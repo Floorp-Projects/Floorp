@@ -9,6 +9,7 @@
 #include "mozilla/Vector.h"
 
 #include "jit/IonAnalysis.h"
+#include "jit/IonSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
@@ -145,8 +146,10 @@ IsObjectEscaped(MInstruction *ins)
         MNode *consumer = (*i)->consumer();
         if (!consumer->isDefinition()) {
             // Cannot optimize if it is observable from fun.arguments or others.
-            if (consumer->toResumePoint()->isObservableOperand(*i))
+            if (consumer->toResumePoint()->isObservableOperand(*i)) {
+                IonSpewDef(IonSpew_Escape, "Object is observable\n", ins);
                 return true;
+            }
             continue;
         }
 
@@ -157,6 +160,9 @@ IsObjectEscaped(MInstruction *ins)
             // Not escaped if it is the first argument.
             if (def->indexOf(*i) == 0)
                 break;
+
+            IonSpewDef(IonSpew_Escape, "Object ", ins);
+            IonSpewDef(IonSpew_Escape, "  is escaped by\n", def);
             return true;
 
           case MDefinition::Op_Slots: {
@@ -178,17 +184,23 @@ IsObjectEscaped(MInstruction *ins)
           case MDefinition::Op_GuardShape: {
             MGuardShape *guard = def->toGuardShape();
             MOZ_ASSERT(!ins->isGuardShape());
-            if (ins->toNewObject()->templateObject()->lastProperty() != guard->shape())
+            if (ins->toNewObject()->templateObject()->lastProperty() != guard->shape()) {
+                IonSpewDef(IonSpew_Escape, "Object ", ins);
+                IonSpewDef(IonSpew_Escape, "  has a non-matching guard shape\n", guard);
                 return true;
+            }
             if (IsObjectEscaped(def->toInstruction()))
                 return true;
             break;
           }
           default:
+            IonSpewDef(IonSpew_Escape, "Object ", ins);
+            IonSpewDef(IonSpew_Escape, "  is escaped by\n", def);
             return true;
         }
     }
 
+    IonSpewDef(IonSpew_Escape, "Object is not escaped\n", ins);
     return false;
 }
 
@@ -489,8 +501,15 @@ IsArrayEscaped(MInstruction *ins)
 
     // The array is probably too large to be represented efficiently with
     // MArrayState, and we do not want to make huge allocations during bailouts.
-    if (!ins->toNewArray()->isAllocating() || count >= 16)
+    if (!ins->toNewArray()->isAllocating()) {
+        IonSpewDef(IonSpew_Escape, "Array is not allocated\n", ins);
         return true;
+    }
+
+    if (count >= 16) {
+        IonSpewDef(IonSpew_Escape, "Array has too many elements\n", ins);
+        return true;
+    }
 
     // Check if the object is escaped. If the object is not the first argument
     // of either a known Store / Load, then we consider it as escaped. This is a
@@ -499,8 +518,10 @@ IsArrayEscaped(MInstruction *ins)
         MNode *consumer = (*i)->consumer();
         if (!consumer->isDefinition()) {
             // Cannot optimize if it is observable from fun.arguments or others.
-            if (consumer->toResumePoint()->isObservableOperand(*i))
+            if (consumer->toResumePoint()->isObservableOperand(*i)) {
+                IonSpewDef(IonSpew_Escape, "Array is observable\n", ins);
                 return true;
+            }
             continue;
         }
 
@@ -522,16 +543,28 @@ IsArrayEscaped(MInstruction *ins)
                     // for properties, thus it might do additional side-effects
                     // which are not reflected by the alias set, is we are
                     // bailing on holes.
-                    if (access->toLoadElement()->needsHoleCheck())
+                    if (access->toLoadElement()->needsHoleCheck()) {
+                        IonSpewDef(IonSpew_Escape, "Array ", ins);
+                        IonSpewDef(IonSpew_Escape,
+                                   "  has a load element which needs hole check\n", access);
                         return true;
+                    }
 
                     // If the index is not a constant then this index can alias
                     // all others. We do not handle this case.
                     int32_t index;
-                    if (!IndexOf(access, &index))
+                    if (!IndexOf(access, &index)) {
+                        IonSpewDef(IonSpew_Escape, "Array ", ins);
+                        IonSpewDef(IonSpew_Escape,
+                                   "  has a load element with a non-trivial index\n", access);
                         return true;
-                    if (index < 0 || count <= uint32_t(index))
+                    }
+                    if (index < 0 || count <= uint32_t(index)) {
+                        IonSpewDef(IonSpew_Escape, "Array ", ins);
+                        IonSpewDef(IonSpew_Escape,
+                                   "  has a load element with an out-of-bound index\n", access);
                         return true;
+                    }
                     break;
                   }
 
@@ -549,14 +582,23 @@ IsArrayEscaped(MInstruction *ins)
                     // If the index is not a constant then this index can alias
                     // all others. We do not handle this case.
                     int32_t index;
-                    if (!IndexOf(access, &index))
+                    if (!IndexOf(access, &index)) {
+                        IonSpewDef(IonSpew_Escape, "Array ", ins);
+                        IonSpewDef(IonSpew_Escape, "  has a store element with a non-trivial index\n", access);
                         return true;
-                    if (index < 0 || count <= uint32_t(index))
+                    }
+                    if (index < 0 || count <= uint32_t(index)) {
+                        IonSpewDef(IonSpew_Escape, "Array ", ins);
+                        IonSpewDef(IonSpew_Escape, "  has a store element with an out-of-bound index\n", access);
                         return true;
+                    }
 
                     // We are not yet encoding magic hole constants in resume points.
-                    if (access->toStoreElement()->value()->type() == MIRType_MagicHole)
+                    if (access->toStoreElement()->value()->type() == MIRType_MagicHole) {
+                        IonSpewDef(IonSpew_Escape, "Array ", ins);
+                        IonSpewDef(IonSpew_Escape, "  has a store element with an magic-hole constant\n", access);
                         return true;
+                    }
                     break;
                   }
 
@@ -573,6 +615,8 @@ IsArrayEscaped(MInstruction *ins)
                     break;
 
                   default:
+                    IonSpewDef(IonSpew_Escape, "Array's element ", ins);
+                    IonSpewDef(IonSpew_Escape, "  is escaped by\n", def);
                     return true;
                 }
             }
@@ -581,10 +625,13 @@ IsArrayEscaped(MInstruction *ins)
           }
 
           default:
+            IonSpewDef(IonSpew_Escape, "Array ", ins);
+            IonSpewDef(IonSpew_Escape, "  is escaped by\n", def);
             return true;
         }
     }
 
+    IonSpewDef(IonSpew_Escape, "Array is not escaped\n", ins);
     return false;
 }
 
