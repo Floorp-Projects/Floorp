@@ -279,7 +279,7 @@ assertEq(asmLink(asmCompile(USE_ASM + "function f() { return (4 | (2 == 2))|0 } 
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { return (4 | (!2))|0 } return f"))(), 4);
 
 // get that order-of-operations right!
-var buf = new ArrayBuffer(4096);
+var buf = new ArrayBuffer(BUF_MIN);
 asmLink(asmCompile('glob','imp','buf', USE_ASM + "var i32=new glob.Int32Array(buf); var x=0; function a() { return x|0 } function b() { x=42; return 0 } function f() { i32[((b()|0) & 0x3) >> 2] = a()|0 } return f"), this, null, buf)();
 assertEq(new Int32Array(buf)[0], 42);
 
