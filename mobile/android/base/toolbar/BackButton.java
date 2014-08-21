@@ -21,14 +21,18 @@ public class BackButton extends ShapedButton {
     private Path mBorderPath;
     private Paint mBorderPaint;
     private Paint mBorderPrivatePaint;
+    private final float mBorderWidth;
 
     public BackButton(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        mBorderWidth = getResources().getDimension(R.dimen.nav_button_border_width);
 
         // Paint to draw the border.
         mBorderPaint = new Paint();
         mBorderPaint.setAntiAlias(true);
         mBorderPaint.setColor(0xFFB5B5B5);
+        mBorderPaint.setStrokeWidth(mBorderWidth);
         mBorderPaint.setStyle(Paint.Style.STROKE);
 
         mBorderPrivatePaint = new Paint(mBorderPaint);
@@ -44,14 +48,10 @@ public class BackButton extends ShapedButton {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
 
         mPath.reset();
-        mPath.addCircle(width/2, height/2, width/2, Path.Direction.CW);
-
-        float borderWidth = getContext().getResources().getDimension(R.dimen.nav_button_border_width);
-        mBorderPaint.setStrokeWidth(borderWidth);
-        mBorderPrivatePaint.setStrokeWidth(borderWidth);
+        mPath.addCircle(width/2, height/2, width/2 - mBorderWidth, Path.Direction.CW);
 
         mBorderPath.reset();
-        mBorderPath.addCircle(width/2, height/2, (width/2) - borderWidth, Path.Direction.CW);
+        mBorderPath.addCircle(width/2, height/2, (width/2) - mBorderWidth, Path.Direction.CW);
     }
 
     @Override
