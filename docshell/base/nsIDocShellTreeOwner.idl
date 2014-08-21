@@ -12,7 +12,7 @@
 
 interface nsIDocShellTreeItem;
 
-[scriptable, uuid(6cd89e60-1060-491e-8c31-ce969435ec56)]
+[scriptable, uuid(05b5b240-1f61-11e4-8c21-0800200c9a66)]
 interface nsIDocShellTreeOwner : nsISupports
 {
 	/*
@@ -63,9 +63,6 @@ interface nsIDocShellTreeOwner : nsISupports
 	Returns the Primary Content Shell
 	*/
 	readonly attribute nsIDocShellTreeItem primaryContentShell;
-
-	[implicit_jscontext]
-	readonly attribute jsval contentWindow;
 
 	/*
 	Tells the tree owner to size its window or parent window in such a way

@@ -83,7 +83,7 @@ public:
                            mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE {
       if (NS_FAILED(aResult)) {
         mDecryptor->mCallback->Error();
-        delete aSample;
+        MOZ_ASSERT(!aSample);
       } else {
         RefPtr<nsIRunnable> task;
         task = NS_NewRunnableMethodWithArg<MP4Sample*>(mDecryptor,

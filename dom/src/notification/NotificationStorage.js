@@ -71,7 +71,8 @@ NotificationStorage.prototype = {
     }
   },
 
-  put: function(origin, id, title, dir, lang, body, tag, icon, alertName) {
+  put: function(origin, id, title, dir, lang, body, tag, icon, alertName,
+                data) {
     if (DEBUG) { debug("PUT: " + id + ": " + title); }
     var notification = {
       id: id,
@@ -83,7 +84,8 @@ NotificationStorage.prototype = {
       icon: icon,
       alertName: alertName,
       timestamp: new Date().getTime(),
-      origin: origin
+      origin: origin,
+      data: data
     };
 
     this._notifications[id] = notification;
@@ -202,7 +204,8 @@ NotificationStorage.prototype = {
                         notification.lang,
                         notification.body,
                         notification.tag,
-                        notification.icon);
+                        notification.icon,
+                        notification.data);
       } catch (e) {
         if (DEBUG) { debug("Error calling callback handle: " + e); }
       }

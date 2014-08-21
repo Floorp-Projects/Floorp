@@ -1947,7 +1947,6 @@ function WifiWorker() {
       if (!ok)
         return;
 
-      self.waitForScan(function firstScan() {});
       // The select network command we used in associate() disables others networks.
       // Enable them here to make sure wpa_supplicant helps to connect to known
       // network automatically.

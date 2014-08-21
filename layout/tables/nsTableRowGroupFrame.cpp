@@ -1357,6 +1357,12 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   }
   
   FinishAndStoreOverflow(&aDesiredSize);
+
+  // Any absolutely-positioned children will get reflowed in
+  // nsFrame::FixupPositionedTableParts in another pass, so propagate our
+  // dirtiness to them before our parent clears our dirty bits.
+  PushDirtyBitToAbsoluteFrames();
+
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 }
 
