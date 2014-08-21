@@ -1118,7 +1118,7 @@ var BrowserApp = {
     aTab.browser.dispatchEvent(evt);
   },
 
-  quit: function quit(aClear = {}) {
+  quit: function quit(aClear = { sanitize: {}, dontSaveSession: false }) {
     // Figure out if there's at least one other browser window around.
     let lastBrowser = true;
     let e = Services.wm.getEnumerator("navigator:browser");
@@ -1138,7 +1138,13 @@ var BrowserApp = {
       Services.obs.notifyObservers(null, "browser-lastwindow-close-granted", null);
     }
 
-    BrowserApp.sanitize(aClear, function() {
+    // Tell session store to forget about this window
+    if (aClear.dontSaveSession) {
+      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+      ss.removeWindow(window);
+    }
+
+    BrowserApp.sanitize(aClear.sanitize, function() {
       window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
       window.close();
     });
