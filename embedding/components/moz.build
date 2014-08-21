@@ -8,13 +8,13 @@
 # but we need to export interface headers from those directories.
 DIRS += [
     'windowwatcher',
-    'appstartup/src',
+    'appstartup',
     'find',
     'webbrowserpersist',
     'commandhandler',
 ]
 
 if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
-    DIRS += ['printingui/src']
+    DIRS += ['printingui']
 
 DIRS += ['build']

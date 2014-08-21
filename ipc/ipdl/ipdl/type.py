@@ -280,7 +280,7 @@ class ProtocolType(IPDLType):
         self.sendSemantics = sendSemantics
         self.spawns = set()             # ProtocolType
         self.opens = set()              # ProtocolType
-        self.managers = set()           # ProtocolType
+        self.managers = []           # ProtocolType
         self.manages = [ ]
         self.stateless = stateless
         self.hasDelete = False
@@ -294,7 +294,7 @@ class ProtocolType(IPDLType):
 
     def addManager(self, mgrtype):
         assert mgrtype.isIPDL() and mgrtype.isProtocol()
-        self.managers.add(mgrtype)
+        self.managers.append(mgrtype)
 
     def addSpawn(self, ptype):
         assert self.isToplevel() and  ptype.isToplevel()
@@ -305,7 +305,7 @@ class ProtocolType(IPDLType):
         self.opens.add(ptype)
 
     def managedBy(self, mgr):
-        self.managers = mgr
+        self.managers = list(mgr)
 
     def toplevel(self):
         if self.isToplevel():
