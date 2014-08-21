@@ -8050,9 +8050,10 @@ class InlinePropertyTable : public TempObject
         JS_ASSERT(priorResumePoint_ == nullptr);
         priorResumePoint_ = resumePoint;
     }
-
-    MResumePoint *priorResumePoint() const {
-        return priorResumePoint_;
+    MResumePoint *takePriorResumePoint() {
+        MResumePoint *rp = priorResumePoint_;
+        priorResumePoint_ = nullptr;
+        return rp;
     }
 
     jsbytecode *pc() const {

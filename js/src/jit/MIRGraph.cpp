@@ -248,7 +248,10 @@ MBasicBlock::NewWithResumePoint(MIRGraph &graph, CompileInfo &info,
 {
     MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, site, NORMAL);
 
+    MOZ_ASSERT(!resumePoint->instruction());
+    resumePoint->block()->discardResumePoint(resumePoint, RefType_None);
     resumePoint->block_ = block;
+    block->addResumePoint(resumePoint);
     block->entryResumePoint_ = resumePoint;
 
     if (!block->init())
@@ -765,9 +768,10 @@ AssertSafelyDiscardable(MDefinition *def)
 }
 
 void
-MBasicBlock::discardResumePoint(MResumePoint *rp)
+MBasicBlock::discardResumePoint(MResumePoint *rp, ReferencesType refType /* = RefType_Default */)
 {
-    rp->discardUses();
+    if (refType & RefType_DiscardOperands)
+        rp->discardUses();
     MResumePointIterator iter = resumePointsBegin();
     while (*iter != rp) {
         // We should reach it before reaching the end.
@@ -785,8 +789,8 @@ MBasicBlock::prepareForDiscard(MInstruction *ins, ReferencesType refType /* = Re
     MOZ_ASSERT(ins->block() == this);
 
     MResumePoint *rp = ins->resumePoint();
-    if (refType & RefType_DiscardResumePoint && rp)
-        discardResumePoint(rp);
+    if ((refType & RefType_DiscardResumePoint) && rp)
+        discardResumePoint(rp, refType);
 
     // We need to assert that instructions have no uses after removing the their
     // resume points operands as they could be captured by their own resume

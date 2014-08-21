@@ -61,14 +61,16 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // as needed.
     void setVariable(uint32_t slot);
 
-    void discardResumePoint(MResumePoint *rp);
-
     enum ReferencesType {
+        RefType_None = 0,
         RefType_AssertNoUses = 1 << 0,
         RefType_DiscardOperands = 1 << 1,
         RefType_DiscardResumePoint = 1 << 2,
+        RefType_DefaultNoAssert = RefType_DiscardOperands | RefType_DiscardResumePoint,
         RefType_Default = RefType_AssertNoUses | RefType_DiscardOperands | RefType_DiscardResumePoint
     };
+
+    void discardResumePoint(MResumePoint *rp, ReferencesType refType = RefType_Default);
 
     // Remove all references to an instruction such that it can be removed from
     // the list of instruction, without keeping any dangling pointer to it. This
@@ -182,6 +184,12 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Adds a resume point to this block.
     void addResumePoint(MResumePoint *resume) {
         resumePoints_.pushFront(resume);
+    }
+
+    // Discard pre-allocated resume point.
+    void discardPreAllocatedResumePoint(MResumePoint *resume) {
+        MOZ_ASSERT(!resume->instruction());
+        discardResumePoint(resume);
     }
 
     // Adds a predecessor. Every predecessor must have the same exit stack
