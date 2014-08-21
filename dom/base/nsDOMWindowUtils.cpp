@@ -2887,17 +2887,6 @@ nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResu
     return NS_OK;
   }
 
-  // Get the outermost frame for the content node, so that we can test
-  // canvasframe invalidations by observing the documentElement.
-  for (;;) {
-    nsIFrame* parentFrame = frame->GetParent();
-    if (parentFrame && parentFrame->GetContent() == content) {
-      frame = parentFrame;
-    } else {
-      break;
-    }
-  }
-
   *aResult = frame->CheckAndClearPaintedState();
   return NS_OK;
 }
