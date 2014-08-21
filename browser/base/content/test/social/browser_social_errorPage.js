@@ -36,16 +36,10 @@ function goOnline(callback) {
 function openPanel(url, panelCallback, loadCallback) {
   // open a flyout
   SocialFlyout.open(url, 0, panelCallback);
-  // wait for both open and loaded before callback. Since the test doesn't close
-  // the panel between opens, we cannot rely on events here. We need to ensure
-  // popupshown happens before we finish out the tests.
-  waitForCondition(function() {
-                    return SocialFlyout.panel.state == "open" &&
-                           SocialFlyout.iframe.contentDocument.readyState == "complete";
-                   },
-                   loadCallback,
-                   "flyout is open and loaded");
-
+  SocialFlyout.panel.firstChild.addEventListener("load", function panelLoad() {
+    SocialFlyout.panel.firstChild.removeEventListener("load", panelLoad, true);
+    loadCallback();
+  }, true);
 }
 
 function openChat(url, panelCallback, loadCallback) {
@@ -189,10 +183,6 @@ var tests = {
     // Ensure that the error listener survives the chat window being detached.
     let url = "https://example.com/browser/browser/base/content/test/social/social_chat.html";
     let panelCallbackCount = 0;
-    // chatwindow tests throw errors, which muddy test output, if the worker
-    // doesn't get test-init
-    let port = SocialSidebar.provider.getWorkerPort();
-    port.postMessage({topic: "test-init"});
     // open a chat while we are still online.
     openChat(
       url,
@@ -210,7 +200,6 @@ var tests = {
               waitForCondition(function() chat.contentDocument.location.href.indexOf("about:socialerror?")==0,
                                function() {
                                 chat.close();
-                                port.close();
                                 next();
                                 },
                                "error page didn't appear");
