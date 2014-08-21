@@ -396,7 +396,7 @@ jit::IonSpewDef(IonSpewChannel channel, const char *str, MDefinition *def)
         return;
 
     IonSpewHeader(channel);
-    fprintf(IonSpewFile, str);
+    fprintf(IonSpewFile, "%s", str);
     def->dump(IonSpewFile);
     def->dumpLocation(IonSpewFile);
 }
