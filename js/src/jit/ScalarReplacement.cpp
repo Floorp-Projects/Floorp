@@ -8,6 +8,7 @@
 
 #include "mozilla/Vector.h"
 
+#include "jit/IonAnalysis.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
@@ -321,8 +322,11 @@ ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
     }
 
     if (succ->numPredecessors() > 1) {
+        // We need to re-compute successorWithPhis as the previous EliminatePhis
+        // phase might have removed all the Phis from the successor block.
         size_t currIndex = succ->indexForPredecessor(curr);
         MOZ_ASSERT(succ->getPredecessor(currIndex) == curr);
+        curr->setSuccessorWithPhis(succ, currIndex);
 
         // Copy the current slot states to the index of current block in all the
         // Phi created during the first visit of the successor.
@@ -817,21 +821,17 @@ ScalarReplacementOfArray(MIRGenerator *mir, MIRGraph &graph,
             }
 
             if (succ->numPredecessors() > 1) {
-                // The current block might appear multiple times among the
-                // predecessors. As we need to replace all the inputs, we need
-                // to check all predecessors against the current block to
-                // replace the Phi node operands.
-                size_t numPreds = succ->numPredecessors();
-                for (size_t p = 0; p < numPreds; p++) {
-                    if (succ->getPredecessor(p) != *block)
-                        continue;
+                // We need to re-compute successorWithPhis as the previous EliminatePhis
+                // phase might have removed all the Phis from the successor block.
+                size_t currIndex = succ->indexForPredecessor(*block);
+                MOZ_ASSERT(succ->getPredecessor(currIndex) == *block);
+                block->setSuccessorWithPhis(succ, currIndex);
 
-                    // Copy the current slot state to the predecessor index of
-                    // each Phi of the same slot.
-                    for (size_t index = 0; index < state->numElements(); index++) {
-                        MPhi *phi = succState->getElement(index)->toPhi();
-                        phi->replaceOperand(p, state->getElement(index));
-                    }
+                // Copy the current slot state to the predecessor index of
+                // each Phi of the same slot.
+                for (size_t index = 0; index < state->numElements(); index++) {
+                    MPhi *phi = succState->getElement(index)->toPhi();
+                    phi->replaceOperand(currIndex, state->getElement(index));
                 }
             }
         }
@@ -849,6 +849,7 @@ ScalarReplacement(MIRGenerator *mir, MIRGraph &graph)
 {
     EmulateStateOf<ObjectMemoryView> replaceObject(mir, graph);
     ArrayTrait::GraphState arrayStates;
+    bool addedPhi = false;
 
     for (ReversePostorderIterator block = graph.rpoBegin(); block != graph.rpoEnd(); block++) {
         if (mir->shouldCancel("Scalar Replacement (main loop)"))
@@ -860,15 +861,26 @@ ScalarReplacement(MIRGenerator *mir, MIRGraph &graph)
                 if (!replaceObject.run(view))
                     return false;
                 view.assertSuccess();
+                addedPhi = true;
                 continue;
             }
 
             if (ins->isNewArray() && !IsArrayEscaped(*ins)) {
                 if (!ScalarReplacementOfArray(mir, graph, arrayStates, *ins))
                     return false;
+                addedPhi = true;
                 continue;
             }
         }
+    }
+
+    if (addedPhi) {
+        // Phis added by Scalar Replacement are only redundant Phis which are
+        // not directly captured by any resume point but only by the MDefinition
+        // state. The conservative observability only focuses on Phis which are
+        // not used as resume points operands.
+        if (!EliminatePhis(mir, graph, ConservativeObservability))
+            return false;
     }
 
     return true;
