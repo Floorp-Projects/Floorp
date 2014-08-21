@@ -998,6 +998,10 @@ RNewArray::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedValue result(cx);
     RootedTypeObject type(cx);
 
+    // Use AutoEnterAnalysis to avoid invoking the object metadata callback
+    // while bailing out, which could try to walk the stack.
+    types::AutoEnterAnalysis enter(cx);
+
     // See CodeGenerator::visitNewArrayCallVM
     if (!templateObject->hasSingletonType())
         type = templateObject->type();

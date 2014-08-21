@@ -2594,20 +2594,20 @@ void MediaDecoderStateMachine::AdvanceFrame()
   int64_t remainingTime = AUDIO_DURATION_USECS;
   NS_ASSERTION(clock_time >= mStartTime, "Should have positive clock time.");
   nsAutoPtr<VideoData> currentFrame;
-#ifdef PR_LOGGING
-  int32_t droppedFrames = 0;
-#endif
   if (VideoQueue().GetSize() > 0) {
     VideoData* frame = VideoQueue().PeekFront();
+#ifdef PR_LOGGING
+    int32_t droppedFrames = 0;
+#endif
     while (mScheduler->IsRealTime() || clock_time >= frame->mTime) {
       mVideoFrameEndTime = frame->GetEndTime();
-      currentFrame = frame;
 #ifdef PR_LOGGING
-      VERBOSE_LOG("discarding video frame %lld", frame->mTime);
-      if (droppedFrames++) {
-        VERBOSE_LOG("discarding video frame %lld (%d so far)", frame->mTime, droppedFrames-1);
+      if (currentFrame) {
+        VERBOSE_LOG("discarding video frame mTime=%lld clock_time=%lld (%d so far)",
+                    currentFrame->mTime, ++droppedFrames);
       }
 #endif
+      currentFrame = frame;
       VideoQueue().PopFront();
       // Notify the decode thread that the video queue's buffers may have
       // free'd up space for more frames.

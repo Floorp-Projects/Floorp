@@ -11,6 +11,7 @@
 #include "MediaSource.h"
 #include "MediaSourceReader.h"
 #include "MediaSourceResource.h"
+#include "MediaSourceUtils.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaSourceLog();
@@ -59,14 +60,12 @@ MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
     return NS_ERROR_FAILURE;
   }
 
-
   nsresult rv = mDecoderStateMachine->Init(nullptr);
-
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetStateMachineParameters();
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -82,8 +81,7 @@ MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
   } else {
     aSeekable->Add(0, duration);
   }
-  MSE_DEBUG("MediaSourceDecoder(%p)::GetSeekable startTime=%f endTime=%f",
-            this, aSeekable->GetStartTime(), aSeekable->GetEndTime());
+  MSE_DEBUG("MediaSourceDecoder(%p)::GetSeekable ranges=%s", this, DumpTimeRanges(aSeekable).get());
   return NS_OK;
 }
 
@@ -110,7 +108,8 @@ MediaSourceDecoder::DetachMediaSource()
 already_AddRefed<SubBufferDecoder>
 MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
 {
-  return mReader->CreateSubDecoder(aType, this);
+  MOZ_ASSERT(mReader);
+  return mReader->CreateSubDecoder(aType);
 }
 
 } // namespace mozilla

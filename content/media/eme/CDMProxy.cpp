@@ -311,6 +311,14 @@ void
 CDMProxy::gmp_Shutdown()
 {
   MOZ_ASSERT(IsOnGMPThread());
+
+  // Abort any pending decrypt jobs, to awaken any clients waiting on a job.
+  for (size_t i = 0; i < mDecryptionJobs.Length(); i++) {
+    DecryptJob* job = mDecryptionJobs[i];
+    job->mClient->Decrypted(NS_ERROR_ABORT, nullptr);
+  }
+  mDecryptionJobs.Clear();
+
   if (mCDM) {
     mCDM->Close();
     mCDM = nullptr;
@@ -487,11 +495,14 @@ CDMProxy::gmp_Decrypted(uint32_t aId,
       if (aDecryptedData.Length() != job->mSample->size) {
         NS_WARNING("CDM returned incorrect number of decrypted bytes");
       }
-      PodCopy(job->mSample->data,
-              aDecryptedData.Elements(),
-              std::min<size_t>(aDecryptedData.Length(), job->mSample->size));
-      nsresult rv = GMP_SUCCEEDED(aResult) ? NS_OK : NS_ERROR_FAILURE;
-      job->mClient->Decrypted(rv, job->mSample.forget());
+      if (GMP_SUCCEEDED(aResult)) {
+        PodCopy(job->mSample->data,
+                aDecryptedData.Elements(),
+                std::min<size_t>(aDecryptedData.Length(), job->mSample->size));
+        job->mClient->Decrypted(NS_OK, job->mSample.forget());
+      } else {
+        job->mClient->Decrypted(NS_ERROR_FAILURE, nullptr);
+      }
       mDecryptionJobs.RemoveElementAt(i);
       return;
     } else {

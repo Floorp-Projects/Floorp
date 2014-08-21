@@ -32,7 +32,7 @@ class AtExitManager {
   // even if one already exists.  This should only be used for testing!
   // AtExitManagers are kept on a global stack, and it will be removed during
   // destruction.  This allows you to shadow another AtExitManager.
-  AtExitManager(bool shadow);
+  explicit AtExitManager(bool shadow);
 
  public:
   typedef void (*AtExitCallbackType)(void*);

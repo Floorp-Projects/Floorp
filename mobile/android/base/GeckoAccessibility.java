@@ -55,17 +55,17 @@ public class GeckoAccessibility {
                     "es.codefactory.android.app.ma.MAAccessibilityService" // Codefactory Mobile Accessibility screen reader
                 }));
 
-    public static void updateAccessibilitySettings (final GeckoApp app) {
+    public static void updateAccessibilitySettings (final Context context) {
         new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
                 @Override
                 public Void doInBackground(Void... args) {
                     JSONObject ret = new JSONObject();
                     sEnabled = false;
                     AccessibilityManager accessibilityManager =
-                        (AccessibilityManager) app.getSystemService(Context.ACCESSIBILITY_SERVICE);
+                        (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
                     if (accessibilityManager.isEnabled()) {
                         ActivityManager activityManager =
-                            (ActivityManager) app.getSystemService(Context.ACTIVITY_SERVICE);
+                            (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
                         List<RunningServiceInfo> runningServices = activityManager.getRunningServices(Integer.MAX_VALUE);
 
                         for (RunningServiceInfo runningServiceInfo : runningServices) {
@@ -91,9 +91,15 @@ public class GeckoAccessibility {
 
                 @Override
                 public void onPostExecute(Void args) {
-                    // Disable the dynamic toolbar when enabling accessibility.
-                    // These features tend not to interact well.
-                    app.setAccessibilityEnabled(sEnabled);
+                    boolean isGeckoApp = false;
+                    try {
+                        isGeckoApp = context instanceof GeckoApp;
+                    } catch (NoClassDefFoundError ex) {}
+                    if (isGeckoApp) {
+                        // Disable the dynamic toolbar when enabling accessibility.
+                        // These features tend not to interact well.
+                        ((GeckoApp) context).setAccessibilityEnabled(sEnabled);
+                    }
                 }
             }.execute();
     }
@@ -248,6 +254,19 @@ public class GeckoAccessibility {
         if (Versions.feature16Plus) {
             layerview.setAccessibilityDelegate(new GeckoAccessibilityDelegate());
             layerview.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+        }
+    }
+
+    public static void setAccessibilityStateChangeListener(final Context context) {
+        // The state change listener is only supported on API14+
+        if (Versions.feature14Plus) {
+            AccessibilityManager accessibilityManager =
+                (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
+            accessibilityManager.addAccessibilityStateChangeListener(new AccessibilityManager.AccessibilityStateChangeListener() {
+                public void onAccessibilityStateChanged(boolean enabled) {
+                    updateAccessibilitySettings(context);
+                }
+            });
         }
     }
 

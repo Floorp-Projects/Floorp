@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>WebCrypto Test Suite</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" href="./test_WebCrypto.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<!-- Utilities for manipulating ABVs -->
+<script src="util.js"></script>
+
+<!-- A simple wrapper around IndexedDB -->
+<script src="simpledb.js"></script>
+
+<!-- Test vectors drawn from the literature -->
+<script src="./test-vectors.js"></script>
+
+<!-- General testing framework -->
+<script src="./test-array.js"></script>
+
+<script>/*<![CDATA[*/
+"use strict";
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import and use of an AES-GCM key",
+  function () {
+    var that = this;
+
+    function doEncrypt(x) {
+      return crypto.subtle.encrypt(
+        {
+          name: "AES-GCM",
+          iv: tv.aes_gcm_enc.iv,
+          additionalData: tv.aes_gcm_enc.adata,
+          tagLength: 128
+        },
+        x, tv.aes_gcm_enc.data);
+    }
+
+    crypto.subtle.importKey("jwk", tv.aes_gcm_enc.key_jwk, "AES-GCM", false, ['encrypt'])
+      .then(doEncrypt)
+      .then(
+        memcmp_complete(that, tv.aes_gcm_enc.result),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import and use of an RSASSA-PKCS1-v1_5 private key",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+
+    function doSign(x) {
+      return crypto.subtle.sign(alg.name, x, tv.rsassa.data);
+    }
+    function fail(x) { console.log(x); error(that); }
+
+    crypto.subtle.importKey("jwk", tv.rsassa.jwk_priv, alg, false, ['sign'])
+      .then( doSign, fail )
+      .then( memcmp_complete(that, tv.rsassa.sig256), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import and use of an RSASSA-PKCS1-v1_5 public key",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+
+    function doVerify(x) {
+      return crypto.subtle.verify(alg.name, x, tv.rsassa.sig256, tv.rsassa.data);
+    }
+    function fail(x) { error(that); }
+
+    crypto.subtle.importKey("jwk", tv.rsassa.jwk_pub, alg, false, ['verify'])
+      .then( doVerify, fail )
+      .then(
+        complete(that, function(x) { return x; }),
+        fail
+      );
+  });
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import failure on incomplete RSA private key (missing 'qi')",
+  function () {
+    var that = this;
+    var alg = { name: "RSA-OAEP", hash: "SHA-256" };
+    var jwk = {
+      kty: "RSA",
+      n: tv.rsassa.jwk_priv.n,
+      e: tv.rsassa.jwk_priv.e,
+      d: tv.rsassa.jwk_priv.d,
+      p: tv.rsassa.jwk_priv.p,
+      q: tv.rsassa.jwk_priv.q,
+      dp: tv.rsassa.jwk_priv.dp,
+      dq: tv.rsassa.jwk_priv.dq,
+    };
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+      .then( error(that), complete(that) );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import failure on algorithm mismatch",
+  function () {
+    var that = this;
+    var alg = "AES-GCM";
+    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", alg: "A256GCM" };
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+      .then( error(that), complete(that) );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import failure on usages mismatch",
+  function () {
+    var that = this;
+    var alg = "AES-GCM";
+    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", key_ops: ['encrypt'] };
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+      .then( error(that), complete(that) );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import failure on extractable mismatch",
+  function () {
+    var that = this;
+    var alg = "AES-GCM";
+    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", ext: false };
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt'])
+      .then( error(that), complete(that) );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK export of a symmetric key",
+  function () {
+    var that = this;
+    var alg = "AES-GCM";
+    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ" };
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ['k']) &&
+                 x.kty == 'oct' &&
+                 x.alg == 'A128GCM' &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ['encrypt','decrypt']) &&
+                 x.k == jwk.k
+        }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK export of an RSA private key",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+    var jwk = tv.rsassa.jwk_priv;
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['sign'])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          window.jwk_priv = x;
+          console.log(JSON.stringify(x));
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ['n', 'e', 'd', 'p', 'q', 'dp', 'dq', 'qi']) &&
+                 x.kty == 'RSA' &&
+                 x.alg == 'RS256' &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ['sign']) &&
+                 x.n  == jwk.n  &&
+                 x.e  == jwk.e  &&
+                 x.d  == jwk.d  &&
+                 x.p  == jwk.p  &&
+                 x.q  == jwk.q  &&
+                 x.dp == jwk.dp &&
+                 x.dq == jwk.dq &&
+                 x.qi == jwk.qi;
+          }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK export of an RSA public key",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+    var jwk = tv.rsassa.jwk_pub;
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['verify'])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          window.jwk_pub = x;
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ['n', 'e']) &&
+                 x.kty == 'RSA' &&
+                 x.alg == 'RS256' &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ['verify']) &&
+                 x.n  == jwk.n  &&
+                 x.e  == jwk.e;
+          }),
+        error(that)
+      );
+  }
+);
+/*]]>*/</script>
+</head>
+
+<body>
+
+<div id="content">
+	<div id="head">
+		<b>Web</b>Crypto<br>
+	</div>
+
+    <div id="start" onclick="start();">RUN ALL</div>
+
+    <div id="resultDiv" class="content">
+    Summary:
+    <span class="pass"><span id="passN">0</span> passed, </span>
+    <span class="fail"><span id="failN">0</span> failed, </span>
+    <span class="pending"><span id="pendingN">0</span> pending.</span>
+    <br/>
+    <br/>
+
+    <table id="results">
+        <tr>
+            <th>Test</th>
+            <th>Result</th>
+            <th>Time</th>
+        </tr>
+    </table>
+
+    </div>
+
+    <div id="foot"></div>
+</div>
+
+</body>
+</html>
