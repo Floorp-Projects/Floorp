@@ -1019,6 +1019,8 @@ void CCApp_processCmds(unsigned int cmd, unsigned int reason, string_t reasonStr
          case CMD_UNREGISTER_ALL_LINES:
             /* send a shutdown message to the SIP Task */
             SIPTaskPostShutdown(SIP_EXTERNAL, reason, reasonStr);
+            ccsnap_line_free();
+            ccsnap_device_free();
             break;
          case CMD_RESTART:
             SIPTaskPostRestart(TRUE);
@@ -1505,6 +1507,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
                     state_data.media_stream_track_id;
                 data->media_stream_id = sessUpd->update.ccSessionUpd.data.
                     state_data.media_stream_id;
+                strlib_free(data->status);
                 data->status =
                   sessUpd->update.ccSessionUpd.data.state_data.reason_text;
                 break;
@@ -1761,6 +1764,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 	data->status = ccsnap_EscapeStrToLocaleStr(data->status, sessUpd->update.ccSessionUpd.data.status.status, LEN_UNKNOWN);
         if (data->status != NULL) {
             if(strncmp(data->status, UNKNOWN_PHRASE_STR, UNKNOWN_PHRASE_STR_SIZE) == 0){
+                    strlib_free(data->status);
                     data->status = strlib_empty();
             }
             if(strcmp(data->status, strlib_empty()) != 0){
@@ -1847,9 +1851,11 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
     case ICE_CANDIDATE_FOUND:
 	if (sessUpd->update.ccSessionUpd.data.state_data.extra) {
 	    if (sessUpd->eventID == ICE_CANDIDATE_FOUND) {
+                strlib_free(data->candidate);
 		data->candidate = sessUpd->update.ccSessionUpd.data.state_data.extra;
 	    }
 	}
+        strlib_free(data->sdp);
         data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
         /* Fall through to the next case... */
     case REMOTE_STREAM_ADD:

@@ -1275,8 +1275,17 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
       configs.push_back(config_raw);
     }
 
-    if (conduit->ConfigureRecvMediaCodecs(configs))
+    auto error = conduit->ConfigureRecvMediaCodecs(configs);
+
+    // Would be nice to use a smart container, but we'd need to change
+    // a lot of code.
+    for (auto it = configs.begin(); it != configs.end(); ++it) {
+      delete *it;
+    }
+
+    if (error) {
       return VCM_ERROR;
+    }
 
     // Now we have all the pieces, create the pipeline
     mozilla::RefPtr<mozilla::MediaPipelineReceiveAudio> pipeline =
@@ -1330,13 +1339,23 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
         ccsdpCodecName(payloads[i].codec_type),
         payloads[i].video.rtcp_fb_types);
       if (vcmEnsureExternalCodec(conduit, config_raw, false)) {
+        delete config_raw;
         continue;
       }
       configs.push_back(config_raw);
     }
 
-    if (conduit->ConfigureRecvMediaCodecs(configs))
+    auto error = conduit->ConfigureRecvMediaCodecs(configs);
+
+    // Would be nice to use a smart container, but we'd need to change
+    // a lot of code.
+    for (auto it = configs.begin(); it != configs.end(); ++it) {
+      delete *it;
+    }
+
+    if (error) {
       return VCM_ERROR;
+    }
 
     // Now we have all the pieces, create the pipeline
     mozilla::RefPtr<mozilla::MediaPipelineReceiveVideo> pipeline =

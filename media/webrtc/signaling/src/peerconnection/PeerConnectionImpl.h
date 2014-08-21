@@ -140,6 +140,7 @@ public:
       return false;
     }
     addStunServer(*server);
+    delete server;
     return true;
   }
   bool addTurnServer(const std::string& addr, uint16_t port,
@@ -157,6 +158,7 @@ public:
       return false;
     }
     addTurnServer(*server);
+    delete server;
     return true;
   }
   void addStunServer(const NrIceStunServer& server) { mStunServers.push_back (server); }
