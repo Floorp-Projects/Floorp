@@ -94,9 +94,6 @@ public:
   // Cancel animations all the way up the chain.
   void CancelAnimations() const;
 
-  // Clear overscroll all the way up the chain.
-  void ClearOverscroll() const;
-
   // Snap back the APZC that is overscrolled, if any.
   void SnapBackOverscrolledApzc() const;
 
@@ -105,9 +102,6 @@ public:
   bool CanBePanned(const AsyncPanZoomController* aApzc) const;
 private:
   std::vector<nsRefPtr<AsyncPanZoomController>> mChain;
-
-  typedef void (AsyncPanZoomController::*APZCMethod)();
-  void ForEachApzc(APZCMethod aMethod) const;
 };
 
 // Don't pollute other files with this macro for now.
