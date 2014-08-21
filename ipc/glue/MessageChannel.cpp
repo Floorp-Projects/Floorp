@@ -208,7 +208,9 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mRemoteStackDepthGuess(false),
     mSawInterruptOutMsg(false),
     mAbortOnError(false),
-    mFlags(REQUIRE_DEFAULT)
+    mFlags(REQUIRE_DEFAULT),
+    mPeerPidSet(false),
+    mPeerPid(-1)
 {
     MOZ_COUNT_CTOR(ipc::MessageChannel);
 
@@ -220,6 +222,10 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mDequeueOneTask = new RefCountedTask(NewRunnableMethod(
                                                  this,
                                                  &MessageChannel::OnMaybeDequeueOne));
+
+    mOnChannelConnectedTask = new RefCountedTask(NewRunnableMethod(
+        this,
+        &MessageChannel::DispatchOnChannelConnected));
 
 #ifdef OS_WIN
     mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
@@ -282,6 +288,8 @@ MessageChannel::Clear()
     mWorkerLoop = nullptr;
     delete mLink;
     mLink = nullptr;
+
+    mOnChannelConnectedTask->Cancel();
 
     if (mChannelErrorTask) {
         mChannelErrorTask->Cancel();
@@ -1427,19 +1435,19 @@ MessageChannel::SetReplyTimeoutMs(int32_t aTimeoutMs)
 void
 MessageChannel::OnChannelConnected(int32_t peer_id)
 {
-    mWorkerLoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this,
-                          &MessageChannel::DispatchOnChannelConnected,
-                          peer_id));
+    MOZ_ASSERT(!mPeerPidSet);
+    mPeerPidSet = true;
+    mPeerPid = peer_id;
+    mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mOnChannelConnectedTask));
 }
 
 void
-MessageChannel::DispatchOnChannelConnected(int32_t peer_pid)
+MessageChannel::DispatchOnChannelConnected()
 {
     AssertWorkerThread();
+    MOZ_ASSERT(mPeerPidSet);
     if (mListener)
-        mListener->OnChannelConnected(peer_pid);
+        mListener->OnChannelConnected(mPeerPid);
 }
 
 void
