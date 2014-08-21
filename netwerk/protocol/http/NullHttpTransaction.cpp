@@ -23,10 +23,10 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
   : mStatus(NS_OK)
   , mCaps(caps | NS_HTTP_ALLOW_KEEPALIVE)
   , mCapsToClear(0)
-  , mCallbacks(callbacks)
-  , mConnectionInfo(ci)
   , mRequestHead(nullptr)
   , mIsDone(false)
+  , mCallbacks(callbacks)
+  , mConnectionInfo(ci)
 {
 }
 

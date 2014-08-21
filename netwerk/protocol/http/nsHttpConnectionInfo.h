@@ -32,10 +32,22 @@ namespace mozilla { namespace net {
 class nsHttpConnectionInfo
 {
 public:
-    nsHttpConnectionInfo(const nsACString &host, int32_t port,
+    nsHttpConnectionInfo(const nsACString &physicalHost,
+                         int32_t physicalPort,
+                         const nsACString &npnToken,
                          const nsACString &username,
-                         nsProxyInfo* proxyInfo,
+                         nsProxyInfo *proxyInfo,
                          bool endToEndSSL = false);
+
+    // this version must use TLS and you may supply the domain
+    // information to be validated
+    nsHttpConnectionInfo(const nsACString &physicalHost,
+                         int32_t physicalPort,
+                         const nsACString &npnToken,
+                         const nsACString &username,
+                         nsProxyInfo *proxyInfo,
+                         const nsACString &logicalHost,
+                         int32_t logicalPort);
 
 private:
     virtual ~nsHttpConnectionInfo()
@@ -46,15 +58,12 @@ private:
 public:
     const nsAFlatCString &HashKey() const { return mHashKey; }
 
-    void SetOriginServer(const nsACString &host, int32_t port);
-
-    void SetOriginServer(const char *host, int32_t port)
-    {
-        SetOriginServer(nsDependentCString(host), port);
-    }
+    const nsCString &GetAuthenticationHost() const { return mAuthenticationHost; }
+    int32_t GetAuthenticationPort() const { return mAuthenticationPort; }
 
     // OK to treat these as an infalible allocation
     nsHttpConnectionInfo* Clone() const;
+    void CloneAsDirectRoute(nsHttpConnectionInfo **outParam);
     nsresult CreateWildCard(nsHttpConnectionInfo **outParam);
 
     const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host().get() : nullptr; }
@@ -83,8 +92,12 @@ public:
     bool          GetAnonymous() const   { return mHashKey.CharAt(2) == 'A'; }
     void          SetPrivate(bool priv)  { mHashKey.SetCharAt(priv ? 'P' : '.', 3); }
     bool          GetPrivate() const     { return mHashKey.CharAt(3) == 'P'; }
+    void          SetRelaxed(bool relaxed)
+                                       { mHashKey.SetCharAt(relaxed ? 'R' : '.', 4); }
+    bool          GetRelaxed() const   { return mHashKey.CharAt(4) == 'R'; }
 
     const nsCString &GetHost() { return mHost; }
+    const nsCString &GetNPNToken() { return mNPNToken; }
 
     // Returns true for any kind of proxy (http, socks, https, etc..)
     bool UsingProxy();
@@ -108,15 +121,26 @@ public:
     bool HostIsLocalIPLiteral() const;
 
 private:
+    void Init(const nsACString &host,
+              int32_t port,
+              const nsACString &npnToken,
+              const nsACString &username,
+              nsProxyInfo* proxyInfo,
+              bool EndToEndSSL);
+    void SetOriginServer(const nsACString &host, int32_t port);
+
     nsCString              mHashKey;
     nsCString              mHost;
     int32_t                mPort;
     nsCString              mUsername;
+    nsCString              mAuthenticationHost;
+    int32_t                mAuthenticationPort;
     nsCOMPtr<nsProxyInfo>  mProxyInfo;
     bool                   mUsingHttpProxy;
     bool                   mUsingHttpsProxy;
     bool                   mEndToEndSSL;
     bool                   mUsingConnect;  // if will use CONNECT with http proxy
+    nsCString              mNPNToken;
 
 // for nsRefPtr
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHttpConnectionInfo)
