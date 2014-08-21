@@ -87,6 +87,10 @@ dictionary EcdhKeyDeriveParams : Algorithm {
   required CryptoKey public;
 };
 
+dictionary DhKeyDeriveParams : Algorithm {
+  required CryptoKey public;
+};
+
 dictionary EcdsaParams : Algorithm {
   required AlgorithmIdentifier hash;
 };
