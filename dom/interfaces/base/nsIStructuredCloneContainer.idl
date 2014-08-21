@@ -46,7 +46,7 @@ interface nsIStructuredCloneContainer : nsISupports
   void initFromBase64(in AString aData,in unsigned long aFormatVersion);
 
   /**
-   * Deserialize the object this conatiner holds, returning it wrapped as
+   * Deserialize the object this container holds, returning it wrapped as
    * an nsIVariant.
    */
   [implicit_jscontext]

@@ -9,7 +9,8 @@ var registrar = SpecialPowers.wrap(SpecialPowers.Components).manager.
 
 var mockAlertsService = {
   showAlertNotification: function(imageUrl, title, text, textClickable,
-                                  cookie, alertListener, name, bidi, lang) {
+                                  cookie, alertListener, name, bidi,
+                                  lang, data) {
     // probably should do this async....
     SpecialPowers.wrap(alertListener).observe(null, "alertshow", cookie);
 
@@ -22,7 +23,8 @@ var mockAlertsService = {
 
   showAppNotification: function(imageUrl, title, text, alertListener, details) {
     this.showAlertNotification(imageUrl, title, text, details.textClickable, "",
-                               alertListener, details.name, details.dir, details.lang);
+                               alertListener, details.name, details.dir,
+                               details.lang, details.data);
   },
 
   QueryInterface: function(aIID) {
