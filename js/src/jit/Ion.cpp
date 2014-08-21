@@ -1995,9 +1995,16 @@ CheckFrame(BaselineFrame *frame)
     JS_ASSERT(!frame->isDebuggerFrame());
 
     // This check is to not overrun the stack.
-    if (frame->isFunctionFrame() && TooManyArguments(frame->numActualArgs())) {
-        IonSpew(IonSpew_Abort, "too many actual args");
-        return false;
+    if (frame->isFunctionFrame()) {
+        if (TooManyArguments(frame->numActualArgs())) {
+            IonSpew(IonSpew_Abort, "too many actual args");
+            return false;
+        }
+
+        if (TooManyArguments(frame->numFormalArgs())) {
+            IonSpew(IonSpew_Abort, "too many args");
+            return false;
+        }
     }
 
     return true;
