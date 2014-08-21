@@ -11,6 +11,8 @@ import sys
 import tempfile
 import time
 
+import mozfile
+
 from .runner import BaseRunner
 from ..devices import Emulator
 
@@ -128,7 +130,10 @@ class DeviceRunner(BaseRunner):
 
     def check_for_crashes(self):
         dump_dir = self.device.pull_minidumps()
-        BaseRunner.check_for_crashes(self, dump_directory=dump_dir, test_name=self.last_test)
+        crashed = BaseRunner.check_for_crashes(self, dump_directory=dump_dir,
+                                               test_name=self.last_test)
+        mozfile.remove(dump_dir)
+        return crashed
 
     def cleanup(self, *args, **kwargs):
         BaseRunner.cleanup(self, *args, **kwargs)
