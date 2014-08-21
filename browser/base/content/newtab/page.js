@@ -33,6 +33,9 @@ let gPage = {
 
     // Initialize customize controls.
     gCustomize.init();
+
+    // Initialize intro panel.
+    gIntro.init();
   },
 
   /**
@@ -211,5 +214,8 @@ let gPage = {
     }
 
     DirectoryLinksProvider.reportSitesAction(gGrid.sites, "view", lastIndex);
+
+    // Show the panel now that anchors are sized
+    gIntro.showIfNecessary();
   }
 };

@@ -49,6 +49,25 @@ input[type=button] {
   right: auto;
 }
 
+#newtab-intro-panel {
+  color: #737373;
+  font-size: 15px;
+  line-height: 20px;
+  margin-top: -32px;
+  padding: 10px;
+  width: 500px;
+}
+
+#newtab-intro-panel h1 {
+  color: #343f48;
+  font-family: Open Sans, sans-serif;
+  font-size: 30px;
+}
+
+#newtab-intro-panel a {
+  color: #4a90e2;
+}
+
 /* MARGINS */
 #newtab-vertical-margin {
   display: -moz-box;
@@ -211,6 +230,7 @@ input[type=button] {
   text-align: start;
 }
 
+#newtab-intro-panel input,
 .sponsored-explain input {
   background-size: 20px;
   height: 20px;
