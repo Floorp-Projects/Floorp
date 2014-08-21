@@ -299,7 +299,7 @@ ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
         // block to the successor.  As the block state is immutable, if the
         // current block has multiple successors, they will share the same entry
         // state.
-        if (succ->numPredecessors() <= 1) {
+        if (succ->numPredecessors() <= 1 || !state_->numSlots()) {
             *pSuccState = state_;
             return true;
         }
@@ -333,12 +333,19 @@ ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
         *pSuccState = succState;
     }
 
-    if (succ->numPredecessors() > 1) {
+    if (succ->numPredecessors() > 1 && succState->numSlots()) {
         // We need to re-compute successorWithPhis as the previous EliminatePhis
         // phase might have removed all the Phis from the successor block.
-        size_t currIndex = succ->indexForPredecessor(curr);
+        size_t currIndex;
+        MOZ_ASSERT(!succ->phisEmpty());
+        if (curr->successorWithPhis()) {
+            MOZ_ASSERT(curr->successorWithPhis() == succ);
+            currIndex = curr->positionInPhiSuccessor();
+        } else {
+            currIndex = succ->indexForPredecessor(curr);
+            curr->setSuccessorWithPhis(succ, currIndex);
+        }
         MOZ_ASSERT(succ->getPredecessor(currIndex) == curr);
-        curr->setSuccessorWithPhis(succ, currIndex);
 
         // Copy the current slot states to the index of current block in all the
         // Phi created during the first visit of the successor.
@@ -635,267 +642,309 @@ IsArrayEscaped(MInstruction *ins)
     return false;
 }
 
-struct ArrayTrait {
-    typedef MArrayState BlockState;
-    typedef Vector<BlockState *, 8, SystemAllocPolicy> GraphState;
-};
-
-// This function replaces every MStoreElement and MSetInitializedLength by an
+// This class replaces every MStoreElement and MSetInitializedLength by an
 // MArrayState which emulates the content of the array. All MLoadElement,
 // MInitializedLength and MArrayLength are replaced by the corresponding value.
 //
 // In order to restore the value of the array correctly in case of bailouts, we
 // replace all reference of the allocation by the MArrayState definition.
-static bool
-ScalarReplacementOfArray(MIRGenerator *mir, MIRGraph &graph,
-                         ArrayTrait::GraphState &states,
-                         MInstruction *arr)
+class ArrayMemoryView : public MDefinitionVisitorDefaultNoop
 {
-    typedef ArrayTrait::BlockState BlockState;
+  public:
+    typedef MArrayState BlockState;
+    static const char *phaseName;
 
-    // For each basic block, we record the last/first state of the array in
-    // each of the basic blocks.
-    if (!states.appendN(nullptr, graph.numBlocks()))
-        return false;
+  private:
+    TempAllocator &alloc_;
+    MConstant *undefinedVal_;
+    MConstant *length_;
+    MInstruction *arr_;
+    MBasicBlock *startBlock_;
+    BlockState *state_;
 
+  public:
+    ArrayMemoryView(TempAllocator &alloc, MInstruction *arr);
+
+    MBasicBlock *startingBlock();
+    bool initStartingState(BlockState **pState);
+
+    void setEntryBlockState(BlockState *state);
+    bool mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ, BlockState **pSuccState);
+
+#ifdef DEBUG
+    void assertSuccess();
+#else
+    void assertSuccess() {}
+#endif
+
+  private:
+    bool isArrayStateElements(MDefinition *elements);
+    void discardInstruction(MInstruction *ins, MDefinition *elements);
+
+  public:
+    bool visitResumePoint(MResumePoint *rp);
+    bool visitStoreElement(MStoreElement *ins);
+    bool visitLoadElement(MLoadElement *ins);
+    bool visitSetInitializedLength(MSetInitializedLength *ins);
+    bool visitInitializedLength(MInitializedLength *ins);
+    bool visitArrayLength(MArrayLength *ins);
+};
+
+const char *ArrayMemoryView::phaseName = "Scalar Replacement of Array";
+
+ArrayMemoryView::ArrayMemoryView(TempAllocator &alloc, MInstruction *arr)
+  : alloc_(alloc),
+    undefinedVal_(nullptr),
+    length_(nullptr),
+    arr_(arr),
+    startBlock_(arr->block()),
+    state_(nullptr)
+{
+}
+
+MBasicBlock *
+ArrayMemoryView::startingBlock()
+{
+    return startBlock_;
+}
+
+bool
+ArrayMemoryView::initStartingState(BlockState **pState)
+{
     // Uninitialized elements have an "undefined" value.
-    MBasicBlock *arrBlock = arr->block();
-    MConstant *undefinedVal = MConstant::New(graph.alloc(), UndefinedValue());
-    MConstant *initLength = MConstant::New(graph.alloc(), Int32Value(0));
-    MConstant *length = nullptr;
-    arrBlock->insertBefore(arr, undefinedVal);
-    arrBlock->insertBefore(arr, initLength);
-    states[arrBlock->id()] = BlockState::New(graph.alloc(), arr, undefinedVal, initLength);
+    undefinedVal_ = MConstant::New(alloc_, UndefinedValue());
+    MConstant *initLength = MConstant::New(alloc_, Int32Value(0));
+    arr_->block()->insertBefore(arr_, undefinedVal_);
+    arr_->block()->insertBefore(arr_, initLength);
 
-    // Iterate over each basic block and save the object layout of the object.
-    for (ReversePostorderIterator block = graph.rpoBegin(arr->block()); block != graph.rpoEnd(); block++) {
-        if (mir->shouldCancel("Scalar Replacement of Array"))
-            return false;
+    // Create a new block state and insert at it at the location of the new array.
+    BlockState *state = BlockState::New(alloc_, arr_, undefinedVal_, initLength);
+    startBlock_->insertAfter(arr_, state);
 
-        BlockState *state = states[block->id()];
-        if (!state) {
-            MOZ_ASSERT(!arrBlock->dominates(*block));
-            continue;
-        }
-
-        // Insert the state either at the location of the new object, or after
-        // all the phi nodes if the block has multiple predecessors.
-        if (*block == arrBlock)
-            arrBlock->insertAfter(arr, state);
-        else if (block->numPredecessors() > 1)
-            block->insertBefore(*block->begin(), state);
-        else
-            MOZ_ASSERT(state->block()->dominates(*block));
-
-        // Replace the local variable references by references to the object state.
-        ReplaceResumePointOperands(block->entryResumePoint(), arr, state);
-
-        for (MDefinitionIterator ins(*block); ins; ) {
-            switch (ins->op()) {
-              case MDefinition::Op_ArrayState: {
-                ins++;
-                continue;
-              }
-
-              case MDefinition::Op_LoadElement: {
-                MLoadElement *def = ins->toLoadElement();
-
-                // Skip other array objects.
-                MDefinition *elements = def->elements();
-                if (!elements->isElements())
-                    break;
-                if (elements->toElements()->object() != arr)
-                    break;
-
-                // Replace by the value contained at the index.
-                int32_t index;
-                MOZ_ALWAYS_TRUE(IndexOf(def, &index));
-                ins->replaceAllUsesWith(state->getElement(index));
-
-                // Remove original instruction.
-                ins = block->discardDefAt(ins);
-                if (!elements->hasLiveDefUses())
-                    elements->block()->discard(elements->toInstruction());
-                continue;
-              }
-
-              case MDefinition::Op_StoreElement: {
-                MStoreElement *def = ins->toStoreElement();
-
-                // Skip other array objects.
-                MDefinition *elements = def->elements();
-                if (!elements->isElements())
-                    break;
-                if (elements->toElements()->object() != arr)
-                    break;
-
-                // Register value of the setter in the state.
-                int32_t index;
-                MOZ_ALWAYS_TRUE(IndexOf(def, &index));
-                state = BlockState::Copy(graph.alloc(), state);
-                state->setElement(index, def->value());
-                block->insertBefore(ins->toInstruction(), state);
-
-                // Remove original instruction.
-                ins = block->discardDefAt(ins);
-                if (!elements->hasLiveDefUses())
-                    elements->block()->discard(elements->toInstruction());
-                continue;
-              }
-
-              case MDefinition::Op_SetInitializedLength: {
-                MSetInitializedLength *def = ins->toSetInitializedLength();
-
-                // Skip other array objects.
-                MDefinition *elements = def->elements();
-                if (!elements->isElements())
-                    break;
-                if (elements->toElements()->object() != arr)
-                    break;
-
-                // Replace by the new initialized length.  Note that the
-                // argument of MSetInitalizedLength is the last index and not
-                // the initialized length.  To obtain the length, we need to add
-                // 1 to it, and thus we need to create a new constant that we
-                // register in the ArrayState.
-                state = BlockState::Copy(graph.alloc(), state);
-                int32_t initLengthValue = def->index()->toConstant()->value().toInt32() + 1;
-                MConstant *initLength = MConstant::New(graph.alloc(), Int32Value(initLengthValue));
-                block->insertBefore(ins->toInstruction(), initLength);
-                block->insertBefore(ins->toInstruction(), state);
-                state->setInitializedLength(initLength);
-
-                // Remove original instruction.
-                ins = block->discardDefAt(ins);
-                if (!elements->hasLiveDefUses())
-                    elements->block()->discard(elements->toInstruction());
-                continue;
-              }
-
-              case MDefinition::Op_InitializedLength: {
-                MInitializedLength *def = ins->toInitializedLength();
-
-                // Skip other array objects.
-                MDefinition *elements = def->elements();
-                if (!elements->isElements())
-                    break;
-                if (elements->toElements()->object() != arr)
-                    break;
-
-                // Replace by the value of the length.
-                ins->replaceAllUsesWith(state->initializedLength());
-
-                // Remove original instruction.
-                ins = block->discardDefAt(ins);
-                if (!elements->hasLiveDefUses())
-                    elements->block()->discard(elements->toInstruction());
-                continue;
-              }
-
-              case MDefinition::Op_ArrayLength: {
-                MArrayLength *def = ins->toArrayLength();
-
-                // Skip other array objects.
-                MDefinition *elements = def->elements();
-                if (!elements->isElements())
-                    break;
-                if (elements->toElements()->object() != arr)
-                    break;
-
-                // Replace by the value of the length.
-                if (!length) {
-                    length = MConstant::New(graph.alloc(), Int32Value(state->numElements()));
-                    arrBlock->insertBefore(arr, length);
-                }
-                ins->replaceAllUsesWith(length);
-
-                // Remove original instruction.
-                ins = block->discardDefAt(ins);
-                if (!elements->hasLiveDefUses())
-                    elements->block()->discard(elements->toInstruction());
-                continue;
-              }
-
-              default:
-                break;
-            }
-
-            // Replace the local variable references by references to the object state.
-            if (ins->isInstruction())
-                ReplaceResumePointOperands(ins->toInstruction()->resumePoint(), arr, state);
-
-            ins++;
-        }
-
-        // For each successor, copy/merge the current state as being the initial
-        // state of the successor block.
-        for (size_t s = 0; s < block->numSuccessors(); s++) {
-            MBasicBlock *succ = block->getSuccessor(s);
-            BlockState *succState = states[succ->id()];
-
-            // When a block has no state yet, create a empty one for the
-            // successor.
-            if (!succState) {
-                // If the successor is not dominated then the object cannot flow
-                // in this basic block without a Phi.  We know that no Phi exist
-                // in non-dominated successors as the conservative escaped
-                // analysis fails otherwise.  Such condition can succeed if the
-                // successor is a join at the end of a if-block and the object
-                // only exists within the branch.
-                if (!arrBlock->dominates(succ))
-                    continue;
-
-                if (succ->numPredecessors() > 1) {
-                    succState = states[succ->id()] = BlockState::Copy(graph.alloc(), state);
-                    size_t numPreds = succ->numPredecessors();
-                    for (size_t index = 0; index < state->numElements(); index++) {
-                        MPhi *phi = MPhi::New(graph.alloc());
-                        if (!phi->reserveLength(numPreds))
-                            return false;
-
-                        // Fill the input of the successors Phi with undefined
-                        // values, and each block later fills the Phi inputs.
-                        for (size_t p = 0; p < numPreds; p++)
-                            phi->addInput(undefinedVal);
-
-                        // Add Phi in the list of Phi of the basic block.
-                        succ->addPhi(phi);
-                        succState->setElement(index, phi);
-                    }
-                } else {
-                    succState = states[succ->id()] = state;
-                }
-            }
-
-            if (succ->numPredecessors() > 1) {
-                // We need to re-compute successorWithPhis as the previous EliminatePhis
-                // phase might have removed all the Phis from the successor block.
-                size_t currIndex = succ->indexForPredecessor(*block);
-                MOZ_ASSERT(succ->getPredecessor(currIndex) == *block);
-                block->setSuccessorWithPhis(succ, currIndex);
-
-                // Copy the current slot state to the predecessor index of
-                // each Phi of the same slot.
-                for (size_t index = 0; index < state->numElements(); index++) {
-                    MPhi *phi = succState->getElement(index)->toPhi();
-                    phi->replaceOperand(currIndex, state->getElement(index));
-                }
-            }
-        }
-    }
-
-    MOZ_ASSERT(!arr->hasLiveDefUses());
-    arr->setRecoveredOnBailout();
-    states.clear();
+    *pState = state;
     return true;
 }
 
+void
+ArrayMemoryView::setEntryBlockState(BlockState *state)
+{
+    state_ = state;
+}
+
+bool
+ArrayMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
+                                          BlockState **pSuccState)
+{
+    BlockState *succState = *pSuccState;
+
+    // When a block has no state yet, create an empty one for the
+    // successor.
+    if (!succState) {
+        // If the successor is not dominated then the array cannot flow
+        // in this basic block without a Phi.  We know that no Phi exist
+        // in non-dominated successors as the conservative escaped
+        // analysis fails otherwise.  Such condition can succeed if the
+        // successor is a join at the end of a if-block and the array
+        // only exists within the branch.
+        if (!startBlock_->dominates(succ))
+            return true;
+
+        // If there is only one predecessor, carry over the last state of the
+        // block to the successor.  As the block state is immutable, if the
+        // current block has multiple successors, they will share the same entry
+        // state.
+        if (succ->numPredecessors() <= 1 || !state_->numElements()) {
+            *pSuccState = state_;
+            return true;
+        }
+
+        // If we have multiple predecessors, then we allocate one Phi node for
+        // each predecessor, and create a new block state which only has phi
+        // nodes.  These would later be removed by the removal of redundant phi
+        // nodes.
+        succState = BlockState::Copy(alloc_, state_);
+        size_t numPreds = succ->numPredecessors();
+        for (size_t index = 0; index < state_->numElements(); index++) {
+            MPhi *phi = MPhi::New(alloc_);
+            if (!phi->reserveLength(numPreds))
+                return false;
+
+            // Fill the input of the successors Phi with undefined
+            // values, and each block later fills the Phi inputs.
+            for (size_t p = 0; p < numPreds; p++)
+                phi->addInput(undefinedVal_);
+
+            // Add Phi in the list of Phis of the basic block.
+            succ->addPhi(phi);
+            succState->setElement(index, phi);
+        }
+
+        // Insert the newly created block state instruction at the beginning
+        // of the successor block, after all the phi nodes.  Note that it
+        // would be captured by the entry resume point of the successor
+        // block.
+        succ->insertBefore(*succ->begin(), succState);
+        *pSuccState = succState;
+    }
+
+    if (succ->numPredecessors() > 1 && succState->numElements()) {
+        // We need to re-compute successorWithPhis as the previous EliminatePhis
+        // phase might have removed all the Phis from the successor block.
+        size_t currIndex;
+        MOZ_ASSERT(!succ->phisEmpty());
+        if (curr->successorWithPhis()) {
+            MOZ_ASSERT(curr->successorWithPhis() == succ);
+            currIndex = curr->positionInPhiSuccessor();
+        } else {
+            currIndex = succ->indexForPredecessor(curr);
+            curr->setSuccessorWithPhis(succ, currIndex);
+        }
+        MOZ_ASSERT(succ->getPredecessor(currIndex) == curr);
+
+        // Copy the current element states to the index of current block in all
+        // the Phi created during the first visit of the successor.
+        for (size_t index = 0; index < state_->numElements(); index++) {
+            MPhi *phi = succState->getElement(index)->toPhi();
+            phi->replaceOperand(currIndex, state_->getElement(index));
+        }
+    }
+
+    return true;
+}
+
+#ifdef DEBUG
+void
+ArrayMemoryView::assertSuccess()
+{
+    MOZ_ASSERT(!arr_->hasLiveDefUses());
+}
+#endif
+
+bool
+ArrayMemoryView::visitResumePoint(MResumePoint *rp)
+{
+    ReplaceResumePointOperands(rp, arr_, state_);
+    return true;
+}
+
+bool
+ArrayMemoryView::isArrayStateElements(MDefinition *elements)
+{
+    return elements->isElements() && elements->toElements()->object() == arr_;
+}
+
+void
+ArrayMemoryView::discardInstruction(MInstruction *ins, MDefinition *elements)
+{
+    MOZ_ASSERT(elements->isElements());
+    ins->block()->discard(ins);
+    if (!elements->hasLiveDefUses())
+        elements->block()->discard(elements->toInstruction());
+}
+
+bool
+ArrayMemoryView::visitStoreElement(MStoreElement *ins)
+{
+    // Skip other array objects.
+    MDefinition *elements = ins->elements();
+    if (!isArrayStateElements(elements))
+        return true;
+
+    // Register value of the setter in the state.
+    int32_t index;
+    MOZ_ALWAYS_TRUE(IndexOf(ins, &index));
+    state_ = BlockState::Copy(alloc_, state_);
+    state_->setElement(index, ins->value());
+    ins->block()->insertBefore(ins, state_);
+
+    // Remove original instruction.
+    discardInstruction(ins, elements);
+    return true;
+}
+
+bool
+ArrayMemoryView::visitLoadElement(MLoadElement *ins)
+{
+    // Skip other array objects.
+    MDefinition *elements = ins->elements();
+    if (!isArrayStateElements(elements))
+        return true;
+
+    // Replace by the value contained at the index.
+    int32_t index;
+    MOZ_ALWAYS_TRUE(IndexOf(ins, &index));
+    ins->replaceAllUsesWith(state_->getElement(index));
+
+    // Remove original instruction.
+    discardInstruction(ins, elements);
+    return true;
+}
+
+bool
+ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength *ins)
+{
+    // Skip other array objects.
+    MDefinition *elements = ins->elements();
+    if (!isArrayStateElements(elements))
+        return true;
+
+    // Replace by the new initialized length.  Note that the argument of
+    // MSetInitalizedLength is the last index and not the initialized length.
+    // To obtain the length, we need to add 1 to it, and thus we need to create
+    // a new constant that we register in the ArrayState.
+    state_ = BlockState::Copy(alloc_, state_);
+    int32_t initLengthValue = ins->index()->toConstant()->value().toInt32() + 1;
+    MConstant *initLength = MConstant::New(alloc_, Int32Value(initLengthValue));
+    ins->block()->insertBefore(ins, initLength);
+    ins->block()->insertBefore(ins, state_);
+    state_->setInitializedLength(initLength);
+
+    // Remove original instruction.
+    discardInstruction(ins, elements);
+    return true;
+}
+
+bool
+ArrayMemoryView::visitInitializedLength(MInitializedLength *ins)
+{
+    // Skip other array objects.
+    MDefinition *elements = ins->elements();
+    if (!isArrayStateElements(elements))
+        return true;
+
+    // Replace by the value of the length.
+    ins->replaceAllUsesWith(state_->initializedLength());
+
+    // Remove original instruction.
+    discardInstruction(ins, elements);
+    return true;
+}
+
+bool
+ArrayMemoryView::visitArrayLength(MArrayLength *ins)
+{
+    // Skip other array objects.
+    MDefinition *elements = ins->elements();
+    if (!isArrayStateElements(elements))
+        return true;
+
+    // Replace by the value of the length.
+    if (!length_) {
+        length_ = MConstant::New(alloc_, Int32Value(state_->numElements()));
+        arr_->block()->insertBefore(arr_, length_);
+    }
+    ins->replaceAllUsesWith(length_);
+
+    // Remove original instruction.
+    discardInstruction(ins, elements);
+    return true;
+}
 
 bool
 ScalarReplacement(MIRGenerator *mir, MIRGraph &graph)
 {
     EmulateStateOf<ObjectMemoryView> replaceObject(mir, graph);
-    ArrayTrait::GraphState arrayStates;
+    EmulateStateOf<ArrayMemoryView> replaceArray(mir, graph);
     bool addedPhi = false;
 
     for (ReversePostorderIterator block = graph.rpoBegin(); block != graph.rpoEnd(); block++) {
@@ -913,8 +962,10 @@ ScalarReplacement(MIRGenerator *mir, MIRGraph &graph)
             }
 
             if (ins->isNewArray() && !IsArrayEscaped(*ins)) {
-                if (!ScalarReplacementOfArray(mir, graph, arrayStates, *ins))
+                ArrayMemoryView view(graph.alloc(), *ins);
+                if (!replaceArray.run(view))
                     return false;
+                view.assertSuccess();
                 addedPhi = true;
                 continue;
             }
@@ -926,6 +977,7 @@ ScalarReplacement(MIRGenerator *mir, MIRGraph &graph)
         // not directly captured by any resume point but only by the MDefinition
         // state. The conservative observability only focuses on Phis which are
         // not used as resume points operands.
+        AssertExtendedGraphCoherency(graph);
         if (!EliminatePhis(mir, graph, ConservativeObservability))
             return false;
     }
