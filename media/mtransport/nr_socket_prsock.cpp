@@ -519,8 +519,8 @@ int NrSocket::sendto(const void *msg, size_t len,
 
     // Tolerate rate of 8k/sec, for one second.
     static SimpleTokenBucket burst(16384*1, 16384);
-    // Tolerate rate of 3.6k/sec over twenty seconds.
-    static SimpleTokenBucket sustained(3686*20, 3686);
+    // Tolerate rate of 7.2k/sec over twenty seconds.
+    static SimpleTokenBucket sustained(7372*20, 7372);
 
     // Check number of tokens in each bucket.
     if (burst.getTokens(UINT32_MAX) < len) {
