@@ -203,7 +203,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)
     uint64_t Available(); \
     virtual nsresult ReadSegments(nsAHttpSegmentReader *, uint32_t, uint32_t *); \
     virtual nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *); \
-    void     Close(nsresult reason);                                    \
+    virtual void Close(nsresult reason);                                \
     nsHttpConnectionInfo *ConnectionInfo();                             \
     void     SetProxyConnectFailed();                                   \
     virtual nsHttpRequestHead *RequestHead();                                   \
