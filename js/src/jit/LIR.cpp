@@ -408,7 +408,7 @@ PrintUse(char *buf, size_t size, const LUse *use)
         JS_snprintf(buf, size, "v%d:**", use->virtualRegister());
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("invalid use policy");
+        MOZ_CRASH("invalid use policy");
     }
 }
 
@@ -441,7 +441,7 @@ LAllocation::toString() const
         PrintUse(buf, sizeof(buf), toUse());
         return buf;
       default:
-        MOZ_ASSUME_UNREACHABLE("what?");
+        MOZ_CRASH("what?");
     }
 }
 #endif // DEBUG

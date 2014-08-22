@@ -314,7 +314,7 @@ class JitRuntime
         switch (mode) {
           case SequentialExecution: return bailoutHandler_;
           case ParallelExecution:   return parallelBailoutHandler_;
-          default:                  MOZ_ASSUME_UNREACHABLE("No such execution mode");
+          default:                  MOZ_CRASH("No such execution mode");
         }
     }
 
@@ -332,7 +332,7 @@ class JitRuntime
         switch (mode) {
           case SequentialExecution: return argumentsRectifier_;
           case ParallelExecution:   return parallelArgumentsRectifier_;
-          default:                  MOZ_ASSUME_UNREACHABLE("No such execution mode");
+          default:                  MOZ_CRASH("No such execution mode");
         }
     }
 
@@ -510,7 +510,7 @@ class JitCompartment
         switch (mode) {
           case SequentialExecution: return stringConcatStub_;
           case ParallelExecution:   return parallelStringConcatStub_;
-          default:                  MOZ_ASSUME_UNREACHABLE("No such execution mode");
+          default:                  MOZ_CRASH("No such execution mode");
         }
     }
 };

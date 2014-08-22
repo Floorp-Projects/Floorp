@@ -484,7 +484,7 @@ CodeGeneratorX86::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
         label = masm.movapsWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected type in visitAsmJSLoadGlobalVar");
+        MOZ_CRASH("unexpected type in visitAsmJSLoadGlobalVar");
     }
     masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
     return true;
@@ -518,7 +518,7 @@ CodeGeneratorX86::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
         label = masm.movapsWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected type in visitAsmJSStoreGlobalVar");
+        MOZ_CRASH("unexpected type in visitAsmJSStoreGlobalVar");
     }
     masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
     return true;
