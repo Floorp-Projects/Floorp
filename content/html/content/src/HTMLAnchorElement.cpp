@@ -199,7 +199,7 @@ HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
   }
 
   // cannot focus links if there is no link handler
-  nsIDocument* doc = GetCurrentDoc();
+  nsIDocument* doc = GetComposedDoc();
   if (doc) {
     nsIPresShell* presShell = doc->GetShell();
     if (presShell) {

@@ -801,7 +801,7 @@ nsListBoxBodyFrame::ScrollToIndex(int32_t aRowIndex)
   // This change has to happen immediately.
   // Flush any pending reflow commands.
   // XXXbz why, exactly?
-  mContent->GetDocument()->FlushPendingNotifications(Flush_Layout);
+  mContent->GetComposedDoc()->FlushPendingNotifications(Flush_Layout);
 
   return NS_OK;
 }
@@ -874,7 +874,7 @@ nsListBoxBodyFrame::DoInternalPositionChanged(bool aUp, int32_t aDelta)
   PRTime start = PR_Now();
 
   nsWeakFrame weakThis(this);
-  mContent->GetDocument()->FlushPendingNotifications(Flush_Layout);
+  mContent->GetComposedDoc()->FlushPendingNotifications(Flush_Layout);
   if (!weakThis.IsAlive()) {
     return NS_OK;
   }

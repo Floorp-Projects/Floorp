@@ -453,7 +453,7 @@ HTMLBodyElement::GetAssociatedEditor()
   }
 
   // For designmode, try to get document's editor
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = GetPresContext(eForComposedDoc);
   if (!presContext) {
     return nullptr;
   }

@@ -78,7 +78,7 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content) {
-    nsCOMPtr<nsIDocument> doc = content->GetDocument();
+    nsCOMPtr<nsIDocument> doc = content->GetComposedDoc();
     if (doc) {
       nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc->GetSubDocumentFor(content)));
 

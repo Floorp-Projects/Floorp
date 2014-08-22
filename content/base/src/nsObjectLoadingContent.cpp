@@ -322,7 +322,7 @@ nsPluginCrashedEvent::Run()
   LOG(("OBJLC [%p]: Firing plugin crashed event\n",
        mContent.get()));
 
-  nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
+  nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
   if (!doc) {
     NS_WARNING("Couldn't get document for PluginCrashed event!");
     return NS_OK;

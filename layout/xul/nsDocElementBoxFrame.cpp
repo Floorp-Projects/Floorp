@@ -83,7 +83,7 @@ nsDocElementBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 nsresult
 nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
-  nsIDocument* doc = mContent->GetDocument();
+  nsIDocument* doc = mContent->GetComposedDoc();
   if (!doc) {
     // The page is currently being torn down.  Why bother.
     return NS_ERROR_FAILURE;

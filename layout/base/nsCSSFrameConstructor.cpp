@@ -6687,7 +6687,7 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
   bool hasInsertion = false;
   if (!multiple) {
     // XXXbz XBL2/sXBL issue
-    nsIDocument* document = aStartChild->GetDocument();
+    nsIDocument* document = aStartChild->GetComposedDoc();
     // XXXbz how would |document| be null here?
     if (document && aStartChild->GetXBLInsertionParent()) {
       hasInsertion = true;
