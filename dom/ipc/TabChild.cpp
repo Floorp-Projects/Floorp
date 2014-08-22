@@ -34,6 +34,7 @@
 #include "mozilla/unused.h"
 #include "mozIApplication.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsEmbedCID.h"
 #include <algorithm>
 #ifdef MOZ_CRASHREPORTER
@@ -1873,6 +1874,15 @@ TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
     if (scrollbarOwner) {
       scrollbarOwner->ScrollbarActivityStarted();
     }
+
+    nsCOMPtr<nsIDocument> doc = GetDocument();
+    if (doc) {
+      nsCOMPtr<nsIDocShell> docshell(doc->GetDocShell());
+      if (docshell) {
+        nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
+        nsdocshell->NotifyAsyncPanZoomStarted();
+      }
+    }
     break;
   }
   case APZStateChange::TransformEnd:
@@ -1881,6 +1891,15 @@ TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
     nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
     if (scrollbarOwner) {
       scrollbarOwner->ScrollbarActivityStopped();
+    }
+
+    nsCOMPtr<nsIDocument> doc = GetDocument();
+    if (doc) {
+      nsCOMPtr<nsIDocShell> docshell(doc->GetDocShell());
+      if (docshell) {
+        nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
+        nsdocshell->NotifyAsyncPanZoomStopped();
+      }
     }
     break;
   }

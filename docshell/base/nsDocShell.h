@@ -243,6 +243,13 @@ public:
     }
 
     nsresult HistoryTransactionRemoved(int32_t aIndex);
+
+    // Notify Scroll observers when an async panning/zooming transform
+    // has started being applied
+    void NotifyAsyncPanZoomStarted();
+    // Notify Scroll observers when an async panning/zooming transform
+    // is no longer applied
+    void NotifyAsyncPanZoomStopped();
 protected:
     // Object Management
     virtual ~nsDocShell();
