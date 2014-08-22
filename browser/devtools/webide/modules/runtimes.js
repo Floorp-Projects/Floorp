@@ -126,11 +126,13 @@ let gRemoteRuntime = {
       return promise.reject();
     }
     let ret = {value: connection.host + ":" + connection.port};
-    Services.prompt.prompt(win,
-                           Strings.GetStringFromName("remote_runtime_promptTitle"),
-                           Strings.GetStringFromName("remote_runtime_promptMessage"),
-                           ret, null, {});
+    let title = Strings.GetStringFromName("remote_runtime_promptTitle");
+    let message = Strings.GetStringFromName("remote_runtime_promptMessage");
+    let ok = Services.prompt.prompt(win, title, message, ret, null, {});
     let [host,port] = ret.value.split(":");
+    if (!ok) {
+      return promise.reject({canceled: true});
+    }
     if (!host || !port) {
       return promise.reject();
     }
