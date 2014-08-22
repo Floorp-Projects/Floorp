@@ -1,0 +1,7 @@
+.popup-notification-item-title[popupid="bad-content"] {
+  font-weight: bold;
+}
+
+.popup-notification-item-message[popupid="bad-content"] {
+  width: 17em;
+}
