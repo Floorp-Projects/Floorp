@@ -20,10 +20,6 @@ public:
   virtual ~RenderFrameChild() {}
 
   void Destroy();
-
-protected:
-  virtual PLayerTransactionChild* AllocPLayerTransactionChild() MOZ_OVERRIDE;
-  virtual bool DeallocPLayerTransactionChild(PLayerTransactionChild* aLayers) MOZ_OVERRIDE;
 };
 
 } // namespace layout

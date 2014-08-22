@@ -517,8 +517,6 @@ private:
     // call this during Init().
     void NotifyTabContextUpdated();
 
-    bool UseDirectCompositor();
-
     void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     enum FrameScriptLoading { DONT_LOAD_SCRIPTS, DEFAULT_LOAD_SCRIPTS };

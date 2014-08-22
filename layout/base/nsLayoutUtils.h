@@ -663,23 +663,6 @@ public:
                                        nsIWidget* aWidget, nsIntPoint aPt,
                                        nsView* aView);
 
-  /**
-   * Find IDs corresponding to a scrollable content element in the child process.
-   * In correspondence with the shadow layer tree, you can use this to perform a
-   * hit test that corresponds to a specific shadow layer that you can then perform
-   * transformations on to do parent-side scrolling.
-   *
-   * @param aFrame The root frame of a stack context
-   * @param aTarget The rect to hit test relative to the frame origin
-   * @param aOutIDs All found IDs are added here
-   * @param aIgnoreRootScrollFrame a boolean to control if the display list
-   *        builder should ignore the root scroll frame
-   */
-  static nsresult GetRemoteContentIds(nsIFrame* aFrame,
-                                     const nsRect& aTarget,
-                                     nsTArray<ViewID> &aOutIDs,
-                                     bool aIgnoreRootScrollFrame);
-
   enum FrameForPointFlags {
     /**
      * When set, paint suppression is ignored, so we'll return non-root page
