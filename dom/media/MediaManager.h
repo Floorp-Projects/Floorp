@@ -557,9 +557,7 @@ public:
 
     return mActiveWindows.Get(aWindowId);
   }
-  void RemoveWindowID(uint64_t aWindowId) {
-    mActiveWindows.Remove(aWindowId);
-  }
+  void RemoveWindowID(uint64_t aWindowId);
   bool IsWindowStillActive(uint64_t aWindowId) {
     return !!GetWindowListeners(aWindowId);
   }
