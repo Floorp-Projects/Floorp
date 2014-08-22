@@ -2301,7 +2301,8 @@ bool
 XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj,
                        JS::Handle<jsid> id,
-                       JS::MutableHandle<JSPropertyDescriptor> desc);
+                       JS::MutableHandle<JSPropertyDescriptor> desc,
+                       bool& cacheOnHolder);
 
 /**
  * This resolves operations, attributes and constants of the interfaces for obj.
@@ -2313,7 +2314,8 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 bool
 XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           JS::Handle<JSObject*> obj,
-                          JS::Handle<jsid> id, JS::MutableHandle<JSPropertyDescriptor> desc);
+                          JS::Handle<jsid> id, JS::MutableHandle<JSPropertyDescriptor> desc,
+                          bool& cacheOnHolder);
 
 /**
  * Define a property on obj through an Xray wrapper.
