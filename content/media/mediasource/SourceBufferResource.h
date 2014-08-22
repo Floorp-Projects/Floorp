@@ -18,6 +18,18 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nscore.h"
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* GetMediaSourceLog();
+extern PRLogModuleInfo* GetMediaSourceAPILog();
+
+#define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#else
+#define MSE_DEBUG(...)
+#endif
+
+#define UNIMPLEMENTED() MSE_DEBUG("SourceBufferResource(%p): UNIMPLEMENTED FUNCTION at line %d", this, __LINE__)
 
 class nsIStreamListener;
 
@@ -37,8 +49,8 @@ public:
   SourceBufferResource(nsIPrincipal* aPrincipal,
                        const nsACString& aType);
   virtual nsresult Close() MOZ_OVERRIDE;
-  virtual void Suspend(bool aCloseImmediately) MOZ_OVERRIDE {}
-  virtual void Resume() MOZ_OVERRIDE {}
+  virtual void Suspend(bool aCloseImmediately) MOZ_OVERRIDE { UNIMPLEMENTED(); }
+  virtual void Resume() MOZ_OVERRIDE { UNIMPLEMENTED(); }
 
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE
   {
@@ -47,29 +59,30 @@ public:
 
   virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) MOZ_OVERRIDE
   {
+    UNIMPLEMENTED();
     return nullptr;
   }
 
-  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) MOZ_OVERRIDE {}
-  virtual void SetPlaybackRate(uint32_t aBytesPerSecond) MOZ_OVERRIDE {}
+  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) MOZ_OVERRIDE { UNIMPLEMENTED(); }
+  virtual void SetPlaybackRate(uint32_t aBytesPerSecond) MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
   virtual nsresult Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE;
-  virtual void StartSeekingForMetadata() MOZ_OVERRIDE { }
-  virtual void EndSeekingForMetadata() MOZ_OVERRIDE {}
+  virtual void StartSeekingForMetadata() MOZ_OVERRIDE { UNIMPLEMENTED(); }
+  virtual void EndSeekingForMetadata() MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual int64_t Tell() MOZ_OVERRIDE { return mOffset; }
-  virtual void Pin() MOZ_OVERRIDE {}
-  virtual void Unpin() MOZ_OVERRIDE {}
-  virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { *aIsReliable = false; return 0; }
+  virtual void Pin() MOZ_OVERRIDE { UNIMPLEMENTED(); }
+  virtual void Unpin() MOZ_OVERRIDE { UNIMPLEMENTED(); }
+  virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { UNIMPLEMENTED(); *aIsReliable = false; return 0; }
   virtual int64_t GetLength() MOZ_OVERRIDE { return mInputBuffer.GetLength(); }
   virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE { return GetLength() == aOffset ? -1 : aOffset; }
   virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE { return GetLength(); }
-  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { return false; }
-  virtual bool IsSuspendedByCache() MOZ_OVERRIDE { return false; }
-  virtual bool IsSuspended() MOZ_OVERRIDE { return false; }
+  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
+  virtual bool IsSuspendedByCache() MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
+  virtual bool IsSuspended() MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) MOZ_OVERRIDE;
-  virtual bool IsTransportSeekable() MOZ_OVERRIDE { return true; }
-  virtual nsresult Open(nsIStreamListener** aStreamListener) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual bool IsTransportSeekable() MOZ_OVERRIDE { UNIMPLEMENTED(); return true; }
+  virtual nsresult Open(nsIStreamListener** aStreamListener) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
 
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) MOZ_OVERRIDE
   {
@@ -134,4 +147,7 @@ private:
 };
 
 } // namespace mozilla
+
+#undef UNIMPLEMENTED
+
 #endif /* MOZILLA_SOURCEBUFFERRESOURCE_H_ */

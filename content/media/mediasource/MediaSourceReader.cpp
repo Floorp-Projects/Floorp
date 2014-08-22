@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "MediaSourceReader.h"
 
+#include "prlog.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "DecoderTraits.h"
 #include "MediaDataDecodedListener.h"
@@ -12,7 +13,7 @@
 #include "MediaSource.h"
 #include "MediaSourceDecoder.h"
 #include "MediaSourceUtils.h"
-#include "SubBufferDecoder.h"
+#include "SourceBufferDecoder.h"
 
 #ifdef MOZ_FMP4
 #include "MP4Decoder.h"
@@ -217,7 +218,7 @@ MediaSourceReader::SwitchReaders(SwitchType aType)
   double decodeTarget = double(mTimeThreshold) / USECS_PER_S;
 
   for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
-    SubBufferDecoder* decoder = mDecoders[i];
+    SourceBufferDecoder* decoder = mDecoders[i];
     const MediaInfo& info = decoder->GetReader()->GetMediaInfo();
 
     nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
@@ -258,7 +259,7 @@ MediaSourceReader::SetMediaSourceDuration(double aDuration)
 
 class ReleaseDecodersTask : public nsRunnable {
 public:
-  ReleaseDecodersTask(nsTArray<nsRefPtr<SubBufferDecoder>>& aDecoders)
+  ReleaseDecodersTask(nsTArray<nsRefPtr<SourceBufferDecoder>>& aDecoders)
   {
     mDecoders.SwapElements(aDecoders);
   }
@@ -269,7 +270,7 @@ public:
   }
 
 private:
-  nsTArray<nsRefPtr<SubBufferDecoder>> mDecoders;
+  nsTArray<nsRefPtr<SourceBufferDecoder>> mDecoders;
 };
 
 void
@@ -277,7 +278,7 @@ MediaSourceReader::InitializePendingDecoders()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   for (uint32_t i = 0; i < mPendingDecoders.Length(); ++i) {
-    nsRefPtr<SubBufferDecoder> decoder = mPendingDecoders[i];
+    nsRefPtr<SourceBufferDecoder> decoder = mPendingDecoders[i];
     MediaDecoderReader* reader = decoder->GetReader();
     MSE_DEBUG("MediaSourceReader(%p): Initializing subdecoder %p reader %p",
               this, decoder.get(), reader);
@@ -339,12 +340,12 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder)
   return DecoderTraits::CreateReader(aType, aDecoder);
 }
 
-already_AddRefed<SubBufferDecoder>
+already_AddRefed<SourceBufferDecoder>
 MediaSourceReader::CreateSubDecoder(const nsACString& aType)
 {
   MOZ_ASSERT(GetTaskQueue());
-  nsRefPtr<SubBufferDecoder> decoder =
-    new SubBufferDecoder(new SourceBufferResource(nullptr, aType), mDecoder);
+  nsRefPtr<SourceBufferDecoder> decoder =
+    new SourceBufferDecoder(new SourceBufferResource(nullptr, aType), mDecoder);
   nsRefPtr<MediaDecoderReader> reader(CreateReaderForType(aType, decoder));
   if (!reader) {
     return nullptr;
@@ -433,12 +434,14 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   ResetDecode();
   if (mAudioReader) {
     nsresult rv = mAudioReader->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
+    MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p rv=%xf", this, mAudioReader.get(), rv);
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
   if (mVideoReader) {
     nsresult rv = mVideoReader->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
+    MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p rv=%xf", this, mVideoReader.get(), rv);
     if (NS_FAILED(rv)) {
       return rv;
     }
