@@ -10,6 +10,7 @@
 #ifndef MOZILLA_IMAGELIB_SURFACECACHE_H_
 #define MOZILLA_IMAGELIB_SURFACECACHE_H_
 
+#include "mozilla/Maybe.h"          // for Maybe
 #include "mozilla/HashFunctions.h"  // for HashGeneric and AddToHash
 #include "gfxPoint.h"               // for gfxSize
 #include "nsCOMPtr.h"               // for already_AddRefed
@@ -46,28 +47,19 @@ class SurfaceKey
   typedef gfx::IntSize IntSize;
 public:
   SurfaceKey(const IntSize& aSize,
-             const gfxSize aScale,
-             const SVGImageContext* aSVGContext,
+             const Maybe<SVGImageContext>& aSVGContext,
              const float aAnimationTime,
              const uint32_t aFlags)
     : mSize(aSize)
-    , mScale(aScale)
-    , mSVGContextIsValid(aSVGContext != nullptr)
+    , mSVGContext(aSVGContext)
     , mAnimationTime(aAnimationTime)
     , mFlags(aFlags)
-  {
-    // XXX(seth): Would love to use Maybe<T> here, but see bug 913586.
-    if (mSVGContextIsValid)
-      mSVGContext = *aSVGContext;
-  }
+  { }
 
   bool operator==(const SurfaceKey& aOther) const
   {
-    bool matchesSVGContext = aOther.mSVGContextIsValid == mSVGContextIsValid &&
-                             (!mSVGContextIsValid || aOther.mSVGContext == mSVGContext);
     return aOther.mSize == mSize &&
-           aOther.mScale == mScale &&
-           matchesSVGContext &&
+           aOther.mSVGContext == mSVGContext &&
            aOther.mAnimationTime == mAnimationTime &&
            aOther.mFlags == mFlags;
   }
@@ -75,8 +67,7 @@ public:
   uint32_t Hash() const
   {
     uint32_t hash = HashGeneric(mSize.width, mSize.height);
-    hash = AddToHash(hash, mScale.width, mScale.height);
-    hash = AddToHash(hash, mSVGContextIsValid, mSVGContext.Hash());
+    hash = AddToHash(hash, mSVGContext.map(HashSIC).valueOr(0));
     hash = AddToHash(hash, mAnimationTime, mFlags);
     return hash;
   }
@@ -84,12 +75,14 @@ public:
   IntSize Size() const { return mSize; }
 
 private:
-  IntSize         mSize;
-  gfxSize         mScale;
-  SVGImageContext mSVGContext;
-  bool            mSVGContextIsValid;
-  float           mAnimationTime;
-  uint32_t        mFlags;
+  static uint32_t HashSIC(const SVGImageContext& aSIC) {
+    return aSIC.Hash();
+  }
+
+  IntSize                mSize;
+  Maybe<SVGImageContext> mSVGContext;
+  float                  mAnimationTime;
+  uint32_t               mFlags;
 };
 
 /**

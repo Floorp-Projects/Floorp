@@ -16,6 +16,8 @@
 namespace mozilla {
 namespace image {
 
+class ImageRegion;
+
 class imgFrame
 {
   typedef gfx::Color Color;
@@ -31,10 +33,9 @@ public:
   nsresult Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, SurfaceFormat aFormat, uint8_t aPaletteDepth = 0);
   nsresult Optimize();
 
-  bool Draw(gfxContext *aContext, GraphicsFilter aFilter,
-            const gfxMatrix &aUserSpaceToImageSpace, const gfxRect& aFill,
-            const nsIntMargin &aPadding, const nsIntRect &aSubimage,
-            uint32_t aImageFlags = imgIContainer::FLAG_NONE);
+  bool Draw(gfxContext* aContext, const ImageRegion& aRegion,
+            const nsIntMargin& aPadding, GraphicsFilter aFilter,
+            uint32_t aImageFlags);
 
   nsresult ImageUpdated(const nsIntRect &aUpdateRect);
 
@@ -111,12 +112,10 @@ private: // methods
   SurfaceWithFormat SurfaceForDrawing(bool               aDoPadding,
                                       bool               aDoPartialDecode,
                                       bool               aDoTile,
+                                      gfxContext*        aContext,
                                       const nsIntMargin& aPadding,
-                                      gfxMatrix&         aUserSpaceToImageSpace,
-                                      gfxRect&           aFill,
-                                      gfxRect&           aSubimage,
-                                      gfxRect&           aSourceRect,
                                       gfxRect&           aImageRect,
+                                      ImageRegion&       aRegion,
                                       SourceSurface*     aSurface);
 
 private: // data

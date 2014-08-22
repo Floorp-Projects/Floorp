@@ -330,7 +330,7 @@ public:
 
 private:
   // Initiates an HQ scale for the given frame, if possible.
-  void RequestScale(imgFrame* aFrame, gfxSize aScale);
+  void RequestScale(imgFrame* aFrame, nsIntSize aScale);
 
   already_AddRefed<imgStatusTracker> CurrentStatusTracker()
   {
@@ -558,10 +558,9 @@ private:
 
   bool DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                                     gfxContext *aContext,
+                                    const nsIntSize& aSize,
+                                    const ImageRegion& aRegion,
                                     GraphicsFilter aFilter,
-                                    const gfxMatrix &aUserSpaceToImageSpace,
-                                    const gfxRect &aFill,
-                                    const nsIntRect &aSubimage,
                                     uint32_t aFlags);
 
   TemporaryRef<gfx::SourceSurface> CopyFrame(uint32_t aWhichFrame,
@@ -739,8 +738,8 @@ private: // data
   bool     IsDecodeFinished();
   TimeStamp mDrawStartTime;
 
-  inline bool CanQualityScale(const gfxSize& scale);
-  inline bool CanScale(GraphicsFilter aFilter, gfxSize aScale, uint32_t aFlags);
+  inline bool CanQualityScale(const gfx::Size& scale);
+  inline bool CanScale(GraphicsFilter aFilter, gfx::Size aScale, uint32_t aFlags);
 
   struct ScaleResult
   {
@@ -748,7 +747,7 @@ private: // data
      : status(SCALE_INVALID)
     {}
 
-    gfxSize scale;
+    nsIntSize scaledSize;
     nsAutoPtr<imgFrame> frame;
     ScaleStatus status;
   };
