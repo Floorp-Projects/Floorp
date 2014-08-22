@@ -135,6 +135,9 @@ exports.dirname = dirname;
  *  var path = OS.Path.join(tmpDir, "foo", "bar");
  *
  * Under Windows, this will return "$TMP\foo\bar".
+ *
+ * Empty components are ignored, i.e. `OS.Path.join("foo", "", "bar)` is the
+ * same as `OS.Path.join("foo", "bar")`.
  */
 let join = function(...path) {
   let paths = [];
@@ -143,6 +146,9 @@ let join = function(...path) {
   for (let subpath of path) {
     if (subpath == null) {
       throw new TypeError("invalid path component");
+    }
+    if (subpath == "") {
+      continue;
     }
     let drive = this.winGetDrive(subpath);
     if (drive) {

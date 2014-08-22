@@ -432,9 +432,35 @@ nsNSSSocketInfo::JoinConnection(const nsACString& npnProtocol,
     return NS_OK;
   }
 
-  if (CERT_VerifyCertName(nssCert, PromiseFlatCString(hostname).get()) !=
-      SECSuccess) {
-      return NS_OK;
+  // Attempt to verify the joinee's certificate using the joining hostname.
+  // This ensures that any hostname-specific verification logic (e.g. key
+  // pinning) is satisfied by the joinee's certificate chain.
+  // This verification only uses local information; since we're on the network
+  // thread, we would be blocking on ourselves if we attempted any network i/o.
+  // TODO(bug 1056935): The certificate chain built by this verification may be
+  // different than the certificate chain originally built during the joined
+  // connection's TLS handshake. Consequently, we may report a wrong and/or
+  // misleading certificate chain for HTTP transactions coalesced onto this
+  // connection. This may become problematic in the future. For example,
+  // if/when we begin relying on intermediate certificates being stored in the
+  // securityInfo of a cached HTTPS response, that cached certificate chain may
+  // actually be the wrong chain. We should consider having JoinConnection
+  // return the certificate chain built here, so that the calling Necko code
+  // can associate the correct certificate chain with the HTTP transactions it
+  // is trying to join onto this connection.
+  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  if (!certVerifier) {
+    return NS_OK;
+  }
+  nsAutoCString hostnameFlat(PromiseFlatCString(hostname));
+  CertVerifier::Flags flags = CertVerifier::FLAG_LOCAL_ONLY;
+  SECStatus rv = certVerifier->VerifySSLServerCert(nssCert, nullptr,
+                                                   mozilla::pkix::Now(),
+                                                   nullptr, hostnameFlat.get(),
+                                                   false, flags, nullptr,
+                                                   nullptr);
+  if (rv != SECSuccess) {
+    return NS_OK;
   }
 
   // All tests pass - this is joinable

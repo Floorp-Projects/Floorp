@@ -539,6 +539,196 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow, const nsAString& aScope,
   return NS_DispatchToCurrentThread(registerRunnable);
 }
 
+/*
+ * Implements the async aspects of the getRegistrations algorithm.
+ */
+class GetRegistrationsRunnable : public nsRunnable
+{
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<Promise> mPromise;
+public:
+  GetRegistrationsRunnable(nsPIDOMWindow* aWindow, Promise* aPromise)
+    : mWindow(aWindow), mPromise(aPromise)
+  { }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+
+    nsIDocument* doc = mWindow->GetExtantDoc();
+    if (!doc) {
+      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> docURI = doc->GetDocumentURI();
+    if (!docURI) {
+      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+    if (!principal) {
+      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+      return NS_OK;
+    }
+
+    nsTArray<nsRefPtr<ServiceWorkerRegistration>> array;
+
+    nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo =
+      swm->GetDomainInfo(docURI);
+
+    if (!domainInfo) {
+      mPromise->MaybeResolve(array);
+      return NS_OK;
+    }
+
+    for (uint32_t i = 0; i < domainInfo->mOrderedScopes.Length(); ++i) {
+      NS_ConvertUTF8toUTF16 scope(domainInfo->mOrderedScopes[i]);
+      nsRefPtr<ServiceWorkerRegistration> swr =
+        new ServiceWorkerRegistration(mWindow, scope);
+
+      array.AppendElement(swr);
+    }
+
+    mPromise->MaybeResolve(array);
+    return NS_OK;
+  }
+};
+
+// If we return an error code here, the ServiceWorkerContainer will
+// automatically reject the Promise.
+NS_IMETHODIMP
+ServiceWorkerManager::GetRegistrations(nsIDOMWindow* aWindow,
+                                       nsISupports** aPromise)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aWindow);
+
+  // XXXnsm Don't allow chrome callers for now, we don't support chrome
+  // ServiceWorkers.
+  MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  if (!window) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIGlobalObject> sgo = do_QueryInterface(window);
+  ErrorResult result;
+  nsRefPtr<Promise> promise = Promise::Create(sgo, result);
+  if (result.Failed()) {
+    return result.ErrorCode();
+  }
+
+  nsRefPtr<nsIRunnable> runnable =
+    new GetRegistrationsRunnable(window, promise);
+  promise.forget(aPromise);
+  return NS_DispatchToCurrentThread(runnable);
+}
+
+/*
+ * Implements the async aspects of the getRegistration algorithm.
+ */
+class GetRegistrationRunnable : public nsRunnable
+{
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<Promise> mPromise;
+  nsString mDocumentURL;
+
+public:
+  GetRegistrationRunnable(nsPIDOMWindow* aWindow, Promise* aPromise,
+                          const nsAString& aDocumentURL)
+    : mWindow(aWindow), mPromise(aPromise), mDocumentURL(aDocumentURL)
+  { }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+
+    nsIDocument* doc = mWindow->GetExtantDoc();
+    if (!doc) {
+      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> docURI = doc->GetDocumentURI();
+    if (!docURI) {
+      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), mDocumentURL, nullptr, docURI);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mPromise->MaybeReject(rv);
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+    if (!principal) {
+      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+      return NS_OK;
+    }
+
+    rv = principal->CheckMayLoad(uri, true /* report */,
+                                 false /* allowIfInheritsPrinciple */);
+    if (NS_FAILED(rv)) {
+      mPromise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+      return NS_OK;
+    }
+
+    nsRefPtr<ServiceWorkerRegistrationInfo> registration =
+      swm->GetServiceWorkerRegistrationInfo(uri);
+
+    if (!registration) {
+      mPromise->MaybeResolve(JS::UndefinedHandleValue);
+      return NS_OK;
+    }
+
+    NS_ConvertUTF8toUTF16 scope(registration->mScope);
+    nsRefPtr<ServiceWorkerRegistration> swr =
+      new ServiceWorkerRegistration(mWindow, scope);
+    mPromise->MaybeResolve(swr);
+
+    return NS_OK;
+  }
+};
+
+// If we return an error code here, the ServiceWorkerContainer will
+// automatically reject the Promise.
+NS_IMETHODIMP
+ServiceWorkerManager::GetRegistration(nsIDOMWindow* aWindow,
+                                      const nsAString& aDocumentURL,
+                                      nsISupports** aPromise)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aWindow);
+
+  // XXXnsm Don't allow chrome callers for now, we don't support chrome
+  // ServiceWorkers.
+  MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  if (!window) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIGlobalObject> sgo = do_QueryInterface(window);
+  ErrorResult result;
+  nsRefPtr<Promise> promise = Promise::Create(sgo, result);
+  if (result.Failed()) {
+    return result.ErrorCode();
+  }
+
+  nsRefPtr<nsIRunnable> runnable =
+    new GetRegistrationRunnable(window, promise, aDocumentURL);
+  promise.forget(aPromise);
+  return NS_DispatchToCurrentThread(runnable);
+}
+
 void
 ServiceWorkerManager::RejectUpdatePromiseObservers(ServiceWorkerRegistrationInfo* aRegistration,
                                                    nsresult aRv)
@@ -1290,8 +1480,6 @@ ServiceWorkerManager::AddScope(nsTArray<nsCString>& aList, const nsACString& aSc
 /* static */ nsCString
 ServiceWorkerManager::FindScopeForPath(nsTArray<nsCString>& aList, const nsACString& aPath)
 {
-  MOZ_ASSERT(aPath.FindChar('*') == -1);
-
   nsCString match;
 
   for (uint32_t i = 0; i < aList.Length(); ++i) {
@@ -1441,6 +1629,7 @@ ServiceWorkerManager::AddRegistrationEventListener(nsIURI* aDocumentURI, nsIDOME
 
   // TODO: this is very very bad:
   ServiceWorkerRegistration* registration = static_cast<ServiceWorkerRegistration*>(aListener);
+  MOZ_ASSERT(!domainInfo->mServiceWorkerRegistrations.Contains(registration));
   domainInfo->mServiceWorkerRegistrations.AppendElement(registration);
   return NS_OK;
 }
@@ -1455,6 +1644,7 @@ ServiceWorkerManager::RemoveRegistrationEventListener(nsIURI* aDocumentURI, nsID
   }
 
   ServiceWorkerRegistration* registration = static_cast<ServiceWorkerRegistration*>(aListener);
+  MOZ_ASSERT(domainInfo->mServiceWorkerRegistrations.Contains(registration));
   domainInfo->mServiceWorkerRegistrations.RemoveElement(registration);
   return NS_OK;
 }

@@ -151,6 +151,22 @@
         ]]></getter>
       </property>
 
+      <property name="formValidationAnchor" readonly="true">
+        <getter><![CDATA[
+        if (this.mCurrentTab._formValidationAnchor) {
+          return this.mCurrentTab._formValidationAnchor;
+        }
+        let stack = this.mCurrentBrowser.parentNode;
+        // Create an anchor for the form validation popup
+        const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        let formValidationAnchor = document.createElementNS(NS_XUL, "hbox");
+        formValidationAnchor.className = "form-validation-anchor";
+        formValidationAnchor.hidden = true;
+        stack.appendChild(formValidationAnchor);
+        return this.mCurrentTab._formValidationAnchor = formValidationAnchor;
+        ]]></getter>
+      </property>
+
       <method name="isFindBarInitialized">
         <parameter name="aTab"/>
         <body><![CDATA[
@@ -775,16 +791,6 @@
                   autocomplete.registerOpenPage(aLocation);
                   unifiedComplete.registerOpenPage(aLocation);
                   this.mBrowser.registeredOpenURI = aLocation;
-                }
-
-                // It's possible we've moved from a URL that we cannot load remotely
-                // to one that we can. If so, switch to a remote browser. This will
-                // cause us to re-enter this onLocationChange function, but next time,
-                // updateBrowserRemotenessByURL will return false.
-                if (gMultiProcessBrowser &&
-                    this.mTabBrowser.updateBrowserRemotenessByURL(this.mBrowser,
-                                                                  aLocation.spec)) {
-                  this.mTabBrowser.loadURIWithFlags(aLocation.spec, aFlags);
                 }
               }
 

@@ -263,7 +263,7 @@ loop.conversation = (function(OT, mozL10n) {
      */
     declineAndBlock: function() {
       navigator.mozLoop.stopAlerting();
-      var token = navigator.mozLoop.getLoopCharPref("loopToken");
+      var token = this._conversation.get("callToken");
       this._client.deleteCallUrl(token, function(error) {
         // XXX The conversation window will be closed when this cb is triggered
         // figure out if there is a better way to report the error to the user
