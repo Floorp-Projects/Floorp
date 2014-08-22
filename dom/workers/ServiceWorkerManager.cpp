@@ -556,7 +556,7 @@ ServiceWorkerManager::Register(const nsAString& aScope,
 
   nsCOMPtr<nsIGlobalObject> sgo = GetEntryGlobal();
   if (!sgo) {
-    MOZ_ASSERT("Register() should only be called from a valid entry settings object!");
+    MOZ_CRASH("Register() should only be called from a valid entry settings object!");
     return NS_ERROR_FAILURE;
   }
 
