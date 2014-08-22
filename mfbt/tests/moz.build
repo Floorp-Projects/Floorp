@@ -20,6 +20,7 @@ CPP_UNIT_TESTS += [
     'TestIntegerPrintfMacros',
     'TestMacroArgs',
     'TestMacroForEach',
+    'TestMaybe',
     'TestPair',
     'TestRefPtr',
     'TestRollingMean',
