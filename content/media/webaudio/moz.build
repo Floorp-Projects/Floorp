@@ -75,6 +75,7 @@ UNIFIED_SOURCES += [
     'AudioParam.cpp',
     'AudioProcessingEvent.cpp',
     'BiquadFilterNode.cpp',
+    'BufferDecoder.cpp',
     'ChannelMergerNode.cpp',
     'ChannelSplitterNode.cpp',
     'ConvolverNode.cpp',
