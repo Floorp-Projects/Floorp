@@ -102,16 +102,6 @@ test("new Float32Array(1)", function(a) Float32Array.prototype.subarray.call(a).
 test("new Float64Array(1)", function(a) Float64Array.prototype.subarray.call(a).toString());
 test("new Uint8ClampedArray(1)", function(a) Uint8ClampedArray.prototype.subarray.call(a).toString());
 
-test("new Int8Array(1)", function(a) Int8Array.subarray(a).toString());
-test("new Uint8Array(1)", function(a) Uint8Array.subarray(a).toString());
-test("new Int16Array(1)", function(a) Int16Array.subarray(a).toString());
-test("new Uint16Array(1)", function(a) Uint16Array.subarray(a).toString());
-test("new Int32Array(1)", function(a) Int32Array.subarray(a).toString());
-test("new Uint32Array(1)", function(a) Uint32Array.subarray(a).toString());
-test("new Float32Array(1)", function(a) Float32Array.subarray(a).toString());
-test("new Float64Array(1)", function(a) Float64Array.subarray(a).toString());
-test("new Uint8ClampedArray(1)", function(a) Uint8ClampedArray.subarray(a).toString());
-
 test("new Int8Array(1)", function(a) Int8Array.prototype.set.call(a, []));
 test("new Uint8Array(1)", function(a) Uint8Array.prototype.set.call(a, []));
 test("new Int16Array(1)", function(a) Int16Array.prototype.set.call(a, []));

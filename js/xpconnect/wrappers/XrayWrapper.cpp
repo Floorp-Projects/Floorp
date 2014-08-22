@@ -85,6 +85,7 @@ IsJSXraySupported(JSProtoKey key)
       case JSProto_Object:
       case JSProto_Array:
       case JSProto_Function:
+      case JSProto_TypedArray:
         return true;
       default:
         return false;
