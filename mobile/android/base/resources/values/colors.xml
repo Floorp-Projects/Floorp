@@ -31,6 +31,10 @@
   <!-- highlight-focused on private nav button: 10% white over background_private -->
   <color name="highlight_nav_focused_pb">#FF3F423F</color>
 
+  <!-- Onboarding start pane -->
+  <color name="onboard_start">#EAEAEA</color>
+  <color name="onboard_start_highlight">#D8D8D8</color>
+
   <!--
       Application theme colors
   -->
