@@ -51,7 +51,7 @@ UNIFIED_SOURCES += [
     'WebGLContextExtensions.cpp',
     'WebGLContextFramebufferOperations.cpp',
     'WebGLContextGL.cpp',
-    'WebGLContextLossTimer.cpp',
+    'WebGLContextLossHandler.cpp',
     'WebGLContextReporter.cpp',
     'WebGLContextState.cpp',
     'WebGLContextUtils.cpp',
