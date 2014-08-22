@@ -12,4 +12,5 @@
 
 [Pref="dom.animations-api.core.enabled"]
 interface AnimationEffect {
+  readonly attribute DOMString name;
 };
