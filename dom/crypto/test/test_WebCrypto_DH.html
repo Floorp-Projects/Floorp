@@ -177,6 +177,60 @@ TestArray.addTest(
       .then(error(that), complete(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Raw import/export of a public DH key",
+  function () {
+    var that = this;
+    var alg = {
+      name: "DH",
+      prime: tv.dh_nist.prime,
+      generator: tv.dh_nist.gen
+    };
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("raw", x);
+    }
+
+    crypto.subtle.importKey("raw", tv.dh_nist.raw, alg, true, ["deriveBits"])
+      .then(doExport)
+      .then(memcmp_complete(that, tv.dh_nist.raw), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Derive bits from an imported public and a generated private DH key",
+  function() {
+    var that = this;
+    var alg = {
+      name: "DH",
+      prime: tv.dh_nist.prime,
+      generator: tv.dh_nist.gen
+    };
+
+    var privKey;
+    function setPriv(x) { privKey = x.privateKey; }
+
+    function doImport() {
+      return crypto.subtle.importKey("raw", tv.dh_nist.raw, alg, true, ["deriveBits"]);
+    }
+
+    function doDerive(pubKey) {
+      var alg = {name: "DH", public: pubKey};
+      return crypto.subtle.deriveBits(alg, privKey, 128);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["deriveBits"])
+      .then(setPriv, error(that))
+      .then(doImport, error(that))
+      .then(doDerive, error(that))
+      .then(complete(that, function (x) {
+        return x.byteLength == 16;
+      }), error(that));
+  }
+);
 /*]]>*/</script>
 </head>
 
