@@ -89,12 +89,6 @@ OfflineObserver::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-uint32_t
-DisconnectableParent::GetAppId()
-{
-  return NECKO_UNKNOWN_APP_ID;
-}
-
 nsresult
 DisconnectableParent::OfflineNotification(nsISupports *aSubject)
 {

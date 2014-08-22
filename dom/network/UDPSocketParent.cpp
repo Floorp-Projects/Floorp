@@ -49,14 +49,7 @@ UDPSocketParent::OfflineNotification(nsISupports *aSubject)
   info->GetAppId(&targetAppId);
 
   // Obtain App ID
-  uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-  const PContentParent *content = Manager()->Manager();
-  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
-  if (browsers.Length() > 0) {
-    TabParent *tab = static_cast<TabParent*>(browsers[0]);
-    appId = tab->OwnAppId();
-  }
-
+  uint32_t appId = GetAppId();
   if (appId != targetAppId) {
     return NS_OK;
   }
@@ -67,6 +60,19 @@ UDPSocketParent::OfflineNotification(nsISupports *aSubject)
   }
 
   return NS_OK;
+}
+
+uint32_t
+UDPSocketParent::GetAppId()
+{
+  uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
+  const PContentParent *content = Manager()->Manager();
+  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
+  if (browsers.Length() > 0) {
+    TabParent *tab = static_cast<TabParent*>(browsers[0]);
+    appId = tab->OwnAppId();
+  }
+  return appId;
 }
 
 bool

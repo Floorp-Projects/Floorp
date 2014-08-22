@@ -39,6 +39,8 @@
 #include "nsIProtocolProxyService2.h"
 #include "MainThreadUtils.h"
 #include "nsIWidget.h"
+#include "nsThreadUtils.h"
+#include "mozilla/net/NeckoCommon.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -49,6 +51,7 @@
 #endif
 
 using namespace mozilla;
+using mozilla::net::IsNeckoChild;
 
 #define PORT_PREF_PREFIX           "network.security.ports."
 #define PORT_PREF(x)               PORT_PREF_PREFIX x
@@ -925,11 +928,12 @@ nsIOService::GetPrefBranch(nsIPrefBranch **result)
 }
 
 // This returns true if wifi-only apps should have connectivity.
+// Always returns false in the child process (should not depend on this method)
 static bool
 IsWifiActive()
 {
     // We don't need to do this check inside the child process
-    if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    if (IsNeckoChild()) {
         return false;
     }
 #ifdef MOZ_WIDGET_GONK
@@ -1429,7 +1433,7 @@ private:
 NS_IMETHODIMP
 nsIOService::SetAppOffline(uint32_t aAppId, int32_t aState)
 {
-    NS_ENSURE_TRUE(XRE_GetProcessType() == GeckoProcessType_Default,
+    NS_ENSURE_TRUE(!IsNeckoChild(),
                    NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(aAppId != nsIScriptSecurityManager::NO_APP_ID,
                    NS_ERROR_INVALID_ARG);
@@ -1470,6 +1474,7 @@ nsIOService::SetAppOfflineInternal(uint32_t aAppId, int32_t aState)
         }
         break;
     case nsIAppOfflineInfo::WIFI_ONLY:
+        MOZ_RELEASE_ASSERT(!IsNeckoChild());
         mAppsOfflineStatus.Put(aAppId, nsIAppOfflineInfo::WIFI_ONLY);
         if (offline && wifiActive) {
             NotifyAppOfflineStatus(aAppId, nsIAppOfflineInfo::ONLINE);
@@ -1512,6 +1517,7 @@ nsIOService::IsAppOffline(uint32_t aAppId, bool* aResult)
             *aResult = true;
             break;
         case nsIAppOfflineInfo::WIFI_ONLY:
+            MOZ_RELEASE_ASSERT(!IsNeckoChild());
             *aResult = !IsWifiActive();
             break;
         default:
