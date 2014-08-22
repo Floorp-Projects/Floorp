@@ -4,28 +4,38 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Usage: ./generate_certs.sh <path to objdir> <output directory>
+# Usage: ./generate_certs.sh <path to objdir> <output directory> [--clobber]
 # e.g. (from the root of mozilla-central)
 # `./security/manager/ssl/tests/unit/tlsserver/generate_certs.sh \
 #  obj-x86_64-unknown-linux-gnu/ \
 #  security/manager/ssl/tests/unit/tlsserver/`
 #
-# NB: This will cause the following files to be overwritten if they are in
-# the output directory:
+# The --clobber switch is optional. If specified, the existing database of
+# keys and certificates is removed and repopulated. By default, existing
+# databases are preserved and only keys and certificates that don't already
+# exist in the database are added.
+# NB: If --clobber is specified, the following files to be overwritten if they
+# are in the output directory:
 #  cert9.db, key4.db, pkcs11.txt, test-ca.der, other-test-ca.der, default-ee.der
-# NB: You must run genHPKPStaticPins.js after running this file, since its
-# output (StaticHPKPins.h) depends on default-ee.der
+# (if --clobber is not specified, then only cert9.db and key4.db are modified)
+# NB: If --clobber is specified, you must run genHPKPStaticPins.js after
+# running this file, since its output (StaticHPKPins.h) depends on
+# default-ee.der
 
 set -x
 set -e
 
-if [ $# -ne 2 ]; then
-  echo "Usage: `basename ${0}` <path to objdir> <output directory>"
+if [ $# -lt 2 ]; then
+  echo "Usage: `basename ${0}` <path to objdir> <output directory> [--clobber]"
   exit $E_BADARGS
 fi
 
 OBJDIR=${1}
 OUTPUT_DIR=${2}
+CLOBBER=0
+if [ "${3}" == "--clobber" ]; then
+  CLOBBER=1
+fi
 # Use the SQL DB so we can run tests on Android.
 DB_ARGUMENT="sql:$OUTPUT_DIR"
 RUN_MOZILLA="$OBJDIR/dist/bin/run-mozilla.sh"
@@ -58,10 +68,18 @@ if [ ! -d "$OUTPUT_DIR" ]; then
 fi
 
 if [ -f "$OUTPUT_DIR/cert9.db" -o -f "$OUTPUT_DIR/key4.db" -o -f "$OUTPUT_DIR/pkcs11.txt" ]; then
-  echo "Found pre-existing NSS DBs. Clobbering old OCSP certs."
-  rm -f "$OUTPUT_DIR/cert9.db" "$OUTPUT_DIR/key4.db" "$OUTPUT_DIR/pkcs11.txt"
+  if [ $CLOBBER -eq 1 ]; then
+    echo "Found pre-existing NSS DBs. Clobbering old certificates."
+    rm -f "$OUTPUT_DIR/cert9.db" "$OUTPUT_DIR/key4.db" "$OUTPUT_DIR/pkcs11.txt"
+    $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -N -f $PASSWORD_FILE
+  else
+    echo "Found pre-existing NSS DBs. Only generating newly added certificates."
+    echo "(re-run with --clobber to remove and regenerate old certificates)"
+  fi
+else
+  echo "No pre-existing NSS DBs found. Creating new ones."
+  $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -N -f $PASSWORD_FILE
 fi
-$RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -N -f $PASSWORD_FILE
 
 COMMON_ARGS="-v 360 -w -1 -2 -z $NOISE_FILE"
 
@@ -72,11 +90,25 @@ function export_cert {
   $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -L -n $NICKNAME -r > $OUTPUT_DIR/$DERFILE
 }
 
+# Bash doesn't actually allow return values in a sane way, so just use a
+# global variable.
+function cert_already_exists {
+  NICKNAME="${1}"
+  ALREADY_EXISTS=1
+  $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -L -n $NICKNAME || ALREADY_EXISTS=0
+}
+
 function make_CA {
   CA_RESPONSES="y\n1\ny"
   NICKNAME="${1}"
   SUBJECT="${2}"
   DERFILE="${3}"
+
+  cert_already_exists $NICKNAME
+  if [ $ALREADY_EXISTS -eq 1 ]; then
+    echo "cert \"$NICKNAME\" already exists - not regenerating it (use --clobber to force regeneration)"
+    return
+  fi
 
   echo -e "$CA_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -S \
                                                    -n $NICKNAME \
@@ -86,7 +118,7 @@ function make_CA {
   export_cert $NICKNAME $DERFILE
 }
 
-SERIALNO=1
+SERIALNO=$RANDOM
 
 function make_INT {
   INT_RESPONSES="y\n0\ny\n2\n7\nhttp://localhost:8080/\n\nn\nn\n"
@@ -94,6 +126,12 @@ function make_INT {
   SUBJECT="${2}"
   CA="${3}"
   EXTRA_ARGS="${4}"
+
+  cert_already_exists $NICKNAME
+  if [ $ALREADY_EXISTS -eq 1 ]; then
+    echo "cert \"$NICKNAME\" already exists - not regenerating it (use --clobber to force regeneration)"
+    return
+  fi
 
   echo -e "$INT_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -S \
                                                     -n $NICKNAME \
@@ -115,6 +153,12 @@ function make_EE {
   SUBJECT_ALT_NAME="${4}"
   EXTRA_ARGS="${5} ${6}"
 
+  cert_already_exists $NICKNAME
+  if [ $ALREADY_EXISTS -eq 1 ]; then
+    echo "cert \"$NICKNAME\" already exists - not regenerating it (use --clobber to force regeneration)"
+    return
+  fi
+
   echo -e "$CERT_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -S \
                                                      -n $NICKNAME \
                                                      -s "$SUBJECT" \
@@ -134,6 +178,12 @@ function make_delegated {
   SUBJECT="${2}"
   CA="${3}"
   EXTRA_ARGS="${4}"
+
+  cert_already_exists $NICKNAME
+  if [ $ALREADY_EXISTS -eq 1 ]; then
+    echo "cert \"$NICKNAME\" already exists - not regenerating it (use --clobber to force regeneration)"
+    return
+  fi
 
   echo -e "$CERT_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -S \
                                                      -n $NICKNAME \
@@ -168,9 +218,14 @@ make_EE mismatch 'CN=Mismatch Test End-entity' testCA "doesntmatch.example.com"
 make_EE selfsigned 'CN=Self-signed Test End-entity' testCA "selfsigned.example.com" "-x"
 # If the certificate 'CN=Test Intermediate' isn't loaded into memory,
 # this certificate will have an unknown issuer.
+# deletedINT is never kept in the database, so it always gets regenerated.
+# That's ok, because if unknownissuer was already in the database, it won't
+# get regenerated. Either way, deletedINT will then be removed again.
 make_INT deletedINT 'CN=Test Intermediate to delete' testCA
 make_EE unknownissuer 'CN=Test End-entity from unknown issuer' deletedINT "unknownissuer.example.com"
+
 $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -D -n deletedINT
+
 make_INT expiredINT 'CN=Expired Test Intermediate' testCA "-w -400"
 make_EE expiredissuer 'CN=Test End-entity with expired issuer' expiredINT "expiredissuer.example.com"
 NSS_ALLOW_WEAK_SIGNATURE_ALG=1 make_EE md5signature 'CN=Test End-entity with MD5 signature' testCA "md5signature.example.com" "-Z MD5"
