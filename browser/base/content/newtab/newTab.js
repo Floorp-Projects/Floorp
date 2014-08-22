@@ -48,6 +48,18 @@ function newTabString(name, args) {
 
     case "customize.blank":
       return "Blank";
+
+    case "sponsored.button":
+      return "SPONSORED";
+
+    case "sponsored.explain":
+      return "This tile is being shown to you on behalf of a Mozilla partner. You can remove it at any time by clicking the %1$S button. %2$S".replace("%1$S", args[0]).replace("%2$S", args[1]);
+
+    case "enhanced.explain":
+      return "A Mozilla partner has visually enhanced this tile, replacing the screenshot. You can turn off enhanced tiles by clicking the %1$S button for your preferences. %2$S".replace("%1$S", args[0]).replace("%2$S", args[1]);
+
+    case "learn.link":
+      return "Learn more…";
   }
 
   let stringName = "newtab." + name;
@@ -63,6 +75,8 @@ function inPrivateBrowsingMode() {
 
 const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 const XUL_NAMESPACE = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+const TILES_EXPLAIN_LINK = "https://support.mozilla.org/kb/how-do-sponsored-tiles-work";
 
 #include transformations.js
 #include page.js
