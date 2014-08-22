@@ -2,7 +2,7 @@
 // http://creativecommons.org/licenses/publicdomain/
 
 (function () {
-    var [x, y] = {"0": function () y, "1": 13};
+    var [x, y] = [function () y, 13];
     assertEq(x(), 13);
 })();
 

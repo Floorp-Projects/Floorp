@@ -26,7 +26,7 @@ function test()
     var [a, b, [c0, c1]] = [x, x, x];
   }
 
-  expect = 'TypeError: (intermediate value)[2] is null';
+  expect = 'TypeError: (intermediate value)[\'@@iterator\'](...).next(...).value is null';
   actual = 'No Error';
   try
   {

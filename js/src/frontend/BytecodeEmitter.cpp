@@ -3026,9 +3026,14 @@ EmitDestructuringDecls(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp prologOp
         for (ParseNode *element = pattern->pn_head; element; element = element->pn_next) {
             if (element->isKind(PNK_ELISION))
                 continue;
+            ParseNode *target = element;
+            if (element->isKind(PNK_SPREAD)) {
+                JS_ASSERT(element->pn_kid->isKind(PNK_NAME));
+                target = element->pn_kid;
+            }
             DestructuringDeclEmitter emitter =
-                element->isKind(PNK_NAME) ? EmitDestructuringDecl : EmitDestructuringDecls;
-            if (!emitter(cx, bce, prologOp, element))
+                target->isKind(PNK_NAME) ? EmitDestructuringDecl : EmitDestructuringDecls;
+            if (!emitter(cx, bce, prologOp, target))
                 return false;
         }
         return true;
@@ -3070,6 +3075,8 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
     // destructuring initialiser-form, call ourselves to handle it, then pop
     // the matched value. Otherwise emit an lvalue bytecode sequence followed
     // by an assignment op.
+    if (pn->isKind(PNK_SPREAD))
+        pn = pn->pn_kid;
     if (pn->isKind(PNK_ARRAY) || pn->isKind(PNK_OBJECT)) {
         if (!EmitDestructuringOpsHelper(cx, bce, pn, emitOption))
             return false;
@@ -3187,6 +3194,28 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
     return true;
 }
 
+static bool EmitSpread(ExclusiveContext *cx, BytecodeEmitter *bce);
+static bool EmitIterator(ExclusiveContext *cx, BytecodeEmitter *bce);
+
+/**
+ * EmitIteratorNext will pop iterator from the top of the stack.
+ * It will push the result of |.next()| onto the stack.
+ */
+static bool
+EmitIteratorNext(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn=nullptr)
+{
+    if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ... ITER ITER
+        return false;
+    if (!EmitAtomOp(cx, cx->names().next, JSOP_CALLPROP, bce)) // ... ITER NEXT
+        return false;
+    if (Emit1(cx, bce, JSOP_SWAP) < 0)                         // ... NEXT ITER
+        return false;
+    if (EmitCall(cx, bce, JSOP_CALL, 0, pn) < 0)               // ... RESULT
+        return false;
+    CheckTypeSet(cx, bce, JSOP_CALL);
+    return true;
+}
+
 /*
  * Recursive helper for EmitDestructuringOps.
  * EmitDestructuringOpsHelper assumes the to-be-destructured value has been
@@ -3206,9 +3235,9 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
 {
     JS_ASSERT(emitOption != DefineVars);
 
-    unsigned index;
     ParseNode *pn2, *pn3;
     bool doElemOp;
+    bool needToPopIterator = false;
 
 #ifdef DEBUG
     int stackDepth = bce->stackDepth;
@@ -3217,26 +3246,33 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
     JS_ASSERT(pn->isKind(PNK_ARRAY) || pn->isKind(PNK_OBJECT));
 #endif
 
-    index = 0;
-    for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-        /* Duplicate the value being destructured to use as a reference base. */
-        if (Emit1(cx, bce, JSOP_DUP) < 0)
-            return false;
-
-        /*
-         * Now push the property name currently being matched, which is either
-         * the array initialiser's current index, or the current property name
-         * "label" on the left of a colon in the object initialiser.  Set pn3
-         * to the lvalue node, which is in the value-initializing position.
-         */
-        doElemOp = true;
-        if (pn->isKind(PNK_ARRAY)) {
-            if (!EmitNumberOp(cx, index, bce))
+    /*
+     * When destructuring an array, use an iterator to walk it, instead of index lookup.
+     * InitializeVars expects us to leave the *original* value on the stack.
+     */
+    if (pn->isKind(PNK_ARRAY)) {
+        if (emitOption == InitializeVars) {
+            if (Emit1(cx, bce, JSOP_DUP) < 0)                      // OBJ OBJ
                 return false;
-            pn3 = pn2;
-        } else {
-            JS_ASSERT(pn->isKind(PNK_OBJECT));
+        }
+        if (!EmitIterator(cx, bce))                                // OBJ? ITER
+            return false;
+        needToPopIterator = true;
+    }
+
+    for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+        /*
+         * Now push the property name currently being matched, which is the
+         * current property name "label" on the left of a colon in the object initialiser.
+         * Set pn3 to the lvalue node, which is in the value-initializing position.
+         */
+        if (pn->isKind(PNK_OBJECT)) {
+            doElemOp = true;
             JS_ASSERT(pn2->isKind(PNK_COLON) || pn2->isKind(PNK_SHORTHAND));
+
+            /* Duplicate the value being destructured to use as a reference base. */
+            if (Emit1(cx, bce, JSOP_DUP) < 0)
+                return false;
 
             ParseNode *key = pn2->pn_left;
             if (key->isKind(PNK_NUMBER)) {
@@ -3263,19 +3299,79 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                     return false;
             }
 
+            if (doElemOp) {
+                /*
+                 * Ok, get the value of the matching property name.  This leaves
+                 * that value on top of the value being destructured, so the stack
+                 * is one deeper than when we started.
+                 */
+                if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
+                    return false;
+                JS_ASSERT(bce->stackDepth >= stackDepth + 1);
+            }
+
             pn3 = pn2->pn_right;
-        }
+        } else {
+            JS_ASSERT(pn->isKind(PNK_ARRAY));
 
+            if (pn2->isKind(PNK_SPREAD)) {
+                /* Create a new array with the rest of the iterator */
+                ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);          // ITER ARRAY
+                if (off < 0)
+                    return false;
+                CheckTypeSet(cx, bce, JSOP_NEWARRAY);
+                jsbytecode *pc = bce->code(off);
+                SET_UINT24(pc, 0);
 
-        if (doElemOp) {
-            /*
-             * Ok, get the value of the matching property name.  This leaves
-             * that value on top of the value being destructured, so the stack
-             * is one deeper than when we started.
-             */
-            if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
-                return false;
-            JS_ASSERT(bce->stackDepth >= stackDepth + 1);
+                if (!EmitNumberOp(cx, 0, bce))                             // ITER ARRAY INDEX
+                    return false;
+                if (!EmitSpread(cx, bce))                                  // ARRAY INDEX
+                    return false;
+                if (Emit1(cx, bce, JSOP_POP) < 0)                          // ARRAY
+                    return false;
+                if (Emit1(cx, bce, JSOP_ENDINIT) < 0)
+                    return false;
+                needToPopIterator = false;
+            } else {
+                if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER ITER
+                    return false;
+                if (!EmitIteratorNext(cx, bce, pn))                        // ITER RESULT
+                    return false;
+                if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER RESULT RESULT
+                    return false;
+                if (!EmitAtomOp(cx, cx->names().done, JSOP_GETPROP, bce))  // ITER RESULT DONE?
+                    return false;
+
+                // Emit (result.done ? undefined : result.value)
+                // This is mostly copied from EmitConditionalExpression, except that this code
+                // does not push new values onto the stack.
+                ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_COND);
+                if (noteIndex < 0)
+                    return false;
+                ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFEQ, 0);
+                if (beq < 0)
+                    return false;
+
+                if (Emit1(cx, bce, JSOP_POP) < 0)                          // ITER
+                    return false;
+                if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                    // ITER UNDEFINED
+                    return false;
+
+                /* Jump around else, fixup the branch, emit else, fixup jump. */
+                ptrdiff_t jmp = EmitJump(cx, bce, JSOP_GOTO, 0);
+                if (jmp < 0)
+                    return false;
+                SetJumpOffsetAt(bce, beq);
+
+                if (!EmitAtomOp(cx, cx->names().value, JSOP_GETPROP, bce)) // ITER VALUE
+                    return false;
+
+                SetJumpOffsetAt(bce, jmp);
+                if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq))
+                    return false;
+            }
+
+            pn3 = pn2;
         }
 
         /* Elision node makes a hole in the array destructurer. */
@@ -3289,7 +3385,8 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
             if (!EmitDestructuringLHS(cx, bce, pn3, emitOption))
                 return false;
 
-            if (emitOption == PushInitialValues) {
+            if (emitOption == PushInitialValues &&
+                (pn->isKind(PNK_OBJECT) || needToPopIterator)) {
                 /*
                  * After '[x,y]' in 'let ([[x,y], z] = o)', the stack is
                  *   | to-be-destructured-value | x | y |
@@ -3312,14 +3409,16 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                 }
             }
         }
-
-        ++index;
     }
 
-    if (emitOption == PushInitialValues) {
+    if (needToPopIterator && Emit1(cx, bce, JSOP_POP) < 0)
+        return false;
+
+    if (emitOption == PushInitialValues && pn->isKind(PNK_OBJECT)) {
         /*
          * Per the above loop invariant, to-be-destructured-value is at the top
          * of the stack. To achieve the post-condition, pop it.
+         * In case of array destructuring, the above POP already took care of the iterator.
          */
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
@@ -4418,13 +4517,6 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, StmtType type, ParseNode *
         // Push a dummy result so that we properly enter iteration midstream.
         if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                // ITER RESULT
             return false;
-    } else {
-        // If type is STMT_SPREAD, it expects that iterator to be already on
-        // the stack.
-        if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)2) < 0)      // I ITER ARR
-            return false;
-        if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)2) < 0)      // ITER ARR I
-            return false;
     }
 
     // Enter the block before the loop body, after evaluating the obj.
@@ -4507,15 +4599,8 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, StmtType type, ParseNode *
         if (!EmitDupAt(cx, bce, bce->stackDepth - 1 - 2))      // ITER ARR I ITER
             return false;
     }
-    if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ... ITER ITER
+    if (!EmitIteratorNext(cx, bce, forHead))                   // ... RESULT
         return false;
-    if (!EmitAtomOp(cx, cx->names().next, JSOP_CALLPROP, bce)) // ... ITER NEXT
-        return false;
-    if (Emit1(cx, bce, JSOP_SWAP) < 0)                         // ... NEXT ITER
-        return false;
-    if (EmitCall(cx, bce, JSOP_CALL, 0, forHead) < 0)          // ... RESULT
-        return false;
-    CheckTypeSet(cx, bce, JSOP_CALL);
     if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ... RESULT RESULT
         return false;
     if (!EmitAtomOp(cx, cx->names().done, JSOP_GETPROP, bce))  // ... RESULT DONE?
@@ -6057,11 +6142,12 @@ EmitArrayComp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 /**
- * EmitSpread expects the iterator, the current index (I) of the array, and the
- * array itself to be on the stack in that order (iterator on the top). It will
- * pop the iterator and I, then iterate over the iterator by calling |.next()|
+ * EmitSpread expects the current index (I) of the array, the array itself and the iterator to be
+ * on the stack in that order (iterator on the bottom).
+ * It will pop the iterator and I, then iterate over the iterator by calling |.next()|
  * and put the results into the I-th element of array with incrementing I, then
  * push the result I (it will be original I + iteration count).
+ * The stack after iteration will look like |ARRAY INDEX|.
  */
 static bool
 EmitSpread(ExclusiveContext *cx, BytecodeEmitter *bce)
@@ -6087,7 +6173,7 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t co
             nspread++;
     }
 
-    ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);
+    ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);                    // ARRAY
     if (off < 0)
         return false;
     CheckTypeSet(cx, bce, JSOP_NEWARRAY);
@@ -6103,7 +6189,7 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t co
     for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
         if (!afterSpread && pn2->isKind(PNK_SPREAD)) {
             afterSpread = true;
-            if (!EmitNumberOp(cx, atomIndex, bce))
+            if (!EmitNumberOp(cx, atomIndex, bce))                       // ARRAY INDEX
                 return false;
         }
         if (!UpdateSourceCoordNotes(cx, bce, pn2->pn_pos.begin))
@@ -6113,13 +6199,17 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t co
                 return false;
         } else {
             ParseNode *expr = pn2->isKind(PNK_SPREAD) ? pn2->pn_kid : pn2;
-            if (!EmitTree(cx, bce, expr))
+            if (!EmitTree(cx, bce, expr))                                // ARRAY INDEX? VALUE
                 return false;
         }
         if (pn2->isKind(PNK_SPREAD)) {
-            if (!EmitIterator(cx, bce))
+            if (!EmitIterator(cx, bce))                                  // ARRAY INDEX ITER
                 return false;
-            if (!EmitSpread(cx, bce))
+            if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)2) < 0)            // INDEX ITER ARRAY
+                return false;
+            if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)2) < 0)            // ITER ARRAY INDEX
+                return false;
+            if (!EmitSpread(cx, bce))                                    // ARRAY INDEX
                 return false;
         } else if (afterSpread) {
             if (Emit1(cx, bce, JSOP_INITELEM_INC) < 0)
@@ -6133,7 +6223,7 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t co
     }
     JS_ASSERT(atomIndex == count);
     if (afterSpread) {
-        if (Emit1(cx, bce, JSOP_POP) < 0)
+        if (Emit1(cx, bce, JSOP_POP) < 0)                                // ARRAY
             return false;
     }
 
