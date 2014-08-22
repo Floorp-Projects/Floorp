@@ -60,9 +60,6 @@ MozNFCTag.prototype = {
   _techTypesMap: null,
 
   // NFCTag interface:
-  getDetailsNDEF: function getDetailsNDEF() {
-    return this._nfcContentHelper.getDetailsNDEF(this._window, this.session);
-  },
   readNDEF: function readNDEF() {
     return this._nfcContentHelper.readNDEF(this._window, this.session);
   },
