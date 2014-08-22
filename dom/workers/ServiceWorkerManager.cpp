@@ -555,10 +555,7 @@ ServiceWorkerManager::Register(const nsAString& aScope,
   MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIGlobalObject> sgo = GetEntryGlobal();
-  if (!sgo) {
-    MOZ_CRASH("Register() should only be called from a valid entry settings object!");
-    return NS_ERROR_FAILURE;
-  }
+  MOZ_ASSERT(sgo, "Register() should only be called from a valid entry settings object!");
 
   ErrorResult result;
   nsRefPtr<Promise> promise = Promise::Create(sgo, result);
