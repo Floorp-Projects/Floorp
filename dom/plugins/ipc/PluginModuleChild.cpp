@@ -163,6 +163,9 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
                     true,
                     getter_AddRefs(localFile));
 
+    if (!localFile)
+        return false;
+
     bool exists;
     localFile->Exists(&exists);
     NS_ASSERTION(exists, "plugin file ain't there");

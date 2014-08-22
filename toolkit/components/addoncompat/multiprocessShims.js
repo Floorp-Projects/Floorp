@@ -94,6 +94,10 @@ AddonInterpositionService.prototype = {
       return "RemoteBrowserElement";
     }
 
+    if (target instanceof Ci.nsIDOMChromeWindow) {
+      return "ChromeWindow";
+    }
+
     if (target instanceof Ci.nsIDOMEventTarget) {
       return "EventTarget";
     }

@@ -53,20 +53,27 @@ assertAsmLinkAlwaysFail(asmCompile('glob', USE_ASM + 'var im=glob.Math.imul; fun
 assertEq(asmLink(asmCompile('glob', USE_ASM + 'var im=glob.Math.imul; function f(i,j) {i=i|0;j=j|0; return im(i,j)|0} return f'), {Math:{imul:Math.imul}})(2,3), 6);
 assertEq(asmLink(asmCompile('glob', USE_ASM + 'var im=glob.Math.imul; function f(i,j) {i=i|0;j=j|0; return im(i,j)|0} return f'), this)(8,4), 32);
 
-assertAsmLinkAlwaysFail(asmCompile('glob','i','b', USE_ASM + 'var i32=new glob.Int32Array(b); function f(){} return f'), null, null);
-assertAsmLinkAlwaysFail(asmCompile('glob','i','b', USE_ASM + 'var i32=new glob.Int32Array(b); function f(){} return f'), this, null, null);
-assertAsmLinkAlwaysFail(asmCompile('glob','i','b', USE_ASM + 'var i32=new glob.Int32Array(b); function f(){} return f'), this, null, null);
-assertAsmLinkAlwaysFail(asmCompile('glob','i','b', USE_ASM + 'var i32=new glob.Int32Array(b); function f(){} return f'), this, null, new ArrayBuffer(1));
-assertAsmLinkFail(asmCompile('glob','i','b', USE_ASM + 'var i32=new glob.Int32Array(b); function f(){} return f'), this, null, new ArrayBuffer(100));
-assertAsmLinkFail(asmCompile('glob','i','b', USE_ASM + 'var i32=new glob.Int32Array(b); function f(){} return f'), this, null, new ArrayBuffer(4000));
-assertEq(asmLink(asmCompile('glob','i','b', USE_ASM + 'var i32=new glob.Int32Array(b); function f(){} return f'), this, null, new ArrayBuffer(4096))(), undefined);
-assertEq(asmLink(asmCompile('glob','i','b', USE_ASM + 'var i32=new glob.Int32Array(b); function f(){} return f'), this, null, new ArrayBuffer(2*4096))(), undefined);
+var module = asmCompile('glob','i','b', USE_ASM + 'var i32=new glob.Int32Array(b); function f(){} return f');
+assertAsmLinkAlwaysFail(module, null, null);
+assertAsmLinkAlwaysFail(module, this, null, null);
+assertAsmLinkAlwaysFail(module, this, null, null);
+assertAsmLinkAlwaysFail(module, this, null, new ArrayBuffer(1));
+assertAsmLinkFail(module, this, null, new ArrayBuffer(4));
+assertAsmLinkFail(module, this, null, new ArrayBuffer(100));
+assertAsmLinkFail(module, this, null, new ArrayBuffer(4092));
+assertAsmLinkFail(module, this, null, new ArrayBuffer(64000));
+assertAsmLinkFail(module, this, null, new ArrayBuffer(BUF_MIN+4));
+assertAsmLinkDeprecated(module, this, null, new ArrayBuffer(4096));
+assertAsmLinkDeprecated(module, this, null, new ArrayBuffer(2*4096));
+assertAsmLinkDeprecated(module, this, null, new ArrayBuffer(4*4096));
+assertAsmLinkDeprecated(module, this, null, new ArrayBuffer(32*1024));
+assertEq(asmLink(module, this, null, new ArrayBuffer(BUF_MIN))(), undefined);
 
 assertAsmTypeFail('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i = i32[i]|0; return i|0}; return f');
 assertAsmTypeFail('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i = i32[i>>1]|0; return i|0}; return f');
 assertAsmTypeFail('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i = i32[i>>1]|0; return i|0}; return f');
-assertAsmLinkAlwaysFail(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i = i32[i>>2]|0; return i|0}; return f'), this, null, new ArrayBuffer(4095));
-assertEq(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i = i32[i>>2]|0; return i|0}; return f')(this, null, new ArrayBuffer(4096))(), 0);
+assertAsmLinkAlwaysFail(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i = i32[i>>2]|0; return i|0}; return f'), this, null, new ArrayBuffer(BUF_MIN-1));
+assertEq(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i = i32[i>>2]|0; return i|0}; return f')(this, null, new ArrayBuffer(BUF_MIN))(), 0);
 
 var exp = asmLink(asmCompile(USE_ASM + "return {}"));
 assertEq(Object.keys(exp).length, 0);

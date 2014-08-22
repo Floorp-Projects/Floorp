@@ -184,6 +184,10 @@ public:
   int8_t CachedWritableByte();
   void SetCachedWritableByte(int8_t);
 
+  void UnsafePrerenderMethod();
+  int32_t UnsafePrerenderWritable();
+  void SetUnsafePrerenderWritable(int32_t);
+  int32_t UnsafePrerenderReadonly();
   int16_t ReadonlyShort();
   int16_t WritableShort();
   void SetWritableShort(int16_t);

@@ -10,6 +10,13 @@ xul|window xul|scrollbar {
   display: none;
 }
 
+/* Bug 1041576 - Scrollable with scrollgrab should not have scrollbars */
+@-moz-document domain(system.gaiamobile.org) {
+  .browser-container > xul|scrollbar {
+    display: none;
+  }
+}
+
 html xul|scrollbar[root="true"] {
   position: relative;
   z-index: 2147483647;

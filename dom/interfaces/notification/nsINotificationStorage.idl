@@ -4,7 +4,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(fb089720-1c5c-11e3-b773-0800200c9a66)]
+[scriptable, uuid(9b12f566-2c7f-48ef-990d-e5092a71d11e)]
 interface nsINotificationStorageCallback : nsISupports
 {
   /**
@@ -26,7 +26,8 @@ interface nsINotificationStorageCallback : nsISupports
               in DOMString lang,
               in DOMString body,
               in DOMString tag,
-              in DOMString icon);
+              in DOMString icon,
+              in DOMString data);
 
   /**
    * Callback function used to notify C++ the we have returned
@@ -39,7 +40,7 @@ interface nsINotificationStorageCallback : nsISupports
 /**
  * Interface for notification persistence layer.
  */
-[scriptable, uuid(cc4656d7-2a2a-47f1-8016-55891e833d64)]
+[scriptable, uuid(1be733d9-d614-43f2-9fd4-8f573a33b215)]
 interface nsINotificationStorage : nsISupports
 {
 
@@ -68,7 +69,8 @@ interface nsINotificationStorage : nsISupports
            in DOMString body,
            in DOMString tag,
            in DOMString icon,
-           in DOMString alertName);
+           in DOMString alertName,
+           in DOMString data);
 
   /**
    * Retrieve a list of notifications.

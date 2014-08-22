@@ -17,6 +17,8 @@ EXTRA_JS_MODULES += [
     'ContentSearch.jsm',
     'CustomizationTabPreloader.jsm',
     'Feeds.jsm',
+    'FormSubmitObserver.jsm',
+    'FormValidationHandler.jsm',
     'NetworkPrioritizer.jsm',
     'offlineAppCache.jsm',
     'PanelFrame.jsm',

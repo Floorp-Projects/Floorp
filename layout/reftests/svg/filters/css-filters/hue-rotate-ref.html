@@ -1,0 +1,32 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Hue Rotate an HTML Element</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <style type="text/css">
+    #target {
+      filter: url(#hue-rotate);
+      background-color: #f00;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a green square.</p>
+  <div id="target"></div>
+  <!--
+    This equivalent SVG filter is defined in:
+    http://www.w3.org/TR/filter-effects-1/#huerotateEquivalent
+  -->
+  <svg width="0" height="0">
+    <filter id="hue-rotate">
+      <feColorMatrix type="hueRotate" values="90" color-interpolation-filters="sRGB"/>
+    </filter>
+  </svg>
+</body>
+</html>

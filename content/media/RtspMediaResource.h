@@ -146,7 +146,7 @@ public:
   virtual bool    IsSuspended() MOZ_OVERRIDE { return false; }
   virtual bool    IsTransportSeekable() MOZ_OVERRIDE { return true; }
   // dummy
-  virtual double  GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { return 0; }
+  virtual double  GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { *aIsReliable = false; return 0; }
 
   virtual int64_t GetLength() MOZ_OVERRIDE {
     if (mRealTime) {

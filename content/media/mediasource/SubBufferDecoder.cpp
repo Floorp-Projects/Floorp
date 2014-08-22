@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SubBufferDecoder.h"
-#include "MediaSourceDecoder.h"
+#include "AbstractMediaDecoder.h"
 #include "MediaDecoderReader.h"
 #include "mozilla/dom/TimeRanges.h"
 

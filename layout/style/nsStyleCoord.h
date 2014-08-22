@@ -152,7 +152,9 @@ public:
   int32_t     GetIntValue() const;
   float       GetPercentValue() const;
   float       GetFactorValue() const;
+  float       GetFactorOrPercentValue() const;
   float       GetAngleValue() const;
+  double      GetAngleValueInDegrees() const;
   double      GetAngleValueInRadians() const;
   float       GetFlexFractionValue() const;
   Calc*       GetCalcValue() const;
@@ -328,6 +330,16 @@ inline float nsStyleCoord::GetFactorValue() const
 {
   NS_ASSERTION(mUnit == eStyleUnit_Factor, "not a factor value");
   if (mUnit == eStyleUnit_Factor) {
+    return mValue.mFloat;
+  }
+  return 0.0f;
+}
+
+inline float nsStyleCoord::GetFactorOrPercentValue() const
+{
+  NS_ASSERTION(mUnit == eStyleUnit_Factor || mUnit == eStyleUnit_Percent,
+               "not a percent or factor value");
+  if (mUnit == eStyleUnit_Factor || mUnit == eStyleUnit_Percent) {
     return mValue.mFloat;
   }
   return 0.0f;

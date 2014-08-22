@@ -24,7 +24,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
 
   var mockAlertsService = {
     showAlertNotification: function(imageUrl, title, text, textClickable,
-                                    cookie, alertListener, name, dir, lang) {
+                                    cookie, alertListener, name, dir,
+                                    lang, data) {
       notificationsCreated.push(name);
       if (notificationsCreated.length == 3) {
         checkNotifications();

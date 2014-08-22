@@ -530,6 +530,7 @@ private:
                                            const nsString& aText, const bool& aTextClickable,
                                            const nsString& aCookie, const nsString& aName,
                                            const nsString& aBidi, const nsString& aLang,
+                                           const nsString& aData,
                                            const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
 
     virtual bool RecvCloseAlert(const nsString& aName,

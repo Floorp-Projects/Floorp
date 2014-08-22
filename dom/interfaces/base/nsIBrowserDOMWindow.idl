@@ -9,7 +9,7 @@ interface nsIDOMWindow;
 interface nsIURI;
 interface nsIFrameLoaderOwner;
 
-[scriptable, uuid(e420bd32-b8c4-4b47-8cca-09e0bddbb0c3)]
+[scriptable, uuid(699b8f60-2898-11e4-8c21-0800200c9a66)]
 
 /**
  * The C++ source has access to the browser script source through
@@ -92,12 +92,5 @@ interface nsIBrowserDOMWindow : nsISupports
    *         currently open tab in this toplevel browser window.
    */
   boolean      isTabContentWindow(in nsIDOMWindow aWindow);
-
-  /**
-  * The contentWindow property of the currently selected browser.
-  * This is used to implement .content in remote-Firefox.
-  */
-
-  readonly attribute jsval contentWindow;
 };
 

@@ -58,11 +58,21 @@ static const int64_t CAN_PLAY_THROUGH_MARGIN = 1;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaDecoderLog;
-#define DECODER_LOG(type, msg, ...) \
-  PR_LOG(gMediaDecoderLog, type, ("Decoder=%p " msg, this, ##__VA_ARGS__))
+#define DECODER_LOG(x, ...) \
+  PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG, ("Decoder=%p " x, this, ##__VA_ARGS__))
 #else
-#define DECODER_LOG(type, msg, ...)
+#define DECODER_LOG(x, ...)
 #endif
+
+static const char* const gPlayStateStr[] = {
+  "START",
+  "LOADING",
+  "PAUSED",
+  "PLAYING",
+  "SEEKING",
+  "ENDED",
+  "SHUTDOWN"
+};
 
 class MediaMemoryTracker : public nsIMemoryReporter
 {
@@ -331,7 +341,7 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
 {
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
-  DECODER_LOG(PR_LOG_DEBUG, "RecreateDecodedStream aStartTimeUSecs=%lld!", aStartTimeUSecs);
+  DECODER_LOG("RecreateDecodedStream aStartTimeUSecs=%lld!", aStartTimeUSecs);
 
   DestroyDecodedStream();
 
@@ -363,7 +373,7 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
                                    bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  DECODER_LOG(PR_LOG_DEBUG, "AddOutputStream aStream=%p!", aStream);
+  DECODER_LOG("AddOutputStream aStream=%p!", aStream);
 
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -524,10 +534,7 @@ nsresult MediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
     nsresult rv = mResource->Open(aStreamListener);
-    if (NS_FAILED(rv)) {
-      DECODER_LOG(PR_LOG_WARNING, "Failed to open stream!");
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }
@@ -541,10 +548,7 @@ nsresult MediaDecoder::Load(nsIStreamListener** aStreamListener,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDecoderStateMachine = CreateStateMachine();
-  if (!mDecoderStateMachine) {
-    DECODER_LOG(PR_LOG_WARNING, "Failed to create state machine!");
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(mDecoderStateMachine, NS_ERROR_FAILURE);
 
   return InitializeStateMachine(aCloneDonor);
 }
@@ -555,11 +559,9 @@ nsresult MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
   NS_ASSERTION(mDecoderStateMachine, "Cannot initialize null state machine!");
 
   MediaDecoder* cloneDonor = static_cast<MediaDecoder*>(aCloneDonor);
-  if (NS_FAILED(mDecoderStateMachine->Init(cloneDonor ?
-                                           cloneDonor->mDecoderStateMachine : nullptr))) {
-    DECODER_LOG(PR_LOG_WARNING, "Failed to init state machine!");
-    return NS_ERROR_FAILURE;
-  }
+  nsresult rv = mDecoderStateMachine->Init(
+      cloneDonor ? cloneDonor->mDecoderStateMachine : nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // If some parameters got set before the state machine got created,
   // set them now
@@ -692,6 +694,10 @@ void MediaDecoder::MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags)
   if (mShuttingDown) {
     return;
   }
+
+  DECODER_LOG("MetadataLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d",
+              aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
+              aInfo->HasAudio(), aInfo->HasVideo());
 
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -1006,6 +1012,8 @@ void MediaDecoder::NotifyDownloadEnded(nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  DECODER_LOG("NotifyDownloadEnded, status=%x", aStatus);
+
   if (aStatus == NS_BINDING_ABORTED) {
     // Download has been cancelled by user.
     if (mOwner) {
@@ -1168,6 +1176,9 @@ void MediaDecoder::ChangeState(PlayState aState)
       mDecodedStream->mHaveBlockedForPlayState = blockForPlayState;
     }
   }
+
+  DECODER_LOG("ChangeState %s => %s",
+              gPlayStateStr[mPlayState], gPlayStateStr[aState]);
   mPlayState = aState;
 
   if (mPlayState == PLAY_STATE_PLAYING) {
@@ -1265,7 +1276,7 @@ void MediaDecoder::DurationChanged()
   SetInfinite(mDuration == -1);
 
   if (mOwner && oldDuration != mDuration && !IsInfinite()) {
-    DECODER_LOG(PR_LOG_DEBUG, "Duration changed to %lld", mDuration);
+    DECODER_LOG("Duration changed to %lld", mDuration);
     mOwner->DispatchEvent(NS_LITERAL_STRING("durationchange"));
   }
 }
@@ -1486,10 +1497,8 @@ void MediaDecoder::Invalidate()
 // Constructs the time ranges representing what segments of the media
 // are buffered and playable.
 nsresult MediaDecoder::GetBuffered(dom::TimeRanges* aBuffered) {
-  if (mDecoderStateMachine) {
-    return mDecoderStateMachine->GetBuffered(aBuffered);
-  }
-  return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mDecoderStateMachine, NS_ERROR_FAILURE);
+  return mDecoderStateMachine->GetBuffered(aBuffered);
 }
 
 size_t MediaDecoder::SizeOfVideoQueue() {

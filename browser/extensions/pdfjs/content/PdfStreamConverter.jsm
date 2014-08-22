@@ -906,9 +906,6 @@ PdfStreamConverter.prototype = {
       aRequest.setResponseHeader('Content-Security-Policy', '', false);
       aRequest.setResponseHeader('Content-Security-Policy-Report-Only', '',
                                  false);
-      aRequest.setResponseHeader('X-Content-Security-Policy', '', false);
-      aRequest.setResponseHeader('X-Content-Security-Policy-Report-Only', '',
-                                 false);
     }
 
     PdfJsTelemetry.onViewerIsUsed();

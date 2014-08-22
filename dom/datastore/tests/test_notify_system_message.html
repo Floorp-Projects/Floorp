@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - notify updates with system messages</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+  var gHostedManifestURL = 'http://test/tests/dom/datastore/tests/file_app.sjs?testToken=file_notify_system_message.html';
+  var gHostedPageURL = 'http://mochi.test:8888/tests/dom/datastore/tests/file_notify_system_message.html';
+  var gApp;
+
+  function cbError() {
+    ok(false, "Error callback invoked");
+    finish();
+  }
+
+  function installApp() {
+    var request = navigator.mozApps.install(gHostedManifestURL);
+    request.onerror = cbError;
+    request.onsuccess = function() {
+      gApp = request.result;
+      runTest();
+    }
+  }
+
+  function uninstallApp() {
+    // Uninstall the app.
+    var request = navigator.mozApps.mgmt.uninstall(gApp);
+    request.onerror = cbError;
+    request.onsuccess = function() {
+      // All done.
+      info("All done");
+      runTest();
+    }
+  }
+
+  function testApp() {
+    var ifr = document.createElement('iframe');
+    ifr.setAttribute('mozbrowser', 'true');
+    ifr.setAttribute('mozapp', gApp.manifestURL);
+    ifr.setAttribute('src', gApp.manifest.launch_path);
+    var domParent = document.getElementById('container');
+
+    // Set us up to listen for messages from the app.
+    var listener = function(e) {
+      var message = e.detail.message;
+      if (/^OK/.exec(message)) {
+        ok(true, "Message from app: " + message);
+      } else if (/KO/.exec(message)) {
+        ok(false, "Message from app: " + message);
+      } else if (/DONE/.exec(message)) {
+        ok(true, "Messaging from app complete");
+        ifr.removeEventListener('mozbrowsershowmodalprompt', listener);
+        domParent.removeChild(ifr);
+        runTest();
+      }
+    }
+
+    // This event is triggered when the app calls "alert".
+    ifr.addEventListener('mozbrowsershowmodalprompt', listener, false);
+    domParent.appendChild(ifr);
+  }
+
+  var tests = [
+    // Permissions.
+    function() {
+      SpecialPowers.pushPermissions(
+        [{ "type": "browser", "allow": 1, "context": document },
+         { "type": "embed-apps", "allow": 1, "context": document },
+         { "type": "webapps-manage", "allow": 1, "context": document }], runTest);
+    },
+
+    // Preferences.
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true],
+                                         ["dom.datastore.sysMsgOnChangeShortTimeoutSec", 1],
+                                         ["dom.datastore.sysMsgOnChangeLongTimeoutSec", 3],
+                                         ["dom.sysmsg.enabled", true],
+                                         ["dom.testing.ignore_ipc_principal", true],
+                                         ["dom.testing.datastore_enabled_for_hosted_apps", true],
+                                         ["dom.mozBrowserFramesEnabled", true]]}, runTest);
+    },
+
+    function() {
+      SpecialPowers.setAllAppsLaunchable(true);
+      // No confirmation needed when an app is installed.
+      SpecialPowers.autoConfirmAppInstall(runTest);
+    },
+
+    function() {
+      if (SpecialPowers.isMainProcess()) {
+        SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
+        SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
+        var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+                                     .getService(SpecialPowers.Ci.nsIIOService);
+        var systemMessenger = SpecialPowers.Cc["@mozilla.org/system-message-internal;1"]
+                              .getService(SpecialPowers.Ci.nsISystemMessagesInternal);
+        systemMessenger.registerPage("datastore-update-foo",
+                                     ioService.newURI(gHostedPageURL, null, null),
+                                     ioService.newURI(gHostedManifestURL, null, null));
+      }
+      runTest();
+    },
+
+    // Installing the app.
+    installApp,
+
+    // Run tests in app.
+    testApp,
+
+    // Uninstall the app.
+    uninstallApp
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  function finish() {
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTest();
+  </script>
+</body>
+</html>

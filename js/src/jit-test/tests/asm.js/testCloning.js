@@ -5,9 +5,9 @@ assertEq(asmLink(code)(), 42);
 assertEq(asmLink(code)(), 42);
 
 var code = asmCompile('glob', 'ffis', 'buf', USE_ASM + 'var i32=new glob.Int32Array(buf); function g() { return i32[0]|0 } return g');
-var i32_1 = new Int32Array(4096);
+var i32_1 = new Int32Array(BUF_MIN/4);
 i32_1[0] = 42;
-var i32_2 = new Int32Array(4096);
+var i32_2 = new Int32Array(BUF_MIN/4);
 i32_2[0] = 13;
 assertEq(asmLink(code, this, null, i32_1.buffer)(), 42);
 assertEq(asmLink(code, this, null, i32_2.buffer)(), 13);

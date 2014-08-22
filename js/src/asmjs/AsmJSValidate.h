@@ -47,77 +47,63 @@ typedef frontend::ParseContext<frontend::FullParseHandler> AsmJSParseContext;
 // In this case, the parser.tokenStream has been advanced an indeterminate
 // amount and the entire function should be reparsed from the beginning.
 extern bool
-CompileAsmJS(ExclusiveContext *cx, AsmJSParser &parser, frontend::ParseNode *stmtList,
+ValidateAsmJS(ExclusiveContext *cx, AsmJSParser &parser, frontend::ParseNode *stmtList,
              bool *validated);
 
-// The assumed page size; dynamically checked in CompileAsmJS.
+// The assumed page size; dynamically checked in ValidateAsmJS.
 const size_t AsmJSPageSize = 4096;
-
-// The asm.js spec requires that the ArrayBuffer's byteLength be a multiple of 4096.
-static const size_t AsmJSAllocationGranularity = 4096;
 
 #ifdef JS_CODEGEN_X64
 // On x64, the internal ArrayBuffer data array is inflated to 4GiB (only the
 // byteLength portion of which is accessible) so that out-of-bounds accesses
 // (made using a uint32 index) are guaranteed to raise a SIGSEGV.
-static const size_t AsmJSBufferProtectedSize = 4 * 1024ULL * 1024ULL * 1024ULL;
+static const size_t AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL;
+#endif
 
-// To avoid dynamically checking bounds on each load/store, asm.js code relies
-// on the SIGSEGV handler in AsmJSSignalHandlers.cpp. However, this only works
-// if we can guarantee that *any* out-of-bounds access generates a fault. This
-// isn't generally true since an out-of-bounds access could land on other
-// Mozilla data. To overcome this on x64, we reserve an entire 4GB space,
-// making only the range [0, byteLength) accessible, and use a 32-bit unsigned
-// index into this space. (x86 and ARM require different tricks.)
-//
-// One complication is that we need to put an ObjectElements struct immediately
-// before the data array (as required by the general JSObject data structure).
-// Thus, we must stick a page before the elements to hold ObjectElements.
-//
-//   |<------------------------------ 4GB + 1 pages --------------------->|
-//           |<--- sizeof --->|<------------------- 4GB ----------------->|
-//
-//   | waste | ObjectElements | data array | inaccessible reserved memory |
-//                            ^            ^                              ^
-//                            |            \                             /
-//                      obj->elements       required to be page boundaries
-//
-static const size_t AsmJSMappedSize = AsmJSPageSize + AsmJSBufferProtectedSize;
-#endif // JS_CODEGEN_X64
-
-// Return whether asm.js optimization is inhibited by the platform or
-// dynamically disabled:
-extern bool
-IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, JS::Value *vp);
-
-// To succesfully link an asm.js module to an ArrayBuffer heap, the
-// ArrayBuffer's byteLength must be:
-//  - greater or equal to 4096
-//  - either a power of 2 OR a multiple of 16MB
-inline bool
-IsValidAsmJSHeapLength(uint32_t length)
-{
-    if (length < 4096)
-        return false;
-
-    if (IsPowerOfTwo(length))
-        return true;
-
-    return (length & 0x00ffffff) == 0;
-}
+// From the asm.js spec Linking section:
+//  the heap object's byteLength must be either
+//    2^n for n in [12, 24)
+//  or
+//    2^24 * n for n >= 1.
 
 inline uint32_t
 RoundUpToNextValidAsmJSHeapLength(uint32_t length)
 {
-    if (length < 4096)
-        return 4096;
+    if (length <= 4 * 1024)
+        return 4 * 1024;
 
-    if (length < 16 * 1024 * 1024)
+    if (length <= 16 * 1024 * 1024)
         return mozilla::RoundUpPow2(length);
 
     JS_ASSERT(length <= 0xff000000);
     return (length + 0x00ffffff) & ~0x00ffffff;
 }
+
+inline bool
+IsValidAsmJSHeapLength(uint32_t length)
+{
+    bool valid = length >= 4 * 1024 &&
+                 (IsPowerOfTwo(length) ||
+                  (length & 0x00ffffff) == 0);
+
+    JS_ASSERT_IF(valid, length % AsmJSPageSize == 0);
+    JS_ASSERT_IF(valid, length == RoundUpToNextValidAsmJSHeapLength(length));
+
+    return valid;
+}
+
+// For now, power-of-2 lengths in this range are accepted, but in the future
+// we'll change this to cause link-time failure.
+inline bool
+IsDeprecatedAsmJSHeapLength(uint32_t length)
+{
+    return length >= 4 * 1024 && length < 64 * 1024 && IsPowerOfTwo(length);
+}
+
+// Return whether asm.js optimization is inhibited by the platform or
+// dynamically disabled:
+extern bool
+IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, JS::Value *vp);
 
 } // namespace js
 

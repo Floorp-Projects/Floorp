@@ -39,7 +39,7 @@ NS_IMPL_ISUPPORTS(MediaEngineDefaultVideoSource, nsITimerCallback)
  */
 
 MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
-  : mTimer(nullptr), mMonitor("Fake video")
+  : mTimer(nullptr), mMonitor("Fake video"), mCb(16), mCr(16)
 {
   mImageContainer = layers::LayerManager::CreateImageContainer();
   mState = kReleased;
