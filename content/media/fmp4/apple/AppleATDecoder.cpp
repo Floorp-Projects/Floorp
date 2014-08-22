@@ -35,6 +35,7 @@ AppleATDecoder::AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
   , mCurrentAudioTimestamp(0)
   , mSamplePosition(0)
   , mHaveOutput(false)
+  , mFlushed(false)
 {
   MOZ_COUNT_CTOR(AppleATDecoder);
   LOG("Creating Apple AudioToolbox Audio decoder");
@@ -135,6 +136,9 @@ AppleATDecoder::Flush()
     LOG("Error %d resetting AudioConverter", rv);
     return NS_ERROR_FAILURE;
   }
+  // Notify our task queue of the coming input discontinuity.
+  mTaskQueue->Dispatch(
+      NS_NewRunnableMethod(this, &AppleATDecoder::SignalFlush));
   return NS_OK;
 }
 
@@ -353,10 +357,11 @@ AppleATDecoder::SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample)
 {
   mSamplePosition = aSample->byte_offset;
   mCurrentAudioTimestamp = aSample->composition_timestamp;
+  uint32_t flags = mFlushed ? kAudioFileStreamParseFlag_Discontinuity : 0;
   OSStatus rv = AudioFileStreamParseBytes(mStream,
                                           aSample->size,
                                           aSample->data,
-                                          0);
+                                          flags);
   if (rv != noErr) {
     LOG("Error %d parsing audio data", rv);
     mCallback->Error();
@@ -368,6 +373,12 @@ AppleATDecoder::SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample)
   if (!mHaveOutput) {
     mCallback->InputExhausted();
   }
+}
+
+void
+AppleATDecoder::SignalFlush()
+{
+  mFlushed = true;
 }
 
 } // namespace mozilla
