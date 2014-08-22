@@ -14174,9 +14174,8 @@ SimRecordHelperObject.prototype = {
         ICCIOHelper.loadNextRecord(options);
       } else {
         RIL.iccInfoPrivate.OPL = opl;
+        RIL.overrideICCNetworkName();
       }
-
-      RIL.overrideICCNetworkName();
     }
 
     ICCIOHelper.loadLinearFixedEF({fileId: ICC_EF_OPL,
@@ -14245,9 +14244,8 @@ SimRecordHelperObject.prototype = {
           }
         }
         RIL.iccInfoPrivate.PNN = pnn;
+        RIL.overrideICCNetworkName();
       }
-
-      RIL.overrideICCNetworkName();
     }
 
     let pnn = [];
