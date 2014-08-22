@@ -53,6 +53,14 @@ class HomePagerTabStrip extends PagerTabStrip {
         getViewTreeObserver().addOnPreDrawListener(new PreDrawListener());
     }
 
+    @Override
+    public int getPaddingBottom() {
+        // PagerTabStrip enforces a minimum bottom padding of 6dp which causes
+        // misalignments when using 'center_vertical' gravity. Force padding bottom
+        // to 0dp so that children are properly centered.
+        return 0;
+    }
+
     private void animateTitles() {
         final View prevTextView = getChildAt(0);
         final View nextTextView = getChildAt(getChildCount() - 1);
