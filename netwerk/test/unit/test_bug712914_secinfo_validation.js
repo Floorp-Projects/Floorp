@@ -1,8 +1,5 @@
 var _ios;
 
-var ACCESS_WRITE = Ci.nsICache.ACCESS_WRITE;
-var ACCESS_READ = Ci.nsICache.ACCESS_READ;
-
 var KEY_CORRUPT_SECINFO = "http://corruptSecurityInfo/";
 var ENTRY_DATA = "foobar";
 
