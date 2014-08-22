@@ -6,7 +6,7 @@
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
- * Last changed in libpng 1.6.10 [March 6, 2014]
+ * Last changed in libpng 1.6.10 [March 6, 1014]]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -62,8 +62,6 @@
    /* Pick up the definition of 'restrict' from config.h if it was read: */
 #  define PNG_RESTRICT restrict
 #endif
-
-#include "mozpngconf.h"
 
 /* To support symbol prefixing it is necessary to know *before* including png.h
  * whether the fixed point (and maybe other) APIs are exported, because if they
@@ -121,8 +119,12 @@
     * PNG_ARM_NEON_OPT is set in CPPFLAGS (to >0) then arm/arm_init.c will fail
     * to compile with an appropriate #error if ALIGNED_MEMORY has been turned
     * off.
+    *
+    * Note that gcc-4.9 defines __ARM_NEON instead of __ARM_NEON__, so we
+    * check both variants.
     */
-#  if defined(__ARM_NEON__) && defined(PNG_ALIGNED_MEMORY_SUPPORTED)
+#  if (defined(__ARM_NEON__) || defined(__ARM_NEON)) && \
+   defined(PNG_ALIGNED_MEMORY_SUPPORTED)
 #     define PNG_ARM_NEON_OPT 2
 #  else
 #     define PNG_ARM_NEON_OPT 0
@@ -150,7 +152,7 @@
     * libpng implementation list for incorporation in the next minor release.
     */
 #  ifndef PNG_ARM_NEON_IMPLEMENTATION
-#     ifdef __ARM_NEON__
+#     if defined(__ARM_NEON__) || defined(__ARM_NEON)
 #        if defined(__clang__)
             /* At present it is unknown by the libpng developers which versions
              * of clang support the intrinsics, however some or perhaps all
@@ -838,7 +840,7 @@
     * zlib version number and because this affects handling of certain broken
     * PNG files the -I directives must match.
     *
-    * The most likely explanation is that you passed a -I in CFLAGS, this will
+    * The most likely explanation is that you passed a -I in CFLAGS. This will
     * not work; all the preprocessor directories and in particular all the -I
     * directives must be in CPPFLAGS.
     */
