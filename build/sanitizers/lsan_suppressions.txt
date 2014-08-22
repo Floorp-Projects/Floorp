@@ -62,9 +62,11 @@ leak:gsmsdp_add_default_video_formats_to_local_sdp
 leak:CCAPI_CallInfo_getMediaStreams
 
 # Intermittent Mochitest 3 WebRTC leaks, as seen in bug 1055910.
-leak:sdp_build_attr_
+leak:sdp_build_
 leak:VcmSIPCCBinding::CandidateReady
 leak:fsmdef_ev_foundcandidate
+leak:create_timecard
+leak:stamp_timecard
 
 
 ###
