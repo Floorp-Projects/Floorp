@@ -416,20 +416,6 @@ js::AssertSameCompartment(JSObject *objA, JSObject *objB)
 }
 #endif
 
-JS_FRIEND_API(JSObject *)
-js::DefaultObjectForContextOrNull(JSContext *cx)
-{
-    if (cx->options().noDefaultCompartmentObject())
-        return nullptr;
-    return cx->maybeDefaultCompartmentObject();
-}
-
-JS_FRIEND_API(void)
-js::SetDefaultObjectForContext(JSContext *cx, JSObject *obj)
-{
-    cx->setDefaultCompartmentObject(obj);
-}
-
 JS_FRIEND_API(void)
 js::NotifyAnimationActivity(JSObject *obj)
 {

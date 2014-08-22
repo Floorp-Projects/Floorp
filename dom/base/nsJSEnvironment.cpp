@@ -741,8 +741,7 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
     ::JS_SetContextPrivate(mContext, static_cast<nsIScriptContext *>(this));
 
     // Make sure the new context gets the default context options
-    JS::ContextOptionsRef(mContext).setPrivateIsNSISupports(true)
-                                   .setNoDefaultCompartmentObject(true);
+    JS::ContextOptionsRef(mContext).setPrivateIsNSISupports(true);
 
     // Watch for the JS boolean options
     Preferences::RegisterCallback(JSOptionChangedCallback,
