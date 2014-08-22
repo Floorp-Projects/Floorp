@@ -421,10 +421,13 @@ var commandsPeerConnection = [
       var stream = pc._pc.getLocalStreams()[0];
       var track = stream && stream.getAudioTracks()[0];
       if (track) {
+        var msg = "pcLocal.HasStat outbound audio rtp ";
         pc.getStats(track, function(stats) {
           ok(pc.hasStat(stats,
                         { type:"outboundrtp", isRemote:false, mediaType:"audio" }),
-             "pcLocal.HasStat outbound audio rtp");
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"inboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"video" }), msg + "3");
           test.next();
         });
       } else {
@@ -439,10 +442,13 @@ var commandsPeerConnection = [
       var stream = pc._pc.getLocalStreams()[0];
       var track = stream && stream.getVideoTracks()[0];
       if (track) {
+        var msg = "pcLocal.HasStat outbound video rtp ";
         pc.getStats(track, function(stats) {
           ok(pc.hasStat(stats,
                         { type:"outboundrtp", isRemote:false, mediaType:"video" }),
-             "pcLocal.HasStat outbound video rtp");
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"inboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"audio" }), msg + "3");
           test.next();
         });
       } else {
@@ -457,10 +463,13 @@ var commandsPeerConnection = [
       var stream = pc._pc.getRemoteStreams()[0];
       var track = stream && stream.getAudioTracks()[0];
       if (track) {
+        var msg = "pcLocal.HasStat inbound audio rtp ";
         pc.getStats(track, function(stats) {
           ok(pc.hasStat(stats,
                         { type:"inboundrtp", isRemote:false, mediaType:"audio" }),
-             "pcLocal.HasStat inbound audio rtp");
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"outboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"video" }), msg + "3");
           test.next();
         });
       } else {
@@ -475,10 +484,13 @@ var commandsPeerConnection = [
       var stream = pc._pc.getRemoteStreams()[0];
       var track = stream && stream.getVideoTracks()[0];
       if (track) {
+        var msg = "pcLocal.HasStat inbound video rtp ";
         pc.getStats(track, function(stats) {
           ok(pc.hasStat(stats,
                         { type:"inboundrtp", isRemote:false, mediaType:"video" }),
-             "pcLocal.HasStat inbound video rtp");
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"outboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"audio" }), msg + "3");
           test.next();
         });
       } else {
@@ -493,10 +505,13 @@ var commandsPeerConnection = [
       var stream = pc._pc.getLocalStreams()[0];
       var track = stream && stream.getAudioTracks()[0];
       if (track) {
+        var msg = "pcRemote.HasStat outbound audio rtp ";
         pc.getStats(track, function(stats) {
           ok(pc.hasStat(stats,
                         { type:"outboundrtp", isRemote:false, mediaType:"audio" }),
-             "pcRemote.HasStat outbound audio rtp");
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"inboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"video" }), msg + "3");
           test.next();
         });
       } else {
@@ -511,10 +526,13 @@ var commandsPeerConnection = [
       var stream = pc._pc.getLocalStreams()[0];
       var track = stream && stream.getVideoTracks()[0];
       if (track) {
+        var msg = "pcRemote.HasStat outbound audio rtp ";
         pc.getStats(track, function(stats) {
           ok(pc.hasStat(stats,
                         { type:"outboundrtp", isRemote:false, mediaType:"video" }),
-             "pcRemote.HasStat outbound audio rtp");
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"inboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"audio" }), msg + "3");
           test.next();
         });
       } else {
@@ -529,10 +547,13 @@ var commandsPeerConnection = [
       var stream = pc._pc.getRemoteStreams()[0];
       var track = stream && stream.getAudioTracks()[0];
       if (track) {
+        var msg = "pcRemote.HasStat inbound audio rtp ";
         pc.getStats(track, function(stats) {
           ok(pc.hasStat(stats,
                         { type:"inboundrtp", isRemote:false, mediaType:"audio" }),
-             "pcRemote.HasStat inbound audio rtp");
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"outboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"video" }), msg + "3");
           test.next();
         });
       } else {
@@ -547,10 +568,13 @@ var commandsPeerConnection = [
       var stream = pc._pc.getRemoteStreams()[0];
       var track = stream && stream.getVideoTracks()[0];
       if (track) {
+        var msg = "pcRemote.HasStat inbound video rtp ";
         pc.getStats(track, function(stats) {
           ok(pc.hasStat(stats,
                         { type:"inboundrtp", isRemote:false, mediaType:"video" }),
-             "pcRemote.HasStat inbound video rtp");
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"outboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"audio" }), msg + "3");
           test.next();
         });
       } else {
