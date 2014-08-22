@@ -1936,21 +1936,6 @@ nsContentUtils::InProlog(nsINode *aNode)
   return !root || doc->IndexOf(aNode) < doc->IndexOf(root);
 }
 
-//static
-void
-nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
-{
-  JSContext* cx = GetSafeJSContext();
-  if (!cx) {
-    return;
-  }
-  if (JSObject* global = js::DefaultObjectForContextOrNull(cx)) {
-    JS::AssertGCThingMustBeTenured(global);
-    JS_CallUnbarrieredObjectTracer(aTrc, &global, "safe context");
-    MOZ_ASSERT(global == js::DefaultObjectForContextOrNull(cx));
-  }
-}
-
 nsIDocument*
 nsContentUtils::GetDocumentFromCaller()
 {

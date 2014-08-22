@@ -1572,10 +1572,6 @@ public:
   static nsresult CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChannel);
   static nsIInterfaceRequestor* GetSameOriginChecker();
 
-  // Trace the safe JS context.
-  static void TraceSafeJSContext(JSTracer* aTrc);
-
-
   /**
    * Get the Origin of the passed in nsIPrincipal or nsIURI. If the passed in
    * nsIURI or the URI of the passed in nsIPrincipal does not have a host, the
