@@ -13,6 +13,7 @@
 #include "nsIStringStream.h"
 #include "nsIChannel.h"
 #include "nsICachingChannel.h"
+#include "nsICacheEntryDescriptor.h"
 #include "nsIInputStream.h"
 #include "CNavDTD.h"
 #include "prenv.h"

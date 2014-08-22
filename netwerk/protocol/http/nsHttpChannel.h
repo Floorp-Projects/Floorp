@@ -25,6 +25,7 @@
 
 class nsIPrincipal;
 class nsDNSPrefetch;
+class nsICacheEntryDescriptor;
 class nsICancelable;
 class nsIHttpChannelAuthProvider;
 class nsInputStreamPump;
