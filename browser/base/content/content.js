@@ -226,14 +226,14 @@ let AboutHomeListener = {
   },
 
   onPageHide: function(aEvent) {
-    if (event.target.defaultView.frameElement) {
+    if (aEvent.target.defaultView.frameElement) {
       return;
     }
     removeMessageListener("AboutHome:Update", this);
     removeEventListener("click", this, true);
     removeEventListener("pagehide", this, true);
-    if (event.target.documentElement) {
-      event.target.documentElement.removeAttribute("hasBrowserHandlers");
+    if (aEvent.target.documentElement) {
+      aEvent.target.documentElement.removeAttribute("hasBrowserHandlers");
     }
   },
 

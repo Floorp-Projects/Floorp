@@ -166,7 +166,6 @@ let CustomizableUIInternal = {
       "preferences-button",
       "add-ons-button",
       "developer-button",
-      "social-share-button",
     ];
 
     if (gPalette.has("switch-to-metro-button")) {
@@ -208,6 +207,7 @@ let CustomizableUIInternal = {
         "downloads-button",
         "home-button",
         "loop-call-button",
+        "social-share-button",
       ],
       defaultCollapsed: false,
     }, true);
