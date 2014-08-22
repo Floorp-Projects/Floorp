@@ -62,7 +62,8 @@
 }
 
 /* CUSTOMIZE */
-#newtab-customize-button {
+#newtab-customize-button,
+.newtab-customize {
   background-color: transparent;
   background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 32, 32, 0);
   background-size: 28px;
@@ -160,10 +161,6 @@
   font-weight: bold;
 }
 
-.newtab-site[type=sponsored] .newtab-title {
-  -moz-padding-end: 24px;
-}
-
 /* CONTROLS */
 .newtab-control {
   background-color: transparent;
@@ -198,25 +195,4 @@
 
 .newtab-control-block:hover:active {
   background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 256, 32, 224);
-}
-
-.newtab-control-sponsored {
-  background-image: url(chrome://browser/skin/newtab/controls.png);
-  background-position: -249px -1px;
-  background-size: auto;
-}
-
-@media (min-resolution: 2dppx) {
-  .newtab-control-sponsored {
-    background-image: url(chrome://browser/skin/newtab/controls@2x.png);
-    background-size: 296px;
-  }
-}
-
-.newtab-control-sponsored:hover {
-  background-position: -265px -1px;
-}
-
-.newtab-control-sponsored[panelShown] {
-  background-position: -281px -1px;
 }
