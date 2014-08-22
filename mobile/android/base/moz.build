@@ -378,6 +378,7 @@ gbjar.sources += [
     'sqlite/MatrixBlobCursor.java',
     'sqlite/SQLiteBridge.java',
     'sqlite/SQLiteBridgeException.java',
+    'StartPane.java',
     'SuggestClient.java',
     'SurfaceBits.java',
     'Tab.java',
