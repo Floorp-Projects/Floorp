@@ -231,6 +231,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   uint32_t loadFlags = aLoadFlags;
   if (appOffline) {
     loadFlags |= nsICachingChannel::LOAD_ONLY_FROM_CACHE;
+    loadFlags |= nsIRequest::LOAD_FROM_CACHE;
+    loadFlags |= nsICachingChannel::LOAD_NO_NETWORK_IO;
   }
 
   nsCOMPtr<nsIChannel> channel;
@@ -383,8 +385,12 @@ HttpChannelParent::ConnectChannel(const uint32_t& channelId)
   }
 
   if (appOffline) {
-    mChannel->Cancel(NS_ERROR_OFFLINE);
-    mStatus = NS_ERROR_OFFLINE;
+    uint32_t loadFlags;
+    mChannel->GetLoadFlags(&loadFlags);
+    loadFlags |= nsICachingChannel::LOAD_ONLY_FROM_CACHE;
+    loadFlags |= nsIRequest::LOAD_FROM_CACHE;
+    loadFlags |= nsICachingChannel::LOAD_NO_NETWORK_IO;
+    mChannel->SetLoadFlags(loadFlags);
   }
 
   return true;

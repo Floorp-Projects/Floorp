@@ -62,6 +62,7 @@ public:
                         const uint32_t& aTrackingNumber) MOZ_OVERRIDE;
   virtual bool RecvRequestDelete() MOZ_OVERRIDE;
   virtual nsresult OfflineNotification(nsISupports *) MOZ_OVERRIDE;
+  virtual uint32_t GetAppId() MOZ_OVERRIDE;
 
 private:
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
