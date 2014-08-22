@@ -16,7 +16,6 @@ import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -140,19 +139,6 @@ public class DynamicPanel extends HomeFragment {
         if (mAuthStateTask != null) {
             mAuthStateTask.cancel(true);
             mAuthStateTask = null;
-        }
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        // Detach and reattach the fragment as the layout changes.
-        if (isVisible()) {
-            getFragmentManager().beginTransaction()
-                                .detach(this)
-                                .attach(this)
-                                .commitAllowingStateLoss();
         }
     }
 
