@@ -1894,26 +1894,6 @@ VideoData* OggReader::FindStartTime(int64_t& aOutStartTime)
   return videoData;
 }
 
-VideoData* OggReader::DecodeToFirstVideoData()
-{
-  bool eof = false;
-  while (!eof && VideoQueue().GetSize() == 0) {
-    {
-      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->IsShutdown()) {
-        return nullptr;
-      }
-    }
-    bool keyframeSkip = false;
-    eof = !DecodeVideoFrame(keyframeSkip, 0);
-  }
-  if (eof) {
-    VideoQueue().Finish();
-  }
-  VideoData* d = nullptr;
-  return (d = VideoQueue().PeekFront()) ? d : nullptr;
-}
-
 AudioData* OggReader::DecodeToFirstAudioData()
 {
   bool eof = false;
