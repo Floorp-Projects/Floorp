@@ -355,10 +355,16 @@ class MochitestRunner(MozbuildObject):
                 return 1
             options.debuggerArgs = debugger_args
 
-        if app_override == "dist":
-            options.app = self.get_binary_path(where='staged-package')
-        elif app_override:
-            options.app = app_override
+        if app_override:
+            if app_override == "dist":
+                options.app = self.get_binary_path(where='staged-package')
+            elif app_override:
+                options.app = app_override
+            if options.gmp_path is None:
+                # Need to fix the location of gmp_fake which might not be shipped in the binary
+                bin_path = self.get_binary_path()
+                options.gmp_path = os.path.join(os.path.dirname(bin_path), 'gmp-fake')
+
 
         logger_options = {key: value for key, value in vars(options).iteritems() if key.startswith('log')}
         runner = mochitest.Mochitest(logger_options)
