@@ -927,7 +927,7 @@ MipsDebugger::debug()
                         printAllRegsIncludingFPU();
                     } else {
                         Register reg = Register::FromName(arg1);
-                        FloatRegister fReg = FloatRegister::FromName(arg1);
+                        FloatRegister fReg(FloatRegister::FromName(arg1));
                         if (reg != InvalidReg) {
                             value = getRegisterValue(reg.code());
                             printf("%s: 0x%08x %d \n", arg1, value, value);
