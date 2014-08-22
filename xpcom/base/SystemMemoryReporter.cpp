@@ -7,6 +7,7 @@
 #include "mozilla/SystemMemoryReporter.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/LinuxUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TaggedAnonymousMemory.h"
@@ -349,37 +350,6 @@ private:
     return NS_OK;
   }
 
-  // Obtain the name of a thread, omitting any numeric suffix added by a
-  // thread pool library (as in, e.g., "Binder_2" or "mozStorage #1").
-  // The empty string is returned on error.
-  //
-  // Note: if this is ever needed on kernels older than 2.6.33 (early 2010),
-  // it will have to parse /proc/<pid>/status instead, because
-  // /proc/<pid>/comm didn't exist before then.
-  void GetThreadName(pid_t aTid, nsACString& aName)
-  {
-    aName.Truncate();
-    if (aTid <= 0) {
-      return;
-    }
-    char buf[16]; // 15 chars max + '\n'
-    nsPrintfCString path("/proc/%d/comm", aTid);
-    FILE* fp = fopen(path.get(), "r");
-    if (!fp) {
-      // The fopen could also fail if the thread exited before we got here.
-      return;
-    }
-    size_t len = fread(buf, 1, sizeof(buf), fp);
-    fclose(fp);
-    // No need to strip the '\n', since isspace() includes it.
-    while (len > 0 &&
-           (isspace(buf[len - 1]) || isdigit(buf[len - 1]) ||
-            buf[len - 1] == '#' || buf[len - 1] == '_')) {
-      --len;
-    }
-    aName.Assign(buf, len);
-  }
-
   nsresult ParseMappings(FILE* aFile,
                          const nsACString& aProcessName,
                          nsIHandleReportCallback* aHandleReport,
@@ -504,7 +474,7 @@ private:
       // "[stack:" entries from reaching the IsAnonymous case below.)
       pid_t tid = atoi(absPath.get() + 7);
       nsAutoCString threadName, escapedThreadName;
-      GetThreadName(tid, threadName);
+      LinuxUtils::GetThreadName(tid, threadName);
       if (threadName.IsEmpty()) {
         threadName.AssignLiteral("<unknown>");
       }
@@ -1037,7 +1007,7 @@ private:
 
       // Attempt to map the pid to a more useful name.
       nsAutoCString procName;
-      GetThreadName(atoi(pid), procName);
+      LinuxUtils::GetThreadName(atoi(pid), procName);
 
       if (procName.IsEmpty()) {
         procName.Append("pid=");
