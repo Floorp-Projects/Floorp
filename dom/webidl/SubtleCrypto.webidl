@@ -91,6 +91,11 @@ dictionary DhKeyDeriveParams : Algorithm {
   required CryptoKey public;
 };
 
+dictionary DhImportKeyParams : Algorithm {
+  required BigInteger prime;
+  required BigInteger generator;
+};
+
 dictionary EcdsaParams : Algorithm {
   required AlgorithmIdentifier hash;
 };

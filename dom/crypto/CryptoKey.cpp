@@ -896,6 +896,49 @@ CryptoKey::PublicKeyToJwk(SECKEYPublicKey* aPubKey,
   }
 }
 
+SECKEYPublicKey*
+CryptoKey::PublicDhKeyFromRaw(CryptoBuffer& aKeyData,
+                              const CryptoBuffer& aPrime,
+                              const CryptoBuffer& aGenerator,
+                              const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+{
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return nullptr;
+  }
+
+  SECKEYPublicKey* key = PORT_ArenaZNew(arena, SECKEYPublicKey);
+  if (!key) {
+    return nullptr;
+  }
+
+  key->keyType = dhKey;
+  key->pkcs11Slot = nullptr;
+  key->pkcs11ID = CK_INVALID_HANDLE;
+
+  // Set DH public key params.
+  if (!aPrime.ToSECItem(arena, &key->u.dh.prime) ||
+      !aGenerator.ToSECItem(arena, &key->u.dh.base) ||
+      !aKeyData.ToSECItem(arena, &key->u.dh.publicValue)) {
+    return nullptr;
+  }
+
+  key->u.dh.prime.type = siUnsignedInteger;
+  key->u.dh.base.type = siUnsignedInteger;
+  key->u.dh.publicValue.type = siUnsignedInteger;
+
+  return SECKEY_CopyPublicKey(key);
+}
+
+nsresult
+CryptoKey::PublicDhKeyToRaw(SECKEYPublicKey* aPubKey,
+                            CryptoBuffer& aRetVal,
+                            const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+{
+  aRetVal.Assign(&aPubKey->u.dh.publicValue);
+  return NS_OK;
+}
+
 bool
 CryptoKey::PublicKeyValid(SECKEYPublicKey* aPubKey)
 {
