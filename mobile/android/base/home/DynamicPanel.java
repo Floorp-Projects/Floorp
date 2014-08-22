@@ -5,24 +5,15 @@
 
 package org.mozilla.gecko.home;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.HomeItems;
-import org.mozilla.gecko.db.DBUtils;
-import org.mozilla.gecko.db.HomeProvider;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
-import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PanelLayout.ContextMenuRegistry;
 import org.mozilla.gecko.home.PanelLayout.DatasetHandler;
 import org.mozilla.gecko.home.PanelLayout.DatasetRequest;
-import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -88,9 +79,6 @@ public class DynamicPanel extends HomeFragment {
     // Callbacks used for the loader
     private PanelLoaderCallbacks mLoaderCallbacks;
 
-    // On URL open listener
-    private OnUrlOpenListener mUrlOpenListener;
-
     // The current UI mode in the fragment
     private UIMode mUIMode;
 
@@ -103,25 +91,6 @@ public class DynamicPanel extends HomeFragment {
     private enum UIMode {
         PANEL,
         AUTH
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-
-        try {
-            mUrlOpenListener = (OnUrlOpenListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement HomePager.OnUrlOpenListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-
-        mUrlOpenListener = null;
     }
 
     @Override
