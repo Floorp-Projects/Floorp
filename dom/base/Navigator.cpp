@@ -1576,7 +1576,7 @@ Navigator::GetTv()
     if (!mWindow) {
       return nullptr;
     }
-    mTVManager = new TVManager(mWindow);
+    mTVManager = TVManager::Create(mWindow);
   }
 
   return mTVManager;
