@@ -1,5 +1,5 @@
 (function () {
-    const x = [] = {};
+    const x = [] = [];
     (function () {
 	String(x);
     })();

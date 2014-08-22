@@ -1,4 +1,4 @@
-// |jit-test| error: SyntaxError
+// |jit-test|
 ({eval} = Object.defineProperty(evalcx("lazy"), "", {}))
 eval("eval(/x/)", [])
 

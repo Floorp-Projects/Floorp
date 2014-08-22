@@ -27,7 +27,7 @@ function test()
       {
         d.d.d;
       }
-      catch([] if gc())
+      catch({} if gc())
       {
       }
       catch(y)

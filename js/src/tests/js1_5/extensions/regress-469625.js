@@ -23,7 +23,7 @@ function test()
   jit(true);
 
   [].__proto__[0] = 'a';
-  for (var j = 0; j < 3; ++j) [[, ]] = [];
+  for (var j = 0; j < 3; ++j) [[, ]] = [,];
 
   jit(false);
 
