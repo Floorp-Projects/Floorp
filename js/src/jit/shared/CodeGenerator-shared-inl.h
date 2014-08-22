@@ -19,7 +19,7 @@ ToInt32(const LAllocation *a)
         return a->toConstant()->toInt32();
     if (a->isConstantIndex())
         return a->toConstantIndex()->index();
-    MOZ_ASSUME_UNREACHABLE("this is not a constant!");
+    MOZ_CRASH("this is not a constant!");
 }
 
 static inline double

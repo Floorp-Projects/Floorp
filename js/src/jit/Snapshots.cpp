@@ -251,7 +251,7 @@ RValueAllocation::layoutFromMode(Mode mode)
       }
     }
 
-    MOZ_ASSUME_UNREACHABLE("Wrong mode type?");
+    MOZ_CRASH("Wrong mode type?");
 }
 
 // Pad serialized RValueAllocations by a multiple of X bytes in the allocation
@@ -401,7 +401,7 @@ ValTypeToString(JSValueType type)
       case JSVAL_TYPE_MAGIC:
         return "magic";
       default:
-        MOZ_ASSUME_UNREACHABLE("no payload");
+        MOZ_CRASH("no payload");
     }
 }
 
