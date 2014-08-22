@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_TVProgram_h__
-#define mozilla_dom_TVProgram_h__
+#ifndef mozilla_dom_TVProgram_h
+#define mozilla_dom_TVProgram_h
 
 #include "nsWrapperCache.h"
+
+class nsITVProgramData;
 
 namespace mozilla {
 namespace dom {
@@ -21,7 +23,9 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TVProgram)
 
-  explicit TVProgram(nsISupports* aOwner);
+  TVProgram(nsISupports* aOwner,
+            TVChannel* aChannel,
+            nsITVProgramData* aData);
 
   // WebIDL (internal functions)
 
@@ -55,7 +59,21 @@ public:
 private:
   ~TVProgram();
 
+  void SetLanguages(uint32_t aCount,
+                    char** aLanguages,
+                    nsTArray<nsString>& aLanguageList);
+
   nsCOMPtr<nsISupports> mOwner;
+  nsRefPtr<TVChannel> mChannel;
+  nsString mEventId;
+  nsString mTitle;
+  uint64_t mStartTime;
+  uint64_t mDuration;
+  nsString mDescription;
+  nsString mRating;
+  bool mIsInterrupting;
+  nsTArray<nsString> mAudioLanguages;
+  nsTArray<nsString> mSubtitleLanguages;
 };
 
 } // namespace dom

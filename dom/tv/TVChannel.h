@@ -4,12 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_TVChannel_h__
-#define mozilla_dom_TVChannel_h__
+#ifndef mozilla_dom_TVChannel_h
+#define mozilla_dom_TVChannel_h
 
 #include "mozilla/DOMEventTargetHelper.h"
 // Include TVChannelBinding.h since enum TVChannelType can't be forward declared.
 #include "mozilla/dom/TVChannelBinding.h"
+
+class nsITVChannelData;
+class nsITVService;
 
 namespace mozilla {
 namespace dom {
@@ -24,11 +27,15 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TVChannel, DOMEventTargetHelper)
 
-  explicit TVChannel(nsPIDOMWindow* aWindow);
+  static already_AddRefed<TVChannel> Create(nsPIDOMWindow* aWindow,
+                                            TVSource* aSource,
+                                            nsITVChannelData* aData);
 
   // WebIDL (internal functions)
 
   virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
+
+  nsresult DispatchTVEvent(nsIDOMEvent* aEvent);
 
   // WebIDL (public APIs)
 
@@ -56,11 +63,26 @@ public:
   bool IsFree() const;
 
 private:
+  TVChannel(nsPIDOMWindow* aWindow,
+            TVSource* aSource);
+
   ~TVChannel();
 
+  bool Init(nsITVChannelData* aData);
+
+  nsCOMPtr<nsITVService> mTVService;
+  nsRefPtr<TVSource> mSource;
+  nsString mNetworkId;
+  nsString mTransportStreamId;
+  nsString mServiceId;
+  TVChannelType mType;
+  nsString mNumber;
+  nsString mName;
+  bool mIsEmergency;
+  bool mIsFree;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_TVChannel_h__
+#endif // mozilla_dom_TVChannel_h
