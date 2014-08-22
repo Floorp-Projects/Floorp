@@ -572,7 +572,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   nsHttpRequestHead  *requestHead = chan->GetRequestHead();
   bool isFromCache = false;
   chan->IsFromCache(&isFromCache);
-  uint32_t expirationTime = nsICache::NO_EXPIRATION_TIME;
+  uint32_t expirationTime = nsICacheEntry::NO_EXPIRATION_TIME;
   chan->GetCacheTokenExpirationTime(&expirationTime);
   nsCString cachedCharset;
   chan->GetCacheTokenCachedCharset(cachedCharset);

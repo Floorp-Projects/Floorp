@@ -6,7 +6,7 @@
 
 #include "mozIThirdPartyUtil.h"
 #include "nsNetUtil.h"
-#include "nsICacheEntryDescriptor.h"
+#include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
 #include "nsIChannel.h"
 #include "nsIDocShell.h"
@@ -281,7 +281,7 @@ nsChannelClassifier::MarkEntryClassified(nsresult status)
         return;
     }
 
-    nsCOMPtr<nsICacheEntryDescriptor> cacheEntry =
+    nsCOMPtr<nsICacheEntry> cacheEntry =
         do_QueryInterface(cacheToken);
     if (!cacheEntry) {
         return;
@@ -313,7 +313,7 @@ nsChannelClassifier::HasBeenClassified(nsIChannel *aChannel)
         return false;
     }
 
-    nsCOMPtr<nsICacheEntryDescriptor> cacheEntry =
+    nsCOMPtr<nsICacheEntry> cacheEntry =
         do_QueryInterface(cacheToken);
     if (!cacheEntry) {
         return false;
