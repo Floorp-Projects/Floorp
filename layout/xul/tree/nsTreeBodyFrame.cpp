@@ -319,7 +319,7 @@ nsTreeBodyFrame::EnsureBoxObject()
   if (!mTreeBoxObject) {
     nsIContent* parent = GetBaseElement();
     if (parent) {
-      nsIDocument* nsDoc = parent->GetDocument();
+      nsIDocument* nsDoc = parent->GetComposedDoc();
       if (!nsDoc) // there may be no document, if we're called from Destroy()
         return;
       ErrorResult ignored;
@@ -2171,7 +2171,7 @@ nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContex
     if (styleRequest) {
       styleRequest->Clone(imgNotificationObserver, getter_AddRefs(imageRequest));
     } else {
-      nsIDocument* doc = mContent->GetDocument();
+      nsIDocument* doc = mContent->GetComposedDoc();
       if (!doc)
         // The page is currently being torn down.  Why bother.
         return NS_ERROR_FAILURE;

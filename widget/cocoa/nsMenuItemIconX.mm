@@ -179,7 +179,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
   if (!hasImageAttr) {
     // If the content node has no "image" attribute, get the
     // "list-style-image" property from CSS.
-    nsCOMPtr<nsIDocument> document = mContent->GetDocument();
+    nsCOMPtr<nsIDocument> document = mContent->GetComposedDoc();
     if (!document)
       return NS_ERROR_FAILURE;
 

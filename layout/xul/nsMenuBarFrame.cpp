@@ -72,7 +72,7 @@ nsMenuBarFrame::Init(nsIContent*       aContent,
 
   // Hook up the menu bar as a key listener on the whole document.  It will see every
   // key press that occurs, but after everyone else does.
-  mTarget = aContent->GetDocument();
+  mTarget = aContent->GetComposedDoc();
 
   // Also hook up the listener to the window listening for focus events. This is so we can keep proper
   // state as the user alt-tabs through processes.

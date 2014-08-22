@@ -1236,7 +1236,7 @@ nsXULTemplateQueryProcessorRDF::CompileExtendedQuery(nsRDFQuery* aQuery,
                 tag = do_GetAtom(tagstr);
             }
 
-            nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(condition->GetDocument());
+            nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(condition->GetComposedDoc());
             if (! doc)
                 return NS_ERROR_FAILURE;
 

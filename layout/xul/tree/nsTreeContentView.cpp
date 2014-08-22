@@ -488,7 +488,7 @@ nsTreeContentView::SetTree(nsITreeBoxObject* aTree)
     NS_ENSURE_STATE(mRoot);
 
     // Add ourselves to document's observers.
-    nsIDocument* document = mRoot->GetDocument();
+    nsIDocument* document = mRoot->GetComposedDoc();
     if (document) {
       document->AddObserver(this);
       mDocument = document;

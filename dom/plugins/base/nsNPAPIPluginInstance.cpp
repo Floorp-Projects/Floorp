@@ -1682,7 +1682,7 @@ NS_IMETHODIMP
 CarbonEventModelFailureEvent::Run()
 {
   nsString type = NS_LITERAL_STRING("npapi-carbon-event-model-failure");
-  nsContentUtils::DispatchTrustedEvent(mContent->GetDocument(), mContent,
+  nsContentUtils::DispatchTrustedEvent(mContent->GetComposedDoc(), mContent,
                                        type, true, true);
   return NS_OK;
 }
