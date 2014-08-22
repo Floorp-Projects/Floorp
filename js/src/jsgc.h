@@ -994,7 +994,7 @@ class GCHelperState
     void startBackgroundThread(State newState);
     void waitForBackgroundThread();
 
-    State state();
+    State state() const;
     void setState(State state);
 
     bool              sweepFlag;
@@ -1041,6 +1041,9 @@ class GCHelperState
 
     /* Must be called without the GC lock taken. */
     void waitBackgroundSweepOrAllocEnd();
+
+    /* Must be called without the GC lock taken. */
+    void assertStateIsIdle() const;
 
     /* Must be called with the GC lock taken. */
     void startBackgroundAllocationIfIdle();
