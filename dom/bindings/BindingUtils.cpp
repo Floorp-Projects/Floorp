@@ -911,9 +911,12 @@ ThrowConstructorWithoutNew(JSContext* cx, const char* name)
 
 inline const NativePropertyHooks*
 GetNativePropertyHooks(JSContext *cx, JS::Handle<JSObject*> obj,
-                       DOMObjectType& type)
+                       DOMObjectType& type, bool& isGlobal)
 {
-  const DOMJSClass* domClass = GetDOMClass(obj);
+  const js::Class* clasp = js::GetObjectClass(obj);
+  isGlobal = (clasp->flags & JSCLASS_DOM_GLOBAL) != 0;
+
+  const DOMJSClass* domClass = GetDOMClass(clasp);
   if (domClass) {
     type = eInstance;
     return domClass->mNativeHooks;
@@ -964,8 +967,9 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   cacheOnHolder = false;
 
   DOMObjectType type;
+  bool isGlobal;
   const NativePropertyHooks *nativePropertyHooks =
-    GetNativePropertyHooks(cx, obj, type);
+    GetNativePropertyHooks(cx, obj, type, isGlobal);
 
   if (type != eInstance) {
     // For prototype objects and interface objects, just return their
@@ -1319,8 +1323,9 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   cacheOnHolder = false;
 
   DOMObjectType type;
+  bool isGlobal;
   const NativePropertyHooks* nativePropertyHooks =
-    GetNativePropertyHooks(cx, obj, type);
+    GetNativePropertyHooks(cx, obj, type, isGlobal);
 
   if (type == eInstance) {
     // Force the type to be eInterfacePrototype, since we need to walk the
@@ -1400,7 +1405,7 @@ bool
 XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         JS::Handle<JSObject*> obj,
                         unsigned flags, JS::AutoIdVector& props,
-                        DOMObjectType type,
+                        DOMObjectType type, bool isGlobal,
                         const NativeProperties* nativeProperties)
 {
   if (type == eInstance) {
@@ -1439,8 +1444,9 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
 bool
 XrayEnumerateNativeProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                               const NativePropertyHooks* nativePropertyHooks,
-                              DOMObjectType type, JS::Handle<JSObject*> obj,
-                              unsigned flags, JS::AutoIdVector& props)
+                              DOMObjectType type, bool isGlobal,
+                              JS::Handle<JSObject*> obj, unsigned flags,
+                              JS::AutoIdVector& props)
 {
   if (type == eInterface &&
       nativePropertyHooks->mPrototypeID != prototypes::id::_ID_Count &&
@@ -1459,14 +1465,14 @@ XrayEnumerateNativeProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
     nativePropertyHooks->mNativeProperties;
 
   if (nativeProperties.regular &&
-      !XrayEnumerateProperties(cx, wrapper, obj, flags, props, type,
+      !XrayEnumerateProperties(cx, wrapper, obj, flags, props, type, isGlobal,
                                nativeProperties.regular)) {
     return false;
   }
 
   if (nativeProperties.chromeOnly &&
       xpc::AccessCheck::isChrome(js::GetObjectCompartment(wrapper)) &&
-      !XrayEnumerateProperties(cx, wrapper, obj, flags, props, type,
+      !XrayEnumerateProperties(cx, wrapper, obj, flags, props, type, isGlobal,
                                nativeProperties.chromeOnly)) {
     return false;
   }
@@ -1480,8 +1486,9 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         unsigned flags, JS::AutoIdVector& props)
 {
   DOMObjectType type;
+  bool isGlobal;
   const NativePropertyHooks* nativePropertyHooks =
-    GetNativePropertyHooks(cx, obj, type);
+    GetNativePropertyHooks(cx, obj, type, isGlobal);
 
   if (type == eInstance) {
     if (nativePropertyHooks->mEnumerateOwnProperties &&
@@ -1492,7 +1499,7 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
 
     // Handle Unforgeable properties.
     if (!XrayEnumerateNativeProperties(cx, wrapper, nativePropertyHooks, type,
-                                       obj, flags, props)) {
+                                       isGlobal, obj, flags, props)) {
       return false;
     }
 
@@ -1508,7 +1515,7 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
   if (type == eInterfacePrototype) {
     do {
       if (!XrayEnumerateNativeProperties(cx, wrapper, nativePropertyHooks, type,
-                                         obj, flags, props)) {
+                                         isGlobal, obj, flags, props)) {
         return false;
       }
 
@@ -1521,7 +1528,7 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
   }
 
   return XrayEnumerateNativeProperties(cx, wrapper, nativePropertyHooks, type,
-                                       obj, flags, props);
+                                       isGlobal, obj, flags, props);
 }
 
 NativePropertyHooks sWorkerNativePropertyHooks = {

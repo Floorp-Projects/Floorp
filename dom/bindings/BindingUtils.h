@@ -181,13 +181,15 @@ UnwrapDOMObject(JSObject* obj)
 }
 
 inline const DOMJSClass*
+GetDOMClass(const js::Class* clasp)
+{
+  return IsDOMClass(clasp) ? DOMJSClass::FromJSClass(clasp) : nullptr;
+}
+
+inline const DOMJSClass*
 GetDOMClass(JSObject* obj)
 {
-  const js::Class* clasp = js::GetObjectClass(obj);
-  if (IsDOMClass(clasp)) {
-    return DOMJSClass::FromJSClass(clasp);
-  }
-  return nullptr;
+  return GetDOMClass(js::GetObjectClass(obj));
 }
 
 inline nsISupports*
