@@ -724,7 +724,15 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY getUserMedia.selectMicrophone.accesskey "M">
 <!ENTITY getUserMedia.allWindowsShared.message "All visible windows on your screen will be shared.">
 
-<!ENTITY mixedContentBlocked.moreinfo "Most websites will still work properly even when this content is blocked.">
+<!-- Bad Content Blocker Doorhanger Notification -->
+<!ENTITY badContentBlocked.moreinfo "Most websites will work properly even if content is blocked.">
+
+<!ENTITY mixedContentBlocked2.message "Insecure content">
+<!ENTITY mixedContentBlocked2.moreinfo "Some unencrypted elements on this website have been blocked.">
+<!ENTITY mixedContentBlocked2.learnMore "Learn More">
+<!ENTITY mixedContentBlocked2.options "Options">
+<!ENTITY mixedContentBlocked2.unblock.label "Disable protection for now">
+<!ENTITY mixedContentBlocked2.unblock.accesskey "D">
 
 <!ENTITY pointerLock.notification.message "Press ESC at any time to show it again.">
 
