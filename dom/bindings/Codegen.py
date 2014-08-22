@@ -6320,6 +6320,21 @@ class CGPerSignatureCall(CGThing):
         self.arguments = arguments
         self.argCount = len(arguments)
         cgThings = []
+
+        # Here, we check if the current getter, setter, method, interface or
+        # inherited interfaces have the UnsafeInPrerendering extended attribute
+        # and if so, we add a check to make sure it is safe.
+        if (idlNode.getExtendedAttribute("UnsafeInPrerendering") or
+            descriptor.interface.getExtendedAttribute("UnsafeInPrerendering") or
+            any(i.getExtendedAttribute("UnsafeInPrerendering")
+                for i in descriptor.interface.getInheritedInterfaces())):
+                cgThings.append(CGGeneric(dedent(
+                    """
+                    if (mozilla::dom::CheckSafetyInPrerendering(cx, obj)) {
+                        //TODO: Handle call into unsafe API during Prerendering (Bug 730101)
+                        return false;
+                    }
+                    """)))
         lenientFloatCode = None
         if idlNode.getExtendedAttribute('LenientFloat') is not None:
             if setter:

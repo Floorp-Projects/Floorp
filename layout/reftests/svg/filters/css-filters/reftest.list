@@ -10,3 +10,27 @@ default-preferences pref(layout.css.filters.enabled,true)
 == drop-shadow.html drop-shadow-ref.html
 == drop-shadow-default-color.html drop-shadow-default-color-ref.html
 == drop-shadow-negative-offset.html drop-shadow-negative-offset-ref.html
+fuzzy-if(d2d,1,10000) == grayscale.html grayscale-ref.html
+fuzzy-if(d2d,1,10000) == grayscale-one.html grayscale-one-ref.html
+fuzzy-if(d2d,1,10000) == grayscale-over-one.html grayscale-over-one-ref.html
+fuzzy-if(d2d,1,10000) == grayscale-percent.html grayscale-percent-ref.html
+== grayscale-zero.html grayscale-zero-ref.html
+== hue-rotate.html hue-rotate-ref.html
+== hue-rotate-360.html hue-rotate-360-ref.html
+== hue-rotate-grad.html hue-rotate-grad-ref.html
+== hue-rotate-negative.html hue-rotate-negative-ref.html
+== hue-rotate-over-360.html hue-rotate-over-360-ref.html
+== hue-rotate-rad.html hue-rotate-rad-ref.html
+== hue-rotate-turn.html hue-rotate-turn-ref.html
+== hue-rotate-zero.html hue-rotate-zero-ref.html
+== saturate.html saturate-ref.html
+fuzzy-if(d2d,1,10000) == saturate-desaturate.html saturate-desaturate-ref.html
+== saturate-extreme.html saturate-extreme-ref.html
+== saturate-one.html saturate-one-ref.html
+== saturate-percent.html saturate-percent-ref.html
+fuzzy-if(d2d,1,10000) == saturate-zero.html saturate-zero-ref.html
+fuzzy-if(d2d,1,10000) == sepia.html sepia-ref.html
+fuzzy-if(d2d,1,10000) == sepia-one.html sepia-one-ref.html
+fuzzy-if(d2d,1,10000) == sepia-over-one.html sepia-over-one-ref.html
+fuzzy-if(d2d,1,10000) == sepia-percent.html sepia-percent-ref.html
+== sepia-zero.html sepia-zero-ref.html

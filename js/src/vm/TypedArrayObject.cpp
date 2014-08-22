@@ -28,8 +28,6 @@
 #endif
 #include "jswrapper.h"
 
-#include "asmjs/AsmJSModule.h"
-#include "asmjs/AsmJSValidate.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "vm/ArrayBufferObject.h"

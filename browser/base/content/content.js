@@ -8,6 +8,8 @@ let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentLinkHandler",
   "resource:///modules/ContentLinkHandler.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
@@ -18,11 +20,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
   "resource:///modules/UITour.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormSubmitObserver",
+  "resource:///modules/FormSubmitObserver.jsm");
 
-// Creates a new nsIURI object.
-function makeURI(uri, originCharset, baseURI) {
-  return Services.io.newURI(uri, originCharset, baseURI);
-}
+// TabChildGlobal
+var global = this;
+
+// Load the form validation popup handler
+var formSubmitObserver = new FormSubmitObserver(content, this);
 
 addMessageListener("Browser:HideSessionRestoreButton", function (message) {
   // Hide session restore button on about:home
@@ -328,9 +333,6 @@ let ContentSearchMediator = {
 };
 ContentSearchMediator.init(this);
 
-
-var global = this;
-
 // Lazily load the finder code
 addMessageListener("Finder:Initialize", function () {
   let {RemoteFinderListener} = Cu.import("resource://gre/modules/RemoteFinder.jsm", {});
@@ -465,7 +467,7 @@ let ClickEventHandler = {
     // In case of XLink, we don't return the node we got href from since
     // callers expect <a>-like elements.
     // Note: makeURI() will throw if aUri is not a valid URI.
-    return [href ? makeURI(href, null, baseURI).spec : null, null];
+    return [href ? BrowserUtils.makeURI(href, null, baseURI).spec : null, null];
   }
 };
 ClickEventHandler.init();

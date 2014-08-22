@@ -104,30 +104,32 @@ Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
                           aFlashCounter);
 }
 
-gfx::Rect
-Compositor::ClipRectInLayersCoordinates(gfx::Rect aClip) const {
-  gfx::Rect result;
-  aClip = aClip + GetCurrentRenderTarget()->GetOrigin();
-  gfx::IntSize destSize = GetWidgetSize();
+RenderTargetRect
+Compositor::ClipRectInLayersCoordinates(RenderTargetIntRect aClip) const {
+  RenderTargetRect result;
+  aClip = aClip + RenderTargetIntPoint(GetCurrentRenderTarget()->GetOrigin().x,
+                                       GetCurrentRenderTarget()->GetOrigin().y);
+  RenderTargetIntSize destSize = RenderTargetIntSize(GetWidgetSize().width,
+                                                     GetWidgetSize().height);
 
   switch (mScreenRotation) {
     case ROTATION_0:
-      result = aClip;
+      result = RenderTargetRect(aClip.x, aClip.y, aClip.width, aClip.height);
       break;
     case ROTATION_90:
-      result = gfx::Rect(aClip.y,
-                         destSize.width - aClip.x - aClip.width,
-                         aClip.height, aClip.width);
+      result = RenderTargetRect(aClip.y,
+                                destSize.width - aClip.x - aClip.width,
+                                aClip.height, aClip.width);
       break;
     case ROTATION_270:
-      result = gfx::Rect(destSize.height - aClip.y - aClip.height,
-                         aClip.x,
-                         aClip.height, aClip.width);
+      result = RenderTargetRect(destSize.height - aClip.y - aClip.height,
+                                aClip.x,
+                                aClip.height, aClip.width);
       break;
     case ROTATION_180:
-      result = gfx::Rect(destSize.width - aClip.x - aClip.width,
-                         destSize.height - aClip.y - aClip.height,
-                         aClip.width, aClip.height);
+      result = RenderTargetRect(destSize.width - aClip.x - aClip.width,
+                                destSize.height - aClip.y - aClip.height,
+                                aClip.width, aClip.height);
       break;
       // ScreenRotation has a sentinel value, need to catch it in the switch
       // statement otherwise the build fails (-WError)

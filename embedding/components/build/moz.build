@@ -12,24 +12,24 @@ FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    '../appstartup/src',
-    '../commandhandler/src',
-    '../find/src',
-    '../webbrowserpersist/src',
-    '../windowwatcher/src',
+    '../appstartup',
+    '../commandhandler',
+    '../find',
+    '../webbrowserpersist',
+    '../windowwatcher',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
-        '../printingui/src/win',
+        '../printingui/win',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        '../printingui/src/mac',
+        '../printingui/mac',
     ]
 
 if CONFIG['MOZ_PDF_PRINTING']:
     LOCAL_INCLUDES += [
-        '../printingui/src/unixshared',
+        '../printingui/unixshared',
     ]
 

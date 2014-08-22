@@ -49,6 +49,9 @@ interface Notification : EventTarget {
   [Pure]
   readonly attribute DOMString? icon;
 
+  [Constant]
+  readonly attribute any data;
+
   void close();
 };
 
@@ -58,6 +61,7 @@ dictionary NotificationOptions {
   DOMString body = "";
   DOMString tag = "";
   DOMString icon = "";
+  any data = null;
 };
 
 dictionary GetNotificationOptions {

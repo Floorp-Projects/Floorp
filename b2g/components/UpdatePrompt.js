@@ -312,6 +312,9 @@ UpdatePrompt.prototype = {
     }
 
     switch (aDetail.result) {
+      // Battery not okay, do not wait for idle to re-prompt
+      case "low-battery":
+        break;
       case "wait":
         // Wait until the user is idle before prompting to apply the update
         this.waitForIdle();

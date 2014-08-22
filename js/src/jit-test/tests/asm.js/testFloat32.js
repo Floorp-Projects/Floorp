@@ -2,7 +2,7 @@ load(libdir + "asm.js");
 const TO_FLOAT32 = "var toF = glob.Math.fround;";
 const HEAP32 = "var f32 = new glob.Float32Array(heap);";
 const HEAP64 = "var f64 = new glob.Float64Array(heap);"
-var heap = new ArrayBuffer(4096);
+var heap = new ArrayBuffer(BUF_MIN);
 
 // Module linking
 assertAsmLinkAlwaysFail(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f() {} return f"), null);

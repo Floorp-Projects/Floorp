@@ -64,6 +64,10 @@ private:
    */
   nsresult SetAttributesForBlur(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForDropShadow(FilterPrimitiveDescription& aDescr);
+  nsresult SetAttributesForGrayscale(FilterPrimitiveDescription& aDescr);
+  nsresult SetAttributesForHueRotate(FilterPrimitiveDescription& aDescr);
+  nsresult SetAttributesForSaturate(FilterPrimitiveDescription& aDescr);
+  nsresult SetAttributesForSepia(FilterPrimitiveDescription& aDescr);
 
   /**
    * Returns the index of the last result in the aPrimitiveDescrs, which we'll

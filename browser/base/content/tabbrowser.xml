@@ -151,6 +151,22 @@
         ]]></getter>
       </property>
 
+      <property name="formValidationAnchor" readonly="true">
+        <getter><![CDATA[
+        if (this.mCurrentTab._formValidationAnchor) {
+          return this.mCurrentTab._formValidationAnchor;
+        }
+        let stack = this.mCurrentBrowser.parentNode;
+        // Create an anchor for the form validation popup
+        const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        let formValidationAnchor = document.createElementNS(NS_XUL, "hbox");
+        formValidationAnchor.className = "form-validation-anchor";
+        formValidationAnchor.hidden = true;
+        stack.appendChild(formValidationAnchor);
+        return this.mCurrentTab._formValidationAnchor = formValidationAnchor;
+        ]]></getter>
+      </property>
+
       <method name="isFindBarInitialized">
         <parameter name="aTab"/>
         <body><![CDATA[

@@ -4,6 +4,7 @@
 
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Preferences.h"
@@ -16,10 +17,12 @@
 #include "nsIPermissionManager.h"
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
+#include "nsStructuredCloneContainer.h"
 #include "nsToolkitCompsCID.h"
 #include "nsGlobalWindow.h"
 #include "nsDOMJSUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIXPConnect.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/Services.h"
 #include "nsContentPermissionHelper.h"
@@ -57,11 +60,12 @@ public:
                     const nsAString& aBody,
                     const nsAString& aTag,
                     const nsAString& aIcon,
+                    const nsAString& aData,
                     JSContext* aCx)
   {
     MOZ_ASSERT(!aID.IsEmpty());
 
-    NotificationOptions options;
+    RootedDictionary<NotificationOptions> options(aCx);
     options.mDir = Notification::StringToDirection(nsString(aDir));
     options.mLang = aLang;
     options.mBody = aBody;
@@ -71,6 +75,12 @@ public:
                                                                        aID,
                                                                        aTitle,
                                                                        options);
+    ErrorResult rv;
+    notification->InitFromBase64(aCx, aData, rv);
+    if (rv.Failed()) {
+      return rv.ErrorCode();
+    }
+
     JSAutoCompartment ac(aCx, mGlobal);
     JS::Rooted<JSObject*> element(aCx, notification->WrapObject(aCx));
     NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
@@ -371,7 +381,7 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
 Notification::Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
                            NotificationDirection aDir, const nsAString& aLang,
                            const nsAString& aTag, const nsAString& aIconUrl,
-			   nsPIDOMWindow* aWindow)
+                           nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow),
     mID(aID), mTitle(aTitle), mBody(aBody), mDir(aDir), mLang(aLang),
     mTag(aTag), mIconUrl(aIconUrl), mIsClosed(false)
@@ -404,10 +414,18 @@ Notification::Constructor(const GlobalObject& aGlobal,
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(window, "Window should not be null.");
+
   nsRefPtr<Notification> notification = CreateInternal(window,
                                                        EmptyString(),
                                                        aTitle,
                                                        aOptions);
+
+  // Make a structured clone of the aOptions.mData object
+  JS::Rooted<JS::Value> data(aGlobal.Context(), aOptions.mData);
+  notification->InitFromJSVal(aGlobal.Context(), data, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Queue a task to show the notification.
   nsCOMPtr<nsIRunnable> showNotificationTask =
@@ -435,6 +453,13 @@ Notification::Constructor(const GlobalObject& aGlobal,
   nsString alertName;
   notification->GetAlertName(alertName);
 
+  nsString dataString;
+  nsCOMPtr<nsIStructuredCloneContainer> scContainer;
+  scContainer = notification->GetDataCloneContainer();
+  if (scContainer) {
+    scContainer->GetDataAsBase64(dataString);
+  }
+
   aRv = notificationStorage->Put(origin,
                                  id,
                                  aTitle,
@@ -443,7 +468,9 @@ Notification::Constructor(const GlobalObject& aGlobal,
                                  aOptions.mBody,
                                  aOptions.mTag,
                                  aOptions.mIcon,
-                                 alertName);
+                                 alertName,
+                                 dataString);
+
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -481,9 +508,28 @@ Notification::CreateInternal(nsPIDOMWindow* aWindow,
                                                          aOptions.mLang,
                                                          aOptions.mTag,
                                                          aOptions.mIcon,
-							 aWindow);
+                                                         aWindow);
   return notification.forget();
 }
+
+Notification::~Notification() {}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(Notification)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Notification, DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mData)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDataObjectContainer)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Notification, DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mData)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDataObjectContainer)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_ADDREF_INHERITED(Notification, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(Notification, DOMEventTargetHelper)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Notification)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 nsIPrincipal*
 Notification::GetPrincipal()
@@ -531,6 +577,13 @@ Notification::ShowInternal()
 
   nsCOMPtr<nsIObserver> observer = new NotificationObserver(this);
 
+  // mDataObjectContainer might be uninitialized here because the notification
+  // was constructed with an undefined data property.
+  nsString dataStr;
+  if (mDataObjectContainer) {
+    mDataObjectContainer->GetDataAsBase64(dataStr);
+  }
+
 #ifdef MOZ_B2G
   nsCOMPtr<nsIAppNotificationService> appNotifier =
     do_GetService("@mozilla.org/system-alerts-service;1");
@@ -553,6 +606,7 @@ Notification::ShowInternal()
         ops.mDir = DirectionToString(mDir);
         ops.mLang = mLang;
         ops.mTag = mTag;
+        ops.mData = dataStr;
 
         if (!ToJSValue(cx, ops, &val)) {
           NS_WARNING("Converting dict to object failed!");
@@ -574,7 +628,7 @@ Notification::ShowInternal()
   alertService->ShowAlertNotification(absoluteUrl, mTitle, mBody, true,
                                       uniqueCookie, observer, mAlertName,
                                       DirectionToString(mDir), mLang,
-                                             GetPrincipal());
+                                      dataStr, GetPrincipal());
 }
 
 void
@@ -778,6 +832,54 @@ Notification::GetOrigin(nsPIDOMWindow* aWindow, nsString& aOrigin)
   }
 
   return NS_OK;
+}
+
+nsIStructuredCloneContainer* Notification::GetDataCloneContainer()
+{
+  return mDataObjectContainer;
+}
+
+void
+Notification::GetData(JSContext* aCx,
+                      JS::MutableHandle<JS::Value> aRetval)
+{
+  if (!mData && mDataObjectContainer) {
+    nsresult rv;
+    rv = mDataObjectContainer->DeserializeToVariant(aCx, getter_AddRefs(mData));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRetval.setNull();
+      return;
+    }
+  }
+  if (!mData) {
+    aRetval.setNull();
+    return;
+  }
+  VariantToJsval(aCx, mData, aRetval);
+}
+
+void
+Notification::InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData,
+                            ErrorResult& aRv)
+{
+  if (mDataObjectContainer || aData.isNull()) {
+    return;
+  }
+  mDataObjectContainer = new nsStructuredCloneContainer();
+  aRv = mDataObjectContainer->InitFromJSVal(aData);
+}
+
+void Notification::InitFromBase64(JSContext* aCx, const nsAString& aData,
+                                  ErrorResult& aRv)
+{
+  if (mDataObjectContainer || aData.IsEmpty()) {
+    return;
+  }
+
+  auto container = new nsStructuredCloneContainer();
+  aRv = container->InitFromBase64(aData, JS_STRUCTURED_CLONE_VERSION,
+                                  aCx);
+  mDataObjectContainer = container;
 }
 
 } // namespace dom

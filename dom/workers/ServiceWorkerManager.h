@@ -195,6 +195,8 @@ class ServiceWorkerManager MOZ_FINAL : public nsIServiceWorkerManager
   friend class CallInstallRunnable;
   friend class CancelServiceWorkerInstallationRunnable;
   friend class ServiceWorkerUpdateInstance;
+  friend class GetRegistrationsRunnable;
+  friend class GetRegistrationRunnable;
 
 public:
   NS_DECL_ISUPPORTS

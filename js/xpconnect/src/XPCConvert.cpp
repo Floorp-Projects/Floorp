@@ -908,17 +908,6 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
         // around a security wrapper. XBL does this with Xrays from the XBL
         // scope - see nsBindingManager::GetBindingImplementation.
         JSObject* inner = js::CheckedUnwrap(src, /* stopAtOuter = */ false);
-
-        // Hack - For historical reasons, wrapped chrome JS objects have been
-        // passable as native interfaces. We'd like to fix this, but it
-        // involves fixing the contacts API and PeerConnection to stop using
-        // COWs. This needs to happen, but for now just preserve the old
-        // behavior.
-        //
-        // Note that there is an identical hack in getWrapper which should be
-        // removed if this one is.
-        if (!inner && MOZ_UNLIKELY(xpc::WrapperFactory::IsCOW(src)))
-            inner = js::UncheckedUnwrap(src);
         if (!inner) {
             if (pErr)
                 *pErr = NS_ERROR_XPC_SECURITY_MANAGER_VETO;
