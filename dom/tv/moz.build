@@ -7,19 +7,39 @@
 TEST_DIRS += ['test']
 
 EXPORTS.mozilla.dom += [
+    'FakeTVService.h',
     'TVChannel.h',
+    'TVListeners.h',
     'TVManager.h',
     'TVProgram.h',
+    'TVServiceCallbacks.h',
+    'TVServiceFactory.h',
+    'TVServiceRunnables.h',
     'TVSource.h',
     'TVTuner.h',
+    'TVTypes.h',
+    'TVUtils.h',
 ]
 
 UNIFIED_SOURCES += [
+    'FakeTVService.cpp',
     'TVChannel.cpp',
+    'TVListeners.cpp',
     'TVManager.cpp',
     'TVProgram.cpp',
+    'TVServiceCallbacks.cpp',
+    'TVServiceFactory.cpp',
     'TVSource.cpp',
     'TVTuner.cpp',
+    'TVTypes.cpp',
 ]
+
+XPIDL_SOURCES += [
+    'nsITVService.idl',
+]
+
+XPIDL_MODULE = 'dom_tv'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
