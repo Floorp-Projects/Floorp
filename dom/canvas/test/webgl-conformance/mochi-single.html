@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<html>
+<head>
+<title>
+WebGL Conformance Test Suite Single Test Wrapper
+</title>
+<!-- Uncomment this to use this without mochi-wrapper.html files.
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+-->
+<script src="../webgl-mochitest/driver-info.js"></script>
+</head>
+<body>
+<div>Status: <span id='status'>Initializing</span></div>
+<div>Path: <span id='path'>-</span></div>
+<div>Failures: <span id='results'>-</span></div>
+<iframe id='test-frame' width='100%' scrolling='no'></iframe>
+<script>
+'use strict';
+
+var IFRAME_BODY_MARGIN = 8;
+var IFRAME_SIZE_UPDATE_INTERVAL = 100; // ms
+
+////////////////////////////////////////
+
+var statusElem = document.getElementById('status');
+var pathElem = document.getElementById('path');
+var resultsElem = document.getElementById('results');
+var frameElem = document.getElementById('test-frame');
+
+
+function RunTest(testPath) {
+  pathElem.innerHTML = testPath;
+
+  // Auto-update to grow the size of the doc.
+  function UpdateFrameSize() {
+    var frameBody = frameElem.contentWindow.document.body;
+
+    if (frameBody) {
+      var scrollHeight = frameBody.scrollHeight;
+      frameElem.height = scrollHeight + 2*IFRAME_BODY_MARGIN;
+    }
+
+    setTimeout(UpdateFrameSize, IFRAME_SIZE_UPDATE_INTERVAL);
+  }
+  UpdateFrameSize();
+
+  // Load the iframe.
+  statusElem.innerHTML = 'Loading';
+
+  frameElem.onloadstart = function() {
+    statusElem.innerHTML = 'Running';
+  };
+  frameElem.src = testPath;
+}
+
+var failureCount = 0;
+var resultCount = 0;
+window.webglTestHarness = {
+  reportResults: function(success, message) {
+    resultCount++;
+    if (!success) {
+      failureCount++;
+    }
+
+    var color = failureCount ? 'red' : 'green';
+
+    resultsElem.innerHTML = [
+      '<font color="' + color + '">',
+      '' + failureCount + '/' + resultCount,
+      '</font>',
+    ].join('\n');
+  },
+
+  notifyFinished: function(testPath) {
+    OnTestComplete();
+  },
+};
+
+var gTestPath = null;
+
+function OnTestComplete() {
+  statusElem.innerHTML = 'Complete';
+
+  var passed = failureCount == 0;
+  ok(passed, 'Should pass: ' + gTestPath);
+  SimpleTest.finish();
+}
+
+if (!window.ok) {
+  window.ok = parent.ok;
+}
+if (!window.todo) {
+  window.todo = parent.todo;
+}
+if (!window.SimpleTest) {
+  window.SimpleTest = parent.SimpleTest;
+}
+
+if (!window.ok) {
+  window.ok = function(status, message) {
+    console.log('ok(' + status + ', "' + message + '")');
+  }
+}
+if (!window.todo) {
+  window.todo = function(status, message) {
+    console.log('todo(' + status + ', "' + message + '")');
+  }
+}
+if (!window.SimpleTest) {
+  window.SimpleTest = {
+    waitForExplicitFinish: function(){},
+    finish: function(){},
+  };
+}
+
+////////////////////////////////////////
+// Begin execution
+
+SimpleTest.waitForExplicitFinish();
+
+do {
+  var arg = location.search.substr(1);
+  if (arg == 'dump') {
+    statusElem.innerHTML = 'Dumping';
+
+    ok(true, 'OS:' + DriverInfo.getOS());
+    ok(true, 'OS version:' + DriverInfo.getOSVersion());
+    ok(true, 'Driver:' + DriverInfo.getDriver());
+
+    statusElem.innerHTML = 'Complete';
+    break;
+  }
+
+  gTestPath = arg;
+  RunTest(gTestPath);
+} while (false);
+
+</script>
+</body>
+</html>
