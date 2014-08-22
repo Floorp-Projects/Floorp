@@ -15,6 +15,8 @@
 #include "nsISupportsImpl.h"
 #include "nsContentUtils.h"
 
+#include "prprf.h"
+
 // Undo the damage done by mozzconf.h
 #undef compress
 
