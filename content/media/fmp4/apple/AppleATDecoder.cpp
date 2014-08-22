@@ -32,7 +32,7 @@ AppleATDecoder::AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
   , mCallback(aCallback)
   , mConverter(nullptr)
   , mStream(nullptr)
-  , mCurrentAudioFrame(0)
+  , mCurrentAudioTimestamp(0)
   , mSamplePosition(0)
   , mHaveOutput(false)
 {
@@ -286,7 +286,7 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
     const int rate = mOutputFormat.mSampleRate;
     const int channels = mOutputFormat.mChannelsPerFrame;
 
-    int64_t time = FramesToUsecs(mCurrentAudioFrame, rate).value();
+    int64_t time = mCurrentAudioTimestamp;
     int64_t duration = FramesToUsecs(numFrames, rate).value();
 
     LOG("pushed audio at time %lfs; duration %lfs\n",
@@ -298,8 +298,6 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
                                      channels, rate);
     mCallback->Output(audio);
     mHaveOutput = true;
-
-    mCurrentAudioFrame += numFrames;
 
     if (rv == kNeedMoreData) {
       // No error; we just need more data.
@@ -354,6 +352,7 @@ void
 AppleATDecoder::SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample)
 {
   mSamplePosition = aSample->byte_offset;
+  mCurrentAudioTimestamp = aSample->composition_timestamp;
   OSStatus rv = AudioFileStreamParseBytes(mStream,
                                           aSample->size,
                                           aSample->data,
