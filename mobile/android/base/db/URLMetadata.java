@@ -5,6 +5,8 @@
  */
 package org.mozilla.gecko.db;
 
+import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.Telemetry;
 
@@ -186,5 +188,19 @@ public class URLMetadata {
         } catch (Exception ex) {
             Log.e(LOGTAG, "error saving", ex);
         }
+    }
+
+    public static int deleteUnused(final ContentResolver cr) {
+        final String selection = URLMetadataTable.URL_COLUMN + " NOT IN "
+                + "(SELECT " + History.URL
+                + " FROM " + History.TABLE_NAME
+                + " WHERE " + History.IS_DELETED + " = 0"
+                + " UNION "
+                + " SELECT " + Bookmarks.URL
+                + " FROM " + Bookmarks.TABLE_NAME
+                + " WHERE " + Bookmarks.IS_DELETED + " = 0 "
+                + " AND " + Bookmarks.URL + " IS NOT NULL)";
+
+        return cr.delete(URLMetadataTable.CONTENT_URI, selection, null);
     }
 }

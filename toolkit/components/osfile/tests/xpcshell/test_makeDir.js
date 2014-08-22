@@ -120,4 +120,23 @@ add_task(function test_option_from() {
   do_check_true(!!exception);
   do_check_true(exception instanceof OS.File.Error);
   do_check_true(exception.becauseNoSuchFile);
+
+  // Test edge cases on paths
+
+  let dir3 = Path.join(profileDir, "d", "", "e", "f");
+  do_check_false((yield OS.File.exists(dir3)));
+  yield OS.File.makeDir(dir3, {from: profileDir});
+  do_check_true((yield OS.File.exists(dir3)));
+
+  let dir4;
+  if (OS.Constants.Win) {
+    // Test that we can create a directory recursively even
+    // if we have too many "\\".
+    dir4 = profileDir + "\\\\g";
+  } else {
+    dir4 = profileDir + "////g";
+  }
+  do_check_false((yield OS.File.exists(dir4)));
+  yield OS.File.makeDir(dir4, {from: profileDir});
+  do_check_true((yield OS.File.exists(dir4)));
 });

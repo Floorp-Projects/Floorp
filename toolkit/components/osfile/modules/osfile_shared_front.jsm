@@ -549,21 +549,29 @@ AbstractFile.removeRecursive = function(path, options = {}) {
  * does not support security descriptors.
  */
 AbstractFile.makeDir = function(path, options = {}) {
-  if (!options.from) {
+  let from = options.from;
+  if (!from) {
     OS.File._makeDir(path, options);
     return;
   }
-  if (!path.startsWith(options.from)) {
-    throw new Error("Incorrect use of option |from|: " + path + " is not a descendant of " + options.from);
+  if (!path.startsWith(from)) {
+    // Apparently, `from` is not a parent of `path`. However, we may
+    // have false negatives due to non-normalized paths, e.g.
+    // "foo//bar" is a parent of "foo/bar/sna".
+    path = Path.normalize(path);
+    from = Path.normalize(from);
+    if (!path.startsWith(from)) {
+      throw new Error("Incorrect use of option |from|: " + path + " is not a descendant of " + from);
+    }
   }
   let innerOptions = Object.create(options, {
     ignoreExisting: {
       value: true
     }
   });
-  // Compute the elements that appear in |path| but not in |options.from|.
-  let items = Path.split(path).components.slice(Path.split(options.from).components.length);
-  let current = options.from;
+  // Compute the elements that appear in |path| but not in |from|.
+  let items = Path.split(path).components.slice(Path.split(from).components.length);
+  let current = from;
   for (let item of items) {
     current = Path.join(current, item);
     OS.File._makeDir(current, innerOptions);

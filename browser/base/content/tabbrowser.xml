@@ -792,16 +792,6 @@
                   unifiedComplete.registerOpenPage(aLocation);
                   this.mBrowser.registeredOpenURI = aLocation;
                 }
-
-                // It's possible we've moved from a URL that we cannot load remotely
-                // to one that we can. If so, switch to a remote browser. This will
-                // cause us to re-enter this onLocationChange function, but next time,
-                // updateBrowserRemotenessByURL will return false.
-                if (gMultiProcessBrowser &&
-                    this.mTabBrowser.updateBrowserRemotenessByURL(this.mBrowser,
-                                                                  aLocation.spec)) {
-                  this.mTabBrowser.loadURIWithFlags(aLocation.spec, aFlags);
-                }
               }
 
               if (!this.mBlank) {

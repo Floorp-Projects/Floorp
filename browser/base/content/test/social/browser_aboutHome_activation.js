@@ -19,7 +19,7 @@ let snippet =
 '         "iconURL": "chrome://branding/content/icon16.png",' +
 '         "icon32URL": "chrome://branding/content/favicon32.png",' +
 '         "icon64URL": "chrome://branding/content/icon64.png",' +
-'         "sidebarURL": "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",' +
+'         "sidebarURL": "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",' +
 '         "postActivationURL": "https://example.com/browser/browser/base/content/test/social/social_postActivation.html",' +
 '       };' +
 '       function activateProvider(node) {' +
@@ -41,7 +41,7 @@ let snippet2 =
 '         "iconURL": "chrome://branding/content/icon16.png",' +
 '         "icon32URL": "chrome://branding/content/favicon32.png",' +
 '         "icon64URL": "chrome://branding/content/icon64.png",' +
-'         "sidebarURL": "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",' +
+'         "sidebarURL": "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",' +
 '         "postActivationURL": "https://example.com/browser/browser/base/content/test/social/social_postActivation.html",' +
 '         "oneclick": true' +
 '       };' +

@@ -1228,6 +1228,7 @@ EventTooltip.prototype = {
     if (event.target.classList.contains("event-tooltip-debugger-icon")) {
       this._debugClicked(event);
       event.stopPropagation();
+      return;
     }
 
     let doc = this._tooltip.doc;

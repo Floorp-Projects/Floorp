@@ -17,25 +17,31 @@ import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
 public class BackButton extends ShapedButton { 
-    private Path mPath;
-    private Path mBorderPath;
-    private Paint mBorderPaint;
-    private Paint mBorderPrivatePaint;
+    private final Path mBorderPath;
+    private final Paint mBorderPaint;
+    private final float mBorderWidth;
 
     public BackButton(Context context, AttributeSet attrs) {
         super(context, attrs);
 
+        mBorderWidth = getResources().getDimension(R.dimen.nav_button_border_width);
+
         // Paint to draw the border.
         mBorderPaint = new Paint();
         mBorderPaint.setAntiAlias(true);
-        mBorderPaint.setColor(0xFF000000);
+        mBorderPaint.setStrokeWidth(mBorderWidth);
         mBorderPaint.setStyle(Paint.Style.STROKE);
 
-        mBorderPrivatePaint = new Paint(mBorderPaint);
-
         // Path is masked.
-        mPath = new Path();
         mBorderPath = new Path();
+
+        setPrivateMode(false);
+    }
+
+    @Override
+    public void setPrivateMode(boolean isPrivate) {
+        super.setPrivateMode(isPrivate);
+        mBorderPaint.setColor(isPrivate ? 0xFF363B40 : 0xFFB5B5B5);
     }
 
     @Override
@@ -43,24 +49,10 @@ public class BackButton extends ShapedButton {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
 
         mPath.reset();
-        mPath.addCircle(width/2, height/2, width/2, Path.Direction.CW);
-
-        float borderWidth = getContext().getResources().getDimension(R.dimen.nav_button_border_width);
-        mBorderPaint.setStrokeWidth(borderWidth);
-        mBorderPrivatePaint.setStrokeWidth(borderWidth);
+        mPath.addCircle(width/2, height/2, width/2 - mBorderWidth, Path.Direction.CW);
 
         mBorderPath.reset();
-        mBorderPath.addCircle(width/2, height/2, (width/2) - borderWidth, Path.Direction.CW);
-
-        mBorderPaint.setShader(new LinearGradient(0, 0, 
-                                                  0, height, 
-                                                  0xFFB5BBC1, 0xFFFAFBFC,
-                                                  Shader.TileMode.CLAMP));
-
-        mBorderPrivatePaint.setShader(new LinearGradient(0, 0, 
-                                                         0, height, 
-                                                         0xFF040607, 0xFF0B0D0E,
-                                                         Shader.TileMode.CLAMP));
+        mBorderPath.addCircle(width/2, height/2, (width/2) - mBorderWidth, Path.Direction.CW);
     }
 
     @Override
@@ -68,7 +60,7 @@ public class BackButton extends ShapedButton {
         mCanvasDelegate.draw(canvas, mPath, getWidth(), getHeight());
 
         // Draw the border on top.
-        canvas.drawPath(mBorderPath, isPrivateMode() ? mBorderPrivatePaint : mBorderPaint);
+        canvas.drawPath(mBorderPath, mBorderPaint);
     }
 
     // The drawable is constructed as per @drawable/url_bar_nav_button.
