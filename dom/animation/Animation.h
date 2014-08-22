@@ -120,6 +120,8 @@ struct ElementPropertyTransition;
 
 namespace dom {
 
+class AnimationEffect;
+
 class Animation : public nsWrapperCache
 {
 public:
@@ -145,6 +147,11 @@ public:
   virtual const ElementPropertyTransition* AsTransition() const {
     return nullptr;
   }
+
+  // Animation interface
+  // This currently returns a new object each time when used from C++ but is
+  // cached when used from JS.
+  already_AddRefed<AnimationEffect> GetEffect();
 
   void SetParentTime(Nullable<TimeDuration> aParentTime);
 

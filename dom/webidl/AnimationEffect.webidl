@@ -4,15 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dev.w3.org/fxtf/web-animations/#the-animation-interface
+ * http://dev.w3.org/fxtf/web-animations/#the-animationeffect-interface
  *
  * Copyright © 2014 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
 [Pref="dom.animations-api.core.enabled"]
-interface Animation {
-  // FIXME: |effect| should have type (AnimationEffect or EffectCallback)?
-  // but we haven't implemented EffectCallback yet.
-  [Cached,Pure] readonly attribute AnimationEffect? effect;
+interface AnimationEffect {
 };
