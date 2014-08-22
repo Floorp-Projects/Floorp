@@ -1746,6 +1746,88 @@ private:
   }
 };
 
+class ImportDhKeyTask : public ImportKeyTask
+{
+public:
+  ImportDhKeyTask(JSContext* aCx, const nsAString& aFormat,
+                  const ObjectOrString& aAlgorithm, bool aExtractable,
+                  const Sequence<nsString>& aKeyUsages)
+  {
+    Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+  }
+
+  ImportDhKeyTask(JSContext* aCx, const nsAString& aFormat,
+                  JS::Handle<JSObject*> aKeyData,
+                  const ObjectOrString& aAlgorithm, bool aExtractable,
+                  const Sequence<nsString>& aKeyUsages)
+  {
+    Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+    if (NS_SUCCEEDED(mEarlyRv)) {
+      SetKeyData(aCx, aKeyData);
+    }
+  }
+
+  void Init(JSContext* aCx, const nsAString& aFormat,
+            const ObjectOrString& aAlgorithm, bool aExtractable,
+            const Sequence<nsString>& aKeyUsages)
+  {
+    ImportKeyTask::Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+    if (NS_FAILED(mEarlyRv)) {
+      return;
+    }
+
+    RootedDictionary<DhImportKeyParams> params(aCx);
+    mEarlyRv = Coerce(aCx, params, aAlgorithm);
+    if (NS_FAILED(mEarlyRv)) {
+      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+      return;
+    }
+
+    CryptoBuffer prime;
+    ATTEMPT_BUFFER_INIT(mPrime, params.mPrime);
+
+    CryptoBuffer generator;
+    ATTEMPT_BUFFER_INIT(mGenerator, params.mGenerator);
+  }
+
+private:
+  CryptoBuffer mPrime;
+  CryptoBuffer mGenerator;
+
+  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  {
+    // Import the key data itself
+    ScopedSECKEYPublicKey pubKey;
+
+    nsNSSShutDownPreventionLock locker;
+    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+      // Public key import
+      pubKey = CryptoKey::PublicDhKeyFromRaw(mKeyData, mPrime, mGenerator, locker);
+      if (!pubKey) {
+        return NS_ERROR_DOM_DATA_ERR;
+      }
+
+      mKey->SetPublicKey(pubKey.get());
+      mKey->SetType(CryptoKey::PUBLIC);
+    } else {
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+
+    return NS_OK;
+  }
+
+  virtual nsresult AfterCrypto() MOZ_OVERRIDE
+  {
+    // Check permissions for the requested operation
+    if (mKey->HasUsageOtherThan(CryptoKey::DERIVEBITS | CryptoKey::DERIVEKEY)) {
+      return NS_ERROR_DOM_DATA_ERR;
+    }
+
+    mKey->Algorithm().MakeDh(mAlgName, mPrime, mGenerator);
+    return NS_OK;
+  }
+};
+
 class ExportKeyTask : public WebCryptoTask
 {
 public:
@@ -1786,6 +1868,14 @@ private:
     nsNSSShutDownPreventionLock locker;
 
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+      if (mPublicKey && mPublicKey->keyType == dhKey) {
+        nsresult rv = CryptoKey::PublicDhKeyToRaw(mPublicKey, mResult, locker);
+        if (NS_FAILED(rv)) {
+          return NS_ERROR_DOM_OPERATION_ERR;
+        }
+        return NS_OK;
+      }
+
       mResult = mSymKey;
       if (mResult.Length() == 0) {
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -2825,6 +2915,9 @@ WebCryptoTask::CreateImportKeyTask(JSContext* aCx,
              algName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA)) {
     return new ImportEcKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
                                aExtractable, aKeyUsages);
+  } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
+    return new ImportDhKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
+                               aExtractable, aKeyUsages);
   } else {
     return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   }
@@ -2861,7 +2954,8 @@ WebCryptoTask::CreateExportKeyTask(const nsAString& aFormat,
       algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP) ||
-      algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
+      algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH) ||
+      algName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
     return new ExportKeyTask(aFormat, aKey);
   }
 
