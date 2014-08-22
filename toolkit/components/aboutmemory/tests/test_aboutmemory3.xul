@@ -307,7 +307,7 @@ End of P\n\
 P2 (pid NNN)\n\
 Other Measurements\n\
 \n\
-0.00 MB ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN} 0xNNN-blah(0xNNN)\n\
+0.00 MB ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN} 0xNNN-blah(0xNNN) pid NNN pid=NNN\n\
 \n\
 End of P2 (pid NNN)\n\
 P3\n\
@@ -382,7 +382,7 @@ End of P\n\
 P2 (pid NNN)\n\
 Other Measurements\n\
 \n\
-11 B ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN} 0xNNN-blah(0xNNN)\n\
+11 B ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN} 0xNNN-blah(0xNNN) pid NNN pid=NNN\n\
 \n\
 End of P2 (pid NNN)\n\
 P3\n\

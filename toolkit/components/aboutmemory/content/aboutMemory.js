@@ -823,8 +823,11 @@ function makeDReportMap(aJSONReports)
     // e.g. PIDs, addresses, null principal UUIDs. (Note that we don't strip
     // out all UUIDs because some of them -- such as those used by add-ons --
     // are deterministic.)
-    let strippedProcess = jr.process.replace(/pid \d+/g, "pid NNN");
+    let pidRegex = /pid([ =])\d+/g;
+    let pidSubst = "pid$1NNN";
+    let strippedProcess = jr.process.replace(pidRegex, pidSubst);
     let strippedPath = jr.path.replace(/0x[0-9A-Fa-f]+/g, "0xNNN");
+    strippedPath = strippedPath.replace(pidRegex, pidSubst);
     strippedPath = strippedPath.replace(
       /moz-nullprincipal:{........-....-....-....-............}/g,
       "moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}");
