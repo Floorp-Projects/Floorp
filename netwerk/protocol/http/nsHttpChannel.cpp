@@ -58,6 +58,7 @@
 #include "nsInputStreamPump.h"
 #include "nsURLHelper.h"
 #include "nsISocketTransport.h"
+#include "nsICacheSession.h"
 #include "nsIStreamConverterService.h"
 #include "nsISiteSecurityService.h"
 #include "nsCRT.h"

@@ -18,6 +18,7 @@
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserver.h"
 #include "nsISpeculativeConnect.h"
+#include "nsICache.h"
 
 class nsIHttpChannel;
 class nsIPrefBranch;
@@ -109,6 +110,7 @@ public:
     uint32_t       ConnectTimeout()  { return mConnectTimeout; }
     uint32_t       ParallelSpeculativeConnectLimit() { return mParallelSpeculativeConnectLimit; }
     bool           CriticalRequestPrioritization() { return mCriticalRequestPrioritization; }
+    double         BypassCacheLockThreshold() { return mBypassCacheLockThreshold; }
 
     uint32_t       MaxConnectionsPerOrigin() { return mMaxPersistentConnectionsPerServer; }
     bool           UseRequestTokenBucket() { return mRequestTokenBucketEnabled; }
@@ -298,6 +300,13 @@ public:
     // returns true in between Init and Shutdown states
     bool Active() { return mHandlerActive; }
 
+    static void GetCacheSessionNameForStoragePolicy(
+            nsCacheStoragePolicy storagePolicy,
+            bool isPrivate,
+            uint32_t appId,
+            bool inBrowser,
+            nsACString& sessionName);
+
     // When the disk cache is responding slowly its use is suppressed
     // for 1 minute for most requests. Callable from main thread only.
     TimeStamp GetCacheSkippedUntil() { return mCacheSkippedUntil; }
@@ -464,6 +473,10 @@ private:
     // The maximum amount of time to wait for socket transport to be
     // established. In milliseconds.
     uint32_t       mConnectTimeout;
+
+    // The maximum amount of time the nsICacheSession lock can be held
+    // before a new transaction bypasses the cache. In milliseconds.
+    double         mBypassCacheLockThreshold;
 
     // The maximum number of current global half open sockets allowable
     // when starting a new speculative connection.

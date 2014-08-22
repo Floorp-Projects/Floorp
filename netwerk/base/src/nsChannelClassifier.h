@@ -24,8 +24,6 @@ public:
 
 private:
     nsCOMPtr<nsIChannel> mSuspendedChannel;
-    // Set true if the channel is on the allow list.
-    bool mIsAllowListed;
 
     ~nsChannelClassifier() {}
     void MarkEntryClassified(nsresult status);

@@ -12,6 +12,7 @@
 #include "nsCPrefetchService.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
+#include "nsICacheSession.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"

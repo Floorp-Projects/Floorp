@@ -9,7 +9,6 @@
 #include "HttpLog.h"
 
 #include "nsHttp.h"
-#include "nsICacheEntry.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
@@ -42,7 +41,7 @@ HttpChannelChild::HttpChannelChild()
   : HttpAsyncAborter<HttpChannelChild>(MOZ_THIS_IN_INITIALIZER_LIST())
   , mIsFromCache(false)
   , mCacheEntryAvailable(false)
-  , mCacheExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME)
+  , mCacheExpirationTime(nsICache::NO_EXPIRATION_TIME)
   , mSendResumeAt(false)
   , mIPCOpen(false)
   , mKeptAlive(false)
