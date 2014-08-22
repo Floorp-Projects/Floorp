@@ -1309,8 +1309,22 @@ DocAccessible::GetAccessibleOrContainer(nsINode* aNode) const
 
   nsINode* currNode = aNode;
   Accessible* accessible = nullptr;
-  while (!(accessible = GetAccessible(currNode)) &&
-         (currNode = currNode->GetParentNode()));
+  while (!(accessible = GetAccessible(currNode))) {
+    nsINode* parent = nullptr;
+
+    // If this is a content node, try to get a flattened parent content node.
+    // This will smartly skip from the shadow root to the host element,
+    // over parentless document fragment
+    if (currNode->IsContent())
+      parent = currNode->AsContent()->GetFlattenedTreeParent();
+
+    // Fallback to just get parent node, in case there is no parent content
+    // node. Or current node is not a content node.
+    if (!parent)
+      parent = currNode->GetParentNode();
+
+    if (!(currNode = parent)) break;
+  }
 
   return accessible;
 }
