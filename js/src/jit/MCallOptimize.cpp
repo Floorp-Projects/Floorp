@@ -226,14 +226,15 @@ IonBuilder::inlineNativeGetter(CallInfo &callInfo, JSFunction *target)
     types::TemporaryTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
     JS_ASSERT(callInfo.argc() == 0);
 
-    // Try to optimize typed array lengths. There is one getter for each
-    // typed array prototype, and make sure we are accessing the right one
-    // for the type of the instance object.
+    // Try to optimize typed array lengths. There is one getter on
+    // %TypedArray%.prototype for typed arrays and one getter on
+    // SharedTypedArray.prototype for shared typed arrays.  Make sure we're
+    // accessing the right one for the type of the instance object.
     if (thisTypes) {
         Scalar::Type type;
 
         type = thisTypes->getTypedArrayType();
-        if (type != Scalar::TypeMax && TypedArrayObject::isOriginalLengthGetter(type, native)) {
+        if (type != Scalar::TypeMax && TypedArrayObject::isOriginalLengthGetter(native)) {
             MInstruction *length = addTypedArrayLength(callInfo.thisArg());
             current->push(length);
             return InliningStatus_Inlined;
