@@ -276,11 +276,11 @@ CommandChain.prototype = {
  *
  * @param {HTMLMediaElement} element the media element being analyzed
  */
-function MediaElementChecker(element) {
+function MediaElementChecker(element, expectVideo) {
   this.element = element;
   this.canPlayThroughFired = false;
   this.timeUpdateFired = false;
-  this.timePassed = false;
+  this.hasRenderedMedia = false;
 
   var self = this;
   var elementId = self.element.getAttribute('id');
@@ -305,9 +305,21 @@ function MediaElementChecker(element) {
     if(element.mozSrcObject && element.mozSrcObject.currentTime > 0 &&
        element.currentTime > 0) {
       info('time passed for media element ' + elementId);
-      self.timePassed = true;
-      self.element.removeEventListener('timeupdate', timeUpdateCallback,
-                                       false);
+      // We know element isn't fixed; null tells us it or some parent is display:none if not fixed
+      if(expectVideo && !(element.offsetParent === null)) {
+        if(element.mozPaintedFrames > 0) {
+	  info(element.mozPaintedFrames + ' frames have painted');
+          self.hasRenderedMedia = true;
+        }
+      } else {
+        // XXX punt for now; don't see a good way to find if audio actually played
+        // Maybe mozCaptureStream, route to WebAudio?  Ugh
+        self.hasRenderedMedia = true;
+      }
+      if (self.hasRenderedMedia) {
+        self.element.removeEventListener('timeupdate', timeUpdateCallback,
+                                         false);
+      }
     }
   };
 
@@ -329,7 +341,7 @@ MediaElementChecker.prototype = {
     var elementId = self.element.getAttribute('id');
     info('Analyzing element: ' + elementId);
 
-    if(self.canPlayThroughFired && self.timeUpdateFired && self.timePassed) {
+    if(self.canPlayThroughFired && self.timeUpdateFired && self.hasRenderedMedia) {
       ok(true, 'Media flowing for ' + elementId);
       onSuccess();
     } else {
@@ -538,12 +550,12 @@ function PeerConnectionTest(options) {
   }
 
   if (options.is_local)
-    this.pcLocal = new PeerConnectionWrapper('pcLocal', options.config_local, options.h264);
+    this.pcLocal = new PeerConnectionWrapper('pcLocal', options, true);
   else
     this.pcLocal = null;
 
   if (options.is_remote)
-    this.pcRemote = new PeerConnectionWrapper('pcRemote', options.config_remote || options.config_local, options.h264);
+    this.pcRemote = new PeerConnectionWrapper('pcRemote', options, false);
   else
     this.pcRemote = null;
 
@@ -1354,11 +1366,14 @@ DataChannelWrapper.prototype = {
  * @constructor
  * @param {string} label
  *        Description for the peer connection instance
- * @param {object} configuration
- *        Configuration for the peer connection instance
+ * @param {object} options
+ *        Optional options for the peer connection test
+ * @param {bool} local
+ *        if this is constructing the local or remote peerconnection
  */
-function PeerConnectionWrapper(label, configuration, h264) {
-  this.configuration = configuration;
+function PeerConnectionWrapper(label, options, local) {
+  this.configuration = local ? options.config_local :
+                               (options.config_remote || options.config_local);
   this.label = label;
   this.whenCreated = Date.now();
 
@@ -1372,7 +1387,8 @@ function PeerConnectionWrapper(label, configuration, h264) {
   this.onAddStreamFired = false;
   this.addStreamCallbacks = {};
 
-  this.h264 = typeof h264 !== "undefined" ? true : false;
+  // This is probably overly baroque
+  this.h264 = typeof options.h264 !== "undefined" ? options.h264 : false;
 
   info("Creating " + this);
   this._pc = new mozRTCPeerConnection(this.configuration);
@@ -1534,7 +1550,7 @@ PeerConnectionWrapper.prototype = {
    * @param {MediaStream} stream
    *        Media stream to handle
    * @param {string} type
-   *        The type of media stream ('audio' or 'video')
+   *        The type of media stream ('audio' or 'video' or 'audiovideo')
    * @param {string} side
    *        The location the stream is coming from ('local' or 'remote')
    */
@@ -1555,7 +1571,7 @@ PeerConnectionWrapper.prototype = {
     }
 
     var element = createMediaElement(type, this.label + '_' + side);
-    this.mediaCheckers.push(new MediaElementChecker(element));
+    this.mediaCheckers.push(new MediaElementChecker(element, type == "video" || type == "audiovideo"));
     element.mozSrcObject = stream;
     element.play();
   },
