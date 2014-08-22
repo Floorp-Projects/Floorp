@@ -99,8 +99,6 @@ public:
     return mStream->AsSourceStream();
   }
 
-  void StopScreenWindowSharing();
-
   // mVideo/AudioSource are set by Activate(), so we assume they're capturing
   // if set and represent a real capture device.
   bool CapturingVideo()
@@ -121,13 +119,13 @@ public:
   bool CapturingScreen()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-    return mVideoSource && !mStopped && !mVideoSource->IsAvailable() &&
+    return mVideoSource && !mStopped &&
            mVideoSource->GetMediaSource() == MediaSourceType::Screen;
   }
   bool CapturingWindow()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-    return mVideoSource && !mStopped && !mVideoSource->IsAvailable() &&
+    return mVideoSource && !mStopped &&
            mVideoSource->GetMediaSource() == MediaSourceType::Window;
   }
 
@@ -248,8 +246,7 @@ class GetUserMediaNotificationEvent: public nsRunnable
   public:
     enum GetUserMediaStatus {
       STARTING,
-      STOPPING,
-      STOPPED_TRACK
+      STOPPING
     };
     GetUserMediaNotificationEvent(GetUserMediaCallbackMediaStreamListener* aListener,
                                   GetUserMediaStatus aStatus,
@@ -286,7 +283,6 @@ class GetUserMediaNotificationEvent: public nsRunnable
 typedef enum {
   MEDIA_START,
   MEDIA_STOP,
-  MEDIA_STOP_TRACK,
   MEDIA_DIRECT_LISTENERS
 } MediaOperation;
 
@@ -430,7 +426,6 @@ public:
         break;
 
       case MEDIA_STOP:
-      case MEDIA_STOP_TRACK:
         {
           NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
           if (mAudioSource) {
@@ -445,12 +440,9 @@ public:
           if (mBool) {
             source->Finish();
           }
-
           nsIRunnable *event =
             new GetUserMediaNotificationEvent(mListener,
-                                              mType == MEDIA_STOP ?
-                                              GetUserMediaNotificationEvent::STOPPING :
-                                              GetUserMediaNotificationEvent::STOPPED_TRACK,
+                                              GetUserMediaNotificationEvent::STOPPING,
                                               mAudioSource != nullptr,
                                               mVideoSource != nullptr,
                                               mWindowID);
@@ -602,9 +594,6 @@ private:
   nsresult MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVideo,
                                            bool* aAudio, bool *aScreenShare,
                                            bool* aWindowShare);
-
-  void StopScreensharing(uint64_t aWindowID);
-  void StopScreensharing(nsPIDOMWindow *aWindow);
 
   void StopMediaStreams();
 
