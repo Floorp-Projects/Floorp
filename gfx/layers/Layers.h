@@ -1504,26 +1504,6 @@ public:
 
   RenderTargetRect TransformRectToRenderTarget(const LayerIntRect& aRect);
 
-  /**
-   * Add debugging information to the layer dump.
-   */
-  void AddExtraDumpInfo(const nsACString& aStr)
-  {
-#ifdef MOZ_DUMP_PAINTING
-    mExtraDumpInfo.AppendElement(aStr);
-#endif
-  }
-
-  /**
-   * Clear debugging information. Useful for recycling.
-   */
-  void ClearExtraDumpInfo()
-  {
-#ifdef MOZ_DUMP_PAINTING
-     mExtraDumpInfo.Clear();
-#endif
-  }
-
 protected:
   Layer(LayerManager* aManager, void* aImplData);
 
@@ -1626,9 +1606,6 @@ protected:
   // This is empty unless this is a scrollable ContainerLayer and the
   // apz.printtree pref is turned on.
   std::string mContentDescription;
-#ifdef MOZ_DUMP_PAINTING
-  nsTArray<nsCString> mExtraDumpInfo;
-#endif
 };
 
 /**
