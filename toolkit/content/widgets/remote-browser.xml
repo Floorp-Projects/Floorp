@@ -280,19 +280,28 @@
               this._isSyntheticDocument = data.synthetic;
               break;
 
-            case "FullZoomChange":
+            case "FullZoomChange": {
               this._fullZoom = data.value;
+              let event = document.createEvent("Events");
+              event.initEvent("FullZoomChange", true, false);
+              this.dispatchEvent(event);
               break;
+            }
 
-            case "TextZoomChange":
+            case "TextZoomChange": {
               this._textZoom = data.value;
+              let event = document.createEvent("Events");
+              event.initEvent("TextZoomChange", true, false);
+              this.dispatchEvent(event);
               break;
+            }
 
-            case "ZoomChangeUsingMouseWheel":
+            case "ZoomChangeUsingMouseWheel": {
               let event = document.createEvent("Events");
               event.initEvent("ZoomChangeUsingMouseWheel", true, false);
               this.dispatchEvent(event);
               break;
+            }
 
             case "Forms:HideDropDown": {
               Cu.import("resource://gre/modules/SelectParentHelper.jsm");

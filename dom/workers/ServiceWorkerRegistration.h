@@ -22,9 +22,11 @@ class ServiceWorker;
 }
 
 class ServiceWorkerRegistration MOZ_FINAL : public DOMEventTargetHelper
+                                          , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIOBSERVER
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistration,
                                            DOMEventTargetHelper)
 
@@ -91,6 +93,9 @@ private:
   nsRefPtr<workers::ServiceWorker> mActiveWorker;
 
   const nsString mScope;
+
+  uint64_t mInnerID;
+  bool mIsListeningForEvents;
 };
 
 } // namespace dom

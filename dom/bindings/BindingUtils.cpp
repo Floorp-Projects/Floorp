@@ -2357,6 +2357,14 @@ CheckPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[
 }
 
 bool
+CheckSafetyInPrerendering(JSContext* aCx, JSObject* aObj)
+{
+  //TODO: Check if page is being prerendered.
+  //Returning false for now.
+  return false;
+}
+
+bool
 GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);

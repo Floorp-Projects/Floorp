@@ -174,10 +174,16 @@
     // Preferences
     function() {
       SpecialPowers.pushPrefEnv({"set": [["dom.mozBrowserFramesEnabled", true],
-                                         ["dom.enable_widgets", true]]}, runTest);
+                                         ["dom.enable_widgets", true],
+                                         ["dom.datastore.sysMsgOnChangeShortTimeoutSec", 1],
+                                         ["dom.datastore.sysMsgOnChangeLongTimeoutSec", 3]]}, runTest);
     },
 
     function() {
+      if (SpecialPowers.isMainProcess()) {
+        SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
+      }
+
       SpecialPowers.setAllAppsLaunchable(true);
       runTest();
     },
@@ -218,10 +224,6 @@
 
   function finish() {
     SimpleTest.finish();
-  }
-
-  if (SpecialPowers.isMainProcess()) {
-    SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
   }
 
   SimpleTest.waitForExplicitFinish();

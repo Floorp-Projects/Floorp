@@ -175,9 +175,15 @@ IsIonInlinablePC(jsbytecode *pc) {
 }
 
 inline bool
-TooManyArguments(unsigned nargs)
+TooManyActualArguments(unsigned nargs)
 {
-    return nargs >= SNAPSHOT_MAX_NARGS || nargs > js_JitOptions.maxStackArgs;
+    return nargs > js_JitOptions.maxStackArgs;
+}
+
+inline bool
+TooManyFormalArguments(unsigned nargs)
+{
+    return nargs >= SNAPSHOT_MAX_NARGS || TooManyActualArguments(nargs);
 }
 
 inline size_t
