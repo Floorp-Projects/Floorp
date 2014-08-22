@@ -658,8 +658,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     bool asmJS(Node list);
 
-    void accumulateTelemetry();
-
     friend class LegacyCompExprTransplanter;
     friend struct BindData<ParseHandler>;
 };
