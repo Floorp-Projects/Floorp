@@ -192,7 +192,7 @@ static EGLSurface
 CreateSurfaceForWindow(nsIWidget* widget, const EGLConfig& config) {
     EGLSurface newSurface = EGL_NO_SURFACE;
 
-    #ifdef MOZ_ANDROID_OMTC
+    #ifdef MOZ_WIDGET_ANDROID
         mozilla::AndroidBridge::Bridge()->RegisterCompositor();
         newSurface = mozilla::AndroidBridge::Bridge()->CreateEGLSurfaceForCompositor();
         if (newSurface == EGL_NO_SURFACE) {
