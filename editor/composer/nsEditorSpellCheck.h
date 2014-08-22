@@ -27,7 +27,7 @@ class nsITextServicesFilter;
 
 class DictionaryFetcher;
 
-class nsEditorSpellCheck : public nsIEditorSpellCheck
+class nsEditorSpellCheck MOZ_FINAL : public nsIEditorSpellCheck
 {
   friend class DictionaryFetcher;
 

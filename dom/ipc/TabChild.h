@@ -226,20 +226,20 @@ protected:
     mozilla::layout::ScrollingBehavior mScrolling;
 };
 
-class TabChild : public TabChildBase,
-                 public PBrowserChild,
-                 public nsIWebBrowserChrome2,
-                 public nsIEmbeddingSiteWindow,
-                 public nsIWebBrowserChromeFocus,
-                 public nsIInterfaceRequestor,
-                 public nsIWindowProvider,
-                 public nsIDOMEventListener,
-                 public nsIWebProgressListener,
-                 public nsSupportsWeakReference,
-                 public nsITabChild,
-                 public nsIObserver,
-                 public TabContext,
-                 public nsITooltipListener
+class TabChild MOZ_FINAL : public TabChildBase,
+                           public PBrowserChild,
+                           public nsIWebBrowserChrome2,
+                           public nsIEmbeddingSiteWindow,
+                           public nsIWebBrowserChromeFocus,
+                           public nsIInterfaceRequestor,
+                           public nsIWindowProvider,
+                           public nsIDOMEventListener,
+                           public nsIWebProgressListener,
+                           public nsSupportsWeakReference,
+                           public nsITabChild,
+                           public nsIObserver,
+                           public TabContext,
+                           public nsITooltipListener
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
@@ -516,8 +516,6 @@ private:
     // You should call this after calling TabContext::SetTabContext().  We also
     // call this during Init().
     void NotifyTabContextUpdated();
-
-    bool UseDirectCompositor();
 
     void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 

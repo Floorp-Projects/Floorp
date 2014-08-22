@@ -55,8 +55,8 @@ namespace layout {
  * ActivityStarted().
  */
 
-class ScrollbarActivity : public nsIDOMEventListener,
-                          public nsARefreshObserver {
+class ScrollbarActivity MOZ_FINAL : public nsIDOMEventListener,
+                                    public nsARefreshObserver {
 public:
   ScrollbarActivity(nsIScrollbarOwner* aScrollableFrame)
    : mScrollableFrame(aScrollableFrame)

@@ -329,41 +329,27 @@ add_task(function* test_addCrash() {
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG));
 });
 
-add_task(function* test_addSubmission() {
+add_task(function* test_addSubmissionAttemptAndResult() {
   let m = yield getManager();
 
   let crashes = yield m.getCrashes();
   Assert.equal(crashes.length, 0);
 
-  yield m.addSubmission(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH, true,
-                        "success", DUMMY_DATE);
-  yield m.addSubmission(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH, false,
-                        "failure", DUMMY_DATE);
+  yield m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
+                   "main-crash", DUMMY_DATE);
+  yield m.addSubmissionAttempt("main-crash", "submission", DUMMY_DATE);
+  yield m.addSubmissionResult("main-crash", "submission", DUMMY_DATE_2,
+                              m.SUBMISSION_RESULT_OK);
 
   crashes = yield m.getCrashes();
-  Assert.equal(crashes.length, 2);
+  Assert.equal(crashes.length, 1);
 
-  let map = new Map(crashes.map(crash => [crash.id, crash]));
+  let submissions = crashes[0].submissions;
+  Assert.ok(!!submissions);
 
-  let crash = map.get("success-submission");
-  Assert.ok(!!crash);
-  Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type,
-               m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_CRASH + "-" +
-               m.PROCESS_TYPE_SUBMISSION + "-" + m.SUBMISSION_TYPE_SUCCEEDED);
-  Assert.ok(
-    crash.isOfType(m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_CRASH + "-" +
-                   m.PROCESS_TYPE_SUBMISSION, m.SUBMISSION_TYPE_SUCCEEDED));
-
-  let crash = map.get("failure-submission");
-  Assert.ok(!!crash);
-  Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type,
-               m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_CRASH + "-" +
-               m.PROCESS_TYPE_SUBMISSION + "-" + m.SUBMISSION_TYPE_FAILED);
-  Assert.ok(
-    crash.isOfType(m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_CRASH + "-" +
-                   m.PROCESS_TYPE_SUBMISSION, m.SUBMISSION_TYPE_FAILED));
-
+  let submission = submissions.get("submission");
+  Assert.ok(!!submission);
+  Assert.equal(submission.requestDate.getTime(), DUMMY_DATE.getTime());
+  Assert.equal(submission.responseDate.getTime(), DUMMY_DATE_2.getTime());
+  Assert.equal(submission.result, m.SUBMISSION_RESULT_OK);
 });
-

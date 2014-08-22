@@ -21,7 +21,7 @@
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
-#include "SubBufferDecoder.h"
+#include "SourceBufferDecoder.h"
 #include "mozilla/Preferences.h"
 
 struct JSContext;
@@ -381,7 +381,7 @@ SourceBuffer::InitNewDecoder()
   MSE_DEBUG("SourceBuffer(%p)::InitNewDecoder", this);
   MOZ_ASSERT(!mDecoder);
   MediaSourceDecoder* parentDecoder = mMediaSource->GetDecoder();
-  nsRefPtr<SubBufferDecoder> decoder = parentDecoder->CreateSubDecoder(mType);
+  nsRefPtr<SourceBufferDecoder> decoder = parentDecoder->CreateSubDecoder(mType);
   if (!decoder) {
     return false;
   }

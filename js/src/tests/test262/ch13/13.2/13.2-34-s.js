@@ -12,7 +12,7 @@
 
 
 function testcase() {
-        return ! Object.getOwnPropertyDescriptor(Function("'use strict';"), 
-                                                  "arguments").configurable;
+        return Object.getOwnPropertyDescriptor(Function("'use strict';"), 
+                                               "arguments") === undefined;
 }
 runTestCase(testcase);

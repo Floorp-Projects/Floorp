@@ -22,7 +22,7 @@
 
 class nsITimer;
 
-class nsRepeatService : public nsITimerCallback
+class nsRepeatService MOZ_FINAL : public nsITimerCallback
 {
 public:
 

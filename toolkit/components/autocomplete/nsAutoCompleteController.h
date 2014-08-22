@@ -20,10 +20,10 @@
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsAutoCompleteController : public nsIAutoCompleteController,
-                                 public nsIAutoCompleteObserver,
-                                 public nsITimerCallback,
-                                 public nsITreeView
+class nsAutoCompleteController MOZ_FINAL : public nsIAutoCompleteController,
+                                           public nsIAutoCompleteObserver,
+                                           public nsITimerCallback,
+                                           public nsITreeView
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

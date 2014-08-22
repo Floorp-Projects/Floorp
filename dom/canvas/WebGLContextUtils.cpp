@@ -22,6 +22,7 @@
 #include "WebGLProgram.h"
 #include "WebGLTexture.h"
 #include "WebGLVertexArray.h"
+#include "WebGLContextUtils.h"
 
 #include "mozilla/dom/ScriptSettings.h"
 
@@ -53,6 +54,47 @@ FormatHasAlpha(GLenum webGLFormat)
            webGLFormat == LOCAL_GL_RGBA4 ||
            webGLFormat == LOCAL_GL_RGB5_A1 ||
            webGLFormat == LOCAL_GL_SRGB_ALPHA;
+}
+
+GLComponents::GLComponents(GLenum format)
+{
+    mComponents = 0;
+
+    switch (format) {
+        case LOCAL_GL_RGBA:
+        case LOCAL_GL_RGBA4:
+        case LOCAL_GL_RGBA8:
+        case LOCAL_GL_RGB5_A1:
+        // Luminance + Alpha can be converted
+        // to and from RGBA
+        case LOCAL_GL_LUMINANCE_ALPHA:
+            mComponents |= Components::Alpha;
+        // Drops through
+        case LOCAL_GL_RGB:
+        case LOCAL_GL_RGB565:
+        // Luminance can be converted to and from RGB
+        case LOCAL_GL_LUMINANCE:
+            mComponents |= Components::Red | Components::Green | Components::Blue;
+            break;
+        case LOCAL_GL_ALPHA:
+            mComponents |= Components::Alpha;
+            break;
+        case LOCAL_GL_DEPTH_COMPONENT:
+            mComponents |= Components::Depth;
+            break;
+        case LOCAL_GL_DEPTH_STENCIL:
+            mComponents |= Components::Stencil;
+            break;
+        default:
+            MOZ_ASSERT(false, "Unhandled case - GLComponents");
+            break;
+    }
+}
+
+bool
+GLComponents::IsSubsetOf(const GLComponents& other) const
+{
+    return (mComponents | other.mComponents) == other.mComponents;
 }
 
 /**

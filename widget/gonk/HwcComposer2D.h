@@ -94,7 +94,7 @@ private:
     bool TryHwComposition();
     bool ReallocLayerList();
     bool PrepareLayerList(layers::Layer* aContainer, const nsIntRect& aClip,
-          const gfxMatrix& aParentTransform, const gfxMatrix& aGLWorldTransform);
+          const gfx::Matrix& aParentTransform, const gfx::Matrix& aGLWorldTransform);
     void setCrop(HwcLayer* layer, hwc_rect_t srcCrop);
     void setHwcGeometry(bool aGeometryChanged);
     void SendtoLayerScope();

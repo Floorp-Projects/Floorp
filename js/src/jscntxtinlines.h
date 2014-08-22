@@ -381,23 +381,6 @@ JSContext::runningWithTrustedPrincipals() const
 }
 
 inline void
-JSContext::setDefaultCompartmentObject(JSObject *obj)
-{
-    JS_ASSERT(!options().noDefaultCompartmentObject());
-    defaultCompartmentObject_ = obj;
-}
-
-inline void
-JSContext::setDefaultCompartmentObjectIfUnset(JSObject *obj)
-{
-    if (!options().noDefaultCompartmentObject() &&
-        !defaultCompartmentObject_)
-    {
-        setDefaultCompartmentObject(obj);
-    }
-}
-
-inline void
 js::ExclusiveContext::enterCompartment(JSCompartment *c)
 {
     enterCompartmentDepth_++;
