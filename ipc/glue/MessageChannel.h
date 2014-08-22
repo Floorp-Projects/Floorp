@@ -205,7 +205,7 @@ class MessageChannel : HasResultCodes
     void OnNotifyMaybeChannelError();
     void ReportConnectionError(const char* aChannelName) const;
     void ReportMessageRouteError(const char* channelName) const;
-    bool MaybeHandleError(Result code, const char* channelName);
+    bool MaybeHandleError(Result code, const Message& aMsg, const char* channelName);
 
     void Clear();
 

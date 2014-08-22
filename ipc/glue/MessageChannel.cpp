@@ -15,6 +15,8 @@
 #include "nsISupportsImpl.h"
 #include "nsContentUtils.h"
 
+#include "prprf.h"
+
 // Undo the damage done by mozzconf.h
 #undef compress
 
@@ -1124,7 +1126,7 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg)
     Result rv = mListener->OnMessageReceived(aMsg, reply);
     mDispatchingSyncMessage = false;
 
-    if (!MaybeHandleError(rv, "DispatchSyncMessage")) {
+    if (!MaybeHandleError(rv, aMsg, "DispatchSyncMessage")) {
         delete reply;
         reply = new Message();
         reply->set_sync();
@@ -1182,7 +1184,7 @@ MessageChannel::DispatchUrgentMessage(const Message& aMsg)
     mDispatchingUrgentMessageCount--;
     gDispatchingUrgentMessageCount--;
 
-    if (!MaybeHandleError(rv, "DispatchUrgentMessage")) {
+    if (!MaybeHandleError(rv, aMsg, "DispatchUrgentMessage")) {
         delete reply;
         reply = new Message();
         reply->set_urgent();
@@ -1204,7 +1206,7 @@ MessageChannel::DispatchRPCMessage(const Message& aMsg)
 
     Message *reply = nullptr;
 
-    if (!MaybeHandleError(mListener->OnCallReceived(aMsg, reply), "DispatchRPCMessage")) {
+    if (!MaybeHandleError(mListener->OnCallReceived(aMsg, reply), aMsg, "DispatchRPCMessage")) {
         delete reply;
         reply = new Message();
         reply->set_rpc();
@@ -1228,7 +1230,7 @@ MessageChannel::DispatchAsyncMessage(const Message& aMsg)
         NS_RUNTIMEABORT("unhandled special message!");
     }
 
-    MaybeHandleError(mListener->OnMessageReceived(aMsg), "DispatchAsyncMessage");
+    MaybeHandleError(mListener->OnMessageReceived(aMsg), aMsg, "DispatchAsyncMessage");
 }
 
 void
@@ -1296,7 +1298,7 @@ MessageChannel::DispatchInterruptMessage(const Message& aMsg, size_t stackDepth)
     Result rv = mListener->OnCallReceived(aMsg, reply);
     --mRemoteStackDepthGuess;
 
-    if (!MaybeHandleError(rv, "DispatchInterruptMessage")) {
+    if (!MaybeHandleError(rv, aMsg, "DispatchInterruptMessage")) {
         delete reply;
         reply = new Message();
         reply->set_interrupt();
@@ -1556,7 +1558,7 @@ MessageChannel::ReportConnectionError(const char* aChannelName) const
 }
 
 bool
-MessageChannel::MaybeHandleError(Result code, const char* channelName)
+MessageChannel::MaybeHandleError(Result code, const Message& aMsg, const char* channelName)
 {
     if (MsgProcessed == code)
         return true;
@@ -1587,7 +1589,12 @@ MessageChannel::MaybeHandleError(Result code, const char* channelName)
         return false;
     }
 
-    PrintErrorMessage(mSide, channelName, errorMsg);
+    char printedMsg[512];
+    PR_snprintf(printedMsg, sizeof(printedMsg),
+                "(msgtype=0x%lX,name=%s) %s",
+                aMsg.type(), aMsg.name(), errorMsg);
+
+    PrintErrorMessage(mSide, channelName, printedMsg);
 
     mListener->OnProcessingError(code);
 
