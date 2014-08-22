@@ -14,4 +14,5 @@ dictionary AppNotificationServiceOptions {
   DOMString dir = "";
   DOMString lang = "";
   DOMString tag = "";
+  DOMString data = "";
 };

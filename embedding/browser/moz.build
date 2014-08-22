@@ -4,4 +4,52 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['webBrowser', 'build']
+DIRS += ['build']
+
+XPIDL_SOURCES += [
+    'nsCWebBrowser.idl',
+    'nsICommandHandler.idl',
+    'nsIContextMenuListener.idl',
+    'nsIContextMenuListener2.idl',
+    'nsIEmbeddingSiteWindow.idl',
+    'nsITooltipListener.idl',
+    'nsITooltipTextProvider.idl',
+    'nsIWebBrowser.idl',
+    'nsIWebBrowserChrome.idl',
+    'nsIWebBrowserChrome2.idl',
+    'nsIWebBrowserChrome3.idl',
+    'nsIWebBrowserChromeFocus.idl',
+    'nsIWebBrowserFocus.idl',
+    'nsIWebBrowserSetup.idl',
+    'nsIWebBrowserStream.idl',
+]
+
+if CONFIG['NS_PRINTING']:
+    XPIDL_SOURCES += [
+        'nsIPrintingPrompt.idl',
+        'nsIPrintingPromptService.idl',
+        'nsIWebBrowserPrint.idl',
+    ]
+
+XPIDL_MODULE = 'webBrowser_core'
+
+EXPORTS += [
+    'nsCTooltipTextProvider.h',
+]
+
+UNIFIED_SOURCES += [
+    'nsCommandHandler.cpp',
+    'nsContextMenuInfo.cpp',
+    'nsDocShellTreeOwner.cpp',
+    'nsEmbedStream.cpp',
+    'nsWebBrowser.cpp',
+    'nsWebBrowserContentPolicy.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/content/svg/content/src',
+]

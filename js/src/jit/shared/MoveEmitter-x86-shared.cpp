@@ -148,7 +148,7 @@ MoveEmitterX86::emit(const MoveResolver &moves)
             emitFloat32X4Move(from, to);
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+            MOZ_CRASH("Unexpected move type");
         }
     }
 }
@@ -278,7 +278,7 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Type type)
         masm.Push(toOperand(to));
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+        MOZ_CRASH("Unexpected move type");
     }
 }
 
@@ -350,7 +350,7 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
         masm.Pop(toPopOperand(to));
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+        MOZ_CRASH("Unexpected move type");
     }
 }
 

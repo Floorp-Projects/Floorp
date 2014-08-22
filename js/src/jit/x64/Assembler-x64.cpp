@@ -44,7 +44,7 @@ ABIArgGenerator::next(MIRType type)
         current_ = ABIArg(FloatArgRegs[regIndex_++]);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
+        MOZ_CRASH("Unexpected argument type");
     }
     return current_;
 #else
@@ -68,7 +68,7 @@ ABIArgGenerator::next(MIRType type)
         current_ = ABIArg(FloatArgRegs[floatRegIndex_++]);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
+        MOZ_CRASH("Unexpected argument type");
     }
     return current_;
 #endif

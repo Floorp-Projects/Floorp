@@ -32,7 +32,7 @@ public:
   virtual int64_t Tell() MOZ_OVERRIDE { return -1; }
   virtual void Pin() MOZ_OVERRIDE {}
   virtual void Unpin() MOZ_OVERRIDE {}
-  virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { return 0; }
+  virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { *aIsReliable = false; return 0; }
   virtual int64_t GetLength() MOZ_OVERRIDE { return -1; }
   virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE { return aOffset; }
   virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE { return GetLength(); }

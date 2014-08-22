@@ -1421,8 +1421,6 @@ class MOZ_STACK_CLASS ModuleCompiler
         return exits_.add(p, Move(exitDescriptor), *exitIndex);
     }
 
-    // Note a constraint on the minimum size of the heap.  The heap size is
-    // constrained when linking to be at least the maximum of all such constraints.
     void requireHeapLengthToBeAtLeast(uint32_t len) {
         module_->requireHeapLengthToBeAtLeast(len);
     }
@@ -3429,17 +3427,17 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, Scalar::Type *viewType,
 
     *viewType = global->viewType();
 
-    uint32_t pointer;
-    if (IsLiteralOrConstInt(f, indexExpr, &pointer)) {
-        if (pointer > (uint32_t(INT32_MAX) >> TypedArrayShift(*viewType)))
+    uint32_t index;
+    if (IsLiteralOrConstInt(f, indexExpr, &index)) {
+        uint64_t byteOffset = uint64_t(index) << TypedArrayShift(*viewType);
+        if (byteOffset > INT32_MAX)
             return f.fail(indexExpr, "constant index out of range");
-        pointer <<= TypedArrayShift(*viewType);
-        // It is adequate to note pointer+1 rather than rounding up to the next
-        // access-size boundary because access is always aligned and the constraint
-        // will be rounded up to a larger alignment later.
-        f.m().requireHeapLengthToBeAtLeast(uint32_t(pointer) + 1);
+
+        unsigned elementSize = 1 << TypedArrayShift(*viewType);
+        f.m().requireHeapLengthToBeAtLeast(byteOffset + elementSize);
+
         *needsBoundsCheck = NO_BOUNDS_CHECK;
-        *def = f.constant(Int32Value(pointer), Type::Int);
+        *def = f.constant(Int32Value(byteOffset), Type::Int);
         return true;
     }
 
@@ -3463,18 +3461,6 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, Scalar::Type *viewType,
 
         if (pointerNode->isKind(PNK_BITAND))
             FoldMaskedArrayIndex(f, &pointerNode, &mask, needsBoundsCheck);
-
-        // Fold a 'literal constant right shifted' now, and skip the bounds check if
-        // currently possible. This handles the optimization of many of these uses without
-        // the need for range analysis, and saves the generation of a MBitAnd op.
-        if (IsLiteralOrConstInt(f, pointerNode, &pointer) && pointer <= uint32_t(INT32_MAX)) {
-            // Cases: b[c>>n], and b[(c&m)>>n]
-            pointer &= mask;
-            if (pointer < f.m().minHeapLength())
-                *needsBoundsCheck = NO_BOUNDS_CHECK;
-            *def = f.constant(Int32Value(pointer), Type::Int);
-            return true;
-        }
 
         Type pointerType;
         if (!CheckExpr(f, pointerNode, &pointerDef, &pointerType))
@@ -5406,14 +5392,8 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
 
     m.parser().release(mark);
 
-    // Copy the cumulative minimum heap size constraint to the MIR for use in analysis.  The length
-    // is also constrained to particular lengths, so firstly round up - a larger 'heap required
-    // length' can help range analysis to prove that bounds checks are not needed.
-    uint32_t len = RoundUpToNextValidAsmJSHeapLength(m.minHeapLength());
-    m.requireHeapLengthToBeAtLeast(len);
-
     *mir = f.extractMIR();
-    (*mir)->noteMinAsmJSHeapLength(len);
+    (*mir)->initMinAsmJSHeapLength(m.minHeapLength());
     *funcOut = func;
     return true;
 }
@@ -6934,7 +6914,7 @@ NoExceptionPending(ExclusiveContext *cx)
 }
 
 bool
-js::CompileAsmJS(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *validated)
+js::ValidateAsmJS(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *validated)
 {
     *validated = false;
 

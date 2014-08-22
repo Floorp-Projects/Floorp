@@ -60,7 +60,8 @@ ChromeNotifications.prototype = {
           lang: notification.lang,
           tag: notification.tag,
           dbId: notification.id,
-          timestamp: notification.timestamp
+          timestamp: notification.timestamp,
+          data: notification.data
         }
       );
       resentNotifications++;

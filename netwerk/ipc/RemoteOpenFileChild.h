@@ -32,13 +32,15 @@ namespace net {
  *
  * To open a file handle with this class, AsyncRemoteFileOpen() must be called
  * first.  After the listener's OnRemoteFileOpenComplete() is called, if the
- * result is NS_OK, nsIFile.OpenNSPRFileDesc() may be called--once--to get the
- * file handle.
+ * result is NS_OK, nsIFile.OpenNSPRFileDesc() may be called to get a
+ * duplicated file descriptor.
  *
- * Note that calling Clone() on this class results in the filehandle ownership
- * being passed on to the new RemoteOpenFileChild. I.e. if
- * OnRemoteFileOpenComplete is called and then Clone(), OpenNSPRFileDesc() will
- * work in the cloned object, but not in the original.
+ * Note that the file descriptor returned by NSPRFileDesc() is duplicated from
+ * the original, which shares its file offset with the original.  If the file
+ * offset is modified (ex: by lseek/read/write) on one of the shared
+ * descriptors, the offset is also changed for the other.   It can be safely
+ * used only with operations that take absolute offsets, such as
+ * mmap/pread/pwrite.
  *
  * This class should only be instantiated in a child process.
  *

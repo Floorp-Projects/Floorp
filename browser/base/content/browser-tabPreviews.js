@@ -58,6 +58,10 @@ var tabPreviews = {
     thumbnail.height = this.height;
     thumbnail.width = this.width;
 
+    // drawWindow doesn't yet work with e10s (bug 698371)
+    if (gMultiProcessBrowser)
+      return thumbnail;
+
     var ctx = thumbnail.getContext("2d");
     var win = aTab.linkedBrowser.contentWindow;
     var snippetWidth = win.innerWidth * .6;

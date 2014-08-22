@@ -3780,10 +3780,6 @@ pref("layers.tile-width", 256);
 pref("layers.tile-height", 256);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
-// When a layer is moving it will add a scroll graph to measure the smoothness
-// of the movement. NOTE: This pref triggers composites to refresh
-// the graph.
-pref("layers.scroll-graph", false);
 
 // Set the default values, and then override per-platform as needed
 pref("layers.offmainthreadcomposition.enabled", false);

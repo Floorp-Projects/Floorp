@@ -304,12 +304,16 @@ setUpdateTrackingId();
 })();
 
 // ================ Accessibility ============
-SettingsListener.observe("accessibility.screenreader", false, function(value) {
-  if (value && !("AccessFu" in this)) {
-    Cu.import('resource://gre/modules/accessibility/AccessFu.jsm');
-    AccessFu.attach(window);
-  }
-});
+(function setupAccessibility() {
+  let accessibilityScope = {};
+  SettingsListener.observe("accessibility.screenreader", false, function(value) {
+    if (!('AccessFu' in accessibilityScope)) {
+      Cu.import('resource://gre/modules/accessibility/AccessFu.jsm',
+                accessibilityScope);
+      accessibilityScope.AccessFu.attach(window);
+    }
+  });
+})();
 
 // ================ Theming ============
 (function themingSettingsListener() {

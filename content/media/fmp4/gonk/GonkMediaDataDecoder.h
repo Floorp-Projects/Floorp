@@ -68,7 +68,9 @@ public:
 private:
 
   // Called on the task queue. Inserts the sample into the decoder, and
-  // extracts output if available.
+  // extracts output if available, if aSample is null, it means there is
+  // no data from source, it will notify the decoder EOS and flush all the
+  // decoded frames.
   void ProcessDecode(mp4_demuxer::MP4Sample* aSample);
 
   // Called on the task queue. Extracts output if available, and delivers
@@ -88,6 +90,8 @@ private:
   // The last offset into the media resource that was passed into Input().
   // This is used to approximate the decoder's position in the media resource.
   int64_t mLastStreamOffset;
+  // Set it ture when there is no input data
+  bool mSignaledEOS;
 };
 
 } // namespace mozilla

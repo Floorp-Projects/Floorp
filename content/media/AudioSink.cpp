@@ -302,7 +302,7 @@ AudioSink::PlayFromAudioQueue()
     GetReentrantMonitor().NotifyAll();
   }
   SINK_LOG_V("playing %u frames of audio at time %lld",
-             this, audio->mFrames, audio->mTime);
+             audio->mFrames, audio->mTime);
   mAudioStream->Write(audio->mAudioData, audio->mFrames);
 
   StartAudioStreamPlaybackIfNeeded();

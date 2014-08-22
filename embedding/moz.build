@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['base', 'components', 'browser']
+DIRS += ['components', 'browser']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['android/geckoview_example']
@@ -13,3 +13,15 @@ TEST_DIRS += ['test']
 
 if CONFIG['ENABLE_TESTS']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+
+XPIDL_SOURCES += [
+    'nsIWindowCreator.idl',
+    'nsIWindowCreator2.idl',
+    'nsIWindowProvider.idl',
+]
+
+XPIDL_MODULE = 'embed_base'
+
+EXPORTS += [
+    'nsEmbedCID.h',
+]

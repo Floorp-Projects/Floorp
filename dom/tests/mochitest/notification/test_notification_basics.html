@@ -14,6 +14,7 @@
 <script type="text/javascript">
 
   var info = NotificationTest.info;
+  var options;
 
   var steps = [
     function () {
@@ -62,13 +63,8 @@
     function (done) {
       info("Test create notification");
 
-      var options = {
-        dir: "auto",
-        lang: "",
-        body: "This is a notification body",
-        tag: "sometag",
-        icon: "icon.png"
-      };
+      options = NotificationTest.payload;
+
       var notification = new Notification("This is a title", options);
 
       ok(notification, "Notification exists");
@@ -77,12 +73,15 @@
       is(notification.onerror, null, "onerror() should be null");
       is(notification.onclose, null, "onclose() should be null");
       is(typeof notification.close, "function", "close() should exist");
+      is(typeof notification.data, "object", "data should be a JS object");
 
       is(notification.dir, options.dir, "auto should get set");
       is(notification.lang, options.lang, "lang should get set");
       is(notification.body, options.body, "body should get set");
       is(notification.tag, options.tag, "tag should get set");
       is(notification.icon, options.icon, "icon should get set");
+      ok(NotificationTest.customDataMatches(notification.data),
+         "data should get set");
 
       // store notification in test context
       this.notification = notification;

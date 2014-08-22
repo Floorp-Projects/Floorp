@@ -27,6 +27,7 @@ class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
 
   protected:
     virtual bool isParent() { return false; }
+    virtual JSObject *defaultScope() MOZ_OVERRIDE;
 
   private:
     bool fail(JSContext *cx, ReturnStatus *rs);

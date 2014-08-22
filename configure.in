@@ -1371,8 +1371,6 @@ if test "$GNU_CC"; then
       AC_MSG_RESULT("$result")
       if test "$result" = "yes"; then
           HAVE_X86_AVX2=1
-          AC_DEFINE(HAVE_X86_AVX2)
-          AC_SUBST(HAVE_X86_AVX2)
       fi
     esac
 
@@ -2168,6 +2166,10 @@ ia64*-hpux*)
         dnl both SSSE3 and SSE4.1.
         HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
         HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
+        if test "$_CC_SUITE" -ge "11"; then
+            dnl allow AVX2 code from VS2012
+            HAVE_X86_AVX2=1
+        fi
         MOZ_MEMORY=1
     fi
     AC_DEFINE(HAVE_SNPRINTF)
@@ -8703,6 +8705,7 @@ AC_SUBST(CPU_ARCH)
 AC_SUBST(INTEL_ARCHITECTURE)
 AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
 AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
+AC_SUBST(HAVE_X86_AVX2)
 AC_SUBST(GCC_USE_GNU_LD)
 
 AC_SUBST(MOZ_CHROME_FILE_FORMAT)
