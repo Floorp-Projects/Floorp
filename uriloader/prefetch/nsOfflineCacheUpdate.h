@@ -36,7 +36,6 @@
 
 class nsOfflineCacheUpdate;
 
-class nsICacheEntryDescriptor;
 class nsIUTF8StringEnumerator;
 class nsILoadContext;
 
