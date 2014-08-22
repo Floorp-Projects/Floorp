@@ -436,6 +436,7 @@ let gTests = [
     expectObserverCalled("getUserMedia:revoke");
 
     yield promiseNoPopupNotification("webRTC-sharingDevices");
+    expectObserverCalled("recording-window-ended");
 
     if (gObservedTopics["recording-device-events"] == 1) {
       todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
@@ -709,6 +710,7 @@ let gTests = [
       expectObserverCalled("getUserMedia:revoke");
 
       yield promiseNoPopupNotification("webRTC-sharingDevices");
+      expectObserverCalled("recording-window-ended");
 
       if (gObservedTopics["recording-device-events"] == 1) {
         todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
