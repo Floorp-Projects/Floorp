@@ -112,7 +112,7 @@ public:
   // an input/output buffer has become available, a format change is
   // pending, an error is pending.
   void requestActivityNotification(const sp<AMessage> &aNotify);
-
+  // If aData is null, will notify decoder input EOS
   status_t Input(const uint8_t* aData, uint32_t aDataSize,
                  int64_t aTimestampUsecs, uint64_t flags);
   status_t Output(MediaBuffer** aBuffer, int64_t aTimeoutUs);

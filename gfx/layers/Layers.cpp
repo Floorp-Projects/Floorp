@@ -62,21 +62,20 @@ LayerManager::GetPrimaryScrollableLayer()
   nsTArray<Layer*> queue;
   queue.AppendElement(mRoot);
   while (queue.Length()) {
-    ContainerLayer* containerLayer = queue[0]->AsContainerLayer();
+    Layer* layer = queue[0];
     queue.RemoveElementAt(0);
-    if (!containerLayer) {
-      continue;
-    }
 
-    const FrameMetrics& frameMetrics = containerLayer->GetFrameMetrics();
+    const FrameMetrics& frameMetrics = layer->GetFrameMetrics();
     if (frameMetrics.IsScrollable()) {
-      return containerLayer;
+      return layer;
     }
 
-    Layer* child = containerLayer->GetFirstChild();
-    while (child) {
-      queue.AppendElement(child);
-      child = child->GetNextSibling();
+    if (ContainerLayer* containerLayer = layer->AsContainerLayer()) {
+      Layer* child = containerLayer->GetFirstChild();
+      while (child) {
+        queue.AppendElement(child);
+        child = child->GetNextSibling();
+      }
     }
   }
 
@@ -93,22 +92,21 @@ LayerManager::GetScrollableLayers(nsTArray<Layer*>& aArray)
   nsTArray<Layer*> queue;
   queue.AppendElement(mRoot);
   while (!queue.IsEmpty()) {
-    ContainerLayer* containerLayer = queue.LastElement()->AsContainerLayer();
+    Layer* layer = queue.LastElement();
     queue.RemoveElementAt(queue.Length() - 1);
-    if (!containerLayer) {
-      continue;
-    }
 
-    const FrameMetrics& frameMetrics = containerLayer->GetFrameMetrics();
+    const FrameMetrics& frameMetrics = layer->GetFrameMetrics();
     if (frameMetrics.IsScrollable()) {
-      aArray.AppendElement(containerLayer);
+      aArray.AppendElement(layer);
       continue;
     }
 
-    Layer* child = containerLayer->GetFirstChild();
-    while (child) {
-      queue.AppendElement(child);
-      child = child->GetNextSibling();
+    if (ContainerLayer* containerLayer = layer->AsContainerLayer()) {
+      Layer* child = containerLayer->GetFirstChild();
+      while (child) {
+        queue.AppendElement(child);
+        child = child->GetNextSibling();
+      }
     }
   }
 }

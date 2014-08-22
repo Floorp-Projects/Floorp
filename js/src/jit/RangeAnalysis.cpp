@@ -1520,11 +1520,11 @@ MStringLength::computeRange(TempAllocator &alloc)
 void
 MArgumentsLength::computeRange(TempAllocator &alloc)
 {
-    // This is is a conservative upper bound on what |TooManyArguments| checks.
-    // If exceeded, Ion will not be entered in the first place.
-    static_assert(SNAPSHOT_MAX_NARGS <= UINT32_MAX,
-                  "NewUInt32Range requires a uint32 value");
-    setRange(Range::NewUInt32Range(alloc, 0, SNAPSHOT_MAX_NARGS));
+    // This is is a conservative upper bound on what |TooManyActualArguments|
+    // checks.  If exceeded, Ion will not be entered in the first place.
+    MOZ_ASSERT(js_JitOptions.maxStackArgs <= UINT32_MAX,
+               "NewUInt32Range requires a uint32 value");
+    setRange(Range::NewUInt32Range(alloc, 0, js_JitOptions.maxStackArgs));
 }
 
 void

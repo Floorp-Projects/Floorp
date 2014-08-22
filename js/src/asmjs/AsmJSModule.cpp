@@ -107,7 +107,7 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t
     mozilla::PodZero(&pod);
     pod.funcPtrTableAndExitBytes_ = SIZE_MAX;
     pod.functionBytes_ = UINT32_MAX;
-    pod.minHeapLength_ = AsmJSAllocationGranularity;
+    pod.minHeapLength_ = RoundUpToNextValidAsmJSHeapLength(0);
     pod.strict_ = strict;
     pod.usesSignalHandlers_ = canUseSignalHandlers;
 

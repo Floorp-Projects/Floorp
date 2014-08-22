@@ -759,7 +759,7 @@ AuthCertificate(CertVerifier& certVerifier,
   rv = certVerifier.VerifySSLServerCert(cert, stapledOCSPResponse,
                                         time, infoObject,
                                         infoObject->GetHostNameRaw(),
-                                        saveIntermediates, nullptr,
+                                        saveIntermediates, 0, nullptr,
                                         &evOidPolicy);
 
   // We want to remember the CA certs in the temp db, so that the application can find the

@@ -137,6 +137,12 @@ interface TestInterface {
   [StoreInSlot, Pure]
   attribute byte cachedWritableByte;
 
+  [UnsafeInPrerendering]
+  void unsafePrerenderMethod();
+  [UnsafeInPrerendering]
+  attribute long unsafePrerenderWritable;
+  [UnsafeInPrerendering]
+  readonly attribute long unsafePrerenderReadonly;
   readonly attribute short readonlyShort;
   attribute short writableShort;
   void passShort(short arg);

@@ -49,8 +49,11 @@ GMPChild::~GMPChild()
 }
 
 static bool
-GetPluginBinaryFile(const std::string& aPluginPath,
-                    nsCOMPtr<nsIFile>& aLibFile)
+GetPluginFile(const std::string& aPluginPath,
+#if defined(XP_MACOSX)
+              nsCOMPtr<nsIFile>& aLibDirectory,
+#endif
+              nsCOMPtr<nsIFile>& aLibFile)
 {
   nsDependentCString pluginPath(aPluginPath.c_str());
 
@@ -59,6 +62,12 @@ GetPluginBinaryFile(const std::string& aPluginPath,
   if (NS_FAILED(rv)) {
     return false;
   }
+
+#if defined(XP_MACOSX)
+  if (NS_FAILED(aLibFile->Clone(getter_AddRefs(aLibDirectory)))) {
+    return false;
+  }
+#endif
 
   nsAutoString leafName;
   if (NS_FAILED(aLibFile->GetLeafName(leafName))) {
@@ -81,32 +90,48 @@ GetPluginBinaryFile(const std::string& aPluginPath,
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
 static bool
-GetPluginBinaryPath(const std::string& aPluginPath,
-                    nsCString &aPluginBinaryPath)
+GetPluginPaths(const std::string& aPluginPath,
+               nsCString &aPluginDirectoryPath,
+               nsCString &aPluginFilePath)
 {
-  nsCOMPtr<nsIFile> libFile;
-  if (!GetPluginBinaryFile(aPluginPath, libFile)) {
+  nsCOMPtr<nsIFile> libDirectory, libFile;
+  if (!GetPluginFile(aPluginPath, libDirectory, libFile)) {
     return false;
   }
 
-  libFile->GetNativePath(aPluginBinaryPath);
+  // Mac sandbox rules expect paths to actual files and directories -- not
+  // soft links.
+  bool isLink;
+  libDirectory->IsSymlink(&isLink);
+  if (isLink) {
+    libDirectory->GetNativeTarget(aPluginDirectoryPath);
+  } else {
+    libDirectory->GetNativePath(aPluginDirectoryPath);
+  }
+  libFile->IsSymlink(&isLink);
+  if (isLink) {
+    libFile->GetNativeTarget(aPluginFilePath);
+  } else {
+    libFile->GetNativePath(aPluginFilePath);
+  }
+
   return true;
 }
 
 void
 GMPChild::OnChannelConnected(int32_t aPid)
 {
+  nsAutoCString pluginDirectoryPath, pluginFilePath;
+  if (!GetPluginPaths(mPluginPath, pluginDirectoryPath, pluginFilePath)) {
+    MOZ_CRASH("Error scanning plugin path");
+  }
+
   MacSandboxInfo info;
   info.type = MacSandboxType_Plugin;
   info.pluginInfo.type = MacSandboxPluginType_GMPlugin_Default;
-  info.pluginInfo.pluginPath.Assign(mPluginPath.c_str());
-
-  nsAutoCString pluginBinaryPath;
-  if (!GetPluginBinaryPath(mPluginPath, pluginBinaryPath)) {
-    MOZ_CRASH("Error scanning plugin path");
-  }
-  mPluginBinaryPath.Assign(pluginBinaryPath);
-  info.pluginInfo.pluginBinaryPath.Assign(pluginBinaryPath);
+  info.pluginInfo.pluginPath.Assign(pluginDirectoryPath);
+  mPluginBinaryPath.Assign(pluginFilePath);
+  info.pluginInfo.pluginBinaryPath.Assign(pluginFilePath);
 
   nsAutoCString err;
   if (!mozilla::StartMacSandbox(info, err)) {
@@ -165,7 +190,7 @@ GMPChild::LoadPluginLibrary(const std::string& aPluginPath)
   mLib = PR_LoadLibrary(nativePath.get());
 #else
   nsCOMPtr<nsIFile> libFile;
-  if (!GetPluginBinaryFile(aPluginPath, libFile)) {
+  if (!GetPluginFile(aPluginPath, libFile)) {
     return false;
   }
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
