@@ -105,6 +105,26 @@ nsresult MediaDecoderReader::ResetDecode()
   return res;
 }
 
+VideoData* MediaDecoderReader::DecodeToFirstVideoData()
+{
+  bool eof = false;
+  while (!eof && VideoQueue().GetSize() == 0) {
+    {
+      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
+      if (mDecoder->IsShutdown()) {
+        return nullptr;
+      }
+    }
+    bool keyframeSkip = false;
+    eof = !DecodeVideoFrame(keyframeSkip, 0);
+  }
+  if (eof) {
+    VideoQueue().Finish();
+  }
+  VideoData* d = nullptr;
+  return (d = VideoQueue().PeekFront()) ? d : nullptr;
+}
+
 nsresult
 MediaDecoderReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered,
                                 int64_t aStartTime)
