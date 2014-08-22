@@ -170,10 +170,6 @@ loop.panel = (function(_, mozL10n) {
     * Returns a random 5 character string used to identify
     * the conversation.
     * XXX this will go away once the backend changes
-    * @note:
-    * - When we get back a callUrl we use setLoopCharPref to store the token
-    *   (the last fragment of the URL) so that it can be used to ignore&block
-    *   the call. The preference is used by the conversation router.
     */
     conversationIdentifier: function() {
       return Math.random().toString(36).substring(5);
@@ -199,7 +195,6 @@ loop.panel = (function(_, mozL10n) {
           var token = callUrlData.callToken ||
                       callUrl.pathname.split('/').pop();
 
-          navigator.mozLoop.setLoopCharPref('loopToken', token);
           this.setState({pending: false, copied: false, callUrl: callUrl.href});
         } catch(e) {
           console.log(e);

@@ -92,14 +92,6 @@
         <attr name="entryKeys" format="string"/>
     </declare-styleable>
 
-    <declare-styleable name="BrowserToolbarCurve">
-        <attr name="curveTowards">
-            <flag name="none" value="0x00" />
-            <flag name="left" value="0x01" />
-            <flag name="right" value ="0x02" />
-        </attr>
-    </declare-styleable>
-
     <declare-styleable name="TabsTray">
         <attr name="tabs">
             <flag name="tabs_normal" value="0x00" />

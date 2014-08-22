@@ -26,7 +26,8 @@ describe("loop.shared.models", function() {
       sessionToken:   "sessionToken",
       apiKey:         "apiKey",
       callType:       "callType",
-      websocketToken: 123
+      websocketToken: 123,
+      callToken:    "callToken"
     };
     fakeSession = _.extend({
       connect: function () {},
@@ -159,6 +160,7 @@ describe("loop.shared.models", function() {
              expect(conversation.get("sessionToken")).eql("sessionToken");
              expect(conversation.get("apiKey")).eql("apiKey");
              expect(conversation.get("callType")).eql("callType");
+             expect(conversation.get("callToken")).eql("callToken");
            });
       });
 
