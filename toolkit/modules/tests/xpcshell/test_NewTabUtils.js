@@ -191,7 +191,7 @@ function makeLinks(frecRangeStart, frecRangeEnd, step) {
 
 function makeLink(frecency) {
   return {
-    url: "http://example.com/" + frecency,
+    url: "http://example" + frecency + ".com/",
     title: "My frecency is " + frecency,
     frecency: frecency,
     lastVisitDate: 0,
