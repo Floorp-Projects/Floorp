@@ -272,9 +272,35 @@ abstract class HomeFragment extends Fragment {
         loadIfVisible();
     }
 
+    /**
+     * Handle a configuration change by detaching and re-attaching.
+     * <p>
+     * A HomeFragment only needs to handle onConfiguration change (i.e.,
+     * re-attach) if its UI needs to change (i.e., re-inflate layouts, use
+     * different styles, etc) for different device orientations. Handling
+     * configuration changes in all HomeFragments will simply cause some
+     * redundant re-inflations on device rotation. This slight inefficiency
+     * avoids potentially not handling a needed onConfigurationChanged in a
+     * subclass.
+     */
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+
+        // Reattach the fragment, forcing a re-inflation of its view.
+        // We use commitAllowingStateLoss() instead of commit() here to avoid
+        // an IllegalStateException. If the phone is rotated while Fennec
+        // is in the background, onConfigurationChanged() is fired.
+        // onConfigurationChanged() is called before onResume(), so
+        // using commit() would throw an IllegalStateException since it can't
+        // be used between the Activity's onSaveInstanceState() and
+        // onResume().
+        if (isVisible()) {
+            getFragmentManager().beginTransaction()
+                                .detach(this)
+                                .attach(this)
+                                .commitAllowingStateLoss();
+        }
     }
 
     void setCanLoadHint(boolean canLoadHint) {
