@@ -163,6 +163,10 @@ user_pref("browser.pagethumbnails.capturing_disabled", true);
 // download test runs first doesn't show the popup inconsistently.
 user_pref("browser.download.panel.shown", true);
 
+// Assume the about:newtab page's intro panels have been shown to not depend on
+// which test runs first and happens to open about:newtab
+user_pref("browser.newtabpage.introShown", true);
+
 // prefs for firefox metro.
 // Disable first-tun tab
 user_pref("browser.firstrun.count", 0);
@@ -218,6 +222,10 @@ user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
 
 // Enable debug logging in the mozApps implementation.
 user_pref("dom.mozApps.debug", true);
+
+// Don't fetch or send directory tiles data from real servers
+user_pref("browser.newtabpage.directory.source", 'data:application/json,{"testing":1}');
+user_pref("browser.newtabpage.directory.ping", "");
 
 // Enable Loop
 user_pref("loop.enabled", true);
