@@ -1776,18 +1776,20 @@ public:
       return;
     }
 
-    RootedDictionary<DhImportKeyParams> params(aCx);
-    mEarlyRv = Coerce(aCx, params, aAlgorithm);
-    if (NS_FAILED(mEarlyRv)) {
-      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
-      return;
+    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+      RootedDictionary<DhImportKeyParams> params(aCx);
+      mEarlyRv = Coerce(aCx, params, aAlgorithm);
+      if (NS_FAILED(mEarlyRv)) {
+        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
+      }
+
+      CryptoBuffer prime;
+      ATTEMPT_BUFFER_INIT(mPrime, params.mPrime);
+
+      CryptoBuffer generator;
+      ATTEMPT_BUFFER_INIT(mGenerator, params.mGenerator);
     }
-
-    CryptoBuffer prime;
-    ATTEMPT_BUFFER_INIT(mPrime, params.mPrime);
-
-    CryptoBuffer generator;
-    ATTEMPT_BUFFER_INIT(mGenerator, params.mGenerator);
   }
 
 private:
@@ -1800,11 +1802,24 @@ private:
     ScopedSECKEYPublicKey pubKey;
 
     nsNSSShutDownPreventionLock locker;
-    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW) ||
+        mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
       // Public key import
-      pubKey = CryptoKey::PublicDhKeyFromRaw(mKeyData, mPrime, mGenerator, locker);
+      if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+        pubKey = CryptoKey::PublicDhKeyFromRaw(mKeyData, mPrime, mGenerator, locker);
+      } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
+        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData, locker);
+      } else {
+        MOZ_ASSERT(false);
+      }
+
       if (!pubKey) {
         return NS_ERROR_DOM_DATA_ERR;
+      }
+
+      if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
+        ATTEMPT_BUFFER_ASSIGN(mPrime, &pubKey->u.dh.prime);
+        ATTEMPT_BUFFER_ASSIGN(mGenerator, &pubKey->u.dh.base);
       }
 
       mKey->SetPublicKey(pubKey.get());
