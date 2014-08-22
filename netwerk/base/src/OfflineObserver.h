@@ -29,7 +29,7 @@ public:
   virtual nsresult OfflineNotification(nsISupports *aSubject);
 
   // GetAppId returns the appId for the app associated with the parent
-  virtual uint32_t GetAppId();
+  virtual uint32_t GetAppId() = 0;
 
   // OfflineDisconnect cancels all existing connections in the parent when
   // the app becomes offline.
