@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
+
+#include "WebGLContextLossHandler.h"
 #include "WebGL1Context.h"
 #include "WebGLObjectModel.h"
 #include "WebGLExtensions.h"
@@ -286,9 +288,7 @@ WebGLContext::WebGLContext()
 
     mAllowContextRestore = true;
     mLastLossWasSimulated = false;
-    mContextLossTimerRunning = false;
-    mRunContextLossTimerAgain = false;
-    mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
+    mContextLossHandler = new WebGLContextLossHandler(this);
     mContextStatus = ContextNotLost;
     mLoseContextOnMemoryPressure = false;
     mCanLoseContextInForeground = true;
@@ -324,8 +324,9 @@ WebGLContext::~WebGLContext()
 
     DestroyResourcesAndContext();
     WebGLMemoryTracker::RemoveWebGLContext(this);
-    TerminateContextLossTimer();
-    mContextRestorer = nullptr;
+
+    mContextLossHandler->DisableTimer();
+    mContextLossHandler = nullptr;
 }
 
 void
@@ -1297,6 +1298,12 @@ WebGLContext::TryToRestoreContext()
     return true;
 }
 
+void
+WebGLContext::RunContextLossTimer()
+{
+    mContextLossHandler->RunTimer();
+}
+
 class UpdateContextLossStatusTask : public nsRunnable
 {
     nsRefPtr<WebGLContext> mContext;
@@ -1417,7 +1424,7 @@ WebGLContext::UpdateContextLossStatus()
 
         if (!TryToRestoreContext()) {
             // Failed to restore. Try again later.
-            RunContextLossTimer();
+            mContextLossHandler->RunTimer();
             return;
         }
 
