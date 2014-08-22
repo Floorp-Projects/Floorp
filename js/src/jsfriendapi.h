@@ -721,13 +721,6 @@ AssertSameCompartment(JSObject *objA, JSObject *objB);
 inline void AssertSameCompartment(JSObject *objA, JSObject *objB) {}
 #endif
 
-// For legacy consumers only. This whole concept is going away soon.
-JS_FRIEND_API(JSObject *)
-DefaultObjectForContextOrNull(JSContext *cx);
-
-JS_FRIEND_API(void)
-SetDefaultObjectForContext(JSContext *cx, JSObject *obj);
-
 JS_FRIEND_API(void)
 NotifyAnimationActivity(JSObject *obj);
 

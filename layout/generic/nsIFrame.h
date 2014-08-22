@@ -33,7 +33,6 @@
 #include "WritingModes.h"
 #include <algorithm>
 #include "nsITheme.h"
-#include "gfx3DMatrix.h"
 #include "nsLayoutUtils.h"
 #include "nsFrameState.h"
 #include "CaretAssociationHint.h"
@@ -61,7 +60,6 @@
 
 struct nsHTMLReflowState;
 class nsHTMLReflowCommand;
-class gfxMatrix;
 class nsIAtom;
 class nsPresContext;
 class nsIPresShell;
@@ -409,6 +407,7 @@ public:
   typedef mozilla::layout::FrameChildListIterator ChildListIterator;
   typedef mozilla::layout::FrameChildListArrayIterator ChildListArrayIterator;
   typedef mozilla::gfx::Matrix Matrix;
+  typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::Sides Sides;
   typedef mozilla::LogicalSides LogicalSides;
 
@@ -1977,11 +1976,11 @@ public:
    * document as this frame. If this frame IsTransformed(), then *aOutAncestor
    * will be the parent frame (if not preserve-3d) or the nearest non-transformed
    * ancestor (if preserve-3d).
-   * @return A gfxMatrix that converts points in this frame's coordinate space
+   * @return A Matrix4x4 that converts points in this frame's coordinate space
    *   into points in aOutAncestor's coordinate space.
    */
-  gfx3DMatrix GetTransformMatrix(const nsIFrame* aStopAtAncestor,
-                                 nsIFrame **aOutAncestor);
+  Matrix4x4 GetTransformMatrix(const nsIFrame* aStopAtAncestor,
+                               nsIFrame **aOutAncestor);
 
   /**
    * Bit-flags to pass to IsFrameOfType()

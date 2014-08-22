@@ -44,10 +44,10 @@ class gfxXlibSurface;
 #endif
 #endif
 
-class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
-                              public nsIDOMEventListener,
-                              public nsIPrivacyTransitionObserver,
-                              public nsSupportsWeakReference
+class nsPluginInstanceOwner MOZ_FINAL : public nsIPluginInstanceOwner,
+                                        public nsIDOMEventListener,
+                                        public nsIPrivacyTransitionObserver,
+                                        public nsSupportsWeakReference
 {
 public:
   nsPluginInstanceOwner();

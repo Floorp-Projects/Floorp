@@ -26,38 +26,13 @@ namespace layout {
 sync protocol PRenderFrame
 {
     manager PBrowser;
-    manages PLayerTransaction;
 
 parent:
-    /**
-     * Shadow layer trees can be grafted into the parent's in one of
-     * two ways
-     *  - direct shadow tree: updates are sent to parent
-     *  - indirect: the parent holds a reference (ID) to a shadow tree
-     *    that's managed by the compositor.  During composition, the
-     *    shadow tree is looked up and grafted appropriately
-     *
-     * |id| is set to 0 in the "direct" case, and to a whole number
-     * in the "indirect" case.
-     */
-    async PLayerTransaction();
-
     async NotifyCompositorTransaction();
 
     async UpdateHitRegion(nsRegion aRegion);
 
     async __delete__();
-
-state EMPTY_OR_DIRECT_COMPOSITOR:
-    recv PLayerTransaction goto HAVE_CONTENT;
-    recv NotifyCompositorTransaction goto EMPTY_OR_DIRECT_COMPOSITOR;
-    recv UpdateHitRegion goto EMPTY_OR_DIRECT_COMPOSITOR;
-    recv __delete__;
-
-state HAVE_CONTENT:
-    recv NotifyCompositorTransaction goto HAVE_CONTENT;
-    recv UpdateHitRegion goto HAVE_CONTENT;
-    recv __delete__;
 };
 
 } // namespace layout

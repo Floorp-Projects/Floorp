@@ -189,6 +189,20 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
                     context['DEFINES'][define] = True
 
             for include in target_conf.get('include_dirs', []):
+                # moz.build expects all LOCAL_INCLUDES to exist, so ensure they do.
+                #
+                # NB: gyp files sometimes have actual absolute paths (e.g.
+                # /usr/include32) and sometimes paths that moz.build considers
+                # absolute, i.e. starting from topsrcdir. There's no good way
+                # to tell them apart here, and the actual absolute paths are
+                # likely bogus. In any event, actual absolute paths will be
+                # filtered out by trying to find them in topsrcdir.
+                if include.startswith('/'):
+                    resolved = mozpath.abspath(mozpath.join(config.topsrcdir, include[1:]))
+                else:
+                    resolved = mozpath.abspath(mozpath.join(mozpath.dirname(build_file), include))
+                if not os.path.exists(resolved):
+                    continue
                 context['LOCAL_INCLUDES'] += [include]
 
             context['EXTRA_ASSEMBLER_FLAGS'] = target_conf.get('asflags_mozilla', [])

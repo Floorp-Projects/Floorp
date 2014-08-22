@@ -865,8 +865,8 @@ protected:
  * device output color space. This class is very simple as all backends
  * have to know about how to deal with drawing a cairo image.
  */
-class CairoImage : public Image,
-                   public ISharedImage {
+class CairoImage MOZ_FINAL : public Image,
+                             public ISharedImage {
 public:
   struct Data {
     gfx::IntSize mSize;

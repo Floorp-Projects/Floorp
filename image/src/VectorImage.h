@@ -26,8 +26,8 @@ class  SVGRootRenderingObserver;
 class  SVGLoadEventListener;
 class  SVGParseCompleteListener;
 
-class VectorImage : public ImageResource,
-                    public nsIStreamListener
+class VectorImage MOZ_FINAL : public ImageResource,
+                              public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS

@@ -23,6 +23,8 @@ public:
   ~Index();
 
   void UpdateMoofIndex(const nsTArray<mozilla::MediaByteRange>& aByteRanges);
+  Microseconds GetEndCompositionIfBuffered(
+    const nsTArray<mozilla::MediaByteRange>& aByteRanges);
   void ConvertByteRangesToTimeRanges(
     const nsTArray<mozilla::MediaByteRange>& aByteRanges,
     nsTArray<Interval<Microseconds>>* aTimeRanges);

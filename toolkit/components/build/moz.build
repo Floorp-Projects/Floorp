@@ -20,7 +20,6 @@ LOCAL_INCLUDES += [
     '../downloads',
     '../feeds',
     '../find',
-    '../intl',
     '../jsdownloads/src',
     '../protobuf',
     '../startup',
