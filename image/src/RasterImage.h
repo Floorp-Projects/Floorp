@@ -576,10 +576,10 @@ private:
    */
   void DeleteImgFrame(uint32_t framenum);
 
-  imgFrame* GetImgFrameNoDecode(uint32_t framenum);
-  imgFrame* GetImgFrame(uint32_t framenum);
-  imgFrame* GetDrawableImgFrame(uint32_t framenum);
-  imgFrame* GetCurrentImgFrame();
+  already_AddRefed<imgFrame> GetImgFrameNoDecode(uint32_t framenum);
+  already_AddRefed<imgFrame> GetImgFrame(uint32_t framenum);
+  already_AddRefed<imgFrame> GetDrawableImgFrame(uint32_t framenum);
+  already_AddRefed<imgFrame> GetCurrentImgFrame();
   uint32_t GetCurrentImgFrameIndex() const;
 
   size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
@@ -637,9 +637,9 @@ private: // data
   FrameBlender              mFrameBlender;
 
   // The last frame we decoded for multipart images.
-  imgFrame*                  mMultipartDecodedFrame;
+  nsRefPtr<imgFrame>        mMultipartDecodedFrame;
 
-  nsCOMPtr<nsIProperties>    mProperties;
+  nsCOMPtr<nsIProperties>   mProperties;
 
   // IMPORTANT: if you use mAnim in a method, call EnsureImageIsDecoded() first to ensure
   // that the frames actually exist (they may have been discarded to save memory, or
@@ -748,7 +748,7 @@ private: // data
     {}
 
     nsIntSize scaledSize;
-    nsAutoPtr<imgFrame> frame;
+    nsRefPtr<imgFrame> frame;
     ScaleStatus status;
   };
 

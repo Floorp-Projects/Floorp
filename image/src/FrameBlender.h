@@ -44,16 +44,16 @@ public:
    * Get the @aIndex-th frame, including (if applicable) any results of
    * blending.
    */
-  imgFrame* GetFrame(uint32_t aIndex) const;
+  already_AddRefed<imgFrame> GetFrame(uint32_t aIndex) const;
 
   /**
    * Get the @aIndex-th frame in the frame index, ignoring results of blending.
    */
-  imgFrame* RawGetFrame(uint32_t aIndex) const;
+  already_AddRefed<imgFrame> RawGetFrame(uint32_t aIndex) const;
 
   void InsertFrame(uint32_t framenum, imgFrame* aFrame);
   void RemoveFrame(uint32_t framenum);
-  imgFrame* SwapFrame(uint32_t framenum, imgFrame* aFrame);
+  already_AddRefed<imgFrame> SwapFrame(uint32_t framenum, imgFrame* aFrame);
   void ClearFrames();
 
   /* The total number of frames in this image. */

@@ -438,6 +438,16 @@ nsIntRect imgFrame::GetRect() const
   return nsIntRect(mOffset, nsIntSize(mSize.width, mSize.height));
 }
 
+int32_t
+imgFrame::GetStride() const
+{
+  if (mImageSurface) {
+    return mImageSurface->Stride();
+  }
+
+  return VolatileSurfaceStride(mSize, mFormat);
+}
+
 SurfaceFormat imgFrame::GetFormat() const
 {
   return mFormat;
@@ -663,6 +673,21 @@ imgFrame::GetSurface()
     return nullptr;
 
   return CreateLockedSurface(mVBuf, mSize, mFormat);
+}
+
+TemporaryRef<DrawTarget>
+imgFrame::GetDrawTarget()
+{
+  MOZ_ASSERT(mLockCount >= 1, "Should lock before requesting a DrawTarget");
+
+  uint8_t* data = GetImageData();
+  if (!data) {
+    return nullptr;
+  }
+
+  int32_t stride = GetStride();
+  return gfxPlatform::GetPlatform()->
+    CreateDrawTargetForData(data, mSize, stride, mFormat);
 }
 
 int32_t imgFrame::GetRawTimeout() const
