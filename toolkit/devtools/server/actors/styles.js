@@ -12,9 +12,7 @@ const {Arg, Option, method, RetVal, types} = protocol;
 const events = require("sdk/event/core");
 const object = require("sdk/util/object");
 const { Class } = require("sdk/core/heritage");
-
-// This will add the "stylesheet" actor type for protocol.js to recognize
-require("devtools/server/actors/stylesheets");
+const { StyleSheetActor } = require("devtools/server/actors/stylesheets");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
 loader.lazyGetter(this, "DOMUtils", () => Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils));
@@ -114,15 +112,17 @@ var PageStyleActor = protocol.ActorClass({
   },
 
   /**
-   * Return or create a StyleSheetActor for the given nsIDOMCSSStyleSheet.
-   * @param  {DOMStyleSheet} sheet
-   *         The style sheet to create an actor for.
-   * @return {StyleSheetActor}
-   *         The actor for this style sheet
+   * Return or create a StyleSheetActor for the given
+   * nsIDOMCSSStyleSheet
    */
   _sheetRef: function(sheet) {
-    let tabActor = this.inspector.tabActor;
-    let actor = tabActor.createStyleSheetActor(sheet);
+    if (this.refMap.has(sheet)) {
+      return this.refMap.get(sheet);
+    }
+    let actor = new StyleSheetActor(sheet, this, this.walker.rootWin);
+    this.manage(actor);
+    this.refMap.set(sheet, actor);
+
     return actor;
   },
 
@@ -975,7 +975,6 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
   get location()
   {
     return {
-      source: this.parentStyleSheet,
       href: this.href,
       line: this.line,
       column: this.column
@@ -993,14 +992,11 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
       return promise.resolve(this.location);
     }
     return parentSheet.getOriginalLocation(this.line, this.column)
-      .then(({ fromSourceMap, source, line, column }) => {
+      .then(({ source, line, column }) => {
         let location = {
           href: source,
           line: line,
           column: column
-        }
-        if (fromSourceMap === false) {
-          location.source = this.parentStyleSheet;
         }
         if (!source) {
           location.href = this.href;
