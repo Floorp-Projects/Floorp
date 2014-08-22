@@ -1452,12 +1452,6 @@ TabChild::DestroyWindow()
     }
 }
 
-bool
-TabChild::UseDirectCompositor()
-{
-    return !!CompositorChild::Get();
-}
-
 void
 TabChild::ActorDestroy(ActorDestroyReason why)
 {
@@ -2569,28 +2563,23 @@ TabChild::InitRenderingState()
         return false;
     }
 
-    PLayerTransactionChild* shadowManager = nullptr;
-    if (id != 0) {
-        // Pushing layers transactions directly to a separate
-        // compositor context.
-        PCompositorChild* compositorChild = CompositorChild::Get();
-        if (!compositorChild) {
-          NS_WARNING("failed to get CompositorChild instance");
-          return false;
-        }
-        nsTArray<LayersBackend> backends;
-        backends.AppendElement(mTextureFactoryIdentifier.mParentBackend);
-        bool success;
-        shadowManager =
-            compositorChild->SendPLayerTransactionConstructor(backends,
-                                                              id, &mTextureFactoryIdentifier, &success);
-        if (!success) {
-          NS_WARNING("failed to properly allocate layer transaction");
-          return false;
-        }
-    } else {
-        // Pushing transactions to the parent content.
-        shadowManager = remoteFrame->SendPLayerTransactionConstructor();
+    MOZ_ASSERT(id != 0);
+
+    // Pushing layers transactions directly to a separate
+    // compositor context.
+    PCompositorChild* compositorChild = CompositorChild::Get();
+    if (!compositorChild) {
+      NS_WARNING("failed to get CompositorChild instance");
+      return false;
+    }
+    nsTArray<LayersBackend> backends;
+    backends.AppendElement(mTextureFactoryIdentifier.mParentBackend);
+    PLayerTransactionChild* shadowManager =
+        compositorChild->SendPLayerTransactionConstructor(backends,
+                                                          id, &mTextureFactoryIdentifier, &success);
+    if (!success) {
+      NS_WARNING("failed to properly allocate layer transaction");
+      return false;
     }
 
     if (!shadowManager) {
@@ -2672,7 +2661,7 @@ TabChild::GetDefaultScale(double* aScale)
 void
 TabChild::NotifyPainted()
 {
-    if (UseDirectCompositor() && !mNotified) {
+    if (!mNotified) {
         mRemoteFrame->SendNotifyCompositorTransaction();
         mNotified = true;
     }

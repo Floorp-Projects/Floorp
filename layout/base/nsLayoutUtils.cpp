@@ -2618,36 +2618,6 @@ static bool gDumpEventList = false;
 int gPaintCount = 0;
 #endif
 
-nsresult
-nsLayoutUtils::GetRemoteContentIds(nsIFrame* aFrame,
-                                   const nsRect& aTarget,
-                                   nsTArray<ViewID> &aOutIDs,
-                                   bool aIgnoreRootScrollFrame)
-{
-  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::EVENT_DELIVERY,
-                               false);
-  nsDisplayList list;
-
-  if (aIgnoreRootScrollFrame) {
-    nsIFrame* rootScrollFrame =
-      aFrame->PresContext()->PresShell()->GetRootScrollFrame();
-    if (rootScrollFrame) {
-      builder.SetIgnoreScrollFrame(rootScrollFrame);
-    }
-  }
-
-  builder.EnterPresShell(aFrame, aTarget);
-  aFrame->BuildDisplayListForStackingContext(&builder, aTarget, &list);
-  builder.LeavePresShell(aFrame, aTarget);
-
-  nsAutoTArray<nsIFrame*,8> outFrames;
-  nsDisplayItem::HitTestState hitTestState(&aOutIDs);
-  list.HitTest(&builder, aTarget, &hitTestState, &outFrames);
-  list.DeleteAll();
-
-  return NS_OK;
-}
-
 nsIFrame*
 nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt, uint32_t aFlags)
 {
