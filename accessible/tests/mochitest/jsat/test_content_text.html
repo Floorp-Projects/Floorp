@@ -112,16 +112,6 @@
               toIndex: 5
             }]
           }],
-          // XXX: Bug 980510: doing next after text traversal should
-          // bring us to the next paragraph.
-          [ContentMessages.simpleMoveNext, {
-            speak: 'You\'re a good guy, mon frere. ' +
-              'That means brother in French. ' +
-              'I don\'t know how I know that. ' +
-              'I took four years of Spanish.',
-            speak_checkFunc: 'todo_is' // Bug 980510
-          }],
-          // XXX: extra move op here because of bug 980510.
           [ContentMessages.simpleMoveNext, {
             speak: 'You\'re a good guy, mon frere. ' +
               'That means brother in French. ' +
