@@ -5004,8 +5004,6 @@ get_gtk_cursor(nsCursor aCursor)
     case eCursor_grab:
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "openhand");
         if (!gdkcursor)
-            gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "hand1");
-        if (!gdkcursor)
             newType = MOZ_CURSOR_HAND_GRAB;
         break;
     case eCursor_grabbing:
