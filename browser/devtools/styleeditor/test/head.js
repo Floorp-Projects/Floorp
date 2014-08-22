@@ -53,10 +53,13 @@ function addTab(url) {
   return def.promise;
 }
 
-function cleanup()
+function* cleanup()
 {
   gPanelWindow = null;
   while (gBrowser.tabs.length > 1) {
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    yield gDevTools.closeToolbox(target);
+
     gBrowser.removeCurrentTab();
   }
 }

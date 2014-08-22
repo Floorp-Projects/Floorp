@@ -98,18 +98,44 @@ ServiceWorkerContainer::GetController()
 already_AddRefed<Promise>
 ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
 {
-  // FIXME(nsm): Bug 1002571
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+  nsresult rv;
+  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsISupports> promise;
+  aRv = swm->GetRegistrations(mWindow, getter_AddRefs(promise));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> ret = static_cast<Promise*>(promise.get());
+  MOZ_ASSERT(ret);
+  return ret.forget();
 }
 
 already_AddRefed<Promise>
 ServiceWorkerContainer::GetRegistration(const nsAString& aDocumentURL,
                                         ErrorResult& aRv)
 {
-  // FIXME(nsm): Bug 1002571
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+  nsresult rv;
+  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsISupports> promise;
+  aRv = swm->GetRegistration(mWindow, aDocumentURL, getter_AddRefs(promise));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> ret = static_cast<Promise*>(promise.get());
+  MOZ_ASSERT(ret);
+  return ret.forget();
 }
 
 already_AddRefed<Promise>

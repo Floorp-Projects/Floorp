@@ -1351,17 +1351,6 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
-    if (mir->optimizationInfo().scalarReplacementEnabled()) {
-        AutoTraceLog log(logger, TraceLogger::ScalarReplacement);
-        if (!ScalarReplacement(mir, graph))
-            return false;
-        IonSpewPass("Scalar Replacement");
-        AssertGraphCoherency(graph);
-
-        if (mir->shouldCancel("Scalar Replacement"))
-            return false;
-    }
-
     {
         AutoTraceLog log(logger, TraceLogger::PhiAnalysis);
         // Aggressive phi elimination must occur before any code elimination. If the
@@ -1385,6 +1374,17 @@ OptimizeMIR(MIRGenerator *mir)
         // No spew: graph not changed.
 
         if (mir->shouldCancel("Phi reverse mapping"))
+            return false;
+    }
+
+    if (mir->optimizationInfo().scalarReplacementEnabled()) {
+        AutoTraceLog log(logger, TraceLogger::ScalarReplacement);
+        if (!ScalarReplacement(mir, graph))
+            return false;
+        IonSpewPass("Scalar Replacement");
+        AssertGraphCoherency(graph);
+
+        if (mir->shouldCancel("Scalar Replacement"))
             return false;
     }
 
@@ -1995,9 +1995,16 @@ CheckFrame(BaselineFrame *frame)
     JS_ASSERT(!frame->isDebuggerFrame());
 
     // This check is to not overrun the stack.
-    if (frame->isFunctionFrame() && TooManyArguments(frame->numActualArgs())) {
-        IonSpew(IonSpew_Abort, "too many actual args");
-        return false;
+    if (frame->isFunctionFrame()) {
+        if (TooManyActualArguments(frame->numActualArgs())) {
+            IonSpew(IonSpew_Abort, "too many actual args");
+            return false;
+        }
+
+        if (TooManyFormalArguments(frame->numFormalArgs())) {
+            IonSpew(IonSpew_Abort, "too many args");
+            return false;
+        }
     }
 
     return true;
@@ -2236,13 +2243,13 @@ jit::CanEnter(JSContext *cx, RunState &state)
     if (state.isInvoke()) {
         InvokeState &invoke = *state.asInvoke();
 
-        if (TooManyArguments(invoke.args().length())) {
+        if (TooManyActualArguments(invoke.args().length())) {
             IonSpew(IonSpew_Abort, "too many actual args");
             ForbidCompilation(cx, script);
             return Method_CantCompile;
         }
 
-        if (TooManyArguments(invoke.args().callee().as<JSFunction>().nargs())) {
+        if (TooManyFormalArguments(invoke.args().callee().as<JSFunction>().nargs())) {
             IonSpew(IonSpew_Abort, "too many args");
             ForbidCompilation(cx, script);
             return Method_CantCompile;
