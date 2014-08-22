@@ -2896,6 +2896,36 @@ nsDocShell::RemoveWeakScrollObserver(nsIScrollObserver* aObserver)
     return mScrollObservers.RemoveElement(obs) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+void
+nsDocShell::NotifyAsyncPanZoomStarted()
+{
+    nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mScrollObservers);
+    while (iter.HasMore()) {
+        nsWeakPtr ref = iter.GetNext();
+        nsCOMPtr<nsIScrollObserver> obs = do_QueryReferent(ref);
+        if (obs) {
+            obs->AsyncPanZoomStarted();
+        } else {
+            mScrollObservers.RemoveElement(ref);
+        }
+    }
+}
+
+void
+nsDocShell::NotifyAsyncPanZoomStopped()
+{
+    nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mScrollObservers);
+    while (iter.HasMore()) {
+        nsWeakPtr ref = iter.GetNext();
+        nsCOMPtr<nsIScrollObserver> obs = do_QueryReferent(ref);
+        if (obs) {
+            obs->AsyncPanZoomStopped();
+        } else {
+            mScrollObservers.RemoveElement(ref);
+        }
+    }
+}
+
 NS_IMETHODIMP
 nsDocShell::NotifyScrollObservers()
 {
