@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TVManager.h"
+#include "mozilla/dom/TVProgram.h"
 #include "mozilla/dom/TVSource.h"
 #include "mozilla/dom/TVTuner.h"
 #include "nsArrayUtils.h"
@@ -359,7 +360,8 @@ TVServiceChannelGetterCallback::NotifySuccess(nsIArray* aDataList)
       return NS_ERROR_DOM_ABORT_ERR;
     }
 
-    nsRefPtr<TVChannel> channel = new TVChannel(mSource->GetOwner());
+    nsRefPtr<TVChannel> channel =
+      TVChannel::Create(mSource->GetOwner(), mSource, channelData);
     channels.AppendElement(channel);
   }
 
@@ -424,8 +426,45 @@ TVServiceProgramGetterCallback::NotifySuccess(nsIArray* aDataList)
     return NS_ERROR_INVALID_ARG;
   }
 
-  // TODO Store the results to MozStorage in follow-up patches.
+  uint32_t length;
+  nsresult rv = aDataList->GetLength(&length);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return rv;
+  }
 
+  if (mIsSingular && length == 0) {
+    mPromise->MaybeResolve(JS::UndefinedHandleValue);
+    return NS_OK;
+  }
+
+  if (mIsSingular) {
+    nsCOMPtr<nsITVProgramData> programData = do_QueryElementAt(aDataList, 0);
+    if (NS_WARN_IF(!programData)) {
+      mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      return NS_ERROR_DOM_ABORT_ERR;
+    }
+
+    nsRefPtr<TVProgram> program = new TVProgram(mChannel->GetOwner(), mChannel,
+                                                programData);
+    mPromise->MaybeResolve(program);
+    return NS_OK;
+  }
+
+  nsTArray<nsRefPtr<TVProgram>> programs(length);
+  for (uint32_t i = 0; i < length; i++) {
+    nsCOMPtr<nsITVProgramData> programData = do_QueryElementAt(aDataList, i);
+    if (NS_WARN_IF(!programData)) {
+      mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      return NS_ERROR_DOM_ABORT_ERR;
+    }
+
+    nsRefPtr<TVProgram> program = new TVProgram(mChannel->GetOwner(), mChannel,
+                                                programData);
+    programs.AppendElement(program);
+  }
+
+  mPromise->MaybeResolve(programs);
   return NS_OK;
 }
 

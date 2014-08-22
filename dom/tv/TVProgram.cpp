@@ -4,13 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/TVChannel.h"
 #include "mozilla/dom/TVProgramBinding.h"
+#include "nsITVService.h"
 #include "TVProgram.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TVProgram, mOwner)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TVProgram, mOwner, mChannel)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TVProgram)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TVProgram)
@@ -20,9 +22,28 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TVProgram)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-TVProgram::TVProgram(nsISupports* aOwner)
+TVProgram::TVProgram(nsISupports* aOwner,
+                     TVChannel* aChannel,
+                     nsITVProgramData* aData)
   : mOwner(aOwner)
+  , mChannel(aChannel)
 {
+  MOZ_ASSERT(mChannel);
+  MOZ_ASSERT(aData);
+
+  aData->GetEventId(mEventId);
+  aData->GetTitle(mTitle);
+  aData->GetStartTime(&mStartTime);
+  aData->GetDuration(&mDuration);
+  aData->GetDescription(mDescription);
+  aData->GetRating(mRating);
+
+  uint32_t count;
+  char** languages;
+  aData->GetAudioLanguages(&count, &languages);
+  SetLanguages(count, languages, mAudioLanguages);
+  aData->GetSubtitleLanguages(&count, &languages);
+  SetLanguages(count, languages, mSubtitleLanguages);
 }
 
 TVProgram::~TVProgram()
@@ -38,58 +59,69 @@ TVProgram::WrapObject(JSContext* aCx)
 void
 TVProgram::GetAudioLanguages(nsTArray<nsString>& aLanguages) const
 {
-  // TODO Implement in follow-up patches.
+  aLanguages = mAudioLanguages;
 }
 
 void
 TVProgram::GetSubtitleLanguages(nsTArray<nsString>& aLanguages) const
 {
-  // TODO Implement in follow-up patches.
+  aLanguages = mSubtitleLanguages;
 }
 
 void
 TVProgram::GetEventId(nsAString& aEventId) const
 {
-  // TODO Implement in follow-up patches.
+  aEventId = mEventId;
 }
 
 already_AddRefed<TVChannel>
 TVProgram::Channel() const
 {
-  // TODO Implement in follow-up patches.
-  return nullptr;
+  nsRefPtr<TVChannel> channel = mChannel;
+  return channel.forget();
 }
 
 void
 TVProgram::GetTitle(nsAString& aTitle) const
 {
-  // TODO Implement in follow-up patches.
+  aTitle = mTitle;
 }
 
 uint64_t
 TVProgram::StartTime() const
 {
-  // TODO Implement in follow-up patches.
-  return 0;
+  return mStartTime;
 }
 
 uint64_t
 TVProgram::Duration() const
 {
-  // TODO Implement in follow-up patches.
-  return 0;
+  return mDuration;
 }
 
 void
 TVProgram::GetDescription(nsAString& aDescription) const
 {
-  // TODO Implement in follow-up patches.
+  aDescription = mDescription;
 }
 
 void
 TVProgram::GetRating(nsAString& aRating) const
 {
-  // TODO Implement in follow-up patches.
+  aRating = mRating;
+}
+
+void
+TVProgram::SetLanguages(uint32_t aCount,
+                        char** aLanguages,
+                        nsTArray<nsString>& aLanguageList)
+{
+  for (uint32_t i = 0; i < aCount; i++) {
+    nsString language;
+    language.AssignASCII(aLanguages[i]);
+    aLanguageList.AppendElement(language);
+  }
+  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(aCount, aLanguages);
 }
 
 } // namespace dom
