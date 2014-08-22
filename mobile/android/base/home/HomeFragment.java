@@ -18,10 +18,10 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.StringUtils;
@@ -29,11 +29,11 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.widget.ButtonToast;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -47,6 +47,8 @@ import android.widget.Toast;
 /**
  * HomeFragment is an empty fragment that can be added to the HomePager.
  * Subclasses can add their own views.
+ * <p>
+ * The containing activity <b>must</b> implement {@link OnUrlOpenListener}.
  */
 abstract class HomeFragment extends Fragment {
     // Log Tag.
@@ -65,6 +67,27 @@ abstract class HomeFragment extends Fragment {
 
     // Whether the fragment has loaded its content
     private boolean mIsLoaded;
+
+    // On URL open listener
+    protected OnUrlOpenListener mUrlOpenListener;
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+        try {
+            mUrlOpenListener = (OnUrlOpenListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement HomePager.OnUrlOpenListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mUrlOpenListener = null;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
