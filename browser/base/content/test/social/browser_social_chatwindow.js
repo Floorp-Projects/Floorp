@@ -34,6 +34,7 @@ function openChat(provider, callback) {
   let port = provider.getWorkerPort();
   port.onmessage = function(e) {
     if (e.data.topic == "got-chatbox-message") {
+      port.close();
       callback();
     }
   }
@@ -41,7 +42,6 @@ function openChat(provider, callback) {
   port.postMessage({topic: "test-init"});
   port.postMessage({topic: "test-worker-chat", data: url});
   gURLsNotRemembered.push(url);
-  return port;
 }
 
 function windowHasChats(win) {
@@ -172,9 +172,6 @@ var tests = {
     let num = 0;
     is(chatbar.childNodes.length, 0, "chatbar starting empty");
     is(chatbar.menupopup.childNodes.length, 0, "popup starting empty");
-    let port = SocialSidebar.provider.getWorkerPort();
-    ok(port, "provider has a port");
-    port.postMessage({topic: "test-init"});
 
     makeChat("normal", "first chat", function() {
       // got the first one.
@@ -198,7 +195,6 @@ var tests = {
           chatbar.selectedChat.close();
           is(chatbar.selectedChat, second, "second chat is selected");
           closeAllChats();
-          port.close();
           next();
         });
       });
@@ -247,24 +243,24 @@ var tests = {
 
   testMultipleProviderChat: function(next) {
     // test incomming chats from all providers
-    let port0 = openChat(Social.providers[0], function() {
-      let port1 = openChat(Social.providers[1], function() {
-        let port2 = openChat(Social.providers[2], function() {
+    openChat(Social.providers[0], function() {
+      openChat(Social.providers[1], function() {
+        openChat(Social.providers[2], function() {
           let chats = document.getElementById("pinnedchats");
           waitForCondition(function() chats.children.length == Social.providers.length,
             function() {
               ok(true, "one chat window per provider opened");
               // test logout of a single provider
-              port2.postMessage({topic: "test-logout"});
+              let provider = Social.providers[2];
+              let port = provider.getWorkerPort();
+              port.postMessage({topic: "test-logout"});
               waitForCondition(function() chats.children.length == Social.providers.length - 1,
                 function() {
                   closeAllChats();
                   waitForCondition(function() chats.children.length == 0,
                                    function() {
                                     ok(!chats.selectedChat, "multiprovider chats are all closed");
-                                    port0.close();
-                                    port1.close();
-                                    port2.close();
+                                    port.close();
                                     next();
                                    },
                                    "chat windows didn't close");
