@@ -174,6 +174,7 @@ class RefTest(object):
     # And for snippets.
     prefs['browser.snippets.enabled'] = False
     prefs['browser.snippets.syncPromo.enabled'] = False
+    prefs['browser.snippets.firstrunHomepage.enabled'] = False
     # And for useragent updates.
     prefs['general.useragent.updates.enabled'] = False
     # And for webapp updates.  Yes, it is supposed to be an integer.
