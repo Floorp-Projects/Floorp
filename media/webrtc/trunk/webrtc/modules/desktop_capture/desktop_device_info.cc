@@ -238,11 +238,11 @@ int32_t DesktopDeviceInfoImpl::initializeWindowList() {
       pWinDevice->setScreenId(itr->id);
       pWinDevice->setDeviceName(itr->title.c_str());
 
-      char idStr[64];
+      char idStr[BUFSIZ];
 #if XP_WIN
       _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "\\win\\%ld", pWinDevice->getScreenId());
 #else
-      snprintf(idStr, BUFSIZ, "\\win\\%ld", pWinDevice->getScreenId());
+      snprintf(idStr, sizeof(idStr), "\\win\\%ld", pWinDevice->getScreenId());
 #endif
       pWinDevice->setUniqueIdName(idStr);
       desktop_window_list_[pWinDevice->getScreenId()] = pWinDevice;
