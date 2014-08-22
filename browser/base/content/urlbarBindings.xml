@@ -10,6 +10,8 @@
 %notificationDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
 ]>
 
 <bindings id="urlbarBindings" xmlns="http://www.mozilla.org/xbl"
@@ -1569,6 +1571,110 @@
                     "center-item-menulist").value = val;
         </setter>
       </property>
+    </implementation>
+  </binding>
+
+  <binding id="bad-content-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
+    <content>
+      <xul:hbox align="start">
+        <xul:image class="popup-notification-icon" xbl:inherits="popupid"/>
+        <xul:vbox>
+          <!-- header -->
+          <xul:vbox>
+            <xul:description anonid="badContentBlocked.title"
+              class="popup-notification-item-title" xbl:inherits="popupid">
+            </xul:description>
+            <xul:description class="popup-notification-item-message"
+              xbl:inherits="popupid">
+              &badContentBlocked.moreinfo;
+            </xul:description>
+          </xul:vbox>
+          <!-- mixed content -->
+          <xul:vbox anonid="mixedContent" hidden="true">
+            <xul:separator class="groove"/>
+            <xul:hbox align="start">
+              <xul:vbox>
+                <xul:description class="popup-notification-item-title"
+                  xbl:inherits="popupid">
+                  &mixedContentBlocked2.message;
+                </xul:description>
+                <xul:description class="popup-notification-item-message"
+                  xbl:inherits="popupid">
+                  &mixedContentBlocked2.moreinfo;
+                </xul:description>
+                <xul:label anonid="mixedContent.helplink"
+                  class="text-link plain" href=""
+                  value="&mixedContentBlocked2.learnMore;"/>
+              </xul:vbox>
+              <xul:button
+                type="menu" label="&mixedContentBlocked2.options;"
+                sizetopopup="none">
+                <xul:menupopup>
+                  <xul:menuitem anonid="mixedContentAction.unblock"
+                    hidden="true" label="&mixedContentBlocked2.unblock.label;"
+                    accesskey="&mixedContentBlocked2.unblock.accesskey;"
+                    oncommand="document.getBindingParent(this).disableMixedContentProtection();"/>
+                </xul:menupopup>
+              </xul:button>
+            </xul:hbox>
+          </xul:vbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+    <resources>
+      <stylesheet src="chrome://global/skin/notification.css"/>
+    </resources>
+    <implementation>
+      <field name="_brandShortName">
+        document.getElementById("bundle_brand").getString("brandShortName")
+      </field>
+      <field name="_doorhangerTitle">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "badContentBlocked.title")
+      </field>
+      <field name="_mixedContent">
+        document.getAnonymousElementByAttribute(this, "anonid",
+            "mixedContent")
+      </field>
+      <field name="_mixedContentUnblock">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "mixedContentAction.unblock")
+      </field>
+      <field name="_mixedContentHelplink">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "mixedContent.helplink")
+      </field>
+      <constructor><![CDATA[
+        // default title
+        _doorhangerTitle.value =
+          gNavigatorBundle.getFormattedString(
+            "badContentBlocked.notblocked.message", [this._brandShortName]);
+
+        if (this.notification.options.state &
+          Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+          _doorhangerTitle.value =
+            gNavigatorBundle.getFormattedString(
+              "badContentBlocked.blocked.message", [this._brandShortName]);
+          _mixedContent.hidden = false;
+          _mixedContentUnblock.hidden = false;
+          _mixedContentHelplink.href =
+            Services.urlFormatter.formatURLPref("app.support.baseURL")
+              + "mixed-content";
+        }
+      ]]></constructor>
+      <method name="disableMixedContentProtection">
+        <body><![CDATA[
+          // Use telemetry to measure how often unblocking happens
+          const kMIXED_CONTENT_UNBLOCK_EVENT = 2;
+          let histogram =
+            Services.telemetry.getHistogramById(
+              "MIXED_CONTENT_UNBLOCK_COUNTER");
+          histogram.add(kMIXED_CONTENT_UNBLOCK_EVENT);
+          // Reload the page with the content unblocked
+          BrowserReloadWithFlags(
+            nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT);
+        ]]></body>
+      </method>
     </implementation>
   </binding>
 
