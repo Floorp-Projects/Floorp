@@ -619,29 +619,35 @@ function ArrayIteratorNext() {
     var a = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_ITERATED_OBJECT);
     var index = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX);
     var itemKind = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_ITEM_KIND);
+    var result = { value: undefined, done: false };
 
     // FIXME: This should be ToLength, which clamps at 2**53.  Bug 924058.
     if (index >= TO_UINT32(a.length)) {
         // When the above is changed to ToLength, use +1/0 here instead
         // of MAX_UINT32.
         UnsafeSetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX, 0xffffffff);
-        return { value: undefined, done: true };
+        result.done = true;
+        return result;
     }
 
     UnsafeSetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX, index + 1);
 
-    if (itemKind === ITEM_KIND_VALUE)
-        return { value: a[index], done: false };
+    if (itemKind === ITEM_KIND_VALUE) {
+        result.value = a[index];
+        return result;
+    }
 
     if (itemKind === ITEM_KIND_KEY_AND_VALUE) {
         var pair = NewDenseArray(2);
         pair[0] = index;
         pair[1] = a[index];
-        return { value: pair, done : false };
+        result.value = pair;
+        return result;
     }
 
     assert(itemKind === ITEM_KIND_KEY, itemKind);
-    return { value: index, done: false };
+    result.value = index;
+    return result;
 }
 
 function ArrayValuesAt(n) {

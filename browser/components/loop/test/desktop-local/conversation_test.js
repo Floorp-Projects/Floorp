@@ -120,6 +120,7 @@ describe("loop.conversation", function() {
         pendingCallTimeout: 1000,
       });
       sandbox.stub(client, "requestCallsInfo");
+      sandbox.spy(conversation, "setIncomingSessionData");
       sandbox.stub(conversation, "setOutgoingSessionData");
     });
 
@@ -201,7 +202,6 @@ describe("loop.conversation", function() {
             };
 
             sandbox.stub(router, "_setupWebSocketAndCallView");
-            sandbox.stub(conversation, "setIncomingSessionData");
 
             client.requestCallsInfo.callsArgWith(1, null, [fakeSessionData]);
           });
@@ -436,10 +436,23 @@ describe("loop.conversation", function() {
         });
 
         it("should call delete call", function() {
-          var deleteCallUrl = sandbox.stub(loop.Client.prototype, "deleteCallUrl");
+          sandbox.stub(conversation, "get").withArgs("callToken")
+                                           .returns("fakeToken");
+          var deleteCallUrl = sandbox.stub(loop.Client.prototype,
+                                           "deleteCallUrl");
           router.declineAndBlock();
 
           sinon.assert.calledOnce(deleteCallUrl);
+          sinon.assert.calledWithExactly(deleteCallUrl, "fakeToken",
+                                                        sinon.match.func);
+        });
+
+        it("should get callToken from conversation model", function() {
+          sandbox.stub(conversation, "get");
+          router.declineAndBlock();
+
+          sinon.assert.calledOnce(conversation.get);
+          sinon.assert.calledWithExactly(conversation.get, "callToken");
         });
 
         it("should trigger error handling in case of error", function() {

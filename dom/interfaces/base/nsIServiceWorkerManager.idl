@@ -8,7 +8,7 @@
 interface nsIDocument;
 interface nsIURI;
 
-[uuid(9b5acea4-2601-4ac7-8836-4352ceb88178)]
+[uuid(6413f297-5581-47e8-a7f4-c509fd7a85a1)]
 interface nsIServiceWorkerManager : nsISupports
 {
   // Returns a Promise
@@ -16,6 +16,12 @@ interface nsIServiceWorkerManager : nsISupports
 
   // Returns a Promise
   nsISupports unregister(in nsIDOMWindow aWindow, in DOMString aScope);
+
+  // Returns a Promise
+  nsISupports getRegistrations(in nsIDOMWindow aWindow);
+
+  // Returns a Promise
+  nsISupports getRegistration(in nsIDOMWindow aWindow, in DOMString aScope);
 
   // aTarget MUST be a ServiceWorkerRegistration.
   [noscript] void AddRegistrationEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);

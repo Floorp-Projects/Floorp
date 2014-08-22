@@ -3,8 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <ImageButton android:id="@+id/back"
                  style="@style/UrlBar.ImageButton.Unused"/>
@@ -66,13 +65,12 @@
                                               android:src="@drawable/menu_level"
                                               android:visibility="gone"/>
 
-    <org.mozilla.gecko.toolbar.ShapedButton android:id="@+id/tabs"
-                                            style="@style/UrlBar.ImageButton"
-                                            android:layout_width="64dip"
-                                            android:layout_toLeftOf="@id/menu"
-                                            android:layout_alignWithParentIfMissing="true"
-                                            gecko:curveTowards="right"
-                                            android:background="@drawable/shaped_button"/>
+    <org.mozilla.gecko.toolbar.PhoneTabsButton android:id="@+id/tabs"
+                                               style="@style/UrlBar.ImageButton"
+                                               android:layout_width="64dip"
+                                               android:layout_toLeftOf="@id/menu"
+                                               android:layout_alignWithParentIfMissing="true"
+                                               android:background="@drawable/shaped_button"/>
 
     <!-- The TextSwitcher should be shifted 24dp on the left, to avoid
          the curve. On a 48dp space, centering 24dp image will leave

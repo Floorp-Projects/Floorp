@@ -96,7 +96,7 @@ assertEq(asmLink(asmCompileCached(USE_ASM + "function f1() { return 1 } function
 assertEq(asmLink(asmCompileCached("g", USE_ASM + "var s=g.Math.sin; function f(d) { d=+d; return +s(d) } return f"), this)(.3), Math.sin(.3));
 assertEq(asmLink(asmCompileCached("g","ffis", USE_ASM + "var ffi=ffis.ffi; function f(i) { i=i|0; return ffi(i|0)|0 } return f"), null, {ffi:function(i){return i+2}})(1), 3);
 assertEq(asmLink(asmCompileCached("g","ffis", USE_ASM + "var x=ffis.x|0; function f() { return x|0 } return f"), null, {x:43})(), 43);
-var i32 = new Int32Array(4096);
+var i32 = new Int32Array(BUF_MIN/4);
 i32[4] = 42;
 assertEq(asmLink(asmCompileCached("g","ffis","buf", USE_ASM + "var i32=new g.Int32Array(buf); function f(i) { i=i|0; return i32[i>>2]|0 } return f"), this, null, i32.buffer)(4*4), 42);
 assertEq(asmLink(asmCompileCached('glob', USE_ASM + 'var x=glob.Math.PI; function f() { return +x } return f'), this)(), Math.PI);

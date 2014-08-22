@@ -84,7 +84,9 @@ class TbplFormatter(BaseFormatter):
     def test_end(self, data):
         test_id = self.test_id(data["test"])
         time_msg = ""
-
+        message = data.get("message", "")
+        if "stack" in data:
+            message += "\n%s" % data["stack"]
         if test_id in self.test_start_times:
             start_time = self.test_start_times.pop(test_id)
             time = data["time"] - start_time
@@ -92,7 +94,7 @@ class TbplFormatter(BaseFormatter):
 
         if "expected" in data:
             failure_line = "TEST-UNEXPECTED-%s | %s | %s" % (
-                data["status"], test_id, data.get("message", ""))
+                data["status"], test_id, message)
 
             info_line = "TEST-INFO expected %s%s\n" % (data["expected"], time_msg)
             return "\n".join([failure_line, info_line])

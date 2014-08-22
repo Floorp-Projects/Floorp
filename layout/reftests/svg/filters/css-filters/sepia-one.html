@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Apply Sepia to an HTML Element Using a Factor of One</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-sepia">
+  <link rel="match" href="sepia-one-ref.html">
+  <meta name="assert"
+        content="Given a factor of one, the CSS sepia filter function should
+                 change the color of an HTML element to a brown hue.">
+  <style type="text/css">
+    #target {
+      filter: sepia(1);
+      background-color: #f00;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a brown square.</p>
+  <div id="target"></div>
+</body>
+</html>

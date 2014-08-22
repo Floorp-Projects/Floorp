@@ -4,7 +4,7 @@ setIonCheckGraphCoherency(false);
 setCachingEnabled(false);
 
 // constants
-var buf = new ArrayBuffer(4096);
+var buf = new ArrayBuffer(BUF_MIN);
 
 // An unshifted literal constant byte index in the range 0 to 2^31-1 inclusive should give a link failure.
 assertAsmLinkFail(asmCompile('glob', 'imp', 'b', USE_ASM + 'var arr=new glob.Int8Array(b);  function f() {return arr[0x7fffffff]|0 } return f'), this, null, buf);
@@ -46,15 +46,15 @@ assertAsmTypeFail('glob', 'imp', 'b', USE_ASM + 'var arr=new glob.Int32Array(b);
 // Folded non-intish constant expressions should cause an error compiling.
 assertAsmTypeFail('glob', 'imp', 'b', USE_ASM + 'var arr=new glob.Int8Array(b);  function f() {return arr[0xffffffff+1]|0 } return f');
 
-
+var ab = new ArrayBuffer(BUF_MIN);
+var arr = new Int32Array(BUF_MIN);
+for (var i = 0; i < arr.length; i++)
+    arr[i] = i;
 
 function testInt(ctor, shift, scale, disp) {
-    var ab = new ArrayBuffer(4096);
     var arr = new ctor(ab);
-    for (var i = 0; i < arr.length; i++)
-        arr[i] = i;
     var f = asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + 'var arr=new glob.' + ctor.name + '(b); function f(i) {i=i|0; return arr[((i<<' + scale + ')+' + disp + ')>>' + shift + ']|0 } return f'), this, null, ab);
-    for (var i of [0,1,2,3,4,1023,1024,1025,4095,4096,4097])
+    for (var i of [0,1,2,3,4,1023,1024,1025,BUF_MIN-2,BUF_MIN-1,BUF_MIN,BUF_MIN+1])
         assertEq(f(i), arr[((i<<scale)+disp)>>shift]|0);
 
     for (var i of [-Math.pow(2,28),Math.pow(2,28),-Math.pow(2,29),Math.pow(2,29),-Math.pow(2,30),Math.pow(2,30),-Math.pow(2,31),Math.pow(2,31),-Math.pow(2,32),Math.pow(2,32)]) {
@@ -83,12 +83,9 @@ function testInt(ctor, shift, scale, disp) {
 }
 
 function testFloat(ctor, shift, scale, disp, coercion) {
-    var ab = new ArrayBuffer(4096);
     var arr = new ctor(ab);
-    for (var i = 0; i < arr.length; i++)
-        arr[i] = i;
     var f = asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + 'var arr=new glob.' + ctor.name + '(b); var toF = glob.Math.fround; function f(i) {i=i|0; return ' + coercion + '(arr[((i<<' + scale + ')+' + disp + ')>>' + shift + ']) } return f'), this, null, ab);
-    for (var i of [0,1,2,3,4,1023,1024,1025,4095,4096,4097])
+    for (var i of [0,1,2,3,4,1023,1024,1025,BUF_MIN-2,BUF_MIN-1,BUF_MIN,BUF_MIN+1])
         assertEq(f(i), +arr[((i<<scale)+disp)>>shift]);
 
     for (var i of [-Math.pow(2,31), Math.pow(2,31)-1, Math.pow(2,32)]) {
