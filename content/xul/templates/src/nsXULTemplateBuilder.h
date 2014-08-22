@@ -118,7 +118,7 @@ public:
     void RunnableLoadAndRebuild() {
       Uninit(false);  // Reset results
 
-      nsCOMPtr<nsIDocument> doc = mRoot ? mRoot->GetDocument() : nullptr;
+      nsCOMPtr<nsIDocument> doc = mRoot ? mRoot->GetComposedDoc() : nullptr;
       if (doc) {
         bool shouldDelay;
         LoadDataSources(doc, &shouldDelay);

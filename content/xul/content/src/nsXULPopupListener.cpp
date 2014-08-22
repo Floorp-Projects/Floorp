@@ -355,7 +355,7 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
     return rv;
 
   // Try to find the popup content and the document.
-  nsCOMPtr<nsIDocument> document = mElement->GetDocument();
+  nsCOMPtr<nsIDocument> document = mElement->GetComposedDoc();
   if (!document) {
     NS_WARNING("No document!");
     return NS_ERROR_FAILURE;
@@ -386,10 +386,14 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
         }
       }
     }
-  } else if (!(popup = document->GetElementById(identifier))) {
+  } else if (!mElement->IsInUncomposedDoc() ||
+             !(popup = document->GetElementById(identifier))) {
+    // XXXsmaug Should we try to use ShadowRoot::GetElementById in case
+    //          mElement is in shadow DOM?
+    //
     // Use getElementById to obtain the popup content and gracefully fail if 
     // we didn't find any popup content in the document. 
-    NS_ERROR("GetElementById had some kind of spasm.");
+    NS_WARNING("GetElementById had some kind of spasm.");
     return rv;
   }
 

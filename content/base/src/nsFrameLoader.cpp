@@ -1891,7 +1891,7 @@ nsresult
 nsFrameLoader::GetWindowDimensions(nsIntRect& aRect)
 {
   // Need to get outer window position here
-  nsIDocument* doc = mOwnerContent->GetDocument();
+  nsIDocument* doc = mOwnerContent->GetComposedDoc();
   if (!doc) {
     return NS_ERROR_FAILURE;
   }
@@ -2065,7 +2065,10 @@ nsFrameLoader::TryRemoteBrowser()
 {
   NS_ASSERTION(!mRemoteBrowser, "TryRemoteBrowser called with a remote browser already?");
 
-  nsIDocument* doc = mOwnerContent->GetDocument();
+  //XXXsmaug Per spec (2014/08/21) frameloader should not work in case the
+  //         element isn't in document, only in shadow dom, but that will change
+  //         https://www.w3.org/Bugs/Public/show_bug.cgi?id=26365#c0
+  nsIDocument* doc = mOwnerContent->GetComposedDoc();
   if (!doc) {
     return false;
   }

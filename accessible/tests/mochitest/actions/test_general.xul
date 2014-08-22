@@ -24,7 +24,7 @@
     if (navigator.platform.startsWith("Mac")) {
       SimpleTest.expectAssertions(0, 1);
     } else {
-      SimpleTest.expectAssertions(1);
+      SimpleTest.expectAssertions(0, 1);
     }
 
     function doTest()

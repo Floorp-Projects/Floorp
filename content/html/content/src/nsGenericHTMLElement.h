@@ -829,7 +829,12 @@ public:
    * Get the presentation context for this content node.
    * @return the presentation context
    */
-  nsPresContext* GetPresContext();
+  enum PresContextFor
+  {
+    eForComposedDoc,
+    eForUncomposedDoc
+  };
+  nsPresContext* GetPresContext(PresContextFor aFor);
 
   // Form Helper Routines
   /**

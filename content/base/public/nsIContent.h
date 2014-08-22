@@ -39,8 +39,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0x329f4c0f, 0x369d, 0x4f35, \
-  { 0x9a, 0x49, 0xd6, 0xa3, 0xaf, 0xb4, 0x34, 0x9f } }
+{ 0x697a2fe1, 0x5549, 0x48e7, \
+  { 0x9a, 0x1a, 0xc2, 0x9d, 0xab, 0x14, 0xe2, 0x39 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -112,16 +112,6 @@ public:
    */
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) = 0;
-  
-  /**
-   * DEPRECATED - Use GetCurrentDoc or GetOwnerDoc.
-   * Get the document for this content.
-   * @return the document
-   */
-  nsIDocument *GetDocument() const
-  {
-    return GetCurrentDoc();
-  }
 
   enum {
     /**
