@@ -28,8 +28,160 @@ class _OldCacheEntryWrapper : public nsICacheEntry
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_FORWARD_SAFE_NSICACHEENTRYDESCRIPTOR(mOldDesc)
-  NS_FORWARD_NSICACHEENTRYINFO(mOldInfo->)
+
+  // nsICacheEntryDescriptor
+  NS_IMETHOD SetExpirationTime(uint32_t expirationTime)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->SetExpirationTime(expirationTime);
+  }
+  NS_IMETHOD SetDataSize(uint32_t size)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->SetDataSize(size);
+  }
+  NS_IMETHOD OpenInputStream(uint32_t offset, nsIInputStream * *_retval)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->OpenInputStream(offset, _retval);
+  }
+  NS_IMETHOD OpenOutputStream(uint32_t offset, nsIOutputStream * *_retval)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->OpenOutputStream(offset, _retval);
+  }
+  NS_IMETHOD GetCacheElement(nsISupports * *aCacheElement)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->GetCacheElement(aCacheElement);
+  }
+  NS_IMETHOD SetCacheElement(nsISupports *aCacheElement)
+  { return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->SetCacheElement(aCacheElement);
+  }
+  NS_IMETHOD GetPredictedDataSize(int64_t *aPredictedDataSize)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->GetPredictedDataSize(aPredictedDataSize);
+  }
+  NS_IMETHOD SetPredictedDataSize(int64_t aPredictedDataSize)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->SetPredictedDataSize(aPredictedDataSize);
+  }
+  NS_IMETHOD GetAccessGranted(nsCacheAccessMode *aAccessGranted)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->GetAccessGranted(aAccessGranted);
+  }
+  NS_IMETHOD GetStoragePolicy(nsCacheStoragePolicy *aStoragePolicy)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->GetStoragePolicy(aStoragePolicy);
+  }
+  NS_IMETHOD SetStoragePolicy(nsCacheStoragePolicy aStoragePolicy)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->SetStoragePolicy(aStoragePolicy);
+  }
+  NS_IMETHOD GetFile(nsIFile * *aFile)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->GetFile(aFile);
+  }
+  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->GetSecurityInfo(aSecurityInfo);
+  }
+  NS_IMETHOD SetSecurityInfo(nsISupports *aSecurityInfo)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->SetSecurityInfo(aSecurityInfo);
+  }
+  NS_IMETHOD GetStorageDataSize(uint32_t *aStorageDataSize)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->GetStorageDataSize(aStorageDataSize);
+  }
+  NS_IMETHOD Doom(void)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->Doom();
+  }
+  NS_IMETHOD DoomAndFailPendingRequests(nsresult status)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->DoomAndFailPendingRequests(status);
+  }
+  NS_IMETHOD AsyncDoom(nsICacheListener *listener)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->AsyncDoom(listener);
+  }
+  NS_IMETHOD MarkValid(void)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->MarkValid();
+  }
+  NS_IMETHOD Close(void)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->Close();
+  }
+  NS_IMETHOD GetMetaDataElement(const char * key, char * *_retval)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->GetMetaDataElement(key, _retval);
+  }
+  NS_IMETHOD SetMetaDataElement(const char * key, const char * value)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->SetMetaDataElement(key, value);
+  }
+  NS_IMETHOD VisitMetaData(nsICacheMetaDataVisitor *visitor)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->VisitMetaData(visitor);
+  }
+
+  // nsICacheEntryInfo
+  NS_IMETHOD GetClientID(char * *aClientID)
+  {
+    return mOldInfo->GetClientID(aClientID);
+  }
+  NS_IMETHOD GetDeviceID(char * *aDeviceID)
+  {
+    return mOldInfo->GetDeviceID(aDeviceID);
+  }
+  NS_IMETHOD GetKey(nsACString & aKey)
+  {
+    return mOldInfo->GetKey(aKey);
+  }
+  NS_IMETHOD GetFetchCount(int32_t *aFetchCount)
+  {
+    return mOldInfo->GetFetchCount(aFetchCount);
+  }
+  NS_IMETHOD GetLastFetched(uint32_t *aLastFetched)
+  {
+    return mOldInfo->GetLastFetched(aLastFetched);
+  }
+  NS_IMETHOD GetLastModified(uint32_t *aLastModified)
+  {
+    return mOldInfo->GetLastModified(aLastModified);
+  }
+  NS_IMETHOD GetExpirationTime(uint32_t *aExpirationTime)
+  {
+    return mOldInfo->GetExpirationTime(aExpirationTime);
+  }
+  NS_IMETHOD GetDataSize(uint32_t *aDataSize)
+  {
+    return mOldInfo->GetDataSize(aDataSize);
+  }
+  NS_IMETHOD IsStreamBased(bool *_retval)
+  {
+    return mOldInfo->IsStreamBased(_retval);
+  }
 
   NS_IMETHOD AsyncDoom(nsICacheEntryDoomCallback* listener);
   NS_IMETHOD GetPersistent(bool *aPersistToDisk);

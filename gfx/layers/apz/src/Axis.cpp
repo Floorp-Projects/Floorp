@@ -33,7 +33,7 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
 {
 }
 
-void Axis::UpdateWithTouchAtDevicePoint(ScreenIntCoord aPos, uint32_t aTimestampMs) {
+void Axis::UpdateWithTouchAtDevicePoint(ScreenCoord aPos, uint32_t aTimestampMs) {
   // mVelocityQueue is controller-thread only
   AsyncPanZoomController::AssertOnControllerThread();
 
@@ -46,7 +46,7 @@ void Axis::UpdateWithTouchAtDevicePoint(ScreenIntCoord aPos, uint32_t aTimestamp
     return;
   }
 
-  float newVelocity = mAxisLocked ? 0 : (float)(mPos - aPos) / (float)(aTimestampMs - mPosTimeMs);
+  float newVelocity = mAxisLocked ? 0.0f : (float)(mPos - aPos) / (float)(aTimestampMs - mPosTimeMs);
   if (gfxPrefs::APZMaxVelocity() > 0.0f) {
     newVelocity = std::min(newVelocity, gfxPrefs::APZMaxVelocity() * APZCTreeManager::GetDPI());
   }
@@ -62,7 +62,7 @@ void Axis::UpdateWithTouchAtDevicePoint(ScreenIntCoord aPos, uint32_t aTimestamp
   }
 }
 
-void Axis::StartTouch(ScreenIntCoord aPos, uint32_t aTimestampMs) {
+void Axis::StartTouch(ScreenCoord aPos, uint32_t aTimestampMs) {
   mStartPos = aPos;
   mPos = aPos;
   mPosTimeMs = aTimestampMs;
@@ -196,7 +196,7 @@ float Axis::PanDistance() {
   return fabsf((mPos - mStartPos).value);
 }
 
-float Axis::PanDistance(ScreenIntCoord aPos) {
+float Axis::PanDistance(ScreenCoord aPos) {
   return fabsf((aPos - mStartPos).value);
 }
 

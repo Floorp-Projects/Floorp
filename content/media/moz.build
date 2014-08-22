@@ -65,7 +65,6 @@ EXPORTS += [
     'AbstractMediaDecoder.h',
     'AudioChannelFormat.h',
     'AudioCompactor.h',
-    'AudioEventTimeline.h',
     'AudioMixer.h',
     'AudioSampleFormat.h',
     'AudioSegment.h',
@@ -100,6 +99,7 @@ EXPORTS += [
     'SharedBuffer.h',
     'SharedThreadPool.h',
     'StreamBuffer.h',
+    'ThreadPoolCOMListener.h',
     'TimeVarying.h',
     'TrackUnionStream.h',
     'VideoFrameContainer.h',
@@ -169,6 +169,9 @@ UNIFIED_SOURCES += [
     'VideoUtils.cpp',
     'WebVTTListener.cpp',
 ]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+  SOURCES += [ 'ThreadPoolCOMListener.cpp' ]
 
 # DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
 # Latency.cpp needs to be built separately because it forces NSPR logging.

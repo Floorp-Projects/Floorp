@@ -232,6 +232,23 @@ MDefinition::analyzeEdgeCasesBackward()
 {
 }
 
+void
+MInstruction::setResumePoint(MResumePoint *resumePoint)
+{
+    JS_ASSERT(!resumePoint_);
+    resumePoint_ = resumePoint;
+    resumePoint_->setInstruction(this);
+}
+
+void
+MInstruction::stealResumePoint(MInstruction *ins)
+{
+    MOZ_ASSERT(ins->resumePoint_->instruction() == ins);
+    resumePoint_ = ins->resumePoint_;
+    ins->resumePoint_ = nullptr;
+    resumePoint_->replaceInstruction(this);
+}
+
 static bool
 MaybeEmulatesUndefined(MDefinition *op)
 {
@@ -338,6 +355,34 @@ void
 MDefinition::dump() const
 {
     dump(stderr);
+}
+
+void
+MDefinition::dumpLocation(FILE *fp) const
+{
+    MResumePoint *rp = nullptr;
+    const char *linkWord = nullptr;
+    if (isInstruction() && toInstruction()->resumePoint()) {
+        rp = toInstruction()->resumePoint();
+        linkWord = "at";
+    } else {
+        rp = block()->entryResumePoint();
+        linkWord = "after";
+    }
+
+    while (rp) {
+        JSScript *script = rp->block()->info().script();
+        uint32_t lineno = PCToLineNumber(rp->block()->info().script(), rp->pc());
+        fprintf(fp, "  %s %s:%d\n", linkWord, script->filename(), lineno);
+        rp = rp->caller();
+        linkWord = "in";
+    }
+}
+
+void
+MDefinition::dumpLocation() const
+{
+    dumpLocation(stderr);
 }
 
 #ifdef DEBUG
@@ -2381,6 +2426,20 @@ MResumePoint::New(TempAllocator &alloc, MBasicBlock *block, jsbytecode *pc, MRes
     for (size_t i = 0; i < operands.length(); i++)
         resume->initOperand(i, operands[i]);
 
+    return resume;
+}
+
+MResumePoint *
+MResumePoint::Copy(TempAllocator &alloc, MResumePoint *src)
+{
+    MResumePoint *resume = new(alloc) MResumePoint(src->block(), src->pc(),
+                                                   src->caller(), src->mode());
+    // Copy the operands from the original resume point, and not from the
+    // current block stack.
+    if (!resume->operands_.init(alloc, src->stackDepth()))
+        return nullptr;
+    for (size_t i = 0; i < resume->stackDepth(); i++)
+        resume->initOperand(i, src->getOperand(i));
     return resume;
 }
 
