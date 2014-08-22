@@ -1308,19 +1308,6 @@ public:
     mTimestamp.Construct(now);
   }
 };
-
-// Specialized helper - push map[key] if specified or all map values onto array
-
-static void
-PushBackSelect(nsTArray<RefPtr<MediaPipeline>>& aDst,
-               const std::map<TrackID, RefPtr<mozilla::MediaPipeline>> & aSrc,
-               TrackID aKey = 0) {
-  auto begin = aKey ? aSrc.find(aKey) : aSrc.begin(), it = begin;
-  for (auto end = (aKey && begin != aSrc.end())? ++begin : aSrc.end();
-       it != end; ++it) {
-    aDst.AppendElement(it->second);
-  }
-}
 #endif
 
 NS_IMETHODIMP
@@ -2277,18 +2264,40 @@ PeerConnectionImpl::BuildStatsQuery_m(
   }
 
   // Gather up pipelines from mMedia so they may be inspected on STS
-  TrackID trackId = aSelector ? aSelector->GetTrackID() : 0;
 
   for (int i = 0, len = mMedia->LocalStreamsLength(); i < len; i++) {
-    PushBackSelect(query->pipelines,
-                   mMedia->GetLocalStream(i)->GetPipelines(),
-                   trackId);
+    auto& pipelines = mMedia->GetLocalStream(i)->GetPipelines();
+    if (aSelector) {
+      if (mMedia->GetLocalStream(i)->GetMediaStream()->HasTrack(*aSelector)) {
+        // XXX use type instead of TrackID - bug 1056650
+        for (auto it = pipelines.begin(); it != pipelines.end(); ++it) {
+          if (it->second->IsVideo() == !!aSelector->AsVideoStreamTrack()) {
+            query->pipelines.AppendElement(it->second);
+          }
+        }
+      }
+    } else {
+      for (auto it = pipelines.begin(); it != pipelines.end(); ++it) {
+        query->pipelines.AppendElement(it->second);
+      }
+    }
   }
 
   for (int i = 0, len = mMedia->RemoteStreamsLength(); i < len; i++) {
-    PushBackSelect(query->pipelines,
-                   mMedia->GetRemoteStream(i)->GetPipelines(),
-                   trackId);
+    auto& pipelines = mMedia->GetRemoteStream(i)->GetPipelines();
+    if (aSelector) {
+      if (mMedia->GetRemoteStream(i)->GetMediaStream()->HasTrack(*aSelector)) {
+        for (auto it = pipelines.begin(); it != pipelines.end(); ++it) {
+          if (it->second->trackid() == aSelector->GetTrackID()) {
+            query->pipelines.AppendElement(it->second);
+          }
+        }
+      }
+    } else {
+      for (auto it = pipelines.begin(); it != pipelines.end(); ++it) {
+        query->pipelines.AppendElement(it->second);
+      }
+    }
   }
 
   query->iceCtx = mMedia->ice_ctx();
@@ -2296,7 +2305,7 @@ PeerConnectionImpl::BuildStatsQuery_m(
   // From the list of MediaPipelines, determine the set of NrIceMediaStreams
   // we are interested in.
   std::set<size_t> levelsToGrab;
-  if (trackId) {
+  if (aSelector) {
     for (size_t p = 0; p < query->pipelines.Length(); ++p) {
       size_t level = query->pipelines[p]->level();
       MOZ_ASSERT(level);
