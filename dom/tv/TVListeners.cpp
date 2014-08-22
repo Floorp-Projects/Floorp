@@ -53,9 +53,7 @@ TVSourceListener::NotifyChannelScanned(const nsAString& aTunerId,
                                        nsITVChannelData* aChannelData)
 {
   nsRefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
-
-  // TODO Notify the source in follow-up patches.
-
+  source->NotifyChannelScanned(aChannelData);
   return NS_OK;
 }
 
@@ -64,9 +62,7 @@ TVSourceListener::NotifyChannelScanComplete(const nsAString& aTunerId,
                                             const nsAString& aSourceType)
 {
   nsRefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
-
-  // TODO Notify the source in follow-up patches.
-
+  source->NotifyChannelScanComplete();
   return NS_OK;
 }
 
@@ -75,9 +71,7 @@ TVSourceListener::NotifyChannelScanStopped(const nsAString& aTunerId,
                                            const nsAString& aSourceType)
 {
   nsRefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
-
-  // TODO Notify the source in follow-up patches.
-
+  source->NotifyChannelScanStopped();
   return NS_OK;
 }
 
@@ -89,9 +83,7 @@ TVSourceListener::NotifyEITBroadcasted(const nsAString& aTunerId,
                                        const uint32_t aCount)
 {
   nsRefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
-
-  // TODO Notify the source in follow-up patches.
-
+  source->NotifyEITBroadcasted(aChannelData, aProgramDataList, aCount);
   return NS_OK;
 }
 

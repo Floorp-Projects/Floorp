@@ -8,6 +8,7 @@
 #include "mozilla/dom/TVManager.h"
 #include "mozilla/dom/TVSource.h"
 #include "mozilla/dom/TVTuner.h"
+#include "nsArrayUtils.h"
 #include "TVServiceCallbacks.h"
 
 namespace mozilla {
@@ -51,7 +52,11 @@ TVServiceSourceSetterCallback::NotifySuccess(nsIArray* aDataList)
     return NS_ERROR_INVALID_ARG;
   }
 
-  // TODO Update correspondent fields in |mTuner| in follow-up patches.
+  nsresult rv = mTuner->SetCurrentSource(mSourceType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mPromise->MaybeReject(rv);
+    return rv;
+  }
 
   mPromise->MaybeResolve(JS::UndefinedHandleValue);
   return NS_OK;
@@ -116,7 +121,7 @@ TVServiceChannelScanCallback::NotifySuccess(nsIArray* aDataList)
     return NS_ERROR_INVALID_ARG;
   }
 
-  // TODO Update correspondent fields in |mSource| in follow-up patches.
+  mSource->SetIsScanning(mIsScanning);
 
   mPromise->MaybeResolve(JS::UndefinedHandleValue);
   return NS_OK;
@@ -184,13 +189,26 @@ TVServiceChannelSetterCallback::NotifySuccess(nsIArray* aDataList)
 
   uint32_t length;
   nsresult rv = aDataList->GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return rv;
+  }
   if (length != 1) {
     mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     return NS_ERROR_INVALID_ARG;
   }
 
-  // TODO Update correspondent fields in |mSource| in follow-up patches.
+  nsCOMPtr<nsITVChannelData> channelData = do_QueryElementAt(aDataList, 0);
+  if (NS_WARN_IF(!channelData)) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return rv;
+  }
+
+  rv = mSource->SetCurrentChannel(channelData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return rv;
+  }
 
   mPromise->MaybeResolve(JS::UndefinedHandleValue);
   return NS_OK;
@@ -221,7 +239,7 @@ TVServiceChannelSetterCallback::NotifyError(uint16_t aErrorCode)
  * Implementation of TVServiceTunerGetterCallback
  */
 
-NS_IMPL_CYCLE_COLLECTION(TVServiceTunerGetterCallback, mManager, mPromise)
+NS_IMPL_CYCLE_COLLECTION(TVServiceTunerGetterCallback, mManager)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TVServiceTunerGetterCallback)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TVServiceTunerGetterCallback)
@@ -231,13 +249,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TVServiceTunerGetterCallback)
   NS_INTERFACE_MAP_ENTRY(nsITVServiceCallback)
 NS_INTERFACE_MAP_END
 
-TVServiceTunerGetterCallback::TVServiceTunerGetterCallback(TVManager* aManager,
-                                                           Promise* aPromise)
+TVServiceTunerGetterCallback::TVServiceTunerGetterCallback(TVManager* aManager)
   : mManager(aManager)
-  , mPromise(aPromise)
 {
   MOZ_ASSERT(mManager);
-  MOZ_ASSERT(mPromise);
 }
 
 TVServiceTunerGetterCallback::~TVServiceTunerGetterCallback()
@@ -248,11 +263,27 @@ TVServiceTunerGetterCallback::~TVServiceTunerGetterCallback()
 TVServiceTunerGetterCallback::NotifySuccess(nsIArray* aDataList)
 {
   if (!aDataList) {
-    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    mManager->RejectPendingGetTunersPromises(NS_ERROR_DOM_ABORT_ERR);
     return NS_ERROR_INVALID_ARG;
   }
 
-  // TODO Implement in follow-up patches.
+  uint32_t length;
+  nsresult rv = aDataList->GetLength(&length);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<nsRefPtr<TVTuner>> tuners(length);
+  for (uint32_t i = 0; i < length; i++) {
+    nsCOMPtr<nsITVTunerData> tunerData = do_QueryElementAt(aDataList, i);
+    if (NS_WARN_IF(!tunerData)) {
+      continue;
+    }
+
+    nsRefPtr<TVTuner> tuner = TVTuner::Create(mManager->GetOwner(), tunerData);
+    NS_ENSURE_TRUE(tuner, NS_ERROR_DOM_ABORT_ERR);
+
+    tuners.AppendElement(tuner);
+  }
+  mManager->SetTuners(tuners);
 
   return NS_OK;
 }
@@ -263,17 +294,17 @@ TVServiceTunerGetterCallback::NotifyError(uint16_t aErrorCode)
   switch (aErrorCode) {
   case nsITVServiceCallback::TV_ERROR_FAILURE:
   case nsITVServiceCallback::TV_ERROR_INVALID_ARG:
-    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    mManager->RejectPendingGetTunersPromises(NS_ERROR_DOM_ABORT_ERR);
     return NS_OK;
   case nsITVServiceCallback::TV_ERROR_NO_SIGNAL:
-    mPromise->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
+    mManager->RejectPendingGetTunersPromises(NS_ERROR_DOM_NETWORK_ERR);
     return NS_OK;
   case nsITVServiceCallback::TV_ERROR_NOT_SUPPORTED:
-    mPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    mManager->RejectPendingGetTunersPromises(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return NS_OK;
   }
 
-  mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+  mManager->RejectPendingGetTunersPromises(NS_ERROR_DOM_ABORT_ERR);
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
@@ -313,7 +344,26 @@ TVServiceChannelGetterCallback::NotifySuccess(nsIArray* aDataList)
     return NS_ERROR_INVALID_ARG;
   }
 
-  // TODO Implement in follow-up patches.
+  uint32_t length;
+  nsresult rv = aDataList->GetLength(&length);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return rv;
+  }
+
+  nsTArray<nsRefPtr<TVChannel>> channels(length);
+  for (uint32_t i = 0; i < length; i++) {
+    nsCOMPtr<nsITVChannelData> channelData = do_QueryElementAt(aDataList, i);
+    if (NS_WARN_IF(!channelData)) {
+      mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      return NS_ERROR_DOM_ABORT_ERR;
+    }
+
+    nsRefPtr<TVChannel> channel = new TVChannel(mSource->GetOwner());
+    channels.AppendElement(channel);
+  }
+
+  mPromise->MaybeResolve(channels);
 
   return NS_OK;
 }
@@ -374,7 +424,7 @@ TVServiceProgramGetterCallback::NotifySuccess(nsIArray* aDataList)
     return NS_ERROR_INVALID_ARG;
   }
 
-  // TODO Store the results to IndexedDB in follow-up patches.
+  // TODO Store the results to MozStorage in follow-up patches.
 
   return NS_OK;
 }

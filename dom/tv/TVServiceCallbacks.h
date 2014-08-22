@@ -84,14 +84,12 @@ public:
   NS_DECL_NSITVSERVICECALLBACK
   NS_DECL_CYCLE_COLLECTION_CLASS(TVServiceTunerGetterCallback)
 
-  TVServiceTunerGetterCallback(TVManager* aManager,
-                               Promise* aPromise);
+  explicit TVServiceTunerGetterCallback(TVManager* aManager);
 
 private:
   ~TVServiceTunerGetterCallback();
 
   nsRefPtr<TVManager> mManager;
-  nsRefPtr<Promise> mPromise;
 };
 
 class TVServiceChannelGetterCallback MOZ_FINAL : public nsITVServiceCallback

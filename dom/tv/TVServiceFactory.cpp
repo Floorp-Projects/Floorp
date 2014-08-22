@@ -17,8 +17,26 @@ namespace dom {
 TVServiceFactory::CreateFakeTVService()
 {
   nsRefPtr<FakeTVService> service = new FakeTVService();
-  nsresult rv = service->SetSourceListener(new TVSourceListener());
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  return service.forget();
+}
+
+/* static */ already_AddRefed<nsITVService>
+TVServiceFactory::AutoCreateTVService()
+{
+  nsresult rv;
+  nsCOMPtr<nsITVService> service = do_CreateInstance(TV_SERVICE_CONTRACTID);
+  if (!service) {
+    // Fallback to the fake service.
+    service = do_CreateInstance(FAKE_TV_SERVICE_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+  }
+
+  rv = service->SetSourceListener(new TVSourceListener());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
 
   return service.forget();
 }
