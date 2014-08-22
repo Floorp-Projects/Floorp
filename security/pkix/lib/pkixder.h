@@ -464,7 +464,7 @@ CertificateSerialNumber(Reader& input, /*out*/ Input& value)
 
 // x.509 and OCSP both use this same version numbering scheme, though OCSP
 // only supports v1.
-MOZILLA_PKIX_ENUM_CLASS Version { v1 = 0, v2 = 1, v3 = 2 };
+MOZILLA_PKIX_ENUM_CLASS Version { v1 = 0, v2 = 1, v3 = 2, v4 = 3 };
 
 // X.509 Certificate and OCSP ResponseData both use this
 // "[0] EXPLICIT Version DEFAULT <defaultVersion>" construct, but with
@@ -497,6 +497,7 @@ OptionalVersion(Reader& input, /*out*/ Version& version)
     // XXX(bug 1031093): We shouldn't accept an explicit encoding of v1, but we
     // do here for compatibility reasons.
     case static_cast<uint8_t>(Version::v1): version = Version::v1; break;
+    case static_cast<uint8_t>(Version::v4): version = Version::v4; break;
     default:
       return Result::ERROR_BAD_DER;
   }

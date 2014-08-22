@@ -9,15 +9,15 @@ if (typeof findReferences == "function") {
 
     var o = ({});
 
-    function returnHeavy(y) { eval(''); return function heavy() { return y; }; }
-    assertEq(referencesVia(returnHeavy(o), 'fun_callscope; y', o), true);
-    assertEq(referencesVia(returnHeavy(o), 'fun_callscope; shape; base; parent', this), true);
+    function returnHeavy(y) { eval(''); Math.sin(); return function heavy() { return y; }; }
+    assertEq(referencesVia(returnHeavy(o), 'fun_environment; y', o), true);
+    assertEq(referencesVia(returnHeavy(o), 'fun_environment; enclosing_environment', this), true);
 
     function returnBlock(z) { eval(''); let(w = z) { return function block() { return w; }; }; }
-    assertEq(referencesVia(returnBlock(o), 'fun_callscope; w', o), true);
+    assertEq(referencesVia(returnBlock(o), 'fun_environment; w', o), true);
 
     function returnWithObj(v) { with(v) return function withObj() { return u; }; }
-    assertEq(referencesVia(returnWithObj(o), 'fun_callscope; type; type_proto', o), true);
+    assertEq(referencesVia(returnWithObj(o), 'fun_environment; with_object', o), true);
 
     reportCompare(true, true);
 } else {

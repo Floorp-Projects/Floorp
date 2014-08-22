@@ -153,6 +153,10 @@ struct Point4DTyped :
   Point4DTyped<UnknownUnits> ToUnknownPoint() const {
     return Point4DTyped<UnknownUnits>(this->x, this->y, this->z, this->w);
   }
+
+  PointTyped<units> As2DPoint() {
+    return PointTyped<units>(this->x / this->w, this->y / this->w);
+  }
 };
 typedef Point4DTyped<UnknownUnits> Point4D;
 

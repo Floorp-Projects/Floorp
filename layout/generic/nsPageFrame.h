@@ -12,7 +12,7 @@
 class nsSharedPageData;
 
 // Page frame class used by the simple page sequence frame
-class nsPageFrame : public nsContainerFrame {
+class nsPageFrame MOZ_FINAL : public nsContainerFrame {
 
 public:
   NS_DECL_FRAMEARENA_HELPERS

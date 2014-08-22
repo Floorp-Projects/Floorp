@@ -944,7 +944,6 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         }
         nscoord descent = desiredSize.BSize(rowWM) - ascent;
         UpdateHeight(desiredSize.BSize(rowWM), ascent, descent, &aTableFrame, cellFrame);
-        UpdateHeight(desiredSize.Height(), ascent, descent, &aTableFrame, cellFrame);
       }
       else {
         cellMaxHeight = std::max(cellMaxHeight, desiredSize.Height());

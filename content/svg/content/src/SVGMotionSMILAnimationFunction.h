@@ -31,7 +31,7 @@ class SVGMPathElement;
 // Subclass of nsSMILAnimationFunction to support a few extra features offered
 // by the <animateMotion> element.
 //
-class SVGMotionSMILAnimationFunction : public nsSMILAnimationFunction
+class SVGMotionSMILAnimationFunction MOZ_FINAL : public nsSMILAnimationFunction
 {
   typedef mozilla::gfx::Path Path;
 

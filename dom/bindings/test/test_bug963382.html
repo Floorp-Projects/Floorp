@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=963382
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 963382</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for clearing cache attributes in JS-implemented WebIDL implementations. **/
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, go);
+
+  function go() {
+    var t = new TestInterfaceJS();
+
+    // Test [Cached] attribute clearing.
+    is(t.cachedAttr, 15, "Initial value of number");
+
+    t.setCachedAttr(3);
+    is(t.cachedAttr, 15, "Setting the number on the inner JS object should not affect cached value");
+
+    t.clearCachedAttrCache();
+    is(t.cachedAttr, 3, "Setting the number on the inner JS object should affect cached value after clearing the cache.");
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=963382">Mozilla Bug 963382</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

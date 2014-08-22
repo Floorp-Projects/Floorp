@@ -109,7 +109,7 @@ protected:
  * Accessible for HTML input@type="text", input@type="password", textarea and
  * other HTML text controls.
  */
-class HTMLTextFieldAccessible : public HyperTextAccessibleWrap
+class HTMLTextFieldAccessible MOZ_FINAL : public HyperTextAccessibleWrap
 {
 
 public:

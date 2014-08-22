@@ -3410,12 +3410,12 @@ CodeGenerator::generateBody()
 #endif
 
         for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
-            IonSpewStart(IonSpew_Codegen, "instruction %s", iter->opName());
 #ifdef DEBUG
+            IonSpewStart(IonSpew_Codegen, "instruction %s", iter->opName());
             if (const char *extra = iter->extraName())
                 IonSpewCont(IonSpew_Codegen, ":%s", extra);
-#endif
             IonSpewFin(IonSpew_Codegen);
+#endif
 
             if (counts)
                 blockCounts->visitInstruction(*iter);

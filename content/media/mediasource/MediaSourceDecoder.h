@@ -19,7 +19,7 @@ namespace mozilla {
 class MediaResource;
 class MediaDecoderStateMachine;
 class MediaSourceReader;
-class SubBufferDecoder;
+class SourceBufferDecoder;
 
 namespace dom {
 
@@ -43,7 +43,7 @@ public:
   void AttachMediaSource(dom::MediaSource* aMediaSource);
   void DetachMediaSource();
 
-  already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType);
+  already_AddRefed<SourceBufferDecoder> CreateSubDecoder(const nsACString& aType);
 
 private:
   // The owning MediaSource holds a strong reference to this decoder, and

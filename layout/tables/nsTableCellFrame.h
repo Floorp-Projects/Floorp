@@ -287,7 +287,7 @@ inline void nsTableCellFrame::SetHasPctOverHeight(bool aValue)
 }
 
 // nsBCTableCellFrame
-class nsBCTableCellFrame : public nsTableCellFrame
+class nsBCTableCellFrame MOZ_FINAL : public nsTableCellFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS

@@ -451,7 +451,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
-  if (HasShadowManager() && mForwarder->EndTransaction(&replies, mRegionToClear,
+  if (mForwarder->EndTransaction(&replies, mRegionToClear,
         mLatestTransactionId, aScheduleComposite, mPaintSequenceNumber,
         mIsRepeatTransaction, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
@@ -507,14 +507,15 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
     if (sent) {
       mNeedsComposite = false;
     }
-    if (!sent || mForwarder->GetShadowManager()->HasNoCompositor()) {
-      // Clear the transaction id so that it doesn't get returned
-      // unless we forwarded to somewhere that doesn't actually
-      // have a compositor.
-      mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
-    }
   } else if (HasShadowManager()) {
     NS_WARNING("failed to forward Layers transaction");
+  }
+
+  if (!sent) {
+    // Clear the transaction id so that it doesn't get returned
+    // unless we forwarded to somewhere that doesn't actually
+    // have a compositor.
+    mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
   }
 
   mForwarder->RemoveTexturesIfNecessary();

@@ -56,8 +56,20 @@ class LIRGeneratorNone : public LIRGeneratorShared
     bool lowerMulI(MMul *, MDefinition *, MDefinition *) { MOZ_CRASH(); }
     bool lowerUDiv(MDiv *) { MOZ_CRASH(); }
     bool lowerUMod(MMod *) { MOZ_CRASH(); }
+    bool visitBox(MBox *box) { MOZ_CRASH(); }
+    bool visitUnbox(MUnbox *unbox) { MOZ_CRASH(); }
+    bool visitReturn(MReturn *ret) { MOZ_CRASH(); }
     bool visitPowHalf(MPowHalf *) { MOZ_CRASH(); }
     bool visitAsmJSNeg(MAsmJSNeg *) { MOZ_CRASH(); }
+    bool visitGuardShape(MGuardShape *ins) { MOZ_CRASH(); }
+    bool visitGuardObjectType(MGuardObjectType *ins) { MOZ_CRASH(); }
+    bool visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins) { MOZ_CRASH(); }
+    bool visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins) { MOZ_CRASH(); }
+    bool visitAsmJSLoadHeap(MAsmJSLoadHeap *ins) { MOZ_CRASH(); }
+    bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins) { MOZ_CRASH(); }
+    bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins) { MOZ_CRASH(); }
+    bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins) { MOZ_CRASH(); }
+    bool visitForkJoinGetSlice(MForkJoinGetSlice *ins) { MOZ_CRASH(); }
 
     LTableSwitch *newLTableSwitch(LAllocation, LDefinition, MTableSwitch *) { MOZ_CRASH(); }
     LTableSwitchV *newLTableSwitchV(MTableSwitch *) { MOZ_CRASH(); }

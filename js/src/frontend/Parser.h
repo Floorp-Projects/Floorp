@@ -33,7 +33,7 @@ struct StmtInfoPC : public StmtInfoBase {
     explicit StmtInfoPC(ExclusiveContext *cx) : StmtInfoBase(cx), innerBlockScopeDepth(0) {}
 };
 
-typedef HashSet<JSAtom *> FuncStmtSet;
+typedef HashSet<JSAtom *, DefaultHasher<JSAtom *>, LifoAllocPolicy<Fallible>> FuncStmtSet;
 class SharedContext;
 
 typedef Vector<Definition *, 16> DeclVector;
