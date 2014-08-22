@@ -17,7 +17,7 @@ class CodeGenerator;
 
 class MoveEmitterMIPS
 {
-    bool inCycle_;
+    uint32_t inCycle_;
     MacroAssemblerMIPSCompat &masm;
 
     // Original stack push value.
@@ -38,15 +38,17 @@ class MoveEmitterMIPS
     void assertDone();
     Register tempReg();
     FloatRegister tempFloatReg();
-    Address cycleSlot() const;
+    Address cycleSlot(uint32_t slot, uint32_t subslot) const;
     int32_t getAdjustedOffset(const MoveOperand &operand);
     Address getAdjustedAddress(const MoveOperand &operand);
 
     void emitMove(const MoveOperand &from, const MoveOperand &to);
     void emitFloat32Move(const MoveOperand &from, const MoveOperand &to);
     void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);
-    void breakCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type);
-    void completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type);
+    void breakCycle(const MoveOperand &from, const MoveOperand &to,
+                    MoveOp::Type type, uint32_t slot);
+    void completeCycle(const MoveOperand &from, const MoveOperand &to,
+                       MoveOp::Type type, uint32_t slot);
     void emit(const MoveOp &move);
 
   public:
