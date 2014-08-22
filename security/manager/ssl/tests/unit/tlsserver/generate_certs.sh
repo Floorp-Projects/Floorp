@@ -279,6 +279,7 @@ make_delegated invalidDelegatedSignerKeyUsageCrlSigning 'CN=Test Invalid Delegat
 make_delegated invalidDelegatedSignerWrongExtKeyUsage 'CN=Test Invalid Delegated Responder Wrong extKeyUsage' testCA "--extKeyUsage codeSigning"
 
 make_INT self-signed-EE-with-cA-true 'CN=Test Self-signed End-entity with CA true' unused "-x -8 self-signed-end-entity-with-cA-true.example.com"
+make_INT ca-used-as-end-entity 'CN=Test Intermediate used as End-Entity' testCA "-8 ca-used-as-end-entity.example.com"
 
 make_delegated badKeysizeDelegatedSigner 'CN=Bad Keysize Delegated Responder' testCA "--extKeyUsage ocspResponder -g 1008"
 
