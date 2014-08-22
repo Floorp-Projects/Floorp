@@ -33,7 +33,7 @@ struct ElementPropertyTransition : public dom::Animation
 {
   ElementPropertyTransition(nsIDocument* aDocument,
                             const AnimationTiming &aTiming)
-    : dom::Animation(aDocument, aTiming) { }
+    : dom::Animation(aDocument, aTiming, EmptyString()) { }
 
   virtual ElementPropertyTransition* AsTransition() { return this; }
   virtual const ElementPropertyTransition* AsTransition() const { return this; }
