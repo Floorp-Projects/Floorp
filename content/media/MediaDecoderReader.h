@@ -163,6 +163,9 @@ public:
     return mDecoder;
   }
 
+  // TODO: DEPRECATED.  This uses synchronous decoding.
+  VideoData* DecodeToFirstVideoData();
+
   MediaInfo GetMediaInfo() { return mInfo; }
 
   // Indicates if the media is seekable.

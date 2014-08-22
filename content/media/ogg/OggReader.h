@@ -90,7 +90,6 @@ private:
   // frame, if we have video.
   VideoData* FindStartTime(int64_t& aOutStartTime);
   AudioData* DecodeToFirstAudioData();
-  VideoData* DecodeToFirstVideoData();
 
   // This monitor should be taken when reading or writing to mIsChained.
   ReentrantMonitor mMonitor;
