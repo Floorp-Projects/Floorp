@@ -719,15 +719,11 @@ nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
   MOZ_ASSERT(request == mPump);
 
-  // If our content type is unknown or if the content type is
-  // application/octet-stream and the caller requested it, use the content type
+  // If our content type is unknown, use the content type
   // sniffer. If the sniffer is not available for some reason, then we just keep
   // going as-is.
-  bool shouldSniff = mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE) ||
-            ((mLoadFlags & LOAD_TREAT_APPLICATION_OCTET_STREAM_AS_UNKNOWN) &&
-            mContentType.EqualsLiteral(APPLICATION_OCTET_STREAM));
-
-  if (NS_SUCCEEDED(mStatus) && shouldSniff) {
+  if (NS_SUCCEEDED(mStatus) &&
+      mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
     mPump->PeekStream(CallUnknownTypeSniffer, static_cast<nsIChannel*>(this));
   }
 
