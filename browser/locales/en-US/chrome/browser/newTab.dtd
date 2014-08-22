@@ -12,6 +12,3 @@
 <!ENTITY newtab.undo.undoButton "Undo.">
 <!ENTITY newtab.undo.restoreButton "Restore All.">
 <!ENTITY newtab.undo.closeTooltip "Hide">
-<!ENTITY newtab.sponsored.release.message "This Sponsor site was suggested because we hoped you’d find it interesting and because it supports Mozilla’s mission.">
-<!ENTITY newtab.sponsored.trial.message2 "This site was suggested because we hoped you’d find it interesting and because it supports Mozilla’s mission.">
-<!ENTITY newtab.panel.link.text "Learn more…">

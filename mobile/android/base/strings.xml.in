@@ -41,6 +41,12 @@
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
 
+  <string name="onboard_start_message">&onboard_start_message;</string>
+  <string name="onboard_start_subtext">&onboard_start_subtext;</string>
+  <string name="onboard_start_button_account">&onboard_start_button_account;</string>
+  <string name="onboard_start_button_browser">&onboard_start_button_browser;</string>
+  <string name="onboard_empty_contentDescription"></string>
+
   <string name="bookmarks_title">&bookmarks_title;</string>
   <string name="history_title">&history_title;</string>
   <string name="reading_list_title">&reading_list_title;</string>

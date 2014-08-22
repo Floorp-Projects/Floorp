@@ -10,6 +10,7 @@ include('background_junit3_sources.mozbuild')
 
 jar = add_java_jar('background-junit3')
 jar.sources += background_junit3_sources
+jar.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
 
 main = add_android_eclipse_project('BackgroundInstrumentationTests', OBJDIR + '/AndroidManifest.xml')
 main.package_name = 'org.mozilla.gecko.background.tests'

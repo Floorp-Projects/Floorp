@@ -17,6 +17,9 @@ const kWhitelist = [
   {sourceName: /loop\/.*sdk-content\/.*\.css$/i /* TokBox SDK assets, see bug 1032469 */}
 ];
 
+let moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
+let {generateURIsFromDirTree} = Cu.import(moduleLocation, {});
+
 /**
  * Check if an error should be ignored due to matching one of the whitelist
  * objects defined in kWhitelist
@@ -40,113 +43,12 @@ function ignoredError(aErrorObject) {
   return false;
 }
 
-
-/**
- * Returns a promise that is resolved with a list of CSS files to check,
- * represented by their nsIURI objects.
- *
- * @param appDir the application directory to scan for CSS files (nsIFile)
- */
-function generateURIsFromDirTree(appDir) {
-  let rv = [];
-  let dirQueue = [appDir.path];
-  return Task.spawn(function*() {
-    while (dirQueue.length) {
-      let nextDir = dirQueue.shift();
-      let {subdirs, cssfiles} = yield iterateOverPath(nextDir);
-      dirQueue = dirQueue.concat(subdirs);
-      rv = rv.concat(cssfiles);
-    }
-    return rv;
-  });
-}
-
-/* Shorthand constructor to construct an nsI(Local)File */
-let LocalFile = Components.Constructor("@mozilla.org/file/local;1", Ci.nsIFile, "initWithPath");
-
-/**
- * Uses OS.File.DirectoryIterator to asynchronously iterate over a directory.
- * It returns a promise that is resolved with an object with two properties:
- *  - cssfiles: an array of nsIURIs corresponding to CSS that needs checking
- *  - subdirs: an array of paths for subdirectories we need to recurse into
- *             (handled by generateURIsFromDirTree above)
- *
- * @param path the path to check (string)
- */
-function iterateOverPath(path) {
-  let iterator = new OS.File.DirectoryIterator(path);
-  let parentDir = new LocalFile(path);
-  let subdirs = [];
-  let cssfiles = [];
-  // Iterate through the directory
-  let promise = iterator.forEach(
-    function onEntry(entry) {
-      if (entry.isDir) {
-        let subdir = parentDir.clone();
-        subdir.append(entry.name);
-        subdirs.push(subdir.path);
-      } else if (entry.name.endsWith(".css")) {
-        let file = parentDir.clone();
-        file.append(entry.name);
-        let uriSpec = getURLForFile(file);
-        cssfiles.push(Services.io.newURI(uriSpec, null, null));
-      } else if (entry.name.endsWith(".ja")) {
-        let file = parentDir.clone();
-        file.append(entry.name);
-        let subentries = [uri for (uri of generateEntriesFromJarFile(file))];
-        cssfiles = cssfiles.concat(subentries);
-      }
-    }
-  );
-
-  let outerPromise = Promise.defer();
-  promise.then(function() {
-    outerPromise.resolve({cssfiles: cssfiles, subdirs: subdirs});
-    iterator.close();
-  }, function(e) {
-    outerPromise.reject(e);
-    iterator.close();
-  });
-  return outerPromise.promise;
-}
-
-/* Helper function to generate a URI spec (NB: not an nsIURI yet!)
- * given an nsIFile object */
-function getURLForFile(file) {
-  let fileHandler = Services.io.getProtocolHandler("file");
-  fileHandler = fileHandler.QueryInterface(Ci.nsIFileProtocolHandler);
-  return fileHandler.getURLSpecFromFile(file);
-}
-
-/**
- * A generator that generates nsIURIs for CSS files found in jar files
- * like omni.ja.
- *
- * @param jarFile an nsIFile object for the jar file that needs checking.
- */
-function* generateEntriesFromJarFile(jarFile) {
-  const ZipReader = new Components.Constructor("@mozilla.org/libjar/zip-reader;1", "nsIZipReader", "open");
-  let zr = new ZipReader(jarFile);
-  let entryEnumerator = zr.findEntries("*.css$");
-
-  const kURIStart = getURLForFile(jarFile);
-  while (entryEnumerator.hasMore()) {
-    let entry = entryEnumerator.getNext();
-    let entryURISpec = "jar:" + kURIStart + "!/" + entry;
-    yield Services.io.newURI(entryURISpec, null, null);
-  }
-  zr.close();
-}
-
-/**
- * The actual test.
- */
 add_task(function checkAllTheCSS() {
   let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
   // This asynchronously produces a list of URLs (sadly, mostly sync on our
   // test infrastructure because it runs against jarfiles there, and
   // our zipreader APIs are all sync)
-  let uris = yield generateURIsFromDirTree(appDir);
+  let uris = yield generateURIsFromDirTree(appDir, ".css");
 
   // Create a clean iframe to load all the files into:
   let hiddenWin = Services.appShell.hiddenDOMWindow;

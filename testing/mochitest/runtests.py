@@ -1162,6 +1162,9 @@ class Mochitest(MochitestUtilsMixin):
     return manifest
 
   def getGMPPluginPath(self, options):
+    if options.gmp_path:
+      return options.gmp_path
+
     # For local builds, gmp-fake will be under dist/bin.
     gmp_path = os.path.join(options.xrePath, 'gmp-fake')
     if os.path.isdir(gmp_path):
