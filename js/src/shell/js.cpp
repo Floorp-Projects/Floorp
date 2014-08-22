@@ -958,7 +958,6 @@ class AutoNewContext
         if (!newcx)
             return false;
         JS::ContextOptionsRef(newcx).setDontReportUncaught(true);
-        js::SetDefaultObjectForContext(newcx, JS::CurrentGlobalOrNull(cx));
 
         newRequest.emplace(newcx);
         newCompartment.emplace(newcx, JS::CurrentGlobalOrNull(cx));
@@ -2663,14 +2662,6 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
             break;
     }
 
-    AutoSaveFrameChain sfc(cx);
-    mozilla::Maybe<AutoCompartment> ac;
-    if (saveCurrent) {
-        if (!sfc.save())
-            return false;
-        ac.emplace(cx, DefaultObjectForContextOrNull(cx));
-    }
-
     AutoStableStringChars stableChars(cx);
     if (!stableChars.initTwoByte(cx, str))
         return JSTRAP_ERROR;
@@ -2691,6 +2682,12 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     if (!ComputeThis(cx, frame))
         return false;
     RootedValue thisv(cx, frame.thisValue());
+
+    AutoSaveFrameChain sfc(cx);
+    if (saveCurrent) {
+        if (!sfc.save())
+            return false;
+    }
 
     bool ok;
     {
@@ -5955,7 +5952,6 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         return 1;
 
     JSAutoCompartment ac(cx, glob);
-    js::SetDefaultObjectForContext(cx, glob);
 
     JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class);
     if (!envobj)
