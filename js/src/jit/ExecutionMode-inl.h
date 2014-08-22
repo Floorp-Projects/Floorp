@@ -22,7 +22,7 @@ HasIonScript(JSScript *script, ExecutionMode cmode)
       case ParallelExecution: return script->hasParallelIonScript();
       default:;
     }
-    MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    MOZ_CRASH("No such execution mode");
 }
 
 static inline IonScript *
@@ -33,7 +33,7 @@ GetIonScript(JSScript *script, ExecutionMode cmode)
       case ParallelExecution: return script->maybeParallelIonScript();
       default:;
     }
-    MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    MOZ_CRASH("No such execution mode");
 }
 
 static inline void
@@ -44,7 +44,7 @@ SetIonScript(JSScript *script, ExecutionMode cmode, IonScript *ionScript)
       case ParallelExecution: script->setParallelIonScript(ionScript); return;
       default:;
     }
-    MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    MOZ_CRASH("No such execution mode");
 }
 
 static inline size_t
@@ -55,7 +55,7 @@ OffsetOfIonInJSScript(ExecutionMode cmode)
       case ParallelExecution: return JSScript::offsetOfParallelIonScript();
       default:;
     }
-    MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    MOZ_CRASH("No such execution mode");
 }
 
 static inline bool
@@ -68,8 +68,7 @@ CanIonCompile(JSScript *script, ExecutionMode cmode)
       case ArgumentsUsageAnalysis: return true;
       default:;
     }
-    MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    return false;
+    MOZ_CRASH("No such execution mode");
 }
 
 static inline bool
@@ -80,7 +79,7 @@ CompilingOffThread(JSScript *script, ExecutionMode cmode)
       case ParallelExecution: return script->isParallelIonCompilingOffThread();
       default:;
     }
-    MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    MOZ_CRASH("No such execution mode");
 }
 
 static inline bool
@@ -91,7 +90,7 @@ CompilingOffThread(HandleScript script, ExecutionMode cmode)
       case ParallelExecution: return script->isParallelIonCompilingOffThread();
       default:;
     }
-    MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    MOZ_CRASH("No such execution mode");
 }
 
 } // namespace jit
