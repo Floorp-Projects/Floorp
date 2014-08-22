@@ -1201,7 +1201,8 @@ nsresult HTMLMediaElement::LoadResource()
                      loadGroup,
                      nullptr,
                      nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
-                     nsIChannel::LOAD_TREAT_APPLICATION_OCTET_STREAM_AS_UNKNOWN,
+                     nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE |
+                     nsIChannel::LOAD_CALL_CONTENT_SNIFFERS,
                      channelPolicy);
   NS_ENSURE_SUCCESS(rv,rv);
 
