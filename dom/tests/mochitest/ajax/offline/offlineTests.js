@@ -18,7 +18,7 @@ function OfflineCacheContents(urls) {
 OfflineCacheContents.prototype = {
 QueryInterface: function(iid) {
     if (!iid.equals(Ci.nsISupports) &&
-        !iid.equals(Ci.nsICacheEntryOpenCallback)) {
+        !iid.equals(Ci.nsICacheListener)) {
       throw Cr.NS_ERROR_NO_INTERFACE;
     }
     return this;
