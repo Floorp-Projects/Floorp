@@ -2969,6 +2969,10 @@ nsGlobalWindow::SetOpenerWindow(nsIDOMWindow* aOpener,
   NS_ASSERTION(aOpener || !aOriginalOpener,
                "Shouldn't set mHadOriginalOpener if aOpener is null");
 
+#ifdef DEBUG
+  nsCOMPtr<nsPIDOMWindow> opener = do_QueryInterface(aOpener);
+  MOZ_ASSERT(!opener || opener->IsOuterWindow());
+#endif
   mOpener = do_GetWeakReference(aOpener);
   NS_ASSERTION(mOpener || !aOpener, "Opener must support weak references!");
 
@@ -4600,7 +4604,7 @@ nsGlobalWindow::SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
     return;
   }
 
-  nsGlobalWindow* win = nullptr;
+  nsPIDOMWindow* win = nullptr;
   if (aOpener.isObject()) {
     JSObject* unwrapped = js::CheckedUnwrap(&aOpener.toObject(),
                                             /* stopAtOuter = */ false);
@@ -4615,6 +4619,14 @@ nsGlobalWindow::SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
       aError.Throw(NS_ERROR_INVALID_ARG);
       return;
     }
+  }
+
+  if (win && win->IsInnerWindow()) {
+    if (!win->IsCurrentInnerWindow()) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+    win = win->GetOuterWindow();
   }
 
   SetOpenerWindow(win, false);
@@ -6535,7 +6547,8 @@ nsGlobalWindow::Focus(ErrorResult& aError)
     return;
   }
 
-  nsCOMPtr<nsIDOMWindow> caller = do_QueryInterface(GetEntryGlobal());
+  nsCOMPtr<nsPIDOMWindow> caller = do_QueryInterface(GetEntryGlobal());
+  caller = caller ? caller->GetOuterWindow() : nullptr;
   nsCOMPtr<nsIDOMWindow> opener;
   GetOpener(getter_AddRefs(opener));
 
