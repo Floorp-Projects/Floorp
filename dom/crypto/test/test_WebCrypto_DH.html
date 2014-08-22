@@ -231,6 +231,22 @@ TestArray.addTest(
       }), error(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "SPKI import/export of a public DH key",
+  function() {
+    var that = this;
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("spki", x);
+    }
+
+    crypto.subtle.importKey("spki", tv.dh_nist.spki, "DH", true, ["deriveBits"])
+      .then(doExport, error(that))
+      .then(memcmp_complete(that, tv.dh_nist.spki), error(that));
+  }
+);
 /*]]>*/</script>
 </head>
 
