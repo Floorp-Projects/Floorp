@@ -24,17 +24,6 @@ let gPage = {
     // listen from the xul window and filter then delegate
     addEventListener("click", this, false);
 
-    // Initialize sponsored panel
-    this._sponsoredPanel = document.getElementById("sponsored-panel");
-    let link = this._sponsoredPanel.querySelector(".text-link");
-    link.addEventListener("click", () => this._sponsoredPanel.hidePopup());
-    if (UpdateChannel.get().startsWith("release")) {
-      document.getElementById("sponsored-panel-trial-descr").style.display = "none";
-    }
-    else {
-      document.getElementById("sponsored-panel-release-descr").style.display = "none";
-    }
-
     // Check if the new tab feature is enabled.
     let enabled = gAllPages.enabled;
     if (enabled)
@@ -87,21 +76,6 @@ let gPage = {
     if (gGrid.ready && !skipUpdate) {
       gGrid.refresh();
     }
-  },
-
-  /**
-   * Shows sponsored panel
-   */
-  showSponsoredPanel: function Page_showSponsoredPanel(aTarget) {
-    if (this._sponsoredPanel.state == "closed") {
-      let self = this;
-      this._sponsoredPanel.addEventListener("popuphidden", function onPopupHidden(aEvent) {
-        self._sponsoredPanel.removeEventListener("popuphidden", onPopupHidden, false);
-        aTarget.removeAttribute("panelShown");
-      });
-    }
-    aTarget.setAttribute("panelShown", "true");
-    this._sponsoredPanel.openPopup(aTarget);
   },
 
   /**
