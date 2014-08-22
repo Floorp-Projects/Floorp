@@ -8,7 +8,9 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "ImageRegion.h"
 #include "Orientation.h"
+#include "SVGImageContext.h"
 
 #include "mozilla/MemoryReporting.h"
 
@@ -217,10 +219,9 @@ DynamicImage::GetFrame(uint32_t aWhichFrame,
                                      SurfaceFormat::B8G8R8A8);
   nsRefPtr<gfxContext> context = new gfxContext(dt);
 
-  nsresult rv = Draw(context, GraphicsFilter::FILTER_NEAREST, gfxMatrix(),
-                     gfxRect(0, 0, size.width, size.height),
-                     nsIntRect(0, 0, size.width, size.height),
-                     size, nullptr, aWhichFrame, aFlags);
+  nsresult rv = Draw(context, size, ImageRegion::Create(size),
+                     aWhichFrame, GraphicsFilter::FILTER_NEAREST,
+                     Nothing(), aFlags);
 
   NS_ENSURE_SUCCESS(rv, nullptr);
   return dt->Snapshot();
@@ -243,23 +244,34 @@ DynamicImage::GetImageContainer(LayerManager* aManager, ImageContainer** _retval
 
 NS_IMETHODIMP
 DynamicImage::Draw(gfxContext* aContext,
-                   GraphicsFilter aFilter,
-                   const gfxMatrix& aUserSpaceToImageSpace,
-                   const gfxRect& aFill,
-                   const nsIntRect& aSubimage,
-                   const nsIntSize& aViewportSize,
-                   const SVGImageContext* aSVGContext,
+                   const nsIntSize& aSize,
+                   const ImageRegion& aRegion,
                    uint32_t aWhichFrame,
+                   GraphicsFilter aFilter,
+                   const Maybe<SVGImageContext>& aSVGContext,
                    uint32_t aFlags)
 {
+  MOZ_ASSERT(!aSize.IsEmpty(), "Unexpected empty size");
+
   gfxIntSize drawableSize(mDrawable->Size());
-  gfxRect imageRect(0, 0, drawableSize.width, drawableSize.height);
-  gfxRect sourceRect = aUserSpaceToImageSpace.TransformBounds(aFill);
 
-  gfxUtils::DrawPixelSnapped(aContext, mDrawable, aUserSpaceToImageSpace,
-                             aSubimage, sourceRect, imageRect, aFill,
-                             SurfaceFormat::B8G8R8A8, aFilter, aFlags);
+  if (aSize == drawableSize) {
+    gfxUtils::DrawPixelSnapped(aContext, mDrawable, drawableSize, aRegion,
+                               SurfaceFormat::B8G8R8A8, aFilter);
+    return NS_OK;
+  }
 
+  gfxSize scale(double(aSize.width) / drawableSize.width,
+                double(aSize.height) / drawableSize.height);
+
+  ImageRegion region(aRegion);
+  region.Scale(1.0 / scale.width, 1.0 / scale.height);
+
+  gfxContextMatrixAutoSaveRestore saveMatrix(aContext);
+  aContext->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
+
+  gfxUtils::DrawPixelSnapped(aContext, mDrawable, drawableSize, region,
+                             SurfaceFormat::B8G8R8A8, aFilter);
   return NS_OK;
 }
 
