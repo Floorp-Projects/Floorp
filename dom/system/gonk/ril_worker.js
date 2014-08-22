@@ -2529,77 +2529,105 @@ RilObject.prototype = {
     return true;
   },
 
+  _serviceCodeToKeyString: function(serviceCode) {
+    switch (serviceCode) {
+      case MMI_SC_CFU:
+      case MMI_SC_CF_BUSY:
+      case MMI_SC_CF_NO_REPLY:
+      case MMI_SC_CF_NOT_REACHABLE:
+      case MMI_SC_CF_ALL:
+      case MMI_SC_CF_ALL_CONDITIONAL:
+        return MMI_KS_SC_CALL_FORWARDING;
+      case MMI_SC_PIN:
+        return MMI_KS_SC_PIN;
+      case MMI_SC_PIN2:
+        return MMI_KS_SC_PIN2;
+      case MMI_SC_PUK:
+        return MMI_KS_SC_PUK;
+      case MMI_SC_PUK2:
+        return MMI_KS_SC_PUK2;
+      case MMI_SC_IMEI:
+        return MMI_KS_SC_IMEI;
+      case MMI_SC_CLIP:
+        return MMI_KS_SC_CLIP;
+      case MMI_SC_CLIR:
+        return MMI_KS_SC_CLIR;
+      case MMI_SC_BAOC:
+      case MMI_SC_BAOIC:
+      case MMI_SC_BAOICxH:
+      case MMI_SC_BAIC:
+      case MMI_SC_BAICr:
+      case MMI_SC_BA_ALL:
+      case MMI_SC_BA_MO:
+      case MMI_SC_BA_MT:
+        return MMI_KS_SC_CALL_BARRING;
+      case MMI_SC_CALL_WAITING:
+        return MMI_SC_CALL_WAITING;
+      default:
+        return MMI_KS_SC_USSD;
+    }
+  },
+
   sendMMI: function(options) {
     if (DEBUG) {
       this.context.debug("SendMMI " + JSON.stringify(options));
     }
-    let mmiString = options.mmi;
-    let mmi = this._parseMMI(mmiString);
 
-    let _sendMMIError = (function(errorMsg, mmiServiceCode) {
+    let mmi = this._parseMMI(options.mmi);
+    if (DEBUG) {
+      this.context.debug("MMI " + JSON.stringify(mmi));
+    }
+
+    let _sendMMIError = (function(errorMsg) {
       options.success = false;
       options.errorMsg = errorMsg;
-      if (mmiServiceCode) {
-        options.mmiServiceCode = mmiServiceCode;
-      }
       this.sendChromeMessage(options);
     }).bind(this);
 
-    function _isValidPINPUKRequest(mmiServiceCode) {
+    // It's neither a valid mmi code nor an ongoing ussd.
+    if (!mmi && !this._ussdSession) {
+      _sendMMIError(MMI_ERROR_KS_ERROR);
+      return;
+    }
+
+    options.mmiServiceCode = mmi ?
+      this._serviceCodeToKeyString(mmi.serviceCode) : MMI_KS_SC_USSD;
+
+    function _isValidPINPUKRequest() {
       // The only allowed MMI procedure for ICC PIN, PIN2, PUK and PUK2 handling
       // is "Registration" (**).
-      if (!mmi.procedure || mmi.procedure != MMI_PROCEDURE_REGISTRATION ) {
-        _sendMMIError(MMI_ERROR_KS_INVALID_ACTION, mmiServiceCode);
+      if (mmi.procedure != MMI_PROCEDURE_REGISTRATION ) {
+        _sendMMIError(MMI_ERROR_KS_INVALID_ACTION);
         return false;
       }
 
-      if (!mmi.sia || !mmi.sia.length || !mmi.sib || !mmi.sib.length ||
-          !mmi.sic || !mmi.sic.length) {
-        _sendMMIError(MMI_ERROR_KS_ERROR, mmiServiceCode);
-        return false;
-      }
-
-      if (mmi.sib != mmi.sic) {
-        _sendMMIError(MMI_ERROR_KS_MISMATCH_PIN, mmiServiceCode);
+      if (!mmi.sia || !mmi.sib || !mmi.sic) {
+        _sendMMIError(MMI_ERROR_KS_ERROR);
         return false;
       }
 
       if (mmi.sia.length < 4 || mmi.sia.length > 8 ||
           mmi.sib.length < 4 || mmi.sib.length > 8 ||
           mmi.sic.length < 4 || mmi.sic.length > 8) {
-        _sendMMIError(MMI_ERROR_KS_INVALID_PIN, mmiServiceCode);
+        _sendMMIError(MMI_ERROR_KS_INVALID_PIN);
+        return false;
+      }
+
+      if (mmi.sib != mmi.sic) {
+        _sendMMIError(MMI_ERROR_KS_MISMATCH_PIN);
         return false;
       }
 
       return true;
     }
 
-    let _isRadioAvailable = (function(mmiServiceCode) {
+    let _isRadioAvailable = (function() {
       if (this.radioState !== GECKO_RADIOSTATE_READY) {
-        _sendMMIError(GECKO_ERROR_RADIO_NOT_AVAILABLE, mmiServiceCode);
+        _sendMMIError(GECKO_ERROR_RADIO_NOT_AVAILABLE);
         return false;
       }
       return true;
     }).bind(this);
-
-    // If we couldn't parse the MMI code, we'll send it as an USSD request.
-    if (mmi === null) {
-      if (this._ussdSession) {
-        if (!_isRadioAvailable(MMI_KS_SC_USSD)) {
-          return;
-        }
-        options.ussd = mmiString;
-        this.sendUSSD(options);
-        return;
-      }
-
-      _sendMMIError(MMI_ERROR_KS_ERROR);
-      return;
-    }
-
-    if (DEBUG) {
-      this.context.debug("MMI " + JSON.stringify(mmi));
-    }
 
     // We check if the MMI service code is supported and in that case we
     // trigger the appropriate RIL request if possible.
@@ -2612,14 +2640,13 @@ RilObject.prototype = {
       case MMI_SC_CF_NOT_REACHABLE:
       case MMI_SC_CF_ALL:
       case MMI_SC_CF_ALL_CONDITIONAL:
-        if (!_isRadioAvailable(MMI_KS_SC_CALL_FORWARDING)) {
+        if (!_isRadioAvailable()) {
           return;
         }
         // Call forwarding requires at least an action, given by the MMI
         // procedure, and a reason, given by the MMI service code, but there
         // is no way that we get this far without a valid procedure or service
         // code.
-        options.mmiServiceCode = MMI_KS_SC_CALL_FORWARDING;
         options.action = MMI_PROC_TO_CF_ACTION[mmi.procedure];
         options.reason = MMI_SC_TO_CF_REASON[sc];
         options.number = mmi.sia;
@@ -2640,12 +2667,10 @@ RilObject.prototype = {
         // an MMI code of the form **04*OLD_PIN*NEW_PIN*NEW_PIN#, where old PIN
         // should be entered as the SIA parameter and the new PIN as SIB and
         // SIC.
-        if (!_isRadioAvailable(MMI_KS_SC_PIN) ||
-            !_isValidPINPUKRequest(MMI_KS_SC_PIN)) {
+        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
           return;
         }
 
-        options.mmiServiceCode = MMI_KS_SC_PIN;
         options.pin = mmi.sia;
         options.newPin = mmi.sib;
         this.changeICCPIN(options);
@@ -2657,12 +2682,10 @@ RilObject.prototype = {
         // enter and MMI code of the form **042*OLD_PIN2*NEW_PIN2*NEW_PIN2#,
         // where the old PIN2 should be entered as the SIA parameter and the
         // new PIN2 as SIB and SIC.
-        if (!_isRadioAvailable(MMI_KS_SC_PIN2) ||
-            !_isValidPINPUKRequest(MMI_KS_SC_PIN2)) {
+        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
           return;
         }
 
-        options.mmiServiceCode = MMI_KS_SC_PIN2;
         options.pin = mmi.sia;
         options.newPin = mmi.sib;
         this.changeICCPIN2(options);
@@ -2674,12 +2697,10 @@ RilObject.prototype = {
         // enter an MMI code of the form **05*PUK*NEW_PIN*NEW_PIN#, where PUK
         // should be entered as the SIA parameter and the new PIN as SIB and
         // SIC.
-        if (!_isRadioAvailable(MMI_KS_SC_PUK) ||
-            !_isValidPINPUKRequest(MMI_KS_SC_PUK)) {
+        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
           return;
         }
 
-        options.mmiServiceCode = MMI_KS_SC_PUK;
         options.puk = mmi.sia;
         options.newPin = mmi.sib;
         this.enterICCPUK(options);
@@ -2691,12 +2712,10 @@ RilObject.prototype = {
         // enter an MMI code of the form **052*PUK2*NEW_PIN2*NEW_PIN2#, where
         // PUK2 should be entered as the SIA parameter and the new PIN2 as SIB
         // and SIC.
-        if (!_isRadioAvailable(MMI_KS_SC_PUK2) ||
-            !_isValidPINPUKRequest(MMI_KS_SC_PUK2)) {
+        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
           return;
         }
 
-        options.mmiServiceCode = MMI_KS_SC_PUK2;
         options.puk = mmi.sia;
         options.newPin = mmi.sib;
         this.enterICCPUK2(options);
@@ -2710,7 +2729,6 @@ RilObject.prototype = {
           return;
         }
         // If we already had the device's IMEI, we just send it to chrome.
-        options.mmiServiceCode = MMI_KS_SC_IMEI;
         options.success = true;
         options.statusMessage = this.IMEI;
         this.sendChromeMessage(options);
@@ -2718,12 +2736,11 @@ RilObject.prototype = {
 
       // CLIP
       case MMI_SC_CLIP:
-        options.mmiServiceCode = MMI_KS_SC_CLIP;
         options.procedure = mmi.procedure;
         if (options.procedure === MMI_PROCEDURE_INTERROGATION) {
           this.queryCLIP(options);
         } else {
-          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED, MMI_KS_SC_CLIP);
+          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
         }
         return;
 
@@ -2732,7 +2749,6 @@ RilObject.prototype = {
       // point in the future. In the mean time we handle temporary CLIR MMI
       // commands through the dial() function. Please see bug 889737.
       case MMI_SC_CLIR:
-        options.mmiServiceCode = MMI_KS_SC_CLIR;
         options.procedure = mmi.procedure;
         switch (options.procedure) {
           case MMI_PROCEDURE_INTERROGATION:
@@ -2745,7 +2761,7 @@ RilObject.prototype = {
             options.clirMode = CLIR_SUPPRESSION;
             break;
           default:
-            _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED, MMI_KS_SC_CLIR);
+            _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
             return;
         }
         options.isSetCLIR = true;
@@ -2761,7 +2777,6 @@ RilObject.prototype = {
       case MMI_SC_BA_ALL:
       case MMI_SC_BA_MO:
       case MMI_SC_BA_MT:
-        options.mmiServiceCode = MMI_KS_SC_CALL_BARRING;
         options.password = mmi.sia || "";
         options.serviceClass = this._siToServiceClass(mmi.sib);
         options.facility = MMI_SC_TO_CB_FACILITY[sc];
@@ -2775,7 +2790,7 @@ RilObject.prototype = {
         } else if (mmi.procedure === MMI_PROCEDURE_DEACTIVATION) {
           options.enabled = 0;
         } else {
-          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED, MMI_KS_SC_CALL_BARRING);
+          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
           return;
         }
         this.setICCFacilityLock(options);
@@ -2783,11 +2798,10 @@ RilObject.prototype = {
 
       // Call waiting
       case MMI_SC_CALL_WAITING:
-        if (!_isRadioAvailable(MMI_KS_SC_CALL_WAITING)) {
+        if (!_isRadioAvailable()) {
           return;
         }
 
-        options.mmiServiceCode = MMI_KS_SC_CALL_WAITING;
 
         if (mmi.procedure === MMI_PROCEDURE_INTERROGATION) {
           this._handleQueryMMICallWaiting(options);
@@ -2799,7 +2813,7 @@ RilObject.prototype = {
         } else if (mmi.procedure === MMI_PROCEDURE_DEACTIVATION) {
           options.enabled = false;
         } else {
-          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED, MMI_KS_SC_CALL_WAITING);
+          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
           return;
         }
 
@@ -2808,22 +2822,13 @@ RilObject.prototype = {
         return;
     }
 
-    // If the MMI code is not a known code and is a recognized USSD request,
-    // it shall still be sent as a USSD request.
-    if (mmi.fullMMI) {
-      if (!_isRadioAvailable(MMI_KS_SC_USSD)) {
-        return;
-      }
-
-      options.ussd = mmi.fullMMI;
-      options.mmiServiceCode = MMI_KS_SC_USSD;
-      this.sendUSSD(options);
+    // If the MMI code is not a known code, it is treated as an ussd.
+    if (!_isRadioAvailable()) {
       return;
     }
 
-    // At this point, the MMI string is considered as not valid MMI code and
-    // not valid USSD code.
-    _sendMMIError(MMI_ERROR_KS_ERROR);
+    options.ussd = mmi.fullMMI;
+    this.sendUSSD(options);
   },
 
   /**
@@ -2844,7 +2849,6 @@ RilObject.prototype = {
    * Cancel pending USSD.
    */
    cancelUSSD: function(options) {
-     options.mmiServiceCode = MMI_KS_SC_USSD;
      this.context.Buf.simpleRequest(REQUEST_CANCEL_USSD, options);
    },
 
@@ -6056,7 +6060,6 @@ RilObject.prototype[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, option
     return;
   }
 
-  options.mmiServiceCode = MMI_KS_SC_IMEI;
   options.success = (options.rilRequestError === 0);
   options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   if ((!options.success || this.IMEI == null) && !options.errorMsg) {
@@ -14174,9 +14177,8 @@ SimRecordHelperObject.prototype = {
         ICCIOHelper.loadNextRecord(options);
       } else {
         RIL.iccInfoPrivate.OPL = opl;
+        RIL.overrideICCNetworkName();
       }
-
-      RIL.overrideICCNetworkName();
     }
 
     ICCIOHelper.loadLinearFixedEF({fileId: ICC_EF_OPL,
@@ -14245,9 +14247,8 @@ SimRecordHelperObject.prototype = {
           }
         }
         RIL.iccInfoPrivate.PNN = pnn;
+        RIL.overrideICCNetworkName();
       }
-
-      RIL.overrideICCNetworkName();
     }
 
     let pnn = [];

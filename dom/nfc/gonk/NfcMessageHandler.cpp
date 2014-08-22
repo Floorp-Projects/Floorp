@@ -263,8 +263,8 @@ NfcMessageHandler::InitializeNotification(const Parcel& aParcel, EventOptions& a
   aOptions.mMajorVersion = aParcel.readInt32();
   aOptions.mMinorVersion = aParcel.readInt32();
 
-  if (aOptions.mMajorVersion != NFCD_MAJOR_VERSION &&
-      aOptions.mMinorVersion != NFCD_MAJOR_VERSION) {
+  if (aOptions.mMajorVersion != NFCD_MAJOR_VERSION ||
+      aOptions.mMinorVersion != NFCD_MINOR_VERSION) {
      CHROMIUM_LOG("NFCD version mismatched. majorVersion: %d, minorVersion: %d",
                   aOptions.mMajorVersion, aOptions.mMinorVersion);
   }
