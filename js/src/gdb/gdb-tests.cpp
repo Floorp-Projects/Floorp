@@ -76,8 +76,6 @@ main (int argc, const char **argv)
     options.setVersion(JSVERSION_LATEST);
     RootedObject global(cx, checkPtr(JS_NewGlobalObject(cx, &global_class,
                         nullptr, JS::FireOnNewGlobalHook, options)));
-    js::SetDefaultObjectForContext(cx, global);
-
     JSAutoCompartment ac(cx, global);
 
     /* Populate the global object with the standard globals,
