@@ -233,10 +233,10 @@ struct ParseContext : public GenericParseContext
     // Set when parsing a declaration-like destructuring pattern.  This flag
     // causes PrimaryExpr to create PN_NAME parse nodes for variable references
     // which are not hooked into any definition's use chain, added to any tree
-    // context's AtomList, etc. etc.  CheckDestructuring will do that work
+    // context's AtomList, etc. etc.  checkDestructuring will do that work
     // later.
     //
-    // The comments atop CheckDestructuring explain the distinction between
+    // The comments atop checkDestructuring explain the distinction between
     // assignment-like and declaration-like destructuring patterns, and why
     // they need to be treated differently.
     bool            inDeclDestructuring:1;
@@ -615,7 +615,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool isValidForStatementLHS(Node pn1, JSVersion version, bool forDecl, bool forEach,
                                 ParseNodeKind headKind);
     bool checkAndMarkAsIncOperand(Node kid, TokenKind tt, bool preorder);
-    bool checkStrictAssignment(Node lhs, AssignmentFlavor flavor);
+    bool checkStrictAssignment(Node lhs);
     bool checkStrictBinding(PropertyName *name, Node pn);
     bool defineArg(Node funcpn, HandlePropertyName name,
                    bool disallowDuplicateArgs = false, Node *duplicatedArg = nullptr);
@@ -628,7 +628,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node newRegExp();
 
     Node newBindingNode(PropertyName *name, bool functionScope, VarContext varContext = HoistVars);
-    bool checkDestructuring(BindData<ParseHandler> *data, Node left, bool toplevel = true);
+    bool checkDestructuring(BindData<ParseHandler> *data, Node left);
     bool bindDestructuringVar(BindData<ParseHandler> *data, Node pn);
     bool bindDestructuringLHS(Node pn);
     bool makeSetCall(Node pn, unsigned msg);
