@@ -50,6 +50,7 @@ public:
   AnimationTimeline* Timeline() const { return mTimeline; }
   double StartTime() const;
   double CurrentTime() const;
+  bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
   void SetSource(Animation* aSource);
   void Tick();
