@@ -246,11 +246,7 @@
            onpopuphidden="SocialShare.onHidden()"
            hidden="true">
       <vbox class="social-share-toolbar">
-        <arrowscrollbox id="social-share-provider-buttons" orient="vertical" flex="1">
-          <toolbarbutton id="add-share-provider" class="toolbarbutton share-provider-button" type="radio"
-                         group="share-providers" tooltiptext="&findShareServices.label;"
-                         oncommand="SocialShare.showDirectory()"/>
-        </arrowscrollbox>
+        <arrowscrollbox id="social-share-provider-buttons" orient="vertical" flex="1"/>
       </vbox>
     </panel>
 

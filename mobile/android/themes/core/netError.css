@@ -7,6 +7,8 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
+  --moz-vertical-spacing: 10px;
+  --moz-background-height: 32px;
 }
 
 body {
@@ -14,7 +16,7 @@ body {
   background-image: linear-gradient(-45deg, #dfe8ee,     #dfe8ee 33%,
                                             #ecf0f3 33%, #ecf0f3 66%,
                                             #dfe8ee 66%, #dfe8ee);
-  background-size: 64px 32px;
+  background-size: 64px var(--moz-background-height);
   background-repeat: repeat-x;
 
   background-color: #f1f1f1;
@@ -30,15 +32,22 @@ body {
 ul {
   /* Shove the list indicator so that its left aligned, but use outside so that text
    * doesn't don't wrap the text around it */
-  padding: 1em;
+  padding: 0 1em;
   margin: 0;
   list-style: round outside none;
 }
 
-li:not(:last-of-type),
-#errorLongDesc,
-#errorLongContent {
-  padding-bottom: 10px;
+#errorShortDesc,
+li:not(:last-of-type) {
+  /* Margins between the li and buttons below it won't be collapsed. Remove the bottom margin here. */
+  margin: var(--moz-vertical-spacing) 0;
+}
+
+li > button {
+  /* Removing the normal padding on the li so this stretched edge to edge. */
+  margin-left: -1em;
+  margin-right: -1em;
+  width: calc(100% + 2em);
 }
 
 /* Push the #ignoreWarningButton to the bottom on the blocked site page */
@@ -47,7 +56,9 @@ li:not(:last-of-type),
 }
 
 h1 {
-  padding: 1rem 0;
+  margin: 0;
+  /* Since this has an underline, use padding for vertical spacing rather than margin */
+  padding: var(--moz-vertical-spacing) 0;
   font-weight: 300;
   border-bottom: 1px solid #e0e2e5;
 }
@@ -55,27 +66,39 @@ h1 {
 h2 {
   font-size: small;
   padding: 0;
-  margin: 0;
+  margin: var(--moz-vertical-spacing) 0;
 }
 
 p {
-  margin-top: 0;
+  margin: var(--moz-vertical-spacing) 0;
 }
 
 button {
+  /* Force buttons to display: block here to try and enfoce collapsing margins */
+  display: block;
   width: 100%;
   border: none;
   padding: 1rem;
   font-family: sans-serif;
   background-color: #e0e2e5;
-  font-size: 1rem; /* Not sure why this has to be specified. See bug 892843. */
   font-weight: 300;
   border-radius: 2px;
   background-image: none;
+  margin: var(--moz-vertical-spacing) 0 0;
 }
 
-button + button {
-  margin-top: 1em;  
+button.inProgress {
+  background-image: linear-gradient(-45deg, #dfe8ee,     #dfe8ee 33%,
+                                            #ecf0f3 33%, #ecf0f3 66%,
+                                            #dfe8ee 66%, #dfe8ee);
+  background-size: 37px 5px;
+  background-repeat: repeat-x;
+  animation: progress 6s linear infinite;
+}
+
+@keyframes progress {
+  from { background-position: 0 100%; }
+  to { background-position: 100% 100%; }
 }
 
 .certerror {
@@ -96,11 +119,11 @@ button + button {
   /* If the page is greater than 550px center the content.
    * This number should be kept in sync with the media query for tablets below */
   max-width: 550px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-top: 1rem;
+  margin: 0 auto;
+  transform: translateY(var(--moz-background-height));
+  padding-bottom: var(--moz-vertical-spacing);
 
-  min-height: calc(100% - 1rem);
+  min-height: calc(100% - var(--moz-background-height) - var(--moz-vertical-spacing));
   display: flex;
   flex-direction: column;
 }
@@ -113,19 +136,13 @@ button + button {
  *
  * This shows an arrow to the right of the h2 element, and hides the content when collapsed="true". */
 .expander {
-  margin: 1rem 0;
+  margin: var(--moz-vertical-spacing) 0;
   background-image: url("chrome://browser/skin/images/dropmarker.svg");
   background-repeat: no-repeat;
   /* dropmarker.svg is 10x7. Ensure that its centered in the middle of an 18x18 box */
   background-position: 3px 5.5px;
   background-size: 10px 7px;
   padding-left: 18px;
-}
-
-.expander:first-of-type {
-  /* Double the margin here so that the space above the first expander
-   * is the same as the space between multiple expanders */
-  margin-top: 20px;
 }
 
 div[collapsed="true"] > .expander {
@@ -174,10 +191,6 @@ div[collapsed="true"] > .expander + * {
     width: auto;
   }
 
-  button + button {
-    margin-top: 0;
-  }
-
   /* If the tablet is tall as well, add some padding to make content feel a bit more centered */
   @media (min-height: 550px) {
     #errorPageContainer {
@@ -185,6 +198,4 @@ div[collapsed="true"] > .expander + * {
       min-height: calc(100% - 64px);
     }
   }
-
-
 }

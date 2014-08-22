@@ -453,7 +453,7 @@ SessionStore.prototype = {
     // indicate that there is no private data
     sendMessageToJava({
       type: "PrivateBrowsing:Data",
-      session: (privateData.windows[0].tabs.length > 0) ? JSON.stringify(privateData) : null
+      session: (privateData.windows.length > 0 && privateData.windows[0].tabs.length > 0) ? JSON.stringify(privateData) : null
     });
 
     this._lastSaveTime = Date.now();
@@ -997,7 +997,18 @@ SessionStore.prototype = {
     }
 
     Services.obs.notifyObservers(null, "sessionstore-windows-restored", notifyMessage);
-  })
+  }),
+
+  removeWindow: function ss_removeWindow(aWindow) {
+    if (!aWindow || !aWindow.__SSID || !this._windows[aWindow.__SSID])
+      return;
+
+    delete this._windows[aWindow.__SSID];
+    delete aWindow.__SSID;
+
+    this.saveState();
+  }
+
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStore]);

@@ -3,18 +3,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <org.mozilla.gecko.toolbar.ShapedButton android:id="@+id/tabs"
-                                            style="@style/UrlBar.ImageButton"
-                                            android:layout_width="84dip"
-                                            android:layout_alignParentLeft="true"
-                                            gecko:curveTowards="left"
-                                            android:background="@drawable/shaped_button"
-                                            android:gravity="center_vertical"
-                                            android:paddingLeft="6dip"
-                                            android:paddingRight="38dip"/>
+    <org.mozilla.gecko.toolbar.TabletTabsButton android:id="@+id/tabs"
+                                                style="@style/UrlBar.ImageButton"
+                                                android:layout_width="84dip"
+                                                android:layout_alignParentLeft="true"
+                                                android:background="@drawable/shaped_button"
+                                                android:gravity="center_vertical"
+                                                android:paddingLeft="6dip"
+                                                android:paddingRight="38dip"/>
 
     <!-- The TextSwitcher should be shifted 28dp on the right, to avoid
          the curve. On a 56dp space, centering 24dp image will leave
