@@ -1,12 +1,8 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Media test: mozStopDownload</title>
+  <title>Media test: sniffing</title>
   <meta charset='utf-8'>
-  <script type="text/javascript" src="/MochiKit/Base.js"></script>
-  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
-  <script type="text/javascript" src="/MochiKit/Style.js"></script>
-  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript" src="manifest.js"></script>
@@ -22,23 +18,15 @@ function finish_test(element) {
   manager.finished(element.token);
 }
 
-function onApplicationOctetStreamLoaded(e) {
-  var t = e.target;
-  t.removeEventListener('loadedmetadata', onApplicationOctetStreamLoaded);
-  ok(true, "The media loads when served with application/octet-stream.");
-  finish_test(t);
-}
-
-function checkApplicationOctetStream(t) {
-  t.src = t.src.replace("&nomime", "&type=application/octet-stream");
-  t.addEventListener("loadedmetadata", onApplicationOctetStreamLoaded);
-}
-
 function onmetadataloaded(e) {
   var t = e.target;
-  t.removeEventListener('loadedmetadata', onmetadataloaded)
-  ok(true, "The media loads when served without a Content-Type.");
-  checkApplicationOctetStream(t);
+  ++t.srcIndex;
+  ok(true, "The media loads when loaded via " + t.src);
+  if (t.srcIndex < t.srcList.length) {
+    t.src = t.srcList[t.srcIndex];
+  } else {
+    finish_test(t);
+  }
 }
 
 function onerror(e) {
@@ -53,7 +41,16 @@ function startTest(test, token) {
   var element = document.createElement(elemType);
   // This .sjs file serve the media file without Content-Type header, or with a
   // specific Content-Type header.
-  element.src = 'contentType.sjs?file=' + test.name + "&nomime";
+  var baseSrc = 'contentType.sjs?file=' + test.name;
+  element.srcList = [
+    baseSrc + "&nomime",
+    baseSrc + "&type=application/octet-stream",
+    baseSrc + "&type=audio/wav",
+    baseSrc + "&type=text/html",
+    baseSrc + "&type=absolute_nonsense"
+  ];
+  element.srcIndex = 0;
+  element.src = element.srcList[element.srcIndex];
   element.token = token;
   element.controls = true;
   element.preload = "metadata";
