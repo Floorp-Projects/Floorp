@@ -105,6 +105,7 @@ MacroAssemblerMIPS::branchTruncateDouble(FloatRegister src, Register dest,
     as_mfc1(dest, ScratchFloatReg);
 
     ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
+    ma_b(dest, Imm32(INT32_MIN), fail, Assembler::Equal);
 }
 
 // Checks whether a double is representable as a 32-bit integer. If so, the
