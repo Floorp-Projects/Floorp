@@ -43,6 +43,8 @@ const BadCertHost sBadCertHosts[] =
   { "inadequatekeyusage.example.com", "inadequatekeyusage" },
   { "selfsigned-inadequateEKU.example.com", "selfsigned-inadequateEKU" },
   { "self-signed-end-entity-with-cA-true.example.com", "self-signed-EE-with-cA-true" },
+  { "ca-used-as-end-entity.example.com", "ca-used-as-end-entity" },
+  { "ca-used-as-end-entity-name-mismatch.example.com", "ca-used-as-end-entity" },
   // All of include-subdomains.pinning.example.com is pinned to End Entity
   // Test Cert with nick localhostAndExampleCom. Any other nick will only
   // pass pinning when security.cert_pinning.enforcement.level != strict and
