@@ -63,7 +63,7 @@ private:
     android::sp<android::FramebufferSurface> mFBSurface;
     android::sp<ANativeWindow> mSTClient;
     android::sp<android::IGraphicBufferAlloc> mAlloc;
-    android::sp<android::GraphicBuffer> mBootAnimBuffer;
+    int mFence;
     hwc_display_contents_1_t* mList;
     uint32_t mWidth;
     uint32_t mHeight;
