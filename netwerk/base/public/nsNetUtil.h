@@ -75,6 +75,7 @@
 #include "nsIRedirectChannelRegistrar.h"
 #include "nsIMIMEHeaderParam.h"
 #include "nsILoadContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "mozilla/Services.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "mozIApplicationClearPrivateDataParams.h"
@@ -1614,6 +1615,30 @@ NS_IsOffline()
     if (ios)
         ios->GetOffline(&offline);
     return offline;
+}
+
+inline bool
+NS_IsAppOffline(uint32_t appId)
+{
+    bool appOffline = false;
+    nsCOMPtr<nsIIOService> io(
+        do_GetService("@mozilla.org/network/io-service;1"));
+    if (io) {
+        io->IsAppOffline(appId, &appOffline);
+    }
+    return appOffline;
+}
+
+inline bool
+NS_IsAppOffline(nsIPrincipal * principal)
+{
+    if (!principal) {
+        return NS_IsOffline();
+    }
+    uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
+    principal->GetAppId(&appId);
+
+    return NS_IsAppOffline(appId);
 }
 
 /**
