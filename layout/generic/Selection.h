@@ -46,9 +46,9 @@ struct RangeData
 namespace mozilla {
 namespace dom {
 
-class Selection : public nsISelectionPrivate,
-                  public nsWrapperCache,
-                  public nsSupportsWeakReference
+class Selection MOZ_FINAL : public nsISelectionPrivate,
+                            public nsWrapperCache,
+                            public nsSupportsWeakReference
 {
 protected:
   virtual ~Selection();

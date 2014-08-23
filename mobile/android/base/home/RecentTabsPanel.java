@@ -27,7 +27,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MatrixCursor.RowBuilder;
@@ -48,6 +47,7 @@ import android.widget.TextView;
 public class RecentTabsPanel extends HomeFragment
                              implements NativeEventListener {
     // Logging tag name
+    @SuppressWarnings("unused")
     private static final String LOGTAG = "GeckoRecentTabsPanel";
 
     // Cursor loader ID for the loader that loads recent tabs
@@ -179,19 +179,6 @@ public class RecentTabsPanel extends HomeFragment
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "ClosedTabs:Data");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ClosedTabs:StopNotifications", null));
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        // Detach and reattach the fragment as the layout changes.
-        if (isVisible()) {
-            getFragmentManager().beginTransaction()
-                                .detach(this)
-                                .attach(this)
-                                .commitAllowingStateLoss();
-        }
     }
 
     @Override

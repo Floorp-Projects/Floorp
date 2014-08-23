@@ -543,6 +543,7 @@ sync_java_files = [
     'browserid/verifier/BrowserIDVerifierDelegate.java',
     'browserid/verifier/BrowserIDVerifierException.java',
     'browserid/VerifyingPublicKey.java',
+    'fxa/AccountLoader.java',
     'fxa/activities/FxAccountAbstractActivity.java',
     'fxa/activities/FxAccountAbstractSetupActivity.java',
     'fxa/activities/FxAccountConfirmAccountActivity.java',

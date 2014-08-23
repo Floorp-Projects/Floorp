@@ -96,7 +96,6 @@ static JSObject *
 CreateObjectPrototype(JSContext *cx, JSProtoKey key)
 {
     Rooted<GlobalObject*> self(cx, cx->global());
-    cx->setDefaultCompartmentObjectIfUnset(self);
 
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     JS_ASSERT(self->isNative());
@@ -122,14 +121,6 @@ CreateObjectPrototype(JSContext *cx, JSProtoKey key)
 }
 
 static bool
-ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
-{
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
-                                 JSMSG_THROW_TYPE_ERROR);
-    return false;
-}
-
-static bool
 FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject proto)
 {
     Rooted<GlobalObject*> self(cx, cx->global());
@@ -140,15 +131,6 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
     if (!evalobj)
         return false;
     self->setOriginalEval(evalobj);
-
-    /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
-    RootedFunction throwTypeError(cx, NewFunction(cx, js::NullPtr(), ThrowTypeError, 0,
-                                                  JSFunction::NATIVE_FUN, self, js::NullPtr()));
-    if (!throwTypeError)
-        return false;
-    if (!JSObject::preventExtensions(cx, throwTypeError))
-        return false;
-    self->setThrowTypeError(throwTypeError);
 
     RootedObject intrinsicsHolder(cx);
     if (cx->runtime()->isSelfHostingGlobal(self)) {
@@ -5976,18 +5958,42 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     }
 
     if (!shape) {
-        const char *slotname = nullptr;
-        if (obj->is<GlobalObject>()) {
-#define TEST_SLOT_MATCHES_PROTOTYPE(name,code,init,clasp)                     \
-            if ((code) == slot) { slotname = js_##name##_str; goto found; }
-            JS_FOR_EACH_PROTOTYPE(TEST_SLOT_MATCHES_PROTOTYPE)
+        do {
+            const char *slotname = nullptr;
+            const char *pattern = nullptr;
+            if (obj->is<GlobalObject>()) {
+                pattern = "CLASS_OBJECT(%s)";
+                if (false)
+                    ;
+#define TEST_SLOT_MATCHES_PROTOTYPE(name,code,init,clasp) \
+                else if ((code) == slot) { slotname = js_##name##_str; }
+                JS_FOR_EACH_PROTOTYPE(TEST_SLOT_MATCHES_PROTOTYPE)
 #undef TEST_SLOT_MATCHES_PROTOTYPE
-        }
-      found:
-        if (slotname)
-            JS_snprintf(buf, bufsize, "CLASS_OBJECT(%s)", slotname);
-        else
-            JS_snprintf(buf, bufsize, "**UNKNOWN SLOT %ld**", (long)slot);
+            } else {
+                pattern = "%s";
+                if (obj->is<ScopeObject>()) {
+                    if (slot == ScopeObject::enclosingScopeSlot()) {
+                        slotname = "enclosing_environment";
+                    } else if (obj->is<CallObject>()) {
+                        if (slot == CallObject::calleeSlot())
+                            slotname = "callee_slot";
+                    } else if (obj->is<DeclEnvObject>()) {
+                        if (slot == DeclEnvObject::lambdaSlot())
+                            slotname = "named_lambda";
+                    } else if (obj->is<DynamicWithObject>()) {
+                        if (slot == DynamicWithObject::objectSlot())
+                            slotname = "with_object";
+                        else if (slot == DynamicWithObject::thisSlot())
+                            slotname = "with_this";
+                    }
+                }
+            }
+
+            if (slotname)
+                JS_snprintf(buf, bufsize, pattern, slotname);
+            else
+                JS_snprintf(buf, bufsize, "**UNKNOWN SLOT %ld**", (long)slot);
+        } while (false);
     } else {
         jsid propid = shape->propid();
         if (JSID_IS_INT(propid)) {

@@ -410,6 +410,12 @@ class MochitestOptions(optparse.OptionParser):
           "dest": "useTestMediaDevices",
           "help": "Use test media device drivers for media testing.",
         }],
+        [["--gmp-path"],
+        { "action": "store",
+          "default": None,
+          "dest": "gmp_path",
+          "help": "Path to fake GMP plugin. Will be deduced from the binary if not passed.",
+        }],
     ]
 
     def __init__(self, **kwargs):

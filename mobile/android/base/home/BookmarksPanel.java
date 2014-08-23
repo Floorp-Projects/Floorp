@@ -140,23 +140,10 @@ public class BookmarksPanel extends HomeFragment {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
-        // Reattach the fragment, forcing a reinflation of its view.
-        // We use commitAllowingStateLoss() instead of commit() here to avoid
-        // an IllegalStateException. If the phone is rotated while Fennec
-        // is in the background, onConfigurationChanged() is fired.
-        // onConfigurationChanged() is called before onResume(), so
-        // using commit() would throw an IllegalStateException since it can't
-        // be used between the Activity's onSaveInstanceState() and
-        // onResume().
         if (isVisible()) {
             // The parent stack is saved just so that the folder state can be
             // restored on rotation.
             mSavedParentStack = mListAdapter.getParentStack();
-
-            getFragmentManager().beginTransaction()
-                                .detach(this)
-                                .attach(this)
-                                .commitAllowingStateLoss();
         }
     }
 

@@ -22,7 +22,7 @@ class MemoryReport;
 }
 }
 
-class nsMemoryReporterManager : public nsIMemoryReporterManager
+class nsMemoryReporterManager MOZ_FINAL : public nsIMemoryReporterManager
 {
   virtual ~nsMemoryReporterManager();
 

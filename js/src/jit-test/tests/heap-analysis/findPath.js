@@ -30,7 +30,7 @@ print(uneval(findPath(c, c.obj)));
 function f(x) { return function g(y) { return x+y; }; }
 var o = {}
 var gc = f(o);
-Match.Pattern([{node: gc, edge: "fun_callscope"},
+Match.Pattern([{node: gc, edge: "fun_environment"},
                {node: Match.Pattern.ANY, edge: "x"}])
   .assert(findPath(gc, o));
 print(uneval(findPath(gc, o)));

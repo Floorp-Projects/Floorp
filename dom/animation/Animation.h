@@ -120,12 +120,17 @@ struct ElementPropertyTransition;
 
 namespace dom {
 
+class AnimationEffect;
+
 class Animation : public nsWrapperCache
 {
 public:
-  Animation(nsIDocument* aDocument, const AnimationTiming &aTiming)
+  Animation(nsIDocument* aDocument,
+            const AnimationTiming &aTiming,
+            const nsSubstring& aName)
     : mDocument(aDocument)
     , mTiming(aTiming)
+    , mName(aName)
     , mIsFinishedTransition(false)
     , mLastNotification(LAST_NOTIFICATION_NONE)
   {
@@ -146,6 +151,11 @@ public:
     return nullptr;
   }
 
+  // Animation interface
+  // This currently returns a new object each time when used from C++ but is
+  // cached when used from JS.
+  already_AddRefed<AnimationEffect> GetEffect();
+
   void SetParentTime(Nullable<TimeDuration> aParentTime);
 
   const AnimationTiming& Timing() const {
@@ -153,6 +163,10 @@ public:
   }
   AnimationTiming& Timing() {
     return mTiming;
+  }
+
+  const nsString& Name() const {
+    return mName;
   }
 
   // Return the duration from the start the active interval to the point where
@@ -243,6 +257,7 @@ protected:
   Nullable<TimeDuration> mParentTime;
 
   AnimationTiming mTiming;
+  nsString mName;
   // A flag to mark transitions that have finished and are due to
   // be removed on the next throttle-able cycle.
   bool mIsFinishedTransition;

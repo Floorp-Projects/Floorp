@@ -276,4 +276,97 @@ toolbarpaletteitem[place="toolbar"] {
   margin-right: 0;
 }
 
+#customization-lwtheme-menu > .panel-arrowcontainer > .panel-arrowcontent {
+  -moz-box-orient: vertical;
+  /* Make the panel padding uniform across all platforms due to the
+     styling of the section headers and footer. */
+  padding: 10px;
+}
+
+.customization-lwtheme-menu-theme > .toolbarbutton-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.customization-lwtheme-menu-theme {
+  -moz-appearance: none;
+  border: 1px solid transparent;
+  margin: 0 -5px 5px;
+  padding-top: 0;
+  -moz-padding-end: 5px;
+  padding-bottom: 0;
+  -moz-padding-start: 0;
+}
+
+.customization-lwtheme-menu-theme[active="true"],
+.customization-lwtheme-menu-theme:hover {
+  background-color: hsla(210,4%,10%,.08);
+  border-color: hsla(210,4%,10%,.11);
+}
+
+.customization-lwtheme-menu-theme[active="true"],
+.customization-lwtheme-menu-theme:hover:active {
+  background-color: hsla(210,4%,10%,.15);
+}
+
+.customization-lwtheme-menu-theme > .toolbarbutton-icon {
+  margin: 5px;
+}
+
+.customization-lwtheme-menu-theme > .toolbarbutton-text {
+  text-align: start;
+}
+
+#customization-lwtheme-menu-header,
+#customization-lwtheme-menu-recommended {
+  padding: 10px;
+  margin-bottom: 5px;
+}
+
+#customization-lwtheme-menu-header,
+#customization-lwtheme-menu-recommended,
+#customization-lwtheme-menu-footer {
+  background-color: hsla(210,4%,10%,.05);
+  color: hsl(0,0%,50%);
+  margin-right: -10px;
+  margin-left: -10px;
+}
+
+#customization-lwtheme-menu-header {
+  margin-top: -10px;
+  border-bottom: 1px solid hsla(210,4%,10%,.05);
+}
+
+#customization-lwtheme-menu-recommended {
+  border-top: 1px solid hsla(210,4%,10%,.05);
+  border-bottom: 1px solid hsla(210,4%,10%,.05);
+}
+
+#customization-lwtheme-menu-footer {
+  border-top: 1px solid hsla(210,4%,10%,.05);
+  margin-bottom: -10px;
+}
+
+.customization-lwtheme-menu-footeritem {
+  -moz-appearance: none;
+  -moz-box-flex: 1;
+  color: hsl(0,0%,50%);
+  border: 1px solid transparent;
+  padding: 10px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.customization-lwtheme-menu-footeritem:hover {
+  background-color: hsla(210,4%,10%,.15);
+}
+
+#customization-lwtheme-menu-footer:not(:hover) > .customization-lwtheme-menu-footeritem:first-child {
+  -moz-border-end: 1px solid hsla(210,4%,10%,.15);
+}
+
+#customization-lwtheme-menu-footer:hover > .customization-lwtheme-menu-footeritem:first-child {
+  -moz-border-end-color: transparent;
+}
+
 %include customizeTip.inc.css

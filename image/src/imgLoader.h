@@ -205,11 +205,11 @@ private:
   uint32_t mSize;
 };
 
-class imgLoader : public imgILoader,
-                  public nsIContentSniffer,
-                  public imgICache,
-                  public nsSupportsWeakReference,
-                  public nsIObserver
+class imgLoader MOZ_FINAL : public imgILoader,
+                            public nsIContentSniffer,
+                            public imgICache,
+                            public nsSupportsWeakReference,
+                            public nsIObserver
 {
   virtual ~imgLoader();
 

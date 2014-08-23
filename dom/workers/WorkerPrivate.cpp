@@ -3944,10 +3944,8 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
   for (;;) {
     // Workers lazily create a global object in CompileScriptRunnable. We need
     // to enter the global's compartment as soon as it has been created.
-    if (!workerCompartment) {
-      if (JSObject* global = js::DefaultObjectForContextOrNull(aCx)) {
-        workerCompartment.emplace(aCx, global);
-      }
+    if (!workerCompartment && GlobalScope()) {
+      workerCompartment.emplace(aCx, GlobalScope()->GetGlobalJSObject());
     }
 
     Status currentStatus;

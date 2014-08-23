@@ -50,7 +50,7 @@ public:
   int32_t index;
 };
 
-class nsSplitterFrameInner : public nsIDOMEventListener
+class nsSplitterFrameInner MOZ_FINAL : public nsIDOMEventListener
 {
 protected:
   virtual ~nsSplitterFrameInner();
