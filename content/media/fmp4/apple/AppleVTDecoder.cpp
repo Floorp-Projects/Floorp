@@ -7,7 +7,6 @@
 #include <CoreFoundation/CFString.h>
 
 #include "AppleUtils.h"
-#include "mozilla/SHA1.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "MP4Reader.h"
 #include "MP4Decoder.h"
@@ -21,11 +20,15 @@
 #include "VideoUtils.h"
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* GetDemuxerLog();
-#define LOG(...) PR_LOG(GetDemuxerLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#define LOG_MEDIA_SHA1
+PRLogModuleInfo* GetAppleMediaLog();
+#define LOG(...) PR_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+//#define LOG_MEDIA_SHA1
 #else
 #define LOG(...)
+#endif
+
+#ifdef LOG_MEDIA_SHA1
+#include "mozilla/SHA1.h"
 #endif
 
 namespace mozilla {

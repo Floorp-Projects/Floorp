@@ -2058,20 +2058,6 @@ if test "$ac_cv_type_ssize_t" = true ; then
 else
   AC_MSG_RESULT(no)
 fi
-AC_STRUCT_ST_BLKSIZE
-AC_MSG_CHECKING(for siginfo_t)
-AC_CACHE_VAL(ac_cv_siginfo_t,
- [AC_TRY_COMPILE([#define _POSIX_C_SOURCE 199506L
-                  #include <signal.h>],
-                 [siginfo_t* info;],
-                 [ac_cv_siginfo_t=true],
-                 [ac_cv_siginfo_t=false])])
-if test "$ac_cv_siginfo_t" = true ; then
-  AC_DEFINE(HAVE_SIGINFO_T)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
 
 MOZ_CHECK_HEADERS(endian.h)
 if test "$ac_cv_header_endian_h" = yes; then

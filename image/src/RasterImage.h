@@ -135,11 +135,11 @@ class ScaleRequest;
 class Decoder;
 class FrameAnimator;
 
-class RasterImage : public ImageResource
-                  , public nsIProperties
-                  , public SupportsWeakPtr<RasterImage>
+class RasterImage MOZ_FINAL : public ImageResource
+                            , public nsIProperties
+                            , public SupportsWeakPtr<RasterImage>
 #ifdef DEBUG
-                  , public imgIContainerDebug
+                            , public imgIContainerDebug
 #endif
 {
   // (no public constructor - use ImageFactory)

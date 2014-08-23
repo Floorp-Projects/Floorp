@@ -46,10 +46,10 @@ class HTMLOptionsCollection;
  * Frame-based listbox.
  */
 
-class nsListControlFrame : public nsHTMLScrollFrame,
-                           public nsIFormControlFrame, 
-                           public nsIListControlFrame,
-                           public nsISelectControlFrame
+class nsListControlFrame MOZ_FINAL : public nsHTMLScrollFrame,
+                                     public nsIFormControlFrame,
+                                     public nsIListControlFrame,
+                                     public nsISelectControlFrame
 {
 public:
   friend nsContainerFrame* NS_NewListControlFrame(nsIPresShell* aPresShell,

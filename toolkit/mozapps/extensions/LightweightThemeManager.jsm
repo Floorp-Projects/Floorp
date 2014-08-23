@@ -398,6 +398,8 @@ this.LightweightThemeManager = {
 function AddonWrapper(aTheme) {
   this.__defineGetter__("id", function AddonWrapper_idGetter() aTheme.id + ID_SUFFIX);
   this.__defineGetter__("type", function AddonWrapper_typeGetter() ADDON_TYPE);
+  this.__defineGetter__("headerURL", function AddonWrapper_headerURLGetter() aTheme.headerURL);
+  this.__defineGetter__("footerURL", function AddonWrapper_footerURLGetter() aTheme.footerURL);
   this.__defineGetter__("isActive", function AddonWrapper_isActiveGetter() {
     let current = LightweightThemeManager.currentTheme;
     if (current)
@@ -623,7 +625,7 @@ function _sanitizeTheme(aData, aBaseURI, aLocal) {
   if (!aData || typeof aData != "object")
     return null;
 
-  var resourceProtocols = ["http", "https"];
+  var resourceProtocols = ["http", "https", "resource"];
   if (aLocal)
     resourceProtocols.push("file");
   var resourceProtocolExp = new RegExp("^(" + resourceProtocols.join("|") + "):");
@@ -754,7 +756,7 @@ function _getLocalImageURI(localFileName) {
 }
 
 function _persistImage(sourceURL, localFileName, successCallback) {
-  if (/^file:/.test(sourceURL))
+  if (/^(file|resource):/.test(sourceURL))
     return;
 
   var targetURI = _getLocalImageURI(localFileName);

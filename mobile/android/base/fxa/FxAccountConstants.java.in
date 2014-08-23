@@ -67,4 +67,14 @@ public class FxAccountConstants {
    * received only by Firefox channels sharing the same Android Firefox Account type.
    */
   public static final String PER_ACCOUNT_TYPE_PERMISSION = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE";
+
+  /**
+   * This action is broadcast when an Android Firefox Account's internal state
+   * is changed.
+   * <p>
+   * It is protected by signing-level permission PER_ACCOUNT_TYPE_PERMISSION and
+   * can be received only by Firefox versions sharing the same Android Firefox
+   * Account type.
+   */
+  public static final String ACCOUNT_STATE_CHANGED_ACTION = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.accounts.ACCOUNT_STATE_CHANGED_ACTION";
 }

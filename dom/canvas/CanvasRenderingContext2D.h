@@ -112,7 +112,7 @@ class CanvasRenderingContext2DUserData;
 /**
  ** CanvasRenderingContext2D
  **/
-class CanvasRenderingContext2D :
+class CanvasRenderingContext2D MOZ_FINAL :
   public nsICanvasRenderingContextInternal,
   public nsWrapperCache
 {

@@ -22,10 +22,6 @@ LIBRARY_NAME = 'omxplugin'
 
 FORCE_SHARED_LIB = True
 
-LOCAL_INCLUDES += [
-    '../../content/media/plugins',
-]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     pass
 else:
