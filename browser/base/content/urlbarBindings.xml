@@ -1614,6 +1614,10 @@
                     hidden="true" label="&mixedContentBlocked2.unblock.label;"
                     accesskey="&mixedContentBlocked2.unblock.accesskey;"
                     oncommand="document.getBindingParent(this).disableMixedContentProtection();"/>
+                  <xul:menuitem anonid="mixedContentAction.block"
+                    hidden="true" label="&mixedContentBlocked2.block.label;"
+                    accesskey="&mixedContentBlocked2.block.accesskey;"
+                    oncommand="document.getBindingParent(this).enableMixedContentProtection();"/>
                 </xul:menupopup>
               </xul:button>
             </xul:hbox>
@@ -1645,6 +1649,10 @@
       <field name="_mixedContentUnblock">
         document.getAnonymousElementByAttribute(this, "anonid",
           "mixedContentAction.unblock")
+      </field>
+      <field name="_mixedContentBlock">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "mixedContentAction.block");
       </field>
       <field name="_mixedContentProtectionDisabledWarning">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -1680,6 +1688,7 @@
         if (this.notification.options.state &
             Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
           _mixedContent.hidden = false;
+          _mixedContentBlock.hidden = false;
           _mixedContentProtectionDisabledWarning.hidden = false;
           _mixedContentHelpLink.href =
             Services.urlFormatter.formatURLPref("app.support.baseURL")
@@ -1697,6 +1706,13 @@
           // Reload the page with the content unblocked
           BrowserReloadWithFlags(
             nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT);
+        ]]></body>
+      </method>
+      <method name="enableMixedContentProtection">
+        <body><![CDATA[
+          let docShell = gBrowser.webNavigation.QueryInterface(Ci.nsIDocShell);
+          docShell.mixedContentChannel = null;
+          BrowserReload();
         ]]></body>
       </method>
     </implementation>
