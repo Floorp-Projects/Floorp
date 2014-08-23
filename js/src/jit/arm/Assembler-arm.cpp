@@ -1550,6 +1550,13 @@ Assembler::as_udiv(Register rd, Register rn, Register rm, Condition c)
     return writeInst(0x0730f010 | c | RN(rd) | RM(rm) | rn.code());
 }
 
+BufferOffset
+Assembler::as_clz(Register dest, Register src, Condition c, Instruction *instdest)
+{
+    return writeInst(RD(dest) | src.code() | c | 0x016f0f10, (uint32_t*)instdest);
+}
+
+
 // Data transfer instructions: ldr, str, ldrb, strb. Using an int to
 // differentiate between 8 bits and 32 bits is overkill, but meh.
 BufferOffset
