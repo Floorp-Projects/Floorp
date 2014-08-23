@@ -944,9 +944,6 @@ void HTMLMediaElement::LoadFromSourceChildren()
       ReportLoadError("MediaLoadUnsupportedTypeAttribute", params, ArrayLength(params));
       continue;
     }
-    // TODO: "If candidate has a keySystem attribute whose value represents a
-    //       Key System that the user agent knows it cannot use with type,
-    //       then end the synchronous section[...]" (Bug 1016707)
     nsAutoString media;
     HTMLSourceElement *childSrc = HTMLSourceElement::FromContent(child);
     MOZ_ASSERT(childSrc, "Expect child to be HTMLSourceElement");
