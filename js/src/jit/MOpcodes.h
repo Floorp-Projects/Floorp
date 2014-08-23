@@ -63,6 +63,7 @@ namespace jit {
     _(Ursh)                                                                 \
     _(MinMax)                                                               \
     _(Abs)                                                                  \
+    _(Clz)                                                                  \
     _(Sqrt)                                                                 \
     _(Atan2)                                                                \
     _(Hypot)                                                                \

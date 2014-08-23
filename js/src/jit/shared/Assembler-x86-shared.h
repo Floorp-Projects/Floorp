@@ -1160,6 +1160,9 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void bsr(const Register &src, const Register &dest) {
+        masm.bsr_rr(src.code(), dest.code());
+    }
     void imull(Register multiplier) {
         masm.imull_r(multiplier.code());
     }

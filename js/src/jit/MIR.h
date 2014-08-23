@@ -4531,6 +4531,50 @@ class MAbs
     ALLOW_CLONE(MAbs)
 };
 
+class MClz
+    : public MUnaryInstruction
+    , public BitwisePolicy
+{
+    bool operandIsNeverZero_;
+
+    MClz(MDefinition *num)
+      : MUnaryInstruction(num),
+        operandIsNeverZero_(false)
+    {
+        JS_ASSERT(IsNumberType(num->type()));
+        specialization_ = MIRType_Int32;
+        setResultType(MIRType_Int32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Clz)
+    static MClz *New(TempAllocator &alloc, MDefinition *num) {
+        return new(alloc) MClz(num);
+    }
+    MDefinition *num() const {
+        return getOperand(0);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    bool operandIsNeverZero() const {
+        return operandIsNeverZero_;
+    }
+
+    MDefinition *foldsTo(TempAllocator &alloc);
+    void computeRange(TempAllocator &alloc);
+    void collectRangeInfoPreTrunc();
+};
+
 // Inline implementation of Math.sqrt().
 class MSqrt
   : public MUnaryInstruction,
