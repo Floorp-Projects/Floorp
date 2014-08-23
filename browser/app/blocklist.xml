@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1407886026000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1408662916000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -223,6 +223,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i491" id="{515b2424-5911-40bd-8a2c-bdb20286d8f5}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i698" id="{6b2a75c8-6e2e-4267-b955-43e25b54e575}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -1074,8 +1080,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i474" id="{906000a4-88d9-4d52-b209-7a772970d91f}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+      <emItem  blockID="i700" id="2bbadf1f-a5af-499f-9642-9942fcdb7c76@f05a14cc-8842-4eee-be17-744677a917ed.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1184,8 +1190,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i83" id="flash@adobee.com">
-                        <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i694" id="59D317DB041748fdB89B47E6F96058F3@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1301,6 +1307,12 @@
                           </targetApplication>
                     </versionRange>
                                 <versionRange  minVersion="1.5.7.5" maxVersion="1.5.7.5" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i83" id="flash@adobee.com">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1634,6 +1646,14 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i696" id="/^({fa95f577-07cb-4470-ac90-e843f5f83c52}|ffxtlbr@speedial\.com)$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
       <emItem  blockID="i544" id="/^(93abedcf-8e3a-4d02-b761-d1441e437c09@243f129d-aee2-42c2-bcd1-48858e1c22fd\.com|9acfc440-ac2d-417a-a64c-f6f14653b712@09f9a966-9258-4b12-af32-da29bdcc28c5\.com|58ad0086-1cfb-48bb-8ad2-33a8905572bc@5715d2be-69b9-4930-8f7e-64bdeb961cfd\.com)$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -1667,6 +1687,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i372" id="5nc3QHFgcb@r06Ws9gvNNVRfH.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i474" id="{906000a4-88d9-4d52-b209-7a772970d91f}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
