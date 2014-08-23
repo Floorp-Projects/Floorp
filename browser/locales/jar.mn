@@ -66,6 +66,7 @@
     locale/browser/devtools/app-manager.properties (%chrome/browser/devtools/app-manager.properties)
     locale/browser/devtools/webide.dtd             (%chrome/browser/devtools/webide.dtd)
     locale/browser/devtools/webide.properties      (%chrome/browser/devtools/webide.properties)
+    locale/browser/lightweightThemes.properties    (%chrome/browser/lightweightThemes.properties)
     locale/browser/loop/loop.properties            (%chrome/browser/loop/loop.properties)
     locale/browser/newTab.dtd                      (%chrome/browser/newTab.dtd)
     locale/browser/newTab.properties               (%chrome/browser/newTab.properties)
