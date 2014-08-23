@@ -192,8 +192,6 @@ browser.jar:
   skin/classic/browser/feeds/audioFeedIcon.png              (feeds/feedIcon.png)
   skin/classic/browser/feeds/audioFeedIcon16.png            (feeds/feedIcon16.png)
 * skin/classic/browser/newtab/newTab.css                    (newtab/newTab.css)
-  skin/classic/browser/newtab/controls.png                  (../shared/newtab/controls.png)
-  skin/classic/browser/newtab/controls@2x.png               (../shared/newtab/controls@2x.png)
   skin/classic/browser/newtab/controls.svg                  (../shared/newtab/controls.svg)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
