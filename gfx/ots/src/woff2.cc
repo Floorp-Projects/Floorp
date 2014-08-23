@@ -870,7 +870,7 @@ bool ConvertWOFF2ToTTF(uint8_t* result, size_t result_length,
   ots::Buffer file(data, length);
 
   uint32_t signature;
-  uint32_t flavor;
+  uint32_t flavor = 0;
   if (!file.ReadU32(&signature) || signature != kWoff2Signature ||
       !file.ReadU32(&flavor)) {
     return OTS_FAILURE();
