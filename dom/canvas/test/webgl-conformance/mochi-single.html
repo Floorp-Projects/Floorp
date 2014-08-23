@@ -22,16 +22,49 @@ WebGL Conformance Test Suite Single Test Wrapper
 var IFRAME_BODY_MARGIN = 8;
 var IFRAME_SIZE_UPDATE_INTERVAL = 100; // ms
 
-////////////////////////////////////////
-
 var statusElem = document.getElementById('status');
 var pathElem = document.getElementById('path');
 var resultsElem = document.getElementById('results');
 var frameElem = document.getElementById('test-frame');
 
+////////////////////////////////////////////////////////////////////////
+// Forward SimpleTest functions and replace if missing.
+
+if (!window.ok) {
+  window.ok = parent.ok;
+}
+if (!window.todo) {
+  window.todo = parent.todo;
+}
+if (!window.SimpleTest) {
+  window.SimpleTest = parent.SimpleTest;
+}
+
+if (!window.ok) {
+  window.ok = function(status, message) {
+    console.log('ok(' + status + ', "' + message + '")');
+  }
+}
+if (!window.todo) {
+  window.todo = function(status, message) {
+    console.log('todo(' + status + ', "' + message + '")');
+  }
+}
+if (!window.SimpleTest) {
+  window.SimpleTest = {
+    waitForExplicitFinish: function(){},
+    finish: function(){},
+  };
+}
+
+////////////////////////////////////////////////////////////////////////
+// Test running and harness.
+
+var gTestPath = null;
 
 function RunTest(testPath) {
   pathElem.innerHTML = testPath;
+  gTestPath = testPath;
 
   // Auto-update to grow the size of the doc.
   function UpdateFrameSize() {
@@ -78,8 +111,6 @@ window.webglTestHarness = {
   },
 };
 
-var gTestPath = null;
-
 function OnTestComplete() {
   statusElem.innerHTML = 'Complete';
 
@@ -88,34 +119,7 @@ function OnTestComplete() {
   SimpleTest.finish();
 }
 
-if (!window.ok) {
-  window.ok = parent.ok;
-}
-if (!window.todo) {
-  window.todo = parent.todo;
-}
-if (!window.SimpleTest) {
-  window.SimpleTest = parent.SimpleTest;
-}
-
-if (!window.ok) {
-  window.ok = function(status, message) {
-    console.log('ok(' + status + ', "' + message + '")');
-  }
-}
-if (!window.todo) {
-  window.todo = function(status, message) {
-    console.log('todo(' + status + ', "' + message + '")');
-  }
-}
-if (!window.SimpleTest) {
-  window.SimpleTest = {
-    waitForExplicitFinish: function(){},
-    finish: function(){},
-  };
-}
-
-////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 // Begin execution
 
 SimpleTest.waitForExplicitFinish();
