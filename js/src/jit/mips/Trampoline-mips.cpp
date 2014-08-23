@@ -931,13 +931,7 @@ JitRuntime::generatePreBarrier(JSContext *cx, MIRType type)
     masm.setupUnalignedABICall(2, a2);
     masm.passABIArg(a0);
     masm.passABIArg(a1);
-
-    if (type == MIRType_Value) {
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, MarkValueFromIon));
-    } else {
-        MOZ_ASSERT(type == MIRType_Shape);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, MarkShapeFromIon));
-    }
+    masm.callWithABI(IonMarkFunction(type));
 
     masm.PopRegsInMask(save);
     masm.ret();

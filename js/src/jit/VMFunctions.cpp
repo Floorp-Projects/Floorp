@@ -1239,5 +1239,23 @@ TypedObjectProto(JSObject *obj)
     return &typedObj.typedProto();
 }
 
+void
+MarkValueFromIon(JSRuntime *rt, Value *vp)
+{
+    gc::MarkValueUnbarriered(&rt->gc.marker, vp, "write barrier");
+}
+
+void
+MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
+{
+    gc::MarkShapeUnbarriered(&rt->gc.marker, shapep, "write barrier");
+}
+
+void
+MarkTypeObjectFromIon(JSRuntime *rt, types::TypeObject **typep)
+{
+    gc::MarkTypeObjectUnbarriered(&rt->gc.marker, typep, "write barrier");
+}
+
 } // namespace jit
 } // namespace js
