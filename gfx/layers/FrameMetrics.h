@@ -337,10 +337,17 @@ public:
   // Whether or not this frame may have touch caret.
   bool mMayHaveTouchCaret;
 
-  // Whether or not this is the root scroll frame for the root content document.
-  bool mIsRoot;
-
 public:
+  void SetIsRoot(bool aIsRoot)
+  {
+    mIsRoot = aIsRoot;
+  }
+
+  bool GetIsRoot() const
+  {
+    return mIsRoot;
+  }
+
   void SetHasScrollgrab(bool aHasScrollgrab)
   {
     mHasScrollgrab = aHasScrollgrab;
@@ -450,6 +457,9 @@ public:
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
+
+  // Whether or not this is the root scroll frame for the root content document.
+  bool mIsRoot;
 
   // Whether or not this frame is for an element marked 'scrollgrab'.
   bool mHasScrollgrab;
