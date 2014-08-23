@@ -803,6 +803,18 @@ nsFrameMessageManager::Atob(const nsAString& aAsciiString,
 
 // nsIProcessChecker
 
+NS_IMETHODIMP
+nsFrameMessageManager::KillChild(bool *aValid)
+{
+  if (!mCallback) {
+    *aValid = false;
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aValid = mCallback->KillChild();
+  return NS_OK;
+}
+
 nsresult
 nsFrameMessageManager::AssertProcessInternal(ProcessCheckerType aType,
                                              const nsAString& aCapability,
