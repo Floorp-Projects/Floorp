@@ -1617,6 +1617,12 @@
                 </xul:menupopup>
               </xul:button>
             </xul:hbox>
+            <xul:hbox anonid="mixedContentProtectionDisabled" hidden="true"
+                      class="popup-notification-footer" xbl:inherits="popupid">
+              <xul:description class="popup-notification-item-message popup-notification-item-message-critical" xbl:inherits="popupid">
+                  &mixedContentBlocked2.disabled.message;
+              </xul:description>
+            </xul:hbox>
           </xul:vbox>
         </xul:vbox>
       </xul:hbox>
@@ -1640,10 +1646,20 @@
         document.getAnonymousElementByAttribute(this, "anonid",
           "mixedContentAction.unblock")
       </field>
-      <field name="_mixedContentHelplink">
+      <field name="_mixedContentProtectionDisabledWarning">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "mixedContentProtectionDisabled")
+      </field>
+      <field name="_mixedContentHelpLink">
         document.getAnonymousElementByAttribute(this, "anonid",
           "mixedContent.helplink")
       </field>
+      <property name="isMixedContentBlocked" readonly="true">
+        <getter><![CDATA[
+          return this.notification.options.state &
+            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
+        ]]></getter>
+      </property>
       <constructor><![CDATA[
         // default title
         _doorhangerTitle.value =
@@ -1651,13 +1667,21 @@
             "badContentBlocked.notblocked.message", [this._brandShortName]);
 
         if (this.notification.options.state &
-          Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
           _doorhangerTitle.value =
             gNavigatorBundle.getFormattedString(
               "badContentBlocked.blocked.message", [this._brandShortName]);
           _mixedContent.hidden = false;
           _mixedContentUnblock.hidden = false;
-          _mixedContentHelplink.href =
+          _mixedContentHelpLink.href =
+            Services.urlFormatter.formatURLPref("app.support.baseURL")
+              + "mixed-content";
+        }
+        if (this.notification.options.state &
+            Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
+          _mixedContent.hidden = false;
+          _mixedContentProtectionDisabledWarning.hidden = false;
+          _mixedContentHelpLink.href =
             Services.urlFormatter.formatURLPref("app.support.baseURL")
               + "mixed-content";
         }

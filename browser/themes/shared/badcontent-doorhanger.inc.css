@@ -5,3 +5,12 @@
 .popup-notification-item-message[popupid="bad-content"] {
   width: 17em;
 }
+
+.popup-notification-item-message-critical[popupid="bad-content"] {
+  color: #d74345;
+  font-style: italic;
+}
+
+.popup-notification-footer[popupid="bad-content"] {
+  padding-top: 1em;
+}
