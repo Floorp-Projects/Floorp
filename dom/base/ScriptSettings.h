@@ -46,7 +46,6 @@ public:
 
 private:
   mozilla::Maybe<JSAutoRequest> mAutoRequest;
-  mozilla::Maybe<JSAutoCompartment> mAutoCompartment;
   nsCOMPtr<nsIScriptContext> mScx;
   uint32_t mStackDepthAfterPush;
 #ifdef DEBUG

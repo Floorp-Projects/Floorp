@@ -34,12 +34,12 @@ protected:
     virtual ~nsDirectoryViewerFactory();
 };
 
-class nsHTTPIndex : public nsIHTTPIndex,
-                    public nsIRDFDataSource,
-                    public nsIStreamListener,
-                    public nsIDirIndexListener,
-                    public nsIInterfaceRequestor,
-                    public nsIFTPEventSink
+class nsHTTPIndex MOZ_FINAL : public nsIHTTPIndex,
+                              public nsIRDFDataSource,
+                              public nsIStreamListener,
+                              public nsIDirIndexListener,
+                              public nsIInterfaceRequestor,
+                              public nsIFTPEventSink
 {
 private:
 

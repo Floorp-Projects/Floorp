@@ -149,12 +149,10 @@ nsPageFrame::Reflow(nsPresContext*           aPresContext,
 
   // Return our desired size
   WritingMode wm = aReflowState.GetWritingMode();
-  LogicalSize finalSize(wm);
-  finalSize.ISize(wm) = aReflowState.AvailableISize();
+  aDesiredSize.ISize(wm) = aReflowState.AvailableISize();
   if (aReflowState.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
-    finalSize.BSize(wm) = aReflowState.AvailableBSize();
+    aDesiredSize.BSize(wm) = aReflowState.AvailableBSize();
   }
-  aDesiredSize.SetSize(wm, finalSize);
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);

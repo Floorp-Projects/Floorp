@@ -37,7 +37,8 @@ namespace widget {
 
 struct AutoCacheNativeKeyCommands;
 
-class PuppetWidget : public nsBaseWidget, public nsSupportsWeakReference
+class PuppetWidget MOZ_FINAL : public nsBaseWidget,
+                               public nsSupportsWeakReference
 {
   typedef mozilla::dom::TabChild TabChild;
   typedef mozilla::gfx::DrawTarget DrawTarget;

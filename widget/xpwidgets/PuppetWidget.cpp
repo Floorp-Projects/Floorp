@@ -9,9 +9,6 @@
 
 #include "ClientLayerManager.h"
 #include "gfxPlatform.h"
-#if defined(MOZ_ENABLE_D3D10_LAYER)
-# include "LayerManagerD3D10.h"
-#endif
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Hal.h"
 #include "mozilla/IMEStateManager.h"
@@ -365,20 +362,7 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                               bool* aAllowRetaining)
 {
   if (!mLayerManager) {
-    // The backend hint is a temporary placeholder until Azure, when
-    // all content-process layer managers will be BasicLayerManagers.
-#if defined(MOZ_ENABLE_D3D10_LAYER)
-    if (mozilla::layers::LayersBackend::LAYERS_D3D10 == aBackendHint) {
-      nsRefPtr<LayerManagerD3D10> m = new LayerManagerD3D10(this);
-      m->AsShadowForwarder()->SetShadowManager(aShadowManager);
-      if (m->Initialize()) {
-        mLayerManager = m;
-      }
-    }
-#endif
-    if (!mLayerManager) {
-      mLayerManager = new ClientLayerManager(this);
-    }
+    mLayerManager = new ClientLayerManager(this);
   }
   ShadowLayerForwarder* lf = mLayerManager->AsShadowForwarder();
   if (!lf->HasShadowManager() && aShadowManager) {

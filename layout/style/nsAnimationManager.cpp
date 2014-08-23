@@ -77,7 +77,7 @@ nsAnimationManager::GetEventsForCurrentTime(AnimationPlayerCollection*
             computedTiming.mCurrentIteration;
           TimeDuration elapsedTime =
             std::max(iterationStart, anim->InitialAdvance());
-          AnimationEventInfo ei(aCollection->mElement, player->mName, message,
+          AnimationEventInfo ei(aCollection->mElement, player->Name(), message,
                                 elapsedTime, aCollection->PseudoElement());
           aEventsToDispatch.AppendElement(ei);
         }
@@ -94,7 +94,7 @@ nsAnimationManager::GetEventsForCurrentTime(AnimationPlayerCollection*
           TimeDuration elapsedTime =
             std::min(anim->InitialAdvance(), computedTiming.mActiveDuration);
           AnimationEventInfo ei(aCollection->mElement,
-                                player->mName, NS_ANIMATION_START,
+                                player->Name(), NS_ANIMATION_START,
                                 elapsedTime, aCollection->PseudoElement());
           aEventsToDispatch.AppendElement(ei);
         }
@@ -102,7 +102,7 @@ nsAnimationManager::GetEventsForCurrentTime(AnimationPlayerCollection*
         if (anim->LastNotification() != Animation::LAST_NOTIFICATION_END) {
           anim->SetLastNotification(Animation::LAST_NOTIFICATION_END);
           AnimationEventInfo ei(aCollection->mElement,
-                                player->mName, NS_ANIMATION_END,
+                                player->Name(), NS_ANIMATION_END,
                                 computedTiming.mActiveDuration,
                                 aCollection->PseudoElement());
           aEventsToDispatch.AppendElement(ei);
@@ -285,7 +285,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           size_t oldIdx = collection->mPlayers.Length();
           while (oldIdx-- != 0) {
             AnimationPlayer* a = collection->mPlayers[oldIdx];
-            if (a->mName == newPlayer->mName) {
+            if (a->Name() == newPlayer->Name()) {
               oldPlayer = a;
               break;
             }
@@ -442,8 +442,6 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     nsRefPtr<AnimationPlayer> dest =
       *aPlayers.AppendElement(new AnimationPlayer(aTimeline));
 
-    dest->mName = src.GetName();
-
     AnimationTiming timing;
     timing.mIterationDuration =
       TimeDuration::FromMilliseconds(src.GetDuration());
@@ -453,7 +451,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     timing.mFillMode = src.GetFillMode();
 
     nsRefPtr<Animation> destAnim =
-      new Animation(mPresContext->Document(), timing);
+      new Animation(mPresContext->Document(), timing, src.GetName());
     dest->SetSource(destAnim);
 
     dest->mStartTime = now;

@@ -195,7 +195,7 @@ public:
   int32_t mOrdinal;
 };
 
-class nsDisplayBullet : public nsDisplayItem {
+class nsDisplayBullet MOZ_FINAL : public nsDisplayItem {
 public:
   nsDisplayBullet(nsDisplayListBuilder* aBuilder, nsBulletFrame* aFrame) :
     nsDisplayItem(aBuilder, aFrame) {

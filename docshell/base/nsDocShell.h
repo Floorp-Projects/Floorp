@@ -123,24 +123,24 @@ typedef enum {
 //***    nsDocShell
 //*****************************************************************************
 
-class nsDocShell : public nsDocLoader,
-                   public nsIDocShell,
-                   public nsIWebNavigation,
-                   public nsIBaseWindow, 
-                   public nsIScrollable, 
-                   public nsITextScroll, 
-                   public nsIDocCharset, 
-                   public nsIContentViewerContainer,
-                   public nsIRefreshURI,
-                   public nsIWebProgressListener,
-                   public nsIWebPageDescriptor,
-                   public nsIAuthPromptProvider,
-                   public nsILoadContext,
-                   public nsIWebShellServices,
-                   public nsILinkHandler,
-                   public nsIClipboardCommands,
-                   public nsIDOMStorageManager,
-                   public mozilla::SupportsWeakPtr<nsDocShell>
+class nsDocShell MOZ_FINAL : public nsDocLoader,
+                             public nsIDocShell,
+                             public nsIWebNavigation,
+                             public nsIBaseWindow,
+                             public nsIScrollable,
+                             public nsITextScroll,
+                             public nsIDocCharset,
+                             public nsIContentViewerContainer,
+                             public nsIRefreshURI,
+                             public nsIWebProgressListener,
+                             public nsIWebPageDescriptor,
+                             public nsIAuthPromptProvider,
+                             public nsILoadContext,
+                             public nsIWebShellServices,
+                             public nsILinkHandler,
+                             public nsIClipboardCommands,
+                             public nsIDOMStorageManager,
+                             public mozilla::SupportsWeakPtr<nsDocShell>
 {
     friend class nsDSURIContentListener;
 
@@ -243,6 +243,13 @@ public:
     }
 
     nsresult HistoryTransactionRemoved(int32_t aIndex);
+
+    // Notify Scroll observers when an async panning/zooming transform
+    // has started being applied
+    void NotifyAsyncPanZoomStarted();
+    // Notify Scroll observers when an async panning/zooming transform
+    // is no longer applied
+    void NotifyAsyncPanZoomStopped();
 protected:
     // Object Management
     virtual ~nsDocShell();

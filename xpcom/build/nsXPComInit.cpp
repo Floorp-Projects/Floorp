@@ -668,7 +668,10 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
 #ifdef MOZ_WEBM
   // And for libnestegg.
-  nestegg_set_halloc_func(NesteggReporter::CountingRealloc);
+  // libnestegg expects that its realloc implementation will free
+  // the pointer argument when a size of 0 is passed in, so we need
+  // the special version of the counting realloc.
+  nestegg_set_halloc_func(NesteggReporter::CountingFreeingRealloc);
 #endif
 
   // Initialize the JS engine.

@@ -22,7 +22,7 @@
  */
 // XXXldb This needs a better name that indicates that it's for any grid
 // row.
-class nsGridRowLeafLayout : public nsGridRowLayout
+class nsGridRowLeafLayout MOZ_FINAL : public nsGridRowLayout
 {
 public:
 

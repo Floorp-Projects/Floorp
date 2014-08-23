@@ -148,7 +148,7 @@ private:
   nsRefPtr<nsPresContext> mPresContext;
 };
 
-class nsMenuPopupFrame : public nsBoxFrame, public nsMenuParent
+class nsMenuPopupFrame MOZ_FINAL : public nsBoxFrame, public nsMenuParent
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsMenuPopupFrame)

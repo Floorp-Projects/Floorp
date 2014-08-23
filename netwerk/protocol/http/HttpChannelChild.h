@@ -33,17 +33,17 @@
 namespace mozilla {
 namespace net {
 
-class HttpChannelChild : public PHttpChannelChild
-                       , public HttpBaseChannel
-                       , public HttpAsyncAborter<HttpChannelChild>
-                       , public nsICacheInfoChannel
-                       , public nsIProxiedChannel
-                       , public nsIApplicationCacheChannel
-                       , public nsIAsyncVerifyRedirectCallback
-                       , public nsIAssociatedContentSecurity
-                       , public nsIChildChannel
-                       , public nsIHttpChannelChild
-                       , public nsIDivertableChannel
+class HttpChannelChild MOZ_FINAL : public PHttpChannelChild
+                                 , public HttpBaseChannel
+                                 , public HttpAsyncAborter<HttpChannelChild>
+                                 , public nsICacheInfoChannel
+                                 , public nsIProxiedChannel
+                                 , public nsIApplicationCacheChannel
+                                 , public nsIAsyncVerifyRedirectCallback
+                                 , public nsIAssociatedContentSecurity
+                                 , public nsIChildChannel
+                                 , public nsIHttpChannelChild
+                                 , public nsIDivertableChannel
 {
   virtual ~HttpChannelChild();
 public:
