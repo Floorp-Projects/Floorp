@@ -974,6 +974,16 @@ CodeGeneratorARM::visitUrshD(LUrshD *ins)
 }
 
 bool
+CodeGeneratorARM::visitClzI(LClzI *ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    masm.ma_clz(input, output);
+    return true;
+}
+
+bool
 CodeGeneratorARM::visitPowHalfD(LPowHalfD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
