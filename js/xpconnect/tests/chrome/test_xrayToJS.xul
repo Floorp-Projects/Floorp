@@ -87,7 +87,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(global(factoryFun), iwin, "proper global for factoryFun");
     is(factoryFun().foo, 32, "factoryFun invokable");
     is(global(factoryFun()), iwin, "minted objects live in the content scope");
-    testXray('Function', factoryFun, new iwin.Function(), ['caller', 'arguments', 'length', 'name']);
+    testXray('Function', factoryFun, new iwin.Function(), ['length', 'name']);
     var echoThis = new iwin.Function('return this;');
     echoThis.wrappedJSObject.bind = 42;
     var boundEchoThis = echoThis.bind(document);
@@ -181,9 +181,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   }
   for (var c of typedArrayClasses) {
     gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT", "length", "buffer",
-                               "byteLength", "byteOffset", "@@iterator", "subarray", "set"];
-    if (!isReleaseBuild)
-      gPrototypeProperties[c].push("move");
+                               "byteLength", "byteOffset", "@@iterator", "subarray", "set",
+                               "copyWithin"];
   }
   for (var c of errorObjectClasses) {
       gPrototypeProperties[c] = ["constructor", "name",

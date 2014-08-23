@@ -11,20 +11,18 @@
 <!-- Specific error messages -->
 
 <!ENTITY connectionFailure.title "Unable to connect">
-<!ENTITY connectionFailure.longDesc "&sharedLongDesc3;">
+<!ENTITY connectionFailure.longDesc "&sharedLongDesc2;">
 
 <!ENTITY deniedPortAccess.title "This address is restricted">
 <!ENTITY deniedPortAccess.longDesc "">
 
 <!ENTITY dnsNotFound.title "Server not found">
-<!ENTITY dnsNotFound.longDesc3 "
+<!ENTITY dnsNotFound.longDesc2 "
 <ul>
   <li>Check the address for typing errors such as
     <strong>ww</strong>.example.com instead of
     <strong>www</strong>.example.com</li>
-  <li>If you are unable to load any pages, check your device's data or Wi-Fi connection.
-    <button id='wifi'>Enable Wi-Fi</button>
-  </li>
+  <li>If you are unable to load any pages, check your device's data or Wi-Fi connection.</li>
 </ul>
 ">
 
@@ -53,17 +51,15 @@
 ">
 
 <!ENTITY netInterrupt.title "The connection was interrupted">
-<!ENTITY netInterrupt.longDesc "&sharedLongDesc3;">
+<!ENTITY netInterrupt.longDesc "&sharedLongDesc2;">
 
 <!ENTITY notCached.title "Document Expired">
 <!ENTITY notCached.longDesc "<p>The requested document is not available in &brandShortName;'s cache.</p><ul><li>As a security precaution, &brandShortName; does not automatically re-request sensitive documents.</li><li>Click Try Again to re-request the document from the website.</li></ul>">
 
 <!ENTITY netOffline.title "Offline mode">
-<!ENTITY netOffline.longDesc3 "
+<!ENTITY netOffline.longDesc2 "
 <ul>
-  <li>Try again. &brandShortName; will attempt to open a connection and reload the page.
-    <button id='wifi'>Enable Wi-Fi</button>
-  </li>
+  <li>Try again. &brandShortName; will attempt to open a connection and reload the page.</li>
 </ul>
 ">
 
@@ -82,10 +78,10 @@
 ">
 
 <!ENTITY netReset.title "The connection was reset">
-<!ENTITY netReset.longDesc "&sharedLongDesc3;">
+<!ENTITY netReset.longDesc "&sharedLongDesc2;">
 
 <!ENTITY netTimeout.title "The connection has timed out">
-<!ENTITY netTimeout.longDesc "&sharedLongDesc3;">
+<!ENTITY netTimeout.longDesc "&sharedLongDesc2;">
 
 <!ENTITY unknownProtocolFound.title "The address wasn't understood">
 <!ENTITY unknownProtocolFound.longDesc "
@@ -104,12 +100,10 @@
 ">
 
 <!ENTITY proxyResolveFailure.title "Unable to find the proxy server">
-<!ENTITY proxyResolveFailure.longDesc3 "
+<!ENTITY proxyResolveFailure.longDesc2 "
 <ul>
   <li>Check the proxy settings to make sure that they are correct.</li>
-  <li>Check to make sure your device has a working data or Wi-Fi connection.
-    <button id='wifi'>Enable Wi-Fi</button>
-  </li>
+  <li>Check to make sure your device has a working data or Wi-Fi connection.</li>
 </ul>
 ">
 
@@ -148,12 +142,10 @@ be temporary, and you can try again later.</li>
 </ul>
 ">
 
-<!ENTITY sharedLongDesc3 "
+<!ENTITY sharedLongDesc2 "
 <ul>
   <li>The site could be temporarily unavailable or too busy. Try again in a few moments.</li>
-  <li>If you are unable to load any pages, check your mobile device's data or Wi-Fi connection.
-    <button id='wifi'>Enable Wi-Fi</button>
-  </li>
+  <li>If you are unable to load any pages, check your mobile device's data or Wi-Fi connection.</li>
 </ul>
 ">
 

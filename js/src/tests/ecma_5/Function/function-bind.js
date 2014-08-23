@@ -239,34 +239,28 @@ assertEq(fooDesc.configurable, true);
 
 
 /*
- * 19. Let thrower be the [[ThrowTypeError]] function Object (13.2.3).
- * 20. Call the [[DefineOwnProperty]] internal method of F with arguments
- *     "caller", PropertyDescriptor {[[Get]]: thrower, [[Set]]: thrower,
- *     [[Enumerable]]: false, [[Configurable]]: false}, and false.
- * 21. Call the [[DefineOwnProperty]] internal method of F with arguments
- *     "arguments", PropertyDescriptor {[[Get]]: thrower, [[Set]]: thrower,
- *     [[Enumerable]]: false, [[Configurable]]: false}, and false.
+ * Steps 19-21 are removed from ES6, instead implemented through "arguments" and
+ * "caller" accessors on Function.prototype.  So no own properties, but do check
+ * for the same observable behavior (modulo where the accessors live).
  */
-function f() { "use strict"; }
-var canonicalTTE = Object.getOwnPropertyDescriptor(f, "caller").get;
+function strict() { "use strict"; }
+function nonstrict() {}
 
-var tte;
+function testBound(fun)
+{
+  var boundf = fun.bind();
 
-var boundf = f.bind();
+  assertEq(Object.getOwnPropertyDescriptor(boundf, "arguments"), undefined,
+           "should be no arguments property");
+  assertEq(Object.getOwnPropertyDescriptor(boundf, "caller"), undefined,
+           "should be no caller property");
 
-var boundfCaller = Object.getOwnPropertyDescriptor(boundf, "caller");
-assertEq("get" in boundfCaller, true);
-assertEq("set" in boundfCaller, true);
-tte = boundfCaller.get;
-assertEq(tte, canonicalTTE);
-assertEq(tte, boundfCaller.set);
+  expectThrowTypeError(function() { return boundf.arguments; });
+  expectThrowTypeError(function() { return boundf.caller; });
+}
 
-var boundfArguments = Object.getOwnPropertyDescriptor(boundf, "arguments");
-assertEq("get" in boundfArguments, true);
-assertEq("set" in boundfArguments, true);
-tte = boundfArguments.get;
-assertEq(tte, canonicalTTE);
-assertEq(tte, boundfArguments.set);
+testBound(strict);
+testBound(nonstrict);
 
 
 /* 22. Return F. */

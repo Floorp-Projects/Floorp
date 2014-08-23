@@ -114,7 +114,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 # media/mtransport so we work with --disable-webrtc
 LOCAL_INCLUDES += [
-    '../base',
     '/media/mtransport',
     '/xpcom/base',
     '/xpcom/build',

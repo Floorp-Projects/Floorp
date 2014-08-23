@@ -381,6 +381,8 @@ struct RegExpTestCache
  */
 class FreeOp : public JSFreeOp
 {
+    Vector<void *, 0, SystemAllocPolicy> freeLaterList;
+
   public:
     static FreeOp *get(JSFreeOp *fop) {
         return static_cast<FreeOp *>(fop);
@@ -390,7 +392,13 @@ class FreeOp : public JSFreeOp
       : JSFreeOp(rt)
     {}
 
+    ~FreeOp() {
+        for (size_t i = 0; i < freeLaterList.length(); i++)
+            free_(freeLaterList[i]);
+    }
+
     inline void free_(void *p);
+    inline void freeLater(void *p);
 
     template <class T>
     inline void delete_(T *p) {
@@ -1471,6 +1479,17 @@ inline void
 FreeOp::free_(void *p)
 {
     js_free(p);
+}
+
+inline void
+FreeOp::freeLater(void *p)
+{
+    // FreeOps other than the defaultFreeOp() are constructed on the stack,
+    // and won't hold onto the pointers to free indefinitely.
+    JS_ASSERT(this != runtime()->defaultFreeOp());
+
+    if (!freeLaterList.append(p))
+        CrashAtUnhandlableOOM("FreeOp::freeLater");
 }
 
 class AutoLockGC

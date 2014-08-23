@@ -5063,19 +5063,20 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
                            1, 1);
 
   } else {
-    gfxRect originalRect(NSAppUnitsToFloatPixels(aRect.x, factor),
-                         NSAppUnitsToFloatPixels(aRect.y, factor),
-                         NSAppUnitsToFloatPixels(aRect.width, factor),
-                         NSAppUnitsToFloatPixels(aRect.height, factor));
+    Rect originalRect(NSAppUnitsToFloatPixels(aRect.x, factor),
+                      NSAppUnitsToFloatPixels(aRect.y, factor),
+                      NSAppUnitsToFloatPixels(aRect.width, factor),
+                      NSAppUnitsToFloatPixels(aRect.height, factor));
 
-    gfxRect rect = To3DMatrix(matrix).Inverse().ProjectRectBounds(originalRect);
+    matrix.Invert();
+    Rect rect = matrix.ProjectRectBounds(originalRect);
 
     bool snap;
     nsRect childBounds = mStoredList.GetBounds(aBuilder, &snap);
-    gfxRect childGfxBounds(NSAppUnitsToFloatPixels(childBounds.x, factor),
-                           NSAppUnitsToFloatPixels(childBounds.y, factor),
-                           NSAppUnitsToFloatPixels(childBounds.width, factor),
-                           NSAppUnitsToFloatPixels(childBounds.height, factor));
+    Rect childGfxBounds(NSAppUnitsToFloatPixels(childBounds.x, factor),
+                        NSAppUnitsToFloatPixels(childBounds.y, factor),
+                        NSAppUnitsToFloatPixels(childBounds.width, factor),
+                        NSAppUnitsToFloatPixels(childBounds.height, factor));
     rect = rect.Intersect(childGfxBounds);
 
     resultingRect = nsRect(NSFloatPixelsToAppUnits(float(rect.X()), factor),
@@ -5304,19 +5305,19 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aTransformedBounds,
     return false;
   }
 
-  gfxRect result(NSAppUnitsToFloatPixels(aTransformedBounds.x, factor),
-                 NSAppUnitsToFloatPixels(aTransformedBounds.y, factor),
-                 NSAppUnitsToFloatPixels(aTransformedBounds.width, factor),
-                 NSAppUnitsToFloatPixels(aTransformedBounds.height, factor));
+  Rect result(NSAppUnitsToFloatPixels(aTransformedBounds.x, factor),
+              NSAppUnitsToFloatPixels(aTransformedBounds.y, factor),
+              NSAppUnitsToFloatPixels(aTransformedBounds.width, factor),
+              NSAppUnitsToFloatPixels(aTransformedBounds.height, factor));
 
-  gfxRect childGfxBounds(NSAppUnitsToFloatPixels(aChildBounds.x, factor),
-                         NSAppUnitsToFloatPixels(aChildBounds.y, factor),
-                         NSAppUnitsToFloatPixels(aChildBounds.width, factor),
-                         NSAppUnitsToFloatPixels(aChildBounds.height, factor));
+  Rect childGfxBounds(NSAppUnitsToFloatPixels(aChildBounds.x, factor),
+                      NSAppUnitsToFloatPixels(aChildBounds.y, factor),
+                      NSAppUnitsToFloatPixels(aChildBounds.width, factor),
+                      NSAppUnitsToFloatPixels(aChildBounds.height, factor));
 
-  result = transform.Inverse().ProjectRectBounds(result);
+  result = ToMatrix4x4(transform.Inverse()).ProjectRectBounds(result);
   result = result.Intersect(childGfxBounds);
-  *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(result, factor);
+  *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(ThebesRect(result), factor);
   return true;
 }
 
@@ -5329,23 +5330,23 @@ bool nsDisplayTransform::UntransformVisibleRect(nsDisplayListBuilder* aBuilder,
 
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  gfxRect result(NSAppUnitsToFloatPixels(mVisibleRect.x, factor),
-                 NSAppUnitsToFloatPixels(mVisibleRect.y, factor),
-                 NSAppUnitsToFloatPixels(mVisibleRect.width, factor),
-                 NSAppUnitsToFloatPixels(mVisibleRect.height, factor));
+  Rect result(NSAppUnitsToFloatPixels(mVisibleRect.x, factor),
+              NSAppUnitsToFloatPixels(mVisibleRect.y, factor),
+              NSAppUnitsToFloatPixels(mVisibleRect.width, factor),
+              NSAppUnitsToFloatPixels(mVisibleRect.height, factor));
 
   bool snap;
   nsRect childBounds = mStoredList.GetBounds(aBuilder, &snap);
-  gfxRect childGfxBounds(NSAppUnitsToFloatPixels(childBounds.x, factor),
-                         NSAppUnitsToFloatPixels(childBounds.y, factor),
-                         NSAppUnitsToFloatPixels(childBounds.width, factor),
-                         NSAppUnitsToFloatPixels(childBounds.height, factor));
+  Rect childGfxBounds(NSAppUnitsToFloatPixels(childBounds.x, factor),
+                      NSAppUnitsToFloatPixels(childBounds.y, factor),
+                      NSAppUnitsToFloatPixels(childBounds.width, factor),
+                      NSAppUnitsToFloatPixels(childBounds.height, factor));
 
   /* We want to untransform the matrix, so invert the transformation first! */
-  result = matrix.Inverse().ProjectRectBounds(result);
+  result = ToMatrix4x4(matrix.Inverse()).ProjectRectBounds(result);
   result = result.Intersect(childGfxBounds);
 
-  *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(result, factor);
+  *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(ThebesRect(result), factor);
 
   return true;
 }

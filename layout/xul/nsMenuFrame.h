@@ -72,7 +72,7 @@ private:
   nsMenuFrame* mFrame;
 };
 
-class nsMenuFrame : public nsBoxFrame
+class nsMenuFrame MOZ_FINAL : public nsBoxFrame
 {
 public:
   nsMenuFrame(nsIPresShell* aShell, nsStyleContext* aContext);

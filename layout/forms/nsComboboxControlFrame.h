@@ -37,13 +37,13 @@ class nsComboboxDisplayFrame;
 class nsIDOMEventListener;
 class nsIScrollableFrame;
 
-class nsComboboxControlFrame : public nsBlockFrame,
-                               public nsIFormControlFrame,
-                               public nsIComboboxControlFrame,
-                               public nsIAnonymousContentCreator,
-                               public nsISelectControlFrame,
-                               public nsIRollupListener,
-                               public nsIStatefulFrame
+class nsComboboxControlFrame MOZ_FINAL : public nsBlockFrame,
+                                         public nsIFormControlFrame,
+                                         public nsIComboboxControlFrame,
+                                         public nsIAnonymousContentCreator,
+                                         public nsISelectControlFrame,
+                                         public nsIRollupListener,
+                                         public nsIStatefulFrame
 {
 public:
   friend nsContainerFrame* NS_NewComboboxControlFrame(nsIPresShell* aPresShell,

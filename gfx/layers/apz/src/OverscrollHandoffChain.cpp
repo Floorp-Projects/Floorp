@@ -61,21 +61,30 @@ OverscrollHandoffChain::IndexOf(const AsyncPanZoomController* aApzc) const
 }
 
 void
-OverscrollHandoffChain::FlushRepaints() const
+OverscrollHandoffChain::ForEachApzc(APZCMethod aMethod) const
 {
   MOZ_ASSERT(Length() > 0);
   for (uint32_t i = 0; i < Length(); ++i) {
-    mChain[i]->FlushRepaintForOverscrollHandoff();
+    (mChain[i]->*aMethod)();
   }
+}
+
+void
+OverscrollHandoffChain::FlushRepaints() const
+{
+  ForEachApzc(&AsyncPanZoomController::FlushRepaintForOverscrollHandoff);
 }
 
 void
 OverscrollHandoffChain::CancelAnimations() const
 {
-  MOZ_ASSERT(Length() > 0);
-  for (uint32_t i = 0; i < Length(); ++i) {
-    mChain[i]->CancelAnimation();
-  }
+  ForEachApzc(&AsyncPanZoomController::CancelAnimation);
+}
+
+void
+OverscrollHandoffChain::ClearOverscroll() const
+{
+  ForEachApzc(&AsyncPanZoomController::ClearOverscroll);
 }
 
 void

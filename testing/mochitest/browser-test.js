@@ -16,10 +16,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserNewTabPreloader",
-  "resource:///modules/BrowserNewTabPreloader.jsm", "BrowserNewTabPreloader");
+  "resource:///modules/BrowserNewTabPreloader.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
-  "resource:///modules/CustomizationTabPreloader.jsm", "CustomizationTabPreloader");
+  "resource:///modules/CustomizationTabPreloader.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
+  "resource:///modules/ContentSearch.jsm");
 
 const SIMPLETEST_OVERRIDES =
   ["ok", "is", "isnot", "ise", "todo", "todo_is", "todo_isnot", "info", "expectAssertions"];
@@ -455,6 +458,8 @@ Tester.prototype = {
     // is invoked to start the tests.
     this.waitForWindowsState((function () {
       if (this.done) {
+        let promise = Promise.resolve();
+
         // Uninitialize a few things explicitly so that they can clean up
         // frames and browser intentionally kept alive until shutdown to
         // eliminate false positives.
@@ -484,6 +489,9 @@ Tester.prototype = {
           SocialFlyout.unload();
           SocialShare.uninit();
           TabView.uninit();
+
+          // Destroying ContentSearch is asynchronous.
+          promise = ContentSearch.destroy();
         }
 
         // Schedule GC and CC runs before finishing in order to detect
@@ -515,20 +523,22 @@ Tester.prototype = {
           }
         };
 
-        checkForLeakedGlobalWindows(aResults => {
-          if (aResults.length == 0) {
-            this.finish();
-            return;
-          }
-          // After the first check, if there are reported leaked windows, sleep
-          // for a while, to allow off-main-thread work to complete and free up
-          // main-thread objects.  Then check again.
-          setTimeout(() => {
-            checkForLeakedGlobalWindows(aResults => {
-              reportLeaks(aResults);
+        promise.then(() => {
+          checkForLeakedGlobalWindows(aResults => {
+            if (aResults.length == 0) {
               this.finish();
-            });
-          }, 1000);
+              return;
+            }
+            // After the first check, if there are reported leaked windows, sleep
+            // for a while, to allow off-main-thread work to complete and free up
+            // main-thread objects.  Then check again.
+            setTimeout(() => {
+              checkForLeakedGlobalWindows(aResults => {
+                reportLeaks(aResults);
+                this.finish();
+              });
+            }, 1000);
+          });
         });
 
         return;
