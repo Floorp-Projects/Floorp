@@ -7088,6 +7088,22 @@ DoubleToAtom(ExclusiveContext *cx, double value)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::computedPropertyName(Node literal)
+{
+    uint32_t begin = pos().begin;
+    Node assignNode = assignExpr();
+    if (!assignNode)
+        return null();
+    MUST_MATCH_TOKEN(TOK_RB, JSMSG_COMP_PROP_UNTERM_EXPR);
+    Node propname = handler.newComputedName(assignNode, begin, pos().end);
+    if (!propname)
+        return null();
+    handler.setListFlag(literal, PNX_NONCONST);
+    return propname;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::objectLiteral()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_LC));
@@ -7121,16 +7137,9 @@ Parser<ParseHandler>::objectLiteral()
             break;
 
           case TOK_LB: {
-              // Computed property name.
-              uint32_t begin = pos().begin;
-              Node assignNode = assignExpr();
-              if (!assignNode)
-                  return null();
-              MUST_MATCH_TOKEN(TOK_RB, JSMSG_COMP_PROP_UNTERM_EXPR);
-              propname = handler.newComputedName(assignNode, begin, pos().end);
+              propname = computedPropertyName(literal);
               if (!propname)
                   return null();
-              handler.setListFlag(literal, PNX_NONCONST);
               break;
           }
 
@@ -7184,6 +7193,10 @@ Parser<ParseHandler>::objectLiteral()
                 if (!atom)
                     return null();
                 propname = newNumber(tokenStream.currentToken());
+                if (!propname)
+                    return null();
+            } else if (tt == TOK_LB) {
+                propname = computedPropertyName(literal);
                 if (!propname)
                     return null();
             } else {

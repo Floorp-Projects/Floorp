@@ -54,6 +54,7 @@ assertEq(a.foo1, 1);
 assertEq(a.foo2, 2);
 assertEq(a.foo3, 3);
 
+var expr = "abc";
 syntaxError("({[");
 syntaxError("({[expr");
 syntaxError("({[expr]");
@@ -174,8 +175,69 @@ assertEq(next.done, true);
 assertEq(next.value.hello, 2);
 assertEq(next.value.world, 3);
 
-syntaxError("a = {get [expr]() { return 3; }, set[expr](v) { return 2; }}");
+// get and set.
+expr = "abc";
+syntaxError("({get [");
+syntaxError("({get [expr()");
+syntaxError("({get [expr]()");
+syntaxError("({get [expr]()})");
+syntaxError("({get [expr] 0 ()})");
+syntaxError("({get [expr], 0(})");
+syntaxError("[get [expr]: 0()]");
+syntaxError("({get [expr](: name: 0})");
+syntaxError("({get [1, 2](): 3})");
+syntaxError("({get [1;](): 1})");
+syntaxError("({get [if (0) 0;](){}})");
+syntaxError("({set [(a)");
+syntaxError("({set [expr(a)");
+syntaxError("({set [expr](a){}");
+syntaxError("({set [expr]}(a)");
+syntaxError("({set [expr](a), 0})");
+syntaxError("[set [expr](a): 0]");
+syntaxError("({set [expr](a): name: 0})");
+syntaxError("({set [1, 2](a) {return 3;}})");
+syntaxError("({set [1;](a) {return 1}})");
+syntaxError("({set [if (0) 0;](a){}})");
+syntaxError("function f() { {get [x](): 1} }");
+syntaxError("function f() { get [x](): 1 }");
+syntaxError("function f() { {set [x](a): 1} }");
+syntaxError("function f() { set [x](a): 1 }");
+f1 = "abc";
+syntaxError('a = {get [f1@](){}, set [f1](a){}}'); // unexpected symbol at end of AssignmentExpression
+syntaxError('a = {get@ [f1](){}, set [f1](a){}}'); // unexpected symbol after get
+syntaxError('a = {get [f1](){}, set@ [f1](a){}}'); // unexpected symbol after set
 
+expr = "hey";
+a = {get [expr]() { return 3; }, set[expr](v) { throw 2; }};
+assertEq(a.hey, 3);
+assertThrowsValue(() => { a.hey = 5; }, 2);
+
+// Symbols with duplicate get and set.
+expr = Symbol("hey");
+a = {get [expr]() { return 3; }, set[expr](v) { throw 2; },
+     set [expr] (w) { throw 4; }, get[expr](){return 5; }};
+assertEq(a[expr], 5);
+assertThrowsValue(() => { a[expr] = 7; }, 4);
+
+// expressions with side effects are called in the right order
+log = "";
+obj = {
+    "a": log += 'a',
+    get [log += 'b']() {},
+    [log += 'c']: log += 'd',
+    set [log += 'e'](a) {}
+};
+assertEq(log, "abcde");
+
+// assignment expressions, objects and regex in computed names
+obj = {
+    get [a = "hey"]() { return 1; },
+    get [a = {b : 4}.b]() { return 2; },
+    set [/x/.source](a) { throw 3; }
+}
+assertEq(obj.hey, 1);
+assertEq(obj[4], 2);
+assertThrowsValue(() => { obj.x = 7; }, 3);
 
 
 reportCompare(0, 0, "ok");
