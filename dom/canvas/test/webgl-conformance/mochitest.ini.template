@@ -1,0 +1,7 @@
+[DEFAULT]
+skip-if = e10s
+support-files = mochi-single.html
+                mochi-wrapper.css
+                %%SUPPORT_FILES%%
+
+%%MANIFEST_TESTS%%
