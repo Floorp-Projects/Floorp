@@ -595,7 +595,7 @@ class ICStub
             IC_STUB_KIND_LIST(DEF_KIND_STR)
 #undef DEF_KIND_STR
           default:
-            MOZ_ASSUME_UNREACHABLE("Invalid kind.");
+            MOZ_CRASH("Invalid kind.");
         }
     }
 
@@ -1130,7 +1130,7 @@ class ICStubCompiler
             regs.take(R1);
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Invalid numInputs");
+            MOZ_CRASH("Invalid numInputs");
         }
 
         return regs;
@@ -3306,8 +3306,7 @@ class ICGetElemNativeCompiler : public ICStubCompiler
                     getter_, pcOffset_, holder_, holderShape);
         }
 
-        MOZ_ASSUME_UNREACHABLE("Invalid kind.");
-        return nullptr;
+        MOZ_CRASH("Invalid kind.");
     }
 };
 
