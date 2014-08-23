@@ -135,6 +135,7 @@ hg addremove ${test262_dir}
 # for spec changes, or where we're experimenting with semantics that disagree
 # with those in test262.  See below: this isn't every test we don't pass!
 patch -d "${js_src_tests_dir}" -p4 < ./function-arguments-caller-changes.diff
+patch -d "${js_src_tests_dir}" -p4 < ./dupl-prop-changes.diff
 
 # The alert reader may now be wondering: what about test262 tests that we don't
 # pass?  (And what about any test262 tests whose format we don't yet support?)
