@@ -76,7 +76,6 @@ public:
     : mCompositionBounds(0, 0, 0, 0)
     , mDisplayPort(0, 0, 0, 0)
     , mCriticalDisplayPort(0, 0, 0, 0)
-    , mViewport(0, 0, 0, 0)
     , mScrollableRect(0, 0, 0, 0)
     , mResolution(1)
     , mCumulativeResolution(1)
@@ -95,6 +94,7 @@ public:
     , mDisplayPortMargins(0, 0, 0, 0)
     , mUseDisplayPortMargins(false)
     , mPresShellId(-1)
+    , mViewport(0, 0, 0, 0)
   {}
 
   // Default copy ctor and operator= are fine
@@ -287,17 +287,6 @@ public:
   // The same restrictions for mDisplayPort apply here.
   CSSRect mCriticalDisplayPort;
 
-  // The CSS viewport, which is the dimensions we're using to constrain the
-  // <html> element of this frame, relative to the top-left of the layer. Note
-  // that its offset is structured in such a way that it doesn't depend on the
-  // method layout uses to scroll content.
-  //
-  // This is mainly useful on the root layer, however nested iframes can have
-  // their own viewport, which will just be the size of the window of the
-  // iframe. For layers that don't correspond to a document, this metric is
-  // meaningless and invalid.
-  CSSRect mViewport;
-
   // The scrollable bounds of a frame. This is determined by reflow.
   // Ordinarily the x and y will be 0 and the width and height will be the
   // size of the element being scrolled. However for RTL pages or elements
@@ -448,6 +437,16 @@ public:
     mPresShellId = aPresShellId;
   }
 
+  void SetViewport(const CSSRect& aViewport)
+  {
+    mViewport = aViewport;
+  }
+
+  const CSSRect& GetViewport() const
+  {
+    return mViewport;
+  }
+
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
@@ -499,6 +498,17 @@ private:
   bool mUseDisplayPortMargins;
 
   uint32_t mPresShellId;
+
+  // The CSS viewport, which is the dimensions we're using to constrain the
+  // <html> element of this frame, relative to the top-left of the layer. Note
+  // that its offset is structured in such a way that it doesn't depend on the
+  // method layout uses to scroll content.
+  //
+  // This is mainly useful on the root layer, however nested iframes can have
+  // their own viewport, which will just be the size of the window of the
+  // iframe. For layers that don't correspond to a document, this metric is
+  // meaningless and invalid.
+  CSSRect mViewport;
 };
 
 /**
