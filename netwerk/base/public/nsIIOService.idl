@@ -89,6 +89,24 @@ interface nsIIOService : nsISupports
     attribute boolean offline;
 
     /**
+     * Set whether network appears to be offline for network connections from
+     * a given appID.
+     *
+     * Calling this function may fire the "network:app-offline-status-changed"
+     * notification, which is also sent to child processes containing this appId.
+     * 'state' must one of nsIAppOfflineInfo::{ONLINE|OFFLINE|WIFI_ONLY}.
+     */
+    void setAppOffline(in uint32_t appId, in long state);
+
+    /**
+     * Returns true if given appId is currently not allowed to make network
+     * connections. It will return true if the app is in the wifi-only state
+     * and we are currently on a 3G connection.
+     */
+    boolean isAppOffline(in uint32_t appId);
+
+
+    /**
      * Checks if a port number is banned. This involves consulting a list of
      * unsafe ports, corresponding to network services that may be easily
      * exploitable. If the given port is considered unsafe, then the protocol
@@ -117,6 +135,18 @@ interface nsIIOService : nsISupports
     ACString extractScheme(in AUTF8String urlString);
 };
 
+[scriptable, uuid(4ac296a0-ca1b-44f4-8787-117a88cb70fb)]
+interface nsIAppOfflineInfo : nsISupports
+{
+    readonly attribute unsigned long appId;
+
+    const long ONLINE = 1;
+    const long OFFLINE = 2;
+    const long WIFI_ONLY = 3;
+
+    readonly attribute long mode;
+};
+
 %{C++
 /**
  * We send notifications through nsIObserverService with topic
@@ -136,4 +166,10 @@ interface nsIIOService : nsISupports
 #define NS_IOSERVICE_OFFLINE_STATUS_TOPIC "network:offline-status-changed"
 #define NS_IOSERVICE_OFFLINE              "offline"
 #define NS_IOSERVICE_ONLINE               "online"
+
+/**
+ * When network:app-offline-status-changed is fired,
+ * the 'Subject' argument is a nsIOfflineAppInfo.
+ */
+#define NS_IOSERVICE_APP_OFFLINE_STATUS_TOPIC "network:app-offline-status-changed"
 %}

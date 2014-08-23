@@ -13,6 +13,8 @@
 #include "mozilla/net/PHttpChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
+#include "OfflineObserver.h"
+#include "nsIObserver.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsHttpChannel.h"
@@ -38,6 +40,7 @@ class HttpChannelParent : public PHttpChannelParent
                         , public nsIInterfaceRequestor
                         , public ADivertableParentChannel
                         , public nsIAuthPromptProvider
+                        , public DisconnectableParent
 {
   virtual ~HttpChannelParent();
 
@@ -129,6 +132,9 @@ protected:
   friend class HttpChannelParentListener;
   nsRefPtr<mozilla::dom::TabParent> mTabParent;
 
+  void OfflineDisconnect() MOZ_OVERRIDE;
+  uint32_t GetAppId() MOZ_OVERRIDE;
+
 private:
   nsRefPtr<nsHttpChannel>       mChannel;
   nsCOMPtr<nsICacheEntry>       mCacheEntry;
@@ -149,6 +155,8 @@ private:
   bool mSentRedirect1Begin          : 1;
   bool mSentRedirect1BeginFailed    : 1;
   bool mReceivedRedirect2Verify     : 1;
+
+  nsRefPtr<OfflineObserver> mObserver;
 
   PBOverrideStatus mPBOverride;
 

@@ -100,6 +100,8 @@ child:
    */
   AsyncAuthPromptForNestedFrame(uint64_t nestedFrameId, nsCString uri,
                                 nsString realm, uint64_t callbackId);
+  // Notifies child that a given app is now offline (or online)
+  AppOfflineStatus(uint32_t appId, bool offline);
 
 both:
   // Actually we need PTCPSocket() for parent. But ipdl disallows us having different
