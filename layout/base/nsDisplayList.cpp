@@ -704,7 +704,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   }
 
   metrics.SetScrollId(scrollId);
-  metrics.mIsRoot = aIsRoot;
+  metrics.SetIsRoot(aIsRoot);
 
   // Only the root scrollable frame for a given presShell should pick up
   // the presShell's resolution. All the other frames are 1.0.
