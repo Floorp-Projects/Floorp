@@ -6119,8 +6119,14 @@ var XPInstallObserver = {
     } else {
       // Display completion message for new installs or updates not done Automatically
       if (!aInstall.existingAddon || !AddonManager.shouldAutoUpdate(aInstall.existingAddon)) {
-        let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart");
-        NativeWindow.toast.show(message, "short");
+        let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart.message");
+        NativeWindow.toast.show(message, "short", {
+          button: {
+            icon: "drawable://alert_addon",
+            label: Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart.action2"),
+            callback: () => { BrowserApp.addTab("about:addons#" + aAddon.id, { parentId: BrowserApp.selectedTab.id }); },
+          }
+        });
       }
     }
   },

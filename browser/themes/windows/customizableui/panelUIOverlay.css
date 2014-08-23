@@ -100,10 +100,6 @@ menuitem[type="checkbox"].subviewbutton {
   -moz-padding-start: 0;
 }
 
-.subviewbutton.bookmark-item > .toolbarbutton-icon {
-  -moz-margin-start: 3px;
-}
-
 /* subviewbutton entries for social sidebars have images that come from external
 /* sources, and are not guaranteed to be the size we want, so force the size on
 /* those icons. */

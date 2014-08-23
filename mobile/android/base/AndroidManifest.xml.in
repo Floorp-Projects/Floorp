@@ -230,6 +230,11 @@
             </intent-filter>
         </activity-alias>
 
+        <activity android:name="org.mozilla.gecko.StartPane"
+                  android:theme="@style/GeckoStartPane"
+                  android:excludeFromRecents="true"
+                  android:noHistory="true" />
+
         <activity android:name="org.mozilla.gecko.webapp.Dispatcher"
             android:noHistory="true" >
             <intent-filter>
