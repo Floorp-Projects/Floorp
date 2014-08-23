@@ -60,7 +60,7 @@ function Number_isSafeInteger(number) {
         return false;
 
     // Step 2.
-    if (!std_isFinite(number))
+    if (!Number_isFinite(number))
         return false;
 
     // Step 3.
@@ -76,4 +76,12 @@ function Number_isSafeInteger(number) {
 
     // Step 6.
     return false;
+}
+
+function Global_isNaN(number) {
+    return Number_isNaN(ToNumber(number));
+}
+
+function Global_isFinite(number){
+    return Number_isFinite(ToNumber(number));
 }
