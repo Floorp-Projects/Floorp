@@ -220,16 +220,41 @@ def WriteWrappers(testFilePathList):
 
 
 def WriteManifest(wrapperFilePathList, supportFilePathList):
-    manifestTestList = []
-    for cur in wrapperFilePathList:
-        manifestTestList.append('[' + cur + ']')
+    errataMap = LoadErrata()
 
+    # DEFAULT_ERRATA
+    defaultHeader = '[DEFAULT]'
+    defaultErrataStr = ''
+    if defaultHeader in errataMap:
+        defaultErrataStr = '\n'.join(errataMap[defaultHeader])
+        del errataMap[defaultHeader]
+
+    # SUPPORT_FILES
     supportFilePathList = sorted(supportFilePathList)
-
     supportFilesStr = '\n'.join(supportFilePathList)
-    manifestTestsStr = '\n'.join(manifestTestList)
 
+    # MANIFEST_TESTS
+    headerList = ['[' + x + ']' for x in wrapperFilePathList]
+
+    manifestTestLineList = []
+    for header in headerList:
+        manifestTestLineList.append(header)
+
+        if not header in errataMap:
+            continue
+
+        errataLineList = errataMap[header]
+        del errataMap[header]
+        manifestTestLineList += errataLineList
+        continue
+
+    assert not errataMap, 'Errata left in map: {}'.format(str(errataMap))
+
+    manifestTestsStr = '\n'.join(manifestTestLineList)
+
+    # Fill the template.
     templateDict = {
+        'DEFAULT_ERRATA': defaultErrataStr,
         'SUPPORT_FILES': supportFilesStr,
         'MANIFEST_TESTS': manifestTestsStr,
     }
@@ -245,6 +270,39 @@ WRAPPER_TEMPLATE_FILEPATH = 'mochi-wrapper.html.template'
 WRAPPERS_DIR = '_wrappers'
 MANIFEST_TEMPLATE_FILEPATH = 'mochitest.ini.template'
 MANIFEST_OUTPUT_FILEPATH = '_mochitest.ini'
+ERRATA_FILEPATH = 'mochitest-errata.ini'
+kManifestHeaderRegex = re.compile(r'\[[^\]]*?\]')
+
+
+def LoadErrata():
+    nodeMap = {}
+
+    nodeHeader = None
+    nodeLineList = []
+    with open(ERRATA_FILEPATH, 'r') as f:
+        for line in f:
+            line = line.rstrip()
+            cur = line.lstrip()
+            if cur.startswith('#'):
+                continue
+
+            if not cur:
+                continue
+
+            if not cur.startswith('['):
+                nodeLineList.append(line)
+                continue
+
+            match = kManifestHeaderRegex.search(cur)
+            assert match, line
+
+            nodeHeader = match.group()
+            assert not nodeHeader in nodeMap, 'Duplicate header: ' + nodeHeader
+            nodeLineList = []
+            nodeMap[nodeHeader] = nodeLineList
+            continue
+
+    return nodeMap
 
 ########################################################################
 
@@ -253,12 +311,20 @@ SUPPORT_DIRS = [
     'resources',
 ]
 
+EXTRA_SUPPORT_FILES = [
+    'always-fail.html',
+]
+
+
 def GetSupportFileList():
     ret = []
     for supportDir in SUPPORT_DIRS:
         ret += GetFilePathListForDir(supportDir)
 
+    ret += EXTRA_SUPPORT_FILES
+
     return ret
+
 
 def GetFilePathListForDir(baseDir):
     ret = []
