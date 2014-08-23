@@ -37,6 +37,8 @@
 #include "SerializedLoadContext.h"
 #include "nsAuthInformationHolder.h"
 #include "nsIAuthPromptCallback.h"
+#include "nsIOService.h"
+#include "mozilla/net/OfflineObserver.h"
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::TabParent;
@@ -74,10 +76,15 @@ NeckoParent::NeckoParent()
     LossyCopyUTF16toASCII(corePath, mCoreAppsBasePath);
     LossyCopyUTF16toASCII(webPath, mWebAppsBasePath);
   }
+
+  mObserver = new OfflineObserver(this);
 }
 
 NeckoParent::~NeckoParent()
 {
+  if (mObserver) {
+    mObserver->RemoveObserver();
+  }
 }
 
 static PBOverrideStatus
@@ -803,6 +810,45 @@ NeckoParent::RecvOnAuthCancelled(const uint64_t& aCallbackId,
   CallbackMap().erase(aCallbackId);
   callback->OnAuthCancelled(nullptr, aUserCancel);
   return true;
+}
+
+nsresult
+NeckoParent::OfflineNotification(nsISupports *aSubject)
+{
+  nsCOMPtr<nsIAppOfflineInfo> info(do_QueryInterface(aSubject));
+  if (!info) {
+    return NS_OK;
+  }
+
+  uint32_t targetAppId = NECKO_UNKNOWN_APP_ID;
+  info->GetAppId(&targetAppId);
+
+  for (uint32_t i = 0; i < Manager()->ManagedPBrowserParent().Length(); ++i) {
+    nsRefPtr<TabParent> tabParent =
+      static_cast<TabParent*>(Manager()->ManagedPBrowserParent()[i]);
+    uint32_t appId = tabParent->OwnOrContainingAppId();
+
+    if (appId == targetAppId) {
+      if (gIOService) {
+        bool offline = false;
+        nsresult rv = gIOService->IsAppOffline(appId, &offline);
+        if (NS_FAILED(rv)) {
+          printf_stderr("Unexpected - NeckoParent: "
+                        "appId not found by isAppOffline(): %u\n", appId);
+          break;
+        }
+        if (!SendAppOfflineStatus(appId, offline)) {
+          printf_stderr("NeckoParent: "
+                        "SendAppOfflineStatus failed for appId: %u\n", appId);
+        }
+        // Once we found the targetAppId, we don't need to continue
+        break;
+      }
+    }
+
+  }
+
+  return NS_OK;
 }
 
 }} // mozilla::net

@@ -16,6 +16,7 @@ EXPORTS.mozilla.net += [
     'ChannelDiverterParent.h',
     'Dashboard.h',
     'DashboardTypes.h',
+    'OfflineObserver.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -83,6 +84,7 @@ SOURCES += [
     'nsAsyncRedirectVerifyHelper.cpp',
     'nsSocketTransport2.cpp',
     'nsSocketTransportService2.cpp',
+    'OfflineObserver.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
