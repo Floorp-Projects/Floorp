@@ -1325,6 +1325,11 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   list-style-image: url(chrome://browser/skin/bad-content-blocked-16.png);
 }
 
+.bad-content-unblocked-notification-icon,
+#bad-content-unblocked-notification-icon {
+  list-style-image: url(chrome://browser/skin/bad-content-unblocked-16.png);
+}
+
 .webRTC-shareDevices-notification-icon,
 #webRTC-shareDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
