@@ -279,6 +279,11 @@ JitRuntime::initialize(JSContext *cx)
     if (!shapePreBarrier_)
         return false;
 
+    IonSpew(IonSpew_Codegen, "# Emitting Pre Barrier for TypeObject");
+    typeObjectPreBarrier_ = generatePreBarrier(cx, MIRType_TypeObject);
+    if (!typeObjectPreBarrier_)
+        return false;
+
     IonSpew(IonSpew_Codegen, "# Emitting malloc stub");
     mallocStub_ = generateMallocStub(cx);
     if (!mallocStub_)
@@ -2890,18 +2895,6 @@ jit::FinishInvalidation<SequentialExecution>(FreeOp *fop, JSScript *script);
 
 template void
 jit::FinishInvalidation<ParallelExecution>(FreeOp *fop, JSScript *script);
-
-void
-jit::MarkValueFromIon(JSRuntime *rt, Value *vp)
-{
-    gc::MarkValueUnbarriered(&rt->gc.marker, vp, "write barrier");
-}
-
-void
-jit::MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
-{
-    gc::MarkShapeUnbarriered(&rt->gc.marker, shapep, "write barrier");
-}
 
 void
 jit::ForbidCompilation(JSContext *cx, JSScript *script)

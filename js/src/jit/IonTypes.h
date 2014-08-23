@@ -362,6 +362,7 @@ enum MIRType
     MIRType_Elements,                // An elements vector
     MIRType_Pointer,                 // An opaque pointer that receives no special treatment
     MIRType_Shape,                   // A Shape pointer.
+    MIRType_TypeObject,              // A TypeObject pointer.
     MIRType_ForkJoinContext,         // js::ForkJoinContext*
     MIRType_Last = MIRType_ForkJoinContext,
     MIRType_Float32x4 = MIRType_Float32 | (2 << VECTOR_SCALE_SHIFT),

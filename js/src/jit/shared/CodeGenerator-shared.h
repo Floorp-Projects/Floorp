@@ -348,8 +348,8 @@ class CodeGeneratorShared : public LInstructionVisitor
     bool emitTruncateDouble(FloatRegister src, Register dest, MInstruction *mir);
     bool emitTruncateFloat32(FloatRegister src, Register dest, MInstruction *mir);
 
-    void emitPreBarrier(Register base, const LAllocation *index, MIRType type);
-    void emitPreBarrier(Address address, MIRType type);
+    void emitPreBarrier(Register base, const LAllocation *index);
+    void emitPreBarrier(Address address);
 
     // We don't emit code for trivial blocks, so if we want to branch to the
     // given block, and it's trivial, return the ultimate block we should
