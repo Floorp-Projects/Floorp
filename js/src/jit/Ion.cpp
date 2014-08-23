@@ -2244,6 +2244,8 @@ jit::CanEnter(JSContext *cx, RunState &state)
     if (script->hasIonScript() && script->ionScript()->bailoutExpected())
         return Method_Skipped;
 
+    RootedScript rscript(cx, script);
+
     // If constructing, allocate a new |this| object before building Ion.
     // Creating |this| is done before building Ion because it may change the
     // type information and invalidate compilation results.
@@ -2262,18 +2264,8 @@ jit::CanEnter(JSContext *cx, RunState &state)
             return Method_CantCompile;
         }
 
-        if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
-            RootedScript scriptRoot(cx, script);
-            RootedObject callee(cx, &invoke.args().callee());
-            RootedObject obj(cx, CreateThisForFunction(cx, callee,
-                                                       invoke.useNewType()
-                                                       ? SingletonObject
-                                                       : GenericObject));
-            if (!obj || !jit::IsIonEnabled(cx)) // Note: OOM under CreateThis can disable TI.
-                return Method_Skipped;
-            invoke.args().setThis(ObjectValue(*obj));
-            script = scriptRoot;
-        }
+        if (!state.maybeCreateThisForConstructor(cx))
+            return Method_Skipped;
     } else if (state.isGenerator()) {
         IonSpew(IonSpew_Abort, "generator frame");
         ForbidCompilation(cx, script);
@@ -2282,7 +2274,6 @@ jit::CanEnter(JSContext *cx, RunState &state)
 
     // If --ion-eager is used, compile with Baseline first, so that we
     // can directly enter IonMonkey.
-    RootedScript rscript(cx, script);
     if (js_JitOptions.eagerCompilation && !rscript->hasBaselineScript()) {
         MethodStatus status = CanEnterBaselineMethod(cx, state);
         if (status != Method_Compiled)
