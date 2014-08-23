@@ -26,9 +26,3 @@ partial interface HTMLSourceElement {
            [SetterThrows]
            attribute DOMString media;
 };
-
-// Encrypted Media Extensions
-partial interface HTMLSourceElement {
-  [Pref="media.eme.enabled"]
-  attribute DOMString keySystem;
-};
