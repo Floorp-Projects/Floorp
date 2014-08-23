@@ -353,6 +353,23 @@ js::ValueToCallable(JSContext *cx, HandleValue v, int numToSkip, MaybeConstruct 
     return nullptr;
 }
 
+bool
+RunState::maybeCreateThisForConstructor(JSContext *cx)
+{
+    if (isInvoke()) {
+        InvokeState &invoke = *asInvoke();
+        if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
+            RootedObject callee(cx, &invoke.args().callee());
+            NewObjectKind newKind = invoke.useNewType() ? SingletonObject : GenericObject;
+            JSObject *obj = CreateThisForFunction(cx, callee, newKind);
+            if (!obj)
+                return false;
+            invoke.args().setThis(ObjectValue(*obj));
+        }
+    }
+    return true;
+}
+
 static MOZ_NEVER_INLINE bool
 Interpret(JSContext *cx, RunState &state);
 

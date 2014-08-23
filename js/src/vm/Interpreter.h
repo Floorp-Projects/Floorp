@@ -208,6 +208,8 @@ class RunState
     virtual InterpreterFrame *pushInterpreterFrame(JSContext *cx) = 0;
     virtual void setReturnValue(Value v) = 0;
 
+    bool maybeCreateThisForConstructor(JSContext *cx);
+
   private:
     RunState(const RunState &other) MOZ_DELETE;
     RunState(const ExecuteState &other) MOZ_DELETE;

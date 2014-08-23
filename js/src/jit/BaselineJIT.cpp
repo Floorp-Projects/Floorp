@@ -321,17 +321,8 @@ jit::CanEnterBaselineMethod(JSContext *cx, RunState &state)
             return Method_CantCompile;
         }
 
-        // If constructing, allocate a new |this| object.
-        if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
-            RootedObject callee(cx, &invoke.args().callee());
-            RootedObject obj(cx, CreateThisForFunction(cx, callee,
-                                                       invoke.useNewType()
-                                                       ? SingletonObject
-                                                       : GenericObject));
-            if (!obj)
-                return Method_Skipped;
-            invoke.args().setThis(ObjectValue(*obj));
-        }
+        if (!state.maybeCreateThisForConstructor(cx))
+            return Method_Skipped;
     } else if (state.isExecute()) {
         ExecuteType type = state.asExecute()->type();
         if (type == EXECUTE_DEBUG || type == EXECUTE_DEBUG_GLOBAL) {
