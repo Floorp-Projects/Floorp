@@ -32,9 +32,6 @@ SOURCES += mtransport_cppsrcs
 
 FAIL_ON_WARNINGS = True
 
-LOCAL_INCLUDES = [
-    '/media/webrtc/trunk/third_party/libjingle/source/',
-]
 LOCAL_INCLUDES += [
     '/media/mtransport/',
     '/media/mtransport/third_party/',

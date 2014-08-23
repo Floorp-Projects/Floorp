@@ -21,9 +21,9 @@ class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
 
-class nsListBoxBodyFrame : public nsBoxFrame,
-                           public nsIScrollbarMediator,
-                           public nsIReflowCallback
+class nsListBoxBodyFrame MOZ_FINAL : public nsBoxFrame,
+                                     public nsIScrollbarMediator,
+                                     public nsIReflowCallback
 {
   nsListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
                      nsBoxLayout* aLayoutManager);

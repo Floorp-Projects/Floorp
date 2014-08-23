@@ -116,6 +116,8 @@ struct BasePoint4D {
   void Normalize() {
     *this /= Length();
   }
+
+  bool HasPositiveWCoord() { return w > 0; }
 };
 
 }

@@ -37,4 +37,9 @@ interface TestInterfaceJS {
   (DOMString or TestInterfaceJS?) pingPongUnionContainingNull((TestInterfaceJS? or DOMString) something);
   (TestInterfaceJS or long)? pingPongNullableUnion((TestInterfaceJS or long)? something);
   (Location or TestInterfaceJS) returnBadUnion();
+
+  [Cached, Pure]
+  readonly attribute short cachedAttr;
+  void setCachedAttr(short n);
+  void clearCachedAttrCache();
 };

@@ -5,9 +5,12 @@
 
 #include "Matrix.h"
 #include "Tools.h"
+#include <algorithm>
 #include <math.h>
 
 #include "mozilla/FloatingPoint.h" // for UnspecifiedNaN
+
+using namespace std;
 
 namespace mozilla {
 namespace gfx {
@@ -24,7 +27,7 @@ Matrix::Rotation(Float aAngle)
   newMatrix._12 = s;
   newMatrix._21 = -s;
   newMatrix._22 = c;
-  
+
   return newMatrix;
 }
 
@@ -99,6 +102,73 @@ Matrix4x4::TransformBounds(const Rect& aRect) const
     if (quad[i].y > max_y) {
       max_y = quad[i].y;
     }
+  }
+
+  return Rect(min_x, min_y, max_x - min_x, max_y - min_y);
+}
+
+Point4D ComputePerspectivePlaneIntercept(const Point4D& aFirst,
+                                         const Point4D& aSecond)
+{
+  // FIXME: See bug 1035611
+  // Since we can't easily deal with points as w=0 (since we divide by w), we
+  // approximate this by finding a point with w just greater than 0. Unfortunately
+  // this is a tradeoff between accuracy and floating point precision.
+
+  // We want to interpolate aFirst and aSecond to find a point as close to
+  // the positive side of the w=0 plane as possible.
+
+  // Since we know what we want the w component to be, we can rearrange the
+  // interpolation equation and solve for t.
+  float w = 0.00001f;
+  float t = (w - aFirst.w) / (aSecond.w - aFirst.w);
+
+  // Use t to find the remainder of the components
+  return aFirst + (aSecond - aFirst) * t;
+}
+
+Rect Matrix4x4::ProjectRectBounds(const Rect& aRect) const
+{
+  Point4D points[4];
+
+  points[0] = ProjectPoint(aRect.TopLeft());
+  points[1] = ProjectPoint(aRect.TopRight());
+  points[2] = ProjectPoint(aRect.BottomLeft());
+  points[3] = ProjectPoint(aRect.BottomRight());
+
+  Float min_x = std::numeric_limits<Float>::max();
+  Float min_y = std::numeric_limits<Float>::max();
+  Float max_x = -std::numeric_limits<Float>::max();
+  Float max_y = -std::numeric_limits<Float>::max();
+
+  bool foundPoint = false;
+  for (int i=0; i<4; i++) {
+    // Only use points that exist above the w=0 plane
+    if (points[i].HasPositiveWCoord()) {
+      foundPoint = true;
+      Point point2d = points[i].As2DPoint();
+      min_x = min<Float>(point2d.x, min_x);
+      max_x = max<Float>(point2d.x, max_x);
+      min_y = min<Float>(point2d.y, min_y);
+      max_y = max<Float>(point2d.y, max_y);
+    }
+
+    int next = (i == 3) ? 0 : i + 1;
+    if (points[i].HasPositiveWCoord() != points[next].HasPositiveWCoord()) {
+      // If the line between two points crosses the w=0 plane, then interpolate a point
+      // as close to the w=0 plane as possible and use that instead.
+      Point4D intercept = ComputePerspectivePlaneIntercept(points[i], points[next]);
+
+      Point point2d = intercept.As2DPoint();
+      min_x = min<Float>(point2d.x, min_x);
+      max_x = max<Float>(point2d.x, max_x);
+      min_y = min<Float>(point2d.y, min_y);
+      max_y = max<Float>(point2d.y, max_y);
+    }
+  }
+
+  if (!foundPoint) {
+    return Rect(0, 0, 0, 0);
   }
 
   return Rect(min_x, min_y, max_x - min_x, max_y - min_y);

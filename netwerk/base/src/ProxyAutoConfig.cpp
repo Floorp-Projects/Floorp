@@ -581,7 +581,6 @@ private:
     JS::Rooted<JSObject*> global(mContext, mGlobal);
 
     JSAutoCompartment ac(mContext, global);
-    js::SetDefaultObjectForContext(mContext, global);
     JS_InitStandardClasses(mContext, global);
 
     JS_SetErrorReporter(mContext, PACErrorReporter);

@@ -916,7 +916,7 @@ int64_t OggReader::RangeStartTime(int64_t aOffset)
   nsresult res = resource->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
   NS_ENSURE_SUCCESS(res, 0);
   int64_t startTime = 0;
-  MediaDecoderReader::FindStartTime(startTime);
+  FindStartTime(startTime);
   return startTime;
 }
 
@@ -1858,6 +1858,59 @@ nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 
   return NS_OK;
 #endif
+}
+
+VideoData* OggReader::FindStartTime(int64_t& aOutStartTime)
+{
+  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
+               "Should be on state machine or decode thread.");
+
+  // Extract the start times of the bitstreams in order to calculate
+  // the duration.
+  int64_t videoStartTime = INT64_MAX;
+  int64_t audioStartTime = INT64_MAX;
+  VideoData* videoData = nullptr;
+
+  if (HasVideo()) {
+    videoData = DecodeToFirstVideoData();
+    if (videoData) {
+      videoStartTime = videoData->mTime;
+      LOG(PR_LOG_DEBUG, ("OggReader::FindStartTime() video=%lld", videoStartTime));
+    }
+  }
+  if (HasAudio()) {
+    AudioData* audioData = DecodeToFirstAudioData();
+    if (audioData) {
+      audioStartTime = audioData->mTime;
+      LOG(PR_LOG_DEBUG, ("OggReader::FindStartTime() audio=%lld", audioStartTime));
+    }
+  }
+
+  int64_t startTime = std::min(videoStartTime, audioStartTime);
+  if (startTime != INT64_MAX) {
+    aOutStartTime = startTime;
+  }
+
+  return videoData;
+}
+
+AudioData* OggReader::DecodeToFirstAudioData()
+{
+  bool eof = false;
+  while (!eof && AudioQueue().GetSize() == 0) {
+    {
+      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
+      if (mDecoder->IsShutdown()) {
+        return nullptr;
+      }
+    }
+    eof = !DecodeAudioData();
+  }
+  if (eof) {
+    AudioQueue().Finish();
+  }
+  AudioData* d = nullptr;
+  return (d = AudioQueue().PeekFront()) ? d : nullptr;
 }
 
 OggCodecStore::OggCodecStore()

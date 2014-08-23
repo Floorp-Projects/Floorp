@@ -17,7 +17,7 @@
 #define NS_SYSTEMPRINCIPAL_CONTRACTID "@mozilla.org/systemprincipal;1"
 
 
-class nsSystemPrincipal : public nsJSPrincipals
+class nsSystemPrincipal MOZ_FINAL : public nsJSPrincipals
 {
 public:
     // Our refcount is managed by nsJSPrincipals.  Use this macro to avoid

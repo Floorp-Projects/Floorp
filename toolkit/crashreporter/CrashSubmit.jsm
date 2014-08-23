@@ -185,10 +185,10 @@ function writeSubmittedReport(crashID, viewURL) {
 }
 
 // the Submitter class represents an individual submission.
-function Submitter(id, processType, submitSuccess, submitError, noThrottle,
-                   extraExtraKeyVals) {
+function Submitter(id, recordSubmission, submitSuccess, submitError,
+                   noThrottle, extraExtraKeyVals) {
   this.id = id;
-  this.processType = processType;
+  this.recordSubmission = recordSubmission;
   this.successCallback = submitSuccess;
   this.errorCallback = submitError;
   this.noThrottle = noThrottle;
@@ -280,6 +280,11 @@ Submitter.prototype = {
       }
     }
 
+    let submissionID = Cc["@mozilla.org/uuid-generator;1"]
+                         .getService(Ci.nsIUUIDGenerator)
+                         .generateUUID().toString();
+    let manager = Services.crashmanager;
+
     let self = this;
     xhr.addEventListener("readystatechange", function (aEvt) {
       if (xhr.readyState == 4) {
@@ -287,13 +292,11 @@ Submitter.prototype = {
           xhr.status == 200 ? parseKeyValuePairs(xhr.responseText) : {};
         let submitted = !!ret.CrashID;
 
-        if (self.processType) {
-          // TODO: Use exact crash time?
-          let crashTime = new Date();
-          let manager = Services.crashmanager;
-          manager.addSubmission(self.processType, manager.CRASH_TYPE_CRASH,
-                                submitted, submitted ? ret.CrashID : "",
-                                crashTime);
+        if (self.recordSubmission) {
+          let result = submitted ? manager.SUBMISSION_RESULT_OK :
+                                   manager.SUBMISSION_RESULT_FAILED;
+          manager.addSubmissionResult(self.id, submissionID, new Date(),
+                                      result);
         }
 
         if (submitted) {
@@ -306,6 +309,9 @@ Submitter.prototype = {
       }
     }, false);
 
+    if (this.recordSubmission) {
+      manager.addSubmissionAttempt(this.id, submissionID, new Date());
+    }
     xhr.send(formData);
     return true;
   },
@@ -397,9 +403,8 @@ this.CrashSubmit = {
    *        Filename (minus .dmp extension) of the minidump to submit.
    * @param params
    *        An object containing any of the following optional parameters:
-   *        - processType
-   *          One of the CrashManager.PROCESS_TYPE constants. If set, a
-   *          submission event is recorded in CrashManager.
+   *        - recordSubmission
+   *          If true, a submission event is recorded in CrashManager.
    *        - submitSuccess
    *          A function that will be called if the report is submitted
    *          successfully with two parameters: the id that was passed
@@ -428,14 +433,14 @@ this.CrashSubmit = {
   submit: function CrashSubmit_submit(id, params)
   {
     params = params || {};
-    let processType = null;
+    let recordSubmission = false;
     let submitSuccess = null;
     let submitError = null;
     let noThrottle = false;
     let extraExtraKeyVals = null;
 
-    if ('processType' in params)
-      processType = params.processType;
+    if ('recordSubmission' in params)
+      recordSubmission = params.recordSubmission;
     if ('submitSuccess' in params)
       submitSuccess = params.submitSuccess;
     if ('submitError' in params)
@@ -445,7 +450,8 @@ this.CrashSubmit = {
     if ('extraExtraKeyVals' in params)
       extraExtraKeyVals = params.extraExtraKeyVals;
 
-    let submitter = new Submitter(id, processType, submitSuccess, submitError,
+    let submitter = new Submitter(id, recordSubmission,
+                                  submitSuccess, submitError,
                                   noThrottle, extraExtraKeyVals);
     CrashSubmit._activeSubmissions.push(submitter);
     return submitter.submit();

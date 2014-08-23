@@ -39,10 +39,10 @@ class nsHttpResponseHead;
 // intended to run on the socket thread.
 //-----------------------------------------------------------------------------
 
-class nsHttpTransaction : public nsAHttpTransaction
-                        , public ATokenBucketEvent
-                        , public nsIInputStreamCallback
-                        , public nsIOutputStreamCallback
+class nsHttpTransaction MOZ_FINAL : public nsAHttpTransaction
+                                  , public ATokenBucketEvent
+                                  , public nsIInputStreamCallback
+                                  , public nsIOutputStreamCallback
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

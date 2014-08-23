@@ -66,7 +66,7 @@ private:
  *
  */
 
-class nsNameSpaceManager
+class nsNameSpaceManager MOZ_FINAL
 {
 public:
   virtual ~nsNameSpaceManager() {}

@@ -146,10 +146,6 @@ nsContentView::Update(const ViewConfig& aConfig)
     }
   }
 
-  if (RenderFrameParent* rfp = mFrameLoader->GetCurrentRemoteFrame()) {
-    rfp->ContentViewScaleChanged(this);
-  }
-
   return NS_OK;
 }
 
@@ -2394,34 +2390,8 @@ nsFrameLoader::GetContentViewsIn(float aXPx, float aYPx,
                                  uint32_t* aLength,
                                  nsIContentView*** aResult)
 {
-  nscoord x = nsPresContext::CSSPixelsToAppUnits(aXPx - aLeftSize);
-  nscoord y = nsPresContext::CSSPixelsToAppUnits(aYPx - aTopSize);
-  nscoord w = nsPresContext::CSSPixelsToAppUnits(aLeftSize + aRightSize) + 1;
-  nscoord h = nsPresContext::CSSPixelsToAppUnits(aTopSize + aBottomSize) + 1;
-  nsRect target(x, y, w, h);
-
-  nsIFrame* frame = GetPrimaryFrameOfOwningContent();
-
-  nsTArray<ViewID> ids;
-  nsLayoutUtils::GetRemoteContentIds(frame, target, ids, true);
-  if (ids.Length() == 0 || !GetCurrentRemoteFrame()) {
-    *aResult = nullptr;
-    *aLength = 0;
-    return NS_OK;
-  }
-
-  nsIContentView** result = reinterpret_cast<nsIContentView**>(
-    NS_Alloc(ids.Length() * sizeof(nsIContentView*)));
-
-  for (uint32_t i = 0; i < ids.Length(); i++) {
-    nsIContentView* view = GetCurrentRemoteFrame()->GetContentView(ids[i]);
-    NS_ABORT_IF_FALSE(view, "Retrieved ID from RenderFrameParent, it should be valid!");
-    nsRefPtr<nsIContentView>(view).forget(&result[i]);
-  }
-
-  *aResult = result;
-  *aLength = ids.Length();
-
+  *aResult = nullptr;
+  *aLength = 0;
   return NS_OK;
 }
 

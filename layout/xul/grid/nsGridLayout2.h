@@ -23,8 +23,8 @@ class nsGridCell;
 /**
  * The nsBoxLayout implementation for a grid.
  */
-class nsGridLayout2 : public nsStackLayout, 
-                      public nsIGridPart
+class nsGridLayout2 MOZ_FINAL : public nsStackLayout, 
+                                public nsIGridPart
 {
 public:
 

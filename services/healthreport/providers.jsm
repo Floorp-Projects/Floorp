@@ -1145,6 +1145,32 @@ CrashesProvider.prototype = Object.freeze({
     this._log.info("Grabbing crash counts from crash manager.");
     let crashCounts = yield this._manager.getCrashCountsByDay();
 
+    // TODO: CrashManager no longer stores submissions as crashes, but we still
+    // want to send the submission data to FHR. As a temporary workaround, we
+    // populate |crashCounts| with the submission data to match past behaviour.
+    // See bug 1056160.
+    let crashes = yield this._manager.getCrashes();
+    for (let crash of crashes) {
+      for (let [submissionID, submission] of crash.submissions) {
+        if (!submission.responseDate) {
+          continue;
+        }
+
+        let day = Metrics.dateToDays(submission.responseDate);
+        if (!crashCounts.has(day)) {
+          crashCounts.set(day, new Map());
+        }
+
+        let succeeded =
+          submission.result == this._manager.SUBMISSION_RESULT_OK;
+        let type = crash.type + "-submission-" + (succeeded ? "succeeded" :
+                                                              "failed");
+
+        let count = (crashCounts.get(day).get(type) || 0) + 1;
+        crashCounts.get(day).set(type, count);
+      }
+    }
+
     let m = this.getMeasurement("crashes", 5);
     let fields = DailyCrashesMeasurement5.prototype.fields;
 

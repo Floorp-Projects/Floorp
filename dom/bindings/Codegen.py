@@ -1539,15 +1539,18 @@ class CGClassFinalizeHook(CGAbstractClassHook):
         return finalizeHook(self.descriptor, self.name, self.args[0].name).define()
 
 
+def JSNativeArguments():
+    return [Argument('JSContext*', 'cx'),
+            Argument('unsigned', 'argc'),
+            Argument('JS::Value*', 'vp')]
+
 class CGClassConstructor(CGAbstractStaticMethod):
     """
     JS-visible constructor for our objects
     """
     def __init__(self, descriptor, ctor, name=CONSTRUCT_HOOK_NAME):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
-        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool',
+                                        JSNativeArguments())
         self._ctor = ctor
 
     def define(self):
@@ -2037,6 +2040,21 @@ def isMaybeExposedIn(member, descriptor):
     # and member is only exposed in windows, then it's not exposed.
     return not descriptor.workers or member.exposureSet != set(["Window"])
 
+def clearableCachedAttrs(descriptor):
+    return (m for m in descriptor.interface.members if
+            m.isAttr() and
+            # Constants should never need clearing!
+            not m.getExtendedAttribute("Constant") and
+            not m.getExtendedAttribute("SameObject") and
+            m.slotIndex is not None)
+
+def MakeClearCachedValueNativeName(member):
+    return "ClearCached%sValue" % MakeNativeName(member.identifier.name)
+
+def MakeJSImplClearCachedValueNativeName(member):
+    return "_" + MakeClearCachedValueNativeName(member)
+
+
 class MethodDefiner(PropertyDefiner):
     """
     A class for defining methods on a prototype object.
@@ -2165,16 +2183,29 @@ class MethodDefiner(PropertyDefiner):
                                                  # automatically.
                     "condition": MemberCondition(None, None)
                 })
-        elif (descriptor.interface.isJSImplemented() and
-              descriptor.interface.hasInterfaceObject()):
-            self.chrome.append({
-                "name": '_create',
-                "nativeName": ("%s::_Create" % descriptor.name),
-                "methodInfo": False,
-                "length": 2,
-                "flags": "0",
-                "condition": MemberCondition(None, None)
-            })
+
+        if (descriptor.interface.isJSImplemented() and
+            descriptor.interface.hasInterfaceObject()):
+            if static:
+                self.chrome.append({
+                    "name": '_create',
+                    "nativeName": ("%s::_Create" % descriptor.name),
+                    "methodInfo": False,
+                    "length": 2,
+                    "flags": "0",
+                    "condition": MemberCondition(None, None)
+                })
+            else:
+                for m in clearableCachedAttrs(descriptor):
+                    attrName = MakeNativeName(m.identifier.name)
+                    self.chrome.append({
+                        "name": "_clearCached%sValue" % attrName,
+                        "nativeName": MakeJSImplClearCachedValueNativeName(m),
+                        "methodInfo": False,
+                        "length": "0",
+                        "flags": "0",
+                        "condition": MemberCondition(None, None)
+                    })
 
         self.unforgeable = unforgeable
 
@@ -3247,7 +3278,7 @@ class CGClearCachedValueMethod(CGAbstractMethod):
             args = []
             returnType = 'void'
         args.append(Argument(descriptor.nativeType + '*', 'aObject'))
-        name = ("ClearCached%sValue" % MakeNativeName(member.identifier.name))
+        name = MakeClearCachedValueNativeName(member)
         CGAbstractMethod.__init__(self, descriptor, name, returnType, args)
 
     def definition_body(self):
@@ -7083,8 +7114,8 @@ class CGSetterCall(CGPerSignatureCall):
                 args = "cx, self"
             else:
                 args = "self"
-            clearSlot = ("ClearCached%sValue(%s);\n" %
-                         (MakeNativeName(self.idlNode.identifier.name), args))
+            clearSlot = ("%s(%s);\n" %
+                         (MakeClearCachedValueNativeName(self.idlNode), args))
         else:
             clearSlot = ""
 
@@ -7177,10 +7208,8 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
     CGThing which is already properly indented.
     """
     def __init__(self, descriptor, name):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
-        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool",
+                                        JSNativeArguments())
 
     def definition_body(self):
         # Make sure that "obj" is in the same compartment as "cx", since we'll
@@ -7208,15 +7237,12 @@ class CGGenericMethod(CGAbstractBindingMethod):
     UncheckedUnwrap and after that operate on the result.
     """
     def __init__(self, descriptor, allowCrossOriginThis=False):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
         unwrapFailureCode = (
             'return ThrowInvalidThis(cx, args, GetInvalidThisErrorForMethod(%%(securityError)s), "%s");\n' %
             descriptor.interface.identifier.name)
         name = "genericCrossOriginMethod" if allowCrossOriginThis else "genericMethod"
         CGAbstractBindingMethod.__init__(self, descriptor, name,
-                                         args,
+                                         JSNativeArguments(),
                                          unwrapFailureCode=unwrapFailureCode,
                                          allowCrossOriginThis=allowCrossOriginThis)
 
@@ -7241,9 +7267,6 @@ class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
     Does not handle cross-origin this.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
         unwrapFailureCode = dedent("""
             ThrowInvalidThis(cx, args, GetInvalidThisErrorForMethod(%%(securityError)s), "%s");\n
             return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
@@ -7258,7 +7281,7 @@ class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
         """)
 
         CGAbstractBindingMethod.__init__(self, descriptor, name,
-                                         args,
+                                         JSNativeArguments(),
                                          callArgs=customCallArgs,
                                          unwrapFailureCode=unwrapFailureCode)
 
@@ -7382,13 +7405,10 @@ class CGLegacyCallHook(CGAbstractBindingMethod):
     """
     def __init__(self, descriptor):
         self._legacycaller = descriptor.operations["LegacyCaller"]
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
         # Our "self" is actually the callee in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, LEGACYCALLER_HOOK_NAME,
-            args, getThisObj="&args.callee()")
+            JSNativeArguments(), getThisObj="&args.callee()")
 
     def define(self):
         if not self._legacycaller:
@@ -7549,9 +7569,6 @@ class CGGenericGetter(CGAbstractBindingMethod):
     A class for generating the C++ code for an IDL attribute getter.
     """
     def __init__(self, descriptor, lenientThis=False, allowCrossOriginThis=False):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
         if lenientThis:
             name = "genericLenientGetter"
             unwrapFailureCode = dedent("""
@@ -7570,7 +7587,7 @@ class CGGenericGetter(CGAbstractBindingMethod):
             unwrapFailureCode = (
                 'return ThrowInvalidThis(cx, args, GetInvalidThisErrorForGetter(%%(securityError)s), "%s");\n' %
                 descriptor.interface.identifier.name)
-        CGAbstractBindingMethod.__init__(self, descriptor, name, args,
+        CGAbstractBindingMethod.__init__(self, descriptor, name, JSNativeArguments(),
                                          unwrapFailureCode,
                                          allowCrossOriginThis=allowCrossOriginThis)
 
@@ -7681,9 +7698,6 @@ class CGGenericSetter(CGAbstractBindingMethod):
     A class for generating the C++ code for an IDL attribute setter.
     """
     def __init__(self, descriptor, lenientThis=False, allowCrossOriginThis=False):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
         if lenientThis:
             name = "genericLenientSetter"
             unwrapFailureCode = dedent("""
@@ -7703,7 +7717,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
                 'return ThrowInvalidThis(cx, args, GetInvalidThisErrorForSetter(%%(securityError)s), "%s");\n' %
                 descriptor.interface.identifier.name)
 
-        CGAbstractBindingMethod.__init__(self, descriptor, name, args,
+        CGAbstractBindingMethod.__init__(self, descriptor, name, JSNativeArguments(),
                                          unwrapFailureCode,
                                          allowCrossOriginThis=allowCrossOriginThis)
 
@@ -10839,6 +10853,11 @@ class CGDescriptor(CGThing):
                                           post="\n};\n",
                                           defineOnly=True))
 
+        # Generate the _ClearCachedFooValue methods before the property arrays that use them.
+        if descriptor.interface.isJSImplemented():
+            for m in clearableCachedAttrs(descriptor):
+                cgThings.append(CGJSImplClearCachedValueMethod(descriptor, m))
+
         properties = PropertyArrays(descriptor)
         cgThings.append(CGGeneric(define=str(properties)))
         cgThings.append(CGNativeProperties(descriptor, properties))
@@ -10930,12 +10949,7 @@ class CGDescriptor(CGThing):
         # cached values, since we can't get at the JSObject.
         if descriptor.wrapperCache:
             cgThings.extend(CGClearCachedValueMethod(descriptor, m) for
-                            m in descriptor.interface.members if
-                            m.isAttr() and
-                            # Constants should never need clearing!
-                            not m.getExtendedAttribute("Constant") and
-                            not m.getExtendedAttribute("SameObject") and
-                            m.slotIndex is not None)
+                            m in clearableCachedAttrs(descriptor))
 
         # CGCreateInterfaceObjectsMethod needs to come after our
         # CGDOMJSClass, if any.
@@ -12959,6 +12973,27 @@ def callbackSetterName(attr, descriptor):
         descriptor.binaryNameFor(attr.identifier.name))
 
 
+class CGJSImplClearCachedValueMethod(CGAbstractBindingMethod):
+    def __init__(self, descriptor, attr):
+        if attr.getExtendedAttribute("StoreInSlot"):
+            raise TypeError("[StoreInSlot] is not supported for JS-implemented WebIDL. See bug 1056325.")
+
+        CGAbstractBindingMethod.__init__(self, descriptor,
+                                         MakeJSImplClearCachedValueNativeName(attr),
+                                         JSNativeArguments())
+        self.attr = attr
+
+    def generate_code(self):
+        return CGGeneric(fill(
+            """
+            ${bindingNamespace}::${fnName}(self);
+            args.rval().setUndefined();
+            return true;
+            """,
+            bindingNamespace=toBindingNamespace(self.descriptor.name),
+            fnName=MakeClearCachedValueNativeName(self.attr)))
+
+
 class CGJSImplGetter(CGJSImplMember):
     """
     Class for generating code for the getters of attributes for a JS-implemented
@@ -13111,9 +13146,7 @@ class CGJSImplClass(CGBindingImplClass):
         self.methodDecls.append(
             ClassMethod("_Create",
                         "bool",
-                        [Argument("JSContext*", "cx"),
-                         Argument("unsigned", "argc"),
-                         Argument("JS::Value*", "vp")],
+                        JSNativeArguments(),
                         static=True,
                         body=self.getCreateFromExistingBody()))
 
