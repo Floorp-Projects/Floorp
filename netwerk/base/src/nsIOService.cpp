@@ -1450,18 +1450,29 @@ nsIOService::SetAppOffline(uint32_t aAppId, int32_t aState)
     return NS_OK;
 }
 
+// This method may be called in both the parent and the child process
+// In parent it only gets called in from nsIOService::SetAppOffline
+// and SetAppOfflineMainThread::Run
+// In the child, it may get called from NeckoChild::RecvAppOfflineStatus
+// and TabChild::RecvAppOfflineStatus.
+// Note that in the child process, apps should never be in a WIFI_ONLY
+// because wifi status is not available on the child
 void
 nsIOService::SetAppOfflineInternal(uint32_t aAppId, int32_t aState)
 {
     MOZ_ASSERT(NS_IsMainThread());
     NS_ENSURE_TRUE_VOID(NS_IsMainThread());
 
-    int32_t state;
-    if (mAppsOfflineStatus.Get(aAppId, &state) && state == aState) {
+    int32_t state = nsIAppOfflineInfo::ONLINE;
+    mAppsOfflineStatus.Get(aAppId, &state);
+    if (state == aState) {
         // The app is already in this state. Nothing needs to be done.
         return;
     }
 
+    // wifiActive will always be false in the child process
+    // but it will be true in the parent process on Desktop Firefox as it does
+    // not have wifi-detection capabilities
     bool wifiActive = IsWifiActive();
     bool offline = (state == nsIAppOfflineInfo::OFFLINE) ||
                    (state == nsIAppOfflineInfo::WIFI_ONLY && !wifiActive);
