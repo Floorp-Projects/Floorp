@@ -420,9 +420,7 @@ bool ProcessWOFF2(ots::OpenTypeFile *header,
 ots::TableAction GetTableAction(ots::OpenTypeFile *header, uint32_t tag) {
   ots::TableAction action = ots::TABLE_ACTION_DEFAULT;
 
-  if (header->table_action_func != NULL) {
-    action = header->table_action_func(htonl(tag), header->table_action_user_data);
-  }
+  action = header->context->GetTableAction(htonl(tag));
 
   if (action == ots::TABLE_ACTION_DEFAULT) {
     action = ots::TABLE_ACTION_DROP;
@@ -807,10 +805,7 @@ bool OTSContext::Process(OTSStream *output,
                          size_t length) {
   OpenTypeFile header;
 
-  header.message_func = message_func;
-  header.message_user_data = message_user_data;
-  header.table_action_func = table_action_func;
-  header.table_action_user_data = table_action_user_data;
+  header.context = this;
 
   if (length < 4) {
     return OTS_FAILURE_MSG_(&header, "file less than 4 bytes");
