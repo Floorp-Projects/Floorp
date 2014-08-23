@@ -143,6 +143,23 @@ var obj = {
 }
 assertEq(obj.a.call(), "hey");
 
+// Duplicates
+var obj = {
+    meth : 3,
+    meth() { return 4; },
+    meth() { return 5; }
+}
+assertEq(obj.meth(), 5);
+
+var obj = {
+    meth() { return 4; },
+    meth() { return 5; },
+    meth : 3
+}
+assertEq(obj.meth, 3);
+assertThrowsInstanceOf(function() {obj.meth();}, TypeError);
+
+
 // Tests provided by benvie in the bug to distinguish from ES5 desugar.
 assertEq(({ method() {} }).method.name, "method");
 assertThrowsInstanceOf(function() {({ method() { method() } }).method() }, ReferenceError);
