@@ -1508,9 +1508,6 @@ pref("browser.newtab.url", "about:newtab");
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
-// Remembers if the about:newtab intro has been shown
-pref("browser.newtabpage.introShown", false);
-
 // Toggles the content of 'about:newtab'. Shows the grid when enabled.
 pref("browser.newtabpage.enabled", true);
 
@@ -1518,13 +1515,13 @@ pref("browser.newtabpage.enabled", true);
 pref("browser.newtabpage.rows", 3);
 
 // number of columns of newtab grid
-pref("browser.newtabpage.columns", 5);
+pref("browser.newtabpage.columns", 3);
 
 // directory tiles download URL
-pref("browser.newtabpage.directory.source", "https://tiles.up.mozillalabs.com/v2/links/fetch");
+pref("browser.newtabpage.directory.source", "chrome://global/content/directoryLinks.json");
 
-// endpoint to send newtab click and view pings
-pref("browser.newtabpage.directory.ping", "https://tiles.up.mozillalabs.com/v2/links/");
+// endpoint to send newtab click reports
+pref("browser.newtabpage.directory.reportClickEndPoint", "https://tiles.up.mozillalabs.com/ping/click");
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);

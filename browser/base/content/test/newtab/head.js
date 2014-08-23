@@ -26,47 +26,31 @@ let gWindow = window;
 
 // Default to dummy/empty directory links
 let gDirectorySource = 'data:application/json,{"test":1}';
-let gOrigDirectorySource;
 
-// The tests assume all 3 rows and all 3 columns of sites are shown, but the
-// window may be too small to actually show everything.  Resize it if necessary.
-let requiredSize = {};
-requiredSize.innerHeight =
+// The tests assume all three rows of sites are shown, but the window may be too
+// short to actually show three rows.  Resize it if necessary.
+let requiredInnerHeight =
   40 + 32 + // undo container + bottom margin
   44 + 32 + // search bar + bottom margin
-  (3 * (180 + 32)) + // 3 rows * (tile height + title and bottom margin)
-  100; // breathing room
-requiredSize.innerWidth =
-  (3 * (290 + 20)) + // 3 cols * (tile width + side margins)
+  (3 * (150 + 32)) + // 3 rows * (tile height + title and bottom margin)
   100; // breathing room
 
-let oldSize = {};
-Object.keys(requiredSize).forEach(prop => {
-  info([prop, gBrowser.contentWindow[prop], requiredSize[prop]]);
-  if (gBrowser.contentWindow[prop] < requiredSize[prop]) {
-    oldSize[prop] = gBrowser.contentWindow[prop];
-    info("Changing browser " + prop + " from " + oldSize[prop] + " to " +
-         requiredSize[prop]);
-    gBrowser.contentWindow[prop] = requiredSize[prop];
-  }
-});
-let (screenHeight = {}, screenWidth = {}) {
+let oldInnerHeight = null;
+if (gBrowser.contentWindow.innerHeight < requiredInnerHeight) {
+  oldInnerHeight = gBrowser.contentWindow.innerHeight;
+  info("Changing browser inner height from " + oldInnerHeight + " to " +
+       requiredInnerHeight);
+  gBrowser.contentWindow.innerHeight = requiredInnerHeight;
+  let screenHeight = {};
   Cc["@mozilla.org/gfx/screenmanager;1"].
     getService(Ci.nsIScreenManager).
     primaryScreen.
-    GetAvailRectDisplayPix({}, {}, screenWidth, screenHeight);
+    GetAvailRectDisplayPix({}, {}, {}, screenHeight);
   screenHeight = screenHeight.value;
-  screenWidth = screenWidth.value;
   if (screenHeight < gBrowser.contentWindow.outerHeight) {
     info("Warning: Browser outer height is now " +
          gBrowser.contentWindow.outerHeight + ", which is larger than the " +
          "available screen height, " + screenHeight +
-         ". That may cause problems.");
-  }
-  if (screenWidth < gBrowser.contentWindow.outerWidth) {
-    info("Warning: Browser outer width is now " +
-         gBrowser.contentWindow.outerWidth + ", which is larger than the " +
-         "available screen width, " + screenWidth +
          ". That may cause problems.");
   }
 }
@@ -75,11 +59,8 @@ registerCleanupFunction(function () {
   while (gWindow.gBrowser.tabs.length > 1)
     gWindow.gBrowser.removeTab(gWindow.gBrowser.tabs[1]);
 
-  Object.keys(oldSize).forEach(prop => {
-    if (oldSize[prop]) {
-      gBrowser.contentWindow[prop] = oldSize[prop];
-    }
-  });
+  if (oldInnerHeight)
+    gBrowser.contentWindow.innerHeight = oldInnerHeight;
 
   // Stop any update timers to prevent unexpected updates in later tests
   let timer = NewTabUtils.allPages._scheduleUpdateTimeout;
@@ -89,7 +70,7 @@ registerCleanupFunction(function () {
   }
 
   Services.prefs.clearUserPref(PREF_NEWTAB_ENABLED);
-  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gOrigDirectorySource);
+  Services.prefs.clearUserPref(PREF_NEWTAB_DIRECTORYSOURCE);
 
   return watchLinksChangeOnce();
 });
@@ -120,9 +101,6 @@ function test() {
     // Wait for hidden page to update with the desired links
     whenPagesUpdated(() => TestRunner.run(), true);
   });
-
-  // Save the original directory source (which is set globally for tests)
-  gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gDirectorySource);
 }
 
@@ -207,20 +185,17 @@ function getCell(aIndex) {
  * Allows to provide a list of links that is used to construct the grid.
  * @param aLinksPattern the pattern (see below)
  *
- * Example: setLinks("-1,0,1,2,3")
- * Result: [{url: "http://example.com/", title: "site#-1"},
- *          {url: "http://example0.com/", title: "site#0"},
- *          {url: "http://example1.com/", title: "site#1"},
- *          {url: "http://example2.com/", title: "site#2"},
- *          {url: "http://example3.com/", title: "site#3"}]
+ * Example: setLinks("1,2,3")
+ * Result: [{url: "http://example.com/#1", title: "site#1"},
+ *          {url: "http://example.com/#2", title: "site#2"}
+ *          {url: "http://example.com/#3", title: "site#3"}]
  */
 function setLinks(aLinks) {
   let links = aLinks;
 
   if (typeof links == "string") {
     links = aLinks.split(/\s*,\s*/).map(function (id) {
-      return {url: "http://example" + (id != "-1" ? id : "") + ".com/",
-              title: "site#" + id};
+      return {url: "http://example.com/#" + id, title: "site#" + id};
     });
   }
 
@@ -291,7 +266,7 @@ function fillHistory(aLinks, aCallback) {
  * @param aLinksPattern the pattern (see below)
  *
  * Example: setPinnedLinks("3,,1")
- * Result: 'http://example3.com/' is pinned in the first cell. 'http://example1.com/' is
+ * Result: 'http://example.com/#3' is pinned in the first cell. 'http://example.com/#1' is
  *         pinned in the third cell.
  */
 function setPinnedLinks(aLinks) {
@@ -300,8 +275,7 @@ function setPinnedLinks(aLinks) {
   if (typeof links == "string") {
     links = aLinks.split(/\s*,\s*/).map(function (id) {
       if (id)
-        return {url: "http://example" + (id != "-1" ? id : "") + ".com/",
-                title: "site#" + id};
+        return {url: "http://example.com/#" + id, title: "site#" + id};
     });
   }
 
@@ -363,9 +337,9 @@ function addNewTabPageTab() {
  * @param the array of sites to compare with (optional)
  *
  * Example: checkGrid("3p,2,,1p")
- * Result: We expect the first cell to contain the pinned site 'http://example3.com/'.
- *         The second cell contains 'http://example2.com/'. The third cell is empty.
- *         The fourth cell contains the pinned site 'http://example4.com/'.
+ * Result: We expect the first cell to contain the pinned site 'http://example.com/#3'.
+ *         The second cell contains 'http://example.com/#2'. The third cell is empty.
+ *         The fourth cell contains the pinned site 'http://example.com/#4'.
  */
 function checkGrid(aSitesPattern, aSites) {
   let length = aSitesPattern.split(",").length;
@@ -375,12 +349,13 @@ function checkGrid(aSitesPattern, aSites) {
       return "";
 
     let pinned = aSite.isPinned();
-    let hasPinnedAttr = aSite.node.hasAttribute("pinned");
+    let pinButton = aSite.node.querySelector(".newtab-control-pin");
+    let hasPinnedAttr = pinButton.hasAttribute("pinned");
 
     if (pinned != hasPinnedAttr)
       ok(false, "invalid state (site.isPinned() != site[pinned])");
 
-    return aSite.url.replace(/^http:\/\/example(\d+)\.com\/$/, "$1") + (pinned ? "p" : "");
+    return aSite.url.replace(/^http:\/\/example\.com\/#(\d+)$/, "$1") + (pinned ? "p" : "");
   });
 
   is(current, aSitesPattern, "grid status = " + aSitesPattern);
@@ -497,7 +472,7 @@ function startAndCompleteDragOperation(aSource, aDest, aCallback) {
  */
 function createExternalDropIframe() {
   const url = "data:text/html;charset=utf-8," +
-              "<a id='link' href='http://example99.com/'>link</a>";
+              "<a id='link' href='http://example.com/%2399'>link</a>";
 
   let deferred = Promise.defer();
   let doc = getContentDocument();
@@ -505,8 +480,6 @@ function createExternalDropIframe() {
   iframe.setAttribute("src", url);
   iframe.style.width = "50px";
   iframe.style.height = "50px";
-  iframe.style.position = "absolute";
-  iframe.style.zIndex = 50;
 
   let margin = doc.getElementById("newtab-margin-top");
   margin.appendChild(iframe);
@@ -618,7 +591,6 @@ function createDragEvent(aEventType, aData) {
  */
 function whenPagesUpdated(aCallback, aOnlyIfHidden=false) {
   let page = {
-    observe: _ => _,
     update: function (onlyIfHidden=false) {
       if (onlyIfHidden == aOnlyIfHidden) {
         NewTabUtils.allPages.unregister(this);
