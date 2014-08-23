@@ -1297,6 +1297,15 @@ LIRGenerator::visitAbs(MAbs *ins)
 }
 
 bool
+LIRGenerator::visitClz(MClz *ins)
+{
+    MDefinition *num = ins->num();
+
+    LClzI *lir = new(alloc()) LClzI(useRegisterAtStart(num));
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitSqrt(MSqrt *ins)
 {
     MDefinition *num = ins->input();

@@ -153,6 +153,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitMinMaxD(LMinMaxD *ins);
     virtual bool visitAbsD(LAbsD *ins);
     virtual bool visitAbsF(LAbsF *ins);
+    virtual bool visitClzI(LClzI *ins);
     virtual bool visitSqrtD(LSqrtD *ins);
     virtual bool visitSqrtF(LSqrtF *ins);
     virtual bool visitPowHalfD(LPowHalfD *ins);

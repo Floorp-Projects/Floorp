@@ -545,6 +545,28 @@ CodeGeneratorX86Shared::visitAbsF(LAbsF *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitClzI(LClzI *ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    // bsr is undefined on 0
+    Label done, nonzero;
+    if (!ins->mir()->operandIsNeverZero()) {
+        masm.testl(input, input);
+        masm.j(Assembler::NonZero, &nonzero);
+        masm.move32(Imm32(32), output);
+        masm.jump(&done);
+    }
+
+    masm.bind(&nonzero);
+    masm.bsr(input, output);
+    masm.xor32(Imm32(0x1F), output);
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSqrtD(LSqrtD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());

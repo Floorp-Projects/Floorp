@@ -324,6 +324,7 @@ private:
         OP_SETCC            = 0x90,
         OP2_IMUL_GvEv       = 0xAF,
         OP2_CMPXCHG_GvEw    = 0xB1,
+        OP2_BSR_GvEv        = 0xBD,
         OP2_MOVSX_GvEb      = 0xBE,
         OP2_MOVSX_GvEw      = 0xBF,
         OP2_MOVZX_GvEb      = 0xB6,
@@ -1300,6 +1301,12 @@ public:
         }
     }
 #endif
+
+    void bsr_rr(RegisterID src, RegisterID dst)
+    {
+        spew("bsr        %s, %s", nameIReg(4, src), nameIReg(4, dst));
+        m_formatter.twoByteOp(OP2_BSR_GvEv, dst, src);
+    }
 
     void imull_rr(RegisterID src, RegisterID dst)
     {
