@@ -2864,7 +2864,7 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
-    isRoot = mFrameMetrics.mIsRoot;
+    isRoot = mFrameMetrics.GetIsRoot();
     scrollableSize = mFrameMetrics.mScrollableRect.Size();
     contentRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
     contentRect.MoveTo(mCurrentAsyncScrollOffset);
