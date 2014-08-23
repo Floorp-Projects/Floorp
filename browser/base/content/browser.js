@@ -6485,9 +6485,14 @@ var gIdentityHandler = {
       this.setMode(this.IDENTITY_MODE_UNKNOWN);
     }
 
-    // Ensure the doorhanger is shown when mixed active content is blocked.
-    if (state & nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT)
+    // Show the doorhanger when:
+    // - mixed active content is blocked
+    // - mixed active content is loaded (detected but not blocked)
+    if (state &
+        (nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT |
+         nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT)) {
       this.showBadContentDoorhanger(state);
+    }
   },
 
   showBadContentDoorhanger : function(state) {
@@ -6495,7 +6500,7 @@ var gIdentityHandler = {
       PopupNotifications.getNotification("bad-content",
         gBrowser.selectedBrowser);
 
-    // If we've already got an active notification, bail out to avoid showing it repeatedly.
+    // Avoid showing the same notification (same state) repeatedly.
     if (currentNotification && currentNotification.options.state == state)
       return;
 
@@ -6505,9 +6510,15 @@ var gIdentityHandler = {
       state: state
     };
 
+    // default
+    let iconState = "bad-content-blocked-notification-icon";
+
+    if (state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
+      iconState = "bad-content-unblocked-notification-icon";
+    }
+
     PopupNotifications.show(gBrowser.selectedBrowser, "bad-content",
-                            "", "bad-content-blocked-notification-icon",
-                            null, null, options);
+                            "", iconState, null, null, options);
   },
 
   /**

@@ -725,6 +725,7 @@
                 <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="plugin-install-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="bad-content-blocked-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="bad-content-unblocked-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="webRTC-shareMicrophone-notification-icon" class="notification-anchor-icon" role="button"/>
