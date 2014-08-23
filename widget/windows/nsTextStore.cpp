@@ -1426,15 +1426,13 @@ nsTextStore::LockedContent()
   }
 
   if (!mLockedContent.IsInitialized()) {
-    MOZ_ASSERT(mWidget && !mWidget->Destroyed());
+    nsAutoString text;
+    if (NS_WARN_IF(!GetCurrentText(text))) {
+      mLockedContent.Clear();
+      return mLockedContent;
+    }
 
-    WidgetQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, mWidget);
-    queryText.InitForQueryTextContent(0, UINT32_MAX);
-    mWidget->InitEvent(queryText);
-    mWidget->DispatchWindowEvent(&queryText);
-    NS_ENSURE_TRUE(queryText.mSucceeded, mLockedContent);
-
-    mLockedContent.Init(queryText.mReply.mString);
+    mLockedContent.Init(text);
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
@@ -1443,6 +1441,29 @@ nsTextStore::LockedContent()
           this, mLockedContent.Text().Length()));
 
   return mLockedContent;
+}
+
+bool
+nsTextStore::GetCurrentText(nsAString& aTextContent)
+{
+  if (mLockedContent.IsInitialized()) {
+    aTextContent = mLockedContent.Text();
+    return true;
+  }
+
+  MOZ_ASSERT(mWidget && !mWidget->Destroyed());
+
+  WidgetQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, mWidget);
+  queryText.InitForQueryTextContent(0, UINT32_MAX);
+  mWidget->InitEvent(queryText);
+  mWidget->DispatchWindowEvent(&queryText);
+  if (NS_WARN_IF(!queryText.mSucceeded)) {
+    aTextContent.Truncate();
+    return false;
+  }
+
+  aTextContent = queryText.mReply.mString;
+  return true;
 }
 
 nsTextStore::Selection&
