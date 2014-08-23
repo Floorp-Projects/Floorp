@@ -1788,10 +1788,6 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
     return NS_OK;
   }
 
-  // Telemetry.
-  xpc::RecordDonatedNode(oldCompartment);
-  xpc::RecordAdoptedNode(newCompartment);
-
   nsISupports* native = UnwrapDOMObjectToISupports(aObj);
   if (!native) {
     return NS_OK;
