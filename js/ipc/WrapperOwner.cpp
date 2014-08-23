@@ -679,7 +679,7 @@ IsCPOW(JSObject *obj)
 bool
 IsWrappedCPOW(JSObject *obj)
 {
-    JSObject *unwrapped = js::CheckedUnwrap(obj, true);
+    JSObject *unwrapped = js::UncheckedUnwrap(obj, true);
     if (!unwrapped)
         return false;
     return IsCPOW(unwrapped);
@@ -775,7 +775,7 @@ WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *ob
     // wrappers, then the wrapper might be GCed while the target remained alive.
     // Whenever operating on an object that comes from the table, we wrap it
     // in findObjectById.
-    obj = js::CheckedUnwrap(obj, false);
+    obj = js::UncheckedUnwrap(obj, false);
     if (obj && IsCPOW(obj) && OwnerOf(obj) == this) {
         *objVarp = LocalObject(idOf(obj));
         return true;
