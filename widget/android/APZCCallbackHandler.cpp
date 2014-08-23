@@ -91,7 +91,7 @@ APZCCallbackHandler::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aFrameMetrics.GetScrollId() != FrameMetrics::NULL_SCROLL_ID);
 
-    if (aFrameMetrics.mIsRoot) {
+    if (aFrameMetrics.GetIsRoot()) {
         nsIDOMWindowUtils* utils = GetDOMWindowUtils();
         if (utils && APZCCallbackHelper::HasValidPresShellId(utils, aFrameMetrics)) {
             FrameMetrics metrics = aFrameMetrics;
