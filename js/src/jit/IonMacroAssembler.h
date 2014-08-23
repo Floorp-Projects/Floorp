@@ -656,11 +656,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template <typename T>
     void callPreBarrier(const T &address, MIRType type) {
-        JS_ASSERT(type == MIRType_Value ||
-                  type == MIRType_String ||
-                  type == MIRType_Symbol ||
-                  type == MIRType_Object ||
-                  type == MIRType_Shape);
         Label done;
 
         if (type == MIRType_Value)
@@ -670,9 +665,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         computeEffectiveAddress(address, PreBarrierReg);
 
         const JitRuntime *rt = GetIonContext()->runtime->jitRuntime();
-        JitCode *preBarrier = (type == MIRType_Shape)
-                              ? rt->shapePreBarrier()
-                              : rt->valuePreBarrier();
+        JitCode *preBarrier = rt->preBarrier(type);
 
         call(preBarrier);
         Pop(PreBarrierReg);
@@ -682,12 +675,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template <typename T>
     void patchableCallPreBarrier(const T &address, MIRType type) {
-        JS_ASSERT(type == MIRType_Value ||
-                  type == MIRType_String ||
-                  type == MIRType_Symbol ||
-                  type == MIRType_Object ||
-                  type == MIRType_Shape);
-
         Label done;
 
         // All barriers are off by default.

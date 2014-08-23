@@ -1179,21 +1179,21 @@ CodeGeneratorShared::omitOverRecursedCheck() const
 }
 
 void
-CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation *index, MIRType type)
+CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation *index)
 {
     if (index->isConstant()) {
         Address address(base, ToInt32(index) * sizeof(Value));
-        masm.patchableCallPreBarrier(address, type);
+        masm.patchableCallPreBarrier(address, MIRType_Value);
     } else {
         BaseIndex address(base, ToRegister(index), TimesEight);
-        masm.patchableCallPreBarrier(address, type);
+        masm.patchableCallPreBarrier(address, MIRType_Value);
     }
 }
 
 void
-CodeGeneratorShared::emitPreBarrier(Address address, MIRType type)
+CodeGeneratorShared::emitPreBarrier(Address address)
 {
-    masm.patchableCallPreBarrier(address, type);
+    masm.patchableCallPreBarrier(address, MIRType_Value);
 }
 
 void
