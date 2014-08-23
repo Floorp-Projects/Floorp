@@ -253,7 +253,7 @@ ICEntryKindToString(ICEntry::Kind kind)
       case ICEntry::Kind_DebugEpilogue:
         return "debug epilogue";
       default:
-        MOZ_ASSUME_UNREACHABLE("bad ICEntry kind");
+        MOZ_CRASH("bad ICEntry kind");
     }
 }
 
@@ -612,7 +612,7 @@ CloneOldBaselineStub(JSContext *cx, DebugModeOSREntryVector &entries, size_t ent
 #undef CASE_KIND
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad stub kind");
+        MOZ_CRASH("Bad stub kind");
     }
 
     if (!entry.newStub)
@@ -714,7 +714,7 @@ BaselineDebugModeOSRInfo::popValueInto(PCMappingSlotInfo::SlotLocation loc, Valu
       case PCMappingSlotInfo::SlotIgnore:
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad slot location");
+        MOZ_CRASH("Bad slot location");
     }
 
     stackAdjust++;
