@@ -19,8 +19,8 @@ class nsImageBoxFrame;
 
 class nsDisplayXULImage;
 
-class nsImageBoxListener : public imgINotificationObserver,
-                           public imgIOnloadBlocker
+class nsImageBoxListener MOZ_FINAL : public imgINotificationObserver,
+                                     public imgIOnloadBlocker
 {
 public:
   nsImageBoxListener();
@@ -37,7 +37,7 @@ private:
   nsImageBoxFrame *mFrame;
 };
 
-class nsImageBoxFrame : public nsLeafBoxFrame
+class nsImageBoxFrame MOZ_FINAL : public nsLeafBoxFrame
 {
 public:
   typedef mozilla::layers::LayerManager LayerManager;

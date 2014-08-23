@@ -64,7 +64,7 @@ using namespace mozilla::dom;
 // do we wait before checking again?
 #define SMOOTH_INTERVAL 100
 
-class nsListScrollSmoother : public nsITimerCallback
+class nsListScrollSmoother MOZ_FINAL : public nsITimerCallback
 {
 private:
   virtual ~nsListScrollSmoother();

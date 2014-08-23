@@ -13,7 +13,6 @@ LIBRARY_NAME = 'omxpluginkk'
 FORCE_SHARED_LIB = True
 
 LOCAL_INCLUDES += [
-    '../../../content/media/plugins',
     '../include/ics',
     '../include/ics/media/stagefright/openmax',
 ]

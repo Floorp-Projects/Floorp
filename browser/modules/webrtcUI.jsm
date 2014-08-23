@@ -777,14 +777,6 @@ function updateBrowserSpecificIndicator(aBrowser) {
         perms.remove(uri.host, "microphone");
 
       Services.obs.notifyObservers(null, "getUserMedia:revoke", windowId);
-
-      // Performing an action from a notification removes it, but if the page
-      // uses screensharing and a device, we may have another notification to remove.
-      let outerWindowID = Services.wm.getCurrentInnerWindowWithId(windowId)
-                                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                                     .getInterface(Ci.nsIDOMWindowUtils)
-                                     .outerWindowID;
-      removeBrowserSpecificIndicator(null, null, outerWindowID);
     }
   }];
   let options = {
@@ -827,6 +819,13 @@ function updateBrowserSpecificIndicator(aBrowser) {
       return aTopic == "swapping";
     }
   };
+  secondaryActions = [{
+    label: stringBundle.getString("getUserMedia.stopSharing.label"),
+    accessKey: stringBundle.getString("getUserMedia.stopSharing.accesskey"),
+    callback: function () {
+      Services.obs.notifyObservers(null, "getUserMedia:revoke", "screen:" + windowId);
+    }
+  }];
   // If we are sharing both a window and the screen, show 'Screen'.
   let stringId = "getUserMedia.sharing" + (screen.value ? "Screen" : "Window") + ".message";
   chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingScreen",

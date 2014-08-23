@@ -48,8 +48,8 @@ class IndexedDBDatabaseChild;
 class IndexedDBDatabaseParent;
 struct ObjectStoreInfoGuts;
 
-class IDBDatabase : public IDBWrapperCache,
-                    public nsIOfflineStorage
+class IDBDatabase MOZ_FINAL : public IDBWrapperCache,
+                              public nsIOfflineStorage
 {
   friend class AsyncConnectionHelper;
   friend class IndexedDatabaseManager;

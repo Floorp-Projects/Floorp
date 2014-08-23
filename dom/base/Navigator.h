@@ -105,9 +105,9 @@ class AudioChannelManager;
 #endif
 } // namespace system
 
-class Navigator : public nsIDOMNavigator
-                , public nsIMozNavigatorNetwork
-                , public nsWrapperCache
+class Navigator MOZ_FINAL : public nsIDOMNavigator
+                          , public nsIMozNavigatorNetwork
+                          , public nsWrapperCache
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);

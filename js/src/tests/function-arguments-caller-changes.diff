@@ -1,0 +1,234 @@
+diff --git a/js/src/tests/test262/ch13/13.2/13.2-29-s.js b/js/src/tests/test262/ch13/13.2/13.2-29-s.js
+--- a/js/src/tests/test262/ch13/13.2/13.2-29-s.js
++++ b/js/src/tests/test262/ch13/13.2/13.2-29-s.js
+@@ -8,12 +8,12 @@
+  * @description StrictMode - property named 'caller' of function objects is not configurable
+  * @onlyStrict
+  */
+ 
+ 
+ 
+ function testcase() {
+         function foo() {"use strict";}
+-        return ! Object.getOwnPropertyDescriptor(foo, 
+-                                                  "caller").configurable;
++        return Object.getOwnPropertyDescriptor(foo, 
++                                               "caller") === undefined;
+ }
+-runTestCase(testcase);
+\ No newline at end of file
++runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch13/13.2/13.2-30-s.js b/js/src/tests/test262/ch13/13.2/13.2-30-s.js
+--- a/js/src/tests/test262/ch13/13.2/13.2-30-s.js
++++ b/js/src/tests/test262/ch13/13.2/13.2-30-s.js
+@@ -7,12 +7,12 @@
+  * @path ch13/13.2/13.2-30-s.js
+  * @description StrictMode - property named 'caller' of function objects is not configurable
+  * @onlyStrict
+  */
+ 
+ 
+ 
+ function testcase() {
+-        return ! Object.getOwnPropertyDescriptor(Function("'use strict';"), 
+-                                                  "caller").configurable;
++        return Object.getOwnPropertyDescriptor(Function("'use strict';"), 
++                                               "caller") === undefined;
+ }
+-runTestCase(testcase);
+\ No newline at end of file
++runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch13/13.2/13.2-31-s.js b/js/src/tests/test262/ch13/13.2/13.2-31-s.js
+--- a/js/src/tests/test262/ch13/13.2/13.2-31-s.js
++++ b/js/src/tests/test262/ch13/13.2/13.2-31-s.js
+@@ -7,12 +7,12 @@
+  * @path ch13/13.2/13.2-31-s.js
+  * @description StrictMode - property named 'caller' of function objects is not configurable
+  * @onlyStrict
+  */
+ 
+ 
+ 
+ function testcase() {
+-        return ! Object.getOwnPropertyDescriptor(new Function("'use strict';"), 
+-                                                  "caller").configurable;
++        return Object.getOwnPropertyDescriptor(new Function("'use strict';"), 
++                                               "caller") === undefined;
+ }
+-runTestCase(testcase);
+\ No newline at end of file
++runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch13/13.2/13.2-32-s.js b/js/src/tests/test262/ch13/13.2/13.2-32-s.js
+--- a/js/src/tests/test262/ch13/13.2/13.2-32-s.js
++++ b/js/src/tests/test262/ch13/13.2/13.2-32-s.js
+@@ -8,12 +8,12 @@
+  * @description StrictMode - property named 'caller' of function objects is not configurable
+  * @onlyStrict
+  */
+ 
+ 
+ 
+ function testcase() {
+         var funcExpr = function () { "use strict";};
+-        return ! Object.getOwnPropertyDescriptor(funcExpr, 
+-                                                  "caller").configurable;
++        return Object.getOwnPropertyDescriptor(funcExpr, 
++                                                  "caller") === undefined;
+ }
+-runTestCase(testcase);
+\ No newline at end of file
++runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch13/13.2/13.2-33-s.js b/js/src/tests/test262/ch13/13.2/13.2-33-s.js
+--- a/js/src/tests/test262/ch13/13.2/13.2-33-s.js
++++ b/js/src/tests/test262/ch13/13.2/13.2-33-s.js
+@@ -8,12 +8,12 @@
+  * @description StrictMode - property named 'arguments' of function objects is not configurable
+  * @onlyStrict
+  */
+ 
+ 
+ 
+ function testcase() {
+         function foo() {"use strict";}
+-        return ! Object.getOwnPropertyDescriptor(foo, 
+-                                                  "arguments").configurable;
++        return Object.getOwnPropertyDescriptor(foo, 
++                                               "arguments") === undefined;
+ }
+-runTestCase(testcase);
+\ No newline at end of file
++runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch13/13.2/13.2-34-s.js b/js/src/tests/test262/ch13/13.2/13.2-34-s.js
+--- a/js/src/tests/test262/ch13/13.2/13.2-34-s.js
++++ b/js/src/tests/test262/ch13/13.2/13.2-34-s.js
+@@ -7,12 +7,12 @@
+  * @path ch13/13.2/13.2-34-s.js
+  * @description StrictMode - property named 'arguments' of function objects is not configurable
+  * @onlyStrict
+  */
+ 
+ 
+ 
+ function testcase() {
+-        return ! Object.getOwnPropertyDescriptor(Function("'use strict';"), 
+-                                                  "arguments").configurable;
++        return Object.getOwnPropertyDescriptor(Function("'use strict';"), 
++                                               "arguments") === undefined;
+ }
+-runTestCase(testcase);
+\ No newline at end of file
++runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch13/13.2/13.2-35-s.js b/js/src/tests/test262/ch13/13.2/13.2-35-s.js
+--- a/js/src/tests/test262/ch13/13.2/13.2-35-s.js
++++ b/js/src/tests/test262/ch13/13.2/13.2-35-s.js
+@@ -7,12 +7,12 @@
+  * @path ch13/13.2/13.2-35-s.js
+  * @description StrictMode - property named 'arguments' of function objects is not configurable
+  * @onlyStrict
+  */
+ 
+ 
+ 
+ function testcase() {
+-        return ! Object.getOwnPropertyDescriptor(new Function("'use strict';"), 
+-                                                  "arguments").configurable;
++        return Object.getOwnPropertyDescriptor(new Function("'use strict';"), 
++                                               "arguments") === undefined;
+ }
+-runTestCase(testcase);
+\ No newline at end of file
++runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch13/13.2/13.2-36-s.js b/js/src/tests/test262/ch13/13.2/13.2-36-s.js
+--- a/js/src/tests/test262/ch13/13.2/13.2-36-s.js
++++ b/js/src/tests/test262/ch13/13.2/13.2-36-s.js
+@@ -8,12 +8,12 @@
+  * @description StrictMode - property named 'arguments' of function objects is not configurable
+  * @onlyStrict
+  */
+ 
+ 
+ 
+ function testcase() {
+         var funcExpr = function () { "use strict";};
+-        return ! Object.getOwnPropertyDescriptor(funcExpr, 
+-                                                  "arguments").configurable;
++        return Object.getOwnPropertyDescriptor(funcExpr, 
++                                                "arguments") === undefined;
+ }
+-runTestCase(testcase);
+\ No newline at end of file
++runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch13/13.2/S13.2.3_A1.js b/js/src/tests/test262/ch13/13.2/S13.2.3_A1.js
+--- a/js/src/tests/test262/ch13/13.2/S13.2.3_A1.js
++++ b/js/src/tests/test262/ch13/13.2/S13.2.3_A1.js
+@@ -1,49 +1,61 @@
+ // Copyright 2011 Google Inc.  All rights reserved.
+ // This code is governed by the BSD license found in the LICENSE file.
+ 
+ /**
+  * @path ch13/13.2/S13.2.3_A1.js
+- * @description check that all poisoning use the [[ThrowTypeError]]
++ * @description check that strict mode functions/arguments have
++ *   [[ThrowTypeError]]-like behavior
+  * function object.
+  * @onlyStrict
+  */
+ 
+ "use strict";
+-var poison = Object.getOwnPropertyDescriptor(function() {}, 'caller').get;
++var poison = Object.getOwnPropertyDescriptor(Function.prototype, 'caller').get;
+ 
+ if (typeof poison !== 'function') {
+   $ERROR("#1: A strict function's .caller should be poisoned with a function");
+ }
+ var threw = null;
+ try {
+-  poison();
++  poison.call(function() {});
+ } catch (err) {
+   threw = err;
+ }
+ if (!threw || !(threw instanceof TypeError)) {
+   $ERROR("#2: Poisoned property should throw TypeError");
+ }
+ 
++function checkNotPresent(obj, name) {
++  var desc = Object.getOwnPropertyDescriptor(obj, name);
++  if (desc !== undefined) {
++    $ERROR("#3: " + name + " should not appear as a descriptor");
++  }
++}
++
++var argumentsPoison =
++  Object.getOwnPropertyDescriptor(function() { return arguments; }(),
++                                  "callee").get;
++
+ function checkPoison(obj, name) {
+   var desc = Object.getOwnPropertyDescriptor(obj, name);
+   if (desc.enumerable) {
+     $ERROR("#3: Poisoned " + name + " should not be enumerable");
+   }
+   if (desc.configurable) {
+     $ERROR("#4: Poisoned " + name + " should not be configurable");
+   }
+-  if (poison !== desc.get) {
++  if (argumentsPoison !== desc.get) {
+     $ERROR("#5: " + name + "'s getter not poisoned with same poison");
+   }
+-  if (poison !== desc.set) {
++  if (argumentsPoison !== desc.set) {
+     $ERROR("#6: " + name + "'s setter not poisoned with same poison");
+   }
+ }
+ 
+-checkPoison(function() {}, 'caller');
+-checkPoison(function() {}, 'arguments');
++checkNotPresent(function() {}, 'caller');
++checkNotPresent(function() {}, 'arguments');
+ checkPoison((function() { return arguments; })(), 'caller');
+ checkPoison((function() { return arguments; })(), 'callee');
+-checkPoison((function() {}).bind(null), 'caller');
+-checkPoison((function() {}).bind(null), 'arguments');
++checkNotPresent((function() {}).bind(null), 'caller');
++checkNotPresent((function() {}).bind(null), 'arguments');
+ 

@@ -1,0 +1,68 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Bug 1045994 - Add a chrome-only property to inspect if an animation is
+       running on the compositor or not</title>
+<script type="application/javascript"
+  src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript"
+  src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css"
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<style>
+@keyframes anim {
+  to { transform: translate(100px) }
+}
+.target {
+  // Element needs geometry to be eligible for layerization
+  width: 100px;
+  height: 100px;
+  background-color: white;
+}
+</style>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1045994"
+  target="_blank">Mozilla Bug 1045994</a>
+<div class="target"></div>
+<script>
+'use strict';
+
+/** Test for bug 1045994 - Add a chrome-only property to inspect if an
+    animation is running on the compositor or not **/
+
+SimpleTest.waitForExplicitFinish();
+
+var div = document.querySelector('div.target');
+
+const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
+var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
+                  SpecialPowers.getBoolPref(OMTAPrefKey);
+
+// FIXME: When we implement Element.animate, use that here instead of CSS
+// so that we remove any dependency on the CSS mapping.
+div.style.animation = 'anim 100s';
+window.getComputedStyle(div).animationName;
+var player = div.getAnimationPlayers()[0];
+
+// Wait so that animation can be set up.
+// FIXME: When we implement the AnimationPlayer.ready promise we should wait
+// on that here.
+window.requestAnimationFrame(function() {
+  is(player.isRunningOnCompositor, omtaEnabled,
+     'AnimationPlayer reports that it is running on the compositor'
+     + ' during playback');
+
+  div.style.animationPlayState = 'paused';
+  window.getComputedStyle(div).animationPlayState;
+
+  // FIXME: Likewise, we should wait on AnimationPlayer.ready here too.
+  window.requestAnimationFrame(function() {
+    is(player.isRunningOnCompositor, false,
+       'AnimationPlayer reports that it is NOT running on the compositor'
+       + ' when paused');
+    SimpleTest.finish();
+  });
+});
+</script>
+</body>

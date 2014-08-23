@@ -184,7 +184,7 @@ protected:
 
 // A nsCSSFontFaceStyleDecl is always embedded in a nsCSSFontFaceRule.
 class nsCSSFontFaceRule;
-class nsCSSFontFaceStyleDecl : public nsICSSDeclaration
+class nsCSSFontFaceStyleDecl MOZ_FINAL : public nsICSSDeclaration
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

@@ -459,6 +459,19 @@ TelephonyService.prototype = {
     return hasConference ? numCalls + 1 : numCalls;
   },
 
+  /**
+   * Get arbitrary one of active call.
+   */
+  _getOneActiveCall: function(aClientId) {
+    for (let index in this._currentCalls[aClientId]) {
+      let call = this._currentCalls[aClientId][index];
+      if (call.state === nsITelephonyService.CALL_STATE_CONNECTED) {
+        return call;
+      }
+    }
+    return null;
+  },
+
   _addCdmaChildCall: function(aClientId, aNumber, aParentId) {
     let childCall = {
       callIndex: CDMA_SECOND_CALL_INDEX,
@@ -509,6 +522,7 @@ TelephonyService.prototype = {
     });
   },
 
+  cachedDialRequest: null,
   isDialing: false,
 
   dial: function(aClientId, aNumber, aIsDialEmergency, aCallback) {
@@ -563,7 +577,25 @@ TelephonyService.prototype = {
         }
       }
 
-      this._dialInternal(aClientId, options, aCallback);
+      // Before we dial, we have to hold the active call first.
+      let activeCall = this._getOneActiveCall(aClientId);
+      if (!activeCall) {
+        this._dialInternal(aClientId, options, aCallback);
+      } else {
+        if (DEBUG) debug("There is an active call. Hold it first before dial.");
+
+        this.cachedDialRequest = {
+          clientId: aClientId,
+          options: options,
+          callback: aCallback
+        };
+
+        if (activeCall.isConference) {
+          this.holdConference(aClientId);
+        } else {
+          this.holdCall(aClientId, activeCall.callIndex);
+        }
+      }
     }, cause => {
       aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
     });
@@ -588,7 +620,7 @@ TelephonyService.prototype = {
       } else {
         // RIL doesn't hold the 2nd call. We create one by ourselves.
         aCallback.notifyDialSuccess(CDMA_SECOND_CALL_INDEX, response.number);
-        this._addCdmaChildCall(aClientId, aNumber, currentCdmaCallIndex);
+        this._addCdmaChildCall(aClientId, response.number, currentCdmaCallIndex);
       }
     });
   },
@@ -897,6 +929,15 @@ TelephonyService.prototype = {
       call.namePresentaation = pick(aCall.namePresentation, nsITelephonyService.CALL_PRESENTATION_ALLOWED);
 
       this._currentCalls[aClientId][aCall.callIndex] = call;
+    }
+
+    // Handle cached dial request.
+    if (this.cachedDialRequest && !this._getOneActiveCall()) {
+      if (DEBUG) debug("All calls held. Perform the cached dial request.");
+
+      let request = this.cachedDialRequest;
+      this._dialInternal(request.clientId, request.options, request.callback);
+      this.cachedDialRequest = null;
     }
 
     this._notifyAllListeners("callStateChanged", [aClientId,

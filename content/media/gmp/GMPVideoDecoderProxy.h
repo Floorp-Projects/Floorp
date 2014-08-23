@@ -12,6 +12,7 @@
 #include "gmp-video-frame-encoded.h"
 
 #include "GMPCallbackBase.h"
+#include "mozilla/UniquePtr.h"
 
 class GMPVideoDecoderCallbackProxy : public GMPCallbackBase,
                                      public GMPVideoDecoderCallback
@@ -37,7 +38,7 @@ public:
                               const nsTArray<uint8_t>& aCodecSpecific,
                               GMPVideoDecoderCallbackProxy* aCallback,
                               int32_t aCoreCount) = 0;
-  virtual nsresult Decode(GMPVideoEncodedFrame* aInputFrame,
+  virtual nsresult Decode(mozilla::UniquePtr<GMPVideoEncodedFrame> aInputFrame,
                           bool aMissingFrames,
                           const nsTArray<uint8_t>& aCodecSpecificInfo,
                           int64_t aRenderTimeMs = -1) = 0;
@@ -49,5 +50,18 @@ public:
   // interface/codec.
   virtual void Close() = 0;
 };
+
+namespace mozilla {
+
+template<>
+struct DefaultDelete<GMPVideoEncodedFrame>
+{
+  void operator()(GMPVideoEncodedFrame* aFrame) const
+  {
+    aFrame->Destroy();
+  }
+};
+
+} // namespace mozilla
 
 #endif
