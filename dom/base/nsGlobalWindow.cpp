@@ -10745,7 +10745,7 @@ nsGlobalWindow::FireOfflineStatusEvent()
   if (!IsCurrentInnerWindow())
     return;
   nsAutoString name;
-  if (NS_IsOffline()) {
+  if (NS_IsOffline() || NS_IsAppOffline(GetPrincipal())) {
     name.AssignLiteral("offline");
   } else {
     name.AssignLiteral("online");
@@ -11301,7 +11301,8 @@ nsresult
 nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
                         const char16_t* aData)
 {
-  if (!nsCRT::strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC)) {
+  if (!nsCRT::strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC) ||
+      !nsCRT::strcmp(aTopic, NS_IOSERVICE_APP_OFFLINE_STATUS_TOPIC)) {
     if (IsFrozen()) {
       // if an even number of notifications arrive while we're frozen,
       // we don't need to fire.

@@ -2513,7 +2513,11 @@ nsFtpState::CheckCache()
 
     // Set cache access requested:
     nsCacheAccessMode accessReq;
-    if (NS_IsOffline()) {
+    uint32_t appId;
+    bool isInBrowser;
+    NS_GetAppInfo(mChannel, &appId, &isInBrowser);
+
+    if (NS_IsOffline() || NS_IsAppOffline(appId)) {
         accessReq = nsICache::ACCESS_READ; // can only read
     } else if (mChannel->HasLoadFlag(nsIRequest::LOAD_BYPASS_CACHE)) {
         accessReq = nsICache::ACCESS_WRITE; // replace cache entry
