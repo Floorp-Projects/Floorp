@@ -24,18 +24,23 @@ let gPage = {
     // listen from the xul window and filter then delegate
     addEventListener("click", this, false);
 
+    // Initialize sponsored panel
+    this._sponsoredPanel = document.getElementById("sponsored-panel");
+    let link = this._sponsoredPanel.querySelector(".text-link");
+    link.addEventListener("click", () => this._sponsoredPanel.hidePopup());
+    if (UpdateChannel.get().startsWith("release")) {
+      document.getElementById("sponsored-panel-trial-descr").style.display = "none";
+    }
+    else {
+      document.getElementById("sponsored-panel-release-descr").style.display = "none";
+    }
+
     // Check if the new tab feature is enabled.
     let enabled = gAllPages.enabled;
     if (enabled)
       this._init();
 
     this._updateAttributes(enabled);
-
-    // Initialize customize controls.
-    gCustomize.init();
-
-    // Initialize intro panel.
-    gIntro.init();
   },
 
   /**
@@ -43,15 +48,8 @@ let gPage = {
    */
   observe: function Page_observe(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed") {
-      gCustomize.updateSelected();
-
       let enabled = gAllPages.enabled;
       this._updateAttributes(enabled);
-
-      // Update thumbnails to the new enhanced setting
-      if (aData == "browser.newtabpage.enhanced") {
-        this.update();
-      }
 
       // Initialize the whole page if we haven't done that, yet.
       if (enabled) {
@@ -82,6 +80,21 @@ let gPage = {
   },
 
   /**
+   * Shows sponsored panel
+   */
+  showSponsoredPanel: function Page_showSponsoredPanel(aTarget) {
+    if (this._sponsoredPanel.state == "closed") {
+      let self = this;
+      this._sponsoredPanel.addEventListener("popuphidden", function onPopupHidden(aEvent) {
+        self._sponsoredPanel.removeEventListener("popuphidden", onPopupHidden, false);
+        aTarget.removeAttribute("panelShown");
+      });
+    }
+    aTarget.setAttribute("panelShown", "true");
+    this._sponsoredPanel.openPopup(aTarget);
+  },
+
+  /**
    * Internally initializes the page. This runs only when/if the feature
    * is/gets enabled.
    */
@@ -97,7 +110,7 @@ let gPage = {
     if (document.hidden) {
       addEventListener("visibilitychange", this);
     } else {
-      setTimeout(_ => this.onPageFirstVisible());
+      this.onPageFirstVisible();
     }
 
     // Initialize and render the grid.
@@ -119,7 +132,7 @@ let gPage = {
    */
   _updateAttributes: function Page_updateAttributes(aValue) {
     // Set the nodes' states.
-    let nodeSelector = "#newtab-scrollbox, #newtab-grid, #newtab-search-container";
+    let nodeSelector = "#newtab-scrollbox, #newtab-toggle, #newtab-grid, #newtab-search-container";
     for (let node of document.querySelectorAll(nodeSelector)) {
       if (aValue)
         node.removeAttribute("page-disabled");
@@ -135,6 +148,10 @@ let gPage = {
       else
         input.setAttribute("tabindex", "-1");
     }
+
+    // Update the toggle button's title.
+    let toggle = document.getElementById("newtab-toggle");
+    toggle.setAttribute("title", newTabString(aValue ? "hide" : "show"));
   },
 
   /**
@@ -147,6 +164,13 @@ let gPage = {
         break;
       case "click":
         let {button, target} = aEvent;
+        if (target.id == "newtab-toggle") {
+          if (button == 0) {
+            gAllPages.enabled = !gAllPages.enabled;
+          }
+          break;
+        }
+
         // Go up ancestors until we find a Site or not
         while (target) {
           if (target.hasOwnProperty("_newtabSite")) {
@@ -177,45 +201,42 @@ let gPage = {
     // Record another page impression.
     Services.telemetry.getHistogramById("NEWTAB_PAGE_SHOWN").add(true);
 
+    // Initialize type counting with the types we want to count
+    let directoryCount = {};
+    for (let type of DirectoryLinksProvider.linkTypes) {
+      directoryCount[type] = 0;
+    }
+
     for (let site of gGrid.sites) {
       if (site) {
         site.captureIfMissing();
-      }
-    }
 
-    // Allow the document to reflow so the page has sizing info
-    let i = 0;
-    let checkSizing = _ => setTimeout(_ => {
-      if (document.documentElement.clientWidth == 0) {
-        checkSizing();
-      }
-      else {
-        this.onPageFirstSized();
-      }
-    });
-    checkSizing();
-  },
+        // Record which tile index a directory link was shown
+        let {directoryIndex, type} = site.link;
+        if (directoryIndex !== undefined) {
+          let tileIndex = site.cell.index;
+          // For telemetry, only handle the first 9 links in the first 9 cells
+          if (directoryIndex < 9) {
+            let shownId = "NEWTAB_PAGE_DIRECTORY_LINK" + directoryIndex + "_SHOWN";
+            Services.telemetry.getHistogramById(shownId).add(Math.min(9, tileIndex));
+          }
+        }
 
-  onPageFirstSized: function() {
-    // Work backwards to find the first visible site from the end
-    let {sites} = gGrid;
-    let lastIndex = sites.length;
-    while (lastIndex-- > 0) {
-      let site = sites[lastIndex];
-      if (site) {
-        let {node} = site;
-        let rect = node.getBoundingClientRect();
-        let target = document.elementFromPoint(rect.x + rect.width / 2,
-                                               rect.y + rect.height / 2);
-        if (node.contains(target)) {
-          break;
+        // Aggregate tile impression counts into directory types
+        if (type in directoryCount) {
+          directoryCount[type]++;
         }
       }
     }
 
-    DirectoryLinksProvider.reportSitesAction(gGrid.sites, "view", lastIndex);
-
-    // Show the panel now that anchors are sized
-    gIntro.showIfNecessary();
+    DirectoryLinksProvider.reportShownCount(directoryCount);
+    // Record how many directory sites were shown, but place counts over the
+    // default 9 in the same bucket
+    for (let type of Object.keys(directoryCount)) {
+      let count = directoryCount[type];
+      let shownId = "NEWTAB_PAGE_DIRECTORY_" + type.toUpperCase() + "_SHOWN";
+      let shownCount = Math.min(10, count);
+      Services.telemetry.getHistogramById(shownId).add(shownCount);
+    }
   }
 };
