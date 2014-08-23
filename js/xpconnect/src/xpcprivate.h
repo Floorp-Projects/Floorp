@@ -3602,8 +3602,6 @@ public:
         , skipWriteToGlobalPrototype(false)
         , universalXPConnectEnabled(false)
         , forcePermissiveCOWs(false)
-        , adoptedNode(false)
-        , donatedNode(false)
         , warnedAboutXrays(false)
         , scriptability(c)
         , scope(nullptr)
@@ -3655,10 +3653,6 @@ public:
     //
     // Using it in production is inherently unsafe.
     bool forcePermissiveCOWs;
-
-    // for telemetry. See bug 928476.
-    bool adoptedNode;
-    bool donatedNode;
 
     // Whether we've emitted a warning about a property that was filtered out
     // by XrayWrappers. See XrayWrapper.cpp.
