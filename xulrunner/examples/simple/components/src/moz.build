@@ -8,20 +8,11 @@ SOURCES += [
     'SimpleTest.cpp',
 ]
 
-LIBRARY_NAME = 'simpletest'
+XPCOMBinaryComponent('simpletest')
 
 EXTRA_COMPONENTS += [
     'SimpleTest.js',
     'SimpleTest.manifest',
 ]
 
-IS_COMPONENT = True
-
 XPI_NAME = 'simple'
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
-]

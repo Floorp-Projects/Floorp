@@ -55,3 +55,5 @@ if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
 if not CONFIG['JS_STANDALONE']:
     # Bring in the configuration for the configured application.
     include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')
+
+include('build/templates.mozbuild')
