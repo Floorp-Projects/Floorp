@@ -284,7 +284,7 @@ SizeOfFramePrefix(FrameType type)
       case JitFrame_Exit:
         return IonExitFrameLayout::Size();
       default:
-        MOZ_ASSUME_UNREACHABLE("unknown frame type");
+        MOZ_CRASH("unknown frame type");
     }
 }
 
@@ -467,7 +467,7 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
             break;
 
           default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected try note");
+            MOZ_CRASH("Unexpected try note");
         }
     }
 }
@@ -528,7 +528,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
             return;
 
           default:
-            MOZ_ASSUME_UNREACHABLE("Invalid trap status");
+            MOZ_CRASH("Invalid trap status");
         }
     }
 
@@ -607,7 +607,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
             break;
 
           default:
-            MOZ_ASSUME_UNREACHABLE("Invalid try note");
+            MOZ_CRASH("Invalid try note");
         }
     }
 
@@ -842,7 +842,7 @@ MarkCalleeToken(JSTracer *trc, CalleeToken token)
         return CalleeToToken(script);
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("unknown callee token type");
+        MOZ_CRASH("unknown callee token type");
     }
 }
 
@@ -1046,7 +1046,7 @@ JitActivationIterator::jitStackRange(uintptr_t *&min, uintptr_t *&end)
         if (exitFrame->isWrapperExit() && f->outParam == Type_Handle) {
             switch (f->outParamRootType) {
               case VMFunction::RootNone:
-                MOZ_ASSUME_UNREACHABLE("Handle outparam must have root type");
+                MOZ_CRASH("Handle outparam must have root type");
               case VMFunction::RootObject:
               case VMFunction::RootString:
               case VMFunction::RootPropertyName:
@@ -1234,7 +1234,7 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
     if (f->outParam == Type_Handle) {
         switch (f->outParamRootType) {
           case VMFunction::RootNone:
-            MOZ_ASSUME_UNREACHABLE("Handle outparam must have root type");
+            MOZ_CRASH("Handle outparam must have root type");
           case VMFunction::RootObject:
             gc::MarkObjectRoot(trc, footer->outParam<JSObject *>(), "ion-vm-out");
             break;
@@ -1299,14 +1299,14 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
             MarkIonJSFrame(trc, frames);
             break;
           case JitFrame_Unwound_IonJS:
-            MOZ_ASSUME_UNREACHABLE("invalid");
+            MOZ_CRASH("invalid");
           case JitFrame_Rectifier:
             MarkRectifierFrame(trc, frames);
             break;
           case JitFrame_Unwound_Rectifier:
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected frame type");
+            MOZ_CRASH("unexpected frame type");
         }
     }
 }
@@ -1521,7 +1521,7 @@ FromTypedPayload(JSValueType type, uintptr_t payload)
       case JSVAL_TYPE_OBJECT:
         return FromObjectPayload(payload);
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected type - needs payload");
+        MOZ_CRASH("unexpected type - needs payload");
     }
 }
 
@@ -1609,7 +1609,7 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc)
           case JSVAL_TYPE_OBJECT:
             return FromObjectPayload(fromStack(alloc.stackOffset2()));
           default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected type");
+            MOZ_CRASH("Unexpected type");
         }
       }
 
@@ -1665,7 +1665,7 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc)
         return fromInstructionResult(alloc.index());
 
       default:
-        MOZ_ASSUME_UNREACHABLE("huh?");
+        MOZ_CRASH("huh?");
     }
 }
 
@@ -1776,10 +1776,10 @@ JitFrameIterator::ionScriptFromCalleeToken() const
           case ParallelExecution:
             return script()->parallelIonScript();
           default:
-            MOZ_ASSUME_UNREACHABLE("No such execution mode");
+            MOZ_CRASH("No such execution mode");
         }
       default:
-        MOZ_ASSUME_UNREACHABLE("unknown callee token type");
+        MOZ_CRASH("unknown callee token type");
     }
 }
 
