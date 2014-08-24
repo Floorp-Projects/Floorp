@@ -36,7 +36,7 @@ OptimizationLevelString(OptimizationLevel level)
       case Optimization_AsmJS:
         return "Optimization_AsmJS";
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid OptimizationLevel");
+        MOZ_CRASH("Invalid OptimizationLevel");
     }
 }
 #endif
