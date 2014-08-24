@@ -83,7 +83,7 @@ print <<__END__;
    by genSpecialCasingData.pl - do not edit! */
 
 #include "nsSpecialCasingData.h"
-#include "mozilla/Util.h" // for ArrayLength
+#include "mozilla/ArrayUtils.h" // for ArrayLength
 #include <stdlib.h>       // for bsearch
 
 __END__
