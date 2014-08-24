@@ -12,9 +12,7 @@ SOURCES += [
     'nsModule.cpp',
 ]
 
-LIBRARY_NAME = 'browsercomps'
-
-IS_COMPONENT = True
+XPCOMBinaryComponent('browsercomps')
 
 LOCAL_INCLUDES += [
     '../about',
@@ -22,13 +20,6 @@ LOCAL_INCLUDES += [
     '../feeds',
     '../migration',
     '../shell',
-]
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

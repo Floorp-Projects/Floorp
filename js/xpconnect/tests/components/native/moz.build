@@ -12,9 +12,7 @@ UNIFIED_SOURCES += [
     'xpctest_params.cpp',
 ]
 
-LIBRARY_NAME = 'xpctest'
-
-IS_COMPONENT = True
+XPCOMBinaryComponent('xpctest')
 
 DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
     CONFIG['DLL_PREFIX'],
@@ -23,10 +21,3 @@ DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
 )
 
 FAIL_ON_WARNINGS = True
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
-]

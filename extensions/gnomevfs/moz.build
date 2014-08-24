@@ -8,20 +8,11 @@ SOURCES += [
     'nsGnomeVFSProtocolHandler.cpp',
 ]
 
-LIBRARY_NAME = 'nkgnomevfs'
-
-IS_COMPONENT = True
+XPCOMBinaryComponent('nkgnomevfs')
 
 # make sure this component is never statically linked into the main
 # application.  this is necessary since we don't want to force users
 # to install gnome-vfs2 in order to use the rest of mozilla ;-)
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
-]
 
 CXXFLAGS += CONFIG['MOZ_GNOMEVFS_CFLAGS']
 
