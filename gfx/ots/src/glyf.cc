@@ -112,19 +112,9 @@ bool ParseSimpleGlyph(ots::OpenTypeFile *file, const uint8_t *data,
     return OTS_FAILURE_MSG("Glyph header length too high %d", gly_header_length);
   }
 
-  if (ots::g_transcode_hints) {
-    glyf->iov.push_back(std::make_pair(
-        data + gly_offset,
-        static_cast<size_t>(gly_header_length + bytecode_length)));
-  } else {
-    // enqueue two vectors: the glyph data up to the bytecode length, then
-    // a pointer to a static uint16_t 0 to overwrite the length.
-    glyf->iov.push_back(std::make_pair(
-        data + gly_offset,
-        static_cast<size_t>(gly_header_length - 2)));
-    glyf->iov.push_back(std::make_pair((const uint8_t*) "\x00\x00",
-                                       static_cast<size_t>(2)));
-  }
+  glyf->iov.push_back(std::make_pair(
+      data + gly_offset,
+      static_cast<size_t>(gly_header_length + bytecode_length)));
 
   if (!table->Skip(bytecode_length)) {
     return OTS_FAILURE_MSG("Can't skip bytecode of length %d", bytecode_length);
@@ -163,10 +153,7 @@ bool ParseSimpleGlyph(ots::OpenTypeFile *file, const uint8_t *data,
       static_cast<size_t>(flags_count_physical + xy_coordinates_length)));
 
   *new_size
-      = gly_header_length + flags_count_physical + xy_coordinates_length;
-  if (ots::g_transcode_hints) {
-    *new_size += bytecode_length;
-  }
+      = gly_header_length + flags_count_physical + xy_coordinates_length + bytecode_length;
 
   return true;
 }
