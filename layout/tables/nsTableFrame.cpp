@@ -1612,17 +1612,22 @@ nsTableFrame::TableShrinkWidthToFit(nsRenderingContext *aRenderingContext,
   return result;
 }
 
-/* virtual */ nsSize
+/* virtual */
+LogicalSize
 nsTableFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                              nsSize aCBSize, nscoord aAvailableWidth,
-                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                              WritingMode aWM,
+                              const LogicalSize& aCBSize,
+                              nscoord aAvailableISize,
+                              const LogicalSize& aMargin,
+                              const LogicalSize& aBorder,
+                              const LogicalSize& aPadding,
                               bool aShrinkWrap)
 {
   // Tables always shrink-wrap.
-  nscoord cbBased = aAvailableWidth - aMargin.width - aBorder.width -
-                    aPadding.width;
-  return nsSize(TableShrinkWidthToFit(aRenderingContext, cbBased),
-                NS_UNCONSTRAINEDSIZE);
+  nscoord cbBased = aAvailableISize - aMargin.ISize(aWM) - aBorder.ISize(aWM) -
+                    aPadding.ISize(aWM);
+  return LogicalSize(aWM, TableShrinkWidthToFit(aRenderingContext, cbBased),
+                     NS_UNCONSTRAINEDSIZE);
 }
 
 // Return true if aParentReflowState.frame or any of its ancestors within
