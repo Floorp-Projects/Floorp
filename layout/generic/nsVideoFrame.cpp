@@ -482,13 +482,15 @@ nsVideoFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-nsSize nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
-                                     nsSize aCBSize,
-                                     nscoord aAvailableWidth,
-                                     nsSize aMargin,
-                                     nsSize aBorder,
-                                     nsSize aPadding,
-                                     uint32_t aFlags)
+LogicalSize
+nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
+                          WritingMode aWM,
+                          const LogicalSize& aCBSize,
+                          nscoord aAvailableISize,
+                          const LogicalSize& aMargin,
+                          const LogicalSize& aBorder,
+                          const LogicalSize& aPadding,
+                          uint32_t aFlags)
 {
   nsSize size = GetVideoIntrinsicSize(aRenderingContext);
 
@@ -499,14 +501,15 @@ nsSize nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   // Only video elements have an intrinsic ratio.
   nsSize intrinsicRatio = HasVideoElement() ? size : nsSize(0, 0);
 
-  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aRenderingContext,
+  return LogicalSize(aWM,
+    nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aRenderingContext,
                                                            this,
                                                            intrinsicSize,
                                                            intrinsicRatio,
-                                                           aCBSize,
-                                                           aMargin,
-                                                           aBorder,
-                                                           aPadding);
+                                                           aCBSize.GetPhysicalSize(aWM),
+                                                           aMargin.GetPhysicalSize(aWM),
+                                                           aBorder.GetPhysicalSize(aWM),
+                                                           aPadding.GetPhysicalSize(aWM)));
 }
 
 nscoord nsVideoFrame::GetMinISize(nsRenderingContext *aRenderingContext)
