@@ -26,8 +26,10 @@ function IsWindowsVistaOrLater() {
   return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.0;
 }
 
-function IsWindows() {
-  return navigator.userAgent.match(/Windows/) != null;
+function IsWindowsXPOrEarlier() {
+  var re = /Windows NT (\d.\d)/;
+  var winver = navigator.userAgent.match(re);
+  return winver && winver.length == 2 && parseFloat(winver[1]) < 6.0;
 }
 
 function getPref(name) {
@@ -41,7 +43,7 @@ function getPref(name) {
 var haveMp4 = (getPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
                getPref("media.omx.enabled") ||
                getPref("media.gstreamer.enabled") ||
-               getPref("media.fragmented-mp4.exposed");
+               (getPref("media.fragmented-mp4.exposed") && !IsWindowsXPOrEarlier());
 // TODO:  Add "getPref("media.plugins.enabled")" once MP4 works on Gingerbread.
              
 check_mp4(document.getElementById('v'), haveMp4);
