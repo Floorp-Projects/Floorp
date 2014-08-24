@@ -8274,10 +8274,8 @@ var Tabs = {
     // If the tab was last touched more than browser.tabs.expireTime seconds ago,
     // zombify it.
     if (lruTab) {
-      let tabAgeMs = Date.now() - lruTab.lastTouchedAt;
-      if (tabAgeMs > expireTimeMs) {
+      if (Date.now() - lruTab.lastTouchedAt > expireTimeMs) {
         MemoryObserver.zombify(lruTab);
-        Telemetry.addData("FENNEC_TAB_EXPIRED", tabAgeMs / 1000);
         return true;
       }
     }
