@@ -501,15 +501,14 @@ nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   // Only video elements have an intrinsic ratio.
   nsSize intrinsicRatio = HasVideoElement() ? size : nsSize(0, 0);
 
-  return LogicalSize(aWM,
-    nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aRenderingContext,
+  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM, aRenderingContext,
                                                            this,
                                                            intrinsicSize,
                                                            intrinsicRatio,
-                                                           aCBSize.GetPhysicalSize(aWM),
-                                                           aMargin.GetPhysicalSize(aWM),
-                                                           aBorder.GetPhysicalSize(aWM),
-                                                           aPadding.GetPhysicalSize(aWM)));
+                                                           aCBSize,
+                                                           aMargin,
+                                                           aBorder,
+                                                           aPadding);
 }
 
 nscoord nsVideoFrame::GetMinISize(nsRenderingContext *aRenderingContext)
