@@ -11,7 +11,7 @@ function test() {
     let cw = TabView.getContentWindow();
     whenAppTabIconAdded(cw.GroupItems.groupItems[0], function() {
       let body = cw.document.body;
-      let [appTabIcon] = cw.iQ(".appTabTray .appTabIcon");
+      let appTabIcon = cw.iQ(".appTabTray .appTabIcon")[0];
 
       EventUtils.synthesizeMouseAtCenter(appTabIcon, {type: "mousedown"}, cw);
       EventUtils.synthesizeMouse(body, 500, 100, {type: "mousemove"}, cw);
