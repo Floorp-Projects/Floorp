@@ -9,11 +9,11 @@
 
 #define TABLE_NAME "kern"
 
-#define DROP_THIS_TABLE \
+#define DROP_THIS_TABLE(msg_) \
   do { \
     delete file->kern; \
     file->kern = 0; \
-    OTS_FAILURE_MSG("Table discarded"); \
+    OTS_FAILURE_MSG(msg_ ", table discarded"); \
   } while (0)
 
 namespace ots {
@@ -31,13 +31,12 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   }
 
   if (kern->version > 0) {
-    DROP_THIS_TABLE;
+    DROP_THIS_TABLE("bad table version");
     return true;
   }
 
   if (num_tables == 0) {
-    OTS_WARNING("num_tables is zero");
-    DROP_THIS_TABLE;
+    DROP_THIS_TABLE("num_tables is zero");
     return true;
   }
 
@@ -71,8 +70,7 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       continue;
     }
     if (subtable.coverage & 0xF0) {
-      OTS_WARNING("Reserved fields should zero-filled.");
-      DROP_THIS_TABLE;
+      DROP_THIS_TABLE("Reserved fields should zero-filled.");
       return true;
     }
     const uint32_t format = (subtable.coverage & 0xFF00) >> 8;
@@ -91,8 +89,7 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     }
 
     if (!num_pairs) {
-      OTS_WARNING("Zero length subtable is found.");
-      DROP_THIS_TABLE;
+      DROP_THIS_TABLE("Zero length subtable is found.");
       return true;
     }
 
@@ -101,8 +98,7 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     const size_t kFormat0PairSize = 6;  // left, right, and value. 2 bytes each.
     if (num_pairs > (65536 / kFormat0PairSize)) {
       // Some fonts (e.g. calibri.ttf, pykes_peak_zero.ttf) have pairs >= 10923.
-      OTS_WARNING("Too large subtable.");
-      DROP_THIS_TABLE;
+      DROP_THIS_TABLE("Too large subtable.");
       return true;
     }
     unsigned max_pow2 = 0;
@@ -137,10 +133,9 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       const uint32_t current_pair
           = (kerning_pair.left << 16) + kerning_pair.right;
       if (j != 0 && current_pair <= last_pair) {
-        OTS_WARNING("Kerning pairs are not sorted.");
         // Many free fonts don't follow this rule, so we don't call OTS_FAILURE
         // in order to support these fonts.
-        DROP_THIS_TABLE;
+        DROP_THIS_TABLE("Kerning pairs are not sorted.");
         return true;
       }
       last_pair = current_pair;
@@ -151,8 +146,7 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   }
 
   if (!kern->subtables.size()) {
-    OTS_WARNING("All subtables are removed.");
-    DROP_THIS_TABLE;
+    DROP_THIS_TABLE("All subtables are removed.");
     return true;
   }
 

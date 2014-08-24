@@ -9,10 +9,11 @@
 
 #define TABLE_NAME "gasp"
 
-#define DROP_THIS_TABLE \
+#define DROP_THIS_TABLE(...) \
   do { \
     delete file->gasp; \
     file->gasp = 0; \
+    OTS_FAILURE_MSG_(file, TABLE_NAME ": " __VA_ARGS__); \
     OTS_FAILURE_MSG("Table discarded"); \
   } while (0)
 
@@ -32,14 +33,12 @@ bool ots_gasp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
   if (gasp->version > 1) {
     // Lots of Linux fonts have bad version numbers...
-    OTS_WARNING("bad version: %u", gasp->version);
-    DROP_THIS_TABLE;
+    DROP_THIS_TABLE("bad version: %u", gasp->version);
     return true;
   }
 
   if (num_ranges == 0) {
-    OTS_WARNING("num_ranges is zero");
-    DROP_THIS_TABLE;
+    DROP_THIS_TABLE("num_ranges is zero");
     return true;
   }
 
@@ -54,15 +53,13 @@ bool ots_gasp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     if ((i > 0) && (gasp->gasp_ranges[i - 1].first >= max_ppem)) {
       // The records in the gaspRange[] array must be sorted in order of
       // increasing rangeMaxPPEM value.
-      OTS_WARNING("ranges are not sorted");
-      DROP_THIS_TABLE;
+      DROP_THIS_TABLE("ranges are not sorted");
       return true;
     }
     if ((i == num_ranges - 1u) &&  // never underflow.
         (max_ppem != 0xffffu)) {
-      OTS_WARNING("The last record should be 0xFFFF as a sentinel value "
+      DROP_THIS_TABLE("The last record should be 0xFFFF as a sentinel value "
                   "for rangeMaxPPEM");
-      DROP_THIS_TABLE;
       return true;
     }
 

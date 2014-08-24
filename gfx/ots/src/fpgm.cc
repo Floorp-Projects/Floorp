@@ -32,7 +32,7 @@ bool ots_fpgm_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
 bool ots_fpgm_should_serialise(OpenTypeFile *file) {
   if (!file->glyf) return false;  // this table is not for CFF fonts.
-  return g_transcode_hints && file->fpgm;
+  return file->fpgm;
 }
 
 bool ots_fpgm_serialise(OTSStream *out, OpenTypeFile *file) {

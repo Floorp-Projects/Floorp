@@ -270,7 +270,6 @@ bool ParseClassDefFormat1(const ots::OpenTypeFile *file,
     return OTS_FAILURE_MSG("Failed to read starting glyph of class definition");
   }
   if (start_glyph > num_glyphs) {
-    OTS_WARNING("bad start glyph ID: %u", start_glyph);
     return OTS_FAILURE_MSG("Bad starting glyph %d in class definition", start_glyph);
   }
 
@@ -287,7 +286,6 @@ bool ParseClassDefFormat1(const ots::OpenTypeFile *file,
       return OTS_FAILURE_MSG("Failed to read class value for glyph %d in class definition", i);
     }
     if (class_value > num_classes) {
-      OTS_WARNING("bad class value: %u", class_value);
       return OTS_FAILURE_MSG("Bad class value %d for glyph %d in class definition", class_value, i);
     }
   }

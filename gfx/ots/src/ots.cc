@@ -199,7 +199,7 @@ bool ProcessTTF(ots::OpenTypeFile *header,
   // Don't call ots_failure() here since ~25% of fonts (250+ fonts) in
   // http://www.princexml.com/fonts/ have unexpected search_range value.
   if (header->search_range != expected_search_range) {
-    OTS_WARNING("bad search range");
+    OTS_FAILURE_MSG_HDR("bad search range");
     header->search_range = expected_search_range;  // Fix the value.
   }
 
@@ -214,7 +214,7 @@ bool ProcessTTF(ots::OpenTypeFile *header,
   const uint32_t expected_range_shift
       = 16 * header->num_tables - header->search_range;
   if (header->range_shift != expected_range_shift) {
-    OTS_WARNING("bad range shift");
+    OTS_FAILURE_MSG_HDR("bad range shift");
     header->range_shift = expected_range_shift;  // the same as above.
   }
 
@@ -838,18 +838,6 @@ bool Failure(const char *f, int l, const char *fn) {
     std::fflush(stderr);
   }
   return false;
-}
-
-void Warning(const char *f, int l, const char *format, ...) {
-  if (g_debug_output) {
-    std::fprintf(stderr, "WARNING at %s:%d: ", f, l);
-    std::va_list va;
-    va_start(va, format);
-    std::vfprintf(stderr, format, va);
-    va_end(va);
-    std::fprintf(stderr, "\n");
-    std::fflush(stderr);
-  }
 }
 #endif
 
