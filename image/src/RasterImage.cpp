@@ -1822,8 +1822,9 @@ RasterImage::OnImageDataAvailable(nsIRequest*,
   uint32_t bytesRead;
   rv = aInStr->ReadSegments(WriteToRasterImage, this, aCount, &bytesRead);
 
-  NS_ABORT_IF_FALSE(bytesRead == aCount || HasError(),
-    "WriteToRasterImage should consume everything or the image must be in error!");
+  NS_ABORT_IF_FALSE(bytesRead == aCount || HasError() || NS_FAILED(rv),
+    "WriteToRasterImage should consume everything if ReadSegments succeeds or "
+    "the image must be in error!");
 
   return rv;
 }
