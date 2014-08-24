@@ -350,12 +350,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     /* Unexpected end of input, i.e. TOK_EOF not at top-level. */
     bool isUnexpectedEOF_:1;
 
-    /* Used for collecting telemetry on SpiderMonkey's deprecated language extensions. */
-    bool sawDeprecatedForEach:1;
-    bool sawDeprecatedDestructuringForIn:1;
-    bool sawDeprecatedLegacyGenerator:1;
-    bool sawDeprecatedExpressionClosure:1;
-
     typedef typename ParseHandler::Node Node;
     typedef typename ParseHandler::DefinitionNode DefinitionNode;
 
@@ -663,8 +657,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     TokenPos pos() const { return tokenStream.currentToken().pos; }
 
     bool asmJS(Node list);
-
-    void accumulateTelemetry();
 
     friend class LegacyCompExprTransplanter;
     friend struct BindData<ParseHandler>;
