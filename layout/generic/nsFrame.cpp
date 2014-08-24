@@ -4056,14 +4056,10 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                      const LogicalSize& aPadding,
                      uint32_t aFlags)
 {
-  LogicalSize result =
-    LogicalSize(aWM, ComputeAutoSize(aRenderingContext,
-                                     aCBSize.GetPhysicalSize(aWM),
-                                     aAvailableISize,
-                                     aMargin.GetPhysicalSize(aWM),
-                                     aBorder.GetPhysicalSize(aWM),
-                                     aPadding.GetPhysicalSize(aWM),
-                                     aFlags & eShrinkWrap));
+  LogicalSize result = ComputeAutoSize(aRenderingContext, aWM,
+                                       aCBSize, aAvailableISize,
+                                       aMargin, aBorder, aPadding,
+                                       aFlags & eShrinkWrap);
   LogicalSize boxSizingAdjust(aWM);
   const nsStylePosition *stylePos = StylePosition();
 
@@ -4250,20 +4246,27 @@ nsIFrame::GetPrefWidthTightBounds(nsRenderingContext* aContext,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* virtual */ nsSize
+/* virtual */
+LogicalSize
 nsFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                         nsSize aCBSize, nscoord aAvailableWidth,
-                         nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                         WritingMode aWM,
+                         const mozilla::LogicalSize& aCBSize,
+                         nscoord aAvailableISize,
+                         const mozilla::LogicalSize& aMargin,
+                         const mozilla::LogicalSize& aBorder,
+                         const mozilla::LogicalSize& aPadding,
                          bool aShrinkWrap)
 {
   // Use basic shrink-wrapping as a default implementation.
-  nsSize result(0xdeadbeef, NS_UNCONSTRAINEDSIZE);
+  LogicalSize result(aWM, 0xdeadbeef, NS_UNCONSTRAINEDSIZE);
 
   // don't bother setting it if the result won't be used
-  if (StylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
-    nscoord availBased = aAvailableWidth - aMargin.width - aBorder.width -
-                         aPadding.width;
-    result.width = ShrinkWidthToFit(aRenderingContext, availBased);
+  const nsStyleCoord& inlineStyleCoord =
+    aWM.IsVertical() ? StylePosition()->mHeight : StylePosition()->mWidth;
+  if (inlineStyleCoord.GetUnit() == eStyleUnit_Auto) {
+    nscoord availBased = aAvailableISize - aMargin.ISize(aWM) -
+                         aBorder.ISize(aWM) - aPadding.ISize(aWM);
+    result.ISize(aWM) = ShrinkWidthToFit(aRenderingContext, availBased);
   }
   return result;
 }

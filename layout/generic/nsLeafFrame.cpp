@@ -35,13 +35,20 @@ nsLeafFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   return result;
 }
 
-/* virtual */ nsSize
+/* virtual */
+LogicalSize
 nsLeafFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                             nsSize aCBSize, nscoord aAvailableWidth,
-                             nsSize aMargin, nsSize aBorder,
-                             nsSize aPadding, bool aShrinkWrap)
+                             WritingMode aWM,
+                             const LogicalSize& aCBSize,
+                             nscoord aAvailableISize,
+                             const LogicalSize& aMargin,
+                             const LogicalSize& aBorder,
+                             const LogicalSize& aPadding,
+                             bool aShrinkWrap)
 {
-  return nsSize(GetIntrinsicISize(), GetIntrinsicBSize());
+  const WritingMode wm = GetWritingMode();
+  LogicalSize result(wm, GetIntrinsicISize(), GetIntrinsicBSize());
+  return result.ConvertTo(aWM, wm);
 }
 
 void
