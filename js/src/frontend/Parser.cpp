@@ -430,6 +430,10 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     foldConstants(foldConstants),
     abortedSyntaxParse(false),
     isUnexpectedEOF_(false),
+    sawDeprecatedForEach(false),
+    sawDeprecatedDestructuringForIn(false),
+    sawDeprecatedLegacyGenerator(false),
+    sawDeprecatedExpressionClosure(false),
     handler(cx, *alloc, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
 {
     {
@@ -449,6 +453,8 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
 template <typename ParseHandler>
 Parser<ParseHandler>::~Parser()
 {
+    accumulateTelemetry();
+
     alloc.release(tempPoolMark);
 
     /*
@@ -2259,6 +2265,10 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
             report(ParseError, false, null(), JSMSG_CURLY_BEFORE_BODY);
             return false;
         }
+
+        if (kind != Arrow)
+            sawDeprecatedExpressionClosure = true;
+
         tokenStream.ungetToken();
         bodyType = ExpressionBody;
         fun->setIsExprClosure();
@@ -4083,6 +4093,7 @@ Parser<FullParseHandler>::forStatement()
     if (allowsForEachIn() && tokenStream.matchContextualKeyword(context->names().each)) {
         iflags = JSITER_FOREACH;
         isForEach = true;
+        sawDeprecatedForEach = true;
     }
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
@@ -4300,8 +4311,10 @@ Parser<FullParseHandler>::forStatement()
                  * Destructuring for-in requires [key, value] enumeration
                  * in JS1.7.
                  */
-                if (!isForEach && headKind == PNK_FORIN)
+                if (!isForEach && headKind == PNK_FORIN) {
                     iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
+                    sawDeprecatedDestructuringForIn = true;
+                }
             }
             break;
 
@@ -4803,6 +4816,7 @@ Parser<ParseHandler>::yieldExpression()
         }
 
         pc->sc->asFunctionBox()->setGeneratorKind(LegacyGenerator);
+        sawDeprecatedLegacyGenerator = true;
 
         if (pc->funHasReturnExpr) {
             /* As in Python (see PEP-255), disallow return v; in generators. */
@@ -7571,6 +7585,47 @@ Parser<ParseHandler>::exprInParens()
 #endif /* JS_HAS_GENERATOR_EXPRS */
 
     return pn;
+}
+
+template <typename ParseHandler>
+void
+Parser<ParseHandler>::accumulateTelemetry()
+{
+    JSContext* cx = context->maybeJSContext();
+    if (!cx)
+        return;
+    JSAccumulateTelemetryDataCallback cb = cx->runtime()->telemetryCallback;
+    if (!cb)
+        return;
+    const char* filename = getFilename();
+    if (!filename)
+        return;
+
+    bool isHTTP = strncmp(filename, "http://", 7) == 0 || strncmp(filename, "https://", 8) == 0;
+
+    // Only report telemetry for web content, not add-ons or chrome JS.
+    if (!isHTTP)
+        return;
+
+    enum DeprecatedLanguageExtensions {
+        DeprecatedForEach = 0,            // JS 1.6+
+        DeprecatedDestructuringForIn = 1, // JS 1.7 only
+        DeprecatedLegacyGenerator = 2,    // JS 1.7+
+        DeprecatedExpressionClosure = 3,  // Added in JS 1.8, but not version-gated
+    };
+
+    // Hazard analysis can't tell that the telemetry callbacks don't GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
+    // Call back into Firefox's Telemetry reporter.
+    if (sawDeprecatedForEach)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedForEach);
+    if (sawDeprecatedDestructuringForIn)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedDestructuringForIn);
+    if (sawDeprecatedLegacyGenerator)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedLegacyGenerator);
+    if (sawDeprecatedExpressionClosure)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedExpressionClosure);
 }
 
 template class Parser<FullParseHandler>;
