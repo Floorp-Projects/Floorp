@@ -596,6 +596,10 @@ this.UtteranceGenerator = {  // jshint ignore:line
       aOutput.push({string: 'stateUnavailable'});
     }
 
+    if (aState.contains(States.READONLY)) {
+      aOutput.push({string: 'stateReadonly'});
+    }
+
     // Don't utter this in Jelly Bean, we let TalkBack do it for us there.
     // This is because we expose the checked information on the node itself.
     // XXX: this means the checked state is always appended to the end,
