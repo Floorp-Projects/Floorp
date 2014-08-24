@@ -950,12 +950,13 @@ for name, (storage_type, input_types, docs, tier) in VARIABLES.items():
 #
 # Each entry is a tuple of:
 #
-#  (method attribute, (argument types), docs)
+#  (function returning the corresponding function from a given sandbox,
+#   (argument types), docs)
 #
 # The first element is an attribute on Sandbox that should be a function type.
 #
 FUNCTIONS = {
-    'include': ('_include', (str,),
+    'include': (lambda self: self._include, (str,),
         """Include another mozbuild file in the context of this one.
 
         This is similar to a ``#include`` in C languages. The filename passed to
@@ -982,7 +983,7 @@ FUNCTIONS = {
            include('/elsewhere/foo.build')
         """),
 
-    'add_java_jar': ('_add_java_jar', (str,),
+    'add_java_jar': (lambda self: self._add_java_jar, (str,),
         """Declare a Java JAR target to be built.
 
         This is the supported way to populate the JAVA_JAR_TARGETS
@@ -995,7 +996,8 @@ FUNCTIONS = {
         :py:class:`mozbuild.frontend.data.JavaJarData`.
         """),
 
-    'add_android_eclipse_project': ('_add_android_eclipse_project', (str, str),
+    'add_android_eclipse_project': (
+        lambda self: self._add_android_eclipse_project, (str, str),
         """Declare an Android Eclipse project.
 
         This is one of the supported ways to populate the
@@ -1009,7 +1011,8 @@ FUNCTIONS = {
         :py:class:`mozbuild.frontend.data.AndroidEclipseProjectData`.
         """),
 
-    'add_android_eclipse_library_project': ('_add_android_eclipse_library_project', (str,),
+    'add_android_eclipse_library_project': (
+        lambda self: self._add_android_eclipse_library_project, (str,),
         """Declare an Android Eclipse library project.
 
         This is one of the supported ways to populate the
@@ -1022,7 +1025,9 @@ FUNCTIONS = {
         :py:class:`mozbuild.frontend.data.AndroidEclipseProjectData`.
         """),
 
-    'add_tier_dir': ('_add_tier_directory', (str, [str, list], bool, bool, str),
+    'add_tier_dir': (
+        lambda self: self._add_tier_directory,
+        (str, [str, list], bool, bool, str),
         """Register a directory for tier traversal.
 
         This is the preferred way to populate the TIERS variable.
@@ -1057,7 +1062,7 @@ FUNCTIONS = {
            add_tier_dir('base', 'bar', external=True)
         """),
 
-    'export': ('_export', (str,),
+    'export': (lambda self: self._export, (str,),
         """Make the specified variable available to all child directories.
 
         The variable specified by the argument string is added to the
@@ -1084,7 +1089,7 @@ FUNCTIONS = {
           export('XPI_NAME')
         """),
 
-    'warning': ('_warning', (str,),
+    'warning': (lambda self: self._warning, (str,),
         """Issue a warning.
 
         Warnings are string messages that are printed during execution.
@@ -1092,10 +1097,57 @@ FUNCTIONS = {
         Warnings are ignored during execution.
         """),
 
-    'error': ('_error', (str,),
+    'error': (lambda self: self._error, (str,),
         """Issue a fatal error.
 
         If this function is called, processing is aborted immediately.
+        """),
+
+    'template': (lambda self: self._template_decorator, (),
+        """Decorator for template declarations.
+
+        Templates are a special kind of functions that can be declared in
+        mozbuild files. Uppercase variables assigned in the function scope
+        are considered to be the result of the template.
+
+        Contrary to traditional python functions:
+           - return values from template functions are ignored,
+           - template functions don't have access to the global scope.
+
+        Example template
+        ^^^^^^^^^^^^^^^^
+
+        The following ``Program`` template sets two variables ``PROGRAM`` and
+        ``USE_LIBS``. ``PROGRAM`` is set to the argument given on the template
+        invocation, and ``USE_LIBS`` to contain "mozglue"::
+
+           @template
+           def Program(name):
+               PROGRAM = name
+               USE_LIBS += ['mozglue']
+
+        Template invocation
+        ^^^^^^^^^^^^^^^^^^^
+
+        A template is invoked in the form of a function call::
+
+           Program('myprog')
+
+        The result of the template, being all the uppercase variable it sets
+        is mixed to the existing set of variables defined in the mozbuild file
+        invoking the template::
+
+           FINAL_TARGET = 'dist/other'
+           USE_LIBS += ['mylib']
+           Program('myprog')
+           USE_LIBS += ['otherlib']
+
+        The above mozbuild results in the following variables set:
+
+           - ``FINAL_TARGET`` is 'dist/other'
+           - ``USE_LIBS`` is ['mylib', 'mozglue', 'otherlib']
+           - ``PROGRAM`` is 'myprog'
+
         """),
 }
 
