@@ -90,6 +90,14 @@ public:
     // connections.
     nsresult PruneDeadConnections();
 
+    // called to close active connections with no registered "traffic"
+    nsresult PruneNoTraffic();
+
+    // "VerifyTraffic" means marking connections now, and then check again in
+    // N seconds to see if there's been any traffic and if not, kill
+    // that connection.
+    nsresult VerifyTraffic();
+
     // Close all idle persistent connections and prevent any active connections
     // from being reused. Optional connection info resets CI specific
     // information such as Happy Eyeballs history.
@@ -242,6 +250,9 @@ public:
     void ResetIPFamilyPreference(nsHttpConnectionInfo *);
 
     uint16_t MaxRequestDelay() { return mMaxRequestDelay; }
+
+    // public, so that the SPDY/http2 seesions can activate
+    void ActivateTimeoutTick();
 
 private:
     virtual ~nsHttpConnectionMgr();
@@ -525,6 +536,8 @@ private:
     static PLDHashOperator PurgeExcessIdleConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     static PLDHashOperator PurgeExcessSpdyConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     static PLDHashOperator ClosePersistentConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
+    static PLDHashOperator VerifyTrafficCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
+    static PLDHashOperator PruneNoTrafficCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     bool     ProcessPendingQForEntry(nsConnectionEntry *, bool considerAll);
     bool     IsUnderPressure(nsConnectionEntry *ent,
                              nsHttpTransaction::Classifier classification);
@@ -643,6 +656,8 @@ private:
     void OnMsgProcessFeedback      (int32_t, void *);
     void OnMsgProcessAllSpdyPendingQ (int32_t, void *);
     void OnMsgUpdateRequestTokenBucket (int32_t, void *);
+    void OnMsgVerifyTraffic (int32_t, void *);
+    void OnMsgPruneNoTraffic (int32_t, void *);
 
     // Total number of active connections in all of the ConnectionEntry objects
     // that are accessed from mCT connection table.
@@ -660,6 +675,9 @@ private:
     uint64_t mTimeOfNextWakeUp;
     // Timer for next pruning of dead connections.
     nsCOMPtr<nsITimer> mTimer;
+    // Timer for pruning stalled connections after changed network.
+    nsCOMPtr<nsITimer> mTrafficTimer;
+    bool mPruningNoTraffic;
 
     // A 1s tick to call nsHttpConnection::ReadTimeoutTick on
     // active http/1 connections and check for orphaned half opens.
@@ -685,7 +703,6 @@ private:
         void *aArg);
 
     // Read Timeout Tick handlers
-    void ActivateTimeoutTick();
     void TimeoutTick();
     static PLDHashOperator TimeoutTickCB(const nsACString &key,
                                          nsAutoPtr<nsConnectionEntry> &ent,
