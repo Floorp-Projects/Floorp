@@ -25,10 +25,8 @@ var MemoryObserver = {
     for (let i = 0; i < tabs.length; i++) {
       if (tabs[i] != selected) {
         this.zombify(tabs[i]);
-        Telemetry.addData("FENNEC_TAB_ZOMBIFIED", (Date.now() - tabs[i].lastTouchedAt) / 1000);
       }
     }
-    Telemetry.addData("FENNEC_LOWMEM_TAB_COUNT", tabs.length);
 
     // Change some preferences temporarily for only this session
     let defaults = Services.prefs.getDefaultBranch(null);
