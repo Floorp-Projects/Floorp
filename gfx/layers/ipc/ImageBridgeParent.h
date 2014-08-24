@@ -98,14 +98,14 @@ public:
                   ipc::SharedMemory::SharedMemoryType aType,
                   ipc::Shmem* aShmem) MOZ_OVERRIDE
   {
-    return AllocShmem(aSize, aType, aShmem);
+    return PImageBridgeParent::AllocShmem(aSize, aType, aShmem);
   }
 
   bool AllocUnsafeShmem(size_t aSize,
                         ipc::SharedMemory::SharedMemoryType aType,
                         ipc::Shmem* aShmem) MOZ_OVERRIDE
   {
-    return AllocUnsafeShmem(aSize, aType, aShmem);
+    return PImageBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
   }
 
   void DeallocShmem(ipc::Shmem& aShmem) MOZ_OVERRIDE
