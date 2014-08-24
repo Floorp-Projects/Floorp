@@ -711,14 +711,14 @@ nsSubDocumentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 {
   nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
   if (subDocRoot) {
-    return LogicalSize(aWM, nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
+    return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM,
                             aRenderingContext, this,
                             subDocRoot->GetIntrinsicSize(),
                             subDocRoot->GetIntrinsicRatio(),
-                            aCBSize.GetPhysicalSize(aWM),
-                            aMargin.GetPhysicalSize(aWM),
-                            aBorder.GetPhysicalSize(aWM),
-                            aPadding.GetPhysicalSize(aWM)));
+                            aCBSize,
+                            aMargin,
+                            aBorder,
+                            aPadding);
   }
   return nsLeafFrame::ComputeSize(aRenderingContext, aWM,
                                   aCBSize, aAvailableISize,

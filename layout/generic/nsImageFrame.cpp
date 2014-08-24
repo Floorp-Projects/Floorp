@@ -802,13 +802,13 @@ nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     }
   }
 
-  return LogicalSize(aWM, nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
+  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM,
                             aRenderingContext, this,
                             intrinsicSize, mIntrinsicRatio,
-                            aCBSize.GetPhysicalSize(aWM),
-                            aMargin.GetPhysicalSize(aWM),
-                            aBorder.GetPhysicalSize(aWM),
-                            aPadding.GetPhysicalSize(aWM)));
+                            aCBSize,
+                            aMargin,
+                            aBorder,
+                            aPadding);
 }
 
 nsRect 

@@ -304,15 +304,13 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                       "we lack an intrinsic height or width.");
   }
 
-  nsSize result =
-    nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
+  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM,
                             aRenderingContext, this,
                             intrinsicSize, GetIntrinsicRatio(),
-                            cbSize.GetPhysicalSize(aWM),
-                            aMargin.GetPhysicalSize(aWM),
-                            aBorder.GetPhysicalSize(aWM),
-                            aPadding.GetPhysicalSize(aWM));
-  return LogicalSize(aWM, result);
+                            cbSize,
+                            aMargin,
+                            aBorder,
+                            aPadding);
 }
 
 void
