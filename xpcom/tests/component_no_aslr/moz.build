@@ -10,22 +10,13 @@ SOURCES += [
     'TestComponent.cpp',
 ]
 
-LIBRARY_NAME = 'testcompnoaslr'
-
-IS_COMPONENT = True
+XPCOMBinaryComponent('testcompnoaslr')
 
 DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
     CONFIG['DLL_PREFIX'],
     LIBRARY_NAME,
     CONFIG['DLL_SUFFIX']
 )
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
-]
 
 # Need to link with CoreFoundation on Mac
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
