@@ -4402,14 +4402,6 @@
     "description": "Time to update the visited link set (ms)",
     "cpp_guard": "ANDROID"
   },
-  "FENNEC_LOWMEM_TAB_COUNT": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 100,
-    "n_buckets": 30,
-    "description": "How many tabs were open when a low-memory event was received",
-    "cpp_guard": "ANDROID"
-  },
   "FENNEC_RESTORING_ACTIVITY": {
     "expires_in_version": "never",
     "kind": "flag",
@@ -4457,26 +4449,6 @@
     "high": "5000",
     "n_buckets": 20,
     "description": "Time for the Java UI to load (ms)",
-    "cpp_guard": "ANDROID"
-  },
-  "FENNEC_TAB_EXPIRED": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 10,
-    "high": 604800,
-    "n_buckets": 20,
-    "extended_statistics_ok": true,
-    "description": "How long (in seconds) a tab was inactive before it was expired",
-    "cpp_guard": "ANDROID"
-  },
-  "FENNEC_TAB_ZOMBIFIED": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 10,
-    "high": 604800,
-    "n_buckets": 20,
-    "extended_statistics_ok": true,
-    "description": "How long (in seconds) a tab was inactive when it was OOM-zombified",
     "cpp_guard": "ANDROID"
   },
   "FENNEC_TOPSITES_LOADER_TIME_MS": {
