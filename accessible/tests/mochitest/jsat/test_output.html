@@ -233,6 +233,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedBraille: [[{"string": "entryAbbr"}, "I am required"],
                             ["I am required", {"string": "entryAbbr"}]]
         }, {
+          // test unavailable state utterance on inputs
+          accOrElmOrID: "readonlyInput",
+          expectedUtterance: [[{"string": "stateReadonly"}, {"string": "entry"},
+            "No edits"], ["No edits", {"string": "stateReadonly"},
+            {"string": "entry"}]],
+          expectedBraille: [[{"string": "entryAbbr"}, "No edits"],
+                            ["No edits", {"string": "entryAbbr"}]]
+        }, {
+          // test unavailable state utterance on textareas
+          accOrElmOrID: "readonlyTextarea",
+          expectedUtterance: [[{"string": "stateReadonly"}, {"string": "textarea"},
+            "No editing"], ["No editing", {"string": "stateReadonly"},
+            {"string": "textarea"}]],
+          expectedBraille: [[{"string": "textareaAbbr"}, "No editing"],
+                            ["No editing", {"string": "textareaAbbr"}]]
+        }, {
           // test has popup state utterance
           accOrElmOrID: "hasPopupButton",
           expectedUtterance: [[{"string": "stateHasPopup"},
@@ -486,6 +502,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <button id="expandedButton" aria-expanded="true">I am expanded</button>
       <button id="collapsedButton" aria-expanded="false">I am collapsed</button>
       <input id="requiredInput" required placeholder="I am required" />
+      <input id="readonlyInput" readonly value="No edits" />
+      <textarea id="readonlyTextarea" readonly>No editing</textarea>
       <button id="hasPopupButton" aria-haspopup="true">I have a popup</button>
       <div role="tablist">
         <a id="tab1" href="#" role="tab" aria-selected="true">Account</a>
