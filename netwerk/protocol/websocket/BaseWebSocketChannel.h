@@ -69,6 +69,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   uint32_t                        mWasOpened                 : 1;
   uint32_t                        mClientSetPingInterval     : 1;
   uint32_t                        mClientSetPingTimeout      : 1;
+  uint32_t                        mPingForced                : 1;
 
   uint32_t                        mPingInterval;         /* milliseconds */
   uint32_t                        mPingResponseTimeout;  /* milliseconds */
