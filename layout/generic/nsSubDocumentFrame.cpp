@@ -693,21 +693,30 @@ nsSubDocumentFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 }
 
 
-/* virtual */ nsSize
+/* virtual */
+LogicalSize
 nsSubDocumentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
-                                nsSize aCBSize, nscoord aAvailableWidth,
-                                nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                                WritingMode aWM,
+                                const LogicalSize& aCBSize,
+                                nscoord aAvailableISize,
+                                const LogicalSize& aMargin,
+                                const LogicalSize& aBorder,
+                                const LogicalSize& aPadding,
                                 uint32_t aFlags)
 {
   nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
   if (subDocRoot) {
-    return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
+    return LogicalSize(aWM, nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
                             subDocRoot->GetIntrinsicSize(),
                             subDocRoot->GetIntrinsicRatio(),
-                            aCBSize, aMargin, aBorder, aPadding);
+                            aCBSize.GetPhysicalSize(aWM),
+                            aMargin.GetPhysicalSize(aWM),
+                            aBorder.GetPhysicalSize(aWM),
+                            aPadding.GetPhysicalSize(aWM)));
   }
-  return nsLeafFrame::ComputeSize(aRenderingContext, aCBSize, aAvailableWidth,
+  return nsLeafFrame::ComputeSize(aRenderingContext, aWM,
+                                  aCBSize, aAvailableISize,
                                   aMargin, aBorder, aPadding, aFlags);
 }
 

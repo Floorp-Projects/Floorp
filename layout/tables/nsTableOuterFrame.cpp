@@ -474,21 +474,20 @@ ChildShrinkWrapWidth(nsRenderingContext *aRenderingContext,
   AutoMaybeDisableFontInflation an(aChildFrame);
 
   nsCSSOffsetState offsets(aChildFrame, aRenderingContext, aCBSize.width);
-  nsSize size = aChildFrame->ComputeSize(aRenderingContext, aCBSize,
+  WritingMode wm = offsets.GetWritingMode();
+  LogicalSize size =
+    aChildFrame->ComputeSize(aRenderingContext,
+                  wm, LogicalSize(wm, aCBSize),
                   aAvailableWidth,
-                  nsSize(offsets.ComputedPhysicalMargin().LeftRight(),
-                         offsets.ComputedPhysicalMargin().TopBottom()),
-                  nsSize(offsets.ComputedPhysicalBorderPadding().LeftRight() -
-                           offsets.ComputedPhysicalPadding().LeftRight(),
-                         offsets.ComputedPhysicalBorderPadding().TopBottom() -
-                           offsets.ComputedPhysicalPadding().TopBottom()),
-                  nsSize(offsets.ComputedPhysicalPadding().LeftRight(),
-                         offsets.ComputedPhysicalPadding().TopBottom()),
+                  offsets.ComputedLogicalMargin().Size(wm),
+                  offsets.ComputedLogicalBorderPadding().Size(wm) -
+                    offsets.ComputedLogicalPadding().Size(wm),
+                  offsets.ComputedLogicalPadding().Size(wm),
                   true);
   if (aMarginResult)
-    *aMarginResult = offsets.ComputedPhysicalMargin().LeftRight();
-  return size.width + offsets.ComputedPhysicalMargin().LeftRight() +
-                      offsets.ComputedPhysicalBorderPadding().LeftRight();
+    *aMarginResult = offsets.ComputedLogicalMargin().IStartEnd(wm);
+  return size.ISize(wm) + offsets.ComputedLogicalMargin().IStartEnd(wm) +
+                      offsets.ComputedLogicalBorderPadding().IStartEnd(wm);
 }
 
 /* virtual */ nsSize

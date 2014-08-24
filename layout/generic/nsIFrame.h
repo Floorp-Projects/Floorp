@@ -1658,6 +1658,10 @@ public:
    * separately is so that the 'box-sizing' property can be handled.
    * Thus aMargin includes absolute positioning offsets as well.
    *
+   * @param aWritingMode  The writing mode to use for the returned size
+   *                      (need not match this frame's writing mode).
+   *                      This is also the writing mode of the passed-in
+   *                      LogicalSize parameters.
    * @param aCBSize  The size of the element's containing block.  (Well,
    *                 the |height| component isn't really.)
    * @param aAvailableWidth  The available width for 'auto' widths.
@@ -1681,10 +1685,15 @@ public:
    *                 percentages.
    * @param aFlags   Flags to further customize behavior (definitions above).
    */
-  virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
-                             nsSize aCBSize, nscoord aAvailableWidth,
-                             nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             uint32_t aFlags) = 0;
+  virtual mozilla::LogicalSize
+  ComputeSize(nsRenderingContext *aRenderingContext,
+              mozilla::WritingMode aWritingMode,
+              const mozilla::LogicalSize& aCBSize,
+              nscoord aAvailableISize,
+              const mozilla::LogicalSize& aMargin,
+              const mozilla::LogicalSize& aBorder,
+              const mozilla::LogicalSize& aPadding,
+              uint32_t aFlags) = 0;
 
   /**
    * Compute a tight bounding rectangle for the frame. This is a rectangle
