@@ -601,20 +601,16 @@ FloatMarginWidth(const nsHTMLReflowState& aCBReflowState,
                  const nsCSSOffsetState& aFloatOffsetState)
 {
   AutoMaybeDisableFontInflation an(aFloat);
+  WritingMode fosWM = aFloatOffsetState.GetWritingMode();
   return aFloat->ComputeSize(
     aCBReflowState.rendContext,
-    nsSize(aCBReflowState.ComputedWidth(),
-           aCBReflowState.ComputedHeight()),
+    fosWM,
+    aCBReflowState.ComputedSize(fosWM),
     aFloatAvailableWidth,
-    nsSize(aFloatOffsetState.ComputedPhysicalMargin().LeftRight(),
-           aFloatOffsetState.ComputedPhysicalMargin().TopBottom()),
-    nsSize(aFloatOffsetState.ComputedPhysicalBorderPadding().LeftRight() -
-             aFloatOffsetState.ComputedPhysicalPadding().LeftRight(),
-           aFloatOffsetState.ComputedPhysicalBorderPadding().TopBottom() -
-             aFloatOffsetState.ComputedPhysicalPadding().TopBottom()),
-    nsSize(aFloatOffsetState.ComputedPhysicalPadding().LeftRight(),
-           aFloatOffsetState.ComputedPhysicalPadding().TopBottom()),
-    true).width +
+    aFloatOffsetState.ComputedLogicalMargin().Size(fosWM),
+    aFloatOffsetState.ComputedLogicalBorderPadding().Size(fosWM),
+    aFloatOffsetState.ComputedLogicalPadding().Size(fosWM),
+    true).Width(fosWM) +
   aFloatOffsetState.ComputedPhysicalMargin().LeftRight() +
   aFloatOffsetState.ComputedPhysicalBorderPadding().LeftRight();
 }
