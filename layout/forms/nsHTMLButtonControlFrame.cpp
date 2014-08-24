@@ -269,9 +269,9 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
     extraleft = std::min(extraleft, aButtonReflowState.ComputedPhysicalPadding().left);
     extraright = std::min(extraright, aButtonReflowState.ComputedPhysicalPadding().right);
     xoffset -= extraleft;
-    availSize.SetWidth(wm, availSize.Width(wm) + extraleft + extraright);
+    availSize.Width(wm) = availSize.Width(wm) + extraleft + extraright;
   }
-  availSize.SetWidth(wm, std::max(availSize.Width(wm), 0));
+  availSize.Width(wm) = std::max(availSize.Width(wm), 0);
 
   // Give child a clone of the button's reflow state, with height/width reduced
   // by focusPadding, so that descendants with height:100% don't protrude.
