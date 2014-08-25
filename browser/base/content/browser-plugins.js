@@ -1222,13 +1222,15 @@ var gPluginHandler = {
       let observer = {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                                Ci.nsISupportsWeakReference]),
-        observe : function(subject, topic, data) {
+        observe : (subject, topic, data) => {
           let propertyBag = subject;
           if (!(propertyBag instanceof Ci.nsIPropertyBag2))
             return;
           // Ignore notifications for other crashes.
           if (propertyBag.get("minidumpID") != pluginDumpID)
             return;
+
+          let statusDiv = this.getPluginUI(plugin, "submitStatus");
           statusDiv.setAttribute("status", data);
         },
 
