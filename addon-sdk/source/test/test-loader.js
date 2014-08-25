@@ -366,4 +366,12 @@ exports['test shared globals'] = function(assert) {
   unload(loader);
 }
 
+exports["test require#resolve"] = function(assert) {
+  let root = require.resolve("sdk/tabs").replace(/commonjs\.path\/(.*)$/, "") + "commonjs.path/";
+  assert.ok(/^resource:\/\/extensions\.modules\.[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}-at-jetpack\.commonjs\.path\/$/.test(root), "correct resolution root");
+
+  assert.equal(root + "sdk/tabs.js", require.resolve("sdk/tabs"), "correct resolution of sdk module");
+  assert.equal(root + "toolkit/loader.js", require.resolve("toolkit/loader"), "correct resolution of sdk module");
+};
+
 require('test').run(exports);

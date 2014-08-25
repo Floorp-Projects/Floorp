@@ -5,6 +5,5 @@
   "description": "run tab tests in e10s mode",
   "author": "Tomislav Jovanovic",
   "license": "MPL 2.0",
-  "version": "0.1",
-  "e10s": true
+  "version": "0.1"
 }
