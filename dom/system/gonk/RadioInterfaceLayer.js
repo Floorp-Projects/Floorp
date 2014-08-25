@@ -4292,7 +4292,7 @@ RadioInterface.prototype = {
       if (!response.errorMsg) {
         request.notifyGetSmscAddress(response.smscAddress);
       } else {
-        request.notifyGetSmscAddressFailed(response.errorMsg);
+        request.notifyGetSmscAddressFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
       }
     }).bind(this));
   },
