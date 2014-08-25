@@ -539,6 +539,10 @@ SelectionCarets::SelectWord()
   nsLayoutUtils::TransformPoint(canvasFrame, ptFrame, ptInFrame);
 
   nsIFrame* caretFocusFrame = GetCaretFocusFrame();
+  if (!caretFocusFrame) {
+    return NS_OK;
+  }
+
   SetSelectionDragState(true);
   nsFrame* frame = static_cast<nsFrame*>(ptFrame);
   nsresult rs = frame->SelectByTypeAtPoint(mPresShell->GetPresContext(), ptInFrame,
@@ -637,6 +641,10 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
   }
 
   nsIFrame* caretFocusFrame = GetCaretFocusFrame();
+  if (!caretFocusFrame) {
+    return nsEventStatus_eConsumeNoDefault;
+  }
+
   nsRefPtr<nsFrameSelection> fs = caretFocusFrame->GetFrameSelection();
 
   nsresult result;
@@ -735,6 +743,10 @@ void
 SelectionCarets::SetSelectionDragState(bool aState)
 {
   nsIFrame* caretFocusFrame = GetCaretFocusFrame();
+  if (!caretFocusFrame) {
+    return;
+  }
+
   nsRefPtr<nsFrameSelection> fs = caretFocusFrame->GetFrameSelection();
   fs->SetDragState(aState);
 }

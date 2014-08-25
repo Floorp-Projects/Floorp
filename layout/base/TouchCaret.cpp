@@ -543,13 +543,7 @@ nsEventStatus
 TouchCaret::HandleEvent(WidgetEvent* aEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  if (!presShell) {
-    return nsEventStatus_eIgnore;
-  }
-
-  mozilla::dom::Element* touchCaretElement = presShell->GetTouchCaretElement();
-  if (!touchCaretElement) {
+  if (!IsDisplayable()) {
     return nsEventStatus_eIgnore;
   }
 
