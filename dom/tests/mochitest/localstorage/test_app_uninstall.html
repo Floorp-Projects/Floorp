@@ -183,7 +183,9 @@ function browserLoadEvent() {
 
 addLoadEvent(() =>
   SpecialPowers.pushPrefEnv({set: [['dom.mozBrowserFramesEnabled', true]]}, () =>
-    SpecialPowers.autoConfirmAppInstall(runTest)
+    SpecialPowers.autoConfirmAppInstall(() =>
+      SpecialPowers.autoConfirmAppUninstall(runTest)
+    )
   )
 );
 

@@ -91,6 +91,10 @@ var steps = [
     SpecialPowers.autoConfirmAppInstall(PackagedTestHelper.next);
   },
   function() {
+    ok(true, "autoConfirmAppUninstall");
+    SpecialPowers.autoConfirmAppUninstall(PackagedTestHelper.next);
+  },
+  function() {
     PackagedTestHelper.setAppVersion(0, PackagedTestHelper.next);
   },
   function() {

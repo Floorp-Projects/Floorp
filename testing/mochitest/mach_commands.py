@@ -363,7 +363,7 @@ class MochitestRunner(MozbuildObject):
             if options.gmp_path is None:
                 # Need to fix the location of gmp_fake which might not be shipped in the binary
                 bin_path = self.get_binary_path()
-                options.gmp_path = os.path.join(os.path.dirname(bin_path), 'gmp-fake')
+                options.gmp_path = os.path.join(os.path.dirname(bin_path), 'gmp-fake', '1.0')
 
 
         logger_options = {key: value for key, value in vars(options).iteritems() if key.startswith('log')}

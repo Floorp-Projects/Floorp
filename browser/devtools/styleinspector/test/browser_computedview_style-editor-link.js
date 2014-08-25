@@ -21,6 +21,9 @@ const DOCUMENT_URL = "data:text/html;charset=utf-8,"+encodeURIComponent(
    '.nomatches {color: #ff0000;}</style> <div id="first" style="margin: 10em; ',
    'font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA">',
    '</style>',
+   '<style>',
+   'div { color: #f06; }',
+   '</style>',
    '<link rel="stylesheet" type="text/css" href="'+STYLESHEET_URL+'">',
    '</head>',
    '<body>',
@@ -50,7 +53,8 @@ let test = asyncTest(function*() {
   yield selectNode("span", inspector);
 
   yield testInlineStyle(view, inspector);
-  yield testInlineStyleSheet(view, toolbox);
+  yield testFirstInlineStyleSheet(view, toolbox);
+  yield testSecondInlineStyleSheet(view, toolbox);
   yield testExternalStyleSheet(view, toolbox);
 });
 
@@ -61,8 +65,7 @@ function* testInlineStyle(view, inspector) {
 
   let onWindow = waitForWindow();
   info("Clicking on the first rule-link in the computed-view");
-  let link = getComputedViewLinkByIndex(view, 0);
-  link.click();
+  clickLinkByIndex(view, 0);
 
   let win = yield onWindow;
 
@@ -72,20 +75,37 @@ function* testInlineStyle(view, inspector) {
   win.close();
 }
 
-function* testInlineStyleSheet(view, toolbox) {
+function* testFirstInlineStyleSheet(view, toolbox) {
   info("Testing inline stylesheet");
 
   info("Listening for toolbox switch to the styleeditor");
   let onSwitch = waitForStyleEditor(toolbox);
 
   info("Clicking an inline stylesheet");
-  let link = getComputedViewLinkByIndex(view, 2);
-  link.click();
+  clickLinkByIndex(view, 2);
   let editor = yield onSwitch;
 
   ok(true, "Switched to the style-editor panel in the toolbox");
 
   validateStyleEditorSheet(editor, 0);
+}
+
+function* testSecondInlineStyleSheet(view, toolbox) {
+  info("Testing second inline stylesheet");
+
+  info("Waiting for the stylesheet editor to be selected");
+  let panel = toolbox.getCurrentPanel();
+  let onSelected = panel.UI.once("editor-selected");
+
+  info("Switching back to the inspector panel in the toolbox");
+  yield toolbox.selectTool("inspector");
+
+  info("Clicking on second inline stylesheet link");
+  clickLinkByIndex(view, 4);
+  let editor = yield onSelected;
+
+  is(toolbox.currentToolId, "styleeditor", "The style editor is selected again");
+  validateStyleEditorSheet(editor, 1);
 }
 
 function* testExternalStyleSheet(view, toolbox) {
@@ -99,16 +119,21 @@ function* testExternalStyleSheet(view, toolbox) {
   yield toolbox.selectTool("inspector");
 
   info("Clicking on an external stylesheet link");
-  let link =  getComputedViewLinkByIndex(view, 1);
-  link.click();
+  clickLinkByIndex(view, 1);
   let editor = yield onSelected;
 
   is(toolbox.currentToolId, "styleeditor", "The style editor is selected again");
-  validateStyleEditorSheet(editor, 1);
+  validateStyleEditorSheet(editor, 2);
 }
 
 function validateStyleEditorSheet(editor, expectedSheetIndex) {
   info("Validating style editor stylesheet");
   let sheet = content.document.styleSheets[expectedSheetIndex];
   is(editor.styleSheet.href, sheet.href, "loaded stylesheet matches document stylesheet");
+}
+
+function clickLinkByIndex(view, index) {
+  let link = getComputedViewLinkByIndex(view, index);
+  link.scrollIntoView();
+  link.click();
 }
