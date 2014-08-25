@@ -266,8 +266,10 @@ struct AnimationPlayerCollection : public PRCList
   mozilla::dom::Element* GetElementToRestyle() const;
 
   void PostRestyleForAnimation(nsPresContext *aPresContext) {
-    nsRestyleHint styleHint = IsForElement() ? eRestyle_Self : eRestyle_Subtree;
-    aPresContext->PresShell()->RestyleForAnimation(mElement, styleHint);
+    mozilla::dom::Element* element = GetElementToRestyle();
+    if (element) {
+      aPresContext->PresShell()->RestyleForAnimation(element, eRestyle_Self);
+    }
   }
 
   static void LogAsyncAnimationFailure(nsCString& aMessage,
