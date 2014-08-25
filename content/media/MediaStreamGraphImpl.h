@@ -181,15 +181,16 @@ public:
    * This does the actual iteration: Message processing, MediaStream ordering,
    * blocking computation and processing.
    */
-  nsTArray<MessageBlock>& MessageQueue() {
-    CurrentDriver()->GetThreadMonitor().AssertCurrentThreadOwns();
-    return mMessageQueue;
-  }
-  void DoIteration(nsTArray<MessageBlock>& aMessageQueue);
+  void DoIteration();
 
   bool OneIteration(GraphTime aFrom, GraphTime aTo,
-                    GraphTime aStateFrom, GraphTime aStateEnd,
-                    nsTArray<MessageBlock>& aMessageQueue);
+                    GraphTime aStateFrom, GraphTime aStateEnd);
+
+  // Get
+  nsTArray<MessageBlock>& MessageQueue() {
+    CurrentDriver()->GetThreadMonitor().AssertCurrentThreadOwns();
+    return mFrontMessageQueue;
+  }
 
   /* This is the end of the current iteration, that is, the current time of the
    * graph. */
@@ -226,8 +227,12 @@ public:
    * Process graph message for this iteration, update stream processing order,
    * and recompute stream blocking until aEndBlockingDecisions.
    */
-  void UpdateGraph(nsTArray<MessageBlock>& aMessageQueue,
-                   GraphTime aEndBlockingDecisions);
+  void UpdateGraph(GraphTime aEndBlockingDecisions);
+
+  void SwapMessageQueues() {
+    CurrentDriver()->GetThreadMonitor().AssertCurrentThreadOwns();
+    mFrontMessageQueue.SwapElements(mBackMessageQueue);
+  }
   /**
    * Do all the processing and play the audio and video, ffrom aFrom to aTo.
    */
@@ -487,7 +492,10 @@ public:
    * A list of batches of messages to process. Each batch is processed
    * as an atomic unit.
    */
-  nsTArray<MessageBlock> mMessageQueue;
+  /* Message queue processed by the MSG thread during an iteration. */
+  nsTArray<MessageBlock> mFrontMessageQueue;
+  /* Message queue in which the main thread appends messages. */
+  nsTArray<MessageBlock> mBackMessageQueue;
   /**
    * This enum specifies where this graph is in its lifecycle. This is used
    * to control shutdown.

@@ -204,6 +204,8 @@ protected:
   GraphTime mLastSwitchOffset;
 };
 
+class MediaStreamGraphInitThreadRunnable;
+
 /**
  * This class is a driver that manages its own thread.
  */
@@ -216,6 +218,7 @@ public:
   virtual void Stop() MOZ_OVERRIDE;
   virtual void Dispatch(nsIRunnable* aEvent) MOZ_OVERRIDE;
   void RunThread();
+  friend MediaStreamGraphInitThreadRunnable;
 private:
   nsCOMPtr<nsIThread> mThread;
 };
