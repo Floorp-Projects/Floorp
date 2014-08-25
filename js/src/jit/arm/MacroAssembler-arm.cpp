@@ -782,7 +782,7 @@ MacroAssemblerARM::ma_cmn(Register src1, Register src2, Condition c)
 void
 MacroAssemblerARM::ma_cmn(Register src1, Operand op, Condition c)
 {
-    MOZ_ASSUME_UNREACHABLE("Feature NYI");
+    MOZ_CRASH("Feature NYI");
 }
 
 // Compare (src - src2).
@@ -816,7 +816,7 @@ MacroAssemblerARM::ma_cmp(Register src1, Operand op, Condition c)
         as_cmp(src1, O2Reg(ScratchRegister), c);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("trying to compare FP and integer registers");
+        MOZ_CRASH("trying to compare FP and integer registers");
     }
 }
 void
@@ -889,7 +889,7 @@ MacroAssemblerARM::ma_check_mul(Register src1, Register src2, Register dest, Con
         return NotEqual;
     }
 
-    MOZ_ASSUME_UNREACHABLE("Condition NYI");
+    MOZ_CRASH("Condition NYI");
 }
 
 Assembler::Condition
@@ -907,7 +907,7 @@ MacroAssemblerARM::ma_check_mul(Register src1, Imm32 imm, Register dest, Conditi
         return NotEqual;
     }
 
-    MOZ_ASSUME_UNREACHABLE("Condition NYI");
+    MOZ_CRASH("Condition NYI");
 }
 
 void
@@ -1023,7 +1023,7 @@ void
 MacroAssemblerARM::ma_dtr(LoadStore ls, Register rn, Register rm, Register rt,
                           Index mode, Assembler::Condition cc)
 {
-    MOZ_ASSUME_UNREACHABLE("Feature NYI");
+    MOZ_CRASH("Feature NYI");
 }
 
 void
@@ -1365,7 +1365,7 @@ MacroAssemblerARM::ma_b(void *target, Relocation::Kind reloc, Assembler::Conditi
         as_Imm32Pool(pc, trg, c);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Other methods of generating tracable jumps NYI");
+        MOZ_CRASH("Other methods of generating tracable jumps NYI");
     }
 }
 
@@ -3510,7 +3510,7 @@ MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
                 mode = IB;
                 break;
               default:
-                MOZ_ASSUME_UNREACHABLE("Bogus Offset for LoadValue as DTM");
+                MOZ_CRASH("Bogus Offset for LoadValue as DTM");
             }
             startDataTransferM(IsLoad, Register::FromCode(srcOp.base()), mode);
             transferReg(val.payloadReg());
@@ -3580,7 +3580,7 @@ MacroAssemblerARMCompat::storePayload(Register src, Operand dest)
         ma_str(src, ToPayload(dest));
         return;
     }
-    MOZ_ASSUME_UNREACHABLE("why do we do all of these things?");
+    MOZ_CRASH("why do we do all of these things?");
 
 }
 
@@ -3630,7 +3630,7 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Operand dest) {
         return;
     }
 
-    MOZ_ASSUME_UNREACHABLE("why do we do all of these things?");
+    MOZ_CRASH("why do we do all of these things?");
 
 }
 
@@ -3850,7 +3850,7 @@ MacroAssemblerARMCompat::passHardFpABIArg(const MoveOperand &from, MoveOp::Type 
         break;
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
+        MOZ_CRASH("Unexpected argument type");
     }
 
     enoughMemory_ = moveResolver_.addMove(from, to, type);
@@ -3880,7 +3880,7 @@ MacroAssemblerARMCompat::passSoftFpABIArg(const MoveOperand &from, MoveOp::Type 
         passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
+        MOZ_CRASH("Unexpected argument type");
     }
 
     Register destReg;
@@ -4038,7 +4038,7 @@ MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type resu
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected callWithABI result");
+        MOZ_CRASH("unexpected callWithABI result");
     }
 
     freeStack(stackAdjust);
@@ -4078,7 +4078,7 @@ AssertValidABIFunctionType(uint32_t passedArgTypes)
       case Args_Int_IntDouble:
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected type");
+        MOZ_CRASH("Unexpected type");
     }
 }
 #endif
@@ -4093,7 +4093,7 @@ MacroAssemblerARMCompat::callWithABI(void *fun, MoveOp::Type result)
       case MoveOp::GENERAL: passedArgTypes_ |= ArgType_General; break;
       case MoveOp::DOUBLE:  passedArgTypes_ |= ArgType_Double;  break;
       case MoveOp::FLOAT32: passedArgTypes_ |= ArgType_Float32; break;
-      default: MOZ_ASSUME_UNREACHABLE("Invalid return type");
+      default: MOZ_CRASH("Invalid return type");
     }
 #ifdef DEBUG
     AssertValidABIFunctionType(passedArgTypes_);
