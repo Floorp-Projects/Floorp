@@ -5,12 +5,36 @@
 package org.mozilla.search.providers;
 
 import android.net.Uri;
+import android.util.Xml;
+
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Locale;
 
 /**
  * Extend this class to add a new search engine to
  * the search activity.
  */
-public abstract class SearchEngine {
+public class SearchEngine {
+
+    private static final String URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
+    private static final String URLTYPE_SEARCH_HTML  = "text/html";
+
+    // Parameters copied from nsSearchService.js
+    private static final String MOZ_PARAM_LOCALE = "\\{moz:locale\\}";
+    private static final String MOZ_PARAM_DIST_ID = "\\{moz:distributionID\\}";
+    private static final String MOZ_PARAM_OFFICIAL = "\\{moz:official\\}";
+
+    // Supported OpenSearch parameters
+    // See http://opensearch.a9.com/spec/1.1/querysyntax/#core
+    private static final String OS_PARAM_USER_DEFINED = "\\{searchTerms\\??\\}";
+    private static final String OS_PARAM_INPUT_ENCODING = "\\{inputEncoding\\??\\}";
+    private static final String OS_PARAM_LANGUAGE = "\\{language\\??\\}";
+    private static final String OS_PARAM_OUTPUT_ENCODING = "\\{outputEncoding\\??\\}";
+    private static final String OS_PARAM_OPTIONAL = "\\{(?:\\w+:)?\\w+\\?\\}";
 
     // Boilerplate bookmarklet-style JS for injecting CSS into the
     // head of a web page. The actual CSS is inserted at `%s`.
@@ -21,82 +45,183 @@ public abstract class SearchEngine {
                     "document.getElementsByTagName('head')[0].appendChild(tag);" +
                     "tag.innerText='%s'})();";
 
-    private String suggestionTemplate;
+    private String identifier;
+    private String shortName;
+
+    // TODO: Make something more robust (like EngineURL in nsSearchService.js)
+    private Uri resultsUri;
+    private Uri suggestUri;
 
     /**
+     *
+     * @param in InputStream of open search plugin XML
+     */
+    public SearchEngine(String identifier, InputStream in) throws IOException, XmlPullParserException {
+        this.identifier = identifier;
+
+        final XmlPullParser parser = Xml.newPullParser();
+        parser.setInput(in, null);
+        parser.nextTag();
+        readSearchPlugin(parser);
+    }
+
+    private void readSearchPlugin(XmlPullParser parser) throws XmlPullParserException, IOException {
+        parser.require(XmlPullParser.START_TAG, null, "SearchPlugin");
+        while (parser.next() != XmlPullParser.END_TAG) {
+            if (parser.getEventType() != XmlPullParser.START_TAG) {
+                continue;
+            }
+
+            final String tag = parser.getName();
+            if (tag.equals("ShortName")) {
+                readShortName(parser);
+            } else if (tag.equals("Url")) {
+                readUrl(parser);
+            // TODO: Support for other tags
+            //} else if (tag.equals("Image")) {
+            } else {
+                skip(parser);
+            }
+        }
+    }
+
+    private void readShortName(XmlPullParser parser) throws IOException, XmlPullParserException {
+        parser.require(XmlPullParser.START_TAG, null, "ShortName");
+        if (parser.next() == XmlPullParser.TEXT) {
+            shortName = parser.getText();
+            parser.nextTag();
+        }
+    }
+
+    private void readUrl(XmlPullParser parser) throws XmlPullParserException, IOException {
+        parser.require(XmlPullParser.START_TAG, null, "Url");
+
+        final String type = parser.getAttributeValue(null, "type");
+        final String template = parser.getAttributeValue(null, "template");
+
+        Uri uri = Uri.parse(template);
+
+        while (parser.next() != XmlPullParser.END_TAG) {
+            if (parser.getEventType() != XmlPullParser.START_TAG) {
+                continue;
+            }
+
+            final String tag = parser.getName();
+
+            if (tag.equals("Param")) {
+                final String name = parser.getAttributeValue(null, "name");
+                final String value = parser.getAttributeValue(null, "value");
+                uri = uri.buildUpon().appendQueryParameter(name, value).build();
+                parser.nextTag();
+            // TODO: Support for other tags
+            //} else if (tag.equals("MozParam")) {
+            } else {
+                skip(parser);
+            }
+        }
+
+        if (type.equals(URLTYPE_SEARCH_HTML)) {
+            resultsUri = uri;
+        } else if (type.equals(URLTYPE_SUGGEST_JSON)) {
+            suggestUri = uri;
+        }
+    }
+
+    private void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
+        if (parser.getEventType() != XmlPullParser.START_TAG) {
+            throw new IllegalStateException();
+        }
+        int depth = 1;
+        while (depth != 0) {
+            switch (parser.next()) {
+                case XmlPullParser.END_TAG:
+                    depth--;
+                    break;
+                case XmlPullParser.START_TAG:
+                    depth++;
+                    break;
+            }
+        }
+    }
+
+    /**
+     * HACKS! We'll need to replace this with endpoints that return the correct content.
+     *
      * Retrieve a JS snippet, in bookmarklet style, that can be used
      * to modify the results page.
      */
     public String getInjectableJs() {
-        return String.format(STYLE_INJECTION_SCRIPT, getInjectableCss());
+        final String css;
+
+        if (identifier.equals("bing")) {
+            css = "#mHeader{display:none}#contentWrapper{margin-top:0}";
+        } else if (identifier.equals("google")) {
+            css = "#sfcnt,#top_nav{display:none}";
+        } else if (identifier.equals("yahoo")) {
+            css = "#nav,#header{display:none}";
+        } else {
+            css = "";
+        }
+
+        return String.format(STYLE_INJECTION_SCRIPT, css);
+    }
+
+    public String getName() {
+        return shortName;
     }
 
     /**
      * Determine whether a particular url belongs to this search engine. If not,
      * the url will be sent to Fennec.
      */
-    final public boolean isSearchResultsPage(String url) {
-        return getResultsUri().getAuthority().equalsIgnoreCase(Uri.parse(url).getAuthority());
+    public boolean isSearchResultsPage(String url) {
+        return resultsUri.getAuthority().equalsIgnoreCase(Uri.parse(url).getAuthority());
     }
 
     /**
-     * Create a uri string that can be used to fetch suggestions.
+     * Create a uri string that can be used to fetch the results page.
      *
-     * @param query The user's partial query. This method will handle url escaping.
+     * @param query The user's query. This method will escape and encode the query.
      */
-    final public String suggestUriForQuery(String query) {
-        return getSuggestionUri().buildUpon().appendQueryParameter(getSuggestionQueryParam(), query).build().toString();
+    public String resultsUriForQuery(String query) {
+        final String template = Uri.decode(resultsUri.toString());
+        return paramSubstitution(template, Uri.encode(query));
     }
 
     /**
-     * Create a uri strung that can be used to fetch the results page.
+     * Create a uri string to fetch autocomplete suggestions.
      *
-     * @param query The user's query. This method will handle url escaping.
+     * @param query The user's query. This method will escape and encode the query.
      */
-    final public String resultsUriForQuery(String query) {
-        return getResultsUri().buildUpon().appendQueryParameter(getResultsQueryParam(), query).build().toString();
+    public String getSuggestionTemplate(String query) {
+        final String template = Uri.decode(suggestUri.toString());
+        return paramSubstitution(template, Uri.encode(query));
     }
 
     /**
-     * Create a suggestion uri that can be used by SuggestClient
+     * Formats template string with proper parameters. Modeled after
+     * ParamSubstitution in nsSearchService.js
+     *
+     * @param template
+     * @param query
+     * @return
      */
-    final public String getSuggestionTemplate(String placeholder) {
-        if (suggestionTemplate == null) {
-            suggestionTemplate = suggestUriForQuery(placeholder);
-        }
-        return suggestionTemplate;
+    private String paramSubstitution(String template, String query) {
+        final String locale = Locale.getDefault().toString();
+
+        template = template.replaceAll(MOZ_PARAM_LOCALE, locale);
+        template = template.replaceAll(MOZ_PARAM_DIST_ID, "");
+        template = template.replaceAll(MOZ_PARAM_OFFICIAL, "unofficial");
+
+        template = template.replaceAll(OS_PARAM_USER_DEFINED, query);
+        template = template.replaceAll(OS_PARAM_INPUT_ENCODING, "UTF-8");
+
+        template = template.replaceAll(OS_PARAM_LANGUAGE, locale);
+        template = template.replaceAll(OS_PARAM_OUTPUT_ENCODING, "UTF-8");
+
+        // Replace any optional parameters
+        template = template.replaceAll(OS_PARAM_OPTIONAL, "");
+
+        return template;
     }
-
-    /**
-     * Retrieve a snippet of CSS that can be used to modify the appearance
-     * of the search results page. Currently this is used to hide
-     * the web site's search bar and facet bar.
-     */
-    protected abstract String getInjectableCss();
-
-    /**
-     * Retrieve the base Uri that should be used when retrieving
-     * the results page. This may include params that do not vary --
-     * for example, the user's locale.
-     */
-    protected abstract Uri getResultsUri();
-
-    /**
-     * Retrieve the base Uri that should be used when fetching
-     * suggestions. This may include params that do not vary --
-     * for example, the user's locale.
-     */
-    protected abstract Uri getSuggestionUri();
-
-    /**
-     * Retrieve the uri query param for the user's partial query.
-     * Used for suggestions.
-     */
-    protected abstract String getSuggestionQueryParam();
-
-    /**
-     * Retrieve the uri query param that holds the user's final query.
-     * Used for results.
-     */
-    protected abstract String getResultsQueryParam();
 }
