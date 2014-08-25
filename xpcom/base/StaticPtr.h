@@ -54,15 +54,9 @@ public:
     return *this;
   }
 
-  T* get() const
-  {
-    return mRawPtr;
-  }
+  T* get() const { return mRawPtr; }
 
-  operator T*() const
-  {
-    return get();
-  }
+  operator T*() const { return get(); }
 
   T* operator->() const
   {
@@ -70,10 +64,7 @@ public:
     return get();
   }
 
-  T& operator*() const
-  {
-    return *get();
-  }
+  T& operator*() const { return *get(); }
 
 private:
   // Disallow copy constructor, but only in debug mode.  We only define
@@ -120,15 +111,9 @@ public:
     return (this = aRhs.mRawPtr);
   }
 
-  T* get() const
-  {
-    return mRawPtr;
-  }
+  T* get() const { return mRawPtr; }
 
-  operator T*() const
-  {
-    return get();
-  }
+  operator T*() const { return get(); }
 
   T* operator->() const
   {
@@ -136,10 +121,7 @@ public:
     return get();
   }
 
-  T& operator*() const
-  {
-    return *get();
-  }
+  T& operator*() const { return *get(); }
 
 private:
   void AssignWithAddref(T* aNewPtr)

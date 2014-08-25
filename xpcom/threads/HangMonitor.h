@@ -40,7 +40,7 @@ void Shutdown();
 
 /**
  * Notify the hang monitor of activity which will reset its internal timer.
- * 
+ *
  * @param activityType The type of activity being reported.
  * @see ActivityType
  */
