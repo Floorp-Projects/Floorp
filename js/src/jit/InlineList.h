@@ -311,9 +311,10 @@ class InlineList : protected InlineListNode<T>
         insertBeforeUnchecked(at, item);
     }
     void insertBeforeUnchecked(Node *at, Node *item) {
+        Node *atPrev = at->prev;
         item->next = at;
-        item->prev = at->prev;
-        at->prev->next = item;
+        item->prev = atPrev;
+        atPrev->next = item;
         at->prev = item;
     }
     void insertAfter(Node *at, Node *item) {
@@ -322,15 +323,19 @@ class InlineList : protected InlineListNode<T>
         insertAfterUnchecked(at, item);
     }
     void insertAfterUnchecked(Node *at, Node *item) {
-        item->next = at->next;
+        Node *atNext = static_cast<Node *>(at->next);
+        item->next = atNext;
         item->prev = at;
-        static_cast<Node *>(at->next)->prev = item;
+        atNext->prev = item;
         at->next = item;
     }
     void remove(Node *t) {
-        t->prev->next = t->next;
-        static_cast<Node *>(t->next)->prev = t->prev;
-        t->next = t->prev = nullptr;
+        Node *tNext = static_cast<Node *>(t->next);
+        Node *tPrev = t->prev;
+        tPrev->next = tNext;
+        tNext->prev = tPrev;
+        t->next = nullptr;
+        t->prev = nullptr;
     }
     void clear() {
         this->next = this->prev = this;
