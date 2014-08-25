@@ -248,7 +248,7 @@ this.AccessFu = { // jshint ignore:line
     }
 
     if (this._notifyOutputPref.value) {
-      Services.obs.notifyObservers(null, 'accessfu-output',
+      Services.obs.notifyObservers(null, 'accessibility-output',
                                    JSON.stringify(aPresentationData));
     }
   },
@@ -514,7 +514,7 @@ var Output = {
   },
 
   B2G: function B2G(aDetails) {
-    Utils.dispatchChromeEvent('accessfu-output', aDetails);
+    Utils.dispatchChromeEvent('accessibility-output', aDetails);
   },
 
   Visual: function Visual(aDetail, aBrowser) {
