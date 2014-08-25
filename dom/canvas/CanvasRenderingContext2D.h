@@ -41,6 +41,7 @@ class ImageData;
 class StringOrCanvasGradientOrCanvasPattern;
 class OwningStringOrCanvasGradientOrCanvasPattern;
 class TextMetrics;
+class SVGMatrix;
 
 extern const mozilla::gfx::Float SIGMA_MAX;
 
@@ -93,6 +94,9 @@ public:
   // passed directly and we can't drop the only ref to have a raw pointer.
   CanvasPath(nsISupports* aParent,
              TemporaryRef<gfx::PathBuilder> aPathBuilder);
+
+  void AddPath(CanvasPath& aCanvasPath,
+               const Optional<NonNull<SVGMatrix>>& aMatrix);
 
 private:
   virtual ~CanvasPath() {}
