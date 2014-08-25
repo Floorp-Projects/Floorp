@@ -29,21 +29,48 @@ public class OverlayToastHelper {
      * @param isTransient Should a retry button be presented?
      * @param retryListener Listener to fire when the retry button is pressed.
      */
-    public static void showFailureToast(Context context, String failureMessage, boolean isTransient, View.OnClickListener retryListener) {
-        showToast(context, failureMessage, isTransient, retryListener);
+    public static void showFailureToast(Context context, String failureMessage, View.OnClickListener retryListener) {
+        showToast(context, failureMessage, false, retryListener);
     }
-    public static void showFailureToast(Context context, String failureMessage, boolean isTransient) {
-        showFailureToast(context, failureMessage, isTransient, null);
+    public static void showFailureToast(Context context, String failureMessage) {
+        showFailureToast(context, failureMessage, null);
     }
 
     /**
      * Show a toast indicating a successful share.
-     * @param successMesssage Message to show in the toast.
+     * @param successMessage Message to show in the toast.
      */
-    public static void showSuccessToast(Context context, String successMesssage) {
-        showToast(context, successMesssage, false, null);
+    public static void showSuccessToast(Context context, String successMessage) {
+        showToast(context, successMessage, true, null);
     }
 
-    private static void showToast(Context context, String message, boolean withRetry, View.OnClickListener retryListener) {
+    private static void showToast(Context context, String message, boolean success, View.OnClickListener retryListener) {
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        View layout = inflater.inflate(R.layout.overlay_share_toast, null);
+
+        TextView text = (TextView) layout.findViewById(R.id.overlay_toast_message);
+        text.setText(message);
+
+        if (retryListener == null) {
+            // Hide the retry button.
+            layout.findViewById(R.id.overlay_toast_separator).setVisibility(View.GONE);
+            layout.findViewById(R.id.overlay_toast_retry_btn).setVisibility(View.GONE);
+        } else {
+            // Set up the button to perform a retry.
+            Button retryBtn = (Button) layout.findViewById(R.id.overlay_toast_retry_btn);
+            retryBtn.setOnClickListener(retryListener);
+        }
+
+        if (!success) {
+            // Hide the happy green tick.
+            text.setCompoundDrawables(null, null, null, null);
+        }
+
+        Toast toast = new Toast(context);
+        toast.setGravity(Gravity.CENTER_VERTICAL | Gravity.BOTTOM, 0, 0);
+        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.setView(layout);
+        toast.show();
     }
 }

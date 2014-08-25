@@ -488,7 +488,11 @@ if CONFIG['MOZ_ANDROID_SHARE_OVERLAY']:
         'overlays/service/sharemethods/ParcelableClientRecord.java',
         'overlays/service/sharemethods/SendTab.java',
         'overlays/service/sharemethods/ShareMethod.java',
-        'overlays/ui/OverlayToastHelper.java'
+        'overlays/ui/OverlayToastHelper.java',
+        'overlays/ui/SendTabDeviceListArrayAdapter.java',
+        'overlays/ui/SendTabList.java',
+        'overlays/ui/SendTabTargetSelectedListener.java',
+        'overlays/ui/ShareDialog.java',
     ]
 
 gbjar.sources += sync_java_files

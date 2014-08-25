@@ -90,6 +90,23 @@
      to display browser chrome. -->
 <!ENTITY locale_system_default "System default">
 
+<!-- Localization note (overlay_share_bookmark_btn_label) : This string is
+     used in the share overlay menu to select an action. It is the verb
+     "to bookmark", not the noun "a bookmark". -->
+<!ENTITY overlay_share_bookmark_btn_label "Bookmark">
+<!ENTITY overlay_share_reading_list_btn_label "Add to Reading List">
+<!ENTITY overlay_share_header "Send to &brandShortName;">
+<!ENTITY overlay_share_send_other "Send to other devices">
+
+<!-- Localization note (overlay_share_send_tab_btn_label) : Used on the
+     share overlay menu to represent the "Send Tab" action when the user
+     either has not set up Sync, or has no other devices to send a tab
+     to. -->
+<!ENTITY overlay_share_send_tab_btn_label "Send to another device">
+<!ENTITY overlay_share_no_url "No link found in this share">
+<!ENTITY overlay_share_retry "Try again">
+<!ENTITY overlay_share_select_device "Select device">
+
 <!ENTITY pref_category_search3 "Search">
 <!ENTITY pref_category_search_summary "Customize your search providers">
 <!ENTITY pref_category_display "Display">
