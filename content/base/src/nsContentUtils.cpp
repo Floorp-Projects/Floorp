@@ -1781,7 +1781,7 @@ nsContentUtils::Shutdown()
   sUserDefinedEvents = nullptr;
 
   if (sEventListenerManagersHash.ops) {
-    NS_ASSERTION(sEventListenerManagersHash.entryCount == 0,
+    NS_ASSERTION(sEventListenerManagersHash.EntryCount() == 0,
                  "Event listener manager hash not empty at shutdown!");
 
     // See comment above.
@@ -1793,7 +1793,7 @@ nsContentUtils::Shutdown()
     // it could leave dangling references in DOMClassInfo's preserved
     // wrapper table.
 
-    if (sEventListenerManagersHash.entryCount == 0) {
+    if (sEventListenerManagersHash.EntryCount() == 0) {
       PL_DHashTableFinish(&sEventListenerManagersHash);
       sEventListenerManagersHash.ops = nullptr;
     }

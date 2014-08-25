@@ -75,11 +75,6 @@ typedef struct PLDHashTableOps  PLDHashTableOps;
  * maintained automatically by PL_DHashTableOperate -- users should never set
  * it, and its only uses should be via the entry macros below.
  *
- * The PL_DHASH_ENTRY_IS_LIVE function tests whether entry is neither free nor
- * removed.  An entry may be either busy or free; if busy, it may be live or
- * removed.  Consumers of this API should not access members of entries that
- * are not live.
- *
  * However, use PL_DHASH_ENTRY_IS_BUSY for faster liveness testing of entries
  * returned by PL_DHashTableOperate, as PL_DHashTableOperate never returns a
  * non-live, busy (i.e., removed) entry pointer to its caller.  See below for
@@ -102,11 +97,66 @@ PL_DHASH_ENTRY_IS_BUSY(PLDHashEntryHdr* aEntry)
   return !PL_DHASH_ENTRY_IS_FREE(aEntry);
 }
 
-MOZ_ALWAYS_INLINE bool
-PL_DHASH_ENTRY_IS_LIVE(PLDHashEntryHdr* aEntry)
+/*
+ * To consolidate keyHash computation and table grow/shrink code, we use a
+ * single entry point for lookup, add, and remove operations.  The operation
+ * codes are declared here, along with codes returned by PLDHashEnumerator
+ * functions, which control PL_DHashTableEnumerate's behavior.
+ */
+typedef enum PLDHashOperator
 {
-  return aEntry->keyHash >= 2;
-}
+  PL_DHASH_LOOKUP = 0,        /* lookup entry */
+  PL_DHASH_ADD = 1,           /* add entry */
+  PL_DHASH_REMOVE = 2,        /* remove entry, or enumerator says remove */
+  PL_DHASH_NEXT = 0,          /* enumerator says continue */
+  PL_DHASH_STOP = 1           /* enumerator says stop */
+} PLDHashOperator;
+
+/*
+ * Enumerate entries in table using etor:
+ *
+ *   count = PL_DHashTableEnumerate(table, etor, arg);
+ *
+ * PL_DHashTableEnumerate calls etor like so:
+ *
+ *   op = etor(table, entry, number, arg);
+ *
+ * where number is a zero-based ordinal assigned to live entries according to
+ * their order in aTable->entryStore.
+ *
+ * The return value, op, is treated as a set of flags.  If op is PL_DHASH_NEXT,
+ * then continue enumerating.  If op contains PL_DHASH_REMOVE, then clear (via
+ * aTable->ops->clearEntry) and free entry.  Then we check whether op contains
+ * PL_DHASH_STOP; if so, stop enumerating and return the number of live entries
+ * that were enumerated so far.  Return the total number of live entries when
+ * enumeration completes normally.
+ *
+ * If etor calls PL_DHashTableOperate on table with op != PL_DHASH_LOOKUP, it
+ * must return PL_DHASH_STOP; otherwise undefined behavior results.
+ *
+ * If any enumerator returns PL_DHASH_REMOVE, aTable->entryStore may be shrunk
+ * or compressed after enumeration, but before PL_DHashTableEnumerate returns.
+ * Such an enumerator therefore can't safely set aside entry pointers, but an
+ * enumerator that never returns PL_DHASH_REMOVE can set pointers to entries
+ * aside, e.g., to avoid copying live entries into an array of the entry type.
+ * Copying entry pointers is cheaper, and safe so long as the caller of such a
+ * "stable" Enumerate doesn't use the set-aside pointers after any call either
+ * to PL_DHashTableOperate, or to an "unstable" form of Enumerate, which might
+ * grow or shrink entryStore.
+ *
+ * If your enumerator wants to remove certain entries, but set aside pointers
+ * to other entries that it retains, it can use PL_DHashTableRawRemove on the
+ * entries to be removed, returning PL_DHASH_NEXT to skip them.  Likewise, if
+ * you want to remove entries, but for some reason you do not want entryStore
+ * to be shrunk or compressed, you can call PL_DHashTableRawRemove safely on
+ * the entry being enumerated, rather than returning PL_DHASH_REMOVE.
+ */
+typedef PLDHashOperator (*PLDHashEnumerator)(PLDHashTable* aTable,
+                                             PLDHashEntryHdr* aHdr,
+                                             uint32_t aNumber, void* aArg);
+
+typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
+  PLDHashEntryHdr* aHdr, mozilla::MallocSizeOf aMallocSizeOf, void* aArg);
 
 /*
  * A PLDHashTable is currently 8 words (without the PL_DHASHMETER overhead)
@@ -182,8 +232,15 @@ PL_DHASH_ENTRY_IS_LIVE(PLDHashEntryHdr* aEntry)
  */
 struct PLDHashTable
 {
-  const PLDHashTableOps* ops;         /* virtual operations, see below */
+  /*
+   * Virtual operations; see below. This field is public because it's commonly
+   * zeroed to indicate that a table is no longer live.
+   */
+  const PLDHashTableOps* ops;
+
   void*               data;           /* ops- and instance-specific data */
+
+private:
   int16_t             hashShift;      /* multiplicative hash shift */
   /*
    * |recursionLevel| is only used in debug builds, but is present in opt
@@ -197,6 +254,7 @@ struct PLDHashTable
   uint32_t            removedCount;   /* removed entry sentinels in table */
   uint32_t            generation;     /* entry storage generation number */
   char*               entryStore;     /* entry storage */
+
 #ifdef PL_DHASHMETER
   struct PLDHashStats
   {
@@ -219,15 +277,63 @@ struct PLDHashTable
     uint32_t        enumShrinks;    /* contractions after Enumerate */
   } stats;
 #endif
-};
 
-/*
- * Size in entries (gross, not net of free and removed sentinels) for table.
- * We store hashShift rather than sizeLog2 to optimize the collision-free case
- * in SearchTable.
- */
-#define PL_DHASH_TABLE_CAPACITY(table) \
-    ((uint32_t)1 << (PL_DHASH_BITS - (table)->hashShift))
+public:
+  /*
+   * Size in entries (gross, not net of free and removed sentinels) for table.
+   * We store hashShift rather than sizeLog2 to optimize the collision-free case
+   * in SearchTable.
+   */
+  uint32_t Capacity() const
+  {
+    return ((uint32_t)1 << (PL_DHASH_BITS - hashShift));
+  }
+
+  uint32_t EntrySize()  const { return entrySize; }
+  uint32_t EntryCount() const { return entryCount; }
+  uint32_t Generation() const { return generation; }
+
+  bool Init(const PLDHashTableOps* aOps, void* aData, uint32_t aEntrySize,
+            const mozilla::fallible_t&, uint32_t aLength);
+
+  void Finish();
+
+  PLDHashEntryHdr* Operate(const void* aKey, PLDHashOperator aOp);
+
+  void RawRemove(PLDHashEntryHdr* aEntry);
+
+  uint32_t Enumerate(PLDHashEnumerator aEtor, void* aArg);
+
+  size_t SizeOfIncludingThis(
+    PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
+    mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr) const;
+
+  size_t SizeOfExcludingThis(
+    PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
+    mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr) const;
+
+#ifdef DEBUG
+  void MarkImmutable();
+#endif
+
+  void MoveEntryStub(const PLDHashEntryHdr* aFrom, PLDHashEntryHdr* aTo);
+
+  void ClearEntryStub(PLDHashEntryHdr* aEntry);
+
+  void FreeStringKey(PLDHashEntryHdr* aEntry);
+
+#ifdef PL_DHASHMETER
+  void DumpMeter(PLDHashEnumerator aDump, FILE* aFp);
+#endif
+
+private:
+  PLDHashEntryHdr* PL_DHASH_FASTCALL
+    SearchTable(const void* aKey, PLDHashNumber aKeyHash, PLDHashOperator aOp);
+
+  PLDHashEntryHdr* PL_DHASH_FASTCALL FindFreeEntry(PLDHashNumber aKeyHash);
+
+  bool ChangeTable(int aDeltaLog2);
+};
 
 /*
  * Table space at entryStore is allocated and freed using these callbacks.
@@ -425,21 +531,6 @@ MOZ_WARN_UNUSED_RESULT NS_COM_GLUE bool PL_DHashTableInit(
 NS_COM_GLUE void PL_DHashTableFinish(PLDHashTable* aTable);
 
 /*
- * To consolidate keyHash computation and table grow/shrink code, we use a
- * single entry point for lookup, add, and remove operations.  The operation
- * codes are declared here, along with codes returned by PLDHashEnumerator
- * functions, which control PL_DHashTableEnumerate's behavior.
- */
-typedef enum PLDHashOperator
-{
-  PL_DHASH_LOOKUP = 0,        /* lookup entry */
-  PL_DHASH_ADD = 1,           /* add entry */
-  PL_DHASH_REMOVE = 2,        /* remove entry, or enumerator says remove */
-  PL_DHASH_NEXT = 0,          /* enumerator says continue */
-  PL_DHASH_STOP = 1           /* enumerator says stop */
-} PLDHashOperator;
-
-/*
  * To lookup a key in table, call:
  *
  *  entry = PL_DHashTableOperate(table, key, PL_DHASH_LOOKUP);
@@ -485,55 +576,9 @@ PL_DHashTableOperate(PLDHashTable* aTable, const void* aKey,
 NS_COM_GLUE void PL_DHashTableRawRemove(PLDHashTable* aTable,
                                         PLDHashEntryHdr* aEntry);
 
-/*
- * Enumerate entries in table using etor:
- *
- *   count = PL_DHashTableEnumerate(table, etor, arg);
- *
- * PL_DHashTableEnumerate calls etor like so:
- *
- *   op = etor(table, entry, number, arg);
- *
- * where number is a zero-based ordinal assigned to live entries according to
- * their order in aTable->entryStore.
- *
- * The return value, op, is treated as a set of flags.  If op is PL_DHASH_NEXT,
- * then continue enumerating.  If op contains PL_DHASH_REMOVE, then clear (via
- * aTable->ops->clearEntry) and free entry.  Then we check whether op contains
- * PL_DHASH_STOP; if so, stop enumerating and return the number of live entries
- * that were enumerated so far.  Return the total number of live entries when
- * enumeration completes normally.
- *
- * If etor calls PL_DHashTableOperate on table with op != PL_DHASH_LOOKUP, it
- * must return PL_DHASH_STOP; otherwise undefined behavior results.
- *
- * If any enumerator returns PL_DHASH_REMOVE, aTable->entryStore may be shrunk
- * or compressed after enumeration, but before PL_DHashTableEnumerate returns.
- * Such an enumerator therefore can't safely set aside entry pointers, but an
- * enumerator that never returns PL_DHASH_REMOVE can set pointers to entries
- * aside, e.g., to avoid copying live entries into an array of the entry type.
- * Copying entry pointers is cheaper, and safe so long as the caller of such a
- * "stable" Enumerate doesn't use the set-aside pointers after any call either
- * to PL_DHashTableOperate, or to an "unstable" form of Enumerate, which might
- * grow or shrink entryStore.
- *
- * If your enumerator wants to remove certain entries, but set aside pointers
- * to other entries that it retains, it can use PL_DHashTableRawRemove on the
- * entries to be removed, returning PL_DHASH_NEXT to skip them.  Likewise, if
- * you want to remove entries, but for some reason you do not want entryStore
- * to be shrunk or compressed, you can call PL_DHashTableRawRemove safely on
- * the entry being enumerated, rather than returning PL_DHASH_REMOVE.
- */
-typedef PLDHashOperator (*PLDHashEnumerator)(PLDHashTable* aTable,
-                                             PLDHashEntryHdr* aHdr,
-                                             uint32_t aNumber, void* aArg);
-
 NS_COM_GLUE uint32_t
 PL_DHashTableEnumerate(PLDHashTable* aTable, PLDHashEnumerator aEtor,
                        void* aArg);
-
-typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
-  PLDHashEntryHdr* aHdr, mozilla::MallocSizeOf aMallocSizeOf, void* aArg);
 
 /**
  * Measure the size of the table's entry storage, and if

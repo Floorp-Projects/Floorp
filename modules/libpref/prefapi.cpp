@@ -47,7 +47,7 @@ clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     // don't need to free this as it's allocated in memory owned by
     // gPrefNameArena
     pref->key = nullptr;
-    memset(entry, 0, table->entrySize);
+    memset(entry, 0, table->EntrySize());
 }
 
 static bool
@@ -65,7 +65,7 @@ matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
     return (strcmp(prefEntry->key, otherKey) == 0);
 }
 
-PLDHashTable        gHashTable = { nullptr };
+PLDHashTable        gHashTable;
 static PLArenaPool  gPrefNameArena;
 bool                gDirty = false;
 
