@@ -144,6 +144,7 @@ nsHttpHandler::nsHttpHandler()
     , mSpdyTimeout(PR_SecondsToInterval(180))
     , mResponseTimeout(PR_SecondsToInterval(300))
     , mResponseTimeoutEnabled(false)
+    , mNetworkChangedTimeout(5000)
     , mMaxRequestAttempts(10)
     , mMaxRequestDelay(10)
     , mIdleSynTimeout(250)
@@ -857,6 +858,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("response.timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mResponseTimeout = PR_SecondsToInterval(clamped(val, 0, 0xffff));
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("network-changed.timeout"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("network-changed.timeout"), &val);
+        if (NS_SUCCEEDED(rv))
+            mNetworkChangedTimeout = clamped(val, 1, 600) * 1000;
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-connections"))) {
@@ -1832,6 +1839,7 @@ nsHttpHandler::Observe(nsISupports *subject,
         if (strcmp(state, NS_NETWORK_LINK_DATA_CHANGED) == 0) {
             if (mConnMgr) {
                 mConnMgr->PruneDeadConnections();
+                mConnMgr->VerifyTraffic();
             }
         }
     }
