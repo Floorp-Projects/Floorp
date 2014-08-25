@@ -33,6 +33,9 @@ let gPage = {
 
     // Initialize customize controls.
     gCustomize.init();
+
+    // Initialize intro panel.
+    gIntro.init();
   },
 
   /**
@@ -94,7 +97,7 @@ let gPage = {
     if (document.hidden) {
       addEventListener("visibilitychange", this);
     } else {
-      this.onPageFirstVisible();
+      setTimeout(_ => this.onPageFirstVisible());
     }
 
     // Initialize and render the grid.
@@ -174,42 +177,45 @@ let gPage = {
     // Record another page impression.
     Services.telemetry.getHistogramById("NEWTAB_PAGE_SHOWN").add(true);
 
-    // Initialize type counting with the types we want to count
-    let directoryCount = {};
-    for (let type of DirectoryLinksProvider.linkTypes) {
-      directoryCount[type] = 0;
-    }
-
     for (let site of gGrid.sites) {
       if (site) {
         site.captureIfMissing();
+      }
+    }
 
-        // Record which tile index a directory link was shown
-        let {directoryIndex, type} = site.link;
-        if (directoryIndex !== undefined) {
-          let tileIndex = site.cell.index;
-          // For telemetry, only handle the first 9 links in the first 9 cells
-          if (directoryIndex < 9) {
-            let shownId = "NEWTAB_PAGE_DIRECTORY_LINK" + directoryIndex + "_SHOWN";
-            Services.telemetry.getHistogramById(shownId).add(Math.min(9, tileIndex));
-          }
-        }
+    // Allow the document to reflow so the page has sizing info
+    let i = 0;
+    let checkSizing = _ => setTimeout(_ => {
+      if (document.documentElement.clientWidth == 0) {
+        checkSizing();
+      }
+      else {
+        this.onPageFirstSized();
+      }
+    });
+    checkSizing();
+  },
 
-        // Aggregate tile impression counts into directory types
-        if (type in directoryCount) {
-          directoryCount[type]++;
+  onPageFirstSized: function() {
+    // Work backwards to find the first visible site from the end
+    let {sites} = gGrid;
+    let lastIndex = sites.length;
+    while (lastIndex-- > 0) {
+      let site = sites[lastIndex];
+      if (site) {
+        let {node} = site;
+        let rect = node.getBoundingClientRect();
+        let target = document.elementFromPoint(rect.x + rect.width / 2,
+                                               rect.y + rect.height / 2);
+        if (node.contains(target)) {
+          break;
         }
       }
     }
 
-    DirectoryLinksProvider.reportShownCount(directoryCount);
-    // Record how many directory sites were shown, but place counts over the
-    // default 9 in the same bucket
-    for (let type of Object.keys(directoryCount)) {
-      let count = directoryCount[type];
-      let shownId = "NEWTAB_PAGE_DIRECTORY_" + type.toUpperCase() + "_SHOWN";
-      let shownCount = Math.min(10, count);
-      Services.telemetry.getHistogramById(shownId).add(shownCount);
-    }
+    DirectoryLinksProvider.reportSitesAction(gGrid.sites, "view", lastIndex);
+
+    // Show the panel now that anchors are sized
+    gIntro.showIfNecessary();
   }
 };

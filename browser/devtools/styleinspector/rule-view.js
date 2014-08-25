@@ -1291,10 +1291,7 @@ CssRuleView.prototype = {
       return null;
     }
 
-    return {
-      type: type,
-      value: value
-    };
+    return {type, value};
   },
 
   /**

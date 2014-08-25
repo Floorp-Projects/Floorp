@@ -5,27 +5,15 @@
 
 package org.mozilla.gecko.home;
 
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Callback;
-
 import org.mozilla.gecko.db.BrowserContract.TopSites;
-import org.mozilla.gecko.db.URLMetadata;
 import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.content.Context;
-import android.content.ContentResolver;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
