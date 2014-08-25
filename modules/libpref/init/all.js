@@ -986,6 +986,10 @@ pref("security.fileuri.strict_origin_policy", true);
 // the results
 pref("network.allow-experiments", true);
 
+// Allow the network changed event to get sent when a network topology or
+// setup change is noticed while running.
+pref("network.notify.changed", true);
+
 // Transmit UDP busy-work to the LAN when anticipating low latency
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
 pref("network.tickle-wifi.enabled", false);
