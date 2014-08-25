@@ -25,7 +25,7 @@ interface nsILoadInfo;
  *
  * This interface must be used only from the XPCOM main thread.
  */
-[scriptable, uuid(3423767b-9f4e-430e-9859-67a83ffb689d)]
+[scriptable, uuid(1bc48693-c45d-45f4-8ab1-46e323037fe1)]
 interface nsIChannel : nsIRequest
 {
     /**
