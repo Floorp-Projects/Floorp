@@ -2728,9 +2728,9 @@ MediaStreamGraph::GetInstance()
       nsContentUtils::RegisterShutdownObserver(new MediaStreamGraphShutdownObserver());
     }
 
-    AudioStream::InitPreferredSampleRate();
+    CubebUtils::InitPreferredSampleRate();
 
-    gGraph = new MediaStreamGraphImpl(true, AudioStream::PreferredSampleRate());
+    gGraph = new MediaStreamGraphImpl(true, CubebUtils::PreferredSampleRate());
 
     STREAM_LOG(PR_LOG_DEBUG, ("Starting up MediaStreamGraph %p", gGraph));
   }
