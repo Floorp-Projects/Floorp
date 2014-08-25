@@ -59,6 +59,7 @@ let testcases = [
   ["test.", "http://test./", "http://www.test./", true, true],
   [".test", "http://.test/", "http://www..test/", true, true],
   ["mozilla is amazing", null, null, true, true],
+  ["mozilla ", "http://mozilla/", "http://www.mozilla.com/", true, true],
   ["", null, null, true, true],
   ["[]", null, null, true, true]
 ];
@@ -66,14 +67,17 @@ let testcases = [
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
   testcases.push(["C:\\some\\file.txt", "file:///C:/some/file.txt", null, false, true]);
   testcases.push(["//mozilla", "http://mozilla/", "http://www.mozilla.com/", false, true]);
+  testcases.push(["mozilla\\", "http://mozilla/", "http://www.mozilla.com/", true, true]);
 } else {
   testcases.push(["/some/file.txt", "file:///some/file.txt", null, false, true]);
   testcases.push(["//mozilla", "file:////mozilla", null, false, true]);
+  testcases.push(["mozilla\\", "http://mozilla\\/", "http://www.mozilla/", true, true]);
 }
 
 function run_test() {
   for (let [testInput, expectedFixedURI, alternativeURI,
             expectKeywordLookup, expectProtocolChange] of testcases) {
+    testInput = testInput.trim();
     for (let flags of flagInputs) {
       let info;
       let fixupURIOnly = null;
