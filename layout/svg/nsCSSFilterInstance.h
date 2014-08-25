@@ -69,6 +69,7 @@ private:
   nsresult SetAttributesForGrayscale(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForHueRotate(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForInvert(FilterPrimitiveDescription& aDescr);
+  nsresult SetAttributesForOpacity(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForSaturate(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForSepia(FilterPrimitiveDescription& aDescr);
 
