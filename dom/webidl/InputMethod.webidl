@@ -138,6 +138,10 @@ interface MozInputContext: EventTarget {
 
     /* User moves the cursor, or changes the selection with other means. If the text around
      * cursor has changed, but the cursor has not been moved, the IME won't get notification.
+     *
+     * A dict is provided in the detail property of the event containing the new values, and
+     * an "ownAction" property to denote the event is the result of our own mutation to
+     * the input field.
      */
     attribute EventHandler onselectionchange;
 
@@ -163,17 +167,14 @@ interface MozInputContext: EventTarget {
     Promise<boolean> deleteSurroundingText(long offset, long length);
 
     /*
-    * Notifies when the text around the cursor is changed, due to either text
-    * editing or cursor movement. If the cursor has been moved, but the text around has not
-    * changed, the IME won't get notification.
-    *
-    * The event handler function is specified as:
-    * @param beforeString Text before and including cursor position.
-    * @param afterString Text after and excluing cursor position.
-    * function(DOMString beforeText, DOMString afterText) {
-    * ...
-    *  }
-    */
+     * Notifies when the text around the cursor is changed, due to either text
+     * editing or cursor movement. If the cursor has been moved, but the text around has not
+     * changed, the IME won't get notification.
+     *
+     * A dict is provided in the detail property of the event containing the new values, and
+     * an "ownAction" property to denote the event is the result of our own mutation to
+     * the input field.
+     */
     attribute EventHandler onsurroundingtextchange;
 
     /*
