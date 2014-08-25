@@ -20,11 +20,17 @@ typedef struct FarEndAudioChunk_ {
 } FarEndAudioChunk;
 
 // XXX Really a singleton currently
-class AudioOutputObserver // : public MSGOutputObserver
+class AudioOutputObserver : public MixerCallbackReceiver
 {
 public:
   AudioOutputObserver();
   virtual ~AudioOutputObserver();
+
+  void MixerCallback(AudioDataValue* aMixedBuffer,
+                     AudioSampleFormat aFormat,
+                     uint32_t aChannels,
+                     uint32_t aFrames,
+                     uint32_t aSampleRate) MOZ_OVERRIDE;
 
   void Clear();
   void InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrames, bool aOverran,
