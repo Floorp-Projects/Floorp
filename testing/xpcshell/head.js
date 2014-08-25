@@ -1349,6 +1349,6 @@ try {
     let prefs = Components.classes["@mozilla.org/preferences-service;1"]
       .getService(Components.interfaces.nsIPrefBranch);
 
-    prefs.setCharPref("media.gmp-manager.url.override", "http://%(server)s/dummy.xml");
+    prefs.setCharPref("media.gmp-manager.url.override", "http://%(server)s/dummy-gmp-manager.xml");
   }
 } catch (e) { }
