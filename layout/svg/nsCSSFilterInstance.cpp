@@ -51,7 +51,9 @@ nsCSSFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
       result = SetAttributesForBlur(descr);
       break;
     case NS_STYLE_FILTER_BRIGHTNESS:
-      return NS_ERROR_NOT_IMPLEMENTED;
+      descr = CreatePrimitiveDescription(PrimitiveType::ComponentTransfer, aPrimitiveDescrs);
+      result = SetAttributesForBrightness(descr);
+      break;
     case NS_STYLE_FILTER_CONTRAST:
       return NS_ERROR_NOT_IMPLEMENTED;
     case NS_STYLE_FILTER_DROP_SHADOW:
@@ -121,6 +123,31 @@ nsCSSFilterInstance::SetAttributesForBlur(FilterPrimitiveDescription& aDescr)
 
   Size radiusInFilterSpace = BlurRadiusToFilterSpace(radiusInFrameSpace.GetCoordValue());
   aDescr.Attributes().Set(eGaussianBlurStdDeviation, radiusInFilterSpace);
+  return NS_OK;
+}
+
+nsresult
+nsCSSFilterInstance::SetAttributesForBrightness(FilterPrimitiveDescription& aDescr)
+{
+  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
+  float value = styleValue.GetFactorOrPercentValue();
+
+  // Set transfer functions for RGB.
+  AttributeMap brightnessAttrs;
+  brightnessAttrs.Set(eComponentTransferFunctionType,
+                      (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_LINEAR);
+  brightnessAttrs.Set(eComponentTransferFunctionSlope, value);
+  brightnessAttrs.Set(eComponentTransferFunctionIntercept, 0.0f);
+  aDescr.Attributes().Set(eComponentTransferFunctionR, brightnessAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionG, brightnessAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionB, brightnessAttrs);
+
+  // Set identity transfer function for A.
+  AttributeMap identityAttrs;
+  identityAttrs.Set(eComponentTransferFunctionType,
+                    (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY);
+  aDescr.Attributes().Set(eComponentTransferFunctionA, identityAttrs);
+
   return NS_OK;
 }
 

@@ -63,6 +63,7 @@ private:
    * Sets aDescr's attributes using the style info in mFilter.
    */
   nsresult SetAttributesForBlur(FilterPrimitiveDescription& aDescr);
+  nsresult SetAttributesForBrightness(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForDropShadow(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForGrayscale(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForHueRotate(FilterPrimitiveDescription& aDescr);
