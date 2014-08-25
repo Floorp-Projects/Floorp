@@ -129,6 +129,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports*, REFNSIID, void**);
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/AvailableMemoryTracker.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/CountingAllocatorBase.h"
 #include "mozilla/SystemMemoryReporter.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
