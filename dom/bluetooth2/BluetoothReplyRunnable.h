@@ -35,9 +35,11 @@ public:
 
   void SetReply(BluetoothReply* aReply);
 
-  void SetError(const nsAString& aError)
+  void SetError(const nsAString& aErrorString,
+                const enum BluetoothStatus aErrorStatus = STATUS_FAIL)
   {
-    mErrorString = aError;
+    mErrorString = aErrorString;
+    mErrorStatus = aErrorStatus;
   }
 
   virtual void ReleaseMembers();
@@ -67,6 +69,7 @@ private:
   nsCOMPtr<nsIDOMDOMRequest> mDOMRequest;
   nsRefPtr<Promise> mPromise;
 
+  BluetoothStatus mErrorStatus;
   nsString mErrorString;
   nsString mName; // for debugging
 };

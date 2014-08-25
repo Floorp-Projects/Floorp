@@ -8,32 +8,6 @@ skip script ecma_6/String/normalize-generateddata-input.js # input data for othe
 # Test262 tests skipped due to SpiderMonkey bugs #
 ##################################################
 
-# These tests all make assumptions about global-object property enumeration
-# behavior, but because of bug 866222 these assumptions don't hold in the
-# browser.
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T1.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T2.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T3.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T4.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T5.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T6.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T7.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T8.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T9.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T10.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T11.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T1.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T2.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T3.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T4.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T5.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T6.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T7.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T8.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T9.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T10.js
-skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T11.js
-
 skip script test262/ch10/10.4/10.4.3/10.4.3-1-104.js # bug 603201
 skip script test262/ch10/10.4/10.4.3/10.4.3-1-106.js # bug 603201
 

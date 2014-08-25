@@ -120,7 +120,7 @@ class TestSandbox(unittest.TestCase):
 
 
 class TestMozbuildSandbox(unittest.TestCase):
-    def sandbox(self, data_path=None):
+    def sandbox(self, data_path=None, metadata={}):
         config = None
 
         if data_path is not None:
@@ -128,7 +128,7 @@ class TestMozbuildSandbox(unittest.TestCase):
         else:
             config = MockConfig()
 
-        return MozbuildSandbox(Context(VARIABLES, config))
+        return MozbuildSandbox(Context(VARIABLES, config), metadata)
 
     def test_default_state(self):
         sandbox = self.sandbox()
@@ -357,6 +357,140 @@ add_tier_dir('t1', 'bat')
             sandbox.exec_source('EXPORTS = "foo.h"')
 
         self.assertEqual(se.exception.exc_type, ValueError)
+
+    def test_templates(self):
+        sandbox = self.sandbox(data_path='templates')
+
+        # Templates need to be defined in actual files because of
+        # inspect.getsourcelines.
+        sandbox.exec_file('templates.mozbuild')
+
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
+        source = '''
+Template([
+    'foo.cpp',
+])
+'''
+        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+
+        self.assertEqual(sandbox2._context, {
+            'SOURCES': ['foo.cpp'],
+            'DIRS': [],
+        })
+
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
+        source = '''
+SOURCES += ['qux.cpp']
+Template([
+    'bar.cpp',
+    'foo.cpp',
+],[
+    'foo',
+])
+SOURCES += ['hoge.cpp']
+'''
+        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+
+        self.assertEqual(sandbox2._context, {
+            'SOURCES': ['qux.cpp', 'bar.cpp', 'foo.cpp', 'hoge.cpp'],
+            'DIRS': ['foo'],
+        })
+
+        source = '''
+TemplateError([
+    'foo.cpp',
+])
+'''
+        with self.assertRaises(SandboxExecutionError) as se:
+            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+
+        e = se.exception
+        self.assertIsInstance(e.exc_value, KeyError)
+
+        e = se.exception.exc_value
+        self.assertEqual(e.args[0], 'global_ns')
+        self.assertEqual(e.args[1], 'set_unknown')
+
+        # TemplateGlobalVariable tries to access 'illegal' but that is expected
+        # to throw.
+        source = '''
+illegal = True
+TemplateGlobalVariable()
+'''
+        with self.assertRaises(SandboxExecutionError) as se:
+            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+
+        e = se.exception
+        self.assertIsInstance(e.exc_value, NameError)
+
+        # TemplateGlobalUPPERVariable sets SOURCES with DIRS, but the context
+        # used when running the template is not expected to access variables
+        # from the global context.
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
+        source = '''
+DIRS += ['foo']
+TemplateGlobalUPPERVariable()
+'''
+        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+        self.assertEqual(sandbox2._context, {
+            'SOURCES': [],
+            'DIRS': ['foo'],
+        })
+
+        # However, the result of the template is mixed with the global
+        # context.
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
+        source = '''
+SOURCES += ['qux.cpp']
+TemplateInherit([
+    'bar.cpp',
+    'foo.cpp',
+])
+SOURCES += ['hoge.cpp']
+'''
+        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+
+        self.assertEqual(sandbox2._context, {
+            'SOURCES': ['qux.cpp', 'bar.cpp', 'foo.cpp', 'hoge.cpp'],
+            'USE_LIBS': ['foo'],
+            'DIRS': [],
+        })
+
+        # Template names must be CamelCase. Here, we can define the template
+        # inline because the error happens before inspect.getsourcelines.
+        source = '''
+@template
+def foo():
+    pass
+'''
+
+        with self.assertRaises(SandboxExecutionError) as se:
+            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+
+        e = se.exception
+        self.assertIsInstance(e.exc_value, NameError)
+
+        e = se.exception.exc_value
+        self.assertEqual(e.message,
+            'Template function names must be CamelCase.')
+
+        # Template names must not already be registered.
+        source = '''
+@template
+def Template():
+    pass
+'''
+        with self.assertRaises(SandboxExecutionError) as se:
+            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+
+        e = se.exception
+        self.assertIsInstance(e.exc_value, KeyError)
+
+        e = se.exception.exc_value
+        self.assertEqual(e.message,
+            'A template named "Template" was already declared in %s.' %
+            sandbox.normalize_path('templates.mozbuild'))
+
 
 if __name__ == '__main__':
     main()

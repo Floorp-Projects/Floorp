@@ -35,12 +35,11 @@ extern PRLogModuleInfo* GetMediaSourceAPILog();
 
 namespace mozilla {
 
-MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder, dom::MediaSource* aSource)
+MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
   , mTimeThreshold(-1)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
-  , mMediaSource(aSource)
 {
 }
 
@@ -249,14 +248,6 @@ MediaSourceReader::SwitchReaders(SwitchType aType)
   return didSwitch;
 }
 
-void
-MediaSourceReader::SetMediaSourceDuration(double aDuration)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  ErrorResult dummy;
-  mMediaSource->SetDuration(aDuration, dummy);
-}
-
 class ReleaseDecodersTask : public nsRunnable {
 public:
   ReleaseDecodersTask(nsTArray<nsRefPtr<SourceBufferDecoder>>& aDecoders)
@@ -423,7 +414,7 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   // we'll remove this for an async approach based on that in bug XXXXXXX.
   while (!DecodersContainTime(target) && !IsShutdown()) {
     MSE_DEBUG("MediaSourceReader(%p)::Seek waiting for target=%f", this, target);
-    mMediaSource->WaitForData();
+    static_cast<MediaSourceDecoder*>(mDecoder)->WaitForData();
     SwitchReaders(SWITCH_FORCED);
   }
 
@@ -491,7 +482,8 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDecoder->SetMediaDuration(maxDuration);
     nsRefPtr<nsIRunnable> task (
-      NS_NewRunnableMethodWithArg<double>(this, &MediaSourceReader::SetMediaSourceDuration,
+      NS_NewRunnableMethodWithArg<double>(static_cast<MediaSourceDecoder*>(mDecoder),
+                                          &MediaSourceDecoder::SetMediaSourceDuration,
                                           static_cast<double>(maxDuration) / USECS_PER_S));
     NS_DispatchToMainThread(task);
   }

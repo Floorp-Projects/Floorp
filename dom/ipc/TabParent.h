@@ -416,6 +416,10 @@ private:
     // Whether we have already sent a FileDescriptor for the app package.
     bool mAppPackageFileDescriptorSent;
 
+    // Whether we need to send the offline status to the TabChild
+    // This is true, until the first call of LoadURL
+    bool mSendOfflineStatus;
+
     uint32_t mChromeFlags;
 
     nsCOMPtr<nsILoadContext> mLoadContext;

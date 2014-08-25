@@ -70,13 +70,16 @@ class TbplFormatter(BaseFormatter):
         message = "- " + data["message"] if "message" in data else ""
         if "stack" in data:
             message += "\n%s" % data["stack"]
+        if message and message[-1] == "\n":
+            message = message[:-1]
+
         if "expected" in data:
-            failure_line = "TEST-UNEXPECTED-%s | %s | %s %s" % (
+            failure_line = "TEST-UNEXPECTED-%s | %s | %s %s\n" % (
                 data["status"], self.id_str(data["test"]), data["subtest"],
                 message)
             if data["expected"] != "PASS":
                 info_line = "TEST-INFO | expected %s\n" % data["expected"]
-                return "\n".join([failure_line, info_line])
+                return failure_line + info_line
             return failure_line
 
         return "TEST-%s | %s | %s %s\n" % (
@@ -86,16 +89,20 @@ class TbplFormatter(BaseFormatter):
     def test_end(self, data):
         test_id = self.test_id(data["test"])
         time_msg = ""
-        message = data.get("message", "")
-        if "stack" in data:
-            message += "\n%s" % data["stack"]
+
         if test_id in self.test_start_times:
             start_time = self.test_start_times.pop(test_id)
             time = data["time"] - start_time
             time_msg = "took %ims" % time
 
         if "expected" in data:
-            failure_line = "TEST-UNEXPECTED-%s | %s | %s" % (
+            message = data.get("message", "")
+            if "stack" in data:
+                message += "\n%s" % data["stack"]
+            if message and message[-1] == "\n":
+                message = message[:-1]
+
+            failure_line = "TEST-UNEXPECTED-%s | %s | %s\n" % (
                 data["status"], test_id, message)
 
             if data["expected"] not in ("PASS", "OK"):
@@ -103,7 +110,8 @@ class TbplFormatter(BaseFormatter):
             else:
                 expected_msg = ""
             info_line = "TEST-INFO %s%s\n" % (expected_msg, time_msg)
-            return "\n".join([failure_line, info_line])
+
+            return failure_line + info_line
 
         return "TEST-%s | %s | %s\n" % (
             data["status"], test_id, time_msg)
