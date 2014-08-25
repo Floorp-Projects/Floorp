@@ -132,6 +132,25 @@ function runTests() {
   is(mouseleavecount, 7, "Unexpected mouseleave event count!");
 
   checkRelatedTarget = false;
+
+  iframe.contentDocument.body.firstChild.onmouseenter = null;
+  iframe.contentDocument.body.firstChild.onmouseleave = null;
+  iframe.contentDocument.body.lastChild.onmouseenter = null;
+  iframe.contentDocument.body.lastChild.onmouseleave = null;
+
+  container.onmouseenter = null;
+  container.onmouseleave = null;
+  container.onmouseout = null;
+  container.onmouseover = null;
+
+  var children = container.getElementsByTagName('*');
+  for (var i=0;i<children.length;i++) {
+    children[i].onmouseenter = null;
+    children[i].onmouseleave = null;
+    children[i].onmouseout = null;
+    children[i].onmouseover = null;
+  }
+
   SimpleTest.finish();
 }
 
