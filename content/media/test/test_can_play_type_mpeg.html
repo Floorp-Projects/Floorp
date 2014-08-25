@@ -21,15 +21,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=799315
 <script>
 
 function IsWindowsVistaOrLater() {
-  var re = /Windows NT (\d.\d)/;
+  var re = /Windows NT (\d+\.\d)/;
   var winver = navigator.userAgent.match(re);
   return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.0;
 }
 
-function IsWindowsXPOrEarlier() {
-  var re = /Windows NT (\d.\d)/;
-  var winver = navigator.userAgent.match(re);
-  return winver && winver.length == 2 && parseFloat(winver[1]) < 6.0;
+function IsMacOSLionOrLater() {
+  var re = /Mac OS X (\d+)\.(\d+)/;
+  var ver = navigator.userAgent.match(re);
+  if (!ver || ver.length != 3) {
+    return false;
+  }
+  var major = ver[1] | 0;
+  var minor = ver[2] | 0;
+  return major == 10 && minor >= 7;
 }
 
 function getPref(name) {
@@ -40,10 +45,17 @@ function getPref(name) {
   return pref;
 }
 
+// Check whether we should expect the new MP4Reader-based support to work.
+function IsMP4ReaderAvailable() {
+  var prefs = getPref("media.fragmented-mp4.enabled") &&
+              getPref("media.fragmented-mp4.exposed");
+  return prefs && (IsWindowsVistaOrLater() || IsMacOSLionOrLater());
+}
+
 var haveMp4 = (getPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
                getPref("media.omx.enabled") ||
                getPref("media.gstreamer.enabled") ||
-               (getPref("media.fragmented-mp4.exposed") && !IsWindowsXPOrEarlier());
+               IsMP4ReaderAvailable();
 // TODO:  Add "getPref("media.plugins.enabled")" once MP4 works on Gingerbread.
              
 check_mp4(document.getElementById('v'), haveMp4);
