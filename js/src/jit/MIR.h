@@ -3918,7 +3918,6 @@ class MTruncateToInt32
 
         // An object might have "valueOf", which means it is effectful.
         // ToInt32(symbol) throws.
-        MOZ_ASSERT(def->type() != MIRType_Object);
         if (def->mightBeType(MIRType_Object) || def->mightBeType(MIRType_Symbol))
             setGuard();
     }
