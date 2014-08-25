@@ -419,14 +419,14 @@ static bool isInEmulator()
 
 bool OmxDecoder::AllocateMediaResources()
 {
-  // OMXClient::connect() always returns OK and abort's fatally if
-  // it can't connect.
-  OMXClient client;
-  DebugOnly<status_t> err = client.connect();
-  NS_ASSERTION(err == OK, "Failed to connect to OMX in mediaserver.");
-  sp<IOMX> omx = client.interface();
-
   if ((mVideoTrack != nullptr) && (mVideoSource == nullptr)) {
+    // OMXClient::connect() always returns OK and abort's fatally if
+    // it can't connect.
+    OMXClient client;
+    DebugOnly<status_t> err = client.connect();
+    NS_ASSERTION(err == OK, "Failed to connect to OMX in mediaserver.");
+    sp<IOMX> omx = client.interface();
+
     mNativeWindow = new GonkNativeWindow();
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
     mNativeWindowClient = new GonkNativeWindowClient(mNativeWindow->getBufferQueue());
@@ -468,6 +468,13 @@ bool OmxDecoder::AllocateMediaResources()
   }
 
   if ((mAudioTrack != nullptr) && (mAudioSource == nullptr)) {
+    // OMXClient::connect() always returns OK and abort's fatally if
+    // it can't connect.
+    OMXClient client;
+    DebugOnly<status_t> err = client.connect();
+    NS_ASSERTION(err == OK, "Failed to connect to OMX in mediaserver.");
+    sp<IOMX> omx = client.interface();
+
     const char *audioMime = nullptr;
     sp<MetaData> meta = mAudioTrack->getFormat();
     if (!meta->findCString(kKeyMIMEType, &audioMime)) {
