@@ -10,6 +10,8 @@
 %notificationDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
 ]>
 
 <bindings id="urlbarBindings" xmlns="http://www.mozilla.org/xbl"
@@ -1569,6 +1571,259 @@
                     "center-item-menulist").value = val;
         </setter>
       </property>
+    </implementation>
+  </binding>
+
+  <binding id="bad-content-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
+    <content>
+      <xul:hbox align="start">
+        <xul:image class="popup-notification-icon" xbl:inherits="popupid"/>
+        <xul:vbox>
+          <!-- header -->
+          <xul:vbox>
+            <xul:description anonid="badContentBlocked.title"
+              class="popup-notification-item-title" xbl:inherits="popupid">
+            </xul:description>
+            <xul:description class="popup-notification-item-message"
+              xbl:inherits="popupid">
+              &badContentBlocked.moreinfo;
+            </xul:description>
+          </xul:vbox>
+          <!-- mixed content -->
+          <xul:vbox anonid="mixedContent" hidden="true">
+            <xul:separator class="groove"/>
+            <xul:hbox align="start">
+              <xul:vbox>
+                <xul:description class="popup-notification-item-title"
+                  xbl:inherits="popupid">
+                  &mixedContentBlocked2.message;
+                </xul:description>
+                <xul:description class="popup-notification-item-message"
+                  xbl:inherits="popupid">
+                  &mixedContentBlocked2.moreinfo;
+                </xul:description>
+                <xul:label anonid="mixedContent.helplink"
+                  class="text-link plain" href=""
+                  value="&mixedContentBlocked2.learnMore;"/>
+              </xul:vbox>
+              <xul:button
+                type="menu" label="&mixedContentBlocked2.options;"
+                sizetopopup="none">
+                <xul:menupopup>
+                  <xul:menuitem anonid="mixedContentAction.unblock"
+                    hidden="true" label="&mixedContentBlocked2.unblock.label;"
+                    accesskey="&mixedContentBlocked2.unblock.accesskey;"
+                    oncommand="document.getBindingParent(this).disableMixedContentProtection();"/>
+                  <xul:menuitem anonid="mixedContentAction.block"
+                    hidden="true" label="&mixedContentBlocked2.block.label;"
+                    accesskey="&mixedContentBlocked2.block.accesskey;"
+                    oncommand="document.getBindingParent(this).enableMixedContentProtection();"/>
+                </xul:menupopup>
+              </xul:button>
+            </xul:hbox>
+            <xul:hbox anonid="mixedContentProtectionDisabled" hidden="true"
+                      class="popup-notification-footer" xbl:inherits="popupid">
+              <xul:description class="popup-notification-item-message popup-notification-item-message-critical" xbl:inherits="popupid">
+                  &mixedContentBlocked2.disabled.message;
+              </xul:description>
+            </xul:hbox>
+          </xul:vbox>
+          <!-- tracking content -->
+          <xul:vbox anonid="trackingContent" hidden="true">
+            <xul:separator class="groove"/>
+            <xul:hbox align="start">
+              <xul:vbox>
+                <xul:description class="popup-notification-item-title"
+                  xbl:inherits="popupid">
+                  &trackingContentBlocked.message;
+                </xul:description>
+                <xul:description class="popup-notification-item-message"
+                  xbl:inherits="popupid">
+                  &trackingContentBlocked.moreinfo;
+                </xul:description>
+                <xul:label anonid="trackingContent.helplink"
+                  class="text-link plain" href=""
+                  value="&trackingContentBlocked.learnMore;"/>
+              </xul:vbox>
+              <xul:button
+                type="menu" label="&trackingContentBlocked.options;"
+                sizetopopup="none">
+                <xul:menupopup>
+                  <xul:menuitem anonid="trackingContentAction.unblock"
+                    hidden="true" label="&trackingContentBlocked.unblock.label;"
+                    oncommand="document.getBindingParent(this).disableTrackingContentProtection();"/>
+                  <xul:menuitem anonid="trackingContentAction.block"
+                    hidden="true" label="&trackingContentBlocked.block.label;"
+                    oncommand="document.getBindingParent(this).enableTrackingContentProtection();"/>
+                </xul:menupopup>
+              </xul:button>
+            </xul:hbox>
+            <xul:hbox anonid="trackingContentProtectionDisabled" hidden="true"
+                      class="popup-notification-footer" xbl:inherits="popupid">
+              <xul:description class="popup-notification-item-message popup-notification-item-message-critical" xbl:inherits="popupid">
+                &trackingContentBlocked.disabled.message;
+                </xul:description>
+            </xul:hbox>
+          </xul:vbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+    <resources>
+      <stylesheet src="chrome://global/skin/notification.css"/>
+    </resources>
+    <implementation>
+      <field name="_brandShortName">
+        document.getElementById("bundle_brand").getString("brandShortName")
+      </field>
+      <field name="_doorhangerTitle">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "badContentBlocked.title")
+      </field>
+      <field name="_mixedContent">
+        document.getAnonymousElementByAttribute(this, "anonid",
+            "mixedContent")
+      </field>
+      <field name="_mixedContentUnblock">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "mixedContentAction.unblock")
+      </field>
+      <field name="_mixedContentBlock">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "mixedContentAction.block");
+      </field>
+      <field name="_mixedContentProtectionDisabledWarning">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "mixedContentProtectionDisabled")
+      </field>
+      <field name="_mixedContentHelpLink">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "mixedContent.helplink")
+      </field>
+      <property name="isMixedContentBlocked" readonly="true">
+        <getter><![CDATA[
+          return this.notification.options.state &
+            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
+        ]]></getter>
+      </property>
+      <field name="_trackingContent">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "trackingContent")
+      </field>
+      <field name="_trackingContentUnblock">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "trackingContentAction.unblock")
+      </field>
+      <field name="_trackingContentBlock">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "trackingContentAction.block");
+      </field>
+      <field name="_trackingContentProtectionDisabledWarning">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "trackingContentProtectionDisabled")
+      </field>
+      <field name="_trackingContentHelpLink">
+        document.getAnonymousElementByAttribute(this, "anonid",
+          "trackingContent.helplink")
+      </field>
+      <property name="isTrackingContentBlocked" readonly="true">
+        <getter><![CDATA[
+          return this.notification.options.state &
+            Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT;
+        ]]></getter>
+      </property>
+      <constructor><![CDATA[
+        // default title
+        _doorhangerTitle.value =
+          gNavigatorBundle.getFormattedString(
+            "badContentBlocked.notblocked.message", [this._brandShortName]);
+
+        if (this.notification.options.state &
+            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+          _doorhangerTitle.value =
+            gNavigatorBundle.getFormattedString(
+              "badContentBlocked.blocked.message", [this._brandShortName]);
+          _mixedContent.hidden = false;
+          _mixedContentUnblock.hidden = false;
+          _mixedContentHelpLink.href =
+            Services.urlFormatter.formatURLPref("app.support.baseURL")
+              + "mixed-content";
+        }
+        if (this.notification.options.state &
+            Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
+          _mixedContent.hidden = false;
+          _mixedContentBlock.hidden = false;
+          _mixedContentProtectionDisabledWarning.hidden = false;
+          _mixedContentHelpLink.href =
+            Services.urlFormatter.formatURLPref("app.support.baseURL")
+              + "mixed-content";
+        }
+        if (this.notification.options.state &
+            Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
+          _doorhangerTitle.value =
+            gNavigatorBundle.getFormattedString(
+              "badContentBlocked.blocked.message", [this._brandShortName]);
+          _trackingContent.hidden = false
+          _trackingContentUnblock.hidden = false;
+          _trackingContentHelpLink.href =
+            Services.urlFormatter.formatURLPref("app.support.baseURL")
+              + "tracking-protection";
+        }
+        if (this.notification.options.state &
+            Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) {
+          _trackingContent.hidden = false
+          _trackingContentBlock.hidden = false;
+          _trackingContentProtectionDisabledWarning.hidden = false;
+          _trackingContentHelpLink.href =
+            Services.urlFormatter.formatURLPref("app.support.baseURL")
+              + "tracking-protection";
+        }
+      ]]></constructor>
+      <method name="disableMixedContentProtection">
+        <body><![CDATA[
+          // Use telemetry to measure how often unblocking happens
+          const kMIXED_CONTENT_UNBLOCK_EVENT = 2;
+          let histogram =
+            Services.telemetry.getHistogramById(
+              "MIXED_CONTENT_UNBLOCK_COUNTER");
+          histogram.add(kMIXED_CONTENT_UNBLOCK_EVENT);
+          // Reload the page with the content unblocked
+          BrowserReloadWithFlags(
+            nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT);
+        ]]></body>
+      </method>
+      <method name="enableMixedContentProtection">
+        <body><![CDATA[
+          let docShell = gBrowser.webNavigation.QueryInterface(Ci.nsIDocShell);
+          docShell.mixedContentChannel = null;
+          BrowserReload();
+        ]]></body>
+      </method>
+      <method name="disableTrackingContentProtection">
+        <body><![CDATA[
+          // convert document URI into the format used by
+          // nsChannelClassifier::ShouldEnableTrackingProtection
+          // (any scheme turned into https is correct)
+          let normalizedUrl = Services.io.newURI(
+            "https://" + gBrowser.selectedBrowser.currentURI.hostPort,
+            null, null);
+          // Add the current host in the 'trackingprotection' consumer of
+          // the permission manager using a normalized URI. This effectively
+          // places this host on the tracking protection white list.
+          Services.perms.add(normalizedUrl,
+            "trackingprotection", Services.perms.ALLOW_ACTION);
+          BrowserReload();
+        ]]></body>
+      </method>
+      <method name="enableTrackingContentProtection">
+        <body><![CDATA[
+          // Remove the current host from the 'trackingprotection' consumer
+          // of the permission manager. This effectively removes this host
+          // from the tracking protection white list (any list actually).
+          Services.perms.remove(gBrowser.selectedBrowser.currentURI.host,
+            "trackingprotection");
+          BrowserReload();
+        ]]></body>
+      </method>
     </implementation>
   </binding>
 
