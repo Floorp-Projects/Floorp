@@ -405,9 +405,10 @@ interface nsIFrameScriptLoader : nsISupports
   jsval getDelayedFrameScripts();
 };
 
-[scriptable, builtinclass, uuid(ad57800b-ff21-4e2f-91d3-e68615ae8afe)]
+[scriptable, builtinclass, uuid(637e8538-4f8f-4a3d-8510-e74386233e19)]
 interface nsIProcessChecker : nsISupports
 {
+  bool killChild();
 
   /**
    * Return true if the "remote" process has |aPermission|.  This is
