@@ -28,14 +28,14 @@ struct AutoProfilerUnregisterThread
 };
 
 GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
-    : mIterationStart(INITIAL_CURRENT_TIME),
-      mIterationEnd(INITIAL_CURRENT_TIME),
-      mStateComputedTime(INITIAL_CURRENT_TIME),
-      mGraphImpl(aGraphImpl),
-      mWaitState(WAITSTATE_RUNNING),
-      mNeedAnotherIteration(false),
-      mMonitor("MediaStreamGraphMonitor")
-  { }
+  : mIterationStart(INITIAL_CURRENT_TIME),
+    mIterationEnd(INITIAL_CURRENT_TIME),
+    mStateComputedTime(INITIAL_CURRENT_TIME),
+    mGraphImpl(aGraphImpl),
+    mWaitState(WAITSTATE_RUNNING),
+    mNeedAnotherIteration(false),
+    mMonitor("MediaStreamGraphMonitor")
+{ }
 
 DriverHolder::DriverHolder(MediaStreamGraphImpl* aGraphImpl)
   : mGraphImpl(aGraphImpl),
@@ -75,6 +75,10 @@ public:
   {
     char aLocal;
     profiler_register_thread("MediaStreamGraph", &aLocal);
+    {
+      MonitorAutoLock mon(mDriver->GetThreadMonitor());
+      mDriver->mGraphImpl->SwapMessageQueues();
+    }
     mDriver->RunThread();
     return NS_OK;
   }
@@ -122,13 +126,6 @@ void
 ThreadedDriver::RunThread()
 {
   AutoProfilerUnregisterThread autoUnregister;
-  nsTArray<MessageBlock> messageQueue;
-  {
-    MonitorAutoLock lock(mMonitor);
-    messageQueue.SwapElements(mGraphImpl->MessageQueue());
-  }
-  NS_ASSERTION(!messageQueue.IsEmpty(),
-               "Shouldn't have started a graph with empty message queue!");
 
   bool stillProcessing = true;
   while (stillProcessing) {
@@ -142,8 +139,7 @@ ThreadedDriver::RunThread()
     stillProcessing = mGraphImpl->OneIteration(prevCurrentTime,
                                                nextCurrentTime,
                                                StateComputedTime(),
-                                               nextStateComputedTime,
-                                               messageQueue);
+                                               nextStateComputedTime);
   }
 }
 
