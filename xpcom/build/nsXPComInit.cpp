@@ -447,8 +447,9 @@ CountingAllocatorBase<VPXReporter>::sAmount(0);
 #endif /* MOZ_VPX */
 
 #ifdef MOZ_WEBM
-class NesteggReporter MOZ_FINAL : public nsIMemoryReporter
-                                , public CountingAllocatorBase<NesteggReporter>
+class NesteggReporter MOZ_FINAL
+  : public nsIMemoryReporter
+  , public CountingAllocatorBase<NesteggReporter>
 {
 public:
   NS_DECL_ISUPPORTS
@@ -817,7 +818,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
 
     nsRefPtr<nsObserverService> observerService;
     CallGetService("@mozilla.org/observer-service;1",
-                   (nsObserverService**) getter_AddRefs(observerService));
+                   (nsObserverService**)getter_AddRefs(observerService));
 
     if (observerService) {
       observerService->NotifyObservers(nullptr,

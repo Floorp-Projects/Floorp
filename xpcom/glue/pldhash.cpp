@@ -258,8 +258,9 @@ PL_DHashTableInit(PLDHashTable* aTable, const PLDHashTableOps* aOps,
   aTable->entryCount = aTable->removedCount = 0;
   aTable->generation = 0;
   uint32_t nbytes;
-  if (!SizeOfEntryStore(capacity, aEntrySize, &nbytes))
-    return false;   // overflowed
+  if (!SizeOfEntryStore(capacity, aEntrySize, &nbytes)) {
+    return false;  // overflowed
+  }
 
   aTable->entryStore = (char*)aOps->allocTable(aTable, nbytes);
   if (!aTable->entryStore) {

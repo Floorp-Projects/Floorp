@@ -69,7 +69,7 @@ nsDeque::~nsDeque()
   printf("Capacity: %i\n", mCapacity);
 
   static int mCaps[15] = {0};
-  switch(mCapacity) {
+  switch (mCapacity) {
     case 4:     mCaps[0]++; break;
     case 8:     mCaps[1]++; break;
     case 16:    mCaps[2]++; break;
@@ -366,7 +366,8 @@ nsDeque::RemoveObjectAt(int32_t aIndex)
   // "Shuffle down" all elements in the array by 1, overwritting the element
   // being removed.
   for (int32_t i = aIndex; i < mSize; ++i) {
-    mData[modulus(mOrigin + i, mCapacity)] = mData[modulus(mOrigin + i + 1, mCapacity)];
+    mData[modulus(mOrigin + i, mCapacity)] =
+      mData[modulus(mOrigin + i + 1, mCapacity)];
   }
   mSize--;
 
