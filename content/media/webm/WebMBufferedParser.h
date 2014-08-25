@@ -209,11 +209,11 @@ public:
   void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
   bool CalculateBufferedForRange(int64_t aStartOffset, int64_t aEndOffset,
                                  uint64_t* aStartTime, uint64_t* aEndTime);
-  enum OffsetType {
-    CLUSTER_START,
-    BLOCK_START
-  };
-  bool GetOffsetForTime(uint64_t aTime, int64_t* aOffset, enum OffsetType aType);
+
+  // Returns true if aTime is is present in mTimeMapping and sets aOffset to
+  // the latest offset for which decoding can resume without data
+  // dependencies to arrive at aTime.
+  bool GetOffsetForTime(uint64_t aTime, int64_t* aOffset);
 
 private:
   // Private destructor, to discourage deletion outside of Release():

@@ -147,7 +147,7 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
           uint32_t idx = aMapping.IndexOfFirstElementGt(mBlockOffset);
           if (idx == 0 || !(aMapping[idx - 1] == mBlockOffset)) {
             // Don't insert invalid negative timecodes.
-            if (mBlockOffset > 0 || mClusterTimecode > uint16_t(abs(mBlockOffset))) {
+            if (mBlockTimecode >= 0 || mClusterTimecode >= uint16_t(abs(mBlockTimecode))) {
               MOZ_ASSERT(mGotTimecodeScale);
               uint64_t absTimecode = mClusterTimecode + mBlockTimecode;
               absTimecode *= mTimecodeScale;
@@ -226,7 +226,7 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset, int64_t 
   return true;
 }
 
-bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset, enum OffsetType aType)
+bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   WebMTimeDataOffset result(0, 0, 0);
@@ -238,7 +238,7 @@ bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset, enum 
     }
   }
 
-  *aOffset = aType == CLUSTER_START ? result.mSyncOffset : result.mOffset;
+  *aOffset = result.mSyncOffset;
   return true;
 }
 
