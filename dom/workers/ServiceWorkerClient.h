@@ -11,9 +11,14 @@
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
 class Promise;
+template<typename T> class Optional;
+template<typename T> class Sequence;
 
 namespace workers {
 
@@ -35,6 +40,10 @@ public:
   {
     return mId;
   }
+
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const Optional<Sequence<JS::Value>>& aTransferable,
+                   ErrorResult& aRv);
 
   nsISupports* GetParentObject() const
   {
