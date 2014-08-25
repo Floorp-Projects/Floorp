@@ -9,6 +9,7 @@
 #include "nsBlockReflowContext.h"
 #include "nsBlockReflowState.h"
 #include "nsFloatManager.h"
+#include "nsColumnSetFrame.h"
 #include "nsContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
@@ -38,8 +39,13 @@ nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
 static nsIFrame* DescendIntoBlockLevelFrame(nsIFrame* aFrame)
 {
   nsIAtom* type = aFrame->GetType();
-  if (type == nsGkAtoms::columnSetFrame)
-    return DescendIntoBlockLevelFrame(aFrame->GetFirstPrincipalChild());
+  if (type == nsGkAtoms::columnSetFrame) {
+    static_cast<nsColumnSetFrame*>(aFrame)->DrainOverflowColumns();
+    nsIFrame* child = aFrame->GetFirstPrincipalChild();
+    if (child) {
+      return DescendIntoBlockLevelFrame(child);
+    }
+  }
   return aFrame;
 }
 
