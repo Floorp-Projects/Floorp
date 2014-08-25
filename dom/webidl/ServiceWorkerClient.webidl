@@ -11,4 +11,6 @@
 [Exposed=ServiceWorker]
 interface ServiceWorkerClient {
   readonly attribute unsigned long id;
+  [Throws]
+  void postMessage(any message, optional sequence<Transferable> transfer);
 };

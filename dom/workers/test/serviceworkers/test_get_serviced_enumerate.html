@@ -1,0 +1,82 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 982726 - test get_serviced </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration;
+  var opened = [];
+  var results = [];
+
+  function start() {
+    return navigator.serviceWorker.register("get_serviced_worker_enumerate.js",
+                                            { scope: "./sw_clients/" }).then((swr) => registration = swr);
+  }
+
+  function openWindow() {
+    var p = new Promise(function(res, rej) {
+      var w = window.open("sw_clients/service_worker_controlled.html");
+      window.onmessage = function(e) {
+        if (e.data === "READY") {
+          opened.push(w);
+          res();
+        }
+      }
+    });
+    return p;
+  }
+
+  function testGetServiced() {
+    var count = 0;
+    return new Promise(function (res, rej) {
+      registration.active.postMessage("getServiced");
+      // wait for response
+      window.onmessage = function(msg) {
+        results[msg.data] = "ok";
+        count = count + 1;
+        if (count == opened.length) {
+          for (i = 0; i < count; i++) {
+            ok(results[i] == "ok", "Client received the message.");
+          }
+          res();
+        }
+      }
+    });
+  }
+
+  function runTest() {
+    start()
+      .then(openWindow).then(openWindow)
+      .then(openWindow).then(openWindow)
+      .then(testGetServiced)
+      .then(function(e) {
+        while (opened.length) {
+          opened.pop().close();
+        }
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+
