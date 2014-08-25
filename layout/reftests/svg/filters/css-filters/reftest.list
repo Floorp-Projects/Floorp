@@ -23,6 +23,12 @@ fuzzy-if(d2d,1,10000) == grayscale-percent.html grayscale-percent-ref.html
 == hue-rotate-rad.html hue-rotate-rad-ref.html
 == hue-rotate-turn.html hue-rotate-turn-ref.html
 == hue-rotate-zero.html hue-rotate-zero-ref.html
+fuzzy-if(d2d,1,10000) == invert.html invert-ref.html
+== invert-half.html invert-half-ref.html
+== invert-one.html invert-one-ref.html
+== invert-over-one.html invert-over-one-ref.html
+fuzzy-if(d2d,1,10000) == invert-percent.html invert-percent-ref.html
+== invert-zero.html invert-zero-ref.html
 == saturate.html saturate-ref.html
 fuzzy-if(d2d,1,10000) == saturate-desaturate.html saturate-desaturate-ref.html
 == saturate-extreme.html saturate-extreme-ref.html

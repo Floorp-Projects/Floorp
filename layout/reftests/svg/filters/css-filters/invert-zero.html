@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Invert an HTML Element Using a Factor of Zero</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-invert">
+  <link rel="match" href="invert-zero-ref.html">
+  <meta name="assert"
+        content="Given a factor of zero, the CSS invert filter function should
+                 not change the color of an HTML element.">
+  <style type="text/css">
+    #target {
+      filter: invert(0);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a green square.</p>
+  <div id="target"></div>
+</body>
+</html>

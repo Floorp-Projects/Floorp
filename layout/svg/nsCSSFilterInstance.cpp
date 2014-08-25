@@ -67,7 +67,9 @@ nsCSSFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
       result = SetAttributesForHueRotate(descr);
       break;
     case NS_STYLE_FILTER_INVERT:
-      return NS_ERROR_NOT_IMPLEMENTED;
+      descr = CreatePrimitiveDescription(PrimitiveType::ComponentTransfer, aPrimitiveDescrs);
+      result = SetAttributesForInvert(descr);
+      break;
     case NS_STYLE_FILTER_OPACITY:
       return NS_ERROR_NOT_IMPLEMENTED;
     case NS_STYLE_FILTER_SATURATE:
@@ -173,6 +175,33 @@ nsCSSFilterInstance::SetAttributesForHueRotate(FilterPrimitiveDescription& aDesc
   const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
   float value = styleValue.GetAngleValueInDegrees();
   aDescr.Attributes().Set(eColorMatrixValues, &value, 1);
+
+  return NS_OK;
+}
+
+nsresult
+nsCSSFilterInstance::SetAttributesForInvert(FilterPrimitiveDescription& aDescr)
+{
+  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
+  float value = ClampFactor(styleValue.GetFactorOrPercentValue());
+
+  // Set transfer functions for RGB.
+  AttributeMap invertAttrs;
+  float invertTableValues[2];
+  invertTableValues[0] = value;
+  invertTableValues[1] = 1 - value;
+  invertAttrs.Set(eComponentTransferFunctionType,
+                  (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_TABLE);
+  invertAttrs.Set(eComponentTransferFunctionTableValues, invertTableValues, 2);
+  aDescr.Attributes().Set(eComponentTransferFunctionR, invertAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionG, invertAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionB, invertAttrs);
+
+  // Set identity transfer function for A.
+  AttributeMap identityAttrs;
+  identityAttrs.Set(eComponentTransferFunctionType,
+                    (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY);
+  aDescr.Attributes().Set(eComponentTransferFunctionA, identityAttrs);
 
   return NS_OK;
 }
