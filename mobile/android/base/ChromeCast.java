@@ -157,6 +157,10 @@ class ChromeCast implements GeckoMediaPlayer {
         final JSONObject obj = new JSONObject();
         try {
             final CastDevice device = CastDevice.getFromBundle(route.getExtras());
+            if (device == null) {
+                return null;
+            }
+
             obj.put("uuid", route.getId());
             obj.put("version", device.getDeviceVersion());
             obj.put("friendlyName", device.getFriendlyName());
