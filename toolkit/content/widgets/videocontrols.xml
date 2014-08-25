@@ -409,7 +409,7 @@
                     this.videocontrols.randomID = this.randomID;
 
                     this.setPlayButtonState(this.video.paused);
-                    this.setMuteButtonState(this.video.muted);
+                    this.updateMuteButtonState();
 
                     this.setFullscreenButtonState();
 
@@ -565,7 +565,7 @@
                         case "volumechange":
                             var volume = this.video.muted ? 0 : this.video.volume;
                             var volumePercentage = Math.round(volume * 100);
-                            this.setMuteButtonState(this.video.muted);
+                            this.updateMuteButtonState();
                             this.volumeControl.value = volumePercentage;
                             this.volumeForeground.style.paddingRight = (1 - volume) * this._volumeControlWidth + "px";
                             break;
@@ -1040,7 +1040,10 @@
                     if (this.isVideoWithoutAudioTrack()) {
                         return;
                     }
-                    this.video.muted = !this.video.muted;
+                    this.video.muted = !this.isEffectivelyMuted();
+                    if (this.video.volume === 0) {
+                      this.video.volume = 0.5;
+                    }
 
                     // We'll handle style changes in the event listener for
                     // the "volumechange" event, same as if content script was
@@ -1130,13 +1133,19 @@
                   this.playButton.setAttribute("aria-label", value);
                 },
 
-                setMuteButtonState : function(aMuted) {
-                  if (aMuted)
+                isEffectivelyMuted : function() {
+                  return this.video.muted || !this.video.volume;
+                },
+
+                updateMuteButtonState : function() {
+                  var muted = this.isEffectivelyMuted();
+
+                  if (muted)
                       this.muteButton.setAttribute("muted", "true");
                   else
                       this.muteButton.removeAttribute("muted");
 
-                  var attrName = aMuted ? "unmutelabel" : "mutelabel";
+                  var attrName = muted ? "unmutelabel" : "mutelabel";
                   var value = this.muteButton.getAttribute(attrName);
                   this.muteButton.setAttribute("aria-label", value);
                 },
