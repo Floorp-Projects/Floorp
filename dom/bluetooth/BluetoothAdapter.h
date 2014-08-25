@@ -119,16 +119,11 @@ public:
 
   already_AddRefed<DOMRequest>
     Connect(BluetoothDevice& aDevice,
-            const Optional<uint16_t>& aServiceUuid, ErrorResult& aRv);
+            const Optional<short unsigned int>& aServiceUuid, ErrorResult& aRv);
   already_AddRefed<DOMRequest>
     Disconnect(BluetoothDevice& aDevice,
-               const Optional<uint16_t>& aServiceUuid,
+               const Optional<short unsigned int>& aServiceUuid,
                ErrorResult& aRv);
-
-  already_AddRefed<DOMRequest>
-    IsConnected(const uint16_t aServiceUuid,
-                ErrorResult& aRv);
-
   already_AddRefed<DOMRequest>
     GetConnectedDevices(uint16_t aServiceUuid, ErrorResult& aRv);
 

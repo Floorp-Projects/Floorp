@@ -218,8 +218,6 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_ConnectRequest());
     case Request::TDisconnectRequest:
       return actor->DoRequest(aRequest.get_DisconnectRequest());
-    case Request::TIsConnectedRequest:
-      return actor->DoRequest(aRequest.get_IsConnectedRequest());
     case Request::TSendFileRequest:
       return actor->DoRequest(aRequest.get_SendFileRequest());
     case Request::TStopSendingFileRequest:
@@ -507,18 +505,6 @@ BluetoothRequestParent::DoRequest(const DisconnectRequest& aRequest)
   mService->Disconnect(aRequest.address(),
                        aRequest.serviceUuid(),
                        mReplyRunnable.get());
-
-  return true;
-}
-
-bool
-BluetoothRequestParent::DoRequest(const IsConnectedRequest& aRequest)
-{
-  MOZ_ASSERT(mService);
-  MOZ_ASSERT(mRequestType == Request::TIsConnectedRequest);
-
-  mService->IsConnected(aRequest.serviceUuid(),
-                        mReplyRunnable.get());
 
   return true;
 }

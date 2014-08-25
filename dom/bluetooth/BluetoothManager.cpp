@@ -210,6 +210,18 @@ BluetoothManager::Notify(const BluetoothSignal& aData)
   }
 }
 
+bool
+BluetoothManager::IsConnected(uint16_t aProfileId, ErrorResult& aRv)
+{
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+
+  return bs->IsConnected(aProfileId);
+}
+
 JSObject*
 BluetoothManager::WrapObject(JSContext* aCx)
 {
