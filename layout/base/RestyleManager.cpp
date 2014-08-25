@@ -2108,8 +2108,13 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       ElementForStyleContext(parentFrame ? parentFrame->GetContent() : nullptr,
                              aFrame,
                              oldContext->GetPseudoType());
+    nsIContent* pseudoElementContent = aFrame->GetContent();
+    Element* pseudoElement =
+      (pseudoElementContent && pseudoElementContent->IsElement())
+        ? pseudoElementContent->AsElement() : nullptr;
     newContext = mPresContext->StyleSet()->
-                   ReparentStyleContext(oldContext, newParentContext, element);
+                   ReparentStyleContext(oldContext, newParentContext, element,
+                                        pseudoElement);
   }
 
   if (newContext) {
@@ -2187,7 +2192,7 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
         nsRefPtr<nsStyleContext> newExtraContext;
         newExtraContext = mPresContext->StyleSet()->
                             ReparentStyleContext(oldExtraContext,
-                                                 newContext, nullptr);
+                                                 newContext, nullptr, nullptr);
         if (newExtraContext) {
           if (newExtraContext != oldExtraContext) {
             // Make sure to call CalcStyleDifference so that the new
@@ -2529,8 +2534,13 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
     Element* element = ElementForStyleContext(mParentContent, aSelf, pseudoType);
     if (aRestyleHint == nsRestyleHint(0) &&
         !styleSet->IsInRuleTreeReconstruct()) {
+      nsIContent* pseudoElementContent = aSelf->GetContent();
+      Element* pseudoElement =
+        (pseudoElementContent && pseudoElementContent->IsElement())
+          ? pseudoElementContent->AsElement() : nullptr;
       newContext =
-        styleSet->ReparentStyleContext(oldContext, parentContext, element);
+        styleSet->ReparentStyleContext(oldContext, parentContext, element,
+                                       pseudoElement);
     } else {
       // Use ResolveStyleWithReplacement either for actual replacements
       // or, with no replacements, as a substitute for
@@ -2656,8 +2666,13 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
                                                 oldExtraContext,
                                                 nsRestyleHint(0));
       } else {
+        nsIContent* pseudoElementContent = aSelf->GetContent();
+        Element* pseudoElement =
+          (pseudoElementContent && pseudoElementContent->IsElement())
+            ? pseudoElementContent->AsElement() : nullptr;
         newExtraContext =
-          styleSet->ReparentStyleContext(oldExtraContext, newContext, element);
+          styleSet->ReparentStyleContext(oldExtraContext, newContext, element,
+                                         pseudoElement);
       }
     } else if (extraPseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
       newExtraContext = styleSet->ResolveAnonymousBoxStyle(extraPseudoTag,
@@ -2825,7 +2840,7 @@ ElementRestyler::RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint)
         undisplayedContext =
           styleSet->ReparentStyleContext(undisplayed->mStyle,
                                          mFrame->StyleContext(),
-                                         element);
+                                         element, element);
       }
       const nsStyleDisplay* display = undisplayedContext->StyleDisplay();
       if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
