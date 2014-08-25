@@ -22,88 +22,82 @@
 #define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
 
 int
-main(void)
+main()
 {
-    nsresult rv;
+  nsresult rv;
 
-    XPCOMGlueStartup(nullptr);
+  XPCOMGlueStartup(nullptr);
 
-    // Initialize XPCOM
-    nsCOMPtr<nsIServiceManager> servMan;
-    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
-    if (NS_FAILED(rv))
-    {
-        printf("ERROR: XPCOM intialization error [%x].\n",
-               static_cast<uint32_t>(rv));
-        return -1;
-    }
+  // Initialize XPCOM
+  nsCOMPtr<nsIServiceManager> servMan;
+  rv = NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    printf("ERROR: XPCOM intialization error [%x].\n",
+           static_cast<uint32_t>(rv));
+    return -1;
+  }
 
-    nsCOMPtr<nsIComponentManager> manager = do_QueryInterface(servMan);
+  nsCOMPtr<nsIComponentManager> manager = do_QueryInterface(servMan);
 
-    // Create an instance of our component
-    nsCOMPtr<nsISample> mysample;
-    rv = manager->CreateInstanceByContractID(NS_SAMPLE_CONTRACTID,
-                                             nullptr,
-                                             NS_GET_IID(nsISample),
-                                             getter_AddRefs(mysample));
-    if (NS_FAILED(rv))
-    {
-        printf("ERROR: Cannot create instance of component " NS_SAMPLE_CONTRACTID " [%x].\n"
-               "Debugging hint:\n"
-               "\tsetenv NSPR_LOG_MODULES nsComponentManager:5\n"
-               "\tsetenv NSPR_LOG_FILE xpcom.log\n"
-               "\t./nsTestSample\n"
-               "\t<check the contents for xpcom.log for possible cause of error>.\n",
-               static_cast<uint32_t>(rv));
-        return -2;
-    }
+  // Create an instance of our component
+  nsCOMPtr<nsISample> mysample;
+  rv = manager->CreateInstanceByContractID(NS_SAMPLE_CONTRACTID,
+                                           nullptr,
+                                           NS_GET_IID(nsISample),
+                                           getter_AddRefs(mysample));
+  if (NS_FAILED(rv)) {
+    printf("ERROR: Cannot create instance of component " NS_SAMPLE_CONTRACTID " [%x].\n"
+           "Debugging hint:\n"
+           "\tsetenv NSPR_LOG_MODULES nsComponentManager:5\n"
+           "\tsetenv NSPR_LOG_FILE xpcom.log\n"
+           "\t./nsTestSample\n"
+           "\t<check the contents for xpcom.log for possible cause of error>.\n",
+           static_cast<uint32_t>(rv));
+    return -2;
+  }
 
-    // Call methods on our sample to test it out.
-    rv = mysample->WriteValue("Inital print:");
-    if (NS_FAILED(rv))
-    {
-        printf("ERROR: Calling nsISample::WriteValue() [%x]\n",
-               static_cast<uint32_t>(rv));
-        return -3;
-    }
+  // Call methods on our sample to test it out.
+  rv = mysample->WriteValue("Inital print:");
+  if (NS_FAILED(rv)) {
+    printf("ERROR: Calling nsISample::WriteValue() [%x]\n",
+           static_cast<uint32_t>(rv));
+    return -3;
+  }
 
-    const char *testValue = "XPCOM defies gravity";
-    rv = mysample->SetValue(testValue);
-    if (NS_FAILED(rv))
-    {
-        printf("ERROR: Calling nsISample::SetValue() [%x]\n",
-               static_cast<uint32_t>(rv));
-        return -3;
-    }
-    printf("Set value to: %s\n", testValue);
-    char *str;
-    rv = mysample->GetValue(&str);
+  const char* testValue = "XPCOM defies gravity";
+  rv = mysample->SetValue(testValue);
+  if (NS_FAILED(rv)) {
+    printf("ERROR: Calling nsISample::SetValue() [%x]\n",
+           static_cast<uint32_t>(rv));
+    return -3;
+  }
+  printf("Set value to: %s\n", testValue);
+  char* str;
+  rv = mysample->GetValue(&str);
 
-    if (NS_FAILED(rv))
-    {
-        printf("ERROR: Calling nsISample::GetValue() [%x]\n",
-               static_cast<uint32_t>(rv));
-        return -3;
-    }
-    if (strcmp(str, testValue))
-    {
-        printf("Test FAILED.\n");
-        return -4;
-    }
+  if (NS_FAILED(rv)) {
+    printf("ERROR: Calling nsISample::GetValue() [%x]\n",
+           static_cast<uint32_t>(rv));
+    return -3;
+  }
+  if (strcmp(str, testValue)) {
+    printf("Test FAILED.\n");
+    return -4;
+  }
 
-    NS_Free(str);
+  NS_Free(str);
 
-    rv = mysample->WriteValue("Final print :");
-    printf("Test passed.\n");
-    
-    // All nsCOMPtr's must be deleted prior to calling shutdown XPCOM
-    // as we should not hold references passed XPCOM Shutdown.
-    servMan = 0;
-    manager = 0;
-    mysample = 0;
-    
-    // Shutdown XPCOM
-    NS_ShutdownXPCOM(nullptr);
+  rv = mysample->WriteValue("Final print :");
+  printf("Test passed.\n");
 
-    return 0;
+  // All nsCOMPtr's must be deleted prior to calling shutdown XPCOM
+  // as we should not hold references passed XPCOM Shutdown.
+  servMan = 0;
+  manager = 0;
+  mysample = 0;
+
+  // Shutdown XPCOM
+  NS_ShutdownXPCOM(nullptr);
+
+  return 0;
 }
