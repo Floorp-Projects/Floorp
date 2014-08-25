@@ -5965,9 +5965,11 @@ GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
     JS_ASSERT(masm.framePushed() == FramePushedAfterSave);
 
     // ARM and MIPS have a globally-pinned GlobalReg (x64 uses RIP-relative
-    // addressing, x86 uses immediates in effective addresses).
+    // addressing, x86 uses immediates in effective addresses). For the
+    // AsmJSGlobalRegBias addition, see Assembler-(mips,arm).h.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     masm.movePtr(IntArgReg1, GlobalReg);
+    masm.addPtr(Imm32(AsmJSGlobalRegBias), GlobalReg);
 #endif
 
     // ARM, MIPS and x64 have a globally-pinned HeapReg (x86 uses immediates in
@@ -6254,7 +6256,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 #elif defined(JS_CODEGEN_X86)
     m.masm().append(AsmJSGlobalAccess(masm.movlWithPatch(Imm32(0), callee), globalDataOffset));
 #else
-    masm.computeEffectiveAddress(Address(GlobalReg, globalDataOffset), callee);
+    masm.computeEffectiveAddress(Address(GlobalReg, globalDataOffset - AsmJSGlobalRegBias), callee);
 #endif
 
     // 2.2. Get callee
