@@ -591,6 +591,8 @@ ShmemTextureHost::ShmemTextureHost(const ipc::Shmem& aShmem,
 
 ShmemTextureHost::~ShmemTextureHost()
 {
+  MOZ_ASSERT(!mShmem || (mFlags & TextureFlags::DEALLOCATE_CLIENT),
+             "Leaking our buffer");
   DeallocateDeviceData();
   MOZ_COUNT_DTOR(ShmemTextureHost);
 }
@@ -641,9 +643,9 @@ MemoryTextureHost::MemoryTextureHost(uint8_t* aBuffer,
 
 MemoryTextureHost::~MemoryTextureHost()
 {
+  MOZ_ASSERT(!mBuffer || (mFlags & TextureFlags::DEALLOCATE_CLIENT),
+             "Leaking our buffer");
   DeallocateDeviceData();
-  NS_ASSERTION(!mBuffer || (mFlags & TextureFlags::DEALLOCATE_CLIENT),
-               "Leaking our buffer");
   MOZ_COUNT_DTOR(MemoryTextureHost);
 }
 

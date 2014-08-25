@@ -44,6 +44,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795164
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 
+    SpecialPowers.autoConfirmAppUninstall(continueTest);
+    yield undefined;
+
     // Keeping track of the number of times `mozApps.mgmt.onuninstall` gets triggered
     let uninstallCount = 0;
 

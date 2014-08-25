@@ -44,6 +44,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 
+    SpecialPowers.autoConfirmAppUninstall(continueTest);
+    yield undefined;
+
     let request = navigator.mozApps.install(url1);
     request.onerror = mozAppsError;
     request.onsuccess = continueTest;
