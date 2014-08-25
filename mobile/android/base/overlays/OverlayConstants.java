@@ -48,7 +48,7 @@ public class OverlayConstants {
     // The optional extra Parcelable parameters for a ShareMethod.
     public static final String EXTRA_PARAMETERS = "EXTRA";
 
-    // The extra field key used for holding one or more share method names (See above).
+    // The extra field key used for holding the ShareMethod.Type we wish to use for an operation.
     public static final String EXTRA_SHARE_METHOD = "SHARE_METHOD";
 
     /*
