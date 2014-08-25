@@ -425,7 +425,8 @@ public:
             (aStats->mCreates != aStats->mDestroys));
   }
 
-  bool PrintDumpHeader(FILE* aOut, const char* aMsg, nsTraceRefcnt::StatisticsType aType)
+  bool PrintDumpHeader(FILE* aOut, const char* aMsg,
+                       nsTraceRefcnt::StatisticsType aType)
   {
     fprintf(aOut, "\n== BloatView: %s, %s process %d\n", aMsg,
             XRE_ChildProcessTypeToString(XRE_GetProcessType()), getpid());
@@ -447,7 +448,8 @@ public:
 
   void Dump(int aIndex, FILE* aOut, nsTraceRefcnt::StatisticsType aType)
   {
-    nsTraceRefcntStats* stats = (aType == nsTraceRefcnt::NEW_STATS) ? &mNewStats : &mAllStats;
+    nsTraceRefcntStats* stats =
+      (aType == nsTraceRefcnt::NEW_STATS) ? &mNewStats : &mAllStats;
     if (gLogLeaksOnly && !HaveLeaks(stats)) {
       return;
     }
@@ -573,7 +575,7 @@ DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
 }
 
 
-template <>
+template<>
 class nsDefaultComparator<BloatEntry*, BloatEntry*>
 {
 public:
@@ -677,7 +679,9 @@ LogThisType(const char* aTypeName)
 static intptr_t
 GetSerialNumber(void* aPtr, bool aCreate)
 {
-  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr);
+  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers,
+                                            PLHashNumber(NS_PTR_TO_INT32(aPtr)),
+                                            aPtr);
   if (hep && *hep) {
     return reinterpret_cast<serialNumberRecord*>((*hep)->value)->serialNumber;
   } else if (aCreate) {
@@ -685,7 +689,8 @@ GetSerialNumber(void* aPtr, bool aCreate)
     record->serialNumber = ++gNextSerialNumber;
     record->refCount = 0;
     record->COMPtrCount = 0;
-    PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr, reinterpret_cast<void*>(record));
+    PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(NS_PTR_TO_INT32(aPtr)),
+                       aPtr, reinterpret_cast<void*>(record));
     return gNextSerialNumber;
   }
   return 0;
@@ -694,7 +699,9 @@ GetSerialNumber(void* aPtr, bool aCreate)
 static int32_t*
 GetRefCount(void* aPtr)
 {
-  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr);
+  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers,
+                                            PLHashNumber(NS_PTR_TO_INT32(aPtr)),
+                                            aPtr);
   if (hep && *hep) {
     return &((reinterpret_cast<serialNumberRecord*>((*hep)->value))->refCount);
   } else {
@@ -706,7 +713,9 @@ GetRefCount(void* aPtr)
 static int32_t*
 GetCOMPtrCount(void* aPtr)
 {
-  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr);
+  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers,
+                                            PLHashNumber(NS_PTR_TO_INT32(aPtr)),
+                                            aPtr);
   if (hep && *hep) {
     return &((reinterpret_cast<serialNumberRecord*>((*hep)->value))->COMPtrCount);
   }
@@ -959,7 +968,7 @@ PrintStackFrame(void* aPC, void* aSP, void* aClosure)
 static void
 PrintStackFrameCached(void* aPC, void* aSP, void* aClosure)
 {
-  CodeAddressServiceWriter *writer = static_cast<CodeAddressServiceWriter*>(aClosure);
+  auto writer = static_cast<CodeAddressServiceWriter*>(aClosure);
   gCodeAddressService->WriteLocation(*writer, aPC);
 }
 #endif
@@ -983,8 +992,8 @@ nsTraceRefcnt::WalkTheStackCached(FILE* aStream)
     gCodeAddressService = new WalkTheStackCodeAddressService();
   }
   CodeAddressServiceWriter writer(aStream);
-  NS_StackWalk(PrintStackFrameCached, /* skipFrames */ 2, /* maxFrames */ 0, &writer,
-               0, nullptr);
+  NS_StackWalk(PrintStackFrameCached, /* skipFrames */ 2, /* maxFrames */ 0,
+               &writer, 0, nullptr);
 #endif
 }
 
@@ -1092,7 +1101,7 @@ LogTerm()
 
 EXPORT_XPCOM_API(void)
 NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
-             const char* aClazz, uint32_t aClassSize)
+             const char* aClass, uint32_t aClassSize)
 {
 #ifdef NS_IMPL_REFCNT_LOGGING
   ASSERT_ACTIVITY_IS_LEGAL;
@@ -1103,7 +1112,7 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
     LOCK_TRACELOG();
 
     if (gBloatLog) {
-      BloatEntry* entry = GetBloatEntry(aClazz, aClassSize);
+      BloatEntry* entry = GetBloatEntry(aClass, aClassSize);
       if (entry) {
         entry->AddRef(aRefcnt);
       }
@@ -1112,7 +1121,7 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
     // Here's the case where MOZ_COUNT_CTOR was not used,
     // yet we still want to see creation information:
 
-    bool loggingThisType = (!gTypesToLog || LogThisType(aClazz));
+    bool loggingThisType = (!gTypesToLog || LogThisType(aClass));
     intptr_t serialno = 0;
     if (gSerialNumbers && loggingThisType) {
       serialno = GetSerialNumber(aPtr, aRefcnt == 1);
@@ -1129,14 +1138,15 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
     bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (aRefcnt == 1 && gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog, "\n<%s> 0x%08X %" PRIdPTR " Create\n",
-              aClazz, NS_PTR_TO_INT32(aPtr), serialno);
+              aClass, NS_PTR_TO_INT32(aPtr), serialno);
       nsTraceRefcnt::WalkTheStackCached(gAllocLog);
     }
 
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
       // Can't use PR_LOG(), b/c it truncates the line
       fprintf(gRefcntsLog,
-              "\n<%s> 0x%08X %" PRIuPTR " AddRef %" PRIuPTR "\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
+              "\n<%s> 0x%08X %" PRIuPTR " AddRef %" PRIuPTR "\n",
+              aClass, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
       nsTraceRefcnt::WalkTheStackCached(gRefcntsLog);
       fflush(gRefcntsLog);
     }
@@ -1146,7 +1156,7 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
 }
 
 EXPORT_XPCOM_API(void)
-NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClazz)
+NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
 {
 #ifdef NS_IMPL_REFCNT_LOGGING
   ASSERT_ACTIVITY_IS_LEGAL;
@@ -1157,13 +1167,13 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClazz)
     LOCK_TRACELOG();
 
     if (gBloatLog) {
-      BloatEntry* entry = GetBloatEntry(aClazz, 0);
+      BloatEntry* entry = GetBloatEntry(aClass, 0);
       if (entry) {
         entry->Release(aRefcnt);
       }
     }
 
-    bool loggingThisType = (!gTypesToLog || LogThisType(aClazz));
+    bool loggingThisType = (!gTypesToLog || LogThisType(aClass));
     intptr_t serialno = 0;
     if (gSerialNumbers && loggingThisType) {
       serialno = GetSerialNumber(aPtr, false);
@@ -1181,7 +1191,8 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClazz)
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
       // Can't use PR_LOG(), b/c it truncates the line
       fprintf(gRefcntsLog,
-              "\n<%s> 0x%08X %" PRIuPTR " Release %" PRIuPTR "\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
+              "\n<%s> 0x%08X %" PRIuPTR " Release %" PRIuPTR "\n", aClass,
+              NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
       nsTraceRefcnt::WalkTheStackCached(gRefcntsLog);
       fflush(gRefcntsLog);
     }
@@ -1192,7 +1203,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClazz)
     if (aRefcnt == 0 && gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog,
               "\n<%s> 0x%08X %" PRIdPTR " Destroy\n",
-              aClazz, NS_PTR_TO_INT32(aPtr), serialno);
+              aClass, NS_PTR_TO_INT32(aPtr), serialno);
       nsTraceRefcnt::WalkTheStackCached(gAllocLog);
     }
 

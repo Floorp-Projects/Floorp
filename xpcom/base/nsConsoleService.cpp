@@ -34,7 +34,9 @@ using namespace mozilla;
 
 NS_IMPL_ADDREF(nsConsoleService)
 NS_IMPL_RELEASE(nsConsoleService)
-NS_IMPL_CLASSINFO(nsConsoleService, nullptr, nsIClassInfo::THREADSAFE | nsIClassInfo::SINGLETON, NS_CONSOLESERVICE_CID)
+NS_IMPL_CLASSINFO(nsConsoleService, nullptr,
+                  nsIClassInfo::THREADSAFE | nsIClassInfo::SINGLETON,
+                  NS_CONSOLESERVICE_CID)
 NS_IMPL_QUERY_INTERFACE_CI(nsConsoleService, nsIConsoleService)
 NS_IMPL_CI_INTERFACE_GETTER(nsConsoleService, nsIConsoleService)
 
@@ -57,7 +59,7 @@ nsConsoleService::nsConsoleService()
 nsConsoleService::~nsConsoleService()
 {
   uint32_t i = 0;
-  while (i < mBufferSize && mMessages[i] != nullptr) {
+  while (i < mBufferSize && mMessages[i]) {
     NS_RELEASE(mMessages[i]);
     i++;
   }
@@ -266,7 +268,8 @@ nsConsoleService::LogStringMessage(const char16_t* aMessage)
 }
 
 NS_IMETHODIMP
-nsConsoleService::GetMessageArray(uint32_t* aCount, nsIConsoleMessage*** aMessages)
+nsConsoleService::GetMessageArray(uint32_t* aCount,
+                                  nsIConsoleMessage*** aMessages)
 {
   nsIConsoleMessage** messageArray;
 

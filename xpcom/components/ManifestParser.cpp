@@ -225,7 +225,7 @@ LogMessageWithContext(FileLocation& aFile,
     // This can happen early in component registration. Fall back to a
     // generic console message.
     LogMessage("Warning: in '%s', line %i: %s", file.get(),
-               aLineNumber, (char*) formatted);
+               aLineNumber, (char*)formatted);
     return;
   }
 
