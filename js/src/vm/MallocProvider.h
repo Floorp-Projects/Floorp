@@ -59,8 +59,17 @@ struct MallocProvider
 
     template <class T>
     T *pod_malloc(size_t numElems) {
-        MOZ_ASSERT(numElems > 0);
-        return pod_malloc_with_extra<T, T>(numElems - 1);
+        T *p = js_pod_malloc<T>(numElems);
+        if (MOZ_LIKELY(p)) {
+            client()->updateMallocCounter(numElems * sizeof(T));
+            return p;
+        }
+        if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
+            client()->reportAllocationOverflow();
+            return nullptr;
+        }
+        client()->onOutOfMemory(nullptr, numElems * sizeof(T));
+        return nullptr;
     }
 
     template <class T, class U>
@@ -74,7 +83,7 @@ struct MallocProvider
             client()->reportAllocationOverflow();
             return nullptr;
         }
-        T *p = reinterpret_cast<T *>(js_pod_malloc<uint8_t>(bytes));
+        T *p = (T *)js_pod_malloc<uint8_t>(bytes);
         if (MOZ_LIKELY(p)) {
             client()->updateMallocCounter(bytes);
             return p;
@@ -95,29 +104,23 @@ struct MallocProvider
     }
 
     template <class T>
-    T *pod_calloc(size_t numElems) {
-        MOZ_ASSERT(numElems > 0);
-        return pod_calloc_with_extra<T, T>(numElems - 1);
+    T *
+    pod_calloc(size_t numElems) {
+        T *p = pod_malloc<T>(numElems);
+        if (MOZ_UNLIKELY(!p))
+            return nullptr;
+        memset(p, 0, numElems * sizeof(T));
+        return p;
     }
 
     template <class T, class U>
-    T *pod_calloc_with_extra(size_t numExtra) {
-        if (numExtra & mozilla::tl::MulOverflowMask<sizeof(U)>::value) {
-            client()->reportAllocationOverflow();
+    T *
+    pod_calloc_with_extra(size_t numExtra) {
+        T *p = pod_malloc_with_extra<T, U>(numExtra);
+        if (MOZ_UNLIKELY(!p))
             return nullptr;
-        }
-        size_t bytes = sizeof(T) + numExtra * sizeof(U);
-        if (bytes < sizeof(T)) {
-            client()->reportAllocationOverflow();
-            return nullptr;
-        }
-        T *p = reinterpret_cast<T *>(js_pod_calloc<uint8_t>(bytes));
-        if (MOZ_LIKELY(p)) {
-            client()->updateMallocCounter(bytes);
-            return p;
-        }
-        client()->onOutOfMemory(nullptr, bytes);
-        return nullptr;
+        memset(p, 0, sizeof(T) + numExtra * sizeof(U));
+        return p;
     }
 
     template <class T>
