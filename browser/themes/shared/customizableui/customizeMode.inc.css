@@ -94,12 +94,13 @@
 }
 
 #customization-header {
-  font-size: 1.5em;
-  line-height: 1.5em;
-  color: rgb(64,100,128);
-  font-weight: lighter;
-  margin-bottom: 1em;
-  padding: 25px 25px 0;
+  font-size: 1.75em;
+  line-height: 1.75em;
+  color: #666;
+  font-weight: 200;
+  margin: 25px 25px 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 #customization-panel-container {
