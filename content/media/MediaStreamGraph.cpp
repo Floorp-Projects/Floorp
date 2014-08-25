@@ -2640,7 +2640,9 @@ ProcessedMediaStream::DestroyImpl()
   // SetStreamOrderDirty(), for other reasons.
 }
 
-MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime, TrackRate aSampleRate)
+MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
+                                           TrackRate aSampleRate,
+                                           DOMMediaStream::TrackTypeHints aHint= DOMMediaStream::HINT_CONTENTS_UNKNOWN)
   : mDriverHolder(MOZ_THIS_IN_INITIALIZER_LIST())
   , mProcessingGraphUpdateIndex(0)
   , mPortCount(0)
@@ -2672,10 +2674,10 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime, TrackRate aSampleRate
 #endif
 
   if (mRealtime) {
-    // Always start with a system clock driver when creating a realtime graph: we
-    // don't know if this graph will ever be used for audio.
+    printf("New Graph, using a SystemClockDriver %p\n", this);
     mDriverHolder.Switch(new SystemClockDriver(this));
   } else {
+    printf("New Graph, using a OfflineClockDriver %p\n", this);
     mDriverHolder.Switch(new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS));
   }
 
@@ -2716,7 +2718,7 @@ MediaStreamGraphShutdownObserver::Observe(nsISupports *aSubject,
 }
 
 MediaStreamGraph*
-MediaStreamGraph::GetInstance()
+MediaStreamGraph::GetInstance(DOMMediaStream::TrackTypeHints aHint)
 {
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
 

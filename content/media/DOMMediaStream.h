@@ -159,7 +159,8 @@ public:
   // Indicate what track types we eventually expect to add to this stream
   enum {
     HINT_CONTENTS_AUDIO = 1 << 0,
-    HINT_CONTENTS_VIDEO = 1 << 1
+    HINT_CONTENTS_VIDEO = 1 << 1,
+    HINT_CONTENTS_UNKNOWN = 1 << 2
   };
   TrackTypeHints GetHintContents() const { return mHintContents; }
   void SetHintContents(TrackTypeHints aHintContents) { mHintContents = aHintContents; }
