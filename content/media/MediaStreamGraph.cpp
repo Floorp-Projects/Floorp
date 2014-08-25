@@ -1260,21 +1260,20 @@ MediaStreamGraphImpl::ResumeAllAudioOutputs()
 }
 
 void
-MediaStreamGraphImpl::UpdateGraph(nsTArray<MessageBlock>& aMessageQueue,
-                                  GraphTime aEndBlockingDecision)
+MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecision)
 {
   // Calculate independent action times for each batch of messages (each
   // batch corresponding to an event loop task). This isolates the performance
   // of different scripts to some extent.
-  for (uint32_t i = 0; i < aMessageQueue.Length(); ++i) {
-    mProcessingGraphUpdateIndex = aMessageQueue[i].mGraphUpdateIndex;
-    nsTArray<nsAutoPtr<ControlMessage> >& messages = aMessageQueue[i].mMessages;
+  for (uint32_t i = 0; i < mFrontMessageQueue.Length(); ++i) {
+    mProcessingGraphUpdateIndex = mFrontMessageQueue[i].mGraphUpdateIndex;
+    nsTArray<nsAutoPtr<ControlMessage> >& messages = mFrontMessageQueue[i].mMessages;
 
     for (uint32_t j = 0; j < messages.Length(); ++j) {
       messages[j]->Run();
     }
   }
-  aMessageQueue.Clear();
+  mFrontMessageQueue.Clear();
 
   if (mStreamOrderDirty) {
     UpdateStreamOrder();
@@ -1383,12 +1382,11 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
 
 bool
 MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
-                                   GraphTime aStateFrom, GraphTime aStateEnd,
-                                   nsTArray<MessageBlock>& aMessageQueue)
+                                   GraphTime aStateFrom, GraphTime aStateEnd)
 {
   UpdateCurrentTimeForStreams(aFrom, aTo);
 
-  UpdateGraph(aMessageQueue, aStateEnd);
+  UpdateGraph(aStateEnd);
 
   Process(aStateFrom, aStateEnd);
 
@@ -1398,7 +1396,7 @@ MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
     MonitorAutoLock lock(CurrentDriver()->GetThreadMonitor());
     bool finalUpdate = mForceShutDown ||
       (IterationEnd() >= mEndTime && AllFinishedStreamsNotified()) ||
-      (IsEmpty() && mMessageQueue.IsEmpty());
+      (IsEmpty() && mBackMessageQueue.IsEmpty());
     PrepareUpdatesToMainThreadState(finalUpdate);
     if (finalUpdate) {
       // Enter shutdown mode. The stable-state handler will detect this
@@ -1413,7 +1411,7 @@ MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
 
     CurrentDriver()->WaitForNextIteration();
 
-    aMessageQueue.SwapElements(mMessageQueue);
+    SwapMessageQueues();
   }
 
   return true;
@@ -1609,7 +1607,7 @@ MediaStreamGraphImpl::RunInStableState()
       }
     } else {
       if (mLifecycleState <= LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
-        MessageBlock* block = mMessageQueue.AppendElement();
+        MessageBlock* block = mBackMessageQueue.AppendElement();
         block->mMessages.SwapElements(mCurrentTaskMessageQueue);
         block->mGraphUpdateIndex = mNextGraphUpdateIndex;
         ++mNextGraphUpdateIndex;
@@ -1634,11 +1632,11 @@ MediaStreamGraphImpl::RunInStableState()
     if ((mForceShutDown || !mRealtime) &&
         mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
       // Defer calls to RunDuringShutdown() to happen while mMonitor is not held.
-      for (uint32_t i = 0; i < mMessageQueue.Length(); ++i) {
-        MessageBlock& mb = mMessageQueue[i];
+      for (uint32_t i = 0; i < mBackMessageQueue.Length(); ++i) {
+        MessageBlock& mb = mBackMessageQueue[i];
         controlMessagesToRunDuringShutdown.MoveElementsFrom(mb.mMessages);
       }
-      mMessageQueue.Clear();
+      mBackMessageQueue.Clear();
       MOZ_ASSERT(mCurrentTaskMessageQueue.IsEmpty());
       // Stop MediaStreamGraph threads. Do not clear gGraph since
       // we have outstanding DOM objects that may need it.
