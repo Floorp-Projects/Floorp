@@ -144,14 +144,16 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         // duplicate WebMTimeDataOffset entries.
         {
           ReentrantMonitorAutoEnter mon(aReentrantMonitor);
-          uint32_t idx = aMapping.IndexOfFirstElementGt(mBlockOffset);
-          if (idx == 0 || !(aMapping[idx - 1] == mBlockOffset)) {
+          int64_t endOffset = mBlockOffset + mBlockSize +
+                              mElement.mID.mLength + mElement.mSize.mLength;
+          uint32_t idx = aMapping.IndexOfFirstElementGt(endOffset);
+          if (idx == 0 || aMapping[idx - 1] != endOffset) {
             // Don't insert invalid negative timecodes.
             if (mBlockTimecode >= 0 || mClusterTimecode >= uint16_t(abs(mBlockTimecode))) {
               MOZ_ASSERT(mGotTimecodeScale);
               uint64_t absTimecode = mClusterTimecode + mBlockTimecode;
               absTimecode *= mTimecodeScale;
-              WebMTimeDataOffset entry(mBlockOffset, absTimecode, mClusterOffset);
+              WebMTimeDataOffset entry(endOffset, absTimecode, mClusterOffset);
               aMapping.InsertElementAt(idx, entry);
             }
           }
@@ -182,19 +184,29 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
   mCurrentOffset += aLength;
 }
 
+struct SyncOffsetComparator {
+  bool Equals(const WebMTimeDataOffset& a, const int64_t& b) const {
+    return a.mSyncOffset == b;
+  }
+
+  bool LessThan(const WebMTimeDataOffset& a, const int64_t& b) const {
+    return a.mSyncOffset < b;
+  }
+};
+
 bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset, int64_t aEndOffset,
                                                   uint64_t* aStartTime, uint64_t* aEndTime)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   // Find the first WebMTimeDataOffset at or after aStartOffset.
-  uint32_t start = mTimeMapping.IndexOfFirstElementGt(aStartOffset - 1);
+  uint32_t start = mTimeMapping.IndexOfFirstElementGt(aStartOffset - 1, SyncOffsetComparator());
   if (start == mTimeMapping.Length()) {
     return false;
   }
 
   // Find the first WebMTimeDataOffset at or before aEndOffset.
-  uint32_t end = mTimeMapping.IndexOfFirstElementGt(aEndOffset - 1);
+  uint32_t end = mTimeMapping.IndexOfFirstElementGt(aEndOffset);
   if (end > 0) {
     end -= 1;
   }
@@ -204,25 +216,21 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset, int64_t 
     return false;
   }
 
-  NS_ASSERTION(mTimeMapping[start].mOffset >= aStartOffset &&
-               mTimeMapping[end].mOffset <= aEndOffset,
+  NS_ASSERTION(mTimeMapping[start].mSyncOffset >= aStartOffset &&
+               mTimeMapping[end].mEndOffset <= aEndOffset,
                "Computed time range must lie within data range.");
   if (start > 0) {
-    NS_ASSERTION(mTimeMapping[start - 1].mOffset <= aStartOffset,
+    NS_ASSERTION(mTimeMapping[start - 1].mSyncOffset < aStartOffset,
                  "Must have found least WebMTimeDataOffset for start");
   }
   if (end < mTimeMapping.Length() - 1) {
-    NS_ASSERTION(mTimeMapping[end + 1].mOffset >= aEndOffset,
+    NS_ASSERTION(mTimeMapping[end + 1].mEndOffset > aEndOffset,
                  "Must have found greatest WebMTimeDataOffset for end");
   }
 
-  // The timestamp of the first media sample, in ns. We must subtract this
-  // from the ranges' start and end timestamps, so that those timestamps are
-  // normalized in the range [0,duration].
-
+  uint64_t frameDuration = mTimeMapping[end].mTimecode - mTimeMapping[end - 1].mTimecode;
   *aStartTime = mTimeMapping[start].mTimecode;
-  *aEndTime = mTimeMapping[end].mTimecode;
-  *aEndTime += mTimeMapping[end].mTimecode - mTimeMapping[end - 1].mTimecode;
+  *aEndTime = mTimeMapping[end].mTimecode + frameDuration;
   return true;
 }
 

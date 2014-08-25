@@ -20,19 +20,23 @@ class TimeRanges;
 // that offset.
 struct WebMTimeDataOffset
 {
-  WebMTimeDataOffset(int64_t aOffset, uint64_t aTimecode, int64_t aSyncOffset)
-    : mOffset(aOffset), mSyncOffset(aSyncOffset), mTimecode(aTimecode)
+  WebMTimeDataOffset(int64_t aEndOffset, uint64_t aTimecode, int64_t aSyncOffset)
+    : mEndOffset(aEndOffset), mSyncOffset(aSyncOffset), mTimecode(aTimecode)
   {}
 
-  bool operator==(int64_t aOffset) const {
-    return mOffset == aOffset;
+  bool operator==(int64_t aEndOffset) const {
+    return mEndOffset == aEndOffset;
   }
 
-  bool operator<(int64_t aOffset) const {
-    return mOffset < aOffset;
+  bool operator!=(int64_t aEndOffset) const {
+    return mEndOffset != aEndOffset;
   }
 
-  int64_t mOffset;
+  bool operator<(int64_t aEndOffset) const {
+    return mEndOffset < aEndOffset;
+  }
+
+  int64_t mEndOffset;
   int64_t mSyncOffset;
   uint64_t mTimecode;
 };
