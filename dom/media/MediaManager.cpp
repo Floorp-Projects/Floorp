@@ -2095,20 +2095,22 @@ MediaManager::GetActiveMediaCaptureWindows(nsISupportsArray **aArray)
 NS_IMETHODIMP
 MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow, bool* aVideo,
                                       bool* aAudio, bool *aScreenShare,
-                                      bool* aWindowShare)
+                                      bool* aWindowShare, bool *aAppShare)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   *aVideo = false;
   *aAudio = false;
   *aScreenShare = false;
   *aWindowShare = false;
+  *aAppShare = false;
 
-  nsresult rv = MediaCaptureWindowStateInternal(aWindow, aVideo, aAudio, aScreenShare, aWindowShare);
+  nsresult rv = MediaCaptureWindowStateInternal(aWindow, aVideo, aAudio, aScreenShare, aWindowShare, aAppShare);
 #ifdef DEBUG
   nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
-  LOG(("%s: window %lld capturing %s %s %s %s", __FUNCTION__, piWin ? piWin->WindowID() : -1,
+  LOG(("%s: window %lld capturing %s %s %s %s %s", __FUNCTION__, piWin ? piWin->WindowID() : -1,
        *aVideo ? "video" : "", *aAudio ? "audio" : "",
-       *aScreenShare ? "screenshare" : "",  *aWindowShare ? "windowshare" : ""));
+       *aScreenShare ? "screenshare" : "",  *aWindowShare ? "windowshare" : "",
+       *aAppShare ? "appshare" : ""));
 #endif
   return rv;
 }
@@ -2116,7 +2118,7 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow, bool* aVideo,
 nsresult
 MediaManager::MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVideo,
                                               bool* aAudio, bool *aScreenShare,
-                                              bool* aWindowShare)
+                                              bool* aWindowShare, bool *aAppShare)
 {
   // We need to return the union of all streams in all innerwindows that
   // correspond to that outerwindow.
@@ -2148,9 +2150,11 @@ MediaManager::MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVide
           if (listener->CapturingScreen()) {
             *aScreenShare = true;
           }
-          if (listener->CapturingWindow() || listener->CapturingApplication()) {
-            // treat window and application as the same
+          if (listener->CapturingWindow()) {
             *aWindowShare = true;
+          }
+          if (listener->CapturingApplication()) {
+            *aAppShare = true;
           }
         }
       }
@@ -2166,7 +2170,7 @@ MediaManager::MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVide
         docShell->GetChildAt(i, getter_AddRefs(item));
         nsCOMPtr<nsPIDOMWindow> win = item ? item->GetWindow() : nullptr;
 
-        MediaCaptureWindowStateInternal(win, aVideo, aAudio, aScreenShare, aWindowShare);
+        MediaCaptureWindowStateInternal(win, aVideo, aAudio, aScreenShare, aWindowShare, aAppShare);
       }
     }
   }
