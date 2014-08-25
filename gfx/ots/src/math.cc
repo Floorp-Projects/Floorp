@@ -384,12 +384,10 @@ bool ParseGlyphAssemblyTable(const ots::OpenTypeFile *file,
       return OTS_FAILURE();
     }
     if (glyph >= num_glyphs) {
-      OTS_WARNING("bad glyph ID: %u", glyph);
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("bad glyph ID: %u", glyph);
     }
     if (part_flags & ~0x00000001) {
-      OTS_WARNING("unknown part flag: %u", part_flags);
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("unknown part flag: %u", part_flags);
     }
   }
 
@@ -435,8 +433,7 @@ bool ParseMathGlyphConstructionTable(const ots::OpenTypeFile *file,
       return OTS_FAILURE();
     }
     if (glyph >= num_glyphs) {
-      OTS_WARNING("bad glyph ID: %u", glyph);
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("bad glyph ID: %u", glyph);
     }
   }
 
@@ -519,8 +516,12 @@ bool ParseMathVariantsTable(const ots::OpenTypeFile *file,
 
 }  // namespace
 
-#define DROP_THIS_TABLE \
-  do { file->math->data = 0; file->math->length = 0; } while (0)
+#define DROP_THIS_TABLE(msg_) \
+  do { \
+    file->math->data = 0; \
+    file->math->length = 0; \
+    OTS_FAILURE_MSG(msg_ ", table discarded"); \
+  } while (0)
 
 namespace ots {
 
@@ -542,8 +543,7 @@ bool ots_math_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     return OTS_FAILURE();
   }
   if (version != 0x00010000) {
-    OTS_WARNING("bad MATH version");
-    DROP_THIS_TABLE;
+    DROP_THIS_TABLE("bad MATH version");
     return true;
   }
 
@@ -562,24 +562,23 @@ bool ots_math_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       offset_math_glyph_info < kMathHeaderSize ||
       offset_math_variants >= length ||
       offset_math_variants < kMathHeaderSize) {
-    OTS_WARNING("bad offset in MATH header");
-    DROP_THIS_TABLE;
+    DROP_THIS_TABLE("bad offset in MATH header");
     return true;
   }
 
   if (!ParseMathConstantsTable(file, data + offset_math_constants,
                                length - offset_math_constants)) {
-    DROP_THIS_TABLE;
+    DROP_THIS_TABLE("failed to parse MathConstants table");
     return true;
   }
   if (!ParseMathGlyphInfoTable(file, data + offset_math_glyph_info,
                                length - offset_math_glyph_info, num_glyphs)) {
-    DROP_THIS_TABLE;
+    DROP_THIS_TABLE("failed to parse MathGlyphInfo table");
     return true;
   }
   if (!ParseMathVariantsTable(file, data + offset_math_variants,
                               length - offset_math_variants, num_glyphs)) {
-    DROP_THIS_TABLE;
+    DROP_THIS_TABLE("failed to parse MathVariants table");
     return true;
   }
 

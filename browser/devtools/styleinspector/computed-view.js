@@ -1424,19 +1424,16 @@ SelectorView.prototype = {
       return;
     }
 
-    let location = promise.resolve({
-      href: rule.href,
-      line: rule.line
-    });
-    if (rule.href && Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
+    let location = promise.resolve(rule.location);
+    if (Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
       location = rule.getOriginalLocation();
     }
-
-    location.then(({href, line}) => {
+    location.then(({source, href, line, column}) => {
       let target = inspector.target;
       if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
         gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
-          toolbox.getCurrentPanel().selectStyleSheet(href, line);
+          let sheet = source || href;
+          toolbox.getCurrentPanel().selectStyleSheet(sheet, line, column);
         });
       }
     });

@@ -74,17 +74,6 @@ let StyleSheetsActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.parentActor = tabActor;
-
-    // keep a map of sheets-to-actors so we don't create two actors for one sheet
-    this._sheets = new Map();
-  },
-
-  /**
-   * Destroy the current StyleSheetsActor instance.
-   */
-  destroy: function()
-  {
-    this._sheets.clear();
   },
 
   /**
@@ -156,7 +145,7 @@ let StyleSheetsActor = protocol.ActorClass({
     return Task.spawn(function() {
       let actors = [];
       for (let i = 0; i < styleSheets.length; i++) {
-        let actor = this._createStyleSheetActor(styleSheets[i]);
+        let actor = this.parentActor.createStyleSheetActor(styleSheets[i]);
         actors.push(actor);
 
         // Get all sheets, including imported ones
@@ -188,7 +177,7 @@ let StyleSheetsActor = protocol.ActorClass({
           if (!rule.styleSheet) {
             continue;
           }
-          let actor = this._createStyleSheetActor(rule.styleSheet);
+          let actor = this.parentActor.createStyleSheetActor(rule.styleSheet);
           imported.push(actor);
 
           // recurse imports in this stylesheet as well
@@ -205,36 +194,6 @@ let StyleSheetsActor = protocol.ActorClass({
     }.bind(this));
   },
 
-  /**
-   * Create a new actor for a style sheet, if it hasn't already been created.
-   *
-   * @param  {DOMStyleSheet} styleSheet
-   *         The style sheet to create an actor for.
-   * @return {StyleSheetActor}
-   *         The actor for this style sheet
-   */
-  _createStyleSheetActor: function(styleSheet)
-  {
-    if (this._sheets.has(styleSheet)) {
-      return this._sheets.get(styleSheet);
-    }
-    let actor = new StyleSheetActor(styleSheet, this);
-
-    this.manage(actor);
-    this._sheets.set(styleSheet, actor);
-
-    return actor;
-  },
-
-  /**
-   * Clear all the current stylesheet actors in map.
-   */
-  _clearStyleSheetActors: function() {
-    for (let actor in this._sheets) {
-      this.unmanage(this._sheets[actor]);
-    }
-    this._sheets.clear();
-  },
 
   /**
    * Create a new style sheet in the document with the given text.
@@ -255,7 +214,7 @@ let StyleSheetsActor = protocol.ActorClass({
     }
     parent.appendChild(style);
 
-    let actor = this._createStyleSheetActor(style.sheet);
+    let actor = this.parentActor.createStyleSheetActor(style.sheet);
     return actor;
   }, {
     request: { text: Arg(0, "string") },
@@ -323,6 +282,8 @@ let MediaRuleActor = protocol.ActorClass({
     if (this.mql) {
       this.mql.removeListener(this._matchesChange);
     }
+
+    protocol.Actor.prototype.destroy.call(this);
   },
 
   form: function(detail) {
@@ -419,16 +380,6 @@ let StyleSheetActor = protocol.ActorClass({
    * Document of target.
    */
   get document() this.window.document,
-
-  /**
-   * Browser for the target.
-   */
-  get browser() {
-    if (this.parentActor.parentActor) {
-      return this.parentActor.parentActor.browser;
-    }
-    return null;
-  },
 
   get ownerNode() this.rawSheet.ownerNode,
 
@@ -768,6 +719,7 @@ let StyleSheetActor = protocol.ActorClass({
         return sourceMap.originalPositionFor({ line: line, column: column });
       }
       return {
+        fromSourceMap: false,
         source: this.href,
         line: line,
         column: column
@@ -998,7 +950,6 @@ var StyleSheetFront = protocol.FrontClass(StyleSheetActor, {
 
   destroy: function() {
     events.off(this, "property-change", this._onPropertyChange);
-
     protocol.Front.prototype.destroy.call(this);
   },
 
