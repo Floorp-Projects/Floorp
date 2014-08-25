@@ -33,9 +33,9 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::AssertedCast;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
-using mozilla::SafeCast;
 
 class jit::BaselineFrameInspector
 {
@@ -7552,7 +7552,7 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
 
                 obj->setImplicitlyUsedUnchecked();
 
-                int32_t len = SafeCast<int32_t>(tarr->length());
+                int32_t len = AssertedCast<int32_t>(tarr->length());
                 *length = MConstant::New(alloc(), Int32Value(len));
                 current->add(*length);
 
