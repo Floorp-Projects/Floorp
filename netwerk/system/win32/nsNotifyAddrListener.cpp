@@ -27,6 +27,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Services.h"
 #include "nsCRT.h"
+#include "nsIPrefService.h"
 
 #include <iptypes.h>
 #include <iphlpapi.h>
@@ -37,6 +38,8 @@ static decltype(NcFreeNetconProperties)* sNcFreeNetconProperties;
 static HMODULE sIphlpapi;
 static decltype(NotifyIpInterfaceChange)* sNotifyIpInterfaceChange;
 static decltype(CancelMibChangeNotify2)* sCancelMibChangeNotify2;
+
+static const char kAllowChangedEvents[] = "network.notify.changed";
 
 static void InitIphlpapi(void)
 {
@@ -90,6 +93,7 @@ nsNotifyAddrListener::nsNotifyAddrListener()
     , mStatusKnown(false)
     , mCheckAttempted(false)
     , mShutdownEvent(nullptr)
+    , mAllowChangedEvent(true)
 {
     InitIphlpapi();
 }
@@ -188,13 +192,30 @@ nsNotifyAddrListener::Run()
     return NS_OK;
 }
 
+void
+nsNotifyAddrListener::updateFromPref(nsIPrefBranch *prefs)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    bool allow=true;
+    nsresult rv = prefs->GetBoolPref(kAllowChangedEvents, &allow);
+    if (NS_SUCCEEDED(rv)) {
+        mAllowChangedEvent = allow;
+    }
+}
+
 NS_IMETHODIMP
 nsNotifyAddrListener::Observe(nsISupports *subject,
                               const char *topic,
                               const char16_t *data)
 {
-    if (!strcmp("xpcom-shutdown-threads", topic))
+    if (!strcmp("xpcom-shutdown-threads", topic)) {
         Shutdown();
+    } else if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, topic)) {
+        nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(subject);
+        if (prefs) {
+            updateFromPref(prefs);
+        }
+    }
 
     return NS_OK;
 }
@@ -210,6 +231,13 @@ nsNotifyAddrListener::Init(void)
     nsresult rv = observerService->AddObserver(this, "xpcom-shutdown-threads",
                                                false);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // monitor preference change
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs) {
+        prefs->AddObserver(kAllowChangedEvents, this, true);
+        updateFromPref(prefs);
+    }
 
     mShutdownEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     NS_ENSURE_TRUE(mShutdownEvent, NS_ERROR_OUT_OF_MEMORY);
@@ -494,8 +522,10 @@ nsNotifyAddrListener::CheckLinkStatus(void)
 
         if (mLinkUp && (prevCsum != mIPInterfaceChecksum)) {
             // Network is online. Topology has changed. Always send CHANGED
-            // before UP.
-            SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
+            // before UP - if allowed to.
+            if (mAllowChangedEvent) {
+                SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
+            }
         }
         if (prevLinkUp != mLinkUp) {
             // UP/DOWN status changed, send appropriate UP/DOWN event
