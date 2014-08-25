@@ -605,7 +605,7 @@ private:
 
   nsresult MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVideo,
                                            bool* aAudio, bool *aScreenShare,
-                                           bool* aWindowShare);
+                                           bool* aWindowShare, bool *aAppShare);
 
   void StopScreensharing(uint64_t aWindowID);
   void StopScreensharing(nsPIDOMWindow *aWindow);
