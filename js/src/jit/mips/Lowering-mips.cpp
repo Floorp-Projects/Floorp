@@ -522,11 +522,11 @@ LIRGeneratorMIPS::lowerTruncateFToInt32(MTruncateToInt32 *ins)
 bool
 LIRGeneratorMIPS::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins)
 {
-    MOZ_ASSUME_UNREACHABLE("NYI");
+    MOZ_CRASH("NYI");
 }
 
 bool
 LIRGeneratorMIPS::visitForkJoinGetSlice(MForkJoinGetSlice *ins)
 {
-    MOZ_ASSUME_UNREACHABLE("NYI");
+    MOZ_CRASH("NYI");
 }
