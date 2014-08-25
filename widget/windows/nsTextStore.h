@@ -615,7 +615,8 @@ protected:
     void ReplaceTextWith(LONG aStart, LONG aLength, const nsAString& aString);
 
     void StartComposition(ITfCompositionView* aCompositionView,
-                          const PendingAction& aCompStart);
+                          const PendingAction& aCompStart,
+                          bool aPreserveSelection);
     void EndComposition(const PendingAction& aCompEnd);
 
     const nsString& Text() const
