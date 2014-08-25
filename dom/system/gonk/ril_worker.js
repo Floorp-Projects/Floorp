@@ -10844,7 +10844,6 @@ StkCommandParamsFactoryObject.prototype = {
     ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID_LIST, ctlvs);
     if (ctlv) {
       iconIdList = ctlv.value;
-      menu.itemIconSelfExplanatory = iconIdList.qualifier == 0 ? true : false;
       ids = ids.concat(iconIdList.identifiers);
     }
 
@@ -10862,8 +10861,10 @@ StkCommandParamsFactoryObject.prototype = {
         menu.icons = result.shift();
       }
 
+      let iconSelfExplanatory = iconIdList.qualifier == 0 ? true : false;
       for (let i = 0; i < result.length; i++) {
         menu.items[i].icons = result[i];
+        menu.items[i].iconSelfExplanatory = iconSelfExplanatory;
       }
 
       this.context.RIL.sendChromeMessage(cmdDetails);
@@ -15792,45 +15793,78 @@ IconLoaderObject.prototype = {
 
     switch (codingScheme) {
       case ICC_IMG_CODING_SCHEME_BASIC:
-        return {pixels: rawData.body,
-                width: rawData.width,
-                height: rawData.height};
+        return this._decodeBasicImage(rawData.width, rawData.height, rawData.body);
 
       case ICC_IMG_CODING_SCHEME_COLOR:
       case ICC_IMG_CODING_SCHEME_COLOR_TRANSPARENCY:
-        let bitsPerImgPoint = rawData.bitsPerImgPoint;
-        let mask = 0xff >> (8 - bitsPerImgPoint);
-        let bitsStartOffset = 8 - bitsPerImgPoint;
-        let bitIndex = bitsStartOffset;
-        let numOfClutEntries = rawData.numOfClutEntries;
-        let clut = rawData.clut;
-        let body = rawData.body;
-        let numOfPixels = rawData.width * rawData.height;
-        let pixelIndex = 0;
-        let currentByteIndex = 0;
-        let currentByte = body[currentByteIndex++];
-
-        let pixels = [];
-        while (pixelIndex < numOfPixels) {
-          // Reassign data and index for every byte (8 bits).
-          if (bitIndex < 0) {
-            currentByte = body[currentByteIndex++];
-            bitIndex = bitsStartOffset;
-          }
-          let clutEntry = ((currentByte >> bitIndex) & mask);
-          let clutIndex = clutEntry * ICC_CLUT_ENTRY_SIZE;
-          let alpha = codingScheme == ICC_IMG_CODING_SCHEME_COLOR_TRANSPARENCY &&
-                      clutEntry == numOfClutEntries - 1;
-          pixels[pixelIndex++] = {red: clut[clutIndex],
-                                  green: clut[clutIndex + 1],
-                                  blue: clut[clutIndex + 2],
-                                  alpha: alpha ? 0x00 : 0xff};
-          bitIndex -= bitsPerImgPoint;
-        }
-        return {pixels: pixels,
-                width: rawData.width,
-                height: rawData.height};
+        return this._decodeColorImage(codingScheme,
+                                      rawData.width, rawData.height,
+                                      rawData.bitsPerImgPoint,
+                                      rawData.numOfClutEntries,
+                                      rawData.clut, rawData.body);
     }
+
+    return null;
+  },
+
+  _decodeBasicImage: function(width, height, body) {
+    let numOfPixels = width * height;
+    let pixelIndex = 0;
+    let currentByteIndex = 0;
+    let currentByte = 0x00;
+
+    const BLACK = 0x000000FF;
+    const WHITE = 0xFFFFFFFF;
+
+    let pixels = [];
+    while (pixelIndex < numOfPixels) {
+      // Reassign data and index for every byte (8 bits).
+      if (pixelIndex % 8 == 0) {
+        currentByte = body[currentByteIndex++];
+      }
+      let bit = (currentByte >> (7 - (pixelIndex % 8))) & 0x01;
+      pixels[pixelIndex++] = bit ? WHITE : BLACK;
+    }
+
+    return {pixels: pixels,
+            codingScheme: GECKO_IMG_CODING_SCHEME_BASIC,
+            width: width,
+            height: height};
+  },
+
+  _decodeColorImage: function(codingScheme, width, height, bitsPerImgPoint,
+                              numOfClutEntries, clut, body) {
+    let mask = 0xff >> (8 - bitsPerImgPoint);
+    let bitsStartOffset = 8 - bitsPerImgPoint;
+    let bitIndex = bitsStartOffset;
+    let numOfPixels = width * height;
+    let pixelIndex = 0;
+    let currentByteIndex = 0;
+    let currentByte = body[currentByteIndex++];
+
+    let pixels = [];
+    while (pixelIndex < numOfPixels) {
+      // Reassign data and index for every byte (8 bits).
+      if (bitIndex < 0) {
+        currentByte = body[currentByteIndex++];
+        bitIndex = bitsStartOffset;
+      }
+      let clutEntry = ((currentByte >> bitIndex) & mask);
+      let clutIndex = clutEntry * ICC_CLUT_ENTRY_SIZE;
+      let alpha = codingScheme == ICC_IMG_CODING_SCHEME_COLOR_TRANSPARENCY &&
+                  clutEntry == numOfClutEntries - 1;
+      pixels[pixelIndex++] = alpha ? 0x00
+                                   : (clut[clutIndex] << 24 |
+                                      clut[clutIndex + 1] << 16 |
+                                      clut[clutIndex + 2] << 8 |
+                                      0xFF) >>> 0;
+      bitIndex -= bitsPerImgPoint;
+    }
+
+    return {pixels: pixels,
+            codingScheme: ICC_IMG_CODING_SCHEME_TO_GECKO[codingScheme],
+            width: width,
+            height: height};
   },
 };
 
