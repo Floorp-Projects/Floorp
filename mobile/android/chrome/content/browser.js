@@ -2737,7 +2737,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
     Cu.reportError(err);
 
     let sandbox = {};
-    Services.scriptloader.loadSubScript(script, sandbox);
+    Cu.import(script, sandbox);
     return sandbox[exprt];
   });
 });
