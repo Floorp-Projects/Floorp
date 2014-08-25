@@ -411,8 +411,14 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
 }
 
 RefPtr<CompositingRenderTarget>
-LayerManagerComposite::PushGroup()
+LayerManagerComposite::PushGroupForLayerEffects()
 {
+  // This is currently true, so just making sure that any new use of this
+  // method is flagged for investigation
+  MOZ_ASSERT(gfxPrefs::LayersEffectInvert() ||
+             gfxPrefs::LayersEffectGrayscale() ||
+             gfxPrefs::LayersEffectContrast() != 0.0);
+
   RefPtr<CompositingRenderTarget> previousTarget = mCompositor->GetCurrentRenderTarget();
   // make our render target the same size as the destination target
   // so that we don't have to change size if the drawing area changes.
@@ -427,35 +433,65 @@ LayerManagerComposite::PushGroup()
   mCompositor->SetRenderTarget(mTwoPassTmpTarget);
   return previousTarget;
 }
-void LayerManagerComposite::PopGroup(RefPtr<CompositingRenderTarget> aPreviousTarget, nsIntRect aClipRect)
+void
+LayerManagerComposite::PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> aPreviousTarget,
+                                               nsIntRect aClipRect,
+                                               bool aGrayscaleEffect,
+                                               bool aInvertEffect,
+                                               float aContrastEffect)
 {
+  MOZ_ASSERT(mTwoPassTmpTarget);
+
+  // This is currently true, so just making sure that any new use of this
+  // method is flagged for investigation
+  MOZ_ASSERT(aInvertEffect || aGrayscaleEffect || aContrastEffect != 0.0);
+
   mCompositor->SetRenderTarget(aPreviousTarget);
 
   EffectChain effectChain(RootLayer());
-  Matrix5x4 matrix;
-  if (gfxPrefs::Grayscale()) {
-    matrix._11 = matrix._12 = matrix._13 = 0.2126f;
-    matrix._21 = matrix._22 = matrix._23 = 0.7152f;
-    matrix._31 = matrix._32 = matrix._33 = 0.0722f;
+  Matrix5x4 effectMatrix;
+  if (aGrayscaleEffect) {
+    // R' = G' = B' = luminance
+    // R' = 0.2126*R + 0.7152*G + 0.0722*B
+    // G' = 0.2126*R + 0.7152*G + 0.0722*B
+    // B' = 0.2126*R + 0.7152*G + 0.0722*B
+    Matrix5x4 grayscaleMatrix(0.2126f, 0.2126f, 0.2126f, 0,
+                              0.7152f, 0.7152f, 0.7152f, 0,
+                              0.0722f, 0.0722f, 0.0722f, 0,
+                              0,       0,       0,       1,
+                              0,       0,       0,       0);
+    effectMatrix = grayscaleMatrix;
   }
 
-  if (gfxPrefs::Invert()) {
-    matrix._11 = -matrix._11;
-    matrix._12 = -matrix._12;
-    matrix._13 = -matrix._13;
-    matrix._21 = -matrix._21;
-    matrix._22 = -matrix._22;
-    matrix._23 = -matrix._23;
-    matrix._31 = -matrix._31;
-    matrix._32 = -matrix._32;
-    matrix._33 = -matrix._33;
-    matrix._51 = 1;
-    matrix._52 = 1;
-    matrix._53 = 1;
+  if (aInvertEffect) {
+    // R' = 1 - R
+    // G' = 1 - G
+    // B' = 1 - B
+    Matrix5x4 colorInvertMatrix(-1,  0,  0, 0,
+                                 0, -1,  0, 0,
+                                 0,  0, -1, 0,
+                                 0,  0,  0, 1,
+                                 1,  1,  1, 0);
+    effectMatrix = effectMatrix * colorInvertMatrix;
+  }
+
+  if (aContrastEffect != 0.0) {
+    // Multiplying with:
+    // R' = (1 + c) * (R - 0.5) + 0.5
+    // G' = (1 + c) * (G - 0.5) + 0.5
+    // B' = (1 + c) * (B - 0.5) + 0.5
+    float cP1 = aContrastEffect + 1;
+    float hc = 0.5*aContrastEffect;
+    Matrix5x4 contrastMatrix( cP1,   0,   0, 0,
+                                0, cP1,   0, 0,
+                                0,   0, cP1, 0,
+                                0,   0,   0, 1,
+                              -hc, -hc, -hc, 0);
+    effectMatrix = effectMatrix * contrastMatrix;
   }
 
   effectChain.mPrimaryEffect = new EffectRenderTarget(mTwoPassTmpTarget);
-  effectChain.mSecondaryEffects[EffectTypes::COLOR_MATRIX] = new EffectColorMatrix(matrix);
+  effectChain.mSecondaryEffects[EffectTypes::COLOR_MATRIX] = new EffectColorMatrix(effectMatrix);
 
   gfx::Rect clipRectF(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
   mCompositor->DrawQuad(Rect(Point(0, 0), Size(mTwoPassTmpTarget->GetSize())), clipRectF, effectChain, 1.,
@@ -473,8 +509,15 @@ LayerManagerComposite::Render()
     return;
   }
 
-  /** Our more efficient but less powerful alter ego, if one is available. */
-  nsRefPtr<Composer2D> composer2D = mCompositor->GetWidget()->GetComposer2D();
+  // At this time, it doesn't really matter if these preferences change
+  // during the execution of the function; we should be safe in all
+  // permutations. However, may as well just get the values onces and
+  // then use them, just in case the consistency becomes important in
+  // the future.
+  bool invertVal = gfxPrefs::LayersEffectInvert();
+  bool grayscaleVal = gfxPrefs::LayersEffectGrayscale();
+  float contrastVal = gfxPrefs::LayersEffectContrast();
+  bool haveLayerEffects = (invertVal || grayscaleVal || contrastVal != 0.0);
 
   // Set LayerScope begin/end frame
   LayerScopeAutoFrame frame(PR_Now());
@@ -494,8 +537,13 @@ LayerManagerComposite::Render()
     LayerScope::SendLayerDump(Move(packet));
   }
 
-  if (gfxPrefs::Invert() || gfxPrefs::Grayscale()) {
-    composer2D = nullptr;
+  /** Our more efficient but less powerful alter ego, if one is available. */
+  nsRefPtr<Composer2D> composer2D;
+
+  // We can't use composert2D if we have layer effects, so only get it
+  // when we don't have any effects.
+  if (!haveLayerEffects) {
+    composer2D = mCompositor->GetWidget()->GetComposer2D();
   }
 
   if (!mTarget && composer2D && composer2D->TryRender(mRoot, mWorldMatrix, mGeometryChanged)) {
@@ -558,8 +606,8 @@ LayerManagerComposite::Render()
                                                                actualBounds.height));
 
   RefPtr<CompositingRenderTarget> previousTarget;
-  if (gfxPrefs::Invert() || gfxPrefs::Grayscale()) {
-    previousTarget = PushGroup();
+  if (haveLayerEffects) {
+    previousTarget = PushGroupForLayerEffects();
   } else {
     mTwoPassTmpTarget = nullptr;
   }
@@ -577,7 +625,9 @@ LayerManagerComposite::Render()
   }
 
   if (mTwoPassTmpTarget) {
-    PopGroup(previousTarget, clipRect);
+    MOZ_ASSERT(haveLayerEffects);
+    PopGroupForLayerEffects(previousTarget, clipRect,
+                            grayscaleVal, invertVal, contrastVal);
   }
 
   // Allow widget to render a custom foreground.
