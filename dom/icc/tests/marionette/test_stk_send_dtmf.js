@@ -9,6 +9,14 @@ function testSendDTMF(command, expect) {
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.text, expect.text, expect.name);
 
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   runNextTest();
 }
 
@@ -35,20 +43,28 @@ let tests = [
    func: testSendDTMF,
    expect: {name: "send_dtmf_cmd_3_with_alpha_identifier",
             commandQualifier: 0x00,
-            text: "Basic Icon"}},
-  {command: "d011810301140082028183ac02c1f29e020001",
+            text: "Basic Icon",
+            iconSelfExplanatory: true,
+            icons: [basicIcon]}},
+  {command: "d011810301140082028183ac02c1f29e020005",
    func: testSendDTMF,
    expect: {name: "send_dtmf_cmd_3_without_alpha_identifier",
-            commandQualifier: 0x00}},
+            commandQualifier: 0x00,
+            iconSelfExplanatory: true,
+            icons: [colorIcon]}},
   {command: "d01c810301140082028183850953656e642044544d46ac02c1f29e020101",
    func: testSendDTMF,
    expect: {name: "send_dtmf_cmd_4_with_alpha_identifier",
             commandQualifier: 0x00,
-            text: "Send DTMF"}},
-  {command: "d011810301140082028183ac02c1f29e020101",
+            text: "Send DTMF",
+            iconSelfExplanatory: false,
+            icons: [basicIcon]}},
+  {command: "d011810301140082028183ac02c1f29e020105",
    func: testSendDTMF,
    expect: {name: "send_dtmf_cmd_4_without_alpha_identifier",
-            commandQualifier: 0x00}},
+            commandQualifier: 0x00,
+            iconSelfExplanatory: false,
+            icons: [colorIcon]}},
   {command: "d028810301140082028183851980041704140420041004120421042204120423041904220415ac02c1f2",
    func: testSendDTMF,
    expect: {name: "send_dtmf_cmd_5_with_alpha_identifier",

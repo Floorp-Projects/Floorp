@@ -147,6 +147,7 @@ CreateException(JSContext* aCx, nsresult aRv, const char* aMessage)
   case NS_ERROR_MODULE_DOM_XPATH:
   case NS_ERROR_MODULE_DOM_INDEXEDDB:
   case NS_ERROR_MODULE_DOM_FILEHANDLE:
+  case NS_ERROR_MODULE_DOM_BLUETOOTH:
     return DOMException::Create(aRv);
   default:
     break;

@@ -172,6 +172,7 @@ Site.prototype = {
 
       if (this.link.type != link.type) {
         this.node.setAttribute("type", "enhanced");
+        this.enhancedId = link.directoryId;
       }
     }
   },
@@ -287,15 +288,8 @@ Site.prototype = {
       }
     }
 
-    // Specially count click actions for directory tiles
-    let typeIndex = DirectoryLinksProvider.linkTypes.indexOf(this.link.type);
-    if (action !== undefined && typeIndex != -1) {
-      if (action == "click") {
-        Services.telemetry.getHistogramById("NEWTAB_PAGE_DIRECTORY_TYPE_CLICKED")
-                          .add(typeIndex);
-      }
-      DirectoryLinksProvider.reportLinkAction(this.link, action, tileIndex, pinned);
-    }
+    // Report all link click actions
+    DirectoryLinksProvider.reportSitesAction(gGrid.sites, action, tileIndex);
   },
 
   /**

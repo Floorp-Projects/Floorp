@@ -9,6 +9,14 @@ function testSendSMS(command, expect) {
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.text, expect.title, expect.name);
 
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   runNextTest();
 }
 
@@ -90,24 +98,32 @@ let tests = [
             title: "ЗДРАВСТВУЙТЕ"}},
   // send_sms_cmd_9_without_alpha_identifier has the same pdu as
   // send_sms_cmd_8_without_alpha_identifier.
-  {command: "d03b81030113008202818385074e4f2049434f4e86099111223344556677f88b180100099110325476f840f40c54657374204d6573736167659e020001",
+  {command: "d03b81030113008202818385074e4f2049434f4e86099111223344556677f88b180100099110325476f840f40c54657374204d6573736167659e020002",
    func: testSendSMS,
    expect: {name: "send_sms_cmd_10_with_alpha_identifier",
             commandQualifier: 0x00,
+            // The record number 02 in EFimg is not defined, so no icon will be
+            // shown, but the text string should still be displayed.
             title: "NO ICON"}},
   {command: "d03281030113008202818386099111223344556677f88b180100099110325476f840f40c54657374204d6573736167659e020001",
    func: testSendSMS,
    expect: {name: "send_sms_cmd_10_without_alpha_identifier",
-            commandQualifier: 0x00}},
+            commandQualifier: 0x00,
+            iconSelfExplanatory: true,
+            icons: [basicIcon]}},
   {command: "d03b810301130082028183850753656e6420534d86099111223344556677f88b180100099110325476f840f40c54657374204d6573736167651e020101",
    func: testSendSMS,
    expect: {name: "send_sms_cmd_11_with_alpha_identifier",
             commandQualifier: 0x00,
-            title: "Send SM"}},
+            title: "Send SM",
+            iconSelfExplanatory: false,
+            icons: [basicIcon]}},
   {command: "d03281030113008202818386099111223344556677f88b180100099110325476f840f40c54657374204d6573736167651e020101",
    func: testSendSMS,
    expect: {name: "send_sms_cmd_11_without_alpha_identifier",
-            commandQualifier: 0x00}},
+            commandQualifier: 0x00,
+            iconSelfExplanatory: false,
+            icons: [basicIcon]}},
   {command: "d02c8103011300820281838510546578742041747472696275746520318b09010002911040f00120d004001000b4",
    func: testSendSMS,
    expect: {name: "send_sms_cmd_12_with_alpha_identifier",

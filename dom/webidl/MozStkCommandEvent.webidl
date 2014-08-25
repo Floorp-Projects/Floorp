@@ -4,6 +4,56 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+enum IccImageCodingScheme { "basic", "color", "color-transparency" };
+
+dictionary MozStkIcon
+{
+  /*
+   * Width of the icon.
+   */
+  unsigned long width;
+
+  /*
+   * Height of the icon.
+   */
+  unsigned long height;
+
+  /*
+   * Image coding scheme of the icon.
+   */
+  IccImageCodingScheme codingScheme;
+
+  /*
+   * Array of pixels. Each pixel represents a color in the RGBA format made up
+   * of four bytes, that is, the Red sample in the highest 8 bits, followed by
+   * the Green sample, Blue sample and the Alpha sample in the lowest 8 bits.
+   */
+  sequence<unsigned long> pixels;
+};
+
+dictionary MozStkIconContainer
+{
+  /**
+   * Indicates how the icon is to be used.
+   *
+   * @see TS 11.14, clause 12.31, Icon Identifier.
+   *
+   * true: icon replaces the text string.
+   * false: icon shall be displayed together with the text string.
+   */
+  boolean iconSelfExplanatory;
+
+  /**
+   * Icon(s) that replaces or accompanies the text string.
+   *
+   * @see TS 11.14, clause 12.31, Icon Identifier.
+   *
+   * Array of icons, basically of a same image, that may differ in size,
+   * resolution or coding scheme. The first icon should be the default one.
+   */
+  sequence<MozStkIcon> icons;
+};
+
 [Pref="dom.icc.enabled",
  Constructor(DOMString type, optional MozStkCommandEventInit eventInitDict)]
 interface MozStkCommandEvent : Event
@@ -16,7 +66,7 @@ dictionary MozStkCommandEventInit : EventInit
   any command = null;
 };
 
-dictionary MozStkTextMessage
+dictionary MozStkTextMessage : MozStkIconContainer
 {
   /**
    * Text String.
@@ -75,7 +125,7 @@ dictionary MozStkTextMessage
   boolean responseNeeded;
 };
 
-dictionary MozStkItem
+dictionary MozStkItem : MozStkIconContainer
 {
   /**
    * Identifier of item.
@@ -91,7 +141,7 @@ dictionary MozStkItem
   DOMString text;
 };
 
-dictionary MozStkMenu
+dictionary MozStkMenu : MozStkIconContainer
 {
   /**
    * Array of MozStkItem.
@@ -137,7 +187,7 @@ dictionary MozStkMenu
   sequence<unsigned short> nextActionList;
 };
 
-dictionary MozStkInput
+dictionary MozStkInput : MozStkIconContainer
 {
   /**
    * Text for the ME to display in conjunction with asking the user to respond.
@@ -230,7 +280,7 @@ dictionary MozStkInput
   boolean isHelpAvailable;
 };
 
-dictionary MozStkBrowserSetting
+dictionary MozStkBrowserSetting : MozStkIconContainer
 {
   /**
    * Confirm message to launch browser.
@@ -250,7 +300,7 @@ dictionary MozStkBrowserSetting
   unsigned short mode;
 };
 
-dictionary MozStkSetUpCall
+dictionary MozStkSetUpCall : MozStkIconContainer
 {
   /**
    * The Dialling number.
@@ -323,7 +373,7 @@ dictionary MozStkDuration
   octet timeInterval;
 };
 
-dictionary MozStkPlayTone
+dictionary MozStkPlayTone : MozStkIconContainer
 {
   /**
    * Text String.
@@ -409,7 +459,7 @@ dictionary MozStkTimer
   unsigned short timerAction;
 };
 
-dictionary MozStkBipMessage
+dictionary MozStkBipMessage : MozStkIconContainer
 {
   /**
    * Text String

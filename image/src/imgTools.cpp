@@ -60,7 +60,7 @@ NS_IMETHODIMP imgTools::DecodeImage(nsIInputStream* aInStr,
                                     imgIContainer **aContainer)
 {
   nsresult rv;
-  nsRefPtr<Image> image;
+  nsRefPtr<image::Image> image;
 
   NS_ENSURE_ARG_POINTER(aInStr);
 
