@@ -768,7 +768,8 @@ public:
 
   size_type GetMutableData(wchar_t** aData, size_type aNewLen, const fallible_t&)
   {
-    return GetMutableData(reinterpret_cast<char16_t**>(aData), aNewLen, fallible_t());
+    return GetMutableData(reinterpret_cast<char16_t**>(aData), aNewLen,
+                          fallible_t());
   }
 #endif
 
@@ -958,8 +959,7 @@ protected:
   {
     aCutLength = XPCOM_MIN(aCutLength, mLength - aCutStart);
     uint32_t newTotalLen = mLength - aCutLength + aNewLength;
-    if (aCutStart == mLength && Capacity() > newTotalLen)
-    {
+    if (aCutStart == mLength && Capacity() > newTotalLen) {
       mFlags &= ~F_VOIDED;
       mData[newTotalLen] = char_type(0);
       mLength = newTotalLen;

@@ -35,7 +35,8 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
   nsAutoString logicalDrives;
   DWORD len = 0;
   while (true) {
-    len = GetLogicalDriveStringsW(len, reinterpret_cast<wchar_t*>(logicalDrives.BeginWriting()));
+    len = GetLogicalDriveStringsW(
+      len, reinterpret_cast<wchar_t*>(logicalDrives.BeginWriting()));
     if (!len) {
       return false;
     } else if (len > logicalDrives.Length()) {
