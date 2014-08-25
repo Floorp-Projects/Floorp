@@ -12,8 +12,6 @@ interface BluetoothManager : EventTarget {
            attribute EventHandler ondisabled;
            attribute EventHandler onadapteradded;
 
-  [Throws]
-  boolean     isConnected(unsigned short aProfile);
   [NewObject, Throws]
   DOMRequest? getDefaultAdapter();
 };

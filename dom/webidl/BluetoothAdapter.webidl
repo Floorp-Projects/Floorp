@@ -117,6 +117,9 @@ interface BluetoothAdapter : EventTarget {
   [NewObject, Throws]
   DOMRequest disconnect(BluetoothDevice device, optional unsigned short serviceUuid);
 
+  [NewObject, Throws]
+  DOMRequest isConnected(unsigned short serviceUuid);
+
   // One device can only send one file at a time
   [NewObject, Throws]
   DOMRequest sendFile(DOMString deviceAddress, Blob blob);
