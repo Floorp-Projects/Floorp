@@ -1129,6 +1129,7 @@ Messages.Extended.prototype = Heritage.extend(Messages.Simple.prototype,
       "infinity": "cm-atom",
       "null": "cm-atom",
       "undefined": "cm-comment",
+      "symbol": "cm-atom"
     };
 
     let className = map[typeof grip];
