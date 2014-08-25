@@ -79,6 +79,7 @@ public:
       return mResponseTimeoutEnabled ? mResponseTimeout : 0;
     }
     PRIntervalTime ResponseTimeoutEnabled()  { return mResponseTimeoutEnabled; }
+    uint32_t       NetworkChangedTimeout()   { return mNetworkChangedTimeout; }
     uint16_t       MaxRequestAttempts()      { return mMaxRequestAttempts; }
     const char    *DefaultSocketType()       { return mDefaultSocketType.get(); /* ok to return null */ }
     uint32_t       PhishyUserPassLength()    { return mPhishyUserPassLength; }
@@ -357,7 +358,7 @@ private:
     PRIntervalTime mSpdyTimeout;
     PRIntervalTime mResponseTimeout;
     bool mResponseTimeoutEnabled;
-
+    uint32_t mNetworkChangedTimeout; // milliseconds
     uint16_t mMaxRequestAttempts;
     uint16_t mMaxRequestDelay;
     uint16_t mIdleSynTimeout;
