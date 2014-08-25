@@ -170,6 +170,9 @@ protected:
   DoRequest(const DisconnectRequest& aRequest);
 
   bool
+  DoRequest(const IsConnectedRequest& aRequest);
+
+  bool
   DoRequest(const SendFileRequest& aRequest);
 
   bool
