@@ -78,7 +78,7 @@ let runTest = Task.async(function*() {
     yield setMacRootInstallDir(OS.Path.join(OS.Constants.Path.homeDir, "Applications"));
   }
 
-  confirmNextInstall();
+  confirmNextPopup();
 
   let (request = navigator.mozApps.installPackage(app.manifestURL)) {
     let (deferred = Promise.defer()) {
@@ -110,7 +110,7 @@ let runTest = Task.async(function*() {
 
   is(WebappOSUtils.launch(app), false, "Launch fails");
 
-  confirmNextInstall();
+  confirmNextPopup();
 
   let (request = navigator.mozApps.installPackage(app.manifestURL)) {
     let (deferred = Promise.defer()) {

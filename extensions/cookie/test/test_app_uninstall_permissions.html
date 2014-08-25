@@ -103,7 +103,9 @@ function onInstall() {
 }
 
 SpecialPowers.autoConfirmAppInstall(() =>
-  navigator.mozApps.install(gManifestURL, null).onsuccess = onInstall
+  SpecialPowers.autoConfirmAppUninstall(() =>
+    navigator.mozApps.install(gManifestURL, null).onsuccess = onInstall
+  )
 );
 
 </script>

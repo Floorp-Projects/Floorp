@@ -26,10 +26,10 @@ using namespace mozilla::dom;
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMCameraManager, mWindow)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCameraManager)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCameraManager)
@@ -116,7 +116,16 @@ nsDOMCameraManager::CreateInstance(nsPIDOMWindow* aWindow)
     new nsDOMCameraManager(aWindow);
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  obs->AddObserver(cameraManager, "xpcom-shutdown", true);
+  if (!obs) {
+    DOM_CAMERA_LOGE("Camera manager failed to get observer service\n");
+    return nullptr;
+  }
+
+  nsresult rv = obs->AddObserver(cameraManager, "xpcom-shutdown", true);
+  if (NS_FAILED(rv)) {
+    DOM_CAMERA_LOGE("Camera manager failed to add 'xpcom-shutdown' observer (0x%x)\n", rv);
+    return nullptr;
+  }
 
   return cameraManager.forget();
 }

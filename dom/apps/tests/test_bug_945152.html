@@ -71,6 +71,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=945152
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 
+    SpecialPowers.autoConfirmAppUninstall(continueTest);
+    yield undefined;
+
     // Create app on server side.
     createApp(continueTest);
     yield undefined;
