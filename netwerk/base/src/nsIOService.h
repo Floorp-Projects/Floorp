@@ -91,7 +91,7 @@ private:
     nsIOService();
     ~nsIOService();
 
-    nsresult TrackNetworkLinkStatusForOffline();
+    nsresult OnNetworkLinkEvent(const char *data);
 
     nsresult GetCachedProtocolHandler(const char *scheme,
                                                   nsIProtocolHandler* *hdlrResult,
