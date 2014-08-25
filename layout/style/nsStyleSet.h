@@ -222,10 +222,16 @@ class nsStyleSet
   // aElement should be non-null if this is a style context for an
   // element or pseudo-element; in the latter case it should be the
   // real element the pseudo-element is for.
+  // aElementOrPseudoElement should be the same, except for
+  // pseudo-elements it should be the pseudo-element.  It is temporary
+  // until bug 960465 lands.  It only really needs to be correct for
+  // things we run animations on (elements and ::before and ::after
+  // pseudo-elements).
   already_AddRefed<nsStyleContext>
   ReparentStyleContext(nsStyleContext* aStyleContext,
                        nsStyleContext* aNewParentContext,
-                       mozilla::dom::Element* aElement);
+                       mozilla::dom::Element* aElement,
+                       mozilla::dom::Element* aElementOrPseudoElement);
 
   // Test if style is dependent on a document state.
   bool HasDocumentStateDependentStyle(nsPresContext* aPresContext,
