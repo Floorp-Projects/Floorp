@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using mozilla::dom::bluetooth::BluetoothStatus from "mozilla/dom/bluetooth/BluetoothCommon.h";
+
 namespace mozilla {
 namespace dom {
 namespace bluetooth {
@@ -49,7 +51,8 @@ struct BluetoothReplySuccess
 
 struct BluetoothReplyError
 {
-  nsString error;
+  BluetoothStatus errorStatus;
+  nsString errorString;
 };
 
 union BluetoothReply
