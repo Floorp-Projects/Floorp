@@ -11,7 +11,24 @@ function testSelectItem(command, expect) {
   for (let index in command.options.items) {
     is(command.options.items[index].identifier, expect.items[index].identifier, expect.name);
     is(command.options.items[index].text, expect.items[index].text, expect.name);
+
+    let itemIcons = command.options.items[index].icons;
+    if (itemIcons) {
+      isIcons(itemIcons, expect.items[index].icons, expect.name);
+
+      let iconSelfExplanatory = command.options.items[index].iconSelfExplanatory;
+      is(iconSelfExplanatory, expect.items[index].iconSelfExplanatory, expect.name);
+    }
   }
+
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   let length = command.options.nextActionList ? command.options.nextActionList.length : 0;
   for (let i = 0; i < length; i++) {
     is(command.options.nextActionList[i], expect.nextActionList[i], expect.name);
@@ -76,18 +93,26 @@ let tests = [
             commandQualifier: 0x80,
             title: "Toolkit Select",
             items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}]}},
-  {command: "d03e810301240082028182850e546f6f6c6b69742053656c6563748f07014974656d20318f07024974656d20328f07034974656d20339e0201019f0401050505",
+  {command: "d03e810301240082028182850e546f6f6c6b69742053656c6563748f07014974656d20318f07024974656d20328f07034974656d20339e0201019f0401030303",
    func: testSelectItem,
    expect: {name: "select_item_cmd_10",
             commandQualifier: 0x00,
             title: "Toolkit Select",
-            items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}]}},
+            iconSelfExplanatory: false,
+            icons: [basicIcon],
+            items: [{identifier: 1, text: "Item 1", iconSelfExplanatory: false, icons: [colorIcon]},
+                    {identifier: 2, text: "Item 2", iconSelfExplanatory: false, icons: [colorIcon]},
+                    {identifier: 3, text: "Item 3", iconSelfExplanatory: false, icons: [colorIcon]}]}},
   {command: "d03e810301240082028182850e546f6f6c6b69742053656c6563748f07014974656d20318f07024974656d20328f07034974656d20339e0200019f0400050505",
    func: testSelectItem,
    expect: {name: "select_item_cmd_11",
             commandQualifier: 0x00,
             title: "Toolkit Select",
-            items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}]}},
+            iconSelfExplanatory: true,
+            icons: [basicIcon],
+            items: [{identifier: 1, text: "Item 1", iconSelfExplanatory: true, icons: [colorTransparencyIcon]},
+                    {identifier: 2, text: "Item 2", iconSelfExplanatory: true, icons: [colorTransparencyIcon]},
+                    {identifier: 3, text: "Item 3", iconSelfExplanatory: true, icons: [colorTransparencyIcon]}]}},
   {command: "d034810301240382028182850e546f6f6c6b69742053656c6563748f07014974656d20318f07024974656d20328f07034974656d2033",
    func: testSelectItem,
    expect: {name: "select_item_cmd_12",
