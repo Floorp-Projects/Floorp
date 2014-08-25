@@ -593,6 +593,10 @@ Navigator::CookieEnabled()
 bool
 Navigator::OnLine()
 {
+  if (mWindow && mWindow->GetDoc()) {
+    return !NS_IsAppOffline(mWindow->GetDoc()->NodePrincipal());
+  }
+
   return !NS_IsOffline();
 }
 
@@ -2311,12 +2315,7 @@ Navigator::HasNFCSupport(JSContext* /* unused */, JSObject* aGlobal)
 
   // Do not support NFC if NFC content helper does not exist.
   nsCOMPtr<nsISupports> contentHelper = do_GetService("@mozilla.org/nfc/content-helper;1");
-  if (!contentHelper) {
-    return false;
-  }
-
-  return win && (CheckPermission(win, "nfc-read") ||
-                 CheckPermission(win, "nfc-write"));
+  return !!contentHelper;
 }
 #endif // MOZ_NFC
 

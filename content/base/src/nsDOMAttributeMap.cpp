@@ -12,7 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/MozNamedAttrMapBinding.h"
+#include "mozilla/dom/NamedNodeMapBinding.h"
 #include "nsAttrName.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -561,5 +561,5 @@ nsDOMAttributeMap::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 /* virtual */ JSObject*
 nsDOMAttributeMap::WrapObject(JSContext* aCx)
 {
-  return MozNamedAttrMapBinding::Wrap(aCx, this);
+  return NamedNodeMapBinding::Wrap(aCx, this);
 }

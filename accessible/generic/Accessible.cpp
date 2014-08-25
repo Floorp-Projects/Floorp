@@ -1287,7 +1287,7 @@ Accessible::NativeAttributes()
   // override properties on a widget they used in an iframe.
   nsIContent* startContent = mContent;
   while (startContent) {
-    nsIDocument* doc = startContent->GetDocument();
+    nsIDocument* doc = startContent->GetComposedDoc();
     if (!doc)
       break;
 

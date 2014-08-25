@@ -127,7 +127,7 @@ HTMLTextAreaElement::Select()
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
 
-  nsRefPtr<nsPresContext> presContext = GetPresContext();
+  nsRefPtr<nsPresContext> presContext = GetPresContext(eForComposedDoc);
   if (state == eInactiveWindow) {
     if (fm)
       fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
