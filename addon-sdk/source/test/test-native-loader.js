@@ -85,13 +85,13 @@ exports['test JSM loading'] = function (assert, done) {
       manifest: manifest,
       isNative: true
     });
-    
+
     let program = main(loader);
     assert.ok(program.localJSMCached, 'local relative JSMs are cached');
     assert.ok(program.isCachedJSAbsolute , 'absolute resource:// js are cached');
     assert.ok(program.isCachedPath, 'JSMs resolved in paths are cached');
     assert.ok(program.isCachedAbsolute, 'absolute resource:// JSMs are cached');
-    
+
     assert.ok(program.localJSM, 'able to load local relative JSMs');
     all([
       program.isLoadedPath(10),
@@ -147,6 +147,35 @@ exports['test native Loader without mappings'] = function (assert, done) {
 
     let program = main(loader);
     testLoader(program, assert);
+    unload(loader);
+    done();
+  }).then(null, (reason) => console.error(reason));
+};
+
+exports["test require#resolve with relative, dependencies"] = function(assert, done) {
+  getJSON('/fixtures/native-addon-test/package.json').then(manifest => {
+    let rootURI = root + '/fixtures/native-addon-test/';
+    let loader = Loader({
+      paths: makePaths(rootURI),
+      rootURI: rootURI,
+      manifest: manifest,
+      isNative: true
+    });
+
+    let program = main(loader);
+    let fixtureRoot = program.require.resolve("./").replace(/native-addon-test\/(.*)/, "") + "native-addon-test/";
+
+    assert.ok(/^resource:\/\/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}-at-jetpack\/addon-sdk\/tests\/fixtures\/native-addon-test\/$/.test(fixtureRoot),
+      "correct resolution root");
+    assert.equal(program.require.resolve("test-math"), fixtureRoot + "node_modules/test-math/index.js", "works with node_modules");
+    assert.equal(program.require.resolve("./newmodule"), fixtureRoot + "newmodule/lib/file.js", "works with directory mains");
+    assert.equal(program.require.resolve("./dir/a"), fixtureRoot + "dir/a.js", "works with normal relative module lookups");
+    assert.equal(program.require.resolve("modules/Promise.jsm"), "resource://gre/modules/Promise.jsm", "works with path lookups");
+
+    // TODO bug 1050422, handle loading non JS/JSM file paths
+    // assert.equal(program.require.resolve("test-assets/styles.css"), fixtureRoot + "node_modules/test-assets/styles.css",
+    // "works with different file extension lookups in dependencies");
+
     unload(loader);
     done();
   }).then(null, (reason) => console.error(reason));

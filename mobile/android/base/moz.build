@@ -78,7 +78,7 @@ gujar.sources += [
     'util/RawResource.java',
     'util/StringUtils.java',
     'util/ThreadUtils.java',
-    'util/UiAsyncTask.java',
+    'util/UIAsyncTask.java',
     'util/WebActivityMapper.java',
 ]
 gujar.extra_jars = [
@@ -125,6 +125,7 @@ gbjar.sources += [
     'AndroidGamepadManager.java',
     'animation/AnimationUtils.java',
     'animation/AnimatorProxy.java',
+    'animation/BounceAnimator.java',
     'animation/HeightChangeAnimation.java',
     'animation/PropertyAnimator.java',
     'animation/Rotate3DAnimation.java',

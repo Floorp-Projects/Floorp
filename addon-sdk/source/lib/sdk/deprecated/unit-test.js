@@ -10,9 +10,9 @@ module.metadata = {
 const memory = require("./memory");
 const timer = require("../timers");
 const cfxArgs = require("../test/options");
-const { getTabs, getURI } = require("../tabs/utils");
+const { getTabs, closeTab, getURI } = require("../tabs/utils");
 const { windows, isBrowser } = require("../window/utils");
-const { defer, all } = require("../core/promise");
+const { defer, all, Debugging: PromiseDebugging } = require("../core/promise");
 
 const findAndRunTests = function findAndRunTests(options) {
   var TestFinder = require("./unit-test-finder").TestFinder;
@@ -48,13 +48,17 @@ const TestRunner = function TestRunner(options) {
 TestRunner.prototype = {
   toString: function toString() "[object TestRunner]",
 
-  DEFAULT_PAUSE_TIMEOUT: cfxArgs.parseable ? 5*60000 : 15000,
+  DEFAULT_PAUSE_TIMEOUT: (cfxArgs.parseable ? 300000 : 15000), //Five minutes (5*60*1000ms)
   PAUSE_DELAY: 500,
 
   _logTestFailed: function _logTestFailed(why) {
     if (!(why in this.test.errors))
       this.test.errors[why] = 0;
     this.test.errors[why]++;
+  },
+
+  _uncaughtErrorObserver: function({message, date, fileName, stack, lineNumber}) {
+    this.fail("There was an uncaught Promise rejection: " + stack);
   },
 
   pass: function pass(message) {
@@ -299,6 +303,8 @@ TestRunner.prototype = {
         return promise;
       });
 
+      PromiseDebugging.flushUncaughtErrors();
+
       all(winPromises).then(_ => {
         let tabs = [];
         for (let win of wins.filter(isBrowser)) {
@@ -306,6 +312,7 @@ TestRunner.prototype = {
             tabs.push(tab);
           }
         }
+        let leftover = tabs.slice(1);
 
         if (wins.length != 1)
           this.fail("Should not be any unexpected windows open");
@@ -323,6 +330,8 @@ TestRunner.prototype = {
             }
           }
         }
+
+        leftover.forEach(closeTab);
 
         this.testRunSummary.push({
           name: this.test.name,
@@ -492,6 +501,8 @@ TestRunner.prototype = {
     this.test.passed = 0;
     this.test.failed = 0;
     this.test.errors = {};
+    PromiseDebugging.clearUncaughtErrorObservers();
+    PromiseDebugging.addUncaughtErrorObserver(this._uncaughtErrorObserver.bind(this));
 
     this.isDone = false;
     this.onDone = function(self) {

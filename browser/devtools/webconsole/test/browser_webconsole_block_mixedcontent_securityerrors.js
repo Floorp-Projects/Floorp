@@ -56,10 +56,13 @@ function blockMixedContentTest1()
 
 function mixedContentOverrideTest2(hud)
 {
-  var notification = PopupNotifications.getNotification("mixed-content-blocked", browser);
-  ok(notification, "Mixed Content Doorhanger didn't appear");
+  var notification = PopupNotifications.getNotification("bad-content", browser);
+  ok(notification, "Mixed Content Doorhanger did appear");
+  notification.reshow();
+  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked");
   // Click on the doorhanger.
-  notification.secondaryActions[0].callback();
+  PopupNotifications.panel.firstChild.disableMixedContentProtection();
+  notification.remove();
 
   waitForMessages({
     webconsole: hud,

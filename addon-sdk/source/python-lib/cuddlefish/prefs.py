@@ -19,6 +19,7 @@ DEFAULT_COMMON_PREFS = {
 
     # Disable extension updates and notifications.
     'extensions.update.enabled' : False,
+    'lightweightThemes.update.enabled' : False,
     'extensions.update.notifyUser' : False,
 
     # From:
@@ -32,6 +33,24 @@ DEFAULT_COMMON_PREFS = {
     'extensions.installDistroAddons' : False,
     # Allow installing extensions dropped into the profile folder
     'extensions.autoDisableScopes' : 10,
+
+}
+
+DEFAULT_NO_CONNECTIONS_PREFS = {
+    'toolkit.telemetry.enabled': False,
+    'app.update.auto' : False,
+    'app.update.url': 'http://localhost/app-dummy/update',
+    'media.gmp-gmpopenh264.autoupdate' : False,
+    'media.gmp-manager.cert.checkAttributes' : False,
+    'media.gmp-manager.cert.requireBuiltIn' : False,
+    'media.gmp-manager.url' : 'http://localhost/media-dummy/gmpmanager',
+    'browser.newtab.url' : 'about:blank',
+    'browser.search.update': False,
+    'browser.safebrowsing.enabled' : False,
+    'browser.safebrowsing.updateURL': 'http://localhost/safebrowsing-dummy/update',
+    'browser.safebrowsing.gethashURL': 'http://localhost/safebrowsing-dummy/gethash',
+    'browser.safebrowsing.reportURL': 'http://localhost/safebrowsing-dummy/report',
+    'browser.safebrowsing.malware.reportURL': 'http://localhost/safebrowsing-dummy/malwarereport',
 
     # Disable app update
     'app.update.enabled' : False,
