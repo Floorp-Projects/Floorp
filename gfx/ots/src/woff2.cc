@@ -55,10 +55,6 @@ const uint32_t kCompressionTypeNone = 0;
 const uint32_t kCompressionTypeGzip = 1;
 const uint32_t kCompressionTypeBrotli = 2;
 
-// This is a special value for the short format only, as described in
-// "Design for compressed header format" in draft doc.
-const uint32_t kShortFlagsContinue = 3;
-
 const uint32_t kKnownTags[] = {
   TAG('c', 'm', 'a', 'p'),  // 0
   TAG('h', 'e', 'a', 'd'),  // 1
@@ -89,6 +85,40 @@ const uint32_t kKnownTags[] = {
   TAG('G', 'D', 'E', 'F'),  // 26
   TAG('G', 'P', 'O', 'S'),  // 27
   TAG('G', 'S', 'U', 'B'),  // 28
+  TAG('E', 'B', 'S', 'C'),  // 29
+  TAG('J', 'S', 'T', 'F'),  // 30
+  TAG('M', 'A', 'T', 'H'),  // 31
+  TAG('C', 'B', 'D', 'T'),  // 32
+  TAG('C', 'B', 'L', 'C'),  // 33
+  TAG('C', 'O', 'L', 'R'),  // 34
+  TAG('C', 'P', 'A', 'L'),  // 35
+  TAG('S', 'V', 'G', ' '),  // 36
+  TAG('s', 'b', 'i', 'x'),  // 37
+  TAG('a', 'c', 'n', 't'),  // 38
+  TAG('a', 'v', 'a', 'r'),  // 39
+  TAG('b', 'd', 'a', 't'),  // 40
+  TAG('b', 'l', 'o', 'c'),  // 41
+  TAG('b', 's', 'l', 'n'),  // 42
+  TAG('c', 'v', 'a', 'r'),  // 43
+  TAG('f', 'd', 's', 'c'),  // 44
+  TAG('f', 'e', 'a', 't'),  // 45
+  TAG('f', 'm', 't', 'x'),  // 46
+  TAG('f', 'v', 'a', 'r'),  // 47
+  TAG('g', 'v', 'a', 'r'),  // 48
+  TAG('h', 's', 't', 'y'),  // 49
+  TAG('j', 'u', 's', 't'),  // 50
+  TAG('l', 'c', 'a', 'r'),  // 51
+  TAG('m', 'o', 'r', 't'),  // 52
+  TAG('m', 'o', 'r', 'x'),  // 53
+  TAG('o', 'p', 'b', 'd'),  // 54
+  TAG('p', 'r', 'o', 'p'),  // 55
+  TAG('t', 'r', 'a', 'k'),  // 56
+  TAG('Z', 'a', 'p', 'f'),  // 57
+  TAG('S', 'i', 'l', 'f'),  // 58
+  TAG('G', 'l', 'a', 't'),  // 59
+  TAG('G', 'l', 'o', 'c'),  // 60
+  TAG('F', 'e', 'a', 't'),  // 61
+  TAG('S', 'i', 'l', 'l'),  // 62
 };
 
 struct Point {
@@ -769,7 +799,6 @@ bool Woff2Uncompress(uint8_t* dst_buf, size_t dst_size,
 
 bool ReadShortDirectory(ots::Buffer* file, std::vector<Table>* tables,
     size_t num_tables) {
-  uint32_t last_compression_type = 0;
   for (size_t i = 0; i < num_tables; ++i) {
     Table* table = &tables->at(i);
     uint8_t flag_byte;
@@ -777,29 +806,24 @@ bool ReadShortDirectory(ots::Buffer* file, std::vector<Table>* tables,
       return OTS_FAILURE();
     }
     uint32_t tag;
-    if ((flag_byte & 0x1f) == 0x1f) {
+    if ((flag_byte & 0x3f) == 0x3f) {
       if (!file->ReadU32(&tag)) {
         return OTS_FAILURE();
       }
     } else {
-      if ((flag_byte & 0x1f) >= arraysize(kKnownTags)) {
-        return OTS_FAILURE();
-      }
-      tag = kKnownTags[flag_byte & 0x1f];
+      tag = kKnownTags[flag_byte & 0x3f];
     }
-    uint32_t flags = flag_byte >> 6;
-    if (flags == kShortFlagsContinue) {
-      flags = last_compression_type | kWoff2FlagsContinueStream;
-    } else {
-      if (flags == kCompressionTypeNone ||
-          flags == kCompressionTypeGzip ||
-          flags == kCompressionTypeBrotli) {
-        last_compression_type = flags;
-      } else {
-        return OTS_FAILURE();
-      }
+    // Bits 6 and 7 are reserved and must be 0.
+    if ((flag_byte & 0xc0) != 0) {
+      return OTS_FAILURE();
     }
-    if ((flag_byte & 0x20) != 0) {
+    uint32_t flags = kCompressionTypeBrotli;
+    if (i > 0) {
+      flags |= kWoff2FlagsContinueStream;
+    }
+    // Always transform the glyf and loca tables
+    if (tag == TAG('g', 'l', 'y', 'f') ||
+        tag == TAG('l', 'o', 'c', 'a')) {
       flags |= kWoff2FlagsTransform;
     }
     uint32_t dst_length;
@@ -812,26 +836,13 @@ bool ReadShortDirectory(ots::Buffer* file, std::vector<Table>* tables,
         return OTS_FAILURE();
       }
     }
-    uint32_t src_length = transform_length;
-    if ((flag_byte >> 6) == 1 || (flag_byte >> 6) == 2) {
-      if (!ReadBase128(file, &src_length)) {
-        return OTS_FAILURE();
-      }
-    } else if (static_cast<uint32_t>(flag_byte >> 6) == kShortFlagsContinue) {
-      // The compressed data for this table is in a previuos table, so we set
-      // the src_length to zero.
-      src_length = 0;
-    }
     // Disallow huge numbers (> 1GB) for sanity.
-    if (src_length > 1024 * 1024 * 1024 ||
-        transform_length > 1024 * 1024 * 1024 ||
+    if (transform_length > 1024 * 1024 * 1024 ||
         dst_length > 1024 * 1024 * 1024) {
       return OTS_FAILURE();
     }
-
     table->tag = tag;
     table->flags = flags;
-    table->src_length = src_length;
     table->transform_length = transform_length;
     table->dst_length = dst_length;
   }
@@ -859,7 +870,7 @@ bool ConvertWOFF2ToTTF(uint8_t* result, size_t result_length,
   ots::Buffer file(data, length);
 
   uint32_t signature;
-  uint32_t flavor;
+  uint32_t flavor = 0;
   if (!file.ReadU32(&signature) || signature != kWoff2Signature ||
       !file.ReadU32(&flavor)) {
     return OTS_FAILURE();
@@ -880,10 +891,18 @@ bool ConvertWOFF2ToTTF(uint8_t* result, size_t result_length,
   // We don't care about these fields of the header:
   //   uint16_t reserved
   //   uint32_t total_sfnt_size
+  if (!file.Skip(6)) {
+    return OTS_FAILURE();
+  }
+  uint32_t compressed_length;
+  if (!file.ReadU32(&compressed_length)) {
+    return OTS_FAILURE();
+  }
+  // We don't care about these fields of the header:
   //   uint16_t major_version, minor_version
   //   uint32_t meta_offset, meta_length, meta_orig_length
   //   uint32_t priv_offset, priv_length
-  if (!file.Skip(30)) {
+  if (!file.Skip(24)) {
     return OTS_FAILURE();
   }
   std::vector<Table> tables(num_tables);
@@ -897,6 +916,7 @@ bool ConvertWOFF2ToTTF(uint8_t* result, size_t result_length,
   for (uint16_t i = 0; i < num_tables; ++i) {
     Table* table = &tables.at(i);
     table->src_offset = src_offset;
+    table->src_length = (i == 0 ? compressed_length : 0);
     src_offset += table->src_length;
     if (src_offset > std::numeric_limits<uint32_t>::max()) {
       return OTS_FAILURE();
@@ -983,7 +1003,7 @@ bool ConvertWOFF2ToTTF(uint8_t* result, size_t result_length,
       }
       uncompressed_buf.resize(total_size);
       if (!Woff2Uncompress(&uncompressed_buf[0], total_size,
-          src_buf, table->src_length, compression_type)) {
+          src_buf, compressed_length, compression_type)) {
         return OTS_FAILURE();
       }
       transform_buf = &uncompressed_buf[0];
