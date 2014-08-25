@@ -47,7 +47,7 @@ MediaSourceDecoder::Clone()
 MediaDecoderStateMachine*
 MediaSourceDecoder::CreateStateMachine()
 {
-  mReader = new MediaSourceReader(this, mMediaSource);
+  mReader = new MediaSourceReader(this);
   return new MediaDecoderStateMachine(this, mReader);
 }
 
@@ -72,6 +72,10 @@ MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
 nsresult
 MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mMediaSource) {
+    return NS_ERROR_FAILURE;
+  }
   double duration = mMediaSource->Duration();
   if (IsNaN(duration)) {
     // Return empty range.
@@ -86,6 +90,16 @@ MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
   return NS_OK;
 }
 
+void
+MediaSourceDecoder::Shutdown()
+{
+  MediaDecoder::Shutdown();
+
+  // Kick WaitForData out of its slumber.
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  mon.NotifyAll();
+}
+
 /*static*/
 already_AddRefed<MediaResource>
 MediaSourceDecoder::CreateResource()
@@ -96,13 +110,14 @@ MediaSourceDecoder::CreateResource()
 void
 MediaSourceDecoder::AttachMediaSource(dom::MediaSource* aMediaSource)
 {
-  MOZ_ASSERT(!mMediaSource && !mDecoderStateMachine);
+  MOZ_ASSERT(!mMediaSource && !mDecoderStateMachine && NS_IsMainThread());
   mMediaSource = aMediaSource;
 }
 
 void
 MediaSourceDecoder::DetachMediaSource()
 {
+  MOZ_ASSERT(mMediaSource && NS_IsMainThread());
   mMediaSource = nullptr;
 }
 
@@ -111,6 +126,33 @@ MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
 {
   MOZ_ASSERT(mReader);
   return mReader->CreateSubDecoder(aType);
+}
+
+void
+MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mMediaSource) {
+    return;
+  }
+  ErrorResult dummy;
+  mMediaSource->SetDuration(aDuration, dummy);
+}
+
+void
+MediaSourceDecoder::WaitForData()
+{
+  MSE_DEBUG("MediaSourceDecoder(%p)::WaitForData()", this);
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  mon.Wait();
+}
+
+void
+MediaSourceDecoder::NotifyGotData()
+{
+  MSE_DEBUG("MediaSourceDecoder(%p)::NotifyGotData()", this);
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  mon.NotifyAll();
 }
 
 } // namespace mozilla
