@@ -20,6 +20,14 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothObjectType>
              mozilla::dom::bluetooth::TYPE_INVALID>
 { };
 
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothStatus>
+  : public ContiguousEnumSerializer<
+             mozilla::dom::bluetooth::BluetoothStatus,
+             mozilla::dom::bluetooth::STATUS_SUCCESS,
+             mozilla::dom::bluetooth::STATUS_RMT_DEV_DOWN>
+{ };
+
 } // namespace IPC
 
 #endif // mozilla_dom_bluetooth_ipc_bluetoothchild_h__
