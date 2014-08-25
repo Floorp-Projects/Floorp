@@ -499,7 +499,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // if required when data is appended.
   mMediaSource->GetDecoder()->ScheduleStateMachineThread();
 
-  mMediaSource->NotifyGotData();
+  mMediaSource->GetDecoder()->NotifyGotData();
 }
 
 double
