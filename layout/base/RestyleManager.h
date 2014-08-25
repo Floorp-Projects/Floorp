@@ -475,8 +475,8 @@ private:
    * Helpers for RestyleChildren().
    */
   void RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint);
-  void RestyleBeforePseudo();
-  void RestyleAfterPseudo(nsIFrame* aFrame);
+  void MaybeReframeForBeforePseudo();
+  void MaybeReframeForAfterPseudo(nsIFrame* aFrame);
   void RestyleContentChildren(nsIFrame* aParent,
                               nsRestyleHint aChildRestyleHint);
   void InitializeAccessibilityNotifications();
