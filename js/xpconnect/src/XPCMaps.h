@@ -74,6 +74,10 @@ public:
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
+    // Report the sum of SizeOfIncludingThis() for all wrapped JS in the map.
+    // Each wrapped JS is only in one map.
+    size_t SizeOfWrappedJS(mozilla::MallocSizeOf mallocSizeOf) const;
+
 private:
     JSObject2WrappedJSMap() {}
 

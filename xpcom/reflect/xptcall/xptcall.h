@@ -13,6 +13,7 @@
 #include "xpt_struct.h"
 #include "xptinfo.h"
 #include "js/Value.h"
+#include "mozilla/MemoryReporting.h"
 
 struct nsXPTCMiniVariant
 {
@@ -178,6 +179,12 @@ NS_GetXPTCallStub(REFNSIID aIID, nsIXPTCProxy* aOuter,
  */
 XPCOM_API(void)
 NS_DestroyXPTCallStub(nsISomeInterface* aStub);
+
+/**
+ * Measures the size of an XPTCall stub previously created with NS_GetXPTCallStub.
+ */
+XPCOM_API(size_t)
+NS_SizeOfIncludingThisXPTCallStub(const nsISomeInterface* aStub, mozilla::MallocSizeOf aMallocSizeOf);
 
 XPCOM_API(nsresult)
 NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,

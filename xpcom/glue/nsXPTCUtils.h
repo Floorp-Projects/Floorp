@@ -8,6 +8,7 @@
 #define nsXPTCUtils_h__
 
 #include "xptcall.h"
+#include "mozilla/MemoryReporting.h"
 
 /**
  * A helper class that initializes an xptcall helper at construction
@@ -32,6 +33,12 @@ protected:
     if (mXPTCStub) {
       NS_DestroyXPTCallStub(mXPTCStub);
     }
+  }
+
+  size_t
+  SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return mXPTCStub ? NS_SizeOfIncludingThisXPTCallStub(mXPTCStub, aMallocSizeOf) : 0;
   }
 };
 
