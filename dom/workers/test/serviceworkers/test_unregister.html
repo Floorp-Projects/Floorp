@@ -1,0 +1,103 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 984048 - Test unregister</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function simpleRegister() {
+    return navigator.serviceWorker.register("worker.js", { scope: "unregister/" });
+  }
+
+  function testControlled() {
+    var testPromise = new Promise(function(res, rej) {
+      window.onmessage = function(e) {
+        if (e.data === "READY") {
+          w.postMessage({ "controlled": true }, "*");
+        } else if (e.data === "SUCCESS") {
+          ok(true, "New window should be controlled.");
+          res();
+        } else if (e.data === "FAIL") {
+          ok(false, "New window should be controlled");
+          res();
+        }
+      }
+    });
+
+    // This setTimeout is temporary to allow the ServiceWorker to get
+    // activated. Once Bug 1025077 is implemented, this can be replaced to use
+    // ready().
+
+    var w;
+    setTimeout(function() {
+      w = window.open("unregister/index.html", "_blank", "width=700, height=400");
+    }, 150);
+    return testPromise.then(() => w.close());
+  }
+
+  function unregister() {
+    return navigator.serviceWorker.getRegistration("unregister/")
+           .then(function(reg) {
+             return reg.unregister().then(function(v) {
+               ok(v, "Unregister should resolve to true");
+             }, function(e) {
+               ok(false, "Unregister failed with " + e.name);
+             });
+           });
+  }
+
+  function testUncontrolled() {
+    var testPromise = new Promise(function(res, rej) {
+      window.onmessage = function(e) {
+        if (e.data === "READY") {
+          w.postMessage({ "controlled": false }, "*");
+        } else if (e.data === "SUCCESS") {
+          ok(true, "New window should not be controlled.");
+          res();
+        } else if (e.data === "FAIL") {
+          ok(false, "New window should not be controlled");
+          res();
+        }
+      }
+    });
+
+    var w;
+    setTimeout(function() {
+      w = window.open("unregister/index.html", "_blank", "width=700, height=400");
+    }, 150);
+    return testPromise.then(() => w.close());
+  }
+
+  function runTest() {
+    simpleRegister()
+      .then(testControlled)
+      .then(unregister)
+      .then(testUncontrolled)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+

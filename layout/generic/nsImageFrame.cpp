@@ -759,10 +759,15 @@ nsImageFrame::EnsureIntrinsicSizeAndRatio(nsPresContext* aPresContext)
   }
 }
 
-/* virtual */ nsSize
+/* virtual */
+LogicalSize
 nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
-                          nsSize aCBSize, nscoord aAvailableWidth,
-                          nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                          WritingMode aWM,
+                          const LogicalSize& aCBSize,
+                          nscoord aAvailableISize,
+                          const LogicalSize& aMargin,
+                          const LogicalSize& aBorder,
+                          const LogicalSize& aPadding,
                           uint32_t aFlags)
 {
   nsPresContext *presContext = PresContext();
@@ -797,10 +802,13 @@ nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     }
   }
 
-  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
+  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM,
                             aRenderingContext, this,
-                            intrinsicSize, mIntrinsicRatio, aCBSize,
-                            aMargin, aBorder, aPadding);
+                            intrinsicSize, mIntrinsicRatio,
+                            aCBSize,
+                            aMargin,
+                            aBorder,
+                            aPadding);
 }
 
 nsRect 

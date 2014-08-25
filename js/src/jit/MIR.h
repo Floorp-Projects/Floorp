@@ -3644,9 +3644,7 @@ class MReturnFromCtor
     }
 };
 
-// Converts a primitive (either typed or untyped) to a double. If the input is
-// not primitive at runtime, a bailout occurs.
-class MToDouble
+class MToFPInstruction
   : public MUnaryInstruction,
     public ToDoublePolicy
 {
@@ -3661,10 +3659,31 @@ class MToDouble
   private:
     ConversionKind conversion_;
 
+  protected:
+    explicit MToFPInstruction(MDefinition *def, ConversionKind conversion = NonStringPrimitives)
+      : MUnaryInstruction(def), conversion_(conversion)
+    { }
+
+  public:
+    ConversionKind conversion() const {
+        return conversion_;
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+// Converts a primitive (either typed or untyped) to a double. If the input is
+// not primitive at runtime, a bailout occurs.
+class MToDouble
+  : public MToFPInstruction
+{
+  private:
     TruncateKind implicitTruncate_;
 
     explicit MToDouble(MDefinition *def, ConversionKind conversion = NonStringPrimitives)
-      : MUnaryInstruction(def), conversion_(conversion), implicitTruncate_(NoTruncate)
+      : MToFPInstruction(def, conversion), implicitTruncate_(NoTruncate)
     {
         setResultType(MIRType_Double);
         setMovable();
@@ -3684,14 +3703,6 @@ class MToDouble
     }
     static MToDouble *NewAsmJS(TempAllocator &alloc, MDefinition *def) {
         return new(alloc) MToDouble(def);
-    }
-
-    ConversionKind conversion() const {
-        return conversion_;
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
     }
 
     MDefinition *foldsTo(TempAllocator &alloc);
@@ -3725,22 +3736,11 @@ class MToDouble
 // Converts a primitive (either typed or untyped) to a float32. If the input is
 // not primitive at runtime, a bailout occurs.
 class MToFloat32
-  : public MUnaryInstruction,
-    public ToDoublePolicy
+  : public MToFPInstruction
 {
-  public:
-    // Types of values which can be converted.
-    enum ConversionKind {
-        NonStringPrimitives,
-        NonNullNonStringPrimitives,
-        NumbersOnly
-    };
-
   protected:
-    ConversionKind conversion_;
-
     MToFloat32(MDefinition *def, ConversionKind conversion)
-      : MUnaryInstruction(def), conversion_(conversion)
+      : MToFPInstruction(def, conversion)
     {
         setResultType(MIRType_Float32);
         setMovable();
@@ -3760,14 +3760,6 @@ class MToFloat32
     }
     static MToFloat32 *NewAsmJS(TempAllocator &alloc, MDefinition *def) {
         return new(alloc) MToFloat32(def, NonStringPrimitives);
-    }
-
-    ConversionKind conversion() const {
-        return conversion_;
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
     }
 
     virtual MDefinition *foldsTo(TempAllocator &alloc);
@@ -3926,7 +3918,6 @@ class MTruncateToInt32
 
         // An object might have "valueOf", which means it is effectful.
         // ToInt32(symbol) throws.
-        MOZ_ASSERT(def->type() != MIRType_Object);
         if (def->mightBeType(MIRType_Object) || def->mightBeType(MIRType_Symbol))
             setGuard();
     }
@@ -4529,6 +4520,50 @@ class MAbs
     }
 
     ALLOW_CLONE(MAbs)
+};
+
+class MClz
+    : public MUnaryInstruction
+    , public BitwisePolicy
+{
+    bool operandIsNeverZero_;
+
+    MClz(MDefinition *num)
+      : MUnaryInstruction(num),
+        operandIsNeverZero_(false)
+    {
+        JS_ASSERT(IsNumberType(num->type()));
+        specialization_ = MIRType_Int32;
+        setResultType(MIRType_Int32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Clz)
+    static MClz *New(TempAllocator &alloc, MDefinition *num) {
+        return new(alloc) MClz(num);
+    }
+    MDefinition *num() const {
+        return getOperand(0);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    bool operandIsNeverZero() const {
+        return operandIsNeverZero_;
+    }
+
+    MDefinition *foldsTo(TempAllocator &alloc);
+    void computeRange(TempAllocator &alloc);
+    void collectRangeInfoPreTrunc();
 };
 
 // Inline implementation of Math.sqrt().

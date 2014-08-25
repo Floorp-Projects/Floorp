@@ -6300,6 +6300,7 @@ nsBlockFrame::AccessibleType()
   }
 
   if (!HasBullet() || !PresContext()) {
+    //XXXsmaug What if we're in the shadow dom?
     if (!mContent->GetParent()) {
       // Don't create accessible objects for the root content node, they are redundant with
       // the nsDocAccessible object created with the document node
@@ -6307,7 +6308,7 @@ nsBlockFrame::AccessibleType()
     }
     
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc =
-      do_QueryInterface(mContent->GetDocument());
+      do_QueryInterface(mContent->GetComposedDoc());
     if (htmlDoc) {
       nsCOMPtr<nsIDOMHTMLElement> body;
       htmlDoc->GetBody(getter_AddRefs(body));

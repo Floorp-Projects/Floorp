@@ -690,7 +690,7 @@ JitRuntime::generateBailoutHandler(JSContext *cx, ExecutionMode mode)
         GenerateParallelBailoutThunk(masm, NO_FRAME_SIZE_CLASS_ID);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 
     Linker linker(masm);
@@ -843,7 +843,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.branchIfFalseBool(v0, masm.failureLabel(f.executionMode));
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unknown failure kind");
+        MOZ_CRASH("unknown failure kind");
     }
 
     masm.freeStack(outParamOffset);
@@ -931,13 +931,7 @@ JitRuntime::generatePreBarrier(JSContext *cx, MIRType type)
     masm.setupUnalignedABICall(2, a2);
     masm.passABIArg(a0);
     masm.passABIArg(a1);
-
-    if (type == MIRType_Value) {
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, MarkValueFromIon));
-    } else {
-        MOZ_ASSERT(type == MIRType_Shape);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, MarkShapeFromIon));
-    }
+    masm.callWithABI(IonMarkFunction(type));
 
     masm.PopRegsInMask(save);
     masm.ret();

@@ -235,12 +235,12 @@ CodeGenerator::visitValueToDouble(LValueToDouble *lir)
     masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
     masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
 
-    if (mir->conversion() != MToDouble::NumbersOnly) {
+    if (mir->conversion() != MToFPInstruction::NumbersOnly) {
         masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
         masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
         hasBoolean = true;
         hasUndefined = true;
-        if (mir->conversion() != MToDouble::NonNullNonStringPrimitives) {
+        if (mir->conversion() != MToFPInstruction::NonNullNonStringPrimitives) {
             masm.branchTestNull(Assembler::Equal, tag, &isNull);
             hasNull = true;
         }
@@ -293,12 +293,12 @@ CodeGenerator::visitValueToFloat32(LValueToFloat32 *lir)
     masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
     masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
 
-    if (mir->conversion() != MToFloat32::NumbersOnly) {
+    if (mir->conversion() != MToFPInstruction::NumbersOnly) {
         masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
         masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
         hasBoolean = true;
         hasUndefined = true;
-        if (mir->conversion() != MToFloat32::NonNullNonStringPrimitives) {
+        if (mir->conversion() != MToFPInstruction::NonNullNonStringPrimitives) {
             masm.branchTestNull(Assembler::Equal, tag, &isNull);
             hasNull = true;
         }
@@ -1651,7 +1651,7 @@ CodeGenerator::visitStoreSlotT(LStoreSlotT *lir)
     Address dest(base, offset);
 
     if (lir->mir()->needsBarrier())
-        emitPreBarrier(dest, lir->mir()->slotType());
+        emitPreBarrier(dest);
 
     MIRType valueType = lir->mir()->value()->type();
     ConstantOrRegister value;
@@ -1673,7 +1673,7 @@ CodeGenerator::visitStoreSlotV(LStoreSlotV *lir)
     const ValueOperand value = ToValue(lir, LStoreSlotV::Value);
 
     if (lir->mir()->needsBarrier())
-       emitPreBarrier(Address(base, offset), MIRType_Value);
+       emitPreBarrier(Address(base, offset));
 
     masm.storeValue(value, Address(base, offset));
     return true;
@@ -1768,14 +1768,14 @@ CodeGenerator::emitSetPropertyPolymorphic(LInstruction *ins, Register obj, Regis
             // Fixed slot.
             Address addr(obj, JSObject::getFixedSlotOffset(shape->slot()));
             if (mir->needsBarrier())
-                emitPreBarrier(addr, MIRType_Value);
+                emitPreBarrier(addr);
             masm.storeConstantOrRegister(value, addr);
         } else {
             // Dynamic slot.
             masm.loadPtr(Address(obj, JSObject::offsetOfSlots()), scratch);
             Address addr(scratch, (shape->slot() - shape->numFixedSlots()) * sizeof(js::Value));
             if (mir->needsBarrier())
-                emitPreBarrier(addr, MIRType_Value);
+                emitPreBarrier(addr);
             masm.storeConstantOrRegister(value, addr);
         }
 
@@ -3145,18 +3145,30 @@ CodeGenerator::maybeCreateScriptCounts()
         MBasicBlock *block = graph.getBlock(i)->mir();
 
         uint32_t offset = 0;
+        char *description = nullptr;
         if (script) {
-            // Find a PC offset in the outermost script to use. If this block
-            // is from an inlined script, find a location in the outer script
-            // to associate information about the inlining with.
             if (MResumePoint *resume = block->entryResumePoint()) {
+                // Find a PC offset in the outermost script to use. If this
+                // block is from an inlined script, find a location in the
+                // outer script to associate information about the inlining
+                // with.
                 while (resume->caller())
                     resume = resume->caller();
                 offset = script->pcToOffset(resume->pc());
+
+                if (block->entryResumePoint()->caller()) {
+                    // Get the filename and line number of the inner script.
+                    JSScript *innerScript = block->info().script();
+                    description = (char *) js_calloc(200);
+                    if (description) {
+                        JS_snprintf(description, 200, "%s:%d",
+                                    innerScript->filename(), innerScript->lineno());
+                    }
+                }
             }
         }
 
-        if (!counts->block(i).init(block->id(), offset, block->numSuccessors())) {
+        if (!counts->block(i).init(block->id(), offset, description, block->numSuccessors())) {
             js_delete(counts);
             return nullptr;
         }
@@ -4234,7 +4246,7 @@ CodeGenerator::visitSetArgumentsObjectArg(LSetArgumentsObjectArg *lir)
 
     masm.loadPrivate(Address(argsObj, ArgumentsObject::getDataSlotOffset()), temp);
     Address argAddr(temp, ArgumentsData::offsetOfArgs() + lir->mir()->argno() * sizeof(Value));
-    emitPreBarrier(argAddr, MIRType_Value);
+    emitPreBarrier(argAddr);
 #ifdef DEBUG
     Label success;
     masm.branchTestMagic(Assembler::NotEqual, argAddr, &success);
@@ -5781,7 +5793,7 @@ CodeGenerator::visitStoreElementT(LStoreElementT *store)
     const LAllocation *index = store->index();
 
     if (store->mir()->needsBarrier())
-       emitPreBarrier(elements, index, store->mir()->elementType());
+        emitPreBarrier(elements, index);
 
     if (store->mir()->needsHoleCheck() && !emitStoreHoleCheck(elements, index, store->snapshot()))
         return false;
@@ -5799,7 +5811,7 @@ CodeGenerator::visitStoreElementV(LStoreElementV *lir)
     const LAllocation *index = lir->index();
 
     if (lir->mir()->needsBarrier())
-        emitPreBarrier(elements, index, MIRType_Value);
+        emitPreBarrier(elements, index);
 
     if (lir->mir()->needsHoleCheck() && !emitStoreHoleCheck(elements, index, lir->snapshot()))
         return false;
@@ -5826,7 +5838,7 @@ CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT *lir)
     masm.branchKey(Assembler::BelowOrEqual, initLength, ToInt32Key(index), ool->entry());
 
     if (lir->mir()->needsBarrier())
-        emitPreBarrier(elements, index, lir->mir()->elementType());
+        emitPreBarrier(elements, index);
 
     masm.bind(ool->rejoinStore());
     emitStoreElementTyped(lir->value(), lir->mir()->value()->type(), lir->mir()->elementType(),
@@ -5852,7 +5864,7 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV *lir)
     masm.branchKey(Assembler::BelowOrEqual, initLength, ToInt32Key(index), ool->entry());
 
     if (lir->mir()->needsBarrier())
-        emitPreBarrier(elements, index, lir->mir()->elementType());
+        emitPreBarrier(elements, index);
 
     masm.bind(ool->rejoinStore());
     if (lir->index()->isConstant())
@@ -7159,7 +7171,7 @@ CodeGenerator::visitStoreFixedSlotV(LStoreFixedSlotV *ins)
 
     Address address(obj, JSObject::getFixedSlotOffset(slot));
     if (ins->mir()->needsBarrier())
-        emitPreBarrier(address, MIRType_Value);
+        emitPreBarrier(address);
 
     masm.storeValue(value, address);
 
@@ -7181,7 +7193,7 @@ CodeGenerator::visitStoreFixedSlotT(LStoreFixedSlotT *ins)
 
     Address address(obj, JSObject::getFixedSlotOffset(slot));
     if (ins->mir()->needsBarrier())
-        emitPreBarrier(address, MIRType_Value);
+        emitPreBarrier(address);
 
     masm.storeConstantOrRegister(nvalue, address);
 

@@ -1004,7 +1004,12 @@ MacroAssemblerARM::ma_udiv(Register num, Register div, Register dest, Condition 
 {
     as_udiv(dest, num, div, cond);
 }
-
+// Miscelanous instructions
+void
+MacroAssemblerARM::ma_clz(Register src, Register dest, Condition cond)
+{
+    as_clz(dest, src, cond);
+}
 // Memory.
 // Shortcut for when we know we're transferring 32 bits of data.
 void
