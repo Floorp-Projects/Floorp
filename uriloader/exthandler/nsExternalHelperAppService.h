@@ -186,6 +186,13 @@ protected:
    * added during the private browsing mode)
    */
   nsCOMArray<nsIFile> mTemporaryPrivateFilesList;
+
+private:
+  nsresult DoContentContentProcessHelper(const nsACString& aMimeContentType,
+                                         nsIRequest *aRequest,
+                                         nsIInterfaceRequestor *aWindowContext,
+                                         bool aForceSave,
+                                         nsIStreamListener ** aStreamListener);
 };
 
 /**
