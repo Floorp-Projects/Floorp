@@ -616,11 +616,12 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
 nsresult
 nsExternalHelperAppService::DoContentContentProcessHelper(const nsACString& aMimeContentType,
                                                           nsIRequest *aRequest,
-                                                          nsIInterfaceRequestor *aWindowContext,
+                                                          nsIInterfaceRequestor *aContentContext,
                                                           bool aForceSave,
+                                                          nsIInterfaceRequestor *aWindowContext,
                                                           nsIStreamListener ** aStreamListener)
 {
-  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(aWindowContext);
+  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(aContentContext);
   NS_ENSURE_STATE(window);
 
   // We need to get a hold of a ContentChild so that we can begin forwarding
@@ -675,7 +676,7 @@ nsExternalHelperAppService::DoContentContentProcessHelper(const nsACString& aMim
   uint32_t reason = nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
 
   nsRefPtr<nsExternalAppHandler> handler =
-    new nsExternalAppHandler(nullptr, EmptyCString(), aWindowContext, this,
+    new nsExternalAppHandler(nullptr, EmptyCString(), aContentContext, aWindowContext, this,
                              fileName, reason, aForceSave);
   if (!handler) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -687,13 +688,14 @@ nsExternalHelperAppService::DoContentContentProcessHelper(const nsACString& aMim
 
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
                                                     nsIRequest *aRequest,
-                                                    nsIInterfaceRequestor *aWindowContext,
+                                                    nsIInterfaceRequestor *aContentContext,
                                                     bool aForceSave,
+                                                    nsIInterfaceRequestor *aWindowContext,
                                                     nsIStreamListener ** aStreamListener)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    return DoContentContentProcessHelper(aMimeContentType, aRequest, aWindowContext,
-                                         aForceSave, aStreamListener);
+    return DoContentContentProcessHelper(aMimeContentType, aRequest, aContentContext,
+                                         aForceSave, aWindowContext, aStreamListener);
   }
 
   nsAutoString fileName;
@@ -820,6 +822,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
 
   nsExternalAppHandler * handler = new nsExternalAppHandler(mimeInfo,
                                                             buf,
+                                                            aContentContext,
                                                             aWindowContext,
                                                             this,
                                                             fileName,
@@ -1184,11 +1187,13 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
                                            const nsCSubstring& aTempFileExtension,
+                                           nsIInterfaceRequestor* aContentContext,
                                            nsIInterfaceRequestor* aWindowContext,
                                            nsExternalHelperAppService *aExtProtSvc,
                                            const nsAString& aSuggestedFilename,
                                            uint32_t aReason, bool aForceSave)
 : mMimeInfo(aMIMEInfo)
+, mContentContext(aContentContext)
 , mWindowContext(aWindowContext)
 , mWindowToClose(nullptr)
 , mSuggestedFileName(aSuggestedFilename)
@@ -1316,7 +1321,7 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
   // Note that we need to do this before removing aChannel from the loadgroup,
   // since that would mess with the original channel on the loader.
   nsCOMPtr<nsIDocumentLoader> origContextLoader =
-    do_GetInterface(mWindowContext);
+    do_GetInterface(mContentContext);
   if (origContextLoader)
     origContextLoader->GetDocumentChannel(getter_AddRefs(mOriginalChannel));
 
@@ -1690,13 +1695,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   
   if (alwaysAsk)
   {
-    // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog request
-    mDialog = do_CreateInstance( NS_HELPERAPPLAUNCHERDLG_CONTRACTID, &rv );
+    // Display the dialog
+    mDialog = do_CreateInstance(NS_HELPERAPPLAUNCHERDLG_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // this will create a reference cycle (the dialog holds a reference to us as
     // nsIHelperAppLauncher), which will be broken in Cancel or CreateTransfer.
-    rv = mDialog->Show( this, mWindowContext, mReason );
+    rv = mDialog->Show(this, GetDialogParent(), mReason);
 
     // what do we do if the dialog failed? I guess we should call Cancel and abort the load....
   }
@@ -1849,7 +1854,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
               if (XRE_GetProcessType() == GeckoProcessType_Default) {
                 // We don't have a listener.  Simply show the alert ourselves.
                 nsresult qiRv;
-                nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mWindowContext, &qiRv));
+                nsCOMPtr<nsIPrompt> prompter(do_GetInterface(GetDialogParent(), &qiRv));
                 nsXPIDLString title;
                 bundle->FormatStringFromName(MOZ_UTF16("title"),
                                              strings,
@@ -1857,8 +1862,8 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
                                              getter_Copies(title));
 
                 PR_LOG(nsExternalHelperAppService::mLog, PR_LOG_DEBUG,
-                       ("mWindowContext=0x%p, prompter=0x%p, qi rv=0x%08X, title='%s', msg='%s'",
-                       mWindowContext.get(),
+                       ("mContentContext=0x%p, prompter=0x%p, qi rv=0x%08X, title='%s', msg='%s'",
+                       mContentContext.get(),
                        prompter.get(),
                        qiRv,
                        NS_ConvertUTF16toUTF8(title).get(),
@@ -1868,7 +1873,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
                 // instead, get it's docshell and use it to alert the user.
                 if (!prompter)
                 {
-                  nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mWindowContext));
+                  nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(GetDialogParent()));
                   if (!window || !window->GetDocShell())
                   {
                     return;
@@ -1877,7 +1882,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
                   prompter = do_GetInterface(window->GetDocShell(), &qiRv);
 
                   PR_LOG(nsExternalHelperAppService::mLog, PR_LOG_DEBUG,
-                         ("No prompter from mWindowContext, using DocShell, " \
+                         ("No prompter from mContentContext, using DocShell, " \
                           "window=0x%p, docShell=0x%p, " \
                           "prompter=0x%p, qi rv=0x%08X",
                           window.get(),
@@ -2213,14 +2218,13 @@ nsresult nsExternalAppHandler::SaveDestinationAvailable(nsIFile * aFile)
 
 void nsExternalAppHandler::RequestSaveDestination(const nsAFlatString &aDefaultFile, const nsAFlatString &aFileExtension)
 {
-  // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog request
-  // Convert to use file picker? No, then embeddors could not do any sort of
+  // Display the dialog
+  // XXX Convert to use file picker? No, then embeddors could not do any sort of
   // "AutoDownload" w/o showing a prompt
   nsresult rv = NS_OK;
-  if (!mDialog)
-  {
+  if (!mDialog) {
     // Get helper app launcher dialog.
-    mDialog = do_CreateInstance( NS_HELPERAPPLAUNCHERDLG_CONTRACTID, &rv );
+    mDialog = do_CreateInstance(NS_HELPERAPPLAUNCHERDLG_CONTRACTID, &rv);
     if (rv != NS_OK) {
       Cancel(NS_BINDING_ABORTED);
       return;
@@ -2239,7 +2243,7 @@ void nsExternalAppHandler::RequestSaveDestination(const nsAFlatString &aDefaultF
   nsRefPtr<nsExternalAppHandler> kungFuDeathGrip(this);
   nsCOMPtr<nsIHelperAppLauncherDialog> dlg(mDialog);
   rv = mDialog->PromptForSaveToFile(this,
-                                    mWindowContext,
+                                    GetDialogParent(),
                                     aDefaultFile.get(),
                                     aFileExtension.get(),
                                     mForceSave, &fileToUse);
@@ -2247,7 +2251,7 @@ void nsExternalAppHandler::RequestSaveDestination(const nsAFlatString &aDefaultF
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     // we need to use the async version -> nsIHelperAppLauncherDialog.promptForSaveToFileAsync.
     rv = mDialog->PromptForSaveToFileAsync(this, 
-                                           mWindowContext,
+                                           GetDialogParent(),
                                            aDefaultFile.get(),
                                            aFileExtension.get(),
                                            mForceSave);
@@ -2481,9 +2485,9 @@ void nsExternalAppHandler::ProcessAnyRefreshTags()
    // pass this refresh information back to the caller? For now, try to get the refresh URI
    // interface. If the window context where the request originated came from supports this
    // then we can force it to process the refresh information (if there is any) from this channel.
-   if (mWindowContext && mOriginalChannel)
+   if (mContentContext && mOriginalChannel)
    {
-     nsCOMPtr<nsIRefreshURI> refreshHandler (do_GetInterface(mWindowContext));
+     nsCOMPtr<nsIRefreshURI> refreshHandler (do_GetInterface(mContentContext));
      if (refreshHandler) {
         refreshHandler->SetupRefreshURI(mOriginalChannel);
      }
@@ -2510,7 +2514,7 @@ bool nsExternalAppHandler::GetNeverAskFlagFromPref(const char * prefName, const 
 
 nsresult nsExternalAppHandler::MaybeCloseWindow()
 {
-  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mWindowContext);
+  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mContentContext);
   NS_ENSURE_STATE(window);
 
   if (mShouldCloseWindow) {
@@ -2521,7 +2525,7 @@ nsresult nsExternalAppHandler::MaybeCloseWindow()
 
     bool isClosed;
     if (opener && NS_SUCCEEDED(opener->GetClosed(&isClosed)) && !isClosed) {
-      mWindowContext = do_GetInterface(opener);
+      mContentContext = do_GetInterface(opener);
 
       // Now close the old window.  Do it on a timer so that we don't run
       // into issues trying to close the window before it has fully opened.
