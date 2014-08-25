@@ -6,7 +6,7 @@
 
 #include "mozIThirdPartyUtil.h"
 #include "nsNetUtil.h"
-#include "nsICacheEntryDescriptor.h"
+#include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
 #include "nsIChannel.h"
 #include "nsIDocShell.h"
@@ -41,6 +41,7 @@ NS_IMPL_ISUPPORTS(nsChannelClassifier,
                   nsIURIClassifierCallback)
 
 nsChannelClassifier::nsChannelClassifier()
+  : mIsAllowListed(false)
 {
 #if defined(PR_LOGGING)
     if (!gChannelClassifierLog)
@@ -122,7 +123,12 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
     }
 #endif
 
-    *result = permissions != nsIPermissionManager::ALLOW_ACTION;
+    if (permissions == nsIPermissionManager::ALLOW_ACTION) {
+      mIsAllowListed = true;
+      *result = false;
+    } else {
+      *result = true;
+    }
 
     // Tracking protection will be enabled so return without updating
     // the security state. If any channels are subsequently cancelled
@@ -259,7 +265,7 @@ void
 nsChannelClassifier::MarkEntryClassified(nsresult status)
 {
     // Don't cache tracking classifications because we support allowlisting.
-    if (status == NS_ERROR_TRACKING_URI) {
+    if (status == NS_ERROR_TRACKING_URI || mIsAllowListed) {
         return;
     }
 
@@ -275,7 +281,7 @@ nsChannelClassifier::MarkEntryClassified(nsresult status)
         return;
     }
 
-    nsCOMPtr<nsICacheEntryDescriptor> cacheEntry =
+    nsCOMPtr<nsICacheEntry> cacheEntry =
         do_QueryInterface(cacheToken);
     if (!cacheEntry) {
         return;
@@ -307,7 +313,7 @@ nsChannelClassifier::HasBeenClassified(nsIChannel *aChannel)
         return false;
     }
 
-    nsCOMPtr<nsICacheEntryDescriptor> cacheEntry =
+    nsCOMPtr<nsICacheEntry> cacheEntry =
         do_QueryInterface(cacheToken);
     if (!cacheEntry) {
         return false;

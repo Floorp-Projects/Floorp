@@ -12,6 +12,7 @@
 #include "gfxRect.h"
 #include "GraphicsFilter.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "nsRect.h"
 #include "nsSize.h"
@@ -33,6 +34,7 @@ class SVGImageContext;
 
 namespace mozilla {
 namespace image {
+class ImageRegion;
 struct Orientation;
 }
 }
@@ -50,10 +52,11 @@ native nsIntRectByVal(nsIntRect);
 native nsSize(nsSize);
 [ptr] native nsIFrame(nsIFrame);
 [ptr] native ImageContainer(mozilla::layers::ImageContainer);
+[ref] native ImageRegion(mozilla::image::ImageRegion);
 [ptr] native LayerManager(mozilla::layers::LayerManager);
 native Orientation(mozilla::image::Orientation);
 [ref] native TimeStamp(mozilla::TimeStamp);
-[ptr] native SVGImageContext(mozilla::SVGImageContext);
+[ref] native MaybeSVGImageContext(mozilla::Maybe<mozilla::SVGImageContext>);
 native TempRefSourceSurface(mozilla::TemporaryRef<mozilla::gfx::SourceSurface>);
 native TempRefImgIContainer(already_AddRefed<imgIContainer>);
 native nsIntSizeByVal(nsIntSize);
@@ -66,7 +69,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(9c0f1884-dad9-4d63-a0e5-dda7b3b3416b)]
+[scriptable, builtinclass, uuid(f8bb7671-5f36-490b-b828-3f4c6ad38665)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -226,39 +229,113 @@ interface imgIContainer : nsISupports
   [noscript] ImageContainer getImageContainer(in LayerManager aManager);
 
   /**
-   * Draw a frame onto the context specified.
+   * Draw the requested frame of this image onto the context specified.
+   *
+   * Drawing an image involves scaling it to a certain size (which may be
+   * implemented as a "smart" scale by substituting an HQ-scaled frame or
+   * rendering at a high DPI), and then selecting a region of that image to
+   * draw. That region is drawn onto the graphics context and in the process
+   * transformed by the context matrix, which determines the final area that is
+   * filled. The basic process looks like this:
+   *
+   *                           +------------------+
+   *                           |      Image       |
+   *                           |                  |
+   *                           | intrinsic width  |
+   *                           |        X         |
+   *                           | intrinsic height |
+   *                           +------------------+
+   *                          /                    \
+   *                         /                      \
+   *                        /    (scale to aSize)    \
+   *                       /                          \
+   *                      +----------------------------+
+   *                      |                            |
+   *                      |        Scaled Image        |
+   *                      | aSize.width X aSize.height |
+   *                      |                            |
+   *                      |       +---------+          |
+   *                      |       | aRegion |          |
+   *                      |       +---------+          |
+   *                      +-------(---------(----------+
+   *                              |         |
+   *                             /           \
+   *                            |  (transform |
+   *                           /  by aContext  \
+   *                          |     matrix)     |
+   *                         /                   \
+   *                        +---------------------+
+   *                        |                     |
+   *                        |      Fill Rect      |
+   *                        |                     |
+   *                        +---------------------+
+   *
+   * The region may extend outside of the scaled image's boundaries. It's
+   * actually a region in tiled image space, which is formed by tiling the
+   * scaled image infinitely in every direction. Drawing with a region larger
+   * than the scaled image thus causes the filled area to contain multiple tiled
+   * copies of the image, which looks like this:
+   *
+   *           ....................................................
+   *           :                :                :                :
+   *           :      Tile      :      Tile      :      Tile      :
+   *           :        +------------[aRegion]------------+       :
+   *           :........|.......:................:........|.......:
+   *           :        |       :                :        |       :
+   *           :      Ti|le     :  Scaled Image  :      Ti|le     :
+   *           :        |       :                :        |       :
+   *           :........|.......:................:........|.......:
+   *           :        +---------------------------------+       :
+   *           :      Ti|le     :      Tile      :      Ti|le     :
+   *           :       /        :                :         \      :
+   *           :......(.........:................:..........).....:
+   *                  |                                     |
+   *                 /                                       \
+   *                |      (transform by aContext matrix)     |
+   *               /                                           \
+   *              +---------------------------------------------+
+   *              |     :                                 :     |
+   *              |.....:.................................:.....|
+   *              |     :                                 :     |
+   *              |     :           Tiled Fill            :     |
+   *              |     :                                 :     |
+   *              |.....:.................................:.....|
+   *              |     :                                 :     |
+   *              +---------------------------------------------+
+   *
    *
    * @param aContext The Thebes context to draw the image to.
-   * @param aFilter The filter to be used if we're scaling the image.
-   * @param aUserSpaceToImageSpace The transformation from user space (e.g.,
-   *                               appunits) to image space.
-   * @param aFill The area in the context to draw pixels to. When aFlags includes
-   *              FLAG_CLAMP, the image will be extended to this area by clampling
-   *              image sample coordinates. Otherwise, the image will be
-   *              automatically tiled as necessary.
-   * @param aSubimage The area of the image, in pixels, that we are allowed to
-   *                  sample from.
-   * @param aViewportSize
-   *          The size (in CSS pixels) of the viewport that would be available
-   *          for the full image to occupy, if we were drawing the full image.
-   *          (Note that we might not actually be drawing the full image -- we
-   *          might be restricted by aSubimage -- but we still need the full
-   *          image's viewport-size in order for SVG images with the "viewBox"
-   *          attribute to position their content correctly.)
-   * @param aSVGContext If non-null, SVG-related rendering context such as
-   *                    overridden attributes on the image document's root <svg>
-   *                    node. Ignored for raster images.
+   * @param aSize The size to which the image should be scaled before drawing.
+   *              This requirement may be satisfied using HQ scaled frames,
+   *              selecting from different resolution layers, drawing at a
+   *              higher DPI, or just performing additional scaling on the
+   *              graphics context. Callers can use optimalImageSizeForDest()
+   *              to determine the best choice for this parameter if they have
+   *              no special size requirements.
+   * @param aRegion The region in tiled image space which will be drawn onto the
+   *                graphics context. aRegion is in the coordinate space of the
+   *                image after it has been scaled to aSize - that is, the image
+   *                is scaled first, and then aRegion is applied. When aFlags
+   *                includes FLAG_CLAMP, the image will be extended to this area
+   *                by clamping image sample coordinates. Otherwise, the image
+   *                will be automatically tiled as necessary. aRegion can also
+   *                optionally contain a second region which restricts the set of
+   *                pixels we're allowed to sample from when drawing; this is
+   *                only of use to callers which need to draw with pixel snapping.
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aFilter The filter to be used if we're scaling the image.
+   * @param aSVGContext If specified, SVG-related rendering context, such as
+   *                    overridden attributes on the image document's root <svg>
+   *                    node, and the size of the viewport that the full image
+   *                    would occupy. Ignored for raster images.
    * @param aFlags Flags of the FLAG_* variety
    */
   [noscript] void draw(in gfxContext aContext,
-                       in gfxGraphicsFilter aFilter,
-                       [const] in gfxMatrix aUserSpaceToImageSpace,
-                       [const] in gfxRect aFill,
-                       [const] in nsIntRect aSubimage,
-                       [const] in nsIntSize aViewportSize,
-                       [const] in SVGImageContext aSVGContext,
+                       [const] in nsIntSize aSize,
+                       [const] in ImageRegion aRegion,
                        in uint32_t aWhichFrame,
+                       in gfxGraphicsFilter aFilter,
+                       [const] in MaybeSVGImageContext aSVGContext,
                        in uint32_t aFlags);
 
   /*

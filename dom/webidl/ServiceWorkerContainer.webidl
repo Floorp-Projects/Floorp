@@ -47,5 +47,5 @@ partial interface ServiceWorkerContainer {
 };
 
 dictionary RegistrationOptionList {
-  ScalarValueString scope = "/*";
+  ScalarValueString scope = "/";
 };

@@ -1193,9 +1193,9 @@ class Assembler : public AssemblerShared
     // exist, when calling with a third dest parameter, a this object is still
     // needed. Dummy always happens to be null, but we shouldn't be looking at
     // it in any case.
+  public:
     static Assembler *Dummy;
 
-  public:
     // For the alignment fill use NOP: 0x0320f000 or (Always | InstNOP::NopInst).
     // For the nopFill use a branch to the next instruction: 0xeaffffff.
     Assembler()
@@ -1370,6 +1370,7 @@ class Assembler : public AssemblerShared
 
     BufferOffset as_sdiv(Register dest, Register num, Register div, Condition c = Always);
     BufferOffset as_udiv(Register dest, Register num, Register div, Condition c = Always);
+    BufferOffset as_clz(Register dest, Register src, Condition c = Always, Instruction *instdest = nullptr);
 
     // Data transfer instructions: ldr, str, ldrb, strb.
     // Using an int to differentiate between 8 bits and 32 bits is overkill.

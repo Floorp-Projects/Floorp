@@ -1320,6 +1320,13 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
     mask->Dump(aStream, pfx.get(), aDumpHtml);
   }
 
+#ifdef MOZ_DUMP_PAINTING
+  for (size_t i = 0; i < mExtraDumpInfo.Length(); i++) {
+    const nsCString& str = mExtraDumpInfo[i];
+    aStream << aPrefix << "  Info:\n" << str.get();
+  }
+#endif
+
   if (Layer* kid = GetFirstChild()) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";

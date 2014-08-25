@@ -665,9 +665,10 @@ protected:
                  uint8_t optional_argc, mozilla::ErrorResult& error);
 
   void DrawDirectlyToCanvas(const nsLayoutUtils::DirectDrawInfo& image,
-                            mozilla::gfx::Rect* bounds, double dx, double dy,
-                            double dw, double dh, double sx, double sy,
-                            double sw, double sh, gfxIntSize imgSize);
+                            mozilla::gfx::Rect* bounds,
+                            mozilla::gfx::Rect dest,
+                            mozilla::gfx::Rect src,
+                            gfxIntSize imgSize);
 
   nsString& GetFont()
   {

@@ -6345,15 +6345,15 @@ js_DumpBacktrace(JSContext *cx)
 }
 
 void
-JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExtraSizes *sizes)
+JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo *info)
 {
     if (hasDynamicSlots())
-        sizes->mallocHeapSlots += mallocSizeOf(slots);
+        info->objectsMallocHeapSlots += mallocSizeOf(slots);
 
     if (hasDynamicElements()) {
         js::ObjectElements *elements = getElementsHeader();
         if (!elements->isCopyOnWrite() || elements->ownerObject() == this)
-            sizes->mallocHeapElementsNonAsmJS += mallocSizeOf(elements);
+            info->objectsMallocHeapElementsNonAsmJS += mallocSizeOf(elements);
     }
 
     // Other things may be measured in the future if DMD indicates it is worthwhile.
@@ -6375,20 +6375,20 @@ JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Objects
         // - ( 1.0%, 96.4%): Proxy
 
     } else if (is<ArgumentsObject>()) {
-        sizes->mallocHeapArgumentsData += as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
+        info->objectsMallocHeapMisc += as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
     } else if (is<RegExpStaticsObject>()) {
-        sizes->mallocHeapRegExpStatics += as<RegExpStaticsObject>().sizeOfData(mallocSizeOf);
+        info->objectsMallocHeapMisc += as<RegExpStaticsObject>().sizeOfData(mallocSizeOf);
     } else if (is<PropertyIteratorObject>()) {
-        sizes->mallocHeapPropertyIteratorData += as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
+        info->objectsMallocHeapMisc += as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
     } else if (is<ArrayBufferObject>() || is<SharedArrayBufferObject>()) {
-        ArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, sizes);
+        ArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info);
     } else if (is<AsmJSModuleObject>()) {
-        as<AsmJSModuleObject>().addSizeOfMisc(mallocSizeOf, &sizes->nonHeapCodeAsmJS,
-                                              &sizes->mallocHeapAsmJSModuleData);
+        as<AsmJSModuleObject>().addSizeOfMisc(mallocSizeOf, &info->objectsNonHeapCodeAsmJS,
+                                              &info->objectsMallocHeapMisc);
 #ifdef JS_HAS_CTYPES
     } else {
         // This must be the last case.
-        sizes->mallocHeapCtypesData +=
+        info->objectsMallocHeapMisc +=
             js::SizeOfDataIfCDataObject(mallocSizeOf, const_cast<JSObject *>(this));
 #endif
     }

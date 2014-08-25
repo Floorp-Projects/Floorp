@@ -41,7 +41,7 @@ FormData implements LegacyQueryInterface;
 HTMLCollection implements LegacyQueryInterface;
 History implements LegacyQueryInterface;
 MimeTypeArray implements LegacyQueryInterface;
-MozNamedAttrMap implements LegacyQueryInterface;
+NamedNodeMap implements LegacyQueryInterface;
 MutationObserver implements LegacyQueryInterface;
 MutationRecord implements LegacyQueryInterface;
 Navigator implements LegacyQueryInterface;

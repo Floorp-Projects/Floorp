@@ -11,44 +11,46 @@
  */
 
 /*
- * Created on Mon Apr 28 11:24:35 2014 from UCD data files with version info:
+ * Created on Fri Aug 22 16:49:19 2014 from UCD data files with version info:
  *
 
-# Date: 2013-09-27, 23:05:00 GMT [KW]
+# Date: 2014-06-12, 20:18:00 GMT [KW]
 #
 # Unicode Character Database
-# Copyright (c) 1991-2013 Unicode, Inc.
+# Copyright (c) 1991-2014 Unicode, Inc.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
-# For documentation, see NamesList.html,
-# UAX #38, "Unicode Han Database (Unihan)," and
+# For documentation, see the following:
+# NamesList.html
+# UAX #38, "Unicode Han Database (Unihan)"
 # UAX #44, "Unicode Character Database."
 #
+# The UAXes can be accessed at http://www.unicode.org/versions/Unicode7.0.0/
 
 This directory contains the final data files
-for the Unicode Character Database (UCD) for Unicode 6.3.0.
+for the Unicode Character Database, for Version 7.0.0 of the Unicode
+Standard.
 
 
+# Scripts-7.0.0.txt
+# Date: 2014-05-15, 00:11:35 GMT [MD]
 
-# Scripts-6.3.0.txt
-# Date: 2013-07-05, 14:09:02 GMT [MD]
+# EastAsianWidth-7.0.0.txt
+# Date: 2014-02-28, 23:15:00 GMT [KW, LI]
 
-# EastAsianWidth-6.3.0.txt
-# Date: 2013-02-05, 20:09:00 GMT [KW, LI]
+# BidiMirroring-7.0.0.txt
+# Date: 2013-12-17, 00:00:00 GMT [KW, LI]
 
-# BidiMirroring-6.3.0.txt
-# Date: 2013-02-12, 08:20:00 GMT [KW, LI]
-
-# HangulSyllableType-6.3.0.txt
-# Date: 2012-12-20, 22:18:29 GMT [MD]
+# HangulSyllableType-7.0.0.txt
+# Date: 2013-11-27, 09:54:39 GMT [MD]
 
 # File: xidmodifications.txt
-# Version: 3.0-draft
-# Generated: 2012-05-07, 07:52:41 GMT
+# Version: 7.0.0
+# Generated: 2014-07-23, 12:42:33 GMT
 
 #
 # Unihan_Variants.txt
-# Date: 2013-02-25 22:46:17 GMT [JHJ]
+# Date: 2014-05-09 18:17:02 GMT [JHJ]
 
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
@@ -181,9 +183,32 @@ enum {
   MOZ_SCRIPT_SHARADA = 100,
   MOZ_SCRIPT_SORA_SOMPENG = 101,
   MOZ_SCRIPT_TAKRI = 102,
-  MOZ_SCRIPT_MATHEMATICAL_NOTATION = 103,
+  MOZ_SCRIPT_BASSA_VAH = 103,
+  MOZ_SCRIPT_CAUCASIAN_ALBANIAN = 104,
+  MOZ_SCRIPT_DUPLOYAN = 105,
+  MOZ_SCRIPT_ELBASAN = 106,
+  MOZ_SCRIPT_GRANTHA = 107,
+  MOZ_SCRIPT_KHOJKI = 108,
+  MOZ_SCRIPT_KHUDAWADI = 109,
+  MOZ_SCRIPT_LINEAR_A = 110,
+  MOZ_SCRIPT_MAHAJANI = 111,
+  MOZ_SCRIPT_MANICHAEAN = 112,
+  MOZ_SCRIPT_MENDE_KIKAKUI = 113,
+  MOZ_SCRIPT_MODI = 114,
+  MOZ_SCRIPT_MRO = 115,
+  MOZ_SCRIPT_NABATAEAN = 116,
+  MOZ_SCRIPT_OLD_NORTH_ARABIAN = 117,
+  MOZ_SCRIPT_OLD_PERMIC = 118,
+  MOZ_SCRIPT_PAHAWH_HMONG = 119,
+  MOZ_SCRIPT_PALMYRENE = 120,
+  MOZ_SCRIPT_PAU_CIN_HAU = 121,
+  MOZ_SCRIPT_PSALTER_PAHLAVI = 122,
+  MOZ_SCRIPT_SIDDHAM = 123,
+  MOZ_SCRIPT_TIRHUTA = 124,
+  MOZ_SCRIPT_WARANG_CITI = 125,
+  MOZ_SCRIPT_MATHEMATICAL_NOTATION = 126,
 
-  MOZ_NUM_SCRIPT_CODES = 104,
+  MOZ_NUM_SCRIPT_CODES = 127,
 
   MOZ_SCRIPT_INVALID = -1
 };

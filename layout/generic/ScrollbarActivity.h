@@ -13,7 +13,7 @@
 #include "nsRefreshDriver.h"
 
 class nsIContent;
-class nsIScrollbarOwner;
+class nsIScrollbarMediator;
 class nsITimer;
 class nsIAtom;
 
@@ -58,7 +58,7 @@ namespace layout {
 class ScrollbarActivity MOZ_FINAL : public nsIDOMEventListener,
                                     public nsARefreshObserver {
 public:
-  ScrollbarActivity(nsIScrollbarOwner* aScrollableFrame)
+  ScrollbarActivity(nsIScrollbarMediator* aScrollableFrame)
    : mScrollableFrame(aScrollableFrame)
    , mNestedActivityCounter(0)
    , mIsActive(false)
@@ -135,7 +135,7 @@ protected:
     return TimeDuration::FromMilliseconds(mScrollbarFadeDuration);
   }
 
-  nsIScrollbarOwner* mScrollableFrame;
+  nsIScrollbarMediator* mScrollableFrame;
   TimeStamp mFadeBeginTime;
   nsCOMPtr<nsITimer> mFadeBeginTimer;
   nsCOMPtr<nsIDOMEventTarget> mHorizontalScrollbar; // null while inactive

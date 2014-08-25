@@ -173,6 +173,9 @@ public:
   {
     return mControlledDocumentsCounter > 0;
   }
+
+  void
+  Clear();
 };
 
 #define NS_SERVICEWORKERMANAGER_IMPL_IID                 \
@@ -194,9 +197,11 @@ class ServiceWorkerManager MOZ_FINAL : public nsIServiceWorkerManager
   friend class RegisterRunnable;
   friend class CallInstallRunnable;
   friend class CancelServiceWorkerInstallationRunnable;
+  friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUpdateInstance;
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
+  friend class UnregisterRunnable;
 
 public:
   NS_DECL_ISUPPORTS
@@ -234,10 +239,6 @@ public:
     // Scope to registration.
     nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistrationInfo> mServiceWorkerRegistrationInfos;
 
-    // This array can't be stored in ServiceWorkerRegistration because one may
-    // not exist when a certain window is opened, but we still want that
-    // window's container to be notified if it's in scope.
-    // The containers inform the SWM on creation and destruction.
     nsTObserverArray<ServiceWorkerRegistration*> mServiceWorkerRegistrations;
 
     nsRefPtrHashtable<nsISupportsHashKey, ServiceWorkerRegistrationInfo> mControlledDocuments;
@@ -263,6 +264,14 @@ public:
       mServiceWorkerRegistrationInfos.Put(aScope, registration);
       ServiceWorkerManager::AddScope(mOrderedScopes, aScope);
       return registration;
+    }
+
+    void
+    RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration)
+    {
+      MOZ_ASSERT(mServiceWorkerRegistrationInfos.Contains(aRegistration->mScope));
+      ServiceWorkerManager::RemoveScope(mOrderedScopes, aRegistration->mScope);
+      mServiceWorkerRegistrationInfos.Remove(aRegistration->mScope);
     }
 
     NS_INLINE_DECL_REFCOUNTING(ServiceWorkerDomainInfo)
@@ -313,6 +322,9 @@ public:
 private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();
+
+  void
+  AbortCurrentUpdate(ServiceWorkerRegistrationInfo* aRegistration);
 
   NS_IMETHOD
   Update(ServiceWorkerRegistrationInfo* aRegistration, nsPIDOMWindow* aWindow);
