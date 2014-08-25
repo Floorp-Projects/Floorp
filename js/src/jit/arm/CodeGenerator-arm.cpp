@@ -875,7 +875,7 @@ CodeGeneratorARM::visitBitOpI(LBitOpI *ins)
             masm.ma_and(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
         break;
       default:
-        MOZ_CRASH("unexpected binary opcode");
+        MOZ_ASSUME_UNREACHABLE("unexpected binary opcode");
     }
 
     return true;
@@ -917,7 +917,7 @@ CodeGeneratorARM::visitShiftI(LShiftI *ins)
             }
             break;
           default:
-            MOZ_CRASH("Unexpected shift op");
+            MOZ_ASSUME_UNREACHABLE("Unexpected shift op");
         }
     } else {
         // The shift amounts should be AND'ed into the 0-31 range since arm
@@ -942,7 +942,7 @@ CodeGeneratorARM::visitShiftI(LShiftI *ins)
             }
             break;
           default:
-            MOZ_CRASH("Unexpected shift op");
+            MOZ_ASSUME_UNREACHABLE("Unexpected shift op");
         }
     }
 
@@ -1148,7 +1148,7 @@ CodeGeneratorARM::visitMathD(LMathD *math)
         masm.ma_vdiv(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
         break;
       default:
-        MOZ_CRASH("unexpected opcode");
+        MOZ_ASSUME_UNREACHABLE("unexpected opcode");
     }
     return true;
 }
@@ -1174,7 +1174,7 @@ CodeGeneratorARM::visitMathF(LMathF *math)
         masm.ma_vdiv_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
         break;
       default:
-        MOZ_CRASH("unexpected opcode");
+        MOZ_ASSUME_UNREACHABLE("unexpected opcode");
     }
     return true;
 }
@@ -1777,13 +1777,13 @@ getBase(U *mir)
 bool
 CodeGeneratorARM::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 bool
 CodeGeneratorARM::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 bool
@@ -1802,7 +1802,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
       case Scalar::Uint32:  isSigned = true;  size = 32; break;
       case Scalar::Float64: isFloat = true;   size = 64; break;
       case Scalar::Float32: isFloat = true;   size = 32; break;
-      default: MOZ_CRASH("unexpected array type");
+      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
 
     const LAllocation *ptr = ins->ptr();
@@ -1876,7 +1876,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
       case Scalar::Uint32:  isSigned = true;  size = 32; break;
       case Scalar::Float64: isFloat  = true;  size = 64; break;
       case Scalar::Float32: isFloat = true;   size = 32; break;
-      default: MOZ_CRASH("unexpected array type");
+      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
     const LAllocation *ptr = ins->ptr();
     if (ptr->isConstant()) {
@@ -2152,11 +2152,11 @@ CodeGeneratorARM::visitNegF(LNegF *ins)
 bool
 CodeGeneratorARM::visitForkJoinGetSlice(LForkJoinGetSlice *ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 JitCode *
 JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }

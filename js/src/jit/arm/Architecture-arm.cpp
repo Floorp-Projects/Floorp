@@ -356,7 +356,7 @@ VFPRegister::getRegisterDumpOffsetInBytes()
         return id() * sizeof(float);
     if (isDouble())
         return id() * sizeof(double);
-    MOZ_CRASH("not Single or Double");
+    MOZ_ASSUME_UNREACHABLE();
 }
 
 uint32_t

@@ -1592,7 +1592,7 @@ class Assembler : public AssemblerShared
         JS_ASSERT(rn.code() > dtmLastReg);
         dtmRegBitField |= 1 << rn.code();
         if (dtmLoadStore == IsLoad && rn.code() == 13 && dtmBase.code() == 13) {
-            MOZ_CRASH("ARM Spec says this is invalid");
+            MOZ_ASSUME_UNREACHABLE("ARM Spec says this is invalid");
         }
     }
     void finishDataTransfer() {
@@ -1717,7 +1717,7 @@ class Assembler : public AssemblerShared
     static void PatchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
 
     static void PatchInstructionImmediate(uint8_t *code, PatchedImmPtr imm) {
-        MOZ_CRASH("Unused.");
+        MOZ_ASSUME_UNREACHABLE("Unused.");
     }
 
     static uint32_t AlignDoubleArg(uint32_t offset) {
