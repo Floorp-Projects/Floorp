@@ -334,10 +334,10 @@ MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
 GraphTime
 MediaStreamGraphImpl::GetAudioPosition(MediaStream* aStream)
 {
-  if (aStream->mAudioOutputStreams.IsEmpty()) {
+  if (!mMixedAudioStream) {
     return IterationEnd();
   }
-  int64_t positionInFrames = aStream->mAudioOutputStreams[0].mStream->GetPositionInFrames();
+  int64_t positionInFrames = mMixedAudioStream->GetPositionInFrames();
   if (positionInFrames < 0) {
     return IterationEnd();
   }
@@ -500,6 +500,7 @@ void
 MediaStreamGraphImpl::UpdateStreamOrder()
 {
   bool shouldMix = false;
+  bool audioTrackPresent = false;
   // Value of mCycleMarker for unvisited streams in cycle detection.
   const uint32_t NOT_VISITED = UINT32_MAX;
   // Value of mCycleMarker for ordered streams in muted cycles.
@@ -513,26 +514,25 @@ MediaStreamGraphImpl::UpdateStreamOrder()
         stream->AsSourceStream()->NeedsMixing()) {
       shouldMix = true;
     }
+    for (StreamBuffer::TrackIter tracks(stream->GetStreamBuffer(), MediaSegment::AUDIO);
+         !tracks.IsEnded(); tracks.Next()) {
+      audioTrackPresent = true;
+    }
   }
 
   if (!mMixer && shouldMix) {
-    mMixer = new AudioMixer(AudioMixerCallback);
-    for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-      for (uint32_t j = 0; j < mStreams[i]->mAudioOutputStreams.Length(); ++j) {
-        mStreams[i]->mAudioOutputStreams[j].mStream->SetMicrophoneActive(true);
+    mMixedAudioStream->SetMicrophoneActive(true);
+    if (shouldMix) {
+      if (gFarendObserver && !mMixer.FindCallback(gFarendObserver)) {
+        mMixer.AddCallback(gFarendObserver);
       }
     }
-    if (gFarendObserver) {
-      mMixer->AddCallback(gFarendObserver);
-    }
-  } else if (mMixer && !shouldMix) {
-    mMixer->RemoveCallback(gFarendObserver);
-    mMixer = nullptr;
-    for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-      for (uint32_t j = 0; j < mStreams[i]->mAudioOutputStreams.Length(); ++j) {
-        mStreams[i]->mAudioOutputStreams[j].mStream->SetMicrophoneActive(false);
-      }
-    }
+  } else {
+    mMixer.RemoveCallback(gFarendObserver);
+  }
+
+  if (!audioTrackPresent && mMixedAudioStream) {
+    mMixedAudioStream = nullptr;
   }
 
   // The algorithm for finding cycles is based on Tim Leslie's iterative
@@ -890,49 +890,47 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
       if (i < audioOutputStreamsFound.Length()) {
         audioOutputStreamsFound[i] = true;
       } else {
-        // No output stream created for this track yet. Check if it's time to
-        // create one.
-        GraphTime startTime =
-          StreamTimeToGraphTime(aStream, tracks->GetStartTimeRoundDown(),
-                                INCLUDE_TRAILING_BLOCKED_INTERVAL);
-        if (startTime >= CurrentDriver()->StateComputedTime()) {
-          // The stream wants to play audio, but nothing will play for the forseeable
-          // future, so don't create the stream.
-          continue;
-        }
-
-        // Allocating a AudioStream would be slow, so we finish the Init async
         MediaStream::AudioOutputStream* audioOutputStream =
           aStream->mAudioOutputStreams.AppendElement();
         audioOutputStream->mAudioPlaybackStartTime = aAudioOutputStartTime;
         audioOutputStream->mBlockedAudioTime = 0;
         audioOutputStream->mLastTickWritten = 0;
-        audioOutputStream->mStream = new AudioStream();
-        // XXX for now, allocate stereo output. But we need to fix this to
-        // match the system's ideal channel configuration.
-        // NOTE: we presume this is either fast or async-under-the-covers
-        audioOutputStream->mStream->Init(2, mSampleRate,
-                                         aStream->mAudioChannelType,
-                                         AudioStream::LowLatency);
         audioOutputStream->mTrackID = tracks->GetID();
 
         // If there is a mixer, there is a micrphone active.
         audioOutputStream->mStream->SetMicrophoneActive(mMixer);
 
-        LogLatency(AsyncLatencyLogger::AudioStreamCreate,
-                   reinterpret_cast<uint64_t>(aStream),
-                   reinterpret_cast<int64_t>(audioOutputStream->mStream.get()));
+        if (!mMixedAudioStream) {
+          mMixedAudioStream = new AudioStream();
+          // XXX for now, allocate stereo output. But we need to fix this to
+          // match the system's ideal channel configuration.
+          // NOTE: we presume this is either fast or async-under-the-covers
+          mMixedAudioStream->Init(AudioChannelCount(), mSampleRate,
+                             AudioChannel::Normal,
+                             AudioStream::LowLatency);
+        }
       }
     }
   }
 
   for (int32_t i = audioOutputStreamsFound.Length() - 1; i >= 0; --i) {
     if (!audioOutputStreamsFound[i]) {
-      aStream->mAudioOutputStreams[i].mStream->Shutdown();
       aStream->mAudioOutputStreams.RemoveElementAt(i);
     }
   }
 }
+
+void
+MediaStreamGraphImpl::MixerCallback(AudioDataValue* aMixedBuffer,
+                                    AudioSampleFormat aFormat,
+                                    uint32_t aChannels,
+                                    uint32_t aFrames,
+                                    uint32_t aSampleRate)
+{
+  MOZ_ASSERT(mMixedAudioStream);
+  mMixedAudioStream->Write(aMixedBuffer, aFrames, nullptr);
+}
+
 
 TrackTicks
 MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
@@ -952,8 +950,6 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     return 0;
   }
 
-  // When we're playing multiple copies of this stream at the same time, they're
-  // perfectly correlated so adding volumes is the right thing to do.
   float volume = 0.0f;
   for (uint32_t i = 0; i < aStream->mAudioOutputs.Length(); ++i) {
     volume += aStream->mAudioOutputs[i].mVolume;
@@ -1036,7 +1032,8 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
 
     // Need unique id for stream & track - and we want it to match the inserter
     output.WriteTo(LATENCY_STREAM_ID(aStream, track->GetID()),
-                   audioOutput.mStream, mMixer);
+                                     mMixer, AudioChannelCount(),
+                                     mSampleRate);
   }
   return ticksWritten;
 }
@@ -1242,11 +1239,8 @@ MediaStreamGraphImpl::PauseAllAudioOutputs()
   if (mAudioOutputsPaused) {
     return;
   }
-  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-    MediaStream* s = mStreams[i];
-    for (uint32_t j = 0; j < s->mAudioOutputStreams.Length(); ++j) {
-      s->mAudioOutputStreams[j].mStream->Pause();
-    }
+  if (mMixedAudioStream) {
+    mMixedAudioStream->Pause();
   }
   mAudioOutputsPaused = true;
 }
@@ -1258,11 +1252,8 @@ MediaStreamGraphImpl::ResumeAllAudioOutputs()
     return;
   }
 
-  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-    MediaStream* s = mStreams[i];
-    for (uint32_t j = 0; j < s->mAudioOutputStreams.Length(); ++j) {
-      s->mAudioOutputStreams[j].mStream->Resume();
-    }
+  if (mMixedAudioStream) {
+    mMixedAudioStream->Resume();
   }
 
   mAudioOutputsPaused = false;
@@ -1325,6 +1316,9 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
   // This is the number of frame that are written to the AudioStreams, for
   // this cycle.
   TrackTicks ticksPlayed = 0;
+
+  mMixer.StartMixing();
+
   // Figure out what each stream wants to do
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     MediaStream* stream = mStreams[i];
@@ -1356,8 +1350,8 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
       }
     }
     NotifyHasCurrentData(stream);
+    // Only playback audio and video in real-time mode
     if (mRealtime) {
-      // Only playback audio and video in real-time mode
       CreateOrDestroyAudioStreams(aFrom, stream);
       TrackTicks ticksPlayedForThisStream = PlayAudio(stream, aFrom, aTo);
       if (!ticksPlayed) {
@@ -1378,8 +1372,8 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
     }
   }
 
-  if (mMixer) {
-    mMixer->FinishMixing();
+  if (ticksPlayed) {
+    mMixer.FinishMixing();
   }
 
   if (!allBlockedForever) {
@@ -1780,7 +1774,7 @@ MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   // - mVideoOutputs - elements
   // - mLastPlayedVideoFrame
   // - mListeners - elements
-  // - mAudioOutputStreams - elements
+  // - mAudioOutputStream - elements
 
   amount += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
   amount += mAudioOutputs.SizeOfExcludingThis(aMallocSizeOf);
@@ -1792,10 +1786,6 @@ MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   amount += mBlocked.SizeOfExcludingThis(aMallocSizeOf);
   amount += mGraphUpdateIndices.SizeOfExcludingThis(aMallocSizeOf);
   amount += mConsumers.SizeOfExcludingThis(aMallocSizeOf);
-  amount += mAudioOutputStreams.SizeOfExcludingThis(aMallocSizeOf);
-  for (size_t i = 0; i < mAudioOutputStreams.Length(); i++) {
-    amount += mAudioOutputStreams[i].SizeOfExcludingThis(aMallocSizeOf);
-  }
 
   return amount;
 }
@@ -1906,10 +1896,6 @@ MediaStream::DestroyImpl()
   for (int32_t i = mConsumers.Length() - 1; i >= 0; --i) {
     mConsumers[i]->Disconnect();
   }
-  for (uint32_t i = 0; i < mAudioOutputStreams.Length(); ++i) {
-    mAudioOutputStreams[i].mStream->Shutdown();
-  }
-  mAudioOutputStreams.Clear();
   mGraph = nullptr;
 }
 
@@ -2671,7 +2657,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime, TrackRate aSampleRate
   , mNonRealtimeProcessing(false)
   , mStreamOrderDirty(false)
   , mLatencyLog(AsyncLatencyLogger::Get())
-  , mMixer(nullptr)
+  , mMixedAudioStream(nullptr)
   , mMemoryReportMonitor("MSGIMemory")
   , mSelfRef(MOZ_THIS_IN_INITIALIZER_LIST())
   , mAudioStreamSizes()
@@ -2694,6 +2680,8 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime, TrackRate aSampleRate
   } else {
     mDriverHolder.Switch(new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS));
   }
+
+  mMixer.AddCallback(this);
 
   mLastMainThreadUpdate = TimeStamp::Now();
 
