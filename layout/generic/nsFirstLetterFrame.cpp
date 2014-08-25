@@ -238,15 +238,15 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     ll->BeginSpan(this, &aReflowState, bp.IStart(wm),
                   availSize.ISize(wm), &mBaseline);
     ll->ReflowFrame(kid, aReflowStatus, &kidMetrics, pushedFrame);
-    ll->EndSpan(this);
+    NS_ASSERTION(lineWM.IsVertical() == wm.IsVertical(),
+                 "we're assuming we can mix sizes between lineWM and wm "
+                 "since we shouldn't have orthogonal writing modes within "
+                 "a line.");
+    aMetrics.ISize(lineWM) = ll->EndSpan(this) + bp.IStartEnd(wm);
     ll->SetInFirstLetter(false);
 
-    LogicalSize convertedSize = kidMetrics.Size(lineWM).ConvertTo(wm, lineWM);
-    convertedSize.ISize(wm) += bp.IStartEnd(wm);
-    convertedSize.BSize(wm) += bp.BStartEnd(wm);
-    aMetrics.SetSize(wm, convertedSize);
-    aMetrics.SetBlockStartAscent(kidMetrics.BlockStartAscent() +
-                                 bp.BStart(wm));
+    nsLayoutUtils::SetBSizeFromFontMetrics(this, aMetrics, aReflowState,
+                                           bp, lineWM, wm);
   }
 
   // Ensure that the overflow rect contains the child textframe's overflow rect.
