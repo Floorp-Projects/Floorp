@@ -62,6 +62,7 @@ using std::placeholders::_3;
 extern class Placeholder1 { } _1;
 extern class Placeholder2 { } _2;
 extern class Placeholder3 { } _3;
+extern class Placeholder4 { } _4;
 
 template <typename V>       V&  ref(V& v)       { return v; }
 template <typename V> const V& cref(const V& v) { return v; }
@@ -113,17 +114,18 @@ private:
   void operator=(const Bind4&) /*= delete*/;
 };
 
-template <typename R, typename C1, typename P1, typename P2, typename P3>
-class BindToMemberFunction3
+template <typename R, typename C1, typename P1, typename P2, typename P3,
+          typename P4>
+class BindToMemberFunction4
 {
 public:
-  typedef R (C1::*F)(P1&, P2&, P3&);
-  BindToMemberFunction3(F f, C1* that) : f(f), that(that) { }
-  R operator()(P1& p1, P2& p2, P3& p3) const { return (that->*f)(p1, p2, p3); }
+  typedef R (C1::*F)(P1&, P2&, P3, P4&);
+  BindToMemberFunction4(F f, C1* that) : f(f), that(that) { }
+  R operator()(P1& p1, P2& p2, P3 p3, P4& p4) const { return (that->*f)(p1, p2, p3, p4); }
 private:
   const F f;
   C1* const that;
-  void operator=(const BindToMemberFunction3&) /*= delete*/;
+  void operator=(const BindToMemberFunction4&) /*= delete*/;
 };
 
 } // namespace internal
@@ -151,12 +153,13 @@ bind(R (*f)(P1&, B1, B2, B3&, B4&), Placeholder1&, const B1& b1, const B2& b2,
   return internal::Bind4<R, P1, const B1, const B2, B3, B4>(f, b1, b2, b3, b4);
 }
 
-template <typename R, typename C1, typename P1, typename P2, typename P3>
-inline internal::BindToMemberFunction3<R, C1, P1, P2, P3>
-bind(R (C1::*f)(P1&, P2&, P3&), C1* that, Placeholder1&, Placeholder2&,
-     Placeholder3&)
+template <typename R, typename C1, typename P1, typename P2, typename P3,
+          typename P4>
+inline internal::BindToMemberFunction4<R, C1, P1, P2, P3, P4>
+bind(R (C1::*f)(P1&, P2&, P3, P4&), C1* that, Placeholder1&, Placeholder2&,
+     Placeholder3, Placeholder4&)
 {
-  return internal::BindToMemberFunction3<R, C1, P1, P2, P3>(f, that);
+  return internal::BindToMemberFunction4<R, C1, P1, P2, P3, P4>(f, that);
 }
 
 #endif
