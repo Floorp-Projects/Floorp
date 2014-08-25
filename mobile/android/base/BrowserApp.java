@@ -2517,6 +2517,9 @@ public class BrowserApp extends GeckoApp
         final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
         share.setVisible(!inGuestMode);
         share.setEnabled(StringUtils.isShareableUrl(url) && !inGuestMode);
+        MenuUtils.safeSetEnabled(aMenu, R.id.apps, !inGuestMode);
+        MenuUtils.safeSetEnabled(aMenu, R.id.addons, !inGuestMode);
+        MenuUtils.safeSetEnabled(aMenu, R.id.downloads, !inGuestMode);
 
         // NOTE: Use MenuUtils.safeSetEnabled because some actions might
         // be on the BrowserToolbar context menu
