@@ -529,24 +529,6 @@ MediaStreamGraphImpl::MarkConsumed(MediaStream* aStream)
   }
 }
 
-static void AudioMixerCallback(AudioDataValue* aMixedBuffer,
-                               AudioSampleFormat aFormat,
-                               uint32_t aChannels,
-                               uint32_t aFrames,
-                               uint32_t aSampleRate)
-{
-  // Need an api to register mixer callbacks, bug 989921
-#ifdef MOZ_WEBRTC
-  if (aFrames > 0 && aChannels > 0) {
-    // XXX need Observer base class and registration API
-    if (gFarendObserver) {
-      gFarendObserver->InsertFarEnd(aMixedBuffer, aFrames, false,
-                                    aSampleRate, aChannels, aFormat);
-    }
-  }
-#endif
-}
-
 void
 MediaStreamGraphImpl::UpdateStreamOrder()
 {
@@ -573,7 +555,11 @@ MediaStreamGraphImpl::UpdateStreamOrder()
         mStreams[i]->mAudioOutputStreams[j].mStream->SetMicrophoneActive(true);
       }
     }
+    if (gFarendObserver) {
+      mMixer->AddCallback(gFarendObserver);
+    }
   } else if (mMixer && !shouldMix) {
+    mMixer->RemoveCallback(gFarendObserver);
     mMixer = nullptr;
     for (uint32_t i = 0; i < mStreams.Length(); ++i) {
       for (uint32_t j = 0; j < mStreams[i]->mAudioOutputStreams.Length(); ++j) {
@@ -1425,6 +1411,11 @@ MediaStreamGraphImpl::RunThread()
     // This is the number of frame that are written to the AudioStreams, for
     // this cycle.
     TrackTicks ticksPlayed = 0;
+
+    if (mMixer) {
+      mMixer->StartMixing();
+    }
+
     // Figure out what each stream wants to do
     for (uint32_t i = 0; i < mStreams.Length(); ++i) {
       MediaStream* stream = mStreams[i];
@@ -1480,7 +1471,7 @@ MediaStreamGraphImpl::RunThread()
       }
     }
 
-    if (mMixer) {
+    if (mMixer && ticksPlayed) {
       mMixer->FinishMixing();
     }
 
