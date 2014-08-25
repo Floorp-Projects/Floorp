@@ -59,6 +59,15 @@ let testcases = [
   ["test.", "http://test./", "http://www.test./", true, true],
   [".test", "http://.test/", "http://www..test/", true, true],
   ["mozilla is amazing", null, null, true, true],
+  ["mozilla ", "http://mozilla/", "http://www.mozilla.com/", true, true],
+  ["   mozilla  ", "http://mozilla/", "http://www.mozilla.com/", true, true],
+  ["mozilla \\", null, null, true, true],
+  ["mozilla \\ foo.txt", null, null, true, true],
+  ["mozilla \\\r foo.txt", null, null, true, true],
+  ["mozilla\n", "http://mozilla/", "http://www.mozilla.com/", true, true],
+  ["mozilla \r\n", "http://mozilla/", "http://www.mozilla.com/", true, true],
+  ["moz\r\nfirefox\nos\r", "http://mozfirefoxos/", "http://www.mozfirefoxos.com/", true, true],
+  ["moz\r\n firefox\n", null, null, true, true],
   ["", null, null, true, true],
   ["[]", null, null, true, true]
 ];
@@ -66,9 +75,15 @@ let testcases = [
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
   testcases.push(["C:\\some\\file.txt", "file:///C:/some/file.txt", null, false, true]);
   testcases.push(["//mozilla", "http://mozilla/", "http://www.mozilla.com/", false, true]);
+  testcases.push(["mozilla\\", "http://mozilla/", "http://www.mozilla.com/", true, true]);
 } else {
   testcases.push(["/some/file.txt", "file:///some/file.txt", null, false, true]);
   testcases.push(["//mozilla", "file:////mozilla", null, false, true]);
+  testcases.push(["mozilla\\", "http://mozilla\\/", "http://www.mozilla/", true, true]);
+}
+
+function sanitize(input) {
+  return input.replace(/\r|\n/g, "").trim();
 }
 
 function run_test() {
@@ -117,7 +132,7 @@ function run_test() {
 
       // Check the preferred URI
       if (couldDoKeywordLookup && expectKeywordLookup) {
-        let urlparamInput = encodeURIComponent(testInput).replace("%20", "+", "g");
+        let urlparamInput = encodeURIComponent(sanitize(testInput)).replace("%20", "+", "g");
         let searchURL = kSearchEngineURL.replace("{searchTerms}", urlparamInput);
         do_check_eq(info.preferredURI.spec, searchURL);
       } else {
@@ -125,7 +140,7 @@ function run_test() {
         // the fixed URI should be preferred:
         do_check_eq(info.preferredURI.spec, info.fixedURI.spec);
       }
-      do_check_eq(testInput, info.originalInput);
+      do_check_eq(sanitize(testInput), info.originalInput);
     }
   }
 }
