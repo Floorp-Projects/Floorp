@@ -60,10 +60,9 @@ class BaseTestFrontendUnits(MarionetteTestCase):
     def setUp(self):
         super(BaseTestFrontendUnits, self).setUp()
 
-        # This extends the timeout for find_element to 10 seconds.
-        # We need this as the tests take an amount of time to run after loading,
-        # which we have to wait for.
-        self.marionette.set_search_timeout(10000)
+        # This extends the timeout for find_element. We need this as the tests
+        # take an amount of time to run after loading, which we have to wait for.
+        self.marionette.set_search_timeout(60000)
 
     # srcdir_path should be the directory relative to this file.
     def set_server_prefix(self, srcdir_path):
