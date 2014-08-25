@@ -219,7 +219,7 @@ DOMMediaStream::InitSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintCont
 {
   mWindow = aWindow;
   SetHintContents(aHintContents);
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance(aHintContents);
   InitStreamCommon(gm->CreateSourceStream(this));
 }
 
@@ -228,7 +228,7 @@ DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHint
 {
   mWindow = aWindow;
   SetHintContents(aHintContents);
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance(aHintContents);
   InitStreamCommon(gm->CreateTrackUnionStream(this));
 }
 

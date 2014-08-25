@@ -32,6 +32,11 @@
 #undef None
 #endif
 
+// X.h on Linux #defines CurrentTime as 0L, so we have to #undef it here.
+#ifdef CurrentTime
+#undef CurrentTime
+#endif
+
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 
 // Define to output information on decoding and painting framerate
