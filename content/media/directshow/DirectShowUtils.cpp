@@ -11,6 +11,9 @@
 #include "nsAutoPtr.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/RefPtr.h"
+#include "nsPrintfCString.h"
+
+#define WARN(...) NS_WARNING(nsPrintfCString(__VA_ARGS__).get())
 
 namespace mozilla {
 
@@ -193,11 +196,15 @@ CreateAndAddFilter(IGraphBuilder* aGraph,
                         getter_AddRefs(filter));
   if (FAILED(hr)) {
     // Object probably not available on this system.
+    WARN("CoCreateInstance failed, hr=%x", hr);
     return hr;
   }
 
   hr = aGraph->AddFilter(filter, aFilterName);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (FAILED(hr)) {
+    WARN("AddFilter failed, hr=%x", hr);
+    return hr;
+  }
 
   filter.forget(aOutFilter);
 
@@ -219,25 +226,35 @@ AddMP3DMOWrapperFilter(IGraphBuilder* aGraph,
                         CLSCTX_INPROC_SERVER,
                         IID_IBaseFilter,
                         getter_AddRefs(filter));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (FAILED(hr)) {
+    WARN("CoCreateInstance failed, hr=%x", hr);
+    return hr;
+  }
 
   // Query for IDMOWrapperFilter.
   nsRefPtr<IDMOWrapperFilter> dmoWrapper;
   hr = filter->QueryInterface(IID_IDMOWrapperFilter,
                               getter_AddRefs(dmoWrapper));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (FAILED(hr)) {
+    WARN("QueryInterface failed, hr=%x", hr);
+    return hr;
+  }
 
   hr = dmoWrapper->Init(CLSID_CMP3DecMediaObject, DMOCATEGORY_AUDIO_DECODER);
   if (FAILED(hr)) {
     // Can't instantiate MP3 DMO. It doesn't exist on Windows XP, we're
     // probably hitting that. Don't log warning to console, this is an
     // expected error.
+    WARN("dmoWrapper Init failed, hr=%x", hr);
     return hr;
   }
 
   // Add the wrapper filter to graph.
   hr = aGraph->AddFilter(filter, L"MP3 Decoder DMO");
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (FAILED(hr)) {
+    WARN("AddFilter failed, hr=%x", hr);
+    return hr;
+  }
 
   filter.forget(aOutFilter);
 
@@ -307,3 +324,6 @@ ConnectFilters(IGraphBuilder* aGraph,
 }
 
 } // namespace mozilla
+
+// avoid redefined macro in unified build
+#undef WARN

@@ -12,7 +12,7 @@
  * help layout save dynamic pages in cache for future retrievals.
  */
 
-[scriptable, uuid (89b0674a-9e2f-4124-9b59-481444be841d)]
+[scriptable, uuid (8b8f3341-46da-40f5-a16f-41a91f5d25dd)]
 interface nsIWyciwygChannel : nsIChannel
 {
   /**

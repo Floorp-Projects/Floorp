@@ -863,12 +863,8 @@ nsHttpChannel::CallOnStartRequest()
         }
     }
 
-    bool shouldSniff = mResponseHead && (mResponseHead->ContentType().IsEmpty() ||
-        ((mResponseHead->ContentType().EqualsLiteral(APPLICATION_OCTET_STREAM) &&
-        (mLoadFlags & LOAD_TREAT_APPLICATION_OCTET_STREAM_AS_UNKNOWN))));
-
     bool unknownDecoderStarted = false;
-    if (shouldSniff) {
+    if (mResponseHead && mResponseHead->ContentType().IsEmpty()) {
         MOZ_ASSERT(mConnectionInfo, "Should have connection info here");
         if (!mContentTypeHint.IsEmpty())
             mResponseHead->SetContentType(mContentTypeHint);

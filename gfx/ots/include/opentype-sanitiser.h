@@ -199,15 +199,11 @@ class OTSStream {
   unsigned chksum_buffer_offset_;
 };
 
-// Signature of the function to be provided by the client in order to report errors.
-// The return type is a boolean so that it can be used within an expression,
-// but the actual value is ignored. (Suggested convention is to always return 'false'.)
 #ifdef __GCC__
 #define MSGFUNC_FMT_ATTR __attribute__((format(printf, 2, 3)))
 #else
 #define MSGFUNC_FMT_ATTR
 #endif
-typedef bool (*MessageFunc)(void *user_data, const char *format, ...)  MSGFUNC_FMT_ATTR;
 
 enum TableAction {
   TABLE_ACTION_DEFAULT,  // Use OTS's default action for that table
@@ -216,21 +212,9 @@ enum TableAction {
   TABLE_ACTION_DROP      // Drop the table
 };
 
-// Signature of the function to be provided by the client to decide what action
-// to do for a given table.
-//   tag: table tag as an integer in big-endian byte order, independent of platform endianness
-//   user_data: user defined data that are passed to SetTableActionCallback()
-typedef TableAction (*TableActionFunc)(uint32_t tag, void *user_data);
-
 class OTS_API OTSContext {
   public:
-    OTSContext()
-        : message_func(0),
-          message_user_data(0),
-          table_action_func(0),
-          table_action_user_data(0)
-        {}
-
+    OTSContext() {}
     ~OTSContext() {}
 
     // Process a given OpenType file and write out a sanitised version
@@ -242,24 +226,14 @@ class OTS_API OTSContext {
     //   context: optional context that holds various OTS settings like user callbacks
     bool Process(OTSStream *output, const uint8_t *input, size_t length);
 
-    // Set a callback function that will be called when OTS is reporting an error.
-    void SetMessageCallback(MessageFunc func, void *user_data) {
-      message_func = func;
-      message_user_data = user_data;
-    }
+    // This function will be called when OTS is reporting an error.
+    virtual void Message(const char *format, ...) MSGFUNC_FMT_ATTR {}
 
-    // Set a callback function that will be called when OTS needs to decide what to
-    // do for a font table.
-    void SetTableActionCallback(TableActionFunc func, void *user_data) {
-      table_action_func = func;
-      table_action_user_data = user_data;
-    }
-
-  private:
-    MessageFunc      message_func;
-    void            *message_user_data;
-    TableActionFunc  table_action_func;
-    void            *table_action_user_data;
+    // This function will be called when OTS needs to decide what to do for a
+    // font table.
+    //   tag: table tag as an integer in big-endian byte order, independent of
+    //   platform endianness
+    virtual TableAction GetTableAction(uint32_t tag) { return ots::TABLE_ACTION_DEFAULT; }
 };
 
 // Force to disable debug output even when the library is compiled with
