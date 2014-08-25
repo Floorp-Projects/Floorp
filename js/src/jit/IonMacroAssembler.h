@@ -145,7 +145,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             } else if (type_.isAnyObject()) {
                 mirType = MIRType_Object;
             } else {
-                MOZ_ASSUME_UNREACHABLE("Unknown conversion to mirtype");
+                MOZ_CRASH("Unknown conversion to mirtype");
             }
 
             if (mirType == MIRType_Double)
@@ -347,7 +347,7 @@ class MacroAssembler : public MacroAssemblerSpecific
           case MIRType_MagicIsConstructing:
           case MIRType_MagicHole: return branchTestMagic(cond, val, label);
           default:
-            MOZ_ASSUME_UNREACHABLE("Bad MIRType");
+            MOZ_CRASH("Bad MIRType");
         }
     }
 
@@ -656,11 +656,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template <typename T>
     void callPreBarrier(const T &address, MIRType type) {
-        JS_ASSERT(type == MIRType_Value ||
-                  type == MIRType_String ||
-                  type == MIRType_Symbol ||
-                  type == MIRType_Object ||
-                  type == MIRType_Shape);
         Label done;
 
         if (type == MIRType_Value)
@@ -670,9 +665,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         computeEffectiveAddress(address, PreBarrierReg);
 
         const JitRuntime *rt = GetIonContext()->runtime->jitRuntime();
-        JitCode *preBarrier = (type == MIRType_Shape)
-                              ? rt->shapePreBarrier()
-                              : rt->valuePreBarrier();
+        JitCode *preBarrier = rt->preBarrier(type);
 
         call(preBarrier);
         Pop(PreBarrierReg);
@@ -682,12 +675,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template <typename T>
     void patchableCallPreBarrier(const T &address, MIRType type) {
-        JS_ASSERT(type == MIRType_Value ||
-                  type == MIRType_String ||
-                  type == MIRType_Symbol ||
-                  type == MIRType_Object ||
-                  type == MIRType_Shape);
-
         Label done;
 
         // All barriers are off by default.
@@ -744,7 +731,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             store32(value, dest);
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
+            MOZ_CRASH("Invalid typed array type");
         }
     }
 
@@ -1172,7 +1159,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         switch (executionMode) {
           case SequentialExecution: return &sequentialFailureLabel_;
           case ParallelExecution: return &parallelFailureLabel_;
-          default: MOZ_ASSUME_UNREACHABLE("Unexpected execution mode");
+          default: MOZ_CRASH("Unexpected execution mode");
         }
     }
 
@@ -1469,7 +1456,7 @@ JSOpToDoubleCondition(JSOp op)
       case JSOP_GE:
         return Assembler::DoubleGreaterThanOrEqual;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected comparison operation");
+        MOZ_CRASH("Unexpected comparison operation");
     }
 }
 
@@ -1496,7 +1483,7 @@ JSOpToCondition(JSOp op, bool isSigned)
           case JSOP_GE:
             return Assembler::GreaterThanOrEqual;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unrecognized comparison operation");
+            MOZ_CRASH("Unrecognized comparison operation");
         }
     } else {
         switch (op) {
@@ -1515,7 +1502,7 @@ JSOpToCondition(JSOp op, bool isSigned)
           case JSOP_GE:
             return Assembler::AboveOrEqual;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unrecognized comparison operation");
+            MOZ_CRASH("Unrecognized comparison operation");
         }
     }
 }

@@ -33,17 +33,18 @@ for (var i = 0; i < lhs_prefix.length; i++) {
         eval(lhs_prefix[i] + "eval('x')" + lhs_suffix[i]);
         assertEq(i, -2);
     } catch (e) {
-        /*
-         * NB: JSOP_SETCALL throws only JSMSG_BAD_LEFTSIDE_OF_ASS, it does not
-         * specialize for ++ and -- as the compiler's error reporting does. See
-         * the next section's forked assertEq code.
-         */
-        assertEq(e.message, "invalid assignment left-hand side");
+        if (/\[/.test(lhs_prefix[i])) {
+            assertEq(e.message, "invalid destructuring target");
+        } else {
+            /*
+             * NB: JSOP_SETCALL throws only JSMSG_BAD_LEFTSIDE_OF_ASS, it does not
+             * specialize for ++ and -- as the compiler's error reporting does. See
+             * the next section's forked assertEq code.
+             */
+            assertEq(e.message, "invalid assignment left-hand side");
+        }
     }
 }
-
-/* Destructuring desugars in the obvious way, so y must be 5 here. */
-assertEq(y, 5);
 
 /* Now test for strict mode rejecting any SETCALL variant at compile time. */
 for (var i = 0; i < lhs_prefix.length; i++) {
@@ -53,6 +54,8 @@ for (var i = 0; i < lhs_prefix.length; i++) {
     } catch (e) {
         if (/\+\+|\-\-/.test(lhs_prefix[i] || lhs_suffix[i]))
             assertEq(e.message, "invalid increment/decrement operand");
+        else if (/\[/.test(lhs_prefix[i]))
+            assertEq(e.message, "invalid destructuring target");
         else
             assertEq(e.message, "invalid assignment left-hand side");
     }

@@ -2343,6 +2343,7 @@ TypeCompartment::print(JSContext *cx, bool force)
 {
 #ifdef DEBUG
     gc::AutoSuppressGC suppressGC(cx);
+    JSAutoRequest request(cx);
 
     JSCompartment *compartment = this->compartment();
     AutoEnterAnalysis enter(nullptr, compartment);

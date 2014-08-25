@@ -176,17 +176,12 @@ CommonAnimationManager::AddStyleUpdatesTo(RestyleTracker& aTracker)
       static_cast<AnimationPlayerCollection*>(next);
     next = PR_NEXT_LINK(next);
 
-    if (!collection->IsForElement()) {
-      // We don't support compositor-driven animation of :before/:after
-      // transitions or animations, so at least skip those.
-      // FIXME: We'll need to handle this before using this for the
-      // transitions redesign.
-      continue;
+    dom::Element* elementToRestyle = collection->GetElementToRestyle();
+    if (elementToRestyle) {
+      nsRestyleHint rshint = collection->IsForTransitions()
+        ? eRestyle_CSSTransitions : eRestyle_CSSAnimations;
+      aTracker.AddPendingRestyle(elementToRestyle, rshint, nsChangeHint(0));
     }
-
-    nsRestyleHint rshint = collection->IsForTransitions()
-      ? eRestyle_CSSTransitions : eRestyle_CSSAnimations;
-    aTracker.AddPendingRestyle(collection->mElement, rshint, nsChangeHint(0));
   }
 }
 
@@ -411,6 +406,32 @@ AnimationPlayerCollection::HasAnimationOfProperty(
     }
   }
   return false;
+}
+
+mozilla::dom::Element*
+AnimationPlayerCollection::GetElementToRestyle() const
+{
+  if (IsForElement()) {
+    return mElement;
+  }
+
+  nsIFrame* primaryFrame = mElement->GetPrimaryFrame();
+  if (!primaryFrame) {
+    return nullptr;
+  }
+  nsIFrame* pseudoFrame;
+  if (IsForBeforePseudo()) {
+    pseudoFrame = nsLayoutUtils::GetBeforeFrame(primaryFrame);
+  } else if (IsForAfterPseudo()) {
+    pseudoFrame = nsLayoutUtils::GetAfterFrame(primaryFrame);
+  } else {
+    MOZ_ASSERT(false, "unknown mElementProperty");
+    return nullptr;
+  }
+  if (!pseudoFrame) {
+    return nullptr;
+  }
+  return pseudoFrame->GetContent()->AsElement();
 }
 
 /* static */ void

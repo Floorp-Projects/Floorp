@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const SEARCH_ENGINES = {
   "Google": {
     // This is the "2x" image designed for OS X retina resolution, Windows at 192dpi, etc.;
@@ -269,13 +271,13 @@ function ensureSnippetsMapThen(aCallback)
 
       // The cache has been filled up, create the snippets map.
       gSnippetsMap = Object.freeze({
-        get: function (aKey) cache.get(aKey),
+        get: (aKey) => cache.get(aKey),
         set: function (aKey, aValue) {
           db.transaction(SNIPPETS_OBJECTSTORE_NAME, "readwrite")
             .objectStore(SNIPPETS_OBJECTSTORE_NAME).put(aValue, aKey);
           return cache.set(aKey, aValue);
         },
-        has: function (aKey) cache.has(aKey),
+        has: (aKey) => cache.has(aKey),
         delete: function (aKey) {
           db.transaction(SNIPPETS_OBJECTSTORE_NAME, "readwrite")
             .objectStore(SNIPPETS_OBJECTSTORE_NAME).delete(aKey);
@@ -286,7 +288,7 @@ function ensureSnippetsMapThen(aCallback)
             .objectStore(SNIPPETS_OBJECTSTORE_NAME).clear();
           return cache.clear();
         },
-        get size() cache.size
+        get size() { return cache.size; },
       });
 
       setTimeout(invokeCallbacks, 0);

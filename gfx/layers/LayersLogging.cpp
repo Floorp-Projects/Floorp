@@ -130,7 +130,7 @@ AppendToString(std::stringstream& aStream, const FrameMetrics& m,
     AppendToString(aStream, m.GetDisplayPortMargins(), " dpm=");
     aStream << nsPrintfCString(" um=%d", m.GetUseDisplayPortMargins()).get();
     AppendToString(aStream, m.GetRootCompositionSize(), " rcs=");
-    AppendToString(aStream, m.mViewport, " v=");
+    AppendToString(aStream, m.GetViewport(), " v=");
     aStream << nsPrintfCString(" z=(ld=%.3f r=%.3f cr=%.3f z=%.3f ts=%.3f)",
             m.mDevPixelsPerCSSPixel.scale, m.mResolution.scale,
             m.mCumulativeResolution.scale, m.GetZoom().scale,
