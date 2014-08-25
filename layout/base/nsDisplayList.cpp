@@ -52,6 +52,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/UniquePtr.h"
 #include "ActiveLayerTracker.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
@@ -1258,9 +1259,10 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                              (!layerManager->IsCompositingCheap() && layerManager->NeedsWidgetInvalidation())) &&
                             widgetTransaction;
 
-  nsAutoPtr<LayerProperties> props(computeInvalidRect ? 
-                                     LayerProperties::CloneFrom(layerManager->GetRoot()) : 
-                                     nullptr);
+  UniquePtr<LayerProperties> props;
+  if (computeInvalidRect) {
+    props = Move(LayerProperties::CloneFrom(layerManager->GetRoot()));
+  }
 
   ContainerLayerParameters containerParameters
     (presShell->GetXResolution(), presShell->GetYResolution());
