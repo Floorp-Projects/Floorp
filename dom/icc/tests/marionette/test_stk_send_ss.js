@@ -9,6 +9,14 @@ function testSendSS(command, expect) {
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.text, expect.title, expect.name);
 
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   runNextTest();
 }
 
@@ -51,29 +59,41 @@ let tests = [
    func: testSendSS,
    expect: {name: "send_ss_cmd_5_with_alpha_identifier",
             commandQualifier: 0x00,
-            title: "Basic Icon"}},
+            title: "Basic Icon",
+            iconSelfExplanatory: true,
+            icons: [basicIcon]}},
   {command: "d01f810301110082028183891091aa120a214365870921436587a901fb9e020001",
    func: testSendSS,
    expect: {name: "send_ss_cmd_5_without_alpha_identifier",
-            commandQualifier: 0x00}},
-  {command: "d02c810301110082028183850b436f6c6f75722049636f6e891091aa120a214365870921436587a901fb9e020002",
+            commandQualifier: 0x00,
+            iconSelfExplanatory: true,
+            icons: [basicIcon]}},
+  {command: "d02c810301110082028183850b436f6c6f75722049636f6e891091aa120a214365870921436587a901fb9e020003",
    func: testSendSS,
    expect: {name: "send_ss_cmd_6_with_alpha_identifier",
             commandQualifier: 0x00,
-            title: "Colour Icon"}},
-  {command: "d01f810301110082028183891091aa120a214365870921436587a901fb9e020002",
+            title: "Colour Icon",
+            iconSelfExplanatory: true,
+            icons: [colorIcon]}},
+  {command: "d01f810301110082028183891091aa120a214365870921436587a901fb9e020003",
    func: testSendSS,
    expect: {name: "send_ss_cmd_6_without_alpha_identifier",
-            commandQualifier: 0x00}},
+            commandQualifier: 0x00,
+            iconSelfExplanatory: true,
+            icons: [colorIcon]}},
   {command: "d02b810301110082028183850a42617369632049636f6e891091aa120a214365870921436587a901fb9e020101",
    func: testSendSS,
    expect: {name: "send_ss_cmd_7_with_alpha_identifier",
             commandQualifier: 0x00,
-            title: "Basic Icon"}},
+            title: "Basic Icon",
+            iconSelfExplanatory: false,
+            icons: [basicIcon]}},
   {command: "d01f810301110082028183891091aa120a214365870921436587a901fb9e020101",
    func: testSendSS,
    expect: {name: "send_ss_cmd_7_without_alpha_identifier",
-            commandQualifier: 0x00}},
+            commandQualifier: 0x00,
+            iconSelfExplanatory: false,
+            icons: [basicIcon]}},
   {command: "d036810301110082028183851980041704140420041004120421042204120423041904220415891091aa120a214365870921436587a901fb",
    func: testSendSS,
    expect: {name: "send_ss_cmd_8_with_alpha_identifier",

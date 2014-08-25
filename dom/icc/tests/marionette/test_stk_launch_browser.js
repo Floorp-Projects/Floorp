@@ -12,6 +12,14 @@ function testLaunchBrowser(command, expect) {
     is(command.options.confirmMessage, expect.text, expect.name);
   }
 
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   runNextTest();
 }
 
@@ -69,13 +77,17 @@ let tests = [
    expect: {name: "launch_browser_cmd_9",
             commandQualifier: 0x02,
             url: "",
-            text: "Not self explan."}},
+            text: "Not self explan.",
+            iconSelfExplanatory: false,
+            icons: [basicIcon]}},
   {command: "d01d8103011502820281823100050c53656c66206578706c616e2e1e020001",
    func: testLaunchBrowser,
    expect: {name: "launch_browser_cmd_10",
             commandQualifier: 0x02,
             url: "",
-            text: "Self explan."}},
+            text: "Self explan.",
+            iconSelfExplanatory: true,
+            icons: [basicIcon]}},
   {command: "d0208103011500820281823100050d44656661756c742055524c2031d004000d00b4",
    func: testLaunchBrowser,
    expect: {name: "launch_browser_cmd_11",
