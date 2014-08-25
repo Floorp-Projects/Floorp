@@ -700,13 +700,17 @@ NrSocketIpc::NrSocketIpc(const nsCOMPtr<nsIEventTarget> &main_thread)
 
 // IUDPSocketInternal interfaces
 // callback while error happened in UDP socket operation
-NS_IMETHODIMP NrSocketIpc::CallListenerError(const nsACString &message,
+NS_IMETHODIMP NrSocketIpc::CallListenerError(const nsACString &type,
+                                             const nsACString &message,
                                              const nsACString &filename,
-                                             uint32_t line_number) {
+                                             uint32_t line_number,
+                                             uint32_t column_number) {
   ASSERT_ON_THREAD(main_thread_);
+  MOZ_ASSERT(type.EqualsLiteral("onerror"));
 
-  r_log(LOG_GENERIC, LOG_ERR, "UDP socket error:%s at %s:%d",
-        message.BeginReading(), filename.BeginReading(), line_number );
+  r_log(LOG_GENERIC, LOG_ERR, "UDP socket error:%s at %s:%d:%d",
+        message.BeginReading(), filename.BeginReading(),
+        line_number, column_number);
 
   ReentrantMonitorAutoEnter mon(monitor_);
   err_ = true;
@@ -716,11 +720,12 @@ NS_IMETHODIMP NrSocketIpc::CallListenerError(const nsACString &message,
 }
 
 // callback while receiving UDP packet
-NS_IMETHODIMP NrSocketIpc::CallListenerReceivedData(const nsACString &host,
-                                                    uint16_t port,
-                                                    const uint8_t *data,
+NS_IMETHODIMP NrSocketIpc::CallListenerReceivedData(const nsACString &type,
+                                                    const nsACString &host,
+                                                    uint16_t port, uint8_t *data,
                                                     uint32_t data_length) {
   ASSERT_ON_THREAD(main_thread_);
+  MOZ_ASSERT(type.EqualsLiteral("ondata"));
 
   PRNetAddr addr;
   memset(&addr, 0, sizeof(addr));
@@ -753,68 +758,89 @@ NS_IMETHODIMP NrSocketIpc::CallListenerReceivedData(const nsACString &host,
   return NS_OK;
 }
 
-// callback while UDP socket is opened
-NS_IMETHODIMP NrSocketIpc::CallListenerOpened() {
+// callback while UDP socket is opened or closed
+NS_IMETHODIMP NrSocketIpc::CallListenerVoid(const nsACString &type) {
   ASSERT_ON_THREAD(main_thread_);
-  ReentrantMonitorAutoEnter mon(monitor_);
+  if (type.EqualsLiteral("onopen")) {
+    ReentrantMonitorAutoEnter mon(monitor_);
 
-  uint16_t port;
-  if (NS_FAILED(socket_child_->GetLocalPort(&port))) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to get local port");
-    return NS_OK;
+    uint16_t port;
+    if (NS_FAILED(socket_child_->GetLocalPort(&port))) {
+      err_ = true;
+      MOZ_ASSERT(false, "Failed to get local port");
+      return NS_OK;
+    }
+
+    nsAutoCString address;
+    if(NS_FAILED(socket_child_->GetLocalAddress(address))) {
+      err_ = true;
+      MOZ_ASSERT(false, "Failed to get local address");
+      return NS_OK;
+    }
+
+    PRNetAddr praddr;
+    if (PR_SUCCESS != PR_InitializeNetAddr(PR_IpAddrAny, port, &praddr)) {
+      err_ = true;
+      MOZ_ASSERT(false, "Failed to set port in PRNetAddr");
+      return NS_OK;
+    }
+
+    if (PR_SUCCESS != PR_StringToNetAddr(address.BeginReading(), &praddr)) {
+      err_ = true;
+      MOZ_ASSERT(false, "Failed to convert local host to PRNetAddr");
+      return NS_OK;
+    }
+
+    nr_transport_addr expected_addr;
+    if(nr_transport_addr_copy(&expected_addr, &my_addr_)) {
+      err_ = true;
+      MOZ_ASSERT(false, "Failed to copy my_addr_");
+    }
+
+    if (nr_praddr_to_transport_addr(&praddr, &my_addr_, IPPROTO_UDP, 1)) {
+      err_ = true;
+      MOZ_ASSERT(false, "Failed to copy local host to my_addr_");
+    }
+
+    if (nr_transport_addr_cmp(&expected_addr, &my_addr_,
+                              NR_TRANSPORT_ADDR_CMP_MODE_ADDR)) {
+      err_ = true;
+      MOZ_ASSERT(false, "Address of opened socket is not expected");
+    }
+
+    mon.NotifyAll();
+  } else if (type.EqualsLiteral("onclose")) {
+    // Already handled in UpdateReadyState, nothing to do here
+  } else {
+    MOZ_ASSERT(false, "Received unexpected event");
   }
-
-  nsAutoCString address;
-  if(NS_FAILED(socket_child_->GetLocalAddress(address))) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to get local address");
-    return NS_OK;
-  }
-
-  PRNetAddr praddr;
-  if (PR_SUCCESS != PR_InitializeNetAddr(PR_IpAddrAny, port, &praddr)) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to set port in PRNetAddr");
-    return NS_OK;
-  }
-
-  if (PR_SUCCESS != PR_StringToNetAddr(address.BeginReading(), &praddr)) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to convert local host to PRNetAddr");
-    return NS_OK;
-  }
-
-  nr_transport_addr expected_addr;
-  if(nr_transport_addr_copy(&expected_addr, &my_addr_)) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to copy my_addr_");
-  }
-
-  if (nr_praddr_to_transport_addr(&praddr, &my_addr_, IPPROTO_UDP, 1)) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to copy local host to my_addr_");
-  }
-
-  if (nr_transport_addr_cmp(&expected_addr, &my_addr_,
-                            NR_TRANSPORT_ADDR_CMP_MODE_ADDR)) {
-    err_ = true;
-    MOZ_ASSERT(false, "Address of opened socket is not expected");
-  }
-
-  mon.NotifyAll();
 
   return NS_OK;
 }
 
-// callback while UDP socket is closed
-NS_IMETHODIMP NrSocketIpc::CallListenerClosed() {
+// callback while UDP packet is sent
+NS_IMETHODIMP NrSocketIpc::CallListenerSent(const nsACString &type,
+                                            nsresult result) {
+  ASSERT_ON_THREAD(main_thread_);
+  MOZ_ASSERT(type.EqualsLiteral("onsent"));
+
+  if (NS_FAILED(result)) {
+    ReentrantMonitorAutoEnter mon(monitor_);
+    err_ = true;
+  }
+  return NS_OK;
+}
+
+// callback for state update after every socket operation
+NS_IMETHODIMP NrSocketIpc::UpdateReadyState(const nsACString &readyState) {
   ASSERT_ON_THREAD(main_thread_);
 
   ReentrantMonitorAutoEnter mon(monitor_);
 
-  MOZ_ASSERT(state_ == NR_CONNECTED || state_ == NR_CLOSING);
-  state_ = NR_CLOSED;
+  if (readyState.EqualsLiteral("closed")) {
+    MOZ_ASSERT(state_ == NR_CONNECTED || state_ == NR_CLOSING);
+    state_ = NR_CLOSED;
+  }
 
   return NS_OK;
 }
@@ -1004,20 +1030,14 @@ void NrSocketIpc::create_m(const nsACString &host, const uint16_t port) {
   if (NS_FAILED(rv)) {
     err_ = true;
     MOZ_ASSERT(false, "Failed to create UDPSocketChild");
-    mon.NotifyAll();
-    return;
   }
 
   socket_child_ = new nsMainThreadPtrHolder<nsIUDPSocketChild>(socketChild);
   socket_child_->SetFilterName(nsCString("stun"));
 
-  if (NS_FAILED(socket_child_->Bind(this, host, port,
-                                    /* reuse = */ false,
-                                    /* loopback = */ false))) {
+  if (NS_FAILED(socket_child_->Bind(this, host, port))) {
     err_ = true;
     MOZ_ASSERT(false, "Failed to create UDP socket");
-    mon.NotifyAll();
-    return;
   }
 }
 
