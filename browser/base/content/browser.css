@@ -698,6 +698,10 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#identity-request-notification");
 }
 
+#bad-content-notification {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#bad-content-notification");
+}
+
 #click-to-play-plugins-notification {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#click-to-play-plugins-notification");
 }

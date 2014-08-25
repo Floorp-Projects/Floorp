@@ -63,10 +63,12 @@ browser.jar:
   skin/classic/browser/menuPanel-help@2x.png
   skin/classic/browser/menuPanel-small.png
   skin/classic/browser/menuPanel-small@2x.png
-  skin/classic/browser/mixed-content-blocked-16.png
-  skin/classic/browser/mixed-content-blocked-16@2x.png
-  skin/classic/browser/mixed-content-blocked-64.png
-  skin/classic/browser/mixed-content-blocked-64@2x.png
+  skin/classic/browser/bad-content-blocked-16.png
+  skin/classic/browser/bad-content-blocked-16@2x.png
+  skin/classic/browser/bad-content-blocked-64.png
+  skin/classic/browser/bad-content-blocked-64@2x.png
+  skin/classic/browser/bad-content-unblocked-16.png
+  skin/classic/browser/bad-content-unblocked-16@2x.png
   skin/classic/browser/panel-expander-closed.png
   skin/classic/browser/panel-expander-closed@2x.png
   skin/classic/browser/panel-expander-open.png

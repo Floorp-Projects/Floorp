@@ -25,9 +25,7 @@ const isOSX10_6 = (() => {
   return vString && /darwin/.test(platform()) && /10\.6/.test(vString);
 })();
 
-const {
-  search
-} = require('sdk/places/history');
+const { search } = require('sdk/places/history');
 const {
   invalidResolve, invalidReject, createTree, createBookmark,
   compareWithHost, addVisits, resetPlaces, createBookmarkItem,
@@ -37,21 +35,20 @@ const { save, MENU, UNSORTED } = require('sdk/places/bookmarks');
 const { promisedEmitter } = require('sdk/places/utils');
 
 exports['test bookmark-item-added'] = function (assert, done) {
-  function handler ({type, data}) {
+  events.on('data', function handler ({type, data}) {
     if (type !== 'bookmark-item-added') return;
     if (data.title !== 'bookmark-added-title') return;
+    events.off('data', handler);
 
     assert.equal(type, 'bookmark-item-added', 'correct type in bookmark-added event');
-    assert.equal(data.type, 'bookmark', 'correct data in bookmark-added event');
-    assert.ok(data.id != null, 'correct data in bookmark-added event');
-    assert.ok(data.parentId != null, 'correct data in bookmark-added event');
-    assert.ok(data.index != null, 'correct data in bookmark-added event');
-    assert.equal(data.url, 'http://moz.com/', 'correct data in bookmark-added event');
-    assert.ok(data.dateAdded != null, 'correct data in bookmark-added event');
-    events.off('data', handler);
+    assert.equal(data.type, 'bookmark', 'correct data.type in bookmark-added event');
+    assert.ok(data.id != null, 'correct data.id in bookmark-added event');
+    assert.notEqual(data.parentId, null, 'correct data.parentId in bookmark-added event');
+    assert.ok(data.index >= 0, 'correct data.index in bookmark-added event');
+    assert.equal(data.url, 'http://moz.com/', 'correct data.url in bookmark-added event');
+    assert.notEqual(data.dateAdded, null, 'correct data.dateAdded in bookmark-added event');
     done();
-  }
-  events.on('data', handler);
+  });
   createBookmark({ title: 'bookmark-added-title' });
 };
 
@@ -62,7 +59,7 @@ exports['test bookmark-item-changed'] = function (assert, done) {
   // Due to bug 969616 and bug 971964, disabling tests in 10.6 (happens only
   // in debug builds) to prevent intermittent failures
   if (isOSX10_6) {
-    assert.ok(true, 'skipping test in OSX 10.6'); 
+    assert.pass('skipping test in OSX 10.6');
     return done();
   }
 
@@ -94,7 +91,7 @@ exports['test bookmark-item-changed'] = function (assert, done) {
     id = item.id;
     item.title = 'bookmark-changed-title-2';
     return saveP(item);
-  }).then(complete);
+  }).then(complete).catch(assert.fail);
 };
 
 exports['test bookmark-item-moved'] = function (assert, done) {
@@ -105,7 +102,7 @@ exports['test bookmark-item-moved'] = function (assert, done) {
   // Due to bug 969616 and bug 971964, disabling tests in 10.6 (happens only
   // in debug builds) to prevent intermittent failures
   if (isOSX10_6) {
-    assert.ok(true, 'skipping test in OSX 10.6'); 
+    assert.ok(true, 'skipping test in OSX 10.6');
     return done();
   }
 
@@ -138,7 +135,7 @@ exports['test bookmark-item-moved'] = function (assert, done) {
     previousParentId = bmsrv.getFolderIdForItem(id);
     item.group = MENU;
     return saveP(item);
-  }).then(complete);
+  }).then(complete).catch(assert.fail);
 };
 
 exports['test bookmark-item-removed'] = function (assert, done) {
@@ -171,7 +168,7 @@ exports['test bookmark-item-removed'] = function (assert, done) {
     id = item.id;
     item.remove = true;
     return saveP(item);
-  }).then(complete);
+  }).then(complete).catch(assert.fail);
 };
 
 exports['test bookmark-item-visited'] = function (assert, done) {
@@ -205,7 +202,7 @@ exports['test bookmark-item-visited'] = function (assert, done) {
   }).then(item => {
     id = item.id;
     return addVisits('http://bookmark-item-visited.com/');
-  }).then(complete);
+  }).then(complete).catch(assert.fail);
 };
 
 exports['test history-start-batch, history-end-batch, history-start-clear'] = function (assert, done) {

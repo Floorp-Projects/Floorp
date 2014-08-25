@@ -13,7 +13,7 @@ const { URL, isLocalURL } = require('../url');
 const events = require("../system/events");
 const { loadSheet, removeSheet, isTypeValid } = require("./utils");
 const { isString } = require("../lang/type");
-const { attachTo, detachFrom, getTargetWindow } = require("../content/mod");
+const { attachTo, detachFrom } = require("../content/mod");
 const { data } = require('../self');
 
 const { freeze, create } = Object;

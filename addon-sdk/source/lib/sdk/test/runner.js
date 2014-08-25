@@ -9,6 +9,7 @@ module.metadata = {
 
 var { exit, stdout } = require("../system");
 var cfxArgs = require("../test/options");
+var events = require("../system/events");
 
 function runTests(findAndRunTests) {
   var harness = require("./harness");
@@ -18,14 +19,18 @@ function runTests(findAndRunTests) {
     var total = tests.passed + tests.failed;
     stdout.write(tests.passed + " of " + total + " tests passed.\n");
 
+    events.emit("sdk:test:results", { data: JSON.stringify(tests) });
+
     if (tests.failed == 0) {
       if (tests.passed === 0)
         stdout.write("No tests were run\n");
-      exit(0);
+      if (!cfxArgs.keepOpen)
+        exit(0);
     } else {
       if (cfxArgs.verbose || cfxArgs.parseable)
         printFailedTests(tests, stdout.write);
-      exit(1);
+      if (!cfxArgs.keepOpen)
+        exit(1);
     }
   };
 

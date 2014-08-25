@@ -19,6 +19,7 @@ exports.promise = require('sdk/core/promise');
 
 exports.localJSM  = require('./dir/test.jsm');
 exports.promisejsm = require('modules/Promise.jsm').Promise;
+exports.require = require;
 
 let math = require('test-math');
 exports.areModulesCached = (math === exports.math);
