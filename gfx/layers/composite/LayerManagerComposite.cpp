@@ -713,7 +713,7 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
   }
 }
 
-#ifdef MOZ_ANDROID_OMTC
+#ifdef MOZ_WIDGET_ANDROID
 static float
 GetDisplayportCoverage(const CSSRect& aDisplayPort,
                        const Matrix4x4& aTransformToScreen,
@@ -735,7 +735,7 @@ GetDisplayportCoverage(const CSSRect& aDisplayPort,
 
   return 1.0f;
 }
-#endif // MOZ_ANDROID_OMTC
+#endif // MOZ_WIDGET_ANDROID
 
 float
 LayerManagerComposite::ComputeRenderIntegrity()
@@ -756,7 +756,7 @@ LayerManagerComposite::ComputeRenderIntegrity()
   float lowPrecisionMultiplier = 1.0f;
   float highPrecisionMultiplier = 1.0f;
 
-#ifdef MOZ_ANDROID_OMTC
+#ifdef MOZ_WIDGET_ANDROID
   // Use the transform on the primary scrollable layer and its FrameMetrics
   // to find out how much of the viewport the current displayport covers
   Layer* primaryScrollable = GetPrimaryScrollableLayer();
@@ -807,7 +807,7 @@ LayerManagerComposite::ComputeRenderIntegrity()
   if (highPrecisionMultiplier <= 0.0f && lowPrecisionMultiplier <= 0.0f) {
     return 0.0f;
   }
-#endif // MOZ_ANDROID_OMTC
+#endif // MOZ_WIDGET_ANDROID
 
   nsIntRegion screenRegion(screenRect);
   nsIntRegion lowPrecisionScreenRegion(screenRect);

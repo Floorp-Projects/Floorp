@@ -404,7 +404,7 @@ nsSecureBrowserUIImpl::Notify(nsIDOMHTMLFormElement* aDOMForm,
   
   nsCOMPtr<nsIContent> formNode = do_QueryInterface(aDOMForm);
 
-  nsCOMPtr<nsIDocument> document = formNode->GetDocument();
+  nsCOMPtr<nsIDocument> document = formNode->GetComposedDoc();
   if (!document) return NS_OK;
 
   nsIPrincipal *principal = formNode->NodePrincipal();

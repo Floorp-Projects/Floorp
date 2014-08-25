@@ -247,7 +247,6 @@ void
 HTMLFormElement::Submit(ErrorResult& aRv)
 {
   // Send the submit event
-  nsRefPtr<nsPresContext> presContext = GetPresContext();
   if (mPendingSubmission) {
     // aha, we have a pending submission that was not flushed
     // (this happens when form.submit() is called twice)

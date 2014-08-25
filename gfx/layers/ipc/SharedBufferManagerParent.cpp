@@ -17,6 +17,7 @@
 #include "mozilla/UniquePtr.h"          // for UniquePtr
 #include "nsIMemoryReporter.h"
 #ifdef MOZ_WIDGET_GONK
+#include "mozilla/LinuxUtils.h"
 #include "ui/PixelFormat.h"
 #endif
 #include "nsPrintfCString.h"
@@ -52,6 +53,9 @@ public:
       base::ProcessId pid = it->first;
       SharedBufferManagerParent *mgr = it->second;
 
+      nsAutoCString pidName;
+      LinuxUtils::GetThreadName(pid, pidName);
+
       MutexAutoLock lock(mgr->mLock);
       std::map<int64_t, android::sp<android::GraphicBuffer> >::iterator buf_it;
       for (buf_it = mgr->mBuffers.begin(); buf_it != mgr->mBuffers.end(); buf_it++) {
@@ -65,8 +69,8 @@ public:
           // Special case for BSP specific formats (mainly YUV formats, count it as normal YUV buffer).
           : (stride * height * 3 / 2);
 
-        nsPrintfCString gpath("gralloc/pid(%d)/buffer(width=%d, height=%d, bpp=%d, stride=%d)",
-            pid, gb->getWidth(), height, bpp, stride);
+        nsPrintfCString gpath("gralloc/%s (pid=%d)/buffer(width=%d, height=%d, bpp=%d, stride=%d)",
+            pidName.get(), pid, gb->getWidth(), height, bpp, stride);
 
         rv = aHandleReport->Callback(EmptyCString(), gpath, KIND_OTHER, UNITS_BYTES, amount,
             NS_LITERAL_CSTRING(

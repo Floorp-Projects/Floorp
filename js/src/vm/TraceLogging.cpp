@@ -260,7 +260,7 @@ TraceLogger::disable()
     }
 
     JS_ASSERT(enabled == 1);
-    while (stack.currentId() > 0)
+    while (stack.size() > 1)
         stopEvent();
 
     enabled = 0;
@@ -286,7 +286,7 @@ TraceLogger::flush()
         if (bytesWritten < tree.size())
             return false;
 
-        treeOffset += tree.currentId();
+        treeOffset += tree.lastEntryId();
         tree.clear();
     }
 
@@ -323,7 +323,7 @@ TraceLogger::~TraceLogger()
         // We temporary enable logging for this. Stop doesn't need any extra data,
         // so is safe to do, even when we encountered OOM.
         enabled = 1;
-        while (stack.currentId() > 0)
+        while (stack.size() > 1)
             stopEvent();
         enabled = 0;
     }
@@ -602,7 +602,7 @@ TraceLogger::startEvent(uint32_t id)
 TraceLogger::StackEntry &
 TraceLogger::getActiveAncestor()
 {
-    uint32_t parentId = stack.currentId();
+    uint32_t parentId = stack.lastEntryId();
     while (!stack[parentId].active())
         parentId--;
     return stack[parentId];
@@ -636,14 +636,14 @@ TraceLogger::startEvent(uint32_t id, uint64_t timestamp)
 
     if (parent.lastChildId() == 0) {
         MOZ_ASSERT(!entry.hasChildren());
-        MOZ_ASSERT(parent.treeId() == tree.currentId() + treeOffset);
+        MOZ_ASSERT(parent.treeId() == tree.lastEntryId() + treeOffset);
 
         if (!updateHasChildren(parent.treeId()))
             return false;
     } else {
         MOZ_ASSERT(entry.hasChildren());
 
-        if (!updateNextId(parent.lastChildId(), tree.nextId() + treeOffset))
+        if (!updateNextId(parent.lastChildId(), tree.size() + treeOffset))
             return false;
     }
 
@@ -657,12 +657,12 @@ TraceLogger::startEvent(uint32_t id, uint64_t timestamp)
 
     // Add a new stack entry.
     StackEntry &stackEntry = stack.pushUninitialized();
-    stackEntry.setTreeId(tree.currentId() + treeOffset);
+    stackEntry.setTreeId(tree.lastEntryId() + treeOffset);
     stackEntry.setLastChildId(0);
     stackEntry.setActive(true);
 
     // Set the last child of the parent to this newly added entry.
-    parent.setLastChildId(tree.currentId() + treeOffset);
+    parent.setLastChildId(tree.lastEntryId() + treeOffset);
 
     return true;
 }
@@ -671,10 +671,10 @@ void
 TraceLogger::stopEvent(uint32_t id)
 {
 #ifdef DEBUG
-    if (stack.currentId() > 0) {
+    if (stack.size() > 1) {
         TreeEntry entry;
-        MOZ_ASSERT_IF(stack.current().active(), getTreeEntry(stack.current().treeId(), &entry));
-        MOZ_ASSERT_IF(stack.current().active(), entry.textId() == id);
+        MOZ_ASSERT_IF(stack.lastEntry().active(), getTreeEntry(stack.lastEntry().treeId(), &entry));
+        MOZ_ASSERT_IF(stack.lastEntry().active(), entry.textId() == id);
     }
 #endif
     stopEvent();
@@ -683,16 +683,16 @@ TraceLogger::stopEvent(uint32_t id)
 void
 TraceLogger::stopEvent()
 {
-    if (enabled > 0 && stack.current().active()) {
+    if (enabled > 0 && stack.lastEntry().active()) {
         uint64_t stop = rdtsc() - traceLoggers.startupTime;
-        if (!updateStop(stack.current().treeId(), stop)) {
+        if (!updateStop(stack.lastEntry().treeId(), stop)) {
             fprintf(stderr, "TraceLogging: Failed to stop an event.\n");
             enabled = 0;
             failed = true;
             return;
         }
     }
-    if (stack.currentId() == 0) {
+    if (stack.size() == 1) {
         if (enabled == 0)
             return;
 

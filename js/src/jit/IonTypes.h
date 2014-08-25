@@ -222,7 +222,7 @@ BailoutKindString(BailoutKind kind)
       case Bailout_IonExceptionDebugMode:
         return "Bailout_IonExceptionDebugMode";
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid BailoutKind");
+        MOZ_CRASH("Invalid BailoutKind");
     }
 }
 
@@ -362,6 +362,7 @@ enum MIRType
     MIRType_Elements,                // An elements vector
     MIRType_Pointer,                 // An opaque pointer that receives no special treatment
     MIRType_Shape,                   // A Shape pointer.
+    MIRType_TypeObject,              // A TypeObject pointer.
     MIRType_ForkJoinContext,         // js::ForkJoinContext*
     MIRType_Last = MIRType_ForkJoinContext,
     MIRType_Float32x4 = MIRType_Float32 | (2 << VECTOR_SCALE_SHIFT),
@@ -407,7 +408,7 @@ MIRTypeFromValueType(JSValueType type)
       case JSVAL_TYPE_UNKNOWN:
         return MIRType_Value;
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected jsval type");
+        MOZ_CRASH("unexpected jsval type");
     }
 }
 
@@ -494,7 +495,7 @@ StringFromMIRType(MIRType type)
     case MIRType_Float32x4:
       return "Float32x4";
     default:
-      MOZ_ASSUME_UNREACHABLE("Unknown MIRType.");
+      MOZ_CRASH("Unknown MIRType.");
   }
 }
 
@@ -540,7 +541,7 @@ SimdTypeToLength(MIRType type)
         return 4;
       default: break;
     }
-    MOZ_ASSUME_UNREACHABLE("unexpected SIMD kind");
+    MOZ_CRASH("unexpected SIMD kind");
 }
 
 static inline MIRType
@@ -554,7 +555,7 @@ SimdTypeToScalarType(MIRType type)
         return MIRType_Float32;
       default: break;
     }
-    MOZ_ASSUME_UNREACHABLE("unexpected SIMD kind");
+    MOZ_CRASH("unexpected SIMD kind");
 }
 
 // Indicates a lane in a SIMD register: X for the first lane, Y for the second,

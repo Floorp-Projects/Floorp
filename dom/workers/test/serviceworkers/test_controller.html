@@ -16,8 +16,8 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    // We use the control* scope for the less specific registration. The window will register a worker on controller/*
-    return navigator.serviceWorker.register("worker.js", { scope: "./control*" });
+    // We use the control scope for the less specific registration. The window will register a worker on controller/
+    return navigator.serviceWorker.register("worker.js", { scope: "./control" });
   }
 
   function testController() {

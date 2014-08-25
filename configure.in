@@ -3797,7 +3797,6 @@ MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
-MOZ_ANDROID_OMTC=
 MOZ_ANDROID_APZ=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -4784,14 +4783,6 @@ if test -n "$MOZ_ANDROID_HISTORY"; then
     else
         AC_MSG_ERROR([Cannot use MOZ_ANDROID_HISTORY alongside MOZ_PLACES.])
     fi
-fi
-
-dnl ========================================================
-dnl = Build with the Android compositor
-dnl ========================================================
-if test -n "$MOZ_ANDROID_OMTC"; then
-     dnl Do this if defined in confvars.sh
-     AC_DEFINE(MOZ_ANDROID_OMTC)
 fi
 
 dnl ========================================================
@@ -8374,7 +8365,6 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
-AC_SUBST(MOZ_ANDROID_OMTC)
 AC_SUBST(MOZ_ANDROID_APZ)
 AC_SUBST(MOZ_ANDROID_ANR_REPORTER)
 AC_SUBST(MOZ_CRASHREPORTER)

@@ -943,7 +943,7 @@ inDOMUtils::GetRuleNodeForElement(dom::Element* aElement,
   *aRuleNode = nullptr;
   *aStyleContext = nullptr;
 
-  nsIDocument* doc = aElement->GetDocument();
+  nsIDocument* doc = aElement->GetComposedDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
   nsIPresShell *presShell = doc->GetShell();

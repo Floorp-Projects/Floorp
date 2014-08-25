@@ -72,18 +72,15 @@ FrozenImage::GetImageContainer(layers::LayerManager* aManager,
 
 NS_IMETHODIMP
 FrozenImage::Draw(gfxContext* aContext,
-                  GraphicsFilter aFilter,
-                  const gfxMatrix& aUserSpaceToImageSpace,
-                  const gfxRect& aFill,
-                  const nsIntRect& aSubimage,
-                  const nsIntSize& aViewportSize,
-                  const SVGImageContext* aSVGContext,
+                  const nsIntSize& aSize,
+                  const ImageRegion& aRegion,
                   uint32_t /* aWhichFrame - ignored */,
+                  GraphicsFilter aFilter,
+                  const Maybe<SVGImageContext>& aSVGContext,
                   uint32_t aFlags)
 {
-  return InnerImage()->Draw(aContext, aFilter, aUserSpaceToImageSpace,
-                            aFill, aSubimage, aViewportSize, aSVGContext,
-                            FRAME_FIRST, aFlags);
+  return InnerImage()->Draw(aContext, aSize, aRegion, FRAME_FIRST,
+                            aFilter, aSVGContext, aFlags);
 }
 
 NS_IMETHODIMP_(void)

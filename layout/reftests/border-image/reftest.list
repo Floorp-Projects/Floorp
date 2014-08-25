@@ -3,7 +3,9 @@
 == solid-image-2.html solid-image-2-ref.html
 == solid-image-2a.html solid-image-2-ref.html
 == multicolor-image-1.html multicolor-image-1-ref.html
-== multicolor-image-2.html multicolor-image-2-ref.html
+# This is fuzzy temporarily until bug 1044702 makes it possible to use source
+# clipping on Windows. (Any other fix would have a significant perf cost.)
+fuzzy-if(winWidget,1,1) == multicolor-image-2.html multicolor-image-2-ref.html
 == multicolor-image-3.html multicolor-image-3-ref.html
 == multicolor-image-4.html multicolor-image-4-ref.html
 == multicolor-image-5.html multicolor-image-5-ref.html
