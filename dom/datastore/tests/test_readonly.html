@@ -40,6 +40,9 @@
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 
+    SpecialPowers.autoConfirmAppUninstall(continueTest);
+    yield undefined;
+
     var request = navigator.mozApps.install(gHostedManifestURL);
     request.onerror = cbError;
     request.onsuccess = continueTest;
