@@ -98,12 +98,6 @@ public:
     return false;
   }
 
-  virtual bool KillChild()
-  {
-    // By default, does nothing.
-    return false;
-  }
-
 protected:
   bool BuildClonedMessageDataForParent(nsIContentParent* aParent,
                                        const StructuredCloneData& aData,
