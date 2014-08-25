@@ -164,7 +164,7 @@ static inline Result ResponseData(
 static inline Result SingleResponse(Input& input, Context& context);
 static Result ExtensionNotUnderstood(Input& extnID,
                                      const SECItem& extnValue,
-                                     /*out*/ bool& understood);
+                                     bool critical, /*out*/ bool& understood);
 static inline Result CertID(Input& input,
                             const Context& context,
                             /*out*/ bool& match);
@@ -833,7 +833,7 @@ KeyHash(TrustDomain& trustDomain, const SECItem& subjectPublicKeyInfo,
 
 Result
 ExtensionNotUnderstood(Input& /*extnID*/, const SECItem& /*extnValue*/,
-                       /*out*/ bool& understood)
+                       bool /*critical*/, /*out*/ bool& understood)
 {
   understood = false;
   return Success;
