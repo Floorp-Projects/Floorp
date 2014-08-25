@@ -39,7 +39,6 @@ public:
   virtual void SetPropertyByValue(const BluetoothNamedValue& aValue) MOZ_OVERRIDE;
 
   bool GetEnabled(ErrorResult& aRv);
-  bool IsConnected(uint16_t aProfileId, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest> GetDefaultAdapter(ErrorResult& aRv);
 
