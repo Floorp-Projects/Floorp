@@ -63,6 +63,7 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS += [
     'AbstractMediaDecoder.h',
+    'AudioBufferUtils.h',
     'AudioChannelFormat.h',
     'AudioCompactor.h',
     'AudioMixer.h',
