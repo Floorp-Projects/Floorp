@@ -763,14 +763,12 @@ class RunProgram(MachCommandBase):
     @Command('run', category='post-build', allow_all_args=True,
         description='Run the compiled program.')
     @CommandArgument('params', default=None, nargs='...',
-        help='Command-line arguments to pass to the program.')
+        help='Command-line arguments to be passed through to the program. Not specifying a -profile or -P option will result in a temporary profile being used.')
     @CommandArgument('+remote', '+r', action='store_true',
         help='Do not pass the -no-remote argument by default.')
     @CommandArgument('+background', '+b', action='store_true',
         help='Do not pass the -foreground argument by default on Mac')
-    @CommandArgument('+profile', '+P', action='store_true',
-        help='Specify the profile to use')
-    def run(self, params, remote, background, profile):
+    def run(self, params, remote, background):
         try:
             args = [self.get_binary_path('app')]
         except Exception as e:
@@ -800,7 +798,7 @@ class DebugProgram(MachCommandBase):
     @Command('debug', category='post-build', allow_all_args=True,
         description='Debug the compiled program.')
     @CommandArgument('params', default=None, nargs='...',
-        help='Command-line arguments to pass to the program.')
+        help='Command-line arguments to be passed through to the program. Not specifying a -profile or -P option will result in a temporary profile being used.')
     @CommandArgument('+remote', '+r', action='store_true',
         help='Do not pass the -no-remote argument by default')
     @CommandArgument('+background', '+b', action='store_true',
@@ -809,8 +807,6 @@ class DebugProgram(MachCommandBase):
         help='Name of debugger to launch')
     @CommandArgument('+debugparams', default=None, metavar='params', type=str,
         help='Command-line arguments to pass to GDB or LLDB itself; split as the Bourne shell would.')
-    @CommandArgument('+profile', '+P', action='store_true',
-        help='Specifiy thr profile to use')
     # Bug 933807 introduced JS_DISABLE_SLOW_SCRIPT_SIGNALS to avoid clever
     # segfaults induced by the slow-script-detecting logic for Ion/Odin JITted
     # code.  If we don't pass this, the user will need to periodically type
@@ -818,7 +814,7 @@ class DebugProgram(MachCommandBase):
     # automatic resuming; see the bug.
     @CommandArgument('+slowscript', action='store_true',
         help='Do not set the JS_DISABLE_SLOW_SCRIPT_SIGNALS env variable; when not set, recoverable but misleading SIGSEGV instances may occur in Ion/Odin JIT code')
-    def debug(self, params, remote, background, profile, debugger, debugparams, slowscript):
+    def debug(self, params, remote, background, debugger, debugparams, slowscript):
         import which
         if debugger:
             try:
