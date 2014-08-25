@@ -199,9 +199,10 @@
         ],
         'conditions': [
           ['OS=="android" or OS=="ios"', {
-            'dependencies': [
-              '<(gen_core_neon_offsets_gyp):*',
-            ],
+	    # This also provokes it to try to invoke gypi's in libvpx
+            #'dependencies': [
+            #  '<(gen_core_neon_offsets_gyp):*',
+            #],
 	    #
 	    # We disable the ASM source, because our gyp->Makefile translator
 	    # does not support the build steps to get the asm offsets.
