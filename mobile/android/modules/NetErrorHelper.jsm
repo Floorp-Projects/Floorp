@@ -5,7 +5,9 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/UITelemetry.jsm");
 
 this.EXPORTED_SYMBOLS = ["NetErrorHelper"];
 
@@ -59,3 +61,73 @@ NetErrorHelper.prototype = {
     }
   },
 }
+
+handlers.wifi = {
+  // This registers itself with the nsIObserverService as a weak ref,
+  // so we have to implement GetWeakReference as well.
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+
+  GetWeakReference: function() {
+    return Cu.getWeakReference(this);
+  },
+
+  onPageShown: function(browser) {
+      // If we have a connection, don't bother showing the wifi toggle.
+      let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
+      if (network.isLinkUp && network.linkStatusKnown) {
+        let nodes = browser.contentDocument.querySelectorAll("#wifi");
+        for (let i = 0; i < nodes.length; i++) {
+          nodes[i].style.display = "none";
+        }
+      }
+  },
+
+  handleClick: function(event) {
+    let node = event.target;
+    while(node && node.id !== "wifi") {
+      node = node.parentNode;
+    }
+
+    if (!node) {
+      return;
+    }
+
+    UITelemetry.addEvent("neterror.1", "button", "wifitoggle");
+    // Show indeterminate progress while we wait for the network.
+    node.disabled = true;
+    node.classList.add("inProgress");
+
+    this.node = Cu.getWeakReference(node);
+    Services.obs.addObserver(this, "network:link-status-changed", true);
+
+    sendMessageToJava({
+      type: "Wifi:Enable"
+    });
+  },
+
+  observe: function(subject, topic, data) {
+    let node = this.node.get();
+    if (!node) {
+      return;
+    }
+
+    // Remove the progress bar
+    node.disabled = false;
+    node.classList.remove("inProgress");
+
+    let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
+    if (network.isLinkUp && network.linkStatusKnown) {
+      // If everything worked, reload the page
+      UITelemetry.addEvent("neterror.1", "button", "wifitoggle.reload");
+      Services.obs.removeObserver(this, "network:link-status-changed");
+
+      // Even at this point, Android sometimes lies about the real state of the network and this reload request fails.
+      // Add a 500ms delay before refreshing the page.
+      node.ownerDocument.defaultView.setTimeout(function() {
+        node.ownerDocument.location.reload(false);
+      }, 500);
+    }
+  }
+}
+
