@@ -5,7 +5,7 @@
 
 #include "nsIChannel.idl"
 
-[uuid(0073d67c-a64f-4f45-8f36-02cd0abfeca1)]
+[uuid(ac5bcfe9-fe54-4e9a-95fb-cd7aa558c5bc)]
 interface nsIViewSourceChannel : nsIChannel
 {
     /**
