@@ -10,6 +10,7 @@
 
 #include "mozilla/AutoRestore.h"
 #include "nsIWidget.h"
+#include "nsString.h"
 #include "WidgetUtils.h"
 
 using namespace mozilla::widget;
@@ -90,7 +91,7 @@ BGRIntToRGBString(DWORD color, nsAString& aResult)
 }
 } // anonymous namespace
 
-AsyncColorChooser::AsyncColorChooser(const nsAString& aInitialColor,
+AsyncColorChooser::AsyncColorChooser(COLORREF aInitialColor,
                                      nsIWidget* aParentWidget,
                                      nsIColorPickerShownCallback* aCallback)
   : mInitialColor(aInitialColor)
@@ -120,11 +121,11 @@ AsyncColorChooser::Run()
     options.lStructSize   = sizeof(options);
     options.hwndOwner     = adtw.get();
     options.Flags         = CC_RGBINIT | CC_FULLOPEN;
-    options.rgbResult     = ColorStringToRGB(mInitialColor);
+    options.rgbResult     = mInitialColor;
     options.lpCustColors  = sCustomColors;
 
     if (ChooseColor(&options)) {
-      BGRIntToRGBString(options.rgbResult, mColor);
+      mColor = options.rgbResult;
     }
   } else {
     NS_WARNING("Currently, it's not possible to open more than one color "
@@ -133,7 +134,9 @@ AsyncColorChooser::Run()
   }
 
   if (mCallback) {
-    mCallback->Done(mColor);
+    nsAutoString colorStr;
+    BGRIntToRGBString(mColor, colorStr);
+    mCallback->Done(colorStr);
   }
 
   return NS_OK;
@@ -160,7 +163,7 @@ nsColorPicker::Init(nsIDOMWindow* parent,
   NS_PRECONDITION(parent,
       "Null parent passed to colorpicker, no color picker for you!");
   mParentWidget =  WidgetUtils::DOMWindowToWidget(parent);
-  mInitialColor = aInitialColor;
+  mInitialColor = ColorStringToRGB(aInitialColor);
   return NS_OK;
 }
 
@@ -168,6 +171,8 @@ NS_IMETHODIMP
 nsColorPicker::Open(nsIColorPickerShownCallback* aCallback)
 {
   NS_ENSURE_ARG(aCallback);
-  nsCOMPtr<nsIRunnable> event = new AsyncColorChooser(mInitialColor, mParentWidget, aCallback);
+  nsCOMPtr<nsIRunnable> event = new AsyncColorChooser(mInitialColor,
+                                                      mParentWidget,
+                                                      aCallback);
   return NS_DispatchToMainThread(event);
 }
