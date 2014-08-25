@@ -156,7 +156,7 @@ static inline Result ResponseData(
                        const DERArray& certs);
 static inline Result SingleResponse(Reader& input, Context& context);
 static Result ExtensionNotUnderstood(Reader& extnID, Input extnValue,
-                                     /*out*/ bool& understood);
+                                     bool critical, /*out*/ bool& understood);
 static inline Result CertID(Reader& input,
                             const Context& context,
                             /*out*/ bool& match);
@@ -824,7 +824,7 @@ KeyHash(TrustDomain& trustDomain, const Input subjectPublicKeyInfo,
 
 Result
 ExtensionNotUnderstood(Reader& /*extnID*/, Input /*extnValue*/,
-                       /*out*/ bool& understood)
+                       bool /*critical*/, /*out*/ bool& understood)
 {
   understood = false;
   return Success;
