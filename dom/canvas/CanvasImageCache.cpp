@@ -85,22 +85,14 @@ public:
 static bool sPrefsInitialized = false;
 static int32_t sCanvasImageCacheLimit = 0;
 
+class ImageCacheObserver;
+
 class ImageCache MOZ_FINAL : public nsExpirationTracker<ImageCacheEntryData,4> {
 public:
   // We use 3 generations of 1 second each to get a 2-3 seconds timeout.
   enum { GENERATION_MS = 1000 };
-  ImageCache()
-    : nsExpirationTracker<ImageCacheEntryData,4>(GENERATION_MS)
-    , mTotal(0)
-  {
-    if (!sPrefsInitialized) {
-      sPrefsInitialized = true;
-      Preferences::AddIntVarCache(&sCanvasImageCacheLimit, "canvas.image.cache.limit", 0);
-    }
-  }
-  ~ImageCache() {
-    AgeAllGenerations();
-  }
+  ImageCache();
+  ~ImageCache();
 
   virtual void NotifyExpired(ImageCacheEntryData* aObject)
   {
@@ -112,9 +104,75 @@ public:
 
   nsTHashtable<ImageCacheEntry> mCache;
   size_t mTotal;
+  nsRefPtr<ImageCacheObserver> mImageCacheObserver;
 };
 
 static ImageCache* gImageCache = nullptr;
+
+// Listen memory-pressure event for image cache purge
+class ImageCacheObserver MOZ_FINAL : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  ImageCacheObserver(ImageCache* aImageCache)
+    : mImageCache(aImageCache)
+  {
+    RegisterMemoryPressureEvent();
+  }
+
+  void Destroy()
+  {
+    UnregisterMemoryPressureEvent();
+    mImageCache = nullptr;
+  }
+
+  NS_IMETHODIMP Observe(nsISupports* aSubject,
+                        const char* aTopic,
+                        const char16_t* aSomeData)
+  {
+    if (!mImageCache || strcmp(aTopic, "memory-pressure")) {
+      return NS_OK;
+    }
+
+    mImageCache->AgeAllGenerations();
+    return NS_OK;
+  }
+
+private:
+  virtual ~ImageCacheObserver()
+  {
+  }
+
+  void RegisterMemoryPressureEvent()
+  {
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+
+    MOZ_ASSERT(observerService);
+
+    if (observerService) {
+      observerService->AddObserver(this, "memory-pressure", false);
+    }
+  }
+
+  void UnregisterMemoryPressureEvent()
+  {
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+
+    // Do not assert on observerService here. This might be triggered by
+    // the cycle collector at a late enough time, that XPCOM services are
+    // no longer available. See bug 1029504.
+    if (observerService) {
+        observerService->RemoveObserver(this, "memory-pressure");
+    }
+  }
+
+  ImageCache* mImageCache;
+};
+
+NS_IMPL_ISUPPORTS(ImageCacheObserver, nsIObserver)
 
 class CanvasImageCacheShutdownObserver MOZ_FINAL : public nsIObserver
 {
@@ -123,6 +181,23 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 };
+
+ImageCache::ImageCache()
+  : nsExpirationTracker<ImageCacheEntryData,4>(GENERATION_MS)
+  , mTotal(0)
+{
+  if (!sPrefsInitialized) {
+    sPrefsInitialized = true;
+    Preferences::AddIntVarCache(&sCanvasImageCacheLimit, "canvas.image.cache.limit", 0);
+  }
+  mImageCacheObserver = new ImageCacheObserver(this);
+  MOZ_RELEASE_ASSERT(mImageCacheObserver, "Can't alloc ImageCacheObserver");
+}
+
+ImageCache::~ImageCache() {
+  AgeAllGenerations();
+  mImageCacheObserver->Destroy();
+}
 
 void
 CanvasImageCache::NotifyDrawImage(Element* aImage,
