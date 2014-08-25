@@ -101,11 +101,6 @@ struct DisconnectRequest
   uint16_t serviceUuid;
 };
 
-struct IsConnectedRequest
-{
-  uint16_t serviceUuid;
-};
-
 struct SendFileRequest
 {
   nsString devicePath;
@@ -185,7 +180,6 @@ union Request
   PairedDevicePropertiesRequest;
   ConnectRequest;
   DisconnectRequest;
-  IsConnectedRequest;
   SendFileRequest;
   StopSendingFileRequest;
   ConfirmReceivingFileRequest;

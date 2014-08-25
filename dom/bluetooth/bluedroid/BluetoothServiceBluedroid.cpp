@@ -1019,23 +1019,6 @@ BluetoothServiceBluedroid::Disconnect(
 }
 
 void
-BluetoothServiceBluedroid::IsConnected(const uint16_t aServiceUuid,
-                                       BluetoothReplyRunnable* aRunnable)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRunnable);
-
-  BluetoothProfileManagerBase* profile =
-    BluetoothUuidHelper::GetBluetoothProfileManager(aServiceUuid);
-  if (profile) {
-    DispatchBluetoothReply(aRunnable, profile->IsConnected(), EmptyString());
-  } else {
-    BT_WARNING("Can't find profile manager with uuid: %x", aServiceUuid);
-    DispatchBluetoothReply(aRunnable, false, EmptyString());
-  }
-}
-
-void
 BluetoothServiceBluedroid::SendFile(const nsAString& aDeviceAddress,
                                     BlobParent* aBlobParent,
                                     BlobChild* aBlobChild,
