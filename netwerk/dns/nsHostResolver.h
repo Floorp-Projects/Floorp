@@ -238,6 +238,11 @@ public:
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
+    /**
+     * Flush the DNS cache.
+     */
+    void FlushCache();
+
 private:
    explicit nsHostResolver(uint32_t maxCacheEntries = 50, uint32_t maxCacheLifetime = 60,
                             uint32_t lifetimeGracePeriod = 0);

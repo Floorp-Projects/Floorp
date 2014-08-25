@@ -65,6 +65,11 @@ interface nsINetworkLinkService : nsISupports
  */
 #define NS_NETWORK_LINK_DATA_DOWN    "down"
 /**
+ * isLinkUp is still true, but the network setup is modified.
+ * linkStatusKnown is true.
+ */
+#define NS_NETWORK_LINK_DATA_CHANGED "changed"
+/**
  * linkStatusKnown is now false.
  */
 #define NS_NETWORK_LINK_DATA_UNKNOWN "unknown"

@@ -68,8 +68,8 @@ using mozilla::net::IsNeckoChild;
 nsIOService* gIOService = nullptr;
 static bool gHasWarnedUploadChannel2;
 
-// A general port blacklist.  Connections to these ports will not be allowed unless 
-// the protocol overrides.
+// A general port blacklist.  Connections to these ports will not be allowed
+// unless the protocol overrides.
 //
 // TODO: I am sure that there are more ports to be added.  
 //       This cut is based on the classic mozilla codebase
@@ -279,10 +279,9 @@ nsIOService::InitializeNetworkLinkService()
         // so let's cross our fingers!
         mManageOfflineStatus = false;
     }
-   
 
     if (mManageOfflineStatus)
-        TrackNetworkLinkStatusForOffline();
+        OnNetworkLinkEvent(NS_NETWORK_LINK_DATA_UNKNOWN);
     else
         SetOffline(false);
     
@@ -992,7 +991,7 @@ nsIOService::Observe(nsISupports *subject,
         if (mOfflineForProfileChange) {
             mOfflineForProfileChange = false;
             if (!mManageOfflineStatus ||
-                NS_FAILED(TrackNetworkLinkStatusForOffline())) {
+                NS_FAILED(OnNetworkLinkEvent(NS_NETWORK_LINK_DATA_UNKNOWN))) {
                 SetOffline(false);
             }
         } 
@@ -1022,8 +1021,8 @@ nsIOService::Observe(nsISupports *subject,
         mProxyService = nullptr;
     }
     else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
-        if (!mOfflineForProfileChange && mManageOfflineStatus) {
-            TrackNetworkLinkStatusForOffline();
+        if (!mOfflineForProfileChange) {
+            OnNetworkLinkEvent(NS_ConvertUTF16toUTF8(data).get());
         }
     }
     else if (!strcmp(topic, kNetworkActiveChanged)) {
@@ -1154,24 +1153,25 @@ nsIOService::NewSimpleNestedURI(nsIURI* aURI, nsIURI** aResult)
 }
 
 NS_IMETHODIMP
-nsIOService::SetManageOfflineStatus(bool aManage) {
+nsIOService::SetManageOfflineStatus(bool aManage)
+{
     nsresult rv = NS_OK;
 
     // SetManageOfflineStatus must throw when we fail to go from non-managed
-    // to managed.  Usually because there is no link monitoring service 
-    // available.  Failure to do this switch is detected by a failure of 
-    // TrackNetworkLinkStatusForOffline().  When there is no network link 
-    // available during call to InitializeNetworkLinkService(), application is
-    // put to offline mode.  And when we change mMangeOfflineStatus to false 
-    // on the next line we get stuck on being offline even though the link 
-    // becomes later available.
+    // to managed.  Usually because there is no link monitoring service
+    // available.  Failure to do this switch is detected by a failure of
+    // OnNetworkLinkEvent().  When there is no network link available during
+    // call to InitializeNetworkLinkService(), application is put to offline
+    // mode.  And when we change mMangeOfflineStatus to false on the next line
+    // we get stuck on being offline even though the link becomes later
+    // available.
     bool wasManaged = mManageOfflineStatus;
     mManageOfflineStatus = aManage;
 
     InitializeNetworkLinkService();
 
     if (mManageOfflineStatus && !wasManaged) {
-        rv = TrackNetworkLinkStatusForOffline();
+        rv = OnNetworkLinkEvent(NS_NETWORK_LINK_DATA_UNKNOWN);
         if (NS_FAILED(rv))
             mManageOfflineStatus = false;
     }
@@ -1184,41 +1184,57 @@ nsIOService::GetManageOfflineStatus(bool* aManage) {
     return NS_OK;
 }
 
+// input argument 'data' is already UTF8'ed
 nsresult
-nsIOService::TrackNetworkLinkStatusForOffline()
+nsIOService::OnNetworkLinkEvent(const char *data)
 {
-    NS_ASSERTION(mManageOfflineStatus,
-                 "Don't call this unless we're managing the offline status");
     if (!mNetworkLinkService)
         return NS_ERROR_FAILURE;
 
     if (mShutdown)
         return NS_ERROR_NOT_AVAILABLE;
-  
-    // check to make sure this won't collide with Autodial
-    if (mSocketTransportService) {
-        bool autodialEnabled = false;
-        mSocketTransportService->GetAutodialEnabled(&autodialEnabled);
-        // If autodialing-on-link-down is enabled, check if the OS auto dial 
-        // option is set to always autodial. If so, then we are 
-        // always up for the purposes of offline management.
-        if (autodialEnabled) {
+
+    if (mManageOfflineStatus)
+        return NS_OK;
+
+    if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
+        // check to make sure this won't collide with Autodial
+        if (mSocketTransportService) {
+            bool autodialEnabled = false;
+            mSocketTransportService->GetAutodialEnabled(&autodialEnabled);
+            // If autodialing-on-link-down is enabled, check if the OS auto
+            // dial option is set to always autodial. If so, then we are
+            // always up for the purposes of offline management.
+            if (autodialEnabled) {
 #if defined(XP_WIN)
-            // On Windows, we should first check with the OS
-            // to see if autodial is enabled.  If it is
-            // enabled then we are allowed to manage the
-            // offline state.
-            if(nsNativeConnectionHelper::IsAutodialEnabled()) 
-                return SetOffline(false);
+                // On Windows, we should first check with the OS to see if
+                // autodial is enabled.  If it is enabled then we are allowed
+                // to manage the offline state.
+                if (nsNativeConnectionHelper::IsAutodialEnabled()) {
+                    return SetOffline(false);
+                }
 #else
-            return SetOffline(false);
+                return SetOffline(false);
 #endif
+            }
         }
     }
 
     bool isUp;
-    nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
+        isUp = false;
+    } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UP)) {
+        isUp = true;
+    } else if (!strcmp(data, NS_NETWORK_LINK_DATA_CHANGED)) {
+        // CHANGED events are handled by others
+        return NS_OK;
+    } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UNKNOWN)) {
+        nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+        NS_WARNING("Unhandled network event!");
+        return NS_OK;
+    }
     return SetOffline(!isUp);
 }
 
