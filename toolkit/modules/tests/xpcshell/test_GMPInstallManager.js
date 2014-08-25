@@ -29,11 +29,9 @@ add_test(function test_prefs() {
   GMPPrefs.set(GMPPrefs.KEY_URL, "http://not-really-used");
   GMPPrefs.set(GMPPrefs.KEY_URL_OVERRIDE, "http://not-really-used-2");
   GMPPrefs.set(GMPPrefs.KEY_ADDON_LAST_UPDATE, "1", addon1);
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_PATH, "2", addon1);
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_VERSION, "3", addon1);
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_LAST_UPDATE, "4", addon2);
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_PATH, "5", addon2);
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_VERSION, "6", addon2);
+  GMPPrefs.set(GMPPrefs.KEY_ADDON_VERSION, "2", addon1);
+  GMPPrefs.set(GMPPrefs.KEY_ADDON_LAST_UPDATE, "3", addon2);
+  GMPPrefs.set(GMPPrefs.KEY_ADDON_VERSION, "4", addon2);
   GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, false, addon2);
   GMPPrefs.set(GMPPrefs.KEY_CERT_CHECKATTRS, true);
 
@@ -41,11 +39,9 @@ add_test(function test_prefs() {
   do_check_eq(GMPPrefs.get(GMPPrefs.KEY_URL), "http://not-really-used");
   do_check_eq(GMPPrefs.get(GMPPrefs.KEY_URL_OVERRIDE), "http://not-really-used-2");
   do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_LAST_UPDATE, addon1), "1");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_PATH, addon1), "2");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_VERSION, addon1), "3");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_LAST_UPDATE, addon2), "4");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_PATH, addon2), "5");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_VERSION, addon2), "6");
+  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_VERSION, addon1), "2");
+  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_LAST_UPDATE, addon2), "3");
+  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_VERSION, addon2), "4");
   do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_AUTOUPDATE, addon2), false);
   do_check_true(GMPPrefs.get(GMPPrefs.KEY_CERT_CHECKATTRS));
   GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, true, addon2);
@@ -435,7 +431,7 @@ function test_checkForAddons_installAddon(id, includeSize,wantInstallReject) {
       let readData = readStringFromFile(extractedFile);
       do_check_eq(readData, data);
 
-      // Check that the downloaded zip mathces the offered zip exactly
+      // Check that the downloaded zip matches the offered zip exactly
       let downloadedGMPFile = FileUtils.getFile("TmpD",
         [gmpAddon.id + ".zip"]);
       do_check_true(downloadedGMPFile.exists());
@@ -446,8 +442,6 @@ function test_checkForAddons_installAddon(id, includeSize,wantInstallReject) {
       // Make sure the prefs are set correctly
       do_check_true(!!GMPPrefs.get(GMPPrefs.KEY_ADDON_LAST_UPDATE,
                                    gmpAddon.id, ""));
-      do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_PATH, gmpAddon.id, ""),
-                               extractedFile.parent.path);
       do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_VERSION, gmpAddon.id, ""),
                                "1.1");
       // Make sure it reports as being installed
