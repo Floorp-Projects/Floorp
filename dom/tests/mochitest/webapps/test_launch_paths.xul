@@ -45,7 +45,7 @@ function install(next) {
   var beforehand = Date.now();
   const fuzzySpan = 250;
 
-  confirmNextInstall();
+  confirmNextPopup();
   navigator.mozApps.install(url, null).onsuccess = function onInstall() {
     app = this.result;
 
@@ -84,6 +84,7 @@ function getSelf(next) {
 }
 
 function uninstall(next) {
+  confirmNextPopup();
   navigator.mozApps.mgmt.uninstall(app).onsuccess = function onUninstall() {
     // Try to retrieve the app we just uninstalled, to make sure it no longer
     // exists in the registry.

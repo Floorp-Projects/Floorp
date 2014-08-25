@@ -215,6 +215,7 @@ WebappsRegistry.prototype = {
       let mgmt = Cc["@mozilla.org/webapps/manager;1"]
                    .createInstance(Ci.nsISupports);
       mgmt.wrappedJSObject.init(this._window);
+      mgmt.wrappedJSObject._windowId = this._id;
       this._mgmt = mgmt.__DOM_IMPL__
         ? mgmt.__DOM_IMPL__
         : this._window.DOMApplicationsManager._create(this._window, mgmt.wrappedJSObject);
@@ -721,10 +722,15 @@ WebappsApplicationMgmt.prototype = {
 
   uninstall: function(aApp) {
     let request = this.createRequest();
-    cpmm.sendAsyncMessage("Webapps:Uninstall", { origin: aApp.origin,
-                                                 manifestURL: aApp.manifestURL,
-                                                 oid: this._id,
-                                                 requestID: this.getRequestId(request) });
+
+    cpmm.sendAsyncMessage("Webapps:Uninstall", {
+      origin: aApp.origin,
+      manifestURL: aApp.manifestURL,
+      oid: this._id,
+      from: this._window.location.href,
+      windowId: this._windowId,
+      requestID: this.getRequestId(request)
+    });
     return request;
   },
 

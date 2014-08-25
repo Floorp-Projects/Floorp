@@ -19,7 +19,7 @@
 
 var parent = SpecialPowers.wrap(window).parent;
 
-confirmNextInstall();
+confirmNextPopup();
 navigator.mozApps.install(parent.url2, null).onsuccess = function onInstall() {
   // Give the test page a reference to the installed app, so it can uninstall it
   // after it finishes the tests.

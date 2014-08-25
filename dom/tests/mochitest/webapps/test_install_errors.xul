@@ -69,7 +69,7 @@ function invalidManifest(next) {
 function permissionDenied(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/no_delegated_install.webapp";
 
-  confirmNextInstall();
+  confirmNextPopup();
   var request = navigator.mozApps.install(url, null);
 
   request.onerror = function onInstallError() {
@@ -79,6 +79,7 @@ function permissionDenied(next) {
 
   request.onsuccess = function onInstall() {
     todo(false, "manifest without installs_allowed_from fails");
+    confirmNextPopup();
     navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
       next();
     };
@@ -97,6 +98,7 @@ function invalidContent(next) {
 
   request.onsuccess = function onInstall() {
     ok(false, "manifest with bad content type should fail");
+    confirmNextPopup();
     navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
       next();
     };
@@ -206,6 +208,7 @@ function originNotAllowed(next) {
 
   request.onsuccess = function onInstall() {
     ok(false, "test should fail because of installs_allowed_from");
+    confirmNextPopup();
     navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
       next();
     };
@@ -215,7 +218,7 @@ function originNotAllowed(next) {
 function originAllowed(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/installs_allowed_from_chrome_mochitests.webapp";
 
-  confirmNextInstall();
+  confirmNextPopup();
   var request = navigator.mozApps.install(url, null);
 
   request.onerror = function onInstallError() {
@@ -225,6 +228,7 @@ function originAllowed(next) {
 
   request.onsuccess = function onInstall() {
     ok(true, "test origin is in installs_allowed_from");
+    confirmNextPopup();
     navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
       next();
     };

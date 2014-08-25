@@ -34,19 +34,22 @@ function runAll(steps) {
   next();
 }
 
-function confirmNextInstall() {
+function confirmNextPopup() {
   var Ci = SpecialPowers.Ci;
 
-  var popupPanel = SpecialPowers.wrap(window).top.
-                   QueryInterface(Ci.nsIInterfaceRequestor).
-                   getInterface(Ci.nsIWebNavigation).
-                   QueryInterface(Ci.nsIDocShell).
-                   chromeEventHandler.ownerDocument.defaultView.
-                   PopupNotifications.panel;
+  var popupNotifications = SpecialPowers.wrap(window).top.
+                           QueryInterface(Ci.nsIInterfaceRequestor).
+                           getInterface(Ci.nsIWebNavigation).
+                           QueryInterface(Ci.nsIDocShell).
+                           chromeEventHandler.ownerDocument.defaultView.
+                           PopupNotifications;
+
+  var popupPanel = popupNotifications.panel;
 
   function onPopupShown() {
     popupPanel.removeEventListener("popupshown", onPopupShown, false);
     SpecialPowers.wrap(this).childNodes[0].button.doCommand();
+    popupNotifications._dismiss();
   }
   popupPanel.addEventListener("popupshown", onPopupShown, false);
 }

@@ -56,7 +56,7 @@ let runTest = Task.async(function*() {
     yield setMacRootInstallDir(OS.Path.join(OS.Constants.Path.homeDir, "Applications"));
   }
 
-  confirmNextInstall();
+  confirmNextPopup();
 
   yield setState("Version", 1);
 

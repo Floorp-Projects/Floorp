@@ -29,6 +29,10 @@ XPCOMUtils.defineLazyGetter(this, "events", () => {
   return require("sdk/event/core");
 });
 
+XPCOMUtils.defineLazyGetter(this, "StyleSheetActor", () => {
+  return require("devtools/server/actors/stylesheets").StyleSheetActor;
+});
+
 // Also depends on following symbols, shared by common scope with main.js:
 // DebuggerServer, CommonCreateExtraActors, CommonAppendExtraActors, ActorPool,
 // ThreadActor
@@ -545,6 +549,9 @@ function TabActor(aConnection)
   this._extraActors = {};
   this._exited = false;
 
+  // Map of DOM stylesheets to StyleSheetActors
+  this._styleSheetActors = new Map();
+
   this._shouldAddNewGlobalAsDebuggee = this._shouldAddNewGlobalAsDebuggee.bind(this);
 
   this.makeDebugger = makeDebugger.bind(null, {
@@ -722,6 +729,7 @@ TabActor.prototype = {
   disconnect: function BTA_disconnect() {
     this._detach();
     this._extraActors = null;
+    this._styleSheetActors.clear();
     this._exited = true;
   },
 
@@ -1059,6 +1067,12 @@ TabActor.prototype = {
       }
     }
 
+    for (let sheetActor of this._styleSheetActors.values()) {
+      this._tabPool.removeActor(sheetActor);
+    }
+    this._styleSheetActors.clear();
+
+
     // Refresh the debuggee list when a new window object appears (top window or
     // iframe).
     if (threadActor.attached) {
@@ -1175,6 +1189,28 @@ TabActor.prototype = {
     }
     catch (ex) { }
     return isNative;
+  },
+
+  /**
+   * Create or return the StyleSheetActor for a style sheet. This method
+   * is here because the Style Editor and Inspector share style sheet actors.
+   *
+   * @param DOMStyleSheet styleSheet
+   *        The style sheet to creat an actor for.
+   * @return StyleSheetActor actor
+   *         The actor for this style sheet.
+   *
+   */
+  createStyleSheetActor: function BTA_createStyleSheetActor(styleSheet) {
+    if (this._styleSheetActors.has(styleSheet)) {
+      return this._styleSheetActors.get(styleSheet);
+    }
+    let actor = new StyleSheetActor(styleSheet, this);
+    this._styleSheetActors.set(styleSheet, actor);
+
+    this._tabPool.addActor(actor);
+
+    return actor;
   }
 };
 

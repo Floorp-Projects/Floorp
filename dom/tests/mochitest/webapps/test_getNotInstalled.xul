@@ -76,11 +76,11 @@ function getNotInstalled(next) {
 
 // Add an app to the appregistry
 function installApp(next) {
-  confirmNextInstall();
+  confirmNextPopup();
   navigator.mozApps.install(url, null).onsuccess = function onInstall() {
     app = this.result;
     next();
-  }
+  };
 }
 
 // Call navigator.mozApps.mgmt.getNotInstalled and make sure there is one more.
@@ -128,6 +128,7 @@ function unmonkeyPatchDOMApplicationRegistry(next) {
 
 // Remove the app from the appregistry
 function uninstallApp(next) {
+  confirmNextPopup();
   window.navigator.mozApps.mgmt.uninstall(app).onsuccess = function onUninstall() {
     app = null;
     next();
