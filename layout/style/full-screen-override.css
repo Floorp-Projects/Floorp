@@ -16,9 +16,11 @@
      filtering, since that would affect the full-screen element and create a pseudo-
      stacking context. */
   mask: initial !important;
-  clip: initial !important;
+  clip-path: initial !important;
   filter: initial !important;
+  clip: initial !important;
   transform: initial !important;
+  /* FIXME: do we need to worry about 'overflow'? */
   will-change: initial !important;
 }
 
