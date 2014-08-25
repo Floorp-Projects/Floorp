@@ -24,7 +24,7 @@ extern "C" NS_HIDDEN_(void) XPCOMGlueEnablePreload();
  * Initialize the XPCOM glue by dynamically linking against the XPCOM
  * shared library indicated by xpcomFile.
  */
-extern "C" NS_HIDDEN_(nsresult) XPCOMGlueStartup(const char* xpcomFile);
+extern "C" NS_HIDDEN_(nsresult) XPCOMGlueStartup(const char* aXPCOMFile);
 
 typedef void (*NSFuncPtr)();
 
@@ -43,7 +43,7 @@ struct nsDynamicFunctionLoad
  *         functions were found.
  */
 extern "C" NS_HIDDEN_(nsresult)
-XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad* symbols);
+XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad* aSymbols);
 
 #endif // XPCOM_GLUE
 #endif // nsXPCOMGlue_h__
