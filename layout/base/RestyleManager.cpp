@@ -2713,7 +2713,7 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
   // trigger assertions about mismatched rule trees.
   if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
       mightReframePseudos) {
-    RestyleBeforePseudo();
+    MaybeReframeForBeforePseudo();
   }
 
   // There is no need to waste time crawling into a frame's children
@@ -2742,7 +2742,7 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
   // See comments above regarding :before.
   if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
       mightReframePseudos) {
-    RestyleAfterPseudo(lastContinuation);
+    MaybeReframeForAfterPseudo(lastContinuation);
   }
 }
 
@@ -2844,7 +2844,7 @@ ElementRestyler::RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint)
 }
 
 void
-ElementRestyler::RestyleBeforePseudo()
+ElementRestyler::MaybeReframeForBeforePseudo()
 {
   // Make sure not to do this for pseudo-frames or frames that
   // can't have generated content.
@@ -2879,7 +2879,7 @@ ElementRestyler::RestyleBeforePseudo()
  * ElementRestyler is restyling.
  */
 void
-ElementRestyler::RestyleAfterPseudo(nsIFrame* aFrame)
+ElementRestyler::MaybeReframeForAfterPseudo(nsIFrame* aFrame)
 {
   // Make sure not to do this for pseudo-frames or frames that
   // can't have generated content.
