@@ -11,7 +11,6 @@ let OpenH264Scope = Cu.import("resource://gre/modules/addons/OpenH264Provider.js
 const OPENH264_PLUGIN_ID       = "gmp-gmpopenh264";
 const OPENH264_PREF_BRANCH     = "media." + OPENH264_PLUGIN_ID + ".";
 const OPENH264_PREF_ENABLED    = OPENH264_PREF_BRANCH + "enabled";
-const OPENH264_PREF_PATH       = OPENH264_PREF_BRANCH + "path";
 const OPENH264_PREF_VERSION    = OPENH264_PREF_BRANCH + "version";
 const OPENH264_PREF_LASTUPDATE = OPENH264_PREF_BRANCH + "lastUpdate";
 const OPENH264_PREF_AUTOUPDATE = OPENH264_PREF_BRANCH + "autoupdate";
@@ -99,7 +98,6 @@ add_task(function* initializeState() {
     Services.obs.removeObserver(gOptionsObserver, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
 
     Services.prefs.clearUserPref(OPENH264_PREF_ENABLED);
-    Services.prefs.clearUserPref(OPENH264_PREF_PATH);
     Services.prefs.clearUserPref(OPENH264_PREF_VERSION);
     Services.prefs.clearUserPref(OPENH264_PREF_LASTUPDATE);
     Services.prefs.clearUserPref(OPENH264_PREF_AUTOUPDATE);
@@ -116,10 +114,9 @@ add_task(function* initializeState() {
 
   // Start out with OpenH264 not being installed, disabled and automatic updates disabled.
   Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, false);
-  Services.prefs.setCharPref(OPENH264_PREF_VERSION, "");
-  Services.prefs.setCharPref(OPENH264_PREF_LASTUPDATE, "");
+  Services.prefs.setIntPref (OPENH264_PREF_LASTUPDATE, 0);
   Services.prefs.setBoolPref(OPENH264_PREF_AUTOUPDATE, false);
-  Services.prefs.setCharPref(OPENH264_PREF_PATH, "");
+  Services.prefs.setCharPref(OPENH264_PREF_VERSION, "");
 });
 
 add_task(function* testNotInstalled() {
@@ -162,10 +159,9 @@ add_task(function* testNotInstalledDetails() {
 
 add_task(function* testInstalled() {
   Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, true);
-  Services.prefs.setBoolPref(OPENH264_PREF_VERSION, "1.2.3.4");
-  Services.prefs.setBoolPref(OPENH264_PREF_LASTUPDATE, "" + TEST_DATE.getTime());
+  Services.prefs.setIntPref (OPENH264_PREF_LASTUPDATE, TEST_DATE.getTime());
   Services.prefs.setBoolPref(OPENH264_PREF_AUTOUPDATE, false);
-  Services.prefs.setCharPref(OPENH264_PREF_PATH, "foo/bar");
+  Services.prefs.setCharPref(OPENH264_PREF_VERSION, "1.2.3.4");
 
   yield gCategoryUtilities.openType("plugin");
 
@@ -204,20 +200,17 @@ add_task(function* testInstalledDetails() {
 });
 
 add_task(function* testPreferencesButton() {
-  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
-  file.append("openh264");
-  file.append("testDir");
 
   let prefValues = [
-    { enabled: false, path: "" },
-    { enabled: false, path: file.path },
-    { enabled: true, path: "" },
-    { enabled: true, path: file.path },
+    { enabled: false, version: "" },
+    { enabled: false, version: "1.2.3.4" },
+    { enabled: true, version: "" },
+    { enabled: true, version: "1.2.3.4" },
   ];
 
   for (let prefs of prefValues) {
     dump("Testing preferences button with pref settings: " + JSON.stringify(prefs) + "\n");
-    Services.prefs.setCharPref(OPENH264_PREF_PATH, prefs.path);
+    Services.prefs.setCharPref(OPENH264_PREF_VERSION, prefs.version);
     Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, prefs.enabled);
 
     yield gCategoryUtilities.openType("plugin");

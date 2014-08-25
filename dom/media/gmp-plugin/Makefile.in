@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 INSTALL_TARGETS += FAKE_GMP_PLUGIN
-FAKE_GMP_PLUGIN_DEST = $(DEPTH)/dist/bin/gmp-fake
+FAKE_GMP_PLUGIN_DEST = $(DEPTH)/dist/bin/gmp-fake/1.0
 FAKE_GMP_PLUGIN_FILES = \
   $(SHARED_LIBRARY) \
   $(srcdir)/fake.info
