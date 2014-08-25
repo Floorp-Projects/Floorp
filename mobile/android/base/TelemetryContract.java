@@ -152,6 +152,9 @@ public interface TelemetryContract {
         // Note: Only used in JavaScript for now, but here for completeness.
         PAGEACTION("pageaction"),
 
+        // Action triggered from a settings screen.
+        SETTINGS("settings"),
+
         // Action triggered from a suggestion provided to the user.
         SUGGESTION("suggestion"),
 
@@ -199,6 +202,9 @@ public interface TelemetryContract {
         // Started when a Reader viewer becomes active in the foreground.
         // Note: Only used in JavaScript for now, but here for completeness.
         READER("reader.1"),
+
+        // Settings activity is active.
+        SETTINGS("settings.1"),
 
         // VALUES BELOW THIS LINE ARE EXCLUSIVE TO TESTING.
         _TEST_STARTED_TWICE("_test_session_started_twice.1"),
