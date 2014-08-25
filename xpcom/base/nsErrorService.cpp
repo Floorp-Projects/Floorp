@@ -11,7 +11,8 @@
 NS_IMPL_ISUPPORTS(nsErrorService, nsIErrorService)
 
 nsresult
-nsErrorService::Create(nsISupports* aOuter, const nsIID& aIID, void** aInstancePtr)
+nsErrorService::Create(nsISupports* aOuter, const nsIID& aIID,
+                       void** aInstancePtr)
 {
   if (NS_WARN_IF(aOuter)) {
     return NS_ERROR_NO_AGGREGATION;
@@ -21,7 +22,8 @@ nsErrorService::Create(nsISupports* aOuter, const nsIID& aIID, void** aInstanceP
 }
 
 NS_IMETHODIMP
-nsErrorService::RegisterErrorStringBundle(int16_t aErrorModule, const char* aStringBundleURL)
+nsErrorService::RegisterErrorStringBundle(int16_t aErrorModule,
+                                          const char* aStringBundleURL)
 {
   mErrorStringBundleURLMap.Put(aErrorModule, new nsCString(aStringBundleURL));
   return NS_OK;

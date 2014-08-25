@@ -202,7 +202,8 @@ nsSystemInfo::Init()
                          versionDouble >= 6.2);
   NS_ENSURE_SUCCESS(rv, rv);
 #else
-  rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16("hasWindowsTouchInterface"), false);
+  rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16("hasWindowsTouchInterface"),
+                         false);
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
@@ -235,7 +236,8 @@ nsSystemInfo::Init()
   if (NS_FAILED(GetProfileHDDInfo())) {
     // We might have been called before profile-do-change. We'll observe that
     // event so that we can fill this in later.
-    nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> obsService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -263,7 +265,8 @@ nsSystemInfo::Init()
 
 #if defined(MOZ_WIDGET_GTK)
   // This must be done here because NSPR can only separate OS's when compiled, not libraries.
-  char* gtkver = PR_smprintf("GTK %u.%u.%u", gtk_major_version, gtk_minor_version, gtk_micro_version);
+  char* gtkver = PR_smprintf("GTK %u.%u.%u", gtk_major_version,
+                             gtk_minor_version, gtk_micro_version);
   if (gtkver) {
     rv = SetPropertyAsACString(NS_LITERAL_STRING("secondaryLibrary"),
                                nsDependentCString(gtkver));
@@ -396,8 +399,8 @@ nsSystemInfo::Observe(nsISupports* aSubject, const char* aTopic,
 {
   if (!strcmp(aTopic, "profile-do-change")) {
     nsresult rv;
-    nsCOMPtr<nsIObserverService> obsService = do_GetService(
-                                              NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> obsService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       return rv;
     }
