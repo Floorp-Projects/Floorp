@@ -8,6 +8,7 @@
 
 #include "gfxAndroidPlatform.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/CountingAllocatorBase.h"
 #include "mozilla/Preferences.h"
 
 #include "gfx2DGlue.h"
