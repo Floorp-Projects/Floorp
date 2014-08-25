@@ -404,13 +404,13 @@ public:
 
   void NS_FASTCALL AssignASCII(const char* aData)
   {
-    AssignASCII(aData, mozilla::SafeCast<size_type, size_t>(strlen(aData)));
+    AssignASCII(aData, mozilla::AssertedCast<size_type, size_t>(strlen(aData)));
   }
   NS_WARN_UNUSED_RESULT bool NS_FASTCALL AssignASCII(const char* aData,
                                                      const fallible_t&)
   {
     return AssignASCII(aData,
-                       mozilla::SafeCast<size_type, size_t>(strlen(aData)),
+                       mozilla::AssertedCast<size_type, size_t>(strlen(aData)),
                        fallible_t());
   }
 

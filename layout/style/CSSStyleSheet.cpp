@@ -94,7 +94,7 @@ CSSRuleListImpl::Length()
     return 0;
   }
 
-  return SafeCast<uint32_t>(mStyleSheet->StyleRuleCount());
+  return AssertedCast<uint32_t>(mStyleSheet->StyleRuleCount());
 }
 
 nsIDOMCSSRule*    

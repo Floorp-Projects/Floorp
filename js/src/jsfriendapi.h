@@ -1657,7 +1657,7 @@ Get ## Type ## ArrayLengthAndData(JSObject *obj, uint32_t *length, type **data) 
 { \
     JS_ASSERT(GetObjectClass(obj) == detail::Type ## ArrayClassPtr); \
     const JS::Value &slot = GetReservedSlot(obj, detail::TypedArrayLengthSlot); \
-    *length = mozilla::SafeCast<uint32_t>(slot.toInt32()); \
+    *length = mozilla::AssertedCast<uint32_t>(slot.toInt32()); \
     *data = static_cast<type*>(GetObjectPrivate(obj)); \
 }
 
