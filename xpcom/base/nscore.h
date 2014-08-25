@@ -174,6 +174,16 @@
 #endif
 
 /**
+ * Printf style formats
+ */
+#ifdef __GNUC__
+#define MOZ_FORMAT_PRINTF(stringIndex, firstToCheck)  \
+    __attribute__ ((format (printf, stringIndex, firstToCheck)))
+#else
+#define MOZ_FORMAT_PRINTF(stringIndex, firstToCheck)
+#endif
+
+/**
  * Generic API modifiers which return the standard XPCOM nsresult type
  */
 #define NS_IMETHOD          NS_IMETHOD_(nsresult)
