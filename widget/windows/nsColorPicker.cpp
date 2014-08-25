@@ -91,10 +91,13 @@ BGRIntToRGBString(DWORD color, nsAString& aResult)
 }
 } // anonymous namespace
 
+static AsyncColorChooser* gColorChooser;
+
 AsyncColorChooser::AsyncColorChooser(COLORREF aInitialColor,
                                      nsIWidget* aParentWidget,
                                      nsIColorPickerShownCallback* aCallback)
   : mInitialColor(aInitialColor)
+  , mColor(aInitialColor)
   , mParentWidget(aParentWidget)
   , mCallback(aCallback)
 {
@@ -108,11 +111,10 @@ AsyncColorChooser::Run()
   MOZ_ASSERT(NS_IsMainThread(),
       "Color pickers can only be opened from main thread currently");
 
-  static bool sColorPickerOpen = false;
   // Allow only one color picker to be opened at a time, to workaround bug 944737
-  if (!sColorPickerOpen) {
-    mozilla::AutoRestore<bool> autoRestoreColorPickerOpen(sColorPickerOpen);
-    sColorPickerOpen = true;
+  if (!gColorChooser) {
+    mozilla::AutoRestore<AsyncColorChooser*> restoreColorChooser(gColorChooser);
+    gColorChooser = this;
 
     AutoDestroyTmpWindow adtw((HWND) (mParentWidget.get() ?
       mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : nullptr));
@@ -120,13 +122,12 @@ AsyncColorChooser::Run()
     CHOOSECOLOR options;
     options.lStructSize   = sizeof(options);
     options.hwndOwner     = adtw.get();
-    options.Flags         = CC_RGBINIT | CC_FULLOPEN;
+    options.Flags         = CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     options.rgbResult     = mInitialColor;
     options.lpCustColors  = sCustomColors;
+    options.lpfnHook      = HookProc;
 
-    if (ChooseColor(&options)) {
-      mColor = options.rgbResult;
-    }
+    mColor = ChooseColor(&options) ? options.rgbResult : mInitialColor;
   } else {
     NS_WARNING("Currently, it's not possible to open more than one color "
                "picker at a time");
@@ -140,6 +141,39 @@ AsyncColorChooser::Run()
   }
 
   return NS_OK;
+}
+
+void
+AsyncColorChooser::Update(COLORREF aColor)
+{
+  if (mColor != aColor) {
+    mColor = aColor;
+
+    nsAutoString colorStr;
+    BGRIntToRGBString(mColor, colorStr);
+    mCallback->Update(colorStr);
+  }
+}
+
+/* static */ UINT_PTR CALLBACK
+AsyncColorChooser::HookProc(HWND aDialog, UINT aMsg,
+                            WPARAM aWParam, LPARAM aLParam)
+{
+  if (!gColorChooser) {
+    return 0;
+  }
+
+  if (aMsg == WM_CTLCOLORSTATIC) {
+    // The color picker does not expose a proper way to retrieve the current
+    // color, so we need to obtain it from the static control displaying the
+    // current color instead.
+    const int kCurrentColorBoxID = 709;
+    if ((HWND)aLParam == GetDlgItem(aDialog, kCurrentColorBoxID)) {
+      gColorChooser->Update(GetPixel((HDC)aWParam, 0, 0));
+    }
+  }
+
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

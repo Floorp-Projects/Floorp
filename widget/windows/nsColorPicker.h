@@ -26,6 +26,11 @@ public:
   NS_IMETHOD Run() MOZ_OVERRIDE;
 
 private:
+  void Update(COLORREF aColor);
+
+  static UINT_PTR CALLBACK HookProc(HWND aDialog, UINT aMsg,
+                                    WPARAM aWParam, LPARAM aLParam);
+
   COLORREF mInitialColor;
   COLORREF mColor;
   nsCOMPtr<nsIWidget> mParentWidget;
