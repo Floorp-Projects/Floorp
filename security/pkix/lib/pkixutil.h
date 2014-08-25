@@ -142,9 +142,10 @@ private:
   NonOwningSECItem keyUsage;
   NonOwningSECItem nameConstraints;
   NonOwningSECItem subjectAltName;
+  NonOwningSECItem criticalNetscapeCertificateType;
 
   Result RememberExtension(Input& extnID, const SECItem& extnValue,
-                                /*out*/ bool& understood);
+                           bool critical, /*out*/ bool& understood);
 
   BackCert(const BackCert&) /* = delete */;
   void operator=(const BackCert&); /* = delete */;

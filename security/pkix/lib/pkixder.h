@@ -564,7 +564,7 @@ OptionalExtensions(Input& input, uint8_t tag, ExtensionHandler extensionHandler)
     }
 
     bool understood = false;
-    rv = extensionHandler(extnID, extnValue, understood);
+    rv = extensionHandler(extnID, extnValue, critical, understood);
     if (rv != Success) {
       return rv;
     }
