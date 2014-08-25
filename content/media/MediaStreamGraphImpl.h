@@ -112,8 +112,9 @@ public:
    * to the main thread while the main thread is not in the middle
    * of a script. It runs during a "stable state" (per HTML5) or during
    * an event posted to the main thread.
+   * The boolean affects which boolean controlling runnable dispatch is cleared
    */
-  void RunInStableState();
+  void RunInStableState(bool aSourceIsMSG);
   /**
    * Ensure a runnable to run RunInStableState is posted to the appshell to
    * run at the next stable state (per HTML5).
