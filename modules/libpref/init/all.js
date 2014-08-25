@@ -1162,6 +1162,11 @@ pref("network.http.connection-retry-timeout", 250);
 // to give up if the OS does not give up first
 pref("network.http.connection-timeout", 90);
 
+// The number of seconds to allow active connections to prove that they have
+// traffic before considered stalled, after a network change has been detected
+// and signalled.
+pref("network.http.network-changed.timeout", 5);
+
 // The maximum number of current global half open sockets allowable
 // when starting a new speculative connection.
 pref("network.http.speculative-parallel-limit", 6);

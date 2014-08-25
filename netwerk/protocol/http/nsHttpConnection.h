@@ -200,6 +200,20 @@ public:
     void    SetupSecondaryTLS();
     void    SetInSpdyTunnel(bool arg);
 
+    // Returns true if the socket peer has a private (RFC1918-like) address.
+    bool    PeerHasPrivateIP();
+    // Check active connections for traffic (or not). SPDY connections send a
+    // ping, ordinary HTTP connections get some time to get traffic to be
+    // considered alive.
+    void CheckForTraffic(bool check);
+
+    // NoTraffic() returns true if there's been no traffic on the (non-spdy)
+    // connection since CheckForTraffic() was called.
+    bool NoTraffic() {
+        return mTrafficStamp &&
+            (mTrafficCount == (mTotalBytesWritten + mTotalBytesRead));
+    }
+
 private:
     // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
     enum TCPKeepaliveConfig {
@@ -291,6 +305,10 @@ private:
     bool                            mExperienced;
     bool                            mInSpdyTunnel;
     bool                            mForcePlainText;
+
+    // A snapshot of current number of transfered bytes
+    int64_t                         mTrafficCount;
+    bool                            mTrafficStamp; // true then the above is set
 
     // The number of <= HTTP/1.1 transactions performed on this connection. This
     // excludes spdy transactions.
