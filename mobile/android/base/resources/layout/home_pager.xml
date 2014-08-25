@@ -14,9 +14,9 @@
                                   android:background="@android:color/white">
 
     <org.mozilla.gecko.home.HomePagerTabStrip android:layout_width="match_parent"
-                                              android:layout_height="32dip"
+                                              android:layout_height="40dip"
                                               android:layout_gravity="top"
-                                              android:gravity="bottom"
+                                              android:gravity="center_vertical"
                                               android:background="@color/background_light"
                                               gecko:tabIndicatorColor="@color/text_color_highlight"
                                               android:textAppearance="@style/TextAppearance.Widget.HomePagerTabStrip"/>

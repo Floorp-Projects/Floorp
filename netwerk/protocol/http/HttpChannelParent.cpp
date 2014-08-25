@@ -27,6 +27,8 @@
 #include "SerializedLoadContext.h"
 #include "nsIAuthInformation.h"
 #include "nsIAuthPromptCallback.h"
+#include "nsIOService.h"
+#include "nsICachingChannel.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -64,10 +66,15 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   } else {
     mNestedFrameId = iframeEmbedding.get_uint64_t();
   }
+
+  mObserver = new OfflineObserver(this);
 }
 
 HttpChannelParent::~HttpChannelParent()
 {
+  if (mObserver) {
+    mObserver->RemoveObserver();
+  }
 }
 
 void
@@ -160,7 +167,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const OptionalURIParams&   aDocURI,
                                  const OptionalURIParams&   aReferrerURI,
                                  const OptionalURIParams&   aAPIRedirectToURI,
-                                 const uint32_t&            loadFlags,
+                                 const uint32_t&            aLoadFlags,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsCString&           requestMethod,
                                  const OptionalInputStreamParams& uploadStream,
@@ -199,6 +206,20 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
+
+  bool appOffline = false;
+  uint32_t appId = GetAppId();
+  if (appId != NECKO_UNKNOWN_APP_ID &&
+      appId != NECKO_NO_APP_ID) {
+    gIOService->IsAppOffline(appId, &appOffline);
+  }
+
+  uint32_t loadFlags = aLoadFlags;
+  if (appOffline) {
+    loadFlags |= nsICachingChannel::LOAD_ONLY_FROM_CACHE;
+    loadFlags |= nsIRequest::LOAD_FROM_CACHE;
+    loadFlags |= nsICachingChannel::LOAD_NO_NETWORK_IO;
+  }
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), uri, ios, nullptr, nullptr, loadFlags);
@@ -285,10 +306,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 
     if (setChooseApplicationCache) {
       bool inBrowser = false;
-      uint32_t appId = NECKO_NO_APP_ID;
       if (mLoadContext) {
         mLoadContext->GetIsInBrowserElement(&inBrowser);
-        mLoadContext->GetAppId(&appId);
       }
 
       bool chooseAppCache = false;
@@ -331,6 +350,22 @@ HttpChannelParent::ConnectChannel(const uint32_t& channelId)
     if (pbChannel) {
       pbChannel->SetPrivate(mPBOverride == kPBOverride_Private ? true : false);
     }
+  }
+
+  bool appOffline = false;
+  uint32_t appId = GetAppId();
+  if (appId != NECKO_UNKNOWN_APP_ID &&
+      appId != NECKO_NO_APP_ID) {
+    gIOService->IsAppOffline(appId, &appOffline);
+  }
+
+  if (appOffline) {
+    uint32_t loadFlags;
+    mChannel->GetLoadFlags(&loadFlags);
+    loadFlags |= nsICachingChannel::LOAD_ONLY_FROM_CACHE;
+    loadFlags |= nsIRequest::LOAD_FROM_CACHE;
+    loadFlags |= nsICachingChannel::LOAD_NO_NETWORK_IO;
+    mChannel->SetLoadFlags(loadFlags);
   }
 
   return true;
@@ -572,7 +607,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   nsHttpRequestHead  *requestHead = chan->GetRequestHead();
   bool isFromCache = false;
   chan->IsFromCache(&isFromCache);
-  uint32_t expirationTime = nsICache::NO_EXPIRATION_TIME;
+  uint32_t expirationTime = nsICacheEntry::NO_EXPIRATION_TIME;
   chan->GetCacheTokenExpirationTime(&expirationTime);
   nsCString cachedCharset;
   chan->GetCacheTokenCachedCharset(cachedCharset);
@@ -999,6 +1034,25 @@ HttpChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
   if (!mIPCClosed) {
     unused << SendDeleteSelf();
   }
+}
+
+void
+HttpChannelParent::OfflineDisconnect()
+{
+  if (mChannel) {
+    mChannel->Cancel(NS_ERROR_OFFLINE);
+  }
+  mStatus = NS_ERROR_OFFLINE;
+}
+
+uint32_t
+HttpChannelParent::GetAppId()
+{
+  uint32_t appId = NECKO_UNKNOWN_APP_ID;
+  if (mLoadContext) {
+    mLoadContext->GetAppId(&appId);
+  }
+  return appId;
 }
 
 NS_IMETHODIMP

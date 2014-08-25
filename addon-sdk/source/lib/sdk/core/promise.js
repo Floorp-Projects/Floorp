@@ -17,7 +17,8 @@ const PROMISE_URI = 'resource://gre/modules/Promise.jsm';
 
 getEnvironment.call(this, function ({ require, exports, module, Cu }) {
 
-const { defer, resolve, all, reject, race } = Cu.import(PROMISE_URI, {}).Promise;
+const Promise = Cu.import(PROMISE_URI, {}).Promise;
+const { Debugging, defer, resolve, all, reject, race } = Promise;
 
 module.metadata = {
   'stability': 'unstable'
@@ -75,7 +76,7 @@ exports.resolve = resolve;
 exports.reject = reject;
 exports.race = race;
 exports.Promise = Promise;
-
+exports.Debugging = Debugging;
 });
 
 function getEnvironment (callback) {

@@ -2,7 +2,7 @@ fuzzy-if(Android,8,30) == background-image-zoom-1.html background-image-zoom-1-r
 == background-image-zoom-2.html about:blank
 == image-seam-1a.html image-seam-1-ref.html
 == image-seam-1b.html image-seam-1-ref.html
-fails-if(cocoaWidget) == image-seam-2.html image-seam-2-ref.html # Quartz doesn't support EXTEND_PAD (bug 567370)
+== image-seam-2.html  image-seam-2-ref.html
 skip-if(B2G&&browserIsRemote) == image-zoom-1.html image-zoom-1-ref.html
 skip-if(B2G&&browserIsRemote) == image-zoom-2.html image-zoom-1-ref.html
 == invalid-url-image-1.html invalid-url-image-1-ref.html

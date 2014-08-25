@@ -82,22 +82,6 @@
     "kind": "boolean",
     "description": "blocklist.xml has been loaded synchronously"
   },
-  "COMPARTMENT_DONATED_NODE": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "When a compartment is destroyed, we record whether one of its nodes was ever adopted into another compartment"
-  },
-  "COMPARTMENT_ADOPTED_NODE": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "When a compartment is destroyed, we record whether it had ever adopted a node from another compartment"
-  },
-  "COMPARTMENT_LIVING_ADOPTERS": {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "The number of living compartments for which COMPARTMENT_ADOPTED_NODE is true"
-  },
   "CYCLE_COLLECTOR": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -333,6 +317,12 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Has seen location error"
+  },
+  "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach, DestructuringForIn, LegacyGenerator, ExpressionClosure"
   },
   "TELEMETRY_PING": {
     "expires_in_version": "never",
@@ -4315,84 +4305,6 @@
     "n_values": 10,
     "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket."
   },
-  "NEWTAB_PAGE_DIRECTORY_LINK0_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track impression count of directory link #0 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_LINK1_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track impression count of directory link #1 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_LINK2_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track impression count of directory link #2 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_LINK3_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track impression count of directory link #3 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_LINK4_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track impression count of directory link #4 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_LINK5_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track impression count of directory link #5 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_LINK6_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track impression count of directory link #6 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_LINK7_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track impression count of directory link #7 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_LINK8_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track impression count of directory link #8 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_AFFILIATE_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 11,
-    "description": "Number of affiliate directory links shown on about:newtab. For non-default row or column configurations, extra links fall into the '10' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_ORGANIC_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 11,
-    "description": "Number of organic directory links shown on about:newtab. For non-default row or column configurations, extra links fall into the '10' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_SPONSORED_SHOWN": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 11,
-    "description": "Number of sponsored directory links shown on about:newtab. For non-default row or column configurations, extra links fall into the '10' bucket."
-  },
-  "NEWTAB_PAGE_DIRECTORY_TYPE_CLICKED": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 3,
-    "description": "Track click count on about:newtab directory links per type (sponsored, affiliate, organic)."
-  },
   "PANORAMA_INITIALIZATION_TIME_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4480,14 +4392,6 @@
     "description": "Time to update the visited link set (ms)",
     "cpp_guard": "ANDROID"
   },
-  "FENNEC_LOWMEM_TAB_COUNT": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 100,
-    "n_buckets": 30,
-    "description": "How many tabs were open when a low-memory event was received",
-    "cpp_guard": "ANDROID"
-  },
   "FENNEC_RESTORING_ACTIVITY": {
     "expires_in_version": "never",
     "kind": "flag",
@@ -4535,26 +4439,6 @@
     "high": "5000",
     "n_buckets": 20,
     "description": "Time for the Java UI to load (ms)",
-    "cpp_guard": "ANDROID"
-  },
-  "FENNEC_TAB_EXPIRED": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 10,
-    "high": 604800,
-    "n_buckets": 20,
-    "extended_statistics_ok": true,
-    "description": "How long (in seconds) a tab was inactive before it was expired",
-    "cpp_guard": "ANDROID"
-  },
-  "FENNEC_TAB_ZOMBIFIED": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 10,
-    "high": 604800,
-    "n_buckets": 20,
-    "extended_statistics_ok": true,
-    "description": "How long (in seconds) a tab was inactive when it was OOM-zombified",
     "cpp_guard": "ANDROID"
   },
   "FENNEC_TOPSITES_LOADER_TIME_MS": {

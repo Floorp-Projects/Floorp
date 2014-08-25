@@ -16,7 +16,7 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    var p = navigator.serviceWorker.register("worker.js", { scope: "simpleregister/*" });
+    var p = navigator.serviceWorker.register("worker.js", { scope: "simpleregister/" });
     ok(p instanceof Promise, "register() should return a Promise");
     return Promise.resolve();
   }
@@ -31,7 +31,7 @@
   }
 
   function sameOriginScope() {
-    p = navigator.serviceWorker.register("worker.js", { scope: "http://www.example.com/*" });
+    p = navigator.serviceWorker.register("worker.js", { scope: "http://www.example.com/" });
     return p.then(function(w) {
       ok(false, "Worker controlling scope for different origin should fail");
     }, function(e) {
@@ -56,12 +56,12 @@
   }
 
   function realWorker() {
-    var p = navigator.serviceWorker.register("worker.js", { scope: "realworker*" });
+    var p = navigator.serviceWorker.register("worker.js", { scope: "realworker" });
     return p.then(function(wr) {
       ok(wr instanceof ServiceWorkerRegistration, "Register a ServiceWorker");
 
       info(wr.scope);
-      ok(wr.scope == (new URL("realworker*", document.baseURI)).href, "Scope should match");
+      ok(wr.scope == (new URL("realworker", document.baseURI)).href, "Scope should match");
 
     }, function(e) {
       info("Error: " + e.name);
@@ -70,8 +70,8 @@
   }
 
   function abortPrevious() {
-    var p = navigator.serviceWorker.register("worker2.js", { scope: "foo/*" });
-    var q = navigator.serviceWorker.register("worker3.js", { scope: "foo/*" });
+    var p = navigator.serviceWorker.register("worker2.js", { scope: "foo/" });
+    var q = navigator.serviceWorker.register("worker3.js", { scope: "foo/" });
 
     return Promise.all([
       p.then(function(wr) {
@@ -120,7 +120,7 @@
     });
 
     function continueTest() {
-      navigator.serviceWorker.register("worker2.js", { scope: "simpleregister/*" });
+      navigator.serviceWorker.register("worker2.js", { scope: "simpleregister/" });
     }
 
     window.onmessage = function(e) {

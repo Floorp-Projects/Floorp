@@ -712,7 +712,7 @@
                      ontextreverted="return this.handleRevert();"
                      pageproxystate="invalid"
                      onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
-                     onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
+                     onblur="setTimeout(() => { document.getElementById('identity-box').style.MozUserFocus = ''; }, 0);">
               <box id="notification-popup-box" hidden="true" align="center">
                 <image id="default-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="identity-notification-icon" class="notification-anchor-icon" role="button"/>
@@ -724,7 +724,8 @@
                 <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="plugin-install-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="mixed-content-blocked-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="bad-content-blocked-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="bad-content-unblocked-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="webRTC-shareMicrophone-notification-icon" class="notification-anchor-icon" role="button"/>

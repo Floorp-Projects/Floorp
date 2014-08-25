@@ -1263,11 +1263,15 @@ public:
    *
    *   http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
    */
-  static nsSize ComputeSizeWithIntrinsicDimensions(
+  static mozilla::LogicalSize
+  ComputeSizeWithIntrinsicDimensions(mozilla::WritingMode aWM,
                     nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                     const mozilla::IntrinsicSize& aIntrinsicSize,
-                    nsSize aIntrinsicRatio, nsSize aCBSize,
-                    nsSize aMargin, nsSize aBorder, nsSize aPadding);
+                    nsSize aIntrinsicRatio,
+                    const mozilla::LogicalSize& aCBSize,
+                    const mozilla::LogicalSize& aMargin,
+                    const mozilla::LogicalSize& aBorder,
+                    const mozilla::LogicalSize& aPadding);
 
   /*
    * Calculate the used values for 'width' and 'height' when width
@@ -1455,14 +1459,14 @@ public:
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
    */
   static nsresult DrawImage(nsRenderingContext* aRenderingContext,
-                            nsPresContext*       aPresContext,
-                            imgIContainer*       aImage,
-                            GraphicsFilter       aGraphicsFilter,
-                            const nsRect&        aDest,
-                            const nsRect&        aFill,
-                            const nsPoint&       aAnchor,
-                            const nsRect&        aDirty,
-                            uint32_t             aImageFlags);
+                            nsPresContext*      aPresContext,
+                            imgIContainer*      aImage,
+                            GraphicsFilter      aGraphicsFilter,
+                            const nsRect&       aDest,
+                            const nsRect&       aFill,
+                            const nsPoint&      aAnchor,
+                            const nsRect&       aDirty,
+                            uint32_t            aImageFlags);
 
   /**
    * Convert an nsRect to a gfxRect.
@@ -1515,15 +1519,15 @@ public:
    *                            in appunits. For best results it should
    *                            be aligned with image pixels.
    */
-  static nsresult DrawSingleImage(nsRenderingContext*    aRenderingContext,
-                                  nsPresContext*         aPresContext,
-                                  imgIContainer*         aImage,
-                                  GraphicsFilter         aGraphicsFilter,
-                                  const nsRect&          aDest,
-                                  const nsRect&          aDirty,
+  static nsresult DrawSingleImage(nsRenderingContext* aRenderingContext,
+                                  nsPresContext*      aPresContext,
+                                  imgIContainer*      aImage,
+                                  GraphicsFilter      aGraphicsFilter,
+                                  const nsRect&       aDest,
+                                  const nsRect&       aDirty,
                                   const mozilla::SVGImageContext* aSVGContext,
-                                  uint32_t               aImageFlags,
-                                  const nsRect*          aSourceArea = nullptr);
+                                  uint32_t            aImageFlags,
+                                  const nsRect*       aSourceArea = nullptr);
 
   /**
    * Given an imgIContainer, this method attempts to obtain an intrinsic
@@ -1546,6 +1550,17 @@ public:
                                     nsSize&        aIntrinsicRatio,
                                     bool&          aGotWidth,
                                     bool&          aGotHeight);
+
+  /**
+   * Given an imgIContainer, this method attempts to obtain an intrinsic
+   * px-valued height & width for it. If the imgIContainer has a non-pixel
+   * value for either height or width, this method tries to generate a pixel
+   * value for that dimension using the intrinsic ratio (if available). If,
+   * after trying all these methods, no value is available for one or both
+   * dimensions, the corresponding dimension of aFallbackSize is used instead.
+   */
+  static nsIntSize ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
+                                                     const nsSize&  aFallbackSize);
 
   /**
    * Given a source area of an image (in appunits) and a destination area

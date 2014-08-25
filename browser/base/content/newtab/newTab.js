@@ -51,6 +51,7 @@ const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 const XUL_NAMESPACE = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const TILES_EXPLAIN_LINK = "https://support.mozilla.org/kb/how-do-sponsored-tiles-work";
+const TILES_PRIVACY_LINK = "https://www.mozilla.org/privacy/";
 
 #include transformations.js
 #include page.js
@@ -66,6 +67,7 @@ const TILES_EXPLAIN_LINK = "https://support.mozilla.org/kb/how-do-sponsored-tile
 #include undo.js
 #include search.js
 #include customize.js
+#include intro.js
 
 // Everything is loaded. Initialize the New Tab Page.
 gPage.init();

@@ -59,23 +59,31 @@ nsTableOuterFrame::GetLogicalBaseline(WritingMode aWritingMode) const
          kid->BStart(aWritingMode, mRect.width);
 }
 
-/* virtual */ nsSize
+/* virtual */
+LogicalSize
 nsTableCaptionFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                                     nsSize aCBSize, nscoord aAvailableWidth,
-                                     nsSize aMargin, nsSize aBorder,
-                                     nsSize aPadding, bool aShrinkWrap)
+                                     WritingMode aWM,
+                                     const LogicalSize& aCBSize,
+                                     nscoord aAvailableISize,
+                                     const LogicalSize& aMargin,
+                                     const LogicalSize& aBorder,
+                                     const LogicalSize& aPadding,
+                                     bool aShrinkWrap)
 {
-  nsSize result = nsBlockFrame::ComputeAutoSize(aRenderingContext, aCBSize,
-                    aAvailableWidth, aMargin, aBorder, aPadding, aShrinkWrap);
+  LogicalSize result =
+    nsBlockFrame::ComputeAutoSize(aRenderingContext, aWM, aCBSize,
+                                  aAvailableISize, aMargin, aBorder,
+                                  aPadding, aShrinkWrap);
 
   // If we're a container for font size inflation, then shrink
   // wrapping inside of us should not apply font size inflation.
   AutoMaybeDisableFontInflation an(this);
 
+  // XXX todo: make this aware of vertical writing modes
   uint8_t captionSide = StyleTableBorder()->mCaptionSide;
   if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
       captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
-    result.width = GetMinISize(aRenderingContext);
+    result.ISize(aWM) = GetMinISize(aRenderingContext);
   } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
              captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
     // The outer frame constrains our available width to the width of
@@ -84,10 +92,12 @@ nsTableCaptionFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
     // to transmit that information another way, so we could grow up to
     // the table's available width, but that's harder.)
     nscoord min = GetMinISize(aRenderingContext);
-    if (min > aCBSize.width)
-      min = aCBSize.width;
-    if (min > result.width)
-      result.width = min;
+    if (min > aCBSize.ISize(aWM)) {
+      min = aCBSize.ISize(aWM);
+    }
+    if (min > result.ISize(aWM)) {
+      result.ISize(aWM) = min;
+    }
   }
   return result;
 }
@@ -474,60 +484,72 @@ ChildShrinkWrapWidth(nsRenderingContext *aRenderingContext,
   AutoMaybeDisableFontInflation an(aChildFrame);
 
   nsCSSOffsetState offsets(aChildFrame, aRenderingContext, aCBSize.width);
-  nsSize size = aChildFrame->ComputeSize(aRenderingContext, aCBSize,
+  WritingMode wm = offsets.GetWritingMode();
+  LogicalSize size =
+    aChildFrame->ComputeSize(aRenderingContext,
+                  wm, LogicalSize(wm, aCBSize),
                   aAvailableWidth,
-                  nsSize(offsets.ComputedPhysicalMargin().LeftRight(),
-                         offsets.ComputedPhysicalMargin().TopBottom()),
-                  nsSize(offsets.ComputedPhysicalBorderPadding().LeftRight() -
-                           offsets.ComputedPhysicalPadding().LeftRight(),
-                         offsets.ComputedPhysicalBorderPadding().TopBottom() -
-                           offsets.ComputedPhysicalPadding().TopBottom()),
-                  nsSize(offsets.ComputedPhysicalPadding().LeftRight(),
-                         offsets.ComputedPhysicalPadding().TopBottom()),
+                  offsets.ComputedLogicalMargin().Size(wm),
+                  offsets.ComputedLogicalBorderPadding().Size(wm) -
+                    offsets.ComputedLogicalPadding().Size(wm),
+                  offsets.ComputedLogicalPadding().Size(wm),
                   true);
   if (aMarginResult)
-    *aMarginResult = offsets.ComputedPhysicalMargin().LeftRight();
-  return size.width + offsets.ComputedPhysicalMargin().LeftRight() +
-                      offsets.ComputedPhysicalBorderPadding().LeftRight();
+    *aMarginResult = offsets.ComputedLogicalMargin().IStartEnd(wm);
+  return size.ISize(wm) + offsets.ComputedLogicalMargin().IStartEnd(wm) +
+                      offsets.ComputedLogicalBorderPadding().IStartEnd(wm);
 }
 
-/* virtual */ nsSize
+/* virtual */
+LogicalSize
 nsTableOuterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                                   nsSize aCBSize, nscoord aAvailableWidth,
-                                   nsSize aMargin, nsSize aBorder,
-                                   nsSize aPadding, bool aShrinkWrap)
+                                   WritingMode aWM,
+                                   const LogicalSize& aCBSize,
+                                   nscoord aAvailableISize,
+                                   const LogicalSize& aMargin,
+                                   const LogicalSize& aBorder,
+                                   const LogicalSize& aPadding,
+                                   bool aShrinkWrap)
 {
-  nscoord kidAvailableWidth = aAvailableWidth - aMargin.width;
-  NS_ASSERTION(aBorder == nsSize(0, 0) &&
-               aPadding == nsSize(0, 0),
-               "Table outer frames cannot hae borders or paddings");
+  nscoord kidAvailableWidth = aAvailableISize - aMargin.ISize(aWM);
+  NS_ASSERTION(aBorder == LogicalSize(aWM) &&
+               aPadding == LogicalSize(aWM),
+               "Table outer frames cannot have borders or paddings");
 
   // When we're shrink-wrapping, our auto size needs to wrap around the
   // actual size of the table, which (if it is specified as a percent)
   // could be something that is not reflected in our GetMinISize and
   // GetPrefISize.  See bug 349457 for an example.
 
+  // XXX The use of aCBSize.GetPhysicalSize(aWM) below is temporary,
+  // until ChildShrinkWrapWidth is updated and width becomes inlineSize.
+
   // Match the availableWidth logic in Reflow.
   uint8_t captionSide = GetCaptionSide();
   nscoord width;
   if (captionSide == NO_SIDE) {
     width = ChildShrinkWrapWidth(aRenderingContext, InnerTableFrame(),
-                                 aCBSize, kidAvailableWidth);
+                                 aCBSize.GetPhysicalSize(aWM),
+                                 kidAvailableWidth);
   } else if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
              captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
     nscoord capWidth = ChildShrinkWrapWidth(aRenderingContext,
                                             mCaptionFrames.FirstChild(),
-                                            aCBSize, kidAvailableWidth);
+                                            aCBSize.GetPhysicalSize(aWM),
+                                            kidAvailableWidth);
     width = capWidth + ChildShrinkWrapWidth(aRenderingContext,
-                                            InnerTableFrame(), aCBSize,
+                                            InnerTableFrame(),
+                                            aCBSize.GetPhysicalSize(aWM),
                                             kidAvailableWidth - capWidth);
   } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
              captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
     nscoord margin;
     width = ChildShrinkWrapWidth(aRenderingContext, InnerTableFrame(),
-                                 aCBSize, kidAvailableWidth, &margin);
+                                 aCBSize.GetPhysicalSize(aWM),
+                                 kidAvailableWidth, &margin);
     nscoord capWidth = ChildShrinkWrapWidth(aRenderingContext,
-                                            mCaptionFrames.FirstChild(), aCBSize,
+                                            mCaptionFrames.FirstChild(),
+                                            aCBSize.GetPhysicalSize(aWM),
                                             width - margin);
     if (capWidth > width)
       width = capWidth;
@@ -536,15 +558,17 @@ nsTableOuterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                  captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE,
                  "unexpected caption-side");
     width = ChildShrinkWrapWidth(aRenderingContext, InnerTableFrame(),
-                                 aCBSize, kidAvailableWidth);
+                                 aCBSize.GetPhysicalSize(aWM),
+                                 kidAvailableWidth);
     nscoord capWidth = ChildShrinkWrapWidth(aRenderingContext,
                                             mCaptionFrames.FirstChild(),
-                                            aCBSize, kidAvailableWidth);
+                                            aCBSize.GetPhysicalSize(aWM),
+                                            kidAvailableWidth);
     if (capWidth > width)
       width = capWidth;
   }
 
-  return nsSize(width, NS_UNCONSTRAINEDSIZE);
+  return LogicalSize(aWM, width, NS_UNCONSTRAINEDSIZE);
 }
 
 uint8_t

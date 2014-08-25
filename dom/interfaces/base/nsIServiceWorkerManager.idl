@@ -8,14 +8,27 @@
 interface nsIDocument;
 interface nsIURI;
 
-[uuid(6413f297-5581-47e8-a7f4-c509fd7a85a1)]
+[uuid(c7132f91-c46c-4e01-b75a-43babb254d93)]
 interface nsIServiceWorkerManager : nsISupports
 {
-  // Returns a Promise
-  nsISupports register(in nsIDOMWindow aWindow, in DOMString aScope, in DOMString aScriptURI);
+  /**
+   * Registers a ServiceWorker with script loaded from `aScriptURI` to act as
+   * the ServiceWorker for aScope.  Requires a valid entry settings object on
+   * the stack. This means you must call this from content code 'within'
+   * a window.
+   *
+   * Returns a Promise.
+   */
+  nsISupports register(in DOMString aScope, in DOMString aScriptURI);
 
-  // Returns a Promise
-  nsISupports unregister(in nsIDOMWindow aWindow, in DOMString aScope);
+  /**
+   * Unregister an existing ServiceWorker registration for `aScope`.  Requires
+   * a valid entry settings object on the stack. This means you must call this
+   * from content code 'within' a window.
+   *
+   * Returns a Promise.
+   */
+  nsISupports unregister(in DOMString aScope);
 
   // Returns a Promise
   nsISupports getRegistrations(in nsIDOMWindow aWindow);

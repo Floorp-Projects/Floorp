@@ -16,6 +16,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/unused.h"
 #include "SerializedLoadContext.h"
+#include "nsIOService.h"
 
 using namespace mozilla::ipc;
 
@@ -37,11 +38,16 @@ FTPChannelParent::FTPChannelParent(nsILoadContext* aLoadContext, PBOverrideStatu
   nsIProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp", &handler);
   NS_ASSERTION(handler, "no ftp handler");
+  
+  mObserver = new OfflineObserver(this);
 }
 
 FTPChannelParent::~FTPChannelParent()
 {
   gFtpHandler->Release();
+  if (mObserver) {
+    mObserver->RemoveObserver();
+  }
 }
 
 void
@@ -108,7 +114,18 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
        this, uriSpec.get()));
 #endif
 
+  bool app_offline = false;
+  uint32_t appId = GetAppId();
+  if (appId != NECKO_UNKNOWN_APP_ID &&
+      appId != NECKO_NO_APP_ID) {
+    gIOService->IsAppOffline(appId, &app_offline);
+    LOG(("FTP app id %u is offline %d\n", appId, app_offline));
+  }
+
   nsresult rv;
+  if (app_offline)
+    return SendFailedAsyncOpen(NS_ERROR_OFFLINE);
+
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
@@ -173,6 +190,7 @@ FTPChannelParent::RecvCancel(const nsresult& status)
 {
   if (mChannel)
     mChannel->Cancel(status);
+
   return true;
 }
 
@@ -617,6 +635,25 @@ FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
   if (!mIPCClosed) {
     unused << SendDeleteSelf();
   }
+}
+
+void
+FTPChannelParent::OfflineDisconnect()
+{
+  if (mChannel) {
+    mChannel->Cancel(NS_ERROR_OFFLINE);
+  }
+  mStatus = NS_ERROR_OFFLINE;
+}
+
+uint32_t
+FTPChannelParent::GetAppId()
+{
+  uint32_t appId = NECKO_UNKNOWN_APP_ID;
+  if (mLoadContext) {
+    mLoadContext->GetAppId(&appId);
+  }
+  return appId;
 }
 
 //-----------------------------------------------------------------------------
