@@ -3457,21 +3457,20 @@ BluetoothDBusService::Disconnect(const nsAString& aDeviceAddress,
   ConnectDisconnect(false, aDeviceAddress, aRunnable, aServiceUuid);
 }
 
-void
-BluetoothDBusService::IsConnected(const uint16_t aServiceUuid,
-                                  BluetoothReplyRunnable* aRunnable)
+bool
+BluetoothDBusService::IsConnected(const uint16_t aServiceUuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRunnable);
 
   BluetoothProfileManagerBase* profile =
     BluetoothUuidHelper::GetBluetoothProfileManager(aServiceUuid);
-  if (profile) {
-    DispatchBluetoothReply(aRunnable, profile->IsConnected(), EmptyString());
-  } else {
-    BT_WARNING("Can't find profile manager with uuid: %x", aServiceUuid);
-    DispatchBluetoothReply(aRunnable, false, EmptyString());
+  if (!profile) {
+    BT_WARNING(ERR_UNKNOWN_PROFILE);
+    return false;
   }
+
+  NS_ENSURE_TRUE(profile, false);
+  return profile->IsConnected();
 }
 
 #ifdef MOZ_B2G_RIL
