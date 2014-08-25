@@ -377,7 +377,6 @@ MediaSource::MediaSource(nsPIDOMWindow* aWindow)
   , mDuration(UnspecifiedNaN<double>())
   , mDecoder(nullptr)
   , mReadyState(MediaSourceReadyState::Closed)
-  , mWaitForDataMonitor("MediaSource.WaitForData.Monitor")
 {
   MOZ_ASSERT(NS_IsMainThread());
   mSourceBuffers = new SourceBufferList(this);
@@ -463,22 +462,6 @@ MediaSource::NotifyEvicted(double aStart, double aEnd)
   // Cycle through all SourceBuffers and tell them to evict data in
   // the given range.
   mSourceBuffers->Evict(aStart, aEnd);
-}
-
-void
-MediaSource::WaitForData()
-{
-  MSE_DEBUG("MediaSource(%p)::WaitForData()", this);
-  MonitorAutoLock mon(mWaitForDataMonitor);
-  mon.Wait();
-}
-
-void
-MediaSource::NotifyGotData()
-{
-  MSE_DEBUG("MediaSource(%p)::NotifyGotData()", this);
-  MonitorAutoLock mon(mWaitForDataMonitor);
-  mon.NotifyAll();
 }
 
 nsPIDOMWindow*
