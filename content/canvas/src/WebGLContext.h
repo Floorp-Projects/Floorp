@@ -7,6 +7,7 @@
 #define WEBGLCONTEXT_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/WeakPtr.h"
 #include "GLDefs.h"
 #include "WebGLActiveInfo.h"
 #include "WebGLObjectModel.h"
@@ -60,6 +61,7 @@ class nsIDocShell;
 
 namespace mozilla {
 
+class WebGLContextLossHandler;
 class WebGLMemoryPressureObserver;
 class WebGLContextBoundObject;
 class WebGLActiveInfo;
@@ -135,7 +137,8 @@ class WebGLContext :
     public nsICanvasRenderingContextInternal,
     public nsSupportsWeakReference,
     public WebGLRectangleObject,
-    public nsWrapperCache
+    public nsWrapperCache,
+    public SupportsWeakPtr<WebGLContext>
 {
     friend class WebGLContextUserData;
     friend class WebGLExtensionCompressedTextureATC;
@@ -160,6 +163,8 @@ class WebGLContext :
     };
 
 public:
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(WebGLContext)
+
     WebGLContext();
     virtual ~WebGLContext();
 
@@ -266,11 +271,9 @@ public:
 
     bool MinCapabilityMode() const { return mMinCapability; }
 
+    void RunContextLossTimer();
     void UpdateContextLossStatus();
     void EnqueueUpdateContextLossStatus();
-    static void ContextLossCallbackStatic(nsITimer* timer, void* thisPointer);
-    void RunContextLossTimer();
-    void TerminateContextLossTimer();
 
     bool TryToRestoreContext();
 
@@ -1236,11 +1239,9 @@ protected:
     GLsizei mViewportHeight;
     bool mAlreadyWarnedAboutViewportLargerThanDest;
 
-    nsCOMPtr<nsITimer> mContextRestorer;
+    RefPtr<WebGLContextLossHandler> mContextLossHandler;
     bool mAllowContextRestore;
     bool mLastLossWasSimulated;
-    bool mContextLossTimerRunning;
-    bool mRunContextLossTimerAgain;
     ContextStatus mContextStatus;
     bool mContextLostErrorSet;
 
