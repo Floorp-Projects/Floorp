@@ -17,6 +17,14 @@ function testDisplayText(command, expect) {
     is(duration.timeInterval, expect.duration.timeInterval, expect.name);
   }
 
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   runNextTest();
 }
 
@@ -89,6 +97,14 @@ let tests = [
             userClear: true,
             duration: {timeUnit: iccManager.STK_TIME_UNIT_SECOND,
                        timeInterval: 0x0A}}},
+  {command: "d01a8103012180820281028d0b0442617369632049636f6e9e020001",
+    func: testDisplayText,
+    expect: {name: "display_text_cmd_12",
+             commandQualifier: 0x80,
+             text: "Basic Icon",
+             userClear: true,
+             iconSelfExplanatory: true,
+             icons: [basicIcon]}},
 ];
 
 runNextTest();

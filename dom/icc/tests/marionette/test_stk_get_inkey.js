@@ -18,6 +18,14 @@ function testGetInKey(command, expect) {
     is(duration.timeInterval, expect.duration.timeInterval, expect.name);
   }
 
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   runNextTest();
 }
 
@@ -88,10 +96,12 @@ let tests = [
             commandQualifier: 0x04,
             text: "Enter NO",
             isYesNoRequested: true}},
-  {command: "d0198103012200820281828d0a043c4e4f2d49434f4e3e1e020001",
+  {command: "d0198103012200820281828d0a043c4e4f2d49434f4e3e1e020002",
    func: testGetInKey,
    expect: {name: "get_inkey_cmd_13",
             commandQualifier: 0x00,
+            // The record number 02 in EFimg is not defined, so no icon will be
+            // shown, but the text string should still be displayed.
             text: "<NO-ICON>"}},
   {command: "D0198103012200820281828D0A04456E74657220222B228402010A",
    func: testGetInKey,

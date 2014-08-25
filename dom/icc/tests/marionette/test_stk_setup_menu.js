@@ -11,7 +11,24 @@ function testSetupMenu(command, expect) {
   for (let index in command.options.items) {
     is(command.options.items[index].identifier, expect.items[index].identifier, expect.name);
     is(command.options.items[index].text, expect.items[index].text, expect.name);
+
+    let itemIcons = command.options.items[index].icons;
+    if (itemIcons) {
+      isIcons(itemIcons, expect.items[index].icons, expect.name);
+
+      let iconSelfExplanatory = command.options.items[index].iconSelfExplanatory;
+      is(iconSelfExplanatory, expect.items[index].iconSelfExplanatory, expect.name);
+    }
   }
+
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   let length = command.options.nextActionList ? command.options.nextActionList.length : 0;
   for (let i = 0; i < length; i++) {
     is(command.options.nextActionList[i], expect.nextActionList[i], expect.name);
@@ -83,18 +100,26 @@ let tests = [
             title: "Toolkit Menu",
             items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}, {identifier: 4, text: "Item 4"}],
             nextActionList: [iccManager.STK_CMD_SEND_SMS, iccManager.STK_CMD_SET_UP_CALL, iccManager.STK_CMD_LAUNCH_BROWSER, iccManager.STK_CMD_PROVIDE_LOCAL_INFO]}},
-  {command: "d03c810301250082028182850c546f6f6c6b6974204d656e758f07014974656d20318f07024974656d20328f07034974656d20339e0201019f0401050505",
+  {command: "d03c810301250082028182850c546f6f6c6b6974204d656e758f07014974656d20318f07024974656d20328f07034974656d20339e0201019f0401030303",
    func: testSetupMenu,
    expect: {name: "setup_menu_cmd_8",
             commandQualifier: 0x00,
             title: "Toolkit Menu",
-            items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}]}},
+            iconSelfExplanatory: false,
+            icons: [basicIcon],
+            items: [{identifier: 1, text: "Item 1", iconSelfExplanatory: false, icons: [colorIcon]},
+                    {identifier: 2, text: "Item 2", iconSelfExplanatory: false, icons: [colorIcon]},
+                    {identifier: 3, text: "Item 3", iconSelfExplanatory: false, icons: [colorIcon]}]}},
   {command: "d03c810301250082028182850c546f6f6c6b6974204d656e758f07014974656d20318f07024974656d20328f07034974656d20339e0200019f0400050505",
    func: testSetupMenu,
    expect: {name: "setup_menu_cmd_9",
             commandQualifier: 0x00,
             title: "Toolkit Menu",
-            items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}]}},
+            iconSelfExplanatory: true,
+            icons: [basicIcon],
+            items: [{identifier: 1, text: "Item 1", iconSelfExplanatory: true, icons: [colorTransparencyIcon]},
+                    {identifier: 2, text: "Item 2", iconSelfExplanatory: true, icons: [colorTransparencyIcon]},
+                    {identifier: 3, text: "Item 3", iconSelfExplanatory: true, icons: [colorTransparencyIcon]}]}},
   {command: "d029810301250182028182850c546f6f6c6b6974204d656e758f07014974656d20318f07024974656d2032",
    func: testSetupMenu,
    expect: {name: "setup_menu_cmd_10",

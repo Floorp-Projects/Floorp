@@ -9,6 +9,14 @@ function testSendUSSD(command, expect) {
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.text, expect.title, expect.name);
 
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   runNextTest();
 }
 
@@ -58,29 +66,41 @@ let tests = [
    func: testSendUSSD,
    expect: {name: "send_ussd_cmd_6_with_alpha_identifier",
             commandQualifier: 0x00,
-            title: "Basic Icon"}},
+            title: "Basic Icon",
+            iconSelfExplanatory: true,
+            icons: [basicIcon]}},
   {command: "d0488103011200820281838a39f041e19058341e9149e592d9743ea151e9945ab55eb1596d2b2c1e93cbe6333aad5eb3dbee373c2e9fd3ebf63b3eaf6fc564335acd76c3e5609e020001",
    func: testSendUSSD,
    expect: {name: "send_ussd_cmd_6_without_alpha_identifier",
-            commandQualifier: 0x00}},
-  {command: "d054810301120082028183850a436f6c6f722049636f6e8a39f041e19058341e9149e592d9743ea151e9945ab55eb1596d2b2c1e93cbe6333aad5eb3dbee373c2e9fd3ebf63b3eaf6fc564335acd76c3e5609e020002",
+            commandQualifier: 0x00,
+            iconSelfExplanatory: true,
+            icons: [basicIcon]}},
+  {command: "d054810301120082028183850a436f6c6f722049636f6e8a39f041e19058341e9149e592d9743ea151e9945ab55eb1596d2b2c1e93cbe6333aad5eb3dbee373c2e9fd3ebf63b3eaf6fc564335acd76c3e5609e020003",
    func: testSendUSSD,
    expect: {name: "send_ussd_cmd_7_with_alpha_identifier",
             commandQualifier: 0x00,
-            title: "Color Icon"}},
-  {command: "d0488103011200820281838a39f041e19058341e9149e592d9743ea151e9945ab55eb1596d2b2c1e93cbe6333aad5eb3dbee373c2e9fd3ebf63b3eaf6fc564335acd76c3e5609e020002",
+            title: "Color Icon",
+            iconSelfExplanatory: true,
+            icons: [colorIcon]}},
+  {command: "d0488103011200820281838a39f041e19058341e9149e592d9743ea151e9945ab55eb1596d2b2c1e93cbe6333aad5eb3dbee373c2e9fd3ebf63b3eaf6fc564335acd76c3e5609e020003",
    func: testSendUSSD,
    expect: {name: "send_ussd_cmd_7_without_alpha_identifier",
-            commandQualifier: 0x00}},
+            commandQualifier: 0x00,
+            iconSelfExplanatory: true,
+            icons: [colorIcon]}},
   {command: "d054810301120082028183850a42617369632049636f6e8a39f041e19058341e9149e592d9743ea151e9945ab55eb1596d2b2c1e93cbe6333aad5eb3dbee373c2e9fd3ebf63b3eaf6fc564335acd76c3e5609e020101",
    func: testSendUSSD,
    expect: {name: "send_ussd_cmd_8_with_alpha_identifier",
             commandQualifier: 0x00,
-            title: "Basic Icon"}},
+            title: "Basic Icon",
+            iconSelfExplanatory: false,
+            icons: [basicIcon]}},
   {command: "d0488103011200820281838a39f041e19058341e9149e592d9743ea151e9945ab55eb1596d2b2c1e93cbe6333aad5eb3dbee373c2e9fd3ebf63b3eaf6fc564335acd76c3e5609e020101",
    func: testSendUSSD,
    expect: {name: "send_ussd_cmd_8_without_alpha_identifier",
-            commandQualifier: 0x00}},
+            commandQualifier: 0x00,
+            iconSelfExplanatory: false,
+            icons: [basicIcon]}},
   {command: "d05f8103011200820281838519800417041404200410041204210422041204230419042204158a39f041e19058341e9149e592d9743ea151e9945ab55eb1596d2b2c1e93cbe6333aad5eb3dbee373c2e9fd3ebf63b3eaf6fc564335acd76c3e560",
    func: testSendUSSD,
    expect: {name: "send_ussd_cmd_9_with_alpha_identifier",
