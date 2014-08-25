@@ -82,22 +82,6 @@
     "kind": "boolean",
     "description": "blocklist.xml has been loaded synchronously"
   },
-  "COMPARTMENT_DONATED_NODE": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "When a compartment is destroyed, we record whether one of its nodes was ever adopted into another compartment"
-  },
-  "COMPARTMENT_ADOPTED_NODE": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "When a compartment is destroyed, we record whether it had ever adopted a node from another compartment"
-  },
-  "COMPARTMENT_LIVING_ADOPTERS": {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "The number of living compartments for which COMPARTMENT_ADOPTED_NODE is true"
-  },
   "CYCLE_COLLECTOR": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -333,6 +317,12 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Has seen location error"
+  },
+  "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach, DestructuringForIn, LegacyGenerator, ExpressionClosure"
   },
   "TELEMETRY_PING": {
     "expires_in_version": "never",

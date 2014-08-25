@@ -5,5 +5,5 @@ function WeekDay( t ) {
 }
 var expect = 'No Error';
 for (var i = 0; i < 50; i++) {
-    var [] = expect ? WeekDay( i.a ) : true, uneval;
+    var [] = [expect ? WeekDay(i.a) : true], uneval;
 }

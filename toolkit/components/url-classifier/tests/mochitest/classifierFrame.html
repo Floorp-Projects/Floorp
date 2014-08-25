@@ -15,6 +15,15 @@ function checkLoads() {
   var style = document.defaultView.getComputedStyle(elt, "");
   window.parent.isnot(style.visibility, "hidden", "Should not load bad css");
 
+  // Call parent.loadTestFrame again to test classification metadata in HTTP
+  // cache entries.
+  if (window.parent.firstLoad) {
+    window.parent.info("Reloading from cache...");
+    window.parent.firstLoad = false;
+    window.parent.loadTestFrame();
+    return;
+  }
+
   // End (parent) test.
   window.parent.SimpleTest.finish();
 }

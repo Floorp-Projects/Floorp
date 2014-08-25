@@ -17,25 +17,28 @@ class TimeRanges;
 }
 
 // Stores a stream byte offset and the scaled timecode of the block at
-// that offset.  The timecode must be scaled by the stream's timecode
-// scale before use.
+// that offset.
 struct WebMTimeDataOffset
 {
-  WebMTimeDataOffset(int64_t aOffset, uint64_t aTimecode, int64_t aSyncOffset)
-    : mOffset(aOffset), mTimecode(aTimecode), mSyncOffset(aSyncOffset)
+  WebMTimeDataOffset(int64_t aEndOffset, uint64_t aTimecode, int64_t aSyncOffset)
+    : mEndOffset(aEndOffset), mSyncOffset(aSyncOffset), mTimecode(aTimecode)
   {}
 
-  bool operator==(int64_t aOffset) const {
-    return mOffset == aOffset;
+  bool operator==(int64_t aEndOffset) const {
+    return mEndOffset == aEndOffset;
   }
 
-  bool operator<(int64_t aOffset) const {
-    return mOffset < aOffset;
+  bool operator!=(int64_t aEndOffset) const {
+    return mEndOffset != aEndOffset;
   }
 
-  int64_t mOffset;
-  uint64_t mTimecode;
+  bool operator<(int64_t aEndOffset) const {
+    return mEndOffset < aEndOffset;
+  }
+
+  int64_t mEndOffset;
   int64_t mSyncOffset;
+  uint64_t mTimecode;
 };
 
 // A simple WebM parser that produces data offset to timecode pairs as it
@@ -46,9 +49,22 @@ struct WebMTimeDataOffset
 // within the stream.
 struct WebMBufferedParser
 {
-  WebMBufferedParser(int64_t aOffset)
-    : mStartOffset(aOffset), mCurrentOffset(aOffset), mState(CLUSTER_SYNC), mClusterIDPos(0)
+  explicit WebMBufferedParser(int64_t aOffset)
+    : mStartOffset(aOffset), mCurrentOffset(aOffset), mState(READ_ELEMENT_ID),
+      mVIntRaw(false), mTimecodeScale(1000000), mGotTimecodeScale(false)
   {}
+
+  uint32_t GetTimecodeScale() {
+    MOZ_ASSERT(mGotTimecodeScale);
+    return mTimecodeScale;
+  }
+
+  // If this parser is not expected to parse a segment info, it must be told
+  // the appropriate timecode scale to use from elsewhere.
+  void SetTimecodeScale(uint32_t aTimecodeScale) {
+    mTimecodeScale = aTimecodeScale;
+    mGotTimecodeScale = true;
+  }
 
   // Steps the parser through aLength bytes of data.  Always consumes
   // aLength bytes.  Updates mCurrentOffset before returning.  Acquires
@@ -76,65 +92,47 @@ struct WebMBufferedParser
 
 private:
   enum State {
-    // Parser start state.  Scans forward searching for stream sync by
-    // matching CLUSTER_ID with the curernt byte.  The match state is stored
-    // in mClusterIDPos.  Once this reaches sizeof(CLUSTER_ID), stream may
-    // have sync.  The parser then advances to read the cluster size and
-    // timecode.
-    CLUSTER_SYNC,
+    // Parser start state.  Expects to begin at a valid EBML element.  Move
+    // to READ_VINT with mVIntRaw true, then return to READ_ELEMENT_SIZE.
+    READ_ELEMENT_ID,
 
-    /*
-      The the parser states below assume that CLUSTER_SYNC has found a valid
-      sync point within the data.  If parsing fails in these states, the
-      parser returns to CLUSTER_SYNC to find a new sync point.
-    */
+    // Store element ID read into mVInt into mElement.mID.  Move to
+    // READ_VINT with mVIntRaw false, then return to PARSE_ELEMENT.
+    READ_ELEMENT_SIZE,
+
+    // Simplistic core of the parser.  Does not pay attention to nesting of
+    // elements.  Checks mElement for an element ID of interest, then moves
+    // to the next state as determined by the element ID.
+    PARSE_ELEMENT,
 
     // Read the first byte of a variable length integer.  The first byte
     // encodes both the variable integer's length and part of the value.
-    // The value read so far is stored in mVInt and the length is stored in
-    // mVIntLength.  The number of bytes left to read is stored in
-    // mVIntLeft.
+    // The value read so far is stored in mVInt.mValue and the length is
+    // stored in mVInt.mLength.  The number of bytes left to read is stored
+    // in mVIntLeft.
     READ_VINT,
 
-    // Reads the remaining mVIntLeft bytes into mVInt.
+    // Reads the remaining mVIntLeft bytes into mVInt.mValue.
     READ_VINT_REST,
 
-    // Check that the next element is TIMECODE_ID.  The cluster timecode is
-    // required to be the first element in a cluster.  Advances to READ_VINT
-    // to read the timecode's length into mVInt.
-    TIMECODE_SYNC,
+    // mVInt holds the parsed timecode scale, store it in mTimecodeScale,
+    // then return READ_ELEMENT_ID.
+    READ_TIMECODESCALE,
 
-    // mVInt holds the length of the variable length unsigned integer
-    // containing the cluster timecode.  Read mVInt bytes into
-    // mClusterTimecode.
+    // mVInt holds the parsed cluster timecode, store it in
+    // mClusterTimecode, then return to READ_ELEMENT_ID.
     READ_CLUSTER_TIMECODE,
 
-    // Skips elements with a cluster until BLOCKGROUP_ID or SIMPLEBLOCK_ID
-    // is found.  If BLOCKGROUP_ID is found, the parser returns to
-    // ANY_BLOCK_ID searching for a BLOCK_ID.  Once a block or simpleblock
-    // is found, the current data offset is stored in mBlockOffset.  If the
-    // current byte is the beginning of a four byte variant integer, it
-    // indicates the parser has reached a top-level element ID and the
-    // parser returns to CLUSTER_SYNC.
-    ANY_BLOCK_SYNC,
-
-    // Start reading a block.  Blocks and simpleblocks are parsed the same
-    // way as the initial layouts are identical.  mBlockSize is initialized
-    // from mVInt (holding the element size), and mBlockTimecode(Length) is
-    // initialized for parsing.
-    READ_BLOCK,
-
-    // Reads mBlockTimecodeLength bytes of data into mBlockTimecode.  When
-    // mBlockTimecodeLength reaches 0, the timecode has been read.  The sum
-    // of mClusterTimecode and mBlockTimecode is stored as a pair with
-    // mBlockOffset into the offset-to-time map.
+    // mBlockTimecodeLength holds the remaining length of the block timecode
+    // left to read.  Read each byte of the timecode into mBlockTimecode.
+    // Once complete, calculate the scaled timecode from the cluster
+    // timecode, block timecode, and timecode scale, and insert a
+    // WebMTimeDataOffset entry into aMapping if one is not already present
+    // for this offset.
     READ_BLOCK_TIMECODE,
 
     // Skip mSkipBytes of data before resuming parse at mNextState.
     SKIP_DATA,
-
-    // Skip the content of an element.  mVInt holds the element length.
-    SKIP_ELEMENT
   };
 
   // Current state machine action.
@@ -144,16 +142,23 @@ private:
   // mNextState when the current action completes.
   State mNextState;
 
-  // Match position within CLUSTER_ID.  Used to find sync within arbitrary
-  // data.
-  uint32_t mClusterIDPos;
+  struct VInt {
+    VInt() : mValue(0), mLength(0) {}
+    uint64_t mValue;
+    uint64_t mLength;
+  };
 
-  // Variable length integer read from data.
-  uint64_t mVInt;
+  struct EBMLElement {
+    uint64_t Length() { return mID.mLength + mSize.mLength; }
+    VInt mID;
+    VInt mSize;
+  };
 
-  // Encoding length of mVInt.  This is the total number of bytes used to
-  // encoding mVInt's value.
-  uint32_t mVIntLength;
+  EBMLElement mElement;
+
+  VInt mVInt;
+
+  bool mVIntRaw;
 
   // Number of bytes of mVInt left to read.  mVInt is complete once this
   // reaches 0.
@@ -186,6 +191,14 @@ private:
   // Count of bytes left to skip before resuming parse at mNextState.
   // Mostly used to skip block payload data after reading a block timecode.
   uint32_t mSkipBytes;
+
+  // Timecode scale read from the segment info and used to scale absolute
+  // timecodes.
+  uint32_t mTimecodeScale;
+
+  // True if we read the timecode scale from the segment info or have
+  // confirmed that the default value is to be used.
+  bool mGotTimecodeScale;
 };
 
 class WebMBufferedState MOZ_FINAL
@@ -200,11 +213,11 @@ public:
   void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
   bool CalculateBufferedForRange(int64_t aStartOffset, int64_t aEndOffset,
                                  uint64_t* aStartTime, uint64_t* aEndTime);
-  enum OffsetType {
-    CLUSTER_START,
-    BLOCK_START
-  };
-  bool GetOffsetForTime(uint64_t aTime, int64_t* aOffset, enum OffsetType aType);
+
+  // Returns true if aTime is is present in mTimeMapping and sets aOffset to
+  // the latest offset for which decoding can resume without data
+  // dependencies to arrive at aTime.
+  bool GetOffsetForTime(uint64_t aTime, int64_t* aOffset);
 
 private:
   // Private destructor, to discourage deletion outside of Release():

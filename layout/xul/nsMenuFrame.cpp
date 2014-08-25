@@ -1034,10 +1034,12 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
     return;
 
   // Turn the document into a DOM document so we can use getElementById
-  nsIDocument *document = mContent->GetDocument();
+  nsIDocument *document = mContent->GetUncomposedDoc();
   if (!document)
     return;
 
+  //XXXsmaug If mContent is in shadow dom, should we use
+  //         ShadowRoot::GetElementById()?
   nsIContent *keyElement = document->GetElementById(keyValue);
   if (!keyElement) {
 #ifdef DEBUG
