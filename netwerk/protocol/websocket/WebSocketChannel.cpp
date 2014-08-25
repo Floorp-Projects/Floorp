@@ -35,6 +35,8 @@
 #include "nsIRandomGenerator.h"
 #include "nsISocketTransport.h"
 #include "nsThreadUtils.h"
+#include "nsINetworkLinkService.h"
+#include "nsIObserverService.h"
 
 #include "nsAutoPtr.h"
 #include "nsNetCID.h"
@@ -85,7 +87,8 @@ NS_IMPL_ISUPPORTS(WebSocketChannel,
                   nsIProtocolProxyCallback,
                   nsIInterfaceRequestor,
                   nsIChannelEventSink,
-                  nsIThreadRetargetableRequest)
+                  nsIThreadRetargetableRequest,
+                  nsIObserver)
 
 // We implement RFC 6455, which uses Sec-WebSocket-Version: 13 on the wire.
 #define SEC_WEBSOCKET_VERSION "13"
@@ -1046,6 +1049,16 @@ WebSocketChannel::WebSocketChannel() :
     LOG(("Failed to initiate dashboard service."));
 
   mSerial = sSerialSeed++;
+
+  // Register for prefs change notifications
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
+  } else {
+    NS_WARNING("failed to get observer service");
+  }
+
 }
 
 WebSocketChannel::~WebSocketChannel()
@@ -1102,6 +1115,55 @@ WebSocketChannel::~WebSocketChannel()
     mLoadGroup.forget(&forgettableGroup);
     NS_ProxyRelease(mainThread, forgettableGroup, false);
   }
+}
+
+NS_IMETHODIMP
+WebSocketChannel::Observe(nsISupports *subject,
+                          const char *topic,
+                          const char16_t *data)
+{
+  LOG(("WebSocketChannel::Observe [topic=\"%s\"]\n", topic));
+
+  if (strcmp(topic, NS_NETWORK_LINK_TOPIC) == 0) {
+    nsCString converted = NS_ConvertUTF16toUTF8(data);
+    const char *state = converted.get();
+
+    if (strcmp(state, NS_NETWORK_LINK_DATA_CHANGED) == 0) {
+      LOG(("WebSocket: received network CHANGED event"));
+      if (mPingOutstanding) {
+        // If there's an outstanding ping that's expected to get a pong back
+        // we let that do its thing.
+        LOG(("WebSocket: pong already pending"));
+      } else if (!mSocketThread) {
+        // there has not been an asyncopen yet on the object and then we need
+        // no ping.
+        LOG(("WebSocket: early object, no ping needed"));
+      } else {
+        LOG(("nsWebSocketChannel:: Generating Ping as network changed\n"));
+
+        if (mPingForced) {
+          // avoid more than one
+          return NS_OK;
+        }
+        if (!mPingTimer) {
+          // The ping timer is only conditionally running already. If it
+          // wasn't already created do it here.
+          nsresult rv;
+          mPingTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+          if (NS_FAILED(rv)) {
+            NS_WARNING("unable to create ping timer. Carrying on.");
+          } else {
+            mPingTimer->SetTarget(mSocketThread);
+          }
+        }
+        // Trigger the ping timeout asap to fire off a new ping. Wait just
+        // a little bit to better avoid multi-triggers.
+        mPingForced = 1;
+        mPingTimer->InitWithCallback(this, 200, nsITimer::TYPE_ONE_SHOT);
+      }
+    }
+  }
+  return NS_OK;
 }
 
 void
@@ -2623,11 +2685,16 @@ WebSocketChannel::Notify(nsITimer *timer)
     }
 
     if (!mPingOutstanding) {
-      LOG(("nsWebSocketChannel:: Generating Ping\n"));
-      mPingOutstanding = 1;
-      GeneratePing();
-      mPingTimer->InitWithCallback(this, mPingResponseTimeout,
-                                   nsITimer::TYPE_ONE_SHOT);
+      // Allow for the case where a PING was force-sent even though ping
+      // interval isn't enabled. Only issue a new PING if it truly is enabled.
+      if (mPingInterval || mPingForced) {
+        LOG(("nsWebSocketChannel:: Generating Ping\n"));
+        mPingOutstanding = 1;
+        mPingForced = 0;
+        GeneratePing();
+        mPingTimer->InitWithCallback(this, mPingResponseTimeout,
+                                     nsITimer::TYPE_ONE_SHOT);
+      }
     } else {
       LOG(("nsWebSocketChannel:: Timed out Ping\n"));
       mPingTimer = nullptr;
