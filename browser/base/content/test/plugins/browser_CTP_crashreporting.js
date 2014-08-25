@@ -114,6 +114,15 @@ function onSubmitStatus(subj, topic, data) {
     val = getPropertyBagValue(extra, "PluginContentURL");
     ok(val === undefined,
        "URL should be absent from extra data when opt-in not checked");
+
+    // Execute this later in case the event to change submitStatus has not
+    // have been dispatched yet.
+    executeSoon(function () {
+      let plugin = gBrowser.contentDocument.getElementById("test");
+      let elt = gPluginHandler.getPluginUI.bind(gPluginHandler, plugin);
+      is(elt("submitStatus").getAttribute("status"), data,
+         "submitStatus data should match");
+    });
   }
   catch (err) {
     failWithException(err);
