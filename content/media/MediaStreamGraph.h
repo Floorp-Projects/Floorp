@@ -435,6 +435,11 @@ public:
   {
     mAudioOutputs.AppendElement(AudioOutput(aKey));
   }
+  // Returns true if this stream has an audio output.
+  bool HasAudioOutput()
+  {
+    return !mAudioOutputs.IsEmpty();
+  }
   void RemoveAudioOutputImpl(void* aKey);
   void AddVideoOutputImpl(already_AddRefed<VideoFrameContainer> aContainer)
   {
@@ -616,15 +621,7 @@ protected:
     MediaTime mBlockedAudioTime;
     // Last tick written to the audio output.
     TrackTicks mLastTickWritten;
-    RefPtr<AudioStream> mStream;
     TrackID mTrackID;
-
-    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-    {
-      size_t amount = 0;
-      amount += mStream->SizeOfIncludingThis(aMallocSizeOf);
-      return amount;
-    }
   };
   nsTArray<AudioOutputStream> mAudioOutputStreams;
 

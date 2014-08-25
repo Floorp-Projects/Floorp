@@ -16,13 +16,12 @@
 #include "Latency.h"
 #include "mozilla/WeakPtr.h"
 #include "GraphDriver.h"
+#include "AudioMixer.h"
 
 namespace mozilla {
 
 template <typename T>
 class LinkedList;
-
-class AudioMixer;
 
 /**
  * Assume we can run an iteration of the MediaStreamGraph loop in this much time
@@ -116,7 +115,8 @@ struct MessageBlock {
  * OfflineAudioContext object.
  */
 class MediaStreamGraphImpl : public MediaStreamGraph,
-                             public nsIMemoryReporter {
+                             public nsIMemoryReporter,
+                             public MixerCallbackReceiver {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
@@ -350,13 +350,21 @@ public:
    * If aStream needs an audio stream but doesn't have one, create it.
    * If aStream doesn't need an audio stream but has one, destroy it.
    */
-  void CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTime,
-                                   MediaStream* aStream);
+  void CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTime, MediaStream* aStream);
   /**
    * Queue audio (mix of stream audio and silence for blocked intervals)
    * to the audio output stream. Returns the number of frames played.
    */
   TrackTicks PlayAudio(MediaStream* aStream, GraphTime aFrom, GraphTime aTo);
+
+  /* The mixer call the Graph back when all the media streams that have audio
+   * outputs have been mixed down, so it can write to its AudioStream to output
+   * sound. */
+  virtual void MixerCallback(AudioDataValue* aMixedBuffer,
+                             AudioSampleFormat aFormat,
+                             uint32_t aChannels,
+                             uint32_t aFrames,
+                             uint32_t aSampleRate) MOZ_OVERRIDE;
   /**
    * Set the correct current video frame for stream aStream.
    */
@@ -412,6 +420,8 @@ public:
 
   TrackRate AudioSampleRate() const { return mSampleRate; }
   TrackRate GraphRate() const { return mSampleRate; }
+  // Always stereo for now.
+  uint32_t AudioChannelCount() { return 2; }
 
   double MediaTimeToSeconds(GraphTime aTime)
   {
@@ -600,10 +610,11 @@ public:
    * Hold a ref to the Latency logger
    */
   nsRefPtr<AsyncLatencyLogger> mLatencyLog;
+  AudioMixer mMixer;
   /**
-   * If this is not null, all the audio output for the MSG will be mixed down.
+   * The mixed down audio output for this graph.
    */
-  nsAutoPtr<AudioMixer> mMixer;
+  nsRefPtr<AudioStream> mMixedAudioStream;
 
 private:
   virtual ~MediaStreamGraphImpl();

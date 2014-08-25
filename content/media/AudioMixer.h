@@ -10,6 +10,7 @@
 #include "nsTArray.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/LinkedList.h"
+#include "AudioStream.h"
 
 namespace mozilla {
 
@@ -20,7 +21,6 @@ struct MixerCallbackReceiver {
                              uint32_t aFrames,
                              uint32_t aSampleRate) = 0;
 };
-
 /**
  * This class mixes multiple streams of audio together to output a single audio
  * stream.
@@ -91,6 +91,16 @@ public:
 
   void AddCallback(MixerCallbackReceiver* aReceiver) {
     mCallbacks.insertBack(new MixerCallback(aReceiver));
+  }
+
+  bool FindCallback(MixerCallbackReceiver* aReceiver) {
+    for (MixerCallback* cb = mCallbacks.getFirst();
+         cb != nullptr; cb = cb->getNext()) {
+      if (cb->mReceiver == aReceiver) {
+        return true;
+      }
+    }
+    return false;
   }
 
   bool RemoveCallback(MixerCallbackReceiver* aReceiver) {
