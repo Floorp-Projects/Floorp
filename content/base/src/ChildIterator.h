@@ -44,20 +44,6 @@ public:
   {
   }
 
-  ExplicitChildIterator(const ExplicitChildIterator& aOther)
-    : mParent(aOther.mParent), mChild(aOther.mChild),
-      mDefaultChild(aOther.mDefaultChild),
-      mShadowIterator(aOther.mShadowIterator ?
-                      new ExplicitChildIterator(*aOther.mShadowIterator) :
-                      nullptr),
-      mIndexInInserted(aOther.mIndexInInserted), mIsFirst(aOther.mIsFirst) {}
-
-  ExplicitChildIterator(ExplicitChildIterator&& aOther)
-    : mParent(aOther.mParent), mChild(aOther.mChild),
-      mDefaultChild(aOther.mDefaultChild),
-      mShadowIterator(Move(aOther.mShadowIterator)),
-      mIndexInInserted(aOther.mIndexInInserted), mIsFirst(aOther.mIsFirst) {}
-
   nsIContent* GetNextChild();
 
   // Looks for aChildToFind respecting insertion points until aChildToFind
@@ -132,12 +118,6 @@ public:
     Init(false);
   }
 
-  FlattenedChildIterator(FlattenedChildIterator&& aOther)
-    : ExplicitChildIterator(Move(aOther)), mXBLInvolved(aOther.mXBLInvolved) {}
-
-  FlattenedChildIterator(const FlattenedChildIterator& aOther)
-    : ExplicitChildIterator(aOther), mXBLInvolved(aOther.mXBLInvolved) {}
-
   bool XBLInvolved() { return mXBLInvolved; }
 
 protected:
@@ -146,7 +126,7 @@ protected:
    * doesn't want to consider XBL.
    */
   FlattenedChildIterator(nsIContent* aParent, bool aIgnoreXBL)
-    : ExplicitChildIterator(aParent), mXBLInvolved(false)
+  : ExplicitChildIterator(aParent), mXBLInvolved(false)
   {
     Init(aIgnoreXBL);
   }
@@ -171,12 +151,6 @@ public:
     FlattenedChildIterator(aNode, (aFlags & nsIContent::eAllButXBL)),
     mOriginalContent(aNode), mFlags(aFlags),
     mPhase(eNeedBeforeKid) {}
-
-  AllChildrenIterator(AllChildrenIterator&& aOther)
-    : FlattenedChildIterator(Move(aOther)),
-      mOriginalContent(aOther.mOriginalContent),
-      mAnonKids(Move(aOther.mAnonKids)), mFlags(aOther.mFlags),
-      mPhase(aOther.mPhase), mMutationGuard(aOther.mMutationGuard) {}
 
 #ifdef DEBUG
   ~AllChildrenIterator() { MOZ_ASSERT(!mMutationGuard.Mutated(0)); }
