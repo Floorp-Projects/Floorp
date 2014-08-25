@@ -570,7 +570,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for local_include in context.get('LOCAL_INCLUDES', []):
             if local_include.startswith('/'):
-                path = self.config.topsrcdir
+                path = context.config.topsrcdir
                 relative_include = local_include[1:]
             else:
                 path = context.srcdir
