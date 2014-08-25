@@ -168,10 +168,13 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
                                   /* wantsUntrusted = */ false);
   }
 
+  this._doCommandHandlerBinder = this._doCommandHandler.bind(this);
   this._frameElement.addEventListener('mozdocommand',
-                                      this._doCommandHandler.bind(this),
+                                      this._doCommandHandlerBinder,
                                       /* useCapture = */ false,
                                       /* wantsUntrusted = */ false);
+
+  Services.obs.addObserver(this, 'ipc:browser-destroyed', /* ownsWeak = */ true);
 
   this._window._browserElementParents.set(this, null);
 
@@ -919,6 +922,13 @@ BrowserElementParent.prototype = {
         }
         Services.obs.removeObserver(this, 'remote-browser-frame-shown');
       }
+    case 'ipc:browser-destroyed':
+      if (this._isAlive() && subject == this._frameLoader) {
+        Services.obs.removeObserver(this, 'ipc:browser-destroyed');
+        this._frameElement.removeEventListener('mozdocommand',
+                                               this._doCommandHandlerBinder)
+      }
+      break;
     default:
       debug('Unknown topic: ' + topic);
       break;
