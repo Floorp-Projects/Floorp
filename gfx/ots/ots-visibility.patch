@@ -37,22 +37,22 @@ diff --git a/gfx/ots/include/opentype-sanitiser.h b/gfx/ots/include/opentype-san
  typedef unsigned short uint16_t;
  typedef int int32_t;
  typedef unsigned int uint32_t;
-@@ -197,17 +217,17 @@ enum TableAction {
- };
+@@ -187,17 +187,17 @@ class OTSStream {
  
- // Signature of the function to be provided by the client to decide what action
- // to do for a given table.
- //   tag: table tag as an integer in big-endian byte order, independent of platform endianness
- //   user_data: user defined data that are passed to SetTableActionCallback()
- typedef TableAction (*TableActionFunc)(uint32_t tag, void *user_data);
+ enum TableAction {
+   TABLE_ACTION_DEFAULT,  // Use OTS's default action for that table
+   TABLE_ACTION_SANITIZE, // Sanitize the table, potentially droping it
+   TABLE_ACTION_PASSTHRU, // Serialize the table unchanged
+   TABLE_ACTION_DROP      // Drop the table
+ };
  
 -class OTSContext {
 +class OTS_API OTSContext {
    public:
-     OTSContext()
-         : message_func(0),
-           message_user_data(0),
-           table_action_func(0),
-           table_action_user_data(0)
-         {}
+     OTSContext() {}
+     ~OTSContext() {}
  
+     // Process a given OpenType file and write out a sanitised version
+     //   output: a pointer to an object implementing the OTSStream interface. The
+     //     sanitisied output will be written to this. In the even of a failure,
+     //     partial output may have been written.

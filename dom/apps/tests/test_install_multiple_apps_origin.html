@@ -60,6 +60,9 @@ function runTest() {
   SpecialPowers.autoConfirmAppInstall(continueTest);
   yield undefined;
 
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
   request = navigator.mozApps.mgmt.getAll();
   request.onerror = cbError;
   request.onsuccess = continueTest;

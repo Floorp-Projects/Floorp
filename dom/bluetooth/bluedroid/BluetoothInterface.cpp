@@ -2328,23 +2328,23 @@ BluetoothHandsfreeInterface::Init(
   BluetoothHandsfreeResultHandler* aRes)
 {
   static bthf_callbacks_t sCallbacks = {
-    .size = sizeof(sCallbacks),
-    .connection_state_cb = BluetoothHandsfreeCallback::ConnectionState,
-    .audio_state_cb = BluetoothHandsfreeCallback::AudioState,
-    .vr_cmd_cb = BluetoothHandsfreeCallback::VoiceRecognition,
-    .answer_call_cmd_cb = BluetoothHandsfreeCallback::AnswerCall,
-    .hangup_call_cmd_cb = BluetoothHandsfreeCallback::HangupCall,
-    .volume_cmd_cb = BluetoothHandsfreeCallback::Volume,
-    .dial_call_cmd_cb = BluetoothHandsfreeCallback::DialCall,
-    .dtmf_cmd_cb = BluetoothHandsfreeCallback::Dtmf,
-    .nrec_cmd_cb = BluetoothHandsfreeCallback::NoiseReductionEchoCancellation,
-    .chld_cmd_cb = BluetoothHandsfreeCallback::CallHold,
-    .cnum_cmd_cb = BluetoothHandsfreeCallback::Cnum,
-    .cind_cmd_cb = BluetoothHandsfreeCallback::Cind,
-    .cops_cmd_cb = BluetoothHandsfreeCallback::Cops,
-    .clcc_cmd_cb = BluetoothHandsfreeCallback::Clcc,
-    .unknown_at_cmd_cb = BluetoothHandsfreeCallback::UnknownAt,
-    .key_pressed_cmd_cb = BluetoothHandsfreeCallback::KeyPressed
+    sizeof(sCallbacks),
+    BluetoothHandsfreeCallback::ConnectionState,
+    BluetoothHandsfreeCallback::AudioState,
+    BluetoothHandsfreeCallback::VoiceRecognition,
+    BluetoothHandsfreeCallback::AnswerCall,
+    BluetoothHandsfreeCallback::HangupCall,
+    BluetoothHandsfreeCallback::Volume,
+    BluetoothHandsfreeCallback::DialCall,
+    BluetoothHandsfreeCallback::Dtmf,
+    BluetoothHandsfreeCallback::NoiseReductionEchoCancellation,
+    BluetoothHandsfreeCallback::CallHold,
+    BluetoothHandsfreeCallback::Cnum,
+    BluetoothHandsfreeCallback::Cind,
+    BluetoothHandsfreeCallback::Cops,
+    BluetoothHandsfreeCallback::Clcc,
+    BluetoothHandsfreeCallback::UnknownAt,
+    BluetoothHandsfreeCallback::KeyPressed
   };
 
   sHandsfreeNotificationHandler = aNotificationHandler;

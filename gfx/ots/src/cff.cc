@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "maxp.h"
 #include "cff_type2_charstring.h"
 
 // CFF - PostScript font program (Compact Font Format) table
@@ -461,8 +462,9 @@ bool ParsePrivateDictData(
 }
 
 bool ParseDictData(const uint8_t *data, size_t table_length,
-                   const ots::CFFIndex &index, size_t sid_max,
-                   DICT_DATA_TYPE type, ots::OpenTypeCFF *out_cff) {
+                   const ots::CFFIndex &index, size_t glyphs,
+                   size_t sid_max, DICT_DATA_TYPE type,
+                   ots::OpenTypeCFF *out_cff) {
   for (unsigned i = 1; i < index.offsets.size(); ++i) {
     if (type == DICT_DATA_TOPLEVEL) {
       out_cff->char_strings_array.push_back(new ots::CFFIndex);
@@ -474,7 +476,7 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
 
     FONT_FORMAT font_format = FORMAT_UNKNOWN;
     bool have_ros = false;
-    size_t glyphs = 0;
+    size_t charstring_glyphs = 0;
     size_t charset_offset = 0;
 
     while (table.offset() < dict_length) {
@@ -638,10 +640,13 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
           if (charstring_index->count < 2) {
             return OTS_FAILURE();
           }
-          if (glyphs) {
+          if (charstring_glyphs) {
             return OTS_FAILURE();  // multiple charstring tables?
           }
-          glyphs = charstring_index->count;
+          charstring_glyphs = charstring_index->count;
+          if (charstring_glyphs != glyphs) {
+            return OTS_FAILURE();  // CFF and maxp have different number of glyphs?
+          }
           break;
         }
 
@@ -664,7 +669,8 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
             return OTS_FAILURE();
           }
           if (!ParseDictData(data, table_length,
-                             sub_dict_index, sid_max, DICT_DATA_FDARRAY,
+                             sub_dict_index,
+                             glyphs, sid_max, DICT_DATA_FDARRAY,
                              out_cff)) {
             return OTS_FAILURE();
           }
@@ -961,12 +967,14 @@ bool ots_cff_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     return OTS_FAILURE();
   }
 
+  const size_t num_glyphs = file->maxp->num_glyphs;
   const size_t sid_max = string_index.count + kNStdString;
   // string_index.count == 0 is allowed.
 
   // parse "9. Top DICT Data"
   if (!ParseDictData(data, length, top_dict_index,
-                     sid_max, DICT_DATA_TOPLEVEL, file->cff)) {
+                     num_glyphs, sid_max,
+                     DICT_DATA_TOPLEVEL, file->cff)) {
     return OTS_FAILURE();
   }
 
@@ -994,7 +1002,7 @@ bool ots_cff_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
                                       file->cff->local_subrs_per_font,
                                       file->cff->local_subrs,
                                       &table)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed validating charstring set %d", (int) i);
     }
   }
 

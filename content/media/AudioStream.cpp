@@ -915,6 +915,11 @@ void
 AudioStream::Pause()
 {
   MonitorAutoLock mon(mMonitor);
+
+  if (mState == ERRORED) {
+    return;
+  }
+
   if (!mCubebStream || (mState != STARTED && mState != RUNNING)) {
     mNeedsStart = false;
     mState = STOPPED; // which also tells async OpenCubeb not to start, just init
