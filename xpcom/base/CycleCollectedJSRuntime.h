@@ -121,22 +121,13 @@ protected:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
 
-  virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb)
-  {
-  }
-  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer)
-  {
-  }
+  virtual void
+  TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) {}
+  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) {}
 
-  virtual void CustomGCCallback(JSGCStatus aStatus)
-  {
-  }
-  virtual void CustomOutOfMemoryCallback()
-  {
-  }
-  virtual void CustomLargeAllocationFailureCallback()
-  {
-  }
+  virtual void CustomGCCallback(JSGCStatus aStatus) {}
+  virtual void CustomOutOfMemoryCallback() {}
+  virtual void CustomLargeAllocationFailureCallback() {}
   virtual bool CustomContextCallback(JSContext* aCx, unsigned aOperation)
   {
     return true; // Don't block context creation.
@@ -191,8 +182,8 @@ private:
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
   static void GCCallback(JSRuntime* aRuntime, JSGCStatus aStatus, void* aData);
-  static void OutOfMemoryCallback(JSContext *aContext, void *aData);
-  static void LargeAllocationFailureCallback(void *aData);
+  static void OutOfMemoryCallback(JSContext* aContext, void* aData);
+  static void LargeAllocationFailureCallback(void* aData);
   static bool ContextCallback(JSContext* aCx, unsigned aOperation,
                               void* aData);
 
@@ -240,7 +231,7 @@ public:
   MOZ_END_NESTED_ENUM_CLASS(OOMState)
 
 private:
-  void AnnotateAndSetOutOfMemory(OOMState *aStatePtr, OOMState aNewState);
+  void AnnotateAndSetOutOfMemory(OOMState* aStatePtr, OOMState aNewState);
   void OnGC(JSGCStatus aStatus);
   void OnOutOfMemory();
   void OnLargeAllocationFailure();
