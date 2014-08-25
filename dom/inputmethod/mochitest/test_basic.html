@@ -144,13 +144,15 @@ function test_onSelectionChange() {
     }
   }
 
-  gContext.onselectionchange = function() {
+  gContext.onselectionchange = function(evt) {
     ok(true, 'onselectionchange fired');
-    cleanup();
+    is(evt.detail.selectionStart, 10);
+    is(evt.detail.selectionEnd, 10);
+    ok(evt.detail.ownAction);
   };
 
   gContext.sendKey(0, 'j'.charCodeAt(0), 0).then(function() {
-    // do nothing and wait for onselectionchange event
+    cleanup();
   }, function(e) {
     ok(false, 'sendKey failed: ' + e.name);
     cleanup(true);
@@ -175,13 +177,15 @@ function test_onSurroundingTextChange() {
     }
   }
 
-  gContext.onsurroundingtextchange = function() {
+  gContext.onsurroundingtextchange = function(evt) {
     ok(true, 'onsurroundingtextchange fired');
-    cleanup();
+    is(evt.detail.beforeString, 'Xulei2013jj');
+    is(evt.detail.afterString, '');
+    ok(evt.detail.ownAction);
   };
 
   gContext.sendKey(0, 'j'.charCodeAt(0), 0).then(function() {
-    // do nothing and wait for onselectionchange event
+    cleanup();
   }, function(e) {
     ok(false, 'sendKey failed: ' + e.name);
     cleanup(true);
