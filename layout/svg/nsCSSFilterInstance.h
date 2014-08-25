@@ -64,6 +64,7 @@ private:
    */
   nsresult SetAttributesForBlur(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForBrightness(FilterPrimitiveDescription& aDescr);
+  nsresult SetAttributesForContrast(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForDropShadow(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForGrayscale(FilterPrimitiveDescription& aDescr);
   nsresult SetAttributesForHueRotate(FilterPrimitiveDescription& aDescr);

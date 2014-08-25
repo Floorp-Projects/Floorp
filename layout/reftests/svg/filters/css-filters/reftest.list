@@ -13,6 +13,12 @@ default-preferences pref(layout.css.filters.enabled,true)
 == brightness-one.html brightness-one-ref.html
 == brightness-percent.html brightness-percent-ref.html
 == brightness-zero.html brightness-zero-ref.html
+== contrast.html contrast-ref.html
+== contrast-extreme.html contrast-extreme-ref.html
+== contrast-one.html contrast-one-ref.html
+== contrast-percent.html contrast-percent-ref.html
+== contrast-reduce.html contrast-reduce-ref.html
+== contrast-zero.html contrast-zero-ref.html
 == drop-shadow.html drop-shadow-ref.html
 == drop-shadow-default-color.html drop-shadow-default-color-ref.html
 == drop-shadow-negative-offset.html drop-shadow-negative-offset-ref.html
