@@ -105,11 +105,11 @@ class InstallManifest(object):
         Both path and fileobj cannot be defined.
         """
         self._dests = {}
-        self._source_file = None
+        self._source_files = set()
 
         if path or fileobj:
             with _auto_fileobj(path, fileobj, 'rb') as fh:
-                self._source_file = fh.name
+                self._source_files.add(fh.name)
                 self._load_from_fileobj(fh)
 
     def _load_from_fileobj(self, fileobj):
@@ -179,6 +179,14 @@ class InstallManifest(object):
     def __ior__(self, other):
         if not isinstance(other, InstallManifest):
             raise ValueError('Can only | with another instance of InstallManifest.')
+
+        # We must copy source files to ourselves so extra dependencies from
+        # the preprocessor are taken into account. Ideally, we would track
+        # which source file each entry came from. However, this is more
+        # complicated and not yet implemented. The current implementation
+        # will result in over invalidation, possibly leading to performance
+        # loss.
+        self._source_files |= other._source_files
 
         for dest in sorted(other._dests):
             self._add_entry(dest, other._dests[dest])
@@ -288,9 +296,6 @@ class InstallManifest(object):
 
         self._dests[dest] = entry
 
-    def _get_deps(self, dest):
-        return {self._source_file} if self._source_file else set()
-
     def populate_registry(self, registry):
         """Populate a mozpack.copier.FileRegistry instance with data from us.
 
@@ -339,7 +344,7 @@ class InstallManifest(object):
                     depfile_path=entry[2],
                     marker=entry[3],
                     defines=self._decode_field_entry(entry[4]),
-                    extra_depends=self._get_deps(dest)))
+                    extra_depends=self._source_files))
 
                 continue
 
