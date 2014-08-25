@@ -388,14 +388,6 @@ var gUnseekableTests = [
   { name:"no-cues.webm", type:"video/webm" },
   { name:"bogus.duh", type:"bogus/duh"}
 ];
-// Unfortunately big-buck-bunny-unseekable.mp4 is doesn't play on Windows 7, so
-// only include it in the unseekable tests if we're on later versions of Windows.
-// This test actually only passes on win8 at the moment.
-if (navigator.userAgent.indexOf("Windows") != -1 && IsWindows8OrLater()) {
-  gUnseekableTests = gUnseekableTests.concat([
-    { name:"big-buck-bunny-unseekable.mp4", type:"video/mp4" }
-  ]);
-}
 // Android supports fragmented MP4 playback from 4.3.
 var androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
                                   .getService(SpecialPowers.Ci.nsIPropertyBag2)

@@ -2060,8 +2060,9 @@ DOMXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
                                      HandleObject holder, HandleId id,
                                      MutableHandle<JSPropertyDescriptor> desc)
 {
+    bool unused;
     RootedObject obj(cx, getTargetObject(wrapper));
-    if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc))
+    if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc, unused))
         return false;
 
     MOZ_ASSERT(!desc.object() || desc.object() == wrapper, "What did we resolve this on?");
@@ -2102,13 +2103,26 @@ DOMXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper, Handl
         }
     }
 
+    if (!JS_GetPropertyDescriptorById(cx, holder, id, desc))
+        return false;
+    if (desc.object()) {
+        desc.object().set(wrapper);
+        return true;
+    }
+
     RootedObject obj(cx, getTargetObject(wrapper));
-    if (!XrayResolveOwnProperty(cx, wrapper, obj, id, desc))
+    bool cacheOnHolder;
+    if (!XrayResolveOwnProperty(cx, wrapper, obj, id, desc, cacheOnHolder))
         return false;
 
     MOZ_ASSERT(!desc.object() || desc.object() == wrapper, "What did we resolve this on?");
 
-    return true;
+    if (!desc.object() || !cacheOnHolder)
+        return true;
+
+    return JS_DefinePropertyById(cx, holder, id, desc.value(), desc.attributes(),
+                                 desc.getter(), desc.setter()) &&
+           JS_GetPropertyDescriptorById(cx, holder, id, desc);
 }
 
 bool

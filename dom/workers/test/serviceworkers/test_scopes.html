@@ -15,15 +15,33 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
+  var scriptsAndScopes = [
+    [ "worker.js", "." ],
+    [ "worker.js", "./sub/dir/"],
+    [ "worker.js", "./sub/dir" ],
+    [ "worker.js", "./sub/dir.html" ],
+    [ "worker.js", "./sub/dir/a" ],
+    [ "worker.js", "./sub" ],
+    [ "worker.js", "./star*" ], // '*' has no special meaning
+  ];
+
   function registerWorkers() {
-    return Promise.all([
-      navigator.serviceWorker.register("worker.js", { scope: "*" }),
-      navigator.serviceWorker.register("worker.js", { scope: "sub/dir/*"}),
-      navigator.serviceWorker.register("worker.js", { scope: "sub/dir*" }),
-      navigator.serviceWorker.register("worker.js", { scope: "sub/dir" }),
-      navigator.serviceWorker.register("worker.js", { scope: "sub/dir/a*" }),
-      navigator.serviceWorker.register("worker.js", { scope: "sub*" }),
-    ]);
+    var registerArray = [];
+    scriptsAndScopes.forEach(function(item) {
+      registerArray.push(navigator.serviceWorker.register(item[0], { scope: item[1] }));
+    });
+    return Promise.all(registerArray);
+  }
+
+  function unregisterWorkers() {
+    var unregisterArray = [];
+    scriptsAndScopes.forEach(function(item) {
+      var p = navigator.serviceWorker.getRegistration(item[1]);
+      unregisterArray.push(p.then(function(reg) {
+        return reg.unregister();
+      }));
+    });
+    return Promise.all(unregisterArray);
   }
 
   function testScopes() {
@@ -35,13 +53,15 @@
         return base + s;
       }
 
-      ok(getScope(p("index.html")) === p("*"), "Scope should match");
-      ok(getScope(p("sua.html")) === p("*"), "Scope should match");
-      ok(getScope(p("sub.html")) === p("sub*"), "Scope should match");
-      ok(getScope(p("sub/dir.html")) === p("sub/dir*"), "Scope should match");
+      ok(getScope(p("index.html")) === p(""), "Scope should match");
+      ok(getScope(p("sua.html")) === p(""), "Scope should match");
+      ok(getScope(p("sub.html")) === p("sub"), "Scope should match");
+      ok(getScope(p("sub/dir.html")) === p("sub/dir.html"), "Scope should match");
       ok(getScope(p("sub/dir")) === p("sub/dir"), "Scope should match");
-      ok(getScope(p("sub/dir/foo")) === p("sub/dir/*"), "Scope should match");
-      ok(getScope(p("sub/dir/afoo")) === p("sub/dir/a*"), "Scope should match");
+      ok(getScope(p("sub/dir/foo")) === p("sub/dir/"), "Scope should match");
+      ok(getScope(p("sub/dir/afoo")) === p("sub/dir/a"), "Scope should match");
+      ok(getScope(p("star*wars")) === p("star*"), "Scope should match");
+      ok(getScope(p("star/a.html")) === p(""), "Scope should match");
       resolve(true);
     });
   }
@@ -49,6 +69,7 @@
   function runTest() {
     registerWorkers()
       .then(testScopes)
+      .then(unregisterWorkers)
       .then(function() {
         SimpleTest.finish();
       }).catch(function(e) {

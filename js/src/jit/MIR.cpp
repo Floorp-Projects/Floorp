@@ -3425,6 +3425,19 @@ MSqrt::trySpecializeFloat32(TempAllocator &alloc) {
 }
 
 MDefinition *
+MClz::foldsTo(TempAllocator &alloc)
+{
+    if (num()->isConstant()) {
+        int32_t n = num()->toConstant()->value().toInt32();
+        if (n == 0)
+            return MConstant::New(alloc, Int32Value(32));
+        return MConstant::New(alloc, Int32Value(mozilla::CountLeadingZeroes32(n)));
+    }
+
+    return this;
+}
+
+MDefinition *
 MBoundsCheck::foldsTo(TempAllocator &alloc)
 {
     if (index()->isConstant() && length()->isConstant()) {

@@ -29,7 +29,7 @@ class MediaSource;
 class MediaSourceReader : public MediaDecoderReader
 {
 public:
-  MediaSourceReader(MediaSourceDecoder* aDecoder, dom::MediaSource* aSource);
+  MediaSourceReader(MediaSourceDecoder* aDecoder);
 
   nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE
   {
@@ -98,8 +98,6 @@ private:
   bool SwitchAudioReader(MediaDecoderReader* aTargetReader);
   bool SwitchVideoReader(MediaDecoderReader* aTargetReader);
 
-  void SetMediaSourceDuration(double aDuration) ;
-
   // These are read and written on the decode task queue threads.
   int64_t mTimeThreshold;
   bool mDropAudioBeforeThreshold;
@@ -110,8 +108,6 @@ private:
 
   nsRefPtr<MediaDecoderReader> mAudioReader;
   nsRefPtr<MediaDecoderReader> mVideoReader;
-
-  dom::MediaSource* mMediaSource;
 };
 
 } // namespace mozilla

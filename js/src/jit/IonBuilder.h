@@ -684,6 +684,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineMathAbs(CallInfo &callInfo);
     InliningStatus inlineMathFloor(CallInfo &callInfo);
     InliningStatus inlineMathCeil(CallInfo &callInfo);
+    InliningStatus inlineMathClz32(CallInfo &callInfo);
     InliningStatus inlineMathRound(CallInfo &callInfo);
     InliningStatus inlineMathSqrt(CallInfo &callInfo);
     InliningStatus inlineMathAtan2(CallInfo &callInfo);

@@ -18,10 +18,12 @@ It does this by examining specific variables populated during execution.
 
 from __future__ import print_function, unicode_literals
 
+import inspect
 import logging
 import os
 import sys
 import time
+import tokenize
 import traceback
 import types
 
@@ -29,6 +31,7 @@ from collections import OrderedDict
 from io import StringIO
 
 from mozbuild.util import (
+    memoize,
     ReadOnlyDefaultDict,
     ReadOnlyDict,
 )
@@ -126,12 +129,15 @@ class MozbuildSandbox(Sandbox):
         exports = self.metadata.get('exports', {})
         self.exports = set(exports.keys())
         context.update(exports)
+        self.templates = self.metadata.setdefault('templates', {})
 
     def __getitem__(self, key):
         if key in SPECIAL_VARIABLES:
             return SPECIAL_VARIABLES[key][0](self._context)
         if key in FUNCTIONS:
-            return getattr(self, FUNCTIONS[key][0])
+            return FUNCTIONS[key][0](self)
+        if key in self.templates:
+            return self._create_template_function(self.templates[key])
         return Sandbox.__getitem__(self, key)
 
     def __setitem__(self, key, value):
@@ -297,6 +303,106 @@ class MozbuildSandbox(Sandbox):
 
     def _error(self, message):
         raise SandboxCalledError(self._execution_stack, message)
+
+    def _template_decorator(self, func):
+        """Registers template as expected by _create_template_function.
+
+        The template data consists of:
+        - the function object as it comes from the sandbox evaluation of the
+          template declaration.
+        - its code, modified as described in the comments of this method.
+        - the path of the file containing the template definition.
+        """
+
+        if not inspect.isfunction(func):
+            raise Exception('`template` is a function decorator. You must '
+                'use it as `@template` preceding a function declaration.')
+
+        name = func.func_name
+
+        if name in self.templates:
+            raise KeyError(
+                'A template named "%s" was already declared in %s.' % (name,
+                self.templates[name][2]))
+
+        if name.islower() or name.isupper() or name[0].islower():
+            raise NameError('Template function names must be CamelCase.')
+
+        lines, firstlineno = inspect.getsourcelines(func)
+        first_op = None
+        generator = tokenize.generate_tokens(iter(lines).next)
+        # Find the first indent token in the source of this template function,
+        # which corresponds to the beginning of the function body.
+        for typ, s, begin, end, line in generator:
+            if typ == tokenize.OP:
+                first_op = True
+            if first_op and typ == tokenize.INDENT:
+                break
+        if typ != tokenize.INDENT:
+            # This should never happen.
+            raise Exception('Could not find the first line of the template %s' %
+                func.func_name)
+        # The code of the template in moz.build looks like this:
+        # m      def Foo(args):
+        # n          FOO = 'bar'
+        # n+1        (...)
+        #
+        # where,
+        # - m is firstlineno - 1,
+        # - n is usually m + 1, but in case the function signature takes more
+        # lines, is really m + begin[0] - 1
+        #
+        # We want that to be replaced with:
+        # m       if True:
+        # n           FOO = 'bar'
+        # n+1         (...)
+        #
+        # (this is simpler than trying to deindent the function body)
+        # So we need to prepend with n - 1 newlines so that line numbers
+        # are unchanged.
+        code = '\n' * (firstlineno + begin[0] - 3) + 'if True:\n'
+        code += ''.join(lines[begin[0] - 1:])
+
+        self.templates[name] = func, code, self._execution_stack[-1]
+
+    @memoize
+    def _create_template_function(self, template):
+        """Returns a function object for use within the sandbox for the given
+        template.
+
+        When a moz.build file contains a reference to a template call, the
+        sandbox needs a function to execute. This is what this method returns.
+        That function creates a new sandbox for execution of the template.
+        After the template is executed, the data from its execution is merged
+        with the context of the calling sandbox.
+        """
+        func, code, path = template
+
+        def template_function(*args, **kwargs):
+            context = Context(VARIABLES, self._context.config)
+            context.add_source(self._execution_stack[-1])
+            for p in self._context.all_paths:
+                context.add_source(p)
+
+            sandbox = MozbuildSandbox(context, self.metadata)
+            for k, v in inspect.getcallargs(func, *args, **kwargs).items():
+                sandbox[k] = v
+
+            sandbox.exec_source(code, path)
+
+            # The sandbox will do all the necessary checks for these merges.
+            for key, value in context.items():
+                if isinstance(value, dict):
+                    self[key].update(value)
+                elif isinstance(value, list):
+                    self[key] += value
+                else:
+                    self[key] = value
+
+            for p in context.all_paths:
+                self._context.add_source(p)
+
+        return template_function
 
 
 class SandboxValidationError(Exception):
@@ -846,6 +952,9 @@ class BuildReader(object):
                             d, var), context)
 
                 recurse_info[d] = {}
+                if 'templates' in sandbox.metadata:
+                    recurse_info[d]['templates'] = dict(
+                        sandbox.metadata['templates'])
                 if 'exports' in sandbox.metadata:
                     sandbox.recompute_exports()
                     recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
@@ -865,6 +974,9 @@ class BuildReader(object):
                             'Tier directory (%s) registered multiple '
                             'times in %s' % (d, tier), context)
                     recurse_info[d] = {'check_external': True}
+                    if 'templates' in sandbox.metadata:
+                        recurse_info[d]['templates'] = dict(
+                            sandbox.metadata['templates'])
 
         for relpath, child_metadata in recurse_info.items():
             if 'check_external' in child_metadata:
