@@ -95,7 +95,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HTMLOptionsCollection, mElements)
 
 // QueryInterface implementation for HTMLOptionsCollection
 NS_INTERFACE_TABLE_HEAD(HTMLOptionsCollection)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
   NS_INTERFACE_TABLE(HTMLOptionsCollection,
                      nsIHTMLCollection,
                      nsIDOMHTMLOptionsCollection,

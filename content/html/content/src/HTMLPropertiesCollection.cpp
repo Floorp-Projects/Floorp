@@ -61,7 +61,7 @@ HTMLPropertiesCollection::~HTMLPropertiesCollection()
 }
 
 NS_INTERFACE_TABLE_HEAD(HTMLPropertiesCollection)
-    NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+    NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
     NS_INTERFACE_TABLE(HTMLPropertiesCollection,
                        nsIDOMHTMLCollection,
                        nsIHTMLCollection,
@@ -408,7 +408,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(PropertyNodeList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PropertyNodeList)
 
 NS_INTERFACE_TABLE_HEAD(PropertyNodeList)
-    NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+    NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
     NS_INTERFACE_TABLE(PropertyNodeList,
                        nsIDOMNodeList,
                        nsINodeList,
