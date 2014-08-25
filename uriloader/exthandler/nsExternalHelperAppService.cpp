@@ -612,18 +612,95 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
 {
 }
 
+
+nsresult
+nsExternalHelperAppService::DoContentContentProcessHelper(const nsACString& aMimeContentType,
+                                                          nsIRequest *aRequest,
+                                                          nsIInterfaceRequestor *aWindowContext,
+                                                          bool aForceSave,
+                                                          nsIStreamListener ** aStreamListener)
+{
+  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(aWindowContext);
+  NS_ENSURE_STATE(window);
+
+  // We need to get a hold of a ContentChild so that we can begin forwarding
+  // this data to the parent.  In the HTTP case, this is unfortunate, since
+  // we're actually passing data from parent->child->parent wastefully, but
+  // the Right Fix will eventually be to short-circuit those channels on the
+  // parent side based on some sort of subscription concept.
+  using mozilla::dom::ContentChild;
+  using mozilla::dom::ExternalHelperAppChild;
+  ContentChild *child = ContentChild::GetSingleton();
+  if (!child) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCString disp;
+  nsCOMPtr<nsIURI> uri;
+  int64_t contentLength = -1;
+  uint32_t contentDisposition = -1;
+  nsAutoString fileName;
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  if (channel) {
+    channel->GetURI(getter_AddRefs(uri));
+    channel->GetContentLength(&contentLength);
+    channel->GetContentDisposition(&contentDisposition);
+    channel->GetContentDispositionFilename(fileName);
+    channel->GetContentDispositionHeader(disp);
+  }
+
+  nsCOMPtr<nsIURI> referrer;
+  NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));
+
+  OptionalURIParams uriParams, referrerParams;
+  SerializeURI(uri, uriParams);
+  SerializeURI(referrer, referrerParams);
+
+  // Now we build a protocol for forwarding our data to the parent.  The
+  // protocol will act as a listener on the child-side and create a "real"
+  // helperAppService listener on the parent-side, via another call to
+  // DoContent.
+  mozilla::dom::PExternalHelperAppChild *pc =
+    child->SendPExternalHelperAppConstructor(uriParams,
+                                              nsCString(aMimeContentType),
+                                              disp, contentDisposition,
+                                              fileName, aForceSave, 
+                                              contentLength, referrerParams,
+                                              mozilla::dom::TabChild::GetFrom(window));
+  ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
+
+  NS_ADDREF(*aStreamListener = childListener);
+
+  uint32_t reason = nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
+
+  nsRefPtr<nsExternalAppHandler> handler =
+    new nsExternalAppHandler(nullptr, EmptyCString(), aWindowContext, this,
+                             fileName, reason, aForceSave);
+  if (!handler) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  childListener->SetHandler(handler);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
                                                     nsIRequest *aRequest,
                                                     nsIInterfaceRequestor *aWindowContext,
                                                     bool aForceSave,
                                                     nsIStreamListener ** aStreamListener)
 {
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return DoContentContentProcessHelper(aMimeContentType, aRequest, aWindowContext,
+                                         aForceSave, aStreamListener);
+  }
+
+  nsresult rv;
   nsAutoString fileName;
   nsAutoCString fileExtension;
   uint32_t reason = nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
   uint32_t contentDisposition = -1;
-
-  nsresult rv;
 
   // Get the file extension and name that we will need later
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -634,62 +711,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     channel->GetContentLength(&contentLength);
     channel->GetContentDisposition(&contentDisposition);
     channel->GetContentDispositionFilename(fileName);
-  }
-  
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    nsCOMPtr<nsIDOMWindow> window = do_GetInterface(aWindowContext);
-    NS_ENSURE_STATE(window);
 
-    // We need to get a hold of a ContentChild so that we can begin forwarding
-    // this data to the parent.  In the HTTP case, this is unfortunate, since
-    // we're actually passing data from parent->child->parent wastefully, but
-    // the Right Fix will eventually be to short-circuit those channels on the
-    // parent side based on some sort of subscription concept.
-    using mozilla::dom::ContentChild;
-    using mozilla::dom::ExternalHelperAppChild;
-    ContentChild *child = ContentChild::GetSingleton();
-    if (!child)
-      return NS_ERROR_FAILURE;
-
-    nsCString disp;
-    if (channel) {
-      channel->GetContentDispositionHeader(disp);
-    }
-
-    nsCOMPtr<nsIURI> referrer;
-    rv = NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));
-
-    OptionalURIParams uriParams, referrerParams;
-    SerializeURI(uri, uriParams);
-    SerializeURI(referrer, referrerParams);
-
-    // Now we build a protocol for forwarding our data to the parent.  The
-    // protocol will act as a listener on the child-side and create a "real"
-    // helperAppService listener on the parent-side, via another call to
-    // DoContent.
-    mozilla::dom::PExternalHelperAppChild *pc =
-      child->SendPExternalHelperAppConstructor(uriParams,
-                                               nsCString(aMimeContentType),
-                                               disp, contentDisposition,
-                                               fileName, aForceSave, 
-                                               contentLength, referrerParams,
-                                               mozilla::dom::TabChild::GetFrom(window));
-    ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
-
-    NS_ADDREF(*aStreamListener = childListener);
-
-    nsRefPtr<nsExternalAppHandler> handler =
-      new nsExternalAppHandler(nullptr, EmptyCString(), aWindowContext, this,
-                               fileName,
-                               reason, aForceSave);
-    if (!handler)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    childListener->SetHandler(handler);
-    return NS_OK;
-  }
-
-  if (channel) {
     // Check if we have a POST request, in which case we don't want to use
     // the url's extension
     bool allowURLExt = true;
