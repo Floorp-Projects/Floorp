@@ -321,7 +321,8 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
 
 GrallocTextureHostOGL::~GrallocTextureHostOGL()
 {
-  mTextureSource = nullptr;
+  MOZ_ASSERT(!mTextureSource || (mFlags & TextureFlags::DEALLOCATE_CLIENT),
+             "Leaking our buffer");
 }
 
 void

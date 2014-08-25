@@ -172,46 +172,44 @@ gfxProxyFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeed
     return nullptr;
 }
 
-static ots::TableAction
-OTSTableAction(uint32_t aTag, void *aUserData)
-{
-    // preserve Graphite, color glyph and SVG tables
-    if (aTag == TRUETYPE_TAG('S', 'i', 'l', 'f') ||
-        aTag == TRUETYPE_TAG('S', 'i', 'l', 'l') ||
-        aTag == TRUETYPE_TAG('G', 'l', 'o', 'c') ||
-        aTag == TRUETYPE_TAG('G', 'l', 'a', 't') ||
-        aTag == TRUETYPE_TAG('F', 'e', 'a', 't') ||
-        aTag == TRUETYPE_TAG('S', 'V', 'G', ' ') ||
-        aTag == TRUETYPE_TAG('C', 'O', 'L', 'R') ||
-        aTag == TRUETYPE_TAG('C', 'P', 'A', 'L')) {
-        return ots::TABLE_ACTION_PASSTHRU;
-    }
-    return ots::TABLE_ACTION_DEFAULT;
-}
+class gfxOTSContext : public ots::OTSContext {
+public:
+    gfxOTSContext(gfxMixedFontFamily *aFamily, gfxProxyFontEntry  *aProxy)
+        : mFamily(aFamily), mProxy(aProxy) {}
 
-struct OTSCallbackUserData {
+    virtual ots::TableAction GetTableAction(uint32_t aTag) MOZ_OVERRIDE {
+        // preserve Graphite, color glyph and SVG tables
+        if (aTag == TRUETYPE_TAG('S', 'i', 'l', 'f') ||
+            aTag == TRUETYPE_TAG('S', 'i', 'l', 'l') ||
+            aTag == TRUETYPE_TAG('G', 'l', 'o', 'c') ||
+            aTag == TRUETYPE_TAG('G', 'l', 'a', 't') ||
+            aTag == TRUETYPE_TAG('F', 'e', 'a', 't') ||
+            aTag == TRUETYPE_TAG('S', 'V', 'G', ' ') ||
+            aTag == TRUETYPE_TAG('C', 'O', 'L', 'R') ||
+            aTag == TRUETYPE_TAG('C', 'P', 'A', 'L')) {
+            return ots::TABLE_ACTION_PASSTHRU;
+        }
+        return ots::TABLE_ACTION_DEFAULT;
+    }
+
+    virtual void Message(const char *format, ...) MSGFUNC_FMT_ATTR MOZ_OVERRIDE {
+        va_list va;
+        va_start(va, format);
+
+        // buf should be more than adequate for any message OTS generates,
+        // so we don't worry about checking the result of vsnprintf()
+        char buf[512];
+        (void)vsnprintf(buf, sizeof(buf), format, va);
+
+        va_end(va);
+
+        mProxy->mFontSet->LogMessage(mFamily, mProxy, buf);
+    }
+
+private:
     gfxMixedFontFamily *mFamily;
     gfxProxyFontEntry  *mProxy;
 };
-
-/* static */ bool
-gfxProxyFontEntry::OTSMessage(void *aUserData, const char *format, ...)
-{
-    va_list va;
-    va_start(va, format);
-
-    // buf should be more than adequate for any message OTS generates,
-    // so we don't worry about checking the result of vsnprintf()
-    char buf[512];
-    (void)vsnprintf(buf, sizeof(buf), format, va);
-
-    va_end(va);
-
-    OTSCallbackUserData *d = static_cast<OTSCallbackUserData*>(aUserData);
-    d->mProxy->mFontSet->LogMessage(d->mFamily, d->mProxy, buf);
-
-    return false;
-}
 
 // Call the OTS library to sanitize an sfnt before attempting to use it.
 // Returns a newly-allocated block, or nullptr in case of fatal errors.
@@ -226,13 +224,7 @@ gfxProxyFontEntry::SanitizeOpenTypeData(gfxMixedFontFamily *aFamily,
     ExpandingMemoryStream output(aIsCompressed ? aLength * 2 : aLength,
                                  1024 * 1024 * 256);
 
-    OTSCallbackUserData userData;
-    userData.mFamily = aFamily;
-    userData.mProxy = this;
-
-    ots::OTSContext otsContext;
-    otsContext.SetTableActionCallback(&OTSTableAction, nullptr);
-    otsContext.SetMessageCallback(&OTSMessage, &userData);
+    gfxOTSContext otsContext(aFamily, this);
 
     if (otsContext.Process(&output, aData, aLength)) {
         aSaneLength = output.Tell();

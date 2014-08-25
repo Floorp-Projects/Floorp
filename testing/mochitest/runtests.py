@@ -1166,12 +1166,12 @@ class Mochitest(MochitestUtilsMixin):
       return options.gmp_path
 
     # For local builds, gmp-fake will be under dist/bin.
-    gmp_path = os.path.join(options.xrePath, 'gmp-fake')
+    gmp_path = os.path.join(options.xrePath, 'gmp-fake', '1.0')
     if os.path.isdir(gmp_path):
       return gmp_path
 
     # For packaged builds, gmp-fake will get copied under $profile/plugins.
-    gmp_path = os.path.join(self.profile.profile, 'plugins', 'gmp-fake')
+    gmp_path = os.path.join(self.profile.profile, 'plugins', 'gmp-fake', '1.0')
     if os.path.isdir(gmp_path):
       return gmp_path
     # This is fatal for desktop environments.

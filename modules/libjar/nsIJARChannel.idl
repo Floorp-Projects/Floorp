@@ -8,7 +8,7 @@
 interface nsIFile;
 interface nsIZipEntry;
 
-[scriptable, builtinclass, uuid(8cce289f-1671-452e-b9c3-3b7366ec8337)]
+[scriptable, builtinclass, uuid(6b438dc3-9ba0-4f5f-b83f-82e1d7b98604)]
 interface nsIJARChannel : nsIChannel
 {
     /**
