@@ -1487,19 +1487,22 @@ private:
 
 class MediaStreamGraphStableStateRunnable : public nsRunnable {
 public:
-  explicit MediaStreamGraphStableStateRunnable(MediaStreamGraphImpl* aGraph)
+  explicit MediaStreamGraphStableStateRunnable(MediaStreamGraphImpl* aGraph,
+                                               bool aSourceIsMSG)
     : mGraph(aGraph)
+    , mSourceIsMSG(aSourceIsMSG)
   {
   }
   NS_IMETHOD Run()
   {
     if (mGraph) {
-      mGraph->RunInStableState();
+      mGraph->RunInStableState(mSourceIsMSG);
     }
     return NS_OK;
   }
 private:
   MediaStreamGraphImpl* mGraph;
+  bool mSourceIsMSG;
 };
 
 /*
@@ -1533,7 +1536,7 @@ public:
 }
 
 void
-MediaStreamGraphImpl::RunInStableState()
+MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
 
@@ -1545,7 +1548,10 @@ MediaStreamGraphImpl::RunInStableState()
 
   {
     MonitorAutoLock lock(mMonitor);
-    mPostedRunInStableStateEvent = false;
+    if (aSourceIsMSG) {
+      MOZ_ASSERT(mPostedRunInStableStateEvent);
+      mPostedRunInStableStateEvent = false;
+    }
 
     runnables.SwapElements(mUpdateRunnables);
     for (uint32_t i = 0; i < mStreamUpdates.Length(); ++i) {
@@ -1635,7 +1641,10 @@ MediaStreamGraphImpl::RunInStableState()
   }
 
   // Make sure we get a new current time in the next event loop task
-  mPostedRunInStableState = false;
+  if (!aSourceIsMSG) {
+    MOZ_ASSERT(mPostedRunInStableState);
+    mPostedRunInStableState = false;
+  }
 
   for (uint32_t i = 0; i < runnables.Length(); ++i) {
     runnables[i]->Run();
@@ -1660,7 +1669,7 @@ MediaStreamGraphImpl::EnsureRunInStableState()
   if (mPostedRunInStableState)
     return;
   mPostedRunInStableState = true;
-  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this);
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this, false);
   nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
   if (appShell) {
     appShell->RunInStableState(event);
@@ -1677,7 +1686,7 @@ MediaStreamGraphImpl::EnsureStableStateEventPosted()
   if (mPostedRunInStableStateEvent)
     return;
   mPostedRunInStableStateEvent = true;
-  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this);
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this, true);
   NS_DispatchToMainThread(event);
 }
 

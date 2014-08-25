@@ -686,7 +686,7 @@ AudioStream::SetVolume(double aVolume)
 {
   NS_ABORT_IF_FALSE(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
 
-  if (cubeb_stream_set_volume(mCubebStream, aVolume * CubebUtils::GetVolumeScale()) != CUBEB_OK) {
+  if (cubeb_stream_set_volume(mCubebStream.get(), aVolume * CubebUtils::GetVolumeScale()) != CUBEB_OK) {
     NS_WARNING("Could not change volume on cubeb stream.");
   }
 }
