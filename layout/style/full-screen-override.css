@@ -6,19 +6,19 @@
 *|*:-moz-full-screen-ancestor {
   /* Ancestors of a full-screen element should not induce stacking contexts
      that would prevent the full-screen element from being on top. */
-  z-index: auto;
+  z-index: initial !important;
   /* Ancestors of a full-screen element should not be partially transparent,
      since that would apply to the full-screen element and make the page visible
      behind it. It would also create a pseudo-stacking-context that would let content
      draw on top of the full-screen element. */
-  opacity: 1;
+  opacity: initial !important;
   /* Ancestors of a full-screen element should not apply SVG masking, clipping, or
      filtering, since that would affect the full-screen element and create a pseudo-
      stacking context. */
-  mask: none;
-  clip: auto;
-  filter: none;
-  -moz-transform: none;
-  will-change: auto;
+  mask: initial !important;
+  clip: initial !important;
+  filter: initial !important;
+  transform: initial !important;
+  will-change: initial !important;
 }
 
