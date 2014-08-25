@@ -72,11 +72,7 @@ public:
 
     void ShutdownMarker();
 
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-        size_t n = mallocSizeOf(this);
-        n += mTable.sizeOfExcludingThis(mallocSizeOf);
-        return n;
-    }
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
     JSObject2WrappedJSMap() {}
