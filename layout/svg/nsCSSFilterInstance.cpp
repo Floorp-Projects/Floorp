@@ -55,7 +55,9 @@ nsCSSFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
       result = SetAttributesForBrightness(descr);
       break;
     case NS_STYLE_FILTER_CONTRAST:
-      return NS_ERROR_NOT_IMPLEMENTED;
+      descr = CreatePrimitiveDescription(PrimitiveType::ComponentTransfer, aPrimitiveDescrs);
+      result = SetAttributesForContrast(descr);
+      break;
     case NS_STYLE_FILTER_DROP_SHADOW:
       descr = CreatePrimitiveDescription(PrimitiveType::DropShadow, aPrimitiveDescrs);
       result = SetAttributesForDropShadow(descr);
@@ -141,6 +143,32 @@ nsCSSFilterInstance::SetAttributesForBrightness(FilterPrimitiveDescription& aDes
   aDescr.Attributes().Set(eComponentTransferFunctionR, brightnessAttrs);
   aDescr.Attributes().Set(eComponentTransferFunctionG, brightnessAttrs);
   aDescr.Attributes().Set(eComponentTransferFunctionB, brightnessAttrs);
+
+  // Set identity transfer function for A.
+  AttributeMap identityAttrs;
+  identityAttrs.Set(eComponentTransferFunctionType,
+                    (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY);
+  aDescr.Attributes().Set(eComponentTransferFunctionA, identityAttrs);
+
+  return NS_OK;
+}
+
+nsresult
+nsCSSFilterInstance::SetAttributesForContrast(FilterPrimitiveDescription& aDescr)
+{
+  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
+  float value = styleValue.GetFactorOrPercentValue();
+  float intercept = -(0.5 * value) + 0.5;
+
+  // Set transfer functions for RGB.
+  AttributeMap contrastAttrs;
+  contrastAttrs.Set(eComponentTransferFunctionType,
+                    (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_LINEAR);
+  contrastAttrs.Set(eComponentTransferFunctionSlope, value);
+  contrastAttrs.Set(eComponentTransferFunctionIntercept, intercept);
+  aDescr.Attributes().Set(eComponentTransferFunctionR, contrastAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionG, contrastAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionB, contrastAttrs);
 
   // Set identity transfer function for A.
   AttributeMap identityAttrs;
