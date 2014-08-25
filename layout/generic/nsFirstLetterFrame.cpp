@@ -214,6 +214,19 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     // In the floating first-letter case, we need to set this ourselves;
     // nsLineLayout::BeginSpan will set it in the other case
     mBaseline = kidMetrics.BlockStartAscent();
+
+    // Place and size the child and update the output metrics
+    LogicalSize convertedSize = kidMetrics.Size(lineWM).ConvertTo(wm, lineWM);
+    kid->SetRect(nsRect(bp.IStart(wm), bp.BStart(wm),
+                        convertedSize.ISize(wm), convertedSize.BSize(wm)));
+    kid->FinishAndStoreOverflow(&kidMetrics);
+    kid->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
+
+    convertedSize.ISize(wm) += bp.IStartEnd(wm);
+    convertedSize.BSize(wm) += bp.BStartEnd(wm);
+    aMetrics.SetSize(wm, convertedSize);
+    aMetrics.SetBlockStartAscent(kidMetrics.BlockStartAscent() +
+                                 bp.BStart(wm));
   }
   else {
     // Pretend we are a span and reflow the child frame
@@ -227,20 +240,20 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     ll->ReflowFrame(kid, aReflowStatus, &kidMetrics, pushedFrame);
     ll->EndSpan(this);
     ll->SetInFirstLetter(false);
+
+    // Place and size the child and update the output metrics
+    LogicalSize convertedSize = kidMetrics.Size(lineWM).ConvertTo(wm, lineWM);
+    kid->SetRect(nsRect(bp.IStart(wm), bp.BStart(wm),
+                        convertedSize.ISize(wm), convertedSize.BSize(wm)));
+    kid->FinishAndStoreOverflow(&kidMetrics);
+    kid->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
+
+    convertedSize.ISize(wm) += bp.IStartEnd(wm);
+    convertedSize.BSize(wm) += bp.BStartEnd(wm);
+    aMetrics.SetSize(wm, convertedSize);
+    aMetrics.SetBlockStartAscent(kidMetrics.BlockStartAscent() +
+                                 bp.BStart(wm));
   }
-
-  // Place and size the child and update the output metrics
-  LogicalSize convertedSize = kidMetrics.Size(lineWM).ConvertTo(wm, lineWM);
-  kid->SetRect(nsRect(bp.IStart(wm), bp.BStart(wm),
-                      convertedSize.ISize(wm), convertedSize.BSize(wm)));
-  kid->FinishAndStoreOverflow(&kidMetrics);
-  kid->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
-
-  convertedSize.ISize(wm) += bp.IStartEnd(wm);
-  convertedSize.BSize(wm) += bp.BStartEnd(wm);
-  aMetrics.SetSize(wm, convertedSize);
-  aMetrics.SetBlockStartAscent(kidMetrics.BlockStartAscent() +
-                               bp.BStart(wm));
 
   // Ensure that the overflow rect contains the child textframe's overflow rect.
   // Note that if this is floating, the overline/underline drawable area is in
