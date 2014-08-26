@@ -1,0 +1,34 @@
+<html class="reftest-wait">
+<head>
+  <script>
+    function doTest() {
+      var c = document.getElementById('c');
+      var ctx = c.getContext('2d');
+
+      ctx.transform(1, 0, 0, 1, 0.5, 0.5);
+
+      ctx.moveTo(0,0);
+      ctx.lineTo(100,0);
+      ctx.lineTo(100, 100);
+      ctx.lineTo(0,100);
+      ctx.closePath();
+
+      ctx.moveTo(0,0);
+      ctx.lineTo(100,0);
+      ctx.lineTo(100, 100);
+      ctx.lineTo(0,100);
+      ctx.closePath();
+
+      ctx.clip('evenodd');
+
+      ctx.fillStyle = 'red';
+      ctx.fillRect(0,0,400,400);
+
+      document.documentElement.removeAttribute("class");
+  }
+  </script>
+</head>
+<body onload="doTest()">
+  <canvas id="c" width="400" height="400"></canvas>
+</body>
+</body></html>
