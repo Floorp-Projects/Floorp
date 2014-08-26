@@ -19,7 +19,6 @@
 #include "XPCJSMemoryReporter.h"
 #include "js/MemoryMetrics.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/IntegerPrintfMacros.h"
 
 using namespace mozilla;
 
@@ -170,7 +169,7 @@ AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr, bool aAnonymize)
 
   if (uri) {
     if (aAnonymize && !aWindow->IsChromeWindow()) {
-      aStr.AppendPrintf("<anonymized-%" PRIu64 ">", aWindow->WindowID());
+      aStr.AppendPrintf("<anonymized-%d>", aWindow->WindowID());
     } else {
       nsCString spec;
       uri->GetSpec(spec);

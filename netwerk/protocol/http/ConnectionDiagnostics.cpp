@@ -15,7 +15,6 @@
 #include "nsHttpHandler.h"
 #include "nsIConsoleService.h"
 #include "nsHttpRequestHead.h"
-#include "mozilla/IntegerPrintfMacros.h"
 
 extern PRThread *gSocketThread;
 
@@ -64,13 +63,13 @@ nsHttpConnectionMgr::PrintDiagnosticsCB(const nsACString &key,
                               self->AtActiveConnectionLimit(ent, NS_HTTP_ALLOW_KEEPALIVE));
   self->mLogData.AppendPrintf("   RestrictConnections = %d\n",
                               self->RestrictConnections(ent));
-  self->mLogData.AppendPrintf("   Pending Q Length = %" PRIuSIZE "\n",
+  self->mLogData.AppendPrintf("   Pending Q Length = %u\n",
                               ent->mPendingQ.Length());
-  self->mLogData.AppendPrintf("   Active Conns Length = %" PRIuSIZE "\n",
+  self->mLogData.AppendPrintf("   Active Conns Length = %u\n",
                               ent->mActiveConns.Length());
-  self->mLogData.AppendPrintf("   Idle Conns Length = %" PRIuSIZE "\n",
+  self->mLogData.AppendPrintf("   Idle Conns Length = %u\n",
                               ent->mIdleConns.Length());
-  self->mLogData.AppendPrintf("   Half Opens Length = %" PRIuSIZE "\n",
+  self->mLogData.AppendPrintf("   Half Opens Length = %u\n",
                               ent->mHalfOpens.Length());
   self->mLogData.AppendPrintf("   Coalescing Key = %s\n",
                               ent->mCoalescingKey.get());
@@ -147,7 +146,7 @@ nsHttpConnection::PrintDiagnostics(nsCString &log)
   log.AppendPrintf("    time since last read = %ums\n",
                    PR_IntervalToMilliseconds(now - mLastReadTime));
 
-  log.AppendPrintf("    max-read/read/written %" PRId64 "/%" PRId64 "/%" PRId64 "\n",
+  log.AppendPrintf("    max-read/read/written %lld/%lld/%lld\n",
                    mMaxBytesRead, mTotalBytesRead, mTotalBytesWritten);
 
   log.AppendPrintf("    rtt = %ums\n", PR_IntervalToMilliseconds(mRtt));

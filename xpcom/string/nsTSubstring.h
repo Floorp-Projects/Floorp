@@ -7,7 +7,6 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/IntegerPrintfMacros.h"
 
 #ifndef MOZILLA_INTERNAL_API
 #error Cannot use internal string classes without MOZILLA_INTERNAL_API defined. Use the frozen header nsStringAPI.h instead.
@@ -557,8 +556,7 @@ public:
    * Append a formatted string to the current string. Uses the format
    * codes documented in prprf.h
    */
-  // Note: MOZ_FORMAT_PRINTF(2, 3) because 'this counts as a parameter.
-  void AppendPrintf(const char* aFormat, ...) MOZ_FORMAT_PRINTF(2, 3);
+  void AppendPrintf(const char* aFormat, ...);
   void AppendPrintf(const char* aFormat, va_list aAp);
   void AppendInt(int32_t aInteger)
   {
@@ -580,20 +578,20 @@ public:
   }
   void AppendInt(int64_t aInteger)
   {
-    AppendPrintf("%" PRId64, aInteger);
+    AppendPrintf("%lld", aInteger);
   }
   void AppendInt(int64_t aInteger, int aRadix)
   {
-    const char* fmt = aRadix == 10 ? "%" PRId64 : aRadix == 8 ? "%" PRIo64 : "%" PRIx64;
+    const char* fmt = aRadix == 10 ? "%lld" : aRadix == 8 ? "%llo" : "%llx";
     AppendPrintf(fmt, aInteger);
   }
   void AppendInt(uint64_t aInteger)
   {
-    AppendPrintf("%" PRIu64, aInteger);
+    AppendPrintf("%llu", aInteger);
   }
   void AppendInt(uint64_t aInteger, int aRadix)
   {
-    const char* fmt = aRadix == 10 ? "%" PRIu64 : aRadix == 8 ? "%" PRIo64 : "%" PRIx64;
+    const char* fmt = aRadix == 10 ? "%llu" : aRadix == 8 ? "%llo" : "%llx";
     AppendPrintf(fmt, aInteger);
   }
 
