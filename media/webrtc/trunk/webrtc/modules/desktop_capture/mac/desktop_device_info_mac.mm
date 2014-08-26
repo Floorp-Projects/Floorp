@@ -7,8 +7,12 @@
 #include <Cocoa/Cocoa.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <map>
 
 namespace webrtc {
+
+// Helper type to track the number of window instances for a given process
+typedef std::map<ProcessId, uint32_t> AppWindowCountMap;
 
 #define MULTI_MONITOR_NO_SUPPORT 1
 
@@ -49,6 +53,28 @@ void DesktopDeviceInfoMac::InitializeScreenList() {
 void DesktopDeviceInfoMac::InitializeApplicationList() {
   //List all running applications (excluding background processes).
 
+  // Get a list of all windows, to match to applications
+  AppWindowCountMap appWins;
+  CFArrayRef windowInfos = CGWindowListCopyWindowInfo(
+      kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements,
+      kCGNullWindowID);
+  CFIndex windowInfosCount = CFArrayGetCount(windowInfos);
+  for (CFIndex idx = 0; idx < windowInfosCount; idx++) {
+    CFDictionaryRef info = reinterpret_cast<CFDictionaryRef>(
+        CFArrayGetValueAtIndex(windowInfos, idx));
+    CFNumberRef winOwner = reinterpret_cast<CFNumberRef>(
+        CFDictionaryGetValue(info, kCGWindowOwnerPID));
+
+    pid_t owner;
+    CFNumberGetValue(winOwner, kCFNumberIntType, &owner);
+    AppWindowCountMap::iterator itr = appWins.find(owner);
+    if (itr == appWins.end()) {
+      appWins[owner] = 1;
+    } else {
+      appWins[owner]++;
+    }
+  }
+
   NSArray *running = [[NSWorkspace sharedWorkspace] runningApplications];
   for (NSRunningApplication *ra in running) {
     if (ra.activationPolicy != NSApplicationActivationPolicyRegular)
@@ -68,13 +94,18 @@ void DesktopDeviceInfoMac::InitializeApplicationList() {
     }
 
     pDesktopApplication->setProcessId(pid);
+    pDesktopApplication->setWindowCount(appWins[pid]);
 
     NSString *str;
     str = [ra.executableURL absoluteString];
     pDesktopApplication->setProcessPathName([str UTF8String]);
 
+    // Record <window count> then <localized name>
+    // NOTE: localized names can get *VERY* long
     str = ra.localizedName;
-    pDesktopApplication->setProcessAppName([str UTF8String]);
+    char nameStr[BUFSIZ];
+    snprintf(nameStr, sizeof(nameStr), "%d\x1e%s", pDesktopApplication->getWindowCount(), [str UTF8String]);
+    pDesktopApplication->setProcessAppName(nameStr);
 
     char idStr[64];
     snprintf(idStr, sizeof(idStr), "%ld", pDesktopApplication->getProcessId());

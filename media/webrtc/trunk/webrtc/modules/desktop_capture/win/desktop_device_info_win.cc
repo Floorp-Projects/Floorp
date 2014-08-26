@@ -54,15 +54,22 @@ void DesktopDeviceInfoWin::InitializeApplicationList() {
   // List all running applications exclude background process.
   HWND hWnd;
   for (hWnd = GetWindow(GetDesktopWindow(), GW_CHILD); hWnd; hWnd = GetWindow(hWnd, GW_HWNDNEXT)) {
-    if (!IsWindowVisible(hWnd))
+    if (!IsWindowVisible(hWnd)) {
       continue;
+    }
 
     DWORD dwProcessId = 0;
     GetWindowThreadProcessId(hWnd, &dwProcessId);
 
-    // filter out non-process, current process, or any already seen processes
-    if (dwProcessId == 0 || dwProcessId == GetCurrentProcessId() ||
-        desktop_application_list_.find(dwProcessId) != desktop_application_list_.end()) {
+    // filter out non-process, current process
+    if (dwProcessId == 0 || dwProcessId == GetCurrentProcessId()) {
+      continue;
+    }
+
+    // filter out already-seen processes, after updating the window count
+    DesktopApplicationList::iterator itr = desktop_application_list_.find(dwProcessId);
+    if (itr != desktop_application_list_.end()) {
+      itr->second->setWindowCount(itr->second->getWindowCount() + 1);
       continue;
     }
 
@@ -74,6 +81,8 @@ void DesktopDeviceInfoWin::InitializeApplicationList() {
 
     // process id
     pDesktopApplication->setProcessId(dwProcessId);
+    // initialize window count to 1 (updated on subsequent finds)
+    pDesktopApplication->setWindowCount(1);
 
     // process path name
     WCHAR szFilePathName[MAX_PATH]={0};
@@ -121,6 +130,18 @@ void DesktopDeviceInfoWin::InitializeApplicationList() {
     pDesktopApplication->setUniqueIdName(idStr);
 
     desktop_application_list_[pDesktopApplication->getProcessId()] = pDesktopApplication;
+  }
+
+  // re-walk the application list, prepending the window count to the application name
+  DesktopApplicationList::iterator itr;
+  for (itr = desktop_application_list_.begin(); itr != desktop_application_list_.end(); itr++) {
+    DesktopApplication *pApp = itr->second;
+
+    // localized application names can be *VERY* large
+    char nameStr[BUFSIZ];
+    _snprintf_s(nameStr, sizeof(nameStr), sizeof(nameStr) - 1, "%d\x1e%s",
+                pApp->getWindowCount(), pApp->getProcessAppName());
+    pApp->setProcessAppName(nameStr);
   }
 }
 
