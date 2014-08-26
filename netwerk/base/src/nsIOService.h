@@ -91,7 +91,7 @@ private:
     nsIOService();
     ~nsIOService();
 
-    nsresult OnNetworkLinkEvent(const char *data);
+    nsresult TrackNetworkLinkStatusForOffline();
 
     nsresult GetCachedProtocolHandler(const char *scheme,
                                                   nsIProtocolHandler* *hdlrResult,
@@ -144,7 +144,6 @@ private:
     nsTArray<int32_t>                    mRestrictedPortList;
 
     bool                                 mAutoDialEnabled;
-    bool                                 mNetworkNotifyChanged;
 
     int32_t                              mPreviousWifiState;
     // Hashtable of (appId, nsIAppOffineInfo::mode) pairs
