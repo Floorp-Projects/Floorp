@@ -52,8 +52,8 @@ public:
 
   virtual bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
   {
-    MSE_DEBUG("ContainerParser: aLength=%u [%x%x%x%x]",
-              aLength,
+    MSE_DEBUG("ContainerParser(%p)::IsInitSegmentPresent aLength=%u [%x%x%x%x]",
+              this, aLength,
               aLength > 0 ? aData[0] : 0,
               aLength > 1 ? aData[1] : 0,
               aLength > 2 ? aData[2] : 0,
@@ -67,7 +67,16 @@ public:
     return false;
   }
 
+  virtual const nsTArray<uint8_t>& InitData()
+  {
+    MOZ_ASSERT(mInitData.Length() > 0);
+    return mInitData;
+  }
+
   static ContainerParser* CreateForMIMEType(const nsACString& aType);
+
+protected:
+  nsTArray<uint8_t> mInitData;
 };
 
 class WebMContainerParser : public ContainerParser {
@@ -115,12 +124,26 @@ public:
     mTimecodeScale = parser.GetTimecodeScale();
 
     if (mapping.IsEmpty()) {
+      // XXX This is a bit of a hack.  Assume if there are no timecodes
+      // present and it's an init segment that it's _just_ an init segment.
+      // We should be more precise.
+      if (IsInitSegmentPresent(aData, aLength)) {
+        MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: Stashed init of %u bytes.",
+                  this, aLength);
+
+        mInitData.ReplaceElementsAt(0, mInitData.Length(), aData, aLength);
+      }
+
       return false;
     }
 
     static const double NS_PER_S = 1e9;
     aStart = mapping[0].mTimecode / NS_PER_S;
     aEnd = mapping.LastElement().mTimecode / NS_PER_S;
+
+    MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: [%f, %f] [fso=%lld, leo=%lld]",
+              this, aStart, aEnd, mapping[0].mSyncOffset, mapping.LastElement().mEndOffset);
+
     return true;
   }
 
@@ -406,7 +429,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aMediaSource);
   mParser = ContainerParser::CreateForMIMEType(aType);
-  MSE_DEBUG("SourceBuffer(%p)::SourceBuffer: Creating initial decoder.", this);
+  MSE_DEBUG("SourceBuffer(%p)::SourceBuffer: Creating initial decoder, mParser=%p", this, mParser.get());
   InitNewDecoder();
 }
 
@@ -472,6 +495,8 @@ SourceBuffer::DiscardDecoder()
   }
   mDecoder = nullptr;
   mDecoderInitialized = false;
+  // XXX: Parser reset may be required?
+  mLastParsedTimestamp = UnspecifiedNaN<double>();
 }
 
 void
@@ -544,6 +569,9 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   double start, end;
   if (mParser->ParseStartAndEndTimestamps(aData, aLength, start, end)) {
     if (start <= mLastParsedTimestamp) {
+      MSE_DEBUG("SourceBuffer(%p)::AppendData: Data (%f, %f) overlaps %f.",
+                this, start, end, mLastParsedTimestamp);
+
       // This data is earlier in the timeline than data we have already
       // processed, so we must create a new decoder to handle the decoding.
       DiscardDecoder();
@@ -554,9 +582,10 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
         aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
         return;
       }
-      MSE_DEBUG("SourceBuffer(%p)::AppendData: Decoder marked as initialized (%f, %f).",
-                this, start, end);
+      MSE_DEBUG("SourceBuffer(%p)::AppendData: Decoder marked as initialized.", this);
       mDecoderInitialized = true;
+      const nsTArray<uint8_t>& initData = mParser->InitData();
+      mDecoder->GetResource()->AppendData(initData.Elements(), initData.Length());
     }
     mLastParsedTimestamp = end;
     MSE_DEBUG("SourceBuffer(%p)::AppendData: Segment start=%f end=%f", this, start, end);
