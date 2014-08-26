@@ -114,8 +114,6 @@ static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
 
 static void PrintUniformityInfo(Layer* aLayer)
 {
-  static TimeStamp t0 = TimeStamp::Now();
-
   // Don't want to print a log for smaller layers
   if (aLayer->GetEffectiveVisibleRegion().GetBounds().width < 300 ||
       aLayer->GetEffectiveVisibleRegion().GetBounds().height < 300) {
@@ -135,8 +133,7 @@ static void PrintUniformityInfo(Layer* aLayer)
                                          scrollOffset,
                                          &overscrollTransform);
     printf_stderr("UniformityInfo Layer_Move %llu %p %f, %f\n",
-        (unsigned long long)(TimeStamp::Now() - t0).ToMilliseconds(), aLayer,
-        scrollOffset.x.value, scrollOffset.y.value);
+          TimeStamp::Now(), aLayer, scrollOffset.x.value, scrollOffset.y.value);
   }
 }
 
