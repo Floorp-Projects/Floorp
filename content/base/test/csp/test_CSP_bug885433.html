@@ -34,6 +34,9 @@ function checkAllowed () {
   ok(color === green, "Eval should be allowed");
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('unsafe-inline-style-allowed')).color;
   ok(color === green, "Inline style should be allowed");
+
+  document.getElementById('cspframe2').src = 'file_CSP_bug885433_blocks.html';
+  document.getElementById('cspframe2').addEventListener('load', checkBlocked, false);
 }
 
 function checkBlocked () {
@@ -52,8 +55,6 @@ function checkBlocked () {
 
 document.getElementById('cspframe').src = 'file_CSP_bug885433_allows.html';
 document.getElementById('cspframe').addEventListener('load', checkAllowed, false);
-document.getElementById('cspframe2').src = 'file_CSP_bug885433_blocks.html';
-document.getElementById('cspframe2').addEventListener('load', checkBlocked, false);
 </script>
 </pre>
 </body>
