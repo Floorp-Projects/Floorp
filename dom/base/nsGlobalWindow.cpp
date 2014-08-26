@@ -213,6 +213,7 @@
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/HashChangeEvent.h"
+#include "mozilla/dom/MozSelfSupportBinding.h"
 #include "mozilla/dom/PopStateEvent.h"
 #include "mozilla/dom/PopupBlockedEvent.h"
 #include "mozilla/dom/WindowBinding.h"
@@ -1467,6 +1468,8 @@ nsGlobalWindow::CleanUp()
 
   mExternal = nullptr;
 
+  mMozSelfSupport = nullptr;
+
   mPerformance = nullptr;
 
 #ifdef MOZ_WEBSPEECH
@@ -1786,6 +1789,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMozSelfSupport)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -1846,6 +1850,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMozSelfSupport)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -4063,6 +4068,19 @@ nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
   *aContent = GetContentInternal(rv).take();
 
   return rv.ErrorCode();
+}
+
+MozSelfSupport*
+nsGlobalWindow::GetMozSelfSupport(ErrorResult& aError)
+{
+  if (mMozSelfSupport) {
+    return mMozSelfSupport;
+  }
+
+  AutoSafeJSContext cx;
+  GlobalObject global(cx, FastGetGlobalJSObject());
+  mMozSelfSupport = MozSelfSupport::Constructor(global, cx, aError);
+  return mMozSelfSupport;
 }
 
 NS_IMETHODIMP

@@ -114,6 +114,7 @@ class External;
 class Function;
 class Gamepad;
 class MediaQueryList;
+class MozSelfSupport;
 class Navigator;
 class OwningExternalOrWindowProxy;
 class Selection;
@@ -1016,6 +1017,9 @@ public:
             bool aWrapAround, bool aWholeWord, bool aSearchInFrames,
             bool aShowDialog, mozilla::ErrorResult& aError);
   uint64_t GetMozPaintCount(mozilla::ErrorResult& aError);
+
+  mozilla::dom::MozSelfSupport* GetMozSelfSupport(mozilla::ErrorResult& aError);
+
   already_AddRefed<nsIDOMWindow> OpenDialog(JSContext* aCx,
                                             const nsAString& aUrl,
                                             const nsAString& aName,
@@ -1561,6 +1565,8 @@ protected:
   // forward declared here means that ~nsGlobalWindow wouldn't compile because
   // it wouldn't see the ~External function's declaration.
   nsCOMPtr<nsISupports>         mExternal;
+
+  nsRefPtr<mozilla::dom::MozSelfSupport> mMozSelfSupport;
 
   nsRefPtr<mozilla::dom::DOMStorage> mLocalStorage;
   nsRefPtr<mozilla::dom::DOMStorage> mSessionStorage;

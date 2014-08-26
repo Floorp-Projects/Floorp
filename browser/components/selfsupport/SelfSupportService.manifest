@@ -1,4 +1,2 @@
 component {d30aae8b-f352-4de3-b936-bb9d875df0bb} SelfSupportService.js
 contract @mozilla.org/mozselfsupport;1 {d30aae8b-f352-4de3-b936-bb9d875df0bb}
-
-category JavaScript-global-privileged-property MozSelfSupport @mozilla.org/mozselfsupport;1

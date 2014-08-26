@@ -11,8 +11,9 @@
  * specific Mozilla domains to access it directly.
  */
 [ChromeOnly,
- JSImplementation="@mozilla.org/mozselfsupport;1"]
-interface MozSelfSupportImpl
+ JSImplementation="@mozilla.org/mozselfsupport;1",
+ Constructor()]
+interface MozSelfSupport
 {
   /**
    * Controls whether uploading FHR data is allowed.
