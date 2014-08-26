@@ -42,11 +42,13 @@ public:
   void setProcessPathName(const char *appPathNameUTF8);
   void setUniqueIdName(const char *appUniqueIdUTF8);
   void setProcessAppName(const char *appNameUTF8);
+  void setWindowCount(const uint32_t count);
 
   ProcessId getProcessId();
   const char *getProcessPathName();
   const char *getUniqueIdName();
   const char *getProcessAppName();
+  uint32_t getWindowCount();
 
   DesktopApplication& operator= (DesktopApplication& other);
 
@@ -55,9 +57,10 @@ protected:
   char* processPathNameUTF8_;
   char* applicationNameUTF8_;
   char* processUniqueIdUTF8_;
+  uint32_t windowCount_;
 };
 
-typedef std::map<intptr_t,DesktopApplication*> DesktopApplicationList;
+typedef std::map<intptr_t, DesktopApplication*> DesktopApplicationList;
 
 class DesktopDeviceInfo {
 public:
