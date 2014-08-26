@@ -5607,6 +5607,24 @@ if test -n "${JAVA_BIN_PATH}" -o \
   fi
 fi
 
+AC_MSG_CHECKING([for minimum required javac version >= 1.7])
+
+dnl Javac spits out something like `javac 1.8.0`. This line cuts off the 'javac'
+_javac_version=$($JAVAC -version 2>&1 | cut -d ' ' -f 2)
+
+dnl Here, we extract the major (1) and minor (8) version numbers from the
+dnl acquired version string.
+_javac_major_version=$(echo $_javac_version | cut -d '.' -f 1)
+_javac_minor_version=$(echo $_javac_version | cut -d '.' -f 2)
+
+AC_MSG_RESULT([$_javac_version])
+
+dnl Fail if we have a version older than 1.7
+if test "$_javac_major_version" -lt "1" -o \
+    \( "$_javac_minor_version" -lt "7" \); then
+    AC_MSG_ERROR([javac 1.7 or higher is required.])
+fi
+
 dnl ========================================================
 dnl = ANGLE OpenGL->D3D translator for WebGL
 dnl = * only applies to win32
