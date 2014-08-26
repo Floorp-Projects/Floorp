@@ -123,10 +123,10 @@ private:
   nsRefPtr<BluetoothAdapter> mAdapterPtr;
 };
 
-class GetScoConnectionStatusTask : public BluetoothReplyRunnable
+class GetConnectionStatusTask : public BluetoothReplyRunnable
 {
 public:
-  GetScoConnectionStatusTask(nsIDOMDOMRequest* aReq) :
+  GetConnectionStatusTask(nsIDOMDOMRequest* aReq) :
     BluetoothReplyRunnable(aReq)
   {
     MOZ_ASSERT(aReq);
@@ -683,7 +683,7 @@ BluetoothAdapter::SetPairingConfirmation(const nsAString& aDeviceAddress,
 
 already_AddRefed<DOMRequest>
 BluetoothAdapter::Connect(BluetoothDevice& aDevice,
-                          const Optional<short unsigned int>& aServiceUuid,
+                          const Optional<uint16_t>& aServiceUuid,
                           ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
@@ -716,7 +716,7 @@ BluetoothAdapter::Connect(BluetoothDevice& aDevice,
 
 already_AddRefed<DOMRequest>
 BluetoothAdapter::Disconnect(BluetoothDevice& aDevice,
-                             const Optional<short unsigned int>& aServiceUuid,
+                             const Optional<uint16_t>& aServiceUuid,
                              ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
@@ -742,6 +742,29 @@ BluetoothAdapter::Disconnect(BluetoothDevice& aDevice,
     return nullptr;
   }
   bs->Disconnect(address, serviceUuid, results);
+
+  return request.forget();
+}
+
+already_AddRefed<DOMRequest>
+BluetoothAdapter::IsConnected(const uint16_t aServiceUuid, ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothReplyRunnable> results =
+    new GetConnectionStatusTask(request);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  bs->IsConnected(aServiceUuid, results);
 
   return request.forget();
 }
@@ -892,7 +915,7 @@ BluetoothAdapter::IsScoConnected(ErrorResult& aRv)
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
   nsRefPtr<BluetoothReplyRunnable> results =
-    new GetScoConnectionStatusTask(request);
+    new GetConnectionStatusTask(request);
 
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
