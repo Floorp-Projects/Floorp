@@ -69,7 +69,9 @@ void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
 {
 
   STREAM_LOG(PR_LOG_DEBUG, ("Switching to new driver: %p (%s)", aNextDriver, aNextDriver->AsAudioCallbackDriver() ? "AudioCallbackDriver" : "SystemClockDriver"));
-  MOZ_ASSERT(!mNextDriver);
+  // Sometimes we switch twice to a new driver per iteration, this is probably a
+  // bug.
+  MOZ_ASSERT(!mNextDriver || !mNextDriver->AsAudioCallbackDriver());
   mNextDriver = aNextDriver;
 }
 
@@ -473,7 +475,7 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, dom::
 }
 
 AudioCallbackDriver::~AudioCallbackDriver()
-{ }
+{}
 
 void
 AudioCallbackDriver::Init()
@@ -771,9 +773,7 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
                                              mStateComputedTime,
                                              mNextStateComputedTime);
 
-  if (stillProcessing) {
-    mBuffer.BufferFilled();
-  }
+  mBuffer.BufferFilled();
 
   if (mNextDriver && stillProcessing) {
     {
