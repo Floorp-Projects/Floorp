@@ -174,24 +174,6 @@ caption {
 }
 
 /**
- * Privacy Pane
- */
-
-html|a.inline-link {
-  color: -moz-nativehyperlinktext;
-  text-decoration: none;
-}
-
-html|a.inline-link:hover {
-  text-decoration: underline;
-}
-
-html|a.inline-link:-moz-focusring {
-  outline-width: 0;
-  box-shadow: @focusRingShadow@;
-}
-
-/**
  * Update Preferences
  */
 #autoInstallOptions {

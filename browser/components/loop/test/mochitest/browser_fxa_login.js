@@ -90,3 +90,122 @@ add_task(function* invalidState() {
     ok(error, "The login promise should be rejected due to invalid state");
   });
 });
+
+add_task(function* basicRegistration() {
+  MozLoopService.resetFxA();
+  let params = {
+    client_id: "client_id",
+    content_uri: BASE_URL + "/content",
+    oauth_uri: BASE_URL + "/oauth",
+    profile_uri: BASE_URL + "/profile",
+    state: "state",
+  };
+  yield promiseOAuthParamsSetup(BASE_URL, params);
+
+  let tokenData = yield MozLoopService.internal.promiseFxAOAuthToken("code1", "state");
+  is(tokenData.access_token, "code1_access_token", "Check access_token");
+  is(tokenData.scope, "profile", "Check scope");
+  is(tokenData.token_type, "bearer", "Check token_type");
+});
+
+add_task(function* registrationWithInvalidState() {
+  MozLoopService.resetFxA();
+  let params = {
+    client_id: "client_id",
+    content_uri: BASE_URL + "/content",
+    oauth_uri: BASE_URL + "/oauth",
+    profile_uri: BASE_URL + "/profile",
+    state: "invalid_state",
+  };
+  yield promiseOAuthParamsSetup(BASE_URL, params);
+
+  let tokenPromise = MozLoopService.internal.promiseFxAOAuthToken("code1", "state");
+  yield tokenPromise.then(body => {
+    ok(false, "Promise should have rejected");
+  },
+  error => {
+    is(error.code, 400, "Check error code");
+  });
+});
+
+add_task(function* registrationWith401() {
+  MozLoopService.resetFxA();
+  let params = {
+    client_id: "client_id",
+    content_uri: BASE_URL + "/content",
+    oauth_uri: BASE_URL + "/oauth",
+    profile_uri: BASE_URL + "/profile",
+    state: "state",
+    test_error: "token_401",
+  };
+  yield promiseOAuthParamsSetup(BASE_URL, params);
+
+  let tokenPromise = MozLoopService.internal.promiseFxAOAuthToken("code1", "state");
+  yield tokenPromise.then(body => {
+    ok(false, "Promise should have rejected");
+  },
+  error => {
+    is(error.code, 401, "Check error code");
+  });
+});
+
+add_task(function* basicAuthorizationAndRegistration() {
+  MozLoopService.resetFxA();
+  let params = {
+    client_id: "client_id",
+    content_uri: BASE_URL + "/content",
+    oauth_uri: BASE_URL + "/oauth",
+    profile_uri: BASE_URL + "/profile",
+    state: "state",
+  };
+  yield promiseOAuthParamsSetup(BASE_URL, params);
+
+  let tokenData = yield MozLoopService.logInToFxA();
+  ise(tokenData.access_token, "code1_access_token", "Check access_token");
+  ise(tokenData.scope, "profile", "Check scope");
+  ise(tokenData.token_type, "bearer", "Check token_type");
+});
+
+add_task(function* loginWithParams401() {
+  MozLoopService.resetFxA();
+  let params = {
+    client_id: "client_id",
+    content_uri: BASE_URL + "/content",
+    oauth_uri: BASE_URL + "/oauth",
+    profile_uri: BASE_URL + "/profile",
+    state: "state",
+    test_error: "params_401",
+  };
+  yield promiseOAuthParamsSetup(BASE_URL, params);
+
+  let loginPromise = MozLoopService.logInToFxA();
+  yield loginPromise.then(tokenData => {
+    ok(false, "Promise should have rejected");
+  },
+  error => {
+    ise(error.code, 401, "Check error code");
+    ise(MozLoopService.gFxAOAuthTokenData, null, "Check there is no saved token data");
+  });
+});
+
+add_task(function* loginWithRegistration401() {
+  MozLoopService.resetFxA();
+  let params = {
+    client_id: "client_id",
+    content_uri: BASE_URL + "/content",
+    oauth_uri: BASE_URL + "/oauth",
+    profile_uri: BASE_URL + "/profile",
+    state: "state",
+    test_error: "token_401",
+  };
+  yield promiseOAuthParamsSetup(BASE_URL, params);
+
+  let loginPromise = MozLoopService.logInToFxA();
+  yield loginPromise.then(tokenData => {
+    ok(false, "Promise should have rejected");
+  },
+  error => {
+    ise(error.code, 401, "Check error code");
+    ise(MozLoopService.gFxAOAuthTokenData, null, "Check there is no saved token data");
+  });
+});

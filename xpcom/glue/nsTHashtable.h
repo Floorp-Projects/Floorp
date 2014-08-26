@@ -125,7 +125,7 @@ public:
    */
   EntryType* GetEntry(KeyType aKey) const
   {
-    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+    NS_ASSERTION(mTable.ops, "nsTHashtable was not initialized properly.");
 
     EntryType* entry = reinterpret_cast<EntryType*>(
       PL_DHashTableOperate(const_cast<PLDHashTable*>(&mTable),
@@ -156,7 +156,7 @@ public:
   }
 
   EntryType* PutEntry(KeyType aKey, const fallible_t&) NS_WARN_UNUSED_RESULT {
-    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+    NS_ASSERTION(mTable.ops, "nsTHashtable was not initialized properly.");
 
     return static_cast<EntryType*>(PL_DHashTableOperate(
       &mTable, EntryType::KeyToPointer(aKey), PL_DHASH_ADD));
@@ -168,7 +168,7 @@ public:
    */
   void RemoveEntry(KeyType aKey)
   {
-    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+    NS_ASSERTION(mTable.ops, "nsTHashtable was not initialized properly.");
 
     PL_DHashTableOperate(&mTable,
                          EntryType::KeyToPointer(aKey),
@@ -209,7 +209,7 @@ public:
    */
   uint32_t EnumerateEntries(Enumerator aEnumFunc, void* aUserArg)
   {
-    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+    NS_ASSERTION(mTable.ops, "nsTHashtable was not initialized properly.");
 
     s_EnumArgs args = { aEnumFunc, aUserArg };
     return PL_DHashTableEnumerate(&mTable, s_EnumStub, &args);
@@ -220,7 +220,7 @@ public:
    */
   void Clear()
   {
-    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+    NS_ASSERTION(mTable.ops, "nsTHashtable was not initialized properly.");
 
     PL_DHashTableEnumerate(&mTable, PL_DHashStubEnumRemove, nullptr);
   }
@@ -299,7 +299,7 @@ public:
    */
   void MarkImmutable()
   {
-    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+    NS_ASSERTION(mTable.ops, "nsTHashtable was not initialized properly.");
 
     PL_DHashMarkTableImmutable(&mTable);
   }
@@ -392,13 +392,13 @@ nsTHashtable<EntryType>::nsTHashtable(nsTHashtable<EntryType>&& aOther)
 
   // Indicate that aOther is not initialized.  This will make its destructor a
   // nop, which is what we want.
-  aOther.mTable.entrySize = 0;
+  aOther.mTable.ops = nullptr;
 }
 
 template<class EntryType>
 nsTHashtable<EntryType>::~nsTHashtable()
 {
-  if (mTable.entrySize) {
+  if (mTable.ops) {
     PL_DHashTableFinish(&mTable);
   }
 }

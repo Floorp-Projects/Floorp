@@ -356,7 +356,7 @@ LIRGeneratorMIPS::newLTableSwitch(const LAllocation &in, const LDefinition &inpu
 LTableSwitchV *
 LIRGeneratorMIPS::newLTableSwitchV(MTableSwitch *tableswitch)
 {
-    return new(alloc()) LTableSwitchV(temp(), tempFloat32(), temp(), tableswitch);
+    return new(alloc()) LTableSwitchV(temp(), tempDouble(), temp(), tableswitch);
 }
 
 bool
