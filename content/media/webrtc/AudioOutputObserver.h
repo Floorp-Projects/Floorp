@@ -6,6 +6,7 @@
 #define AUDIOOUTPUTOBSERVER_H_
 
 #include "mozilla/StaticPtr.h"
+#include "AudioMixer.h"
 
 namespace webrtc {
 class SingleRwFifo;
@@ -24,7 +25,8 @@ class AudioOutputObserver : public MixerCallbackReceiver
 {
 public:
   AudioOutputObserver();
-  virtual ~AudioOutputObserver();
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioOutputObserver);
 
   void MixerCallback(AudioDataValue* aMixedBuffer,
                      AudioSampleFormat aFormat,
@@ -42,6 +44,7 @@ public:
   uint32_t Size();
 
 private:
+  virtual ~AudioOutputObserver();
   uint32_t mPlayoutFreq;
   uint32_t mPlayoutChannels;
 
@@ -53,8 +56,7 @@ private:
   uint32_t mSamplesSaved;
 };
 
-// XXX until there's a registration API in MSG
-extern StaticAutoPtr<AudioOutputObserver> gFarendObserver;
+extern StaticRefPtr<AudioOutputObserver> gFarendObserver;
 
 }
 
