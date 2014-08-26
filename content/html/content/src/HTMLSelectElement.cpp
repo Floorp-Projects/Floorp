@@ -973,8 +973,8 @@ HTMLSelectElement::SetOptionsSelectedByIndex(int32_t aStartIndex,
 
   if (aOptionsMask & IS_SELECTED) {
     // Setting selectedIndex to an out-of-bounds index means -1. (HTML5)
-    if (aStartIndex < 0 || SafeCast<uint32_t>(aStartIndex) >= numItems ||
-        aEndIndex < 0 || SafeCast<uint32_t>(aEndIndex) >= numItems) {
+    if (aStartIndex < 0 || AssertedCast<uint32_t>(aStartIndex) >= numItems ||
+        aEndIndex < 0 || AssertedCast<uint32_t>(aEndIndex) >= numItems) {
       aStartIndex = -1;
       aEndIndex = -1;
     }
@@ -1004,8 +1004,8 @@ HTMLSelectElement::SetOptionsSelectedByIndex(int32_t aStartIndex,
       MOZ_ASSERT(aEndIndex >= 0);
       // Loop through the options and select them (if they are not disabled and
       // if they are not already selected).
-      for (uint32_t optIndex = SafeCast<uint32_t>(aStartIndex);
-           optIndex <= SafeCast<uint32_t>(aEndIndex);
+      for (uint32_t optIndex = AssertedCast<uint32_t>(aStartIndex);
+           optIndex <= AssertedCast<uint32_t>(aEndIndex);
            optIndex++) {
         nsRefPtr<HTMLOptionElement> option = Item(optIndex);
 
@@ -1040,7 +1040,7 @@ HTMLSelectElement::SetOptionsSelectedByIndex(int32_t aStartIndex,
        || ((aOptionsMask & CLEAR_ALL) && !allDisabled)
        || aStartIndex == -1)
        && previousSelectedIndex != -1) {
-      for (uint32_t optIndex = SafeCast<uint32_t>(previousSelectedIndex);
+      for (uint32_t optIndex = AssertedCast<uint32_t>(previousSelectedIndex);
            optIndex < numItems;
            optIndex++) {
         if (static_cast<int32_t>(optIndex) < aStartIndex ||

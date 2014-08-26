@@ -53,6 +53,7 @@ const OCSPHost sOCSPHosts[] =
   { "ocsp-stapling-delegated-wrong-extKeyUsage.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerWrongExtKeyUsage" },
   { "ocsp-stapling-ancient-valid.example.com", ORTAncientAlmostExpired, nullptr},
   { "keysize-ocsp-delegated.example.com", ORTDelegatedIncluded, "badKeysizeDelegatedSigner" },
+  { "revoked-ca-cert-used-as-end-entity.example.com", ORTRevoked, "ca-used-as-end-entity" },
   { nullptr, ORTNull, nullptr }
 };
 

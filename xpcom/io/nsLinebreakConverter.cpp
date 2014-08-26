@@ -289,7 +289,8 @@ nsLinebreakConverter::ConvertLineBreaks(const char* aSrc,
 
   char* resultString;
   if (aSrcBreaks == eLinebreakAny) {
-    resultString = ConvertUnknownBreaks(aSrc, sourceLen, GetLinebreakString(aDestBreaks));
+    resultString = ConvertUnknownBreaks(aSrc, sourceLen,
+                                        GetLinebreakString(aDestBreaks));
   } else
     resultString = ConvertBreaks(aSrc, sourceLen,
                                  GetLinebreakString(aSrcBreaks),
@@ -376,7 +377,8 @@ nsLinebreakConverter::ConvertUnicharLineBreaks(const char16_t* aSrc,
 
   char16_t* resultString;
   if (aSrcBreaks == eLinebreakAny) {
-    resultString = ConvertUnknownBreaks(aSrc, bufLen, GetLinebreakString(aDestBreaks));
+    resultString = ConvertUnknownBreaks(aSrc, bufLen,
+                                        GetLinebreakString(aDestBreaks));
   } else
     resultString = ConvertBreaks(aSrc, bufLen, GetLinebreakString(aSrcBreaks),
                                  GetLinebreakString(aDestBreaks));

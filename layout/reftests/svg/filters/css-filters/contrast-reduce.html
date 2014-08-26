@@ -1,0 +1,29 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Reduce the Contrast of an HTML Element</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-contrast">
+  <link rel="match" href="contrast-reduce-ref.html">
+  <meta name="assert"
+        content="Given a factor of less than one, the CSS contrast filter
+                 function should change color channel values to be closer to
+                 their middle value.">
+  <style type="text/css">
+    #target {
+      filter: contrast(0.5);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a green square.</p>
+  <div id="target"></div>
+</body>
+</html>

@@ -109,7 +109,8 @@ public:
   nsresult AddObject(T* aObj)
   {
     nsExpirationState* state = aObj->GetExpirationState();
-    NS_ASSERTION(!state->IsTracked(), "Tried to add an object that's already tracked");
+    NS_ASSERTION(!state->IsTracked(),
+                 "Tried to add an object that's already tracked");
     nsTArray<T*>& generation = mGenerations[mNewestGeneration];
     uint32_t index = generation.Length();
     if (index > nsExpirationState::MAX_INDEX_IN_GENERATION) {

@@ -152,26 +152,45 @@ private:
 #define NS_LOG_RELEASE(_p, _rc, _type) \
   NS_LogRelease((_p), (_rc), (_type))
 
+#include "mozilla/TypeTraits.h"
+#define MOZ_ASSERT_CLASSNAME(_type)                         \
+  static_assert(mozilla::IsClass<_type>::value,             \
+                "Token '" #_type "' is not a class type.")
+// Older versions of gcc can't instantiate local classes in templates.
+// GCC 4.7 doesn't have this problem.
+#if MOZ_IS_GCC
+# if !MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
+#  undef MOZ_ASSERT_CLASSNAME
+#  define MOZ_ASSERT_CLASSNAME(_type)
+# endif
+#endif
+
 // Note that the following constructor/destructor logging macros are redundant
 // for refcounted objects that log via the NS_LOG_ADDREF/NS_LOG_RELEASE macros.
 // Refcount logging is preferred.
 #define MOZ_COUNT_CTOR(_type)                                 \
 do {                                                          \
+  MOZ_ASSERT_CLASSNAME(_type);                                \
   NS_LogCtor((void*)this, #_type, sizeof(*this));             \
 } while (0)
 
 #define MOZ_COUNT_CTOR_INHERITED(_type, _base)                    \
 do {                                                              \
+  MOZ_ASSERT_CLASSNAME(_type);                                    \
+  MOZ_ASSERT_CLASSNAME(_base);                                    \
   NS_LogCtor((void*)this, #_type, sizeof(*this) - sizeof(_base)); \
 } while (0)
 
 #define MOZ_COUNT_DTOR(_type)                                 \
 do {                                                          \
+  MOZ_ASSERT_CLASSNAME(_type);                                \
   NS_LogDtor((void*)this, #_type, sizeof(*this));             \
 } while (0)
 
 #define MOZ_COUNT_DTOR_INHERITED(_type, _base)                    \
 do {                                                              \
+  MOZ_ASSERT_CLASSNAME(_type);                                    \
+  MOZ_ASSERT_CLASSNAME(_base);                                    \
   NS_LogDtor((void*)this, #_type, sizeof(*this) - sizeof(_base)); \
 } while (0)
 

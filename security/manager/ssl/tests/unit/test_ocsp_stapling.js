@@ -143,6 +143,9 @@ function add_tests(certDB, otherTestCA) {
   add_ocsp_test("keysize-ocsp-delegated.example.com",
                 getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE),
                 true);
+
+  add_ocsp_test("revoked-ca-cert-used-as-end-entity.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_REVOKED_CERTIFICATE), true);
 }
 
 function check_ocsp_stapling_telemetry() {
@@ -154,7 +157,7 @@ function check_ocsp_stapling_telemetry() {
   do_check_eq(histogram.counts[1], 5); // 5 connections with a good response
   do_check_eq(histogram.counts[2], 18); // 18 connections with no stapled resp.
   do_check_eq(histogram.counts[3], 0); // 0 connections with an expired response
-  do_check_eq(histogram.counts[4], 20); // 20 connections with bad responses
+  do_check_eq(histogram.counts[4], 21); // 21 connections with bad responses
   run_next_test();
 }
 

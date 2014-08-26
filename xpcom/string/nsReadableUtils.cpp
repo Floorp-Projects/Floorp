@@ -87,7 +87,8 @@ LossyAppendUTF16toASCII(const nsAString& aSource, nsACString& aDest)
   // right now, this won't work on multi-fragment destinations
   LossyConvertEncoding16to8 converter(dest.get());
 
-  copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+  copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
+              converter);
 }
 
 void
@@ -103,7 +104,8 @@ AppendASCIItoUTF16(const nsACString& aSource, nsAString& aDest,
                    const mozilla::fallible_t&)
 {
   uint32_t old_dest_length = aDest.Length();
-  if (!aDest.SetLength(old_dest_length + aSource.Length(), mozilla::fallible_t())) {
+  if (!aDest.SetLength(old_dest_length + aSource.Length(),
+                       mozilla::fallible_t())) {
     return false;
   }
 
@@ -117,7 +119,8 @@ AppendASCIItoUTF16(const nsACString& aSource, nsAString& aDest,
   // right now, this won't work on multi-fragment destinations
   LossyConvertEncoding8to16 converter(dest.get());
 
-  copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+  copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
+              converter);
   return true;
 }
 
@@ -254,7 +257,8 @@ inline
 ToCharT*
 AllocateStringCopy(const FromStringT& aSource, ToCharT*)
 {
-  return static_cast<ToCharT*>(nsMemory::Alloc((aSource.Length() + 1) * sizeof(ToCharT)));
+  return static_cast<ToCharT*>(nsMemory::Alloc(
+    (aSource.Length() + 1) * sizeof(ToCharT)));
 }
 
 
@@ -311,7 +315,8 @@ ToNewCString(const nsACString& aSource)
 
   nsACString::const_iterator fromBegin, fromEnd;
   char* toBegin = result;
-  *copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), toBegin) = char(0);
+  *copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
+               toBegin) = char(0);
   return result;
 }
 
@@ -327,7 +332,8 @@ ToNewUnicode(const nsAString& aSource)
 
   nsAString::const_iterator fromBegin, fromEnd;
   char16_t* toBegin = result;
-  *copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), toBegin) = char16_t(0);
+  *copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
+               toBegin) = char16_t(0);
   return result;
 }
 
@@ -643,7 +649,8 @@ ToUpperCase(const nsACString& aSource, nsACString& aDest)
   aDest.SetLength(aSource.Length());
 
   CopyToUpperCase converter(aDest.BeginWriting(toBegin));
-  copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+  copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
+              converter);
 }
 
 /**
@@ -723,7 +730,8 @@ ToLowerCase(const nsACString& aSource, nsACString& aDest)
   aDest.SetLength(aSource.Length());
 
   CopyToLowerCase converter(aDest.BeginWriting(toBegin));
-  copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+  copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
+              converter);
 }
 
 bool
