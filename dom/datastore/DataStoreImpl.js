@@ -172,7 +172,7 @@ DataStore.prototype = {
     debug("GetInternal: " + aIds.toSource());
 
     // Creation of the results array.
-    let results = new Array(aIds.length);
+    let results = new this._window.Array(aIds.length);
 
     // We're going to create this amount of requests.
     let pendingIds = aIds.length;
@@ -417,6 +417,10 @@ DataStore.prototype = {
       if (!validateId(ids[i])) {
         return throwInvalidArg(this._window);
       }
+    }
+
+    if (ids.length == 0) {
+      return this._window.Promise.resolve(new this._window.Array());
     }
 
     let self = this;

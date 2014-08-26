@@ -86,7 +86,6 @@ public:
   static bool IsNuwaReady();
   static void OnNuwaReady();
   static bool PreallocatedProcessReady();
-  static void RunAfterPreallocatedProcessReady(nsIRunnable* aRunnable);
 #endif
 
 private:

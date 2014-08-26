@@ -1475,7 +1475,7 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
 
   // XXX Remove this check once addStream has an error callback
   // available and/or we have plumbing to handle multiple
-  // local audio streams.
+  // local audio streams.  bug 1056650
   if ((hints & DOMMediaStream::HINT_CONTENTS_AUDIO) &&
       mNumAudioStreams > 0) {
     CSFLogError(logTag, "%s: Only one local audio stream is supported for now",
@@ -1485,7 +1485,7 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
 
   // XXX Remove this check once addStream has an error callback
   // available and/or we have plumbing to handle multiple
-  // local video streams.
+  // local video streams. bug 1056650
   if ((hints & DOMMediaStream::HINT_CONTENTS_VIDEO) &&
       mNumVideoStreams > 0) {
     CSFLogError(logTag, "%s: Only one local video stream is supported for now",
@@ -1565,6 +1565,70 @@ PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
     mNumVideoStreams--;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
+                                 MediaStreamTrack& aWithTrack,
+                                 DOMMediaStream& aStream) {
+  PC_AUTO_ENTER_API_CALL(true);
+
+  // TODO: Do an aStream.HasTrack() check on both track args someday.
+  //
+  // The proposed API will be that both tracks must already be in the same
+  // stream. However, since our MediaStreams currently are limited to one
+  // track per type, we allow replacement with an outside track not already
+  // in the same stream. This works because sync happens receiver-side and
+  // timestamps are tied to capture.
+  //
+  // Since a track may be replaced more than once, the track being replaced
+  // may not be in the stream either, so we check neither arg right now.
+
+  // XXX This MUST be addressed when we add multiple tracks of a type!!
+  // This is needed because the track IDs used by MSG are from TrackUnion
+  // (for getUserMedia streams) and aren't the same as the values the source tracks
+  // have.  Solution is to have SIPCC/VcmSIPCCBinding read track ids and use those.
+
+  // Because DirectListeners see the SourceMediaStream's TrackID's, and not the
+  // TrackUnionStream's TrackID's, this value won't currently match what is used in
+  // MediaPipelineTransmit.  Bug 1056652
+  //  TrackID thisID = aThisTrack.GetTrackID();
+  TrackID withID = aWithTrack.GetTrackID();
+
+  bool success = false;
+  for(uint32_t i = 0; i < media()->LocalStreamsLength(); ++i) {
+    LocalSourceStreamInfo *info = media()->GetLocalStream(i);
+    // XXX use type instead of TrackID - bug 1056650
+    int pipeline = info->HasTrackType(&aStream, !!(aThisTrack.AsVideoStreamTrack()));
+    if (pipeline >= 0) {
+      // XXX GetStream() will likely be invalid once a track can be in more than one
+      info->ReplaceTrack(pipeline, aWithTrack.GetStream(), withID);
+      success = true;
+      break;
+    }
+  }
+  if (!success) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
+  if (!pco) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  JSErrorResult rv;
+
+  if (success) {
+    pco->OnReplaceTrackSuccess(rv);
+  } else {
+    pco->OnReplaceTrackError(kInternalError,
+                             ObString("Failed to replace track"),
+                             rv);
+  }
+  if (rv.Failed()) {
+    CSFLogError(logTag, "Error firing replaceTrack callback");
+    return NS_ERROR_UNEXPECTED;
+  }
   return NS_OK;
 }
 

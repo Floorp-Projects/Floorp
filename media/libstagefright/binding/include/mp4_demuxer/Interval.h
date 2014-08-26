@@ -6,6 +6,7 @@
 #define INTERVAL_H_
 
 #include "nsTArray.h"
+#include <algorithm>
 
 namespace mp4_demuxer
 {
@@ -37,6 +38,18 @@ struct Interval
     return start == aOther.start && end == aOther.end;
   }
   bool operator!=(const Interval& aOther) const { return !(*this == aOther); }
+  bool IsNull() const
+  {
+    return end == start;
+  }
+  Interval Extents(const Interval& aOther) const
+  {
+    if (IsNull()) {
+      return aOther;
+    }
+    return Interval(std::min(start, aOther.start),
+                    std::max(end, aOther.end));
+  }
 
   T start;
   T end;

@@ -129,6 +129,14 @@ MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
 }
 
 void
+MediaSourceDecoder::Ended()
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  mReader->Ended();
+  mon.NotifyAll();
+}
+
+void
 MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());

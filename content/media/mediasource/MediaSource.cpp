@@ -266,6 +266,7 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
 
   SetReadyState(MediaSourceReadyState::Ended);
   mSourceBuffers->Ended();
+  mDecoder->Ended();
   if (!aError.WasPassed()) {
     DurationChange(mSourceBuffers->GetHighestBufferedEndTime(), aRv);
     if (aRv.Failed()) {
