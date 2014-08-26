@@ -368,8 +368,13 @@ public:
     return this;
   }
 
+  /**
+   * Whether the audio callback is processing. This is for asserting only.
+   */
   bool InCallback();
 
+  /* Whether the underlying cubeb stream has been started. See comment for
+   * mStarted for details. */
   bool IsStarted();
 
   /* Tell the driver whether this process is using a microphone or not. This is
@@ -388,7 +393,7 @@ private:
   void StartStream();
   friend class AsyncCubebTask;
   void Init();
-  /* MediaStreamGraph are always down/up mixed to stereo for now. */
+  /* MediaStreamGraphs are always down/up mixed to stereo for now. */
   static const uint32_t ChannelCount = 2;
   /* The size of this buffer comes from the fact that some audio backends can
    * call back with a number of frames lower than one block (128 frames), so we
@@ -436,7 +441,7 @@ private:
   /* This can only be accessed with the graph's monitor held. */
   bool mInCallback;
   /* A thread has been created to be able to pause and restart the audio thread,
-   * but has not done so yet. This indicates tha the callback should return
+   * but has not done so yet. This indicates that the callback should return
    * early */
   bool mPauseRequested;
   /**
