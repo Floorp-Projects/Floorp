@@ -1035,6 +1035,12 @@ class CGHeaders(CGWrapper):
             elif unrolled.isInterface():
                 if unrolled.isSpiderMonkeyInterface():
                     bindingHeaders.add("jsfriendapi.h")
+                    if jsImplementedDescriptors:
+                        # Since we can't forward-declare typed array types
+                        # (because they're typedefs), we have to go ahead and
+                        # just include their header if we need to have functions
+                        # taking references to them declared in that header.
+                        headerSet = declareIncludes
                     headerSet.add("mozilla/dom/TypedArray.h")
                 else:
                     providers = getRelevantProviders(descriptor, config)
@@ -5485,7 +5491,8 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                 'jsvalHandle': "&tmp",
                 'returnsNewObject': returnsNewObject,
                 'exceptionCode': exceptionCode,
-                'obj': "returnArray"
+                'obj': "returnArray",
+                'typedArraysAreStructs': typedArraysAreStructs
             })
         sequenceWrapLevel -= 1
         code = fill(
@@ -5538,7 +5545,8 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                 'jsvalHandle': "&tmp",
                 'returnsNewObject': returnsNewObject,
                 'exceptionCode': exceptionCode,
-                'obj': "returnObj"
+                'obj': "returnObj",
+                'typedArraysAreStructs': typedArraysAreStructs
             })
         mozMapWrapLevel -= 1
         code = fill(
@@ -11809,6 +11817,8 @@ class CGForwardDeclarations(CGWrapper):
                         builder.add(desc.nativeType)
                     except NoSuchDescriptorError:
                         pass
+            # Note: Spidermonkey interfaces are typedefs, so can't be
+            # forward-declared
             elif t.isCallback():
                 builder.addInMozillaDom(str(t))
             elif t.isDictionary():
@@ -12015,7 +12025,7 @@ class CGBindingRoot(CGThing):
             return {desc.getDescriptor(desc.interface.parent.identifier.name)}
         for x in dependencySortObjects(jsImplemented, getParentDescriptor,
                                        lambda d: d.interface.identifier.name):
-            cgthings.append(CGCallbackInterface(x))
+            cgthings.append(CGCallbackInterface(x, typedArraysAreStructs=True))
             cgthings.append(CGJSImplClass(x))
 
         # And make sure we have the right number of newlines at the end
@@ -12073,10 +12083,11 @@ class CGBindingRoot(CGThing):
 class CGNativeMember(ClassMethod):
     def __init__(self, descriptorProvider, member, name, signature, extendedAttrs,
                  breakAfter=True, passJSBitsAsNeeded=True, visibility="public",
-                 jsObjectsArePtr=False, variadicIsSequence=False):
+                 typedArraysAreStructs=True, variadicIsSequence=False):
         """
-        If jsObjectsArePtr is true, typed arrays and "object" will be
-        passed as JSObject*.
+        If typedArraysAreStructs is false, typed arrays will be passed as
+        JS::Handle<JSObject*>.  If it's true they will be passed as one of the
+        dom::TypedArray subclasses.
 
         If passJSBitsAsNeeded is false, we don't automatically pass in a
         JSContext* or a JSObject* based on the return and argument types.  We
@@ -12087,7 +12098,7 @@ class CGNativeMember(ClassMethod):
         self.extendedAttrs = extendedAttrs
         self.resultAlreadyAddRefed = isResultAlreadyAddRefed(self.extendedAttrs)
         self.passJSBitsAsNeeded = passJSBitsAsNeeded
-        self.jsObjectsArePtr = jsObjectsArePtr
+        self.typedArraysAreStructs = typedArraysAreStructs
         self.variadicIsSequence = variadicIsSequence
         breakAfterSelf = "\n" if breakAfter else ""
         ClassMethod.__init__(self, name,
@@ -12195,9 +12206,9 @@ class CGNativeMember(ClassMethod):
                 # No need for a third element in the isMember case
                 return "JSObject*", None, None
             if type.nullable():
-                returnCode = "${declName}.IsNull() ? nullptr : ${declName}.Value().Obj();\n"
+                returnCode = "${declName}.IsNull() ? nullptr : ${declName}.Value().Obj()"
             else:
-                returnCode = "${declName}.Obj();\n"
+                returnCode = "${declName}.Obj()"
             return "void", "", "aRetVal.set(%s);\n" % returnCode
         if type.isSequence():
             # If we want to handle sequence-of-sequences return values, we're
@@ -12373,8 +12384,8 @@ class CGNativeMember(ClassMethod):
                     False, False)
 
         if type.isSpiderMonkeyInterface():
-            if self.jsObjectsArePtr:
-                return "JSObject*", False, False
+            if not self.typedArraysAreStructs:
+                return "JS::Handle<JSObject*>", False, False
 
             return type.name, True, True
 
@@ -12862,13 +12873,11 @@ class CGJSImplMember(CGNativeMember):
     """
     def __init__(self, descriptorProvider, member, name, signature,
                  extendedAttrs, breakAfter=True, passJSBitsAsNeeded=True,
-                 visibility="public", jsObjectsArePtr=False,
-                 variadicIsSequence=False):
+                 visibility="public", variadicIsSequence=False):
         CGNativeMember.__init__(self, descriptorProvider, member, name,
                                 signature, extendedAttrs, breakAfter=breakAfter,
                                 passJSBitsAsNeeded=passJSBitsAsNeeded,
                                 visibility=visibility,
-                                jsObjectsArePtr=jsObjectsArePtr,
                                 variadicIsSequence=variadicIsSequence)
         self.body = self.getImpl()
 
@@ -13370,16 +13379,17 @@ class CGCallbackFunction(CGCallback):
 
 
 class CGCallbackInterface(CGCallback):
-    def __init__(self, descriptor):
+    def __init__(self, descriptor, typedArraysAreStructs=False):
         iface = descriptor.interface
         attrs = [m for m in iface.members if m.isAttr() and not m.isStatic()]
-        getters = [CallbackGetter(a, descriptor) for a in attrs]
-        setters = [CallbackSetter(a, descriptor) for a in attrs
-                   if not a.readonly]
+        getters = [CallbackGetter(a, descriptor, typedArraysAreStructs)
+                   for a in attrs]
+        setters = [CallbackSetter(a, descriptor, typedArraysAreStructs)
+                   for a in attrs if not a.readonly]
         methods = [m for m in iface.members
                    if m.isMethod() and not m.isStatic() and not m.isIdentifierLess()]
-        methods = [CallbackOperation(m, sig, descriptor) for m in methods
-                   for sig in m.signatures()]
+        methods = [CallbackOperation(m, sig, descriptor, typedArraysAreStructs)
+                   for m in methods for sig in m.signatures()]
         if iface.isJSImplemented() and iface.ctor():
             sigs = descriptor.interface.ctor().signatures()
             if len(sigs) != 1:
@@ -13420,7 +13430,8 @@ class FakeMember():
 
 
 class CallbackMember(CGNativeMember):
-    def __init__(self, sig, name, descriptorProvider, needThisHandling, rethrowContentException=False):
+    def __init__(self, sig, name, descriptorProvider, needThisHandling,
+                 rethrowContentException=False, typedArraysAreStructs=False):
         """
         needThisHandling is True if we need to be able to accept a specified
         thisObj, False otherwise.
@@ -13452,7 +13463,7 @@ class CallbackMember(CGNativeMember):
                                 extendedAttrs={},
                                 passJSBitsAsNeeded=False,
                                 visibility=visibility,
-                                jsObjectsArePtr=True)
+                                typedArraysAreStructs=typedArraysAreStructs)
         # We have to do all the generation of our body now, because
         # the caller relies on us throwing if we can't manage it.
         self.exceptionCode = ("aRv.Throw(NS_ERROR_UNEXPECTED);\n"
@@ -13568,7 +13579,8 @@ class CallbackMember(CGNativeMember):
                     # CallSetup already handled the unmark-gray bits for us.
                     'obj': 'CallbackPreserveColor()',
                     'returnsNewObject': False,
-                    'exceptionCode': self.exceptionCode
+                    'exceptionCode': self.exceptionCode,
+                    'typedArraysAreStructs': self.typedArraysAreStructs
                 })
         except MethodNotNewObjectError as err:
             raise TypeError("%s being passed as an argument to %s but is not "
@@ -13671,9 +13683,10 @@ class CallbackMember(CGNativeMember):
 
 class CallbackMethod(CallbackMember):
     def __init__(self, sig, name, descriptorProvider, needThisHandling,
-                 rethrowContentException=False):
+                 rethrowContentException=False, typedArraysAreStructs=False):
         CallbackMember.__init__(self, sig, name, descriptorProvider,
-                                needThisHandling, rethrowContentException)
+                                needThisHandling, rethrowContentException,
+                                typedArraysAreStructs=typedArraysAreStructs)
 
     def getRvalDecl(self):
         return "JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());\n"
@@ -13730,10 +13743,14 @@ class CallbackOperationBase(CallbackMethod):
     """
     Common class for implementing various callback operations.
     """
-    def __init__(self, signature, jsName, nativeName, descriptor, singleOperation, rethrowContentException=False):
+    def __init__(self, signature, jsName, nativeName, descriptor,
+                 singleOperation, rethrowContentException=False,
+                 typedArraysAreStructs=False):
         self.singleOperation = singleOperation
         self.methodName = descriptor.binaryNameFor(jsName)
-        CallbackMethod.__init__(self, signature, nativeName, descriptor, singleOperation, rethrowContentException)
+        CallbackMethod.__init__(self, signature, nativeName, descriptor,
+                                singleOperation, rethrowContentException,
+                                typedArraysAreStructs=typedArraysAreStructs)
 
     def getThisDecl(self):
         if not self.singleOperation:
@@ -13784,7 +13801,7 @@ class CallbackOperation(CallbackOperationBase):
     """
     Codegen actual WebIDL operations on callback interfaces.
     """
-    def __init__(self, method, signature, descriptor):
+    def __init__(self, method, signature, descriptor, typedArraysAreStructs):
         self.ensureASCIIName(method)
         self.method = method
         jsName = method.identifier.name
@@ -13792,7 +13809,8 @@ class CallbackOperation(CallbackOperationBase):
                                        jsName,
                                        MakeNativeName(descriptor.binaryNameFor(jsName)),
                                        descriptor, descriptor.interface.isSingleOperationInterface(),
-                                       rethrowContentException=descriptor.interface.isJSImplemented())
+                                       rethrowContentException=descriptor.interface.isJSImplemented(),
+                                       typedArraysAreStructs=typedArraysAreStructs)
 
     def getPrettyName(self):
         return "%s.%s" % (self.descriptorProvider.interface.identifier.name,
@@ -13803,12 +13821,13 @@ class CallbackAccessor(CallbackMember):
     """
     Shared superclass for CallbackGetter and CallbackSetter.
     """
-    def __init__(self, attr, sig, name, descriptor):
+    def __init__(self, attr, sig, name, descriptor, typedArraysAreStructs):
         self.ensureASCIIName(attr)
         self.attrName = attr.identifier.name
         CallbackMember.__init__(self, sig, name, descriptor,
                                 needThisHandling=False,
-                                rethrowContentException=descriptor.interface.isJSImplemented())
+                                rethrowContentException=descriptor.interface.isJSImplemented(),
+                                typedArraysAreStructs=typedArraysAreStructs)
 
     def getPrettyName(self):
         return "%s.%s" % (self.descriptorProvider.interface.identifier.name,
@@ -13816,11 +13835,12 @@ class CallbackAccessor(CallbackMember):
 
 
 class CallbackGetter(CallbackAccessor):
-    def __init__(self, attr, descriptor):
+    def __init__(self, attr, descriptor, typedArraysAreStructs):
         CallbackAccessor.__init__(self, attr,
                                   (attr.type, []),
                                   callbackGetterName(attr, descriptor),
-                                  descriptor)
+                                  descriptor,
+                                  typedArraysAreStructs)
 
     def getRvalDecl(self):
         return "JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());\n"
@@ -13842,12 +13862,12 @@ class CallbackGetter(CallbackAccessor):
 
 
 class CallbackSetter(CallbackAccessor):
-    def __init__(self, attr, descriptor):
+    def __init__(self, attr, descriptor, typedArraysAreStructs):
         CallbackAccessor.__init__(self, attr,
                                   (BuiltinTypes[IDLBuiltinType.Types.void],
                                    [FakeArgument(attr.type, attr)]),
                                   callbackSetterName(attr, descriptor),
-                                  descriptor)
+                                  descriptor, typedArraysAreStructs)
 
     def getRvalDecl(self):
         # We don't need an rval

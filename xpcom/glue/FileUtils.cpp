@@ -142,8 +142,8 @@ mozilla::ReadSysFile(
   ssize_t bytesRead;
   size_t offset = 0;
   do {
-    bytesRead = MOZ_TEMP_FAILURE_RETRY(
-      read(fd, aBuf + offset, aBufSize - offset));
+    bytesRead = MOZ_TEMP_FAILURE_RETRY(read(fd, aBuf + offset,
+                                            aBufSize - offset));
     if (bytesRead == -1) {
       return false;
     }

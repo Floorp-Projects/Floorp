@@ -163,8 +163,9 @@ public:
   {
     // There is lots of privacy-sensitive data in /proc. Just skip this
     // reporter entirely when anonymization is required.
-    if (aAnonymize)
+    if (aAnonymize) {
       return NS_OK;
+    }
 
     if (!Preferences::GetBool("memory.system_memory_reporter")) {
       return NS_OK;
@@ -213,12 +214,12 @@ private:
   class ProcessSizes
   {
   public:
-    void Add(const nsACString &aKey, size_t aSize)
+    void Add(const nsACString& aKey, size_t aSize)
     {
       mTagged.Put(aKey, mTagged.Get(aKey) + aSize);
     }
 
-    void Report(nsIHandleReportCallback *aHandleReport, nsISupports *aData)
+    void Report(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
     {
       EnumArgs env = { aHandleReport, aData };
       mTagged.EnumerateRead(ReportSizes, &env);
@@ -227,16 +228,17 @@ private:
   private:
     nsDataHashtable<nsCStringHashKey, size_t> mTagged;
 
-    struct EnumArgs {
+    struct EnumArgs
+    {
       nsIHandleReportCallback* mHandleReport;
       nsISupports* mData;
     };
 
     static PLDHashOperator ReportSizes(nsCStringHashKey::KeyType aKey,
                                        size_t aAmount,
-                                       void *aUserArg)
+                                       void* aUserArg)
     {
-      const EnumArgs *envp = reinterpret_cast<const EnumArgs*>(aUserArg);
+      const EnumArgs* envp = reinterpret_cast<const EnumArgs*>(aUserArg);
 
       nsAutoCString path("processes/");
       path.Append(aKey);
@@ -335,8 +337,8 @@ private:
 
         // Report the open file descriptors for this process.
         nsPrintfCString procFdPath("/proc/%s/fd", pidStr);
-        rv = CollectOpenFileReports(
-                  aHandleReport, aData, procFdPath, processName);
+        rv = CollectOpenFileReports(aHandleReport, aData, procFdPath,
+                                    processName);
         if (NS_FAILED(rv)) {
           break;
         }
@@ -947,12 +949,12 @@ private:
 #undef CHECK_PREFIX
 
         const nsCString processName(aProcessName);
-        nsPrintfCString entryPath(
-            "open-fds/%s/%s%s/%s", processName.get(), category, linkPath, fd);
-        nsPrintfCString entryDescription(
-            "%s file descriptor opened by the process", descriptionPrefix);
-        REPORT_WITH_CLEANUP(
-            entryPath, UNITS_COUNT, 1, entryDescription, closedir(d));
+        nsPrintfCString entryPath("open-fds/%s/%s%s/%s",
+                                  processName.get(), category, linkPath, fd);
+        nsPrintfCString entryDescription("%s file descriptor opened by the process",
+                                         descriptionPrefix);
+        REPORT_WITH_CLEANUP(entryPath, UNITS_COUNT, 1, entryDescription,
+                            closedir(d));
       }
     }
 
@@ -973,8 +975,8 @@ private:
 
     // For simplicity numbers will be uint64_t, strings 63 chars max.
     const char* const kScanFormat =
-        "%" SCNx64 " %" SCNx64 " %" SCNu64 " %" SCNu64
-        " %63s %63s %63s %" SCNu64;
+      "%" SCNx64 " %" SCNx64 " %" SCNu64 " %" SCNu64
+      " %63s %63s %63s %" SCNu64;
     const int kNumFields = 8;
     const size_t kStringSize = 64;
 
