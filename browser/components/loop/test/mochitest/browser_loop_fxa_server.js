@@ -69,7 +69,7 @@ add_task(function* token_request() {
   let request = yield promiseToken("my_code", params.state);
   ise(request.status, 200, "Check token response status");
   ise(request.response.access_token, "my_code_access_token", "Check access_token");
-  ise(request.response.scopes, "", "Check scopes");
+  ise(request.response.scope, "profile", "Check scope");
   ise(request.response.token_type, "bearer", "Check token_type");
 });
 
