@@ -22,6 +22,7 @@
 #include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsTextFrame.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 namespace mozilla {
 
@@ -59,7 +60,7 @@ GetFrameState(nsIFrame* aFrame)
 #undef FRAME_STATE_BIT
 
   if (state) {
-    result.AppendPrintf(" | 0x%0llx", state);
+    result.AppendPrintf(" | 0x%0" PRIx64, state);
   }
 
   return result;
