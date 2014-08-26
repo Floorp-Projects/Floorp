@@ -2383,9 +2383,15 @@ RilObject.prototype = {
       let request = options.attach ? RIL_REQUEST_GPRS_ATTACH :
                                      RIL_REQUEST_GPRS_DETACH;
       this.context.Buf.simpleRequest(request, options);
+      return;
     } else if (RILQUIRKS_SUBSCRIPTION_CONTROL && options.attach) {
       this.context.Buf.simpleRequest(REQUEST_SET_DATA_SUBSCRIPTION, options);
+      return;
     }
+
+    // We don't really send a request to rild, so instantly reply success to
+    // RadioInterfaceLayer.
+    this.sendChromeMessage(options);
   },
 
   /**
