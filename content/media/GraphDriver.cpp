@@ -41,24 +41,6 @@ GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
     mNextDriver(nullptr)
 { }
 
-DriverHolder::DriverHolder(MediaStreamGraphImpl* aGraphImpl)
-  : mGraphImpl(aGraphImpl)
-{ }
-
-GraphTime
-DriverHolder::GetCurrentTime()
-{
-  MOZ_ASSERT(mDriver, "Can't get current time without a clock.");
-  return mDriver->GetCurrentTime();
-}
-
-void
-DriverHolder::Switch(GraphDriver* aDriver)
-{
-  MOZ_ASSERT(!mDriver, "This is only for initial switch.");
-  mDriver = aDriver;
-}
-
 void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
                                GraphTime aLastSwitchNextIterationStart,
                                GraphTime aLastSwitchNextIterationEnd,
