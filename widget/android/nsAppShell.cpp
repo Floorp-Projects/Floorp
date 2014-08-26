@@ -111,7 +111,10 @@ private:
 };
 
 class WakeLockListener MOZ_FINAL : public nsIDOMMozWakeLockListener {
- public:
+private:
+  ~WakeLockListener() {}
+
+public:
   NS_DECL_ISUPPORTS;
 
   nsresult Callback(const nsAString& topic, const nsAString& state) {
