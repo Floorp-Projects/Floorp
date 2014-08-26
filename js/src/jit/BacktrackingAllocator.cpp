@@ -542,19 +542,20 @@ BacktrackingAllocator::processInterval(LiveInterval *interval)
     bool canAllocate = setIntervalRequirement(interval);
 
     bool fixed;
-    LiveInterval *conflict = nullptr;
+    LiveInterval *conflict[MaxAliasedRegisters] = {nullptr};
     for (size_t attempt = 0;; attempt++) {
         if (canAllocate) {
             bool success = false;
             fixed = false;
-            conflict = nullptr;
+            for (uint32_t i = 0; i < MaxAliasedRegisters; i++)
+                conflict[i] = nullptr;
 
             // Ok, let's try allocating for this interval.
             if (interval->requirement()->kind() == Requirement::FIXED) {
-                if (!tryAllocateFixed(interval, &success, &fixed, &conflict))
+                if (!tryAllocateFixed(interval, &success, &fixed, conflict))
                     return false;
             } else {
-                if (!tryAllocateNonFixed(interval, &success, &fixed, &conflict))
+                if (!tryAllocateNonFixed(interval, &success, &fixed, conflict))
                     return false;
             }
 
@@ -564,12 +565,15 @@ BacktrackingAllocator::processInterval(LiveInterval *interval)
 
             // If that didn't work, but we have a non-fixed LiveInterval known
             // to be conflicting, maybe we can evict it and try again.
+            // The conflict array is filled up starting from 0, and they were
+            // initialized to nullptr, so just checking the 0th element is
+            // sufficient.
             if (attempt < MAX_ATTEMPTS &&
                 !fixed &&
-                conflict &&
-                computeSpillWeight(conflict) < computeSpillWeight(interval))
+                conflict[0] &&
+                computeSpillsWeight(conflict) < computeSpillWeight(interval))
             {
-                if (!evictInterval(conflict))
+                if (!evictIntervals(conflict))
                     return false;
                 continue;
             }
@@ -771,9 +775,11 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister &r, LiveInterval *in
 
     JS_ASSERT_IF(interval->requirement()->kind() == Requirement::FIXED,
                  interval->requirement()->allocation() == LAllocation(r.reg));
-
+    size_t aliasCount = 0;
+    LiveInterval *localConflicts[MaxAliasedRegisters] = {nullptr};
     for (size_t i = 0; i < interval->numRanges(); i++) {
         AllocatedRange range(interval, interval->getRange(i)), existing;
+        bool shortCircuit = false;
         for (size_t a = 0; a < r.reg.numAliased(); a++) {
             PhysicalRegister &rAlias = registers[r.reg.aliased(a).code()];
             if (!rAlias.allocations.contains(range, &existing))
@@ -786,8 +792,19 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister &r, LiveInterval *in
                             existing.range->toString(),
                             computeSpillWeight(existing.interval));
                 }
-                if (!*pconflicting || computeSpillWeight(existing.interval) < computeSpillWeight(*pconflicting))
-                    *pconflicting = existing.interval;
+                JS_ASSERT(aliasCount < MaxAliasedRegisters);
+                localConflicts[aliasCount++] = existing.interval;
+                // Abstraction Violaiton, and not-perfect optimization!
+                // if the registers are an exact fit, then no other intervals
+                // need to be checked. They are an exact fit if a = 0 (by
+                // convention). this is non-perfect because this optimization
+                // also applies if the register-to-be-evicted is strictly
+                // larger than r. There is currently no api to give this
+                // information, so check a directly for now.
+                if (a == 0) {
+                    shortCircuit = true;
+                    break;
+                }
             } else {
                 if (IonSpewEnabled(IonSpew_RegAlloc)) {
                     IonSpew(IonSpew_RegAlloc, "  %s collides with fixed use %s",
@@ -797,8 +814,16 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister &r, LiveInterval *in
             }
             return true;
         }
+        if (shortCircuit)
+            break;
     }
-
+    if (aliasCount != 0) {
+        if (!pconflicting[0] || computeSpillsWeight(localConflicts) < computeSpillsWeight(pconflicting)) {
+            for (size_t i = 0; i < MaxAliasedRegisters; i++)
+                pconflicting[i] = localConflicts[i];
+        }
+        return true;
+    }
     IonSpew(IonSpew_RegAlloc, "  allocated to %s", r.reg.name());
 
     for (size_t i = 0; i < interval->numRanges(); i++) {
@@ -1888,8 +1913,33 @@ BacktrackingAllocator::splitAcrossCalls(LiveInterval *interval)
     return splitAt(interval, callPositions);
 }
 
+static LiveInterval *
+maxEnd(LiveInterval **conflicts)
+{
+    LiveInterval *ret = nullptr;
+    for (uint32_t i = 0; i < MaxAliasedRegisters; i++) {
+        if (conflicts[i] == nullptr)
+            continue;
+        if (ret == nullptr || conflicts[i]->end() > ret->end())
+            ret = conflicts[i];
+    }
+    return ret;
+}
+static LiveInterval *
+minStart(LiveInterval **conflicts)
+{
+    LiveInterval *ret = nullptr;
+    for (uint32_t i = 0; i < MaxAliasedRegisters; i++) {
+        if (conflicts[i] == nullptr)
+            continue;
+        if (ret == nullptr || conflicts[i]->start() < ret->start())
+            ret = conflicts[i];
+    }
+    return ret;
+}
+
 bool
-BacktrackingAllocator::chooseIntervalSplit(LiveInterval *interval, LiveInterval *conflict)
+BacktrackingAllocator::chooseIntervalSplit(LiveInterval *interval, LiveInterval **conflict)
 {
     bool success = false;
 
@@ -1898,12 +1948,12 @@ BacktrackingAllocator::chooseIntervalSplit(LiveInterval *interval, LiveInterval 
     if (success)
         return true;
 
-    if (!trySplitBeforeFirstRegisterUse(interval, conflict, &success))
+    if (!trySplitBeforeFirstRegisterUse(interval, maxEnd(conflict), &success))
         return false;
     if (success)
         return true;
 
-    if (!trySplitAfterLastRegisterUse(interval, conflict, &success))
+    if (!trySplitAfterLastRegisterUse(interval, minStart(conflict), &success))
         return false;
     if (success)
         return true;
