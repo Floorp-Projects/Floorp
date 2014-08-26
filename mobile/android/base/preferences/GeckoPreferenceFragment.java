@@ -13,6 +13,9 @@ import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.LocaleManager;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.TelemetryContract.Method;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -59,6 +62,12 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
         getPreferenceManager().setSharedPreferencesName(GeckoSharedPrefs.APP_PREFS_NAME);
 
         int res = getResource();
+        if (res == R.xml.preferences) {
+            Telemetry.startUISession(TelemetryContract.Session.SETTINGS);
+        } else {
+            final String resourceName = getArguments().getString("resource");
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, Method.SETTINGS, resourceName);
+        }
 
         // Display a menu for Search preferences.
         if (res == R.xml.preferences_search) {
@@ -194,6 +203,11 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
         super.onDestroy();
         if (mPrefsRequestId > 0) {
             PrefsHelper.removeObserver(mPrefsRequestId);
+        }
+
+        final int res = getResource();
+        if (res == R.xml.preferences) {
+            Telemetry.stopUISession(TelemetryContract.Session.SETTINGS);
         }
     }
 }

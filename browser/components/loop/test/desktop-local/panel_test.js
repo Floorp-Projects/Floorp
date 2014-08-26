@@ -357,26 +357,6 @@ describe("loop.panel", function() {
 
   describe('loop.panel.ToSView', function() {
 
-    it("should set the value of the loop.seenToS preference to 'seen'",
-      function() {
-        TestUtils.renderIntoDocument(loop.panel.ToSView());
-
-        sinon.assert.calledOnce(navigator.mozLoop.setLoopCharPref);
-        sinon.assert.calledWithExactly(navigator.mozLoop.setLoopCharPref,
-          'seenToS', 'seen');
-      });
-
-    it("should not set the value of loop.seenToS when it's already set",
-      function() {
-        navigator.mozLoop.getLoopCharPref = function() {
-          return "seen";
-        };
-
-        TestUtils.renderIntoDocument(loop.panel.ToSView());
-
-        sinon.assert.notCalled(navigator.mozLoop.setLoopCharPref);
-      });
-
     it("should render when the value of loop.seenToS is not set", function() {
       var view = TestUtils.renderIntoDocument(loop.panel.ToSView());
 
