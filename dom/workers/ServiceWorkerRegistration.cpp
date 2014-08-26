@@ -13,7 +13,6 @@
 #include "nsServiceManagerUtils.h"
 #include "ServiceWorker.h"
 
-#include "nsIObserverService.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"
@@ -24,7 +23,6 @@ namespace mozilla {
 namespace dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistration)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorkerRegistration, DOMEventTargetHelper)
@@ -32,35 +30,30 @@ NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistration, DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistration,
                                    DOMEventTargetHelper,
-                                   mWindow,
                                    mInstallingWorker,
                                    mWaitingWorker,
                                    mActiveWorker)
 
 ServiceWorkerRegistration::ServiceWorkerRegistration(nsPIDOMWindow* aWindow,
                                                      const nsAString& aScope)
-  : mWindow(aWindow)
+  : DOMEventTargetHelper(aWindow)
   , mScope(aScope)
-  , mInnerID(0)
-  , mIsListeningForEvents(false)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsInnerWindow());
 
-  SetIsDOMBinding();
   StartListeningForEvents();
-
-  mInnerID = aWindow->WindowID();
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    obs->AddObserver(this, "inner-window-destroyed", false);
-  }
 }
 
 ServiceWorkerRegistration::~ServiceWorkerRegistration()
 {
+}
+
+void
+ServiceWorkerRegistration::DisconnectFromOwner()
+{
   StopListeningForEvents();
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 JSObject*
@@ -138,13 +131,13 @@ ServiceWorkerRegistration::GetWorkerReference(WhichServiceWorker aWhichOne)
   nsCOMPtr<nsISupports> serviceWorker;
   switch(aWhichOne) {
     case WhichServiceWorker::INSTALLING_WORKER:
-      rv = swm->GetInstalling(mWindow, getter_AddRefs(serviceWorker));
+      rv = swm->GetInstalling(GetOwner(), getter_AddRefs(serviceWorker));
       break;
     case WhichServiceWorker::WAITING_WORKER:
-      rv = swm->GetWaiting(mWindow, getter_AddRefs(serviceWorker));
+      rv = swm->GetWaiting(GetOwner(), getter_AddRefs(serviceWorker));
       break;
     case WhichServiceWorker::ACTIVE_WORKER:
-      rv = swm->GetActive(mWindow, getter_AddRefs(serviceWorker));
+      rv = swm->GetActive(GetOwner(), getter_AddRefs(serviceWorker));
       break;
     default:
       MOZ_CRASH("Invalid enum value");
@@ -180,74 +173,27 @@ ServiceWorkerRegistration::InvalidateWorkerReference(WhichServiceWorker aWhichOn
 void
 ServiceWorkerRegistration::StartListeningForEvents()
 {
-  MOZ_ASSERT(!mIsListeningForEvents);
-
   nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
-  MOZ_ASSERT(mWindow);
-
   if (swm) {
     swm->AddRegistrationEventListener(GetDocumentURI(), this);
   }
-
-  mIsListeningForEvents = true;
 }
 
 void
 ServiceWorkerRegistration::StopListeningForEvents()
 {
-  if (!mIsListeningForEvents) {
-    return;
-  }
-
   nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
-
-  // StopListeningForEvents is called in the dtor, and it can happen that
-  // SnowWhite had already set to null mWindow.
-  if (swm && mWindow) {
+  if (swm) {
     swm->RemoveRegistrationEventListener(GetDocumentURI(), this);
   }
-
-  mIsListeningForEvents = false;
 }
 
 nsIURI*
 ServiceWorkerRegistration::GetDocumentURI() const
 {
-  MOZ_ASSERT(mWindow);
-  return mWindow->GetDocumentURI();
+  MOZ_ASSERT(GetOwner());
+  return GetOwner()->GetDocumentURI();
 }
 
-NS_IMETHODIMP
-ServiceWorkerRegistration::Observe(nsISupports* aSubject, const char* aTopic,
-                                   const char16_t* aData)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (strcmp(aTopic, "inner-window-destroyed")) {
-    return NS_OK;
-  }
-
-  if (!mIsListeningForEvents) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
-
-  uint64_t innerID;
-  nsresult rv = wrapper->GetData(&innerID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (innerID == mInnerID) {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (obs) {
-      obs->RemoveObserver(this, "inner-window-destroyed");
-    }
-
-    StopListeningForEvents();
-  }
-
-  return NS_OK;
-}
 } // dom namespace
 } // mozilla namespace
