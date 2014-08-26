@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <assert.h>
+#include <mozilla/NullPtr.h>
 #include "AudioBufferUtils.h"
 
 const uint32_t FRAMES = 256;

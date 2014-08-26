@@ -24,39 +24,6 @@ template <typename T>
 class LinkedList;
 
 /**
- * Assume we can run an iteration of the MediaStreamGraph loop in this much time
- * or less.
- * We try to run the control loop at this rate.
- */
-static const int MEDIA_GRAPH_TARGET_PERIOD_MS = 10;
-
-/**
- * Assume that we might miss our scheduled wakeup of the MediaStreamGraph by
- * this much.
- */
-static const int SCHEDULE_SAFETY_MARGIN_MS = 10;
-
-/**
- * Try have this much audio buffered in streams and queued to the hardware.
- * The maximum delay to the end of the next control loop
- * is 2*MEDIA_GRAPH_TARGET_PERIOD_MS + SCHEDULE_SAFETY_MARGIN_MS.
- * There is no point in buffering more audio than this in a stream at any
- * given time (until we add processing).
- * This is not optimal yet.
- */
-static const int AUDIO_TARGET_MS = 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
-    SCHEDULE_SAFETY_MARGIN_MS;
-
-/**
- * Try have this much video buffered. Video frames are set
- * near the end of the iteration of the control loop. The maximum delay
- * to the setting of the next video frame is 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
- * SCHEDULE_SAFETY_MARGIN_MS. This is not optimal yet.
- */
-static const int VIDEO_TARGET_MS = 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
-    SCHEDULE_SAFETY_MARGIN_MS;
-
-/**
  * A per-stream update message passed from the media graph thread to the
  * main thread.
  */
@@ -100,11 +67,11 @@ protected:
   MediaStream* mStream;
 };
 
-struct MessageBlock {
+class MessageBlock {
+public:
   int64_t mGraphUpdateIndex;
   nsTArray<nsAutoPtr<ControlMessage> > mMessages;
 };
-
 
 /**
  * The implementation of a media stream graph. This class is private to this
@@ -115,8 +82,7 @@ struct MessageBlock {
  * OfflineAudioContext object.
  */
 class MediaStreamGraphImpl : public MediaStreamGraph,
-                             public nsIMemoryReporter,
-                             public MixerCallbackReceiver {
+                             public nsIMemoryReporter {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
@@ -186,9 +152,9 @@ public:
   bool OneIteration(GraphTime aFrom, GraphTime aTo,
                     GraphTime aStateFrom, GraphTime aStateEnd);
 
-  // Get
+  // Get the message queue, from the current GraphDriver thread.
   nsTArray<MessageBlock>& MessageQueue() {
-    CurrentDriver()->GetThreadMonitor().AssertCurrentThreadOwns();
+    mMonitor.AssertCurrentThreadOwns();
     return mFrontMessageQueue;
   }
 
@@ -230,7 +196,7 @@ public:
   void UpdateGraph(GraphTime aEndBlockingDecisions);
 
   void SwapMessageQueues() {
-    CurrentDriver()->GetThreadMonitor().AssertCurrentThreadOwns();
+    mMonitor.AssertCurrentThreadOwns();
     mFrontMessageQueue.SwapElements(mBackMessageQueue);
   }
   /**
@@ -361,15 +327,6 @@ public:
    * to the audio output stream. Returns the number of frames played.
    */
   TrackTicks PlayAudio(MediaStream* aStream, GraphTime aFrom, GraphTime aTo);
-
-  /* The mixer call the Graph back when all the media streams that have audio
-   * outputs have been mixed down, so it can write to its AudioStream to output
-   * sound. */
-  virtual void MixerCallback(AudioDataValue* aMixedBuffer,
-                             AudioSampleFormat aFormat,
-                             uint32_t aChannels,
-                             uint32_t aFrames,
-                             uint32_t aSampleRate) MOZ_OVERRIDE;
   /**
    * Set the correct current video frame for stream aStream.
    */
@@ -446,6 +403,20 @@ public:
     return RateConvertTicksRoundDown(aRate, GraphRate(), aTime);
   }
 
+  /**
+   * Effectively set the new driver, while we are switching.
+   * It is only safe to call this at the very end of an iteration, when there
+   * has been a SwitchAtNextIteration call during the iteration. The driver
+   * should return and pass the control to the new driver shortly after.
+   */
+  void SetCurrentDriver(GraphDriver* aDriver) {
+    mDriverHolder.SetCurrentDriver(aDriver);
+  }
+
+  Monitor& GetMonitor() {
+    return mMonitor;
+  }
+
   // Data members
 
   // The following state is managed on the graph thread only, unless
@@ -477,6 +448,13 @@ public:
    */
   int32_t mPortCount;
 
+  // mMonitor guards the data below.
+  // MediaStreamGraph normally does its work without holding mMonitor, so it is
+  // not safe to just grab mMonitor from some thread and start monkeying with
+  // the graph. Instead, communicate with the graph thread using provided
+  // mechanisms such as the ControlMessage queue.
+  Monitor mMonitor;
+
   // Data guarded by mMonitor (must always be accessed with mMonitor held,
   // regardless of the value of mLifecycleState.
 
@@ -496,6 +474,12 @@ public:
   nsTArray<MessageBlock> mFrontMessageQueue;
   /* Message queue in which the main thread appends messages. */
   nsTArray<MessageBlock> mBackMessageQueue;
+
+  /* True if there will messages to process if we swap the message queues. */
+  bool MessagesQueued() {
+    mMonitor.AssertCurrentThreadOwns();
+    return !mBackMessageQueue.IsEmpty();
+  }
   /**
    * This enum specifies where this graph is in its lifecycle. This is used
    * to control shutdown.

@@ -149,7 +149,6 @@ void AudioSegment::ResampleChunks(SpeexResamplerState* aResampler, uint32_t aInR
 void
 AudioSegment::WriteTo(uint64_t aID, AudioMixer& aMixer, uint32_t aOutputChannels, uint32_t aSampleRate)
 {
-  uint32_t outputChannels = aOutput->GetChannels();
   nsAutoTArray<AudioDataValue,AUDIO_PROCESSING_FRAMES*GUESS_AUDIO_CHANNELS> buf;
   nsAutoTArray<const void*,GUESS_AUDIO_CHANNELS> channelData;
   // Offset in the buffer that will end up sent to the AudioStream, in samples.
@@ -208,7 +207,7 @@ AudioSegment::WriteTo(uint64_t aID, AudioMixer& aMixer, uint32_t aOutputChannels
   }
 
   if (offset) {
-    aMixer.Mix(buf.Elements(), aOutputChannels, offset, aSampleRate);
+    aMixer.Mix(buf.Elements(), aOutputChannels, offset / aOutputChannels, aSampleRate);
   }
 }
 

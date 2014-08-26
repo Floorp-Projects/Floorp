@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdint.h>
+#include <algorithm>
 #include "mozilla/Preferences.h"
 #include "CubebUtils.h"
+#include "prdtoa.h"
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
 #define PREF_CUBEB_LATENCY "media.cubeb_latency_ms"
@@ -145,7 +147,7 @@ bool CubebUtils::sCubebLatencyPrefSet;
 }
 
 #if defined(__ANDROID__) && defined(MOZ_B2G)
-static cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
+/*static*/ cubeb_stream_type CubebUtils::ConvertChannelToCubebType(dom::AudioChannel aChannel)
 {
   switch(aChannel) {
     case dom::AudioChannel::Normal:
