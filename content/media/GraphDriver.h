@@ -297,42 +297,6 @@ private:
   GraphTime mSlice;
 };
 
-class AsyncCubebTask : public nsRunnable
-{
-public:
-  enum AsyncCubebOperation {
-    INIT,
-    SHUTDOWN,
-    SLEEP
-  };
-
-
-  AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation)
-    : mDriver(aDriver),
-      mOperation(aOperation)
-  {}
-
-  nsresult Dispatch()
-  {
-    // Can't add 'this' as the event to run, since mThread may not be set yet
-    nsresult rv = NS_NewNamedThread("CubebOperation", getter_AddRefs(mThread));
-    if (NS_SUCCEEDED(rv)) {
-      // Note: event must not null out mThread!
-      rv = mThread->Dispatch(this, NS_DISPATCH_NORMAL);
-    }
-    return rv;
-  }
-
-protected:
-  virtual ~AsyncCubebTask() {};
-
-private:
-  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL;
-  nsCOMPtr<nsIThread> mThread;
-  nsRefPtr<AudioCallbackDriver> mDriver;
-  AsyncCubebOperation mOperation;
-};
-
 /**
  * This is a graph driver that is based on callback functions called by the
  * audio api. This ensures minimal audio latency, because it means there is no
@@ -407,6 +371,8 @@ public:
 
   bool IsStarted();
 private:
+  /* Start the cubeb stream */
+  void StartStream();
   friend class AsyncCubebTask;
   void Init();
   /* MediaStreamGraph are always down/up mixed to stereo for now. */
@@ -442,8 +408,6 @@ private:
    * This is synchronized by the Graph's monitor.
    * */
   bool mStarted;
-  /* This can only be accessed with the graph's monitor held. */
-  bool mInCallback;
 
   struct AutoInCallback
   {
@@ -456,6 +420,50 @@ private:
    * shutdown of the audio stream. */
   nsCOMPtr<nsIThread> mInitShutdownThread;
   dom::AudioChannel mAudioChannel;
+  /* This can only be accessed with the graph's monitor held. */
+  bool mInCallback;
+  /* A thread has been created to be able to pause and restart the audio thread,
+   * but has not done so yet. This indicates tha the callback should return
+   * early */
+  bool mPauseRequested;
+};
+
+class AsyncCubebTask : public nsRunnable
+{
+public:
+  enum AsyncCubebOperation {
+    INIT,
+    SHUTDOWN,
+    SLEEP
+  };
+
+
+  AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation)
+    : mDriver(aDriver),
+      mOperation(aOperation)
+  {
+    MOZ_ASSERT(mDriver->mAudioStream || aOperation == INIT, "No audio stream !");
+  }
+
+  nsresult Dispatch()
+  {
+    // Can't add 'this' as the event to run, since mThread may not be set yet
+    nsresult rv = NS_NewNamedThread("CubebOperation", getter_AddRefs(mThread));
+    if (NS_SUCCEEDED(rv)) {
+      // Note: event must not null out mThread!
+      rv = mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    }
+    return rv;
+  }
+
+protected:
+  virtual ~AsyncCubebTask() {};
+
+private:
+  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL;
+  nsCOMPtr<nsIThread> mThread;
+  nsRefPtr<AudioCallbackDriver> mDriver;
+  AsyncCubebOperation mOperation;
 };
 
 }

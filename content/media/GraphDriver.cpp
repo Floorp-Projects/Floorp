@@ -189,6 +189,7 @@ ThreadedDriver::Resume()
 void
 ThreadedDriver::Revive()
 {
+  STREAM_LOG(PR_LOG_DEBUG, ("AudioCallbackDriver reviving."));
   // If we were switching, switch now. Otherwise, tell thread to run the main
   // loop again.
   if (mNextDriver) {
@@ -300,6 +301,8 @@ OfflineClockDriver::GetCurrentTimeStamp()
 void
 SystemClockDriver::WaitForNextIteration()
 {
+  mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
+
   PRIntervalTime timeout = PR_INTERVAL_NO_TIMEOUT;
   TimeStamp now = TimeStamp::Now();
   if (mNeedAnotherIteration) {
@@ -426,11 +429,21 @@ AsyncCubebTask::Run()
       mDriver = nullptr;
       break;
     case AsyncCubebOperation::SLEEP: {
-      MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
-      mDriver->Stop();
-      mDriver->mGraphImpl->GetMonitor().Wait(PR_INTERVAL_NO_TIMEOUT);
+      {
+        MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
+        // We might just have been awoken
+        if (mDriver->mNeedAnotherIteration ||
+            mDriver->mWaitState != AudioCallbackDriver::WAITSTATE_WAITING_INDEFINITELY) {
+          mDriver->mPauseRequested = false;
+          break;
+        }
+        mDriver->Stop();
+        mDriver->mPauseRequested = false;
+        mDriver->mGraphImpl->GetMonitor().Wait(PR_INTERVAL_NO_TIMEOUT);
+      }
       STREAM_LOG(PR_LOG_DEBUG, ("Restarting audio stream from sleep."));
-      mDriver->Start();
+      mDriver->StartStream();
+      break;
     }
     default:
       MOZ_CRASH("Operation not implemented.");
@@ -446,7 +459,10 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, dom::
   : GraphDriver(aGraphImpl)
   , mStarted(false)
   , mAudioChannel(aChannel)
+  , mInCallback(false)
+  , mPauseRequested(false)
 {
+  STREAM_LOG(PR_LOG_DEBUG, ("AudioCallbackDriver ctor for graph %p", aGraphImpl));
 }
 
 AudioCallbackDriver::~AudioCallbackDriver()
@@ -499,20 +515,16 @@ AudioCallbackDriver::Init()
     return;
   }
 
-  if (cubeb_stream_start(mAudioStream) != CUBEB_OK) {
-    NS_WARNING("Could not start cubeb stream for MSG.");
-  }
+  StartStream();
 
-  {
-    MonitorAutoLock mon(mGraphImpl->GetMonitor());
-    mStarted = true;
-  }
+  STREAM_LOG(PR_LOG_DEBUG, ("AudioCallbackDriver started."));
 }
 
 
 void
 AudioCallbackDriver::Destroy()
 {
+  STREAM_LOG(PR_LOG_DEBUG, ("AudioCallbackDriver destroyed."));
   mAudioStream.reset();
 }
 
@@ -549,6 +561,20 @@ AudioCallbackDriver::Start()
 }
 
 void
+AudioCallbackDriver::StartStream()
+{
+  if (cubeb_stream_start(mAudioStream) != CUBEB_OK) {
+    MOZ_CRASH("Could not start cubeb stream for MSG.");
+  }
+
+  {
+    MonitorAutoLock mon(mGraphImpl->GetMonitor());
+    mStarted = true;
+    mWaitState = WAITSTATE_RUNNING;
+  }
+}
+
+void
 AudioCallbackDriver::Stop()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "This is blocking and should not be called on the main thread.");
@@ -561,6 +587,7 @@ AudioCallbackDriver::Stop()
 void
 AudioCallbackDriver::Revive()
 {
+  STREAM_LOG(PR_LOG_DEBUG, ("AudioCallbackDriver reviving."));
   // If we were switching, switch now. Otherwise, start the audio thread again.
   if (mNextDriver) {
     mNextDriver->SetGraphTime(this, mIterationStart, mIterationEnd,
@@ -593,11 +620,15 @@ AudioCallbackDriver::GetCurrentTime()
 
 void AudioCallbackDriver::WaitForNextIteration()
 {
+  mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
+
   // We can't block on the monitor in the audio callback, so we kick off a new
   // thread that will pause the audio stream, and restart it when unblocked.
-  if (!mNeedAnotherIteration) {
+  // We don't want to sleep when we haven't started the driver yet.
+  if (!mNeedAnotherIteration && mAudioStream) {
     mWaitState = WAITSTATE_WAITING_INDEFINITELY;
     STREAM_LOG(PR_LOG_DEBUG+1, ("AudioCallbackDriver going to sleep"));
+    mPauseRequested = true;
     nsRefPtr<AsyncCubebTask> sleepEvent =
       new AsyncCubebTask(this, AsyncCubebTask::SLEEP);
     sleepEvent->Dispatch();
@@ -607,7 +638,8 @@ void AudioCallbackDriver::WaitForNextIteration()
 void
 AudioCallbackDriver::WakeUp()
 {
-  MOZ_CRASH("AudioCallbackDriver should never have to wakeup.");
+  mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
+  mGraphImpl->GetMonitor().Notify();
 }
 
 /* static */ long
@@ -648,6 +680,11 @@ long
 AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
 {
   bool stillProcessing;
+
+  if (mPauseRequested) {
+    PodZero(aBuffer, aFrames * mGraphImpl->AudioChannelCount());
+    return aFrames;
+  }
 
   DebugOnly<AutoInCallback> aic(this);
 
@@ -721,8 +758,6 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
   if (stillProcessing) {
     mBuffer.BufferFilled();
   }
-
-  WaitForNextIteration();
 
   if (mNextDriver && stillProcessing) {
     {
