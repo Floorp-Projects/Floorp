@@ -156,6 +156,11 @@ public:
   bool OneIteration(GraphTime aFrom, GraphTime aTo,
                     GraphTime aStateFrom, GraphTime aStateEnd);
 
+  bool Running() {
+    mMonitor.AssertCurrentThreadOwns();
+    return mLifecycleState == LIFECYCLE_RUNNING;
+  }
+
   // Get the message queue, from the current GraphDriver thread.
   nsTArray<MessageBlock>& MessageQueue() {
     mMonitor.AssertCurrentThreadOwns();
