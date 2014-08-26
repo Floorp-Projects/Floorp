@@ -1108,6 +1108,16 @@ HeapTypeSet::setNonWritableProperty(ExclusiveContext *cx)
     newPropertyState(cx);
 }
 
+inline void
+HeapTypeSet::setNonConstantProperty(ExclusiveContext *cx)
+{
+    if (flags & TYPE_FLAG_NON_CONSTANT_PROPERTY)
+        return;
+
+    flags |= TYPE_FLAG_NON_CONSTANT_PROPERTY;
+    newPropertyState(cx);
+}
+
 inline unsigned
 TypeSet::getObjectCount() const
 {
