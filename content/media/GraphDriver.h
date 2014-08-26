@@ -87,14 +87,13 @@ public:
   virtual void WaitForNextIteration() = 0;
   /* Wakes up the graph if it is waiting. */
   virtual void WakeUp() = 0;
-  /* Return true on success, false on error. */
-  // XXX put this in the AudioCallbackDriver ctor
-  virtual bool Init(dom::AudioChannel aChannel = dom::AudioChannel::Normal) { return true; }
   virtual void Destroy() {}
-  /* Start the graph, creating the thread. */
+  /* Start the graph, init the driver, start the thread. */
   virtual void Start() = 0;
   /* Stop the graph, shutting down the thread. */
   virtual void Stop() = 0;
+  /* Resume after a stop */
+  virtual void Resume() = 0;
   /* Revive this driver, as more messages just arrived. */
   virtual void Revive() = 0;
   /* Rate at which the GraphDriver runs, in ms. This can either be user
@@ -142,8 +141,6 @@ public:
   virtual void GetAudioBuffer(float** aBuffer, long& aFrames) {
     MOZ_CRASH("This is not an Audio GraphDriver!");
   }
-
-  bool InCallback();
 
   virtual AudioCallbackDriver* AsAudioCallbackDriver() {
     return nullptr;
@@ -281,6 +278,7 @@ public:
   virtual ~ThreadedDriver();
   virtual void Start() MOZ_OVERRIDE;
   virtual void Stop() MOZ_OVERRIDE;
+  virtual void Resume() MOZ_OVERRIDE;
   virtual void Revive() MOZ_OVERRIDE;
   /**
    * Runs main control loop on the graph thread. Normally a single invocation
@@ -337,6 +335,41 @@ private:
   GraphTime mSlice;
 };
 
+class AsyncCubebTask : public nsRunnable
+{
+public:
+  enum AsyncCubebOperation {
+    INIT,
+    SHUTDOWN
+  };
+
+
+  AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation)
+    : mDriver(aDriver),
+      mOperation(aOperation)
+  {}
+
+  nsresult Dispatch()
+  {
+    // Can't add 'this' as the event to run, since mThread may not be set yet
+    nsresult rv = NS_NewNamedThread("CubebOperation", getter_AddRefs(mThread));
+    if (NS_SUCCEEDED(rv)) {
+      // Note: event must not null out mThread!
+      rv = mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    }
+    return rv;
+  }
+
+protected:
+  virtual ~AsyncCubebTask() {};
+
+private:
+  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL;
+  nsCOMPtr<nsIThread> mThread;
+  nsRefPtr<AudioCallbackDriver> mDriver;
+  AsyncCubebOperation mOperation;
+};
+
 /**
  * This is a graph driver that is based on callback functions called by the
  * audio api. This ensures minimal audio latency, because it means there is no
@@ -361,13 +394,14 @@ class AudioCallbackDriver : public GraphDriver,
                             public MixerCallbackReceiver
 {
 public:
-  AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl);
+  AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl,
+                      dom::AudioChannel aChannel = dom::AudioChannel::Normal);
   virtual ~AudioCallbackDriver();
 
-  virtual bool Init(dom::AudioChannel aChannel) MOZ_OVERRIDE;
   virtual void Destroy() MOZ_OVERRIDE;
   virtual void Start() MOZ_OVERRIDE;
   virtual void Stop() MOZ_OVERRIDE;
+  virtual void Resume() MOZ_OVERRIDE;
   virtual void Revive() MOZ_OVERRIDE;
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) MOZ_OVERRIDE;
@@ -406,8 +440,12 @@ public:
     return this;
   }
 
+  bool InCallback();
+
   bool IsStarted();
 private:
+  friend class AsyncCubebTask;
+  void Init();
   /* MediaStreamGraph are always down/up mixed to stereo for now. */
   static const uint32_t ChannelCount = 2;
   /* The size of this buffer comes from the fact that some audio backends can
@@ -451,6 +489,10 @@ private:
     AudioCallbackDriver* mDriver;
   };
 
+  /* Thread for off-main-thread initialization and
+   * shutdown of the audio stream. */
+  nsCOMPtr<nsIThread> mInitShutdownThread;
+  dom::AudioChannel mAudioChannel;
 };
 
 }
