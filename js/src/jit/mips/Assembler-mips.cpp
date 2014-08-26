@@ -961,9 +961,9 @@ Assembler::as_movf(Register rd, Register rs, uint16_t cc)
 
 // Bit twiddling.
 BufferOffset
-Assembler::as_clz(Register rd, Register rs, Register rt)
+Assembler::as_clz(Register rd, Register rs)
 {
-    return writeInst(InstReg(op_special2, rs, rt, rd, ff_clz).encode());
+    return writeInst(InstReg(op_special2, rs, rs, rd, ff_clz).encode());
 }
 
 BufferOffset

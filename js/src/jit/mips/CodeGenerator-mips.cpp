@@ -912,6 +912,16 @@ CodeGeneratorMIPS::visitUrshD(LUrshD *ins)
 }
 
 bool
+CodeGeneratorMIPS::visitClzI(LClzI *ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    masm.as_clz(output, input);
+    return true;
+}
+
+bool
 CodeGeneratorMIPS::visitPowHalfD(LPowHalfD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
