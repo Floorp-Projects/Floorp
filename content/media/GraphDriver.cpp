@@ -6,6 +6,10 @@
 #include <MediaStreamGraphImpl.h>
 #include "CubebUtils.h"
 
+#ifdef XP_MACOSX
+#include <sys/sysctl.h>
+#endif
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaStreamGraphLog;
 #define STREAM_LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
@@ -515,6 +519,9 @@ AudioCallbackDriver::Init()
     return;
   }
 
+  cubeb_stream_register_device_changed_callback(mAudioStream,
+                                                AudioCallbackDriver::DeviceChangedCallback_s);
+
   StartStream();
 
   STREAM_LOG(PR_LOG_DEBUG, ("AudioCallbackDriver started."));
@@ -657,6 +664,13 @@ AudioCallbackDriver::StateCallback_s(cubeb_stream* aStream, void * aUser,
 {
   AudioCallbackDriver* driver = reinterpret_cast<AudioCallbackDriver*>(aUser);
   driver->StateCallback(aState);
+}
+
+/* static */ void
+AudioCallbackDriver::DeviceChangedCallback_s(void* aUser)
+{
+  AudioCallbackDriver* driver = reinterpret_cast<AudioCallbackDriver*>(aUser);
+  driver->DeviceChangedCallback();
 }
 
 bool AudioCallbackDriver::InCallback() {
@@ -813,6 +827,59 @@ AudioCallbackDriver::MixerCallback(AudioDataValue* aMixedBuffer,
   NS_WARN_IF_FALSE(written == aFrames - toWrite, "Dropping frames.");
 };
 
+void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive)
+{
+#ifdef XP_MACOSX
+  cubeb_device* out;
+  int rv;
+  char name[128];
+  size_t length = sizeof(name);
+
+  rv = sysctlbyname("hw.model", name, &length, NULL, 0);
+  if (rv) {
+    return;
+  }
+
+  if (!strncmp(name, "MacBookPro", 10)) {
+    if (cubeb_stream_get_current_device(mAudioStream, &out) == CUBEB_OK) {
+      // Check if we are currently outputing sound on external speakers.
+      if (!strcmp(out->output_name, "ispk")) {
+        // Pan everything to the right speaker.
+        if (aMicrophoneActive) {
+          if (cubeb_stream_set_panning(mAudioStream, 1.0) != CUBEB_OK) {
+            NS_WARNING("Could not pan audio output to the right.");
+          }
+        } else {
+          if (cubeb_stream_set_panning(mAudioStream, 0.0) != CUBEB_OK) {
+            NS_WARNING("Could not pan audio output to the center.");
+          }
+        }
+      } else {
+        if (cubeb_stream_set_panning(mAudioStream, 0.0) != CUBEB_OK) {
+          NS_WARNING("Could not pan audio output to the center.");
+        }
+      }
+      cubeb_stream_device_destroy(mAudioStream, out);
+    }
+  }
+#endif
+}
+
+void
+AudioCallbackDriver::DeviceChangedCallback() {
+  MonitorAutoLock mon(mGraphImpl->GetMonitor());
+  PanOutputIfNeeded(mMicrophoneActive);
+}
+
+void
+AudioCallbackDriver::SetMicrophoneActive(bool aActive)
+{
+  MonitorAutoLock mon(mGraphImpl->GetMonitor());
+
+  mMicrophoneActive = aActive;
+
+  PanOutputIfNeeded(mMicrophoneActive);
+}
 
 uint32_t
 AudioCallbackDriver::IterationDuration()
