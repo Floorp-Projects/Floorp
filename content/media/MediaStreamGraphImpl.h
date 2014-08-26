@@ -94,7 +94,10 @@ public:
    * output.  Those objects currently only support audio, and are used to
    * implement OfflineAudioContext.  They do not support MediaStream inputs.
    */
-  explicit MediaStreamGraphImpl(bool aRealtime, TrackRate aSampleRate, DOMMediaStream::TrackTypeHints aHint);
+  explicit MediaStreamGraphImpl(bool aRealtime,
+                                TrackRate aSampleRate,
+                                DOMMediaStream::TrackTypeHints aHint,
+                                dom::AudioChannel aChannel = dom::AudioChannel::Normal);
 
   /**
    * Unregisters memory reporting and deletes this instance. This should be
