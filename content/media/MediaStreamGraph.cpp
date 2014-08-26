@@ -1482,7 +1482,7 @@ public:
     return NS_OK;
   }
 private:
-  MediaStreamGraphImpl* mGraph;
+  nsRefPtr<MediaStreamGraphImpl> mGraph;
 };
 
 class MediaStreamGraphStableStateRunnable : public nsRunnable {
@@ -1501,7 +1501,7 @@ public:
     return NS_OK;
   }
 private:
-  MediaStreamGraphImpl* mGraph;
+  nsRefPtr<MediaStreamGraphImpl> mGraph;
   bool mSourceIsMSG;
 };
 
