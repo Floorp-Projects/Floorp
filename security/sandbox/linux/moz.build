@@ -14,8 +14,11 @@ EXPORTS.mozilla += [
 ]
 
 SOURCES += [
+    '../chromium/base/shim/base/logging.cpp',
     '../chromium/sandbox/linux/seccomp-bpf/basicblock.cc',
     '../chromium/sandbox/linux/seccomp-bpf/codegen.cc',
+    '../chromium/sandbox/linux/seccomp-bpf/die.cc',
+    '../chromium/sandbox/linux/seccomp-bpf/syscall.cc',
     'Sandbox.cpp',
     'SandboxAssembler.cpp',
     'SandboxFilter.cpp',
@@ -24,10 +27,9 @@ SOURCES += [
 DEFINES['NS_NO_XPCOM'] = True
 DISABLE_STL_WRAPPING = True
 
-LOCAL_INCLUDES += [
-    '/security/sandbox',
-    '/security/sandbox/chromium',
-]
+LOCAL_INCLUDES += ['/security/sandbox/chromium/base/shim']
+LOCAL_INCLUDES += ['/security/sandbox/chromium']
+LOCAL_INCLUDES += ['/security/sandbox']
 
 if CONFIG['OS_TARGET'] != 'Android':
     # Needed for clock_gettime with glibc < 2.17:
