@@ -520,11 +520,17 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     }
   }
 
-  if (!audioTrackPresent && CurrentDriver()->AsAudioCallbackDriver()) {
-    SystemClockDriver* driver = new SystemClockDriver(this);
-    MOZ_ASSERT(CurrentDriver()->AsAudioCallbackDriver());
-    mMixer.RemoveCallback(CurrentDriver()->AsAudioCallbackDriver());
-    CurrentDriver()->SwitchAtNextIteration(driver);
+  if (!audioTrackPresent &&
+      CurrentDriver()->AsAudioCallbackDriver()) {
+    bool started;
+    {
+      MonitorAutoLock mon(mMonitor);
+      started = CurrentDriver()->AsAudioCallbackDriver()->IsStarted();
+    }
+    if (started) {
+      SystemClockDriver* driver = new SystemClockDriver(this);
+      CurrentDriver()->SwitchAtNextIteration(driver);
+    }
   }
 
   if (!mMixer && shouldMix) {
