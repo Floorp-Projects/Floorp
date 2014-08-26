@@ -134,7 +134,7 @@ public:
     // We can't release an audio driver on the main thread, because it can be
     // blocking.
     if (mDriver->AsAudioCallbackDriver()) {
-      printf("Releasing audio driver off main thread.\n");
+      STREAM_LOG(PR_LOG_DEBUG, ("Releasing audio driver off main thread.\n"));
       nsRefPtr<AsyncCubebTask> releaseEvent =
         new AsyncCubebTask(mDriver->AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
       mDriver = nullptr;
@@ -438,12 +438,13 @@ AsyncCubebTask::Run()
       {
         MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
         // We might just have been awoken
-        if (mDriver->mNeedAnotherIteration ||
-            mDriver->mWaitState != AudioCallbackDriver::WAITSTATE_WAITING_INDEFINITELY) {
+        if (mDriver->mNeedAnotherIteration) {
           mDriver->mPauseRequested = false;
+          mDriver->mWaitState = AudioCallbackDriver::WAITSTATE_RUNNING;
           break;
         }
         mDriver->Stop();
+        mDriver->mWaitState = AudioCallbackDriver::WAITSTATE_WAITING_INDEFINITELY;
         mDriver->mPauseRequested = false;
         mDriver->mGraphImpl->GetMonitor().Wait(PR_INTERVAL_NO_TIMEOUT);
       }
@@ -634,8 +635,7 @@ void AudioCallbackDriver::WaitForNextIteration()
   // We can't block on the monitor in the audio callback, so we kick off a new
   // thread that will pause the audio stream, and restart it when unblocked.
   // We don't want to sleep when we haven't started the driver yet.
-  if (!mNeedAnotherIteration && mAudioStream) {
-    mWaitState = WAITSTATE_WAITING_INDEFINITELY;
+  if (!mNeedAnotherIteration && mAudioStream && mGraphImpl->Running()) {
     STREAM_LOG(PR_LOG_DEBUG+1, ("AudioCallbackDriver going to sleep"));
     mPauseRequested = true;
     nsRefPtr<AsyncCubebTask> sleepEvent =
