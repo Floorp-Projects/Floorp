@@ -741,7 +741,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY trackingContentBlocked.moreinfo "Parts of the page that track your online activity have been blocked.">
 <!ENTITY trackingContentBlocked.learnMore "Learn More">
 <!ENTITY trackingContentBlocked.options "Options">
-<!ENTITY trackingContentBlocked.unblock.label "Disable protection">
+<!ENTITY trackingContentBlocked.unblock.label2 "Disable protection for this site">
 <!ENTITY trackingContentBlocked.block.label "Enable protection">
 <!ENTITY trackingContentBlocked.disabled.message "Tracking protection is disabled">
 
