@@ -1910,7 +1910,9 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     fontStyle = f->StyleFont();
     nsIFrame* parent = mLineContainer->GetParent();
     if (NS_MATHML_MATHVARIANT_NONE != fontStyle->mMathVariant) {
-      anyMathMLStyling = true;
+      if (NS_MATHML_MATHVARIANT_NORMAL != fontStyle->mMathVariant) {
+        anyMathMLStyling = true;
+      }
     } else if (mLineContainer->GetStateBits() & NS_FRAME_IS_IN_SINGLE_CHAR_MI) {
       textFlags |= nsTextFrameUtils::TEXT_IS_SINGLE_CHAR_MI;
       anyMathMLStyling = true;

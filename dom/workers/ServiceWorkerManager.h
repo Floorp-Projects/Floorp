@@ -20,6 +20,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsTObserverArray.h"
+#include "nsClassHashtable.h"
 
 class nsIScriptError;
 
@@ -199,6 +200,7 @@ class ServiceWorkerManager MOZ_FINAL : public nsIServiceWorkerManager
   friend class CancelServiceWorkerInstallationRunnable;
   friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUpdateInstance;
+  friend class GetReadyPromiseRunnable;
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
   friend class UnregisterRunnable;
@@ -389,6 +391,31 @@ private:
   FireEventOnServiceWorkerRegistrations(ServiceWorkerRegistrationInfo* aRegistration,
                                         const nsAString& aName);
 
+  void
+  StorePendingReadyPromise(nsPIDOMWindow* aWindow, nsIURI* aURI, Promise* aPromise);
+
+  void
+  CheckPendingReadyPromises();
+
+  bool
+  CheckReadyPromise(nsPIDOMWindow* aWindow, nsIURI* aURI, Promise* aPromise);
+
+  struct PendingReadyPromise
+  {
+    PendingReadyPromise(nsIURI* aURI, Promise* aPromise)
+      : mURI(aURI), mPromise(aPromise)
+    { }
+
+    nsCOMPtr<nsIURI> mURI;
+    nsRefPtr<Promise> mPromise;
+  };
+
+  static PLDHashOperator
+  CheckPendingReadyPromisesEnumerator(nsISupports* aSupports,
+                                      nsAutoPtr<PendingReadyPromise>& aData,
+                                      void* aUnused);
+
+  nsClassHashtable<nsISupportsHashKey, PendingReadyPromise> mPendingReadyPromises;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorkerManager,

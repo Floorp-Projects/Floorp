@@ -28,3 +28,19 @@ interface nsIDNSListener : nsISupports
                           in nsIDNSRecord  aRecord,
                           in nsresult      aStatus);
 };
+
+/**
+ * nsIDNSListenerProxy:
+ *
+ * Must be implemented by classes that wrap the original listener passed to
+ * nsIDNSService.AsyncResolve, so we have access to original listener for
+ * comparison purposes.
+ */
+[uuid(60eff0e4-6f7c-493c-add9-1cbea59063ad)]
+interface nsIDNSListenerProxy : nsISupports
+{
+  /*
+   * The original nsIDNSListener which requested hostname resolution.
+   */
+  readonly attribute nsIDNSListener originalListener;
+};

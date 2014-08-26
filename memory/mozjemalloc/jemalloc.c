@@ -193,17 +193,6 @@
  */
 #define MALLOC_VALIDATE
 
-/* Embed no-op macros that support memory allocation tracking via valgrind. */
-#ifdef MOZ_VALGRIND
-#  define MALLOC_VALGRIND
-#endif
-#ifdef MALLOC_VALGRIND
-#  include <valgrind/valgrind.h>
-#else
-#  define VALGRIND_MALLOCLIKE_BLOCK(addr, sizeB, rzB, is_zeroed)
-#  define VALGRIND_FREELIKE_BLOCK(addr, rzB)
-#endif
-
 /*
  * MALLOC_BALANCE enables monitoring of arena lock contention and dynamically
  * re-balances arena load if exponentially averaged contention exceeds a
@@ -2100,7 +2089,6 @@ base_alloc(size_t size)
 	}
 #endif
 	malloc_mutex_unlock(&base_mtx);
-	VALGRIND_MALLOCLIKE_BLOCK(ret, size, 0, false);
 
 	return (ret);
 }
@@ -2111,12 +2099,6 @@ base_calloc(size_t number, size_t size)
 	void *ret;
 
 	ret = base_alloc(number * size);
-#ifdef MALLOC_VALGRIND
-	if (ret != NULL) {
-		VALGRIND_FREELIKE_BLOCK(ret, 0);
-		VALGRIND_MALLOCLIKE_BLOCK(ret, size, 0, true);
-	}
-#endif
 	memset(ret, 0, number * size);
 
 	return (ret);
@@ -2131,8 +2113,6 @@ base_node_alloc(void)
 	if (base_nodes != NULL) {
 		ret = base_nodes;
 		base_nodes = *(extent_node_t **)ret;
-		VALGRIND_FREELIKE_BLOCK(ret, 0);
-		VALGRIND_MALLOCLIKE_BLOCK(ret, sizeof(extent_node_t), 0, false);
 		malloc_mutex_unlock(&base_mtx);
 	} else {
 		malloc_mutex_unlock(&base_mtx);
@@ -2147,8 +2127,6 @@ base_node_dealloc(extent_node_t *node)
 {
 
 	malloc_mutex_lock(&base_mtx);
-	VALGRIND_FREELIKE_BLOCK(node, 0);
-	VALGRIND_MALLOCLIKE_BLOCK(node, sizeof(extent_node_t *), 0, false);
 	*(extent_node_t **)node = base_nodes;
 	base_nodes = node;
 	malloc_mutex_unlock(&base_mtx);
@@ -3355,14 +3333,8 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 		if (zero) {
 			if ((chunk->map[run_ind + i].bits & CHUNK_MAP_ZEROED)
 			    == 0) {
-				VALGRIND_MALLOCLIKE_BLOCK((void *)((uintptr_t)
-				    chunk + ((run_ind + i) << pagesize_2pow)),
-				    pagesize, 0, false);
 				memset((void *)((uintptr_t)chunk + ((run_ind
 				    + i) << pagesize_2pow)), 0, pagesize);
-				VALGRIND_FREELIKE_BLOCK((void *)((uintptr_t)
-				    chunk + ((run_ind + i) << pagesize_2pow)),
-				    0);
 				/* CHUNK_MAP_ZEROED is cleared below. */
 			}
 		}
@@ -3403,8 +3375,6 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 	arena_run_t *run;
 	size_t i;
 
-	VALGRIND_MALLOCLIKE_BLOCK(chunk, (arena_chunk_header_npages <<
-	    pagesize_2pow), 0, false);
 #ifdef MALLOC_STATS
 	arena->stats.mapped += chunksize;
 #endif
@@ -3470,7 +3440,6 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 		LinkedList_Remove(&arena->spare->chunks_madvised_elem);
 #endif
 
-		VALGRIND_FREELIKE_BLOCK(arena->spare, 0);
 		chunk_dealloc((void *)arena->spare, chunksize);
 #ifdef MALLOC_STATS
 		arena->stats.mapped -= chunksize;
@@ -3833,9 +3802,6 @@ arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 	if (run == bin->runcur)
 		return (run);
 
-	VALGRIND_MALLOCLIKE_BLOCK(run, sizeof(arena_run_t) + (sizeof(unsigned) *
-	    (bin->regs_mask_nelms - 1)), 0, false);
-
 	/* Initialize run internals. */
 	run->bin = bin;
 
@@ -4091,7 +4057,6 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 #endif
 	malloc_spin_unlock(&arena->lock);
 
-	VALGRIND_MALLOCLIKE_BLOCK(ret, size, 0, zero);
 	if (zero == false) {
 #ifdef MALLOC_FILL
 		if (opt_junk)
@@ -4128,7 +4093,6 @@ arena_malloc_large(arena_t *arena, size_t size, bool zero)
 #endif
 	malloc_spin_unlock(&arena->lock);
 
-	VALGRIND_MALLOCLIKE_BLOCK(ret, size, 0, zero);
 	if (zero == false) {
 #ifdef MALLOC_FILL
 		if (opt_junk)
@@ -4232,7 +4196,6 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 #endif
 	malloc_spin_unlock(&arena->lock);
 
-	VALGRIND_MALLOCLIKE_BLOCK(ret, size, 0, false);
 #ifdef MALLOC_FILL
 	if (opt_junk)
 		memset(ret, 0xa5, size);
@@ -4483,7 +4446,6 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 #if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 		run->magic = 0;
 #endif
-		VALGRIND_FREELIKE_BLOCK(run, 0);
 		arena_run_dalloc(arena, run, true);
 #ifdef MALLOC_STATS
 		bin->stats.curruns--;
@@ -4591,7 +4553,6 @@ arena_dalloc(void *ptr, size_t offset)
 		malloc_spin_unlock(&arena->lock);
 	} else
 		arena_dalloc_large(arena, chunk, ptr);
-	VALGRIND_FREELIKE_BLOCK(ptr, 0);
 }
 
 static inline void
@@ -4794,28 +4755,10 @@ iralloc(void *ptr, size_t size)
 
 	oldsize = isalloc(ptr);
 
-#ifndef MALLOC_VALGRIND
 	if (size <= arena_maxclass)
 		return (arena_ralloc(ptr, size, oldsize));
 	else
 		return (huge_ralloc(ptr, size, oldsize));
-#else
-	/*
-	 * Valgrind does not provide a public interface for modifying an
-	 * existing allocation, so use malloc/memcpy/free instead.
-	 */
-	{
-		void *ret = imalloc(size);
-		if (ret != NULL) {
-			if (oldsize < size)
-			    memcpy(ret, ptr, oldsize);
-			else
-			    memcpy(ret, ptr, size);
-			idalloc(ptr);
-		}
-		return (ret);
-	}
-#endif
 }
 
 static bool
@@ -5005,12 +4948,6 @@ huge_malloc(size_t size, bool zero)
 		pages_decommit((void *)((uintptr_t)ret + psize), csize - psize);
 #endif
 
-#ifdef MALLOC_DECOMMIT
-	VALGRIND_MALLOCLIKE_BLOCK(ret, psize, 0, zero);
-#else
-	VALGRIND_MALLOCLIKE_BLOCK(ret, csize, 0, zero);
-#endif
-
 #ifdef MALLOC_FILL
 	if (zero == false) {
 		if (opt_junk)
@@ -5125,12 +5062,6 @@ huge_palloc(size_t alignment, size_t size)
 		pages_decommit((void *)((uintptr_t)ret + psize),
 		    chunk_size - psize);
 	}
-#endif
-
-#ifdef MALLOC_DECOMMIT
-	VALGRIND_MALLOCLIKE_BLOCK(ret, psize, 0, false);
-#else
-	VALGRIND_MALLOCLIKE_BLOCK(ret, chunk_size, 0, false);
 #endif
 
 #ifdef MALLOC_FILL
@@ -5275,7 +5206,6 @@ huge_dalloc(void *ptr)
 
 	/* Unmap chunk. */
 	chunk_dealloc(node->addr, CHUNK_CEILING(node->size));
-	VALGRIND_FREELIKE_BLOCK(node->addr, 0);
 
 	base_node_dealloc(node);
 }
