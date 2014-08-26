@@ -351,7 +351,7 @@ VideoCaptureModule::DeviceInfo* DesktopCaptureImpl::CreateDeviceInfo(const int32
 }
 
 const char* DesktopCaptureImpl::CurrentDeviceName() const {
-  return _deviceUniqueId;
+  return _deviceUniqueId.c_str();
 }
 
 int32_t DesktopCaptureImpl::ChangeUniqueId(const int32_t id) {
@@ -400,6 +400,8 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
     MouseCursorMonitor *pMouseCursorMonitor = MouseCursorMonitor::CreateForWindow(webrtc::DesktopCaptureOptions::CreateDefault(), winId);
     desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pWindowCapturer, pMouseCursorMonitor));
   }
+  _deviceUniqueId = uniqueId;
+
   return 0;
 }
 
@@ -453,7 +455,7 @@ int32_t DesktopCaptureImpl::Process() {
 
 DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id)
   : _id(id),
-    _deviceUniqueId(NULL),
+    _deviceUniqueId(""),
     _apiCs(*CriticalSectionWrapper::CreateCriticalSection()),
     _captureDelay(0),
     _requestedCapability(),
@@ -489,8 +491,6 @@ DesktopCaptureImpl::~DesktopCaptureImpl() {
   DeRegisterCaptureCallback();
   delete &_callBackCs;
   delete &_apiCs;
-
-  delete[] _deviceUniqueId;
 }
 
 void DesktopCaptureImpl::RegisterCaptureDataCallback(
