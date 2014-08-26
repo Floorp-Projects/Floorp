@@ -340,7 +340,8 @@ class AsyncCubebTask : public nsRunnable
 public:
   enum AsyncCubebOperation {
     INIT,
-    SHUTDOWN
+    SHUTDOWN,
+    SLEEP
   };
 
 
@@ -406,7 +407,7 @@ public:
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) MOZ_OVERRIDE;
   virtual GraphTime GetCurrentTime() MOZ_OVERRIDE;
-  virtual void WaitForNextIteration() MOZ_OVERRIDE { }
+  virtual void WaitForNextIteration() MOZ_OVERRIDE;
   virtual void WakeUp() MOZ_OVERRIDE;
 
   /* Static wrapper function cubeb calls back. */

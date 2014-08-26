@@ -371,14 +371,6 @@ public:
   {
     mStreamOrderDirty = true;
   }
-  /**
-   * Pause all AudioStreams being written to by MediaStreams
-   */
-  void PauseAllAudioOutputs();
-  /**
-   * Resume all AudioStreams being written to by MediaStreams
-   */
-  void ResumeAllAudioOutputs();
 
   TrackRate AudioSampleRate() const { return mSampleRate; }
   TrackRate GraphRate() const { return mSampleRate; }
@@ -633,12 +625,6 @@ private:
    * Indicates that the MSG thread should gather data for a memory report.
    */
   bool mNeedsMemoryReport;
-
-  /**
-   * True if the audio outputs are paused because they would output silence
-   * anyway.
-   */
-  bool mAudioOutputsPaused;
 
 #ifdef DEBUG
   /**

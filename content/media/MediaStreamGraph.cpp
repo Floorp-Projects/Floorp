@@ -1227,42 +1227,6 @@ MediaStreamGraphImpl::AllFinishedStreamsNotified()
   return true;
 }
 
-void MediaStreamGraphImpl::PausedIndefinitly()
-{
-  PauseAllAudioOutputs();
-}
-
-void MediaStreamGraphImpl::ResumedFromPaused()
-{
-  ResumeAllAudioOutputs();
-}
-
-void
-MediaStreamGraphImpl::PauseAllAudioOutputs()
-{
-  if (mAudioOutputsPaused) {
-    return;
-  }
-  if (mMixedAudioStream) {
-    mMixedAudioStream->Pause();
-  }
-  mAudioOutputsPaused = true;
-}
-
-void
-MediaStreamGraphImpl::ResumeAllAudioOutputs()
-{
-  if (!mAudioOutputsPaused) {
-    return;
-  }
-
-  if (mMixedAudioStream) {
-    mMixedAudioStream->Resume();
-  }
-
-  mAudioOutputsPaused = false;
-}
-
 void
 MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecision)
 {
@@ -2698,7 +2662,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
   , mSelfRef(MOZ_THIS_IN_INITIALIZER_LIST())
   , mAudioStreamSizes()
   , mNeedsMemoryReport(false)
-  , mAudioOutputsPaused(false)
 #ifdef DEBUG
   , mCanRunMessagesSynchronously(false)
 #endif
