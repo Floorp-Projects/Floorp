@@ -22,6 +22,7 @@ namespace mozilla {
 
 template <typename T>
 class LinkedList;
+class AudioOutputObserver;
 
 /**
  * A per-stream update message passed from the media graph thread to the
@@ -601,10 +602,7 @@ public:
    */
   nsRefPtr<AsyncLatencyLogger> mLatencyLog;
   AudioMixer mMixer;
-  /**
-   * The mixed down audio output for this graph.
-   */
-  nsRefPtr<AudioStream> mMixedAudioStream;
+  nsRefPtr<AudioOutputObserver> mFarendObserverRef;
 
 private:
   virtual ~MediaStreamGraphImpl();

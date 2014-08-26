@@ -499,7 +499,7 @@ MediaStreamGraphImpl::MarkConsumed(MediaStream* aStream)
 void
 MediaStreamGraphImpl::UpdateStreamOrder()
 {
-  bool shouldMix = false;
+  bool shouldAEC = false;
   bool audioTrackPresent = false;
   // Value of mCycleMarker for unvisited streams in cycle detection.
   const uint32_t NOT_VISITED = UINT32_MAX;
@@ -512,7 +512,7 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     stream->mInBlockingSet = false;
     if (stream->AsSourceStream() &&
         stream->AsSourceStream()->NeedsMixing()) {
-      shouldMix = true;
+      shouldAEC = true;
     }
     for (StreamBuffer::TrackIter tracks(stream->GetStreamBuffer(), MediaSegment::AUDIO);
          !tracks.IsEnded(); tracks.Next()) {
@@ -533,18 +533,14 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     }
   }
 
-  if (!mMixer && shouldMix) {
-    if (shouldMix) {
-      if (gFarendObserver && !mMixer.FindCallback(gFarendObserver)) {
-        mMixer.AddCallback(gFarendObserver);
-      }
+  if (shouldAEC && !mFarendObserverRef && gFarendObserver) {
+    mFarendObserverRef = gFarendObserver;
+    mMixer.AddCallback(mFarendObserverRef);
+  } else if (!shouldAEC && mFarendObserverRef){
+    if (mMixer.FindCallback(mFarendObserverRef)) {
+      mMixer.RemoveCallback(mFarendObserverRef);
+      mFarendObserverRef = nullptr;
     }
-  } else {
-    mMixer.RemoveCallback(gFarendObserver);
-  }
-
-  if (!audioTrackPresent && mMixedAudioStream) {
-    mMixedAudioStream = nullptr;
   }
 
   // The algorithm for finding cycles is based on Tim Leslie's iterative
@@ -2218,7 +2214,7 @@ SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
   data->mData = aSegment;
   data->mHaveEnough = false;
   if (auto graph = GraphImpl()) {
-    GraphImpl()->CurrentDriver()->EnsureNextIteration();
+    graph->CurrentDriver()->EnsureNextIteration();
   }
 }
 
@@ -2404,7 +2400,7 @@ SourceMediaStream::EndTrack(TrackID aID)
     }
   }
   if (auto graph = GraphImpl()) {
-    GraphImpl()->CurrentDriver()->EnsureNextIteration();
+    graph->CurrentDriver()->EnsureNextIteration();
   }
 }
 
@@ -2415,7 +2411,7 @@ SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime)
   MOZ_ASSERT(aKnownTime >= mUpdateKnownTracksTime);
   mUpdateKnownTracksTime = aKnownTime;
   if (auto graph = GraphImpl()) {
-    GraphImpl()->CurrentDriver()->EnsureNextIteration();
+    graph->CurrentDriver()->EnsureNextIteration();
   }
 }
 
@@ -2654,7 +2650,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
   , mNonRealtimeProcessing(false)
   , mStreamOrderDirty(false)
   , mLatencyLog(AsyncLatencyLogger::Get())
-  , mMixedAudioStream(nullptr)
+  , mFarendObserverRef(nullptr)
   , mMemoryReportMonitor("MSGIMemory")
   , mSelfRef(MOZ_THIS_IN_INITIALIZER_LIST())
   , mAudioStreamSizes()
