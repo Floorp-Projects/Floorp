@@ -9,7 +9,12 @@ NodeJS and npm installed.
 Installation
 ------------
 
+Fetch and install/build any NPM and bower dependencies, as well as the
+localized Terms-of-Service content:
+
     $ make install
+
+Some of the above is driven by Gruntfile.js.
 
 Configuration
 -------------
