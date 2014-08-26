@@ -76,9 +76,13 @@ function params(request, response) {
     return;
   }
 
-  let origin = request.scheme + "://" + request.host + ":" + request.port;
-
   let params = JSON.parse(getSharedState("/fxa-oauth/params") || "{}");
+
+  if (params.test_error && params.test_error == "params_401") {
+    response.setStatusLine(request.httpVersion, 401, "Unauthorized");
+    response.write("401 Unauthorized");
+    return;
+  }
 
   // Warn if required parameters are missing.
   for (let paramName of REQUIRED_PARAMS) {
@@ -113,6 +117,13 @@ function oauth_authorization(request, response) {
  */
 function token(request, response) {
   let params = JSON.parse(getSharedState("/fxa-oauth/params") || "{}");
+
+  if (params.test_error && params.test_error == "token_401") {
+    response.setStatusLine(request.httpVersion, 401, "Unauthorized");
+    response.write("401 Unauthorized");
+    return;
+  }
+
   let body = NetUtil.readInputStreamToString(request.bodyInputStream,
                                              request.bodyInputStream.available());
   let payload = JSON.parse(body);
@@ -124,7 +135,7 @@ function token(request, response) {
 
   let tokenData = {
     access_token: payload.code + "_access_token",
-    scopes: "",
+    scope: "profile",
     token_type: "bearer",
   };
   response.setHeader("Content-Type", "application/json; charset=utf-8", false);
