@@ -1103,6 +1103,7 @@ class Activation
     ThreadSafeContext *cx_;
     JSCompartment *compartment_;
     Activation *prev_;
+    Activation *prevProfiling_;
 
     // Counter incremented by JS_SaveFrameChain on the top-most activation and
     // decremented by JS_RestoreFrameChain. If > 0, ScriptFrameIter should stop
@@ -1133,6 +1134,8 @@ class Activation
     Activation *prev() const {
         return prev_;
     }
+    Activation *prevProfiling() const { return prevProfiling_; }
+    inline Activation *mostRecentProfiling();
 
     bool isInterpreter() const {
         return kind_ == Interpreter;
@@ -1146,6 +1149,10 @@ class Activation
     bool isAsmJS() const {
         return kind_ == AsmJS;
     }
+
+    inline bool isProfiling() const;
+    void registerProfiling();
+    void unregisterProfiling();
 
     InterpreterActivation *asInterpreter() const {
         JS_ASSERT(isInterpreter());
@@ -1238,6 +1245,10 @@ class InterpreterActivation : public Activation
         return opMask_;
     }
 
+    bool isProfiling() const {
+        return false;
+    }
+
     // If this js::Interpret frame is running |script|, enable interrupts.
     void enableInterruptsIfRunning(JSScript *script) {
         if (regs_.fp()->script() == script)
@@ -1322,6 +1333,10 @@ class JitActivation : public Activation
         return active_;
     }
     void setActive(JSContext *cx, bool active = true);
+
+    bool isProfiling() const {
+        return false;
+    }
 
     uint8_t *prevJitTop() const {
         return prevJitTop_;
@@ -1480,6 +1495,10 @@ class AsmJSActivation : public Activation
     inline JSContext *cx();
     AsmJSModule &module() const { return module_; }
     AsmJSActivation *prevAsmJS() const { return prevAsmJS_; }
+
+    bool isProfiling() const {
+        return true;
+    }
 
     // Returns a pointer to the base of the innermost stack frame of asm.js code
     // in this activation.

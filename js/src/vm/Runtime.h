@@ -567,6 +567,12 @@ class PerThreadData : public PerThreadDataFriendFields
      */
     js::Activation *activation_;
 
+    /*
+     * Points to the most recent profiling activation running on the
+     * thread.  Protected by rt->interruptLock.
+     */
+    js::Activation * volatile profilingActivation_;
+
     /* See AsmJSActivation comment. Protected by rt->interruptLock. */
     js::AsmJSActivation * volatile asmJSActivationStack_;
 
@@ -587,6 +593,10 @@ class PerThreadData : public PerThreadDataFriendFields
     }
     static unsigned offsetOfActivation() {
         return offsetof(PerThreadData, activation_);
+    }
+
+    js::Activation *profilingActivation() const {
+        return profilingActivation_;
     }
 
     js::AsmJSActivation *asmJSActivationStack() const {
