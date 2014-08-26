@@ -13,32 +13,24 @@
   %brandDTD;
   <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
   %browserDTD;
-  <!ENTITY % privatebrowsingpageDTD SYSTEM "chrome://browser/locale/aboutPrivateBrowsing.dtd">
-  %privatebrowsingpageDTD;
+  <!ENTITY % aboutPrivateBrowsingDTD SYSTEM "chrome://browser/locale/aboutPrivateBrowsing.dtd">
+  %aboutPrivateBrowsingDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all"/>
-    <link rel="stylesheet" href="chrome://browser/skin/aboutPrivateBrowsing.css" type="text/css" media="all"/>
-    <style type="text/css"><![CDATA[
-      body.normal .showPrivate,
-      body.private .showNormal {
-        display: none;
-      }
-    ]]></style>
+    <link rel="stylesheet" href="chrome://browser/content/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <script type="application/javascript;version=1.7"><![CDATA[
-      const Cc = Components.classes;
-      const Ci = Components.interfaces;
+      const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-      Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+      Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
       if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
-        document.title = "]]>&privatebrowsingpage.title.normal;<![CDATA[";
+        document.title = "]]>&aboutPrivateBrowsing.title.normal;<![CDATA[";
         setFavIcon("chrome://global/skin/icons/question-16.png");
       } else {
 #ifndef XP_MACOSX
-        document.title = "]]>&privatebrowsingpage.title;<![CDATA[";
+        document.title = "]]>&aboutPrivateBrowsing.title;<![CDATA[";
 #endif
         setFavIcon("chrome://browser/skin/Privacy-16.png");
       }
@@ -65,12 +57,13 @@
         }
 
         // Set up the help link
-        let moreInfoURL = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-                          getService(Ci.nsIURLFormatter).
-                          formatURLPref("app.support.baseURL");
-        let moreInfoLink = document.getElementById("moreInfoLink");
-        if (moreInfoLink)
-          moreInfoLink.setAttribute("href", moreInfoURL + "private-browsing");
+        let learnMoreURL = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
+                           .getService(Ci.nsIURLFormatter)
+                           .formatURLPref("app.support.baseURL");
+        let learnMore = document.getElementById("learnMore");
+        if (learnMore) {
+          learnMore.setAttribute("href", learnMoreURL + "private-browsing");
+        }
       }, false);
 
       function openPrivateWindow() {
@@ -79,57 +72,27 @@
     ]]></script>
   </head>
 
-  <body dir="&locale.dir;"
-        class="private">
+  <body dir="&locale.dir;" class="private">
+    <div id="pageContainer">
+      <h1 class="titleText showPrivate">&aboutPrivateBrowsing.title;</h1>
+      <h1 class="titleText showNormal">&aboutPrivateBrowsing.title.normal;</h1>
 
-    <!-- PAGE CONTAINER (for styling purposes only) -->
-    <div id="errorPageContainer">
+      <p class="showPrivate">&aboutPrivateBrowsing.subtitle;</p>
+      <p class="showNormal">&aboutPrivateBrowsing.subtitle.normal;</p>
 
-      <!-- Error Title -->
-      <div id="errorTitle">
-        <h1 id="errorTitleText" class="showPrivate">&privatebrowsingpage.title;</h1>
-        <h1 id="errorTitleTextNormal" class="showNormal">&privatebrowsingpage.title.normal;</h1>
-      </div>
+      <p>&aboutPrivateBrowsing.description;</p>
 
-      <!-- LONG CONTENT (the section most likely to require scrolling) -->
-      <div id="errorLongContent">
+      <p class="showNormal">&aboutPrivateBrowsing.notPrivate;</p>
 
-        <!-- Short Description -->
-        <div id="errorShortDesc">
-          <p id="errorShortDescText" class="showPrivate">&privatebrowsingpage.perwindow.issueDesc;</p>
-          <p id="errorShortDescTextNormal" class="showNormal">&privatebrowsingpage.perwindow.issueDesc.normal;</p>
-        </div>
-
-        <!-- Long Description -->
-        <div id="errorLongDesc">
-          <p id="errorLongDescText">&privatebrowsingpage.perwindow.description;</p>
-        </div>
-
-        <!-- Start Private Browsing -->
-        <div id="startPrivateBrowsingDesc" class="showNormal">
-          <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  id="startPrivateBrowsing" label="&privatebrowsingpage.openPrivateWindow.label;"
-                  accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;"
-                  oncommand="openPrivateWindow();"/>
-        </div>
-
-        <!-- Footer -->
-        <div id="footerDesc">
-          <p id="footerText" class="showPrivate">&privatebrowsingpage.howToStop3;</p>
-          <p id="footerTextNormal" class="showNormal">&privatebrowsingpage.howToStart4;</p>
-        </div>
-
-        <!-- More Info -->
-        <div id="moreInfo" class="showPrivate">
-          <p id="moreInfoText">
-            &privatebrowsingpage.moreInfo;
-          </p>
-          <p id="moreInfoLinkContainer">
-            <a id="moreInfoLink" target="_blank">&privatebrowsingpage.learnMore;</a>
-          </p>
-        </div>
+      <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+              class="showNormal"
+              label="&privatebrowsingpage.openPrivateWindow.label;"
+              accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;"
+              oncommand="openPrivateWindow();"/>
+      <div class="showPrivate">
+        <p>&aboutPrivateBrowsing.moreInfo;</p>
+        <p><a id="learnMore" target="_blank">&aboutPrivateBrowsing.learnMore;</a></p>
       </div>
     </div>
-
   </body>
 </html>

@@ -245,10 +245,13 @@ pref("media.directshow.enabled", true);
 #ifdef MOZ_FMP4
 pref("media.fragmented-mp4.enabled", true);
 pref("media.fragmented-mp4.ffmpeg.enabled", false);
-// Denotes that the fragmented MP4 parser can be created by <video> elements.
-// This is for testing, since the parser can't yet handle non-fragmented MP4,
-// so it will fail to play most MP4 files.
+// "media.fragmented-mp4.exposed" controls whether the MP4 parser can be
+// created by <video> elements.
+#if defined(XP_WIN) && defined(MOZ_WMF)
+pref("media.fragmented-mp4.exposed", true);
+#else
 pref("media.fragmented-mp4.exposed", false);
+#endif
 // Specifies whether the fragmented MP4 parser uses a test decoder that
 // just outputs blank frames/audio instead of actually decoding. The blank
 // decoder works on all platforms.
@@ -983,6 +986,10 @@ pref("security.fileuri.strict_origin_policy", true);
 // the results
 pref("network.allow-experiments", true);
 
+// Allow the network changed event to get sent when a network topology or
+// setup change is noticed while running.
+pref("network.notify.changed", true);
+
 // Transmit UDP busy-work to the LAN when anticipating low latency
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
 pref("network.tickle-wifi.enabled", false);
@@ -1158,6 +1165,11 @@ pref("network.http.connection-retry-timeout", 250);
 // The number of seconds after sending initial SYN for an HTTP connection
 // to give up if the OS does not give up first
 pref("network.http.connection-timeout", 90);
+
+// The number of seconds to allow active connections to prove that they have
+// traffic before considered stalled, after a network change has been detected
+// and signalled.
+pref("network.http.network-changed.timeout", 5);
 
 // The maximum number of current global half open sockets allowable
 // when starting a new speculative connection.
@@ -4253,3 +4265,6 @@ pref("dom.fetch.enabled", false);
 // platforms; and set to 0 to disable the low-memory check altogether.
 pref("camera.control.low_memory_thresholdMB", 404);
 #endif
+
+// UDPSocket API
+pref("dom.udpsocket.enabled", false);

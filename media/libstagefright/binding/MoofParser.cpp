@@ -27,6 +27,19 @@ MoofParser::RebuildFragmentedIndex(const nsTArray<MediaByteRange>& aByteRanges)
   }
 }
 
+Interval<Microseconds>
+MoofParser::GetCompositionRange()
+{
+  Interval<Microseconds> compositionRange;
+  for (size_t i = 0; i < mMoofs.Length(); i++) {
+    nsTArray<Interval<Microseconds>>& compositionRanges = mMoofs[i].mTimeRanges;
+    for (int j = 0; j < compositionRanges.Length(); j++) {
+      compositionRange = compositionRange.Extents(compositionRanges[j]);
+    }
+  }
+  return compositionRange;
+}
+
 bool
 MoofParser::ReachedEnd()
 {
@@ -54,7 +67,7 @@ MoofParser::ParseTrak(Box& aBox)
     if (box.IsType("tkhd")) {
       tkhd = Tkhd(box);
     } else if (box.IsType("mdia")) {
-      if (tkhd.mTrackId == mTrex.mTrackId) {
+      if (!mTrex.mTrackId || tkhd.mTrackId == mTrex.mTrackId) {
         ParseMdia(box, tkhd);
       }
     }
@@ -77,7 +90,7 @@ MoofParser::ParseMvex(Box& aBox)
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("trex")) {
       Trex trex = Trex(box);
-      if (trex.mTrackId == mTrex.mTrackId) {
+      if (!mTrex.mTrackId || trex.mTrackId == mTrex.mTrackId) {
         mTrex = trex;
       }
     }
@@ -102,9 +115,11 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd)
     if (box.IsType("tfhd")) {
       tfhd = Tfhd(box, aTrex);
     } else if (box.IsType("tfdt")) {
-      tfdt = Tfdt(box);
+      if (!aTrex.mTrackId || tfhd.mTrackId == aTrex.mTrackId) {
+        tfdt = Tfdt(box);
+      }
     } else if (box.IsType("trun")) {
-      if (tfhd.mTrackId == aTrex.mTrackId) {
+      if (!aTrex.mTrackId || tfhd.mTrackId == aTrex.mTrackId) {
         ParseTrun(box, tfhd, tfdt, aMdhd);
       }
     }
@@ -143,30 +158,22 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd)
                                             : aTfhd.mDefaultSampleFlags;
     uint32_t ctsOffset = flags & 0x800 ? reader->ReadU32() : 0;
 
-    MediaSource::Indice indice;
-    indice.start_offset = offset;
+    Sample sample;
+    sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
     offset += sampleSize;
-    indice.end_offset = offset;
 
-    indice.start_composition =
-      ((decodeTime + ctsOffset) * 1000000ll) / aMdhd.mTimescale;
+    sample.mCompositionRange = Interval<Microseconds>(
+      ((decodeTime + ctsOffset) * 1000000ll) / aMdhd.mTimescale,
+      ((decodeTime + sampleDuration + ctsOffset) * 1000000ll) / aMdhd.mTimescale);
     decodeTime += sampleDuration;
-    indice.end_composition =
-      ((decodeTime + ctsOffset) * 1000000ll) / aMdhd.mTimescale;
 
-    indice.sync = !(sampleFlags & 0x1010000);
+    sample.mSync = !(sampleFlags & 0x1010000);
 
-    mIndex.AppendElement(indice);
+    mIndex.AppendElement(sample);
 
-    MediaByteRange compositionRange(indice.start_offset, indice.end_offset);
-    if (mMdatRange.IsNull()) {
-      mMdatRange = compositionRange;
-    } else {
-      mMdatRange = mMdatRange.Extents(compositionRange);
-    }
-    Interval<Microseconds>::SemiNormalAppend(
-      timeRanges,
-      Interval<Microseconds>(indice.start_composition, indice.end_composition));
+    mMdatRange = mMdatRange.Extents(sample.mByteRange);
+    Interval<Microseconds>::SemiNormalAppend(timeRanges,
+                                             sample.mCompositionRange);
   }
   Interval<Microseconds>::Normalize(timeRanges, &mTimeRanges);
 }

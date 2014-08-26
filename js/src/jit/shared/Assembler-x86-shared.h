@@ -9,7 +9,6 @@
 
 #include <cstddef>
 
-#include "assembler/assembler/MacroAssemblerX86Common.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/shared/BaseAssembler-x86-shared.h"
 
@@ -123,6 +122,57 @@ class Operand
         }
         return false;
     }
+};
+
+class CPUInfo
+{
+  public:
+    // As the SSE's were introduced in order, the presence of a later SSE implies
+    // the presence of an earlier SSE. For example, SSE4_2 support implies SSE2 support.
+    enum SSEVersion {
+        UnknownSSE = 0,
+        NoSSE = 1,
+        SSE = 2,
+        SSE2 = 3,
+        SSE3 = 4,
+        SSSE3 = 5,
+        SSE4_1 = 6,
+        SSE4_2 = 7
+    };
+
+    static SSEVersion GetSSEVersion() {
+        if (maxSSEVersion == UnknownSSE)
+            SetSSEVersion();
+
+        MOZ_ASSERT(maxSSEVersion != UnknownSSE);
+        MOZ_ASSERT_IF(maxEnabledSSEVersion != UnknownSSE, maxSSEVersion <= maxEnabledSSEVersion);
+        return maxSSEVersion;
+    }
+
+  private:
+    static SSEVersion maxSSEVersion;
+    static SSEVersion maxEnabledSSEVersion;
+
+    static void SetSSEVersion();
+
+  public:
+    static bool IsSSE2Present() {
+#ifdef JS_CODEGEN_X64
+        return true;
+#else
+        return GetSSEVersion() >= SSE2;
+#endif
+    }
+    static bool IsSSE3Present()  { return GetSSEVersion() >= SSE3; }
+    static bool IsSSSE3Present() { return GetSSEVersion() >= SSSE3; }
+    static bool IsSSE41Present() { return GetSSEVersion() >= SSE4_1; }
+    static bool IsSSE42Present() { return GetSSEVersion() >= SSE4_2; }
+
+#ifdef JS_CODEGEN_X86
+    static void SetFloatingPointDisabled() { maxEnabledSSEVersion = NoSSE; }
+#endif
+    static void SetSSE3Disabled() { maxEnabledSSEVersion = SSE2; }
+    static void SetSSE4Disabled() { maxEnabledSSEVersion = SSSE3; }
 };
 
 class AssemblerX86Shared : public AssemblerShared
@@ -871,16 +921,11 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
 #ifdef DEBUG
-    static bool HasSSE2() {
-        return JSC::MacroAssemblerX86Common::isSSE2Present();
-    }
+    static bool HasSSE2() { return CPUInfo::IsSSE2Present(); }
 #endif
-    static bool HasSSE3() {
-        return JSC::MacroAssemblerX86Common::isSSE3Present();
-    }
-    static bool HasSSE41() {
-        return JSC::MacroAssemblerX86Common::isSSE41Present();
-    }
+    static bool HasSSE3() { return CPUInfo::IsSSE3Present(); }
+    static bool HasSSE41() { return CPUInfo::IsSSE41Present(); }
+    static bool SupportsFloatingPoint() { return CPUInfo::IsSSE2Present(); }
 
     // The below cmpl methods switch the lhs and rhs when it invokes the
     // macroassembler to conform with intel standard.  When calling this
