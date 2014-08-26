@@ -35,8 +35,8 @@ NS_DEFINE_NAMED_CID(NS_SAMPLE_CID);
 // each entry has the form { CID, service, factoryproc, constructorproc }
 // where factoryproc is usually nullptr.
 static const mozilla::Module::CIDEntry kSampleCIDs[] = {
-    { &kNS_SAMPLE_CID, false, nullptr, nsSampleImplConstructor },
-    { nullptr }
+  { &kNS_SAMPLE_CID, false, nullptr, nsSampleImplConstructor },
+  { nullptr }
 };
 
 // Build a table which maps contract IDs to CIDs.
@@ -44,8 +44,8 @@ static const mozilla::Module::CIDEntry kSampleCIDs[] = {
 // cases an extension component may override the contract ID of a builtin gecko component
 // to modify or extend functionality.
 static const mozilla::Module::ContractIDEntry kSampleContracts[] = {
-    { NS_SAMPLE_CONTRACTID, &kNS_SAMPLE_CID },
-    { nullptr }
+  { NS_SAMPLE_CONTRACTID, &kNS_SAMPLE_CID },
+  { nullptr }
 };
 
 // Category entries are category/key/value triples which can be used
@@ -54,15 +54,15 @@ static const mozilla::Module::ContractIDEntry kSampleContracts[] = {
 // entries: this is just a sample of how you'd do it.
 // @see nsICategoryManager for information on retrieving category data.
 static const mozilla::Module::CategoryEntry kSampleCategories[] = {
-    { "my-category", "my-key", NS_SAMPLE_CONTRACTID },
-    { nullptr }
+  { "my-category", "my-key", NS_SAMPLE_CONTRACTID },
+  { nullptr }
 };
 
 static const mozilla::Module kSampleModule = {
-    mozilla::Module::kVersion,
-    kSampleCIDs,
-    kSampleContracts,
-    kSampleCategories
+  mozilla::Module::kVersion,
+  kSampleCIDs,
+  kSampleContracts,
+  kSampleCategories
 };
 
 // The following line implements the one-and-only "NSModule" symbol exported from this

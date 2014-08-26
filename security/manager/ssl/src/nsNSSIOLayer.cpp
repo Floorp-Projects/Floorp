@@ -638,7 +638,7 @@ nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode,
 
   if (mPlaintextBytesRead && !errorCode) {
     Telemetry::Accumulate(Telemetry::SSL_BYTES_BEFORE_CERT_CALLBACK,
-                          SafeCast<uint32_t>(mPlaintextBytesRead));
+                          AssertedCast<uint32_t>(mPlaintextBytesRead));
   }
 
   mCertVerificationState = after_cert_verification;

@@ -1168,13 +1168,13 @@ nsContextMenu.prototype = {
           return;
         }
 
-        var extHelperAppSvc = 
+        let extHelperAppSvc = 
           Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
           getService(Ci.nsIExternalHelperAppService);
-        var channel = aRequest.QueryInterface(Ci.nsIChannel);
-        this.extListener = 
+        let channel = aRequest.QueryInterface(Ci.nsIChannel);
+        this.extListener =
           extHelperAppSvc.doContent(channel.contentType, aRequest, 
-                                    doc.defaultView, true);
+                                    doc.defaultView, true, window);
         this.extListener.onStartRequest(aRequest, aContext);
       }, 
 

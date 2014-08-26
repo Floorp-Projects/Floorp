@@ -111,6 +111,23 @@ JSObject2WrappedJSMap::ShutdownMarker()
     }
 }
 
+size_t
+JSObject2WrappedJSMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    size_t n = mallocSizeOf(this);
+    n += mTable.sizeOfExcludingThis(mallocSizeOf);
+    return n;
+}
+
+size_t
+JSObject2WrappedJSMap::SizeOfWrappedJS(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    size_t n = 0;
+    for (Map::Range r = mTable.all(); !r.empty(); r.popFront())
+        n += r.front().value()->SizeOfIncludingThis(mallocSizeOf);
+    return n;
+}
+
 /***************************************************************************/
 // implement Native2WrappedNativeMap...
 

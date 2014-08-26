@@ -2489,6 +2489,8 @@ public:
     void TraceJS(JSTracer* trc);
     static void GetTraceName(JSTracer* trc, char *buf, size_t bufsize);
 
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
     virtual ~nsXPCWrappedJS();
 protected:
     nsXPCWrappedJS();   // not implemented

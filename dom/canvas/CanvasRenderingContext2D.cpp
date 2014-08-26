@@ -91,6 +91,7 @@
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
+#include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/TextMetrics.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/SVGMatrix.h"
@@ -4592,6 +4593,25 @@ CanvasPath::BezierTo(const gfx::Point& aCP1,
   EnsurePathBuilder();
 
   mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
+}
+
+void
+CanvasPath::AddPath(CanvasPath& aCanvasPath, const Optional<NonNull<SVGMatrix>>& aMatrix)
+{
+  RefPtr<gfx::Path> tempPath = aCanvasPath.GetPath(CanvasWindingRule::Nonzero,
+                                                   gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+
+  if (aMatrix.WasPassed()) {
+    const SVGMatrix& m = aMatrix.Value();
+    Matrix transform(m.A(), m.B(), m.C(), m.D(), m.E(), m.F());
+
+    if (!transform.IsIdentity()) {
+      RefPtr<PathBuilder> tempBuilder = tempPath->TransformedCopyToBuilder(transform, FillRule::FILL_WINDING);
+      tempPath = tempBuilder->Finish();
+    }
+  }
+
+  tempPath->StreamToSink(mPathBuilder);
 }
 
 TemporaryRef<gfx::Path>

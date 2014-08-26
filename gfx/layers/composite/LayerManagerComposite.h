@@ -269,8 +269,12 @@ private:
 
   void WorldTransformRect(nsIntRect& aRect);
 
-  RefPtr<CompositingRenderTarget> PushGroup();
-  void PopGroup(RefPtr<CompositingRenderTarget> aPreviousTarget, nsIntRect aClipRect);
+  RefPtr<CompositingRenderTarget> PushGroupForLayerEffects();
+  void PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> aPreviousTarget,
+                               nsIntRect aClipRect,
+                               bool aGrayscaleEffect,
+                               bool aInvertEffect,
+                               float aContrastEffect);
 
   RefPtr<Compositor> mCompositor;
   nsAutoPtr<LayerProperties> mClonedLayerTreeProperties;

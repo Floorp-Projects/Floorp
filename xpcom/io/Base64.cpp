@@ -19,7 +19,7 @@ const unsigned char* base =
                   "abcdefghijklmnopqrstuvwxyz"
                   "0123456789+/";
 
-template <typename T>
+template<typename T>
 static void
 Encode3to4(const unsigned char* aSrc, T* aDest)
 {
@@ -37,7 +37,7 @@ Encode3to4(const unsigned char* aSrc, T* aDest)
   }
 }
 
-template <typename T>
+template<typename T>
 static void
 Encode2to4(const unsigned char* aSrc, T* aDest)
 {
@@ -47,7 +47,7 @@ Encode2to4(const unsigned char* aSrc, T* aDest)
   aDest[3] = (unsigned char)'=';
 }
 
-template <typename T>
+template<typename T>
 static void
 Encode1to4(const unsigned char* aSrc, T* aDest)
 {
@@ -57,7 +57,7 @@ Encode1to4(const unsigned char* aSrc, T* aDest)
   aDest[3] = (unsigned char)'=';
 }
 
-template <typename T>
+template<typename T>
 static void
 Encode(const unsigned char* aSrc, uint32_t aSrcLen, T* aDest)
 {
@@ -84,7 +84,7 @@ Encode(const unsigned char* aSrc, uint32_t aSrcLen, T* aDest)
 
 // END base64 encode code copied and modified from NSPR.
 
-template <typename T>
+template<typename T>
 struct EncodeInputStream_State
 {
   unsigned char c[3];
@@ -92,7 +92,7 @@ struct EncodeInputStream_State
   typename T::char_type* buffer;
 };
 
-template <typename T>
+template<typename T>
 NS_METHOD
 EncodeInputStream_Encoder(nsIInputStream* aStream,
                           void* aClosure,
@@ -152,7 +152,7 @@ EncodeInputStream_Encoder(nsIInputStream* aStream,
   return NS_OK;
 }
 
-template <typename T>
+template<typename T>
 nsresult
 EncodeInputStream(nsIInputStream* aInputStream,
                   T& aDest,

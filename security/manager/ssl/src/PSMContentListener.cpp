@@ -94,7 +94,7 @@ PSMContentDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
   
   mBufferOffset = 0;
   mBufferSize = 0;
-  mByteData = (char*) nsMemory::Alloc(SafeCast<size_t>(contentLength));
+  mByteData = (char*)nsMemory::Alloc(AssertedCast<size_t>(contentLength));
   if (!mByteData)
     return NS_ERROR_OUT_OF_MEMORY;
   
