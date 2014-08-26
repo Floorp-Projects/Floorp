@@ -59,7 +59,7 @@ class Bootstrapper(object):
                     cls = UbuntuBootstrapper
             elif distro == 'Ubuntu':
                 cls = UbuntuBootstrapper
-            elif distro == 'Elementary':
+            elif distro in ('Elementary OS', 'Elementary'):
                 cls = UbuntuBootstrapper
             else:
                 raise NotImplementedError('Bootstrap support for this Linux '

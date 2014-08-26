@@ -337,50 +337,100 @@ function test_pathconstructor_canvas() {
 }
 </script>
 
+<p>Canvas test: test_addpath_canvas</p>
+<canvas id="c8" class="output" width="200" height="200">+
+</canvas>
+<script type="text/javascript">
+
+function test_addpath_canvas() {
+  var c = document.getElementById("c8");
+  var ctx = c.getContext("2d");
+  ctx.beginPath();
+  var p1 = new Path2D();
+  p1.rect(0,0,100,100);
+  var p2 = new Path2D();
+  p2.rect(0,100,100,100);
+  var m = ctx.currentTransform;
+  p1.addPath(p2, m);
+  ctx.fillStyle = 'yellow';
+  ctx.fill(p1);
+  isPixel(ctx, 0, 100, [255, 255, 0, 255], 0);
+
+  ctx.clearRect(0,0,200,200);
+
+  ctx.beginPath();
+  var p3 = new Path2D();
+  p3.rect(0,0,100,100);
+  var p4 = new Path2D();
+  p4.rect(0,100,100,100);
+  var m = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGMatrix();
+  m.a = 1; m.b = 0;
+  m.c = 0; m.d = 1;
+  m.e = 100; m.f = -100;
+  p3.addPath(p4, m);
+  ctx.fillStyle = 'yellow';
+  ctx.fill(p3);
+  isPixel(ctx, 50, 50, [255, 255, 0, 255], 0);
+  isPixel(ctx, 150, 150, [0, 0, 0, 0], 0);
+
+  var p5 = new Path2D();
+  p5.rect(0,0,100,100);
+  shouldThrow(ctx, "p5.addPath(null, m)");
+  shouldThrow(ctx, "p5.addPath([], m)");
+  shouldThrow(ctx, "p5.addPath({}, m)");
+}
+</script>
+
 <script>
 
 function runTests() {
  try {
   test_drawClipPath_canvas();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_drawClipPath_canvas");
+  throw e;
  }
  try {
   test_drawFillPath_canvas();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_drawFillPath_canvas");
+  throw e;
  }
  try {
   test_drawStrokePath_canvas();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_drawStrokePath_canvas");
+  throw e;
  }
  try {
   test_large_canvas();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_large_canvas");
+  throw e;
  }
  try {
   test_isPointInPath_canvas();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_isPointInPath_canvas");
+  throw e;
  }
  try {
   test_isPointInStroke_canvas();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_isPointInStroke_canvas");
+  throw e;
  }
  try {
   test_pathconstructor_canvas();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_pathconstructor_canvas");
+  throw e;
+ }
+ try {
+  test_addpath_canvas();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_addpath_canvas");
+  throw e;
  }
  SpecialPowers.setBoolPref("canvas.path.enabled", false);
  SimpleTest.finish();

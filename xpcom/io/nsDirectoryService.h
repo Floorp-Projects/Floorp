@@ -24,8 +24,6 @@ class nsDirectoryService MOZ_FINAL
   , public nsIDirectoryServiceProvider2
 {
 public:
-
-  // nsISupports interface
   NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_DECL_NSIPROPERTIES

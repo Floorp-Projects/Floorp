@@ -33,8 +33,9 @@ static const char rules[] =
   "    (regex #\"^/etc$\")\n"
   "    (regex #\"^/dev/u?random$\")\n"
   "    (regex #\"^/(private/)?var($|/)\")\n"
-  "    (regex #\"\\.app/Contents/MacOS/plugin-container\\.app/Contents/\")\n"
   "    (literal \"/usr/share/icu/icudt51l.dat\")\n"
+  "    (literal \"%s\")\n"
+  "    (literal \"%s\")\n"
   "    (literal \"%s\"))\n";
 
 bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage)
@@ -48,11 +49,15 @@ bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage)
   if (nsCocoaFeatures::OnLionOrLater()) {
     profile.AppendPrintf(rules, ";",
                          aInfo.pluginInfo.pluginPath.get(),
-                         aInfo.pluginInfo.pluginBinaryPath.get());
+                         aInfo.pluginInfo.pluginBinaryPath.get(),
+                         aInfo.appPath.get(),
+                         aInfo.appBinaryPath.get());
   } else {
     profile.AppendPrintf(rules, "",
                          aInfo.pluginInfo.pluginPath.get(),
-                         aInfo.pluginInfo.pluginBinaryPath.get());
+                         aInfo.pluginInfo.pluginBinaryPath.get(),
+                         aInfo.appPath.get(),
+                         aInfo.appBinaryPath.get());
   }
 
   char *errorbuf = NULL;

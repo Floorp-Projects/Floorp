@@ -17,7 +17,7 @@
 #include "nsUUIDGenerator.h"
 
 #ifdef ANDROID
-extern "C" NS_EXPORT void arc4random_buf(void *, size_t);
+extern "C" NS_EXPORT void arc4random_buf(void*, size_t);
 #endif
 
 using namespace mozilla;

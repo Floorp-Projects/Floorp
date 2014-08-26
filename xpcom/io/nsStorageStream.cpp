@@ -479,7 +479,7 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
 
     count = XPCOM_MIN(availableInSegment, remainingCapacity);
     rv = aWriter(this, aClosure, cur + mReadCursor, aCount - remainingCapacity,
-                count, &bytesConsumed);
+                 count, &bytesConsumed);
     if (NS_FAILED(rv) || (bytesConsumed == 0)) {
       break;
     }
@@ -609,7 +609,8 @@ nsStorageInputStream::Serialize(InputStreamParams& aParams, FileDescriptorArray&
 }
 
 bool
-nsStorageInputStream::Deserialize(const InputStreamParams& aParams, const FileDescriptorArray&)
+nsStorageInputStream::Deserialize(const InputStreamParams& aParams,
+                                  const FileDescriptorArray&)
 {
   NS_NOTREACHED("We should never attempt to deserialize a storage input stream.");
   return false;

@@ -27,9 +27,9 @@
 
 #include "vm/Shape-inl.h"
 
+using mozilla::AssertedCast;
 using mozilla::CheckedInt32;
 using mozilla::DebugOnly;
-using mozilla::SafeCast;
 
 using namespace js;
 
@@ -1162,7 +1162,7 @@ StructTypeDescr::fieldOffset(size_t index) const
     JSObject &fieldOffsets =
         getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS).toObject();
     JS_ASSERT(index < fieldOffsets.getDenseInitializedLength());
-    return SafeCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
+    return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
 
 size_t
@@ -1171,7 +1171,7 @@ StructTypeDescr::maybeForwardedFieldOffset(size_t index) const
     JSObject &fieldOffsets =
         *MaybeForwarded(&getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS).toObject());
     JS_ASSERT(index < fieldOffsets.getDenseInitializedLength());
-    return SafeCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
+    return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
 
 SizedTypeDescr&

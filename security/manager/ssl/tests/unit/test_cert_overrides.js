@@ -59,8 +59,9 @@ function check_telemetry() {
   do_check_eq(histogram.counts[ 6], 0); // SEC_ERROR_UNTRUSTED_CERT
   do_check_eq(histogram.counts[ 7], 0); // SEC_ERROR_INADEQUATE_KEY_USAGE
   do_check_eq(histogram.counts[ 8], 2); // SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
-  do_check_eq(histogram.counts[ 9], 4); // SSL_ERROR_BAD_CERT_DOMAIN
+  do_check_eq(histogram.counts[ 9], 5); // SSL_ERROR_BAD_CERT_DOMAIN
   do_check_eq(histogram.counts[10], 5); // SEC_ERROR_EXPIRED_CERTIFICATE
+  do_check_eq(histogram.counts[11], 2); // MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
   run_next_test();
 }
 
@@ -121,6 +122,10 @@ function add_simple_tests() {
   add_cert_override_test("self-signed-end-entity-with-cA-true.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          getXPCOMStatusFromNSS(SEC_ERROR_UNKNOWN_ISSUER));
+
+  add_cert_override_test("ca-used-as-end-entity.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY));
 }
 
 function add_combo_tests() {
@@ -147,6 +152,11 @@ function add_combo_tests() {
                          Ci.nsICertOverrideService.ERROR_TIME,
                          getXPCOMStatusFromNSS(
                             SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED));
+
+  add_cert_override_test("ca-used-as-end-entity-name-mismatch.example.com",
+                         Ci.nsICertOverrideService.ERROR_MISMATCH |
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY));
 }
 
 function add_distrust_tests() {
@@ -159,6 +169,10 @@ function add_distrust_tests() {
 
   add_distrust_override_test("tlsserver/other-test-ca.der",
                              "untrustedissuer.example.com",
+                             getXPCOMStatusFromNSS(SEC_ERROR_UNTRUSTED_ISSUER));
+
+  add_distrust_override_test("tlsserver/test-ca.der",
+                             "ca-used-as-end-entity.example.com",
                              getXPCOMStatusFromNSS(SEC_ERROR_UNTRUSTED_ISSUER));
 }
 

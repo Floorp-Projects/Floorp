@@ -152,9 +152,36 @@ BackCert::Init()
   if (version == der::Version::v3 || version == der::Version::v4) {
     rv = der::OptionalExtensions(tbsCertificate, CSC | 3,
                                  bind(&BackCert::RememberExtension, this, _1,
-                                      _2, _3));
+                                      _2, _3, _4));
     if (rv != Success) {
       return rv;
+    }
+    // The Netscape Certificate Type extension is an obsolete
+    // Netscape-proprietary mechanism that we ignore in favor of the standard
+    // extensions. However, some CAs have issued certificates with the Netscape
+    // Cert Type extension marked critical. Thus, for compatibility reasons, we
+    // "understand" this extension by ignoring it when it is not critical, and
+    // by ensuring that the equivalent standardized extensions are present when
+    // it is marked critical, based on the assumption that the information in
+    // the Netscape Cert Type extension is consistent with the information in
+    // the standard extensions.
+    //
+    // Here is a mapping between the Netscape Cert Type extension and the
+    // standard extensions:
+    //
+    // Netscape Cert Type  |  BasicConstraints.cA  |  Extended Key Usage
+    // --------------------+-----------------------+----------------------
+    // SSL Server          |  false                |  id_kp_serverAuth
+    // SSL Client          |  false                |  id_kp_clientAuth
+    // S/MIME Client       |  false                |  id_kp_emailProtection
+    // Object Signing      |  false                |  id_kp_codeSigning
+    // SSL Server CA       |  true                 |  id_pk_serverAuth
+    // SSL Client CA       |  true                 |  id_kp_clientAuth
+    // S/MIME CA           |  true                 |  id_kp_emailProtection
+    // Object Signing CA   |  true                 |  id_kp_codeSigning
+    if (criticalNetscapeCertificateType.GetLength() > 0 &&
+        (basicConstraints.GetLength() == 0 || extKeyUsage.GetLength() == 0)) {
+      return Result::ERROR_UNKNOWN_CRITICAL_EXTENSION;
     }
   }
 
@@ -165,7 +192,7 @@ BackCert::Init()
 // to limitations in our std::bind polyfill.
 Result
 BackCert::RememberExtension(Reader& extnID, const Input& extnValue,
-                            /*out*/ bool& understood)
+                            bool critical, /*out*/ bool& understood)
 {
   understood = false;
 
@@ -205,6 +232,10 @@ BackCert::RememberExtension(Reader& extnID, const Input& extnValue,
   static const uint8_t id_pe_authorityInfoAccess[] = {
     0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x01
   };
+  // python DottedOIDToCode.py Netscape-certificate-type 2.16.840.1.113730.1.1
+  static const uint8_t Netscape_certificate_type[] = {
+    0x60, 0x86, 0x48, 0x01, 0x86, 0xf8, 0x42, 0x01, 0x01
+  };
 
   Input* out = nullptr;
 
@@ -238,6 +269,8 @@ BackCert::RememberExtension(Reader& extnID, const Input& extnValue,
     out = &inhibitAnyPolicy;
   } else if (extnID.MatchRest(id_pe_authorityInfoAccess)) {
     out = &authorityInfoAccess;
+  } else if (extnID.MatchRest(Netscape_certificate_type) && critical) {
+    out = &criticalNetscapeCertificateType;
   }
 
   if (out) {
