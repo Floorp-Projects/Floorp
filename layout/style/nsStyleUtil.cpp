@@ -62,7 +62,7 @@ void nsStyleUtil::AppendEscapedCSSString(const nsAString& aString,
   for (; in != end; in++) {
     if (*in < 0x20 || (*in >= 0x7F && *in < 0xA0)) {
       // Escape U+0000 through U+001F and U+007F through U+009F numerically.
-      aReturn.AppendPrintf("\\%hX ", static_cast<int16_t>(*in));
+      aReturn.AppendPrintf("\\%hX ", *in);
     } else {
       if (*in == '"' || *in == '\'' || *in == '\\') {
         // Escape backslash and quote characters symbolically.
@@ -116,7 +116,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
   // numerically.  If we didn't escape it numerically, it would get
   // interpreted as a numeric escape for the wrong character.
   if (in != end && ('0' <= *in && *in <= '9')) {
-    aReturn.AppendPrintf("\\%hX ", static_cast<int16_t>(*in));
+    aReturn.AppendPrintf("\\%hX ", *in);
     ++in;
   }
 
@@ -127,7 +127,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
     }
     if (ch < 0x20 || (0x7F <= ch && ch < 0xA0)) {
       // Escape U+0000 through U+001F and U+007F through U+009F numerically.
-      aReturn.AppendPrintf("\\%hX ", static_cast<int16_t>(*in));
+      aReturn.AppendPrintf("\\%hX ", *in);
     } else {
       // Escape ASCII non-identifier printables as a backslash plus
       // the character.

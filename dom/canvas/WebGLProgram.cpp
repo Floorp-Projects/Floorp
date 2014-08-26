@@ -8,7 +8,6 @@
 #include "WebGLProgram.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "GLContext.h"
-#include "mozilla/IntegerPrintfMacros.h"
 
 #include "MurmurHash3.h"
 
@@ -235,7 +234,7 @@ WebGLProgram::HashMapIdentifier(const nsACString& name, nsCString *hashedName)
     uint64_t hash = IdentifierHashFunction(name.BeginReading(), name.Length());
     hashedName->Truncate();
     // This MUST MATCH angle/src/compiler/translator/HashNames.h HASHED_NAME_PREFIX
-    hashedName->AppendPrintf("webgl_%" PRIx64, hash);
+    hashedName->AppendPrintf("webgl_%llx", hash);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLProgram, mAttachedShaders)
