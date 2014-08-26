@@ -85,7 +85,7 @@ public:
 class MediaStreamGraphImpl : public MediaStreamGraph,
                              public nsIMemoryReporter {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
   /**
