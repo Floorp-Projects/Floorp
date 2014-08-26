@@ -50,7 +50,7 @@ using namespace mozilla::dom;
 // -------------------------------
 // Style Rule List for the DOM
 //
-class CSSRuleListImpl : public CSSRuleList
+class CSSRuleListImpl MOZ_FINAL : public CSSRuleList
 {
 public:
   CSSRuleListImpl(CSSStyleSheet *aStyleSheet);
@@ -94,7 +94,7 @@ CSSRuleListImpl::Length()
     return 0;
   }
 
-  return SafeCast<uint32_t>(mStyleSheet->StyleRuleCount());
+  return AssertedCast<uint32_t>(mStyleSheet->StyleRuleCount());
 }
 
 nsIDOMCSSRule*    

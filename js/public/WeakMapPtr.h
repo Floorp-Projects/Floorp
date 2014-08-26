@@ -23,9 +23,9 @@ template <typename K, typename V>
 class JS_PUBLIC_API(WeakMapPtr)
 {
   public:
-    WeakMapPtr() : ptr(nullptr) {};
+    WeakMapPtr() : ptr(nullptr) {}
     bool init(JSContext *cx);
-    bool initialized() { return ptr != nullptr; };
+    bool initialized() { return ptr != nullptr; }
     void destroy();
     virtual ~WeakMapPtr() { MOZ_ASSERT(!initialized()); }
     void trace(JSTracer *tracer);

@@ -1965,11 +1965,13 @@ ThreadActor.prototype = {
     switch (typeof aValue) {
       case "boolean":
         return aValue;
+
       case "string":
         if (this._stringIsLong(aValue)) {
           return this.longStringGrip(aValue, aPool);
         }
         return aValue;
+
       case "number":
         if (aValue === Infinity) {
           return { type: "Infinity" };
@@ -1981,13 +1983,26 @@ ThreadActor.prototype = {
           return { type: "-0" };
         }
         return aValue;
+
       case "undefined":
         return { type: "undefined" };
+
       case "object":
         if (aValue === null) {
           return { type: "null" };
         }
         return this.objectGrip(aValue, aPool);
+
+      case "symbol":
+        let form = {
+          type: "symbol"
+        };
+        let name = getSymbolName(aValue);
+        if (name !== undefined) {
+          form.name = this.createValueGrip(name);
+        }
+        return form;
+
       default:
         dbg_assert(false, "Failed to provide a grip for: " + aValue);
         return null;
@@ -5429,6 +5444,13 @@ function getInnerId(window) {
   return window.QueryInterface(Ci.nsIInterfaceRequestor).
                 getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 };
+
+const symbolProtoToString = Symbol.prototype.toString;
+
+function getSymbolName(symbol) {
+  const name = symbolProtoToString.call(symbol).slice("Symbol(".length, -1);
+  return name || undefined;
+}
 
 exports.register = function(handle) {
   ThreadActor.breakpointStore = new BreakpointStore();

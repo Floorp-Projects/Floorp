@@ -405,22 +405,23 @@ const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
   // we assume that extensions are correct, i.e., a directory doesnt't have '.js'
   // and a js file isn't named 'file.json.js'
   let fullId = join(rootURI, id);
-
   let resolvedPath;
-  if (resolvedPath = loadAsFile(fullId))
+
+  if ((resolvedPath = loadAsFile(fullId)))
     return stripBase(rootURI, resolvedPath);
-  else if (resolvedPath = loadAsDirectory(fullId))
+
+  if ((resolvedPath = loadAsDirectory(fullId)))
     return stripBase(rootURI, resolvedPath);
+
   // If manifest has dependencies, attempt to look up node modules
   // in the `dependencies` list
-  else {
-    let dirs = getNodeModulePaths(dirname(join(rootURI, requirer))).map(dir => join(dir, id));
-    for (let i = 0; i < dirs.length; i++) {
-      if (resolvedPath = loadAsFile(dirs[i]))
-        return stripBase(rootURI, resolvedPath);
-      if (resolvedPath = loadAsDirectory(dirs[i]))
-        return stripBase(rootURI, resolvedPath);
-    }
+  let dirs = getNodeModulePaths(dirname(join(rootURI, requirer))).map(dir => join(dir, id));
+  for (let i = 0; i < dirs.length; i++) {
+    if ((resolvedPath = loadAsFile(dirs[i])))
+      return stripBase(rootURI, resolvedPath);
+
+    if ((resolvedPath = loadAsDirectory(dirs[i])))
+      return stripBase(rootURI, resolvedPath);
   }
 
   // We would not find lookup for things like `sdk/tabs`, as that's part of
@@ -452,14 +453,14 @@ function loadAsFile (path) {
 // Attempts to load `path/package.json`'s `main` entry,
 // followed by `path/index.js`, or `undefined` otherwise
 function loadAsDirectory (path) {
-  let found;
   try {
     // If `path/package.json` exists, parse the `main` entry
     // and attempt to load that
     let main = getManifestMain(JSON.parse(readURI(path + '/package.json')));
     if (main != null) {
       let tmpPath = join(path, main);
-      if (found = loadAsFile(tmpPath))
+      let found = loadAsFile(tmpPath);
+      if (found)
         return found
     }
     try {
@@ -533,7 +534,7 @@ exports.resolveURI = resolveURI;
 // with it during link time.
 const Require = iced(function Require(loader, requirer) {
   let {
-    modules, mapping, resolve, load, manifest, rootURI, isNative, requireMap
+    modules, mapping, resolve: loaderResolve, load, manifest, rootURI, isNative, requireMap
   } = loader;
 
   function require(id) {
@@ -541,55 +542,7 @@ const Require = iced(function Require(loader, requirer) {
       throw Error('you must provide a module name when calling require() from '
                   + requirer.id, requirer.uri);
 
-    let requirement;
-    let uri;
-
-    // TODO should get native Firefox modules before doing node-style lookups
-    // to save on loading time
-    if (isNative) {
-      // If a requireMap is available from `generateMap`, use that to
-      // immediately resolve the node-style mapping.
-      if (requireMap && requireMap[requirer.id])
-        requirement = requireMap[requirer.id][id];
-
-      // For native modules, we want to check if it's a module specified
-      // in 'modules', like `chrome`, or `@loader` -- if it exists,
-      // just set the uri to skip resolution
-      if (!requirement && modules[id])
-        uri = requirement = id;
-
-      // If no requireMap was provided, or resolution not found in
-      // the requireMap, and not a npm dependency, attempt a runtime lookup
-      if (!requirement && !isNodeModule(id)) {
-        // If `isNative` defined, this is using the new, native-style
-        // loader, not cuddlefish, so lets resolve using node's algorithm
-        // and get back a path that needs to be resolved via paths mapping
-        // in `resolveURI`
-        requirement = resolve(id, requirer.id, {
-          manifest: manifest,
-          rootURI: rootURI
-        });
-      }
-
-      // If not found in the map, not a node module, and wasn't able to be
-      // looked up, it's something
-      // found in the paths most likely, like `sdk/tabs`, which should
-      // be resolved relatively if needed using traditional resolve
-      if (!requirement) {
-        requirement = isRelative(id) ? exports.resolve(id, requirer.id) : id;
-      }
-    } else {
-      // Resolve `id` to its requirer if it's relative.
-      requirement = requirer ? resolve(id, requirer.id) : id;
-    }
-
-    // Resolves `uri` of module using loaders resolve function.
-    uri = uri || resolveURI(requirement, mapping);
-
-    if (!uri) // Throw if `uri` can not be resolved.
-      throw Error('Module: Can not resolve "' + id + '" module required by ' +
-                  requirer.id + ' located at ' + requirer.uri, requirer.uri);
-
+    let { uri, requirement } = getRequirements(id);
     let module = null;
     // If module is already cached by loader then just use it.
     if (uri in modules) {
@@ -643,6 +596,73 @@ const Require = iced(function Require(loader, requirer) {
 
     return module.exports;
   }
+
+  // Resolution function taking a module name/path and
+  // returning a resourceURI and a `requirement` used by the loader.
+  // Used by both `require` and `require.resolve`.
+  function getRequirements(id) {
+    if (!id) // Throw if `id` is not passed.
+      throw Error('you must provide a module name when calling require() from '
+                  + requirer.id, requirer.uri);
+
+    let requirement;
+    let uri;
+
+    // TODO should get native Firefox modules before doing node-style lookups
+    // to save on loading time
+    if (isNative) {
+      // If a requireMap is available from `generateMap`, use that to
+      // immediately resolve the node-style mapping.
+      if (requireMap && requireMap[requirer.id])
+        requirement = requireMap[requirer.id][id];
+
+      // For native modules, we want to check if it's a module specified
+      // in 'modules', like `chrome`, or `@loader` -- if it exists,
+      // just set the uri to skip resolution
+      if (!requirement && modules[id])
+        uri = requirement = id;
+
+      // If no requireMap was provided, or resolution not found in
+      // the requireMap, and not a npm dependency, attempt a runtime lookup
+      if (!requirement && !isNodeModule(id)) {
+        // If `isNative` defined, this is using the new, native-style
+        // loader, not cuddlefish, so lets resolve using node's algorithm
+        // and get back a path that needs to be resolved via paths mapping
+        // in `resolveURI`
+        requirement = loaderResolve(id, requirer.id, {
+          manifest: manifest,
+          rootURI: rootURI
+        });
+      }
+
+      // If not found in the map, not a node module, and wasn't able to be
+      // looked up, it's something
+      // found in the paths most likely, like `sdk/tabs`, which should
+      // be resolved relatively if needed using traditional resolve
+      if (!requirement) {
+        requirement = isRelative(id) ? exports.resolve(id, requirer.id) : id;
+      }
+    } else {
+      // Resolve `id` to its requirer if it's relative.
+      requirement = requirer ? loaderResolve(id, requirer.id) : id;
+    }
+
+    // Resolves `uri` of module using loaders resolve function.
+    uri = uri || resolveURI(requirement, mapping);
+
+    if (!uri) // Throw if `uri` can not be resolved.
+      throw Error('Module: Can not resolve "' + id + '" module required by ' +
+                  requirer.id + ' located at ' + requirer.uri, requirer.uri);
+
+    return { uri: uri, requirement: requirement };
+  }
+
+  // Expose the `resolve` function for this `Require` instance
+  require.resolve = function resolve(id) {
+    let { uri } = getRequirements(id);
+    return uri;
+  }
+
   // Make `require.main === module` evaluate to true in main module scope.
   require.main = loader.main === requirer ? requirer : undefined;
   return iced(require);
@@ -864,14 +884,14 @@ function findAllModuleIncludes (uri, options, results, callback) {
   // Abort if JSON or JSM
   if (isJSONURI(uri) || isJSMURI(uri)) {
     callback(results);
-    return void 0;
+    return;
   }
 
   findModuleIncludes(join(rootURI, uri), modules => {
     // If no modules are included in the file, just call callback immediately
     if (!modules.length) {
       callback(results);
-      return void 0;
+      return;
     }
 
     results[uri] = modules.reduce((agg, mod) => {

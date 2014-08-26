@@ -19,6 +19,30 @@ void DriverFormatsFromFormatAndType(gl::GLContext* gl, GLenum webGLFormat, GLenu
                                     GLenum* out_driverInternalFormat, GLenum* out_driverFormat);
 GLenum DriverTypeFromType(gl::GLContext* gl, GLenum webGLType);
 
+struct GLComponents
+{
+    unsigned char mComponents;
+
+    enum Components {
+        Red     = (1 << 0),
+        Green   = (1 << 1),
+        Blue    = (1 << 2),
+        Alpha   = (1 << 3),
+        Stencil = (1 << 4),
+        Depth   = (1 << 5),
+    };
+
+    GLComponents()
+        : mComponents(0)
+    { }
+
+    GLComponents(GLenum format);
+
+    // Returns true iff other has all (or more) of
+    // the components present in this GLComponents
+    bool IsSubsetOf(const GLComponents& other) const;
+};
+
 template <typename WebGLObjectType>
 JS::Value
 WebGLContext::WebGLObjectAsJSValue(JSContext *cx, const WebGLObjectType *object, ErrorResult& rv) const

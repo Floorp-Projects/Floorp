@@ -13,8 +13,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
-                                   ["media.webvtt.regions.enabled", true]]},
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
   function() {
     var video = document.createElement("video");
     video.src = "seek.webm";

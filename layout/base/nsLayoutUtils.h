@@ -122,6 +122,7 @@ class nsLayoutUtils
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Rect Rect;
+  typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
@@ -663,23 +664,6 @@ public:
                                        nsIWidget* aWidget, nsIntPoint aPt,
                                        nsView* aView);
 
-  /**
-   * Find IDs corresponding to a scrollable content element in the child process.
-   * In correspondence with the shadow layer tree, you can use this to perform a
-   * hit test that corresponds to a specific shadow layer that you can then perform
-   * transformations on to do parent-side scrolling.
-   *
-   * @param aFrame The root frame of a stack context
-   * @param aTarget The rect to hit test relative to the frame origin
-   * @param aOutIDs All found IDs are added here
-   * @param aIgnoreRootScrollFrame a boolean to control if the display list
-   *        builder should ignore the root scroll frame
-   */
-  static nsresult GetRemoteContentIds(nsIFrame* aFrame,
-                                     const nsRect& aTarget,
-                                     nsTArray<ViewID> &aOutIDs,
-                                     bool aIgnoreRootScrollFrame);
-
   enum FrameForPointFlags {
     /**
      * When set, paint suppression is ignored, so we'll return non-root page
@@ -735,7 +719,7 @@ public:
    * Gets the transform for aFrame relative to aAncestor. Pass null for aAncestor
    * to go up to the root frame.
    */
-  static gfx3DMatrix GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncestor);
+  static Matrix4x4 GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncestor);
 
   /**
    * Transforms a list of CSSPoints from aFromFrame to aToFrame, taking into
@@ -777,7 +761,7 @@ public:
    * transaction were opened at the time this helper is called.
    */
   static bool GetLayerTransformForFrame(nsIFrame* aFrame,
-                                        gfx3DMatrix* aTransform);
+                                        Matrix4x4* aTransform);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed
@@ -1279,11 +1263,15 @@ public:
    *
    *   http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
    */
-  static nsSize ComputeSizeWithIntrinsicDimensions(
+  static mozilla::LogicalSize
+  ComputeSizeWithIntrinsicDimensions(mozilla::WritingMode aWM,
                     nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                     const mozilla::IntrinsicSize& aIntrinsicSize,
-                    nsSize aIntrinsicRatio, nsSize aCBSize,
-                    nsSize aMargin, nsSize aBorder, nsSize aPadding);
+                    nsSize aIntrinsicRatio,
+                    const mozilla::LogicalSize& aCBSize,
+                    const mozilla::LogicalSize& aMargin,
+                    const mozilla::LogicalSize& aBorder,
+                    const mozilla::LogicalSize& aPadding);
 
   /*
    * Calculate the used values for 'width' and 'height' when width
@@ -1471,14 +1459,14 @@ public:
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
    */
   static nsresult DrawImage(nsRenderingContext* aRenderingContext,
-                            nsPresContext*       aPresContext,
-                            imgIContainer*       aImage,
-                            GraphicsFilter       aGraphicsFilter,
-                            const nsRect&        aDest,
-                            const nsRect&        aFill,
-                            const nsPoint&       aAnchor,
-                            const nsRect&        aDirty,
-                            uint32_t             aImageFlags);
+                            nsPresContext*      aPresContext,
+                            imgIContainer*      aImage,
+                            GraphicsFilter      aGraphicsFilter,
+                            const nsRect&       aDest,
+                            const nsRect&       aFill,
+                            const nsPoint&      aAnchor,
+                            const nsRect&       aDirty,
+                            uint32_t            aImageFlags);
 
   /**
    * Convert an nsRect to a gfxRect.
@@ -1531,15 +1519,15 @@ public:
    *                            in appunits. For best results it should
    *                            be aligned with image pixels.
    */
-  static nsresult DrawSingleImage(nsRenderingContext*    aRenderingContext,
-                                  nsPresContext*         aPresContext,
-                                  imgIContainer*         aImage,
-                                  GraphicsFilter         aGraphicsFilter,
-                                  const nsRect&          aDest,
-                                  const nsRect&          aDirty,
+  static nsresult DrawSingleImage(nsRenderingContext* aRenderingContext,
+                                  nsPresContext*      aPresContext,
+                                  imgIContainer*      aImage,
+                                  GraphicsFilter      aGraphicsFilter,
+                                  const nsRect&       aDest,
+                                  const nsRect&       aDirty,
                                   const mozilla::SVGImageContext* aSVGContext,
-                                  uint32_t               aImageFlags,
-                                  const nsRect*          aSourceArea = nullptr);
+                                  uint32_t            aImageFlags,
+                                  const nsRect*       aSourceArea = nullptr);
 
   /**
    * Given an imgIContainer, this method attempts to obtain an intrinsic
@@ -1562,6 +1550,17 @@ public:
                                     nsSize&        aIntrinsicRatio,
                                     bool&          aGotWidth,
                                     bool&          aGotHeight);
+
+  /**
+   * Given an imgIContainer, this method attempts to obtain an intrinsic
+   * px-valued height & width for it. If the imgIContainer has a non-pixel
+   * value for either height or width, this method tries to generate a pixel
+   * value for that dimension using the intrinsic ratio (if available). If,
+   * after trying all these methods, no value is available for one or both
+   * dimensions, the corresponding dimension of aFallbackSize is used instead.
+   */
+  static nsIntSize ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
+                                                     const nsSize&  aFallbackSize);
 
   /**
    * Given a source area of an image (in appunits) and a destination area

@@ -420,8 +420,11 @@ let gTests = [
   }
 },
 {
-  desc: "Cmd+k should focus the search bar element",
-  setup: function () {},
+  desc: "Cmd+k should focus the search box in the page when the search box in the toolbar is absent",
+  setup: function () {
+    // Remove the search bar from toolbar
+    CustomizableUI.removeWidgetFromArea("search-container");
+  },
   run: Task.async(function* () {
     let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
     let logo = doc.getElementById("brandLogo");
@@ -433,8 +436,25 @@ let gTests = [
     EventUtils.synthesizeKey("k", { accelKey: true });
     yield promiseWaitForCondition(() => doc.activeElement === searchInput);
     is(searchInput, doc.activeElement, "Search input should be the active element.");
+    CustomizableUI.reset();
   })
 },
+{
+  desc: "Cmd+k should focus the search box in the toolbar when it's present",
+  setup: function () {},
+  run: Task.async(function* () {
+    let logo = gBrowser.selectedTab.linkedBrowser.contentDocument.getElementById("brandLogo");
+    let doc = window.document;
+    let searchInput = doc.getElementById("searchbar").textbox.inputField;
+
+    EventUtils.synthesizeMouseAtCenter(logo, {});
+    isnot(searchInput, doc.activeElement, "Search bar should not be the active element.");
+
+    EventUtils.synthesizeKey("k", { accelKey: true });
+    yield promiseWaitForCondition(() => doc.activeElement === searchInput);
+    is(searchInput, doc.activeElement, "Search bar should be the active element.");
+  })
+}
 
 ];
 

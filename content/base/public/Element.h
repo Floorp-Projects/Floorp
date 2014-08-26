@@ -728,7 +728,7 @@ public:
   int32_t ScrollTop()
   {
     nsIScrollableFrame* sf = GetScrollFrame();
-    return sf ? sf->GetScrollPositionCSSPixels().y : 0;
+    return sf ? sf->GetScrollPositionCSSPixels().y.value : 0;
   }
   void SetScrollTop(int32_t aScrollTop)
   {
@@ -741,7 +741,7 @@ public:
   int32_t ScrollLeft()
   {
     nsIScrollableFrame* sf = GetScrollFrame();
-    return sf ? sf->GetScrollPositionCSSPixels().x : 0;
+    return sf ? sf->GetScrollPositionCSSPixels().x.value : 0;
   }
   void SetScrollLeft(int32_t aScrollLeft)
   {

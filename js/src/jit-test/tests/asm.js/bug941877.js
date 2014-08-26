@@ -28,7 +28,7 @@ var F = (function (stdlib, n, heap) {
 });
 
 var compiled = asmCompile('stdlib', 'n', 'heap', USE_ASM + FunctionBody(F));
-asmLink(compiled, this, null, new ArrayBuffer(4096))();
+asmLink(compiled, this, null, new ArrayBuffer(BUF_MIN))();
 
 var F = (function(stdlib, n, heap) {
     var Float64ArrayView = new stdlib.Float64Array(heap)
@@ -39,7 +39,7 @@ var F = (function(stdlib, n, heap) {
 });
 
 var compiled = asmCompile('stdlib', 'n', 'heap', USE_ASM + FunctionBody(F));
-asmLink(compiled, this, null, new ArrayBuffer(4096))();
+asmLink(compiled, this, null, new ArrayBuffer(BUF_MIN))();
 
 function test0(x)
 {

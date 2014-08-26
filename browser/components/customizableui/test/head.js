@@ -227,6 +227,15 @@ function startCustomizing(aWindow=window) {
   return deferred.promise;
 }
 
+function promiseObserverNotified(aTopic) {
+  let deferred = Promise.defer();
+  Services.obs.addObserver(function onNotification(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(onNotification, aTopic);
+      deferred.resolve({subject: aSubject, data: aData});
+    }, aTopic, false);
+  return deferred.promise;
+}
+
 function openAndLoadWindow(aOptions, aWaitForDelayedStartup=false) {
   let deferred = Promise.defer();
   let win = OpenBrowserWindow(aOptions);

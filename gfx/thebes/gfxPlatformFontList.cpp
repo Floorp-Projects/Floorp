@@ -729,7 +729,7 @@ gfxPlatformFontList::CheckFamily(gfxFontFamily *aFamily)
 }
 
 gfxFontFamily* 
-gfxPlatformFontList::FindFamily(const nsAString& aFamily)
+gfxPlatformFontList::FindFamily(const nsAString& aFamily, bool aUseSystemFonts)
 {
     nsAutoString key;
     gfxFontFamily *familyEntry;
@@ -741,6 +741,15 @@ gfxPlatformFontList::FindFamily(const nsAString& aFamily)
     if ((familyEntry = mFontFamilies.GetWeak(key))) {
         return CheckFamily(familyEntry);
     }
+
+#if defined(XP_MACOSX)
+    // for system font types allow hidden system fonts to be referenced
+    if (aUseSystemFonts) {
+        if ((familyEntry = mSystemFontFamilies.GetWeak(key)) != nullptr) {
+            return CheckFamily(familyEntry);
+        }
+    }
+#endif
 
     // lookup in other family names list (mostly localized names)
     if ((familyEntry = mOtherFamilyNames.GetWeak(key)) != nullptr) {

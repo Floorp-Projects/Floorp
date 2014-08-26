@@ -10,11 +10,43 @@ gPrefix = "";
 // each of these tests evaluate whether a given feature is enabled as required
 // and also whether features that shouldn't be enabled are or not.
 var gPropertyData = [
+  // font-variant (shorthand)
+  // valid values
+  { prop: "font-variant", value: "normal", features: {"smcp": 0} },
+  { prop: "font-variant", value: "small-caps", features: {"smcp": 1, "c2sc": 0} },
+  { prop: "font-variant", value: "none", features: {"liga": 0, "dlig": 0, "clig": 0, "calt": 0, "hlig": 0} },
+  { prop: "font-variant", value: "all-small-caps", features: {"smcp": 1, "c2sc": 1, "pcap": 0} },
+  { prop: "font-variant", value: "common-ligatures no-discretionary-ligatures", features: {"liga": 1, "clig": 1, "dlig": 0, "hlig": 0, "calt": 1} },
+  { prop: "font-variant", value: "proportional-nums slashed-zero diagonal-fractions oldstyle-nums ordinal", features: {"frac": 1, "afrc": 0, "tnum": 0, "pnum": 1, "onum": 1, "ordn": 1, "zero": 1} },
+  { prop: "font-variant", value: "all-small-caps traditional", features: {"smcp": 1, "c2sc": 1, "pcap": 0, "trad": 1, "jp04": 0} },
+  { prop: "font-variant", value: "styleset(out-of-bounds1, out-of-bounds2) traditional", features: {"ss00": 0, "ss01": 0, "ss99": 0, "trad": 1} }, // out-of-bounds values but not invalid syntax
+  { prop: "font-variant", value: "styleset(ok-alt-a, ok-alt-b) historical-forms", features: {"ss01": 1, "ss02": 0, "ss03": 1, "ss04": 0, "ss05": 1, "ss19": 1, "ss20": 0, "hist": 1, "hlig": 0} },
+  { prop: "font-variant", value: "traditional historical-forms styleset(ok-alt-a, ok-alt-b)", features: {"trad": 1, "ss01": 1, "ss02": 0, "ss03": 1, "ss04": 0, "ss05": 1, "ss19": 1, "ss20": 0, "hist": 1, "hlig": 0} },
+  { prop: "font-variant", value: "styleset(scope-test2)", features: {"ss23": 0, "ss24": 1, "ss01": 1} },
+  { prop: "font-variant", value: "character-variant(scope-test2)", features: {"cv23": 2, "cv24": 0, "cv01": 0} },
+
+  // invalid values
+  { prop: "font-variant", value: "normal small-caps", features: {"smcp": 0}, invalid: true },
+  { prop: "font-variant", value: "common-ligatures none", features: {"liga": 1, "clig": 1, "dlig": 0}, invalid: true },
+  { prop: "font-variant", value: "none common-ligatures", features: {"liga": 1, "clig": 1, "dlig": 0}, invalid: true },
+  { prop: "font-variant", value: "small-caps potato", features: {"smcp": 0}, invalid: true },
+  { prop: "font-variant", value: "common-ligatures traditional no-common-ligatures", features: {"liga": 1, "clig": 1, "dlig": 0, "trad": 0}, invalid: true },
+  { prop: "font-variant", value: "common-ligatures traditional common-ligatures", features: {"liga": 1, "clig": 1, "dlig": 0, "trad": 0}, invalid: true },
+  { prop: "font-variant", value: "small-caps jis83 all-small-caps", features: {"smcp": 0, "c2sc": 0, "jp83": 0}, invalid: true },
+  { prop: "font-variant", value: "lining-nums traditional slashed-zero ordinal normal", features: {"lnum": 0, "onum": 0, "zero": 0, "trad": 0}, invalid: true },
+  { prop: "font-variant", value: "diagonal-fractions stacked-fractions", features: {"frac": 0, "afrc": 0}, invalid: true },
+  { prop: "font-variant", value: "stacked-fractions diagonal-fractions historical-ligatures", features: {"frac": 0, "afrc": 0, "hlig": 0}, invalid: true },
+  { prop: "font-variant", value: "super sub", features: {"subs": 0, "sups": 0}, invalid: true },
+  { prop: "font-variant", value: "super historical-ligatures sub", features: {"subs": 0, "sups": 0, "hlig": 0}, invalid: true },
+  { prop: "font-variant", value: "annotation(circled) annotation(circled)", features: {"nalt": 0, "lnum": 0, "onum": 0, "pnum": 0}, invalid: true },
+
   // font-variant-alternates
   // valid values
   { prop: "font-variant-alternates", value: "normal", features: {"salt": 0, "swsh": 0} },
   { prop: "font-variant-alternates", value: "historical-forms", features: {"hist": 1, "hlig": 0} },
   { prop: "font-variant-alternates", value: "styleset(ok-alt-a, ok-alt-b)", features: {"ss01": 1, "ss02": 0, "ss03": 1, "ss04": 0, "ss05": 1, "ss19": 1, "ss20": 0} },
+  { prop: "font-variant-alternates", value: "styleset(ok-alt-a, ok-alt-b) historical-forms", features: {"ss01": 1, "ss02": 0, "ss03": 1, "ss04": 0, "ss05": 1, "ss19": 1, "ss20": 0, "hist": 1, "hlig": 0} },
+  { prop: "font-variant-alternates", value: "historical-forms styleset(ok-alt-a, ok-alt-b)", features: {"ss01": 1, "ss02": 0, "ss03": 1, "ss04": 0, "ss05": 1, "ss19": 1, "ss20": 0, "hist": 1, "hlig": 0} },
   { prop: "font-variant-alternates", value: "character-variant(ok-1)", features: {"cv78": 2, "cv79": 0, "cv77": 0} },
   { prop: "font-variant-alternates", value: "character-variant(ok-1, ok-3)", features: {"cv78": 2, "cv79": 0, "cv77": 0, "cv23": 1, "cv22": 0, "cv24": 0} },
   { prop: "font-variant-alternates", value: "annotation(circled)", features: {"nalt": 1} },

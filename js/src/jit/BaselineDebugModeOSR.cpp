@@ -87,10 +87,10 @@ struct DebugModeOSREntry
     }
 
     bool needsRecompileInfo() const {
-        return (frameKind == ICEntry::Kind_CallVM ||
-                frameKind == ICEntry::Kind_DebugTrap ||
-                frameKind == ICEntry::Kind_DebugPrologue ||
-                frameKind == ICEntry::Kind_DebugEpilogue);
+        return frameKind == ICEntry::Kind_CallVM ||
+               frameKind == ICEntry::Kind_DebugTrap ||
+               frameKind == ICEntry::Kind_DebugPrologue ||
+               frameKind == ICEntry::Kind_DebugEpilogue;
     }
 
     bool recompiled() const {
@@ -253,7 +253,7 @@ ICEntryKindToString(ICEntry::Kind kind)
       case ICEntry::Kind_DebugEpilogue:
         return "debug epilogue";
       default:
-        MOZ_ASSUME_UNREACHABLE("bad ICEntry kind");
+        MOZ_CRASH("bad ICEntry kind");
     }
 }
 
@@ -612,7 +612,7 @@ CloneOldBaselineStub(JSContext *cx, DebugModeOSREntryVector &entries, size_t ent
 #undef CASE_KIND
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad stub kind");
+        MOZ_CRASH("Bad stub kind");
     }
 
     if (!entry.newStub)
@@ -714,7 +714,7 @@ BaselineDebugModeOSRInfo::popValueInto(PCMappingSlotInfo::SlotLocation loc, Valu
       case PCMappingSlotInfo::SlotIgnore:
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad slot location");
+        MOZ_CRASH("Bad slot location");
     }
 
     stackAdjust++;
@@ -805,9 +805,9 @@ JitRuntime::getBaselineDebugModeOSRHandlerAddress(JSContext *cx, bool popFrameRe
 {
     if (!getBaselineDebugModeOSRHandler(cx))
         return nullptr;
-    return (popFrameReg
-            ? baselineDebugModeOSRHandler_->raw()
-            : baselineDebugModeOSRHandlerNoFrameRegPopAddr_);
+    return popFrameReg
+           ? baselineDebugModeOSRHandler_->raw()
+           : baselineDebugModeOSRHandlerNoFrameRegPopAddr_;
 }
 
 JitCode *

@@ -142,11 +142,19 @@ this.startup = function(window) {
     // Wait for XUL window loading
     yield deferredWindowLoad.promise;
 
+    // Override Toolkit's nsITransfer implementation with the one from the
+    // JavaScript API for downloads. This will eventually be removed when
+    // nsIDownloadManager will not be available anymore (bug 851471).
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
+              .registerFactory(Components.ID("{1b4c85df-cbdd-4bb6-b04e-613caece083c}"),
+                               "", "@mozilla.org/transfer;1", null);
+
     // Load these modules here because they aren't needed right at startup,
     // but they need to be loaded to perform some initialization steps.
     Cu.import("resource://gre/modules/Payment.jsm");
     Cu.import("resource://gre/modules/AlarmService.jsm");
     Cu.import("resource://webapprt/modules/WebRTCHandler.jsm");
+    Cu.import("resource://webapprt/modules/DownloadView.jsm");
 
     // Get the <browser> element in the webapp.xul window.
     let appBrowser = window.document.getElementById("content");

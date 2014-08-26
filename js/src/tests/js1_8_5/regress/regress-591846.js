@@ -51,9 +51,6 @@ function check(obj, name, value, readonly) {
     assertEq(obj[name], value);
 }
 
-check(Object, 'caller', null, false);
-check(Object, 'arguments', null, false);
-
 // Reset RegExp.leftContext to the empty string.
 /x/.test('x');
 

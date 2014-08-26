@@ -150,7 +150,8 @@ SeekableStreamAtBeginning(nsIInputStream* aStream)
 NS_IMETHODIMP
 nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
 {
-  NS_ASSERTION(SeekableStreamAtBeginning(aStream), "Appended stream not at beginning.");
+  NS_ASSERTION(SeekableStreamAtBeginning(aStream),
+               "Appended stream not at beginning.");
   return mStreams.AppendElement(aStream) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -158,7 +159,8 @@ nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
 NS_IMETHODIMP
 nsMultiplexInputStream::InsertStream(nsIInputStream* aStream, uint32_t aIndex)
 {
-  NS_ASSERTION(SeekableStreamAtBeginning(aStream), "Inserted stream not at beginning.");
+  NS_ASSERTION(SeekableStreamAtBeginning(aStream),
+               "Inserted stream not at beginning.");
   mStreams.InsertElementAt(aIndex, aStream);
   if (mCurrentStream > aIndex ||
       (mCurrentStream == aIndex && mStartedReadingCurrent)) {

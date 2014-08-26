@@ -184,6 +184,10 @@ public:
   int8_t CachedWritableByte();
   void SetCachedWritableByte(int8_t);
 
+  void UnsafePrerenderMethod();
+  int32_t UnsafePrerenderWritable();
+  void SetUnsafePrerenderWritable(int32_t);
+  int32_t UnsafePrerenderReadonly();
   int16_t ReadonlyShort();
   int16_t WritableShort();
   void SetWritableShort(int16_t);
@@ -457,6 +461,8 @@ public:
   void PassVariadicTypedArray(const Sequence<Float32Array>&);
   void PassVariadicNullableTypedArray(const Sequence<Nullable<Float32Array> >&);
   void ReceiveUint8Array(JSContext*, JS::MutableHandle<JSObject*>);
+  void SetUint8ArrayAttr(const Uint8Array&);
+  void GetUint8ArrayAttr(JSContext*, JS::MutableHandle<JSObject*>);
 
   // DOMString types
   void PassString(const nsAString&);

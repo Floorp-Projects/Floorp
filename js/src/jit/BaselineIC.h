@@ -595,7 +595,7 @@ class ICStub
             IC_STUB_KIND_LIST(DEF_KIND_STR)
 #undef DEF_KIND_STR
           default:
-            MOZ_ASSUME_UNREACHABLE("Invalid kind.");
+            MOZ_CRASH("Invalid kind.");
         }
     }
 
@@ -1130,7 +1130,7 @@ class ICStubCompiler
             regs.take(R1);
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Invalid numInputs");
+            MOZ_CRASH("Invalid numInputs");
         }
 
         return regs;
@@ -2255,8 +2255,8 @@ class ICCompare_Int32WithBoolean : public ICStub
         bool generateStubCode(MacroAssembler &masm);
 
         virtual int32_t getKey() const {
-            return (static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
-                    (static_cast<int32_t>(lhsIsInt32_) << 24));
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
+                   (static_cast<int32_t>(lhsIsInt32_) << 24);
         }
 
       public:
@@ -2568,8 +2568,8 @@ class ICBinaryArith_Int32 : public ICStub
 
         // Stub keys shift-stubs need to encode the kind, the JSOp and if we allow doubles.
         virtual int32_t getKey() const {
-            return (static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
-                    (static_cast<int32_t>(allowDouble_) << 24));
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
+                   (static_cast<int32_t>(allowDouble_) << 24);
         }
 
       public:
@@ -3306,8 +3306,7 @@ class ICGetElemNativeCompiler : public ICStubCompiler
                     getter_, pcOffset_, holder_, holderShape);
         }
 
-        MOZ_ASSUME_UNREACHABLE("Invalid kind.");
-        return nullptr;
+        MOZ_CRASH("Invalid kind.");
     }
 };
 

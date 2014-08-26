@@ -7,6 +7,7 @@
 #include "mozilla/SystemMemoryReporter.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/LinuxUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TaggedAnonymousMemory.h"
@@ -162,8 +163,9 @@ public:
   {
     // There is lots of privacy-sensitive data in /proc. Just skip this
     // reporter entirely when anonymization is required.
-    if (aAnonymize)
+    if (aAnonymize) {
       return NS_OK;
+    }
 
     if (!Preferences::GetBool("memory.system_memory_reporter")) {
       return NS_OK;
@@ -212,12 +214,12 @@ private:
   class ProcessSizes
   {
   public:
-    void Add(const nsACString &aKey, size_t aSize)
+    void Add(const nsACString& aKey, size_t aSize)
     {
       mTagged.Put(aKey, mTagged.Get(aKey) + aSize);
     }
 
-    void Report(nsIHandleReportCallback *aHandleReport, nsISupports *aData)
+    void Report(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
     {
       EnumArgs env = { aHandleReport, aData };
       mTagged.EnumerateRead(ReportSizes, &env);
@@ -226,16 +228,17 @@ private:
   private:
     nsDataHashtable<nsCStringHashKey, size_t> mTagged;
 
-    struct EnumArgs {
+    struct EnumArgs
+    {
       nsIHandleReportCallback* mHandleReport;
       nsISupports* mData;
     };
 
     static PLDHashOperator ReportSizes(nsCStringHashKey::KeyType aKey,
                                        size_t aAmount,
-                                       void *aUserArg)
+                                       void* aUserArg)
     {
-      const EnumArgs *envp = reinterpret_cast<const EnumArgs*>(aUserArg);
+      const EnumArgs* envp = reinterpret_cast<const EnumArgs*>(aUserArg);
 
       nsAutoCString path("processes/");
       path.Append(aKey);
@@ -334,8 +337,8 @@ private:
 
         // Report the open file descriptors for this process.
         nsPrintfCString procFdPath("/proc/%s/fd", pidStr);
-        rv = CollectOpenFileReports(
-                  aHandleReport, aData, procFdPath, processName);
+        rv = CollectOpenFileReports(aHandleReport, aData, procFdPath,
+                                    processName);
         if (NS_FAILED(rv)) {
           break;
         }
@@ -347,37 +350,6 @@ private:
     processSizes.Report(aHandleReport, aData);
 
     return NS_OK;
-  }
-
-  // Obtain the name of a thread, omitting any numeric suffix added by a
-  // thread pool library (as in, e.g., "Binder_2" or "mozStorage #1").
-  // The empty string is returned on error.
-  //
-  // Note: if this is ever needed on kernels older than 2.6.33 (early 2010),
-  // it will have to parse /proc/<pid>/status instead, because
-  // /proc/<pid>/comm didn't exist before then.
-  void GetThreadName(pid_t aTid, nsACString& aName)
-  {
-    aName.Truncate();
-    if (aTid <= 0) {
-      return;
-    }
-    char buf[16]; // 15 chars max + '\n'
-    nsPrintfCString path("/proc/%d/comm", aTid);
-    FILE* fp = fopen(path.get(), "r");
-    if (!fp) {
-      // The fopen could also fail if the thread exited before we got here.
-      return;
-    }
-    size_t len = fread(buf, 1, sizeof(buf), fp);
-    fclose(fp);
-    // No need to strip the '\n', since isspace() includes it.
-    while (len > 0 &&
-           (isspace(buf[len - 1]) || isdigit(buf[len - 1]) ||
-            buf[len - 1] == '#' || buf[len - 1] == '_')) {
-      --len;
-    }
-    aName.Assign(buf, len);
   }
 
   nsresult ParseMappings(FILE* aFile,
@@ -504,7 +476,7 @@ private:
       // "[stack:" entries from reaching the IsAnonymous case below.)
       pid_t tid = atoi(absPath.get() + 7);
       nsAutoCString threadName, escapedThreadName;
-      GetThreadName(tid, threadName);
+      LinuxUtils::GetThreadName(tid, threadName);
       if (threadName.IsEmpty()) {
         threadName.AssignLiteral("<unknown>");
       }
@@ -977,12 +949,12 @@ private:
 #undef CHECK_PREFIX
 
         const nsCString processName(aProcessName);
-        nsPrintfCString entryPath(
-            "open-fds/%s/%s%s/%s", processName.get(), category, linkPath, fd);
-        nsPrintfCString entryDescription(
-            "%s file descriptor opened by the process", descriptionPrefix);
-        REPORT_WITH_CLEANUP(
-            entryPath, UNITS_COUNT, 1, entryDescription, closedir(d));
+        nsPrintfCString entryPath("open-fds/%s/%s%s/%s",
+                                  processName.get(), category, linkPath, fd);
+        nsPrintfCString entryDescription("%s file descriptor opened by the process",
+                                         descriptionPrefix);
+        REPORT_WITH_CLEANUP(entryPath, UNITS_COUNT, 1, entryDescription,
+                            closedir(d));
       }
     }
 
@@ -1003,8 +975,8 @@ private:
 
     // For simplicity numbers will be uint64_t, strings 63 chars max.
     const char* const kScanFormat =
-        "%" SCNx64 " %" SCNx64 " %" SCNu64 " %" SCNu64
-        " %63s %63s %63s %" SCNu64;
+      "%" SCNx64 " %" SCNx64 " %" SCNu64 " %" SCNu64
+      " %63s %63s %63s %" SCNu64;
     const int kNumFields = 8;
     const size_t kStringSize = 64;
 
@@ -1037,7 +1009,7 @@ private:
 
       // Attempt to map the pid to a more useful name.
       nsAutoCString procName;
-      GetThreadName(atoi(pid), procName);
+      LinuxUtils::GetThreadName(atoi(pid), procName);
 
       if (procName.IsEmpty()) {
         procName.Append("pid=");

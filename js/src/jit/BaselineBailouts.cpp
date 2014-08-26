@@ -79,7 +79,7 @@ struct BaselineStackBuilder
 
     static size_t HeaderSize() {
         return AlignBytes(sizeof(BaselineBailoutInfo), sizeof(void *));
-    };
+    }
     size_t bufferTotal_;
     size_t bufferAvail_;
     size_t bufferUsed_;
@@ -1726,7 +1726,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         // baseline frame.
         return false;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unknown bailout kind!");
+        MOZ_CRASH("Unknown bailout kind!");
     }
 
     if (!CheckFrequentBailouts(cx, outerScript))

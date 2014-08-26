@@ -39,13 +39,11 @@ public:
   NS_IMETHOD GetImageContainer(layers::LayerManager* aManager,
                                layers::ImageContainer** _retval) MOZ_OVERRIDE;
   NS_IMETHOD Draw(gfxContext* aContext,
-                  GraphicsFilter aFilter,
-                  const gfxMatrix& aUserSpaceToImageSpace,
-                  const gfxRect& aFill,
-                  const nsIntRect& aSubimage,
-                  const nsIntSize& aViewportSize,
-                  const SVGImageContext* aSVGContext,
+                  const nsIntSize& aSize,
+                  const ImageRegion& aRegion,
                   uint32_t aWhichFrame,
+                  GraphicsFilter aFilter,
+                  const Maybe<SVGImageContext>& aSVGContext,
                   uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(const nsIntRect& aRect) MOZ_OVERRIDE;
   nsIntSize OptimalImageSizeForDest(const gfxSize& aDest,
@@ -61,7 +59,7 @@ protected:
 
   virtual ~OrientedImage() { }
 
-  gfxMatrix OrientationMatrix(const nsIntSize& aViewportSize);
+  gfxMatrix OrientationMatrix(const nsIntSize& aSize, bool aInvert = false);
 
 private:
   Orientation mOrientation;

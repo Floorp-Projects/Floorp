@@ -129,8 +129,6 @@ chatBrowserAccess.prototype = {
   },
 
   isTabContentWindow: function (aWindow) this.contentWindow == aWindow,
-
-  get contentWindow() document.getElementById("chatter").contentWindow
 };
 
 </script>

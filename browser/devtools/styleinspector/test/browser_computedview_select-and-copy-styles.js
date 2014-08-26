@@ -15,7 +15,7 @@ let test = asyncTest(function*() {
 
   info("Creating the test document");
   content.document.body.innerHTML = '<style type="text/css"> ' +
-    'span { font-variant: small-caps; color: #000000; } ' +
+    'span { font-variant-caps: small-caps; color: #000000; } ' +
     '.nomatches {color: #ff0000;}</style> <div id="first" style="margin: 10em; ' +
     'font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA">\n' +
     '<h1>Some header text</h1>\n' +
@@ -58,7 +58,7 @@ function checkCopySelection(view) {
 
   let expectedPattern = "font-family: helvetica,sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
-                        "font-variant: small-caps;[\\r\\n]*";
+                        "font-variant-caps: small-caps;[\\r\\n]*";
 
   return waitForClipboard(() => {
     fireCopyEvent(props[0]);
@@ -80,7 +80,7 @@ function checkSelectAll(view) {
   let expectedPattern = "color: #FF0;[\\r\\n]+" +
                         "font-family: helvetica,sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
-                        "font-variant: small-caps;[\\r\\n]*";
+                        "font-variant-caps: small-caps;[\\r\\n]*";
 
   return waitForClipboard(() => {
     fireCopyEvent(prop);

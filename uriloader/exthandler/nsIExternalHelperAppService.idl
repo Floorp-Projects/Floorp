@@ -18,7 +18,7 @@ interface nsIInterfaceRequestor;
  * The external helper app service is used for finding and launching
  * platform specific external applications for a given mime content type.
  */
-[scriptable, uuid(9e456297-ba3e-42b1-92bd-b7db014268cb)]
+[scriptable, uuid(1E4F3AE1-B737-431F-A95D-31FA8DA70199)]
 interface nsIExternalHelperAppService : nsISupports
 {
   /**
@@ -28,16 +28,21 @@ interface nsIExternalHelperAppService : nsISupports
    * with this data.
    * @param aMimeContentType The content type of the incoming data
    * @param aRequest The request corresponding to the incoming data
-   * @param aWindowContext Use GetInterface to retrieve properties like the
-   *                       dom window or parent window...
-   *                       The service might need this in order to bring up dialogs.
+   * @param aContentContext Used in processing content document refresh
+   *  headers after target content is downloaded. Note in e10s land
+   *  this is likely a CPOW that points to a window in the child process.
    * @param aForceSave True to always save this content to disk, regardless of
-   *                   nsIMIMEInfo and other such influences.
+   *  nsIMIMEInfo and other such influences.
+   * @param aWindowContext Used in parenting helper app dialogs, usually
+   *  points to the parent browser window. This parameter may be null,
+   *  in which case dialogs will be parented to aContentContext.
    * @return A nsIStreamListener which the caller should pump the data into.
    */
-  nsIStreamListener doContent (in ACString aMimeContentType, in nsIRequest aRequest,
-                               in nsIInterfaceRequestor aWindowContext,
-                               in boolean aForceSave); 
+  nsIStreamListener doContent (in ACString aMimeContentType,
+                               in nsIRequest aRequest,
+                               in nsIInterfaceRequestor aContentContext,
+                               in boolean aForceSave,
+                               [optional] in nsIInterfaceRequestor aWindowContext); 
 
   /**
    * Returns true if data from a URL with this extension combination

@@ -708,7 +708,7 @@ bool ExecuteType2CharStringOperator(int32_t op,
     return true;
   }
 
-  OTS_WARNING("Undefined operator: %d (0x%x)", op, op);
+  //OTS_WARNING("Undefined operator: %d (0x%x)", op, op);
   return OTS_FAILURE();
 }
 

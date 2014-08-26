@@ -72,8 +72,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 EXPORTS.mozilla += [
     'AvailableMemoryTracker.h',
     'ClearOnShutdown.h',
+    'CountingAllocatorBase.h',
     'CycleCollectedJSRuntime.h',
     'Debug.h',
+    'LinuxUtils.h',
     'nsMemoryInfoDumper.h',
     'StackWalk.h',
     'StaticMutex.h',
@@ -128,6 +130,7 @@ if CONFIG['OS_TARGET'] != 'WINNT' or \
 
 if CONFIG['OS_ARCH'] == 'Linux':
     SOURCES += [
+        'LinuxUtils.cpp',
         'SystemMemoryReporter.cpp',
     ]
 

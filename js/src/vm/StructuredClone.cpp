@@ -771,13 +771,7 @@ JSStructuredCloneWriter::parseTransferable()
 
         if (!v.isObject())
             return reportErrorTransferable();
-
-        RootedObject tObj(context(), CheckedUnwrap(&v.toObject()));
-
-        if (!tObj) {
-            JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
-            return false;
-        }
+        RootedObject tObj(context(), &v.toObject());
 
         // No duplicates allowed
         if (std::find(transferableObjects.begin(), transferableObjects.end(), tObj) != transferableObjects.end()) {
@@ -856,7 +850,8 @@ JSStructuredCloneWriter::checkStack()
 bool
 JSStructuredCloneWriter::writeTypedArray(HandleObject obj)
 {
-    Rooted<TypedArrayObject*> tarr(context(), &obj->as<TypedArrayObject>());
+    Rooted<TypedArrayObject*> tarr(context(), &CheckedUnwrap(obj)->as<TypedArrayObject>());
+    JSAutoCompartment ac(context(), tarr);
 
     if (!TypedArrayObject::ensureHasBuffer(context(), tarr))
         return false;
@@ -878,7 +873,8 @@ JSStructuredCloneWriter::writeTypedArray(HandleObject obj)
 bool
 JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj)
 {
-    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
+    ArrayBufferObject &buffer = CheckedUnwrap(obj)->as<ArrayBufferObject>();
+    JSAutoCompartment ac(context(), &buffer);
 
     return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, buffer.byteLength()) &&
            out.writeBytes(buffer.dataPointer(), buffer.byteLength());
@@ -928,14 +924,22 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj)
     checkStack();
 
     /* Write the header for obj. */
-    return out.writePair(obj->is<ArrayObject>() ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
+    return out.writePair(ObjectClassIs(obj, ESClass_Array, context()) ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
 }
 
 bool
 JSStructuredCloneWriter::traverseMap(HandleObject obj)
 {
     AutoValueVector newEntries(context());
-    if (!MapObject::entries(context(), obj, &newEntries))
+    {
+        // If there is no wrapper, the compartment munging is a no-op.
+        RootedObject unwrapped(context(), CheckedUnwrap(obj));
+        MOZ_ASSERT(unwrapped);
+        JSAutoCompartment ac(context(), unwrapped);
+        if (!MapObject::entries(context(), unwrapped, &newEntries))
+            return false;
+    }
+    if (!context()->compartment()->wrap(context(), newEntries))
         return false;
 
     for (size_t i = newEntries.length(); i > 0; --i) {
@@ -957,7 +961,15 @@ bool
 JSStructuredCloneWriter::traverseSet(HandleObject obj)
 {
     AutoValueVector keys(context());
-    if (!SetObject::keys(context(), obj, &keys))
+    {
+        // If there is no wrapper, the compartment munging is a no-op.
+        RootedObject unwrapped(context(), CheckedUnwrap(obj));
+        MOZ_ASSERT(unwrapped);
+        JSAutoCompartment ac(context(), unwrapped);
+        if (!SetObject::keys(context(), obj, &keys))
+            return false;
+    }
+    if (!context()->compartment()->wrap(context(), keys))
         return false;
 
     for (size_t i = keys.length(); i > 0; --i) {
@@ -995,45 +1007,47 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
     } else if (v.isObject()) {
         RootedObject obj(context(), &v.toObject());
 
-        // The object might be a security wrapper. See if we can clone what's
-        // behind it. If we can, unwrap the object.
-        obj = CheckedUnwrap(obj);
-        if (!obj) {
-            JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
-            return false;
-        }
-
-        AutoCompartment ac(context(), obj);
-
         bool backref;
         if (!startObject(obj, &backref))
             return false;
         if (backref)
             return true;
 
-        if (obj->is<RegExpObject>()) {
-            RegExpObject &reobj = obj->as<RegExpObject>();
-            return out.writePair(SCTAG_REGEXP_OBJECT, reobj.getFlags()) &&
-                   writeString(SCTAG_STRING, reobj.getSource());
-        } else if (obj->is<DateObject>()) {
+        if (ObjectClassIs(obj, ESClass_RegExp, context())) {
+            RegExpGuard re(context());
+            if (!RegExpToShared(context(), obj, &re))
+                return false;
+            return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags()) &&
+                   writeString(SCTAG_STRING, re->getSource());
+        } else if (ObjectClassIs(obj, ESClass_Date, context())) {
             double d = js_DateGetMsecSinceEpoch(obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
-        } else if (obj->is<TypedArrayObject>()) {
+        } else if (JS_IsTypedArrayObject(obj)) {
             return writeTypedArray(obj);
-        } else if (obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().hasData()) {
+        } else if (JS_IsArrayBufferObject(obj) && JS_ArrayBufferHasData(obj)) {
             return writeArrayBuffer(obj);
-        } else if (obj->is<JSObject>() || obj->is<ArrayObject>()) {
+        } else if (ObjectClassIs(obj, ESClass_Object, context())) {
             return traverseObject(obj);
-        } else if (obj->is<BooleanObject>()) {
-            return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->as<BooleanObject>().unbox());
-        } else if (obj->is<NumberObject>()) {
-            return out.writePair(SCTAG_NUMBER_OBJECT, 0) &&
-                   out.writeDouble(obj->as<NumberObject>().unbox());
-        } else if (obj->is<StringObject>()) {
-            return writeString(SCTAG_STRING_OBJECT, obj->as<StringObject>().unbox());
-        } else if (obj->is<MapObject>()) {
+        } else if (ObjectClassIs(obj, ESClass_Array, context())) {
+            return traverseObject(obj);
+        } else if (ObjectClassIs(obj, ESClass_Boolean, context())) {
+            RootedValue unboxed(context());
+            if (!Unbox(context(), obj, &unboxed))
+                return false;
+            return out.writePair(SCTAG_BOOLEAN_OBJECT, unboxed.toBoolean());
+        } else if (ObjectClassIs(obj, ESClass_Number, context())) {
+            RootedValue unboxed(context());
+            if (!Unbox(context(), obj, &unboxed))
+                return false;
+            return out.writePair(SCTAG_NUMBER_OBJECT, 0) && out.writeDouble(unboxed.toNumber());
+        } else if (ObjectClassIs(obj, ESClass_String, context())) {
+            RootedValue unboxed(context());
+            if (!Unbox(context(), obj, &unboxed))
+                return false;
+            return writeString(SCTAG_STRING_OBJECT, unboxed.toString());
+        } else if (ObjectClassIs(obj, ESClass_Map, context())) {
             return traverseMap(obj);
-        } else if (obj->is<SetObject>()) {
+        } else if (ObjectClassIs(obj, ESClass_Set, context())) {
             return traverseSet(obj);
         }
 
@@ -1106,29 +1120,34 @@ JSStructuredCloneWriter::transferOwnership()
         MOZ_ASSERT(ownership == JS::SCTAG_TMO_UNFILLED);
 #endif
 
-        if (obj->is<ArrayBufferObject>()) {
-            bool isMapped = obj->as<ArrayBufferObject>().isMappedArrayBuffer();
-            size_t nbytes = obj->as<ArrayBufferObject>().byteLength();
-            content = JS_StealArrayBufferContents(context(), obj);
-            if (!content)
-                return false; // Destructor will clean up the already-transferred data
-            tag = SCTAG_TRANSFER_MAP_ARRAY_BUFFER;
-            if (isMapped)
-                ownership = JS::SCTAG_TMO_MAPPED_DATA;
-            else
-                ownership = JS::SCTAG_TMO_ALLOC_DATA;
-            extraData = nbytes;
-        } else if (obj->is<SharedArrayBufferObject>()) {
-            SharedArrayRawBuffer *rawbuf = obj->as<SharedArrayBufferObject>().rawBufferObject();
+        if (ObjectClassIs(obj, ESClass_ArrayBuffer, context())) {
+            // The current setup of the array buffer inheritance hierarchy doesn't
+            // lend itself well to generic manipulation via proxies.
+            Rooted<ArrayBufferObject*> arrayBuffer(context(), &CheckedUnwrap(obj)->as<ArrayBufferObject>());
+            if (arrayBuffer->isSharedArrayBuffer()) {
+                SharedArrayRawBuffer *rawbuf = arrayBuffer->as<SharedArrayBufferObject>().rawBufferObject();
 
-            // Avoids a race condition where the parent thread frees the buffer
-            // before the child has accepted the transferable.
-            rawbuf->addReference();
+                // Avoids a race condition where the parent thread frees the buffer
+                // before the child has accepted the transferable.
+                rawbuf->addReference();
 
-            tag = SCTAG_TRANSFER_MAP_SHARED_BUFFER;
-            ownership = JS::SCTAG_TMO_SHARED_BUFFER;
-            content = rawbuf;
-            extraData = 0;
+                tag = SCTAG_TRANSFER_MAP_SHARED_BUFFER;
+                ownership = JS::SCTAG_TMO_SHARED_BUFFER;
+                content = rawbuf;
+                extraData = 0;
+            } else {
+                bool isMapped = arrayBuffer->isMappedArrayBuffer();
+                size_t nbytes = arrayBuffer->byteLength();
+                content = JS_StealArrayBufferContents(context(), arrayBuffer);
+                if (!content)
+                    return false; // Destructor will clean up the already-transferred data
+                tag = SCTAG_TRANSFER_MAP_ARRAY_BUFFER;
+                if (isMapped)
+                    ownership = JS::SCTAG_TMO_MAPPED_DATA;
+                else
+                    ownership = JS::SCTAG_TMO_ALLOC_DATA;
+                extraData = nbytes;
+            }
         } else {
             if (!callbacks || !callbacks->writeTransfer)
                 return reportErrorTransferable();
@@ -2008,14 +2027,5 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, HandleValue v)
     JS_ASSERT(v.isObject());
     assertSameCompartment(w->context(), v);
     RootedObject obj(w->context(), &v.toObject());
-
-    // If the object is a security wrapper, see if we're allowed to unwrap it.
-    // If we aren't, throw.
-    if (obj->is<WrapperObject>())
-        obj = CheckedUnwrap(obj);
-    if (!obj) {
-        JS_ReportErrorNumber(w->context(), js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
-        return false;
-    }
     return w->writeTypedArray(obj);
 }

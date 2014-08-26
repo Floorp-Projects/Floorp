@@ -21,9 +21,9 @@ class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
 
-class nsListBoxBodyFrame : public nsBoxFrame,
-                           public nsIScrollbarMediator,
-                           public nsIReflowCallback
+class nsListBoxBodyFrame MOZ_FINAL : public nsBoxFrame,
+                                     public nsIScrollbarMediator,
+                                     public nsIReflowCallback
 {
   nsListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
                      nsBoxLayout* aLayoutManager);
@@ -56,9 +56,18 @@ public:
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsIAtom* aAttribute, int32_t aModType) MOZ_OVERRIDE;
 
   // nsIScrollbarMediator
-  NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t& aNewIndex) MOZ_OVERRIDE;
-  NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t aNewIndex) MOZ_OVERRIDE;
-  NS_IMETHOD VisibilityChanged(bool aVisible) MOZ_OVERRIDE;
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
+  virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) MOZ_OVERRIDE;
+  virtual void ThumbMoved(nsScrollbarFrame* aScrollbar,
+                          int32_t aOldPos,
+                          int32_t aNewPos) MOZ_OVERRIDE;
+  virtual void VisibilityChanged(bool aVisible) MOZ_OVERRIDE;
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE;
+  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE {}
+  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE {}
+
 
   // nsIReflowCallback
   virtual bool ReflowFinished() MOZ_OVERRIDE;
@@ -89,6 +98,7 @@ public:
   nsresult DoInternalPositionChanged(bool aUp, int32_t aDelta);
   nsListScrollSmoother* GetSmoother();
   void VerticalScroll(int32_t aDelta);
+  void UpdateIndex(int32_t aDirection);
 
   // frames
   nsIFrame* GetFirstFrame();

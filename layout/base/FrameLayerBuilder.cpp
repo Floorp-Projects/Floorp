@@ -370,6 +370,20 @@ public:
     return mFixedPosFrameForLayerData != nullptr;
   }
 
+#ifdef MOZ_DUMP_PAINTING
+
+  /**
+   * Keep track of important decisions for debugging.
+   */
+  nsAutoCString mLog;
+
+  #define FLB_LOG_THEBES_DECISION(tld, ...) \
+          tld->mLog.AppendPrintf("\t\t\t\t"); \
+          tld->mLog.AppendPrintf(__VA_ARGS__);
+#else
+  #define FLB_LOG_THEBES_DECISION(...)
+#endif
+
   /**
    * The region of visible content in the layer, relative to the
    * container layer (which is at the snapped top-left of the display
@@ -501,6 +515,7 @@ private:
    * as infinite, and all display items should be considered 'above' this layer.
    */
   bool mAllDrawingAbove;
+
 };
 
 struct NewLayerEntry {
@@ -1455,6 +1470,7 @@ ContainerState::CreateOrRecycleColorLayer(ThebesLayer *aThebes)
   nsRefPtr<ColorLayer> layer = data->mColorLayer;
   if (layer) {
     layer->SetMaskLayer(nullptr);
+    layer->ClearExtraDumpInfo();
   } else {
     // Create a new layer
     layer = mManager->CreateColorLayer();
@@ -1478,6 +1494,7 @@ ContainerState::CreateOrRecycleImageLayer(ThebesLayer *aThebes)
   nsRefPtr<ImageLayer> layer = data->mImageLayer;
   if (layer) {
     layer->SetMaskLayer(nullptr);
+    layer->ClearExtraDumpInfo();
   } else {
     // Create a new layer
     layer = mManager->CreateImageLayer();
@@ -1499,6 +1516,7 @@ ContainerState::CreateOrRecycleMaskImageLayerFor(Layer* aLayer)
   nsRefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aLayer);
   if (result) {
     mRecycledMaskImageLayers.Remove(aLayer);
+    aLayer->ClearExtraDumpInfo();
     // XXX if we use clip on mask layers, null it out here
   } else {
     // Create a new layer
@@ -1572,7 +1590,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot
   nsRefPtr<ThebesLayer> layer;
   ThebesDisplayItemLayerUserData* data;
   bool layerRecycled = false;
-#ifndef MOZ_ANDROID_OMTC
+#ifndef MOZ_WIDGET_ANDROID
   bool didResetScrollPositionForLayerPixelAlignment = false;
 #endif
 
@@ -1601,6 +1619,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot
       // Clear clip rect and mask layer so we don't accidentally stay clipped.
       // We will reapply any necessary clipping.
       layer->SetMaskLayer(nullptr);
+      layer->ClearExtraDumpInfo();
 
       data = static_cast<ThebesDisplayItemLayerUserData*>
           (layer->GetUserData(&gThebesDisplayItemLayerUserData));
@@ -1623,7 +1642,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot
       }
 #endif
         InvalidateEntireThebesLayer(layer, aAnimatedGeometryRoot);
-#ifndef MOZ_ANDROID_OMTC
+#ifndef MOZ_WIDGET_ANDROID
         didResetScrollPositionForLayerPixelAlignment = true;
 #endif
       }
@@ -1659,7 +1678,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot
     data = new ThebesDisplayItemLayerUserData();
     layer->SetUserData(&gThebesDisplayItemLayerUserData, data);
     ResetScrollPositionForLayerPixelAlignment(aAnimatedGeometryRoot);
-#ifndef MOZ_ANDROID_OMTC
+#ifndef MOZ_WIDGET_ANDROID
     didResetScrollPositionForLayerPixelAlignment = true;
 #endif
   }
@@ -1690,7 +1709,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot
   layer->SetBaseTransform(Matrix4x4::From2D(matrix));
 
   // FIXME: Temporary workaround for bug 681192 and bug 724786.
-#ifndef MOZ_ANDROID_OMTC
+#ifndef MOZ_WIDGET_ANDROID
   // Calculate exact position of the top-left of the active scrolled root.
   // This might not be 0,0 due to the snapping in ScaleToNearestPixels.
   gfxPoint animatedGeometryRootTopLeft = scaledOffset - ThebesPoint(matrix.GetTranslation()) + mParameters.mOffset;
@@ -1737,8 +1756,8 @@ static void
 SetOuterVisibleRegion(Layer* aLayer, nsIntRegion* aOuterVisibleRegion,
                       const nsIntRect* aLayerContentsVisibleRect = nullptr)
 {
-  gfx3DMatrix transform = To3DMatrix(aLayer->GetTransform());
-  gfxMatrix transform2D;
+  Matrix4x4 transform = aLayer->GetTransform();
+  Matrix transform2D;
   if (transform.Is2D(&transform2D) && !transform2D.HasNonIntegerTranslation()) {
     aOuterVisibleRegion->MoveBy(-int(transform2D._31), -int(transform2D._32));
     if (aLayerContentsVisibleRect) {
@@ -1748,8 +1767,9 @@ SetOuterVisibleRegion(Layer* aLayer, nsIntRegion* aOuterVisibleRegion,
     nsIntRect outerRect = aOuterVisibleRegion->GetBounds();
     // if 'transform' is not invertible, then nothing will be displayed
     // for the layer, so it doesn't really matter what we do here
-    gfxRect outerVisible(outerRect.x, outerRect.y, outerRect.width, outerRect.height);
-    gfxRect layerVisible = transform.Inverse().ProjectRectBounds(outerVisible);
+    Rect outerVisible(outerRect.x, outerRect.y, outerRect.width, outerRect.height);
+    transform.Invert();
+    gfxRect layerVisible = ThebesRect(transform.ProjectRectBounds(outerVisible));
     if (aLayerContentsVisibleRect) {
       NS_ASSERTION(aLayerContentsVisibleRect->width >= 0 &&
                    aLayerContentsVisibleRect->height >= 0,
@@ -2048,6 +2068,12 @@ ContainerState::PopThebesLayerData()
   NewLayerEntry* newLayerEntry = &mNewChildLayers[data->mNewChildLayersIndex];
   nsRefPtr<Layer> layer;
   nsRefPtr<ImageContainer> imageContainer = data->CanOptimizeImageLayer(mBuilder);
+
+  FLB_LOG_THEBES_DECISION(data, "Selecting layer for tld=%p\n", data);
+  FLB_LOG_THEBES_DECISION(data, "  Solid=%i, hasImage=%i, canOptimizeAwayThebes=%i\n",
+          data->mIsSolidColorInVisibleRegion, !!imageContainer,
+          CanOptimizeAwayThebesLayer(data, mLayerBuilder));
+
   if ((data->mIsSolidColorInVisibleRegion || imageContainer) &&
       CanOptimizeAwayThebesLayer(data, mLayerBuilder)) {
     NS_ASSERTION(!(data->mIsSolidColorInVisibleRegion && imageContainer),
@@ -2068,6 +2094,7 @@ ContainerState::PopThebesLayerData()
       layer = imageLayer;
       mLayerBuilder->StoreOptimizedLayerForFrame(data->mImage,
                                                  imageLayer);
+      FLB_LOG_THEBES_DECISION(data, "  Selected image layer=%p\n", layer.get());
     } else {
       nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer(data->mLayer);
       colorLayer->SetColor(data->mSolidColor);
@@ -2081,6 +2108,7 @@ ContainerState::PopThebesLayerData()
       colorLayer->SetBounds(visibleRect);
 
       layer = colorLayer;
+      FLB_LOG_THEBES_DECISION(data, "  Selected color layer=%p\n", layer.get());
     }
 
     NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, layer) < 0,
@@ -2105,6 +2133,7 @@ ContainerState::PopThebesLayerData()
     layer = data->mLayer;
     imageContainer = nullptr;
     layer->SetClipRect(nullptr);
+    FLB_LOG_THEBES_DECISION(data, "  Selected thebes layer=%p\n", layer.get());
   }
 
   if (mLayerBuilder->IsBuildingRetainedLayers()) {
@@ -2120,6 +2149,10 @@ ContainerState::PopThebesLayerData()
   } else {
     SetOuterVisibleRegionForLayer(layer, data->mVisibleRegion);
   }
+
+#ifdef MOZ_DUMP_PAINTING
+  layer->AddExtraDumpInfo(nsCString(data->mLog));
+#endif
 
   nsIntRegion transparentRegion;
   transparentRegion.Sub(data->mVisibleRegion, data->mOpaqueRegion);
@@ -2208,9 +2241,9 @@ ContainerState::PopThebesLayerData()
     if (!data->mHitRegion.GetBounds().IsEmpty()) {
       // Our definitely-hit region must go to the maybe-hit-region since
       // this function is an approximation.
-      gfx3DMatrix matrix = nsLayoutUtils::GetTransformToAncestor(
+      Matrix4x4 matrix = nsLayoutUtils::GetTransformToAncestor(
         mContainerReferenceFrame, containingThebesLayerData->mReferenceFrame);
-      gfxMatrix matrix2D;
+      Matrix matrix2D;
       bool isPrecise = matrix.Is2D(&matrix2D) && !matrix2D.HasNonAxisAlignedTransform();
       nsRect rect = nsLayoutUtils::TransformFrameRectToAncestor(
         mContainerReferenceFrame,
@@ -2275,6 +2308,8 @@ ThebesLayerData::Accumulate(ContainerState* aState,
                             const nsIntRect& aDrawRect,
                             const DisplayItemClip& aClip)
 {
+  FLB_LOG_THEBES_DECISION(this, "Accumulating dp=%s(%p), f=%p against tld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
+
   if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(aItem)) {
     mForceTransparentSurface = true;
   }
@@ -2291,7 +2326,9 @@ ThebesLayerData::Accumulate(ContainerState* aState,
   if (mVisibleRegion.IsEmpty() &&
       aItem->SupportsOptimizingToImage()) {
     mImage = static_cast<nsDisplayImageContainer*>(aItem);
-  } else {
+    FLB_LOG_THEBES_DECISION(this, "  Tracking image\n");
+  } else if (mImage) {
+    FLB_LOG_THEBES_DECISION(this, "  No longer tracking image\n");
     mImage = nullptr;
   }
   bool clipMatches = mItemClip == aClip;
@@ -2326,6 +2363,7 @@ ThebesLayerData::Accumulate(ContainerState* aState,
       nsRect bounds = aItem->GetBounds(aState->mBuilder, &snap);
       if (!aState->ScaleToInsidePixels(bounds, snap).Contains(aVisibleRect)) {
         isUniform = false;
+        FLB_LOG_THEBES_DECISION(this, "  Display item does not cover the visible rect\n");
       }
     }
     if (isUniform) {
@@ -2339,9 +2377,11 @@ ThebesLayerData::Accumulate(ContainerState* aState,
         // we can just blend the colors together
         mSolidColor = NS_ComposeColors(mSolidColor, uniformColor);
       } else {
+        FLB_LOG_THEBES_DECISION(this, "  Layer not a solid color: Can't blend colors togethers\n");
         mIsSolidColorInVisibleRegion = false;
       }
     } else {
+      FLB_LOG_THEBES_DECISION(this, "  Layer is not a solid color: Display item is not uniform over the visible bound\n");
       mIsSolidColorInVisibleRegion = false;
     }
 
@@ -2726,6 +2766,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
 
     NS_ASSERTION(mAppUnitsPerDevPixel == AppUnitsPerDevPixel(item),
       "items in a container layer should all have the same app units per dev pixel");
+
+    if (mBuilder->NeedToForceTransparentSurfaceForItem(item)) {
+      aList->SetNeedsTransparentSurface();
+    }
 
     nsIntRect itemVisibleRect =
       ScaleToOutsidePixels(item->GetVisibleRect(), false);
@@ -3982,15 +4026,14 @@ static gfxSize
 PredictScaleForContent(nsIFrame* aFrame, nsIFrame* aAncestorWithScale,
                        const gfxSize& aScale)
 {
-  gfx3DMatrix transform =
-    gfx3DMatrix::ScalingMatrix(aScale.width, aScale.height, 1.0);
+  Matrix4x4 transform = Matrix4x4().Scale(aScale.width, aScale.height, 1.0);
   if (aFrame != aAncestorWithScale) {
     // aTransform is applied first, then the scale is applied to the result
     transform = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestorWithScale)*transform;
   }
-  gfxMatrix transform2d;
+  Matrix transform2d;
   if (transform.CanDraw2D(&transform2d)) {
-     return transform2d.ScaleFactors(true);
+     return ThebesMatrix(transform2d).ScaleFactors(true);
   }
   return gfxSize(1.0, 1.0);
 }

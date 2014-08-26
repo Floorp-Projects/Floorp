@@ -35,8 +35,8 @@ probes::CallTrackingActive(JSContext *cx)
 inline bool
 probes::WantNativeAddressInfo(JSContext *cx)
 {
-    return (cx->reportGranularity >= JITREPORT_GRANULARITY_FUNCTION &&
-            JITGranularityRequested(cx) >= JITREPORT_GRANULARITY_FUNCTION);
+    return cx->reportGranularity >= JITREPORT_GRANULARITY_FUNCTION &&
+           JITGranularityRequested(cx) >= JITREPORT_GRANULARITY_FUNCTION;
 }
 
 inline bool

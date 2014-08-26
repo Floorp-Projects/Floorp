@@ -8,18 +8,37 @@
 interface nsIDocument;
 interface nsIURI;
 
-[uuid(cc539f1e-1ce6-4af5-bf94-195b30bde010)]
+[uuid(c7132f91-c46c-4e01-b75a-43babb254d93)]
 interface nsIServiceWorkerManager : nsISupports
 {
-  // Returns a Promise
-  nsISupports register(in nsIDOMWindow aWindow, in DOMString aScope, in DOMString aScriptURI);
+  /**
+   * Registers a ServiceWorker with script loaded from `aScriptURI` to act as
+   * the ServiceWorker for aScope.  Requires a valid entry settings object on
+   * the stack. This means you must call this from content code 'within'
+   * a window.
+   *
+   * Returns a Promise.
+   */
+  nsISupports register(in DOMString aScope, in DOMString aScriptURI);
+
+  /**
+   * Unregister an existing ServiceWorker registration for `aScope`.  Requires
+   * a valid entry settings object on the stack. This means you must call this
+   * from content code 'within' a window.
+   *
+   * Returns a Promise.
+   */
+  nsISupports unregister(in DOMString aScope);
 
   // Returns a Promise
-  nsISupports unregister(in nsIDOMWindow aWindow, in DOMString aScope);
+  nsISupports getRegistrations(in nsIDOMWindow aWindow);
 
-  // aTarget MUST be a ServiceWorkerContainer.
-  [noscript] void AddContainerEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);
-  [noscript] void RemoveContainerEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);
+  // Returns a Promise
+  nsISupports getRegistration(in nsIDOMWindow aWindow, in DOMString aScope);
+
+  // aTarget MUST be a ServiceWorkerRegistration.
+  [noscript] void AddRegistrationEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);
+  [noscript] void RemoveRegistrationEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);
 
   /**
    * Call this to request that document `aDoc` be controlled by a ServiceWorker

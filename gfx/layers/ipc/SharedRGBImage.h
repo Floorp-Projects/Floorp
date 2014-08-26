@@ -40,7 +40,7 @@ class SharedRGBImage : public Image
                      , public ISharedImage
 {
 public:
-  SharedRGBImage(ImageClient* aCompositable);
+  explicit SharedRGBImage(ImageClient* aCompositable);
 
 protected:
   ~SharedRGBImage();

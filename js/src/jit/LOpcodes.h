@@ -31,6 +31,7 @@
     _(TableSwitchV)                 \
     _(Goto)                         \
     _(NewArray)                     \
+    _(NewArrayCopyOnWrite)          \
     _(ArraySplice)                  \
     _(NewObject)                    \
     _(NewDeclEnvObject)             \
@@ -114,6 +115,7 @@
     _(AbsI)                         \
     _(AbsD)                         \
     _(AbsF)                         \
+    _(ClzI)                         \
     _(SqrtD)                        \
     _(SqrtF)                        \
     _(Atan2D)                       \
@@ -174,6 +176,7 @@
     _(Elements)                     \
     _(ConvertElementsToDoubles)     \
     _(MaybeToDoubleElement)         \
+    _(MaybeCopyElementsForWrite)    \
     _(LoadSlotV)                    \
     _(LoadSlotT)                    \
     _(StoreSlotV)                   \

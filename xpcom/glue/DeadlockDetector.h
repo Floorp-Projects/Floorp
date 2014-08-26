@@ -83,7 +83,7 @@ private:
    */
   struct OrderingEntry
   {
-    OrderingEntry(const T* aResource)
+    explicit OrderingEntry(const T* aResource)
       : mOrderedLT()        // FIXME bug 456272: set to empirical dep size?
       , mExternalRefs()
       , mResource(aResource)
@@ -296,7 +296,7 @@ public:
 
     index_type i = 0;
     size_type len = aStart->mOrderedLT.Length();
-    for (const OrderingEntry* const* it = aStart->mOrderedLT.Elements(); i < len; ++i, ++it) {
+    for (auto it = aStart->mOrderedLT.Elements(); i < len; ++i, ++it) {
       if (InTransitiveClosure(*it, aTarget)) {
         return true;
       }
@@ -347,7 +347,7 @@ public:
 
     index_type i = 0;
     size_type len = aStart->mOrderedLT.Length();
-    for (const OrderingEntry* const* it = aStart->mOrderedLT.Elements(); i < len; ++i, ++it) {
+    for (auto it = aStart->mOrderedLT.Elements(); i < len; ++i, ++it) {
       aChain->AppendElement((*it)->mResource);
       if (GetDeductionChain_Helper(*it, aTarget, aChain)) {
         return true;

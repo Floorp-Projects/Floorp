@@ -27,22 +27,16 @@ HTTP(..) == font-features-turkish.html font-features-noliga.html
 HTTP(..) == font-features-hlig-2.html font-features-hlig.html
 HTTP(..) == font-features-hlig-4.html font-features-hlig.html
 HTTP(..) != font-features-hlig-5.html font-features-hlig.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-features-ligatures-none.html font-features-noliga.html
+HTTP(..) == font-features-ligatures-none.html font-features-noliga.html
 
 # check that feature in style rule overrides @font-face
 skip-if(B2G) HTTP(..) == font-features-hlig-3.html font-features-noliga.html # bug 773482
 
-# make sure old syntax usage never interferes with new syntax usage
-HTTP(..) == font-features-oldsyntax-1.html font-features-ref.html
-HTTP(..) == font-features-oldsyntax-2.html font-features-ref.html
-HTTP(..) == font-features-oldsyntax-3.html font-features-hlig.html
-HTTP(..) == font-features-oldsyntax-4.html font-features-hlig.html
-
-# compare -moz-font-language-override rendering to lang-tagged rendering
+# compare font-language-override rendering to lang-tagged rendering
 skip-if(B2G) HTTP(..) == font-features-turkish-override-1.html font-features-turkish.html # bug 773482
 HTTP(..) == font-features-turkish-override-2.html font-features-turkish.html
 
-# check use of -moz-font-language-override to override explicit lang tag
+# check use of font-language-override to override explicit lang tag
 HTTP(..) == font-features-turkish-override-3.html font-features-ref.html
 HTTP(..) == font-features-turkish-override-4.html font-features-ref.html
 skip-if(B2G) HTTP(..) == font-features-turkish-override-5.html font-features-turkish.html # bug 773482
@@ -53,35 +47,35 @@ HTTP(..) == font-features-order-2.html font-features-noliga.html
 
 # check priority of feature settings vs. font-variant subproperty
 HTTP(..) == font-features-order-3.html font-features-noliga.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-features-order-4.html font-features-noliga.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-features-order-5.html font-features-hlig.html
+HTTP(..) == font-features-order-4.html font-features-noliga.html
+HTTP(..) == font-features-order-5.html font-features-hlig.html
 
 # check priority involving feature settings and font-variant-alternates
-pref(layout.css.font-features.enabled,true) HTTP(..) == alternates-order.html alternates-order-ref.html
+HTTP(..) == alternates-order.html alternates-order-ref.html
 
 # check that font-specific values line up with @font-face feature settings
-pref(layout.css.font-features.enabled,true) HTTP(..) == annotations.html annotations-ref.html
+HTTP(..) == annotations.html annotations-ref.html
 
 # font-variant subproperties
 # test for specific features being on and others off, based on prop values
 # (debug problems with font-variant-debug.html which displays all props)
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-alternates.html font-variant-alternates-ref.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-caps.html font-variant-caps-ref.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-east-asian.html font-variant-east-asian-ref.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-ligatures.html font-variant-ligatures-ref.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-numeric.html font-variant-numeric-ref.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-position.html font-variant-position-ref.html
+HTTP(..) == font-variant-alternates.html font-variant-alternates-ref.html
+HTTP(..) == font-variant-caps.html font-variant-caps-ref.html
+HTTP(..) == font-variant-east-asian.html font-variant-east-asian-ref.html
+HTTP(..) == font-variant-ligatures.html font-variant-ligatures-ref.html
+HTTP(..) == font-variant-numeric.html font-variant-numeric-ref.html
+HTTP(..) == font-variant-position.html font-variant-position-ref.html
 
 # font-kerning
-pref(layout.css.font-features.enabled,true) HTTP(..) != font-kerning-normal.html font-kerning-none.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != font-kerning-auto.html font-kerning-none.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-auto.html font-kerning-normal.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-normal.html font-kerning-kern.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-none.html font-kerning-nokern.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-1.html font-kerning-none.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-2.html font-kerning-normal.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-3.html font-kerning-none.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != font-kerning-table-none.html font-kerning-table-normal.html
+HTTP(..) != font-kerning-normal.html font-kerning-none.html
+HTTP(..) != font-kerning-auto.html font-kerning-none.html
+HTTP(..) == font-kerning-auto.html font-kerning-normal.html
+HTTP(..) == font-kerning-normal.html font-kerning-kern.html
+HTTP(..) == font-kerning-none.html font-kerning-nokern.html
+HTTP(..) == font-kerning-1.html font-kerning-none.html
+HTTP(..) == font-kerning-2.html font-kerning-normal.html
+HTTP(..) == font-kerning-3.html font-kerning-none.html
+HTTP(..) != font-kerning-table-none.html font-kerning-table-normal.html
 
 # sanity check for kerning - with no spaces, kerning should occur
 HTTP(..) == kerning-sanity-check-kern.html kerning-sanity-check-default.html
@@ -102,24 +96,24 @@ random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/
 
 # font-variant-caps fallback
 # -- sanity check - none of these should look like the default rendering
-pref(layout.css.font-features.enabled,true) HTTP(..) != caps-fallback-smallcaps1.html caps-fallback-default.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != caps-fallback-smallcaps2.html caps-fallback-default.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != caps-fallback-petitecaps.html caps-fallback-default.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != caps-fallback-allsmallcaps.html caps-fallback-default.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != caps-fallback-allpetitecaps.html caps-fallback-default.html
+HTTP(..) != caps-fallback-smallcaps1.html caps-fallback-default.html
+HTTP(..) != caps-fallback-smallcaps2.html caps-fallback-default.html
+HTTP(..) != caps-fallback-petitecaps.html caps-fallback-default.html
+HTTP(..) != caps-fallback-allsmallcaps.html caps-fallback-default.html
+HTTP(..) != caps-fallback-allpetitecaps.html caps-fallback-default.html
 # -- normal or fallback rendering
-pref(layout.css.font-features.enabled,true) HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smcp.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == caps-fallback-smallcaps2.html caps-fallback-smcp.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == caps-fallback-petitecaps.html caps-fallback-smcp.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-smcpc2sc.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == caps-fallback-allpetitecaps.html caps-fallback-smcpc2sc.html
+HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smcp.html
+HTTP(..) == caps-fallback-smallcaps2.html caps-fallback-smcp.html
+HTTP(..) == caps-fallback-petitecaps.html caps-fallback-smcp.html
+HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-smcpc2sc.html
+HTTP(..) == caps-fallback-allpetitecaps.html caps-fallback-smcpc2sc.html
 
 # font-variant-position fallback
-pref(layout.css.font-features.enabled,true) HTTP(..) == subsuper-fallback.html subsuper-fallback-ref.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != subsuper-fallback.html subsuper-fallback-notref1.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != subsuper-fallback.html subsuper-fallback-notref2.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != subsuper-fallback.html subsuper-fallback-notref3.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != subsuper-fallback-omega.html subsuper-fallback-omega-notref.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == subsuper-nofallback.html subsuper-nofallback-ref1.html
-pref(layout.css.font-features.enabled,true) HTTP(..) == subsuper-nofallback.html subsuper-nofallback-ref2.html
-pref(layout.css.font-features.enabled,true) HTTP(..) != subsuper-nofallback.html subsuper-nofallback-notref.html
+HTTP(..) == subsuper-fallback.html subsuper-fallback-ref.html
+HTTP(..) != subsuper-fallback.html subsuper-fallback-notref1.html
+HTTP(..) != subsuper-fallback.html subsuper-fallback-notref2.html
+HTTP(..) != subsuper-fallback.html subsuper-fallback-notref3.html
+HTTP(..) != subsuper-fallback-omega.html subsuper-fallback-omega-notref.html
+HTTP(..) == subsuper-nofallback.html subsuper-nofallback-ref1.html
+HTTP(..) == subsuper-nofallback.html subsuper-nofallback-ref2.html
+HTTP(..) != subsuper-nofallback.html subsuper-nofallback-notref.html

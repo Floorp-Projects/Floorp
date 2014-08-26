@@ -958,7 +958,6 @@ class AutoNewContext
         if (!newcx)
             return false;
         JS::ContextOptionsRef(newcx).setDontReportUncaught(true);
-        js::SetDefaultObjectForContext(newcx, JS::CurrentGlobalOrNull(cx));
 
         newRequest.emplace(newcx);
         newCompartment.emplace(newcx, JS::CurrentGlobalOrNull(cx));
@@ -2663,14 +2662,6 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
             break;
     }
 
-    AutoSaveFrameChain sfc(cx);
-    mozilla::Maybe<AutoCompartment> ac;
-    if (saveCurrent) {
-        if (!sfc.save())
-            return false;
-        ac.emplace(cx, DefaultObjectForContextOrNull(cx));
-    }
-
     AutoStableStringChars stableChars(cx);
     if (!stableChars.initTwoByte(cx, str))
         return JSTRAP_ERROR;
@@ -2691,6 +2682,12 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     if (!ComputeThis(cx, frame))
         return false;
     RootedValue thisv(cx, frame.thisValue());
+
+    AutoSaveFrameChain sfc(cx);
+    if (saveCurrent) {
+        if (!sfc.save())
+            return false;
+    }
 
     bool ok;
     {
@@ -5096,7 +5093,7 @@ static const JSClass env_class = {
  * setter and method with attached JitInfo. This object can be used to test
  * IonMonkey DOM optimizations in the shell.
  */
-static uint32_t DOM_OBJECT_SLOT = 0;
+static const uint32_t DOM_OBJECT_SLOT = 0;
 
 static bool
 dom_genericGetter(JSContext* cx, unsigned argc, JS::Value *vp);
@@ -5554,7 +5551,7 @@ ShellBuildId(JS::BuildIdCharVector *buildId)
     return buildId->append(buildid, sizeof(buildid));
 }
 
-static JS::AsmJSCacheOps asmJSCacheOps = {
+static const JS::AsmJSCacheOps asmJSCacheOps = {
     ShellOpenAsmJSCacheEntryForRead,
     ShellCloseAsmJSCacheEntryForRead,
     ShellOpenAsmJSCacheEntryForWrite,
@@ -5925,6 +5922,8 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
     if (jsCacheDir) {
         if (!op.getBoolOption("no-js-cache-per-process"))
             jsCacheDir = JS_smprintf("%s/%u", jsCacheDir, (unsigned)getpid());
+        else
+            jsCacheDir = JS_strdup(rt, jsCacheDir);
         jsCacheAsmJSPath = JS_smprintf("%s/asmjs.cache", jsCacheDir);
     }
 
@@ -5953,7 +5952,6 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         return 1;
 
     JSAutoCompartment ac(cx, glob);
-    js::SetDefaultObjectForContext(cx, glob);
 
     JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class);
     if (!envobj)
@@ -5966,10 +5964,14 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         JS_DumpCompartmentPCCounts(cx);
 
     if (!op->getBoolOption("no-js-cache-per-process")) {
-        if (jsCacheAsmJSPath)
+        if (jsCacheAsmJSPath) {
             unlink(jsCacheAsmJSPath);
-        if (jsCacheDir)
+            JS_free(cx, const_cast<char *>(jsCacheAsmJSPath));
+        }
+        if (jsCacheDir) {
             rmdir(jsCacheDir);
+            JS_free(cx, const_cast<char *>(jsCacheDir));
+        }
     }
 
     return result;

@@ -111,10 +111,6 @@ class SyncTestCommands(MachCommandBase):
             print 'Removing profile directory %s' % profile_dir
             rmtree(profile_dir)
 
-    @Command('doesthiswork', category='testing', description='Example command')
-    def doesthiswork(self):
-        print 'hi!'
-
     @Command('storage-server', category='services',
              description='Run a storage server.')
     @SyncStorageCommand

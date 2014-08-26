@@ -39,6 +39,7 @@ var PageActions = {
 
   _maybeInit: function() {
     if (!this._inited && Object.keys(this._items).length > 0) {
+      this._inited = true;
       Services.obs.addObserver(this, "PageActions:Clicked", false);
       Services.obs.addObserver(this, "PageActions:LongClicked", false);
     }
@@ -46,6 +47,7 @@ var PageActions = {
 
   _maybeUninit: function() {
     if (this._inited && Object.keys(this._items).length == 0) {
+      this._inited = false;
       Services.obs.removeObserver(this, "PageActions:Clicked", false);
       Services.obs.removeObserver(this, "PageActions:LongClicked", false);
     }

@@ -22,13 +22,13 @@ const EventEmitter = devtools.require("devtools/toolkit/event-emitter");
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
 
-
 /**
  * DevTools is a class that represents a set of developer tools, it holds a
  * set of tools and keeps track of open toolboxes in the browser.
  */
 this.DevTools = function DevTools() {
   this._tools = new Map();     // Map<toolId, tool>
+  this._themes = new Map();    // Map<themeId, theme>
   this._toolboxes = new Map(); // Map<target, toolbox>
 
   // destroy() is an observer's handler so we need to preserve context.
@@ -222,6 +222,136 @@ DevTools.prototype = {
 
     for (let [id, definition] of this._tools) {
       if (this.getToolDefinition(id)) {
+        definitions.push(definition);
+      }
+    }
+
+    return definitions.sort(this.ordinalSort);
+  },
+
+  /**
+   * Register a new theme for developer tools toolbox.
+   *
+   * A definition is a light object that holds various information about a
+   * theme.
+   *
+   * Each themeDefinition has the following properties:
+   * - id: Unique identifier for this theme (string|required)
+   * - label: Localized name for the theme to be displayed to the user
+   *          (string|required)
+   * - stylesheets: Array of URLs pointing to a CSS document(s) containing
+   *                the theme style rules (array|required)
+   * - classList: Array of class names identifying the theme within a document.
+   *              These names are set to document element when applying
+   *              the theme (array|required)
+   * - onApply: Function that is executed by the framework when the theme
+   *            is applied. The function takes the current iframe window
+   *            and the previous theme id as arguments (function)
+   * - onUnapply: Function that is executed by the framework when the theme
+   *            is unapplied. The function takes the current iframe window
+   *            and the new theme id as arguments (function)
+   */
+  registerTheme: function DT_registerTheme(themeDefinition) {
+    let themeId = themeDefinition.id;
+
+    if (!themeId) {
+      throw new Error("Invalid theme id");
+    }
+
+    if (this._themes.get(themeId)) {
+      throw new Error("Theme with the same id is already registered");
+    }
+
+    this._themes.set(themeId, themeDefinition);
+
+    this.emit("theme-registered", themeId);
+  },
+
+  /**
+   * Removes an existing theme from the list of registered themes.
+   * Needed so that add-ons can remove themselves when they are deactivated
+   *
+   * @param {string|object} theme
+   *        Definition or the id of the theme to unregister.
+   */
+  unregisterTheme: function DT_unregisterTheme(theme) {
+    let themeId = null;
+    if (typeof theme == "string") {
+      themeId = theme;
+      theme = this._themes.get(theme);
+    }
+    else {
+      themeId = theme.id;
+    }
+
+    let currTheme = Services.prefs.getCharPref("devtools.theme");
+
+    // Change the current theme if it's being dynamically removed together
+    // with the owner (bootstrapped) extension.
+    // But, do not change it if the application is just shutting down.
+    if (!Services.startup.shuttingDown && theme.id == currTheme) {
+      Services.prefs.setCharPref("devtools.theme", "light");
+
+      let data = {
+        pref: "devtools.theme",
+        newValue: "light",
+        oldValue: currTheme
+      };
+
+      gDevTools.emit("pref-changed", data);
+
+      this.emit("theme-unregistered", theme);
+    }
+
+    this._themes.delete(themeId);
+  },
+
+  /**
+   * Get a theme definition if it exists.
+   *
+   * @param {string} themeId
+   *        The id of the theme
+   *
+   * @return {ThemeDefinition|null} theme
+   *         The ThemeDefinition for the id or null.
+   */
+  getThemeDefinition: function DT_getThemeDefinition(themeId) {
+    let theme = this._themes.get(themeId);
+    if (!theme) {
+      return null;
+    }
+    return theme;
+  },
+
+  /**
+   * Get map of registered themes.
+   *
+   * @return {Map} themes
+   *         A map of the the theme definitions registered in this instance
+   */
+  getThemeDefinitionMap: function DT_getThemeDefinitionMap() {
+    let themes = new Map();
+
+    for (let [id, definition] of this._themes) {
+      if (this.getThemeDefinition(id)) {
+        themes.set(id, definition);
+      }
+    }
+
+    return themes;
+  },
+
+  /**
+   * Get registered themes definitions sorted by ordinal value.
+   *
+   * @return {Array} themes
+   *         A sorted array of the theme definitions registered in this instance
+   */
+  getThemeDefinitionArray: function DT_getThemeDefinitionArray() {
+    let definitions = [];
+
+    for (let [id, definition] of this._themes) {
+      if (this.getThemeDefinition(id)) {
         definitions.push(definition);
       }
     }

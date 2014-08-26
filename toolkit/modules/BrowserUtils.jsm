@@ -13,6 +13,15 @@ Cu.import("resource://gre/modules/Services.jsm");
 this.BrowserUtils = {
 
   /**
+   * Prints arguments separated by a space and appends a new line.
+   */
+  dumpLn: function (...args) {
+    for (let a of args)
+      dump(a + " ");
+    dump("\n");
+  },
+
+  /**
    * urlSecurityCheck: JavaScript wrapper for checkLoadURIWithPrincipal
    * and checkLoadURIStrWithPrincipal.
    * If |aPrincipal| is not allowed to link to |aURL|, this function throws with
@@ -112,4 +121,31 @@ this.BrowserUtils = {
     return rect;
   },
 
+  /**
+   * Given an element potentially within a subframe, calculate the offsets
+   * up to the top level browser.
+   *
+   * @param aTopLevelWindow content window to calculate offsets to.
+   * @param aElement The element in question.
+   * @return [targetWindow, offsetX, offsetY]
+   */
+  offsetToTopLevelWindow: function (aTopLevelWindow, aElement) {
+    let offsetX = 0;
+    let offsetY = 0;
+    let element = aElement;
+    while (element &&
+           element.ownerDocument &&
+           element.ownerDocument.defaultView != aTopLevelWindow) {
+      element = element.ownerDocument.defaultView.frameElement;
+      let rect = element.getBoundingClientRect();
+      offsetX += rect.left;
+      offsetY += rect.top;
+    }
+    let win = null;
+    if (element == aElement)
+      win = aTopLevelWindow;
+    else
+      win = element.contentDocument.defaultView;
+    return { targetWindow: win, offsetX: offsetX, offsetY: offsetY };
+  },
 };

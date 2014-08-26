@@ -15,7 +15,7 @@ class nsCString;
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 
-[scriptable, builtinclass, uuid(7836a872-e50c-4e43-8224-fd08a8d09699)]
+[scriptable, builtinclass, uuid(89b819dc-31b0-4d09-915a-66f8a3703483)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
 
@@ -83,6 +83,7 @@ interface nsISSLSocketControl : nsISupports {
     const short SSL_VERSION_UNKNOWN = -1;
 
     [infallible] readonly attribute short SSLVersionUsed;
+    [infallible] readonly attribute short SSLVersionOffered;
 
     /* These values match the NSS defined values in sslt.h */
     const short SSL_MAC_UNKNOWN = -1;

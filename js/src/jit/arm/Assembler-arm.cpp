@@ -808,8 +808,14 @@ TraceOneDataRelocation(JSTracer *trc, Iter *iter, MacroAssemblerARM *masm)
     // No barrier needed since these are constants.
     gc::MarkGCThingUnbarriered(trc, &ptr, "ion-masm-ptr");
 
-    if (ptr != prior)
+    if (ptr != prior) {
         masm->ma_movPatchable(Imm32(int32_t(ptr)), dest, Assembler::Always, rs, ins);
+        // L_LDR won't cause any instructions to be updated.
+        if (rs != Assembler::L_LDR) {
+            AutoFlushICache::flush(uintptr_t(ins), 4);
+            AutoFlushICache::flush(uintptr_t(ins->next()), 4);
+        }
+    }
 }
 
 static void
@@ -1543,6 +1549,13 @@ Assembler::as_udiv(Register rd, Register rn, Register rm, Condition c)
 {
     return writeInst(0x0730f010 | c | RN(rd) | RM(rm) | rn.code());
 }
+
+BufferOffset
+Assembler::as_clz(Register dest, Register src, Condition c, Instruction *instdest)
+{
+    return writeInst(RD(dest) | src.code() | c | 0x016f0f10, (uint32_t*)instdest);
+}
+
 
 // Data transfer instructions: ldr, str, ldrb, strb. Using an int to
 // differentiate between 8 bits and 32 bits is overkill, but meh.

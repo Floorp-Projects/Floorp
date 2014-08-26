@@ -46,11 +46,11 @@ load 880384.html
 load 880404.html
 load 880724.html
 load 881775.html
-test-pref(media.webvtt.enabled,true) load 882549.html
+load 882549.html
 load 882956.html
 load 884459.html
 load 889042.html
-test-pref(media.webvtt.enabled,true) load 894104.html
+load 894104.html
 load 907986-1.html
 load 907986-2.html
 load 907986-3.html
@@ -71,9 +71,9 @@ load 1015662.html
 skip-if(Android||B2G) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1048863
 load buffer-source-ended-1.html
 HTTP load media-element-source-seek-1.html
+load offline-buffer-source-ended-1.html
 load oscillator-ended-1.html
 load oscillator-ended-2.html
-load offline-buffer-source-ended-1.html
 include ../../mediasource/test/crashtests/crashtests.list
 
 # This needs to run at the end to avoid leaking busted state into other tests.

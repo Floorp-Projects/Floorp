@@ -475,8 +475,7 @@ nsDumpUtils::OpenTempFile(const nsACString& aFilename, nsIFile** aFile,
       return rv;
     }
 
-    while (chmod(dirPath.get(), 0777) == -1 && errno == EINTR)
-    {
+    while (chmod(dirPath.get(), 0777) == -1 && errno == EINTR) {
     }
   }
 #endif
@@ -503,8 +502,7 @@ nsDumpUtils::OpenTempFile(const nsACString& aFilename, nsIFile** aFile,
     return rv;
   }
 
-  while (chmod(path.get(), 0666) == -1 && errno == EINTR)
-  {
+  while (chmod(path.get(), 0666) == -1 && errno == EINTR) {
   }
 #endif
 

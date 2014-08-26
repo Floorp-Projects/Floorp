@@ -75,6 +75,8 @@ function OptionsPanel(iframeWindow, toolbox) {
   this.isReady = false;
 
   this._prefChanged = this._prefChanged.bind(this);
+  this._themeRegistered = this._themeRegistered.bind(this);
+  this._themeUnregistered = this._themeUnregistered.bind(this);
 
   this._addListeners();
 
@@ -101,7 +103,9 @@ OptionsPanel.prototype = {
     return targetPromise.then(() => {
       this.setupToolsList();
       this.setupToolbarButtonsList();
+      this.setupThemeList();
       this.populatePreferences();
+      this.updateDefaultTheme();
 
       this._disableJSClicked = this._disableJSClicked.bind(this);
 
@@ -119,10 +123,14 @@ OptionsPanel.prototype = {
 
   _addListeners: function() {
     gDevTools.on("pref-changed", this._prefChanged);
+    gDevTools.on("theme-registered", this._themeRegistered);
+    gDevTools.on("theme-unregistered", this._themeUnregistered);
   },
 
   _removeListeners: function() {
     gDevTools.off("pref-changed", this._prefChanged);
+    gDevTools.off("theme-registered", this._themeRegistered);
+    gDevTools.off("theme-unregistered", this._themeUnregistered);
   },
 
   _prefChanged: function(event, data) {
@@ -131,6 +139,22 @@ OptionsPanel.prototype = {
       let cbx = this.panelDoc.getElementById("devtools-disable-cache");
 
       cbx.checked = cacheDisabled;
+    }
+    else if (data.pref === "devtools.theme") {
+      this.updateCurrentTheme();
+    }
+  },
+
+  _themeRegistered: function(event, themeId) {
+    this.setupThemeList();
+  },
+
+  _themeUnregistered: function(event, theme) {
+    let themeBox = this.panelDoc.getElementById("devtools-theme-box");
+    let themeOption = themeBox.querySelector("[value=" + theme.id + "]");
+
+    if (themeOption) {
+      themeBox.removeChild(themeOption);
     }
   },
 
@@ -229,6 +253,26 @@ OptionsPanel.prototype = {
     this.panelWin.focus();
   },
 
+  setupThemeList: function() {
+    let themeBox = this.panelDoc.getElementById("devtools-theme-box");
+    themeBox.textContent = "";
+
+    let createThemeOption = theme => {
+      let radio = this.panelDoc.createElement("radio");
+      radio.setAttribute("value", theme.id);
+      radio.setAttribute("label", theme.label);
+      return radio;
+    };
+
+    // Populating the default theme list
+    let themes = gDevTools.getThemeDefinitionArray();
+    for (let theme of themes) {
+      themeBox.appendChild(createThemeOption(theme));
+    }
+
+    this.updateCurrentTheme();
+  },
+
   populatePreferences: function() {
     let prefCheckboxes = this.panelDoc.querySelectorAll("checkbox[data-pref]");
     for (let checkbox of prefCheckboxes) {
@@ -258,9 +302,13 @@ OptionsPanel.prototype = {
           pref: this.getAttribute("data-pref"),
           newValue: this.selectedItem.getAttribute("value")
         };
+
         data.oldValue = GetPref(data.pref);
         SetPref(data.pref, data.newValue);
-        gDevTools.emit("pref-changed", data);
+
+        if (data.newValue != data.oldValue) {
+          gDevTools.emit("pref-changed", data);
+        }
       }.bind(radiogroup));
     }
     let prefMenulists = this.panelDoc.querySelectorAll("menulist[data-pref]");
@@ -290,6 +338,25 @@ OptionsPanel.prototype = {
 
       this._populateDisableJSCheckbox();
     });
+  },
+
+  updateDefaultTheme: function() {
+    // Make sure a theme is set in case the previous one coming from
+    // an extension isn't available anymore.
+    let themeBox = this.panelDoc.getElementById("devtools-theme-box");
+    if (themeBox.selectedIndex == -1) {
+      themeBox.selectedItem = themeBox.querySelector("[value=light]");
+    }
+  },
+
+  updateCurrentTheme: function() {
+    let currentTheme = GetPref("devtools.theme");
+    let themeBox = this.panelDoc.getElementById("devtools-theme-box");
+    let themeOption = themeBox.querySelector("[value=" + currentTheme + "]");
+
+    if (themeOption) {
+      themeBox.selectedItem = themeOption;
+    }
   },
 
   _populateDisableJSCheckbox: function() {

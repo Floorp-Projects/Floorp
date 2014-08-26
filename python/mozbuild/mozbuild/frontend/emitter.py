@@ -557,7 +557,6 @@ class TreeMetadataEmitter(LoggingMixin):
             ('GENERATED_EVENTS_WEBIDL_FILES', GeneratedEventWebIDLFile),
             ('GENERATED_WEBIDL_FILES', GeneratedWebIDLFile),
             ('IPDL_SOURCES', IPDLFile),
-            ('LOCAL_INCLUDES', LocalInclude),
             ('GENERATED_INCLUDES', GeneratedInclude),
             ('PREPROCESSED_TEST_WEBIDL_FILES', PreprocessedTestWebIDLFile),
             ('PREPROCESSED_WEBIDL_FILES', PreprocessedWebIDLFile),
@@ -568,6 +567,20 @@ class TreeMetadataEmitter(LoggingMixin):
         for context_var, klass in simple_lists:
             for name in context.get(context_var, []):
                 yield klass(context, name)
+
+        for local_include in context.get('LOCAL_INCLUDES', []):
+            if local_include.startswith('/'):
+                path = context.config.topsrcdir
+                relative_include = local_include[1:]
+            else:
+                path = context.srcdir
+                relative_include = local_include
+
+            actual_include = os.path.join(path, relative_include)
+            if not os.path.exists(actual_include):
+                raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
+                    'does not exist: %s (resolved to %s)' % (local_include, actual_include), context)
+            yield LocalInclude(context, local_include)
 
         if context.get('FINAL_TARGET') or context.get('XPI_NAME') or \
                 context.get('DIST_SUBDIR'):

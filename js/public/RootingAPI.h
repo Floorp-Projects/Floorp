@@ -1236,23 +1236,6 @@ class JS_PUBLIC_API(ObjectPtr)
 } /* namespace JS */
 
 namespace js {
-
-/* Base class for automatic read-only object rooting during compilation. */
-class CompilerRootNode
-{
-  protected:
-    explicit CompilerRootNode(js::gc::Cell *ptr) : next(nullptr), ptr_(ptr) {}
-
-  public:
-    void **address() { return (void **)&ptr_; }
-
-  public:
-    CompilerRootNode *next;
-
-  protected:
-    js::gc::Cell *ptr_;
-};
-
 namespace gc {
 
 template <typename T, typename TraceCallbacks>

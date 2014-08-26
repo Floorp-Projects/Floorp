@@ -41,7 +41,7 @@ public:
 // Perform BeginFrame and EndFrame automatically
 class LayerScopeAutoFrame {
 public:
-    LayerScopeAutoFrame(int64_t aFrameStamp);
+    explicit LayerScopeAutoFrame(int64_t aFrameStamp);
     ~LayerScopeAutoFrame();
 
 private:

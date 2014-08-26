@@ -253,6 +253,17 @@
 
     <style name="Widget.Home.HistoryPanelTitle" parent="Widget.Home.HistoryTabIndicator"/>
 
+    <style name="Widget.Onboard.Start.Button" parent="Widget.BaseButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:paddingTop">15dp</item>
+        <item name="android:paddingBottom">15dp</item>
+        <item name="android:background">@drawable/onboard_start_button</item>
+        <item name="android:textColor">#4A90E2</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
     <!--
         TextAppearance
         Note: Gecko uses light theme as default, while Android uses dark.
@@ -767,6 +778,19 @@
 
     <style name="FloatingHintEditText" parent="android:style/Widget.EditText">
         <item name="android:paddingTop">0dp</item>
+    </style>
+
+    <style name="OnboardStartLayout">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+
+    <style name="OnboardStartTextAppearance">
+        <item name="android:textColor">#5F636B</item>
+    </style>
+
+    <style name="OnboardStartTextAppearance.Subtext">
+        <item name="android:textSize">18sp</item>
     </style>
 
 </resources>

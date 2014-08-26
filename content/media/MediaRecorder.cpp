@@ -70,10 +70,12 @@ NS_IMPL_RELEASE_INHERITED(MediaRecorder, DOMEventTargetHelper)
  *    Release session resource and remove associated streams from MSG.
  *
  * Lifetime of MediaRecorder and Session objects.
- * 1) MediaRecorder creates a Session in MediaRecorder::Start function.
- *    And the Session registers itself to ShutdownObserver and also holds a
- *    MediaRecorder. Therefore, the reference dependency in gecko is:
- *    ShutdownObserver -> Session -> MediaRecorder
+ * 1) MediaRecorder creates a Session in MediaRecorder::Start function and holds
+ *    a reference to Session. Then the Session registers itself to
+ *    ShutdownObserver and also holds a reference to MediaRecorder.
+ *    Therefore, the reference dependency in gecko is:
+ *    ShutdownObserver -> Session <-> MediaRecorder, note that there is a cycle
+ *    reference between Session and MediaRecorder.
  * 2) A Session is destroyed in DestroyRunnable after MediaRecorder::Stop being called
  *    _and_ all encoded media data been passed to OnDataAvailable handler.
  * 3) MediaRecorder::Stop is called by user or the document is going to
@@ -150,18 +152,11 @@ class MediaRecorder::Session: public nsIObserver
   class ExtractRunnable : public nsRunnable
   {
   public:
-    ExtractRunnable(already_AddRefed<Session>&& aSession)
+    ExtractRunnable(Session* aSession)
       : mSession(aSession) {}
 
     ~ExtractRunnable()
-    {
-      if (mSession) {
-        NS_WARNING("~ExtractRunnable something wrong the mSession should null");
-        nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-        NS_WARN_IF_FALSE(mainThread, "Couldn't get the main thread!");
-        NS_ProxyRelease(mainThread, mSession);
-      }
-    }
+    {}
 
     NS_IMETHODIMP Run()
     {
@@ -170,16 +165,15 @@ class MediaRecorder::Session: public nsIObserver
       LOG(PR_LOG_DEBUG, ("Session.ExtractRunnable shutdown = %d", mSession->mEncoder->IsShutdown()));
       if (!mSession->mEncoder->IsShutdown()) {
         mSession->Extract(false);
-        nsRefPtr<nsIRunnable> event = new ExtractRunnable(mSession.forget());
+        nsRefPtr<nsIRunnable> event = new ExtractRunnable(mSession);
         if (NS_FAILED(NS_DispatchToCurrentThread(event))) {
           NS_WARNING("Failed to dispatch ExtractRunnable to encoder thread");
         }
       } else {
         // Flush out remaining encoded data.
         mSession->Extract(true);
-        // Destroy this Session object in main thread.
         if (NS_FAILED(NS_DispatchToMainThread(
-                        new DestroyRunnable(mSession.forget())))) {
+                        new DestroyRunnable(mSession)))) {
           MOZ_ASSERT(false, "NS_DispatchToMainThread DestroyRunnable failed");
         }
       }
@@ -224,7 +218,7 @@ class MediaRecorder::Session: public nsIObserver
   class DestroyRunnable : public nsRunnable
   {
   public:
-    DestroyRunnable(already_AddRefed<Session>&& aSession)
+    DestroyRunnable(Session* aSession)
       : mSession(aSession) {}
 
     NS_IMETHODIMP Run()
@@ -246,8 +240,7 @@ class MediaRecorder::Session: public nsIObserver
         ErrorResult result;
         mSession->mStopIssued = true;
         recorder->Stop(result);
-        if (NS_FAILED(NS_DispatchToMainThread(
-                        new DestroyRunnable(mSession.forget())))) {
+        if (NS_FAILED(NS_DispatchToMainThread(new DestroyRunnable(mSession)))) {
           MOZ_ASSERT(false, "NS_DispatchToMainThread failed");
         }
         return NS_OK;
@@ -257,8 +250,7 @@ class MediaRecorder::Session: public nsIObserver
       mSession->mMimeType = NS_LITERAL_STRING("");
       recorder->SetMimeType(mSession->mMimeType);
       recorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
-      recorder->RemoveSession(mSession);
-      mSession->mRecorder = nullptr;
+      mSession->BreakCycle();
       return NS_OK;
     }
 
@@ -454,8 +446,7 @@ private:
     // shutdown notification and stop Read Thread.
     nsContentUtils::RegisterShutdownObserver(this);
 
-    already_AddRefed<Session> session(this); // addref in MediaRecorder::Start
-    nsRefPtr<nsIRunnable> event = new ExtractRunnable(Move(session));
+    nsRefPtr<nsIRunnable> event = new ExtractRunnable(this);
     if (NS_FAILED(mReadThread->Dispatch(event, NS_DISPATCH_NORMAL))) {
       NS_WARNING("Failed to dispatch ExtractRunnable at beginning");
     }
@@ -472,9 +463,7 @@ private:
     if (NS_FAILED(NS_DispatchToMainThread(new PushBlobRunnable(this)))) {
       MOZ_ASSERT(false, "NS_DispatchToMainThread PushBlobRunnable failed");
     }
-    // Destroy this session object in main thread.
-    already_AddRefed<Session> session(this); // addref in MediaRecorder::Start
-    if (NS_FAILED(NS_DispatchToMainThread(new DestroyRunnable(Move(session))))) {
+    if (NS_FAILED(NS_DispatchToMainThread(new DestroyRunnable(this)))) {
       MOZ_ASSERT(false, "NS_DispatchToMainThread DestroyRunnable failed");
     }
   }
@@ -502,14 +491,21 @@ private:
         mReadThread->Shutdown();
         mReadThread = nullptr;
       }
-      if (mRecorder) {
-        mRecorder->RemoveSession(this);
-        mRecorder = nullptr;
-      }
+      BreakCycle();
       Stop();
     }
 
     return NS_OK;
+  }
+
+  // Break the cycle reference between Session and MediaRecorder.
+  void BreakCycle()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mRecorder) {
+      mRecorder->RemoveSession(this);
+      mRecorder = nullptr;
+    }
   }
 
 private:
@@ -640,16 +636,8 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
 
   mState = RecordingState::Recording;
   // Start a session.
-  // Add session's reference here and pass to ExtractRunnable since the
-  // MediaRecorder doesn't hold any reference to Session. Also
-  // the DoSessionEndTask need this reference for DestroyRunnable.
-  // Note that the reference count is not balance here due to the
-  // DestroyRunnable will destroyed the last reference.
-  nsRefPtr<Session> session = new Session(this, timeSlice);
-  Session* rawPtr;
-  session.forget(&rawPtr);
   mSessions.AppendElement();
-  mSessions.LastElement() = rawPtr;
+  mSessions.LastElement() = new Session(this, timeSlice);
   mSessions.LastElement()->Start();
 }
 

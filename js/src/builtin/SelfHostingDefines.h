@@ -36,4 +36,7 @@
 #define ATTR_NONCONFIGURABLE    0x10
 #define ATTR_NONWRITABLE        0x20
 
+// Stores the private WeakMap slot used for WeakSets
+#define WEAKSET_MAP_SLOT 0
+
 #endif

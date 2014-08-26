@@ -13,6 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667388
   <![CDATA[
 
   // Setup.
+  const Cu = Components.utils;
   SimpleTest.waitForExplicitFinish();
   window.testObject = { myNumber: 42,
                         myDomain: window.location.domain };
@@ -25,34 +26,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667388
     // Mark this frame as loaded.
     framesLoaded[id] = true;
 
-    // Allow it to call |is|.
+    // Allow it to call various helpers.
     window.frames[id].wrappedJSObject.is = is;
+    window.frames[id].wrappedJSObject.ok = ok;
+    window.frames[id].wrappedJSObject.info = info;
 
     // If all the frames are loaded, start the test.
     if (framesLoaded[1] && framesLoaded[2] && framesLoaded[3])
       startTest();
   }
 
+  function reject(e) {
+    ok(false, "Rejected Promise: " + e);
+    SimpleTest.finish();
+  }
+
   function startTest() {
 
-    // Test interaction between chrome and content.
-    runChromeContentTest(window.frames[1]);
-
-    // Try same origin.
-    runContentContentTest(window.frames[1], window.frames[2],
-                          true, "Should be able to clone same-origin");
-
-    // Try cross-origin.
-    runContentContentTest(window.frames[2], window.frames[3],
-                          false, "Should not be able to clone cross-origin");
-
-    // Colaborate with document.domain, then try again.
-    frames[2].document.domain = 'example.org';
-    frames[3].document.domain = 'example.org';
-    runContentContentTest(window.frames[2], window.frames[3],
-                          true, "Should be able to clone cross-origin with document.domain")
-
-    SimpleTest.finish();
+    runChromeContentTest(window.frames[1]).then(
+    runContentContentTest.bind(null, window.frames[1], window.frames[2],
+                               true, "Should be able to clone same-origin"), reject).then(
+    runContentContentTest.bind(null, window.frames[2], window.frames[3],
+                               false, "Should not be able to clone cross-origin"), reject).then(function() {
+      // Colaborate with document.domain, then try again.
+      frames[2].document.domain = 'example.org';
+      frames[3].document.domain = 'example.org';
+      return runContentContentTest(window.frames[2], window.frames[3],
+                                   true, "Should be able to clone cross-origin with document.domain")
+    }, reject).then(SimpleTest.finish.bind(SimpleTest), reject);
   }
 
   // Tests cloning between chrome and content.
@@ -63,12 +64,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667388
                true,
                "Chrome should be able to clone content object");
 
-    // Content should not be able to clone a chrome object.
-    //
-    // Note that because we're using |wrappedJSObject| here, the subject
-    // principal is clamed to the principal of the iframe, which is what we want.
-    contentWin.wrappedJSObject.tryToClone(window.testObject, false,
-                                          "Content should not be able to clone chrome object");
+    // COWs without __exposedProps__ silently deny property gets. So Content
+    // should be able to clone a COW, but the result of the clone should be empty.
+    var p = contentWin.wrappedJSObject.tryToClone(window.testObject, true,
+                                                  "Content should be able to clone COW");
+    return new Promise(function(resolve) {
+      p.then(function(cloneResult) {
+        is(Cu.waiveXrays(cloneResult).toSource(), "({})", "Empty COW clone");
+        resolve();
+      });
+    });
   }
 
   // Test cloning between content and content.
@@ -81,24 +86,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667388
   // long as the security wrappers check documentDomainMakesSameOrigin directly
   // for the puncture case rather than checking IsTransparent(), but it still
   // gives rise to a situation that wouldn't really happen in practice.
-  //
-  // A more serious issues is that we don't/can't test the Xray wrapper path,
-  // because the only native objects that we successfully send through
-  // structured clone don't force a parent in PreCreate, and so we _can't_
-  // have security wrappers around them (we get a new XPCWN in each
-  // compartment). Since the case can't happen, we can't write tests for it.
-  // But when it can happen (ie, we fix PreCreate for File, FileList, Blob, etc),
-  // we want tests right away, because this stuff is very security-sensitive.
-  // So we set this test up to fail when things are fixed, so that the someone
-  // will notice and properly augment this test to cover native objects.
   function runContentContentTest(win1, win2, shouldSucceed, msg) {
-    win1.wrappedJSObject.tryToClone(win2.wrappedJSObject.testObject,
-                                    shouldSucceed, msg);
 
-    var fixMsg = "If this fails, you fixed PreCreate. That's a good thing, ";
-    fixMsg += "but now we need some test coverage. See the above comment.";
-    win1.wrappedJSObject.tryToClone(win2.wrappedJSObject.blob, true, fixMsg);
-    win1.wrappedJSObject.tryToClone(win2.wrappedJSObject.filelist, true, fixMsg);
+    var p = win1.wrappedJSObject.tryToClone(win2.wrappedJSObject.testObject,
+                                            shouldSucceed, msg);
+    if (!shouldSucceed)
+      return;
+    return new Promise(function(resolve) {
+      p.then(function(cloneResult) {
+        is(Cu.waiveXrays(cloneResult).toSource(), win2.wrappedJSObject.testObject.toSource(),
+           "Clone should create an identical object");
+        resolve();
+      });
+    });
   }
 
   function tryToClone(obj, shouldSucceed, message) {

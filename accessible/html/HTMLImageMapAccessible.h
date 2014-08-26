@@ -16,7 +16,7 @@ namespace a11y {
 /**
  * Used for HTML image maps.
  */
-class HTMLImageMapAccessible : public ImageAccessibleWrap
+class HTMLImageMapAccessible MOZ_FINAL : public ImageAccessibleWrap
 {
 public:
   HTMLImageMapAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -52,7 +52,7 @@ protected:
 /**
  * Accessible for image map areas - must be child of image.
  */
-class HTMLAreaAccessible : public HTMLLinkAccessible
+class HTMLAreaAccessible MOZ_FINAL : public HTMLLinkAccessible
 {
 public:
 

@@ -71,17 +71,21 @@ import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.util.UIAsyncTask;
 import org.mozilla.gecko.widget.ButtonToast;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -97,6 +101,7 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.InputDevice;
@@ -144,6 +149,7 @@ public class BrowserApp extends GeckoApp
 
     // Request ID for startActivityForResult.
     private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
+    public static final String ACTION_NEW_PROFILE = "org.mozilla.gecko.NEW_PROFILE";
 
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
@@ -206,6 +212,8 @@ public class BrowserApp extends GeckoApp
     private SharedPreferencesHelper mSharedPreferencesHelper;
 
     private OrderedBroadcastHelper mOrderedBroadcastHelper;
+
+    private BroadcastReceiver mOnboardingReceiver;
 
     private BrowserHealthReporter mBrowserHealthReporter;
 
@@ -431,9 +439,9 @@ public class BrowserApp extends GeckoApp
     }
 
     private void handleReaderFaviconRequest(final String url) {
-        (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
+        (new UIAsyncTask.WithoutParams<String>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            public String doInBackground(Void... params) {
+            public String doInBackground() {
                 return Favicons.getFaviconURLForPageURL(url);
             }
 
@@ -549,6 +557,8 @@ public class BrowserApp extends GeckoApp
             "Updater:Launch",
             "BrowserToolbar:Visibility");
 
+        registerOnboardingReceiver(this);
+
         Distribution distribution = Distribution.init(this);
 
         // Init suggested sites engine in BrowserDB.
@@ -602,6 +612,25 @@ public class BrowserApp extends GeckoApp
         }
     }
 
+    private void registerOnboardingReceiver(Context context) {
+        final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
+
+        // Receiver for launching first run start pane on new profile creation.
+        mOnboardingReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                launchStartPane(BrowserApp.this);
+            }
+        };
+
+        lbm.registerReceiver(mOnboardingReceiver, new IntentFilter(ACTION_NEW_PROFILE));
+    }
+
+    private void launchStartPane(Context context) {
+         final Intent startIntent = new Intent(context, StartPane.class);
+         context.startActivity(startIntent);
+     }
+
     private Class<?> getMediaPlayerManager() {
         if (AppConstants.MOZ_MEDIA_PLAYER) {
             try {
@@ -648,6 +677,9 @@ public class BrowserApp extends GeckoApp
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
             "Prompt:ShowTop");
+
+        final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
+        lbm.unregisterReceiver(mOnboardingReceiver);
     }
 
     private void setBrowserToolbarListeners() {
@@ -1335,7 +1367,7 @@ public class BrowserApp extends GeckoApp
                     BrowserDB.getCount(getContentResolver(), "favicons"));
             Telemetry.HistogramAdd("FENNEC_THUMBNAILS_COUNT",
                     BrowserDB.getCount(getContentResolver(), "thumbnails"));
-
+            Telemetry.HistogramAdd("BROWSER_IS_USER_DEFAULT", (isDefaultBrowser() ? 1 : 0));
         } else if ("Updater:Launch".equals(event)) {
             handleUpdaterLaunch();
 
@@ -1345,6 +1377,23 @@ public class BrowserApp extends GeckoApp
         } else {
             super.handleMessage(event, message, callback);
         }
+    }
+
+    /**
+     * Use a dummy Intent to do a default browser check.
+     *
+     * @return true if this package is the default browser on this device, false otherwise.
+     */
+    private boolean isDefaultBrowser() {
+        final Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.mozilla.org"));
+        final ResolveInfo info = getPackageManager().resolveActivity(viewIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        if (info == null) {
+            // No default is set
+            return false;
+        }
+
+        final String packageName = info.activityInfo.packageName;
+        return (TextUtils.equals(packageName, getPackageName()));
     }
 
     @Override
@@ -2468,6 +2517,9 @@ public class BrowserApp extends GeckoApp
         final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
         share.setVisible(!inGuestMode);
         share.setEnabled(StringUtils.isShareableUrl(url) && !inGuestMode);
+        MenuUtils.safeSetEnabled(aMenu, R.id.apps, !inGuestMode);
+        MenuUtils.safeSetEnabled(aMenu, R.id.addons, !inGuestMode);
+        MenuUtils.safeSetEnabled(aMenu, R.id.downloads, !inGuestMode);
 
         // NOTE: Use MenuUtils.safeSetEnabled because some actions might
         // be on the BrowserToolbar context menu
@@ -2526,7 +2578,8 @@ public class BrowserApp extends GeckoApp
 
         // Disable save as PDF for about:home and xul pages.
         saveAsPDF.setEnabled(!(isAboutHome(tab) ||
-                               tab.getContentType().equals("application/vnd.mozilla.xul+xml")));
+                               tab.getContentType().equals("application/vnd.mozilla.xul+xml") ||
+                               tab.getContentType().startsWith("video/")));
 
         // Disable find in page for about:home, since it won't work on Java content.
         findInPage.setEnabled(!isAboutHome(tab));
@@ -2797,9 +2850,9 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        (new UiAsyncTask<Void, Void, Boolean>(ThreadUtils.getBackgroundHandler()) {
+        (new UIAsyncTask.WithoutParams<Boolean>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            public synchronized Boolean doInBackground(Void... params) {
+            public synchronized Boolean doInBackground() {
                 // Check to see how many times the app has been launched.
                 SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
                 String keyName = getPackageName() + ".feedback_launch_count";
@@ -2841,9 +2894,9 @@ public class BrowserApp extends GeckoApp
     }
 
     private void getLastUrl() {
-        (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
+        (new UIAsyncTask.WithoutParams<String>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            public synchronized String doInBackground(Void... params) {
+            public synchronized String doInBackground() {
                 // Get the most recent URL stored in browser history.
                 String url = "";
                 Cursor c = null;

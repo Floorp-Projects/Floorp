@@ -15,12 +15,16 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
  * Entry point for HTTP requests.
  */
 function handleRequest(request, response) {
-  switch (request.queryString) {
+  // Look at the query string but ignore past the encoded ? when deciding on the handler.
+  switch (request.queryString.replace(/%3F.*/,"")) {
     case "/setup_params":
       setup_params(request, response);
       return;
     case "/fxa-oauth/params":
       params(request, response);
+      return;
+    case encodeURIComponent("/oauth/authorization"):
+      oauth_authorization(request, response);
       return;
     case "/fxa-oauth/token":
       token(request, response);
@@ -87,6 +91,16 @@ function params(request, response) {
   setSharedState("/fxa-oauth/params", JSON.stringify(params));
   response.setHeader("Content-Type", "application/json; charset=utf-8", false);
   response.write(JSON.stringify(params, null, 2));
+}
+
+/**
+ * GET /oauth/authorization endpoint for the test params.
+ *
+ * Redirect to a test page that uses WebChannel to complete the web flow.
+ */
+function oauth_authorization(request, response) {
+  response.setStatusLine(request.httpVersion, 302, "Found");
+  response.setHeader("Location", "browser_fxa_oauth.html");
 }
 
 /**

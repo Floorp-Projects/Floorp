@@ -9,8 +9,14 @@
 #include "nsAutoPtr.h"
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* GetDemuxerLog();
-#define WARN(...) PR_LOG(GetDemuxerLog(), PR_LOG_WARNING, (__VA_ARGS__))
+PRLogModuleInfo* GetAppleMediaLog() {
+  static PRLogModuleInfo* log = nullptr;
+  if (!log) {
+    log = PR_NewLogModule("AppleMedia");
+  }
+  return log;
+}
+#define WARN(...) PR_LOG(GetAppleMediaLog(), PR_LOG_WARNING, (__VA_ARGS__))
 #else
 #define WARN(...)
 #endif

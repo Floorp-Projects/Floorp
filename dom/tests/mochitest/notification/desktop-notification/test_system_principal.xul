@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874090
 
   var mockAlertsService = {
     showAlertNotification: function(imageUrl, title, text, textClickable,
-                                    cookie, alertListener, name, dir, lang) {
+                                    cookie, alertListener, name, dir, lang, data) {
       ok(true, "System principal was granted permission and is able to call showAlertNotification.");
       unregisterMock();
       SimpleTest.finish();

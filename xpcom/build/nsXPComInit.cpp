@@ -129,6 +129,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports*, REFNSIID, void**);
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/AvailableMemoryTracker.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/CountingAllocatorBase.h"
 #include "mozilla/SystemMemoryReporter.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -447,8 +448,9 @@ CountingAllocatorBase<VPXReporter>::sAmount(0);
 #endif /* MOZ_VPX */
 
 #ifdef MOZ_WEBM
-class NesteggReporter MOZ_FINAL : public nsIMemoryReporter
-                                , public CountingAllocatorBase<NesteggReporter>
+class NesteggReporter MOZ_FINAL
+  : public nsIMemoryReporter
+  , public CountingAllocatorBase<NesteggReporter>
 {
 public:
   NS_DECL_ISUPPORTS
@@ -668,7 +670,10 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
 #ifdef MOZ_WEBM
   // And for libnestegg.
-  nestegg_set_halloc_func(NesteggReporter::CountingRealloc);
+  // libnestegg expects that its realloc implementation will free
+  // the pointer argument when a size of 0 is passed in, so we need
+  // the special version of the counting realloc.
+  nestegg_set_halloc_func(NesteggReporter::CountingFreeingRealloc);
 #endif
 
   // Initialize the JS engine.
@@ -814,7 +819,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
 
     nsRefPtr<nsObserverService> observerService;
     CallGetService("@mozilla.org/observer-service;1",
-                   (nsObserverService**) getter_AddRefs(observerService));
+                   (nsObserverService**)getter_AddRefs(observerService));
 
     if (observerService) {
       observerService->NotifyObservers(nullptr,

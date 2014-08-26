@@ -8,7 +8,7 @@
     <style name="UrlBar.ImageButton.Forward">
         <item name="android:contentDescription">@string/forward</item>
         <item name="android:layout_width">45dip</item>
-        <item name="android:layout_height">36dip</item>
+        <item name="android:layout_height">37dip</item>
         <item name="android:paddingLeft">10dp</item>
         <item name="android:paddingTop">7dp</item>
         <item name="android:paddingBottom">7dp</item>
@@ -123,6 +123,11 @@
         <item name="android:layout_height">match_parent</item>
         <item name="android:gravity">center</item>
         <item name="android:layout_gravity">center</item>
+    </style>
+
+    <style name="OnboardStartLayout">
+        <item name="android:layout_height">568dp</item>
+        <item name="android:layout_width">400dp</item>
     </style>
 
     <style name="TextAppearance.UrlBar.Title" parent="TextAppearance.Medium">

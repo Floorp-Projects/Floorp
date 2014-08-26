@@ -573,12 +573,41 @@ function assertWebRTCIndicatorStatus(expected) {
   let ui = Cu.import("resource:///modules/webrtcUI.jsm", {}).webrtcUI;
   let expectedState = expected ? "visible" : "hidden";
   let msg = "WebRTC indicator " + expectedState;
-  is(ui.showGlobalIndicator, expected, msg);
+  is(ui.showGlobalIndicator, !!expected, msg);
+
+  let expectVideo = false, expectAudio = false, expectScreen = false;
+  if (expected) {
+    if (expected.video)
+      expectVideo = true;
+    if (expected.audio)
+      expectAudio = true;
+    if (expected.screen)
+      expectScreen = true;
+  }
+  is(ui.showCameraIndicator, expectVideo, "camera global indicator as expected");
+  is(ui.showMicrophoneIndicator, expectAudio, "microphone global indicator as expected");
+  is(ui.showScreenSharingIndicator, expectScreen, "screen global indicator as expected");
 
   let windows = Services.wm.getEnumerator("navigator:browser");
   while (windows.hasMoreElements()) {
     let win = windows.getNext();
     let menu = win.document.getElementById("tabSharingMenu");
-    is(menu && !menu.hidden, expected, "WebRTC menu should be " + expectedState);
+    is(menu && !menu.hidden, !!expected, "WebRTC menu should be " + expectedState);
+  }
+
+  if (!("nsISystemStatusBar" in Ci)) {
+    let indicator = Services.wm.getEnumerator("Browser:WebRTCGlobalIndicator");
+    let hasWindow = indicator.hasMoreElements();
+    is(hasWindow, !!expected, "popup " + msg);
+    if (hasWindow) {
+      let docElt = indicator.getNext().document.documentElement;
+      for (let item of ["video", "audio", "screen"]) {
+        let expectedValue = (expected && expected[item]) ? "true" : "";
+        is(docElt.getAttribute("sharing" + item), expectedValue,
+           item + " global indicator attribute as expected");
+      }
+
+      ok(!indicator.hasMoreElements(), "only one global indicator window");
+    }
   }
 }

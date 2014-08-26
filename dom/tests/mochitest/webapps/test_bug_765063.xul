@@ -43,7 +43,7 @@ ppmm.addMessageListener("Webapps:Install", mmListener);
 // We call this here, even though the app is installed by the helper page,
 // because the helper page redirect would cause its install listener to unload
 // before it can confirm the install.
-confirmNextInstall();
+confirmNextPopup();
 
 </script> 
 

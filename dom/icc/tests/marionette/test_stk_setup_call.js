@@ -17,6 +17,14 @@ function testSetupCall(command, expect) {
     is(duration.timeInterval, expect.duration.timeInterval, expect.name);
   }
 
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   runNextTest();
 }
 
@@ -82,26 +90,34 @@ let tests = [
    expect: {name: "setup_call_cmd_10",
             commandQualifier: 0x00,
             confirmMessage: "Set up call Icon 3.1.1",
-            address: "+012340123456,1,2"}},
+            address: "+012340123456,1,2",
+            iconSelfExplanatory: false,
+            icons: [basicIcon]}},
   {command: "d03081030110008202818385165365742075702063616c6c2049636f6e20332e322e318609911032042143651c2c9e020001",
    func: testSetupCall,
    expect: {name: "setup_call_cmd_11",
             commandQualifier: 0x00,
             confirmMessage: "Set up call Icon 3.2.1",
-            address: "+012340123456,1,2"}},
-  {command: "d03081030110008202818385165365742075702063616c6c2049636f6e20332e332e318609911032042143651c2c9e020102",
+            address: "+012340123456,1,2",
+            iconSelfExplanatory: true,
+            icons: [basicIcon]}},
+  {command: "d03081030110008202818385165365742075702063616c6c2049636f6e20332e332e318609911032042143651c2c9e020103",
    func: testSetupCall,
    expect: {name: "setup_call_cmd_12",
             commandQualifier: 0x00,
             confirmMessage: "Set up call Icon 3.3.1",
-            address: "+012340123456,1,2"}},
-  {command: "d04c81030110008202818385165365742075702063616c6c2049636f6e20332e342e318609911032042143651c2c9e02000185165365742075702063616c6c2049636f6e20332e342e329e020001",
+            address: "+012340123456,1,2",
+            iconSelfExplanatory: false,
+            icons: [colorIcon]}},
+  {command: "d04c81030110008202818385165365742075702063616c6c2049636f6e20332e342e318609911032042143651c2c9e02000185165365742075702063616c6c2049636f6e20332e342e329e020005",
    func: testSetupCall,
    expect: {name: "setup_call_cmd_13",
             commandQualifier: 0x00,
             confirmMessage: "Set up call Icon 3.4.1",
             callMessage: "Set up call Icon 3.4.2",
-            address: "+012340123456,1,2"}},
+            address: "+012340123456,1,2",
+            iconSelfExplanatory: true,
+            icons: [colorTransparencyIcon]}},
   {command: "d038810301100082028183850e434f4e4649524d4154494f4e20318609911032042143651c2c850643414c4c2031d004000e00b4d004000600b4",
    func: testSetupCall,
    expect: {name: "setup_call_cmd_14",

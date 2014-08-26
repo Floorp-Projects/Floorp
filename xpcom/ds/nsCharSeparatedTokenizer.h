@@ -36,131 +36,132 @@ class nsTCharSeparatedTokenizer
   typedef typename DependentSubstringType::substring_type SubstringType;
 
 public:
-    // Flags -- only one for now. If we need more, they should be defined to
-    // be 1 << 1, 1 << 2, etc. (They're masks, and aFlags is a bitfield.)
-    enum {
-        SEPARATOR_OPTIONAL = 1
-    };
+  // Flags -- only one for now. If we need more, they should be defined to
+  // be 1 << 1, 1 << 2, etc. (They're masks, and aFlags is a bitfield.)
+  enum
+  {
+    SEPARATOR_OPTIONAL = 1
+  };
 
-    nsTCharSeparatedTokenizer(const SubstringType& aSource,
-                              CharType aSeparatorChar,
-                              uint32_t aFlags = 0)
-        : mIter(aSource.Data(), aSource.Length()),
-          mEnd(aSource.Data() + aSource.Length(), aSource.Data(),
-               aSource.Length()),
-          mSeparatorChar(aSeparatorChar),
-          mWhitespaceBeforeFirstToken(false),
-          mWhitespaceAfterCurrentToken(false),
-          mSeparatorAfterCurrentToken(false),
-          mSeparatorOptional(aFlags & SEPARATOR_OPTIONAL)
-    {
-        // Skip initial whitespace
-        while (mIter < mEnd && IsWhitespace(*mIter)) {
-            mWhitespaceBeforeFirstToken = true;
-            ++mIter;
-        }
+  nsTCharSeparatedTokenizer(const SubstringType& aSource,
+                            CharType aSeparatorChar,
+                            uint32_t aFlags = 0)
+    : mIter(aSource.Data(), aSource.Length())
+    , mEnd(aSource.Data() + aSource.Length(), aSource.Data(),
+           aSource.Length())
+    , mSeparatorChar(aSeparatorChar)
+    , mWhitespaceBeforeFirstToken(false)
+    , mWhitespaceAfterCurrentToken(false)
+    , mSeparatorAfterCurrentToken(false)
+    , mSeparatorOptional(aFlags & SEPARATOR_OPTIONAL)
+  {
+    // Skip initial whitespace
+    while (mIter < mEnd && IsWhitespace(*mIter)) {
+      mWhitespaceBeforeFirstToken = true;
+      ++mIter;
+    }
+  }
+
+  /**
+   * Checks if any more tokens are available.
+   */
+  bool hasMoreTokens() const
+  {
+    MOZ_ASSERT(mIter == mEnd || !IsWhitespace(*mIter),
+               "Should be at beginning of token if there is one");
+
+    return mIter < mEnd;
+  }
+
+  /*
+   * Returns true if there is whitespace prior to the first token.
+   */
+  bool whitespaceBeforeFirstToken() const
+  {
+    return mWhitespaceBeforeFirstToken;
+  }
+
+  /*
+   * Returns true if there is a separator after the current token.
+   * Useful if you want to check whether the last token has a separator
+   * after it which may not be valid.
+   */
+  bool separatorAfterCurrentToken() const
+  {
+    return mSeparatorAfterCurrentToken;
+  }
+
+  /*
+   * Returns true if there is any whitespace after the current token.
+   */
+  bool whitespaceAfterCurrentToken() const
+  {
+    return mWhitespaceAfterCurrentToken;
+  }
+
+  /**
+   * Returns the next token.
+   */
+  const DependentSubstringType nextToken()
+  {
+    mozilla::RangedPtr<const CharType> tokenStart = mIter;
+    mozilla::RangedPtr<const CharType> tokenEnd = mIter;
+
+    MOZ_ASSERT(mIter == mEnd || !IsWhitespace(*mIter),
+               "Should be at beginning of token if there is one");
+
+    // Search until we hit separator or end (or whitespace, if a separator
+    // isn't required -- see clause with 'break' below).
+    while (mIter < mEnd && *mIter != mSeparatorChar) {
+      // Skip to end of the current word.
+      while (mIter < mEnd &&
+             !IsWhitespace(*mIter) && *mIter != mSeparatorChar) {
+        ++mIter;
+      }
+      tokenEnd = mIter;
+
+      // Skip whitespace after the current word.
+      mWhitespaceAfterCurrentToken = false;
+      while (mIter < mEnd && IsWhitespace(*mIter)) {
+        mWhitespaceAfterCurrentToken = true;
+        ++mIter;
+      }
+      if (mSeparatorOptional) {
+        // We've hit (and skipped) whitespace, and that's sufficient to end
+        // our token, regardless of whether we've reached a SeparatorChar.
+        break;
+      } // (else, we'll keep looping until we hit mEnd or SeparatorChar)
     }
 
-    /**
-     * Checks if any more tokens are available.
-     */
-    bool hasMoreTokens() const
-    {
-        MOZ_ASSERT(mIter == mEnd || !IsWhitespace(*mIter),
-                   "Should be at beginning of token if there is one");
+    mSeparatorAfterCurrentToken = (mIter != mEnd &&
+                                   *mIter == mSeparatorChar);
+    MOZ_ASSERT(mSeparatorOptional ||
+               (mSeparatorAfterCurrentToken == (mIter < mEnd)),
+               "If we require a separator and haven't hit the end of "
+               "our string, then we shouldn't have left the loop "
+               "unless we hit a separator");
 
-        return mIter < mEnd;
+    // Skip separator (and any whitespace after it), if we're at one.
+    if (mSeparatorAfterCurrentToken) {
+      ++mIter;
+
+      while (mIter < mEnd && IsWhitespace(*mIter)) {
+        mWhitespaceAfterCurrentToken = true;
+        ++mIter;
+      }
     }
 
-    /*
-     * Returns true if there is whitespace prior to the first token.
-     */
-    bool whitespaceBeforeFirstToken() const
-    {
-        return mWhitespaceBeforeFirstToken;
-    }
-
-    /*
-     * Returns true if there is a separator after the current token.
-     * Useful if you want to check whether the last token has a separator
-     * after it which may not be valid.
-     */
-    bool separatorAfterCurrentToken() const
-    {
-        return mSeparatorAfterCurrentToken;
-    }
-
-    /*
-     * Returns true if there is any whitespace after the current token.
-     */
-    bool whitespaceAfterCurrentToken() const
-    {
-        return mWhitespaceAfterCurrentToken;
-    }
-
-    /**
-     * Returns the next token.
-     */
-    const DependentSubstringType nextToken()
-    {
-        mozilla::RangedPtr<const CharType> tokenStart = mIter;
-        mozilla::RangedPtr<const CharType> tokenEnd = mIter;
-
-        MOZ_ASSERT(mIter == mEnd || !IsWhitespace(*mIter),
-                   "Should be at beginning of token if there is one");
-
-        // Search until we hit separator or end (or whitespace, if a separator
-        // isn't required -- see clause with 'break' below).
-        while (mIter < mEnd && *mIter != mSeparatorChar) {
-          // Skip to end of the current word.
-          while (mIter < mEnd &&
-                 !IsWhitespace(*mIter) && *mIter != mSeparatorChar) {
-              ++mIter;
-          }
-          tokenEnd = mIter;
-
-          // Skip whitespace after the current word.
-          mWhitespaceAfterCurrentToken = false;
-          while (mIter < mEnd && IsWhitespace(*mIter)) {
-              mWhitespaceAfterCurrentToken = true;
-              ++mIter;
-          }
-          if (mSeparatorOptional) {
-            // We've hit (and skipped) whitespace, and that's sufficient to end
-            // our token, regardless of whether we've reached a SeparatorChar.
-            break;
-          } // (else, we'll keep looping until we hit mEnd or SeparatorChar)
-        }
-
-        mSeparatorAfterCurrentToken = (mIter != mEnd &&
-                                       *mIter == mSeparatorChar);
-        MOZ_ASSERT(mSeparatorOptional ||
-                   (mSeparatorAfterCurrentToken == (mIter < mEnd)),
-                   "If we require a separator and haven't hit the end of "
-                   "our string, then we shouldn't have left the loop "
-                   "unless we hit a separator");
-
-        // Skip separator (and any whitespace after it), if we're at one.
-        if (mSeparatorAfterCurrentToken) {
-            ++mIter;
-
-            while (mIter < mEnd && IsWhitespace(*mIter)) {
-                mWhitespaceAfterCurrentToken = true;
-                ++mIter;
-            }
-        }
-
-        return Substring(tokenStart.get(), tokenEnd.get());
-    }
+    return Substring(tokenStart.get(), tokenEnd.get());
+  }
 
 private:
-    mozilla::RangedPtr<const CharType> mIter;
-    const mozilla::RangedPtr<const CharType> mEnd;
-    CharType mSeparatorChar;
-    bool mWhitespaceBeforeFirstToken;
-    bool mWhitespaceAfterCurrentToken;
-    bool mSeparatorAfterCurrentToken;
-    bool mSeparatorOptional;
+  mozilla::RangedPtr<const CharType> mIter;
+  const mozilla::RangedPtr<const CharType> mEnd;
+  CharType mSeparatorChar;
+  bool mWhitespaceBeforeFirstToken;
+  bool mWhitespaceAfterCurrentToken;
+  bool mSeparatorAfterCurrentToken;
+  bool mSeparatorOptional;
 };
 
 template<bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>

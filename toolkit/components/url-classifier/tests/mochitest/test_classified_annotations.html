@@ -24,6 +24,11 @@ var testUpdate =
   "a:524:32:" + testData.length + "\n" +
   testData;
 
+function cleanup() {
+  SpecialPowers.clearUserPref("privacy.trackingprotection.enabled");
+  SpecialPowers.clearUserPref("channelclassifier.allowlist_example");
+}
+
 var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
                 .getService(Ci.nsIUrlClassifierDBService);
 
@@ -45,13 +50,12 @@ function doUpdate(update) {
       SimpleTest.finish();
     },
     updateSuccess: function(requestedTimeout) {
-      SpecialPowers.pushPrefEnv(
-        {"set" : [["privacy.trackingprotection.enabled", true]]},
-        function loadTestFrame() {
-          document.getElementById("testFrame").src =
-            "classifiedAnnotatedFrame.html";
-        }
-      );
+      SpecialPowers.setBoolPref("privacy.trackingprotection.enabled", true);
+      // Make sure chrome:// URIs are processed. This does not white-list
+      // any URIs unless 'https://allowlisted.example.com' is added in the
+      // permission manager (see test_allowlisted_annotations.html)
+      SpecialPowers.setBoolPref("channelclassifier.allowlist_example", true);
+      document.getElementById("testFrame").src = "classifiedAnnotatedFrame.html";
     }
   };
 

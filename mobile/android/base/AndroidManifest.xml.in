@@ -230,6 +230,11 @@
             </intent-filter>
         </activity-alias>
 
+        <activity android:name="org.mozilla.gecko.StartPane"
+                  android:theme="@style/GeckoStartPane"
+                  android:excludeFromRecents="true"
+                  android:noHistory="true" />
+
         <activity android:name="org.mozilla.gecko.webapp.Dispatcher"
             android:noHistory="true" >
             <intent-filter>
@@ -353,11 +358,6 @@
                   android:theme="@style/Gecko.Preferences"
                   android:configChanges="orientation|screenSize|locale|layoutDirection"
                   android:excludeFromRecents="true"/>
-
-        <activity android:name="org.mozilla.gecko.home.HomePanelPicker"
-                  android:theme="@style/Gecko.TitleDialog"
-                  android:label="@string/home_add_panel_title"
-                  android:excludeFromRecents="true" />
 
         <provider android:name="org.mozilla.gecko.db.BrowserProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"

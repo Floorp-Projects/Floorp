@@ -28,7 +28,7 @@ class CanvasLayerComposite : public CanvasLayer,
                              public LayerComposite
 {
 public:
-  CanvasLayerComposite(LayerManagerComposite* aManager);
+  explicit CanvasLayerComposite(LayerManagerComposite* aManager);
 
 protected:
   virtual ~CanvasLayerComposite();

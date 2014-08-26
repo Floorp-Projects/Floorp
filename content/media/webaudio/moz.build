@@ -19,6 +19,10 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 EXPORTS += [
     'AudioContext.h',
+    'AudioEventTimeline.h',
+    'AudioNodeEngine.h',
+    'AudioNodeExternalInputStream.h',
+    'AudioNodeStream.h',
     'AudioParamTimeline.h',
     'MediaBufferDecoder.h',
     'ThreeDPoint.h',
@@ -65,9 +69,13 @@ UNIFIED_SOURCES += [
     'AudioDestinationNode.cpp',
     'AudioListener.cpp',
     'AudioNode.cpp',
+    'AudioNodeEngine.cpp',
+    'AudioNodeExternalInputStream.cpp',
+    'AudioNodeStream.cpp',
     'AudioParam.cpp',
     'AudioProcessingEvent.cpp',
     'BiquadFilterNode.cpp',
+    'BufferDecoder.cpp',
     'ChannelMergerNode.cpp',
     'ChannelSplitterNode.cpp',
     'ConvolverNode.cpp',
@@ -90,8 +98,15 @@ UNIFIED_SOURCES += [
     'WebAudioUtils.cpp',
 ]
 
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+    SOURCES += ['AudioNodeEngineNEON.cpp']
+    SOURCES['AudioNodeEngineNEON.cpp'].flags += ['-mfpu=neon']
+
 FAIL_ON_WARNINGS = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+LOCAL_INCLUDES += [
+    '..'
+]

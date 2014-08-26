@@ -596,6 +596,7 @@ this.GET_RESPONSE_EF_SIZE_BYTES = 15;
 // EF path
 this.EF_PATH_MF_SIM       = "3f00";
 this.EF_PATH_DF_PHONEBOOK = "5f3a";
+this.EF_PATH_GRAPHICS     = "5f50";
 this.EF_PATH_DF_TELECOM   = "7f10";
 this.EF_PATH_DF_GSM       = "7f20";
 this.EF_PATH_DF_CDMA      = "7f25";
@@ -671,6 +672,29 @@ this.ICC_USIM_EFGSD_TAG   = 0xc8;
 this.ICC_USIM_EFUID_TAG   = 0xc9;
 this.ICC_USIM_EFEMAIL_TAG = 0xca;
 this.ICC_USIM_EFCCP1_TAG  = 0xcb;
+
+// ICC image coding scheme
+// TS 31.102, sub-clause 4.6.1.1
+this.ICC_IMG_CODING_SCHEME_BASIC              = 0x11;
+this.ICC_IMG_CODING_SCHEME_COLOR              = 0x21;
+this.ICC_IMG_CODING_SCHEME_COLOR_TRANSPARENCY = 0x22;
+
+// Must be in sync with enum IccImageCodingScheme in MozStkCommandEvent.webidl.
+this.GECKO_IMG_CODING_SCHEME_BASIC              = "basic";
+this.GECKO_IMG_CODING_SCHEME_COLOR              = "color";
+this.GECKO_IMG_CODING_SCHEME_COLOR_TRANSPARENCY = "color-transparency";
+
+this.ICC_IMG_CODING_SCHEME_TO_GECKO = {};
+ICC_IMG_CODING_SCHEME_TO_GECKO[ICC_IMG_CODING_SCHEME_BASIC] = GECKO_IMG_CODING_SCHEME_BASIC;
+ICC_IMG_CODING_SCHEME_TO_GECKO[ICC_IMG_CODING_SCHEME_COLOR] = GECKO_IMG_CODING_SCHEME_COLOR;
+ICC_IMG_CODING_SCHEME_TO_GECKO[ICC_IMG_CODING_SCHEME_COLOR_TRANSPARENCY] = GECKO_IMG_CODING_SCHEME_COLOR_TRANSPARENCY;
+
+// ICC image header size per coding scheme
+// TS 31.102, Annex B
+this.ICC_IMG_HEADER_SIZE_BASIC = 2;
+this.ICC_IMG_HEADER_SIZE_COLOR = 6;
+
+this.ICC_CLUT_ENTRY_SIZE = 3;
 
 this.USIM_PBR_ANR = "anr";
 this.USIM_PBR_ANR0 = "anr0";
@@ -1246,6 +1270,7 @@ this.GECKO_ICC_SERVICES = {
     DATA_DOWNLOAD_SMS_PP: 26,
     CBMIR: 30,
     BDN: 31,
+    IMG: 39,
     PNN: 51,
     OPL: 52,
     MDN: 53,
@@ -1261,6 +1286,7 @@ this.GECKO_ICC_SERVICES = {
     GID1: 17,
     SPN: 19,
     MSISDN: 21,
+    IMG: 22,
     DATA_DOWNLOAD_SMS_PP: 28,
     DATA_DOWNLOAD_SMS_CB: 29,
     PNN: 45,

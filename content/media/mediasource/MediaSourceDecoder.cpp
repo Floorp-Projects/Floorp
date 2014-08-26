@@ -5,12 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "MediaSourceDecoder.h"
 
+#include "prlog.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaSource.h"
 #include "MediaSourceReader.h"
 #include "MediaSourceResource.h"
+#include "MediaSourceUtils.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaSourceLog();
@@ -27,7 +29,7 @@ extern PRLogModuleInfo* GetMediaSourceAPILog();
 
 namespace mozilla {
 
-class SubBufferDecoder;
+class SourceBufferDecoder;
 
 MediaSourceDecoder::MediaSourceDecoder(dom::HTMLMediaElement* aElement)
   : mMediaSource(nullptr)
@@ -45,7 +47,7 @@ MediaSourceDecoder::Clone()
 MediaDecoderStateMachine*
 MediaSourceDecoder::CreateStateMachine()
 {
-  mReader = new MediaSourceReader(this, mMediaSource);
+  mReader = new MediaSourceReader(this);
   return new MediaDecoderStateMachine(this, mReader);
 }
 
@@ -59,19 +61,21 @@ MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
     return NS_ERROR_FAILURE;
   }
 
-
   nsresult rv = mDecoderStateMachine->Init(nullptr);
-
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetStateMachineParameters();
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
 MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mMediaSource) {
+    return NS_ERROR_FAILURE;
+  }
   double duration = mMediaSource->Duration();
   if (IsNaN(duration)) {
     // Return empty range.
@@ -82,9 +86,18 @@ MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
   } else {
     aSeekable->Add(0, duration);
   }
-  MSE_DEBUG("MediaSourceDecoder(%p)::GetSeekable startTime=%f endTime=%f",
-            this, aSeekable->GetStartTime(), aSeekable->GetEndTime());
+  MSE_DEBUG("MediaSourceDecoder(%p)::GetSeekable ranges=%s", this, DumpTimeRanges(aSeekable).get());
   return NS_OK;
+}
+
+void
+MediaSourceDecoder::Shutdown()
+{
+  MediaDecoder::Shutdown();
+
+  // Kick WaitForData out of its slumber.
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  mon.NotifyAll();
 }
 
 /*static*/
@@ -97,20 +110,49 @@ MediaSourceDecoder::CreateResource()
 void
 MediaSourceDecoder::AttachMediaSource(dom::MediaSource* aMediaSource)
 {
-  MOZ_ASSERT(!mMediaSource && !mDecoderStateMachine);
+  MOZ_ASSERT(!mMediaSource && !mDecoderStateMachine && NS_IsMainThread());
   mMediaSource = aMediaSource;
 }
 
 void
 MediaSourceDecoder::DetachMediaSource()
 {
+  MOZ_ASSERT(mMediaSource && NS_IsMainThread());
   mMediaSource = nullptr;
 }
 
-already_AddRefed<SubBufferDecoder>
+already_AddRefed<SourceBufferDecoder>
 MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
 {
-  return mReader->CreateSubDecoder(aType, this);
+  MOZ_ASSERT(mReader);
+  return mReader->CreateSubDecoder(aType);
+}
+
+void
+MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mMediaSource) {
+    return;
+  }
+  ErrorResult dummy;
+  mMediaSource->SetDuration(aDuration, dummy);
+}
+
+void
+MediaSourceDecoder::WaitForData()
+{
+  MSE_DEBUG("MediaSourceDecoder(%p)::WaitForData()", this);
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  mon.Wait();
+}
+
+void
+MediaSourceDecoder::NotifyGotData()
+{
+  MSE_DEBUG("MediaSourceDecoder(%p)::NotifyGotData()", this);
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  mon.NotifyAll();
 }
 
 } // namespace mozilla

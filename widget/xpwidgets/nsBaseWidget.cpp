@@ -835,7 +835,7 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
       NS_WARNING("OpenGL-accelerated layers are not supported on this system");
       tell_me_once = 1;
     }
-#ifdef MOZ_ANDROID_OMTC
+#ifdef MOZ_WIDGET_ANDROID
     NS_RUNTIMEABORT("OpenGL-accelerated layers are a hard requirement on this platform. "
                     "Cannot continue without support for them");
 #endif
@@ -1805,8 +1805,8 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
           (void *) aWidget,
           aWidgetName.get(),
           aWindowID,
-          aGuiEvent->refPoint.x,
-          aGuiEvent->refPoint.y);
+          aGuiEvent->refPoint.x.value,
+          aGuiEvent->refPoint.y.value);
 }
 //////////////////////////////////////////////////////////////
 /* static */ void

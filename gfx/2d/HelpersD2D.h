@@ -239,7 +239,7 @@ static inline bool IsPatternSupportedByD2D(const Pattern &aPattern)
 
   Point diff = pat->mCenter2 - pat->mCenter1;
 
-  if (sqrt(diff.x * diff.x + diff.y * diff.y) >= pat->mRadius2) {
+  if (sqrt(diff.x.value * diff.x.value + diff.y.value * diff.y.value) >= pat->mRadius2) {
     // Inner point lies outside the circle.
     return false;
   }

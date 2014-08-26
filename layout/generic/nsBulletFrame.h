@@ -18,7 +18,7 @@ class imgRequestProxy;
 
 class nsBulletFrame;
 
-class nsBulletListener : public imgINotificationObserver
+class nsBulletListener MOZ_FINAL : public imgINotificationObserver
 {
 public:
   nsBulletListener();
@@ -38,7 +38,7 @@ private:
  * A simple class that manages the layout and rendering of html bullets.
  * This class also supports the CSS list-style properties.
  */
-class nsBulletFrame : public nsFrame {
+class nsBulletFrame MOZ_FINAL : public nsFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 #ifdef DEBUG

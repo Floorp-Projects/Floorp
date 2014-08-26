@@ -17,15 +17,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=917945
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
-                                   ["media.webvtt.regions.enabled", true]]},
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
   function() {
     var video = document.createElement("video");
     video.src = "seek.webm";
     video.preload = "auto";
+
     var trackElement = document.createElement("track");
     trackElement.src = "region.vtt";
     trackElement.kind = "subtitles";
+
     document.getElementById("content").appendChild(video);
     video.appendChild(trackElement);
     video.addEventListener("loadedmetadata", function run_tests() {
@@ -36,6 +37,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
         return;
       }
       is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+
       // Set mode to hidden so that the active cue lists are being updated.
       trackElement.track.mode = "hidden";
 
@@ -56,7 +58,6 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
     });
   }
 );
-
 </script>
 </pre>
 </body>

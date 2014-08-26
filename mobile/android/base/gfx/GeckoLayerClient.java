@@ -746,8 +746,11 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     @WrapElementForJNI(allowMultithread = true)
-    public void deactivateProgram() {
+    public void deactivateProgramAndRestoreState(boolean enableScissor,
+            int scissorX, int scissorY, int scissorW, int scissorH)
+    {
         mLayerRenderer.deactivateDefaultProgram();
+        mLayerRenderer.restoreState(enableScissor, scissorX, scissorY, scissorW, scissorH);
     }
 
     private void geometryChanged(DisplayPortMetrics displayPort) {

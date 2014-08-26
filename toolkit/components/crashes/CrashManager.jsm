@@ -133,20 +133,15 @@ this.CrashManager.prototype = Object.freeze({
   // A crash in a Gecko media plugin process.
   PROCESS_TYPE_GMPLUGIN: "gmplugin",
 
-  // A submission of a crash.
-  PROCESS_TYPE_SUBMISSION: "submission",
-
   // A real crash.
   CRASH_TYPE_CRASH: "crash",
 
   // A hang.
   CRASH_TYPE_HANG: "hang",
 
-  // A successful submission.
-  SUBMISSION_TYPE_SUCCEEDED: "succeeded",
-
-  // A failed submission.
-  SUBMISSION_TYPE_FAILED: "failed",
+  // Submission result values.
+  SUBMISSION_RESULT_OK: "ok",
+  SUBMISSION_RESULT_FAILED: "failed",
 
   DUMP_REGEX: /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.dmp$/i,
   SUBMITTED_REGEX: /^bp-(?:hr-)?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.txt$/i,
@@ -373,36 +368,37 @@ this.CrashManager.prototype = Object.freeze({
   },
 
   /**
-   * Record the occurrence of a crash submission.
+   * Record the occurrence of a submission attempt for a crash.
    *
-   * @param processType (string) One of the PROCESS_TYPE constants.
-   * @param crashType (string) One of the CRASH_TYPE constants.
-   * @param succeeded (boolean) Whether the submission succeeded.
-   * @param id (string) Crash ID. Likely a UUID.
-   * @param date (Date) When the crash occurred.
+   * @param crashID (string) Crash ID. Likely a UUID.
+   * @param submissionID (string) Submission ID. Likely a UUID.
+   * @param date (Date) When the attempt occurred.
    *
-   * @return boolean True if the crash submission was recorded and false if not.
+   * @return boolean True if the attempt was recorded and false if not.
    */
-  addSubmission: function (processType, crashType, succeeded, id, date) {
-    return Task.spawn(function* () {
-      let store = yield this._getStore();
-      if (this._addSubmissionAsCrash(store, processType, crashType, succeeded,
-                                     id, date)) {
-        yield store.save();
-      }
-    }.bind(this));
-  },
+  addSubmissionAttempt: Task.async(function* (crashID, submissionID, date) {
+    let store = yield this._getStore();
+    if (store.addSubmissionAttempt(crashID, submissionID, date)) {
+      yield store.save();
+    }
+  }),
 
-  _addSubmissionAsCrash: function (store, processType, crashType, succeeded,
-                                   id, date) {
-    let id = id + "-" + this.PROCESS_TYPE_SUBMISSION;
-    let process = processType + "-" + crashType + "-" +
-                  this.PROCESS_TYPE_SUBMISSION;
-    let submission_type = (
-      succeeded ? this.SUBMISSION_TYPE_SUCCEEDED : this.SUBMISSION_TYPE_FAILED);
-
-    return store.addCrash(process, submission_type, id, date);
-  },
+  /**
+   * Record the occurrence of a submission result for a crash.
+   *
+   * @param crashID (string) Crash ID. Likely a UUID.
+   * @param submissionID (string) Submission ID. Likely a UUID.
+   * @param date (Date) When the submission result was obtained.
+   * @param result (string) One of the SUBMISSION_RESULT constants.
+   *
+   * @return boolean True if the result was recorded and false if not.
+   */
+  addSubmissionResult: Task.async(function* (crashID, submissionID, date, result) {
+    let store = yield this._getStore();
+    if (store.addSubmissionResult(crashID, submissionID, date, result)) {
+      yield store.save();
+    }
+  }),
 
   /**
    * Obtain the paths of all unprocessed events files.
@@ -693,14 +689,64 @@ CrashStore.prototype = Object.freeze({
         // days stored in the payload matches up to actual data.
         let actualCounts = new Map();
 
+        // In the past, submissions were stored as separate crash records
+        // with an id of e.g. "someID-submission". If we find IDs ending
+        // with "-submission", we will need to convert the data to be stored
+        // as actual submissions.
+        //
+        // TODO: The old way of storing submissions was used from FF33 - FF34.
+        // We should drop the conversion code after a few releases. See bug
+        // 1056157.
+        let hasSubmissionsStoredAsCrashes = false;
+
         for (let id in data.crashes) {
+          if (id.endsWith("-submission")) {
+            hasSubmissionsStoredAsCrashes = true;
+            continue;
+          }
+
           let crash = data.crashes[id];
           let denormalized = this._denormalize(crash);
+
+          denormalized.submissions = new Map();
+          if (crash.submissions) {
+            for (let submissionID in crash.submissions) {
+              let submission = crash.submissions[submissionID];
+              denormalized.submissions.set(submissionID,
+                                           this._denormalize(submission));
+            }
+          }
 
           this._data.crashes.set(id, denormalized);
 
           let key = dateToDays(denormalized.crashDate) + "-" + denormalized.type;
           actualCounts.set(key, (actualCounts.get(key) || 0) + 1);
+        }
+
+        if (hasSubmissionsStoredAsCrashes) {
+          for (let id in data.crashes) {
+            if (!id.endsWith("-submission")) {
+              continue;
+            }
+
+            // This type of record will contain e.g.:
+            // {
+            //   "id": "crash1-submission",
+            //   "type": "main-crash-submission-succeeded",
+            //   "crashDate": "...",
+            // }
+            let submissionData = this._denormalize(data.crashes[id]);
+
+            let crashID = id.replace(/-submission$/, "");
+            let result = submissionData.type.endsWith("-succeeded") ?
+              CrashManager.prototype.SUBMISSION_RESULT_OK :
+              CrashManager.prototype.SUBMISSION_RESULT_FAILED;
+
+            this.addSubmissionAttempt(crashID, "converted",
+                                      submissionData.crashDate);
+            this.addSubmissionResult(crashID, "converted",
+                                     submissionData.crashDate, result);
+          }
         }
 
         // The validation in this loop is arguably not necessary. We perform
@@ -777,6 +823,12 @@ CrashStore.prototype = Object.freeze({
 
       for (let [id, crash] of this._data.crashes) {
         let c = this._normalize(crash);
+
+        c.submissions = {};
+        for (let [submissionID, submission] of crash.submissions) {
+          c.submissions[submissionID] = this._normalize(submission);
+        }
+
         normalized.crashes[id] = c;
       }
 
@@ -955,6 +1007,7 @@ CrashStore.prototype = Object.freeze({
         id: id,
         type: type,
         crashDate: date,
+        submissions: new Map(),
       });
     }
 
@@ -988,6 +1041,67 @@ CrashStore.prototype = Object.freeze({
     }
 
     return crashes;
+  },
+
+  /**
+   * Obtain a particular crash submission from its ID.
+   *
+   * @return undefined | submission object
+   */
+  getSubmission: function (crashID, submissionID) {
+    let crash = this._data.crashes.get(crashID);
+    if (!crash || !submissionID) {
+      return undefined;
+    }
+
+    return crash.submissions.get(submissionID);
+  },
+
+  /**
+   * Ensure the submission record is present in storage.
+   */
+  _ensureSubmissionRecord: function (crashID, submissionID) {
+    let crash = this._data.crashes.get(crashID);
+    if (!crash || !submissionID) {
+      return null;
+    }
+
+    if (!crash.submissions.has(submissionID)) {
+      crash.submissions.set(submissionID, {
+        requestDate: null,
+        responseDate: null,
+        result: null,
+      });
+    }
+
+    return crash.submissions.get(submissionID);
+  },
+
+  /**
+   * @return boolean True if the attempt was recorded.
+   */
+  addSubmissionAttempt: function (crashID, submissionID, date) {
+    let submission = this._ensureSubmissionRecord(crashID, submissionID);
+    if (!submission) {
+      return false;
+    }
+
+    submission.requestDate = date;
+    return true;
+  },
+
+  /**
+   * @return boolean True if the response was recorded.
+   */
+  addSubmissionResult: function (crashID, submissionID, date, result) {
+    let submission = this.getSubmission(crashID, submissionID);
+    if (!submission) {
+      return false;
+    }
+
+    submission.responseDate = date;
+    submission.result = result;
+    return true;
   },
 });
 
@@ -1037,6 +1151,10 @@ CrashRecord.prototype = Object.freeze({
 
   isOfType: function (processType, crashType) {
     return processType + "-" + crashType == this.type;
+  },
+
+  get submissions() {
+    return this._o.submissions;
   },
 });
 

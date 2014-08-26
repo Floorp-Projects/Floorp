@@ -226,20 +226,20 @@ protected:
     mozilla::layout::ScrollingBehavior mScrolling;
 };
 
-class TabChild : public TabChildBase,
-                 public PBrowserChild,
-                 public nsIWebBrowserChrome2,
-                 public nsIEmbeddingSiteWindow,
-                 public nsIWebBrowserChromeFocus,
-                 public nsIInterfaceRequestor,
-                 public nsIWindowProvider,
-                 public nsIDOMEventListener,
-                 public nsIWebProgressListener,
-                 public nsSupportsWeakReference,
-                 public nsITabChild,
-                 public nsIObserver,
-                 public TabContext,
-                 public nsITooltipListener
+class TabChild MOZ_FINAL : public TabChildBase,
+                           public PBrowserChild,
+                           public nsIWebBrowserChrome2,
+                           public nsIEmbeddingSiteWindow,
+                           public nsIWebBrowserChromeFocus,
+                           public nsIInterfaceRequestor,
+                           public nsIWindowProvider,
+                           public nsIDOMEventListener,
+                           public nsIWebProgressListener,
+                           public nsSupportsWeakReference,
+                           public nsITabChild,
+                           public nsIObserver,
+                           public TabContext,
+                           public nsITooltipListener
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
@@ -367,6 +367,8 @@ public:
                                   const ClonedMessageData& aData,
                                   const InfallibleTArray<CpowEntry>& aCpows,
                                   const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+
+    virtual bool RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline) MOZ_OVERRIDE;
 
     virtual PDocumentRendererChild*
     AllocPDocumentRendererChild(const nsRect& documentRect, const gfx::Matrix& transform,
@@ -509,6 +511,8 @@ private:
 
     nsresult Init();
 
+    class DelayedFireSingleTapEvent;
+    class DelayedFireContextMenuEvent;
 
     // Notify others that our TabContext has been updated.  (At the moment, this
     // sets the appropriate app-id and is-browser flags on our docshell.)
@@ -516,8 +520,6 @@ private:
     // You should call this after calling TabContext::SetTabContext().  We also
     // call this during Init().
     void NotifyTabContextUpdated();
-
-    bool UseDirectCompositor();
 
     void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
@@ -573,7 +575,7 @@ private:
     // A timer task that fires if the tap-hold timeout is exceeded by
     // the touch we're tracking.  That is, if touchend or a touchmove
     // that exceeds the gesture threshold doesn't happen.
-    CancelableTask* mTapHoldTimer;
+    nsCOMPtr<nsITimer> mTapHoldTimer;
     // Whether we have already received a FileDescriptor for the app package.
     bool mAppPackageFileDescriptorRecved;
     // At present only 1 of these is really expected.
@@ -596,6 +598,7 @@ private:
     nsRefPtr<ActiveElementManager> mActiveElementManager;
     bool mHasValidInnerSize;
     uint64_t mUniqueId;
+    bool mDestroyed;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

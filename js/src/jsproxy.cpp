@@ -330,6 +330,13 @@ BaseProxyHandler::regexp_toShared(JSContext *cx, HandleObject proxy,
 }
 
 bool
+BaseProxyHandler::boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp) const
+{
+    vp.setUndefined();
+    return true;
+}
+
+bool
 BaseProxyHandler::defaultValue(JSContext *cx, HandleObject proxy, JSType hint,
                                MutableHandleValue vp) const
 {
@@ -556,6 +563,13 @@ DirectProxyHandler::regexp_toShared(JSContext *cx, HandleObject proxy,
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return RegExpToShared(cx, target, g);
+}
+
+bool
+DirectProxyHandler::boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp) const
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    return Unbox(cx, target, vp);
 }
 
 JSObject *
@@ -796,7 +810,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
  * eventually moving towards eliminating one of those slots, and so we don't
  * want to add a dependency here.
  */
-static Class CallConstructHolder = {
+static const Class CallConstructHolder = {
     "CallConstructHolder",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS
 };
@@ -1866,7 +1880,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
         return false;
 
     // step 9
-    bool success = ToBoolean(trapResult);;
+    bool success = ToBoolean(trapResult);
 
     // step 11
     if (!success) {
@@ -2607,6 +2621,13 @@ Proxy::regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g)
 {
     JS_CHECK_RECURSION(cx, return false);
     return proxy->as<ProxyObject>().handler()->regexp_toShared(cx, proxy, g);
+}
+
+bool
+Proxy::boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    return proxy->as<ProxyObject>().handler()->boxedValue_unbox(cx, proxy, vp);
 }
 
 bool

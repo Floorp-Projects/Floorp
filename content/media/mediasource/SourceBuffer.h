@@ -21,7 +21,7 @@
 #include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nscore.h"
 
 class JSObject;
@@ -32,7 +32,7 @@ namespace mozilla {
 class ContainerParser;
 class ErrorResult;
 class SourceBufferResource;
-class SubBufferDecoder;
+class SourceBufferDecoder;
 template <typename T> class AsyncEventRunner;
 
 namespace dom {
@@ -141,8 +141,8 @@ private:
 
   nsAutoPtr<ContainerParser> mParser;
 
-  nsRefPtr<SubBufferDecoder> mDecoder;
-  nsTArray<nsRefPtr<SubBufferDecoder>> mDecoders;
+  nsRefPtr<SourceBufferDecoder> mDecoder;
+  nsTArray<nsRefPtr<SourceBufferDecoder>> mDecoders;
 
   double mAppendWindowStart;
   double mAppendWindowEnd;

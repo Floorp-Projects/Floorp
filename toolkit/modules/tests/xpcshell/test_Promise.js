@@ -1089,6 +1089,17 @@ make_promise_test(function test_caught_is_not_reported() {
   );
 }));
 
+// Bug 1033406 - Make sure Promise works even after freezing.
+tests.push(
+  make_promise_test(function test_freezing_promise(test) {
+    var p = new Promise(function executor(resolve) {
+      do_execute_soon(resolve);
+    });
+    Object.freeze(p);
+    return p;
+  })
+);
+
 function run_test()
 {
   do_test_pending();

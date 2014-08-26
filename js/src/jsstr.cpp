@@ -58,6 +58,7 @@ using namespace js::unicode;
 using JS::Symbol;
 using JS::SymbolCode;
 
+using mozilla::AssertedCast;
 using mozilla::CheckedInt;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
@@ -66,7 +67,6 @@ using mozilla::Move;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::RangedPtr;
-using mozilla::SafeCast;
 using mozilla::UniquePtr;
 
 using JS::AutoCheckCannotGC;
@@ -240,7 +240,7 @@ Unescape(StringBuffer &sb, const mozilla::Range<const CharT> chars)
      * comparisons without unsigned-underflow hazards.
      */
     static_assert(JSString::MAX_LENGTH <= INT_MAX, "String length must fit in a signed integer");
-    int length = SafeCast<int>(chars.length());
+    int length = AssertedCast<int>(chars.length());
 
     /*
      * Note that the spec algorithm has been optimized to avoid building
@@ -1014,7 +1014,7 @@ str_normalize(JSContext *cx, unsigned argc, Value *vp)
     static const size_t INLINE_CAPACITY = 32;
 
     const UChar *srcChars = JSCharToUChar(stableChars.twoByteRange().start().get());
-    int32_t srcLen = SafeCast<int32_t>(str->length());
+    int32_t srcLen = AssertedCast<int32_t>(str->length());
     Vector<jschar, INLINE_CAPACITY> chars(cx);
     if (!chars.resize(INLINE_CAPACITY))
         return false;

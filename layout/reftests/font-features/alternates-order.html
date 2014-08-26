@@ -10,13 +10,13 @@
 @font-face {
   font-family: fontA;
   src: url(../fonts/LinLibertine_Re-4.7.5.woff) format("woff");
-  -moz-font-feature-settings: "ss05" on;
+  font-feature-settings: "ss05" on;
 }
 
 @font-face {
   font-family: fontB;
   src: url(../fonts/LinLibertine_Re-4.7.5.woff) format("woff");
-  -moz-font-feature-settings: "ss05" off;
+  font-feature-settings: "ss05" off;
 }
 
 @font-feature-values libertine {
@@ -49,7 +49,7 @@ body {
   line-height: 1.2em;
 }
 
-/* -moz-font-feature-settings: "ss05"; crossed W */
+/* font-feature-settings: "ss05"; crossed W */
 
 div { margin: 0 20px; }
 
@@ -84,14 +84,14 @@ div { margin: 0 20px; }
 #test6 {
   /* testing one feature doesn't affect another */
   font-variant-alternates: styleset(somethingElse);
-  -moz-font-feature-settings: "ss05" on;
+  font-feature-settings: "ss05" on;
 }
 
 #test7 {
   /* testing font-specificity of feature value rule */
   font-family: fontA;
   font-variant-alternates: styleset(scriptJ);
-  -moz-font-feature-settings: "ss06";
+  font-feature-settings: "ss06";
 }
 
 #test8 {

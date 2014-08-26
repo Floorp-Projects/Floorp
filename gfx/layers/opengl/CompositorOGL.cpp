@@ -42,7 +42,7 @@
 #include "TiledLayerBuffer.h"           // for TiledLayerComposer
 #include "HeapCopyOfStackArray.h"
 
-#if MOZ_ANDROID_OMTC
+#if MOZ_WIDGET_ANDROID
 #include "TexturePoolOGL.h"
 #endif
 
@@ -474,8 +474,8 @@ DecomposeIntoNoRepeatRects(const Rect& aRect,
 
   // If we are dealing with wrapping br.x and br.y are greater than 1.0 so
   // wrap them here as well.
-  br = Point(xwrap ? WrapTexCoord(br.x) : br.x,
-             ywrap ? WrapTexCoord(br.y) : br.y);
+  br = Point(xwrap ? WrapTexCoord(br.x) : br.x.value,
+             ywrap ? WrapTexCoord(br.y) : br.y.value);
 
   // If we wrap around along the x axis, we will draw first from
   // tl.x .. 1.0 and then from 0.0 .. br.x (which we just wrapped above).
@@ -750,7 +750,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mPixelsPerFrame = width * height;
   mPixelsFilled = 0;
 
-#if MOZ_ANDROID_OMTC
+#if MOZ_WIDGET_ANDROID
   TexturePoolOGL::Fill(gl());
 #endif
 
@@ -759,8 +759,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   // UI for its dynamic toolbar.
   IntPoint origin;
   if (!mTarget) {
-    origin.x = -mRenderOffset.x;
-    origin.y = -mRenderOffset.y;
+    origin = -TruncatedToInt(mRenderOffset.ToUnknownPoint());
   }
 
   mCurrentRenderTarget =
@@ -787,7 +786,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   // If the Android compositor is being used, this clear will be done in
   // DrawWindowUnderlay. Make sure the bits used here match up with those used
   // in mobile/android/base/gfx/LayerRenderer.java
-#ifndef MOZ_ANDROID_OMTC
+#ifndef MOZ_WIDGET_ANDROID
   mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 #endif
@@ -977,6 +976,8 @@ static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIs
 
   GLenum srcBlend;
   GLenum dstBlend;
+  GLenum srcAlphaBlend = LOCAL_GL_ONE;
+  GLenum dstAlphaBlend = LOCAL_GL_ONE;
 
   switch (aBlendMode) {
     case gfx::CompositionOp::OP_OVER:
@@ -994,13 +995,19 @@ static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIs
       srcBlend = LOCAL_GL_DST_COLOR;
       dstBlend = LOCAL_GL_ONE_MINUS_SRC_ALPHA;
       break;
+    case gfx::CompositionOp::OP_SOURCE:
+      srcBlend = aIsPremultiplied ? LOCAL_GL_ONE : LOCAL_GL_SRC_ALPHA;
+      dstBlend = LOCAL_GL_ZERO;
+      srcAlphaBlend = LOCAL_GL_ONE;
+      dstAlphaBlend = LOCAL_GL_ZERO;
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported blend mode!");
       return false;
   }
 
   aGL->fBlendFuncSeparate(srcBlend, dstBlend,
-                          LOCAL_GL_ONE, LOCAL_GL_ONE);
+                          srcAlphaBlend, dstAlphaBlend);
   return true;
 }
 

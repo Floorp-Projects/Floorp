@@ -21,7 +21,9 @@ const PREF_LOG_LEVEL_DUMP = "identity.fxaccounts.log.appender.dump";
 // identifiable info, credentials, etc) will be logged.
 const PREF_LOG_SENSITIVE_DETAILS = "identity.fxaccounts.log.sensitive";
 
-XPCOMUtils.defineLazyGetter(this, 'log', function() {
+let exports = Object.create(null);
+
+XPCOMUtils.defineLazyGetter(exports, 'log', function() {
   let log = Log.repository.getLogger("FirefoxAccounts");
   // We set the log level to debug, but the default dump appender is set to
   // the level reflected in the pref.  Other code that consumes FxA may then
@@ -52,7 +54,7 @@ XPCOMUtils.defineLazyGetter(this, 'log', function() {
 
 // A boolean to indicate if personally identifiable information (or anything
 // else sensitive, such as credentials) should be logged.
-XPCOMUtils.defineLazyGetter(this, 'logPII', function() {
+XPCOMUtils.defineLazyGetter(exports, 'logPII', function() {
   try {
     return Services.prefs.getBoolPref(PREF_LOG_SENSITIVE_DETAILS);
   } catch (_) {
@@ -60,101 +62,123 @@ XPCOMUtils.defineLazyGetter(this, 'logPII', function() {
   }
 });
 
-this.FXACCOUNTS_PERMISSION = "firefox-accounts";
+exports.FXACCOUNTS_PERMISSION = "firefox-accounts";
 
-this.DATA_FORMAT_VERSION = 1;
-this.DEFAULT_STORAGE_FILENAME = "signedInUser.json";
+exports.DATA_FORMAT_VERSION = 1;
+exports.DEFAULT_STORAGE_FILENAME = "signedInUser.json";
 
 // Token life times.
 // Having this parameter be short has limited security value and can cause
 // spurious authentication values if the client's clock is skewed and
 // we fail to adjust. See Bug 983256.
-this.ASSERTION_LIFETIME = 1000 * 3600 * 24 * 365 * 25; // 25 years
+exports.ASSERTION_LIFETIME = 1000 * 3600 * 24 * 365 * 25; // 25 years
 // This is a time period we want to guarantee that the assertion will be
 // valid after we generate it (e.g., the signed cert won't expire in this
 // period).
-this.ASSERTION_USE_PERIOD = 1000 * 60 * 5; // 5 minutes
-this.CERT_LIFETIME      = 1000 * 3600 * 6;  // 6 hours
-this.KEY_LIFETIME       = 1000 * 3600 * 12; // 12 hours
+exports.ASSERTION_USE_PERIOD = 1000 * 60 * 5; // 5 minutes
+exports.CERT_LIFETIME      = 1000 * 3600 * 6;  // 6 hours
+exports.KEY_LIFETIME       = 1000 * 3600 * 12; // 12 hours
 
 // Polling timings.
-this.POLL_SESSION       = 1000 * 60 * 5;    // 5 minutes
-this.POLL_STEP          = 1000 * 3;         // 3 seconds
+exports.POLL_SESSION       = 1000 * 60 * 5;    // 5 minutes
+exports.POLL_STEP          = 1000 * 3;         // 3 seconds
 
 // Observer notifications.
-this.ONLOGIN_NOTIFICATION = "fxaccounts:onlogin";
-this.ONVERIFIED_NOTIFICATION = "fxaccounts:onverified";
-this.ONLOGOUT_NOTIFICATION = "fxaccounts:onlogout";
+exports.ONLOGIN_NOTIFICATION = "fxaccounts:onlogin";
+exports.ONVERIFIED_NOTIFICATION = "fxaccounts:onverified";
+exports.ONLOGOUT_NOTIFICATION = "fxaccounts:onlogout";
 // Internal to services/fxaccounts only
-this.ON_FXA_UPDATE_NOTIFICATION = "fxaccounts:update";
+exports.ON_FXA_UPDATE_NOTIFICATION = "fxaccounts:update";
 
 // UI Requests.
-this.UI_REQUEST_SIGN_IN_FLOW = "signInFlow";
-this.UI_REQUEST_REFRESH_AUTH = "refreshAuthentication";
+exports.UI_REQUEST_SIGN_IN_FLOW = "signInFlow";
+exports.UI_REQUEST_REFRESH_AUTH = "refreshAuthentication";
 
 // Server errno.
 // From https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#response-format
-this.ERRNO_ACCOUNT_ALREADY_EXISTS         = 101;
-this.ERRNO_ACCOUNT_DOES_NOT_EXIST         = 102;
-this.ERRNO_INCORRECT_PASSWORD             = 103;
-this.ERRNO_UNVERIFIED_ACCOUNT             = 104;
-this.ERRNO_INVALID_VERIFICATION_CODE      = 105;
-this.ERRNO_NOT_VALID_JSON_BODY            = 106;
-this.ERRNO_INVALID_BODY_PARAMETERS        = 107;
-this.ERRNO_MISSING_BODY_PARAMETERS        = 108;
-this.ERRNO_INVALID_REQUEST_SIGNATURE      = 109;
-this.ERRNO_INVALID_AUTH_TOKEN             = 110;
-this.ERRNO_INVALID_AUTH_TIMESTAMP         = 111;
-this.ERRNO_MISSING_CONTENT_LENGTH         = 112;
-this.ERRNO_REQUEST_BODY_TOO_LARGE         = 113;
-this.ERRNO_TOO_MANY_CLIENT_REQUESTS       = 114;
-this.ERRNO_INVALID_AUTH_NONCE             = 115;
-this.ERRNO_ENDPOINT_NO_LONGER_SUPPORTED   = 116;
-this.ERRNO_INCORRECT_LOGIN_METHOD         = 117;
-this.ERRNO_INCORRECT_KEY_RETRIEVAL_METHOD = 118;
-this.ERRNO_INCORRECT_API_VERSION          = 119;
-this.ERRNO_INCORRECT_EMAIL_CASE           = 120;
-this.ERRNO_SERVICE_TEMP_UNAVAILABLE       = 201;
-this.ERRNO_UNKNOWN_ERROR                  = 999;
+exports.ERRNO_ACCOUNT_ALREADY_EXISTS         = 101;
+exports.ERRNO_ACCOUNT_DOES_NOT_EXIST         = 102;
+exports.ERRNO_INCORRECT_PASSWORD             = 103;
+exports.ERRNO_UNVERIFIED_ACCOUNT             = 104;
+exports.ERRNO_INVALID_VERIFICATION_CODE      = 105;
+exports.ERRNO_NOT_VALID_JSON_BODY            = 106;
+exports.ERRNO_INVALID_BODY_PARAMETERS        = 107;
+exports.ERRNO_MISSING_BODY_PARAMETERS        = 108;
+exports.ERRNO_INVALID_REQUEST_SIGNATURE      = 109;
+exports.ERRNO_INVALID_AUTH_TOKEN             = 110;
+exports.ERRNO_INVALID_AUTH_TIMESTAMP         = 111;
+exports.ERRNO_MISSING_CONTENT_LENGTH         = 112;
+exports.ERRNO_REQUEST_BODY_TOO_LARGE         = 113;
+exports.ERRNO_TOO_MANY_CLIENT_REQUESTS       = 114;
+exports.ERRNO_INVALID_AUTH_NONCE             = 115;
+exports.ERRNO_ENDPOINT_NO_LONGER_SUPPORTED   = 116;
+exports.ERRNO_INCORRECT_LOGIN_METHOD         = 117;
+exports.ERRNO_INCORRECT_KEY_RETRIEVAL_METHOD = 118;
+exports.ERRNO_INCORRECT_API_VERSION          = 119;
+exports.ERRNO_INCORRECT_EMAIL_CASE           = 120;
+exports.ERRNO_SERVICE_TEMP_UNAVAILABLE       = 201;
+exports.ERRNO_UNKNOWN_ERROR                  = 999;
 
 // Errors.
-this.ERROR_ACCOUNT_ALREADY_EXISTS         = "ACCOUNT_ALREADY_EXISTS";
-this.ERROR_ACCOUNT_DOES_NOT_EXIST         = "ACCOUNT_DOES_NOT_EXIST ";
-this.ERROR_ALREADY_SIGNED_IN_USER         = "ALREADY_SIGNED_IN_USER";
-this.ERROR_ENDPOINT_NO_LONGER_SUPPORTED   = "ENDPOINT_NO_LONGER_SUPPORTED";
-this.ERROR_INCORRECT_API_VERSION          = "INCORRECT_API_VERSION";
-this.ERROR_INCORRECT_EMAIL_CASE           = "INCORRECT_EMAIL_CASE";
-this.ERROR_INCORRECT_KEY_RETRIEVAL_METHOD = "INCORRECT_KEY_RETRIEVAL_METHOD";
-this.ERROR_INCORRECT_LOGIN_METHOD         = "INCORRECT_LOGIN_METHOD";
-this.ERROR_INVALID_EMAIL                  = "INVALID_EMAIL";
-this.ERROR_INVALID_AUDIENCE               = "INVALID_AUDIENCE";
-this.ERROR_INVALID_AUTH_TOKEN             = "INVALID_AUTH_TOKEN";
-this.ERROR_INVALID_AUTH_TIMESTAMP         = "INVALID_AUTH_TIMESTAMP";
-this.ERROR_INVALID_AUTH_NONCE             = "INVALID_AUTH_NONCE";
-this.ERROR_INVALID_BODY_PARAMETERS        = "INVALID_BODY_PARAMETERS";
-this.ERROR_INVALID_PASSWORD               = "INVALID_PASSWORD";
-this.ERROR_INVALID_VERIFICATION_CODE      = "INVALID_VERIFICATION_CODE";
-this.ERROR_INVALID_REFRESH_AUTH_VALUE     = "INVALID_REFRESH_AUTH_VALUE";
-this.ERROR_INVALID_REQUEST_SIGNATURE      = "INVALID_REQUEST_SIGNATURE";
-this.ERROR_INTERNAL_INVALID_USER          = "INTERNAL_ERROR_INVALID_USER";
-this.ERROR_MISSING_BODY_PARAMETERS        = "MISSING_BODY_PARAMETERS";
-this.ERROR_MISSING_CONTENT_LENGTH         = "MISSING_CONTENT_LENGTH";
-this.ERROR_NO_TOKEN_SESSION               = "NO_TOKEN_SESSION";
-this.ERROR_NO_SILENT_REFRESH_AUTH         = "NO_SILENT_REFRESH_AUTH";
-this.ERROR_NOT_VALID_JSON_BODY            = "NOT_VALID_JSON_BODY";
-this.ERROR_OFFLINE                        = "OFFLINE";
-this.ERROR_PERMISSION_DENIED              = "PERMISSION_DENIED";
-this.ERROR_REQUEST_BODY_TOO_LARGE         = "REQUEST_BODY_TOO_LARGE";
-this.ERROR_SERVER_ERROR                   = "SERVER_ERROR";
-this.ERROR_TOO_MANY_CLIENT_REQUESTS       = "TOO_MANY_CLIENT_REQUESTS";
-this.ERROR_SERVICE_TEMP_UNAVAILABLE       = "SERVICE_TEMPORARY_UNAVAILABLE";
-this.ERROR_UI_ERROR                       = "UI_ERROR";
-this.ERROR_UI_REQUEST                     = "UI_REQUEST";
-this.ERROR_UNKNOWN                        = "UNKNOWN_ERROR";
-this.ERROR_UNVERIFIED_ACCOUNT             = "UNVERIFIED_ACCOUNT";
+exports.ERROR_ACCOUNT_ALREADY_EXISTS         = "ACCOUNT_ALREADY_EXISTS";
+exports.ERROR_ACCOUNT_DOES_NOT_EXIST         = "ACCOUNT_DOES_NOT_EXIST ";
+exports.ERROR_ALREADY_SIGNED_IN_USER         = "ALREADY_SIGNED_IN_USER";
+exports.ERROR_ENDPOINT_NO_LONGER_SUPPORTED   = "ENDPOINT_NO_LONGER_SUPPORTED";
+exports.ERROR_INCORRECT_API_VERSION          = "INCORRECT_API_VERSION";
+exports.ERROR_INCORRECT_EMAIL_CASE           = "INCORRECT_EMAIL_CASE";
+exports.ERROR_INCORRECT_KEY_RETRIEVAL_METHOD = "INCORRECT_KEY_RETRIEVAL_METHOD";
+exports.ERROR_INCORRECT_LOGIN_METHOD         = "INCORRECT_LOGIN_METHOD";
+exports.ERROR_INVALID_EMAIL                  = "INVALID_EMAIL";
+exports.ERROR_INVALID_AUDIENCE               = "INVALID_AUDIENCE";
+exports.ERROR_INVALID_AUTH_TOKEN             = "INVALID_AUTH_TOKEN";
+exports.ERROR_INVALID_AUTH_TIMESTAMP         = "INVALID_AUTH_TIMESTAMP";
+exports.ERROR_INVALID_AUTH_NONCE             = "INVALID_AUTH_NONCE";
+exports.ERROR_INVALID_BODY_PARAMETERS        = "INVALID_BODY_PARAMETERS";
+exports.ERROR_INVALID_PASSWORD               = "INVALID_PASSWORD";
+exports.ERROR_INVALID_VERIFICATION_CODE      = "INVALID_VERIFICATION_CODE";
+exports.ERROR_INVALID_REFRESH_AUTH_VALUE     = "INVALID_REFRESH_AUTH_VALUE";
+exports.ERROR_INVALID_REQUEST_SIGNATURE      = "INVALID_REQUEST_SIGNATURE";
+exports.ERROR_INTERNAL_INVALID_USER          = "INTERNAL_ERROR_INVALID_USER";
+exports.ERROR_MISSING_BODY_PARAMETERS        = "MISSING_BODY_PARAMETERS";
+exports.ERROR_MISSING_CONTENT_LENGTH         = "MISSING_CONTENT_LENGTH";
+exports.ERROR_NO_TOKEN_SESSION               = "NO_TOKEN_SESSION";
+exports.ERROR_NO_SILENT_REFRESH_AUTH         = "NO_SILENT_REFRESH_AUTH";
+exports.ERROR_NOT_VALID_JSON_BODY            = "NOT_VALID_JSON_BODY";
+exports.ERROR_OFFLINE                        = "OFFLINE";
+exports.ERROR_PERMISSION_DENIED              = "PERMISSION_DENIED";
+exports.ERROR_REQUEST_BODY_TOO_LARGE         = "REQUEST_BODY_TOO_LARGE";
+exports.ERROR_SERVER_ERROR                   = "SERVER_ERROR";
+exports.ERROR_TOO_MANY_CLIENT_REQUESTS       = "TOO_MANY_CLIENT_REQUESTS";
+exports.ERROR_SERVICE_TEMP_UNAVAILABLE       = "SERVICE_TEMPORARY_UNAVAILABLE";
+exports.ERROR_UI_ERROR                       = "UI_ERROR";
+exports.ERROR_UI_REQUEST                     = "UI_REQUEST";
+exports.ERROR_UNKNOWN                        = "UNKNOWN_ERROR";
+exports.ERROR_UNVERIFIED_ACCOUNT             = "UNVERIFIED_ACCOUNT";
+
+// FxAccounts has the ability to "split" the credentials between a plain-text
+// JSON file in the profile dir and in the login manager.
+// These constants relate to that.
+
+// The fields we save in the plaintext JSON.
+// See bug 1013064 comments 23-25 for why the sessionToken is "safe"
+exports.FXA_PWDMGR_PLAINTEXT_FIELDS = ["email", "verified", "authAt",
+                                       "sessionToken", "uid"];
+// The pseudo-host we use in the login manager
+exports.FXA_PWDMGR_HOST = "chrome://FirefoxAccounts";
+// The realm we use in the login manager.
+exports.FXA_PWDMGR_REALM = "Firefox Accounts credentials";
 
 // Error matching.
-this.SERVER_ERRNO_TO_ERROR = {};
+exports.SERVER_ERRNO_TO_ERROR = {};
+
+for (let id in exports) {
+  this[id] = exports[id];
+}
+
+// Allow this file to be imported via Components.utils.import().
+this.EXPORTED_SYMBOLS = Object.keys(exports);
+
+// Set these up now that everything has been loaded into |this|.
 SERVER_ERRNO_TO_ERROR[ERRNO_ACCOUNT_ALREADY_EXISTS]         = ERROR_ACCOUNT_ALREADY_EXISTS;
 SERVER_ERRNO_TO_ERROR[ERRNO_ACCOUNT_DOES_NOT_EXIST]         = ERROR_ACCOUNT_DOES_NOT_EXIST;
 SERVER_ERRNO_TO_ERROR[ERRNO_INCORRECT_PASSWORD]             = ERROR_INVALID_PASSWORD;
@@ -177,19 +201,3 @@ SERVER_ERRNO_TO_ERROR[ERRNO_INCORRECT_API_VERSION]          = ERROR_INCORRECT_AP
 SERVER_ERRNO_TO_ERROR[ERRNO_INCORRECT_EMAIL_CASE]           = ERROR_INCORRECT_EMAIL_CASE;
 SERVER_ERRNO_TO_ERROR[ERRNO_SERVICE_TEMP_UNAVAILABLE]       = ERROR_SERVICE_TEMP_UNAVAILABLE;
 SERVER_ERRNO_TO_ERROR[ERRNO_UNKNOWN_ERROR]                  = ERROR_UNKNOWN;
-
-// FxAccounts has the ability to "split" the credentials between a plain-text
-// JSON file in the profile dir and in the login manager.
-// These constants relate to that.
-
-// The fields we save in the plaintext JSON.
-// See bug 1013064 comments 23-25 for why the sessionToken is "safe"
-this.FXA_PWDMGR_PLAINTEXT_FIELDS = ["email", "verified", "authAt",
-                                    "sessionToken", "uid"];
-// The pseudo-host we use in the login manager
-this.FXA_PWDMGR_HOST = "chrome://FirefoxAccounts";
-// The realm we use in the login manager.
-this.FXA_PWDMGR_REALM = "Firefox Accounts credentials";
-
-// Allow this file to be imported via Components.utils.import().
-this.EXPORTED_SYMBOLS = Object.keys(this);

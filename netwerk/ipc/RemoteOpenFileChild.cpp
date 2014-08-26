@@ -20,6 +20,10 @@
 // needed to alloc/free NSPR file descriptors
 #include "private/pprio.h"
 
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_COCOA)
+#include <unistd.h>
+#endif
+
 using namespace mozilla::ipc;
 
 namespace mozilla {

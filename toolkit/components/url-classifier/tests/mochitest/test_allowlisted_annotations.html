@@ -40,6 +40,8 @@ function clearPermissions() {
   ok(!SpecialPowers.testPermission("trackingprotection",
                                    Ci.nsIPermissionManager.ALLOW_ACTION,
                                    { url: "https://allowlisted.example.com" }));
+  SpecialPowers.clearUserPref("privacy.trackingprotection.enabled");
+  SpecialPowers.clearUserPref("channelclassifier.allowlist_example");
 }
 
 function doUpdate(update) {
@@ -60,13 +62,8 @@ function doUpdate(update) {
       SimpleTest.finish();
     },
     updateSuccess: function(requestedTimeout) {
-      SpecialPowers.pushPrefEnv(
-        {"set" : [["privacy.trackingprotection.enabled", true]]},
-        function loadTestFrame() {
-          document.getElementById("testFrame").src =
-            "allowlistAnnotatedFrame.html";
-        }
-      );
+      SpecialPowers.setBoolPref("privacy.trackingprotection.enabled", true);
+      document.getElementById("testFrame").src = "allowlistAnnotatedFrame.html";
     }
   };
 
