@@ -461,8 +461,9 @@ AsyncCubebTask::Run()
 }
 
 AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, dom::AudioChannel aChannel)
-  : GraphDriver(aGraphImpl),
-    mStarted(false)
+  : GraphDriver(aGraphImpl)
+  , mStarted(false)
+  , mAudioChannel(aChannel)
 {
 }
 
@@ -482,15 +483,16 @@ AudioCallbackDriver::Init()
 
 #if defined(__ANDROID__)
 #if defined(MOZ_B2G)
-  params.stream_type = CubebUtils::ConvertChannelToCubebType(aChannels);
+  params.stream_type = CubebUtils::ConvertChannelToCubebType(mAudioChannel);
 #else
   params.stream_type = CUBEB_STREAM_TYPE_MUSIC;
 #endif
-
   if (params.stream_type == CUBEB_STREAM_TYPE_MAX) {
     NS_WARNING("Bad stream type");
     return;
   }
+#else
+  (void)mAudioChannel;
 #endif
 
   params.channels = mGraphImpl->AudioChannelCount();

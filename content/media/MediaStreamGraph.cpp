@@ -2641,7 +2641,8 @@ ProcessedMediaStream::DestroyImpl()
 
 MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
                                            TrackRate aSampleRate,
-                                           DOMMediaStream::TrackTypeHints aHint= DOMMediaStream::HINT_CONTENTS_UNKNOWN)
+                                           DOMMediaStream::TrackTypeHints aHint= DOMMediaStream::HINT_CONTENTS_UNKNOWN,
+                                           dom::AudioChannel aChannel)
   : mDriverHolder(MOZ_THIS_IN_INITIALIZER_LIST())
   , mProcessingGraphUpdateIndex(0)
   , mPortCount(0)
@@ -2674,7 +2675,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
 
   if (mRealtime) {
     if (aHint & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-      AudioCallbackDriver* driver = new AudioCallbackDriver(this);
+      AudioCallbackDriver* driver = new AudioCallbackDriver(this, aChannel);
       mDriverHolder.Switch(driver);
       mMixer.AddCallback(driver);
     } else {
@@ -2719,7 +2720,7 @@ MediaStreamGraphShutdownObserver::Observe(nsISupports *aSubject,
 }
 
 MediaStreamGraph*
-MediaStreamGraph::GetInstance(DOMMediaStream::TrackTypeHints aHint)
+MediaStreamGraph::GetInstance(DOMMediaStream::TrackTypeHints aHint, dom::AudioChannel aChannel)
 {
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
 
@@ -2731,7 +2732,7 @@ MediaStreamGraph::GetInstance(DOMMediaStream::TrackTypeHints aHint)
 
     CubebUtils::InitPreferredSampleRate();
 
-    gGraph = new MediaStreamGraphImpl(true, CubebUtils::PreferredSampleRate(), aHint);
+    gGraph = new MediaStreamGraphImpl(true, CubebUtils::PreferredSampleRate(), aHint, aChannel);
 
     STREAM_LOG(PR_LOG_DEBUG, ("Starting up MediaStreamGraph %p", gGraph));
   }
