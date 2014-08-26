@@ -44,7 +44,10 @@ public:
 
   ~AudioMixer()
   {
-    mCallbacks.clear();
+    MixerCallback* cb;
+    while ((cb = mCallbacks.popFirst())) {
+      delete cb;
+    }
   }
 
   void StartMixing()
@@ -108,6 +111,7 @@ public:
          cb != nullptr; cb = cb->getNext()) {
       if (cb->mReceiver == aReceiver) {
         cb->remove();
+        delete cb;
         return true;
       }
     }
