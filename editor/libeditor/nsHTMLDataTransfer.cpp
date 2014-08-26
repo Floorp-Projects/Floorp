@@ -411,9 +411,9 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     // this is because if there is a br at end of what we paste, it will make
     // the invisible br visible.
     nsWSRunObject wsObj(this, parentNode, offsetOfNewNode);
-    if (nsTextEditUtils::IsBreak(wsObj.mEndReasonNode) && 
-        !IsVisBreak(wsObj.mEndReasonNode) )
-    {
+    if (wsObj.mEndReasonNode &&
+        nsTextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
+        !IsVisBreak(wsObj.mEndReasonNode)) {
       rv = DeleteNode(wsObj.mEndReasonNode);
       NS_ENSURE_SUCCESS(rv, rv);
     }
