@@ -134,8 +134,8 @@
       let href =  window.location.href;
       href = href.substring(0, href.lastIndexOf('/'));
       href = href.substring(0, href.lastIndexOf('/'));
-      iframe.src = href + "/test?consoleLevel=INFO";
-
+      let manifest = "tests/dom/devicestorage/ipc/ipc.json";
+      iframe.src = href + "/test?consoleLevel=INFO&testManifest=" + manifest;
       document.body.appendChild(iframe);
     }
 

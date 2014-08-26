@@ -1,0 +1,7 @@
+{
+"runtests":{
+},
+"excludetests":{
+    "dom/devicestorage/test/test_dirs.html":"excluded"
+   }
+}
