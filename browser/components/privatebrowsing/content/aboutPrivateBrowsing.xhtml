@@ -13,14 +13,13 @@
   %brandDTD;
   <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
   %browserDTD;
-  <!ENTITY % privatebrowsingpageDTD SYSTEM "chrome://browser/locale/aboutPrivateBrowsing.dtd">
-  %privatebrowsingpageDTD;
+  <!ENTITY % aboutPrivateBrowsingDTD SYSTEM "chrome://browser/locale/aboutPrivateBrowsing.dtd">
+  %aboutPrivateBrowsingDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all"/>
-    <link rel="stylesheet" href="chrome://browser/skin/aboutPrivateBrowsing.css" type="text/css" media="all"/>
+    <link rel="stylesheet" href="chrome://browser/content/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <style type="text/css"><![CDATA[
       body.normal .showPrivate,
       body.private .showNormal {
@@ -34,11 +33,11 @@
       Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
       if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
-        document.title = "]]>&privatebrowsingpage.title.normal;<![CDATA[";
+        document.title = "]]>&aboutPrivateBrowsing.title.normal;<![CDATA[";
         setFavIcon("chrome://global/skin/icons/question-16.png");
       } else {
 #ifndef XP_MACOSX
-        document.title = "]]>&privatebrowsingpage.title;<![CDATA[";
+        document.title = "]]>&aboutPrivateBrowsing.title;<![CDATA[";
 #endif
         setFavIcon("chrome://browser/skin/Privacy-16.png");
       }
@@ -83,12 +82,12 @@
         class="private">
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
-    <div id="errorPageContainer">
+    <div id="pageContainer">
 
       <!-- Error Title -->
       <div id="errorTitle">
-        <h1 id="errorTitleText" class="showPrivate">&privatebrowsingpage.title;</h1>
-        <h1 id="errorTitleTextNormal" class="showNormal">&privatebrowsingpage.title.normal;</h1>
+        <h1 class="titleText showPrivate">&aboutPrivateBrowsing.title;</h1>
+        <h1 class="titleText showNormal">&aboutPrivateBrowsing.title.normal;</h1>
       </div>
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
@@ -96,36 +95,31 @@
 
         <!-- Short Description -->
         <div id="errorShortDesc">
-          <p id="errorShortDescText" class="showPrivate">&privatebrowsingpage.perwindow.issueDesc;</p>
-          <p id="errorShortDescTextNormal" class="showNormal">&privatebrowsingpage.perwindow.issueDesc.normal;</p>
+          <p id="errorShortDescText" class="showPrivate">&aboutPrivateBrowsing.subtitle;</p>
+          <p id="errorShortDescTextNormal" class="showNormal">&aboutPrivateBrowsing.subtitle.normal;</p>
         </div>
 
         <!-- Long Description -->
         <div id="errorLongDesc">
-          <p id="errorLongDescText">&privatebrowsingpage.perwindow.description;</p>
+          <p id="errorLongDescText">&aboutPrivateBrowsing.description;</p>
         </div>
+
+        <p class="showNormal">&aboutPrivateBrowsing.notPrivate;</p>
 
         <!-- Start Private Browsing -->
-        <div id="startPrivateBrowsingDesc" class="showNormal">
-          <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  id="startPrivateBrowsing" label="&privatebrowsingpage.openPrivateWindow.label;"
-                  accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;"
-                  oncommand="openPrivateWindow();"/>
-        </div>
-
-        <!-- Footer -->
-        <div id="footerDesc">
-          <p id="footerText" class="showPrivate">&privatebrowsingpage.howToStop3;</p>
-          <p id="footerTextNormal" class="showNormal">&privatebrowsingpage.howToStart4;</p>
-        </div>
+        <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                id="startPrivateBrowsing" class="showNormal"
+                label="&privatebrowsingpage.openPrivateWindow.label;"
+                accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;"
+                oncommand="openPrivateWindow();"/>
 
         <!-- More Info -->
         <div id="moreInfo" class="showPrivate">
           <p id="moreInfoText">
-            &privatebrowsingpage.moreInfo;
+            &aboutPrivateBrowsing.moreInfo;
           </p>
           <p id="moreInfoLinkContainer">
-            <a id="moreInfoLink" target="_blank">&privatebrowsingpage.learnMore;</a>
+            <a id="moreInfoLink" target="_blank">&aboutPrivateBrowsing.learnMore;</a>
           </p>
         </div>
       </div>
