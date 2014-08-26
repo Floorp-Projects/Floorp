@@ -15,6 +15,11 @@ body {
   justify-content: center;
 }
 
+body.normal .showPrivate,
+body.private .showNormal {
+  display: none;
+}
+
 #pageContainer {
   min-width: 320px;
   max-width: 512px;
