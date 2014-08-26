@@ -30,6 +30,7 @@
 #include "gfx2DGlue.h"
 #include "LayersLogging.h"
 #include "UnitTransforms.h"             // for TransformTo
+#include "mozilla/UniquePtr.h"
 
 // This is the minimum area that we deem reasonable to copy from the front buffer to the
 // back buffer on tile updates. If the valid region is smaller than this, we just
@@ -434,28 +435,49 @@ class TileExpiry MOZ_FINAL : public nsExpirationTracker<TileClient, 3>
 {
   public:
     TileExpiry() : nsExpirationTracker<TileClient, 3>(1000) {}
+
+    static void AddTile(TileClient* aTile)
+    {
+      if (!sTileExpiry) {
+        sTileExpiry = MakeUnique<TileExpiry>();
+      }
+
+      sTileExpiry->AddObject(aTile);
+    }
+
+    static void RemoveTile(TileClient* aTile)
+    {
+      MOZ_ASSERT(sTileExpiry);
+      sTileExpiry->RemoveObject(aTile);
+    }
+
+    static void Shutdown() {
+      sTileExpiry = nullptr;
+    }
   private:
-    virtual void NotifyExpired(TileClient* aTile)
+    virtual void NotifyExpired(TileClient* aTile) MOZ_OVERRIDE
     {
       aTile->DiscardBackBuffer();
     }
-};
 
-TileExpiry *TileExpirer()
+    static UniquePtr<TileExpiry> sTileExpiry;
+};
+UniquePtr<TileExpiry> TileExpiry::sTileExpiry;
+
+void ShutdownTileCache()
 {
-  static TileExpiry * sTileExpiry = new TileExpiry();
-  return sTileExpiry;
+  TileExpiry::Shutdown();
 }
 
 void
 TileClient::PrivateProtector::Set(TileClient * const aContainer, RefPtr<TextureClient> aNewValue)
 {
   if (mBuffer) {
-    TileExpirer()->RemoveObject(aContainer);
+    TileExpiry::RemoveTile(aContainer);
   }
   mBuffer = aNewValue;
   if (mBuffer) {
-    TileExpirer()->AddObject(aContainer);
+    TileExpiry::AddTile(aContainer);
   }
 }
 
@@ -475,7 +497,7 @@ TileClient::~TileClient()
 {
   if (mExpirationState.IsTracked()) {
     MOZ_ASSERT(mBackBuffer);
-    TileExpirer()->RemoveObject(this);
+    TileExpiry::RemoveTile(this);
   }
 }
 
