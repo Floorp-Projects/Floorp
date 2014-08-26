@@ -11,7 +11,9 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(DNSListenerProxy, nsIDNSListener)
+NS_IMPL_ISUPPORTS(DNSListenerProxy,
+                  nsIDNSListener,
+                  nsIDNSListenerProxy)
 
 NS_IMETHODIMP
 DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,
@@ -30,7 +32,12 @@ DNSListenerProxy::OnLookupCompleteRunnable::Run()
   return NS_OK;
 }
 
-
+NS_IMETHODIMP
+DNSListenerProxy::GetOriginalListener(nsIDNSListener **aOriginalListener)
+{
+  NS_IF_ADDREF(*aOriginalListener = mListener);
+  return NS_OK;
+}
 
 } // namespace net
 } // namespace mozilla
