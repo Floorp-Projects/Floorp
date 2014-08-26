@@ -630,6 +630,7 @@ AudioCallbackDriver::GetCurrentTime()
 
 void AudioCallbackDriver::WaitForNextIteration()
 {
+#if 0
   mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
 
   // We can't block on the monitor in the audio callback, so we kick off a new
@@ -642,6 +643,7 @@ void AudioCallbackDriver::WaitForNextIteration()
       new AsyncCubebTask(this, AsyncCubebTask::SLEEP);
     sleepEvent->Dispatch();
   }
+#endif
 }
 
 void
