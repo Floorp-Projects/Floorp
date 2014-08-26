@@ -37,7 +37,8 @@ nsMacUtilsImpl::GetArchString(nsAString& aArchString)
 
   CFIndex archCount = ::CFArrayGetCount(archList);
   for (CFIndex i = 0; i < archCount; i++) {
-    CFNumberRef arch = static_cast<CFNumberRef>(::CFArrayGetValueAtIndex(archList, i));
+    CFNumberRef arch =
+      static_cast<CFNumberRef>(::CFArrayGetValueAtIndex(archList, i));
 
     int archInt = 0;
     if (!::CFNumberGetValue(arch, kCFNumberIntType, &archInt)) {

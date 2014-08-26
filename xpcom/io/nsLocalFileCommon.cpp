@@ -241,9 +241,11 @@ nsLocalFile::GetRelativeDescriptor(nsIFile* aFromFile, nsACString& aResult)
     return NS_ERROR_FAILURE;
   }
 
-  for (nodeIndex = 0; nodeIndex < thisNodeCnt && nodeIndex < fromNodeCnt; ++nodeIndex) {
+  for (nodeIndex = 0; nodeIndex < thisNodeCnt &&
+       nodeIndex < fromNodeCnt; ++nodeIndex) {
 #ifdef XP_WIN
-    if (_wcsicmp(char16ptr_t(thisNodes[nodeIndex]), char16ptr_t(fromNodes[nodeIndex]))) {
+    if (_wcsicmp(char16ptr_t(thisNodes[nodeIndex]),
+                 char16ptr_t(fromNodes[nodeIndex]))) {
       break;
     }
 #else

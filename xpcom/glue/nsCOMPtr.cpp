@@ -16,8 +16,9 @@ nsQueryInterface::operator()(const nsIID& aIID, void** aAnswer) const
     NS_ASSERTION(NS_SUCCEEDED(status),
                  "interface not found---were you expecting that?");
 #endif
-  } else
+  } else {
     status = NS_ERROR_NULL_POINTER;
+  }
 
   return status;
 }
@@ -32,8 +33,9 @@ nsQueryInterfaceWithError::operator()(const nsIID& aIID, void** aAnswer) const
     NS_ASSERTION(NS_SUCCEEDED(status),
                  "interface not found---were you expecting that?");
 #endif
-  } else
+  } else {
     status = NS_ERROR_NULL_POINTER;
+  }
 
   if (mErrorPtr) {
     *mErrorPtr = status;

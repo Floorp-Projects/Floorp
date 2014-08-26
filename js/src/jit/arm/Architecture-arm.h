@@ -14,8 +14,8 @@
 
 #include "js/Utility.h"
 
-// Gcc appears to use __ARM_PCS_VFP to denote that the target is a hard-float
-// target.
+// GCC versions 4.6 and above define __ARM_PCS_VFP to denote a hard-float
+// ABI target.
 #if defined(__ARM_PCS_VFP)
 #define JS_CODEGEN_ARM_HARDFP
 #endif
@@ -519,6 +519,7 @@ bool HasVFPv3();
 bool HasVFP();
 bool Has32DP();
 bool HasIDIV();
+bool HasAlignmentFault();
 
 // Arm/D32 has double registers that can NOT be treated as float32 and this
 // requires some dances in lowering.
@@ -537,6 +538,8 @@ hasMultiAlias()
 }
 
 bool ParseARMHwCapFlags(const char *armHwCap);
+void InitARMFlags();
+uint32_t GetARMFlags();
 
 // If the simulator is used then the ABI choice is dynamic. Otherwise the ABI is
 // static and useHardFpABI is inlined so that unused branches can be optimized
