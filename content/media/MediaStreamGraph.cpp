@@ -2640,8 +2640,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
                                            TrackRate aSampleRate,
                                            DOMMediaStream::TrackTypeHints aHint= DOMMediaStream::HINT_CONTENTS_UNKNOWN,
                                            dom::AudioChannel aChannel)
-  : mDriverHolder(MOZ_THIS_IN_INITIALIZER_LIST())
-  , mProcessingGraphUpdateIndex(0)
+  : mProcessingGraphUpdateIndex(0)
   , mPortCount(0)
   , mMonitor("MediaStreamGraphImpl")
   , mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED)
@@ -2673,13 +2672,13 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
   if (mRealtime) {
     if (aHint & DOMMediaStream::HINT_CONTENTS_AUDIO) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(this, aChannel);
-      mDriverHolder.Switch(driver);
+      mDriver = driver;
       mMixer.AddCallback(driver);
     } else {
-      mDriverHolder.Switch(new SystemClockDriver(this));
+      mDriver = new SystemClockDriver(this);
     }
   } else {
-    mDriverHolder.Switch(new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS));
+     mDriver = new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS);
   }
 
   mLastMainThreadUpdate = TimeStamp::Now();

@@ -228,44 +228,6 @@ protected:
   { }
 };
 
-/**
- * A driver holder allows a MediaStreamGraph to seamlessly switch between
- * different Drivers, remembering the current time of the graph at time of
- * switch.
- */
-class DriverHolder
-{
-public:
-  DriverHolder(MediaStreamGraphImpl* aGraphImpl);
-  GraphTime GetCurrentTime();
-
-  // Immediately switch to another driver.
-  void Switch(GraphDriver* aDriver);
-  // Create the new driver, but switch to a new one when the new driver is
-  // ready. System drivers don't have much problems here, but audio drivers can
-  // take a little while to start to fire callbacks.
-  void SwitchAtNextIteration(GraphDriver* aDriver);
-
-  GraphDriver* GetDriver() {
-    MOZ_ASSERT(mDriver);
-    return mDriver.get();
-  }
-
-  void SetCurrentDriver(GraphDriver* aDriver) {
-    mDriver = aDriver;
-  }
-
-protected:
-  // The current driver
-  nsRefPtr<GraphDriver> mDriver;
-  // The lifetime of this pointer is equal to the lifetime of the graph, so it
-  // will never be null.
-  MediaStreamGraphImpl* mGraphImpl;
-  // XXX
-  GraphTime mNextIterationStart;
-  GraphTime mNextStateComputedTime;
-};
-
 class MediaStreamGraphInitThreadRunnable;
 
 /**

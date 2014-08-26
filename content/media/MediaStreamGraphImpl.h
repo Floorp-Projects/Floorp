@@ -399,13 +399,24 @@ public:
   }
 
   /**
+   * Signal to the graph that the thread has paused indefinitly,
+   * or resumed.
+   */
+  void PausedIndefinitly();
+  void ResumedFromPaused();
+
+  GraphDriver* CurrentDriver() {
+    return mDriver;
+  }
+
+  /**
    * Effectively set the new driver, while we are switching.
    * It is only safe to call this at the very end of an iteration, when there
    * has been a SwitchAtNextIteration call during the iteration. The driver
    * should return and pass the control to the new driver shortly after.
    */
   void SetCurrentDriver(GraphDriver* aDriver) {
-    mDriverHolder.SetCurrentDriver(aDriver);
+    mDriver = aDriver;
   }
 
   Monitor& GetMonitor() {
@@ -413,6 +424,14 @@ public:
   }
 
   // Data members
+  //
+  /**
+   * Graphs own owning references to their driver, until shutdown. When a driver
+   * switch occur, previous driver is either deleted, or it's ownership is
+   * passed to a event that will take care of the asynchronous cleanup, as
+   * audio stream can take some time to shut down.
+   */
+  nsRefPtr<GraphDriver> mDriver;
 
   // The following state is managed on the graph thread only, unless
   // mLifecycleState > LIFECYCLE_RUNNING in which case the graph thread
