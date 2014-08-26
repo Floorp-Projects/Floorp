@@ -36,14 +36,14 @@ public:
   AudioCallbackBufferWrapper()
     : mBuffer(nullptr),
       mSamples(0),
-      mSampleWriteOffset(0)
+      mSampleWriteOffset(1)
   {}
   /**
    * Set the buffer in this wrapper. This is to be called at the beginning of
    * the callback.
    */
   void SetBuffer(T* aBuffer, uint32_t aFrames) {
-    MOZ_ASSERT(!mBuffer && !mSamples && mSampleWriteOffset,
+    MOZ_ASSERT(!mBuffer && !mSamples,
         "SetBuffer called twice.");
     mBuffer = aBuffer;
     mSamples = FramesToSamples(CHANNELS, aFrames);
@@ -75,10 +75,12 @@ public:
    * instance can be reused.
    */
   void BufferFilled() {
-    MOZ_ASSERT(Available() == 0,
-        "Audio Buffer is not full by the end of the callback.");
-    MOZ_ASSERT(mSamples && mSampleWriteOffset && mBuffer,
-               "Buffer not set.");
+    // It's okay to have exactly zero samples here, it can happen we have an
+    // audio callback driver because of a hint on MSG creation, but the
+    // AudioOutputStream has not been created yet.
+    NS_WARN_IF_FALSE(Available() == 0 || mSampleWriteOffset == 0,
+            "Audio Buffer is not full by the end of the callback.");
+    MOZ_ASSERT(mSamples, "Buffer not set.");
     mSamples = 0;
     mSampleWriteOffset = 0;
     mBuffer = nullptr;
