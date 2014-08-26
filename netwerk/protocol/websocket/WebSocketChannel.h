@@ -14,7 +14,6 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsITimer.h"
 #include "nsIDNSListener.h"
-#include "nsIObserver.h"
 #include "nsIProtocolProxyCallback.h"
 #include "nsIChannelEventSink.h"
 #include "nsIHttpChannelInternal.h"
@@ -63,7 +62,6 @@ class WebSocketChannel : public BaseWebSocketChannel,
                          public nsIOutputStreamCallback,
                          public nsITimerCallback,
                          public nsIDNSListener,
-                         public nsIObserver,
                          public nsIProtocolProxyCallback,
                          public nsIInterfaceRequestor,
                          public nsIChannelEventSink
@@ -80,7 +78,6 @@ public:
   NS_DECL_NSIPROTOCOLPROXYCALLBACK
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
-  NS_DECL_NSIOBSERVER
 
   // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //
@@ -163,8 +160,8 @@ private:
 
   inline void ResetPingTimer()
   {
-    mPingOutstanding = 0;
     if (mPingTimer) {
+      mPingOutstanding = 0;
       mPingTimer->SetDelay(mPingInterval);
     }
   }

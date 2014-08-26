@@ -1004,18 +1004,29 @@ BluetoothServiceBluedroid::Connect(const nsAString& aDeviceAddress,
   ConnectDisconnect(true, aDeviceAddress, aRunnable, aServiceUuid, aCod);
 }
 
-bool
-BluetoothServiceBluedroid::IsConnected(uint16_t aProfileId)
-{
-  return true;
-}
-
 void
 BluetoothServiceBluedroid::Disconnect(
   const nsAString& aDeviceAddress, uint16_t aServiceUuid,
   BluetoothReplyRunnable* aRunnable)
 {
   ConnectDisconnect(false, aDeviceAddress, aRunnable, aServiceUuid);
+}
+
+void
+BluetoothServiceBluedroid::IsConnected(const uint16_t aServiceUuid,
+                                       BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  BluetoothProfileManagerBase* profile =
+    BluetoothUuidHelper::GetBluetoothProfileManager(aServiceUuid);
+  if (profile) {
+    DispatchBluetoothReply(aRunnable, profile->IsConnected(), EmptyString());
+  } else {
+    BT_WARNING("Can't find profile manager with uuid: %x", aServiceUuid);
+    DispatchBluetoothReply(aRunnable, false, EmptyString());
+  }
 }
 
 void
