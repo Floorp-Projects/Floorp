@@ -203,6 +203,7 @@ loop.webapp = (function($, _, OT, webL10n) {
 
     componentWillUnmount: function() {
       window.removeEventListener("click", this.clickHandler);
+      localStorage.setItem("has-seen-tos", "true");
     },
 
     clickHandler: function(e) {
@@ -235,6 +236,10 @@ loop.webapp = (function($, _, OT, webL10n) {
         "native-dropdown-large-parent": true,
         "standalone-dropdown-menu": true,
         "visually-hidden": !this.state.showCallOptionsMenu
+      });
+      var tosClasses = React.addons.classSet({
+        "terms-service": true,
+        hide: (localStorage.getItem("has-seen-tos") === "true")
       });
 
       return (
@@ -288,7 +293,7 @@ loop.webapp = (function($, _, OT, webL10n) {
               React.DOM.div({className: "flex-padding-1"})
             ), 
 
-            React.DOM.p({className: "terms-service", 
+            React.DOM.p({className: tosClasses, 
                dangerouslySetInnerHTML: {__html: tosHTML}})
           ), 
 
