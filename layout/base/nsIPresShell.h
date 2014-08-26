@@ -680,6 +680,10 @@ public:
    *                  If SCROLL_NO_PARENT_FRAMES is set then we only scroll
    *                  nodes in this document, not in any parent documents which
    *                  contain this document in a iframe or the like.
+   *                  If SCROLL_SMOOTH is set and CSSOM-VIEW scroll-behavior
+   *                  is enabled, we will scroll smoothly using
+   *                  nsIScrollableFrame::ScrollMode::SMOOTH_MSD; otherwise,
+   *                  nsIScrollableFrame::ScrollMode::INSTANT will be used.
    */
   virtual nsresult ScrollContentIntoView(nsIContent* aContent,
                                                      ScrollAxis  aVertical,
@@ -689,7 +693,8 @@ public:
   enum {
     SCROLL_FIRST_ANCESTOR_ONLY = 0x01,
     SCROLL_OVERFLOW_HIDDEN = 0x02,
-    SCROLL_NO_PARENT_FRAMES = 0x04
+    SCROLL_NO_PARENT_FRAMES = 0x04,
+    SCROLL_SMOOTH = 0x08
   };
   /**
    * Scrolls the view of the document so that the given area of a frame

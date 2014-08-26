@@ -135,6 +135,7 @@ public:
 
   // Enumeration for the valid decoding states
   enum State {
+    DECODER_STATE_DECODING_NONE,
     DECODER_STATE_DECODING_METADATA,
     DECODER_STATE_WAIT_FOR_RESOURCES,
     DECODER_STATE_DORMANT,
@@ -892,11 +893,6 @@ protected:
   // waiting to be awakened before it continues decoding. Synchronized
   // by the decoder monitor.
   bool mDecodeThreadWaiting;
-
-  // True if we've dispatched a task to the decode task queue to call
-  // ReadMetadata on the reader. We maintain a flag to ensure that we don't
-  // dispatch multiple tasks to re-do the metadata loading.
-  bool mDispatchedDecodeMetadataTask;
 
   // These two flags are true when we need to drop decoded samples that
   // we receive up to the next discontinuity. We do this when we seek;

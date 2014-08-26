@@ -250,9 +250,9 @@ CodeGeneratorMIPS::visitMinMaxD(LMinMaxD *ins)
 
     // Check for zero.
     masm.bind(&equal);
-    masm.loadConstantDouble(0.0, ScratchFloatReg);
+    masm.loadConstantDouble(0.0, ScratchDoubleReg);
     // First wasn't 0 or -0, so just return it.
-    masm.ma_bc1d(first, ScratchFloatReg, &done, Assembler::DoubleNotEqualOrUnordered, ShortJump);
+    masm.ma_bc1d(first, ScratchDoubleReg, &done, Assembler::DoubleNotEqualOrUnordered, ShortJump);
 
     // So now both operands are either -0 or 0.
     if (ins->mir()->isMax()) {
@@ -920,16 +920,16 @@ CodeGeneratorMIPS::visitPowHalfD(LPowHalfD *ins)
     Label done, skip;
 
     // Masm.pow(-Infinity, 0.5) == Infinity.
-    masm.loadConstantDouble(NegativeInfinity<double>(), ScratchFloatReg);
-    masm.ma_bc1d(input, ScratchFloatReg, &skip, Assembler::DoubleNotEqualOrUnordered, ShortJump);
-    masm.as_negd(output, ScratchFloatReg);
+    masm.loadConstantDouble(NegativeInfinity<double>(), ScratchDoubleReg);
+    masm.ma_bc1d(input, ScratchDoubleReg, &skip, Assembler::DoubleNotEqualOrUnordered, ShortJump);
+    masm.as_negd(output, ScratchDoubleReg);
     masm.ma_b(&done, ShortJump);
 
     masm.bind(&skip);
     // Math.pow(-0, 0.5) == 0 == Math.pow(0, 0.5).
     // Adding 0 converts any -0 to 0.
-    masm.loadConstantDouble(0.0, ScratchFloatReg);
-    masm.as_addd(output, input, ScratchFloatReg);
+    masm.loadConstantDouble(0.0, ScratchDoubleReg);
+    masm.as_addd(output, input, ScratchDoubleReg);
     masm.as_sqrtd(output, output);
 
     masm.bind(&done);
@@ -1087,7 +1087,7 @@ bool
 CodeGeneratorMIPS::visitFloor(LFloor *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchDoubleReg;
     Register output = ToRegister(lir->output());
 
     Label skipCheck, done;
@@ -1124,7 +1124,7 @@ bool
 CodeGeneratorMIPS::visitFloorF(LFloorF *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchFloat32Reg;
     Register output = ToRegister(lir->output());
 
     Label skipCheck, done;
@@ -1161,7 +1161,7 @@ bool
 CodeGeneratorMIPS::visitCeil(LCeil *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchDoubleReg;
     Register output = ToRegister(lir->output());
 
     Label performCeil, done;
@@ -1198,7 +1198,7 @@ bool
 CodeGeneratorMIPS::visitCeilF(LCeilF *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchFloat32Reg;
     Register output = ToRegister(lir->output());
 
     Label performCeil, done;
@@ -1236,7 +1236,7 @@ CodeGeneratorMIPS::visitRound(LRound *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
     FloatRegister temp = ToFloatRegister(lir->temp());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchDoubleReg;
     Register output = ToRegister(lir->output());
 
     Label bail, negative, end, skipCheck;
@@ -1302,7 +1302,7 @@ CodeGeneratorMIPS::visitRoundF(LRoundF *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
     FloatRegister temp = ToFloatRegister(lir->temp());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchFloat32Reg;
     Register output = ToRegister(lir->output());
 
     Label bail, negative, end, skipCheck;
@@ -1461,8 +1461,8 @@ CodeGeneratorMIPS::visitBoxFloatingPoint(LBoxFloatingPoint *box)
 
     FloatRegister reg = ToFloatRegister(in);
     if (box->type() == MIRType_Float32) {
-        masm.convertFloat32ToDouble(reg, ScratchFloatReg);
-        reg = ScratchFloatReg;
+        masm.convertFloat32ToDouble(reg, ScratchDoubleReg);
+        reg = ScratchDoubleReg;
     }
     masm.ma_mv(reg, ValueOperand(ToRegister(type), ToRegister(payload)));
     return true;
@@ -1515,14 +1515,14 @@ CodeGeneratorMIPS::visitTestDAndBranch(LTestDAndBranch *test)
     MBasicBlock *ifTrue = test->ifTrue();
     MBasicBlock *ifFalse = test->ifFalse();
 
-    masm.loadConstantDouble(0.0, ScratchFloatReg);
+    masm.loadConstantDouble(0.0, ScratchDoubleReg);
     // If 0, or NaN, the result is false.
 
     if (isNextBlock(ifFalse->lir())) {
-        branchToBlock(Assembler::DoubleFloat, input, ScratchFloatReg, ifTrue,
+        branchToBlock(Assembler::DoubleFloat, input, ScratchDoubleReg, ifTrue,
                       Assembler::DoubleNotEqual);
     } else {
-        branchToBlock(Assembler::DoubleFloat, input, ScratchFloatReg, ifFalse,
+        branchToBlock(Assembler::DoubleFloat, input, ScratchDoubleReg, ifFalse,
                       Assembler::DoubleEqualOrUnordered);
         jumpToBlock(ifTrue);
     }
@@ -1538,14 +1538,14 @@ CodeGeneratorMIPS::visitTestFAndBranch(LTestFAndBranch *test)
     MBasicBlock *ifTrue = test->ifTrue();
     MBasicBlock *ifFalse = test->ifFalse();
 
-    masm.loadConstantFloat32(0.0, ScratchFloatReg);
+    masm.loadConstantFloat32(0.0, ScratchFloat32Reg);
     // If 0, or NaN, the result is false.
 
     if (isNextBlock(ifFalse->lir())) {
-        branchToBlock(Assembler::SingleFloat, input, ScratchFloatReg, ifTrue,
+        branchToBlock(Assembler::SingleFloat, input, ScratchFloat32Reg, ifTrue,
                       Assembler::DoubleNotEqual);
     } else {
-        branchToBlock(Assembler::SingleFloat, input, ScratchFloatReg, ifFalse,
+        branchToBlock(Assembler::SingleFloat, input, ScratchFloat32Reg, ifFalse,
                       Assembler::DoubleEqualOrUnordered);
         jumpToBlock(ifTrue);
     }
@@ -1761,8 +1761,8 @@ CodeGeneratorMIPS::visitNotD(LNotD *ins)
     Register dest = ToRegister(ins->output());
 
     Label falsey, done;
-    masm.loadConstantDouble(0.0, ScratchFloatReg);
-    masm.ma_bc1d(in, ScratchFloatReg, &falsey, Assembler::DoubleEqualOrUnordered, ShortJump);
+    masm.loadConstantDouble(0.0, ScratchDoubleReg);
+    masm.ma_bc1d(in, ScratchDoubleReg, &falsey, Assembler::DoubleEqualOrUnordered, ShortJump);
 
     masm.move32(Imm32(0), dest);
     masm.ma_b(&done, ShortJump);
@@ -1783,8 +1783,8 @@ CodeGeneratorMIPS::visitNotF(LNotF *ins)
     Register dest = ToRegister(ins->output());
 
     Label falsey, done;
-    masm.loadConstantFloat32(0.0, ScratchFloatReg);
-    masm.ma_bc1s(in, ScratchFloatReg, &falsey, Assembler::DoubleEqualOrUnordered, ShortJump);
+    masm.loadConstantFloat32(0.0, ScratchFloat32Reg);
+    masm.ma_bc1s(in, ScratchFloat32Reg, &falsey, Assembler::DoubleEqualOrUnordered, ShortJump);
 
     masm.move32(Imm32(0), dest);
     masm.ma_b(&done, ShortJump);
@@ -1890,14 +1890,14 @@ CodeGeneratorMIPS::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     int size;
     bool isFloat = false;
     switch (mir->viewType()) {
-      case ArrayBufferView::TYPE_INT8:    isSigned = true;  size =  8; break;
-      case ArrayBufferView::TYPE_UINT8:   isSigned = false; size =  8; break;
-      case ArrayBufferView::TYPE_INT16:   isSigned = true;  size = 16; break;
-      case ArrayBufferView::TYPE_UINT16:  isSigned = false; size = 16; break;
-      case ArrayBufferView::TYPE_INT32:   isSigned = true;  size = 32; break;
-      case ArrayBufferView::TYPE_UINT32:  isSigned = false; size = 32; break;
-      case ArrayBufferView::TYPE_FLOAT64: isFloat  = true;  size = 64; break;
-      case ArrayBufferView::TYPE_FLOAT32: isFloat  = true;  size = 32; break;
+      case Scalar::Int8:    isSigned = true;  size =  8; break;
+      case Scalar::Uint8:   isSigned = false; size =  8; break;
+      case Scalar::Int16:   isSigned = true;  size = 16; break;
+      case Scalar::Uint16:  isSigned = false; size = 16; break;
+      case Scalar::Int32:   isSigned = true;  size = 32; break;
+      case Scalar::Uint32:  isSigned = false; size = 32; break;
+      case Scalar::Float64: isFloat  = true;  size = 64; break;
+      case Scalar::Float32: isFloat  = true;  size = 32; break;
       default: MOZ_CRASH("unexpected array type");
     }
 
@@ -1977,14 +1977,14 @@ CodeGeneratorMIPS::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     int size;
     bool isFloat = false;
     switch (mir->viewType()) {
-      case ArrayBufferView::TYPE_INT8:    isSigned = true;  size = 8;  break;
-      case ArrayBufferView::TYPE_UINT8:   isSigned = false; size = 8;  break;
-      case ArrayBufferView::TYPE_INT16:   isSigned = true;  size = 16; break;
-      case ArrayBufferView::TYPE_UINT16:  isSigned = false; size = 16; break;
-      case ArrayBufferView::TYPE_INT32:   isSigned = true;  size = 32; break;
-      case ArrayBufferView::TYPE_UINT32:  isSigned = false; size = 32; break;
-      case ArrayBufferView::TYPE_FLOAT64: isFloat  = true;  size = 64; break;
-      case ArrayBufferView::TYPE_FLOAT32: isFloat  = true;  size = 32; break;
+      case Scalar::Int8:    isSigned = true;  size =  8; break;
+      case Scalar::Uint8:   isSigned = false; size =  8; break;
+      case Scalar::Int16:   isSigned = true;  size = 16; break;
+      case Scalar::Uint16:  isSigned = false; size = 16; break;
+      case Scalar::Int32:   isSigned = true;  size = 32; break;
+      case Scalar::Uint32:  isSigned = false; size = 32; break;
+      case Scalar::Float64: isFloat  = true;  size = 64; break;
+      case Scalar::Float32: isFloat  = true;  size = 32; break;
       default: MOZ_CRASH("unexpected array type");
     }
 
@@ -2053,7 +2053,8 @@ CodeGeneratorMIPS::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
         if (ins->arg()->isGeneralReg()) {
             masm.storePtr(ToRegister(ins->arg()), Address(StackPointer, mir->spOffset()));
         } else {
-            masm.storeDouble(ToFloatRegister(ins->arg()), Address(StackPointer, mir->spOffset()));
+            masm.storeDouble(ToFloatRegister(ins->arg()).doubleOverlay(0),
+                             Address(StackPointer, mir->spOffset()));
         }
     }
 

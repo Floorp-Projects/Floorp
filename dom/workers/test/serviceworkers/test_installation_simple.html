@@ -141,8 +141,34 @@
     return p;
   }
 
+  var readyPromiseResolved = false;
+
+  function readyPromise() {
+    var frame = document.createElement("iframe");
+    frame.setAttribute("id", "simpleregister-frame-ready");
+    frame.setAttribute("src", new URL("simpleregister/ready.html", document.baseURI).href);
+    document.body.appendChild(frame);
+
+    var channel = new MessageChannel();
+    frame.addEventListener('load', function() {
+      frame.contentWindow.postMessage('your port!', '*', [channel.port2]);
+    }, false);
+
+    channel.port1.onmessage = function() {
+      readyPromiseResolved = true;
+    }
+
+    return Promise.resolve();
+  }
+
+  function checkReadyPromise() {
+    ok(readyPromiseResolved, "The ready promise has been resolved!");
+    return Promise.resolve();
+  }
+
   function runTest() {
     simpleRegister()
+      .then(readyPromise)
       .then(sameOriginWorker)
       .then(sameOriginScope)
       .then(httpsOnly)
@@ -151,6 +177,7 @@
       .then(networkError404)
       .then(parseError)
       .then(updatefound)
+      .then(checkReadyPromise)
       // put more tests here.
       .then(function() {
         SimpleTest.finish();
@@ -162,6 +189,7 @@
 
   SimpleTest.waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({"set": [
+    ["dom.messageChannel.enabled", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true]
   ]}, runTest);

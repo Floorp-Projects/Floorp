@@ -41,14 +41,6 @@
   padding-top: 4px;
 }
 
-#BMB_bookmarksPopup .menu-text {
-  color: #000;
-}
-
-#BMB_bookmarksPopup .subviewbutton[disabled=true] > .menu-text {
-  color: #6d6d6d;
-}
-
 /* bookmark panel separator */
 #BMB_bookmarksPopup menuseparator {
   padding-top: 0;

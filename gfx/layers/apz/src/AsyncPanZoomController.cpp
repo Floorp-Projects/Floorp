@@ -2024,7 +2024,7 @@ const LayerMargin AsyncPanZoomController::CalculatePendingDisplayPort(
   APZC_LOG_FM(aFrameMetrics,
     "Calculated displayport as (%f %f %f %f) from velocity (%f %f) paint time %f metrics",
     displayPort.x, displayPort.y, displayPort.width, displayPort.height,
-    aVelocity.x, aVelocity.y, (float)estimatedPaintDurationMillis);
+    aVelocity.x.value, aVelocity.y.value, (float)estimatedPaintDurationMillis);
 
   CSSMargin cssMargins;
   cssMargins.left = -displayPort.x;
@@ -2492,8 +2492,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
 
     if (scrollOffsetUpdated) {
       APZC_LOG("%p updating scroll offset from (%f, %f) to (%f, %f)\n", this,
-        mFrameMetrics.GetScrollOffset().x, mFrameMetrics.GetScrollOffset().y,
-        aLayerMetrics.GetScrollOffset().x, aLayerMetrics.GetScrollOffset().y);
+        mFrameMetrics.GetScrollOffset().x.value, mFrameMetrics.GetScrollOffset().y.value,
+        aLayerMetrics.GetScrollOffset().x.value, aLayerMetrics.GetScrollOffset().y.value);
 
       mFrameMetrics.CopyScrollInfoFrom(aLayerMetrics);
 

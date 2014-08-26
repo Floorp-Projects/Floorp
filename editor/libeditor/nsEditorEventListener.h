@@ -14,8 +14,12 @@
 #include "nscore.h"
 
 class nsCaret;
+class nsIDOMDragEvent;
 class nsIDOMEvent;
+class nsIDOMKeyEvent;
+class nsIDOMMouseEvent;
 class nsIPresShell;
+class nsEditor;
 
 // X.h defines KeyPress
 #ifdef KeyPress
@@ -26,9 +30,6 @@ class nsIPresShell;
 // On Windows, we support switching the text direction by pressing Ctrl+Shift
 #define HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
 #endif
-
-class nsEditor;
-class nsIDOMDragEvent;
 
 class nsEditorEventListener : public nsIDOMEventListener
 {
@@ -42,20 +43,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-#ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
-#endif
-  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD HandleText(nsIDOMEvent* aTextEvent);
-  NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent);
-  void       HandleEndComposition(nsIDOMEvent* aCompositionEvent);
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD Focus(nsIDOMEvent* aEvent);
-  NS_IMETHOD Blur(nsIDOMEvent* aEvent);
-
   void SpellCheckIfNeeded();
 
 protected:
@@ -64,18 +51,32 @@ protected:
   nsresult InstallToEditor();
   void UninstallFromEditor();
 
-  bool CanDrop(nsIDOMDragEvent* aEvent);
+#ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
+  nsresult KeyDown(nsIDOMKeyEvent* aKeyEvent);
+  nsresult KeyUp(nsIDOMKeyEvent* aKeyEvent);
+#endif
+  nsresult KeyPress(nsIDOMKeyEvent* aKeyEvent);
+  nsresult HandleText(nsIDOMEvent* aTextEvent);
+  nsresult HandleStartComposition(nsIDOMEvent* aCompositionEvent);
+  void HandleEndComposition(nsIDOMEvent* aCompositionEvent);
+  virtual nsresult MouseDown(nsIDOMMouseEvent* aMouseEvent);
+  virtual nsresult MouseUp(nsIDOMMouseEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult MouseClick(nsIDOMMouseEvent* aMouseEvent);
+  nsresult Focus(nsIDOMEvent* aEvent);
+  nsresult Blur(nsIDOMEvent* aEvent);
   nsresult DragEnter(nsIDOMDragEvent* aDragEvent);
   nsresult DragOver(nsIDOMDragEvent* aDragEvent);
   nsresult DragExit(nsIDOMDragEvent* aDragEvent);
   nsresult Drop(nsIDOMDragEvent* aDragEvent);
   nsresult DragGesture(nsIDOMDragEvent* aDragEvent);
+
+  bool CanDrop(nsIDOMDragEvent* aEvent);
   void CleanupDragDropCaret();
   already_AddRefed<nsIPresShell> GetPresShell();
   bool IsFileControlTextBox();
-  bool ShouldHandleNativeKeyBindings(nsIDOMEvent* aKeyEvent);
+  bool ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent);
+  nsresult HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent);
 
-protected:
   nsEditor* mEditor; // weak
   nsRefPtr<nsCaret> mCaret;
   bool mCommitText;

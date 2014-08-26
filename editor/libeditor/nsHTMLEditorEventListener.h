@@ -30,11 +30,11 @@ public:
   virtual nsresult Connect(nsEditor* aEditor);
 #endif
 
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
-
 protected:
+  virtual nsresult MouseDown(nsIDOMMouseEvent* aMouseEvent) MOZ_OVERRIDE;
+  virtual nsresult MouseUp(nsIDOMMouseEvent* aMouseEvent) MOZ_OVERRIDE;
+  virtual nsresult MouseClick(nsIDOMMouseEvent* aMouseEvent) MOZ_OVERRIDE;
+
   inline nsHTMLEditor* GetHTMLEditor();
 };
 

@@ -58,7 +58,7 @@ function clickTraceLog() {
 }
 
 function testCorrectLine() {
-  is(gDebugger.DebuggerView.editor.getCursor().line, 19,
+  is(gDebugger.DebuggerView.editor.getCursor().line, 18,
      "The editor should have the function definition site's line selected.");
 }
 

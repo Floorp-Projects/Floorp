@@ -2578,35 +2578,37 @@ status_t MPEG4Source::parseChunk(off64_t *offset) {
             break;
         }
 
-        case FOURCC('t', 'f', 'd', 't'):
-        {
+        case FOURCC('t', 'f', 'h', 'd'): {
             status_t err;
-            if ((err = parseTrackFragmentData(data_offset, chunk_data_size)) != OK) {
+            if ((err = parseTrackFragmentHeader(data_offset, chunk_data_size)) != OK) {
                 return err;
             }
             *offset += chunk_size;
             break;
         }
 
-        case FOURCC('t', 'f', 'h', 'd'): {
-                status_t err;
-                if ((err = parseTrackFragmentHeader(data_offset, chunk_data_size)) != OK) {
+        case FOURCC('t', 'f', 'd', 't'):
+        {
+            status_t err;
+            if (mLastParsedTrackId == mTrackId) {
+                if ((err = parseTrackFragmentData(data_offset, chunk_data_size)) != OK) {
                     return err;
                 }
-                *offset += chunk_size;
-                break;
+            }
+            *offset += chunk_size;
+            break;
         }
 
         case FOURCC('t', 'r', 'u', 'n'): {
-                status_t err;
-                if (mLastParsedTrackId == mTrackId) {
-                    if ((err = parseTrackFragmentRun(data_offset, chunk_data_size)) != OK) {
-                        return err;
-                    }
+            status_t err;
+            if (mLastParsedTrackId == mTrackId) {
+                if ((err = parseTrackFragmentRun(data_offset, chunk_data_size)) != OK) {
+                    return err;
                 }
+            }
 
-                *offset += chunk_size;
-                break;
+            *offset += chunk_size;
+            break;
         }
 
         case FOURCC('s', 'a', 'i', 'z'): {
@@ -3457,11 +3459,15 @@ status_t MPEG4Source::fragmentedRead(
                 totalTime += se->mDurationUs;
                 totalOffset += se->mSize;
             }
-        mCurrentMoofOffset = totalOffset;
-        mCurrentSamples.clear();
-        mCurrentSampleIndex = 0;
-        parseChunk(&totalOffset);
-        mCurrentTime = totalTime * mTimescale / 1000000ll;
+            mCurrentMoofOffset = totalOffset;
+            mCurrentSamples.clear();
+            mCurrentSampleIndex = 0;
+            mTrackFragmentData.mPresent = false;
+            parseChunk(&totalOffset);
+            mCurrentTime = totalTime * mTimescale / 1000000ll;
+            if (mTrackFragmentData.mPresent) {
+                mCurrentTime += mTrackFragmentData.mBaseMediaDecodeTime;
+            }
         }
 
         if (mBuffer != NULL) {
