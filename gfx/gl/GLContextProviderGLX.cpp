@@ -481,7 +481,7 @@ GLXLibrary::AfterGLXCall()
         if (sErrorEvent.mError.error_code) {
             char buffer[2048];
             XGetErrorText(DefaultXDisplay(), sErrorEvent.mError.error_code, buffer, sizeof(buffer));
-            printf_stderr("X ERROR: %s (%i) - Request: %i.%i, Serial: %i",
+            printf_stderr("X ERROR: %s (%i) - Request: %i.%i, Serial: %lu",
                           buffer,
                           sErrorEvent.mError.error_code,
                           sErrorEvent.mError.request_code,

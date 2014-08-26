@@ -1805,13 +1805,13 @@ MessageChannel::DebugAbort(const char* file, int line, const char* cond,
                   reply ? "(reply)" : "");
     // technically we need the mutex for this, but we're dying anyway
     DumpInterruptStack("  ");
-    printf_stderr("  remote Interrupt stack guess: %lu\n",
+    printf_stderr("  remote Interrupt stack guess: %" PRIuSIZE "\n",
                   mRemoteStackDepthGuess);
-    printf_stderr("  deferred stack size: %lu\n",
+    printf_stderr("  deferred stack size: %" PRIuSIZE "\n",
                   mDeferred.size());
-    printf_stderr("  out-of-turn Interrupt replies stack size: %lu\n",
+    printf_stderr("  out-of-turn Interrupt replies stack size: %" PRIuSIZE "\n",
                   mOutOfTurnReplies.size());
-    printf_stderr("  Pending queue size: %lu, front to back:\n",
+    printf_stderr("  Pending queue size: %" PRIuSIZE ", front to back:\n",
                   mPending.size());
 
     MessageQueue pending = mPending;
