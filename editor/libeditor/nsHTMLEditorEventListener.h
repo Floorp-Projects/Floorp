@@ -31,9 +31,9 @@ public:
 #endif
 
 protected:
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent) MOZ_OVERRIDE;
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent) MOZ_OVERRIDE;
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) MOZ_OVERRIDE;
+  virtual nsresult MouseDown(nsIDOMMouseEvent* aMouseEvent) MOZ_OVERRIDE;
+  virtual nsresult MouseUp(nsIDOMMouseEvent* aMouseEvent) MOZ_OVERRIDE;
+  virtual nsresult MouseClick(nsIDOMMouseEvent* aMouseEvent) MOZ_OVERRIDE;
 
   inline nsHTMLEditor* GetHTMLEditor();
 };

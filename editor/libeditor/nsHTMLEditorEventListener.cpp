@@ -49,15 +49,9 @@ nsHTMLEditorEventListener::GetHTMLEditor()
 }
 
 nsresult
-nsHTMLEditorEventListener::MouseUp(nsIDOMEvent* aMouseEvent)
+nsHTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
-
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
-  if (!mouseEvent) {
-    //non-ui event passed in.  bad things.
-    return NS_OK;
-  }
+  NS_ENSURE_TRUE(aMouseEvent, NS_OK);
 
   nsHTMLEditor* htmlEditor = GetHTMLEditor();
 
@@ -68,23 +62,17 @@ nsHTMLEditorEventListener::MouseUp(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
   int32_t clientX, clientY;
-  mouseEvent->GetClientX(&clientX);
-  mouseEvent->GetClientY(&clientY);
+  aMouseEvent->GetClientX(&clientX);
+  aMouseEvent->GetClientY(&clientY);
   htmlEditor->MouseUp(clientX, clientY, element);
 
   return nsEditorEventListener::MouseUp(aMouseEvent);
 }
 
 nsresult
-nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
+nsHTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
-
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
-  if (!mouseEvent) {
-    //non-ui event passed in.  bad things.
-    return NS_OK;
-  }
+  NS_ENSURE_TRUE(aMouseEvent, NS_OK);
 
   nsHTMLEditor* htmlEditor = GetHTMLEditor();
 
@@ -92,13 +80,13 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
   //XXX This should be easier to do!
   // But eDOMEvents_contextmenu and NS_CONTEXTMENU is not exposed in any event interface :-(
   int16_t buttonNumber;
-  nsresult res = mouseEvent->GetButton(&buttonNumber);
+  nsresult res = aMouseEvent->GetButton(&buttonNumber);
   NS_ENSURE_SUCCESS(res, res);
 
   bool isContextClick = buttonNumber == 2;
 
   int32_t clickCount;
-  res = mouseEvent->GetDetail(&clickCount);
+  res = aMouseEvent->GetDetail(&clickCount);
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIDOMEventTarget> target;
@@ -120,12 +108,12 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
     // Get location of mouse within target node
     nsCOMPtr<nsIDOMNode> parent;
-    res = mouseEvent->GetRangeParent(getter_AddRefs(parent));
+    res = aMouseEvent->GetRangeParent(getter_AddRefs(parent));
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
 
     int32_t offset = 0;
-    res = mouseEvent->GetRangeOffset(&offset);
+    res = aMouseEvent->GetRangeOffset(&offset);
     NS_ENSURE_SUCCESS(res, res);
 
     // Detect if mouse point is within current selection for context click
@@ -204,7 +192,7 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
     //   for all context clicks
     if (element || isContextClick)
     {
-      mouseEvent->PreventDefault();
+      aMouseEvent->PreventDefault();
       return NS_OK;
     }
   }
@@ -212,8 +200,8 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
   {
     // if the target element is an image, we have to display resizers
     int32_t clientX, clientY;
-    mouseEvent->GetClientX(&clientX);
-    mouseEvent->GetClientY(&clientY);
+    aMouseEvent->GetClientX(&clientX);
+    aMouseEvent->GetClientY(&clientY);
     htmlEditor->MouseDown(clientX, clientY, element, aMouseEvent);
   }
 
@@ -221,15 +209,9 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
 }
 
 nsresult
-nsHTMLEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
+nsHTMLEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
-
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
-  if (!mouseEvent) {
-    //non-ui event passed in.  bad things.
-    return NS_OK;
-  }
+  NS_ENSURE_TRUE(aMouseEvent, NS_OK);
 
   nsCOMPtr<nsIDOMEventTarget> target;
   nsresult res = aMouseEvent->GetTarget(getter_AddRefs(target));

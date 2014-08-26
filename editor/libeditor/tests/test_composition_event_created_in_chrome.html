@@ -15,6 +15,9 @@
 
 <script type="application/javascript">
 
+// In nsEditorEventListener, when listening event is not created with proper
+// event interface, it asserts the fact.
+SimpleTest.expectAssertions(2);
 SimpleTest.waitForExplicitFinish();
 
 var gInputElement = document.getElementById("input");
