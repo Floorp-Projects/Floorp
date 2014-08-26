@@ -37,12 +37,6 @@ this.PermissionsTable =  { geolocation: {
                              privileged: PROMPT_ACTION,
                              certified: PROMPT_ACTION
                            },
-                           "geolocation-noprompt": {
-                             app: PROMPT_ACTION,
-                             privileged: PROMPT_ACTION,
-                             certified: ALLOW_ACTION,
-                             substitute: ["geolocation"]
-                           },
                            camera: {
                              app: DENY_ACTION,
                              privileged: PROMPT_ACTION,
