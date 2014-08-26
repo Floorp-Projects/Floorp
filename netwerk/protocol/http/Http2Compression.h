@@ -84,7 +84,7 @@ public:
 
   // NS_OK: Produces the working set of HTTP/1 formatted headers
   nsresult DecodeHeaderBlock(const uint8_t *data, uint32_t datalen,
-                             nsACString &output);
+                             nsACString &output, bool isPush);
 
   void GetStatus(nsACString &hdr) { hdr = mHeaderStatus; }
   void GetHost(nsACString &hdr) { hdr = mHeaderHost; }
@@ -127,6 +127,7 @@ private:
   const uint8_t *mData;
   uint32_t mDataLen;
   bool mSeenNonColonHeader;
+  bool mIsPush;
 };
 
 

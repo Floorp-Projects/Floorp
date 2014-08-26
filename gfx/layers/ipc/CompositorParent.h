@@ -87,15 +87,15 @@ private:
   friend class CompositorParent;
 };
 
-class CompositorParent : public PCompositorParent,
-                         public ShadowLayersManager
+class CompositorParent MOZ_FINAL : public PCompositorParent,
+                                   public ShadowLayersManager
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorParent)
 
 public:
-  CompositorParent(nsIWidget* aWidget,
-                   bool aUseExternalSurfaceSize = false,
-                   int aSurfaceWidth = -1, int aSurfaceHeight = -1);
+  explicit CompositorParent(nsIWidget* aWidget,
+                            bool aUseExternalSurfaceSize = false,
+                            int aSurfaceWidth = -1, int aSurfaceHeight = -1);
 
   // IToplevelProtocol::CloneToplevel()
   virtual IToplevelProtocol*

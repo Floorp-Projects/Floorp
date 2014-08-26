@@ -2284,6 +2284,7 @@ RadioInterface.prototype = {
         break;
       case "cellbroadcast-received":
         message.timestamp = Date.now();
+        this.broadcastCbsSystemMessage(message);
         gMessageManager.sendCellBroadcastMessage("RIL:CellBroadcastReceived",
                                                  this.clientId, message);
         break;
@@ -3311,6 +3312,48 @@ RadioInterface.prototype = {
   },
 
   /**
+   * A helper to broadcast the system message to launch registered apps
+   * like CMAS app and etc.
+   *
+   * @param aName
+   *        The system message name.
+   * @param aMessage
+   *        The Cellbroadcast message received from ril_worker.
+   */
+  broadcastCbsSystemMessage: function(aMessage) {
+    // Create system message with the same structure of nsIDOMMozCellBroadcastMessage
+    // and nsIDOMMozCellBroadcastEtwsInfo.
+    let etws = (aMessage.etws != null)
+               ? {
+                    warningType: (aMessage.etws.warningType != null)
+                                 ? RIL.CB_ETWS_WARNING_TYPE_NAMES[aMessage.etws.warningType]
+                                 : null,
+                    emergencyUserAlert: aMessage.etws.emergencyUserAlert,
+                    popup: aMessage.etws.popup
+                 }
+               : null;
+
+    let systemMessage = {
+      serviceId: this.clientId,
+      gsmGeographicalScope: RIL.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES[aMessage.geographicalScope],
+      messageCode: aMessage.messageCode,
+      messageId: aMessage.messageId,
+      language: aMessage.language,
+      body: aMessage.fullBody,
+      messageClass: aMessage.messageClass,
+      timestamp: aMessage.timestamp,
+      etws: etws,
+      cdmaServiceCategory: aMessage.serviceCategory
+    };
+
+    if (DEBUG) {
+      this.debug("CBS system message to be broadcasted: " + JSON.stringify(systemMessage));
+    }
+
+    gSystemMessenger.broadcastMessage("cellbroadcast-received", systemMessage);
+  },
+
+  /**
    * Set the setting value of "time.clock.automatic-update.available".
    */
   setClockAutoUpdateAvailable: function(value) {
@@ -4249,7 +4292,7 @@ RadioInterface.prototype = {
       if (!response.errorMsg) {
         request.notifyGetSmscAddress(response.smscAddress);
       } else {
-        request.notifyGetSmscAddressFailed(response.errorMsg);
+        request.notifyGetSmscAddressFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
       }
     }).bind(this));
   },

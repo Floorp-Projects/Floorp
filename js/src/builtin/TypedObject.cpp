@@ -27,9 +27,9 @@
 
 #include "vm/Shape-inl.h"
 
+using mozilla::AssertedCast;
 using mozilla::CheckedInt32;
 using mozilla::DebugOnly;
-using mozilla::SafeCast;
 
 using namespace js;
 
@@ -348,7 +348,7 @@ const JSFunctionSpec js::ReferenceTypeDescr::typeObjectMethods[] = {
     JS_FS_END
 };
 
-static int32_t ReferenceSizes[] = {
+static const int32_t ReferenceSizes[] = {
 #define REFERENCE_SIZE(_kind, _type, _name)                        \
     sizeof(_type),
     JS_FOR_EACH_REFERENCE_TYPE_REPR(REFERENCE_SIZE) 0
@@ -427,7 +427,7 @@ js::ReferenceTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
  * Note: these are partially defined in SIMD.cpp
  */
 
-static int32_t X4Sizes[] = {
+static const int32_t X4Sizes[] = {
 #define X4_SIZE(_kind, _type, _name)                        \
     sizeof(_type) * 4,
     JS_FOR_EACH_X4_TYPE_REPR(X4_SIZE) 0
@@ -1162,7 +1162,7 @@ StructTypeDescr::fieldOffset(size_t index) const
     JSObject &fieldOffsets =
         getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS).toObject();
     JS_ASSERT(index < fieldOffsets.getDenseInitializedLength());
-    return SafeCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
+    return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
 
 size_t
@@ -1171,7 +1171,7 @@ StructTypeDescr::maybeForwardedFieldOffset(size_t index) const
     JSObject &fieldOffsets =
         *MaybeForwarded(&getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS).toObject());
     JS_ASSERT(index < fieldOffsets.getDenseInitializedLength());
-    return SafeCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
+    return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
 
 SizedTypeDescr&

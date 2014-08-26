@@ -450,11 +450,29 @@ public abstract class GeckoApp
                     try {
                         clearObj.put(clear, true);
                     } catch(JSONException ex) {
-                        Log.i(LOGTAG, "Error adding clear object " + clear);
+                        Log.e(LOGTAG, "Error adding clear object " + clear, ex);
                     }
                 }
 
-                GeckoAppShell.notifyGeckoOfEvent(GeckoEvent.createBroadcastEvent("Browser:Quit", clearObj.toString()));
+                final JSONObject res = new JSONObject();
+                try {
+                    res.put("sanitize", clearObj);
+                } catch(JSONException ex) {
+                    Log.e(LOGTAG, "Error adding sanitize object", ex);
+                }
+
+                // If the user has opted out of session restore, and does want to clear history
+                // we also want to prevent the current session info from being saved.
+                if (clearObj.has("private.data.history")) {
+                    final String sessionRestore = getSessionRestorePreference();
+                    try {
+                        res.put("dontSaveSession", "quit".equals(sessionRestore));
+                    } catch(JSONException ex) {
+                        Log.e(LOGTAG, "Error adding session restore data", ex);
+                    }
+                }
+
+                GeckoAppShell.notifyGeckoOfEvent(GeckoEvent.createBroadcastEvent("Browser:Quit", res.toString()));
             } else {
                 GeckoAppShell.systemExit();
             }
@@ -1911,8 +1929,12 @@ public abstract class GeckoApp
             refreshChrome();
         }
 
-        // User may have enabled/disabled accessibility.
-        GeckoAccessibility.updateAccessibilitySettings(this);
+        if (!Versions.feature14Plus) {
+            // Update accessibility settings in case it has been changed by the
+            // user. On API14+, this is handled in LayerView by registering an
+            // accessibility state change listener.
+            GeckoAccessibility.updateAccessibilitySettings(this);
+        }
 
         if (mAppStateListeners != null) {
             for (GeckoAppShell.AppStateListener listener: mAppStateListeners) {

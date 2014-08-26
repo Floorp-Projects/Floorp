@@ -32,12 +32,12 @@
 namespace mozilla {
 namespace dom {
 
-class WebSocket : public DOMEventTargetHelper,
-                  public nsIInterfaceRequestor,
-                  public nsIWebSocketListener,
-                  public nsIObserver,
-                  public nsSupportsWeakReference,
-                  public nsIRequest
+class WebSocket MOZ_FINAL : public DOMEventTargetHelper,
+                            public nsIInterfaceRequestor,
+                            public nsIWebSocketListener,
+                            public nsIObserver,
+                            public nsSupportsWeakReference,
+                            public nsIRequest
 {
 friend class CallDispatchConnectionCloseEvents;
 friend class nsAutoCloseWS;

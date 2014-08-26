@@ -30,12 +30,39 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
     return stream;
   }
 
+  var done = false;
   function endHandler(evt, sr) {
+    if (done) {
+      SimpleTest.finish();
+      return;
+    }
+
     try {
-      sr.start(createAudioStream()); // shouldn't fail
+      var stream = createAudioStream();
+      sr.start(stream); // shouldn't fail
     } catch (err) {
       ok(false, "Failed to start() from end() callback");
     }
+
+    // calling start() may cause some callbacks to fire, but we're
+    // no longer interested in them, except for onend, which is where
+    // we'll conclude the test.
+    sr.onstart = null;
+    sr.onaudiostart = null;
+    sr.onspeechstart = null;
+    sr.onspeechend = null;
+    sr.onaudioend = null;
+    sr.onresult = null;
+
+    // FIXME(ggp) the state transition caused by start() is async,
+    // but abort() is sync (see bug 1055093). until we normalize
+    // state transitions, we need to setTimeout here to make sure
+    // abort() finds the speech recognition object in the correct
+    // state (namely, STATE_STARTING).
+    setTimeout(function() {
+      sr.abort();
+      done = true;
+    });
 
     info("Successfully start() from end() callback");
   }
@@ -64,7 +91,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
       'result': buildResultCallback("Mock final result"),
       'end': endHandler,
     },
-    doneFunc: SimpleTest.finish,
     prefs: [["media.webspeech.test.fake_fsm_events", true], ["media.webspeech.test.fake_recognition_service", true]]
   });
 

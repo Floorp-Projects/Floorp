@@ -432,7 +432,7 @@ public:
     char *tmp;
     GetLocalDescription(&tmp);
     aSDP.AssignASCII(tmp);
-    delete tmp;
+    delete[] tmp;
   }
 
   NS_IMETHODIMP GetRemoteDescription(char** aSDP);
@@ -442,7 +442,7 @@ public:
     char *tmp;
     GetRemoteDescription(&tmp);
     aSDP.AssignASCII(tmp);
-    delete tmp;
+    delete[] tmp;
   }
 
   NS_IMETHODIMP SignalingState(mozilla::dom::PCImplSignalingState* aState);

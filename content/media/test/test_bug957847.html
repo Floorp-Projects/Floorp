@@ -17,15 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=957847
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
-  function() {
-    var trackElement = document.createElement('track');
-    trackElement.track.addCue(new VTTCue(0, 1, "A"));
-    // We need to assert something for Mochitest to be happy.
-    ok(true);
-    SimpleTest.finish();
-  }
-);
+
+var trackElement = document.createElement('track');
+trackElement.track.addCue(new VTTCue(0, 1, "A"));
+
+// We need to assert something for Mochitest to be happy.
+ok(true);
+SimpleTest.finish();
 </script>
 </pre>
 </body>

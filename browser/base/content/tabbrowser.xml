@@ -85,6 +85,9 @@
          Components.classes["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
                    .getService(Components.interfaces.mozIPlacesAutoComplete);
       </field>
+      <field name="PlacesUtils" readonly="true">
+        (Components.utils.import("resource://gre/modules/PlacesUtils.jsm", {})).PlacesUtils;
+      </field>
       <field name="mTabBox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
       </field>
@@ -145,6 +148,22 @@
               break;
           }
           return i;
+        ]]></getter>
+      </property>
+
+      <property name="formValidationAnchor" readonly="true">
+        <getter><![CDATA[
+        if (this.mCurrentTab._formValidationAnchor) {
+          return this.mCurrentTab._formValidationAnchor;
+        }
+        let stack = this.mCurrentBrowser.parentNode;
+        // Create an anchor for the form validation popup
+        const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        let formValidationAnchor = document.createElementNS(NS_XUL, "hbox");
+        formValidationAnchor.className = "form-validation-anchor";
+        formValidationAnchor.hidden = true;
+        stack.appendChild(formValidationAnchor);
+        return this.mCurrentTab._formValidationAnchor = formValidationAnchor;
         ]]></getter>
       </property>
 
@@ -840,9 +859,7 @@
 
             let sizedIconUrl = browser.mIconURL || "";
             if (sizedIconUrl) {
-              let size = Math.round(16 * window.devicePixelRatio);
-              sizedIconUrl += (sizedIconUrl.contains("#") ? "&" : "#") +
-                              "-moz-resolution=" + size + "," + size;
+              sizedIconUrl = this.PlacesUtils.getImageURLForResolution(window, sizedIconUrl);
             }
             if (sizedIconUrl != aTab.getAttribute("image")) {
               if (sizedIconUrl)
@@ -1213,6 +1230,15 @@
         // can focus the content area right away, since tab switching is synchronous.
         // If we're using remote tabs, we have to wait until after we've finalized
         // switching the tabs.
+
+        if (newTab._skipContentFocus) {
+          // It's possible the tab we're switching to is ready to focus asynchronously,
+          // when we've already focused something else. In that case, this
+          // _skipContentFocus property can be set so that we skip focusing the
+          // content after we switch tabs.
+          delete newTab._skipContentFocus;
+          return;
+        }
 
         let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
         let focusFlags = fm.FLAG_NOSCROLL;

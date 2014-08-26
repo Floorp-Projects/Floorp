@@ -23,7 +23,7 @@ namespace layers {
 class GLManagerCompositor : public GLManager
 {
 public:
-  GLManagerCompositor(CompositorOGL* aCompositor)
+  explicit GLManagerCompositor(CompositorOGL* aCompositor)
     : mImpl(aCompositor)
   {}
 

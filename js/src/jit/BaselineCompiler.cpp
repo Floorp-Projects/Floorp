@@ -178,7 +178,7 @@ BaselineCompiler::compile()
     // Note: There is an extra entry in the bytecode type map for the search hint, see below.
     size_t bytecodeTypeMapEntries = script->nTypeSets() + 1;
 
-    BaselineScript *baselineScript = BaselineScript::New(cx, prologueOffset_.offset(),
+    BaselineScript *baselineScript = BaselineScript::New(script, prologueOffset_.offset(),
                                                          epilogueOffset_.offset(),
                                                          spsPushToggleOffset_.offset(),
                                                          postDebugPrologueOffset_.offset(),
@@ -1394,7 +1394,7 @@ BaselineCompiler::storeValue(const StackValue *source, const Address &dest,
         masm.storeValue(scratch, dest);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid kind");
+        MOZ_CRASH("Invalid kind");
     }
 }
 
@@ -1645,6 +1645,32 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
+    frame.push(R0);
+    return true;
+}
+
+typedef JSObject *(*NewArrayCopyOnWriteFn)(JSContext *, HandleObject, gc::InitialHeap);
+const VMFunction jit::NewArrayCopyOnWriteInfo =
+    FunctionInfo<NewArrayCopyOnWriteFn>(js::NewDenseCopyOnWriteArray);
+
+bool
+BaselineCompiler::emit_JSOP_NEWARRAY_COPYONWRITE()
+{
+    RootedScript scriptRoot(cx, script);
+    JSObject *obj = types::GetOrFixupCopyOnWriteObject(cx, scriptRoot, pc);
+    if (!obj)
+        return false;
+
+    prepareVMCall();
+
+    pushArg(Imm32(gc::DefaultHeap));
+    pushArg(ImmGCPtr(obj));
+
+    if (!callVM(NewArrayCopyOnWriteInfo))
+        return false;
+
+    // Box and push return value.
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
     frame.push(R0);
     return true;
 }

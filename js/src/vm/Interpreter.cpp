@@ -353,6 +353,23 @@ js::ValueToCallable(JSContext *cx, HandleValue v, int numToSkip, MaybeConstruct 
     return nullptr;
 }
 
+bool
+RunState::maybeCreateThisForConstructor(JSContext *cx)
+{
+    if (isInvoke()) {
+        InvokeState &invoke = *asInvoke();
+        if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
+            RootedObject callee(cx, &invoke.args().callee());
+            NewObjectKind newKind = invoke.useNewType() ? SingletonObject : GenericObject;
+            JSObject *obj = CreateThisForFunction(cx, callee, newKind);
+            if (!obj)
+                return false;
+            invoke.args().setThis(ObjectValue(*obj));
+        }
+    }
+    return true;
+}
+
 static MOZ_NEVER_INLINE bool
 Interpret(JSContext *cx, RunState &state);
 
@@ -1596,7 +1613,6 @@ CASE(JSOP_UNUSED51)
 CASE(JSOP_UNUSED52)
 CASE(JSOP_UNUSED57)
 CASE(JSOP_UNUSED83)
-CASE(JSOP_UNUSED102)
 CASE(JSOP_UNUSED103)
 CASE(JSOP_UNUSED104)
 CASE(JSOP_UNUSED105)
@@ -1993,7 +2009,7 @@ CASE(JSOP_SETCONST)
     if (!SetConstOperation(cx, obj, name, rval))
         goto error;
 }
-END_CASE(JSOP_SETCONST);
+END_CASE(JSOP_SETCONST)
 
 CASE(JSOP_BINDGNAME)
     PUSH_OBJECT(REGS.fp()->global());
@@ -3063,6 +3079,22 @@ CASE(JSOP_NEWARRAY)
 }
 END_CASE(JSOP_NEWARRAY)
 
+CASE(JSOP_NEWARRAY_COPYONWRITE)
+{
+    RootedObject &baseobj = rootObject0;
+    baseobj = types::GetOrFixupCopyOnWriteObject(cx, script, REGS.pc);
+    if (!baseobj)
+        goto error;
+
+    RootedObject &obj = rootObject1;
+    obj = NewDenseCopyOnWriteArray(cx, baseobj, gc::DefaultHeap);
+    if (!obj)
+        goto error;
+
+    PUSH_OBJECT(*obj);
+}
+END_CASE(JSOP_NEWARRAY_COPYONWRITE)
+
 CASE(JSOP_NEWOBJECT)
 {
     RootedObject &baseobj = rootObject0;
@@ -3106,7 +3138,7 @@ CASE(JSOP_MUTATEPROTO)
 
     REGS.sp--;
 }
-END_CASE(JSOP_MUTATEPROTO);
+END_CASE(JSOP_MUTATEPROTO)
 
 CASE(JSOP_INITPROP)
 {
@@ -3130,7 +3162,7 @@ CASE(JSOP_INITPROP)
 
     REGS.sp--;
 }
-END_CASE(JSOP_INITPROP);
+END_CASE(JSOP_INITPROP)
 
 CASE(JSOP_INITELEM)
 {

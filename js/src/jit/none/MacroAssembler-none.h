@@ -7,12 +7,15 @@
 #ifndef jit_none_MacroAssembler_none_h
 #define jit_none_MacroAssembler_none_h
 
+#include "jit/JitCompartment.h"
 #include "jit/MoveResolver.h"
-
 #include "jit/shared/Assembler-shared.h"
+
 
 namespace js {
 namespace jit {
+
+class MDefinition;
 
 static MOZ_CONSTEXPR_VAR Register StackPointer = { 0 };
 static MOZ_CONSTEXPR_VAR Register FramePointer = { 0 };
@@ -217,6 +220,7 @@ class MacroAssemblerNone : public Assembler
 
     CodeOffsetJump jumpWithPatch(RepatchLabel *) { MOZ_CRASH(); }
     CodeOffsetJump jumpWithPatch(RepatchLabel *, Condition) { MOZ_CRASH(); }
+    CodeOffsetJump backedgeJump(RepatchLabel *label) { MOZ_CRASH(); }
     template <typename T, typename S>
     CodeOffsetJump branchPtrWithPatch(Condition, T, S, RepatchLabel *) { MOZ_CRASH(); }
 
@@ -401,6 +405,11 @@ class ABIArgGenerator
 
 static inline void PatchJump(CodeLocationJump &, CodeLocationLabel) { MOZ_CRASH(); }
 static inline bool GetTempRegForIntArg(uint32_t, uint32_t, Register *) { MOZ_CRASH(); }
+static inline
+void PatchBackedge(CodeLocationJump &jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target)
+{
+    MOZ_CRASH();
+}
 
 } // namespace jit
 } // namespace js

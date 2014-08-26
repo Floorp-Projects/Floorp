@@ -10,6 +10,7 @@
 #include "nsDataHashtable.h"
 #include "nsTPriorityQueue.h"
 #include "nsIRunnable.h"
+#include "nsIURI.h"
 
 #define NS_ANDROIDHISTORY_CID \
     {0xCCAA4880, 0x44DD, 0x40A7, {0xA1, 0x3F, 0x61, 0x56, 0xFC, 0x88, 0x2C, 0x0B}}
@@ -20,7 +21,7 @@
 // Max size of History::mEmbedURIs
 #define EMBED_URI_SIZE 128
 
-class nsAndroidHistory : public mozilla::IHistory, public nsIRunnable
+class nsAndroidHistory MOZ_FINAL : public mozilla::IHistory, public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -36,6 +37,8 @@ public:
   nsAndroidHistory();
 
 private:
+  ~nsAndroidHistory() {}
+
   static nsAndroidHistory* sHistory;
 
   nsDataHashtable<nsStringHashKey, nsTArray<mozilla::dom::Link *> *> mListeners;

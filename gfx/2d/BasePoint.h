@@ -17,13 +17,13 @@ namespace gfx {
  * Sub parameter, and only use that subclass. This allows methods to safely
  * cast 'this' to 'Sub*'.
  */
-template <class T, class Sub>
+template <class T, class Sub, class Coord = T>
 struct BasePoint {
-  T x, y;
+  Coord x, y;
 
   // Constructors
   MOZ_CONSTEXPR BasePoint() : x(0), y(0) {}
-  MOZ_CONSTEXPR BasePoint(T aX, T aY) : x(aX), y(aY) {}
+  MOZ_CONSTEXPR BasePoint(Coord aX, Coord aY) : x(aX), y(aY) {}
 
   void MoveTo(T aX, T aY) { x = aX; y = aY; }
   void MoveBy(T aDx, T aDy) { x += aDx; y += aDy; }
@@ -67,15 +67,15 @@ struct BasePoint {
   }
 
   T Length() const {
-    return hypot(x, y);
+    return hypot(x.value, y.value);
   }
 
   // Round() is *not* rounding to nearest integer if the values are negative.
   // They are always rounding as floor(n + 0.5).
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
   Sub& Round() {
-    x = static_cast<T>(floor(x + 0.5));
-    y = static_cast<T>(floor(y + 0.5));
+    x = Coord(floor(T(x) + T(0.5)));
+    y = Coord(floor(T(y) + T(0.5)));
     return *static_cast<Sub*>(this);
   }
 

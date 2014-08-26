@@ -1990,25 +1990,13 @@ pref("layout.css.text-align-true-value.enabled", false);
 // Is support for the CSS4 image-orientation property enabled?
 pref("layout.css.image-orientation.enabled", true);
 
-// Is support for CSS3 Fonts features enabled?
-// (includes font-variant-*, font-kerning, font-synthesis
-// and the @font-feature-values rule)
-// Note: with this enabled, font-feature-settings is aliased
-// to -moz-font-feature-settings.  When unprefixing, this should
-// be reversed, -moz-font-feature-settings should alias to
-// font-feature-settings.
-#ifdef RELEASE_BUILD
-pref("layout.css.font-features.enabled", false);
-#else
-pref("layout.css.font-features.enabled", true);
-#endif
-
 // Are sets of prefixed properties supported?
 pref("layout.css.prefixes.border-image", true);
 pref("layout.css.prefixes.transforms", true);
 pref("layout.css.prefixes.transitions", true);
 pref("layout.css.prefixes.animations", true);
 pref("layout.css.prefixes.box-sizing", true);
+pref("layout.css.prefixes.font-features", true);
 
 // Is support for the :scope selector enabled?
 pref("layout.css.scope-pseudo.enabled", true);
@@ -3792,10 +3780,6 @@ pref("layers.tile-width", 256);
 pref("layers.tile-height", 256);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
-// When a layer is moving it will add a scroll graph to measure the smoothness
-// of the movement. NOTE: This pref triggers composites to refresh
-// the graph.
-pref("layers.scroll-graph", false);
 
 // Set the default values, and then override per-platform as needed
 pref("layers.offmainthreadcomposition.enabled", false);

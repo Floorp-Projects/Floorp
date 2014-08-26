@@ -4,6 +4,7 @@
     "test-math": "*",
     "test-custom-main": "*",
     "test-custom-main-relative": "*",
-    "test-default-main": "*"
+    "test-default-main": "*",
+    "test-assets": "*"
   }
 }

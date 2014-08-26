@@ -178,7 +178,7 @@ struct BaselineScript
     BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
                    uint32_t spsPushToggleOffset, uint32_t postDebugPrologueOffset);
 
-    static BaselineScript *New(JSContext *cx, uint32_t prologueOffset,
+    static BaselineScript *New(JSScript *script, uint32_t prologueOffset,
                                uint32_t epilogueOffset, uint32_t postDebugPrologueOffset,
                                uint32_t spsPushToggleOffset, size_t icEntries,
                                size_t pcMappingIndexEntries, size_t pcMappingSize,
@@ -347,6 +347,8 @@ struct BaselineScript
         return reinterpret_cast<uint32_t *>(reinterpret_cast<uint8_t *>(this) + bytecodeTypeMapOffset_);
     }
 };
+static_assert(sizeof(BaselineScript) % sizeof(uintptr_t) == 0,
+              "The data attached to the script must be aligned for fast JIT access.");
 
 inline bool
 IsBaselineEnabled(JSContext *cx)

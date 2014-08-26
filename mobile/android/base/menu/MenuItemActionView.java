@@ -135,7 +135,7 @@ public class MenuItemActionView extends LinearLayout
         mMenuItem.setSubMenuIndicator(hasSubMenu);
     }
 
-    public void addActionButton(Drawable drawable) {
+    public void addActionButton(Drawable drawable, CharSequence label) {
         // If this is the first icon, retain the text.
         // If not, make the menu item an icon.
         final int count = mActionButtons.size();
@@ -145,6 +145,7 @@ public class MenuItemActionView extends LinearLayout
         if (drawable != null) {
             ImageButton button = new ImageButton(getContext(), null, R.attr.menuItemShareActionButtonStyle);
             button.setImageDrawable(drawable);
+            button.setContentDescription(label);
             button.setOnClickListener(this);
             button.setTag(count);
 

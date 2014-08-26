@@ -38,12 +38,27 @@ function basicSymbols() {
 }
 basicSymbols();
 
-// Calls ToObject() for target and source
+// Calls ToObject() for target, skips null/undefined sources, uses
+// ToObject(source) otherwise.
 function testToObject() {
     assertThrowsInstanceOf(() => Object.assign(null, null), TypeError);
     assertThrowsInstanceOf(() => Object.assign(), TypeError);
     assertThrowsInstanceOf(() => Object.assign(null, {}), TypeError);
-    assertThrowsInstanceOf(() => Object.assign({}, null), TypeError);
+    assertEq(Object.assign({}, null) instanceof Object, true);
+    assertEq(Object.assign({}, undefined) instanceof Object, true);
+
+    // Technically an embedding could have this as extension acting differently
+    // from ours, so a feature-test is inadequate.  We can move this subtest
+    // into extensions/ if that ever matters.
+    if (typeof objectEmulatingUndefined === "function") {
+        var falsyObject = objectEmulatingUndefined();
+        falsyObject.foo = 7;
+
+        var obj = Object.assign({}, falsyObject);
+        assertEq(obj instanceof Object, true);
+        assertEq(obj.foo, 7);
+    }
+
     assertEq(Object.assign(true, {}) instanceof Boolean, true);
     assertEq(Object.assign(1, {}) instanceof Number, true);
     assertEq(Object.assign("string", {}) instanceof String, true);

@@ -8,32 +8,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882703
   <title>Media test: TextTrackList change event</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript">
-
-  SimpleTest.waitForExplicitFinish();
-  video = document.createElement("video");
-
-  isnot(video.textTracks, null, "Video should have a list of TextTracks.");
-
-  video.addTextTrack("subtitles", "", "");
-
-  track = video.textTracks[0];
-  video.textTracks.addEventListener("change", changed);
-
-  is(track.mode, "hidden", "New TextTrack's mode should be hidden.");
-  track.mode = "showing";
-
-  function changed(event) {
-    is(event.target, video.textTracks, "change event's target should be video.textTracks.");
-    ok(event instanceof window.Event, "change event should be a simple event.");
-    ok(!event.bubbles, "change event should not bubble.");
-    ok(event.isTrusted, "change event should be trusted.");
-    ok(!event.cancelable, "change event should not be cancelable.");
-
-    SimpleTest.finish();
-  }
-  </script>
 </head>
 <body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+video = document.createElement("video");
+
+isnot(video.textTracks, null, "Video should have a list of TextTracks.");
+
+video.addTextTrack("subtitles", "", "");
+
+track = video.textTracks[0];
+video.textTracks.addEventListener("change", changed);
+
+is(track.mode, "hidden", "New TextTrack's mode should be hidden.");
+track.mode = "showing";
+
+function changed(event) {
+  is(event.target, video.textTracks, "change event's target should be video.textTracks.");
+  ok(event instanceof window.Event, "change event should be a simple event.");
+  ok(!event.bubbles, "change event should not bubble.");
+  ok(event.isTrusted, "change event should be trusted.");
+  ok(!event.cancelable, "change event should not be cancelable.");
+
+SimpleTest.finish();
+}
+</script>
+</pre>
 </body>
 </html>

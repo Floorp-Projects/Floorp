@@ -40,8 +40,9 @@ browser.jar:
   skin/classic/browser/menuPanel-exit.png
   skin/classic/browser/menuPanel-help.png
   skin/classic/browser/menuPanel-small.png
-  skin/classic/browser/mixed-content-blocked-16.png
-  skin/classic/browser/mixed-content-blocked-64.png
+  skin/classic/browser/bad-content-blocked-16.png
+  skin/classic/browser/bad-content-blocked-64.png
+  skin/classic/browser/bad-content-unblocked-16.png
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/notification-16.png
@@ -118,8 +119,6 @@ browser.jar:
   skin/classic/browser/feeds/subscribe.css            (feeds/subscribe.css)
   skin/classic/browser/feeds/subscribe-ui.css         (feeds/subscribe-ui.css)
 * skin/classic/browser/newtab/newTab.css              (newtab/newTab.css)
-  skin/classic/browser/newtab/controls.png            (../shared/newtab/controls.png)
-  skin/classic/browser/newtab/controls@2x.png         (../shared/newtab/controls@2x.png)
   skin/classic/browser/newtab/controls.svg            (../shared/newtab/controls.svg)
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)

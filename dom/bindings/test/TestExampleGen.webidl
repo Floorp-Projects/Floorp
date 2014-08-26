@@ -307,6 +307,7 @@ interface TestExampleInterface {
   void passVariadicTypedArray(Float32Array... arg);
   void passVariadicNullableTypedArray(Float32Array?... arg);
   Uint8Array receiveUint8Array();
+  attribute Uint8Array uint8ArrayAttr;
 
   // DOMString types
   void passString(DOMString arg);
@@ -491,15 +492,15 @@ interface TestExampleInterface {
   // XXXbz no move constructor on some unions
   // void passMozMapOfUnions2(MozMap<(object or long)> arg);
 
-  //(CanvasPattern or CanvasGradient) receiveUnion();
-  //(object or long) receiveUnion2();
-  //(CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
-  //(CanvasPattern or CanvasGradient)? receiveNullableUnion();
-  //(object or long)? receiveNullableUnion2();
+  (CanvasPattern or CanvasGradient) receiveUnion();
+  (object or long) receiveUnion2();
+  (CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
+  (CanvasPattern or CanvasGradient)? receiveNullableUnion();
+  (object or long)? receiveNullableUnion2();
 
-  //attribute (CanvasPattern or CanvasGradient) writableUnion;
-  //attribute (CanvasPattern? or CanvasGradient) writableUnionContainingNull;
-  //attribute (CanvasPattern or CanvasGradient)? writableNullableUnion;
+  attribute (CanvasPattern or CanvasGradient) writableUnion;
+  attribute (CanvasPattern? or CanvasGradient) writableUnionContainingNull;
+  attribute (CanvasPattern or CanvasGradient)? writableNullableUnion;
 
   // Date types
   void passDate(Date arg);

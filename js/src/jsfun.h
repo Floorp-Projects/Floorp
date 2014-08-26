@@ -168,7 +168,8 @@ class JSFunction : public JSObject
 
     /* Returns the strictness of this function, which must be interpreted. */
     bool strict() const {
-        return nonLazyScript()->strict();
+        MOZ_ASSERT(isInterpreted());
+        return isInterpretedLazy() ? lazyScript()->strict() : nonLazyScript()->strict();
     }
 
     void setFlags(uint16_t flags) {

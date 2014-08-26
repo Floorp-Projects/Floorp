@@ -298,10 +298,9 @@ exports.AppManager = AppManager = {
   _selectedRuntime: null,
   set selectedRuntime(value) {
     this._selectedRuntime = value;
-    if (!value &&
-      this.selectedProject &&
-      this.selectedProject.type == "mainProcess" &&
-      this.selectedProject.type == "runtimeApp") {
+    if (!value && this.selectedProject &&
+        (this.selectedProject.type == "mainProcess" ||
+         this.selectedProject.type == "runtimeApp")) {
       this.selectedProject = null;
     }
     this.update("runtime");
@@ -338,7 +337,7 @@ exports.AppManager = AppManager = {
       try {
         this.selectedRuntime.connect(this.connection).then(
           () => {},
-          () => {deferred.reject()});
+          deferred.reject.bind(deferred));
       } catch(e) {
         console.error(e);
         deferred.reject();
@@ -384,7 +383,11 @@ exports.AppManager = AppManager = {
     let client = this.connection.client;
     let actor = this._listTabsResponse.webappsActor;
     let manifest = this.getProjectManifestURL(this.selectedProject);
-    return AppActorFront.launchApp(client, actor, manifest);
+    if (!this.isProjectRunning()) {
+      return AppActorFront.launchApp(client, actor, manifest);
+    } else {
+      return AppActorFront.reloadApp(client, actor, manifest);
+    }
   },
 
   installAndRunProject: function() {

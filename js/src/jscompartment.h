@@ -231,7 +231,7 @@ struct JSCompartment
                                 size_t *tiArrayTypeTables,
                                 size_t *tiObjectTypeTables,
                                 size_t *compartmentObject,
-                                size_t *shapesCompartmentTables,
+                                size_t *compartmentTables,
                                 size_t *crossCompartmentWrappers,
                                 size_t *regexpCompartment,
                                 size_t *debuggeesSet,
@@ -255,8 +255,8 @@ struct JSCompartment
     js::types::TypeObjectWithNewScriptSet lazyTypeObjects;
     void sweepNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
 #ifdef JSGC_HASH_TABLE_CHECKS
-    void checkNewTypeObjectTablesAfterMovingGC();
-    void checkNewTypeObjectTableAfterMovingGC(js::types::TypeObjectWithNewScriptSet &table);
+    void checkTypeObjectTablesAfterMovingGC();
+    void checkTypeObjectTableAfterMovingGC(js::types::TypeObjectWithNewScriptSet &table);
     void checkInitialShapesTableAfterMovingGC();
     void checkWrapperMapAfterMovingGC();
 #endif
@@ -324,6 +324,14 @@ struct JSCompartment
     bool wrap(JSContext *cx, js::StrictPropertyOp *op);
     bool wrap(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc);
     bool wrap(JSContext *cx, JS::MutableHandle<js::PropDesc> desc);
+
+    template<typename T> bool wrap(JSContext *cx, JS::AutoVectorRooter<T> &vec) {
+        for (size_t i = 0; i < vec.length(); ++i) {
+            if (!wrap(cx, vec[i]))
+                return false;
+        }
+        return true;
+    };
 
     bool putWrapper(JSContext *cx, const js::CrossCompartmentKey& wrapped, const js::Value& wrapper);
 

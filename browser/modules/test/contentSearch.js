@@ -8,7 +8,12 @@ const CLIENT_EVENT_TYPE = "ContentSearchClient";
 
 // Forward events from the in-content service to the test.
 content.addEventListener(SERVICE_EVENT_TYPE, event => {
-  sendAsyncMessage(TEST_MSG, event.detail);
+  // The event dispatch code in content.js clones the event detail into the
+  // content scope. That's generally the right thing, but causes us to end
+  // up with an XrayWrapper to it here, which will screw us up when trying to
+  // serialize the object in sendAsyncMessage. Waive Xrays for the benefit of
+  // the test machinery.
+  sendAsyncMessage(TEST_MSG, Components.utils.waiveXrays(event.detail));
 });
 
 // Forward messages from the test to the in-content service.

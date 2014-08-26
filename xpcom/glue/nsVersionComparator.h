@@ -46,7 +46,8 @@ namespace mozilla {
 int32_t NS_COM_GLUE CompareVersions(const char* aStrA, const char* aStrB);
 
 #ifdef XP_WIN
-int32_t NS_COM_GLUE CompareVersions(const char16_t* aStrA, const char16_t* aStrB);
+int32_t NS_COM_GLUE CompareVersions(const char16_t* aStrA,
+                                    const char16_t* aStrB);
 #endif
 
 struct NS_COM_GLUE Version

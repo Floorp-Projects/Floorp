@@ -33,9 +33,6 @@
 #include "nsViewManager.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMXULElement.h"
-#include "nsIRDFNode.h"
-#include "nsIRDFRemoteDataSource.h"
-#include "nsIRDFService.h"
 #include "nsIStreamListener.h"
 #include "nsITimer.h"
 #include "nsDocShell.h"
@@ -44,11 +41,10 @@
 #include "nsXULContentSink.h"
 #include "nsXULContentUtils.h"
 #include "nsIXULOverlayProvider.h"
+#include "nsIStringEnumerator.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
 #include "nsPIBoxObject.h"
-#include "nsRDFCID.h"
-#include "nsILocalStore.h"
 #include "nsXPIDLString.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
@@ -136,11 +132,6 @@ const uint32_t kMaxAttributeLength = 4096;
 //
 
 int32_t XULDocument::gRefCnt = 0;
-
-nsIRDFService* XULDocument::gRDFService;
-nsIRDFResource* XULDocument::kNC_persist;
-nsIRDFResource* XULDocument::kNC_attribute;
-nsIRDFResource* XULDocument::kNC_value;
 
 PRLogModuleInfo* XULDocument::gXULLog;
 
@@ -230,25 +221,10 @@ XULDocument::~XULDocument()
         PL_DHashTableDestroy(mBroadcasterMap);
     }
 
-    if (mLocalStore) {
-        nsCOMPtr<nsIRDFRemoteDataSource> remote =
-            do_QueryInterface(mLocalStore);
-        if (remote)
-            remote->Flush();
-    }
-
     delete mTemplateBuilderTable;
 
     Preferences::UnregisterCallback(XULDocument::DirectionChanged,
                                     "intl.uidirection.", this);
-
-    if (--gRefCnt == 0) {
-        NS_IF_RELEASE(gRDFService);
-
-        NS_IF_RELEASE(kNC_persist);
-        NS_IF_RELEASE(kNC_attribute);
-        NS_IF_RELEASE(kNC_value);
-    }
 
     if (mOffThreadCompileStringBuf) {
       js_free(mOffThreadCompileStringBuf);
@@ -349,6 +325,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULDocument, XMLDocument)
     tmp->mTemplateBuilderTable = nullptr;
 
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mCommandDispatcher)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStore)
     //XXX We should probably unlink all the objects we traverse.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -1331,10 +1308,7 @@ XULDocument::Persist(const nsAString& aID,
         nameSpaceID = kNameSpaceID_None;
     }
 
-    rv = Persist(element, nameSpaceID, tag);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
+    return Persist(element, nameSpaceID, tag);
 }
 
 nsresult
@@ -1345,102 +1319,39 @@ XULDocument::Persist(nsIContent* aElement, int32_t aNameSpaceID,
     if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()))
         return NS_ERROR_NOT_AVAILABLE;
 
-    // First make sure we _have_ a local store to stuff the persisted
-    // information into. (We might not have one if profile information
-    // hasn't been loaded yet...)
-    if (!mLocalStore)
-        return NS_OK;
-
-    nsresult rv;
-
-    nsCOMPtr<nsIRDFResource> element;
-    rv = nsXULContentUtils::GetElementResource(aElement, getter_AddRefs(element));
-    if (NS_FAILED(rv)) return rv;
-
-    // No ID, so nothing to persist.
-    if (! element)
-        return NS_OK;
-
-    // Ick. Construct a property from the attribute. Punt on
-    // namespaces for now.
-    // Don't bother with unreasonable attributes. We clamp long values,
-    // but truncating attribute names turns it into a different attribute
-    // so there's no point in persisting anything at all
-    nsAtomCString attrstr(aAttribute);
-    if (attrstr.Length() > kMaxAttrNameLength) {
-        NS_WARNING("Can't persist, Attribute name too long");
-        return NS_ERROR_ILLEGAL_VALUE;
+    if (!mLocalStore) {
+        mLocalStore = do_GetService("@mozilla.org/xul/xulstore;1");
+        if (NS_WARN_IF(!mLocalStore)) {
+            return NS_ERROR_NOT_INITIALIZED;
+        }
     }
 
-    nsCOMPtr<nsIRDFResource> attr;
-    rv = gRDFService->GetResource(attrstr,
-                                  getter_AddRefs(attr));
-    if (NS_FAILED(rv)) return rv;
+    nsAutoString id;
 
-    // Turn the value into a literal
+    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
+    nsAtomString attrstr(aAttribute);
+
     nsAutoString valuestr;
     aElement->GetAttr(kNameSpaceID_None, aAttribute, valuestr);
 
-    // prevent over-long attributes that choke the parser (bug 319846)
-    // (can't simply Truncate without testing, it's implemented
-    // using SetLength and will grow a short string)
-    if (valuestr.Length() > kMaxAttributeLength) {
-        NS_WARNING("Truncating persisted attribute value");
-        valuestr.Truncate(kMaxAttributeLength);
+    nsAutoCString utf8uri;
+    nsresult rv = mDocumentURI->GetSpec(utf8uri);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
+    NS_ConvertUTF8toUTF16 uri(utf8uri);
+
+    bool hasAttr;
+    rv = mLocalStore->HasValue(uri, id, attrstr, &hasAttr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
     }
 
-    // See if there was an old value...
-    nsCOMPtr<nsIRDFNode> oldvalue;
-    rv = mLocalStore->GetTarget(element, attr, true, getter_AddRefs(oldvalue));
-    if (NS_FAILED(rv)) return rv;
-
-    if (oldvalue && valuestr.IsEmpty()) {
-        // ...there was an oldvalue, and they've removed it. XXXThis
-        // handling isn't quite right...
-        rv = mLocalStore->Unassert(element, attr, oldvalue);
+    if (hasAttr && valuestr.IsEmpty()) {
+        return mLocalStore->RemoveValue(uri, id, attrstr);
+    } else {
+        return mLocalStore->SetValue(uri, id, attrstr, valuestr);
     }
-    else {
-        // Now either 'change' or 'assert' based on whether there was
-        // an old value.
-        nsCOMPtr<nsIRDFLiteral> newvalue;
-        rv = gRDFService->GetLiteral(valuestr.get(), getter_AddRefs(newvalue));
-        if (NS_FAILED(rv)) return rv;
-
-        if (oldvalue) {
-            if (oldvalue != newvalue)
-                rv = mLocalStore->Change(element, attr, oldvalue, newvalue);
-            else
-                rv = NS_OK;
-        }
-        else {
-            rv = mLocalStore->Assert(element, attr, newvalue, true);
-        }
-    }
-
-    if (NS_FAILED(rv)) return rv;
-
-    // Add it to the persisted set for this document (if it's not
-    // there already).
-    {
-        nsAutoCString docurl;
-        rv = mDocumentURI->GetSpec(docurl);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIRDFResource> doc;
-        rv = gRDFService->GetResource(docurl, getter_AddRefs(doc));
-        if (NS_FAILED(rv)) return rv;
-
-        bool hasAssertion;
-        rv = mLocalStore->HasAssertion(doc, kNC_persist, element, true, &hasAssertion);
-        if (NS_FAILED(rv)) return rv;
-
-        if (! hasAssertion) {
-            rv = mLocalStore->Assert(doc, kNC_persist, element, true);
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    return NS_OK;
 }
 
 
@@ -1993,25 +1904,7 @@ XULDocument::Init()
     mCommandDispatcher = new nsXULCommandDispatcher(this);
     NS_ENSURE_TRUE(mCommandDispatcher, NS_ERROR_OUT_OF_MEMORY);
 
-    // this _could_ fail; e.g., if we've tried to grab the local store
-    // before profiles have initialized. If so, no big deal; nothing
-    // will persist.
-    mLocalStore = do_GetService(NS_LOCALSTORE_CONTRACTID);
-
     if (gRefCnt++ == 0) {
-        // Keep the RDF service cached in a member variable to make using
-        // it a bit less painful
-        rv = CallGetService("@mozilla.org/rdf/rdf-service;1", &gRDFService);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF Service");
-        if (NS_FAILED(rv)) return rv;
-
-        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "persist"),
-                                 &kNC_persist);
-        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "attribute"),
-                                 &kNC_attribute);
-        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "value"),
-                                 &kNC_value);
-
         // ensure that the XUL prototype cache is instantiated successfully,
         // so that we can use nsXULPrototypeCache::GetInstance() without
         // null-checks in the rest of the class.
@@ -2175,8 +2068,12 @@ XULDocument::ApplyPersistentAttributes()
 
     // Add all of the 'persisted' attributes into the content
     // model.
-    if (!mLocalStore)
-        return NS_OK;
+    if (!mLocalStore) {
+        mLocalStore = do_GetService("@mozilla.org/xul/xulstore;1");
+        if (NS_WARN_IF(!mLocalStore)) {
+            return NS_ERROR_NOT_INITIALIZED;
+        }
+    }
 
     mApplyingPersistedAttrs = true;
     ApplyPersistentAttributesInternal();
@@ -2191,56 +2088,49 @@ XULDocument::ApplyPersistentAttributes()
 }
 
 
-nsresult 
+nsresult
 XULDocument::ApplyPersistentAttributesInternal()
 {
     nsCOMArray<nsIContent> elements;
 
-    nsAutoCString docurl;
-    mDocumentURI->GetSpec(docurl);
+    nsAutoCString utf8uri;
+    nsresult rv = mDocumentURI->GetSpec(utf8uri);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
+    NS_ConvertUTF8toUTF16 uri(utf8uri);
 
-    nsCOMPtr<nsIRDFResource> doc;
-    gRDFService->GetResource(docurl, getter_AddRefs(doc));
-
-    nsCOMPtr<nsISimpleEnumerator> persisted;
-    mLocalStore->GetTargets(doc, kNC_persist, true, getter_AddRefs(persisted));
+    // Get a list of element IDs for which persisted values are available
+    nsCOMPtr<nsIStringEnumerator> ids;
+    rv = mLocalStore->GetIDsEnumerator(uri, getter_AddRefs(ids));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
 
     while (1) {
         bool hasmore = false;
-        persisted->HasMoreElements(&hasmore);
-        if (! hasmore)
+        ids->HasMore(&hasmore);
+        if (!hasmore) {
             break;
+        }
 
-        nsCOMPtr<nsISupports> isupports;
-        persisted->GetNext(getter_AddRefs(isupports));
+        nsAutoString id;
+        ids->GetNext(id);
 
-        nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(isupports);
-        if (! resource) {
-            NS_WARNING("expected element to be a resource");
+        if (mRestrictPersistence && !mPersistenceIds.Contains(id)) {
             continue;
         }
 
-        const char *uri;
-        resource->GetValueConst(&uri);
-        if (! uri)
-            continue;
-
-        nsAutoString id;
-        nsXULContentUtils::MakeElementID(this, nsDependentCString(uri), id);
-
-        if (id.IsEmpty())
-            continue;
-
-        if (mRestrictPersistence && !mPersistenceIds.Contains(id))
-            continue;
-
         // This will clear the array if there are no elements.
         GetElementsForID(id, elements);
-
-        if (!elements.Count())
+        if (!elements.Count()) {
             continue;
+        }
 
-        ApplyPersistentAttributesToElements(resource, elements);
+        rv = ApplyPersistentAttributesToElements(id, elements);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
     }
 
     return NS_OK;
@@ -2248,71 +2138,53 @@ XULDocument::ApplyPersistentAttributesInternal()
 
 
 nsresult
-XULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
+XULDocument::ApplyPersistentAttributesToElements(const nsAString &aID,
                                                  nsCOMArray<nsIContent>& aElements)
 {
-    nsresult rv;
+    nsAutoCString utf8uri;
+    nsresult rv = mDocumentURI->GetSpec(utf8uri);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
+    NS_ConvertUTF8toUTF16 uri(utf8uri);
 
-    nsCOMPtr<nsISimpleEnumerator> attrs;
-    rv = mLocalStore->ArcLabelsOut(aResource, getter_AddRefs(attrs));
-    if (NS_FAILED(rv)) return rv;
+    // Get a list of attributes for which persisted values are available
+    nsCOMPtr<nsIStringEnumerator> attrs;
+    rv = mLocalStore->GetAttributeEnumerator(uri, aID, getter_AddRefs(attrs));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
 
     while (1) {
-        bool hasmore;
-        rv = attrs->HasMoreElements(&hasmore);
-        if (NS_FAILED(rv)) return rv;
-
-        if (! hasmore)
+        bool hasmore = PR_FALSE;
+        attrs->HasMore(&hasmore);
+        if (!hasmore) {
             break;
-
-        nsCOMPtr<nsISupports> isupports;
-        rv = attrs->GetNext(getter_AddRefs(isupports));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
-        if (! property) {
-            NS_WARNING("expected a resource");
-            continue;
         }
 
-        const char* attrname;
-        rv = property->GetValueConst(&attrname);
-        if (NS_FAILED(rv)) return rv;
+        nsAutoString attrstr;
+        attrs->GetNext(attrstr);
 
-        nsCOMPtr<nsIAtom> attr = do_GetAtom(attrname);
-        if (! attr)
+        nsAutoString value;
+        rv = mLocalStore->GetValue(uri, aID, attrstr, value);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+
+        nsCOMPtr<nsIAtom> attr = do_GetAtom(attrstr);
+        if (NS_WARN_IF(!attr)) {
             return NS_ERROR_OUT_OF_MEMORY;
-
-        // XXX could hang namespace off here, as well...
-
-        nsCOMPtr<nsIRDFNode> node;
-        rv = mLocalStore->GetTarget(aResource, property, true,
-                                    getter_AddRefs(node));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(node);
-        if (! literal) {
-            NS_WARNING("expected a literal");
-            continue;
         }
-
-        const char16_t* value;
-        rv = literal->GetValueConst(&value);
-        if (NS_FAILED(rv)) return rv;
-
-        nsDependentString wrapper(value);
 
         uint32_t cnt = aElements.Count();
 
         for (int32_t i = int32_t(cnt) - 1; i >= 0; --i) {
             nsCOMPtr<nsIContent> element = aElements.SafeObjectAt(i);
-            if (!element)
-                continue;
+            if (!element) {
+                 continue;
+            }
 
-            rv = element->SetAttr(/* XXX */ kNameSpaceID_None,
-                                  attr,
-                                  wrapper,
-                                  true);
+            rv = element->SetAttr(kNameSpaceID_None, attr, value, PR_TRUE);
         }
     }
 
@@ -4131,7 +4003,9 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
             nsDependentAtomString id(idAtom);
 
             if (!id.IsEmpty()) {
-                nsIDocument *doc = aTargetNode->GetDocument();
+                nsIDocument *doc = aTargetNode->GetUncomposedDoc();
+                //XXXsmaug should we use ShadowRoot::GetElementById()
+                //         if doc is null?
                 if (!doc) return NS_ERROR_FAILURE;
 
                 elementInDocument = doc->GetElementById(id);

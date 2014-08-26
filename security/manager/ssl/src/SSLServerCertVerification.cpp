@@ -97,6 +97,7 @@
 #include <cstring>
 
 #include "pkix/pkixtypes.h"
+#include "pkix/pkixnss.h"
 #include "CertVerifier.h"
 #include "CryptoTask.h"
 #include "ExtendedValidation.h"
@@ -300,9 +301,10 @@ MapCertErrorToProbeValue(PRErrorCode errorCode)
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:  return  8;
     case SSL_ERROR_BAD_CERT_DOMAIN:                    return  9;
     case SEC_ERROR_EXPIRED_CERTIFICATE:                return 10;
+    case mozilla::pkix::MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY: return 11;
   }
   NS_WARNING("Unknown certificate error code. Does MapCertErrorToProbeValue "
-             "handle everything in PRErrorCodeToOverrideType?");
+             "handle everything in DetermineCertOverrideErrors?");
   return 0;
 }
 
@@ -328,6 +330,7 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
     case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
     case SEC_ERROR_UNKNOWN_ISSUER:
+    case mozilla::pkix::MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY:
     {
       collectedErrors = nsICertOverrideService::ERROR_UNTRUSTED;
       errorCodeTrust = defaultErrorCodeToReport;
@@ -759,7 +762,7 @@ AuthCertificate(CertVerifier& certVerifier,
   rv = certVerifier.VerifySSLServerCert(cert, stapledOCSPResponse,
                                         time, infoObject,
                                         infoObject->GetHostNameRaw(),
-                                        saveIntermediates, nullptr,
+                                        saveIntermediates, 0, nullptr,
                                         &evOidPolicy);
 
   // We want to remember the CA certs in the temp db, so that the application can find the

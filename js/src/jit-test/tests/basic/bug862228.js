@@ -1,3 +1,3 @@
-// |jit-test| error: ReferenceError
+// |jit-test| error: SyntaxError
 
 ({"":y=""}=

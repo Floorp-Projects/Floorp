@@ -3,8 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <cmath>
+
+#include "gfx2DGlue.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
+#include "ImageRegion.h"
 #include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsMenuBarX.h"
@@ -18,6 +22,7 @@
 #include "nsMenuUtilsX.h"
 #include "nsToolkit.h"
 #include "nsCRT.h"
+#include "SVGImageContext.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
@@ -35,6 +40,8 @@ using mozilla::gfx::IntRect;
 using mozilla::gfx::IntSize;
 using mozilla::gfx::SurfaceFormat;
 using mozilla::gfx::SourceSurface;
+using mozilla::image::ImageRegion;
+using std::ceil;
 
 static float
 MenuBarScreenHeight()
@@ -473,11 +480,11 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
 
   // Render a vector image at the correct resolution on a retina display
   if (aImage->GetType() == imgIContainer::TYPE_VECTOR && scaleFactor != 1.0f) {
-    int scaledWidth = (int)ceilf(width * scaleFactor);
-    int scaledHeight = (int)ceilf(height * scaleFactor);
+    gfxIntSize scaledSize(ceil(width * scaleFactor),
+                          ceil(height * scaleFactor));
 
     RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
-      CreateOffscreenContentDrawTarget(IntSize(scaledWidth, scaledHeight),
+      CreateOffscreenContentDrawTarget(ToIntSize(scaledSize),
                                        SurfaceFormat::B8G8R8A8);
     if (!drawTarget) {
       NS_ERROR("Failed to create DrawTarget");
@@ -490,11 +497,9 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
       return NS_ERROR_FAILURE;
     }
 
-    aImage->Draw(context, GraphicsFilter::FILTER_NEAREST, gfxMatrix(),
-      gfxRect(0.0f, 0.0f, scaledWidth, scaledHeight),
-      nsIntRect(0, 0, width, height),
-      nsIntSize(scaledWidth, scaledHeight),
-      nullptr, aWhichFrame, imgIContainer::FLAG_SYNC_DECODE);
+    aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize),
+                 aWhichFrame, GraphicsFilter::FILTER_NEAREST, Nothing(),
+                 imgIContainer::FLAG_SYNC_DECODE);
 
     surface = drawTarget->Snapshot();
   } else {

@@ -483,11 +483,11 @@ protected:
   // selection or content is changed without document lock.
   Selection mSelection;
 
-  // Get "current selection" while the document is locked.  The selection is
-  // NOT modified immediately during document lock.  The pending changes will
-  // be flushed at unlocking the document.  The "current selection" is the
-  // modified selection during document lock.  This is also called
-  // CurrentContent() too.
+  // Get "current selection".  If the document is locked, this initializes
+  // mSelection with the selection at the first call during a lock and returns
+  // it.  However, mSelection is NOT modified immediately.  When pending
+  // changes are flushed at unlocking the document, cached mSelection is
+  // modified.  Note that this is also called by LockedContent().
   Selection& CurrentSelection();
 
   struct PendingAction MOZ_FINAL
@@ -615,7 +615,8 @@ protected:
     void ReplaceTextWith(LONG aStart, LONG aLength, const nsAString& aString);
 
     void StartComposition(ITfCompositionView* aCompositionView,
-                          const PendingAction& aCompStart);
+                          const PendingAction& aCompStart,
+                          bool aPreserveSelection);
     void EndComposition(const PendingAction& aCompEnd);
 
     const nsString& Text() const
@@ -654,15 +655,19 @@ protected:
 
     bool mInitialized;
   };
-  // mContent caches "current content" of the document ONLY while the document
+  // mLockedContent caches content of the document ONLY while the document
   // is locked.  I.e., the content is cleared at unlocking the document since
   // we need to reduce the memory usage.  This is initialized by
-  // CurrentContent() automatically, so, don't access this member directly
+  // LockedContent() automatically.  So, don't access this member directly
   // except at calling Clear(), IsInitialized(), IsLayoutChangedAfter() or
   // IsLayoutChanged().
-  Content mContent;
+  Content mLockedContent;
 
-  Content& CurrentContent();
+  Content& LockedContent();
+
+  // While the documet is locked, this returns the text stored by
+  // mLockedContent.  Otherwise, return the current text content.
+  bool GetCurrentText(nsAString& aTextContent);
 
   // The input scopes for this context, defaults to IS_DEFAULT.
   nsTArray<InputScope>         mInputScopes;

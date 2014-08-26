@@ -6,7 +6,9 @@
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
+    'ServiceWorkerCommon.h',
     'ServiceWorkerContainer.h',
+    'ServiceWorkerRegistration.h',
     'WorkerPrivate.h',
     'WorkerRunnable.h',
     'WorkerScope.h',
@@ -50,6 +52,7 @@ SOURCES += [
     'ServiceWorkerContainer.cpp',
     'ServiceWorkerEvents.cpp',
     'ServiceWorkerManager.cpp',
+    'ServiceWorkerRegistration.cpp',
     'SharedWorker.cpp',
     'URL.cpp',
     'WorkerPrivate.cpp',

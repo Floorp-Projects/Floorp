@@ -73,7 +73,7 @@ void MediaOmxCommonReader::CheckAudioOffload()
   if ((meta.get()) && hasNoVideo && isNotStreaming && isTypeMusic &&
       canOffloadStream(meta, false, false, AUDIO_STREAM_MUSIC)) {
     DECODER_LOG(PR_LOG_DEBUG, ("Can offload this audio stream"));
-    mDecoder->SetCanOffloadAudio(true);
+    mDecoder->SetPlatformCanOffloadAudio(true);
   }
 }
 #endif

@@ -420,7 +420,11 @@ DebuggerClient.prototype = {
         this._transport = null;
         return;
       }
-      client.detach(detachClients);
+      if (client.detach) {
+        client.detach(detachClients);
+        return;
+      }
+      detachClients();
     };
     detachClients();
   },
@@ -1008,12 +1012,8 @@ DebuggerClient.prototype = {
     }
     if (client.events.length > 0 && typeof(client.emit) != "function") {
       throw new Error("DebuggerServer.registerClient expects " +
-                      "client instances with non-empty `events` array to" +
+                      "a client instance with non-empty `events` array to" +
                       "have an `emit` function.");
-    }
-    if (typeof(client.detach) != "function") {
-      throw new Error("DebuggerServer.registerClient expects " +
-                      "a client instance with a `detach` function.");
     }
     if (this._clients.has(actorID)) {
       throw new Error("DebuggerServer.registerClient already registered " +

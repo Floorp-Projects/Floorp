@@ -375,6 +375,7 @@ class IonBuilder : public MIRGenerator
     MDefinition *walkScopeChain(unsigned hops);
 
     MInstruction *addConvertElementsToDoubles(MDefinition *elements);
+    MDefinition *addMaybeCopyElementsForWrite(MDefinition *object);
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
     MInstruction *addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bailoutKind);
 
@@ -618,6 +619,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_delprop(PropertyName *name);
     bool jsop_delelem();
     bool jsop_newarray(uint32_t count);
+    bool jsop_newarray_copyonwrite();
     bool jsop_newobject();
     bool jsop_initelem();
     bool jsop_initelem_array();
@@ -682,6 +684,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineMathAbs(CallInfo &callInfo);
     InliningStatus inlineMathFloor(CallInfo &callInfo);
     InliningStatus inlineMathCeil(CallInfo &callInfo);
+    InliningStatus inlineMathClz32(CallInfo &callInfo);
     InliningStatus inlineMathRound(CallInfo &callInfo);
     InliningStatus inlineMathSqrt(CallInfo &callInfo);
     InliningStatus inlineMathAtan2(CallInfo &callInfo);

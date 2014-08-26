@@ -392,11 +392,6 @@ ArrayBufferObject::changeContents(JSContext *cx, BufferContents newContents)
     }
 }
 
-#if defined(JS_CODEGEN_X64)
-// Refer to comment above AsmJSMappedSize in AsmJS.h.
-JS_STATIC_ASSERT(AsmJSAllocationGranularity == AsmJSPageSize);
-#endif
-
 /* static */ bool
 ArrayBufferObject::prepareForAsmJSNoSignals(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 {
@@ -449,7 +444,7 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
 # endif
 
     // Enable access to the valid region.
-    JS_ASSERT(buffer->byteLength() % AsmJSAllocationGranularity == 0);
+    JS_ASSERT(buffer->byteLength() % AsmJSPageSize == 0);
 # ifdef XP_WIN
     if (!VirtualAlloc(data, buffer->byteLength(), MEM_COMMIT, PAGE_READWRITE)) {
         VirtualFree(data, 0, MEM_RELEASE);
@@ -793,7 +788,8 @@ ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffe
 }
 
 /* static */ void
-ArrayBufferObject::addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExtraSizes *sizes)
+ArrayBufferObject::addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf mallocSizeOf,
+                                          JS::ClassInfo *info)
 {
     ArrayBufferObject &buffer = AsArrayBuffer(obj);
 
@@ -804,13 +800,13 @@ ArrayBufferObject::addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf m
         // On x64, ArrayBufferObject::prepareForAsmJS switches the
         // ArrayBufferObject to use mmap'd storage.
         if (buffer.bufferKind() & MAPPED_BUFFER)
-            sizes->nonHeapElementsAsmJS += buffer.byteLength();
+            info->objectsNonHeapElementsAsmJS += buffer.byteLength();
         else
-            sizes->mallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
+            info->objectsMallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
     } else if (MOZ_UNLIKELY(buffer.bufferKind() & MAPPED_BUFFER)) {
-        sizes->nonHeapElementsMapped += buffer.byteLength();
+        info->objectsNonHeapElementsMapped += buffer.byteLength();
     } else if (buffer.dataPointer()) {
-        sizes->mallocHeapElementsNonAsmJS += mallocSizeOf(buffer.dataPointer());
+        info->objectsMallocHeapElementsNonAsmJS += mallocSizeOf(buffer.dataPointer());
     }
 }
 
@@ -1145,6 +1141,12 @@ JS_IsArrayBufferObject(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
     return obj ? obj->is<ArrayBufferObject>() : false;
+}
+
+JS_FRIEND_API(bool)
+JS_ArrayBufferHasData(JSObject *obj)
+{
+    return CheckedUnwrap(obj)->as<ArrayBufferObject>().hasData();
 }
 
 JS_FRIEND_API(JSObject *)

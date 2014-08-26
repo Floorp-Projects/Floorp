@@ -4,6 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+if CONFIG['ENABLE_TESTS']:
+    MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+    MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+    BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
 XPIDL_SOURCES += [
     'nsIBoxObject.idl',
     'nsIBrowserBoxObject.idl',
@@ -72,11 +77,6 @@ if CONFIG['MOZ_XUL']:
         'nsTitleBarFrame.cpp',
         'nsXULLabelFrame.cpp',
         'nsXULPopupManager.cpp',
-    ]
-
-if CONFIG['ENABLE_TESTS']:
-    DIRS += [
-        'test',
     ]
 
 if CONFIG['MOZ_XUL']:

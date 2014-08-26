@@ -1804,6 +1804,38 @@ MediaManager::OnNavigation(uint64_t aWindowID)
 }
 
 void
+MediaManager::RemoveWindowID(uint64_t aWindowId)
+{
+  mActiveWindows.Remove(aWindowId);
+
+  // get outer windowID
+  nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
+    (nsGlobalWindow::GetInnerWindowWithId(aWindowId));
+  if (!window) {
+    LOG(("No inner window for %llu", aWindowId));
+    return;
+  }
+
+  nsPIDOMWindow *outer = window->GetOuterWindow();
+  if (!outer) {
+    LOG(("No outer window for inner %llu", aWindowId));
+    return;
+  }
+
+  uint64_t outerID = outer->WindowID();
+
+  // Notify the UI that this window no longer has gUM active
+  char windowBuffer[32];
+  PR_snprintf(windowBuffer, sizeof(windowBuffer), "%llu", outerID);
+  nsString data = NS_ConvertUTF8toUTF16(windowBuffer);
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  obs->NotifyObservers(nullptr, "recording-window-ended", data.get());
+  LOG(("Sent recording-window-ended for window %llu (outer %llu)",
+       aWindowId, outerID));
+}
+
+void
 MediaManager::RemoveFromWindowList(uint64_t aWindowID,
   GetUserMediaCallbackMediaStreamListener *aListener)
 {
@@ -1820,30 +1852,6 @@ MediaManager::RemoveFromWindowList(uint64_t aWindowID,
   if (listeners->Length() == 0) {
     RemoveWindowID(aWindowID);
     // listeners has been deleted here
-
-    // get outer windowID
-    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
-      (nsGlobalWindow::GetInnerWindowWithId(aWindowID));
-    if (window) {
-      nsPIDOMWindow *outer = window->GetOuterWindow();
-      if (outer) {
-        uint64_t outerID = outer->WindowID();
-
-        // Notify the UI that this window no longer has gUM active
-        char windowBuffer[32];
-        PR_snprintf(windowBuffer, sizeof(windowBuffer), "%llu", outerID);
-        nsString data = NS_ConvertUTF8toUTF16(windowBuffer);
-
-        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-        obs->NotifyObservers(nullptr, "recording-window-ended", data.get());
-        LOG(("Sent recording-window-ended for window %llu (outer %llu)",
-             aWindowID, outerID));
-      } else {
-        LOG(("No outer window for inner %llu", aWindowID));
-      }
-    } else {
-      LOG(("No inner window for %llu", aWindowID));
-    }
   }
 }
 
@@ -1992,13 +2000,23 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
 
   } else if (!strcmp(aTopic, "getUserMedia:revoke")) {
     nsresult rv;
-    uint64_t windowID = nsString(aData).ToInteger64(&rv);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    if (NS_SUCCEEDED(rv)) {
-      LOG(("Revoking MediaCapture access for window %llu",windowID));
-      OnNavigation(windowID);
+    // may be windowid or screen:windowid
+    nsDependentString data(aData);
+    if (Substring(data, 0, strlen("screen:")).EqualsLiteral("screen:")) {
+      uint64_t windowID = PromiseFlatString(Substring(data, strlen("screen:"))).ToInteger64(&rv);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      if (NS_SUCCEEDED(rv)) {
+        LOG(("Revoking Screeen/windowCapture access for window %llu", windowID));
+        StopScreensharing(windowID);
+      }
+    } else {
+      uint64_t windowID = nsString(aData).ToInteger64(&rv);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      if (NS_SUCCEEDED(rv)) {
+        LOG(("Revoking MediaCapture access for window %llu", windowID));
+        OnNavigation(windowID);
+      }
     }
-
     return NS_OK;
   }
 #ifdef MOZ_WIDGET_GONK
@@ -2102,12 +2120,12 @@ MediaManager::MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVide
   // results.
   nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
   if (piWin) {
-    if (piWin->GetCurrentInnerWindow() || piWin->IsInnerWindow()) {
+    if (piWin->IsInnerWindow() || piWin->GetCurrentInnerWindow()) {
       uint64_t windowID;
-      if (piWin->GetCurrentInnerWindow()) {
-        windowID = piWin->GetCurrentInnerWindow()->WindowID();
-      } else {
+      if (piWin->IsInnerWindow()) {
         windowID = piWin->WindowID();
+      } else {
+        windowID = piWin->GetCurrentInnerWindow()->WindowID();
       }
       StreamListeners* listeners = GetActiveWindows()->Get(windowID);
       if (listeners) {
@@ -2148,6 +2166,67 @@ MediaManager::MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVide
   return NS_OK;
 }
 
+// XXX abstract out the iteration over all children and provide a function pointer and data ptr
+
+void
+MediaManager::StopScreensharing(uint64_t aWindowID)
+{
+  // We need to stop window/screensharing for all streams in all innerwindows that
+  // correspond to that outerwindow.
+
+  nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
+      (nsGlobalWindow::GetInnerWindowWithId(aWindowID));
+  if (!window) {
+    return;
+  }
+  StopScreensharing(window);
+}
+
+void
+MediaManager::StopScreensharing(nsPIDOMWindow *aWindow)
+{
+  // We need to stop window/screensharing for all streams in all innerwindows that
+  // correspond to that outerwindow.
+
+  // Iterate the docshell tree to find all the child windows, find
+  // all the listeners for each one, and tell them to stop
+  // window/screensharing
+  nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
+  if (piWin) {
+    if (piWin->IsInnerWindow() || piWin->GetCurrentInnerWindow()) {
+      uint64_t windowID;
+      if (piWin->IsInnerWindow()) {
+        windowID = piWin->WindowID();
+      } else {
+        windowID = piWin->GetCurrentInnerWindow()->WindowID();
+      }
+      StreamListeners* listeners = GetActiveWindows()->Get(windowID);
+      if (listeners) {
+        uint32_t length = listeners->Length();
+        for (uint32_t i = 0; i < length; ++i) {
+          listeners->ElementAt(i)->StopScreenWindowSharing();
+        }
+      }
+    }
+
+    // iterate any children of *this* window (iframes, etc)
+    nsCOMPtr<nsIDocShell> docShell = piWin->GetDocShell();
+    if (docShell) {
+      int32_t i, count;
+      docShell->GetChildCount(&count);
+      for (i = 0; i < count; ++i) {
+        nsCOMPtr<nsIDocShellTreeItem> item;
+        docShell->GetChildAt(i, getter_AddRefs(item));
+        nsCOMPtr<nsPIDOMWindow> win = item ? item->GetWindow() : nullptr;
+
+        if (win) {
+          StopScreensharing(win);
+        }
+      }
+    }
+  }
+}
+
 void
 MediaManager::StopMediaStreams()
 {
@@ -2181,6 +2260,26 @@ GetUserMediaCallbackMediaStreamListener::Invalidate()
                                         mFinished, mWindowID, nullptr);
   mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
+
+// Doesn't kill audio
+// XXX refactor to combine with Invalidate()?
+void
+GetUserMediaCallbackMediaStreamListener::StopScreenWindowSharing()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  if (mVideoSource && !mStopped &&
+      (mVideoSource->GetMediaSource() == MediaSourceType::Screen ||
+       mVideoSource->GetMediaSource() == MediaSourceType::Window)) {
+    // Stop the whole stream if there's no audio; just the video track if we have both
+    nsRefPtr<MediaOperationRunnable> runnable(
+      new MediaOperationRunnable(mAudioSource ? MEDIA_STOP_TRACK : MEDIA_STOP,
+                                 this, nullptr, nullptr,
+                                 nullptr, mVideoSource,
+                                 mFinished, mWindowID, nullptr));
+    mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  }
+}
+
 
 // Called from the MediaStreamGraph thread
 void
@@ -2241,6 +2340,9 @@ GetUserMediaNotificationEvent::Run()
     if (mListener) {
       mListener->SetStopped();
     }
+    break;
+  case STOPPED_TRACK:
+    msg = NS_LITERAL_STRING("shutdown");
     break;
   }
 

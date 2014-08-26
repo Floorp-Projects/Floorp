@@ -599,8 +599,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         data->ValueFor(eCSSProperty__x_system_font);
       const nsCSSValue *style =
         data->ValueFor(eCSSProperty_font_style);
-      const nsCSSValue *variant =
-        data->ValueFor(eCSSProperty_font_variant);
       const nsCSSValue *weight =
         data->ValueFor(eCSSProperty_font_weight);
       const nsCSSValue *size =
@@ -634,17 +632,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       const nsCSSValue *fontVariantPosition =
         data->ValueFor(eCSSProperty_font_variant_position);
 
-      // if font features are not enabled, pointers for fontVariant
-      // values above may be null since the shorthand check ignores them
-      // font-variant-alternates enabled ==> layout.css.font-features.enabled is true
-      bool fontFeaturesEnabled =
-        nsCSSProps::IsEnabled(eCSSProperty_font_variant_alternates);
-
       if (systemFont &&
           systemFont->GetUnit() != eCSSUnit_None &&
           systemFont->GetUnit() != eCSSUnit_Null) {
         if (style->GetUnit() != eCSSUnit_System_Font ||
-            variant->GetUnit() != eCSSUnit_System_Font ||
             weight->GetUnit() != eCSSUnit_System_Font ||
             size->GetUnit() != eCSSUnit_System_Font ||
             lh->GetUnit() != eCSSUnit_System_Font ||
@@ -653,15 +644,14 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
             sizeAdjust->GetUnit() != eCSSUnit_System_Font ||
             featureSettings->GetUnit() != eCSSUnit_System_Font ||
             languageOverride->GetUnit() != eCSSUnit_System_Font ||
-            (fontFeaturesEnabled &&
-             (fontKerning->GetUnit() != eCSSUnit_System_Font ||
-              fontSynthesis->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantAlternates->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantCaps->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantEastAsian->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantLigatures->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantNumeric->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantPosition->GetUnit() != eCSSUnit_System_Font))) {
+            fontKerning->GetUnit() != eCSSUnit_System_Font ||
+            fontSynthesis->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantAlternates->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantCaps->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantEastAsian->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantLigatures->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantNumeric->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantPosition->GetUnit() != eCSSUnit_System_Font) {
           // This can't be represented as a shorthand.
           return;
         }
@@ -675,17 +665,23 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
             sizeAdjust->GetUnit() != eCSSUnit_None ||
             featureSettings->GetUnit() != eCSSUnit_Normal ||
             languageOverride->GetUnit() != eCSSUnit_Normal ||
-            (fontFeaturesEnabled &&
-             (fontKerning->GetIntValue() != NS_FONT_KERNING_AUTO ||
-              fontSynthesis->GetUnit() != eCSSUnit_Enumerated ||
-              fontSynthesis->GetIntValue() !=
-                (NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE) ||
-              fontVariantAlternates->GetUnit() != eCSSUnit_Normal ||
-              fontVariantCaps->GetUnit() != eCSSUnit_Normal ||
-              fontVariantEastAsian->GetUnit() != eCSSUnit_Normal ||
-              fontVariantLigatures->GetUnit() != eCSSUnit_Normal ||
-              fontVariantNumeric->GetUnit() != eCSSUnit_Normal ||
-              fontVariantPosition->GetUnit() != eCSSUnit_Normal))) {
+            fontKerning->GetIntValue() != NS_FONT_KERNING_AUTO ||
+            fontSynthesis->GetUnit() != eCSSUnit_Enumerated ||
+            fontSynthesis->GetIntValue() !=
+              (NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE) ||
+            fontVariantAlternates->GetUnit() != eCSSUnit_Normal ||
+            fontVariantEastAsian->GetUnit() != eCSSUnit_Normal ||
+            fontVariantLigatures->GetUnit() != eCSSUnit_Normal ||
+            fontVariantNumeric->GetUnit() != eCSSUnit_Normal ||
+            fontVariantPosition->GetUnit() != eCSSUnit_Normal) {
+          return;
+        }
+
+        // only a normal or small-caps values of font-variant-caps can
+        // be represented in the font shorthand
+        if (fontVariantCaps->GetUnit() != eCSSUnit_Normal &&
+            (fontVariantCaps->GetUnit() != eCSSUnit_Enumerated ||
+             fontVariantCaps->GetIntValue() != NS_FONT_VARIANT_CAPS_SMALLCAPS)) {
           return;
         }
 
@@ -695,9 +691,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
                                 aSerialization);
           aValue.Append(char16_t(' '));
         }
-        if (variant->GetUnit() != eCSSUnit_Enumerated ||
-            variant->GetIntValue() != NS_FONT_VARIANT_NORMAL) {
-          variant->AppendToString(eCSSProperty_font_variant, aValue,
+        if (fontVariantCaps->GetUnit() != eCSSUnit_Normal) {
+          fontVariantCaps->AppendToString(eCSSProperty_font_variant_caps, aValue,
                                   aSerialization);
           aValue.Append(char16_t(' '));
         }
@@ -715,6 +710,60 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         aValue.Append(char16_t(' '));
         family->AppendToString(eCSSProperty_font_family, aValue,
                                aSerialization);
+      }
+      break;
+    }
+    case eCSSProperty_font_variant: {
+      const nsCSSProperty *subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      const nsCSSValue *fontVariantLigatures =
+        data->ValueFor(eCSSProperty_font_variant_ligatures);
+
+      // all subproperty values normal? system font?
+      bool normalLigs = true, normalNonLigs = true, systemFont = true,
+           hasSystem = false;
+      for (const nsCSSProperty *sp = subprops; *sp != eCSSProperty_UNKNOWN; sp++) {
+        const nsCSSValue *spVal = data->ValueFor(*sp);
+        bool isNormal = (spVal->GetUnit() == eCSSUnit_Normal);
+        if (*sp == eCSSProperty_font_variant_ligatures) {
+          normalLigs = normalLigs && isNormal;
+        } else {
+          normalNonLigs = normalNonLigs && isNormal;
+        }
+        bool isSystem = (spVal->GetUnit() == eCSSUnit_System_Font);
+        systemFont = systemFont && isSystem;
+        hasSystem = hasSystem || isSystem;
+      }
+
+      bool ligsNone =
+        fontVariantLigatures->GetUnit() == eCSSUnit_None;
+
+      // normal, none, or system font ==> single value
+      if ((normalLigs && normalNonLigs) ||
+          (normalNonLigs && ligsNone) ||
+          systemFont) {
+        fontVariantLigatures->AppendToString(eCSSProperty_font_variant_ligatures,
+                                             aValue,
+                                             aSerialization);
+      } else if (ligsNone || hasSystem) {
+        // ligatures none but other values are non-normal ==> empty
+        // at least one but not all values are system font ==> empty
+        return;
+      } else {
+        // iterate over and append non-normal values
+        bool appendSpace = false;
+        for (const nsCSSProperty *sp = subprops;
+             *sp != eCSSProperty_UNKNOWN; sp++) {
+          const nsCSSValue *spVal = data->ValueFor(*sp);
+          if (spVal && spVal->GetUnit() != eCSSUnit_Normal) {
+            if (appendSpace) {
+              aValue.Append(char16_t(' '));
+            } else {
+              appendSpace = true;
+            }
+            spVal->AppendToString(*sp, aValue, aSerialization);
+          }
+        }
       }
       break;
     }
@@ -1294,9 +1343,17 @@ Declaration::ToString(nsAString& aString) const
       // least, which is exactly the order we want to test them.
       nsCSSProperty shorthand = *shorthands;
 
+      GetValue(shorthand, value);
+
+      // in the system font case, skip over font-variant shorthand, since all
+      // subproperties are already dealt with via the font shorthand
+      if (shorthand == eCSSProperty_font_variant &&
+          value.EqualsLiteral("-moz-use-system-font")) {
+        continue;
+      }
+
       // If GetValue gives us a non-empty string back, we can use that
       // value; otherwise it's not possible to use this shorthand.
-      GetValue(shorthand, value);
       if (!value.IsEmpty()) {
         AppendPropertyAndValueToString(shorthand, value, aString);
         shorthandsUsed.AppendElement(shorthand);
@@ -1304,9 +1361,6 @@ Declaration::ToString(nsAString& aString) const
         break;
       }
 
-      NS_ABORT_IF_FALSE(shorthand != eCSSProperty_font ||
-                        *(shorthands + 1) == eCSSProperty_UNKNOWN,
-                        "font should always be the only containing shorthand");
       if (shorthand == eCSSProperty_font) {
         if (haveSystemFont && !didSystemFont) {
           // Output the shorthand font declaration that we will
@@ -1329,6 +1383,7 @@ Declaration::ToString(nsAString& aString) const
         if (property == eCSSProperty__x_system_font ||
             (haveSystemFont && val && val->GetUnit() == eCSSUnit_System_Font)) {
           doneProperty = true;
+          break;
         }
       }
     }

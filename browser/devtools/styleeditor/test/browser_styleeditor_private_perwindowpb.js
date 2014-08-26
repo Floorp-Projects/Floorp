@@ -42,6 +42,7 @@ function test() {
 
   function checkCache() {
     checkDiskCacheFor(TEST_HOST, function() {
+      gUI.off("editor-added", onEditorAdded);
       win.close();
       win = null;
       gUI = null;

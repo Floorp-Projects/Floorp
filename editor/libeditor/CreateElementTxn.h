@@ -9,21 +9,24 @@
 #include "EditTxn.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMNode.h"
 #include "nsISupportsImpl.h"
-#include "nsString.h"
-#include "nscore.h"
 
 class nsEditor;
+class nsIAtom;
+class nsIContent;
+class nsINode;
 
 /**
  * A transaction that creates a new node in the content tree.
  */
+namespace mozilla {
+namespace dom {
+
+class Element;
+
 class CreateElementTxn : public EditTxn
 {
 public:
-  enum { eAppend=-1 };
-
   /** Initialize the transaction.
     * @param aEditor the provider of basic editing functionality
     * @param aTag    the tag (P, HR, TABLE, etc.) for the new element
@@ -31,12 +34,10 @@ public:
     * @param aOffsetInParent the location in aParent to insert the new element
     *                        if eAppend, the new element is appended as the last child
     */
-  NS_IMETHOD Init(nsEditor *aEditor,
-                  const nsAString& aTag,
-                  nsIDOMNode *aParent,
-                  uint32_t aOffsetInParent);
-
-  CreateElementTxn();
+  CreateElementTxn(nsEditor& aEditor,
+                   nsIAtom& aTag,
+                   nsINode& aParent,
+                   int32_t aOffsetInParent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CreateElementTxn, EditTxn)
@@ -45,28 +46,31 @@ public:
 
   NS_IMETHOD RedoTransaction();
 
-  NS_IMETHOD GetNewNode(nsIDOMNode **aNewNode);
+  already_AddRefed<Element> GetNewNode();
 
 protected:
   virtual ~CreateElementTxn();
 
   /** the document into which the new node will be inserted */
   nsEditor* mEditor;
-  
+
   /** the tag (mapping to object type) for the new element */
-  nsString mTag;
+  nsCOMPtr<nsIAtom> mTag;
 
   /** the node into which the new node will be inserted */
-  nsCOMPtr<nsIDOMNode> mParent;
+  nsCOMPtr<nsINode> mParent;
 
   /** the index in mParent for the new node */
-  uint32_t mOffsetInParent;
+  int32_t mOffsetInParent;
 
   /** the new node to insert */
-  nsCOMPtr<nsIDOMNode> mNewNode;  
+  nsCOMPtr<Element> mNewNode;
 
   /** the node we will insert mNewNode before.  We compute this ourselves. */
-  nsCOMPtr<nsIDOMNode> mRefNode;
+  nsCOMPtr<nsIContent> mRefNode;
 };
+
+}
+}
 
 #endif

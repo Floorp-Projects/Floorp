@@ -33,8 +33,8 @@ public:
   typedef RotatedContentBuffer::PaintState PaintState;
   typedef RotatedContentBuffer::ContentType ContentType;
 
-  ClientThebesLayer(ClientLayerManager* aLayerManager,
-                    LayerManager::ThebesLayerCreationHint aCreationHint = LayerManager::NONE) :
+  explicit ClientThebesLayer(ClientLayerManager* aLayerManager,
+                             LayerManager::ThebesLayerCreationHint aCreationHint = LayerManager::NONE) :
     ThebesLayer(aLayerManager,
                 static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()),
                 aCreationHint),

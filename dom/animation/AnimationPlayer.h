@@ -50,9 +50,14 @@ public:
   AnimationTimeline* Timeline() const { return mTimeline; }
   double StartTime() const;
   double CurrentTime() const;
+  bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
   void SetSource(Animation* aSource);
   void Tick();
+
+  const nsString& Name() const {
+    return mSource ? mSource->Name() : EmptyString();
+  }
 
   bool IsPaused() const {
     return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
@@ -82,7 +87,6 @@ public:
     return result;
   }
 
-  nsString mName;
   // The beginning of the delay period.
   TimeStamp mStartTime;
   TimeStamp mPauseStart;

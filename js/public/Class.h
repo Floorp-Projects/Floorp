@@ -518,8 +518,9 @@ Valueify(const JSClass *c)
  * value of objects.
  */
 enum ESClassValue {
-    ESClass_Array, ESClass_Number, ESClass_String, ESClass_Boolean,
-    ESClass_RegExp, ESClass_ArrayBuffer, ESClass_Date
+    ESClass_Object, ESClass_Array, ESClass_Number, ESClass_String,
+    ESClass_Boolean, ESClass_RegExp, ESClass_ArrayBuffer, ESClass_Date,
+    ESClass_Set, ESClass_Map
 };
 
 /*
@@ -534,6 +535,10 @@ ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx);
 /* Just a helper that checks v.isObject before calling ObjectClassIs. */
 inline bool
 IsObjectWithClass(const JS::Value &v, ESClassValue classValue, JSContext *cx);
+
+/* Fills |vp| with the unboxed value for boxed types, or undefined otherwise. */
+inline bool
+Unbox(JSContext *cx, JS::HandleObject obj, JS::MutableHandleValue vp);
 
 }  /* namespace js */
 

@@ -64,7 +64,7 @@ FrameSequence::InsertFrame(uint32_t framenum, imgFrame* aFrame)
   }
 }
 
-imgFrame*
+already_AddRefed<imgFrame>
 FrameSequence::SwapFrame(uint32_t framenum, imgFrame* aFrame)
 {
   NS_ABORT_IF_FALSE(framenum < mFrames.Length(), "Swapping invalid frame!");
@@ -82,7 +82,7 @@ FrameSequence::SwapFrame(uint32_t framenum, imgFrame* aFrame)
     mFrames.RemoveElementAt(framenum);
   }
 
-  return ret.Forget();
+  return ret.GetFrame();
 }
 
 size_t
@@ -91,9 +91,9 @@ FrameSequence::SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocati
 {
   size_t n = 0;
   for (uint32_t i = 0; i < mFrames.Length(); ++i) {
-    imgFrame* frame = mFrames.SafeElementAt(i, FrameDataPair());
-    NS_ABORT_IF_FALSE(frame, "Null frame in frame array!");
-    n += frame->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
+    FrameDataPair fdp = mFrames.SafeElementAt(i, FrameDataPair());
+    NS_ABORT_IF_FALSE(fdp, "Null frame in frame array!");
+    n += fdp->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
   }
 
   return n;

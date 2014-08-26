@@ -76,17 +76,18 @@ nsTSubstringTuple_CharT::WriteTo(char_type* aBuf, uint32_t aBufLen) const
  */
 
 bool
-nsTSubstringTuple_CharT::IsDependentOn(const char_type* start, const char_type* end) const
+nsTSubstringTuple_CharT::IsDependentOn(const char_type* aStart,
+                                       const char_type* aEnd) const
 {
-  // we start with the right-most fragment since it is faster to check.
+  // we aStart with the right-most fragment since it is faster to check.
 
-  if (TO_SUBSTRING(mFragB).IsDependentOn(start, end)) {
+  if (TO_SUBSTRING(mFragB).IsDependentOn(aStart, aEnd)) {
     return true;
   }
 
   if (mHead) {
-    return mHead->IsDependentOn(start, end);
+    return mHead->IsDependentOn(aStart, aEnd);
   }
 
-  return TO_SUBSTRING(mFragA).IsDependentOn(start, end);
+  return TO_SUBSTRING(mFragA).IsDependentOn(aStart, aEnd);
 }

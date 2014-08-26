@@ -661,7 +661,7 @@ Http2Session::UncompressAndDiscard()
   nsAutoCString trash;
 
   rv = mDecompressor.DecodeHeaderBlock(reinterpret_cast<const uint8_t *>(mDecompressBuffer.BeginReading()),
-                                       mDecompressBuffer.Length(), trash);
+                                       mDecompressBuffer.Length(), trash, false);
   mDecompressBuffer.Truncate();
   if (NS_FAILED(rv)) {
     LOG3(("Http2Session::UncompressAndDiscard %p Compression Error\n",
@@ -2945,6 +2945,21 @@ Http2Session::BufferOutput(const char *buf,
   nsresult rv = OnReadSegment(buf, count, countRead);
   mSegmentReader = old;
   return rv;
+}
+
+bool // static
+Http2Session::ALPNCallback(nsISupports *securityInfo)
+{
+  nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo);
+  LOG3(("Http2Session::ALPNCallback sslsocketcontrol=%p\n", ssl.get()));
+  if (ssl) {
+    int16_t version = ssl->GetSSLVersionOffered();
+    LOG3(("Http2Session::ALPNCallback version=%x\n", version));
+    if (version >= nsISSLSocketControl::TLS_VERSION_1_2) {
+      return true;
+    }
+  }
+  return false;
 }
 
 nsresult

@@ -1092,7 +1092,7 @@ TypeAnalyzer::replaceRedundantPhi(MPhi *phi)
         v = MagicValue(JS_OPTIMIZED_OUT);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected type");
+        MOZ_CRASH("unexpected type");
     }
     MConstant *c = MConstant::New(alloc(), v);
     // The instruction pass will insert the box
@@ -1784,10 +1784,22 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
         for (size_t i = 0; i < block->numPredecessors(); i++)
             JS_ASSERT(CheckPredecessorImpliesSuccessor(*block, block->getPredecessor(i)));
 
+        if (block->entryResumePoint()) {
+            MOZ_ASSERT(!block->entryResumePoint()->instruction());
+            MOZ_ASSERT(block->entryResumePoint()->block() == *block);
+        }
+        if (block->outerResumePoint()) {
+            MOZ_ASSERT(!block->outerResumePoint()->instruction());
+            MOZ_ASSERT(block->outerResumePoint()->block() == *block);
+        }
         for (MResumePointIterator iter(block->resumePointsBegin()); iter != block->resumePointsEnd(); iter++) {
+            // We cannot yet assert that is there is no instruction then this is
+            // the entry resume point because we are still storing resume points
+            // in the InlinePropertyTable.
+            MOZ_ASSERT_IF(iter->instruction(), iter->instruction()->block() == *block);
             for (uint32_t i = 0, e = iter->numOperands(); i < e; i++) {
-                if (iter->getUseFor(i)->hasProducer())
-                    JS_ASSERT(CheckOperandImpliesUse(*iter, iter->getOperand(i)));
+                MOZ_ASSERT(iter->getUseFor(i)->hasProducer());
+                MOZ_ASSERT(CheckOperandImpliesUse(*iter, iter->getOperand(i)));
             }
         }
         for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
@@ -1805,11 +1817,8 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
 
             if (iter->isInstruction()) {
                 if (MResumePoint *resume = iter->toInstruction()->resumePoint()) {
-                    if (MInstruction *ins = resume->instruction())
-                        JS_ASSERT(ins->block() == iter->block());
-
-                    for (uint32_t i = 0, e = resume->numOperands(); i < e; i++)
-                        MOZ_ASSERT(resume->getUseFor(i)->hasProducer());
+                    MOZ_ASSERT(resume->instruction() == *iter);
+                    MOZ_ASSERT(resume->block() == *block);
                 }
             }
 
@@ -2268,6 +2277,16 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
     return true;
 }
 
+static inline MDefinition *
+PassthroughOperand(MDefinition *def)
+{
+    if (def->isConvertElementsToDoubles())
+        return def->toConvertElementsToDoubles()->elements();
+    if (def->isMaybeCopyElementsForWrite())
+        return def->toMaybeCopyElementsForWrite()->object();
+    return nullptr;
+}
+
 // Eliminate checks which are redundant given each other or other instructions.
 //
 // A type barrier is considered redundant if all missing types have been tested
@@ -2324,11 +2343,12 @@ jit::EliminateRedundantChecks(MIRGraph &graph)
             } else if (iter->isTypeBarrier()) {
                 if (!TryEliminateTypeBarrier(iter->toTypeBarrier(), &eliminated))
                     return false;
-            } else if (iter->isConvertElementsToDoubles()) {
-                // Now that code motion passes have finished, replace any
-                // ConvertElementsToDoubles with the actual elements.
-                MConvertElementsToDoubles *ins = iter->toConvertElementsToDoubles();
-                ins->replaceAllUsesWith(ins->elements());
+            } else {
+                // Now that code motion passes have finished, replace
+                // instructions which pass through one of their operands
+                // (and perform additional checks) with that operand.
+                if (MDefinition *passthrough = PassthroughOperand(*iter))
+                    iter->replaceAllUsesWith(passthrough);
             }
 
             if (eliminated)
@@ -2762,8 +2782,6 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
                      script->needsArgsObj(),
                      inlineScriptTree);
 
-    AutoTempAllocatorRooter root(cx, &temp);
-
     const OptimizationInfo *optimizationInfo = js_IonOptimizations.get(Optimization_Normal);
 
     types::CompilerConstraintList *constraints = types::NewCompilerConstraintList(temp);
@@ -2992,8 +3010,6 @@ jit::AnalyzeArgumentsUsage(JSContext *cx, JSScript *scriptArg)
                      ArgumentsUsageAnalysis,
                      /* needsArgsObj = */ true,
                      inlineScriptTree);
-
-    AutoTempAllocatorRooter root(cx, &temp);
 
     const OptimizationInfo *optimizationInfo = js_IonOptimizations.get(Optimization_Normal);
 

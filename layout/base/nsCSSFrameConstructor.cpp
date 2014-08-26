@@ -4552,6 +4552,22 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     return &sNonScrollableBlockData;
   }
 
+  // If this is for a <body> node and we've propagated the scroll-frame to the
+  // viewport, we need to make sure not to add another layer of scrollbars, so
+  // we use a different FCData struct without FCDATA_MAY_NEED_SCROLLFRAME.
+  if (propagatedScrollToViewport && aDisplay->IsScrollableOverflow()) {
+    if (aDisplay->mDisplay == NS_STYLE_DISPLAY_FLEX) {
+      static const FrameConstructionData sNonScrollableFlexData =
+        FCDATA_DECL(0, NS_NewFlexContainerFrame);
+      return &sNonScrollableFlexData;
+    }
+    if (aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID) {
+      static const FrameConstructionData sNonScrollableGridData =
+        FCDATA_DECL(0, NS_NewGridContainerFrame);
+      return &sNonScrollableGridData;
+    }
+  }
+
   static const FrameConstructionDataByInt sDisplayData[] = {
     // To keep the hash table small don't add inline frames (they're
     // typically things like FONT and B), because we can quickly
@@ -6671,7 +6687,7 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
   bool hasInsertion = false;
   if (!multiple) {
     // XXXbz XBL2/sXBL issue
-    nsIDocument* document = aStartChild->GetDocument();
+    nsIDocument* document = aStartChild->GetComposedDoc();
     // XXXbz how would |document| be null here?
     if (document && aStartChild->GetXBLInsertionParent()) {
       hasInsertion = true;

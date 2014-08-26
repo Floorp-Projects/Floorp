@@ -728,8 +728,7 @@ MacroAssemblerMIPS::ma_load(Register dest, Address address,
         as_lw(dest, base, encodedOffset);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid argument for ma_load");
-        break;
+        MOZ_CRASH("Invalid argument for ma_load");
     }
 }
 
@@ -768,8 +767,7 @@ MacroAssemblerMIPS::ma_store(Register data, Address address, LoadStoreSize size,
         as_sw(data, base, encodedOffset);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid argument for ma_store");
-        break;
+        MOZ_CRASH("Invalid argument for ma_store");
     }
 }
 
@@ -1073,13 +1071,13 @@ MacroAssemblerMIPS::ma_cmp(Register scratch, Register lhs, Register rhs, Conditi
       case Always:
       case Signed:
       case NotSigned:
-        MOZ_ASSUME_UNREACHABLE("There is a better way to compare for equality.");
+        MOZ_CRASH("There is a better way to compare for equality.");
         break;
       case Overflow:
-        MOZ_ASSUME_UNREACHABLE("Overflow condition not supported for MIPS.");
+        MOZ_CRASH("Overflow condition not supported for MIPS.");
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid condition for branch.");
+        MOZ_CRASH("Invalid condition for branch.");
     }
     return Always;
 }
@@ -1174,8 +1172,7 @@ MacroAssemblerMIPS::ma_cmp_set(Register rd, Register rs, Register rt, Condition 
         as_xori(rd, rd, 1);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid condition for ma_cmp_set.");
-        break;
+        MOZ_CRASH("Invalid condition for ma_cmp_set.");
     }
 }
 
@@ -1242,8 +1239,7 @@ MacroAssemblerMIPS::compareFloatingPoint(FloatFormat fmt, FloatRegister lhs, Flo
         *testKind = TestForTrue;
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid DoubleCondition.");
-        break;
+        MOZ_CRASH("Invalid DoubleCondition.");
     }
 }
 
@@ -2810,6 +2806,63 @@ MacroAssemblerMIPSCompat::moveValue(const Value &val, const ValueOperand &dest)
     moveValue(val, dest.typeReg(), dest.payloadReg());
 }
 
+/* There are 3 paths trough backedge jump. They are listed here in the order
+ * in which instructions are executed.
+ *  - The short jump is simple:
+ *     b offset            # Jumps directly to target.
+ *     lui at, addr1_hi    # In delay slot. Don't care about 'at' here.
+ *
+ *  - The long jump to loop header:
+ *      b label1
+ *      lui at, addr1_hi   # In delay slot. We use the value in 'at' later.
+ *    label1:
+ *      ori at, addr1_lo
+ *      jr at
+ *      lui at, addr2_hi   # In delay slot. Don't care about 'at' here.
+ *
+ *  - The long jump to interrupt loop:
+ *      b label2
+ *      lui at, addr1_hi   # In delay slot. Don't care about 'at' here.
+ *    label2:
+ *      lui at, addr2_hi
+ *      ori at, addr2_lo
+ *      jr at
+ *      nop                # In delay slot.
+ *
+ * The backedge is done this way to avoid patching lui+ori pair while it is
+ * being executed. Look also at jit::PatchBackedge().
+ */
+CodeOffsetJump
+MacroAssemblerMIPSCompat::backedgeJump(RepatchLabel *label)
+{
+    // Only one branch per label.
+    MOZ_ASSERT(!label->used());
+    uint32_t dest = label->bound() ? label->offset() : LabelBase::INVALID_OFFSET;
+    BufferOffset bo = nextOffset();
+    label->use(bo.getOffset());
+
+    // Backedges are short jumps when bound, but can become long when patched.
+    m_buffer.ensureSpace(8 * sizeof(uint32_t));
+    if (label->bound()) {
+        int32_t offset = label->offset() - bo.getOffset();
+        MOZ_ASSERT(BOffImm16::IsInRange(offset));
+        as_b(BOffImm16(offset));
+    } else {
+        // Jump to "label1" by default to jump to the loop header.
+        as_b(BOffImm16(2 * sizeof(uint32_t)));
+    }
+    // No need for nop here. We can safely put next instruction in delay slot.
+    ma_liPatchable(ScratchRegister, Imm32(dest));
+    MOZ_ASSERT(nextOffset().getOffset() - bo.getOffset() == 3 * sizeof(uint32_t));
+    as_jr(ScratchRegister);
+    // No need for nop here. We can safely put next instruction in delay slot.
+    ma_liPatchable(ScratchRegister, Imm32(dest));
+    as_jr(ScratchRegister);
+    as_nop();
+    MOZ_ASSERT(nextOffset().getOffset() - bo.getOffset() == 8 * sizeof(uint32_t));
+    return CodeOffsetJump(bo.getOffset());
+}
+
 CodeOffsetJump
 MacroAssemblerMIPSCompat::jumpWithPatch(RepatchLabel *label)
 {
@@ -2825,7 +2878,6 @@ MacroAssemblerMIPSCompat::jumpWithPatch(RepatchLabel *label)
     as_nop();
     return CodeOffsetJump(bo.getOffset());
 }
-
 
 /////////////////////////////////////////////////////////////////
 // X86/X64-common/ARM/MIPS interface.
@@ -3195,7 +3247,7 @@ MacroAssemblerMIPSCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
         passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
+        MOZ_CRASH("Unexpected argument type");
     }
 }
 
@@ -3344,7 +3396,7 @@ AssertValidABIFunctionType(uint32_t passedArgTypes)
       case Args_Int_IntDouble:
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected type");
+        MOZ_CRASH("Unexpected type");
     }
 }
 #endif
@@ -3359,7 +3411,7 @@ MacroAssemblerMIPSCompat::callWithABI(void *fun, MoveOp::Type result)
       case MoveOp::GENERAL: passedArgTypes_ |= ArgType_General; break;
       case MoveOp::DOUBLE:  passedArgTypes_ |= ArgType_Double;  break;
       case MoveOp::FLOAT32: passedArgTypes_ |= ArgType_Float32; break;
-      default: MOZ_ASSUME_UNREACHABLE("Invalid return type");
+      default: MOZ_CRASH("Invalid return type");
     }
 #ifdef DEBUG
     AssertValidABIFunctionType(passedArgTypes_);

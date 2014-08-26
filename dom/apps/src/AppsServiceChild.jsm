@@ -249,7 +249,11 @@ this.DOMApplicationRegistry = {
         if (!DOMApplicationRegistry.webapps[aId]) {
           return;
         }
-        return DOMApplicationRegistry.webapps[aId][prop];
+
+        if (prop in DOMApplicationRegistry.webapps[aId]) {
+          return DOMApplicationRegistry.webapps[aId][prop];
+        }
+        return null;
       },
       set: function(target, prop, val) {
         if (!DOMApplicationRegistry.webapps[aId]) {

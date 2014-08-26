@@ -690,7 +690,7 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
         if (!IsVectorObject<V>(args[0]) || !args[1].isInt32())
             return ErrorBadArgs(cx);
 
-        Elem *val = TypedObjectMemory<Elem *>(args[0]);;
+        Elem *val = TypedObjectMemory<Elem *>(args[0]);
         int32_t maskArg;
         if (!ToInt32(cx, args[1], &maskArg))
             return false;
@@ -734,7 +734,7 @@ Int32x4BinaryScalar(JSContext *cx, unsigned argc, Value *vp)
     if (!IsVectorObject<Int32x4>(args[0]) || !args[1].isNumber())
         return ErrorBadArgs(cx);
 
-    int32_t *val = TypedObjectMemory<int32_t *>(args[0]);;
+    int32_t *val = TypedObjectMemory<int32_t *>(args[0]);
     int32_t bits;
     if (!ToInt32(cx, args[1], &bits))
         return false;

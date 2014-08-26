@@ -4,16 +4,47 @@
 'use strict';
 
 const { merge } = require('sdk/util/object');
-const { get } = require('sdk/preferences/service');
+const { version, platform } = require('sdk/system');
+const { getMostRecentBrowserWindow, isBrowser } = require('sdk/window/utils');
+const { WindowTracker } = require('sdk/deprecated/window-utils');
+const { close, focus } = require('sdk/window/helpers');
+const { when } = require('sdk/system/unload');
 
-merge(module.exports, require('./test-tab'));
+function replaceWindow(remote) {
+  let next = null;
+  let old = getMostRecentBrowserWindow();
+  let promise = new Promise(resolve => {
+    let tracker = WindowTracker({
+      onTrack: window => {
+        if (window !== next)
+          return;
+        resolve(window);
+        tracker.unload();
+      }
+    });
+  })
+  next = old.OpenBrowserWindow({ remote });
+  return promise.then(focus).then(_ => close(old));
+}
+
+// merge(module.exports, require('./test-tab'));
 merge(module.exports, require('./test-tab-events'));
 merge(module.exports, require('./test-tab-observer'));
 merge(module.exports, require('./test-tab-utils'));
 
-// e10s tests should not ride the train to aurora
-if (get('app.update.channel') !== 'nightly') {
+// run e10s tests only on builds from trunk, fx-team, Nightly..
+if (!version.endsWith('a1')) {
   module.exports = {};
 }
 
-require('sdk/test/runner').runTestsFromModule(module);
+// bug 1054482 - e10s test addons time out on linux
+if (platform === 'linux') {
+  module.exports = {};
+  require('sdk/test/runner').runTestsFromModule(module);
+}
+else {
+  replaceWindow(true).then(_ =>
+    require('sdk/test/runner').runTestsFromModule(module));
+
+  when(_ => replaceWindow(false));
+}

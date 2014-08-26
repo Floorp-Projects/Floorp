@@ -43,8 +43,8 @@ public:
   // via the fontgroup.
   
   // Takes ownership of aInnerTransformTextRunFactory
-  nsCaseTransformTextRunFactory(nsTransformingTextRunFactory* aInnerTransformingTextRunFactory,
-                                bool aAllUppercase = false)
+  explicit nsCaseTransformTextRunFactory(nsTransformingTextRunFactory* aInnerTransformingTextRunFactory,
+                                         bool aAllUppercase = false)
     : mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory),
       mAllUppercase(aAllUppercase) {}
 
@@ -79,7 +79,7 @@ protected:
  * So that we can reshape as necessary, we store enough information
  * to fully rebuild the textrun contents.
  */
-class nsTransformedTextRun : public gfxTextRun {
+class nsTransformedTextRun MOZ_FINAL : public gfxTextRun {
 public:
   static nsTransformedTextRun *Create(const gfxTextRunFactory::Parameters* aParams,
                                       nsTransformingTextRunFactory* aFactory,

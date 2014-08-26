@@ -60,6 +60,9 @@ function runTest() {
   SpecialPowers.autoConfirmAppInstall(continueTest);
   yield undefined;
 
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
   request = navigator.mozApps.mgmt.getAll();
   request.onerror = cbError;
   request.onsuccess = continueTest;
@@ -85,11 +88,20 @@ function runTest() {
   ok(app2, "App 2 is non-null");
   is(app2.manifestURL, manifestURL2, "App 2 manifest url is correct.");
 
+  navigator.mozApps.mgmt.onuninstall = function(event) {
+    var app = event.application;
+    is(app.manifestURL, manifestURL1, "App 1 uninstall event ok.");
+    is(app.manifest.name, "Really Rapid Release (hosted)",
+       "App 1 uninstall manifest ok.");
+    continueTest();
+  }
   request = navigator.mozApps.mgmt.uninstall(app1);
   request.onerror = cbError;
   request.onsuccess = continueTest;
   yield undefined;
+  yield undefined;
   is(request.result, manifestURL1, "App 1 uninstalled.");
+  navigator.mozApps.mgmt.onuninstall = null;
 
   request = navigator.mozApps.mgmt.uninstall(app2);
   request.onerror = cbError;

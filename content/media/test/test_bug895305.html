@@ -18,25 +18,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=905320
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
-  function() {
-    var audio = document.createElement("audio");
-    // Check leaking on TextTrackList objects.
-    window.ttl = audio.textTracks;
-    ttl.addEventListener("click", function(){}, false);
 
-    // Check leaking on VTTCue objects.
-    window.ttc = new VTTCue(3, 4, "Test.");
-    ttc.addEventListener("click", function() {}, false);
+var audio = document.createElement("audio");
 
-    // Check leaking on TextTrack objects.
-    audio.addTextTrack("subtitles", "label", "en-CA");
-    ttl[0].addEventListener("click", function() {}, false);
+// Check leaking on TextTrackList objects.
+window.ttl = audio.textTracks;
+ttl.addEventListener("click", function(){}, false);
 
-    ok(true); // Need to have at least one assertion for Mochitest to be happy.
-    SimpleTest.finish();
-  }
-);
+// Check leaking on VTTCue objects.
+window.ttc = new VTTCue(3, 4, "Test.");
+ttc.addEventListener("click", function() {}, false);
+
+// Check leaking on TextTrack objects.
+audio.addTextTrack("subtitles", "label", "en-CA");
+ttl[0].addEventListener("click", function() {}, false);
+
+ok(true); // Need to have at least one assertion for Mochitest to be happy.
+SimpleTest.finish();
 </script>
 </pre>
 </body>

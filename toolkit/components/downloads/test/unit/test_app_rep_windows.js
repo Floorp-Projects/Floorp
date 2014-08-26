@@ -362,6 +362,24 @@ add_task(function test_good_binary()
                                 fileSize: 12}, false);
 });
 
+add_task(function test_disabled()
+{
+  // Don't set a server, allowing only local checks.
+  Services.prefs.setCharPref("browser.safebrowsing.appRepURL", "");
+  let query = {sourceURI: createURI("http://example.com"),
+               fileSize: 12};
+  let deferred = Promise.defer();
+  gAppRep.queryReputation(query,
+    function onComplete(aShouldBlock, aStatus) {
+      // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
+      do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
+      do_check_false(aShouldBlock);
+      deferred.resolve(true);
+    }
+  );
+  yield deferred.promise;
+});
+
 add_task(function test_teardown()
 {
   gStillRunning = false;

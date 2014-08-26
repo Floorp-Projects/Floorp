@@ -66,14 +66,14 @@ class TextRenderer;
 class CompositingRenderTarget;
 struct FPSState;
 
-class LayerManagerComposite : public LayerManager
+class LayerManagerComposite MOZ_FINAL : public LayerManager
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::IntSize IntSize;
   typedef mozilla::gfx::SurfaceFormat SurfaceFormat;
 
 public:
-  LayerManagerComposite(Compositor* aCompositor);
+  explicit LayerManagerComposite(Compositor* aCompositor);
   ~LayerManagerComposite();
 
   virtual void Destroy() MOZ_OVERRIDE;
@@ -269,8 +269,12 @@ private:
 
   void WorldTransformRect(nsIntRect& aRect);
 
-  RefPtr<CompositingRenderTarget> PushGroup();
-  void PopGroup(RefPtr<CompositingRenderTarget> aPreviousTarget, nsIntRect aClipRect);
+  RefPtr<CompositingRenderTarget> PushGroupForLayerEffects();
+  void PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> aPreviousTarget,
+                               nsIntRect aClipRect,
+                               bool aGrayscaleEffect,
+                               bool aInvertEffect,
+                               float aContrastEffect);
 
   RefPtr<Compositor> mCompositor;
   nsAutoPtr<LayerProperties> mClonedLayerTreeProperties;
@@ -315,7 +319,7 @@ private:
 class LayerComposite
 {
 public:
-  LayerComposite(LayerManagerComposite* aManager);
+  explicit LayerComposite(LayerManagerComposite* aManager);
 
   virtual ~LayerComposite();
 
@@ -336,8 +340,9 @@ public:
    * This allows us on to avoid framebuffer switches in the middle of our render
    * which is inefficient. This must be called before RenderLayer.
    */
-  virtual void Prepare(const nsIntRect& aClipRect) {}
+  virtual void Prepare(const RenderTargetIntRect& aClipRect) {}
 
+  // TODO: This should also take RenderTargetIntRect like Prepare.
   virtual void RenderLayer(const nsIntRect& aClipRect) = 0;
 
   virtual bool SetCompositableHost(CompositableHost*)

@@ -20,6 +20,7 @@
 class nsPIDOMWindow;
 class nsGlobalWindow;
 class nsIScriptContext;
+class nsIDocument;
 
 namespace mozilla {
 namespace dom {
@@ -45,7 +46,6 @@ public:
 
 private:
   mozilla::Maybe<JSAutoRequest> mAutoRequest;
-  mozilla::Maybe<JSAutoCompartment> mAutoCompartment;
   nsCOMPtr<nsIScriptContext> mScx;
   uint32_t mStackDepthAfterPush;
 #ifdef DEBUG
@@ -63,16 +63,56 @@ private:
 void InitScriptSettings();
 void DestroyScriptSettings();
 
-// This mostly gets the entry global, but doesn't entirely match the spec in
-// certain edge cases. It's good enough for some purposes, but not others. If
-// you want to call this function, ping bholley and describe your use-case.
-nsIGlobalObject* BrokenGetEntryGlobal();
+// To implement a web-compatible browser, it is often necessary to obtain the
+// global object that is "associated" with the currently-running code. This
+// process is made more complicated by the fact that, historically, different
+// algorithms have operated with different definitions of the "associated"
+// global.
+//
+// HTML5 formalizes this into two concepts: the "incumbent global" and the
+// "entry global". The incumbent global corresponds to the global of the
+// current script being executed, whereas the entry global corresponds to the
+// global of the script where the current JS execution began.
+//
+// There is also a potentially-distinct third global that is determined by the
+// current compartment. This roughly corresponds with the notion of Realms in
+// ECMAScript.
+//
+// Suppose some event triggers an event listener in window |A|, which invokes a
+// scripted function in window |B|, which invokes the |window.location.href|
+// setter in window |C|. The entry global would be |A|, the incumbent global
+// would be |B|, and the current compartment would be that of |C|.
+//
+// In general, it's best to use to use the most-closely-associated global
+// unless the spec says to do otherwise. In 95% of the cases, the global of
+// the current compartment (GetCurrentGlobal()) is the right thing. For
+// example, WebIDL constructors (new C.XMLHttpRequest()) are initialized with
+// the global of the current compartment (i.e. |C|).
+//
+// The incumbent global is very similar, but differs in a few edge cases. For
+// example, if window |B| does |C.location.href = "..."|, the incumbent global
+// used for the navigation algorithm is B, because no script from |C| was ever run.
+//
+// The entry global is used for various things like computing base URIs, mostly
+// for historical reasons.
+//
+// Note that all of these functions return bonafide global objects. This means
+// that, for Windows, they always return the inner.
 
-// Note: We don't yet expose GetEntryGlobal, because in order for it to be
-// correct, we first need to replace a bunch of explicit cx pushing in the
-// browser with AutoEntryScript. But GetIncumbentGlobal is simpler, because it
-// can mostly be inferred from the JS stack.
+// Returns the global associated with the top-most Candidate Entry Point on
+// the Script Settings Stack. See the HTML spec. This may be null.
+nsIGlobalObject* GetEntryGlobal();
+
+// If the entry global is a window, returns its extant document. Otherwise,
+// returns null.
+nsIDocument* GetEntryDocument();
+
+// Returns the global associated with the top-most entry of the the Script
+// Settings Stack. See the HTML spec. This may be null.
 nsIGlobalObject* GetIncumbentGlobal();
+
+// Returns the global associated with the current compartment. This may be null.
+nsIGlobalObject* GetCurrentGlobal();
 
 // JS-implemented WebIDL presents an interesting situation with respect to the
 // subject principal. A regular C++-implemented API can simply examine the

@@ -20,7 +20,7 @@ import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
+
 import static org.mozilla.gecko.favicons.Favicons.context;
 
 import java.io.IOException;
@@ -219,6 +219,8 @@ public class LoadFaviconTask {
             result = downloadAndDecodeImage(targetFaviconURI);
         } catch (Exception e) {
             Log.e(LOGTAG, "Error reading favicon", e);
+        } catch (OutOfMemoryError e) {
+            Log.e(LOGTAG, "Insufficient memory to process favicon");
         }
 
         return result;
@@ -247,6 +249,26 @@ public class LoadFaviconTask {
             return null;
         }
 
+        // Decode the image from the fetched response.
+        try {
+            return decodeImageFromResponse(entity);
+        } finally {
+            // Close the stream and free related resources.
+            entity.consumeContent();
+        }
+    }
+
+    /**
+     * Copies the favicon stream to a buffer and decodes downloaded content  into bitmaps using the
+     * FaviconDecoder.
+     *
+     * @param entity HttpEntity containing the favicon stream to decode.
+     * @return A LoadFaviconResult containing the bitmap(s) extracted from the downloaded file, or
+     *         null if no or corrupt data were received.
+     * @throws IOException If attempts to fully read the stream result in such an exception, such as
+     *                     in the event of a transient connection failure.
+     */
+    private LoadFaviconResult decodeImageFromResponse(HttpEntity entity) throws IOException {
         // This may not be provided, but if it is, it's useful.
         final long entityReportedLength = entity.getContentLength();
         int bufferSize;

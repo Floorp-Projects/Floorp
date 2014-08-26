@@ -37,11 +37,15 @@ function blockMixedContentTest()
 
 function overrideMCB()
 {
+  // test mixed content flags on load (reload)
   gTestBrowser.addEventListener("load", mixedContentOverrideTest, true);
-  var notification = PopupNotifications.getNotification("mixed-content-blocked", gTestBrowser);
-  ok(notification, "Mixed Content Doorhanger didn't appear");
-  // Click on the doorhanger to allow mixed content.
-  notification.secondaryActions[0].callback(mixedContentOverrideTest);
+  var notification = PopupNotifications.getNotification("bad-content", gTestBrowser);
+  ok(notification, "Mixed Content Doorhanger should appear");
+  notification.reshow();
+  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked");
+  // Click on the doorhanger to allow mixed content (and reload page)
+  PopupNotifications.panel.firstChild.disableMixedContentProtection();
+  notification.remove();
 }
 
 function mixedContentOverrideTest()

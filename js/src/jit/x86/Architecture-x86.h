@@ -7,7 +7,7 @@
 #ifndef jit_x86_Architecture_x86_h
 #define jit_x86_Architecture_x86_h
 
-#include "assembler/assembler/X86Assembler.h"
+#include "jit/shared/BaseAssembler-x86-shared.h"
 
 namespace js {
 namespace jit {
@@ -35,7 +35,7 @@ static const uint32_t BAILOUT_TABLE_ENTRY_SIZE    = 5;
 
 class Registers {
   public:
-    typedef JSC::X86Registers::RegisterID Code;
+    typedef X86Registers::RegisterID Code;
     typedef uint8_t SetType;
     static uint32_t SetSize(SetType x) {
         static_assert(sizeof(SetType) == 1, "SetType must be 8 bits");
@@ -61,8 +61,8 @@ class Registers {
         return Invalid;
     }
 
-    static const Code StackPointer = JSC::X86Registers::esp;
-    static const Code Invalid = JSC::X86Registers::invalid_reg;
+    static const Code StackPointer = X86Registers::esp;
+    static const Code Invalid = X86Registers::invalid_reg;
 
     static const uint32_t Total = 8;
     static const uint32_t TotalPhys = 8;
@@ -73,28 +73,28 @@ class Registers {
     static const uint32_t ArgRegMask = 0;
 
     static const uint32_t VolatileMask =
-        (1 << JSC::X86Registers::eax) |
-        (1 << JSC::X86Registers::ecx) |
-        (1 << JSC::X86Registers::edx);
+        (1 << X86Registers::eax) |
+        (1 << X86Registers::ecx) |
+        (1 << X86Registers::edx);
 
     static const uint32_t NonVolatileMask =
-        (1 << JSC::X86Registers::ebx) |
-        (1 << JSC::X86Registers::esi) |
-        (1 << JSC::X86Registers::edi) |
-        (1 << JSC::X86Registers::ebp);
+        (1 << X86Registers::ebx) |
+        (1 << X86Registers::esi) |
+        (1 << X86Registers::edi) |
+        (1 << X86Registers::ebp);
 
     static const uint32_t WrapperMask =
         VolatileMask |
-        (1 << JSC::X86Registers::ebx);
+        (1 << X86Registers::ebx);
 
     static const uint32_t SingleByteRegs =
-        (1 << JSC::X86Registers::eax) |
-        (1 << JSC::X86Registers::ecx) |
-        (1 << JSC::X86Registers::edx) |
-        (1 << JSC::X86Registers::ebx);
+        (1 << X86Registers::eax) |
+        (1 << X86Registers::ecx) |
+        (1 << X86Registers::edx) |
+        (1 << X86Registers::ebx);
 
     static const uint32_t NonAllocatableMask =
-        (1 << JSC::X86Registers::esp);
+        (1 << X86Registers::esp);
 
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 
@@ -103,12 +103,12 @@ class Registers {
 
     // Registers returned from a JS -> JS call.
     static const uint32_t JSCallMask =
-        (1 << JSC::X86Registers::ecx) |
-        (1 << JSC::X86Registers::edx);
+        (1 << X86Registers::ecx) |
+        (1 << X86Registers::edx);
 
     // Registers returned from a JS -> C call.
     static const uint32_t CallMask =
-        (1 << JSC::X86Registers::eax);
+        (1 << X86Registers::eax);
 };
 
 // Smallest integer type that can hold a register bitmask.
@@ -116,7 +116,7 @@ typedef uint8_t PackedRegisterMask;
 
 class FloatRegisters {
   public:
-    typedef JSC::X86Registers::XMMRegisterID Code;
+    typedef X86Registers::XMMRegisterID Code;
     typedef uint32_t SetType;
     static const char *GetName(Code code) {
         static const char * const Names[] = { "xmm0", "xmm1", "xmm2", "xmm3",
@@ -132,7 +132,7 @@ class FloatRegisters {
         return Invalid;
     }
 
-    static const Code Invalid = JSC::X86Registers::invalid_xmm;
+    static const Code Invalid = X86Registers::invalid_xmm;
 
     static const uint32_t Total = 8;
     static const uint32_t TotalPhys = 8;
@@ -146,7 +146,7 @@ class FloatRegisters {
     static const uint32_t WrapperMask = VolatileMask;
 
     static const uint32_t NonAllocatableMask =
-        (1 << JSC::X86Registers::xmm7);
+        (1 << X86Registers::xmm7);
 
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 };

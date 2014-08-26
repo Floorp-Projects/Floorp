@@ -40,7 +40,7 @@ struct EffectChain;
 class ImageHost : public CompositableHost
 {
 public:
-  ImageHost(const TextureInfo& aTextureInfo);
+  explicit ImageHost(const TextureInfo& aTextureInfo);
   ~ImageHost();
 
   virtual CompositableType GetType() { return mTextureInfo.mCompositableType; }
@@ -93,6 +93,40 @@ protected:
   bool mHasPictureRect;
   bool mLocked;
 };
+
+#ifdef MOZ_WIDGET_GONK
+
+/**
+ * ImageHostOverlay works with ImageClientOverlay
+ */
+class ImageHostOverlay : public CompositableHost {
+public:
+  ImageHostOverlay(const TextureInfo& aTextureInfo);
+  ~ImageHostOverlay();
+
+  virtual CompositableType GetType() { return mTextureInfo.mCompositableType; }
+
+  virtual void Composite(EffectChain& aEffectChain,
+                         float aOpacity,
+                         const gfx::Matrix4x4& aTransform,
+                         const gfx::Filter& aFilter,
+                         const gfx::Rect& aClipRect,
+                         const nsIntRegion* aVisibleRegion = nullptr) MOZ_OVERRIDE;
+  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
+  virtual void UseOverlaySource(OverlaySource aOverlay) MOZ_OVERRIDE;
+  virtual void SetPictureRect(const nsIntRect& aPictureRect) MOZ_OVERRIDE
+  {
+    mPictureRect = aPictureRect;
+    mHasPictureRect = true;
+  }
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
+protected:
+  nsIntRect mPictureRect;
+  bool mHasPictureRect;
+  OverlaySource mOverlay;
+};
+
+#endif
 
 }
 }

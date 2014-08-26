@@ -3097,6 +3097,14 @@ ASTSerializer::arrayPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValu
     for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
         if (next->isKind(PNK_ELISION)) {
             elts.infallibleAppend(NullValue());
+        } else if (next->isKind(PNK_SPREAD)) {
+            RootedValue target(cx);
+            RootedValue spread(cx);
+            if (!pattern(next->pn_kid, pkind, &target))
+                return false;
+            if(!builder.spreadExpression(target, &next->pn_pos, &spread))
+                return false;
+            elts.infallibleAppend(spread);
         } else {
             RootedValue patt(cx);
             if (!pattern(next, pkind, &patt))

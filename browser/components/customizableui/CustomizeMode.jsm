@@ -27,11 +27,15 @@ Cu.import("resource:///modules/CustomizableUI.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DragPositionManager",
                                   "resource:///modules/DragPositionManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
                                   "resource:///modules/BrowserUITelemetry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
+                                  "resource://gre/modules/LightweightThemeManager.jsm");
+
 
 let gModuleName = "[CustomizeMode]";
 #include logging.js
@@ -1215,6 +1219,119 @@ CustomizeMode.prototype = {
       DragPositionManager.remove(this.window, aArea, aContainer);
       let index = this.areas.indexOf(aContainer);
       this.areas.splice(index, 1);
+    }
+  },
+
+  openAddonsManagerThemes: function(aEvent) {
+    aEvent.target.parentNode.parentNode.hidePopup();
+    this.window.BrowserOpenAddonsMgr('addons://list/theme');
+  },
+
+  getMoreThemes: function(aEvent) {
+    aEvent.target.parentNode.parentNode.hidePopup();
+    let getMoreURL = Services.urlFormatter.formatURLPref("lightweightThemes.getMoreURL");
+    this.window.openUILinkIn(getMoreURL, "tab");
+  },
+
+  onLWThemesMenuShowing: function(aEvent) {
+    AddonManager.getAddonsByTypes(["theme"], function(aThemes) {
+      function buildToolbarButton(doc, aTheme) {
+        function previewTheme(aEvent) {
+          LightweightThemeManager.previewTheme(aEvent.target.theme);
+        }
+        function resetPreview() {
+          LightweightThemeManager.resetPreview();
+        }
+        let tbb = doc.createElement("toolbarbutton");
+        tbb.theme = aTheme;
+        tbb.setAttribute("label", aTheme.name);
+        tbb.setAttribute("image", aTheme.iconURL);
+        tbb.setAttribute("tooltiptext", aTheme.description);
+        tbb.setAttribute("tabindex", "0");
+        tbb.classList.add("customization-lwtheme-menu-theme");
+        tbb.setAttribute("aria-checked", aTheme.isActive);
+        tbb.setAttribute("role", "menuitemradio");
+        if (aTheme.isActive) {
+          tbb.setAttribute("active", "true");
+        }
+        tbb.addEventListener("focus", previewTheme);
+        tbb.addEventListener("mouseover", previewTheme);
+        tbb.addEventListener("blur", resetPreview);
+        tbb.addEventListener("mouseout", resetPreview);
+
+        return tbb;
+      }
+
+      const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
+      // Order the themes so the Default theme is always at the beginning.
+      aThemes.sort((a,b) => {a.id != DEFAULT_THEME_ID});
+      let doc = this.window.document;
+      let footer = doc.getElementById("customization-lwtheme-menu-footer");
+      let panel = footer.parentNode;
+      let themesInMyThemesSection = 0;
+      let recommendedLabel = doc.getElementById("customization-lwtheme-menu-recommended");
+      for (let theme of aThemes) {
+        // Only allow the Default full theme to be shown in this list.
+        if ("skinnable" in theme &&
+            theme.id != DEFAULT_THEME_ID) {
+          continue;
+        }
+
+        let tbb = buildToolbarButton(doc, theme);
+        tbb.addEventListener("command", function() {
+          this.theme.userDisabled = false;
+          this.parentNode.hidePopup();
+        });
+        panel.insertBefore(tbb, recommendedLabel);
+        themesInMyThemesSection++;
+      }
+
+      let lwthemePrefs = Services.prefs.getBranch("lightweightThemes.");
+      let recommendedThemes = lwthemePrefs.getComplexValue("recommendedThemes",
+                                                           Ci.nsISupportsString).data;
+      recommendedThemes = JSON.parse(recommendedThemes);
+      let sb = Services.strings.createBundle("chrome://browser/locale/lightweightThemes.properties");
+      for (let theme of recommendedThemes) {
+        theme.name = sb.GetStringFromName("lightweightThemes." + theme.id + ".name");
+        theme.description = sb.GetStringFromName("lightweightThemes." + theme.id + ".description");
+        let tbb = buildToolbarButton(doc, theme);
+        tbb.addEventListener("command", function() {
+          LightweightThemeManager.setLocalTheme(this.theme);
+          recommendedThemes = recommendedThemes.filter((aTheme) => { return aTheme.id != this.theme.id; });
+          let string = Cc["@mozilla.org/supports-string;1"]
+                         .createInstance(Ci.nsISupportsString);
+          string.data = JSON.stringify(recommendedThemes);
+          lwthemePrefs.setComplexValue("recommendedThemes",
+                                       Ci.nsISupportsString, string);
+          this.parentNode.hidePopup();
+        });
+        panel.insertBefore(tbb, footer);
+      }
+      let hideRecommendedLabel = (footer.previousSibling == recommendedLabel);
+      recommendedLabel.hidden = hideRecommendedLabel;
+
+      let hideMyThemesSection = themesInMyThemesSection < 2 && hideRecommendedLabel;
+      let headerLabel = doc.getElementById("customization-lwtheme-menu-header");
+      if (hideMyThemesSection) {
+        let element = recommendedLabel.previousSibling;
+        while (element && element != headerLabel) {
+          element.hidden = true;
+          element = element.previousSibling;
+        }
+      }
+      headerLabel.hidden = hideMyThemesSection;
+    }.bind(this));
+  },
+
+  onLWThemesMenuHidden: function(aEvent) {
+    let doc = aEvent.target.ownerDocument;
+    let footer = doc.getElementById("customization-lwtheme-menu-footer");
+    let recommendedLabel = doc.getElementById("customization-lwtheme-menu-recommended");
+    for (let element of [footer, recommendedLabel]) {
+      while (element.previousSibling &&
+             element.previousSibling.localName == "toolbarbutton") {
+        element.previousSibling.remove();
+      }
     }
   },
 

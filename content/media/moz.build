@@ -65,15 +65,10 @@ EXPORTS += [
     'AbstractMediaDecoder.h',
     'AudioChannelFormat.h',
     'AudioCompactor.h',
-    'AudioEventTimeline.h',
     'AudioMixer.h',
-    'AudioNodeEngine.h',
-    'AudioNodeExternalInputStream.h',
-    'AudioNodeStream.h',
     'AudioSampleFormat.h',
     'AudioSegment.h',
     'AudioStream.h',
-    'BufferDecoder.h',
     'BufferMediaResource.h',
     'DecoderTraits.h',
     'DOMMediaStream.h',
@@ -103,6 +98,7 @@ EXPORTS += [
     'SharedBuffer.h',
     'SharedThreadPool.h',
     'StreamBuffer.h',
+    'ThreadPoolCOMListener.h',
     'TimeVarying.h',
     'TrackUnionStream.h',
     'VideoFrameContainer.h',
@@ -130,16 +126,12 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'AudioChannelFormat.cpp',
     'AudioCompactor.cpp',
-    'AudioNodeEngine.cpp',
-    'AudioNodeExternalInputStream.cpp',
-    'AudioNodeStream.cpp',
     'AudioSegment.cpp',
     'AudioSink.cpp',
     'AudioStream.cpp',
     'AudioStreamTrack.cpp',
     'AudioTrack.cpp',
     'AudioTrackList.cpp',
-    'BufferDecoder.cpp',
     'DOMMediaStream.cpp',
     'EncodedBufferCache.cpp',
     'FileBlockCache.cpp',
@@ -176,6 +168,9 @@ UNIFIED_SOURCES += [
     'WebVTTListener.cpp',
 ]
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+  SOURCES += [ 'ThreadPoolCOMListener.cpp' ]
+
 # DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
 # Latency.cpp needs to be built separately because it forces NSPR logging.
 SOURCES += [
@@ -184,10 +179,6 @@ SOURCES += [
 ]
 
 FAIL_ON_WARNINGS = True
-
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
-    SOURCES += ['AudioNodeEngineNEON.cpp']
-    SOURCES['AudioNodeEngineNEON.cpp'].flags += ['-mfpu=neon']
 
 MSVC_ENABLE_PGO = True
 

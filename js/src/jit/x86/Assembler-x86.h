@@ -9,34 +9,35 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#include "assembler/assembler/X86Assembler.h"
 #include "jit/CompactBuffer.h"
 #include "jit/IonCode.h"
+#include "jit/JitCompartment.h"
 #include "jit/shared/Assembler-shared.h"
+#include "jit/shared/BaseAssembler-x86-shared.h"
 
 namespace js {
 namespace jit {
 
-static MOZ_CONSTEXPR_VAR Register eax = { JSC::X86Registers::eax };
-static MOZ_CONSTEXPR_VAR Register ecx = { JSC::X86Registers::ecx };
-static MOZ_CONSTEXPR_VAR Register edx = { JSC::X86Registers::edx };
-static MOZ_CONSTEXPR_VAR Register ebx = { JSC::X86Registers::ebx };
-static MOZ_CONSTEXPR_VAR Register esp = { JSC::X86Registers::esp };
-static MOZ_CONSTEXPR_VAR Register ebp = { JSC::X86Registers::ebp };
-static MOZ_CONSTEXPR_VAR Register esi = { JSC::X86Registers::esi };
-static MOZ_CONSTEXPR_VAR Register edi = { JSC::X86Registers::edi };
+static MOZ_CONSTEXPR_VAR Register eax = { X86Registers::eax };
+static MOZ_CONSTEXPR_VAR Register ecx = { X86Registers::ecx };
+static MOZ_CONSTEXPR_VAR Register edx = { X86Registers::edx };
+static MOZ_CONSTEXPR_VAR Register ebx = { X86Registers::ebx };
+static MOZ_CONSTEXPR_VAR Register esp = { X86Registers::esp };
+static MOZ_CONSTEXPR_VAR Register ebp = { X86Registers::ebp };
+static MOZ_CONSTEXPR_VAR Register esi = { X86Registers::esi };
+static MOZ_CONSTEXPR_VAR Register edi = { X86Registers::edi };
 
-static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = { JSC::X86Registers::xmm0 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = { JSC::X86Registers::xmm1 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = { JSC::X86Registers::xmm2 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = { JSC::X86Registers::xmm3 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = { JSC::X86Registers::xmm4 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = { JSC::X86Registers::xmm5 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = { JSC::X86Registers::xmm6 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = { JSC::X86Registers::xmm7 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = { X86Registers::xmm0 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = { X86Registers::xmm1 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = { X86Registers::xmm2 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = { X86Registers::xmm3 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = { X86Registers::xmm4 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = { X86Registers::xmm5 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = { X86Registers::xmm6 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = { X86Registers::xmm7 };
 
-static MOZ_CONSTEXPR_VAR Register InvalidReg = { JSC::X86Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
+static MOZ_CONSTEXPR_VAR Register InvalidReg = { X86Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { X86Registers::invalid_xmm };
 
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = ecx;
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = edx;
@@ -159,7 +160,12 @@ PatchJump(CodeLocationJump jump, CodeLocationLabel label)
     JS_ASSERT(((*x >= 0x80 && *x <= 0x8F) && *(x - 1) == 0x0F) ||
               (*x == 0xE9));
 #endif
-    JSC::X86Assembler::setRel32(jump.raw(), label.raw());
+    X86Assembler::setRel32(jump.raw(), label.raw());
+}
+static inline void
+PatchBackedge(CodeLocationJump &jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target)
+{
+    PatchJump(jump_, label);
 }
 
 // Return operand from a JS -> JS call.
@@ -365,7 +371,7 @@ class Assembler : public AssemblerX86Shared
     }
     void j(Condition cond, ImmPtr target,
            Relocation::Kind reloc = Relocation::HARDCODED) {
-        JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
+        JmpSrc src = masm.jCC(static_cast<X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
     }
 
@@ -407,9 +413,9 @@ class Assembler : public AssemblerX86Shared
     void retarget(Label *label, ImmPtr target, Relocation::Kind reloc) {
         if (label->used()) {
             bool more;
-            JSC::X86Assembler::JmpSrc jmp(label->offset());
+            X86Assembler::JmpSrc jmp(label->offset());
             do {
-                JSC::X86Assembler::JmpSrc next;
+                X86Assembler::JmpSrc next;
                 more = masm.nextJump(jmp, &next);
                 addPendingJump(jmp, target, reloc);
                 jmp = next;

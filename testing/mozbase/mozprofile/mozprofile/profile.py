@@ -198,6 +198,25 @@ class Profile(object):
 
         f.close()
 
+    def set_persistent_preferences(self, preferences):
+        """
+        Adds preferences dict to profile preferences and save them during a
+        profile reset
+        """
+
+        # this is a dict sometimes, convert
+        if isinstance(preferences, dict):
+            preferences = preferences.items()
+
+        # add new prefs to preserve them during reset
+        for new_pref in preferences:
+            # if dupe remove item from original list
+            self._preferences = [
+                pref for pref in self._preferences if not new_pref[0] == pref[0]]
+            self._preferences.append(new_pref)
+
+        self.set_preferences(preferences, filename='user.js')
+
     def pop_preferences(self, filename):
         """
         pop the last set of preferences added

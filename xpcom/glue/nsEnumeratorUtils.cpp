@@ -227,7 +227,7 @@ nsUnionEnumerator::HasMoreElements(bool* aResult)
     return NS_OK;
   }
 
-  if (! mAtSecond) {
+  if (!mAtSecond) {
     rv = mFirstEnumerator->HasMoreElements(aResult);
     if (NS_FAILED(rv)) {
       return rv;
@@ -266,7 +266,7 @@ nsUnionEnumerator::GetNext(nsISupports** aResult)
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (! mAtSecond) {
+  if (!mAtSecond) {
     return mFirstEnumerator->GetNext(aResult);
   }
 
@@ -279,9 +279,9 @@ NS_NewUnionEnumerator(nsISimpleEnumerator** aResult,
                       nsISimpleEnumerator* aSecondEnumerator)
 {
   *aResult = nullptr;
-  if (! aFirstEnumerator) {
+  if (!aFirstEnumerator) {
     *aResult = aSecondEnumerator;
-  } else if (! aSecondEnumerator) {
+  } else if (!aSecondEnumerator) {
     *aResult = aFirstEnumerator;
   } else {
     nsUnionEnumerator* enumer = new nsUnionEnumerator(aFirstEnumerator,

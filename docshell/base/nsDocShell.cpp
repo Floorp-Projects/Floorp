@@ -877,7 +877,7 @@ nsDocShell::nsDocShell():
                     (void*) this,
                     gNumberOfDocShells,
                     getpid(),
-                    SafeCast<unsigned long long>(mHistoryID));
+                    AssertedCast<unsigned long long>(mHistoryID));
   }
 #endif
 }
@@ -909,7 +909,7 @@ nsDocShell::~nsDocShell()
                       (void*) this,
                       gNumberOfDocShells,
                       getpid(),
-                      SafeCast<unsigned long long>(mHistoryID));
+                      AssertedCast<unsigned long long>(mHistoryID));
     }
 #endif
 }
@@ -2894,6 +2894,36 @@ nsDocShell::RemoveWeakScrollObserver(nsIScrollObserver* aObserver)
 {
     nsWeakPtr obs = do_GetWeakReference(aObserver);
     return mScrollObservers.RemoveElement(obs) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+void
+nsDocShell::NotifyAsyncPanZoomStarted()
+{
+    nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mScrollObservers);
+    while (iter.HasMore()) {
+        nsWeakPtr ref = iter.GetNext();
+        nsCOMPtr<nsIScrollObserver> obs = do_QueryReferent(ref);
+        if (obs) {
+            obs->AsyncPanZoomStarted();
+        } else {
+            mScrollObservers.RemoveElement(ref);
+        }
+    }
+}
+
+void
+nsDocShell::NotifyAsyncPanZoomStopped()
+{
+    nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mScrollObservers);
+    while (iter.HasMore()) {
+        nsWeakPtr ref = iter.GetNext();
+        nsCOMPtr<nsIScrollObserver> obs = do_QueryReferent(ref);
+        if (obs) {
+            obs->AsyncPanZoomStopped();
+        } else {
+            mScrollObservers.RemoveElement(ref);
+        }
+    }
 }
 
 NS_IMETHODIMP

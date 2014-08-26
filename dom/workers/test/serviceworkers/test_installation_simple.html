@@ -16,7 +16,7 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    var p = navigator.serviceWorker.register("worker.js", { scope: "simpleregister/*" });
+    var p = navigator.serviceWorker.register("worker.js", { scope: "simpleregister/" });
     ok(p instanceof Promise, "register() should return a Promise");
     return Promise.resolve();
   }
@@ -31,7 +31,7 @@
   }
 
   function sameOriginScope() {
-    p = navigator.serviceWorker.register("worker.js", { scope: "http://www.example.com/*" });
+    p = navigator.serviceWorker.register("worker.js", { scope: "http://www.example.com/" });
     return p.then(function(w) {
       ok(false, "Worker controlling scope for different origin should fail");
     }, function(e) {
@@ -56,12 +56,13 @@
   }
 
   function realWorker() {
-    var p = navigator.serviceWorker.register("worker.js", { scope: "realworker*" });
-    return p.then(function(w) {
-      ok(w instanceof ServiceWorker, "Register a ServiceWorker");
-      info(w.scope);
-      ok(w.scope == (new URL("realworker*", document.baseURI)).href, "Scope should match");
-      ok(w.url == (new URL("worker.js", document.baseURI)).href, "URL should be of the worker");
+    var p = navigator.serviceWorker.register("worker.js", { scope: "realworker" });
+    return p.then(function(wr) {
+      ok(wr instanceof ServiceWorkerRegistration, "Register a ServiceWorker");
+
+      info(wr.scope);
+      ok(wr.scope == (new URL("realworker", document.baseURI)).href, "Scope should match");
+
     }, function(e) {
       info("Error: " + e.name);
       ok(false, "realWorker Registration should have succeeded!");
@@ -69,18 +70,18 @@
   }
 
   function abortPrevious() {
-    var p = navigator.serviceWorker.register("worker2.js", { scope: "foo/*" });
-    var q = navigator.serviceWorker.register("worker3.js", { scope: "foo/*" });
+    var p = navigator.serviceWorker.register("worker2.js", { scope: "foo/" });
+    var q = navigator.serviceWorker.register("worker3.js", { scope: "foo/" });
 
     return Promise.all([
-      p.then(function(w) {
+      p.then(function(wr) {
         ok(false, "First registration should fail with AbortError");
       }, function(e) {
         ok(e.name === "AbortError", "First registration should fail with AbortError");
       }),
 
-      q.then(function(w) {
-        ok(w instanceof ServiceWorker, "Second registration should succeed");
+      q.then(function(wr) {
+        ok(wr instanceof ServiceWorkerRegistration, "Second registration should succeed");
       }, function(e) {
         ok(false, "Second registration should succeed");
       })
@@ -97,7 +98,7 @@
 
   function parseError() {
     var p = navigator.serviceWorker.register("parse_error_worker.js");
-    return p.then(function(w) {
+    return p.then(function(wr) {
       ok(false, "Registration should fail with parse error");
     }, function(e) {
     info("NSM " + e.name);
@@ -119,13 +120,13 @@
     });
 
     function continueTest() {
-      navigator.serviceWorker.register("worker2.js", { scope: "simpleregister/*" });
+      navigator.serviceWorker.register("worker2.js", { scope: "simpleregister/" });
     }
 
     window.onmessage = function(e) {
-      if (e.data == "ready") {
+      if (e.data.type == "ready") {
         continueTest();
-      } else if (e.data == "updatefound") {
+      } else if (e.data.type == "finish") {
         window.onmessage = null;
         // We have to make frame navigate away, otherwise it will call
         // MaybeStopControlling() when this document is unloaded. At that point
@@ -133,6 +134,8 @@
         // return since it is currently gated.
         frame.setAttribute("src", new URL("about:blank").href);
         resolve();
+      } else if (e.data.type == "check") {
+        ok(e.data.status, e.data.msg);
       }
     }
     return p;

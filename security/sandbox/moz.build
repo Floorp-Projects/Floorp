@@ -140,3 +140,13 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += ['/nsprpub']
 
     DISABLE_STL_WRAPPING = True
+
+    # Suppress warnings in third-party code.
+    if CONFIG['_MSC_VER']:
+        CXXFLAGS += [
+            '-wd4275', # non dll-interface class exception used as base for dll-interface class
+            '-wd4717', # recursive on all control paths, function will cause runtime stack overflow
+            '-wd4996', # 'GetVersionExW': was declared deprecated
+        ]
+
+FAIL_ON_WARNINGS = True

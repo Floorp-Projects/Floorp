@@ -1693,7 +1693,7 @@ class ValueOperations
     JS::Symbol *toSymbol() const { return value()->toSymbol(); }
     JSObject &toObject() const { return value()->toObject(); }
     JSObject *toObjectOrNull() const { return value()->toObjectOrNull(); }
-    void *toGCThing() const { return value()->toGCThing(); }
+    gc::Cell *toGCThing() const { return value()->toGCThing(); }
     uint64_t asRawBits() const { return value()->asRawBits(); }
 
     JSValueType extractNonDoubleType() const { return value()->extractNonDoubleType(); }
@@ -1945,9 +1945,9 @@ DOUBLE_TO_JSVAL(double d)
 static inline JS_VALUE_CONSTEXPR jsval
 UINT_TO_JSVAL(uint32_t i)
 {
-    return (i <= JSVAL_INT_MAX
-            ? INT_TO_JSVAL((int32_t)i)
-            : DOUBLE_TO_JSVAL((double)i));
+    return i <= JSVAL_INT_MAX
+           ? INT_TO_JSVAL((int32_t)i)
+           : DOUBLE_TO_JSVAL((double)i);
 }
 
 static inline jsval

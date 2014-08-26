@@ -127,7 +127,11 @@ class HTMLElement(object):
 
     def is_enabled(self):
         '''
-        Returns True if the element is enabled.
+        This command will return False if all the following criteria are met otherwise return True:
+
+        * A form control is disabled.
+        * A HtmlElement has a disabled boolean attribute.
+
         '''
         return self.marionette._send_message('isElementEnabled', 'value', id=self.id)
 

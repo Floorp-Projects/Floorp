@@ -41,10 +41,17 @@ MediaOmxCommonDecoder::MediaOmxCommonDecoder()
 }
 
 void
-MediaOmxCommonDecoder::SetCanOffloadAudio(bool aCanOffloadAudio)
+MediaOmxCommonDecoder::SetPlatformCanOffloadAudio(bool aCanOffloadAudio)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mCanOffloadAudio = aCanOffloadAudio;
+}
+
+bool
+MediaOmxCommonDecoder::CheckDecoderCanOffloadAudio()
+{
+  return (mCanOffloadAudio && !mFallbackToStateMachine && !mOutputStreams.Length() &&
+      mInitialPlaybackRate == 1.0);
 }
 
 void
@@ -55,8 +62,7 @@ MediaOmxCommonDecoder::MetadataLoaded(MediaInfo* aInfo,
   MediaDecoder::MetadataLoaded(aInfo, aTags);
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  if (!mCanOffloadAudio || mFallbackToStateMachine || mOutputStreams.Length() ||
-      mInitialPlaybackRate != 1.0) {
+  if (!CheckDecoderCanOffloadAudio()) {
     DECODER_LOG(PR_LOG_DEBUG, ("In %s Offload Audio check failed",
         __PRETTY_FUNCTION__));
     return;
@@ -79,6 +85,7 @@ MediaOmxCommonDecoder::MetadataLoaded(MediaInfo* aInfo,
   }
 
   mAudioOffloadPlayer = nullptr;
+  mFallbackToStateMachine = true;
   DECODER_LOG(PR_LOG_DEBUG, ("In %s Unable to start offload audio %d."
       "Switching to normal mode", __PRETTY_FUNCTION__, err));
 }

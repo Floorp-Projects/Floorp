@@ -173,7 +173,27 @@ DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
   BluetoothReply* reply;
   if (!aErrorStr.IsEmpty()) {
     nsString err(aErrorStr);
-    reply = new BluetoothReply(BluetoothReplyError(err));
+    reply = new BluetoothReply(BluetoothReplyError(STATUS_FAIL, err));
+  } else {
+    MOZ_ASSERT(aValue.type() != BluetoothValue::T__None);
+    reply = new BluetoothReply(BluetoothReplySuccess(aValue));
+  }
+
+  aRunnable->SetReply(reply);
+  if (NS_FAILED(NS_DispatchToMainThread(aRunnable))) {
+    BT_WARNING("Failed to dispatch to main thread!");
+  }
+}
+
+void
+DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
+                       const BluetoothValue& aValue,
+                       const enum BluetoothStatus aStatusCode)
+{
+  // Reply will be deleted by the runnable after running on main thread
+  BluetoothReply* reply;
+  if (aStatusCode != STATUS_SUCCESS) {
+    reply = new BluetoothReply(BluetoothReplyError(aStatusCode, EmptyString()));
   } else {
     MOZ_ASSERT(aValue.type() != BluetoothValue::T__None);
     reply = new BluetoothReply(BluetoothReplySuccess(aValue));

@@ -40,9 +40,9 @@ ObjectPropertyAsStr(MtpObjectProperty aProperty)
   return "MTP_PROPERTY_???";
 }
 
-MozMtpDatabase::MozMtpDatabase(const char *aDir)
+MozMtpDatabase::MozMtpDatabase()
 {
-  MTP_LOG("");
+  MTP_LOG("constructed");
 
   // We use the index into the array as the handle. Since zero isn't a valid
   // index, we stick a dummy entry there.
@@ -50,14 +50,12 @@ MozMtpDatabase::MozMtpDatabase(const char *aDir)
   RefPtr<DbEntry> dummy;
 
   mDb.AppendElement(dummy);
-
-  ReadVolume("sdcard", aDir);
 }
 
 //virtual
 MozMtpDatabase::~MozMtpDatabase()
 {
-  MTP_LOG("");
+  MTP_LOG("destructed");
 }
 
 void
@@ -67,7 +65,7 @@ MozMtpDatabase::AddEntry(DbEntry *entry)
   MOZ_ASSERT(mDb.Length() == entry->mHandle);
   mDb.AppendElement(entry);
 
-  MTP_LOG("AddEntry: Handle: 0x%08x Parent: 0x%08x Path:'%s'",
+  MTP_LOG("Handle: 0x%08x Parent: 0x%08x Path:'%s'",
           entry->mHandle, entry->mParent, entry->mPath.get());
 }
 
@@ -120,18 +118,20 @@ GetPathWithoutFileName(const nsCString& aFullPath)
 }
 
 void
-MozMtpDatabase::ParseDirectory(const char *aDir, MtpObjectHandle aParent)
+MozMtpDatabase::AddDirectory(MtpStorageID aStorageID,
+                             const char* aPath,
+                             MtpObjectHandle aParent)
 {
   ScopedCloseDir dir;
 
-  if (!(dir = PR_OpenDir(aDir))) {
-    MTP_ERR("Unable to open directory '%s'", aDir);
+  if (!(dir = PR_OpenDir(aPath))) {
+    MTP_ERR("Unable to open directory '%s'", aPath);
     return;
   }
 
   PRDirEntry* dirEntry;
   while ((dirEntry = PR_ReadDir(dir, PR_SKIP_BOTH))) {
-    nsPrintfCString filename("%s/%s", aDir, dirEntry->name);
+    nsPrintfCString filename("%s/%s", aPath, dirEntry->name);
     PRFileInfo64 fileInfo;
     if (PR_GetFileInfo64(filename.get(), &fileInfo) != PR_SUCCESS) {
       MTP_ERR("Unable to retrieve file information for '%s'", filename.get());
@@ -140,7 +140,7 @@ MozMtpDatabase::ParseDirectory(const char *aDir, MtpObjectHandle aParent)
 
     RefPtr<DbEntry> entry = new DbEntry;
 
-    entry->mStorageID = MTP_STORAGE_FIXED_RAM;
+    entry->mStorageID = aStorageID;
     entry->mParent = aParent;
     entry->mObjectName = dirEntry->name;
     entry->mDisplayName = dirEntry->name;
@@ -157,40 +157,59 @@ MozMtpDatabase::ParseDirectory(const char *aDir, MtpObjectHandle aParent)
       entry->mObjectFormat = MTP_FORMAT_ASSOCIATION;
       entry->mObjectSize = 0;
       AddEntry(entry);
-      ParseDirectory(filename.get(), entry->mHandle);
+      AddDirectory(aStorageID, filename.get(), entry->mHandle);
     }
   }
 }
 
 void
-MozMtpDatabase::ReadVolume(const char *volumeName, const char *aDir)
+MozMtpDatabase::AddStorage(MtpStorageID aStorageID,
+                           const char* aPath,
+                           const char* aName)
 {
   //TODO: Add an assert re thread being run on
 
   PRFileInfo  fileInfo;
 
-  if (PR_GetFileInfo(aDir, &fileInfo) != PR_SUCCESS) {
-    MTP_ERR("'%s' doesn't exist", aDir);
+  if (PR_GetFileInfo(aPath, &fileInfo) != PR_SUCCESS) {
+    MTP_ERR("'%s' doesn't exist", aPath);
     return;
   }
   if (fileInfo.type != PR_FILE_DIRECTORY) {
-    MTP_ERR("'%s' isn't a directory", aDir);
+    MTP_ERR("'%s' isn't a directory", aPath);
     return;
   }
 
+#if 0
   RefPtr<DbEntry> entry = new DbEntry;
 
-  entry->mStorageID = MTP_STORAGE_FIXED_RAM;
+  entry->mStorageID = aStorageID;
   entry->mParent = MTP_PARENT_ROOT;
-  entry->mObjectName = volumeName;
-  entry->mDisplayName = volumeName;
-  entry->mPath = aDir;
+  entry->mObjectName = aName;
+  entry->mDisplayName = aName;
+  entry->mPath = aPath;
   entry->mObjectFormat = MTP_FORMAT_ASSOCIATION;
   entry->mObjectSize = 0;
 
   AddEntry(entry);
 
-  ParseDirectory(aDir, entry->mHandle);
+  AddDirectory(aStorageID, aPath, entry->mHandle);
+#else
+  AddDirectory(aStorageID, aPath, MTP_PARENT_ROOT);
+#endif
+}
+
+void
+MozMtpDatabase::RemoveStorage(MtpStorageID aStorageID)
+{
+  DbArray::size_type numEntries = mDb.Length();
+  DbArray::index_type entryIndex;
+  for (entryIndex = 1; entryIndex < numEntries; entryIndex++) {
+    RefPtr<DbEntry> entry = mDb[entryIndex];
+    if (entry && entry->mStorageID == aStorageID) {
+      mDb[entryIndex] = nullptr;
+    }
+  }
 }
 
 // called from SendObjectInfo to reserve a database entry for the incoming file
@@ -232,12 +251,12 @@ MozMtpDatabase::beginSendObject(const char* aPath,
 //virtual
 void
 MozMtpDatabase::endSendObject(const char* aPath,
-                            MtpObjectHandle aHandle,
-                            MtpObjectFormat aFormat,
-                            bool succeeded)
+                              MtpObjectHandle aHandle,
+                              MtpObjectFormat aFormat,
+                              bool aSucceeded)
 {
   MTP_LOG("Handle: 0x%08x Path: '%s'", aHandle, aPath);
-  if (!succeeded) {
+  if (!aSucceeded) {
     RemoveEntry(aHandle);
   }
 }
@@ -245,8 +264,8 @@ MozMtpDatabase::endSendObject(const char* aPath,
 //virtual
 MtpObjectHandleList*
 MozMtpDatabase::getObjectList(MtpStorageID aStorageID,
-                            MtpObjectFormat aFormat,
-                            MtpObjectHandle aParent)
+                              MtpObjectFormat aFormat,
+                              MtpObjectHandle aParent)
 {
   MTP_LOG("StorageID: 0x%08x Format: 0x%04x Parent: 0x%08x",
           aStorageID, aFormat, aParent);
@@ -257,11 +276,14 @@ MozMtpDatabase::getObjectList(MtpStorageID aStorageID,
 
   list = new MtpObjectHandleList();
 
+  // Note: objects in the topmost directory of each storage area have a parent
+  //       of MTP_PARENT_ROOT. So we need to filter on storage ID as well.
+
   DbArray::size_type numEntries = mDb.Length();
   DbArray::index_type entryIndex;
   for (entryIndex = 1; entryIndex < numEntries; entryIndex++) {
     RefPtr<DbEntry> entry = mDb[entryIndex];
-    if (entry && entry->mParent == aParent) {
+    if (entry && entry->mStorageID == aStorageID && entry->mParent == aParent) {
       list->push(entry->mHandle);
     }
   }
@@ -271,12 +293,23 @@ MozMtpDatabase::getObjectList(MtpStorageID aStorageID,
 //virtual
 int
 MozMtpDatabase::getNumObjects(MtpStorageID aStorageID,
-                            MtpObjectFormat aFormat,
-                            MtpObjectHandle aParent)
+                              MtpObjectFormat aFormat,
+                              MtpObjectHandle aParent)
 {
   MTP_LOG("");
 
-  return mDb.Length() - 1;
+  int count = 0;
+
+  DbArray::size_type numEntries = mDb.Length();
+  DbArray::index_type entryIndex;
+  for (entryIndex = 1; entryIndex < numEntries; entryIndex++) {
+    RefPtr<DbEntry> entry = mDb[entryIndex];
+    if (entry && entry->mStorageID == aStorageID) {
+      count++;
+    }
+  }
+
+  return count;
 }
 
 //virtual
@@ -344,8 +377,8 @@ MozMtpDatabase::getSupportedDeviceProperties()
 //virtual
 MtpResponseCode
 MozMtpDatabase::getObjectPropertyValue(MtpObjectHandle aHandle,
-                                     MtpObjectProperty aProperty,
-                                     MtpDataPacket& aPacket)
+                                       MtpObjectProperty aProperty,
+                                       MtpDataPacket& aPacket)
 {
   RefPtr<DbEntry> entry = GetEntry(aHandle);
   if (!entry) {
@@ -417,8 +450,8 @@ GetTypeOfObjectProp(MtpObjectProperty aProperty)
 //virtual
 MtpResponseCode
 MozMtpDatabase::setObjectPropertyValue(MtpObjectHandle aHandle,
-                                     MtpObjectProperty aProperty,
-                                     MtpDataPacket& aPacket)
+                                       MtpObjectProperty aProperty,
+                                       MtpDataPacket& aPacket)
 {
   MTP_LOG("Handle: 0x%08x Property: 0x%08x", aHandle, aProperty);
 
@@ -463,7 +496,7 @@ MozMtpDatabase::setObjectPropertyValue(MtpObjectHandle aHandle,
 //virtual
 MtpResponseCode
 MozMtpDatabase::getDevicePropertyValue(MtpDeviceProperty aProperty,
-                                     MtpDataPacket& aPacket)
+                                       MtpDataPacket& aPacket)
 {
   MTP_LOG("(GENERAL ERROR)");
   return MTP_RESPONSE_GENERAL_ERROR;
@@ -472,7 +505,7 @@ MozMtpDatabase::getDevicePropertyValue(MtpDeviceProperty aProperty,
 //virtual
 MtpResponseCode
 MozMtpDatabase::setDevicePropertyValue(MtpDeviceProperty aProperty,
-                                     MtpDataPacket& aPacket)
+                                       MtpDataPacket& aPacket)
 {
   MTP_LOG("(NOT SUPPORTED)");
   return MTP_RESPONSE_OPERATION_NOT_SUPPORTED;
@@ -567,13 +600,13 @@ MozMtpDatabase::QueryEntries(MozMtpDatabase::MatchType aMatchType,
 //virtual
 MtpResponseCode
 MozMtpDatabase::getObjectPropertyList(MtpObjectHandle aHandle,
-                                    uint32_t aFormat,
-                                    uint32_t aProperty,
-                                    int aGroupCode,
-                                    int aDepth,
-                                    MtpDataPacket& aPacket)
+                                      uint32_t aFormat,
+                                      uint32_t aProperty,
+                                      int aGroupCode,
+                                      int aDepth,
+                                      MtpDataPacket& aPacket)
 {
-  MTP_LOG("Handle: 0x%08x Format: 0x%08x aProperty: 0x%08x aGroupCode: %d aDepth %d (NOT SUPPORTED)",
+  MTP_LOG("Handle: 0x%08x Format: 0x%08x aProperty: 0x%08x aGroupCode: %d aDepth %d",
           aHandle, aFormat, aProperty, aGroupCode, aDepth);
 
   if (aDepth > 1) {
@@ -726,7 +759,7 @@ MozMtpDatabase::getObjectPropertyList(MtpObjectHandle aHandle,
 //virtual
 MtpResponseCode
 MozMtpDatabase::getObjectInfo(MtpObjectHandle aHandle,
-                            MtpObjectInfo& aInfo)
+                              MtpObjectInfo& aInfo)
 {
   RefPtr<DbEntry> entry = GetEntry(aHandle);
   if (!entry) {
@@ -780,9 +813,9 @@ MozMtpDatabase::getThumbnail(MtpObjectHandle aHandle, size_t& aOutThumbSize)
 //virtual
 MtpResponseCode
 MozMtpDatabase::getObjectFilePath(MtpObjectHandle aHandle,
-                                MtpString& aOutFilePath,
-                                int64_t& aOutFileLength,
-                                MtpObjectFormat& aOutFormat)
+                                  MtpString& aOutFilePath,
+                                  int64_t& aOutFileLength,
+                                  MtpObjectFormat& aOutFormat)
 {
   RefPtr<DbEntry> entry = GetEntry(aHandle);
   if (!entry) {
@@ -810,6 +843,10 @@ MozMtpDatabase::deleteFile(MtpObjectHandle aHandle)
   }
 
   MTP_LOG("Handle: 0x%08x '%s'", aHandle, entry->mPath.get());
+
+  //TODO: MtpServer::doDeleteObject calls us, and then calls a private
+  //      method (deletePath) which recursively deletes the path.
+  // We need to tell device storage that these files are gone
 
   // File deletion will happen in lower level implementation.
   // The only thing we need to do is removing the entry from the db.
@@ -854,7 +891,7 @@ MozMtpDatabase::getObjectReferences(MtpObjectHandle aHandle)
 //virtual
 MtpResponseCode
 MozMtpDatabase::setObjectReferences(MtpObjectHandle aHandle,
-                                  MtpObjectHandleList* aReferences)
+                                    MtpObjectHandleList* aReferences)
 {
   MTP_LOG("Handle: 0x%08x (NOT SUPPORTED)", aHandle);
   return MTP_RESPONSE_OPERATION_NOT_SUPPORTED;

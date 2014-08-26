@@ -737,9 +737,7 @@ MetroInput::TransformRefPoint(const Foundation::Point& aPosition, LayoutDeviceIn
   // If this event is destined for content we need to transform our ref point through
   // the apz so that zoom can be accounted for.
   aRefPointOut = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(aPosition));
-  ScreenIntPoint spt;
-  spt.x = aRefPointOut.x;
-  spt.y = aRefPointOut.y;
+  ScreenIntPoint spt(aRefPointOut.x, aRefPointOut.y);
   // This is currently a general contained rect hit test, it may produce a false positive for
   // overlay chrome elements.
   bool apzIntersect = mWidget->ApzHitTest(spt);

@@ -41,7 +41,7 @@ class ReadbackProcessor;
  * context (with appropriate clipping and Push/PopGroups performed
  * between layers).
  */
-class BasicLayerManager :
+class BasicLayerManager MOZ_FINAL :
     public LayerManager
 {
 public:
@@ -56,7 +56,7 @@ public:
    * must be called for any rendering to happen. ThebesLayers will not
    * be retained.
    */
-  BasicLayerManager(BasicLayerManagerType aType);
+  explicit BasicLayerManager(BasicLayerManagerType aType);
   /**
    * Construct a BasicLayerManager which will have no default
    * target context. SetDefaultTarget or BeginTransactionWithTarget
@@ -72,7 +72,7 @@ public:
    * must ensure that the widget outlives the layer manager or call
    * ClearWidget before the widget dies.
    */
-  BasicLayerManager(nsIWidget* aWidget);
+  explicit BasicLayerManager(nsIWidget* aWidget);
 
 protected:
   virtual ~BasicLayerManager();

@@ -76,6 +76,26 @@ WebGLFramebuffer::Attachment::HasAlpha() const
     return FormatHasAlpha(format);
 }
 
+GLenum
+WebGLFramebuffer::GetFormatForAttachment(const WebGLFramebuffer::Attachment& attachment) const
+{
+    MOZ_ASSERT(attachment.IsDefined());
+    MOZ_ASSERT(attachment.Texture() || attachment.Renderbuffer());
+
+    if (attachment.Texture()) {
+        const WebGLTexture& tex = *attachment.Texture();
+        MOZ_ASSERT(tex.HasImageInfoAt(tex.Target(), 0));
+
+        const WebGLTexture::ImageInfo& imgInfo = tex.ImageInfoAt(tex.Target(), 0);
+        return imgInfo.WebGLFormat();
+    }
+
+    if (attachment.Renderbuffer())
+        return attachment.Renderbuffer()->InternalFormat();
+
+    return LOCAL_GL_NONE;
+}
+
 bool
 WebGLFramebuffer::Attachment::IsReadableFloat() const
 {
@@ -306,8 +326,12 @@ WebGLFramebuffer::Attachment::IsComplete() const
         if (mAttachmentPoint == LOCAL_GL_DEPTH_ATTACHMENT)
             return IsValidFBOTextureDepthFormat(webGLFormat);
 
-        if (mAttachmentPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
+        if (mAttachmentPoint == LOCAL_GL_STENCIL_ATTACHMENT)
+            return false; // Textures can't have the correct format for stencil buffers
+
+        if (mAttachmentPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
             return IsValidFBOTextureDepthStencilFormat(webGLFormat);
+        }
 
         if (mAttachmentPoint >= LOCAL_GL_COLOR_ATTACHMENT0 &&
             mAttachmentPoint < GLenum(LOCAL_GL_COLOR_ATTACHMENT0 +

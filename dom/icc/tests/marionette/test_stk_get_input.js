@@ -25,6 +25,13 @@ function testGetInput(command, expect) {
   if (command.options.hideInput) {
     is(command.options.hideInput, expect.hideInput, expect.name);
   }
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
 
   runNextTest();
 }
@@ -153,10 +160,12 @@ let tests = [
             minLength: 160,
             maxLength: 160,
             defaultText: "***1111111111###***2222222222###***3333333333###***4444444444###***5555555555###***6666666666###***7777777777###***8888888888###***9999999999###***0000000000###"}},
-  {command: "d01d8103012300820281828d0a043c4e4f2d49434f4e3e9102000a1e020001",
+  {command: "d01d8103012300820281828d0a043c4e4f2d49434f4e3e9102000a1e020002",
    func: testGetInput,
    expect: {name: "get_input_cmd_17",
             commandQualifier: 0x00,
+            // The record number 02 in EFimg is not defined, so no icon will be
+            // shown, but the text string should still be displayed.
             text: "<NO-ICON>",
             minLength: 0,
             maxLength: 10}},
@@ -166,7 +175,9 @@ let tests = [
             commandQualifier: 0x00,
             text: "<BASIC-ICON>",
             minLength: 0,
-            maxLength: 10}},
+            maxLength: 10,
+            iconSelfExplanatory: false,
+            icons: [basicIcon]}},
 ];
 
 runNextTest();

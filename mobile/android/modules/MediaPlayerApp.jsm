@@ -36,14 +36,18 @@ function MediaPlayerApp(service) {
 
 MediaPlayerApp.prototype = {
   start: function start(callback) {
-    send("MediaPlayer:Start", { id: this.id }, (result) => {
-      if (callback) callback(true);
+    send("MediaPlayer:Start", { id: this.id }, (result, err) => {
+      if (callback) {
+        callback(err == null);
+      }
     });
   },
 
   stop: function stop(callback) {
-    send("MediaPlayer:Stop", { id: this.id }, (result) => {
-      if (callback) callback(true);
+    send("MediaPlayer:Stop", { id: this.id }, (result, err) => {
+      if (callback) {
+        callback(err == null);
+      }
     });
   },
 
@@ -54,8 +58,10 @@ MediaPlayerApp.prototype = {
   },
 
   mirror: function mirror(callback) {
-    send("MediaPlayer:Mirror", { id: this.id }, (result) => {
-      if (callback) callback(true);
+    send("MediaPlayer:Mirror", { id: this.id }, (result, err) => {
+      if (callback) {
+        callback(err == null);
+      }
     });
   }
 }
@@ -75,7 +81,7 @@ function RemoteMedia(id, listener) {
 
 RemoteMedia.prototype = {
   shutdown: function shutdown() {
-    this._send("MediaPlayer:End", {}, (result) => {
+    this._send("MediaPlayer:End", {}, (result, err) => {
       this._status = "shutdown";
       if ("onRemoteMediaStop" in this._listener) {
         this._listener.onRemoteMediaStop(this);
@@ -84,19 +90,37 @@ RemoteMedia.prototype = {
   },
 
   play: function play() {
-    this._send("MediaPlayer:Play", {}, (result) => {
+    this._send("MediaPlayer:Play", {}, (result, err) => {
+      if (err) {
+        Cu.reportError("Can't play " + err);
+        this.shutdown();
+        return;
+      }
+
       this._status = "started";
     });
   },
 
   pause: function pause() {
-    this._send("MediaPlayer:Pause", {}, (result) => {
+    this._send("MediaPlayer:Pause", {}, (result, err) => {
+      if (err) {
+        Cu.reportError("Can't pause " + err);
+        this.shutdown();
+        return;
+      }
+
       this._status = "paused";
     });
   },
 
   load: function load(aData) {
-    this._send("MediaPlayer:Load", aData, (result) => {
+    this._send("MediaPlayer:Load", aData, (result, err) => {
+      if (err) {
+        Cu.reportError("Can't load " + err);
+        this.shutdown();
+        return;
+      }
+
       this._status = "started";
     })
   },

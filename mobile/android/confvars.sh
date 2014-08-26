@@ -39,15 +39,11 @@ MOZ_SOCIAL=
 MOZ_ANDROID_HISTORY=1
 MOZ_DISABLE_EXPORT_JS=1
 
-# Needed for building our components as part of libxul
-MOZ_APP_COMPONENT_INCLUDE=nsBrowserComponents.h
-
 # use custom widget for html:select
 MOZ_USE_NATIVE_POPUP_WINDOWS=1
 
 MOZ_APP_ID={aa3c5121-dab2-40e2-81ca-7ea25febc110}
 
-MOZ_ANDROID_OMTC=1
 MOZ_EXTENSION_MANAGER=1
 MOZ_APP_STATIC_INI=1
 

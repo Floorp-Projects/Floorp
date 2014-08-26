@@ -690,11 +690,7 @@ LayerTransactionParent::RecvSetAsyncScrollOffset(PLayerParent* aLayer,
   if (!layer) {
     return false;
   }
-  ContainerLayer* containerLayer = layer->AsContainerLayer();
-  if (!containerLayer) {
-    return false;
-  }
-  AsyncPanZoomController* controller = containerLayer->GetAsyncPanZoomController();
+  AsyncPanZoomController* controller = layer->GetAsyncPanZoomController();
   if (!controller) {
     return false;
   }

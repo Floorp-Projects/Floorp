@@ -38,17 +38,6 @@ function make_uri(url) {
   return ios.newURI(url, null, null);
 }
 
-function CacheListener() { }
-CacheListener.prototype = {
-  QueryInterface : function(iid)
-  {
-    if (iid.equals(Components.interfaces.nsICacheListener))
-      return this;
-    throw Components.results.NS_NOINTERFACE;
-  },
-};
-
-
 const responseBody = "response body";
 
 // A HTTP channel for updating the offline cache should normally succeed.

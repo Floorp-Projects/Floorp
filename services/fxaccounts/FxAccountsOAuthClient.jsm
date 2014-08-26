@@ -11,6 +11,7 @@ this.EXPORTED_SYMBOLS = ["FxAccountsOAuthClient"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
@@ -64,7 +65,9 @@ this.FxAccountsOAuthClient = function(options) {
 
 this.FxAccountsOAuthClient.prototype = {
   /**
-   * Function that gets called once the OAuth flow is successfully complete.
+   * Function that gets called once the OAuth flow is complete.
+   * The callback will receive null as it's argument if there is a state mismatch or an object with
+   * code and state properties otherwise.
    */
   onComplete: null,
   /**
@@ -115,6 +118,7 @@ this.FxAccountsOAuthClient.prototype = {
     this.onComplete = null;
     this._complete = true;
     this._channel.stopListening();
+    this._channel = null;
   },
 
   /**
@@ -157,16 +161,23 @@ this.FxAccountsOAuthClient.prototype = {
         switch (command) {
           case "oauth_complete":
             // validate the state parameter and call onComplete
-            if (this.onComplete && data.code && this.parameters.state === data.state) {
-              log.debug("OAuth flow completed.");
-              this.onComplete({
+            let result = null;
+            if (this.parameters.state === data.state) {
+              result = {
                 code: data.code,
                 state: data.state
-              });
-              // onComplete will be called for this client only once
-              // calling onComplete again will result in a failure of the OAuth flow
-              this.tearDown();
+              };
+              log.debug("OAuth flow completed.");
+            } else {
+              log.debug("OAuth flow failed. State doesn't match");
             }
+
+            if (this.onComplete) {
+              this.onComplete(result);
+            }
+            // onComplete will be called for this client only once
+            // calling onComplete again will result in a failure of the OAuth flow
+            this.tearDown();
 
             // if the message asked to close the tab
             if (data.closeWindow && target && target.contentWindow) {

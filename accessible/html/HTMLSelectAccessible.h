@@ -163,7 +163,7 @@ class HTMLComboboxListAccessible;
 /*
  * A class the represents the HTML Combobox widget.
  */
-class HTMLComboboxAccessible : public AccessibleWrap
+class HTMLComboboxAccessible MOZ_FINAL : public AccessibleWrap
 {
 public:
   enum { eAction_Click = 0 };

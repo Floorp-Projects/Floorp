@@ -49,7 +49,7 @@ function check(expr, expected=expr) {
             // The more lets the merrier
             Function("let (x=4, y=5) { x + y; }\nlet (a, b, c) { a + b - c; }\nlet (o, undef) {" + statement + " }"),
             // Let destructuring
-            Function("o", "undef", "let ([] = 4) {} let (o, undef) { " + statement + " }"),
+            Function("o", "undef", "let ([] = []) {} let (o, undef) { " + statement + " }"),
             // Try-catch blocks
             Function("o", "undef", "try { let q = 4; try { let p = 4; } catch (e) {} } catch (e) {} let (o, undef) { " + statement + " }")
         ];
@@ -109,8 +109,8 @@ check("o[- (o)]");
 // A few one off tests
 check_one("6", (function () { 6() }), " is not a function");
 check_one("Array.prototype.reverse.call(...)", (function () { Array.prototype.reverse.call('123'); }), " is read-only");
-check_one("null", function () { var [{ x }] = [null, {}]; }, " has no properties");
-check_one("x", function () { ieval("let (x) { var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined");
+check_one("(intermediate value)['@@iterator'](...).next(...).value", function () { var [{ x }] = [null, {}]; }, " is null");
+check_one("(intermediate value)['@@iterator'](...).next(...).value", function () { ieval("let (x) { var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined");
 
 // Check fallback behavior
 assertThrowsInstanceOf(function () { for (let x of undefined) {} }, TypeError);

@@ -23,7 +23,7 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
   @SuppressWarnings("unused")
   private static final String LOG_TAG = FxAccountSyncStatusHelper.class.getSimpleName();
 
-  protected static FxAccountSyncStatusHelper sInstance = null;
+  protected static FxAccountSyncStatusHelper sInstance;
 
   public synchronized static FxAccountSyncStatusHelper getInstance() {
     if (sInstance == null) {
@@ -33,7 +33,7 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
   }
 
   // Used to unregister this as a listener.
-  protected Object handle = null;
+  protected Object handle;
 
   // Maps delegates to whether their underlying Android account was syncing the
   // last time we observed a status change.

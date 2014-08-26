@@ -93,26 +93,14 @@ bool ots_maxp_serialise(OTSStream *out, OpenTypeFile *file) {
     return OTS_FAILURE_MSG("Failed to write maxp");
   }
 
-  if (g_transcode_hints) {
-    if (!out->WriteU16(maxp->max_zones) ||
-        !out->WriteU16(maxp->max_t_points) ||
-        !out->WriteU16(maxp->max_storage) ||
-        !out->WriteU16(maxp->max_fdefs) ||
-        !out->WriteU16(maxp->max_idefs) ||
-        !out->WriteU16(maxp->max_stack) ||
-        !out->WriteU16(maxp->max_size_glyf_instructions)) {
-      return OTS_FAILURE_MSG("Failed to write more maxp");
-    }
-  } else {
-    if (!out->WriteU16(1) ||  // max zones
-        !out->WriteU16(0) ||  // max twilight points
-        !out->WriteU16(0) ||  // max storage
-        !out->WriteU16(0) ||  // max function defs
-        !out->WriteU16(0) ||  // max instruction defs
-        !out->WriteU16(0) ||  // max stack elements
-        !out->WriteU16(0)) {  // max instruction byte count
-      return OTS_FAILURE_MSG("Failed to write more maxp");
-    }
+  if (!out->WriteU16(maxp->max_zones) ||
+      !out->WriteU16(maxp->max_t_points) ||
+      !out->WriteU16(maxp->max_storage) ||
+      !out->WriteU16(maxp->max_fdefs) ||
+      !out->WriteU16(maxp->max_idefs) ||
+      !out->WriteU16(maxp->max_stack) ||
+      !out->WriteU16(maxp->max_size_glyf_instructions)) {
+    return OTS_FAILURE_MSG("Failed to write more maxp");
   }
 
   if (!out->WriteU16(maxp->max_c_components) ||

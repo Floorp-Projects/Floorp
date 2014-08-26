@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>Rich Text Tests</title>
+  <script src="js/range.js"></script>
+  <script>
+    /**
+     * Color class allows cross-browser comparison of values, which can
+     * be returned from queryCommandValue in several formats:
+     *   0xff00ff
+     *   rgb(255, 0, 0)
+     *   Number containing the hex value
+     */
+    function Color(value) {
+      this.compare = function(other) {
+        if (!this.valid || !other.valid) {
+          return false;
+        }
+        return this.red == other.red && this.green == other.green && this.blue == other.blue;
+      }
+      this.parse = function(value) {
+        var hexMatch = String(value).match(/#([0-9a-f]{6})/i);
+        if (hexMatch) {
+          this.red = parseInt(hexMatch[1].substring(0, 2), 16);
+          this.green = parseInt(hexMatch[1].substring(2, 4), 16);
+          this.blue = parseInt(hexMatch[1].substring(4, 6), 16);
+          return true;
+        }
+        var rgbMatch = String(value).match(/rgb\(([0-9]{1,3}),\s*([0-9]{1,3}),\s*([0-9]{1,3})\)/i);
+        if (rgbMatch) {
+          this.red = Number(rgbMatch[1]);
+          this.green = Number(rgbMatch[2]);
+          this.blue = Number(rgbMatch[3]);
+          return true;
+        }
+        if (Number(value)) {
+          this.red = value & 0xFF;
+          this.green = (value & 0xFF00) >> 8;
+          this.blue = (value & 0xFF0000) >> 16;
+          return true;
+        }
+        return false;
+      }
+      this.toString = function() {
+        return this.red + ',' + this.green + ',' + this.blue;
+      }
+      this.valid = this.parse(value);
+    }
+
+    /**
+     * Utility class for converting font sizes to the size
+     * attribute in a font tag. Currently only converts px because
+     * only the sizes and px ever come from queryCommandValue.
+     */
+    function Size(value) {
+      var pxMatch = String(value).match(/([0-9]+)px/);
+      if (pxMatch) {
+        var px = Number(pxMatch[1]);
+        if (px <= 10) {
+          this.size = 1;
+        } else if (px <= 13) {
+          this.size = 2;
+        } else if (px <= 16) {
+          this.size = 3;
+        } else if (px <= 18) {
+          this.size = 4;
+        } else if (px <= 24) {
+          this.size = 5;
+        } else if (px <= 32) {
+          this.size = 6;
+        } else if (px <= 47) {
+          this.size = 7;
+        } else {
+          this.size = NaN;
+        }
+      } else if (Number(value)) {
+           this.size = Number(value);
+      } else {
+        switch (value) {
+          case 'x-small':
+            this.size = 1;
+            break;
+          case 'small':
+            this.size = 2;
+            break;
+          case 'medium':
+            this.size = 3;
+            break;
+          case 'large':
+            this.size = 4;
+            break;
+          case 'x-large':
+            this.size = 5;
+            break;
+          case 'xx-large':
+            this.size = 6;
+            break;
+          case 'xxx-large':
+          case '-webkit-xxx-large':
+            this.size = 7;
+            break;
+          default:
+            this.size = null;
+        }
+      }
+      this.compare = function(other) {
+        return this.size == other.size;
+      }
+      this.toString = function() {
+        return String(this.size);
+      }
+    }
+
+    var IMAGE_URI = '/tests/editor/libeditor/tests/green.png';
+
+    var APPLY_TESTS = {
+      'backcolor' : {
+        opt_arg: '#FF0000',
+        styleWithCSS: 'background-color'},
+      'bold' : {
+        opt_arg: null,
+        styleWithCSS: 'font-weight'},
+      'createbookmark' : {
+        opt_arg: 'bookmark_name'},
+      'createlink' : {
+        opt_arg: 'http://www.openweb.org'},
+      'decreasefontsize' : {
+        opt_arg: null},
+      'fontname' : {
+        opt_arg: 'Arial',
+        styleWithCSS: 'font-family'},
+      'fontsize' : {
+        opt_arg: 4,
+        styleWithCSS: 'font-size'},
+      'forecolor' : {
+        opt_arg: '#FF0000',
+        styleWithCSS: 'color'},
+      'formatblock' : {
+        opt_arg: 'h1',
+        wholeline: true},
+      'hilitecolor' : {
+        opt_arg: '#FF0000',
+        styleWithCSS: 'background-color'},
+      'indent' : {
+        opt_arg: null,
+        wholeline: true,
+        styleWithCSS: 'margin'},
+      'inserthorizontalrule' : {
+        opt_arg: null,
+        collapse: true},
+      'inserthtml': {
+        opt_arg: '<br>',
+        collapse: true},
+      'insertimage': {
+        opt_arg: IMAGE_URI,
+        collapse: true},
+      'insertorderedlist' : {
+        opt_arg: null,
+        wholeline: true},
+      'insertunorderedlist' : {
+        opt_arg: null,
+        wholeline: true},
+      'italic' : {
+        opt_arg: null,
+        styleWithCSS: 'font-style'},
+      'justifycenter' : {
+        opt_arg: null,
+        wholeline: true,
+        styleWithCSS: 'text-align'},
+      'justifyfull' : {
+        opt_arg: null,
+        wholeline: true,
+        styleWithCSS: 'text-align'},
+      'justifyleft' : {
+        opt_arg: null,
+        wholeline: true,
+        styleWithCSS: 'text-align'},
+      'justifyright' : {
+        opt_arg: null,
+        wholeline: true,
+        styleWithCSS: 'text-align'},
+      'strikethrough' : {
+        opt_arg: null,
+        styleWithCSS: 'text-decoration'},
+      'subscript' : {
+        opt_arg: null,
+        styleWithCSS: 'vertical-align'},
+      'superscript' : {
+        opt_arg: null,
+        styleWithCSS: 'vertical-align'},
+      'underline' : {
+        opt_arg: null,
+        styleWithCSS: 'text-decoration'}};
+
+    var UNAPPLY_TESTS = {
+      'bold' : {
+        tags: [
+          ['<b>', '</b>'],
+          ['<STRONG>', '</STRONG>'],
+          ['<span style="font-weight: bold;">', '</span>']]},
+      'italic' : {
+        tags: [
+          ['<i>', '</i>'],
+          ['<EM>', '</EM>'],
+          ['<span style="font-style: italic;">', '</span>']]},
+      'outdent' : {
+        unapply: 'indent',
+        block: true,
+        tags: [
+          ['<blockquote>', '</blockquote>'],
+          ['<blockquote class="webkit-indent-blockquote" style="margin: 0 0 0 40px; border: none; padding: 0px;">', '</blockquote>'],
+          ['<ul><li>', '</li></ul>'],
+          ['<ol><li>', '</li></ol>'],
+          ['<div style="margin-left: 40px;">', '</div>']]},
+      'removeformat' : {
+        unapply: '*',
+        block: true,
+        tags: [
+          ['<b>', '</b>'],
+          ['<a href="http://www.foo.com">', '</a>'],
+          ['<table><tr><td>', '</td></tr></table>']]},
+      'strikethrough' : {
+        tags: [
+          ['<strike>', '</strike>'],
+          ['<s>', '</s>'],
+          ['<del>', '</del>'],
+          ['<span style="text-decoration: line-through;">', '</span>']]},
+      'subscript' : {
+        tags: [
+          ['<sub>', '</sub>'],
+          ['<span style="vertical-align: sub;">', '</span>']]},
+      'superscript' : {
+        tags: [
+          ['<sup>', '</sup>'],
+          ['<span style="vertical-align: super;">', '</span>']]},
+      'unbookmark' : {
+        unapply: 'createbookmark',
+        tags: [
+          ['<a name="bookmark">', '</a>']]},
+      'underline' : {
+        tags: [
+          ['<u>', '</u>'],
+          ['<span style="text-decoration: underline;">', '</span>']]},
+      'unlink' : {
+        unapply: 'createbookmark',
+        tags: [
+          ['<a href="http://www.foo.com">', '</a>']]}};
+
+    var QUERY_TESTS = {
+      'backcolor' : {
+        type: 'value',
+        tests: [
+          {html: '<FONT style="BACKGROUND-COLOR: #ffccaa">foo bar baz</FONT>', expected: new Color('#ffccaa')},
+          {html: '<span class="Apple-style-span" style="background-color: rgb(255, 0, 0);">foo bar baz</span>', expected: new Color('#ff0000')},
+          {html: '<span style="background-color: #ff0000">foo bar baz</span>', expected: new Color('#ff0000')}
+        ]
+      },
+      'bold' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<b>foo bar baz</b>', expected: true},
+          {html: '<STRONG>foo bar baz</STRONG>', expected: true},
+          {html: '<span style="font-weight:bold">foo bar baz</span>', expected: true},
+          {html: '<b style="font-weight:normal">foo bar baz</b>', expected: false},
+          {html: '<b><span style="font-weight:normal;">foo bar baz</span>', expected: false}
+         ]
+      },
+      'fontname' : {
+        type: 'value',
+        tests: [
+          {html: '<font face="Arial">foo bar baz</font>', expected: 'Arial'},
+          {html: '<span style="font-family:Arial">foo bar baz</span>', expected: 'Arial'},
+          {html: '<font face="Arial" style="font-family:Courier">foo bar baz</font>', expected: 'Courier'},
+          {html: '<font face="Courier"><font face="Arial">foo bar baz</font></font>', expected: 'Arial'},
+          {html: '<span style="font-family:Courier"><font face="Arial">foo bar baz</font></span>', expected: 'Arial'}
+        ]
+      },
+      'fontsize' : {
+        type: 'value',
+        tests: [
+          {html: '<font size=4>foo bar baz</font>', expected: new Size(4)},
+          // IE adds +1 to font size from font-size style attributes.
+          // This is hard to correct for since it does NOT add +1 to size attribute from font tag.
+          {html: '<span class="Apple-style-span" style="font-size: large;">foo bar baz</span>', expected: new Size(4)},
+          {html: '<font size=1 style="font-size:x-large;">foo bar baz</font>', expected: new Size(5)}
+        ]
+      },
+      'forecolor' : {
+        type: 'value',
+        tests: [
+          {html: '<font color="#ff0000">foo bar baz</font>', expected: new Color('#ff0000')},
+          {html: '<span style="color:#ff0000">foo bar baz</span>', expected: new Color('#ff0000')},
+          {html: '<font color="#0000ff" style="color:#ff0000">foo bar baz</span>', expected: new Color('#ff0000')}
+        ]
+      },
+      'hilitecolor' : {
+        type: 'value',
+        tests: [
+          {html: '<FONT style="BACKGROUND-COLOR: #ffccaa">foo bar baz</FONT>', expected: new Color('#ffccaa')},
+          {html: '<span class="Apple-style-span" style="background-color: rgb(255, 0, 0);">foo bar baz</span>', expected: new Color('#ff0000')},
+          {html: '<span style="background-color: #ff0000">foo bar baz</span>', expected: new Color('#ff0000')}
+        ]
+      },
+      'insertorderedlist' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<ol><li>foo bar baz</li></ol>', expected: true},
+          {html: '<ul><li>foo bar baz</li></ul>', expected: false}
+        ]
+      },
+      'insertunorderedlist' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<ol><li>foo bar baz</li></ol>', expected: false},
+          {html: '<ul><li>foo bar baz</li></ul>', expected: true}
+        ]
+      },
+      'italic' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<i>foo bar baz</i>', expected: true},
+          {html: '<EM>foo bar baz</EM>', expected: true},
+          {html: '<span style="font-style:italic">foo bar baz</span>', expected: true},
+          {html: '<i><span style="font-style:normal">foo bar baz</span></i>', expected: false}
+        ]
+      },
+      'justifycenter' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<div align="center">foo bar baz</div>', expected: true},
+          {html: '<p align="center">foo bar baz</p>', expected: true},
+          {html: '<div style="text-align: center;">foo bar baz</div>', expected: true}
+        ]
+      },
+      'justifyfull' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<div align="justify">foo bar baz</div>', expected: true},
+          {html: '<p align="justify">foo bar baz</p>', expected: true},
+          {html: '<div style="text-align: justify;">foo bar baz</div>', expected: true}
+        ]
+      },
+      'justifyleft' : {
+        type: 'state',
+        tests: [
+          {html: '<div align="left">foo bar baz</div>', expected: true},
+          {html: '<p align="left">foo bar baz</p>', expected: true},
+          {html: '<div style="text-align: left;">foo bar baz</div>', expected: true}
+        ]
+      },
+      'justifyright' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<div align="right">foo bar baz</div>', expected: true},
+          {html: '<p align="right">foo bar baz</p>', expected: true},
+          {html: '<div style="text-align: right;">foo bar baz</div>', expected: true}
+        ]
+      },
+      'strikethrough' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<strike>foo bar baz</strike>', expected: true},
+          {html: '<strike style="text-decoration: none">foo bar baz</strike>', expected: false},
+          {html: '<s>foo bar baz</s>', expected: true},
+          {html: '<del>foo bar baz</del>', expected: true},
+          {html: '<span style="text-decoration:line-through">foo bar baz</span>', expected: true}
+        ]
+      },
+      'subscript' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<sub>foo bar baz</sub>', expected: true}
+        ]
+      },
+      'superscript' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<sup>foo bar baz</sup>', expected: true}
+        ]
+      },
+      'underline' : {
+        type: 'state',
+        tests: [
+          {html: 'foo bar baz', expected: false},
+          {html: '<u>foo bar baz</u>', expected: true},
+          {html: '<a href="http://www.foo.com">foo bar baz</a>', expected: true},
+          {html: '<span style="text-decoration:underline">foo bar baz</span>', expected: true},
+          {html: '<u style="text-decoration:none">foo bar baz</u>', expected: false},
+          {html: '<a style="text-decoration:none" href="http://www.foo.com">foo bar baz</a>', expected: false}
+        ]
+      }
+    };
+
+    var CHANGE_TESTS = {
+      'backcolor' : {
+        type: 'value',
+        tests: [
+          {html: '<FONT style="BACKGROUND-COLOR: #ffccaa">foo bar baz</FONT>', opt_arg: '#884422'},
+          {html: '<span class="Apple-style-span" style="background-color: rgb(255, 0, 0);">foo bar baz</span>', opt_arg: '#0000ff'},
+          {html: '<span style="background-color: #ff0000">foo bar baz</span>', opt_arg: '#0000ff'}
+        ]
+      },
+      'fontname' : {
+        type: 'value',
+        tests: [
+          {html: '<font face="Arial">foo bar baz</font>', opt_arg: 'Courier'},
+          {html: '<span style="font-family:Arial">foo bar baz</span>', opt_arg: 'Courier'},
+          {html: '<font face="Arial" style="font-family:Verdana">foo bar baz</font>', opt_arg: 'Courier'},
+          {html: '<font face="Verdana"><font face="Arial">foo bar baz</font></font>', opt_arg: 'Courier'},
+          {html: '<span style="font-family:Verdana"><font face="Arial">foo bar baz</font></span>', opt_arg: 'Courier'}
+        ]
+      },
+      'fontsize' : {
+        type: 'value',
+        tests: [
+          {html: '<font size=4>foo bar baz</font>', opt_arg: 1},
+          {html: '<span class="Apple-style-span" style="font-size: large;">foo bar baz</span>', opt_arg: 1},
+          {html: '<font size=1 style="font-size:x-small;">foo bar baz</font>', opt_arg: 5}
+        ]
+      },
+      'forecolor' : {
+        type: 'value',
+        tests: [
+          {html: '<font color="#ff0000">foo bar baz</font>', opt_arg: '#00ff00'},
+          {html: '<span style="color:#ff0000">foo bar baz</span>', opt_arg: '#00ff00'},
+          {html: '<font color="#0000ff" style="color:#ff0000">foo bar baz</span>', opt_arg: '#00ff00'}
+        ]
+      },
+      'hilitecolor' : {
+        type: 'value',
+        tests: [
+          {html: '<FONT style="BACKGROUND-COLOR: #ffccaa">foo bar baz</FONT>', opt_arg: '#884422'},
+          {html: '<span class="Apple-style-span" style="background-color: rgb(255, 0, 0);">foo bar baz</span>', opt_arg: '#00ff00'},
+          {html: '<span style="background-color: #ff0000">foo bar baz</span>', opt_arg: '#00ff00'}
+        ]
+      }
+    };
+
+    /** The document of the editable iframe */
+    var editorDoc = null;
+    /** Dummy text to apply and unapply formatting to */
+    var TEST_CONTENT = 'foo bar baz';
+    /**
+     * Word in dummy text that should change. Formatting is sometimes applied
+     * to a single word instead of the entire text node because sometimes a
+     * style might get applied to the body node instead of wrapped around
+     * the text, and that's not what's being tested.
+     */
+    var TEST_WORD = 'bar';
+    /** Constant for indicating an action is unsupported (threw exception) */
+    var UNSUPPORTED = 'UNSUPPORTED';
+    /** <br> and <p> are acceptable HTML to be left over from block elements */
+    var BLOCK_REMOVE_TAGS = [/\s*<br>\s*/i, /\s*<p>\s*/i];
+    /** Array used to accumulate test results */
+    // Tack on the actual display tests with bogus data
+    // otherwise the beacon will fail.
+    var results = ['apply=0', 'unapply=0', 'change=0', 'query=0'];
+
+    /**
+     *
+     */
+    function resetIframe(newHtml) {
+      // These attributes can get set on the iframe by some errant execCommands
+      editorDoc.body.setAttribute('style', '');
+      editorDoc.body.setAttribute('bgcolor', '');
+      editorDoc.body.innerHTML = newHtml;
+    }
+
+    /**
+     * Finds the text node in the given node containing the given word.
+     * Returns null if not found.
+     */
+    function findTextNode(word, node) {
+      if (node.nodeType == 3) {
+        // Text node, check value.
+        if (node.data.indexOf(word) != -1) {
+          return node;
+        }
+      } else if (node.nodeType == 1) {
+        // Element node, check children.
+        for (var i = 0; i < node.childNodes.length; i++) {
+          var result = findTextNode(word, node.childNodes[i]);
+          if (result) {
+            return result;
+          }
+        }
+      }
+      return null;
+    }
+
+    /**
+     * Sets the selection to be collapsed at the start of the word,
+     * or the start of the editor if no word is passed in.
+     */
+     function selectStart(word) {
+       var textNode = findTextNode(word || '', editorDoc.body);
+       var startOffset = 0;
+       if (word) {
+         startOffset = textNode.data.indexOf(word);
+       }
+       var range = createCaret(textNode, startOffset);
+       range.select();
+     }
+
+    /**
+     * Selects the given word in the editor iframe.
+     */
+    function selectWord(word) {
+      var textNode = findTextNode(word, editorDoc.body);
+      if (!textNode) {
+        return;
+      }
+      var start = textNode.data.indexOf(word);
+      var range = createFromNodes(textNode, start, textNode, start + word.length);
+      range.select();
+    }
+
+    /**
+     * Gets the HTML before the text, so that we know how the browser
+     * applied a style
+     */
+    function getSurroundingTags(text) {
+      var html = editorDoc.body.innerHTML;
+      var tagStart = html.indexOf('<');
+      var index = editorDoc.body.innerHTML.indexOf(text);
+      if (tagStart == -1 || index == -1) {
+        return '';
+      }
+      return editorDoc.body.innerHTML.substring(tagStart, index);
+    }
+
+    /**
+     * Does the test for an apply execCommand.
+     */
+    function doApplyTest(command, styleWithCSS) {
+      try {
+        // Set styleWithCSS
+        try {
+          editorDoc.execCommand('styleWithCSS', false, styleWithCSS);
+        } catch (ex) {
+          // Ignore errors
+        }
+        resetIframe(TEST_CONTENT);
+        if (APPLY_TESTS[command].collapse) {
+          selectStart(TEST_WORD);
+        } else {
+          selectWord(TEST_WORD);
+        }
+        try {
+          editorDoc.execCommand(command, false, APPLY_TESTS[command].opt_arg);
+        } catch (ex) {
+          return UNSUPPORTED;
+        }
+        return getSurroundingTags(APPLY_TESTS[command].wholeline? TEST_CONTENT : TEST_WORD);
+      } catch (ex) {
+        return UNSUPPORTED;
+      }
+    }
+
+    /**
+     * Outputs the result of the apply command to a table.
+     * @return {boolean} success
+     */
+    function outputApplyResult(command, result, styleWithCSS) {
+      // The apply command "succeeded" if HTML was generated.
+      var success = (result != UNSUPPORTED) && result;
+      // Except for styleWithCSS commands, which only succeed if the
+      // expected style was applied.
+      if (styleWithCSS) {
+        success = result && result.toLowerCase().indexOf(APPLY_TESTS[command].styleWithCSS) != -1;
+      }
+      results.push('a-' + command + '-' + (styleWithCSS ? 1 : 0) + '=' + (success ? '1' : '0'));
+
+      // Each command is displayed as a table row with 3 columns
+      var tr = document.createElement('TR');
+      tr.className = success ? 'success' : 'fail';
+
+      // Column 1: command name
+      var td = document.createElement('TD');
+      td.innerHTML = command;
+      tr.appendChild(td);
+
+      // Column 2: styleWithCSS
+      var td = document.createElement('TD');
+      td.innerHTML = styleWithCSS ? 'true' : 'false';
+      tr.appendChild(td);
+
+      // Column 3: pass/fail
+      td = document.createElement('TD');
+      td.innerHTML = success ? 'PASS' : 'FAIL';
+      tr.appendChild(td);
+
+      // Column 4: generated HTML (for passing commands)
+      td = document.createElement('TD');
+      // Escape the HTML in the result for printing.
+      result = result.replace(/\</g, '&lt;').replace(/\>/g, '&gt;');
+      td.innerHTML = result;
+      tr.appendChild(td);
+      var table = document.getElementById('apply_output');
+      table.appendChild(tr);
+      return success;
+    }
+
+    /**
+     * Does the test for an unapply execCommand.
+     */
+    function doUnapplyTest(command, index) {
+      try {
+        var wordStart = TEST_CONTENT.indexOf(TEST_WORD);
+        resetIframe(
+            TEST_CONTENT.substring(0, wordStart) +
+            UNAPPLY_TESTS[command].tags[index][0] +
+            TEST_WORD +
+            UNAPPLY_TESTS[command].tags[index][1] +
+            TEST_CONTENT.substring(wordStart + TEST_WORD.length));
+        selectWord(TEST_WORD);
+        try {
+          editorDoc.execCommand(command, false, UNAPPLY_TESTS[command].opt_arg || null);
+        } catch (ex) {
+          return UNSUPPORTED;
+        }
+        return getSurroundingTags(TEST_WORD);
+      } catch (ex) {
+        return UNSUPPORTED;
+      }
+    }
+
+    /**
+     * Check if the given unapply execCommand succeeded. It succeeded if
+     * the following conditions are true:
+     *   - The execCommand did not throw an exception
+     *   - One of the following:
+     *     - The html was removed after the execCommand
+     *     - The html was block and the html was replaced with <p> or <br>
+     */
+    function unapplyCommandSucceeded(command, result) {
+      if (result != UNSUPPORTED) {
+        if (!result) {
+          return true;
+        } else if (UNAPPLY_TESTS[command].block) {
+          for (var i = 0; i < BLOCK_REMOVE_TAGS.length; i++) {
+            if (result.match(BLOCK_REMOVE_TAGS[i])) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    /**
+     * Outputs the result of the unapply command to a table.
+     * @return {boolean} success
+     */
+    function outputUnapplyResult(command, result, index) {
+      // The apply command "succeeded" if HTML was removed.
+      var success = unapplyCommandSucceeded(command, result);
+      results.push('u-' + command + '-' + index + '=' + (success ? '1' : '0'));
+
+      // Each command is displayed as a table row with 5 columns
+      var tr = document.createElement('TR');
+      tr.className = success ? 'success' : 'fail';
+
+      // Column 1: command name
+      var td = document.createElement('TD');
+      td.innerHTML = command;
+      tr.appendChild(td);
+
+      // Column 2: command name being unapplied
+      var td = document.createElement('TD');
+      td.innerHTML = UNAPPLY_TESTS[command].unapply || command;
+      tr.appendChild(td);
+
+      // Column 3: pass/fail
+      td = document.createElement('TD');
+      td.innerHTML = success ? 'PASS' : 'FAIL';
+      tr.appendChild(td);
+
+      // Column 4: html being removed
+      td = document.createElement('TD');
+      // Escape the html for printing.
+      var htmlToRemove = UNAPPLY_TESTS[command].tags[index][0].replace(/\</g, '&lt;').replace(/\>/g, '&gt;');
+      td.innerHTML = htmlToRemove;
+      tr.appendChild(td);
+
+      // Column 5: resulting html
+      td = document.createElement('TD');
+      // Escape the HTML in the result for printing.
+      result = result.replace(/\</g, '&lt;').replace(/\>/g, '&gt;');
+      td.innerHTML = success ? '&nbsp;' : result;
+      tr.appendChild(td);
+      var table = document.getElementById('unapply_output');
+      table.appendChild(tr);
+      return success;
+    }
+
+    /**
+     * Does a queryCommandState or queryCommandValue test for an execCommand.
+     */
+    function doQueryTest(command, index) {
+      try {
+        resetIframe(QUERY_TESTS[command].tests[index].html);
+        selectWord(TEST_WORD);
+        // Dummy val that won't match any expected vals, including false.
+        var result = UNSUPPORTED;
+        if (QUERY_TESTS[command].type == 'state') {
+          try {
+            result = editorDoc.queryCommandState(command);
+          } catch (ex) {
+            result = UNSUPPORTED;
+          }
+        } else {
+          try {
+            // A return value of false indicates the command is not supported.
+            result = editorDoc.queryCommandValue(command) || UNSUPPORTED;
+          } catch (ex) {
+            result = UNSUPPORTED;
+          }
+        }
+        return result;
+      } catch (ex) {
+        return UNSUPPORTED;
+      }
+    }
+
+    /**
+     * Check if the given queryCommandState or queryCommandValue succeeded.
+     */
+    function queryCommandSucceeded(command, index, result) {
+      var expected = QUERY_TESTS[command].tests[index].expected;
+      if (expected instanceof Color) {
+        return expected.compare(new Color(result));
+      } else if (expected instanceof Size) {
+        return expected.compare(new Size(result));
+      } else {
+        return (result == expected);
+      }
+    }
+
+    /**
+     * @return {boolean} success
+     */
+    function outputQueryResult(command, index, result) {
+      // Create table row for results.
+      var tr = document.createElement('TR');
+      var success = queryCommandSucceeded(command, index, result);
+      tr.className = success ? 'success' : 'fail';
+      results.push('q-' + command + '-' + index + '=' + (success ? '1' : '0'));
+
+      // Column 1: command name
+      var td = document.createElement('TD');
+      td.innerHTML = command;
+      tr.appendChild(td);
+
+      // Column 2: pass/fail
+      td = document.createElement('TD');
+      td.innerHTML = success ? 'PASS' : 'FAIL';
+      tr.appendChild(td);
+
+      // Column 3: test HTML
+      td = document.createElement('TD');
+      var testHtml = QUERY_TESTS[command].tests[index].html.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      td.innerHTML = testHtml.substring(0, testHtml.indexOf(TEST_CONTENT));
+      tr.appendChild(td);
+
+      // Column 4: Expected result
+      td = document.createElement('TD');
+      td.innerHTML = QUERY_TESTS[command].tests[index].expected;
+      tr.appendChild(td);
+
+      // Column 5: Actual result
+      td = document.createElement('TD');
+      td.innerHTML = result;
+      tr.appendChild(td);
+
+      // Append result to the state or value table, depending on what
+      // type of command this is.
+      var table = document.getElementById(
+      QUERY_TESTS[command].type == 'state' ? 'querystate_output' : 'queryvalue_output');
+      table.appendChild(tr);
+      return success;
+    }
+
+    function doChangeTest(command, index) {
+      try {
+        resetIframe(CHANGE_TESTS[command].tests[index].html);
+        selectWord(TEST_CONTENT);
+        try {
+          editorDoc.execCommand(command, false, CHANGE_TESTS[command].tests[index].opt_arg);
+        } catch (ex) {
+          return UNSUPPORTED;
+        }
+      } catch (ex) {
+        return UNSUPPORTED;
+      }
+    }
+
+    function checkChangeSuccess(command, index) {
+      var textNode = findTextNode(TEST_CONTENT, editorDoc.body);
+      if (!textNode) {
+        // The text has been removed from the document, or split up for no reason.
+        return false;
+      }
+      var expected = null, attributeName = null, styleName = null;
+      switch (command) {
+        case 'backcolor':
+        case 'hilitecolor':
+          expected = new Color(CHANGE_TESTS[command].tests[index].opt_arg);
+          styleName = 'backgroundColor';
+          break;
+        case 'fontname':
+          expected = CHANGE_TESTS[command].tests[index].opt_arg;
+          attributeName = 'face';
+          styleName = 'fontFamily';
+          break;
+        case 'fontsize':
+          expected = new Size(CHANGE_TESTS[command].tests[index].opt_arg);
+          attributeName = 'size';
+          styleName = 'fontSize';
+          break;
+        case 'forecolor':
+          expected = new Color(CHANGE_TESTS[command].tests[index].opt_arg);
+          attributeName = 'color';
+          styleName = 'color';
+      }
+      var foundExpected = false;
+
+      // Loop through all the parent nodes that format the text node,
+      // checking that there is exactly one font attribute or
+      // style, and that it's set correctly.
+      var currentNode = textNode.parentNode;
+      while(currentNode && currentNode.nodeName != 'BODY') {
+        // Check font attribute.
+        if (attributeName && currentNode.nodeName == 'FONT' && currentNode.getAttribute(attributeName)) {
+          var foundAttribute = false;
+          switch(command) {
+            case 'backcolor':
+            case 'forecolor':
+            case 'hilitecolor':
+              foundAttribute = new Color(currentNode.getAttribute(attributeName)).compare(expected);
+              break;
+            case 'fontsize':
+              foundAttribute = new Size(currentNode.getAttribute(attributeName)).compare(expected);
+              break;
+            case 'fontname':
+              foundAttribute = (currentNode.getAttribute(attributeName).toLowerCase() == expected.toLowerCase());
+          }
+          if (foundAttribute && foundExpected) {
+            // This is the correct attribute, but the style has been applied
+            // twice. This makes it hard for other browsers to remove the
+            // style.
+            return false;
+          } else if (!foundAttribute) {
+            // This node has an incorrect font attribute.
+            return false;
+          }
+          // The expected font attribute was found.
+          foundExpected = true;
+        }
+        // Check node style.
+        if (currentNode.style[styleName]) {
+          var foundStyle = false;
+          switch(command) {
+            case 'backcolor':
+            case 'forecolor':
+            case 'hilitecolor':
+              foundStyle = new Color(currentNode.style[styleName]).compare(expected);
+              break;
+            case 'fontsize':
+              foundStyle = new Size(currentNode.style[styleName]).compare(expected);
+              break;
+            case 'fontname':
+              foundStyle = (currentNode.style[styleName].toLowerCase() == expected.toLowerCase());
+          }
+          if (foundStyle && foundExpected) {
+            // This is the correct style, but the style has been
+            // applied twice. This makes it hard for other browsers to
+            // remove the style.
+            return false;
+          } else if (!foundStyle) {
+            // This node has an incorrect font style.
+            return false;
+          }
+          foundExpected = true;
+        }
+        currentNode = currentNode.parentNode;
+      }
+      return foundExpected;
+    }
+
+    /**
+     * @return {boolean} success
+     */
+    function outputChangeResult(command, index) {
+      // Each command is displayed as a table row with 4 columns
+      var tr = document.createElement('TR');
+      var success = checkChangeSuccess(command, index);
+      tr.className = success ? 'success' : 'fail';
+      results.push('c-' + command + '-' + index + '=' + (success ? '1' : '0'));
+
+      // Column 1: command name
+      var td = document.createElement('TD');
+      td.innerHTML = command;
+      tr.appendChild(td);
+
+      // Column 2: status
+      td = document.createElement('TD');
+      td.innerHTML = (success == null) ? '?' : (success == true ? 'PASS' : 'FAIL');
+      tr.appendChild(td);
+
+      // Column 3: opt_arg
+      td = document.createElement('TD');
+      td.innerHTML = CHANGE_TESTS[command].tests[index].opt_arg;
+      tr.appendChild(td);
+
+      // Column 4: original html
+      td = document.createElement('TD');
+      td.innerHTML = CHANGE_TESTS[command].tests[index].html.replace(/\</g, '&lt;').replace(/\>/g, '&gt;');;
+      tr.appendChild(td);
+
+      // Column 5: resulting html
+      td = document.createElement('TD');
+      td.innerHTML = editorDoc.body.innerHTML.replace(/\</g, '&lt;').replace(/\>/g, '&gt;');;
+      tr.appendChild(td);
+
+      var table = document.getElementById('change_output');
+      table.appendChild(tr);
+      return success;
+    }
+
+    function runTests() {
+      // Wrap initialization code in a try/catch so we can fail gracefully
+      // on older browsers.
+      try {
+        editorDoc = document.getElementById('editor').contentWindow.document;
+        // Default styleWithCSS to false, since it's not supported by IE.
+        try {
+          editorDoc.execCommand('styleWithCSS', false, false);
+        } catch (ex) {
+          // Not supported by IE.
+        }
+      } catch (ex) {}
+
+      // Apply tests
+      var apply_score = 0;
+      var apply_count = 0;
+      var unapply_score= 0;
+      var unapply_count = 0;
+      var change_score = 0;
+      var change_count = 0;
+      var query_score = 0;
+      var query_count = 0;
+      for (var command in APPLY_TESTS) {
+        try {
+          var result = doApplyTest(command, false);
+          var success = outputApplyResult(command, result, false);
+          apply_score += success ? 1 : 0;
+        } catch (ex) {
+          // An exception is counted as a failed test, don't increment success.
+        }
+        apply_count++;
+        if (APPLY_TESTS[command].styleWithCSS) {
+          try {
+            var result = doApplyTest(command, true);
+            var success = outputApplyResult(command, result, true);
+            apply_score += success ? 1 : 0;
+          } catch (ex) {
+            // An exception is counted as a failed test, don't increment success.
+          }
+          apply_count++;
+        }
+      }
+
+      // Unapply tests
+      for (var command in UNAPPLY_TESTS) {
+        for (var i = 0; i < UNAPPLY_TESTS[command].tags.length; i++) {
+          try {
+            var result = doUnapplyTest(command, i);
+            var success = outputUnapplyResult(command, result, i);
+            unapply_score += success ? 1 : 0;
+          } catch (ex) {
+            // An exception is counted as a failed test, don't increment success.
+          }
+          unapply_count++;
+        }
+      }
+
+      // Query tests
+      for (var command in QUERY_TESTS) {
+        for (var i = 0; i < QUERY_TESTS[command].tests.length; i++) {
+          try {
+            var result = doQueryTest(command, i);
+            var success = outputQueryResult(command, i, result);
+            query_score += success ? 1 : 0;
+          } catch (ex) {
+            // An exception is counted as a failed test, don't increment success.
+          }
+          query_count++;
+        }
+      }
+
+      // Change tests
+      for (var command in CHANGE_TESTS) {
+        for (var i = 0; i < CHANGE_TESTS[command].tests.length; i++) {
+          try {
+            doChangeTest(command, i);
+            var success = outputChangeResult(command, i);
+            change_score += success ? 1 : 0;
+          } catch (ex) {
+            // An exception is counted as a failed test, don't increment success.
+          }
+          change_count++;
+        }
+      }
+
+      // Beacon all test results.
+      // and construct a shorter version for the results page.
+      try {
+        document.getElementById('apply-score').innerHTML =
+            apply_score + '/' + apply_count;
+        document.getElementById('unapply-score').innerHTML =
+            unapply_score + '/' + unapply_count;
+        document.getElementById('query-score').innerHTML =
+            query_score + '/' + query_count;
+        document.getElementById('change-score').innerHTML =
+            change_score + '/' + change_count;
+      } catch (ex) {}
+      var continueParams = [
+        'apply=' + apply_score,
+        'unapply=' + unapply_score,
+        'query=' + query_score,
+        'change=' + change_score
+      ];
+      parent.sendScore(results, continueParams);
+    }
+  </script>
+  <style>
+    .success {
+      background-color: #93c47d;
+    }
+    .fail {
+      background-color: #ea9999;
+    }
+    .score {
+      color: #666;
+    }
+  </style>
+</head>
+<body onload="runTests()">
+  <h1>Apply Formatting <span id="apply-score" class="score"></span></h1>
+  <table id="apply"><tbody id="apply_output"><tr><th>Command</th><th>styleWithCSS</th><th>Status</th><th>Output</th></tr></tbody></table>
+  <h1>Unapply Formatting <span id="unapply-score" class="score"></span></h1>
+  <table id="unapply">
+    <thead><tr><th>Command</th><th>Command unapplied</th><th>Status</th><th>HTML Attempted to Unapply</th><th>Resulting HTML</th></tr></thead>
+    <tbody id="unapply_output"></tbody></table>
+  <h1>Query Formatting State <span id="query-score" class="score"></span></h1>
+  <table id="querystate">
+    <thead><tr><th>Command</th><th>Status</th><th>HTML</th><th>Expected</th><th>Actual</th></tr></thead>
+    <tbody id="querystate_output"></tbody></table>
+  <h1>Query Formatting Value </h1>
+  <table id="queryvalue">
+    <thead><tr><th>Command</th><th>Status</th><th>HTML</th><th>Expected</th><th>Actual</th></tr></thead>
+    <tbody id="queryvalue_output"></tbody></table>
+  <h1>Change Formatting <span id="change-score" class="score"></span></h1>
+  <table id="change">
+    <thead><tr><th>Command</th><th>Status</th><th>Argument</th><th>Original HTML</th><th>Resulting HTML</th></tr></thead>
+    <tbody id="change_output"></tbody></table>
+  <iframe name="editor" id="editor" src="editable.html"></iframe>
+</body>
+</html>

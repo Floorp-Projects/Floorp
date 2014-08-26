@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:ANIMALS="http://www.some-fictitious-zoo.com/rdf#">
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/arachnids">
+     <ANIMALS:name>Arachnids</ANIMALS:name>
+   </ANIMALS:Class>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/arachnids/tarantula">
+         <ANIMALS:name>Tarantula</ANIMALS:name>
+       </RDF:Description>
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/birds">
+     <ANIMALS:name>Birds</ANIMALS:name>
+   </ANIMALS:Class>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/birds/emu">
+         <ANIMALS:name>Emu</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/birds/barnowl">
+         <ANIMALS:name>Barn Owl</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/birds/raven">
+         <ANIMALS:name>Raven</ANIMALS:name>
+       </RDF:Description>
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/crustaceans">
+     <ANIMALS:name>Crustaceans</ANIMALS:name>
+   </ANIMALS:Class>
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/fish">
+     <ANIMALS:name>Fish</ANIMALS:name>
+   </ANIMALS:Class>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/fish/cod">
+         <ANIMALS:name>Cod</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/fish/swordfish">
+         <ANIMALS:name>Swordfish</ANIMALS:name>
+       </RDF:Description>
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/mammals">
+     <ANIMALS:name>Mammals</ANIMALS:name>
+   </ANIMALS:Class>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/lion">
+         <ANIMALS:name>Lion</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/hippopotamus">
+         <ANIMALS:name>HIPPOPOTAMUS</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/africanelephant">
+         <ANIMALS:name>African Elephant</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/llama">
+         <ANIMALS:name>LLAMA</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/polarbear">
+         <ANIMALS:name>Polar Bear</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/aardvark">
+         <ANIMALS:name>aardvark</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo">
+         <ANIMALS:name>Nine-banded Armadillo</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/gorilla">
+         <ANIMALS:name>Gorilla</ANIMALS:name>
+       </RDF:Description>
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/reptiles">
+     <ANIMALS:name>Reptiles</ANIMALS:name>
+   </ANIMALS:Class>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/reptiles/anaconda">
+         <ANIMALS:name>Anaconda</ANIMALS:name>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/reptiles/chameleon">
+         <ANIMALS:name>Chameleon</ANIMALS:name>
+       </RDF:Description>
+
+  <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/some-animals" ANIMALS:name="Zoo Animals">
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/arachnids"/>
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/birds"/>
+  </RDF:Seq>
+
+  <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/all-animals" ANIMALS:name="Zoo Animals">
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/arachnids">
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/arachnids/tarantula"/>
+      </RDF:Seq>
+    </RDF:li>
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/birds">
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/birds/emu"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/birds/barnowl"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/birds/raven"/>
+      </RDF:Seq>
+    </RDF:li>
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/crustaceans"/>
+    </RDF:li>
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/fish">
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/fish/cod"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/fish/swordfish"/>
+      </RDF:Seq>
+    </RDF:li>
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/mammals">
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/lion"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/hippopotamus"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/africanelephant"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/llama"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/polarbear"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/aardvark"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/gorilla"/>
+      </RDF:Seq>
+    </RDF:li>
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/reptiles">
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/reptiles/anaconda"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/reptiles/chameleon"/>
+      </RDF:Seq>
+    </RDF:li>
+  </RDF:Seq>
+
+</RDF:RDF>

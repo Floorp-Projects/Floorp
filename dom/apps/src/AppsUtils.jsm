@@ -57,6 +57,10 @@ mozIApplication.prototype = {
     return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
   },
 
+  hasWidgetPage: function(aPageURL) {
+    return this.widgetPages.indexOf(aPageURL) != -1;
+  },
+
   QueryInterface: function(aIID) {
     if (aIID.equals(Ci.mozIApplication) ||
         aIID.equals(Ci.nsISupports))
@@ -100,6 +104,7 @@ function _setAppProperties(aObj, aApp) {
   aObj.storeVersion = aApp.storeVersion || 0;
   aObj.role = aApp.role || "";
   aObj.redirects = aApp.redirects;
+  aObj.widgetPages = aApp.widgetPages || [];
   aObj.kind = aApp.kind;
 }
 
@@ -676,6 +681,10 @@ ManifestHelper.prototype = {
 
   get package_path() {
     return this._localeProp("package_path");
+  },
+
+  get widgetPages() {
+    return this._localeProp("widgetPages");
   },
 
   get size() {

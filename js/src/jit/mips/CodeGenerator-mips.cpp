@@ -88,7 +88,7 @@ CodeGeneratorMIPS::branchToBlock(Assembler::FloatFormat fmt, FloatRegister lhs, 
         else
             masm.ma_bc1s(lhs, rhs, &skip, Assembler::InvertCondition(cond), ShortJump);
 
-        backedge = masm.jumpWithPatch(&rejoin);
+        backedge = masm.backedgeJump(&rejoin);
         masm.bind(&rejoin);
         masm.bind(&skip);
 
@@ -197,8 +197,9 @@ CodeGeneratorMIPS::bailoutFrom(Label *label, LSnapshot *snapshot)
                   frameClass_.frameSize() == masm.framePushed());
 
     // We don't use table bailouts because retargeting is easier this way.
+    InlineScriptTree *tree = snapshot->mir()->block()->trackedTree();
     OutOfLineBailout *ool = new(alloc()) OutOfLineBailout(snapshot, masm.framePushed());
-    if (!addOutOfLineCode(ool)) {
+    if (!addOutOfLineCode(ool, BytecodeSite(tree, tree->script()->code()))) {
         return false;
     }
 
@@ -821,7 +822,7 @@ CodeGeneratorMIPS::visitBitOpI(LBitOpI *ins)
             masm.ma_and(ToRegister(dest), ToRegister(lhs), ToRegister(rhs));
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected binary opcode");
+        MOZ_CRASH("unexpected binary opcode");
     }
 
     return true;
@@ -862,7 +863,7 @@ CodeGeneratorMIPS::visitShiftI(LShiftI *ins)
             }
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected shift op");
+            MOZ_CRASH("Unexpected shift op");
         }
     } else {
         // The shift amounts should be AND'ed into the 0-31 range
@@ -884,7 +885,7 @@ CodeGeneratorMIPS::visitShiftI(LShiftI *ins)
             }
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected shift op");
+            MOZ_CRASH("Unexpected shift op");
         }
     }
 
@@ -1018,7 +1019,7 @@ CodeGeneratorMIPS::emitTableSwitchDispatch(MTableSwitch *mir, Register index,
     // generate the case entries (we don't yet know their offsets in the
     // instruction stream).
     OutOfLineTableSwitch *ool = new(alloc()) OutOfLineTableSwitch(mir);
-    if (!addOutOfLineCode(ool))
+    if (!addOutOfLineCode(ool, mir))
         return false;
 
     // Compute the position where a pointer to the right case stands.
@@ -1051,7 +1052,7 @@ CodeGeneratorMIPS::visitMathD(LMathD *math)
         masm.as_divd(ToFloatRegister(output), ToFloatRegister(src1), ToFloatRegister(src2));
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected opcode");
+        MOZ_CRASH("unexpected opcode");
     }
     return true;
 }
@@ -1077,7 +1078,7 @@ CodeGeneratorMIPS::visitMathF(LMathF *math)
         masm.as_divs(ToFloatRegister(output), ToFloatRegister(src1), ToFloatRegister(src2));
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected opcode");
+        MOZ_CRASH("unexpected opcode");
     }
     return true;
 }
@@ -1869,13 +1870,13 @@ DispatchIonCache::initializeAddCacheState(LInstruction *ins, AddCacheState *addS
 bool
 CodeGeneratorMIPS::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins)
 {
-    MOZ_ASSUME_UNREACHABLE("NYI");
+    MOZ_CRASH("NYI");
 }
 
 bool
 CodeGeneratorMIPS::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins)
 {
-    MOZ_ASSUME_UNREACHABLE("NYI");
+    MOZ_CRASH("NYI");
 }
 
 bool
@@ -1897,7 +1898,7 @@ CodeGeneratorMIPS::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
       case ArrayBufferView::TYPE_UINT32:  isSigned = false; size = 32; break;
       case ArrayBufferView::TYPE_FLOAT64: isFloat  = true;  size = 64; break;
       case ArrayBufferView::TYPE_FLOAT32: isFloat  = true;  size = 32; break;
-      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
+      default: MOZ_CRASH("unexpected array type");
     }
 
     if (ptr->isConstant()) {
@@ -1953,9 +1954,9 @@ CodeGeneratorMIPS::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     // Offset is out of range. Load default values.
     if (isFloat) {
         if (size == 32)
-            masm.convertDoubleToFloat32(NANReg, ToFloatRegister(out));
+            masm.loadFloat32(Address(GlobalReg, AsmJSNaN32GlobalDataOffset), ToFloatRegister(out));
         else
-            masm.moveDouble(NANReg, ToFloatRegister(out));
+            masm.loadDouble(Address(GlobalReg, AsmJSNaN64GlobalDataOffset), ToFloatRegister(out));
     } else {
         masm.move32(Imm32(0), ToRegister(out));
     }
@@ -1984,7 +1985,7 @@ CodeGeneratorMIPS::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
       case ArrayBufferView::TYPE_UINT32:  isSigned = false; size = 32; break;
       case ArrayBufferView::TYPE_FLOAT64: isFloat  = true;  size = 64; break;
       case ArrayBufferView::TYPE_FLOAT32: isFloat  = true;  size = 32; break;
-      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
+      default: MOZ_CRASH("unexpected array type");
     }
 
     if (ptr->isConstant()) {
@@ -2228,11 +2229,11 @@ CodeGeneratorMIPS::visitNegF(LNegF *ins)
 bool
 CodeGeneratorMIPS::visitForkJoinGetSlice(LForkJoinGetSlice *ins)
 {
-    MOZ_ASSUME_UNREACHABLE("NYI");
+    MOZ_CRASH("NYI");
 }
 
 JitCode *
 JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
 {
-    MOZ_ASSUME_UNREACHABLE("NYI");
+    MOZ_CRASH("NYI");
 }

@@ -35,3 +35,6 @@ interface AnalyserNode : AudioNode {
 
 };
 
+// Mozilla extension
+AnalyserNode implements AudioNodePassThrough;
+

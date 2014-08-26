@@ -62,6 +62,7 @@ public:
     static int16_t GetScreenOrientationWrapper();
     static bool GetShowPasswordSetting();
     static jintArray GetSystemColoursWrapper();
+    static jstring GetUserRestrictions();
     static void HandleGeckoMessageWrapper(jobject a0);
     static void HandleUncaughtException(jobject a0, jthrowable a1);
     static void HideProgressDialog();
@@ -69,6 +70,7 @@ public:
     static bool IsNetworkLinkKnown();
     static bool IsNetworkLinkUp();
     static bool IsTablet();
+    static bool IsUserRestricted();
     static void KillAnyZombies();
     static jclass LoadPluginClass(const nsAString& a0, const nsAString& a1);
     static void LockScreenOrientation(int32_t a0);
@@ -148,6 +150,7 @@ protected:
     static jmethodID jGetScreenOrientationWrapper;
     static jmethodID jGetShowPasswordSetting;
     static jmethodID jGetSystemColoursWrapper;
+    static jmethodID jGetUserRestrictions;
     static jmethodID jHandleGeckoMessageWrapper;
     static jmethodID jHandleUncaughtException;
     static jmethodID jHideProgressDialog;
@@ -155,6 +158,7 @@ protected:
     static jmethodID jIsNetworkLinkKnown;
     static jmethodID jIsNetworkLinkUp;
     static jmethodID jIsTablet;
+    static jmethodID jIsUserRestricted;
     static jmethodID jKillAnyZombies;
     static jmethodID jLoadPluginClass;
     static jmethodID jLockScreenOrientation;
@@ -313,7 +317,7 @@ public:
     void ActivateProgram();
     void ContentDocumentChanged();
     jobject CreateFrame();
-    void DeactivateProgram();
+    void DeactivateProgramAndRestoreState(bool a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4);
     jobject GetDisplayPort(bool a0, bool a1, int32_t a2, jobject a3);
     bool IsContentDocumentDisplayed();
     jobject ProgressiveUpdateCallback(bool a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, bool a6);
@@ -327,7 +331,7 @@ protected:
     static jmethodID jActivateProgram;
     static jmethodID jContentDocumentChanged;
     static jmethodID jCreateFrame;
-    static jmethodID jDeactivateProgram;
+    static jmethodID jDeactivateProgramAndRestoreState;
     static jmethodID jGetDisplayPort;
     static jmethodID jIsContentDocumentDisplayed;
     static jmethodID jProgressiveUpdateCallback;

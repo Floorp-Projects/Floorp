@@ -63,10 +63,12 @@ browser.jar:
   skin/classic/browser/menuPanel-help@2x.png
   skin/classic/browser/menuPanel-small.png
   skin/classic/browser/menuPanel-small@2x.png
-  skin/classic/browser/mixed-content-blocked-16.png
-  skin/classic/browser/mixed-content-blocked-16@2x.png
-  skin/classic/browser/mixed-content-blocked-64.png
-  skin/classic/browser/mixed-content-blocked-64@2x.png
+  skin/classic/browser/bad-content-blocked-16.png
+  skin/classic/browser/bad-content-blocked-16@2x.png
+  skin/classic/browser/bad-content-blocked-64.png
+  skin/classic/browser/bad-content-blocked-64@2x.png
+  skin/classic/browser/bad-content-unblocked-16.png
+  skin/classic/browser/bad-content-unblocked-16@2x.png
   skin/classic/browser/panel-expander-closed.png
   skin/classic/browser/panel-expander-closed@2x.png
   skin/classic/browser/panel-expander-open.png
@@ -192,8 +194,6 @@ browser.jar:
   skin/classic/browser/feeds/audioFeedIcon.png              (feeds/feedIcon.png)
   skin/classic/browser/feeds/audioFeedIcon16.png            (feeds/feedIcon16.png)
 * skin/classic/browser/newtab/newTab.css                    (newtab/newTab.css)
-  skin/classic/browser/newtab/controls.png                  (../shared/newtab/controls.png)
-  skin/classic/browser/newtab/controls@2x.png               (../shared/newtab/controls@2x.png)
   skin/classic/browser/newtab/controls.svg                  (../shared/newtab/controls.svg)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png

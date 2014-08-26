@@ -16,8 +16,8 @@
 #include "prlog.h"
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* GetDemuxerLog();
-#define LOG(...) PR_LOG(GetDemuxerLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+PRLogModuleInfo* GetAppleMediaLog();
+#define LOG(...) PR_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))
 #else
 #define LOG(...)
 #endif
@@ -32,9 +32,10 @@ AppleATDecoder::AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
   , mCallback(aCallback)
   , mConverter(nullptr)
   , mStream(nullptr)
-  , mCurrentAudioFrame(0)
+  , mCurrentAudioTimestamp(0)
   , mSamplePosition(0)
   , mHaveOutput(false)
+  , mFlushed(false)
 {
   MOZ_COUNT_CTOR(AppleATDecoder);
   LOG("Creating Apple AudioToolbox Audio decoder");
@@ -55,7 +56,7 @@ AppleATDecoder::AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
 
 AppleATDecoder::~AppleATDecoder()
 {
-  MOZ_COUNT_DTOR(AppleATDecoer);
+  MOZ_COUNT_DTOR(AppleATDecoder);
   MOZ_ASSERT(!mConverter);
   MOZ_ASSERT(!mStream);
 }
@@ -129,11 +130,15 @@ nsresult
 AppleATDecoder::Flush()
 {
   LOG("Flushing AudioToolbox AAC decoder");
+  mTaskQueue->Flush();
   OSStatus rv = AudioConverterReset(mConverter);
   if (rv) {
     LOG("Error %d resetting AudioConverter", rv);
     return NS_ERROR_FAILURE;
   }
+  // Notify our task queue of the coming input discontinuity.
+  mTaskQueue->Dispatch(
+      NS_NewRunnableMethod(this, &AppleATDecoder::SignalFlush));
   return NS_OK;
 }
 
@@ -285,7 +290,7 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
     const int rate = mOutputFormat.mSampleRate;
     const int channels = mOutputFormat.mChannelsPerFrame;
 
-    int64_t time = FramesToUsecs(mCurrentAudioFrame, rate).value();
+    int64_t time = mCurrentAudioTimestamp;
     int64_t duration = FramesToUsecs(numFrames, rate).value();
 
     LOG("pushed audio at time %lfs; duration %lfs\n",
@@ -297,8 +302,6 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
                                      channels, rate);
     mCallback->Output(audio);
     mHaveOutput = true;
-
-    mCurrentAudioFrame += numFrames;
 
     if (rv == kNeedMoreData) {
       // No error; we just need more data.
@@ -353,10 +356,12 @@ void
 AppleATDecoder::SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample)
 {
   mSamplePosition = aSample->byte_offset;
+  mCurrentAudioTimestamp = aSample->composition_timestamp;
+  uint32_t flags = mFlushed ? kAudioFileStreamParseFlag_Discontinuity : 0;
   OSStatus rv = AudioFileStreamParseBytes(mStream,
                                           aSample->size,
                                           aSample->data,
-                                          0);
+                                          flags);
   if (rv != noErr) {
     LOG("Error %d parsing audio data", rv);
     mCallback->Error();
@@ -368,6 +373,12 @@ AppleATDecoder::SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample)
   if (!mHaveOutput) {
     mCallback->InputExhausted();
   }
+}
+
+void
+AppleATDecoder::SignalFlush()
+{
+  mFlushed = true;
 }
 
 } // namespace mozilla

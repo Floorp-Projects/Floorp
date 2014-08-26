@@ -16,24 +16,31 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    var p = navigator.serviceWorker.register("worker.js", { scope: "./*" });
+    var p = navigator.serviceWorker.register("worker.js", { scope: "./" });
     return p;
   }
 
-  function nextRegister() {
-    var p = navigator.serviceWorker.register("install_event_worker.js", { scope: "./*" });
+  function nextRegister(reg) {
+    var p = navigator.serviceWorker.register("install_event_worker.js", { scope: "./" });
 
     return new Promise(function(resolve, reject) {
-      navigator.serviceWorker.onupdatefound = function(e) {
+      reg.onupdatefound = function(e) {
         ok(true, "Received onupdatefound");
         resolve();
       };
     });
   }
 
+  function unregister() {
+    return navigator.serviceWorker.getRegistration("./").then(function(reg) {
+      return reg.unregister();
+    });
+  }
+
   function runTest() {
     simpleRegister()
       .then(nextRegister)
+      .then(unregister)
       .then(function() {
         SimpleTest.finish();
       }).catch(function(e) {

@@ -33,17 +33,15 @@ def build_xpi(template_root_dir, manifest, xpi_path,
 
     zf = zipfile.ZipFile(xpi_path, "w", zipfile.ZIP_DEFLATED)
 
-    open('.install.rdf', 'w').write(str(manifest))
-    zf.write('.install.rdf', 'install.rdf')
-    os.remove('.install.rdf')
+    zf.writestr('install.rdf', str(manifest))
 
     # Handle add-on icon
     if 'icon' in harness_options:
-        zf.write(str(harness_options['icon']), 'icon.png')
+        zf.write(os.path.join(str(harness_options['icon'])), 'icon.png')
         del harness_options['icon']
 
     if 'icon64' in harness_options:
-        zf.write(str(harness_options['icon64']), 'icon64.png')
+        zf.write(os.path.join(str(harness_options['icon64'])), 'icon64.png')
         del harness_options['icon64']
 
     # chrome.manifest
@@ -161,9 +159,7 @@ def build_xpi(template_root_dir, manifest, xpi_path,
         harness_options[key] = value
 
     # Write harness-options.json
-    open('.options.json', 'w').write(json.dumps(harness_options, indent=1,
-                                                sort_keys=True))
-    zf.write('.options.json', 'harness-options.json')
-    os.remove('.options.json')
+    zf.writestr('harness-options.json', json.dumps(harness_options, indent=1,
+                                                   sort_keys=True))
 
     zf.close()

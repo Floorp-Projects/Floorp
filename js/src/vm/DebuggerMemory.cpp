@@ -8,6 +8,9 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
+#include "mozilla/Vector.h"
+
+#include <stdlib.h>
 
 #include "jscompartment.h"
 
@@ -195,7 +198,7 @@ DebuggerMemory::drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp)
 
     for (size_t i = 0; i < length; i++) {
         Debugger::AllocationSite *allocSite = dbg->allocationsLog.popFirst();
-        result->setDenseElement(i, ObjectValue(*allocSite->frame));
+        result->setDenseElement(i, ObjectOrNullValue(allocSite->frame));
         js_delete(allocSite);
     }
 
@@ -280,6 +283,9 @@ struct Census {
 //   bool count(Census &census, const Node &node);
 //      Categorize and count |node| as appropriate for this kind of assorter.
 //
+//   size_t total() const;
+//      Return the number of times 'count' has been called.
+//
 //   bool report(Census &census, MutableHandleValue report);
 //      Construct a JavaScript object reporting the counts this assorter has
 //      seen, and store it in |report|.
@@ -289,23 +295,25 @@ struct Census {
 
 // The simplest assorter: count everything, and return a tally form.
 class Tally {
-    size_t counter;
+    size_t total_;
 
   public:
-    Tally(Census &census) : counter(0) { }
-    Tally(Tally &&rhs) : counter(rhs.counter) { }
-    Tally &operator=(Tally &&rhs) { counter = rhs.counter; return *this; }
+    Tally(Census &census) : total_(0) { }
+    Tally(Tally &&rhs) : total_(rhs.total_) { }
+    Tally &operator=(Tally &&rhs) { total_ = rhs.total_; return *this; }
 
     bool init(Census &census) { return true; }
 
     bool count(Census &census, const Node &node) {
-        counter++;
+        total_++;
         return true;
     }
 
+    size_t total() const { return total_; }
+
     bool report(Census &census, MutableHandleValue report) {
         RootedObject obj(census.cx, NewBuiltinClassInstance(census.cx, &JSObject::class_));
-        RootedValue countValue(census.cx, NumberValue(counter));
+        RootedValue countValue(census.cx, NumberValue(total_));
         if (!obj ||
             !JSObject::defineProperty(census.cx, obj, census.cx->names().count, countValue))
         {
@@ -327,6 +335,7 @@ template<typename EachObject = Tally,
          typename EachString = Tally,
          typename EachOther  = Tally>
 class ByJSType {
+    size_t total_;
     EachObject objects;
     EachScript scripts;
     EachString strings;
@@ -334,13 +343,15 @@ class ByJSType {
 
   public:
     ByJSType(Census &census)
-      : objects(census),
+      : total_(0),
+        objects(census),
         scripts(census),
         strings(census),
         other(census)
     { }
     ByJSType(ByJSType &&rhs)
-      : objects(Move(rhs.objects)),
+      : total_(rhs.total_),
+        objects(Move(rhs.objects)),
         scripts(move(rhs.scripts)),
         strings(move(rhs.strings)),
         other(move(rhs.other))
@@ -360,6 +371,7 @@ class ByJSType {
     }
 
     bool count(Census &census, const Node &node) {
+        total_++;
         if (node.is<JSObject>())
             return objects.count(census, node);
          if (node.is<JSScript>() || node.is<LazyScript>() || node.is<jit::JitCode>())
@@ -401,7 +413,6 @@ class ByJSType {
     }
 };
 
-
 // An assorter that categorizes nodes that are JSObjects by their class, and
 // places all other nodes in an 'other' category. The template arguments must be
 // assorter types; each JSObject class gets an EachClass assorter, and the
@@ -409,6 +420,8 @@ class ByJSType {
 template<typename EachClass = Tally,
          typename EachOther = Tally>
 class ByObjectClass {
+    size_t total_;
+
     // A hash policy that compares js::Classes by name.
     struct HashPolicy {
         typedef const js::Class *Lookup;
@@ -424,12 +437,29 @@ class ByObjectClass {
     // six named "Object"), you will get several different Classes being counted
     // in the same table entry.
     typedef HashMap<const js::Class *, EachClass, HashPolicy, SystemAllocPolicy> Table;
+    typedef typename Table::Entry Entry;
     Table table;
     EachOther other;
 
+    static int compareEntries(const void *lhsVoid, const void *rhsVoid) {
+        size_t lhs = (*static_cast<const Entry * const *>(lhsVoid))->value().total();
+        size_t rhs = (*static_cast<const Entry * const *>(rhsVoid))->value().total();
+
+        // qsort sorts in "ascending" order, so we should describe entries with
+        // smaller counts as being "greater than" entries with larger counts. We
+        // don't want to just subtract the counts, as they're unsigned.
+        if (lhs < rhs)
+            return 1;
+        if (lhs > rhs)
+            return -1;
+        return 0;
+    }
+
   public:
-    ByObjectClass(Census &census) : other(census) { }
-    ByObjectClass(ByObjectClass &&rhs) : table(Move(rhs.table)), other(Move(rhs.other)) { }
+    ByObjectClass(Census &census) : total_(0), other(census) { }
+    ByObjectClass(ByObjectClass &&rhs)
+      : total_(rhs.total_), table(Move(rhs.table)), other(Move(rhs.other))
+    { }
     ByObjectClass &operator=(ByObjectClass &&rhs) {
         MOZ_ASSERT(&rhs != this);
         this->~ByObjectClass();
@@ -440,6 +470,7 @@ class ByObjectClass {
     bool init(Census &census) { return table.init() && other.init(census); }
 
     bool count(Census &census, const Node &node) {
+        total_++;
         if (!node.is<JSObject>())
             return other.count(census, node);
 
@@ -454,20 +485,33 @@ class ByObjectClass {
         return p->value().count(census, node);
     }
 
+    size_t total() const { return total_; }
+
     bool report(Census &census, MutableHandleValue report) {
         JSContext *cx = census.cx;
 
+        // Build a vector of pointers to entries; sort by total; and then use
+        // that to build the result object. This makes the ordering of entries
+        // more interesting, and a little less non-deterministic.
+        mozilla::Vector<Entry *> entries;
+        if (!entries.reserve(table.count()))
+            return false;
+        for (typename Table::Range r = table.all(); !r.empty(); r.popFront())
+            entries.infallibleAppend(&r.front());
+        qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries);
+
+        // Now build the result by iterating over the sorted vector.
         RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
         if (!obj)
             return false;
-
-        for (typename Table::Range r = table.all(); !r.empty(); r.popFront()) {
-            EachClass &entry = r.front().value();
-            RootedValue entryReport(cx);
-            if (!entry.report(census, &entryReport))
+        for (Entry **entryPtr = entries.begin(); entryPtr < entries.end(); entryPtr++) {
+            Entry &entry = **entryPtr;
+            EachClass &assorter = entry.value();
+            RootedValue assorterReport(cx);
+            if (!assorter.report(census, &assorterReport))
                 return false;
 
-            const char *name = r.front().key()->name;
+            const char *name = entry.key()->name;
             MOZ_ASSERT(name);
             JSAtom *atom = Atomize(census.cx, name, strlen(name));
             if (!atom)
@@ -488,7 +532,7 @@ class ByObjectClass {
             }
 #endif
 
-            if (!JSObject::defineGeneric(cx, obj, entryId, entryReport))
+            if (!JSObject::defineGeneric(cx, obj, entryId, assorterReport))
                 return false;
         }
 
@@ -501,15 +545,18 @@ class ByObjectClass {
 // An assorter that categorizes nodes by their ubi::Node::typeName.
 template<typename EachType = Tally>
 class ByUbinodeType {
+    size_t total_;
+
     // Note that, because ubi::Node::typeName promises to return a specific
     // pointer, not just any string whose contents are correct, we can use their
     // addresses as hash table keys.
     typedef HashMap<const jschar *, EachType, DefaultHasher<const jschar *>, SystemAllocPolicy> Table;
+    typedef typename Table::Entry Entry;
     Table table;
 
   public:
-    ByUbinodeType(Census &census) { }
-    ByUbinodeType(ByUbinodeType &&rhs) : table(Move(rhs.table)) { }
+    ByUbinodeType(Census &census) : total_(0) { }
+    ByUbinodeType(ByUbinodeType &&rhs) : total_(rhs.total_), table(Move(rhs.table)) { }
     ByUbinodeType &operator=(ByUbinodeType &&rhs) {
         MOZ_ASSERT(&rhs != this);
         this->~ByUbinodeType();
@@ -520,6 +567,7 @@ class ByUbinodeType {
     bool init(Census &census) { return table.init(); }
 
     bool count(Census &census, const Node &node) {
+        total_++;
         const jschar *key = node.typeName();
         typename Table::AddPtr p = table.lookupForAdd(key);
         if (!p) {
@@ -531,27 +579,54 @@ class ByUbinodeType {
         return p->value().count(census, node);
     }
 
+    size_t total() const { return total_; }
+
+    static int compareEntries(const void *lhsVoid, const void *rhsVoid) {
+        size_t lhs = (*static_cast<const Entry * const *>(lhsVoid))->value().total();
+        size_t rhs = (*static_cast<const Entry * const *>(rhsVoid))->value().total();
+
+        // qsort sorts in "ascending" order, so we should describe entries with
+        // smaller counts as being "greater than" entries with larger counts. We
+        // don't want to just subtract the counts, as they're unsigned.
+        if (lhs < rhs)
+            return 1;
+        if (lhs > rhs)
+            return -1;
+        return 0;
+    }
+
     bool report(Census &census, MutableHandleValue report) {
         JSContext *cx = census.cx;
 
+        // Build a vector of pointers to entries; sort by total; and then use
+        // that to build the result object. This makes the ordering of entries
+        // more interesting, and a little less non-deterministic.
+        mozilla::Vector<Entry *> entries;
+        if (!entries.reserve(table.count()))
+            return false;
+        for (typename Table::Range r = table.all(); !r.empty(); r.popFront())
+            entries.infallibleAppend(&r.front());
+        qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries);
+
+        // Now build the result by iterating over the sorted vector.
         RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
         if (!obj)
             return false;
-
-        for (typename Table::Range r = table.all(); !r.empty(); r.popFront()) {
-            EachType &entry = r.front().value();
-            RootedValue entryReport(cx);
-            if (!entry.report(census, &entryReport))
+        for (Entry **entryPtr = entries.begin(); entryPtr < entries.end(); entryPtr++) {
+            Entry &entry = **entryPtr;
+            EachType &assorter = entry.value();
+            RootedValue assorterReport(cx);
+            if (!assorter.report(census, &assorterReport))
                 return false;
 
-            const jschar *name = r.front().key();
+            const jschar *name = entry.key();
             MOZ_ASSERT(name);
             JSAtom *atom = AtomizeChars(cx, name, js_strlen(name));
             if (!atom)
                 return false;
             RootedId entryId(cx, AtomToId(atom));
 
-            if (!JSObject::defineGeneric(cx, obj, entryId, entryReport))
+            if (!JSObject::defineGeneric(cx, obj, entryId, assorterReport))
                 return false;
         }
 

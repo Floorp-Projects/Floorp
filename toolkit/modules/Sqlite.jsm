@@ -731,16 +731,17 @@ function openConnection(options) {
 
   log.info("Opening database: " + path + " (" + identifier + ")");
   let deferred = Promise.defer();
-  let options = null;
+  let dbOptions = null;
   if (!sharedMemoryCache) {
-    options = Cc["@mozilla.org/hash-property-bag;1"].
+    dbOptions = Cc["@mozilla.org/hash-property-bag;1"].
       createInstance(Ci.nsIWritablePropertyBag);
-    options.setProperty("shared", false);
+    dbOptions.setProperty("shared", false);
   }
-  Services.storage.openAsyncDatabase(file, options, function(status, connection) {
+  Services.storage.openAsyncDatabase(file, dbOptions, function(status, connection) {
     if (!connection) {
       log.warn("Could not open connection: " + status);
       deferred.reject(new Error("Could not open connection: " + status));
+      return;
     }
     log.info("Connection opened");
     try {

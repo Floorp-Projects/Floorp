@@ -83,6 +83,25 @@ public:
 
   virtual nsresult GetMargin(nsMargin& aMargin) MOZ_OVERRIDE;
 
+  /**
+   * The following three methods set the value of mIncrement when a
+   * scrollbar button is pressed.
+   */
+  void SetIncrementToLine(int32_t aDirection);
+  void SetIncrementToPage(int32_t aDirection);
+  void SetIncrementToWhole(int32_t aDirection);
+  /**
+   * MoveToNewPosition() adds mIncrement to the current position and
+   * updates the curpos attribute.
+   * @note This method might destroy the frame, pres shell, and other objects.
+   */
+  int32_t MoveToNewPosition();
+  int32_t GetIncrement() { return mIncrement; }
+
+protected:
+  int32_t mIncrement; // Amount to scroll, in CSSPixels
+  bool mSmoothScroll;
+
 private:
   nsCOMPtr<nsIContent> mScrollbarMediator;
 }; // class nsScrollbarFrame

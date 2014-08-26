@@ -111,6 +111,23 @@ JSObject2WrappedJSMap::ShutdownMarker()
     }
 }
 
+size_t
+JSObject2WrappedJSMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    size_t n = mallocSizeOf(this);
+    n += mTable.sizeOfExcludingThis(mallocSizeOf);
+    return n;
+}
+
+size_t
+JSObject2WrappedJSMap::SizeOfWrappedJS(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    size_t n = 0;
+    for (Map::Range r = mTable.all(); !r.empty(); r.popFront())
+        n += r.front().value()->SizeOfIncludingThis(mallocSizeOf);
+    return n;
+}
+
 /***************************************************************************/
 // implement Native2WrappedNativeMap...
 
@@ -375,10 +392,10 @@ NativeSetMap::Entry::Match(PLDHashTable *table,
         // it would end up really being a set with two interfaces (except for
         // the case where the one interface happened to be nsISupports).
 
-        return ((SetInTable->GetInterfaceCount() == 1 &&
-                 SetInTable->GetInterfaceAt(0) == Addition) ||
-                (SetInTable->GetInterfaceCount() == 2 &&
-                 SetInTable->GetInterfaceAt(1) == Addition));
+        return (SetInTable->GetInterfaceCount() == 1 &&
+                SetInTable->GetInterfaceAt(0) == Addition) ||
+               (SetInTable->GetInterfaceCount() == 2 &&
+                SetInTable->GetInterfaceAt(1) == Addition);
     }
 
     if (!Addition && Set == SetInTable)

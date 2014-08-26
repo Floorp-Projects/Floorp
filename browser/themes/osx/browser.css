@@ -1313,11 +1313,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     width: 16px;
   }
 
-  #add-share-provider {
-    list-style-image: url(chrome://browser/skin/menuPanel-small@2x.png);
-    -moz-image-region: rect(0px, 192px, 32px, 160px);
-  }
-
   #loop-call-button > .toolbarbutton-badge-container {
     list-style-image: url("chrome://browser/skin/loop/toolbar@2x.png");
     -moz-image-region: rect(0, 36px, 36px, 0);
@@ -3563,12 +3558,21 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
-#mixed-content-blocked-notification-icon {
-  list-style-image: url(chrome://browser/skin/mixed-content-blocked-16.png);
+#bad-content-blocked-notification-icon {
+  list-style-image: url(chrome://browser/skin/bad-content-blocked-16.png);
 }
 @media (min-resolution: 2dppx) {
-  #mixed-content-blocked-notification-icon {
-    list-style-image: url(chrome://browser/skin/mixed-content-blocked-16@2x.png);
+  #bad-content-blocked-notification-icon {
+    list-style-image: url(chrome://browser/skin/bad-content-blocked-16@2x.png);
+  }
+}
+
+#bad-content-unblocked-notification-icon {
+  list-style-image: url(chrome://browser/skin/bad-content-unblocked-16.png);
+}
+@media (min-resolution: 2dppx) {
+  #bad-content-unblocked-notification-icon {
+    list-style-image: url(chrome://browser/skin/bad-content-unblocked-16@2x.png);
   }
 }
 
@@ -3916,12 +3920,12 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   list-style-image: url(chrome://global/skin/icons/webapps-64.png);
 }
 
-.popup-notification-icon[popupid="mixed-content-blocked"] {
-  list-style-image: url(chrome://browser/skin/mixed-content-blocked-64.png);
+.popup-notification-icon[popupid="bad-content"] {
+  list-style-image: url(chrome://browser/skin/bad-content-blocked-64.png);
 }
 @media (min-resolution: 2dppx) {
-  .popup-notification-icon[popupid="mixed-content-blocked"] {
-    list-style-image: url(chrome://browser/skin/mixed-content-blocked-64@2x.png);
+  .popup-notification-icon[popupid="bad-content"] {
+    list-style-image: url(chrome://browser/skin/bad-content-blocked-64@2x.png);
   }
 }
 
@@ -4157,6 +4161,7 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 %include ../shared/devtools/highlighter.inc.css
 %include ../shared/devtools/commandline.inc.css
 %include ../shared/plugin-doorhanger.inc.css
+%include ../shared/badcontent-doorhanger.inc.css
 
 %include downloads/indicator.css
 

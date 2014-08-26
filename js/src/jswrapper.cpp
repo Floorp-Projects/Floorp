@@ -570,6 +570,15 @@ CrossCompartmentWrapper::regexp_toShared(JSContext *cx, HandleObject wrapper, Re
 }
 
 bool
+CrossCompartmentWrapper::boxedValue_unbox(JSContext *cx, HandleObject wrapper, MutableHandleValue vp) const
+{
+    PIERCE(cx, wrapper,
+           NOTHING,
+           Wrapper::boxedValue_unbox(cx, wrapper, vp),
+           cx->compartment()->wrap(cx, vp));
+}
+
+bool
 CrossCompartmentWrapper::defaultValue(JSContext *cx, HandleObject wrapper, JSType hint,
                                       MutableHandleValue vp) const
 {
@@ -687,6 +696,14 @@ bool
 SecurityWrapper<Base>::regexp_toShared(JSContext *cx, HandleObject obj, RegExpGuard *g) const
 {
     return Base::regexp_toShared(cx, obj, g);
+}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::boxedValue_unbox(JSContext *cx, HandleObject obj, MutableHandleValue vp) const
+{
+    vp.setUndefined();
+    return true;
 }
 
 template <class Base>

@@ -59,7 +59,7 @@ nsresult
 nsProgressFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   // Create the progress bar div.
-  nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
+  nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
   mBarDiv = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Associate ::-moz-progress-bar pseudo-element to the anonymous child.
@@ -219,24 +219,29 @@ nsProgressFrame::AttributeChanged(int32_t  aNameSpaceID,
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
-nsSize
+LogicalSize
 nsProgressFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                                 nsSize aCBSize, nscoord aAvailableWidth,
-                                 nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, bool aShrinkWrap)
+                                 WritingMode aWM,
+                                 const LogicalSize& aCBSize,
+                                 nscoord aAvailableISize,
+                                 const LogicalSize& aMargin,
+                                 const LogicalSize& aBorder,
+                                 const LogicalSize& aPadding,
+                                 bool aShrinkWrap)
 {
-  nsSize autoSize;
-  autoSize.height = autoSize.width =
+  const WritingMode wm = GetWritingMode();
+  LogicalSize autoSize(wm);
+  autoSize.BSize(wm) = autoSize.ISize(wm) =
     NSToCoordRound(StyleFont()->mFont.size *
                    nsLayoutUtils::FontSizeInflationFor(this)); // 1em
 
   if (StyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL) {
-    autoSize.height *= 10; // 10em
+    autoSize.Height(wm) *= 10; // 10em
   } else {
-    autoSize.width *= 10; // 10em
+    autoSize.Width(wm) *= 10; // 10em
   }
 
-  return autoSize;
+  return autoSize.ConvertTo(aWM, wm);
 }
 
 nscoord

@@ -16,7 +16,7 @@ extern "C" void sandbox_free_error(char *errorbuf);
 
 namespace mozilla {
 
-static const char *rules =
+static const char rules[] =
   "(version 1)\n"
   "(deny default)\n"
   "(allow signal (target self))\n"
@@ -33,13 +33,14 @@ static const char *rules =
   "    (regex #\"^/etc$\")\n"
   "    (regex #\"^/dev/u?random$\")\n"
   "    (regex #\"^/(private/)?var($|/)\")\n"
-  "    (regex #\"\\.app/Contents/MacOS/plugin-container\\.app/Contents/\")\n"
   "    (literal \"/usr/share/icu/icudt51l.dat\")\n"
+  "    (literal \"%s\")\n"
+  "    (literal \"%s\")\n"
   "    (literal \"%s\"))\n";
 
 bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage)
 {
-  if (!aInfo.type == MacSandboxType_Plugin) {
+  if (aInfo.type != MacSandboxType_Plugin) {
     aErrorMessage.AppendPrintf("Unexpected sandbox type %u", aInfo.type);
     return false;
   }
@@ -48,11 +49,15 @@ bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage)
   if (nsCocoaFeatures::OnLionOrLater()) {
     profile.AppendPrintf(rules, ";",
                          aInfo.pluginInfo.pluginPath.get(),
-                         aInfo.pluginInfo.pluginBinaryPath.get());
+                         aInfo.pluginInfo.pluginBinaryPath.get(),
+                         aInfo.appPath.get(),
+                         aInfo.appBinaryPath.get());
   } else {
     profile.AppendPrintf(rules, "",
                          aInfo.pluginInfo.pluginPath.get(),
-                         aInfo.pluginInfo.pluginBinaryPath.get());
+                         aInfo.pluginInfo.pluginBinaryPath.get(),
+                         aInfo.appPath.get(),
+                         aInfo.appBinaryPath.get());
   }
 
   char *errorbuf = NULL;
@@ -60,7 +65,7 @@ bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage)
     if (errorbuf) {
       aErrorMessage.AppendPrintf("sandbox_init() failed with error \"%s\"",
                                  errorbuf);
-      printf(profile.get());
+      printf("profile: %s\n", profile.get());
       sandbox_free_error(errorbuf);
     }
     return false;

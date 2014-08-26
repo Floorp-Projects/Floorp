@@ -169,11 +169,21 @@ class ObjectElements
 {
   public:
     enum Flags {
+        // Integers written to these elements must be converted to doubles.
         CONVERT_DOUBLE_ELEMENTS     = 0x1,
 
         // Present only if these elements correspond to an array with
         // non-writable length; never present for non-arrays.
-        NONWRITABLE_ARRAY_LENGTH    = 0x2
+        NONWRITABLE_ARRAY_LENGTH    = 0x2,
+
+        // These elements are shared with another object and must be copied
+        // before they can be changed. A pointer to the original owner of the
+        // elements, which is immutable, is stored immediately after the
+        // elements data. There is one case where elements can be written to
+        // before being copied: when setting the CONVERT_DOUBLE_ELEMENTS flag
+        // the shared elements may change (from ints to doubles) without
+        // making a copy first.
+        COPY_ON_WRITE               = 0x4
     };
 
   private:
@@ -210,16 +220,26 @@ class ObjectElements
         return flags & CONVERT_DOUBLE_ELEMENTS;
     }
     void setShouldConvertDoubleElements() {
+        // Note: allow isCopyOnWrite() here, see comment above.
         flags |= CONVERT_DOUBLE_ELEMENTS;
     }
     void clearShouldConvertDoubleElements() {
+        JS_ASSERT(!isCopyOnWrite());
         flags &= ~CONVERT_DOUBLE_ELEMENTS;
     }
     bool hasNonwritableArrayLength() const {
         return flags & NONWRITABLE_ARRAY_LENGTH;
     }
     void setNonwritableArrayLength() {
+        JS_ASSERT(!isCopyOnWrite());
         flags |= NONWRITABLE_ARRAY_LENGTH;
+    }
+    bool isCopyOnWrite() const {
+        return flags & COPY_ON_WRITE;
+    }
+    void clearCopyOnWrite() {
+        JS_ASSERT(isCopyOnWrite());
+        flags &= ~COPY_ON_WRITE;
     }
 
   public:
@@ -230,8 +250,16 @@ class ObjectElements
     HeapSlot *elements() {
         return reinterpret_cast<HeapSlot*>(uintptr_t(this) + sizeof(ObjectElements));
     }
+    const HeapSlot *elements() const {
+        return reinterpret_cast<const HeapSlot*>(uintptr_t(this) + sizeof(ObjectElements));
+    }
     static ObjectElements * fromElements(HeapSlot *elems) {
         return reinterpret_cast<ObjectElements*>(uintptr_t(elems) - sizeof(ObjectElements));
+    }
+
+    HeapPtrObject &ownerObject() const {
+        JS_ASSERT(isCopyOnWrite());
+        return *(HeapPtrObject *)(&elements()[initializedLength]);
     }
 
     static int offsetOfFlags() {
@@ -248,6 +276,7 @@ class ObjectElements
     }
 
     static bool ConvertElementsToDoubles(JSContext *cx, uintptr_t elements);
+    static bool MakeElementsCopyOnWrite(ExclusiveContext *cx, JSObject *obj);
 
     // This is enough slots to store an object of this class. See the static
     // assertion below.
@@ -406,7 +435,12 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
 
     HeapSlotArray getDenseElements() {
         JS_ASSERT(isNative());
-        return HeapSlotArray(elements);
+        return HeapSlotArray(elements, !getElementsHeader()->isCopyOnWrite());
+    }
+    HeapSlotArray getDenseElementsAllowCopyOnWrite() {
+        // Backdoor allowing direct access to copy on write elements.
+        JS_ASSERT(isNative());
+        return HeapSlotArray(elements, true);
     }
     const Value &getDenseElement(uint32_t idx) {
         JS_ASSERT(isNative());

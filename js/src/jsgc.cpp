@@ -6323,7 +6323,7 @@ JS::AutoAssertOnGC::AutoAssertOnGC()
         JSRuntime *runtime = data->runtimeIfOnOwnerThread();
         if (runtime) {
             gc = &runtime->gc;
-            gcNumber = gc->gcNumber();;
+            gcNumber = gc->gcNumber();
             gc->enterUnsafeRegion();
         }
     }
@@ -6365,7 +6365,7 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime *rt)
      * that have been moved.
      */
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        c->checkNewTypeObjectTablesAfterMovingGC();
+        c->checkTypeObjectTablesAfterMovingGC();
         c->checkInitialShapesTableAfterMovingGC();
         c->checkWrapperMapAfterMovingGC();
         if (c->debugScopes)

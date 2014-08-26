@@ -190,7 +190,7 @@ protected:
  */
 class FenceDeliveryTracker : public AsyncTransactionTracker {
 public:
-  FenceDeliveryTracker(FenceHandle& aFenceHandle)
+  explicit FenceDeliveryTracker(FenceHandle& aFenceHandle)
     : mFenceHandle(aFenceHandle)
   {
     MOZ_COUNT_CTOR(FenceDeliveryTracker);

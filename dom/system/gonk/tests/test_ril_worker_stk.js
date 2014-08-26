@@ -414,15 +414,20 @@ add_test(function test_stk_proactive_command_play_tone() {
   let pduHelper = context.GsmPDUHelper;
   let berHelper = context.BerTlvHelper;
   let stkHelper = context.StkProactiveCmdHelper;
+  let ril = context.RIL;
+  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x10];
+  ril.appType = CARD_APPTYPE_SIM;
 
   let tone_1 = [
     0xD0,
-    0x1B,
+    0x1F,
     0x81, 0x03, 0x01, 0x20, 0x00,
     0x82, 0x02, 0x81, 0x03,
     0x85, 0x09, 0x44, 0x69, 0x61, 0x6C, 0x20, 0x54, 0x6F, 0x6E, 0x65,
     0x8E, 0x01, 0x01,
-    0x84, 0x02, 0x01, 0x05];
+    0x84, 0x02, 0x01, 0x05,
+    0x9E, 0x02, 0x00, 0x01];
 
   for (let i = 0; i < tone_1.length; i++) {
     pduHelper.writeHexOctet(tone_1[i]);
@@ -444,6 +449,10 @@ add_test(function test_stk_proactive_command_play_tone() {
   tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_DURATION, ctlvs);
   do_check_eq(tlv.value.timeUnit, STK_TIME_UNIT_SECOND);
   do_check_eq(tlv.value.timeInterval, 5);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+  do_check_eq(tlv.value.qualifier, 0x00);
+  do_check_eq(tlv.value.identifier, 0x01);
 
   run_next_test();
 });
@@ -492,15 +501,20 @@ add_test(function test_read_septets_to_string() {
   let pduHelper = context.GsmPDUHelper;
   let berHelper = context.BerTlvHelper;
   let stkHelper = context.StkProactiveCmdHelper;
+  let ril = context.RIL;
+  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x10];
+  ril.appType = CARD_APPTYPE_SIM;
 
   let display_text_1 = [
     0xd0,
-    0x28,
+    0x2c,
     0x81, 0x03, 0x01, 0x21, 0x80,
     0x82, 0x02, 0x81, 0x02,
     0x0d, 0x1d, 0x00, 0xd3, 0x30, 0x9b, 0xfc, 0x06, 0xc9, 0x5c, 0x30, 0x1a,
     0xa8, 0xe8, 0x02, 0x59, 0xc3, 0xec, 0x34, 0xb9, 0xac, 0x07, 0xc9, 0x60,
     0x2f, 0x58, 0xed, 0x15, 0x9b, 0xb9, 0x40,
+    0x9e, 0x02, 0x00, 0x01
   ];
 
   for (let i = 0; i < display_text_1.length; i++) {
@@ -511,6 +525,10 @@ add_test(function test_read_septets_to_string() {
   let ctlvs = berTlv.value;
   let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
   do_check_eq(tlv.value.textString, "Saldo 2.04 E. Validez 20/05/13. ");
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+  do_check_eq(tlv.value.qualifier, 0x00);
+  do_check_eq(tlv.value.identifier, 0x01);
 
   run_next_test();
 });
@@ -562,15 +580,20 @@ add_test(function test_stk_proactive_command_get_input() {
   let berHelper = context.BerTlvHelper;
   let stkHelper = context.StkProactiveCmdHelper;
   let stkCmdHelper = context.StkCommandParamsFactory;
+  let ril = context.RIL;
+  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x10];
+  ril.appType = CARD_APPTYPE_SIM;
 
   let get_input_1 = [
     0xD0,
-    0x1E,
+    0x22,
     0x81, 0x03, 0x01, 0x23, 0x8F,
     0x82, 0x02, 0x81, 0x82,
     0x8D, 0x05, 0x04, 0x54, 0x65, 0x78, 0x74,
     0x91, 0x02, 0x01, 0x10,
-    0x17, 0x08, 0x04, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6C, 0x74];
+    0x17, 0x08, 0x04, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6C, 0x74,
+    0x9E, 0x02, 0x00, 0x01];
 
   for (let i = 0; i < get_input_1.length; i++) {
     pduHelper.writeHexOctet(get_input_1[i]);
@@ -592,6 +615,10 @@ add_test(function test_stk_proactive_command_get_input() {
   do_check_eq(input.minLength, 0x01);
   do_check_eq(input.maxLength, 0x10);
   do_check_eq(input.defaultText, "Default");
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+  do_check_eq(tlv.value.qualifier, 0x00);
+  do_check_eq(tlv.value.identifier, 0x01);
 
   let get_input_2 = [
     0xD0,
@@ -661,10 +688,14 @@ add_test(function test_stk_proactive_command_select_item() {
   let berHelper = context.BerTlvHelper;
   let stkHelper = context.StkProactiveCmdHelper;
   let stkFactory = context.StkCommandParamsFactory;
+  let ril = context.RIL;
+  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x10];
+  ril.appType = CARD_APPTYPE_SIM;
 
   let select_item_1 = [
     0xD0,
-    0x33,
+    0x3C,
     0x81, 0x03, 0x01, 0x24, 0x00,
     0x82, 0x02, 0x81, 0x82,
     0x85, 0x05, 0x54, 0x69, 0x74, 0x6C, 0x65,
@@ -672,7 +703,9 @@ add_test(function test_stk_proactive_command_select_item() {
     0x8F, 0x07, 0x02, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x32,
     0x8F, 0x07, 0x03, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x33,
     0x18, 0x03, 0x10, 0x15, 0x20,
-    0x90, 0x01, 0x01
+    0x90, 0x01, 0x01,
+    0x9E, 0x02, 0x00, 0x01,
+    0x9F, 0x03, 0x00, 0x01, 0x02
   ];
 
   for(let i = 0 ; i < select_item_1.length; i++) {
@@ -698,6 +731,15 @@ add_test(function test_stk_proactive_command_select_item() {
   do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
   do_check_eq(menu.nextActionList[2], STK_CMD_PLAY_TONE);
   do_check_eq(menu.defaultItem, 0x00);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+  do_check_eq(tlv.value.qualifier, 0x00);
+  do_check_eq(tlv.value.identifier, 0x01);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID_LIST, ctlvs);
+  do_check_eq(tlv.value.qualifier, 0x00);
+  do_check_eq(tlv.value.identifiers[0], 0x01);
+  do_check_eq(tlv.value.identifiers[1], 0x02);
 
   let select_item_2 = [
     0xD0,
@@ -749,17 +791,23 @@ add_test(function test_stk_proactive_command_set_up_menu() {
   let berHelper = context.BerTlvHelper;
   let stkHelper = context.StkProactiveCmdHelper;
   let stkFactory = context.StkCommandParamsFactory;
+  let ril = context.RIL;
+  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x10];
+  ril.appType = CARD_APPTYPE_SIM;
 
   let set_up_menu_1 = [
     0xD0,
-    0x30,
+    0x39,
     0x81, 0x03, 0x01, 0x25, 0x00,
     0x82, 0x02, 0x81, 0x82,
     0x85, 0x05, 0x54, 0x69, 0x74, 0x6C, 0x65,
     0x8F, 0x07, 0x01, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x31,
     0x8F, 0x07, 0x02, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x32,
     0x8F, 0x07, 0x03, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x33,
-    0x18, 0x03, 0x10, 0x15, 0x20
+    0x18, 0x03, 0x10, 0x15, 0x20,
+    0x9E, 0x02, 0x00, 0x01,
+    0x9F, 0x03, 0x00, 0x01, 0x02
   ];
 
   for(let i = 0 ; i < set_up_menu_1.length; i++) {
@@ -784,6 +832,15 @@ add_test(function test_stk_proactive_command_set_up_menu() {
   do_check_eq(menu.nextActionList[0], STK_CMD_SET_UP_CALL);
   do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
   do_check_eq(menu.nextActionList[2], STK_CMD_PLAY_TONE);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+  do_check_eq(tlv.value.qualifier, 0x00);
+  do_check_eq(tlv.value.identifier, 0x01);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID_LIST, ctlvs);
+  do_check_eq(tlv.value.qualifier, 0x00);
+  do_check_eq(tlv.value.identifiers[0], 0x01);
+  do_check_eq(tlv.value.identifiers[1], 0x02);
 
   let set_up_menu_2 = [
     0xD0,
@@ -833,15 +890,20 @@ add_test(function test_stk_proactive_command_set_up_call() {
   let berHelper = context.BerTlvHelper;
   let stkHelper = context.StkProactiveCmdHelper;
   let cmdFactory = context.StkCommandParamsFactory;
+  let ril = context.RIL;
+  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x10];
+  ril.appType = CARD_APPTYPE_SIM;
 
   let set_up_call_1 = [
     0xD0,
-    0x29,
+    0x2d,
     0x81, 0x03, 0x01, 0x10, 0x04,
     0x82, 0x02, 0x81, 0x82,
     0x05, 0x0A, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x6E, 0x6E, 0x65, 0x63, 0x74,
     0x86, 0x09, 0x81, 0x10, 0x32, 0x04, 0x21, 0x43, 0x65, 0x1C, 0x2C,
-    0x05, 0x07, 0x4D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65];
+    0x05, 0x07, 0x4D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+    0x9E, 0x02, 0x00, 0x01];
 
   for (let i = 0 ; i < set_up_call_1.length; i++) {
     pduHelper.writeHexOctet(set_up_call_1[i]);
@@ -857,6 +919,10 @@ add_test(function test_stk_proactive_command_set_up_call() {
   do_check_eq(setupCall.address, "012340123456,1,2");
   do_check_eq(setupCall.confirmMessage, "Disconnect");
   do_check_eq(setupCall.callMessage, "Message");
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+  do_check_eq(tlv.value.qualifier, 0x00);
+  do_check_eq(tlv.value.identifier, 0x01);
 
   run_next_test();
 });

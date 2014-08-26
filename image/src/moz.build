@@ -6,6 +6,7 @@
 
 EXPORTS += [
     'ImageOps.h',
+    'ImageRegion.h',
     'imgLoader.h',
     'imgRequest.h',
     'imgRequestProxy.h',

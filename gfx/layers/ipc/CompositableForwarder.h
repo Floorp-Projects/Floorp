@@ -106,6 +106,11 @@ public:
   virtual void UpdatePictureRect(CompositableClient* aCompositable,
                                  const nsIntRect& aRect) = 0;
 
+#ifdef MOZ_WIDGET_GONK
+  virtual void UseOverlaySource(CompositableClient* aCompositabl,
+                                const OverlaySource& aOverlay) = 0;
+#endif
+
   /**
    * Tell the CompositableHost on the compositor side to remove the texture
    * from the CompositableHost.
