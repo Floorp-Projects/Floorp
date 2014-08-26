@@ -54,7 +54,7 @@ double mozToDouble(const String &aStr, bool *valid) {
     double_conversion::StringToDoubleConverter::NO_FLAGS,
     mozilla::UnspecifiedNaN<double>(), mozilla::UnspecifiedNaN<double>(), nullptr, nullptr);
   const char* str = aStr.c_str();
-  int length = mozilla::SafeCast<int>(strlen(str));
+  int length = mozilla::AssertedCast<int>(strlen(str));
   int processed_char_count; // unused - NO_FLAGS requires the whole string to parse
   double result = converter.StringToDouble(str, length, &processed_char_count);
   *valid = mozilla::IsFinite(result);
