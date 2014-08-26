@@ -35,13 +35,6 @@ static const int32_t NUNBOX32_TYPE_OFFSET    = 4;
 static const int32_t NUNBOX32_PAYLOAD_OFFSET = 0;
 
 static const uint32_t ShadowStackSpace = 0;
-
-// MaxAliasedRegisters is the maximum number of names that can be allocated to
-// any register. For example since S0, S1 and D0 cannot be in use
-// at the same time, the largest number of aliased registers is 2 (S0, S1).
-// This is for the register allocators. It is so the allocator can keep track
-// of all intervals that alias a given register.
-static const uint32_t MaxAliasedRegisters = 2;
 ////
 // These offsets are related to bailouts.
 ////

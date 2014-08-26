@@ -26,13 +26,6 @@ static const uint32_t ShadowStackSpace = 0;
 static const int32_t NUNBOX32_TYPE_OFFSET         = 4;
 static const int32_t NUNBOX32_PAYLOAD_OFFSET      = 0;
 
-// MaxAliasedRegisters is the largest number of registers that be simultaneously
-// allocated, and alais a single register. If al and ah could be allocated
-// independently, this would be two, but since there is no aliasing on x86/x64
-// this is 1.
-// This is so the register allocator knows the largest number of intervals
-// it may have to evict at once
-static const uint32_t MaxAliasedRegisters = 1;
 ////
 // These offsets are related to bailouts.
 ////
