@@ -551,10 +551,29 @@ AudioCallbackDriver::StateCallback_s(cubeb_stream* aStream, void * aUser,
   driver->StateCallback(aState);
 }
 
+bool AudioCallbackDriver::InCallback() {
+  MonitorAutoLock mon(mGraphImpl->GetMonitor());
+  return mInCallback;
+}
+
+AudioCallbackDriver::AutoInCallback::AutoInCallback(AudioCallbackDriver* aDriver)
+  : mDriver(aDriver)
+{
+  MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
+  mDriver->mInCallback = true;
+}
+
+AudioCallbackDriver::AutoInCallback::~AutoInCallback() {
+  MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
+  mDriver->mInCallback = false;
+}
+
 long
 AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
 {
   bool stillProcessing;
+
+  DebugOnly<AutoInCallback> aic(this);
 
   if (mStateComputedTime == 0) {
     MonitorAutoLock mon(mGraphImpl->GetMonitor());
