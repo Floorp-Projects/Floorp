@@ -1627,7 +1627,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 #endif
 
     void loadAsmJSActivation(Register dest) {
-        loadPtr(Address(GlobalReg, AsmJSActivationGlobalDataOffset), dest);
+        loadPtr(Address(GlobalReg, AsmJSActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
     }
 };
 

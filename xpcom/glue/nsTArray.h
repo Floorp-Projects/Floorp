@@ -473,7 +473,7 @@ public:
   }
   // Invoke the copy-constructor in place.
   template<class A>
-  static inline void Construct(E* aE, A &&aArg)
+  static inline void Construct(E* aE, A&& aArg)
   {
     typedef typename mozilla::RemoveCV<E>::Type E_NoCV;
     typedef typename mozilla::RemoveCV<A>::Type A_NoCV;
@@ -1103,8 +1103,9 @@ public:
   {
     // Adjust memory allocation up-front to catch errors.
     if (!Alloc::Successful(this->EnsureCapacity(Length() + aArrayLen - aCount,
-                                                sizeof(elem_type))))
+                                                sizeof(elem_type)))) {
       return nullptr;
+    }
     DestructRange(aStart, aCount);
     this->ShiftData(aStart, aCount, aArrayLen,
                     sizeof(elem_type), MOZ_ALIGNOF(elem_type));
@@ -1164,8 +1165,9 @@ public:
   elem_type* InsertElementAt(index_type aIndex)
   {
     if (!Alloc::Successful(this->EnsureCapacity(Length() + 1,
-                                                sizeof(elem_type))))
+                                                sizeof(elem_type)))) {
       return nullptr;
+    }
     this->ShiftData(aIndex, 0, 1, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
     elem_type* elem = Elements() + aIndex;
     elem_traits::Construct(elem);
@@ -1177,11 +1179,13 @@ public:
   elem_type* InsertElementAt(index_type aIndex, elem_type&& aItem)
   {
     if (!Alloc::Successful(this->EnsureCapacity(Length() + 1,
-                                                sizeof(elem_type))))
+                                                sizeof(elem_type)))) {
       return nullptr;
+    }
     this->ShiftData(aIndex, 0, 1, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
     elem_type* elem = Elements() + aIndex;
-    nsTArrayElementTraits<elem_type>::Construct(elem, mozilla::Forward<elem_type>(aItem));
+    nsTArrayElementTraits<elem_type>::Construct(elem,
+                                                mozilla::Forward<elem_type>(aItem));
     return elem;
   }
 
@@ -1257,8 +1261,9 @@ public:
   elem_type* AppendElements(const Item* aArray, size_type aArrayLen)
   {
     if (!Alloc::Successful(this->EnsureCapacity(Length() + aArrayLen,
-                                                sizeof(elem_type))))
+                                                sizeof(elem_type)))) {
       return nullptr;
+    }
     index_type len = Length();
     AssignRange(len, aArrayLen, aArray);
     this->IncrementLength(aArrayLen);
@@ -1283,11 +1288,13 @@ public:
   elem_type* AppendElement(elem_type&& aItem)
   {
     if (!Alloc::Successful(this->EnsureCapacity(Length() + 1,
-                                                sizeof(elem_type))))
+                                                sizeof(elem_type)))) {
       return nullptr;
+    }
     index_type len = Length();
     elem_type* iter = Elements() + len;
-    nsTArrayElementTraits<elem_type>::Construct(iter, mozilla::Forward<elem_type>(aItem));
+    nsTArrayElementTraits<elem_type>::Construct(iter,
+                                                mozilla::Forward<elem_type>(aItem));
     this->IncrementLength(1);
     return iter;
   }
@@ -1299,8 +1306,9 @@ public:
   elem_type* AppendElements(size_type aCount)
   {
     if (!Alloc::Successful(this->EnsureCapacity(Length() + aCount,
-                                                sizeof(elem_type))))
+                                                sizeof(elem_type)))) {
       return nullptr;
+    }
     elem_type* elems = Elements() + Length();
     size_type i;
     for (i = 0; i < aCount; ++i) {
@@ -1325,8 +1333,9 @@ public:
     index_type len = Length();
     index_type otherLen = aArray.Length();
     if (!Alloc::Successful(this->EnsureCapacity(len + otherLen,
-                                                sizeof(elem_type))))
+                                                sizeof(elem_type)))) {
       return nullptr;
+    }
     copy_type::CopyElements(Elements() + len, aArray.Elements(), otherLen,
                             sizeof(elem_type));
     this->IncrementLength(otherLen);
@@ -1433,7 +1442,7 @@ public:
   // removes elements from the array (see also RemoveElementsAt).
   // @param aNewLen The desired length of this array.
   // @return True if the operation succeeded; false otherwise.
-  // See also TruncateLength if the new length is guaranteed to be smaller than 
+  // See also TruncateLength if the new length is guaranteed to be smaller than
   // the old.
   typename Alloc::ResultType SetLength(size_type aNewLen)
   {

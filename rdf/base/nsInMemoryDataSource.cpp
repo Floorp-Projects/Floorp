@@ -159,7 +159,7 @@ Assertion::Assertion(nsIRDFResource* aSource)
       mRefCnt(0),
       mHashEntry(true)
 {
-    MOZ_COUNT_CTOR(RDF_Assertion);
+    MOZ_COUNT_CTOR(Assertion);
 
     NS_ADDREF(mSource);
 
@@ -176,7 +176,7 @@ Assertion::Assertion(nsIRDFResource* aSource,
       mRefCnt(0),
       mHashEntry(false)
 {
-    MOZ_COUNT_CTOR(RDF_Assertion);
+    MOZ_COUNT_CTOR(Assertion);
 
     u.as.mProperty = aProperty;
     u.as.mTarget = aTarget;
@@ -199,7 +199,7 @@ Assertion::~Assertion()
         u.hash.mPropertyHash = nullptr;
     }
 
-    MOZ_COUNT_DTOR(RDF_Assertion);
+    MOZ_COUNT_DTOR(Assertion);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: Assertion\n", gInstanceCount);

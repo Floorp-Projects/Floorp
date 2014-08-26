@@ -1007,7 +1007,14 @@ class IDLInterface(IDLObjectWithScope):
 
         if (self.getExtendedAttribute("Pref") and
             self._exposureGlobalNames != set([self.parentScope.primaryGlobalName])):
-            raise WebIDLError("[Pref] used on an member that is not %s-only" %
+            raise WebIDLError("[Pref] used on an interface that is not %s-only" %
+                              self.parentScope.primaryGlobalName,
+                              [self.location])
+
+        if (self.getExtendedAttribute("CheckPermissions") and
+            self._exposureGlobalNames != set([self.parentScope.primaryGlobalName])):
+            raise WebIDLError("[CheckPermissions] used on an interface that is "
+                              "not %s-only" %
                               self.parentScope.primaryGlobalName,
                               [self.location])
 
@@ -3020,6 +3027,13 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
             self.exposureSet != set([self._scope.primaryGlobalName])):
             raise WebIDLError("[Pref] used on an interface member that is not "
                               "%s-only" % self._scope.primaryGlobalName,
+                              [self.location])
+
+        if (self.getExtendedAttribute("CheckPermissions") and
+            self.exposureSet != set([self._scope.primaryGlobalName])):
+            raise WebIDLError("[CheckPermissions] used on an interface member "
+                              "that is not %s-only" %
+                              self._scope.primaryGlobalName,
                               [self.location])
 
 class IDLConst(IDLInterfaceMember):

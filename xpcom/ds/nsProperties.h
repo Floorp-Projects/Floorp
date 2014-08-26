@@ -20,8 +20,8 @@
     {0x93, 0xb6, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-typedef nsInterfaceHashtable<nsCharPtrHashKey, nsISupports>
-        nsProperties_HashBase;
+typedef nsInterfaceHashtable<nsCharPtrHashKey,
+                             nsISupports> nsProperties_HashBase;
 
 class nsProperties MOZ_FINAL
   : public nsIProperties

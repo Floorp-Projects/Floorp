@@ -122,13 +122,15 @@ public:
     if (aN > 0) {
       difference_type step = XPCOM_MIN(aN, size_forward());
 
-      NS_ASSERTION(step > 0, "can't advance a reading iterator beyond the end of a string");
+      NS_ASSERTION(step > 0,
+                   "can't advance a reading iterator beyond the end of a string");
 
       mPosition += step;
     } else if (aN < 0) {
       difference_type step = XPCOM_MAX(aN, -size_backward());
 
-      NS_ASSERTION(step < 0, "can't advance (backward) a reading iterator beyond the end of a string");
+      NS_ASSERTION(step < 0,
+                   "can't advance (backward) a reading iterator beyond the end of a string");
 
       mPosition += step;
     }
@@ -248,13 +250,15 @@ public:
     if (aN > 0) {
       difference_type step = XPCOM_MIN(aN, size_forward());
 
-      NS_ASSERTION(step > 0, "can't advance a writing iterator beyond the end of a string");
+      NS_ASSERTION(step > 0,
+                   "can't advance a writing iterator beyond the end of a string");
 
       mPosition += step;
     } else if (aN < 0) {
       difference_type step = XPCOM_MAX(aN, -size_backward());
 
-      NS_ASSERTION(step < 0, "can't advance (backward) a writing iterator beyond the end of a string");
+      NS_ASSERTION(step < 0,
+                   "can't advance (backward) a writing iterator beyond the end of a string");
 
       mPosition += step;
     }
@@ -263,7 +267,8 @@ public:
 
   void write(const value_type* aS, uint32_t aN)
   {
-    NS_ASSERTION(size_forward() > 0, "You can't |write| into an |nsWritingIterator| with no space!");
+    NS_ASSERTION(size_forward() > 0,
+                 "You can't |write| into an |nsWritingIterator| with no space!");
 
     nsCharTraits<value_type>::move(mPosition, aS, aN);
     advance(difference_type(aN));
