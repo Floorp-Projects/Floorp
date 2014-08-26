@@ -172,10 +172,6 @@ public:
     char aLocal;
     STREAM_LOG(PR_LOG_DEBUG, ("Starting system thread"));
     profiler_register_thread("MediaStreamGraph", &aLocal);
-    {
-      MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
-      mDriver->mGraphImpl->SwapMessageQueues();
-    }
     if (mDriver->mPreviousDriver) {
       MOZ_ASSERT(!mDriver->AsAudioCallbackDriver());
       // Stop and release the previous driver off-main-thread.
@@ -183,6 +179,10 @@ public:
         new AsyncCubebTask(mDriver->mPreviousDriver->AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
       mDriver->mPreviousDriver = nullptr;
       releaseEvent->Dispatch();
+    } else {
+      MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
+      MOZ_ASSERT(mDriver->mGraphImpl->MessagesQueued(), "Don't start a graph without messages queued.");
+      mDriver->mGraphImpl->SwapMessageQueues();
     }
     mDriver->RunThread();
     return NS_OK;
