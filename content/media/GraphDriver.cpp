@@ -57,7 +57,6 @@ DriverHolder::Switch(GraphDriver* aDriver)
 {
   MOZ_ASSERT(!mDriver, "This is only for initial switch.");
   mDriver = aDriver;
-  mDriver->Init();
 }
 
 void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
@@ -145,7 +144,17 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mDriver = nullptr;
+    // We can't release an audio driver on the main thread, because it can be
+    // blocking.
+    if (mDriver->AsAudioCallbackDriver()) {
+      printf("Releasing audio driver off main thread.\n");
+      nsRefPtr<AsyncCubebTask> releaseEvent =
+        new AsyncCubebTask(mDriver->AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
+      mDriver = nullptr;
+      releaseEvent->Dispatch();
+    } else {
+      mDriver = nullptr;
+    }
     return NS_OK;
   }
 private:
@@ -168,9 +177,12 @@ public:
       mDriver->mGraphImpl->SwapMessageQueues();
     }
     if (mDriver->mPreviousDriver) {
-      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutdownThreadRunnable(mDriver->mPreviousDriver);
+      MOZ_ASSERT(!mDriver->AsAudioCallbackDriver());
+      // Stop and release the previous driver off-main-thread.
+      nsRefPtr<AsyncCubebTask> releaseEvent =
+        new AsyncCubebTask(mDriver->mPreviousDriver->AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
       mDriver->mPreviousDriver = nullptr;
-      NS_DispatchToMainThread(event);
+      releaseEvent->Dispatch();
     }
     mDriver->RunThread();
     return NS_OK;
@@ -187,6 +199,12 @@ ThreadedDriver::Start()
 }
 
 void
+ThreadedDriver::Resume()
+{
+  Start();
+}
+
+void
 ThreadedDriver::Revive()
 {
   // If we were switching, switch now. Otherwise, tell thread to run the main
@@ -195,7 +213,6 @@ ThreadedDriver::Revive()
     mNextDriver->SetGraphTime(this, mIterationStart, mIterationEnd,
                                mStateComputedTime, mNextStateComputedTime);
     mGraphImpl->SetCurrentDriver(mNextDriver);
-    mNextDriver->Init();
     mNextDriver->Start();
   } else {
     nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
@@ -253,7 +270,6 @@ ThreadedDriver::RunThread()
       mNextDriver->SetGraphTime(this, mIterationStart, mIterationEnd,
                                  mStateComputedTime, mNextStateComputedTime);
       mGraphImpl->SetCurrentDriver(mNextDriver);
-      mNextDriver->Init();
       mNextDriver->Start();
       return;
     }
@@ -405,7 +421,41 @@ OfflineClockDriver::WakeUp()
 }
 
 
-AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
+NS_IMETHODIMP
+AsyncCubebTask::Run()
+{
+  MOZ_ASSERT(mThread);
+  if (NS_IsMainThread()) {
+    mThread->Shutdown(); // can't shutdown from the thread itself, darn
+    // don't null out mThread!
+    // See bug 999104.  we must hold a ref to the thread across Dispatch()
+    // since the internal mthread ref could be released while processing
+    // the Dispatch(), and Dispatch/PutEvent itself doesn't hold a ref; it
+    // assumes the caller does.
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(mDriver);
+
+  switch(mOperation) {
+    case AsyncCubebOperation::INIT:
+      mDriver->Init();
+      break;
+    case AsyncCubebOperation::SHUTDOWN:
+      mDriver->Stop();
+      mDriver = nullptr;
+      break;
+    default:
+      MOZ_CRASH("Operation not implemented.");
+  }
+
+  // and now kill this thread
+  NS_DispatchToMainThread(this);
+
+  return NS_OK;
+}
+
+AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, dom::AudioChannel aChannel)
   : GraphDriver(aGraphImpl),
     mStarted(false)
 {
@@ -414,11 +464,14 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
 AudioCallbackDriver::~AudioCallbackDriver()
 { }
 
-bool
-AudioCallbackDriver::Init(dom::AudioChannel aChannel = dom::AudioChannel::Normal)
+void
+AudioCallbackDriver::Init()
 {
   cubeb_stream_params params;
   uint32_t latency;
+
+  MOZ_ASSERT(!NS_IsMainThread(),
+      "This is blocking and should never run on the main thread.");
 
   mSampleRate = params.rate = CubebUtils::PreferredSampleRate();
 
@@ -430,7 +483,8 @@ AudioCallbackDriver::Init(dom::AudioChannel aChannel = dom::AudioChannel::Normal
 #endif
 
   if (params.stream_type == CUBEB_STREAM_TYPE_MAX) {
-    return false;
+    NS_WARNING("Bad stream type");
+    return;
   }
 #endif
 
@@ -443,7 +497,7 @@ AudioCallbackDriver::Init(dom::AudioChannel aChannel = dom::AudioChannel::Normal
 
   if (cubeb_get_min_latency(CubebUtils::GetCubebContext(), params, &latency) != CUBEB_OK) {
     NS_WARNING("Could not get minimal latency from cubeb.");
-    return false;
+    return;
   }
 
   cubeb_stream* stream;
@@ -453,9 +507,17 @@ AudioCallbackDriver::Init(dom::AudioChannel aChannel = dom::AudioChannel::Normal
     mAudioStream.own(stream);
   } else {
     NS_WARNING("Could not create a cubeb stream for MediaStreamGraph.");
-    return false;
+    return;
   }
-  return true;
+
+  if (cubeb_stream_start(mAudioStream) != CUBEB_OK) {
+    NS_WARNING("Could not start cubeb stream for MSG.");
+  }
+
+  {
+    MonitorAutoLock mon(mGraphImpl->GetMonitor());
+    mStarted = true;
+  }
 }
 
 
@@ -466,28 +528,41 @@ AudioCallbackDriver::Destroy()
 }
 
 void
-AudioCallbackDriver::Start()
+AudioCallbackDriver::Resume()
 {
-  STREAM_LOG(PR_LOG_DEBUG, ("Starting audio threads for MediaStreamGraph %p", mGraphImpl));
+  STREAM_LOG(PR_LOG_DEBUG, ("Resuming audio threads for MediaStreamGraph %p", mGraphImpl));
   if (cubeb_stream_start(mAudioStream) != CUBEB_OK) {
     NS_WARNING("Could not start cubeb stream for MSG.");
   }
+}
 
-  {
-    MonitorAutoLock mon(mGraphImpl->GetMonitor());
-    mStarted = true;
-  }
+void
+AudioCallbackDriver::Start()
+{
+  // If this is running on the main thread, we can't open the stream directly,
+  // because it is a blocking operation.
+  if (NS_IsMainThread()) {
+    STREAM_LOG(PR_LOG_DEBUG, ("Starting audio threads for MediaStreamGraph %p from a new thread.", mGraphImpl));
+    nsRefPtr<AsyncCubebTask> initEvent =
+      new AsyncCubebTask(this, AsyncCubebTask::INIT);
+    initEvent->Dispatch();
+  } else {
+    STREAM_LOG(PR_LOG_DEBUG, ("Starting audio threads for MediaStreamGraph %p from the previous driver's thread", mGraphImpl));
+    Init();
 
-  if (mPreviousDriver) {
-    nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutdownThreadRunnable(mPreviousDriver);
-    mPreviousDriver = nullptr;
-    NS_DispatchToMainThread(event);
+    if (mPreviousDriver) {
+      nsCOMPtr<nsIRunnable> event =
+        new MediaStreamGraphShutdownThreadRunnable(mPreviousDriver);
+      mPreviousDriver = nullptr;
+      NS_DispatchToMainThread(event);
+    }
   }
 }
 
 void
 AudioCallbackDriver::Stop()
 {
+  MOZ_ASSERT(!NS_IsMainThread(), "This is blocking and should not be called on the main thread.");
   STREAM_LOG(PR_LOG_DEBUG, ("Stopping audio threads for MediaStreamGraph %p", mGraphImpl));
   if (cubeb_stream_stop(mAudioStream) != CUBEB_OK) {
     NS_WARNING("Could not stop cubeb stream for MSG.");
@@ -502,7 +577,6 @@ AudioCallbackDriver::Revive()
     mNextDriver->SetGraphTime(this, mIterationStart, mIterationEnd,
                                mStateComputedTime, mNextStateComputedTime);
     mGraphImpl->SetCurrentDriver(mNextDriver);
-    mNextDriver->Init();
     mNextDriver->Start();
   } else {
     Init();
@@ -660,7 +734,6 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
     mNextDriver->SetGraphTime(this, mIterationStart, mIterationEnd,
                                mStateComputedTime, mNextStateComputedTime);
     mGraphImpl->SetCurrentDriver(mNextDriver);
-    mNextDriver->Init();
     mNextDriver->Start();
     // Returning less than aFrames starts the draining and eventually stops the
     // audio thread. This function will never get called again.
