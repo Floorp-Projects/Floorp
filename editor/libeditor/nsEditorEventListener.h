@@ -75,6 +75,7 @@ protected:
   already_AddRefed<nsIPresShell> GetPresShell();
   bool IsFileControlTextBox();
   bool ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent);
+  nsresult HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent);
 
   nsEditor* mEditor; // weak
   nsRefPtr<nsCaret> mCaret;
