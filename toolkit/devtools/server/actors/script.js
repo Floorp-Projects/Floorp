@@ -8,7 +8,7 @@
 
 const Services = require("Services");
 const { Cc, Ci, Cu, components, ChromeWorker } = require("chrome");
-const { ActorPool } = require("devtools/server/actors/common");
+const { ActorPool, getOffsetColumn } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dbg_assert, dumpn, update } = DevToolsUtils;
@@ -5225,31 +5225,6 @@ ThreadSources.prototype = {
 exports.ThreadSources = ThreadSources;
 
 // Utility functions.
-
-// TODO bug 863089: use Debugger.Script.prototype.getOffsetColumn when it is
-// implemented.
-function getOffsetColumn(aOffset, aScript) {
-  let bestOffsetMapping = null;
-  for (let offsetMapping of aScript.getAllColumnOffsets()) {
-    if (!bestOffsetMapping ||
-        (offsetMapping.offset <= aOffset &&
-         offsetMapping.offset > bestOffsetMapping.offset)) {
-      bestOffsetMapping = offsetMapping;
-    }
-  }
-
-  if (!bestOffsetMapping) {
-    // XXX: Try not to completely break the experience of using the debugger for
-    // the user by assuming column 0. Simultaneously, report the error so that
-    // there is a paper trail if the assumption is bad and the debugging
-    // experience becomes wonky.
-    reportError(new Error("Could not find a column for offset " + aOffset
-                          + " in the script " + aScript));
-    return 0;
-  }
-
-  return bestOffsetMapping.columnNumber;
-}
 
 /**
  * Return the non-source-mapped location of the given Debugger.Frame. If the

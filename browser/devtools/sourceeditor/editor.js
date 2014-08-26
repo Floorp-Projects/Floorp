@@ -618,6 +618,32 @@ Editor.prototype = {
     cm.lineInfo(line).gutterMarkers[gutterName].classList.remove(markerClass);
   },
 
+  /**
+   * Adds a marker with a specified class and an HTML content to a line's
+   * gutter. If another marker exists on that line, it is overwritten by a new
+   * marker.
+   */
+  addContentMarker: function (line, gutterName, markerClass, content) {
+    let cm = editors.get(this);
+    let info = cm.lineInfo(line);
+    if (!info)
+      return;
+
+    let marker = cm.getWrapperElement().ownerDocument.createElement("div");
+    marker.className = markerClass;
+    marker.innerHTML = content;
+    cm.setGutterMarker(info.line, gutterName, marker);
+  },
+
+  /**
+   * The reverse of addContentMarker. Removes any line's markers in the
+   * specified gutter.
+   */
+  removeContentMarker: function (line, gutterName) {
+    let cm = editors.get(this);
+    cm.setGutterMarker(info.line, gutterName, null);
+  },
+
   getMarker: function(line, gutterName) {
     let cm = editors.get(this);
     let info = cm.lineInfo(line);
