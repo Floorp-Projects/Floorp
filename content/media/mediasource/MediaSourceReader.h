@@ -87,6 +87,12 @@ public:
   // Return true if any of the active decoders contain data for the given time
   bool DecodersContainTime(double aTime);
 
+  // Mark the reader to indicate that EndOfStream has been called on our MediaSource
+  void Ended();
+
+  // Return true if the Ended method has been called
+  bool IsEnded();
+
 private:
   enum SwitchType {
     SWITCH_OPTIONAL,
@@ -108,6 +114,8 @@ private:
 
   nsRefPtr<MediaDecoderReader> mAudioReader;
   nsRefPtr<MediaDecoderReader> mVideoReader;
+
+  bool mEnded;
 };
 
 } // namespace mozilla
