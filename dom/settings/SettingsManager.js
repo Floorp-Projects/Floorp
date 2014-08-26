@@ -319,6 +319,14 @@ SettingsManager.prototype = {
           if (DEBUG) debug("no observers stored!");
         }
         break;
+      case "Settings:Notifier:Init:OK":
+        // If SettingManager receives this message means SettingChangeNotifier
+        // might not receive the Settings:RegisterForMessage message. We should
+        // send it again after SettingChangeNotifier is ready.
+        if (this.hasReadPrivileges) {
+          cpmm.sendAsyncMessage("Settings:RegisterForMessages");
+        }
+        break;
       default:
         if (DEBUG) debug("Wrong message: " + aMessage.name);
     }
@@ -327,7 +335,6 @@ SettingsManager.prototype = {
   addObserver: function addObserver(aName, aCallback) {
     if (DEBUG) debug("addObserver " + aName);
     if (!this._callbacks) {
-      cpmm.sendAsyncMessage("Settings:RegisterForMessages");
       this._callbacks = {};
     }
     if (!this._callbacks[aName]) {
@@ -354,6 +361,7 @@ SettingsManager.prototype = {
   init: function(aWindow) {
     mrm.registerStrongReporter(this);
     cpmm.addMessageListener("Settings:Change:Return:OK", this);
+    cpmm.addMessageListener("Settings:Notifier:Init:OK", this);
     this._window = aWindow;
     Services.obs.addObserver(this, "inner-window-destroyed", false);
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
@@ -411,6 +419,7 @@ SettingsManager.prototype = {
   cleanup: function() {
     Services.obs.removeObserver(this, "inner-window-destroyed");
     cpmm.removeMessageListener("Settings:Change:Return:OK", this);
+    cpmm.removeMessageListener("Settings:Notifier:Init:OK", this);
     mrm.unregisterStrongReporter(this);
     this._requests = null;
     this._window = null;
