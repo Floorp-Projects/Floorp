@@ -30,10 +30,12 @@
         [
           // Simple traversal forward
           [ContentMessages.simpleMoveNext, {
-            speak: ['Phone status bar', 'Traversal Rule test document']
+            speak: ['Phone status bar', 'Traversal Rule test document'],
+            focused: 'body'
           }],
           [ContentMessages.simpleMoveNext, {
-            speak: ['wow', {'string': 'headingLevel', 'args': [1]} ,'such app']
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]} ,'such app'],
+            focused: 'iframe'
           }],
           [ContentMessages.simpleMoveNext, {
             speak: ['many option', {'string': 'stateNotChecked'},
