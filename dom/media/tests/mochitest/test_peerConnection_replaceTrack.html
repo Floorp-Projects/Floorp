@@ -14,7 +14,8 @@
 <script type="application/javascript;version=1.8">
   createHTML({
     bug: "1032839",
-    title: "Replace video track"
+    title: "Replace video track",
+    visible: true
   });
 
   function isSenderOfTrack(sender) {
@@ -28,8 +29,9 @@
     test = new PeerConnectionTest();
     test.setMediaConstraints([{video: true}], [{video: true}]);
     test.chain.removeAfter("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
-    test.chain.insertBefore("PC_LOCAL_CHECK_MEDIA_FLOW_PRESENT", [[
-      "PC_LOCAL_REPLACE_VIDEOTRACK",
+    var flowtest = test.chain.remove("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
+    test.chain.append(flowtest);
+    test.chain.append([["PC_LOCAL_REPLACE_VIDEOTRACK",
       function (test) {
         var stream = test.pcLocal._pc.getLocalStreams()[0];
         var track = stream.getVideoTracks()[0];
@@ -52,6 +54,7 @@
         });
       }
     ]]);
+    test.chain.append(flowtest);
 
     test.run();
   });

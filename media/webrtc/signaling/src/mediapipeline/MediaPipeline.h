@@ -146,6 +146,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   virtual Direction direction() const { return direction_; }
   virtual TrackID trackid() const { return track_id_; }
   virtual int level() const { return level_; }
+  virtual bool IsVideo() const { return false; }
 
   bool IsDoingRtcpMux() const {
     return (rtp_.type_ == MUX);
@@ -244,8 +245,10 @@ class MediaPipeline : public sigslot::has_slots<> {
   RefPtr<MediaStream> stream_;  // A pointer to the stream we are servicing.
                                 // Written on the main thread.
                                 // Used on STS and MediaStreamGraph threads.
+                                // May be changed by rtpSender.replaceTrack()
   TrackID track_id_;            // The track on the stream.
-                                // Written and used as the stream_;
+                                // Written and used as with the stream_;
+                                // Not used outside initialization in MediaPipelineTransmit
   int level_; // The m-line index (starting at 1, to match convention)
   RefPtr<MediaSessionConduit> conduit_;  // Our conduit. Written on the main
                                          // thread. Read on STS thread.
@@ -372,20 +375,33 @@ public:
                         nsCOMPtr<nsIEventTarget> main_thread,
                         nsCOMPtr<nsIEventTarget> sts_thread,
                         DOMMediaStream *domstream,
-                        TrackID track_id,
+                        int pipeline_index, // For PeerConnectionMedia/mPipelines
                         int level,
+                        bool is_video,
                         RefPtr<MediaSessionConduit> conduit,
                         RefPtr<TransportFlow> rtp_transport,
                         RefPtr<TransportFlow> rtcp_transport) :
       MediaPipeline(pc, TRANSMIT, main_thread, sts_thread,
-                    domstream->GetStream(), track_id, level,
+                    domstream->GetStream(), TRACK_INVALID, level,
                     conduit, rtp_transport, rtcp_transport),
       listener_(new PipelineListener(conduit)),
-      domstream_(domstream)
+      domstream_(domstream),
+      pipeline_index_(pipeline_index),
+      is_video_(is_video)
   {}
 
   // Initialize (stuff here may fail)
   virtual nsresult Init() MOZ_OVERRIDE;
+
+  virtual void AttachToTrack(TrackID track_id);
+
+  // Index used to refer to this before we know the TrackID
+  virtual TrackID pipeline_index() const { return pipeline_index_; }
+  // Note: unlike MediaPipeline::trackid(), this is threadsafe
+  // Not set until first media is received
+  virtual TrackID const trackid_locked() { return listener_->trackid(); }
+  // written and used from MainThread
+  virtual bool IsVideo() const MOZ_OVERRIDE { return is_video_; }
 
 #ifdef MOZILLA_INTERNAL_API
   // when the principal of the PeerConnection changes, it calls through to here
@@ -407,12 +423,23 @@ public:
   // Override MediaPipeline::TransportReady.
   virtual nsresult TransportReady_s(TransportInfo &info);
 
+  // Replace a track with a different one
+  // In non-compliance with the likely final spec, allow the new
+  // track to be part of a different stream (since we don't support
+  // multiple tracks of a type in a stream yet).  bug 1056650
+  virtual nsresult ReplaceTrack(DOMMediaStream *domstream,
+                                TrackID track_id);
+
+
   // Separate class to allow ref counting
   class PipelineListener : public MediaStreamDirectListener {
    friend class MediaPipelineTransmit;
    public:
     PipelineListener(const RefPtr<MediaSessionConduit>& conduit)
       : conduit_(conduit),
+        track_id_(TRACK_INVALID),
+        mMutex("MediaPipelineTransmit::PipelineListener"),
+        track_id_external_(TRACK_INVALID),
         active_(false),
         enabled_(false),
         direct_connect_(false),
@@ -438,6 +465,10 @@ public:
 
     void SetActive(bool active) { active_ = active; }
     void SetEnabled(bool enabled) { enabled_ = enabled; }
+    TrackID trackid() {
+      MutexAutoLock lock(mMutex);
+      return track_id_external_;
+    }
 
     // Implement MediaStreamListener
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
@@ -469,6 +500,13 @@ public:
 #endif
     RefPtr<MediaSessionConduit> conduit_;
 
+    // May be TRACK_INVALID until we see data from the track
+    TrackID track_id_; // this is the current TrackID this listener is attached to
+    Mutex mMutex;
+    // protected by mMutex
+    // May be TRACK_INVALID until we see data from the track
+    TrackID track_id_external_; // this is queried from other threads
+
     // active is true if there is a transport to send on
     mozilla::Atomic<bool> active_;
     // enabled is true if the media access control permits sending
@@ -495,6 +533,8 @@ public:
  private:
   RefPtr<PipelineListener> listener_;
   DOMMediaStream *domstream_;
+  int pipeline_index_; // for lookups in LocalSourceStreamInfo::mPipelines;
+  bool is_video_;
 };
 
 
