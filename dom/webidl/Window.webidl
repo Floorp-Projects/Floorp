@@ -328,6 +328,14 @@ partial interface Window {
    */
   [Throws] readonly attribute unsigned long long mozPaintCount;
 
+  /**
+   * This property exists because static attributes don't yet work for
+   * JS-implemented WebIDL (see bugs 1058606 and 863952). With this hack, we
+   * can use `MozSelfSupport.something(...)`, which will continue to work
+   * after we ditch this property and switch to static attributes. See 
+   */
+  [ChromeOnly, Throws] readonly attribute MozSelfSupport MozSelfSupport;
+
   [Pure]
            attribute EventHandler onwheel;
 
