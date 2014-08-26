@@ -1,0 +1,72 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test events of media track interfaces</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function localCheckMetadata(msg, e) {
+  ok(msg in gOggTrackInfoResults, "File: " + msg + " is in pre-parsed gOggTrackInfoResults list");
+  var r = gOggTrackInfoResults[msg];
+
+  var hasExpectedAudio = r && r.hasOwnProperty("audio_id");
+  var hasExpectedVideo = r && r.hasOwnProperty("video_id");
+
+  var hasParsedAudio = e.audioTracks.length >= 1;
+  var hasParsedVideo = e.videoTracks.length >= 1;
+
+  ok(!(hasExpectedAudio ^ hasParsedAudio), "Check availability of expected/parsed audio");
+  ok(!(hasExpectedVideo ^ hasParsedVideo), "Check availability of expected/parsed video");
+  if (hasParsedAudio) {
+    is(e.audioTracks.length, 1, "The length of audio track should be 1");
+    is(e.audioTracks[0].id, r.audio_id, "File: " + msg + ", Audio track id");
+    is(e.audioTracks[0].kind, r.audio_kind, "File: " + msg + ", Audio track kind");
+    is(e.audioTracks[0].language, r.audio_language, "File: " + msg + ", Audio track language");
+    is(e.audioTracks[0].label, r.audio_label, "File: " + msg + ", Audio track label");
+  }
+  if (hasParsedVideo) {
+    is(e.videoTracks.length, 1, "The length of video track should be 1");
+    is(e.videoTracks[0].id, r.video_id, "File: " + msg + ", Video track id");
+    is(e.videoTracks[0].kind, r.video_kind, "File: " + msg + ", Video track kind");
+    is(e.videoTracks[0].language, r.video_language, "File: " + msg + ", Video track language");
+    is(e.videoTracks[0].label, r.video_label, "File: " + msg + ", Video track label");
+  }
+}
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  v.preload = "metadata";
+  v.token = token;
+  manager.started(token);
+
+  v.src = test.name;
+  v.name = test.name;
+
+  v.onloadedmetadata = function(evt) {
+    localCheckMetadata(evt.target.name, evt.target);
+    evt.target.finished = true;
+    evt.target.onloadedmetadata = null;
+    removeNodeAndSource(evt.target);
+    manager.finished(evt.target.token);
+  };
+
+  document.body.appendChild(v);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.track.enabled", true]]},
+  function() {
+  	manager.runTests(gMultitrackInfoOggPlayList, startTest);
+  }
+);
+</script>
+</pre>
+</body>
+</html>
