@@ -9,6 +9,12 @@ var gContentPane = {
    */
   init: function ()
   {
+    function setEventListener(aId, aEventType, aCallback)
+    {
+      document.getElementById(aId)
+              .addEventListener(aEventType, aCallback.bind(gContentPane));
+    }
+
     this._rebuildFonts();
     var menulist = document.getElementById("defaultFont");
     if (menulist.selectedIndex == -1) {
@@ -22,6 +28,21 @@ var gContentPane = {
       let row = document.getElementById("translationBox");
       row.removeAttribute("hidden");
     }
+
+    setEventListener("font.language.group", "change",
+      gContentPane._rebuildFonts);
+    setEventListener("popupPolicyButton", "command",
+      gContentPane.showPopupExceptions);
+    setEventListener("advancedFonts", "command",
+      gContentPane.configureFonts);
+    setEventListener("colors", "command",
+      gContentPane.configureColors);
+    setEventListener("chooseLanguage", "command",
+      gContentPane.showLanguages);
+    setEventListener("translationAttributionImage", "click",
+      gContentPane.openTranslationProviderAttribution);
+    setEventListener("translateButton", "command",
+      gContentPane.showTranslationExceptions);
   },
 
   // UTILITY FUNCTIONS
