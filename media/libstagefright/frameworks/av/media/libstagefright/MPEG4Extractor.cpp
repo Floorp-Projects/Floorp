@@ -3457,11 +3457,15 @@ status_t MPEG4Source::fragmentedRead(
                 totalTime += se->mDurationUs;
                 totalOffset += se->mSize;
             }
-        mCurrentMoofOffset = totalOffset;
-        mCurrentSamples.clear();
-        mCurrentSampleIndex = 0;
-        parseChunk(&totalOffset);
-        mCurrentTime = totalTime * mTimescale / 1000000ll;
+            mCurrentMoofOffset = totalOffset;
+            mCurrentSamples.clear();
+            mCurrentSampleIndex = 0;
+            mTrackFragmentData.mPresent = false;
+            parseChunk(&totalOffset);
+            mCurrentTime = totalTime * mTimescale / 1000000ll;
+            if (mTrackFragmentData.mPresent) {
+                mCurrentTime += mTrackFragmentData.mBaseMediaDecodeTime;
+            }
         }
 
         if (mBuffer != NULL) {
