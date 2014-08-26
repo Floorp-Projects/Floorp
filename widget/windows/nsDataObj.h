@@ -102,7 +102,7 @@ protected:
 		STDMETHODIMP_(ULONG) Release       ();
 
     // support for clipboard
-    void AddDataFlavor(const char* aDataFlavor, LPFORMATETC aFE);
+    virtual void AddDataFlavor(const char* aDataFlavor, LPFORMATETC aFE);
     void SetTransferable(nsITransferable * aTransferable);
 
 		// Return the registered OLE class ID of this object's CfDataObj.
