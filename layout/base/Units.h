@@ -295,7 +295,17 @@ struct ScreenPixel {
   }
 };
 
-// Operators to apply ScaleFactors directly to Points, Rects, Sizes and Margins
+// Operators to apply ScaleFactors directly to Coords, Points, Rects, Sizes and Margins
+
+template<class src, class dst>
+gfx::CoordTyped<dst> operator*(gfx::CoordTyped<src>& aCoord, const gfx::ScaleFactor<src, dst>& aScale) {
+  return gfx::CoordTyped<dst>(aCoord.value * aScale.scale);
+}
+
+template<class src, class dst>
+gfx::CoordTyped<dst> operator/(gfx::CoordTyped<src>& aCoord, const gfx::ScaleFactor<src, dst>& aScale) {
+  return gfx::CoordTyped<dst>(aCoord.value / aScale.scale);
+}
 
 template<class src, class dst>
 gfx::PointTyped<dst> operator*(const gfx::PointTyped<src>& aPoint, const gfx::ScaleFactor<src, dst>& aScale) {

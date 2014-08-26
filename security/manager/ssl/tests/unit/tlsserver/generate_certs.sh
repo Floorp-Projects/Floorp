@@ -172,6 +172,37 @@ function make_EE {
   SERIALNO=$(($SERIALNO + 1))
 }
 
+function make_EE_with_nsCertType {
+  NICKNAME="${1}"
+  SUBJECT="${2}"
+  CA="${3}"
+  SUBJECT_ALT_NAME="${4}"
+  NS_CERT_TYPE_CRITICAL="${5}"
+  EXTRA_ARGS="${6}"
+  # This adds the Netscape certificate type extension with the "sslServer"
+  # bit asserted. Its criticality depends on if "y" or "n" was passed as
+  # an argument to this function.
+  CERT_RESPONSES="n\n\ny\n1\n8\n$NS_CERT_TYPE_CRITICAL\n"
+
+  cert_already_exists $NICKNAME
+  if [ $ALREADY_EXISTS -eq 1 ]; then
+    echo "cert \"$NICKNAME\" already exists - not regenerating it (use --clobber to force regeneration)"
+    return
+  fi
+
+  echo -e "$CERT_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -S \
+                                                     -n $NICKNAME \
+                                                     -s "$SUBJECT" \
+                                                     -8 $SUBJECT_ALT_NAME \
+                                                     -c $CA \
+                                                     -t ",," \
+                                                     -m $SERIALNO \
+                                                     -5 \
+                                                     $COMMON_ARGS \
+                                                     $EXTRA_ARGS
+  SERIALNO=$(($SERIALNO + 1))
+}
+
 function make_delegated {
   CERT_RESPONSES="n\n\ny\n"
   NICKNAME="${1}"
@@ -248,7 +279,12 @@ make_delegated invalidDelegatedSignerKeyUsageCrlSigning 'CN=Test Invalid Delegat
 make_delegated invalidDelegatedSignerWrongExtKeyUsage 'CN=Test Invalid Delegated Responder Wrong extKeyUsage' testCA "--extKeyUsage codeSigning"
 
 make_INT self-signed-EE-with-cA-true 'CN=Test Self-signed End-entity with CA true' unused "-x -8 self-signed-end-entity-with-cA-true.example.com"
+make_INT ca-used-as-end-entity 'CN=Test Intermediate used as End-Entity' testCA "-8 ca-used-as-end-entity.example.com"
 
 make_delegated badKeysizeDelegatedSigner 'CN=Bad Keysize Delegated Responder' testCA "--extKeyUsage ocspResponder -g 1008"
+
+make_EE_with_nsCertType nsCertTypeCritical 'CN=nsCertType Critical' testCA "localhost,*.example.com" "y"
+make_EE_with_nsCertType nsCertTypeNotCritical 'CN=nsCertType Not Critical' testCA "localhost,*.example.com" "n"
+make_EE_with_nsCertType nsCertTypeCriticalWithExtKeyUsage 'CN=nsCertType Critical With extKeyUsage' testCA "localhost,*.example.com" "y" "--extKeyUsage serverAuth"
 
 cleanup

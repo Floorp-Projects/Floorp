@@ -1763,17 +1763,6 @@ DispatchIonCache::initializeAddCacheState(LInstruction *ins, AddCacheState *addS
     addState->dispatchScratch = ScratchRegister;
 }
 
-template <class U>
-Register
-getBase(U *mir)
-{
-    switch (mir->base()) {
-      case U::Heap: return HeapReg;
-      case U::Global: return GlobalReg;
-    }
-    return InvalidReg;
-}
-
 bool
 CodeGeneratorARM::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins)
 {
@@ -1845,10 +1834,12 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
         FloatRegister dst = ToFloatRegister(ins->output());
         VFPRegister vd(dst);
         if (size == 32) {
-            masm.ma_vldr(Operand(GlobalReg, AsmJSNaN32GlobalDataOffset), vd.singleOverlay(), Assembler::AboveOrEqual);
+            masm.ma_vldr(Operand(GlobalReg, AsmJSNaN32GlobalDataOffset - AsmJSGlobalRegBias),
+                         vd.singleOverlay(), Assembler::AboveOrEqual);
             masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Below);
         } else {
-            masm.ma_vldr(Operand(GlobalReg, AsmJSNaN64GlobalDataOffset), vd, Assembler::AboveOrEqual);
+            masm.ma_vldr(Operand(GlobalReg, AsmJSNaN64GlobalDataOffset - AsmJSGlobalRegBias),
+                         vd, Assembler::AboveOrEqual);
             masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Below);
         }
     } else {
@@ -2068,7 +2059,7 @@ bool
 CodeGeneratorARM::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
 {
     const MAsmJSLoadGlobalVar *mir = ins->mir();
-    unsigned addr = mir->globalDataOffset();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
     if (mir->type() == MIRType_Int32) {
         masm.ma_dtr(IsLoad, GlobalReg, Imm32(addr), ToRegister(ins->output()));
     } else if (mir->type() == MIRType_Float32) {
@@ -2087,7 +2078,7 @@ CodeGeneratorARM::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
 
     MIRType type = mir->value()->type();
     JS_ASSERT(IsNumberType(type));
-    unsigned addr = mir->globalDataOffset();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
     if (mir->value()->type() == MIRType_Int32) {
         masm.ma_dtr(IsStore, GlobalReg, Imm32(addr), ToRegister(ins->value()));
     } else if (mir->value()->type() == MIRType_Float32) {
@@ -2108,7 +2099,7 @@ CodeGeneratorARM::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins)
     Register tmp = ToRegister(ins->temp());
     Register out = ToRegister(ins->output());
     unsigned addr = mir->globalDataOffset();
-    masm.ma_mov(Imm32(addr), tmp);
+    masm.ma_mov(Imm32(addr - AsmJSGlobalRegBias), tmp);
     masm.as_add(tmp, tmp, lsl(index, 2));
     masm.ma_ldr(DTRAddr(GlobalReg, DtrRegImmShift(tmp, LSL, 0)), out);
 
@@ -2120,7 +2111,8 @@ CodeGeneratorARM::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins)
 {
     const MAsmJSLoadFFIFunc *mir = ins->mir();
 
-    masm.ma_ldr(Operand(GlobalReg, mir->globalDataOffset()), ToRegister(ins->output()));
+    masm.ma_ldr(Operand(GlobalReg, mir->globalDataOffset() - AsmJSGlobalRegBias),
+                ToRegister(ins->output()));
 
     return true;
 }
