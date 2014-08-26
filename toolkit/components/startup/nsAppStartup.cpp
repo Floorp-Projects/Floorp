@@ -161,12 +161,14 @@ nsAppStartup::Init()
   if (!os)
     return NS_ERROR_FAILURE;
 
+  os->AddObserver(this, "quit-application", true);
   os->AddObserver(this, "quit-application-forced", true);
   os->AddObserver(this, "sessionstore-init-started", true);
   os->AddObserver(this, "sessionstore-windows-restored", true);
   os->AddObserver(this, "profile-change-teardown", true);
   os->AddObserver(this, "xul-window-registered", true);
   os->AddObserver(this, "xul-window-destroyed", true);
+  os->AddObserver(this, "profile-before-change", true);
   os->AddObserver(this, "xpcom-shutdown", true);
 
 #if defined(XP_WIN)
@@ -721,6 +723,10 @@ nsAppStartup::Observe(nsISupports *aSubject,
       mXPCOMShutdownProbe->Trigger();
     }
 #endif // defined(XP_WIN)
+  } else if (!strcmp(aTopic, "quit-application")) {
+    StartupTimeline::Record(StartupTimeline::QUIT_APPLICATION);
+  } else if (!strcmp(aTopic, "profile-before-change")) {
+    StartupTimeline::Record(StartupTimeline::PROFILE_BEFORE_CHANGE);
   } else {
     NS_ERROR("Unexpected observer topic.");
   }

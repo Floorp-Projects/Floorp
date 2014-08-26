@@ -13,11 +13,8 @@ search_activity_sources = [
     'java/org/mozilla/search/MainActivity.java',
     'java/org/mozilla/search/PostSearchFragment.java',
     'java/org/mozilla/search/PreSearchFragment.java',
-    'java/org/mozilla/search/providers/BingSearchEngine.java',
-    'java/org/mozilla/search/providers/GoogleSearchEngine.java',
     'java/org/mozilla/search/providers/SearchEngine.java',
     'java/org/mozilla/search/providers/SearchEngineManager.java',
-    'java/org/mozilla/search/providers/YahooSearchEngine.java',
     'java/org/mozilla/search/SearchPreferenceActivity.java',
     'java/org/mozilla/search/SearchWidget.java',
 ]

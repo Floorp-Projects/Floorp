@@ -33,6 +33,10 @@
                 <action android:name="org.mozilla.widget.LAUNCH_SEARCH"/>
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="org.mozilla.widget.LAUNCH_NEW_TAB"/>
+            </intent-filter>
+
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/search_widget_info" />
         </receiver>
 
