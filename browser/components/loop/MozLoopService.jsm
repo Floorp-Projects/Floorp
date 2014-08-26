@@ -295,6 +295,11 @@ let MozLoopServiceInternal = {
       return;
     }
 
+    // We set this here as it is assumed that once the user receives an incoming
+    // call, they'll have had enough time to see the terms of service. See
+    // bug 1046039 for background.
+    Services.prefs.setCharPref("loop.seenToS", "seen");
+
     this.openChatWindow(null,
                         this.localizedStrings["incoming_call_title"].textContent,
                         "about:loopconversation#incoming/" + version);
