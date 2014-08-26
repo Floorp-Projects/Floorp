@@ -210,10 +210,14 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
   nsCOMPtr<nsITimer> mTimer;
 };
 
+class Fake_DOMMediaStream;
+
 class Fake_MediaStreamTrack : public mozilla::RefCounted<Fake_MediaStreamTrack>
 {
 public:
   Fake_MediaStreamTrack(bool aIsVideo) : mIsVideo (aIsVideo) {}
+  mozilla::TrackID GetTrackID() { return mIsVideo ? 1 : 0; }
+  Fake_DOMMediaStream *GetStream() { return nullptr; }
   const Fake_MediaStreamTrack* AsVideoStreamTrack() const
   {
     return mIsVideo? this : nullptr;

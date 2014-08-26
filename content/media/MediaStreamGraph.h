@@ -855,6 +855,7 @@ protected:
 
   TrackData* FindDataForTrack(TrackID aID)
   {
+    mMutex.AssertCurrentThreadOwns();
     for (uint32_t i = 0; i < mUpdateTracks.Length(); ++i) {
       if (mUpdateTracks[i].mID == aID) {
         return &mUpdateTracks[i];
