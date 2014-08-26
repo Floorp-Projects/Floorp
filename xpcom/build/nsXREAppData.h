@@ -128,12 +128,6 @@ struct nsXREAppData
 #define NS_XRE_ENABLE_PROFILE_MIGRATOR (1 << 1)
 
 /**
- * Indicates whether or not the extension manager service should be
- * initialized at startup.
- */
-#define NS_XRE_ENABLE_EXTENSION_MANAGER (1 << 2)
-
-/**
  * Indicates whether or not to use Breakpad crash reporting.
  */
 #define NS_XRE_ENABLE_CRASH_REPORTER (1 << 3)

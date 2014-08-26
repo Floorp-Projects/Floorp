@@ -44,7 +44,6 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=1
 
 MOZ_APP_ID={aa3c5121-dab2-40e2-81ca-7ea25febc110}
 
-MOZ_EXTENSION_MANAGER=1
 MOZ_APP_STATIC_INI=1
 
 # Enable on-demand decompression
