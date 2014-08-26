@@ -21,8 +21,10 @@
         <![CDATA[
           this._frameLoader =
             this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
-          this._contentViewManager =
-            this._frameLoader.QueryInterface(Components.interfaces.nsIContentViewManager);
+          this._contentViewManager = null;
+            // TODO: rip out all the code dealing with _contentViewManager because it is
+            // obsolete and dead code. The nsIContentViewManager interface that it used
+            // to point to is being removed in bug 936690.
 
           let prefService =
             Components.classes["@mozilla.org/preferences-service;1"]
