@@ -245,9 +245,8 @@ pref("media.directshow.enabled", true);
 #ifdef MOZ_FMP4
 pref("media.fragmented-mp4.enabled", true);
 pref("media.fragmented-mp4.ffmpeg.enabled", false);
-// "media.fragmented-mp4.exposed" controls whether the MP4 parser can be
-// created by <video> elements.
-#if defined(XP_WIN) && defined(MOZ_WMF)
+#if defined(XP_WIN) && defined(MOZ_WMF) || defined(XP_MACOSX)
+// Denotes that the fragmented MP4 parser can be created by <video> elements.
 pref("media.fragmented-mp4.exposed", true);
 #else
 pref("media.fragmented-mp4.exposed", false);
