@@ -243,16 +243,6 @@ MOZ_ALWAYS_INLINE bool
 PLDHashTable::Init(const PLDHashTableOps* aOps, void* aData,
                    uint32_t aEntrySize, const fallible_t&, uint32_t aLength)
 {
-#ifdef DEBUG
-  if (aEntrySize > 16 * sizeof(void*)) {
-    printf_stderr(
-      "pldhash: for the table at address %p, the given aEntrySize"
-      " of %lu definitely favors chaining over double hashing.\n",
-      (void*)this,
-      (unsigned long) aEntrySize);
-  }
-#endif
-
   if (aLength > PL_DHASH_MAX_INITIAL_LENGTH) {
     return false;
   }
