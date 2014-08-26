@@ -1,0 +1,15 @@
+<html>
+  <head></head>
+  <body>
+    <script type="text/javascript">
+
+       window.addEventListener('message', function(evt) {
+         navigator.serviceWorker.ready.then(function() {
+           evt.ports[0].postMessage("WOW!");
+         });
+       }, false);
+
+    </script>
+  </body>
+</html>
+
