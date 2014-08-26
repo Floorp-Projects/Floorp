@@ -311,6 +311,12 @@ nsDNSAsyncRequest::OnLookupComplete(nsHostResolver *resolver,
 bool
 nsDNSAsyncRequest::EqualsAsyncListener(nsIDNSListener *aListener)
 {
+    nsCOMPtr<nsIDNSListenerProxy> wrapper = do_QueryInterface(mListener);
+    if (wrapper) {
+        nsCOMPtr<nsIDNSListener> originalListener;
+        wrapper->GetOriginalListener(getter_AddRefs(originalListener));
+        return aListener == originalListener;
+    }
     return (aListener == mListener);
 }
 

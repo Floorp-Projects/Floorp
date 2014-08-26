@@ -482,7 +482,7 @@ class LDefinition
     }
     bool isCompatibleReg(const AnyRegister &r) const {
         if (isFloatReg() && r.isFloat()) {
-#if defined(JS_CODEGEN_ARM)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
             if (type() == FLOAT32)
                 return r.fpu().isSingle();
             return r.fpu().isDouble();
@@ -493,7 +493,7 @@ class LDefinition
         return !isFloatReg() && !r.isFloat();
     }
     bool isCompatibleDef(const LDefinition &other) const {
-#ifdef JS_CODEGEN_ARM
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
         if (isFloatReg() && other.isFloatReg())
             return type() == other.type();
         return !isFloatReg() && !other.isFloatReg();

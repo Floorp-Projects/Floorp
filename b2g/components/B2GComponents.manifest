@@ -101,3 +101,8 @@ category command-line-handler m-b2goop @mozilla.org/commandlinehandler/general-s
 # MobileIdentityUIGlue.js
 component {83dbe26a-81f3-4a75-9541-3d0b7ca496b5} MobileIdentityUIGlue.js
 contract @mozilla.org/services/mobileid-ui-glue;1 {83dbe26a-81f3-4a75-9541-3d0b7ca496b5}
+
+# B2GAppMigrator.js
+component {7211ece0-b458-4635-9afc-f8d7f376ee95} B2GAppMigrator.js
+contract @mozilla.org/b2g-app-migrator;1 {7211ece0-b458-4635-9afc-f8d7f376ee95}
+category profile-after-change B2GAppMigrator @mozilla.org/b2g-app-migrator;1

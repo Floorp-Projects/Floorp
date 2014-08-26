@@ -2955,6 +2955,29 @@ CallerSubsumes(JS::Handle<JS::Value> aValue)
   return CallerSubsumes(&aValue.toObject());
 }
 
+template<class T>
+inline bool
+WrappedJSToDictionary(nsISupports* aObject, T& aDictionary)
+{
+  nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(aObject);
+  if (!wrappedObj) {
+    return false;
+  }
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JSObject*> obj(cx, wrappedObj->GetJSObject());
+  if (!obj) {
+    return false;
+  }
+
+  JSAutoCompartment ac(cx, obj);
+  JS::Rooted<JS::Value> v(cx, OBJECT_TO_JSVAL(obj));
+  return aDictionary.Init(cx, v);
+}
+
 } // namespace dom
 } // namespace mozilla
 
