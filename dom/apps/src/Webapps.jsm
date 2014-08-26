@@ -629,6 +629,10 @@ this.DOMApplicationRegistry = {
       yield this.loadCurrentRegistry();
 
       if (runUpdate) {
+
+        // Run migration before uninstall of core apps happens.
+        Services.obs.notifyObservers(null, "webapps-before-update-merge", null);        
+
 #ifdef MOZ_WIDGET_GONK
         yield this.installSystemApps();
 #endif

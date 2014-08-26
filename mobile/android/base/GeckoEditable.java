@@ -183,6 +183,12 @@ final class GeckoEditable
             return action;
         }
 
+        static Action newRemoveSpan(Object object) {
+            final Action action = new Action(TYPE_REMOVE_SPAN);
+            action.mSpanObject = object;
+            return action;
+        }
+
         static Action newSetHandler(Handler handler) {
             final Action action = new Action(TYPE_SET_HANDLER);
             action.mHandler = handler;
@@ -701,9 +707,15 @@ final class GeckoEditable
                 }
             });
             break;
+
         case Action.TYPE_SET_SPAN:
             mText.setSpan(action.mSpanObject, action.mStart, action.mEnd, action.mSpanFlags);
             break;
+
+        case Action.TYPE_REMOVE_SPAN:
+            mText.removeSpan(action.mSpanObject);
+            break;
+
         case Action.TYPE_SET_HANDLER:
             geckoSetIcHandler(action.mHandler);
             break;
@@ -1046,11 +1058,7 @@ final class GeckoEditable
                 what == Selection.SELECTION_END) {
             Log.w(LOGTAG, "selection removed with removeSpan()");
         }
-        if (mText.getSpanStart(what) >= 0) { // only remove if it's there
-            // Okay to remove immediately
-            mText.removeSpan(what);
-            mActionQueue.offer(new Action(Action.TYPE_REMOVE_SPAN));
-        }
+        mActionQueue.offer(Action.newRemoveSpan(what));
     }
 
     @Override

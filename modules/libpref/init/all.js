@@ -986,10 +986,6 @@ pref("security.fileuri.strict_origin_policy", true);
 // the results
 pref("network.allow-experiments", true);
 
-// Allow the network changed event to get sent when a network topology or
-// setup change is noticed while running.
-pref("network.notify.changed", true);
-
 // Transmit UDP busy-work to the LAN when anticipating low latency
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
 pref("network.tickle-wifi.enabled", false);
@@ -1165,11 +1161,6 @@ pref("network.http.connection-retry-timeout", 250);
 // The number of seconds after sending initial SYN for an HTTP connection
 // to give up if the OS does not give up first
 pref("network.http.connection-timeout", 90);
-
-// The number of seconds to allow active connections to prove that they have
-// traffic before considered stalled, after a network change has been detected
-// and signalled.
-pref("network.http.network-changed.timeout", 5);
 
 // The maximum number of current global half open sockets allowable
 // when starting a new speculative connection.
