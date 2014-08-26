@@ -217,6 +217,17 @@ public:
   DOMMediaStream* GetMediaStream() {
     return mMediaStream;
   }
+  // Returns the mPipelines index for the track or -1.
+#if 0
+  int HasTrack(DOMMediaStream* aStream, mozilla::TrackID aTrack);
+#endif
+  int HasTrackType(DOMMediaStream* aStream, bool aIsVideo);
+  // XXX NOTE: does not change mMediaStream, even if it replaces the last track
+  // in a LocalSourceStreamInfo.  Revise when we have support for multiple tracks
+  // of a type.
+  // Note aIndex != aOldTrack!  It's the result of HasTrackType()
+  nsresult ReplaceTrack(int aIndex, DOMMediaStream* aNewStream, mozilla::TrackID aNewTrack);
+
   void StorePipeline(int aTrack,
                      mozilla::RefPtr<mozilla::MediaPipelineTransmit> aPipeline);
 
