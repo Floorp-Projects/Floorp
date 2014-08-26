@@ -1450,11 +1450,13 @@ public:
     NS_ASSERTION(mGraph->mDetectedNotRunning,
                  "We should know the graph thread control loop isn't running!");
 
+    STREAM_LOG(PR_LOG_DEBUG, ("Shutting down graph %p", mGraph));
+
     if (mGraph->CurrentDriver()->AsAudioCallbackDriver()) {
       MOZ_ASSERT(!mGraph->CurrentDriver()->AsAudioCallbackDriver()->InCallback());
     }
 
-    STREAM_LOG(PR_LOG_DEBUG, ("Shutting drown graph %p", mGraph));
+    mGraph->CurrentDriver()->Stop();
 
     // mGraph's thread is not running so it's OK to do whatever here
     if (mGraph->IsEmpty()) {
