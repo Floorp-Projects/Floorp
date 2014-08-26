@@ -14,6 +14,10 @@
 #include "mozilla/Types.h"
 #include "nscore.h"
 
+#ifdef PL_DHASHMETER
+#include <stdio.h>
+#endif
+
 #if defined(__GNUC__) && defined(__i386__)
 #define PL_DHASH_FASTCALL __attribute__ ((regparm (3),stdcall))
 #elif defined(XP_WIN)
@@ -26,8 +30,8 @@
  * Table capacity limit; do not exceed.  The max capacity used to be 1<<23 but
  * that occasionally that wasn't enough.  Making it much bigger than 1<<26
  * probably isn't worthwhile -- tables that big are kind of ridiculous.  Also,
- * the growth operation will (deliberately) fail if |capacity * entrySize|
- * overflows a uint32_t, and entrySize is always at least 8 bytes.
+ * the growth operation will (deliberately) fail if |capacity * mEntrySize|
+ * overflows a uint32_t, and mEntrySize is always at least 8 bytes.
  */
 #define PL_DHASH_MAX_CAPACITY           ((uint32_t)1 << 26)
 
@@ -122,7 +126,7 @@ typedef enum PLDHashOperator
  *   op = etor(table, entry, number, arg);
  *
  * where number is a zero-based ordinal assigned to live entries according to
- * their order in aTable->entryStore.
+ * their order in aTable->mEntryStore.
  *
  * The return value, op, is treated as a set of flags.  If op is PL_DHASH_NEXT,
  * then continue enumerating.  If op contains PL_DHASH_REMOVE, then clear (via
@@ -134,7 +138,7 @@ typedef enum PLDHashOperator
  * If etor calls PL_DHashTableOperate on table with op != PL_DHASH_LOOKUP, it
  * must return PL_DHASH_STOP; otherwise undefined behavior results.
  *
- * If any enumerator returns PL_DHASH_REMOVE, aTable->entryStore may be shrunk
+ * If any enumerator returns PL_DHASH_REMOVE, aTable->mEntryStore may be shrunk
  * or compressed after enumeration, but before PL_DHashTableEnumerate returns.
  * Such an enumerator therefore can't safely set aside entry pointers, but an
  * enumerator that never returns PL_DHASH_REMOVE can set pointers to entries
@@ -142,12 +146,12 @@ typedef enum PLDHashOperator
  * Copying entry pointers is cheaper, and safe so long as the caller of such a
  * "stable" Enumerate doesn't use the set-aside pointers after any call either
  * to PL_DHashTableOperate, or to an "unstable" form of Enumerate, which might
- * grow or shrink entryStore.
+ * grow or shrink mEntryStore.
  *
  * If your enumerator wants to remove certain entries, but set aside pointers
  * to other entries that it retains, it can use PL_DHashTableRawRemove on the
  * entries to be removed, returning PL_DHASH_NEXT to skip them.  Likewise, if
- * you want to remove entries, but for some reason you do not want entryStore
+ * you want to remove entries, but for some reason you do not want mEntryStore
  * to be shrunk or compressed, you can call PL_DHashTableRawRemove safely on
  * the entry being enumerated, rather than returning PL_DHASH_REMOVE.
  */
@@ -222,9 +226,9 @@ typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
  * Note a qualitative difference between chaining and double hashing: under
  * chaining, entry addresses are stable across table shrinks and grows.  With
  * double hashing, you can't safely hold an entry pointer and use it after an
- * ADD or REMOVE operation, unless you sample aTable->generation before adding
+ * ADD or REMOVE operation, unless you sample aTable->mGeneration before adding
  * or removing, and compare the sample after, dereferencing the entry pointer
- * only if aTable->generation has not changed.
+ * only if aTable->mGeneration has not changed.
  *
  * The moral of this story: there is no one-size-fits-all hash table scheme,
  * but for small table entry size, and assuming entry address stability is not
@@ -241,57 +245,57 @@ struct PLDHashTable
   void*               data;           /* ops- and instance-specific data */
 
 private:
-  int16_t             hashShift;      /* multiplicative hash shift */
+  int16_t             mHashShift;     /* multiplicative hash shift */
   /*
-   * |recursionLevel| is only used in debug builds, but is present in opt
+   * |mRecursionLevel| is only used in debug builds, but is present in opt
    * builds to avoid binary compatibility problems when mixing DEBUG and
    * non-DEBUG components.  (Actually, even if it were removed,
    * sizeof(PLDHashTable) wouldn't change, due to struct padding.)
    */
-  uint16_t            recursionLevel; /* used to detect unsafe re-entry */
-  uint32_t            entrySize;      /* number of bytes in an entry */
-  uint32_t            entryCount;     /* number of entries in table */
-  uint32_t            removedCount;   /* removed entry sentinels in table */
-  uint32_t            generation;     /* entry storage generation number */
-  char*               entryStore;     /* entry storage */
+  uint16_t            mRecursionLevel;/* used to detect unsafe re-entry */
+  uint32_t            mEntrySize;     /* number of bytes in an entry */
+  uint32_t            mEntryCount;    /* number of entries in table */
+  uint32_t            mRemovedCount;  /* removed entry sentinels in table */
+  uint32_t            mGeneration;    /* entry storage generation number */
+  char*               mEntryStore;    /* entry storage */
 
 #ifdef PL_DHASHMETER
   struct PLDHashStats
   {
-    uint32_t        searches;       /* total number of table searches */
-    uint32_t        steps;          /* hash chain links traversed */
-    uint32_t        hits;           /* searches that found key */
-    uint32_t        misses;         /* searches that didn't find key */
-    uint32_t        lookups;        /* number of PL_DHASH_LOOKUPs */
-    uint32_t        addMisses;      /* adds that miss, and do work */
-    uint32_t        addOverRemoved; /* adds that recycled a removed entry */
-    uint32_t        addHits;        /* adds that hit an existing entry */
-    uint32_t        addFailures;    /* out-of-memory during add growth */
-    uint32_t        removeHits;     /* removes that hit, and do work */
-    uint32_t        removeMisses;   /* useless removes that miss */
-    uint32_t        removeFrees;    /* removes that freed entry directly */
-    uint32_t        removeEnums;    /* removes done by Enumerate */
-    uint32_t        grows;          /* table expansions */
-    uint32_t        shrinks;        /* table contractions */
-    uint32_t        compresses;     /* table compressions */
-    uint32_t        enumShrinks;    /* contractions after Enumerate */
-  } stats;
+    uint32_t        mSearches;      /* total number of table searches */
+    uint32_t        mSteps;         /* hash chain links traversed */
+    uint32_t        mHits;          /* searches that found key */
+    uint32_t        mMisses;        /* searches that didn't find key */
+    uint32_t        mLookups;       /* number of PL_DHASH_LOOKUPs */
+    uint32_t        mAddMisses;     /* adds that miss, and do work */
+    uint32_t        mAddOverRemoved;/* adds that recycled a removed entry */
+    uint32_t        mAddHits;       /* adds that hit an existing entry */
+    uint32_t        mAddFailures;   /* out-of-memory during add growth */
+    uint32_t        mRemoveHits;    /* removes that hit, and do work */
+    uint32_t        mRemoveMisses;  /* useless removes that miss */
+    uint32_t        mRemoveFrees;   /* removes that freed entry directly */
+    uint32_t        mRemoveEnums;   /* removes done by Enumerate */
+    uint32_t        mGrows;         /* table expansions */
+    uint32_t        mShrinks;       /* table contractions */
+    uint32_t        mCompresses;    /* table compressions */
+    uint32_t        mEnumShrinks;   /* contractions after Enumerate */
+  } mStats;
 #endif
 
 public:
   /*
    * Size in entries (gross, not net of free and removed sentinels) for table.
-   * We store hashShift rather than sizeLog2 to optimize the collision-free case
-   * in SearchTable.
+   * We store mHashShift rather than sizeLog2 to optimize the collision-free
+   * case in SearchTable.
    */
   uint32_t Capacity() const
   {
-    return ((uint32_t)1 << (PL_DHASH_BITS - hashShift));
+    return ((uint32_t)1 << (PL_DHASH_BITS - mHashShift));
   }
 
-  uint32_t EntrySize()  const { return entrySize; }
-  uint32_t EntryCount() const { return entryCount; }
-  uint32_t Generation() const { return generation; }
+  uint32_t EntrySize()  const { return mEntrySize; }
+  uint32_t EntryCount() const { return mEntryCount; }
+  uint32_t Generation() const { return mGeneration; }
 
   bool Init(const PLDHashTableOps* aOps, void* aData, uint32_t aEntrySize,
             const mozilla::fallible_t&, uint32_t aLength);
@@ -336,7 +340,7 @@ private:
 };
 
 /*
- * Table space at entryStore is allocated and freed using these callbacks.
+ * Table space at mEntryStore is allocated and freed using these callbacks.
  * The allocator should return null on error only (not if called with aNBytes
  * equal to 0; but note that pldhash.c code will never call with 0 aNBytes).
  */
@@ -487,7 +491,7 @@ NS_COM_GLUE const PLDHashTableOps* PL_DHashGetStubOps(void);
 /*
  * Dynamically allocate a new PLDHashTable using malloc, initialize it using
  * PL_DHashTableInit, and return its address.  Return null on malloc failure.
- * Note that the entry storage at aTable->entryStore will be allocated using
+ * Note that the entry storage at aTable->mEntryStore will be allocated using
  * the aOps->allocTable callback.
  */
 NS_COM_GLUE PLDHashTable* PL_NewDHashTable(
@@ -570,7 +574,7 @@ PL_DHashTableOperate(PLDHashTable* aTable, const void* aKey,
  * NB: this is a "raw" or low-level routine, intended to be used only where
  * the inefficiency of a full PL_DHashTableOperate (which rehashes in order
  * to find the entry given its key) is not tolerable.  This function does not
- * shrink the table if it is underloaded.  It does not update stats #ifdef
+ * shrink the table if it is underloaded.  It does not update mStats #ifdef
  * PL_DHASHMETER, either.
  */
 NS_COM_GLUE void PL_DHashTableRawRemove(PLDHashTable* aTable,
@@ -618,8 +622,6 @@ NS_COM_GLUE void PL_DHashMarkTableImmutable(PLDHashTable* aTable);
 #endif
 
 #ifdef PL_DHASHMETER
-#include <stdio.h>
-
 NS_COM_GLUE void PL_DHashTableDumpMeter(PLDHashTable* aTable,
                                         PLDHashEnumerator aDump, FILE* aFp);
 #endif
