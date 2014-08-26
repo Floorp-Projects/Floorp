@@ -402,12 +402,12 @@ typedef void (*StderrCallback)(const char* aFmt, va_list aArgs);
 extern "C" {
 #endif
 
-void printf_stderr(const char* aFmt, ...);
+void printf_stderr(const char* aFmt, ...) MOZ_FORMAT_PRINTF(1, 2);
 
 void vprintf_stderr(const char* aFmt, va_list aArgs);
 
 // fprintf with special handling for stderr to print to the console
-void fprintf_stderr(FILE* aFile, const char* aFmt, ...);
+void fprintf_stderr(FILE* aFile, const char* aFmt, ...) MOZ_FORMAT_PRINTF(2, 3);
 
 // used by the profiler to log stderr in the profiler for more
 // advanced performance debugging and display/layers visualization.
