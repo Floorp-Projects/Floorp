@@ -10,7 +10,7 @@
 /**
  * Network link status monitoring service.
  */
-[scriptable, uuid(f7d3be87-7403-4a1e-b89f-2797776e9b08)]
+[scriptable, uuid(48113f15-7635-406c-b290-5c48c8ab1ee1)]
 interface nsINetworkLinkService : nsISupports
 {
   /* Link type constants */
