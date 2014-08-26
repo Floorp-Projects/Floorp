@@ -12,7 +12,6 @@ MinVersion=@GRE_MILESTONE@
 MaxVersion=@GRE_MILESTONE@
 
 [XRE]
-EnableExtensionManager=0
 EnableProfileMigrator=0
 
 [Crash Reporter]
