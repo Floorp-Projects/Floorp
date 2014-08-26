@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Sandbox.h"
+#include "SandboxInternal.h"
 #include "SandboxLogging.h"
 
 #include <unistd.h>
@@ -25,13 +26,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/unused.h"
-#include "mozilla/dom/Exceptions.h"
-#include "nsThreadUtils.h"
-#include "prenv.h"
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
 
 #if defined(ANDROID)
 #include "android_ucontext.h"
@@ -44,6 +38,8 @@
 #include "sandbox/linux/seccomp-bpf/die.h"
 
 namespace mozilla {
+
+SandboxCrashFunc gSandboxCrashFunc;
 
 #ifdef MOZ_GMP_SANDBOX
 // For media plugins, we can start the sandbox before we dlopen the
@@ -89,49 +85,6 @@ struct SandboxFlags {
 static const SandboxFlags gSandboxFlags;
 
 /**
- * Log JS stack info in the same place as the sandbox violation
- * message.  Useful in case the responsible code is JS and all we have
- * are logs and a minidump with the C++ stacks (e.g., on TBPL).
- */
-static void
-SandboxLogJSStack(void)
-{
-  if (!NS_IsMainThread()) {
-    // This might be a worker thread... or it might be a non-JS
-    // thread, or a non-NSPR thread.  There's isn't a good API for
-    // dealing with this, yet.
-    return;
-  }
-  nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack();
-  for (int i = 0; frame != nullptr; ++i) {
-    nsAutoString fileName, funName;
-    int32_t lineNumber;
-
-    // Don't stop unwinding if an attribute can't be read.
-    fileName.SetIsVoid(true);
-    unused << frame->GetFilename(fileName);
-    lineNumber = 0;
-    unused << frame->GetLineNumber(&lineNumber);
-    funName.SetIsVoid(true);
-    unused << frame->GetName(funName);
-
-    if (!funName.IsVoid() || !fileName.IsVoid()) {
-      SANDBOX_LOG_ERROR("JS frame %d: %s %s line %d", i,
-                        funName.IsVoid() ?
-                        "(anonymous)" : NS_ConvertUTF16toUTF8(funName).get(),
-                        fileName.IsVoid() ?
-                        "(no file)" : NS_ConvertUTF16toUTF8(fileName).get(),
-                        lineNumber);
-    }
-
-    nsCOMPtr<nsIStackFrame> nextFrame;
-    nsresult rv = frame->GetCaller(getter_AddRefs(nextFrame));
-    NS_ENSURE_SUCCESS_VOID(rv);
-    frame = nextFrame;
-  }
-}
-
-/**
  * This is the SIGSYS handler function. It is used to report to the user
  * which system call has been denied by Seccomp.
  * This function also makes the process exit as denying the system call
@@ -145,7 +98,7 @@ Reporter(int nr, siginfo_t *info, void *void_context)
 {
   ucontext_t *ctx = static_cast<ucontext_t*>(void_context);
   unsigned long syscall_nr, args[6];
-  pid_t pid = getpid(), tid = syscall(__NR_gettid);
+  pid_t pid = getpid();
 
   if (nr != SIGSYS) {
     return;
@@ -191,23 +144,10 @@ Reporter(int nr, siginfo_t *info, void *void_context)
                     pid, syscall_nr,
                     args[0], args[1], args[2], args[3], args[4], args[5]);
 
-#ifdef MOZ_CRASHREPORTER
   // Bug 1017393: record syscall number somewhere useful.
   info->si_addr = reinterpret_cast<void*>(syscall_nr);
-  bool dumped = CrashReporter::WriteMinidumpForSigInfo(nr, info, void_context);
-  if (!dumped) {
-    SANDBOX_LOG_ERROR("Failed to write minidump");
-  }
-#endif
 
-  // Do this last, in case it crashes or deadlocks.
-  SandboxLogJSStack();
-
-  // Try to reraise, so the parent sees that this process crashed.
-  // (If tgkill is forbidden, then seccomp will raise SIGSYS, which
-  // also accomplishes that goal.)
-  signal(SIGSYS, SIG_DFL);
-  syscall(__NR_tgkill, pid, tid, nr);
+  gSandboxCrashFunc(nr, info, void_context);
   _exit(127);
 }
 
@@ -338,7 +278,7 @@ BroadcastSetThreadSandbox(SandboxType aType)
   DIR *taskdp;
   struct dirent *de;
   SandboxFilter filter(&sSetSandboxFilter, aType,
-                       PR_GetEnv("MOZ_SANDBOX_VERBOSE"));
+                       getenv("MOZ_SANDBOX_VERBOSE"));
 
   static_assert(sizeof(mozilla::Atomic<int>) == sizeof(int),
                 "mozilla::Atomic<int> isn't represented by an int");
@@ -469,6 +409,8 @@ BroadcastSetThreadSandbox(SandboxType aType)
 static void
 SetCurrentProcessSandbox(SandboxType aType)
 {
+  MOZ_ASSERT(gSandboxCrashFunc);
+
   if (InstallSyscallReporter()) {
     SANDBOX_LOG_ERROR("install_syscall_reporter() failed\n");
   }
