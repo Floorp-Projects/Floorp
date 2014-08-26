@@ -91,9 +91,10 @@ DoCommandCallback(Command aCommand, void* aData)
   }
 }
 
-nsEditorEventListener::nsEditorEventListener() :
-  mEditor(nullptr), mCommitText(false),
-  mInTransaction(false)
+nsEditorEventListener::nsEditorEventListener()
+  : mEditor(nullptr)
+  , mCommitText(false)
+  , mInTransaction(false)
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   , mHaveBidiKeyboards(false)
   , mShouldSwitchTextDirection(false)
@@ -447,8 +448,9 @@ bool IsCtrlShiftPressed(bool& isRTL)
   //    To ignore the keys checked in 1, we set their status to 0 before
   //    checking the key status.
   const int kKeyDownMask = 0x80;
-  if ((keystate[VK_CONTROL] & kKeyDownMask) == 0)
+  if ((keystate[VK_CONTROL] & kKeyDownMask) == 0) {
     return false;
+  }
 
   if (keystate[VK_RSHIFT] & kKeyDownMask) {
     keystate[VK_RSHIFT] = 0;
@@ -471,8 +473,9 @@ bool IsCtrlShiftPressed(bool& isRTL)
   keystate[VK_RCONTROL] = 0;
   keystate[VK_LCONTROL] = 0;
   for (int i = 0; i <= VK_PACKET; ++i) {
-    if (keystate[i] & kKeyDownMask)
+    if (keystate[i] & kKeyDownMask) {
       return false;
+    }
   }
   return true;
 }
@@ -624,10 +627,8 @@ nsEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
   int16_t button = -1;
   aMouseEvent->GetButton(&button);
   // middle-mouse click (paste);
-  if (button == 1)
-  {
-    if (Preferences::GetBool("middlemouse.paste", false))
-    {
+  if (button == 1) {
+    if (Preferences::GetBool("middlemouse.paste", false)) {
       // Set the selection to the point under the mouse cursor:
       nsCOMPtr<nsIDOMNode> parent;
       if (NS_FAILED(aMouseEvent->GetRangeParent(getter_AddRefs(parent)))) {
@@ -639,8 +640,9 @@ nsEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
       }
 
       nsCOMPtr<nsISelection> selection;
-      if (NS_SUCCEEDED(mEditor->GetSelection(getter_AddRefs(selection))))
-        (void)selection->Collapse(parent, offset);
+      if (NS_SUCCEEDED(mEditor->GetSelection(getter_AddRefs(selection)))) {
+        selection->Collapse(parent, offset);
+      }
 
       // If the ctrl key is pressed, we'll do paste as quotation.
       // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
@@ -648,8 +650,9 @@ nsEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
       aMouseEvent->GetCtrlKey(&ctrlKey);
 
       nsCOMPtr<nsIEditorMailSupport> mailEditor;
-      if (ctrlKey)
+      if (ctrlKey) {
         mailEditor = do_QueryObject(mEditor);
+      }
 
       int32_t clipboard = nsIClipboard::kGlobalClipboard;
       nsCOMPtr<nsIClipboard> clipboardService =
@@ -662,10 +665,11 @@ nsEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
         }
       }
 
-      if (mailEditor)
+      if (mailEditor) {
         mailEditor->PasteAsQuotation(clipboard);
-      else
+      } else {
         mEditor->Paste(clipboard);
+      }
 
       // Prevent the event from propagating up to be possibly handled
       // again by the containing window:
@@ -753,17 +757,14 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
       mCaret->SetVisible(true);
       mCaret->SetCaretPosition(parent, offset);
     }
-  }
-  else
-  {
+  } else {
     if (!IsFileControlTextBox()) {
       // This is needed when dropping on an input, to prevent the editor for
       // the editable parent from receiving the event.
       aDragEvent->StopPropagation();
     }
 
-    if (mCaret)
-    {
+    if (mCaret) {
       mCaret->SetVisible(false);
     }
   }
@@ -774,13 +775,11 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
 void
 nsEditorEventListener::CleanupDragDropCaret()
 {
-  if (mCaret)
-  {
+  if (mCaret) {
     mCaret->SetVisible(false);    // hide it, so that it turns off its timer
 
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-    if (presShell)
-    {
+    if (presShell) {
       nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
       if (selCon) {
         selCon->SetCaretEnabled(false);
@@ -869,8 +868,9 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   // is the same as the drag source.
   nsCOMPtr<nsIDOMNode> sourceNode;
   dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
-  if (!sourceNode)
+  if (!sourceNode) {
     return true;
+  }
 
   // There is a source node, so compare the source documents and this document.
   // Disallow drops on the same document.
@@ -881,18 +881,22 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   nsCOMPtr<nsIDOMDocument> sourceDoc;
   nsresult rv = sourceNode->GetOwnerDocument(getter_AddRefs(sourceDoc));
   NS_ENSURE_SUCCESS(rv, false);
-  if (domdoc == sourceDoc)      // source and dest are the same document; disallow drops within the selection
-  {
+
+  // source and dest are the same document; disallow drops within the selection
+  if (domdoc == sourceDoc) {
     nsCOMPtr<nsISelection> selection;
     rv = mEditor->GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(rv) || !selection)
+    if (NS_FAILED(rv) || !selection) {
       return false;
-    
+    }
+
     // Don't bother if collapsed - can always drop
     if (!selection->Collapsed()) {
       nsCOMPtr<nsIDOMNode> parent;
       rv = aEvent->GetRangeParent(getter_AddRefs(parent));
-      if (NS_FAILED(rv) || !parent) return false;
+      if (NS_FAILED(rv) || !parent) {
+        return false;
+      }
 
       int32_t offset = 0;
       rv = aEvent->GetRangeOffset(&offset);
@@ -902,17 +906,20 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
       rv = selection->GetRangeCount(&rangeCount);
       NS_ENSURE_SUCCESS(rv, false);
 
-      for (int32_t i = 0; i < rangeCount; i++)
-      {
+      for (int32_t i = 0; i < rangeCount; i++) {
         nsCOMPtr<nsIDOMRange> range;
         rv = selection->GetRangeAt(i, getter_AddRefs(range));
-        if (NS_FAILED(rv) || !range) 
-          continue; //don't bail yet, iterate through them all
+        if (NS_FAILED(rv) || !range) {
+          // Don't bail yet, iterate through them all
+          continue;
+        }
 
         bool inRange = true;
-        (void)range->IsPointInRange(parent, offset, &inRange);
-        if (inRange)
-          return false;  //okay, now you can bail, we are over the orginal selection
+        range->IsPointInRange(parent, offset, &inRange);
+        if (inRange) {
+          // Okay, now you can bail, we are over the orginal selection
+          return false;
+        }
       }
     }
   }
@@ -983,8 +990,9 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
 
       nsCOMPtr<nsIDOMElement> element;
       fm->GetFocusedElement(getter_AddRefs(element));
-      if (!SameCOMIdentity(element, target))
+      if (!SameCOMIdentity(element, target)) {
         return NS_OK;
+      }
     }
   }
 
@@ -1010,21 +1018,22 @@ nsEditorEventListener::Blur(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMElement> element;
   fm->GetFocusedElement(getter_AddRefs(element));
-  if (element)
+  if (element) {
     return NS_OK;
+  }
 
   mEditor->FinalizeSelection();
   return NS_OK;
 }
 
 void
-nsEditorEventListener::SpellCheckIfNeeded() {
+nsEditorEventListener::SpellCheckIfNeeded()
+{
   // If the spell check skip flag is still enabled from creation time,
   // disable it because focused editors are allowed to spell check.
   uint32_t currentFlags = 0;
   mEditor->GetFlags(&currentFlags);
-  if(currentFlags & nsIPlaintextEditor::eEditorSkipSpellCheck)
-  {
+  if(currentFlags & nsIPlaintextEditor::eEditorSkipSpellCheck) {
     currentFlags ^= nsIPlaintextEditor::eEditorSkipSpellCheck;
     mEditor->SetFlags(currentFlags);
   }
