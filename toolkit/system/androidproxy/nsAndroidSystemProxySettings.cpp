@@ -26,7 +26,7 @@ public:
     nsresult Init();
 
 private:
-    ~nsAndroidSystemProxySettings() {};
+    virtual ~nsAndroidSystemProxySettings() {}
 };
 
 NS_IMPL_ISUPPORTS(nsAndroidSystemProxySettings, nsISystemProxySettings)

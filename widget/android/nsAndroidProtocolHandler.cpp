@@ -25,11 +25,15 @@ public:
         mBridgeInputStream = env->NewGlobalRef(GeckoAppShell::CreateInputStream(connection));
         mBridgeChannel = env->NewGlobalRef(AndroidBridge::ChannelCreate(mBridgeInputStream));
     }
+
+private:
     virtual ~AndroidInputStream() {
         JNIEnv *env = GetJNIForThread();
         env->DeleteGlobalRef(mBridgeInputStream);
         env->DeleteGlobalRef(mBridgeChannel);
     }
+
+public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
 
