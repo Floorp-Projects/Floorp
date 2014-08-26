@@ -330,8 +330,9 @@ CodeGenerator::visitValueToFloat32(LValueToFloat32 *lir)
     masm.jump(&done);
 
     masm.bind(&isDouble);
-    // ARM may not have a double register available if we've allocated output as a float32.
-#ifdef JS_CODEGEN_ARM
+    // ARM and MIPS may not have a double register available if we've
+    // allocated output as a float32.
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     masm.unboxDouble(operand, ScratchDoubleReg);
     masm.convertDoubleToFloat32(ScratchDoubleReg, output);
 #else

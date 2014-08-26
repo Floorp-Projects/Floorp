@@ -24,6 +24,7 @@ const StreamTime STREAM_TIME_MAX = MEDIA_TIME_MAX;
  */
 typedef int32_t TrackID;
 const TrackID TRACK_NONE = 0;
+const TrackID TRACK_INVALID = -1;
 
 inline TrackTicks RateConvertTicksRoundDown(TrackRate aOutRate,
                                             TrackRate aInRate,

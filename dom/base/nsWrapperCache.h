@@ -313,11 +313,15 @@ enum { WRAPPER_CACHE_FLAGS_BITS_USED = 2 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
 
-#define NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY                                   \
+#define NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY                                 \
   if ( aIID.Equals(NS_GET_IID(nsWrapperCache)) ) {                            \
     *aInstancePtr = static_cast<nsWrapperCache*>(this);                       \
     return NS_OK;                                                             \
   }
+
+#define NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY                                   \
+  NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY                                       \
+  else
 
 
 // Cycle collector macros for wrapper caches.

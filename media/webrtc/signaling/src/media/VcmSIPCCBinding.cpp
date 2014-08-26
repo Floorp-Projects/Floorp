@@ -2562,12 +2562,15 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
   const char *mediaType;
   mozilla::RefPtr<mozilla::MediaSessionConduit> conduit;
   int err = VCM_ERROR;
+  bool is_video;
   if (CC_IS_AUDIO(mcap_id)) {
     mediaType = "audio";
     err = vcmTxCreateAudioConduit(level, payload, pc, attrs, conduit);
+    is_video = false;
   } else if (CC_IS_VIDEO(mcap_id)) {
     mediaType = "video";
     err = vcmTxCreateVideoConduit(level, payload, pc, attrs, conduit);
+    is_video = true;
   } else {
     CSFLogError(logTag, "%s: mcap_id unrecognized", __FUNCTION__);
   }
@@ -2586,6 +2589,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
       stream->GetMediaStream(),
       pc_track_id,
       level,
+      is_video,
       conduit, rtp_flow, rtcp_flow);
 
   nsresult res = pipeline->Init();

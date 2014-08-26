@@ -358,9 +358,12 @@ void
 BufferTextureHost::Updated(const nsIntRegion* aRegion)
 {
   ++mUpdateSerial;
-  if (aRegion) {
+  // If the last frame wasn't uploaded yet, and we -don't- have a partial update,
+  // we still need to update the full surface.
+  // XXX - Clean this up a little bit, this is a little confusing.
+  if (aRegion && ((mFirstSource && mFirstSource->GetUpdateSerial() == mUpdateSerial) || mPartialUpdate)) {
     mPartialUpdate = true;
-    mMaybeUpdatedRegion = *aRegion;
+    mMaybeUpdatedRegion = mMaybeUpdatedRegion.Or(mMaybeUpdatedRegion, *aRegion);
   } else {
     mPartialUpdate = false;
   }
@@ -445,6 +448,11 @@ BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
   if (!Upload(aRegion)) {
     return false;
   }
+
+  // We no longer have an invalid region.
+  mPartialUpdate = false;
+  mMaybeUpdatedRegion.SetEmpty();
+
   // If upload returns true we know mFirstSource is not null
   mFirstSource->SetUpdateSerial(mUpdateSerial);
   return true;

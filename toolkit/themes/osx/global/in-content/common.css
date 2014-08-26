@@ -58,3 +58,10 @@ xul|description {
   font-size: 1.25rem;
   line-height: 22px;
 }
+
+html|a:-moz-focusring,
+xul|*.text-link:-moz-focusring,
+xul|*.inline-link:-moz-focusring {
+  outline-width: 0;
+  box-shadow: @focusRingShadow@;
+}

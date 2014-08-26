@@ -5982,7 +5982,6 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     // Create an MStart to hold the first valid MResumePoint.
     MStart *start = MStart::New(alloc(), MStart::StartType_Osr);
     osrBlock->add(start);
-    graph().setOsrStart(start);
 
     // MOsrValue instructions are infallible, so the first MResumePoint must
     // occur after they execute, at the point of the MStart.

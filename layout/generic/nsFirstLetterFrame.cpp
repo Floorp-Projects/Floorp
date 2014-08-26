@@ -184,6 +184,9 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     availSize.BSize(wm) -= bp.BStartEnd(wm);
   }
 
+  WritingMode lineWM = aMetrics.GetWritingMode();
+  nsHTMLReflowMetrics kidMetrics(lineWM);
+
   // Reflow the child
   if (!aReflowState.mLineLayout) {
     // When there is no lineLayout provided, we provide our own. The
@@ -203,14 +206,27 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     ll.SetFirstLetterStyleOK(true);
 
     kid->WillReflow(aPresContext);
-    kid->Reflow(aPresContext, aMetrics, rs, aReflowStatus);
+    kid->Reflow(aPresContext, kidMetrics, rs, aReflowStatus);
 
     ll.EndLineReflow();
     ll.SetInFirstLetter(false);
 
     // In the floating first-letter case, we need to set this ourselves;
     // nsLineLayout::BeginSpan will set it in the other case
-    mBaseline = aMetrics.BlockStartAscent();
+    mBaseline = kidMetrics.BlockStartAscent();
+
+    // Place and size the child and update the output metrics
+    LogicalSize convertedSize = kidMetrics.Size(lineWM).ConvertTo(wm, lineWM);
+    kid->SetRect(nsRect(bp.IStart(wm), bp.BStart(wm),
+                        convertedSize.ISize(wm), convertedSize.BSize(wm)));
+    kid->FinishAndStoreOverflow(&kidMetrics);
+    kid->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
+
+    convertedSize.ISize(wm) += bp.IStartEnd(wm);
+    convertedSize.BSize(wm) += bp.BStartEnd(wm);
+    aMetrics.SetSize(wm, convertedSize);
+    aMetrics.SetBlockStartAscent(kidMetrics.BlockStartAscent() +
+                                 bp.BStart(wm));
   }
   else {
     // Pretend we are a span and reflow the child frame
@@ -221,24 +237,17 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
       mStyleContext->GetPseudo() == nsCSSPseudoElements::firstLetter);
     ll->BeginSpan(this, &aReflowState, bp.IStart(wm),
                   availSize.ISize(wm), &mBaseline);
-    ll->ReflowFrame(kid, aReflowStatus, &aMetrics, pushedFrame);
-    ll->EndSpan(this);
+    ll->ReflowFrame(kid, aReflowStatus, &kidMetrics, pushedFrame);
+    NS_ASSERTION(lineWM.IsVertical() == wm.IsVertical(),
+                 "we're assuming we can mix sizes between lineWM and wm "
+                 "since we shouldn't have orthogonal writing modes within "
+                 "a line.");
+    aMetrics.ISize(lineWM) = ll->EndSpan(this) + bp.IStartEnd(wm);
     ll->SetInFirstLetter(false);
+
+    nsLayoutUtils::SetBSizeFromFontMetrics(this, aMetrics, aReflowState,
+                                           bp, lineWM, wm);
   }
-
-  // Place and size the child and update the output metrics
-  WritingMode lineWM = aMetrics.GetWritingMode();
-  LogicalSize convertedSize = aMetrics.Size(lineWM).ConvertTo(wm, lineWM);
-  kid->SetRect(nsRect(bp.IStart(wm), bp.BStart(wm),
-                      convertedSize.ISize(wm), convertedSize.BSize(wm)));
-  kid->FinishAndStoreOverflow(&aMetrics);
-  kid->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
-
-  convertedSize.ISize(wm) += bp.IStartEnd(wm);
-  convertedSize.BSize(wm) += bp.BStartEnd(wm);
-  aMetrics.SetSize(wm, convertedSize);
-  aMetrics.SetBlockStartAscent(aMetrics.BlockStartAscent() +
-                               bp.BStart(wm));
 
   // Ensure that the overflow rect contains the child textframe's overflow rect.
   // Note that if this is floating, the overline/underline drawable area is in

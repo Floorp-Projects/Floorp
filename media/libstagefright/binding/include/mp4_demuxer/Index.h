@@ -14,6 +14,7 @@ namespace mp4_demuxer
 
 template <typename T> class Interval;
 class MoofParser;
+class Sample;
 
 class Index
 {
@@ -31,7 +32,7 @@ public:
   uint64_t GetEvictionOffset(Microseconds aTime);
 
 private:
-  nsTArray<stagefright::MediaSource::Indice> mIndex;
+  nsTArray<Sample> mIndex;
   nsAutoPtr<MoofParser> mMoofParser;
 };
 }

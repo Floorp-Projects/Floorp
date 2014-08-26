@@ -102,6 +102,51 @@ void LocalSourceStreamInfo::DetachMedia_m()
   mMediaStream = nullptr;
 }
 
+#if 0
+// XXX  bug 1056652 makes this not very useful for transmit streams
+// NOTE: index is != the trackid in the MediaStream
+int LocalSourceStreamInfo::HasTrack(DOMMediaStream* aStream, TrackID aTrack)
+{
+  if (aStream != mMediaStream) {
+    return -1;
+  }
+  for (auto it = mPipelines.begin(); it != mPipelines.end(); ++it) {
+    if (it->second->trackid_locked() == aTrack) {
+      return it->first;
+    }
+  }
+  return -1;
+}
+#endif
+
+// NOTE: index is != the trackid in the MediaStream
+int LocalSourceStreamInfo::HasTrackType(DOMMediaStream* aStream, bool aIsVideo)
+{
+  if (aStream != mMediaStream) {
+    return -1;
+  }
+  for (auto it = mPipelines.begin(); it != mPipelines.end(); ++it) {
+    if (it->second->IsVideo() == aIsVideo) {
+      return it->first;
+    }
+  }
+  return -1;
+}
+
+// XXX revisit once we support multiple tracks of a type - bug 1056650
+nsresult LocalSourceStreamInfo::ReplaceTrack(int aIndex,
+                                             DOMMediaStream* aNewStream,
+                                             TrackID aNewTrack)
+{
+  // Note aIndex != aOldTrack!
+  mozilla::RefPtr<mozilla::MediaPipeline> pipeline = mPipelines[aIndex];
+  MOZ_ASSERT(pipeline);
+  if (NS_SUCCEEDED(static_cast<mozilla::MediaPipelineTransmit*>(pipeline.get())->ReplaceTrack(aNewStream, aNewTrack))) {
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
 void RemoteSourceStreamInfo::DetachTransport_s()
 {
   ASSERT_ON_THREAD(mParent->GetSTSThread());
@@ -277,7 +322,7 @@ PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream,
   // Now see if we already have this stream or another stream with
   // tracks of the same type, since we only allow one track of each type.
   // TODO(ekr@rtfm.com): remove this when multiple of each stream
-  // is allowed
+  // is allowed  bug 1056650
   nsRefPtr<LocalSourceStreamInfo> localSourceStream = nullptr;
 
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
@@ -729,7 +774,7 @@ LocalSourceStreamInfo::StorePipeline(
     return;
   }
   //TODO: Revisit once we start supporting multiple streams or multiple tracks
-  // of same type
+  // of same type  bug 1056650
   mPipelines[aTrack] = aPipeline;
 }
 
@@ -746,7 +791,7 @@ RemoteSourceStreamInfo::StorePipeline(
   CSFLogDebug(logTag, "%s track %d %s = %p", __FUNCTION__, aTrack, aIsVideo ? "video" : "audio",
               aPipeline.get());
   // See if we have both audio and video here, and if so cross the streams and sync them
-  // XXX Needs to be adjusted when we support multiple streams of the same type
+  // XXX Needs to be adjusted when we support multiple streams of the same type  bug 1056650
   for (std::map<int, bool>::iterator it = mTypes.begin(); it != mTypes.end(); ++it) {
     if (it->second != aIsVideo) {
       // Ok, we have one video, one non-video - cross the streams!
@@ -764,7 +809,7 @@ RemoteSourceStreamInfo::StorePipeline(
     }
   }
   //TODO: Revisit once we start supporting multiple streams or multiple tracks
-  // of same type
+  // of same type bug 1056650
   mPipelines[aTrack] = aPipeline;
   //TODO: move to attribute on Pipeline
   mTypes[aTrack] = aIsVideo;
