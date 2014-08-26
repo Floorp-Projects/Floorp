@@ -23,12 +23,12 @@ using mozilla::Swap;
 using mozilla::ToMaybe;
 using mozilla::UniquePtr;
 
-// Work around a bug in Visual Studio 2010 that prevents expressions of the form
-// |decltype(foo)::type| from working. See here:
+// Work around a bug in Visual Studio 2010 and 2012 that prevents expressions of
+// the form |decltype(foo)::type| from working. See here:
 // http://stackoverflow.com/questions/14330768/c11-compiler-error-when-using-decltypevar-followed-by-internal-type-of-var
 // GCC < 4.7 also has a similar bug.
 #if MOZ_IS_MSVC
-#  if MOZ_MSVC_VERSION_AT_LEAST(11)
+#  if MOZ_MSVC_VERSION_AT_LEAST(12)
 #    define DECLTYPE(EXPR) decltype(EXPR)
 #  else
      template<typename T> struct Identity { typedef T type; };
