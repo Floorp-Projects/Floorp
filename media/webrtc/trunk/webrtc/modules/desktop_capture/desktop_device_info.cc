@@ -85,10 +85,11 @@ DesktopDisplayDevice& DesktopDisplayDevice::operator= (DesktopDisplayDevice& oth
 
 
 DesktopApplication::DesktopApplication() {
-  processId_ =0;
+  processId_ = 0;
   processPathNameUTF8_= NULL;
   applicationNameUTF8_= NULL;
   processUniqueIdUTF8_= NULL;
+  windowCount_ = 0;
 }
 
 DesktopApplication::~DesktopApplication() {
@@ -110,6 +111,10 @@ void DesktopApplication::setProcessAppName(const char *appNameUTF8) {
   SetStringMember(&applicationNameUTF8_, appNameUTF8);
 }
 
+void DesktopApplication::setWindowCount(const uint32_t count) {
+  windowCount_ = count;
+}
+
 ProcessId DesktopApplication::getProcessId() {
   return processId_;
 }
@@ -124,6 +129,10 @@ const char *DesktopApplication::getUniqueIdName() {
 
 const char *DesktopApplication::getProcessAppName() {
   return applicationNameUTF8_;
+}
+
+uint32_t DesktopApplication::getWindowCount() {
+  return windowCount_;
 }
 
 DesktopApplication& DesktopApplication::operator= (DesktopApplication& other) {
