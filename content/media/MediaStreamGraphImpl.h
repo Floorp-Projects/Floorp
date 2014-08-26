@@ -537,22 +537,6 @@ public:
   };
   LifecycleState mLifecycleState;
   /**
-   * This enum specifies the wait state of the graph thread.
-   */
-  enum WaitState {
-    // RunThread() is running normally
-    WAITSTATE_RUNNING,
-    // RunThread() is paused waiting for its next iteration, which will
-    // happen soon
-    WAITSTATE_WAITING_FOR_NEXT_ITERATION,
-    // RunThread() is paused indefinitely waiting for something to change
-    WAITSTATE_WAITING_INDEFINITELY,
-    // Something has signaled RunThread() to wake up immediately,
-    // but it hasn't done so yet
-    WAITSTATE_WAKING_UP
-  };
-  WaitState mWaitState;
-  /**
    * The graph should stop processing at or after this time.
    */
   GraphTime mEndTime;
