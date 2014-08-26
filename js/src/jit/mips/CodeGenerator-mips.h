@@ -182,6 +182,8 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     virtual bool visitShiftI(LShiftI *ins);
     virtual bool visitUrshD(LUrshD *ins);
 
+    virtual bool visitClzI(LClzI *ins);
+
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
     virtual bool visitCompare(LCompare *comp);
     virtual bool visitCompareAndBranch(LCompareAndBranch *comp);
