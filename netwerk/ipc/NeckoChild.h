@@ -77,7 +77,6 @@ protected:
                                                  const nsCString& aUri,
                                                  const nsString& aRealm,
                                                  const uint64_t& aCallbackId) MOZ_OVERRIDE;
-  virtual bool RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline) MOZ_OVERRIDE;
 };
 
 /**
