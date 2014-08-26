@@ -115,6 +115,8 @@ GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
       return "hdr-need-1x";
     case CAMERA_PARAM_RECORDINGHINT:
       return KEY_RECORDING_HINT;
+    case CAMERA_PARAM_PICTURE_QUALITY:
+      return KEY_JPEG_QUALITY;
 
     case CAMERA_PARAM_SUPPORTED_PREVIEWSIZES:
       return KEY_SUPPORTED_PREVIEW_SIZES;
@@ -661,6 +663,19 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const double& aValue)
         DOM_CAMERA_LOGI("Zoom = %fx --> index = %d\n", aValue, index);
       }
       return SetImpl(CAMERA_PARAM_ZOOM, index);
+
+    case CAMERA_PARAM_PICTURE_QUALITY:
+      {
+        // Convert aValue [0.0..1.0] to nearest index in the range [1..100].
+        index = (aValue + 0.005) * 99.0 + 1.0;
+        if (aValue < 0.0) {
+          index = 1;
+        } else if (aValue > 1.0) {
+          index = 100;
+        }
+        DOM_CAMERA_LOGI("Picture quality = %f --> index = %d\n", aValue, index);
+      }
+      return SetImpl(CAMERA_PARAM_PICTURE_QUALITY, index);
   }
 
   return SetImpl(aKey, aValue);
@@ -723,6 +738,19 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, double& aValue)
         val = index * mExposureCompensationStep;
         DOM_CAMERA_LOGI("exposure compensation (aKey=%d): index=%d --> EV=%f\n", aKey, index, val);
       }
+      break;
+
+    case CAMERA_PARAM_PICTURE_QUALITY:
+      // Convert index [1..100] to a quality value [0.0..1.0].
+      rv = GetImpl(aKey, index);
+      if (index < 2) {
+        val = 0.0;
+      } else if (index > 99) {
+        val = 1.0;
+      } else {
+        val = static_cast<double>(index - 1) / 99.0;
+      }
+      DOM_CAMERA_LOGI("index = %d --> picture quality = %f\n", index, val);
       break;
 
     default:
