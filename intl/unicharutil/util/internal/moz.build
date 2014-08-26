@@ -12,8 +12,4 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '..',
-    '../../src',
 ]
-
-if CONFIG['ENABLE_INTL_API']:
-    CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']

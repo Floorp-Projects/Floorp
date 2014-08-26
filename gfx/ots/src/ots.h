@@ -29,52 +29,33 @@ namespace ots {
 bool Failure(const char *f, int l, const char *fn);
 #endif
 
-#if defined(_MSC_VER)
-// MSVC supports C99 style variadic macros.
-#define OTS_WARNING(format, ...)
-#else
-// GCC
-#if defined(OTS_DEBUG)
-#define OTS_WARNING(format, args...) \
-    ots::Warning(__FILE__, __LINE__, format, ##args)
-void Warning(const char *f, int l, const char *format, ...)
-     __attribute__((format(printf, 3, 4)));
-#else
-#define OTS_WARNING(format, args...)
-#endif
-#endif
-
 // All OTS_FAILURE_* macros ultimately evaluate to 'false', just like the original
 // message-less OTS_FAILURE(), so that the current parser will return 'false' as
 // its result (indicating a failure).
-// If a message_func pointer has been provided, this will be called before returning
-// the 'false' status.
+
+#if defined(_MSC_VER) || !defined(OTS_DEBUG)
+#define OTS_MESSAGE_(otf_,...) \
+  (otf_)->context->Message(__VA_ARGS__)
+#else
+#define OTS_MESSAGE_(otf_,...) \
+  OTS_FAILURE(), \
+  (otf_)->context->Message(__VA_ARGS__)
+#endif
 
 // Generate a simple message
 #define OTS_FAILURE_MSG_(otf_,...) \
-  ((otf_)->message_func && \
-    (*(otf_)->message_func)((otf_)->message_user_data, __VA_ARGS__) && \
-    false)
+  (OTS_MESSAGE_(otf_,__VA_ARGS__), false)
 
 // Generate a message with an associated table tag
 #define OTS_FAILURE_MSG_TAG_(otf_,msg_,tag_) \
-  ((otf_)->message_func && \
-    (*(otf_)->message_func)((otf_)->message_user_data, "%4.4s: %s", tag_, msg_) && \
-    false)
+  (OTS_MESSAGE_(otf_,"%4.4s: %s", tag_, msg_), false)
 
 // Convenience macro for use in files that only handle a single table tag,
 // defined as TABLE_NAME at the top of the file; the 'file' variable is
 // expected to be the current OpenTypeFile pointer.
 #define OTS_FAILURE_MSG(...) OTS_FAILURE_MSG_(file, TABLE_NAME ": " __VA_ARGS__)
 
-// Define OTS_NO_TRANSCODE_HINTS (i.e., g++ -DOTS_NO_TRANSCODE_HINTS) if you
-// want to omit TrueType hinting instructions and variables in glyf, fpgm, prep,
-// and cvt tables.
-#if defined(OTS_NO_TRANSCODE_HINTS)
-const bool g_transcode_hints = false;
-#else
-const bool g_transcode_hints = true;
-#endif
+#define OTS_WARNING OTS_FAILURE_MSG
 
 // -----------------------------------------------------------------------------
 // Buffer helper class
@@ -250,11 +231,7 @@ struct OpenTypeFile {
   uint16_t entry_selector;
   uint16_t range_shift;
 
-  MessageFunc  message_func;
-  void        *message_user_data;
-
-  TableActionFunc  table_action_func;
-  void            *table_action_user_data;
+  OTSContext *context;
 
 #define F(name, capname) OpenType##capname *name;
 FOR_EACH_TABLE_TYPE

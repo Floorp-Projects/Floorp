@@ -421,23 +421,8 @@ PendingLookup::LookupNext()
     nsRefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
     return lookup->LookupSpec(spec, true);
   }
-#ifdef XP_WIN
-  // There are no more URIs to check against local list. If the file is not
-  // eligible for remote lookup, bail.
-  if (!IsBinaryFile()) {
-    LOG(("Not eligible for remote lookups [this=%x]", this));
-    return OnComplete(false, NS_OK);
-  }
-  // Send the remote query if we are on Windows.
-  nsresult rv = SendRemoteQuery();
-  if (NS_FAILED(rv)) {
-    return OnComplete(false, rv);
-  }
-  return NS_OK;
-#else
   LOG(("PendingLookup: Nothing left to check [this=%p]", this));
   return OnComplete(false, NS_OK);
-#endif
 }
 
 nsCString
@@ -1063,14 +1048,6 @@ nsresult ApplicationReputationService::QueryReputationInternal(
   nsresult rv;
   // If malware checks aren't enabled, don't query application reputation.
   if (!Preferences::GetBool(PREF_SB_MALWARE_ENABLED, false)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // If there is no service URL for querying application reputation, abort.
-  nsCString serviceUrl;
-  NS_ENSURE_SUCCESS(Preferences::GetCString(PREF_SB_APP_REP_URL, &serviceUrl),
-                    NS_ERROR_NOT_AVAILABLE);
-  if (serviceUrl.EqualsLiteral("")) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

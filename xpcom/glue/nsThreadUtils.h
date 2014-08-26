@@ -294,7 +294,11 @@ template<class ClassType, bool Owning>
 struct nsRunnableMethodReceiver<ClassType, void, Owning>
 {
   ClassType* mObj;
-  explicit nsRunnableMethodReceiver(ClassType* aObj) : mObj(aObj) { NS_IF_ADDREF(mObj); }
+  explicit nsRunnableMethodReceiver(ClassType* aObj)
+    : mObj(aObj)
+  {
+    NS_IF_ADDREF(mObj);
+  }
   ~nsRunnableMethodReceiver() { Revoke(); }
   void Revoke() { NS_IF_RELEASE(mObj); }
 };

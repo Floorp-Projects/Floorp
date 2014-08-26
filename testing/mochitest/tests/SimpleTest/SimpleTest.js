@@ -243,9 +243,6 @@ SimpleTest._cleanupFunctions = [];
  * Something like assert.
 **/
 SimpleTest.ok = function (condition, name, diag) {
-    if (name === null || name === undefined) {
-        name = "undefined assertion name";
-    }
     var test = {'result': !!condition, 'name': name, 'diag': diag};
     var successInfo = {status:"PASS", expected:"PASS", message:"TEST-PASS"};
     var failureInfo = {status:"FAIL", expected:"PASS", message:"TEST-UNEXPECTED-FAIL"};
@@ -824,6 +821,8 @@ SimpleTest.finish = function() {
         }
     }
 
+    SimpleTest.testsLength = SimpleTest._tests.length;
+
     SimpleTest._alreadyFinished = true;
 
     var afterCleanup = function() {
@@ -1313,7 +1312,9 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
     var message = (isExpected ? "expected " : "") + "uncaught exception";
     var error = errorMsg + " at " + url + ":" + lineNumber;
     if (!SimpleTest._ignoringAllUncaughtExceptions) {
-        SimpleTest.ok(isExpected, message, error);
+        // Don't log if SimpleTest.finish() is already called, it would cause failures
+        if (!SimpleTest._alreadyFinished)
+          SimpleTest.ok(isExpected, message, error);
         SimpleTest._expectingUncaughtException = false;
     } else {
         SimpleTest.todo(false, message + ": " + error);

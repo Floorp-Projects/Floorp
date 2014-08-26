@@ -344,16 +344,25 @@ ProcessLink::OnChannelConnected(int32_t peer_pid)
 {
     AssertIOThread();
 
+    bool notifyChannel = false;
+
     {
         MonitorAutoLock lock(*mChan->mMonitor);
-        mChan->mChannelState = ChannelConnected;
-        mChan->mMonitor->Notify();
+        // Only update channel state if its still thinks its opening.  Do not
+        // force it into connected if it has errored out, started closing, etc.
+        if (mChan->mChannelState == ChannelOpening) {
+          mChan->mChannelState = ChannelConnected;
+          mChan->mMonitor->Notify();
+          notifyChannel = true;
+        }
     }
 
     if (mExistingListener)
         mExistingListener->OnChannelConnected(peer_pid);
 
-    mChan->OnChannelConnected(peer_pid);
+    if (notifyChannel) {
+      mChan->OnChannelConnected(peer_pid);
+    }
 }
 
 void

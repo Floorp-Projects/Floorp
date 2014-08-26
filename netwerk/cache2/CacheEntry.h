@@ -47,9 +47,9 @@ class CacheFileOutputStream;
 class CacheOutputCloseListener;
 class CacheEntryHandle;
 
-class CacheEntry : public nsICacheEntry
-                 , public nsIRunnable
-                 , public CacheFileListener
+class CacheEntry MOZ_FINAL : public nsICacheEntry
+                           , public nsIRunnable
+                           , public CacheFileListener
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

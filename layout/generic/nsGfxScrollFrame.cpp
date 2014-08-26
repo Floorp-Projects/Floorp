@@ -305,6 +305,8 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
     GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox,
                         &vScrollbarMinSize,
                         aAssumeVScroll ? &vScrollbarPrefSize : nullptr, true);
+    nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mVScrollbarBox);
+    scrollbar->SetScrollbarMediatorContent(mContent);
   }
   nscoord vScrollbarDesiredWidth = aAssumeVScroll ? vScrollbarPrefSize.width : 0;
   nscoord vScrollbarMinHeight = aAssumeVScroll ? vScrollbarMinSize.height : 0;
@@ -315,6 +317,8 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
     GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox,
                         &hScrollbarMinSize,
                         aAssumeHScroll ? &hScrollbarPrefSize : nullptr, false);
+    nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mHScrollbarBox);
+    scrollbar->SetScrollbarMediatorContent(mContent);
   }
   nscoord hScrollbarDesiredHeight = aAssumeHScroll ? hScrollbarPrefSize.height : 0;
   nscoord hScrollbarMinWidth = aAssumeHScroll ? hScrollbarMinSize.width : 0;
@@ -891,9 +895,9 @@ nsHTMLScrollFrame::AccessibleType()
 
 NS_QUERYFRAME_HEAD(nsHTMLScrollFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-  NS_QUERYFRAME_ENTRY(nsIScrollbarOwner)
   NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
   NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
+  NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 //----------nsXULScrollFrame-------------------------------------------
@@ -1039,6 +1043,106 @@ ScrollFrameHelper::WantAsyncScroll() const
   bool isVAsyncScrollable = isVScrollable && (mVScrollbarBox || isFocused);
   bool isHAsyncScrollable = isHScrollable && (mHScrollbarBox || isFocused);
   return isVAsyncScrollable || isHAsyncScrollable;
+}
+
+static nsRect
+GetOnePixelRangeAroundPoint(nsPoint aPoint, bool aIsHorizontal)
+{
+  nsRect allowedRange;
+  nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
+  if (aIsHorizontal) {
+    allowedRange.x = aPoint.x - halfPixel;
+    allowedRange.width = halfPixel*2 - 1;
+  } else {
+    allowedRange.y = aPoint.y - halfPixel;
+    allowedRange.height = halfPixel*2 - 1;
+  }
+  return allowedRange;
+}
+
+void
+ScrollFrameHelper::ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection)
+{
+  ScrollByUnit(aScrollbar, nsIScrollableFrame::SMOOTH, aDirection,
+               nsIScrollableFrame::PAGES);
+}
+
+void
+ScrollFrameHelper::ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection)
+{
+  ScrollByUnit(aScrollbar, nsIScrollableFrame::INSTANT, aDirection,
+               nsIScrollableFrame::WHOLE);
+}
+
+void
+ScrollFrameHelper::ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection)
+{
+  bool isHorizontal = aScrollbar->IsHorizontal();
+  nsIntPoint delta;
+  if (isHorizontal) {
+    const double kScrollMultiplier =
+      Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
+                          NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE);
+    delta.x = aDirection * kScrollMultiplier;
+  } else {
+    const double kScrollMultiplier =
+      Preferences::GetInt("toolkit.scrollbox.horizontalScrollDistance",
+                          NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
+    delta.y = aDirection * kScrollMultiplier;
+  }
+  nsIntPoint overflow;
+  ScrollBy(delta, nsIScrollableFrame::LINES, nsIScrollableFrame::SMOOTH,
+           &overflow, nsGkAtoms::other);
+}
+
+void
+ScrollFrameHelper::RepeatButtonScroll(nsScrollbarFrame* aScrollbar)
+{
+  aScrollbar->MoveToNewPosition();
+}
+
+void
+ScrollFrameHelper::ThumbMoved(nsScrollbarFrame* aScrollbar,
+                              nscoord aOldPos,
+                              nscoord aNewPos)
+{
+  MOZ_ASSERT(aScrollbar != nullptr);
+  bool isHorizontal = aScrollbar->IsHorizontal();
+  nsPoint current = GetScrollPosition();
+  nsPoint dest = current;
+  if (isHorizontal) {
+    dest.x = aNewPos;
+  } else {
+    dest.y = aNewPos;
+  }
+  nsRect allowedRange = GetOnePixelRangeAroundPoint(dest, isHorizontal);
+
+  // Don't try to scroll if we're already at an acceptable place.
+  // Don't call Contains here since Contains returns false when the point is
+  // on the bottom or right edge of the rectangle.
+  if (allowedRange.ClampPoint(current) == current) {
+    return;
+  }
+
+  ScrollTo(dest, nsIScrollableFrame::INSTANT, &allowedRange);
+}
+
+void
+ScrollFrameHelper::ScrollByUnit(nsScrollbarFrame* aScrollbar,
+                                nsIScrollableFrame::ScrollMode aMode,
+                                int32_t aDirection,
+                                nsIScrollableFrame::ScrollUnit aUnit)
+{
+  MOZ_ASSERT(aScrollbar != nullptr);
+  bool isHorizontal = aScrollbar->IsHorizontal();
+  nsIntPoint delta;
+  if (isHorizontal) {
+    delta.x = aDirection;
+  } else {
+    delta.y = aDirection;
+  }
+  nsIntPoint overflow;
+  ScrollBy(delta, aUnit, aMode, &overflow, nsGkAtoms::other);
 }
 
 nsresult
@@ -1234,9 +1338,9 @@ nsXULScrollFrame::DoLayout(nsBoxLayoutState& aState)
 
 NS_QUERYFRAME_HEAD(nsXULScrollFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-  NS_QUERYFRAME_ENTRY(nsIScrollbarOwner)
   NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
   NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
+  NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 //-------------------- Helper ----------------------

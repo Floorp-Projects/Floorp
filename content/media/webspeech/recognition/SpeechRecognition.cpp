@@ -490,13 +490,11 @@ SpeechRecognition::DoNothing(SpeechEvent* aEvent)
 void
 SpeechRecognition::AbortSilently(SpeechEvent* aEvent)
 {
-  bool stopRecording = StateBetween(STATE_ESTIMATING, STATE_RECOGNIZING);
-
   if (mRecognitionService) {
     mRecognitionService->Abort();
   }
 
-  if (stopRecording) {
+  if (mDOMStream) {
     StopRecording();
   }
 

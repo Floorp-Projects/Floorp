@@ -374,21 +374,10 @@ JSContext::setPendingException(js::Value v)
     JS_ASSERT_IF(v.isObject(), v.toObject().compartment() == compartment());
 }
 
-inline void
-JSContext::setDefaultCompartmentObject(JSObject *obj)
+inline bool
+JSContext::runningWithTrustedPrincipals() const
 {
-    JS_ASSERT(!options().noDefaultCompartmentObject());
-    defaultCompartmentObject_ = obj;
-}
-
-inline void
-JSContext::setDefaultCompartmentObjectIfUnset(JSObject *obj)
-{
-    if (!options().noDefaultCompartmentObject() &&
-        !defaultCompartmentObject_)
-    {
-        setDefaultCompartmentObject(obj);
-    }
+    return !compartment() || compartment()->principals == runtime()->trustedPrincipals();
 }
 
 inline void

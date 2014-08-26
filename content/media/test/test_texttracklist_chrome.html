@@ -16,14 +16,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=881976
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
-  function() {
-    var video = document.createElement("video");
-    is(video.textTracks.mediaElement, video, "Video's TextTrackList's MediaElement reference should be set to the video.");
-    SimpleTest.finish();
-  }
-);
 
+var video = document.createElement("video");
+is(video.textTracks.mediaElement, video, "Video's TextTrackList's MediaElement reference should be set to the video.");
+SimpleTest.finish();
 </script>
 </pre>
 </body>

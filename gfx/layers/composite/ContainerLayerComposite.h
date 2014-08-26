@@ -27,15 +27,15 @@ class ContainerLayerComposite : public ContainerLayer,
   template<class ContainerT>
   friend void ContainerPrepare(ContainerT* aContainer,
                                LayerManagerComposite* aManager,
-                               const nsIntRect& aClipRect);
+                               const RenderTargetIntRect& aClipRect);
   template<class ContainerT>
   friend void ContainerRender(ContainerT* aContainer,
                               LayerManagerComposite* aManager,
-                              const nsIntRect& aClipRect);
+                              const RenderTargetIntRect& aClipRect);
   template<class ContainerT>
   friend void RenderLayers(ContainerT* aContainer,
                            LayerManagerComposite* aManager,
-                           const nsIntRect& aClipRect);
+                           const RenderTargetIntRect& aClipRect);
   template<class ContainerT>
   friend void RenderIntermediate(ContainerT* aContainer,
                    LayerManagerComposite* aManager,
@@ -45,15 +45,15 @@ class ContainerLayerComposite : public ContainerLayer,
   friend RefPtr<CompositingRenderTarget>
   CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,
                                              LayerManagerComposite* aManager,
-                                             const nsIntRect& aClipRect);
+                                             const RenderTargetIntRect& aClipRect);
   template<class ContainerT>
   friend RefPtr<CompositingRenderTarget>
   CreateTemporaryTarget(ContainerT* aContainer,
                         LayerManagerComposite* aManager,
-                        const nsIntRect& aClipRect);
+                        const RenderTargetIntRect& aClipRect);
 
 public:
-  ContainerLayerComposite(LayerManagerComposite *aManager);
+  explicit ContainerLayerComposite(LayerManagerComposite *aManager);
 
 protected:
   ~ContainerLayerComposite();
@@ -67,7 +67,7 @@ public:
   LayerComposite* GetFirstChildComposite();
 
   virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
-  virtual void Prepare(const nsIntRect& aClipRect) MOZ_OVERRIDE;
+  virtual void Prepare(const RenderTargetIntRect& aClipRect) MOZ_OVERRIDE;
 
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE
   {
@@ -91,7 +91,7 @@ class RefLayerComposite : public RefLayer,
   template<class ContainerT>
   friend void ContainerPrepare(ContainerT* aContainer,
                                LayerManagerComposite* aManager,
-                               const nsIntRect& aClipRect);
+                               const RenderTargetIntRect& aClipRect);
   template<class ContainerT>
   friend void ContainerRender(ContainerT* aContainer,
                               LayerManagerComposite* aManager,
@@ -117,7 +117,7 @@ class RefLayerComposite : public RefLayer,
                         const nsIntRect& aClipRect);
 
 public:
-  RefLayerComposite(LayerManagerComposite *aManager);
+  explicit RefLayerComposite(LayerManagerComposite *aManager);
 
 protected:
   ~RefLayerComposite();
@@ -131,7 +131,7 @@ public:
   LayerComposite* GetFirstChildComposite();
 
   virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
-  virtual void Prepare(const nsIntRect& aClipRect) MOZ_OVERRIDE;
+  virtual void Prepare(const RenderTargetIntRect& aClipRect) MOZ_OVERRIDE;
 
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE
   {

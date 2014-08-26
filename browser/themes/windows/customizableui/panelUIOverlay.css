@@ -100,10 +100,6 @@ menuitem[type="checkbox"].subviewbutton {
   -moz-padding-start: 0;
 }
 
-.subviewbutton.bookmark-item > .toolbarbutton-icon {
-  -moz-margin-start: 3px;
-}
-
 /* subviewbutton entries for social sidebars have images that come from external
 /* sources, and are not guaranteed to be the size we want, so force the size on
 /* those icons. */
@@ -124,6 +120,10 @@ menu.subviewbutton > .menu-right {
 
 menu[disabled="true"].subviewbutton > .menu-right {
   -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
 }
 
 %ifdef WINDOWS_AERO

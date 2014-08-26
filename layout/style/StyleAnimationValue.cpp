@@ -1813,10 +1813,36 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
 
         break;
       }
+      case eCSSKeyword_rotate3d: {
+        gfxPoint3D vector1(a1->Item(1).GetFloatValue(),
+                           a1->Item(2).GetFloatValue(),
+                           a1->Item(3).GetFloatValue());
+        vector1.Normalize();
+        gfxPoint3D vector2(a2->Item(1).GetFloatValue(),
+                           a2->Item(2).GetFloatValue(),
+                           a2->Item(3).GetFloatValue());
+        vector2.Normalize();
+
+        // Handle rotate3d with matched (normalized) vectors,
+        // otherwise fallthrough to the next switch statement
+        // and do matrix decomposition.
+        if (vector1 == vector2) {
+          // We skipped appending a transform function above for rotate3d,
+          // so do it now.
+          arr = StyleAnimationValue::AppendTransformFunction(tfunc, resultTail);
+          arr->Item(1).SetFloatValue(vector1.x, eCSSUnit_Number);
+          arr->Item(2).SetFloatValue(vector1.y, eCSSUnit_Number);
+          arr->Item(3).SetFloatValue(vector1.z, eCSSUnit_Number);
+
+          AddCSSValueAngle(aCoeff1, a1->Item(4), aCoeff2, a2->Item(4),
+                           arr->Item(4));
+          break;
+        }
+        // FALL THROUGH
+      }
       case eCSSKeyword_matrix:
       case eCSSKeyword_matrix3d:
       case eCSSKeyword_interpolatematrix:
-      case eCSSKeyword_rotate3d:
       case eCSSKeyword_perspective: {
         // FIXME: If the matrix contains only numbers then we could decompose
         // here.

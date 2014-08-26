@@ -84,6 +84,9 @@ full copy of its source code, and explain how the code entered the system,
 whether via a call to `eval`, a `<script>` element, or otherwise. A
 `Debugger.Script` points to the `Debugger.Source` from which it is derived.
 
+Also omitted is the `Debugger`'s [`Debugger.Memory`][memory] instance, which
+holds methods and accessors for observing the debuggee's memory use.
+
 All these types follow some [general conventions][conventions], which you
 should look through before drilling down into any particular type's
 specification.

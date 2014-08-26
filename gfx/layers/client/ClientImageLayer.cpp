@@ -26,7 +26,7 @@ using namespace mozilla::gfx;
 class ClientImageLayer : public ImageLayer, 
                          public ClientLayer {
 public:
-  ClientImageLayer(ClientLayerManager* aLayerManager)
+  explicit ClientImageLayer(ClientLayerManager* aLayerManager)
     : ImageLayer(aLayerManager,
                  static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
     , mImageClientTypeContainer(CompositableType::BUFFER_UNKNOWN)
@@ -110,6 +110,11 @@ protected:
 #ifdef MOZ_WIDGET_GONK
     // gralloc buffer needs CompositableType::BUFFER_IMAGE_BUFFERED to prevent
     // the buffer's usage conflict.
+    if (autoLock.GetImage()->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
+      mImageClientTypeContainer = CompositableType::IMAGE_OVERLAY;
+      return mImageClientTypeContainer;
+    }
+
     mImageClientTypeContainer = autoLock.GetImage() ?
                                   CompositableType::BUFFER_IMAGE_BUFFERED : CompositableType::BUFFER_UNKNOWN;
 #else

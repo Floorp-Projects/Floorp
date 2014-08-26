@@ -421,7 +421,7 @@ class CompartmentsIterT
 
     void next() {
         JS_ASSERT(!done());
-        JS_ASSERT(!comp->done());
+        JS_ASSERT(!comp.ref().done());
         comp->next();
         if (comp->done()) {
             comp.reset();

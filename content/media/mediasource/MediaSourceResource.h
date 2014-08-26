@@ -8,6 +8,18 @@
 #define MOZILLA_MEDIASOURCERESOURCE_H_
 
 #include "MediaResource.h"
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* GetMediaSourceLog();
+extern PRLogModuleInfo* GetMediaSourceAPILog();
+
+#define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#else
+#define MSE_DEBUG(...)
+#endif
+
+#define UNIMPLEMENTED() MSE_DEBUG("MediaSourceResource(%p): UNIMPLEMENTED FUNCTION at line %d", this, __LINE__)
 
 namespace mozilla {
 
@@ -32,7 +44,7 @@ public:
   virtual int64_t Tell() MOZ_OVERRIDE { return -1; }
   virtual void Pin() MOZ_OVERRIDE {}
   virtual void Unpin() MOZ_OVERRIDE {}
-  virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { return 0; }
+  virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { *aIsReliable = false; return 0; }
   virtual int64_t GetLength() MOZ_OVERRIDE { return -1; }
   virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE { return aOffset; }
   virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE { return GetLength(); }
@@ -44,12 +56,13 @@ public:
 
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) MOZ_OVERRIDE
   {
+    UNIMPLEMENTED();
     aRanges.AppendElement(MediaByteRange(0, GetLength()));
     return NS_OK;
   }
 
-  virtual bool IsTransportSeekable() MOZ_OVERRIDE { return true; }
-  virtual const nsCString& GetContentType() const MOZ_OVERRIDE { return mType; }
+  virtual bool IsTransportSeekable() MOZ_OVERRIDE { UNIMPLEMENTED(); return true; }
+  virtual const nsCString& GetContentType() const MOZ_OVERRIDE { UNIMPLEMENTED(); return mType; }
 
 private:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
@@ -69,5 +82,7 @@ private:
 };
 
 } // namespace mozilla
+
+#undef UNIMPLEMENTED
 
 #endif /* MOZILLA_MEDIASOURCERESOURCE_H_ */

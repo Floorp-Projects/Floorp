@@ -882,7 +882,6 @@
      *   Stack: obj, id, val => obj
      */ \
     macro(JSOP_INITELEM_SETTER, 100, "initelem_setter",   NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_SET|JOF_DETECTING) \
-    \
     /*
      * Pushes the call site object specified by objectIndex onto the stack. Defines the raw
      * property specified by objectIndex + 1 on the call site object and freezes both the call site
@@ -894,7 +893,17 @@
      */ \
     macro(JSOP_CALLSITEOBJ,     101, "callsiteobj",     NULL,         5,  0,  1,  JOF_OBJECT) \
     \
-    macro(JSOP_UNUSED102,  102, "unused102",   NULL,         1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pushes a newly created array onto the stack, whose elements are the same
+     * as that of a template object's copy on write elements.
+     *
+     *   Category: Literals
+     *   Type: Array
+     *   Operands: uint32_t objectIndex
+     *   Stack: => obj
+     */ \
+    macro(JSOP_NEWARRAY_COPYONWRITE, 102, "newarray_copyonwrite", NULL, 5, 0, 1, JOF_OBJECT) \
+    \
     macro(JSOP_UNUSED103,  103, "unused103",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED104,  104, "unused104",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED105,  105, "unused105",   NULL,         1,  0,  0,  JOF_BYTE) \

@@ -107,6 +107,10 @@ var steps = [
     SpecialPowers.autoConfirmAppInstall(PackagedTestHelper.next);
   },
   function() {
+    info("autoConfirmAppUninstall");
+    SpecialPowers.autoConfirmAppUninstall(PackagedTestHelper.next);
+  },
+  function() {
     info("== TEST == Install packaged app");
     var miniManifestURL = gSJS + "?" + "app=valid&" + "version=1";
 

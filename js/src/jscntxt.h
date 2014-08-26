@@ -455,21 +455,7 @@ struct JSContext : public js::ExclusiveContext,
     bool saveFrameChain();
     void restoreFrameChain();
 
-    /*
-     * When no compartments have been explicitly entered, the context's
-     * compartment will be set to the compartment of the "default compartment
-     * object".
-     */
-  private:
-    JSObject *defaultCompartmentObject_;
   public:
-    inline void setDefaultCompartmentObject(JSObject *obj);
-    inline void setDefaultCompartmentObjectIfUnset(JSObject *obj);
-    JSObject *maybeDefaultCompartmentObject() const {
-        JS_ASSERT(!options().noDefaultCompartmentObject());
-        return defaultCompartmentObject_;
-    }
-
     /* State for object and array toSource conversion. */
     js::ObjectSet       cycleDetectorSet;
 
@@ -602,7 +588,7 @@ struct JSContext : public js::ExclusiveContext,
      * See JS_SetTrustedPrincipals in jsapi.h.
      * Note: !cx->compartment is treated as trusted.
      */
-    bool runningWithTrustedPrincipals() const;
+    inline bool runningWithTrustedPrincipals() const;
 
     JS_FRIEND_API(size_t) sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

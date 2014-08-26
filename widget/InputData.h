@@ -188,7 +188,7 @@ public:
     mTouches.AppendElements(aOther.mTouches);
   }
 
-  MultiTouchInput(const WidgetTouchEvent& aTouchEvent);
+  explicit MultiTouchInput(const WidgetTouchEvent& aTouchEvent);
   WidgetTouchEvent ToWidgetTouchEvent(nsIWidget* aWidget) const;
 
   // This conversion from WidgetMouseEvent to MultiTouchInput is needed because
@@ -197,7 +197,7 @@ public:
   // the panning code can handle. This code is very limited and only supports
   // SingleTouchData. It also sends garbage for the identifier, radius, force
   // and rotation angle.
-  MultiTouchInput(const WidgetMouseEvent& aMouseEvent);
+  explicit MultiTouchInput(const WidgetMouseEvent& aMouseEvent);
 
   MultiTouchType mType;
   nsTArray<SingleTouchData> mTouches;

@@ -22,6 +22,7 @@ const { URL } = require('sdk/url');
 const { once, off, emit } = require('sdk/event/core');
 const { defer, all } = require('sdk/core/promise');
 const { modelFor } = require('sdk/model/core');
+require('sdk/windows');
 
 const { BUILTIN_SIDEBAR_MENUITEMS, isSidebarShowing,
         getSidebarMenuitems, getExtraSidebarMenuitems, makeID, simulateCommand,

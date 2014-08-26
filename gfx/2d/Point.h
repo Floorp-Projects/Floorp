@@ -8,6 +8,8 @@
 
 #include "mozilla/Attributes.h"
 #include "Types.h"
+#include "Coord.h"
+#include "BaseCoord.h"
 #include "BasePoint.h"
 #include "BasePoint3D.h"
 #include "BasePoint4D.h"
@@ -33,15 +35,21 @@ namespace gfx {
 
 template<class units>
 struct IntPointTyped :
-  public BasePoint< int32_t, IntPointTyped<units> >,
+  public BasePoint< int32_t, IntPointTyped<units>, IntCoordTyped<units> >,
   public units {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  typedef BasePoint< int32_t, IntPointTyped<units> > Super;
+  typedef IntCoordTyped<units> Coord;
+  typedef BasePoint< int32_t, IntPointTyped<units>, IntCoordTyped<units> > Super;
 
   MOZ_CONSTEXPR IntPointTyped() : Super() {}
-  MOZ_CONSTEXPR IntPointTyped(int32_t aX, int32_t aY) : Super(aX, aY) {}
+  MOZ_CONSTEXPR IntPointTyped(int32_t aX, int32_t aY) : Super(Coord(aX), Coord(aY)) {}
+  // The mixed-type constructors (int, Coord) and (Coord, int) are needed to
+  // avoid ambiguities because Coord is implicitly convertible to int.
+  MOZ_CONSTEXPR IntPointTyped(int32_t aX, Coord aY) : Super(Coord(aX), aY) {}
+  MOZ_CONSTEXPR IntPointTyped(Coord aX, int32_t aY) : Super(aX, Coord(aY)) {}
+  MOZ_CONSTEXPR IntPointTyped(Coord aX, Coord aY) : Super(aX, aY) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
@@ -58,15 +66,21 @@ typedef IntPointTyped<UnknownUnits> IntPoint;
 
 template<class units>
 struct PointTyped :
-  public BasePoint< Float, PointTyped<units> >,
+  public BasePoint< Float, PointTyped<units>, CoordTyped<units> >,
   public units {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  typedef BasePoint< Float, PointTyped<units> > Super;
+  typedef CoordTyped<units> Coord;
+  typedef BasePoint< Float, PointTyped<units>, CoordTyped<units> > Super;
 
   MOZ_CONSTEXPR PointTyped() : Super() {}
-  MOZ_CONSTEXPR PointTyped(Float aX, Float aY) : Super(aX, aY) {}
+  MOZ_CONSTEXPR PointTyped(Float aX, Float aY) : Super(Coord(aX), Coord(aY)) {}
+  // The mixed-type constructors (Float, Coord) and (Coord, Float) are needed to
+  // avoid ambiguities because Coord is implicitly convertible to Float.
+  MOZ_CONSTEXPR PointTyped(Float aX, Coord aY) : Super(Coord(aX), aY) {}
+  MOZ_CONSTEXPR PointTyped(Coord aX, Float aY) : Super(aX, Coord(aY)) {}
+  MOZ_CONSTEXPR PointTyped(Coord aX, Coord aY) : Super(aX.value, aY.value) {}
   MOZ_CONSTEXPR MOZ_IMPLICIT PointTyped(const IntPointTyped<units>& point) : Super(float(point.x), float(point.y)) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
@@ -84,8 +98,14 @@ typedef PointTyped<UnknownUnits> Point;
 
 template<class units>
 IntPointTyped<units> RoundedToInt(const PointTyped<units>& aPoint) {
-  return IntPointTyped<units>(int32_t(floorf(aPoint.x + 0.5f)),
-                              int32_t(floorf(aPoint.y + 0.5f)));
+  return IntPointTyped<units>(aPoint.x.Rounded(),
+                              aPoint.y.Rounded());
+}
+
+template<class units>
+IntPointTyped<units> TruncatedToInt(const PointTyped<units>& aPoint) {
+  return IntPointTyped<units>(aPoint.x.Truncated(),
+                              aPoint.y.Truncated());
 }
 
 template<class units>
@@ -132,6 +152,10 @@ struct Point4DTyped :
 
   Point4DTyped<UnknownUnits> ToUnknownPoint() const {
     return Point4DTyped<UnknownUnits>(this->x, this->y, this->z, this->w);
+  }
+
+  PointTyped<units> As2DPoint() {
+    return PointTyped<units>(this->x / this->w, this->y / this->w);
   }
 };
 typedef Point4DTyped<UnknownUnits> Point4D;

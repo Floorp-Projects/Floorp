@@ -20,12 +20,9 @@
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&newtab.pageTitle;">
 
-  <xul:panel id="sponsored-panel" orient="vertical" type="arrow">
-    <xul:description id="sponsored-panel-release-descr">&newtab.sponsored.release.message;</xul:description>
-    <xul:description id="sponsored-panel-trial-descr">&newtab.sponsored.trial.message2;</xul:description>
-    <xul:label class="text-link"
-               href="https://support.mozilla.org/kb/how-do-sponsored-tiles-work"
-               value="&newtab.panel.link.text;" />
+  <xul:panel id="newtab-intro-panel" orient="vertical" type="arrow"
+             noautohide="true" position="leftcenter topright">
+    <h1>&newtab.intro.header;</h1>
   </xul:panel>
 
   <xul:panel id="newtab-search-panel" orient="vertical" type="arrow"
@@ -45,6 +42,9 @@
     </xul:hbox>
     <xul:hbox id="newtab-customize-blank" class="newtab-customize-panel-item">
       <xul:label>&newtab.customize.blank;</xul:label>
+    </xul:hbox>
+    <xul:hbox id="newtab-customize-what" class="newtab-customize-panel-item">
+      <xul:label>&newtab.customize.what;</xul:label>
     </xul:hbox>
   </xul:panel>
 

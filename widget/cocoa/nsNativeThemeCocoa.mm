@@ -83,16 +83,8 @@ extern "C" {
 @end
 
 static void
-DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
+DrawFocusRingForCellIfNeeded(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
 {
-  [aCell drawWithFrame:aWithFrame inView:aInView];
-
-#if defined(MAC_OS_X_VERSION_10_8) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_8
-  // When building with the 10.8 SDK or higher, focus rings don't draw as part
-  // of -[NSCell drawWithFrame:inView:] and must be drawn by a separate call
-  // to -[NSCell drawFocusRingMaskWithFrame:inView:]; .
-  // See the NSButtonCell section under
-  // https://developer.apple.com/library/mac/releasenotes/AppKit/RN-AppKitOlderNotes/#X10_8Notes
   if ([aCell showsFirstResponder]) {
     CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
     CGContextSaveGState(cgContext);
@@ -117,6 +109,20 @@ DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
 
     CGContextRestoreGState(cgContext);
   }
+}
+
+static void
+DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
+{
+  [aCell drawWithFrame:aWithFrame inView:aInView];
+
+#if defined(MAC_OS_X_VERSION_10_8) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_8
+  // When building with the 10.8 SDK or higher, focus rings don't draw as part
+  // of -[NSCell drawWithFrame:inView:] and must be drawn by a separate call
+  // to -[NSCell drawFocusRingMaskWithFrame:inView:]; .
+  // See the NSButtonCell section under
+  // https://developer.apple.com/library/mac/releasenotes/AppKit/RN-AppKitOlderNotes/#X10_8Notes
+  DrawFocusRingForCellIfNeeded(aCell, aWithFrame, aInView);
 #endif
 }
 
@@ -288,19 +294,6 @@ static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
 // On 64-bit, NSSearchFieldCells don't draw focus rings.
 #if defined(__x86_64__)
 
-static void DrawFocusRing(NSRect rect, float radius)
-{
-  NSSetFocusRingStyle(NSFocusRingOnly);
-  NSBezierPath* path = [NSBezierPath bezierPath];
-  rect = NSInsetRect(rect, radius, radius);
-  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMinY(rect)) radius:radius startAngle:180.0 endAngle:270.0];
-  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMinY(rect)) radius:radius startAngle:270.0 endAngle:360.0];
-  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMaxY(rect)) radius:radius startAngle:  0.0 endAngle: 90.0];
-  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMaxY(rect)) radius:radius startAngle: 90.0 endAngle:180.0];
-  [path closePath];
-  [path fill];
-}
-
 @interface SearchFieldCellWithFocusRing : ContextAwareSearchFieldCell {} @end
 
 @implementation SearchFieldCellWithFocusRing
@@ -308,9 +301,21 @@ static void DrawFocusRing(NSRect rect, float radius)
 - (void)drawWithFrame:(NSRect)rect inView:(NSView*)controlView
 {
   [super drawWithFrame:rect inView:controlView];
-  if ([self showsFirstResponder]) {
-    DrawFocusRing(rect, NSHeight(rect) / 2);
-  }
+
+#if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
+  // When building against the 10.8 SDK and up, DrawCellIncludingFocusRing will
+  // invoke DrawFocusRingForCellIfNeeded for us, but when building
+  // against earlier SDKs we have to do it here.
+  DrawFocusRingForCellIfNeeded(self, rect, controlView);
+#endif
+}
+
+- (void)drawFocusRingMaskWithFrame:(NSRect)rect inView:(NSView*)controlView
+{
+  // By default this draws nothing. I don't know why.
+  // We just draw the search field again. It's a great mask shape for its own
+  // focus ring.
+  [super drawWithFrame:rect inView:controlView];
 }
 
 @end
@@ -3054,7 +3059,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
     }
 
     case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON: {
-      if ([NativeWindowForFrame(aFrame) respondsToSelector:@selector(toggleFullScreen:)]) {
+      if ([NativeWindowForFrame(aFrame) respondsToSelector:@selector(toggleFullScreen:)] &&
+          !nsCocoaFeatures::OnYosemiteOrLater()) {
         // This value is hardcoded because it's needed before we can measure the
         // position and size of the fullscreen button.
         aResult->SizeTo(16, 17);

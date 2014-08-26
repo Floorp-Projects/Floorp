@@ -6,8 +6,8 @@
 "filename": "setup.sh"
 },
 {
-"size": 165226,
-"digest": "79280f7595bc9e1613e05f8b2f0db3798ac739b96191e0f133e8ccd8ad149fedc84a1046e59863574189db28363a01712ae7b368ad1714e30ff88e7ebd5dad23",
+"size": 166485,
+"digest": "ec5974b7e0a756ae3995f54ff92b3c17715857a8bf9407249e83372cd63d29fae086a324175e9b76cc883b29c3d8a474974fccc6d6e26f4dd5f3efa7fe9bf22a",
 "algorithm": "sha512",
 "filename": "sccache.tar.bz2"
 }

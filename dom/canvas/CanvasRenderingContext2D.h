@@ -41,6 +41,7 @@ class ImageData;
 class StringOrCanvasGradientOrCanvasPattern;
 class OwningStringOrCanvasGradientOrCanvasPattern;
 class TextMetrics;
+class SVGMatrix;
 
 extern const mozilla::gfx::Float SIGMA_MAX;
 
@@ -94,6 +95,9 @@ public:
   CanvasPath(nsISupports* aParent,
              TemporaryRef<gfx::PathBuilder> aPathBuilder);
 
+  void AddPath(CanvasPath& aCanvasPath,
+               const Optional<NonNull<SVGMatrix>>& aMatrix);
+
 private:
   virtual ~CanvasPath() {}
 
@@ -112,7 +116,7 @@ class CanvasRenderingContext2DUserData;
 /**
  ** CanvasRenderingContext2D
  **/
-class CanvasRenderingContext2D :
+class CanvasRenderingContext2D MOZ_FINAL :
   public nsICanvasRenderingContextInternal,
   public nsWrapperCache
 {
@@ -665,9 +669,10 @@ protected:
                  uint8_t optional_argc, mozilla::ErrorResult& error);
 
   void DrawDirectlyToCanvas(const nsLayoutUtils::DirectDrawInfo& image,
-                            mozilla::gfx::Rect* bounds, double dx, double dy,
-                            double dw, double dh, double sx, double sy,
-                            double sw, double sh, gfxIntSize imgSize);
+                            mozilla::gfx::Rect* bounds,
+                            mozilla::gfx::Rect dest,
+                            mozilla::gfx::Rect src,
+                            gfxIntSize imgSize);
 
   nsString& GetFont()
   {
@@ -790,7 +795,7 @@ protected:
     // The spec says we should not draw shadows if the operator is OVER.
     // If it's over and the alpha value is zero, nothing needs to be drawn.
     return NS_GET_A(state.shadowColor) != 0 &&
-      (state.shadowBlur != 0 || state.shadowOffset.x != 0 || state.shadowOffset.y != 0);
+      (state.shadowBlur != 0.f || state.shadowOffset.x != 0.f || state.shadowOffset.y != 0.f);
   }
 
   mozilla::gfx::CompositionOp UsedOperation()

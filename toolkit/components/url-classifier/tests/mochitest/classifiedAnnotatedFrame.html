@@ -81,6 +81,8 @@ function checkLoads() {
   window.parent.is(allNodeMatch, true,
     "All tracking nodes are expected to be annotated as such");
 
+  // Unset prefs, etc.
+  window.parent.cleanup();
   // End (parent) test.
   window.parent.SimpleTest.finish();
 }

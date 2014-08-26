@@ -303,11 +303,11 @@ gfxPlatformMac::GetCommonFallbackFonts(const uint32_t aCh,
         case 0x2a:
         case 0x2b:
         case 0x2e:
+            aFontList.AppendElement(kFontHiraginoKakuGothic);
             aFontList.AppendElement(kFontAppleSymbols);
             aFontList.AppendElement(kFontMenlo);
             aFontList.AppendElement(kFontSTIXGeneral);
             aFontList.AppendElement(kFontGeneva);
-            aFontList.AppendElement(kFontHiraginoKakuGothic);
             aFontList.AppendElement(kFontAppleColorEmoji);
             break;
         case 0x2c:

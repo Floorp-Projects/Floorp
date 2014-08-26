@@ -944,13 +944,13 @@ bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
       b.mPlanes[1].mHeight = (img->d_h + 1) >> img->y_chroma_shift;
       b.mPlanes[1].mWidth = (img->d_w + 1) >> img->x_chroma_shift;
       b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
- 
+
       b.mPlanes[2].mData = img->planes[2];
       b.mPlanes[2].mStride = img->stride[2];
       b.mPlanes[2].mHeight = (img->d_h + 1) >> img->y_chroma_shift;
       b.mPlanes[2].mWidth = (img->d_w + 1) >> img->x_chroma_shift;
       b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
-  
+
       IntRect picture = ToIntRect(mPicture);
       if (img->d_w != static_cast<uint32_t>(mInitialFrame.width) ||
           img->d_h != static_cast<uint32_t>(mInitialFrame.height)) {
@@ -1011,8 +1011,7 @@ nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
   if (r != 0) {
     // Try seeking directly based on cluster information in memory.
     int64_t offset = 0;
-    bool rv = mBufferedState->GetOffsetForTime((aTarget - aStartTime)/NS_PER_USEC, &offset,
-                                               WebMBufferedState::CLUSTER_START);
+    bool rv = mBufferedState->GetOffsetForTime((aTarget - aStartTime)/NS_PER_USEC, &offset);
     if (!rv) {
       return NS_ERROR_FAILURE;
     }
@@ -1087,8 +1086,7 @@ void WebMReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_
 int64_t WebMReader::GetEvictionOffset(double aTime)
 {
   int64_t offset;
-  if (!mBufferedState->GetOffsetForTime(aTime / NS_PER_USEC, &offset,
-                                        WebMBufferedState::CLUSTER_START)) {
+  if (!mBufferedState->GetOffsetForTime(aTime / NS_PER_USEC, &offset)) {
     return -1;
   }
 

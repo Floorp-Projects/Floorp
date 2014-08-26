@@ -343,7 +343,8 @@ public:
 
   /**
    * Returns a list of all descendant layers for which
-   * GetFrameMetrics().IsScrollable() is true.
+   * GetFrameMetrics().IsScrollable() is true and that
+   * do not already have an ancestor in the return list.
    */
   void GetScrollableLayers(nsTArray<Layer*>& aArray);
 
@@ -1171,7 +1172,7 @@ public:
   gfx::CompositionOp GetMixBlendMode() const { return mMixBlendMode; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nullptr; }
   uint32_t GetContentFlags() { return mContentFlags; }
-  const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
+  const nsIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   const FrameMetrics& GetFrameMetrics() const { return mFrameMetrics; }
   FrameMetrics::ViewID GetScrollHandoffParentId() const { return mScrollHandoffParentId; }
   const EventRegions& GetEventRegions() const { return mEventRegions; }
@@ -1388,8 +1389,8 @@ public:
    * by aWorldTransform before being combined with aCurrentScissorRect, if
    * aWorldTransform is non-null.
    */
-  nsIntRect CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
-                                 const gfx::Matrix* aWorldTransform);
+  RenderTargetIntRect CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect,
+                                           const gfx::Matrix* aWorldTransform);
 
   virtual const char* Name() const =0;
   virtual LayerType GetType() const =0;
@@ -1486,7 +1487,6 @@ public:
 
   virtual LayerRenderState GetRenderState() { return LayerRenderState(); }
 
-
   void Mutated()
   {
     mManager->Mutated(this);
@@ -1501,6 +1501,28 @@ public:
    * transaction.
    */
   bool MayResample();
+
+  RenderTargetRect TransformRectToRenderTarget(const LayerIntRect& aRect);
+
+  /**
+   * Add debugging information to the layer dump.
+   */
+  void AddExtraDumpInfo(const nsACString& aStr)
+  {
+#ifdef MOZ_DUMP_PAINTING
+    mExtraDumpInfo.AppendElement(aStr);
+#endif
+  }
+
+  /**
+   * Clear debugging information. Useful for recycling.
+   */
+  void ClearExtraDumpInfo()
+  {
+#ifdef MOZ_DUMP_PAINTING
+     mExtraDumpInfo.Clear();
+#endif
+  }
 
 protected:
   Layer(LayerManager* aManager, void* aImplData);
@@ -1604,6 +1626,9 @@ protected:
   // This is empty unless this is a scrollable ContainerLayer and the
   // apz.printtree pref is turned on.
   std::string mContentDescription;
+#ifdef MOZ_DUMP_PAINTING
+  nsTArray<nsCString> mExtraDumpInfo;
+#endif
 };
 
 /**
@@ -1813,12 +1838,15 @@ public:
 
   /**
    * Returns the rectangle covered by the intermediate surface,
-   * in this layer's coordinate system
+   * in this layer's coordinate system.
+   *
+   * NOTE: Since this layer has an intermediate surface it follows
+   *       that LayerPixel == RenderTargetPixel
    */
-  nsIntRect GetIntermediateSurfaceRect()
+  RenderTargetIntRect GetIntermediateSurfaceRect()
   {
     NS_ASSERTION(mUseIntermediateSurface, "Must have intermediate surface");
-    return mVisibleRegion.GetBounds();
+    return RenderTargetPixel::FromUntyped(mVisibleRegion.GetBounds());
   }
 
   /**
@@ -2231,6 +2259,9 @@ void WriteSnapshotToDumpFile(Layer* aLayer, gfx::DataSourceSurface* aSurf);
 void WriteSnapshotToDumpFile(LayerManager* aManager, gfx::DataSourceSurface* aSurf);
 void WriteSnapshotToDumpFile(Compositor* aCompositor, gfx::DrawTarget* aTarget);
 #endif
+
+// A utility function used by different LayerManager implementations.
+nsIntRect ToOutsideIntRect(const gfxRect &aRect);
 
 }
 }

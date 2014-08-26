@@ -13,7 +13,6 @@ LIBRARY_NAME = 'omxpluginfroyo'
 FORCE_SHARED_LIB = True
 
 LOCAL_INCLUDES += [
-    '../../../content/media/plugins',
     '../include/froyo',
     '../include/froyo/media/stagefright/openmax',
 ]

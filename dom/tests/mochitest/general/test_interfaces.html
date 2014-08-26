@@ -88,6 +88,7 @@ var ecmaGlobals =
     "Uint8ClampedArray",
     "URIError",
     "WeakMap",
+    "WeakSet",
   ];
 // IMPORTANT: Do not change the list above without review from
 //            a JavaScript Engine peer!
@@ -120,6 +121,8 @@ var interfaceNamesInGlobalScope =
     "AnimationEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Animation", pref: "dom.animations-api.core.enabled"},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "AnimationEffect", pref: "dom.animations-api.core.enabled"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "AnimationPlayer", pref: "dom.animations-api.core.enabled"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -240,7 +243,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "CSSFontFaceRule",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "CSSFontFeatureValuesRule", release: false},
+    "CSSFontFeatureValuesRule",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "CSSGroupingRule",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -640,8 +643,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MozActivity", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "MozApplicationEvent",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MozCellBroadcast", b2g: true, pref: "dom.cellbroadcast.enabled"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MozCellBroadcastEvent", b2g: true, pref: "dom.cellbroadcast.enabled"},
@@ -686,15 +687,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "MozMobileMessageThread",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "MozNamedAttrMap",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MozNDEFRecord", b2g: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MozNFCPeer", b2g: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MozNFCPeerEvent", b2g: true, permission: "nfc-write"},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MozNFCTag", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MozOtaStatusEvent", b2g: true, pref: "dom.mobileconnection.enabled"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -751,6 +744,8 @@ var interfaceNamesInGlobalScope =
     "MutationObserver",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "MutationRecord",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "NamedNodeMap",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Navigator",
 // IMPORTANT: Do not change this list without review from a DOM peer!

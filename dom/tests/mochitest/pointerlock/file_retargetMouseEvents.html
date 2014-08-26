@@ -143,7 +143,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         parent.addEventListener("click", parentClickTest);
         child.addEventListener("click", childClickTest);
         SimpleTest.executeSoon(function () {
-          synthesizeMouseAtCenter(child, {type: "click"}, window);
+          synthesizeMouseAtCenter(child, {}, window);
         });
       };
 

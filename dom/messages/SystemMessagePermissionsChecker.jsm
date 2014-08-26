@@ -15,7 +15,8 @@ Cu.import("resource://gre/modules/PermissionsTable.jsm");
 Cu.import("resource://gre/modules/PermissionSettings.jsm");
 
 this.EXPORTED_SYMBOLS = ["SystemMessagePermissionsChecker",
-                         "SystemMessagePermissionsTable"];
+                         "SystemMessagePermissionsTable",
+                         "SystemMessagePrefixPermissionsTable"];
 
 function debug(aStr) {
   // dump("SystemMessagePermissionsChecker.jsm: " + aStr + "\n");
@@ -54,6 +55,9 @@ this.SystemMessagePermissionsTable = {
   },
   "bluetooth-opp-transfer-start": {
     "bluetooth": []
+  },
+  "cellbroadcast-received": {
+    "cellbroadcast": []
   },
   "connection": { },
   "captive-portal": {
@@ -122,6 +126,18 @@ this.SystemMessagePermissionsTable = {
   }
 };
 
+// This table maps system message prefix to permission(s), indicating only
+// the system messages with specified prefixes granted by the page's permissions
+// are allowed to be registered or sent to that page. Note the empty permission
+// set means this type of system message is always permitted.
+//
+// Note that this table is only used when the permission checker can't find a
+// match in SystemMessagePermissionsTable listed above.
+
+this.SystemMessagePrefixPermissionsTable = {
+  "datastore-update-": { },
+};
+
 this.SystemMessagePermissionsChecker = {
   /**
    * Return all the needed permission names for the given system message.
@@ -140,16 +156,26 @@ this.SystemMessagePermissionsChecker = {
 
     let permNames = SystemMessagePermissionsTable[aSysMsgName];
     if (permNames === undefined) {
-      debug("'" + aSysMsgName + "' is not associated with permissions. " +
-            "Please add them to the SystemMessagePermissionsTable.");
-      return null;
+      // Try to look up in the prefix table.
+      for (let sysMsgPrefix in SystemMessagePrefixPermissionsTable) {
+        if (aSysMsgName.indexOf(sysMsgPrefix) === 0) {
+          permNames = SystemMessagePrefixPermissionsTable[sysMsgPrefix];
+          break;
+        }
+      }
+
+      if (permNames === undefined) {
+        debug("'" + aSysMsgName + "' is not associated with permissions. " +
+              "Please add them to the SystemMessage[Prefix]PermissionsTable.");
+        return null;
+      }
     }
 
     let object = { };
     for (let permName in permNames) {
       if (PermissionsTable[permName] === undefined) {
         debug("'" + permName + "' for '" + aSysMsgName + "' is invalid. " +
-              "Please correct it in the SystemMessagePermissionsTable.");
+              "Please correct it in the SystemMessage[Prefix]PermissionsTable.");
         return null;
       }
 
@@ -157,7 +183,7 @@ this.SystemMessagePermissionsChecker = {
       let access = permNames[permName];
       if (!access || !Array.isArray(access)) {
         debug("'" + permName + "' is not associated with access array. " +
-              "Please correct it in the SystemMessagePermissionsTable.");
+              "Please correct it in the SystemMessage[Prefix]PermissionsTable.");
         return null;
       }
       object[permName] = appendAccessToPermName(permName, access);

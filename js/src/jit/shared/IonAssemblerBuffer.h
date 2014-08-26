@@ -50,7 +50,7 @@ class BufferOffset
     }
 
     BufferOffset() : offset(INT_MIN) {}
-    bool assigned() const { return offset != INT_MIN; };
+    bool assigned() const { return offset != INT_MIN; }
 };
 
 template<int SliceSize>
@@ -278,7 +278,7 @@ struct AssemblerBuffer
             Inst *i = m_buffer->getInst(bo);
             bo = BufferOffset(bo.getOffset() + i->size());
             return cur();
-        };
+        }
         Inst *cur() {
             return m_buffer->getInst(bo);
         }

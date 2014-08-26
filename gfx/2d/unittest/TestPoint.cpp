@@ -26,8 +26,8 @@ TestPoint::Addition()
 
   a += b;
 
-  VERIFY(a.x == 7);
-  VERIFY(a.y == -3);
+  VERIFY(a.x == 7.f);
+  VERIFY(a.y == -3.f);
 }
 
 void
@@ -41,6 +41,6 @@ TestPoint::Subtraction()
 
   a -= b;
 
-  VERIFY(a.x == -3);
-  VERIFY(a.y == 7);
+  VERIFY(a.x == -3.f);
+  VERIFY(a.y == 7.f);
 }

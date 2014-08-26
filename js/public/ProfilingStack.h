@@ -92,7 +92,7 @@ class ProfileEntry
     bool isCpp() const volatile { return hasFlag(IS_CPP_ENTRY); }
     bool isJs() const volatile { return !isCpp(); }
 
-    bool isCopyLabel() const volatile { return hasFlag(FRAME_LABEL_COPY); };
+    bool isCopyLabel() const volatile { return hasFlag(FRAME_LABEL_COPY); }
 
     void setLabel(const char *aString) volatile { string = aString; }
     const char *label() const volatile { return string; }

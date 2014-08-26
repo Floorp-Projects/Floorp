@@ -3584,7 +3584,7 @@ const int64_t UNDEFINED_URN_VALUE = -1;
 
 // Create a urn (like
 // urn:places-persist:place:group=0&group=1&sort=1&type=1,,%28local%20files%29)
-// to be used to persist the open state of this container in localstore.rdf
+// to be used to persist the open state of this container
 nsresult
 CreatePlacesPersistURN(nsNavHistoryQueryResultNode *aResultNode, 
                        int64_t aValue, const nsCString& aTitle, nsCString& aURN)

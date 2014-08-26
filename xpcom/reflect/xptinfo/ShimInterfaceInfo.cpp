@@ -245,7 +245,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/MouseScrollEventBinding.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "mozilla/dom/MozNamedAttrMapBinding.h"
+#include "mozilla/dom/NamedNodeMapBinding.h"
 #include "mozilla/dom/NodeIteratorBinding.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NotifyPaintEventBinding.h"
@@ -434,7 +434,7 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(MouseEvent),
   DEFINE_SHIM(MouseScrollEvent),
   DEFINE_SHIM(MutationEvent),
-  DEFINE_SHIM(MozNamedAttrMap),
+  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMMozNamedAttrMap, NamedNodeMap),
   DEFINE_SHIM(NodeIterator),
   DEFINE_SHIM(Node),
   DEFINE_SHIM(NotifyPaintEvent),

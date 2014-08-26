@@ -13,8 +13,13 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 EXTRA_JS_MODULES.loop += [
+    'LoopContacts.jsm',
+    'LoopStorage.jsm',
     'MozLoopAPI.jsm',
     'MozLoopPushHandler.jsm',
-    'MozLoopService.jsm',
     'MozLoopWorker.js',
+]
+
+EXTRA_PP_JS_MODULES.loop += [
+    'MozLoopService.jsm',
 ]

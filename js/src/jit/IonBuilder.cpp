@@ -33,9 +33,9 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::AssertedCast;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
-using mozilla::SafeCast;
 
 class jit::BaselineFrameInspector
 {
@@ -377,11 +377,14 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
     if (!inlineScript->hasBaselineScript())
         return DontInline(inlineScript, "No baseline jitcode");
 
-    if (TooManyArguments(target->nargs()))
+    if (TooManyFormalArguments(target->nargs()))
         return DontInline(inlineScript, "Too many args");
 
-    if (TooManyArguments(callInfo.argc()))
-        return DontInline(inlineScript, "Too many args");
+    // We check the number of actual arguments against the maximum number of
+    // formal arguments as we do not want to encode all actual arguments in the
+    // callerResumePoint.
+    if (TooManyFormalArguments(callInfo.argc()))
+        return DontInline(inlineScript, "Too many actual args");
 
     // Allow inlining of recursive calls, but only one level deep.
     IonBuilder *builder = callerBuilder_;
@@ -700,7 +703,7 @@ IonBuilder::build()
     // register/stack pressure.
     MCheckOverRecursed *check = MCheckOverRecursed::New(alloc());
     current->add(check);
-    check->setResumePoint(current->entryResumePoint());
+    check->setResumePoint(MResumePoint::Copy(alloc(), current->entryResumePoint()));
 
     // Parameters have been checked to correspond to the typeset, now we unbox
     // what we can in an infallible manner.
@@ -712,10 +715,6 @@ IonBuilder::build()
 
     if (info().needsArgsObj() && !initArgumentsObject())
         return false;
-
-    // Prevent |this| from being DCE'd: necessary for constructors.
-    if (info().funMaybeLazy())
-        current->getSlot(info().thisSlot())->setGuard();
 
     // The type analysis phase attempts to insert unbox operations near
     // definitions of values. It also attempts to replace uses in resume points
@@ -735,7 +734,7 @@ IonBuilder::build()
     for (uint32_t i = 0; i < info().endArgSlot(); i++) {
         MInstruction *ins = current->getEntrySlot(i)->toInstruction();
         if (ins->type() == MIRType_Value)
-            ins->setResumePoint(current->entryResumePoint());
+            ins->setResumePoint(MResumePoint::Copy(alloc(), current->entryResumePoint()));
     }
 
     // lazyArguments should never be accessed in |argsObjAliasesFormals| scripts.
@@ -1371,7 +1370,7 @@ IonBuilder::snoopControlFlow(JSOp op)
 
           default:
             // Hard assert for now - make an error later.
-            MOZ_ASSUME_UNREACHABLE("unknown goto case");
+            MOZ_CRASH("unknown goto case");
         }
         break;
       }
@@ -1382,7 +1381,7 @@ IonBuilder::snoopControlFlow(JSOp op)
       case JSOP_IFNE:
         // We should never reach an IFNE, it's a stopAt point, which will
         // trigger closing the loop.
-        MOZ_ASSUME_UNREACHABLE("we should never reach an ifne!");
+        MOZ_CRASH("we should never reach an ifne!");
 
       default:
         break;
@@ -1547,6 +1546,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_NEWARRAY:
         return jsop_newarray(GET_UINT24(pc));
 
+      case JSOP_NEWARRAY_COPYONWRITE:
+        return jsop_newarray_copyonwrite();
+
       case JSOP_NEWOBJECT:
         return jsop_newobject();
 
@@ -1659,7 +1661,7 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_LOOPHEAD:
         // JSOP_LOOPHEAD is handled when processing the loop header.
-        MOZ_ASSUME_UNREACHABLE("JSOP_LOOPHEAD outside loop");
+        MOZ_CRASH("JSOP_LOOPHEAD outside loop");
 
       case JSOP_GETELEM:
       case JSOP_CALLELEM:
@@ -1871,7 +1873,7 @@ IonBuilder::processCfgEntry(CFGState &state)
         return processTryEnd(state);
 
       default:
-        MOZ_ASSUME_UNREACHABLE("unknown cfgstate");
+        MOZ_CRASH("unknown cfgstate");
     }
 }
 
@@ -2579,7 +2581,7 @@ IonBuilder::processSwitchBreak(JSOp op)
         breaks = &state.condswitch.breaks;
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected switch state.");
+        MOZ_CRASH("Unexpected switch state.");
     }
 
     *breaks = new(alloc()) DeferredEdge(current, *breaks);
@@ -2658,7 +2660,7 @@ IonBuilder::maybeLoop(JSOp op, jssrcnote *sn)
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected opcode");
+        MOZ_CRASH("unexpected opcode");
     }
 
     return ControlStatus_None;
@@ -2688,7 +2690,7 @@ IonBuilder::assertValidLoopHeadOp(jsbytecode *pc)
             break;
 
           default:
-            MOZ_ASSUME_UNREACHABLE("JSOP_LOOPHEAD unexpected source note");
+            MOZ_CRASH("JSOP_LOOPHEAD unexpected source note");
         }
 
         // Make sure this loop goes to the same ifne as the loop header's
@@ -3585,7 +3587,7 @@ IonBuilder::jsop_ifeq(JSOp op)
       }
 
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected source note type");
+        MOZ_CRASH("unexpected source note type");
     }
 
     // Switch to parsing the true branch. Note that no PC update is needed,
@@ -3707,7 +3709,7 @@ IonBuilder::processReturn(JSOp op)
 
       default:
         def = nullptr;
-        MOZ_ASSUME_UNREACHABLE("unknown return op");
+        MOZ_CRASH("unknown return op");
     }
 
     if (instrumentedProfiling() && inliningDepth_ == 0) {
@@ -3826,7 +3828,7 @@ IonBuilder::jsop_bitop(JSOp op)
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected bitop");
+        MOZ_CRASH("unexpected bitop");
     }
 
     current->add(ins);
@@ -3883,7 +3885,7 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected binary opcode");
+        MOZ_CRASH("unexpected binary opcode");
     }
 
     current->add(ins);
@@ -3985,6 +3987,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
         MResumePoint::New(alloc(), current, pc, callerResumePoint_, MResumePoint::Outer);
     if (!outerResumePoint)
         return false;
+    current->setOuterResumePoint(outerResumePoint);
 
     // Pop formals again, except leave |fun| on stack for duration of call.
     callInfo.popFormals(current);
@@ -4229,7 +4232,7 @@ IonBuilder::selectInliningTargets(ObjectVector &targets, CallInfo &callInfo, Boo
             inlineable = true;
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unhandled InliningDecision value!");
+            MOZ_CRASH("Unhandled InliningDecision value!");
         }
 
         // Enforce a maximum inlined bytecode limit at the callsite.
@@ -4263,6 +4266,68 @@ CanInlineGetPropertyCache(MGetPropertyCache *cache, MDefinition *thisDef)
     return true;
 }
 
+class WrapMGetPropertyCache
+{
+    MGetPropertyCache *cache_;
+
+  private:
+    void discardPriorResumePoint() {
+        if (!cache_)
+            return;
+
+        InlinePropertyTable *propTable = cache_->propTable();
+        if (!propTable)
+            return;
+        MResumePoint *rp = propTable->takePriorResumePoint();
+        if (!rp)
+            return;
+        cache_->block()->discardPreAllocatedResumePoint(rp);
+    }
+
+  public:
+    WrapMGetPropertyCache(MGetPropertyCache *cache)
+      : cache_(cache)
+    { }
+
+    ~WrapMGetPropertyCache() {
+        discardPriorResumePoint();
+    }
+
+    MGetPropertyCache *get() {
+        return cache_;
+    }
+    MGetPropertyCache *operator->() {
+        return get();
+    }
+
+    // This function returns the cache given to the constructor if the
+    // GetPropertyCache can be moved into the TypeObject fallback path.
+    MGetPropertyCache *moveableCache(bool hasTypeBarrier, MDefinition *thisDef) {
+        // If we have unhandled uses of the MGetPropertyCache, then we cannot
+        // move it to the TypeObject fallback path.
+        if (!hasTypeBarrier) {
+            if (cache_->hasUses())
+                return nullptr;
+        } else {
+            // There is the TypeBarrier consumer, so we check that this is the
+            // only consumer.
+            MOZ_ASSERT(cache_->hasUses());
+            if (!cache_->hasOneUse())
+                return nullptr;
+        }
+
+        // If the this-object is not identical to the object of the
+        // MGetPropertyCache, then we cannot use the InlinePropertyTable, or if
+        // we do not yet have enough information from the TypeObject.
+        if (!CanInlineGetPropertyCache(cache_, thisDef))
+            return nullptr;
+
+        MGetPropertyCache *ret = cache_;
+        cache_ = nullptr;
+        return ret;
+    }
+};
+
 MGetPropertyCache *
 IonBuilder::getInlineableGetPropertyCache(CallInfo &callInfo)
 {
@@ -4279,12 +4344,8 @@ IonBuilder::getInlineableGetPropertyCache(CallInfo &callInfo)
 
     // MGetPropertyCache with no uses may be optimized away.
     if (funcDef->isGetPropertyCache()) {
-        MGetPropertyCache *cache = funcDef->toGetPropertyCache();
-        if (cache->hasUses())
-            return nullptr;
-        if (!CanInlineGetPropertyCache(cache, thisDef))
-            return nullptr;
-        return cache;
+        WrapMGetPropertyCache cache(funcDef->toGetPropertyCache());
+        return cache.moveableCache(/* hasTypeBarrier = */ false, thisDef);
     }
 
     // Optimize away the following common pattern:
@@ -4298,12 +4359,8 @@ IonBuilder::getInlineableGetPropertyCache(CallInfo &callInfo)
         if (!barrier->input()->isGetPropertyCache())
             return nullptr;
 
-        MGetPropertyCache *cache = barrier->input()->toGetPropertyCache();
-        if (cache->hasUses() && !cache->hasOneUse())
-            return nullptr;
-        if (!CanInlineGetPropertyCache(cache, thisDef))
-            return nullptr;
-        return cache;
+        WrapMGetPropertyCache cache(barrier->input()->toGetPropertyCache());
+        return cache.moveableCache(/* hasTypeBarrier = */ true, thisDef);
     }
 
     return nullptr;
@@ -4331,11 +4388,11 @@ IonBuilder::inlineCallsite(ObjectVector &targets, ObjectVector &originals,
     // Is the function provided by an MGetPropertyCache?
     // If so, the cache may be movable to a fallback path, with a dispatch
     // instruction guarding on the incoming TypeObject.
-    MGetPropertyCache *propCache = getInlineableGetPropertyCache(callInfo);
+    WrapMGetPropertyCache propCache(getInlineableGetPropertyCache(callInfo));
 
     // Inline single targets -- unless they derive from a cache, in which case
     // avoiding the cache and guarding is still faster.
-    if (!propCache && targets.length() == 1) {
+    if (!propCache.get() && targets.length() == 1) {
         JSFunction *target = &targets[0]->as<JSFunction>();
         InliningDecision decision = makeInliningDecision(target, callInfo);
         switch (decision) {
@@ -4373,7 +4430,7 @@ IonBuilder::inlineCallsite(ObjectVector &targets, ObjectVector &originals,
         return InliningStatus_NotInlined;
 
     // Perform a polymorphic dispatch.
-    if (!inlineCalls(callInfo, targets, originals, choiceSet, propCache))
+    if (!inlineCalls(callInfo, targets, originals, choiceSet, propCache.get()))
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;
@@ -4425,6 +4482,7 @@ IonBuilder::inlineTypeObjectFallback(CallInfo &callInfo, MBasicBlock *dispatchBl
     // This means that no resume points yet capture the MGetPropertyCache,
     // so everything from the MGetPropertyCache up until the call is movable.
     // We now move the MGetPropertyCache and friends into a fallback path.
+    MOZ_ASSERT(cache->idempotent());
 
     // Create a new CallInfo to track modified state within the fallback path.
     CallInfo fallbackInfo(alloc(), callInfo.constructing());
@@ -4455,9 +4513,10 @@ IonBuilder::inlineTypeObjectFallback(CallInfo &callInfo, MBasicBlock *dispatchBl
     // Construct a block into which the MGetPropertyCache can be moved.
     // This is subtle: the pc and resume point are those of the MGetPropertyCache!
     InlinePropertyTable *propTable = cache->propTable();
+    MResumePoint *priorResumePoint = propTable->takePriorResumePoint();
     JS_ASSERT(propTable->pc() != nullptr);
-    JS_ASSERT(propTable->priorResumePoint() != nullptr);
-    MBasicBlock *getPropBlock = newBlock(prepBlock, propTable->pc(), propTable->priorResumePoint());
+    JS_ASSERT(priorResumePoint != nullptr);
+    MBasicBlock *getPropBlock = newBlock(prepBlock, propTable->pc(), priorResumePoint);
     if (!getPropBlock)
         return false;
 
@@ -5537,6 +5596,28 @@ IonBuilder::jsop_newarray(uint32_t count)
 }
 
 bool
+IonBuilder::jsop_newarray_copyonwrite()
+{
+    JSObject *templateObject = types::GetCopyOnWriteObject(script(), pc);
+
+    // The baseline compiler should have ensured the template object has a type
+    // with the copy on write flag set already. During the arguments usage
+    // analysis the baseline compiler hasn't run yet, however, though in this
+    // case the template object's type doesn't matter.
+    JS_ASSERT_IF(info().executionMode() != ArgumentsUsageAnalysis,
+                 templateObject->type()->hasAnyFlags(types::OBJECT_FLAG_COPY_ON_WRITE));
+
+    MNewArrayCopyOnWrite *ins =
+        MNewArrayCopyOnWrite::New(alloc(), constraints(), templateObject,
+                                  templateObject->type()->initialHeap(constraints()));
+
+    current->add(ins);
+    current->push(ins);
+
+    return true;
+}
+
+bool
 IonBuilder::jsop_newobject()
 {
     JSObject *templateObject = inspector->getTemplateObject(pc);
@@ -5943,11 +6024,6 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
         return nullptr;
     graph().setOsrBlock(osrBlock);
 
-    // Wrap |this| with a guaranteed use, to prevent instruction elimination.
-    // Prevent |this| from being DCE'd: necessary for constructors.
-    if (info().funMaybeLazy())
-        preheader->getSlot(info().thisSlot())->setGuard();
-
     return preheader;
 }
 
@@ -6052,7 +6128,6 @@ IonBuilder::resume(MInstruction *ins, jsbytecode *pc, MResumePoint::Mode mode)
     if (!resumePoint)
         return false;
     ins->setResumePoint(resumePoint);
-    resumePoint->setInstruction(ins);
     return true;
 }
 
@@ -6535,7 +6610,7 @@ jit::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *input
         return types->unknown() || (inputTypes && inputTypes->isSubset(types));
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad input type");
+        MOZ_CRASH("Bad input type");
     }
 }
 
@@ -6819,10 +6894,10 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
         return true;
 
       case type::UnsizedArray:
-        MOZ_ASSUME_UNREACHABLE("Unsized arrays cannot be element types");
+        MOZ_CRASH("Unsized arrays cannot be element types");
     }
 
-    MOZ_ASSUME_UNREACHABLE("Bad kind");
+    MOZ_CRASH("Bad kind");
 }
 
 static MIRType
@@ -7477,7 +7552,7 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
 
                 obj->setImplicitlyUsedUnchecked();
 
-                int32_t len = SafeCast<int32_t>(tarr->length());
+                int32_t len = AssertedCast<int32_t>(tarr->length());
                 *length = MConstant::New(alloc(), Int32Value(len));
                 current->add(*length);
 
@@ -7564,7 +7639,7 @@ MIRTypeForTypedArrayRead(Scalar::Type arrayType, bool observedDouble)
       default:
         break;
     }
-    MOZ_ASSUME_UNREACHABLE("Unknown typed array type");
+    MOZ_CRASH("Unknown typed array type");
 }
 
 bool
@@ -7632,7 +7707,7 @@ IonBuilder::jsop_getelem_typed(MDefinition *obj, MDefinition *index,
                 barrier = BarrierKind::NoBarrier;
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unknown typed array type");
+            MOZ_CRASH("Unknown typed array type");
         }
 
         // Assume we will read out-of-bound values. In this case the
@@ -7730,7 +7805,7 @@ IonBuilder::setElemTryTypedObject(bool *emitted, MDefinition *obj,
                                                  elemSize);
     }
 
-    MOZ_ASSUME_UNREACHABLE("Bad kind");
+    MOZ_CRASH("Bad kind");
 }
 
 bool
@@ -7931,6 +8006,9 @@ IonBuilder::setElemTryCache(bool *emitted, MDefinition *object,
     // another value.
     bool guardHoles = ElementAccessHasExtraIndexedProperty(constraints(), object);
 
+    // Make sure the object being written to doesn't have copy on write elements.
+    object = addMaybeCopyElementsForWrite(object);
+
     if (NeedsPostBarrier(info(), value))
         current->add(MPostWriteBarrier::New(alloc(), object, value));
 
@@ -7966,6 +8044,9 @@ IonBuilder::jsop_setelem_dense(types::TemporaryTypeSet::DoubleConversion convers
     current->add(idInt32);
     id = idInt32;
 
+    // Copy the elements vector if necessary.
+    obj = addMaybeCopyElementsForWrite(obj);
+
     // Get the elements vector.
     MElements *elements = MElements::New(alloc(), obj);
     current->add(elements);
@@ -7993,7 +8074,7 @@ IonBuilder::jsop_setelem_dense(types::TemporaryTypeSet::DoubleConversion convers
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Unknown double conversion");
+        MOZ_CRASH("Unknown double conversion");
     }
 
     bool writeHole = false;
@@ -8804,10 +8885,10 @@ IonBuilder::getPropTryTypedObject(bool *emitted,
                                                  resultTypes);
 
       case type::UnsizedArray:
-        MOZ_ASSUME_UNREACHABLE("Field of unsized array type");
+        MOZ_CRASH("Field of unsized array type");
     }
 
-    MOZ_ASSUME_UNREACHABLE("Bad kind");
+    MOZ_CRASH("Bad kind");
 }
 
 bool
@@ -9147,7 +9228,20 @@ IonBuilder::getPropTryCache(bool *emitted, MDefinition *obj, PropertyName *name,
             load->setIdempotent();
     }
 
-    if (JSOp(*pc) == JSOP_CALLPROP) {
+    // When we are in the context of making a call from the value returned from
+    // a property, we query the typeObject for the given property name to fill
+    // the InlinePropertyTable of the GetPropertyCache.  This information is
+    // then used in inlineCallsite and inlineCalls, if the "this" definition is
+    // matching the "object" definition of the GetPropertyCache (see
+    // CanInlineGetPropertyCache).
+    //
+    // If this GetPropertyCache is idempotent, then we can dispatch to the right
+    // function only by checking the typed object, instead of querying the value
+    // of the property.  Thus this GetPropertyCache can be moved into the
+    // fallback path (see inlineTypeObjectFallback).  Otherwise, we always have
+    // to do the GetPropertyCache, and we can dispatch based on the JSFunction
+    // value.
+    if (JSOp(*pc) == JSOP_CALLPROP && load->idempotent()) {
         if (!annotateGetPropertyCache(obj, load, obj->resultTypeSet(), types))
             return false;
     }
@@ -9250,8 +9344,8 @@ IonBuilder::needsToMonitorMissingProperties(types::TemporaryTypeSet *types)
     // TypeScript::Monitor to ensure that the observed type set contains
     // undefined. To account for possible missing properties, which property
     // types do not track, we must always insert a type barrier.
-    return (info().executionMode() == ParallelExecution &&
-            !types->hasType(types::Type::UndefinedType()));
+    return info().executionMode() == ParallelExecution &&
+           !types->hasType(types::Type::UndefinedType());
 }
 
 bool
@@ -9441,7 +9535,7 @@ IonBuilder::setPropTryTypedObject(bool *emitted, MDefinition *obj,
                                                  value, fieldPrediction);
     }
 
-    MOZ_ASSUME_UNREACHABLE("Unknown kind");
+    MOZ_CRASH("Unknown kind");
 }
 
 bool
@@ -10256,6 +10350,16 @@ IonBuilder::addConvertElementsToDoubles(MDefinition *elements)
     MInstruction *convert = MConvertElementsToDoubles::New(alloc(), elements);
     current->add(convert);
     return convert;
+}
+
+MDefinition *
+IonBuilder::addMaybeCopyElementsForWrite(MDefinition *object)
+{
+    if (!ElementAccessMightBeCopyOnWrite(constraints(), object))
+        return object;
+    MInstruction *copy = MMaybeCopyElementsForWrite::New(alloc(), object);
+    current->add(copy);
+    return copy;
 }
 
 MInstruction *

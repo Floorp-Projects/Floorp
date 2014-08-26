@@ -199,7 +199,7 @@ bool ProcessTTF(ots::OpenTypeFile *header,
   // Don't call ots_failure() here since ~25% of fonts (250+ fonts) in
   // http://www.princexml.com/fonts/ have unexpected search_range value.
   if (header->search_range != expected_search_range) {
-    OTS_WARNING("bad search range");
+    OTS_FAILURE_MSG_HDR("bad search range");
     header->search_range = expected_search_range;  // Fix the value.
   }
 
@@ -214,7 +214,7 @@ bool ProcessTTF(ots::OpenTypeFile *header,
   const uint32_t expected_range_shift
       = 16 * header->num_tables - header->search_range;
   if (header->range_shift != expected_range_shift) {
-    OTS_WARNING("bad range shift");
+    OTS_FAILURE_MSG_HDR("bad range shift");
     header->range_shift = expected_range_shift;  // the same as above.
   }
 
@@ -420,9 +420,7 @@ bool ProcessWOFF2(ots::OpenTypeFile *header,
 ots::TableAction GetTableAction(ots::OpenTypeFile *header, uint32_t tag) {
   ots::TableAction action = ots::TABLE_ACTION_DEFAULT;
 
-  if (header->table_action_func != NULL) {
-    action = header->table_action_func(htonl(tag), header->table_action_user_data);
-  }
+  action = header->context->GetTableAction(htonl(tag));
 
   if (action == ots::TABLE_ACTION_DEFAULT) {
     action = ots::TABLE_ACTION_DROP;
@@ -807,10 +805,7 @@ bool OTSContext::Process(OTSStream *output,
                          size_t length) {
   OpenTypeFile header;
 
-  header.message_func = message_func;
-  header.message_user_data = message_user_data;
-  header.table_action_func = table_action_func;
-  header.table_action_user_data = table_action_user_data;
+  header.context = this;
 
   if (length < 4) {
     return OTS_FAILURE_MSG_(&header, "file less than 4 bytes");
@@ -843,18 +838,6 @@ bool Failure(const char *f, int l, const char *fn) {
     std::fflush(stderr);
   }
   return false;
-}
-
-void Warning(const char *f, int l, const char *format, ...) {
-  if (g_debug_output) {
-    std::fprintf(stderr, "WARNING at %s:%d: ", f, l);
-    std::va_list va;
-    va_start(va, format);
-    std::vfprintf(stderr, format, va);
-    va_end(va);
-    std::fprintf(stderr, "\n");
-    std::fflush(stderr);
-  }
 }
 #endif
 

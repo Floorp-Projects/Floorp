@@ -37,7 +37,7 @@ union MaybeTransform {
 };
 
 sync protocol PLayerTransaction {
-  manager PRenderFrame or PCompositor;
+  manager PCompositor;
   manages PLayer;
   manages PCompositable;
   manages PTexture;

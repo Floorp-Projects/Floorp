@@ -38,6 +38,9 @@ nsContextMenu.prototype = {
 
     // Initialize (disable/remove) menu items.
     this.initItems();
+
+    // Register this opening of the menu with telemetry:
+    this._checkTelemetryForMenu(aXulMenu);
   },
 
   hiding: function CM_hiding() {
@@ -45,6 +48,11 @@ nsContextMenu.prototype = {
     InlineSpellCheckerUI.clearSuggestionsFromMenu();
     InlineSpellCheckerUI.clearDictionaryListFromMenu();
     InlineSpellCheckerUI.uninit();
+
+    // This handler self-deletes, only run it if it is still there:
+    if (this._onPopupHiding) {
+      this._onPopupHiding();
+    }
   },
 
   initItems: function CM_initItems() {
@@ -334,7 +342,7 @@ nsContextMenu.prototype = {
     let shareEnabled = shareButton && !shareButton.disabled && !this.onSocial;
     let pageShare = shareEnabled && !(this.isContentSelected ||
                             this.onTextInput || this.onLink || this.onImage ||
-                            this.onVideo || this.onAudio || this.onCanvas);
+                            this.onVideo || this.onAudio);
     this.showItem("context-sharepage", pageShare);
     this.showItem("context-shareselect", shareEnabled && this.isContentSelected);
     this.showItem("context-sharelink", shareEnabled && (this.onLink || this.onPlainTextLink) && !this.onMailtoLink);
@@ -1160,13 +1168,13 @@ nsContextMenu.prototype = {
           return;
         }
 
-        var extHelperAppSvc = 
+        let extHelperAppSvc = 
           Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
           getService(Ci.nsIExternalHelperAppService);
-        var channel = aRequest.QueryInterface(Ci.nsIChannel);
-        this.extListener = 
+        let channel = aRequest.QueryInterface(Ci.nsIChannel);
+        this.extListener =
           extHelperAppSvc.doContent(channel.contentType, aRequest, 
-                                    doc.defaultView, true);
+                                    doc.defaultView, true, window);
         this.extListener.onStartRequest(aRequest, aContext);
       }, 
 
@@ -1703,5 +1711,76 @@ nsContextMenu.prototype = {
                                                          selectedText]);
     menuItem.label = menuLabel;
     menuItem.accessKey = gNavigatorBundle.getString("contextMenuSearch.accesskey");
-  }
+  },
+
+  _getTelemetryClickInfo: function(aXulMenu) {
+    this._onPopupHiding = () => {
+      aXulMenu.ownerDocument.removeEventListener("command", activationHandler, true);
+      aXulMenu.removeEventListener("popuphiding", this._onPopupHiding, true);
+      delete this._onPopupHiding;
+
+      let eventKey = [
+          this._telemetryPageContext,
+          this._telemetryHadCustomItems ? "withcustom" : "withoutcustom"
+      ];
+      let target = this._telemetryClickID || "close-without-interaction";
+      BrowserUITelemetry.registerContextMenuInteraction(eventKey, target);
+    };
+    let activationHandler = (e) => {
+      // Deal with command events being routed to command elements; figure out
+      // what triggered the event (which will have the right e.target)
+      if (e.sourceEvent) {
+        e = e.sourceEvent;
+      }
+      // Target should be in the menu (this catches using shortcuts for items
+      // not in the menu while the menu is up)
+      if (!aXulMenu.contains(e.target)) {
+        return;
+      }
+
+      // Check if this is a page menu item:
+      if (e.target.hasAttribute(PageMenu.GENERATEDITEMID_ATTR)) {
+        this._telemetryClickID = "custom-page-item";
+      } else {
+        this._telemetryClickID = (e.target.id || "unknown").replace(/^context-/i, "");
+      }
+    };
+    aXulMenu.ownerDocument.addEventListener("command", activationHandler, true);
+    aXulMenu.addEventListener("popuphiding", this._onPopupHiding, true);
+  },
+
+  _getTelemetryPageContextInfo: function() {
+    if (this.isContentSelected) {
+      return "selection";
+    }
+    if (this.onLink) {
+      if (this.onImage || this.onCanvas) {
+        return "image-link";
+      }
+      return "link";
+    }
+    if (this.onImage) {
+      return "image"
+    }
+    if (this.onCanvas) {
+      return "canvas";
+    }
+    if (this.onVideo || this.onAudio) {
+      return "media";
+    }
+    if (this.onTextInput) {
+      return "input";
+    }
+    if (this.onSocial) {
+      return "social";
+    }
+    return "other";
+  },
+
+  _checkTelemetryForMenu: function(aXulMenu) {
+    this._telemetryClickID = null;
+    this._telemetryPageContext = this._getTelemetryPageContextInfo();
+    this._telemetryHadCustomItems = this.hasPageMenu;
+    this._getTelemetryClickInfo(aXulMenu);
+  },
 };

@@ -401,6 +401,21 @@ bool
 ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
 {
     JS_ASSERT(obj->is<ArrayObject>());
+    JS_ASSERT(obj->as<ArrayObject>().lengthIsWritable());
+    JS_ASSERT(!ObjectMayHaveExtraIndexedProperties(obj));
+
+    uint32_t idx = obj->as<ArrayObject>().length();
+    JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, idx, 1);
+    if (result == JSObject::ED_FAILED)
+        return false;
+
+    if (result == JSObject::ED_OK) {
+        obj->setDenseElement(idx, v);
+        MOZ_ASSERT(idx < INT32_MAX);
+        *length = idx + 1;
+        obj->as<ArrayObject>().setLengthInt32(*length);
+        return true;
+    }
 
     JS::AutoValueArray<3> argv(cx);
     argv[0].setUndefined();
@@ -798,7 +813,7 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustRet
         return false;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid trap status");
+        MOZ_CRASH("Invalid trap status");
     }
 }
 
@@ -950,7 +965,7 @@ HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, bool *mus
         return false;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid trap status");
+        MOZ_CRASH("Invalid trap status");
     }
 
     return true;
@@ -981,7 +996,7 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *m
         return false;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid trap status");
+        MOZ_CRASH("Invalid trap status");
     }
 }
 
@@ -1222,6 +1237,24 @@ TypedObjectProto(JSObject *obj)
     JS_ASSERT(obj->is<TypedObject>());
     TypedObject &typedObj = obj->as<TypedObject>();
     return &typedObj.typedProto();
+}
+
+void
+MarkValueFromIon(JSRuntime *rt, Value *vp)
+{
+    gc::MarkValueUnbarriered(&rt->gc.marker, vp, "write barrier");
+}
+
+void
+MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
+{
+    gc::MarkShapeUnbarriered(&rt->gc.marker, shapep, "write barrier");
+}
+
+void
+MarkTypeObjectFromIon(JSRuntime *rt, types::TypeObject **typep)
+{
+    gc::MarkTypeObjectUnbarriered(&rt->gc.marker, typep, "write barrier");
 }
 
 } // namespace jit

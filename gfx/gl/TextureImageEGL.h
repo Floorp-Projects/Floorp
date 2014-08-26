@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace gl {
 
-class TextureImageEGL
+class TextureImageEGL MOZ_FINAL
     : public TextureImage
 {
 public:

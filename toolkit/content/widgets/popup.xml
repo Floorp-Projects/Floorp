@@ -262,11 +262,11 @@
         // Capture the previous focus before has a chance to get set inside the panel
         try {
           this._prevFocus = document.commandDispatcher.focusedElement;
-          if (!this._prevFocus)  // Content window has focus
-            this._prevFocus = document.commandDispatcher.focusedWindow;
-        } catch (ex) {
-          this._prevFocus = document.activeElement;
-        }
+          if (this._prevFocus)
+            return;
+        } catch (ex) { }
+
+        this._prevFocus = document.activeElement;
       ]]></handler>
       <handler event="popupshown"><![CDATA[
         // Fire event for accessibility APIs

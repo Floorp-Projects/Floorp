@@ -31,6 +31,10 @@ let test = asyncTest(function*() {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let contextMenu = new nsContextMenu(contentAreaContextMenu);
   yield contextMenu.inspectNode();
+
+  // Clean up context menu:
+  contextMenu.hiding();
+
   yield onInspectorReady;
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);

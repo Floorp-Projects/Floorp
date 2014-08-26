@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<style>
+@keyframes xyz {
+  to { left: 100px }
+}
+</style>
+<script>
+'use strict';
+
+function addDiv() {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+  return div;
+}
+
+test(function() {
+  var div = addDiv();
+  div.style.animation = 'xyz 100s';
+  window.getComputedStyle(div).animationName;
+
+  assert_equals(div.getAnimationPlayers()[0].source.effect.name, 'xyz',
+                'Animation effect name matches keyframes rule name');
+  div.remove();
+}, 'Effect name makes keyframe rule');
+
+test(function() {
+  var div = addDiv();
+  div.style.animation = 'x\\yz 100s';
+  dump(window.getComputedStyle(div).animationName + "\n");
+
+  assert_equals(div.getAnimationPlayers()[0].source.effect.name, 'xyz',
+                'Escaped animation effect name matches keyframes rule name');
+  div.remove();
+}, 'Escaped animation name');
+
+test(function() {
+  var div = addDiv();
+  div.style.animation = 'x\\79 z 100s';
+  window.getComputedStyle(div).animationName;
+
+  assert_equals(div.getAnimationPlayers()[0].source.effect.name, 'xyz',
+                'Hex-escaped animation effect name matches keyframes rule'
+                + ' name');
+  div.remove();
+}, 'Animation name with hex-escape');
+
+test(function() {
+  var div = addDiv();
+
+  // Add a transition
+  div.style.left = '0px';
+  window.getComputedStyle(div).transitionProperty;
+  div.style.transition = 'all 100s';
+  div.style.left = '100px';
+  window.getComputedStyle(div).left;
+
+  assert_equals(div.getAnimationPlayers()[0].source.effect.name, '',
+                'Animation effects for transitions have an empty name');
+  div.remove();
+}, 'Effect name for transitions');
+</script>

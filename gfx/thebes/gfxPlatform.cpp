@@ -505,8 +505,7 @@ gfxPlatform::InitLayersIPC()
 
     AsyncTransactionTrackersHolder::Initialize();
 
-    if (UsesOffMainThreadCompositing() &&
-        XRE_GetProcessType() == GeckoProcessType_Default)
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
     {
         mozilla::layers::CompositorParent::StartUp();
 #ifndef MOZ_WIDGET_GONK
@@ -528,8 +527,7 @@ gfxPlatform::ShutdownLayersIPC()
     }
     sLayersIPCIsUp = false;
 
-    if (UsesOffMainThreadCompositing() &&
-        XRE_GetProcessType() == GeckoProcessType_Default)
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
     {
         // This must happen after the shutdown of media and widgets, which
         // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
@@ -867,7 +865,7 @@ gfxPlatform::InitializeSkiaCacheLimits()
   #endif
 
 #ifdef USE_SKIA_GPU
-    mSkiaGlue->GetGrContext()->setTextureCacheLimits(cacheItemLimit, cacheSizeLimit);
+    mSkiaGlue->GetGrContext()->setResourceCacheLimits(cacheItemLimit, cacheSizeLimit);
 #endif
   }
 }

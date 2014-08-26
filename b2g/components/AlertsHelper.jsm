@@ -136,20 +136,26 @@ let AlertsHelper = {
         });
       } catch (e) {
         // we get an exception if the app is not launched yet
-        gSystemMessenger.sendMessage(kNotificationSystemMessageName, {
-            clicked: (detail.type === kDesktopNotificationClick),
-            title: listener.title,
-            body: listener.text,
-            imageURL: listener.imageURL,
-            lang: listener.lang,
-            dir: listener.dir,
-            id: listener.id,
-            tag: listener.tag,
-            timestamp: listener.timestamp
-          },
-          Services.io.newURI(listener.target, null, null),
-          Services.io.newURI(listener.manifestURL, null, null)
-        );
+        if (detail.type !== kDesktopNotificationShow) {
+          // excluding the 'show' event: there is no reason a unlaunched app
+          // would want to be notified that a notification is shown. This
+          // happens when a notification is still displayed at reboot time.
+          gSystemMessenger.sendMessage(kNotificationSystemMessageName, {
+              clicked: (detail.type === kDesktopNotificationClick),
+              title: listener.title,
+              body: listener.text,
+              imageURL: listener.imageURL,
+              lang: listener.lang,
+              dir: listener.dir,
+              id: listener.id,
+              tag: listener.tag,
+              timestamp: listener.timestamp,
+              data: listener.dataObj
+            },
+            Services.io.newURI(listener.target, null, null),
+            Services.io.newURI(listener.manifestURL, null, null)
+          );
+        }
       }
     }
 
@@ -194,8 +200,32 @@ let AlertsHelper = {
     });
   },
 
+  deserializeStructuredClone: function(dataString) {
+    if (!dataString) {
+      return null;
+    }
+    let scContainer = Cc["@mozilla.org/docshell/structured-clone-container;1"].
+      createInstance(Ci.nsIStructuredCloneContainer);
+
+    // The maximum supported structured-clone serialization format version
+    // as defined in "js/public/StructuredClone.h"
+    let JS_STRUCTURED_CLONE_VERSION = 4;
+    scContainer.initFromBase64(dataString, JS_STRUCTURED_CLONE_VERSION);
+    let dataObj = scContainer.deserializeToVariant();
+
+    // We have to check whether dataObj contains DOM objects (supported by
+    // nsIStructuredCloneContainer, but not by Cu.cloneInto), e.g. ImageData.
+    // After the structured clone callback systems will be unified, we'll not
+    // have to perform this check anymore.
+    try {
+      let data = Cu.cloneInto(dataObj, {});
+    } catch(e) { dataObj = null; }
+
+    return dataObj;
+  },
+
   showNotification: function(imageURL, title, text, textClickable, cookie,
-                             uid, bidi, lang, manifestURL, timestamp) {
+                             uid, bidi, lang, dataObj, manifestURL, timestamp) {
     function send(appName, appIcon) {
       SystemAppProxy._sendCustomEvent(kMozChromeNotificationEvent, {
         type: kDesktopNotification,
@@ -208,7 +238,8 @@ let AlertsHelper = {
         appName: appName,
         appIcon: appIcon,
         manifestURL: manifestURL,
-        timestamp: timestamp
+        timestamp: timestamp,
+        data: dataObj
       });
     }
 
@@ -233,15 +264,17 @@ let AlertsHelper = {
       currentListener.observer.observe(null, kTopicAlertFinished, currentListener.cookie);
     }
 
+    let dataObj = this.deserializeStructuredClone(data.dataStr);
     this.registerListener(data.name, data.cookie, data.alertListener);
     this.showNotification(data.imageURL, data.title, data.text,
                           data.textClickable, data.cookie, data.name, data.bidi,
-                          data.lang, null);
+                          data.lang, dataObj, null);
   },
 
   showAppNotification: function(aMessage) {
     let data = aMessage.data;
     let details = data.details;
+    let dataObject = this.deserializeStructuredClone(details.data);
     let listener = {
       mm: aMessage.target,
       title: data.title,
@@ -252,12 +285,14 @@ let AlertsHelper = {
       id: details.id || undefined,
       dir: details.dir || undefined,
       tag: details.tag || undefined,
-      timestamp: details.timestamp || undefined
+      timestamp: details.timestamp || undefined,
+      dataObj: dataObject || undefined
     };
     this.registerAppListener(data.uid, listener);
     this.showNotification(data.imageURL, data.title, data.text,
                           details.textClickable, null, data.uid, details.dir,
-                          details.lang, details.manifestURL, details.timestamp);
+                          details.lang, dataObject, details.manifestURL,
+                          details.timestamp);
   },
 
   closeAlert: function(name) {

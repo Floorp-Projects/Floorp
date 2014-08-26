@@ -9,15 +9,25 @@ function testBipCommand(command, expect) {
   is(command.typeOfCommand, expect.typeOfCommand, expect.name);
   is(command.options.text, expect.text, expect.name);
 
+  let icons = command.options.icons;
+  if (icons) {
+    isIcons(icons, expect.icons, expect.name);
+
+    let iconSelfExplanatory = command.options.iconSelfExplanatory;
+    is(iconSelfExplanatory, expect.iconSelfExplanatory, expect.name);
+  }
+
   runNextTest();
 }
 
 let tests = [
-  {command: "d04b81030140018202818205074f70656e204944350702030403041f0239020578470a065465737447700272730d08f4557365724c6f670d08f4557365725077643c0301ad9c3e052101010101",
+  {command: "d04f81030140018202818205074f70656e204944350702030403041f0239020578470a065465737447700272730d08f4557365724c6f670d08f4557365725077643c0301ad9c3e0521010101019e020007",
    func: testBipCommand,
    expect: {name: "open_channel_1",
             typeOfCommand: iccManager.STK_CMD_OPEN_CHANNEL,
-            text: "Open ID"}},
+            text: "Open ID",
+            iconSelfExplanatory: true,
+            icons: [colorIcon, colorTransparencyIcon]}},
   {command: "d0448103014001820281820500350702030403041f0239020578470a065465737447700272730d08f4557365724c6f670d08f4557365725077643c0301ad9c3e052101010101",
    func: testBipCommand,
    expect: {name: "open_channel_2",

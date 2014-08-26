@@ -20,7 +20,7 @@ class nsSliderFrame;
 
 nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsSliderMediator : public nsIDOMEventListener
+class nsSliderMediator MOZ_FINAL : public nsIDOMEventListener
 {
 public:
 
@@ -42,6 +42,8 @@ class nsSliderFrame : public nsBoxFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_QUERYFRAME_TARGET(nsSliderFrame)
+  NS_DECL_QUERYFRAME
 
   friend class nsSliderMediator;
 
@@ -161,6 +163,7 @@ private:
   static void Notify(void* aData) {
     (static_cast<nsSliderFrame*>(aData))->Notify();
   }
+  void PageScroll(nscoord aChange);
  
   nsPoint mDestinationPoint;
   nsRefPtr<nsSliderMediator> mMediator;

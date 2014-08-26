@@ -23,7 +23,7 @@ class ColorLayerComposite : public ColorLayer,
                             public LayerComposite
 {
 public:
-  ColorLayerComposite(LayerManagerComposite *aManager)
+  explicit ColorLayerComposite(LayerManagerComposite *aManager)
     : ColorLayer(aManager, nullptr)
     , LayerComposite(aManager)
   {

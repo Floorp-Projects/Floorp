@@ -117,6 +117,7 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
              mBuffer->GetLayer() == this,
              "buffer is corrupted");
 
+  const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
   gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
 
 #ifdef MOZ_DUMP_PAINTING
@@ -131,8 +132,6 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
   EffectChain effectChain(this);
   LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
   AddBlendModeEffect(effectChain);
-
-  const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
 
   mBuffer->SetPaintWillResample(MayResample());
 

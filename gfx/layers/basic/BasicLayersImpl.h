@@ -49,7 +49,7 @@ class BasicReadbackLayer : public ReadbackLayer,
                            public BasicImplData
 {
 public:
-  BasicReadbackLayer(BasicLayerManager* aLayerManager) :
+  explicit BasicReadbackLayer(BasicLayerManager* aLayerManager) :
     ReadbackLayer(aLayerManager,
                   static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST()))
   {

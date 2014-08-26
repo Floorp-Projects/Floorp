@@ -20,7 +20,7 @@
     {"process": "P", "path": "a/c/g", "kind": 2, "units": 0, "amount": 3000000, "description": "Desc."},
     {"process": "P", "path": "a/h", "kind": 2, "units": 0, "amount": 1000, "description": "Desc."},
 
-    {"process": "P2 (pid 22)", "path": "z-moz-nullprincipal:{85e250f3-57ae-46c4-a11e-4176dd39d9c5} 0x1234", "kind": 2, "units": 0, "amount": 33, "description": "Desc."},
+    {"process": "P2 (pid 22)", "path": "z-moz-nullprincipal:{85e250f3-57ae-46c4-a11e-4176dd39d9c5} 0x1234-blah(0x2345) pid 123 pid=45678", "kind": 2, "units": 0, "amount": 33, "description": "Desc."},
 
     {"process": "P3", "path": "p3", "kind": 2, "units": 0, "amount": 55, "description": "Desc."},
 

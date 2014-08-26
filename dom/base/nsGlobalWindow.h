@@ -599,6 +599,7 @@ public:
 
   nsGlobalWindow *GetCurrentInnerWindowInternal() const
   {
+    MOZ_ASSERT(IsOuterWindow());
     return static_cast<nsGlobalWindow *>(mInnerWindow);
   }
 

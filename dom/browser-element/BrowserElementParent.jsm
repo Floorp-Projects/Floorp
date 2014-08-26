@@ -68,6 +68,8 @@ this.BrowserElementParentBuilder = {
 function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
   debug("Creating new BrowserElementParent object for " + frameLoader);
   this._domRequestCounter = 0;
+  this._domRequestReady = false;
+  this._pendingAPICalls = [];
   this._pendingDOMRequests = {};
   this._pendingSetInputMethodActive = [];
   this._hasRemoteFrame = hasRemoteFrame;
@@ -94,7 +96,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
 
   let defineNoReturnMethod = function(name, fn) {
     XPCNativeWrapper.unwrap(self._frameElement)[name] = function method() {
-      if (!self._mm) {
+      if (!self._domRequestReady) {
         // Remote browser haven't been created, we just queue the API call.
         let args = Array.slice(arguments);
         args.unshift(self);
@@ -116,24 +118,30 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
   // Define methods on the frame element.
   defineNoReturnMethod('setVisible', this._setVisible);
   defineDOMRequestMethod('getVisible', 'get-visible');
-  defineNoReturnMethod('sendMouseEvent', this._sendMouseEvent);
 
-  // 0 = disabled, 1 = enabled, 2 - auto detect
-  if (getIntPref(TOUCH_EVENTS_ENABLED_PREF, 0) != 0) {
-    defineNoReturnMethod('sendTouchEvent', this._sendTouchEvent);
+  // Not expose security sensitive browser API for widgets
+  if (!this._frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerIsWidget) {
+    defineNoReturnMethod('sendMouseEvent', this._sendMouseEvent);
+
+    // 0 = disabled, 1 = enabled, 2 - auto detect
+    if (getIntPref(TOUCH_EVENTS_ENABLED_PREF, 0) != 0) {
+      defineNoReturnMethod('sendTouchEvent', this._sendTouchEvent);
+    }
+    defineNoReturnMethod('goBack', this._goBack);
+    defineNoReturnMethod('goForward', this._goForward);
+    defineNoReturnMethod('reload', this._reload);
+    defineNoReturnMethod('stop', this._stop);
+    defineMethod('download', this._download);
+    defineDOMRequestMethod('purgeHistory', 'purge-history');
+    defineMethod('getScreenshot', this._getScreenshot);
+    defineNoReturnMethod('zoom', this._zoom);
+
+    defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
+    defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
   }
-  defineNoReturnMethod('goBack', this._goBack);
-  defineNoReturnMethod('goForward', this._goForward);
-  defineNoReturnMethod('reload', this._reload);
-  defineNoReturnMethod('stop', this._stop);
-  defineNoReturnMethod('zoom', this._zoom);
-  defineMethod('download', this._download);
-  defineDOMRequestMethod('purgeHistory', 'purge-history');
-  defineMethod('getScreenshot', this._getScreenshot);
+
   defineMethod('addNextPaintListener', this._addNextPaintListener);
   defineMethod('removeNextPaintListener', this._removeNextPaintListener);
-  defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
-  defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
 
   let principal = this._frameElement.ownerDocument.nodePrincipal;
   let perm = Services.perms
@@ -175,7 +183,6 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
   } else {
     // if we are a pending frame, we setup message manager after
     // observing remote-browser-frame-shown
-    this._pendingAPICalls = [];
     Services.obs.addObserver(this, 'remote-browser-frame-shown', /* ownsWeak = */ true);
   }
 }
@@ -217,6 +224,9 @@ BrowserElementParent.prototype = {
   _setupMessageListener: function() {
     this._mm = this._frameLoader.messageManager;
     let self = this;
+    let isWidget = this._frameLoader
+                       .QueryInterface(Ci.nsIFrameLoader)
+                       .ownerIsWidget;
 
     // Messages we receive are handed to functions which take a (data) argument,
     // where |data| is the message manager's data object.
@@ -224,26 +234,14 @@ BrowserElementParent.prototype = {
     // on data.msg_name
     let mmCalls = {
       "hello": this._recvHello,
-      "contextmenu": this._fireCtxMenuEvent,
-      "locationchange": this._fireEventFromMsg,
       "loadstart": this._fireProfiledEventFromMsg,
       "loadend": this._fireProfiledEventFromMsg,
-      "titlechange": this._fireProfiledEventFromMsg,
-      "iconchange": this._fireEventFromMsg,
-      "manifestchange": this._fireEventFromMsg,
-      "metachange": this._fireEventFromMsg,
       "close": this._fireEventFromMsg,
-      "resize": this._fireEventFromMsg,
-      "activitydone": this._fireEventFromMsg,
-      "opensearch": this._fireEventFromMsg,
-      "securitychange": this._fireEventFromMsg,
       "error": this._fireEventFromMsg,
-      "scroll": this._fireEventFromMsg,
       "firstpaint": this._fireProfiledEventFromMsg,
       "documentfirstpaint": this._fireProfiledEventFromMsg,
       "nextpaint": this._recvNextPaint,
       "keyevent": this._fireKeyEvent,
-      "showmodalprompt": this._handleShowModalPrompt,
       "got-purge-history": this._gotDOMRequestResult,
       "got-screenshot": this._gotDOMRequestResult,
       "got-can-go-back": this._gotDOMRequestResult,
@@ -257,9 +255,31 @@ BrowserElementParent.prototype = {
       "selectionchange": this._handleSelectionChange
     };
 
+    let mmSecuritySensitiveCalls = {
+      "showmodalprompt": this._handleShowModalPrompt,
+      "contextmenu": this._fireCtxMenuEvent,
+      "securitychange": this._fireEventFromMsg,
+      "locationchange": this._fireEventFromMsg,
+      "iconchange": this._fireEventFromMsg,
+      "titlechange": this._fireProfiledEventFromMsg,
+      "opensearch": this._fireEventFromMsg,
+      "manifestchange": this._fireEventFromMsg,
+      "metachange": this._fireEventFromMsg,
+      "resize": this._fireEventFromMsg,
+      "activitydone": this._fireEventFromMsg,
+      "scroll": this._fireEventFromMsg
+    };
+
     this._mm.addMessageListener('browser-element-api:call', function(aMsg) {
-      if (self._isAlive() && (aMsg.data.msg_name in mmCalls)) {
+      if (!self._isAlive()) {
+        return;
+      }
+
+      if (aMsg.data.msg_name in mmCalls) {
         return mmCalls[aMsg.data.msg_name].apply(self, arguments);
+      } else if (!isWidget && aMsg.data.msg_name in mmSecuritySensitiveCalls) {
+        return mmSecuritySensitiveCalls[aMsg.data.msg_name]
+                 .apply(self, arguments);
       }
     });
   },
@@ -294,25 +314,28 @@ BrowserElementParent.prototype = {
       }
     };
 
-    if (authDetail.isOnlyPassword) {
-      // We don't handle password-only prompts, so just cancel it.
+    // 1. We don't handle password-only prompts.
+    // 2. We don't handle for widget case because of security concern.
+    if (authDetail.isOnlyPassword ||
+        this._frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerIsWidget) {
       cancelCallback();
       return;
-    } else { /* username and password */
-      let detail = {
-        host:     authDetail.host,
-        realm:    authDetail.realm
-      };
-
-      evt = this._createEvent('usernameandpasswordrequired', detail,
-                              /* cancelable */ true);
-      Cu.exportFunction(function(username, password) {
-        if (callbackCalled)
-          return;
-        callbackCalled = true;
-        callback(true, username, password);
-      }, evt.detail, { defineAs: 'authenticate' });
     }
+
+    /* username and password */
+    let detail = {
+      host:     authDetail.host,
+      realm:    authDetail.realm
+    };
+
+    evt = this._createEvent('usernameandpasswordrequired', detail,
+                            /* cancelable */ true);
+    Cu.exportFunction(function(username, password) {
+      if (callbackCalled)
+        return;
+      callbackCalled = true;
+      callback(true, username, password);
+    }, evt.detail, { defineAs: 'authenticate' });
 
     Cu.exportFunction(cancelCallback, evt.detail, { defineAs: 'cancel' });
 
@@ -346,6 +369,13 @@ BrowserElementParent.prototype = {
     // we run our constructor.
     if (this._window.document.hidden) {
       this._ownerVisibilityChange();
+    }
+
+    if (!this._domRequestReady) {
+      // At least, one message listener such as for hello is registered.
+      // So we can use sendAsyncMessage now.
+      this._domRequestReady = true;
+      this._runPendingAPICall();
     }
 
     return {
@@ -509,7 +539,7 @@ BrowserElementParent.prototype = {
         Services.DOMRequest.fireErrorAsync(req, "fail");
       }
     };
-    if (this._mm) {
+    if (this._domRequestReady) {
       send();
     } else {
       // Child haven't been loaded.
@@ -775,7 +805,7 @@ BrowserElementParent.prototype = {
       if (self._nextPaintListeners.push(listener) == 1)
         self._sendAsyncMsg('activate-next-paint-listener');
     };
-    if (!this._mm) {
+    if (!this._domRequestReady) {
       this._pendingAPICalls.push(run);
     } else {
       run();
@@ -798,7 +828,7 @@ BrowserElementParent.prototype = {
       if (self._nextPaintListeners.length == 0)
         self._sendAsyncMsg('deactivate-next-paint-listener');
     };
-    if (!this._mm) {
+    if (!this._domRequestReady) {
       this._pendingAPICalls.push(run);
     } else {
       run();
@@ -886,7 +916,6 @@ BrowserElementParent.prototype = {
         if (!this._mm) {
           this._setupMessageListener();
           this._registerAppManifest();
-          this._runPendingAPICall();
         }
         Services.obs.removeObserver(this, 'remote-browser-frame-shown');
       }

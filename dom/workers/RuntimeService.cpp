@@ -1089,6 +1089,28 @@ public:
 #endif
 
 #ifdef ENABLE_TESTS
+  class TestPBackgroundCreateCallback MOZ_FINAL :
+    public nsIIPCBackgroundChildCreateCallback
+  {
+  public:
+    virtual void ActorCreated(PBackgroundChild* actor) MOZ_OVERRIDE
+    {
+      MOZ_RELEASE_ASSERT(actor);
+    }
+
+    virtual void ActorFailed() MOZ_OVERRIDE
+    {
+      MOZ_CRASH("TestPBackground() should not fail GetOrCreateForCurrentThread()");
+    }
+
+  private:
+    ~TestPBackgroundCreateCallback()
+    { }
+
+  public:
+    NS_DECL_ISUPPORTS;
+  };
+
   void
   TestPBackground()
   {
@@ -1122,6 +1144,11 @@ private:
   ~WorkerThread()
   { }
 };
+
+#ifdef ENABLE_TESTS
+NS_IMPL_ISUPPORTS(RuntimeService::WorkerThread::TestPBackgroundCreateCallback,
+                  nsIIPCBackgroundChildCreateCallback);
+#endif
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -2449,6 +2476,28 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
     SendOfflineStatusChangeEventToAllWorkers(NS_IsOffline());
     return NS_OK;
   }
+  if (!strcmp(aTopic, NS_IOSERVICE_APP_OFFLINE_STATUS_TOPIC)) {
+    nsCOMPtr<nsIAppOfflineInfo> info(do_QueryInterface(aSubject));
+    if (!info) {
+      return NS_OK;
+    }
+    nsIPrincipal * principal = GetPrincipalForAsmJSCacheOp();
+    if (!principal) {
+      return NS_OK;
+    }
+
+    uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
+    principal->GetAppId(&appId);
+
+    uint32_t notificationAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
+    info->GetAppId(&notificationAppId);
+
+    if (appId != notificationAppId) {
+      return NS_OK;
+    }
+
+    SendOfflineStatusChangeEventToAllWorkers(NS_IsAppOffline(appId));
+  }
 
   NS_NOTREACHED("Unknown observer topic!");
   return NS_OK;
@@ -2698,11 +2747,11 @@ WorkerThreadPrimaryRunnable::Run()
     return rv;
   }
 
+  mThread->SetWorker(mWorkerPrivate);
+
 #ifdef ENABLE_TESTS
   mThread->TestPBackground();
 #endif
-
-  mThread->SetWorker(mWorkerPrivate);
 
   mWorkerPrivate->AssertIsOnWorkerThread();
 

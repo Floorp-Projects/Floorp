@@ -17,7 +17,7 @@ class nsRenderingContext;
 #define DIR_VERTICAL 0
 #define DIR_HORIZONTAL 1
 
-class inFlasher : public inIFlasher
+class inFlasher MOZ_FINAL : public inIFlasher
 {
 public:
   NS_DECL_ISUPPORTS

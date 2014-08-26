@@ -162,6 +162,7 @@ this.DOMApplicationRegistry = {
   children: [ ],
   allAppsLaunchable: false,
   _updateHandlers: [ ],
+  _pendingUninstalls: {},
 
   init: function() {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
@@ -262,6 +263,10 @@ this.DOMApplicationRegistry = {
           app.role = "";
         }
 
+        if (app.widgetPages === undefined) {
+          app.widgetPages = [];
+        }
+
         // At startup we can't be downloading, and the $TMP directory
         // will be empty so we can't just apply a staged update.
         app.downloading = false;
@@ -321,6 +326,15 @@ this.DOMApplicationRegistry = {
     return res.length > 0 ? res : null;
   },
 
+  _saveWidgetsFullPath: function(aManifest, aDestApp) {
+    if (aManifest.widgetPages) {
+      aDestApp.widgetPages = aManifest.widgetPages.map(aManifest.resolveURL,
+                                                       aManifest/* thisArg */);
+    } else {
+      aDestApp.widgetPages = [];
+    }
+  },
+
   // Registers all the activities and system messages.
   registerAppsHandlers: Task.async(function*(aRunUpdate) {
     this.notifyAppsRegistryStart();
@@ -345,6 +359,10 @@ this.DOMApplicationRegistry = {
         let app = this.webapps[aResult.id];
         app.csp = aResult.manifest.csp || "";
         app.role = aResult.manifest.role || "";
+
+        let localeManifest = new ManifestHelper(aResult.manifest, app.origin, app.manifestURL);
+        this._saveWidgetsFullPath(localeManifest, app);
+
         if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
           app.redirects = this.sanitizeRedirects(aResult.redirects);
         }
@@ -530,7 +548,7 @@ this.DOMApplicationRegistry = {
        if (this.webapps[id].manifestURL === httpsManifestURL) {
          debug("Found a http/https match: " + app.manifestURL + " / " +
                this.webapps[id].manifestURL);
-         this.uninstall(app.manifestURL, function() {}, function() {});
+         this.uninstall(app.manifestURL);
          return;
        }
     }
@@ -984,6 +1002,8 @@ this.DOMApplicationRegistry = {
         app.name = manifest.name;
         app.csp = manifest.csp || "";
         app.role = localeManifest.role;
+        this._saveWidgetsFullPath(localeManifest, app);
+
         if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
           app.redirects = this.sanitizeRedirects(manifest.redirects);
         }
@@ -2014,6 +2034,8 @@ this.DOMApplicationRegistry = {
     aApp.downloadAvailable = true;
     aApp.downloadSize = manifest.size;
     aApp.updateManifest = aNewManifest;
+    this._saveWidgetsFullPath(manifest, aApp);
+
     yield this._saveApps();
 
     this.broadcastMessage("Webapps:UpdateState", {
@@ -2072,6 +2094,7 @@ this.DOMApplicationRegistry = {
       aApp.name = aNewManifest.name;
       aApp.csp = manifest.csp || "";
       aApp.role = manifest.role || "";
+      this._saveWidgetsFullPath(manifest, aApp);
       aApp.updateTime = Date.now();
     } else {
       manifest =
@@ -2471,6 +2494,7 @@ this.DOMApplicationRegistry = {
     appObject.name = aManifest.name;
     appObject.csp = aLocaleManifest.csp || "";
     appObject.role = aLocaleManifest.role;
+    this._saveWidgetsFullPath(aLocaleManifest, appObject);
     appObject.installerAppId = aData.appId;
     appObject.installerIsBrowser = aData.isBrowser;
 
@@ -2505,6 +2529,9 @@ this.DOMApplicationRegistry = {
     app.name = aManifest.name;
 
     app.csp = aManifest.csp || "";
+
+    let aLocaleManifest = new ManifestHelper(aManifest, app.origin, app.manifestURL);
+    this._saveWidgetsFullPath(aLocaleManifest, app);
 
     app.appStatus = AppsUtils.getAppManifestStatus(aManifest);
 
@@ -2612,7 +2639,7 @@ this.DOMApplicationRegistry = {
             manifest: jsonManifest
           },
           isReinstall,
-          this.uninstall.bind(this, aData, aData.mm)
+          this.doUninstall.bind(this, aData, aData.mm)
         );
       }
 
@@ -3649,39 +3676,50 @@ this.DOMApplicationRegistry = {
     AppDownloadManager.remove(aNewApp.manifestURL);
   },
 
-  doUninstall: function(aData, aMm) {
-    this.uninstall(aData.manifestURL,
-      function onsuccess() {
-        aMm.sendAsyncMessage("Webapps:Uninstall:Return:OK", aData);
-      },
-      function onfailure() {
-        // Fall-through, fails to uninstall the desired app because:
-        //   - we cannot find the app to be uninstalled.
-        //   - the app to be uninstalled is not removable.
-        aMm.sendAsyncMessage("Webapps:Uninstall:Return:KO", aData);
+  doUninstall: Task.async(function*(aData, aMm) {
+    // The yields here could get stuck forever, so we only hold
+    // a weak reference to the message manager while yielding, to avoid
+    // leaking the whole page associationed with the message manager.
+    aMm = Cu.getWeakReference(aMm);
+
+    let response = "Webapps:Uninstall:Return:OK";
+
+    try {
+      aData.app = yield this._getAppWithManifest(aData.manifestURL);
+
+      let prefName = "dom.mozApps.auto_confirm_uninstall";
+      if (Services.prefs.prefHasUserValue(prefName) &&
+          Services.prefs.getBoolPref(prefName)) {
+        yield this._uninstallApp(aData.app);
+      } else {
+        yield this._promptForUninstall(aData);
       }
-    );
+    } catch (error) {
+      aData.error = error;
+      response = "Webapps:Uninstall:Return:KO";
+    }
+
+    if (aMm = aMm.get()) {
+      aMm.sendAsyncMessage(response, aData);
+    }
+  }),
+
+  uninstall: function(aManifestURL) {
+    return this._getAppWithManifest(aManifestURL)
+      .then(this._uninstallApp.bind(this));
   },
 
-  uninstall: function(aManifestURL, aOnSuccess, aOnFailure) {
-    debug("uninstall " + aManifestURL);
-
-    let app = this.getAppByManifestURL(aManifestURL);
-    if (!app) {
-      aOnFailure("NO_SUCH_APP");
-      return;
-    }
-    let id = app.id;
-
-    if (!app.removable) {
+  _uninstallApp: Task.async(function*(aApp) {
+    if (!aApp.removable) {
       debug("Error: cannot uninstall a non-removable app.");
-      aOnFailure("NON_REMOVABLE_APP");
-      return;
+      throw new Error("NON_REMOVABLE_APP");
     }
+
+    let id = aApp.id;
 
     // Check if we are downloading something for this app, and cancel the
     // download if needed.
-    this.cancelDownload(app.manifestURL);
+    this.cancelDownload(aApp.manifestURL);
 
     // Clean up the deprecated manifest cache if needed.
     if (id in this._manifestCache) {
@@ -3689,18 +3727,13 @@ this.DOMApplicationRegistry = {
     }
 
     // Clear private data first.
-    this._clearPrivateData(app.localId, false);
+    this._clearPrivateData(aApp.localId, false);
 
     // Then notify observers.
-    // We have to clone the app object as nsIDOMApplication objects are
-    // stringified as an empty object. (see bug 830376)
-    let appClone = AppsUtils.cloneAppObject(app);
-    Services.obs.notifyObservers(null, "webapps-uninstall", JSON.stringify(appClone));
+    Services.obs.notifyObservers(null, "webapps-uninstall", JSON.stringify(aApp));
 
     if (supportSystemMessages()) {
-      this._readManifests([{ id: id }]).then((aResult) => {
-        this._unregisterActivities(aResult[0].manifest, app);
-      });
+      this._unregisterActivities(aApp.manifest, aApp);
     }
 
     let dir = this._getAppDir(id);
@@ -3710,18 +3743,47 @@ this.DOMApplicationRegistry = {
 
     delete this.webapps[id];
 
-    this._saveApps().then(() => {
-      this.broadcastMessage("Webapps:Uninstall:Broadcast:Return:OK", appClone);
-      this.broadcastMessage("Webapps:RemoveApp", { id: id });
-      try {
-        if (aOnSuccess) {
-          aOnSuccess();
-        }
-      } catch(ex) {
-        Cu.reportError("DOMApplicationRegistry: Exception on app uninstall: " +
-                       ex + "\n" + ex.stack);
-      }
-    });
+    yield this._saveApps();
+
+    this.broadcastMessage("Webapps:Uninstall:Broadcast:Return:OK", aApp);
+    this.broadcastMessage("Webapps:RemoveApp", { id: id });
+
+    return aApp;
+  }),
+
+  _promptForUninstall: function(aData) {
+    let deferred = Promise.defer();
+    this._pendingUninstalls[aData.requestID] = deferred;
+    Services.obs.notifyObservers(null, "webapps-ask-uninstall",
+                                 JSON.stringify(aData));
+    return deferred.promise;
+  },
+
+  confirmUninstall: function(aData) {
+    let pending = this._pendingUninstalls[aData.requestID];
+    if (pending) {
+      delete this._pendingUninstalls[aData.requestID];
+      return this._uninstallApp(aData.app).then(() => {
+        pending.resolve();
+        return aData.app;
+      });
+    }
+    return Promise.reject(new Error("PENDING_UNINSTALL_NOT_FOUND"));
+  },
+
+  denyUninstall: function(aData, aReason = "ERROR_UNKNOWN_FAILURE") {
+    // Fails to uninstall the desired app because:
+    //   - we cannot find the app to be uninstalled.
+    //   - the app to be uninstalled is not removable.
+    //   - the user declined the confirmation
+    debug("Failed to uninstall app: " + aReason);
+    let pending = this._pendingUninstalls[aData.requestID];
+    if (pending) {
+      delete this._pendingUninstalls[aData.requestID];
+      pending.reject(new Error(aReason));
+      return Promise.resolve();
+    }
+    return Promise.reject(new Error("PENDING_UNINSTALL_NOT_FOUND"));
   },
 
   getSelf: function(aData, aMm) {
@@ -4040,6 +4102,17 @@ this.DOMApplicationRegistry = {
   getAppByManifestURL: function(aManifestURL) {
     return AppsUtils.getAppByManifestURL(this.webapps, aManifestURL);
   },
+
+  _getAppWithManifest: Task.async(function*(aManifestURL) {
+    let app = this.getAppByManifestURL(aManifestURL);
+    if (!app) {
+      throw new Error("NO_SUCH_APP");
+    }
+
+    app.manifest = ( yield this._readManifests([{ id: app.id }]) )[0].manifest;
+
+    return app;
+  }),
 
   getCSPByLocalId: function(aLocalId) {
     debug("getCSPByLocalId:" + aLocalId);

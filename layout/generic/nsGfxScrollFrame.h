@@ -13,6 +13,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsBoxFrame.h"
 #include "nsIScrollableFrame.h"
+#include "nsIScrollbarMediator.h"
 #include "nsIStatefulFrame.h"
 #include "nsThreadUtils.h"
 #include "nsIReflowCallback.h"
@@ -325,6 +326,19 @@ public:
   }
   bool WantAsyncScroll() const;
 
+  // nsIScrollbarMediator
+  void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection);
+  void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection);
+  void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection);
+  void RepeatButtonScroll(nsScrollbarFrame* aScrollbar);
+  void ThumbMoved(nsScrollbarFrame* aScrollbar,
+                  nscoord aOldPos,
+                  nscoord aNewPos);
+  void ScrollByUnit(nsScrollbarFrame* aScrollbar,
+                    nsIScrollableFrame::ScrollMode aMode,
+                    int32_t aDirection,
+                    nsIScrollableFrame::ScrollUnit aUnit);
+
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<nsIContent> mHScrollbarContent;
   nsCOMPtr<nsIContent> mVScrollbarContent;
@@ -547,14 +561,6 @@ public:
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter) MOZ_OVERRIDE;
 
-  // nsIScrollbarOwner
-  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
-    return mHelper.GetScrollbarBox(aVertical);
-  }
-
-  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
-  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
-
   // nsIScrollableFrame
   virtual nsIFrame* GetScrolledFrame() const MOZ_OVERRIDE {
     return mHelper.GetScrolledFrame();
@@ -721,6 +727,31 @@ public:
    * @see nsGkAtoms::scrollFrame
    */
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+
+  // nsIScrollbarMediator
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE {
+    mHelper.ScrollByPage(aScrollbar, aDirection);
+  }
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE {
+    mHelper.ScrollByWhole(aScrollbar, aDirection);
+  }
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE {
+    mHelper.ScrollByLine(aScrollbar, aDirection);
+  }
+  virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) MOZ_OVERRIDE {
+    mHelper.RepeatButtonScroll(aScrollbar);
+  }
+  virtual void ThumbMoved(nsScrollbarFrame* aScrollbar,
+                          nscoord aOldPos,
+                          nscoord aNewPos) MOZ_OVERRIDE {
+    mHelper.ThumbMoved(aScrollbar, aOldPos, aNewPos);
+  }
+  virtual void VisibilityChanged(bool aVisible) {}
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
+    return mHelper.GetScrollbarBox(aVertical);
+  }
+  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
+  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
   
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
@@ -767,10 +798,10 @@ private:
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsXULScrollFrame : public nsBoxFrame,
-                         public nsIScrollableFrame,
-                         public nsIAnonymousContentCreator,
-                         public nsIStatefulFrame {
+class nsXULScrollFrame MOZ_FINAL : public nsBoxFrame,
+                                   public nsIScrollableFrame,
+                                   public nsIAnonymousContentCreator,
+                                   public nsIStatefulFrame {
 public:
   typedef mozilla::ScrollFrameHelper ScrollFrameHelper;
   typedef mozilla::CSSIntPoint CSSIntPoint;
@@ -871,14 +902,6 @@ public:
 
   static void AdjustReflowStateForPrintPreview(nsBoxLayoutState& aState, bool& aSetBack);
   static void AdjustReflowStateBack(nsBoxLayoutState& aState, bool aSetBack);
-
-  // nsIScrollbarOwner
-  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
-    return mHelper.GetScrollbarBox(aVertical);
-  }
-
-  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
-  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
 
   // nsIScrollableFrame
   virtual nsIFrame* GetScrolledFrame() const MOZ_OVERRIDE {
@@ -1051,6 +1074,31 @@ public:
       return false;
     return nsBoxFrame::IsFrameOfType(aFlags);
   }
+
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE {
+    mHelper.ScrollByPage(aScrollbar, aDirection);
+  }
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE {
+    mHelper.ScrollByWhole(aScrollbar, aDirection);
+  }
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE {
+    mHelper.ScrollByLine(aScrollbar, aDirection);
+  }
+  virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) MOZ_OVERRIDE {
+    mHelper.RepeatButtonScroll(aScrollbar);
+  }
+  virtual void ThumbMoved(nsScrollbarFrame* aScrollbar,
+                          nscoord aOldPos,
+                          nscoord aNewPos) MOZ_OVERRIDE {
+    mHelper.ThumbMoved(aScrollbar, aOldPos, aNewPos);
+  }
+  virtual void VisibilityChanged(bool aVisible) {}
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
+    return mHelper.GetScrollbarBox(aVertical);
+  }
+
+  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
+  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;

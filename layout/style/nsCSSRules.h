@@ -184,7 +184,7 @@ protected:
 
 // A nsCSSFontFaceStyleDecl is always embedded in a nsCSSFontFaceRule.
 class nsCSSFontFaceRule;
-class nsCSSFontFaceStyleDecl : public nsICSSDeclaration
+class nsCSSFontFaceStyleDecl MOZ_FINAL : public nsICSSDeclaration
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -337,15 +337,6 @@ public:
   }
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
-
-  static bool PrefEnabled()
-  {
-    // font-variant-alternates enabled ==> layout.css.font-features.enabled is true
-    bool fontFeaturesEnabled =
-      nsCSSProps::IsEnabled(eCSSProperty_font_variant_alternates);
-
-    return fontFeaturesEnabled;
-  }
 
 protected:
   ~nsCSSFontFeatureValuesRule() {}

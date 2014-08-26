@@ -207,13 +207,13 @@ protected:
  * This TextureSource can be used without a TextureHost and manage it's own
  * GL texture(s).
  */
-class TextureImageTextureSourceOGL : public DataTextureSource
-                                   , public TextureSourceOGL
-                                   , public BigImageIterator
+class TextureImageTextureSourceOGL MOZ_FINAL : public DataTextureSource
+                                             , public TextureSourceOGL
+                                             , public BigImageIterator
 {
 public:
-  TextureImageTextureSourceOGL(gl::GLContext* aGL,
-                               TextureFlags aFlags = TextureFlags::DEFAULT)
+  explicit TextureImageTextureSourceOGL(gl::GLContext* aGL,
+                                        TextureFlags aFlags = TextureFlags::DEFAULT)
     : mGL(aGL)
     , mFlags(aFlags)
     , mIterating(false)

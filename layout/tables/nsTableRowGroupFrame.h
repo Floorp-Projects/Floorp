@@ -51,7 +51,7 @@ struct nsRowGroupReflowState {
  * @see nsTableFrame
  * @see nsTableRowFrame
  */
-class nsTableRowGroupFrame
+class nsTableRowGroupFrame MOZ_FINAL
   : public nsContainerFrame
   , public nsILineIterator
 {

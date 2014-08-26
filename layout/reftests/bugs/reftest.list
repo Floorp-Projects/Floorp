@@ -1161,10 +1161,10 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 skip-if(B2G) fails-if(Android) == 446100-1b.html about:blank
 skip-if(B2G) fails-if(Android) == 446100-1c.html about:blank
 == 446100-1d.html about:blank
-skip-if(B2G&&browserIsRemote) == 446100-1e.html about:blank
-skip-if(B2G&&browserIsRemote) == 446100-1f.html about:blank
+== 446100-1e.html about:blank
+== 446100-1f.html about:blank
 skip-if(B2G) fails-if(Android) == 446100-1g.html about:blank
-skip-if(B2G&&browserIsRemote) == 446100-1h.html about:blank
+== 446100-1h.html about:blank
 skip-if(B2G) == 447749-1.html 447749-1-ref.html
 fuzzy(127,2) == 448193.html 448193-ref.html
 != 449149-1a.html about:blank
@@ -1633,8 +1633,8 @@ fails-if(Android&&AndroidVersion!=10&&AndroidVersion!=17) == 617242-1.html 61724
 != 618071.html 618071-notref.html
 == 619117-1.html 619117-1-ref.html
 HTTP(..) == 619511-1.html 619511-1-ref.html
-skip-if(Android||(B2G&&browserIsRemote)) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html
-skip-if(Android||(B2G&&browserIsRemote)) == 621253-1-internalFilter.html 621253-1-ref.html
+skip-if(Android) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html
+skip-if(Android) == 621253-1-internalFilter.html 621253-1-ref.html
 HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
 == 621253-2-internalFilter.html 621253-2-ref.html
 skip-if(B2G) random-if(winWidget) fuzzy-if(OSX==10.8,19,17) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
@@ -1720,7 +1720,7 @@ skip-if(B2G) == 751012-1b.html 751012-1-ref.html
 random-if(Android) == 753329-1.html about:blank
 == 758561-1.html 758561-1-ref.html
 fuzzy-if(true,1,90) random-if(Android&&AndroidVersion<15) == 759036-1.html 759036-1-ref.html
-fuzzy-if(true,17,5885) random-if(Android&&AndroidVersion<15) == 759036-2.html 759036-2-ref.html
+fuzzy-if(true,17,5886) random-if(Android&&AndroidVersion<15) == 759036-2.html 759036-2-ref.html
 random-if(Android&&AndroidVersion<15) == 776265-1a.html 776265-1-ref.html
 == 776265-1b.html 776265-1-ref.html
 == 776265-1c.html 776265-1-ref.html
@@ -1821,3 +1821,5 @@ pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
 == 1042104-1.html 1042104-1-ref.html
 == 1044198-1.html 1044198-1-ref.html
 == 1049499-1.html 1049499-1-ref.html
+== 1053035-1-flex.html 1053035-1-ref.html
+test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-ref.html

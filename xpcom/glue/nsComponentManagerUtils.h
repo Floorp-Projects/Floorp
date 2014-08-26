@@ -31,7 +31,8 @@ NS_COM_GLUE nsresult CallGetClassObject(const char* aContractID,
 class NS_COM_GLUE nsCreateInstanceByCID : public nsCOMPtr_helper
 {
 public:
-  nsCreateInstanceByCID(const nsCID& aCID, nsISupports* aOuter, nsresult* aErrorPtr)
+  nsCreateInstanceByCID(const nsCID& aCID, nsISupports* aOuter,
+                        nsresult* aErrorPtr)
     : mCID(aCID)
     , mOuter(aOuter)
     , mErrorPtr(aErrorPtr)

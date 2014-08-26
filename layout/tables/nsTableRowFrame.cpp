@@ -944,7 +944,6 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         }
         nscoord descent = desiredSize.BSize(rowWM) - ascent;
         UpdateHeight(desiredSize.BSize(rowWM), ascent, descent, &aTableFrame, cellFrame);
-        UpdateHeight(desiredSize.Height(), ascent, descent, &aTableFrame, cellFrame);
       }
       else {
         cellMaxHeight = std::max(cellMaxHeight, desiredSize.Height());
@@ -1063,6 +1062,11 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
       nsSize(aDesiredSize.Width(), aDesiredSize.Height()) != mRect.Size()) {
     InvalidateFrame();
   }
+
+  // Any absolutely-positioned children will get reflowed in
+  // nsFrame::FixupPositionedTableParts in another pass, so propagate our
+  // dirtiness to them before our parent clears our dirty bits.
+  PushDirtyBitToAbsoluteFrames();
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 }

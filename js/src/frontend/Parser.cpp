@@ -430,6 +430,10 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     foldConstants(foldConstants),
     abortedSyntaxParse(false),
     isUnexpectedEOF_(false),
+    sawDeprecatedForEach(false),
+    sawDeprecatedDestructuringForIn(false),
+    sawDeprecatedLegacyGenerator(false),
+    sawDeprecatedExpressionClosure(false),
     handler(cx, *alloc, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
 {
     {
@@ -449,6 +453,8 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
 template <typename ParseHandler>
 Parser<ParseHandler>::~Parser()
 {
+    accumulateTelemetry();
+
     alloc.release(tempPoolMark);
 
     /*
@@ -656,13 +662,13 @@ Parser<ParseHandler>::reportBadReturn(Node pn, ParseReportKind kind,
 
 /*
  * Check that assigning to lhs is permitted.  Assigning to 'eval' or
- * 'arguments' is banned in strict mode and in destructuring assignment.
+ * 'arguments' is banned in strict mode.
  */
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::checkStrictAssignment(Node lhs, AssignmentFlavor flavor)
+Parser<ParseHandler>::checkStrictAssignment(Node lhs)
 {
-    if (!pc->sc->needStrictChecks() && flavor != KeyedDestructuringAssignment)
+    if (!pc->sc->needStrictChecks())
         return true;
 
     JSAtom *atom = handler.isName(lhs);
@@ -674,16 +680,7 @@ Parser<ParseHandler>::checkStrictAssignment(Node lhs, AssignmentFlavor flavor)
         if (!AtomToPrintableString(context, atom, &name))
             return false;
 
-        ParseReportKind kind;
-        unsigned errnum;
-        if (pc->sc->strict || flavor != KeyedDestructuringAssignment) {
-            kind = ParseStrictError;
-            errnum = JSMSG_BAD_STRICT_ASSIGN;
-        } else {
-            kind = ParseError;
-            errnum = JSMSG_BAD_DESTRUCT_ASSIGN;
-        }
-        if (!report(kind, pc->sc->strict, lhs, errnum, name.ptr()))
+        if (!report(ParseStrictError, pc->sc->strict, lhs, JSMSG_BAD_STRICT_ASSIGN, name.ptr()))
             return false;
     }
     return true;
@@ -1051,7 +1048,7 @@ Parser<FullParseHandler>::makeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *
  * helper function signature in order to share code among destructuring and
  * simple variable declaration parsers.  In the destructuring case, the binder
  * function is called indirectly from the variable declaration parser by way
- * of CheckDestructuring and its friends.
+ * of checkDestructuring and its friends.
  */
 
 template <typename ParseHandler>
@@ -1672,7 +1669,7 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
              * end of functionBody.
              */
             if (!pc->funcStmts) {
-                pc->funcStmts = context->new_<FuncStmtSet>(context);
+                pc->funcStmts = alloc.new_<FuncStmtSet>(alloc);
                 if (!pc->funcStmts || !pc->funcStmts->init())
                     return false;
             }
@@ -2268,6 +2265,10 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
             report(ParseError, false, null(), JSMSG_CURLY_BEFORE_BODY);
             return false;
         }
+
+        if (kind != Arrow)
+            sawDeprecatedExpressionClosure = true;
+
         tokenStream.ungetToken();
         bodyType = ExpressionBody;
         fun->setIsExprClosure();
@@ -2440,7 +2441,7 @@ Parser<FullParseHandler>::asmJS(Node list)
     // function from the beginning. Reparsing is triggered by marking that a
     // new directive has been encountered and returning 'false'.
     bool validated;
-    if (!CompileAsmJS(context, *this, list, &validated))
+    if (!ValidateAsmJS(context, *this, list, &validated))
         return false;
     if (!validated) {
         pc->newDirectives->setAsmJS();
@@ -3027,20 +3028,20 @@ Parser<FullParseHandler>::bindDestructuringVar(BindData<FullParseHandler> *data,
  *   arbitrary lvalue expressions; the destructuring is just a fancy
  *   assignment.
  *
- * - declaration-like: |var| and |let| declarations, functions' formal
+ * - binding-like: |var| and |let| declarations, functions' formal
  *   parameter lists, |catch| clauses, and comprehension tails.  In
  *   these cases, the patterns' property value positions must be
  *   simple names; the destructuring defines them as new variables.
  *
  * In both cases, other code parses the pattern as an arbitrary
- * primaryExpr, and then, here in CheckDestructuring, verify that the
- * tree is a valid destructuring expression.
+ * primaryExpr, and then, here in checkDestructuring, verify that the
+ * tree is a valid AssignmentPattern or BindingPattern.
  *
  * In assignment-like contexts, we parse the pattern with
  * pc->inDeclDestructuring clear, so the lvalue expressions in the
  * pattern are parsed normally.  primaryExpr links variable references
  * into the appropriate use chains; creates placeholder definitions;
- * and so on.  CheckDestructuring is called with |data| nullptr (since
+ * and so on.  checkDestructuring is called with |data| nullptr (since
  * we won't be binding any new names), and we specialize lvalues as
  * appropriate.
  *
@@ -3050,18 +3051,14 @@ Parser<FullParseHandler>::bindDestructuringVar(BindData<FullParseHandler> *data,
  * variables anyway.  In this case, we parse the pattern with
  * pc->inDeclDestructuring set, which directs primaryExpr to leave
  * whatever name nodes it creates unconnected.  Then, here in
- * CheckDestructuring, we require the pattern's property value
+ * checkDestructuring, we require the pattern's property value
  * positions to be simple names, and define them as appropriate to the
  * context.  For these calls, |data| points to the right sort of
  * BindData.
- *
- * The 'toplevel' is a private detail of the recursive strategy used by
- * CheckDestructuring and callers should use the default value.
  */
 template <>
 bool
-Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
-                                             ParseNode *left, bool toplevel)
+Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data, ParseNode *left)
 {
     bool ok;
 
@@ -3074,19 +3071,33 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
     blockObj = data && data->binder == bindLet ? data->let.blockObj.get() : nullptr;
 
     if (left->isKind(PNK_ARRAY)) {
-        for (ParseNode *pn = left->pn_head; pn; pn = pn->pn_next) {
-            if (!pn->isKind(PNK_ELISION)) {
-                if (pn->isKind(PNK_ARRAY) || pn->isKind(PNK_OBJECT)) {
-                    ok = checkDestructuring(data, pn, false);
+        for (ParseNode *element = left->pn_head; element; element = element->pn_next) {
+            if (!element->isKind(PNK_ELISION)) {
+                ParseNode *target = element;
+                if (target->isKind(PNK_SPREAD)) {
+                    if (target->pn_next) {
+                        report(ParseError, false, target->pn_next, JSMSG_PARAMETER_AFTER_REST);
+                        return false;
+                    }
+                    target = target->pn_kid;
+
+                    // The RestElement should not support nested patterns.
+                    if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
+                        report(ParseError, false, target, JSMSG_BAD_DESTRUCT_TARGET);
+                        return false;
+                    }
+                }
+                if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
+                    ok = checkDestructuring(data, target);
                 } else {
                     if (data) {
-                        if (!pn->isKind(PNK_NAME)) {
-                            report(ParseError, false, pn, JSMSG_NO_VARIABLE_NAME);
+                        if (!target->isKind(PNK_NAME)) {
+                            report(ParseError, false, target, JSMSG_NO_VARIABLE_NAME);
                             return false;
                         }
-                        ok = bindDestructuringVar(data, pn);
+                        ok = bindDestructuringVar(data, target);
                     } else {
-                        ok = checkAndMarkAsAssignmentLhs(pn, KeyedDestructuringAssignment);
+                        ok = checkAndMarkAsAssignmentLhs(target, KeyedDestructuringAssignment);
                     }
                 }
                 if (!ok)
@@ -3100,7 +3111,7 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
             ParseNode *expr = member->pn_right;
 
             if (expr->isKind(PNK_ARRAY) || expr->isKind(PNK_OBJECT)) {
-                ok = checkDestructuring(data, expr, false);
+                ok = checkDestructuring(data, expr);
             } else if (data) {
                 if (!expr->isKind(PNK_NAME)) {
                     report(ParseError, false, expr, JSMSG_NO_VARIABLE_NAME);
@@ -3131,8 +3142,7 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
 
 template <>
 bool
-Parser<SyntaxParseHandler>::checkDestructuring(BindData<SyntaxParseHandler> *data,
-                                               Node left, bool toplevel)
+Parser<SyntaxParseHandler>::checkDestructuring(BindData<SyntaxParseHandler> *data, Node left)
 {
     return abortIfSyntaxParser();
 }
@@ -4083,6 +4093,7 @@ Parser<FullParseHandler>::forStatement()
     if (allowsForEachIn() && tokenStream.matchContextualKeyword(context->names().each)) {
         iflags = JSITER_FOREACH;
         isForEach = true;
+        sawDeprecatedForEach = true;
     }
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
@@ -4300,8 +4311,10 @@ Parser<FullParseHandler>::forStatement()
                  * Destructuring for-in requires [key, value] enumeration
                  * in JS1.7.
                  */
-                if (!isForEach && headKind == PNK_FORIN)
+                if (!isForEach && headKind == PNK_FORIN) {
                     iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
+                    sawDeprecatedDestructuringForIn = true;
+                }
             }
             break;
 
@@ -4803,6 +4816,7 @@ Parser<ParseHandler>::yieldExpression()
         }
 
         pc->sc->asFunctionBox()->setGeneratorKind(LegacyGenerator);
+        sawDeprecatedLegacyGenerator = true;
 
         if (pc->funHasReturnExpr) {
             /* As in Python (see PEP-255), disallow return v; in generators. */
@@ -5477,7 +5491,7 @@ Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, AssignmentF
 {
     switch (pn->getKind()) {
       case PNK_NAME:
-        if (!checkStrictAssignment(pn, flavor))
+        if (!checkStrictAssignment(pn))
             return false;
         if (flavor == KeyedDestructuringAssignment) {
             /*
@@ -5508,12 +5522,18 @@ Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, AssignmentF
         break;
 
       case PNK_CALL:
+        if (flavor == KeyedDestructuringAssignment) {
+            report(ParseError, false, pn, JSMSG_BAD_DESTRUCT_TARGET);
+            return false;
+        }
         if (!makeSetCall(pn, JSMSG_BAD_LEFTSIDE_OF_ASS))
             return false;
         break;
 
       default:
-        report(ParseError, false, pn, JSMSG_BAD_LEFTSIDE_OF_ASS);
+        unsigned errnum = (flavor == KeyedDestructuringAssignment) ? JSMSG_BAD_DESTRUCT_TARGET :
+            JSMSG_BAD_LEFTSIDE_OF_ASS;
+        report(ParseError, false, pn, errnum);
         return false;
     }
     return true;
@@ -5530,7 +5550,7 @@ Parser<SyntaxParseHandler>::checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavo
     {
         return abortIfSyntaxParser();
     }
-    return checkStrictAssignment(pn, flavor);
+    return checkStrictAssignment(pn);
 }
 
 template <typename ParseHandler>
@@ -5640,7 +5660,7 @@ Parser<FullParseHandler>::checkAndMarkAsIncOperand(ParseNode *kid, TokenKind tt,
         return false;
     }
 
-    if (!checkStrictAssignment(kid, IncDecAssignment))
+    if (!checkStrictAssignment(kid))
         return false;
 
     // Mark.
@@ -7565,6 +7585,47 @@ Parser<ParseHandler>::exprInParens()
 #endif /* JS_HAS_GENERATOR_EXPRS */
 
     return pn;
+}
+
+template <typename ParseHandler>
+void
+Parser<ParseHandler>::accumulateTelemetry()
+{
+    JSContext* cx = context->maybeJSContext();
+    if (!cx)
+        return;
+    JSAccumulateTelemetryDataCallback cb = cx->runtime()->telemetryCallback;
+    if (!cb)
+        return;
+    const char* filename = getFilename();
+    if (!filename)
+        return;
+
+    bool isHTTP = strncmp(filename, "http://", 7) == 0 || strncmp(filename, "https://", 8) == 0;
+
+    // Only report telemetry for web content, not add-ons or chrome JS.
+    if (!isHTTP)
+        return;
+
+    enum DeprecatedLanguageExtensions {
+        DeprecatedForEach = 0,            // JS 1.6+
+        DeprecatedDestructuringForIn = 1, // JS 1.7 only
+        DeprecatedLegacyGenerator = 2,    // JS 1.7+
+        DeprecatedExpressionClosure = 3,  // Added in JS 1.8, but not version-gated
+    };
+
+    // Hazard analysis can't tell that the telemetry callbacks don't GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
+    // Call back into Firefox's Telemetry reporter.
+    if (sawDeprecatedForEach)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedForEach);
+    if (sawDeprecatedDestructuringForIn)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedDestructuringForIn);
+    if (sawDeprecatedLegacyGenerator)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedLegacyGenerator);
+    if (sawDeprecatedExpressionClosure)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedExpressionClosure);
 }
 
 template class Parser<FullParseHandler>;

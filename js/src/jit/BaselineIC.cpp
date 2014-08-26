@@ -253,7 +253,7 @@ ICStub::trace(JSTracer *trc)
           case 2: setElemStub->toImpl<2>()->traceShapes(trc); break;
           case 3: setElemStub->toImpl<3>()->traceShapes(trc); break;
           case 4: setElemStub->toImpl<4>()->traceShapes(trc); break;
-          default: MOZ_ASSUME_UNREACHABLE("Invalid proto stub.");
+          default: MOZ_CRASH("Invalid proto stub.");
         }
         break;
       }
@@ -348,7 +348,7 @@ ICStub::trace(JSTracer *trc)
           case 6: propStub->toImpl<6>()->traceShapes(trc); break;
           case 7: propStub->toImpl<7>()->traceShapes(trc); break;
           case 8: propStub->toImpl<8>()->traceShapes(trc); break;
-          default: MOZ_ASSUME_UNREACHABLE("Invalid proto stub.");
+          default: MOZ_CRASH("Invalid proto stub.");
         }
         break;
       }
@@ -415,7 +415,7 @@ ICStub::trace(JSTracer *trc)
           case 2: propStub->toImpl<2>()->traceShapes(trc); break;
           case 3: propStub->toImpl<3>()->traceShapes(trc); break;
           case 4: propStub->toImpl<4>()->traceShapes(trc); break;
-          default: MOZ_ASSUME_UNREACHABLE("Invalid proto stub.");
+          default: MOZ_CRASH("Invalid proto stub.");
         }
         break;
       }
@@ -827,7 +827,7 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame
     else if (stat == Method_Compiled)
         IonSpew(IonSpew_BaselineOSR, "  Compiled with Ion!");
     else
-        MOZ_ASSUME_UNREACHABLE("Invalid MethodStatus!");
+        MOZ_CRASH("Invalid MethodStatus!");
 
     // Failed to compile.  Reset use count and return.
     if (stat != Method_Compiled) {
@@ -1544,7 +1544,7 @@ DoTypeUpdateFallback(JSContext *cx, BaselineFrame *frame, ICUpdatedStub *stub, H
         break;
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid stub");
+        MOZ_CRASH("Invalid stub");
     }
 
     return stub->addUpdateStubForValue(cx, script, obj, id, value);
@@ -2590,7 +2590,7 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
         break;
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Unhandled baseline arith op");
+        MOZ_CRASH("Unhandled baseline arith op");
     }
 
     // Check if debug mode toggling made the stub invalid.
@@ -2914,7 +2914,7 @@ ICBinaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ReturnDoubleReg == FloatReg0);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected op");
+        MOZ_CRASH("Unexpected op");
     }
 
     masm.boxDouble(FloatReg0, R0);
@@ -2992,7 +2992,7 @@ ICBinaryArith_BooleanWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
         break;
       }
       default:
-       MOZ_ASSUME_UNREACHABLE("Unhandled op for BinaryArith_BooleanWithInt32.");
+       MOZ_CRASH("Unhandled op for BinaryArith_BooleanWithInt32.");
     }
 
     // Failure case - jump to next stub
@@ -3054,7 +3054,7 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
         masm.andPtr(intReg, intReg2);
         break;
       default:
-       MOZ_ASSUME_UNREACHABLE("Unhandled op for BinaryArith_DoubleWithInt32.");
+       MOZ_CRASH("Unhandled op for BinaryArith_DoubleWithInt32.");
     }
     masm.tagValue(JSVAL_TYPE_INT32, intReg2, R0);
     EmitReturnFromIC(masm);
@@ -3098,7 +3098,7 @@ DoUnaryArithFallback(JSContext *cx, BaselineFrame *frame, ICUnaryArith_Fallback 
             return false;
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected op");
+        MOZ_CRASH("Unexpected op");
     }
 
     // Check if debug mode toggling made the stub invalid.
@@ -3738,7 +3738,7 @@ RemoveExistingGetElemNativeStubs(JSContext *cx, ICGetElem_Fallback *stub, Handle
 
         // Should never get here, because this means a matching stub exists, and if
         // a matching stub exists, this procedure should never have been called.
-        MOZ_ASSUME_UNREACHABLE("Procedure should never have been called.");
+        MOZ_CRASH("Procedure should never have been called.");
     }
 }
 
@@ -3890,9 +3890,9 @@ static bool
 TypedArrayRequiresFloatingPoint(TypedArrayObject *tarr)
 {
     uint32_t type = tarr->type();
-    return (type == Scalar::Uint32 ||
-            type == Scalar::Float32 ||
-            type == Scalar::Float64);
+    return type == Scalar::Uint32 ||
+           type == Scalar::Float32 ||
+           type == Scalar::Float64;
 }
 
 static bool
@@ -5256,6 +5256,20 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     BaseIndex element(scratchReg, key, TimesEight);
     masm.branchTestMagic(Assembler::Equal, element, &failure);
 
+    // Perform a single test to see if we either need to convert double
+    // elements or clone the copy on write elements in the object.
+    Label noSpecialHandling;
+    Address elementsFlags(scratchReg, ObjectElements::offsetOfFlags());
+    masm.branchTest32(Assembler::Zero, elementsFlags,
+                      Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS |
+                            ObjectElements::COPY_ON_WRITE),
+                      &noSpecialHandling);
+
+    // Fail if we need to clone copy on write elements.
+    masm.branchTest32(Assembler::NonZero, elementsFlags,
+                      Imm32(ObjectElements::COPY_ON_WRITE),
+                      &failure);
+
     // Failure is not possible now.  Free up registers.
     regs.add(R0);
     regs.add(R1);
@@ -5263,21 +5277,17 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     regs.takeUnchecked(key);
     Address valueAddr(BaselineStackReg, ICStackValueOffset);
 
-    // Convert int32 values to double if convertDoubleElements is set. In this
-    // case the heap typeset is guaranteed to contain both int32 and double, so
-    // it's okay to store a double.
-    Label dontConvertDoubles;
-    Address elementsFlags(scratchReg, ObjectElements::offsetOfFlags());
-    masm.branchTest32(Assembler::Zero, elementsFlags,
-                      Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
-                      &dontConvertDoubles);
-    // Note that double arrays are only created by IonMonkey, so if we have no
-    // floating-point support Ion is disabled and there should be no double arrays.
+    // We need to convert int32 values being stored into doubles. In this case
+    // the heap typeset is guaranteed to contain both int32 and double, so it's
+    // okay to store a double. Note that double arrays are only created by
+    // IonMonkey, so if we have no floating-point support Ion is disabled and
+    // there should be no double arrays.
     if (cx->runtime()->jitSupportsFloatingPoint)
-        masm.convertInt32ValueToDouble(valueAddr, regs.getAny(), &dontConvertDoubles);
+        masm.convertInt32ValueToDouble(valueAddr, regs.getAny(), &noSpecialHandling);
     else
         masm.assumeUnreachable("There shouldn't be double arrays when there is no FP support.");
-    masm.bind(&dontConvertDoubles);
+
+    masm.bind(&noSpecialHandling);
 
     // Don't overwrite R0 becuase |obj| might overlap with it, and it's needed
     // for post-write barrier later.
@@ -5344,7 +5354,7 @@ ICSetElemDenseAddCompiler::getStub(ICStubSpace *space)
       case 2: stub = getStubSpecific<2>(space, &shapes); break;
       case 3: stub = getStubSpecific<3>(space, &shapes); break;
       case 4: stub = getStubSpecific<4>(space, &shapes); break;
-      default: MOZ_ASSUME_UNREACHABLE("ProtoChainDepth too high.");
+      default: MOZ_CRASH("ProtoChainDepth too high.");
     }
     if (!stub || !stub->initUpdatingChain(cx, space))
         return nullptr;
@@ -5429,6 +5439,12 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     Address capacity(scratchReg, ObjectElements::offsetOfCapacity());
     masm.branch32(Assembler::BelowOrEqual, capacity, key, &failure);
 
+    // Check for copy on write elements.
+    Address elementsFlags(scratchReg, ObjectElements::offsetOfFlags());
+    masm.branchTest32(Assembler::NonZero, elementsFlags,
+                      Imm32(ObjectElements::COPY_ON_WRITE),
+                      &failure);
+
     // Failure is not possible now.  Free up registers.
     regs.add(R0);
     regs.add(R1);
@@ -5451,7 +5467,6 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     // case the heap typeset is guaranteed to contain both int32 and double, so
     // it's okay to store a double.
     Label dontConvertDoubles;
-    Address elementsFlags(scratchReg, ObjectElements::offsetOfFlags());
     masm.branchTest32(Assembler::Zero, elementsFlags,
                       Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
                       &dontConvertDoubles);
@@ -6699,7 +6714,7 @@ ICGetProp_Primitive::Compiler::generateStubCode(MacroAssembler &masm)
         masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected type");
+        MOZ_CRASH("unexpected type");
     }
 
     GeneralRegisterSet regs(availableGeneralRegs(1));
@@ -6854,7 +6869,7 @@ ICGetPropNativeDoesNotExistCompiler::getStub(ICStubSpace *space)
       case 6: stub = getStubSpecific<6>(space, &shapes); break;
       case 7: stub = getStubSpecific<7>(space, &shapes); break;
       case 8: stub = getStubSpecific<8>(space, &shapes); break;
-      default: MOZ_ASSUME_UNREACHABLE("ProtoChainDepth too high.");
+      default: MOZ_CRASH("ProtoChainDepth too high.");
     }
     if (!stub)
         return nullptr;
@@ -7733,7 +7748,7 @@ ICSetPropNativeAddCompiler::getStub(ICStubSpace *space)
       case 2: stub = getStubSpecific<2>(space, &shapes); break;
       case 3: stub = getStubSpecific<3>(space, &shapes); break;
       case 4: stub = getStubSpecific<4>(space, &shapes); break;
-      default: MOZ_ASSUME_UNREACHABLE("ProtoChainDepth too high.");
+      default: MOZ_CRASH("ProtoChainDepth too high.");
     }
     if (!stub || !stub->initUpdatingChain(cx, space))
         return nullptr;
@@ -10036,7 +10051,7 @@ ICTypeOf_Typed::Compiler::generateStubCode(MacroAssembler &masm)
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected type");
+        MOZ_CRASH("Unexpected type");
     }
 
     masm.movePtr(ImmGCPtr(typeString_), R0.scratchReg());

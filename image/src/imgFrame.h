@@ -16,29 +16,35 @@
 namespace mozilla {
 namespace image {
 
+class ImageRegion;
+
 class imgFrame
 {
   typedef gfx::Color Color;
   typedef gfx::DataSourceSurface DataSourceSurface;
+  typedef gfx::DrawTarget DrawTarget;
   typedef gfx::IntSize IntSize;
   typedef gfx::SourceSurface SourceSurface;
   typedef gfx::SurfaceFormat SurfaceFormat;
 
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(imgFrame)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(imgFrame)
+
   imgFrame();
-  ~imgFrame();
 
   nsresult Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, SurfaceFormat aFormat, uint8_t aPaletteDepth = 0);
   nsresult Optimize();
 
-  bool Draw(gfxContext *aContext, GraphicsFilter aFilter,
-            const gfxMatrix &aUserSpaceToImageSpace, const gfxRect& aFill,
-            const nsIntMargin &aPadding, const nsIntRect &aSubimage,
-            uint32_t aImageFlags = imgIContainer::FLAG_NONE);
+  bool Draw(gfxContext* aContext, const ImageRegion& aRegion,
+            const nsIntMargin& aPadding, GraphicsFilter aFilter,
+            uint32_t aImageFlags);
 
   nsresult ImageUpdated(const nsIntRect &aUpdateRect);
 
   nsIntRect GetRect() const;
+  IntSize GetSize() const { return mSize; }
+  int32_t GetStride() const;
   SurfaceFormat GetFormat() const;
   bool GetNeedsBackground() const;
   uint32_t GetImageBytesPerRow() const;
@@ -71,6 +77,7 @@ public:
   void SetDiscardable();
 
   TemporaryRef<SourceSurface> GetSurface();
+  TemporaryRef<DrawTarget> GetDrawTarget();
 
   Color
   SinglePixelColor()
@@ -99,6 +106,8 @@ public:
 
 private: // methods
 
+  ~imgFrame();
+
   struct SurfaceWithFormat {
     nsRefPtr<gfxDrawable> mDrawable;
     SurfaceFormat mFormat;
@@ -111,12 +120,10 @@ private: // methods
   SurfaceWithFormat SurfaceForDrawing(bool               aDoPadding,
                                       bool               aDoPartialDecode,
                                       bool               aDoTile,
+                                      gfxContext*        aContext,
                                       const nsIntMargin& aPadding,
-                                      gfxMatrix&         aUserSpaceToImageSpace,
-                                      gfxRect&           aFill,
-                                      gfxRect&           aSubimage,
-                                      gfxRect&           aSourceRect,
                                       gfxRect&           aImageRect,
+                                      ImageRegion&       aRegion,
                                       SourceSurface*     aSurface);
 
 private: // data
@@ -181,7 +188,7 @@ private: // data
     bool Succeeded() { return mSucceeded; }
 
   private:
-    imgFrame* mFrame;
+    nsRefPtr<imgFrame> mFrame;
     bool mSucceeded;
   };
 

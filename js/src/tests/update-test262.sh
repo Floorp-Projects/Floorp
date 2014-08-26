@@ -131,6 +131,11 @@ hg -R ${tmp_dir} log -r. >> ${test262_dir}/HG-INFO
 hg addremove ${js_src_tests_dir}/supporting
 hg addremove ${test262_dir}
 
+# Apply a very narrow set of post-fixes to tests that haven't yet been updated
+# for spec changes, or where we're experimenting with semantics that disagree
+# with those in test262.  See below: this isn't every test we don't pass!
+patch -d "${js_src_tests_dir}" -p4 < ./function-arguments-caller-changes.diff
+
 # The alert reader may now be wondering: what about test262 tests that we don't
 # pass?  (And what about any test262 tests whose format we don't yet support?)
 # We explicitly disable all such tests in js/src/tests/jstests.list one by one.

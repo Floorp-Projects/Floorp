@@ -245,6 +245,18 @@ static bool
 LinkModuleToHeap(JSContext *cx, AsmJSModule &module, Handle<ArrayBufferObject*> heap)
 {
     uint32_t heapLength = heap->byteLength();
+
+    if (IsDeprecatedAsmJSHeapLength(heapLength)) {
+        LinkFail(cx, "ArrayBuffer byteLengths smaller than 64KB are deprecated and "
+                     "will cause a link-time failure in the future");
+
+        // The goal of deprecation is to give apps some time before linking
+        // fails. However, if warnings-as-errors is turned on (which happens as
+        // part of asm.js testing) an exception may be raised.
+        if (cx->isExceptionPending())
+            return false;
+    }
+
     if (!IsValidAsmJSHeapLength(heapLength)) {
         ScopedJSFreePtr<char> msg(
             JS_smprintf("ArrayBuffer byteLength 0x%x is not a valid heap length. The next "
@@ -259,7 +271,7 @@ LinkModuleToHeap(JSContext *cx, AsmJSModule &module, Handle<ArrayBufferObject*> 
     JS_ASSERT((module.minHeapLength() - 1) <= INT32_MAX);
     if (heapLength < module.minHeapLength()) {
         ScopedJSFreePtr<char> msg(
-            JS_smprintf("ArrayBuffer byteLength of 0x%x is less than 0x%x (which is the"
+            JS_smprintf("ArrayBuffer byteLength of 0x%x is less than 0x%x (which is the "
                         "largest constant heap access offset rounded up to the next valid "
                         "heap size).",
                         heapLength,
@@ -341,6 +353,8 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
 
     for (unsigned i = 0; i < module.numExits(); i++)
         module.exitIndexToGlobalDatum(i).fun = &ffis[module.exit(i).ffiIndex()]->as<JSFunction>();
+
+    module.initGlobalNaN();
 
     return true;
 }

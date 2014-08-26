@@ -11,6 +11,7 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 
 #include "GLDefs.h"
 #include "WebGLActiveInfo.h"
@@ -62,6 +63,7 @@ class nsIDocShell;
 
 namespace mozilla {
 
+class WebGLContextLossHandler;
 class WebGLObserver;
 class WebGLContextBoundObject;
 class WebGLActiveInfo;
@@ -138,7 +140,8 @@ class WebGLContext :
     public nsICanvasRenderingContextInternal,
     public nsSupportsWeakReference,
     public WebGLRectangleObject,
-    public nsWrapperCache
+    public nsWrapperCache,
+    public SupportsWeakPtr<WebGLContext>
 {
     friend class WebGLContextUserData;
     friend class WebGLExtensionCompressedTextureATC;
@@ -164,6 +167,8 @@ class WebGLContext :
 
 public:
     WebGLContext();
+
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(WebGLContext)
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -268,11 +273,9 @@ public:
 
     bool MinCapabilityMode() const { return mMinCapability; }
 
+    void RunContextLossTimer();
     void UpdateContextLossStatus();
     void EnqueueUpdateContextLossStatus();
-    static void ContextLossCallbackStatic(nsITimer* timer, void* thisPointer);
-    void RunContextLossTimer();
-    void TerminateContextLossTimer();
 
     bool TryToRestoreContext();
 
@@ -1051,6 +1054,7 @@ protected:
     bool ValidateGLSLCharacter(char16_t c);
     bool ValidateGLSLString(const nsAString& string, const char *info);
 
+    bool ValidateCopyTexImage(GLenum format, WebGLTexImageFunc func);
     bool ValidateTexImage(GLuint dims, GLenum target,
                           GLint level, GLint internalFormat,
                           GLint xoffset, GLint yoffset, GLint zoffset,
@@ -1263,11 +1267,9 @@ protected:
     GLsizei mViewportHeight;
     bool mAlreadyWarnedAboutViewportLargerThanDest;
 
-    nsCOMPtr<nsITimer> mContextRestorer;
+    RefPtr<WebGLContextLossHandler> mContextLossHandler;
     bool mAllowContextRestore;
     bool mLastLossWasSimulated;
-    bool mContextLossTimerRunning;
-    bool mRunContextLossTimerAgain;
     ContextStatus mContextStatus;
     bool mContextLostErrorSet;
 

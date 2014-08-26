@@ -90,7 +90,7 @@ bool ots_name_parse(OpenTypeFile* file, const uint8_t* data, size_t length) {
   // are invalid name records, but it's not clear that is necessary.
   for (unsigned i = 0; i < count; ++i) {
     NameRecord rec;
-    uint16_t name_length, name_offset;
+    uint16_t name_length, name_offset = 0;
     if (!table.ReadU16(&rec.platform_id) ||
         !table.ReadU16(&rec.encoding_id) ||
         !table.ReadU16(&rec.language_id) ||

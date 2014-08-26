@@ -336,6 +336,8 @@ DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeede
         if (index <= UINT32_MAX) {
             uint32_t idx = uint32_t(index);
             if (idx < obj->getDenseInitializedLength()) {
+                if (!obj->maybeCopyElementsForWrite(cx))
+                    return false;
                 obj->markDenseElementsNotPacked(cx);
                 obj->setDenseElement(idx, MagicValue(JS_ELEMENTS_HOLE));
                 if (!js_SuppressDeletedElement(cx, obj, idx))
@@ -472,6 +474,9 @@ js::ArraySetLength(typename ExecutionModeTraits<mode>::ContextType cxArg,
     MOZ_ASSERT(cxArg->isThreadLocal(arr));
     MOZ_ASSERT(id == NameToId(cxArg->names().length));
 
+    if (!arr->maybeCopyElementsForWrite(cxArg))
+        return false;
+
     /* Steps 1-2 are irrelevant in our implementation. */
 
     /* Steps 3-5. */
@@ -547,6 +552,9 @@ js::ArraySetLength(typename ExecutionModeTraits<mode>::ContextType cxArg,
         // fix this inefficiency by moving indexed storage to be entirely
         // separate from non-indexed storage.
         if (!arr->isIndexed()) {
+            if (!arr->maybeCopyElementsForWrite(cxArg))
+                return false;
+
             uint32_t oldCapacity = arr->getDenseCapacity();
             uint32_t oldInitializedLength = arr->getDenseInitializedLength();
             MOZ_ASSERT(oldCapacity >= oldInitializedLength);
@@ -947,7 +955,7 @@ template <typename CharT>
 struct CharSeparatorOp
 {
     const CharT sep;
-    explicit CharSeparatorOp(CharT sep) : sep(sep) {};
+    explicit CharSeparatorOp(CharT sep) : sep(sep) {}
     bool operator()(JSContext *, StringBuffer &sb) { return sb.append(sep); }
 };
 
@@ -1417,9 +1425,7 @@ array_reverse(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-namespace {
-
-inline bool
+static inline bool
 CompareStringValues(JSContext *cx, const Value &a, const Value &b, bool *lessOrEqualp)
 {
     if (!CheckForInterrupt(cx))
@@ -1512,6 +1518,8 @@ CompareSubStringValues(JSContext *cx, const Char1 *s1, size_t len1, const Char2 
     *lessOrEqualp = (result <= 0);
     return true;
 }
+
+namespace {
 
 struct SortComparatorStrings
 {
@@ -1619,7 +1627,7 @@ struct NumericElement
     size_t elementIndex;
 };
 
-bool
+static bool
 ComparatorNumericLeftMinusRight(const NumericElement &a, const NumericElement &b,
                                 bool *lessOrEqualp)
 {
@@ -1627,7 +1635,7 @@ ComparatorNumericLeftMinusRight(const NumericElement &a, const NumericElement &b
     return true;
 }
 
-bool
+static bool
 ComparatorNumericRightMinusLeft(const NumericElement &a, const NumericElement &b,
                                 bool *lessOrEqualp)
 {
@@ -1638,21 +1646,21 @@ ComparatorNumericRightMinusLeft(const NumericElement &a, const NumericElement &b
 typedef bool (*ComparatorNumeric)(const NumericElement &a, const NumericElement &b,
                                   bool *lessOrEqualp);
 
-ComparatorNumeric SortComparatorNumerics[] = {
+static const ComparatorNumeric SortComparatorNumerics[] = {
     nullptr,
     nullptr,
     ComparatorNumericLeftMinusRight,
     ComparatorNumericRightMinusLeft
 };
 
-bool
+static bool
 ComparatorInt32LeftMinusRight(const Value &a, const Value &b, bool *lessOrEqualp)
 {
     *lessOrEqualp = (a.toInt32() <= b.toInt32());
     return true;
 }
 
-bool
+static bool
 ComparatorInt32RightMinusLeft(const Value &a, const Value &b, bool *lessOrEqualp)
 {
     *lessOrEqualp = (b.toInt32() <= a.toInt32());
@@ -1661,7 +1669,7 @@ ComparatorInt32RightMinusLeft(const Value &a, const Value &b, bool *lessOrEqualp
 
 typedef bool (*ComparatorInt32)(const Value &a, const Value &b, bool *lessOrEqualp);
 
-ComparatorInt32 SortComparatorInt32s[] = {
+static const ComparatorInt32 SortComparatorInt32s[] = {
     nullptr,
     nullptr,
     ComparatorInt32LeftMinusRight,
@@ -1677,11 +1685,13 @@ enum ComparatorMatchResult {
     Match_RightMinusLeft
 };
 
+} /* namespace anonymous */
+
 /*
  * Specialize behavior for comparator functions with particular common bytecode
  * patterns: namely, |return x - y| and |return y - x|.
  */
-ComparatorMatchResult
+static ComparatorMatchResult
 MatchNumericComparator(JSContext *cx, const Value &v)
 {
     if (!v.isObject())
@@ -1779,7 +1789,7 @@ MergeSortByKey(K keys, size_t len, K scratch, C comparator, AutoValueVector *vec
  * To minimize #conversions, SortLexicographically() first converts all Values
  * to strings at once, then sorts the elements by these cached strings.
  */
-bool
+static bool
 SortLexicographically(JSContext *cx, AutoValueVector *vec, size_t len)
 {
     JS_ASSERT(vec->length() >= len);
@@ -1819,7 +1829,7 @@ SortLexicographically(JSContext *cx, AutoValueVector *vec, size_t len)
  * To minimize #conversions, SortNumerically first converts all Values to
  * numerics at once, then sorts the elements by these cached numerics.
  */
-bool
+static bool
 SortNumerically(JSContext *cx, AutoValueVector *vec, size_t len, ComparatorMatchResult comp)
 {
     JS_ASSERT(vec->length() >= len);
@@ -1850,8 +1860,6 @@ SortNumerically(JSContext *cx, AutoValueVector *vec, size_t len, ComparatorMatch
     return MergeSortByKey(numElements.begin(), len, numElements.begin() + len,
                           SortComparatorNumerics[comp], vec);
 }
-
-} /* namespace anonymous */
 
 bool
 js::array_sort(JSContext *cx, unsigned argc, Value *vp)
@@ -2139,8 +2147,11 @@ js::array_pop(JSContext *cx, unsigned argc, Value *vp)
     // Don't do anything if this isn't an array, as any deletion above has no
     // effect on any elements after the "last" one indicated by the "length"
     // property.
-    if (obj->is<ArrayObject>() && obj->getDenseInitializedLength() > index)
+    if (obj->is<ArrayObject>() && obj->getDenseInitializedLength() > index) {
+        if (!obj->maybeCopyElementsForWrite(cx))
+            return false;
         obj->setDenseInitializedLength(index);
+    }
 
     /* Steps 4a, 5d. */
     return SetLengthProperty(cx, obj, index);
@@ -2199,6 +2210,9 @@ js::array_shift(JSContext *cx, unsigned argc, Value *vp)
         args.rval().set(obj->getDenseElement(0));
         if (args.rval().isMagic(JS_ELEMENTS_HOLE))
             args.rval().setUndefined();
+
+        if (!obj->maybeCopyElementsForWrite(cx))
+            return false;
 
         obj->moveDenseElements(0, 1, obj->getDenseInitializedLength() - 1);
         obj->setDenseInitializedLength(obj->getDenseInitializedLength() - 1);
@@ -2458,6 +2472,9 @@ js::array_splice_impl(JSContext *cx, unsigned argc, Value *vp, bool returnValueI
         uint32_t finalLength = len - actualDeleteCount + itemCount;
 
         if (CanOptimizeForDenseStorage(obj, 0, len, cx)) {
+            if (!obj->maybeCopyElementsForWrite(cx))
+                return false;
+
             /* Steps 12(a)-(b). */
             obj->moveDenseElements(targetIndex, sourceIndex, len - sourceIndex);
 
@@ -2539,6 +2556,8 @@ js::array_splice_impl(JSContext *cx, unsigned argc, Value *vp, bool returnValueI
         }
 
         if (CanOptimizeForDenseStorage(obj, len, itemCount - actualDeleteCount, cx)) {
+            if (!obj->maybeCopyElementsForWrite(cx))
+                return false;
             obj->moveDenseElements(actualStart + itemCount,
                                    actualStart + actualDeleteCount,
                                    len - (actualStart + actualDeleteCount));
@@ -3343,12 +3362,7 @@ js::NewDenseAllocatedArrayWithTemplate(JSContext *cx, uint32_t length, JSObject 
     allocKind = GetBackgroundAllocKind(allocKind);
 
     RootedTypeObject type(cx, templateObject->type());
-    if (!type)
-        return nullptr;
-
     RootedShape shape(cx, templateObject->lastProperty());
-    if (!shape)
-        return nullptr;
 
     gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
     Rooted<ArrayObject *> arr(cx, JSObject::createArray(cx, allocKind, heap, shape, type, length));
@@ -3360,6 +3374,32 @@ js::NewDenseAllocatedArrayWithTemplate(JSContext *cx, uint32_t length, JSObject 
 
     probes::CreateObject(cx, arr);
 
+    return arr;
+}
+
+JSObject *
+js::NewDenseCopyOnWriteArray(JSContext *cx, HandleObject templateObject, gc::InitialHeap heap)
+{
+    RootedTypeObject type(cx, templateObject->type());
+    RootedShape shape(cx, templateObject->lastProperty());
+
+    JS_ASSERT(!gc::IsInsideNursery(templateObject));
+    HeapSlot *elements = templateObject->getDenseElementsAllowCopyOnWrite();
+
+    JSObject *metadata = nullptr;
+    if (!NewObjectMetadata(cx, &metadata))
+        return nullptr;
+    if (metadata) {
+        shape = Shape::setObjectMetadata(cx, metadata, templateObject->getTaggedProto(), shape);
+        if (!shape)
+            return nullptr;
+    }
+
+    Rooted<ArrayObject *> arr(cx, JSObject::createArray(cx, heap, shape, type, elements));
+    if (!arr)
+        return nullptr;
+
+    probes::CreateObject(cx, arr);
     return arr;
 }
 

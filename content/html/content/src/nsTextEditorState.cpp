@@ -1518,6 +1518,14 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   NS_ASSERTION(!aFrame || aFrame == mBoundFrame, "Unbinding from the wrong frame");
   NS_ENSURE_TRUE_VOID(!aFrame || aFrame == mBoundFrame);
 
+  // If the editor is modified but nsIEditorObserver::EditAction() hasn't been
+  // called yet, we need to notify it here because editor may be destroyed
+  // before EditAction() is called if selection listener causes flushing layout.
+  if (mTextListener && mEditor && mEditorInitialized &&
+      mEditor->GetIsInEditAction()) {
+    mTextListener->EditAction();
+  }
+
   // We need to start storing the value outside of the editor if we're not
   // going to use it anymore, so retrieve it for now.
   nsAutoString value;

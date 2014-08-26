@@ -30,7 +30,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/plugins/base',
-    '/dom/plugins/base/android/include',
     '/gfx/gl',
     '/widget/android',
     '/widget/xpwidgets',

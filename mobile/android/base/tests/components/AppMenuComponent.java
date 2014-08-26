@@ -6,6 +6,7 @@ package org.mozilla.gecko.tests.components;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertFalse;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
 import java.util.List;
@@ -28,6 +29,8 @@ import com.jayway.android.robotium.solo.Solo;
  * A class representing any interactions that take place on the app menu.
  */
 public class AppMenuComponent extends BaseComponent {
+    private static final long MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS = 1000L;
+
     private Boolean hasLegacyMenu = null;
 
     public enum MenuItem {
@@ -112,6 +115,7 @@ public class AppMenuComponent extends BaseComponent {
                 pressMenuItem(MenuItem.PAGE.getString(mSolo));
 
                 final View pageMenuItemView = findAppMenuItemView(pageMenuItem.getString(mSolo));
+                fAssertNotNull("The page menu item is not null", pageMenuItemView);
                 fAssertFalse("The page menu item is not enabled", pageMenuItemView.isEnabled());
                 fAssertEquals("The page menu item is visible", View.VISIBLE, pageMenuItemView.getVisibility());
             } else {
@@ -141,6 +145,8 @@ public class AppMenuComponent extends BaseComponent {
      * This method is dependent on not having two views with equivalent contentDescription / text.
      */
     private View findAppMenuItemView(String text) {
+        mSolo.waitForText(text, 1, MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS);
+
         final List<View> views = mSolo.getViews();
 
         final List<MenuItemActionBar> menuItemActionBarList = RobotiumUtils.filterViews(MenuItemActionBar.class, views);

@@ -25,7 +25,7 @@ interface nsILoadInfo;
  *
  * This interface must be used only from the XPCOM main thread.
  */
-[scriptable, uuid(3423767b-9f4e-430e-9859-67a83ffb689d)]
+[scriptable, uuid(1bc48693-c45d-45f4-8ab1-46e323037fe1)]
 interface nsIChannel : nsIRequest
 {
     /**
@@ -241,12 +241,11 @@ interface nsIChannel : nsIRequest
     const unsigned long LOAD_CLASSIFY_URI = 1 << 22;
 
     /**
-     * If this flag is set and a server's response is Content-Type
-     * application/octet-steam, the server's Content-Type will be ignored and
-     * the channel content will be sniffed as though no Content-Type had been
-     * passed.
+     * If this flag is set, the media-type content sniffer will be allowed
+     * to override any server-set content-type. Otherwise it will only
+     * be allowed to override "no content type" and application/octet-stream.
      */
-    const unsigned long LOAD_TREAT_APPLICATION_OCTET_STREAM_AS_UNKNOWN = 1 << 23;
+    const unsigned long LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE = 1 << 23;
 
     /**
      * Set to let explicitely provided credentials be used over credentials

@@ -23,6 +23,7 @@ background_junit3_sources = [
     'src/db/TestFormHistoryRepositorySession.java',
     'src/db/TestPasswordsRepository.java',
     'src/fxa/authenticator/TestAccountPickler.java',
+    'src/fxa/TestAccountLoader.java',
     'src/fxa/TestBrowserIDKeyPairGeneration.java',
     'src/fxa/TestFirefoxAccounts.java',
     'src/healthreport/MockDatabaseEnvironment.java',

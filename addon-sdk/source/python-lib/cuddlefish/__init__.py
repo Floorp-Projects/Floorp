@@ -239,6 +239,13 @@ parser_groups = (
                                       action="store_true",
                                       default=False,
                                       cmds=['test', 'run', 'xpi', 'testpkgs'])),
+        (("", "--no-connections",), dict(dest="no_connections",
+                                      help="disable/enable remote connections (on for cfx run only by default)",
+                                      type="choice",
+                                      choices=["on", "off", "default"],
+                                      default="default",
+                                      cmds=['test', 'run', 'testpkgs',
+                                            'testall', 'testaddons', 'testex'])),
         ]
      ),
 
@@ -746,14 +753,10 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
                                       "lib", "sdk", "loader", "cuddlefish.js")
     loader_modules = [("addon-sdk", "lib", "sdk/loader/cuddlefish", cuddlefish_js_path)]
     scan_tests = command == "test"
-    test_filter_re = None
-    if scan_tests and options.filter:
-        test_filter_re = options.filter
-        if ":" in options.filter:
-            test_filter_re = options.filter.split(":")[0]
+
     try:
         manifest = build_manifest(target_cfg, pkg_cfg, deps, scan_tests,
-                                  test_filter_re, loader_modules,
+                                  None, loader_modules,
                                   abort_on_missing=options.abort_on_missing)
     except ModuleNotFoundError, e:
         print str(e)
@@ -899,6 +902,16 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
     else:
         from cuddlefish.runner import run_app
 
+        if options.no_connections == "default":
+            if command == "run":
+              no_connections = False
+            else:
+              no_connections = True
+        elif options.no_connections == "on":
+            no_connections = True
+        else:
+            no_connections = False
+
         if options.profiledir:
             options.profiledir = os.path.expanduser(options.profiledir)
             options.profiledir = os.path.abspath(options.profiledir)
@@ -931,7 +944,8 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
                              overload_modules=options.overload_modules,
                              bundle_sdk=options.bundle_sdk,
                              pkgdir=options.pkgdir,
-                             enable_e10s=enable_e10s)
+                             enable_e10s=enable_e10s,
+                             no_connections=no_connections)
         except ValueError, e:
             print ""
             print "A given cfx option has an inappropriate value:"

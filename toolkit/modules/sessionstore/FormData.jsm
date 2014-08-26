@@ -139,7 +139,7 @@ let FormDataInternal = {
     const MAX_TRAVERSED_XPATHS = 100;
     let generatedCount = 0;
 
-    while (node = formNodes.iterateNext()) {
+    while ((node = formNodes.iterateNext())) {
       let hasDefaultValue = true;
       let value;
 

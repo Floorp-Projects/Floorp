@@ -54,7 +54,7 @@ pref("browser.cache.memory_limit", 2048); // 2 MB
 /* image cache prefs */
 pref("image.cache.size", 1048576); // bytes
 pref("image.high_quality_downscaling.enabled", false);
-pref("canvas.image.cache.limit", 10485760); // 10 MB
+pref("canvas.image.cache.limit", 20971520); // 20 MB
 
 /* offline cache prefs */
 pref("browser.offline-apps.notify", false);
@@ -889,6 +889,10 @@ pref("network.sntp.timeout", 30); // In seconds.
 
 // Enable dataStore
 pref("dom.datastore.enabled", true);
+// When an entry is changed, use two timers to fire system messages in a more
+// moderate pattern.
+pref("dom.datastore.sysMsgOnChangeShortTimeoutSec", 10);
+pref("dom.datastore.sysMsgOnChangeLongTimeoutSec", 60);
 
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", true);
@@ -992,8 +996,8 @@ pref("browser.autofocus", false);
 // Enable wakelock
 pref("dom.wakelock.enabled", true);
 
-// Disable touch caret by default
-pref("touchcaret.enabled", false);
+// Enable touch caret by default
+pref("touchcaret.enabled", true);
 
 // Disable selection caret by default
 pref("selectioncaret.enabled", false);

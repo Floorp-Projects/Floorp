@@ -14,6 +14,7 @@
 #include "jit/CompactBuffer.h"
 #include "jit/IonCode.h"
 #include "jit/IonSpewer.h"
+#include "jit/JitCompartment.h"
 #include "jit/mips/Architecture-mips.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/shared/IonAssemblerBuffer.h"
@@ -114,8 +115,6 @@ static MOZ_CONSTEXPR_VAR Register ReturnReg = v0;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg = { FloatRegisters::f0 };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = { FloatRegisters::f18 };
 static MOZ_CONSTEXPR_VAR FloatRegister SecondScratchFloatReg = { FloatRegisters::f16 };
-
-static MOZ_CONSTEXPR_VAR FloatRegister NANReg = { FloatRegisters::f30 };
 
 // Registers used in the GenerateFFIIonExit Enable Activation block.
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = t0;
@@ -619,6 +618,10 @@ class Operand
 
 void
 PatchJump(CodeLocationJump &jump_, CodeLocationLabel label);
+
+void
+PatchBackedge(CodeLocationJump &jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target);
+
 class Assembler;
 typedef js::jit::AssemblerBuffer<1024, Instruction> MIPSBuffer;
 
@@ -811,6 +814,7 @@ class Assembler : public AssemblerShared
 
     // Branch and jump instructions
     BufferOffset as_bal(BOffImm16 off);
+    BufferOffset as_b(BOffImm16 off);
 
     InstImm getBranchCode(JumpOrCall jumpOrCall);
     InstImm getBranchCode(Register s, Register t, Condition c);
