@@ -40,19 +40,26 @@ function test(aLongName, aShortName, aMcc, aMnc, aLac, aCid,
 
 startTestCommon(function() {
   /**
-   * In emulator we have pre-defined 4 PNN sets:
+   * In emulator we have pre-defined 7 EF_PNN (see 3GPP TS 31.102 clause 4.2.58)
+   * sets:
    *
    *   PNN 1: Full name: "Test1", Short name: "Test1"
    *   PNN 2: Full name: "Test2", Short name: (none)
-   *   PNN 2: Full name: "Test3", Short name: (none)
-   *   PNN 2: Full name: "Test4", Short name: (none)
+   *   PNN 3: Full name: "Test3", Short name: (none)
+   *   PNN 4: Full name: "Test4", Short name: (none)
+   *   PNN 5: Full name: "Test5", Short name: (none)
+   *   PNN 6: Full name: "Test6", Short name: (none)
+   *   PNN 7: Full name: "Test7", Short name: (none)
    *
-   * Also 4 OPL sets:
+   * Also 7 EF_OPL (see 3GPP TS 31.102 clause 4.2.59) sets:
    *
    *   MCC = 001, MNC =  01, START=0000, END=FFFE, PNN = 01,
    *   MCC = 001, MNC =  02, START=0001, END=0010, PNN = 02,
    *   MCC = 001, MNC =  03, START=0011, END=0011, PNN = 03,
    *   MCC = 001, MNC = 001, START=0012, END=0012, PNN = 04,
+   *   MCC = 001, MNC =  1D, START=0000, END=FFFE, PNN = 05,
+   *   MCC = 001, MNC = 2DD, START=0000, END=FFFE, PNN = 06,
+   *   MCC = 001, MNC = DDD, START=0000, END=FFFE, PNN = 07,
    *
    * See https://github.com/mozilla-b2g/platform_external_qemu/blob/master/telephony/sim_card.c#L725
    */
@@ -106,6 +113,41 @@ startTestCommon(function() {
         // Test if we match MNC "01" and "001" correctly.
         .then(() => test("Foo1", "Bar1", "001", "001", 0x0012, TEST_CELL_ID,
                          "Test4", ""))
+
+        // Wild char test for MCC = 001, MNC = 1D cases.
+        .then(() => test("Foo10", "Bar10", "001", "10", 0x0000, TEST_CELL_ID,
+                         "Test5", ""))
+        .then(() => test("Foo11", "Bar11", "001", "11", 0x0001, TEST_CELL_ID,
+                         "Test5", ""))
+        .then(() => test("Foo12", "Bar12", "001", "12", 0x0002, TEST_CELL_ID,
+                         "Test5", ""))
+        .then(() => test("Foo13", "Bar13", "001", "13", 0x0003, TEST_CELL_ID,
+                         "Test5", ""))
+        .then(() => test("Foo14", "Bar14", "001", "14", 0x0004, TEST_CELL_ID,
+                         "Test5", ""))
+        .then(() => test("Foo15", "Bar15", "001", "15", 0x0005, TEST_CELL_ID,
+                         "Test5", ""))
+        .then(() => test("Foo16", "Bar16", "001", "16", 0x0006, TEST_CELL_ID,
+                         "Test5", ""))
+        .then(() => test("Foo17", "Bar17", "001", "17", 0x0007, TEST_CELL_ID,
+                         "Test5", ""))
+        .then(() => test("Foo18", "Bar18", "001", "18", 0x0008, TEST_CELL_ID,
+                         "Test5", ""))
+        .then(() => test("Foo19", "Bar19", "001", "19", 0x0009, TEST_CELL_ID,
+                         "Test5", ""))
+        .then(() => test("Foo20", "Bar20", "001", "20", 0x000A, TEST_CELL_ID))
+
+        // Wild chars test for MCC = 001, MNC = 2DD cases.
+        .then(() => test("Foo0", "Bar0", "001", "200", 0x00C8, TEST_CELL_ID,
+                         "Test6", ""))
+        .then(() => test("Foo1", "Bar1", "001", "299", 0x012B, TEST_CELL_ID,
+                         "Test6", ""))
+
+        // Wild chars test for MCC = 001, MNC = DDD cases.
+        .then(() => test("Foo300", "Bar300", "001", "300", 0x012C, TEST_CELL_ID,
+                         "Test7", ""))
+        .then(() => test("Foo999", "Bar999", "001", "999", 0x03E7, TEST_CELL_ID,
+                         "Test7", ""))
 
         // Reset back to initial values.
         .then(() => test(longName, shortName, mcc, mnc, lac, cid));
