@@ -1564,26 +1564,6 @@ MediaStreamGraphImpl::RunInStableState()
     }
     mStreamUpdates.Clear();
 
-    // Don't start the thread for a non-realtime graph until it has been
-    // explicitly started by StartNonRealtimeProcessing.
-    if (mLifecycleState == LIFECYCLE_THREAD_NOT_STARTED &&
-        (mRealtime || mNonRealtimeProcessing)) {
-      mLifecycleState = LIFECYCLE_RUNNING;
-      // Start the thread now. We couldn't start it earlier because
-      // the graph might exit immediately on finding it has no streams. The
-      // first message for a new graph must create a stream.
-      {
-        // We should exit the monitor for now, because starting a stream might
-        // take locks, and we don't want to deadlock. We probably want this to be
-        // async on another thread.
-        MonitorAutoUnlock unlock(mMonitor);
-        STREAM_LOG(PR_LOG_DEBUG, ("Starting a graph with a %s\n",
-              CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
-                                                         "SystemDriver"));
-        CurrentDriver()->Start();
-      }
-    }
-
     if (mCurrentTaskMessageQueue.IsEmpty()) {
       if (mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP && IsEmpty()) {
         // Complete shutdown. First, ensure that this graph is no longer used.
@@ -1623,6 +1603,23 @@ MediaStreamGraphImpl::RunInStableState()
           MonitorAutoUnlock unlock(mMonitor);
           CurrentDriver()->Revive();
         }
+      }
+    }
+
+    // Don't start the thread for a non-realtime graph until it has been
+    // explicitly started by StartNonRealtimeProcessing.
+    if (mLifecycleState == LIFECYCLE_THREAD_NOT_STARTED &&
+        (mRealtime || mNonRealtimeProcessing)) {
+      mLifecycleState = LIFECYCLE_RUNNING;
+      // Start the thread now. We couldn't start it earlier because
+      // the graph might exit immediately on finding it has no streams. The
+      // first message for a new graph must create a stream.
+      {
+        // We should exit the monitor for now, because starting a stream might
+        // take locks, and we don't want to deadlock.
+        MonitorAutoUnlock unlock(mMonitor);
+        STREAM_LOG(PR_LOG_DEBUG, ("Starting a graph ! %s\n", CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" : "SystemDriver"));
+        CurrentDriver()->Start();
       }
     }
 
