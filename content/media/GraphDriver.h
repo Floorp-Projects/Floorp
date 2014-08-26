@@ -342,6 +342,7 @@ public:
                              long aFrames);
   static void StateCallback_s(cubeb_stream* aStream, void * aUser,
                               cubeb_state aState);
+  static void DeviceChangedCallback_s(void * aUser);
   /* This function is called by the underlying audio backend when a refill is
    * needed. This is what drives the whole graph when it is used to output
    * audio. If the return value is exactly aFrames, this function will get
@@ -370,7 +371,19 @@ public:
   bool InCallback();
 
   bool IsStarted();
+
+  /* Tell the driver whether this process is using a microphone or not. This is
+   * thread safe. */
+  void SetMicrophoneActive(bool aActive);
 private:
+  /**
+   * On certain MacBookPro, the microphone is located near the left speaker.
+   * We need to pan the sound output to the right speaker if we are using the
+   * mic and the built-in speaker, or we will have terrible echo.  */
+  void PanOutputIfNeeded(bool aMicrophoneActive);
+  /**
+   * This is called when the output device used by the cubeb stream changes. */
+  void DeviceChangedCallback();
   /* Start the cubeb stream */
   void StartStream();
   friend class AsyncCubebTask;
@@ -426,6 +439,10 @@ private:
    * but has not done so yet. This indicates tha the callback should return
    * early */
   bool mPauseRequested;
+  /**
+   * True if microphone is being used by this process. This is synchronized by
+   * the graph's monitor. */
+  bool mMicrophoneActive;
 };
 
 class AsyncCubebTask : public nsRunnable
