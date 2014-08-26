@@ -422,7 +422,7 @@ bool IsCtrlShiftPressed(bool& isRTL)
 // This logic is mostly borrowed from Chromium's
 // RenderWidgetHostViewWin::OnKeyEvent.
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {
   if (mHaveBidiKeyboards) {
@@ -448,7 +448,7 @@ nsEditorEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   if (mHaveBidiKeyboards) {
@@ -476,7 +476,7 @@ nsEditorEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
 }
 #endif
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
@@ -538,7 +538,7 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
@@ -634,7 +634,7 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
@@ -642,7 +642,7 @@ nsEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
@@ -868,7 +868,7 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   return true;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
@@ -891,7 +891,7 @@ nsEditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
   mEditor->EndIMEComposition();
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
@@ -949,7 +949,7 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::Blur(nsIDOMEvent* aEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
