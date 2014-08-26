@@ -225,6 +225,15 @@ class BacktrackingAllocator
     bool tryAllocateGroupRegister(PhysicalRegister &r, VirtualRegisterGroup *group,
                                   bool *psuccess, bool *pfixed, LiveInterval **pconflicting);
     bool evictInterval(LiveInterval *interval);
+    bool evictIntervals(LiveInterval **intervals) {
+        for (size_t i = 0; i < MaxAliasedRegisters; i++) {
+            if (intervals[i] == nullptr)
+                continue;
+            if (!evictInterval(intervals[i]))
+                return false;
+        }
+        return true;
+    }
     void distributeUses(LiveInterval *interval, const LiveIntervalVector &newIntervals);
     bool split(LiveInterval *interval, const LiveIntervalVector &newIntervals);
     bool requeueIntervals(const LiveIntervalVector &newIntervals);
@@ -255,11 +264,20 @@ class BacktrackingAllocator
 
     size_t computePriority(const LiveInterval *interval);
     size_t computeSpillWeight(const LiveInterval *interval);
+    size_t computeSpillsWeight(LiveInterval **intervals) {
+        size_t ret = 0;
+        for (size_t i = 0; i < MaxAliasedRegisters; i++) {
+            if (intervals[i] == nullptr)
+                continue;
+            ret += computeSpillWeight(intervals[i]);
+        }
+        return ret;
+    }
 
     size_t computePriority(const VirtualRegisterGroup *group);
     size_t computeSpillWeight(const VirtualRegisterGroup *group);
 
-    bool chooseIntervalSplit(LiveInterval *interval, LiveInterval *conflict);
+    bool chooseIntervalSplit(LiveInterval *interval, LiveInterval **conflict);
 
     bool splitAt(LiveInterval *interval, const SplitPositions &splitPositions);
     bool trySplitAcrossHotcode(LiveInterval *interval, bool *success);
