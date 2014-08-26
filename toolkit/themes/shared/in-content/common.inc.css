@@ -386,20 +386,23 @@ xul|textbox[disabled="true"] {
 
 /* Links */
 
+html|a,
 xul|*.text-link,
-xul|*.inline-link,
-html|a.inline-link {
+xul|*.inline-link {
   font-size: 1.25rem;
   line-height: 22px;
   color: #0095dd;
+  text-decoration: none;
 }
 
+html|a:hover,
 xul|*.text-link:hover,
 xul|*.inline-link:hover {
   color: #4cb1ff;
   text-decoration: none;
 }
 
+html|a:hover:active,
 xul|*.text-link:hover:active,
 xul|*.inline-link:hover:active {
   color: #ff9500;
