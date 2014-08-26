@@ -44,8 +44,10 @@ endif
 # the linker script is given after crtbegin.o, and even past that, replaces
 # the default section rules with those from the script instead of
 # supplementing them. Which leads to a lib with a huge load of sections.
+ifneq (OpenBSD,$(OS_TARGET))
 ifdef LD_IS_BFD
 OS_LDFLAGS += $(topsrcdir)/toolkit/library/StaticXULComponents.ld
+endif
 endif
 
 ifeq (WINNT,$(OS_TARGET))
