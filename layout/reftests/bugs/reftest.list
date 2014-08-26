@@ -1815,3 +1815,4 @@ pref(layout.css.will-change.enabled,true) == 1018522-1.html 1018522-1-ref.html
 pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
 == 1024473-1.html 1024473-1-ref.html
 == 1044198-1.html 1044198-1-ref.html
+== 1050788-1.html about:blank
