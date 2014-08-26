@@ -48,7 +48,7 @@ nsHTMLEditorEventListener::GetHTMLEditor()
   return static_cast<nsHTMLEditor*>(mEditor);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLEditorEventListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
@@ -75,7 +75,7 @@ nsHTMLEditorEventListener::MouseUp(nsIDOMEvent* aMouseEvent)
   return nsEditorEventListener::MouseUp(aMouseEvent);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
@@ -220,7 +220,7 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
   return nsEditorEventListener::MouseDown(aMouseEvent);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
