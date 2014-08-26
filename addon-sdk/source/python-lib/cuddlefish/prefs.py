@@ -36,6 +36,10 @@ DEFAULT_COMMON_PREFS = {
     # Disable app update
     'app.update.enabled' : False,
 
+    # Disable about:newtab content fetch and ping
+    'browser.newtabpage.directory.source': 'data:application/json,{"jetpack":1}',
+    'browser.newtabpage.directory.ping': '',
+
     # Point update checks to a nonexistent local URL for fast failures.
     'extensions.update.url' : 'http://localhost/extensions-dummy/updateURL',
     'extensions.blocklist.url' : 'http://localhost/extensions-dummy/blocklistURL',
