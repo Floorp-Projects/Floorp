@@ -40,19 +40,10 @@ public:
   UDPSocketChild();
   virtual ~UDPSocketChild();
 
-  virtual bool RecvCallbackOpened(const UDPAddressInfo& aAddressInfo) MOZ_OVERRIDE;
-  virtual bool RecvCallbackClosed() MOZ_OVERRIDE;
-  virtual bool RecvCallbackReceivedData(const UDPAddressInfo& aAddressInfo,
-                                        const InfallibleTArray<uint8_t>& aData) MOZ_OVERRIDE;
-  virtual bool RecvCallbackError(const nsCString& aMessage,
-                                 const nsCString& aFilename,
-                                 const uint32_t& aLineNumber) MOZ_OVERRIDE;
-
+  virtual bool RecvCallback(const nsCString& aType,
+                            const UDPCallbackData& aData,
+                            const nsCString& aState) MOZ_OVERRIDE;
 private:
-  nsresult SendDataInternal(const UDPSocketAddr& aAddr,
-                            const uint8_t* aData,
-                            const uint32_t aByteLength);
-
   uint16_t mLocalPort;
   nsCString mLocalAddress;
   nsCString mFilterName;
