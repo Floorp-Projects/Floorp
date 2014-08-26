@@ -1004,7 +1004,7 @@ let SessionStoreInternal = {
       this._collectWindowData(aWindow);
 
       if (isFullyLoaded) {
-        winData.title = aWindow.content.document.title || tabbrowser.selectedTab.label;
+        winData.title = tabbrowser.selectedBrowser.contentTitle || tabbrowser.selectedTab.label;
         winData.title = this._replaceLoadingTitle(winData.title, tabbrowser,
                                                   tabbrowser.selectedTab);
         SessionCookies.update([winData]);
@@ -2656,8 +2656,8 @@ let SessionStoreInternal = {
     var _this = this;
     aWindow.setTimeout(function() {
       _this.restoreDimensions.apply(_this, [aWindow,
-        +aWinData.width || 0,
-        +aWinData.height || 0,
+        +(aWinData.width || 0),
+        +(aWinData.height || 0),
         "screenX" in aWinData ? +aWinData.screenX : NaN,
         "screenY" in aWinData ? +aWinData.screenY : NaN,
         aWinData.sizemode || "", aWinData.sidebar || ""]);
