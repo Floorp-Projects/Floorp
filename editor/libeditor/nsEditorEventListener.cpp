@@ -49,6 +49,7 @@
 #include "nsIWidget.h"                  // for nsIWidget
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsPIWindowRoot.h"             // for nsPIWindowRoot
+#include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsServiceManagerUtils.h"      // for do_GetService
 #include "nsString.h"                   // for nsAutoString
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
@@ -90,9 +91,10 @@ DoCommandCallback(Command aCommand, void* aData)
   }
 }
 
-nsEditorEventListener::nsEditorEventListener() :
-  mEditor(nullptr), mCommitText(false),
-  mInTransaction(false)
+nsEditorEventListener::nsEditorEventListener()
+  : mEditor(nullptr)
+  , mCommitText(false)
+  , mInTransaction(false)
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   , mHaveBidiKeyboards(false)
   , mShouldSwitchTextDirection(false)
@@ -310,50 +312,109 @@ NS_IMPL_ISUPPORTS(nsEditorEventListener, nsIDOMEventListener)
 NS_IMETHODIMP
 nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIEditor> kungFuDeathGrip = mEditor;
+
+  WidgetEvent* internalEvent = aEvent->GetInternalNSEvent();
+
+  // Let's handle each event with the message of the internal event of the
+  // coming event.  If the DOM event was created with improper interface,
+  // e.g., keydown event is created with |new MouseEvent("keydown", {});|,
+  // its message is always 0.  Therefore, we can ban such strange event easy.
+  // However, we need to handle strange "focus" and "blur" event.  See the
+  // following code of this switch statement.
+  // NOTE: Each event handler may require specific event interface.  Before
+  //       calling it, this queries the specific interface.  If it would fail,
+  //       each event handler would just ignore the event.  So, in this method,
+  //       you don't need to check if the QI succeeded before each call.
+  switch (internalEvent->message) {
+    // dragenter
+    case NS_DRAGDROP_ENTER: {
+      nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
+      return DragEnter(dragEvent);
+    }
+    // dragover
+    case NS_DRAGDROP_OVER_SYNTH: {
+      nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
+      return DragOver(dragEvent);
+    }
+    // dragexit
+    case NS_DRAGDROP_EXIT_SYNTH: {
+      nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
+      return DragExit(dragEvent);
+    }
+    // drop
+    case NS_DRAGDROP_DROP: {
+      nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
+      return Drop(dragEvent);
+    }
+#ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
+    // keydown
+    case NS_KEY_DOWN: {
+      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
+      return KeyDown(keyEvent);
+    }
+    // keyup
+    case NS_KEY_UP: {
+      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
+      return KeyUp(keyEvent);
+    }
+#endif // #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
+    // keypress
+    case NS_KEY_PRESS: {
+      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
+      return KeyPress(keyEvent);
+    }
+    // mousedown
+    case NS_MOUSE_BUTTON_DOWN: {
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      return MouseDown(mouseEvent);
+    }
+    // mouseup
+    case NS_MOUSE_BUTTON_UP: {
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      return MouseUp(mouseEvent);
+    }
+    // click
+    case NS_MOUSE_CLICK: {
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      return MouseClick(mouseEvent);
+    }
+    // focus
+    case NS_FOCUS_CONTENT:
+      return Focus(aEvent);
+    // blur
+    case NS_BLUR_CONTENT:
+      return Blur(aEvent);
+    // text
+    case NS_TEXT_TEXT:
+      return HandleText(aEvent);
+    // compositionstart
+    case NS_COMPOSITION_START:
+      return HandleStartComposition(aEvent);
+    // compositionend
+    case NS_COMPOSITION_END:
+      HandleEndComposition(aEvent);
+      return NS_OK;
+  }
 
   nsAutoString eventType;
   aEvent->GetType(eventType);
-
-  nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
-  if (dragEvent) {
-    if (eventType.EqualsLiteral("dragenter"))
-      return DragEnter(dragEvent);
-    if (eventType.EqualsLiteral("dragover"))
-      return DragOver(dragEvent);
-    if (eventType.EqualsLiteral("dragexit"))
-      return DragExit(dragEvent);
-    if (eventType.EqualsLiteral("drop"))
-      return Drop(dragEvent);
-  }
-
-#ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-  if (eventType.EqualsLiteral("keydown"))
-    return KeyDown(aEvent);
-  if (eventType.EqualsLiteral("keyup"))
-    return KeyUp(aEvent);
-#endif
-  if (eventType.EqualsLiteral("keypress"))
-    return KeyPress(aEvent);
-  if (eventType.EqualsLiteral("mousedown"))
-    return MouseDown(aEvent);
-  if (eventType.EqualsLiteral("mouseup"))
-    return MouseUp(aEvent);
-  if (eventType.EqualsLiteral("click"))
-    return MouseClick(aEvent);
-  if (eventType.EqualsLiteral("focus"))
+  // We should accept "focus" and "blur" event even if it's synthesized with
+  // wrong interface for compatibility with older Gecko.
+  if (eventType.EqualsLiteral("focus")) {
     return Focus(aEvent);
-  if (eventType.EqualsLiteral("blur"))
-    return Blur(aEvent);
-  if (eventType.EqualsLiteral("text"))
-    return HandleText(aEvent);
-  if (eventType.EqualsLiteral("compositionstart"))
-    return HandleStartComposition(aEvent);
-  if (eventType.EqualsLiteral("compositionend")) {
-    HandleEndComposition(aEvent);
-    return NS_OK;
   }
+  if (eventType.EqualsLiteral("blur")) {
+    return Blur(aEvent);
+  }
+#ifdef DEBUG
+  nsPrintfCString assertMessage("Editor doesn't handle \"%s\" event "
+    "because its internal event doesn't have proper message",
+    NS_ConvertUTF16toUTF8(eventType).get());
+  NS_ASSERTION(false, assertMessage.get());
+#endif
 
   return NS_OK;
 }
@@ -387,8 +448,9 @@ bool IsCtrlShiftPressed(bool& isRTL)
   //    To ignore the keys checked in 1, we set their status to 0 before
   //    checking the key status.
   const int kKeyDownMask = 0x80;
-  if ((keystate[VK_CONTROL] & kKeyDownMask) == 0)
+  if ((keystate[VK_CONTROL] & kKeyDownMask) == 0) {
     return false;
+  }
 
   if (keystate[VK_RSHIFT] & kKeyDownMask) {
     keystate[VK_RSHIFT] = 0;
@@ -411,8 +473,9 @@ bool IsCtrlShiftPressed(bool& isRTL)
   keystate[VK_RCONTROL] = 0;
   keystate[VK_LCONTROL] = 0;
   for (int i = 0; i <= VK_PACKET; ++i) {
-    if (keystate[i] & kKeyDownMask)
+    if (keystate[i] & kKeyDownMask) {
       return false;
+    }
   }
   return true;
 }
@@ -422,64 +485,57 @@ bool IsCtrlShiftPressed(bool& isRTL)
 // This logic is mostly borrowed from Chromium's
 // RenderWidgetHostViewWin::OnKeyEvent.
 
-NS_IMETHODIMP
-nsEditorEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
+nsresult
+nsEditorEventListener::KeyUp(nsIDOMKeyEvent* aKeyEvent)
 {
-  if (mHaveBidiKeyboards) {
-    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-    if (!keyEvent) {
-      // non-key event passed to keyup.  bad things.
-      return NS_OK;
-    }
+  NS_ENSURE_TRUE(aKeyEvent, NS_OK);
 
-    uint32_t keyCode = 0;
-    keyEvent->GetKeyCode(&keyCode);
-    if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT ||
-        keyCode == nsIDOMKeyEvent::DOM_VK_CONTROL) {
-      if (mShouldSwitchTextDirection && mEditor->IsPlaintextEditor()) {
-        mEditor->SwitchTextDirectionTo(mSwitchToRTL ?
-          nsIPlaintextEditor::eEditorRightToLeft :
-          nsIPlaintextEditor::eEditorLeftToRight);
-        mShouldSwitchTextDirection = false;
-      }
-    }
+  if (!mHaveBidiKeyboards) {
+    return NS_OK;
   }
 
+  uint32_t keyCode = 0;
+  aKeyEvent->GetKeyCode(&keyCode);
+  if ((keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT ||
+       keyCode == nsIDOMKeyEvent::DOM_VK_CONTROL) &&
+      mShouldSwitchTextDirection && mEditor->IsPlaintextEditor()) {
+    mEditor->SwitchTextDirectionTo(mSwitchToRTL ?
+      nsIPlaintextEditor::eEditorRightToLeft :
+      nsIPlaintextEditor::eEditorLeftToRight);
+    mShouldSwitchTextDirection = false;
+  }
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEditorEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
+nsresult
+nsEditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
 {
-  if (mHaveBidiKeyboards) {
-    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-    if (!keyEvent) {
-      // non-key event passed to keydown.  bad things.
-      return NS_OK;
-    }
+  NS_ENSURE_TRUE(aKeyEvent, NS_OK);
 
-    uint32_t keyCode = 0;
-    keyEvent->GetKeyCode(&keyCode);
-    if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT) {
-      bool switchToRTL;
-      if (IsCtrlShiftPressed(switchToRTL)) {
-        mShouldSwitchTextDirection = true;
-        mSwitchToRTL = switchToRTL;
-      }
-    } else if (keyCode != nsIDOMKeyEvent::DOM_VK_CONTROL) {
-      // In case the user presses any other key besides Ctrl and Shift
-      mShouldSwitchTextDirection = false;
-    }
+  if (!mHaveBidiKeyboards) {
+    return NS_OK;
   }
 
+  uint32_t keyCode = 0;
+  aKeyEvent->GetKeyCode(&keyCode);
+  if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT) {
+    bool switchToRTL;
+    if (IsCtrlShiftPressed(switchToRTL)) {
+      mShouldSwitchTextDirection = true;
+      mSwitchToRTL = switchToRTL;
+    }
+  } else if (keyCode != nsIDOMKeyEvent::DOM_VK_CONTROL) {
+    // In case the user presses any other key besides Ctrl and Shift
+    mShouldSwitchTextDirection = false;
+  }
   return NS_OK;
 }
 #endif
 
-NS_IMETHODIMP
-nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
+nsresult
+nsEditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(aKeyEvent, NS_OK);
 
   if (!mEditor->IsAcceptableInputEvent(aKeyEvent)) {
     return NS_OK;
@@ -497,13 +553,7 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-  if (!keyEvent) {
-    //non-key event passed to keypress.  bad things.
-    return NS_OK;
-  }
-
-  nsresult rv = mEditor->HandleKeyPressEvent(keyEvent);
+  nsresult rv = mEditor->HandleKeyPressEvent(aKeyEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aKeyEvent->GetDefaultPrevented(&defaultPrevented);
@@ -511,40 +561,38 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
-  if (ShouldHandleNativeKeyBindings(aKeyEvent)) {
-    // Now, ask the native key bindings to handle the event.
-    WidgetKeyboardEvent* keyEvent =
-      aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
-    MOZ_ASSERT(keyEvent,
-               "DOM key event's internal event must be WidgetKeyboardEvent");
-    nsIWidget* widget = keyEvent->widget;
-    // If the event is created by chrome script, the widget is always nullptr.
-    if (!widget) {
-      nsCOMPtr<nsIPresShell> ps = GetPresShell();
-      nsPresContext* pc = ps ? ps->GetPresContext() : nullptr;
-      widget = pc ? pc->GetNearestWidget() : nullptr;
-      NS_ENSURE_TRUE(widget, NS_OK);
-    }
-
-    nsCOMPtr<nsIDocument> doc = mEditor->GetDocument();
-    bool handled = widget->ExecuteNativeKeyBinding(
-                             nsIWidget::NativeKeyBindingsForRichTextEditor,
-                             *keyEvent, DoCommandCallback, doc);
-    if (handled) {
-      aKeyEvent->PreventDefault();
-    }
+  if (!ShouldHandleNativeKeyBindings(aKeyEvent)) {
+    return NS_OK;
   }
 
+  // Now, ask the native key bindings to handle the event.
+  WidgetKeyboardEvent* keyEvent =
+    aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+  MOZ_ASSERT(keyEvent,
+             "DOM key event's internal event must be WidgetKeyboardEvent");
+  nsIWidget* widget = keyEvent->widget;
+  // If the event is created by chrome script, the widget is always nullptr.
+  if (!widget) {
+    nsCOMPtr<nsIPresShell> ps = GetPresShell();
+    nsPresContext* pc = ps ? ps->GetPresContext() : nullptr;
+    widget = pc ? pc->GetNearestWidget() : nullptr;
+    NS_ENSURE_TRUE(widget, NS_OK);
+  }
+
+  nsCOMPtr<nsIDocument> doc = mEditor->GetDocument();
+  bool handled = widget->ExecuteNativeKeyBinding(
+                           nsIWidget::NativeKeyBindingsForRichTextEditor,
+                           *keyEvent, DoCommandCallback, doc);
+  if (handled) {
+    aKeyEvent->PreventDefault();
+  }
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
+nsresult
+nsEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
-
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-  NS_ENSURE_TRUE(mouseEvent, NS_OK);
+  NS_ENSURE_TRUE(aMouseEvent, NS_OK);
 
   // nothing to do if editor isn't editable or clicked on out of the editor.
   if (mEditor->IsReadonly() || mEditor->IsDisabled() ||
@@ -563,7 +611,7 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
     if (presContext && currentDoc) {
       IMEStateManager::OnClickInEditor(presContext,
         currentDoc->HasFlag(NODE_IS_EDITABLE) ? nullptr : focusedContent,
-        mouseEvent);
+        aMouseEvent);
     }
   }
 
@@ -579,74 +627,85 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   mEditor->ForceCompositionEnd();
 
   int16_t button = -1;
-  mouseEvent->GetButton(&button);
-  // middle-mouse click (paste);
-  if (button == 1)
-  {
-    if (Preferences::GetBool("middlemouse.paste", false))
-    {
-      // Set the selection to the point under the mouse cursor:
-      nsCOMPtr<nsIDOMNode> parent;
-      if (NS_FAILED(mouseEvent->GetRangeParent(getter_AddRefs(parent))))
-        return NS_ERROR_NULL_POINTER;
-      int32_t offset = 0;
-      if (NS_FAILED(mouseEvent->GetRangeOffset(&offset)))
-        return NS_ERROR_NULL_POINTER;
-
-      nsCOMPtr<nsISelection> selection;
-      if (NS_SUCCEEDED(mEditor->GetSelection(getter_AddRefs(selection))))
-        (void)selection->Collapse(parent, offset);
-
-      // If the ctrl key is pressed, we'll do paste as quotation.
-      // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
-      bool ctrlKey = false;
-      mouseEvent->GetCtrlKey(&ctrlKey);
-
-      nsCOMPtr<nsIEditorMailSupport> mailEditor;
-      if (ctrlKey)
-        mailEditor = do_QueryObject(mEditor);
-
-      int32_t clipboard = nsIClipboard::kGlobalClipboard;
-      nsCOMPtr<nsIClipboard> clipboardService =
-        do_GetService("@mozilla.org/widget/clipboard;1", &rv);
-      if (NS_SUCCEEDED(rv)) {
-        bool selectionSupported;
-        rv = clipboardService->SupportsSelectionClipboard(&selectionSupported);
-        if (NS_SUCCEEDED(rv) && selectionSupported) {
-          clipboard = nsIClipboard::kSelectionClipboard;
-        }
-      }
-
-      if (mailEditor)
-        mailEditor->PasteAsQuotation(clipboard);
-      else
-        mEditor->Paste(clipboard);
-
-      // Prevent the event from propagating up to be possibly handled
-      // again by the containing window:
-      mouseEvent->StopPropagation();
-      mouseEvent->PreventDefault();
-
-      // We processed the event, whether drop/paste succeeded or not
-      return NS_OK;
-    }
+  aMouseEvent->GetButton(&button);
+  if (button == 1) {
+    return HandleMiddleClickPaste(aMouseEvent);
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
+nsresult
+nsEditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
+  if (!Preferences::GetBool("middlemouse.paste", false)) {
+    // Middle click paste isn't enabled.
+    return NS_OK;
+  }
+
+  // Set the selection to the point under the mouse cursor:
+  nsCOMPtr<nsIDOMNode> parent;
+  if (NS_FAILED(aMouseEvent->GetRangeParent(getter_AddRefs(parent)))) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  int32_t offset = 0;
+  if (NS_FAILED(aMouseEvent->GetRangeOffset(&offset))) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsCOMPtr<nsISelection> selection;
+  if (NS_SUCCEEDED(mEditor->GetSelection(getter_AddRefs(selection)))) {
+    selection->Collapse(parent, offset);
+  }
+
+  // If the ctrl key is pressed, we'll do paste as quotation.
+  // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
+  bool ctrlKey = false;
+  aMouseEvent->GetCtrlKey(&ctrlKey);
+
+  nsCOMPtr<nsIEditorMailSupport> mailEditor;
+  if (ctrlKey) {
+    mailEditor = do_QueryObject(mEditor);
+  }
+
+  nsresult rv;
+  int32_t clipboard = nsIClipboard::kGlobalClipboard;
+  nsCOMPtr<nsIClipboard> clipboardService =
+    do_GetService("@mozilla.org/widget/clipboard;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    bool selectionSupported;
+    rv = clipboardService->SupportsSelectionClipboard(&selectionSupported);
+    if (NS_SUCCEEDED(rv) && selectionSupported) {
+      clipboard = nsIClipboard::kSelectionClipboard;
+    }
+  }
+
+  if (mailEditor) {
+    mailEditor->PasteAsQuotation(clipboard);
+  } else {
+    mEditor->Paste(clipboard);
+  }
+
+  // Prevent the event from propagating up to be possibly handled
+  // again by the containing window:
+  aMouseEvent->StopPropagation();
+  aMouseEvent->PreventDefault();
+
+  // We processed the event, whether drop/paste succeeded or not
+  return NS_OK;
+}
+
+nsresult
+nsEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
+{
+  NS_ENSURE_TRUE(aMouseEvent, NS_OK);
+
   mEditor->ForceCompositionEnd();
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
-
   if (!mEditor->IsAcceptableInputEvent(aTextEvent)) {
     return NS_OK;
   }
@@ -666,6 +725,8 @@ nsEditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
 nsresult
 nsEditorEventListener::DragEnter(nsIDOMDragEvent* aDragEvent)
 {
+  NS_ENSURE_TRUE(aDragEvent, NS_OK);
+
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_OK);
 
@@ -683,6 +744,8 @@ nsEditorEventListener::DragEnter(nsIDOMDragEvent* aDragEvent)
 nsresult
 nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
 {
+  NS_ENSURE_TRUE(aDragEvent, NS_OK);
+
   nsCOMPtr<nsIDOMNode> parent;
   bool defaultPrevented;
   aDragEvent->GetDefaultPrevented(&defaultPrevented);
@@ -697,79 +760,83 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
   if (dropParent->IsEditable() && CanDrop(aDragEvent)) {
     aDragEvent->PreventDefault(); // consumed
 
-    if (mCaret) {
-      int32_t offset = 0;
-      nsresult rv = aDragEvent->GetRangeOffset(&offset);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      mCaret->SetVisible(true);
-      mCaret->SetCaretPosition(parent, offset);
-    }
-  }
-  else
-  {
-    if (!IsFileControlTextBox()) {
-      // This is needed when dropping on an input, to prevent the editor for
-      // the editable parent from receiving the event.
-      aDragEvent->StopPropagation();
+    if (!mCaret) {
+      return NS_OK;
     }
 
-    if (mCaret)
-    {
-      mCaret->SetVisible(false);
-    }
+    int32_t offset = 0;
+    nsresult rv = aDragEvent->GetRangeOffset(&offset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mCaret->SetVisible(true);
+    mCaret->SetCaretPosition(parent, offset);
+
+    return NS_OK;
   }
 
+  if (!IsFileControlTextBox()) {
+    // This is needed when dropping on an input, to prevent the editor for
+    // the editable parent from receiving the event.
+    aDragEvent->StopPropagation();
+  }
+
+  if (mCaret) {
+    mCaret->SetVisible(false);
+  }
   return NS_OK;
 }
 
 void
 nsEditorEventListener::CleanupDragDropCaret()
 {
-  if (mCaret)
-  {
-    mCaret->SetVisible(false);    // hide it, so that it turns off its timer
-
-    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-    if (presShell)
-    {
-      nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
-      if (selCon) {
-        selCon->SetCaretEnabled(false);
-      }
-      presShell->RestoreCaret();
-    }
-
-    mCaret->Terminate();
-    mCaret = nullptr;
+  if (!mCaret) {
+    return;
   }
+
+  mCaret->SetVisible(false);    // hide it, so that it turns off its timer
+
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  if (presShell) {
+    nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
+    if (selCon) {
+      selCon->SetCaretEnabled(false);
+    }
+    presShell->RestoreCaret();
+  }
+
+  mCaret->Terminate();
+  mCaret = nullptr;
 }
 
 nsresult
 nsEditorEventListener::DragExit(nsIDOMDragEvent* aDragEvent)
 {
+  NS_ENSURE_TRUE(aDragEvent, NS_OK);
+
   CleanupDragDropCaret();
 
   return NS_OK;
 }
 
 nsresult
-nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
+nsEditorEventListener::Drop(nsIDOMDragEvent* aDragEvent)
 {
+  NS_ENSURE_TRUE(aDragEvent, NS_OK);
+
   CleanupDragDropCaret();
 
   bool defaultPrevented;
-  aMouseEvent->GetDefaultPrevented(&defaultPrevented);
+  aDragEvent->GetDefaultPrevented(&defaultPrevented);
   if (defaultPrevented) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIDOMNode> parent;
-  aMouseEvent->GetRangeParent(getter_AddRefs(parent));
+  aDragEvent->GetRangeParent(getter_AddRefs(parent));
   nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
   NS_ENSURE_TRUE(dropParent, NS_ERROR_FAILURE);
 
-  if (!dropParent->IsEditable() || !CanDrop(aMouseEvent)) {
+  if (!dropParent->IsEditable() || !CanDrop(aDragEvent)) {
     // was it because we're read-only?
     if ((mEditor->IsReadonly() || mEditor->IsDisabled()) &&
         !IsFileControlTextBox()) {
@@ -777,14 +844,14 @@ nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
       // since someone else handling it might be unintentional and the 
       // user could probably re-drag to be not over the disabled/readonly 
       // editfields if that is what is desired.
-      return aMouseEvent->StopPropagation();
+      return aDragEvent->StopPropagation();
     }
     return NS_OK;
   }
 
-  aMouseEvent->StopPropagation();
-  aMouseEvent->PreventDefault();
-  return mEditor->InsertFromDrop(aMouseEvent);
+  aDragEvent->StopPropagation();
+  aDragEvent->PreventDefault();
+  return mEditor->InsertFromDrop(aDragEvent);
 }
 
 bool
@@ -817,8 +884,9 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   // is the same as the drag source.
   nsCOMPtr<nsIDOMNode> sourceNode;
   dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
-  if (!sourceNode)
+  if (!sourceNode) {
     return true;
+  }
 
   // There is a source node, so compare the source documents and this document.
   // Disallow drops on the same document.
@@ -829,49 +897,58 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   nsCOMPtr<nsIDOMDocument> sourceDoc;
   nsresult rv = sourceNode->GetOwnerDocument(getter_AddRefs(sourceDoc));
   NS_ENSURE_SUCCESS(rv, false);
-  if (domdoc == sourceDoc)      // source and dest are the same document; disallow drops within the selection
-  {
-    nsCOMPtr<nsISelection> selection;
-    rv = mEditor->GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(rv) || !selection)
+
+  // If the source and the dest are not same document, allow to drop it always.
+  if (domdoc != sourceDoc) {
+    return true;
+  }
+
+  nsCOMPtr<nsISelection> selection;
+  rv = mEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv) || !selection) {
+    return false;
+  }
+
+  // If selection is collapsed, allow to drop it always.
+  if (selection->Collapsed()) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDOMNode> parent;
+  rv = aEvent->GetRangeParent(getter_AddRefs(parent));
+  if (NS_FAILED(rv) || !parent) {
+    return false;
+  }
+
+  int32_t offset = 0;
+  rv = aEvent->GetRangeOffset(&offset);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  int32_t rangeCount;
+  rv = selection->GetRangeCount(&rangeCount);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  for (int32_t i = 0; i < rangeCount; i++) {
+    nsCOMPtr<nsIDOMRange> range;
+    rv = selection->GetRangeAt(i, getter_AddRefs(range));
+    if (NS_FAILED(rv) || !range) {
+      // Don't bail yet, iterate through them all
+      continue;
+    }
+
+    bool inRange = true;
+    range->IsPointInRange(parent, offset, &inRange);
+    if (inRange) {
+      // Okay, now you can bail, we are over the orginal selection
       return false;
-    
-    // Don't bother if collapsed - can always drop
-    if (!selection->Collapsed()) {
-      nsCOMPtr<nsIDOMNode> parent;
-      rv = aEvent->GetRangeParent(getter_AddRefs(parent));
-      if (NS_FAILED(rv) || !parent) return false;
-
-      int32_t offset = 0;
-      rv = aEvent->GetRangeOffset(&offset);
-      NS_ENSURE_SUCCESS(rv, false);
-
-      int32_t rangeCount;
-      rv = selection->GetRangeCount(&rangeCount);
-      NS_ENSURE_SUCCESS(rv, false);
-
-      for (int32_t i = 0; i < rangeCount; i++)
-      {
-        nsCOMPtr<nsIDOMRange> range;
-        rv = selection->GetRangeAt(i, getter_AddRefs(range));
-        if (NS_FAILED(rv) || !range) 
-          continue; //don't bail yet, iterate through them all
-
-        bool inRange = true;
-        (void)range->IsPointInRange(parent, offset, &inRange);
-        if (inRange)
-          return false;  //okay, now you can bail, we are over the orginal selection
-      }
     }
   }
-  
   return true;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
   if (!mEditor->IsAcceptableInputEvent(aCompositionEvent)) {
     return NS_OK;
   }
@@ -883,7 +960,6 @@ nsEditorEventListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
 void
 nsEditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
 {
-  MOZ_ASSERT(mEditor);
   if (!mEditor->IsAcceptableInputEvent(aCompositionEvent)) {
     return;
   }
@@ -891,11 +967,10 @@ nsEditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
   mEditor->EndIMEComposition();
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_ARG(aEvent);
+  NS_ENSURE_TRUE(aEvent, NS_OK);
 
   // Don't turn on selection and caret when the editor is disabled.
   if (mEditor->IsDisabled()) {
@@ -934,8 +1009,9 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
 
       nsCOMPtr<nsIDOMElement> element;
       fm->GetFocusedElement(getter_AddRefs(element));
-      if (!SameCOMIdentity(element, target))
+      if (!SameCOMIdentity(element, target)) {
         return NS_OK;
+      }
     }
   }
 
@@ -949,11 +1025,10 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorEventListener::Blur(nsIDOMEvent* aEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_ARG(aEvent);
+  NS_ENSURE_TRUE(aEvent, NS_OK);
 
   // check if something else is focused. If another element is focused, then
   // we should not change the selection.
@@ -962,21 +1037,20 @@ nsEditorEventListener::Blur(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMElement> element;
   fm->GetFocusedElement(getter_AddRefs(element));
-  if (element)
-    return NS_OK;
-
-  mEditor->FinalizeSelection();
+  if (!element) {
+    mEditor->FinalizeSelection();
+  }
   return NS_OK;
 }
 
 void
-nsEditorEventListener::SpellCheckIfNeeded() {
+nsEditorEventListener::SpellCheckIfNeeded()
+{
   // If the spell check skip flag is still enabled from creation time,
   // disable it because focused editors are allowed to spell check.
   uint32_t currentFlags = 0;
   mEditor->GetFlags(&currentFlags);
-  if(currentFlags & nsIPlaintextEditor::eEditorSkipSpellCheck)
-  {
+  if(currentFlags & nsIPlaintextEditor::eEditorSkipSpellCheck) {
     currentFlags ^= nsIPlaintextEditor::eEditorSkipSpellCheck;
     mEditor->SetFlags(currentFlags);
   }
@@ -986,19 +1060,19 @@ bool
 nsEditorEventListener::IsFileControlTextBox()
 {
   dom::Element* root = mEditor->GetRoot();
-  if (root && root->ChromeOnlyAccess()) {
-    nsIContent* parent = root->FindFirstNonChromeOnlyAccessContent();
-    if (parent && parent->IsHTML(nsGkAtoms::input)) {
-      nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(parent);
-      MOZ_ASSERT(formControl);
-      return formControl->GetType() == NS_FORM_INPUT_FILE;
-    }
+  if (!root || !root->ChromeOnlyAccess()) {
+    return false;
   }
-  return false;
+  nsIContent* parent = root->FindFirstNonChromeOnlyAccessContent();
+  if (!parent || !parent->IsHTML(nsGkAtoms::input)) {
+    return false;
+  }
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(parent);
+  return formControl->GetType() == NS_FORM_INPUT_FILE;
 }
 
 bool
-nsEditorEventListener::ShouldHandleNativeKeyBindings(nsIDOMEvent* aKeyEvent)
+nsEditorEventListener::ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent)
 {
   // Only return true if the target of the event is a desendant of the active
   // editing host in order to match the similar decision made in
@@ -1034,4 +1108,3 @@ nsEditorEventListener::ShouldHandleNativeKeyBindings(nsIDOMEvent* aKeyEvent)
 
   return nsContentUtils::ContentIsDescendantOf(targetContent, editingHost);
 }
-

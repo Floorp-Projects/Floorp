@@ -136,7 +136,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 // XPConnect interface list for HTMLFormControlsCollection
 NS_INTERFACE_TABLE_HEAD(HTMLFormControlsCollection)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
   NS_INTERFACE_TABLE(HTMLFormControlsCollection,
                      nsIHTMLCollection,
                      nsIDOMHTMLCollection)

@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
+include protocol PBlob;
+include InputStreamParams;
 
 include "mozilla/net/NeckoMessageUtils.h";
 include "mozilla/net/DNS.h";
@@ -14,34 +16,19 @@ include "prio.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
-struct UDPError {
-  nsCString message;
-  nsCString filename;
-  uint32_t lineNumber;
-  uint32_t columnNumber;
-};
-
-struct UDPMessage {
-  nsCString fromAddr;
-  uint16_t port;
-  uint8_t[] data;
-};
-
 struct UDPAddressInfo {
-  nsCString local;
+  nsCString addr;
   uint16_t port;
 };
 
-struct UDPSendResult {
-  nsresult value;
+union UDPSocketAddr {
+  UDPAddressInfo;
+  NetAddr;
 };
 
-union UDPCallbackData {
-  void_t;
-  UDPMessage;
-  UDPAddressInfo;
-  UDPSendResult;
-  UDPError;
+union UDPData {
+  uint8_t[];
+  InputStreamParams;
 };
 
 namespace mozilla {
@@ -53,13 +40,22 @@ protocol PUDPSocket
   manager PNecko;
 
 parent:
-  Data(uint8_t[] data, nsCString remoteAddress, uint16_t port);
-  DataWithAddress(uint8_t[] data, NetAddr addr);
+  Bind(UDPAddressInfo addressInfo, bool addressReuse, bool loopback);
+
+  OutgoingData(UDPData data, UDPSocketAddr addr);
+
+  JoinMulticast(nsCString multicastAddress, nsCString iface);
+  LeaveMulticast(nsCString multicastAddress, nsCString iface);
+
   Close();
+
   RequestDelete();
 
 child:
-  Callback(nsCString type, UDPCallbackData data, nsCString aState);
+  CallbackOpened(UDPAddressInfo addressInfo);
+  CallbackClosed();
+  CallbackReceivedData(UDPAddressInfo addressInfo, uint8_t[] data);
+  CallbackError(nsCString message, nsCString filename, uint32_t lineNumber);
   __delete__();
 };
 

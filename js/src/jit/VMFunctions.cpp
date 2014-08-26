@@ -402,7 +402,6 @@ ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
 {
     JS_ASSERT(obj->is<ArrayObject>());
     JS_ASSERT(obj->as<ArrayObject>().lengthIsWritable());
-    JS_ASSERT(!ObjectMayHaveExtraIndexedProperties(obj));
 
     uint32_t idx = obj->as<ArrayObject>().length();
     JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, idx, 1);

@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXPORTS.mozilla.dom += [
+    'UDPSocket.h',
+]
+
 EXPORTS.mozilla.dom.network += [
     'Connection.h',
     'Constants.h',
@@ -22,6 +26,7 @@ UNIFIED_SOURCES += [
     'TCPServerSocketParent.cpp',
     'TCPSocketChild.cpp',
     'TCPSocketParent.cpp',
+    'UDPSocket.cpp',
     'UDPSocketChild.cpp',
     'UDPSocketParent.cpp',
 ]

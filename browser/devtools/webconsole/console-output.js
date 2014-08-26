@@ -488,6 +488,11 @@ Messages.BaseMessage.prototype = {
     let container = doc.createElementNS(XHTML_NS, "div");
     container.id = "console-msg-" + gSequenceId();
     container.className = "message";
+    if (this.category == "input") {
+      // Assistive technology tools shouldn't echo input to the user,
+      // as the user knows what they've just typed.
+      container.setAttribute("aria-live", "off");
+    }
     container.category = this._categoryCompat;
     container.severity = this._severityCompat;
     container.setAttribute("category", this._categoryNameCompat);
@@ -1124,6 +1129,7 @@ Messages.Extended.prototype = Heritage.extend(Messages.Simple.prototype,
       "infinity": "cm-atom",
       "null": "cm-atom",
       "undefined": "cm-comment",
+      "symbol": "cm-atom"
     };
 
     let className = map[typeof grip];
