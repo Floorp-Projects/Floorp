@@ -4,6 +4,48 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
-
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
+
+XPIDL_SOURCES += [
+    'nsIExpatSink.idl',
+    'nsIExtendedExpatSink.idl',
+]
+
+XPIDL_MODULE = 'htmlparser'
+
+EXPORTS += [
+    'nsHTMLTagList.h',
+    'nsHTMLTags.h',
+    'nsIContentSink.h',
+    'nsIDTD.h',
+    'nsIFragmentContentSink.h',
+    'nsIHTMLContentSink.h',
+    'nsIParser.h',
+    'nsIParserService.h',
+    'nsITokenizer.h',
+    'nsParserBase.h',
+    'nsParserCIID.h',
+    'nsParserConstants.h',
+    'nsScannerString.h',
+    'nsToken.h',
+]
+
+UNIFIED_SOURCES += [
+    'CNavDTD.cpp',
+    'CParserContext.cpp',
+    'nsElementTable.cpp',
+    'nsExpatDriver.cpp',
+    'nsHTMLEntities.cpp',
+    'nsHTMLTags.cpp',
+    'nsHTMLTokenizer.cpp',
+    'nsParser.cpp',
+    'nsParserModule.cpp',
+    'nsParserMsgUtils.cpp',
+    'nsParserService.cpp',
+    'nsScanner.cpp',
+    'nsScannerString.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'
