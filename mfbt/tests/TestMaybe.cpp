@@ -26,7 +26,7 @@ using mozilla::UniquePtr;
 // Work around a bug in Visual Studio 2010 that prevents expressions of the form
 // |decltype(foo)::type| from working. See here:
 // http://stackoverflow.com/questions/14330768/c11-compiler-error-when-using-decltypevar-followed-by-internal-type-of-var
-// GCC 4.4 also appears to have a similar bug.
+// GCC < 4.7 also has a similar bug.
 #if MOZ_IS_MSVC
 #  if MOZ_MSVC_VERSION_AT_LEAST(11)
 #    define DECLTYPE(EXPR) decltype(EXPR)
@@ -35,7 +35,7 @@ using mozilla::UniquePtr;
 #    define DECLTYPE(EXPR) Identity<decltype(EXPR)>::type
 #  endif
 #elif MOZ_IS_GCC
-#  if MOZ_GCC_VERSION_AT_LEAST(4,5,0)
+#  if MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
 #    define DECLTYPE(EXPR) decltype(EXPR)
 #  else
      template<typename T> struct Identity { typedef T type; };
