@@ -115,6 +115,7 @@ function hasBreakpoint(ctx, line) {
   let markers = cm.lineInfo(line).gutterMarkers;
 
   return markers != null &&
+    markers.breakpoints &&
     markers.breakpoints.classList.contains("breakpoint");
 }
 
