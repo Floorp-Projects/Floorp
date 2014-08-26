@@ -589,8 +589,6 @@ AudioCallbackDriver::StartStream()
 void
 AudioCallbackDriver::Stop()
 {
-  MOZ_ASSERT(!NS_IsMainThread(), "This is blocking and should not be called on the main thread.");
-  STREAM_LOG(PR_LOG_DEBUG, ("Stopping audio threads for MediaStreamGraph %p", mGraphImpl));
   if (cubeb_stream_stop(mAudioStream) != CUBEB_OK) {
     NS_WARNING("Could not stop cubeb stream for MSG.");
   }
