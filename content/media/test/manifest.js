@@ -250,6 +250,70 @@ var gInvalidTests = [
   { name:"invalid-preskip.webm", type:"audio/webm; codecs=opus"},
 ];
 
+// Files to check different cases of ogg skeleton information.
+// sample-fisbone-skeleton4.ogv
+// - Skeleton v4, w/ Content-Type,Role,Name,Language,Title for both theora/vorbis
+// sample-fisbone-wrong-header.ogv
+// - Skeleton v4, wrong message field sequence for vorbis
+// multiple-bos-more-header-fields.ogg
+// - Skeleton v3, w/ Content-Type,Role,Name,Language,Title for both theora/vorbis
+// seek.ogv
+// - No skeleton, but theora
+// audio-overhang.ogg
+// - No skeleton, but vorbis
+var gMultitrackInfoOggPlayList = [
+  { name:"sample-fisbone-skeleton4.ogv", type:"video/ogg", duration:5.049 },
+  { name:"sample-fisbone-wrong-header.ogv", type:"video/ogg", duration:5.049 },
+  { name:"multiple-bos-more-header-fileds.ogg", type:"video/ogg", duration:0.431 },
+  { name:"seek.ogv", type:"video/ogg", duration:3.996 },
+  { name:"audio-gaps.ogg", type:"audio/ogg", duration:2.208 }
+];
+// Pre-parsed results of gMultitrackInfoOggPlayList.
+var gOggTrackInfoResults = {
+  "sample-fisbone-skeleton4.ogv" : {
+    "audio_id":" audio_1",
+    "audio_kind":"main",
+    "audio_language":" en-US",
+    "audio_label":" Audio track for test",
+    "video_id":" video_1",
+    "video_kind":"main",
+    "video_language":" fr",
+    "video_label":" Video track for test"
+  },
+  "sample-fisbone-wrong-header.ogv" : {
+    "audio_id":"1",
+    "audio_kind":"main",
+    "audio_language":"",
+    "audio_label":"",
+    "video_id":" video_1",
+    "video_kind":"main",
+    "video_language":" fr",
+    "video_label":" Video track for test"
+  },
+  "multiple-bos-more-header-fileds.ogg" : {
+    "audio_id":"1",
+    "audio_kind":"main",
+    "audio_language":"",
+    "audio_label":"",
+    "video_id":"2",
+    "video_kind":"main",
+    "video_language":"",
+    "video_label":""
+  },
+  "seek.ogv" : {
+    "video_id":"2",
+    "video_kind":"main",
+    "video_language":"",
+    "video_label":""
+  },
+  "audio-gaps.ogg" : {
+    "audio_id":"1",
+    "audio_kind":"main",
+    "audio_language":"",
+    "audio_label":""
+  }
+};
+
 // Converts a path/filename to a file:// URI which we can load from disk.
 // Optionally checks whether the file actually exists on disk at the location
 // we've specified.
