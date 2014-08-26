@@ -738,11 +738,16 @@ Activation::Activation(ThreadSafeContext *cx, Kind kind)
   : cx_(cx),
     compartment_(cx->compartment_),
     prev_(cx->perThreadData->activation_),
+    prevProfiling_(prev_ ? prev_->mostRecentProfiling() : nullptr),
     savedFrameChain_(0),
     hideScriptedCallerCount_(0),
     kind_(kind)
 {
     cx->perThreadData->activation_ = this;
+
+    // Link the activation into the list of profiling activations if needed.
+    if (isProfiling())
+        registerProfiling();
 }
 
 Activation::~Activation()
@@ -750,6 +755,33 @@ Activation::~Activation()
     JS_ASSERT(cx_->perThreadData->activation_ == this);
     JS_ASSERT(hideScriptedCallerCount_ == 0);
     cx_->perThreadData->activation_ = prev_;
+
+    if (isProfiling())
+        unregisterProfiling();
+}
+
+bool
+Activation::isProfiling() const
+{
+    if (isInterpreter())
+        return asInterpreter()->isProfiling();
+
+    if (isJit())
+        return asJit()->isProfiling();
+
+    if (isForkJoin())
+        return asForkJoin()->isProfiling();
+
+    JS_ASSERT(isAsmJS());
+    return asAsmJS()->isProfiling();
+}
+
+Activation *
+Activation::mostRecentProfiling()
+{
+    if (isProfiling())
+        return this;
+    return prevProfiling_;
 }
 
 InterpreterActivation::InterpreterActivation(RunState &state, JSContext *cx,
