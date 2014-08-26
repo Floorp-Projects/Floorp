@@ -8,20 +8,29 @@ var app = express();
 var port = process.env.PORT || 3000;
 var loopServerPort = process.env.LOOP_SERVER_PORT || 5000;
 
-app.get('/content/config.js', function (req, res) {
+function getConfigFile(req, res) {
   "use strict";
 
   res.set('Content-Type', 'text/javascript');
   res.send(
     "var loop = loop || {};" +
     "loop.config = loop.config || {};" +
-    "loop.config.serverUrl = 'http://localhost:" + loopServerPort + "';"
+    "loop.config.serverUrl = 'http://localhost:" + loopServerPort + "';" +
+    "loop.config.pendingCallTimeout = 20000;"
   );
+}
 
-});
+app.get('/content/config.js', getConfigFile);
 
 // This lets /test/ be mapped to the right place for running tests
 app.use('/', express.static(__dirname + '/../'));
+
+// Magic so that the legal content works both in the standalone server
+// and as static content in the loop-client repo
+app.use('/', express.static(__dirname + '/content/'));
+app.use('/shared', express.static(__dirname + '/../content/shared/'));
+app.get('/config.js', getConfigFile);
+
 // This lets /content/ be mapped right for the static contents.
 app.use('/', express.static(__dirname + '/'));
 // This lets standalone components load images into the UI showcase
