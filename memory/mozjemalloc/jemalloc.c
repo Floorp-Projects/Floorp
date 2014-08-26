@@ -193,10 +193,6 @@
  */
 #define MALLOC_VALIDATE
 
-#ifdef MOZ_VALGRIND
-#  include <valgrind/valgrind.h>
-#endif
-
 /*
  * MALLOC_BALANCE enables monitoring of arena lock contention and dynamically
  * re-balances arena load if exponentially averaged contention exceeds a
@@ -3378,15 +3374,6 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 {
 	arena_run_t *run;
 	size_t i;
-
-#ifdef MOZ_VALGRIND
-	if (RUNNING_ON_VALGRIND) {
-		fprintf(stderr, "ERROR: Cannot run Valgrind with jemalloc enabled.\n");
-		fprintf(stderr, "Please build with --disable-jemalloc, or run Valgrind with\n");
-		fprintf(stderr, "--soname-synonyms=somalloc=NONE.\n");
-		jemalloc_crash();
-	}
-#endif
 
 #ifdef MALLOC_STATS
 	arena->stats.mapped += chunksize;
