@@ -490,20 +490,20 @@ nsEditorEventListener::KeyUp(nsIDOMKeyEvent* aKeyEvent)
 {
   NS_ENSURE_TRUE(aKeyEvent, NS_OK);
 
-  if (mHaveBidiKeyboards) {
-    uint32_t keyCode = 0;
-    aKeyEvent->GetKeyCode(&keyCode);
-    if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT ||
-        keyCode == nsIDOMKeyEvent::DOM_VK_CONTROL) {
-      if (mShouldSwitchTextDirection && mEditor->IsPlaintextEditor()) {
-        mEditor->SwitchTextDirectionTo(mSwitchToRTL ?
-          nsIPlaintextEditor::eEditorRightToLeft :
-          nsIPlaintextEditor::eEditorLeftToRight);
-        mShouldSwitchTextDirection = false;
-      }
-    }
+  if (!mHaveBidiKeyboards) {
+    return NS_OK;
   }
 
+  uint32_t keyCode = 0;
+  aKeyEvent->GetKeyCode(&keyCode);
+  if ((keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT ||
+       keyCode == nsIDOMKeyEvent::DOM_VK_CONTROL) &&
+      mShouldSwitchTextDirection && mEditor->IsPlaintextEditor()) {
+    mEditor->SwitchTextDirectionTo(mSwitchToRTL ?
+      nsIPlaintextEditor::eEditorRightToLeft :
+      nsIPlaintextEditor::eEditorLeftToRight);
+    mShouldSwitchTextDirection = false;
+  }
   return NS_OK;
 }
 
@@ -512,21 +512,22 @@ nsEditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
 {
   NS_ENSURE_TRUE(aKeyEvent, NS_OK);
 
-  if (mHaveBidiKeyboards) {
-    uint32_t keyCode = 0;
-    aKeyEvent->GetKeyCode(&keyCode);
-    if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT) {
-      bool switchToRTL;
-      if (IsCtrlShiftPressed(switchToRTL)) {
-        mShouldSwitchTextDirection = true;
-        mSwitchToRTL = switchToRTL;
-      }
-    } else if (keyCode != nsIDOMKeyEvent::DOM_VK_CONTROL) {
-      // In case the user presses any other key besides Ctrl and Shift
-      mShouldSwitchTextDirection = false;
-    }
+  if (!mHaveBidiKeyboards) {
+    return NS_OK;
   }
 
+  uint32_t keyCode = 0;
+  aKeyEvent->GetKeyCode(&keyCode);
+  if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT) {
+    bool switchToRTL;
+    if (IsCtrlShiftPressed(switchToRTL)) {
+      mShouldSwitchTextDirection = true;
+      mSwitchToRTL = switchToRTL;
+    }
+  } else if (keyCode != nsIDOMKeyEvent::DOM_VK_CONTROL) {
+    // In case the user presses any other key besides Ctrl and Shift
+    mShouldSwitchTextDirection = false;
+  }
   return NS_OK;
 }
 #endif
@@ -560,30 +561,31 @@ nsEditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
     return NS_OK;
   }
 
-  if (ShouldHandleNativeKeyBindings(aKeyEvent)) {
-    // Now, ask the native key bindings to handle the event.
-    WidgetKeyboardEvent* keyEvent =
-      aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
-    MOZ_ASSERT(keyEvent,
-               "DOM key event's internal event must be WidgetKeyboardEvent");
-    nsIWidget* widget = keyEvent->widget;
-    // If the event is created by chrome script, the widget is always nullptr.
-    if (!widget) {
-      nsCOMPtr<nsIPresShell> ps = GetPresShell();
-      nsPresContext* pc = ps ? ps->GetPresContext() : nullptr;
-      widget = pc ? pc->GetNearestWidget() : nullptr;
-      NS_ENSURE_TRUE(widget, NS_OK);
-    }
-
-    nsCOMPtr<nsIDocument> doc = mEditor->GetDocument();
-    bool handled = widget->ExecuteNativeKeyBinding(
-                             nsIWidget::NativeKeyBindingsForRichTextEditor,
-                             *keyEvent, DoCommandCallback, doc);
-    if (handled) {
-      aKeyEvent->PreventDefault();
-    }
+  if (!ShouldHandleNativeKeyBindings(aKeyEvent)) {
+    return NS_OK;
   }
 
+  // Now, ask the native key bindings to handle the event.
+  WidgetKeyboardEvent* keyEvent =
+    aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+  MOZ_ASSERT(keyEvent,
+             "DOM key event's internal event must be WidgetKeyboardEvent");
+  nsIWidget* widget = keyEvent->widget;
+  // If the event is created by chrome script, the widget is always nullptr.
+  if (!widget) {
+    nsCOMPtr<nsIPresShell> ps = GetPresShell();
+    nsPresContext* pc = ps ? ps->GetPresContext() : nullptr;
+    widget = pc ? pc->GetNearestWidget() : nullptr;
+    NS_ENSURE_TRUE(widget, NS_OK);
+  }
+
+  nsCOMPtr<nsIDocument> doc = mEditor->GetDocument();
+  bool handled = widget->ExecuteNativeKeyBinding(
+                           nsIWidget::NativeKeyBindingsForRichTextEditor,
+                           *keyEvent, DoCommandCallback, doc);
+  if (handled) {
+    aKeyEvent->PreventDefault();
+  }
   return NS_OK;
 }
 
@@ -626,60 +628,69 @@ nsEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 
   int16_t button = -1;
   aMouseEvent->GetButton(&button);
-  // middle-mouse click (paste);
   if (button == 1) {
-    if (Preferences::GetBool("middlemouse.paste", false)) {
-      // Set the selection to the point under the mouse cursor:
-      nsCOMPtr<nsIDOMNode> parent;
-      if (NS_FAILED(aMouseEvent->GetRangeParent(getter_AddRefs(parent)))) {
-        return NS_ERROR_NULL_POINTER;
-      }
-      int32_t offset = 0;
-      if (NS_FAILED(aMouseEvent->GetRangeOffset(&offset))) {
-        return NS_ERROR_NULL_POINTER;
-      }
+    return HandleMiddleClickPaste(aMouseEvent);
+  }
+  return NS_OK;
+}
 
-      nsCOMPtr<nsISelection> selection;
-      if (NS_SUCCEEDED(mEditor->GetSelection(getter_AddRefs(selection)))) {
-        selection->Collapse(parent, offset);
-      }
+nsresult
+nsEditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
+{
+  if (!Preferences::GetBool("middlemouse.paste", false)) {
+    // Middle click paste isn't enabled.
+    return NS_OK;
+  }
 
-      // If the ctrl key is pressed, we'll do paste as quotation.
-      // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
-      bool ctrlKey = false;
-      aMouseEvent->GetCtrlKey(&ctrlKey);
+  // Set the selection to the point under the mouse cursor:
+  nsCOMPtr<nsIDOMNode> parent;
+  if (NS_FAILED(aMouseEvent->GetRangeParent(getter_AddRefs(parent)))) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  int32_t offset = 0;
+  if (NS_FAILED(aMouseEvent->GetRangeOffset(&offset))) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-      nsCOMPtr<nsIEditorMailSupport> mailEditor;
-      if (ctrlKey) {
-        mailEditor = do_QueryObject(mEditor);
-      }
+  nsCOMPtr<nsISelection> selection;
+  if (NS_SUCCEEDED(mEditor->GetSelection(getter_AddRefs(selection)))) {
+    selection->Collapse(parent, offset);
+  }
 
-      int32_t clipboard = nsIClipboard::kGlobalClipboard;
-      nsCOMPtr<nsIClipboard> clipboardService =
-        do_GetService("@mozilla.org/widget/clipboard;1", &rv);
-      if (NS_SUCCEEDED(rv)) {
-        bool selectionSupported;
-        rv = clipboardService->SupportsSelectionClipboard(&selectionSupported);
-        if (NS_SUCCEEDED(rv) && selectionSupported) {
-          clipboard = nsIClipboard::kSelectionClipboard;
-        }
-      }
+  // If the ctrl key is pressed, we'll do paste as quotation.
+  // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
+  bool ctrlKey = false;
+  aMouseEvent->GetCtrlKey(&ctrlKey);
 
-      if (mailEditor) {
-        mailEditor->PasteAsQuotation(clipboard);
-      } else {
-        mEditor->Paste(clipboard);
-      }
+  nsCOMPtr<nsIEditorMailSupport> mailEditor;
+  if (ctrlKey) {
+    mailEditor = do_QueryObject(mEditor);
+  }
 
-      // Prevent the event from propagating up to be possibly handled
-      // again by the containing window:
-      aMouseEvent->StopPropagation();
-      aMouseEvent->PreventDefault();
-
-      // We processed the event, whether drop/paste succeeded or not
-      return NS_OK;
+  nsresult rv;
+  int32_t clipboard = nsIClipboard::kGlobalClipboard;
+  nsCOMPtr<nsIClipboard> clipboardService =
+    do_GetService("@mozilla.org/widget/clipboard;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    bool selectionSupported;
+    rv = clipboardService->SupportsSelectionClipboard(&selectionSupported);
+    if (NS_SUCCEEDED(rv) && selectionSupported) {
+      clipboard = nsIClipboard::kSelectionClipboard;
     }
   }
+
+  if (mailEditor) {
+    mailEditor->PasteAsQuotation(clipboard);
+  } else {
+    mEditor->Paste(clipboard);
+  }
+
+  // Prevent the event from propagating up to be possibly handled
+  // again by the containing window:
+  aMouseEvent->StopPropagation();
+  aMouseEvent->PreventDefault();
+
+  // We processed the event, whether drop/paste succeeded or not
   return NS_OK;
 }
 
@@ -749,47 +760,52 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
   if (dropParent->IsEditable() && CanDrop(aDragEvent)) {
     aDragEvent->PreventDefault(); // consumed
 
-    if (mCaret) {
-      int32_t offset = 0;
-      nsresult rv = aDragEvent->GetRangeOffset(&offset);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      mCaret->SetVisible(true);
-      mCaret->SetCaretPosition(parent, offset);
-    }
-  } else {
-    if (!IsFileControlTextBox()) {
-      // This is needed when dropping on an input, to prevent the editor for
-      // the editable parent from receiving the event.
-      aDragEvent->StopPropagation();
+    if (!mCaret) {
+      return NS_OK;
     }
 
-    if (mCaret) {
-      mCaret->SetVisible(false);
-    }
+    int32_t offset = 0;
+    nsresult rv = aDragEvent->GetRangeOffset(&offset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mCaret->SetVisible(true);
+    mCaret->SetCaretPosition(parent, offset);
+
+    return NS_OK;
   }
 
+  if (!IsFileControlTextBox()) {
+    // This is needed when dropping on an input, to prevent the editor for
+    // the editable parent from receiving the event.
+    aDragEvent->StopPropagation();
+  }
+
+  if (mCaret) {
+    mCaret->SetVisible(false);
+  }
   return NS_OK;
 }
 
 void
 nsEditorEventListener::CleanupDragDropCaret()
 {
-  if (mCaret) {
-    mCaret->SetVisible(false);    // hide it, so that it turns off its timer
-
-    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-    if (presShell) {
-      nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
-      if (selCon) {
-        selCon->SetCaretEnabled(false);
-      }
-      presShell->RestoreCaret();
-    }
-
-    mCaret->Terminate();
-    mCaret = nullptr;
+  if (!mCaret) {
+    return;
   }
+
+  mCaret->SetVisible(false);    // hide it, so that it turns off its timer
+
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  if (presShell) {
+    nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
+    if (selCon) {
+      selCon->SetCaretEnabled(false);
+    }
+    presShell->RestoreCaret();
+  }
+
+  mCaret->Terminate();
+  mCaret = nullptr;
 }
 
 nsresult
@@ -882,48 +898,51 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   nsresult rv = sourceNode->GetOwnerDocument(getter_AddRefs(sourceDoc));
   NS_ENSURE_SUCCESS(rv, false);
 
-  // source and dest are the same document; disallow drops within the selection
-  if (domdoc == sourceDoc) {
-    nsCOMPtr<nsISelection> selection;
-    rv = mEditor->GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(rv) || !selection) {
+  // If the source and the dest are not same document, allow to drop it always.
+  if (domdoc != sourceDoc) {
+    return true;
+  }
+
+  nsCOMPtr<nsISelection> selection;
+  rv = mEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv) || !selection) {
+    return false;
+  }
+
+  // If selection is collapsed, allow to drop it always.
+  if (selection->Collapsed()) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDOMNode> parent;
+  rv = aEvent->GetRangeParent(getter_AddRefs(parent));
+  if (NS_FAILED(rv) || !parent) {
+    return false;
+  }
+
+  int32_t offset = 0;
+  rv = aEvent->GetRangeOffset(&offset);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  int32_t rangeCount;
+  rv = selection->GetRangeCount(&rangeCount);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  for (int32_t i = 0; i < rangeCount; i++) {
+    nsCOMPtr<nsIDOMRange> range;
+    rv = selection->GetRangeAt(i, getter_AddRefs(range));
+    if (NS_FAILED(rv) || !range) {
+      // Don't bail yet, iterate through them all
+      continue;
+    }
+
+    bool inRange = true;
+    range->IsPointInRange(parent, offset, &inRange);
+    if (inRange) {
+      // Okay, now you can bail, we are over the orginal selection
       return false;
     }
-
-    // Don't bother if collapsed - can always drop
-    if (!selection->Collapsed()) {
-      nsCOMPtr<nsIDOMNode> parent;
-      rv = aEvent->GetRangeParent(getter_AddRefs(parent));
-      if (NS_FAILED(rv) || !parent) {
-        return false;
-      }
-
-      int32_t offset = 0;
-      rv = aEvent->GetRangeOffset(&offset);
-      NS_ENSURE_SUCCESS(rv, false);
-
-      int32_t rangeCount;
-      rv = selection->GetRangeCount(&rangeCount);
-      NS_ENSURE_SUCCESS(rv, false);
-
-      for (int32_t i = 0; i < rangeCount; i++) {
-        nsCOMPtr<nsIDOMRange> range;
-        rv = selection->GetRangeAt(i, getter_AddRefs(range));
-        if (NS_FAILED(rv) || !range) {
-          // Don't bail yet, iterate through them all
-          continue;
-        }
-
-        bool inRange = true;
-        range->IsPointInRange(parent, offset, &inRange);
-        if (inRange) {
-          // Okay, now you can bail, we are over the orginal selection
-          return false;
-        }
-      }
-    }
   }
-  
   return true;
 }
 
@@ -1018,11 +1037,9 @@ nsEditorEventListener::Blur(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMElement> element;
   fm->GetFocusedElement(getter_AddRefs(element));
-  if (element) {
-    return NS_OK;
+  if (!element) {
+    mEditor->FinalizeSelection();
   }
-
-  mEditor->FinalizeSelection();
   return NS_OK;
 }
 
@@ -1043,15 +1060,15 @@ bool
 nsEditorEventListener::IsFileControlTextBox()
 {
   dom::Element* root = mEditor->GetRoot();
-  if (root && root->ChromeOnlyAccess()) {
-    nsIContent* parent = root->FindFirstNonChromeOnlyAccessContent();
-    if (parent && parent->IsHTML(nsGkAtoms::input)) {
-      nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(parent);
-      MOZ_ASSERT(formControl);
-      return formControl->GetType() == NS_FORM_INPUT_FILE;
-    }
+  if (!root || !root->ChromeOnlyAccess()) {
+    return false;
   }
-  return false;
+  nsIContent* parent = root->FindFirstNonChromeOnlyAccessContent();
+  if (!parent || !parent->IsHTML(nsGkAtoms::input)) {
+    return false;
+  }
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(parent);
+  return formControl->GetType() == NS_FORM_INPUT_FILE;
 }
 
 bool
@@ -1091,4 +1108,3 @@ nsEditorEventListener::ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent)
 
   return nsContentUtils::ContentIsDescendantOf(targetContent, editingHost);
 }
-
