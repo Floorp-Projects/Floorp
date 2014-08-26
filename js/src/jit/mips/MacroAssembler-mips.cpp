@@ -52,9 +52,9 @@ MacroAssemblerMIPS::convertInt32ToDouble(const Address &src, FloatRegister dest)
 void
 MacroAssemblerMIPS::convertUInt32ToDouble(Register src, FloatRegister dest)
 {
-    // We use SecondScratchFloatReg because MacroAssembler::loadFromTypedArray
-    // calls with ScratchFloatReg as dest.
-    MOZ_ASSERT(dest != SecondScratchFloatReg);
+    // We use SecondScratchDoubleReg because MacroAssembler::loadFromTypedArray
+    // calls with ScratchDoubleReg as dest.
+    MOZ_ASSERT(dest != SecondScratchDoubleReg);
 
     // Subtract INT32_MIN to get a positive number
     ma_subu(ScratchRegister, src, Imm32(INT32_MIN));
@@ -64,8 +64,8 @@ MacroAssemblerMIPS::convertUInt32ToDouble(Register src, FloatRegister dest)
     as_cvtdw(dest, dest);
 
     // Add unsigned value of INT32_MIN
-    ma_lid(SecondScratchFloatReg, 2147483648.0);
-    as_addd(dest, dest, SecondScratchFloatReg);
+    ma_lid(SecondScratchDoubleReg, 2147483648.0);
+    as_addd(dest, dest, SecondScratchDoubleReg);
 }
 
 void
@@ -101,10 +101,11 @@ MacroAssemblerMIPS::branchTruncateDouble(FloatRegister src, Register dest,
                                          Label *fail)
 {
     Label test, success;
-    as_truncwd(ScratchFloatReg, src);
-    as_mfc1(dest, ScratchFloatReg);
+    as_truncwd(ScratchDoubleReg, src);
+    as_mfc1(dest, ScratchDoubleReg);
 
     ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
+    ma_b(dest, Imm32(INT32_MIN), fail, Assembler::Equal);
 }
 
 // Checks whether a double is representable as a 32-bit integer. If so, the
@@ -116,10 +117,10 @@ MacroAssemblerMIPS::convertDoubleToInt32(FloatRegister src, Register dest,
 {
     // Convert double to int, then convert back and check if we have the
     // same number.
-    as_cvtwd(ScratchFloatReg, src);
-    as_mfc1(dest, ScratchFloatReg);
-    as_cvtdw(ScratchFloatReg, ScratchFloatReg);
-    ma_bc1d(src, ScratchFloatReg, fail, Assembler::DoubleNotEqualOrUnordered);
+    as_cvtwd(ScratchDoubleReg, src);
+    as_mfc1(dest, ScratchDoubleReg);
+    as_cvtdw(ScratchDoubleReg, ScratchDoubleReg);
+    ma_bc1d(src, ScratchDoubleReg, fail, Assembler::DoubleNotEqualOrUnordered);
 
     if (negativeZeroCheck) {
         Label notZero;
@@ -143,10 +144,10 @@ MacroAssemblerMIPS::convertFloat32ToInt32(FloatRegister src, Register dest,
     // convert the floating point value to an integer, if it did not fit, then
     // when we convert it *back* to  a float, it will have a different value,
     // which we can test.
-    as_cvtws(ScratchFloatReg, src);
-    as_mfc1(dest, ScratchFloatReg);
-    as_cvtsw(ScratchFloatReg, ScratchFloatReg);
-    ma_bc1s(src, ScratchFloatReg, fail, Assembler::DoubleNotEqualOrUnordered);
+    as_cvtws(ScratchFloat32Reg, src);
+    as_mfc1(dest, ScratchFloat32Reg);
+    as_cvtsw(ScratchFloat32Reg, ScratchFloat32Reg);
+    ma_bc1s(src, ScratchFloat32Reg, fail, Assembler::DoubleNotEqualOrUnordered);
 
     if (negativeZeroCheck) {
         Label notZero;
@@ -171,8 +172,8 @@ MacroAssemblerMIPS::branchTruncateFloat32(FloatRegister src, Register dest,
                                           Label *fail)
 {
     Label test, success;
-    as_truncws(ScratchFloatReg, src);
-    as_mfc1(dest, ScratchFloatReg);
+    as_truncws(ScratchFloat32Reg, src);
+    as_mfc1(dest, ScratchFloat32Reg);
 
     ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
 }
@@ -1429,7 +1430,7 @@ MacroAssemblerMIPS::ma_ss(FloatRegister ft, BaseIndex address)
 void
 MacroAssemblerMIPS::ma_pop(FloatRegister fs)
 {
-    ma_ld(fs, Address(StackPointer, 0));
+    ma_ld(fs.doubleOverlay(0), Address(StackPointer, 0));
     as_addiu(StackPointer, StackPointer, sizeof(double));
 }
 
@@ -1437,7 +1438,7 @@ void
 MacroAssemblerMIPS::ma_push(FloatRegister fs)
 {
     as_addiu(StackPointer, StackPointer, -sizeof(double));
-    ma_sd(fs, Address(StackPointer, 0));
+    ma_sd(fs.doubleOverlay(0), Address(StackPointer, 0));
 }
 
 void
@@ -1560,7 +1561,7 @@ void
 MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 {
     JS_ASSERT(!SupportsSimd && simdSet.size() == 0);
-    int32_t diffF = set.fpus().size() * sizeof(double);
+    int32_t diffF = set.fpus().getPushSizeInBytes();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
     reserveStack(diffG);
@@ -1576,12 +1577,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
     ma_and(SecondScratchReg, sp, Imm32(~(StackAlignment - 1)));
     reserveStack(diffF + sizeof(double));
 
-    for (FloatRegisterForwardIterator iter(set.fpus()); iter.more(); iter++) {
-        // Use assembly s.d because we have alligned the stack.
-        // :TODO: (Bug 972836) Fix this once odd regs can be used as
-        // float32 only. For now we skip saving odd regs for O32 ABI.
-
-        // :TODO: (Bug 985881) Make a switch for N32 ABI.
+    for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); iter++) {
         if ((*iter).code() % 2 == 0)
             as_sd(*iter, SecondScratchReg, -diffF);
         diffF -= sizeof(double);
@@ -1594,7 +1590,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
 {
     JS_ASSERT(!SupportsSimd && simdSet.size() == 0);
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
-    int32_t diffF = set.fpus().size() * sizeof(double);
+    int32_t diffF = set.fpus().getPushSizeInBytes();
     const int32_t reservedG = diffG;
     const int32_t reservedF = diffF;
 
@@ -1602,11 +1598,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
     ma_addu(SecondScratchReg, sp, Imm32(reservedF + sizeof(double)));
     ma_and(SecondScratchReg, SecondScratchReg, Imm32(~(StackAlignment - 1)));
 
-    for (FloatRegisterForwardIterator iter(set.fpus()); iter.more(); iter++) {
-        // :TODO: (Bug 972836) Fix this once odd regs can be used as
-        // float32 only. For now we skip loading odd regs for O32 ABI.
-
-        // :TODO: (Bug 985881) Make a switch for N32 ABI.
+    for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); iter++) {
         if (!ignore.has(*iter) && ((*iter).code() % 2 == 0))
             // Use assembly l.d because we have alligned the stack.
             as_ld(*iter, SecondScratchReg, -diffF);
@@ -2069,12 +2061,12 @@ MacroAssemblerMIPSCompat::storePtr(Register src, AbsoluteAddress dest)
 void
 MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 {
-    JS_ASSERT(input != ScratchFloatReg);
+    JS_ASSERT(input != ScratchDoubleReg);
     Label positive, done;
 
     // <= 0 or NaN --> 0
-    zeroDouble(ScratchFloatReg);
-    branchDouble(DoubleGreaterThan, input, ScratchFloatReg, &positive);
+    zeroDouble(ScratchDoubleReg);
+    branchDouble(DoubleGreaterThan, input, ScratchDoubleReg, &positive);
     {
         move32(Imm32(0), output);
         jump(&done);
@@ -2083,8 +2075,8 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     bind(&positive);
 
     // Add 0.5 and truncate.
-    loadConstantDouble(0.5, ScratchFloatReg);
-    addDouble(ScratchFloatReg, input);
+    loadConstantDouble(0.5, ScratchDoubleReg);
+    addDouble(ScratchDoubleReg, input);
 
     Label outOfRange;
 
@@ -2092,8 +2084,8 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     branch32(Assembler::Above, output, Imm32(255), &outOfRange);
     {
         // Check if we had a tie.
-        convertInt32ToDouble(output, ScratchFloatReg);
-        branchDouble(DoubleNotEqual, input, ScratchFloatReg, &done);
+        convertInt32ToDouble(output, ScratchDoubleReg);
+        branchDouble(DoubleNotEqual, input, ScratchDoubleReg, &done);
 
         // It was a tie. Mask out the ones bit to get an even value.
         // See also js_TypedArray_uint8_clamp_double.
@@ -2533,7 +2525,6 @@ MacroAssemblerMIPSCompat::unboxBoolean(const Address &src, Register dest)
 void
 MacroAssemblerMIPSCompat::unboxDouble(const ValueOperand &operand, FloatRegister dest)
 {
-    MOZ_ASSERT(dest != ScratchFloatReg);
     moveToDoubleLo(operand.payloadReg(), dest);
     moveToDoubleHi(operand.typeReg(), dest);
 }
@@ -2713,9 +2704,9 @@ MacroAssemblerMIPSCompat::branchTestStringTruthy(bool b, const ValueOperand &val
 void
 MacroAssemblerMIPSCompat::branchTestDoubleTruthy(bool b, FloatRegister value, Label *label)
 {
-    ma_lid(ScratchFloatReg, 0.0);
+    ma_lid(ScratchDoubleReg, 0.0);
     DoubleCondition cond = b ? DoubleNotEqual : DoubleEqualOrUnordered;
-    ma_bc1d(value, ScratchFloatReg, label, cond);
+    ma_bc1d(value, ScratchDoubleReg, label, cond);
 }
 
 void

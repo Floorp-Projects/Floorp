@@ -14,6 +14,10 @@
 # error "Wrong architecture. Only x86 and x64 should build this file!"
 #endif
 
+#ifdef _MSC_VER
+# include <intrin.h> // for __cpuid
+#endif
+
 using namespace js;
 using namespace js::jit;
 
@@ -130,4 +134,62 @@ AssemblerX86Shared::InvertCondition(Condition cond)
       default:
         MOZ_CRASH("unexpected condition");
     }
+}
+
+CPUInfo::SSEVersion CPUInfo::maxSSEVersion = UnknownSSE;
+CPUInfo::SSEVersion CPUInfo::maxEnabledSSEVersion = UnknownSSE;
+
+void
+CPUInfo::SetSSEVersion()
+{
+    int flagsEDX = 0;
+    int flagsECX = 0;
+
+#ifdef _MSC_VER
+    int cpuinfo[4];
+    __cpuid(cpuinfo, 1);
+    flagsECX = cpuinfo[2];
+    flagsEDX = cpuinfo[3];
+#elif defined(__GNUC__)
+# ifdef JS_CODEGEN_X64
+    asm (
+         "movl $0x1, %%eax;"
+         "cpuid;"
+         : "=c" (flagsECX), "=d" (flagsEDX)
+         :
+         : "%eax", "%ebx"
+         );
+# else
+    // On x86, preserve ebx. The compiler needs it for PIC mode.
+    asm (
+         "movl $0x1, %%eax;"
+         "pushl %%ebx;"
+         "cpuid;"
+         "popl %%ebx;"
+         : "=c" (flagsECX), "=d" (flagsEDX)
+         :
+         : "%eax"
+         );
+# endif
+#else
+# error "Unsupported compiler"
+#endif
+
+    static const int SSEBit = 1 << 25;
+    static const int SSE2Bit = 1 << 26;
+    static const int SSE3Bit = 1 << 0;
+    static const int SSSE3Bit = 1 << 9;
+    static const int SSE41Bit = 1 << 19;
+    static const int SSE42Bit = 1 << 20;
+
+    if (flagsECX & SSE42Bit)      maxSSEVersion = SSE4_2;
+    else if (flagsECX & SSE41Bit) maxSSEVersion = SSE4_1;
+    else if (flagsECX & SSSE3Bit) maxSSEVersion = SSSE3;
+    else if (flagsECX & SSE3Bit)  maxSSEVersion = SSE3;
+    else if (flagsEDX & SSE2Bit)  maxSSEVersion = SSE2;
+    else if (flagsEDX & SSEBit)   maxSSEVersion = SSE;
+    else                          maxSSEVersion = NoSSE;
+
+    if (maxEnabledSSEVersion != UnknownSSE)
+        maxSSEVersion = Min(maxSSEVersion, maxEnabledSSEVersion);
 }
