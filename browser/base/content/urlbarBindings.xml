@@ -1650,7 +1650,7 @@
                 sizetopopup="none">
                 <xul:menupopup>
                   <xul:menuitem anonid="trackingContentAction.unblock"
-                    hidden="true" label="&trackingContentBlocked.unblock.label;"
+                    hidden="true" label="&trackingContentBlocked.unblock.label2;"
                     oncommand="document.getBindingParent(this).disableTrackingContentProtection();"/>
                   <xul:menuitem anonid="trackingContentAction.block"
                     hidden="true" label="&trackingContentBlocked.block.label;"
