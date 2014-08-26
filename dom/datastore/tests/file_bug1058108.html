@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - basic operation on a readonly db</title>
+  <script type="text/javascript" src="file_basic_common.js"></script>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+function ok(a, msg) {
+  alert((a ? 'OK' : 'KO') + ' ' + msg)
+}
+
+function finish() {
+  alert('DONE');
+}
+
+navigator.getDataStores('foo').then(function(stores) {
+  is(stores.length, 1, "getDataStores('foo') returns 1 element");
+  is(stores[0].name, 'foo', 'The dataStore.name is foo');
+  is(stores[0].readOnly, false, 'The dataStore foo is not in readonly');
+
+  var store = stores[0];
+  store.get.apply(store, []).then(function(a) {
+    ok(Array.isArray(a), "bug 1058108");
+    is(a.length, 0, "bug 1058108");
+    finish();
+  });
+});
+
+  </script>
+</body>
+</html>
+
