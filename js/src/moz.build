@@ -376,12 +376,6 @@ else:
         'jit/ExecutableAllocatorPosix.cpp',
     ]
 
-if CONFIG['ENABLE_ION']:
-    if CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
-        SOURCES += [
-            'assembler/assembler/MacroAssemblerX86Common.cpp',
-        ]
-
 if CONFIG['JS_HAS_CTYPES']:
     SOURCES += [
         'ctypes/CTypes.cpp',

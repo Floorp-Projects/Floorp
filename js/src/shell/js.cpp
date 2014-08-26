@@ -3862,7 +3862,7 @@ EscapeForShell(AutoCStringVector &argv)
 
 static Vector<const char*, 4, js::SystemAllocPolicy> sPropagatedFlags;
 
-#if defined(DEBUG) && (defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64))
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 static bool
 PropagateFlagToNestedShells(const char *flag)
 {
@@ -6175,24 +6175,23 @@ main(int argc, char **argv, char **envp)
      * allocations as possible.
      */
     OOM_printAllocationCount = op.getBoolOption('O');
+#endif
 
 #ifdef JS_CODEGEN_X86
     if (op.getBoolOption("no-fpu"))
-        JSC::MacroAssemblerX86Common::SetFloatingPointDisabled();
+        js::jit::CPUInfo::SetFloatingPointDisabled();
 #endif
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     if (op.getBoolOption("no-sse3")) {
-        JSC::MacroAssemblerX86Common::SetSSE3Disabled();
+        js::jit::CPUInfo::SetSSE3Disabled();
         PropagateFlagToNestedShells("--no-sse3");
     }
     if (op.getBoolOption("no-sse4")) {
-        JSC::MacroAssemblerX86Common::SetSSE4Disabled();
+        js::jit::CPUInfo::SetSSE4Disabled();
         PropagateFlagToNestedShells("--no-sse4");
     }
 #endif
-
-#endif // DEBUG
 
     if (op.getBoolOption("no-threads"))
         js::DisableExtraThreads();
