@@ -115,7 +115,9 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd)
     if (box.IsType("tfhd")) {
       tfhd = Tfhd(box, aTrex);
     } else if (box.IsType("tfdt")) {
-      tfdt = Tfdt(box);
+      if (!aTrex.mTrackId || tfhd.mTrackId == aTrex.mTrackId) {
+        tfdt = Tfdt(box);
+      }
     } else if (box.IsType("trun")) {
       if (!aTrex.mTrackId || tfhd.mTrackId == aTrex.mTrackId) {
         ParseTrun(box, tfhd, tfdt, aMdhd);
