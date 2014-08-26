@@ -425,7 +425,7 @@ skip-if(B2G&&browserIsRemote) == 321402-6.xul 321402-6-ref.xul # bug 974780
 random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 328829-2.xhtml 328829-2-ref.xhtml
 == 329359-1.html 329359-1-ref.html
-skip-if(B2G) == 331809-1.html 331809-1-ref.html # bug 580499 is blacked out, bug 839735
+== 331809-1.html 331809-1-ref.html # bug 580499 is blacked out
 == 332360.html 332360-ref.html
 == 332360-ltr.html 332360-ltr-ref.html
 == 332360-width.html 332360-ref.html
@@ -1291,9 +1291,9 @@ random-if(d2d) skip-if(B2G&&browserIsRemote) == 478377-1.xul 478377-1-ref.xul # 
 == 478614-6.html 478614-6-ref.html
 == 478614-7.html 478614-7-ref.html
 skip-if(B2G) == 478811-1.html 478811-1-ref.html
-skip-if(B2G) == 478811-2.html 478811-2-ref.html # bug 839735
-skip-if(B2G) == 478811-3.html 478811-3-ref.html # bug 839735
-skip-if(B2G) == 478811-4.html 478811-4-ref.html # bug 839735
+== 478811-2.html 478811-2-ref.html
+== 478811-3.html 478811-3-ref.html
+== 478811-4.html 478811-4-ref.html
 == 478956-1a.html 478956-1-ref.html
 == 478956-1b.html 478956-1-ref.html
 == 480017-1.html 480017-1-ref.html
@@ -1445,7 +1445,7 @@ random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 528038-1f.html 528038-1-ref.html
 == 528038-2.html 528038-2-ref.html
 == 528096-1.html 528096-1-ref.html
-skip-if(B2G) == 530686-1.html 530686-1-ref.html # bug 839735
+== 530686-1.html 530686-1-ref.html
 == 531098-1.html 531098-1-ref.html
 == 531200-1.html 531200-1-ref.html
 == 531371-1.html 531371-1-ref.html
@@ -1656,7 +1656,7 @@ skip-if(B2G) random-if(d2d) fuzzy-if(winWidget&&!d2d,1,15) == 635373-3.html 6353
 HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
-skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-1.html 637852-1-ref.html # bug 839735
+fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-1.html 637852-1-ref.html
 fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-2.html 637852-2-ref.html
 fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-3.html 637852-3-ref.html
 skip-if(B2G) == 641770-1.html 641770-1-ref.html
