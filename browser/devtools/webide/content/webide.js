@@ -561,11 +561,7 @@ let UI = {
 
       // If connected and a project is selected
       if (AppManager.selectedProject.type == "runtimeApp") {
-        if (isProjectRunning) {
-          playCmd.setAttribute("disabled", "true");
-        } else {
-          playCmd.removeAttribute("disabled");
-        }
+        playCmd.removeAttribute("disabled");
       } else if (AppManager.selectedProject.type == "mainProcess") {
         playCmd.setAttribute("disabled", "true");
         stopCmd.setAttribute("disabled", "true");
