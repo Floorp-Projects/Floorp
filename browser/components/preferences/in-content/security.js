@@ -12,8 +12,25 @@ var gSecurityPane = {
    */
   init: function ()
   {
+    function setEventListener(aId, aEventType, aCallback)
+    {
+      document.getElementById(aId)
+              .addEventListener(aEventType, aCallback.bind(gSecurityPane));
+    }
+
     this._pane = document.getElementById("paneSecurity");
     this._initMasterPasswordUI();
+
+    setEventListener("addonExceptions", "command",
+      gSecurityPane.showAddonExceptions);
+    setEventListener("passwordExceptions", "command",
+      gSecurityPane.showPasswordExceptions);
+    setEventListener("useMasterPassword", "command",
+      gSecurityPane.updateMasterPasswordButton);
+    setEventListener("changeMasterPassword", "command",
+      gSecurityPane.changeMasterPassword);
+    setEventListener("showPasswords", "command",
+      gSecurityPane.showPasswords);
   },
 
   // ADD-ONS
