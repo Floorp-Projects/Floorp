@@ -998,12 +998,13 @@ nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   LOG(PR_LOG_DEBUG, ("Reader [%p] for Decoder [%p]: About to seek to %fs",
-                     this, mDecoder, aTarget/1000000.0));
+                     this, mDecoder, double(aTarget) / USECS_PER_S));
   if (NS_FAILED(ResetDecode())) {
     return NS_ERROR_FAILURE;
   }
   uint32_t trackToSeek = mHasVideo ? mVideoTrack : mAudioTrack;
   uint64_t target = aTarget * NS_PER_USEC;
+
   if (mSeekPreroll) {
     target = std::max(static_cast<uint64_t>(aStartTime * NS_PER_USEC), target - mSeekPreroll);
   }
@@ -1011,12 +1012,14 @@ nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
   if (r != 0) {
     // Try seeking directly based on cluster information in memory.
     int64_t offset = 0;
-    bool rv = mBufferedState->GetOffsetForTime((aTarget - aStartTime)/NS_PER_USEC, &offset);
+    bool rv = mBufferedState->GetOffsetForTime(target, &offset);
     if (!rv) {
       return NS_ERROR_FAILURE;
     }
 
     r = nestegg_offset_seek(mContext, offset);
+    LOG(PR_LOG_DEBUG, ("Reader [%p]: track_seek for %u failed, offset_seek to %lld r=%d",
+                       this, trackToSeek, offset, r));
     if (r != 0) {
       return NS_ERROR_FAILURE;
     }
@@ -1079,7 +1082,7 @@ void WebMReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_
 int64_t WebMReader::GetEvictionOffset(double aTime)
 {
   int64_t offset;
-  if (!mBufferedState->GetOffsetForTime(aTime / NS_PER_USEC, &offset)) {
+  if (!mBufferedState->GetOffsetForTime(aTime * NS_PER_S, &offset)) {
     return -1;
   }
 
