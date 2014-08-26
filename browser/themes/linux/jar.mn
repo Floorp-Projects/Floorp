@@ -6,7 +6,6 @@ browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 % override chrome://global/skin/icons/warning-16.png moz-icon://stock/gtk-dialog-warning?size=menu
   skin/classic/browser/sanitizeDialog.css
-* skin/classic/browser/aboutPrivateBrowsing.css
 * skin/classic/browser/aboutSessionRestore.css
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutWelcomeBack.css                     (../shared/aboutWelcomeBack.css)
@@ -35,6 +34,8 @@ browser.jar:
   skin/classic/browser/identity-icons-https-mixed-active.png
   skin/classic/browser/identity-icons-https-mixed-display.png
   skin/classic/browser/Info.png
+  skin/classic/browser/mask.png                             (../shared/mask.png)
+  skin/classic/browser/mask@2x.png                          (../shared/mask@2x.png)
   skin/classic/browser/menuPanel.png
   skin/classic/browser/menuPanel-customize.png
   skin/classic/browser/menuPanel-exit.png
@@ -55,7 +56,6 @@ browser.jar:
   skin/classic/browser/pointerLock-16.png
   skin/classic/browser/pointerLock-64.png
   skin/classic/browser/Privacy-16.png
-  skin/classic/browser/Privacy-48.png
   skin/classic/browser/privatebrowsing-mask.png
   skin/classic/browser/reload-stop-go.png
   skin/classic/browser/searchbar.css
