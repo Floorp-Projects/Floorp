@@ -3528,7 +3528,7 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
   else {
     AssertIsOnMainThread();
     RuntimeService::GetDefaultPreferences(mPreferences);
-    mOnLine = !NS_IsOffline() && !NS_IsAppOffline(aLoadInfo.mPrincipal);
+    mOnLine = !NS_IsOffline();
   }
 }
 
