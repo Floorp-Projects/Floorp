@@ -130,7 +130,8 @@ MediaCodecReader::TrackInputCopier::Copy(MediaBuffer* aSourceBuffer,
 }
 
 MediaCodecReader::Track::Track()
-  : mDurationUs(INT64_C(0))
+  : mSourceIsStopped(true)
+  , mDurationUs(INT64_C(0))
   , mInputIndex(sInvalidInputIndex)
   , mInputEndOfStream(false)
   , mOutputEndOfStream(false)
@@ -220,12 +221,22 @@ MediaCodecReader::IsWaitingMediaResources()
 bool
 MediaCodecReader::IsDormantNeeded()
 {
-  return mVideoTrack.mCodec != nullptr;
+  return mVideoTrack.mSource != nullptr;
 }
 
 void
 MediaCodecReader::ReleaseMediaResources()
 {
+  // Stop the mSource because we are in the dormant state and the stop function
+  // will rewind the mSource to the beginning of the stream.
+  if (mVideoTrack.mSource != nullptr) {
+    mVideoTrack.mSource->stop();
+    mVideoTrack.mSourceIsStopped = true;
+  }
+  if (mAudioTrack.mSource != nullptr) {
+    mAudioTrack.mSource->stop();
+    mAudioTrack.mSourceIsStopped = true;
+  }
   ReleaseCriticalResources();
 }
 
@@ -836,6 +847,7 @@ MediaCodecReader::CreateMediaSources()
     sp<MediaSource> audioSource = mExtractor->getTrack(audioTrackIndex);
     if (audioSource != nullptr && audioSource->start() == OK) {
       mAudioTrack.mSource = audioSource;
+      mAudioTrack.mSourceIsStopped = false;
     }
     // Get one another track instance for audio offload playback.
     mAudioOffloadTrack.mSource = mExtractor->getTrack(audioTrackIndex);
@@ -845,6 +857,7 @@ MediaCodecReader::CreateMediaSources()
     sp<MediaSource> videoSource = mExtractor->getTrack(videoTrackIndex);
     if (videoSource != nullptr && videoSource->start() == OK) {
       mVideoTrack.mSource = videoSource;
+      mVideoTrack.mSourceIsStopped = false;
     }
   }
 
@@ -1229,6 +1242,14 @@ MediaCodecReader::FillCodecInputData(Track& aTrack)
     }
     MOZ_ASSERT(aTrack.mInputIndex.isValid(), "aElement.mInputIndex should be valid");
 
+    // Start the mSource before we read it.
+    if (aTrack.mSourceIsStopped) {
+      if (aTrack.mSource->start() == OK) {
+        aTrack.mSourceIsStopped = false;
+      } else {
+        return UNKNOWN_ERROR;
+      }
+    }
     MediaBuffer* source_buffer = nullptr;
     status_t status = OK;
     if (IsValidTimestampUs(aTrack.mSeekTimeUs)) {
@@ -1311,7 +1332,7 @@ MediaCodecReader::GetCodecOutputData(Track& aTrack,
       &info.mSize, &info.mTimeUs, &info.mFlags, duration);
     // Check EOS first.
     if (status == ERROR_END_OF_STREAM ||
-        info.mFlags & MediaCodec::BUFFER_FLAG_EOS) {
+        (info.mFlags & MediaCodec::BUFFER_FLAG_EOS)) {
       aBuffer = info;
       aBuffer.mBuffer = aTrack.mOutputBuffers[info.mIndex];
       aTrack.mOutputEndOfStream = true;
