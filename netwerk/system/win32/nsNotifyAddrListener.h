@@ -14,9 +14,6 @@
 #include "nsIObserver.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
-#include "nsIPrefBranch.h"
-
-class nsIPrefBranch;
 
 class nsNotifyAddrListener : public nsINetworkLinkService,
                              public nsIRunnable,
@@ -33,7 +30,6 @@ public:
     nsNotifyAddrListener();
 
     nsresult Init(void);
-    void CheckLinkStatus(void);
 
 protected:
     class ChangeEvent : public nsRunnable {
@@ -52,28 +48,16 @@ protected:
     bool mCheckAttempted;
 
     nsresult Shutdown(void);
-    nsresult SendEvent(const char *aEventID);
+    nsresult SendEventToUI(const char *aEventID);
 
     DWORD CheckAdaptersAddresses(void);
-
-    // Checks for an Internet Connection Sharing (ICS) gateway.
-    bool  CheckICSGateway(PIP_ADAPTER_ADDRESSES aAdapter);
+    bool  CheckIsGateway(PIP_ADAPTER_ADDRESSES aAdapter);
     bool  CheckICSStatus(PWCHAR aAdapterName);
+    void  CheckLinkStatus(void);
 
     nsCOMPtr<nsIThread> mThread;
 
     HANDLE        mShutdownEvent;
-
-private:
-    // read the pref value and set mAllowChangedEvent
-    void updateFromPref(nsIPrefBranch *prefs);
-
-    // This is a checksum of various meta data for all network interfaces
-    // considered UP at last check.
-    ULONG mIPInterfaceChecksum;
-
-    // Network changed events are enabled
-    bool mAllowChangedEvent;
 };
 
 #endif /* NSNOTIFYADDRLISTENER_H_ */

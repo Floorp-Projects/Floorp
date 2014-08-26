@@ -478,8 +478,10 @@ nsHostResolver::ClearPendingQueue(PRCList *aPendingQ)
 }
 
 void
-nsHostResolver::FlushCache()
+nsHostResolver::Shutdown()
 {
+    LOG(("Shutting down host resolver.\n"));
+
     PRCList pendingQHigh, pendingQMed, pendingQLow, evictionQ;
     PR_INIT_CLIST(&pendingQHigh);
     PR_INIT_CLIST(&pendingQMed);
@@ -488,20 +490,23 @@ nsHostResolver::FlushCache()
 
     {
         MutexAutoLock lock(mLock);
+        
+        mShutdown = true;
+
         MoveCList(mHighQ, pendingQHigh);
         MoveCList(mMediumQ, pendingQMed);
         MoveCList(mLowQ, pendingQLow);
         MoveCList(mEvictionQ, evictionQ);
         mEvictionQSize = 0;
         mPendingCount = 0;
-
+        
         if (mNumIdleThreads)
             mIdleThreadCV.NotifyAll();
-
+        
         // empty host database
         PL_DHashTableEnumerate(&mDB, HostDB_RemoveEntry, nullptr);
     }
-
+    
     ClearPendingQueue(&pendingQHigh);
     ClearPendingQueue(&pendingQMed);
     ClearPendingQueue(&pendingQLow);
@@ -514,18 +519,6 @@ nsHostResolver::FlushCache()
             NS_RELEASE(rec);
         }
     }
-}
-
-void
-nsHostResolver::Shutdown()
-{
-    LOG(("Shutting down host resolver.\n"));
-
-    {
-        MutexAutoLock lock(mLock);
-        mShutdown = true;
-    }
-    FlushCache();
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     
