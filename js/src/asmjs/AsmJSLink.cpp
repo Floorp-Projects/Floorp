@@ -77,8 +77,11 @@ GetDataProperty(JSContext *cx, HandleValue objVal, HandlePropertyName field, Mut
     if (!objVal.isObject())
         return LinkFail(cx, "accessing property of non-object");
 
-    Rooted<JSPropertyDescriptor> desc(cx);
     RootedObject obj(cx, &objVal.toObject());
+    if (IsScriptedProxy(obj))
+        return LinkFail(cx, "accessing property of a Proxy");
+
+    Rooted<JSPropertyDescriptor> desc(cx);
     RootedId id(cx, NameToId(field));
     if (!JS_GetPropertyDescriptorById(cx, obj, id, &desc))
         return false;
