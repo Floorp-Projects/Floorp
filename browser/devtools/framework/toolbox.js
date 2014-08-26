@@ -1479,9 +1479,11 @@ Toolbox.prototype = {
     gDevTools.off("pref-changed", this._prefChanged);
 
     this._lastFocusedElement = null;
-    this._saveSplitConsoleHeight();
-    this.webconsolePanel.removeEventListener("resize",
-      this._saveSplitConsoleHeight);
+    if (this.webconsolePanel) {
+      this._saveSplitConsoleHeight();
+      this.webconsolePanel.removeEventListener("resize",
+        this._saveSplitConsoleHeight);
+    }
     this.closeButton.removeEventListener("command", this.destroy, true);
 
     let outstanding = [];
