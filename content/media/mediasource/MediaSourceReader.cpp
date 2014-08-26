@@ -215,9 +215,13 @@ MediaSourceReader::SwitchVideoReader(MediaDecoderReader* aTargetReader)
 bool
 MediaSourceReader::SwitchReaders(SwitchType aType)
 {
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
   InitializePendingDecoders();
+
+  // This monitor must be held after the call to InitializePendingDecoders
+  // as that method also obtains the lock, and then attempts to exit it
+  // to call ReadMetadata on the readers. If we hold it before the call then
+  // it remains held during the ReadMetadata call causing a deadlock.
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   bool didSwitch = false;
   double decodeTarget = double(mTimeThreshold) / USECS_PER_S;
