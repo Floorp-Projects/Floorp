@@ -331,7 +331,6 @@ SystemClockDriver::WaitForNextIteration()
     mWaitState = WAITSTATE_WAITING_FOR_NEXT_ITERATION;
   } else {
     mWaitState = WAITSTATE_WAITING_INDEFINITELY;
-    mGraphImpl->PausedIndefinitly();
   }
   if (timeout > 0) {
     mGraphImpl->GetMonitor().Wait(timeout);
@@ -340,7 +339,6 @@ SystemClockDriver::WaitForNextIteration()
           (TimeStamp::Now() - now).ToSeconds()));
   }
 
-  mGraphImpl->ResumedFromPaused();
   mWaitState = WAITSTATE_RUNNING;
   mNeedAnotherIteration = false;
 }
@@ -445,6 +443,13 @@ AsyncCubebTask::Run()
       mDriver->Stop();
       mDriver = nullptr;
       break;
+    case AsyncCubebOperation::SLEEP: {
+      MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
+      mDriver->Stop();
+      mDriver->mGraphImpl->GetMonitor().Wait(PR_INTERVAL_NO_TIMEOUT);
+      STREAM_LOG(PR_LOG_DEBUG, ("Restarting audio stream from sleep."));
+      mDriver->Start();
+    }
     default:
       MOZ_CRASH("Operation not implemented.");
   }
@@ -602,6 +607,19 @@ AudioCallbackDriver::GetCurrentTime()
   return mSampleRate * position;
 }
 
+void AudioCallbackDriver::WaitForNextIteration()
+{
+  // We can't block on the monitor in the audio callback, so we kick off a new
+  // thread that will pause the audio stream, and restart it when unblocked.
+  if (!mNeedAnotherIteration) {
+    mWaitState = WAITSTATE_WAITING_INDEFINITELY;
+    STREAM_LOG(PR_LOG_DEBUG+1, ("AudioCallbackDriver going to sleep"));
+    nsRefPtr<AsyncCubebTask> sleepEvent =
+      new AsyncCubebTask(this, AsyncCubebTask::SLEEP);
+    sleepEvent->Dispatch();
+  }
+}
+
 void
 AudioCallbackDriver::WakeUp()
 {
@@ -720,6 +738,7 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
     mBuffer.BufferFilled();
   }
 
+  WaitForNextIteration();
 
   if (mNextDriver && stillProcessing) {
     {
