@@ -101,13 +101,14 @@ void GraphDriver::EnsureNextIterationLocked()
 {
   mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
 
+  if (IsWaitingIndefinitly()) {
+    WakeUp();
+  }
+
   if (mNeedAnotherIteration) {
     return;
   }
   mNeedAnotherIteration = true;
-  if (IsWaitingIndefinitly()) {
-    WakeUp();
-  }
 }
 
 ThreadedDriver::ThreadedDriver(MediaStreamGraphImpl* aGraphImpl)
@@ -335,6 +336,7 @@ SystemClockDriver::WaitForNextIteration()
 void
 SystemClockDriver::WakeUp()
 {
+  mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
   mWaitState = WAITSTATE_WAKING_UP;
   mGraphImpl->GetMonitor().Notify();
 }
