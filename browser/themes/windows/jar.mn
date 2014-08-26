@@ -8,7 +8,6 @@ browser.jar:
 # NOTE: If you add a new file here, you'll need to add it to the aero
 # section at the bottom of this file
         skin/classic/browser/sanitizeDialog.css
-*       skin/classic/browser/aboutPrivateBrowsing.css
 *       skin/classic/browser/aboutSessionRestore.css
         skin/classic/browser/aboutSessionRestore-window-icon.png     (preferences/application.png)
         skin/classic/browser/aboutWelcomeBack.css                    (../shared/aboutWelcomeBack.css)
@@ -40,6 +39,8 @@ browser.jar:
         skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/livemark-folder.png
+        skin/classic/browser/mask.png                               (../shared/mask.png)
+        skin/classic/browser/mask@2x.png                            (../shared/mask@2x.png)
         skin/classic/browser/menu-back.png
         skin/classic/browser/menu-forward.png
         skin/classic/browser/menuPanel.png
@@ -416,7 +417,6 @@ browser.jar:
 browser.jar:
 % skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
         skin/classic/aero/browser/sanitizeDialog.css                       (sanitizeDialog.css)
-*       skin/classic/aero/browser/aboutPrivateBrowsing.css           (aboutPrivateBrowsing.css)
 *       skin/classic/aero/browser/aboutSessionRestore.css            (aboutSessionRestore.css)
         skin/classic/aero/browser/aboutSessionRestore-window-icon.png (aboutSessionRestore-window-icon-aero.png)
         skin/classic/aero/browser/aboutCertError.css
@@ -448,6 +448,8 @@ browser.jar:
         skin/classic/aero/browser/keyhole-forward-mask.svg
         skin/classic/aero/browser/KUI-background.png
         skin/classic/aero/browser/livemark-folder.png                (livemark-folder-aero.png)
+        skin/classic/aero/browser/mask.png                           (../shared/mask.png)
+        skin/classic/aero/browser/mask@2x.png                        (../shared/mask@2x.png)
         skin/classic/aero/browser/menu-back.png                      (menu-back-aero.png)
         skin/classic/aero/browser/menu-forward.png                   (menu-forward-aero.png)
         skin/classic/aero/browser/menuPanel.png
@@ -476,7 +478,6 @@ browser.jar:
         skin/classic/aero/browser/pointerLock-64.png
         skin/classic/aero/browser/Privacy-16.png                     (Privacy-16-aero.png)
         skin/classic/aero/browser/Privacy-32.png                     (Privacy-32-aero.png)
-        skin/classic/aero/browser/Privacy-48.png                     (Privacy-48-aero.png)
         skin/classic/aero/browser/privatebrowsing-mask-tabstrip.png
         skin/classic/aero/browser/privatebrowsing-mask-tabstrip-XPVista7.png
         skin/classic/aero/browser/privatebrowsing-mask-titlebar.png
