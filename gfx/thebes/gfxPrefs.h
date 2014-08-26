@@ -222,6 +222,13 @@ private:
   DECL_GFX_PREF(Live, "layers.flash-borders",                  FlashLayerBorders, bool, false);
   DECL_GFX_PREF(Live, "layers.draw-layer-info",                DrawLayerInfo, bool, false);
   DECL_GFX_PREF(Live, "layers.dump",                           LayersDump, bool, false);
+
+  // 0 is "no change" for contrast, positive values increase it, negative values
+  // decrease it until we hit mid gray at -1 contrast, after that it gets weird.
+  DECL_GFX_PREF(Live, "layers.effect.contrast",                LayersEffectContrast, float, 0.0f);
+  DECL_GFX_PREF(Live, "layers.effect.grayscale",               LayersEffectGrayscale, bool, false);
+  DECL_GFX_PREF(Live, "layers.effect.invert",                  LayersEffectInvert, bool, false);
+
   DECL_GFX_PREF(Once, "layers.enable-tiles",                   LayersTilesEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.simple-tiles",                   LayersUseSimpleTiles, bool, false);
   DECL_GFX_PREF(Once, "layers.force-per-tile-drawing",         PerTileDrawing, bool, false);
@@ -249,8 +256,6 @@ private:
   DECL_GFX_PREF(Once, "layers.prefer-opengl",                  LayersPreferOpenGL, bool, false);
   DECL_GFX_PREF(Once, "layers.progressive-paint",              UseProgressiveTilePainting, bool, false);
   DECL_GFX_PREF(Once, "layers.uniformity-info",                UniformityInfo, bool, false);
-  DECL_GFX_PREF(Live, "layers.invert",                         Invert, bool, false);
-  DECL_GFX_PREF(Live, "layers.grayscale",                      Grayscale, bool, false);
 
   DECL_GFX_PREF(Live, "layout.css.scroll-behavior.damping-ratio", ScrollBehaviorDampingRatio, float, 1.0f);
   DECL_GFX_PREF(Live, "layout.css.scroll-behavior.enabled",    ScrollBehaviorEnabled, bool, false);

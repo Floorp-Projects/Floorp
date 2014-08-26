@@ -1358,13 +1358,15 @@ nsWSRunObject::DeleteChars(nsINode* aStartNode, int32_t aStartOffset,
     if (node == aStartNode) {
       uint32_t len = node->Length();
       if (uint32_t(aStartOffset) < len) {
-        res = mHTMLEditor->DeleteText(*node, SafeCast<uint32_t>(aStartOffset),
+        res = mHTMLEditor->DeleteText(*node,
+                                      AssertedCast<uint32_t>(aStartOffset),
                                       len - aStartOffset);
         NS_ENSURE_SUCCESS(res, res);
       }
     } else if (node == aEndNode) {
       if (aEndOffset) {
-        res = mHTMLEditor->DeleteText(*node, 0, SafeCast<uint32_t>(aEndOffset));
+        res = mHTMLEditor->DeleteText(*node, 0,
+                                      AssertedCast<uint32_t>(aEndOffset));
         NS_ENSURE_SUCCESS(res, res);
       }
       break;

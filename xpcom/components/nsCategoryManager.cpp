@@ -213,12 +213,7 @@ EntryEnumerator::Create(nsTHashtable<CategoryLeaf>& aTable)
 CategoryNode*
 CategoryNode::Create(PLArenaPool* aArena)
 {
-  CategoryNode* node = new(aArena) CategoryNode();
-  if (!node) {
-    return nullptr;
-  }
-
-  return node;
+  return new (aArena) CategoryNode();
 }
 
 CategoryNode::~CategoryNode()

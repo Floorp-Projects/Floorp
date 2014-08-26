@@ -303,33 +303,30 @@ interface TestJSImplInterface {
   //MozMap<MozMap<long>> receiveMozMapOfMozMaps();
   MozMap<any> receiveAnyMozMap();
 
-  // ArrayBuffer is handled differently in callback interfaces and the example generator.
-  // Need to figure out what should be done there.  Seems like other typed array stuff is
-  // similarly not working in the JS implemented generator.  Probably some other issues
-  // here as well.
   // Typed array types
-  //void passArrayBuffer(ArrayBuffer arg);
-  //void passNullableArrayBuffer(ArrayBuffer? arg);
-  //void passOptionalArrayBuffer(optional ArrayBuffer arg);
-  //void passOptionalNullableArrayBuffer(optional ArrayBuffer? arg);
-  //void passOptionalNullableArrayBufferWithDefaultValue(optional ArrayBuffer? arg= null);
-  //void passArrayBufferView(ArrayBufferView arg);
-  //void passInt8Array(Int8Array arg);
-  //void passInt16Array(Int16Array arg);
-  //void passInt32Array(Int32Array arg);
-  //void passUint8Array(Uint8Array arg);
-  //void passUint16Array(Uint16Array arg);
-  //void passUint32Array(Uint32Array arg);
-  //void passUint8ClampedArray(Uint8ClampedArray arg);
-  //void passFloat32Array(Float32Array arg);
-  //void passFloat64Array(Float64Array arg);
-  //void passSequenceOfArrayBuffers(sequence<ArrayBuffer> arg);
-  //void passSequenceOfNullableArrayBuffers(sequence<ArrayBuffer?> arg);
-  //void passMozMapOfArrayBuffers(MozMap<ArrayBuffer> arg);
-  //void passMozMapOfNullableArrayBuffers(MozMap<ArrayBuffer?> arg);
-  //void passVariadicTypedArray(Float32Array... arg);
-  //void passVariadicNullableTypedArray(Float32Array?... arg);
-  //Uint8Array receiveUint8Array();
+  void passArrayBuffer(ArrayBuffer arg);
+  void passNullableArrayBuffer(ArrayBuffer? arg);
+  void passOptionalArrayBuffer(optional ArrayBuffer arg);
+  void passOptionalNullableArrayBuffer(optional ArrayBuffer? arg);
+  void passOptionalNullableArrayBufferWithDefaultValue(optional ArrayBuffer? arg= null);
+  void passArrayBufferView(ArrayBufferView arg);
+  void passInt8Array(Int8Array arg);
+  void passInt16Array(Int16Array arg);
+  void passInt32Array(Int32Array arg);
+  void passUint8Array(Uint8Array arg);
+  void passUint16Array(Uint16Array arg);
+  void passUint32Array(Uint32Array arg);
+  void passUint8ClampedArray(Uint8ClampedArray arg);
+  void passFloat32Array(Float32Array arg);
+  void passFloat64Array(Float64Array arg);
+  void passSequenceOfArrayBuffers(sequence<ArrayBuffer> arg);
+  void passSequenceOfNullableArrayBuffers(sequence<ArrayBuffer?> arg);
+  void passMozMapOfArrayBuffers(MozMap<ArrayBuffer> arg);
+  void passMozMapOfNullableArrayBuffers(MozMap<ArrayBuffer?> arg);
+  void passVariadicTypedArray(Float32Array... arg);
+  void passVariadicNullableTypedArray(Float32Array?... arg);
+  Uint8Array receiveUint8Array();
+  attribute Uint8Array uint8ArrayAttr;
 
   // DOMString types
   void passString(DOMString arg);

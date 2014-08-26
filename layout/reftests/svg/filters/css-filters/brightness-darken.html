@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Darken an HTML Element Using the Brightness Function</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-brightness">
+  <link rel="match" href="brightness-darken-ref.html">
+  <meta name="assert"
+        content="Given a factor less than one, the CSS brightness filter
+                 function should darken the color of an HTML element.">
+  <style type="text/css">
+    #target {
+      filter: brightness(0.25);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a dark green square.</p>
+  <div id="target"></div>
+</body>
+</html>

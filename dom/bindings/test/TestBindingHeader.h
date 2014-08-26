@@ -461,6 +461,8 @@ public:
   void PassVariadicTypedArray(const Sequence<Float32Array>&);
   void PassVariadicNullableTypedArray(const Sequence<Nullable<Float32Array> >&);
   void ReceiveUint8Array(JSContext*, JS::MutableHandle<JSObject*>);
+  void SetUint8ArrayAttr(const Uint8Array&);
+  void GetUint8ArrayAttr(JSContext*, JS::MutableHandle<JSObject*>);
 
   // DOMString types
   void PassString(const nsAString&);
