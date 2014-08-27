@@ -379,13 +379,13 @@ class MinorCollectionTracer : public JSTracer
 } /* namespace js */
 
 static AllocKind
-GetObjectAllocKindForCopy(JSRuntime *rt, JSObject *obj)
+GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
 {
     if (obj->is<ArrayObject>()) {
         JS_ASSERT(obj->numFixedSlots() == 0);
 
         /* Use minimal size object if we are just going to copy the pointer. */
-        if (!rt->gc.nursery.isInside(obj->getElementsHeader()))
+        if (!nursery.isInside(obj->getElementsHeader()))
             return FINALIZE_OBJECT0_BACKGROUND;
 
         size_t nelements = obj->getDenseCapacity();
@@ -410,7 +410,7 @@ GetObjectAllocKindForCopy(JSRuntime *rt, JSObject *obj)
     return GetBackgroundAllocKind(kind);
 }
 
-void *
+MOZ_ALWAYS_INLINE void *
 js::Nursery::allocateFromTenured(Zone *zone, AllocKind thingKind)
 {
     void *t = zone->allocator.arenas.allocateFromFreeList(thingKind, Arena::thingSize(thingKind));
@@ -520,7 +520,8 @@ js::Nursery::traceObject(MinorCollectionTracer *trc, JSObject *obj)
     if (clasp->trace)
         clasp->trace(trc, obj);
 
-    if (!obj->isNative())
+    MOZ_ASSERT(obj->isNative() == clasp->isNative());
+    if (!clasp->isNative())
         return;
 
     // Note: the contents of copy on write elements pointers are filled in
@@ -569,8 +570,8 @@ js::Nursery::markSlot(MinorCollectionTracer *trc, HeapSlot *slotp)
 void *
 js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
 {
+    AllocKind dstKind = GetObjectAllocKindForCopy(*this, src);
     Zone *zone = src->zone();
-    AllocKind dstKind = GetObjectAllocKindForCopy(trc->runtime(), src);
     JSObject *dst = static_cast<JSObject *>(allocateFromTenured(zone, dstKind));
     if (!dst)
         CrashAtUnhandlableOOM("Failed to allocate object while tenuring.");
@@ -585,7 +586,7 @@ js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
     return static_cast<void *>(dst);
 }
 
-size_t
+MOZ_ALWAYS_INLINE size_t
 js::Nursery::moveObjectToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
 {
     size_t srcSize = Arena::thingSize(dstKind);
@@ -646,7 +647,7 @@ js::Nursery::forwardTypedArrayPointers(JSObject *dst, JSObject *src)
                               nslots);
 }
 
-size_t
+MOZ_ALWAYS_INLINE size_t
 js::Nursery::moveSlotsToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
 {
     /* Fixed slots have already been copied over. */
@@ -668,7 +669,7 @@ js::Nursery::moveSlotsToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
     return count * sizeof(HeapSlot);
 }
 
-size_t
+MOZ_ALWAYS_INLINE size_t
 js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
 {
     if (src->hasEmptyElements() || src->denseElementsAreCopyOnWrite())

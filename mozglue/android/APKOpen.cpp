@@ -317,11 +317,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jcl
 }
 
 extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName, jboolean jShouldExtract) {
-  if (jShouldExtract) {
-    putenv("MOZ_LINKER_EXTRACT=1");
-  }
-
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName) {
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
   // better to do here
@@ -339,11 +335,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(JNIEnv *jenv, jc
 }
 
 extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName, jboolean jShouldExtract) {
-  if (jShouldExtract) {
-    putenv("MOZ_LINKER_EXTRACT=1");
-  }
-
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName) {
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
   // better to do here

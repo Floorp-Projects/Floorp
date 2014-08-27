@@ -4056,10 +4056,10 @@ UpdateShapeTypeAndValue(typename ExecutionModeTraits<mode>::ExclusiveContextType
     jsid id = shape->propid();
     if (shape->hasSlot()) {
         if (mode == ParallelExecution) {
-            if (!obj->nativeSetSlotIfHasType(shape, value))
+            if (!obj->nativeSetSlotIfHasType(shape, value, /* overwriting = */ false))
                 return false;
         } else {
-            obj->nativeSetSlotWithType(cx->asExclusiveContext(), shape, value);
+            obj->nativeSetSlotWithType(cx->asExclusiveContext(), shape, value, /* overwriting = */ false);
         }
     }
     if (!shape->hasSlot() || !shape->hasDefaultGetter() || !shape->hasDefaultSetter()) {
