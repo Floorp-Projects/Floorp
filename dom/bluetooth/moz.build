@@ -113,7 +113,7 @@ FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
     '../base',
-    '../network/src',
+    '../network',
     '../system/gonk',
 ]
 

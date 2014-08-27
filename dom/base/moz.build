@@ -150,7 +150,7 @@ LOCAL_INCLUDES += [
     '../bluetooth',
     '../events',
     '../media',
-    '../network/src',
+    '../network',
     '../src/geolocation',
     '../src/storage',
     '../time',
