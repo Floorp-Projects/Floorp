@@ -10,50 +10,49 @@ body,
   height: 100%;
 }
 
-body {
+.standalone {
   width: 100%;
-  /* prevent the video convsersation elements to occupy the whole available
-     width hence the height while keeping aspect ratio */
-  max-width: 730px;
-  margin: 0 auto;
   background: #fbfbfb;
   color: #666;
   text-align: center;
   font-family: Open Sans,sans-serif;
 }
 
-header {
+.standalone-header {
   border-radius: 4px;
   background: #fff;
   padding: 1rem 5rem;
   border: 1px solid #E7E7E7;
   box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.03);
+  margin-top: 2rem;
 }
 
 /*
  * Top/Bottom spacing
  **/
-header {
-  margin-top: 2rem;
-}
-
-.footer {
+.standalone-footer {
   margin-bottom: 2rem;
 }
 
 .container {
   display: flex;
-  align-items: center;
   flex-direction: column;
-  justify-content: space-between;
+  margin: 0 auto;
+
+  /* prevent the video conversation elements to occupy the whole available
+   width hence the height while keeping aspect ratio */
+  width: 30%;
+  min-width: 400px;
   height: 100%;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .container-box {
   display: flex;
   flex-direction: column;
-  align-content: center;
   width: 100%;
+  align-content: center;
 }
 
 .footer,
@@ -96,12 +95,6 @@ header {
   background-repeat: no-repeat;
 }
 
-.call-url {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
 .loop-logo {
   width: 100px;
   height: 100px;
@@ -111,12 +104,17 @@ header {
   background-repeat: no-repeat;
 }
 
-.large-font {
+.standalone-header-title,
+.standalone-call-btn-label {
+  font-weight: lighter;
+}
+
+.standalone-header-title {
   font-size: 1.8rem;
 }
 
-.light-weight-font {
-  font-weight: lighter;
+.standalone-call-btn-label {
+  font-size: 1.2rem;
 }
 
 .light-color-font {
@@ -124,28 +122,49 @@ header {
   font-weight: normal;
 }
 
+.standalone-btn-chevron-menu-group {
+  display: flex;
+  justify-content: space-between;
+  flex: 2;
+}
+
 .start-audio-only-call,
-.start-audio-video-call {
-  background-color: none;
-  background-image: url("../shared/img/audio-default-16x16@1.5x.png");
-  background-position: 80% center;
-  background-size: 10px;
+.standalone-call-btn-video-icon {
+  width: 1.2rem;
+  height: 1.2rem;
   background-repeat: no-repeat;
   cursor: pointer;
 }
 
 .start-audio-only-call {
-  border: none;
   width: 100%;
+  border: none;
+  background-size: 10px;
+  background-color: #F0F0F0;
+  background-image: url("../shared/img/audio-default-16x16@1.5x.png");
+  background-position: 90% center;
 }
 
 .start-audio-only-call:hover {
   background-image: url("../shared/img/audio-inverse-14x14.png");
 }
 
-.start-audio-video-call {
-  background-size: 20px;
+.standalone-call-btn-video-icon {
   background-image: url("../shared/img/video-inverse-14x14.png");
+  display: inline-block;
+  background-size: 1.2rem;
+  margin-left: .5rem;
+}
+
+/* Ellipsed text content of audio-video call btn */
+.standalone-call-btn-text {
+  /* make some room for the video icon */
+  max-width: 85%;
+  vertical-align: bottom;
+}
+
+.standalone-call-btn-video-icon {
+  vertical-align: top;
 }
 
 @media (min-resolution: 2dppx) {
@@ -155,8 +174,29 @@ header {
   .start-audio-only-call:hover {
     background-image: url("../shared/img/audio-inverse-14x14@2x.png");
   }
-  .start-audio-video-call {
+  .standalone-call-btn-video-icon {
     background-image: url("../shared/img/video-inverse-14x14@2x.png");
   }
+}
+
+.btn-large {
+  /* Dimensions from spec
+   * https://people.mozilla.org/~dhenein/labs/loop-link-spec/#call-start */
+  font-size: 1rem;
+  padding: .3em .5rem;
+}
+
+  .btn-large + .btn-chevron {
+    padding: 1rem;
+    height: 100%; /* match full height of button */
+  }
+
+/*
+ * Left / Right padding elements
+ * used to center components
+ * */
+.flex-padding-1 {
+  display: flex;
+  flex: 1;
 }
 

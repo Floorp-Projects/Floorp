@@ -172,9 +172,9 @@
 #endif
       </prefpane>
       <hbox pack="end">
-        <button class="help-button"
-                aria-label="&helpButton.label;"
-                oncommand="helpButtonCommand();"/>
+        <button id="help-button"
+                class="help-button"
+                aria-label="&helpButton.label;"/>
       </hbox>
     </vbox>
 

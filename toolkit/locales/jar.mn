@@ -14,7 +14,7 @@
   locale/@AB_CD@/global/aboutSupport.properties         (%chrome/global/aboutSupport.properties)
   locale/@AB_CD@/global/aboutTelemetry.dtd              (%chrome/global/aboutTelemetry.dtd)
   locale/@AB_CD@/global/aboutTelemetry.properties       (%chrome/global/aboutTelemetry.properties)
-  locale/@AB_CD@/global/actions.dtd                     (%chrome/global/actions.dtd)
+  locale/@AB_CD@/global/autocomplete.properties         (%chrome/global/autocomplete.properties)
   locale/@AB_CD@/global/appPicker.dtd                   (%chrome/global/appPicker.dtd)
   locale/@AB_CD@/global/brand.dtd                       (generic/chrome/global/brand.dtd)
   locale/@AB_CD@/global/browser.properties              (%chrome/global/browser.properties)

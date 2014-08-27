@@ -52,8 +52,7 @@
     <spacer flex="1"/>
     <button id="addonExceptions"
             label="&addonExceptions.label;"
-            accesskey="&addonExceptions.accesskey;"
-            oncommand="gSecurityPane.showAddonExceptions();"/>
+            accesskey="&addonExceptions.accesskey;"/>
   </hbox>
 
   <separator class="thin"/>
@@ -82,26 +81,22 @@
     <button id="passwordExceptions"
             label="&passwordExceptions.label;"
             accesskey="&passwordExceptions.accesskey;"
-            oncommand="gSecurityPane.showPasswordExceptions();"
             preference="pref.privacy.disable_button.view_passwords_exceptions"/>
   </hbox>
   <hbox id="masterPasswordBox">
     <checkbox id="useMasterPassword"
-              oncommand="gSecurityPane.updateMasterPasswordButton();"
               label="&useMasterPassword.label;"
               accesskey="&useMasterPassword.accesskey;"/>
     <spacer flex="1"/>
     <button id="changeMasterPassword"
             label="&changeMasterPassword.label;"
-            accesskey="&changeMasterPassword.accesskey;"
-            oncommand="gSecurityPane.changeMasterPassword();"/>
+            accesskey="&changeMasterPassword.accesskey;"/>
   </hbox>
 
   <hbox id="showPasswordsBox">
     <spacer flex="1"/>
     <button id="showPasswords"
             label="&savedPasswords.label;" accesskey="&savedPasswords.accesskey;"
-            oncommand="gSecurityPane.showPasswords();"
             preference="pref.privacy.disable_button.view_passwords"/>
   </hbox>
 </groupbox>

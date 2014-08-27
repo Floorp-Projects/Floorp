@@ -1,0 +1,18 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>doc_markup_events-overflow.html</title>
+</head>
+<body>
+  <h1>doc_markup_events-overflow.html</h1>
+  <span id="events">Inspect me!</span>
+  <script>
+    var el = document.getElementById("events");
+    for (var i = 50; i > 0; i--) {
+      el.addEventListener("click", function onClick() {
+        alert("click");
+      });
+    }
+  </script>
+</body>
+</html>

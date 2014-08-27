@@ -62,9 +62,9 @@ TaggingService.prototype = {
     let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                                 .DBConnection;
     let stmt = db.createStatement(
-      "SELECT id FROM moz_bookmarks "
-    + "WHERE parent = :tag_id "
-    + "AND fk = (SELECT id FROM moz_places WHERE url = :page_url)"
+      `SELECT id FROM moz_bookmarks
+       WHERE parent = :tag_id
+       AND fk = (SELECT id FROM moz_places WHERE url = :page_url)`
     );
     stmt.params.tag_id = tagId;
     stmt.params.page_url = aURI.spec;
@@ -181,8 +181,8 @@ TaggingService.prototype = {
     let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                                 .DBConnection;
     let stmt = db.createStatement(
-      "SELECT count(*) AS count FROM moz_bookmarks "
-    + "WHERE parent = :tag_id"
+      `SELECT count(*) AS count FROM moz_bookmarks
+       WHERE parent = :tag_id`
     );
     stmt.params.tag_id = aTagId;
     try {
@@ -247,9 +247,9 @@ TaggingService.prototype = {
     let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                                 .DBConnection;
     let stmt = db.createStatement(
-      "SELECT h.url FROM moz_places h "
-    + "JOIN moz_bookmarks b ON b.fk = h.id "
-    + "WHERE b.parent = :tag_id "
+      `SELECT h.url FROM moz_places h
+       JOIN moz_bookmarks b ON b.fk = h.id
+       WHERE b.parent = :tag_id`
     );
     stmt.params.tag_id = tagId;
     try {
@@ -358,9 +358,9 @@ TaggingService.prototype = {
     let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                                 .DBConnection;
     let stmt = db.createStatement(
-      "SELECT id, parent "
-    + "FROM moz_bookmarks "
-    + "WHERE fk = (SELECT id FROM moz_places WHERE url = :page_url)"
+      `SELECT id, parent
+       FROM moz_bookmarks
+       WHERE fk = (SELECT id FROM moz_places WHERE url = :page_url)`
     );
     stmt.params.page_url = aURI.spec;
     try {
