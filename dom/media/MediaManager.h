@@ -101,6 +101,8 @@ public:
 
   void StopScreenWindowSharing();
 
+  void StopTrack(TrackID aID, bool aIsAudio);
+
   // mVideo/AudioSource are set by Activate(), so we assume they're capturing
   // if set and represent a real capture device.
   bool CapturingVideo()
