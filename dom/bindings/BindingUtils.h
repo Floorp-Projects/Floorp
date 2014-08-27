@@ -2978,6 +2978,25 @@ WrappedJSToDictionary(nsISupports* aObject, T& aDictionary)
   return aDictionary.Init(cx, v);
 }
 
+
+template<class T, class S>
+inline nsRefPtr<T>
+StrongOrRawPtr(already_AddRefed<S>&& aPtr)
+{
+  return aPtr.template downcast<T>();
+}
+
+template<class T>
+inline T*
+StrongOrRawPtr(T* aPtr)
+{
+  return aPtr;
+}
+
+template<class T, template<typename> class SmartPtr, class S>
+inline void
+StrongOrRawPtr(SmartPtr<S>&& aPtr) MOZ_DELETE;
+
 } // namespace dom
 } // namespace mozilla
 
