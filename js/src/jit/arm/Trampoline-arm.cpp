@@ -705,7 +705,7 @@ JitRuntime::generateBailoutHandler(JSContext *cx, ExecutionMode mode)
         GenerateParallelBailoutThunk(masm, NO_FRAME_SIZE_CLASS_ID);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 
     Linker linker(masm);
@@ -839,7 +839,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.branchIfFalseBool(r0, masm.failureLabel(f.executionMode));
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unknown failure kind");
+        MOZ_CRASH("unknown failure kind");
     }
 
     // Load the outparam and free any allocated stack.
