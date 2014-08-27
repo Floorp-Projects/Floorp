@@ -87,6 +87,9 @@ class ChromeCast implements GeckoMediaPlayer {
                 remoteMediaPlayer.setOnStatusUpdatedListener(this);
                 remoteMediaPlayer.setOnMetadataUpdatedListener(this);
                 mSessionId = result.getSessionId();
+                if (!verifySession(callback)) {
+                    return;
+                }
 
                 try {
                     Cast.CastApi.setMessageReceivedCallbacks(apiClient, remoteMediaPlayer.getNamespace(), remoteMediaPlayer);
