@@ -5921,7 +5921,6 @@ def dictionaryMatchesLambda(dictionary, func):
 # Whenever this is modified, please update CGNativeMember.getRetvalInfo as
 # needed to keep the types compatible.
 def getRetvalDeclarationForType(returnType, descriptorProvider,
-                                resultAlreadyAddRefed,
                                 isMember=False):
     """
     Returns a tuple containing five things:
@@ -5990,11 +5989,8 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         nullable = returnType.nullable()
         if nullable:
             returnType = returnType.inner
-        # If our result is already addrefed, use the right type in the
-        # sequence argument here.
         result, _, _, _, _ = getRetvalDeclarationForType(returnType.inner,
                                                          descriptorProvider,
-                                                         resultAlreadyAddRefed,
                                                          isMember="Sequence")
         # While we have our inner type, set up our rooter, if needed
         if not isMember and typeNeedsRooting(returnType):
@@ -6010,11 +6006,8 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         nullable = returnType.nullable()
         if nullable:
             returnType = returnType.inner
-        # If our result is already addrefed, use the right type in the
-        # MozMap argument here.
         result, _, _, _, _ = getRetvalDeclarationForType(returnType.inner,
                                                          descriptorProvider,
-                                                         resultAlreadyAddRefed,
                                                          isMember="MozMap")
         # While we have our inner type, set up our rooter, if needed
         if not isMember and typeNeedsRooting(returnType):
@@ -6063,10 +6056,6 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
                     returnType)
 
 
-def isResultAlreadyAddRefed(extendedAttributes):
-    return 'resultNotAddRefed' not in extendedAttributes
-
-
 def needCx(returnType, arguments, extendedAttributes, considerTypes,
            static=False):
     return (not static and considerTypes and
@@ -6108,10 +6097,8 @@ class CGCallGenerator(CGThing):
 
         isFallible = errorReport is not None
 
-        resultAlreadyAddRefed = isResultAlreadyAddRefed(extendedAttributes)
         result, resultOutParam, resultRooter, resultArgs, resultConversion = \
-            getRetvalDeclarationForType(
-                returnType, descriptorProvider, resultAlreadyAddRefed)
+            getRetvalDeclarationForType(returnType, descriptorProvider)
 
         args = CGList([CGGeneric(arg) for arg in argsPre], ", ")
         for a, name in arguments:
@@ -7725,10 +7712,8 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
     def makeNativeName(descriptor, attr):
         name = attr.identifier.name
         nativeName = MakeNativeName(descriptor.binaryNameFor(name))
-        # resultOutParam does not depend on whether resultAlreadyAddRefed is set
         _, resultOutParam, _, _, _ = getRetvalDeclarationForType(attr.type,
-                                                                 descriptor,
-                                                                 False)
+                                                                 descriptor)
         infallible = ('infallible' in
                       descriptor.getExtendedAttributes(attr, getter=True))
         if resultOutParam or attr.type.nullable() or not infallible:
@@ -12161,7 +12146,8 @@ class CGBindingRoot(CGThing):
 class CGNativeMember(ClassMethod):
     def __init__(self, descriptorProvider, member, name, signature, extendedAttrs,
                  breakAfter=True, passJSBitsAsNeeded=True, visibility="public",
-                 typedArraysAreStructs=True, variadicIsSequence=False):
+                 typedArraysAreStructs=True, variadicIsSequence=False,
+                 resultNotAddRefed=False):
         """
         If typedArraysAreStructs is false, typed arrays will be passed as
         JS::Handle<JSObject*>.  If it's true they will be passed as one of the
@@ -12174,7 +12160,7 @@ class CGNativeMember(ClassMethod):
         self.descriptorProvider = descriptorProvider
         self.member = member
         self.extendedAttrs = extendedAttrs
-        self.resultAlreadyAddRefed = isResultAlreadyAddRefed(self.extendedAttrs)
+        self.resultAlreadyAddRefed = not resultNotAddRefed
         self.passJSBitsAsNeeded = passJSBitsAsNeeded
         self.typedArraysAreStructs = typedArraysAreStructs
         self.variadicIsSequence = variadicIsSequence
@@ -14302,13 +14288,12 @@ class GlobalGenRoots():
 class CGEventGetter(CGNativeMember):
     def __init__(self, descriptor, attr):
         ea = descriptor.getExtendedAttributes(attr, getter=True)
-        if not attr.type.isSequence():
-            ea.append('resultNotAddRefed')
         CGNativeMember.__init__(self, descriptor, attr,
                                 CGSpecializedGetter.makeNativeName(descriptor,
                                                                    attr),
                                 (attr.type, []),
-                                ea)
+                                ea,
+                                resultNotAddRefed=not attr.type.isSequence())
         self.body = self.getMethodBody()
 
     def getArgs(self, returnType, argList):
