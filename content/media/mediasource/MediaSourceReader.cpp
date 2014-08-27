@@ -344,6 +344,9 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder)
 already_AddRefed<SourceBufferDecoder>
 MediaSourceReader::CreateSubDecoder(const nsACString& aType)
 {
+  if (IsShutdown()) {
+    return nullptr;
+  }
   MOZ_ASSERT(GetTaskQueue());
   nsRefPtr<SourceBufferDecoder> decoder =
     new SourceBufferDecoder(new SourceBufferResource(aType), mDecoder);
