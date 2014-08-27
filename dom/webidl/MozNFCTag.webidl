@@ -29,9 +29,6 @@ interface MozNFCTag {
   DOMRequest readNDEF();
   DOMRequest writeNDEF(sequence<MozNDEFRecord> records);
   DOMRequest makeReadOnlyNDEF();
-
-  DOMRequest connect(NFCTechType techType);
-  DOMRequest close();
 };
 
 // Mozilla Only

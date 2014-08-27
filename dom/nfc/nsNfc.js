@@ -72,13 +72,6 @@ MozNFCTag.prototype = {
   makeReadOnlyNDEF: function makeReadOnlyNDEF() {
     return this._nfcContentHelper.makeReadOnlyNDEF(this._window, this.session);
   },
-  connect: function connect(enum_tech_type) {
-    let int_tech_type = this._techTypesMap[enum_tech_type];
-    return this._nfcContentHelper.connect(this._window, int_tech_type, this.session);
-  },
-  close: function close() {
-    return this._nfcContentHelper.close(this._window, this.session);
-  },
 
   classID: Components.ID("{4e1e2e90-3137-11e3-aa6e-0800200c9a66}"),
   contractID: "@mozilla.org/nfc/NFCTag;1",
