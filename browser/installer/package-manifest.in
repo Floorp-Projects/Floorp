@@ -237,6 +237,7 @@
 @RESPATH@/components/dom_gamepad.xpt
 #endif
 @RESPATH@/components/dom_payment.xpt
+@RESPATH@/components/dom_presentation.xpt
 @RESPATH@/components/downloads.xpt
 @RESPATH@/components/editor.xpt
 @RESPATH@/components/embed_base.xpt
