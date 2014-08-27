@@ -1,0 +1,48 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPresentationDevice;
+
+%{C++
+#define PRESENTATION_DEVICE_PROMPT_CONTRACTID "@mozilla.org/presentation-device/prompt;1"
+%}
+
+/*
+ * The information and callbacks for device selection
+ */
+[scriptable, uuid(b2aa7f6a-9448-446a-bba4-9c29638b0ed4)]
+interface nsIPresentationDeviceRequest : nsISupports
+{
+  // The origin which initiate the request.
+  readonly attribute DOMString origin;
+
+  // The URL to be opened after selection.
+  readonly attribute DOMString requestURL;
+
+  /*
+   * Callback after selecting a device
+   * @param device The selected device.
+   */
+  void select(in nsIPresentationDevice device);
+
+  /*
+    Callback after selection failed or canceled by user.
+   */
+  void cancel();
+};
+
+/*
+ * UI prompt for device selection.
+ */
+[scriptable, uuid(ac1a7e44-de86-454f-a9f1-276de2539831)]
+interface nsIPresentationDevicePrompt : nsISupports
+{
+  /*
+   * Request a device selection.
+   * @param request The information and callbacks of this selection request.
+   */
+  void promptDeviceSelection(in nsIPresentationDeviceRequest request);
+};

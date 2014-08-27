@@ -248,6 +248,8 @@ static void Shutdown();
 
 #include "GMPService.h"
 
+#include "mozilla/dom/presentation/PresentationDeviceManager.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::dom::alarm::AlarmHalService;
@@ -270,6 +272,11 @@ using mozilla::gmp::GeckoMediaPluginService;
 
 #define TRANSFORMIIX_NODESET_CONTRACTID \
 "@mozilla.org/transformiix-nodeset;1"
+
+// PresentationDeviceManager
+/* e1e79dec-4085-4994-ac5b-744b016697e6 */
+#define PRESENTATION_DEVICE_MANAGER_CID \
+{ 0xe1e79dec, 0x4085, 0x4994, { 0xac, 0x5b, 0x74, 0x4b, 0x01, 0x66, 0x97, 0xe6 } }
 
 // Factory Constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR(txMozillaXSLTProcessor)
@@ -369,6 +376,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(FakeTVService,
 NS_GENERIC_FACTORY_CONSTRUCTOR(TVTunerData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TVChannelData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TVProgramData)
+NS_GENERIC_FACTORY_CONSTRUCTOR(PresentationDeviceManager)
 
 //-----------------------------------------------------------------------------
 
@@ -814,6 +822,8 @@ NS_DEFINE_NAMED_CID(GECKO_MEDIA_PLUGIN_SERVICE_CID);
 
 NS_DEFINE_NAMED_CID(NS_MOBILE_CONNECTION_SERVICE_CID);
 
+NS_DEFINE_NAMED_CID(PRESENTATION_DEVICE_MANAGER_CID);
+
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
                                     REFNSIID aIID, void **aResult)
@@ -1102,6 +1112,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kTV_TUNER_DATA_CID, false, nullptr, TVTunerDataConstructor },
   { &kTV_CHANNEL_DATA_CID, false, nullptr, TVChannelDataConstructor },
   { &kTV_PROGRAM_DATA_CID, false, nullptr, TVProgramDataConstructor },
+  { &kPRESENTATION_DEVICE_MANAGER_CID, false, nullptr, PresentationDeviceManagerConstructor },
   { nullptr }
 };
 
@@ -1261,6 +1272,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/gecko-media-plugin-service;1",  &kGECKO_MEDIA_PLUGIN_SERVICE_CID },
   { NS_MOBILE_CONNECTION_SERVICE_CONTRACTID, &kNS_MOBILE_CONNECTION_SERVICE_CID },
   { NS_VOICEMAIL_SERVICE_CONTRACTID, &kNS_VOICEMAIL_SERVICE_CID },
+  { PRESENTATION_DEVICE_MANAGER_CONTRACTID, &kPRESENTATION_DEVICE_MANAGER_CID },
   { nullptr }
 };
 
@@ -1284,6 +1296,7 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
 #ifdef MOZ_B2G_BT
   { "profile-after-change", "Bluetooth Service", BLUETOOTHSERVICE_CONTRACTID },
 #endif
+  { "profile-after-change", "PresentationDeviceManager", PRESENTATION_DEVICE_MANAGER_CONTRACTID },
   { nullptr }
 };
 

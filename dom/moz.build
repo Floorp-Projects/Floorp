@@ -146,6 +146,8 @@ if CONFIG['MOZ_B2G_BT_API_V2']:
 else:
     DIRS += ['bluetooth']
 
+DIRS += ['presentation']
+
 TEST_DIRS += [
     'tests',
     'imptests',
