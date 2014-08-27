@@ -34,6 +34,7 @@ var gMyDecoderObserver; // value will be set in main()
 var gReferenceSnapshot; // value will be set in takeReferenceSnapshot()
 var gOnStopFrameCounter = 0;
 var gIsTestFinished = false;
+var gTimer = null;
 
 
 function takeReferenceSnapshot() {
@@ -64,7 +65,8 @@ function myOnStopFrame(aRequest) {
              "at call #" + gOnStopFrameCounter + " to onStopFrame");
     cleanUpAndFinish();
   }
-  setTimeout(function() { myOnStopFrame(0, 0); }, 1000);
+  if (!gTimer)
+    gTimer = setTimeout(function() { gTimer = null; myOnStopFrame(0, 0); }, 1000);
 }
 
 function failTest() {
@@ -75,6 +77,7 @@ function failTest() {
 }
 
 function cleanUpAndFinish() {
+  clearTimeout(gTimer);
   // On the off chance that failTest and myOnStopFrame are triggered
   // back-to-back, use a flag to prevent multiple calls to SimpleTest.finish.
   if (gIsTestFinished) {
