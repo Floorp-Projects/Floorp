@@ -6569,13 +6569,17 @@ class CGPerSignatureCall(CGThing):
         return 'infallible' not in self.extendedAttributes
 
     def wrap_return_value(self):
+        wrapCode = ""
+
         returnsNewObject = memberReturnsNewObject(self.idlNode)
-        if returnsNewObject:
-            # We better be returning addrefed things!
-            assert(isResultAlreadyAddRefed(self.extendedAttributes) or
-                   # NewObject can return raw pointers to owned objects
-                   (self.returnType.isGeckoInterface() and
-                    self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned'))
+        if (returnsNewObject and
+            self.returnType.isGeckoInterface() and
+            not self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned'):
+            wrapCode += dedent(
+                """
+                static_assert(!IsPointer<decltype(result)>::value,
+                              "NewObject implies that we need to keep the object alive with a strong reference.");
+                """)
 
         setSlot = self.idlNode.isAttr() and self.idlNode.slotIndex is not None
         if setSlot:
@@ -6593,7 +6597,7 @@ class CGPerSignatureCall(CGThing):
             'obj': "reflector" if setSlot else "obj"
         }
         try:
-            wrapCode = wrapForType(self.returnType, self.descriptor, resultTemplateValues)
+            wrapCode += wrapForType(self.returnType, self.descriptor, resultTemplateValues)
         except MethodNotNewObjectError, err:
             assert not returnsNewObject
             raise TypeError("%s being returned from non-NewObject method or property %s.%s" %
@@ -12250,7 +12254,7 @@ class CGNativeMember(ClassMethod):
                 if memberReturnsNewObject(self.member) or isMember:
                     warning = ""
                 else:
-                    warning = "// Mark this as resultNotAddRefed to return raw pointers\n"
+                    warning = "// Return a raw pointer here to avoid refcounting, but make sure it's safe (the object should be kept alive by the callee).\n"
                 result = CGWrapper(result,
                                    pre=("%s%s<" % (warning, holder)),
                                    post=">")
@@ -13495,9 +13499,8 @@ class FakeMember():
         return False
 
     def getExtendedAttribute(self, name):
-        # Claim to be a [NewObject] so we can avoid the "mark this
-        # resultNotAddRefed" comments CGNativeMember codegen would
-        # otherwise stick in.
+        # Claim to be a [NewObject] so we can avoid the "return a raw pointer"
+        # comments CGNativeMember codegen would otherwise stick in.
         if name == "NewObject":
             return True
         return None
