@@ -101,9 +101,9 @@ bool InImageBridgeChildThread();
  * not used at all (except for the very first transaction that provides the
  * CompositableHost with an AsyncID).
  */
-class ImageBridgeChild : public PImageBridgeChild
-                       , public CompositableForwarder
-                       , public AsyncTransactionTrackersHolder
+class ImageBridgeChild MOZ_FINAL : public PImageBridgeChild
+                                 , public CompositableForwarder
+                                 , public AsyncTransactionTrackersHolder
 {
   friend class ImageContainer;
   typedef InfallibleTArray<AsyncParentMessageData> AsyncParentMessageArray;

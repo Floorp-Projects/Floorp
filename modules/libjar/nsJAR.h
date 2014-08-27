@@ -52,7 +52,7 @@ typedef enum
  * nsJAR serves as an XPCOM wrapper for nsZipArchive with the addition of
  * JAR manifest file parsing.
  *------------------------------------------------------------------------*/
-class nsJAR : public nsIZipReader
+class nsJAR MOZ_FINAL : public nsIZipReader
 {
   // Allows nsJARInputStream to call the verification functions
   friend class nsJARInputStream;

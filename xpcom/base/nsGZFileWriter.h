@@ -13,7 +13,7 @@
 /**
  * A simple class for writing .gz files.
  */
-class nsGZFileWriter : public nsIGZFileWriter
+class nsGZFileWriter MOZ_FINAL : public nsIGZFileWriter
 {
   virtual ~nsGZFileWriter();
 
