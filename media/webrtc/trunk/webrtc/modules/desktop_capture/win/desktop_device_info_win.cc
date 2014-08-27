@@ -3,18 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "webrtc/modules/desktop_capture/win/desktop_device_info_win.h"
-#include "webrtc/modules/desktop_capture/win/win_shared.h"
-#include <stdio.h>
 
-// Duplicating declaration so that it always resolves in decltype use
-// typedef BOOL (WINAPI *QueryFullProcessImageNameProc)(HANDLE hProcess, DWORD dwFlags, LPTSTR lpExeName, PDWORD lpdwSize);
-BOOL WINAPI QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags, LPTSTR lpExeName, PDWORD lpdwSize);
-
-// Duplicating declaration so that it always resolves in decltype use
-// typedoef DWORD (WINAPI *GetProcessImageFileNameProc)(HANDLE hProcess, LPTSTR lpImageFileName, DWORD nSize);
-DWORD WINAPI GetProcessImageFileName(HANDLE hProcess, LPTSTR lpImageFileName, DWORD nSize);
-
-namespace webrtc {
+namespace webrtc{
 
 DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
   DesktopDeviceInfoWin * pDesktopDeviceInfo = new DesktopDeviceInfoWin();
@@ -32,7 +22,7 @@ DesktopDeviceInfoWin::~DesktopDeviceInfoWin() {
 }
 
 #if !defined(MULTI_MONITOR_SCREENSHARE)
-void DesktopDeviceInfoWin::MultiMonitorScreenshare()
+int32_t DesktopDeviceInfoWin::MultiMonitorScreenshare()
 {
   DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
   if (pDesktopDeviceInfo) {
@@ -42,86 +32,35 @@ void DesktopDeviceInfoWin::MultiMonitorScreenshare()
 
     desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
   }
+  return 0;
 }
 #endif
 
-void DesktopDeviceInfoWin::InitializeScreenList() {
+int32_t DesktopDeviceInfoWin::Init() {
 #if !defined(MULTI_MONITOR_SCREENSHARE)
   MultiMonitorScreenshare();
 #endif
+
+  initializeWindowList();
+
+  return 0;
 }
-void DesktopDeviceInfoWin::InitializeApplicationList() {
-  // List all running applications exclude background process.
-  HWND hWnd;
-  for (hWnd = GetWindow(GetDesktopWindow(), GW_CHILD); hWnd; hWnd = GetWindow(hWnd, GW_HWNDNEXT)) {
-    if (!IsWindowVisible(hWnd))
-      continue;
 
-    DWORD dwProcessId = 0;
-    GetWindowThreadProcessId(hWnd, &dwProcessId);
-
-    // filter out non-process, current process, or any already seen processes
-    if (dwProcessId == 0 || dwProcessId == GetCurrentProcessId() ||
-        desktop_application_list_.find(dwProcessId) != desktop_application_list_.end()) {
-      continue;
-    }
-
-    // Add one application
-    DesktopApplication *pDesktopApplication = new DesktopApplication;
-    if (!pDesktopApplication) {
-      continue;
-    }
-
-    // process id
-    pDesktopApplication->setProcessId(dwProcessId);
-
-    // process path name
-    WCHAR szFilePathName[MAX_PATH]={0};
-    decltype(QueryFullProcessImageName) *lpfnQueryFullProcessImageNameProc =
-      reinterpret_cast<decltype(QueryFullProcessImageName) *>(GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "QueryFullProcessImageNameW"));
-    if (lpfnQueryFullProcessImageNameProc) {
-      // After Vista
-      DWORD dwMaxSize = _MAX_PATH;
-      HANDLE hWndPro = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwProcessId);
-      if(hWndPro) {
-        lpfnQueryFullProcessImageNameProc(hWndPro, 0, szFilePathName, &dwMaxSize);
-        CloseHandle(hWndPro);
-      }
-    } else {
-      HMODULE hModPSAPI = LoadLibrary(TEXT("PSAPI.dll"));
-      if (hModPSAPI) {
-        decltype(GetProcessImageFileName) *pfnGetProcessImageFileName =
-          reinterpret_cast<decltype(GetProcessImageFileName) *>(GetProcAddress(hModPSAPI, "GetProcessImageFileNameW"));
-
-        if (pfnGetProcessImageFileName) {
-          HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, 0, dwProcessId);
-          if (hProcess) {
-            DWORD dwMaxSize = _MAX_PATH;
-            pfnGetProcessImageFileName(hProcess, szFilePathName, dwMaxSize);
-            CloseHandle(hProcess);
-          }
-        }
-        FreeLibrary(hModPSAPI);
-      }
-    }
-    pDesktopApplication->setProcessPathName(Utf16ToUtf8(szFilePathName).c_str());
-
-    // application name
-    WCHAR szWndTitle[_MAX_PATH]={0};
-    GetWindowText(hWnd, szWndTitle, MAX_PATH);
-    if (lstrlen(szWndTitle) <= 0) {
-      pDesktopApplication->setProcessAppName(Utf16ToUtf8(szFilePathName).c_str());
-    } else {
-      pDesktopApplication->setProcessAppName(Utf16ToUtf8(szWndTitle).c_str());
-    }
-
-    // unique id name
-    char idStr[64];
-    _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%ld", pDesktopApplication->getProcessId());
-    pDesktopApplication->setUniqueIdName(idStr);
-
-    desktop_application_list_[pDesktopApplication->getProcessId()] = pDesktopApplication;
+int32_t DesktopDeviceInfoWin::Refresh() {
+#if !defined(MULTI_MONITOR_SCREENSHARE)
+  std::map<intptr_t,DesktopDisplayDevice*>::iterator iterDevice;
+  for (iterDevice=desktop_display_list_.begin(); iterDevice!=desktop_display_list_.end(); iterDevice++){
+    DesktopDisplayDevice * pDesktopDisplayDevice = iterDevice->second;
+    delete pDesktopDisplayDevice;
+    iterDevice->second = NULL;
   }
+  desktop_display_list_.clear();
+  MultiMonitorScreenshare();
+#endif
+
+  RefreshWindowList();
+
+  return 0;
 }
 
-} // namespace webrtc
+} //namespace webrtc
