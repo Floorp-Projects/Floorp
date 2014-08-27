@@ -10,6 +10,9 @@
 <!ENTITY dntTrackingNotOkay.accesskey   "n">
 <!ENTITY dntTrackingOkay.label2         "Tell sites that I want to be tracked">
 <!ENTITY dntTrackingOkay.accesskey      "h">
+<!ENTITY trackingProtection.label       "Prevent sites from tracking me">
+<!ENTITY trackingProtection.accesskey   "m">
+<!ENTITY trackingProtectionLearnMore.label "Learn more">
 <!ENTITY doNotTrackInfo.label           "Learn More">
 
 <!ENTITY  history.label                 "History">
