@@ -779,7 +779,9 @@
 
       <handler event="dragstart" phase="capturing"><![CDATA[
         // Drag only if the gesture starts from the input field.
-        if (event.originalTarget != this.inputField)
+        if (this.inputField != event.originalTarget && 
+            !(this.inputField.compareDocumentPosition(event.originalTarget) &
+              Node.DOCUMENT_POSITION_CONTAINED_BY))
           return;
 
         // Drag only if the entire value is selected and it's a valid URI.
