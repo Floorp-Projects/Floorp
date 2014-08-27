@@ -123,7 +123,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     protected final TabCounter tabsCounter;
     protected final ThemedImageButton menuButton;
     protected final ThemedImageView menuIcon;
-    protected final LinearLayout actionItemBar;
     private MenuPopup menuPopup;
     protected final List<View> focusOrder;
 
@@ -205,7 +204,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
         menuButton = (ThemedImageButton) findViewById(R.id.menu);
         menuIcon = (ThemedImageView) findViewById(R.id.menu_icon);
-        actionItemBar = (LinearLayout) findViewById(R.id.menu_items);
         hasSoftMenuButton = !HardwareUtils.hasMenuButton();
 
         editCancel = (ThemedImageView) findViewById(R.id.edit_cancel);
@@ -652,7 +650,8 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                 continue;
             }
 
-            if (view == actionItemBar) {
+            if (view.getId() == R.id.menu_items) {
+                final LinearLayout actionItemBar = (LinearLayout) view;
                 final int childCount = actionItemBar.getChildCount();
                 for (int child = 0; child < childCount; child++) {
                     View childView = actionItemBar.getChildAt(child);
@@ -895,17 +894,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         triggerStopEditingTransition();
 
         return url;
-    }
-
-    @Override
-    public boolean addActionItem(View actionItem) {
-        actionItemBar.addView(actionItem);
-        return true;
-    }
-
-    @Override
-    public void removeActionItem(View actionItem) {
-        actionItemBar.removeView(actionItem);
     }
 
     @Override
