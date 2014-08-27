@@ -4056,14 +4056,6 @@
     "kind": "boolean",
     "description": "True when we had to wait for a pending preload on first access to localStorage data, false otherwise"
   },
-  "LOCALDOMSTORAGE_GETALLKEYS_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Time to return a list of all keys in domain's LocalStorage (ms)"
-  },
   "LOCALDOMSTORAGE_GETALLKEYS_BLOCKING_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4071,14 +4063,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Time to block before we return a list of all keys in domain's LocalStorage (ms)"
-  },
-  "LOCALDOMSTORAGE_GETKEY_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Time to return a key name in domain's LocalStorage (ms)"
   },
   "LOCALDOMSTORAGE_GETKEY_BLOCKING_MS": {
     "expires_in_version": "never",
@@ -4088,14 +4072,6 @@
     "extended_statistics_ok": true,
     "description": "Time to block before we return a key name in domain's LocalStorage (ms)"
   },
-  "LOCALDOMSTORAGE_GETLENGTH_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Time to return number of keys in domain's LocalStorage (ms)"
-  },
   "LOCALDOMSTORAGE_GETLENGTH_BLOCKING_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4103,14 +4079,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Time to block before we return number of keys in domain's LocalStorage (ms)"
-  },
-  "LOCALDOMSTORAGE_GETVALUE_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Time to return a value for a key in LocalStorage (ms)"
   },
   "LOCALDOMSTORAGE_GETVALUE_BLOCKING_MS": {
     "expires_in_version": "never",
@@ -4120,14 +4088,6 @@
     "extended_statistics_ok": true,
     "description": "Time to block before we return a value for a key in LocalStorage (ms)"
   },
-  "LOCALDOMSTORAGE_SETVALUE_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Time to set a single key's value in LocalStorage (ms)"
-  },
   "LOCALDOMSTORAGE_SETVALUE_BLOCKING_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4136,14 +4096,6 @@
     "extended_statistics_ok": true,
     "description": "Time to block before we set a single key's value in LocalStorage (ms)"
   },
-  "LOCALDOMSTORAGE_REMOVEKEY_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Time to remove a single key from LocalStorage (ms)"
-  },
   "LOCALDOMSTORAGE_REMOVEKEY_BLOCKING_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4151,14 +4103,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Time to block before we remove a single key from LocalStorage (ms)"
-  },
-  "LOCALDOMSTORAGE_CLEAR_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Time to clear LocalStorage for all domains (ms)"
   },
   "LOCALDOMSTORAGE_CLEAR_BLOCKING_MS": {
     "expires_in_version": "never",

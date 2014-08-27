@@ -126,7 +126,10 @@
 
           // Note: Match "vsize" but not "vsize-max-contiguous".
           let vsizes = actual.match(/vsize[^-]/g);
-          let endOfBrowsers  = actual.match(/End of Browser/g);
+          let endOfBrowsers = actual.match(/End of Browser/g);
+          if (endOfBrowsers == null) {
+            endOfBrowsers = actual.match(/End of Web Content/g);
+          }
           let m2 = (vsizes.length == 4 && endOfBrowsers.length == 3);
           ok(m2, "three child processes present in loaded data");
           good = good && !!m2;

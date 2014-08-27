@@ -15,6 +15,9 @@ namespace mobilemessage {
 
 class MobileMessageDatabaseService MOZ_FINAL : public nsIMobileMessageDatabaseService
 {
+private:
+  ~MobileMessageDatabaseService() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMOBILEMESSAGEDATABASESERVICE
