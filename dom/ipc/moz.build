@@ -114,7 +114,7 @@ LOCAL_INCLUDES += [
     '/dom/fmradio/ipc',
     '/dom/indexedDB',
     '/dom/indexedDB/ipc',
-    '/dom/mobilemessage/src/ipc',
+    '/dom/mobilemessage/ipc',
     '/extensions/cookie',
     '/hal/sandbox',
     '/js/ipc',
