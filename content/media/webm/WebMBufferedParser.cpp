@@ -127,6 +127,7 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       }
       break;
     case READ_TIMECODESCALE:
+      MOZ_ASSERT(mGotTimecodeScale);
       mTimecodeScale = mVInt.mValue;
       mState = READ_ELEMENT_ID;
       break;
