@@ -138,8 +138,9 @@ class Configuration:
                 getter = lambda x: x.interface.isJSImplemented()
             elif key == 'isNavigatorProperty':
                 getter = lambda x: x.interface.getNavigatorProperty() != None
-            elif key == 'isExposedInAllWorkers':
-                getter = lambda x: not x.interface.isExternal() and "Worker" in x.interface._exposureGlobalNames
+            elif key == 'isExposedInAnyWorker':
+                getter = lambda x: (not x.interface.isExternal() and
+                                    x.interface.isExposedInAnyWorker())
             else:
                 # Have to watch out: just closing over "key" is not enough,
                 # since we're about to mutate its value
@@ -549,7 +550,10 @@ class Descriptor(DescriptorProvider):
                 self.interface.getExtendedAttribute("ChromeOnly") or
                 self.interface.getExtendedAttribute("Func") or
                 self.interface.getExtendedAttribute("AvailableIn") or
-                self.interface.getExtendedAttribute("CheckPermissions"))
+                self.interface.getExtendedAttribute("CheckPermissions") or
+                (not self.workers and not self.interface.isExposedInWindow()) or
+                (self.interface.isExposedInAnyWorker() and
+                 self.interface.isExposedOnlyInSomeWorkers()))
 
     def needsXrayResolveHooks(self):
         """
