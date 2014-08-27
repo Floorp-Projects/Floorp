@@ -11,7 +11,7 @@
  */
 
 [Pref="media.eme.enabled", Constructor(DOMString type, optional MediaKeyNeededEventInit eventInitDict)]
-interface MediaKeyNeededEvent : Event {
+interface MediaEncryptedEvent : Event {
   readonly attribute DOMString initDataType;
   [Throws]
   readonly attribute Uint8Array? initData;
@@ -19,5 +19,5 @@ interface MediaKeyNeededEvent : Event {
 
 dictionary MediaKeyNeededEventInit : EventInit {
   DOMString initDataType = "";
-  Uint8Array? initData;
+  Uint8Array? initData = null;
 };

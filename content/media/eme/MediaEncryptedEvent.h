@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_MediaKeyNeededEvent_h__
 #define mozilla_dom_MediaKeyNeededEvent_h__
 
-#include "mozilla/dom/MediaKeyNeededEventBinding.h"
+#include "mozilla/dom/MediaEncryptedEventBinding.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
@@ -22,14 +22,14 @@
 namespace mozilla {
 namespace dom {
 
-class MediaKeyNeededEvent MOZ_FINAL : public Event
+class MediaEncryptedEvent MOZ_FINAL : public Event
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaKeyNeededEvent, Event)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaEncryptedEvent, Event)
 protected:
-  virtual ~MediaKeyNeededEvent();
-  MediaKeyNeededEvent(EventTarget* aOwner);
+  virtual ~MediaEncryptedEvent();
+  MediaEncryptedEvent(EventTarget* aOwner);
 
   nsString mInitDataType;
   JS::Heap<JSObject*> mInitData;
@@ -38,12 +38,12 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  static already_AddRefed<MediaKeyNeededEvent>
+  static already_AddRefed<MediaEncryptedEvent>
   Constructor(EventTarget* aOwner,
               const nsAString& aInitDataType,
               const nsTArray<uint8_t>& aInitData);
 
-  static already_AddRefed<MediaKeyNeededEvent>
+  static already_AddRefed<MediaEncryptedEvent>
   Constructor(const GlobalObject& aGlobal,
               const nsAString& aType,
               const MediaKeyNeededEventInit& aEventInitDict,
