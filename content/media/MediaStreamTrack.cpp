@@ -54,11 +54,5 @@ MediaStreamTrack::SetEnabled(bool aEnabled)
   mStream->SetTrackEnabled(mTrackID, aEnabled);
 }
 
-void
-MediaStreamTrack::Stop()
-{
-  mStream->StopTrack(mTrackID);
-}
-
 }
 }
