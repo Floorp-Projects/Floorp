@@ -186,6 +186,7 @@ VideoDecoderConfig::IsValid()
 
 MP4Sample::MP4Sample()
   : mMediaBuffer(nullptr)
+  , decode_timestamp(0)
   , composition_timestamp(0)
   , duration(0)
   , byte_offset(0)
@@ -206,6 +207,7 @@ void
 MP4Sample::Update()
 {
   sp<MetaData> m = mMediaBuffer->meta_data();
+  decode_timestamp = FindInt64(m, kKeyDecodingTime);
   composition_timestamp = FindInt64(m, kKeyTime);
   duration = FindInt64(m, kKeyDuration);
   byte_offset = FindInt64(m, kKey64BitFileOffset);

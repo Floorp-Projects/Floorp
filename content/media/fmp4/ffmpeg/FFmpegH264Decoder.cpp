@@ -56,6 +56,7 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
   aSample->Pad(FF_INPUT_BUFFER_PADDING_SIZE);
   packet.data = aSample->data;
   packet.size = aSample->size;
+  packet.dts = aSample->decode_timestamp;
   packet.pts = aSample->composition_timestamp;
   packet.flags = aSample->is_sync_point ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->byte_offset;
