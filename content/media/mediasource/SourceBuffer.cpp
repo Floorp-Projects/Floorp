@@ -590,6 +590,9 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
       MSE_DEBUG("SourceBuffer(%p)::AppendData: Decoder marked as initialized.", this);
       mDecoderInitialized = true;
       const nsTArray<uint8_t>& initData = mParser->InitData();
+      mDecoder->NotifyDataArrived(reinterpret_cast<const char*>(initData.Elements()),
+                                  initData.Length(),
+                                  0);
       mDecoder->GetResource()->AppendData(initData.Elements(), initData.Length());
     }
     mLastParsedTimestamp = end;
