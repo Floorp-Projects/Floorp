@@ -7,6 +7,8 @@
 #ifndef mozilla_Sandbox_h
 #define mozilla_Sandbox_h
 
+#include "mozilla/Types.h"
+
 namespace mozilla {
 
 // The Set*Sandbox() functions must not be called if the corresponding
@@ -19,13 +21,13 @@ namespace mozilla {
 
 #ifdef MOZ_CONTENT_SANDBOX
 // Disabled by setting env var MOZ_DISABLE_CONTENT_SANDBOX.
-bool CanSandboxContentProcess();
-void SetContentProcessSandbox();
+MFBT_API bool CanSandboxContentProcess();
+MFBT_API void SetContentProcessSandbox();
 #endif
 #ifdef MOZ_GMP_SANDBOX
 // Disabled by setting env var MOZ_DISABLE_GMP_SANDBOX.
-bool CanSandboxMediaPlugin();
-void SetMediaPluginSandbox(const char *aFilePath);
+MFBT_API bool CanSandboxMediaPlugin();
+MFBT_API void SetMediaPluginSandbox(const char *aFilePath);
 #endif
 
 } // namespace mozilla

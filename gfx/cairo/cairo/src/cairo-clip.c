@@ -595,6 +595,12 @@ _cairo_clip_path_to_region_geometric (cairo_clip_path_t *clip_path)
     if (status == CAIRO_INT_STATUS_UNSUPPORTED)
 	goto UNSUPPORTED;
 
+    if (unlikely (traps.num_traps == 0)) {
+	clip_path->region = cairo_region_create ();
+	clip_path->flags |= CAIRO_CLIP_PATH_HAS_REGION;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     if (traps.num_traps > ARRAY_LENGTH (stack_boxes)) {
 	boxes = _cairo_malloc_ab (traps.num_traps, sizeof (cairo_box_t));
 	if (unlikely (boxes == NULL))

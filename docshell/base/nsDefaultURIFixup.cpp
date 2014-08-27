@@ -140,8 +140,6 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI, uint32_t aFixup
     NS_ENSURE_ARG(!aStringURI.IsEmpty());
 
     nsresult rv;
-    nsRefPtr<nsDefaultURIFixupInfo> info = new nsDefaultURIFixupInfo(aStringURI);
-    NS_ADDREF(*aInfo = info);
 
     nsAutoCString uriString(aStringURI);
     uriString.Trim(" ");  // Cleanup the empty spaces that might be on each end.
@@ -150,6 +148,9 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI, uint32_t aFixup
     uriString.StripChars("\r\n");
 
     NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
+
+    nsRefPtr<nsDefaultURIFixupInfo> info = new nsDefaultURIFixupInfo(uriString);
+    NS_ADDREF(*aInfo = info);
 
     nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -984,7 +985,7 @@ void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
         }
         // If we get here, we don't have a valid URI, or we did but the
         // host is not whitelisted, so we do a keyword search *anyway*:
-        rv = KeywordToURI(aURIString, aPostData,
+        rv = KeywordToURI(aFixupInfo->mOriginalInput, aPostData,
                           getter_AddRefs(aFixupInfo->mPreferredURI));
         if (NS_SUCCEEDED(rv) && aFixupInfo->mPreferredURI)
         {

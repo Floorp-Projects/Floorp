@@ -147,7 +147,7 @@ public:
         PL_DHashTableOperate(mTable, wrapper->GetIdentityObject(), PL_DHASH_REMOVE);
     }
 
-    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Count() { return mTable->EntryCount(); }
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
@@ -209,7 +209,7 @@ public:
         PL_DHashTableOperate(mTable, &clazz->GetIID(), PL_DHASH_REMOVE);
     }
 
-    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Count() { return mTable->EntryCount(); }
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
@@ -266,7 +266,7 @@ public:
         PL_DHashTableOperate(mTable, iface->GetIID(), PL_DHASH_REMOVE);
     }
 
-    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Count() { return mTable->EntryCount(); }
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
@@ -325,7 +325,7 @@ public:
         PL_DHashTableOperate(mTable, info, PL_DHASH_REMOVE);
     }
 
-    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Count() { return mTable->EntryCount(); }
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
@@ -385,7 +385,7 @@ public:
         PL_DHashTableOperate(mTable, info, PL_DHASH_REMOVE);
     }
 
-    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Count() { return mTable->EntryCount(); }
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
@@ -458,7 +458,7 @@ public:
         PL_DHashTableOperate(mTable, &key, PL_DHASH_REMOVE);
     }
 
-    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Count() { return mTable->EntryCount(); }
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
@@ -525,7 +525,7 @@ public:
         PL_DHashTableOperate(mTable, &iid, PL_DHASH_REMOVE);
     }
 
-    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Count() { return mTable->EntryCount(); }
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
@@ -562,7 +562,7 @@ public:
     bool GetNewOrUsed(uint32_t flags, char* name, uint32_t interfacesBitmap,
                       XPCNativeScriptableInfo* si);
 
-    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Count() { return mTable->EntryCount(); }
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
@@ -600,7 +600,7 @@ public:
         PL_DHashTableOperate(mTable, proto, PL_DHASH_REMOVE);
     }
 
-    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Count() { return mTable->EntryCount(); }
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
