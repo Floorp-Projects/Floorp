@@ -2601,26 +2601,10 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
   if (!strcmp(aTopic, NS_IOSERVICE_APP_OFFLINE_STATUS_TOPIC)) {
-    nsCOMPtr<nsIAppOfflineInfo> info(do_QueryInterface(aSubject));
-    if (!info) {
-      return NS_OK;
-    }
-    nsIPrincipal * principal = GetPrincipalForAsmJSCacheOp();
-    if (!principal) {
-      return NS_OK;
-    }
-
-    uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-    principal->GetAppId(&appId);
-
-    uint32_t notificationAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-    info->GetAppId(&notificationAppId);
-
-    if (appId != notificationAppId) {
-      return NS_OK;
-    }
-
-    SendOfflineStatusChangeEventToAllWorkers(NS_IsOffline() || NS_IsAppOffline(appId));
+    BROADCAST_ALL_WORKERS(OfflineStatusChangeEvent,
+                          NS_IsOffline() ||
+                          NS_IsAppOffline(workers[index]->GetPrincipal()));
+    return NS_OK;
   }
 
   NS_NOTREACHED("Unknown observer topic!");
