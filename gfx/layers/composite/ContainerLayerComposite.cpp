@@ -128,9 +128,9 @@ static void PrintUniformityInfo(Layer* aLayer)
     return;
   }
   Point translation = transform.As2D().GetTranslation();
-  printf_stderr("UniformityInfo Layer_Move %llu %p %f, %f\n",
+  printf_stderr("UniformityInfo Layer_Move %llu %p %s\n",
       (unsigned long long)(TimeStamp::Now() - t0).ToMilliseconds(), aLayer,
-      translation.x.value, translation.y.value);
+      ToString(translation).c_str());
 }
 
 /* all of the per-layer prepared data we need to maintain */
