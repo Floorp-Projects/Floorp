@@ -80,7 +80,9 @@ RenderTarget9::RenderTarget9(Renderer *renderer, GLsizei width, GLsizei height, 
                                                 0, FALSE, &mRenderTarget, NULL);
         }
 
-        if (result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY)
+        if (result == D3DERR_OUTOFVIDEOMEMORY ||
+            result == E_INVALIDARG ||
+            result == E_OUTOFMEMORY)
         {
             gl::error(GL_OUT_OF_MEMORY);
 
