@@ -242,3 +242,7 @@ user_pref("browser.newtabpage.directory.ping", "");
 
 // Enable Loop
 user_pref("loop.enabled", true);
+
+// Ensure UITour won't hit the network
+user_pref("browser.uitour.pinnedTabUrl", "http://%(server)s/uitour-dummy/pinnedTab");
+user_pref("browser.uitour.url", "http://%(server)s/uitour-dummy/tour");
