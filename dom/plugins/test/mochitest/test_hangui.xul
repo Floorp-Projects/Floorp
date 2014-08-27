@@ -9,6 +9,8 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript"
+          src="utils.js" />
+  <script type="application/javascript"
           src="http://mochi.test:8888/chrome/dom/plugins/test/mochitest/hang_test.js" />
   <script type="application/javascript"
           src="http://mochi.test:8888/chrome/dom/plugins/test/mochitest/hangui_common.js" />
@@ -19,6 +21,7 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -100,7 +103,8 @@ function runTests() {
 
   resetVars();
 
-  hanguiExpect("Prime ChromeWorker", false, false, "test1");
+  hanguiOperation("Prime ChromeWorker", 0, false, false, HANGUIOP_NOTHING, 0,
+                  false, "test1");
 }
 
 window.frameLoaded = runTests;
@@ -244,7 +248,7 @@ function test3() {
 }
 
 function test2() {
-  // This test is identical to test1 because there were some bugs where the 
+  // This test is identical to test1 because there were some bugs where the
   // Hang UI would show on the first hang but not on subsequent hangs
   hanguiExpect("test2: Plugin Hang UI is showing", true, true, "test3");
   p.stall(STALL_DURATION);
