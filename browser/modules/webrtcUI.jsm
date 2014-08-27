@@ -353,10 +353,22 @@ function prompt(aContentWindow, aCallID, aAudio, aVideo, aDevices, aSecure) {
           let name;
           // Screen has a special treatment because we currently only support
           // sharing the primary screen and want to display a localized string.
-          if (type == "screen")
+          if (type == "screen") {
             name = stringBundle.getString("getUserMedia.shareEntireScreen.label");
-          else
+          }
+          else {
             name = devices[i].name;
+            if (type == "application") {
+              // The application names returned by the platform are of the form:
+              // <window count>\x1e<application name>
+              let sepIndex = name.indexOf("\x1e");
+              let count = name.slice(0, sepIndex);
+              let stringId = "getUserMedia.shareApplicationWindowCount.label";
+              name = PluralForm.get(parseInt(count), stringBundle.getString(stringId))
+                               .replace("#1", name.slice(sepIndex + 1))
+                               .replace("#2", count);
+            }
+          }
           addDeviceToList(menupopup, name, i, typeName);
         }
 
