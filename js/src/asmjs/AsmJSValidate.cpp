@@ -3964,13 +3964,13 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, RetTyp
     return true;
 }
 
-static bool CheckCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type);
+static bool CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type);
 
 static bool
 CheckFRoundArg(FunctionCompiler &f, ParseNode *arg, MDefinition **def, Type *type)
 {
     if (arg->isKind(PNK_CALL))
-        return CheckCall(f, arg, RetType::Float, def, type);
+        return CheckCoercedCall(f, arg, RetType::Float, def, type);
 
     MDefinition *inputDef;
     Type inputType;
@@ -4093,7 +4093,7 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinF
 }
 
 static bool
-CheckCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
+CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
@@ -4134,7 +4134,7 @@ CheckPos(FunctionCompiler &f, ParseNode *pos, MDefinition **def, Type *type)
     ParseNode *operand = UnaryKid(pos);
 
     if (operand->isKind(PNK_CALL))
-        return CheckCall(f, operand, RetType::Double, def, type);
+        return CheckCoercedCall(f, operand, RetType::Double, def, type);
 
     MDefinition *operandDef;
     Type operandType;
@@ -4263,7 +4263,7 @@ CheckComma(FunctionCompiler &f, ParseNode *comma, MDefinition **def, Type *type)
         MDefinition *_1;
         Type _2;
         if (pn->isKind(PNK_CALL)) {
-            if (!CheckCall(f, pn, RetType::Void, &_1, &_2))
+            if (!CheckCoercedCall(f, pn, RetType::Void, &_1, &_2))
                 return false;
         } else {
             if (!CheckExpr(f, pn, &_1, &_2))
@@ -4585,7 +4585,7 @@ CheckBitwise(FunctionCompiler &f, ParseNode *bitwise, MDefinition **def, Type *t
 
     if (IsLiteralInt(f.m(), rhs, &i) && i == uint32_t(identityElement)) {
         if (bitwise->isKind(PNK_BITOR) && lhs->isKind(PNK_CALL))
-            return CheckCall(f, lhs, RetType::Signed, def, type);
+            return CheckCoercedCall(f, lhs, RetType::Signed, def, type);
 
         Type lhsType;
         if (!CheckExpr(f, lhs, def, &lhsType))
@@ -4704,7 +4704,7 @@ CheckExprStatement(FunctionCompiler &f, ParseNode *exprStmt)
     Type _2;
 
     if (expr->isKind(PNK_CALL))
-        return CheckCall(f, expr, RetType::Void, &_1, &_2);
+        return CheckCoercedCall(f, expr, RetType::Void, &_1, &_2);
 
     return CheckExpr(f, UnaryKid(exprStmt), &_1, &_2);
 }
