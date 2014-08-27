@@ -451,7 +451,7 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
     srcBox.front = 0;
     srcBox.right = aSourcePoint.x + aRect.width;
     srcBox.bottom = aSourcePoint.y + aRect.height;
-    srcBox.back = 0;
+    srcBox.back = 1;
 
     const IntSize& srcSize = sourceD3D11->GetSize();
     MOZ_ASSERT(srcSize.width >= 0 && srcSize.height >= 0,

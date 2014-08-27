@@ -7,7 +7,6 @@
 
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/net/NeckoCommon.h"
-#include "mozilla/net/OfflineObserver.h"
 
 #ifndef mozilla_net_NeckoParent_h
 #define mozilla_net_NeckoParent_h
@@ -23,9 +22,8 @@ enum PBOverrideStatus {
 };
 
 // Header file contents
-class NeckoParent
-  : public PNeckoParent
-  , public DisconnectableParent
+class NeckoParent :
+  public PNeckoParent
 {
 public:
   NeckoParent();
@@ -53,8 +51,7 @@ public:
                            nsCOMPtr<nsILoadContext> &aResult);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
-  virtual nsresult OfflineNotification(nsISupports *) MOZ_OVERRIDE;
-  virtual uint32_t GetAppId() MOZ_OVERRIDE { return NECKO_UNKNOWN_APP_ID; }
+
   virtual void
   CloneManagees(ProtocolBase* aSource,
               mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
@@ -204,7 +201,6 @@ protected:
 private:
   nsCString mCoreAppsBasePath;
   nsCString mWebAppsBasePath;
-  nsRefPtr<OfflineObserver> mObserver;
 };
 
 } // namespace net
