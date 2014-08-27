@@ -37,7 +37,9 @@ function test() {
 
     // Check no toolbox buttons are shown
     let buttons = addonDebugger.frame.contentDocument.getElementById("toolbox-buttons").children;
-    is(buttons.length, 0, "no toolbox buttons for the addon debugger");
+    Array.forEach(buttons, (btn, i) => {
+      is(btn.hidden, true, "no toolbox buttons for the addon debugger -- " + btn.className);
+    });
 
     yield addonDebugger.destroy();
     yield removeAddon(addon);
