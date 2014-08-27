@@ -15,6 +15,12 @@ var gAdvancedPane = {
    */
   init: function ()
   {
+    function setEventListener(aId, aEventType, aCallback)
+    {
+      document.getElementById(aId)
+              .addEventListener(aEventType, aCallback.bind(gAdvancedPane));
+    }
+
     this._inited = true;
     var advancedPrefs = document.getElementById("advancedPrefs");
 
@@ -35,6 +41,44 @@ var gAdvancedPane = {
 #endif
     this.updateActualCacheSize();
     this.updateActualAppCacheSize();
+
+    setEventListener("layers.acceleration.disabled", "change",
+                     gAdvancedPane.updateHardwareAcceleration);
+    setEventListener("advancedPrefs", "select",
+                     gAdvancedPane.tabSelectionChanged);
+#ifdef MOZ_SERVICES_HEALTHREPORT
+    setEventListener("submitHealthReportBox", "command",
+                     gAdvancedPane.updateSubmitHealthReport);
+#endif
+#ifdef MOZ_CRASHREPORTER
+    setEventListener("submitCrashesBox", "command",
+                     gAdvancedPane.updateSubmitCrashes);
+#endif
+    setEventListener("connectionSettings", "command",
+                     gAdvancedPane.showConnections);
+    setEventListener("clearCacheButton", "command",
+                     gAdvancedPane.clearCache);
+    setEventListener("clearOfflineAppCacheButton", "command",
+                     gAdvancedPane.clearOfflineAppCache);
+    setEventListener("offlineNotifyExceptions", "command",
+                     gAdvancedPane.showOfflineExceptions);
+    setEventListener("offlineNotifyExceptions", "command", function (event) {
+      gAdvancedPane.offlineAppSelected(event); })
+    let bundlePrefs = document.getElementById("bundlePreferences");
+    document.getElementById("offlineAppsList")
+            .style.height = bundlePrefs.getString("offlineAppsList.height");
+    setEventListener("offlineAppsListRemove", "command",
+                     gAdvancedPane.removeOfflineApp);
+#ifdef MOZ_UPDATER
+    setEventListener("updateRadioGroup", "command",
+                     gAdvancedPane.updateWritePrefs);
+#endif
+    setEventListener("showUpdateHistory", "command",
+                     gAdvancedPane.showUpdates);
+    setEventListener("viewCertificatesButton", "command",
+                     gAdvancedPane.showCertificates);
+    setEventListener("viewSecurityDevicesButton", "command",
+                     gAdvancedPane.showSecurityDevices);
   },
 
   /**

@@ -153,7 +153,7 @@
                      value="&unlinkDevice.label;"/>
             </hbox>
           </groupbox>
-          <hbox id="tosPP" pack="center">
+          <hbox id="tosPP-normal" pack="center">
             <label class="text-link"
                    onclick="event.stopPropagation();gSyncUtils.openToS();"
                    value="&prefs.tosLink.label;"/>
@@ -290,7 +290,7 @@
                      onchange="gSyncUtils.changeName(this)"/>
           </hbox>
           <spacer flex="1"/>
-          <hbox id="tosPP" pack="center">
+          <hbox id="tosPP-small" pack="center">
             <label class="text-link small"
                    onclick="event.stopPropagation();gSyncUtils.openToS();"
                    value="&prefs.tosLink.label;"/>

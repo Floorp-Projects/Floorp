@@ -29,7 +29,6 @@
 #include "ClientLayerManager.h"
 #include "FrameLayerBuilder.h"
 
-typedef nsContentView::ViewConfig ViewConfig;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -304,13 +303,6 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
     *aTextureFactoryIdentifier = TextureFactoryIdentifier();
   }
 
-  if (lm && lm->GetRoot() && lm->GetRoot()->AsContainerLayer()) {
-    ViewID rootScrollId = lm->GetRoot()->AsContainerLayer()->GetFrameMetrics().GetScrollId();
-    if (rootScrollId != FrameMetrics::NULL_SCROLL_ID) {
-      mRootContentView = new nsContentView(aFrameLoader, rootScrollId, true);
-    }
-  }
-
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     // Our remote frame will push layers updates to the compositor,
     // and we'll keep an indirect reference to that tree.
@@ -354,12 +346,6 @@ void
 RenderFrameParent::Destroy()
 {
   mFrameLoaderDestroyed = true;
-}
-
-nsContentView*
-RenderFrameParent::GetRootContentView()
-{
-  return mRootContentView;
 }
 
 already_AddRefed<Layer>
