@@ -30,9 +30,11 @@ protected:
 
 class nsScreenManagerAndroid MOZ_FINAL : public nsIScreenManager
 {
+private:
+    ~nsScreenManagerAndroid();
+
 public:
     nsScreenManagerAndroid();
-    ~nsScreenManagerAndroid();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCREENMANAGER

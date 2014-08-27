@@ -16,6 +16,8 @@ public:
   NS_DECL_NSINETWORKLINKSERVICE
 
   nsAndroidNetworkLinkService();
+
+private:
   virtual ~nsAndroidNetworkLinkService();
 };
 

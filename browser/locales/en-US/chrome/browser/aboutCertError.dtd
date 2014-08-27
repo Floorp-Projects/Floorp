@@ -26,6 +26,10 @@ going to the right place. However, this site's identity can't be verified.">
 <!ENTITY certerror.whatShouldIDo.content "If you usually connect to
 this site without problems, this error could mean that someone is
 trying to impersonate the site, and you shouldn't continue.">
+<!ENTITY certerror.whatShouldIDo.badStsCertExplanation "This site uses HTTP
+Strict Transport Security (HSTS) to specify that &brandShortName; only connect
+to it securely. As a result, it is not possible to add an exception for this
+certificate.">
 <!ENTITY certerror.getMeOutOfHere.label "Get me out of here!">
 
 <!ENTITY certerror.expert.heading "I Understand the Risks">

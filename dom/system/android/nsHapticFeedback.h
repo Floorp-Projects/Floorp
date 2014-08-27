@@ -7,6 +7,9 @@
 
 class nsHapticFeedback MOZ_FINAL : public nsIHapticFeedback
 {
+private:
+  ~nsHapticFeedback() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHAPTICFEEDBACK

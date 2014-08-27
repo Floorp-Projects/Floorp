@@ -60,4 +60,5 @@ if CONFIG['GNU_CXX']:
     CXXFLAGS += [
         '-Wno-empty-body',
         '-Wno-type-limits',
+        '-Wno-unused-local-typedefs',
     ]

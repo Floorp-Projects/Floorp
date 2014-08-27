@@ -521,11 +521,6 @@ child:
      */
     UIResolutionChanged();
 
-    /**
-     * Tell the child of an app's offline status
-     */
-    AppOfflineStatus(uint32_t id, bool offline);
-
 /*
  * FIXME: write protocol!
 
