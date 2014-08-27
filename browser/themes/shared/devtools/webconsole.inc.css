@@ -63,6 +63,10 @@ a {
   margin: 3px;
 }
 
+.message-body-wrapper .table-widget-body {
+  overflow: visible;
+}
+
 /* The red bubble that shows the number of times a message is repeated */
 .message-repeats {
   -moz-user-select: none;
@@ -221,6 +225,13 @@ a {
 
 .theme-light .console-string {
   color: hsl(24,85%,39%);
+}
+
+.theme-selected .console-string,
+.theme-selected .cm-number,
+.theme-selected .cm-variable,
+.theme-selected .kind-ArrayLike {
+  color: #f5f7fa !important; /* Selection Text Color */
 }
 
 .message[category=network] > .indent {
@@ -427,6 +438,10 @@ a {
   overflow-y: auto;
   border: 1px solid rgb(200,200,200);
   border-radius: 3px;
+}
+
+.consoletable {
+  margin: 5px 0 0 0;
 }
 
 .theme-light .message[severity=error] .stacktrace {
