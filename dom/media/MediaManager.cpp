@@ -1645,11 +1645,16 @@ MediaManager::GetUserMedia(bool aPrivileged,
        on the whitelist. */
       // Block screen/window sharing on Mac OSX 10.6 and WinXP until proved that they work
       if (
+#if defined(XP_MACOSX) || defined(XP_WIN)
+          (
+            !Preferences::GetBool("media.getusermedia.screensharing.allow_on_old_platforms", false) &&
 #if defined(XP_MACOSX)
-          !nsCocoaFeatures::OnLionOrLater() ||
+            !nsCocoaFeatures::OnLionOrLater()
 #endif
 #if defined (XP_WIN)
-          !IsVistaOrLater() ||
+            !IsVistaOrLater()
+#endif
+           ) ||
 #endif
           (!aPrivileged && !HostHasPermission(*docURI))) {
         return runnable->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
