@@ -52,8 +52,6 @@ import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Interpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -133,25 +131,26 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     private OnStartEditingListener startEditingListener;
     private OnStopEditingListener stopEditingListener;
 
-    private final BrowserApp activity;
-    private boolean hasSoftMenuButton;
+    protected final BrowserApp activity;
+    protected boolean hasSoftMenuButton;
 
     protected UIMode uiMode;
 
     private final Paint shadowPaint;
     private final int shadowSize;
 
-    private static final Interpolator buttonsInterpolator = new AccelerateInterpolator();
-
     private final LightweightTheme theme;
     private final ToolbarPrefs prefs;
 
     public abstract boolean isAnimating();
 
+    protected abstract boolean isTabsButtonOffscreen();
+
     protected abstract void updateNavigationButtons(Tab tab);
 
     protected abstract void triggerStartEditingTransition(PropertyAnimator animator);
     protected abstract void triggerStopEditingTransition();
+    public abstract void triggerTabsPanelTransition(PropertyAnimator animator, boolean areTabsShown);
 
     public static BrowserToolbar create(final Context context, final AttributeSet attrs) {
         final BrowserToolbar toolbar;
@@ -535,7 +534,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         }
     }
 
-    private boolean isVisible() {
+    protected boolean isVisible() {
         return ViewHelper.getTranslationY(this) == 0;
     }
 
@@ -545,10 +544,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         tabsButton.setNextFocusDownId(nextId);
         urlDisplayLayout.setNextFocusDownId(nextId);
         menuButton.setNextFocusDownId(nextId);
-    }
-
-    private void addTab() {
-        activity.addTab();
     }
 
     private void toggleTabs() {
@@ -571,32 +566,12 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         }
     }
 
-    protected void updateTabCountAndAnimate(final int count) {
-        // Don't animate if the toolbar is hidden.
-        if (!isVisible()) {
-            updateTabCount(count);
-            return;
-        }
-
+    protected void updateTabCount(final int count) {
         // If toolbar is in edit mode on a phone, this means the entry is expanded
         // and the tabs button is translated offscreen. Don't trigger tabs counter
         // updates until the tabs button is back on screen.
         // See stopEditing()
-        if (!isEditing() || HardwareUtils.isTablet()) {
-            tabsCounter.setCount(count);
-
-            tabsButton.setContentDescription((count > 1) ?
-                                             activity.getString(R.string.num_tabs, count) :
-                                             activity.getString(R.string.one_tab));
-        }
-    }
-
-    private void updateTabCount(int count) {
-        // If toolbar is in edit mode on a phone, this means the entry is expanded
-        // and the tabs button is translated offscreen. Don't trigger tabs counter
-        // updates until the tabs button is back on screen.
-        // See stopEditing()
-        if (isEditing() && !HardwareUtils.isTablet()) {
+        if (isTabsButtonOffscreen()) {
             return;
         }
 
@@ -685,53 +660,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     public void setTitle(CharSequence title) {
         urlDisplayLayout.setTitle(title);
-    }
-
-    public void prepareTabsAnimation(PropertyAnimator animator, boolean tabsAreShown) {
-        if (!tabsAreShown) {
-            PropertyAnimator buttonsAnimator =
-                    new PropertyAnimator(animator.getDuration(), buttonsInterpolator);
-
-            buttonsAnimator.attach(tabsCounter,
-                                   PropertyAnimator.Property.ALPHA,
-                                   1.0f);
-
-            if (hasSoftMenuButton && !HardwareUtils.isTablet()) {
-                buttonsAnimator.attach(menuIcon,
-                                       PropertyAnimator.Property.ALPHA,
-                                       1.0f);
-            }
-
-            buttonsAnimator.start();
-
-            return;
-        }
-
-        ViewHelper.setAlpha(tabsCounter, 0.0f);
-
-        if (hasSoftMenuButton && !HardwareUtils.isTablet()) {
-            ViewHelper.setAlpha(menuIcon, 0.0f);
-        }
-    }
-
-    public void finishTabsAnimation(boolean tabsAreShown) {
-        if (tabsAreShown) {
-            return;
-        }
-
-        PropertyAnimator animator = new PropertyAnimator(150);
-
-        animator.attach(tabsCounter,
-                        PropertyAnimator.Property.ALPHA,
-                        1.0f);
-
-        if (hasSoftMenuButton && !HardwareUtils.isTablet()) {
-            animator.attach(menuIcon,
-                            PropertyAnimator.Property.ALPHA,
-                            1.0f);
-        }
-
-        animator.start();
     }
 
     public void setOnActivateListener(OnActivateListener listener) {
