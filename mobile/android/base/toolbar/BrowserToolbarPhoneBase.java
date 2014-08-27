@@ -9,6 +9,8 @@ import java.util.Arrays;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.ViewHelper;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -17,6 +19,8 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Interpolator;
 import android.widget.ImageView;
 
 /**
@@ -29,6 +33,8 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
 
     private final Path roundCornerShape;
     private final Paint roundCornerPaint;
+
+    private final Interpolator buttonsInterpolator = new AccelerateInterpolator();
 
     public BrowserToolbarPhoneBase(final Context context, final AttributeSet attrs) {
         super(context, attrs);
@@ -56,6 +62,11 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
     }
 
     @Override
+    protected boolean isTabsButtonOffscreen() {
+        return isEditing();
+    }
+
+    @Override
     public boolean addActionItem(final View actionItem) {
         // We have no action item bar.
         return false;
@@ -80,6 +91,31 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
         }
     }
 
+    @Override
+    public void triggerTabsPanelTransition(final PropertyAnimator animator, final boolean areTabsShown) {
+        if (areTabsShown) {
+            ViewHelper.setAlpha(tabsCounter, 0.0f);
+            if (hasSoftMenuButton) {
+                ViewHelper.setAlpha(menuIcon, 0.0f);
+            }
+            return;
+        }
+
+        final PropertyAnimator buttonsAnimator =
+                new PropertyAnimator(animator.getDuration(), buttonsInterpolator);
+
+        buttonsAnimator.attach(tabsCounter,
+                               PropertyAnimator.Property.ALPHA,
+                               1.0f);
+        if (hasSoftMenuButton) {
+            buttonsAnimator.attach(menuIcon,
+                                   PropertyAnimator.Property.ALPHA,
+                                   1.0f);
+        }
+
+        buttonsAnimator.start();
+    }
+
     /**
      * Returns the number of pixels the url bar translating edge
      * needs to translate to the right to enter its editing mode state.
@@ -95,4 +131,25 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
     protected int getUrlBarCurveTranslation() {
         return getWidth() - tabsButton.getLeft();
     }
+
+    protected void updateTabCountAndAnimate(final int count) {
+        // Don't animate if the toolbar is hidden.
+        if (!isVisible()) {
+            updateTabCount(count);
+            return;
+        }
+
+        // If toolbar is in edit mode on a phone, this means the entry is expanded
+        // and the tabs button is translated offscreen. Don't trigger tabs counter
+        // updates until the tabs button is back on screen.
+        // See stopEditing()
+        if (!isTabsButtonOffscreen()) {
+            tabsCounter.setCount(count);
+
+            tabsButton.setContentDescription((count > 1) ?
+                                             activity.getString(R.string.num_tabs, count) :
+                                             activity.getString(R.string.one_tab));
+        }
+    }
+
 }
