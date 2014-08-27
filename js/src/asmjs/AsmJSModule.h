@@ -78,6 +78,69 @@ struct AsmJSFunctionLabels
     jit::Label &overflowExit;
 };
 
+// Represents the type and value of an asm.js numeric literal.
+//
+// A literal is a double iff the literal contains a decimal point (even if the
+// fractional part is 0). Otherwise, integers may be classified:
+//  fixnum: [0, 2^31)
+//  negative int: [-2^31, 0)
+//  big unsigned: [2^31, 2^32)
+//  out of range: otherwise
+// Lastly, a literal may be a float literal which is any double or integer
+// literal coerced with Math.fround.
+class AsmJSNumLit
+{
+  public:
+    enum Which {
+        Fixnum,
+        NegativeInt,
+        BigUnsigned,
+        Double,
+        Float,
+        OutOfRangeInt = -1
+    };
+
+  private:
+    Which which_;
+    Value value_;
+
+  public:
+    static AsmJSNumLit Create(Which w, Value v) {
+        AsmJSNumLit lit;
+        lit.which_ = w;
+        lit.value_ = v;
+        return lit;
+    }
+
+    Which which() const {
+        return which_;
+    }
+
+    int32_t toInt32() const {
+        JS_ASSERT(which_ == Fixnum || which_ == NegativeInt || which_ == BigUnsigned);
+        return value_.toInt32();
+    }
+
+    double toDouble() const {
+        JS_ASSERT(which_ == Double);
+        return value_.toDouble();
+    }
+
+    float toFloat() const {
+        JS_ASSERT(which_ == Float);
+        return float(value_.toDouble());
+    }
+
+    Value value() const {
+        JS_ASSERT(which_ != OutOfRangeInt);
+        return value_;
+    }
+
+    bool hasType() const {
+        return which_ != OutOfRangeInt;
+    }
+};
+
 // An asm.js module represents the collection of functions nested inside a
 // single outer "use asm" function. For example, this asm.js module:
 //   function() { "use asm"; function f() {} function g() {} return f }
