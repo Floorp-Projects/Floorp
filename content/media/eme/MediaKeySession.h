@@ -70,6 +70,8 @@ public:
 
   already_AddRefed<Promise> Remove(ErrorResult& aRv);
 
+  already_AddRefed<Promise> GetUsableKeyIds(ErrorResult& aRv);
+
   void DispatchKeyMessage(const nsTArray<uint8_t>& aMessage,
                           const nsAString& aURL);
 
