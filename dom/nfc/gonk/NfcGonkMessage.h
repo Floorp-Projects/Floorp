@@ -8,7 +8,7 @@
 namespace mozilla {
 
 #define NFCD_MAJOR_VERSION 1
-#define NFCD_MINOR_VERSION 7
+#define NFCD_MINOR_VERSION 8
 
 enum NfcRequest {
   ConfigReq = 0,
@@ -31,6 +31,7 @@ enum NfcNotification {
   Initialized = 2000,
   TechDiscovered,
   TechLost,
+  HCIEventTransaction,
 };
 
 enum NfcTechlogy {
@@ -73,6 +74,12 @@ enum NfcErrorCode {
   DeselectSeFail = -29,
   FailEnableLowPowerMode = -30,
   FailDisableLowPowerMode = -31,
+};
+
+enum SecureElementOrigin {
+  SIM = 0,
+  ESE = 1,
+  ASSD = 2,
 };
 
 } // namespace mozilla

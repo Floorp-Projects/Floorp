@@ -43,4 +43,11 @@ dictionary NfcEventOptions
   long maxSupportedLength;
 
   long powerLevel;
+
+  // HCI Event Transaction fields
+  DOMString origin;
+  long originType;
+  long originIndex;
+  Uint8Array aid;
+  Uint8Array payload;
 };
