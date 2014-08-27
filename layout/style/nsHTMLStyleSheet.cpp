@@ -500,12 +500,12 @@ nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped)
 
   NS_ASSERTION(mMappedAttrTable.ops, "table uninitialized");
 #ifdef DEBUG
-  uint32_t entryCount = mMappedAttrTable.entryCount - 1;
+  uint32_t entryCount = mMappedAttrTable.EntryCount() - 1;
 #endif
 
   PL_DHashTableOperate(&mMappedAttrTable, aMapped, PL_DHASH_REMOVE);
 
-  NS_ASSERTION(entryCount == mMappedAttrTable.entryCount, "not removed");
+  NS_ASSERTION(entryCount == mMappedAttrTable.EntryCount(), "not removed");
 }
 
 nsIStyleRule*

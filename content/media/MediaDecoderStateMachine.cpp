@@ -2602,7 +2602,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
 #ifdef PR_LOGGING
       if (currentFrame) {
         VERBOSE_LOG("discarding video frame mTime=%lld clock_time=%lld (%d so far)",
-                    currentFrame->mTime, ++droppedFrames);
+                    currentFrame->mTime, clock_time, ++droppedFrames);
       }
 #endif
       currentFrame = frame;
