@@ -1954,9 +1954,11 @@ CodeGeneratorMIPS::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     // Offset is out of range. Load default values.
     if (isFloat) {
         if (size == 32)
-            masm.loadFloat32(Address(GlobalReg, AsmJSNaN32GlobalDataOffset), ToFloatRegister(out));
+            masm.loadFloat32(Address(GlobalReg, AsmJSNaN32GlobalDataOffset - AsmJSGlobalRegBias),
+                             ToFloatRegister(out));
         else
-            masm.loadDouble(Address(GlobalReg, AsmJSNaN64GlobalDataOffset), ToFloatRegister(out));
+            masm.loadDouble(Address(GlobalReg, AsmJSNaN64GlobalDataOffset - AsmJSGlobalRegBias),
+                            ToFloatRegister(out));
     } else {
         masm.move32(Imm32(0), ToRegister(out));
     }
@@ -2147,7 +2149,7 @@ bool
 CodeGeneratorMIPS::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
 {
     const MAsmJSLoadGlobalVar *mir = ins->mir();
-    unsigned addr = mir->globalDataOffset();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
     if (mir->type() == MIRType_Int32)
         masm.load32(Address(GlobalReg, addr), ToRegister(ins->output()));
     else if (mir->type() == MIRType_Float32)
@@ -2164,7 +2166,7 @@ CodeGeneratorMIPS::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
 
     MIRType type = mir->value()->type();
     MOZ_ASSERT(IsNumberType(type));
-    unsigned addr = mir->globalDataOffset();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
     if (mir->value()->type() == MIRType_Int32)
         masm.store32(ToRegister(ins->value()), Address(GlobalReg, addr));
     else if (mir->value()->type() == MIRType_Float32)
@@ -2182,7 +2184,7 @@ CodeGeneratorMIPS::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins)
     Register index = ToRegister(ins->index());
     Register tmp = ToRegister(ins->temp());
     Register out = ToRegister(ins->output());
-    unsigned addr = mir->globalDataOffset();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
 
     BaseIndex source(GlobalReg, index, TimesFour, addr);
     masm.load32(source, out);
@@ -2193,7 +2195,8 @@ bool
 CodeGeneratorMIPS::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins)
 {
     const MAsmJSLoadFFIFunc *mir = ins->mir();
-    masm.loadPtr(Address(GlobalReg, mir->globalDataOffset()), ToRegister(ins->output()));
+    masm.loadPtr(Address(GlobalReg, mir->globalDataOffset() - AsmJSGlobalRegBias),
+                 ToRegister(ins->output()));
     return true;
 }
 
