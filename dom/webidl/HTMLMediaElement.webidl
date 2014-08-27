@@ -155,7 +155,7 @@ partial interface HTMLMediaElement {
   Promise<void> setMediaKeys(MediaKeys? mediaKeys);
 
   [Pref="media.eme.enabled"]
-  attribute EventHandler onneedkey;
+  attribute EventHandler onencrypted;
 
   [Pref="media.eme.enabled"]
   readonly attribute MediaWaitingFor waitingFor;

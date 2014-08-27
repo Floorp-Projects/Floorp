@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'MediaEncryptedEvent.h',
     'MediaKeyError.h',
     'MediaKeyMessageEvent.h',
-    'MediaKeyNeededEvent.h',
     'MediaKeys.h',
     'MediaKeySession.h',
 ]
@@ -24,9 +24,9 @@ UNIFIED_SOURCES += [
     'CDMCaps.cpp',
     'CDMProxy.cpp',
     'EMELog.cpp',
+    'MediaEncryptedEvent.cpp',
     'MediaKeyError.cpp',
     'MediaKeyMessageEvent.cpp',
-    'MediaKeyNeededEvent.cpp',
     'MediaKeys.cpp',
     'MediaKeySession.cpp',
 ]

@@ -8,7 +8,7 @@
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/MediaKeyError.h"
 #include "mozilla/dom/MediaKeyMessageEvent.h"
-#include "mozilla/dom/MediaKeyNeededEvent.h"
+#include "mozilla/dom/MediaEncryptedEvent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/AsyncEventDispatcher.h"
