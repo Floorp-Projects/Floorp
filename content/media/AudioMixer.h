@@ -9,14 +9,18 @@
 #include "AudioSampleFormat.h"
 #include "nsTArray.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/LinkedList.h"
+#include "AudioStream.h"
 
 namespace mozilla {
-typedef void(*MixerFunc)(AudioDataValue* aMixedBuffer,
-                         AudioSampleFormat aFormat,
-                         uint32_t aChannels,
-                         uint32_t aFrames,
-                         uint32_t aSampleRate);
 
+struct MixerCallbackReceiver {
+  virtual void MixerCallback(AudioDataValue* aMixedBuffer,
+                             AudioSampleFormat aFormat,
+                             uint32_t aChannels,
+                             uint32_t aFrames,
+                             uint32_t aSampleRate) = 0;
+};
 /**
  * This class mixes multiple streams of audio together to output a single audio
  * stream.
@@ -32,21 +36,37 @@ typedef void(*MixerFunc)(AudioDataValue* aMixedBuffer,
 class AudioMixer
 {
 public:
-  AudioMixer(MixerFunc aCallback)
-    : mCallback(aCallback),
-      mFrames(0),
+  AudioMixer()
+    : mFrames(0),
       mChannels(0),
       mSampleRate(0)
   { }
 
+  ~AudioMixer()
+  {
+    MixerCallback* cb;
+    while ((cb = mCallbacks.popFirst())) {
+      delete cb;
+    }
+  }
+
+  void StartMixing()
+  {
+    mSampleRate = mChannels = mFrames = 0;
+  }
+
   /* Get the data from the mixer. This is supposed to be called when all the
    * tracks have been mixed in. The caller should not hold onto the data. */
   void FinishMixing() {
-    mCallback(mMixedAudio.Elements(),
-              AudioSampleTypeToFormat<AudioDataValue>::Format,
-              mChannels,
-              mFrames,
-              mSampleRate);
+    MOZ_ASSERT(mChannels && mFrames && mSampleRate, "Mix not called for this cycle?");
+    for (MixerCallback* cb = mCallbacks.getFirst();
+         cb != nullptr; cb = cb->getNext()) {
+      cb->mReceiver->MixerCallback(mMixedAudio.Elements(),
+                                   AudioSampleTypeToFormat<AudioDataValue>::Format,
+                                   mChannels,
+                                   mFrames,
+                                   mSampleRate);
+    }
     PodZero(mMixedAudio.Elements(), mMixedAudio.Length());
     mSampleRate = mChannels = mFrames = 0;
   }
@@ -71,6 +91,32 @@ public:
       mMixedAudio[i] += aSamples[i];
     }
   }
+
+  void AddCallback(MixerCallbackReceiver* aReceiver) {
+    mCallbacks.insertBack(new MixerCallback(aReceiver));
+  }
+
+  bool FindCallback(MixerCallbackReceiver* aReceiver) {
+    for (MixerCallback* cb = mCallbacks.getFirst();
+         cb != nullptr; cb = cb->getNext()) {
+      if (cb->mReceiver == aReceiver) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool RemoveCallback(MixerCallbackReceiver* aReceiver) {
+    for (MixerCallback* cb = mCallbacks.getFirst();
+         cb != nullptr; cb = cb->getNext()) {
+      if (cb->mReceiver == aReceiver) {
+        cb->remove();
+        delete cb;
+        return true;
+      }
+    }
+    return false;
+  }
 private:
   void EnsureCapacityAndSilence() {
     if (mFrames * mChannels > mMixedAudio.Length()) {
@@ -79,8 +125,17 @@ private:
     PodZero(mMixedAudio.Elements(), mMixedAudio.Length());
   }
 
+  class MixerCallback : public LinkedListElement<MixerCallback>
+  {
+  public:
+    MixerCallback(MixerCallbackReceiver* aReceiver)
+      : mReceiver(aReceiver)
+    { }
+    MixerCallbackReceiver* mReceiver;
+  };
+
   /* Function that is called when the mixing is done. */
-  MixerFunc mCallback;
+  LinkedList<MixerCallback> mCallbacks;
   /* Number of frames for this mixing block. */
   uint32_t mFrames;
   /* Number of channels for this mixing block. */

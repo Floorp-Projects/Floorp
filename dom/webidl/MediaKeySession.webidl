@@ -19,10 +19,6 @@ interface MediaKeySession : EventTarget {
   readonly attribute DOMString keySystem;
   readonly attribute DOMString sessionId;
 
-  // Invalid WebIDL, doesn't work.
-  // https://www.w3.org/Bugs/Public/show_bug.cgi?id=25594
-  // readonly attribute Array<Uint8Array> usableKeyIds;
-
   readonly attribute unrestricted double expiration;
 
   // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
@@ -31,7 +27,7 @@ interface MediaKeySession : EventTarget {
   // session operations
   // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
   [NewObject, Throws]
-  Promise<void> update(Uint8Array response);
+  Promise<void> update((ArrayBufferView or ArrayBuffer) response);
 
   // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
   [NewObject, Throws]
@@ -40,4 +36,7 @@ interface MediaKeySession : EventTarget {
   // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
   [NewObject, Throws]
   Promise<void> remove();
+
+  [NewObject, Throws]
+  Promise<sequence<ArrayBuffer>> getUsableKeyIds();
 };

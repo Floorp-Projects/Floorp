@@ -15,6 +15,8 @@
  * video_capture_impl.h
  */
 
+#include <string>
+
 #include "webrtc/common_video/interface/i420_video_frame.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/desktop_capture/screen_capturer.h"
@@ -218,7 +220,7 @@ protected:
                                int64_t capture_time);
 
   int32_t _id; // Module ID
-  char* _deviceUniqueId; // current Device unique name;
+  std::string _deviceUniqueId; // current Device unique name;
   CriticalSectionWrapper& _apiCs;
   int32_t _captureDelay; // Current capture delay. May be changed of platform dependent parts.
   VideoCaptureCapability _requestedCapability; // Should be set by platform dependent code in StartCapture.

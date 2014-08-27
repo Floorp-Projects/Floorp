@@ -13,10 +13,8 @@
 #include "Latency.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtr.h"
-
-#include "cubeb/cubeb.h"
+#include "CubebUtils.h"
 
 namespace soundtouch {
 class SoundTouch;
@@ -186,24 +184,6 @@ class AudioStream MOZ_FINAL
   virtual ~AudioStream();
 
 public:
-  // Initialize Audio Library. Some Audio backends require initializing the
-  // library before using it.
-  static void InitLibrary();
-
-  // Shutdown Audio Library. Some Audio backends require shutting down the
-  // library after using it.
-  static void ShutdownLibrary();
-
-  // Returns the maximum number of channels supported by the audio hardware.
-  static int MaxNumberOfChannels();
-
-  // Queries the samplerate the hardware/mixer runs at, and stores it.
-  // Can be called on any thread. When this returns, it is safe to call
-  // PreferredSampleRate without locking.
-  static void InitPreferredSampleRate();
-  // Get the aformentionned sample rate. Does not lock.
-  static int PreferredSampleRate();
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioStream)
   AudioStream();
 
@@ -304,14 +284,6 @@ private:
   void AudioInitTaskFinished();
 
   void CheckForStart();
-
-  static void PrefChanged(const char* aPref, void* aClosure);
-  static double GetVolumeScale();
-  static bool GetFirstStream();
-  static cubeb* GetCubebContext();
-  static cubeb* GetCubebContextUnlocked();
-  static uint32_t GetCubebLatency();
-  static bool CubebLatencyPrefSet();
 
   static long DataCallback_S(cubeb_stream*, void* aThis, void* aBuffer, long aFrames)
   {
@@ -430,18 +402,6 @@ private:
   // True if there is a pending AudioInitTask. Shutdown() will wait until the
   // pending AudioInitTask is finished.
   bool mPendingAudioInitTask;
-
-  // This mutex protects the static members below.
-  static StaticMutex sMutex;
-  static cubeb* sCubebContext;
-
-  // Prefered samplerate, in Hz (characteristic of the
-  // hardware/mixer/platform/API used).
-  static uint32_t sPreferredSampleRate;
-
-  static double sVolumeScale;
-  static uint32_t sCubebLatency;
-  static bool sCubebLatencyPrefSet;
 };
 
 class AudioInitTask : public nsRunnable
