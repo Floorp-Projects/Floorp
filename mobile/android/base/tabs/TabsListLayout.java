@@ -20,7 +20,6 @@ import org.mozilla.gecko.animation.PropertyAnimator.Property;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.TwoWayView;
-import org.mozilla.gecko.widget.TabThumbnailWrapper;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -35,11 +34,8 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TextView;
 
-class TabsListLayout extends TwoWayView 
+class TabsListLayout extends TwoWayView
                      implements TabsLayout {
     private static final String LOGTAG = "Gecko" + TabsListLayout.class.getSimpleName();
 
@@ -86,9 +82,9 @@ class TabsListLayout extends TwoWayView
         setRecyclerListener(new RecyclerListener() {
             @Override
             public void onMovedToScrapHeap(View view) {
-                TabRow row = (TabRow) view.getTag();
-                row.thumbnail.setImageDrawable(null);
-                row.close.setVisibility(View.VISIBLE);
+                TabsLayoutItemView item = (TabsLayoutItemView) view.getTag();
+                item.thumbnail.setImageDrawable(null);
+                item.close.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -123,23 +119,7 @@ class TabsListLayout extends TwoWayView
         mTabsPanel.autoHidePanel();
     }
 
-    // ViewHolder for a row in the list
-    private class TabRow {
-        int id;
-        TextView title;
-        ImageView thumbnail;
-        ImageButton close;
-        ViewGroup info;
-        TabThumbnailWrapper thumbnailWrapper;
 
-        public TabRow(View view) {
-            info = (ViewGroup) view;
-            title = (TextView) view.findViewById(R.id.title);
-            thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
-            close = (ImageButton) view.findViewById(R.id.close);
-            thumbnailWrapper = (TabThumbnailWrapper) view.findViewById(R.id.wrapper);
-        }
-    }
 
     // Adapter to bind tabs into a list
     private class TabsAdapter extends BaseAdapter implements Tabs.OnTabsChangedListener {
@@ -155,7 +135,7 @@ class TabsListLayout extends TwoWayView
             mOnCloseClickListener = new Button.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    TabRow tab = (TabRow) v.getTag();
+                    TabsLayoutItemView tab = (TabsLayoutItemView) v.getTag();
                     final int pos = (isVertical() ? tab.info.getWidth() : 0 - tab.info.getHeight());
                     animateClose(tab.info, pos);
                 }
@@ -186,8 +166,8 @@ class TabsListLayout extends TwoWayView
                     if (view == null)
                         return;
 
-                    TabRow row = (TabRow) view.getTag();
-                    assignValues(row, tab);
+                    TabsLayoutItemView item = (TabsLayoutItemView) view.getTag();
+                    assignValues(item, tab);
                     break;
             }
         }
@@ -265,23 +245,23 @@ class TabsListLayout extends TwoWayView
             }
         }
 
-        private void assignValues(TabRow row, Tab tab) {
-            if (row == null || tab == null)
+        private void assignValues(TabsLayoutItemView item, Tab tab) {
+            if (item == null || tab == null)
                 return;
 
-            row.id = tab.getId();
+            item.id = tab.getId();
 
             Drawable thumbnailImage = tab.getThumbnail();
             if (thumbnailImage != null) {
-                row.thumbnail.setImageDrawable(thumbnailImage);
+                item.thumbnail.setImageDrawable(thumbnailImage);
             } else {
-                row.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
+                item.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
             }
-            if (row.thumbnailWrapper != null) {
-                row.thumbnailWrapper.setRecording(tab.isRecording());
+            if (item.thumbnailWrapper != null) {
+                item.thumbnailWrapper.setRecording(tab.isRecording());
             }
-            row.title.setText(tab.getDisplayTitle());
-            row.close.setTag(row);
+            item.title.setText(tab.getDisplayTitle());
+            item.close.setTag(item);
         }
 
         private void resetTransforms(View view) {
@@ -305,22 +285,22 @@ class TabsListLayout extends TwoWayView
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            TabRow row;
+            TabsLayoutItemView item;
 
             if (convertView == null) {
                 convertView = mInflater.inflate(R.layout.tabs_row, null);
-                row = new TabRow(convertView);
-                row.close.setOnClickListener(mOnCloseClickListener);
-                convertView.setTag(row);
+                item = new TabsLayoutItemView(convertView);
+                item.close.setOnClickListener(mOnCloseClickListener);
+                convertView.setTag(item);
             } else {
-                row = (TabRow) convertView.getTag();
+                item = (TabsLayoutItemView) convertView.getTag();
                 // If we're recycling this view, there's a chance it was transformed during
                 // the close animation. Remove any of those properties.
                 resetTransforms(convertView);
             }
 
             Tab tab = mTabs.get(position);
-            assignValues(row, tab);
+            assignValues(item, tab);
 
             return convertView;
         }
@@ -443,7 +423,7 @@ class TabsListLayout extends TwoWayView
         else
             animator.attach(view, Property.WIDTH, 1);
 
-        TabRow tab = (TabRow)view.getTag();
+        TabsLayoutItemView tab = (TabsLayoutItemView)view.getTag();
         final int tabId = tab.id;
 
         // Caching this assumes that all rows are the same height
@@ -480,7 +460,7 @@ class TabsListLayout extends TwoWayView
             public void onPropertyAnimationStart() { }
             @Override
             public void onPropertyAnimationEnd() {
-                TabRow tab = (TabRow) view.getTag();
+                TabsLayoutItemView tab = (TabsLayoutItemView) view.getTag();
                 tab.close.setVisibility(View.VISIBLE);
             }
         });
@@ -578,7 +558,7 @@ class TabsListLayout extends TwoWayView
                     mSwipeView.setPressed(false);
 
                     if (!mSwiping) {
-                        TabRow tab = (TabRow) mSwipeView.getTag();
+                        TabsLayoutItemView tab = (TabsLayoutItemView) mSwipeView.getTag();
                         Tabs.getInstance().selectTab(tab.id);
                         autoHidePanel();
 
@@ -666,7 +646,7 @@ class TabsListLayout extends TwoWayView
                         mSwiping = true;
                         TabsListLayout.this.requestDisallowInterceptTouchEvent(true);
 
-                        TabRow tab = (TabRow) mSwipeView.getTag();
+                        TabsLayoutItemView tab = (TabsLayoutItemView) mSwipeView.getTag();
                         tab.close.setVisibility(View.INVISIBLE);
 
                         // Stops listview from highlighting the touched item
