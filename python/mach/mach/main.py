@@ -78,9 +78,13 @@ Run |mach help| to show a list of commands.
 
 UNKNOWN_COMMAND_ERROR = r'''
 It looks like you are trying to %s an unknown mach command: %s
-
+%s
 Run |mach help| to show a list of commands.
 '''.lstrip()
+
+SUGGESTED_COMMANDS_MESSAGE = r'''
+Did you want to %s any of these commands instead: %s?
+'''
 
 UNRECOGNIZED_ARGUMENT_ERROR = r'''
 It looks like you passed an unrecognized argument into mach.
@@ -388,7 +392,8 @@ To see more help for a specific command, run:
             print(NO_COMMAND_ERROR)
             return 1
         except UnknownCommandError as e:
-            print(UNKNOWN_COMMAND_ERROR % (e.verb, e.command))
+            suggestion_message = SUGGESTED_COMMANDS_MESSAGE % (e.verb, ', '.join(e.suggested_commands)) if e.suggested_commands else ''
+            print(UNKNOWN_COMMAND_ERROR % (e.verb, e.command, suggestion_message))
             return 1
         except UnrecognizedArgumentError as e:
             print(UNRECOGNIZED_ARGUMENT_ERROR % (e.command,

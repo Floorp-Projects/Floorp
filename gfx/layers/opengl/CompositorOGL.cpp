@@ -1493,8 +1493,7 @@ CompositorOGL::CopyToTarget(DrawTarget* aTarget, const nsIntPoint& aTopLeft, con
 
   RefPtr<DataSourceSurface> source =
         Factory::CreateDataSourceSurface(rect.Size(), gfx::SurfaceFormat::B8G8R8A8);
-  if (!source) {
-    NS_WARNING("Failed to create SourceSurface.");
+  if (NS_WARN_IF(!source)) {
     return;
   }
 

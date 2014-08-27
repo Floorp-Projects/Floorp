@@ -961,9 +961,9 @@ Assembler::as_movf(Register rd, Register rs, uint16_t cc)
 
 // Bit twiddling.
 BufferOffset
-Assembler::as_clz(Register rd, Register rs, Register rt)
+Assembler::as_clz(Register rd, Register rs)
 {
-    return writeInst(InstReg(op_special2, rs, rt, rd, ff_clz).encode());
+    return writeInst(InstReg(op_special2, rs, rs, rd, ff_clz).encode());
 }
 
 BufferOffset
@@ -1408,7 +1408,6 @@ Assembler::retarget(Label *label, Label *target)
 }
 
 void dbg_break() {}
-static int stopBKPT = -1;
 void
 Assembler::as_break(uint32_t code)
 {
@@ -1578,9 +1577,9 @@ InstImm Assembler::invertBranch(InstImm branch, BOffImm16 skipOffset)
         else
             branch.setRT((RTField) ((rt | 0x1) << RTShift));
         return branch;
+      default:
+        MOZ_CRASH("Error creating long branch.");
     }
-
-    MOZ_CRASH("Error creating long branch.");
 }
 
 void

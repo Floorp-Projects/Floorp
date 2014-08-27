@@ -866,6 +866,9 @@ RasterImage::CopyFrame(uint32_t aWhichFrame,
   IntSize size(mSize.width, mSize.height);
   RefPtr<DataSourceSurface> surf =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
+  if (NS_WARN_IF(!surf)) {
+    return nullptr;
+  }
 
   DataSourceSurface::MappedSurface mapping;
   DebugOnly<bool> success =
@@ -2330,6 +2333,31 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
     }
   }
 
+  // If the image is waiting for decode work to be notified, go ahead and do that.
+  if (mDecodeRequest &&
+      mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_WORK_DONE &&
+      aDecodeType == SYNCHRONOUS_NOTIFY) {
+    ReentrantMonitorAutoEnter lock(mDecodingMonitor);
+    nsresult rv = FinishedSomeDecoding();
+    CONTAINER_ENSURE_SUCCESS(rv);
+  }
+
+  // If we're fully decoded, we have nothing to do. We need this check after
+  // DecodeUntilSizeAvailable and FinishedSomeDecoding because they can result
+  // in us finishing an in-progress decode (or kicking off and finishing a
+  // synchronous decode if we're already waiting on a full decode).
+  if (mDecoded) {
+    return NS_OK;
+  }
+
+  // If we've already got a full decoder running, and have already decoded
+  // some bytes, we have nothing to do if we haven't been asked to do some
+  // sync decoding
+  if (mDecoder && !mDecoder->IsSizeDecode() && mBytesDecoded &&
+      aDecodeType != SYNCHRONOUS_NOTIFY_AND_SOME_DECODE) {
+    return NS_OK;
+  }
+
   ReentrantMonitorAutoEnter lock(mDecodingMonitor);
 
   // If we don't have any bytes to flush to the decoder, we can't do anything.
@@ -2337,6 +2365,9 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   // the source data.
   if (mBytesDecoded > mSourceData.Length())
     return NS_OK;
+
+  // After acquiring the lock we may have finished some more decoding, so
+  // we need to repeat the following three checks after getting the lock.
 
   // If the image is waiting for decode work to be notified, go ahead and do that.
   if (mDecodeRequest &&

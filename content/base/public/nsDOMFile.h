@@ -201,9 +201,6 @@ public:
 
   virtual nsresult GetInternalStream(nsIInputStream** aStream) = 0;
 
-  virtual nsresult
-  GetInternalUrl(nsIPrincipal* aPrincipal, nsAString& aURL) = 0;
-
   virtual int64_t GetFileId() = 0;
 
   virtual void AddFileInfo(indexedDB::FileInfo* aFileInfo) = 0;
@@ -335,8 +332,6 @@ public:
   }
 
   virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
-
-  virtual nsresult GetInternalUrl(nsIPrincipal* aPrincipal, nsAString& aURL) MOZ_OVERRIDE;
 
   virtual int64_t GetFileId() MOZ_OVERRIDE;
 

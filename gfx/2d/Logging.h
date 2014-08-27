@@ -155,6 +155,25 @@ typedef Log<LOG_WARNING> WarningLog;
 #define gfxWarning if (1) ; else NoLog
 #endif
 
+// See nsDebug.h and the NS_WARN_IF macro
+
+#ifdef __cplusplus
+#ifdef DEBUG
+inline bool MOZ2D_warn_if_impl(bool aCondition, const char* aExpr,
+                               const char* aFile, int32_t aLine)
+{
+  if (MOZ_UNLIKELY(aCondition)) {
+    gfxWarning() << aExpr << " at " << aFile << ":" << aLine;
+  }
+  return aCondition;
+}
+#define MOZ2D_WARN_IF(condition) \
+  MOZ2D_warn_if_impl(condition, #condition, __FILE__, __LINE__)
+#else
+#define MOZ2D_WARN_IF(condition) (bool)(condition)
+#endif
+#endif
+
 const int INDENT_PER_LEVEL = 2;
 
 class TreeLog
