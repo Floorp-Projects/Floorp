@@ -179,18 +179,24 @@ loop.shared.views = (function(_, OT, l10n) {
 
     render: function() {
       /* jshint ignore:start */
-      var hangupButtonClasses = "btn btn-hangup";
       return (
         React.DOM.ul({className: "conversation-toolbar"}, 
-          React.DOM.li(null, React.DOM.button({className: hangupButtonClasses, 
-                      onClick: this.handleClickHangup, 
-                      title: l10n.get("hangup_button_title")})), 
-          React.DOM.li(null, MediaControlButton({action: this.handleToggleVideo, 
-                                  enabled: this.props.video.enabled, 
-                                  scope: "local", type: "video"})), 
-          React.DOM.li(null, MediaControlButton({action: this.handleToggleAudio, 
-                                  enabled: this.props.audio.enabled, 
-                                  scope: "local", type: "audio"}))
+          React.DOM.li({className: "conversation-toolbar-btn-box"}, 
+            React.DOM.button({className: "btn btn-hangup", onClick: this.handleClickHangup, 
+                    title: l10n.get("hangup_button_title")}, 
+              l10n.get("hangup_button_caption")
+            )
+          ), 
+          React.DOM.li({className: "conversation-toolbar-btn-box"}, 
+            MediaControlButton({action: this.handleToggleVideo, 
+                                enabled: this.props.video.enabled, 
+                                scope: "local", type: "video"})
+          ), 
+          React.DOM.li({className: "conversation-toolbar-btn-box"}, 
+            MediaControlButton({action: this.handleToggleAudio, 
+                                enabled: this.props.audio.enabled, 
+                                scope: "local", type: "audio"})
+          )
         )
       );
       /* jshint ignore:end */
@@ -347,16 +353,18 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       /* jshint ignore:start */
       return (
-        React.DOM.div({className: "conversation"}, 
-          ConversationToolbar({video: this.state.video, 
-                               audio: this.state.audio, 
-                               publishStream: this.publishStream, 
-                               hangup: this.hangup}), 
-          React.DOM.div({className: "media nested"}, 
-            React.DOM.div({className: "video_wrapper remote_wrapper"}, 
-              React.DOM.div({className: "video_inner remote"})
-            ), 
-            React.DOM.div({className: "local"})
+        React.DOM.div({className: "video-layout-wrapper"}, 
+          React.DOM.div({className: "conversation"}, 
+            ConversationToolbar({video: this.state.video, 
+                                 audio: this.state.audio, 
+                                 publishStream: this.publishStream, 
+                                 hangup: this.hangup}), 
+            React.DOM.div({className: "media nested"}, 
+              React.DOM.div({className: "video_wrapper remote_wrapper"}, 
+                React.DOM.div({className: "video_inner remote"})
+              ), 
+              React.DOM.div({className: "local"})
+            )
           )
         )
       );

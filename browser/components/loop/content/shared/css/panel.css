@@ -4,13 +4,14 @@
 
 /* Panel styles */
 .panel {
-  /* XXX the Social API panel behaves weirdly on inner element size changes,
-     adding unwanted scrollbars; quickfix is to hide these for now. */
-  overflow: hidden;
-}
+  /* XXX force proper content positioning by adding extra margin space
+   * taken away by reset.css
+   */
+  margin-top: 7px;
+  margin-bottom: 7px;
 
-.component-spacer {
-  padding: 5px 10px 10px 10px;
+  /* hide the extra margin space that the panel resizer now wants to show */
+  overflow: hidden;
 }
 
 .spacer {
@@ -21,58 +22,32 @@
   background: #fbfbfb;
 }
 
-.share .description .field {
-  padding-bottom: 1em;
-  border-bottom: 1px dotted #ddd;
+.share .description,
+.share .action input,
+.share > .action > .invite > .url-actions {
+  margin: 14px 14px 0 14px;
 }
 
-.share .description select {
-  float: right;
-}
-
-.share .description .preview video {
-  background: #ccc;
-  float: right;
-  width: 180px;
-}
-
-.description-content {
-  margin: .5em 0;
-  font-size: 1em;
+.share .description {
   font-weight: 700;
-  font-family: Open Sans,sans-serif;
-  color: #666;
 }
 
-.share .action {
-  clear: right;
-}
-
-.share .action input[type="text"],
-.share .action input[type="url"] {
+.share .action input {
   border: 1px solid #ccc; /* Overriding background style for a text input (see
                              below) resets its borders to a weird beveled style;
                              defining a default 1px border solves the issue. */
   font-size: 1em;
-  width: 100%;
   padding: 0 10px;
-  margin: 5px 0;
   border-radius: 2px;
   outline: 0;
-  height: 24px;
+  height: 26px;
+  width: calc(100% - 28px);
 }
 
 .share .action input.pending {
   background-image: url(../img/loading-icon.gif);
   background-repeat: no-repeat;
   background-position: right;
-}
-
-/* For some reason, buttons have a bigger default font size in FF; we're
-   reducing a bit for graphical consistency here. */
-.share .action button {
-  font-size: .9em;
-  padding-top: 6px;
 }
 
 .share .action .btn {
@@ -82,17 +57,11 @@
   width: 50%;
   height: 26px;
   text-align: center;
-  font-family: 'Lucida Grande', sans-serif;
-  margin-top: 10px;
 }
 
 .share > .action .btn:hover {
   background-color: #008ACB;
   border: 1px solid #008ACB;
-}
-
-.share > .action > .invite > .url-actions {
-  margin: 0 0 5px;
 }
 
 .share > .action > .invite > .url-actions > .btn:first-child {
@@ -126,8 +95,8 @@
 
 .dnd-menu {
   position: absolute;
-  top: -35px;
-  left: 10px;
+  top: -28px;
+  left: 0;
   background: #fdfdfd;
   box-shadow: 0 1px 3px rgba(0,0,0,.3);
   list-style: none;
@@ -194,7 +163,8 @@
   color: #7F7F7F;
   display: flex;
   align-items: center;
-  margin-top: auto;
+  margin-top: 14px;
   flex-direction: row;
+  padding: 14px;
 }
 
