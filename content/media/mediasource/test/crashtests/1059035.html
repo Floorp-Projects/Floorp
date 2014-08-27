@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+/*
+user_pref("media.mediasource.enabled", true);
+*/
+
+function boom()
+{
+    var mediaSource = new MediaSource();
+    var htmlAudio = document.createElement("audio");
+    htmlAudio.src = URL.createObjectURL(mediaSource);
+
+    setTimeout(function() {
+        var sourceBuffer = mediaSource.addSourceBuffer("video/webm");
+        mediaSource.removeSourceBuffer(sourceBuffer);
+        sourceBuffer.remove(0, 0);
+    }, 0);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
