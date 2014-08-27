@@ -136,6 +136,9 @@ public class SearchPreferenceActivity extends PreferenceActivity
         if (TextUtils.equals(PREF_SEARCH_ENGINE_KEY, key)) {
             final ListPreference searchEnginePref = (ListPreference) findPreference(PREF_SEARCH_ENGINE_KEY);
             searchEnginePref.setSummary(searchEnginePref.getEntry());
+            Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH_SET_DEFAULT,
+                                  TelemetryContract.Method.DIALOG,
+                                  searchEnginePref.getValue().toLowerCase());
         }
     }
 }

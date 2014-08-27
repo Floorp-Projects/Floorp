@@ -225,9 +225,9 @@ class TicklerTimer MOZ_FINAL : public nsITimerCallback
     mTickler = do_GetWeakReference(aTickler);
   }
 
-  ~TicklerTimer() {};
-
 private:
+  ~TicklerTimer() {}
+
   nsWeakPtr mTickler;
 };
 

@@ -5982,7 +5982,6 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     // Create an MStart to hold the first valid MResumePoint.
     MStart *start = MStart::New(alloc(), MStart::StartType_Osr);
     osrBlock->add(start);
-    graph().setOsrStart(start);
 
     // MOsrValue instructions are infallible, so the first MResumePoint must
     // occur after they execute, at the point of the MStart.
@@ -7543,7 +7542,7 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
 #else
         bool isTenured = true;
 #endif
-        if (isTenured) {
+        if (isTenured && tarr->hasSingletonType()) {
             // The 'data' pointer can change in rare circumstances
             // (ArrayBufferObject::changeContents).
             types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarr);
@@ -8678,6 +8677,10 @@ IonBuilder::jsop_getprop(PropertyName *name)
 
     MDefinition *obj = current->pop();
 
+    // Try to optimize to a specific constant.
+    if (!getPropTryInferredConstant(&emitted, obj, name) || emitted)
+        return emitted;
+
     // Try to optimize arguments.length.
     if (!getPropTryArgumentsLength(&emitted, obj) || emitted)
         return emitted;
@@ -8764,6 +8767,28 @@ IonBuilder::checkIsDefinitelyOptimizedArguments(MDefinition *obj, bool *isOptimi
     }
 
     *isOptimizedArgs = true;
+    return true;
+}
+
+bool
+IonBuilder::getPropTryInferredConstant(bool *emitted, MDefinition *obj, PropertyName *name)
+{
+    JS_ASSERT(*emitted == false);
+
+    // Need a result typeset to optimize.
+    types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
+    if (!objTypes)
+        return true;
+
+    Value constVal = UndefinedValue();
+    if (objTypes->propertyIsConstant(constraints(), NameToId(name), &constVal)) {
+        spew("Optimized constant property");
+        obj->setImplicitlyUsedUnchecked();
+        if (!pushConstant(constVal))
+            return false;
+        *emitted = true;
+    }
+
     return true;
 }
 
@@ -9381,13 +9406,16 @@ IonBuilder::jsop_setprop(PropertyName *name)
     if (!setPropTryTypedObject(&emitted, obj, name, value) || emitted)
         return emitted;
 
-    // Try to emit store from definite slots.
-    if (!setPropTryDefiniteSlot(&emitted, obj, name, value, barrier, objTypes) || emitted)
-        return emitted;
+    // Do not emit optimized stores to slots that may be constant.
+    if (objTypes && !objTypes->propertyMightBeConstant(constraints(), NameToId(name))) {
+        // Try to emit store from definite slots.
+        if (!setPropTryDefiniteSlot(&emitted, obj, name, value, barrier, objTypes) || emitted)
+            return emitted;
 
-    // Try to emit a monomorphic/polymorphic store based on baseline caches.
-    if (!setPropTryInlineAccess(&emitted, obj, name, value, barrier, objTypes) || emitted)
-        return emitted;
+        // Try to emit a monomorphic/polymorphic store based on baseline caches.
+        if (!setPropTryInlineAccess(&emitted, obj, name, value, barrier, objTypes) || emitted)
+            return emitted;
+    }
 
     // Emit a polymorphic cache.
     return setPropTryCache(&emitted, obj, name, value, barrier, objTypes);

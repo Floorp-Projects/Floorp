@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "UDPSocketChild.h"
+#include "mozilla/unused.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/net/NeckoChild.h"
 
 using mozilla::net::gNeckoChild;
@@ -59,17 +61,20 @@ UDPSocketChild::~UDPSocketChild()
 // nsIUDPSocketChild Methods
 
 NS_IMETHODIMP
-UDPSocketChild::Bind(nsIUDPSocketInternal *aSocket,
+UDPSocketChild::Bind(nsIUDPSocketInternal* aSocket,
                      const nsACString& aHost,
-                     uint16_t aPort)
+                     uint16_t aPort,
+                     bool aAddressReuse,
+                     bool aLoopback)
 {
   NS_ENSURE_ARG(aSocket);
 
   mSocket = aSocket;
   AddIPDLReference();
 
-  gNeckoChild->SendPUDPSocketConstructor(this, nsCString(aHost), aPort, mFilterName);
+  gNeckoChild->SendPUDPSocketConstructor(this, mFilterName);
 
+  SendBind(UDPAddressInfo(nsCString(aHost), aPort), aAddressReuse, aLoopback);
   return NS_OK;
 }
 
@@ -83,26 +88,18 @@ UDPSocketChild::Close()
 NS_IMETHODIMP
 UDPSocketChild::Send(const nsACString& aHost,
                      uint16_t aPort,
-                     const uint8_t *aData,
+                     const uint8_t* aData,
                      uint32_t aByteLength)
 {
   NS_ENSURE_ARG(aData);
 
-  FallibleTArray<uint8_t> fallibleArray;
-  if (!fallibleArray.InsertElementsAt(0, aData, aByteLength)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  InfallibleTArray<uint8_t> array;
-  array.SwapElements(fallibleArray);
-  SendData(array, nsCString(aHost), aPort);
-
-  return NS_OK;
+  return SendDataInternal(UDPSocketAddr(UDPAddressInfo(nsCString(aHost), aPort)),
+                          aData, aByteLength);
 }
 
 NS_IMETHODIMP
-UDPSocketChild::SendWithAddr(nsINetAddr *aAddr,
-                             const uint8_t *aData,
+UDPSocketChild::SendWithAddr(nsINetAddr* aAddr,
+                             const uint8_t* aData,
                              uint32_t aByteLength)
 {
   NS_ENSURE_ARG(aAddr);
@@ -111,15 +108,25 @@ UDPSocketChild::SendWithAddr(nsINetAddr *aAddr,
   NetAddr addr;
   aAddr->GetNetAddr(&addr);
 
-  return SendWithAddress(&addr, aData, aByteLength);
+  return SendDataInternal(UDPSocketAddr(addr), aData, aByteLength);
 }
 
 NS_IMETHODIMP
-UDPSocketChild::SendWithAddress(const NetAddr *aAddr,
-                                const uint8_t *aData,
+UDPSocketChild::SendWithAddress(const NetAddr* aAddr,
+                                const uint8_t* aData,
                                 uint32_t aByteLength)
 {
   NS_ENSURE_ARG(aAddr);
+  NS_ENSURE_ARG(aData);
+
+  return SendDataInternal(UDPSocketAddr(*aAddr), aData, aByteLength);
+}
+
+nsresult
+UDPSocketChild::SendDataInternal(const UDPSocketAddr& aAddr,
+                                 const uint8_t* aData,
+                                 const uint32_t aByteLength)
+{
   NS_ENSURE_ARG(aData);
 
   FallibleTArray<uint8_t> fallibleArray;
@@ -129,13 +136,48 @@ UDPSocketChild::SendWithAddress(const NetAddr *aAddr,
 
   InfallibleTArray<uint8_t> array;
   array.SwapElements(fallibleArray);
-  SendDataWithAddress(array, *aAddr);
+
+  SendOutgoingData(array, aAddr);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-UDPSocketChild::GetLocalPort(uint16_t *aLocalPort)
+UDPSocketChild::SendBinaryStream(const nsACString& aHost,
+                                 uint16_t aPort,
+                                 nsIInputStream* aStream)
+{
+  NS_ENSURE_ARG(aStream);
+
+  OptionalInputStreamParams stream;
+  nsTArray<mozilla::ipc::FileDescriptor> fds;
+  SerializeInputStream(aStream, stream, fds);
+
+  MOZ_ASSERT(fds.IsEmpty());
+
+  SendOutgoingData(UDPData(stream), UDPSocketAddr(UDPAddressInfo(nsCString(aHost), aPort)));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UDPSocketChild::JoinMulticast(const nsACString& aMulticastAddress,
+                              const nsACString& aInterface)
+{
+  SendJoinMulticast(nsCString(aMulticastAddress), nsCString(aInterface));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UDPSocketChild::LeaveMulticast(const nsACString& aMulticastAddress,
+                               const nsACString& aInterface)
+{
+  SendLeaveMulticast(nsCString(aMulticastAddress), nsCString(aInterface));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UDPSocketChild::GetLocalPort(uint16_t* aLocalPort)
 {
   NS_ENSURE_ARG_POINTER(aLocalPort);
 
@@ -144,14 +186,14 @@ UDPSocketChild::GetLocalPort(uint16_t *aLocalPort)
 }
 
 NS_IMETHODIMP
-UDPSocketChild::GetLocalAddress(nsACString &aLocalAddress)
+UDPSocketChild::GetLocalAddress(nsACString& aLocalAddress)
 {
   aLocalAddress = mLocalAddress;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-UDPSocketChild::SetFilterName(const nsACString &aFilterName)
+UDPSocketChild::SetFilterName(const nsACString& aFilterName)
 {
   if (!mFilterName.IsEmpty()) {
     // filter name can only be set once.
@@ -162,7 +204,7 @@ UDPSocketChild::SetFilterName(const nsACString &aFilterName)
 }
 
 NS_IMETHODIMP
-UDPSocketChild::GetFilterName(nsACString &aFilterName)
+UDPSocketChild::GetFilterName(nsACString& aFilterName)
 {
   aFilterName = mFilterName;
   return NS_OK;
@@ -170,39 +212,44 @@ UDPSocketChild::GetFilterName(nsACString &aFilterName)
 
 // PUDPSocketChild Methods
 bool
-UDPSocketChild::RecvCallback(const nsCString &aType,
-                             const UDPCallbackData &aData,
-                             const nsCString &aState)
+UDPSocketChild::RecvCallbackOpened(const UDPAddressInfo& aAddressInfo)
 {
-  if (NS_FAILED(mSocket->UpdateReadyState(aState)))
-    NS_ERROR("Shouldn't fail!");
+  mLocalAddress = aAddressInfo.addr();
+  mLocalPort = aAddressInfo.port();
 
-  nsresult rv = NS_ERROR_FAILURE;
-  if (aData.type() == UDPCallbackData::Tvoid_t) {
-    rv = mSocket->CallListenerVoid(aType);
-  } else if (aData.type() == UDPCallbackData::TUDPError) {
-    const UDPError& err(aData.get_UDPError());
-    rv = mSocket->CallListenerError(aType, err.message(), err.filename(),
-                                    err.lineNumber(), err.columnNumber());
-  } else if (aData.type() == UDPCallbackData::TUDPMessage) {
-    const UDPMessage& message(aData.get_UDPMessage());
-    InfallibleTArray<uint8_t> data(message.data());
-    rv = mSocket->CallListenerReceivedData(aType, message.fromAddr(), message.port(),
-                                           data.Elements(), data.Length());
-  } else if (aData.type() == UDPCallbackData::TUDPAddressInfo) {
-    //update local address and port.
-    const UDPAddressInfo& addressInfo(aData.get_UDPAddressInfo());
-    mLocalAddress = addressInfo.local();
-    mLocalPort = addressInfo.port();
-    rv = mSocket->CallListenerVoid(aType);
-  } else if (aData.type() == UDPCallbackData::TUDPSendResult) {
-    const UDPSendResult& returnValue(aData.get_UDPSendResult());
-    rv = mSocket->CallListenerSent(aType, returnValue.value());
-  } else {
-    MOZ_ASSERT(false, "Invalid callback type!");
-  }
+  nsresult rv = mSocket->CallListenerOpened();
+  mozilla::unused << NS_WARN_IF(NS_FAILED(rv));
 
-  NS_ENSURE_SUCCESS(rv, true);
+  return true;
+}
+
+bool
+UDPSocketChild::RecvCallbackClosed()
+{
+  nsresult rv = mSocket->CallListenerClosed();
+  mozilla::unused << NS_WARN_IF(NS_FAILED(rv));
+
+  return true;
+}
+
+bool
+UDPSocketChild::RecvCallbackReceivedData(const UDPAddressInfo& aAddressInfo,
+                                         const InfallibleTArray<uint8_t>& aData)
+{
+  nsresult rv = mSocket->CallListenerReceivedData(aAddressInfo.addr(), aAddressInfo.port(),
+                                                  aData.Elements(), aData.Length());
+  mozilla::unused << NS_WARN_IF(NS_FAILED(rv));
+
+  return true;
+}
+
+bool
+UDPSocketChild::RecvCallbackError(const nsCString& aMessage,
+                                  const nsCString& aFilename,
+                                  const uint32_t& aLineNumber)
+{
+  nsresult rv = mSocket->CallListenerError(aMessage, aFilename, aLineNumber);
+  mozilla::unused << NS_WARN_IF(NS_FAILED(rv));
 
   return true;
 }

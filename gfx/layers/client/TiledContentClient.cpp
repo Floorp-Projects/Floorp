@@ -1409,7 +1409,7 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
       viewTransform);
 #endif
 
-  TILING_LOG("TILING %p: Progressive update view transform %f %f zoom %f abort %d\n", mThebesLayer, viewTransform.mTranslation.x, viewTransform.mTranslation.y, viewTransform.mScale.scale, abortPaint);
+  TILING_LOG("TILING %p: Progressive update view transform %f %f zoom %f abort %d\n", mThebesLayer, viewTransform.mTranslation.x.value, viewTransform.mTranslation.y.value, viewTransform.mScale.scale, abortPaint);
 
   if (abortPaint) {
     // We ignore if front-end wants to abort if this is the first,

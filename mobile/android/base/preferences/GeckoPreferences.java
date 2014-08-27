@@ -339,7 +339,9 @@ OnSharedPreferenceChangeListener
             int res = 0;
             if (intentExtras != null && intentExtras.containsKey(INTENT_EXTRA_RESOURCES)) {
                 // Fetch resource id from intent.
-                String resourceName = intentExtras.getString(INTENT_EXTRA_RESOURCES);
+                final String resourceName = intentExtras.getString(INTENT_EXTRA_RESOURCES);
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, Method.SETTINGS, resourceName);
+
                 if (resourceName != null) {
                     res = getResources().getIdentifier(resourceName, "xml", getPackageName());
                     if (res == 0) {
@@ -351,6 +353,7 @@ OnSharedPreferenceChangeListener
                 // No resource specified, or the resource was invalid; use the default preferences screen.
                 Log.e(LOGTAG, "Displaying default settings.");
                 res = R.xml.preferences;
+                Telemetry.startUISession(TelemetryContract.Session.SETTINGS);
             }
 
             // We don't include a title in the XML, so set it here, in a locale-aware fashion.
@@ -467,6 +470,8 @@ OnSharedPreferenceChangeListener
         if (NO_TRANSITIONS) {
             overridePendingTransition(0, 0);
         }
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, Method.BACK, "settings");
     }
 
     @Override
@@ -476,6 +481,13 @@ OnSharedPreferenceChangeListener
             "Sanitize:Finished");
         if (mPrefsRequestId > 0) {
             PrefsHelper.removeObserver(mPrefsRequestId);
+        }
+
+        // The intent extras will be null if this is the top-level settings
+        // activity. In that case, we want to end the SETTINGS telmetry session.
+        // For HC+ versions of Android this is handled in GeckoPreferenceFragment.
+        if (Versions.preHC && getIntent().getExtras() == null) {
+            Telemetry.stopUISession(TelemetryContract.Session.SETTINGS);
         }
     }
 
@@ -978,6 +990,9 @@ OnSharedPreferenceChangeListener
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         final String prefName = preference.getKey();
         Log.i(LOGTAG, "Changed " + prefName + " = " + newValue);
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.EDIT, Method.SETTINGS, prefName);
+
         if (PREFS_MP_ENABLED.equals(prefName)) {
             showDialog((Boolean) newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
 

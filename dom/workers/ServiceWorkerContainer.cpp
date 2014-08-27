@@ -30,16 +30,26 @@ NS_IMPL_ADDREF_INHERITED(ServiceWorkerContainer, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(ServiceWorkerContainer, DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerContainer, DOMEventTargetHelper,
-                                   mControllerWorker)
+                                   mControllerWorker, mReadyPromise)
 
 ServiceWorkerContainer::ServiceWorkerContainer(nsPIDOMWindow* aWindow)
-  : mWindow(aWindow)
+  : DOMEventTargetHelper(aWindow)
 {
-  SetIsDOMBinding();
 }
 
 ServiceWorkerContainer::~ServiceWorkerContainer()
 {
+}
+
+void
+ServiceWorkerContainer::DisconnectFromOwner()
+{
+  nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
+  MOZ_ASSERT(swm);
+
+  swm->RemoveReadyPromise(GetOwner());
+
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 JSObject*
@@ -82,7 +92,7 @@ ServiceWorkerContainer::GetController()
     }
 
     nsCOMPtr<nsISupports> serviceWorker;
-    rv = swm->GetDocumentController(mWindow, getter_AddRefs(serviceWorker));
+    rv = swm->GetDocumentController(GetOwner(), getter_AddRefs(serviceWorker));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -106,7 +116,7 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
   }
 
   nsCOMPtr<nsISupports> promise;
-  aRv = swm->GetRegistrations(mWindow, getter_AddRefs(promise));
+  aRv = swm->GetRegistrations(GetOwner(), getter_AddRefs(promise));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -128,7 +138,7 @@ ServiceWorkerContainer::GetRegistration(const nsAString& aDocumentURL,
   }
 
   nsCOMPtr<nsISupports> promise;
-  aRv = swm->GetRegistration(mWindow, aDocumentURL, getter_AddRefs(promise));
+  aRv = swm->GetRegistration(GetOwner(), aDocumentURL, getter_AddRefs(promise));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -138,12 +148,24 @@ ServiceWorkerContainer::GetRegistration(const nsAString& aDocumentURL,
   return ret.forget();
 }
 
-already_AddRefed<Promise>
+Promise*
 ServiceWorkerContainer::GetReady(ErrorResult& aRv)
 {
-  // FIXME(nsm): Bug 1025077
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
-  return Promise::Create(global, aRv);
+  if (mReadyPromise) {
+    return mReadyPromise;
+  }
+
+  nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
+  if (!swm) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsISupports> promise;
+  aRv = swm->GetReadyPromise(GetOwner(), getter_AddRefs(promise));
+
+  mReadyPromise = static_cast<Promise*>(promise.get());
+  return mReadyPromise;
 }
 
 // Testing only.

@@ -1979,6 +1979,16 @@ MachineState::FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
         machine.setRegisterLocation(FloatRegister(i, FloatRegister::Double), &fpregs[i]);
     for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++)
         machine.setRegisterLocation(FloatRegister(i, FloatRegister::Single), (double*)&fbase[i]);
+#elif defined(JS_CODEGEN_MIPS)
+    float *fbase = (float*)&fpregs[0];
+    for (unsigned i = 0; i < FloatRegisters::TotalDouble; i++) {
+        machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Double),
+                                    &fpregs[i]);
+    }
+    for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++) {
+        machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Single),
+                                    (double*)&fbase[i]);
+    }
 #else
     for (unsigned i = 0; i < FloatRegisters::Total; i++)
         machine.setRegisterLocation(FloatRegister::FromCode(i), &fpregs[i]);

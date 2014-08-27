@@ -180,7 +180,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       aDecoder->GetReentrantMonitor(),
       &MediaDecoderStateMachine::TimeoutExpired,
       MOZ_THIS_IN_INITIALIZER_LIST(), aRealTime)),
-  mState(DECODER_STATE_DECODING_METADATA),
+  mState(DECODER_STATE_DECODING_NONE),
   mSyncPointInMediaStream(-1),
   mSyncPointInDecodedStream(-1),
   mPlayDuration(0),
@@ -209,7 +209,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mQuickBuffering(false),
   mMinimizePreroll(false),
   mDecodeThreadWaiting(false),
-  mDispatchedDecodeMetadataTask(false),
   mDropAudioUntilNextDiscontinuity(false),
   mDropVideoUntilNextDiscontinuity(false),
   mDecodeToSeekTarget(false),
@@ -358,22 +357,26 @@ static const TrackRate RATE_VIDEO = USECS_PER_S;
 
 void MediaDecoderStateMachine::SendStreamData()
 {
-  NS_ASSERTION(OnDecodeThread() ||
-               OnStateMachineThread(), "Should be on decode thread or state machine thread");
+  NS_ASSERTION(OnDecodeThread() || OnStateMachineThread(),
+               "Should be on decode thread or state machine thread");
   AssertCurrentThreadInMonitor();
+  MOZ_ASSERT(mState != DECODER_STATE_DECODING_NONE);
 
   DecodedStreamData* stream = mDecoder->GetDecodedStream();
-  if (!stream)
+  if (!stream) {
     return;
+  }
 
-  if (mState == DECODER_STATE_DECODING_METADATA)
+  if (mState == DECODER_STATE_DECODING_METADATA) {
     return;
+  }
 
   // If there's still an audio sink alive, then we can't send any stream
   // data yet since both SendStreamData and the audio sink want to be in
   // charge of popping the audio queue. We're waiting for the audio sink
-  if (mAudioSink)
+  if (mAudioSink) {
     return;
+  }
 
   int64_t minLastAudioPacketTime = INT64_MAX;
   bool finished =
@@ -1330,7 +1333,7 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
     ScheduleStateMachine();
     mStartTime = 0;
     mCurrentFrameTime = 0;
-    mState = DECODER_STATE_DECODING_METADATA;
+    mState = DECODER_STATE_DECODING_NONE;
     mDecoder->GetReentrantMonitor().NotifyAll();
   }
 }
@@ -1399,8 +1402,8 @@ void MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged()
   DECODER_LOG("NotifyWaitingForResourcesStatusChanged");
   // The reader is no longer waiting for resources (say a hardware decoder),
   // we can now proceed to decode metadata.
-  mState = DECODER_STATE_DECODING_METADATA;
-  EnqueueDecodeMetadataTask();
+  mState = DECODER_STATE_DECODING_NONE;
+  ScheduleStateMachine();
 }
 
 void MediaDecoderStateMachine::Play()
@@ -1531,21 +1534,13 @@ nsresult
 MediaDecoderStateMachine::EnqueueDecodeMetadataTask()
 {
   AssertCurrentThreadInMonitor();
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
 
-  if (mState != DECODER_STATE_DECODING_METADATA ||
-      mDispatchedDecodeMetadataTask) {
-    return NS_OK;
-  }
-
-  mDispatchedDecodeMetadataTask = true;
   RefPtr<nsIRunnable> task(
     NS_NewRunnableMethod(this, &MediaDecoderStateMachine::CallDecodeMetadata));
   nsresult rv = mDecodeTaskQueue->Dispatch(task);
-  if (NS_FAILED(rv)) {
-    DECODER_WARN("Dispatch ReadMetadata task failed.");
-    mDispatchedDecodeMetadataTask = false;
-  }
-  return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
 }
 
 void
@@ -1872,10 +1867,8 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
 {
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
   DECODER_LOG("Decoding Media Headers");
-  if (mState != DECODER_STATE_DECODING_METADATA) {
-    return NS_ERROR_FAILURE;
-  }
 
   nsresult res;
   MediaInfo info;
@@ -1890,7 +1883,6 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
       // change state to DECODER_STATE_WAIT_FOR_RESOURCES
       StartWaitForResources();
       // affect values only if ReadMetadata succeeds
-      mDispatchedDecodeMetadataTask = false;
       return NS_OK;
     }
   }
@@ -2012,7 +2004,6 @@ MediaDecoderStateMachine::FinishDecodeMetadata()
     StartPlayback();
   }
 
-  mDispatchedDecodeMetadataTask = false;
   return NS_OK;
 }
 
@@ -2142,6 +2133,8 @@ MediaDecoderStateMachine::SeekCompleted()
       NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
     }
   }
+
+  MOZ_ASSERT(mState != DECODER_STATE_DECODING_NONE);
 
   mDecoder->StartProgressUpdates();
   if (mState == DECODER_STATE_DECODING_METADATA ||
@@ -2329,9 +2322,14 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       return NS_OK;
     }
 
-    case DECODER_STATE_DECODING_METADATA: {
+    case DECODER_STATE_DECODING_NONE: {
+      mState = DECODER_STATE_DECODING_METADATA;
       // Ensure we have a decode thread to decode metadata.
       return EnqueueDecodeMetadataTask();
+    }
+
+    case DECODER_STATE_DECODING_METADATA: {
+      return NS_OK;
     }
 
     case DECODER_STATE_DECODING: {
