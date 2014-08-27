@@ -645,6 +645,11 @@ var DebuggerServer = {
 
         // ... and notify the child process to clean the tab actors.
         mm.sendAsyncMessage("debug:disconnect", { childID: childID });
+
+        if (netMonitor) {
+          netMonitor.destroy();
+          netMonitor = null;
+        }
       }
     });
 
