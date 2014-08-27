@@ -3519,6 +3519,8 @@ JSObject::CopyElementsForWrite(ThreadSafeContext *cx, JSObject *obj)
     if (newCapacity >= NELEMENTS_LIMIT)
         return false;
 
+    JSObject::writeBarrierPre(obj->getElementsHeader()->ownerObject());
+
     ObjectElements *newheader = AllocateElements(cx, obj, newAllocated);
     if (!newheader)
         return false;

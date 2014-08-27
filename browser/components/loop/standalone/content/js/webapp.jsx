@@ -48,7 +48,7 @@ loop.webapp = (function($, _, OT, webL10n) {
         <div className="promote-firefox">
           <h3>{__("promote_firefox_hello_heading")}</h3>
           <p>
-            <a className="btn btn-large btn-success"
+            <a className="btn btn-large btn-accept"
                href="https://www.mozilla.org/firefox/">
               {__("get_firefox_button")}
             </a>
@@ -100,8 +100,8 @@ loop.webapp = (function($, _, OT, webL10n) {
 
       return (
         /* jshint ignore:start */
-        <header className="container-box">
-          <h1 className="light-weight-font">
+        <header className="standalone-header container-box">
+          <h1 className="standalone-header-title">
             <strong>{__("brandShortname")}</strong> {__("clientShortname")}
           </h1>
           <div className="loop-logo" title="Firefox WebRTC! logo"></div>
@@ -120,7 +120,7 @@ loop.webapp = (function($, _, OT, webL10n) {
   var ConversationFooter = React.createClass({
     render: function() {
       return (
-        <div className="footer container-box">
+        <div className="standalone-footer container-box">
           <div title="Mozilla Logo" className="footer-logo"></div>
         </div>
       );
@@ -229,8 +229,7 @@ loop.webapp = (function($, _, OT, webL10n) {
           "https://www.mozilla.org/privacy/'>" + privacy_notice_name + "</a>"
       });
 
-      var btnClassStartCall = "btn btn-large btn-success " +
-                              "start-audio-video-call " +
+      var btnClassStartCall = "btn btn-large btn-accept " +
                               loop.shared.utils.getTargetPlatform();
       var dropdownMenuClasses = React.addons.classSet({
         "native-dropdown-large-parent": true,
@@ -250,23 +249,26 @@ loop.webapp = (function($, _, OT, webL10n) {
             <ConversationHeader
               urlCreationDateString={this.state.urlCreationDateString} />
 
-            <p className="large-font light-weight-font">
+            <p className="standalone-call-btn-label">
               {__("initiate_call_button_label")}
             </p>
 
             <div id="messages"></div>
 
-            <div className="button-group">
+            <div className="btn-group">
               <div className="flex-padding-1"></div>
-              <div className="button-chevron-menu-group">
-                <div className="button-group-chevron">
-                  <div className="button-group">
+              <div className="standalone-btn-chevron-menu-group">
+                <div className="btn-group-chevron">
+                  <div className="btn-group">
 
                     <button className={btnClassStartCall}
                             onClick={this._initiateOutgoingCall("audio-video")}
                             disabled={this.state.disableCallButton}
                             title={__("initiate_audio_video_call_tooltip")} >
-                      {__("initiate_audio_video_call_button")}
+                      <span className="standalone-call-btn-text">
+                        {__("initiate_audio_video_call_button")}
+                      </span>
+                      <span className="standalone-call-btn-video-icon"></span>
                     </button>
 
                     <div className="btn-chevron"
@@ -537,8 +539,8 @@ loop.webapp = (function($, _, OT, webL10n) {
     var helper = new WebappHelper();
     var client = new loop.StandaloneClient({
       baseServerUrl: baseServerUrl
-    }),
-    router = new WebappRouter({
+    });
+    var router = new WebappRouter({
       helper: helper,
       notifier: new sharedViews.NotificationListView({el: "#messages"}),
       client: client,
@@ -547,12 +549,16 @@ loop.webapp = (function($, _, OT, webL10n) {
         pendingCallTimeout: loop.config.pendingCallTimeout
       })
     });
+
     Backbone.history.start();
     if (helper.isIOS(navigator.platform)) {
       router.navigate("unsupportedDevice", {trigger: true});
     } else if (!OT.checkSystemRequirements()) {
       router.navigate("unsupportedBrowser", {trigger: true});
     }
+
+    document.body.classList.add(loop.shared.utils.getTargetPlatform());
+
     // Set the 'lang' and 'dir' attributes to <html> when the page is translated
     document.documentElement.lang = document.webL10n.getLanguage();
     document.documentElement.dir = document.webL10n.getDirection();

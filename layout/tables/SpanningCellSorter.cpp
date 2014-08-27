@@ -153,20 +153,20 @@ SpanningCellSorter::GetNext(int32_t *aColSpan)
             mEnumerationIndex = 0;
             if (mHashTable.ops) {
                 HashTableEntry **sh =
-                    new HashTableEntry*[mHashTable.entryCount];
+                    new HashTableEntry*[mHashTable.EntryCount()];
                 if (!sh) {
                     // give up
                     mState = DONE;
                     return nullptr;
                 }
                 PL_DHashTableEnumerate(&mHashTable, FillSortedArray, sh);
-                NS_QuickSort(sh, mHashTable.entryCount, sizeof(sh[0]),
+                NS_QuickSort(sh, mHashTable.EntryCount(), sizeof(sh[0]),
                              SortArray, nullptr);
                 mSortedHashTable = sh;
             }
             /* fall through */
         case ENUMERATING_HASH:
-            if (mHashTable.ops && mEnumerationIndex < mHashTable.entryCount) {
+            if (mHashTable.ops && mEnumerationIndex < mHashTable.EntryCount()) {
                 Item *result = mSortedHashTable[mEnumerationIndex]->mItems;
                 *aColSpan = mSortedHashTable[mEnumerationIndex]->mColSpan;
                 NS_ASSERTION(result, "holes in hash table");
