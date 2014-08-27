@@ -184,4 +184,16 @@ CDMCaps::AutoLock::CanDecryptVideo()
   return mData.HasCap(GMP_EME_CAP_DECRYPT_VIDEO);
 }
 
+void
+CDMCaps::AutoLock::GetUsableKeysForSession(const nsAString& aSessionId,
+                                           nsTArray<CencKeyId>& aOutKeyIds)
+{
+  for (size_t i = 0; i < mData.mUsableKeyIds.Length(); i++) {
+    const auto& key = mData.mUsableKeyIds[i];
+    if (key.mSessionId.Equals(aSessionId)) {
+      aOutKeyIds.AppendElement(key.mId);
+    }
+  }
+}
+
 } // namespace mozilla
