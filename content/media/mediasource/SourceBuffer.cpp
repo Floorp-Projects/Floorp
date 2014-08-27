@@ -123,17 +123,22 @@ public:
 
     mTimecodeScale = parser.GetTimecodeScale();
 
-    if (mapping.IsEmpty()) {
-      // XXX This is a bit of a hack.  Assume if there are no timecodes
-      // present and it's an init segment that it's _just_ an init segment.
-      // We should be more precise.
-      if (IsInitSegmentPresent(aData, aLength)) {
-        MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: Stashed init of %u bytes.",
-                  this, aLength);
-
-        mInitData.ReplaceElementsAt(0, mInitData.Length(), aData, aLength);
+    // XXX This is a bit of a hack.  Assume if there are no timecodes
+    // present and it's an init segment that it's _just_ an init segment.
+    // We should be more precise.
+    if (IsInitSegmentPresent(aData, aLength)) {
+      uint32_t length = aLength;
+      if (!mapping.IsEmpty()) {
+        length = mapping[0].mSyncOffset;
+        MOZ_ASSERT(length <= aLength);
       }
+      MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: Stashed init of %u bytes.",
+                this, length);
 
+      mInitData.ReplaceElementsAt(0, mInitData.Length(), aData, length);
+    }
+
+    if (mapping.IsEmpty()) {
       return false;
     }
 
