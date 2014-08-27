@@ -38,9 +38,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-class TabsTray extends TwoWayView
-               implements TabsPanel.CloseAllPanelView {
-    private static final String LOGTAG = "Gecko" + TabsTray.class.getSimpleName();
+class TabsListLayout extends TwoWayView implements
+                           TabsPanel.CloseAllPanelView {
+    private static final String LOGTAG = "Gecko" + TabsListLayout.class.getSimpleName();
 
     private Context mContext;
     private TabsPanel mTabsPanel;
@@ -63,7 +63,7 @@ class TabsTray extends TwoWayView
 
     private int mOriginalSize;
 
-    public TabsTray(Context context, AttributeSet attrs) {
+    public TabsListLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
 
@@ -181,7 +181,7 @@ class TabsTray extends TwoWayView
                 case THUMBNAIL:
                 case TITLE:
                 case RECORDING_CHANGE:
-                    View view = TabsTray.this.getChildAt(getPositionForTab(tab) - TabsTray.this.getFirstVisiblePosition());
+                    View view = TabsListLayout.this.getChildAt(getPositionForTab(tab) - TabsListLayout.this.getFirstVisiblePosition());
                     if (view == null)
                         return;
 
@@ -212,7 +212,7 @@ class TabsTray extends TwoWayView
             updateSelectedStyle(selected);
 
             if (selected != -1) {
-                TabsTray.this.setSelection(selected);
+                TabsListLayout.this.setSelection(selected);
             }
         }
 
@@ -223,7 +223,7 @@ class TabsTray extends TwoWayView
          */
         private void updateSelectedStyle(int selected) {
             for (int i = 0; i < getCount(); i++) {
-                TabsTray.this.setItemChecked(i, (i == selected));
+                TabsListLayout.this.setItemChecked(i, (i == selected));
             }
         }
 
@@ -373,7 +373,7 @@ class TabsTray extends TwoWayView
                     autoHidePanel();
 
                     // Re-enable the view after the animation is done.
-                    TabsTray.this.setEnabled(true);
+                    TabsListLayout.this.setEnabled(true);
 
                     // Then actually close all the tabs.
                     final Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
@@ -512,7 +512,7 @@ class TabsTray extends TwoWayView
         public TabSwipeGestureListener() {
             mEnabled = true;
 
-            ViewConfiguration vc = ViewConfiguration.get(TabsTray.this.getContext());
+            ViewConfiguration vc = ViewConfiguration.get(TabsListLayout.this.getContext());
             mSwipeThreshold = vc.getScaledTouchSlop();
             mMinFlingVelocity = (int) (getContext().getResources().getDisplayMetrics().density * MIN_VELOCITY);
             mMaxFlingVelocity = vc.getScaledMaximumFlingVelocity();
@@ -541,8 +541,8 @@ class TabsTray extends TwoWayView
                 return false;
 
             if (mListWidth < 2 || mListHeight < 2) {
-                mListWidth = TabsTray.this.getWidth();
-                mListHeight = TabsTray.this.getHeight();
+                mListWidth = TabsListLayout.this.getWidth();
+                mListHeight = TabsListLayout.this.getHeight();
             }
 
             switch (e.getActionMasked()) {
@@ -663,7 +663,7 @@ class TabsTray extends TwoWayView
 
                     if (isSwipingToClose) {
                         mSwiping = true;
-                        TabsTray.this.requestDisallowInterceptTouchEvent(true);
+                        TabsListLayout.this.requestDisallowInterceptTouchEvent(true);
 
                         TabRow tab = (TabRow) mSwipeView.getTag();
                         tab.close.setVisibility(View.INVISIBLE);
@@ -673,7 +673,7 @@ class TabsTray extends TwoWayView
                         MotionEvent cancelEvent = MotionEvent.obtain(e);
                         cancelEvent.setAction(MotionEvent.ACTION_CANCEL |
                                 (e.getActionIndex() << MotionEvent.ACTION_POINTER_INDEX_SHIFT));
-                        TabsTray.this.onTouchEvent(cancelEvent);
+                        TabsListLayout.this.onTouchEvent(cancelEvent);
                         cancelEvent.recycle();
                     }
 
@@ -700,13 +700,13 @@ class TabsTray extends TwoWayView
             Rect rect = new Rect();
 
             int[] listViewCoords = new int[2];
-            TabsTray.this.getLocationOnScreen(listViewCoords);
+            TabsListLayout.this.getLocationOnScreen(listViewCoords);
 
             int x = (int) rawX - listViewCoords[0];
             int y = (int) rawY - listViewCoords[1];
 
-            for (int i = 0; i < TabsTray.this.getChildCount(); i++) {
-                View child = TabsTray.this.getChildAt(i);
+            for (int i = 0; i < TabsListLayout.this.getChildCount(); i++) {
+                View child = TabsListLayout.this.getChildAt(i);
                 child.getHitRect(rect);
 
                 if (rect.contains(x, y))
@@ -720,14 +720,14 @@ class TabsTray extends TwoWayView
             if (mPendingCheckForTap == null)
                 mPendingCheckForTap = new CheckForTap();
 
-            TabsTray.this.postDelayed(mPendingCheckForTap, ViewConfiguration.getTapTimeout());
+            TabsListLayout.this.postDelayed(mPendingCheckForTap, ViewConfiguration.getTapTimeout());
         }
 
         private void cancelCheckForTap() {
             if (mPendingCheckForTap == null)
                 return;
 
-            TabsTray.this.removeCallbacks(mPendingCheckForTap);
+            TabsListLayout.this.removeCallbacks(mPendingCheckForTap);
         }
 
         private class CheckForTap implements Runnable {
