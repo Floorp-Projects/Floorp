@@ -230,9 +230,9 @@ public:
   void ConstructMediaTracks(AudioTrackList* aAudioTrackList,
                             VideoTrackList* aVideoTrackList);
 
-  virtual void NotifyMediaStreamTrackCreated(MediaStreamTrack* aTrack);
+  void NotifyMediaStreamTrackCreated(MediaStreamTrack* aTrack);
 
-  virtual void NotifyMediaStreamTrackEnded(MediaStreamTrack* aTrack);
+  void NotifyMediaStreamTrackEnded(MediaStreamTrack* aTrack);
 
 protected:
   virtual ~DOMMediaStream();
