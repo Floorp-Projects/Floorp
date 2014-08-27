@@ -346,6 +346,14 @@ SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
                                                       true);
 }
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope,
+                                   mClients)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerGlobalScope)
+NS_INTERFACE_MAP_END_INHERITING(WorkerGlobalScope)
+
+NS_IMPL_ADDREF_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope)
+NS_IMPL_RELEASE_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope)
+
 ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
                                                    const nsACString& aScope)
   : WorkerGlobalScope(aWorkerPrivate),

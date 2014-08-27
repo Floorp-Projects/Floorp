@@ -325,6 +325,8 @@ WEBIDL_FILES = [
     'ScrollAreaEvent.webidl',
     'Selection.webidl',
     'ServiceWorker.webidl',
+    'ServiceWorkerClient.webidl',
+    'ServiceWorkerClients.webidl',
     'ServiceWorkerContainer.webidl',
     'ServiceWorkerGlobalScope.webidl',
     'ServiceWorkerRegistration.webidl',
