@@ -77,12 +77,12 @@ loop.panel = (function(_, mozL10n) {
                               __("display_name_available_status");
 
       return (
-        <div className="footer component-spacer">
+        <div className="footer">
           <div className="do-not-disturb">
-            <p className="dnd-status" onClick={this.showDropdownMenu}>
+            <div className="dnd-status" onClick={this.showDropdownMenu}>
               <span>{availabilityText}</span>
               <i className={availabilityStatus}></i>
-            </p>
+            </div>
             <ul className={availabilityDropdown}
                 onMouseLeave={this.hideDropdownMenu}>
               <li onClick={this.changeAvailability("available")}
@@ -138,10 +138,8 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       return (
-        <div className="component-spacer share generate-url">
-          <div className="description">
-            <p className="description-content">{this.props.summary}</p>
-          </div>
+        <div className="share generate-url">
+          <div className="description">{this.props.summary}</div>
           <div className="action">
             {this.props.children}
           </div>
@@ -175,6 +173,12 @@ loop.panel = (function(_, mozL10n) {
     },
 
     componentDidMount: function() {
+      // If we've already got a callURL, don't bother requesting a new one.
+      // As of this writing, only used for visual testing in the UI showcase.
+      if (this.state.callUrl.length) {
+        return;
+      }
+
       this.setState({pending: true});
       this.props.client.requestCallUrl(this.conversationIdentifier(),
                                        this._onCallUrlReceived);
@@ -239,7 +243,7 @@ loop.panel = (function(_, mozL10n) {
           <div className="invite">
             <input type="url" value={this.state.callUrl} readOnly="true"
                    className={inputCSSClass} />
-            <p className="button-group url-actions">
+            <p className="btn-group url-actions">
               <button className="btn btn-email" disabled={!this.state.callUrl}
                 onClick={this.handleEmailButtonClick}
                 data-mailto={this._generateMailTo()}>
@@ -360,6 +364,8 @@ loop.panel = (function(_, mozL10n) {
       notifier: new sharedViews.NotificationListView({el: "#messages"})
     });
     Backbone.history.start();
+
+    document.body.classList.add(loop.shared.utils.getTargetPlatform());
 
     // Notify the window that we've finished initalization and initial layout
     var evtObject = document.createEvent('Event');

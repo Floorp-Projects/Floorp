@@ -5,11 +5,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<!DOCTYPE bindings [
-<!ENTITY % actionsDTD SYSTEM "chrome://global/locale/actions.dtd">
-%actionsDTD;
-]>
-
 <bindings id="autocompleteBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
@@ -1288,6 +1283,15 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </getter>
       </property>
 
+      <property name="_stringBundle">
+        <getter><![CDATA[
+          if (!this.__stringBundle) {
+            this.__stringBundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
+          }
+          return this.__stringBundle;
+        ]]></getter>
+      </property>
+
       <field name="_boundaryCutoff">null</field>
 
       <property name="boundaryCutoff" readonly="true">
@@ -1446,7 +1450,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             let [,action, param] = url.match(/^moz-action:([^,]+),(.*)$/);
             this.setAttribute("actiontype", action);
             url = param;
-            let desc = "]]>&action.switchToTab.label;<![CDATA[";
+            let desc = this._stringBundle.GetStringFromName("switchToTab");
             this._setUpDescription(this._action, desc, true);
 
             // Remove the "action" substring so that the correct style, if any,
@@ -1532,8 +1536,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           if (!searchEngine) {
             this._setUpDescription(this._url, url);
           } else {
+            let desc = this._stringBundle.formatStringFromName("searchWithEngine", [searchEngine], 1);
+
             // The search engine name, when present, is not emphasized.
-            this._setUpDescription(this._url, searchEngine, true);
+            this._setUpDescription(this._url, desc, true);
           }
 
           // Set up overflow on a timeout because the contents of the box
