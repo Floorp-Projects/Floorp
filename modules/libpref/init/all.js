@@ -3712,7 +3712,7 @@ pref("gl.msaa-level", 2);
 pref("webgl.force-enabled", false);
 pref("webgl.disabled", false);
 pref("webgl.shader_validator", true);
-pref("webgl.prefer-native-gl", false);
+pref("webgl.disable-angle", false);
 pref("webgl.min_capability_mode", false);
 pref("webgl.disable-extensions", false);
 pref("webgl.msaa-force", false);
