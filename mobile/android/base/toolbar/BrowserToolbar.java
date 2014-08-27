@@ -176,11 +176,11 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private final LightweightTheme theme;
     private final ToolbarPrefs prefs;
 
-    public BrowserToolbar(Context context) {
-        this(context, null);
+    public static View create(final Context context, final AttributeSet attrs) {
+        return new BrowserToolbar(context, attrs);
     }
 
-    public BrowserToolbar(Context context, AttributeSet attrs) {
+    private BrowserToolbar(final Context context, final AttributeSet attrs) {
         super(context, attrs);
         setWillNotDraw(false);
 
