@@ -4,14 +4,16 @@
 "use strict";
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
+
 const Services = require("Services");
+
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const events = require("sdk/event/core");
 const { on: systemOn, off: systemOff } = require("sdk/system/events");
-const { setTimeout, clearTimeout } = require("sdk/timers");
 const protocol = require("devtools/server/protocol");
 const { CallWatcherActor, CallWatcherFront } = require("devtools/server/actors/call-watcher");
 const { ThreadActor } = require("devtools/server/actors/script");
+
 const { on, once, off, emit } = events;
 const { method, Arg, Option, RetVal } = protocol;
 
@@ -24,10 +26,6 @@ exports.unregister = function(handle) {
   handle.removeTabActor(WebAudioActor);
   handle.removeGlobalActor(WebAudioActor);
 };
-
-// In milliseconds, how often should AudioNodes poll to see
-// if an AudioParam's value has changed to emit to the client.
-const PARAM_POLLING_FREQUENCY = 1000;
 
 const AUDIO_GLOBALS = [
   "AudioContext", "AudioNode"
@@ -148,10 +146,6 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
     }
   },
 
-  destroy: function(conn) {
-    protocol.Actor.prototype.destroy.call(this, conn);
-  },
-
   /**
    * Returns the name of the audio type.
    * Examples: "OscillatorNode", "MediaElementAudioSourceNode"
@@ -193,7 +187,6 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
         node[param].value = value;
       else
         node[param] = value;
-
       return undefined;
     } catch (e) {
       return constructError(e);
@@ -228,7 +221,14 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
     // AudioBuffer or Float32Array references and the like,
     // so this just formats the value to be displayed in the VariablesView,
     // without using real grips and managing via actor pools.
-    return createGrip(value);
+    let grip;
+    try {
+      grip = ThreadActor.prototype.createValueGrip(value);
+    }
+    catch (e) {
+      grip = createObjectGrip(value);
+    }
+    return grip;
   }, {
     request: {
       param: Arg(0, "string")
@@ -252,27 +252,16 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
   }),
 
   /**
-   * Get an array of objects each containing a `param`, `value` and `flags` property,
-   * corresponding to a property name and current value of the audio node, and any
-   * associated flags as defined by NODE_PROPERTIES.
+   * Get an array of objects each containing a `param` and `value` property,
+   * corresponding to a property name and current value of the audio node.
    */
-  getParams: method(function () {
+  getParams: method(function (param) {
     let props = Object.keys(NODE_PROPERTIES[this.type]);
     return props.map(prop =>
       ({ param: prop, value: this.getParam(prop), flags: this.getParamFlags(prop) }));
   }, {
     response: { params: RetVal("json") }
-  }),
-
-  /**
-   * Returns a boolean indicating whether or not
-   * the underlying AudioNode has been collected yet or not.
-   *
-   * @return Boolean
-   */
-  isAlive: function () {
-    return !!this.node.get();
-  }
+  })
 });
 
 /**
@@ -418,66 +407,12 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     this.tabActor = null;
     this._initialized = false;
     off(this._callWatcher._contentObserver, "global-destroyed", this._onGlobalDestroyed);
-    this.disableChangeParamEvents();
     this._nativeToActorID = null;
     this._callWatcher.eraseRecording();
     this._callWatcher.finalize();
     this._callWatcher = null;
   }, {
    oneway: true
-  }),
-
-  /**
-   * Takes an AudioNodeActor and a duration specifying how often
-   * should the node's parameters be polled to detect changes. Emits
-   * `change-param` when a change is found.
-   *
-   * Currently, only one AudioNodeActor can be listened to at a time.
-   *
-   * `wait` is used in tests to specify the poll timer.
-   */
-  enableChangeParamEvents: method(function (nodeActor, wait) {
-    // For now, only have one node being polled
-    this.disableChangeParamEvents();
-
-    // Ignore if node is dead
-    if (!nodeActor.isAlive()) {
-      return;
-    }
-
-    let previous = mapAudioParams(nodeActor);
-
-    // Store the ID of the node being polled
-    this._pollingID = nodeActor.actorID;
-
-    this.poller = new Poller(() => {
-      // If node has been collected, disable param polling
-      if (!nodeActor.isAlive()) {
-        this.disableChangeParamEvents();
-        return;
-      }
-
-      let current = mapAudioParams(nodeActor);
-      diffAudioParams(previous, current).forEach(changed => {
-        this._onChangeParam(nodeActor, changed);
-      });
-      previous = current;
-    }).on(wait || PARAM_POLLING_FREQUENCY);
-  }, {
-    request: {
-      node: Arg(0, "audionode"),
-      wait: Arg(1, "nullable:number"),
-    },
-    oneway: true
-  }),
-
-  disableChangeParamEvents: method(function () {
-    if (this.poller) {
-      this.poller.off();
-    }
-    this._pollingID = null;
-  }, {
-    oneway: true
   }),
 
   /**
@@ -502,6 +437,12 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
       dest: Option(0, "audionode"),
       param: Option(0, "string")
     },
+    "change-param": {
+      type: "changeParam",
+      source: Option(0, "audionode"),
+      param: Option(0, "string"),
+      value: Option(0, "string")
+    },
     "create-node": {
       type: "createNode",
       source: Arg(0, "audionode")
@@ -509,13 +450,6 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     "destroy-node": {
       type: "destroyNode",
       source: Arg(0, "audionode")
-    },
-    "change-param": {
-      type: "changeParam",
-      param: Option(0, "string"),
-      newValue: Option(0, "json"),
-      oldValue: Option(0, "json"),
-      actorID: Option(0, "string")
     }
   },
 
@@ -539,7 +473,7 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
   /**
    * Takes an XrayWrapper node, and attaches the node's `nativeID`
    * to the AudioParams as `_parentID`, as well as the the type of param
-   * as a string on `_paramName`. Used to tag AudioParams for `connect-param` events.
+   * as a string on `_paramName`.
    */
   _instrumentParams: function (node) {
     let type = getConstructorName(node);
@@ -559,14 +493,6 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
    * created), so make a new actor and store that.
    */
   _getActorByNativeID: function (nativeID) {
-    // If the WebAudioActor has already been finalized, the `_nativeToActorID`
-    // map will already be destroyed -- the lingering destruction events
-    // seem to only occur in e10s, so add an extra check here to disregard
-    // these late events
-    if (!this._nativeToActorID) {
-      return null;
-    }
-
     // Ensure we have a Number, rather than a string
     // return via notification.
     nativeID = ~~nativeID;
@@ -618,12 +544,15 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
   },
 
   /**
-   * Called when an AudioParam that's being listened to changes.
-   * Takes an AudioNodeActor and an object with `newValue`, `oldValue`, and `param` name.
+   * Called when a parameter changes on an audio node
    */
-  _onChangeParam: function (actor, changed) {
-    changed.actorID = actor.actorID;
-    emit(this, "change-param", changed);
+  _onParamChange: function (node, param, value) {
+    let actor = this._getActorByNativeID(node.id);
+    emit(this, "param-change", {
+      source: actor,
+      param: param,
+      value: value
+    });
   },
 
   /**
@@ -634,8 +563,7 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     emit(this, "create-node", actor);
   },
 
-  /**
-   * Called when `webaudio-node-demise` is triggered,
+  /** Called when `webaudio-node-demise` is triggered,
    * and emits the associated actor to the front if found.
    */
   _onDestroyNode: function ({data}) {
@@ -648,10 +576,6 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     // notifications for a document that no longer exists,
     // the mapping should not be found, so we do not emit an event.
     if (actor) {
-      // Turn off polling for changes if on for this node
-      if (this._pollingID === actor.actorID) {
-        this.disableChangeParamEvents();
-      }
       this._nativeToActorID.delete(nativeID);
       emit(this, "destroy-node", actor);
     }
@@ -739,109 +663,17 @@ function getConstructorName (obj) {
 }
 
 /**
- * Create a value grip for `value`, or fallback to a grip-like object
- * for renderable information for the front-end for things like Float32Arrays,
- * AudioBuffers, without tracking them in an actor pool.
+ * Create a grip-like object to pass in renderable information
+ * to the front-end for things like Float32Arrays, AudioBuffers,
+ * without tracking them in an actor pool.
  */
-function createGrip (value) {
-  try {
-    return ThreadActor.prototype.createValueGrip(value);
-  }
-  catch (e) {
-    return {
-      type: "object",
-      preview: {
-        kind: "ObjectWithText",
-        text: ""
-      },
-      class: getConstructorName(value)
-    };
-  }
+function createObjectGrip (value) {
+  return {
+    type: "object",
+    preview: {
+      kind: "ObjectWithText",
+      text: ""
+    },
+    class: getConstructorName(value)
+  };
 }
-
-/**
- * Takes an AudioNodeActor and maps its current parameter values
- * to a hash, where the property is the AudioParam name, and value
- * is the current value.
- */
-function mapAudioParams (node) {
-  return node.getParams().reduce(function (obj, p) {
-    obj[p.param] = p.value;
-    return obj;
-  }, {});
-}
-
-/**
- * Takes an object of previous and current values of audio parameters,
- * and compares them. If they differ, emit a `change-param` event.
- *
- * @param Object prev
- *        Hash of previous set of AudioParam values.
- * @param Object current
- *        Hash of current set of AudioParam values.
- */
-function diffAudioParams (prev, current) {
-  return Object.keys(current).reduce((changed, param) => {
-    if (!equalGrips(current[param], prev[param])) {
-      changed.push({
-        param: param,
-        oldValue: prev[param],
-        newValue: current[param]
-      });
-    }
-    return changed;
-  }, []);
-}
-
-/**
- * Compares two grip objects to determine if they're equal or not.
- *
- * @param Any a
- * @param Any a
- * @return Boolean
- */
-function equalGrips (a, b) {
-  let aType = typeof a;
-  let bType = typeof b;
-  if (aType !== bType) {
-    return false;
-  } else if (aType === "object") {
-    // In this case, we are comparing two objects, like an ArrayBuffer or Float32Array,
-    // or even just plain "null"s (which grip's will have `type` property "null",
-    // and we have no way of showing more information than its class, so assume
-    // these are equal since nothing can be updated with information of value.
-    if (a.type === b.type) {
-      return true;
-    }
-    // Otherwise return false -- this could be a case of a property going from `null`
-    // to having an ArrayBuffer or an object, in which case we should update it.
-    return false;
-  } else {
-    return a === b;
-  }
-}
-
-/**
- * Poller class -- takes a function, and call be turned on and off
- * via methods to execute `fn` on the interval specified during `on`.
- */
-function Poller (fn) {
-  this.fn = fn;
-}
-
-Poller.prototype.on = function (wait) {
-  let poller = this;
-  poller.timer = setTimeout(poll, wait);
-  function poll () {
-    poller.fn();
-    poller.timer = setTimeout(poll, wait);
-  }
-  return this;
-};
-
-Poller.prototype.off = function () {
-  if (this.timer) {
-    clearTimeout(this.timer);
-  }
-  return this;
-};
