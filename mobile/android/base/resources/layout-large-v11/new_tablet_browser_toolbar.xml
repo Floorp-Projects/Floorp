@@ -22,9 +22,7 @@
 
     <org.mozilla.gecko.toolbar.ForwardButton style="@style/UrlBar.ImageButton.Forward"
                                              android:id="@+id/forward"
-                                             android:layout_marginLeft="-15dp"
-                                             android:layout_alignLeft="@id/url_bar_entry"
-/>
+                                             android:layout_alignLeft="@id/url_bar_entry"/>
 
     <org.mozilla.gecko.toolbar.BackButton android:id="@+id/back"
                                           style="@style/UrlBar.ImageButton"
