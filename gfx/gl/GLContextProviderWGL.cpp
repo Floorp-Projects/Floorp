@@ -607,7 +607,8 @@ CreateWindowOffscreenContext()
 }
 
 already_AddRefed<GLContext>
-GLContextProviderWGL::CreateHeadless()
+GLContextProviderWGL::CreateOffscreen(const gfxIntSize& size,
+                                      const SurfaceCaps& caps)
 {
     if (!sWGLLib.EnsureInitialized()) {
         return nullptr;
@@ -634,18 +635,6 @@ GLContextProviderWGL::CreateHeadless()
     {
         return nullptr;
     }
-
-    nsRefPtr<GLContext> retGL = glContext;
-    return retGL.forget();
-}
-
-already_AddRefed<GLContext>
-GLContextProviderWGL::CreateOffscreen(const gfxIntSize& size,
-                                      const SurfaceCaps& caps)
-{
-    nsRefPtr<GLContext> glContext = CreateHeadless();
-    if (!glContext)
-        return nullptr;
 
     if (!glContext->InitOffscreen(ToIntSize(size), caps))
         return nullptr;

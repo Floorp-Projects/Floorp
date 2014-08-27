@@ -248,32 +248,24 @@ CreateOffscreenFBOContext(bool aShare = true)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderCGL::CreateHeadless()
-{
-    nsRefPtr<GLContextCGL> glContext = CreateOffscreenFBOContext();
-    if (!glContext)
-        return nullptr;
-
-    if (!glContext->Init())
-        return nullptr;
-
-    return glContext.forget();
-}
-
-already_AddRefed<GLContext>
 GLContextProviderCGL::CreateOffscreen(const gfxIntSize& size,
                                       const SurfaceCaps& caps)
 {
-    nsRefPtr<GLContext> glContext = CreateHeadless();
-    if (!glContext->InitOffscreen(ToIntSize(size), caps))
-        return nullptr;
+    nsRefPtr<GLContextCGL> glContext = CreateOffscreenFBOContext();
+    if (glContext &&
+        glContext->Init() &&
+        glContext->InitOffscreen(ToIntSize(size), caps))
+    {
+        return glContext.forget();
+    }
 
-    return glContext.forget();
+    // everything failed
+    return nullptr;
 }
 
 static nsRefPtr<GLContext> gGlobalContext;
 
-GLContext*
+GLContext *
 GLContextProviderCGL::GetGlobalContext()
 {
     if (!sCGLLibrary.EnsureInitialized()) {
