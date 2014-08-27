@@ -26,8 +26,8 @@ class TrackUnionStream : public ProcessedMediaStream {
 public:
   TrackUnionStream(DOMMediaStream* aWrapper) :
     ProcessedMediaStream(aWrapper),
-    mFilterCallback(nullptr)
-  {}
+    mFilterCallback(nullptr),
+    mMaxTrackID(0) {}
 
   virtual void RemoveInput(MediaInputPort* aPort) MOZ_OVERRIDE
   {
@@ -163,21 +163,10 @@ protected:
   uint32_t AddTrack(MediaInputPort* aPort, StreamBuffer::Track* aTrack,
                     GraphTime aFrom)
   {
-    // Use the ID of the source track if it's not already assigned to a track,
-    // otherwise allocate a new unique ID.
-    TrackID id = aTrack->GetID();
-    TrackID maxTrackID = 0;
-    bool found = false;
-    for (uint32_t i = 0; i < mTrackMap.Length(); ++i) {
-      TrackID outID = mTrackMap[i].mOutputTrackID;
-      if (outID == id) {
-        found = true;
-      }
-      maxTrackID = std::max(maxTrackID, outID);
-    }
-    if (found) {
-      id = maxTrackID + 1;
-    }
+    // Use the ID of the source track if we can, otherwise allocate a new
+    // unique ID
+    TrackID id = std::max(mMaxTrackID + 1, aTrack->GetID());
+    mMaxTrackID = id;
 
     TrackRate rate = aTrack->GetRate();
     // Round up the track start time so the track, if anything, starts a
@@ -354,6 +343,7 @@ protected:
   }
 
   nsTArray<TrackMapEntry> mTrackMap;
+  TrackID mMaxTrackID;
 };
 
 }
