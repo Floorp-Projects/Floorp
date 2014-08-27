@@ -2985,7 +2985,6 @@ protected:
     GLint mMaxCubeMapTextureSize;
     GLint mMaxTextureImageSize;
     GLint mMaxRenderbufferSize;
-    GLint mMaxViewportDims[2];
     GLsizei mMaxSamples;
     bool mNeedsTextureSizeChecks;
     bool mWorkAroundDriverBugs;
