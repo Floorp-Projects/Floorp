@@ -1337,7 +1337,7 @@ LoginManagerPrompter.prototype = {
 
         // If the URI explicitly specified a port, only include it when
         // it's not the default. (We never want "http://foo.com:80")
-        port = uri.port;
+        var port = uri.port;
         if (port != -1) {
             var handler = Services.io.getProtocolHandler(scheme);
             if (port != handler.defaultPort)
