@@ -18,6 +18,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/MediaKeySessionBinding.h"
 #include "mozilla/dom/MediaKeysBinding.h"
+#include "mozilla/dom/UnionTypes.h"
 
 struct JSContext;
 
@@ -62,7 +63,7 @@ public:
 
   Promise* Closed() const;
 
-  already_AddRefed<Promise> Update(const Uint8Array& response,
+  already_AddRefed<Promise> Update(const ArrayBufferViewOrArrayBuffer& response,
                                    ErrorResult& aRv);
 
   already_AddRefed<Promise> Close(ErrorResult& aRv);
