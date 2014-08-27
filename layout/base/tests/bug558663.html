@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=558663
+-->
+<head>
+  <title>Test for Bug 558663</title>
+</head>
+<body>
+<p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=558663">Mozilla Bug 558663</a></p>
+
+ <!-- 20x20 of red -->
+<iframe id="iframe" src="data:text/html,<img id='image' border='0' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAG0lEQVR42mP8z0A%2BYKJA76jmUc2jmkc1U0EzACKcASfOgGoMAAAAAElFTkSuQmCC'>"></iframe>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 558663 **/
+var ok = parent.ok;
+var SimpleTest = parent.SimpleTest;
+var compareSnapshots = parent.compareSnapshots;
+var snapshotWindow = parent.snapshotWindow;
+var synthesizeMouse = parent.synthesizeMouse;
+
+window.addEventListener("load", runTest, false);
+
+function checkSnapshots(s1, s2, shouldBeEqual, testName) {
+  var res = compareSnapshots(s1, s2, shouldBeEqual);
+  if (res[0]) {
+    ok(true, testName + " snapshots compare correctly");
+  } else {
+    ok(false, testName + " snapshots compare incorrectly. snapshot 1: " +
+              res[1] + " snapshot 2: " + res[2]); 
+  }
+}
+
+function runTest() {
+  document.getElementById("iframe").contentWindow.document.designMode = "on";
+
+  // The editor requires the event loop to spin after you turn on design mode
+  // before it takes effect.
+  setTimeout(continueTest, 100);
+}
+
+function continueTest() {
+  var win = document.getElementById("iframe").contentWindow;
+  var doc = win.document;
+  var image = doc.getElementById("image");
+
+  // We want to test that clicking on the image and then clicking on one of the
+  // draggers doesn't make the draggers disappear.
+
+  // clean snapshot
+  var before = snapshotWindow(win);
+
+  // click to get the draggers
+  synthesizeMouse(image, 1, 1, {type: "mousedown"}, win);
+  synthesizeMouse(image, 1, 1, {type: "mouseup"}, win);
+
+  // mouse over a dragger will change its color, so move the mouse away
+  synthesizeMouse(doc.documentElement, 50, 50, {type: "mousemove"}, win);
+
+  // snapshot with hopefully draggers
+  var middle = snapshotWindow(win);
+
+  // clicking on the top left dragger shouldn't change anything
+  synthesizeMouse(image, 1, 1, {type: "mousedown"}, win);
+  synthesizeMouse(image, 1, 1, {type: "mouseup"}, win);
+
+  // mouse over a dragger will change its color, so move the mouse away
+  synthesizeMouse(doc.documentElement, 50, 50, {type: "mousemove"}, win);
+
+  // snapshot with hopefully draggers again
+  var middle2 = snapshotWindow(win);
+
+  // click outside the image (but inside the document) to unselect it
+  synthesizeMouse(doc.documentElement, 50, 50, {type: "mousedown"}, win);
+  synthesizeMouse(doc.documentElement, 50, 50, {type: "mouseup"}, win);
+
+  // and then click outside the document so we don't draw a caret
+  synthesizeMouse(document.documentElement, 1, 1, {type: "mousedown"}, window);
+  synthesizeMouse(document.documentElement, 1, 1, {type: "mouseup"}, window);
+
+  // hopefully clean snapshot
+  var end = snapshotWindow(win);
+
+  // before == end && middle == middle2 && before/end != middle/middle2
+  checkSnapshots(before, end, true, "before and after should be the same")
+  checkSnapshots(middle, middle2, true, "middle two should be the same");
+  checkSnapshots(before, middle, false, "before and middle should not be the same");
+  checkSnapshots(before, middle2, false, "before and middle2 should not be the same");
+  checkSnapshots(middle, end, false, "middle and end should not be the same");
+  checkSnapshots(middle2, end, false, "middle2 and end should not be the same");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
