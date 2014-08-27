@@ -13,6 +13,7 @@
 #include "Blur.h"
 #include <map>
 #include "FilterProcessing.h"
+#include "Logging.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/DebugOnly.h"
 
@@ -493,8 +494,7 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
 
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aDestRect.Size(), format);
-
-  if (!target) {
+  if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
   }
 
@@ -1194,7 +1194,7 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
     tmp = aInput;
   } else {
     tmp = Factory::CreateDataSourceSurface(tmpRect.Size(), SurfaceFormat::B8G8R8A8);
-    if (!tmp) {
+    if (MOZ2D_WARN_IF(!tmp)) {
       return nullptr;
     }
 
@@ -1213,7 +1213,7 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
     dest = tmp;
   } else {
     dest = Factory::CreateDataSourceSurface(destRect.Size(), SurfaceFormat::B8G8R8A8);
-    if (!dest) {
+    if (MOZ2D_WARN_IF(!dest)) {
       return nullptr;
     }
 
@@ -1311,7 +1311,7 @@ Premultiply(DataSourceSurface* aSurface)
   IntSize size = aSurface->GetSize();
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
-  if (!target) {
+  if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
   }
 
@@ -1336,7 +1336,7 @@ Unpremultiply(DataSourceSurface* aSurface)
   IntSize size = aSurface->GetSize();
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
-  if (!target) {
+  if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
   }
 
@@ -1423,7 +1423,7 @@ FilterNodeFloodSoftware::Render(const IntRect& aRect)
   SurfaceFormat format = FormatForColor(mColor);
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aRect.Size(), format);
-  if (!target) {
+  if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
   }
 
@@ -1552,7 +1552,7 @@ FilterNodeTileSoftware::Render(const IntRect& aRect)
         // same format as our input filter, and we do not actually know the
         // input format before we call GetInputDataSourceSurface.
         target = Factory::CreateDataSourceSurface(aRect.Size(), input->GetFormat());
-        if (!target) {
+        if (MOZ2D_WARN_IF(!target)) {
           return nullptr;
         }
       }
@@ -1709,7 +1709,7 @@ FilterNodeComponentTransferSoftware::Render(const IntRect& aRect)
 
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aRect.Size(), format);
-  if (!target) {
+  if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
   }
 
@@ -2372,7 +2372,7 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
 
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8);
-  if (!target) {
+  if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
   }
   ClearDataSourceSurface(target);
@@ -2519,7 +2519,7 @@ FilterNodeDisplacementMapSoftware::Render(const IntRect& aRect)
     GetInputDataSourceSurface(IN_DISPLACEMENT_MAP_IN2, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8);
-  if (!input || !map || !target) {
+  if (MOZ2D_WARN_IF(!(input && map && target))) {
     return nullptr;
   }
 
@@ -2777,7 +2777,7 @@ FilterNodeCompositeSoftware::Render(const IntRect& aRect)
     GetInputDataSourceSurface(IN_COMPOSITE_IN_START, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> dest =
     Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8);
-  if (!dest) {
+  if (MOZ2D_WARN_IF(!dest)) {
     return nullptr;
   }
 
@@ -2870,12 +2870,18 @@ FilterNodeBlurXYSoftware::Render(const IntRect& aRect)
 
   if (input->GetFormat() == SurfaceFormat::A8) {
     target = Factory::CreateDataSourceSurface(srcRect.Size(), SurfaceFormat::A8);
+    if (MOZ2D_WARN_IF(!target)) {
+      return nullptr;
+    }
     CopyRect(input, target, IntRect(IntPoint(), input->GetSize()), IntPoint());
     AlphaBoxBlur blur(r, target->Stride(), sigmaXY.width, sigmaXY.height);
     blur.Blur(target->GetData());
   } else {
     RefPtr<DataSourceSurface> channel0, channel1, channel2, channel3;
     FilterProcessing::SeparateColorChannels(input, channel0, channel1, channel2, channel3);
+    if (MOZ2D_WARN_IF(!(channel0 && channel1 && channel2))) {
+      return nullptr;
+    }
     AlphaBoxBlur blur(r, channel0->Stride(), sigmaXY.width, sigmaXY.height);
     blur.Blur(channel0->GetData());
     blur.Blur(channel1->GetData());
@@ -3384,7 +3390,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
 
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
-  if (!target) {
+  if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
   }
 

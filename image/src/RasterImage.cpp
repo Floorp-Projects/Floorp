@@ -866,6 +866,9 @@ RasterImage::CopyFrame(uint32_t aWhichFrame,
   IntSize size(mSize.width, mSize.height);
   RefPtr<DataSourceSurface> surf =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
+  if (NS_WARN_IF(!surf)) {
+    return nullptr;
+  }
 
   DataSourceSurface::MappedSurface mapping;
   DebugOnly<bool> success =
