@@ -337,8 +337,8 @@ TimingInfoFromSample(mp4_demuxer::MP4Sample* aSample)
   timestamp.duration = CMTimeMake(aSample->duration, USECS_PER_S);
   timestamp.presentationTimeStamp =
     CMTimeMake(aSample->composition_timestamp, USECS_PER_S);
-  // No DTS value available from libstagefright.
-  timestamp.decodeTimeStamp = CMTimeMake(0, USECS_PER_S);
+  timestamp.decodeTimeStamp =
+    CMTimeMake(aSample->decode_timestamp, USECS_PER_S);
 
   return timestamp;
 }
