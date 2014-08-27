@@ -547,27 +547,38 @@ describe("loop.conversation", function() {
     });
 
     describe("click event on .btn-accept", function() {
-      it("should trigger an 'accept' conversation model event", function() {
+      it("should trigger an 'accept' conversation model event", function () {
         var buttonAccept = view.getDOMNode().querySelector(".btn-accept");
-
+        model.trigger.withArgs("accept");
         TestUtils.Simulate.click(buttonAccept);
 
         /* Setting a model property triggers 2 events */
-        sinon.assert.calledThrice(model.trigger);
-        sinon.assert.calledWith(model.trigger, "accept");
-        sinon.assert.calledWith(model.trigger, "change:selectedCallType");
-        sinon.assert.calledWith(model.trigger, "change");
+        sinon.assert.calledOnce(model.trigger.withArgs("accept"));
       });
 
-      it("should set selectedCallType to audio-video", function() {
-        var buttonAccept = view.getDOMNode().querySelector(".call-audio-video");
+      it("should set selectedCallType to audio-video", function () {
+        var buttonAccept = view.getDOMNode().querySelector(".btn-accept");
         sandbox.stub(model, "set");
 
         TestUtils.Simulate.click(buttonAccept);
 
         sinon.assert.calledOnce(model.set);
-        sinon.assert.calledWithExactly(model.set, "selectedCallType", "audio-video");
+        sinon.assert.calledWithExactly(model.set, "selectedCallType",
+          "audio-video");
       });
+    });
+
+    describe("click event on .call-audio-only", function() {
+
+      it("should trigger an 'accept' conversation model event", function () {
+        var buttonAccept = view.getDOMNode().querySelector(".call-audio-only");
+        model.trigger.withArgs("accept");
+        TestUtils.Simulate.click(buttonAccept);
+
+        /* Setting a model property triggers 2 events */
+        sinon.assert.calledOnce(model.trigger.withArgs("accept"));
+      });
+
 
       it("should set selectedCallType to audio", function() {
         var buttonAccept = view.getDOMNode().querySelector(".call-audio-only");

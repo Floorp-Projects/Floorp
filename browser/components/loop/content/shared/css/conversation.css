@@ -2,56 +2,120 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Conversation window styles */
+/* Shared conversation window styles */
+.standalone .video-layout-wrapper {
+  background-color: #444;
+}
 
 .conversation {
   position: relative;
 }
 
+.standalone .conversation {
+  margin: 0 auto;
+  max-height: 100vh;
+}
+
 .conversation-toolbar {
-  position: absolute;
   z-index: 999; /* required to have it superimposed to the video element */
+  border: 1px solid #5a5a5a;
+  border-left: 0;
+  border-right: 0;
+}
+
+.conversation .conversation-toolbar {
+  position: absolute;
   left: 0;
   right: 0;
-  background: rgba(0, 0, 0, .70);
-  border: 1px solid #5a5a5a;
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
+}
+
+/* desktop version */
+.conversation-window .conversation-toolbar {
+  height: 26px;
+  background: rgba(0,0,0,.70);
+}
+
+/* standalone version */
+.standalone .conversation-toolbar {
+  bottom: 0;
+}
+
+.standalone .conversation-toolbar {
+  background: rgba(0,0,0,.50);
+  padding: 20px;
+  height: 64px;
 }
 
 .conversation-toolbar li {
   float: left;
-  font-size: 0px; /* prevents vertical bottom padding added to buttons in google
-                     chrome */
+  font-size: 0; /* prevents vertical bottom padding added to buttons in google
+                   chrome */
 }
 
-.conversation-toolbar .btn {
-  width: 40px;
-  height: 30px;
-  background: transparent;
-  background-repeat: no-repeat;
-  background-position: 12px 8px;
-  background-size: 14px 14px;
+  .standalone .conversation-toolbar li {
+    /* XXX Might make sense to use relative units here.
+     */
+    margin-right: 16px;
+  }
+
+.conversation-toolbar-btn-box {
   border-right: 1px solid #5a5a5a;
-  border-radius: 0;
+}
+
+  .standalone .conversation-toolbar-btn-box {
+    /* overwrite the style for standalone
+     * because we reuse the same component */
+    border: none;
+  }
+
+.conversation-toolbar .btn {
+  /* dimensions according to spec
+   * https://people.mozilla.org/~dhenein/labs/loop-link-spec/#video-call */
+  width: 32px;
+  height: 24px;
+  background-position: center;
+  background-size: 40%;
+  background-repeat: no-repeat;
+}
+
+.standalone .media-control {
+  width: 36px;
+  background-position: center;
+  border-radius: 28px;
+}
+
+  .standalone-conversation-toolbar-media-btn:hover {
+    background-color: rgba(255,255,255,.35);
+  }
+
+.fx-embedded-answer-btn-text {
+  vertical-align: bottom;
+  /* don't stretch the button if the localized text is too big */
+  max-width: 80%;
+}
+
+.fx-embedded-btn-icon-video {
+  display: inline-block;
+  vertical-align: top;
+  width: .8rem;
+  height: .8rem;
+  background-image: url("../img/video-inverse-14x14.png");
+  background-repeat: no-repeat;
   cursor: pointer;
 }
 
-.conversation-toolbar .btn:hover {
-  background-color: rgba(255, 255, 255, .35);
+.standalone .btn-hangup {
+  width: auto;
+  font-size: 12px;
+  border-radius: 2px;
+  padding: 0 20px;
 }
 
-/* Hangup button */
-.conversation-toolbar .btn-hangup {
-  background-color: #D74345;
+.conversation-window .conversation-toolbar .btn-hangup {
   background-image: url(../img/hangup-inverse-14x14.png);
 }
-.conversation-toolbar .btn-hangup:hover {
-  background-color: #C53436;
-}
 @media (min-resolution: 2dppx) {
-  .conversation-toolbar .btn-hangup {
+  .conversation-window .conversation-toolbar .btn-hangup {
     background-image: url(../img/hangup-inverse-14x14@2x.png);
   }
 }
@@ -71,33 +135,33 @@
 }
 
 /* Audio mute button */
-.conversation-toolbar .local-media.btn-mute-audio {
+.btn-mute-audio {
   background-image: url(../img/audio-inverse-14x14.png);
 }
-.conversation-toolbar .local-media.btn-mute-audio.muted {
+.btn-mute-audio.muted {
   background-image: url(../img/mute-inverse-14x14.png);
 }
 @media (min-resolution: 2dppx) {
-  .conversation-toolbar .local-media.btn-mute-audio {
+  .btn-mute-audio {
     background-image: url(../img/audio-inverse-14x14@2x.png);
   }
-  .conversation-toolbar .local-media.btn-mute-audio.muted {
+  .btn-mute-audio.muted {
     background-image: url(../img/mute-inverse-14x14@2x.png);
   }
 }
 
 /* Video mute button */
-.conversation-toolbar .local-media.btn-mute-video {
+.btn-mute-video {
   background-image: url(../img/video-inverse-14x14.png);
 }
-.conversation-toolbar .local-media.btn-mute-video.muted {
+.btn-mute-video.muted {
   background-image: url(../img/facemute-14x14.png);
 }
 @media (min-resolution: 2dppx) {
-  .conversation-toolbar .local-media.btn-mute-video {
+  .btn-mute-video {
     background-image: url(../img/video-inverse-14x14@2x.png);
   }
-  .conversation-toolbar .local-media.btn-mute-video.muted {
+  .btn-mute-video.muted {
     background-image: url(../img/facemute-14x14@2x.png);
   }
 }
@@ -119,7 +183,6 @@
 .conversation .media.nested .remote_wrapper {
   display: inline-block;
   position: relative;
-  background: #0f0;
   width: 100%;
   padding-bottom: 75%; /* XXX forced 4:3 ratio, see bug 1020445 */
 }
@@ -144,6 +207,14 @@
   /* next two lines are workaround for lack of object-fit; see bug 1020445 */
   height: 22.5%;
   max-height: 105px;
+}
+
+.standalone .conversation .media.nested .local {
+  /* required to have it superimposed on the control toolbar */
+  z-index: 1001;
+  bottom: 10px;
+  right: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* Side by side video elements */
@@ -178,20 +249,37 @@
 }
 
 .incoming-call-action-group {
-  padding: 2.5em 1em;
-}
-
-.incoming-call-action-group .button-chevron-menu-group {
-  margin-right: .5em;
+  display: flex;
+  padding: 2.5em 0;
+  width: 100%;
+  justify-content: space-around;
 }
 
 .incoming-call-action-group > .btn {
   margin-left: .5em;
 }
 
+.incoming-call-action-group .btn-group-chevron,
+.incoming-call-action-group .btn-group {
+  width: 100%;
+  max-width: 120px;  /* required by the UI Showcase, but the not real code */
+}
+
+/* XXX Once we get the incoming call avatar, bug 1047435, the H2 should
+ * disappear from our markup, and we should remove this rule entirely.
+ */
 .incoming-call h2 {
   font-size: 1.5em;
   font-weight: normal;
+
+  /* compensate for reset.css overriding this; values borrowed from
+     Firefox Mac html.css */
+  margin: 0.83em 0;
+}
+
+.fx-embedded-incoming-call-button-spacer {
+  display: flex;
+  flex: 1;
 }
 
 .call-audio-only {
@@ -212,20 +300,9 @@
     background-color: #6cb23e;
   }
 
-
-.call-audio-video {
-  background-image: url("../img/video-inverse-14x14.png");
-  background-position: 96% center;
-  background-repeat: no-repeat;
-  background-size: 1rem;
-}
-
 @media (min-resolution: 2dppx) {
   .call-audio-only {
     background-image: url("../img/audio-inverse-14x14@2x.png");
-  }
-  .call-audio-video {
-    background-image: url("../img/video-inverse-14x14@2x.png");
   }
 }
 
@@ -293,7 +370,7 @@
   }
 
 .conversation-window-dropdown li {
-  padding: 0 10px 0 5px;
+  padding: 2px;
   font-size: .9em;
 }
 
@@ -318,7 +395,7 @@
 /* Feedback form */
 
 .feedback {
-  padding: 1em;
+  padding: 14px;
 }
 
 .feedback h3 {
@@ -326,8 +403,8 @@
   font-size: 12px;
   font-weight: 700;
   text-align: center;
-  margin-bottom: 10px;
-  margin-top: 15px;
+  margin-bottom: 14px;
+  margin-top: 14px;
 }
 
 .feedback .faces {
@@ -340,10 +417,10 @@
 
 .feedback .face {
   border: 1px solid transparent;
-  box-shadow: 0px 1px 2px #CCC;
+  box-shadow: 0 1px 2px #CCC;
   cursor: pointer;
   border-radius: 4px;
-  margin: 0px 10px;
+  margin: 0 10px;
   width: 80px;
   height: 80px;
   background-color: #fbfbfb;
@@ -373,7 +450,7 @@
   cursor: pointer;
   padding: 3px 10px;
   display: inline;
-  margin-bottom: 1em;
+  margin-bottom: 14px;
 }
 
 .feedback label {
@@ -385,12 +462,10 @@
   margin-right: .5em;
 }
 
-.feedback form button[type="submit"] {
-  width: 100%;
-}
-
+.feedback form button[type="submit"],
 .feedback form input[type="text"] {
   width: 100%;
+  margin-top: 14px;
 }
 
 .feedback .info {
