@@ -1568,10 +1568,6 @@ js::NonObjectToNumberSlow(ThreadSafeContext *cx, Value v, double *out)
     return true;
 }
 
-#if defined(_MSC_VER)
-# pragma optimize("g", off)
-#endif
-
 bool
 js::ToNumberSlow(ExclusiveContext *cx, Value v, double *out)
 {
@@ -1607,10 +1603,6 @@ js::ToNumberSlow(JSContext *cx, Value v, double *out)
 {
     return ToNumberSlow(static_cast<ExclusiveContext *>(cx), v, out);
 }
-
-#if defined(_MSC_VER)
-# pragma optimize("", on)
-#endif
 
 /*
  * Convert a value to an int64_t, according to the WebIDL rules for long long
