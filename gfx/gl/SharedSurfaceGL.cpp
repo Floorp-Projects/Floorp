@@ -23,6 +23,7 @@ SharedSurface_Basic::Create(GLContext* gl,
                             const IntSize& size,
                             bool hasAlpha)
 {
+    UniquePtr<SharedSurface_Basic> ret;
     gl->MakeCurrent();
 
     GLContext::ScopedLocalErrorCheck localError(gl);
@@ -33,7 +34,7 @@ SharedSurface_Basic::Create(GLContext* gl,
     GLenum err = localError.GetLocalError();
     if (err) {
         gl->fDeleteTextures(1, &tex);
-        return nullptr;
+        return Move(ret);
     }
 
     SurfaceFormat format = SurfaceFormat::B8G8R8X8;
@@ -53,8 +54,7 @@ SharedSurface_Basic::Create(GLContext* gl,
         MOZ_CRASH("Unhandled Tex format.");
     }
 
-    typedef SharedSurface_Basic ptrT;
-    UniquePtr<ptrT> ret( new ptrT(gl, size, hasAlpha, format, tex) );
+    ret.reset( new SharedSurface_Basic(gl, size, hasAlpha, format, tex) );
     return Move(ret);
 }
 
