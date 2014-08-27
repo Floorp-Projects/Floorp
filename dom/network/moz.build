@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['interfaces', 'src']
+DIRS += ['interfaces']
 
 XPCSHELL_TESTS_MANIFESTS += [
     'tests/unit/xpcshell.ini',
@@ -15,3 +15,72 @@ if CONFIG['MOZ_B2G_RIL']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/unit_stats/xpcshell.ini']
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+
+EXPORTS.mozilla.dom += [
+    'UDPSocket.h',
+]
+
+EXPORTS.mozilla.dom.network += [
+    'Connection.h',
+    'Constants.h',
+    'TCPServerSocketChild.h',
+    'TCPServerSocketParent.h',
+    'TCPSocketChild.h',
+    'TCPSocketParent.h',
+    'Types.h',
+    'UDPSocketChild.h',
+    'UDPSocketParent.h',
+]
+
+UNIFIED_SOURCES += [
+    'Connection.cpp',
+    'TCPServerSocketChild.cpp',
+    'TCPServerSocketParent.cpp',
+    'TCPSocketChild.cpp',
+    'TCPSocketParent.cpp',
+    'UDPSocket.cpp',
+    'UDPSocketChild.cpp',
+    'UDPSocketParent.cpp',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    EXTRA_JS_MODULES += [
+        'NetworkStatsDB.jsm',
+        'NetworkStatsService.jsm',
+    ]
+
+EXTRA_COMPONENTS += [
+    'TCPServerSocket.js',
+    'TCPSocket.manifest',
+    'TCPSocketParentIntermediary.js',
+]
+
+EXTRA_PP_COMPONENTS += [
+    'TCPSocket.js',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    EXTRA_COMPONENTS += [
+        'NetworkStatsManager.js',
+        'NetworkStatsManager.manifest',
+        'NetworkStatsServiceProxy.js',
+        'NetworkStatsServiceProxy.manifest',
+    ]
+    EXPORTS.mozilla.dom.network += [
+        'NetUtils.h',
+    ]
+    UNIFIED_SOURCES += [
+        'NetUtils.cpp',
+    ]
+
+IPDL_SOURCES += [
+    'PTCPServerSocket.ipdl',
+    'PTCPSocket.ipdl',
+    'PUDPSocket.ipdl',
+]
+
+FAIL_ON_WARNINGS = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
