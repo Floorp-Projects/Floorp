@@ -115,6 +115,10 @@ GfxInfo::GfxInfo()
 {
 }
 
+GfxInfo::~GfxInfo()
+{
+}
+
 /* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
  * has occurred because they depend on it for information. (See bug 591561) */
 nsresult

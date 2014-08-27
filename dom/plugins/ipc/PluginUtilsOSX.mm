@@ -277,7 +277,7 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) 
 
   char formattedName[1024];
   snprintf(formattedName, sizeof(formattedName), 
-      "%s (%s)", [currentName UTF8String], aProcessName);
+      "%s %s", [currentName UTF8String], aProcessName);
 
   aProcessName = formattedName;
 

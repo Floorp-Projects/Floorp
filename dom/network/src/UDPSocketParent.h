@@ -11,20 +11,19 @@
 #include "nsCOMPtr.h"
 #include "nsIUDPSocket.h"
 #include "nsIUDPSocketFilter.h"
-#include "mozilla/net/OfflineObserver.h"
 
 namespace mozilla {
 namespace dom {
 
 class UDPSocketParent : public mozilla::net::PUDPSocketParent
                       , public nsIUDPSocketListener
-                      , public mozilla::net::DisconnectableParent
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETLISTENER
 
-  explicit UDPSocketParent();
+  UDPSocketParent() :
+    mIPCOpen(true) {}
 
   bool Init(const nsACString& aFilter);
 
@@ -41,8 +40,6 @@ public:
   virtual bool RecvLeaveMulticast(const nsCString& aMulticastAddress,
                                   const nsCString& aInterface) MOZ_OVERRIDE;
 
-  virtual nsresult OfflineNotification(nsISupports *) MOZ_OVERRIDE;
-  virtual uint32_t GetAppId() MOZ_OVERRIDE;
 private:
   virtual ~UDPSocketParent();
 
@@ -57,7 +54,6 @@ private:
   bool mIPCOpen;
   nsCOMPtr<nsIUDPSocket> mSocket;
   nsCOMPtr<nsIUDPSocketFilter> mFilter;
-  nsRefPtr<mozilla::net::OfflineObserver> mObserver;
 };
 
 } // namespace dom
