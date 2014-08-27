@@ -365,7 +365,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     RefPtr<DataSourceSurface> source = snapshot->GetDataSurface();
     RefPtr<DataSourceSurface> temp =
       Factory::CreateDataSourceSurface(RoundOut(transformBounds).Size(), SurfaceFormat::B8G8R8A8);
-    if (!temp) {
+    if (NS_WARN_IF(!temp)) {
       return;
     }
 
