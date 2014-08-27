@@ -34,7 +34,10 @@ function appFrameScript() {
   };
 
   content.setTimeout(function() {
-    textarea.focus();
+    content.setTimeout(function() {
+      textarea.focus();
+    }, 10);
+
     input.parentNode.removeChild(input);
   }, 0);
 }
