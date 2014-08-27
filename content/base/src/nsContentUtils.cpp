@@ -2082,6 +2082,13 @@ nsContentUtils::ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
   do {
     if (aPossibleDescendant == aPossibleAncestor)
       return true;
+
+    // Step over shadow root to the host node.
+    ShadowRoot* shadowRoot = ShadowRoot::FromNode(aPossibleDescendant);
+    if (shadowRoot) {
+      aPossibleDescendant = shadowRoot->GetHost();
+    }
+
     aPossibleDescendant = GetCrossDocParentNode(aPossibleDescendant);
   } while (aPossibleDescendant);
 
