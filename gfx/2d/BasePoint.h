@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include "mozilla/Attributes.h"
+#include "mozilla/ToString.h"
 
 namespace mozilla {
 namespace gfx {
@@ -77,6 +78,10 @@ struct BasePoint {
     x = Coord(floor(T(x) + T(0.5)));
     y = Coord(floor(T(y) + T(0.5)));
     return *static_cast<Sub*>(this);
+  }
+
+  friend std::ostream& operator<<(std::ostream& stream, const BasePoint<T, Sub, Coord>& aPoint) {
+    return stream << '(' << aPoint.x << ',' << aPoint.y << ')';
   }
 
 };
