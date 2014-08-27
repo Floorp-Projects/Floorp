@@ -2620,7 +2620,7 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    SendOfflineStatusChangeEventToAllWorkers(NS_IsAppOffline(appId));
+    SendOfflineStatusChangeEventToAllWorkers(NS_IsOffline() || NS_IsAppOffline(appId));
   }
 
   NS_NOTREACHED("Unknown observer topic!");

@@ -19,7 +19,7 @@ interface nsIFile;
  * as a convenience to the programmer and in some cases to improve performance
  * by eliminating intermediate data structures and interfaces.
  */
-[scriptable, uuid(bddeda3f-9020-4d12-8c70-984ee9f7935e)]
+[scriptable, uuid(2d19475d-7557-43f7-9682-0c44417b6c0f)]
 interface nsIIOService : nsISupports
 {
     /**
@@ -102,6 +102,7 @@ interface nsIIOService : nsISupports
      * Returns true if given appId is currently not allowed to make network
      * connections. It will return true if the app is in the wifi-only state
      * and we are currently on a 3G connection.
+     * The returned value does not depend on the offline state of the browser.
      */
     boolean isAppOffline(in uint32_t appId);
 
