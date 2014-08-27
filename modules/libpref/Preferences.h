@@ -36,10 +36,10 @@ namespace dom {
 class PrefSetting;
 }
 
-class Preferences : public nsIPrefService,
-                    public nsIObserver,
-                    public nsIPrefBranchInternal,
-                    public nsSupportsWeakReference
+class Preferences MOZ_FINAL : public nsIPrefService,
+                              public nsIObserver,
+                              public nsIPrefBranchInternal,
+                              public nsSupportsWeakReference
 {
 public:
   typedef mozilla::dom::PrefSetting PrefSetting;

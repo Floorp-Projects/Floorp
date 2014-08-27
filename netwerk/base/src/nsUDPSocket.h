@@ -14,8 +14,8 @@
 
 //-----------------------------------------------------------------------------
 
-class nsUDPSocket : public nsASocketHandler
-                  , public nsIUDPSocket
+class nsUDPSocket MOZ_FINAL : public nsASocketHandler
+                            , public nsIUDPSocket
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

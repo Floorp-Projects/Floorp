@@ -32,11 +32,11 @@
 }
 
 
-class nsJARURI : public nsIJARURI,
-                 public nsISerializable,
-                 public nsIClassInfo,
-                 public nsINestedURI,
-                 public nsIIPCSerializableURI
+class nsJARURI MOZ_FINAL : public nsIJARURI,
+                           public nsISerializable,
+                           public nsIClassInfo,
+                           public nsINestedURI,
+                           public nsIIPCSerializableURI
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
