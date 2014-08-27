@@ -100,8 +100,6 @@ public:
    */
   virtual void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
 
-  virtual void StopTrack(TrackID aTrackID);
-
   bool IsFinished();
   /**
    * Returns a principal indicating who may access this stream. The stream contents
