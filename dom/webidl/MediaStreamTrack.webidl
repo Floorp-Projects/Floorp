@@ -43,5 +43,5 @@ interface MediaStreamTrack {
 //    void                   prependConstraint (DOMString constraintName, any constraintValue);
 //    void                   appendConstraint (DOMString constraintName, any constraintValue);
 //                attribute EventHandler          onoverconstrained;
-//    void                   stop ();
+    void                   stop ();
 };
