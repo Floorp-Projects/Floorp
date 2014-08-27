@@ -225,7 +225,7 @@ public:
     // since this event was dispatched.
     MediaDecoderOwner* owner = mDecoder->GetOwner();
     if (owner) {
-      owner->DispatchNeedKey(mInitData, mInitDataType);
+      owner->DispatchEncrypted(mInitData, mInitDataType);
     }
     mDecoder = nullptr;
     return NS_OK;
