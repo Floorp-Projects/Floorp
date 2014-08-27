@@ -54,6 +54,7 @@ private:
   nsresult InitializeSession();
   nsresult WaitForAsynchronousFrames();
   void DrainReorderedFrames();
+  void ClearReorderedFrames();
 };
 
 } // namespace mozilla

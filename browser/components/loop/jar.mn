@@ -17,6 +17,7 @@ browser.jar:
   content/browser/loop/js/panel.js                  (content/js/panel.js)
 
   # Shared styles
+  content/browser/loop/shared/css/reset.css         (content/shared/css/reset.css)
   content/browser/loop/shared/css/common.css        (content/shared/css/common.css)
   content/browser/loop/shared/css/panel.css         (content/shared/css/panel.css)
   content/browser/loop/shared/css/conversation.css  (content/shared/css/conversation.css)
