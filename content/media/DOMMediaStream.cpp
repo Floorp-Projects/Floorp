@@ -266,6 +266,14 @@ DOMMediaStream::SetTrackEnabled(TrackID aTrackID, bool aEnabled)
   }
 }
 
+void
+DOMMediaStream::StopTrack(TrackID aTrackID)
+{
+  if (mStream && mStream->AsSourceStream()) {
+    mStream->AsSourceStream()->EndTrack(aTrackID);
+  }
+}
+
 bool
 DOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
 {
