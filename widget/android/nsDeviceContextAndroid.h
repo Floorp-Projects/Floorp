@@ -7,6 +7,9 @@
 
 class nsDeviceContextSpecAndroid MOZ_FINAL : public nsIDeviceContextSpec
 {
+private:
+    ~nsDeviceContextSpecAndroid() {}
+
 public:
     NS_DECL_ISUPPORTS
 

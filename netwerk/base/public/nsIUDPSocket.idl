@@ -29,7 +29,7 @@ native NetAddr(mozilla::net::NetAddr);
  *
  * An interface to a UDP socket that can accept incoming connections.
  */
-[scriptable, uuid(5e526cc7-a65f-42b2-b193-a6894c0253f7)]
+[scriptable, uuid(8f28299c-f2ac-468a-8223-190335006bbc)]
 interface nsIUDPSocket : nsISupports
 {
     /**

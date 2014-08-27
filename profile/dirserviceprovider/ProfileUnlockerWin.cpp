@@ -171,8 +171,12 @@ ProfileUnlockerWin::Unlock(uint32_t aSeverity)
   if (error != ERROR_SUCCESS) {
     return NS_ERROR_FAILURE;
   }
+  if (numEntries == 0) {
+    // Nobody else is locking the file; the other process must have terminated
+    return NS_OK;
+  }
 
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
   for (UINT i = 0; i < numEntries; ++i) {
     rv = TryToTerminate(info[i].Process);
     if (NS_SUCCEEDED(rv)) {
@@ -188,6 +192,12 @@ ProfileUnlockerWin::Unlock(uint32_t aSeverity)
 nsresult
 ProfileUnlockerWin::TryToTerminate(RM_UNIQUE_PROCESS& aProcess)
 {
+  // Subtle: If the target process terminated before this call to OpenProcess,
+  // this call will still succeed. This is because the restart manager session
+  // internally retains a handle to the target process. The rules for Windows
+  // PIDs state that the PID of a terminated process remains valid as long as
+  // at least one handle to that process remains open, so when we reach this
+  // point the PID is still valid and the process will open successfully.
   DWORD accessRights = PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_TERMINATE;
   nsAutoHandle otherProcess(::OpenProcess(accessRights, FALSE,
                                           aProcess.dwProcessId));
@@ -207,7 +217,19 @@ ProfileUnlockerWin::TryToTerminate(RM_UNIQUE_PROCESS& aProcess)
   WCHAR imageName[MAX_PATH];
   DWORD imageNameLen = MAX_PATH;
   if (!mQueryFullProcessImageName(otherProcess, 0, imageName, &imageNameLen)) {
-    return NS_ERROR_FAILURE;
+    // The error codes for this function are not very descriptive. There are
+    // actually two failure cases here: Either the call failed because the
+    // process is no longer running, or it failed for some other reason. We
+    // need to know which case that is.
+    DWORD otherProcessExitCode;
+    if (!::GetExitCodeProcess(otherProcess, &otherProcessExitCode) ||
+        otherProcessExitCode == STILL_ACTIVE) {
+      // The other process is still running.
+      return NS_ERROR_FAILURE;
+    }
+    // The other process must have terminated. We should return NS_OK so that
+    // this process may proceed with startup.
+    return NS_OK;
   }
   nsCOMPtr<nsIFile> otherProcessImageName;
   if (NS_FAILED(NS_NewLocalFile(nsDependentString(imageName, imageNameLen),
@@ -241,7 +263,11 @@ ProfileUnlockerWin::TryToTerminate(RM_UNIQUE_PROCESS& aProcess)
 
   // We know that another process holds the lock and that it shares the same
   // image name as our process. Let's kill it.
-  if (!::TerminateProcess(otherProcess, 1)) {
+  // Subtle: TerminateProcess returning ERROR_ACCESS_DENIED is actually an
+  // indicator that the target process managed to shut down on its own. In that
+  // case we should return NS_OK since we may proceed with startup.
+  if (!::TerminateProcess(otherProcess, 1) &&
+      ::GetLastError() != ERROR_ACCESS_DENIED) {
     return NS_ERROR_FAILURE;
   }
 

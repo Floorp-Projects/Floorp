@@ -249,7 +249,7 @@ public final class GeckoLoader {
 
         loadMozGlue(context);
         loadLibsSetup(context);
-        loadSQLiteLibsNative(apkName, false);
+        loadSQLiteLibsNative(apkName);
     }
 
     public static void loadNSSLibs(final Context context, final String apkName) {
@@ -262,7 +262,7 @@ public final class GeckoLoader {
 
         loadMozGlue(context);
         loadLibsSetup(context);
-        loadNSSLibsNative(apkName, false);
+        loadNSSLibsNative(apkName);
     }
 
     /**
@@ -537,6 +537,6 @@ public final class GeckoLoader {
     // These methods are implemented in mozglue/android/APKOpen.cpp
     public static native void nativeRun(String args);
     private static native void loadGeckoLibsNative(String apkName);
-    private static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
-    private static native void loadNSSLibsNative(String apkName, boolean shouldExtract);
+    private static native void loadSQLiteLibsNative(String apkName);
+    private static native void loadNSSLibsNative(String apkName);
 }

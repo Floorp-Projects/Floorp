@@ -4,4 +4,4 @@
 
 /* Localized versions of Info.plist keys */
 
-CFBundleName = "%APP_NAME% Plugin Process";
+CFBundleName = "%APP_NAME%";
