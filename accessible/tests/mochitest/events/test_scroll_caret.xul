@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+  <script type="application/javascript"
+          src="../browser.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Tests
+
+    function getAnchorJumpInTabDocument(aTabIdx)
+    {
+      var tabDoc = aTabIdx ? tabDocumentAt(aTabIdx) : currentTabDocument();
+      return tabDoc.querySelector("h1[id='heading_1']");
+    }
+
+    function loadTab(aURL)
+    {
+      this.eventSeq = [
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, currentTabDocument),
+        new asyncCaretMoveChecker(0, getAnchorJumpInTabDocument)
+      ];
+
+      this.invoke = function loadTab_invoke()
+      {
+        tabBrowser().loadURI(aURL);
+      }
+
+      this.getID = function loadTab_getID()
+      {
+        return "load tab: " + aURL;
+      }
+    }
+
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      var url = "http://mochi.test:8888/a11y/accessible/tests/mochitest/events/scroll.html#heading_1";
+      gQueue.push(new loadTab(url));
+      gQueue.onFinish = function() { closeBrowserWindow(); }
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    openBrowserWindow(doTest);
+  ]]>
+  </script>
+
+  <vbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=1056459"
+         title="Make sure caret move event is fired when document receive focus">
+        Mozilla Bug 1056459
+      </a>
+
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox id="eventdump"></vbox>
+  </vbox>
+</window>
