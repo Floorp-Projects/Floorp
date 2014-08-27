@@ -1082,6 +1082,11 @@ TabActor.prototype = {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
     Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
+      // This won't work while the browser is shutting down and we don't really
+      // care.
+      if (Services.startup.shuttingDown) {
+        return;
+      }
       this.webNavigation.reload(force ? Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE
                                       : Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
     }, "TabActor.prototype.onReload's delayed body"), 0);
