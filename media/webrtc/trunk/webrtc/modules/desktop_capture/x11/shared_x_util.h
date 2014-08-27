@@ -11,17 +11,8 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_X11_SHARED_X_UTIL_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_X11_SHARED_X_UTIL_H_
 
-#include "webrtc/system_wrappers/interface/atomic32.h"
-#include "webrtc/system_wrappers/interface/scoped_refptr.h"
-#include "webrtc/modules/desktop_capture/x11/shared_x_display.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include <unistd.h>
-#include <string.h>
-
 #include <map>
 #include <vector>
-#include <vector>
-#include <algorithm>
 
 #include <assert.h>
 #include <X11/Xlib.h>
@@ -31,6 +22,9 @@
 #include <X11/extensions/Xrender.h>
 #include <X11/Xutil.h>
 #include <string>
+
+#include "webrtc/system_wrappers/interface/atomic32.h"
+#include "webrtc/system_wrappers/interface/scoped_refptr.h"
 
 namespace webrtc {
 
