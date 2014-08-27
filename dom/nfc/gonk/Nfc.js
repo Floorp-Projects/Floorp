@@ -237,7 +237,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
      */
 
     receiveMessage: function receiveMessage(msg) {
-      debug("Received '" + msg.name + "' message from content process");
+      debug("Received '" + JSON.stringify(msg) + "' message from content process");
       if (msg.name == "child-process-shutdown") {
         this.removePeerTarget(msg.target);
         return null;
@@ -503,11 +503,9 @@ Nfc.prototype = {
   targetsByRequestId: null,
 
   /**
-   * Process a message from the content process.
+   * Process a message from the gMessageManager.
    */
   receiveMessage: function receiveMessage(message) {
-    debug("Received '" + JSON.stringify(message) + "' message from content process");
-
     let isPowerAPI = message.name == "NFC:StartPoll" ||
                      message.name == "NFC:StopPoll"  ||
                      message.name == "NFC:PowerOff";
