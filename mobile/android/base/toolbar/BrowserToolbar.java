@@ -17,6 +17,7 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.LightweightTheme;
+import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -59,7 +60,6 @@ import android.view.animation.Interpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
@@ -81,10 +81,10 @@ import android.widget.RelativeLayout;
 * as a set of listeners to allow {@code BrowserToolbar} users to react
 * to state changes accordingly.
 */
-public class BrowserToolbar extends ThemedRelativeLayout
-                            implements Tabs.OnTabsChangedListener,
-                                       GeckoMenu.ActionItemBarPresenter,
-                                       GeckoEventListener {
+public abstract class BrowserToolbar extends ThemedRelativeLayout
+                                     implements Tabs.OnTabsChangedListener,
+                                                GeckoMenu.ActionItemBarPresenter,
+                                                GeckoEventListener {
     private static final String LOGTAG = "GeckoToolbar";
 
     public interface OnActivateListener {
@@ -111,7 +111,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
         public void onStopEditing();
     }
 
-    private enum UIMode {
+    protected enum UIMode {
         EDIT,
         DISPLAY
     }
@@ -121,50 +121,43 @@ public class BrowserToolbar extends ThemedRelativeLayout
         HIDE
     }
 
-    private ToolbarDisplayLayout urlDisplayLayout;
-    private ToolbarEditLayout urlEditLayout;
-    private View urlBarEntry;
+    private final boolean isNewTablet;
+
+    protected final ToolbarDisplayLayout urlDisplayLayout;
+    protected final ToolbarEditLayout urlEditLayout;
+    protected final View urlBarEntry;
     private RelativeLayout.LayoutParams urlBarEntryDefaultLayoutParams;
     private RelativeLayout.LayoutParams urlBarEntryShrunkenLayoutParams;
-    private ImageView urlBarTranslatingEdge;
     private boolean isSwitchingTabs;
-    private ThemedImageButton tabsButton;
+    protected final ThemedImageButton tabsButton;
     private ImageButton backButton;
     private ImageButton forwardButton;
 
     private ToolbarProgressView progressBar;
-    private TabCounter tabsCounter;
-    private ThemedImageButton menuButton;
-    private ThemedImageView menuIcon;
-    private LinearLayout actionItemBar;
+    protected final TabCounter tabsCounter;
+    protected final ThemedImageButton menuButton;
+    protected final ThemedImageView menuIcon;
+    protected final LinearLayout actionItemBar;
     private MenuPopup menuPopup;
-    private List<View> focusOrder;
+    protected final List<View> focusOrder;
 
-    private final ThemedImageView editCancel;
+    protected final ThemedImageView editCancel;
 
     private List<View> tabletDisplayModeViews;
     private boolean hidForwardButtonOnStartEditing;
-
-    private boolean shouldShrinkURLBar;
 
     private OnActivateListener activateListener;
     private OnFocusChangeListener focusChangeListener;
     private OnStartEditingListener startEditingListener;
     private OnStopEditingListener stopEditingListener;
-    private final PropertyAnimator.PropertyAnimationListener showEditingPhoneAnimationListener;
-    private final PropertyAnimator.PropertyAnimationListener stopEditingPhoneAnimationListener;
 
     private final BrowserApp activity;
     private boolean hasSoftMenuButton;
 
-    private UIMode uiMode;
-    private boolean isAnimatingEntry;
+    protected UIMode uiMode;
 
     private int urlBarViewOffset;
     private int defaultForwardMargin;
-
-    private Path roundCornerShape;
-    private Paint roundCornerPaint;
 
     private final Paint shadowPaint;
     private final int shadowSize;
@@ -176,21 +169,42 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private final LightweightTheme theme;
     private final ToolbarPrefs prefs;
 
-    public static View create(final Context context, final AttributeSet attrs) {
-        return new BrowserToolbar(context, attrs);
+    public abstract boolean isAnimating();
+
+    protected abstract void triggerStartEditingTransition(PropertyAnimator animator);
+    protected abstract void triggerStopEditingTransition();
+
+    public static BrowserToolbar create(final Context context, final AttributeSet attrs) {
+        final BrowserToolbar toolbar;
+        if (NewTabletUI.isEnabled(context)) {
+            toolbar = new BrowserToolbarNewTablet(context, attrs);
+        } else if (HardwareUtils.isTablet()) {
+            toolbar = new BrowserToolbarTablet(context, attrs);
+        } else if (Versions.preHC) {
+            toolbar = new BrowserToolbarPreHC(context, attrs);
+        } else {
+            toolbar = new BrowserToolbarPhone(context, attrs);
+        }
+        return toolbar;
     }
 
-    private BrowserToolbar(final Context context, final AttributeSet attrs) {
+    protected BrowserToolbar(final Context context, final AttributeSet attrs) {
         super(context, attrs);
         setWillNotDraw(false);
 
+        isNewTablet = NewTabletUI.isEnabled(context);
         theme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
         // BrowserToolbar is attached to BrowserApp only.
         activity = (BrowserApp) context;
 
         // Inflate the content.
-        LayoutInflater.from(context).inflate(R.layout.browser_toolbar, this);
+        // TODO: Remove the branch when new tablet becomes old tablet.
+        if (!isNewTablet) {
+            LayoutInflater.from(context).inflate(R.layout.browser_toolbar, this);
+        } else {
+            LayoutInflater.from(context).inflate(R.layout.new_tablet_browser_toolbar, this);
+        }
 
         Tabs.registerOnTabsChangedListener(this);
         isSwitchingTabs = true;
@@ -219,12 +233,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
             urlBarEntryShrunkenLayoutParams.leftMargin = 0;
         }
 
-        // This will clip the translating edge's image at 60% of its width
-        urlBarTranslatingEdge = (ImageView) findViewById(R.id.url_bar_translating_edge);
-        if (urlBarTranslatingEdge != null) {
-            urlBarTranslatingEdge.getDrawable().setLevel(6000);
-        }
-
         tabsButton = (ThemedImageButton) findViewById(R.id.tabs);
         tabsCounter = (TabCounter) findViewById(R.id.tabs_counter);
         if (Versions.feature11Plus) {
@@ -243,30 +251,12 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         editCancel = (ThemedImageView) findViewById(R.id.edit_cancel);
 
-        // We use different layouts on phones and tablets, so adjust the focus
-        // order appropriately.
+        // The focusOrder List should be filled by sub-classes.
         focusOrder = new ArrayList<View>();
         if (HardwareUtils.isTablet()) {
             focusOrder.addAll(Arrays.asList(tabsButton, backButton, forwardButton, this));
             focusOrder.addAll(urlDisplayLayout.getFocusOrder());
             focusOrder.addAll(Arrays.asList(actionItemBar, menuButton));
-        } else {
-            focusOrder.add(this);
-            focusOrder.addAll(urlDisplayLayout.getFocusOrder());
-            focusOrder.addAll(Arrays.asList(tabsButton, menuButton));
-        }
-
-        if (!HardwareUtils.isTablet()) {
-            roundCornerShape = new Path();
-            roundCornerShape.moveTo(0, 0);
-            roundCornerShape.lineTo(30, 0);
-            roundCornerShape.cubicTo(0, 0, 0, 0, 0, 30);
-            roundCornerShape.lineTo(0, 0);
-
-            roundCornerPaint = new Paint();
-            roundCornerPaint.setAntiAlias(true);
-            roundCornerPaint.setColor(res.getColor(R.color.background_tabs));
-            roundCornerPaint.setStrokeWidth(0.0f);
         }
 
         shadowSize = res.getDimensionPixelSize(R.dimen.browser_toolbar_shadow_size);
@@ -276,41 +266,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
         shadowPaint.setStrokeWidth(0.0f);
 
         setUIMode(UIMode.DISPLAY);
-
-        // Create these listeners here, once, to avoid constructing new listeners
-        // each time they are set on an animator (i.e. each time the url bar is clicked).
-        showEditingPhoneAnimationListener = new PropertyAnimator.PropertyAnimationListener() {
-            @Override
-            public void onPropertyAnimationStart() { /* Do nothing */ }
-
-            @Override
-            public void onPropertyAnimationEnd() {
-                isAnimatingEntry = false;
-            }
-        };
-
-        stopEditingPhoneAnimationListener = new PropertyAnimator.PropertyAnimationListener() {
-            @Override
-            public void onPropertyAnimationStart() { /* Do nothing */ }
-
-            @Override
-            public void onPropertyAnimationEnd() {
-                urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
-                if (shouldShrinkURLBar) {
-                    urlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
-                }
-
-                PropertyAnimator buttonsAnimator = new PropertyAnimator(300);
-                urlDisplayLayout.prepareStopEditingAnimation(buttonsAnimator);
-                buttonsAnimator.start();
-
-                isAnimatingEntry = false;
-
-                // Trigger animation to update the tabs counter once the
-                // tabs button is back on screen.
-                updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
-            }
-        };
 
         prefs = new ToolbarPrefs();
         urlDisplayLayout.setToolbarPrefs(prefs);
@@ -479,7 +434,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
             public void onClick(View v) {
                 // If we exit editing mode during the animation,
                 // we're put into an inconsistent state (bug 1017276).
-                if (!isAnimatingEntry) {
+                if (!isAnimating()) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL,
                                           TelemetryContract.Method.ACTIONBAR,
                                           getResources().getResourceEntryName(editCancel.getId()));
@@ -512,10 +467,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
     public void draw(Canvas canvas) {
         super.draw(canvas);
 
-        if (!HardwareUtils.isTablet() && uiMode == UIMode.DISPLAY) {
-            canvas.drawPath(roundCornerShape, roundCornerPaint);
-        }
-
         final int height = getHeight();
         canvas.drawRect(0, height - shadowSize, getWidth(), height, shadowPaint);
     }
@@ -531,7 +482,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
     public boolean onBackPressed() {
         // If we exit editing mode during the animation,
         // we're put into an inconsistent state (bug 1017276).
-        if (isEditing() && !isAnimatingEntry) {
+        if (isEditing() && !isAnimating()) {
             Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL,
                                   TelemetryContract.Method.BACK);
             cancelEdit();
@@ -701,22 +652,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
         menuButton.setNextFocusDownId(nextId);
     }
 
-    /**
-     * Returns the number of pixels the url bar translating edge
-     * needs to translate to the right to enter its editing mode state.
-     * A negative value means the edge must translate to the left.
-     */
-    private int getUrlBarEntryTranslation() {
-        // Find the distance from the right-edge of the url bar (where we're translating from) to
-        // the left-edge of the cancel button (where we're translating to; note that the cancel
-        // button must be laid out, i.e. not View.GONE).
-        return editCancel.getLeft() - urlBarEntry.getRight();
-    }
-
-    private int getUrlBarCurveTranslation() {
-        return getWidth() - tabsButton.getLeft();
-    }
-
     private boolean canDoBack(Tab tab) {
         return (tab.canDoBack() && !isEditing());
     }
@@ -749,7 +684,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
         }
     }
 
-    private void updateTabCountAndAnimate(int count) {
+    protected void updateTabCountAndAnimate(final int count) {
         // Don't animate if the toolbar is hidden.
         if (!isVisible()) {
             updateTabCount(count);
@@ -810,6 +745,10 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private void updateFocusOrder() {
+        if (focusOrder.size() == 0) {
+            throw new IllegalStateException("Expected focusOrder to be initialized in subclass");
+        }
+
         View prevView = null;
 
         // If the element that has focus becomes disabled or invisible, focus
@@ -935,19 +874,19 @@ public class BrowserToolbar extends ThemedRelativeLayout
         stopEditingListener = listener;
     }
 
-    private void showUrlEditLayout() {
+    protected void showUrlEditLayout() {
         setUrlEditLayoutVisibility(true, null);
     }
 
-    private void showUrlEditLayout(PropertyAnimator animator) {
+    protected void showUrlEditLayout(final PropertyAnimator animator) {
         setUrlEditLayoutVisibility(true, animator);
     }
 
-    private void hideUrlEditLayout() {
+    protected void hideUrlEditLayout() {
         setUrlEditLayoutVisibility(false, null);
     }
 
-    private void hideUrlEditLayout(PropertyAnimator animator) {
+    protected void hideUrlEditLayout(final PropertyAnimator animator) {
         setUrlEditLayoutVisibility(false, animator);
     }
 
@@ -992,7 +931,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private void setCancelVisibility(final int visibility) {
-        editCancel.setVisibility(visibility);
+        if (!isNewTablet) {
+            editCancel.setVisibility(visibility);
+        }
     }
 
     /**
@@ -1044,10 +985,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
         return (uiMode == UIMode.EDIT);
     }
 
-    public boolean isAnimating() {
-        return isAnimatingEntry;
-    }
-
     public void startEditing(String url, PropertyAnimator animator) {
         if (isEditing()) {
             return;
@@ -1063,44 +1000,12 @@ public class BrowserToolbar extends ThemedRelativeLayout
             startEditingListener.onStartEditing();
         }
 
-        if (HardwareUtils.isTablet()) {
+        if (isNewTablet) {
+            showUrlEditLayout();
+        } else if (HardwareUtils.isTablet()) {
             showEditingOnTablet();
         } else {
-            urlBarTranslatingEdge.setVisibility(View.VISIBLE);
-
-            final int curveTranslation = getUrlBarCurveTranslation();
-            final int entryTranslation = getUrlBarEntryTranslation();
-            shouldShrinkURLBar = (entryTranslation < 0);
-            if (shouldShrinkURLBar) {
-                urlBarEntry.setLayoutParams(urlBarEntryShrunkenLayoutParams);
-            }
-
-            if (Versions.preHC) {
-                showEditingOnPreHoneycomb(entryTranslation, curveTranslation);
-            } else {
-                showEditingWithPhoneAnimation(animator, entryTranslation, curveTranslation);
-            }
-        }
-    }
-
-    private void showEditingOnPreHoneycomb(final int entryTranslation,
-            final int curveTranslation) {
-        showUrlEditLayout();
-
-        // Prevent taps through the editing mode cancel button (bug 1001243).
-        tabsButton.setEnabled(false);
-
-        ViewHelper.setTranslationX(urlBarTranslatingEdge, entryTranslation);
-        ViewHelper.setTranslationX(tabsButton, curveTranslation);
-        ViewHelper.setTranslationX(tabsCounter, curveTranslation);
-        ViewHelper.setTranslationX(actionItemBar, curveTranslation);
-
-        if (hasSoftMenuButton) {
-            // Prevent tabs through the editing mode cancel button (bug 1001243).
-            menuButton.setEnabled(false);
-
-            ViewHelper.setTranslationX(menuButton, curveTranslation);
-            ViewHelper.setTranslationX(menuIcon, curveTranslation);
+            triggerStartEditingTransition(animator);
         }
     }
 
@@ -1127,43 +1032,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         // Show editing elements.
         showUrlEditLayout();
-    }
-
-    private void showEditingWithPhoneAnimation(final PropertyAnimator animator,
-            final int entryTranslation, final int curveTranslation) {
-        if (isAnimatingEntry)
-            return;
-
-        urlDisplayLayout.prepareStartEditingAnimation();
-
-        // Slide toolbar elements.
-        animator.attach(urlBarTranslatingEdge,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        entryTranslation);
-        animator.attach(tabsButton,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        curveTranslation);
-        animator.attach(tabsCounter,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        curveTranslation);
-        animator.attach(actionItemBar,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        curveTranslation);
-
-        if (hasSoftMenuButton) {
-            animator.attach(menuButton,
-                            PropertyAnimator.Property.TRANSLATION_X,
-                            curveTranslation);
-
-            animator.attach(menuIcon,
-                            PropertyAnimator.Property.TRANSLATION_X,
-                            curveTranslation);
-        }
-
-        showUrlEditLayout(animator);
-
-        animator.addPropertyAnimationListener(showEditingPhoneAnimationListener);
-        isAnimatingEntry = true; // To be correct, this should be called last.
     }
 
     /**
@@ -1204,44 +1072,13 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         updateProgressVisibility();
 
-        // The animation looks cleaner if the text in the URL bar is
-        // not selected so clear the selection by clearing focus.
-        urlEditLayout.clearFocus();
-
-        if (Versions.preHC) {
-            stopEditingOnPreHoneycomb();
-        } else if (HardwareUtils.isTablet()) {
+        if (HardwareUtils.isTablet()) {
             stopEditingOnTablet();
         } else {
-            stopEditingWithPhoneAnimation();
+            triggerStopEditingTransition();
         }
 
         return url;
-    }
-
-    private void stopEditingOnPreHoneycomb() {
-        hideUrlEditLayout();
-
-        updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
-
-        if (shouldShrinkURLBar) {
-            urlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
-        }
-
-        tabsButton.setEnabled(true);
-
-        urlBarTranslatingEdge.setVisibility(View.INVISIBLE);
-        ViewHelper.setTranslationX(urlBarTranslatingEdge, 0);
-        ViewHelper.setTranslationX(tabsButton, 0);
-        ViewHelper.setTranslationX(tabsCounter, 0);
-        ViewHelper.setTranslationX(actionItemBar, 0);
-
-        if (hasSoftMenuButton) {
-            menuButton.setEnabled(true);
-
-            ViewHelper.setTranslationX(menuButton, 0);
-            ViewHelper.setTranslationX(menuIcon, 0);
-        }
     }
 
     private void stopEditingOnTablet() {
@@ -1265,42 +1102,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         // Hide editing elements.
         hideUrlEditLayout();
-    }
-
-    private void stopEditingWithPhoneAnimation() {
-        final PropertyAnimator contentAnimator = new PropertyAnimator(250);
-        contentAnimator.setUseHardwareLayer(false);
-
-        // Slide the toolbar back to its original size.
-        contentAnimator.attach(urlBarTranslatingEdge,
-                               PropertyAnimator.Property.TRANSLATION_X,
-                               0);
-        contentAnimator.attach(tabsButton,
-                               PropertyAnimator.Property.TRANSLATION_X,
-                               0);
-        contentAnimator.attach(tabsCounter,
-                               PropertyAnimator.Property.TRANSLATION_X,
-                               0);
-        contentAnimator.attach(actionItemBar,
-                               PropertyAnimator.Property.TRANSLATION_X,
-                               0);
-
-        if (hasSoftMenuButton) {
-            contentAnimator.attach(menuButton,
-                                   PropertyAnimator.Property.TRANSLATION_X,
-                                   0);
-
-            contentAnimator.attach(menuIcon,
-                                   PropertyAnimator.Property.TRANSLATION_X,
-                                   0);
-        }
-
-        hideUrlEditLayout(contentAnimator);
-
-        contentAnimator.addPropertyAnimationListener(stopEditingPhoneAnimationListener);
-
-        isAnimatingEntry = true;
-        contentAnimator.start();
     }
 
     private void setButtonEnabled(ImageButton button, boolean enabled) {
@@ -1542,3 +1343,4 @@ public class BrowserToolbar extends ThemedRelativeLayout
         editCancel.onLightweightThemeReset();
     }
 }
+
