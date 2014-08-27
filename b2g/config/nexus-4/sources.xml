@@ -17,10 +17,10 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="6e804a42ab90f4251c7fe8c68731dc1c6abd8006"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="3a838afca295c9db32e1a3ec76d49fb7fe7fd2d2"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3bb61a27cd2941b2ba9b616a11aaa44269210396"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="562d357b72279a9e35d4af5aeecc8e1ffa2f44f1"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="1085a4b05f19f1c43def7e87362d4498ce20b70f"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="320650844ec7cba40a70317b761b88b47a8dca0e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -102,7 +102,7 @@
   <project name="platform/external/webrtc" path="external/webrtc" revision="1a1433203ddf6395516e065ada1dcdfc8bd5c654"/>
   <project name="platform/external/yaffs2" path="external/yaffs2" revision="d94a17182a88c2c2d865f50b728de8561d251efa"/>
   <project name="platform/external/zlib" path="external/zlib" revision="06608b270da9ec8a3e618f201d7356aad83f9ffe"/>
-  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="f9000e9ec6fb84a24ffe049e6a6372c0305ee0f1"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="7a1003b370cde4406afd9186de0b1a5aa95543db"/>
   <project name="platform/frameworks/base" path="frameworks/base" revision="8fafbc6692a52d1f1417693f24f6349b4de5afbd"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="c135c11c422c1570fdae2e19336f06f39e723c5a"/>
   <project name="platform/frameworks/opt/emoji" path="frameworks/opt/emoji" revision="bc06a1779be6919a581a938e1c3118b3a4ab4c18"/>
