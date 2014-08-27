@@ -19,9 +19,7 @@ let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.j
 
 let { WebAudioFront } = devtools.require("devtools/server/actors/webaudio");
 let TargetFactory = devtools.TargetFactory;
-let mm = null;
 
-const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js";
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/webaudioeditor/test/";
 const SIMPLE_CONTEXT_URL = EXAMPLE_URL + "doc_simple-context.html";
 const COMPLEX_CONTEXT_URL = EXAMPLE_URL + "doc_complex-context.html";
@@ -32,7 +30,6 @@ const DESTROY_NODES_URL = EXAMPLE_URL + "doc_destroy-nodes.html";
 const CONNECT_TOGGLE_URL = EXAMPLE_URL + "doc_connect-toggle.html";
 const CONNECT_PARAM_URL = EXAMPLE_URL + "doc_connect-param.html";
 const CONNECT_MULTI_PARAM_URL = EXAMPLE_URL + "doc_connect-multi-param.html";
-const CHANGE_PARAM_URL = EXAMPLE_URL + "doc_change-param.html";
 
 // All tests are asynchronous.
 waitForExplicitFinish();
@@ -136,8 +133,6 @@ function initBackend(aUrl) {
     yield target.makeRemote();
 
     let front = new WebAudioFront(target.client, target.form);
-
-    loadFrameScripts();
     return [target, debuggee, front];
   });
 }
@@ -155,8 +150,6 @@ function initWebAudioEditor(aUrl) {
     Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
     let toolbox = yield gDevTools.showToolbox(target, "webaudioeditor");
     let panel = toolbox.getCurrentPanel();
-
-    loadFrameScripts();
     return [target, debuggee, panel];
   });
 }
@@ -394,12 +387,9 @@ function countGraphObjects (win) {
 * Forces cycle collection and GC, used in AudioNode destruction tests.
 */
 function forceCC () {
-  mm.sendAsyncMessage("devtools:test:forceCC");
-}
-
-function loadFrameScripts () {
-  mm = gBrowser.selectedBrowser.messageManager;
-  mm.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
+  SpecialPowers.DOMWindowUtils.cycleCollect();
+  SpecialPowers.DOMWindowUtils.garbageCollect();
+  SpecialPowers.DOMWindowUtils.garbageCollect();
 }
 
 /**
