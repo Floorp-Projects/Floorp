@@ -2021,9 +2021,9 @@ const LayerMargin AsyncPanZoomController::CalculatePendingDisplayPort(
   displayPort = displayPort.ForceInside(scrollableRect) - scrollOffset;
 
   APZC_LOG_FM(aFrameMetrics,
-    "Calculated displayport as (%f %f %f %f) from velocity (%f %f) paint time %f metrics",
+    "Calculated displayport as (%f %f %f %f) from velocity %s paint time %f metrics",
     displayPort.x, displayPort.y, displayPort.width, displayPort.height,
-    aVelocity.x.value, aVelocity.y.value, (float)estimatedPaintDurationMillis);
+    ToString(aVelocity).c_str(), (float)estimatedPaintDurationMillis);
 
   CSSMargin cssMargins;
   cssMargins.left = -displayPort.x;
@@ -2491,9 +2491,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     mFrameMetrics.SetHasScrollgrab(aLayerMetrics.GetHasScrollgrab());
 
     if (scrollOffsetUpdated) {
-      APZC_LOG("%p updating scroll offset from (%f, %f) to (%f, %f)\n", this,
-        mFrameMetrics.GetScrollOffset().x.value, mFrameMetrics.GetScrollOffset().y.value,
-        aLayerMetrics.GetScrollOffset().x.value, aLayerMetrics.GetScrollOffset().y.value);
+      APZC_LOG("%p updating scroll offset from %s to %s\n", this,
+        ToString(mFrameMetrics.GetScrollOffset()).c_str(),
+        ToString(aLayerMetrics.GetScrollOffset()).c_str());
 
       mFrameMetrics.CopyScrollInfoFrom(aLayerMetrics);
 
