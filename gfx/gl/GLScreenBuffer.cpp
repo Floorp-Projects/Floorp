@@ -568,6 +568,8 @@ DrawBuffer::Create(GLContext* const gl,
             pStencilRB = nullptr;
     }
 
+    GLContext::ScopedLocalErrorCheck localError(gl);
+
     CreateRenderbuffersForOffscreen(gl, formats, size, caps.antialias,
                                     pColorMSRB, pDepthRB, pStencilRB);
 
@@ -578,7 +580,8 @@ DrawBuffer::Create(GLContext* const gl,
     UniquePtr<DrawBuffer> ret( new DrawBuffer(gl, size, fb, colorMSRB,
                                               depthRB, stencilRB) );
 
-    if (!gl->IsFramebufferComplete(fb))
+    GLenum err = localError.GetLocalError();
+    if (err || !gl->IsFramebufferComplete(fb))
         return false;
 
     *out_buffer = Move(ret);
@@ -624,6 +627,8 @@ ReadBuffer::Create(GLContext* gl,
     GLuint* pDepthRB   = caps.depth   ? &depthRB   : nullptr;
     GLuint* pStencilRB = caps.stencil ? &stencilRB : nullptr;
 
+    GLContext::ScopedLocalErrorCheck localError(gl);
+
     CreateRenderbuffersForOffscreen(gl, formats, surf->mSize, caps.antialias,
                                     nullptr, pDepthRB, pStencilRB);
 
@@ -651,7 +656,9 @@ ReadBuffer::Create(GLContext* gl,
 
     UniquePtr<ReadBuffer> ret( new ReadBuffer(gl, fb, depthRB,
                                               stencilRB, surf) );
-    if (!gl->IsFramebufferComplete(fb)) {
+
+    GLenum err = localError.GetLocalError();
+    if (err || !gl->IsFramebufferComplete(fb)) {
         ret = nullptr;
     }
 

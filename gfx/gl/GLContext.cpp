@@ -277,7 +277,7 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mRenderer(GLRenderer::Other),
     mHasRobustness(false),
 #ifdef DEBUG
-    mGLError(LOCAL_GL_NO_ERROR),
+    mIsInLocalErrorCheck(false),
 #endif
     mSharedContext(sharedContext),
     mCaps(caps),
