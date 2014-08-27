@@ -706,18 +706,17 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
     return CUBEB_ERROR;
   }
 
-  int64_t compensated_position = samplerate * (msec - mixer_latency) / 1000;
   pthread_mutex_lock(&stm->mutex);
   int64_t maximum_position = stm->written * (int64_t)stm->inputrate / stm->outputrate;
   pthread_mutex_unlock(&stm->mutex);
   assert(maximum_position >= 0);
 
-  if (compensated_position < 0) {
-    *position = 0;
-  } else if(compensated_position > maximum_position) {
-    *position = maximum_position;
+  if (msec > mixer_latency) {
+    int64_t unadjusted_position = samplerate * (msec - mixer_latency) / 1000;
+    *position = unadjusted_position < maximum_position ?
+                unadjusted_position : maximum_position;
   } else {
-    *position = compensated_position;
+    *position = 0;
   }
   return CUBEB_OK;
 }
