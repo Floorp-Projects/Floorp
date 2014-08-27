@@ -27,6 +27,7 @@ import android.content.res.TypedArray;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.View;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,7 +64,11 @@ public class GeckoView extends LayerView
                         } else if (event.equals("Prompt:Show") || event.equals("Prompt:ShowTop")) {
                             handlePrompt(message);
                         } else if (event.equals("Accessibility:Event")) {
-                            GeckoAccessibility.sendAccessibilityEvent(message);
+                            int mode = getImportantForAccessibility();
+                            if (mode == View.IMPORTANT_FOR_ACCESSIBILITY_YES ||
+                                mode == View.IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+                                GeckoAccessibility.sendAccessibilityEvent(message);
+                            }
                         }
                     } catch (Exception e) {
                         Log.e(LOGTAG, "handleMessage threw for " + event, e);
