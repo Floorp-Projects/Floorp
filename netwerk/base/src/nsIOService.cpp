@@ -1509,12 +1509,7 @@ NS_IMETHODIMP
 nsIOService::IsAppOffline(uint32_t aAppId, bool* aResult)
 {
     NS_ENSURE_ARG(aResult);
-    *aResult = mOffline;
-
-    if (mOffline) {
-        // If the entire browser is offline, return that status
-        return NS_OK;
-    }
+    *aResult = false;
 
     if (aAppId == NECKO_NO_APP_ID ||
         aAppId == NECKO_UNKNOWN_APP_ID) {
