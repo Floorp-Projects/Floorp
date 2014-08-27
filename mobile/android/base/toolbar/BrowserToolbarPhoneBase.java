@@ -16,6 +16,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.ImageView;
 
 /**
@@ -52,6 +53,17 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
         roundCornerPaint.setAntiAlias(true);
         roundCornerPaint.setColor(res.getColor(R.color.background_tabs));
         roundCornerPaint.setStrokeWidth(0.0f);
+    }
+
+    @Override
+    public boolean addActionItem(final View actionItem) {
+        // We have no action item bar.
+        return false;
+    }
+
+    @Override
+    public void removeActionItem(final View actionItem) {
+        // We have no action item bar.
     }
 
     @Override
