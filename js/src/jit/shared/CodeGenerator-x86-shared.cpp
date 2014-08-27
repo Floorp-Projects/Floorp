@@ -2413,6 +2413,19 @@ CodeGeneratorX86Shared::visitSimdSwizzleF(LSimdSwizzleF *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
+
+    uint32_t mask = MacroAssembler::ComputeShuffleMask(ins->laneX(), ins->laneY(), ins->laneZ() - 4,
+                                                       ins->laneW() - 4);
+    masm.shuffleMix(mask, rhs, lhs);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());

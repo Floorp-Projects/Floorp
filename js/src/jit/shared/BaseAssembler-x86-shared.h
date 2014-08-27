@@ -2940,7 +2940,7 @@ public:
     void pshufd_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
     {
         MOZ_ASSERT(mask < 256);
-        spew("pshufd      0x%x, %s, %s",
+        spew("pshufd     0x%x, %s, %s",
              mask, nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_PSHUFD_VdqWdqIb, (RegisterID)dst, (RegisterID)src);
@@ -2953,6 +2953,24 @@ public:
         spew("shufps     0x%x, %s, %s",
              mask, nameFPReg(src), nameFPReg(dst));
         m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, (RegisterID)dst, (RegisterID)src);
+        m_formatter.immediate8(uint8_t(mask));
+    }
+
+    void shufps_imr(uint32_t mask, int offset, RegisterID base, XMMRegisterID dst)
+    {
+        MOZ_ASSERT(mask < 256);
+        spew("shufps     0x%x, %s0x%x(%s), %s",
+             mask, PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, (RegisterID)dst, base, offset);
+        m_formatter.immediate8(uint8_t(mask));
+    }
+
+    void shufps_imr(uint32_t mask, const void* address, XMMRegisterID dst)
+    {
+        spew("shufps     %x, %p, %s",
+             mask, address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, (RegisterID)dst, address);
         m_formatter.immediate8(uint8_t(mask));
     }
 
