@@ -401,7 +401,8 @@ class Build(MachCommandBase):
                 self.log(logging.INFO, 'ccache',
                          {'msg': ccache_diff.hit_rate_message()}, "{msg}")
 
-        if monitor.elapsed > 300:
+        moz_nospam = os.environ.get('MOZ_NOSPAM')
+        if monitor.elapsed > 300 and not moz_nospam:
             # Display a notification when the build completes.
             # This could probably be uplifted into the mach core or at least
             # into a helper API. It is here as an experimentation to see how it

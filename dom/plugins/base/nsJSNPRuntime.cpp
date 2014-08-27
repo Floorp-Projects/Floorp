@@ -274,7 +274,7 @@ OnWrapperDestroyed()
     }
 
     if (sNPObjWrappers.ops) {
-      MOZ_ASSERT(sNPObjWrappers.entryCount == 0);
+      MOZ_ASSERT(sNPObjWrappers.EntryCount() == 0);
 
       // No more wrappers, and our hash was initialized. Finish the
       // hash to prevent leaking it.
@@ -1763,14 +1763,14 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
   entry->mNPObj = npobj;
   entry->mNpp = npp;
 
-  uint32_t generation = sNPObjWrappers.generation;
+  uint32_t generation = sNPObjWrappers.Generation();
 
   // No existing JSObject, create one.
 
   JS::Rooted<JSObject*> obj(cx, ::JS_NewObject(cx, &sNPObjectJSWrapperClass, JS::NullPtr(),
                                                JS::NullPtr()));
 
-  if (generation != sNPObjWrappers.generation) {
+  if (generation != sNPObjWrappers.Generation()) {
       // Reload entry if the JS_NewObject call caused a GC and reallocated
       // the table (see bug 445229). This is guaranteed to succeed.
 

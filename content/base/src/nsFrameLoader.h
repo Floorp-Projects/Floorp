@@ -54,101 +54,7 @@ typedef struct _GtkWidget GtkWidget;
 class QX11EmbedContainer;
 #endif
 
-/**
- * Defines a target configuration for this <browser>'s content
- * document's view.  If the content document's actual view
- * doesn't match this nsIContentView, then on paints its pixels
- * are transformed to compensate for the difference.
- *
- * Used to support asynchronous re-paints of content pixels; see
- * nsIContentView.
- */
-class nsContentView MOZ_FINAL : public nsIContentView
-{
-public:
-  typedef mozilla::layers::FrameMetrics::ViewID ViewID;
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICONTENTVIEW
- 
-  struct ViewConfig {
-    ViewConfig()
-      : mScrollOffset(0, 0)
-      , mXScale(1.0)
-      , mYScale(1.0)
-    {}
-
-    // Default copy ctor and operator= are fine
-
-    bool operator==(const ViewConfig& aOther) const
-    {
-      return (mScrollOffset == aOther.mScrollOffset &&
-              mXScale == aOther.mXScale &&
-              mYScale == aOther.mYScale);
-    }
-
-    // This is the scroll offset the <browser> user wishes or expects
-    // its enclosed content document to have.  "Scroll offset" here
-    // means the document pixel at pixel (0,0) within the CSS
-    // viewport.  If the content document's actual scroll offset
-    // doesn't match |mScrollOffset|, the difference is used to define
-    // a translation transform when painting the content document.
-    nsPoint mScrollOffset;
-    // The scale at which the <browser> user wishes to paint its
-    // enclosed content document.  If content-document layers have a
-    // lower or higher resolution than the desired scale, then the
-    // ratio is used to define a scale transform when painting the
-    // content document.
-    float mXScale;
-    float mYScale;
-  };
-
-  nsContentView(nsFrameLoader* aFrameLoader, ViewID aScrollId, bool aIsRoot,
-                ViewConfig aConfig = ViewConfig())
-    : mViewportSize(0, 0)
-    , mContentSize(0, 0)
-    , mParentScaleX(1.0)
-    , mParentScaleY(1.0)
-    , mFrameLoader(aFrameLoader)
-    , mScrollId(aScrollId)
-    , mIsRoot(aIsRoot)
-    , mConfig(aConfig)
-  {}
-
-  bool IsRoot() const
-  {
-    return mIsRoot;
-  }
-
-  ViewID GetId() const
-  {
-    return mScrollId;
-  }
-
-  ViewConfig GetViewConfig() const
-  {
-    return mConfig;
-  }
-
-  nsSize mViewportSize;
-  nsSize mContentSize;
-  float mParentScaleX;
-  float mParentScaleY;
-
-  nsFrameLoader* mFrameLoader;  // WEAK
-
-private:
-  ~nsContentView() {}
-
-  nsresult Update(const ViewConfig& aConfig);
-
-  ViewID mScrollId;
-  bool mIsRoot;
-  ViewConfig mConfig;
-};
-
-
 class nsFrameLoader MOZ_FINAL : public nsIFrameLoader,
-                                public nsIContentViewManager,
                                 public nsStubMutationObserver,
                                 public mozilla::dom::ipc::MessageManagerCallback
 {
@@ -174,7 +80,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
   NS_DECL_NSIFRAMELOADER
-  NS_DECL_NSICONTENTVIEWMANAGER
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   nsresult CheckForRecursiveLoad(nsIURI* aURI);
   nsresult ReallyStartLoading();
