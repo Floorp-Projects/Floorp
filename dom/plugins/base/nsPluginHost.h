@@ -58,10 +58,10 @@ public:
   nsRefPtr<nsInvalidPluginTag> mNext;
 };
 
-class nsPluginHost : public nsIPluginHost,
-                     public nsIObserver,
-                     public nsITimerCallback,
-                     public nsSupportsWeakReference
+class nsPluginHost MOZ_FINAL : public nsIPluginHost,
+                               public nsIObserver,
+                               public nsITimerCallback,
+                               public nsSupportsWeakReference
 {
   virtual ~nsPluginHost();
 public:

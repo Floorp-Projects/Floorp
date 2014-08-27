@@ -15,7 +15,8 @@ class nsIRequestObserver;
 
 //-----------------------------------------------------------------------------
 
-class nsAsyncStreamCopier : public nsIAsyncStreamCopier, nsIAsyncStreamCopier2
+class nsAsyncStreamCopier MOZ_FINAL : public nsIAsyncStreamCopier,
+                                      nsIAsyncStreamCopier2
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

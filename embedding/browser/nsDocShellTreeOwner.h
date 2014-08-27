@@ -59,13 +59,13 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICDocShellTreeOwner,
                               NS_ICDOCSHELLTREEOWNER_IID)
 
-class nsDocShellTreeOwner : public nsIDocShellTreeOwner,
-                            public nsIBaseWindow,
-                            public nsIInterfaceRequestor,
-                            public nsIWebProgressListener,
-                            public nsIDOMEventListener,
-                            public nsICDocShellTreeOwner,
-                            public nsSupportsWeakReference
+class nsDocShellTreeOwner MOZ_FINAL : public nsIDocShellTreeOwner,
+                                      public nsIBaseWindow,
+                                      public nsIInterfaceRequestor,
+                                      public nsIWebProgressListener,
+                                      public nsIDOMEventListener,
+                                      public nsICDocShellTreeOwner,
+                                      public nsSupportsWeakReference
 {
 friend class nsWebBrowser;
 friend class nsCommandHandler;
@@ -144,7 +144,7 @@ protected:
 // with the DOM with AddChromeListeners() and removing itself with
 // RemoveChromeListeners().
 //
-class ChromeTooltipListener : public nsIDOMEventListener
+class ChromeTooltipListener MOZ_FINAL : public nsIDOMEventListener
 {
 protected:
   virtual ~ChromeTooltipListener ( ) ;

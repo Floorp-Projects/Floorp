@@ -23,7 +23,7 @@ class SpeechSynthesisChild;
 class nsSpeechTask;
 class VoiceData;
 
-class nsSynthVoiceRegistry : public nsISynthVoiceRegistry
+class nsSynthVoiceRegistry MOZ_FINAL : public nsISynthVoiceRegistry
 {
 public:
   NS_DECL_ISUPPORTS
