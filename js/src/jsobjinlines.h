@@ -665,19 +665,27 @@ JSObject::hasProperty(JSContext *cx, js::HandleObject obj,
 }
 
 inline bool
-JSObject::nativeSetSlotIfHasType(js::Shape *shape, const js::Value &value)
+JSObject::nativeSetSlotIfHasType(js::Shape *shape, const js::Value &value, bool overwriting)
 {
     if (!js::types::HasTypePropertyId(this, shape->propid(), value))
         return false;
     nativeSetSlot(shape->slot(), value);
+
+    if (overwriting)
+        shape->setOverwritten();
+
     return true;
 }
 
 inline void
 JSObject::nativeSetSlotWithType(js::ExclusiveContext *cx, js::Shape *shape,
-                                const js::Value &value)
+                                const js::Value &value, bool overwriting)
 {
     nativeSetSlot(shape->slot(), value);
+
+    if (overwriting)
+        shape->setOverwritten();
+
     js::types::AddTypePropertyId(cx, this, shape->propid(), value);
 }
 
@@ -805,7 +813,28 @@ ClassMethodIsNative(JSContext *cx, JSObject *obj, const Class *clasp, jsid metho
             return false;
     }
 
-    return js::IsNativeFunction(v, native);
+    return IsNativeFunction(v, native);
+}
+
+// Return whether looking up 'valueOf' on 'obj' definitely resolves to the
+// original Object.prototype.valueOf. The method may conservatively return
+// 'false' in the case of proxies or other non-native objects.
+static MOZ_ALWAYS_INLINE bool
+HasObjectValueOf(JSObject *obj, JSContext *cx)
+{
+    if (obj->is<ProxyObject>() || !obj->isNative())
+        return false;
+
+    jsid valueOf = NameToId(cx->names().valueOf);
+
+    Value v;
+    while (!HasDataProperty(cx, obj, valueOf, &v)) {
+        obj = obj->getProto();
+        if (!obj || obj->is<ProxyObject>() || !obj->isNative())
+            return false;
+    }
+
+    return IsNativeFunction(v, obj_valueOf);
 }
 
 /* ES5 9.1 ToPrimitive(input). */

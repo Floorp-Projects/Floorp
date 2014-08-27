@@ -555,10 +555,7 @@ ServiceWorkerManager::Register(const nsAString& aScope,
   MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIGlobalObject> sgo = GetEntryGlobal();
-  if (!sgo) {
-    MOZ_CRASH("Register() should only be called from a valid entry settings object!");
-    return NS_ERROR_FAILURE;
-  }
+  MOZ_ASSERT(sgo, "Register() should only be called from a valid entry settings object!");
 
   ErrorResult result;
   nsRefPtr<Promise> promise = Promise::Create(sgo, result);
@@ -821,6 +818,142 @@ ServiceWorkerManager::GetRegistration(nsIDOMWindow* aWindow,
     new GetRegistrationRunnable(window, promise, aDocumentURL);
   promise.forget(aPromise);
   return NS_DispatchToCurrentThread(runnable);
+}
+
+class GetReadyPromiseRunnable : public nsRunnable
+{
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<Promise> mPromise;
+
+public:
+  GetReadyPromiseRunnable(nsPIDOMWindow* aWindow, Promise* aPromise)
+    : mWindow(aWindow), mPromise(aPromise)
+  { }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+
+    nsIDocument* doc = mWindow->GetExtantDoc();
+    if (!doc) {
+      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> docURI = doc->GetDocumentURI();
+    if (!docURI) {
+      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+      return NS_OK;
+    }
+
+    if (!swm->CheckReadyPromise(mWindow, docURI, mPromise)) {
+      swm->StorePendingReadyPromise(mWindow, docURI, mPromise);
+    }
+
+    return NS_OK;
+  }
+};
+
+NS_IMETHODIMP
+ServiceWorkerManager::GetReadyPromise(nsIDOMWindow* aWindow,
+                                      nsISupports** aPromise)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aWindow);
+
+  // XXXnsm Don't allow chrome callers for now, we don't support chrome
+  // ServiceWorkers.
+  MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  if (!window) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT(!mPendingReadyPromises.Contains(window));
+
+  nsCOMPtr<nsIGlobalObject> sgo = do_QueryInterface(window);
+  ErrorResult result;
+  nsRefPtr<Promise> promise = Promise::Create(sgo, result);
+  if (result.Failed()) {
+    return result.ErrorCode();
+  }
+
+  nsRefPtr<nsIRunnable> runnable =
+    new GetReadyPromiseRunnable(window, promise);
+  promise.forget(aPromise);
+  return NS_DispatchToCurrentThread(runnable);
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::RemoveReadyPromise(nsIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aWindow);
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  if (!window) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mPendingReadyPromises.Remove(aWindow);
+  return NS_OK;
+}
+
+void
+ServiceWorkerManager::StorePendingReadyPromise(nsPIDOMWindow* aWindow,
+                                               nsIURI* aURI,
+                                               Promise* aPromise)
+{
+  PendingReadyPromise* data;
+
+  // We should not have 2 pending promises for the same window.
+  MOZ_ASSERT(!mPendingReadyPromises.Get(aWindow, &data));
+
+  data = new PendingReadyPromise(aURI, aPromise);
+  mPendingReadyPromises.Put(aWindow, data);
+}
+
+void
+ServiceWorkerManager::CheckPendingReadyPromises()
+{
+  mPendingReadyPromises.Enumerate(CheckPendingReadyPromisesEnumerator, this);
+}
+
+PLDHashOperator
+ServiceWorkerManager::CheckPendingReadyPromisesEnumerator(
+                                          nsISupports* aSupports,
+                                          nsAutoPtr<PendingReadyPromise>& aData,
+                                          void* aPtr)
+{
+  ServiceWorkerManager* aSwm = static_cast<ServiceWorkerManager*>(aPtr);
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aSupports);
+
+  if (aSwm->CheckReadyPromise(window, aData->mURI, aData->mPromise)) {
+    return PL_DHASH_REMOVE;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+bool
+ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindow* aWindow,
+                                        nsIURI* aURI, Promise* aPromise)
+{
+  nsRefPtr<ServiceWorkerRegistrationInfo> registration =
+    GetServiceWorkerRegistrationInfo(aURI);
+
+  if (registration && registration->mCurrentWorker) {
+    NS_ConvertUTF8toUTF16 scope(registration->mScope);
+    nsRefPtr<ServiceWorkerRegistration> swr =
+      new ServiceWorkerRegistration(aWindow, scope);
+    aPromise->MaybeResolve(swr);
+    return true;
+  }
+
+  return false;
 }
 
 void
@@ -1408,6 +1541,8 @@ public:
       // FIXME(nsm): Just got unregistered!
       return NS_OK;
     }
+
+    swm->CheckPendingReadyPromises();
 
     // FIXME(nsm): Steps 7 of the algorithm.
 

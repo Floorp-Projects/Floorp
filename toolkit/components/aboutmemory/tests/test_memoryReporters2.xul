@@ -85,8 +85,8 @@
         if (processes[i] == "") {
           numEmptyProcesses++;
         } else {
-          ok(processes[i].startsWith("Browser ("),
-             "correct non-empty process name prefix");
+          ok(processes[i].startsWith("Browser (") || processes[i].startsWith("Web Content ("),
+             "correct non-empty process name prefix: " + processes[i]);
           numNonEmptyProcesses++;
         }
       }

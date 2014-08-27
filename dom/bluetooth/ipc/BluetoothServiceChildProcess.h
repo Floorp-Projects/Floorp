@@ -111,8 +111,9 @@ public:
              uint16_t aServiceUuid,
              BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual bool
-  IsConnected(uint16_t aServiceUuid) MOZ_OVERRIDE;
+  virtual void
+  IsConnected(const uint16_t aServiceUuid,
+              BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual void
   SendFile(const nsAString& aDeviceAddress,

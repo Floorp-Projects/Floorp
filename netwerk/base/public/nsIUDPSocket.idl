@@ -10,6 +10,7 @@ interface nsIUDPSocketListener;
 interface nsIUDPMessage;
 interface nsISocketTransport;
 interface nsIOutputStream;
+interface nsIInputStream;
 
 %{ C++
 #include "nsTArrayForwardDeclare.h"
@@ -28,7 +29,7 @@ native NetAddr(mozilla::net::NetAddr);
  *
  * An interface to a UDP socket that can accept incoming connections.
  */
-[scriptable, uuid(3240F793-80FA-4088-987A-9C7378F0AC88)]
+[scriptable, uuid(8f28299c-f2ac-468a-8223-190335006bbc)]
 interface nsIUDPSocket : nsISupports
 {
     /**
@@ -44,8 +45,11 @@ interface nsIUDPSocket : nsISupports
      *        local loopback interface.  Otherwise, it will accept connections
      *        from any interface.  To specify a particular network interface,
      *        use initWithAddress.
+     * @param aAddressReuse
+     *        If true, the socket is allowed to be bound to an address that is
+     *        already in use. Default is true.
      */
-    void init(in long aPort, in boolean aLoopbackOnly);
+    [optional_argc] void init(in long aPort, in boolean aLoopbackOnly, [optional] in boolean aAddressReuse);
 
     /**
      * initWithAddress
@@ -55,8 +59,11 @@ interface nsIUDPSocket : nsISupports
      *
      * @param aAddr
      *        The address to which this UDP socket should be bound.
+     * @param aAddressReuse
+     *        If true, the socket is allowed to be bound to an address that is
+     *        already in use. Default is true.
      */
-    [noscript] void initWithAddress([const] in NetAddrPtr aAddr);
+    [noscript, optional_argc] void initWithAddress([const] in NetAddrPtr aAddr, [optional] in boolean aAddressReuse);
 
     /**
      * close
@@ -84,6 +91,11 @@ interface nsIUDPSocket : nsISupports
      *        The listener to be notified when client connections are accepted.
      */
     void asyncListen(in nsIUDPSocketListener aListener);
+
+    /**
+     * Returns the local address of this UDP socket
+     */
+    readonly attribute nsINetAddr localAddr;
 
     /**
      * Returns the port of this UDP socket.
@@ -144,6 +156,29 @@ interface nsIUDPSocket : nsISupports
     [noscript] unsigned long sendWithAddress([const] in NetAddrPtr addr,
                                              [const, array, size_is(dataLength)]in uint8_t data,
                                              in unsigned long dataLength);
+
+    /**
+     * sendBinaryStream
+     *
+     * Send out the datagram to specified remote address and port.
+     *
+     * @param host The remote host name.
+     * @param port The remote port.
+     * @param stream The input stream to be sent. This must be a buffered stream implementation.
+     */
+    void sendBinaryStream(in AUTF8String host, in unsigned short port,
+                          in nsIInputStream stream);
+
+    /**
+     * sendBinaryStreamWithAddress
+     *
+     * Send out the datagram to specified remote address and port.
+     *
+     * @param addr The remote host address.
+     * @param stream The input stream to be sent. This must be a buffered stream implementation.
+     */
+    void sendBinaryStreamWithAddress([const] in NetAddrPtr addr,
+                                     in nsIInputStream stream);
 
     /**
      * joinMulticast

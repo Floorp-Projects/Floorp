@@ -9,7 +9,7 @@ LIBRARY_NAME = 'ffi'
 if CONFIG['MOZ_NATIVE_FFI']:
     OS_LIBS += CONFIG['MOZ_FFI_LIBS']
 else:
-    if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG['_MSC_VER']:
         prefix = 'lib'
     else:
         prefix = ''
