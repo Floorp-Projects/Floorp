@@ -18,7 +18,6 @@ class BrowserToolbarNewTablet extends BrowserToolbarTabletBase {
 
     public BrowserToolbarNewTablet(final Context context, final AttributeSet attrs) {
         super(context, attrs);
-        // TODO: Implement.
     }
 
     @Override
@@ -27,12 +26,17 @@ class BrowserToolbarNewTablet extends BrowserToolbarTabletBase {
     }
 
     @Override
-    protected void triggerStartEditingTransition(PropertyAnimator animator) {
-        // TODO: Implement.
+    protected void triggerStartEditingTransition(final PropertyAnimator animator) {
+        showUrlEditLayout();
     }
 
     @Override
     protected void triggerStopEditingTransition() {
+        hideUrlEditLayout();
+    }
+
+    @Override
+    protected void animateForwardButton(final ForwardButtonAnimation animation) {
         // TODO: Implement.
     }
 }
