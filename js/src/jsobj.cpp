@@ -1999,7 +1999,8 @@ JSObject *
 js::DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKind)
 {
     /* NB: Keep this in sync with XDRObjectLiteral. */
-    JS_ASSERT(JS::CompartmentOptionsRef(cx).getSingletonsAsTemplates());
+    JS_ASSERT_IF(obj->hasSingletonType(),
+                 JS::CompartmentOptionsRef(cx).getSingletonsAsTemplates());
     JS_ASSERT(obj->is<JSObject>() || obj->is<ArrayObject>());
 
     // Result of the clone function.
@@ -2009,7 +2010,7 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKin
     RootedValue v(cx);
     RootedObject deepObj(cx);
 
-    if (obj->getClass() == &ArrayObject::class_) {
+    if (obj->is<ArrayObject>()) {
         clone = NewDenseUnallocatedArray(cx, obj->as<ArrayObject>().length(), nullptr, newKind);
     } else {
         // Object literals are tenured by default as holded by the JSScript.
@@ -2073,6 +2074,11 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKin
         FixObjectType(cx, clone);
     }
 
+    if (obj->is<ArrayObject>() && obj->denseElementsAreCopyOnWrite()) {
+        if (!ObjectElements::MakeElementsCopyOnWrite(cx, clone))
+            return nullptr;
+    }
+
     return clone;
 }
 
@@ -2083,7 +2089,8 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj)
     /* NB: Keep this in sync with DeepCloneObjectLiteral. */
 
     JSContext *cx = xdr->cx();
-    JS_ASSERT_IF(mode == XDR_ENCODE, JS::CompartmentOptionsRef(cx).getSingletonsAsTemplates());
+    JS_ASSERT_IF(mode == XDR_ENCODE && obj->hasSingletonType(),
+                 JS::CompartmentOptionsRef(cx).getSingletonsAsTemplates());
 
     // Distinguish between objects and array classes.
     uint32_t isArray = 0;
@@ -2284,6 +2291,18 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj)
             return false;
         if (mode == XDR_DECODE && frozen == 1) {
             if (!JSObject::freeze(cx, obj))
+                return false;
+        }
+    }
+
+    if (isArray) {
+        uint32_t copyOnWrite;
+        if (mode == XDR_ENCODE)
+            copyOnWrite = obj->denseElementsAreCopyOnWrite();
+        if (!xdr->codeUint32(&copyOnWrite))
+            return false;
+        if (mode == XDR_DECODE && copyOnWrite) {
+            if (!ObjectElements::MakeElementsCopyOnWrite(cx, obj))
                 return false;
         }
     }
