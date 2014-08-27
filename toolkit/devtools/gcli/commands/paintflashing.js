@@ -102,10 +102,14 @@ exports.items = [
     state: {
       isChecked: function(aTarget) {
         if (aTarget.isLocalTab) {
+          let isChecked = false;
           let window = aTarget.tab.linkedBrowser.contentWindow;
-          let wUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-                              getInterface(Ci.nsIDOMWindowUtils);
-          return wUtils.paintFlashing;
+          if (window) {
+            let wUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).
+                                getInterface(Ci.nsIDOMWindowUtils);
+            isChecked = wUtils.paintFlashing;
+          }
+          return isChecked;
         } else {
           throw new Error("Unsupported target");
         }

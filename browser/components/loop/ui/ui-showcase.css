@@ -16,8 +16,16 @@
   padding-bottom: 1em;
 }
 
-.showcase .menu > a {
+.showcase > header > h1,
+.showcase > section > h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin: .5em 0;
+}
+
+.showcase-menu > a {
   margin-right: .5em;
+  padding: .4rem;
 }
 
 .showcase > section {
@@ -43,7 +51,10 @@
 }
 
 .showcase > section .example > h3 {
+  font-size: 1.2em;
+  font-weight: bold;
   border-bottom: 1px dashed #aaa;
+  margin: .5em 0;
 }
 
 .showcase p.note {
@@ -51,4 +62,23 @@
   padding: 0;
   color: #666;
   font-style: italic;
+}
+
+.showcase p.note > strong {
+  font-weight: bold;
+}
+
+/* Images as fake videos for conversation view */
+.conversation .media.nested .remote,
+.conversation .media.nested .local {
+  background-size: contain;
+}
+
+.conversation .media.nested .remote {
+  background-image: url("sample-img/video-screen-remote.png");
+  background-repeat: no-repeat;
+}
+
+.conversation .media.nested .local {
+  background-image: url("sample-img/video-screen-local.png");
 }
