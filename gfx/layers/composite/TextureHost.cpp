@@ -483,6 +483,9 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
 
     if (!mCompositor->SupportsEffect(EffectTypes::YCBCR)) {
       RefPtr<gfx::DataSourceSurface> surf = yuvDeserializer.ToDataSourceSurface();
+      if (NS_WARN_IF(!surf)) {
+        return false;
+      }
       if (!mFirstSource) {
         mFirstSource = mCompositor->CreateDataTextureSource(mFlags);
       }
@@ -575,6 +578,9 @@ BufferTextureHost::GetAsSurface()
       return nullptr;
     }
     result = yuvDeserializer.ToDataSourceSurface();
+    if (NS_WARN_IF(!result)) {
+      return nullptr;
+    }
   } else {
     ImageDataDeserializer deserializer(GetBuffer(), GetBufferSize());
     if (!deserializer.IsValid()) {
