@@ -453,6 +453,9 @@ Nfc.prototype = {
         this._currentSessionId = null;
 
         break;
+     case "HCIEventTransactionNotification":
+        this.notifyHCIEventTransaction(message);
+        break;
      case "ConfigResponse":
         if (message.status === NFC.NFC_SUCCESS) {
           this.powerLevel = message.powerLevel;
@@ -471,6 +474,26 @@ Nfc.prototype = {
       default:
         throw new Error("Don't know about this message type: " + message.type);
     }
+  },
+
+  // HCI Event Transaction
+  notifyHCIEventTransaction: function notifyHCIEventTransaction(message) {
+    delete message.type;
+    /**
+     * FIXME:
+     * GSMA 6.0 7.4 UI Application triggering requirements
+     * This specifies the need for the following parameters to be derived and
+     * sent. One unclear spec is what the URI format "secure:0" refers to, given
+     * SEName can be something like "SIM1" or "SIM2".
+     *
+     * 1) Mime-type - Secure Element application dependent
+     * 2) URI,  of the format:  nfc://secure:0/<SEName>/<AID>
+     *     - SEName reflects the originating SE. It must be compliant with
+     *       SIMAlliance Open Mobile APIs
+     *     - AID reflects the originating UICC applet identifier
+     * 3) Data - Data payload of the transaction notification, if any.
+     */
+    gSystemMessenger.broadcastMessage("nfc-hci-event-transaction", message);
   },
 
   nfcService: null,
