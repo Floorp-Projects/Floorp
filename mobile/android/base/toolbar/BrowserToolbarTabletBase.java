@@ -17,6 +17,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 
 /**
  * A base implementations of the browser toolbar for tablets.
@@ -29,6 +30,8 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         HIDE
     }
 
+    protected final LinearLayout actionItemBar;
+
     protected final BackButton backButton;
     protected final ForwardButton forwardButton;
 
@@ -36,6 +39,8 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
 
     public BrowserToolbarTabletBase(final Context context, final AttributeSet attrs) {
         super(context, attrs);
+
+        actionItemBar = (LinearLayout) findViewById(R.id.menu_items);
 
         backButton = (BackButton) findViewById(R.id.back);
         setButtonEnabled(backButton, false);
@@ -74,6 +79,17 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
                 return Tabs.getInstance().getSelectedTab().showForwardHistory();
             }
         });
+    }
+
+    @Override
+    public boolean addActionItem(final View actionItem) {
+        actionItemBar.addView(actionItem);
+        return true;
+    }
+
+    @Override
+    public void removeActionItem(final View actionItem) {
+        actionItemBar.removeView(actionItem);
     }
 
     @Override
