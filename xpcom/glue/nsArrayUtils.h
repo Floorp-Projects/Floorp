@@ -11,7 +11,7 @@
 #include "nsIArray.h"
 
 // helper class for do_QueryElementAt
-class NS_COM_GLUE nsQueryArrayElementAt : public nsCOMPtr_helper
+class nsQueryArrayElementAt : public nsCOMPtr_helper
 {
 public:
   nsQueryArrayElementAt(nsIArray* aArray, uint32_t aIndex,
