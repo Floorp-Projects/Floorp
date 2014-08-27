@@ -374,6 +374,7 @@ TabTarget.prototype = {
       event.url = aPacket.url;
       event.title = aPacket.title;
       event.nativeConsoleAPI = aPacket.nativeConsoleAPI;
+      event.isFrameSwitching = aPacket.isFrameSwitching;
       // Send any stored event payload (DOMWindow or nsIRequest) for backwards
       // compatibility with non-remotable tools.
       if (aPacket.state == "start") {
@@ -387,6 +388,11 @@ TabTarget.prototype = {
       }
     };
     this.client.addListener("tabNavigated", this._onTabNavigated);
+
+    this._onFrameUpdate = (aType, aPacket) => {
+      this.emit("frame-update", aPacket);
+    };
+    this.client.addListener("frameUpdate", this._onFrameUpdate);
   },
 
   /**
@@ -396,6 +402,7 @@ TabTarget.prototype = {
     this.client.removeListener("closed", this.destroy);
     this.client.removeListener("tabNavigated", this._onTabNavigated);
     this.client.removeListener("tabDetached", this._onTabDetached);
+    this.client.removeListener("frameUpdate", this._onFrameUpdate);
   },
 
   /**

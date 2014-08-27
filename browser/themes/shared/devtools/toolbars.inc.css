@@ -596,6 +596,10 @@
   background-image: url("chrome://browser/skin/devtools/command-pick.png");
 }
 
+#command-button-frames > image {
+  background-image: url("chrome://browser/skin/devtools/command-frames.png");
+}
+
 #command-button-splitconsole > image {
   background-image: url("chrome://browser/skin/devtools/command-console.png");
 }
@@ -627,6 +631,10 @@
 
   #command-button-pick > image {
     background-image: url("chrome://browser/skin/devtools/command-pick@2x.png");
+  }
+
+  #command-button-frames > image {
+    background-image: url("chrome://browser/skin/devtools/command-frames@2x.png");
   }
 
   #command-button-splitconsole > image {
