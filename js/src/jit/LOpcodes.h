@@ -26,6 +26,7 @@
     _(SimdSignMaskX4)               \
     _(SimdSwizzleI)                 \
     _(SimdSwizzleF)                 \
+    _(SimdShuffle)                  \
     _(SimdUnaryArithIx4)            \
     _(SimdUnaryArithFx4)            \
     _(SimdBinaryCompIx4)            \

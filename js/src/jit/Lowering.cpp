@@ -3831,6 +3831,24 @@ LIRGenerator::visitSimdSwizzle(MSimdSwizzle *ins)
 }
 
 bool
+LIRGenerator::visitSimdShuffle(MSimdShuffle *ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    if (ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Float32x4) {
+        MDefinition *lhs = ins->lhs();
+        MDefinition *rhs = ins->rhs();
+        LSimdShuffle *lir = new (alloc()) LSimdShuffle;
+        return lowerForFPU(lir, ins, lhs, rhs);
+    }
+
+    MOZ_CRASH("Unknown SIMD kind when getting lane");
+    return false;
+}
+
+bool
 LIRGenerator::visitSimdUnaryArith(MSimdUnaryArith *ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
