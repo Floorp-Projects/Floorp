@@ -131,6 +131,12 @@ prefpane {
   height: 500px;
 }
 
+#handlersView > listheader {
+  -moz-appearance: none;
+  border: 0;
+  padding: 0;
+}
+
 #typeColumn,
 #actionColumn {
   -moz-appearance: none;
@@ -244,7 +250,8 @@ description > html|a {
 #weavePrefsDeck > vbox > description,
 #weavePrefsDeck > vbox > #pairDevice > label,
 #weavePrefsDeck > #needsUpdate > hbox > #loginError,
-#weavePrefsDeck > #hasFxaAccount > hbox:not(#tosPP) > label {
+#weavePrefsDeck > #hasFxaAccount > hbox:not(#tosPP-normal) > label,
+#weavePrefsDeck > #hasFxaAccount > hbox:not(#tosPP-small) > label {
   /* no margin-start for elements at the begin of a line */
   -moz-margin-start: 0;
 }

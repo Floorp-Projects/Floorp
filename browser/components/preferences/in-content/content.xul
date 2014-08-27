@@ -14,8 +14,7 @@
   <!-- Fonts -->
   <preference id="font.language.group"
               name="font.language.group"
-              type="wstring"
-              onchange="gContentPane._rebuildFonts();"/>
+              type="wstring"/>
 
   <!-- Languages -->
   <preference id="browser.translation.detectLanguage"
@@ -52,7 +51,6 @@
                                                                         'dom.disable_open_during_load');"/>
         </vbox>
         <button id="popupPolicyButton" label="&popupExceptions.label;"
-                oncommand="gContentPane.showPopupExceptions();"
                 accesskey="&popupExceptions.accesskey;"/>
       </row>
     </rows>
@@ -106,15 +104,13 @@
         </hbox>
         <button id="advancedFonts" icon="select-font"
                 label="&advancedFonts.label;"
-                accesskey="&advancedFonts.accesskey;"
-                oncommand="gContentPane.configureFonts();"/>
+                accesskey="&advancedFonts.accesskey;"/>
       </row>
       <row id="colorsRow">
         <hbox/>
         <button id="colors" icon="select-color"
                 label="&colors.label;"
-                accesskey="&colors.accesskey;"
-                oncommand="gContentPane.configureColors();"/>
+                accesskey="&colors.accesskey;"/>
       </row>
     </rows>
   </grid>
@@ -128,8 +124,7 @@
     <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
     <button id="chooseLanguage"
             label="&chooseButton.label;"
-            accesskey="&chooseButton.accesskey;"
-            oncommand="gContentPane.showLanguages();"/>
+            accesskey="&chooseButton.accesskey;"/>
   </hbox>
 
   <hbox id="translationBox" hidden="true">
@@ -141,13 +136,11 @@
       <label>&translation.options.attribution.beforeLogo;</label>
       <separator orient="vertical" class="thin"/>
       <image id="translationAttributionImage" aria-label="Microsoft Translator"
-             onclick="gContentPane.openTranslationProviderAttribution()"
              src="chrome://browser/content/microsoft-translator-attribution.png"/>
       <separator orient="vertical" class="thin"/>
       <label>&translation.options.attribution.afterLogo;</label>
     </hbox>
     <button id="translateButton" label="&translateExceptions.label;"
-            oncommand="gContentPane.showTranslationExceptions();"
             accesskey="&translateExceptions.accesskey;"/>
   </hbox>
 </groupbox>

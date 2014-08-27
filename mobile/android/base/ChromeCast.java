@@ -78,11 +78,7 @@ class ChromeCast implements GeckoMediaPlayer {
         }
 
         @Override
-        public void onMetadataUpdated() {
-            MediaInfo mediaInfo = remoteMediaPlayer.getMediaInfo();
-            MediaMetadata metadata = mediaInfo.getMetadata();
-            debug("metadata updated " + metadata);
-        }
+        public void onMetadataUpdated() { }
 
         @Override
         public void onResult(ApplicationConnectionResult result) {

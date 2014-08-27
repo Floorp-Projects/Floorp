@@ -44,6 +44,7 @@
 #devtools-tooltip-events-container {
   margin: -4px; /* Compensate for the .panel-arrowcontent padding. */
   max-width: 390px;
+  overflow: auto;
 }
 
 .event-header {
