@@ -8,6 +8,7 @@
 
 #include "Workers.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "ServiceWorkerClients.h"
 
 namespace mozilla {
 namespace dom {
@@ -163,9 +164,15 @@ public:
 class ServiceWorkerGlobalScope MOZ_FINAL : public WorkerGlobalScope
 {
   const nsString mScope;
+  nsRefPtr<ServiceWorkerClients> mClients;
+
   ~ServiceWorkerGlobalScope() { }
 
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerGlobalScope,
+                                           WorkerGlobalScope)
+
   ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate, const nsACString& aScope);
 
   virtual JSObject*
@@ -193,6 +200,15 @@ public:
   Unregister()
   {
     // FIXME(nsm): Bug 982728
+  }
+
+  ServiceWorkerClients*
+  Clients() {
+    if (!mClients) {
+      mClients = new ServiceWorkerClients(this);
+    }
+
+    return mClients;
   }
 
   IMPL_EVENT_HANDLER(activate)
