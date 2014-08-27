@@ -336,7 +336,7 @@ function downloadAndParseChromePins(filename,
 
 // Returns a pair of maps [certNameToSKD, certSKDToName] between cert
 // nicknames and digests of the SPKInfo for the mozilla trust store
-function loadNSSCertinfo(derTestFile) {
+function loadNSSCertinfo(derTestFile, extraCertificates) {
   let allCerts = gCertDB.getCerts();
   let enumerator = allCerts.getEnumerator();
   let certNameToSKD = {};
@@ -351,6 +351,14 @@ function loadNSSCertinfo(derTestFile) {
     certNameToSKD[name] = SKD;
     certSKDToName[SKD] = name;
   }
+
+  for (let cert of extraCertificates) {
+    let name = cert.commonName;
+    let SKD = cert.sha256SubjectPublicKeyInfoDigest;
+    certNameToSKD[name] = SKD;
+    certSKDToName[SKD] = name;
+  }
+
   {
     // A certificate for *.example.com.
     let der = readFileToString(derTestFile);
@@ -545,7 +553,17 @@ function writeFile(certNameToSKD, certSKDToName,
   writeString(genExpirationTime());
 }
 
-let [ certNameToSKD, certSKDToName ] = loadNSSCertinfo(gTestCertFile);
+function loadExtraCertificates(certStringList) {
+  let constructedCerts = [];
+  for (let certString of certStringList) {
+    constructedCerts.push(gCertDB.constructX509FromBase64(certString));
+  }
+  return constructedCerts;
+}
+
+let extraCertificates = loadExtraCertificates(gStaticPins.extra_certificates);
+let [ certNameToSKD, certSKDToName ] = loadNSSCertinfo(gTestCertFile,
+                                                       extraCertificates);
 let [ chromeNameToHash, chromeNameToMozName ] = downloadAndParseChromeCerts(
   gStaticPins.chromium_data.cert_file_url, certSKDToName);
 let [ chromeImportedPinsets, chromeImportedEntries ] =
