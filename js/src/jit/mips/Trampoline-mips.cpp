@@ -340,7 +340,6 @@ JitRuntime::generateInvalidator(JSContext *cx)
 
     // Save floating point registers
     // We can use as_sd because stack is alligned.
-    uint32_t increment = 2;
     for (uint32_t i = 0; i < FloatRegisters::TotalDouble; i ++)
         masm.as_sd(FloatRegister::FromIndex(i, FloatRegister::Double), StackPointer,
                    InvalidationBailoutStack::offsetOfFpRegs() + i * sizeof(double));
