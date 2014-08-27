@@ -15,14 +15,13 @@ public:
   DesktopDeviceInfoWin();
   ~DesktopDeviceInfoWin();
 
-protected:
   //DesktopDeviceInfo Interfaces
-  virtual void InitializeApplicationList() OVERRIDE;
-  virtual void InitializeScreenList() OVERRIDE;
+  virtual int32_t Init();
+  virtual int32_t Refresh();
 
 private:
 #if !defined(MULTI_MONITOR_SCREENSHARE)
-  void MultiMonitorScreenshare();
+  int32_t MultiMonitorScreenshare();
 #endif
 };
 
