@@ -7,7 +7,6 @@
 #include "MediaManager.h"
 
 #include "MediaStreamGraph.h"
-#include "mozilla/dom/MediaStreamTrack.h"
 #include "GetUserMediaRequest.h"
 #include "nsHashPropertyBag.h"
 #ifdef MOZ_WIDGET_GONK
@@ -482,23 +481,19 @@ class nsDOMUserMediaStream : public DOMLocalMediaStream
 public:
   static already_AddRefed<nsDOMUserMediaStream>
   CreateTrackUnionStream(nsIDOMWindow* aWindow,
-                         GetUserMediaCallbackMediaStreamListener* aListener,
-                         MediaEngineSource* aAudioSource,
-                         MediaEngineSource* aVideoSource)
+                         MediaEngineSource *aAudioSource,
+                         MediaEngineSource *aVideoSource)
   {
     DOMMediaStream::TrackTypeHints hints =
       (aAudioSource ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
       (aVideoSource ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
 
-    nsRefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream(aListener,
-                                                                     aAudioSource);
+    nsRefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream(aAudioSource);
     stream->InitTrackUnionStream(aWindow, hints);
     return stream.forget();
   }
 
-  nsDOMUserMediaStream(GetUserMediaCallbackMediaStreamListener* aListener,
-                       MediaEngineSource *aAudioSource) :
-    mListener(aListener),
+  nsDOMUserMediaStream(MediaEngineSource *aAudioSource) :
     mAudioSource(aAudioSource),
     mEchoOn(true),
     mAgcOn(false),
@@ -533,40 +528,6 @@ public:
       mSourceStream->EndAllTrackAndFinish();
     }
   }
-
-  // For gUM streams, we have a trackunion which assigns TrackIDs.  However, for a
-  // single-source trackunion like we have here, the TrackUnion will assign trackids
-  // that match the source's trackids, so we can avoid needing a mapping function.
-  // XXX This will not handle more complex cases well.
-  virtual void StopTrack(TrackID aTrackID)
-  {
-    if (mSourceStream) {
-      mSourceStream->EndTrack(aTrackID);
-      // We could override NotifyMediaStreamTrackEnded(), and maybe should, but it's
-      // risky to do late in a release since that will affect all track ends, and not
-      // just StopTrack()s.
-      if (GetDOMTrackFor(aTrackID)) {
-        mListener->StopTrack(aTrackID, !!GetDOMTrackFor(aTrackID)->AsAudioStreamTrack());
-      } else {
-        LOG(("StopTrack(%d) on non-existant track", aTrackID));
-      }
-    }
-  }
-
-#if 0
-  virtual void NotifyMediaStreamTrackEnded(dom::MediaStreamTrack* aTrack)
-  {
-    TrackID trackID = aTrack->GetTrackID();
-    // We override this so we can also tell the backend to stop capturing if the track ends
-    LOG(("track %d ending, type = %s",
-         trackID, aTrack->AsAudioStreamTrack() ? "audio" : "video"));
-    MOZ_ASSERT(aTrack->AsVideoStreamTrack() || aTrack->AsAudioStreamTrack());
-    mListener->StopTrack(trackID, !!aTrack->AsAudioStreamTrack());
-
-    // forward to superclass
-    DOMLocalMediaStream::NotifyMediaStreamTrackEnded(aTrack);
-  }
-#endif
 
   // Allow getUserMedia to pass input data directly to PeerConnection/MediaPipeline
   virtual bool AddDirectListener(MediaStreamDirectListener *aListener) MOZ_OVERRIDE
@@ -615,7 +576,6 @@ public:
   // explicitly destroyed too.
   nsRefPtr<SourceMediaStream> mSourceStream;
   nsRefPtr<MediaInputPort> mPort;
-  nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
   nsRefPtr<MediaEngineSource> mAudioSource; // so we can turn on AEC
   bool mEchoOn;
   bool mAgcOn;
@@ -748,8 +708,8 @@ public:
 #endif
     // Create a media stream.
     nsRefPtr<nsDOMUserMediaStream> trackunion =
-      nsDOMUserMediaStream::CreateTrackUnionStream(window, mListener,
-                                                   mAudioSource, mVideoSource);
+      nsDOMUserMediaStream::CreateTrackUnionStream(window, mAudioSource,
+                                                   mVideoSource);
     if (!trackunion) {
       nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error = mError.forget();
       LOG(("Returning error for getUserMedia() - no stream"));
@@ -2327,28 +2287,6 @@ GetUserMediaCallbackMediaStreamListener::StopScreenWindowSharing()
   }
 }
 
-// Stop backend for track
-
-void
-GetUserMediaCallbackMediaStreamListener::StopTrack(TrackID aID, bool aIsAudio)
-{
-  if (((aIsAudio && mAudioSource) ||
-       (!aIsAudio && mVideoSource)) && !mStopped)
-  {
-    // XXX to support multiple tracks of a type in a stream, this should key off
-    // the TrackID and not just the type
-    nsRefPtr<MediaOperationRunnable> runnable(
-      new MediaOperationRunnable(MEDIA_STOP_TRACK,
-                                 this, nullptr, nullptr,
-                                 aIsAudio  ? mAudioSource : nullptr,
-                                 !aIsAudio ? mVideoSource : nullptr,
-                                 mFinished, mWindowID, nullptr));
-    mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-  } else {
-    LOG(("gUM track %d ended, but we don't have type %s",
-         aID, aIsAudio ? "audio" : "video"));
-  }
-}
 
 // Called from the MediaStreamGraph thread
 void
