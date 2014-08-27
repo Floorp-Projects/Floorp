@@ -11,9 +11,8 @@ public:
   DesktopDeviceInfoNull();
   ~DesktopDeviceInfoNull();
 
-protected:
-  virtual void InitializeScreenList();
-  virtual void InitializeApplicationList();
+  virtual int32_t Init();
+  virtual int32_t Refresh();
 };
 
 DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
@@ -31,12 +30,15 @@ DesktopDeviceInfoNull::DesktopDeviceInfoNull() {
 DesktopDeviceInfoNull::~DesktopDeviceInfoNull() {
 }
 
-void
-DesktopDeviceInfoNull::InitializeScreenList() {
+int32_t
+DesktopDeviceInfoNull::Init() {
+  initializeWindowList();
+  return 0;
 }
 
-void
-DesktopDeviceInfoNull::InitializeApplicationList() {
+int32_t
+DesktopDeviceInfoNull::Refresh() {
+  return 0;
 }
 
 } //namespace webrtc
