@@ -3,10 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "webrtc/modules/desktop_capture/mac/desktop_device_info_mac.h"
-#include <AppKit/AppKit.h>
 #include <Cocoa/Cocoa.h>
-#include <unistd.h>
-#include <stdio.h>
 
 namespace webrtc {
 
@@ -28,7 +25,7 @@ DesktopDeviceInfoMac::~DesktopDeviceInfoMac() {
 }
 
 #if !defined(MULTI_MONITOR_SCREENSHARE)
-void DesktopDeviceInfoMac::MultiMonitorScreenshare()
+int32_t DesktopDeviceInfoMac::MultiMonitorScreenshare()
 {
   DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
   if (pDesktopDeviceInfo) {
@@ -38,50 +35,29 @@ void DesktopDeviceInfoMac::MultiMonitorScreenshare()
 
     desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
   }
+  return 0;
 }
 #endif
 
-void DesktopDeviceInfoMac::InitializeScreenList() {
+int32_t DesktopDeviceInfoMac::Init() {
 #if !defined(MULTI_MONITOR_SCREENSHARE)
   MultiMonitorScreenshare();
 #endif
+
+  initializeWindowList();
+
+  return 0;
 }
-void DesktopDeviceInfoMac::InitializeApplicationList() {
-  //List all running applications (excluding background processes).
 
-  NSArray *running = [[NSWorkspace sharedWorkspace] runningApplications];
-  for (NSRunningApplication *ra in running) {
-    if (ra.activationPolicy != NSApplicationActivationPolicyRegular)
-      continue;
+int32_t DesktopDeviceInfoMac::Refresh() {
+#if !defined(MULTI_MONITOR_SCREENSHARE)
+  desktop_display_list_.clear();
+  MultiMonitorScreenshare();
+#endif
 
-    ProcessId pid = ra.processIdentifier;
-    if (pid == 0) {
-      continue;
-    }
-    if (pid == getpid()) {
-      continue;
-    }
+  RefreshWindowList();
 
-    DesktopApplication *pDesktopApplication = new DesktopApplication;
-    if (!pDesktopApplication) {
-      continue;
-    }
-
-    pDesktopApplication->setProcessId(pid);
-
-    NSString *str;
-    str = [ra.executableURL absoluteString];
-    pDesktopApplication->setProcessPathName([str UTF8String]);
-
-    str = ra.localizedName;
-    pDesktopApplication->setProcessAppName([str UTF8String]);
-
-    char idStr[64];
-    snprintf(idStr, sizeof(idStr), "%ld", pDesktopApplication->getProcessId());
-    pDesktopApplication->setUniqueIdName(idStr);
-
-    desktop_application_list_[pDesktopApplication->getProcessId()] = pDesktopApplication;
-  }
+  return 0;
 }
 
 } //namespace webrtc
