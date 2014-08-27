@@ -16,6 +16,14 @@ namespace mozilla {
 namespace gfx {
 
 CGImageRef
+CreateCGImage(CGDataProviderReleaseDataCallback aCallback,
+              void *aInfo,
+              const void *aData,
+              const IntSize &aSize,
+              int32_t aStride,
+              SurfaceFormat aFormat);
+
+CGImageRef
 CreateCGImage(void *aInfo,
               const void *aData,
               const IntSize &aSize,

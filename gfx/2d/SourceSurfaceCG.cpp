@@ -59,6 +59,22 @@ CreateCGImage(void *aInfo,
               int32_t aStride,
               SurfaceFormat aFormat)
 {
+  return CreateCGImage(releaseCallback,
+                       aInfo,
+                       aData,
+                       aSize,
+                       aStride,
+                       aFormat);
+}
+
+CGImageRef
+CreateCGImage(CGDataProviderReleaseDataCallback aCallback,
+              void *aInfo,
+              const void *aData,
+              const IntSize &aSize,
+              int32_t aStride,
+              SurfaceFormat aFormat)
+{
   //XXX: we should avoid creating this colorspace everytime
   CGColorSpaceRef colorSpace = nullptr;
   CGBitmapInfo bitinfo = 0;
@@ -97,7 +113,7 @@ CreateCGImage(void *aInfo,
   CGDataProviderRef dataProvider = CGDataProviderCreateWithData(aInfo,
                                                                 aData,
                                                                 bufLen,
-                                                                releaseCallback);
+                                                                aCallback);
 
   CGImageRef image;
   if (aFormat == SurfaceFormat::A8) {

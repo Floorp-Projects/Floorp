@@ -77,7 +77,7 @@ AppleVTLinker::Unlink()
   // reference count to avoidunloading our symbols when other
   // instances still need them.
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(sLink && sRefCount > 0, "Unbalanced Unlink()");
+  MOZ_ASSERT(sRefCount > 0, "Unbalanced Unlink()");
   --sRefCount;
   if (sLink && sRefCount < 1) {
     LOG("Unlinking VideoToolbox framework.");
