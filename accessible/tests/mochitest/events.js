@@ -1743,10 +1743,11 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUse
 /**
  * Caret move events checker.
  */
-function caretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg)
+function caretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg,
+                          aIsAsync)
 {
   this.__proto__ = new invokerChecker(EVENT_TEXT_CARET_MOVED,
-                                      aTargetOrFunc, aTargetFuncArg);
+                                      aTargetOrFunc, aTargetFuncArg, aIsAsync);
 
   this.check = function caretMoveChecker_check(aEvent)
   {
@@ -1754,6 +1755,12 @@ function caretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg)
        aCaretOffset,
        "Wrong caret offset for " + prettyName(aEvent.accessible));
   }
+}
+
+function asyncCaretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg)
+{
+  this.__proto__ = new caretMoveChecker(aCaretOffset, aTargetOrFunc,
+                                        aTargetFuncArg, true);
 }
 
 /**

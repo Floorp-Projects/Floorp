@@ -179,8 +179,7 @@ SelectionManager::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
     logging::SelChange(aSelection, document, aReason);
 #endif
 
-  // Don't fire events until document is loaded.
-  if (document && document->IsContentLoaded()) {
+  if (document) {
     // Selection manager has longer lifetime than any document accessible,
     // so that we are guaranteed that the notification is processed before
     // the selection manager is destroyed.
