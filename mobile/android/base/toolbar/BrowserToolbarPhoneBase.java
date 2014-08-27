@@ -8,6 +8,7 @@ package org.mozilla.gecko.toolbar;
 import java.util.Arrays;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -51,6 +52,11 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
         roundCornerPaint.setAntiAlias(true);
         roundCornerPaint.setColor(res.getColor(R.color.background_tabs));
         roundCornerPaint.setStrokeWidth(0.0f);
+    }
+
+    @Override
+    protected void updateNavigationButtons(final Tab tab) {
+        // We have no navigation buttons so do nothing.
     }
 
     @Override
