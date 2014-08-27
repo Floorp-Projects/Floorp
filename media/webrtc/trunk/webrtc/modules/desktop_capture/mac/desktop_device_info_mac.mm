@@ -36,10 +36,12 @@ void DesktopDeviceInfoMac::MultiMonitorScreenshare()
 {
   DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
   if (pDesktopDeviceInfo) {
-    pDesktopDeviceInfo->setScreenId(0);
+    pDesktopDeviceInfo->setScreenId(CGMainDisplayID());
     pDesktopDeviceInfo->setDeviceName("Primary Monitor");
-    pDesktopDeviceInfo->setUniqueIdName("\\screen\\monitor#1");
 
+    char idStr[64];
+    snprintf(idStr, sizeof(idStr), "%ld", pDesktopDeviceInfo->getScreenId());
+    pDesktopDeviceInfo->setUniqueIdName(idStr);
     desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
   }
 }
