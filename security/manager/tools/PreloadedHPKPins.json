@@ -19,6 +19,10 @@
 //   name: (string) the DNS name of the host in question
 //   include_subdomains: (optional bool) whether subdomains of |name| are also covered
 //   pins: (string) the |name| member of an object in |pinsets|
+//
+// "extra_certs" is a list of base64-encoded certificates. These are used in
+// pinsets that reference certificates not in our root program (for example,
+// Facebook).
 
 // equifax -> aus3
 // Geotrust Primary -> www.mozilla.org
@@ -186,13 +190,12 @@
         "XRamp Global CA Root"
       ]
     },
-    // For pinning tests on pinning.example.com, the certificate must be 'End
-    // Entity Test Cert'
     {
       "name": "facebook",
       "sha256_hashes": [
         "Verisign Class 3 Public Primary Certification Authority - G3",
-        "DigiCert High Assurance EV Root CA"
+        "DigiCert High Assurance EV Root CA",
+        "DigiCert ECC Secure Server CA"
       ]
     }
   ],
@@ -235,5 +238,10 @@
     // Facebook (not pinned by Chrome)
     { "name": "facebook.com", "include_subdomains": true,
       "pins": "facebook", "test_mode": true }
+  ],
+
+  "extra_certificates": [
+     // DigiCert ECC Secure Server CA (for Facebook)
+     "MIIDrDCCApSgAwIBAgIQCssoukZe5TkIdnRw883GEjANBgkqhkiG9w0BAQwFADBhMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBDQTAeFw0xMzAzMDgxMjAwMDBaFw0yMzAzMDgxMjAwMDBaMEwxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxJjAkBgNVBAMTHURpZ2lDZXJ0IEVDQyBTZWN1cmUgU2VydmVyIENBMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE4ghC6nfYJN6gLGSkE85AnCNyqQIKDjc/ITa4jVMU9tWRlUvzlgKNcR7E2Munn17voOZ/WpIRllNv68DLP679Wz9HJOeaBy6Wvqgvu1cYr3GkvXg6HuhbPGtkESvMNCuMo4IBITCCAR0wEgYDVR0TAQH/BAgwBgEB/wIBADAOBgNVHQ8BAf8EBAMCAYYwNAYIKwYBBQUHAQEEKDAmMCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2VydC5jb20wQgYDVR0fBDswOTA3oDWgM4YxaHR0cDovL2NybDMuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0R2xvYmFsUm9vdENBLmNybDA9BgNVHSAENjA0MDIGBFUdIAAwKjAoBggrBgEFBQcCARYcaHR0cHM6Ly93d3cuZGlnaWNlcnQuY29tL0NQUzAdBgNVHQ4EFgQUo53mH/naOU/AbuiRy5Wl2jHiCp8wHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUwDQYJKoZIhvcNAQEMBQADggEBAMeKoENL7HTJxavVHzA1Nm6YVntIrAVjrnuaVyRXzG/63qttnMe2uuzO58pzZNvfBDcKAEmzP58mrZGMIOgfiA4q+2Y3yDDo0sIkp0VILeoBUEoxlBPfjV/aKrtJPGHzecicZpIalir0ezZYoyxBEHQa0+1IttK7igZFcTMQMHp6mCHdJLnsnLWSB62DxsRq+HfmNb4TDydkskO/g+l3VtsIh5RHFPVfKK+jaEyDj2D3loB5hWp2Jp2VDCADjT7ueihlZGak2YPqmXTNbk19HOuNssWvFhtOyPNV6og4ETQdEa8/B6hPatJ0ES8q/HO3X8IVQwVs1n3aAr0im0/T+Xc="
   ]
 }
