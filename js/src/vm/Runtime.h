@@ -1598,7 +1598,7 @@ PerThreadData::runtimeFromMainThread()
 inline JSRuntime *
 PerThreadData::runtimeIfOnOwnerThread()
 {
-    return CurrentThreadCanAccessRuntime(runtime_) ? runtime_ : nullptr;
+    return (runtime_ && CurrentThreadCanAccessRuntime(runtime_)) ? runtime_ : nullptr;
 }
 
 inline bool

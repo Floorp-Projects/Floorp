@@ -1385,7 +1385,7 @@ RemoveInfoCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, uint32_t number,
 
 void nsDocLoader::ClearRequestInfoHash(void)
 {
-  if (!mRequestInfoHash.ops || !mRequestInfoHash.entryCount) {
+  if (!mRequestInfoHash.ops || !mRequestInfoHash.EntryCount()) {
     // No hash, or the hash is empty, nothing to do here then...
 
     return;
