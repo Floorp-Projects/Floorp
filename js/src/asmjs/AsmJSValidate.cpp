@@ -382,15 +382,15 @@ class Type
 {
   public:
     enum Which {
-        Double,
+        Fixnum = AsmJSNumLit::Fixnum,
+        Signed = AsmJSNumLit::NegativeInt,
+        Unsigned = AsmJSNumLit::BigUnsigned,
+        Double = AsmJSNumLit::Double,
+        Float = AsmJSNumLit::Float,
         MaybeDouble,
-        Float,
         MaybeFloat,
         Floatish,
-        Fixnum,
         Int,
-        Signed,
-        Unsigned,
         Intish,
         Void
     };
@@ -400,6 +400,13 @@ class Type
 
   public:
     Type() : which_(Which(-1)) {}
+    static Type Of(const AsmJSNumLit &lit) {
+        JS_ASSERT(lit.hasType());
+        JS_ASSERT(Type::Which(lit.which()) >= Fixnum && Type::Which(lit.which()) <= Float);
+        Type t;
+        t.which_ = Type::Which(lit.which());
+        return t;
+    }
     MOZ_IMPLICIT Type(Which w) : which_(w) {}
 
     bool operator==(Type rhs) const { return which_ == rhs.which_; }
@@ -623,6 +630,27 @@ class VarType
           case AsmJS_FRound: which_ = Float; break;
         }
     }
+    static VarType Of(const AsmJSNumLit &lit) {
+        JS_ASSERT(lit.hasType());
+        VarType v;
+        switch (lit.which()) {
+          case AsmJSNumLit::Fixnum:
+          case AsmJSNumLit::NegativeInt:
+          case AsmJSNumLit::BigUnsigned:
+            v.which_ = Int;
+            return v;
+          case AsmJSNumLit::Double:
+            v.which_ = Double;
+            return v;
+          case AsmJSNumLit::Float:
+            v.which_ = Float;
+            return v;
+          case AsmJSNumLit::OutOfRangeInt:
+            MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("can't be out of range int");
+        }
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected literal type");
+    }
+
     Which which() const {
         return which_;
     }
@@ -916,7 +944,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             struct {
                 VarType::Which type_;
                 uint32_t index_;
-                Value literalValue_;
+                AsmJSNumLit literalValue_;
             } varOrConst;
             uint32_t funcIndex_;
             uint32_t funcPtrTableIndex_;
@@ -945,7 +973,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         bool isConst() const {
             return which_ == ConstantLiteral || which_ == ConstantImport;
         }
-        Value constLiteralValue() const {
+        AsmJSNumLit constLiteralValue() const {
             JS_ASSERT(which_ == ConstantLiteral);
             return u.varOrConst.literalValue_;
         }
@@ -1319,9 +1347,10 @@ class MOZ_STACK_CLASS ModuleCompiler
     void initImportArgumentName(PropertyName *n) { module_->initImportArgumentName(n); }
     void initBufferArgumentName(PropertyName *n) { module_->initBufferArgumentName(n); }
 
-    bool addGlobalVarInit(PropertyName *varName, VarType type, const Value &v, bool isConst) {
+    bool addGlobalVarInit(PropertyName *varName, const AsmJSNumLit &lit, bool isConst) {
         uint32_t index;
-        if (!module_->addGlobalVarInit(v, type.toCoercion(), &index))
+        VarType type = VarType::Of(lit);
+        if (!module_->addGlobalVarInit(lit.value(), type.toCoercion(), &index))
             return false;
 
         Global::Which which = isConst ? Global::ConstantLiteral : Global::Variable;
@@ -1331,7 +1360,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         global->u.varOrConst.index_ = index;
         global->u.varOrConst.type_ = type.which();
         if (isConst)
-            global->u.varOrConst.literalValue_ = v;
+            global->u.varOrConst.literalValue_ = lit;
 
         return globals_.putNew(varName, global);
     }
@@ -1347,7 +1376,6 @@ class MOZ_STACK_CLASS ModuleCompiler
             return false;
         global->u.varOrConst.index_ = index;
         global->u.varOrConst.type_ = VarType(coercion).which();
-
         return globals_.putNew(varName, global);
     }
     bool addFunction(PropertyName *name, Signature &&sig, Func **func) {
@@ -1415,8 +1443,9 @@ class MOZ_STACK_CLASS ModuleCompiler
         Global *global = moduleLifo_.new_<Global>(Global::ConstantLiteral);
         if (!global)
             return false;
-        global->u.varOrConst.literalValue_ = DoubleValue(constant);
         global->u.varOrConst.type_ = VarType::Double;
+        global->u.varOrConst.literalValue_ = AsmJSNumLit::Create(AsmJSNumLit::Double,
+                                                                 DoubleValue(constant));
         return globals_.putNew(varName, global);
     }
   public:
@@ -1618,93 +1647,6 @@ class MOZ_STACK_CLASS ModuleCompiler
 /*****************************************************************************/
 // Numeric literal utilities
 
-namespace {
-
-// Represents the type and value of an asm.js numeric literal.
-//
-// A literal is a double iff the literal contains an exponent or decimal point
-// (even if the fractional part is 0). Otherwise, integers may be classified:
-//  fixnum: [0, 2^31)
-//  negative int: [-2^31, 0)
-//  big unsigned: [2^31, 2^32)
-//  out of range: otherwise
-// Lastly, a literal may be a float literal which is any double or integer
-// literal coerced with Math.fround.
-class NumLit
-{
-  public:
-    enum Which {
-        Fixnum = Type::Fixnum,
-        NegativeInt = Type::Signed,
-        BigUnsigned = Type::Unsigned,
-        Double = Type::Double,
-        Float = Type::Float,
-        OutOfRangeInt = -1
-    };
-
-  private:
-    Which which_;
-    Value v_;
-
-  public:
-    NumLit() {}
-
-    NumLit(Which w, Value v)
-      : which_(w), v_(v)
-    {}
-
-    Which which() const {
-        return which_;
-    }
-
-    int32_t toInt32() const {
-        JS_ASSERT(which_ == Fixnum || which_ == NegativeInt || which_ == BigUnsigned);
-        return v_.toInt32();
-    }
-
-    double toDouble() const {
-        JS_ASSERT(which_ == Double);
-        return v_.toDouble();
-    }
-
-    float toFloat() const {
-        JS_ASSERT(which_ == Float);
-        return float(v_.toDouble());
-    }
-
-    Value value() const {
-        JS_ASSERT(which_ != OutOfRangeInt);
-        return v_;
-    }
-
-    bool hasType() const {
-        return which_ != OutOfRangeInt;
-    }
-
-    Type type() const {
-        JS_ASSERT(hasType());
-        return Type::Which(which_);
-    }
-
-    VarType varType() const {
-        JS_ASSERT(hasType());
-        switch (which_) {
-          case NumLit::Fixnum:
-          case NumLit::NegativeInt:
-          case NumLit::BigUnsigned:
-            return VarType::Int;
-          case NumLit::Double:
-            return VarType::Double;
-          case NumLit::Float:
-            return VarType::Float;
-          case NumLit::OutOfRangeInt:;
-        }
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected NumLit type");
-    }
-};
-
-} /* anonymous namespace */
-
 static bool
 IsNumericNonFloatLiteral(ParseNode *pn)
 {
@@ -1781,7 +1723,7 @@ ExtractNumericNonFloatValue(ParseNode **pn)
     return NumberNodeValue(*pn);
 }
 
-static NumLit
+static AsmJSNumLit
 ExtractNumericLiteral(ModuleCompiler &m, ParseNode *pn)
 {
     JS_ASSERT(IsNumericLiteral(m, pn));
@@ -1791,7 +1733,7 @@ ExtractNumericLiteral(ModuleCompiler &m, ParseNode *pn)
     if (pn->isKind(PNK_CALL)) {
         pn = CallArgList(pn);
         double d = ExtractNumericNonFloatValue(&pn);
-        return NumLit(NumLit::Float, DoubleValue(d));
+        return AsmJSNumLit::Create(AsmJSNumLit::Float, DoubleValue(d));
     }
 
     double d = ExtractNumericNonFloatValue(&pn);
@@ -1799,7 +1741,7 @@ ExtractNumericLiteral(ModuleCompiler &m, ParseNode *pn)
     // The asm.js spec syntactically distinguishes any literal containing a
     // decimal point or the literal -0 as having double type.
     if (NumberNodeHasFrac(pn) || IsNegativeZero(d))
-        return NumLit(NumLit::Double, DoubleValue(d));
+        return AsmJSNumLit::Create(AsmJSNumLit::Double, DoubleValue(d));
 
     // The syntactic checks above rule out these double values.
     JS_ASSERT(!IsNegativeZero(d));
@@ -1810,19 +1752,19 @@ ExtractNumericLiteral(ModuleCompiler &m, ParseNode *pn)
     // Furthermore, d may be inf or -inf. In both cases, casting to an int64_t
     // is undefined, so test against the integer bounds using doubles.
     if (d < double(INT32_MIN) || d > double(UINT32_MAX))
-        return NumLit(NumLit::OutOfRangeInt, UndefinedValue());
+        return AsmJSNumLit::Create(AsmJSNumLit::OutOfRangeInt, UndefinedValue());
 
     // With the above syntactic and range limitations, d is definitely an
     // integer in the range [INT32_MIN, UINT32_MAX] range.
     int64_t i64 = int64_t(d);
     if (i64 >= 0) {
         if (i64 <= INT32_MAX)
-            return NumLit(NumLit::Fixnum, Int32Value(i64));
+            return AsmJSNumLit::Create(AsmJSNumLit::Fixnum, Int32Value(i64));
         JS_ASSERT(i64 <= UINT32_MAX);
-        return NumLit(NumLit::BigUnsigned, Int32Value(uint32_t(i64)));
+        return AsmJSNumLit::Create(AsmJSNumLit::BigUnsigned, Int32Value(uint32_t(i64)));
     }
     JS_ASSERT(i64 >= INT32_MIN);
-    return NumLit(NumLit::NegativeInt, Int32Value(i64));
+    return AsmJSNumLit::Create(AsmJSNumLit::NegativeInt, Int32Value(i64));
 }
 
 static inline bool
@@ -1831,16 +1773,16 @@ IsLiteralInt(ModuleCompiler &m, ParseNode *pn, uint32_t *u32)
     if (!IsNumericLiteral(m, pn))
         return false;
 
-    NumLit literal = ExtractNumericLiteral(m, pn);
+    AsmJSNumLit literal = ExtractNumericLiteral(m, pn);
     switch (literal.which()) {
-      case NumLit::Fixnum:
-      case NumLit::BigUnsigned:
-      case NumLit::NegativeInt:
+      case AsmJSNumLit::Fixnum:
+      case AsmJSNumLit::BigUnsigned:
+      case AsmJSNumLit::NegativeInt:
         *u32 = uint32_t(literal.toInt32());
         return true;
-      case NumLit::Double:
-      case NumLit::Float:
-      case NumLit::OutOfRangeInt:
+      case AsmJSNumLit::Double:
+      case AsmJSNumLit::Float:
+      case AsmJSNumLit::OutOfRangeInt:
         return false;
     }
 
@@ -1864,16 +1806,9 @@ class FunctionCompiler
         Local(VarType t, unsigned slot) : type(t), slot(slot) {}
     };
 
-    struct TypedValue
-    {
-        VarType type;
-        Value value;
-        TypedValue(VarType t, const Value &v) : type(t), value(v) {}
-    };
-
   private:
     typedef HashMap<PropertyName*, Local> LocalMap;
-    typedef Vector<TypedValue> VarInitializerVector;
+    typedef Vector<AsmJSNumLit> VarInitializerVector;
     typedef HashMap<PropertyName*, BlockVector> LabeledBlockMap;
     typedef HashMap<ParseNode*, BlockVector> UnlabeledBlockMap;
     typedef Vector<ParseNode*, 4> NodeStack;
@@ -1980,14 +1915,14 @@ class FunctionCompiler
         return locals_.add(p, name, Local(type, locals_.count()));
     }
 
-    bool addVariable(ParseNode *pn, PropertyName *name, VarType type, const Value &init)
+    bool addVariable(ParseNode *pn, PropertyName *name, const AsmJSNumLit &init)
     {
         LocalMap::AddPtr p = locals_.lookupForAdd(name);
         if (p)
             return failName(pn, "duplicate local name '%s' not allowed", name);
-        if (!locals_.add(p, name, Local(type, locals_.count())))
+        if (!locals_.add(p, name, Local(VarType::Of(init), locals_.count())))
             return false;
-        return varInitializers_.append(TypedValue(type, init));
+        return varInitializers_.append(init);
     }
 
     bool prepareToEmitMIR(const VarTypeVector &argTypes)
@@ -2017,8 +1952,8 @@ class FunctionCompiler
         }
         unsigned firstLocalSlot = argTypes.length();
         for (unsigned i = 0; i < varInitializers_.length(); i++) {
-            MConstant *ins = MConstant::NewAsmJS(alloc(), varInitializers_[i].value,
-                                                 varInitializers_[i].type.toMIRType());
+            AsmJSNumLit &lit = varInitializers_[i];
+            MConstant *ins = MConstant::NewAsmJS(alloc(), lit.value(), Type::Of(lit).toMIRType());
             curBlock_->add(ins);
             curBlock_->initSlot(info().localSlot(firstLocalSlot + i), ins);
             if (!mirGen_->ensureBallast())
@@ -2070,6 +2005,15 @@ class FunctionCompiler
     }
 
     /***************************** Code generation (after local scope setup) */
+
+    MDefinition *constant(const AsmJSNumLit &lit)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MConstant *constant = MConstant::NewAsmJS(alloc(), lit.value(), Type::Of(lit).toMIRType());
+        curBlock_->add(constant);
+        return constant;
+    }
 
     MDefinition *constant(Value v, Type t)
     {
@@ -2990,11 +2934,11 @@ static bool
 CheckGlobalVariableInitConstant(ModuleCompiler &m, PropertyName *varName, ParseNode *initNode,
                                 bool isConst)
 {
-    NumLit literal = ExtractNumericLiteral(m, initNode);
+    AsmJSNumLit literal = ExtractNumericLiteral(m, initNode);
     if (!literal.hasType())
         return m.fail(initNode, "global initializer is out of representable integer range");
 
-    return m.addGlobalVarInit(varName, literal.varType(), literal.value(), isConst);
+    return m.addGlobalVarInit(varName, literal, isConst);
 }
 
 static bool
@@ -3267,17 +3211,17 @@ CheckFinalReturn(FunctionCompiler &f, ParseNode *stmt, RetType *retType)
         if (ParseNode *coercionNode = UnaryKid(stmt)) {
             if (IsNumericLiteral(f.m(), coercionNode)) {
                 switch (ExtractNumericLiteral(f.m(), coercionNode).which()) {
-                  case NumLit::BigUnsigned:
-                  case NumLit::OutOfRangeInt:
+                  case AsmJSNumLit::BigUnsigned:
+                  case AsmJSNumLit::OutOfRangeInt:
                     return f.fail(coercionNode, "returned literal is out of integer range");
-                  case NumLit::Fixnum:
-                  case NumLit::NegativeInt:
+                  case AsmJSNumLit::Fixnum:
+                  case AsmJSNumLit::NegativeInt:
                     *retType = RetType::Signed;
                     break;
-                  case NumLit::Double:
+                  case AsmJSNumLit::Double:
                     *retType = RetType::Double;
                     break;
-                  case NumLit::Float:
+                  case AsmJSNumLit::Float:
                     *retType = RetType::Float;
                     break;
                 }
@@ -3322,7 +3266,7 @@ CheckVariable(FunctionCompiler &f, ParseNode *var)
             if (global->which() != ModuleCompiler::Global::ConstantLiteral)
                 return f.failName(initNode, "'%s' isn't a possible global variable initializer, "
                                             "needs to be a const numeric literal", initName);
-            return f.addVariable(var, name, global->varOrConstType(), global->constLiteralValue());
+            return f.addVariable(var, name, global->constLiteralValue());
         }
         return f.failName(initNode, "'%s' needs to be a global name", initName);
     }
@@ -3330,11 +3274,11 @@ CheckVariable(FunctionCompiler &f, ParseNode *var)
     if (!IsNumericLiteral(f.m(), initNode))
         return f.failName(initNode, "initializer for '%s' needs to be a numeric literal or a global const literal", name);
 
-    NumLit literal = ExtractNumericLiteral(f.m(), initNode);
+    AsmJSNumLit literal = ExtractNumericLiteral(f.m(), initNode);
     if (!literal.hasType())
         return f.failName(initNode, "initializer for '%s' is out of range", name);
 
-    return f.addVariable(var, name, literal.varType(), literal.value());
+    return f.addVariable(var, name, literal);
 }
 
 static bool
@@ -3359,12 +3303,12 @@ CheckExpr(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type);
 static bool
 CheckNumericLiteral(FunctionCompiler &f, ParseNode *num, MDefinition **def, Type *type)
 {
-    NumLit literal = ExtractNumericLiteral(f.m(), num);
+    AsmJSNumLit literal = ExtractNumericLiteral(f.m(), num);
     if (!literal.hasType())
         return f.fail(num, "numeric literal out of representable integer range");
 
-    *type = literal.type();
-    *def = f.constant(literal.value(), literal.type());
+    *type = Type::Of(literal);
+    *def = f.constant(literal);
     return true;
 }
 
@@ -3382,7 +3326,7 @@ CheckVarRef(FunctionCompiler &f, ParseNode *varRef, MDefinition **def, Type *typ
     if (const ModuleCompiler::Global *global = f.lookupGlobal(name)) {
         switch (global->which()) {
           case ModuleCompiler::Global::ConstantLiteral:
-            *def = f.constant(global->constLiteralValue(), global->varOrConstType().toType());
+            *def = f.constant(global->constLiteralValue());
             *type = global->varOrConstType().toType();
             break;
           case ModuleCompiler::Global::ConstantImport:
@@ -3417,7 +3361,7 @@ IsLiteralOrConstInt(FunctionCompiler &f, ParseNode *pn, uint32_t *u32)
     if (!global || global->which() != ModuleCompiler::Global::ConstantLiteral)
         return false;
 
-    const Value &v = global->constLiteralValue();
+    const Value &v = global->constLiteralValue().value();
     if (!v.isInt32())
         return false;
 
@@ -4436,17 +4380,17 @@ IsValidIntMultiplyConstant(ModuleCompiler &m, ParseNode *expr)
     if (!IsNumericLiteral(m, expr))
         return false;
 
-    NumLit literal = ExtractNumericLiteral(m, expr);
+    AsmJSNumLit literal = ExtractNumericLiteral(m, expr);
     switch (literal.which()) {
-      case NumLit::Fixnum:
-      case NumLit::NegativeInt:
+      case AsmJSNumLit::Fixnum:
+      case AsmJSNumLit::NegativeInt:
         if (abs(literal.toInt32()) < (1<<20))
             return true;
         return false;
-      case NumLit::BigUnsigned:
-      case NumLit::Double:
-      case NumLit::Float:
-      case NumLit::OutOfRangeInt:
+      case AsmJSNumLit::BigUnsigned:
+      case AsmJSNumLit::Double:
+      case AsmJSNumLit::Float:
+      case AsmJSNumLit::OutOfRangeInt:
         return false;
     }
 
@@ -5131,17 +5075,17 @@ CheckCaseExpr(FunctionCompiler &f, ParseNode *caseExpr, int32_t *value)
     if (!IsNumericLiteral(f.m(), caseExpr))
         return f.fail(caseExpr, "switch case expression must be an integer literal");
 
-    NumLit literal = ExtractNumericLiteral(f.m(), caseExpr);
+    AsmJSNumLit literal = ExtractNumericLiteral(f.m(), caseExpr);
     switch (literal.which()) {
-      case NumLit::Fixnum:
-      case NumLit::NegativeInt:
+      case AsmJSNumLit::Fixnum:
+      case AsmJSNumLit::NegativeInt:
         *value = literal.toInt32();
         break;
-      case NumLit::OutOfRangeInt:
-      case NumLit::BigUnsigned:
+      case AsmJSNumLit::OutOfRangeInt:
+      case AsmJSNumLit::BigUnsigned:
         return f.fail(caseExpr, "switch case expression out of integer range");
-      case NumLit::Double:
-      case NumLit::Float:
+      case AsmJSNumLit::Double:
+      case AsmJSNumLit::Float:
         return f.fail(caseExpr, "switch case expression must be an integer literal");
     }
 
