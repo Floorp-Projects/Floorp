@@ -12,6 +12,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/Move.h"
 
 namespace mozilla {
 namespace dom {
@@ -95,22 +96,22 @@ MediaKeySession::Closed() const
 }
 
 already_AddRefed<Promise>
-MediaKeySession::Update(const Uint8Array& aResponse, ErrorResult& aRv)
+MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResult& aRv)
 {
   nsRefPtr<Promise> promise(mKeys->MakePromise(aRv));
   if (aRv.Failed()) {
     return nullptr;
   }
-  aResponse.ComputeLengthAndData();
+  nsTArray<uint8_t> data;
   if (IsClosed() ||
       !mKeys->GetCDMProxy() ||
-      !aResponse.Length()) {
+      !CopyArrayBufferViewOrArrayBufferData(aResponse, data)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return promise.forget();
   }
   mKeys->GetCDMProxy()->UpdateSession(mSessionId,
                                       mKeys->StorePromise(promise),
-                                      aResponse);
+                                      data);
   return promise.forget();
 }
 

@@ -31,7 +31,7 @@ interface MediaKeySession : EventTarget {
   // session operations
   // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
   [NewObject, Throws]
-  Promise<void> update(Uint8Array response);
+  Promise<void> update((ArrayBufferView or ArrayBuffer) response);
 
   // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
   [NewObject, Throws]
