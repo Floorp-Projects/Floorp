@@ -171,6 +171,34 @@ MediaKeySession::Remove(ErrorResult& aRv)
   return promise.forget();
 }
 
+already_AddRefed<Promise>
+MediaKeySession::GetUsableKeyIds(ErrorResult& aRv)
+{
+  nsRefPtr<Promise> promise(mKeys->MakePromise(aRv));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (IsClosed() || !mKeys->GetCDMProxy()) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
+  nsTArray<CencKeyId> keyIds;
+  {
+    CDMCaps::AutoLock caps(mKeys->GetCDMProxy()->Capabilites());
+    caps.GetUsableKeysForSession(mSessionId, keyIds);
+  }
+
+  nsTArray<TypedArrayCreator<ArrayBuffer>> array;
+  for (size_t i = 0; i < keyIds.Length(); i++) {
+    array.AppendElement(keyIds[i]);
+  }
+  promise->MaybeResolve(array);
+
+  return promise.forget();
+}
+
 void
 MediaKeySession::DispatchKeyMessage(const nsTArray<uint8_t>& aMessage,
                                     const nsAString& aURL)
