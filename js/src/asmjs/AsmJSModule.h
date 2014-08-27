@@ -131,7 +131,7 @@ class AsmJSNumLit
         return float(value_.toDouble());
     }
 
-    const Value &value() const {
+    Value value() const {
         JS_ASSERT(which_ != OutOfRangeInt);
         return value_;
     }
@@ -168,10 +168,10 @@ class AsmJSModule
                 struct {
                     uint32_t index_;
                     VarInitKind initKind_;
+                    AsmJSCoercion coercion_;
                     union {
-                        AsmJSCoercion coercion_;
-                        AsmJSNumLit numLit_;
-                    } u;
+                        Value constant_; // will only contain int32/double
+                    } init;
                 } var;
                 uint32_t ffiIndex_;
                 Scalar::Type viewType_;
@@ -196,7 +196,7 @@ class AsmJSModule
             if (name_)
                 MarkStringUnbarriered(trc, &name_, "asm.js global name");
             JS_ASSERT_IF(pod.which_ == Variable && pod.u.var.initKind_ == InitConstant,
-                         !pod.u.var.u.numLit_.value().isMarkable());
+                         !pod.u.var.init.constant_.isMarkable());
         }
 
       public:
@@ -212,15 +212,14 @@ class AsmJSModule
             JS_ASSERT(pod.which_ == Variable);
             return pod.u.var.initKind_;
         }
-        const AsmJSNumLit &varInitNumLit() const {
+        const Value &varInitConstant() const {
             JS_ASSERT(pod.which_ == Variable);
             JS_ASSERT(pod.u.var.initKind_ == InitConstant);
-            return pod.u.var.u.numLit_;
+            return pod.u.var.init.constant_;
         }
         AsmJSCoercion varInitCoercion() const {
             JS_ASSERT(pod.which_ == Variable);
-            JS_ASSERT(pod.u.var.initKind_ == InitImport);
-            return pod.u.var.u.coercion_;
+            return pod.u.var.coercion_;
         }
         PropertyName *varImportField() const {
             JS_ASSERT(pod.which_ == Variable);
@@ -817,13 +816,14 @@ class AsmJSModule
     PropertyName *bufferArgumentName() const {
         return bufferArgumentName_;
     }
-    bool addGlobalVarInit(const AsmJSNumLit &lit, uint32_t *globalIndex) {
+    bool addGlobalVarInit(const Value &v, AsmJSCoercion coercion, uint32_t *globalIndex) {
         JS_ASSERT(!isFinishedWithModulePrologue());
         if (pod.numGlobalVars_ == UINT32_MAX)
             return false;
         Global g(Global::Variable, nullptr);
         g.pod.u.var.initKind_ = Global::InitConstant;
-        g.pod.u.var.u.numLit_ = lit;
+        g.pod.u.var.init.constant_ = v;
+        g.pod.u.var.coercion_ = coercion;
         g.pod.u.var.index_ = *globalIndex = pod.numGlobalVars_++;
         return globals_.append(g);
     }
@@ -831,7 +831,7 @@ class AsmJSModule
         JS_ASSERT(!isFinishedWithModulePrologue());
         Global g(Global::Variable, name);
         g.pod.u.var.initKind_ = Global::InitImport;
-        g.pod.u.var.u.coercion_ = coercion;
+        g.pod.u.var.coercion_ = coercion;
         g.pod.u.var.index_ = *globalIndex = pod.numGlobalVars_++;
         return globals_.append(g);
     }

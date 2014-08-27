@@ -106,22 +106,17 @@ ValidateGlobalVariable(JSContext *cx, const AsmJSModule &module, AsmJSModule::Gl
 
     switch (global.varInitKind()) {
       case AsmJSModule::Global::InitConstant: {
-        const AsmJSNumLit &lit = global.varInitNumLit();
-        const Value &v = lit.value();
-        switch (lit.which()) {
-          case AsmJSNumLit::Fixnum:
-          case AsmJSNumLit::NegativeInt:
-          case AsmJSNumLit::BigUnsigned:
+        const Value &v = global.varInitConstant();
+        switch (global.varInitCoercion()) {
+          case AsmJS_ToInt32:
             *(int32_t *)datum = v.toInt32();
             break;
-          case AsmJSNumLit::Double:
+          case AsmJS_ToNumber:
             *(double *)datum = v.toDouble();
             break;
-          case AsmJSNumLit::Float:
+          case AsmJS_FRound:
             *(float *)datum = static_cast<float>(v.toDouble());
             break;
-          case AsmJSNumLit::OutOfRangeInt:
-            MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("OutOfRangeInt isn't valid in the first place");
         }
         break;
       }
