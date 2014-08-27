@@ -1668,6 +1668,12 @@
             </xul:hbox>
           </xul:vbox>
         </xul:vbox>
+        <xul:vbox pack="start">
+          <xul:toolbarbutton anonid="closebutton"
+                             class="messageCloseButton popup-notification-closebutton tabbable close-icon"
+                             xbl:inherits="oncommand=closebuttoncommand"
+                             tooltiptext="&closeNotification.tooltip;"/>
+        </xul:vbox>
       </xul:hbox>
     </content>
     <resources>
