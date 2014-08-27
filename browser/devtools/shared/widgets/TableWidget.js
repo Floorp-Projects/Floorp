@@ -40,6 +40,7 @@ const MAX_VISIBLE_STRING_SIZE = 100;
  *        - highlightUpdated: true to highlight the changed/added row.
  *        - removableColumns: Whether columns are removeable. If set to true,
  *                            the context menu in the headers will not appear.
+ *        - firstColumn: key of the first column that should appear.
  */
 function TableWidget(node, options={}) {
   EventEmitter.decorate(this);
@@ -48,10 +49,11 @@ function TableWidget(node, options={}) {
   this.window = this.document.defaultView;
   this._parent = node;
 
-  let {initialColumns, emptyText, uniqueId, highlightUpdated, removableColumns} =
-      options;
+  let {initialColumns, emptyText, uniqueId, highlightUpdated, removableColumns,
+       firstColumn} = options;
   this.emptyText = emptyText || "";
   this.uniqueId = uniqueId || "name";
+  this.firstColumn = firstColumn || "";
   this.highlightUpdated = highlightUpdated || false;
   this.removableColumns = removableColumns || false;
 
@@ -237,10 +239,24 @@ TableWidget.prototype = {
       sortOn = null;
     }
 
+    if (!(this.firstColumn in columns)) {
+      this.firstColumn = null;
+    }
+
+    if (this.firstColumn) {
+      this.columns.set(this.firstColumn,
+        new Column(this, this.firstColumn, columns[this.firstColumn]));
+    }
+
     for (let id in columns) {
       if (!sortOn) {
         sortOn = id;
       }
+
+      if (this.firstColumn && id == this.firstColumn) {
+        continue;
+      }
+
       this.columns.set(id, new Column(this, id, columns[id]));
       if (hiddenColumns.indexOf(id) > -1) {
         this.columns.get(id).toggleColumn();
