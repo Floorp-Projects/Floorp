@@ -292,8 +292,7 @@ Submitter.prototype = {
           let crashTime = new Date();
           let manager = Services.crashmanager;
           manager.addSubmission(self.processType, manager.CRASH_TYPE_CRASH,
-                                submitted, submitted ? ret.CrashID : "",
-                                crashTime);
+                                submitted, self.id, crashTime);
         }
 
         if (submitted) {
