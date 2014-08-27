@@ -80,7 +80,8 @@
         };
         replaceWithHost(intro);
 
-        if (getCSSClass() == "expertBadCert") {
+        var cssClass = getCSSClass();
+        if (cssClass == "expertBadCert") {
           toggle('technicalContent');
           toggle('expertContent');
         }
@@ -88,8 +89,12 @@
         // Disallow overrides if this is a Strict-Transport-Security
         // host and the cert is bad (STS Spec section 7.3) or if the
         // certerror is in a frame (bug 633691).
-        if (getCSSClass() == "badStsCert" || window != top)
+        if (cssClass == "badStsCert" || window != top) {
           document.getElementById("expertContent").setAttribute("hidden", "true");
+        }
+        if (cssClass != "badStsCert") {
+          document.getElementById("badStsCertExplanation").setAttribute("hidden", "true");
+        }
 
         var tech = document.getElementById("technicalContentText");
         if (tech)
@@ -214,6 +219,7 @@
           <h2>&certerror.whatShouldIDo.heading;</h2>
           <div id="whatShouldIDoContentText">
             <p>&certerror.whatShouldIDo.content;</p>
+            <p id="badStsCertExplanation">&certerror.whatShouldIDo.badStsCertExplanation;</p>
             <button id='getMeOutOfHereButton'>&certerror.getMeOutOfHere.label;</button>
           </div>
         </div>
