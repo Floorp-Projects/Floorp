@@ -573,7 +573,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   }
   double start, end;
   if (mParser->ParseStartAndEndTimestamps(aData, aLength, start, end)) {
-    if (start <= mLastParsedTimestamp) {
+    if (start <= mLastParsedTimestamp || mLastParsedTimestamp - start > 0.1) {
       MSE_DEBUG("SourceBuffer(%p)::AppendData: Data (%f, %f) overlaps %f.",
                 this, start, end, mLastParsedTimestamp);
 
