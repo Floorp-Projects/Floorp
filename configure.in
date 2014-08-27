@@ -3840,6 +3840,7 @@ MOZ_AUDIO_CHANNEL_MANAGER=
 NSS_NO_LIBPKIX=
 MOZ_CONTENT_SANDBOX=
 MOZ_GMP_SANDBOX=
+MOZ_SANDBOX=1
 JSGC_USE_EXACT_ROOTING=1
 JSGC_GENERATIONAL=
 
@@ -6349,10 +6350,18 @@ fi
 AC_SUBST(NSS_NO_LIBPKIX)
 
 dnl ========================================================
+dnl = Sandboxing support
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(sandbox,
+[  --disable-sandbox        Disable sandboxing support],
+    MOZ_SANDBOX=,
+    MOZ_SANDBOX=1)
+
+dnl ========================================================
 dnl = Content process sandboxing
 dnl ========================================================
 if test -n "$gonkdir"; then
-    MOZ_CONTENT_SANDBOX=1
+    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
 fi
 
 MOZ_ARG_ENABLE_BOOL(content-sandbox,
@@ -6371,17 +6380,17 @@ dnl = Gecko Media Plugin sandboxing
 dnl ========================================================
 case $OS_TARGET in
 WINNT)
-    MOZ_GMP_SANDBOX=1
+    MOZ_GMP_SANDBOX=$MOZ_SANDBOX
     ;;
 Linux)
     case $CPU_ARCH in
     x86_64|x86)
-        MOZ_GMP_SANDBOX=1
+        MOZ_GMP_SANDBOX=$MOZ_SANDBOX
         ;;
     esac
     ;;
 Darwin)
-    MOZ_GMP_SANDBOX=1
+    MOZ_GMP_SANDBOX=$MOZ_SANDBOX
     ;;
 esac
 
@@ -6390,6 +6399,17 @@ if test -n "$MOZ_GMP_SANDBOX"; then
 fi
 
 AC_SUBST(MOZ_GMP_SANDBOX)
+
+if test -z "$MOZ_CONTENT_SANDBOX" -a -z "$MOZ_GMP_SANDBOX"; then
+    MOZ_SANDBOX=
+fi
+
+if test -n "$MOZ_SANDBOX"; then
+    AC_DEFINE(MOZ_SANDBOX)
+fi
+
+AC_SUBST(MOZ_SANDBOX)
+
 
 dnl ========================================================
 dnl =
