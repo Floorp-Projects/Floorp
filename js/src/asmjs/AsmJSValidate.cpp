@@ -547,6 +547,35 @@ class RetType
     bool operator!=(RetType rhs) const { return which_ != rhs.which_; }
 };
 
+// Represents the subset of Type that can be used as a return type of a builtin
+// Math function.
+class MathRetType
+{
+  public:
+    enum Which {
+        Double   = Type::Double,
+        Float    = Type::Float,
+        Floatish = Type::Floatish,
+        Signed   = Type::Signed,
+        Unsigned = Type::Unsigned
+    };
+
+  private:
+    Which which_;
+
+  public:
+    MathRetType() : which_(Which(-1)) {}
+    MOZ_IMPLICIT MathRetType(Which w) : which_(w) {}
+
+    Type toType() const {
+        return Type(Type::Which(which_));
+    }
+
+    Which which() const {
+        return which_;
+    }
+};
+
 namespace {
 
 // Represents the subset of Type that can be used as a variable or
@@ -935,6 +964,9 @@ class MOZ_STACK_CLASS ModuleCompiler
         Scalar::Type viewType() const {
             JS_ASSERT(which_ == ArrayView);
             return u.viewType_;
+        }
+        bool isMathFunction() const {
+            return which_ == MathBuiltinFunction;
         }
         AsmJSMathBuiltinFunction mathBuiltinFunction() const {
             JS_ASSERT(which_ == MathBuiltinFunction);
@@ -1683,7 +1715,7 @@ IsNumericNonFloatLiteral(ParseNode *pn)
 }
 
 static bool
-IsFloatCoercion(ModuleCompiler &m, ParseNode *pn, ParseNode **coercedExpr)
+IsCallToGlobal(ModuleCompiler &m, ParseNode *pn, const ModuleCompiler::Global **global)
 {
     if (!pn->isKind(PNK_CALL))
         return false;
@@ -1692,13 +1724,19 @@ IsFloatCoercion(ModuleCompiler &m, ParseNode *pn, ParseNode **coercedExpr)
     if (!callee->isKind(PNK_NAME))
         return false;
 
-    const ModuleCompiler::Global *global = m.lookupGlobal(callee->name());
-    if (!global ||
-        global->which() != ModuleCompiler::Global::MathBuiltinFunction ||
-        global->mathBuiltinFunction() != AsmJSMathBuiltin_fround)
-    {
+    *global = m.lookupGlobal(callee->name());
+    return !!*global;
+}
+
+static bool
+IsFloatCoercion(ModuleCompiler &m, ParseNode *pn, ParseNode **coercedExpr)
+{
+    const ModuleCompiler::Global *global;
+    if (!IsCallToGlobal(m, pn, &global))
         return false;
-    }
+
+    if (!global->isMathFunction() || global->mathBuiltinFunction() != AsmJSMathBuiltin_fround)
+        return false;
 
     if (CallArgListLength(pn) != 1)
         return false;
@@ -3612,7 +3650,7 @@ CheckAssign(FunctionCompiler &f, ParseNode *assign, MDefinition **def, Type *typ
 }
 
 static bool
-CheckMathIMul(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
+CheckMathIMul(FunctionCompiler &f, ParseNode *call, MDefinition **def, MathRetType *type)
 {
     if (CallArgListLength(call) != 2)
         return f.fail(call, "Math.imul must be passed 2 arguments");
@@ -3634,16 +3672,14 @@ CheckMathIMul(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
         return f.failf(lhs, "%s is not a subtype of intish", lhsType.toChars());
     if (!rhsType.isIntish())
         return f.failf(rhs, "%s is not a subtype of intish", rhsType.toChars());
-    if (retType != RetType::Signed)
-        return f.failf(call, "return type is signed, used as %s", retType.toType().toChars());
 
     *def = f.mul(lhsDef, rhsDef, MIRType_Int32, MMul::Integer);
-    *type = Type::Signed;
+    *type = MathRetType::Signed;
     return true;
 }
 
 static bool
-CheckMathAbs(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
+CheckMathAbs(FunctionCompiler &f, ParseNode *call, MDefinition **def, MathRetType *type)
 {
     if (CallArgListLength(call) != 1)
         return f.fail(call, "Math.abs must be passed 1 argument");
@@ -3656,26 +3692,20 @@ CheckMathAbs(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition 
         return false;
 
     if (argType.isSigned()) {
-        if (retType != RetType::Signed)
-            return f.failf(call, "return type is signed, used as %s", retType.toType().toChars());
         *def = f.unary<MAbs>(argDef, MIRType_Int32);
-        *type = Type::Signed;
+        *type = MathRetType::Unsigned;
         return true;
     }
 
     if (argType.isMaybeDouble()) {
-        if (retType != RetType::Double)
-            return f.failf(call, "return type is double, used as %s", retType.toType().toChars());
         *def = f.unary<MAbs>(argDef, MIRType_Double);
-        *type = Type::Double;
+        *type = MathRetType::Double;
         return true;
     }
 
     if (argType.isMaybeFloat()) {
-        if (retType != RetType::Float)
-            return f.failf(call, "return type is float, used as %s", retType.toType().toChars());
         *def = f.unary<MAbs>(argDef, MIRType_Float32);
-        *type = Type::Float;
+        *type = MathRetType::Floatish;
         return true;
     }
 
@@ -3683,7 +3713,7 @@ CheckMathAbs(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition 
 }
 
 static bool
-CheckMathSqrt(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
+CheckMathSqrt(FunctionCompiler &f, ParseNode *call, MDefinition **def, MathRetType *type)
 {
     if (CallArgListLength(call) != 1)
         return f.fail(call, "Math.sqrt must be passed 1 argument");
@@ -3696,18 +3726,14 @@ CheckMathSqrt(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
         return false;
 
     if (argType.isMaybeDouble()) {
-        if (retType != RetType::Double)
-            return f.failf(call, "return type is double, used as %s", retType.toType().toChars());
         *def = f.unary<MSqrt>(argDef, MIRType_Double);
-        *type = Type::Double;
+        *type = MathRetType::Double;
         return true;
     }
 
     if (argType.isMaybeFloat()) {
-        if (retType != RetType::Float)
-            return f.failf(call, "return type is float, used as %s", retType.toType().toChars());
         *def = f.unary<MSqrt>(argDef, MIRType_Float32);
-        *type = Type::Float;
+        *type = MathRetType::Floatish;
         return true;
     }
 
@@ -3715,7 +3741,8 @@ CheckMathSqrt(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
 }
 
 static bool
-CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDefinition **def, Type *type, bool isMax)
+CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, bool isMax,
+                MathRetType *type)
 {
     if (CallArgListLength(callNode) < 2)
         return f.fail(callNode, "Math.min/max must be passed at least 2 arguments");
@@ -3749,12 +3776,7 @@ CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDefi
         lastDef = f.minMax(lastDef, nextDef, opType, isMax);
     }
 
-    if (opIsDouble && retType != RetType::Double)
-        return f.failf(callNode, "return type is double, used as %s", retType.toType().toChars());
-    if (opIsInteger && retType != RetType::Signed)
-        return f.failf(callNode, "return type is int, used as %s", retType.toType().toChars());
-
-    *type = opIsDouble ? Type::Double : Type::Signed;
+    *type = MathRetType(opIsDouble ? MathRetType::Double : MathRetType::Signed);
     *def = lastDef;
     return true;
 }
@@ -3964,96 +3986,53 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, RetTyp
     return true;
 }
 
-static bool CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type);
+static bool
+CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type);
 
 static bool
-CheckFRoundArg(FunctionCompiler &f, ParseNode *arg, MDefinition **def, Type *type)
-{
-    if (arg->isKind(PNK_CALL))
-        return CheckCoercedCall(f, arg, RetType::Float, def, type);
-
-    MDefinition *inputDef;
-    Type inputType;
-    if (!CheckExpr(f, arg, &inputDef, &inputType))
-        return false;
-
-    if (inputType.isMaybeDouble() || inputType.isSigned())
-        *def = f.unary<MToFloat32>(inputDef);
-    else if (inputType.isUnsigned())
-        *def = f.unary<MAsmJSUnsignedToFloat32>(inputDef);
-    else if (inputType.isFloatish())
-        *def = inputDef;
-    else
-        return f.failf(arg, "%s is not a subtype of signed, unsigned, double? or floatish", inputType.toChars());
-
-    *type = Type::Float;
-    return true;
-}
-
-static bool
-CheckMathFRound(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDefinition **def, Type *type)
+CheckMathFRound(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, MathRetType *type)
 {
     ParseNode *argNode = nullptr;
     if (!IsFloatCoercion(f.m(), callNode, &argNode))
         return f.fail(callNode, "invalid call to fround");
 
-    MDefinition *operand;
-    Type operandType;
-    if (!CheckFRoundArg(f, argNode, &operand, &operandType))
+    // Make sure to do this before calling CheckCoercedCall
+    *type = MathRetType::Float;
+
+    Type _;
+    if (argNode->isKind(PNK_CALL))
+        return CheckCoercedCall(f, argNode, RetType::Float, def, &_);
+
+    MDefinition *argDef;
+    Type argType;
+    if (!CheckExpr(f, argNode, &argDef, &argType))
         return false;
 
-    JS_ASSERT(operandType == Type::Float);
+    if (argType.isMaybeDouble() || argType.isSigned())
+        *def = f.unary<MToFloat32>(argDef);
+    else if (argType.isUnsigned())
+        *def = f.unary<MAsmJSUnsignedToFloat32>(argDef);
+    else if (argType.isFloatish())
+        *def = argDef;
+    else
+        return f.failf(argNode, "%s is not a subtype of signed, unsigned, double? or floatish", argType.toChars());
 
-    switch (retType.which()) {
-      case RetType::Double:
-        *def = f.unary<MToDouble>(operand);
-        *type = Type::Double;
-        return true;
-      case RetType::Signed:
-        *def = f.unary<MTruncateToInt32>(operand);
-        *type = Type::Signed;
-        return true;
-      case RetType::Float:
-        *def = operand;
-        *type = Type::Float;
-        return true;
-      case RetType::Void:
-        // definition and return types should be ignored by the caller
-        return true;
-    }
-
-    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("return value of fround is ignored");
-}
-
-static bool
-CheckIsMaybeDouble(FunctionCompiler &f, ParseNode *argNode, Type type)
-{
-    if (!type.isMaybeDouble())
-        return f.failf(argNode, "%s is not a subtype of double?", type.toChars());
-    return true;
-}
-
-static bool
-CheckIsMaybeFloat(FunctionCompiler &f, ParseNode *argNode, Type type)
-{
-    if (!type.isMaybeFloat())
-        return f.failf(argNode, "%s is not a subtype of float?", type.toChars());
     return true;
 }
 
 static bool
 CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinFunction func,
-                     RetType retType, MDefinition **def, Type *type)
+                     MDefinition **def, MathRetType *type)
 {
     unsigned arity = 0;
     AsmJSImmKind doubleCallee, floatCallee;
     switch (func) {
-      case AsmJSMathBuiltin_imul:   return CheckMathIMul(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_abs:    return CheckMathAbs(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_sqrt:   return CheckMathSqrt(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_fround: return CheckMathFRound(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_min:    return CheckMathMinMax(f, callNode, retType, def, type, /* isMax = */ false);
-      case AsmJSMathBuiltin_max:    return CheckMathMinMax(f, callNode, retType, def, type, /* isMax = */ true);
+      case AsmJSMathBuiltin_imul:   return CheckMathIMul(f, callNode, def, type);
+      case AsmJSMathBuiltin_abs:    return CheckMathAbs(f, callNode, def, type);
+      case AsmJSMathBuiltin_sqrt:   return CheckMathSqrt(f, callNode, def, type);
+      case AsmJSMathBuiltin_fround: return CheckMathFRound(f, callNode, def, type);
+      case AsmJSMathBuiltin_min:    return CheckMathMinMax(f, callNode, def, /* isMax = */ false, type);
+      case AsmJSMathBuiltin_max:    return CheckMathMinMax(f, callNode, def, /* isMax = */ true, type);
       case AsmJSMathBuiltin_ceil:   arity = 1; doubleCallee = AsmJSImm_CeilD;  floatCallee = AsmJSImm_CeilF;   break;
       case AsmJSMathBuiltin_floor:  arity = 1; doubleCallee = AsmJSImm_FloorD; floatCallee = AsmJSImm_FloorF;  break;
       case AsmJSMathBuiltin_sin:    arity = 1; doubleCallee = AsmJSImm_SinD;   floatCallee = AsmJSImm_Limit; break;
@@ -4069,26 +4048,143 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinF
       default: MOZ_CRASH("unexpected mathBuiltin function");
     }
 
-    if (retType == RetType::Float && floatCallee == AsmJSImm_Limit)
+    unsigned actualArity = CallArgListLength(callNode);
+    if (actualArity != arity)
+        return f.failf(callNode, "call passed %u arguments, expected %u", actualArity, arity);
+
+    Type firstType;
+    MDefinition *firstArg;
+    ParseNode *argNode = CallArgList(callNode);
+    if (!CheckExpr(f, argNode, &firstArg, &firstType))
+        return false;
+
+    if (!firstType.isMaybeFloat() && !firstType.isMaybeDouble())
+        return f.fail(argNode, "arguments to math call should be a subtype of double? or float?");
+
+    bool opIsDouble = firstType.isMaybeDouble();
+    if (!opIsDouble && floatCallee == AsmJSImm_Limit)
         return f.fail(callNode, "math builtin cannot be used as float");
-    if (retType != RetType::Double && retType != RetType::Float)
-        return f.failf(callNode, "return type of math function is double or float, used as %s", retType.toType().toChars());
 
-    FunctionCompiler::Call call(f, callNode, retType);
-    if (retType == RetType::Float && !CheckCallArgs(f, callNode, CheckIsMaybeFloat, &call))
-        return false;
-    if (retType == RetType::Double && !CheckCallArgs(f, callNode, CheckIsMaybeDouble, &call))
-        return false;
+    FunctionCompiler::Call call(f, callNode, RetType::Double);
+    f.startCallArgs(&call);
 
-    if (call.sig().args().length() != arity)
-        return f.failf(callNode, "call passed %u arguments, expected %u", call.sig().args().length(), arity);
-
-    if (retType == RetType::Float && !f.builtinCall(floatCallee, call, retType.toMIRType(), def))
-        return false;
-    if (retType == RetType::Double && !f.builtinCall(doubleCallee, call, retType.toMIRType(), def))
+    VarType varType = opIsDouble ? VarType::Double : VarType::Float;
+    if (!f.passArg(firstArg, varType, &call))
         return false;
 
-    *type = retType.toType();
+    if (arity == 2) {
+        Type secondType;
+        MDefinition *secondArg;
+        argNode = NextNode(argNode);
+        if (!CheckExpr(f, argNode, &secondArg, &secondType))
+            return false;
+
+        if (firstType.isMaybeDouble() && !secondType.isMaybeDouble())
+            return f.fail(argNode, "both arguments to math builtin call should be the same type");
+        if (firstType.isMaybeFloat() && !secondType.isMaybeFloat())
+            return f.fail(argNode, "both arguments to math builtin call should be the same type");
+
+        if (!f.passArg(secondArg, varType, &call))
+            return false;
+    }
+
+    f.finishCallArgs(&call);
+
+    AsmJSImmKind callee = opIsDouble ? doubleCallee : floatCallee;
+    if (!f.builtinCall(callee, call, varType.toMIRType(), def))
+        return false;
+
+    *type = MathRetType(opIsDouble ? MathRetType::Double : MathRetType::Floatish);
+    return true;
+}
+
+static bool
+CheckUncoercedCall(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
+{
+    JS_ASSERT(expr->isKind(PNK_CALL));
+
+    const ModuleCompiler::Global *global;
+    if (IsCallToGlobal(f.m(), expr, &global) && global->isMathFunction())
+    {
+        MathRetType mathRetType;
+        if (!CheckMathBuiltinCall(f, expr, global->mathBuiltinFunction(), def, &mathRetType))
+            return false;
+        *type = mathRetType.toType();
+        return true;
+    }
+
+    return f.fail(expr, "all function calls must either be calls to standard lib math functions, "
+                        "ignored (via f(); or comma-expression), coerced to signed (via f()|0), "
+                        "coerced to float (via fround(f())) or coerced to double (via +f())");
+}
+
+static bool
+CheckCoercedMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinFunction func,
+                            RetType retType, MDefinition **def, Type *type)
+{
+    MDefinition *operand;
+    MathRetType actualRetType;
+    if (!CheckMathBuiltinCall(f, callNode, func, &operand, &actualRetType))
+        return false;
+
+    switch (retType.which()) {
+      case RetType::Double:
+        switch (actualRetType.which()) {
+          case MathRetType::Double:
+            *def = operand;
+            break;
+          case MathRetType::Float:
+          case MathRetType::Signed:
+            *def = f.unary<MToDouble>(operand);
+            break;
+          case MathRetType::Unsigned:
+            *def = f.unary<MAsmJSUnsignedToDouble>(operand);
+            break;
+          case MathRetType::Floatish:
+            return f.fail(callNode, "math call returns floatish, used as double");
+        }
+        *type = Type::Double;
+        break;
+
+      case RetType::Float:
+        switch (actualRetType.which()) {
+          case MathRetType::Double:
+          case MathRetType::Signed:
+            *def = f.unary<MToFloat32>(operand);
+            break;
+          case MathRetType::Float:
+          case MathRetType::Floatish:
+            *def = operand;
+            break;
+          case MathRetType::Unsigned:
+            *def = f.unary<MAsmJSUnsignedToFloat32>(operand);
+            break;
+        }
+        *type = Type::Float;
+        break;
+
+      case RetType::Signed:
+        switch (actualRetType.which()) {
+          case MathRetType::Unsigned:
+          case MathRetType::Signed:
+            *def = operand;
+            break;
+          case MathRetType::Float:
+          case MathRetType::Floatish:
+          case MathRetType::Double:
+            return f.failf(callNode, "math call returns %s, used as signed", type->toChars());
+        }
+        *type = Type::Signed;
+        break;
+
+      case RetType::Void:
+        // definition and return types should be ignored by the caller
+        *def = nullptr;
+        break;
+    }
+
+    JS_ASSERT_IF(retType == RetType::Void, !*def);
+    JS_ASSERT_IF(retType != RetType::Void, !!*def);
     return true;
 }
 
@@ -4112,7 +4208,7 @@ CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinit
           case ModuleCompiler::Global::FFI:
             return CheckFFICall(f, call, global->ffiIndex(), retType, def, type);
           case ModuleCompiler::Global::MathBuiltinFunction:
-            return CheckMathBuiltinCall(f, call, global->mathBuiltinFunction(), retType, def, type);
+            return CheckCoercedMathBuiltinCall(f, call, global->mathBuiltinFunction(), retType, def, type);
           case ModuleCompiler::Global::ConstantLiteral:
           case ModuleCompiler::Global::ConstantImport:
           case ModuleCompiler::Global::Variable:
@@ -4621,21 +4717,6 @@ CheckBitwise(FunctionCompiler &f, ParseNode *bitwise, MDefinition **def, Type *t
     }
 
     return true;
-}
-
-static bool
-CheckUncoercedCall(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
-{
-    JS_ASSERT(expr->isKind(PNK_CALL));
-
-    ParseNode *arg;
-    if (!IsFloatCoercion(f.m(), expr, &arg)) {
-        return f.fail(expr, "all function calls must either be ignored (via f(); or "
-                            "comma-expression), coerced to signed (via f()|0), coerced to float "
-                            "(via fround(f())) or coerced to double (via +f())");
-    }
-
-    return CheckFRoundArg(f, arg, def, type);
 }
 
 static bool
