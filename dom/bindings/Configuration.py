@@ -414,7 +414,7 @@ class Descriptor(DescriptorProvider):
         if self.interface.isJSImplemented():
             addExtendedAttribute('implicitJSContext', ['constructor'])
         else:
-            for attribute in ['implicitJSContext', 'resultNotAddRefed']:
+            for attribute in ['implicitJSContext']:
                 addExtendedAttribute(attribute, desc.get(attribute, {}))
 
         self._binaryNames = desc.get('binaryNames', {})
