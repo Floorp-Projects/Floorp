@@ -498,7 +498,7 @@ public:
   // at the OS level rather than in Gecko.
   // In addition, the clip rect needs to be offset by the rendering origin.
   // This becomes important if intermediate surfaces are used.
-  RenderTargetRect ClipRectInLayersCoordinates(RenderTargetIntRect aClip) const;
+  RenderTargetRect ClipRectInLayersCoordinates(Layer* aLayer, RenderTargetIntRect aClip) const;
 
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
