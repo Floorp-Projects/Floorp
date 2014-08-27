@@ -742,6 +742,9 @@ class CGList(CGThing):
             deps = deps.union(child.deps())
         return deps
 
+    def __len__(self):
+        return len(self.children)
+
 
 class CGGeneric(CGThing):
     """
@@ -2855,8 +2858,35 @@ class CGConstructorEnabled(CGAbstractMethod):
                                    Argument("JS::Handle<JSObject*>", "aObj")])
 
     def definition_body(self):
+        body = CGList([], "\n")
+
         conditions = []
         iface = self.descriptor.interface
+
+        if not iface.isExposedInWindow():
+            exposedInWindowCheck = dedent(
+              """
+              if (NS_IsMainThread()) {
+                return false;
+              }
+              """)
+            body.append(CGGeneric(exposedInWindowCheck))
+
+        if iface.isExposedInAnyWorker() and iface.isExposedOnlyInSomeWorkers():
+            workerGlobals = sorted(iface.getWorkerExposureSet())
+            workerCondition = CGList((CGGeneric('strcmp(name, "%s")'% workerGlobal)
+                                        for workerGlobal in workerGlobals), " && ")
+            exposedInWorkerCheck = fill(
+              """
+              if (!NS_IsMainThread()) {
+                const char* name = js::GetObjectClass(aObj)->name;
+                if (${workerCondition}) {
+                  return false;
+                }
+              }
+              """, workerCondition=workerCondition.define())
+            body.append(CGGeneric(exposedInWorkerCheck))
+
         pref = iface.getExtendedAttribute("Pref")
         if pref:
             assert isinstance(pref, list) and len(pref) == 1
@@ -2874,10 +2904,18 @@ class CGConstructorEnabled(CGAbstractMethod):
         if checkPermissions is not None:
             conditions.append("CheckPermissions(aCx, aObj, permissions_%i)" % checkPermissions)
         # We should really have some conditions
-        assert len(conditions)
-        return CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
-                                " &&\n"),
-                         pre="return ", post=";\n", reindent=True).define()
+        assert len(body) or len(conditions)
+
+        conditionsWrapper = ""
+        if len(conditions):
+          conditionsWrapper = CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
+                                        " &&\n"),
+                                        pre="return ", post=";\n", reindent=True)
+        else:
+          conditionsWrapper = CGGeneric("return true;\n")
+
+        body.append(conditionsWrapper)
+        return body.define()
 
 
 def CreateBindingJSObject(descriptor, properties, parent):
@@ -11617,7 +11655,7 @@ class CGRegisterWorkerBindings(CGAbstractMethod):
         # and a non-worker descriptor.  When both are present we want the worker
         # descriptor, but otherwise we want whatever descriptor we've got.
         descriptors = self.config.getDescriptors(hasInterfaceObject=True,
-                                                 isExposedInAllWorkers=True,
+                                                 isExposedInAnyWorker=True,
                                                  register=True,
                                                  skipGen=False,
                                                  workers=True)
@@ -11627,7 +11665,7 @@ class CGRegisterWorkerBindings(CGAbstractMethod):
             filter(
                 lambda d: d.interface.identifier.name not in workerDescriptorIfaceNames,
                 self.config.getDescriptors(hasInterfaceObject=True,
-                                           isExposedInAllWorkers=True,
+                                           isExposedInAnyWorker=True,
                                            register=True,
                                            skipGen=False,
                                            workers=False)))
@@ -11639,6 +11677,7 @@ class CGRegisterWorkerBindings(CGAbstractMethod):
                 condition = (
                     "%s::ConstructorEnabled(aCx, aObj) && " % bindingNS
                     + condition)
+
             conditions.append(condition)
         lines = [CGIfWrapper(CGGeneric("return false;\n"), condition) for
                  condition in conditions]
@@ -14098,7 +14137,7 @@ class GlobalGenRoots():
         defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
                                                             register=True,
-                                                            isExposedInAllWorkers=True,
+                                                            isExposedInAnyWorker=True,
                                                             skipGen=False)]
 
         curr = CGHeaders([], [], [], [], [], defineIncludes,
