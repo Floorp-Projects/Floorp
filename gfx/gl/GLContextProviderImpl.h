@@ -60,6 +60,10 @@ public:
     CreateOffscreen(const gfxIntSize& size,
                     const SurfaceCaps& caps);
 
+    // Just create a context. We'll add offscreen stuff ourselves.
+    static already_AddRefed<GLContext>
+    CreateHeadless();
+
     /**
      * Create wrapping Gecko GLContext for external gl context.
      *
