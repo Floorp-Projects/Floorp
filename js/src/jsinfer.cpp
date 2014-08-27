@@ -1754,6 +1754,69 @@ HeapTypeSetKey::nonWritable(CompilerConstraintList *constraints)
     return false;
 }
 
+namespace {
+
+class ConstraintDataConstantProperty
+{
+  public:
+    explicit ConstraintDataConstantProperty() {}
+
+    const char *kind() { return "constantProperty"; }
+
+    bool invalidateOnNewType(Type type) { return false; }
+    bool invalidateOnNewPropertyState(TypeSet *property) {
+        return property->nonConstantProperty();
+    }
+    bool invalidateOnNewObjectState(TypeObject *object) { return false; }
+
+    bool constraintHolds(JSContext *cx,
+                         const HeapTypeSetKey &property, TemporaryTypeSet *expected)
+    {
+        return !invalidateOnNewPropertyState(property.maybeTypes());
+    }
+
+    bool shouldSweep() { return false; }
+};
+
+} /* anonymous namespace */
+
+bool
+HeapTypeSetKey::constant(CompilerConstraintList *constraints, Value *valOut)
+{
+    if (nonData(constraints))
+        return false;
+
+    if (!maybeTypes())
+        return false;
+
+    if (maybeTypes()->nonConstantProperty())
+        return false;
+
+    // Only singleton object properties can be marked as constants.
+    JS_ASSERT(object()->singleton());
+
+    // Get the current value of the property.
+    Shape *shape = object()->singleton()->nativeLookupPure(id());
+    if (!shape)
+        return false;
+    Value val = object()->singleton()->nativeGetSlot(shape->slot());
+
+    // If the value is a pointer to an object in the nursery, don't optimize.
+    if (val.isGCThing() && IsInsideNursery(val.toGCThing()))
+        return false;
+
+    // If the value is a string that's not atomic, don't optimize.
+    if (val.isString() && !val.toString()->isAtom())
+        return false;
+
+    *valOut = val;
+
+    LifoAlloc *alloc = constraints->alloc();
+    typedef CompilerConstraintInstance<ConstraintDataConstantProperty> T;
+    constraints->add(alloc->new_<T>(alloc, *this, ConstraintDataConstantProperty()));
+    return true;
+}
+
 bool
 TemporaryTypeSet::filtersType(const TemporaryTypeSet *other, Type filteredType) const
 {
@@ -1779,6 +1842,95 @@ TemporaryTypeSet::filtersType(const TemporaryTypeSet *other, Type filteredType) 
     }
 
     return true;
+}
+
+namespace {
+
+// A constraint that never triggers recompilation.
+class ConstraintDataInert
+{
+  public:
+    explicit ConstraintDataInert() {}
+
+    const char *kind() { return "inert"; }
+
+    bool invalidateOnNewType(Type type) { return false; }
+    bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
+    bool invalidateOnNewObjectState(TypeObject *object) { return false; }
+
+    bool constraintHolds(JSContext *cx,
+                         const HeapTypeSetKey &property, TemporaryTypeSet *expected)
+    {
+        return true;
+    }
+
+    bool shouldSweep() { return false; }
+};
+
+} /* anonymous namespace */
+
+bool
+TemporaryTypeSet::propertyMightBeConstant(CompilerConstraintList *constraints, jsid id)
+{
+    if (unknownObject())
+        return true;
+
+    for (size_t i = 0; i < getObjectCount(); i++) {
+        TypeObjectKey *type = getObject(i);
+
+        // Type sets are only marked as constants when they are lazily
+        // constructed from the properties of singleton typed objects. So watch
+        // for the cases when a property either already is or might be marked
+        // as constant in the future.
+
+        if (!type || !type->isSingleObject())
+            continue;
+
+        if (type->unknownProperties())
+            return true;
+
+        HeapTypeSetKey property = type->property(id);
+        if (!property.maybeTypes() || !property.maybeTypes()->nonConstantProperty())
+            return true;
+    }
+
+    // It is possible for a property that was not marked as constant to
+    // 'become' one, if we throw away the type property during a GC and
+    // regenerate it with the constant flag set. TypeObject::sweep only removes
+    // type properties if they have no constraints attached to them, so add
+    // inert constraints to pin these properties in place.
+
+    LifoAlloc *alloc = constraints->alloc();
+    for (size_t i = 0; i < getObjectCount(); i++) {
+        TypeObjectKey *type = getObject(i);
+
+        if (!type || !type->isSingleObject())
+            continue;
+
+        HeapTypeSetKey property = type->property(id);
+
+        typedef CompilerConstraintInstance<ConstraintDataInert> T;
+        constraints->add(alloc->new_<T>(alloc, property, ConstraintDataInert()));
+    }
+
+    return false;
+}
+
+bool
+TemporaryTypeSet::propertyIsConstant(CompilerConstraintList *constraints, jsid id, Value *valOut)
+{
+    JS_ASSERT(valOut);
+
+    JSObject *singleton = getSingleton();
+    if (!singleton)
+        return false;
+
+    TypeObjectKey *type = TypeObjectKey::get(singleton);
+    if (type->unknownProperties())
+        return false;
+
+    HeapTypeSetKey property = type->property(id);
+    return property.constant(constraints, valOut);
 }
 
 TemporaryTypeSet::DoubleConversion
@@ -2761,6 +2913,8 @@ static inline void
 UpdatePropertyType(ExclusiveContext *cx, HeapTypeSet *types, JSObject *obj, Shape *shape,
                    bool indexed)
 {
+    JS_ASSERT(obj->hasSingletonType() && !obj->hasLazyType());
+
     if (!shape->writable())
         types->setNonWritableProperty(cx);
 
@@ -2782,6 +2936,14 @@ UpdatePropertyType(ExclusiveContext *cx, HeapTypeSet *types, JSObject *obj, Shap
             Type type = GetValueType(value);
             types->TypeSet::addType(type, &cx->typeLifoAlloc());
         }
+
+        if (indexed || shape->hadOverwrite()) {
+            types->setNonConstantProperty(cx);
+        } else {
+            InferSpew(ISpewOps, "typeSet: %sT%p%s property %s %s - setConstant",
+                      InferSpewColor(types), types, InferSpewColorReset(),
+                      TypeObjectString(obj->type()), TypeIdString(shape->propid()));
+        }
     }
 }
 
@@ -2792,8 +2954,10 @@ TypeObject::updateNewPropertyTypes(ExclusiveContext *cx, jsid id, HeapTypeSet *t
               InferSpewColor(types), types, InferSpewColorReset(),
               TypeObjectString(this), TypeIdString(id));
 
-    if (!singleton() || !singleton()->isNative())
+    if (!singleton() || !singleton()->isNative()) {
+        types->setNonConstantProperty(cx);
         return;
+    }
 
     /*
      * Fill the property in with any type the object already has in an own
@@ -2895,7 +3059,17 @@ InlineAddTypeProperty(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
     AutoEnterAnalysis enter(cx);
 
     HeapTypeSet *types = obj->getProperty(cx, id);
-    if (!types || types->hasType(type))
+    if (!types)
+        return;
+
+    // Clear any constant flag if it exists.
+    if (!types->nonConstantProperty()) {
+        InferSpew(ISpewOps, "constantMutated: %sT%p%s %s",
+                  InferSpewColor(types), types, InferSpewColorReset(), TypeString(type));
+        types->setNonConstantProperty(cx);
+    }
+
+    if (types->hasType(type))
         return;
 
     InferSpew(ISpewOps, "externalType: property %s %s: %s",
