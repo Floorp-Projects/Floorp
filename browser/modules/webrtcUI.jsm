@@ -845,5 +845,8 @@ function removeBrowserNotification(aBrowser, aNotificationId) {
 }
 
 function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {
-  updateBrowserSpecificIndicator(getBrowserForWindowId(aData));
+  let browser = getBrowserForWindowId(aData);
+  // If the tab has already been closed, ignore the notification.
+  if (browser.contentWindow)
+    updateBrowserSpecificIndicator(browser);
 }
