@@ -30,6 +30,7 @@ ABIArgGenerator::ABIArgGenerator()
 ABIArg
 ABIArgGenerator::next(MIRType type)
 {
+    FloatRegister::RegType regType;
     switch (type) {
       case MIRType_Int32:
       case MIRType_Pointer:
@@ -42,15 +43,16 @@ ABIArgGenerator::next(MIRType type)
         break;
       case MIRType_Float32:
       case MIRType_Double:
+        regType = (type == MIRType_Double ? FloatRegister::Double : FloatRegister::Single);
         if (!usedArgSlots_) {
-            current_ = ABIArg(f12);
+            current_ = ABIArg(FloatRegister(FloatRegisters::f12, regType));
             usedArgSlots_ += 2;
             firstArgFloat = true;
         } else if (usedArgSlots_ <= 2) {
             // NOTE: We will use f14 always. This is not compatible with
             // system ABI. We will have to introduce some infrastructure
             // changes if we have to use system ABI here.
-            current_ = ABIArg(f14);
+            current_ = ABIArg(FloatRegister(FloatRegisters::f14, regType));
             usedArgSlots_ = 4;
         } else {
             usedArgSlots_ += usedArgSlots_ % 2;
@@ -89,8 +91,8 @@ js::jit::RT(Register r)
 uint32_t
 js::jit::RT(FloatRegister r)
 {
-    MOZ_ASSERT(r.code() < FloatRegisters::Total);
-    return r.code() << RTShift;
+    MOZ_ASSERT(r.id() < FloatRegisters::TotalSingle);
+    return r.id() << RTShift;
 }
 
 uint32_t
@@ -103,8 +105,8 @@ js::jit::RD(Register r)
 uint32_t
 js::jit::RD(FloatRegister r)
 {
-    MOZ_ASSERT(r.code() < FloatRegisters::Total);
-    return r.code() << RDShift;
+    MOZ_ASSERT(r.id() < FloatRegisters::TotalSingle);
+    return r.id() << RDShift;
 }
 
 uint32_t
@@ -117,8 +119,8 @@ js::jit::SA(uint32_t value)
 uint32_t
 js::jit::SA(FloatRegister r)
 {
-    MOZ_ASSERT(r.code() < FloatRegisters::Total);
-    return r.code() << SAShift;
+    MOZ_ASSERT(r.id() < FloatRegisters::TotalSingle);
+    return r.id() << SAShift;
 }
 
 Register

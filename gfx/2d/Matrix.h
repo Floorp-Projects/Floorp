@@ -534,6 +534,11 @@ public:
     return matrix;
   }
 
+  Matrix4x4& operator*=(const Matrix4x4 &aMatrix)
+  {
+    Matrix4x4 resultMatrix = *this * aMatrix;
+    return *this = resultMatrix;
+  }
 
   /* Returns true if the matrix is an identity matrix.
    */

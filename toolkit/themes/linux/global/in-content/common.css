@@ -60,3 +60,9 @@ xul|*.numberbox-input-box {
   -moz-appearance: none;
   border-width: 0;
 }
+
+html|a:-moz-focusring,
+xul|*.text-link:-moz-focusring,
+xul|*.inline-link:-moz-focusring {
+  border: 1px dotted -moz-DialogText;
+}

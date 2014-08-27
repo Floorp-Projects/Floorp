@@ -32,6 +32,7 @@ LOOP_SERVER_ENV = os.environ.copy()
 # development server that might be running
 LOOP_SERVER_ENV.update({"NODE_ENV": "dev",
                         "PORT": str(LOOP_SERVER_PORT),
+                        "SERVER_ADDRESS": "localhost:" + str(LOOP_SERVER_PORT),
                         "WEB_APP_URL": WEB_APP_URL})
 
 

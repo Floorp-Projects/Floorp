@@ -5934,7 +5934,7 @@ static const RegisterSet NonVolatileRegs =
 // Mips is using one more double slot due to stack alignment for double values.
 // Look at MacroAssembler::PushRegsInMask(RegisterSet set)
 static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
-                                             NonVolatileRegs.fpus().size() * sizeof(double) +
+                                             NonVolatileRegs.fpus().getPushSizeInBytes() +
                                              sizeof(double);
 #else
 static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
@@ -6012,16 +6012,24 @@ GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
             masm.load32(src, iter->gpr());
             break;
           case ABIArg::FPU:
-            masm.loadDouble(src, iter->fpu());
+            if (iter.mirType() == MIRType_Double) {
+                masm.loadDouble(src, iter->fpu());
+            } else {
+                JS_ASSERT(iter.mirType() == MIRType_Float32);
+                masm.loadFloat32(src, iter->fpu());
+            }
             break;
           case ABIArg::Stack:
             if (iter.mirType() == MIRType_Int32) {
                 masm.load32(src, scratch);
                 masm.storePtr(scratch, Address(StackPointer, iter->offsetFromArgBase()));
-            } else {
-                JS_ASSERT(iter.mirType() == MIRType_Double || iter.mirType() == MIRType_Float32);
+            } else if (iter.mirType() == MIRType_Double) {
                 masm.loadDouble(src, ScratchDoubleReg);
                 masm.storeDouble(ScratchDoubleReg, Address(StackPointer, iter->offsetFromArgBase()));
+            } else {
+                JS_ASSERT(iter.mirType() == MIRType_Float32);
+                masm.loadFloat32(src, ScratchFloat32Reg);
+                masm.storeFloat32(ScratchFloat32Reg, Address(StackPointer, iter->offsetFromArgBase()));
             }
             break;
         }

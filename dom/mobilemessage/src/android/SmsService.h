@@ -14,6 +14,9 @@ namespace mobilemessage {
 
 class SmsService MOZ_FINAL : public nsISmsService
 {
+private:
+  ~SmsService() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISMSSERVICE

@@ -44,6 +44,9 @@ static FT_Library gPlatformFTLibrary = nullptr;
 class FreetypeReporter MOZ_FINAL : public nsIMemoryReporter,
                                    public CountingAllocatorBase<FreetypeReporter>
 {
+private:
+    ~FreetypeReporter() {}
+
 public:
     NS_DECL_ISUPPORTS
 

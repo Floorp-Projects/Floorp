@@ -627,11 +627,17 @@ void MediaPipeline::PacketReceived(TransportLayer *layer,
 }
 
 nsresult MediaPipelineTransmit::Init() {
+  AttachToTrack(track_id_);
+
+  return MediaPipeline::Init();
+}
+
+void MediaPipelineTransmit::AttachToTrack(TrackID track_id) {
   char track_id_string[11];
   ASSERT_ON_THREAD(main_thread_);
 
   // We can replace this when we are allowed to do streams or std::to_string
-  PR_snprintf(track_id_string, sizeof(track_id_string), "%d", track_id_);
+  PR_snprintf(track_id_string, sizeof(track_id_string), "%d", track_id);
 
   description_ = pc_ + "| ";
   description_ += conduit_->type() == MediaSessionConduit::AUDIO ?
@@ -657,8 +663,6 @@ nsresult MediaPipelineTransmit::Init() {
   // this enables the unit tests that can't fiddle with principals and the like
   listener_->SetEnabled(true);
 #endif
-
-  return MediaPipeline::Init();
 }
 
 #ifdef MOZILLA_INTERNAL_API
@@ -691,6 +695,23 @@ nsresult MediaPipelineTransmit::TransportReady_s(TransportInfo &info) {
     listener_->SetActive(true);
   }
 
+  return NS_OK;
+}
+
+nsresult MediaPipelineTransmit::ReplaceTrack(DOMMediaStream *domstream,
+                                             TrackID track_id) {
+  // MainThread, checked in calls we make
+  MOZ_MTLOG(ML_DEBUG, "Reattaching pipeline to stream "
+            << static_cast<void *>(domstream->GetStream()) << " conduit type=" <<
+            (conduit_->type() == MediaSessionConduit::AUDIO ?"audio":"video"));
+
+  if (domstream_) { // may be excessive paranoia
+    DetachMediaStream();
+  }
+  domstream_ = domstream; // Detach clears it
+  stream_ = domstream->GetStream();
+  //track_id_ = track_id; not threadsafe to change this; and we don't need to
+  AttachToTrack(track_id);
   return NS_OK;
 }
 
@@ -947,6 +968,10 @@ NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
 #define CRSIZE(x,y) ((((x)+1) >> 1) * (((y)+1) >> 1))
 #define I420SIZE(x,y) (YSIZE((x),(y)) + 2 * CRSIZE((x),(y)))
 
+// XXX NOTE: this code will have to change when we get support for multiple tracks of type
+// in a MediaStream and especially in a PeerConnection stream.  bug 1056650
+// It should be matching on the "correct" track for the pipeline, not just "any video track".
+
 void MediaPipelineTransmit::PipelineListener::
 NewData(MediaStreamGraph* graph, TrackID tid,
         TrackRate rate,
@@ -958,15 +983,25 @@ NewData(MediaStreamGraph* graph, TrackID tid,
     return;
   }
 
+  if (track_id_ != TRACK_INVALID) {
+    if (tid != track_id_) {
+      return;
+    }
+  } else if (conduit_->type() !=
+             (media.GetType() == MediaSegment::AUDIO ? MediaSessionConduit::AUDIO :
+                                                       MediaSessionConduit::VIDEO)) {
+    // Ignore data in case we have a muxed stream
+    return;
+  } else {
+    // Don't lock during normal media flow except on first sample
+    MutexAutoLock lock(mMutex);
+    track_id_ = track_id_external_ = tid;
+  }
+
   // TODO(ekr@rtfm.com): For now assume that we have only one
   // track type and it's destined for us
   // See bug 784517
   if (media.GetType() == MediaSegment::AUDIO) {
-    if (conduit_->type() != MediaSessionConduit::AUDIO) {
-      // Ignore data in case we have a muxed stream
-      return;
-    }
-
     AudioSegment* audio = const_cast<AudioSegment *>(
         static_cast<const AudioSegment *>(&media));
 
@@ -978,11 +1013,6 @@ NewData(MediaStreamGraph* graph, TrackID tid,
     }
   } else if (media.GetType() == MediaSegment::VIDEO) {
 #ifdef MOZILLA_INTERNAL_API
-    if (conduit_->type() != MediaSessionConduit::VIDEO) {
-      // Ignore data in case we have a muxed stream
-      return;
-    }
-
     VideoSegment* video = const_cast<VideoSegment *>(
         static_cast<const VideoSegment *>(&media));
 

@@ -1,0 +1,61 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+@import url("chrome://global/skin/in-content/common.css");
+
+body {
+  display: flex;
+  box-sizing: padding-box;
+  min-height: 100vh;
+  padding: 0 48px;
+  align-items: center;
+  justify-content: center;
+}
+
+body.normal .showPrivate,
+body.private .showNormal {
+  display: none;
+}
+
+#pageContainer {
+  min-width: 320px;
+  max-width: 512px;
+}
+
+.titleText {
+  background: url("chrome://browser/skin/mask.png") left 0 no-repeat;
+  background-size: 45px;
+  -moz-margin-start: -2em;
+  -moz-padding-start: 2em;
+}
+
+.titleText:-moz-dir(rtl) {
+  background-position: right 0;
+}
+
+@media (min-resolution: 2dppx) {
+  .titleText {
+    background-image: url("chrome://browser/skin/mask@2x.png");
+  }
+}
+
+@media (max-width: 675px) {
+  .titleText {
+    padding-top: 0;
+    background-image: none;
+    -moz-margin-start: 0;
+    -moz-padding-start: 0;
+  }
+}
+
+a {
+  font-size: 1rem;
+}
+
+button {
+  margin-top: 1.2em;
+  -moz-margin-start: 0;
+}

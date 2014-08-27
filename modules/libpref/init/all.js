@@ -245,10 +245,13 @@ pref("media.directshow.enabled", true);
 #ifdef MOZ_FMP4
 pref("media.fragmented-mp4.enabled", true);
 pref("media.fragmented-mp4.ffmpeg.enabled", false);
-// Denotes that the fragmented MP4 parser can be created by <video> elements.
-// This is for testing, since the parser can't yet handle non-fragmented MP4,
-// so it will fail to play most MP4 files.
+// "media.fragmented-mp4.exposed" controls whether the MP4 parser can be
+// created by <video> elements.
+#if defined(XP_WIN) && defined(MOZ_WMF)
+pref("media.fragmented-mp4.exposed", true);
+#else
 pref("media.fragmented-mp4.exposed", false);
+#endif
 // Specifies whether the fragmented MP4 parser uses a test decoder that
 // just outputs blank frames/audio instead of actually decoding. The blank
 // decoder works on all platforms.
@@ -4253,3 +4256,6 @@ pref("dom.fetch.enabled", false);
 // platforms; and set to 0 to disable the low-memory check altogether.
 pref("camera.control.low_memory_thresholdMB", 404);
 #endif
+
+// UDPSocket API
+pref("dom.udpsocket.enabled", false);

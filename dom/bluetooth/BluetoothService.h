@@ -229,8 +229,8 @@ public:
   Disconnect(const nsAString& aDeviceAddress, uint16_t aServiceUuid,
              BluetoothReplyRunnable* aRunnable) = 0;
 
-  virtual bool
-  IsConnected(uint16_t aServiceUuid) = 0;
+  virtual void
+  IsConnected(const uint16_t aServiceUuid, BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
   SendFile(const nsAString& aDeviceAddress,

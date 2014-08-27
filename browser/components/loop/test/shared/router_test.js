@@ -165,7 +165,7 @@ describe("loop.shared.router", function() {
 
         sinon.assert.calledOnce(notifier.warnL10n);
         sinon.assert.calledWithExactly(notifier.warnL10n,
-                                       "peer_ended_conversation");
+                                       "peer_ended_conversation2");
 
       });
 
