@@ -77,9 +77,9 @@ loop.panel = (function(_, mozL10n) {
                               __("display_name_available_status");
 
       return (
-        React.DOM.div({className: "footer component-spacer"}, 
+        React.DOM.div({className: "footer"}, 
           React.DOM.div({className: "do-not-disturb"}, 
-            React.DOM.p({className: "dnd-status", onClick: this.showDropdownMenu}, 
+            React.DOM.div({className: "dnd-status", onClick: this.showDropdownMenu}, 
               React.DOM.span(null, availabilityText), 
               React.DOM.i({className: availabilityStatus})
             ), 
@@ -138,10 +138,8 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       return (
-        React.DOM.div({className: "component-spacer share generate-url"}, 
-          React.DOM.div({className: "description"}, 
-            React.DOM.p({className: "description-content"}, this.props.summary)
-          ), 
+        React.DOM.div({className: "share generate-url"}, 
+          React.DOM.div({className: "description"}, this.props.summary), 
           React.DOM.div({className: "action"}, 
             this.props.children
           )
@@ -175,6 +173,12 @@ loop.panel = (function(_, mozL10n) {
     },
 
     componentDidMount: function() {
+      // If we've already got a callURL, don't bother requesting a new one.
+      // As of this writing, only used for visual testing in the UI showcase.
+      if (this.state.callUrl.length) {
+        return;
+      }
+
       this.setState({pending: true});
       this.props.client.requestCallUrl(this.conversationIdentifier(),
                                        this._onCallUrlReceived);
@@ -239,7 +243,7 @@ loop.panel = (function(_, mozL10n) {
           React.DOM.div({className: "invite"}, 
             React.DOM.input({type: "url", value: this.state.callUrl, readOnly: "true", 
                    className: inputCSSClass}), 
-            React.DOM.p({className: "button-group url-actions"}, 
+            React.DOM.p({className: "btn-group url-actions"}, 
               React.DOM.button({className: "btn btn-email", disabled: !this.state.callUrl, 
                 onClick: this.handleEmailButtonClick, 
                 'data-mailto': this._generateMailTo()}, 
@@ -360,6 +364,8 @@ loop.panel = (function(_, mozL10n) {
       notifier: new sharedViews.NotificationListView({el: "#messages"})
     });
     Backbone.history.start();
+
+    document.body.classList.add(loop.shared.utils.getTargetPlatform());
 
     // Notify the window that we've finished initalization and initial layout
     var evtObject = document.createEvent('Event');
