@@ -185,6 +185,15 @@
         "VeriSign Universal Root Certification Authority",
         "XRamp Global CA Root"
       ]
+    },
+    // For pinning tests on pinning.example.com, the certificate must be 'End
+    // Entity Test Cert'
+    {
+      "name": "facebook",
+      "sha256_hashes": [
+        "Verisign Class 3 Public Primary Certification Authority - G3",
+        "DigiCert High Assurance EV Root CA"
+      ]
     }
   ],
 
@@ -220,6 +229,9 @@
     // twitterCDN. More specific rules take precedence because we search for
     // exact domain name first.
     { "name": "twitter.com", "include_subdomains": true,
-      "pins": "twitterCDN", "test_mode": false }
+      "pins": "twitterCDN", "test_mode": false },
+    // Facebook (not pinned by Chrome)
+    { "name": "facebook.com", "include_subdomains": true,
+      "pins": "facebook", "test_mode": true }
   ]
 }
