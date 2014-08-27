@@ -9,6 +9,7 @@
 #include "nsContentUtils.h"
 #include "jsfriendapi.h"
 #include "nsINode.h"
+#include "mozilla/dom/MediaKeys.h"
 
 namespace mozilla {
 namespace dom {
@@ -77,7 +78,9 @@ MediaEncryptedEvent::Constructor(const GlobalObject& aGlobal,
   if (!aEventInitDict.mInitData.IsNull()) {
     const auto& a = aEventInitDict.mInitData.Value();
     a.ComputeLengthAndData();
-    e->mInitData = Uint8Array::Create(aGlobal.Context(), owner, a.Length(), a.Data());
+    e->mInitData = ArrayBuffer::Create(aGlobal.Context(),
+                                       a.Length(),
+                                       a.Data());
     if (!e->mInitData) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
@@ -99,10 +102,9 @@ MediaEncryptedEvent::GetInitData(JSContext* cx,
                                  ErrorResult& aRv)
 {
   if (mRawInitData.Length()) {
-    mInitData = Uint8Array::Create(cx,
-                                   this,
-                                   mRawInitData.Length(),
-                                   mRawInitData.Elements());
+    mInitData = ArrayBuffer::Create(cx,
+                                    mRawInitData.Length(),
+                                    mRawInitData.Elements());
     if (!mInitData) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;

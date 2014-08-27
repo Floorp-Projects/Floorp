@@ -14,10 +14,10 @@
 interface MediaEncryptedEvent : Event {
   readonly attribute DOMString initDataType;
   [Throws]
-  readonly attribute Uint8Array? initData;
+  readonly attribute ArrayBuffer? initData;
 };
 
 dictionary MediaKeyNeededEventInit : EventInit {
   DOMString initDataType = "";
-  Uint8Array? initData = null;
+  ArrayBuffer? initData = null;
 };

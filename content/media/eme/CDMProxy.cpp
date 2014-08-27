@@ -114,7 +114,7 @@ void
 CDMProxy::CreateSession(dom::SessionType aSessionType,
                         PromiseId aPromiseId,
                         const nsAString& aInitDataType,
-                        const Uint8Array& aInitData)
+                        nsTArray<uint8_t>& aInitData)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mGMPThread);
@@ -123,7 +123,7 @@ CDMProxy::CreateSession(dom::SessionType aSessionType,
   data->mSessionType = aSessionType;
   data->mPromiseId = aPromiseId;
   data->mInitDataType = NS_ConvertUTF16toUTF8(aInitDataType);
-  data->mInitData.AppendElements(aInitData.Data(), aInitData.Length());
+  data->mInitData = Move(aInitData);
 
   nsRefPtr<nsIRunnable> task(
     NS_NewRunnableMethodWithArg<nsAutoPtr<CreateSessionData>>(this, &CDMProxy::gmp_CreateSession, data));
@@ -182,14 +182,14 @@ CDMProxy::gmp_LoadSession(nsAutoPtr<SessionOpData> aData)
 
 void
 CDMProxy::SetServerCertificate(PromiseId aPromiseId,
-                               const Uint8Array& aCert)
+                               nsTArray<uint8_t>& aCert)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mGMPThread);
 
   nsAutoPtr<SetServerCertificateData> data;
   data->mPromiseId = aPromiseId;
-  data->mCert.AppendElements(aCert.Data(), aCert.Length());
+  data->mCert = Move(aCert);
   nsRefPtr<nsIRunnable> task(
     NS_NewRunnableMethodWithArg<nsAutoPtr<SetServerCertificateData>>(this, &CDMProxy::gmp_SetServerCertificate, data));
   mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
@@ -209,7 +209,7 @@ CDMProxy::gmp_SetServerCertificate(nsAutoPtr<SetServerCertificateData> aData)
 void
 CDMProxy::UpdateSession(const nsAString& aSessionId,
                         PromiseId aPromiseId,
-                        const Uint8Array& aResponse)
+                        nsTArray<uint8_t>& aResponse)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mGMPThread);
@@ -218,7 +218,7 @@ CDMProxy::UpdateSession(const nsAString& aSessionId,
   nsAutoPtr<UpdateSessionData> data(new UpdateSessionData());
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
-  data->mResponse.AppendElements(aResponse.Data(), aResponse.Length());
+  data->mResponse = Move(aResponse);
   nsRefPtr<nsIRunnable> task(
     NS_NewRunnableMethodWithArg<nsAutoPtr<UpdateSessionData>>(this, &CDMProxy::gmp_UpdateSession, data));
   mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
