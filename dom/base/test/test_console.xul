@@ -15,6 +15,7 @@
 
   ok("console" in window, "Console exists");
   window.console.log(42);
+  ok("table" in console, "Console has the 'table' method.");
   window.console = 42;
   is(window.console, 42, "Console is replacable");
 
