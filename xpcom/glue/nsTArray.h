@@ -227,7 +227,7 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
 // nsTArray_base stores elements into the space allocated beyond
 // sizeof(*this).  This is done to minimize the size of the nsTArray
 // object when it is empty.
-struct NS_COM_GLUE nsTArrayHeader
+struct nsTArrayHeader
 {
   static nsTArrayHeader sEmptyHdr;
 
