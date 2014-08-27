@@ -108,6 +108,9 @@ this.SystemMessagePermissionsTable = {
   "cdma-info-rec-received": {
     "mobileconnection": []
   },
+  "nfc-hci-event-transaction": {
+    "nfc-hci-events": []
+  },
   "nfc-manager-tech-discovered": {
     "nfc-manager": []
   },
