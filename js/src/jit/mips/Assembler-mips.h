@@ -119,6 +119,11 @@ static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { FloatRegisters::f18,
 static MOZ_CONSTEXPR_VAR FloatRegister SecondScratchFloat32Reg = { FloatRegisters::f16, FloatRegister::Single };
 static MOZ_CONSTEXPR_VAR FloatRegister SecondScratchDoubleReg = { FloatRegisters::f16, FloatRegister::Double };
 
+// A bias applied to the GlobalReg to allow the use of instructions with small
+// negative immediate offsets which doubles the range of global data that can be
+// accessed with a single instruction.
+static const int32_t AsmJSGlobalRegBias = 32768;
+
 // Registers used in the GenerateFFIIonExit Enable Activation block.
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = t0;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = a0;
