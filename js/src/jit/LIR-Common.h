@@ -242,10 +242,10 @@ class LSimdSwizzleBase : public LInstructionHelper<1, 1, 0>
         return getOperand(0);
     }
 
-    SimdLane laneX() const { return mir_->toSimdSwizzle()->laneX(); }
-    SimdLane laneY() const { return mir_->toSimdSwizzle()->laneY(); }
-    SimdLane laneZ() const { return mir_->toSimdSwizzle()->laneZ(); }
-    SimdLane laneW() const { return mir_->toSimdSwizzle()->laneW(); }
+    int32_t laneX() const { return mir_->toSimdSwizzle()->laneX(); }
+    int32_t laneY() const { return mir_->toSimdSwizzle()->laneY(); }
+    int32_t laneZ() const { return mir_->toSimdSwizzle()->laneZ(); }
+    int32_t laneW() const { return mir_->toSimdSwizzle()->laneW(); }
 };
 
 // Shuffles a int32x4 into another int32x4 vector.
@@ -263,6 +263,27 @@ class LSimdSwizzleF : public LSimdSwizzleBase
     LIR_HEADER(SimdSwizzleF);
     LSimdSwizzleF(const LAllocation &base) : LSimdSwizzleBase(base)
     {}
+};
+
+// Base class for both int32x4 and float32x4 shuffle instructions.
+class LSimdShuffle : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(SimdShuffle);
+    LSimdShuffle()
+    {}
+
+    const LAllocation *lhs() {
+        return getOperand(0);
+    }
+    const LAllocation *rhs() {
+        return getOperand(1);
+    }
+
+    int32_t laneX() const { return mir_->toSimdShuffle()->laneX(); }
+    int32_t laneY() const { return mir_->toSimdShuffle()->laneY(); }
+    int32_t laneZ() const { return mir_->toSimdShuffle()->laneZ(); }
+    int32_t laneW() const { return mir_->toSimdShuffle()->laneW(); }
 };
 
 // Binary SIMD comparison operation between two SIMD operands

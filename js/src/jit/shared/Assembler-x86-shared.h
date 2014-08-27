@@ -1864,6 +1864,22 @@ class AssemblerX86Shared : public AssemblerShared
         MOZ_ASSERT(HasSSE2());
         masm.shufps_irr(mask, src.code(), dest.code());
     }
+    void shufps(uint32_t mask, const Operand &src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.shufps_irr(mask, src.fpu(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.shufps_imr(mask, src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.shufps_imr(mask, src.address(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void addsd(FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         masm.addsd_rr(src.code(), dest.code());
