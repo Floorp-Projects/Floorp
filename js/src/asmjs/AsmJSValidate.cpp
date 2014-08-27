@@ -1350,7 +1350,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     bool addGlobalVarInit(PropertyName *varName, const AsmJSNumLit &lit, bool isConst) {
         uint32_t index;
         VarType type = VarType::Of(lit);
-        if (!module_->addGlobalVarInit(lit.value(), type.toCoercion(), &index))
+        if (!module_->addGlobalVarInit(lit, &index))
             return false;
 
         Global::Which which = isConst ? Global::ConstantLiteral : Global::Variable;
