@@ -243,6 +243,7 @@ IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin, gfxFloat aMax)
 void
 AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    Layer* aTransformedSubtreeRoot,
+                                                   FrameMetrics::ViewID aTransformScrollId,
                                                    const Matrix4x4& aPreviousTransformForRoot,
                                                    const Matrix4x4& aCurrentTransformForRoot,
                                                    const LayerMargin& aFixedLayerMargins)
@@ -250,8 +251,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   bool isRootFixed = aLayer->GetIsFixedPosition() &&
     !aLayer->GetParent()->GetIsFixedPosition();
   bool isStickyForSubtree = aLayer->GetIsStickyPosition() &&
-    aLayer->GetStickyScrollContainerId() ==
-      aTransformedSubtreeRoot->GetFrameMetrics().GetScrollId();
+    aLayer->GetStickyScrollContainerId() == aTransformScrollId;
   bool isFixedOrSticky = (isRootFixed || isStickyForSubtree);
 
   // We want to process all the fixed and sticky children of
@@ -262,9 +262,9 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
     // ApplyAsyncContentTransformToTree will call this function again for
     // nested scrollable layers, so we don't need to recurse if the layer is
     // scrollable.
-    if (aLayer == aTransformedSubtreeRoot || !aLayer->GetFrameMetrics().IsScrollable()) {
+    if (aLayer == aTransformedSubtreeRoot || !aLayer->HasScrollableFrameMetrics()) {
       for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
-        AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot,
+        AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot, aTransformScrollId,
                                   aPreviousTransformForRoot,
                                   aCurrentTransformForRoot, aFixedLayerMargins);
       }
@@ -613,12 +613,14 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     NS_ASSERTION(!layerComposite->GetShadowTransformSetByAnimation(),
                  "overwriting animated transform!");
 
+    const FrameMetrics& bottom = LayerMetricsWrapper::BottommostScrollableMetrics(aLayer);
+    MOZ_ASSERT(bottom.IsScrollable());  // must be true because hasAsyncTransform is true
+
     // Apply resolution scaling to the old transform - the layer tree as it is
     // doesn't have the necessary transform to display correctly. We use the
     // bottom-most scrollable metrics because that should have the most accurate
     // cumulative resolution for aLayer.
-    LayoutDeviceToLayerScale resolution =
-      LayerMetricsWrapper::BottommostScrollableMetrics(aLayer).mCumulativeResolution;
+    LayoutDeviceToLayerScale resolution = bottom.mCumulativeResolution;
     oldTransform.Scale(resolution.scale, resolution.scale, 1);
 
     // For the purpose of aligning fixed and sticky layers, we disregard
@@ -627,7 +629,9 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     // and therefore that the visual effect applies to fixed and sticky layers.
     Matrix4x4 transformWithoutOverscroll = AdjustAndCombineWithCSSTransform(
         combinedAsyncTransformWithoutOverscroll, aLayer);
-    AlignFixedAndStickyLayers(aLayer, aLayer, oldTransform,
+    // Since fixed/sticky layers are relative to their nearest scrolling ancestor,
+    // we use the ViewID from the bottommost scrollable metrics here.
+    AlignFixedAndStickyLayers(aLayer, aLayer, bottom.GetScrollId(), oldTransform,
                               transformWithoutOverscroll, fixedLayerMargins);
 
     appliedTransform = true;
@@ -908,7 +912,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
 
   // Make sure fixed position layers don't move away from their anchor points
   // when we're asynchronously panning or zooming
-  AlignFixedAndStickyLayers(aLayer, aLayer, oldTransform,
+  AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
                             aLayer->GetLocalTransform(), fixedLayerMargins);
 }
 
