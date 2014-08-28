@@ -30,7 +30,6 @@ class GTests(object):
         Return True if the program exits with a zero status, False otherwise.
         """
         self.xre_path = xre_path
-        self.update_mozinfo()
         env = self.build_environment()
         log.info("Running gtest")
         proc = mozprocess.ProcessHandler([prog, "-unittest"],
@@ -89,31 +88,18 @@ class GTests(object):
                 env[pathvar] = self.xre_path
 
         # ASan specific environment stuff
-        asan = bool(mozinfo.info.get("asan"))
-        if asan and (mozinfo.isLinux or mozinfo.isMac):
+        # mozinfo is not set up properly to detect if ASan is enabled, so just always set these.
+        if mozinfo.isLinux or mozinfo.isMac:
             # Symbolizer support
             llvmsym = os.path.join(self.xre_path, "llvm-symbolizer")
             if os.path.isfile(llvmsym):
                 env["ASAN_SYMBOLIZER_PATH"] = llvmsym
                 log.info("gtest | ASan using symbolizer at %s", llvmsym)
             else:
-                log.testFail("gtest | Failed to find ASan symbolizer at %s", llvmsym)
+                # This should be |testFail| instead of |info|. See bug 1050891.
+                log.info("gtest | Failed to find ASan symbolizer at %s", llvmsym)
 
         return env
-
-    def update_mozinfo(self):
-        """walk up directories to find mozinfo.json update the info"""
-        # TODO: This should go in a more generic place, e.g. mozinfo
-
-        path = self.xre_path
-        dirs = set()
-        while path != os.path.expanduser('~'):
-            if path in dirs:
-                break
-            dirs.add(path)
-            path = os.path.split(path)[0]
-
-        mozinfo.find_and_update_from_json(*dirs)
 
 class gtestOptions(OptionParser):
     def __init__(self):
