@@ -45,7 +45,7 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
     size_t numPairs = matches.length();
     JS_ASSERT(numPairs > 0);
 
-    RootedObject arr(cx, NewDenseAllocatedArrayWithTemplate(cx, numPairs, templateObject));
+    RootedObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(cx, numPairs, templateObject));
     if (!arr)
         return false;
 

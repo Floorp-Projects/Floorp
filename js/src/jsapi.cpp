@@ -3773,7 +3773,7 @@ JS_NewArrayObject(JSContext *cx, size_t length)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return NewDenseAllocatedArray(cx, length);
+    return NewDenseFullyAllocatedArray(cx, length);
 }
 
 JS_PUBLIC_API(bool)

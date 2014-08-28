@@ -9,6 +9,8 @@
 
 #include "mozilla/Attributes.h"
 
+#include "jsarray.h"
+
 #include "jit/Snapshots.h"
 
 struct JSContext;
@@ -505,7 +507,7 @@ class RNewArray MOZ_FINAL : public RInstruction
 {
   private:
     uint32_t count_;
-    bool isAllocating_;
+    AllocatingBehaviour allocatingBehaviour_;
 
   public:
     RINSTRUCTION_HEADER_(NewArray)
