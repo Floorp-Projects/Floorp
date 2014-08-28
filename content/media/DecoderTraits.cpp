@@ -323,7 +323,7 @@ static bool
 IsMP4SupportedType(const nsACString& aType)
 {
   return Preferences::GetBool("media.fragmented-mp4.exposed", false) &&
-         MP4Decoder::GetSupportedCodecs(aType, nullptr);
+         MP4Decoder::CanHandleMediaType(aType);
 }
 #endif
 
@@ -406,8 +406,9 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   }
 #endif
 #ifdef MOZ_FMP4
-  if (IsMP4SupportedType(nsDependentCString(aMIMEType))) {
-    result = aHaveRequestedCodecs ? CANPLAY_YES : CANPLAY_MAYBE;
+  if (MP4Decoder::CanHandleMediaType(nsDependentCString(aMIMEType),
+                                     aRequestedCodecs)) {
+    return aHaveRequestedCodecs ? CANPLAY_YES : CANPLAY_MAYBE;
   }
 #endif
 #ifdef MOZ_GSTREAMER
