@@ -810,12 +810,14 @@ LayerManagerComposite::ComputeRenderIntegrity()
 #ifdef MOZ_WIDGET_ANDROID
   // Use the transform on the primary scrollable layer and its FrameMetrics
   // to find out how much of the viewport the current displayport covers
-  const LayerMetricsWrapper& primaryScrollable = GetPrimaryScrollableLayer();
-  if (primaryScrollable) {
+  nsTArray<Layer*> rootScrollableLayers;
+  GetRootScrollableLayers(rootScrollableLayers);
+  if (rootScrollableLayers.Length() > 0) {
     // This is derived from the code in
     // AsyncCompositionManager::TransformScrollableLayer
-    const FrameMetrics& metrics = primaryScrollable.Metrics();
-    Matrix4x4 transform = primaryScrollable.GetEffectiveTransform();
+    Layer* rootScrollable = rootScrollableLayers[0];
+    const FrameMetrics& metrics = LayerMetricsWrapper::TopmostScrollableMetrics(rootScrollable);
+    Matrix4x4 transform = rootScrollable->GetEffectiveTransform();
     transform.ScalePost(metrics.mResolution.scale, metrics.mResolution.scale, 1);
 
     // Clip the screen rect to the document bounds

@@ -286,13 +286,6 @@ public:
     return gfx::Matrix4x4();
   }
 
-  const gfx::Matrix4x4& GetEffectiveTransform() const
-  {
-    MOZ_ASSERT(IsValid());
-
-    return mLayer->GetEffectiveTransform();
-  }
-
   RefLayer* AsRefLayer() const
   {
     MOZ_ASSERT(IsValid());
