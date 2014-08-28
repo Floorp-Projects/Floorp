@@ -413,6 +413,174 @@ var commandsPeerConnection = [
         test.next();
       });
     }
+  ],
+  [
+    'PC_LOCAL_CHECK_GETSTATS_AUDIOTRACK_OUTBOUND',
+    function (test) {
+      var pc = test.pcLocal;
+      var stream = pc._pc.getLocalStreams()[0];
+      var track = stream && stream.getAudioTracks()[0];
+      if (track) {
+        var msg = "pcLocal.HasStat outbound audio rtp ";
+        pc.getStats(track, function(stats) {
+          ok(pc.hasStat(stats,
+                        { type:"outboundrtp", isRemote:false, mediaType:"audio" }),
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"inboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"video" }), msg + "3");
+          test.next();
+        });
+      } else {
+        test.next();
+      }
+    }
+  ],
+  [
+    'PC_LOCAL_CHECK_GETSTATS_VIDEOTRACK_OUTBOUND',
+    function (test) {
+      var pc = test.pcLocal;
+      var stream = pc._pc.getLocalStreams()[0];
+      var track = stream && stream.getVideoTracks()[0];
+      if (track) {
+        var msg = "pcLocal.HasStat outbound video rtp ";
+        pc.getStats(track, function(stats) {
+          ok(pc.hasStat(stats,
+                        { type:"outboundrtp", isRemote:false, mediaType:"video" }),
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"inboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"audio" }), msg + "3");
+          test.next();
+        });
+      } else {
+        test.next();
+      }
+    }
+  ],
+  [
+    'PC_LOCAL_CHECK_GETSTATS_AUDIOTRACK_INBOUND',
+    function (test) {
+      var pc = test.pcLocal;
+      var stream = pc._pc.getRemoteStreams()[0];
+      var track = stream && stream.getAudioTracks()[0];
+      if (track) {
+        var msg = "pcLocal.HasStat inbound audio rtp ";
+        pc.getStats(track, function(stats) {
+          ok(pc.hasStat(stats,
+                        { type:"inboundrtp", isRemote:false, mediaType:"audio" }),
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"outboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"video" }), msg + "3");
+          test.next();
+        });
+      } else {
+        test.next();
+      }
+    }
+  ],
+  [
+    'PC_LOCAL_CHECK_GETSTATS_VIDEOTRACK_INBOUND',
+    function (test) {
+      var pc = test.pcLocal;
+      var stream = pc._pc.getRemoteStreams()[0];
+      var track = stream && stream.getVideoTracks()[0];
+      if (track) {
+        var msg = "pcLocal.HasStat inbound video rtp ";
+        pc.getStats(track, function(stats) {
+          ok(pc.hasStat(stats,
+                        { type:"inboundrtp", isRemote:false, mediaType:"video" }),
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"outboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"audio" }), msg + "3");
+          test.next();
+        });
+      } else {
+        test.next();
+      }
+    }
+  ],
+  [
+    'PC_REMOTE_CHECK_GETSTATS_AUDIOTRACK_OUTBOUND',
+    function (test) {
+      var pc = test.pcRemote;
+      var stream = pc._pc.getLocalStreams()[0];
+      var track = stream && stream.getAudioTracks()[0];
+      if (track) {
+        var msg = "pcRemote.HasStat outbound audio rtp ";
+        pc.getStats(track, function(stats) {
+          ok(pc.hasStat(stats,
+                        { type:"outboundrtp", isRemote:false, mediaType:"audio" }),
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"inboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"video" }), msg + "3");
+          test.next();
+        });
+      } else {
+        test.next();
+      }
+    }
+  ],
+  [
+    'PC_REMOTE_CHECK_GETSTATS_VIDEOTRACK_OUTBOUND',
+    function (test) {
+      var pc = test.pcRemote;
+      var stream = pc._pc.getLocalStreams()[0];
+      var track = stream && stream.getVideoTracks()[0];
+      if (track) {
+        var msg = "pcRemote.HasStat outbound audio rtp ";
+        pc.getStats(track, function(stats) {
+          ok(pc.hasStat(stats,
+                        { type:"outboundrtp", isRemote:false, mediaType:"video" }),
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"inboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"audio" }), msg + "3");
+          test.next();
+        });
+      } else {
+        test.next();
+      }
+    }
+  ],
+  [
+    'PC_REMOTE_CHECK_GETSTATS_AUDIOTRACK_INBOUND',
+    function (test) {
+      var pc = test.pcRemote;
+      var stream = pc._pc.getRemoteStreams()[0];
+      var track = stream && stream.getAudioTracks()[0];
+      if (track) {
+        var msg = "pcRemote.HasStat inbound audio rtp ";
+        pc.getStats(track, function(stats) {
+          ok(pc.hasStat(stats,
+                        { type:"inboundrtp", isRemote:false, mediaType:"audio" }),
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"outboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"video" }), msg + "3");
+          test.next();
+        });
+      } else {
+        test.next();
+      }
+    }
+  ],
+  [
+    'PC_REMOTE_CHECK_GETSTATS_VIDEOTRACK_INBOUND',
+    function (test) {
+      var pc = test.pcRemote;
+      var stream = pc._pc.getRemoteStreams()[0];
+      var track = stream && stream.getVideoTracks()[0];
+      if (track) {
+        var msg = "pcRemote.HasStat inbound video rtp ";
+        pc.getStats(track, function(stats) {
+          ok(pc.hasStat(stats,
+                        { type:"inboundrtp", isRemote:false, mediaType:"video" }),
+             msg + "1");
+          ok(!pc.hasStat(stats, { type:"outboundrtp", isRemote:false }), msg + "2");
+          ok(!pc.hasStat(stats, { mediaType:"audio" }), msg + "3");
+          test.next();
+        });
+      } else {
+        test.next();
+      }
+    }
   ]
 ];
 

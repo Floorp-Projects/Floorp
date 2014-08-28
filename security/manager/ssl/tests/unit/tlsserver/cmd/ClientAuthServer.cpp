@@ -36,7 +36,7 @@ static const ClientAuthHost sClientAuthHosts[] =
   { "noclientauth.example.com", false, false },
   { "requestclientauth.example.com", true, false },
   { "requireclientauth.example.com", true, true },
-  { nullptr, nullptr }
+  { nullptr, false, false }
 };
 
 static const unsigned char sClientCertFingerprint[] =

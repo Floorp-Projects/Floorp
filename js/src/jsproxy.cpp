@@ -797,6 +797,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
     virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent) const MOZ_OVERRIDE;
     virtual bool isScripted() const MOZ_OVERRIDE { return true; }
 
+    static const char family;
     static const ScriptedIndirectProxyHandler singleton;
 };
 
@@ -818,10 +819,10 @@ static const Class CallConstructHolder = {
 } /* anonymous namespace */
 
 // This variable exists solely to provide a unique address for use as an identifier.
-static const char sScriptedIndirectProxyHandlerFamily = 0;
+const char ScriptedIndirectProxyHandler::family = 0;
 
 ScriptedIndirectProxyHandler::ScriptedIndirectProxyHandler()
-        : BaseProxyHandler(&sScriptedIndirectProxyHandlerFamily)
+        : BaseProxyHandler(&family)
 {
 }
 
@@ -1118,6 +1119,7 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
     virtual bool isScripted() const MOZ_OVERRIDE { return true; }
 
+    static const char family;
     static const ScriptedDirectProxyHandler singleton;
 
     // The "proxy extra" slot index in which the handler is stored. Revocable proxies need to set
@@ -1127,9 +1129,6 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     // is to be cleared during the first revocation.
     static const int REVOKE_SLOT = 0;
 };
-
-// This variable exists solely to provide a unique address for use as an identifier.
-static const char sScriptedDirectProxyHandlerFamily = 0;
 
 static inline bool
 IsDataDescriptor(const PropertyDescriptor &desc)
@@ -1389,7 +1388,7 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
 }
 
 ScriptedDirectProxyHandler::ScriptedDirectProxyHandler()
-        : DirectProxyHandler(&sScriptedDirectProxyHandlerFamily)
+        : DirectProxyHandler(&family)
 {
 }
 
@@ -2208,6 +2207,7 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const C
     return true;
 }
 
+const char ScriptedDirectProxyHandler::family = 0;
 const ScriptedDirectProxyHandler ScriptedDirectProxyHandler::singleton;
 
 #define INVOKE_ON_PROTOTYPE(cx, handler, proxy, protoCall)                   \

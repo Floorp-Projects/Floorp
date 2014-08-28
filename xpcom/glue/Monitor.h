@@ -21,7 +21,7 @@ namespace mozilla {
  * to instead use the RAII wrappers MonitorAutoLock and
  * MonitorAutoUnlock.
  */
-class NS_COM_GLUE Monitor
+class Monitor
 {
 public:
   explicit Monitor(const char* aName)
@@ -69,7 +69,7 @@ private:
  * The monitor must be unlocked when instances of this class are
  * created.
  */
-class NS_COM_GLUE MOZ_STACK_CLASS MonitorAutoLock
+class MOZ_STACK_CLASS MonitorAutoLock
 {
 public:
   explicit MonitorAutoLock(Monitor& aMonitor)
@@ -108,7 +108,7 @@ private:
  * The monitor must be locked by the current thread when instances of
  * this class are created.
  */
-class NS_COM_GLUE MOZ_STACK_CLASS MonitorAutoUnlock
+class MOZ_STACK_CLASS MonitorAutoUnlock
 {
 public:
   explicit MonitorAutoUnlock(Monitor& aMonitor)
