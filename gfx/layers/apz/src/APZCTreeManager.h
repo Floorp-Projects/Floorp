@@ -384,7 +384,7 @@ private:
                                               const gfx::Matrix4x4& aAncestorTransform,
                                               const nsIntRegion& aObscured,
                                               AsyncPanZoomController*& aOutParent,
-                                              AsyncPanZoomController*& aOutNextSibling,
+                                              AsyncPanZoomController* aNextSibling,
                                               TreeBuildingState& aState);
 
   /**

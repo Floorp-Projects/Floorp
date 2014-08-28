@@ -211,7 +211,7 @@ APZCTreeManager::PrepareAPZCForLayer(const Layer* aLayer,
                                      const gfx::Matrix4x4& aAncestorTransform,
                                      const nsIntRegion& aObscured,
                                      AsyncPanZoomController*& aOutParent,
-                                     AsyncPanZoomController*& aOutNextSibling,
+                                     AsyncPanZoomController* aNextSibling,
                                      TreeBuildingState& aState)
 {
   if (!aMetrics.IsScrollable()) {
@@ -308,8 +308,8 @@ APZCTreeManager::PrepareAPZCForLayer(const Layer* aLayer,
                  << "\t" << aLayer->GetContentDescription();
 
     // Bind the APZC instance into the tree of APZCs
-    if (aOutNextSibling) {
-      aOutNextSibling->SetPrevSibling(apzc);
+    if (aNextSibling) {
+      aNextSibling->SetPrevSibling(apzc);
     } else if (aOutParent) {
       aOutParent->SetLastChild(apzc);
     } else {
