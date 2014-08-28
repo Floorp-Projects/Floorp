@@ -239,7 +239,7 @@ interface nsIBrowserSearchInitObserver : nsISupports
   void onInitComplete(in nsresult aStatus);
 };
 
-[scriptable, uuid(939d74a4-5b01-463c-80c7-4301f0c0f9ef)]
+[scriptable, uuid(4a4ce87d-7cb9-4975-a267-345f6a49bb8f)]
 interface nsIBrowserSearchService : nsISupports
 {
   /**
@@ -327,13 +327,17 @@ interface nsIBrowserSearchService : nsISupports
    * @param url
    *        The URL to which search queries should be sent.
    *        Must not be null.
+   *
+   * @param extensionID [optional]
+   *        Optional: The correct extensionID if called by an add-on.
    */
   void addEngineWithDetails(in AString name,
                             in AString iconURL,
                             in AString alias,
                             in AString description,
                             in AString method,
-                            in AString url);
+                            in AString url,
+                            [optional] in AString extensionID);
 
   /**
    * Un-hides all engines installed in the directory corresponding to

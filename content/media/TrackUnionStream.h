@@ -26,8 +26,8 @@ class TrackUnionStream : public ProcessedMediaStream {
 public:
   TrackUnionStream(DOMMediaStream* aWrapper) :
     ProcessedMediaStream(aWrapper),
-    mFilterCallback(nullptr),
-    mMaxTrackID(0) {}
+    mFilterCallback(nullptr)
+  {}
 
   virtual void RemoveInput(MediaInputPort* aPort) MOZ_OVERRIDE
   {
@@ -163,10 +163,24 @@ protected:
   uint32_t AddTrack(MediaInputPort* aPort, StreamBuffer::Track* aTrack,
                     GraphTime aFrom)
   {
-    // Use the ID of the source track if we can, otherwise allocate a new
-    // unique ID
-    TrackID id = std::max(mMaxTrackID + 1, aTrack->GetID());
-    mMaxTrackID = id;
+    // Use the ID of the source track if it's not already assigned to a track,
+    // otherwise allocate a new unique ID.
+    TrackID id = aTrack->GetID();
+    TrackID maxTrackID = 0;
+    for (uint32_t i = 0; i < mTrackMap.Length(); ++i) {
+      TrackID outID = mTrackMap[i].mOutputTrackID;
+      maxTrackID = std::max(maxTrackID, outID);
+    }
+    // Note: we might have removed it here, but it might still be in the
+    // StreamBuffer if the TrackUnionStream sees its input stream flip from
+    // A to B, where both A and B have a track with the same ID
+    while (1) {
+      // search until we find one not in use here, and not in mBuffer
+      if (!mBuffer.FindTrack(id)) {
+        break;
+      }
+      id = ++maxTrackID;
+    }
 
     TrackRate rate = aTrack->GetRate();
     // Round up the track start time so the track, if anything, starts a
@@ -250,8 +264,7 @@ protected:
       StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
       TrackTicks startTicks = outputTrack->GetEnd();
       StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
-      NS_WARN_IF_FALSE(startTicks == TimeToTicksRoundUp(rate, outputStart),
-                       "Samples missing");
+      MOZ_ASSERT(startTicks == TimeToTicksRoundUp(rate, outputStart), "Samples missing");
       TrackTicks endTicks = TimeToTicksRoundUp(rate, outputEnd);
       TrackTicks ticks = endTicks - startTicks;
       StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
@@ -344,7 +357,6 @@ protected:
   }
 
   nsTArray<TrackMapEntry> mTrackMap;
-  TrackID mMaxTrackID;
 };
 
 }

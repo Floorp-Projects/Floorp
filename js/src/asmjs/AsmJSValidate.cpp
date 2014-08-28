@@ -382,15 +382,15 @@ class Type
 {
   public:
     enum Which {
-        Double,
+        Fixnum = AsmJSNumLit::Fixnum,
+        Signed = AsmJSNumLit::NegativeInt,
+        Unsigned = AsmJSNumLit::BigUnsigned,
+        Double = AsmJSNumLit::Double,
+        Float = AsmJSNumLit::Float,
         MaybeDouble,
-        Float,
         MaybeFloat,
         Floatish,
-        Fixnum,
         Int,
-        Signed,
-        Unsigned,
         Intish,
         Void
     };
@@ -400,6 +400,13 @@ class Type
 
   public:
     Type() : which_(Which(-1)) {}
+    static Type Of(const AsmJSNumLit &lit) {
+        JS_ASSERT(lit.hasType());
+        JS_ASSERT(Type::Which(lit.which()) >= Fixnum && Type::Which(lit.which()) <= Float);
+        Type t;
+        t.which_ = Type::Which(lit.which());
+        return t;
+    }
     MOZ_IMPLICIT Type(Which w) : which_(w) {}
 
     bool operator==(Type rhs) const { return which_ == rhs.which_; }
@@ -547,6 +554,35 @@ class RetType
     bool operator!=(RetType rhs) const { return which_ != rhs.which_; }
 };
 
+// Represents the subset of Type that can be used as a return type of a builtin
+// Math function.
+class MathRetType
+{
+  public:
+    enum Which {
+        Double   = Type::Double,
+        Float    = Type::Float,
+        Floatish = Type::Floatish,
+        Signed   = Type::Signed,
+        Unsigned = Type::Unsigned
+    };
+
+  private:
+    Which which_;
+
+  public:
+    MathRetType() : which_(Which(-1)) {}
+    MOZ_IMPLICIT MathRetType(Which w) : which_(w) {}
+
+    Type toType() const {
+        return Type(Type::Which(which_));
+    }
+
+    Which which() const {
+        return which_;
+    }
+};
+
 namespace {
 
 // Represents the subset of Type that can be used as a variable or
@@ -594,6 +630,27 @@ class VarType
           case AsmJS_FRound: which_ = Float; break;
         }
     }
+    static VarType Of(const AsmJSNumLit &lit) {
+        JS_ASSERT(lit.hasType());
+        VarType v;
+        switch (lit.which()) {
+          case AsmJSNumLit::Fixnum:
+          case AsmJSNumLit::NegativeInt:
+          case AsmJSNumLit::BigUnsigned:
+            v.which_ = Int;
+            return v;
+          case AsmJSNumLit::Double:
+            v.which_ = Double;
+            return v;
+          case AsmJSNumLit::Float:
+            v.which_ = Float;
+            return v;
+          case AsmJSNumLit::OutOfRangeInt:
+            MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("can't be out of range int");
+        }
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected literal type");
+    }
+
     Which which() const {
         return which_;
     }
@@ -887,7 +944,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             struct {
                 VarType::Which type_;
                 uint32_t index_;
-                Value literalValue_;
+                AsmJSNumLit literalValue_;
             } varOrConst;
             uint32_t funcIndex_;
             uint32_t funcPtrTableIndex_;
@@ -916,7 +973,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         bool isConst() const {
             return which_ == ConstantLiteral || which_ == ConstantImport;
         }
-        Value constLiteralValue() const {
+        AsmJSNumLit constLiteralValue() const {
             JS_ASSERT(which_ == ConstantLiteral);
             return u.varOrConst.literalValue_;
         }
@@ -935,6 +992,9 @@ class MOZ_STACK_CLASS ModuleCompiler
         Scalar::Type viewType() const {
             JS_ASSERT(which_ == ArrayView);
             return u.viewType_;
+        }
+        bool isMathFunction() const {
+            return which_ == MathBuiltinFunction;
         }
         AsmJSMathBuiltinFunction mathBuiltinFunction() const {
             JS_ASSERT(which_ == MathBuiltinFunction);
@@ -1287,9 +1347,10 @@ class MOZ_STACK_CLASS ModuleCompiler
     void initImportArgumentName(PropertyName *n) { module_->initImportArgumentName(n); }
     void initBufferArgumentName(PropertyName *n) { module_->initBufferArgumentName(n); }
 
-    bool addGlobalVarInit(PropertyName *varName, VarType type, const Value &v, bool isConst) {
+    bool addGlobalVarInit(PropertyName *varName, const AsmJSNumLit &lit, bool isConst) {
         uint32_t index;
-        if (!module_->addGlobalVarInit(v, type.toCoercion(), &index))
+        VarType type = VarType::Of(lit);
+        if (!module_->addGlobalVarInit(lit, &index))
             return false;
 
         Global::Which which = isConst ? Global::ConstantLiteral : Global::Variable;
@@ -1299,7 +1360,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         global->u.varOrConst.index_ = index;
         global->u.varOrConst.type_ = type.which();
         if (isConst)
-            global->u.varOrConst.literalValue_ = v;
+            global->u.varOrConst.literalValue_ = lit;
 
         return globals_.putNew(varName, global);
     }
@@ -1315,7 +1376,6 @@ class MOZ_STACK_CLASS ModuleCompiler
             return false;
         global->u.varOrConst.index_ = index;
         global->u.varOrConst.type_ = VarType(coercion).which();
-
         return globals_.putNew(varName, global);
     }
     bool addFunction(PropertyName *name, Signature &&sig, Func **func) {
@@ -1383,8 +1443,9 @@ class MOZ_STACK_CLASS ModuleCompiler
         Global *global = moduleLifo_.new_<Global>(Global::ConstantLiteral);
         if (!global)
             return false;
-        global->u.varOrConst.literalValue_ = DoubleValue(constant);
         global->u.varOrConst.type_ = VarType::Double;
+        global->u.varOrConst.literalValue_ = AsmJSNumLit::Create(AsmJSNumLit::Double,
+                                                                 DoubleValue(constant));
         return globals_.putNew(varName, global);
     }
   public:
@@ -1586,93 +1647,6 @@ class MOZ_STACK_CLASS ModuleCompiler
 /*****************************************************************************/
 // Numeric literal utilities
 
-namespace {
-
-// Represents the type and value of an asm.js numeric literal.
-//
-// A literal is a double iff the literal contains an exponent or decimal point
-// (even if the fractional part is 0). Otherwise, integers may be classified:
-//  fixnum: [0, 2^31)
-//  negative int: [-2^31, 0)
-//  big unsigned: [2^31, 2^32)
-//  out of range: otherwise
-// Lastly, a literal may be a float literal which is any double or integer
-// literal coerced with Math.fround.
-class NumLit
-{
-  public:
-    enum Which {
-        Fixnum = Type::Fixnum,
-        NegativeInt = Type::Signed,
-        BigUnsigned = Type::Unsigned,
-        Double = Type::Double,
-        Float = Type::Float,
-        OutOfRangeInt = -1
-    };
-
-  private:
-    Which which_;
-    Value v_;
-
-  public:
-    NumLit() {}
-
-    NumLit(Which w, Value v)
-      : which_(w), v_(v)
-    {}
-
-    Which which() const {
-        return which_;
-    }
-
-    int32_t toInt32() const {
-        JS_ASSERT(which_ == Fixnum || which_ == NegativeInt || which_ == BigUnsigned);
-        return v_.toInt32();
-    }
-
-    double toDouble() const {
-        JS_ASSERT(which_ == Double);
-        return v_.toDouble();
-    }
-
-    float toFloat() const {
-        JS_ASSERT(which_ == Float);
-        return float(v_.toDouble());
-    }
-
-    Value value() const {
-        JS_ASSERT(which_ != OutOfRangeInt);
-        return v_;
-    }
-
-    bool hasType() const {
-        return which_ != OutOfRangeInt;
-    }
-
-    Type type() const {
-        JS_ASSERT(hasType());
-        return Type::Which(which_);
-    }
-
-    VarType varType() const {
-        JS_ASSERT(hasType());
-        switch (which_) {
-          case NumLit::Fixnum:
-          case NumLit::NegativeInt:
-          case NumLit::BigUnsigned:
-            return VarType::Int;
-          case NumLit::Double:
-            return VarType::Double;
-          case NumLit::Float:
-            return VarType::Float;
-          case NumLit::OutOfRangeInt:;
-        }
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected NumLit type");
-    }
-};
-
-} /* anonymous namespace */
-
 static bool
 IsNumericNonFloatLiteral(ParseNode *pn)
 {
@@ -1683,7 +1657,7 @@ IsNumericNonFloatLiteral(ParseNode *pn)
 }
 
 static bool
-IsFloatCoercion(ModuleCompiler &m, ParseNode *pn, ParseNode **coercedExpr)
+IsCallToGlobal(ModuleCompiler &m, ParseNode *pn, const ModuleCompiler::Global **global)
 {
     if (!pn->isKind(PNK_CALL))
         return false;
@@ -1692,13 +1666,19 @@ IsFloatCoercion(ModuleCompiler &m, ParseNode *pn, ParseNode **coercedExpr)
     if (!callee->isKind(PNK_NAME))
         return false;
 
-    const ModuleCompiler::Global *global = m.lookupGlobal(callee->name());
-    if (!global ||
-        global->which() != ModuleCompiler::Global::MathBuiltinFunction ||
-        global->mathBuiltinFunction() != AsmJSMathBuiltin_fround)
-    {
+    *global = m.lookupGlobal(callee->name());
+    return !!*global;
+}
+
+static bool
+IsFloatCoercion(ModuleCompiler &m, ParseNode *pn, ParseNode **coercedExpr)
+{
+    const ModuleCompiler::Global *global;
+    if (!IsCallToGlobal(m, pn, &global))
         return false;
-    }
+
+    if (!global->isMathFunction() || global->mathBuiltinFunction() != AsmJSMathBuiltin_fround)
+        return false;
 
     if (CallArgListLength(pn) != 1)
         return false;
@@ -1743,7 +1723,7 @@ ExtractNumericNonFloatValue(ParseNode **pn)
     return NumberNodeValue(*pn);
 }
 
-static NumLit
+static AsmJSNumLit
 ExtractNumericLiteral(ModuleCompiler &m, ParseNode *pn)
 {
     JS_ASSERT(IsNumericLiteral(m, pn));
@@ -1753,7 +1733,7 @@ ExtractNumericLiteral(ModuleCompiler &m, ParseNode *pn)
     if (pn->isKind(PNK_CALL)) {
         pn = CallArgList(pn);
         double d = ExtractNumericNonFloatValue(&pn);
-        return NumLit(NumLit::Float, DoubleValue(d));
+        return AsmJSNumLit::Create(AsmJSNumLit::Float, DoubleValue(d));
     }
 
     double d = ExtractNumericNonFloatValue(&pn);
@@ -1761,7 +1741,7 @@ ExtractNumericLiteral(ModuleCompiler &m, ParseNode *pn)
     // The asm.js spec syntactically distinguishes any literal containing a
     // decimal point or the literal -0 as having double type.
     if (NumberNodeHasFrac(pn) || IsNegativeZero(d))
-        return NumLit(NumLit::Double, DoubleValue(d));
+        return AsmJSNumLit::Create(AsmJSNumLit::Double, DoubleValue(d));
 
     // The syntactic checks above rule out these double values.
     JS_ASSERT(!IsNegativeZero(d));
@@ -1772,19 +1752,19 @@ ExtractNumericLiteral(ModuleCompiler &m, ParseNode *pn)
     // Furthermore, d may be inf or -inf. In both cases, casting to an int64_t
     // is undefined, so test against the integer bounds using doubles.
     if (d < double(INT32_MIN) || d > double(UINT32_MAX))
-        return NumLit(NumLit::OutOfRangeInt, UndefinedValue());
+        return AsmJSNumLit::Create(AsmJSNumLit::OutOfRangeInt, UndefinedValue());
 
     // With the above syntactic and range limitations, d is definitely an
     // integer in the range [INT32_MIN, UINT32_MAX] range.
     int64_t i64 = int64_t(d);
     if (i64 >= 0) {
         if (i64 <= INT32_MAX)
-            return NumLit(NumLit::Fixnum, Int32Value(i64));
+            return AsmJSNumLit::Create(AsmJSNumLit::Fixnum, Int32Value(i64));
         JS_ASSERT(i64 <= UINT32_MAX);
-        return NumLit(NumLit::BigUnsigned, Int32Value(uint32_t(i64)));
+        return AsmJSNumLit::Create(AsmJSNumLit::BigUnsigned, Int32Value(uint32_t(i64)));
     }
     JS_ASSERT(i64 >= INT32_MIN);
-    return NumLit(NumLit::NegativeInt, Int32Value(i64));
+    return AsmJSNumLit::Create(AsmJSNumLit::NegativeInt, Int32Value(i64));
 }
 
 static inline bool
@@ -1793,16 +1773,16 @@ IsLiteralInt(ModuleCompiler &m, ParseNode *pn, uint32_t *u32)
     if (!IsNumericLiteral(m, pn))
         return false;
 
-    NumLit literal = ExtractNumericLiteral(m, pn);
+    AsmJSNumLit literal = ExtractNumericLiteral(m, pn);
     switch (literal.which()) {
-      case NumLit::Fixnum:
-      case NumLit::BigUnsigned:
-      case NumLit::NegativeInt:
+      case AsmJSNumLit::Fixnum:
+      case AsmJSNumLit::BigUnsigned:
+      case AsmJSNumLit::NegativeInt:
         *u32 = uint32_t(literal.toInt32());
         return true;
-      case NumLit::Double:
-      case NumLit::Float:
-      case NumLit::OutOfRangeInt:
+      case AsmJSNumLit::Double:
+      case AsmJSNumLit::Float:
+      case AsmJSNumLit::OutOfRangeInt:
         return false;
     }
 
@@ -1826,16 +1806,9 @@ class FunctionCompiler
         Local(VarType t, unsigned slot) : type(t), slot(slot) {}
     };
 
-    struct TypedValue
-    {
-        VarType type;
-        Value value;
-        TypedValue(VarType t, const Value &v) : type(t), value(v) {}
-    };
-
   private:
     typedef HashMap<PropertyName*, Local> LocalMap;
-    typedef Vector<TypedValue> VarInitializerVector;
+    typedef Vector<AsmJSNumLit> VarInitializerVector;
     typedef HashMap<PropertyName*, BlockVector> LabeledBlockMap;
     typedef HashMap<ParseNode*, BlockVector> UnlabeledBlockMap;
     typedef Vector<ParseNode*, 4> NodeStack;
@@ -1942,14 +1915,14 @@ class FunctionCompiler
         return locals_.add(p, name, Local(type, locals_.count()));
     }
 
-    bool addVariable(ParseNode *pn, PropertyName *name, VarType type, const Value &init)
+    bool addVariable(ParseNode *pn, PropertyName *name, const AsmJSNumLit &init)
     {
         LocalMap::AddPtr p = locals_.lookupForAdd(name);
         if (p)
             return failName(pn, "duplicate local name '%s' not allowed", name);
-        if (!locals_.add(p, name, Local(type, locals_.count())))
+        if (!locals_.add(p, name, Local(VarType::Of(init), locals_.count())))
             return false;
-        return varInitializers_.append(TypedValue(type, init));
+        return varInitializers_.append(init);
     }
 
     bool prepareToEmitMIR(const VarTypeVector &argTypes)
@@ -1979,8 +1952,8 @@ class FunctionCompiler
         }
         unsigned firstLocalSlot = argTypes.length();
         for (unsigned i = 0; i < varInitializers_.length(); i++) {
-            MConstant *ins = MConstant::NewAsmJS(alloc(), varInitializers_[i].value,
-                                                 varInitializers_[i].type.toMIRType());
+            AsmJSNumLit &lit = varInitializers_[i];
+            MConstant *ins = MConstant::NewAsmJS(alloc(), lit.value(), Type::Of(lit).toMIRType());
             curBlock_->add(ins);
             curBlock_->initSlot(info().localSlot(firstLocalSlot + i), ins);
             if (!mirGen_->ensureBallast())
@@ -2032,6 +2005,15 @@ class FunctionCompiler
     }
 
     /***************************** Code generation (after local scope setup) */
+
+    MDefinition *constant(const AsmJSNumLit &lit)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MConstant *constant = MConstant::NewAsmJS(alloc(), lit.value(), Type::Of(lit).toMIRType());
+        curBlock_->add(constant);
+        return constant;
+    }
 
     MDefinition *constant(Value v, Type t)
     {
@@ -2952,11 +2934,11 @@ static bool
 CheckGlobalVariableInitConstant(ModuleCompiler &m, PropertyName *varName, ParseNode *initNode,
                                 bool isConst)
 {
-    NumLit literal = ExtractNumericLiteral(m, initNode);
+    AsmJSNumLit literal = ExtractNumericLiteral(m, initNode);
     if (!literal.hasType())
         return m.fail(initNode, "global initializer is out of representable integer range");
 
-    return m.addGlobalVarInit(varName, literal.varType(), literal.value(), isConst);
+    return m.addGlobalVarInit(varName, literal, isConst);
 }
 
 static bool
@@ -3229,17 +3211,17 @@ CheckFinalReturn(FunctionCompiler &f, ParseNode *stmt, RetType *retType)
         if (ParseNode *coercionNode = UnaryKid(stmt)) {
             if (IsNumericLiteral(f.m(), coercionNode)) {
                 switch (ExtractNumericLiteral(f.m(), coercionNode).which()) {
-                  case NumLit::BigUnsigned:
-                  case NumLit::OutOfRangeInt:
+                  case AsmJSNumLit::BigUnsigned:
+                  case AsmJSNumLit::OutOfRangeInt:
                     return f.fail(coercionNode, "returned literal is out of integer range");
-                  case NumLit::Fixnum:
-                  case NumLit::NegativeInt:
+                  case AsmJSNumLit::Fixnum:
+                  case AsmJSNumLit::NegativeInt:
                     *retType = RetType::Signed;
                     break;
-                  case NumLit::Double:
+                  case AsmJSNumLit::Double:
                     *retType = RetType::Double;
                     break;
-                  case NumLit::Float:
+                  case AsmJSNumLit::Float:
                     *retType = RetType::Float;
                     break;
                 }
@@ -3284,7 +3266,7 @@ CheckVariable(FunctionCompiler &f, ParseNode *var)
             if (global->which() != ModuleCompiler::Global::ConstantLiteral)
                 return f.failName(initNode, "'%s' isn't a possible global variable initializer, "
                                             "needs to be a const numeric literal", initName);
-            return f.addVariable(var, name, global->varOrConstType(), global->constLiteralValue());
+            return f.addVariable(var, name, global->constLiteralValue());
         }
         return f.failName(initNode, "'%s' needs to be a global name", initName);
     }
@@ -3292,11 +3274,11 @@ CheckVariable(FunctionCompiler &f, ParseNode *var)
     if (!IsNumericLiteral(f.m(), initNode))
         return f.failName(initNode, "initializer for '%s' needs to be a numeric literal or a global const literal", name);
 
-    NumLit literal = ExtractNumericLiteral(f.m(), initNode);
+    AsmJSNumLit literal = ExtractNumericLiteral(f.m(), initNode);
     if (!literal.hasType())
         return f.failName(initNode, "initializer for '%s' is out of range", name);
 
-    return f.addVariable(var, name, literal.varType(), literal.value());
+    return f.addVariable(var, name, literal);
 }
 
 static bool
@@ -3321,12 +3303,12 @@ CheckExpr(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type);
 static bool
 CheckNumericLiteral(FunctionCompiler &f, ParseNode *num, MDefinition **def, Type *type)
 {
-    NumLit literal = ExtractNumericLiteral(f.m(), num);
+    AsmJSNumLit literal = ExtractNumericLiteral(f.m(), num);
     if (!literal.hasType())
         return f.fail(num, "numeric literal out of representable integer range");
 
-    *type = literal.type();
-    *def = f.constant(literal.value(), literal.type());
+    *type = Type::Of(literal);
+    *def = f.constant(literal);
     return true;
 }
 
@@ -3344,7 +3326,7 @@ CheckVarRef(FunctionCompiler &f, ParseNode *varRef, MDefinition **def, Type *typ
     if (const ModuleCompiler::Global *global = f.lookupGlobal(name)) {
         switch (global->which()) {
           case ModuleCompiler::Global::ConstantLiteral:
-            *def = f.constant(global->constLiteralValue(), global->varOrConstType().toType());
+            *def = f.constant(global->constLiteralValue());
             *type = global->varOrConstType().toType();
             break;
           case ModuleCompiler::Global::ConstantImport:
@@ -3379,7 +3361,7 @@ IsLiteralOrConstInt(FunctionCompiler &f, ParseNode *pn, uint32_t *u32)
     if (!global || global->which() != ModuleCompiler::Global::ConstantLiteral)
         return false;
 
-    const Value &v = global->constLiteralValue();
+    const Value &v = global->constLiteralValue().value();
     if (!v.isInt32())
         return false;
 
@@ -3612,7 +3594,7 @@ CheckAssign(FunctionCompiler &f, ParseNode *assign, MDefinition **def, Type *typ
 }
 
 static bool
-CheckMathIMul(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
+CheckMathIMul(FunctionCompiler &f, ParseNode *call, MDefinition **def, MathRetType *type)
 {
     if (CallArgListLength(call) != 2)
         return f.fail(call, "Math.imul must be passed 2 arguments");
@@ -3634,16 +3616,14 @@ CheckMathIMul(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
         return f.failf(lhs, "%s is not a subtype of intish", lhsType.toChars());
     if (!rhsType.isIntish())
         return f.failf(rhs, "%s is not a subtype of intish", rhsType.toChars());
-    if (retType != RetType::Signed)
-        return f.failf(call, "return type is signed, used as %s", retType.toType().toChars());
 
     *def = f.mul(lhsDef, rhsDef, MIRType_Int32, MMul::Integer);
-    *type = Type::Signed;
+    *type = MathRetType::Signed;
     return true;
 }
 
 static bool
-CheckMathAbs(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
+CheckMathAbs(FunctionCompiler &f, ParseNode *call, MDefinition **def, MathRetType *type)
 {
     if (CallArgListLength(call) != 1)
         return f.fail(call, "Math.abs must be passed 1 argument");
@@ -3656,26 +3636,20 @@ CheckMathAbs(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition 
         return false;
 
     if (argType.isSigned()) {
-        if (retType != RetType::Signed)
-            return f.failf(call, "return type is signed, used as %s", retType.toType().toChars());
         *def = f.unary<MAbs>(argDef, MIRType_Int32);
-        *type = Type::Signed;
+        *type = MathRetType::Unsigned;
         return true;
     }
 
     if (argType.isMaybeDouble()) {
-        if (retType != RetType::Double)
-            return f.failf(call, "return type is double, used as %s", retType.toType().toChars());
         *def = f.unary<MAbs>(argDef, MIRType_Double);
-        *type = Type::Double;
+        *type = MathRetType::Double;
         return true;
     }
 
     if (argType.isMaybeFloat()) {
-        if (retType != RetType::Float)
-            return f.failf(call, "return type is float, used as %s", retType.toType().toChars());
         *def = f.unary<MAbs>(argDef, MIRType_Float32);
-        *type = Type::Float;
+        *type = MathRetType::Floatish;
         return true;
     }
 
@@ -3683,7 +3657,7 @@ CheckMathAbs(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition 
 }
 
 static bool
-CheckMathSqrt(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
+CheckMathSqrt(FunctionCompiler &f, ParseNode *call, MDefinition **def, MathRetType *type)
 {
     if (CallArgListLength(call) != 1)
         return f.fail(call, "Math.sqrt must be passed 1 argument");
@@ -3696,18 +3670,14 @@ CheckMathSqrt(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
         return false;
 
     if (argType.isMaybeDouble()) {
-        if (retType != RetType::Double)
-            return f.failf(call, "return type is double, used as %s", retType.toType().toChars());
         *def = f.unary<MSqrt>(argDef, MIRType_Double);
-        *type = Type::Double;
+        *type = MathRetType::Double;
         return true;
     }
 
     if (argType.isMaybeFloat()) {
-        if (retType != RetType::Float)
-            return f.failf(call, "return type is float, used as %s", retType.toType().toChars());
         *def = f.unary<MSqrt>(argDef, MIRType_Float32);
-        *type = Type::Float;
+        *type = MathRetType::Floatish;
         return true;
     }
 
@@ -3715,7 +3685,8 @@ CheckMathSqrt(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
 }
 
 static bool
-CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDefinition **def, Type *type, bool isMax)
+CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, bool isMax,
+                MathRetType *type)
 {
     if (CallArgListLength(callNode) < 2)
         return f.fail(callNode, "Math.min/max must be passed at least 2 arguments");
@@ -3749,12 +3720,7 @@ CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDefi
         lastDef = f.minMax(lastDef, nextDef, opType, isMax);
     }
 
-    if (opIsDouble && retType != RetType::Double)
-        return f.failf(callNode, "return type is double, used as %s", retType.toType().toChars());
-    if (opIsInteger && retType != RetType::Signed)
-        return f.failf(callNode, "return type is int, used as %s", retType.toType().toChars());
-
-    *type = opIsDouble ? Type::Double : Type::Signed;
+    *type = MathRetType(opIsDouble ? MathRetType::Double : MathRetType::Signed);
     *def = lastDef;
     return true;
 }
@@ -3964,96 +3930,53 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, RetTyp
     return true;
 }
 
-static bool CheckCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type);
+static bool
+CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type);
 
 static bool
-CheckFRoundArg(FunctionCompiler &f, ParseNode *arg, MDefinition **def, Type *type)
-{
-    if (arg->isKind(PNK_CALL))
-        return CheckCall(f, arg, RetType::Float, def, type);
-
-    MDefinition *inputDef;
-    Type inputType;
-    if (!CheckExpr(f, arg, &inputDef, &inputType))
-        return false;
-
-    if (inputType.isMaybeDouble() || inputType.isSigned())
-        *def = f.unary<MToFloat32>(inputDef);
-    else if (inputType.isUnsigned())
-        *def = f.unary<MAsmJSUnsignedToFloat32>(inputDef);
-    else if (inputType.isFloatish())
-        *def = inputDef;
-    else
-        return f.failf(arg, "%s is not a subtype of signed, unsigned, double? or floatish", inputType.toChars());
-
-    *type = Type::Float;
-    return true;
-}
-
-static bool
-CheckMathFRound(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDefinition **def, Type *type)
+CheckMathFRound(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, MathRetType *type)
 {
     ParseNode *argNode = nullptr;
     if (!IsFloatCoercion(f.m(), callNode, &argNode))
         return f.fail(callNode, "invalid call to fround");
 
-    MDefinition *operand;
-    Type operandType;
-    if (!CheckFRoundArg(f, argNode, &operand, &operandType))
+    // Make sure to do this before calling CheckCoercedCall
+    *type = MathRetType::Float;
+
+    Type _;
+    if (argNode->isKind(PNK_CALL))
+        return CheckCoercedCall(f, argNode, RetType::Float, def, &_);
+
+    MDefinition *argDef;
+    Type argType;
+    if (!CheckExpr(f, argNode, &argDef, &argType))
         return false;
 
-    JS_ASSERT(operandType == Type::Float);
+    if (argType.isMaybeDouble() || argType.isSigned())
+        *def = f.unary<MToFloat32>(argDef);
+    else if (argType.isUnsigned())
+        *def = f.unary<MAsmJSUnsignedToFloat32>(argDef);
+    else if (argType.isFloatish())
+        *def = argDef;
+    else
+        return f.failf(argNode, "%s is not a subtype of signed, unsigned, double? or floatish", argType.toChars());
 
-    switch (retType.which()) {
-      case RetType::Double:
-        *def = f.unary<MToDouble>(operand);
-        *type = Type::Double;
-        return true;
-      case RetType::Signed:
-        *def = f.unary<MTruncateToInt32>(operand);
-        *type = Type::Signed;
-        return true;
-      case RetType::Float:
-        *def = operand;
-        *type = Type::Float;
-        return true;
-      case RetType::Void:
-        // definition and return types should be ignored by the caller
-        return true;
-    }
-
-    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("return value of fround is ignored");
-}
-
-static bool
-CheckIsMaybeDouble(FunctionCompiler &f, ParseNode *argNode, Type type)
-{
-    if (!type.isMaybeDouble())
-        return f.failf(argNode, "%s is not a subtype of double?", type.toChars());
-    return true;
-}
-
-static bool
-CheckIsMaybeFloat(FunctionCompiler &f, ParseNode *argNode, Type type)
-{
-    if (!type.isMaybeFloat())
-        return f.failf(argNode, "%s is not a subtype of float?", type.toChars());
     return true;
 }
 
 static bool
 CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinFunction func,
-                     RetType retType, MDefinition **def, Type *type)
+                     MDefinition **def, MathRetType *type)
 {
     unsigned arity = 0;
     AsmJSImmKind doubleCallee, floatCallee;
     switch (func) {
-      case AsmJSMathBuiltin_imul:   return CheckMathIMul(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_abs:    return CheckMathAbs(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_sqrt:   return CheckMathSqrt(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_fround: return CheckMathFRound(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_min:    return CheckMathMinMax(f, callNode, retType, def, type, /* isMax = */ false);
-      case AsmJSMathBuiltin_max:    return CheckMathMinMax(f, callNode, retType, def, type, /* isMax = */ true);
+      case AsmJSMathBuiltin_imul:   return CheckMathIMul(f, callNode, def, type);
+      case AsmJSMathBuiltin_abs:    return CheckMathAbs(f, callNode, def, type);
+      case AsmJSMathBuiltin_sqrt:   return CheckMathSqrt(f, callNode, def, type);
+      case AsmJSMathBuiltin_fround: return CheckMathFRound(f, callNode, def, type);
+      case AsmJSMathBuiltin_min:    return CheckMathMinMax(f, callNode, def, /* isMax = */ false, type);
+      case AsmJSMathBuiltin_max:    return CheckMathMinMax(f, callNode, def, /* isMax = */ true, type);
       case AsmJSMathBuiltin_ceil:   arity = 1; doubleCallee = AsmJSImm_CeilD;  floatCallee = AsmJSImm_CeilF;   break;
       case AsmJSMathBuiltin_floor:  arity = 1; doubleCallee = AsmJSImm_FloorD; floatCallee = AsmJSImm_FloorF;  break;
       case AsmJSMathBuiltin_sin:    arity = 1; doubleCallee = AsmJSImm_SinD;   floatCallee = AsmJSImm_Limit; break;
@@ -4069,31 +3992,148 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinF
       default: MOZ_CRASH("unexpected mathBuiltin function");
     }
 
-    if (retType == RetType::Float && floatCallee == AsmJSImm_Limit)
+    unsigned actualArity = CallArgListLength(callNode);
+    if (actualArity != arity)
+        return f.failf(callNode, "call passed %u arguments, expected %u", actualArity, arity);
+
+    Type firstType;
+    MDefinition *firstArg;
+    ParseNode *argNode = CallArgList(callNode);
+    if (!CheckExpr(f, argNode, &firstArg, &firstType))
+        return false;
+
+    if (!firstType.isMaybeFloat() && !firstType.isMaybeDouble())
+        return f.fail(argNode, "arguments to math call should be a subtype of double? or float?");
+
+    bool opIsDouble = firstType.isMaybeDouble();
+    if (!opIsDouble && floatCallee == AsmJSImm_Limit)
         return f.fail(callNode, "math builtin cannot be used as float");
-    if (retType != RetType::Double && retType != RetType::Float)
-        return f.failf(callNode, "return type of math function is double or float, used as %s", retType.toType().toChars());
 
-    FunctionCompiler::Call call(f, callNode, retType);
-    if (retType == RetType::Float && !CheckCallArgs(f, callNode, CheckIsMaybeFloat, &call))
-        return false;
-    if (retType == RetType::Double && !CheckCallArgs(f, callNode, CheckIsMaybeDouble, &call))
-        return false;
+    FunctionCompiler::Call call(f, callNode, RetType::Double);
+    f.startCallArgs(&call);
 
-    if (call.sig().args().length() != arity)
-        return f.failf(callNode, "call passed %u arguments, expected %u", call.sig().args().length(), arity);
-
-    if (retType == RetType::Float && !f.builtinCall(floatCallee, call, retType.toMIRType(), def))
-        return false;
-    if (retType == RetType::Double && !f.builtinCall(doubleCallee, call, retType.toMIRType(), def))
+    VarType varType = opIsDouble ? VarType::Double : VarType::Float;
+    if (!f.passArg(firstArg, varType, &call))
         return false;
 
-    *type = retType.toType();
+    if (arity == 2) {
+        Type secondType;
+        MDefinition *secondArg;
+        argNode = NextNode(argNode);
+        if (!CheckExpr(f, argNode, &secondArg, &secondType))
+            return false;
+
+        if (firstType.isMaybeDouble() && !secondType.isMaybeDouble())
+            return f.fail(argNode, "both arguments to math builtin call should be the same type");
+        if (firstType.isMaybeFloat() && !secondType.isMaybeFloat())
+            return f.fail(argNode, "both arguments to math builtin call should be the same type");
+
+        if (!f.passArg(secondArg, varType, &call))
+            return false;
+    }
+
+    f.finishCallArgs(&call);
+
+    AsmJSImmKind callee = opIsDouble ? doubleCallee : floatCallee;
+    if (!f.builtinCall(callee, call, varType.toMIRType(), def))
+        return false;
+
+    *type = MathRetType(opIsDouble ? MathRetType::Double : MathRetType::Floatish);
     return true;
 }
 
 static bool
-CheckCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
+CheckUncoercedCall(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
+{
+    JS_ASSERT(expr->isKind(PNK_CALL));
+
+    const ModuleCompiler::Global *global;
+    if (IsCallToGlobal(f.m(), expr, &global) && global->isMathFunction())
+    {
+        MathRetType mathRetType;
+        if (!CheckMathBuiltinCall(f, expr, global->mathBuiltinFunction(), def, &mathRetType))
+            return false;
+        *type = mathRetType.toType();
+        return true;
+    }
+
+    return f.fail(expr, "all function calls must either be calls to standard lib math functions, "
+                        "ignored (via f(); or comma-expression), coerced to signed (via f()|0), "
+                        "coerced to float (via fround(f())) or coerced to double (via +f())");
+}
+
+static bool
+CheckCoercedMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinFunction func,
+                            RetType retType, MDefinition **def, Type *type)
+{
+    MDefinition *operand;
+    MathRetType actualRetType;
+    if (!CheckMathBuiltinCall(f, callNode, func, &operand, &actualRetType))
+        return false;
+
+    switch (retType.which()) {
+      case RetType::Double:
+        switch (actualRetType.which()) {
+          case MathRetType::Double:
+            *def = operand;
+            break;
+          case MathRetType::Float:
+          case MathRetType::Signed:
+            *def = f.unary<MToDouble>(operand);
+            break;
+          case MathRetType::Unsigned:
+            *def = f.unary<MAsmJSUnsignedToDouble>(operand);
+            break;
+          case MathRetType::Floatish:
+            return f.fail(callNode, "math call returns floatish, used as double");
+        }
+        *type = Type::Double;
+        break;
+
+      case RetType::Float:
+        switch (actualRetType.which()) {
+          case MathRetType::Double:
+          case MathRetType::Signed:
+            *def = f.unary<MToFloat32>(operand);
+            break;
+          case MathRetType::Float:
+          case MathRetType::Floatish:
+            *def = operand;
+            break;
+          case MathRetType::Unsigned:
+            *def = f.unary<MAsmJSUnsignedToFloat32>(operand);
+            break;
+        }
+        *type = Type::Float;
+        break;
+
+      case RetType::Signed:
+        switch (actualRetType.which()) {
+          case MathRetType::Unsigned:
+          case MathRetType::Signed:
+            *def = operand;
+            break;
+          case MathRetType::Float:
+          case MathRetType::Floatish:
+          case MathRetType::Double:
+            return f.failf(callNode, "math call returns %s, used as signed", type->toChars());
+        }
+        *type = Type::Signed;
+        break;
+
+      case RetType::Void:
+        // definition and return types should be ignored by the caller
+        *def = nullptr;
+        break;
+    }
+
+    JS_ASSERT_IF(retType == RetType::Void, !*def);
+    JS_ASSERT_IF(retType != RetType::Void, !!*def);
+    return true;
+}
+
+static bool
+CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
@@ -4112,7 +4152,7 @@ CheckCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **d
           case ModuleCompiler::Global::FFI:
             return CheckFFICall(f, call, global->ffiIndex(), retType, def, type);
           case ModuleCompiler::Global::MathBuiltinFunction:
-            return CheckMathBuiltinCall(f, call, global->mathBuiltinFunction(), retType, def, type);
+            return CheckCoercedMathBuiltinCall(f, call, global->mathBuiltinFunction(), retType, def, type);
           case ModuleCompiler::Global::ConstantLiteral:
           case ModuleCompiler::Global::ConstantImport:
           case ModuleCompiler::Global::Variable:
@@ -4134,7 +4174,7 @@ CheckPos(FunctionCompiler &f, ParseNode *pos, MDefinition **def, Type *type)
     ParseNode *operand = UnaryKid(pos);
 
     if (operand->isKind(PNK_CALL))
-        return CheckCall(f, operand, RetType::Double, def, type);
+        return CheckCoercedCall(f, operand, RetType::Double, def, type);
 
     MDefinition *operandDef;
     Type operandType;
@@ -4263,7 +4303,7 @@ CheckComma(FunctionCompiler &f, ParseNode *comma, MDefinition **def, Type *type)
         MDefinition *_1;
         Type _2;
         if (pn->isKind(PNK_CALL)) {
-            if (!CheckCall(f, pn, RetType::Void, &_1, &_2))
+            if (!CheckCoercedCall(f, pn, RetType::Void, &_1, &_2))
                 return false;
         } else {
             if (!CheckExpr(f, pn, &_1, &_2))
@@ -4340,17 +4380,17 @@ IsValidIntMultiplyConstant(ModuleCompiler &m, ParseNode *expr)
     if (!IsNumericLiteral(m, expr))
         return false;
 
-    NumLit literal = ExtractNumericLiteral(m, expr);
+    AsmJSNumLit literal = ExtractNumericLiteral(m, expr);
     switch (literal.which()) {
-      case NumLit::Fixnum:
-      case NumLit::NegativeInt:
+      case AsmJSNumLit::Fixnum:
+      case AsmJSNumLit::NegativeInt:
         if (abs(literal.toInt32()) < (1<<20))
             return true;
         return false;
-      case NumLit::BigUnsigned:
-      case NumLit::Double:
-      case NumLit::Float:
-      case NumLit::OutOfRangeInt:
+      case AsmJSNumLit::BigUnsigned:
+      case AsmJSNumLit::Double:
+      case AsmJSNumLit::Float:
+      case AsmJSNumLit::OutOfRangeInt:
         return false;
     }
 
@@ -4585,7 +4625,7 @@ CheckBitwise(FunctionCompiler &f, ParseNode *bitwise, MDefinition **def, Type *t
 
     if (IsLiteralInt(f.m(), rhs, &i) && i == uint32_t(identityElement)) {
         if (bitwise->isKind(PNK_BITOR) && lhs->isKind(PNK_CALL))
-            return CheckCall(f, lhs, RetType::Signed, def, type);
+            return CheckCoercedCall(f, lhs, RetType::Signed, def, type);
 
         Type lhsType;
         if (!CheckExpr(f, lhs, def, &lhsType))
@@ -4621,21 +4661,6 @@ CheckBitwise(FunctionCompiler &f, ParseNode *bitwise, MDefinition **def, Type *t
     }
 
     return true;
-}
-
-static bool
-CheckUncoercedCall(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
-{
-    JS_ASSERT(expr->isKind(PNK_CALL));
-
-    ParseNode *arg;
-    if (!IsFloatCoercion(f.m(), expr, &arg)) {
-        return f.fail(expr, "all function calls must either be ignored (via f(); or "
-                            "comma-expression), coerced to signed (via f()|0), coerced to float "
-                            "(via fround(f())) or coerced to double (via +f())");
-    }
-
-    return CheckFRoundArg(f, arg, def, type);
 }
 
 static bool
@@ -4704,7 +4729,7 @@ CheckExprStatement(FunctionCompiler &f, ParseNode *exprStmt)
     Type _2;
 
     if (expr->isKind(PNK_CALL))
-        return CheckCall(f, expr, RetType::Void, &_1, &_2);
+        return CheckCoercedCall(f, expr, RetType::Void, &_1, &_2);
 
     return CheckExpr(f, UnaryKid(exprStmt), &_1, &_2);
 }
@@ -5050,17 +5075,17 @@ CheckCaseExpr(FunctionCompiler &f, ParseNode *caseExpr, int32_t *value)
     if (!IsNumericLiteral(f.m(), caseExpr))
         return f.fail(caseExpr, "switch case expression must be an integer literal");
 
-    NumLit literal = ExtractNumericLiteral(f.m(), caseExpr);
+    AsmJSNumLit literal = ExtractNumericLiteral(f.m(), caseExpr);
     switch (literal.which()) {
-      case NumLit::Fixnum:
-      case NumLit::NegativeInt:
+      case AsmJSNumLit::Fixnum:
+      case AsmJSNumLit::NegativeInt:
         *value = literal.toInt32();
         break;
-      case NumLit::OutOfRangeInt:
-      case NumLit::BigUnsigned:
+      case AsmJSNumLit::OutOfRangeInt:
+      case AsmJSNumLit::BigUnsigned:
         return f.fail(caseExpr, "switch case expression out of integer range");
-      case NumLit::Double:
-      case NumLit::Float:
+      case AsmJSNumLit::Double:
+      case AsmJSNumLit::Float:
         return f.fail(caseExpr, "switch case expression must be an integer literal");
     }
 
@@ -6651,10 +6676,11 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
 
     // Pop resumePC into PC. Clobber HeapReg to make the jump and restore it
     // during jump delay slot.
-    JS_ASSERT(Imm16::IsInSignedRange(AsmJSModule::heapGlobalDataOffset()));
+    JS_ASSERT(Imm16::IsInSignedRange(AsmJSModule::heapGlobalDataOffset() - AsmJSGlobalRegBias));
     masm.pop(HeapReg);
     masm.as_jr(HeapReg);
-    masm.loadPtr(Address(GlobalReg, AsmJSModule::heapGlobalDataOffset()), HeapReg);
+    masm.loadPtr(Address(GlobalReg, AsmJSModule::heapGlobalDataOffset() - AsmJSGlobalRegBias),
+                 HeapReg);
 #elif defined(JS_CODEGEN_ARM)
     masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
     masm.PushRegsInMask(RegisterSet(GeneralRegisterSet(Registers::AllMask & ~(1<<Registers::sp)), FloatRegisterSet(uint32_t(0))));   // save all GP registers,excep sp

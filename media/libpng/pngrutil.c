@@ -1,7 +1,7 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.6.10 [March 6, 2014]
+ * Last changed in libpng 1.6.11 [June 5, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -265,7 +265,7 @@ png_crc_error(png_structrp png_ptr)
    /* The chunk CRC must be serialized in a single I/O call. */
    png_read_data(png_ptr, crc_bytes, 4);
 
-   if (need_crc)
+   if (need_crc != 0)
    {
       crc = png_get_uint_32(crc_bytes);
       return ((int)(crc != png_ptr->crc));
@@ -311,7 +311,7 @@ png_read_buffer(png_structrp png_ptr, png_alloc_size_t new_size, int warn)
 
       else if (warn < 2) /* else silent */
       {
-         if (warn)
+         if (warn != 0)
              png_chunk_warning(png_ptr, "insufficient memory to read chunk");
 
          else
@@ -637,7 +637,7 @@ png_decompress_chunk(png_structrp png_ptr,
                   {
                      if (new_size == *newlength)
                      {
-                        if (terminate)
+                        if (terminate != 0)
                            text[prefix_size + *newlength] = 0;
 
                         if (prefix_size > 0)
@@ -1324,9 +1324,9 @@ png_handle_iCCP(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
     * chunk is just ignored, so does not invalidate the color space.  An
     * alternative is to set the 'invalid' flags at the start of this routine
     * and only clear them in they were not set before and all the tests pass.
-    * The minimum 'deflate' stream is assumed to be just the 2 byte header and 4
-    * byte checksum.  The keyword must be one character and there is a
-    * terminator (0) byte and the compression method.
+    * The minimum 'deflate' stream is assumed to be just the 2 byte header and
+    * 4 byte checksum.  The keyword must be at least one character and there is
+    * a terminator (0) byte and the compression method.
     */
    if (length < 9)
    {
@@ -1563,7 +1563,7 @@ png_handle_iCCP(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
       errmsg = "too many profiles";
 
    /* Failure: the reason is in 'errmsg' */
-   if (!finished)
+   if (finished == 0)
       png_crc_finish(png_ptr, length);
 
    png_ptr->colorspace.flags |= PNG_COLORSPACE_INVALID;
@@ -2645,7 +2645,7 @@ png_handle_iTXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
       /* prefix_length should now be at the trailing '\0' of the translated
        * keyword, but it may already be over the end.  None of this arithmetic
        * can overflow because chunks are at most 2^31 bytes long, but on 16-bit
-       * systems the available allocaton may overflow.
+       * systems the available allocation may overflow.
        */
       ++prefix_length;
 
@@ -2677,7 +2677,7 @@ png_handle_iTXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
          buffer[uncompressed_length+prefix_length] = 0;
 
-         if (compressed)
+         if (compressed != 0)
             text.compression = PNG_ITXT_COMPRESSION_NONE;
 
          else
@@ -3331,7 +3331,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
 #        define S_MASKS(d,s) { S_MASK(0,d,s), S_MASK(1,d,s), S_MASK(2,d,s),\
             S_MASK(3,d,s), S_MASK(4,d,s), S_MASK(5,d,s) }
 
-#        define B_MASKS(d,s) { B_MASK(1,d,s), S_MASK(3,d,s), S_MASK(5,d,s) }
+#        define B_MASKS(d,s) { B_MASK(1,d,s), B_MASK(3,d,s), B_MASK(5,d,s) }
 
 #        define DEPTH_INDEX(d) ((d)==1?0:((d)==2?1:2))
 
@@ -3370,7 +3370,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
 #endif /* !PNG_USE_COMPILE_TIME_MASKS */
 
          /* Use the appropriate mask to copy the required bits.  In some cases
-          * the byte mask will be 0 or 0xff, optimize these cases.  row_width is
+          * the byte mask will be 0 or 0xff; optimize these cases.  row_width is
           * the number of pixels, but the code copies bytes, so it is necessary
           * to special case the end.
           */
@@ -3442,7 +3442,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
          }
 
          /* Work out the bytes to copy. */
-         if (display)
+         if (display != 0)
          {
             /* When doing the 'block' algorithm the pixel in the pass gets
              * replicated to adjacent pixels.  This is why the even (0,2,4,6)
@@ -3642,7 +3642,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
       /* Here if pixel_depth < 8 to check 'end_ptr' below. */
    }
    else
-#endif
+#endif /* PNG_READ_INTERLACING_SUPPORTED */
 
    /* If here then the switch above wasn't used so just memcpy the whole row
     * from the temporary row buffer (notice that this overwrites the end of the
@@ -4328,7 +4328,6 @@ png_read_finish_IDAT(png_structrp png_ptr)
 void /* PRIVATE */
 png_read_finish_row(png_structrp png_ptr)
 {
-#ifdef PNG_READ_INTERLACING_SUPPORTED
    /* Arrays to facilitate easy interlacing - use pass (0 - 6) as index */
 
    /* Start of interlace block */
@@ -4342,14 +4341,12 @@ png_read_finish_row(png_structrp png_ptr)
 
    /* Offset to next interlace block in the y direction */
    static PNG_CONST png_byte png_pass_yinc[7] = {8, 8, 8, 4, 4, 2, 2};
-#endif /* PNG_READ_INTERLACING_SUPPORTED */
 
    png_debug(1, "in png_read_finish_row");
    png_ptr->row_number++;
    if (png_ptr->row_number < png_ptr->num_rows)
       return;
 
-#ifdef PNG_READ_INTERLACING_SUPPORTED
    if (png_ptr->interlaced)
    {
       png_ptr->row_number = 0;
@@ -4387,7 +4384,6 @@ png_read_finish_row(png_structrp png_ptr)
       if (png_ptr->pass < 7)
          return;
    }
-#endif /* PNG_READ_INTERLACING_SUPPORTED */
 
    /* Here after at the end of the last row of the last pass. */
    png_read_finish_IDAT(png_ptr);
@@ -4397,7 +4393,6 @@ png_read_finish_row(png_structrp png_ptr)
 void /* PRIVATE */
 png_read_start_row(png_structrp png_ptr)
 {
-#ifdef PNG_READ_INTERLACING_SUPPORTED
    /* Arrays to facilitate easy interlacing - use pass (0 - 6) as index */
 
    /* Start of interlace block */
@@ -4411,7 +4406,6 @@ png_read_start_row(png_structrp png_ptr)
 
    /* Offset to next interlace block in the y direction */
    static PNG_CONST png_byte png_pass_yinc[7] = {8, 8, 8, 4, 4, 2, 2};
-#endif
 
    int max_pixel_depth;
    png_size_t row_bytes;
@@ -4421,7 +4415,6 @@ png_read_start_row(png_structrp png_ptr)
 #ifdef PNG_READ_TRANSFORMS_SUPPORTED
    png_init_read_transformations(png_ptr);
 #endif
-#ifdef PNG_READ_INTERLACING_SUPPORTED
    if (png_ptr->interlaced)
    {
       if (!(png_ptr->transformations & PNG_INTERLACE))
@@ -4438,7 +4431,6 @@ png_read_start_row(png_structrp png_ptr)
    }
 
    else
-#endif /* PNG_READ_INTERLACING_SUPPORTED */
    {
       png_ptr->num_rows = png_ptr->height;
       png_ptr->iwidth = png_ptr->width;
