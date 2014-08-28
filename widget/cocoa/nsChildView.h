@@ -26,6 +26,7 @@
 #include "mozilla/Mutex.h"
 #include "nsRegion.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsString.h"
 #include "nsIDragService.h"
@@ -93,6 +94,7 @@ class RectTextureImage;
 }
 
 namespace mozilla {
+class VibrancyManager;
 namespace layers {
 class GLManager;
 class APZCTreeManager;
@@ -569,6 +571,7 @@ public:
   }
 
   void              NotifyDirtyRegion(const nsIntRegion& aDirtyRegion);
+  void              ClearVibrantAreas();
 
   // unit conversion convenience functions
   int32_t           CocoaPointsToDevPixels(CGFloat aPts) const {
@@ -625,6 +628,8 @@ protected:
   void UpdateTitlebarCGContext();
 
   nsIntRect RectContainingTitlebarControls();
+  void UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries);
+  mozilla::VibrancyManager& EnsureVibrancyManager();
 
   nsIWidget* GetWidgetForListenerEvents();
 
@@ -693,6 +698,8 @@ protected:
   nsAutoPtr<GLPresenter> mGLPresenter;
 
   nsRefPtr<APZCTreeManager> mAPZCTreeManager;
+
+  mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
 
   static uint32_t sLastInputEventCount;
 
