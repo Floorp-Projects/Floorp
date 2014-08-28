@@ -343,6 +343,34 @@ public:
     return !(*this == aOther);
   }
 
+  static const FrameMetrics& TopmostScrollableMetrics(Layer* aLayer)
+  {
+    for (uint32_t i = aLayer->GetFrameMetricsCount(); i > 0; i--) {
+      if (aLayer->GetFrameMetrics(i - 1).IsScrollable()) {
+        return aLayer->GetFrameMetrics(i - 1);
+      }
+    }
+    return FrameMetrics::sNullMetrics;
+  }
+
+  static const FrameMetrics& BottommostScrollableMetrics(Layer* aLayer)
+  {
+    for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
+      if (aLayer->GetFrameMetrics(i).IsScrollable()) {
+        return aLayer->GetFrameMetrics(i);
+      }
+    }
+    return FrameMetrics::sNullMetrics;
+  }
+
+  static const FrameMetrics& BottommostMetrics(Layer* aLayer)
+  {
+    if (aLayer->GetFrameMetricsCount() > 0) {
+      return aLayer->GetFrameMetrics(0);
+    }
+    return FrameMetrics::sNullMetrics;
+  }
+
 private:
   bool AtBottomLayer() const
   {
