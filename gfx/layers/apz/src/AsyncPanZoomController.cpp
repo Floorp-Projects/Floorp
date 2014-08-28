@@ -379,8 +379,8 @@ static bool IsCloseToVertical(float aAngle, float aThreshold)
 template <typename Units>
 static bool IsZero(const gfx::PointTyped<Units>& aPoint)
 {
-  return FuzzyEqualsMultiplicative(aPoint.x.value, 0.0f)
-      && FuzzyEqualsMultiplicative(aPoint.y.value, 0.0f);
+  return FuzzyEqualsMultiplicative(aPoint.x, 0.0f)
+      && FuzzyEqualsMultiplicative(aPoint.y, 0.0f);
 }
 
 static inline void LogRendertraceRect(const ScrollableLayerGuid& aGuid, const char* aDesc, const char* aColor, const CSSRect& aRect)
@@ -538,9 +538,9 @@ public:
         // We may have reached the end of the scroll range along one axis but
         // not the other. In such a case we only want to hand off the relevant
         // component of the fling.
-        if (FuzzyEqualsAdditive(overscroll.x.value, 0.0f, COORDINATE_EPSILON)) {
+        if (FuzzyEqualsAdditive(overscroll.x, 0.0f, COORDINATE_EPSILON)) {
           velocity.x = 0;
-        } else if (FuzzyEqualsAdditive(overscroll.y.value, 0.0f, COORDINATE_EPSILON)) {
+        } else if (FuzzyEqualsAdditive(overscroll.y, 0.0f, COORDINATE_EPSILON)) {
           velocity.y = 0;
         }
 

@@ -98,14 +98,14 @@ typedef PointTyped<UnknownUnits> Point;
 
 template<class units>
 IntPointTyped<units> RoundedToInt(const PointTyped<units>& aPoint) {
-  return IntPointTyped<units>(aPoint.x.Rounded(),
-                              aPoint.y.Rounded());
+  return IntPointTyped<units>(int32_t(floorf(aPoint.x + 0.5f)),
+                              int32_t(floorf(aPoint.y + 0.5f)));
 }
 
 template<class units>
 IntPointTyped<units> TruncatedToInt(const PointTyped<units>& aPoint) {
-  return IntPointTyped<units>(aPoint.x.Truncated(),
-                              aPoint.y.Truncated());
+  return IntPointTyped<units>(int32_t(aPoint.x),
+                              int32_t(aPoint.y));
 }
 
 template<class units>
