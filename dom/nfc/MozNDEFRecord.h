@@ -89,6 +89,9 @@ private:
   void HoldData();
   void DropData();
 
+  static bool
+  ValidateTNF(const MozNDEFRecordOptions& aOptions, ErrorResult& aRv);
+
   TNF mTnf;
   JS::Heap<JSObject*> mType;
   JS::Heap<JSObject*> mId;
