@@ -23,6 +23,7 @@
 #include "mozilla/layers/TextureHost.h"  // for CompositingRenderTarget
 #include "mozilla/layers/AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
+#include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for NS_ASSERTION
@@ -254,10 +255,18 @@ RenderLayers(ContainerT* aContainer,
   // composited area. If the layer has a background color, fill these areas
   // with the background color by drawing a rectangle of the background color
   // over the entire composited area before drawing the container contents.
-  if (AsyncPanZoomController* apzc = aContainer->GetAsyncPanZoomController()) {
-    // Make sure not to do this on a "scrollinfo" layer (one with an empty visible
-    // region) because it's just a placeholder for APZ purposes.
-    if (apzc->IsOverscrolled() && !aContainer->GetVisibleRegion().IsEmpty()) {
+  // Make sure not to do this on a "scrollinfo" layer because it's just a
+  // placeholder for APZ purposes.
+  if (aContainer->HasScrollableFrameMetrics() && !aContainer->IsScrollInfoLayer()) {
+    bool overscrolled = false;
+    for (uint32_t i = 0; i < aContainer->GetFrameMetricsCount(); i++) {
+      AsyncPanZoomController* apzc = aContainer->GetAsyncPanZoomController(i);
+      if (apzc && apzc->IsOverscrolled()) {
+        overscrolled = true;
+        break;
+      }
+    }
+    if (overscrolled) {
       gfxRGBA color = aContainer->GetBackgroundColor();
       // If the background is completely transparent, there's no point in
       // drawing anything for it. Hopefully the layers behind, if any, will
@@ -421,8 +430,11 @@ ContainerRender(ContainerT* aContainer,
   }
   aContainer->mPrepared = nullptr;
 
-  if (aContainer->GetFrameMetrics().IsScrollable()) {
-    const FrameMetrics& frame = aContainer->GetFrameMetrics();
+  for (uint32_t i = 0; i < aContainer->GetFrameMetricsCount(); i++) {
+    if (!aContainer->GetFrameMetrics(i).IsScrollable()) {
+      continue;
+    }
+    const FrameMetrics& frame = aContainer->GetFrameMetrics(i);
     LayerRect layerBounds = frame.mCompositionBounds * ParentLayerToLayerScale(1.0);
     gfx::Rect rect(layerBounds.x, layerBounds.y, layerBounds.width, layerBounds.height);
     gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
