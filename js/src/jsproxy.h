@@ -87,6 +87,14 @@ class JS_FRIEND_API(Wrapper);
  */
 class JS_FRIEND_API(BaseProxyHandler)
 {
+    /*
+     * Sometimes it's desirable to designate groups of proxy handlers as "similar".
+     * For this, we use the notion of a "family": A consumer-provided opaque pointer
+     * that designates the larger group to which this proxy belongs.
+     *
+     * If it will never be important to differentiate this proxy from others as
+     * part of a distinct group, nullptr may be used instead.
+     */
     const void *mFamily;
 
     /*
