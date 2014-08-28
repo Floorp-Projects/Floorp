@@ -215,6 +215,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool visitSimdBinaryCompFx4(LSimdBinaryCompFx4 *lir);
     bool visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *lir);
     bool visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *lir);
+    bool visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4 *lir);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);

@@ -25,6 +25,7 @@
     _(SimdBinaryCompFx4)            \
     _(SimdBinaryArithIx4)           \
     _(SimdBinaryArithFx4)           \
+    _(SimdBinaryBitwiseX4)          \
     _(Value)                        \
     _(CloneLiteral)                 \
     _(Parameter)                    \

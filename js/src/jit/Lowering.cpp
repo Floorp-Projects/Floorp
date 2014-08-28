@@ -3765,6 +3765,20 @@ LIRGenerator::visitSimdBinaryArith(MSimdBinaryArith *ins)
     return false;
 }
 
+bool
+LIRGenerator::visitSimdBinaryBitwise(MSimdBinaryBitwise *ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    if (ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Float32x4) {
+        LSimdBinaryBitwiseX4 *add = new(alloc()) LSimdBinaryBitwiseX4;
+        return lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+    }
+
+    MOZ_CRASH("Unknown SIMD kind when doing bitwise operations");
+    return false;
+}
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {

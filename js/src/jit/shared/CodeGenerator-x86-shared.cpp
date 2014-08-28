@@ -2310,6 +2310,28 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4 *ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
+
+    MSimdBinaryBitwise::Operation op = ins->operation();
+    switch (op) {
+      case MSimdBinaryBitwise::and_:
+        masm.bitwiseAndX4(rhs, lhs);
+        return true;
+      case MSimdBinaryBitwise::or_:
+        masm.bitwiseOrX4(rhs, lhs);
+        return true;
+      case MSimdBinaryBitwise::xor_:
+        masm.bitwiseXorX4(rhs, lhs);
+        return true;
+    }
+    MOZ_CRASH("unexpected SIMD bitwise op");
+}
+
+bool
 CodeGeneratorX86Shared::visitForkJoinGetSlice(LForkJoinGetSlice *ins)
 {
     MOZ_ASSERT(gen->info().executionMode() == ParallelExecution);
