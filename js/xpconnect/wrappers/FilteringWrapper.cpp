@@ -21,11 +21,6 @@ FilteringWrapper<Base, Policy>::FilteringWrapper(unsigned flags) : Base(flags)
 {
 }
 
-template <typename Base, typename Policy>
-FilteringWrapper<Base, Policy>::~FilteringWrapper()
-{
-}
-
 template <typename Policy>
 static bool
 Filter(JSContext *cx, HandleObject wrapper, AutoIdVector &props)
@@ -191,10 +186,6 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, HandleObject wrapper,
 }
 
 CrossOriginXrayWrapper::CrossOriginXrayWrapper(unsigned flags) : SecurityXrayDOM(flags)
-{
-}
-
-CrossOriginXrayWrapper::~CrossOriginXrayWrapper()
 {
 }
 

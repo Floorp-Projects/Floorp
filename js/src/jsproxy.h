@@ -127,7 +127,6 @@ class JS_FRIEND_API(BaseProxyHandler)
   public:
     explicit BaseProxyHandler(const void *family, bool hasPrototype = false,
                               bool hasSecurityPolicy = false);
-    virtual ~BaseProxyHandler();
 
     bool hasPrototype() const {
         return mHasPrototype;

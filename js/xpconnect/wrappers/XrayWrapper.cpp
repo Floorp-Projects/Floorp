@@ -2250,11 +2250,6 @@ XrayWrapper<Base, Traits>::XrayWrapper(unsigned flags)
 {
 }
 
-template <typename Base, typename Traits>
-XrayWrapper<Base, Traits>::~XrayWrapper()
-{
-}
-
 namespace XrayUtils {
 
 JSObject *

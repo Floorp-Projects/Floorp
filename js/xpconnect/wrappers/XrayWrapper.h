@@ -68,7 +68,6 @@ template <typename Base, typename Traits = XPCWrappedNativeXrayTraits >
 class XrayWrapper : public Base {
   public:
     XrayWrapper(unsigned flags);
-    virtual ~XrayWrapper();
 
     /* Fundamental proxy traps. */
     virtual bool isExtensible(JSContext *cx, JS::Handle<JSObject*> wrapper, bool *extensible) const MOZ_OVERRIDE;
