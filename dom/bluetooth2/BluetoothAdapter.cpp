@@ -641,7 +641,7 @@ BluetoothAdapter::Unpair(const nsAString& aDeviceAddress, ErrorResult& aRv)
 }
 
 already_AddRefed<Promise>
-BluetoothAdapter::EnableDisable(bool aEnable, ErrorResult& aRv)
+BluetoothAdapter::Enable(ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (!global) {
@@ -652,41 +652,28 @@ BluetoothAdapter::EnableDisable(bool aEnable, ErrorResult& aRv)
   nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
-  // Ensure BluetoothService is available before modifying adapter state
+  /**
+   * Ensure
+   * - adapter is disabled, and
+   * - BluetoothService is available.
+   */
+  BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Disabled,
+                        NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
 
-  // Modify adapter state to Enabling/Disabling if adapter is in a valid state
-  nsAutoString methodName;
-  if (aEnable) {
-    // Enable local adapter
-    BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Disabled,
-                          NS_ERROR_DOM_INVALID_STATE_ERR);
-    methodName.AssignLiteral("Enable");
-    mState = BluetoothAdapterState::Enabling;
-  } else {
-    // Disable local adapter
-    BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
-                          NS_ERROR_DOM_INVALID_STATE_ERR);
-    methodName.AssignLiteral("Disable");
-    mState = BluetoothAdapterState::Disabling;
-  }
-
-  // Notify applications of adapter state change to Enabling/Disabling
-  HandleAdapterStateChanged();
+  // Set adapter state "Enabling"
+  SetAdapterState(BluetoothAdapterState::Enabling);
 
   // Wrap runnable to handle result
   nsRefPtr<BluetoothReplyRunnable> result =
     new BluetoothVoidReplyRunnable(nullptr, /* DOMRequest */
                                    promise,
-                                   methodName);
+                                   NS_LITERAL_STRING("Enable"));
 
-  if (NS_FAILED(bs->EnableDisable(aEnable, result))) {
-    // Restore mState and notify applications of adapter state change
-    mState = aEnable ? BluetoothAdapterState::Disabled
-                     : BluetoothAdapterState::Enabled;
-    HandleAdapterStateChanged();
-
+  if (NS_FAILED(bs->EnableDisable(true, result))) {
+    // Restore adapter state and reject promise
+    SetAdapterState(BluetoothAdapterState::Disabled);
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }
 
@@ -694,15 +681,43 @@ BluetoothAdapter::EnableDisable(bool aEnable, ErrorResult& aRv)
 }
 
 already_AddRefed<Promise>
-BluetoothAdapter::Enable(ErrorResult& aRv)
-{
-  return EnableDisable(true, aRv);
-}
-
-already_AddRefed<Promise>
 BluetoothAdapter::Disable(ErrorResult& aRv)
 {
-  return EnableDisable(false, aRv);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  /**
+   * Ensure
+   * - adapter is enabled, and
+   * - BluetoothService is available.
+   */
+  BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
+                        NS_ERROR_DOM_INVALID_STATE_ERR);
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+
+  // Set adapter state "Disabling"
+  SetAdapterState(BluetoothAdapterState::Disabling);
+
+  // Wrap runnable to handle result
+  nsRefPtr<BluetoothReplyRunnable> result =
+    new BluetoothVoidReplyRunnable(nullptr, /* DOMRequest */
+                                   promise,
+                                   NS_LITERAL_STRING("Disable"));
+
+  if (NS_FAILED(bs->EnableDisable(false, result))) {
+    // Restore adapter state and reject promise
+    SetAdapterState(BluetoothAdapterState::Enabled);
+    promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+  }
+
+  return promise.forget();
 }
 
 BluetoothAdapterAttribute
@@ -748,8 +763,15 @@ BluetoothAdapter::IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
 }
 
 void
-BluetoothAdapter::HandleAdapterStateChanged()
+BluetoothAdapter::SetAdapterState(BluetoothAdapterState aState)
 {
+  if (mState == aState) {
+    return;
+  }
+
+  mState = aState;
+
+  // Fire BluetoothAttributeEvent for changed adapter state
   nsTArray<nsString> types;
   BT_APPEND_ENUM_STRING(types,
                         BluetoothAdapterAttribute,
