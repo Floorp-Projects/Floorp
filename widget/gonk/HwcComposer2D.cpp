@@ -397,17 +397,21 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     // OK!  We can compose this layer with hwc.
     int current = mList ? mList->numHwLayers : 0;
 
-    // Do not compose any layer below full-screen Opaque layer
-    // Note: It can be generalized to non-fullscreen Opaque layers.
     bool isOpaque = (opacity == 0xFF) && (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
     if (current && isOpaque) {
-        nsIntRect displayRect = nsIntRect(displayFrame.left, displayFrame.top,
-            displayFrame.right - displayFrame.left, displayFrame.bottom - displayFrame.top);
+        nsIntRect displayRect = HwcUtils::HwcToIntRect(displayFrame);
         if (displayRect.Contains(mScreenRect)) {
-            // In z-order, all previous layers are below
-            // the current layer. We can ignore them now.
+            // In z-order, all previous layers are below current layer
+            // Do not compose any layer below full-screen opaque layer
             mList->numHwLayers = current = 0;
             mHwcLayerMap.Clear();
+        } else {
+            nsIntRect rect = HwcUtils::HwcToIntRect(mList->hwLayers[current-1].displayFrame);
+            if (displayRect.Contains(rect)) {
+                // Do not compose layer hidden under the opaque layer
+                mHwcLayerMap.RemoveElementAt(current-1);
+                current = --mList->numHwLayers;
+            }
         }
     }
 
