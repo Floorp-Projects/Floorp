@@ -324,6 +324,14 @@ Experiments.Policy.prototype = {
   telemetryPayload: function () {
     return TelemetryPing.getPayload();
   },
+
+  /**
+   * For testing a race condition, one of the tests delays the callback of
+   * writing the cache by replacing this policy function.
+   */
+  delayCacheWrite: function(promise) {
+    return promise;
+  },
 };
 
 function AlreadyShutdownError(message="already shut down") {
@@ -1001,7 +1009,7 @@ Experiments.Experiments.prototype = {
       let encoder = new TextEncoder();
       let data = encoder.encode(textData);
       let options = { tmpPath: path + ".tmp", compression: "lz4" };
-      yield OS.File.writeAtomic(path, data, options);
+      yield this._policy.delayCacheWrite(OS.File.writeAtomic(path, data, options));
     } catch (e) {
       // We failed to write the cache, it's still dirty.
       this._dirty = true;
