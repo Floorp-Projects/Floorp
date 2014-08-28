@@ -3703,7 +3703,7 @@ this.DOMApplicationRegistry = {
       response = "Webapps:Uninstall:Return:KO";
     }
 
-    if (aMm = aMm.get()) {
+    if ((aMm = aMm.get())) {
       aMm.sendAsyncMessage(response, aData);
     }
   }),
