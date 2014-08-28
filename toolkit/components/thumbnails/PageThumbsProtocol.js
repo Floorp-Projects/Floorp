@@ -52,6 +52,8 @@ Protocol.prototype = {
    */
   get protocolFlags() {
     return Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD |
+           Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE |
+           Ci.nsIProtocolHandler.URI_IS_LOCAL_FILE |
            Ci.nsIProtocolHandler.URI_NORELATIVE |
            Ci.nsIProtocolHandler.URI_NOAUTH;
   },
