@@ -124,7 +124,7 @@ protected:
   virtual bool RecvGetAnimationTransform(PLayerParent* aParent,
                                          MaybeTransform* aTransform)
                                          MOZ_OVERRIDE;
-  virtual bool RecvSetAsyncScrollOffset(PLayerParent* aLayer,
+  virtual bool RecvSetAsyncScrollOffset(PLayerParent* aLayer, const FrameMetrics::ViewID& aId,
                                         const int32_t& aX, const int32_t& aY) MOZ_OVERRIDE;
   virtual bool RecvGetAPZTestData(APZTestData* aOutData);
 

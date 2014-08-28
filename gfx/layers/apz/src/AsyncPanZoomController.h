@@ -896,12 +896,8 @@ private:
    * including handing off scroll to another APZC, and overscrolling.
    */
 public:
-  void SetScrollHandoffParentId(FrameMetrics::ViewID aScrollParentId) {
-    mScrollParentId = aScrollParentId;
-  }
-
   FrameMetrics::ViewID GetScrollHandoffParentId() const {
-    return mScrollParentId;
+    return mFrameMetrics.GetScrollParentId();
   }
 
   /**
@@ -935,8 +931,6 @@ public:
   bool SnapBackIfOverscrolled();
 
 private:
-  FrameMetrics::ViewID mScrollParentId;
-
   /**
    * A helper function for calling APZCTreeManager::DispatchScroll().
    * Guards against the case where the APZC is being concurrently destroyed

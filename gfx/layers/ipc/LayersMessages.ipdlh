@@ -215,8 +215,7 @@ struct CommonLayerAttributes {
   // Animated colors will only honored for ColorLayers.
   Animation[] animations;
   nsIntRegion invalidRegion;
-  FrameMetrics metrics;
-  ViewID scrollParentId;
+  FrameMetrics[] metrics;
   LayerColor backgroundColor;
   string contentDescription;
 };

@@ -249,15 +249,37 @@ var tests = {
           SocialService.registerProviderListener(function providerListener(topic, origin, providers) {
             if (topic != "provider-update")
               return;
-            is(origin, addonManifest.origin, "provider updated")
+            // The worker will have reloaded and the current provider instance
+            // disabled, removed from the provider list. We have a reference
+            // here, check it is is disabled.
+            is(provider.enabled, false, "old provider instance is disabled")
+            is(origin, addonManifest.origin, "provider manifest updated")
             SocialService.unregisterProviderListener(providerListener);
-            Services.prefs.clearUserPref("social.whitelist");
-            let provider = Social._getProviderFromOrigin(origin);
-            is(provider.manifest.version, 2, "manifest version is 2");
-            Social.uninstallProvider(origin, function() {
-              gBrowser.removeTab(tab);
-              next();
-            });
+
+            // Get the new provider instance, fetch the manifest via workerapi
+            // and validate that data as well.
+            let p = Social._getProviderFromOrigin(origin);
+            is(p.manifest.version, 2, "manifest version is 2");
+            let port = p.getWorkerPort();
+            ok(port, "got a new port");
+            port.onmessage = function (e) {
+              let topic = e.data.topic;
+              switch (topic) {
+                case "social.manifest":
+                  let manifest = e.data.data;
+                  is(manifest.version, 2, "manifest version is 2");
+                  port.close();
+                  Social.uninstallProvider(origin, function() {
+                    Services.prefs.clearUserPref("social.whitelist");
+                    gBrowser.removeTab(tab);
+                    next();
+                  });
+                  break;
+              }
+            }
+            port.postMessage({topic: "test-init"});
+            port.postMessage({topic: "manifest-get"});
+
           });
 
           let port = provider.getWorkerPort();
