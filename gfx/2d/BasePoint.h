@@ -20,7 +20,7 @@ namespace gfx {
  */
 template <class T, class Sub, class Coord = T>
 struct BasePoint {
-  Coord x, y;
+  T x, y;
 
   // Constructors
   MOZ_CONSTEXPR BasePoint() : x(0), y(0) {}
@@ -68,7 +68,7 @@ struct BasePoint {
   }
 
   T Length() const {
-    return hypot(x.value, y.value);
+    return hypot(x, y);
   }
 
   // Round() is *not* rounding to nearest integer if the values are negative.

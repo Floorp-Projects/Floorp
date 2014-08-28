@@ -250,7 +250,7 @@ FlattenBezierCurveSegment(const BezierControlPoints &aControlPoints,
     Point cp21 = currentCP.mCP2 - currentCP.mCP3;
     Point cp31 = currentCP.mCP3 - currentCP.mCP1;
 
-    Float s3 = (cp31.x.value * cp21.y.value - cp31.y.value * cp21.x.value) / hypotf(cp21.x, cp21.y);
+    Float s3 = (cp31.x * cp21.y - cp31.y * cp21.x) / hypotf(cp21.x, cp21.y);
 
     t = 2 * Float(sqrt(aTolerance / (3. * abs(s3))));
 
@@ -286,7 +286,7 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
       return;
     }
 
-    Float s3 = (cp41.x.value * cp21.y.value - cp41.y.value * cp21.x.value) / hypotf(cp21.x, cp21.y);
+    Float s3 = (cp41.x * cp21.y - cp41.y * cp21.x) / hypotf(cp21.x, cp21.y);
 
     if (s3 == 0) {
       // This means within the precision we have it can be approximated
