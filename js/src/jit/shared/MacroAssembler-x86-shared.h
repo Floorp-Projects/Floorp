@@ -467,6 +467,18 @@ class MacroAssemblerX86Shared : public Assembler
         cvtsd2ss(src, dest);
     }
 
+    void bitwiseAndX4(const Operand &src, FloatRegister dest) {
+        // TODO Using the "ps" variant for all types incurs a domain crossing
+        // penalty for integer types and double.
+        andps(src, dest);
+    }
+    void bitwiseOrX4(const Operand &src, FloatRegister dest) {
+        orps(src, dest);
+    }
+    void bitwiseXorX4(const Operand &src, FloatRegister dest) {
+        xorps(src, dest);
+    }
+
     void loadAlignedInt32x4(const Address &src, FloatRegister dest) {
         movdqa(Operand(src), dest);
     }
