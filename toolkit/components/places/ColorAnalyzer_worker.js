@@ -119,7 +119,7 @@ onmessage = function(event) {
 
   // only send back the most desirable colors
   mergedColors.sort(function(a, b) {
-    return b.desirability - a.desirability;
+    return b.desirability != a.desirability ? b.desirability - a.desirability : b.color - a.color;
   });
   mergedColors = mergedColors.map(function(metadata) {
     return metadata.color;
@@ -216,7 +216,7 @@ function mergeColors(colorFrequencies, numPixels, threshold) {
 }
 
 function descendingFreqSort(a, b) {
-  return b.freq - a.freq;
+  return b.freq != a.freq ? b.freq - a.freq : b.color - a.color;
 }
 
 /**
