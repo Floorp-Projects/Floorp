@@ -22,7 +22,7 @@ CallGetInterface(T* aSource, DestinationType** aDestination)
                                reinterpret_cast<void**>(aDestination));
 }
 
-class NS_COM_GLUE nsGetInterface : public nsCOMPtr_helper
+class nsGetInterface : public nsCOMPtr_helper
 {
 public:
   nsGetInterface(nsISupports* aSource, nsresult* aError)

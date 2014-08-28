@@ -303,6 +303,12 @@ AccessFuContentTest.prototype = {
           this.lazyCompare(android, expected.android));
       }
 
+      if (expected.focused) {
+        var doc = currentTabDocument();
+        is(doc.activeElement, doc.querySelector(expected.focused),
+          'Correct element is focused');
+      }
+
       this.pump();
     }
 

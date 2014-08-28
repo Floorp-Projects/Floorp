@@ -650,6 +650,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                                nsIFrame* aScrollFrame,
                                const nsIFrame* aReferenceFrame,
                                ContainerLayer* aRoot,
+                               ViewID aScrollParentId,
                                const nsRect& aViewport,
                                bool aForceNullScrollId,
                                bool aIsRoot,
@@ -706,6 +707,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   metrics.SetScrollId(scrollId);
   metrics.SetIsRoot(aIsRoot);
+  metrics.SetScrollParentId(aScrollParentId);
 
   // Only the root scrollable frame for a given presShell should pick up
   // the presShell's resolution. All the other frames are 1.0.
@@ -1291,7 +1293,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   RecordFrameMetrics(aForFrame, rootScrollFrame,
                      aBuilder->FindReferenceFrameFor(aForFrame),
-                     root, viewport,
+                     root, FrameMetrics::NULL_SCROLL_ID, viewport,
                      !isRoot, isRoot, containerParameters);
 
   // NS_WARNING is debug-only, so don't even bother checking the conditions in
@@ -2437,6 +2439,8 @@ nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuil
     case NS_THEME_WINDOW_BUTTON_BOX:
     case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON:
     case NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED:
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+    case NS_THEME_MAC_VIBRANCY_DARK:
       RegisterThemeGeometry(aBuilder, aFrame);
       break;
     case NS_THEME_WIN_BORDERLESS_GLASS:
@@ -3679,9 +3683,8 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
                       mFrame->GetPosition() +
                       mFrame->GetOffsetToCrossDoc(ReferenceFrame());
 
-    container->SetScrollHandoffParentId(mScrollParentId);
     RecordFrameMetrics(mFrame, rootScrollFrame, ReferenceFrame(),
-                       container, viewport,
+                       container, mScrollParentId, viewport,
                        false, isRootContentDocument, params);
   }
 
@@ -3990,9 +3993,8 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                     mScrollFrame->GetPosition() +
                     mScrollFrame->GetOffsetToCrossDoc(ReferenceFrame());
 
-  layer->SetScrollHandoffParentId(mScrollParentId);
   RecordFrameMetrics(mScrolledFrame, mScrollFrame, ReferenceFrame(), layer,
-                     viewport, false, false, params);
+                     mScrollParentId, viewport, false, false, params);
 
   if (mList.IsOpaque()) {
     nsRect displayport;
