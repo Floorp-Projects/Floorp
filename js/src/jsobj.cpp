@@ -382,11 +382,18 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
     if (pobj->isNative()) {
         desc.setAttributes(GetShapeAttributes(pobj, shape));
         if (desc.hasGetterOrSetterObject()) {
+            MOZ_ASSERT(desc.isShared());
             doGet = false;
             if (desc.hasGetterObject())
                 desc.setGetterObject(shape->getterObject());
             if (desc.hasSetterObject())
                 desc.setSetterObject(shape->setterObject());
+        } else {
+            // This is either a straight-up data property or (rarely) a
+            // property with a JSPropertyOp getter/setter. The latter must be
+            // reported to the caller as a plain data property, so don't
+            // populate desc.getter/setter, and mask away the SHARED bit.
+            desc.attributesRef() &= ~JSPROP_SHARED;
         }
     } else {
         if (!JSObject::getGenericAttributes(cx, pobj, id, &desc.attributesRef()))
