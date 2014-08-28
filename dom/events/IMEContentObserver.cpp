@@ -991,7 +991,9 @@ IMEContentObserver::FlushMergeableNotifications()
   }
 
   // If we're in handling an edit action, this method will be called later.
-  if (mEditor && mEditor->GetIsInEditAction()) {
+  bool isInEditAction = false;
+  if (mEditor && NS_SUCCEEDED(mEditor->GetIsInEditAction(&isInEditAction)) &&
+      isInEditAction) {
     return;
   }
 
