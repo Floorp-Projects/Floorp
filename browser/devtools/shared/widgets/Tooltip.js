@@ -465,6 +465,9 @@ Tooltip.prototype = {
 
     this.empty();
     this.panel.removeAttribute("clamped-dimensions");
+    this.panel.removeAttribute("clamped-dimensions-no-min-height");
+    this.panel.removeAttribute("clamped-dimensions-no-max-or-min-height");
+    this.panel.removeAttribute("wide");
 
     if (content) {
       this.panel.appendChild(content);
@@ -1155,44 +1158,73 @@ EventTooltip.prototype = {
       header.className = "event-header devtools-toolbar";
       container.appendChild(header);
 
-      let debuggerIcon = doc.createElement("image");
-      debuggerIcon.className = "event-tooltip-debugger-icon";
-      debuggerIcon.setAttribute("src", "chrome://browser/skin/devtools/tool-debugger.svg");
-      let openInDebugger = l10n.strings.GetStringFromName("eventsTooltip.openInDebugger");
-      debuggerIcon.setAttribute("tooltiptext", openInDebugger);
-      header.appendChild(debuggerIcon);
+      if (!listener.hide.debugger) {
+        let debuggerIcon = doc.createElement("image");
+        debuggerIcon.className = "event-tooltip-debugger-icon";
+        debuggerIcon.setAttribute("src", "chrome://browser/skin/devtools/tool-debugger.svg");
+        let openInDebugger = l10n.strings.GetStringFromName("eventsTooltip.openInDebugger");
+        debuggerIcon.setAttribute("tooltiptext", openInDebugger);
+        header.appendChild(debuggerIcon);
+      }
 
-      let eventTypeLabel = doc.createElement("label");
-      eventTypeLabel.className = "event-tooltip-event-type";
-      eventTypeLabel.setAttribute("value", listener.type);
-      eventTypeLabel.setAttribute("tooltiptext", listener.type);
-      header.appendChild(eventTypeLabel);
+      if (!listener.hide.type) {
+        let eventTypeLabel = doc.createElement("label");
+        eventTypeLabel.className = "event-tooltip-event-type";
+        eventTypeLabel.setAttribute("value", listener.type);
+        eventTypeLabel.setAttribute("tooltiptext", listener.type);
+        header.appendChild(eventTypeLabel);
+      }
 
-      let filename = doc.createElement("label");
-      filename.className = "event-tooltip-filename devtools-monospace";
-      filename.setAttribute("value", listener.origin);
-      filename.setAttribute("tooltiptext", listener.origin);
-      filename.setAttribute("crop", "left");
-      header.appendChild(filename);
+      if (!listener.hide.filename) {
+        let filename = doc.createElement("label");
+        filename.className = "event-tooltip-filename devtools-monospace";
+        filename.setAttribute("value", listener.origin);
+        filename.setAttribute("tooltiptext", listener.origin);
+        filename.setAttribute("crop", "left");
+        header.appendChild(filename);
+      }
 
-      let attributesBox = doc.createElement("box");
-      attributesBox.setAttribute("class", "event-tooltip-attributes-container");
-      header.appendChild(attributesBox);
+      let attributesContainer = doc.createElement("hbox");
+      attributesContainer.setAttribute("class", "event-tooltip-attributes-container");
+      header.appendChild(attributesContainer);
 
-      let capturing = doc.createElement("label");
-      capturing.className = "event-tooltip-attributes";
-      capturing.setAttribute("value", phase);
-      capturing.setAttribute("tooltiptext", phase);
-      attributesBox.appendChild(capturing);
+      if (!listener.hide.capturing) {
+        let attributesBox = doc.createElement("box");
+        attributesBox.setAttribute("class", "event-tooltip-attributes-box");
+        attributesContainer.appendChild(attributesBox);
 
-      let attributesBox2 = attributesBox.cloneNode(false);
-      header.appendChild(attributesBox2);
+        let capturing = doc.createElement("label");
+        capturing.className = "event-tooltip-attributes";
+        capturing.setAttribute("value", phase);
+        capturing.setAttribute("tooltiptext", phase);
+        attributesBox.appendChild(capturing);
+      }
 
-      let dom0 = doc.createElement("label");
-      dom0.className = "event-tooltip-attributes";
-      dom0.setAttribute("value", level);
-      dom0.setAttribute("tooltiptext", level);
-      attributesBox2.appendChild(dom0);
+      if (listener.tags) {
+        for (let tag of listener.tags.split(",")) {
+          let attributesBox = doc.createElement("box");
+          attributesBox.setAttribute("class", "event-tooltip-attributes-box");
+          attributesContainer.appendChild(attributesBox);
+
+          let tagBox = doc.createElement("label");
+          tagBox.className = "event-tooltip-attributes";
+          tagBox.setAttribute("value", tag);
+          tagBox.setAttribute("tooltiptext", tag);
+          attributesBox.appendChild(tagBox);
+        }
+      }
+
+      if (!listener.hide.dom0) {
+        let attributesBox = doc.createElement("box");
+        attributesBox.setAttribute("class", "event-tooltip-attributes-box");
+        attributesContainer.appendChild(attributesBox);
+
+        let dom0 = doc.createElement("label");
+        dom0.className = "event-tooltip-attributes";
+        dom0.setAttribute("value", level);
+        dom0.setAttribute("tooltiptext", level);
+        attributesBox.appendChild(dom0);
+      }
 
       // Content
       let content = doc.createElement("box");
@@ -1213,7 +1245,8 @@ EventTooltip.prototype = {
     }
 
     this._tooltip.content = container;
-    this._tooltip.panel.setAttribute("clamped-dimensions-no-min-height", "");
+    this._tooltip.panel.setAttribute("clamped-dimensions-no-max-or-min-height", "");
+    this._tooltip.panel.setAttribute("wide", "");
 
     this._tooltip.panel.addEventListener("popuphiding", () => {
       this.destroy(container);

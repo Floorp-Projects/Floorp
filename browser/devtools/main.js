@@ -21,6 +21,8 @@ loader.lazyGetter(this, "osString", () => Cc["@mozilla.org/xre/app-info;1"].getS
 
 let events = require("sdk/system/events");
 
+require("devtools/toolkit/event-parsers");
+
 // Panels
 loader.lazyGetter(this, "OptionsPanel", () => require("devtools/framework/toolbox-options").OptionsPanel);
 loader.lazyGetter(this, "InspectorPanel", () => require("devtools/inspector/inspector-panel").InspectorPanel);
