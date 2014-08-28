@@ -32,6 +32,7 @@
 #include "gfxPrefs.h"
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
+#include "LayerMetricsWrapper.h"
 #endif
 
 namespace mozilla {
@@ -641,9 +642,9 @@ ClientLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
                                               bool aDrawingCritical)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  Layer* primaryScrollable = GetPrimaryScrollableLayer();
+  const LayerMetricsWrapper& primaryScrollable = GetPrimaryScrollableLayer();
   if (primaryScrollable) {
-    const FrameMetrics& metrics = primaryScrollable->GetFrameMetrics();
+    const FrameMetrics& metrics = primaryScrollable.Metrics();
 
     // This is derived from the code in
     // gfx/layers/ipc/CompositorParent.cpp::TransformShadowTree.

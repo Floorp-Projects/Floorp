@@ -21,6 +21,7 @@
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "nsCSSPropList.h"
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels, etc
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
@@ -942,7 +943,15 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
   if (!ApplyAsyncContentTransformToTree(root)) {
     nsAutoTArray<Layer*,1> scrollableLayers;
 #ifdef MOZ_WIDGET_ANDROID
-    scrollableLayers.AppendElement(mLayerManager->GetPrimaryScrollableLayer());
+    const LayerMetricsWrapper& primaryScrollable = mLayerManager->GetPrimaryScrollableLayer();
+    if (primaryScrollable) {
+      // Extracting the Layer* from the LayerMetricsWrapper here is ugly but
+      // should be only temporary. It is needed here because Fennec doesn't
+      // support async scrolling of nested scrollable layers (i.e. sub-APZ).
+      // Once Fennec switches to native APZ (bug 776030) this code will be
+      // eliminated entirely.
+      scrollableLayers.AppendElement((Layer*)primaryScrollable.GetLayer());
+    }
 #else
     mLayerManager->GetScrollableLayers(scrollableLayers);
 #endif

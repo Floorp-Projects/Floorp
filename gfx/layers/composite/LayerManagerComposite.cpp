@@ -38,6 +38,7 @@
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
+#include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/layers/LayersTypes.h"  // for etc
 #include "ipc/CompositorBench.h"        // for CompositorBench
 #include "ipc/ShadowLayerUtils.h"
@@ -809,12 +810,12 @@ LayerManagerComposite::ComputeRenderIntegrity()
 #ifdef MOZ_WIDGET_ANDROID
   // Use the transform on the primary scrollable layer and its FrameMetrics
   // to find out how much of the viewport the current displayport covers
-  Layer* primaryScrollable = GetPrimaryScrollableLayer();
+  const LayerMetricsWrapper& primaryScrollable = GetPrimaryScrollableLayer();
   if (primaryScrollable) {
     // This is derived from the code in
     // AsyncCompositionManager::TransformScrollableLayer
-    const FrameMetrics& metrics = primaryScrollable->GetFrameMetrics();
-    Matrix4x4 transform = primaryScrollable->GetEffectiveTransform();
+    const FrameMetrics& metrics = primaryScrollable.Metrics();
+    Matrix4x4 transform = primaryScrollable.GetEffectiveTransform();
     transform.ScalePost(metrics.mResolution.scale, metrics.mResolution.scale, 1);
 
     // Clip the screen rect to the document bounds
