@@ -54,38 +54,17 @@ IsSupportedH264Codec(const nsAString& aCodec)
   // 5.1.". We also report that we can play Extended profile, as there are
   // bitstreams that are Extended compliant that are also Baseline compliant.
 
-  // H.264 codecs parameters have a type defined as avc1.PPCCLL, where
-  // PP = profile_idc, CC = constraint_set flags, LL = level_idc.
-  // We ignore the constraint_set flags, as it's not clear from the WMF
-  // documentation what constraints the WMF H.264 decoder supports.
-  // See http://blog.pearce.org.nz/2013/11/what-does-h264avc1-codecs-parameters.html
-  // for more details.
-  if (aCodec.Length() != strlen("avc1.PPCCLL")) {
+  int16_t profile = 0, level = 0;
+  if (!ExtractH264CodecDetails(aCodec, profile, level)) {
     return false;
   }
 
-  // Verify the codec starts with "avc1.".
-  const nsAString& sample = Substring(aCodec, 0, 5);
-  if (!sample.EqualsASCII("avc1.")) {
-    return false;
-  }
-
-  // Extract the profile_idc and level_idc. Note: the constraint_set flags
-  // are ignored, it's not clear from the WMF documentation if they make a
-  // difference.
-  nsresult rv = NS_OK;
-  const int32_t profile = PromiseFlatString(Substring(aCodec, 5, 2)).ToInteger(&rv, 16);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  const int32_t level = PromiseFlatString(Substring(aCodec, 9, 2)).ToInteger(&rv, 16);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return level >= eAVEncH264VLevel1 &&
-         level <= eAVEncH264VLevel5_1 &&
-         (profile == eAVEncH264VProfile_Base ||
-          profile == eAVEncH264VProfile_Main ||
-          profile == eAVEncH264VProfile_Extended ||
-          profile == eAVEncH264VProfile_High);
+  return level >= H264_LEVEL_1 &&
+         level <= H264_LEVEL_5_1 &&
+         (profile == H264_PROFILE_BASE ||
+          profile == H264_PROFILE_MAIN ||
+          profile == H264_PROFILE_EXTENDED ||
+          profile == H264_PROFILE_HIGH);
 }
 
 bool

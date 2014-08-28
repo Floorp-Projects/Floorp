@@ -54,7 +54,7 @@ struct nsID
    * nsID Parsing method. Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
    * string into an nsID
    */
-  NS_COM_GLUE bool Parse(const char* aIDStr);
+  bool Parse(const char* aIDStr);
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
   /**
@@ -62,14 +62,14 @@ struct nsID
    * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format. Caller should free string.
    * YOU SHOULD ONLY USE THIS IF YOU CANNOT USE ToProvidedString() BELOW.
    */
-  NS_COM_GLUE char* ToString() const;
+  char* ToString() const;
 
   /**
    * nsID string encoder. Builds a string in
    * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format, into a char[NSID_LENGTH]
    * buffer provided by the caller (for instance, on the stack).
    */
-  NS_COM_GLUE void ToProvidedString(char (&aDest)[NSID_LENGTH]) const;
+  void ToProvidedString(char (&aDest)[NSID_LENGTH]) const;
 
 #endif // XPCOM_GLUE_AVOID_NSPR
 

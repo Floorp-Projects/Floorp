@@ -61,7 +61,7 @@ public:
 
 class nsDequeIterator;
 
-class NS_COM_GLUE nsDeque
+class nsDeque
 {
   friend class nsDequeIterator;
   typedef mozilla::fallible_t fallible_t;
@@ -236,7 +236,7 @@ private:
  * Here comes the nsDequeIterator class...
  ******************************************************/
 
-class NS_COM_GLUE nsDequeIterator
+class nsDequeIterator
 {
 public:
   /**
