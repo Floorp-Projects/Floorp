@@ -358,7 +358,6 @@ add_task(function cancel_mismatch() {
 
   // Clear the AddonRepository-last-updated preference to ensure that it reloads
   Services.prefs.clearUserPref(PREF_METADATA_LASTUPDATE);
-  let observeUpdateDone = promise_observer("TEST:addon-repository-data-updated");
   let installsDone = promise_observer("TEST:all-updates-done");
 
   // Don't pull compatibility data during add-on install
@@ -413,8 +412,6 @@ add_task(function cancel_mismatch() {
 add_task(function cancel_mismatch_no_updates() {
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
   Services.prefs.setCharPref(PREF_MIN_PLATFORM_COMPAT, "0");
-
-  let observeUpdateDone = promise_observer("TEST:addon-repository-data-updated");
 
   // Don't pull compatibility data during add-on install
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);

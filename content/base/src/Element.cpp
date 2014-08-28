@@ -1500,20 +1500,22 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 
   // Unset this since that's what the old code effectively did.
   UnsetFlags(NODE_FORCE_XBL_BINDINGS);
-  
+  bool clearBindingParent = true;
+
 #ifdef MOZ_XUL
   nsXULElement* xulElem = nsXULElement::FromContent(this);
   if (xulElem) {
     xulElem->SetXULBindingParent(nullptr);
+    clearBindingParent = false;
   }
-  else
 #endif
-  {
-    nsDOMSlots *slots = GetExistingDOMSlots();
-    if (slots) {
+
+  nsDOMSlots* slots = GetExistingDOMSlots();
+  if (slots) {
+    if (clearBindingParent) {
       slots->mBindingParent = nullptr;
-      slots->mContainingShadow = nullptr;
     }
+    slots->mContainingShadow = nullptr;
   }
 
   // This has to be here, rather than in nsGenericHTMLElement::UnbindFromTree, 

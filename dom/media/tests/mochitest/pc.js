@@ -1539,6 +1539,10 @@ PeerConnectionWrapper.prototype = {
    *        The location the stream is coming from ('local' or 'remote')
    */
   attachMedia : function PCW_attachMedia(stream, type, side) {
+    function isSenderOfTrack(sender) {
+      return sender.track == this;
+    }
+
     info("Got media stream: " + type + " (" + side + ")");
     this.streams.push(stream);
 
@@ -1547,9 +1551,13 @@ PeerConnectionWrapper.prototype = {
       // way and audio + audiovideo the other.
       if (type == "video") {
         this._pc.addStream(stream);
+        ok(this._pc.getSenders().find(isSenderOfTrack,
+                                      stream.getVideoTracks()[0]),
+           "addStream adds sender");
       } else {
         stream.getTracks().forEach(function(track) {
-          this._pc.addTrack(track, stream);
+          var sender = this._pc.addTrack(track, stream);
+          is(sender.track, track, "addTrack returns sender");
         }.bind(this));
       }
     }

@@ -75,6 +75,8 @@ public:
 private:
   ~ServiceWorkerContainer();
 
+  void RemoveReadyPromise();
+
   // This only changes when a worker hijacks everything in its scope by calling
   // replace().
   // FIXME(nsm): Bug 982711. Provide API to let SWM invalidate this.

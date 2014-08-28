@@ -33,6 +33,16 @@
       element.style.display = "block";
     }
 
+    function ariaHide(id) {
+      var element = document.getElementById(id);
+      element.setAttribute('aria-hidden', true);
+    }
+
+    function ariaShow(id) {
+      var element = document.getElementById(id);
+      element.setAttribute('aria-hidden', false);
+    }
+
     function udpate(id, text, property) {
       var element = document.getElementById(id);
       element[property] = text;
@@ -60,7 +70,7 @@
     }, {
       expected: {
         "eventType": "liveregion-change",
-        "data": [{"string": "hidden"},"I will be hidden"],
+        "data": [{"string": "hidden"}, "I will be hidden"],
         "options": {
           "enqueue": true
         }
@@ -97,11 +107,70 @@
         "eventType": "liveregion-change",
         "data": [{"string": "hidden"}, "I will be hidden"],
         "options": {
+          "enqueue": true
+        }
+      },
+      action: function action() {
+        [ariaHide(id) for (id of ["to_hide5", "to_hide6", "to_hide7",
+          "to_hide8", "to_hide9"])];
+      }
+    }, {
+      expected: {
+        "eventType": "liveregion-change",
+        "data": [{"string": "hidden"}, "I will be hidden"],
+        "options": {
+          "enqueue": true
+        }
+      },
+      action: function action() {
+        [ariaHide(id) for (id of ["to_hide_descendant5", "to_hide_descendant6",
+          "to_hide_descendant7", "to_hide_descendant8"])];
+      }
+    }, {
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["I will be shown"],
+        "options": {
+          "enqueue": true
+        }
+      },
+      action: function action() {
+        [ariaShow(id) for (id of ["to_show5", "to_show6", "to_show7",
+          "to_show8", "to_show9"])];
+      }
+    }, {
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["I will be shown"],
+        "options": {
+          "enqueue": true
+        }
+      },
+      action: function action() {
+        [ariaShow(id) for (id of ["to_show_descendant5", "to_show_descendant6",
+          "to_show_descendant7", "to_show_descendant8"])];
+      }
+    }, {
+      expected: {
+        "eventType": "liveregion-change",
+        "data": [{"string": "hidden"}, "I will be hidden"],
+        "options": {
           "enqueue": false
         }
       },
       action: function action() {
         hide("to_hide_live_assertive");
+      }
+    }, {
+      expected: {
+        "eventType": "liveregion-change",
+        "data": [{"string": "hidden"}, "I will be hidden"],
+        "options": {
+          "enqueue": false
+        }
+      },
+      action: function action() {
+        ariaHide("to_hide_live_assertive2");
       }
     }, {
       expected: {
@@ -113,6 +182,18 @@
       },
       action: function action() {
         [show(id) for (id of ["to_show_live_off", "to_show_live_assertive"])];
+      }
+    }, {
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["I will be shown"],
+        "options": {
+          "enqueue": false
+        }
+      },
+      action: function action() {
+        [ariaShow(id) for (id of ["to_show_live_off2",
+          "to_show_live_assertive2"])];
       }
     }, {
       expected: {
@@ -284,6 +365,12 @@
     <p id="to_hide3" aria-live="assertive" aria-relevant="text">I should not be announced 3</p>
     <p id="to_hide4" aria-live="polite" aria-relevant="all">I will be hidden</p>
 
+    <p id="to_hide5" aria-hidden="true">I should not be announced 5</p>
+    <p id="to_hide6">I should not be announced 6</p>
+    <p id="to_hide7" aria-live="polite">I should not be announced 7</p>
+    <p id="to_hide8" aria-live="assertive" aria-relevant="text">I should not be announced 8</p>
+    <p id="to_hide9" aria-live="polite" aria-relevant="all">I will be hidden</p>
+
     <div>
       <p id="to_hide_descendant1">I should not be announced 1</p>
     </div>
@@ -297,10 +384,29 @@
       <p id="to_hide_descendant4">I will be hidden</p>
     </div>
 
+    <div>
+      <p id="to_hide_descendant5">I should not be announced 4</p>
+    </div>
+    <div aria-live="polite">
+      <p id="to_hide_descendant6">I should not be announced 5</p>
+    </div>
+    <div aria-live="assertive" aria-relevant="text">
+      <p id="to_hide_descendant7">I should not be announced 6</p>
+    </div>
+    <div aria-live="polite" aria-relevant="all">
+      <p id="to_hide_descendant8">I will be hidden</p>
+    </div>
+
     <p id="to_show1" style="display: none">I should not be announced 1</p>
     <p id="to_show2" aria-live="assertive" aria-relevant="text" style="display: none">I should not be announced 2</p>
     <p id="to_show3" aria-live="polite" aria-relevant="removals" style="display: none">I should not be announced 3</p>
     <p id="to_show4" aria-live="polite" aria-relevant="all" style="display: none">I will be shown</p>
+
+    <p id="to_show5" aria-hidden="false">I should not be announced 5</p>
+    <p id="to_show6" aria-hidden="true">I should not be announced 6</p>
+    <p id="to_show7" aria-hidden="true" aria-live="assertive" aria-relevant="text">I should not be announced 7</p>
+    <p id="to_show8" aria-hidden="true" aria-live="polite" aria-relevant="removals">I should not be announced 8</p>
+    <p id="to_show9" aria-hidden="true" aria-live="polite" aria-relevant="all">I will be shown</p>
 
     <div>
       <p id="to_show_descendant1" style="display: none">I should not be announced 1</p>
@@ -315,12 +421,33 @@
       <p id="to_show_descendant4" style="display: none">I will be shown</p>
     </div>
 
+    <div>
+      <p id="to_show_descendant5" aria-hidden="true">I should not be announced 5</p>
+    </div>
+    <div aria-live="polite" aria-relevant="removals">
+      <p id="to_show_descendant6" aria-hidden="true">I should not be announced 6</p>
+    </div>
+    <div aria-live="assertive" aria-relevant="text">
+      <p id="to_show_descendant7" aria-hidden="true">I should not be announced 7</p>
+    </div>
+    <div aria-live="polite" aria-relevant="all">
+      <p id="to_show_descendant8" aria-hidden="true">I will be shown</p>
+    </div>
+
     <div aria-live="assertive" aria-relevant="all">
       <p id="to_hide_live_assertive">I will be hidden</p>
+    </div>
+
+    <div aria-live="assertive" aria-relevant="all">
+      <p id="to_hide_live_assertive2">I will be hidden</p>
     </div>
     <p id="to_show_live_assertive" aria-live="assertive" style="display: none">I will be shown</p>
 
     <p id="to_show_live_off" aria-live="off" style="display: none">I will not be shown</p>
+
+    <p id="to_show_live_assertive2" aria-live="assertive" aria-hidden="true">I will be shown</p>
+
+    <p id="to_show_live_off2" aria-live="off" aria-hidden="true">I will not be shown</p>
 
     <div id="to_replace_region" aria-live="polite" aria-relevant="all">
       <p id="to_replace">I am replaced</p>
