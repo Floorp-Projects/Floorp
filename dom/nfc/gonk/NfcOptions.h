@@ -83,7 +83,8 @@ struct EventOptions
 {
   EventOptions()
     : mType(EmptyString()), mStatus(-1), mSessionId(-1), mRequestId(EmptyString()), mMajorVersion(-1), mMinorVersion(-1),
-      mIsReadOnly(-1), mCanBeMadeReadOnly(-1), mMaxSupportedLength(-1), mPowerLevel(-1)
+      mIsReadOnly(-1), mCanBeMadeReadOnly(-1), mMaxSupportedLength(-1), mPowerLevel(-1), mOrigin(EmptyString()),
+      mOriginType(-1), mOriginIndex(-1)
   {}
 
   nsString mType;
@@ -98,6 +99,12 @@ struct EventOptions
   int32_t mCanBeMadeReadOnly;
   int32_t mMaxSupportedLength;
   int32_t mPowerLevel;
+
+  nsString mOrigin;
+  int32_t mOriginType;
+  int32_t mOriginIndex;
+  nsTArray<uint8_t> mAid;
+  nsTArray<uint8_t> mPayload;
 };
 
 } // namespace mozilla

@@ -439,3 +439,13 @@ function wait(ms) {
   content.setTimeout(def.resolve, ms);
   return def.promise;
 }
+
+/**
+ * Wait for all current promises to be resolved. See this as executeSoon that
+ * can be used with yield.
+ */
+function promiseNextTick() {
+  let deferred = promise.defer();
+  executeSoon(deferred.resolve);
+  return deferred.promise;
+}

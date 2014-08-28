@@ -36,6 +36,12 @@ nsLiteralString NfcTechString[] = {
   NS_LITERAL_STRING("BARCODE")
 };
 
+static const nsLiteralString SEOriginString[] = {
+  NS_LITERAL_STRING("SIM"),
+  NS_LITERAL_STRING("ESE"),
+  NS_LITERAL_STRING("ASSD")
+};
+
 namespace mozilla {
 
 static NfcService* gNfcService;
@@ -161,6 +167,27 @@ public:
     COPY_OPT_FIELD(mIsReadOnly, -1)
     COPY_OPT_FIELD(mCanBeMadeReadOnly, -1)
     COPY_OPT_FIELD(mMaxSupportedLength, -1)
+
+    // HCI Event Transaction parameters.
+    int size = sizeof(SEOriginString) / sizeof(nsLiteralString);
+    // TODO: We need a map or something to more rigorously validate against
+    // Gonk Message header values from inside NfcService.
+    if ((mEvent.mOriginType != -1) && (mEvent.mOriginType < size)) {
+      mEvent.mOrigin.Assign(SEOriginString[mEvent.mOriginType]);
+      mEvent.mOrigin.AppendInt(mEvent.mOriginIndex, 16 /* radix */);
+      event.mOrigin.Construct();
+      event.mOrigin.Value() = mEvent.mOrigin;
+    }
+
+    if (mEvent.mAid.Length() > 0) {
+      event.mAid.Construct();
+      event.mAid.Value().Init(Uint8Array::Create(cx, mEvent.mAid.Length(), mEvent.mAid.Elements()));
+    }
+
+    if (mEvent.mPayload.Length() > 0) {
+      event.mPayload.Construct();
+      event.mPayload.Value().Init(Uint8Array::Create(cx, mEvent.mPayload.Length(), mEvent.mPayload.Elements()));
+    }
 
 #undef COPY_FIELD
 #undef COPY_OPT_FIELD

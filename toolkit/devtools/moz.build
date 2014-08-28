@@ -32,6 +32,7 @@ EXTRA_JS_MODULES.devtools += [
     'deprecated-sync-thenables.js',
     'DevToolsUtils.js',
     'event-emitter.js',
+    'event-parsers.js',
     'output-parser.js',
     'touch-events.js',
     'worker-loader.js',

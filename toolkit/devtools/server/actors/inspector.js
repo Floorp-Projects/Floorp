@@ -290,24 +290,18 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
   },
 
   /**
-   * Are event listeners that are listening on this node?
+   * Are there event listeners that are listening on this node? This method
+   * uses all parsers registered via gDevTools.registerEventParser() to check if
+   * there are any event listeners.
    */
   get _hasEventListeners() {
-    let listeners;
-
-    if (this.rawNode.nodeName.toLowerCase() === "html") {
-      listeners = eventListenerService.getListenerInfoFor(this.rawNode.ownerGlobal);
-    } else {
-      listeners = eventListenerService.getListenerInfoFor(this.rawNode) || [];
+    let parsers = gDevTools.eventParsers;
+    for (let [,{hasListeners}] of parsers) {
+      if (hasListeners && hasListeners(this.rawNode)) {
+        return true;
+      }
     }
-
-    listeners = listeners.filter(listener => {
-      return listener.listenerObject && listener.type && listener.listenerObject;
-    });
-
-    let hasListeners = listeners.length > 0;
-
-    return hasListeners;
+    return false;
   },
 
   writeAttrs: function() {
@@ -333,120 +327,164 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
   },
 
   /**
-   * Get event listeners attached to a node.
+   * Gets event listeners and adds their information to the events array.
    *
    * @param  {Node} node
    *         Node for which we are to get listeners.
+   */
+  getEventListeners: function(node) {
+    let parsers = gDevTools.eventParsers;
+    let dbg = this.parent().tabActor.makeDebugger();
+    let events = [];
+
+    for (let [,{getListeners, normalizeHandler}] of parsers) {
+      let eventInfos = getListeners(node);
+
+      if (!eventInfos) {
+        continue;
+      }
+
+      for (let eventInfo of eventInfos) {
+        if (normalizeHandler) {
+          eventInfo.normalizeHandler = normalizeHandler;
+        }
+
+        this.processHandlerForEvent(node, events, dbg, eventInfo);
+      }
+    }
+
+    return events;
+  },
+
+  /**
+   * Process a handler
+   *
+   * @param  {Node} node
+   *         The node for which we want information.
+   * @param  {Array} events
+   *         The events array contains all event objects that we have gathered
+   *         so far.
+   * @param  {Debugger} dbg
+   *         JSDebugger instance.
+   * @param  {Object} eventInfo
+   *         See gDevTools.registerEventParser() for a description of the
+   *         eventInfo object.
+   *
    * @return {Array}
    *         An array of objects where a typical object looks like this:
    *           {
    *             type: "click",
+   *             handler: function() { doSomething() },
+   *             origin: "http://www.mozilla.com",
+   *             searchString: 'onclick="doSomething()"',
+   *             tags: tags,
    *             DOM0: true,
    *             capturing: true,
-   *             handler: "function() { doSomething() }",
-   *             origin: "http://www.mozilla.com",
-   *             searchString: 'onclick="doSomething()"'
+   *             hide: {
+   *               dom0: true
+   *             }
    *           }
    */
-  getEventListeners: function(node) {
-    let dbg = this.parent().tabActor.makeDebugger();
+  processHandlerForEvent: function(node, events, dbg, eventInfo) {
+    let type = eventInfo.type || "";
+    let handler = eventInfo.handler;
+    let tags = eventInfo.tags || "";
+    let hide = eventInfo.hide || {};
+    let override = eventInfo.override || {};
+    let global = Cu.getGlobalForObject(handler);
+    let globalDO = dbg.addDebuggee(global);
+    let listenerDO = globalDO.makeDebuggeeValue(handler);
 
-    let handlers = eventListenerService.getListenerInfoFor(node);
-    let events = [];
-
-    for (let handler of handlers) {
-      let listener = handler.listenerObject;
-
-      // If there is no JS event listener skip this.
-      if (!listener) {
-        continue;
-      }
-
-      let global = Cu.getGlobalForObject(listener);
-      let globalDO = dbg.addDebuggee(global);
-      let listenerDO = globalDO.makeDebuggeeValue(listener);
-
-      // If the listener is an object with a 'handleEvent' method, use that.
-      if (listenerDO.class === "Object" || listenerDO.class === "XULElement") {
-        let desc;
-
-        while (!desc && listenerDO) {
-          desc = listenerDO.getOwnPropertyDescriptor("handleEvent");
-          listenerDO = listenerDO.proto;
-        }
-
-        if (desc && desc.value) {
-          listenerDO = desc.value;
-        }
-      }
-
-      if (listenerDO.isBoundFunction) {
-        listenerDO = listenerDO.boundTargetFunction;
-      }
-
-      let script = listenerDO.script;
-      let scriptSource = script.source.text;
-      let functionSource =
-        scriptSource.substr(script.sourceStart, script.sourceLength);
-
-      /*
-      The script returned is the whole script and
-      scriptSource.substr(script.sourceStart, script.sourceLength) returns
-      something like:
-        () { doSomething(); }
-
-      So we need to work back to the preceeding \n, ; or } so we can get the
-        appropriate function info e.g.:
-        () => { doSomething(); }
-        function doit() { doSomething(); }
-        doit: function() { doSomething(); }
-      */
-      let scriptBeforeFunc = scriptSource.substr(0, script.sourceStart);
-      let lastEnding = Math.max(
-        scriptBeforeFunc.lastIndexOf(";"),
-        scriptBeforeFunc.lastIndexOf("}"),
-        scriptBeforeFunc.lastIndexOf("{"),
-        scriptBeforeFunc.lastIndexOf("("),
-        scriptBeforeFunc.lastIndexOf(","),
-        scriptBeforeFunc.lastIndexOf("!")
-      );
-
-      if (lastEnding !== -1) {
-        let functionPrefix = scriptBeforeFunc.substr(lastEnding + 1);
-        functionSource = functionPrefix + functionSource;
-      }
-
-      let type = handler.type;
-      let dom0 = false;
-
-      if (typeof node.hasAttribute !== "undefined") {
-        dom0 = !!node.hasAttribute("on" + type);
-      } else {
-        dom0 = !!node["on" + type];
-      }
-
-      let line = script.startLine;
-      let url = script.url;
-      let origin = url + (dom0 ? "" : ":" + line);
-      let searchString;
-
-      if (dom0) {
-        searchString = "on" + type + "=\"" + script.source.text + "\"";
-      } else {
-        scriptSource = "    " + scriptSource;
-      }
-
-      events.push({
-        type: type,
-        DOM0: dom0,
-        capturing: handler.capturing,
-        handler: functionSource.trim(),
-        origin: origin,
-        searchString: searchString
-      });
+    if (eventInfo.normalizeHandler) {
+      listenerDO = eventInfo.normalizeHandler(listenerDO);
     }
-    dbg.removeAllDebuggees();
-    return events;
+
+    // If the listener is an object with a 'handleEvent' method, use that.
+    if (listenerDO.class === "Object" || listenerDO.class === "XULElement") {
+      let desc;
+
+      while (!desc && listenerDO) {
+        desc = listenerDO.getOwnPropertyDescriptor("handleEvent");
+        listenerDO = listenerDO.proto;
+      }
+
+      if (desc && desc.value) {
+        listenerDO = desc.value;
+      }
+    }
+
+    if (listenerDO.isBoundFunction) {
+      listenerDO = listenerDO.boundTargetFunction;
+    }
+
+    let script = listenerDO.script;
+    let scriptSource = script.source.text;
+    let functionSource =
+      scriptSource.substr(script.sourceStart, script.sourceLength);
+
+    /*
+    The script returned is the whole script and
+    scriptSource.substr(script.sourceStart, script.sourceLength) returns
+    something like:
+      () { doSomething(); }
+
+    So we need to work back to the preceeding \n, ; or } so we can get the
+      appropriate function info e.g.:
+      () => { doSomething(); }
+      function doit() { doSomething(); }
+      doit: function() { doSomething(); }
+    */
+    let scriptBeforeFunc = scriptSource.substr(0, script.sourceStart);
+    let lastEnding = Math.max(
+      scriptBeforeFunc.lastIndexOf(";"),
+      scriptBeforeFunc.lastIndexOf("}"),
+      scriptBeforeFunc.lastIndexOf("{"),
+      scriptBeforeFunc.lastIndexOf("("),
+      scriptBeforeFunc.lastIndexOf(","),
+      scriptBeforeFunc.lastIndexOf("!")
+    );
+
+    if (lastEnding !== -1) {
+      let functionPrefix = scriptBeforeFunc.substr(lastEnding + 1);
+      functionSource = functionPrefix + functionSource;
+    }
+
+    let dom0 = false;
+
+    if (typeof node.hasAttribute !== "undefined") {
+      dom0 = !!node.hasAttribute("on" + type);
+    } else {
+      dom0 = !!node["on" + type];
+    }
+
+    let line = script.startLine;
+    let url = script.url;
+    let origin = url + (dom0 ? "" : ":" + line);
+    let searchString;
+
+    if (dom0) {
+      searchString = "on" + type + "=\"" + script.source.text + "\"";
+    } else {
+      scriptSource = "    " + scriptSource;
+    }
+
+    let eventObj = {
+      type: typeof override.type !== "undefined" ? override.type : type,
+      handler: functionSource.trim(),
+      origin: typeof override.origin !== "undefined" ?
+                     override.origin : origin,
+      searchString: typeof override.searchString !== "undefined" ?
+                           override.searchString : searchString,
+      tags: tags,
+      DOM0: typeof override.dom0 !== "undefined" ? override.dom0 : dom0,
+      capturing: typeof override.capturing !== "undefined" ?
+                        override.capturing : eventInfo.capturing,
+      hide: hide
+    };
+
+    events.push(eventObj);
+
+    dbg.removeDebuggee(globalDO);
   },
 
   /**
