@@ -49,18 +49,18 @@
       let message = SpecialPowers.wrap(data).data.msg;
 
       if (validStructuredMessage(message)) {
-        if (message.test === undefined || message.message === undefined) {
-          return;
-        }
-
         switch (message.action) {
           case "test_status":
+            ok(message.expected === undefined, message.subtest, message.message);
+            break;
           case "test_end":
             ok(message.expected === undefined, message.test, message.message);
             break;
+          case "log":
+            info(message.message);
+            break;
           default:
-            let details = message.test + " | " + message.message;
-            info(details);
+            // nothing
         }
       }
     }
@@ -134,8 +134,8 @@
       let href =  window.location.href;
       href = href.substring(0, href.lastIndexOf('/'));
       href = href.substring(0, href.lastIndexOf('/'));
-      iframe.src = href + "/test?consoleLevel=INFO";
-
+      let manifest = "tests/dom/devicestorage/ipc/ipc.json";
+      iframe.src = href + "/test?consoleLevel=INFO&testManifest=" + manifest;
       document.body.appendChild(iframe);
     }
 

@@ -32,13 +32,13 @@ addThis();
 
 status = inSection(2);
 actual = RegExp.$2;
-expect = undefined;
+expect = '';
 addThis();
 
 re.test('b');
 status = inSection(3);
 actual = RegExp.$1;
-expect = undefined;
+expect = '';
 addThis();
 
 status = inSection(4);

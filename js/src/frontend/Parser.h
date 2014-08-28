@@ -624,6 +624,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node pushLetScope(Handle<StaticBlockObject*> blockObj, StmtInfoPC *stmt);
     bool noteNameUse(HandlePropertyName name, Node pn);
     Node objectLiteral();
+    Node computedPropertyName(Node literal);
     Node arrayInitializer();
     Node newRegExp();
 

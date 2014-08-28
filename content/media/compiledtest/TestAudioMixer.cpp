@@ -9,25 +9,28 @@
 using mozilla::AudioDataValue;
 using mozilla::AudioSampleFormat;
 
+struct MixerConsumer : public mozilla::MixerCallbackReceiver
+{
 /* In this test, the different audio stream and channels are always created to
  * cancel each other. */
-void MixingDone(AudioDataValue* aData, AudioSampleFormat aFormat, uint32_t aChannels, uint32_t aFrames, uint32_t aSampleRate)
-{
-  bool silent = true;
-  for (uint32_t i = 0; i < aChannels * aFrames; i++) {
-    if (aData[i] != 0.0) {
-      if (aFormat == mozilla::AUDIO_FORMAT_S16) {
-        fprintf(stderr, "Sample at %d is not silent: %d\n", i, (short)aData[i]);
-      } else {
-        fprintf(stderr, "Sample at %d is not silent: %f\n", i, (float)aData[i]);
+  void MixerCallback(AudioDataValue* aData, AudioSampleFormat aFormat, uint32_t aChannels, uint32_t aFrames, uint32_t aSampleRate)
+  {
+    bool silent = true;
+    for (uint32_t i = 0; i < aChannels * aFrames; i++) {
+      if (aData[i] != 0.0) {
+        if (aFormat == mozilla::AUDIO_FORMAT_S16) {
+          fprintf(stderr, "Sample at %d is not silent: %d\n", i, (short)aData[i]);
+        } else {
+          fprintf(stderr, "Sample at %d is not silent: %f\n", i, (float)aData[i]);
+        }
+        silent = false;
       }
-      silent = false;
+    }
+    if (!silent) {
+      MOZ_CRASH();
     }
   }
-  if (!silent) {
-    MOZ_CRASH();
-  }
-}
+};
 
 /* Helper function to give us the maximum and minimum value that don't clip,
  * for a given sample format (integer or floating-point). */
@@ -68,6 +71,7 @@ void FillBuffer(AudioDataValue* aBuffer, uint32_t aLength, AudioDataValue aValue
 int main(int argc, char* argv[]) {
   const uint32_t CHANNEL_LENGTH = 256;
   const uint32_t AUDIO_RATE = 44100;
+  MixerConsumer consumer;
   AudioDataValue a[CHANNEL_LENGTH * 2];
   AudioDataValue b[CHANNEL_LENGTH * 2];
   FillBuffer(a, CHANNEL_LENGTH, GetLowValue<AudioDataValue>());
@@ -77,7 +81,8 @@ int main(int argc, char* argv[]) {
 
   {
     int iterations = 2;
-    mozilla::AudioMixer mixer(MixingDone);
+    mozilla::AudioMixer mixer;
+    mixer.AddCallback(&consumer);
 
     fprintf(stderr, "Test AudioMixer constant buffer length.\n");
 
@@ -89,7 +94,8 @@ int main(int argc, char* argv[]) {
   }
 
   {
-    mozilla::AudioMixer mixer(MixingDone);
+    mozilla::AudioMixer mixer;
+    mixer.AddCallback(&consumer);
 
     fprintf(stderr, "Test AudioMixer variable buffer length.\n");
 
@@ -120,7 +126,9 @@ int main(int argc, char* argv[]) {
   FillBuffer(b, CHANNEL_LENGTH, GetHighValue<AudioDataValue>());
 
   {
-    mozilla::AudioMixer mixer(MixingDone);
+    mozilla::AudioMixer mixer;
+    mixer.AddCallback(&consumer);
+
     fprintf(stderr, "Test AudioMixer variable channel count.\n");
 
     mixer.Mix(a, 1, CHANNEL_LENGTH, AUDIO_RATE);
@@ -135,7 +143,8 @@ int main(int argc, char* argv[]) {
   }
 
   {
-    mozilla::AudioMixer mixer(MixingDone);
+    mozilla::AudioMixer mixer;
+    mixer.AddCallback(&consumer);
     fprintf(stderr, "Test AudioMixer variable stream count.\n");
 
     mixer.Mix(a, 2, CHANNEL_LENGTH, AUDIO_RATE);

@@ -38,7 +38,7 @@ this.webrtcUI = {
   showGlobalIndicator: false,
   showCameraIndicator: false,
   showMicrophoneIndicator: false,
-  showScreenSharingIndicator: "", // either "Screen" or "Window"
+  showScreenSharingIndicator: "", // either "Application", "Screen" or "Window"
 
   // The boolean parameters indicate which streams should be included in the result.
   getActiveStreams: function(aCamera, aMicrophone, aScreen) {
@@ -53,13 +53,15 @@ this.webrtcUI = {
         Microphone: {},
         Window: {},
         Screen: {},
+        Application: {}
       };
       MediaManagerService.mediaCaptureWindowState(contentWindow, info.Camera,
                                                   info.Microphone, info.Screen,
-                                                  info.Window);
+                                                  info.Window, info.Application);
       if (!(aCamera && info.Camera.value ||
             aMicrophone && info.Microphone.value ||
-            aScreen && (info.Screen.value || info.Window.value)))
+            aScreen && (info.Screen.value || info.Window.value ||
+                        info.Application.value)))
         continue;
 
       let browser = getBrowserForWindow(contentWindow);
@@ -329,36 +331,48 @@ function prompt(aContentWindow, aCallID, aAudio, aVideo, aDevices, aSecure) {
         while (menupopup.lastChild)
           menupopup.removeChild(menupopup.lastChild);
 
-        // "No Window or Screen" is the default because we can't pick a
+        let type = devices[0].mediaSource;
+        let typeName = type.charAt(0).toUpperCase() + type.substr(1);
+
+        let label = chromeDoc.getElementById("webRTC-selectWindow-label");
+        let stringId = "getUserMedia.select" + typeName;
+        label.setAttribute("value",
+                           stringBundle.getString(stringId + ".label"));
+        label.setAttribute("accesskey",
+                           stringBundle.getString(stringId + ".accesskey"));
+
+        // "No <type>" is the default because we can't pick a
         // 'default' window to share.
         addDeviceToList(menupopup,
-                        stringBundle.getString("getUserMedia.noWindowOrScreen.label"),
+                        stringBundle.getString("getUserMedia.no" + typeName + ".label"),
                         "-1");
+        menupopup.appendChild(chromeDoc.createElement("menuseparator"));
 
-        // Then add the 'Entire screen' item if mozGetUserMediaDevices returned it.
+        // Build the list of 'devices'.
         for (let i = 0; i < devices.length; ++i) {
-          if (devices[i].mediaSource == "screen") {
-            menupopup.appendChild(chromeDoc.createElement("menuseparator"));
-            addDeviceToList(menupopup,
-                            stringBundle.getString("getUserMedia.shareEntireScreen.label"),
-                            i, "Screen");
-            break;
+          let name;
+          // Screen has a special treatment because we currently only support
+          // sharing the primary screen and want to display a localized string.
+          if (type == "screen") {
+            name = stringBundle.getString("getUserMedia.shareEntireScreen.label");
           }
-        }
-
-        // Finally add all the window names.
-        let separatorNeeded = true;
-        for (let i = 0; i < devices.length; ++i) {
-          if (devices[i].mediaSource == "window") {
-            if (separatorNeeded) {
-              menupopup.appendChild(chromeDoc.createElement("menuseparator"));
-              separatorNeeded = false;
+          else {
+            name = devices[i].name;
+            if (type == "application") {
+              // The application names returned by the platform are of the form:
+              // <window count>\x1e<application name>
+              let sepIndex = name.indexOf("\x1e");
+              let count = name.slice(0, sepIndex);
+              let stringId = "getUserMedia.shareApplicationWindowCount.label";
+              name = PluralForm.get(parseInt(count), stringBundle.getString(stringId))
+                               .replace("#1", name.slice(sepIndex + 1))
+                               .replace("#2", count);
             }
-            addDeviceToList(menupopup, devices[i].name, i, "Window");
           }
+          addDeviceToList(menupopup, name, i, typeName);
         }
 
-        // Always re-select the "No Window or Screen" item.
+        // Always re-select the "No <type>" item.
         chromeDoc.getElementById("webRTC-selectWindow-menulist").removeAttribute("value");
         chromeDoc.getElementById("webRTC-all-windows-shared").hidden = true;
       }
@@ -460,7 +474,7 @@ function getGlobalIndicator() {
       let type = this.getAttribute("type");
       if (type == "Camera" || type == "Microphone")
         type = "Devices";
-      else if (type == "Window")
+      else if (type == "Window" || type == "Application")
         type = "Screen";
       webrtcUI.showSharingDoorhanger(aEvent.target.stream, type);
     },
@@ -578,15 +592,17 @@ function onTabSharingMenuPopupShowing(e) {
   let streams = webrtcUI.getActiveStreams(true, true, true);
   for (let streamInfo of streams) {
     let stringName = "getUserMedia.sharingMenu";
-    // Guarantee sorting order here or bad things will happen if
-    // the not-specced-but-implemented-everywhere object key sorting changes:
-    let types = Object.keys(streamInfo.types).sort();
-    // Then construct a string ID out of these types:
-    for (let type of types) {
-      if (streamInfo.types[type].value) {
-        stringName += type;
-      }
-    }
+    let types = streamInfo.types;
+    if (types.Camera.value)
+      stringName += "Camera";
+    if (types.Microphone.value)
+      stringName += "Microphone";
+    if (types.Screen.value)
+      stringName += "Screen";
+    else if (types.Application.value)
+      stringName += "Application";
+    else if (types.Window.value)
+      stringName += "Window";
 
     let doc = e.target.ownerDocument;
     let bundle = doc.defaultView.gNavigatorBundle;
@@ -613,10 +629,10 @@ function onTabSharingMenuPopupShowing(e) {
     menuitem.stream = streamInfo;
 
     // We can only open 1 doorhanger at a time. Guessing that users would be
-    // most eager to control screen/window sharing, and only then
+    // most eager to control screen/window/app sharing, and only then
     // camera/microphone sharing, in that (decreasing) order of priority.
     let doorhangerType;
-    if ((/Screen|Window/).test(stringName)) {
+    if ((/Screen|Window|Application/).test(stringName)) {
       doorhangerType = "Screen";
     } else {
       doorhangerType = "Devices";
@@ -691,17 +707,19 @@ function updateIndicators() {
 
   for (let i = 0; i < count; ++i) {
     let contentWindow = contentWindowSupportsArray.GetElementAt(i);
-    let camera = {}, microphone = {}, screen = {}, window = {};
+    let camera = {}, microphone = {}, screen = {}, window = {}, app = {};
     MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
-                                                microphone, screen, window);
+                                                microphone, screen, window, app);
     if (camera.value)
       webrtcUI.showCameraIndicator = true;
     if (microphone.value)
       webrtcUI.showMicrophoneIndicator = true;
     if (screen.value)
       webrtcUI.showScreenSharingIndicator = "Screen";
-    else if (window.value && !webrtcUI.showScreenSharingIndicator)
+    else if (window.value && webrtcUI.showScreenSharingIndicator != "Screen")
       webrtcUI.showScreenSharingIndicator = "Window";
+    else if (app.value && !webrtcUI.showScreenSharingIndicator)
+      webrtcUI.showScreenSharingIndicator = "Application";
 
     updateBrowserSpecificIndicator(getBrowserForWindow(contentWindow));
   }
@@ -738,9 +756,10 @@ function updateIndicators() {
 }
 
 function updateBrowserSpecificIndicator(aBrowser) {
-  let camera = {}, microphone = {}, screen = {}, window = {};
+  let camera = {}, microphone = {}, screen = {}, window = {}, app = {};
   MediaManagerService.mediaCaptureWindowState(aBrowser.contentWindow,
-                                              camera, microphone, screen, window);
+                                              camera, microphone, screen,
+                                              window, app);
   let captureState;
   if (camera.value && microphone.value) {
     captureState = "CameraAndMicrophone";
@@ -803,7 +822,7 @@ function updateBrowserSpecificIndicator(aBrowser) {
   }
 
   // Now handle the screen sharing indicator.
-  if (!screen.value && !window.value) {
+  if (!screen.value && !window.value && !app.value) {
     removeBrowserNotification(aBrowser,"webRTC-sharingScreen");
     return;
   }
@@ -827,9 +846,15 @@ function updateBrowserSpecificIndicator(aBrowser) {
     }
   }];
   // If we are sharing both a window and the screen, show 'Screen'.
-  let stringId = "getUserMedia.sharing" + (screen.value ? "Screen" : "Window") + ".message";
+  let stringId = "getUserMedia.sharing";
+  if (screen.value)
+    stringId += "Screen";
+  else if (app.value)
+    stringId += "Application";
+  else
+    stringId += "Window";
   chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingScreen",
-                                    stringBundle.getString(stringId),
+                                    stringBundle.getString(stringId + ".message"),
                                     "webRTC-sharingScreen-notification-icon",
                                     mainAction, secondaryActions, options);
 }
@@ -843,5 +868,8 @@ function removeBrowserNotification(aBrowser, aNotificationId) {
 }
 
 function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {
-  updateBrowserSpecificIndicator(getBrowserForWindowId(aData));
+  let browser = getBrowserForWindowId(aData);
+  // If the tab has already been closed, ignore the notification.
+  if (browser.contentWindow)
+    updateBrowserSpecificIndicator(browser);
 }

@@ -263,6 +263,9 @@ MapSrcAndCreateMappedDest(DataSourceSurface* srcSurf,
         Factory::CreateDataSourceSurfaceWithStride(srcSurf->GetSize(),
                                                    srcSurf->GetFormat(),
                                                    srcMap.mStride);
+    if (NS_WARN_IF(!destSurf)) {
+        return false;
+    }
 
     DataSourceSurface::MappedSurface destMap;
     if (!destSurf->Map(DataSourceSurface::MapType::WRITE, &destMap)) {

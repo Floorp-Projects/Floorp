@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'mozpngconf.h',
     'png.h',
-    'pngconf.h'
+    'pngconf.h',
+    'pnglibconf.h'
 ]
 
 UNIFIED_SOURCES += [
