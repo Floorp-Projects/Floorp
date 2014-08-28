@@ -8,9 +8,10 @@
 #define MOZILLA_SOURCEBUFFERDECODER_H_
 
 #include "AbstractMediaDecoder.h"
+#include "MediaDecoderReader.h"
+#include "SourceBufferResource.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "SourceBufferResource.h"
 
 namespace mozilla {
 
@@ -75,20 +76,15 @@ public:
     return mReader;
   }
 
+  void SetTaskQueue(MediaTaskQueue* aTaskQueue)
+  {
+    MOZ_ASSERT((!mTaskQueue && aTaskQueue) || (mTaskQueue && !aTaskQueue));
+    mTaskQueue = aTaskQueue;
+  }
+
   // Given a time convert it into an approximate byte offset from the
   // cached data. Returns -1 if no such value is computable.
   int64_t ConvertToByteOffset(double aTime);
-
-  bool IsDiscarded()
-  {
-    return mDiscarded;
-  }
-
-  void SetDiscarded()
-  {
-    GetResource()->Ended();
-    mDiscarded = true;
-  }
 
   // Returns true if the data buffered by this decoder contains the given time.
   bool ContainsTime(double aTime);
@@ -96,12 +92,14 @@ public:
 private:
   virtual ~SourceBufferDecoder();
 
+  // Our TrackBuffer's task queue, this is only non-null during initialization.
+  RefPtr<MediaTaskQueue> mTaskQueue;
+
   nsRefPtr<MediaResource> mResource;
 
   AbstractMediaDecoder* mParentDecoder;
   nsRefPtr<MediaDecoderReader> mReader;
   int64_t mMediaDuration;
-  bool mDiscarded;
 };
 
 } // namespace mozilla
