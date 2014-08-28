@@ -672,7 +672,11 @@ PeerConnectionTest.prototype.setStepTimeout = function(ms) {
  */
 PeerConnectionTest.prototype.createAnswer =
 function PCT_createAnswer(peer, onSuccess) {
+  var self = this;
+
   peer.createAnswer(function (answer) {
+    // make a copy so this does not get updated with ICE candidates
+    self.originalAnswer = new mozRTCSessionDescription(JSON.parse(JSON.stringify(answer)));
     onSuccess(answer);
   });
 };
@@ -688,7 +692,11 @@ function PCT_createAnswer(peer, onSuccess) {
  */
 PeerConnectionTest.prototype.createOffer =
 function PCT_createOffer(peer, onSuccess) {
+  var self = this;
+
   peer.createOffer(function (offer) {
+    // make a copy so this does not get updated with ICE candidates
+    self.originalOffer = new mozRTCSessionDescription(JSON.parse(JSON.stringify(offer)));
     onSuccess(offer);
   });
 };
@@ -826,6 +834,37 @@ PeerConnectionTest.prototype.teardown = function PCT_teardown() {
     else
       finish();
   });
+};
+
+/**
+ * Routes ice candidates from one PCW to the other PCW
+ */
+PeerConnectionTest.prototype.iceCandidateHandler = function
+PCT_iceCandidateHandler(caller, candidate) {
+  var self = this;
+
+  info("Received: " + JSON.stringify(candidate) + " from " + caller);
+
+  var target = null;
+  if (caller.contains("pcLocal")) {
+    if (self.pcRemote) {
+      target = self.pcRemote;
+    }
+  } else if (caller.contains("pcRemote")) {
+    if (self.pcLocal) {
+      target = self.pcLocal;
+    }
+  } else {
+    ok(false, "received event from unknown caller: " + caller);
+    return;
+  }
+
+  if (target) {
+    target.storeOrAddIceCandidate(candidate);
+  } else {
+    info("sending ice candidate to signaling server");
+    send_message({"ice_candidate": candidate});
+  }
 };
 
 /**
@@ -1103,6 +1142,12 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
     }
   },
 
+  createOffer : {
+    value : function DCT_createOffer(peer, onSuccess) {
+      PeerConnectionTest.prototype.createOffer.call(this, peer, onSuccess);
+    }
+  },
+
   setLocalDescription : {
     /**
      * Sets the local description for the specified peer connection instance
@@ -1371,6 +1416,11 @@ function PeerConnectionWrapper(label, configuration, h264) {
 
   this.onAddStreamFired = false;
   this.addStreamCallbacks = {};
+
+  this.remoteDescriptionSet = false;
+  this.endOfTrickleIce = false;
+  this.localRequiresTrickleIce = false;
+  this.remoteRequiresTrickleIce  = false;
 
   this.h264 = typeof h264 !== "undefined" ? true : false;
 
@@ -1648,7 +1698,8 @@ PeerConnectionWrapper.prototype = {
 
     this._pc.createOffer(function (offer) {
       info("Got offer: " + JSON.stringify(offer));
-      self._last_offer = offer;
+      // note: this might get updated through ICE gathering
+      self._latest_offer = offer;
       if (self.h264) {
         isnot(offer.sdp.search("H264/90000"), -1, "H.264 should be present in the SDP offer");
         offer.sdp = removeVP8(offer.sdp);
@@ -1720,6 +1771,15 @@ PeerConnectionWrapper.prototype = {
     var self = this;
     this._pc.setRemoteDescription(desc, function () {
       info(self + ": Successfully set remote description");
+      self.remoteDescriptionSet = true;
+      if ((self._ice_candidates_to_add) &&
+          (self._ice_candidates_to_add.length > 0)) {
+        info("adding stored ice candidates");
+        for (var i = 0; i < self._ice_candidates_to_add.length; i++) {
+          self.addIceCandidate(self._ice_candidates_to_add[i]);
+        }
+        self._ice_candidates_to_add = [];
+      }
       onSuccess();
     }, generateErrorCallback());
   },
@@ -1766,6 +1826,24 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
+   * Either adds a given ICE candidate right away or stores it to be added
+   * later, depending on the state of the PeerConnection.
+   *
+   * @param {object} candidate
+   *        The mozRTCIceCandidate to be added or stored
+   */
+  storeOrAddIceCandidate : function PCW_storeOrAddIceCandidate(candidate) {
+    var self = this;
+
+    self._remote_ice_candidates.push(candidate);
+    if (self.remoteDescriptionSet) {
+      self.addIceCandidate(candidate);
+    } else {
+      self._ice_candidates_to_add.push(candidate);
+    }
+  },
+
+  /**
    * Adds an ICE candidate and automatically handles the failure case.
    *
    * @param {object} candidate
@@ -1776,9 +1854,12 @@ PeerConnectionWrapper.prototype = {
   addIceCandidate : function PCW_addIceCandidate(candidate, onSuccess) {
     var self = this;
 
+    info(self + ": adding ICE candidate " + JSON.stringify(candidate));
     this._pc.addIceCandidate(candidate, function () {
       info(self + ": Successfully added an ICE candidate");
-      onSuccess();
+      if (onSuccess) {
+        onSuccess();
+      }
     }, generateErrorCallback());
   },
 
@@ -1808,7 +1889,7 @@ PeerConnectionWrapper.prototype = {
    * @returns {boolean} True if the connection state is "connected", otherwise false.
    */
   isIceConnected : function PCW_isIceConnected() {
-    info("iceConnectionState: " + this.iceConnectionState);
+    info(this + ": iceConnectionState = " + this.iceConnectionState);
     return this.iceConnectionState === "connected";
   },
 
@@ -1890,6 +1971,43 @@ PeerConnectionWrapper.prototype = {
     }
 
     self.ice_connection_callbacks.waitForIceConnected = iceConnectedChanged;
+  },
+
+  /**
+   * Setup a onicecandidate handler
+   *
+   * @param {object} test
+   *        A PeerConnectionTest object to which the ice candidates gets
+   *        forwarded.
+   */
+  setupIceCandidateHandler : function PCW_setupIceCandidateHandler(test) {
+    var self = this;
+    self._local_ice_candidates = [];
+    self._remote_ice_candidates = [];
+    self._ice_candidates_to_add = [];
+
+    function iceCandidateCallback (anEvent) {
+      info(self.label + ": received iceCandidateEvent");
+      if (!anEvent.candidate) {
+        info(self.label + ": received end of trickle ICE event");
+        self.endOfTrickleIce = true;
+      } else {
+        if (self.endOfTrickleIce) {
+          ok(false, "received ICE candidate after end of trickle");
+        }
+        info(self.label + ": iceCandidate = " + JSON.stringify(anEvent.candidate));
+        ok(anEvent.candidate.candidate.length > 0, "ICE candidate contains candidate");
+        // we don't support SDP MID's yet
+        ok(anEvent.candidate.sdpMid.length === 0, "SDP MID has length zero");
+        ok(typeof anEvent.candidate.sdpMLineIndex === 'number', "SDP MLine Index needs to exist");
+        self._local_ice_candidates.push(anEvent.candidate);
+        test.iceCandidateHandler(self.label, anEvent.candidate);
+      }
+    }
+
+    //FIXME: in the steeplecase scenario we need to setup a permanent listener
+    //       for ice candidates from the signaling server here
+    self._pc.onicecandidate = iceCandidateCallback;
   },
 
   /**
@@ -2073,7 +2191,8 @@ PeerConnectionWrapper.prototype = {
     }
   },
 
-  verifySdp : function PCW_verifySdp(desc, expectedType, constraints, offerOptions) {
+  verifySdp : function PCW_verifySdp(desc, expectedType, constraints,
+      offerOptions, trickleIceCallback) {
     info("Examining this SessionDescription: " + JSON.stringify(desc));
     info("constraints: " + JSON.stringify(constraints));
     info("offerOptions: " + JSON.stringify(offerOptions));
@@ -2085,8 +2204,13 @@ PeerConnectionWrapper.prototype = {
     ok(desc.sdp.contains("a=fingerprint"), "ICE fingerprint is present in SDP");
     //TODO: update this for loopback support bug 1027350
     ok(!desc.sdp.contains(LOOPBACK_ADDR), "loopback interface is absent from SDP");
-    //TODO: update this for trickle ICE bug 1041832
-    ok(desc.sdp.contains("a=candidate"), "at least one ICE candidate is present in SDP");
+    if (desc.sdp.contains("a=candidate")) {
+      ok(true, "at least one ICE candidate is present in SDP");
+      trickleIceCallback(false);
+    } else {
+      info("No ICE candidate in SDP -> requiring trickle ICE");
+      trickleIceCallback(true);
+    }
     //TODO: how can we check for absence/presence of m=application?
 
     //TODO: how to handle media contraints + offer options
