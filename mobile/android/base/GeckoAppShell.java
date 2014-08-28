@@ -2483,7 +2483,16 @@ public class GeckoAppShell
             Looper.myLooper().quit();
         else
             msg.getTarget().dispatchMessage(msg);
-        msg.recycle();
+
+        try {
+            // Bug 1055166 - this sometimes throws IllegalStateException on Android L.
+            // There appears to be no way to figure out if a message is in use or not, let
+            // alone receive a notification when it is no longer being used. Just catch
+            // the exception for now, and if a better solution comes along we can use it.
+            msg.recycle();
+        } catch (IllegalStateException e) {
+            // There is nothing we can do here so just eat it
+        }
         return true;
     }
 
