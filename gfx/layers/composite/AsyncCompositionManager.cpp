@@ -251,108 +251,106 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   bool isStickyForSubtree = aLayer->GetIsStickyPosition() &&
     aLayer->GetStickyScrollContainerId() ==
       aTransformedSubtreeRoot->GetFrameMetrics().GetScrollId();
-  if (aLayer != aTransformedSubtreeRoot && (isRootFixed || isStickyForSubtree)) {
-    // Insert a translation so that the position of the anchor point is the same
-    // before and after the change to the transform of aTransformedSubtreeRoot.
-    // This currently only works for fixed layers with 2D transforms.
+  bool isFixedOrSticky = (isRootFixed || isStickyForSubtree);
 
-    // Accumulate the transforms between this layer and the subtree root layer.
-    Matrix ancestorTransform;
-    if (!AccumulateLayerTransforms2D(aLayer->GetParent(), aTransformedSubtreeRoot,
-                                     ancestorTransform)) {
-      return;
+  // We want to process all the fixed and sticky children of
+  // aTransformedSubtreeRoot. Also, once we do encounter such a child, we don't
+  // need to recurse any deeper because the fixed layers are relative to their
+  // nearest scrollable layer.
+  if (aLayer == aTransformedSubtreeRoot || !isFixedOrSticky) {
+    // ApplyAsyncContentTransformToTree will call this function again for
+    // nested scrollable layers, so we don't need to recurse if the layer is
+    // scrollable.
+    if (aLayer == aTransformedSubtreeRoot || !aLayer->GetFrameMetrics().IsScrollable()) {
+      for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
+        AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot,
+                                  aPreviousTransformForRoot,
+                                  aCurrentTransformForRoot, aFixedLayerMargins);
+      }
     }
-
-    Matrix oldRootTransform;
-    Matrix newRootTransform;
-    if (!aPreviousTransformForRoot.Is2D(&oldRootTransform) ||
-        !aCurrentTransformForRoot.Is2D(&newRootTransform)) {
-      return;
-    }
-
-    // Calculate the cumulative transforms between the subtree root with the
-    // old transform and the current transform.
-    Matrix oldCumulativeTransform = ancestorTransform * oldRootTransform;
-    Matrix newCumulativeTransform = ancestorTransform * newRootTransform;
-    if (newCumulativeTransform.IsSingular()) {
-      return;
-    }
-    Matrix newCumulativeTransformInverse = newCumulativeTransform;
-    newCumulativeTransformInverse.Invert();
-
-    // Now work out the translation necessary to make sure the layer doesn't
-    // move given the new sub-tree root transform.
-    Matrix layerTransform;
-    if (!GetBaseTransform2D(aLayer, &layerTransform)) {
-      return;
-    }
-
-    // Calculate any offset necessary, in previous transform sub-tree root
-    // space. This is used to make sure fixed position content respects
-    // content document fixed position margins.
-    LayerPoint offsetInOldSubtreeLayerSpace = GetLayerFixedMarginsOffset(aLayer, aFixedLayerMargins);
-
-    // Add the above offset to the anchor point so we can offset the layer by
-    // and amount that's specified in old subtree layer space.
-    const LayerPoint& anchorInOldSubtreeLayerSpace = aLayer->GetFixedPositionAnchor();
-    LayerPoint offsetAnchorInOldSubtreeLayerSpace = anchorInOldSubtreeLayerSpace + offsetInOldSubtreeLayerSpace;
-
-    // Add the local layer transform to the two points to make the equation
-    // below this section more convenient.
-    Point anchor(anchorInOldSubtreeLayerSpace.x, anchorInOldSubtreeLayerSpace.y);
-    Point offsetAnchor(offsetAnchorInOldSubtreeLayerSpace.x, offsetAnchorInOldSubtreeLayerSpace.y);
-    Point locallyTransformedAnchor = layerTransform * anchor;
-    Point locallyTransformedOffsetAnchor = layerTransform * offsetAnchor;
-
-    // Transforming the locallyTransformedAnchor by oldCumulativeTransform
-    // returns the layer's anchor point relative to the parent of
-    // aTransformedSubtreeRoot, before the new transform was applied.
-    // Then, applying newCumulativeTransformInverse maps that point relative
-    // to the layer's parent, which is the same coordinate space as
-    // locallyTransformedAnchor again, allowing us to subtract them and find
-    // out the offset necessary to make sure the layer stays stationary.
-    Point oldAnchorPositionInNewSpace =
-      newCumulativeTransformInverse * (oldCumulativeTransform * locallyTransformedOffsetAnchor);
-    Point translation = oldAnchorPositionInNewSpace - locallyTransformedAnchor;
-
-    if (aLayer->GetIsStickyPosition()) {
-      // For sticky positioned layers, the difference between the two rectangles
-      // defines a pair of translation intervals in each dimension through which
-      // the layer should not move relative to the scroll container. To
-      // accomplish this, we limit each dimension of the |translation| to that
-      // part of it which overlaps those intervals.
-      const LayerRect& stickyOuter = aLayer->GetStickyScrollRangeOuter();
-      const LayerRect& stickyInner = aLayer->GetStickyScrollRangeInner();
-
-      translation.y = IntervalOverlap(translation.y, stickyOuter.y, stickyOuter.YMost()) -
-                      IntervalOverlap(translation.y, stickyInner.y, stickyInner.YMost());
-      translation.x = IntervalOverlap(translation.x, stickyOuter.x, stickyOuter.XMost()) -
-                      IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
-    }
-
-    // Finally, apply the 2D translation to the layer transform.
-    TranslateShadowLayer2D(aLayer, ThebesPoint(translation));
-
-    // The transform has now been applied, so there's no need to iterate over
-    // child layers.
     return;
   }
 
-  // Fixed layers are relative to their nearest scrollable layer, so when we
-  // encounter a scrollable layer, bail. ApplyAsyncContentTransformToTree will
-  // have already recursed on this layer and called AlignFixedAndStickyLayers
-  // on it with its own transforms.
-  if (aLayer->GetFrameMetrics().IsScrollable() &&
-      aLayer != aTransformedSubtreeRoot) {
+  // Insert a translation so that the position of the anchor point is the same
+  // before and after the change to the transform of aTransformedSubtreeRoot.
+  // This currently only works for fixed layers with 2D transforms.
+
+  // Accumulate the transforms between this layer and the subtree root layer.
+  Matrix ancestorTransform;
+  if (!AccumulateLayerTransforms2D(aLayer->GetParent(), aTransformedSubtreeRoot,
+                                   ancestorTransform)) {
     return;
   }
 
-  for (Layer* child = aLayer->GetFirstChild();
-       child; child = child->GetNextSibling()) {
-    AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot,
-                              aPreviousTransformForRoot,
-                              aCurrentTransformForRoot, aFixedLayerMargins);
+  Matrix oldRootTransform;
+  Matrix newRootTransform;
+  if (!aPreviousTransformForRoot.Is2D(&oldRootTransform) ||
+      !aCurrentTransformForRoot.Is2D(&newRootTransform)) {
+    return;
   }
+
+  // Calculate the cumulative transforms between the subtree root with the
+  // old transform and the current transform.
+  Matrix oldCumulativeTransform = ancestorTransform * oldRootTransform;
+  Matrix newCumulativeTransform = ancestorTransform * newRootTransform;
+  if (newCumulativeTransform.IsSingular()) {
+    return;
+  }
+  Matrix newCumulativeTransformInverse = newCumulativeTransform;
+  newCumulativeTransformInverse.Invert();
+
+  // Now work out the translation necessary to make sure the layer doesn't
+  // move given the new sub-tree root transform.
+  Matrix layerTransform;
+  if (!GetBaseTransform2D(aLayer, &layerTransform)) {
+    return;
+  }
+
+  // Calculate any offset necessary, in previous transform sub-tree root
+  // space. This is used to make sure fixed position content respects
+  // content document fixed position margins.
+  LayerPoint offsetInOldSubtreeLayerSpace = GetLayerFixedMarginsOffset(aLayer, aFixedLayerMargins);
+
+  // Add the above offset to the anchor point so we can offset the layer by
+  // and amount that's specified in old subtree layer space.
+  const LayerPoint& anchorInOldSubtreeLayerSpace = aLayer->GetFixedPositionAnchor();
+  LayerPoint offsetAnchorInOldSubtreeLayerSpace = anchorInOldSubtreeLayerSpace + offsetInOldSubtreeLayerSpace;
+
+  // Add the local layer transform to the two points to make the equation
+  // below this section more convenient.
+  Point anchor(anchorInOldSubtreeLayerSpace.x, anchorInOldSubtreeLayerSpace.y);
+  Point offsetAnchor(offsetAnchorInOldSubtreeLayerSpace.x, offsetAnchorInOldSubtreeLayerSpace.y);
+  Point locallyTransformedAnchor = layerTransform * anchor;
+  Point locallyTransformedOffsetAnchor = layerTransform * offsetAnchor;
+
+  // Transforming the locallyTransformedAnchor by oldCumulativeTransform
+  // returns the layer's anchor point relative to the parent of
+  // aTransformedSubtreeRoot, before the new transform was applied.
+  // Then, applying newCumulativeTransformInverse maps that point relative
+  // to the layer's parent, which is the same coordinate space as
+  // locallyTransformedAnchor again, allowing us to subtract them and find
+  // out the offset necessary to make sure the layer stays stationary.
+  Point oldAnchorPositionInNewSpace =
+    newCumulativeTransformInverse * (oldCumulativeTransform * locallyTransformedOffsetAnchor);
+  Point translation = oldAnchorPositionInNewSpace - locallyTransformedAnchor;
+
+  if (aLayer->GetIsStickyPosition()) {
+    // For sticky positioned layers, the difference between the two rectangles
+    // defines a pair of translation intervals in each dimension through which
+    // the layer should not move relative to the scroll container. To
+    // accomplish this, we limit each dimension of the |translation| to that
+    // part of it which overlaps those intervals.
+    const LayerRect& stickyOuter = aLayer->GetStickyScrollRangeOuter();
+    const LayerRect& stickyInner = aLayer->GetStickyScrollRangeInner();
+
+    translation.y = IntervalOverlap(translation.y, stickyOuter.y, stickyOuter.YMost()) -
+                    IntervalOverlap(translation.y, stickyInner.y, stickyInner.YMost());
+    translation.x = IntervalOverlap(translation.x, stickyOuter.x, stickyOuter.XMost()) -
+                    IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
+  }
+
+  // Finally, apply the 2D translation to the layer transform.
+  TranslateShadowLayer2D(aLayer, ThebesPoint(translation));
 }
 
 static void
