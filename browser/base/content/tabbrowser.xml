@@ -4526,7 +4526,10 @@
         canvas.mozOpaque = true;
         canvas.width = 160 * scale;
         canvas.height = 90 * scale;
-        PageThumbs.captureToCanvas(browser.contentWindow, canvas);
+        if (!gMultiProcessBrowser) {
+          // Bug 863512 - Make page thumbnails work in e10s
+          PageThumbs.captureToCanvas(browser.contentWindow, canvas);
+        }
         dt.setDragImage(canvas, -16 * scale, -16 * scale);
 
         // _dragData.offsetX/Y give the coordinates that the mouse should be
