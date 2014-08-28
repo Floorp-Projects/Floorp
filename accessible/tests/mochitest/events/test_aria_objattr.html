@@ -20,25 +20,24 @@
      * Do tests.
      */
     var gQueue = null;
-
     function updateAttribute(aID, aAttr, aValue)
     {
       this.node = getNode(aID);
       this.accessible = getAccessible(this.node);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_OBJECT_ATTRIBUTE_CHANGED, this.accessible),
+        new objAttrChangedChecker(aID, aAttr),
       ];
 
       this.invoke = function updateAttribute_invoke()
       {
         this.node.setAttribute(aAttr, aValue);
-      }
+      };
 
       this.getID = function updateAttribute_getID()
       {
         return aAttr + " for " + aID + " " + aValue;
-      }
+      };
     }
 
     // Debug stuff.

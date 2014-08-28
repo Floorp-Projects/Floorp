@@ -282,7 +282,7 @@ Submitter.prototype = {
 
     let submissionID = Cc["@mozilla.org/uuid-generator;1"]
                          .getService(Ci.nsIUUIDGenerator)
-                         .generateUUID().toString();
+                         .generateUUID().toString().slice(1, -1);
     let manager = Services.crashmanager;
 
     let self = this;
@@ -297,6 +297,9 @@ Submitter.prototype = {
                                    manager.SUBMISSION_RESULT_FAILED;
           manager.addSubmissionResult(self.id, submissionID, new Date(),
                                       result);
+          if (submitted) {
+            manager.setRemoteCrashID(self.id, ret.CrashID);
+          }
         }
 
         if (submitted) {

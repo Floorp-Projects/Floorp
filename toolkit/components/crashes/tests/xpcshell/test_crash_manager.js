@@ -353,3 +353,12 @@ add_task(function* test_addSubmissionAttemptAndResult() {
   Assert.equal(submission.responseDate.getTime(), DUMMY_DATE_2.getTime());
   Assert.equal(submission.result, m.SUBMISSION_RESULT_OK);
 });
+
+add_task(function* test_setRemoteCrashID() {
+  let m = yield getManager();
+
+  yield m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
+                   "main-crash", DUMMY_DATE);
+  yield m.setRemoteCrashID("main-crash", "bp-1");
+  Assert.equal((yield m.getCrashes())[0].remoteID, "bp-1");
+});
