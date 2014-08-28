@@ -42,6 +42,7 @@ DIRS += [
     'startup',
     'statusfilter',
     'telemetry',
+    'terminator',
     'thumbnails',
     'typeaheadfind',
     'urlformatter',

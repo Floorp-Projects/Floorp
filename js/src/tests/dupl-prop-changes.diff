@@ -1,0 +1,308 @@
+diff --git a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5-4-4-a-1-s.js b/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5-4-4-a-1-s.js
+deleted file mode 100644
+--- a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5-4-4-a-1-s.js
++++ /dev/null
+@@ -1,31 +0,0 @@
+-/// Copyright (c) 2012 Ecma International.  All rights reserved. 
+-/// Ecma International makes this code available under the terms and conditions set
+-/// forth on http://hg.ecmascript.org/tests/test262/raw-file/tip/LICENSE (the 
+-/// "Use Terms").   Any redistribution of this code must retain the above 
+-/// copyright and this notice and otherwise comply with the Use Terms.
+-/**
+- * Refer 11.1.5; 
+- *   The production
+- *      PropertyNameAndValueList :  PropertyNameAndValueList , PropertyAssignment
+- *    4. If previous is not undefined then throw a SyntaxError exception if any of the following conditions are true
+- *      a. This production is contained in strict code and IsDataDescriptor(previous) is true and IsDataDescriptor(propId.descriptor) is true
+- *
+- * @path ch11/11.1/11.1.5/11.1.5-4-4-a-1-s.js
+- * @description Object literal - SyntaxError for duplicate date property name in strict mode
+- * @onlyStrict
+- */
+-
+-
+-function testcase() {
+-  
+-  try
+-  {
+-    eval("'use strict'; ({foo:0,foo:1});");
+-    return false;
+-  }
+-  catch(e)
+-  {
+-    return (e instanceof SyntaxError);
+-  }
+- }
+-runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-b-1.js b/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-b-1.js
+deleted file mode 100644
+--- a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-b-1.js
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/// Copyright (c) 2012 Ecma International.  All rights reserved. 
+-/// Ecma International makes this code available under the terms and conditions set
+-/// forth on http://hg.ecmascript.org/tests/test262/raw-file/tip/LICENSE (the 
+-/// "Use Terms").   Any redistribution of this code must retain the above 
+-/// copyright and this notice and otherwise comply with the Use Terms.
+-/**
+- * Refer 11.1.5; 
+- *   The production
+- *      PropertyNameAndValueList :  PropertyNameAndValueList , PropertyAssignment
+- *    4. If previous is not undefined then throw a SyntaxError exception if any of the following conditions are true
+- *      b.IsDataDescriptor(previous) is true and IsAccessorDescriptor(propId.descriptor) is true.
+- *
+- * @path ch11/11.1/11.1.5/11.1.5_4-4-b-1.js
+- * @description Object literal - SyntaxError if a data property definition is followed by get accessor definition with the same name
+- */
+-
+-
+-function testcase() {
+-  try
+-  {
+-    eval("({foo : 1, get foo(){}});");
+-    return false;
+-  }
+-  catch(e)
+-  {
+-    return e instanceof SyntaxError;
+-  }
+- }
+-runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-b-2.js b/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-b-2.js
+deleted file mode 100644
+--- a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-b-2.js
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/// Copyright (c) 2012 Ecma International.  All rights reserved. 
+-/// Ecma International makes this code available under the terms and conditions set
+-/// forth on http://hg.ecmascript.org/tests/test262/raw-file/tip/LICENSE (the 
+-/// "Use Terms").   Any redistribution of this code must retain the above 
+-/// copyright and this notice and otherwise comply with the Use Terms.
+-/**
+- * Refer 11.1.5; 
+- *   The production
+- *      PropertyNameAndValueList :  PropertyNameAndValueList , PropertyAssignment
+- *    4. If previous is not undefined then throw a SyntaxError exception if any of the following conditions are true
+- *      b.IsDataDescriptor(previous) is true and IsAccessorDescriptor(propId.descriptor) is true.
+- *
+- * @path ch11/11.1/11.1.5/11.1.5_4-4-b-2.js
+- * @description Object literal - SyntaxError if a data property definition is followed by set accessor definition with the same name
+- */
+-
+-
+-function testcase() {
+-  try
+-  {
+-    eval("({foo : 1, set foo(x){}});");
+-    return false;
+-  }
+-  catch(e)
+-  {
+-    return e instanceof SyntaxError;
+-  }
+- }
+-runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-c-1.js b/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-c-1.js
+deleted file mode 100644
+--- a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-c-1.js
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/// Copyright (c) 2012 Ecma International.  All rights reserved. 
+-/// Ecma International makes this code available under the terms and conditions set
+-/// forth on http://hg.ecmascript.org/tests/test262/raw-file/tip/LICENSE (the 
+-/// "Use Terms").   Any redistribution of this code must retain the above 
+-/// copyright and this notice and otherwise comply with the Use Terms.
+-/**
+- * Refer 11.1.5; 
+- *   The production
+- *      PropertyNameAndValueList :  PropertyNameAndValueList , PropertyAssignment
+- *    4. If previous is not undefined then throw a SyntaxError exception if any of the following conditions are true
+- *      c.IsAccessorDescriptor(previous) is true and IsDataDescriptor(propId.descriptor) is true.
+- *
+- * @path ch11/11.1/11.1.5/11.1.5_4-4-c-1.js
+- * @description Object literal - SyntaxError if a get accessor property definition is followed by a data property definition with the same name
+- */
+-
+-
+-function testcase() {
+-  try
+-  {
+-    eval("({get foo(){}, foo : 1});");
+-    return false;
+-  }
+-  catch(e)
+-  {
+-    return e instanceof SyntaxError;
+-  }
+- }
+-runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-c-2.js b/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-c-2.js
+deleted file mode 100644
+--- a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-c-2.js
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/// Copyright (c) 2012 Ecma International.  All rights reserved. 
+-/// Ecma International makes this code available under the terms and conditions set
+-/// forth on http://hg.ecmascript.org/tests/test262/raw-file/tip/LICENSE (the 
+-/// "Use Terms").   Any redistribution of this code must retain the above 
+-/// copyright and this notice and otherwise comply with the Use Terms.
+-/**
+- * Refer 11.1.5; 
+- *   The production
+- *      PropertyNameAndValueList :  PropertyNameAndValueList , PropertyAssignment
+- *    4. If previous is not undefined then throw a SyntaxError exception if any of the following conditions are true
+- *      c.IsAccessorDescriptor(previous) is true and IsDataDescriptor(propId.descriptor) is true.
+- *
+- * @path ch11/11.1/11.1.5/11.1.5_4-4-c-2.js
+- * @description Object literal - SyntaxError if a set accessor property definition is followed by a data property definition with the same name
+- */
+-
+-
+-function testcase() {
+-  try
+-  {
+-    eval("({set foo(x){}, foo : 1});");
+-    return false;
+-  }
+-  catch(e)
+-  {
+-    return e instanceof SyntaxError;
+-  }
+- }
+-runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-1.js b/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-1.js
+deleted file mode 100644
+--- a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-1.js
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/// Copyright (c) 2012 Ecma International.  All rights reserved. 
+-/// Ecma International makes this code available under the terms and conditions set
+-/// forth on http://hg.ecmascript.org/tests/test262/raw-file/tip/LICENSE (the 
+-/// "Use Terms").   Any redistribution of this code must retain the above 
+-/// copyright and this notice and otherwise comply with the Use Terms.
+-/**
+- * Refer 11.1.5; 
+- *   The production
+- *     PropertyNameAndValueList :  PropertyNameAndValueList , PropertyAssignment
+- *   4. If previous is not undefined then throw a SyntaxError exception if any of the following conditions are true
+- *     d.	IsAccessorDescriptor(previous) is true and IsAccessorDescriptor(propId.descriptor) is true and either both previous and propId.descriptor have [[Get]] fields or both previous and propId.descriptor have [[Set]] fields
+- *
+- * @path ch11/11.1/11.1.5/11.1.5_4-4-d-1.js
+- * @description Object literal - SyntaxError for duplicate property name (get,get)
+- */
+-
+-
+-function testcase() {
+-  try
+-  {
+-    eval("({get foo(){}, get foo(){}});");
+-    return false;
+-  }
+-  catch(e)
+-  {
+-    return e instanceof SyntaxError;
+-  }
+- }
+-runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-2.js b/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-2.js
+deleted file mode 100644
+--- a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-2.js
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/// Copyright (c) 2012 Ecma International.  All rights reserved. 
+-/// Ecma International makes this code available under the terms and conditions set
+-/// forth on http://hg.ecmascript.org/tests/test262/raw-file/tip/LICENSE (the 
+-/// "Use Terms").   Any redistribution of this code must retain the above 
+-/// copyright and this notice and otherwise comply with the Use Terms.
+-/**
+- * Refer 11.1.5; 
+- *   The production
+- *     PropertyNameAndValueList :  PropertyNameAndValueList , PropertyAssignment
+- *   4. If previous is not undefined then throw a SyntaxError exception if any of the following conditions are true
+- *     d.	IsAccessorDescriptor(previous) is true and IsAccessorDescriptor(propId.descriptor) is true and either both previous and propId.descriptor have [[Get]] fields or both previous and propId.descriptor have [[Set]] fields
+- *
+- * @path ch11/11.1/11.1.5/11.1.5_4-4-d-2.js
+- * @description Object literal - SyntaxError for duplicate property name (set,set)
+- */
+-
+-
+-function testcase() {
+-  try
+-  {
+-    eval("({set foo(arg){}, set foo(arg1){}});");
+-    return false;
+-  }
+-  catch(e)
+-  {
+-    return e instanceof SyntaxError;
+-  }
+- }
+-runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-3.js b/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-3.js
+deleted file mode 100644
+--- a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-3.js
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/// Copyright (c) 2012 Ecma International.  All rights reserved. 
+-/// Ecma International makes this code available under the terms and conditions set
+-/// forth on http://hg.ecmascript.org/tests/test262/raw-file/tip/LICENSE (the 
+-/// "Use Terms").   Any redistribution of this code must retain the above 
+-/// copyright and this notice and otherwise comply with the Use Terms.
+-/**
+- * Refer 11.1.5; 
+- *   The production
+- *     PropertyNameAndValueList :  PropertyNameAndValueList , PropertyAssignment
+- *   4. If previous is not undefined then throw a SyntaxError exception if any of the following conditions are true
+- *     d.	IsAccessorDescriptor(previous) is true and IsAccessorDescriptor(propId.descriptor) is true and either both previous and propId.descriptor have [[Get]] fields or both previous and propId.descriptor have [[Set]] fields
+- *
+- * @path ch11/11.1/11.1.5/11.1.5_4-4-d-3.js
+- * @description Object literal - SyntaxError for duplicate property name (get,set,get)
+- */
+-
+-
+-function testcase() {
+-  try
+-  {
+-    eval("({get foo(){}, set foo(arg){}, get foo(){}});");
+-    return false;
+-  }
+-  catch(e)
+-  {
+-    return e instanceof SyntaxError;
+-  }
+- }
+-runTestCase(testcase);
+diff --git a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-4.js b/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-4.js
+deleted file mode 100644
+--- a/js/src/tests/test262/ch11/11.1/11.1.5/11.1.5_4-4-d-4.js
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/// Copyright (c) 2012 Ecma International.  All rights reserved. 
+-/// Ecma International makes this code available under the terms and conditions set
+-/// forth on http://hg.ecmascript.org/tests/test262/raw-file/tip/LICENSE (the 
+-/// "Use Terms").   Any redistribution of this code must retain the above 
+-/// copyright and this notice and otherwise comply with the Use Terms.
+-/**
+- * Refer 11.1.5; 
+- *   The production
+- *     PropertyNameAndValueList :  PropertyNameAndValueList , PropertyAssignment
+- *   4. If previous is not undefined then throw a SyntaxError exception if any of the following conditions are true
+- *     d.	IsAccessorDescriptor(previous) is true and IsAccessorDescriptor(propId.descriptor) is true and either both previous and propId.descriptor have [[Get]] fields or both previous and propId.descriptor have [[Set]] fields
+- *
+- * @path ch11/11.1/11.1.5/11.1.5_4-4-d-4.js
+- * @description Object literal - SyntaxError for duplicate property name (set,get,set)
+- */
+-
+-
+-function testcase() {
+-  try
+-  {
+-    eval("({set foo(arg){}, get foo(){}, set foo(arg1){}});");
+-    return false;
+-  }
+-  catch(e)
+-  {
+-    return e instanceof SyntaxError;
+-  }
+- }
+-runTestCase(testcase);

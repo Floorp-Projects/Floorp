@@ -159,7 +159,7 @@ UseCompatibleWith(const LUse *use, LAllocation alloc)
           // UsePosition is only used as hint.
         return alloc.isRegister();
       default:
-        MOZ_ASSUME_UNREACHABLE("Unknown use policy");
+        MOZ_CRASH("Unknown use policy");
     }
 }
 
@@ -186,7 +186,7 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
             return false;
         return alloc == *ins->getOperand(def->getReusedInput());
       default:
-        MOZ_ASSUME_UNREACHABLE("Unknown definition policy");
+        MOZ_CRASH("Unknown definition policy");
     }
 }
 

@@ -48,6 +48,7 @@ public:
   void GetLabel(nsAString& aLabel) { aLabel.Truncate(); }
   bool Enabled() { return mEnabled; }
   void SetEnabled(bool aEnabled);
+  void Stop();
 
   // Notifications from the MediaStreamGraph
   void NotifyEnded() { mEnded = true; }

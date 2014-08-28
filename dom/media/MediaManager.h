@@ -101,6 +101,8 @@ public:
 
   void StopScreenWindowSharing();
 
+  void StopTrack(TrackID aID, bool aIsAudio);
+
   // mVideo/AudioSource are set by Activate(), so we assume they're capturing
   // if set and represent a real capture device.
   bool CapturingVideo()
@@ -129,6 +131,12 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     return mVideoSource && !mStopped && !mVideoSource->IsAvailable() &&
            mVideoSource->GetMediaSource() == MediaSourceType::Window;
+  }
+  bool CapturingApplication()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    return mVideoSource && !mStopped && !mVideoSource->IsAvailable() &&
+           mVideoSource->GetMediaSource() == MediaSourceType::Application;
   }
 
   void SetStopped()
@@ -599,7 +607,7 @@ private:
 
   nsresult MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVideo,
                                            bool* aAudio, bool *aScreenShare,
-                                           bool* aWindowShare);
+                                           bool* aWindowShare, bool *aAppShare);
 
   void StopScreensharing(uint64_t aWindowID);
   void StopScreensharing(nsPIDOMWindow *aWindow);
