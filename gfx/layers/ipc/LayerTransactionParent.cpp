@@ -679,6 +679,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
 
 bool
 LayerTransactionParent::RecvSetAsyncScrollOffset(PLayerParent* aLayer,
+                                                 const FrameMetrics::ViewID& aId,
                                                  const int32_t& aX, const int32_t& aY)
 {
   if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
@@ -689,7 +690,13 @@ LayerTransactionParent::RecvSetAsyncScrollOffset(PLayerParent* aLayer,
   if (!layer) {
     return false;
   }
-  AsyncPanZoomController* controller = layer->GetAsyncPanZoomController();
+  AsyncPanZoomController* controller = nullptr;
+  for (uint32_t i = 0; i < layer->GetFrameMetricsCount(); i++) {
+    if (layer->GetFrameMetrics(i).GetScrollId() == aId) {
+      controller = layer->GetAsyncPanZoomController(i);
+      break;
+    }
+  }
   if (!controller) {
     return false;
   }
