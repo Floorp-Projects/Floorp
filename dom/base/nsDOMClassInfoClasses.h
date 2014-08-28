@@ -55,7 +55,6 @@ DOMCI_CLASS(ModalContentWindow)
 
 DOMCI_CLASS(MozSmsMessage)
 DOMCI_CLASS(MozMmsMessage)
-DOMCI_CLASS(MozSmsFilter)
 DOMCI_CLASS(MozMobileMessageThread)
 
 // @font-face in CSS

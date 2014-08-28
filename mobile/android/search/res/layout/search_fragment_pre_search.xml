@@ -16,14 +16,4 @@
         android:dividerHeight="0dp"
         android:listSelector="@android:color/transparent"/>
 
-    <ImageButton
-        android:id="@+id/settings_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:padding="15dp"
-        android:src="@drawable/ic_action_settings"
-        android:layout_gravity="bottom|right"
-        android:contentDescription="@string/search_pref_button_content_description"/>
-
 </FrameLayout>

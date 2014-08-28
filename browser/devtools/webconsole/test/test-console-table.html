@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf8">
+    <!--
+    - Any copyright is dedicated to the Public Domain.
+    - http://creativecommons.org/publicdomain/zero/1.0/
+    -->
+    <title>Test for Bug 899753 - console.table support</title>
+    <script>
+      var languages1 = [
+        { name: "JavaScript", fileExtension: [".js"] },
+        { name: { a: "TypeScript" }, fileExtension: ".ts" },
+        { name: "CoffeeScript", fileExtension: ".coffee" }
+      ];
+
+      var languages2 = {
+        csharp: { name: "C#", paradigm: "object-oriented" },
+        fsharp: { name: "F#", paradigm: "functional" }
+      };
+
+      function Person(firstName, lastName, age)
+      {
+          this.firstName = firstName;
+          this.lastName = lastName;
+          this.age = age;
+      }
+
+      var family = {};
+      family.mother = new Person("Susan", "Doyle", 32);
+      family.father = new Person("John", "Doyle", 33);
+      family.daughter = new Person("Lily", "Doyle", 5);
+      family.son = new Person("Mike", "Doyle", 8);
+
+      var myMap = new Map();
+
+      myMap.set("a string", "value associated with 'a string'");
+      myMap.set(5, "value associated with 5");
+
+      var mySet = new Set();
+
+      mySet.add(1);
+      mySet.add(5);
+      mySet.add("some text");
+      mySet.add(null);
+      mySet.add(undefined);
+    </script>
+  </head>
+  <body>
+    <p>Hello world!</p>
+  </body>
+</html>
