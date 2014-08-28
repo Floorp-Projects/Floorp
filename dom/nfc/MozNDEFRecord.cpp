@@ -64,6 +64,42 @@ MozNDEFRecord::DropData()
   mozilla::DropJSObjects(this);
 }
 
+/**
+ * Validate TNF.
+ * See section 3.3 THE NDEF Specification Test Requirements,
+ * NDEF specification 1.0
+ */
+/* static */
+bool
+MozNDEFRecord::ValidateTNF(const MozNDEFRecordOptions& aOptions,
+                           ErrorResult& aRv)
+{
+  // * The TNF field MUST have a value between 0x00 and 0x06.
+  // * The TNF value MUST NOT be 0x07.
+  // These two requirements are already handled by WebIDL bindings.
+
+  // If the TNF value is 0x00 (Empty), the TYPE, ID, and PAYLOAD fields MUST be
+  // omitted from the record.
+  if ((aOptions.mTnf == TNF::Empty) &&
+      (aOptions.mType.WasPassed() || aOptions.mId.WasPassed() ||
+       aOptions.mPayload.WasPassed())) {
+    NS_WARNING("tnf is empty but type/id/payload is not null.");
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return false;
+  }
+
+  // If the TNF value is 0x05 (Unknown) or 0x06(Unchanged), the TYPE field MUST
+  // be omitted from the NDEF record.
+  if ((aOptions.mTnf == TNF::Unknown || aOptions.mTnf == TNF::Unchanged) &&
+      aOptions.mType.WasPassed()) {
+    NS_WARNING("tnf is unknown/unchanged but type  is not null.");
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return false;
+  }
+
+  return true;
+}
+
 /* static */
 already_AddRefed<MozNDEFRecord>
 MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
@@ -73,6 +109,10 @@ MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (!ValidateTNF(aOptions, aRv)) {
     return nullptr;
   }
 
