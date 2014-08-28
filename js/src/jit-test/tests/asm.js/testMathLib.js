@@ -153,6 +153,8 @@ assertEq(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f
 assertEq(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d) { d=+d; var i=0; i = ~~min(d, 0.)|0; return i|0 } return f'), this)(-42), -42);
 assertEq(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d) { d=+d; var i=0; i = ~~max(d, 0.)|0; return i|0 } return f'), this)(-42), 0);
 
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var abs=glob.Math.abs; function f(i) { i=i|0; var d=0.0; return +d; +abs(i|0); return 3.0;} return f'), this)(-42), 0);
+
 assertAsmTypeFail('glob', USE_ASM + 'var tau=glob.Math.TAU; function f() {} return f');
 assertAsmTypeFail('glob', USE_ASM + 'var pi=glob.Math.PI; function f() { return pi | 0 } return f');
 assertAsmTypeFail('glob', USE_ASM + 'var pi=glob.Math.PI; function f() { return +pi() } return f');
