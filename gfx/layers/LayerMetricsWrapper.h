@@ -120,13 +120,18 @@ namespace layers {
  */
 class MOZ_STACK_CLASS LayerMetricsWrapper {
 public:
+  enum StartAt {
+    TOP,
+    BOTTOM,
+  };
+
   LayerMetricsWrapper()
     : mLayer(nullptr)
     , mIndex(0)
   {
   }
 
-  explicit LayerMetricsWrapper(Layer* aRoot)
+  explicit LayerMetricsWrapper(Layer* aRoot, StartAt aStart = StartAt::TOP)
     : mLayer(aRoot)
     , mIndex(0)
   {
@@ -134,9 +139,19 @@ public:
       return;
     }
 
-    mIndex = mLayer->GetFrameMetricsCount();
-    if (mIndex > 0) {
-      mIndex--;
+    switch (aStart) {
+      case StartAt::TOP:
+        mIndex = mLayer->GetFrameMetricsCount();
+        if (mIndex > 0) {
+          mIndex--;
+        }
+        break;
+      case StartAt::BOTTOM:
+        mIndex = 0;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown startAt value");
+        break;
     }
   }
 
@@ -158,6 +173,29 @@ public:
     return IsValid();
   }
 
+  LayerMetricsWrapper GetParent() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    if (!AtTopLayer()) {
+      return LayerMetricsWrapper(mLayer, mIndex + 1);
+    }
+    if (mLayer->GetParent()) {
+      return LayerMetricsWrapper(mLayer->GetParent(), StartAt::BOTTOM);
+    }
+    return LayerMetricsWrapper(nullptr);
+  }
+
+  LayerMetricsWrapper GetFirstChild() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    if (!AtBottomLayer()) {
+      return LayerMetricsWrapper(mLayer, mIndex - 1);
+    }
+    return LayerMetricsWrapper(mLayer->GetFirstChild());
+  }
+
   LayerMetricsWrapper GetLastChild() const
   {
     MOZ_ASSERT(IsValid());
@@ -174,6 +212,16 @@ public:
 
     if (AtTopLayer()) {
       return LayerMetricsWrapper(mLayer->GetPrevSibling());
+    }
+    return LayerMetricsWrapper(nullptr);
+  }
+
+  LayerMetricsWrapper GetNextSibling() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    if (AtTopLayer()) {
+      return LayerMetricsWrapper(mLayer->GetNextSibling());
     }
     return LayerMetricsWrapper(nullptr);
   }
@@ -221,6 +269,13 @@ public:
     return "DummyContainerLayer";
   }
 
+  LayerManager* Manager() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->Manager();
+  }
+
   gfx::Matrix4x4 GetTransform() const
   {
     MOZ_ASSERT(IsValid());
@@ -229,6 +284,13 @@ public:
       return mLayer->GetTransform();
     }
     return gfx::Matrix4x4();
+  }
+
+  const gfx::Matrix4x4& GetEffectiveTransform() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->GetEffectiveTransform();
   }
 
   RefLayer* AsRefLayer() const
@@ -275,6 +337,17 @@ public:
     MOZ_ASSERT(IsValid());
 
     return (void*)mLayer;
+  }
+
+  bool operator==(const LayerMetricsWrapper& aOther) const
+  {
+    return mLayer == aOther.mLayer
+        && mIndex == aOther.mIndex;
+  }
+
+  bool operator!=(const LayerMetricsWrapper& aOther) const
+  {
+    return !(*this == aOther);
   }
 
 private:
