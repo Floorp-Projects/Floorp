@@ -339,13 +339,53 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
   bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
 
+  TimeStamp now = TimeStamp::Now();
+
   if (drawFps) {
     if (!mFPS) {
       mFPS = MakeUnique<FPSState>();
     }
 
+#ifdef ANDROID
+    // Draw a translation delay warning overlay
+    int width;
+    int border;
+    float alpha = 1;
+    if ((now - mWarnTime).ToMilliseconds() < 150) {
+      printf_stderr("Draw\n");
+      EffectChain effects;
+
+      // Black blorder
+      border = 4;
+      width = 6;
+      effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(0, 0, 0, 1));
+      mCompositor->DrawQuad(gfx::Rect(border, border, aBounds.width - 2 * border, width),
+                            aBounds, effects, alpha, gfx::Matrix4x4());
+      mCompositor->DrawQuad(gfx::Rect(border, aBounds.height - border - width, aBounds.width - 2 * border, width),
+                            aBounds, effects, alpha, gfx::Matrix4x4());
+      mCompositor->DrawQuad(gfx::Rect(border, border + width, width, aBounds.height - 2 * border - width * 2),
+                            aBounds, effects, alpha, gfx::Matrix4x4());
+      mCompositor->DrawQuad(gfx::Rect(aBounds.width - border - width, border + width, width, aBounds.height - 2 * border - 2 * width),
+                            aBounds, effects, alpha, gfx::Matrix4x4());
+
+      // Content
+      border = 5;
+      width = 4;
+      effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(1, 1.f - mWarningLevel, 0, 1));
+      mCompositor->DrawQuad(gfx::Rect(border, border, aBounds.width - 2 * border, width),
+                            aBounds, effects, alpha, gfx::Matrix4x4());
+      mCompositor->DrawQuad(gfx::Rect(border, aBounds.height - border - width, aBounds.width - 2 * border, width),
+                            aBounds, effects, alpha, gfx::Matrix4x4());
+      mCompositor->DrawQuad(gfx::Rect(border, border + width, width, aBounds.height - 2 * border - width * 2),
+                            aBounds, effects, alpha, gfx::Matrix4x4());
+      mCompositor->DrawQuad(gfx::Rect(aBounds.width - border - width, border + width, width, aBounds.height - 2 * border - 2 * width),
+                            aBounds, effects, alpha, gfx::Matrix4x4());
+      SetDebugOverlayWantsNextFrame(true);
+    }
+#endif
+
     float fillRatio = mCompositor->GetFillRatio();
-    mFPS->DrawFPS(TimeStamp::Now(), drawFrameColorBars ? 10 : 0, 0, unsigned(fillRatio), mCompositor);
+    mFPS->DrawFPS(now, drawFrameColorBars ? 10 : 0, 0, unsigned(fillRatio), mCompositor);
   } else {
     mFPS = nullptr;
   }
