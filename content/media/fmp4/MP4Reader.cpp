@@ -774,7 +774,10 @@ MP4Reader::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
                              int64_t aOffset)
 {
   if (NS_IsMainThread()) {
-    GetTaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MP4Reader::UpdateIndex));
+    if (GetTaskQueue()) {
+      GetTaskQueue()->Dispatch(
+        NS_NewRunnableMethod(this, &MP4Reader::UpdateIndex));
+    }
   } else {
     UpdateIndex();
   }
