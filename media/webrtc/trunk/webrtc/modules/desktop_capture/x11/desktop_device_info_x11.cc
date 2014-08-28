@@ -35,10 +35,12 @@ void DesktopDeviceInfoX11::MultiMonitorScreenshare()
 {
   DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
   if (pDesktopDeviceInfo) {
-    pDesktopDeviceInfo->setScreenId(0);
+    pDesktopDeviceInfo->setScreenId(webrtc::kFullDesktopScreenId);
     pDesktopDeviceInfo->setDeviceName("Primary Monitor");
-    pDesktopDeviceInfo->setUniqueIdName("\\screen\\monitor#1");
 
+    char idStr[64];
+    snprintf(idStr, sizeof(idStr), "%ld", idStr);
+    pDesktopDeviceInfo->setUniqueIdName(idStr);
     desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
   }
 }

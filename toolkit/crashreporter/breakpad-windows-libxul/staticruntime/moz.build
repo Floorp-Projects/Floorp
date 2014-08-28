@@ -1,0 +1,31 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    '../../google-breakpad/src/common/windows/http_upload.cc',
+]
+
+LIBRARY_NAME = 'google_breakpad_libxul_staticruntime_s'
+
+for var in ('UNICODE', 'UNICODE_', 'BREAKPAD_NO_TERMINATE_THREAD', 'NOMINMAX'):
+    DEFINES[var] = True
+
+LOCAL_INCLUDES += [
+    '/toolkit/crashreporter/google-breakpad/src',
+]
+
+include('/toolkit/crashreporter/google-breakpad/src/common/windows/objs.mozbuild')
+include('/toolkit/crashreporter/google-breakpad/src/client/windows/handler/objs.mozbuild')
+include('/toolkit/crashreporter/google-breakpad/src/client/windows/sender/objs.mozbuild')
+include('/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/objs.mozbuild')
+
+SOURCES += objs_common
+SOURCES += objs_crash_generation
+SOURCES += objs_handler
+SOURCES += objs_sender
+
+DISABLE_STL_WRAPPING = True
+USE_STATIC_LIBS = True

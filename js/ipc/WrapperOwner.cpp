@@ -45,13 +45,11 @@ WrapperOwner::idOf(JSObject *obj)
     return objId;
 }
 
-int sCPOWProxyHandler;
-
 class CPOWProxyHandler : public BaseProxyHandler
 {
   public:
     CPOWProxyHandler()
-      : BaseProxyHandler(&sCPOWProxyHandler) {}
+      : BaseProxyHandler(&family) {}
     virtual ~CPOWProxyHandler() {}
 
     virtual bool finalizeInBackground(Value priv) const MOZ_OVERRIDE {
@@ -86,9 +84,11 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual const char* className(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
     virtual void finalize(JSFreeOp *fop, JSObject *proxy) const MOZ_OVERRIDE;
 
+    static const char family;
     static const CPOWProxyHandler singleton;
 };
 
+const char CPOWProxyHandler::family = 0;
 const CPOWProxyHandler CPOWProxyHandler::singleton;
 
 #define FORWARD(call, args)                                             \

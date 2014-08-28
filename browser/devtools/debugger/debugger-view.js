@@ -221,12 +221,17 @@ let DebuggerView = {
       extraKeys[shortcut] = () => DebuggerView.Filtering[func]();
     }
 
+    let gutters = ["breakpoints"];
+    if (Services.prefs.getBoolPref("devtools.debugger.tracer")) {
+      gutters.unshift("hit-counts");
+    }
+
     this.editor = new Editor({
       mode: Editor.modes.text,
       readOnly: true,
       lineNumbers: true,
       showAnnotationRuler: true,
-      gutters: [ "breakpoints" ],
+      gutters: gutters,
       extraKeys: extraKeys,
       contextMenu: "sourceEditorContextMenu"
     });
@@ -410,6 +415,7 @@ let DebuggerView = {
       // Synchronize any other components with the currently displayed source.
       DebuggerView.Sources.selectedValue = aSource.url;
       DebuggerController.Breakpoints.updateEditorBreakpoints();
+      DebuggerController.HitCounts.updateEditorHitCounts();
 
       histogram.add(Date.now() - startTime);
 

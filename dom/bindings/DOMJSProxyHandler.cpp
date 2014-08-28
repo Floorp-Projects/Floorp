@@ -29,8 +29,7 @@ DefineStaticJSVals(JSContext* cx)
   return InternJSString(cx, s_length_id, "length");
 }
 
-
-const char HandlerFamily = 0;
+const char DOMProxyHandler::family = 0;
 
 js::DOMProxyShadowsResult
 DOMProxyShadows(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id)
@@ -60,7 +59,7 @@ DOMProxyShadows(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id)
 struct SetDOMProxyInformation
 {
   SetDOMProxyInformation() {
-    js::SetDOMProxyInformation((const void*) &HandlerFamily,
+    js::SetDOMProxyInformation((const void*) &DOMProxyHandler::family,
                                js::PROXY_EXTRA_SLOT + JSPROXYSLOT_EXPANDO, DOMProxyShadows);
   }
 };
@@ -361,6 +360,26 @@ DOMProxyHandler::setCustom(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handl
 {
   *done = false;
   return true;
+}
+
+//static
+JSObject *
+DOMProxyHandler::GetExpandoObject(JSObject *obj)
+{
+  MOZ_ASSERT(IsDOMProxy(obj), "expected a DOM proxy object");
+  JS::Value v = js::GetProxyExtra(obj, JSPROXYSLOT_EXPANDO);
+  if (v.isObject()) {
+    return &v.toObject();
+  }
+
+  if (v.isUndefined()) {
+    return nullptr;
+  }
+
+  js::ExpandoAndGeneration* expandoAndGeneration =
+    static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
+  v = expandoAndGeneration->expando;
+  return v.isUndefined() ? nullptr : &v.toObject();
 }
 
 } // namespace dom
