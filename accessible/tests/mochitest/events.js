@@ -1774,6 +1774,43 @@ function textSelectionChecker(aID, aStartOffset, aEndOffset)
 }
 
 /**
+ * Object attribute changed checker
+ */
+function objAttrChangedChecker(aID, aAttr)
+{
+  this.__proto__ = new invokerChecker(EVENT_OBJECT_ATTRIBUTE_CHANGED, aID);
+
+  this.check = function objAttrChangedChecker_check(aEvent)
+  {
+    var event = null;
+    try {
+      var event = aEvent.QueryInterface(
+        nsIAccessibleObjectAttributeChangedEvent);
+    } catch (e) {
+      ok(false, "Object attribute changed event was expected");
+    }
+
+    if (!event) {
+      return;
+    }
+
+    is(event.changedAttribute.toString(), aAttr,
+      "Wrong attribute name of the object attribute changed event.");
+  };
+
+  this.match = function objAttrChangedChecker_match(aEvent)
+  {
+    if (aEvent instanceof nsIAccessibleObjectAttributeChangedEvent) {
+      var scEvent = aEvent.QueryInterface(
+        nsIAccessibleObjectAttributeChangedEvent);
+      return (aEvent.accessible == getAccessible(this.target)) &&
+        (scEvent.changedAttribute.toString() == aAttr);
+    }
+    return false;
+  };
+}
+
+/**
  * State change checker.
  */
 function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
