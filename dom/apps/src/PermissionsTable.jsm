@@ -398,6 +398,13 @@ this.PermissionsTable =  { geolocation: {
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              substitute: ["firefox-accounts"]
+                           },
+                           "settings:wallpaper.image": {
+                             app: DENY_ACTION,
+                             privileged: PROMPT_ACTION,
+                             certified: ALLOW_ACTION,
+                             access: ["read", "write"],
+                             additional: ["settings-api"]
                            }
                          };
 
