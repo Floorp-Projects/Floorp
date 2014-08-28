@@ -604,15 +604,6 @@ HttpBaseChannel::SetApplyConversion(bool value)
   return NS_OK;
 }
 
-nsresult
-HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
-                                           nsIStreamListener** aNewNextListener)
-{
-  return DoApplyContentConversions(aNextListener,
-                                   aNewNextListener,
-                                   mListenerContext);
-}
-
 NS_IMETHODIMP
 HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
                                            nsIStreamListener** aNewNextListener,
@@ -631,7 +622,10 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
   }
 
   nsAutoCString contentEncoding;
-  nsresult rv = mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+  char *cePtr, *val;
+  nsresult rv;
+
+  rv = mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
   if (NS_FAILED(rv) || contentEncoding.IsEmpty())
     return NS_OK;
 
@@ -641,9 +635,9 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
   // being a stack with the last converter created being the first one
   // to accept the raw network data.
 
-  char* cePtr = contentEncoding.BeginWriting();
+  cePtr = contentEncoding.BeginWriting();
   uint32_t count = 0;
-  while (char* val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr)) {
+  while ((val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr))) {
     if (++count > 16) {
       // That's ridiculous. We only understand 2 different ones :)
       // but for compatibility with old code, we will just carry on without
@@ -678,14 +672,15 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
       }
 
       LOG(("converter removed '%s' content-encoding\n", val));
-      nextListener = converter.forget();
+      nextListener = converter;
     }
     else {
       if (val)
         LOG(("Unknown content encoding '%s', ignoring\n", val));
     }
   }
-  nextListener.forget(aNewNextListener);
+  *aNewNextListener = nextListener;
+  NS_ADDREF(*aNewNextListener);
   return NS_OK;
 }
 
