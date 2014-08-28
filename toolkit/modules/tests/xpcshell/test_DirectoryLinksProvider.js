@@ -624,16 +624,16 @@ add_task(function test_DirectoryLinksProvider_enabledNotEnabled() {
 
   Services.prefs.setCharPref(kSourceUrlPref, 'data:application/json,' + JSON.stringify({
     "en-US": [{url: "http://example.com/en", title: "US"}],
-    "de-DE": [{url: "http://example.com/de", title: "DE"}],
+    "te-ST": [{url: "http://example.com/test", title: "TEST"}],
   }));
 
   // Pretend we're not en-US to make sure things aren't enabled
-  Services.prefs.setCharPref(kLocalePref, "de-DE");
+  Services.prefs.setCharPref(kLocalePref, "te-ST");
   yield cleanJsonFile();
   yield cleanJsonFile();
   yield DirectoryLinksProvider.init();
 
-  do_check_false(DirectoryLinksProvider.enabled, "de-DE should trigger not enabled")
+  do_check_false(DirectoryLinksProvider.enabled, "te-ST should trigger not enabled")
   do_check_eq(DirectoryLinksProvider._linksURL, "data:application/json,{}", "override links url");
 
   let data = yield readJsonFile();
