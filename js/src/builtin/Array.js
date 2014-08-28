@@ -432,20 +432,18 @@ function ArrayFind(predicate/*, thisArg*/) {
     var T = arguments.length > 1 ? arguments[1] : undefined;
 
     /* Steps 8-9. */
-    /* Steps a (implicit), and e. */
+    /* Steps a (implicit), and g. */
     /* Note: this will hang in some corner-case situations, because of IEEE-754 numbers'
      * imprecision for large values. Example:
      * var obj = { 18014398509481984: true, length: 18014398509481988 };
      * Array.prototype.find.call(obj, () => true);
      */
     for (var k = 0; k < len; k++) {
-        /* Steps b and c (implicit) */
-        if (k in O) {
-            /* Step d. */
-            var kValue = O[k];
-            if (callFunction(predicate, T, kValue, k, O))
-                return kValue;
-        }
+        /* Steps a-c. */
+        var kValue = O[k];
+        /* Steps d-f. */
+        if (callFunction(predicate, T, kValue, k, O))
+            return kValue;
     }
 
     /* Step 10. */
@@ -470,19 +468,16 @@ function ArrayFindIndex(predicate/*, thisArg*/) {
     var T = arguments.length > 1 ? arguments[1] : undefined;
 
     /* Steps 8-9. */
-    /* Steps a (implicit), and e. */
+    /* Steps a (implicit), and g. */
     /* Note: this will hang in some corner-case situations, because of IEEE-754 numbers'
      * imprecision for large values. Example:
      * var obj = { 18014398509481984: true, length: 18014398509481988 };
      * Array.prototype.find.call(obj, () => true);
      */
     for (var k = 0; k < len; k++) {
-        /* Steps b and c (implicit) */
-        if (k in O) {
-            /* Step d. */
-            if (callFunction(predicate, T, O[k], k, O))
-                return k;
-        }
+        /* Steps a-f. */
+        if (callFunction(predicate, T, O[k], k, O))
+            return k;
     }
 
     /* Step 10. */
