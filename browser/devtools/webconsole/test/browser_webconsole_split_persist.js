@@ -18,8 +18,10 @@ function test() {
     toolbox = yield gDevTools.showToolbox(target, "inspector");
 
     ok(!toolbox.splitConsole, "Split console is hidden by default.");
+    ok(!isCommandButtonChecked(), "Split console button is unchecked by default.");
     yield toggleSplitConsoleWithEscape();
     ok(toolbox.splitConsole, "Split console is now visible.");
+    ok(isCommandButtonChecked(), "Split console button is now checked.");
     ok(getVisiblePrefValue(), "Visibility pref is true");
 
     is(getHeightPrefValue(), toolbox.webconsolePanel.height, "Panel height matches the pref");
@@ -33,6 +35,7 @@ function test() {
     toolbox = yield gDevTools.showToolbox(target, "inspector");
 
     ok(toolbox.splitConsole, "Split console is visible by default.");
+    ok(isCommandButtonChecked(), "Split console button is checked by default.");
     is(getHeightPrefValue(), 200, "Height is set based on panel height after closing");
 
     // Use the binding element since jsterm.inputNode is a XUL textarea element.
@@ -51,6 +54,7 @@ function test() {
 
     yield toggleSplitConsoleWithEscape();
     ok(!toolbox.splitConsole, "Split console is now hidden.");
+    ok(!isCommandButtonChecked(), "Split console button is now unchecked.");
     ok(!getVisiblePrefValue(), "Visibility pref is false");
 
     yield toolbox.destroy();
@@ -83,6 +87,11 @@ function test() {
 
   function getHeightPrefValue() {
     return Services.prefs.getIntPref("devtools.toolbox.splitconsoleHeight");
+  }
+
+  function isCommandButtonChecked() {
+    return toolbox.doc.querySelector("#command-button-splitconsole").
+      hasAttribute("checked");
   }
 
   function toggleSplitConsoleWithEscape() {

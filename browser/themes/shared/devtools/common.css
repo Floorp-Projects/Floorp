@@ -169,9 +169,17 @@
   min-width: 100px;
   max-width: 400px;
 }
+.devtools-tooltip[clamped-dimensions-no-max-or-min-height] {
+  min-width: 400px;
+  max-width: 400px;
+}
 .devtools-tooltip[clamped-dimensions] .panel-arrowcontent,
-.devtools-tooltip[clamped-dimensions-no-min-height] .panel-arrowcontent {
+.devtools-tooltip[clamped-dimensions-no-min-height] .panel-arrowcontent,
+.devtools-tooltip[clamped-dimensions-no-max-or-min-height] .panel-arrowcontent {
   overflow: hidden;
+}
+.devtools-tooltip[wide] {
+  max-width: 600px;
 }
 
 /* Tooltip: Simple Text */

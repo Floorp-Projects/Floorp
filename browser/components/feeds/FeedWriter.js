@@ -889,7 +889,13 @@ FeedWriter.prototype = {
     switch (handler) {
       case "web": {
         if (this._handlersMenuList) {
-          var url = prefs.getComplexValue(getPrefWebForType(feedType), Ci.nsISupportsString).data;
+          var url;
+          try {
+            url = prefs.getComplexValue(getPrefWebForType(feedType), Ci.nsISupportsString).data;
+          } catch (ex) {
+            LOG("FeedWriter._setSelectedHandler: invalid or no handler in prefs");
+            return;
+          }
           var handlers =
             this._handlersMenuList.getElementsByAttribute("webhandlerurl", url);
           if (handlers.length == 0) {
@@ -1039,6 +1045,10 @@ FeedWriter.prototype = {
     var handlers = wccr.getContentHandlers(this._getMimeTypeForFeedType(feedType));
     if (handlers.length != 0) {
       for (var i = 0; i < handlers.length; ++i) {
+        if (!handlers[i].uri) {
+          LOG("Handler with name " + handlers[i].name + " has no URI!? Skipping...");
+          continue;
+        }
         menuItem = liveBookmarksMenuItem.cloneNode(false);
         menuItem.removeAttribute("selected");
         menuItem.className = "menuitem-iconic";
