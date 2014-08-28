@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <style>
+      input {
+        margin: 5px 3px 10px 10px;
+      }
+
+      div {
+        width: 100px;
+        height: 100px;
+        border: 1px solid #000;
+      }
+    </style>
+
+    <script type="application/javascript;version=1.8">
+      let jq = document.location.search.substr(1);
+
+      let script = document.createElement("script");
+      script.setAttribute("type", "text/javascript");
+      script.setAttribute("src", jq);
+
+      document.head.appendChild(script);
+
+      window.addEventListener("load", () => {
+        var handler1 = function liveDivDblClick() { alert(1); };
+        var handler2 = function liveDivDragStart() { alert(2); };
+        var handler3 = function liveDivDragLeave() { alert(3); };
+        var handler4 = function liveDivDragEnd() { alert(4); };
+        var handler5 = function liveDivDrop() { alert(5); };
+        var handler6 = function liveDivDragOver() { alert(6); };
+        var handler7 = function divClick1() { alert(7); };
+        var handler8 = function divClick2() { alert(8); };
+        var handler9 = function divKeyDown() { alert(9); };
+
+        if ($("#livediv").live) {
+          $("#livediv").live( "dblclick", handler1);
+          $("#livediv").live( "dragstart", handler2);
+        }
+
+        if ($("#livediv").delegate) {
+          $(document).delegate( "#livediv", "dragleave", handler3);
+          $(document).delegate( "#livediv", "dragend", handler4);
+        }
+
+        if ($("#livediv").on) {
+          $(document).on( "drop", "#livediv", handler5);
+          $(document).on( "dragover", "#livediv", handler6);
+        }
+
+        var div = $("div")[0];
+        $(div).click(handler7);
+        $(div).click(handler8);
+        $(div).keydown(handler9);
+      });
+    </script>
+  </head>
+  <body>
+    <div id="testdiv"></div>
+    <br>
+    <div id="livediv"></div>
+  </body>
+</html>
