@@ -4,21 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['OS_ARCH'] == 'Linux':
-    DIRS += ['linux']
-elif CONFIG['OS_ARCH'] == 'Darwin':
-    DIRS += ['mac']
-elif CONFIG['OS_ARCH'] == 'WINNT':
-    LIBRARY_NAME = 'sandbox_s'
+if CONFIG['OS_ARCH'] == 'WINNT':
+    LIBRARY_NAME = 'sandbox_staticruntime_s'
     FORCE_STATIC_LIB = True
+    USE_STATIC_LIBS = True
 
-    DIRS += [
-        'staticruntime',
-        'win/src/sandboxbroker',
-        'win/src/sandboxtarget',
-    ]
-
-    include('objs.mozbuild')
+    include('../objs.mozbuild')
     SOURCES += security_sandbox_cppsrcs
 
     for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'SANDBOX_EXPORTS',
@@ -27,6 +18,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
 
     LOCAL_INCLUDES += ['/security/sandbox/chromium/base/shim']
     LOCAL_INCLUDES += ['/security/sandbox/chromium']
+    LOCAL_INCLUDES += ['/security/sandbox']
     LOCAL_INCLUDES += ['/security']
     LOCAL_INCLUDES += ['/nsprpub']
 
