@@ -78,6 +78,7 @@ class AsyncPanZoomController;
 class ClientLayerManager;
 class CommonLayerAttributes;
 class Layer;
+class LayerMetricsWrapper;
 class ThebesLayer;
 class ContainerLayer;
 class ImageLayer;
@@ -339,7 +340,7 @@ public:
    * scrollable layer.
    * Can be called any time.
    */
-  Layer* GetPrimaryScrollableLayer();
+  LayerMetricsWrapper GetPrimaryScrollableLayer();
 
   /**
    * Returns a list of all descendant layers for which
@@ -1191,6 +1192,7 @@ public:
   const FrameMetrics& GetFrameMetrics(uint32_t aIndex) const;
   uint32_t GetFrameMetricsCount() const { return mFrameMetrics.Length(); }
   const nsTArray<FrameMetrics>& GetAllFrameMetrics() { return mFrameMetrics; }
+  bool HasScrollableFrameMetrics() const;
   const EventRegions& GetEventRegions() const { return mEventRegions; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() { return mNextSibling; }

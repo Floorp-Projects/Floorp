@@ -27,6 +27,7 @@
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite
+#include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/layers/LayersMessages.h"  // for TransformFunction, etc
 #include "nsAString.h"
 #include "nsCSSValue.h"                 // for nsCSSValue::Array, etc
@@ -53,34 +54,32 @@ using namespace mozilla::gfx;
 
 //--------------------------------------------------
 // LayerManager
-Layer*
+LayerMetricsWrapper
 LayerManager::GetPrimaryScrollableLayer()
 {
   if (!mRoot) {
-    return nullptr;
+    return LayerMetricsWrapper();
   }
 
-  nsTArray<Layer*> queue;
-  queue.AppendElement(mRoot);
+  nsTArray<LayerMetricsWrapper> queue;
+  queue.AppendElement(LayerMetricsWrapper(mRoot));
   while (queue.Length()) {
-    Layer* layer = queue[0];
+    LayerMetricsWrapper layer = queue[0];
     queue.RemoveElementAt(0);
 
-    const FrameMetrics& frameMetrics = layer->GetFrameMetrics();
+    const FrameMetrics& frameMetrics = layer.Metrics();
     if (frameMetrics.IsScrollable()) {
       return layer;
     }
 
-    if (ContainerLayer* containerLayer = layer->AsContainerLayer()) {
-      Layer* child = containerLayer->GetFirstChild();
-      while (child) {
-        queue.AppendElement(child);
-        child = child->GetNextSibling();
-      }
+    LayerMetricsWrapper child = layer.GetFirstChild();
+    while (child) {
+      queue.AppendElement(child);
+      child = child.GetNextSibling();
     }
   }
 
-  return mRoot;
+  return LayerMetricsWrapper(mRoot);
 }
 
 void
@@ -96,18 +95,13 @@ LayerManager::GetScrollableLayers(nsTArray<Layer*>& aArray)
     Layer* layer = queue.LastElement();
     queue.RemoveElementAt(queue.Length() - 1);
 
-    const FrameMetrics& frameMetrics = layer->GetFrameMetrics();
-    if (frameMetrics.IsScrollable()) {
+    if (layer->HasScrollableFrameMetrics()) {
       aArray.AppendElement(layer);
       continue;
     }
 
-    if (ContainerLayer* containerLayer = layer->AsContainerLayer()) {
-      Layer* child = containerLayer->GetFirstChild();
-      while (child) {
-        queue.AppendElement(child);
-        child = child->GetNextSibling();
-      }
+    for (Layer* child = layer->GetFirstChild(); child; child = child->GetNextSibling()) {
+      queue.AppendElement(child);
     }
   }
 }
@@ -676,6 +670,17 @@ Layer::GetFrameMetrics(uint32_t aIndex) const
 {
   MOZ_ASSERT(aIndex < GetFrameMetricsCount());
   return mFrameMetrics[aIndex];
+}
+
+bool
+Layer::HasScrollableFrameMetrics() const
+{
+  for (uint32_t i = 0; i < GetFrameMetricsCount(); i++) {
+    if (GetFrameMetrics(i).IsScrollable()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 const Matrix4x4
