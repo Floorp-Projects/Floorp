@@ -1070,7 +1070,7 @@ nsChildView::GetDefaultScaleInternal()
 }
 
 CGFloat
-nsChildView::BackingScaleFactor()
+nsChildView::BackingScaleFactor() const
 {
   if (mBackingScaleFactor > 0.0) {
     return mBackingScaleFactor;

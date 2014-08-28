@@ -444,7 +444,7 @@ public:
   // will be 2.0 (and might potentially other values as screen resolutions
   // evolve). This gives the relationship between what Gecko calls "device
   // pixels" and the Cocoa "points" coordinate system.
-  CGFloat                 BackingScaleFactor();
+  CGFloat                 BackingScaleFactor() const;
 
   // Call if the window's backing scale factor changes - i.e., it is moved
   // between HiDPI and non-HiDPI screens
@@ -571,19 +571,19 @@ public:
   void              NotifyDirtyRegion(const nsIntRegion& aDirtyRegion);
 
   // unit conversion convenience functions
-  int32_t           CocoaPointsToDevPixels(CGFloat aPts) {
+  int32_t           CocoaPointsToDevPixels(CGFloat aPts) const {
     return nsCocoaUtils::CocoaPointsToDevPixels(aPts, BackingScaleFactor());
   }
-  nsIntPoint        CocoaPointsToDevPixels(const NSPoint& aPt) {
+  nsIntPoint        CocoaPointsToDevPixels(const NSPoint& aPt) const {
     return nsCocoaUtils::CocoaPointsToDevPixels(aPt, BackingScaleFactor());
   }
-  nsIntRect         CocoaPointsToDevPixels(const NSRect& aRect) {
+  nsIntRect         CocoaPointsToDevPixels(const NSRect& aRect) const {
     return nsCocoaUtils::CocoaPointsToDevPixels(aRect, BackingScaleFactor());
   }
-  CGFloat           DevPixelsToCocoaPoints(int32_t aPixels) {
+  CGFloat           DevPixelsToCocoaPoints(int32_t aPixels) const {
     return nsCocoaUtils::DevPixelsToCocoaPoints(aPixels, BackingScaleFactor());
   }
-  NSRect            DevPixelsToCocoaPoints(const nsIntRect& aRect) {
+  NSRect            DevPixelsToCocoaPoints(const nsIntRect& aRect) const {
     return nsCocoaUtils::DevPixelsToCocoaPoints(aRect, BackingScaleFactor());
   }
 
@@ -678,7 +678,7 @@ protected:
   // messages (respondsToSelector, backingScaleFactor) every time we need to
   // use it.
   // ** We'll need to reinitialize this if the backing resolution changes. **
-  CGFloat               mBackingScaleFactor;
+  mutable CGFloat       mBackingScaleFactor;
 
   bool                  mVisible;
   bool                  mDrawing;
