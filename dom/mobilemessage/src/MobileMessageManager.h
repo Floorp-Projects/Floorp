@@ -14,7 +14,6 @@
 class nsISmsService;
 class nsIDOMMozSmsMessage;
 class nsIDOMMozMmsMessage;
-class nsIDOMMozSmsFilter;
 
 namespace mozilla {
 namespace dom {
@@ -23,6 +22,7 @@ class DOMRequest;
 class DOMCursor;
 struct MmsParameters;
 struct MmsSendParameters;
+struct MobileMessageFilter;
 struct SmsSendParameters;
 
 class MobileMessageManager MOZ_FINAL : public DOMEventTargetHelper
@@ -90,7 +90,7 @@ public:
          ErrorResult& aRv);
 
   already_AddRefed<DOMCursor>
-  GetMessages(nsIDOMMozSmsFilter* aFilter,
+  GetMessages(const MobileMessageFilter& aFilter,
               bool aReverse,
               ErrorResult& aRv);
 

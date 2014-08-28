@@ -19,6 +19,7 @@
 #include <pthread.h>
 #include <hardware/gps.h>
 
+#include "mozilla/Constants.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsContentUtils.h"
@@ -81,8 +82,8 @@ GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
     NS_IMETHOD Run() {
       nsRefPtr<GonkGPSGeolocationProvider> provider =
         GonkGPSGeolocationProvider::GetSingleton();
-      provider->mLastGPSDerivedLocationTime = PR_Now();
       nsCOMPtr<nsIGeolocationUpdate> callback = provider->mLocationCallback;
+      provider->mLastGPSPosition = mPosition;
       if (callback) {
         callback->Update(mPosition);
       }
@@ -101,7 +102,14 @@ GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
                                                         location->accuracy,
                                                         location->bearing,
                                                         location->speed,
-                                                        location->timestamp);
+                                                        PR_Now() / PR_USEC_PER_MSEC);
+  // Note above: Can't use location->timestamp as the time from the satellite is a
+  // minimum of 16 secs old (see http://leapsecond.com/java/gpsclock.htm).
+  // All code from this point on expects the gps location to be timestamped with the
+  // current time, most notably: the geolocation service which respects maximumAge
+  // set in the DOM JS.
+
+
   NS_DispatchToMainThread(new UpdateLocationEvent(somewhere));
 }
 
@@ -699,7 +707,7 @@ GonkGPSGeolocationProvider::NetworkLocationUpdate::Update(nsIDOMGeoPosition *pos
   coords->GetLongitude(&lon);
   coords->GetAccuracy(&acc);
 
-  double delta = MAXFLOAT;
+  double delta = -1.0;
 
   static double sLastMLSPosLat = 0;
   static double sLastMLSPosLon = 0;
@@ -708,15 +716,20 @@ GonkGPSGeolocationProvider::NetworkLocationUpdate::Update(nsIDOMGeoPosition *pos
     // Use spherical law of cosines to calculate difference
     // Not quite as correct as the Haversine but simpler and cheaper
     // Should the following be a utility function? Others might need this calc.
-    const double radsInDeg = 3.14159265 / 180.0;
+    const double radsInDeg = M_PI / 180.0;
     const double rNewLat = lat * radsInDeg;
     const double rNewLon = lon * radsInDeg;
     const double rOldLat = sLastMLSPosLat * radsInDeg;
     const double rOldLon = sLastMLSPosLon * radsInDeg;
     // WGS84 equatorial radius of earth = 6378137m
-    delta = acos( (sin(rNewLat) * sin(rOldLat)) +
-                  (cos(rNewLat) * cos(rOldLat) * cos(rOldLon - rNewLon)) )
-                  * 6378137;
+    double cosDelta = (sin(rNewLat) * sin(rOldLat)) +
+                      (cos(rNewLat) * cos(rOldLat) * cos(rOldLon - rNewLon));
+    if (cosDelta > 1.0) {
+      cosDelta = 1.0;
+    } else if (cosDelta < -1.0) {
+      cosDelta = -1.0;
+    }
+    delta = acos(cosDelta) * 6378137;
   }
 
   sLastMLSPosLat = lat;
@@ -726,14 +739,40 @@ GonkGPSGeolocationProvider::NetworkLocationUpdate::Update(nsIDOMGeoPosition *pos
   // assume the MLS coord is unchanged, and stick with the GPS location
   const double kMinMLSCoordChangeInMeters = 10;
 
-  // if we haven't seen anything from the GPS device for 10s,
-  // use this network derived location.
-  const int kMaxGPSDelayBeforeConsideringMLS = 10000;
-  int64_t diff = PR_Now() - provider->mLastGPSDerivedLocationTime;
-  if (provider->mLocationCallback && diff > kMaxGPSDelayBeforeConsideringMLS
-      && delta > kMinMLSCoordChangeInMeters)
-  {
-    provider->mLocationCallback->Update(position);
+  DOMTimeStamp time_ms = 0;
+  if (provider->mLastGPSPosition) {
+    provider->mLastGPSPosition->GetTimestamp(&time_ms);
+  }
+  const int64_t diff_ms = (PR_Now() / PR_USEC_PER_MSEC) - time_ms;
+
+  // We want to distinguish between the GPS being inactive completely
+  // and temporarily inactive. In the former case, we would use a low
+  // accuracy network location; in the latter, we only want a network
+  // location that appears to updating with movement.
+
+  const bool isGPSFullyInactive = diff_ms > 1000 * 60 * 2; // two mins
+  const bool isGPSTempInactive = diff_ms > 1000 * 10; // 10 secs
+
+  if (provider->mLocationCallback) {
+    if (isGPSFullyInactive ||
+       (isGPSTempInactive && delta > kMinMLSCoordChangeInMeters))
+    {
+      if (gGPSDebugging) {
+        nsContentUtils::LogMessageToConsole("geo: Using MLS, GPS age:%fs, MLS Delta:%fm\n",
+                                            diff_ms / 1000.0, delta);
+      }
+      provider->mLocationCallback->Update(position);
+    } else if (provider->mLastGPSPosition) {
+      if (gGPSDebugging) {
+        nsContentUtils::LogMessageToConsole("geo: Using old GPS age:%fs\n",
+                                            diff_ms / 1000.0);
+      }
+
+      // This is a fallback case so that the GPS provider responds with its last
+      // location rather than waiting for a more recent GPS or network location.
+      // The service decides if the location is too old, not the provider.
+      provider->mLocationCallback->Update(provider->mLastGPSPosition);
+    }
   }
 
   provider->InjectLocation(lat, lon, acc);
@@ -779,7 +818,6 @@ GonkGPSGeolocationProvider::Startup()
     }
   }
 
-  mLastGPSDerivedLocationTime = 0;
   mStarted = true;
   return NS_OK;
 }

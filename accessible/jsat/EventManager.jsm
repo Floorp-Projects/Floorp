@@ -156,7 +156,8 @@ this.EventManager.prototype = {
         let reason = event.reason;
         let oldAccessible = event.oldAccessible;
 
-        if (this.editState.editing) {
+        if (this.editState.editing &&
+            !Utils.getState(position).contains(States.FOCUSED)) {
           aEvent.accessibleDocument.takeFocus();
         }
         this.present(

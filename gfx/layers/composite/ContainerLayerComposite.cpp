@@ -23,6 +23,7 @@
 #include "mozilla/layers/TextureHost.h"  // for CompositingRenderTarget
 #include "mozilla/layers/AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
+#include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for NS_ASSERTION
@@ -120,21 +121,13 @@ static void PrintUniformityInfo(Layer* aLayer)
     return;
   }
 
-  FrameMetrics frameMetrics = aLayer->GetFrameMetrics();
-  if (!frameMetrics.IsScrollable()) {
+  Matrix4x4 transform = aLayer->AsLayerComposite()->GetShadowTransform();
+  if (!transform.Is2D()) {
     return;
   }
-
-  AsyncPanZoomController* apzc = aLayer->GetAsyncPanZoomController();
-  if (apzc) {
-    ViewTransform asyncTransform, overscrollTransform;
-    ScreenPoint scrollOffset;
-    apzc->SampleContentTransformForFrame(&asyncTransform,
-                                         scrollOffset,
-                                         &overscrollTransform);
-    printf_stderr("UniformityInfo Layer_Move %llu %p %f, %f\n",
-          TimeStamp::Now(), aLayer, scrollOffset.x.value, scrollOffset.y.value);
-  }
+  Point translation = transform.As2D().GetTranslation();
+  printf_stderr("UniformityInfo Layer_Move %llu %p %f, %f\n",
+            TimeStamp::Now(), aLayer, translation.x.value, translation.y.value);
 }
 
 /* all of the per-layer prepared data we need to maintain */
@@ -180,6 +173,16 @@ ContainerPrepare(ContainerT* aContainer,
     RenderTargetIntRect clipRect = layerToRender->GetLayer()->
         CalculateScissorRect(aClipRect, &aManager->GetWorldTransform());
     if (clipRect.IsEmpty()) {
+      continue;
+    }
+
+    RenderTargetRect quad = layerToRender->GetLayer()->
+      TransformRectToRenderTarget(LayerPixel::FromUntyped(
+        layerToRender->GetLayer()->GetEffectiveVisibleRegion().GetBounds()));
+
+    Compositor* compositor = aManager->GetCompositor();
+    if (!layerToRender->GetLayer()->AsContainerLayer() &&
+        !quad.Intersects(compositor->ClipRectInLayersCoordinates(layerToRender->GetLayer(), clipRect))) {
       continue;
     }
 
@@ -254,10 +257,18 @@ RenderLayers(ContainerT* aContainer,
   // composited area. If the layer has a background color, fill these areas
   // with the background color by drawing a rectangle of the background color
   // over the entire composited area before drawing the container contents.
-  if (AsyncPanZoomController* apzc = aContainer->GetAsyncPanZoomController()) {
-    // Make sure not to do this on a "scrollinfo" layer (one with an empty visible
-    // region) because it's just a placeholder for APZ purposes.
-    if (apzc->IsOverscrolled() && !aContainer->GetVisibleRegion().IsEmpty()) {
+  // Make sure not to do this on a "scrollinfo" layer because it's just a
+  // placeholder for APZ purposes.
+  if (aContainer->HasScrollableFrameMetrics() && !aContainer->IsScrollInfoLayer()) {
+    bool overscrolled = false;
+    for (uint32_t i = 0; i < aContainer->GetFrameMetricsCount(); i++) {
+      AsyncPanZoomController* apzc = aContainer->GetAsyncPanZoomController(i);
+      if (apzc && apzc->IsOverscrolled()) {
+        overscrolled = true;
+        break;
+      }
+    }
+    if (overscrolled) {
       gfxRGBA color = aContainer->GetBackgroundColor();
       // If the background is completely transparent, there's no point in
       // drawing anything for it. Hopefully the layers behind, if any, will
@@ -268,7 +279,7 @@ RenderLayers(ContainerT* aContainer,
         gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
         compositor->DrawQuad(
           RenderTargetPixel::ToUnknown(
-            compositor->ClipRectInLayersCoordinates(aClipRect)),
+            compositor->ClipRectInLayersCoordinates(aContainer, aClipRect)),
           clipRect, effectChain, opacity, Matrix4x4());
       }
     }
@@ -362,7 +373,6 @@ RenderIntermediate(ContainerT* aContainer,
   if (!surface) {
     return;
   }
-
   compositor->SetRenderTarget(surface);
   // pre-render all of the layers into our temporary
   RenderLayers(aContainer, aManager, RenderTargetPixel::FromUntyped(aClipRect));
@@ -421,8 +431,11 @@ ContainerRender(ContainerT* aContainer,
   }
   aContainer->mPrepared = nullptr;
 
-  if (aContainer->GetFrameMetrics().IsScrollable()) {
-    const FrameMetrics& frame = aContainer->GetFrameMetrics();
+  for (uint32_t i = 0; i < aContainer->GetFrameMetricsCount(); i++) {
+    if (!aContainer->GetFrameMetrics(i).IsScrollable()) {
+      continue;
+    }
+    const FrameMetrics& frame = aContainer->GetFrameMetrics(i);
     LayerRect layerBounds = frame.mCompositionBounds * ParentLayerToLayerScale(1.0);
     gfx::Rect rect(layerBounds.x, layerBounds.y, layerBounds.width, layerBounds.height);
     gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);

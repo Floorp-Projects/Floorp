@@ -23,11 +23,19 @@ SharedSurface_Basic::Create(GLContext* gl,
                             const IntSize& size,
                             bool hasAlpha)
 {
+    UniquePtr<SharedSurface_Basic> ret;
     gl->MakeCurrent();
+
+    GLContext::ScopedLocalErrorCheck localError(gl);
     GLuint tex = CreateTexture(gl, formats.color_texInternalFormat,
                                formats.color_texFormat,
                                formats.color_texType,
                                size);
+    GLenum err = localError.GetLocalError();
+    if (err) {
+        gl->fDeleteTextures(1, &tex);
+        return Move(ret);
+    }
 
     SurfaceFormat format = SurfaceFormat::B8G8R8X8;
     switch (formats.color_texInternalFormat) {
@@ -46,8 +54,7 @@ SharedSurface_Basic::Create(GLContext* gl,
         MOZ_CRASH("Unhandled Tex format.");
     }
 
-    typedef SharedSurface_Basic ptrT;
-    UniquePtr<ptrT> ret( new ptrT(gl, size, hasAlpha, format, tex) );
+    ret.reset( new SharedSurface_Basic(gl, size, hasAlpha, format, tex) );
     return Move(ret);
 }
 
@@ -74,11 +81,8 @@ SharedSurface_Basic::SharedSurface_Basic(GLContext* gl,
                               mTex,
                               0);
 
-    GLenum status = mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-    if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-        mGL->fDeleteFramebuffers(1, &mFB);
-        mFB = 0;
-    }
+    DebugOnly<GLenum> status = mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    MOZ_ASSERT(status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
 
     int32_t stride = gfx::GetAlignedStride<4>(size.width * BytesPerPixel(format));
     mData = gfx::Factory::CreateDataSourceSurfaceWithStride(size, format, stride);
@@ -133,14 +137,24 @@ SharedSurface_GLTexture::Create(GLContext* prodGL,
 
     bool ownsTex = false;
 
+    UniquePtr<SharedSurface_GLTexture> ret;
+
     if (!tex) {
+      GLContext::ScopedLocalErrorCheck localError(prodGL);
+
       tex = CreateTextureForOffscreen(prodGL, formats, size);
+
+      GLenum err = localError.GetLocalError();
+      if (err) {
+          prodGL->fDeleteTextures(1, &tex);
+          return Move(ret);
+      }
+
       ownsTex = true;
     }
 
-    typedef SharedSurface_GLTexture ptrT;
-    UniquePtr<ptrT> ret( new ptrT(prodGL, consGL, size, hasAlpha, tex,
-                                  ownsTex) );
+    ret.reset( new SharedSurface_GLTexture(prodGL, consGL, size,
+                                           hasAlpha, tex, ownsTex) );
     return Move(ret);
 }
 

@@ -72,6 +72,8 @@
 #include "mozilla/layers/ShadowLayers.h"
 #endif
 
+#include <queue>
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -435,12 +437,10 @@ WebGLContext::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions)
     newOpts.premultipliedAlpha = attributes.mPremultipliedAlpha;
     newOpts.antialias = attributes.mAntialias;
     newOpts.preserveDrawingBuffer = attributes.mPreserveDrawingBuffer;
-    if (attributes.mAlpha.WasPassed()) {
-      newOpts.alpha = attributes.mAlpha.Value();
-    }
 
-    // enforce that if stencil is specified, we also give back depth
-    newOpts.depth |= newOpts.stencil;
+    if (attributes.mAlpha.WasPassed()) {
+        newOpts.alpha = attributes.mAlpha.Value();
+    }
 
     // Don't do antialiasing if we've disabled MSAA.
     if (!gfxPrefs::MSAALevel()) {
@@ -471,35 +471,332 @@ WebGLContext::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions)
 int32_t
 WebGLContext::GetWidth() const
 {
-  return mWidth;
+    return mWidth;
 }
 
 int32_t
 WebGLContext::GetHeight() const
 {
-  return mHeight;
+    return mHeight;
 }
 #endif
 
+/* So there are a number of points of failure here. We might fail based
+ * on EGL vs. WGL, or we might fail to alloc a too-large size, or we
+ * might not be able to create a context with a certain combo of context
+ * creation attribs.
+ *
+ * We don't want to test the complete fallback matrix. (for now, at
+ * least) Instead, attempt creation in this order:
+ * 1. By platform API. (e.g. EGL vs. WGL)
+ * 2. By context creation attribs.
+ * 3. By size.
+ *
+ * That is, try to create headless contexts based on the platform API.
+ * Next, create dummy-sized backbuffers for the contexts with the right
+ * caps. Finally, resize the backbuffer to an acceptable size given the
+ * requested size.
+ */
+
+static bool
+IsFeatureInBlacklist(const nsCOMPtr<nsIGfxInfo>& gfxInfo, int32_t feature)
+{
+    int32_t status;
+    if (!NS_SUCCEEDED(gfxInfo->GetFeatureStatus(feature, &status)))
+        return false;
+
+    return status != nsIGfxInfo::FEATURE_STATUS_OK;
+}
+
+static already_AddRefed<GLContext>
+CreateHeadlessNativeGL(bool forceEnabled,
+                       const nsCOMPtr<nsIGfxInfo>& gfxInfo,
+                       WebGLContext* webgl)
+{
+    if (!forceEnabled &&
+        IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_OPENGL))
+    {
+        webgl->GenerateWarning("Refused to create native OpenGL context"
+                               " because of blacklisting.");
+        return nullptr;
+    }
+
+    nsRefPtr<GLContext> gl = gl::GLContextProvider::CreateHeadless();
+    if (!gl) {
+        webgl->GenerateWarning("Error during native OpenGL init.");
+        return nullptr;
+    }
+    MOZ_ASSERT(!gl->IsANGLE());
+
+    return gl.forget();
+}
+
+// Note that we have a separate call for ANGLE and EGL, even though
+// right now, we get ANGLE implicitly by using EGL on Windows.
+// Eventually, we want to be able to pick ANGLE-EGL or native EGL.
+static already_AddRefed<GLContext>
+CreateHeadlessANGLE(bool forceEnabled,
+                    const nsCOMPtr<nsIGfxInfo>& gfxInfo,
+                    WebGLContext* webgl)
+{
+    nsRefPtr<GLContext> gl;
+
+#ifdef XP_WIN
+    if (!forceEnabled &&
+        IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_ANGLE))
+    {
+        webgl->GenerateWarning("Refused to create ANGLE OpenGL context"
+                               " because of blacklisting.");
+        return nullptr;
+    }
+
+    gl = gl::GLContextProviderEGL::CreateHeadless();
+    if (!gl) {
+        webgl->GenerateWarning("Error during ANGLE OpenGL init.");
+        return nullptr;
+    }
+    MOZ_ASSERT(gl->IsANGLE());
+#endif
+
+    return gl.forget();
+}
+
+static already_AddRefed<GLContext>
+CreateHeadlessEGL(bool forceEnabled,
+                  const nsCOMPtr<nsIGfxInfo>& gfxInfo,
+                  WebGLContext* webgl)
+{
+    nsRefPtr<GLContext> gl;
+
+#ifdef ANDROID
+    gl = gl::GLContextProviderEGL::CreateHeadless();
+    if (!gl) {
+        webgl->GenerateWarning("Error during EGL OpenGL init.");
+        return nullptr;
+    }
+    MOZ_ASSERT(!gl->IsANGLE());
+#endif
+
+    return gl.forget();
+}
+
+
+static already_AddRefed<GLContext>
+CreateHeadlessGL(bool forceEnabled,
+                 const nsCOMPtr<nsIGfxInfo>& gfxInfo,
+                 WebGLContext* webgl)
+{
+    bool preferEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL");
+    bool disableANGLE = Preferences::GetBool("webgl.disable-angle", false);
+
+    if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
+        disableANGLE = true;
+    }
+
+    nsRefPtr<GLContext> gl;
+
+    if (preferEGL)
+        gl = CreateHeadlessEGL(forceEnabled, gfxInfo, webgl);
+
+    if (!gl && !disableANGLE)
+        gl = CreateHeadlessANGLE(forceEnabled, gfxInfo, webgl);
+
+    if (!gl)
+        gl = CreateHeadlessNativeGL(forceEnabled, gfxInfo, webgl);
+
+    return gl.forget();
+}
+
+// Try to create a dummy offscreen with the given caps.
+static bool
+CreateOffscreenWithCaps(GLContext* gl, const SurfaceCaps& caps)
+{
+    gfx::IntSize dummySize(16, 16);
+    return gl->InitOffscreen(dummySize, caps);
+}
+
+static void
+PopulateCapFallbackQueue(const SurfaceCaps& baseCaps,
+                         std::queue<SurfaceCaps>* fallbackCaps)
+{
+    fallbackCaps->push(baseCaps);
+
+    // Dropping antialias drops our quality, but not our correctness.
+    // The user basically doesn't have to handle if this fails, they
+    // just get reduced quality.
+    if (baseCaps.antialias) {
+        SurfaceCaps nextCaps(baseCaps);
+        nextCaps.antialias = false;
+        PopulateCapFallbackQueue(nextCaps, fallbackCaps);
+    }
+
+    // If we have to drop one of depth or stencil, we'd prefer to keep
+    // depth. However, the client app will need to handle if this
+    // doesn't work.
+    if (baseCaps.stencil) {
+        SurfaceCaps nextCaps(baseCaps);
+        nextCaps.stencil = false;
+        PopulateCapFallbackQueue(nextCaps, fallbackCaps);
+    }
+
+    if (baseCaps.depth) {
+        SurfaceCaps nextCaps(baseCaps);
+        nextCaps.depth = false;
+        PopulateCapFallbackQueue(nextCaps, fallbackCaps);
+    }
+}
+
+static bool
+CreateOffscreen(GLContext* gl,
+                const WebGLContextOptions& options,
+                const nsCOMPtr<nsIGfxInfo>& gfxInfo,
+                WebGLContext* webgl,
+                layers::ISurfaceAllocator* surfAllocator)
+{
+    SurfaceCaps baseCaps;
+
+    baseCaps.color = true;
+    baseCaps.alpha = options.alpha;
+    baseCaps.antialias = options.antialias;
+    baseCaps.depth = options.depth;
+    baseCaps.preserve = options.preserveDrawingBuffer;
+    baseCaps.stencil = options.stencil;
+
+    // we should really have this behind a
+    // |gfxPlatform::GetPlatform()->GetScreenDepth() == 16| check, but
+    // for now it's just behind a pref for testing/evaluation.
+    baseCaps.bpp16 = Preferences::GetBool("webgl.prefer-16bpp", false);
+
+#ifdef MOZ_WIDGET_GONK
+    baseCaps.surfaceAllocator = surfAllocator;
+#endif
+
+    // Done with baseCaps construction.
+
+    bool forceAllowAA = Preferences::GetBool("webgl.msaa-force", false);
+    if (!forceAllowAA &&
+        IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_MSAA))
+    {
+        webgl->GenerateWarning("Disallowing antialiased backbuffers due"
+                               " to blacklisting.");
+        baseCaps.antialias = false;
+    }
+
+    std::queue<SurfaceCaps> fallbackCaps;
+    PopulateCapFallbackQueue(baseCaps, &fallbackCaps);
+
+    bool created = false;
+    while (!fallbackCaps.empty()) {
+        SurfaceCaps& caps = fallbackCaps.front();
+
+        created = CreateOffscreenWithCaps(gl, caps);
+        if (created)
+            break;
+
+        fallbackCaps.pop();
+    }
+
+    return created;
+}
+
+bool
+WebGLContext::CreateOffscreenGL(bool forceEnabled)
+{
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+
+    layers::ISurfaceAllocator* surfAllocator = nullptr;
+#ifdef MOZ_WIDGET_GONK
+    nsIWidget* docWidget = nsContentUtils::WidgetForDocument(mCanvasElement->OwnerDoc());
+    if (docWidget) {
+        layers::LayerManager* layerManager = docWidget->GetLayerManager();
+        if (layerManager) {
+            // XXX we really want "AsSurfaceAllocator" here for generality
+            layers::ShadowLayerForwarder* forwarder = layerManager->AsShadowForwarder();
+            if (forwarder) {
+                surfAllocator = static_cast<layers::ISurfaceAllocator*>(forwarder);
+            }
+        }
+    }
+#endif
+
+    gl = CreateHeadlessGL(forceEnabled, gfxInfo, this);
+
+    do {
+        if (!gl)
+            break;
+
+        if (!CreateOffscreen(gl, mOptions, gfxInfo, this, surfAllocator))
+            break;
+
+        if (!InitAndValidateGL())
+            break;
+
+        return true;
+    } while (false);
+
+    gl = nullptr;
+    return false;
+}
+
+// Fallback for resizes:
+bool
+WebGLContext::ResizeBackbuffer(uint32_t requestedWidth, uint32_t requestedHeight)
+{
+    uint32_t width = requestedWidth;
+    uint32_t height = requestedHeight;
+
+    bool resized = false;
+    while (width || height) {
+      width = width ? width : 1;
+      height = height ? height : 1;
+
+      gfx::IntSize curSize(width, height);
+      if (gl->ResizeOffscreen(curSize)) {
+          resized = true;
+          break;
+      }
+
+      width /= 2;
+      height /= 2;
+    }
+
+    if (!resized)
+        return false;
+
+    mWidth = gl->OffscreenSize().width;
+    mHeight = gl->OffscreenSize().height;
+    MOZ_ASSERT((uint32_t)mWidth == width);
+    MOZ_ASSERT((uint32_t)mHeight == height);
+
+    if (width != requestedWidth ||
+        height != requestedHeight)
+    {
+        GenerateWarning("Requested size %dx%d was too large, but resize"
+                          " to %dx%d succeeded.",
+                        requestedWidth, requestedHeight,
+                        width, height);
+    }
+    return true;
+}
+
+
 NS_IMETHODIMP
-WebGLContext::SetDimensions(int32_t width, int32_t height)
+WebGLContext::SetDimensions(int32_t sWidth, int32_t sHeight)
 {
     // Early error return cases
+    if (!GetCanvas())
+        return NS_ERROR_FAILURE;
 
-    if (width < 0 || height < 0) {
+    if (sWidth < 0 || sHeight < 0) {
         GenerateWarning("Canvas size is too large (seems like a negative value wrapped)");
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if (!GetCanvas())
-        return NS_ERROR_FAILURE;
+    uint32_t width = sWidth;
+    uint32_t height = sHeight;
 
     // Early success return cases
-
     GetCanvas()->InvalidateCanvas();
-
-    if (gl && mWidth == width && mHeight == height)
-        return NS_OK;
 
     // Zero-sized surfaces can cause problems.
     if (width == 0) {
@@ -511,20 +808,29 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 
     // If we already have a gl context, then we just need to resize it
     if (gl) {
+        if ((uint32_t)mWidth == width &&
+            (uint32_t)mHeight == height)
+        {
+            return NS_OK;
+        }
+
+        if (IsContextLost())
+            return NS_OK;
+
         MakeContextCurrent();
 
         // If we've already drawn, we should commit the current buffer.
         PresentScreenBuffer();
 
         // ResizeOffscreen scraps the current prod buffer before making a new one.
-        gl->ResizeOffscreen(gfx::IntSize(width, height)); // Doesn't matter if it succeeds (soft-fail)
-        // It's unlikely that we'll get a proper-sized context if we recreate if we didn't on resize
+        if (!ResizeBackbuffer(width, height)) {
+            GenerateWarning("WebGL context failed to resize.");
+            ForceLoseContext();
+            return NS_OK;
+        }
 
         // everything's good, we're done here
-        mWidth = gl->OffscreenSize().width;
-        mHeight = gl->OffscreenSize().height;
         mResetLayer = true;
-
         mBackbufferNeedsClear = true;
 
         return NS_OK;
@@ -541,27 +847,6 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     // and that is what can fail if we already have too many.
     LoseOldestWebGLContextIfLimitExceeded();
 
-    // Get some prefs for some preferred/overriden things
-    NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
-
-#ifdef XP_WIN
-    bool preferEGL =
-        Preferences::GetBool("webgl.prefer-egl", false);
-    bool preferOpenGL =
-        Preferences::GetBool("webgl.prefer-native-gl", false);
-#endif
-    bool forceEnabled =
-        Preferences::GetBool("webgl.force-enabled", false);
-    bool disabled =
-        Preferences::GetBool("webgl.disabled", false);
-    bool prefer16bit =
-        Preferences::GetBool("webgl.prefer-16bpp", false);
-
-    ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);
-
-    if (disabled)
-        return NS_ERROR_FAILURE;
-
     // We're going to create an entirely new context.  If our
     // generation is not 0 right now (that is, if this isn't the first
     // context we're creating), we may have to dispatch a context lost
@@ -570,111 +855,32 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     // If incrementing the generation would cause overflow,
     // don't allow it.  Allowing this would allow us to use
     // resource handles created from older context generations.
-    if (!(mGeneration + 1).isValid())
+    if (!(mGeneration + 1).isValid()) {
+        GenerateWarning("Too many WebGL contexts created this run.");
         return NS_ERROR_FAILURE; // exit without changing the value of mGeneration
-
-    SurfaceCaps caps;
-
-    caps.color = true;
-    caps.alpha = mOptions.alpha;
-    caps.depth = mOptions.depth;
-    caps.stencil = mOptions.stencil;
-
-    // we should really have this behind a
-    // |gfxPlatform::GetPlatform()->GetScreenDepth() == 16| check, but
-    // for now it's just behind a pref for testing/evaluation.
-    caps.bpp16 = prefer16bit;
-
-    caps.preserve = mOptions.preserveDrawingBuffer;
-
-#ifdef MOZ_WIDGET_GONK
-    nsIWidget *docWidget = nsContentUtils::WidgetForDocument(mCanvasElement->OwnerDoc());
-    if (docWidget) {
-        layers::LayerManager *layerManager = docWidget->GetLayerManager();
-        if (layerManager) {
-            // XXX we really want "AsSurfaceAllocator" here for generality
-            layers::ShadowLayerForwarder *forwarder = layerManager->AsShadowForwarder();
-            if (forwarder) {
-                caps.surfaceAllocator = static_cast<layers::ISurfaceAllocator*>(forwarder);
-            }
-        }
-    }
-#endif
-
-    bool forceMSAA =
-        Preferences::GetBool("webgl.msaa-force", false);
-
-    int32_t status;
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-    if (mOptions.antialias &&
-        gfxInfo &&
-        NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_MSAA, &status))) {
-        if (status == nsIGfxInfo::FEATURE_STATUS_OK || forceMSAA) {
-            caps.antialias = true;
-        }
     }
 
-#ifdef XP_WIN
-    if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
-        preferEGL = true;
-    }
-#endif
+    // Get some prefs for some preferred/overriden things
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
 
-    // Ask GfxInfo about what we should use
-    bool useOpenGL = true;
-
-#ifdef XP_WIN
-    bool useANGLE = true;
-#endif
-
-    if (gfxInfo && !forceEnabled) {
-        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL, &status))) {
-            if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-                useOpenGL = false;
-            }
-        }
-#ifdef XP_WIN
-        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_ANGLE, &status))) {
-            if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-                useANGLE = false;
-            }
-        }
-#endif
+    bool disabled = Preferences::GetBool("webgl.disabled", false);
+    if (disabled) {
+        GenerateWarning("WebGL creation is disabled, and so disallowed here.");
+        return NS_ERROR_FAILURE;
     }
 
-#ifdef XP_WIN
-    // allow forcing GL and not EGL/ANGLE
-    if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
-        preferEGL = false;
-        useANGLE = false;
-        useOpenGL = true;
+    // Alright, now let's start trying.
+    bool forceEnabled = Preferences::GetBool("webgl.force-enabled", false);
+    ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);
+
+    if (!CreateOffscreenGL(forceEnabled)) {
+        GenerateWarning("WebGL creation failed.");
+        return NS_ERROR_FAILURE;
     }
-#endif
+    MOZ_ASSERT(gl);
 
-    gfxIntSize size(width, height);
-
-#ifdef XP_WIN
-    // if we want EGL, try it now
-    if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
-        gl = gl::GLContextProviderEGL::CreateOffscreen(size, caps);
-        if (!gl || !InitAndValidateGL()) {
-            GenerateWarning("Error during ANGLE OpenGL ES initialization");
-            return NS_ERROR_FAILURE;
-        }
-    }
-#endif
-
-    // try the default provider, whatever that is
-    if (!gl && useOpenGL) {
-        gl = gl::GLContextProvider::CreateOffscreen(size, caps);
-        if (gl && !InitAndValidateGL()) {
-            GenerateWarning("Error during OpenGL initialization");
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    if (!gl) {
-        GenerateWarning("Can't get a usable WebGL context");
+    if (!ResizeBackbuffer(width, height)) {
+        GenerateWarning("Initializing WebGL backbuffer failed.");
         return NS_ERROR_FAILURE;
     }
 
@@ -684,22 +890,17 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     }
 #endif
 
-    mWidth = width;
-    mHeight = height;
-    mViewportWidth = width;
-    mViewportHeight = height;
     mResetLayer = true;
     mOptionsFrozen = true;
 
     // increment the generation number
     ++mGeneration;
-#if 0
-    if (mGeneration > 0) {
-        // XXX dispatch context lost event
-    }
-#endif
 
     MakeContextCurrent();
+
+    gl->fViewport(0, 0, mWidth, mHeight);
+    mViewportWidth = mWidth;
+    mViewportHeight = mHeight;
 
     // Make sure that we clear this out, otherwise
     // we'll end up displaying random memory
@@ -715,12 +916,12 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 
     mShouldPresent = true;
 
-    MOZ_ASSERT(gl->Caps().color == caps.color);
-    MOZ_ASSERT(gl->Caps().alpha == caps.alpha);
-    MOZ_ASSERT(gl->Caps().depth == caps.depth || !gl->Caps().depth);
-    MOZ_ASSERT(gl->Caps().stencil == caps.stencil || !gl->Caps().stencil);
-    MOZ_ASSERT(gl->Caps().antialias == caps.antialias || !gl->Caps().antialias);
-    MOZ_ASSERT(gl->Caps().preserve == caps.preserve);
+    MOZ_ASSERT(gl->Caps().color);
+    MOZ_ASSERT(gl->Caps().alpha == mOptions.alpha);
+    MOZ_ASSERT(gl->Caps().depth == mOptions.depth || !gl->Caps().depth);
+    MOZ_ASSERT(gl->Caps().stencil == mOptions.stencil || !gl->Caps().stencil);
+    MOZ_ASSERT(gl->Caps().antialias == mOptions.antialias || !gl->Caps().antialias);
+    MOZ_ASSERT(gl->Caps().preserve == mOptions.preserveDrawingBuffer);
 
     AssertCachedBindings();
     AssertCachedState();
@@ -1211,7 +1412,7 @@ WebGLContext::PresentScreenBuffer()
     gl->MakeCurrent();
     MOZ_ASSERT(!mBackbufferNeedsClear);
     if (!gl->PublishFrame()) {
-        this->ForceLoseContext();
+        ForceLoseContext();
         return false;
     }
 

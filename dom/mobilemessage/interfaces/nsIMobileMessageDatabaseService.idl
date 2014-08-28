@@ -12,11 +12,10 @@
 %}
 
 interface nsICursorContinueCallback;
-interface nsIDOMMozSmsFilter;
 interface nsIMobileMessageCallback;
 interface nsIMobileMessageCursorCallback;
 
-[scriptable, uuid(8439916f-abc1-4c67-aa45-8a276a0a7855)]
+[scriptable, uuid(ead626bc-f5b4-47e1-921c-0b956c9298e0)]
 interface nsIMobileMessageDatabaseService : nsISupports
 {
   [binaryname(GetMessageMoz)]
@@ -27,7 +26,16 @@ interface nsIMobileMessageDatabaseService : nsISupports
                      in uint32_t count,
                      in nsIMobileMessageCallback request);
 
-  nsICursorContinueCallback createMessageCursor(in nsIDOMMozSmsFilter filter,
+  nsICursorContinueCallback createMessageCursor(in boolean hasStartDate,
+                                                in unsigned long long startDate,
+                                                in boolean hasEndDate,
+                                                in unsigned long long endDate,
+                                                [array, size_is(numbersCount)] in wstring numbers,
+                                                in uint32_t numbersCount,
+                                                [Null(Null), Undefined(Null)] in DOMString delivery,
+                                                in boolean hasRead,
+                                                in boolean read,
+                                                in unsigned long long threadId,
                                                 in boolean reverse,
                                                 in nsIMobileMessageCursorCallback callback);
 
