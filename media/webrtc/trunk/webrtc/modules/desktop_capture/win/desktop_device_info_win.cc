@@ -36,10 +36,12 @@ void DesktopDeviceInfoWin::MultiMonitorScreenshare()
 {
   DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
   if (pDesktopDeviceInfo) {
-    pDesktopDeviceInfo->setScreenId(0);
+    pDesktopDeviceInfo->setScreenId(webrtc::kFullDesktopScreenId);
     pDesktopDeviceInfo->setDeviceName("Primary Monitor");
-    pDesktopDeviceInfo->setUniqueIdName("\\screen\\monitor#1");
 
+    char idStr[64];
+    _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%ld", pDesktopDeviceInfo->getScreenId());
+    pDesktopDeviceInfo->setUniqueIdName(idStr);
     desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
   }
 }

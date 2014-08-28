@@ -67,7 +67,8 @@ public:
             size_t *size,
             uint32_t *compositionTime,
             uint32_t *duration = NULL,
-            bool *isSyncSample = NULL);
+            bool *isSyncSample = NULL,
+            uint32_t *decodeTime = NULL);
 
     enum {
         kFlagBefore,

@@ -36,8 +36,14 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         '/security/sandbox/chromium',
     ]
     USE_LIBS += [
-        'sandbox_s',
+        'sandbox_staticruntime_s',
     ]
+    DELAYLOAD_DLLS += [
+        'mozalloc.dll',
+        'nss3.dll',
+        'xul.dll'
+    ]
+    USE_STATIC_LIBS = True
 
 if CONFIG['_MSC_VER']:
     # Always enter a Windows program through wmain, whether or not we're
@@ -57,7 +63,9 @@ LDFLAGS += [CONFIG['MOZ_ALLOW_HEAP_EXECUTE_FLAGS']]
 if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
     LDFLAGS += ['/HEAP:0x40000']
 
-FAIL_ON_WARNINGS = True
+# Windows builds have dll linkage warnings due to USE_STATIC_LIBS
+if CONFIG['OS_ARCH'] != 'WINNT':
+    FAIL_ON_WARNINGS = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     OS_LIBS += [

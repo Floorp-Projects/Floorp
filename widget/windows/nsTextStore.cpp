@@ -1653,16 +1653,116 @@ nsTextStore::RestartCompositionIfNecessary(ITfRange* aRangeNew)
     // If the queried composition length is different from the length
     // of our composition string, OnUpdateComposition is being called
     // because a part of the original composition was committed.
-    // Reflect that by committing existing composition and starting
-    // a new one. RecordCompositionEndAction() followed by
-    // RecordCompositionStartAction() will accomplish this automagically.
-    RecordCompositionEndAction();
-    RecordCompositionStartAction(pComposition, composingRange, true);
+    hr = RestartComposition(pComposition, composingRange);
+    if (FAILED(hr)) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF: 0x%p   nsTextStore::RestartCompositionIfNecessary() FAILED "
+              "due to RestartComposition() failure", this));
+      return hr;
+    }
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::RestartCompositionIfNecessary() succeeded",
           this));
+  return S_OK;
+}
+
+HRESULT
+nsTextStore::RestartComposition(ITfCompositionView* aCompositionView,
+                                ITfRange* aNewRange)
+{
+  Selection& currentSelection = CurrentSelection();
+
+  LONG newStart, newLength;
+  HRESULT hr = GetRangeExtent(aNewRange, &newStart, &newLength);
+  LONG newEnd = newStart + newLength;
+
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p   nsTextStore::RestartComposition(aCompositionView=0x%p, "
+          "aNewRange=0x%p { newStart=%d, newLength=%d }), "
+          "mComposition={ mStart=%d, mCompositionString.Length()=%d }, "
+          "currentSelection={ IsDirty()=%s, StartOffset()=%d, Length()=%d }",
+          this, aCompositionView, aNewRange, newStart, newLength,
+          mComposition.mStart, mComposition.mString.Length(),
+          GetBoolName(currentSelection.IsDirty()),
+          currentSelection.StartOffset(), currentSelection.Length()));
+
+  if (currentSelection.IsDirty()) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::RestartComposition() FAILED "
+            "due to CurrentSelection() failure", this));
+    return E_FAIL;
+  }
+
+  if (FAILED(hr)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::RestartComposition() FAILED "
+            "due to GetRangeExtent() failure", this));
+    return hr;
+  }
+
+  // If the new range has no overlap with the crrent range, we just commit
+  // the composition and restart new composition with the new range but
+  // current selection range should be preserved.
+  if (newStart >= mComposition.EndOffset() || newEnd <= mComposition.mStart) {
+    RecordCompositionEndAction();
+    RecordCompositionStartAction(aCompositionView, aNewRange, true);
+    return S_OK;
+  }
+
+  // If the new range has an overlap with the current one, we should not commit
+  // the whole current range to avoid creating an odd undo transaction.
+  // I.e., the overlapped range which is being composed should not appear in
+  // undo transaction.
+
+  // Backup current composition data and selection data.
+  Composition oldComposition = mComposition;
+  Selection oldSelection = currentSelection;
+
+  // Commit only the part of composition.
+  LONG keepComposingStartOffset = std::max(mComposition.mStart, newStart);
+  LONG keepComposingEndOffset = std::min(mComposition.EndOffset(), newEnd);
+  MOZ_ASSERT(keepComposingStartOffset <= keepComposingEndOffset,
+    "Why keepComposingEndOffset is smaller than keepComposingStartOffset?");
+  LONG keepComposingLength = keepComposingEndOffset - keepComposingStartOffset;
+  // Remove the overlapped part from the commit string.
+  nsAutoString commitString(mComposition.mString);
+  commitString.Cut(keepComposingStartOffset - mComposition.mStart,
+                   keepComposingLength);
+  // Update the composition string.
+  Content& lockedContent = LockedContent();
+  if (!lockedContent.IsInitialized()) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::RestartComposition() FAILED "
+            "due to LockedContent() failure", this));
+    return E_FAIL;
+  }
+  lockedContent.ReplaceTextWith(mComposition.mStart,
+                                mComposition.mString.Length(),
+                                commitString);
+  // Record a compositionupdate action for commit the part of composing string.
+  PendingAction* action = LastOrNewPendingCompositionUpdate();
+  action->mData = mComposition.mString;
+  action->mRanges->Clear();
+  TextRange caretRange;
+  caretRange.mStartOffset = caretRange.mEndOffset =
+    uint32_t(oldComposition.mStart + commitString.Length());
+  caretRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
+  action->mRanges->AppendElement(caretRange);
+  action->mIncomplete = false;
+
+  // Record compositionend action.
+  RecordCompositionEndAction();
+
+  // Restore the latest text content and selection.
+  lockedContent.ReplaceTextWith(oldComposition.mStart,
+                                commitString.Length(),
+                                oldComposition.mString);
+  currentSelection = oldSelection;
+
+  // Record compositionstart action with the new range
+  RecordCompositionStartAction(aCompositionView, aNewRange, true);
   return S_OK;
 }
 

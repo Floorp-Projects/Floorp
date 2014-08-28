@@ -379,16 +379,16 @@ TiledContentHost::Composite(EffectChain& aEffectChain,
         ? gfxPrefs::LowPrecisionOpacity() : 1.0f;
 
   nsIntRegion tmpRegion;
-  const nsIntRegion* renderRegion;
+  const nsIntRegion* renderRegion = aVisibleRegion;
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
   if (PaintWillResample()) {
     // If we're resampling, then the texture image will contain exactly the
     // entire visible region's bounds, and we should draw it all in one quad
     // to avoid unexpected aliasing.
     tmpRegion = aVisibleRegion->GetBounds();
     renderRegion = &tmpRegion;
-  } else {
-    renderRegion = aVisibleRegion;
   }
+#endif
 
   // Render the low and high precision buffers.
   RenderLayerBuffer(mLowPrecisionTiledBuffer,
@@ -435,8 +435,8 @@ TiledContentHost::RenderTile(const TileHost& aTile,
   Rect layerQuad(screenBounds.x, screenBounds.y, screenBounds.width, screenBounds.height);
   RenderTargetRect quad = RenderTargetRect::FromUnknown(aTransform.TransformBounds(layerQuad));
 
-  if (!quad.Intersects(mCompositor->ClipRectInLayersCoordinates(
-        RenderTargetIntRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height)))) {
+  if (!quad.Intersects(mCompositor->ClipRectInLayersCoordinates(mLayer,
+      RenderTargetIntRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height)))) {
     return;
   }
 

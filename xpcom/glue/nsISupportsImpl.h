@@ -747,7 +747,7 @@ struct QITableEntry
   int32_t   offset;
 };
 
-NS_COM_GLUE nsresult NS_FASTCALL
+nsresult NS_FASTCALL
 NS_TableDrivenQI(void* aThis, REFNSIID aIID,
                  void** aInstancePtr, const QITableEntry* aEntries);
 
