@@ -234,10 +234,13 @@ pref("media.volume_scale", "1.0");
 // Timeout for wakelock release
 pref("media.wakelock_timeout", 2000);
 
+// Whether we should play videos opened in a "video document", i.e. videos
+// opened as top-level documents, as opposed to inside a media element.
+pref("media.play-stand-alone", true);
+
 #ifdef MOZ_WMF
 pref("media.windows-media-foundation.enabled", true);
 pref("media.windows-media-foundation.use-dxva", true);
-pref("media.windows-media-foundation.play-stand-alone", true);
 #endif
 #ifdef MOZ_DIRECTSHOW
 pref("media.directshow.enabled", true);
