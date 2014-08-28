@@ -414,6 +414,13 @@ this.PermissionsTable =  { geolocation: {
                              app: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
+                           },
+                           "settings:wallpaper.image": {
+                             app: DENY_ACTION,
+                             privileged: PROMPT_ACTION,
+                             certified: ALLOW_ACTION,
+                             access: ["read", "write"],
+                             additional: ["settings-api"]
                            }
                          };
 
