@@ -6,7 +6,7 @@
 
 [JSImplementation="@mozilla.org/settingsLock;1",
  Pref="dom.mozSettings.enabled"]
-interface SettingsLock {
+interface SettingsLock : EventTarget {
   // Whether this lock is invalid
   readonly attribute boolean closed;
 
@@ -17,6 +17,8 @@ interface SettingsLock {
   DOMRequest get(DOMString name);
 
   DOMRequest clear();
+  attribute EventHandler onsettingstransactionsuccess;
+  attribute EventHandler onsettingstransactionfailure;
 };
 
 dictionary SettingChange {
