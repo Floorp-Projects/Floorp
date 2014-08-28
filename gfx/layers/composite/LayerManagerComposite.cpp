@@ -38,6 +38,7 @@
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
+#include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/layers/LayersTypes.h"  // for etc
 #include "ipc/CompositorBench.h"        // for CompositorBench
 #include "ipc/ShadowLayerUtils.h"
@@ -796,7 +797,13 @@ LayerManagerComposite::ComputeRenderIntegrity()
     return 1.f;
   }
 
-  const FrameMetrics& rootMetrics = root->GetFrameMetrics();
+  FrameMetrics rootMetrics = LayerMetricsWrapper::TopmostScrollableMetrics(root);
+  if (!rootMetrics.IsScrollable()) {
+    // The root may not have any scrollable metrics, in which case rootMetrics
+    // will just be an empty FrameMetrics. Instead use the actual metrics from
+    // the root layer.
+    rootMetrics = LayerMetricsWrapper(root).Metrics();
+  }
   ParentLayerIntRect bounds = RoundedToInt(rootMetrics.mCompositionBounds);
   nsIntRect screenRect(bounds.x,
                        bounds.y,
@@ -809,12 +816,14 @@ LayerManagerComposite::ComputeRenderIntegrity()
 #ifdef MOZ_WIDGET_ANDROID
   // Use the transform on the primary scrollable layer and its FrameMetrics
   // to find out how much of the viewport the current displayport covers
-  Layer* primaryScrollable = GetPrimaryScrollableLayer();
-  if (primaryScrollable) {
+  nsTArray<Layer*> rootScrollableLayers;
+  GetRootScrollableLayers(rootScrollableLayers);
+  if (rootScrollableLayers.Length() > 0) {
     // This is derived from the code in
     // AsyncCompositionManager::TransformScrollableLayer
-    const FrameMetrics& metrics = primaryScrollable->GetFrameMetrics();
-    Matrix4x4 transform = primaryScrollable->GetEffectiveTransform();
+    Layer* rootScrollable = rootScrollableLayers[0];
+    const FrameMetrics& metrics = LayerMetricsWrapper::TopmostScrollableMetrics(rootScrollable);
+    Matrix4x4 transform = rootScrollable->GetEffectiveTransform();
     transform.ScalePost(metrics.mResolution.scale, metrics.mResolution.scale, 1);
 
     // Clip the screen rect to the document bounds
