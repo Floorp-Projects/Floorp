@@ -17,6 +17,7 @@ namespace jit {
     _(SimdExtractElement)                                                   \
     _(SimdBinaryComp)                                                       \
     _(SimdBinaryArith)                                                      \
+    _(SimdBinaryBitwise)                                                    \
     _(CloneLiteral)                                                         \
     _(Parameter)                                                            \
     _(Callee)                                                               \

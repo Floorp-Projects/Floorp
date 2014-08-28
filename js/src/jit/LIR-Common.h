@@ -266,6 +266,22 @@ class LSimdBinaryArithFx4 : public LSimdBinaryArith
     LSimdBinaryArithFx4() : LSimdBinaryArith() {}
 };
 
+// Binary SIMD bitwise operation between two int32x4 or float32x4 operands
+class LSimdBinaryBitwiseX4 : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(SimdBinaryBitwiseX4);
+    const LAllocation *lhs() {
+        return getOperand(0);
+    }
+    const LAllocation *rhs() {
+        return getOperand(1);
+    }
+    MSimdBinaryBitwise::Operation operation() const {
+        return mir_->toSimdBinaryBitwise()->operation();
+    }
+};
+
 // Constant 32-bit integer.
 class LInteger : public LInstructionHelper<1, 0, 0>
 {
