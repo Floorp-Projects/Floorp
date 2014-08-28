@@ -1154,12 +1154,6 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
       }
     }
 
-    if (backBuffer->HasInternalBuffer()) {
-      // If our new buffer has an internal buffer, we don't want to keep another
-      // TextureClient around unnecessarily, so discard the back-buffer.
-      aTile.DiscardBackBuffer();
-    }
-
     // prepare an array of Moz2D tiles that will be painted into in PostValidate
     gfx::Tile moz2DTile;
     RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
@@ -1191,8 +1185,8 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                             drawRect.width,
                             drawRect.height);
       gfx::IntPoint copyTarget(NS_roundf(drawRect.x), NS_roundf(drawRect.y));
-      // Mark the newly updated area as invalid in the front buffer
-      aTile.mInvalidFront.Or(aTile.mInvalidFront, nsIntRect(copyTarget.x, copyTarget.y, copyRect.width, copyRect.height));
+      // Mark the newly updated area as invalid in the back buffer
+      aTile.mInvalidBack.Or(aTile.mInvalidBack, nsIntRect(copyTarget.x, copyTarget.y, copyRect.width, copyRect.height));
 
       if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
         dt->FillRect(drawRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
