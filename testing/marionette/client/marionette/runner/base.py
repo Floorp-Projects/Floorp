@@ -282,7 +282,6 @@ class BaseMarionetteOptions(OptionParser):
         self.add_option('--type',
                         dest='type',
                         action='store',
-                        default='browser+b2g',
                         help="the type of test to run, can be a combination of values defined in the manifest file; "
                              "individual values are combined with '+' or '-' characters. for example: 'browser+b2g' "
                              "means the set of tests which are compatible with both browser and b2g; 'b2g-qemu' means "
