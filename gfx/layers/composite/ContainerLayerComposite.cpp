@@ -115,6 +115,8 @@ static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
 
 static void PrintUniformityInfo(Layer* aLayer)
 {
+  static TimeStamp t0 = TimeStamp::Now();
+
   // Don't want to print a log for smaller layers
   if (aLayer->GetEffectiveVisibleRegion().GetBounds().width < 300 ||
       aLayer->GetEffectiveVisibleRegion().GetBounds().height < 300) {
@@ -127,7 +129,8 @@ static void PrintUniformityInfo(Layer* aLayer)
   }
   Point translation = transform.As2D().GetTranslation();
   printf_stderr("UniformityInfo Layer_Move %llu %p %f, %f\n",
-            TimeStamp::Now(), aLayer, translation.x.value, translation.y.value);
+      (unsigned long long)(TimeStamp::Now() - t0).ToMilliseconds(), aLayer,
+      translation.x.value, translation.y.value);
 }
 
 /* all of the per-layer prepared data we need to maintain */
