@@ -188,13 +188,11 @@ private:
   void SetPropertyByValue(const BluetoothNamedValue& aValue);
 
   /**
-   * Enable/Disable adapter.
-   * This function is called by methods Enable() and Disable().
+   * Set adapter state and fire BluetoothAttributeEvent if state changed.
    *
-   * @param aEnable [in]  Whether to enable or disable adapter.
-   * @param aRv     [out] Error result to set in case of error.
+   * @param aState [in] The new adapter state
    */
-  already_AddRefed<Promise> EnableDisable(bool aEnable, ErrorResult& aRv);
+  void SetAdapterState(BluetoothAdapterState aState);
 
   /**
    * Pair/Unpair adapter to device of given address.
@@ -208,7 +206,12 @@ private:
                             const nsAString& aDeviceAddress,
                             ErrorResult& aRv);
 
-  void HandleAdapterStateChanged();
+  /**
+   * Retrieve properties of paired devices.
+   *
+   * @param aDeviceAddresses [in] Addresses array of paired devices
+   */
+  void GetPairedDeviceProperties(const nsTArray<nsString>& aDeviceAddresses);
 
   /**
    * Handle "PropertyChanged" bluetooth signal.
@@ -282,13 +285,6 @@ private:
    */
   bool IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
                                  const BluetoothValue& aValue);
-
-  /**
-   * Retrieve properties of paired devices.
-   *
-   * @param aDeviceAddresses [in] Addresses array of paired devices
-   */
-  void GetPairedDeviceProperties(const nsTArray<nsString>& aDeviceAddresses);
 
   /****************************************************************************
    * Variables
