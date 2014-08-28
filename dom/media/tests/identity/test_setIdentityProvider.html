@@ -83,8 +83,8 @@ function theTest() {
   [
     "OFFERS_AND_ANSWERS_INCLUDE_IDENTITY",
     function(test) {
-      ok(test.pcLocal._last_offer.sdp.contains("a=identity"), "a=identity is in the offer SDP");
-      ok(test.pcRemote._last_answer.sdp.contains("a=identity"), "a=identity is in the answer SDP");
+      ok(test.originalOffer.sdp.contains("a=identity"), "a=identity is in the offer SDP");
+      ok(test.originalAnswer.sdp.contains("a=identity"), "a=identity is in the answer SDP");
       test.next();
     }
   ],
