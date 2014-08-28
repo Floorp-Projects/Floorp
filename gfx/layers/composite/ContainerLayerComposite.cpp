@@ -121,21 +121,13 @@ static void PrintUniformityInfo(Layer* aLayer)
     return;
   }
 
-  FrameMetrics frameMetrics = aLayer->GetFrameMetrics();
-  if (!frameMetrics.IsScrollable()) {
+  Matrix4x4 transform = aLayer->AsLayerComposite()->GetShadowTransform();
+  if (!transform.Is2D()) {
     return;
   }
-
-  AsyncPanZoomController* apzc = aLayer->GetAsyncPanZoomController();
-  if (apzc) {
-    ViewTransform asyncTransform, overscrollTransform;
-    ScreenPoint scrollOffset;
-    apzc->SampleContentTransformForFrame(&asyncTransform,
-                                         scrollOffset,
-                                         &overscrollTransform);
-    printf_stderr("UniformityInfo Layer_Move %llu %p %f, %f\n",
-          TimeStamp::Now(), aLayer, scrollOffset.x.value, scrollOffset.y.value);
-  }
+  Point translation = transform.As2D().GetTranslation();
+  printf_stderr("UniformityInfo Layer_Move %llu %p %f, %f\n",
+            TimeStamp::Now(), aLayer, translation.x.value, translation.y.value);
 }
 
 /* all of the per-layer prepared data we need to maintain */
