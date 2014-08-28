@@ -675,7 +675,7 @@ AutoMounter::UpdateState()
     if (umsAvail) {
       umsConfigured = usbConfigured && strstr(functionsStr, USB_FUNC_UMS) != nullptr;
       umsEnabled = (mMode == AUTOMOUNTER_ENABLE_UMS) ||
-                   (mMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) && umsConfigured;
+                   ((mMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) && umsConfigured);
     } else {
       umsConfigured = false;
       umsEnabled = false;
@@ -685,7 +685,7 @@ AutoMounter::UpdateState()
     if (mtpAvail) {
       mtpConfigured = usbConfigured && strstr(functionsStr, USB_FUNC_MTP) != nullptr;
       mtpEnabled = (mMode == AUTOMOUNTER_ENABLE_MTP) ||
-                   (mMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) && mtpConfigured;
+                   ((mMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) && mtpConfigured);
     } else {
       mtpConfigured = false;
       mtpEnabled = false;
