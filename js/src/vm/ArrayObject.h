@@ -14,8 +14,10 @@ namespace js {
 class ArrayObject : public JSObject
 {
   public:
-    // Array(x) eagerly allocates dense elements if x <= this value.
-    static const uint32_t EagerAllocationMaxLength = 2048;
+    // Array(x) eagerly allocates dense elements if x <= this value. Without
+    // the subtraction the max would roll over to the next power-of-two (4096)
+    // due to the way that growElements() and goodAllocated() work.
+    static const uint32_t EagerAllocationMaxLength = 2048 - ObjectElements::VALUES_PER_HEADER;
 
     static const Class class_;
 
