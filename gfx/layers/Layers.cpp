@@ -170,7 +170,6 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mPrevSibling(nullptr),
   mImplData(aImplData),
   mMaskLayer(nullptr),
-  mScrollHandoffParentId(FrameMetrics::NULL_SCROLL_ID),
   mPostXScale(1.0f),
   mPostYScale(1.0f),
   mOpacity(1.0),
@@ -1463,9 +1462,6 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (!mFrameMetrics.IsDefault()) {
     AppendToString(aStream, mFrameMetrics, " [metrics=", "]");
-  }
-  if (mScrollHandoffParentId != FrameMetrics::NULL_SCROLL_ID) {
-    aStream << nsPrintfCString(" [scrollParent=%llu]", mScrollHandoffParentId).get();
   }
 }
 

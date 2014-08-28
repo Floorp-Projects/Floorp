@@ -294,7 +294,6 @@ APZCTreeManager::PrepareAPZCForLayer(const Layer* aLayer,
 
     apzc->NotifyLayersUpdated(aMetrics,
         aState.mIsFirstPaint && (aLayersId == aState.mOriginatingLayersId));
-    apzc->SetScrollHandoffParentId(aLayer->GetScrollHandoffParentId());
 
     nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, aMetrics, aObscured);
     apzc->SetLayerHitTestData(unobscured, aAncestorTransform);

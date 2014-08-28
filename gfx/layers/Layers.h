@@ -829,22 +829,6 @@ public:
     }
   }
 
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Set the ViewID of the ContainerLayer to which overscroll should be handed
-   * off. A value of NULL_SCROLL_ID means that the default handoff-parent-finding
-   * behaviour should be used (i.e. walk up the layer tree to find the next
-   * scrollable ancestor layer).
-   */
-  void SetScrollHandoffParentId(FrameMetrics::ViewID aScrollParentId)
-  {
-    if (mScrollHandoffParentId != aScrollParentId) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrollHandoffParentId", this));
-      mScrollHandoffParentId = aScrollParentId;
-      Mutated();
-    }
-  }
-
   /*
    * Compositor event handling
    * =========================
@@ -1174,7 +1158,6 @@ public:
   uint32_t GetContentFlags() { return mContentFlags; }
   const nsIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   const FrameMetrics& GetFrameMetrics() const { return mFrameMetrics; }
-  FrameMetrics::ViewID GetScrollHandoffParentId() const { return mScrollHandoffParentId; }
   const EventRegions& GetEventRegions() const { return mEventRegions; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() { return mNextSibling; }
@@ -1581,7 +1564,6 @@ protected:
   gfx::UserData mUserData;
   nsIntRegion mVisibleRegion;
   FrameMetrics mFrameMetrics;
-  FrameMetrics::ViewID mScrollHandoffParentId;
   EventRegions mEventRegions;
   gfx::Matrix4x4 mTransform;
   // A mutation of |mTransform| that we've queued to be applied at the

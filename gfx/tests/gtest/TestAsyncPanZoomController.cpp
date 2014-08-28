@@ -1728,7 +1728,9 @@ protected:
   TestAsyncPanZoomController* rootApzc;
 
   void SetScrollHandoff(Layer* aChild, Layer* aParent) {
-    aChild->SetScrollHandoffParentId(aParent->GetFrameMetrics().GetScrollId());
+    FrameMetrics metrics = aChild->GetFrameMetrics();
+    metrics.SetScrollParentId(aParent->GetFrameMetrics().GetScrollId());
+    aChild->SetFrameMetrics(metrics);
   }
 
   void CreateOverscrollHandoffLayerTree1() {
