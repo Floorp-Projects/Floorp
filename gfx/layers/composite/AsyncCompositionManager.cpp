@@ -505,15 +505,15 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 }
 
 static bool
-SampleAPZAnimations(Layer* aLayer, TimeStamp aPoint)
+SampleAPZAnimations(const LayerMetricsWrapper& aLayer, TimeStamp aPoint)
 {
   bool activeAnimations = false;
-  for (Layer* child = aLayer->GetFirstChild(); child;
-        child = child->GetNextSibling()) {
+  for (LayerMetricsWrapper child = aLayer.GetFirstChild(); child;
+        child = child.GetNextSibling()) {
     activeAnimations |= SampleAPZAnimations(child, aPoint);
   }
 
-  if (AsyncPanZoomController* apzc = aLayer->GetAsyncPanZoomController()) {
+  if (AsyncPanZoomController* apzc = aLayer.GetApzc()) {
     activeAnimations |= apzc->AdvanceAnimations(aPoint);
   }
 
@@ -960,7 +960,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
   // code also includes Fennec which is rendered async.  Fennec uses
   // its own platform-specific async rendering that is done partially
   // in Gecko and partially in Java.
-  wantNextFrame |= SampleAPZAnimations(root, aCurrentFrame);
+  wantNextFrame |= SampleAPZAnimations(LayerMetricsWrapper(root), aCurrentFrame);
   if (!ApplyAsyncContentTransformToTree(root)) {
     nsAutoTArray<Layer*,1> scrollableLayers;
 #ifdef MOZ_WIDGET_ANDROID
