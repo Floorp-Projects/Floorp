@@ -22,7 +22,6 @@ include protocol PHal;
 include protocol PImageBridge;
 include protocol PIndexedDB;
 include protocol PMemoryReportRequest;
-include protocol PMobileConnection;
 include protocol PNecko;
 include protocol PScreenManager;
 include protocol PSharedBufferManager;
@@ -311,7 +310,6 @@ intr protocol PContent
     manages PHal;
     manages PIndexedDB;
     manages PMemoryReportRequest;
-    manages PMobileConnection;
     manages PNecko;
     manages PScreenManager;
     manages PSms;
@@ -493,8 +491,6 @@ parent:
     PHal();
 
     PIndexedDB();
-
-    PMobileConnection(uint32_t clientId);
 
     PNecko();
 

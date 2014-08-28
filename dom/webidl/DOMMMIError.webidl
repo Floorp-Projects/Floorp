@@ -4,7 +4,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.mobileconnection.enabled"]
+[Pref="dom.mobileconnection.enabled",
+ Constructor(DOMString serviceCode,
+             DOMString name,
+             optional DOMString message = "",
+             optional short? additionalInformation = null)]
 interface DOMMMIError : DOMError {
   [Constant]
   readonly attribute DOMString serviceCode;
