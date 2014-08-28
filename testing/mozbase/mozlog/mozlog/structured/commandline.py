@@ -158,7 +158,7 @@ def setup_logging(suite, args, defaults=None):
                 formatters[formatter] = []
                 for value in values:
                     found = True
-                    if isinstance(value, str):
+                    if isinstance(value, basestring):
                         value = log_file(value)
                     if value == sys.stdout:
                         found_stdout_logger = True
