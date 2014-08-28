@@ -448,20 +448,28 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
 }
 
 void
-Layer::SetAsyncPanZoomController(AsyncPanZoomController *controller)
+Layer::SetAsyncPanZoomController(uint32_t aIndex, AsyncPanZoomController *controller)
 {
-  mAPZC = controller;
+  MOZ_ASSERT(aIndex < GetFrameMetricsCount());
+  mApzcs[aIndex] = controller;
 }
 
 AsyncPanZoomController*
-Layer::GetAsyncPanZoomController() const
+Layer::GetAsyncPanZoomController(uint32_t aIndex) const
 {
+  MOZ_ASSERT(aIndex < GetFrameMetricsCount());
 #ifdef DEBUG
-  if (mAPZC) {
-    MOZ_ASSERT(GetFrameMetrics().IsScrollable());
+  if (mApzcs[aIndex]) {
+    MOZ_ASSERT(GetFrameMetrics(aIndex).IsScrollable());
   }
 #endif
-  return mAPZC;
+  return mApzcs[aIndex];
+}
+
+void
+Layer::FrameMetricsChanged()
+{
+  mApzcs.SetLength(GetFrameMetricsCount());
 }
 
 void
@@ -660,6 +668,13 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect,
     scissor = RenderTargetPixel::FromUntyped(tmp);
   }
   return currentClip.Intersect(scissor);
+}
+
+const FrameMetrics&
+Layer::GetFrameMetrics(uint32_t aIndex) const
+{
+  MOZ_ASSERT(aIndex < GetFrameMetricsCount());
+  return mFrameMetrics[aIndex];
 }
 
 const Matrix4x4
@@ -1460,8 +1475,11 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (mMaskLayer) {
     aStream << nsPrintfCString(" [mMaskLayer=%p]", mMaskLayer.get()).get();
   }
-  if (!mFrameMetrics.IsDefault()) {
-    AppendToString(aStream, mFrameMetrics, " [metrics=", "]");
+  for (uint32_t i = 0; i < mFrameMetrics.Length(); i++) {
+    if (!mFrameMetrics[i].IsDefault()) {
+      aStream << nsPrintfCString(" [metrics%d=", i).get();
+      AppendToString(aStream, mFrameMetrics[i], "", "]");
+    }
   }
 }
 
