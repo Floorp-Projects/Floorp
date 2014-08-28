@@ -2634,14 +2634,6 @@ JSScript::finalize(FreeOp *fop)
     }
 
     fop->runtime()->lazyScriptCache.remove(this);
-    // Calling lazyScript->maybeScript here will reset lazyScript::script_ iff
-    // it points to this JSScript or another JSScript that is about to be
-    // finalized, so just the call guarantees that the lazyScript doesn't keep
-    // a pointer to the finalized script around.
-    if (lazyScript) {
-        lazyScript->maybeScript();
-        MOZ_ASSERT(lazyScript->maybeScript() != this);
-    }
 }
 
 static const uint32_t GSN_CACHE_THRESHOLD = 100;
@@ -3358,15 +3350,8 @@ JSScript::markChildren(JSTracer *trc)
     if (enclosingScopeOrOriginalFunction_)
         MarkObject(trc, &enclosingScopeOrOriginalFunction_, "enclosing");
 
-    if (maybeLazyScript()) {
+    if (maybeLazyScript())
         MarkLazyScriptUnbarriered(trc, &lazyScript, "lazyScript");
-        // We might be operating on a clone of a script, in which case
-        // lazyScript->maybeScript will return the canonical script. Marking
-        // the lazyScript's script here guarantees that it stays around as
-        // long as any clones do.
-        if (lazyScript->maybeScript())
-            lazyScript->markScript(trc);
-    }
 
     if (IS_GC_MARKING_TRACER(trc)) {
         compartment()->mark();
@@ -3391,6 +3376,9 @@ LazyScript::markChildren(JSTracer *trc)
 
     if (enclosingScope_)
         MarkObject(trc, &enclosingScope_, "enclosingScope");
+
+    if (script_)
+        MarkScript(trc, &script_, "realScript");
 
     HeapPtrAtom *freeVariables = this->freeVariables();
     for (size_t i = 0; i < numFreeVariables(); i++)
@@ -3629,13 +3617,6 @@ LazyScript::resetScript()
 {
     JS_ASSERT(script_);
     script_ = nullptr;
-}
-
-void
-LazyScript::markScript(JSTracer *trc)
-{
-    JS_ASSERT(script_);
-    MarkScript(trc, &script_, "script");
 }
 
 void
