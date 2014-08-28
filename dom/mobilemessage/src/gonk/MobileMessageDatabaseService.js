@@ -108,8 +108,13 @@ MobileMessageDatabaseService.prototype = {
     this.mmdb.deleteMessage(aMessageIds, aLength, aRequest);
   },
 
-  createMessageCursor: function(aFilter, aReverse, aCallback) {
-    return this.mmdb.createMessageCursor(aFilter, aReverse, aCallback);
+  createMessageCursor: function(aHasStartDate, aStartDate, aHasEndDate,
+                                aEndDate, aNumbers, aNumbersCount, aDelivery,
+                                aHasRead, aRead, aThreadId, aReverse, aCallback) {
+    return this.mmdb.createMessageCursor(aHasStartDate, aStartDate, aHasEndDate,
+                                         aEndDate, aNumbers, aNumbersCount,
+                                         aDelivery, aHasRead, aRead, aThreadId,
+                                         aReverse, aCallback);
   },
 
   markMessageRead: function(aMessageId, aValue, aSendReadReport, aRequest) {

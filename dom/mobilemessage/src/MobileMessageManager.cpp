@@ -26,7 +26,6 @@
 #include "nsIObserverService.h"
 #include "nsISmsService.h"
 #include "nsServiceManagerUtils.h" // For do_GetService()
-#include "SmsFilter.h"
 
 #define RECEIVED_EVENT_NAME         NS_LITERAL_STRING("received")
 #define RETRIEVING_EVENT_NAME       NS_LITERAL_STRING("retrieving")
@@ -367,7 +366,7 @@ MobileMessageManager::Delete(const Sequence<OwningLongOrMozSmsMessageOrMozMmsMes
 }
 
 already_AddRefed<DOMCursor>
-MobileMessageManager::GetMessages(nsIDOMMozSmsFilter* aFilter,
+MobileMessageManager::GetMessages(const MobileMessageFilter& aFilter,
                                   bool aReverse,
                                   ErrorResult& aRv)
 {
@@ -378,16 +377,62 @@ MobileMessageManager::GetMessages(nsIDOMMozSmsFilter* aFilter,
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMMozSmsFilter> filter = aFilter;
-  if (!filter) {
-    filter = new SmsFilter();
+  bool hasStartDate = !aFilter.mStartDate.IsNull();
+  uint64_t startDate = 0;
+  if (hasStartDate) {
+    startDate = aFilter.mStartDate.Value();
+  }
+
+  bool hasEndDate = !aFilter.mEndDate.IsNull();
+  uint64_t endDate = 0;
+  if (hasEndDate) {
+    endDate = aFilter.mEndDate.Value();
+  }
+
+  nsAutoArrayPtr<const char16_t*> ptrNumbers;
+  uint32_t numbersCount = 0;
+  if (!aFilter.mNumbers.IsNull() &&
+      aFilter.mNumbers.Value().Length()) {
+    const FallibleTArray<nsString>& numbers = aFilter.mNumbers.Value();
+    uint32_t index;
+
+    numbersCount = numbers.Length();
+    ptrNumbers = new const char16_t* [numbersCount];
+    for (index = 0; index < numbersCount; index++) {
+      ptrNumbers[index] = numbers[index].get();
+    }
+  }
+
+  nsString delivery;
+  delivery.SetIsVoid(true);
+  if (!aFilter.mDelivery.IsNull()) {
+    const uint32_t index = static_cast<uint32_t>(aFilter.mDelivery.Value());
+    const EnumEntry& entry =
+      MobileMessageFilterDeliveryValues::strings[index];
+    delivery.AssignASCII(entry.value, entry.length);
+  }
+
+  bool hasRead = !aFilter.mRead.IsNull();
+  bool read = false;
+  if (hasRead) {
+    read = aFilter.mRead.Value();
+  }
+
+  uint64_t threadId = 0;
+  if (!aFilter.mThreadId.IsNull()) {
+    threadId = aFilter.mThreadId.Value();
   }
 
   nsRefPtr<MobileMessageCursorCallback> cursorCallback =
     new MobileMessageCursorCallback();
-
   nsCOMPtr<nsICursorContinueCallback> continueCallback;
-  nsresult rv = dbService->CreateMessageCursor(filter, aReverse, cursorCallback,
+  nsresult rv = dbService->CreateMessageCursor(hasStartDate, startDate,
+                                               hasEndDate, endDate,
+                                               ptrNumbers, numbersCount,
+                                               delivery,
+                                               hasRead, read,
+                                               threadId,
+                                               aReverse, cursorCallback,
                                                getter_AddRefs(continueCallback));
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
