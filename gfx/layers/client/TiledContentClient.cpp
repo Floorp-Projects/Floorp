@@ -319,6 +319,7 @@ ClientTiledLayerBuffer::GetContentType(SurfaceMode* aMode) const
   if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
 #if defined(MOZ_GFX_OPTIMIZE_MOBILE) || defined(MOZ_WIDGET_GONK)
      mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
+  }
 #else
       if (!mThebesLayer->GetParent() ||
           !mThebesLayer->GetParent()->SupportsComponentAlphaChildren() ||
@@ -327,13 +328,13 @@ ClientTiledLayerBuffer::GetContentType(SurfaceMode* aMode) const
       } else {
         content = gfxContentType::COLOR;
       }
-#endif
   } else if (mode == SurfaceMode::SURFACE_OPAQUE) {
     if (mThebesLayer->MayResample()) {
       mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
       content = gfxContentType::COLOR_ALPHA;
     }
   }
+#endif
 
   if (aMode) {
     *aMode = mode;
