@@ -20,6 +20,7 @@ class MediaResource;
 class MediaDecoderStateMachine;
 class MediaSourceReader;
 class SourceBufferDecoder;
+class TrackBuffer;
 
 namespace dom {
 
@@ -46,6 +47,9 @@ public:
   void DetachMediaSource();
 
   already_AddRefed<SourceBufferDecoder> CreateSubDecoder(const nsACString& aType);
+  void AddTrackBuffer(TrackBuffer* aTrackBuffer);
+  void RemoveTrackBuffer(TrackBuffer* aTrackBuffer);
+  void OnTrackBufferConfigured(TrackBuffer* aTrackBuffer);
 
   void Ended();
 
