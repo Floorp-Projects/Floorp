@@ -1,4 +1,4 @@
-Tutorial: Evaluate An Expression When a debugger; Statement is Executed
+Tutorial: Evaluate an Expression When a debugger; Statement Is Executed
 =======================================================================
 
 This page shows how you can try out the [`Debugger` API][debugger] yourself
