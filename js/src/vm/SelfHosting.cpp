@@ -409,7 +409,7 @@ js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
     uint32_t length = args[0].toInt32();
 
     // Make a new buffer and initialize it up to length.
-    RootedObject buffer(cx, NewDenseAllocatedArray(cx, length));
+    RootedObject buffer(cx, NewDenseFullyAllocatedArray(cx, length));
     if (!buffer)
         return false;
 
