@@ -33,9 +33,6 @@ leak:GI___strdup
 
 # WebRTC leaks added for Mochitest 2.
 leak:NR_reg_init
-# nr_reg_local_init should be redundant with NR_reg_init, but with 34 on Aurora
-# we get less stack frames for some reason.
-leak:nr_reg_local_init
 leak:fsmdef_init
 leak:r_log_register
 leak:nr_reg_set
