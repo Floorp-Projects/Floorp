@@ -841,7 +841,8 @@ public:
    * nested scrolling subdocuments. In general a Layer having multiple
    * FrameMetrics objects is conceptually equivalent to having a stack
    * of ContainerLayers that have been flattened into this Layer.
-   * (A pointer to additional documentation will arrive in a future patch.)
+   * See the documentation in LayerMetricsWrapper.h for a more detailed
+   * explanation of this conceptual equivalence.
    *
    * Note also that there is actually a many-to-many relationship between
    * Layers and FrameMetrics, because multiple Layers may have identical
