@@ -191,7 +191,7 @@ DebuggerMemory::drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp)
 
     size_t length = dbg->allocationsLogLength;
 
-    RootedObject result(cx, NewDenseAllocatedArray(cx, length));
+    RootedObject result(cx, NewDenseFullyAllocatedArray(cx, length));
     if (!result)
         return false;
     result->ensureDenseInitializedLength(cx, 0, length);
