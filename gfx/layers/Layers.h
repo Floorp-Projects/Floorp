@@ -818,13 +818,43 @@ public:
   /**
    * CONSTRUCTION PHASE ONLY
    * Set the (sub)document metrics used to render the Layer subtree
-   * rooted at this.
+   * rooted at this. Note that a layer may have multiple FrameMetrics
+   * objects; calling this function will remove all of them and replace
+   * them with the provided FrameMetrics. See the documentation for
+   * SetFrameMetrics(const nsTArray<FrameMetrics>&) for more details.
    */
   void SetFrameMetrics(const FrameMetrics& aFrameMetrics)
   {
-    if (mFrameMetrics != aFrameMetrics) {
+    if (mFrameMetrics.Length() != 1 || mFrameMetrics[0] != aFrameMetrics) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) FrameMetrics", this));
-      mFrameMetrics = aFrameMetrics;
+      mFrameMetrics.ReplaceElementsAt(0, mFrameMetrics.Length(), aFrameMetrics);
+      FrameMetricsChanged();
+      Mutated();
+    }
+  }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the (sub)document metrics used to render the Layer subtree
+   * rooted at this. There might be multiple metrics on this layer
+   * because the layer may, for example, be contained inside multiple
+   * nested scrolling subdocuments. In general a Layer having multiple
+   * FrameMetrics objects is conceptually equivalent to having a stack
+   * of ContainerLayers that have been flattened into this Layer.
+   * (A pointer to additional documentation will arrive in a future patch.)
+   *
+   * Note also that there is actually a many-to-many relationship between
+   * Layers and FrameMetrics, because multiple Layers may have identical
+   * FrameMetrics objects. This happens when those layers belong to the
+   * same scrolling subdocument and therefore end up with the same async
+   * transform when they are scrolled by the APZ code.
+   */
+  void SetFrameMetrics(const nsTArray<FrameMetrics>& aMetricsArray)
+  {
+    if (mFrameMetrics != aMetricsArray) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) FrameMetrics", this));
+      mFrameMetrics = aMetricsArray;
+      FrameMetricsChanged();
       Mutated();
     }
   }
@@ -1157,7 +1187,9 @@ public:
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nullptr; }
   uint32_t GetContentFlags() { return mContentFlags; }
   const nsIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
-  const FrameMetrics& GetFrameMetrics() const { return mFrameMetrics; }
+  const FrameMetrics& GetFrameMetrics(uint32_t aIndex) const;
+  uint32_t GetFrameMetricsCount() const { return mFrameMetrics.Length(); }
+  const nsTArray<FrameMetrics>& GetAllFrameMetrics() { return mFrameMetrics; }
   const EventRegions& GetEventRegions() const { return mEventRegions; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() { return mNextSibling; }
@@ -1457,9 +1489,16 @@ public:
 
   // These functions allow attaching an AsyncPanZoomController to this layer,
   // and can be used anytime.
-  // A layer has an APZC only-if GetFrameMetrics().IsScrollable()
-  void SetAsyncPanZoomController(AsyncPanZoomController *controller);
-  AsyncPanZoomController* GetAsyncPanZoomController() const;
+  // A layer has an APZC at index aIndex only-if GetFrameMetrics(aIndex).IsScrollable();
+  // attempting to get an APZC for a non-scrollable metrics will return null.
+  // The aIndex for these functions must be less than GetFrameMetricsCount().
+  void SetAsyncPanZoomController(uint32_t aIndex, AsyncPanZoomController *controller);
+  AsyncPanZoomController* GetAsyncPanZoomController(uint32_t aIndex) const;
+  // The FrameMetricsChanged function is used internally to ensure the APZC array length
+  // matches the frame metrics array length.
+private:
+  void FrameMetricsChanged();
+public:
 
   void ApplyPendingUpdatesForThisTransaction();
 
@@ -1563,7 +1602,7 @@ protected:
   nsRefPtr<Layer> mMaskLayer;
   gfx::UserData mUserData;
   nsIntRegion mVisibleRegion;
-  FrameMetrics mFrameMetrics;
+  nsTArray<FrameMetrics> mFrameMetrics;
   EventRegions mEventRegions;
   gfx::Matrix4x4 mTransform;
   // A mutation of |mTransform| that we've queued to be applied at the
@@ -1583,7 +1622,7 @@ protected:
   nsIntRect mClipRect;
   nsIntRect mTileSourceRect;
   nsIntRegion mInvalidRegion;
-  nsRefPtr<AsyncPanZoomController> mAPZC;
+  nsTArray<nsRefPtr<AsyncPanZoomController> > mApzcs;
   uint32_t mContentFlags;
   bool mUseClipRect;
   bool mUseTileSourceRect;
