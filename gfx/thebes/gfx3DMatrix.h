@@ -36,6 +36,27 @@ public:
    */
   gfx3DMatrix(void);
 
+  friend std::ostream& operator<<(std::ostream& stream, const gfx3DMatrix& m) {
+    if (m.IsIdentity()) {
+      return stream << "[ I ]";
+    }
+
+    if (m.Is2D()) {
+      return stream << "["
+             << m._11 << " " << m._12 << "; "
+             << m._21 << " " << m._22 << "; "
+             << m._41 << " " << m._42
+             << "]";
+    }
+
+    return stream << "["
+           << m._11 << " " << m._12 << " " << m._13 << " " << m._14 << "; "
+           << m._21 << " " << m._22 << " " << m._23 << " " << m._24 << "; "
+           << m._31 << " " << m._32 << " " << m._33 << " " << m._34 << "; "
+           << m._41 << " " << m._42 << " " << m._43 << " " << m._44
+           << "]";
+  }
+
   /**
    * Matrix multiplication.
    */

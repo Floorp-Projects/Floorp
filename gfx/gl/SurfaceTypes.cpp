@@ -12,42 +12,42 @@ namespace gl {
 
 SurfaceCaps::SurfaceCaps()
 {
-  Clear();
+    Clear();
 }
 
 SurfaceCaps::SurfaceCaps(const SurfaceCaps& other)
 {
-  *this = other;
+    *this = other;
 }
 
 SurfaceCaps&
 SurfaceCaps::operator=(const SurfaceCaps& other)
 {
-  any = other.any;
-  color = other.color;
-  alpha = other.alpha;
-  bpp16 = other.bpp16;
-  depth = other.depth;
-  stencil = other.stencil;
-  antialias = other.antialias;
-  preserve = other.preserve;
-  surfaceAllocator = other.surfaceAllocator;
+    any = other.any;
+    color = other.color;
+    alpha = other.alpha;
+    bpp16 = other.bpp16;
+    depth = other.depth;
+    stencil = other.stencil;
+    antialias = other.antialias;
+    preserve = other.preserve;
+    surfaceAllocator = other.surfaceAllocator;
 
-  return *this;
+    return *this;
 }
 
 void
 SurfaceCaps::Clear()
 {
-  any = false;
-  color = false;
-  alpha = false;
-  bpp16 = false;
-  depth = false;
-  stencil = false;
-  antialias = false;
-  preserve = false;
-  surfaceAllocator = nullptr;
+    any = false;
+    color = false;
+    alpha = false;
+    bpp16 = false;
+    depth = false;
+    stencil = false;
+    antialias = false;
+    preserve = false;
+    surfaceAllocator = nullptr;
 }
 
 SurfaceCaps::~SurfaceCaps()
