@@ -70,13 +70,6 @@ public:
   // Called asynchronously from FailDiversion.
   void NotifyDiversionFailed(nsresult aErrorCode, bool aSkipResume = true);
 
-  // Forwarded to nsHttpChannel::SetApplyConversion.
-  void SetApplyConversion(bool aApplyConversion) {
-    if (mChannel) {
-      mChannel->SetApplyConversion(aApplyConversion);
-    }
-  }
-
 protected:
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during redirects.
@@ -160,8 +153,6 @@ private:
   nsRefPtr<nsHttpHandler>  mHttpHandler;
 
   nsRefPtr<HttpChannelParentListener> mParentListener;
-  // The first listener in the decode chain if channel decoding is applied.
-  nsCOMPtr<nsIStreamListener> mConverterListener;
   // Set to the canceled status value if the main channel was canceled.
   nsresult mStatus;
   // Once set, no OnStart/OnData/OnStop calls should be accepted; conversely, it
