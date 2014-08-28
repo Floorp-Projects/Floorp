@@ -330,7 +330,7 @@ class Options
                       long aMin, long aMax, long* aN);
 
 public:
-  Options(const char* aDMDEnvVar);
+  explicit Options(const char* aDMDEnvVar);
 
   const char* DMDEnvVar() const { return mDMDEnvVar; }
 
@@ -567,7 +567,7 @@ class AutoBlockIntercepts
   DISALLOW_COPY_AND_ASSIGN(AutoBlockIntercepts);
 
 public:
-  AutoBlockIntercepts(Thread* aT)
+  explicit AutoBlockIntercepts(Thread* aT)
     : mT(aT)
   {
     mT->BlockIntercepts();
@@ -1253,7 +1253,7 @@ protected:
   const StackTrace* const mReportStackTrace2; // nullptr if not 2x-reported
 
 public:
-  RecordKey(const Block& aB)
+  explicit RecordKey(const Block& aB)
     : mAllocStackTrace(aB.AllocStackTrace()),
       mReportStackTrace1(aB.ReportStackTrace1()),
       mReportStackTrace2(aB.ReportStackTrace2())
@@ -1860,7 +1860,7 @@ public:
     size_t mUsableSize;
     size_t mNumBlocks;
 
-    RecordKindData(size_t aN)
+    explicit RecordKindData(size_t aN)
       : mUsableSize(0), mNumBlocks(0)
     {
       mRecordTable.init(aN);
@@ -2061,7 +2061,7 @@ AnalyzeImpl(Analyzer *aAnalyzer, const Writer& aWriter)
     RecordKey key(b);
     RecordTable::AddPtr p = table->lookupForAdd(key);
     if (!p) {
-      Record tr(b);
+      Record tr(key);
       (void)table->add(p, tr);
     }
     p->Add(b);
