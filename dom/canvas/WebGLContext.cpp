@@ -1491,7 +1491,7 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
     surf = Factory::CreateDataSourceSurfaceWithStride(IntSize(mWidth, mHeight),
                                                       surfFormat,
                                                       mWidth * 4);
-    if (!surf) {
+    if (NS_WARN_IF(!surf)) {
         return nullptr;
     }
 

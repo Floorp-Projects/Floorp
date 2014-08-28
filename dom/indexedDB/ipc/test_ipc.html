@@ -65,18 +65,18 @@
       let message = SpecialPowers.wrap(data).data.msg;
 
       if (validStructuredMessage(message)) {
-        if (message.test === undefined || message.message === undefined) {
-          return;
-        }
-
         switch (message.action) {
           case "test_status":
+            ok(message.expected === undefined, message.subtest, message.message);
+            break;
           case "test_end":
             ok(message.expected === undefined, message.test, message.message);
             break;
+          case "log":
+            info(message.message);
+            break;
           default:
-            let details = message.test + " | " + message.message;
-            info(details);
+            // nothing
         }
       }
     }

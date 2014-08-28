@@ -1,7 +1,7 @@
 
 /* pngerror.c - stub functions for i/o and memory allocation
  *
- * Last changed in libpng 1.6.10 [March 6, 2014]
+ * Last changed in libpng 1.6.13 [August 21, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -195,7 +195,7 @@ png_format_number(png_const_charp start, png_charp end, int format,
           * drop the decimal point.  If the number is a true zero handle that
           * here.
           */
-         if (output)
+         if (output != 0)
             *--end = '.';
          else if (number == 0) /* and !output */
             *--end = '0';
@@ -415,10 +415,13 @@ png_app_error(png_const_structrp png_ptr, png_const_charp error_message)
 }
 #endif /* BENIGN_ERRORS */
 
+#define PNG_MAX_ERROR_TEXT 196 /* Currently limited by profile_error in png.c */
+#if defined(PNG_WARNINGS_SUPPORTED) || \
+   (defined(PNG_READ_SUPPORTED) && defined(PNG_ERROR_TEXT_SUPPORTED))
 /* These utilities are used internally to build an error message that relates
  * to the current chunk.  The chunk name comes from png_ptr->chunk_name,
- * this is used to prefix the message.  The message is limited in length
- * to 63 bytes, the name characters are output as hex digits wrapped in []
+ * which is used to prefix the message.  The message is limited in length
+ * to 63 bytes. The name characters are output as hex digits wrapped in []
  * if the character is invalid.
  */
 #define isnonalpha(c) ((c) < 65 || (c) > 122 || ((c) > 90 && (c) < 97))
@@ -427,9 +430,6 @@ static PNG_CONST char png_digit[16] = {
    'A', 'B', 'C', 'D', 'E', 'F'
 };
 
-#define PNG_MAX_ERROR_TEXT 196 /* Currently limited be profile_error in png.c */
-#if defined(PNG_WARNINGS_SUPPORTED) || \
-   (defined(PNG_READ_SUPPORTED) && defined(PNG_ERROR_TEXT_SUPPORTED))
 static void /* PRIVATE */
 png_format_buffer(png_const_structrp png_ptr, png_charp buffer, png_const_charp
     error_message)
@@ -759,6 +759,9 @@ png_longjmp,(png_const_structrp png_ptr, int val),PNG_NORETURN)
 #ifdef PNG_SETJMP_SUPPORTED
    if (png_ptr && png_ptr->longjmp_fn && png_ptr->jmp_buf_ptr)
       png_ptr->longjmp_fn(*png_ptr->jmp_buf_ptr, val);
+#else
+   PNG_UNUSED(png_ptr)
+   PNG_UNUSED(val)
 #endif
 
    /* If control reaches this point, png_longjmp() must not return. The only
@@ -939,7 +942,7 @@ png_safe_execute(png_imagep image_in, int (*function)(png_voidp), png_voidp arg)
    saved_error_buf = image->opaque->error_buf;
    result = setjmp(safe_jmpbuf) == 0;
 
-   if (result)
+   if (result != 0)
    {
 
       image->opaque->error_buf = safe_jmpbuf;
@@ -949,7 +952,7 @@ png_safe_execute(png_imagep image_in, int (*function)(png_voidp), png_voidp arg)
    image->opaque->error_buf = saved_error_buf;
 
    /* And do the cleanup prior to any failure return. */
-   if (!result)
+   if (result == 0)
       png_image_free(image);
 
    return result;

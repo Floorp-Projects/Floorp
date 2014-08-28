@@ -25,13 +25,9 @@ enum NFCTechType {
 
 [JSImplementation="@mozilla.org/nfc/NFCTag;1", AvailableIn="CertifiedApps"]
 interface MozNFCTag {
-  DOMRequest getDetailsNDEF();
   DOMRequest readNDEF();
   DOMRequest writeNDEF(sequence<MozNDEFRecord> records);
   DOMRequest makeReadOnlyNDEF();
-
-  DOMRequest connect(NFCTechType techType);
-  DOMRequest close();
 };
 
 // Mozilla Only

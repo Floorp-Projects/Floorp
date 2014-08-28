@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="53a59364ce4f14068034c8d6fe01f4f6b9f78f23">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="6e804a42ab90f4251c7fe8c68731dc1c6abd8006"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="3a838afca295c9db32e1a3ec76d49fb7fe7fd2d2"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3bb61a27cd2941b2ba9b616a11aaa44269210396"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="1085a4b05f19f1c43def7e87362d4498ce20b70f"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="320650844ec7cba40a70317b761b88b47a8dca0e"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="f92a936f2aa97526d4593386754bdbf02db07a12"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="6e47ff2790f5656b5b074407829ceecf3e6188c4"/>
@@ -122,7 +122,7 @@
   <project name="platform/system/security" path="system/security" revision="583374f69f531ba68fc3dcbff1f74893d2a96406"/>
   <project name="platform/system/vold" path="system/vold" revision="d4455b8cf361f8353e8aebac15ffd64b4aedd2b9"/>
   <project name="platform/external/icu4c" path="external/icu4c" remote="aosp" revision="b4c6379528887dc25ca9991a535a8d92a61ad6b6"/>
-  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="9c6cb3231dd096df10a11b4d76be3727bdeec08d"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="614747e5e6755ffcdb36156ea82d8b5c1609a3af"/>
   <project name="platform_system_core" path="system/core" remote="b2g" revision="9395eb5aa885cf6d305a202de6e9694a58a89717"/>
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->
