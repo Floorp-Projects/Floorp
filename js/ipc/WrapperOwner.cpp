@@ -50,7 +50,6 @@ class CPOWProxyHandler : public BaseProxyHandler
   public:
     CPOWProxyHandler()
       : BaseProxyHandler(&family) {}
-    virtual ~CPOWProxyHandler() {}
 
     virtual bool finalizeInBackground(Value priv) const MOZ_OVERRIDE {
         return false;

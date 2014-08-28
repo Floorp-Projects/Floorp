@@ -24,7 +24,6 @@ template <typename Base, typename Policy>
 class FilteringWrapper : public Base {
   public:
     FilteringWrapper(unsigned flags);
-    virtual ~FilteringWrapper();
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
@@ -60,7 +59,6 @@ class FilteringWrapper : public Base {
 class CrossOriginXrayWrapper : public SecurityXrayDOM {
   public:
     CrossOriginXrayWrapper(unsigned flags);
-    virtual ~CrossOriginXrayWrapper();
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,

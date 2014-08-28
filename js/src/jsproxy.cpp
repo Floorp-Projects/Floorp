@@ -90,10 +90,6 @@ BaseProxyHandler::BaseProxyHandler(const void *family, bool hasPrototype, bool h
 {
 }
 
-BaseProxyHandler::~BaseProxyHandler()
-{
-}
-
 bool
 BaseProxyHandler::enter(JSContext *cx, HandleObject wrapper, HandleId id, Action act,
                         bool *bp) const
@@ -762,7 +758,6 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
 {
   public:
     ScriptedIndirectProxyHandler();
-    virtual ~ScriptedIndirectProxyHandler();
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
@@ -823,10 +818,6 @@ const char ScriptedIndirectProxyHandler::family = 0;
 
 ScriptedIndirectProxyHandler::ScriptedIndirectProxyHandler()
         : BaseProxyHandler(&family)
-{
-}
-
-ScriptedIndirectProxyHandler::~ScriptedIndirectProxyHandler()
 {
 }
 
@@ -1079,7 +1070,6 @@ const ScriptedIndirectProxyHandler ScriptedIndirectProxyHandler::singleton;
 class ScriptedDirectProxyHandler : public DirectProxyHandler {
   public:
     ScriptedDirectProxyHandler();
-    virtual ~ScriptedDirectProxyHandler();
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
@@ -1389,10 +1379,6 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
 
 ScriptedDirectProxyHandler::ScriptedDirectProxyHandler()
         : DirectProxyHandler(&family)
-{
-}
-
-ScriptedDirectProxyHandler::~ScriptedDirectProxyHandler()
 {
 }
 

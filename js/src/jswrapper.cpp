@@ -134,10 +134,6 @@ Wrapper::Wrapper(unsigned flags, bool hasPrototype, bool hasSecurityPolicy)
 {
 }
 
-Wrapper::~Wrapper()
-{
-}
-
 const char Wrapper::family = 0;
 const Wrapper Wrapper::singleton((unsigned)0);
 const Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);
@@ -175,10 +171,6 @@ ErrorCopier::~ErrorCopier()
 CrossCompartmentWrapper::CrossCompartmentWrapper(unsigned flags, bool hasPrototype,
                                                  bool hasSecurityPolicy)
   : Wrapper(CROSS_COMPARTMENT | flags, hasPrototype, hasSecurityPolicy)
-{
-}
-
-CrossCompartmentWrapper::~CrossCompartmentWrapper()
 {
 }
 
