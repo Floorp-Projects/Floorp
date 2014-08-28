@@ -2364,6 +2364,11 @@ nsChildView::UpdateTitlebarCGContext()
   dirtyTitlebarRegion.And(mDirtyTitlebarRegion, mTitlebarRect);
   mDirtyTitlebarRegion.SetEmpty();
 
+  if (mTitlebarRect.IsEmpty()) {
+    ReleaseTitlebarCGContext();
+    return;
+  }
+
   nsIntSize texSize = RectTextureImage::TextureSizeForSize(mTitlebarRect.Size());
   if (!mTitlebarCGContext ||
       CGBitmapContextGetWidth(mTitlebarCGContext) != size_t(texSize.width) ||
