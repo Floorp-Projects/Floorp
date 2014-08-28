@@ -337,10 +337,20 @@ public:
 
   /**
    * Does a breadth-first search from the root layer to find the first
-   * scrollable layer.
+   * scrollable layer, and returns its ViewID. Note that there may be
+   * other layers in the tree which share the same ViewID.
    * Can be called any time.
    */
-  LayerMetricsWrapper GetPrimaryScrollableLayer();
+  FrameMetrics::ViewID GetRootScrollableLayerId();
+
+  /**
+   * Does a breadth-first search from the root layer to find the first
+   * scrollable layer, and returns all the layers that have that ViewID
+   * as the first scrollable metrics in their ancestor chain. If no
+   * scrollable layers are found it just returns the root of the tree if
+   * there is one.
+   */
+  void GetRootScrollableLayers(nsTArray<Layer*>& aArray);
 
   /**
    * Returns a list of all descendant layers for which

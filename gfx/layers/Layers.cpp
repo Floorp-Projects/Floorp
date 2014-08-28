@@ -54,11 +54,11 @@ using namespace mozilla::gfx;
 
 //--------------------------------------------------
 // LayerManager
-LayerMetricsWrapper
-LayerManager::GetPrimaryScrollableLayer()
+FrameMetrics::ViewID
+LayerManager::GetRootScrollableLayerId()
 {
   if (!mRoot) {
-    return LayerMetricsWrapper();
+    return FrameMetrics::NULL_SCROLL_ID;
   }
 
   nsTArray<LayerMetricsWrapper> queue;
@@ -69,7 +69,7 @@ LayerManager::GetPrimaryScrollableLayer()
 
     const FrameMetrics& frameMetrics = layer.Metrics();
     if (frameMetrics.IsScrollable()) {
-      return layer;
+      return frameMetrics.GetScrollId();
     }
 
     LayerMetricsWrapper child = layer.GetFirstChild();
@@ -79,7 +79,37 @@ LayerManager::GetPrimaryScrollableLayer()
     }
   }
 
-  return LayerMetricsWrapper(mRoot);
+  return FrameMetrics::NULL_SCROLL_ID;
+}
+
+void
+LayerManager::GetRootScrollableLayers(nsTArray<Layer*>& aArray)
+{
+  if (!mRoot) {
+    return;
+  }
+
+  FrameMetrics::ViewID rootScrollableId = GetRootScrollableLayerId();
+  if (rootScrollableId == FrameMetrics::NULL_SCROLL_ID) {
+    aArray.AppendElement(mRoot);
+    return;
+  }
+
+  nsTArray<Layer*> queue;
+  queue.AppendElement(mRoot);
+  while (queue.Length()) {
+    Layer* layer = queue[0];
+    queue.RemoveElementAt(0);
+
+    if (LayerMetricsWrapper::TopmostScrollableMetrics(layer).GetScrollId() == rootScrollableId) {
+      aArray.AppendElement(layer);
+      continue;
+    }
+
+    for (Layer* child = layer->GetFirstChild(); child; child = child->GetNextSibling()) {
+      queue.AppendElement(child);
+    }
+  }
 }
 
 void
