@@ -608,7 +608,8 @@ FloatMarginWidth(const nsHTMLReflowState& aCBReflowState,
     aCBReflowState.ComputedSize(fosWM),
     aFloatAvailableWidth,
     aFloatOffsetState.ComputedLogicalMargin().Size(fosWM),
-    aFloatOffsetState.ComputedLogicalBorderPadding().Size(fosWM),
+    aFloatOffsetState.ComputedLogicalBorderPadding().Size(fosWM) -
+      aFloatOffsetState.ComputedLogicalPadding().Size(fosWM),
     aFloatOffsetState.ComputedLogicalPadding().Size(fosWM),
     true).Width(fosWM) +
   aFloatOffsetState.ComputedPhysicalMargin().LeftRight() +
