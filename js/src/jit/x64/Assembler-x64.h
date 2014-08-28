@@ -602,11 +602,29 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel loadRipRelativeDouble(FloatRegister dest) {
         return CodeOffsetLabel(masm.movsd_ripr(dest.code()).offset());
     }
+    CodeOffsetLabel loadRipRelativeFloat32(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movss_ripr(dest.code()).offset());
+    }
+    CodeOffsetLabel loadRipRelativeInt32x4(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movdqa_ripr(dest.code()).offset());
+    }
+    CodeOffsetLabel loadRipRelativeFloat32x4(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movaps_ripr(dest.code()).offset());
+    }
     CodeOffsetLabel storeRipRelativeInt32(Register dest) {
         return CodeOffsetLabel(masm.movl_rrip(dest.code()).offset());
     }
     CodeOffsetLabel storeRipRelativeDouble(FloatRegister dest) {
         return CodeOffsetLabel(masm.movsd_rrip(dest.code()).offset());
+    }
+    CodeOffsetLabel storeRipRelativeFloat32(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movss_rrip(dest.code()).offset());
+    }
+    CodeOffsetLabel storeRipRelativeInt32x4(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movdqa_rrip(dest.code()).offset());
+    }
+    CodeOffsetLabel storeRipRelativeFloat32x4(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movaps_rrip(dest.code()).offset());
     }
     CodeOffsetLabel leaRipRelative(Register dest) {
         return CodeOffsetLabel(masm.leaq_rip(dest.code()).offset());
