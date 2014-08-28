@@ -8,6 +8,7 @@ const { Cu } = require("chrome");
 const { DebuggerServer } = require("devtools/server/main");
 const { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 const Debugger = require("Debugger");
+const { getOffsetColumn } = require("devtools/server/actors/common");
 
 // TODO bug 943125: remove this polyfill and use Debugger.Frame.prototype.depth
 // once it is implemented.
@@ -60,6 +61,7 @@ const TRACE_TYPES = new Set([
   "yield",
   "name",
   "location",
+  "hitCount",
   "callsite",
   "parameterNames",
   "arguments",
@@ -81,6 +83,7 @@ function TracerActor(aConn, aParent)
   this._sequence = 0;
   this._bufferSendTimer = null;
   this._buffer = [];
+  this._hitCounts = new WeakMap();
 
   // Keep track of how many different trace requests have requested what kind of
   // tracing info. This way we can minimize the amount of data we are collecting
@@ -236,6 +239,11 @@ TracerActor.prototype = {
       this._requestsForTraceType[traceType]--;
     }
 
+    // Clear hit counts if no trace is requesting them.
+    if (!this._requestsForTraceType.hitCount) {
+      this._hitCounts.clear();
+    }
+
     if (this.idle) {
       this.dbg.enabled = false;
     }
@@ -272,16 +280,26 @@ TracerActor.prototype = {
         : "(" + aFrame.type + ")";
     }
 
-    if (this._requestsForTraceType.location && aFrame.script) {
-      // We should return the location of the start of the script, but
-      // Debugger.Script does not provide complete start locations (bug
-      // 901138). Instead, return the current offset (the location of the first
-      // statement in the function).
-      packet.location = {
-        url: aFrame.script.url,
-        line: aFrame.script.startLine,
-        column: getOffsetColumn(aFrame.offset, aFrame.script)
-      };
+    if (aFrame.script) {
+      if (this._requestsForTraceType.hitCount) {
+        // Increment hit count.
+        let previousHitCount = this._hitCounts.get(aFrame.script) || 0;
+        this._hitCounts.set(aFrame.script, previousHitCount + 1);
+
+        packet.hitCount = this._hitCounts.get(aFrame.script);
+      }
+
+      if (this._requestsForTraceType.location) {
+        // We should return the location of the start of the script, but
+        // Debugger.Script does not provide complete start locations (bug
+        // 901138). Instead, return the current offset (the location of the first
+        // statement in the function).
+        packet.location = {
+          url: aFrame.script.url,
+          line: aFrame.script.startLine,
+          column: getOffsetColumn(aFrame.offset, aFrame.script)
+        };
+      }
     }
 
     if (this._parent.threadActor && aFrame.script) {
@@ -496,12 +514,6 @@ MapStack.prototype = {
     return value;
   }
 };
-
-// TODO bug 863089: use Debugger.Script.prototype.getOffsetColumn when
-// it is implemented.
-function getOffsetColumn(aOffset, aScript) {
-  return 0;
-}
 
 // Serialization helper functions. Largely copied from script.js and modified
 // for use in serialization rather than object actor requests.

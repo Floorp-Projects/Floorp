@@ -330,13 +330,13 @@ tests.push(function test_categoryDiscover() {
 });
 
 tests.push(function test_localeGeneric() {
-  frcTest(filePrefix + "localeGeneric.png", 0x00A400,
-          "localeGeneric analysis returns orange");
+  frcTest(filePrefix + "localeGeneric.png", 0x3EC23E,
+          "localeGeneric analysis returns green");
 });
 
 tests.push(function test_dictionaryGeneric() {
-  frcTest(filePrefix + "dictionaryGeneric-16.png", 0x502E1E,
-          "dictionaryGeneric-16 analysis returns blue");
+  frcTest(filePrefix + "dictionaryGeneric-16.png", 0x854C30,
+          "dictionaryGeneric-16 analysis returns brown");
 });
 
 tests.push(function test_extensionGeneric() {
