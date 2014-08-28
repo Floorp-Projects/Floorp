@@ -24,23 +24,19 @@ ChannelDiverterParent::~ChannelDiverterParent()
 }
 
 bool
-ChannelDiverterParent::Init(const ChannelDiverterArgs& aArgs)
+ChannelDiverterParent::Init(const ChannelDiverterArgs& aChannel)
 {
-  switch (aArgs.type()) {
-  case ChannelDiverterArgs::THttpChannelDiverterArgs:
+  switch (aChannel.type()) {
+  case ChannelDiverterArgs::TPHttpChannelParent:
   {
-    auto httpParent = static_cast<HttpChannelParent*>(
-      aArgs.get_HttpChannelDiverterArgs().mChannelParent());
-    httpParent->SetApplyConversion(aArgs.get_HttpChannelDiverterArgs().mApplyConversion());
-
-    mDivertableChannelParent =
-      static_cast<ADivertableParentChannel*>(httpParent);
+    mDivertableChannelParent = static_cast<ADivertableParentChannel*>(
+      static_cast<HttpChannelParent*>(aChannel.get_PHttpChannelParent()));
     break;
   }
   case ChannelDiverterArgs::TPFTPChannelParent:
   {
     mDivertableChannelParent = static_cast<ADivertableParentChannel*>(
-      static_cast<FTPChannelParent*>(aArgs.get_PFTPChannelParent()));
+      static_cast<FTPChannelParent*>(aChannel.get_PFTPChannelParent()));
     break;
   }
   default:
