@@ -93,9 +93,6 @@ class GeckoInstance(object):
                 'logfile': self.gecko_log})
         self.runner.start()
 
-    def check_for_crashes(self):
-        return self.runner.check_for_crashes()
-
     def close(self):
         if self.runner:
             self.runner.stop()
