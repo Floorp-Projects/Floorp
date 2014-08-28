@@ -194,7 +194,7 @@ private:
    * non-DEBUG components.  (Actually, even if it were removed,
    * sizeof(PLDHashTable) wouldn't change, due to struct padding.)
    */
-  uint16_t            mRecursionLevel;/* used to detect unsafe re-entry */
+  mutable uint16_t    mRecursionLevel;/* used to detect unsafe re-entry */
   uint32_t            mEntrySize;     /* number of bytes in an entry */
   uint32_t            mEntryCount;    /* number of entries in table */
   uint32_t            mRemovedCount;  /* removed entry sentinels in table */
@@ -271,6 +271,27 @@ public:
 #ifdef PL_DHASHMETER
   void DumpMeter(PLDHashEnumerator aDump, FILE* aFp);
 #endif
+
+  /**
+   * This is an iterator that works over the elements of PLDHashtable. It is not
+   * safe to modify the hashtable while it is being iterated over; on debug
+   * builds, attempting to do so will result in an assertion failure.
+   */
+  class Iterator {
+  public:
+    Iterator(const PLDHashTable* aTable);
+    Iterator(const Iterator& aIterator);
+    ~Iterator();
+    bool HasMoreEntries() const;
+    PLDHashEntryHdr* NextEntry();
+
+  private:
+    const PLDHashTable* mTable;       /* Main table pointer */
+    char* mEntryAddr;                 /* Pointer to the next entry to check */
+    uint32_t mEntryOffset;            /* The number of the elements returned */
+  };
+
+  Iterator Iterate() const { return Iterator(this); }
 
 private:
   PLDHashEntryHdr* PL_DHASH_FASTCALL

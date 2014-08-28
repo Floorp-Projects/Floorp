@@ -18,12 +18,12 @@ const gViewSourceCSS = 'resource://gre-resources/viewsource.css';
 const NS_XHTML = 'http://www.w3.org/1999/xhtml';
 
 // These are markers used to delimit the selection during processing. They
-// are removed from the final rendering, but we pick space-like characters for
-// safety (and futhermore, these are known to be mapped to a 0-length string
-// in transliterate.properties). It is okay to set start=end, we use findNext()
-// U+200B ZERO WIDTH SPACE
-const MARK_SELECTION_START = '\u200B\u200B\u200B\u200B\u200B';
-const MARK_SELECTION_END = '\u200B\u200B\u200B\u200B\u200B';
+// are removed from the final rendering.
+// We use noncharacter Unicode codepoints to minimize the risk of clashing
+// with anything that might legitimately be present in the document.
+// U+FDD0..FDEF <noncharacters>
+const MARK_SELECTION_START = '\uFDD0';
+const MARK_SELECTION_END = '\uFDEF';
 
 function onLoadViewPartialSource()
 {

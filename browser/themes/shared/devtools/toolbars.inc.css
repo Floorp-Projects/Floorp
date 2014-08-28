@@ -85,6 +85,15 @@
   min-width: inherit;
 }
 
+/* Command buttons with menupopups should be styled slightly differently -
+   no background color and a bit more narrow */
+#toolbox-buttons .devtools-toolbarbutton:not([text-as-image]):not(:hover):not([open=true]) {
+  background: transparent;
+}
+#toolbox-buttons .devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker {
+  padding: 0 2px;
+}
+
 .devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
   display: none;
 }
@@ -566,6 +575,9 @@
 }
 .command-button[checked=true] > image {
   background-position: -48px center;
+}
+.command-button[open=true] > image {
+  background-position: 0 center;
 }
 
 #command-button-paintflashing > image {

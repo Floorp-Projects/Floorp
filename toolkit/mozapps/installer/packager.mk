@@ -742,6 +742,13 @@ ifdef MOZ_PACKAGE_JSSHELL
 	$(MAKE_JSSHELL)
 endif # MOZ_PACKAGE_JSSHELL
 endif # LIBXUL_SDK
+ifdef MOZ_CODE_COVERAGE
+	# Package code coverage gcno tree
+	@echo 'Packaging code coverage data...'
+	$(RM) $(CODE_COVERAGE_ARCHIVE_BASENAME).zip
+	$(PYTHON) -mmozbuild.codecoverage.packager \
+		--output-file='$(DIST)/$(PKG_PATH)$(CODE_COVERAGE_ARCHIVE_BASENAME).zip'
+endif
 
 prepare-package: stage-package
 
@@ -890,6 +897,11 @@ UPLOAD_FILES= \
 ifdef MOZ_CRASHREPORTER_UPLOAD_FULL_SYMBOLS
 UPLOAD_FILES += \
   $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip)
+endif
+
+ifdef MOZ_CODE_COVERAGE
+UPLOAD_FILES += \
+  $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(CODE_COVERAGE_ARCHIVE_BASENAME).zip)
 endif
 
 SIGN_CHECKSUM_CMD=
