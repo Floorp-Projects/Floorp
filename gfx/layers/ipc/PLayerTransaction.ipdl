@@ -19,6 +19,7 @@ using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using class mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
+using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -83,7 +84,7 @@ parent:
   // The next time this layer is composited, add this async scroll offset in
   // CSS pixels.
   // Useful for testing rendering of async scrolling.
-  async SetAsyncScrollOffset(PLayer layer, int32_t x, int32_t y);
+  async SetAsyncScrollOffset(PLayer layer, ViewID id, int32_t x, int32_t y);
 
   // Drop any front buffers that might be retained on the compositor
   // side.

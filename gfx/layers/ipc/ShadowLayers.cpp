@@ -607,8 +607,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     common.maskLayerParent() = nullptr;
     common.animations() = mutant->GetAnimations();
     common.invalidRegion() = mutant->GetInvalidRegion();
-    common.metrics() = mutant->GetFrameMetrics();
-    common.scrollParentId() = mutant->GetScrollHandoffParentId();
+    common.metrics() = mutant->GetAllFrameMetrics();
     common.backgroundColor() = mutant->GetBackgroundColor();
     common.contentDescription() = mutant->GetContentDescription();
     attrs.specific() = null_t();

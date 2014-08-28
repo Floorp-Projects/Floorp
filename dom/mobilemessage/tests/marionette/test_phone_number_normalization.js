@@ -52,9 +52,6 @@ let tasks = {
 };
 
 function getAllMessages(callback, filter, reverse) {
-  if (!filter) {
-    filter = new MozSmsFilter;
-  }
   let messages = [];
   let request = manager.getMessages(filter, reverse || false);
   request.onsuccess = function(event) {
