@@ -584,14 +584,20 @@ let gTestSuite = (function() {
    *
    * @return A deferred promise.
    */
-  function setSettings(aSettings, aAllowError) {
-    let request = window.navigator.mozSettings.createLock().set(aSettings);
-    return wrapDomRequestAsPromise(request)
-      .then(function resolve() {
+  function setSettings(aSettings) {
+    let lock = window.navigator.mozSettings.createLock();
+    let request = lock.set(aSettings);
+    let deferred = Promise.defer();
+    lock.onsettingstransactionsuccess = function () {
         ok(true, "setSettings(" + JSON.stringify(aSettings) + ")");
-      }, function reject() {
-        ok(aAllowError, "setSettings(" + JSON.stringify(aSettings) + ")");
-      });
+      deferred.resolve();
+    };
+    lock.onsettingstransactionfailure = function (aEvent) {
+      ok(false, "setSettings(" + JSON.stringify(aSettings) + ")");
+      deferred.reject();
+      throw aEvent.target.error;
+    };
+    return deferred.promise;
   }
 
   /**
