@@ -23,7 +23,6 @@ template<typename Base>
 class AddonWrapper : public Base {
   public:
     AddonWrapper(unsigned flags);
-    virtual ~AddonWrapper();
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
