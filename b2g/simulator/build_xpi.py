@@ -18,11 +18,11 @@ import sys, os, re, subprocess
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.base import MozbuildObject
 from mozbuild.util import ensureParentDir
+from mozpack.mozjar import JarWriter
 from zipfile import ZipFile
 from distutils.version import LooseVersion
 
 ftp_root_path = "/pub/mozilla.org/labs/fxos-simulator"
-UPDATE_LINK = "https://ftp.mozilla.org" + ftp_root_path + "/%(update_path)s/%(xpi_name)s"
 UPDATE_URL = "https://ftp.mozilla.org" + ftp_root_path + "/%(update_path)s/update.rdf"
 XPI_NAME = "fxos-simulator-%(version)s-%(platform)s.xpi"
 
@@ -43,17 +43,17 @@ class GaiaBuilder(object):
         with open(os.path.join(self.gaia_path, "profile", "user.js"), "a") as userJs:
             userJs.write(open(srcfile).read())
 
-def process_package_overload(src, dst, version, app_buildid):
+def preprocess_file(src, dst, version, app_buildid, update_url):
     ensureParentDir(dst)
-    # First replace numeric version like '1.3'
-    # Then replace with 'slashed' version like '1_4'
-    # Finally set the full length addon version like 1.3.20131230
-    # (reduce the app build id to only the build date
-    # as addon manager doesn't handle big ints in addon versions)
+
     defines = {
-        "NUM_VERSION": version,
-        "SLASH_VERSION": version.replace(".", "_"),
-        "FULL_VERSION": ("%s.%s" % (version, app_buildid[:8]))
+        "ADDON_ID": "fxos_" + version.replace(".", "_") + "_simulator@mozilla.org",
+        # (reduce the app build id to only the build date
+        # as addon manager doesn't handle big ints in addon versions)
+        "ADDON_VERSION": ("%s.%s" % (version, app_buildid[:8])),
+        "ADDON_NAME": "Firefox OS " + version + " Simulator",
+        "ADDON_DESCRIPTION": "a Firefox OS " + version + " simulator",
+        "ADDON_UPDATE_URL": update_url
     }
     pp = Preprocessor(defines=defines)
     pp.do_filter("substitution")
@@ -61,20 +61,24 @@ def process_package_overload(src, dst, version, app_buildid):
         with open(src, "r") as input:
             pp.processFile(input=input, output=output)
 
-def add_dir_to_zip(zip, top, pathInZip, blacklist=()):
-    zf = ZipFile(zip, "a")
+def add_dir_to_zip(jar, top, pathInZip, blacklist=()):
     for dirpath, subdirs, files in os.walk(top):
         dir_relpath = os.path.relpath(dirpath, top)
         if dir_relpath.startswith(blacklist):
             continue
-        zf.write(dirpath, os.path.join(pathInZip, dir_relpath))
         for filename in files:
             relpath = os.path.join(dir_relpath, filename)
             if relpath in blacklist:
                 continue
-            zf.write(os.path.join(dirpath, filename),
-                     os.path.join(pathInZip, relpath))
-    zf.close()
+            path = os.path.normpath(os.path.join(pathInZip, relpath))
+            file = open(os.path.join(dirpath, filename), "rb")
+            mode = os.stat(os.path.join(dirpath, filename)).st_mode
+            jar.add(path.encode("ascii"), file, mode=mode)
+
+def add_file_to_zip(jar, path, pathInZip):
+    file = open(path, "rb")
+    mode = os.stat(path).st_mode
+    jar.add(pathInZip.encode("ascii"), file, mode=mode)
 
 def main(platform):
     build = MozbuildObject.from_environment()
@@ -107,38 +111,41 @@ def main(platform):
     builder.profile(env)
     builder.override_prefs(os.path.join(srcdir, "custom-prefs.js"))
 
-    # Substitute version strings in the package manifest overload file
-    manifest_overload = os.path.join(build.topobjdir, "b2g", "simulator", "package-overload.json")
-    process_package_overload(os.path.join(srcdir, "package-overload.json.in"),
-                             manifest_overload,
-                             version,
-                             app_buildid)
-
     # Build the simulator addon xpi
     xpi_name = XPI_NAME % {"version": version, "platform": platform}
     xpi_path = os.path.join(distdir, xpi_name)
 
     update_path = "%s/%s" % (version, platform)
-    update_link = UPDATE_LINK % {"update_path": update_path, "xpi_name": xpi_name}
     update_url = UPDATE_URL % {"update_path": update_path}
-    subprocess.check_call([
-      build.virtualenv_manager.python_path, os.path.join(topsrcdir, "addon-sdk", "source", "bin", "cfx"), "xpi", \
-      "--pkgdir", srcdir, \
-      "--manifest-overload", manifest_overload, \
-      "--strip-sdk", \
-      "--update-link", update_link, \
-      "--update-url", update_url, \
-      "--static-args", "{\"label\": \"Firefox OS %s\"}" % version, \
-      "--output-file", xpi_path \
-    ])
 
-    # Ship b2g-desktop, but prevent its gaia profile to be shipped in the xpi
-    add_dir_to_zip(xpi_path, os.path.join(distdir, "b2g"), "b2g", ("gaia", "B2G.app/Contents/MacOS/gaia"))
-    # Then ship our own gaia profile
-    add_dir_to_zip(xpi_path, os.path.join(gaia_path, "profile"), "profile")
-    # Add "defaults" directory (required by add-on runner in Firefox 31 and
-    # earlier)
-    add_dir_to_zip(xpi_path, os.path.join(srcdir, "defaults"), "defaults")
+    # Preprocess some files...
+    manifest = os.path.join(build.topobjdir, "b2g", "simulator", "install.rdf")
+    preprocess_file(os.path.join(srcdir, "install.rdf.in"),
+                    manifest,
+                    version,
+                    app_buildid,
+                    update_url)
+
+    options_file = os.path.join(build.topobjdir, "b2g", "simulator", "options.xul")
+    preprocess_file(os.path.join(srcdir, "options.xul.in"),
+                    options_file,
+                    version,
+                    app_buildid,
+                    update_url)
+
+    with JarWriter(xpi_path, optimize=False) as zip:
+        # Ship addon files into the .xpi
+        add_dir_to_zip(zip, os.path.join(srcdir, "lib"), "lib")
+        add_file_to_zip(zip, manifest, "install.rdf")
+        add_file_to_zip(zip, os.path.join(srcdir, "bootstrap.js"), "bootstrap.js")
+        add_file_to_zip(zip, options_file, "options.xul")
+        add_file_to_zip(zip, os.path.join(srcdir, "icon.png"), "icon.png")
+        add_file_to_zip(zip, os.path.join(srcdir, "icon64.png"), "icon64.png")
+
+        # Ship b2g-desktop, but prevent its gaia profile to be shipped in the xpi
+        add_dir_to_zip(zip, os.path.join(distdir, "b2g"), "b2g", ("gaia", "B2G.app/Contents/MacOS/gaia"))
+        # Then ship our own gaia profile
+        add_dir_to_zip(zip, os.path.join(gaia_path, "profile"), "profile")
 
 if __name__ == '__main__':
     if 2 != len(sys.argv):
