@@ -139,6 +139,7 @@ TamperOnce(SECItem& item,
       alreadyFoundMatch = true;
       memmove(foundFirstByte, to, toLen);
       p = foundFirstByte + toLen;
+      remaining -= toLen;
     } else {
       p = foundFirstByte + 1;
       --remaining;
