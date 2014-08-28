@@ -15,6 +15,8 @@ let httpServer = new HttpServer();
 let getEngine, postEngine, unresolvableEngine;
 
 function run_test() {
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
+
   removeMetadata();
   updateAppInfo();
 
@@ -25,6 +27,7 @@ function run_test() {
     // Remove added form history entries
     yield updateSearchHistory("remove", null);
     FormHistory.shutdown();
+    Services.prefs.clearUserPref("browser.search.suggest.enabled");
   }));
 
   run_next_test();
@@ -288,7 +291,7 @@ add_task(function* local_result_returned_remote_result_disabled() {
   do_check_eq(result.local.length, 1);
   do_check_eq(result.local[0], "letter A");
   do_check_eq(result.remote.length, 0);
-  Services.prefs.clearUserPref("browser.search.suggest.enabled");
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 });
 
 add_task(function* local_result_returned_remote_result_disabled_after_creation_of_controller() {
@@ -301,6 +304,7 @@ add_task(function* local_result_returned_remote_result_disabled_after_creation_o
   do_check_eq(result.local.length, 1);
   do_check_eq(result.local[0], "letter A");
   do_check_eq(result.remote.length, 0);
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 });
 
 add_task(function* one_of_each_disabled_before_creation_enabled_after_creation_of_controller() {
@@ -317,8 +321,8 @@ add_task(function* one_of_each_disabled_before_creation_enabled_after_creation_o
   do_check_eq(result.remote[0], "letter B");
 });
 
-add_task(function* clear_suggestions_pref() {
-  Services.prefs.clearUserPref("browser.search.suggest.enabled");
+add_task(function* reset_suggestions_pref() {
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 });
 
 add_task(function* one_local_zero_remote() {

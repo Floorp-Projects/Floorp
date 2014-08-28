@@ -15,11 +15,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 
 this.EXPORTED_SYMBOLS = ["LayoutHelpers"];
 
-this.LayoutHelpers = LayoutHelpers = function(aTopLevelWindow) {
+let LayoutHelpers = function(aTopLevelWindow) {
   this._topDocShell = aTopLevelWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                      .getInterface(Ci.nsIWebNavigation)
                                      .QueryInterface(Ci.nsIDocShell);
 };
+
+this.LayoutHelpers = LayoutHelpers;
 
 LayoutHelpers.prototype = {
 

@@ -1151,6 +1151,10 @@ protected:
   // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
   bool mPlayingBeforeSeek;
 
+  // if TRUE then the seek started while content was in active playing state
+  // if FALSE then the seek started while the content was not playing.
+  bool mPlayingThroughTheAudioChannelBeforeSeek;
+
   // True iff this element is paused because the document is inactive or has
   // been suspended by the audio channel service.
   bool mPausedForInactiveDocumentOrChannel;

@@ -353,10 +353,16 @@ this.Utils = { // jshint ignore:line
     return false;
   },
 
+  isHidden: function isHidden(aAccessible) {
+    // Need to account for aria-hidden, so can't just check for INVISIBLE
+    // state.
+    let hidden = Utils.getAttributes(aAccessible).hidden;
+    return hidden && hidden === 'true';
+  },
+
   inHiddenSubtree: function inHiddenSubtree(aAccessible) {
     for (let acc=aAccessible; acc; acc=acc.parent) {
-      let hidden = Utils.getAttributes(acc).hidden;
-      if (hidden && JSON.parse(hidden)) {
+      if (this.isHidden(acc)) {
         return true;
       }
     }
@@ -789,9 +795,7 @@ PivotContext.prototype = {
       if (this._includeInvisible) {
         include = true;
       } else {
-        // Need to account for aria-hidden, so can't just check for INVISIBLE
-        // state.
-        include = Utils.getAttributes(child).hidden !== 'true';
+        include = !Utils.isHidden(child);
       }
       if (include) {
         if (aPreorder) {

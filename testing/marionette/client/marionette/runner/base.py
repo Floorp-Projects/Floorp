@@ -282,7 +282,6 @@ class BaseMarionetteOptions(OptionParser):
         self.add_option('--type',
                         dest='type',
                         action='store',
-                        default='browser+b2g',
                         help="the type of test to run, can be a combination of values defined in the manifest file; "
                              "individual values are combined with '+' or '-' characters. for example: 'browser+b2g' "
                              "means the set of tests which are compatible with both browser and b2g; 'b2g-qemu' means "
@@ -957,4 +956,9 @@ class BaseMarionetteTestRunner(object):
             _extract_xml_from_skipped_manifest_test(test)
 
         doc.appendChild(testsuite)
+
+        # change default encoding to avoid encoding problem for page source
+        reload(sys)
+        sys.setdefaultencoding('utf-8')
+
         return doc.toprettyxml(encoding='utf-8')
