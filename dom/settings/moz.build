@@ -18,8 +18,9 @@ if CONFIG['MOZ_B2G']:
     MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 
 EXTRA_JS_MODULES += [
+    'SettingsChangeNotifier.jsm',
     'SettingsDB.jsm',
-    'SettingsRequestManager.jsm'
+    'SettingsQueue.jsm',
 ]
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']

@@ -155,19 +155,15 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function setSettings(aSettings) {
-    let lock = window.navigator.mozSettings.createLock();
-    let request = lock.set(aSettings);
-    let deferred = Promise.defer();
-    lock.onsettingstransactionsuccess = function () {
+    let request = navigator.mozSettings.createLock().set(aSettings);
+
+    return wrapDomRequestAsPromise(request)
+      .then(function resolve() {
         ok(true, "setSettings(" + JSON.stringify(aSettings) + ")");
-      deferred.resolve();
-    };
-    lock.onsettingstransactionfailure = function (aEvent) {
+      }, function reject(aEvent) {
         ok(false, "setSettings(" + JSON.stringify(aSettings) + ")");
-      deferred.reject();
         throw aEvent.target.error;
-    };
-    return deferred.promise;
+      });
   }
 
   /**
@@ -542,8 +538,6 @@ let gTestSuite = (function() {
     let permissions = [{ 'type': 'wifi-manage', 'allow': 1, 'context': window.document },
                        { 'type': 'settings-write', 'allow': 1, 'context': window.document },
                        { 'type': 'settings-read', 'allow': 1, 'context': window.document },
-                       { 'type': 'settings-api-write', 'allow': 1, 'context': window.document },
-                       { 'type': 'settings-api-read', 'allow': 1, 'context': window.document },
                        { 'type': 'mobileconnection', 'allow': 1, 'context': window.document }];
 
     SpecialPowers.pushPermissions(permissions, function() {
