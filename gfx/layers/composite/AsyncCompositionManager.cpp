@@ -633,34 +633,20 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     appliedTransform = true;
   }
 
-  if (aLayer->AsContainerLayer() && aLayer->GetScrollbarDirection() != Layer::NONE) {
-    ApplyAsyncTransformToScrollbar(aLayer->AsContainerLayer());
+  if (aLayer->GetScrollbarDirection() != Layer::NONE) {
+    ApplyAsyncTransformToScrollbar(aLayer);
   }
   return appliedTransform;
 }
 
 static bool
-LayerHasNonContainerDescendants(ContainerLayer* aContainer)
+LayerIsScrollbarTarget(const LayerMetricsWrapper& aTarget, Layer* aScrollbar)
 {
-  for (Layer* child = aContainer->GetFirstChild();
-       child; child = child->GetNextSibling()) {
-    ContainerLayer* container = child->AsContainerLayer();
-    if (!container || LayerHasNonContainerDescendants(container)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-static bool
-LayerIsScrollbarTarget(Layer* aTarget, ContainerLayer* aScrollbar)
-{
-  AsyncPanZoomController* apzc = aTarget->GetAsyncPanZoomController();
+  AsyncPanZoomController* apzc = aTarget.GetApzc();
   if (!apzc) {
     return false;
   }
-  const FrameMetrics& metrics = aTarget->GetFrameMetrics();
+  const FrameMetrics& metrics = aTarget.Metrics();
   if (metrics.GetScrollId() != aScrollbar->GetScrollbarTargetContainerId()) {
     return false;
   }
@@ -668,21 +654,21 @@ LayerIsScrollbarTarget(Layer* aTarget, ContainerLayer* aScrollbar)
 }
 
 static void
-ApplyAsyncTransformToScrollbarForContent(ContainerLayer* aScrollbar,
-                                         Layer* aContent, bool aScrollbarIsChild)
+ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
+                                         const LayerMetricsWrapper& aContent,
+                                         bool aScrollbarIsDescendant)
 {
   // We only apply the transform if the scroll-target layer has non-container
   // children (i.e. when it has some possibly-visible content). This is to
   // avoid moving scroll-bars in the situation that only a scroll information
   // layer has been built for a scroll frame, as this would result in a
   // disparity between scrollbars and visible content.
-  if (aContent->AsContainerLayer() &&
-      !LayerHasNonContainerDescendants(aContent->AsContainerLayer())) {
+  if (aContent.IsScrollInfoLayer()) {
     return;
   }
 
-  const FrameMetrics& metrics = aContent->GetFrameMetrics();
-  AsyncPanZoomController* apzc = aContent->GetAsyncPanZoomController();
+  const FrameMetrics& metrics = aContent.Metrics();
+  AsyncPanZoomController* apzc = aContent.GetApzc();
 
   Matrix4x4 asyncTransform = apzc->GetCurrentAsyncTransform();
   Matrix4x4 nontransientTransform = apzc->GetNontransientAsyncTransform();
@@ -717,7 +703,7 @@ ApplyAsyncTransformToScrollbarForContent(ContainerLayer* aScrollbar,
 
   Matrix4x4 transform = scrollbarTransform * aScrollbar->GetTransform();
 
-  if (aScrollbarIsChild) {
+  if (aScrollbarIsDescendant) {
     // If the scrollbar layer is a child of the content it is a scrollbar for, then we
     // need to do an extra untransform to cancel out the transient async transform on
     // the content. This is needed because otherwise that transient async transform is
@@ -730,47 +716,50 @@ ApplyAsyncTransformToScrollbarForContent(ContainerLayer* aScrollbar,
   // GetTransform already takes the pre- and post-scale into account.  Since we
   // will apply the pre- and post-scale again when computing the effective
   // transform, we must apply the inverses here.
-  transform.Scale(1.0f/aScrollbar->GetPreXScale(),
-                  1.0f/aScrollbar->GetPreYScale(),
-                  1);
+  if (ContainerLayer* container = aScrollbar->AsContainerLayer()) {
+    transform.Scale(1.0f/container->GetPreXScale(),
+                    1.0f/container->GetPreYScale(),
+                    1);
+  }
   transform = transform * Matrix4x4().Scale(1.0f/aScrollbar->GetPostXScale(),
                                             1.0f/aScrollbar->GetPostYScale(),
                                             1);
   aScrollbar->AsLayerComposite()->SetShadowTransform(transform);
 }
 
-static Layer*
-FindScrolledLayerForScrollbar(ContainerLayer* aLayer, bool* aOutIsAncestor)
+static LayerMetricsWrapper
+FindScrolledLayerForScrollbar(Layer* aScrollbar, bool* aOutIsAncestor)
 {
   // XXX: once bug 967844 is implemented there might be multiple scrolled layers
   // that correspond to the scrollbar's scrollId. Verify that we deal with those
   // cases correctly.
 
-  // Search all siblings of aLayer and of its ancestors.
-  for (Layer* ancestor = aLayer; ancestor; ancestor = ancestor->GetParent()) {
-    for (Layer* scrollTarget = ancestor;
+  // Search all siblings of aScrollbar and of its ancestors.
+  LayerMetricsWrapper scrollbar(aScrollbar, LayerMetricsWrapper::StartAt::BOTTOM);
+  for (LayerMetricsWrapper ancestor = scrollbar; ancestor; ancestor = ancestor.GetParent()) {
+    for (LayerMetricsWrapper scrollTarget = ancestor;
          scrollTarget;
-         scrollTarget = scrollTarget->GetPrevSibling()) {
-      if (scrollTarget != aLayer &&
-          LayerIsScrollbarTarget(scrollTarget, aLayer)) {
+         scrollTarget = scrollTarget.GetPrevSibling()) {
+      if (scrollTarget != scrollbar &&
+          LayerIsScrollbarTarget(scrollTarget, aScrollbar)) {
         *aOutIsAncestor = (scrollTarget == ancestor);
         return scrollTarget;
       }
     }
-    for (Layer* scrollTarget = ancestor->GetNextSibling();
+    for (LayerMetricsWrapper scrollTarget = ancestor.GetNextSibling();
          scrollTarget;
-         scrollTarget = scrollTarget->GetNextSibling()) {
-      if (LayerIsScrollbarTarget(scrollTarget, aLayer)) {
+         scrollTarget = scrollTarget.GetNextSibling()) {
+      if (LayerIsScrollbarTarget(scrollTarget, aScrollbar)) {
         *aOutIsAncestor = false;
         return scrollTarget;
       }
     }
   }
-  return nullptr;
+  return LayerMetricsWrapper();
 }
 
 void
-AsyncCompositionManager::ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer)
+AsyncCompositionManager::ApplyAsyncTransformToScrollbar(Layer* aLayer)
 {
   // If this layer corresponds to a scrollbar, then there should be a layer that
   // is a previous sibling or a parent that has a matching ViewID on its FrameMetrics.
@@ -780,7 +769,7 @@ AsyncCompositionManager::ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer)
   // this case we don't need to do anything because there can't be an async
   // transform on the content.
   bool isAncestor = false;
-  Layer* scrollTarget = FindScrolledLayerForScrollbar(aLayer, &isAncestor);
+  const LayerMetricsWrapper& scrollTarget = FindScrolledLayerForScrollbar(aLayer, &isAncestor);
   if (scrollTarget) {
     ApplyAsyncTransformToScrollbarForContent(aLayer, scrollTarget, isAncestor);
   }
