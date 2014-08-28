@@ -87,6 +87,7 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     virtual bool finalizeInBackground(Value priv) const MOZ_OVERRIDE;
 
+    static const char family;
     static const Wrapper singleton;
     static const Wrapper singletonWithPrototype;
 
@@ -207,9 +208,6 @@ typedef SecurityWrapper<CrossCompartmentWrapper> CrossCompartmentSecurityWrapper
 class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
 {
   public:
-    // This variable exists solely to provide a unique address for use as an identifier.
-    static const char sDeadObjectFamily;
-
     explicit DeadObjectProxy();
 
     /* ES5 Harmony fundamental wrapper traps. */
@@ -243,6 +241,7 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
                                 MutableHandleObject protop) const MOZ_OVERRIDE;
 
+    static const char family;
     static const DeadObjectProxy singleton;
 };
 
@@ -250,15 +249,10 @@ extern JSObject *
 TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj,
                          HandleObject parent);
 
-// Proxy family for wrappers. Public so that IsWrapper() can be fully inlined by
-// jsfriendapi users.
-// This variable exists solely to provide a unique address for use as an identifier.
-extern JS_FRIEND_DATA(const char) sWrapperFamily;
-
 inline bool
 IsWrapper(JSObject *obj)
 {
-    return IsProxy(obj) && GetProxyHandler(obj)->family() == &sWrapperFamily;
+    return IsProxy(obj) && GetProxyHandler(obj)->family() == &Wrapper::family;
 }
 
 // Given a JSObject, returns that object stripped of wrappers. If
