@@ -28,6 +28,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
 #include "nsLookAndFeel.h"
+#include "VibrancyManager.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -3530,6 +3531,10 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     }
     case NS_THEME_FOCUS_OUTLINE:
       return true;
+
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+    case NS_THEME_MAC_VIBRANCY_DARK:
+      return VibrancyManager::SystemSupportsVibrancy();
   }
 
   return false;
@@ -3601,6 +3606,18 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
       return false;
     default:
       return true;
+  }
+}
+
+bool
+nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(uint8_t aWidgetType)
+{
+  switch (aWidgetType) {
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+    case NS_THEME_MAC_VIBRANCY_DARK:
+      return true;
+    default:
+      return false;
   }
 }
 
