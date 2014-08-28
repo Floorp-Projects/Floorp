@@ -788,6 +788,11 @@ Preferences::GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Preferences::GetDirty(bool *_retval) {
+  *_retval = gDirty;
+  return NS_OK;
+}
 
 nsresult
 Preferences::NotifyServiceObservers(const char *aTopic)
