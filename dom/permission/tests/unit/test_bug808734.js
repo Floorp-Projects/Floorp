@@ -15,6 +15,7 @@ var gData = [
   permission: "settings",
   access: READWRITE,
   expected: ["settings-read", "settings-write",
+             "settings-api-read", "settings-api-write",
              "indexedDB-chrome-settings-read",
              "indexedDB-chrome-settings-write"]
 },
