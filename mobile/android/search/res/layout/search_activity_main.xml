@@ -42,6 +42,17 @@
         android:layout_marginTop="@dimen/search_bar_height"
         android:layout_gravity="top"/>
 
+
+    <ImageButton
+        android:id="@+id/settings_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:padding="15dp"
+        android:src="@drawable/ic_action_settings"
+        android:layout_gravity="bottom|right"
+        android:contentDescription="@string/search_pref_button_content_description"/>
+
     <View
         android:id="@+id/animation_card"
         android:layout_width="match_parent"
