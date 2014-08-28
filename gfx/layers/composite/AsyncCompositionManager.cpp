@@ -943,15 +943,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
   if (!ApplyAsyncContentTransformToTree(root)) {
     nsAutoTArray<Layer*,1> scrollableLayers;
 #ifdef MOZ_WIDGET_ANDROID
-    const LayerMetricsWrapper& primaryScrollable = mLayerManager->GetPrimaryScrollableLayer();
-    if (primaryScrollable) {
-      // Extracting the Layer* from the LayerMetricsWrapper here is ugly but
-      // should be only temporary. It is needed here because Fennec doesn't
-      // support async scrolling of nested scrollable layers (i.e. sub-APZ).
-      // Once Fennec switches to native APZ (bug 776030) this code will be
-      // eliminated entirely.
-      scrollableLayers.AppendElement((Layer*)primaryScrollable.GetLayer());
-    }
+    mLayerManager->GetRootScrollableLayers(scrollableLayers);
 #else
     mLayerManager->GetScrollableLayers(scrollableLayers);
 #endif
