@@ -783,6 +783,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
 if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
     main.included_projects += ['../FennecStumbler']
     main.referenced_projects += ['../FennecStumbler']
+    DEFINES['MOZ_STUMBLER_API_KEY'] = CONFIG['MOZ_MOZILLA_API_KEY']
 
 if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
     searchres = add_android_eclipse_library_project('FennecResourcesSearch')
