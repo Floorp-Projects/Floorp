@@ -319,7 +319,6 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       layer->SetAnimations(common.animations());
       layer->SetInvalidRegion(common.invalidRegion());
       layer->SetFrameMetrics(common.metrics());
-      layer->SetScrollHandoffParentId(common.scrollParentId());
       layer->SetBackgroundColor(common.backgroundColor().value());
       layer->SetContentDescription(common.contentDescription());
 
