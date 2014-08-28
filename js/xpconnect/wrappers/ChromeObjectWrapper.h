@@ -26,7 +26,7 @@ struct ExposedPropertiesOnly;
 class ChromeObjectWrapper : public ChromeObjectWrapperBase
 {
   public:
-    ChromeObjectWrapper() : ChromeObjectWrapperBase(0) {}
+    MOZ_CONSTEXPR ChromeObjectWrapper() : ChromeObjectWrapperBase(0) {}
 
     /* Custom traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
