@@ -35,6 +35,8 @@ public:
 
 private:
 
+  // Note that this may still fail to set mGlyphBitmaps to a valid value
+  // if the underlying CreateDataSourceSurface fails for some reason.
   void EnsureInitialized();
 
   RefPtr<Compositor> mCompositor;

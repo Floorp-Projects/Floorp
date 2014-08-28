@@ -6,6 +6,8 @@ function testUnary(f, g) {
         assertEq(f(n), g(n));
 }
 
+const FROUND = 'var fround=glob.Math.fround;';
+
 assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var sq=glob.Math.sin; function f(d) { d=+d; return +sq(d) } return f'), {Math:{sin:Math.sqrt}});
 assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var sq=glob.Math.sin; function f(d) { d=+d; return +sq(d) } return f'), {Math:{sin:null}});
 testUnary(asmLink(asmCompile('glob', USE_ASM + 'var sq=glob.Math.sin; function f(d) { d=+d; return +sq(d) } return f'), {Math:{sin:Math.sin}}), Math.sin);
@@ -101,24 +103,55 @@ function testTernary(f, g, numbers) {
 assertAsmTypeFail('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e,g) { d=+d;e=+e;g=g|0; return +min(d,e,g) } return f');
 assertAsmTypeFail('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e,g) { d=d|0;e=e|0;g=+g; return max(d,e,g)|0 } return f');
 assertAsmTypeFail('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e,g) { d=+d;e=+e;g=+g; return min(d,e,g)|0 } return f');
-assertAsmTypeFail('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e,g) { d=d|0;e=e|0;g=g|0; return +max(d,e,g) } return f');
+testTernary(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e,g) { d=d|0;e=e|0;g=g|0; return +max(d,e,g) } return f'), {Math:{max:Math.max}}), Math.max, intNumbers);
 testTernary(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e,g) { d=d|0;e=e|0;g=g|0; return max(d,e,g)|0 } return f'), {Math:{max:Math.max}}), Math.max, intNumbers);
 testTernary(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e,g) { d=+d;e=+e;g=+g; return +max(d,e,g) } return f'), {Math:{max:Math.max}}), Math.max, doubleNumbers);
 testTernary(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e,g) { d=d|0;e=e|0;g=g|0; return min(d,e,g)|0 } return f'), {Math:{min:Math.min}}), Math.min, intNumbers);
 testTernary(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e,g) { d=+d;e=+e;g=+g; return +min(d,e,g) } return f'), {Math:{min:Math.min}}), Math.min, doubleNumbers);
 
-assertAsmTypeFail('glob', USE_ASM + 'var sin=glob.Math.sin; function f(d) { d=+d; d = sin(d); } return f');
+// Implicit return coercions of math functions
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var im=glob.Math.imul; function f(i) { i=i|0; i = im(i,i); return i|0 } return f'), this)(3), 9);
+assertAsmTypeFail('glob', USE_ASM + 'var im=glob.Math.imul; function f(d) { d=+d; d = im(d, d) } return f');
+assertAsmTypeFail('glob', USE_ASM + FROUND + 'var im=glob.Math.imul; function f(d) { d=fround(d); d = im(d, d) } return f');
+
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var abs=glob.Math.abs; function f(d) { d=d|0; d = abs(d|0); return +(d>>>0) } return f'), this)(-1), 1);
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var abs=glob.Math.abs; function f(d) { d=d|0; var m = 0; m = (-1)>>>0; return (abs(d|0) < (m>>>0))|0 } return f'), this)(42), 1);
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var abs=glob.Math.abs; function f(d) { d=+d; d = abs(d); return +d } return f'), this)(-1.5), 1.5);
+assertEq(asmLink(asmCompile('glob', USE_ASM + FROUND + 'var abs=glob.Math.abs; function f(d) { d=fround(d); d = fround(abs(d)); return +d } return f'), this)(-1.5), 1.5);
+assertAsmTypeFail('glob', USE_ASM + FROUND + 'var abs=glob.Math.abs; function f(d) { d=fround(d); d = abs(d); return +d } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var abs=glob.Math.abs; function f(d) { d=d|0; var m = 0; m = -1; return (abs(d|0) < (m|0))|0 } return f');
+
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var sqrt=glob.Math.sqrt; function f(d) { d=+d; d = sqrt(d); return +d } return f'), this)(256), 16);
+assertEq(asmLink(asmCompile('glob', USE_ASM + FROUND + 'var sqrt=glob.Math.sqrt; function f(d) { d=fround(d); d = fround(sqrt(d)); return +d } return f'), this)(13.37), Math.fround(Math.sqrt(Math.fround(13.37))));
+assertAsmTypeFail('glob', USE_ASM + FROUND + 'var sqrt=glob.Math.sqrt; function f(d) { d=fround(d); d = sqrt(d); return fround(d) } return f');
+assertAsmTypeFail('glob', USE_ASM + FROUND + 'var sqrt=glob.Math.sqrt; function f(d) { d=fround(d); d = sqrt(d); return d } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var sqrt=glob.Math.sqrt; function f(n) { n=n|0; var d=0.; d = sqrt(n|0) } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var sqrt=glob.Math.sqrt; function f(n) { n=n|0; var d=3.; n = sqrt(d)|0 } return f');
+
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d) { d=+d; d = min(d, 13.); return +d } return f'), this)(12), 12);
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d) { d=d|0; d = min(d, 11); return d|0 } return f'), this)(12), 11);
+assertAsmTypeFail('glob', USE_ASM + FROUND + 'var max=glob.Math.max; function f(d) { d=fround(d); d = max(d) } return f');
+
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var sin=glob.Math.sin; function f(d) { d=+d; d = sin(d); return +d } return f'), this)(Math.PI), Math.sin(Math.PI));
+assertAsmTypeFail('glob', USE_ASM + FROUND + 'var sin=glob.Math.sin; function f(d) { d=fround(d); d = sin(d) } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var sin=glob.Math.sin; function f(d) { d=d|0; d = sin(d) } return f');
+
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var pow=glob.Math.pow; function f(d) { d=+d; d = pow(d,d); return +d } return f'), this)(3), 27);
+assertAsmTypeFail('glob', USE_ASM + FROUND + 'var pow=glob.Math.pow; function f(d) { d=fround(d); d = pow(d, d) } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var pow=glob.Math.pow; function f(d) { d=d|0; d = pow(d, d) } return f');
+
 assertAsmTypeFail('glob', USE_ASM + 'var sin=glob.Math.sin; function f(d) { d=+d; var i=0; i = sin(d)|0; } return f');
-assertAsmTypeFail('glob', USE_ASM + 'var pow=glob.Math.pow; function f(d) { d=+d; d = pow(d,d); } return f');
 assertAsmTypeFail('glob', USE_ASM + 'var pow=glob.Math.pow; function f(d) { d=+d; var i=0; i = pow(d,d)|0; } return f');
-assertAsmTypeFail('glob', USE_ASM + 'var atan2=glob.Math.atan2; function f(d) { d=+d; d = atan2(d,d); } return f');
 assertAsmTypeFail('glob', USE_ASM + 'var atan2=glob.Math.atan2; function f(d) { d=+d; var i=0; i = atan2(d,d)|0; } return f');
-assertAsmTypeFail('glob', USE_ASM + 'var sqrt=glob.Math.sqrt; function f(d) { d=+d; d = sqrt(d); } return f');
 assertAsmTypeFail('glob', USE_ASM + 'var sqrt=glob.Math.sqrt; function f(d) { d=+d; sqrt(d)|0; } return f');
-assertAsmTypeFail('glob', USE_ASM + 'var im=glob.Math.imul; function f(i) { i=i|0; var d=0.0; d = +im(i,i); } return f');
-assertAsmTypeFail('glob', USE_ASM + 'var im=glob.Math.imul; function f(i) { i=i|0; i = im(i,i); } return f');
-assertAsmTypeFail('glob', USE_ASM + 'var abs=glob.Math.abs; function f(i) { i=i|0; +abs(i|0); } return f');
 assertAsmTypeFail('glob', USE_ASM + 'var abs=glob.Math.abs; function f(d) { d=+d; abs(d)|0; } return f');
+
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var im=glob.Math.imul; function f(i) { i=i|0; var d=0.0; d = +im(i,i); return +d } return f'), this)(42), Math.imul(42, 42));
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var abs=glob.Math.abs; function f(i) { i=i|0; var d=0.0; d = +abs(i|0); return +d } return f'), this)(-42), 42);
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(i) { i=i|0; var d=0.0; d = +min(i, 0); return +d } return f'), this)(-42), -42);
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(i) { i=i|0; var d=0.0; d = +max(i, 0); return +d } return f'), this)(-42), 0);
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d) { d=+d; var i=0; i = ~~min(d, 0.)|0; return i|0 } return f'), this)(-42), -42);
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d) { d=+d; var i=0; i = ~~max(d, 0.)|0; return i|0 } return f'), this)(-42), 0);
 
 assertAsmTypeFail('glob', USE_ASM + 'var tau=glob.Math.TAU; function f() {} return f');
 assertAsmTypeFail('glob', USE_ASM + 'var pi=glob.Math.PI; function f() { return pi | 0 } return f');

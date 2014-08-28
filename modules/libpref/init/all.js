@@ -245,9 +245,8 @@ pref("media.directshow.enabled", true);
 #ifdef MOZ_FMP4
 pref("media.fragmented-mp4.enabled", true);
 pref("media.fragmented-mp4.ffmpeg.enabled", false);
-// "media.fragmented-mp4.exposed" controls whether the MP4 parser can be
-// created by <video> elements.
-#if defined(XP_WIN) && defined(MOZ_WMF)
+#if defined(XP_WIN) && defined(MOZ_WMF) || defined(XP_MACOSX)
+// Denotes that the fragmented MP4 parser can be created by <video> elements.
 pref("media.fragmented-mp4.exposed", true);
 #else
 pref("media.fragmented-mp4.exposed", false);
@@ -370,6 +369,8 @@ pref("media.navigator.enabled", true);
 
 pref("media.getusermedia.screensharing.enabled", true);
 pref("media.getusermedia.screensharing.allowed_domains", "");
+// OS/X 10.6 and XP have screen/window sharing off by default due to various issues - Caveat emptor
+pref("media.getusermedia.screensharing.allow_on_old_platforms", false);
 
 // TextTrack support
 pref("media.webvtt.enabled", true);
@@ -2098,7 +2099,7 @@ pref("layout.display-list.dump", false);
 // heavily loaded.
 pref("layout.frame_rate.precise", false);
 
-// pref to control whether layout warnings that are hit quite often are enabled 
+// pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", true);
 
 // Is support for the Web Animations API enabled?

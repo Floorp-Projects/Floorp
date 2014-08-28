@@ -7088,21 +7088,25 @@ DoubleToAtom(ExclusiveContext *cx, double value)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::computedPropertyName(Node literal)
+{
+    uint32_t begin = pos().begin;
+    Node assignNode = assignExpr();
+    if (!assignNode)
+        return null();
+    MUST_MATCH_TOKEN(TOK_RB, JSMSG_COMP_PROP_UNTERM_EXPR);
+    Node propname = handler.newComputedName(assignNode, begin, pos().end);
+    if (!propname)
+        return null();
+    handler.setListFlag(literal, PNX_NONCONST);
+    return propname;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::objectLiteral()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_LC));
-
-    /*
-     * A map from property names we've seen thus far to a mask of property
-     * assignment types.
-     */
-    AtomIndexMap seen;
-
-    enum AssignmentType {
-        GET     = 0x1,
-        SET     = 0x2,
-        VALUE   = 0x4 | GET | SET
-    };
 
     Node literal = handler.newObjectLiteral(pos().begin);
     if (!literal)
@@ -7133,16 +7137,9 @@ Parser<ParseHandler>::objectLiteral()
             break;
 
           case TOK_LB: {
-              // Computed property name.
-              uint32_t begin = pos().begin;
-              Node assignNode = assignExpr();
-              if (!assignNode)
-                  return null();
-              MUST_MATCH_TOKEN(TOK_RB, JSMSG_COMP_PROP_UNTERM_EXPR);
-              propname = handler.newComputedName(assignNode, begin, pos().end);
+              propname = computedPropertyName(literal);
               if (!propname)
                   return null();
-              handler.setListFlag(literal, PNX_NONCONST);
               break;
           }
 
@@ -7196,6 +7193,10 @@ Parser<ParseHandler>::objectLiteral()
                 if (!atom)
                     return null();
                 propname = newNumber(tokenStream.currentToken());
+                if (!propname)
+                    return null();
+            } else if (tt == TOK_LB) {
+                propname = computedPropertyName(literal);
                 if (!propname)
                     return null();
             } else {
@@ -7295,49 +7296,6 @@ Parser<ParseHandler>::objectLiteral()
                                   Expression, NotGenerator, op)) {
                 return null();
             }
-        }
-
-        /*
-         * Check for duplicate property names.  Duplicate data properties
-         * only conflict in strict mode.  Duplicate getter or duplicate
-         * setter halves always conflict.  A data property conflicts with
-         * any part of an accessor property.
-         */
-        AssignmentType assignType;
-        if (op == JSOP_INITPROP)
-            assignType = VALUE;
-        else if (op == JSOP_INITPROP_GETTER)
-            assignType = GET;
-        else if (op == JSOP_INITPROP_SETTER)
-            assignType = SET;
-        else
-            MOZ_CRASH("bad opcode in object initializer");
-
-        AtomIndexAddPtr p = seen.lookupForAdd(atom);
-        if (p) {
-            jsatomid index = p.value();
-            AssignmentType oldAssignType = AssignmentType(index);
-            if ((oldAssignType & assignType) &&
-                (oldAssignType != VALUE || assignType != VALUE || pc->sc->needStrictChecks()))
-            {
-                JSAutoByteString name;
-                if (!AtomToPrintableString(context, atom, &name))
-                    return null();
-
-                ParseReportKind reportKind =
-                    (oldAssignType == VALUE && assignType == VALUE && !pc->sc->needStrictChecks())
-                    ? ParseWarning
-                    : (pc->sc->needStrictChecks() ? ParseStrictError : ParseError);
-                if (!report(reportKind, pc->sc->strict, null(),
-                            JSMSG_DUPLICATE_PROPERTY, name.ptr()))
-                {
-                    return null();
-                }
-            }
-            p.value() = assignType | oldAssignType;
-        } else {
-            if (!seen.add(p, atom, assignType))
-                return null();
         }
 
         TokenKind tt = tokenStream.getToken();

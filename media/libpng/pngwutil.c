@@ -1,8 +1,8 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.6.2 [April 25, 2013]
- * Copyright (c) 1998-2013 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.11 [June 5, 2014]
+ * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -699,7 +699,7 @@ png_check_keyword(png_structrp png_ptr, png_const_charp key, png_bytep new_key)
       if ((ch > 32 && ch <= 126) || (ch >= 161 /*&& ch <= 255*/))
          *new_key++ = ch, ++key_len, space = 0;
 
-      else if (!space)
+      else if (space == 0)
       {
          /* A space or an invalid character when one wasn't seen immediately
           * before; output just a space.
@@ -711,14 +711,14 @@ png_check_keyword(png_structrp png_ptr, png_const_charp key, png_bytep new_key)
             bad_character = ch;
       }
 
-      else if (!bad_character)
+      else if (bad_character == 0)
          bad_character = ch; /* just skip it, record the first error */
    }
 
    if (key_len > 0 && space) /* trailing space */
    {
       --key_len, --new_key;
-      if (!bad_character)
+      if (bad_character == 0)
          bad_character = 32;
    }
 
@@ -732,7 +732,7 @@ png_check_keyword(png_structrp png_ptr, png_const_charp key, png_bytep new_key)
    if (*key) /* keyword too long */
       png_warning(png_ptr, "keyword truncated");
 
-   else if (bad_character)
+   else if (bad_character != 0)
    {
       PNG_WARNING_PARAMETERS(p)
 
@@ -903,7 +903,7 @@ png_write_IHDR(png_structrp png_ptr, png_uint_32 width, png_uint_32 height,
    png_ptr->first_frame_height = height;
 #endif
 
-   if (!(png_ptr->do_filter))
+   if ((png_ptr->do_filter) == PNG_NO_FILTERS)
    {
       if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE ||
           png_ptr->bit_depth < 8)
@@ -1214,6 +1214,7 @@ png_write_iCCP(png_structrp png_ptr, png_const_charp name,
    png_uint_32 profile_len;
    png_byte new_name[81]; /* 1 byte for the compression byte */
    compression_state comp;
+   png_uint_32 temp;
 
    png_debug(1, "in png_write_iCCP");
 
@@ -1228,7 +1229,8 @@ png_write_iCCP(png_structrp png_ptr, png_const_charp name,
    if (profile_len < 132)
       png_error(png_ptr, "ICC profile too short");
 
-   if (profile_len & 0x03)
+   temp = (png_uint_32) (*(profile+8));
+   if (temp > 3 && (profile_len & 0x03))
       png_error(png_ptr, "ICC profile length invalid (not a multiple of 4)");
 
    {
@@ -1629,7 +1631,7 @@ png_write_tEXt(png_structrp png_ptr, png_const_charp key, png_const_charp text,
     */
    png_write_chunk_data(png_ptr, new_key, key_len + 1);
 
-   if (text_len)
+   if (text_len != 0)
       png_write_chunk_data(png_ptr, (png_const_bytep)text, text_len);
 
    png_write_chunk_end(png_ptr);
@@ -1755,7 +1757,7 @@ png_write_iTXt(png_structrp png_ptr, int compression, png_const_charp key,
 
    png_text_compress_init(&comp, (png_const_bytep)text, strlen(text));
 
-   if (compression)
+   if (compression != 0)
    {
       if (png_text_compress(png_ptr, png_iTXt, &comp, prefix_len) != Z_OK)
          png_error(png_ptr, png_ptr->zstream.msg);
@@ -1778,7 +1780,7 @@ png_write_iTXt(png_structrp png_ptr, int compression, png_const_charp key,
 
    png_write_chunk_data(png_ptr, (png_const_bytep)lang_key, lang_key_len);
 
-   if (compression)
+   if (compression != 0)
       png_write_compressed_data_out(png_ptr, &comp);
 
    else

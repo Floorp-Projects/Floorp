@@ -142,6 +142,12 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
       resultSurf = sharedSurf_Basic->GetData();
     } else {
       RefPtr<DataSourceSurface> data = GetTempSurface(readSize, format);
+      // There will already be a warning from inside of GetTempSurface, but
+      // it doesn't hurt to complain:
+      if (NS_WARN_IF(!data)) {
+        return;
+      }
+
       // Readback handles Flush/MarkDirty.
       mGLContext->Screen()->Readback(sharedSurf, data);
       if (needsPremult) {
