@@ -1,0 +1,2 @@
+component {b501edd0-28bd-11e4-8c21-0800200c9a66} HCIEventTransactionSystemMessageConfigurator.js
+contract @mozilla.org/dom/system-messages/configurator/nfc-hci-event-transaction;1 {b501edd0-28bd-11e4-8c21-0800200c9a66}

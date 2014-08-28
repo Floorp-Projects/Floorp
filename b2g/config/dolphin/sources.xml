@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="53a59364ce4f14068034c8d6fe01f4f6b9f78f23">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="39cad6c82122b964f12a66771bfbcc14fb342d9e"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="007f3c50cf69f044628a23c2376c6d88aa45f617"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3bb61a27cd2941b2ba9b616a11aaa44269210396"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -133,11 +133,11 @@
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>
   <project groups="invensense" name="platform/hardware/invensense" path="hardware/invensense" revision="e6d9ab28b4f4e7684f6c07874ee819c9ea0002a2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="865ce3b4a2ba0b3a31421ca671f4d6c5595f8690"/>
-  <project name="kernel/common" path="kernel" revision="f3a717dd8dbb08e558c807c5ede071d83d454207"/>
-  <project name="platform/system/core" path="system/core" revision="b5de04ae22343b6bdaa3455aee291bdf9a872738"/>
+  <project name="kernel/common" path="kernel" revision="35bdd9bda8250f80923eb7ad62365d3a251110a0"/>
+  <project name="platform/system/core" path="system/core" revision="53d584d4a4b4316e4de9ee5f210d662f89b44e7e"/>
   <project name="u-boot" path="u-boot" revision="d18f67c122a69f5ff7596a604cf484de5e824f9b"/>
   <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="7feb3df0e150053e0143ef525f6e082bda320aea"/>
-  <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="8010ea42ca4963d610c88279dbe35dbaa2f6daf6"/>
+  <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="f01aa91b3ec0f1a57206bdbfacb00e71e172f581"/>
   <project name="vendor/sprd/partner" path="vendor/sprd/partner" revision="8649c7145972251af11b0639997edfecabfc7c2e"/>
   <project name="vendor/sprd/proprietories" path="vendor/sprd/proprietories" revision="d994b716d979a5b57b11a61cc05d31fe7ca61d38"/>
 </manifest>
