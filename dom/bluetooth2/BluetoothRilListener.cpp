@@ -113,12 +113,12 @@ MobileConnectionListener::NotifyDataError(const nsAString & message)
 }
 
 NS_IMETHODIMP
-MobileConnectionListener::NotifyCFStateChanged(bool success,
-                                               uint16_t action,
-                                               uint16_t reason,
-                                               const nsAString& number,
-                                               uint16_t timeSeconds,
-                                               uint16_t serviceClass)
+MobileConnectionListener::NotifyCFStateChange(bool success,
+                                              uint16_t action,
+                                              uint16_t reason,
+                                              const nsAString& number,
+                                              uint16_t timeSeconds,
+                                              uint16_t serviceClass)
 {
   return NS_OK;
 }
@@ -154,36 +154,18 @@ MobileConnectionListener::NotifyClirModeChanged(uint32_t aMode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-MobileConnectionListener::NotifyLastKnownNetworkChanged()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MobileConnectionListener::NotifyLastKnownHomeNetworkChanged()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MobileConnectionListener::NotifyNetworkSelectionModeChanged()
-{
-  return NS_OK;
-}
-
 bool
 MobileConnectionListener::Listen(bool aStart)
 {
-  nsCOMPtr<nsIMobileConnectionService> service =
-    do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(service, false);
+  nsCOMPtr<nsIMobileConnectionProvider> provider =
+    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
+  NS_ENSURE_TRUE(provider, false);
 
   nsresult rv;
   if (aStart) {
-    rv = service->RegisterListener(mClientId, this);
+    rv = provider->RegisterMobileConnectionMsg(mClientId, this);
   } else {
-    rv = service->UnregisterListener(mClientId, this);
+    rv = provider->UnregisterMobileConnectionMsg(mClientId, this);
   }
 
   return NS_SUCCEEDED(rv);
@@ -370,13 +352,13 @@ BluetoothRilListener::SelectClient()
   // Reset mClientId
   mClientId = mMobileConnListeners.Length();
 
-  nsCOMPtr<nsIMobileConnectionService> service =
-    do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE_VOID(service);
+  nsCOMPtr<nsIMobileConnectionProvider> connection =
+    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
+  NS_ENSURE_TRUE_VOID(connection);
 
   for (uint32_t i = 0; i < mMobileConnListeners.Length(); i++) {
     nsCOMPtr<nsIMobileConnectionInfo> voiceInfo;
-    service->GetVoiceConnectionInfo(i, getter_AddRefs(voiceInfo));
+    connection->GetVoiceConnectionInfo(i, getter_AddRefs(voiceInfo));
     if (!voiceInfo) {
       BT_WARNING("%s: Failed to get voice connection info", __FUNCTION__);
       continue;

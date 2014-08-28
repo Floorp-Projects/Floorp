@@ -59,10 +59,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gRil",
 XPCOMUtils.defineLazyServiceGetter(this, "iccProvider",
                                    "@mozilla.org/ril/content-helper;1",
                                    "nsIIccProvider");
-
-XPCOMUtils.defineLazyServiceGetter(this, "mobileConnectionService",
-                                   "@mozilla.org/mobileconnection/mobileconnectionservice;1",
-                                   "nsIMobileConnectionService");
 #endif
 
 
@@ -127,17 +123,15 @@ this.MobileIdentityManager = {
         continue;
       }
 
-      let voice = mobileConnectionService.getVoiceConnectionInfo(i);
-      let data = mobileConnectionService.getDataConnectionInfo(i);
       let operator = null;
-      if (voice.network &&
-          voice.network.shortName &&
-          voice.network.shortName.length) {
-        operator = voice.network.shortName;
-      } else if (data.network &&
-                 data.network.shortName &&
-                 data.network.shortName.length) {
-        operator = data.network.shortName;
+      if (rilContext.voice.network &&
+          rilContext.voice.network.shortName &&
+          rilContext.voice.network.shortName.length) {
+        operator = rilContext.voice.network.shortName;
+      } else if (rilContext.data.network &&
+                 rilContext.data.network.shortName &&
+                 rilContext.data.network.shortName.length) {
+        operator = rilContext.data.network.shortName;
       }
 
       this._iccInfo.push({
@@ -148,7 +142,7 @@ this.MobileIdentityManager = {
         msisdn: info.msisdn || info.mdn || null,
         operator: operator,
         serviceId: i,
-        roaming: voice.roaming
+        roaming: rilContext.voice.roaming
       });
     }
 
