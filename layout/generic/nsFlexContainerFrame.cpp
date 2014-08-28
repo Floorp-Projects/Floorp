@@ -1841,7 +1841,13 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
 {
+  // XXXdholbert hacky temporary band-aid for bug 1059138: Trivially pass this
+  // assertion (skip it, basically) if the first child is part of a shadow DOM.
+  // (IsOrderLEQWithDOMFallback doesn't know how to compare tree-position of a
+  // shadow-DOM element vs. a non-shadow-DOM element.)
   NS_ASSERTION(
+    (!mFrames.IsEmpty() &&
+     mFrames.FirstChild()->GetContent()->GetContainingShadow()) ||
     nsIFrame::IsFrameListSorted<IsOrderLEQWithDOMFallback>(mFrames),
     "Child frames aren't sorted correctly");
 
