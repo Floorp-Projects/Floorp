@@ -9045,12 +9045,15 @@ class ClassConstructor(ClassItem):
     body contains a string with the code for the constructor, defaults to empty.
     """
     def __init__(self, args, inline=False, bodyInHeader=False,
-                 visibility="private", explicit=False, baseConstructors=None,
+                 visibility="private", explicit=False, constexpr=False, baseConstructors=None,
                  body=""):
+        assert not (inline and constexpr)
+        assert not (bodyInHeader and constexpr)
         self.args = args
         self.inline = inline or bodyInHeader
-        self.bodyInHeader = bodyInHeader
+        self.bodyInHeader = bodyInHeader or constexpr
         self.explicit = explicit
+        self.constexpr = constexpr
         self.baseConstructors = baseConstructors or []
         self.body = body
         ClassItem.__init__(self, None, visibility)
@@ -9061,6 +9064,8 @@ class ClassConstructor(ClassItem):
             decorators.append('explicit')
         if self.inline and declaring:
             decorators.append('inline')
+        if self.constexpr and declaring:
+            decorators.append('MOZ_CONSTEXPR')
         if decorators:
             return ' '.join(decorators) + ' '
         return ''
@@ -10657,7 +10662,7 @@ class CGDOMJSProxyHandler(CGClass):
         constructors = [
             ClassConstructor(
                 [],
-                bodyInHeader=True,
+                constexpr=True,
                 visibility="public",
                 explicit=True)
         ]
