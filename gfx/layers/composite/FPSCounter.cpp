@@ -103,7 +103,7 @@ FPSCounter::IteratedFullInterval(TimeStamp aTimestamp, double aDuration) {
 
   TimeStamp currentStamp = mFrameTimestamps[mIteratorIndex];
   TimeDuration duration = aTimestamp - currentStamp;
-  return duration.ToSecondsSigDigits() >= aDuration;
+  return duration.ToSeconds() >= aDuration;
 }
 
 void
@@ -187,7 +187,7 @@ FPSCounter::BuildHistogram(std::map<int, int>& aFpsData)
     currentTimeStamp = GetNextTimeStamp();
     TimeDuration interval = currentIntervalStart - currentTimeStamp;
 
-    if (interval.ToSecondsSigDigits() >= 1.0 ) {
+    if (interval.ToSeconds() >= 1.0 ) {
       currentIntervalStart = currentTimeStamp;
       aFpsData[frameCount]++;
       frameCount = 0;
