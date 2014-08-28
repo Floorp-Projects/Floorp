@@ -1777,7 +1777,17 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
 
     void initScript(JSScript *script);
     void resetScript();
+    void markScript(JSTracer *trc);
     JSScript *maybeScript() {
+        // script_ is a weak pointer that only gets marked if the JSScript
+        // it points to is. If the script isn't marked and about to be
+        // collected, we manually reset the pointer here.
+        if (script_) {
+            if (gc::IsAboutToBeFinalized(&script_))
+                script_ = nullptr;
+            else
+                JSScript::readBarrier(script_);
+        }
         return script_;
     }
 
