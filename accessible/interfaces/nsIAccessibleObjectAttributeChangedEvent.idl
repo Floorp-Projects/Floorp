@@ -1,0 +1,21 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIAccessibleEvent.idl"
+
+interface nsIAtom;
+
+/**
+ * Fired when an attribute of an accessible changes.
+ */
+[scriptable, builtinclass, uuid(4CA96609-23C8-4771-86E7-77C8B651CA24)]
+interface nsIAccessibleObjectAttributeChangedEvent : nsIAccessibleEvent
+{
+  /**
+   * Return the accessible attribute that changed.
+   */
+  readonly attribute nsIAtom changedAttribute;
+};
