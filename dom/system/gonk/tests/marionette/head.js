@@ -93,13 +93,20 @@ function getSettings(aKey, aAllowError) {
 function setSettings(aKey, aValue, aAllowError) {
   let settings = {};
   settings[aKey] = aValue;
-  let request = window.navigator.mozSettings.createLock().set(settings);
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
+  let lock = window.navigator.mozSettings.createLock();
+  let request = lock.set(settings);
+  let deferred = Promise.defer();
+  lock.onsettingstransactionsuccess = function () {
       log("setSettings(" + JSON.stringify(settings) + ") - success");
-    }, function reject() {
+    deferred.resolve();
+  };
+  lock.onsettingstransactionfailure = function () {
       ok(aAllowError, "setSettings(" + JSON.stringify(settings) + ") - error");
-    });
+    // We resolve even though we've thrown an error, since the ok()
+    // will do that.
+    deferred.resolve();
+  };
+  return deferred.promise;
 }
 
 /**
