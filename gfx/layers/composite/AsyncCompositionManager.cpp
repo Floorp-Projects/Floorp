@@ -552,9 +552,21 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
       ApplyAsyncContentTransformToTree(child);
   }
 
-  if (AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController()) {
-    LayerComposite* layerComposite = aLayer->AsLayerComposite();
-    Matrix4x4 oldTransform = aLayer->GetTransform();
+  LayerComposite* layerComposite = aLayer->AsLayerComposite();
+  Matrix4x4 oldTransform = aLayer->GetTransform();
+
+  Matrix4x4 combinedAsyncTransformWithoutOverscroll;
+  Matrix4x4 combinedAsyncTransform;
+  bool hasAsyncTransform = false;
+  LayerMargin fixedLayerMargins(0, 0, 0, 0);
+
+  for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
+    AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController(i);
+    if (!controller) {
+      continue;
+    }
+
+    hasAsyncTransform = true;
 
     ViewTransform asyncTransformWithoutOverscroll, overscrollTransform;
     ScreenPoint scrollOffset;
@@ -562,12 +574,13 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
                                                scrollOffset,
                                                &overscrollTransform);
 
-    const FrameMetrics& metrics = aLayer->GetFrameMetrics();
+    const FrameMetrics& metrics = aLayer->GetFrameMetrics(i);
     CSSToLayerScale paintScale = metrics.LayersPixelsPerCSSPixel();
     CSSRect displayPort(metrics.mCriticalDisplayPort.IsEmpty() ?
                         metrics.mDisplayPort : metrics.mCriticalDisplayPort);
-    LayerMargin fixedLayerMargins(0, 0, 0, 0);
     ScreenPoint offset(0, 0);
+    // XXX this call to SyncFrameMetrics is not currently being used. It will be cleaned
+    // up as part of bug 776030 or one of its dependencies.
     SyncFrameMetrics(scrollOffset, asyncTransformWithoutOverscroll.mScale.scale,
                      metrics.mScrollableRect, mLayersUpdated, displayPort,
                      paintScale, mIsFirstPaint, fixedLayerMargins, offset);
@@ -578,8 +591,12 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     // Apply the render offset
     mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
-    Matrix4x4 transform = AdjustAndCombineWithCSSTransform(
-        asyncTransformWithoutOverscroll * overscrollTransform, aLayer);
+    combinedAsyncTransformWithoutOverscroll *= asyncTransformWithoutOverscroll;
+    combinedAsyncTransform *= (asyncTransformWithoutOverscroll * overscrollTransform);
+  }
+
+  if (hasAsyncTransform) {
+    Matrix4x4 transform = AdjustAndCombineWithCSSTransform(combinedAsyncTransform, aLayer);
 
     // GetTransform already takes the pre- and post-scale into account.  Since we
     // will apply the pre- and post-scale again when computing the effective
@@ -597,8 +614,11 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
                  "overwriting animated transform!");
 
     // Apply resolution scaling to the old transform - the layer tree as it is
-    // doesn't have the necessary transform to display correctly.
-    LayoutDeviceToLayerScale resolution = metrics.mCumulativeResolution;
+    // doesn't have the necessary transform to display correctly. We use the
+    // bottom-most scrollable metrics because that should have the most accurate
+    // cumulative resolution for aLayer.
+    LayoutDeviceToLayerScale resolution =
+      LayerMetricsWrapper::BottommostScrollableMetrics(aLayer).mCumulativeResolution;
     oldTransform.Scale(resolution.scale, resolution.scale, 1);
 
     // For the purpose of aligning fixed and sticky layers, we disregard
@@ -606,7 +626,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     // parameter. This ensures that the overscroll transform is not unapplied,
     // and therefore that the visual effect applies to fixed and sticky layers.
     Matrix4x4 transformWithoutOverscroll = AdjustAndCombineWithCSSTransform(
-        asyncTransformWithoutOverscroll, aLayer);
+        combinedAsyncTransformWithoutOverscroll, aLayer);
     AlignFixedAndStickyLayers(aLayer, aLayer, oldTransform,
                               transformWithoutOverscroll, fixedLayerMargins);
 
@@ -771,7 +791,15 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
 {
   LayerComposite* layerComposite = aLayer->AsLayerComposite();
 
-  const FrameMetrics& metrics = aLayer->GetFrameMetrics();
+  FrameMetrics metrics = LayerMetricsWrapper::TopmostScrollableMetrics(aLayer);
+  if (!metrics.IsScrollable()) {
+    // On Fennec it's possible that the there is no scrollable layer in the
+    // tree, and this function just gets called with the root layer. In that
+    // case TopmostScrollableMetrics will return an empty FrameMetrics but we
+    // still want to use the actual non-scrollable metrics from the layer.
+    metrics = LayerMetricsWrapper::BottommostMetrics(aLayer);
+  }
+
   // We must apply the resolution scale before a pan/zoom transform, so we call
   // GetTransform here.
   Matrix4x4 oldTransform = aLayer->GetTransform();
