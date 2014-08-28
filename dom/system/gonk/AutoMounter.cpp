@@ -756,21 +756,19 @@ AutoMounter::UpdateState()
       break;
 
     case STATE_MTP_STARTED:
-      if (usbCablePluggedIn) {
-        if (mtpConfigured && mtpEnabled) {
-          // Everything is still good. Leave the MTP server running
-          break;
-        }
-        DBG("STATE_MTP_STARTED: About to StopMtpServer "
-            "mtpConfigured = %d mtpEnabled = %d usbCablePluggedIn: %d",
-            mtpConfigured, mtpEnabled, usbCablePluggedIn);
-        StopMtpServer();
-        if (umsAvail) {
-          // Switch back to UMS
-          SetUsbFunction(USB_FUNC_UMS);
-          SetState(STATE_UMS_CONFIGURING);
-          break;
-        }
+      if (usbCablePluggedIn && mtpConfigured && mtpEnabled) {
+        // Everything is still good. Leave the MTP server running
+        break;
+      }
+      DBG("STATE_MTP_STARTED: About to StopMtpServer "
+          "mtpConfigured = %d mtpEnabled = %d usbCablePluggedIn: %d",
+          mtpConfigured, mtpEnabled, usbCablePluggedIn);
+      StopMtpServer();
+      if (umsAvail) {
+        // Switch back to UMS
+        SetUsbFunction(USB_FUNC_UMS);
+        SetState(STATE_UMS_CONFIGURING);
+        break;
       }
       SetState(STATE_IDLE);
       break;
@@ -778,8 +776,18 @@ AutoMounter::UpdateState()
     case STATE_UMS_CONFIGURING:
       // While configuring, the USB configuration state will change from
       // CONFIGURED -> CONNECTED -> DISCONNECTED -> CONNECTED -> CONFIGURED
-      // so we don't check for cable unplugged here.
+      // so we don't check for cable unplugged here. However, having said
+      // that, we'll often sit in this state while the cable is unplugged,
+      // since we might not get any events until the cable gets plugged back
+      // in. This is why we need to check for mtpEnabled once we get the
+      // configured event.
       if (umsConfigured) {
+        if (mtpEnabled) {
+          // MTP was enabled. Start reconfiguring.
+          SetState(STATE_MTP_CONFIGURING);
+          SetUsbFunction(USB_FUNC_MTP);
+          break;
+        }
         SetState(STATE_UMS_CONFIGURED);
       }
       break;
