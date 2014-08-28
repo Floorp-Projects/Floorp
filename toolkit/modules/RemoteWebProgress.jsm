@@ -166,10 +166,12 @@ RemoteWebProgressManager.prototype = {
       let location = newURI(json.location);
       let flags = json.flags;
 
+      // These properties can change even for a sub-frame navigation.
+      this._browser.webNavigation.canGoBack = json.canGoBack;
+      this._browser.webNavigation.canGoForward = json.canGoForward;
+
       if (json.isTopLevel) {
         this._browser.webNavigation._currentURI = location;
-        this._browser.webNavigation.canGoBack = json.canGoBack;
-        this._browser.webNavigation.canGoForward = json.canGoForward;
         this._browser._characterSet = json.charset;
         this._browser._documentURI = newURI(json.documentURI);
         this._browser._imageDocument = null;
