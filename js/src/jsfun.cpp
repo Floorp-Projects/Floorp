@@ -1531,6 +1531,11 @@ JSFunction::relazify(JSTracer *trc)
     u.i.s.lazy_ = lazy;
     if (lazy) {
         JS_ASSERT(!isSelfHostedBuiltin());
+        // If this is the script stored in the lazy script to be cloned
+        // for un-lazifying other functions, reset it so the script can
+        // be freed.
+        if (lazy->maybeScript() == script)
+            lazy->resetScript();
         MarkLazyScriptUnbarriered(trc, &u.i.s.lazy_, "lazyScript");
     } else {
         JS_ASSERT(isSelfHostedBuiltin());
