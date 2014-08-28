@@ -82,6 +82,11 @@ static PRInt32 ssl3_ClientSendSigAlgsXtn(sslSocket *ss, PRBool append,
 static SECStatus ssl3_ServerHandleSigAlgsXtn(sslSocket *ss, PRUint16 ex_type,
                                              SECItem *data);
 
+static PRInt32 ssl3_ClientSendDraftVersionXtn(sslSocket *ss, PRBool append,
+                                              PRUint32 maxBytes);
+static SECStatus ssl3_ServerHandleDraftVersionXtn(sslSocket *ss, PRUint16 ex_type,
+                                                  SECItem *data);
+
 /*
  * Write bytes.  Using this function means the SECItem structure
  * cannot be freed.  The caller is expected to call this function
@@ -245,6 +250,7 @@ static const ssl3HelloExtensionHandler clientHelloHandlers[] = {
     { ssl_use_srtp_xtn,           &ssl3_HandleUseSRTPXtn },
     { ssl_cert_status_xtn,        &ssl3_ServerHandleStatusRequestXtn },
     { ssl_signature_algorithms_xtn, &ssl3_ServerHandleSigAlgsXtn },
+    { ssl_tls13_draft_version_xtn, &ssl3_ServerHandleDraftVersionXtn },
     { -1, NULL }
 };
 
@@ -286,7 +292,8 @@ ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] = {
     { ssl_app_layer_protocol_xtn, &ssl3_ClientSendAppProtoXtn },
     { ssl_use_srtp_xtn,           &ssl3_SendUseSRTPXtn },
     { ssl_cert_status_xtn,        &ssl3_ClientSendStatusRequestXtn },
-    { ssl_signature_algorithms_xtn, &ssl3_ClientSendSigAlgsXtn }
+    { ssl_signature_algorithms_xtn, &ssl3_ClientSendSigAlgsXtn },
+    { ssl_tls13_draft_version_xtn, &ssl3_ClientSendDraftVersionXtn },
     /* any extra entries will appear as { 0, NULL }    */
 };
 
@@ -2421,3 +2428,93 @@ ssl3_AppendPaddingExtension(sslSocket *ss, unsigned int extensionLen,
 
     return extensionLen;
 }
+
+/* ssl3_ClientSendDraftVersionXtn sends the TLS 1.3 temporary draft
+ * version extension.
+ * TODO(ekr@rtfm.com): Remove when TLS 1.3 is published. */
+static PRInt32
+ssl3_ClientSendDraftVersionXtn(sslSocket * ss, PRBool append, PRUint32 maxBytes)
+{
+    PRInt32 extension_length;
+
+    if (ss->version != SSL_LIBRARY_VERSION_TLS_1_3) {
+        return 0;
+    }
+
+    extension_length = 6;  /* Type + length + number */
+    if (append && maxBytes >= extension_length) {
+        SECStatus rv;
+        rv = ssl3_AppendHandshakeNumber(ss, ssl_tls13_draft_version_xtn, 2);
+        if (rv != SECSuccess)
+            goto loser;
+        rv = ssl3_AppendHandshakeNumber(ss, extension_length - 4, 2);
+        if (rv != SECSuccess)
+            goto loser;
+        rv = ssl3_AppendHandshakeNumber(ss, TLS_1_3_DRAFT_VERSION, 2);
+        if (rv != SECSuccess)
+            goto loser;
+        ss->xtnData.advertised[ss->xtnData.numAdvertised++] =
+                ssl_tls13_draft_version_xtn;
+    } else if (maxBytes < extension_length) {
+        PORT_Assert(0);
+        return 0;
+    }
+
+    return extension_length;
+
+loser:
+    return -1;
+}
+
+/* ssl3_ServerHandleDraftVersionXtn handles the TLS 1.3 temporary draft
+ * version extension.
+ * TODO(ekr@rtfm.com): Remove when TLS 1.3 is published. */
+static SECStatus
+ssl3_ServerHandleDraftVersionXtn(sslSocket * ss, PRUint16 ex_type,
+                                 SECItem *data)
+{
+    PRInt32 draft_version;
+
+    /* Ignore this extension if we aren't doing TLS 1.3 */
+    if (ss->version != SSL_LIBRARY_VERSION_TLS_1_3) {
+        return SECSuccess;
+    }
+
+    if (data->len != 2)
+        goto loser;
+
+    /* Get the draft version out of the handshake */
+    draft_version = ssl3_ConsumeHandshakeNumber(ss, 2,
+                                                &data->data, &data->len);
+    if (draft_version < 0) {
+        goto loser;
+    }
+
+    /*  Keep track of negotiated extensions. */
+    ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
+
+    /* Compare the version */
+    if (draft_version != TLS_1_3_DRAFT_VERSION) {
+        SSL_TRC(30, ("%d: SSL3[%d]: Incompatible version of TLS 1.3 (%d), "
+                     "expected %d",
+                     SSL_GETPID(), ss->fd, draft_version, TLS_1_3_DRAFT_VERSION));
+        goto loser;
+    }
+
+    return SECSuccess;
+
+loser:
+    /*
+     * Incompatible/broken TLS 1.3 implementation. Fall back to TLS 1.2.
+     * TODO(ekr@rtfm.com): It's not entirely clear it's safe to roll back
+     * here. Need to double-check.
+     * TODO(ekr@rtfm.com): Currently we fall back even on broken extensions.
+     * because SECFailure does not cause handshake failures. See bug
+     * 753136.
+     */
+    SSL_TRC(30, ("%d: SSL3[%d]: Rolling back to TLS 1.2", SSL_GETPID(), ss->fd));
+    ss->version = SSL_LIBRARY_VERSION_TLS_1_2;
+
+    return SECSuccess;
+}
+

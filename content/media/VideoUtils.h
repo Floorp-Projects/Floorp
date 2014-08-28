@@ -215,6 +215,45 @@ class SharedThreadPool;
 // for decoding streams.
 TemporaryRef<SharedThreadPool> GetMediaDecodeThreadPool();
 
+enum H264_PROFILE {
+  H264_PROFILE_UNKNOWN                     = 0,
+  H264_PROFILE_BASE                        = 0x42,
+  H264_PROFILE_MAIN                        = 0x4D,
+  H264_PROFILE_EXTENDED                    = 0x58,
+  H264_PROFILE_HIGH                        = 0x64,
+};
+
+enum H264_LEVEL {
+    H264_LEVEL_1         = 10,
+    H264_LEVEL_1_b       = 11,
+    H264_LEVEL_1_1       = 11,
+    H264_LEVEL_1_2       = 12,
+    H264_LEVEL_1_3       = 13,
+    H264_LEVEL_2         = 20,
+    H264_LEVEL_2_1       = 21,
+    H264_LEVEL_2_2       = 22,
+    H264_LEVEL_3         = 30,
+    H264_LEVEL_3_1       = 31,
+    H264_LEVEL_3_2       = 32,
+    H264_LEVEL_4         = 40,
+    H264_LEVEL_4_1       = 41,
+    H264_LEVEL_4_2       = 42,
+    H264_LEVEL_5         = 50,
+    H264_LEVEL_5_1       = 51,
+    H264_LEVEL_5_2       = 52
+};
+
+// Extracts the H.264/AVC profile and level from an H.264 codecs string.
+// H.264 codecs parameters have a type defined as avc1.PPCCLL, where
+// PP = profile_idc, CC = constraint_set flags, LL = level_idc.
+// See http://blog.pearce.org.nz/2013/11/what-does-h264avc1-codecs-parameters.html
+// for more details.
+// Returns false on failure.
+bool
+ExtractH264CodecDetails(const nsAString& aCodecs,
+                        int16_t& aProfile,
+                        int16_t& aLevel);
+
 } // end namespace mozilla
 
 #endif

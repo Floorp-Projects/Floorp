@@ -277,7 +277,7 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mRenderer(GLRenderer::Other),
     mHasRobustness(false),
 #ifdef DEBUG
-    mGLError(LOCAL_GL_NO_ERROR),
+    mIsInLocalErrorCheck(false),
 #endif
     mSharedContext(sharedContext),
     mCaps(caps),
@@ -1112,6 +1112,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         raw_fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
         raw_fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, &mMaxCubeMapTextureSize);
         raw_fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
+        raw_fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, mMaxViewportDims);
 
 #ifdef XP_MACOSX
         if (mWorkAroundDriverBugs) {
@@ -1127,8 +1128,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                     // See bug 879656.  8192 fails, 8191 works.
                     mMaxTextureSize = std::min(mMaxTextureSize, 8191);
                     mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
-                }
-                else {
+                } else {
                     // See bug 877949.
                     mMaxTextureSize = std::min(mMaxTextureSize, 4096);
                     mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);

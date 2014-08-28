@@ -687,7 +687,11 @@ this.SocialService = {
     // overwrite the existing provider then notify the front end so it can
     // handle any reload that might be necessary.
     if (ActiveProviders.has(manifest.origin)) {
-      let provider = new SocialProvider(manifest);
+      // unload the worker prior to replacing the provider instance, also
+      // ensures the workerapi instance is terminated.
+      let provider = SocialServiceInternal.providers[manifest.origin];
+      provider.enabled = false;
+      provider = new SocialProvider(manifest);
       SocialServiceInternal.providers[provider.origin] = provider;
       // update the cache and ui, reload provider if necessary
       this.getOrderedProviderList(providers => {
@@ -756,8 +760,10 @@ function SocialProvider(input) {
 
 SocialProvider.prototype = {
   reload: function() {
-    this._terminate();
-    this._activate();
+    // calling terminate/activate does not set the enabled state whereas setting
+    // enabled will call terminate/activate
+    this.enabled = false;
+    this.enabled = true;
     Services.obs.notifyObservers(null, "social:provider-reload", this.origin);
   },
 
