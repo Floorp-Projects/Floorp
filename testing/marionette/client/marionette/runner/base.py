@@ -956,4 +956,9 @@ class BaseMarionetteTestRunner(object):
             _extract_xml_from_skipped_manifest_test(test)
 
         doc.appendChild(testsuite)
+
+        # change default encoding to avoid encoding problem for page source
+        reload(sys)
+        sys.setdefaultencoding('utf-8')
+
         return doc.toprettyxml(encoding='utf-8')
