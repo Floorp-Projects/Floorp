@@ -75,7 +75,7 @@ addEventListener("hashchange", function () {
 
 addEventListener("MozStorageChanged", function () {
   sendSyncMessage("ss-test:MozStorageChanged");
-});
+}, true);
 
 addMessageListener("ss-test:modifySessionStorage", function (msg) {
   for (let key of Object.keys(msg.data)) {
