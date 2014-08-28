@@ -32,6 +32,14 @@ e = new MozSettingsEvent("settingchanged", {settingName: "a", settingValue: true
 is(e.settingName, "a", "Name should be a.");
 is(e.settingValue, true, "Value should be true.");
 
+var e = new MozSettingsTransactionEvent("settingtransactionsuccess", {});
+ok(e, "Should have settings event!");
+is(e.error, "", "error should be null");
+
+var e = new MozSettingsTransactionEvent("settingtransactionfailure", {error: "Test error."});
+ok(e, "Should have settings event!");
+is(e.error, "Test error.", "error should be 'Test error.'");
+
 
 </script>
 </pre>
