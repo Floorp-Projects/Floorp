@@ -29,11 +29,12 @@ class NoCommandError(MachError):
 class UnknownCommandError(MachError):
     """Raised when we attempted to execute an unknown command."""
 
-    def __init__(self, command, verb):
+    def __init__(self, command, verb, suggested_commands=None):
         MachError.__init__(self)
 
         self.command = command
         self.verb = verb
+        self.suggested_commands = suggested_commands or []
 
 class UnrecognizedArgumentError(MachError):
     """Raised when an unknown argument is passed to mach."""

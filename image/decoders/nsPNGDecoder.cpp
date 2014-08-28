@@ -272,8 +272,14 @@ nsPNGDecoder::InitInternal()
    * by default in the system libpng.  This call also disables it in the
    * system libpng, for decoding speed.  Bug #745202.
    */
-    png_set_check_for_invalid_index(mPNG, 0);
+  png_set_check_for_invalid_index(mPNG, 0);
 #endif
+#endif
+
+#if defined(PNG_SET_OPTION_SUPPORTED) && defined(PNG_sRGB_PROFILE_CHECKS) && \
+            PNG_sRGB_PROFILE_CHECKS >= 0
+  /* Skip checking of sRGB ICC profiles */
+  png_set_option(mPNG, PNG_SKIP_sRGB_CHECK_PROFILE, PNG_OPTION_ON);
 #endif
 
   /* use this as libpng "progressive pointer" (retrieve in callbacks) */

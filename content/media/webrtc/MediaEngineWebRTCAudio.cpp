@@ -49,7 +49,7 @@ extern PRLogModuleInfo* GetMediaManagerLog();
 NS_IMPL_ISUPPORTS0(MediaEngineWebRTCAudioSource)
 
 // XXX temp until MSG supports registration
-StaticAutoPtr<AudioOutputObserver> gFarendObserver;
+StaticRefPtr<AudioOutputObserver> gFarendObserver;
 
 AudioOutputObserver::AudioOutputObserver()
   : mPlayoutFreq(0)
@@ -88,6 +88,19 @@ uint32_t
 AudioOutputObserver::Size()
 {
   return mPlayoutFifo->size();
+}
+
+void
+AudioOutputObserver::MixerCallback(AudioDataValue* aMixedBuffer,
+                                   AudioSampleFormat aFormat,
+                                   uint32_t aChannels,
+                                   uint32_t aFrames,
+                                   uint32_t aSampleRate)
+{
+  if (gFarendObserver) {
+    gFarendObserver->InsertFarEnd(aMixedBuffer, aFrames, false,
+                                  aSampleRate, aChannels, aFormat);
+  }
 }
 
 // static

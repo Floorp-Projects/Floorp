@@ -82,6 +82,11 @@ SharedSurface_Basic::SharedSurface_Basic(GLContext* gl,
 
     int32_t stride = gfx::GetAlignedStride<4>(size.width * BytesPerPixel(format));
     mData = gfx::Factory::CreateDataSourceSurfaceWithStride(size, format, stride);
+    // Leave the extra return for clarity, in case we decide more code should
+    // be added after this check, that should run even if mData is null.
+    if (NS_WARN_IF(!mData)) {
+        return;
+    }
 }
 
 SharedSurface_Basic::~SharedSurface_Basic()
@@ -98,6 +103,11 @@ SharedSurface_Basic::~SharedSurface_Basic()
 void
 SharedSurface_Basic::Fence()
 {
+    // The constructor can fail to get us mData, we should deal with it:
+    if (NS_WARN_IF(!mData)) {
+        return;
+    }
+
     mGL->MakeCurrent();
     ScopedBindFramebuffer autoFB(mGL, mFB);
     ReadPixelsIntoDataSurface(mGL, mData);

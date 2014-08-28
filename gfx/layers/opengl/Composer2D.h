@@ -37,7 +37,7 @@ namespace layers {
 class Layer;
 
 class Composer2D {
-  NS_INLINE_DECL_REFCOUNTING(Composer2D)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Composer2D)
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():

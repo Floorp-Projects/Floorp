@@ -6673,7 +6673,6 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             // every time the initializer executes.
             RootedValue value(cx);
             if (bce->emitterMode != BytecodeEmitter::SelfHosting &&
-                bce->script->compileAndGo() &&
                 pn->pn_count != 0 &&
                 pn->getConstantValue(cx, ParseNode::DontAllowNestedObjects, &value))
             {

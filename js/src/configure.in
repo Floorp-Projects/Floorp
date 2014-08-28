@@ -212,6 +212,9 @@ if test -n "$gonkdir" ; then
     i?86)
         ARCH_DIR=arch-x86
         ;;
+    mips*)
+        ARCH_DIR=arch-mips
+        ;;
     esac
 
     CPPFLAGS="-DANDROID -isystem $gonkdir/bionic/libc/$ARCH_DIR/include -isystem $gonkdir/bionic/libc/include/ -isystem $gonkdir/bionic/libc/kernel/common -isystem $gonkdir/bionic/libc/kernel/$ARCH_DIR -isystem $gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/system/core/include -isystem $gonkdir/bionic $CPPFLAGS -I$gonkdir/external/valgrind/fxos-include"
@@ -554,6 +557,7 @@ if test -n "$_WIN32_MSVC"; then
 
     AC_DEFINE(HAVE_LOCALECONV)
     AC_DEFINE(HAVE_HYPOT)
+    AC_CHECK_FUNCS([_getc_nolock])
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -1618,6 +1622,9 @@ ia64*-hpux*)
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
 
+        WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
+        WIN32_GUI_EXE_LDFLAGS=-mwindows
+
         # We use mix of both POSIX and Win32 printf format across the tree, so format
         # warnings are useless on mingw.
         MOZ_C_SUPPORTS_WARNING(-Wno-, format, ac_c_has_wno_format)
@@ -1648,7 +1655,15 @@ ia64*-hpux*)
         MKCSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ -PDB:$(LINK_PDBFILE) $(DSO_LDOPTS)'
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
-        DSO_LDOPTS=-SUBSYSTEM:WINDOWS
+        dnl Set subsystem version 5 for Windows XP.
+        if test "$CPU_ARCH" = "x86"; then
+            WIN32_SUBSYSTEM_VERSION=5.01
+        else
+            WIN32_SUBSYSTEM_VERSION=5.02
+        fi
+        WIN32_CONSOLE_EXE_LDFLAGS=-SUBSYSTEM:CONSOLE,$WIN32_SUBSYSTEM_VERSION
+        WIN32_GUI_EXE_LDFLAGS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
+        DSO_LDOPTS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
         _USE_CPP_INCLUDE_FLAG=1
         _DEFINES_CFLAGS='-FI $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
@@ -2017,6 +2032,7 @@ powerpc-*)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 mips*-*)
+    ENABLE_ION=1
     AC_DEFINE(JS_CPU_MIPS)
     AC_DEFINE(JS_NUNBOX32)
     ;;
@@ -3167,6 +3183,14 @@ MOZ_ARG_ENABLE_BOOL(arm-simulator,
 [  --enable-arm-simulator Enable ARM simulator for JIT code],
     JS_ARM_SIMULATOR=1,
     JS_ARM_SIMULATOR= )
+MOZ_ARG_ENABLE_BOOL(mips-simulator,
+[  --enable-mips-simulator Enable MIPS simulator for JIT code],
+    JS_MIPS_SIMULATOR=1,
+    JS_MIPS_SIMULATOR= )
+
+if test -n "$JS_ARM_SIMULATOR" && test -n "$JS_MIPS_SIMULATOR"; then
+    AC_MSG_ERROR([Flags --enable-arm-simulator and --enable-mips-simulator cannot be used together.])
+fi
 
 if test -z "$ENABLE_ION"; then
     AC_DEFINE(JS_CODEGEN_NONE)
@@ -3178,6 +3202,13 @@ elif test -n "$JS_ARM_SIMULATOR"; then
     AC_DEFINE(JS_ARM_SIMULATOR)
     AC_DEFINE(JS_CODEGEN_ARM)
     JS_CODEGEN_ARM=1
+elif test -n "$JS_MIPS_SIMULATOR"; then
+    if test "$CPU_ARCH" != "x86"; then
+        AC_MSG_ERROR([The MIPS simulator only works on x86.])
+    fi
+    AC_DEFINE(JS_MIPS_SIMULATOR)
+    AC_DEFINE(JS_CODEGEN_MIPS)
+    JS_CODEGEN_MIPS=1
 elif test "$CPU_ARCH" = "x86"; then
     AC_DEFINE(JS_CODEGEN_X86)
     JS_CODEGEN_X86=1
@@ -3187,10 +3218,15 @@ elif test "$CPU_ARCH" = "x86_64"; then
 elif test "$CPU_ARCH" = "arm"; then
     AC_DEFINE(JS_CODEGEN_ARM)
     JS_CODEGEN_ARM=1
+elif test "$CPU_ARCH" = "mips"; then
+    AC_DEFINE(JS_CODEGEN_MIPS)
+    JS_CODEGEN_MIPS=1
 fi
 
 AC_SUBST(JS_ARM_SIMULATOR)
+AC_SUBST(JS_MIPS_SIMULATOR)
 AC_SUBST(JS_CODEGEN_ARM)
+AC_SUBST(JS_CODEGEN_MIPS)
 AC_SUBST(JS_CODEGEN_X86)
 AC_SUBST(JS_CODEGEN_X64)
 AC_SUBST(JS_CODEGEN_NONE)
@@ -3847,6 +3883,8 @@ AC_SUBST(CC_VERSION)
 AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(MOZ_LINKER)
+AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
+AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 
 AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
 

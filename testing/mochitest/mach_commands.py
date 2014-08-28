@@ -626,56 +626,64 @@ class MachCommands(MachCommandBase):
 
     @Command('mochitest-chrome', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a chrome mochitest (integration test with some XUL).')
+        description='Run a chrome mochitest (integration test with some XUL).',
+        parser=_st_parser)
     @MochitestCommand
     def run_mochitest_chrome(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'chrome', **kwargs)
 
     @Command('mochitest-browser', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a mochitest with browser chrome (integration test with a standard browser).')
+        description='Run a mochitest with browser chrome (integration test with a standard browser).',
+        parser=_st_parser)
     @MochitestCommand
     def run_mochitest_browser(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'browser', **kwargs)
 
     @Command('mochitest-devtools', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a devtools mochitest with browser chrome (integration test with a standard browser with the devtools frame).')
+        description='Run a devtools mochitest with browser chrome (integration test with a standard browser with the devtools frame).',
+        parser=_st_parser)
     @MochitestCommand
     def run_mochitest_devtools(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'devtools', **kwargs)
 
     @Command('mochitest-metro', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a mochitest with metro browser chrome (tests for Windows touch interface).')
+        description='Run a mochitest with metro browser chrome (tests for Windows touch interface).',
+        parser=_st_parser)
     @MochitestCommand
     def run_mochitest_metro(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'metro', **kwargs)
 
     @Command('mochitest-a11y', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run an a11y mochitest (accessibility tests).')
+        description='Run an a11y mochitest (accessibility tests).',
+        parser=_st_parser)
     @MochitestCommand
     def run_mochitest_a11y(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'a11y', **kwargs)
 
     @Command('webapprt-test-chrome', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a webapprt chrome mochitest (Web App Runtime with the browser chrome).')
+        description='Run a webapprt chrome mochitest (Web App Runtime with the browser chrome).',
+        parser=_st_parser)
     @MochitestCommand
     def run_mochitest_webapprt_chrome(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'webapprt-chrome', **kwargs)
 
     @Command('webapprt-test-content', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a webapprt content mochitest (Content rendering of the Web App Runtime).')
+        description='Run a webapprt content mochitest (Content rendering of the Web App Runtime).',
+        parser=_st_parser)
     @MochitestCommand
     def run_mochitest_webapprt_content(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'webapprt-content', **kwargs)
 
     @Command('mochitest', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run any flavor of mochitest (integration test).')
+        description='Run any flavor of mochitest (integration test).',
+        parser=_st_parser)
     @MochitestCommand
     @CommandArgument('-f', '--flavor', choices=FLAVORS.keys(),
         help='Only run tests of this flavor.')

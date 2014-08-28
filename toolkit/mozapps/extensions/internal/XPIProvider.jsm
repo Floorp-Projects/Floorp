@@ -5244,8 +5244,11 @@ AddonInstall.prototype = {
 
       this.channel = NetUtil.newChannel(this.sourceURI);
       this.channel.notificationCallbacks = this;
-      if (this.channel instanceof Ci.nsIHttpChannelInternal)
-        this.channel.forceAllowThirdPartyCookie = true;
+      if (this.channel instanceof Ci.nsIHttpChannel) {
+        this.channel.setRequestHeader("Moz-XPI-Update", "1", true);
+        if (this.channel instanceof Ci.nsIHttpChannelInternal)
+          this.channel.forceAllowThirdPartyCookie = true;
+      }
       this.channel.asyncOpen(listener, null);
 
       Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
