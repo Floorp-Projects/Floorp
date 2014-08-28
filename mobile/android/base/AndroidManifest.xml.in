@@ -371,6 +371,10 @@
 
         </provider>
 
+#ifdef MOZ_ANDROID_SHARE_OVERLAY
+        <!-- Service to handle requests from overlays. -->
+        <service android:name="org.mozilla.gecko.overlays.service.OverlayActionService" />
+#endif
         <!--
           Ensure that passwords provider runs in its own process. (Bug 718760.)
           Process name is per-application to avoid loading CPs from multiple
