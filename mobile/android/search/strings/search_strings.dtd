@@ -18,9 +18,5 @@
 
 <!ENTITY pref_searchProvider_title 'Search engine'>
 
-<!ENTITY pref_searchProvider_bing 'Bing'>
-<!ENTITY pref_searchProvider_google 'Google'>
-<!ENTITY pref_searchProvider_yahoo 'Yahoo'>
-
 <!ENTITY search_widget_button_label 'Search'>
 
