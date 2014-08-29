@@ -8,7 +8,7 @@ TEST_DIRS += ['tests']
 
 UNIFIED_SOURCES += [
     'ChangeAttributeTxn.cpp',
-    'ChangeCSSInlineStyleTxn.cpp',
+    'ChangeStyleTxn.cpp',
     'CreateElementTxn.cpp',
     'DeleteNodeTxn.cpp',
     'DeleteRangeTxn.cpp',
@@ -24,7 +24,6 @@ UNIFIED_SOURCES += [
     'nsEditorController.cpp',
     'nsEditorEventListener.cpp',
     'nsEditorUtils.cpp',
-    'nsEditProperty.cpp',
     'nsHTMLAbsPosition.cpp',
     'nsHTMLAnonymousUtils.cpp',
     'nsHTMLCSSUtils.cpp',

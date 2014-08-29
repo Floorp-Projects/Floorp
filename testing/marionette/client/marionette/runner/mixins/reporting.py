@@ -253,6 +253,7 @@ class HTMLReportingTestResultMixin(object):
             self.marionette.switch_to_frame()
             debug['settings'] = json.dumps(self.marionette.execute_async_script("""
 SpecialPowers.addPermission('settings-read', true, document);
+SpecialPowers.addPermission('settings-api-read', true, document);
 var req = window.navigator.mozSettings.createLock().get('*');
 req.onsuccess = function() {
   marionetteScriptFinished(req.result);
