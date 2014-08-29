@@ -300,7 +300,12 @@ let TPS = {
             Logger.logInfo("tab for " + taburi + " finished loading");
             if (that._tabsFinished == that._tabsAdded) {
               Logger.logInfo("all tabs loaded, continuing...");
-              that.FinishAsyncOperation();
+
+              // Wait a second before continuing to be sure tabs can be synced,
+              // otherwise we can get 'error locating tab'
+              Utils.namedTimer(function () {
+                that.FinishAsyncOperation();
+              }, 1000, this, "postTabsOpening");
             }
           });
           break;
@@ -890,13 +895,7 @@ let TPS = {
 
     this._triggeredSync = true;
     this.StartAsyncOperation();
-
-    // Bug 682446
-    // We wait a little before we trigger the Sync call to be sure elements are
-    // ready to be synced
-    Utils.namedTimer(function () {
-        Weave.Service.sync();
-    }, 2500, this, "beforeSyncDelay");
+    Weave.Service.sync();
   },
 
   WipeServer: function TPS__WipeServer() {
