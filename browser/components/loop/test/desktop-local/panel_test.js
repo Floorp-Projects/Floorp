@@ -217,12 +217,23 @@ describe("loop.panel", function() {
       }));
     });
 
+    describe("FxA sign in/up link", function() {
+      it("should trigger the FxA sign in/up process when clicking the link",
+        function() {
+          navigator.mozLoop.logInToFxA = sandbox.stub();
+
+          TestUtils.Simulate.click(
+            view.getDOMNode().querySelector(".signin-link"));
+
+          sinon.assert.calledOnce(navigator.mozLoop.logInToFxA);
+        });
+      });
+
     describe("#render", function() {
       it("should render a ToSView", function() {
         TestUtils.findRenderedComponentWithType(view, loop.panel.ToSView);
       });
     });
-
   });
 
   describe("loop.panel.CallUrlResult", function() {
