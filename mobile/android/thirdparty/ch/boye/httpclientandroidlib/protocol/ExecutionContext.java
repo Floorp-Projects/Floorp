@@ -31,7 +31,10 @@ package ch.boye.httpclientandroidlib.protocol;
  * {@link HttpContext} attribute names for protocol execution.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link HttpCoreContext}.
  */
+@Deprecated
 public interface ExecutionContext {
 
     /**
@@ -61,7 +64,10 @@ public interface ExecutionContext {
     /**
      * Attribute name of a {@link ch.boye.httpclientandroidlib.HttpHost} object that
      * represents the connection proxy.
+     *
+     * @deprecated (4.3) do not use.
      */
+    @Deprecated
     public static final String HTTP_PROXY_HOST  = "http.proxy_host";
 
     /**

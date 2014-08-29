@@ -30,45 +30,57 @@ package ch.boye.httpclientandroidlib.client.protocol;
 import java.io.IOException;
 import java.util.Collection;
 
-import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpException;
 import ch.boye.httpclientandroidlib.HttpRequest;
 import ch.boye.httpclientandroidlib.HttpRequestInterceptor;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
 import ch.boye.httpclientandroidlib.client.params.ClientPNames;
 import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Request interceptor that adds default request headers.
  *
  * @since 4.0
  */
+@SuppressWarnings("deprecation")
 @Immutable
 public class RequestDefaultHeaders implements HttpRequestInterceptor {
 
-    public RequestDefaultHeaders() {
+    private final Collection<? extends Header> defaultHeaders;
+
+    /**
+     * @since 4.3
+     */
+    public RequestDefaultHeaders(final Collection<? extends Header> defaultHeaders) {
         super();
+        this.defaultHeaders = defaultHeaders;
+    }
+
+    public RequestDefaultHeaders() {
+        this(null);
     }
 
     public void process(final HttpRequest request, final HttpContext context)
             throws HttpException, IOException {
-        if (request == null) {
-            throw new IllegalArgumentException("HTTP request may not be null");
-        }
+        Args.notNull(request, "HTTP request");
 
-        String method = request.getRequestLine().getMethod();
+        final String method = request.getRequestLine().getMethod();
         if (method.equalsIgnoreCase("CONNECT")) {
             return;
         }
 
         // Add default headers
         @SuppressWarnings("unchecked")
-        Collection<Header> defHeaders = (Collection<Header>) request.getParams().getParameter(
-                ClientPNames.DEFAULT_HEADERS);
+        Collection<? extends Header> defHeaders = (Collection<? extends Header>)
+            request.getParams().getParameter(ClientPNames.DEFAULT_HEADERS);
+        if (defHeaders == null) {
+            defHeaders = this.defaultHeaders;
+        }
 
         if (defHeaders != null) {
-            for (Header defHeader : defHeaders) {
+            for (final Header defHeader : defHeaders) {
                 request.addHeader(defHeader);
             }
         }

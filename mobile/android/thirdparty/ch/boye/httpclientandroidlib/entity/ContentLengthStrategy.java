@@ -47,7 +47,7 @@ public interface ContentLengthStrategy {
      * message will be delimited by the end of connection, or {@link #CHUNKED}
      * if the message is chunk coded
      *
-     * @param message
+     * @param message HTTP message
      * @return content length, {@link #IDENTITY}, or {@link #CHUNKED}
      *
      * @throws HttpException in case of HTTP protocol violation

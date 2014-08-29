@@ -53,6 +53,7 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
  *
  * @since 4.0
  */
+@SuppressWarnings("deprecation")
 public interface HttpMessage {
 
     /**
@@ -189,13 +190,21 @@ public interface HttpMessage {
     /**
      * Returns the parameters effective for this message as set by
      * {@link #setParams(HttpParams)}.
+     *
+     * @deprecated (4.3) use configuration classes provided 'ch.boye.httpclientandroidlib.config'
+     *  and 'ch.boye.httpclientandroidlib.client.config'
      */
+    @Deprecated
     HttpParams getParams();
 
     /**
      * Provides parameters to be used for the processing of this message.
      * @param params the parameters
+     *
+     * @deprecated (4.3) use configuration classes provided 'ch.boye.httpclientandroidlib.config'
+     *  and 'ch.boye.httpclientandroidlib.client.config'
      */
+    @Deprecated
     void setParams(HttpParams params);
 
 }
