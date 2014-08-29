@@ -181,7 +181,7 @@ gfx3DMatrix::IsIdentity() const
 }
 
 void
-gfx3DMatrix::Translate(const gfxPoint3D& aPoint)
+gfx3DMatrix::Translate(const Point3D& aPoint)
 {
     _41 += aPoint.x * _11 + aPoint.y * _21 + aPoint.z * _31;
     _42 += aPoint.x * _12 + aPoint.y * _22 + aPoint.z * _32;
@@ -190,7 +190,7 @@ gfx3DMatrix::Translate(const gfxPoint3D& aPoint)
 }
 
 void
-gfx3DMatrix::TranslatePost(const gfxPoint3D& aPoint)
+gfx3DMatrix::TranslatePost(const Point3D& aPoint)
 {
     _11 += _14 * aPoint.x;
     _21 += _24 * aPoint.x;
@@ -226,7 +226,7 @@ gfx3DMatrix::ScalePost(float aX, float aY, float aZ)
 }
 
 void
-gfx3DMatrix::ChangeBasis(const gfxPoint3D& aOrigin)
+gfx3DMatrix::ChangeBasis(const Point3D& aOrigin)
 {
   // Translate to the origin before applying this matrix.
   Translate(-aOrigin);
@@ -411,7 +411,7 @@ gfx3DMatrix::Translation(float aX, float aY, float aZ)
 }
 
 gfx3DMatrix
-gfx3DMatrix::Translation(const gfxPoint3D& aPoint)
+gfx3DMatrix::Translation(const Point3D& aPoint)
 {
   gfx3DMatrix matrix;
 
@@ -523,7 +523,7 @@ gfx3DMatrix::Inverse() const
      * the values.
      */
     gfx3DMatrix matrix3 = Inverse3x3();
-    matrix3.Translate(gfxPoint3D(-_41, -_42, -_43));
+    matrix3.Translate(Point3D(-_41, -_42, -_43));
     return matrix3;
  }
 
@@ -618,13 +618,13 @@ gfx3DMatrix::Transposed() const
 gfxPoint
 gfx3DMatrix::Transform(const gfxPoint& point) const
 {
-  gfxPoint3D vec3d(point.x, point.y, 0);
+  Point3D vec3d(point.x, point.y, 0);
   vec3d = Transform3D(vec3d);
   return gfxPoint(vec3d.x, vec3d.y);
 }
 
-gfxPoint3D
-gfx3DMatrix::Transform3D(const gfxPoint3D& point) const
+Point3D
+gfx3DMatrix::Transform3D(const Point3D& point) const
 {
   gfxFloat x = point.x * _11 + point.y * _21 + point.z * _31 + _41;
   gfxFloat y = point.x * _12 + point.y * _22 + point.z * _32 + _42;
@@ -635,7 +635,7 @@ gfx3DMatrix::Transform3D(const gfxPoint3D& point) const
   y /= w;
   z /= w;
 
-  return gfxPoint3D(x, y, z);
+  return Point3D(x, y, z);
 }
 
 gfxPointH3D
@@ -777,17 +777,17 @@ gfxPointH3D gfx3DMatrix::ProjectPoint(const gfxPoint& aPoint) const
   return Transform4D(gfxPointH3D(aPoint.x, aPoint.y, z, 1));
 }
 
-gfxPoint3D gfx3DMatrix::GetNormalVector() const
+Point3D gfx3DMatrix::GetNormalVector() const
 {
   // Define a plane in transformed space as the transformations
   // of 3 points on the z=0 screen plane.
-  gfxPoint3D a = Transform3D(gfxPoint3D(0, 0, 0));
-  gfxPoint3D b = Transform3D(gfxPoint3D(0, 1, 0));
-  gfxPoint3D c = Transform3D(gfxPoint3D(1, 0, 0));
+  Point3D a = Transform3D(Point3D(0, 0, 0));
+  Point3D b = Transform3D(Point3D(0, 1, 0));
+  Point3D c = Transform3D(Point3D(1, 0, 0));
 
   // Convert to two vectors on the surface of the plane.
-  gfxPoint3D ab = b - a;
-  gfxPoint3D ac = c - a;
+  Point3D ab = b - a;
+  Point3D ac = c - a;
 
   return ac.CrossProduct(ab);
 }
