@@ -371,6 +371,19 @@ this.AppsUtils = {
   },
 
   /**
+   * Checks if the app role is allowed.
+   * Only certified apps can be themes.
+   * @param aRole   : the role assigned to this app.
+   * @param aStatus : the APP_STATUS_* for this app.
+   */
+  checkAppRole: function(aRole, aStatus) {
+    if (aRole == "theme" && aStatus !== Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
+      return false;
+    }
+    return true;
+  },
+
+  /**
    * Method to apply modifications to webapp manifests file saved internally.
    * For now, only ensure app can't rename itself.
    */
