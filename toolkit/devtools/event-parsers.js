@@ -8,14 +8,13 @@
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
-const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 
 loader.lazyGetter(this, "eventListenerService", () => {
   return Cc["@mozilla.org/eventlistenerservice;1"]
            .getService(Ci.nsIEventListenerService);
 });
 
-let eventParsers = [
+let parsers = [
   {
     id: "jQuery events",
     getListeners: function(node) {
@@ -184,10 +183,6 @@ let eventParsers = [
   }
 ];
 
-for (let parserObj of eventParsers) {
-  gDevTools.registerEventParser(parserObj);
-}
-
 function jQueryLiveGetListeners(node, boolOnEventFound) {
   let global = node.ownerGlobal.wrappedJSObject;
   let hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
@@ -260,3 +255,109 @@ function jQueryLiveGetListeners(node, boolOnEventFound) {
   }
   return handlers;
 }
+
+this.EventParsers = function EventParsers() {
+  if (this._eventParsers.size === 0) {
+    for (let parserObj of parsers) {
+      this.registerEventParser(parserObj);
+    }
+  }
+};
+
+exports.EventParsers = EventParsers;
+
+EventParsers.prototype = {
+  _eventParsers: new Map(), // NOTE: This is shared amongst all instances.
+
+  get parsers() {
+    return this._eventParsers;
+  },
+
+  /**
+   * Register a new event parser to be used in the processing of event info.
+   *
+   * @param {Object} parserObj
+   *        Each parser must contain the following properties:
+   *        - parser, which must take the following form:
+   *   {
+   *     id {String}: "jQuery events",         // Unique id.
+   *     getListeners: function(node) { },     // Function that takes a node and
+   *                                           // returns an array of eventInfo
+   *                                           // objects (see below).
+   *
+   *     hasListeners: function(node) { },     // Optional function that takes a
+   *                                           // node and returns a boolean
+   *                                           // indicating whether a node has
+   *                                           // listeners attached.
+   *
+   *     normalizeHandler: function(fnDO) { }, // Optional function that takes a
+   *                                           // Debugger.Object instance and
+   *                                           // climbs the scope chain to get
+   *                                           // the function that should be
+   *                                           // displayed in the event bubble
+   *                                           // see the following url for
+   *                                           // details:
+   *                                           //   https://developer.mozilla.org/
+   *                                           //   docs/Tools/Debugger-API/
+   *                                           //   Debugger.Object
+   *   }
+   *
+   * An eventInfo object should take the following form:
+   *   {
+   *     type {String}:      "click",
+   *     handler {Function}: event handler,
+   *     tags {String}:      "jQuery,Live", // These tags will be displayed as
+   *                                        // attributes in the events popup.
+   *     hide: {               // Hide or show fields:
+   *       debugger: false,    // Debugger icon
+   *       type: false,        // Event type e.g. click
+   *       filename: false,    // Filename
+   *       capturing: false,   // Capturing
+   *       dom0: false         // DOM 0
+   *     },
+   *
+   *     override: {                        // The following can be overridden:
+   *       type: "click",
+   *       origin: "http://www.mozilla.com",
+   *       searchString: 'onclick="doSomething()"',
+   *       DOM0: true,
+   *       capturing: true
+   *     }
+   *   }
+   */
+  registerEventParser: function(parserObj) {
+    let parserId = parserObj.id;
+
+    if (!parserId) {
+      throw new Error("Cannot register new event parser with id " + parserId);
+    }
+    if (this._eventParsers.has(parserId)) {
+      throw new Error("Duplicate event parser id " + parserId);
+    }
+
+    this._eventParsers.set(parserId, {
+      getListeners: parserObj.getListeners,
+      hasListeners: parserObj.hasListeners,
+      normalizeHandler: parserObj.normalizeHandler
+    });
+  },
+
+  /**
+   * Removes parser that matches a given parserId.
+   *
+   * @param {String} parserId
+   *        id of the event parser to unregister.
+   */
+  unregisterEventParser: function(parserId) {
+    this._eventParsers.delete(parserId);
+  },
+
+  /**
+   * Tidy up parsers.
+   */
+  destroy: function() {
+    for (let [id] of this._eventParsers) {
+      this.unregisterEventParser(id, true);
+    }
+  }
+};
