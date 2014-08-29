@@ -8,7 +8,7 @@ TEST_DIRS += ['tests']
 
 UNIFIED_SOURCES += [
     'ChangeAttributeTxn.cpp',
-    'ChangeCSSInlineStyleTxn.cpp',
+    'ChangeStyleTxn.cpp',
     'CreateElementTxn.cpp',
     'DeleteNodeTxn.cpp',
     'DeleteRangeTxn.cpp',

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ChangeCSSInlineStyleTxn.h"
+#include "ChangeStyleTxn.h"
 #include "EditTxn.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
@@ -44,6 +44,7 @@
 #include "nsUnicharUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static
 void ProcessBValue(const nsAString * aInputString, nsAString & aOutputString,
@@ -441,72 +442,53 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
   return false;
 }
 
-// the lowest level above the transaction; adds the css declaration "aProperty : aValue" to
-// the inline styles carried by aElement
+// The lowest level above the transaction; adds the CSS declaration
+// "aProperty : aValue" to the inline styles carried by aElement
 nsresult
-nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAString & aValue,
-                               bool aSuppressTransaction)
+nsHTMLCSSUtils::SetCSSProperty(Element& aElement, nsIAtom& aProperty,
+                               const nsAString& aValue, bool aSuppressTxn)
 {
-  nsRefPtr<ChangeCSSInlineStyleTxn> txn;
-  nsresult result = CreateCSSPropertyTxn(aElement, aProperty, aValue,
-                                         getter_AddRefs(txn), false);
-  if (NS_SUCCEEDED(result))  {
-    if (aSuppressTransaction) {
-      result = txn->DoTransaction();
-    }
-    else {
-      result = mHTMLEditor->DoTransaction(txn);
-    }
+  nsRefPtr<ChangeStyleTxn> txn =
+    CreateCSSPropertyTxn(aElement, aProperty, aValue, ChangeStyleTxn::eSet);
+  if (aSuppressTxn) {
+    return txn->DoTransaction();
   }
-  return result;
+  return mHTMLEditor->DoTransaction(txn);
 }
 
 nsresult
-nsHTMLCSSUtils::SetCSSPropertyPixels(nsIDOMElement *aElement,
-                                     nsIAtom *aProperty,
-                                     int32_t aIntValue,
-                                     bool aSuppressTransaction)
+nsHTMLCSSUtils::SetCSSPropertyPixels(Element& aElement, nsIAtom& aProperty,
+                                     int32_t aIntValue)
 {
   nsAutoString s;
   s.AppendInt(aIntValue);
   return SetCSSProperty(aElement, aProperty, s + NS_LITERAL_STRING("px"),
-                        aSuppressTransaction);
+                        /* suppress txn */ false);
 }
 
-// the lowest level above the transaction; removes the value aValue from the list of values
-// specified for the CSS property aProperty, or totally remove the declaration if this
-// property accepts only one value
+// The lowest level above the transaction; removes the value aValue from the
+// list of values specified for the CSS property aProperty, or totally remove
+// the declaration if this property accepts only one value
 nsresult
-nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAString & aValue,
-                                  bool aSuppressTransaction)
+nsHTMLCSSUtils::RemoveCSSProperty(Element& aElement, nsIAtom& aProperty,
+                                  const nsAString& aValue, bool aSuppressTxn)
 {
-  nsRefPtr<ChangeCSSInlineStyleTxn> txn;
-  nsresult result = CreateCSSPropertyTxn(aElement, aProperty, aValue,
-                                         getter_AddRefs(txn), true);
-  if (NS_SUCCEEDED(result))  {
-    if (aSuppressTransaction) {
-      result = txn->DoTransaction();
-    }
-    else {
-      result = mHTMLEditor->DoTransaction(txn);
-    }
+  nsRefPtr<ChangeStyleTxn> txn =
+    CreateCSSPropertyTxn(aElement, aProperty, aValue, ChangeStyleTxn::eRemove);
+  if (aSuppressTxn) {
+    return txn->DoTransaction();
   }
-  return result;
+  return mHTMLEditor->DoTransaction(txn);
 }
 
-nsresult 
-nsHTMLCSSUtils::CreateCSSPropertyTxn(nsIDOMElement *aElement, 
-                                     nsIAtom * aAttribute,
+already_AddRefed<ChangeStyleTxn>
+nsHTMLCSSUtils::CreateCSSPropertyTxn(Element& aElement, nsIAtom& aAttribute,
                                      const nsAString& aValue,
-                                     ChangeCSSInlineStyleTxn ** aTxn,
-                                     bool aRemoveProperty)
+                                     ChangeStyleTxn::EChangeType aChangeType)
 {
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
-
-  *aTxn = new ChangeCSSInlineStyleTxn();
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aTxn);
-  return (*aTxn)->Init(mHTMLEditor, aElement, aAttribute, aValue, aRemoveProperty);
+  nsRefPtr<ChangeStyleTxn> txn =
+    new ChangeStyleTxn(aElement, aAttribute, aValue, aChangeType);
+  return txn.forget();
 }
 
 nsresult
@@ -598,14 +580,14 @@ nsHTMLCSSUtils::GetComputedStyle(dom::Element* aElement)
 nsresult
 nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, const nsAString & aPropertyValue)
 {
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
+  nsCOMPtr<Element> element = do_QueryInterface(aNode);
+  NS_ENSURE_STATE(element);
 
   // remove the property from the style attribute
-  nsresult res = RemoveCSSProperty(elem, aProperty, aPropertyValue, false);
+  nsresult res = RemoveCSSProperty(*element, *aProperty, aPropertyValue);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
-  if (!element || !element->IsHTML(nsGkAtoms::span) ||
+  if (!element->IsHTML(nsGkAtoms::span) ||
       nsHTMLEditor::HasAttributes(element)) {
     return NS_OK;
   }
@@ -939,11 +921,10 @@ nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                        aValue, cssPropertyArray, cssValueArray,
                                        false);
 
-  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(element);
   // set the individual CSS inline styles
   *aCount = cssPropertyArray.Length();
   for (int32_t index = 0; index < *aCount; index++) {
-    nsresult res = SetCSSProperty(domElement, cssPropertyArray[index],
+    nsresult res = SetCSSProperty(*element, *cssPropertyArray[index],
                                   cssValueArray[index], aSuppressTransaction);
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -988,12 +969,11 @@ nsHTMLCSSUtils::RemoveCSSEquivalentToHTMLStyle(dom::Element* aElement,
                                        aValue, cssPropertyArray, cssValueArray,
                                        true);
 
-  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aElement);
   // remove the individual CSS inline styles
   int32_t count = cssPropertyArray.Length();
   for (int32_t index = 0; index < count; index++) {
-    nsresult res = RemoveCSSProperty(domElement,
-                                     cssPropertyArray[index],
+    nsresult res = RemoveCSSProperty(*aElement,
+                                     *cssPropertyArray[index],
                                      cssValueArray[index],
                                      aSuppressTransaction);
     NS_ENSURE_SUCCESS(res, res);
@@ -1122,11 +1102,11 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
     } else if (nsGkAtoms::u == aHTMLProperty) {
       nsAutoString val;
       val.AssignLiteral("underline");
-      aIsSet = bool(ChangeCSSInlineStyleTxn::ValueIncludes(valueString, val, false));
+      aIsSet = ChangeStyleTxn::ValueIncludes(valueString, val);
     } else if (nsGkAtoms::strike == aHTMLProperty) {
       nsAutoString val;
       val.AssignLiteral("line-through");
-      aIsSet = bool(ChangeCSSInlineStyleTxn::ValueIncludes(valueString, val, false));
+      aIsSet = ChangeStyleTxn::ValueIncludes(valueString, val);
     } else if (aHTMLAttribute &&
                ((nsGkAtoms::font == aHTMLProperty &&
                  aHTMLAttribute->EqualsLiteral("color")) ||
