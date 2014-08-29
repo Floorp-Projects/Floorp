@@ -536,7 +536,7 @@ protected:
   gfx::SurfaceFormat mFormat;
   uint32_t mUpdateSerial;
   bool mLocked;
-  bool mPartialUpdate;
+  bool mNeedsFullUpdate;
 };
 
 /**
