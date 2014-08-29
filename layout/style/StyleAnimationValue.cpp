@@ -27,6 +27,7 @@
 #include "nsIDocument.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 // HELPER METHODS
 // --------------
@@ -1338,9 +1339,9 @@ StyleAnimationValue::AppendTransformFunction(nsCSSKeyword aTransformFunction,
 #define YZSHEAR 2
 
 static bool
-Decompose2DMatrix(const gfxMatrix &aMatrix, gfxPoint3D &aScale,
+Decompose2DMatrix(const gfxMatrix &aMatrix, Point3D &aScale,
                   float aShear[3], gfxQuaternion &aRotate,
-                  gfxPoint3D &aTranslate)
+                  Point3D &aTranslate)
 {
   float A = aMatrix._11,
         B = aMatrix._12,
@@ -1397,9 +1398,9 @@ Decompose2DMatrix(const gfxMatrix &aMatrix, gfxPoint3D &aScale,
  * in http://tog.acm.org/resources/GraphicsGems/AllGems.tar.gz
  */
 static bool
-Decompose3DMatrix(const gfx3DMatrix &aMatrix, gfxPoint3D &aScale,
+Decompose3DMatrix(const gfx3DMatrix &aMatrix, Point3D &aScale,
                   float aShear[3], gfxQuaternion &aRotate,
-                  gfxPoint3D &aTranslate, gfxPointH3D &aPerspective)
+                  Point3D &aTranslate, gfxPointH3D &aPerspective)
 {
   gfx3DMatrix local = aMatrix;
 
@@ -1508,12 +1509,12 @@ StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
 
   // TODO: What do we do if one of these returns false (singular matrix)
 
-  gfxPoint3D scale1(1, 1, 1), translate1;
+  Point3D scale1(1, 1, 1), translate1;
   gfxPointH3D perspective1(0, 0, 0, 1);
   gfxQuaternion rotate1;
   float shear1[3] = { 0.0f, 0.0f, 0.0f};
 
-  gfxPoint3D scale2(1, 1, 1), translate2;
+  Point3D scale2(1, 1, 1), translate2;
   gfxPointH3D perspective2(0, 0, 0, 1);
   gfxQuaternion rotate2;
   float shear2[3] = { 0.0f, 0.0f, 0.0f};
@@ -1536,7 +1537,7 @@ StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
     InterpolateNumerically(perspective1, perspective2, aProgress);
   result.SetTransposedVector(3, perspective);
 
-  gfxPoint3D translate =
+  Point3D translate =
     InterpolateNumerically(translate1, translate2, aProgress);
   result.Translate(translate);
 
@@ -1565,9 +1566,9 @@ StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
     result.SkewXY(xyshear);
   }
 
-  gfxPoint3D scale =
+  Point3D scale =
     InterpolateNumerically(scale1, scale2, aProgress);
-  if (scale != gfxPoint3D(1.0, 1.0, 1.0)) {
+  if (scale != Point3D(1.0, 1.0, 1.0)) {
     result.Scale(scale.x, scale.y, scale.z);
   }
 
@@ -1814,13 +1815,13 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
         break;
       }
       case eCSSKeyword_rotate3d: {
-        gfxPoint3D vector1(a1->Item(1).GetFloatValue(),
-                           a1->Item(2).GetFloatValue(),
-                           a1->Item(3).GetFloatValue());
+        Point3D vector1(a1->Item(1).GetFloatValue(),
+                        a1->Item(2).GetFloatValue(),
+                        a1->Item(3).GetFloatValue());
         vector1.Normalize();
-        gfxPoint3D vector2(a2->Item(1).GetFloatValue(),
-                           a2->Item(2).GetFloatValue(),
-                           a2->Item(3).GetFloatValue());
+        Point3D vector2(a2->Item(1).GetFloatValue(),
+                        a2->Item(2).GetFloatValue(),
+                        a2->Item(3).GetFloatValue());
         vector2.Normalize();
 
         // Handle rotate3d with matched (normalized) vectors,
