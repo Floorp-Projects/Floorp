@@ -13,7 +13,7 @@ import android.util.Log;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.util.GeckoJarReader;
-import org.mozilla.search.Constants;
+import org.mozilla.search.R;
 import org.mozilla.search.SearchPreferenceActivity;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -85,9 +85,10 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         final AsyncTask<Void, Void, SearchEngine> task = new AsyncTask<Void, Void, SearchEngine>() {
             @Override
             protected SearchEngine doInBackground(Void... params) {
-                final String identifier = GeckoSharedPrefs.forApp(context)
-                        .getString(SearchPreferenceActivity.PREF_SEARCH_ENGINE_KEY, Constants.DEFAULT_SEARCH_ENGINE)
-                        .toLowerCase();
+                String identifier = GeckoSharedPrefs.forApp(context).getString(SearchPreferenceActivity.PREF_SEARCH_ENGINE_KEY, null);
+                if (TextUtils.isEmpty(identifier)) {
+                    identifier = context.getResources().getString(R.string.default_engine_identifier);
+                }
                 return createEngine(identifier);
             }
 

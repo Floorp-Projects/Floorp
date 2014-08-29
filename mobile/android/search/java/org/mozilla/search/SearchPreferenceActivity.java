@@ -137,7 +137,7 @@ public class SearchPreferenceActivity extends PreferenceActivity
                 searchEnginePref.setEntryValues(entryValues);
 
                 if (searchEnginePref.getValue() == null) {
-                    searchEnginePref.setValue(Constants.DEFAULT_SEARCH_ENGINE);
+                    searchEnginePref.setValue(getResources().getString(R.string.default_engine_identifier));
                 }
                 searchEnginePref.setSummary(searchEnginePref.getEntry());
             }
