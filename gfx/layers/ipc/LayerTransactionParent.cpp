@@ -321,7 +321,6 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       layer->SetAnimations(common.animations());
       layer->SetInvalidRegion(common.invalidRegion());
       layer->SetFrameMetrics(common.metrics());
-      layer->SetContentDescription(common.contentDescription());
 
       typedef SpecificLayerAttributes Specific;
       const SpecificLayerAttributes& specific = attrs.specific();
