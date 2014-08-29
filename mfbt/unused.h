@@ -7,7 +7,7 @@
 #ifndef mozilla_unused_h
 #define mozilla_unused_h
 
-#include "nscore.h"
+#include "mozilla/Types.h"
 
 namespace mozilla {
 
@@ -19,7 +19,7 @@ struct unused_t
 {
 };
 
-extern const unused_t unused;
+extern MFBT_DATA const unused_t unused;
 
 template<typename T>
 inline void
