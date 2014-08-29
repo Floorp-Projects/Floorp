@@ -27,6 +27,8 @@ if (SpecialPowers.isMainProcess()) {
 
 SpecialPowers.addPermission("settings-write", true, document);
 SpecialPowers.addPermission("settings-read", true, document);
+SpecialPowers.addPermission("settings-api-read", true, document);
+SpecialPowers.addPermission("settings-api-write", true, document);
 
 var screenBright = {"screen.brightness": 0.7};
 
