@@ -138,6 +138,10 @@ struct Paths {
    * system.
    */
   nsString macLocalApplicationsDir;
+  /**
+   * The user's trash directory.
+   */
+  nsString macTrashDir;
 #endif // defined(XP_MACOSX)
 
   Paths()
@@ -158,6 +162,7 @@ struct Paths {
 #if defined(XP_MACOSX)
     macUserLibDir.SetIsVoid(true);
     macLocalApplicationsDir.SetIsVoid(true);
+    macTrashDir.SetIsVoid(true);
 #endif // defined(XP_MACOSX)
   }
 };
@@ -306,6 +311,7 @@ nsresult InitOSFileConstants()
 #if defined(XP_MACOSX)
   GetPathToSpecialDir(NS_MAC_USER_LIB_DIR, paths->macUserLibDir);
   GetPathToSpecialDir(NS_OSX_LOCAL_APPLICATIONS_DIR, paths->macLocalApplicationsDir);
+  GetPathToSpecialDir(NS_MAC_TRASH_DIR, paths->macTrashDir);
 #endif // defined(XP_MACOSX)
 
   gPaths = paths.forget();
@@ -978,6 +984,10 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
   }
 
   if (!SetStringProperty(cx, objPath, "macLocalApplicationsDir", gPaths->macLocalApplicationsDir)) {
+    return false;
+  }
+
+  if (!SetStringProperty(cx, objPath, "macTrashDir", gPaths->macTrashDir)) {
     return false;
   }
 #endif // defined(XP_MACOSX)

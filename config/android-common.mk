@@ -19,9 +19,9 @@ ifndef JAVA_BOOTCLASSPATH
   JAVA_BOOTCLASSPATH = $(ANDROID_SDK)/android.jar
 endif
 
-# For Android, we default to 1.5
+# For Android, we default to 1.7
 ifndef JAVA_VERSION
-  JAVA_VERSION = 1.5
+  JAVA_VERSION = 1.7
 endif
 
 JAVAC_FLAGS = \

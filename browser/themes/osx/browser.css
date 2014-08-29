@@ -1792,6 +1792,21 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   }
 }
 
+@media (-moz-mac-yosemite-theme) {
+  .searchbar-textbox,
+  #urlbar {
+    border-color: #fff;
+    border-radius: 3px;
+    box-shadow: 0 1px 0 0 #aeaeae, 1px 2px 0 0 #d8d8d8;
+    background-image: none;
+  }
+  .searchbar-textbox:-moz-window-inactive,
+  #urlbar:-moz-window-inactive {
+    box-shadow: none;
+    border-color: #dbdbdb;
+  }
+}
+
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
   border-color: -moz-mac-focusring;

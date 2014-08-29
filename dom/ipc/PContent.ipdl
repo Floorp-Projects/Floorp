@@ -447,6 +447,12 @@ child:
      * Notify idle observers in the child
      */
     NotifyIdleObserver(uint64_t observerId, nsCString topic, nsString str);
+
+    /**
+     * Notify windows in the child to apply a new app style.
+     */
+    OnAppThemeChanged();
+
 parent:
     /**
      * Tell the content process some attributes of itself.  This is
