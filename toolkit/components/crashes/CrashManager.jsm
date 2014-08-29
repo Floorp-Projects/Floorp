@@ -1005,19 +1005,20 @@ CrashStore.prototype = Object.freeze({
       return null;
     }
 
-    let day = dateToDays(date);
-    this._ensureCountsForDay(day);
-
     let type = processType + "-" + crashType;
-    let count = (this._countsByDay.get(day).get(type) || 0) + 1;
-    this._countsByDay.get(day).set(type, count);
-
-    if (count > this.HIGH_WATER_DAILY_THRESHOLD &&
-        processType != CrashManager.prototype.PROCESS_TYPE_MAIN) {
-      return null;
-    }
 
     if (!this._data.crashes.has(id)) {
+      let day = dateToDays(date);
+      this._ensureCountsForDay(day);
+
+      let count = (this._countsByDay.get(day).get(type) || 0) + 1;
+      this._countsByDay.get(day).set(type, count);
+
+      if (count > this.HIGH_WATER_DAILY_THRESHOLD &&
+          processType != CrashManager.prototype.PROCESS_TYPE_MAIN) {
+        return null;
+      }
+
       this._data.crashes.set(id, {
         id: id,
         remoteID: null,
