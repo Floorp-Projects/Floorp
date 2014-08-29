@@ -516,7 +516,7 @@ StorageUI.prototype = {
    *        Array of objects to be populated in the storage table
    * @param {number} reason
    *        The reason of this populateTable call. 2 for update, 1 for new row
-   *        in an existing table and 1 when populating a table for the first
+   *        in an existing table and 0 when populating a table for the first
    *        time for the given host/type
    */
   populateTable: function(data, reason) {
