@@ -124,7 +124,7 @@ describe("loop.webapp", function() {
 
     describe("#_setupWebSocketAndCallView", function() {
       beforeEach(function() {
-        conversation.setOutgoingSessionData({
+        conversation.setSessionData({
           sessionId:      "sessionId",
           sessionToken:   "sessionToken",
           apiKey:         "apiKey",
@@ -207,7 +207,7 @@ describe("loop.webapp", function() {
 
       describe("Websocket Events", function() {
         beforeEach(function() {
-          conversation.setOutgoingSessionData({
+          conversation.setSessionData({
             sessionId:      "sessionId",
             sessionToken:   "sessionToken",
             apiKey:         "apiKey",
