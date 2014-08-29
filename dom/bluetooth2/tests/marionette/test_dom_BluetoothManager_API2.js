@@ -39,7 +39,7 @@ function waitForManagerAttributeChanged() {
   return deferred.promise;
 }
 
-startBluetoothTestBase(["settings-read", "settings-write"],
+startBluetoothTestBase(["settings-read", "settings-write", "settings-api-read", "settings-api-write"],
                        function testCaseMain() {
   let adapters = bluetoothManager.getAdapters();
   ok(Array.isArray(adapters), "Can not got the array of adapters");

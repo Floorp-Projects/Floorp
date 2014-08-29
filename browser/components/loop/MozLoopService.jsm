@@ -780,6 +780,10 @@ this.MozLoopService = {
    * @return {Promise} that resolves when the FxA login flow is complete.
    */
   logInToFxA: function() {
+    if (gFxAOAuthTokenData) {
+      return Promise.resolve(gFxAOAuthTokenData);
+    }
+
     return MozLoopServiceInternal.promiseFxAOAuthAuthorization().then(response => {
       return MozLoopServiceInternal.promiseFxAOAuthToken(response.code, response.state);
     }).then(tokenData => {

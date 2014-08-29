@@ -415,6 +415,49 @@ describe("loop.webapp", function() {
           sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
         });
 
+      describe("Published and Subscribed Streams", function() {
+        beforeEach(function() {
+          router._websocket = {
+            mediaUp: sinon.spy()
+          };
+          router.initiate();
+        });
+
+        describe("publishStream", function() {
+          it("should not notify the websocket if only one stream is up",
+            function() {
+              conversation.set("publishedStream", true);
+
+              sinon.assert.notCalled(router._websocket.mediaUp);
+            });
+
+          it("should notify the websocket that media is up if both streams" +
+             "are connected", function() {
+              conversation.set("subscribedStream", true);
+              conversation.set("publishedStream", true);
+
+              sinon.assert.calledOnce(router._websocket.mediaUp);
+            });
+        });
+
+        describe("subscribedStream", function() {
+          it("should not notify the websocket if only one stream is up",
+            function() {
+              conversation.set("subscribedStream", true);
+
+              sinon.assert.notCalled(router._websocket.mediaUp);
+            });
+
+          it("should notify the websocket that media is up if both streams" +
+             "are connected", function() {
+              conversation.set("publishedStream", true);
+              conversation.set("subscribedStream", true);
+
+              sinon.assert.calledOnce(router._websocket.mediaUp);
+            });
+        });
+      });
+
       describe("#setupOutgoingCall", function() {
         beforeEach(function() {
           router.initiate();

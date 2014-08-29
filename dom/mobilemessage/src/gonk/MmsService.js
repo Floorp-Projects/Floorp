@@ -423,19 +423,17 @@ MmsConnection.prototype = {
         return true;
       }
 
-      if (DEBUG) debug("acquire: buffer the MMS request and setup the MMS data call.");
-      this.radioInterface.setupDataCallByType("mms");
-
-      // Clear cache when setup new connection.
-      this.hostsToRoute = [];
-      this.networkInterface = null;
-
       // Set a timer to clear the buffered MMS requests if the
       // MMS network fails to be connected within a time period.
       this.connectTimer.
         initWithCallback(this.flushPendingCallbacks.bind(this, _HTTP_STATUS_ACQUIRE_TIMEOUT),
                          TIME_TO_BUFFER_MMS_REQUESTS,
                          Ci.nsITimer.TYPE_ONE_SHOT);
+
+      // Bug 1059110: Ensure all the initialization are done before setup data call.
+      if (DEBUG) debug("acquire: buffer the MMS request and setup the MMS data call.");
+      this.radioInterface.setupDataCallByType("mms");
+
       return false;
     }
 
