@@ -6005,39 +6005,39 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
     }
 
-    for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-        if (!UpdateSourceCoordNotes(cx, bce, pn2->pn_pos.begin))
+    for (ParseNode *member = pn->pn_head; member; member = member->pn_next) {
+        if (!UpdateSourceCoordNotes(cx, bce, member->pn_pos.begin))
             return false;
 
         /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
-        ParseNode *pn3 = pn2->pn_left;
+        ParseNode *key = member->pn_left;
         bool isIndex = false;
-        if (pn3->isKind(PNK_NUMBER)) {
-            if (!EmitNumberOp(cx, pn3->pn_dval, bce))
+        if (key->isKind(PNK_NUMBER)) {
+            if (!EmitNumberOp(cx, key->pn_dval, bce))
                 return false;
             isIndex = true;
-        } else if (pn3->isKind(PNK_NAME) || pn3->isKind(PNK_STRING)) {
+        } else if (key->isKind(PNK_NAME) || key->isKind(PNK_STRING)) {
             // The parser already checked for atoms representing indexes and
             // used PNK_NUMBER instead, but also watch for ids which TI treats
             // as indexes for simpliciation of downstream analysis.
-            jsid id = NameToId(pn3->pn_atom->asPropertyName());
+            jsid id = NameToId(key->pn_atom->asPropertyName());
             if (id != types::IdToTypeId(id)) {
-                if (!EmitTree(cx, bce, pn3))
+                if (!EmitTree(cx, bce, key))
                     return false;
                 isIndex = true;
             }
         } else {
-            JS_ASSERT(pn3->isKind(PNK_COMPUTED_NAME));
-            if (!EmitTree(cx, bce, pn3->pn_kid))
+            JS_ASSERT(key->isKind(PNK_COMPUTED_NAME));
+            if (!EmitTree(cx, bce, key->pn_kid))
                 return false;
             isIndex = true;
         }
 
         /* Emit code for the property initializer. */
-        if (!EmitTree(cx, bce, pn2->pn_right))
+        if (!EmitTree(cx, bce, member->pn_right))
             return false;
 
-        JSOp op = pn2->getOp();
+        JSOp op = member->getOp();
         JS_ASSERT(op == JSOP_INITPROP ||
                   op == JSOP_INITPROP_GETTER ||
                   op == JSOP_INITPROP_SETTER);
@@ -6056,10 +6056,10 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (Emit1(cx, bce, op) < 0)
                 return false;
         } else {
-            JS_ASSERT(pn3->isKind(PNK_NAME) || pn3->isKind(PNK_STRING));
+            JS_ASSERT(key->isKind(PNK_NAME) || key->isKind(PNK_STRING));
 
             // If we have { __proto__: expr }, implement prototype mutation.
-            if (op == JSOP_INITPROP && pn3->pn_atom == cx->names().proto) {
+            if (op == JSOP_INITPROP && key->pn_atom == cx->names().proto) {
                 obj = nullptr;
                 if (Emit1(cx, bce, JSOP_MUTATEPROTO) < 0)
                     return false;
@@ -6067,7 +6067,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             }
 
             jsatomid index;
-            if (!bce->makeAtomIndex(pn3->pn_atom, &index))
+            if (!bce->makeAtomIndex(key->pn_atom, &index))
                 return false;
 
             MOZ_ASSERT(op == JSOP_INITPROP ||
@@ -6076,7 +6076,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());
-                Rooted<jsid> id(cx, AtomToId(pn3->pn_atom));
+                Rooted<jsid> id(cx, AtomToId(key->pn_atom));
                 RootedValue undefinedValue(cx, UndefinedValue());
                 if (!DefineNativeProperty(cx, obj, id, undefinedValue, nullptr,
                                           nullptr, JSPROP_ENUMERATE))
