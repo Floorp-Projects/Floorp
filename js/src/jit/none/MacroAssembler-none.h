@@ -68,9 +68,8 @@ static MOZ_CONSTEXPR_VAR ValueOperand JSReturnOperand(InvalidReg);
 #error "Bad architecture"
 #endif
 
-static const uint32_t StackAlignment = 8;
+static const uint32_t ABIStackAlignment = 4;
 static const uint32_t CodeAlignment = 4;
-static const bool StackKeptAligned = false;
 
 static const Scale ScalePointer = TimesOne;
 
