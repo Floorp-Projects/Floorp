@@ -117,6 +117,8 @@ exports.ERRNO_INCORRECT_KEY_RETRIEVAL_METHOD = 118;
 exports.ERRNO_INCORRECT_API_VERSION          = 119;
 exports.ERRNO_INCORRECT_EMAIL_CASE           = 120;
 exports.ERRNO_SERVICE_TEMP_UNAVAILABLE       = 201;
+exports.ERRNO_PARSE                          = 997;
+exports.ERRNO_NETWORK                        = 998;
 exports.ERRNO_UNKNOWN_ERROR                  = 999;
 
 // Errors.
@@ -152,8 +154,14 @@ exports.ERROR_TOO_MANY_CLIENT_REQUESTS       = "TOO_MANY_CLIENT_REQUESTS";
 exports.ERROR_SERVICE_TEMP_UNAVAILABLE       = "SERVICE_TEMPORARY_UNAVAILABLE";
 exports.ERROR_UI_ERROR                       = "UI_ERROR";
 exports.ERROR_UI_REQUEST                     = "UI_REQUEST";
+exports.ERROR_PARSE                          = "PARSE_ERROR";
+exports.ERROR_NETWORK                        = "NETWORK_ERROR";
 exports.ERROR_UNKNOWN                        = "UNKNOWN_ERROR";
 exports.ERROR_UNVERIFIED_ACCOUNT             = "UNVERIFIED_ACCOUNT";
+
+// Status code errors
+exports.ERROR_CODE_METHOD_NOT_ALLOWED        = 405;
+exports.ERROR_MSG_METHOD_NOT_ALLOWED         = "METHOD_NOT_ALLOWED";
 
 // FxAccounts has the ability to "split" the credentials between a plain-text
 // JSON file in the profile dir and in the login manager.

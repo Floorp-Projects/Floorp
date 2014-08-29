@@ -2256,8 +2256,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     thebesCtx->Scale(2.0f, 2.0f);
   }
 
-  gfxQuartzNativeDrawing nativeDrawing(thebesCtx, nativeDirtyRect,
-                                       hidpi ? 2.0f : 1.0f);
+  gfxQuartzNativeDrawing nativeDrawing(thebesCtx, nativeDirtyRect);
 
   CGContextRef cgContext = nativeDrawing.BeginNativeDrawing();
   if (cgContext == nullptr) {

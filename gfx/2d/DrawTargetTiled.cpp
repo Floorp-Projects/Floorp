@@ -36,11 +36,12 @@ DrawTargetTiled::Init(const TileSet& aTiles)
                             mTiles[i].mTileOrigin.x + mTiles[i].mDrawTarget->GetSize().width);
     uint32_t newYMost = max(mRect.YMost(),
                             mTiles[i].mTileOrigin.y + mTiles[i].mDrawTarget->GetSize().height);
-    mRect.x = min(mRect.x, mTiles[i].mTileOrigin.x.value);
-    mRect.y = min(mRect.y, mTiles[i].mTileOrigin.y.value);
+    mRect.x = min(mRect.x, mTiles[i].mTileOrigin.x);
+    mRect.y = min(mRect.y, mTiles[i].mTileOrigin.y);
     mRect.width = newXMost - mRect.x;
     mRect.height = newYMost - mRect.y;
   }
+  mFormat = mTiles[0].mDrawTarget->GetFormat();
   return true;
 }
 

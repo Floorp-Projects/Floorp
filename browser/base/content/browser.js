@@ -40,7 +40,11 @@ var gProxyFavIcon = null;
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gContextMenu = null; // nsContextMenu instance
-var gMultiProcessBrowser = false;
+var gMultiProcessBrowser =
+  window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIWebNavigation)
+        .QueryInterface(Ci.nsILoadContext)
+        .useRemoteTabs;
 
 #ifndef XP_MACOSX
 var gEditUIVisible = true;
@@ -784,12 +788,6 @@ var gBrowserInit = {
   delayedStartupFinished: false,
 
   onLoad: function() {
-    gMultiProcessBrowser =
-      window.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsILoadContext)
-      .useRemoteTabs;
-
     var mustLoadSidebar = false;
 
     gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
@@ -1279,6 +1277,12 @@ var gBrowserInit = {
           Services.telemetry.getHistogramById("MASTER_PASSWORD_ENABLED").add(mpEnabled);
         }
       }, 5000);
+
+      // Telemetry for tracking protection.
+      let tpEnabled = gPrefService
+                      .getBoolPref("privacy.trackingprotection.enabled");
+      Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED")
+        .add(tpEnabled);
     });
     this.delayedStartupFinished = true;
 
@@ -6496,6 +6500,10 @@ var gIdentityHandler = {
          nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT     |
          nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)) {
       this.showBadContentDoorhanger(state);
+    } else {
+      // We didn't show the shield
+      Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD")
+        .add(0);
     }
   },
 
@@ -6517,6 +6525,19 @@ var gIdentityHandler = {
     // default
     let iconState = "bad-content-blocked-notification-icon";
 
+    // Telemetry for whether the shield was due to tracking protection or not
+    let histogram = Services.telemetry.getHistogramById
+                      ("TRACKING_PROTECTION_SHIELD");
+    if (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) {
+      histogram.add(1);
+    } else if (state &
+               Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
+      histogram.add(2);
+    } else {
+      // The shield is due to mixed content, just keep a count so we can
+      // normalize later.
+      histogram.add(3);
+    }
     if (state &
         (Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT |
          Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)) {

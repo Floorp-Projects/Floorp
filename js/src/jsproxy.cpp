@@ -83,17 +83,6 @@ js::assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id,
 }
 #endif
 
-BaseProxyHandler::BaseProxyHandler(const void *family, bool hasPrototype, bool hasSecurityPolicy)
-  : mFamily(family),
-    mHasPrototype(hasPrototype),
-    mHasSecurityPolicy(hasSecurityPolicy)
-{
-}
-
-BaseProxyHandler::~BaseProxyHandler()
-{
-}
-
 bool
 BaseProxyHandler::enter(JSContext *cx, HandleObject wrapper, HandleId id, Action act,
                         bool *bp) const
@@ -578,12 +567,6 @@ DirectProxyHandler::weakmapKeyDelegate(JSObject *proxy) const
     return UncheckedUnwrap(proxy);
 }
 
-DirectProxyHandler::DirectProxyHandler(const void *family, bool hasPrototype,
-                                       bool hasSecurityPolicy)
-  : BaseProxyHandler(family, hasPrototype, hasSecurityPolicy)
-{
-}
-
 bool
 DirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const
 {
@@ -761,8 +744,9 @@ namespace {
 class ScriptedIndirectProxyHandler : public BaseProxyHandler
 {
   public:
-    ScriptedIndirectProxyHandler();
-    virtual ~ScriptedIndirectProxyHandler();
+    MOZ_CONSTEXPR ScriptedIndirectProxyHandler()
+      : BaseProxyHandler(&family)
+    { }
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
@@ -820,15 +804,6 @@ static const Class CallConstructHolder = {
 
 // This variable exists solely to provide a unique address for use as an identifier.
 const char ScriptedIndirectProxyHandler::family = 0;
-
-ScriptedIndirectProxyHandler::ScriptedIndirectProxyHandler()
-        : BaseProxyHandler(&family)
-{
-}
-
-ScriptedIndirectProxyHandler::~ScriptedIndirectProxyHandler()
-{
-}
 
 bool
 ScriptedIndirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy,
@@ -1078,8 +1053,9 @@ const ScriptedIndirectProxyHandler ScriptedIndirectProxyHandler::singleton;
 /* Derived class for all scripted direct proxy handlers. */
 class ScriptedDirectProxyHandler : public DirectProxyHandler {
   public:
-    ScriptedDirectProxyHandler();
-    virtual ~ScriptedDirectProxyHandler();
+    MOZ_CONSTEXPR ScriptedDirectProxyHandler()
+      : DirectProxyHandler(&family)
+    { }
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
@@ -1385,15 +1361,6 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
 
     // step n
     return true;
-}
-
-ScriptedDirectProxyHandler::ScriptedDirectProxyHandler()
-        : DirectProxyHandler(&family)
-{
-}
-
-ScriptedDirectProxyHandler::~ScriptedDirectProxyHandler()
-{
 }
 
 // ES6 (22 May, 2014) 9.5.4 Proxy.[[PreventExtensions]]()

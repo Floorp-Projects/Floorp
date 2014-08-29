@@ -31,14 +31,15 @@ CC_DevicePtr CC_SIPCCDevice::createDevice ()
 
     CC_SIPCCDevicePtr pSIPCCDevice = CC_SIPCCDevice::wrap(deviceHandle);
 
+    pSIPCCDevice->enableVideo(true);
+    pSIPCCDevice->enableCamera(true);
+
     return pSIPCCDevice.get();
 }
 
 CC_SIPCCDevice::CC_SIPCCDevice (cc_device_handle_t aDeviceHandle)
 : deviceHandle(aDeviceHandle)
 {
-	enableVideo(true);
-	enableCamera(true);
 }
 
 CC_DeviceInfoPtr CC_SIPCCDevice::getDeviceInfo ()

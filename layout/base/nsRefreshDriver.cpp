@@ -1108,6 +1108,9 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   AutoRestore<bool> restoreInRefresh(mInRefresh);
   mInRefresh = true;
 
+  AutoRestore<TimeStamp> restoreTickStart(mTickStart);
+  mTickStart = TimeStamp::Now();
+
   /*
    * The timer holds a reference to |this| while calling |Notify|.
    * However, implementations of |WillRefresh| are permitted to destroy
@@ -1430,6 +1433,12 @@ nsRefreshDriver::RevokeTransactionId(uint64_t aTransactionId)
     FinishedWaitingForTransaction();
   }
   mPendingTransaction--;
+}
+
+mozilla::TimeStamp
+nsRefreshDriver::GetTransactionStart()
+{
+  return mTickStart;
 }
 
 void

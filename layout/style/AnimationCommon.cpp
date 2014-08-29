@@ -451,7 +451,7 @@ AnimationPlayerCollection::LogAsyncAnimationFailure(nsCString& aMessage,
     aMessage.Append(']');
   }
   aMessage.Append('\n');
-  printf_stderr(aMessage.get());
+  printf_stderr("%s", aMessage.get());
 }
 
 /*static*/ void

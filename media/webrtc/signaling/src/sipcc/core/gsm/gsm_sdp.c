@@ -449,6 +449,13 @@ gsmsdp_free_media (fsmdef_media_t *media)
         media->payloads = NULL;
         media->num_payloads = 0;
     }
+
+    if (media->previous_sdp.payloads != NULL) {
+        cpr_free(media->previous_sdp.payloads);
+        media->previous_sdp.payloads = NULL;
+        media->previous_sdp.num_payloads = 0;
+    }
+
     /*
      * Check to see if the element is part of the
      * free chunk space.
@@ -7364,9 +7371,26 @@ gsmsdp_configure_dtls_data_attributes(fsm_fcb_t *fcb_p)
 void
 gsmsdp_free (fsmdef_dcb_t *dcb_p)
 {
-    if ((dcb_p != NULL) && (dcb_p->sdp != NULL)) {
-        sipsdp_free(&dcb_p->sdp);
-        dcb_p->sdp = NULL;
+    if (dcb_p != NULL) {
+        if (dcb_p->sdp != NULL) {
+            sipsdp_free(&dcb_p->sdp);
+            dcb_p->sdp = NULL;
+        }
+
+        if (dcb_p->media_cap_tbl) {
+            cpr_free(dcb_p->media_cap_tbl);
+            dcb_p->media_cap_tbl = NULL;
+        }
+
+        if (dcb_p->remote_media_stream_tbl) {
+            cpr_free(dcb_p->remote_media_stream_tbl);
+            dcb_p->remote_media_stream_tbl = NULL;
+        }
+
+        if (dcb_p->local_media_track_tbl) {
+            cpr_free(dcb_p->local_media_track_tbl);
+            dcb_p->local_media_track_tbl = NULL;
+        }
     }
 }
 
@@ -7582,30 +7606,4 @@ gsmsdp_find_level_from_mid(fsmdef_dcb_t * dcb_p, const char * mid, uint16_t *lev
     return CC_CAUSE_VALUE_NOT_FOUND;
 }
 
-/**
- * The function performs cleaning candidate list of a given call. It walks
- * through the list and deallocates each candidate entry.
- *
- * @param[in]dcb   - pointer to fsmdef_def_t for the dcb whose
- *                   media list to be cleaned.
- *
- * @return  none
- *
- * @pre     (dcb not_eq NULL)
- */
-void gsmsdp_clean_candidate_list (fsmdef_dcb_t *dcb_p)
-{
-    fsmdef_candidate_t *candidate = NULL;
-
-    while (TRUE) {
-        /* unlink head and free the media */
-        candidate = (fsmdef_candidate_t *)sll_lite_unlink_head(&dcb_p->candidate_list);
-        if (candidate) {
-            strlib_free(candidate->candidate);
-            free(candidate);
-        } else {
-            break;
-        }
-    }
-}
 

@@ -81,9 +81,11 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
         return mFlags;
     }
 
-    explicit Wrapper(unsigned flags, bool hasPrototype = false, bool hasSecurityPolicy = false);
-
-    virtual ~Wrapper();
+    explicit MOZ_CONSTEXPR Wrapper(unsigned aFlags, bool aHasPrototype = false,
+                                   bool aHasSecurityPolicy = false)
+      : DirectProxyHandler(&family, aHasPrototype, aHasSecurityPolicy),
+        mFlags(aFlags)
+    { }
 
     virtual bool finalizeInBackground(Value priv) const MOZ_OVERRIDE;
 
@@ -104,10 +106,10 @@ WrapperOptions::proto() const
 class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
 {
   public:
-    explicit CrossCompartmentWrapper(unsigned flags, bool hasPrototype = false,
-                                     bool hasSecurityPolicy = false);
-
-    virtual ~CrossCompartmentWrapper();
+    explicit MOZ_CONSTEXPR CrossCompartmentWrapper(unsigned aFlags, bool aHasPrototype = false,
+                                                   bool aHasSecurityPolicy = false)
+      : Wrapper(CROSS_COMPARTMENT | aFlags, aHasPrototype, aHasSecurityPolicy)
+    { }
 
     /* ES5 Harmony fundamental wrapper traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject wrapper) const MOZ_OVERRIDE;
@@ -170,7 +172,9 @@ template <class Base>
 class JS_FRIEND_API(SecurityWrapper) : public Base
 {
   public:
-    explicit SecurityWrapper(unsigned flags, bool hasPrototype = false);
+    explicit MOZ_CONSTEXPR SecurityWrapper(unsigned flags, bool hasPrototype = false)
+      : Base(flags, hasPrototype, /* hasSecurityPolicy = */ true)
+    { }
 
     virtual bool isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) const MOZ_OVERRIDE;
     virtual bool preventExtensions(JSContext *cx, HandleObject wrapper) const MOZ_OVERRIDE;
@@ -208,7 +212,9 @@ typedef SecurityWrapper<CrossCompartmentWrapper> CrossCompartmentSecurityWrapper
 class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
 {
   public:
-    explicit DeadObjectProxy();
+    explicit MOZ_CONSTEXPR DeadObjectProxy()
+      : BaseProxyHandler(&family)
+    { }
 
     /* ES5 Harmony fundamental wrapper traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;

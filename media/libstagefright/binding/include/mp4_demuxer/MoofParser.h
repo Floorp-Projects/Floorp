@@ -44,6 +44,11 @@ public:
   }
   Mdhd(Box& aBox);
 
+  Microseconds ToMicroseconds(uint64_t aTimescaleUnits)
+  {
+    return aTimescaleUnits * 1000000ll / mTimescale;
+  }
+
   uint64_t mCreationTime;
   uint64_t mModificationTime;
   uint32_t mTimescale;
@@ -102,13 +107,17 @@ class Moof
 {
 public:
   Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd);
-  void ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd);
-  void ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd);
+  void FixRounding(const Moof& aMoof);
 
   mozilla::MediaByteRange mRange;
   mozilla::MediaByteRange mMdatRange;
-  nsTArray<Interval<Microseconds>> mTimeRanges;
+  Interval<Microseconds> mTimeRange;
   nsTArray<Sample> mIndex;
+
+private:
+  void ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd);
+  void ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd);
+  uint64_t mMaxRoundingError;
 };
 
 class MoofParser

@@ -4,7 +4,10 @@
  * as the third argument
  */
 var target = {};
-for (var key of ['foo', Symbol.iterator]) {
+var keys = ['foo'];
+if (typeof Symbol === "function")
+    keys.push(Symbol.iterator);
+for (var key of keys) {
     handler = {};
     for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy]) {
         handler.get =

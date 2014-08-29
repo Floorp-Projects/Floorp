@@ -70,8 +70,8 @@ void Axis::StartTouch(ScreenCoord aPos, uint32_t aTimestampMs) {
 }
 
 bool Axis::AdjustDisplacement(CSSCoord aDisplacement,
-                              CSSCoord& aDisplacementOut,
-                              CSSCoord& aOverscrollAmountOut)
+                              /* CSSCoord */ float& aDisplacementOut,
+                              /* CSSCoord */ float& aOverscrollAmountOut)
 {
   if (mAxisLocked) {
     aOverscrollAmountOut = 0;

@@ -139,11 +139,6 @@ MediaSourceReader::OnVideoEOS()
     MSE_DEBUG("MediaSourceReader(%p)::OnVideoEOS reader=%p EOS (readers=%u)",
               this, mVideoReader.get(), mDecoders.Length());
     GetCallback()->OnVideoEOS();
-  } else {
-    // If a new decoder isn't ready to respond with frames yet, we're going to
-    // keep hitting this path at 1/frame_duration Hz. Bug 1058422 is raised to
-    // address this issue.
-    RequestVideoData(false, mTimeThreshold);
   }
 }
 
@@ -344,9 +339,12 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder)
 already_AddRefed<SourceBufferDecoder>
 MediaSourceReader::CreateSubDecoder(const nsACString& aType)
 {
+  if (IsShutdown()) {
+    return nullptr;
+  }
   MOZ_ASSERT(GetTaskQueue());
   nsRefPtr<SourceBufferDecoder> decoder =
-    new SourceBufferDecoder(new SourceBufferResource(nullptr, aType), mDecoder);
+    new SourceBufferDecoder(new SourceBufferResource(aType), mDecoder);
   nsRefPtr<MediaDecoderReader> reader(CreateReaderForType(aType, decoder));
   if (!reader) {
     return nullptr;
@@ -441,14 +439,14 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   ResetDecode();
   if (mAudioReader) {
     nsresult rv = mAudioReader->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
-    MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p rv=%xf", this, mAudioReader.get(), rv);
+    MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p rv=%x", this, mAudioReader.get(), rv);
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
   if (mVideoReader) {
     nsresult rv = mVideoReader->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
-    MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p rv=%xf", this, mVideoReader.get(), rv);
+    MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p rv=%x", this, mVideoReader.get(), rv);
     if (NS_FAILED(rv)) {
       return rv;
     }
