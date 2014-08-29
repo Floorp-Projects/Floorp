@@ -509,7 +509,7 @@ FunctionBox::FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunct
     inWith(false),                  // initialized below
     inGenexpLambda(false),
     hasDestructuringArgs(false),
-    useAsm(directives.asmJS()),
+    useAsm(false),
     insideUseAsm(outerpc && outerpc->useAsmOrInsideUseAsm()),
     usesArguments(false),
     usesApply(false),
@@ -2421,10 +2421,11 @@ template <>
 bool
 Parser<FullParseHandler>::asmJS(Node list)
 {
-    // If we are already inside "use asm" that means we are either actively
-    // compiling or we are reparsing after asm.js validation failure. In either
-    // case, nothing to do here.
-    if (pc->useAsmOrInsideUseAsm())
+    // We should be encountering the "use asm" directive for the first time; if
+    // the directive is already, we must have failed asm.js validation and we're
+    // reparsing. In that case, don't try to validate again. A non-null
+    // newDirectives means we're not in a normal function.
+    if (!pc->newDirectives || pc->newDirectives->asmJS())
         return true;
 
     // If there is no ScriptSource, then we are doing a non-compiling parse and
