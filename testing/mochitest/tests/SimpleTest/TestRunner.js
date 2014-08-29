@@ -243,6 +243,10 @@ function StructuredLogger(name) {
         var allData = {action: action,
                        time: new Date().getTime(),
                        thread: "",
+                       // This is a directive to python to format these messages
+                       // for compatibility with mozharness. This can be removed
+                       // with the MochitestFormatter (see bug 1045525).
+                       js_source: "TestRunner",
                        pid: null,
                        source: this.name};
 
