@@ -37,6 +37,12 @@ this.PermissionsTable =  { geolocation: {
                              privileged: PROMPT_ACTION,
                              certified: PROMPT_ACTION
                            },
+                           "geolocation-noprompt": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION,
+                             substitute: ["geolocation"]
+                           },
                            camera: {
                              app: DENY_ACTION,
                              privileged: PROMPT_ACTION,
@@ -517,10 +523,10 @@ this.PermissionsReverseTable = (function () {
   let reverseTable = {};
 
   for (let permName in PermissionsTable) {
-    let permAliases;
+    let permAliases = [];
     if (PermissionsTable[permName].access) {
       permAliases = expandPermissions(permName, "readwrite");
-    } else {
+    } else if (!PermissionsTable[permName].substitute) {
       permAliases = expandPermissions(permName);
     }
     for (let i = 0; i < permAliases.length; i++) {
