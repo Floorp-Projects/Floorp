@@ -336,8 +336,12 @@ MediaSource::Detach()
   mDecoder = nullptr;
   SetReadyState(MediaSourceReadyState::Closed);
   mDuration = UnspecifiedNaN<double>();
-  mActiveSourceBuffers->Clear();
-  mSourceBuffers->Clear();
+  if (mActiveSourceBuffers) {
+    mActiveSourceBuffers->Clear();
+  }
+  if (mSourceBuffers) {
+    mSourceBuffers->Clear();
+  }
 }
 
 void
