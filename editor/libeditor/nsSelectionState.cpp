@@ -446,44 +446,34 @@ nsRangeUpdater::SelAdjJoinNodes(nsIDOMNode* aLeftNode,
 }
 
 
-nsresult
-nsRangeUpdater::SelAdjInsertText(nsIContent* aTextNode, int32_t aOffset,
-                                 const nsAString &aString)
+void
+nsRangeUpdater::SelAdjInsertText(Text& aTextNode, int32_t aOffset,
+                                 const nsAString& aString)
 {
   if (mLock) {
     // lock set by Will/DidReplaceParent, etc...
-    return NS_OK;
+    return;
   }
 
   uint32_t count = mArray.Length();
   if (!count) {
-    return NS_OK;
+    return;
   }
-  NS_ENSURE_TRUE(aTextNode, NS_ERROR_NULL_POINTER);
 
   uint32_t len = aString.Length();
   for (uint32_t i = 0; i < count; i++) {
     nsRangeStore* item = mArray[i];
-    NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
+    MOZ_ASSERT(item);
 
-    if (item->startNode == aTextNode && item->startOffset > aOffset) {
+    if (item->startNode == &aTextNode && item->startOffset > aOffset) {
       item->startOffset += len;
     }
-    if (item->endNode == aTextNode && item->endOffset > aOffset) {
+    if (item->endNode == &aTextNode && item->endOffset > aOffset) {
       item->endOffset += len;
     }
   }
-  return NS_OK;
+  return;
 }
-
-nsresult
-nsRangeUpdater::SelAdjInsertText(nsIDOMCharacterData* aTextNode,
-                                 int32_t aOffset, const nsAString &aString)
-{
-  nsCOMPtr<nsIContent> textNode = do_QueryInterface(aTextNode);
-  return SelAdjInsertText(textNode, aOffset, aString);
-}
-
 
 nsresult
 nsRangeUpdater::SelAdjDeleteText(nsIContent* aTextNode, int32_t aOffset,
