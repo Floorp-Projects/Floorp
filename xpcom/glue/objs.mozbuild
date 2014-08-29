@@ -43,7 +43,6 @@ xpcom_gluens_src_lcppsrcs = [
     'GenericFactory.cpp',
     'nsProxyRelease.cpp',
     'nsTextFormatter.cpp',
-    'unused.cpp',
 ]
 
 xpcom_gluens_src_cppsrcs = [
