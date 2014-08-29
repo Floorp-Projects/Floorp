@@ -16,5 +16,6 @@
     "name": "DEVELOPERTOKEN",
     "url": "DEVELOPERURLTOKEN"
   },
-  "default_locale": "en-US"
+  "default_locale": "en-US",
+  "role": "ROLETOKEN"
 }

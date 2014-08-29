@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={1011738}
+-->
+<head>
+  <title>Test for Bug {1011738}</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="test_packaged_app_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1011738}">Mozilla Bug {1011738}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var gHostedURL = "http://test/tests/dom/apps/tests/file_app.sjs?apptype=hosted&getmanifest=true&role=theme";
+
+var gPackageURL = PackagedTestHelper.gSJS + "?getManifest=true&test_role";
+var gGenerator = runTest();
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document }],
+    function() { gGenerator.next() });
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+  * Checks that no apps that are not certified can be installed as themes.
+  */
+function runTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  // Test that a hosted app can't be a theme.
+  info("Hosted apps can't be themes.");
+  var request = navigator.mozApps.install(gHostedURL, { });
+  request.onerror = function() {
+    is(request.error.name, "INVALID_ROLE");
+    continueTest();
+  };
+  request.onsuccess = function() {
+    ok(false, "We should not install this app!");
+  };
+  yield undefined;
+
+  info("Non certified packaged apps can't be themes.");
+
+  PackagedTestHelper.setAppVersion(1, continueTest, false, false, "theme");
+  yield undefined;
+
+  request = navigator.mozApps.installPackage(gPackageURL, { });
+  request.onerror = cbError;
+
+  request.onsuccess = function() {
+    info("Installing package.");
+  };
+  navigator.mozApps.mgmt.oninstall = function(evt) {
+      info("Got oninstall event");
+      PackagedTestHelper.gApp = evt.application;
+
+      PackagedTestHelper.gApp.ondownloaderror = function() {
+        is(PackagedTestHelper.gApp.downloadError.name, "INVALID_ROLE");
+        continueTest();
+      };
+
+      PackagedTestHelper.gApp.ondownloadapplied = function() {
+        info("App download applied.");
+        ok(false, "We should not install this app!");
+        continueTest();
+      }
+
+    };
+  yield undefined;
+}
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>
