@@ -25,6 +25,7 @@
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
 #include "nsIDocument.h"
+#include "gfx2DGlue.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -1400,9 +1401,9 @@ Decompose2DMatrix(const gfxMatrix &aMatrix, Point3D &aScale,
 static bool
 Decompose3DMatrix(const gfx3DMatrix &aMatrix, Point3D &aScale,
                   float aShear[3], gfxQuaternion &aRotate,
-                  Point3D &aTranslate, gfxPointH3D &aPerspective)
+                  Point3D &aTranslate, Point4D &aPerspective)
 {
-  gfx3DMatrix local = aMatrix;
+  Matrix4x4 local = ToMatrix4x4(aMatrix);
 
   if (local[3][3] == 0) {
     return false;
@@ -1414,8 +1415,8 @@ Decompose3DMatrix(const gfx3DMatrix &aMatrix, Point3D &aScale,
    * perspective is used to solve for perspective, but it also provides
    * an easy way to test for singularity of the upper 3x3 component.
    */
-  gfx3DMatrix perspective = local;
-  gfxPointH3D empty(0, 0, 0, 1);
+  Matrix4x4 perspective = local;
+  Point4D empty(0, 0, 0, 1);
   perspective.SetTransposedVector(3, empty);
 
   if (perspective.Determinant() == 0.0) {
@@ -1438,7 +1439,7 @@ Decompose3DMatrix(const gfx3DMatrix &aMatrix, Point3D &aScale,
     /* Clear the perspective partition */
     local.SetTransposedVector(3, empty);
   } else {
-    aPerspective = gfxPointH3D(0, 0, 0, 1);
+    aPerspective = Point4D(0, 0, 0, 1);
   }
 
   /* Next take care of translation */
@@ -1510,12 +1511,12 @@ StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
   // TODO: What do we do if one of these returns false (singular matrix)
 
   Point3D scale1(1, 1, 1), translate1;
-  gfxPointH3D perspective1(0, 0, 0, 1);
+  Point4D perspective1(0, 0, 0, 1);
   gfxQuaternion rotate1;
   float shear1[3] = { 0.0f, 0.0f, 0.0f};
 
   Point3D scale2(1, 1, 1), translate2;
-  gfxPointH3D perspective2(0, 0, 0, 1);
+  Point4D perspective2(0, 0, 0, 1);
   gfxQuaternion rotate2;
   float shear2[3] = { 0.0f, 0.0f, 0.0f};
 
@@ -1531,18 +1532,18 @@ StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
   }
 
   // Interpolate each of the pieces
-  gfx3DMatrix result;
+  Matrix4x4 result;
 
-  gfxPointH3D perspective =
+  Point4D perspective =
     InterpolateNumerically(perspective1, perspective2, aProgress);
   result.SetTransposedVector(3, perspective);
 
   Point3D translate =
     InterpolateNumerically(translate1, translate2, aProgress);
-  result.Translate(translate);
+  result.Translate(translate.x, translate.y, translate.z);
 
   gfxQuaternion q3 = rotate1.Slerp(rotate2, aProgress);
-  gfx3DMatrix rotate = q3.ToMatrix();
+  Matrix4x4 rotate = q3.ToMatrix();
   if (!rotate.IsIdentity()) {
       result = rotate * result;
   }
@@ -1572,7 +1573,7 @@ StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
     result.Scale(scale.x, scale.y, scale.z);
   }
 
-  return result;
+  return To3DMatrix(result);
 }
 
 static nsCSSValueList*

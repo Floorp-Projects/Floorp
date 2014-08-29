@@ -5,6 +5,7 @@
 
 #include "gfxMatrix.h"
 #include "gfx3DMatrix.h"
+#include "gfx2DGlue.h"
 #include "mozilla/gfx/Tools.h"
 #include <math.h>
 #include <algorithm>
@@ -233,24 +234,6 @@ gfx3DMatrix::ChangeBasis(const Point3D& aOrigin)
 
   // Translate back into position after applying this matrix.
   TranslatePost(aOrigin);
-}
-
-void
-gfx3DMatrix::SkewXY(double aSkew)
-{
-    (*this)[1] += (*this)[0] * aSkew;
-}
-
-void 
-gfx3DMatrix::SkewXZ(double aSkew)
-{
-    (*this)[2] += (*this)[0] * aSkew;
-}
-
-void
-gfx3DMatrix::SkewYZ(double aSkew)
-{
-    (*this)[2] += (*this)[1] * aSkew;
 }
 
 void
@@ -511,7 +494,7 @@ gfx3DMatrix::IsSingular() const
 gfx3DMatrix
 gfx3DMatrix::Inverse() const
 {
-  if (TransposedVector(3) == gfxPointH3D(0, 0, 0, 1)) {
+  if (_14 == 0 && _24 == 0 && _34 == 0 && _44 == 1) {
     /** 
      * When the matrix contains no perspective, the inverse
      * is the same as the 3x3 inverse of the rotation components
@@ -587,34 +570,6 @@ gfx3DMatrix::Inverse() const
   return temp;
 }
 
-gfx3DMatrix&
-gfx3DMatrix::Normalize()
-{
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            (*this)[i][j] /= (*this)[3][3];
-       }
-    }
-    return *this;
-}
-
-gfx3DMatrix&
-gfx3DMatrix::Transpose()
-{
-    *this = Transposed();
-    return *this;
-}
-
-gfx3DMatrix
-gfx3DMatrix::Transposed() const
-{
-    gfx3DMatrix temp;
-    for (int i = 0; i < 4; i++) {
-        temp[i] = TransposedVector(i);
-    }
-    return temp;
-}
-
 gfxPoint
 gfx3DMatrix::Transform(const gfxPoint& point) const
 {
@@ -638,26 +593,15 @@ gfx3DMatrix::Transform3D(const Point3D& point) const
   return Point3D(x, y, z);
 }
 
-gfxPointH3D
-gfx3DMatrix::Transform4D(const gfxPointH3D& aPoint) const
+Point4D
+gfx3DMatrix::Transform4D(const Point4D& aPoint) const
 {
     gfxFloat x = aPoint.x * _11 + aPoint.y * _21 + aPoint.z * _31 + aPoint.w * _41;
     gfxFloat y = aPoint.x * _12 + aPoint.y * _22 + aPoint.z * _32 + aPoint.w * _42;
     gfxFloat z = aPoint.x * _13 + aPoint.y * _23 + aPoint.z * _33 + aPoint.w * _43;
     gfxFloat w = aPoint.x * _14 + aPoint.y * _24 + aPoint.z * _34 + aPoint.w * _44;
 
-    return gfxPointH3D(x, y, z, w);
-}
-
-gfxPointH3D
-gfx3DMatrix::TransposeTransform4D(const gfxPointH3D& aPoint) const
-{
-    gfxFloat x = aPoint.x * _11 + aPoint.y * _12 + aPoint.z * _13 + aPoint.w * _14;
-    gfxFloat y = aPoint.x * _21 + aPoint.y * _22 + aPoint.z * _23 + aPoint.w * _24;
-    gfxFloat z = aPoint.x * _31 + aPoint.y * _32 + aPoint.z * _33 + aPoint.w * _34;
-    gfxFloat w = aPoint.x * _41 + aPoint.y * _42 + aPoint.z * _43 + aPoint.w * _44;
-
-    return gfxPointH3D(x, y, z, w);
+    return Point4D(x, y, z, w);
 }
 
 gfxRect
@@ -763,7 +707,7 @@ gfx3DMatrix::ProjectTo2D()
   return *this;
 }
 
-gfxPointH3D gfx3DMatrix::ProjectPoint(const gfxPoint& aPoint) const
+Point4D gfx3DMatrix::ProjectPoint(const gfxPoint& aPoint) const
 {
   // Find a value for z that will transform to 0.
 
@@ -774,7 +718,7 @@ gfxPointH3D gfx3DMatrix::ProjectPoint(const gfxPoint& aPoint) const
   float z = -(aPoint.x * _13 + aPoint.y * _23 + _43) / _33;
 
   // Compute the transformed point
-  return Transform4D(gfxPointH3D(aPoint.x, aPoint.y, z, 1));
+  return Transform4D(Point4D(aPoint.x, aPoint.y, z, 1));
 }
 
 Point3D gfx3DMatrix::GetNormalVector() const
