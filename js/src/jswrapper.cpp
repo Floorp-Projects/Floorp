@@ -128,16 +128,6 @@ js::IsCrossCompartmentWrapper(JSObject *obj)
            !!(Wrapper::wrapperHandler(obj)->flags() & Wrapper::CROSS_COMPARTMENT);
 }
 
-Wrapper::Wrapper(unsigned flags, bool hasPrototype, bool hasSecurityPolicy)
-  : DirectProxyHandler(&family, hasPrototype, hasSecurityPolicy),
-    mFlags(flags)
-{
-}
-
-Wrapper::~Wrapper()
-{
-}
-
 const char Wrapper::family = 0;
 const Wrapper Wrapper::singleton((unsigned)0);
 const Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);
@@ -171,16 +161,6 @@ ErrorCopier::~ErrorCopier()
 }
 
 /* Cross compartment wrappers. */
-
-CrossCompartmentWrapper::CrossCompartmentWrapper(unsigned flags, bool hasPrototype,
-                                                 bool hasSecurityPolicy)
-  : Wrapper(CROSS_COMPARTMENT | flags, hasPrototype, hasSecurityPolicy)
-{
-}
-
-CrossCompartmentWrapper::~CrossCompartmentWrapper()
-{
-}
 
 bool Wrapper::finalizeInBackground(Value priv) const
 {
@@ -619,12 +599,6 @@ const CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
 /* Security wrappers. */
 
 template <class Base>
-SecurityWrapper<Base>::SecurityWrapper(unsigned flags, bool hasPrototype)
-  : Base(flags, hasPrototype, /* hasSecurityPolicy = */ true)
-{
-}
-
-template <class Base>
 bool
 SecurityWrapper<Base>::isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) const
 {
@@ -745,11 +719,6 @@ SecurityWrapper<Base>::unwatch(JSContext *cx, HandleObject proxy,
 
 template class js::SecurityWrapper<Wrapper>;
 template class js::SecurityWrapper<CrossCompartmentWrapper>;
-
-DeadObjectProxy::DeadObjectProxy()
-  : BaseProxyHandler(&family)
-{
-}
 
 bool
 DeadObjectProxy::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const

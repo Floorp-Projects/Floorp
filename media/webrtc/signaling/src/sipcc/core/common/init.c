@@ -21,7 +21,7 @@
 #include "misc_apps_task.h"
 #include "plat_api.h"
 #include "ccapp_task.h"
-#include "thread_monitor.h"
+#include "uiapi.h"
 #include "mozilla/Assertions.h"
 
 #include "phone_platform_constants.h"
@@ -94,29 +94,29 @@ boolean gStopTickTask = FALSE;
  *--------------------------------------------------------------------------
  */
 
-cprMsgQueue_t ccapp_msgq;
-cprThread_t ccapp_thread;
+cprMsgQueue_t ccapp_msgq = NULL;
+cprThread_t ccapp_thread = NULL;
 
-cprMsgQueue_t sip_msgq;
-cprThread_t sip_thread;
+cprMsgQueue_t sip_msgq = NULL;
+cprThread_t sip_thread = NULL;
 #ifdef NO_SOCKET_POLLING
-cprThread_t sip_msgqwait_thread;
+cprThread_t sip_msgqwait_thread = NULL;
 #endif
 
-cprMsgQueue_t gsm_msgq;
-cprThread_t gsm_thread;
+cprMsgQueue_t gsm_msgq = NULL;
+cprThread_t gsm_thread = NULL;
 
-cprMsgQueue_t misc_app_msgq;
-cprThread_t misc_app_thread;
+cprMsgQueue_t misc_app_msgq = NULL;
+cprThread_t misc_app_thread = NULL;
 
 #ifdef JINDO_DEBUG_SUPPORTED
-cprMsgQueue_t debug_msgq;
-cprThread_t debug_thread;
+cprMsgQueue_t debug_msgq = NULL;
+cprThread_t debug_thread = NULL;
 #endif
 
 #ifdef EXTERNAL_TICK_REQUIRED
-cprMsgQueue_t ticker_msgq;
-cprThread_t ticker_thread;
+cprMsgQueue_t ticker_msgq = NULL;
+cprThread_t ticker_thread = NULL;
 #endif
 
 /* Platform initialized flag */
@@ -215,13 +215,6 @@ ccInit ()
 
     strlib_init();
 
-    /*
-     * below should move to cprPreInit. keep it here until then
-     */
-#if defined(_WIN32) && defined(CPR_TIMERS_ENABLED)
-    cprTimerSystemInit();
-#endif
-
     /* Initialize threads, queues etc. */
     (void) thread_init();
 
@@ -243,136 +236,16 @@ thread_init ()
 
     PHNChangeState(STATE_FILE_CFG);
 
-    /* initialize message queues */
-    sip_msgq = cprCreateMessageQueue("SIPQ", SIPQSZ);
-    gsm_msgq = cprCreateMessageQueue("GSMQ", GSMQSZ);
-
-    if (FALSE == gHardCodeSDPMode) {
-        misc_app_msgq = cprCreateMessageQueue("MISCAPPQ", DEFQSZ);
-    }
-    ccapp_msgq = cprCreateMessageQueue("CCAPPQ", DEFQSZ);
-#ifdef JINDO_DEBUG_SUPPORTED
-    debug_msgq = cprCreateMessageQueue("DEBUGAPPQ", DEFQSZ);
-#endif
-#ifdef EXTERNAL_TICK_REQUIRED
-    ticker_msgq = cprCreateMessageQueue("Ticker", DEFQSZ);
-#endif
-
-
     /*
      * Initialize the command parser and debug infrastructure
      */
     debugInit();
 
-    /* create threads */
-    ccapp_thread = cprCreateThread("CCAPP Task",
-                                 (cprThreadStartRoutine) CCApp_task,
-                                 GSMSTKSZ, CCPROVIDER_THREAD_RELATIVE_PRIORITY /* pri */, ccapp_msgq);
-    MOZ_ASSERT(ccapp_thread);
-    if (ccapp_thread) {
-        thread_started(THREADMON_CCAPP, ccapp_thread);
-    } else {
-        CSFLogError("common", "failed to create CCAPP task");
-    }
+    CCApp_prepare_task();
+    GSM_prepare_task();
 
-#ifdef JINDO_DEBUG_SUPPORTED
-#ifndef VENDOR_BUILD
-    debug_thread = cprCreateThread("Debug Task",
-                                   (cprThreadStartRoutine) debug_task, STKSZ,
-                                   0 /*pri */ , debug_msgq);
-
-    if (debug_thread == NULL) {
-        CSFLogError("common", "failed to create debug task");
-    }
-#endif
-#endif
-
-    /* SIP main thread */
-    sip_thread = cprCreateThread("SIPStack task",
-                                 (cprThreadStartRoutine) sip_platform_task_loop,
-                                 STKSZ, SIP_THREAD_RELATIVE_PRIORITY /* pri */, sip_msgq);
-    MOZ_ASSERT(sip_thread);
-    if (sip_thread) {
-        thread_started(THREADMON_SIP, sip_thread);
-    } else {
-        CSFLogError("common", "failed to create sip task");
-    }
-
-#ifdef NO_SOCKET_POLLING
-    /* SIP message wait queue task */
-    sip_msgqwait_thread = cprCreateThread("SIP MsgQueueWait task",
-                                          (cprThreadStartRoutine)
-                                          sip_platform_task_msgqwait,
-                                          STKSZ, SIP_THREAD_RELATIVE_PRIORITY /* pri */, sip_msgq);
-    MOZ_ASSERT(sip_msgqwait_thread);
-    if (sip_msgqwait_thread) {
-        thread_started(THREADMON_MSGQ, sip_msgqwait_thread);
-    } else {
-        CSFLogError("common", "failed to create sip message queue wait task");
-    }
-#endif
-
-    gsm_thread = cprCreateThread("GSM Task",
-                                 (cprThreadStartRoutine) GSMTask,
-                                 GSMSTKSZ, GSM_THREAD_RELATIVE_PRIORITY /* pri */, gsm_msgq);
-    MOZ_ASSERT(gsm_thread);
-    if (gsm_thread) {
-        thread_started(THREADMON_GSM, gsm_thread);
-    } else {
-        CSFLogError("common", "failed to create gsm task");
-    }
-
-    if (FALSE == gHardCodeSDPMode) {
-    	misc_app_thread = cprCreateThread("MiscApp Task",
-    			(cprThreadStartRoutine) MiscAppTask,
-    			STKSZ, 0 /* pri */, misc_app_msgq);
-    	if (misc_app_thread == NULL) {
-    		CSFLogError("common", "failed to create MiscApp task");
-    	}
-    }
-
-#ifdef EXTERNAL_TICK_REQUIRED
-    ticker_thread = cprCreateThread("Ticker task",
-                                    (cprThreadStartRoutine) TickerTask,
-                                    STKSZ, 0, ticker_msgq);
-    if (ticker_thread == NULL) {
-        CSFLogError("common", "failed to create ticker task");
-    }
-#endif
-
-    /* Associate the threads with the message queues */
-    (void) cprSetMessageQueueThread(sip_msgq, sip_thread);
-    (void) cprSetMessageQueueThread(gsm_msgq, gsm_thread);
-
-    if (FALSE == gHardCodeSDPMode) {
-    	(void) cprSetMessageQueueThread(misc_app_msgq, misc_app_thread);
-    }
-
-    (void) cprSetMessageQueueThread(ccapp_msgq, ccapp_thread);
-#ifdef JINDO_DEBUG_SUPPORTED
-    (void) cprSetMessageQueueThread(debug_msgq, debug_thread);
-#endif
-#ifdef EXTERNAL_TICK_REQUIRED
-    (void) cprSetMessageQueueThread(ticker_msgq, ticker_thread);
-#endif
-
-    /*
-     * initialize debugs of other modules.
-     *
-     * dp_init needs the gsm_msgq id. This
-     * is set in a global variable by the
-     * GSM task running. However due to timing
-     * issues dp_init is sometimes run before
-     * the GSM task has set this variable resulting
-     * in a NULL msgqueue ptr being passed to CPR
-     * which returns an error and does not create
-     * the dialplan timer. Thus pass is the same
-     * data to dp_init that is passed into the
-     * cprCreateThread call for GSM above.
-     */
     config_init();
     vcmInit();
-    dp_init(gsm_msgq);
 
     if (sip_minimum_config_check() != 0) {
         PHNChangeState(STATE_UNPROVISIONED);
@@ -423,22 +296,9 @@ void
 send_protocol_config_msg (void)
 {
     const char *fname = "send_protocol_config_msg";
-    char *msg;
-
-    TNP_DEBUG(DEB_F_PREFIX"send TCP_DONE message to sip thread..", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
-
-    msg = (char *) SIPTaskGetBuffer(4);
-    if (msg == NULL) {
-        TNP_DEBUG(DEB_F_PREFIX"failed to allocate message..", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
-        return;
-    }
-    /* send a config done message to the SIP Task */
-    if (SIPTaskSendMsg(TCP_PHN_CFG_TCP_DONE, msg, 0, NULL) == CPR_FAILURE) {
-        CSFLogError("common", "%s: notify SIP stack ready failed", fname);
-        cpr_free(msg);
-    }
     gsm_set_initialized();
     PHNChangeState(STATE_CONNECTED);
+    ui_set_sip_registration_state(CC_ALL_LINES, TRUE);
 }
 
 
@@ -461,16 +321,10 @@ send_task_unload_msg(cc_srcs_t dest_id)
 {
     const char *fname = "send_task_unload_msg";
     uint16_t len = 4;
-    cprBuffer_t  msg =  gsm_get_buffer(len);
+    cprBuffer_t  msg;
     int  sdpmode = 0;
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
-
-    if (msg == NULL) {
-        CSFLogError("common", "%s: failed to allocate  msg cprBuffer_t",
-                    fname);
-        return;
-    }
 
     DEF_DEBUG(DEB_F_PREFIX"send Unload message to %s task ..",
         DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname),
@@ -550,6 +404,10 @@ send_task_unload_msg(cc_srcs_t dest_id)
             }
             CSFLogError("common", "%s:  send UNLOAD msg to CCapp thread good",
               fname);
+            /* Unlike other similar functions, ccappTaskPostMsg does not take
+             * ownership. */
+            cpr_free(msg);
+            msg = NULL;
         }
         break;
 
@@ -599,10 +457,5 @@ ccUnload (void)
     send_task_unload_msg(CC_SRC_CCAPP);
 
     gStopTickTask = TRUE;
-
-    /*
-     * Here we are waiting until all threads that were started notify and exit.
-     */
-    join_all_threads();
 }
 

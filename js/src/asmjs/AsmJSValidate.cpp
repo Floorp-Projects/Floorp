@@ -4127,8 +4127,8 @@ CheckCoercedMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathB
         break;
     }
 
-    JS_ASSERT_IF(retType == RetType::Void, !*def);
-    JS_ASSERT_IF(retType != RetType::Void, !!*def);
+    JS_ASSERT_IF(retType == RetType::Void || f.inDeadCode(), !*def);
+    JS_ASSERT_IF(retType != RetType::Void && !f.inDeadCode(), !!*def);
     return true;
 }
 

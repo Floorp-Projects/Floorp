@@ -44,12 +44,19 @@ markdown Debugger.Memory.md Debugger-API/Debugger.Memory
   label 'max-alloc-log' '#max-alloc-log'        "Debugger.Memory: maxAllocationsLogLength"
   label 'take-census'   '#take-census'          "Debugger.Memory: takeCensus"
 
+markdown Tutorial-Debugger-Statement.md Debugger-API/Tutorial-Debugger-Statement
+  label 'tut debugger'                          "Tutorial: the debugger; statement"
+
+markdown Tutorial-Alloc-Log-Tree.md Debugger-API/Tutorial-Allocation-Log-Tree
+  label 'tut alloc log'                         "Tutorial: the allocation log"
+
 # Images:
 RBASE=https://mdn.mozillademos.org/files
 resource 'img-shadows'            shadows.svg                        $RBASE/7225/shadows.svg
 resource 'img-chrome-pref'        enable-chrome-devtools.png         $RBASE/7233/enable-chrome-devtools.png
 resource 'img-scratchpad-browser' scratchpad-browser-environment.png $RBASE/7229/scratchpad-browser-environment.png
 resource 'img-example-alert'      debugger-alert.png                 $RBASE/7231/debugger-alert.png
+resource 'img-alloc-plot'         alloc-plot-console.png             $RBASE/8461/alloc-plot-console.png
 
 # External links:
 absolute-label 'protocol' https://wiki.mozilla.org/Remote_Debugging_Protocol "Remote Debugging Protocol"

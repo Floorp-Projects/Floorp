@@ -1055,6 +1055,21 @@ class IDLInterface(IDLObjectWithScope):
             len(set(m.identifier.name for m in self.members if
                     m.isMethod() and not m.isStatic())) == 1)
 
+    def isExposedInWindow(self):
+        return 'Window' in self.exposureSet
+
+    def isExposedInAnyWorker(self):
+        return len(self.getWorkerExposureSet()) > 0
+
+    def isExposedOnlyInSomeWorkers(self):
+        assert self.isExposedInAnyWorker()
+        workerScopes = self.parentScope.globalNameMapping["Worker"]
+        return len(workerScopes.difference(self.exposureSet)) > 0
+
+    def getWorkerExposureSet(self):
+        workerScopes = self.parentScope.globalNameMapping["Worker"]
+        return workerScopes.intersection(self.exposureSet)
+
     def inheritanceDepth(self):
         depth = 0
         parent = self.parent

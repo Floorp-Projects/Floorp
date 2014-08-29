@@ -14,13 +14,11 @@ const { emit, off } = require("sdk/event/core");
 const { Class } = require("sdk/core/heritage");
 const Environment = require("sdk/system/environment").env;
 const Runtime = require("sdk/system/runtime");
-const Self = require("sdk/self");
 const URL = require("sdk/url");
-const Subprocess = require("subprocess");
+const Subprocess = require("sdk/system/child_process/subprocess");
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-const Prefs = require("sdk/simple-prefs").prefs;
 
-const { rootURI: ROOT_URI } = require('@loader/options');
+const ROOT_URI = require("addon").uri;
 const PROFILE_URL = ROOT_URI + "profile/";
 const BIN_URL = ROOT_URI + "b2g/";
 
@@ -140,9 +138,14 @@ exports.SimulatorProcess = Class({
     if (this._executable) {
       return this._executable;
     }
+    let customRuntime;
+    try {
+      let pref = "extensions." + require("addon").id + ".customRuntime";
+      customRuntime = Services.prefs.getComplexValue(pref, Ci.nsIFile);
+    } catch(e) {}
 
-    if (Prefs.customRuntime) {
-      this._executable = Prefs.customRuntime;
+    if (customRuntime) {
+      this._executable = customRuntime;
       this._executableFilename = "Custom runtime";
       return this._executable;
     }
@@ -177,7 +180,13 @@ exports.SimulatorProcess = Class({
   get b2gArguments() {
     let args = [];
 
-    let profile = Prefs.gaiaProfile || URL.toFilename(PROFILE_URL);
+    let gaiaProfile;
+    try {
+      let pref = "extensions." + require("addon").id + ".gaiaProfile";
+      gaiaProfile = Services.prefs.getComplexValue(pref, Ci.nsIFile).path;
+    } catch(e) {}
+
+    let profile = gaiaProfile || URL.toFilename(PROFILE_URL);
     args.push("-profile", profile);
     console.log("profile", profile);
 

@@ -355,6 +355,8 @@ protected:
 
   void AssertCurrentThreadInMonitor() const { mDecoder->GetReentrantMonitor().AssertCurrentThreadIn(); }
 
+  void SetState(State aState);
+
   // Inserts MediaData* samples into their respective MediaQueues.
   // aSample must not be null.
   void Push(AudioData* aSample);

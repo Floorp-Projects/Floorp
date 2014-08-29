@@ -61,7 +61,7 @@ public:
   std::vector<mozilla::DOMMediaStream *> GetStreams() { return streams; }
 
   ResponseState state;
-  char *lastString;
+  std::string lastString;
   sipcc::PeerConnectionImpl::Error lastStatusCode;
   mozilla::dom::PCObserverStateType lastStateType;
   int addIceSuccessCount;
