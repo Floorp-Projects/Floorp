@@ -185,15 +185,17 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
     return OnStopRequest(aRequest, status);
   }
 
-  if (aType == imgINotificationObserver::DECODE_COMPLETE && mFireEventsOnDecode) {
-    mFireEventsOnDecode = false;
+  if (aType == imgINotificationObserver::DECODE_COMPLETE) {
+    if (mFireEventsOnDecode) {
+      mFireEventsOnDecode = false;
 
-    uint32_t reqStatus;
-    aRequest->GetImageStatus(&reqStatus);
-    if (reqStatus & imgIRequest::STATUS_ERROR) {
-      FireEvent(NS_LITERAL_STRING("error"));
-    } else {
-      FireEvent(NS_LITERAL_STRING("load"));
+      uint32_t reqStatus;
+      aRequest->GetImageStatus(&reqStatus);
+      if (reqStatus & imgIRequest::STATUS_ERROR) {
+        FireEvent(NS_LITERAL_STRING("error"));
+      } else {
+        FireEvent(NS_LITERAL_STRING("load"));
+      }
     }
 
     UpdateImageState(true);

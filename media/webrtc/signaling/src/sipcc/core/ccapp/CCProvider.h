@@ -141,7 +141,8 @@ typedef enum {
 
 extern cpr_status_e ccappTaskPostMsg(unsigned int msgId, void * data, uint16_t len, int appId);
 extern void ccappSyncSessionMgmt(session_mgmt_t *sessMgmt);
-extern void CCApp_task(void * arg);
+extern void CCApp_prepare_task();
+extern void GSM_prepare_task();
 extern void *findhash(unsigned int key);
 extern session_id_t createSessionId(line_t line, callid_t call);
 extern void getLineIdAndCallId (line_t *line_id, callid_t *call_id);

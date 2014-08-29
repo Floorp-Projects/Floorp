@@ -26,7 +26,7 @@
     test.chain.append([[
       "PC_LOCAL_SET_REMOTE_OFFER",
       function (test) {
-        test.pcLocal.setRemoteDescriptionAndFail(test.pcLocal._last_offer,
+        test.pcLocal.setRemoteDescriptionAndFail(test.pcLocal._latest_offer,
           function(err) {
             is(err.name, "INVALID_STATE", "Error is INVALID_STATE");
             test.next();

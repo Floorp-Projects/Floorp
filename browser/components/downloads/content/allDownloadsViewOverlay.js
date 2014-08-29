@@ -517,7 +517,7 @@ DownloadElementShell.prototype = {
       if (aAnnoName == DOWNLOAD_META_DATA_ANNO) {
         let metaData = this.getDownloadMetaData();
         let annotatedMetaData = this._getAnnotatedMetaData();
-        metaData.endTme = annotatedMetaData.endTime;
+        metaData.endTime = annotatedMetaData.endTime;
         if ("fileSize" in annotatedMetaData)
           metaData.fileSize = annotatedMetaData.fileSize;
         else

@@ -9,7 +9,6 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/resource.h>
-#include "thread_monitor.h"
 #include "prtypes.h"
 #include "mozilla/Assertions.h"
 

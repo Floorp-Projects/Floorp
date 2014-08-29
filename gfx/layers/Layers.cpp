@@ -1505,8 +1505,8 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     aStream << nsPrintfCString(" [hscrollbar=%lld]", GetScrollbarTargetContainerId()).get();
   }
   if (GetIsFixedPosition()) {
-    aStream << nsPrintfCString(" [isFixedPosition anchor=%f,%f margin=%f,%f,%f,%f]",
-                     mAnchor.x.value, mAnchor.y.value,
+    aStream << nsPrintfCString(" [isFixedPosition anchor=%s margin=%f,%f,%f,%f]",
+                     ToString(mAnchor).c_str(),
                      mMargins.top, mMargins.right, mMargins.bottom, mMargins.left).get();
   }
   if (GetIsStickyPosition()) {

@@ -132,7 +132,9 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
                              mPeriodic(new Fake_MediaPeriodic(this)) {}
 
   void AddTrack(mozilla::TrackID aID, mozilla::TrackRate aRate, mozilla::TrackTicks aStart,
-                mozilla::MediaSegment* aSegment) {}
+                mozilla::MediaSegment* aSegment) {
+    delete aSegment;
+  }
   void EndTrack(mozilla::TrackID aID) {}
 
   bool AppendToTrack(mozilla::TrackID aID, mozilla::MediaSegment* aSegment,

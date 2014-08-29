@@ -22,7 +22,9 @@ g.eval("function f() { debugger; }");
 hits = 0;
 g.eval("args = []; f();");
 g.eval("this.f();");
-g.eval("var world = Symbol('world'); " +
+g.eval("var world = 'world'; " +
+       "if (typeof Symbol === 'function') " +
+       "    Symbol('world'); " +
        "args = ['hello', world, 3.14, true, false, null, undefined]; " +
        "f('hello', world, 3.14, true, false, null, undefined);");
 g.eval("f.apply(undefined, args);");

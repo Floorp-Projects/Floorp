@@ -2,9 +2,11 @@ load(libdir + "asserts.js");
 
 var LENGTH = 1024, SYMBOL_INDEX = 999;
 
+var sym = this.Symbol ? () => Symbol.for("comet") : () => NaN;
+
 var big = [];
 for (var i = 0; i < LENGTH; i++)
-    big[i] = (i === SYMBOL_INDEX ? Symbol.for("comet") : i);
+    big[i] = (i === SYMBOL_INDEX ? sym() : i);
 
 var progress;
 function copy(arr, big) {
