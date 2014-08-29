@@ -1039,11 +1039,13 @@ final class GeckoEditable
         if (DEBUG) {
             StringBuilder log = new StringBuilder(method.getName());
             log.append("(");
-            for (Object arg : args) {
-                debugAppend(log, arg).append(", ");
-            }
-            if (args.length > 0) {
-                log.setLength(log.length() - 2);
+            if (args != null) {
+                for (Object arg : args) {
+                    debugAppend(log, arg).append(", ");
+                }
+                if (args.length > 0) {
+                    log.setLength(log.length() - 2);
+                }
             }
             if (method.getReturnType().equals(Void.TYPE)) {
                 log.append(")");
