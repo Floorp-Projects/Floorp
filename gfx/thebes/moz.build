@@ -31,7 +31,6 @@ EXPORTS += [
     'gfxPattern.h',
     'gfxPlatform.h',
     'gfxPoint.h',
-    'gfxPointH3D.h',
     'gfxPrefs.h',
     'gfxQuad.h',
     'gfxQuaternion.h',

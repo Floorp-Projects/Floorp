@@ -7,7 +7,7 @@
 #define GFX_3DMATRIX_H
 
 #include <gfxTypes.h>
-#include <gfxPointH3D.h>
+#include "mozilla/gfx/Point.h"
 #include <gfxQuad.h>
 
 class gfxMatrix;
@@ -30,6 +30,7 @@ class gfxMatrix;
 class gfx3DMatrix
 {
   typedef mozilla::gfx::Point3D Point3D;
+  typedef mozilla::gfx::Point4D Point4D;
 public:
   /**
    * Create matrix.
@@ -63,15 +64,15 @@ public:
   gfx3DMatrix operator*(const gfx3DMatrix &aMatrix) const;
   gfx3DMatrix& operator*=(const gfx3DMatrix &aMatrix);
 
-  gfxPointH3D& operator[](int aIndex)
+  Point4D& operator[](int aIndex)
   {
       NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
-      return *reinterpret_cast<gfxPointH3D*>((&_11)+4*aIndex);
+      return *reinterpret_cast<Point4D*>((&_11)+4*aIndex);
   }
-  const gfxPointH3D& operator[](int aIndex) const
+  const Point4D& operator[](int aIndex) const
   {
       NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
-      return *reinterpret_cast<const gfxPointH3D*>((&_11)+4*aIndex);
+      return *reinterpret_cast<const Point4D*>((&_11)+4*aIndex);
   }
 
   /**
@@ -157,10 +158,6 @@ public:
    * | 0           0           0 1 |
    */
   void SkewXY(double aXSkew, double aYSkew);
-  
-  void SkewXY(double aSkew);
-  void SkewXZ(double aSkew);
-  void SkewYZ(double aSkew);
 
   /**
    * Scale the matrix
@@ -277,14 +274,13 @@ public:
    * Transforms a 3D vector according to this matrix.
    */
   Point3D Transform3D(const Point3D& point) const;
-  gfxPointH3D Transform4D(const gfxPointH3D& aPoint) const;
-  gfxPointH3D TransposeTransform4D(const gfxPointH3D& aPoint) const;
+  Point4D Transform4D(const Point4D& aPoint) const;
 
   /**
    * Given a point (x,y) find a value for z such that (x,y,z,1) transforms
    * into (x',y',0,w') and returns the latter.
    */
-  gfxPointH3D ProjectPoint(const gfxPoint& aPoint) const;
+  Point4D ProjectPoint(const gfxPoint& aPoint) const;
 
   /**
    * Inverts this matrix, if possible. Otherwise, the matrix is left
@@ -297,26 +293,6 @@ public:
       *this = Inverse();
       return *this;
   }
-
-  gfx3DMatrix& Normalize();
-
-  gfxPointH3D TransposedVector(int aIndex) const
-  {
-      NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
-      return gfxPointH3D(*((&_11)+aIndex), *((&_21)+aIndex), *((&_31)+aIndex), *((&_41)+aIndex));
-  }
-
-  void SetTransposedVector(int aIndex, gfxPointH3D &aVector)
-  {
-      NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
-      *((&_11)+aIndex) = aVector.x;
-      *((&_21)+aIndex) = aVector.y;
-      *((&_31)+aIndex) = aVector.z;
-      *((&_41)+aIndex) = aVector.w;
-  }
-
-  gfx3DMatrix& Transpose();
-  gfx3DMatrix Transposed() const;
 
   /**
    * Returns a unit vector that is perpendicular to the plane formed
