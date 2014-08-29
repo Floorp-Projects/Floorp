@@ -475,6 +475,17 @@ this.BrowserIDManager.prototype = {
    * signed in?
    */
   hasValidToken: function() {
+    // If pref is set to ignore cached authentication credentials for debugging,
+    // then return false to force the fetching of a new token.
+    let ignoreCachedAuthCredentials = false;
+    try {
+      ignoreCachedAuthCredentials = Svc.Prefs.get("debug.ignoreCachedAuthCredentials");
+    } catch(e) {
+      // Pref doesn't exist
+    }
+    if (ignoreCachedAuthCredentials) {
+      return false;
+    }
     if (!this._token) {
       return false;
     }
