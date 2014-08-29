@@ -41,6 +41,7 @@ DrawTargetTiled::Init(const TileSet& aTiles)
     mRect.width = newXMost - mRect.x;
     mRect.height = newYMost - mRect.y;
   }
+  mFormat = mTiles[0].mDrawTarget->GetFormat();
   return true;
 }
 
