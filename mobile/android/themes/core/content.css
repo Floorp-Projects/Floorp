@@ -87,7 +87,7 @@ xul|window xul|scrollbar xul|thumb {
   -moz-border-right-colors: none !important;
   -moz-border-left-colors: none !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  border-radius: 3px;
+  border-radius: @form_border_radius@;
 }
 
 select:not([size]):not([multiple]) > xul|scrollbar,
@@ -106,18 +106,18 @@ button,
 xul|button,
 * > input:not([type="image"]) {
   -moz-appearance: none !important;  /* See bug 598421 for fixing the platform */
-  border-radius: 3px;
+  border-radius: @form_border_radius@;
 }
 
 select[size],
 select[multiple],
 select[size][multiple],
 textarea,
-* > input:not([type="image"]) {
+* > input:not([type="image"]):not([type="image"]) {
   border-style: solid;
-  border-color: #7d7d7d;
-  color: #414141;
-  background: white linear-gradient(rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 3px, rgba(255,255,255,0.2) 16px);
+  border-color: @form_border@;
+  color: @form_text@;
+  background-color: @form_background@;
 }
 
 /* Selects are handled by the form helper, see bug 685197 */
@@ -133,17 +133,17 @@ select[size="1"],
 * > input[type="reset"],
 button {
   border-style: solid;
-  border-color: #7d7d7d;
-  color: #414141;
-  background: white linear-gradient(rgba(255,255,255,0.2) 0, rgba(215,215,215,0.5) 18px, rgba(115,115,115,0.5) 100%);
+  border-color: @form_border@;
+  color: @form_text@;
+  background-color: @form_background@;
 }
 
 input[type="checkbox"] {
-  background: white linear-gradient(rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 2px, rgba(255,255,255,0.2) 6px);
+  background: @form_background@;
 }
 
 input[type="radio"] {
-  background: radial-gradient(at 6px 6px, rgba(255,255,255,0.2) 3px, rgba(195,195,195,0.5) 5px, rgba(115,115,115,0.5) 100%);
+  background: @form_background@
 }
 
 select {
@@ -180,7 +180,7 @@ input[type="radio"],
 input[type="checkbox"] {
   max-width: 14px;
   max-height: 14px;
-  border: 1px solid #a7a7a7 !important;
+  border: 1px solid @form_border@ !important;
   padding: 2px 1px 2px 1px;
 }
 
@@ -191,11 +191,10 @@ select > button {
   border-radius: 0;
   color: #414141;
 
-  background-size: auto auto, 100% 90%;
+  background-size: auto auto;
   background-color: transparent;
-  background-image: url("chrome://browser/skin/images/dropmarker.svg"),
-                    radial-gradient(at bottom left, #bbbbbb 40%, #f5f5f5) !important;
-  background-position: -moz-calc(50% + 1px) center, -15px center !important;
+  background-image: url("chrome://browser/skin/images/dropmarker.svg") !important;
+  background-position: -moz-calc(50% + 1px) center !important;
   background-repeat: no-repeat !important;
 
   font-size: inherit;
@@ -209,8 +208,8 @@ input[type="file"]:focus > input[type="text"],
 * > input:not([type="image"]):focus {
   outline: 0px !important;
   border-style: solid;
-  border-color: rgb(94,128,153);
-  background: white linear-gradient(rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 3px, rgba(255,255,255,0.2) 16px);
+  border-color: @form_border@;
+  background-color: @form_background@;
 }
 
 select:not([size]):not([multiple]):focus,
@@ -222,21 +221,21 @@ input[type="reset"]:focus,
 button:focus {
   outline: 0px !important;
   border-style: solid;
-  border-color: rgb(94,128,153);
-  background: white linear-gradient(rgba(255,255,255,0.2) 0, rgba(198,225,256,0.2) 18px, rgba(27,113,177,0.5) 100%);
+  border-color: @form_border@;
+  background-color: @form_background@;
 }
 
 input[type="checkbox"]:focus,
 input[type="radio"]:focus {
-  border-color: #99c6e0 !important;
+  border-color: @form_border@ !important;
 }
 
 input[type="checkbox"]:focus {
-  background: white linear-gradient(rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 2px, rgba(255,255,255,0.2) 6px);
+  background: @form_background@;
 }
 
 input[type="radio"]:focus {
-  background: radial-gradient(at 6px 6px, rgba(255,255,255,0.2) 3px, rgba(198,225,246,0.2) 5px, rgba(27,113,177,0.5) 100%);
+  background: @form_background@;
 }
 
 /* we need to be specific for selects because the above rules are specific too */
@@ -251,17 +250,17 @@ button[disabled],
 button[disabled]:active,
 * > input:not([type="image"])[disabled],
 * > input:not([type="image"])[disabled]:active {
-  color: rgba(0,0,0,0.3);
-  border-color: rgba(125,125,125,0.4);
+  color: @form_text_disabled@;
+  border-color: @form_border@;
   border-style: solid;
   border-width: 1px;
-  background: transparent linear-gradient(rgba(185,185,185,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(255,255,255,0.4) 100%);
+  background: @form_background_disabled@;
 }
 
 select:not([size]):not([multiple])[disabled],
 select[size="0"][disabled],
 select[size="1"][disabled] {
-  background: transparent linear-gradient(rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
+  background: @form_background_disabled@;
 }
 
 input[type="button"][disabled],
@@ -273,7 +272,7 @@ input[type="reset"][disabled]:active,
 button[disabled],
 button[disabled]:active {
   padding: 0 7px 0 7px;
-  background: transparent linear-gradient(rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
+  background: @form_background_disabled@;
 }
 
 input[type="radio"][disabled],
@@ -284,7 +283,7 @@ input[type="checkbox"][disabled],
 input[type="checkbox"][disabled]:active,
 input[type="checkbox"][disabled]:hover,
 input[type="checkbox"][disabled]:hover:active {
-  border:1px solid rgba(125,125,125,0.4) !important;
+  border:1px solid @form_border@ !important;
 }
 
 select[disabled] > button {
