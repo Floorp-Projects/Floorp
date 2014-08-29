@@ -490,15 +490,31 @@ this.CrashManager.prototype = Object.freeze({
                            entry.path);
             return this.EVENT_FILE_ERROR_MALFORMED;
           }
+
+          let [crashID] = lines;
           store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
-                         payload, date);
+                         crashID, date);
           break;
 
         case "crash.submission.1":
           if (lines.length == 3) {
-            this._addSubmissionAsCrash(store, this.PROCESS_TYPE_MAIN,
-                                       this.CRASH_TYPE_CRASH,
-                                       lines[1] === "true", lines[0], date);
+            let [crashID, result, remoteID] = lines;
+            store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
+                           crashID, date);
+
+            let submissionID = "sub-" + Cc["@mozilla.org/uuid-generator;1"]
+                                          .getService(Ci.nsIUUIDGenerator)
+                                          .generateUUID().toString()
+                                          .slice(1, -1);
+            let succeeded = result === "true";
+
+            store.addSubmissionAttempt(crashID, submissionID, date);
+            store.addSubmissionResult(crashID, submissionID, date,
+                                      succeeded ? this.SUBMISSION_RESULT_OK :
+                                                  this.SUBMISSION_RESULT_FAILED);
+            if (succeeded) {
+              store.setRemoteCrashID(crashID, remoteID);
+            }
           } else {
             return this.EVENT_FILE_ERROR_MALFORMED;
           }
