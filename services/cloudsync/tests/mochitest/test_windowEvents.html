@@ -1,0 +1,62 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test for sessionstore window/tab events.
+-->
+<head>
+  <title>Test for sessionstore window/tab events</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.8">
+
+SimpleTest.waitForExplicitFinish();
+
+Components.utils.import("resource://gre/modules/CloudSync.jsm");
+
+function runTest () {
+  function handleTabChangeEvent () {
+    cloudSync.tabs.removeEventListener("change", handleTabChangeEvent);
+    ok(true, "tab change event");
+
+    setTimeout(function () {
+      cloudSync.tabs.getLocalTabs().then(
+        function (tabs) {
+          let expectedTabsFound = 0;
+
+          for (let tab of tabs) {
+            if (tab.urlHistory[0] == "chrome://mochitests/content/chrome/services/cloudsync/tests/mochitest/other_window.html") {
+              expectedTabsFound ++;
+            }
+          }
+          is(expectedTabsFound, 2, "found the tabs we opened");
+          SimpleTest.finish();
+        }
+      )
+    }, 1000);
+  }
+
+  cloudSync.tabs.addEventListener("change", handleTabChangeEvent);
+
+  window.open("other_window.html?a=1");
+  window.open("other_window.html?b=å%20ä%20ö");
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>
+
