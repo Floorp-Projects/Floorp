@@ -7571,10 +7571,11 @@ Parser<ParseHandler>::accumulateTelemetry()
     if (!filename)
         return;
 
+    bool isAddon = !!cx->compartment()->addonId;
     bool isHTTP = strncmp(filename, "http://", 7) == 0 || strncmp(filename, "https://", 8) == 0;
 
     // Only report telemetry for web content, not add-ons or chrome JS.
-    if (!isHTTP)
+    if (isAddon || !isHTTP)
         return;
 
     enum DeprecatedLanguageExtensions {
