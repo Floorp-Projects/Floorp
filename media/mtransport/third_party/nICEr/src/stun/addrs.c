@@ -239,12 +239,21 @@ stun_get_mib_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
     mib[4] = NET_RT_IFLIST;
     mib[5] = 0;
 
-    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0)
+    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
         errx(1, "iflist-sysctl-estimate");
-    if ((buf = malloc(needed)) == NULL)
+        ABORT(R_INTERNAL);
+    }
+
+    if ((buf = malloc(needed)) == NULL) {
         errx(1, "malloc");
-    if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0)
+        ABORT(R_NO_MEMORY);
+    }
+
+    if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
         errx(1, "actual retrieval of interface table");
+        ABORT(R_INTERNAL);
+    }
+
     lim = buf + needed;
 
     next = buf;
