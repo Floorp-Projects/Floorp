@@ -2397,9 +2397,20 @@ Matrix4x4 AsyncPanZoomController::GetNontransientAsyncTransform() {
 
 Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() {
   ReentrantMonitorAutoEnter lock(mMonitor);
-  LayerPoint scrollChange = (mLastContentPaintMetrics.GetScrollOffset() - mLastDispatchedPaintMetrics.GetScrollOffset())
-                          * mLastContentPaintMetrics.LayersPixelsPerCSSPixel();
+
+  // Technically we should be taking the scroll delta in the coordinate space
+  // of transformed layer pixels (i.e. this layer's LayerPixels, with the layer
+  // transform applied). However in the absence of actual CSS transforms, we
+  // can use the parent-layer space instead.
+  // When we fix bug 993525 and properly support CSS transforms we might have
+  // to revisit this.
+  ParentLayerPoint scrollChange =
+    (mLastContentPaintMetrics.GetScrollOffset() - mLastDispatchedPaintMetrics.GetScrollOffset())
+    * mLastContentPaintMetrics.mDevPixelsPerCSSPixel
+    * mLastContentPaintMetrics.GetParentResolution();
+
   float zoomChange = mLastContentPaintMetrics.GetZoom().scale / mLastDispatchedPaintMetrics.GetZoom().scale;
+
   return Matrix4x4().Translate(scrollChange.x, scrollChange.y, 0) *
          Matrix4x4().Scale(zoomChange, zoomChange, 1);
 }
