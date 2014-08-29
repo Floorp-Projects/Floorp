@@ -43,7 +43,7 @@ class B2GTestCaseMixin(object):
         capabilities = self.marionette.session and \
             self.marionette.session_capabilities or {}
         if not self._device_manager and \
-                capabilities.get('device') != 'desktop':
+                capabilities.get('platform').lower() == 'android':
             self._device_manager = get_dm(self.marionette, **kwargs)
         return self._device_manager
 
