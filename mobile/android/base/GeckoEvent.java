@@ -147,7 +147,8 @@ public class GeckoEvent {
         IME_ADD_COMPOSITION_RANGE(3),
         IME_UPDATE_COMPOSITION(4),
         IME_REMOVE_COMPOSITION(5),
-        IME_ACKNOWLEDGE_FOCUS(6);
+        IME_ACKNOWLEDGE_FOCUS(6),
+        IME_COMPOSE_TEXT(7);
 
         public final int value;
 
@@ -600,10 +601,17 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createIMEReplaceEvent(int start, int end,
-                                                   String text) {
+    public static GeckoEvent createIMEReplaceEvent(int start, int end, String text) {
+        return createIMETextEvent(false, start, end, text);
+    }
+
+    public static GeckoEvent createIMEComposeEvent(int start, int end, String text) {
+        return createIMETextEvent(true, start, end, text);
+    }
+
+    private static GeckoEvent createIMETextEvent(boolean compose, int start, int end, String text) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.IME_EVENT);
-        event.mAction = ImeAction.IME_REPLACE_TEXT.value;
+        event.mAction = (compose ? ImeAction.IME_COMPOSE_TEXT : ImeAction.IME_REPLACE_TEXT).value;
         event.mStart = start;
         event.mEnd = end;
         event.mCharacters = text;

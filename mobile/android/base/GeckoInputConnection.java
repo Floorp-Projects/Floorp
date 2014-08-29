@@ -430,7 +430,7 @@ class GeckoInputConnection
     }
 
     @Override
-    public void onTextChange(String text, int start, int oldEnd, int newEnd) {
+    public void onTextChange(CharSequence text, int start, int oldEnd, int newEnd) {
 
         if (mUpdateRequest == null) {
             // Android always expects selection updates when not in extracted mode;
