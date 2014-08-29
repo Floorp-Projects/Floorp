@@ -149,6 +149,9 @@ loop.conversation = (function(OT, mozL10n) {
         this.navigate("call/decline", {trigger: true});
       });
       this._conversation.once("call:incoming", this.startCall, this);
+      this._conversation.once("change:publishedStream", this._checkConnected, this);
+      this._conversation.once("change:subscribedStream", this._checkConnected, this);
+
       this._client.requestCallsInfo(loopVersion, (err, sessionData) => {
         if (err) {
           console.error("Failed to get the sessionData", err);
@@ -186,6 +189,18 @@ loop.conversation = (function(OT, mozL10n) {
         this._handleSessionError();
         return;
       }.bind(this));
+    },
+
+    /**
+     * Checks if the streams have been connected, and notifies the
+     * websocket that the media is now connected.
+     */
+    _checkConnected: function() {
+      // Check we've had both local and remote streams connected before
+      // sending the media up message.
+      if (this._conversation.streamsConnected()) {
+        this._websocket.mediaUp();
+      }
     },
 
     /**

@@ -162,6 +162,20 @@ describe("loop.CallConnectionWebSocket", function() {
       });
     });
 
+    describe("#mediaUp", function() {
+      it("should send a media-up message to the server", function() {
+        callWebSocket.promiseConnect();
+
+        callWebSocket.mediaUp();
+
+        sinon.assert.calledOnce(dummySocket.send);
+        sinon.assert.calledWithExactly(dummySocket.send, JSON.stringify({
+          messageType: "action",
+          event: "media-up"
+        }));
+      });
+    });
+
     describe("Events", function() {
       beforeEach(function() {
         sandbox.stub(callWebSocket, "trigger");

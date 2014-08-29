@@ -27,9 +27,13 @@ loop.shared.models = (function() {
       apiKey:       undefined,  // OT api key
       callId:       undefined,     // The callId on the server
       progressURL:  undefined,     // The websocket url to use for progress
-      websocketToken: undefined    // The token to use for websocket auth, this is
+      websocketToken: undefined,   // The token to use for websocket auth, this is
                                    // stored as a hex string which is what the server
                                    // requires.
+      subscribedStream: false,     // Used to indicate that a stream has been
+                                   // subscribed to
+      publishedStream: false       // Used to indicate that a stream has been
+                                   // published
     },
 
     /**
@@ -175,6 +179,39 @@ loop.shared.models = (function() {
       this.session.disconnect();
       this.set("ongoing", false)
           .once("session:ended", this.stopListening, this);
+    },
+
+    /**
+     * Publishes a local stream.
+     *
+     * @param {Publisher} publisher The publisher object to publish
+     *                              to the session.
+     */
+    publish: function(publisher) {
+      this.session.publish(publisher);
+      this.set("publishedStream", true);
+    },
+
+    /**
+     * Subscribes to a remote stream.
+     *
+     * @param {Stream} stream The remote stream to subscribe to.
+     * @param {DOMElement} element The element to display the stream in.
+     * @param {Object} config The display properties to set on the stream as
+     *                        documented in:
+     * https://tokbox.com/opentok/libraries/client/js/reference/Session.html#subscribe
+     */
+    subscribe: function(stream, element, config) {
+      this.session.subscribe(stream, element, config);
+      this.set("subscribedStream", true);
+    },
+
+    /**
+     * Returns true if a stream has been published and a stream has been
+     * subscribed to.
+     */
+    streamsConnected: function() {
+      return this.get("publishedStream") && this.get("subscribedStream");
     },
 
     /**
