@@ -166,7 +166,7 @@ class ArrayBufferObject : public JSObject
     static bool saveArrayBufferList(JSCompartment *c, ArrayBufferVector &vector);
     static void restoreArrayBufferLists(ArrayBufferVector &vector);
 
-    static void *stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer);
+    static BufferContents stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer);
 
     bool hasStealableContents() const {
         // Inline elements strictly adhere to the corresponding buffer.
