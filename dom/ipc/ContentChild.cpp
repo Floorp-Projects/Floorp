@@ -2011,6 +2011,16 @@ ContentChild::RecvNuwaFork()
 #endif
 }
 
+bool
+ContentChild::RecvOnAppThemeChanged()
+{
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    if (os) {
+        os->NotifyObservers(nullptr, "app-theme-changed", nullptr);
+    }
+    return true;
+}
+
 } // namespace dom
 } // namespace mozilla
 

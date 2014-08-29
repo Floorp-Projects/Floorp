@@ -23,6 +23,7 @@
 #include "mozilla/Preferences.h"
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
+#include "nsPrincipal.h"
 
 using namespace mozilla;
 
@@ -121,9 +122,10 @@ CSPService::ShouldLoad(uint32_t aContentType,
 
   if (status == nsIPrincipal::APP_STATUS_CERTIFIED) {
     // The CSP for certified apps is :
-    // "default-src *; script-src 'self'; object-src 'none'; style-src 'self'"
+    // "default-src *; script-src 'self'; object-src 'none'; style-src 'self' app://theme.gaiamobile.org:*"
     // That means we can optimize for this case by:
-    // - loading only same origin scripts and stylesheets.
+    // - loading same origin scripts and stylesheets, and stylesheets from the
+    //   theme url space.
     // - never loading objects.
     // - accepting everything else.
 
@@ -131,9 +133,13 @@ CSPService::ShouldLoad(uint32_t aContentType,
       case nsIContentPolicy::TYPE_SCRIPT:
       case nsIContentPolicy::TYPE_STYLESHEET:
         {
+          // Whitelist the theme resources.
+          auto themeOrigin = Preferences::GetCString("b2g.theme.origin");
           nsAutoCString sourceOrigin;
           aRequestOrigin->GetPrePath(sourceOrigin);
-          if (!sourceOrigin.Equals(contentOrigin)) {
+
+          if (!(sourceOrigin.Equals(contentOrigin) ||
+                (themeOrigin && themeOrigin.Equals(contentOrigin)))) {
             *aDecision = nsIContentPolicy::REJECT_SERVER;
           }
         }
