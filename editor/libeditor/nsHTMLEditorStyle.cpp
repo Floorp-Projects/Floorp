@@ -15,7 +15,6 @@
 #include "nsCaseTreatment.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
-#include "nsEditProperty.h"
 #include "nsEditRules.h"
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
@@ -647,7 +646,7 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
         aAttribute, isSet, firstValue, nsHTMLCSSUtils::eSpecified);
     }
     if ( (aProperty && NodeIsType(tmp, aProperty)) ||   // node is the correct inline prop
-         (aProperty == nsEditProperty::href && nsHTMLEditUtils::IsLink(tmp)) ||
+         (aProperty == nsGkAtoms::href && nsHTMLEditUtils::IsLink(tmp)) ||
                                                         // node is href - test if really <a href=...
          (!aProperty && NodeIsProperty(tmp)) ||         // or node is any prop, and we asked to split them all
          isSet)                                         // or the style is specified in the style attribute
@@ -754,7 +753,9 @@ bool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
   if (!IsContainer(aNode))  return false;
   if (!IsEditable(aNode))   return false;
   if (IsBlockNode(aNode))   return false;
-  if (NodeIsType(aNode, nsEditProperty::a)) return false;
+  if (NodeIsType(aNode, nsGkAtoms::a)) {
+    return false;
+  }
   return true;
 }
 
@@ -803,9 +804,9 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
       // node is prop we asked for
       (aProperty && NodeIsType(aNode, aProperty)) ||
       // but check for link (<a href=...)
-      (aProperty == nsEditProperty::href && nsHTMLEditUtils::IsLink(aNode)) ||
+      (aProperty == nsGkAtoms::href && nsHTMLEditUtils::IsLink(aNode)) ||
       // and for named anchors
-      (aProperty == nsEditProperty::name && nsHTMLEditUtils::IsNamedAnchor(aNode)) ||
+      (aProperty == nsGkAtoms::name && nsHTMLEditUtils::IsNamedAnchor(aNode)) ||
       // or node is any prop and we asked for that
       (!aProperty && NodeIsProperty(aNode))
     )
@@ -874,7 +875,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
 
   if (!aChildrenOnly &&
     (
-      (aProperty == nsEditProperty::font) &&    // or node is big or small and we are setting font size
+      // Or node is big or small and we are setting font size
+      aProperty == nsGkAtoms::font &&
       (nsHTMLEditUtils::IsBig(aNode) || nsHTMLEditUtils::IsSmall(aNode)) &&
       (aAttribute && aAttribute->LowerCaseEqualsLiteral("size"))
     )
@@ -1340,9 +1342,9 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
 
     // For links, aProperty uses "href", use "a" instead
-    if (aProperty == nsEditProperty::href ||
-        aProperty == nsEditProperty::name)
-      aProperty = nsEditProperty::a;
+    if (aProperty == nsGkAtoms::href || aProperty == nsGkAtoms::name) {
+      aProperty = nsGkAtoms::a;
+    }
 
     if (aProperty) {
       mTypeInState->ClearProp(aProperty, *aAttribute);
@@ -1369,8 +1371,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
     uint32_t rangeCount = selection->GetRangeCount();
     for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
       nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
-      if (aProperty == nsEditProperty::name)
-      {
+      if (aProperty == nsGkAtoms::name) {
         // promote range if it starts or end in a named anchor and we
         // want to remove named anchors
         res = PromoteRangeIfStartsOrEndsInNamedAnchor(range);
@@ -1510,8 +1511,11 @@ nsHTMLEditor::RelativeFontChange( int32_t aSizeChange)
   // if it's collapsed set typing state
   if (selection->Collapsed()) {
     nsCOMPtr<nsIAtom> atom;
-    if (aSizeChange==1) atom = nsEditProperty::big;
-    else                atom = nsEditProperty::small;
+    if (aSizeChange == 1) {
+      atom = nsGkAtoms::big;
+    } else {
+      atom = nsGkAtoms::small;
+    }
 
     // Let's see in what kind of element the selection is
     int32_t offset;
@@ -1821,7 +1825,8 @@ nsHTMLEditor::GetFontFaceState(bool *aMixed, nsAString &outFace)
   bool first, any, all;
   
   NS_NAMED_LITERAL_STRING(attr, "face");
-  res = GetInlinePropertyBase(nsEditProperty::font, &attr, nullptr, &first, &any, &all, &outFace);
+  res = GetInlinePropertyBase(nsGkAtoms::font, &attr, nullptr, &first, &any,
+                              &all, &outFace);
   NS_ENSURE_SUCCESS(res, res);
   if (any && !all) return res; // mixed
   if (all)
@@ -1831,13 +1836,14 @@ nsHTMLEditor::GetFontFaceState(bool *aMixed, nsAString &outFace)
   }
   
   // if there is no font face, check for tt
-  res = GetInlinePropertyBase(nsEditProperty::tt, nullptr, nullptr, &first, &any, &all,nullptr);
+  res = GetInlinePropertyBase(nsGkAtoms::tt, nullptr, nullptr, &first, &any,
+                              &all,nullptr);
   NS_ENSURE_SUCCESS(res, res);
   if (any && !all) return res; // mixed
   if (all)
   {
     *aMixed = false;
-    nsEditProperty::tt->ToString(outFace);
+    outFace.AssignLiteral("tt");
   }
   
   if (!any)
@@ -1860,7 +1866,8 @@ nsHTMLEditor::GetFontColorState(bool *aMixed, nsAString &aOutColor)
   NS_NAMED_LITERAL_STRING(colorStr, "color");
   bool first, any, all;
   
-  res = GetInlinePropertyBase(nsEditProperty::font, &colorStr, nullptr, &first, &any, &all, &aOutColor);
+  res = GetInlinePropertyBase(nsGkAtoms::font, &colorStr, nullptr, &first,
+                              &any, &all, &aOutColor);
   NS_ENSURE_SUCCESS(res, res);
   if (any && !all) return res; // mixed
   if (all)

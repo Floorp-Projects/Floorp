@@ -13,7 +13,7 @@
 #include "nsCOMArray.h"                 // for nsCOMArray
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
-#include "nsEditProperty.h"             // for nsEditProperty, etc
+#include "nsGkAtoms.h"
 #include "nsIEditor.h"                  // for nsIEditor::EDirection, etc
 #include "nsIEditorIMESupport.h"        // for NS_DECL_NSIEDITORIMESUPPORT, etc
 #include "nsIObserver.h"                // for NS_DECL_NSIOBSERVER, etc
@@ -86,7 +86,7 @@ struct IMEState;
 } // namespace widget
 } // namespace mozilla
 
-#define kMOZEditorBogusNodeAttrAtom nsEditProperty::mozEditorBogusNode
+#define kMOZEditorBogusNodeAttrAtom nsGkAtoms::mozeditorbogusnode
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
 
 // This is int32_t instead of int16_t because nsIInlineSpellChecker.idl's

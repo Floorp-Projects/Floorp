@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"                   // for nsCOMPtr, operator==, etc
 #include "nsCaseTreatment.h"
 #include "nsDebug.h"                    // for NS_PRECONDITION, etc
-#include "nsEditProperty.h"             // for nsEditProperty, etc
 #include "nsEditor.h"                   // for nsEditor
 #include "nsError.h"                    // for NS_SUCCEEDED
 #include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::a, etc
@@ -31,7 +30,7 @@ using namespace mozilla;
 bool 
 nsHTMLEditUtils::IsBig(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::big);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::big);
 }
 
 
@@ -51,17 +50,17 @@ nsHTMLEditUtils::IsInlineStyle(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
   nsIAtom* nodeAtom = aNode->Tag();
-  return (nodeAtom == nsEditProperty::b)
-      || (nodeAtom == nsEditProperty::i)
-      || (nodeAtom == nsEditProperty::u)
-      || (nodeAtom == nsEditProperty::tt)
-      || (nodeAtom == nsEditProperty::s)
-      || (nodeAtom == nsEditProperty::strike)
-      || (nodeAtom == nsEditProperty::big)
-      || (nodeAtom == nsEditProperty::small)
-      || (nodeAtom == nsEditProperty::sub)
-      || (nodeAtom == nsEditProperty::sup)
-      || (nodeAtom == nsEditProperty::font);
+  return (nodeAtom == nsGkAtoms::b)
+      || (nodeAtom == nsGkAtoms::i)
+      || (nodeAtom == nsGkAtoms::u)
+      || (nodeAtom == nsGkAtoms::tt)
+      || (nodeAtom == nsGkAtoms::s)
+      || (nodeAtom == nsGkAtoms::strike)
+      || (nodeAtom == nsGkAtoms::big)
+      || (nodeAtom == nsGkAtoms::small)
+      || (nodeAtom == nsGkAtoms::sub)
+      || (nodeAtom == nsGkAtoms::sup)
+      || (nodeAtom == nsGkAtoms::font);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -80,15 +79,15 @@ nsHTMLEditUtils::IsFormatNode(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
   nsIAtom* nodeAtom = aNode->Tag();
-  return (nodeAtom == nsEditProperty::p)
-      || (nodeAtom == nsEditProperty::pre)
-      || (nodeAtom == nsEditProperty::h1)
-      || (nodeAtom == nsEditProperty::h2)
-      || (nodeAtom == nsEditProperty::h3)
-      || (nodeAtom == nsEditProperty::h4)
-      || (nodeAtom == nsEditProperty::h5)
-      || (nodeAtom == nsEditProperty::h6)
-      || (nodeAtom == nsEditProperty::address);
+  return (nodeAtom == nsGkAtoms::p)
+      || (nodeAtom == nsGkAtoms::pre)
+      || (nodeAtom == nsGkAtoms::h1)
+      || (nodeAtom == nsGkAtoms::h2)
+      || (nodeAtom == nsGkAtoms::h3)
+      || (nodeAtom == nsGkAtoms::h4)
+      || (nodeAtom == nsGkAtoms::h5)
+      || (nodeAtom == nsGkAtoms::h6)
+      || (nodeAtom == nsGkAtoms::address);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -99,13 +98,13 @@ nsHTMLEditUtils::IsNodeThatCanOutdent(nsIDOMNode* aNode)
 {
   NS_PRECONDITION(aNode, "null parent passed to nsHTMLEditUtils::IsNodeThatCanOutdent");
   nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
-  return (nodeAtom == nsEditProperty::ul)
-      || (nodeAtom == nsEditProperty::ol)
-      || (nodeAtom == nsEditProperty::dl)
-      || (nodeAtom == nsEditProperty::li)
-      || (nodeAtom == nsEditProperty::dd)
-      || (nodeAtom == nsEditProperty::dt)
-      || (nodeAtom == nsEditProperty::blockquote);
+  return (nodeAtom == nsGkAtoms::ul)
+      || (nodeAtom == nsGkAtoms::ol)
+      || (nodeAtom == nsGkAtoms::dl)
+      || (nodeAtom == nsGkAtoms::li)
+      || (nodeAtom == nsGkAtoms::dd)
+      || (nodeAtom == nsGkAtoms::dt)
+      || (nodeAtom == nsGkAtoms::blockquote);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -113,7 +112,7 @@ nsHTMLEditUtils::IsNodeThatCanOutdent(nsIDOMNode* aNode)
 bool 
 nsHTMLEditUtils::IsSmall(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::small);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::small);
 }
 
 
@@ -129,12 +128,12 @@ nsHTMLEditUtils::IsHeader(nsIDOMNode* aNode)
 {
   NS_PRECONDITION(aNode, "null parent passed to nsHTMLEditUtils::IsHeader");
   nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
-  return (nodeAtom == nsEditProperty::h1)
-      || (nodeAtom == nsEditProperty::h2)
-      || (nodeAtom == nsEditProperty::h3)
-      || (nodeAtom == nsEditProperty::h4)
-      || (nodeAtom == nsEditProperty::h5)
-      || (nodeAtom == nsEditProperty::h6);
+  return (nodeAtom == nsGkAtoms::h1)
+      || (nodeAtom == nsGkAtoms::h2)
+      || (nodeAtom == nsGkAtoms::h3)
+      || (nodeAtom == nsGkAtoms::h4)
+      || (nodeAtom == nsGkAtoms::h5)
+      || (nodeAtom == nsGkAtoms::h6);
 }
 
 
@@ -144,7 +143,7 @@ nsHTMLEditUtils::IsHeader(nsIDOMNode* aNode)
 bool 
 nsHTMLEditUtils::IsParagraph(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::p);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::p);
 }
 
 
@@ -154,7 +153,7 @@ nsHTMLEditUtils::IsParagraph(nsIDOMNode* aNode)
 bool 
 nsHTMLEditUtils::IsHR(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::hr);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::hr);
 }
 
 
@@ -174,9 +173,9 @@ nsHTMLEditUtils::IsListItem(nsINode* node)
 {
   MOZ_ASSERT(node);
   nsCOMPtr<nsIAtom> nodeAtom = node->Tag();
-  return (nodeAtom == nsEditProperty::li)
-      || (nodeAtom == nsEditProperty::dd)
-      || (nodeAtom == nsEditProperty::dt);
+  return (nodeAtom == nsGkAtoms::li)
+      || (nodeAtom == nsGkAtoms::dd)
+      || (nodeAtom == nsGkAtoms::dt);
 }
 
 
@@ -196,14 +195,14 @@ nsHTMLEditUtils::IsTableElement(nsINode* node)
 {
   MOZ_ASSERT(node);
   nsCOMPtr<nsIAtom> nodeAtom = node->Tag();
-  return (nodeAtom == nsEditProperty::table)
-      || (nodeAtom == nsEditProperty::tr)
-      || (nodeAtom == nsEditProperty::td)
-      || (nodeAtom == nsEditProperty::th)
-      || (nodeAtom == nsEditProperty::thead)
-      || (nodeAtom == nsEditProperty::tfoot)
-      || (nodeAtom == nsEditProperty::tbody)
-      || (nodeAtom == nsEditProperty::caption);
+  return (nodeAtom == nsGkAtoms::table)
+      || (nodeAtom == nsGkAtoms::tr)
+      || (nodeAtom == nsGkAtoms::td)
+      || (nodeAtom == nsGkAtoms::th)
+      || (nodeAtom == nsGkAtoms::thead)
+      || (nodeAtom == nsGkAtoms::tfoot)
+      || (nodeAtom == nsGkAtoms::tbody)
+      || (nodeAtom == nsGkAtoms::caption);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -222,13 +221,13 @@ nsHTMLEditUtils::IsTableElementButNotTable(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
   nsCOMPtr<nsIAtom> nodeAtom = aNode->Tag();
-  return (nodeAtom == nsEditProperty::tr)
-      || (nodeAtom == nsEditProperty::td)
-      || (nodeAtom == nsEditProperty::th)
-      || (nodeAtom == nsEditProperty::thead)
-      || (nodeAtom == nsEditProperty::tfoot)
-      || (nodeAtom == nsEditProperty::tbody)
-      || (nodeAtom == nsEditProperty::caption);
+  return (nodeAtom == nsGkAtoms::tr)
+      || (nodeAtom == nsGkAtoms::td)
+      || (nodeAtom == nsGkAtoms::th)
+      || (nodeAtom == nsGkAtoms::thead)
+      || (nodeAtom == nsGkAtoms::tfoot)
+      || (nodeAtom == nsGkAtoms::tbody)
+      || (nodeAtom == nsGkAtoms::caption);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -237,7 +236,7 @@ nsHTMLEditUtils::IsTableElementButNotTable(nsINode* aNode)
 bool
 nsHTMLEditUtils::IsTable(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::table);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::table);
 }
 
 bool
@@ -252,7 +251,7 @@ nsHTMLEditUtils::IsTable(nsINode* aNode)
 bool 
 nsHTMLEditUtils::IsTableRow(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::tr);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::tr);
 }
 
 
@@ -272,8 +271,8 @@ nsHTMLEditUtils::IsTableCell(nsINode* node)
 {
   MOZ_ASSERT(node);
   nsCOMPtr<nsIAtom> nodeAtom = node->Tag();
-  return (nodeAtom == nsEditProperty::td)
-      || (nodeAtom == nsEditProperty::th);
+  return (nodeAtom == nsGkAtoms::td)
+      || (nodeAtom == nsGkAtoms::th);
 }
 
 
@@ -285,9 +284,9 @@ nsHTMLEditUtils::IsTableCellOrCaption(nsIDOMNode* aNode)
 {
   NS_PRECONDITION(aNode, "null parent passed to nsHTMLEditUtils::IsTableCell");
   nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
-  return (nodeAtom == nsEditProperty::td)
-      || (nodeAtom == nsEditProperty::th)
-      || (nodeAtom == nsEditProperty::caption);
+  return (nodeAtom == nsGkAtoms::td)
+      || (nodeAtom == nsGkAtoms::th)
+      || (nodeAtom == nsGkAtoms::caption);
 }
 
 
@@ -307,9 +306,9 @@ nsHTMLEditUtils::IsList(nsINode* node)
 {
   MOZ_ASSERT(node);
   nsCOMPtr<nsIAtom> nodeAtom = node->Tag();
-  return (nodeAtom == nsEditProperty::ul)
-      || (nodeAtom == nsEditProperty::ol)
-      || (nodeAtom == nsEditProperty::dl);
+  return (nodeAtom == nsGkAtoms::ul)
+      || (nodeAtom == nsGkAtoms::ol)
+      || (nodeAtom == nsGkAtoms::dl);
 }
 
 
@@ -319,7 +318,7 @@ nsHTMLEditUtils::IsList(nsINode* node)
 bool 
 nsHTMLEditUtils::IsOrderedList(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::ol);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::ol);
 }
 
 
@@ -329,7 +328,7 @@ nsHTMLEditUtils::IsOrderedList(nsIDOMNode* aNode)
 bool 
 nsHTMLEditUtils::IsUnorderedList(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::ul);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::ul);
 }
 
 
@@ -339,7 +338,7 @@ nsHTMLEditUtils::IsUnorderedList(nsIDOMNode* aNode)
 bool 
 nsHTMLEditUtils::IsBlockquote(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::blockquote);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::blockquote);
 }
 
 
@@ -349,7 +348,7 @@ nsHTMLEditUtils::IsBlockquote(nsIDOMNode* aNode)
 bool 
 nsHTMLEditUtils::IsPre(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::pre);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::pre);
 }
 
 
@@ -359,7 +358,7 @@ nsHTMLEditUtils::IsPre(nsIDOMNode* aNode)
 bool 
 nsHTMLEditUtils::IsImage(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::img);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::img);
 }
 
 bool 
@@ -412,7 +411,7 @@ nsHTMLEditUtils::IsNamedAnchor(nsINode* aNode)
 bool 
 nsHTMLEditUtils::IsDiv(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsEditProperty::div);
+  return nsEditor::NodeIsType(aNode, nsGkAtoms::div);
 }
 
 
@@ -487,14 +486,14 @@ nsHTMLEditUtils::IsFormWidget(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
   nsCOMPtr<nsIAtom> nodeAtom = aNode->Tag();
-  return (nodeAtom == nsEditProperty::textarea)
-      || (nodeAtom == nsEditProperty::select)
-      || (nodeAtom == nsEditProperty::button)
-      || (nodeAtom == nsEditProperty::output)
-      || (nodeAtom == nsEditProperty::keygen)
-      || (nodeAtom == nsEditProperty::progress)
-      || (nodeAtom == nsEditProperty::meter)
-      || (nodeAtom == nsEditProperty::input);
+  return (nodeAtom == nsGkAtoms::textarea)
+      || (nodeAtom == nsGkAtoms::select)
+      || (nodeAtom == nsGkAtoms::button)
+      || (nodeAtom == nsGkAtoms::output)
+      || (nodeAtom == nsGkAtoms::keygen)
+      || (nodeAtom == nsGkAtoms::progress)
+      || (nodeAtom == nsGkAtoms::meter)
+      || (nodeAtom == nsGkAtoms::input);
 }
 
 bool
@@ -502,22 +501,22 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode* aNode)
 {
   NS_PRECONDITION(aNode, "null node passed to nsHTMLEditUtils::SupportsAlignAttr");
   nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
-  return (nodeAtom == nsEditProperty::hr)
-      || (nodeAtom == nsEditProperty::table)
-      || (nodeAtom == nsEditProperty::tbody)
-      || (nodeAtom == nsEditProperty::tfoot)
-      || (nodeAtom == nsEditProperty::thead)
-      || (nodeAtom == nsEditProperty::tr)
-      || (nodeAtom == nsEditProperty::td)
-      || (nodeAtom == nsEditProperty::th)
-      || (nodeAtom == nsEditProperty::div)
-      || (nodeAtom == nsEditProperty::p)
-      || (nodeAtom == nsEditProperty::h1)
-      || (nodeAtom == nsEditProperty::h2)
-      || (nodeAtom == nsEditProperty::h3)
-      || (nodeAtom == nsEditProperty::h4)
-      || (nodeAtom == nsEditProperty::h5)
-      || (nodeAtom == nsEditProperty::h6);
+  return (nodeAtom == nsGkAtoms::hr)
+      || (nodeAtom == nsGkAtoms::table)
+      || (nodeAtom == nsGkAtoms::tbody)
+      || (nodeAtom == nsGkAtoms::tfoot)
+      || (nodeAtom == nsGkAtoms::thead)
+      || (nodeAtom == nsGkAtoms::tr)
+      || (nodeAtom == nsGkAtoms::td)
+      || (nodeAtom == nsGkAtoms::th)
+      || (nodeAtom == nsGkAtoms::div)
+      || (nodeAtom == nsGkAtoms::p)
+      || (nodeAtom == nsGkAtoms::h1)
+      || (nodeAtom == nsGkAtoms::h2)
+      || (nodeAtom == nsGkAtoms::h3)
+      || (nodeAtom == nsGkAtoms::h4)
+      || (nodeAtom == nsGkAtoms::h5)
+      || (nodeAtom == nsGkAtoms::h6);
 }
 
 // We use bitmasks to test containment of elements. Elements are marked to be
