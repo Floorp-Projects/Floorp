@@ -1586,10 +1586,10 @@ class LIRGraph
     // platform stack alignment requirement, and so that it's a multiple of
     // the number of slots per Value.
     uint32_t paddedLocalSlotCount() const {
-        // Round to StackAlignment, but also round to at least sizeof(Value) in
-        // case that's greater, because StackOffsetOfPassedArg rounds argument
-        // slots to 8-byte boundaries.
-        size_t Alignment = Max(size_t(StackAlignment), sizeof(Value));
+        // Round to ABIStackAlignment, but also round to at least sizeof(Value)
+        // in case that's greater, because StackOffsetOfPassedArg rounds
+        // argument slots to 8-byte boundaries.
+        size_t Alignment = Max(size_t(ABIStackAlignment), sizeof(Value));
         return AlignBytes(localSlotCount(), Alignment);
     }
     size_t paddedLocalSlotsSize() const {

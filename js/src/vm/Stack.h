@@ -1482,7 +1482,7 @@ class AsmJSActivation : public Activation
     AsmJSModule &module_;
     AsmJSActivation *prevAsmJS_;
     AsmJSActivation *prevAsmJSForModule_;
-    void *errorRejoinSP_;
+    void *entrySP_;
     SPSProfiler *profiler_;
     void *resumePC_;
     uint8_t *fp_;
@@ -1512,7 +1512,7 @@ class AsmJSActivation : public Activation
     static unsigned offsetOfResumePC() { return offsetof(AsmJSActivation, resumePC_); }
 
     // Written by JIT code:
-    static unsigned offsetOfErrorRejoinSP() { return offsetof(AsmJSActivation, errorRejoinSP_); }
+    static unsigned offsetOfEntrySP() { return offsetof(AsmJSActivation, entrySP_); }
     static unsigned offsetOfFP() { return offsetof(AsmJSActivation, fp_); }
     static unsigned offsetOfExitReason() { return offsetof(AsmJSActivation, exitReason_); }
 

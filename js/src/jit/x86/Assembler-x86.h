@@ -108,14 +108,13 @@ static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = edi;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = eax;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = esi;
 
-// GCC stack is aligned on 16 bytes, but we don't maintain the invariant in
-// jitted code.
+// GCC stack is aligned on 16 bytes. Ion does not maintain this for internal
+// calls. asm.js code does.
 #if defined(__GNUC__)
-static const uint32_t StackAlignment = 16;
+static const uint32_t ABIStackAlignment = 16;
 #else
-static const uint32_t StackAlignment = 4;
+static const uint32_t ABIStackAlignment = 4;
 #endif
-static const bool StackKeptAligned = false;
 static const uint32_t CodeAlignment = 8;
 
 // This boolean indicates whether we support SIMD instructions flavoured for
@@ -124,6 +123,8 @@ static const uint32_t CodeAlignment = 8;
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
 static const bool SupportsSimd = true;
 static const uint32_t SimdStackAlignment = 16;
+
+static const uint32_t AsmJSStackAlignment = SimdStackAlignment;
 
 struct ImmTag : public Imm32
 {
