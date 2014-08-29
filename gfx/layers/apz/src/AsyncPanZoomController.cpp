@@ -248,16 +248,11 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * number, we stop the fling.
  * Units: screen pixels per millisecond
  *
- * "apz.overscroll.clamping"
- * The maximum proportion of the composition bounds which can become blank
- * as a result of overscroll, along the axis of overscroll.
- *
- * "apz.overscroll.z_effect"
- * The fraction of "apz.overscroll.clamping" which can become blank as a result
- * of overscroll, along the axis opposite to the axis of overscroll. Called
- * "z_effect" because the shrinking that brings about the blank space on the
- * opposite axis creates the effect of the page moving away from you along a
- * "z" axis.
+ * "apz.overscroll.stretch_factor"
+ * How much overscrolling can stretch content along an axis.
+ * The maximum stretch along an axis is a factor of (1 + kStretchFactor).
+ * (So if kStretchFactor is 0, you can't stretch at all; if kStretchFactor
+ * is 1, you can stretch at most by a factor of 2).
  *
  * "apz.overscroll.snap_back.spring_stiffness"
  * The stiffness of the spring used in the physics model for the overscroll
@@ -2185,89 +2180,42 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
 }
 
 void AsyncPanZoomController::GetOverscrollTransform(Matrix4x4* aTransform) const {
-  // The overscroll effect is a combination of a translation in
-  // the direction of overscroll, and shrinking in both directions.
-  // With the effect applied, we can think of the composited region as being
-  // made up of the following subregions.
-  //  (1) The shrunk content (or a portion of it) that used to fill the
-  //      composited region.
-  //  (2) The space created along the axis that has overscroll. This space is
-  //      blank, filled by the background color of the overscrolled content.
-  //      TODO(botond): Implement handling of background color.
-  //  (3) The space created along the other axis. There may or may not be
-  //      content available to fill this space, depending on our scroll
-  //      position along this axis. If there is content, it's shown from the
-  //      displayport. (TODO: Currently we don't take any measures to ensure
-  //      that the displayport is large enough to have this content. Perhaps
-  //      we should.) Otherwise, these spaces are also blank like (2).
-  // To illustrate, for the case where we are overscrolling past the top of
-  // the page, these regions are (1) the bottom-centre region, (2) the top
-  // regions, and (3) the bottom-left and bottom-right regions of the
-  // composited area, respectively.
+  // The overscroll effect is a uniform stretch along the overscrolled axis,
+  // with the edge of the content where we have reached the end of the
+  // scrollable area pinned into place.
 
-  // The maximum proportion of the composition length which can become blank
-  // space along an axis as we overscroll along that axis.
-  const float kClamping = gfxPrefs::APZOverscrollClamping();
+  // The kStretchFactor parameter determines how much overscroll can stretch the
+  // content.
+  const float kStretchFactor = gfxPrefs::APZOverscrollStretchFactor();
 
-  // The proportion of the composition length which will become blank space
-  // along each axis as a result of overscroll along that axis. Since
-  // Axis::ApplyResistance() keeps the magnitude of the overscroll in the range
-  // [0, GetCompositionLength()], these scale factors should be in the range
-  // [0, kClamping].
-  float spacePropX = kClamping * fabsf(mX.GetOverscroll()) / mX.GetCompositionLength();
-  float spacePropY = kClamping * fabsf(mY.GetOverscroll()) / mY.GetCompositionLength();
+  // Compute the amount of the stretch along each axis. The stretch is
+  // proportional to the amount by which we are overscrolled along that axis.
+  CSSSize compositionSize(mX.GetCompositionLength(), mY.GetCompositionLength());
+  float scaleX = 1 + kStretchFactor * fabsf(mX.GetOverscroll()) / mX.GetCompositionLength();
+  float scaleY = 1 + kStretchFactor * fabsf(mY.GetOverscroll()) / mY.GetCompositionLength();
 
-  // The fraction of the proportions above which will become blank space along
-  // the _opposite_ axis as we zoom out as a result of overscroll along an axis.
-  // This creates a 3D effect, as in the layer were moving backward along a "z"
-  // axis.
-  const float kZEffect = gfxPrefs::APZOverscrollZEffect();
-
-  // The translation to apply for overscroll along the x axis.
-  CSSPoint translationX;
-  if (mX.IsOverscrolled()) {
-    // Keep the content centred vertically as we zoom out.
-    translationX.y = (spacePropX * kZEffect * mY.GetCompositionLength()) / 2;
-
-    if (mX.GetOverscroll() < 0) {
-      // Overscroll on left.
-      translationX.x = spacePropX * mX.GetCompositionLength();
-    } else {
-      // Overscroll on right.
-      // Note that zooming out already moves the content at the right edge
-      // of the composition bounds to the left, but since the zooming is
-      // dampened by kZEffect, it doesn't take us as far as we want to go.
-      translationX.x = - (spacePropX * (1 - kZEffect) * mX.GetCompositionLength());
-    }
+  // The scale is applied relative to the origin of the composition bounds, i.e.
+  // it keeps the top-left corner of the content in place. This is fine if we
+  // are overscrolling at the top or on the left, but if we are overscrolling
+  // at the bottom or on the right, we want the bottom or right edge of the
+  // content to stay in place instead, so we add a translation to compensate.
+  CSSPoint translation;
+  if (mX.IsOverscrolled() && mX.GetOverscroll() > 0) {
+    // Overscrolled on the right.
+    CSSCoord overscrolledCompositionWidth = scaleX * compositionSize.width;
+    CSSCoord extraCompositionWidth = overscrolledCompositionWidth - compositionSize.width;
+    translation.x = -extraCompositionWidth;
+  }
+  if (mY.IsOverscrolled() && mY.GetOverscroll() > 0) {
+    // Overscrolled at the bottomn.
+    CSSCoord overscrolledCompositionHeight = scaleY * compositionSize.height;
+    CSSCoord extraCompositionHeight = overscrolledCompositionHeight - compositionSize.height;
+    translation.y = -extraCompositionHeight;
   }
 
-  // The translation to apply for overscroll along the y axis.
-  CSSPoint translationY;
-  if (mY.IsOverscrolled()) {
-    // Keep the content centred horizontally as we zoom out.
-    translationY.x = (spacePropY * kZEffect * mX.GetCompositionLength()) / 2;
-
-    if (mY.GetOverscroll() < 0) {
-      // Overscroll at top.
-      translationY.y = spacePropY * mY.GetCompositionLength();
-    } else {
-      // Overscroll at bottom.
-      // Note that zooming out already moves the content at the bottom edge
-      // of the composition bounds up, but since the zooming is
-      // dampened by kZEffect, it doesn't take us as far as we want to go.
-      translationY.y = - (spacePropY * (1 - kZEffect) * mY.GetCompositionLength());
-    }
-  }
-
-  // Combine the transformations along the two axes.
-  float spaceProp = sqrtf(spacePropX * spacePropX + spacePropY * spacePropY);
-  CSSPoint translation = translationX + translationY;
-
-  float scale = 1 - (kZEffect * spaceProp);
-
-  // Finally, create a matrix representing the transformations.
+  // Combine the transformations into a matrix.
   ScreenPoint screenTranslation = translation * mFrameMetrics.GetZoom();
-  *aTransform = Matrix4x4().Scale(scale, scale, 1)
+  *aTransform = Matrix4x4().Scale(scaleX, scaleY, 1)
                            .PostTranslate(screenTranslation.x, screenTranslation.y, 0);
 }
 
