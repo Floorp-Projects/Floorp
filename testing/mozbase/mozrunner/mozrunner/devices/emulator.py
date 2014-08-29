@@ -208,11 +208,11 @@ waitFor(
 log('waiting for mozbrowserloadend');
 window.addEventListener('mozbrowserloadend', function loaded(aEvent) {
   log('received mozbrowserloadend for ' + aEvent.target.src);
-  if (aEvent.target.src.indexOf('ftu') != -1 || aEvent.target.src.indexOf('homescreen') != -1) {
+  if (aEvent.target.src.indexOf('ftu') != -1 || aEvent.target.src.indexOf('homescreen') != -1 || aEvent.target.src.indexOf('verticalhome') != -1) {
     window.removeEventListener('mozbrowserloadend', loaded);
     marionetteScriptFinished();
   }
-});""", script_timeout=120000)
+});""", script_timeout=300000)
         print '...done'
 
     def _get_telnet_response(self, command=None):

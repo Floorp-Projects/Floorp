@@ -1495,6 +1495,14 @@ BluetoothServiceBluedroid::DiscoveryStateChangedNotification(bool aState)
   DistributeSignal(
     BluetoothSignal(NS_LITERAL_STRING(DISCOVERY_STATE_CHANGED_ID),
                     NS_LITERAL_STRING(KEY_ADAPTER), isDiscovering));
+
+  // Distribute "PropertyChanged" signal to notice adapter this change since
+  // Bluedroid don' treat "discovering" as a property of adapter.
+  InfallibleTArray<BluetoothNamedValue> props;
+  BT_APPEND_NAMED_VALUE(props, "Discovering", BluetoothValue(isDiscovering));
+  DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PropertyChanged"),
+                                   NS_LITERAL_STRING(KEY_ADAPTER),
+                                   BluetoothValue(props)));
 }
 
 void
@@ -1554,47 +1562,64 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
     return;
   }
 
-  bool bonded;
-  if (aState == BOND_STATE_NONE) {
-    bonded = false;
-    sAdapterBondedAddressArray.RemoveElement(aRemoteBdAddr);
-  } else if (aState == BOND_STATE_BONDED) {
-    bonded = true;
-    sAdapterBondedAddressArray.AppendElement(aRemoteBdAddr);
-  } else {
-    return;
+  switch (aStatus) {
+    case STATUS_SUCCESS: {
+      bool bonded;
+      if (aState == BOND_STATE_NONE) {
+        bonded = false;
+        sAdapterBondedAddressArray.RemoveElement(aRemoteBdAddr);
+      } else if (aState == BOND_STATE_BONDED) {
+        bonded = true;
+        sAdapterBondedAddressArray.AppendElement(aRemoteBdAddr);
+      } else {
+        return;
+      }
+
+      // Update bonded address list to BluetoothAdapter
+      InfallibleTArray<BluetoothNamedValue> propertiesChangeArray;
+      BT_APPEND_NAMED_VALUE(propertiesChangeArray, "Devices",
+                            sAdapterBondedAddressArray);
+
+      DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PropertyChanged"),
+                                       NS_LITERAL_STRING(KEY_ADAPTER),
+                                       BluetoothValue(propertiesChangeArray)));
+
+      if (bonded && !sBondingRunnableArray.IsEmpty()) {
+        DispatchBluetoothReply(sBondingRunnableArray[0],
+                               BluetoothValue(true), EmptyString());
+
+        sBondingRunnableArray.RemoveElementAt(0);
+      } else if (!bonded && !sUnbondingRunnableArray.IsEmpty()) {
+        DispatchBluetoothReply(sUnbondingRunnableArray[0],
+                               BluetoothValue(true), EmptyString());
+
+        sUnbondingRunnableArray.RemoveElementAt(0);
+      }
+
+      // Update bonding status to gaia
+      InfallibleTArray<BluetoothNamedValue> propertiesArray;
+      BT_APPEND_NAMED_VALUE(propertiesArray, "address", nsString(aRemoteBdAddr));
+      BT_APPEND_NAMED_VALUE(propertiesArray, "status", bonded);
+
+      DistributeSignal(
+        BluetoothSignal(NS_LITERAL_STRING(PAIRED_STATUS_CHANGED_ID),
+                        NS_LITERAL_STRING(KEY_ADAPTER),
+                        BluetoothValue(propertiesArray)));
+      break;
+    }
+    case STATUS_BUSY:
+    case STATUS_AUTH_FAILURE:
+    case STATUS_RMT_DEV_DOWN: {
+      InfallibleTArray<BluetoothNamedValue> propertiesArray;
+      DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("Cancel"),
+                                 NS_LITERAL_STRING(KEY_LOCAL_AGENT),
+                                 BluetoothValue(propertiesArray)));
+      break;
+    }
+    default:
+      BT_WARNING("Got an unhandled status of BondStateChangedCallback!");
+      break;
   }
-
-  // Update bonded address list to BluetoothAdapter
-  InfallibleTArray<BluetoothNamedValue> propertiesChangeArray;
-  BT_APPEND_NAMED_VALUE(propertiesChangeArray, "Devices",
-                        sAdapterBondedAddressArray);
-
-  DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PropertyChanged"),
-                                   NS_LITERAL_STRING(KEY_ADAPTER),
-                                   BluetoothValue(propertiesChangeArray)));
-
-  if (bonded && !sBondingRunnableArray.IsEmpty()) {
-    DispatchBluetoothReply(sBondingRunnableArray[0],
-                           BluetoothValue(true), EmptyString());
-
-    sBondingRunnableArray.RemoveElementAt(0);
-  } else if (!bonded && !sUnbondingRunnableArray.IsEmpty()) {
-    DispatchBluetoothReply(sUnbondingRunnableArray[0],
-                           BluetoothValue(true), EmptyString());
-
-    sUnbondingRunnableArray.RemoveElementAt(0);
-  }
-
-  // Update bonding status to gaia
-  InfallibleTArray<BluetoothNamedValue> propertiesArray;
-  BT_APPEND_NAMED_VALUE(propertiesArray, "address", nsString(aRemoteBdAddr));
-  BT_APPEND_NAMED_VALUE(propertiesArray, "status", bonded);
-
-  DistributeSignal(
-    BluetoothSignal(NS_LITERAL_STRING(PAIRED_STATUS_CHANGED_ID),
-                    NS_LITERAL_STRING(KEY_ADAPTER),
-                    BluetoothValue(propertiesArray)));
 }
 
 void

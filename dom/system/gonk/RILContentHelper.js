@@ -42,6 +42,8 @@ function debug(s) {
 
 const RILCONTENTHELPER_CID =
   Components.ID("{472816e1-1fd6-4405-996c-806f9ea68174}");
+const ICCINFO_CID =
+  Components.ID("{39d64d90-26a6-11e4-8c21-0800200c9a66}");
 const GSMICCINFO_CID =
   Components.ID("{e0fa785b-ad3f-46ed-bc56-fcb0d6fe4fa8}");
 const CDMAICCINFO_CID =
@@ -156,6 +158,17 @@ MobileIccCardLockRetryCount.prototype = {
 
 function IccInfo() {}
 IccInfo.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozIccInfo]),
+  classID: ICCINFO_CID,
+  classInfo: XPCOMUtils.generateCI({
+    classID:          ICCINFO_CID,
+    classDescription: "MozIccInfo",
+    flags:            Ci.nsIClassInfo.DOM_OBJECT,
+    interfaces:       [Ci.nsIDOMMozIccInfo]
+  }),
+
+  // nsIDOMMozIccInfo
+
   iccType: null,
   iccid: null,
   mcc: null,
@@ -524,7 +537,7 @@ RILContentHelper.prototype = {
     let rilContext = this.rilContexts[clientId];
 
     // Card is not detected, clear iccInfo to null.
-    if (!newInfo || !newInfo.iccType || !newInfo.iccid) {
+    if (!newInfo || !newInfo.iccid) {
       if (rilContext.iccInfo) {
         rilContext.iccInfo = null;
         this._deliverEvent(clientId,
@@ -539,8 +552,10 @@ RILContentHelper.prototype = {
     if (!rilContext.iccInfo) {
       if (newInfo.iccType === "ruim" || newInfo.iccType === "csim") {
         rilContext.iccInfo = new CdmaIccInfo();
-      } else {
+      } else if (newInfo.iccType === "sim" || newInfo.iccType === "usim") {
         rilContext.iccInfo = new GsmIccInfo();
+      } else {
+        rilContext.iccInfo = new IccInfo();
       }
     }
     let changed = (rilContext.iccInfo.iccid != newInfo.iccid) ?

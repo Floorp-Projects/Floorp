@@ -151,4 +151,4 @@ startDSDSTestCommon(function() {
     .then(testEnableDataRoamingWhileRoaming)
     .then(testDisableData)
     .then(restoreTestEnvironment);
-}, ["settings-read", "settings-write"]);
+}, ["settings-read", "settings-write", "settings-api-read", "settings-api-write"]);
