@@ -1,5 +1,13 @@
 %filter substitution
 
+%define form_border #bfbfbf
+%define form_border_radius-radius 2px
+%define form_text #363b40
+%define form_text_disabled #bebebe
+%define form_background white
+%define form_background_disabled #f5f5f5
+%define form_background white
+
 %define color_about_background #ced7de
 %define color_about_item #e6e9eb
 %define color_about_item_inner #eef2f5
