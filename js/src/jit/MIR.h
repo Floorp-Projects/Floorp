@@ -4543,6 +4543,9 @@ class MClz
     static MClz *New(TempAllocator &alloc, MDefinition *num) {
         return new(alloc) MClz(num);
     }
+    static MClz *NewAsmJS(TempAllocator &alloc, MDefinition *num) {
+        return new(alloc) MClz(num);
+    }
     MDefinition *num() const {
         return getOperand(0);
     }
