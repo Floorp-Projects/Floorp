@@ -1819,6 +1819,10 @@
           // places this host on the tracking protection white list.
           Services.perms.add(normalizedUrl,
             "trackingprotection", Services.perms.ALLOW_ACTION);
+          // Telemetry for disable protection
+          let histogram = Services.telemetry.getHistogramById(
+              "TRACKING_PROTECTION_EVENTS");
+          histogram.add(1);
           BrowserReload();
         ]]></body>
       </method>
@@ -1829,6 +1833,10 @@
           // from the tracking protection white list (any list actually).
           Services.perms.remove(gBrowser.selectedBrowser.currentURI.host,
             "trackingprotection");
+          // Telemetry for enable protection
+          let histogram = Services.telemetry.getHistogramById(
+              "TRACKING_PROTECTION_EVENTS");
+          histogram.add(2);
           BrowserReload();
         ]]></body>
       </method>
