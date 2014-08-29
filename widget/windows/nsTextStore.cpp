@@ -838,6 +838,13 @@ nsTextStore::Destroy(void)
   mSink = nullptr;
   mWidget = nullptr;
 
+  if (!mMouseTrackers.IsEmpty()) {
+    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+      ("TSF: 0x%p   nsTextStore::Destroy(), removing a mouse tracker...",
+       this));
+    mMouseTrackers.Clear();
+  }
+
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: 0x%p   nsTextStore::Destroy() succeeded", this));
   return true;
@@ -856,6 +863,8 @@ nsTextStore::QueryInterface(REFIID riid,
     *ppv = static_cast<ITfActiveLanguageProfileNotifySink*>(this);
   } else if (IID_ITfInputProcessorProfileActivationSink == riid) {
     *ppv = static_cast<ITfInputProcessorProfileActivationSink*>(this);
+  } else if (IID_ITfMouseTrackerACP == riid) {
+    *ppv = static_cast<ITfMouseTrackerACP*>(this);
   }
   if (*ppv) {
     AddRef();
@@ -3432,6 +3441,104 @@ nsTextStore::OnActivated(DWORD dwProfileType,
   return S_OK;
 }
 
+STDMETHODIMP
+nsTextStore::AdviseMouseSink(ITfRangeACP* range,
+                             ITfMouseSink* pSink,
+                             DWORD* pdwCookie)
+{
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: 0x%p nsTextStore::AdviseMouseSink(range=0x%p, pSink=0x%p, "
+          "pdwCookie=0x%p)", this, range, pSink, pdwCookie));
+
+  if (!pdwCookie) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::AdviseMouseSink() FAILED due to the "
+            "pdwCookie is null", this));
+    return E_INVALIDARG;
+  }
+  // Initialize the result with invalid cookie for safety.
+  *pdwCookie = MouseTracker::kInvalidCookie;
+
+  if (!range) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::AdviseMouseSink() FAILED due to the "
+            "range is null", this));
+    return E_INVALIDARG;
+  }
+  if (!pSink) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::AdviseMouseSink() FAILED due to the "
+            "pSink is null", this));
+    return E_INVALIDARG;
+  }
+
+  // Looking for an unusing tracker.
+  MouseTracker* tracker = nullptr;
+  for (size_t i = 0; i < mMouseTrackers.Length(); i++) {
+    if (mMouseTrackers[i].IsUsing()) {
+      continue;
+    }
+    tracker = &mMouseTrackers[i];
+  }
+  // If there is no unusing tracker, create new one.
+  // XXX Should we make limitation of the number of installs?
+  if (!tracker) {
+    tracker = mMouseTrackers.AppendElement();
+    HRESULT hr = tracker->Init(this);
+    if (FAILED(hr)) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF: 0x%p   nsTextStore::AdviseMouseSink() FAILED due to "
+              "failure of MouseTracker::Init()", this));
+      return hr;
+    }
+  }
+  HRESULT hr = tracker->AdviseSink(this, range, pSink);
+  if (FAILED(hr)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::AdviseMouseSink() FAILED due to failure "
+            "of MouseTracker::Init()", this));
+    return hr;
+  }
+  *pdwCookie = tracker->Cookie();
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: 0x%p   nsTextStore::AdviseMouseSink(), succeeded, "
+          "*pdwCookie=%d", this, *pdwCookie));
+  return S_OK;
+}
+
+STDMETHODIMP
+nsTextStore::UnadviseMouseSink(DWORD dwCookie)
+{
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: 0x%p nsTextStore::UnadviseMouseSink(dwCookie=%d)",
+          this, dwCookie));
+  if (dwCookie == MouseTracker::kInvalidCookie) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::UnadviseMouseSink() FAILED due to "
+            "the cookie is invalid value", this));
+    return E_INVALIDARG;
+  }
+  // The cookie value must be an index of mMouseTrackers.
+  // We can use this shortcut for now.
+  if (static_cast<size_t>(dwCookie) >= mMouseTrackers.Length()) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::UnadviseMouseSink() FAILED due to "
+            "the cookie is too large value", this));
+    return E_INVALIDARG;
+  }
+  MouseTracker& tracker = mMouseTrackers[dwCookie];
+  if (!tracker.IsUsing()) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::UnadviseMouseSink() FAILED due to "
+            "the found tracker uninstalled already", this));
+    return E_INVALIDARG;
+  }
+  tracker.UnadviseSink();
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: 0x%p   nsTextStore::UnadviseMouseSink(), succeeded", this));
+  return S_OK;
+}
+
 // static
 nsresult
 nsTextStore::OnFocusChange(bool aGotFocus,
@@ -4423,6 +4530,115 @@ nsTextStore::Content::EndComposition(const PendingAction& aCompEnd)
 
   mSelection.CollapseAt(mComposition.mStart + aCompEnd.mData.Length());
   mComposition.End();
+}
+
+/******************************************************************************
+ *  nsTextStore::MouseTracker
+ *****************************************************************************/
+
+nsTextStore::MouseTracker::MouseTracker()
+  : mStart(-1)
+  , mLength(-1)
+  , mCookie(kInvalidCookie)
+{
+}
+
+HRESULT
+nsTextStore::MouseTracker::Init(nsTextStore* aTextStore)
+{
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p   nsTextStore::MouseTracker::Init(aTextStore=0x%p), "
+          "aTextStore->mMouseTrackers.Length()=%d",
+          this, aTextStore->mMouseTrackers.Length()));
+
+  if (&aTextStore->mMouseTrackers.LastElement() != this) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::MouseTracker::Init() FAILED due to "
+            "this is not the last element of mMouseTrackers", this));
+    return E_FAIL;
+  }
+  if (aTextStore->mMouseTrackers.Length() > kInvalidCookie) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::MouseTracker::Init() FAILED due to "
+            "no new cookie available", this));
+    return E_FAIL;
+  }
+  MOZ_ASSERT(!aTextStore->mMouseTrackers.IsEmpty(),
+             "This instance must be in nsTextStore::mMouseTrackers");
+  mCookie = static_cast<DWORD>(aTextStore->mMouseTrackers.Length() - 1);
+  return S_OK;
+}
+
+HRESULT
+nsTextStore::MouseTracker::AdviseSink(nsTextStore* aTextStore,
+                                      ITfRangeACP* aTextRange,
+                                      ITfMouseSink* aMouseSink)
+{
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p   nsTextStore::MouseTracker::AdviseSink(aTextStore=0x%p, "
+          "aTextRange=0x%p, aMouseSink=0x%p), mCookie=%d, mSink=0x%p",
+          this, aTextStore, aTextRange, aMouseSink, mCookie, mSink.get()));
+  MOZ_ASSERT(mCookie != kInvalidCookie, "This hasn't been initalized?");
+
+  if (mSink) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::MouseTracker::AdviseMouseSink() FAILED "
+            "due to already being used", this));
+    return E_FAIL;
+  }
+
+  HRESULT hr = aTextRange->GetExtent(&mStart, &mLength);
+  if (FAILED(hr)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::MouseTracker::AdviseMouseSink() FAILED "
+            "due to failure of ITfRangeACP::GetExtent()", this));
+    return hr;
+  }
+
+  if (mStart < 0 || mLength <= 0) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::MouseTracker::AdviseMouseSink() FAILED "
+            "due to odd result of ITfRangeACP::GetExtent(), "
+            "mStart=%d, mLength=%d", this, mStart, mLength));
+    return E_INVALIDARG;
+  }
+
+  nsAutoString textContent;
+  if (NS_WARN_IF(!aTextStore->GetCurrentText(textContent))) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::MouseTracker::AdviseMouseSink() FAILED "
+            "due to failure of nsTextStore::GetCurrentText()", this));
+    return E_FAIL;
+  }
+
+  if (textContent.Length() <= static_cast<uint32_t>(mStart) ||
+      textContent.Length() < static_cast<uint32_t>(mStart + mLength)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::MouseTracker::AdviseMouseSink() FAILED "
+            "due to out of range, mStart=%d, mLength=%d, "
+            "textContent.Length()=%d",
+            this, mStart, mLength, textContent.Length()));
+    return E_INVALIDARG;
+  }
+
+  mSink = aMouseSink;
+
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p   nsTextStore::MouseTracker::AdviseMouseSink(), "
+          "succeeded, mStart=%d, mLength=%d, textContent.Length()=%d",
+          this, mStart, mLength, textContent.Length()));
+  return S_OK;
+}
+
+void
+nsTextStore::MouseTracker::UnadviseSink()
+{
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p   nsTextStore::MouseTracker::UnadviseSink(), "
+          "mCookie=%d, mSink=0x%p, mStart=%d, mLength=%d",
+          this, mCookie, mSink, mStart, mLength));
+  mSink = nullptr;
+  mStart = mLength = -1;
 }
 
 #ifdef DEBUG
