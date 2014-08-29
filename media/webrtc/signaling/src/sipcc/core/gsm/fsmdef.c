@@ -1264,16 +1264,6 @@ fsmdef_init_dcb (fsmdef_dcb_t *dcb, callid_t call_id,
 
     dcb->active_feature = CC_FEATURE_NONE;
 
-    /* Release transient timers if any have been allocated */
-    if (dcb->err_onhook_tmr) {
-        (void) cprDestroyTimer(dcb->err_onhook_tmr);
-        dcb->err_onhook_tmr = NULL;
-    }
-    if (dcb->req_pending_tmr) {
-        (void) cprDestroyTimer(dcb->req_pending_tmr);
-        dcb->req_pending_tmr = NULL;
-    }
-
     FSM_SET_SECURITY_STATUS(dcb, CC_SECURITY_UNKNOWN);
     FSM_SET_POLICY(dcb, CC_POLICY_UNKNOWN);
     dcb->session = PRIMARY;
@@ -1319,8 +1309,6 @@ fsmdef_init_dcb (fsmdef_dcb_t *dcb, callid_t call_id,
 
     dcb->digest_alg[0] = '\0';
     dcb->digest[0] = '\0';
-
-    sll_lite_init(&dcb->candidate_list);
 }
 
 
@@ -1343,25 +1331,6 @@ fsmdef_free_dcb (fsmdef_dcb_t *dcb)
     strlib_free(dcb->caller_id.orig_called_number);
     strlib_free(dcb->caller_id.orig_rpid_number);
 
-    /* Cancel any existing error onhook timer */
-    if (dcb->err_onhook_tmr) {
-        (void) cprCancelTimer(dcb->err_onhook_tmr);
-        (void) cprDestroyTimer(dcb->err_onhook_tmr);
-        dcb->err_onhook_tmr = NULL;
-    }
-
-    /* Cancel any existing request pending timer */
-    if (dcb->req_pending_tmr) {
-        (void) cprCancelTimer(dcb->req_pending_tmr);
-        (void) cprDestroyTimer(dcb->req_pending_tmr);
-        dcb->req_pending_tmr = NULL;
-    }
-
-    /* Cancel any existing ringback delay timer */
-    if (dcb->ringback_delay_tmr) {
-        (void) cprCancelTimer(dcb->ringback_delay_tmr);
-    }
-
     // Free the call instance id
     if (dcb->caller_id.call_instance_id != 0) {
         fsmutil_free_ci_id(dcb->caller_id.call_instance_id, dcb->line);
@@ -1369,9 +1338,6 @@ fsmdef_free_dcb (fsmdef_dcb_t *dcb)
 
     /* clean media list */
     gsmsdp_clean_media_list(dcb);
-
-    /* clean candidate list */
-    gsmsdp_clean_candidate_list(dcb);
 
     gsmsdp_free(dcb);
 
@@ -1990,9 +1956,6 @@ fsmdef_release (fsm_fcb_t *fcb, cc_causes_t cause, boolean send_release)
         ui_update_media_interface_change(dcb->line, dcb->call_id, MEDIA_INTERFACE_UPDATE_FAIL);
     }
     memset(&kfactor, 0, sizeof(cc_kfact_t));
-    /* Cancel any existing autoanswer timer */
-    (void) cprCancelTimer(dcb->autoAnswerTimer);
-
 
     /*
      * Let Dialog Manager know that there is ONHOOK event
@@ -2345,73 +2308,16 @@ fsmdef_set_feature_timer (fsmdef_dcb_t *dcb, cprTimer_t *timer,
 {
     static const char fname[] = "fsmdef_set_feature_timer";
 
-    if (cprCancelTimer(*timer) != CPR_SUCCESS) {
-        FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CANCEL_FAILED),
-                     dcb->call_id, dcb->line, fname, "Feature", cpr_errno);
-
-        return;
-    }
-
-    if (cprStartTimer(*timer, duration, (void *)(long)dcb->call_id) == CPR_FAILURE) {
-        FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_START_FAILED),
-                     dcb->call_id, dcb->line, fname, "Feature", cpr_errno);
-    }
 }
 
 static void
 fsmdef_set_req_pending_timer (fsmdef_dcb_t *dcb)
 {
-    static const char fname[] = "fsmdef_set_req_pending_timer";
-    uint32_t msec;
-
-    if (dcb == NULL) {
-        FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_INVALID_DCB), fname);
-        return;
-    }
-
-    if (!dcb->req_pending_tmr) {
-        dcb->req_pending_tmr = cprCreateTimer("Request Pending",
-                                              GSM_REQ_PENDING_TIMER,
-                                              TIMER_EXPIRATION,
-                                              gsm_msgq);
-
-        if (dcb->req_pending_tmr == NULL) {
-            FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
-                         dcb->call_id, dcb->line, fname, "Request Pending");
-
-            return;
-        }
-    }
-
-    if (dcb->inbound) {
-        // We did not initiate this call, so set timer between 0 and 2000ms
-        msec = abs(cpr_rand()) % 2000;
-    } else {
-        // We initiated this call, so set the timer between 2100 and 4000ms
-        msec = abs(cpr_rand()) % 1900 + 2100;
-    }
-
-    FSM_DEBUG_SM(DEB_L_C_F_PREFIX"Starting req pending timer for %d ms.",
-		DEB_L_C_F_PREFIX_ARGS(FSM, dcb->line, dcb->call_id, fname), msec);
-
-    fsmdef_set_feature_timer(dcb, &dcb->req_pending_tmr, msec);
 }
 
 static void
 fsmdef_set_ringback_delay_timer (fsmdef_dcb_t *dcb)
 {
-    static const char fname[] = "fsmdef_set_ringback_delay_timer";
-
-    if (dcb == NULL) {
-        FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_INVALID_DCB), fname);
-        return;
-    }
-
-    FSM_DEBUG_SM(DEB_L_C_F_PREFIX"Starting Ringback Delay timer"
-                 " for %d ms.\n",
-                 DEB_L_C_F_PREFIX_ARGS(FSM, dcb->line, dcb->call_id, fname), RINGBACK_DELAY);
-
-    fsmdef_set_feature_timer(dcb, &dcb->ringback_delay_tmr, RINGBACK_DELAY);
 }
 
 /*******************************************************************
@@ -3200,9 +3106,6 @@ fsmdef_ev_createoffer (sm_event_t *event) {
         return (SM_RC_END);
     }
 
-    /* clean candidate list, since we are about to return the candidates */
-    gsmsdp_clean_candidate_list(dcb);
-
     dcb->inbound = FALSE;
 
     if (msg->data.session.options) {
@@ -3363,9 +3266,6 @@ fsmdef_ev_createanswer (sm_event_t *event) {
         free(local_sdp);
         return (SM_RC_END);
     }
-
-    /* clean candidate list, since we are about to return the candidates */
-    gsmsdp_clean_candidate_list(dcb);
 
     dcb->inbound = TRUE;
 
@@ -3633,21 +3533,6 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
     ui_set_local_description(evSetLocalDescSuccess, fcb->state, msg->line,
         msg->call_id, dcb->caller_id.call_instance_id,
         strlib_malloc(local_sdp,-1), msg->timecard, PC_NO_ERROR, NULL);
-
-    /* If we have pending candidates flush them too */
-    while (TRUE) {
-        /* unlink head and free the media */
-        candidate = (fsmdef_candidate_t *)sll_lite_unlink_head(&dcb->candidate_list);
-        if (candidate) {
-            ui_ice_candidate_found(evFoundIceCandidate, fcb->state, line, call_id,
-                                   dcb->caller_id.call_instance_id, strlib_malloc(local_sdp,-1),
-                                   candidate->candidate, /* Transfer ownership */
-                                   NULL, PC_NO_ERROR, NULL);
-            free(candidate);
-        } else {
-            break;
-        }
-    }
 
     free(local_sdp);
     return (SM_RC_END);
@@ -4166,7 +4051,7 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
         dcb->caller_id.call_instance_id, strlib_malloc(remote_sdp,-1),
         msg->timecard, PC_NO_ERROR, NULL);
 
-    free(remote_sdp);
+    cpr_free(remote_sdp);
     return (SM_RC_END);
 }
 
@@ -4234,50 +4119,18 @@ fsmdef_ev_foundcandidate(sm_event_t *event) {
         return (SM_RC_END);
     }
 
-    /* Distinguish between the following three cases:
-
-       1. CreateOffer() has been called but SetLocalDesc() has not.
-       2. We are mid-call.
-       3. We have a remote offer and CreateAnswer() has been called
-          but SetLocalDesc() has not
-
-       The first two of these are in state STABLE but only in
-       the second do pass up trickle candidates. In the other
-       two we buffer them and send them later.
-    */
     /* Smuggle the entire candidate structure in a string */
     PR_snprintf(candidate_tmp, sizeof(candidate_tmp), "%d\t%s\t%s",
                 msg->data.candidate.level,
                 (char *)msg->data.candidate.mid,
                 (char *)msg->data.candidate.candidate);
 
-    if ((fcb->state == FSMDEF_S_STABLE && !dcb->sdp->dest_sdp)
-        || fcb->state == FSMDEF_S_HAVE_REMOTE_OFFER) {
-        fsmdef_candidate_t *buffered_cand = NULL;
-
-        FSM_DEBUG_SM(DEB_F_PREFIX"dcb->sdp->dest_sdp is null."
-                     "assuming CreateOffer called but not SetLocal...\n",
-                     DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
-
-        buffered_cand = (fsmdef_candidate_t *)cpr_malloc(sizeof(fsmdef_candidate_t));
-        if (!buffered_cand)
-            return SM_RC_END;
-
-        buffered_cand->candidate = strlib_malloc(candidate_tmp, -1);
-
-        if (sll_lite_link_head(&dcb->candidate_list,
-                               (sll_lite_node_t *)buffered_cand) != SLL_LITE_RET_SUCCESS)
-            return SM_RC_END;
-
-        /* Don't notify upward */
-        return SM_RC_END;
-    }
-
     ui_ice_candidate_found(evFoundIceCandidate, fcb->state, line, call_id,
         dcb->caller_id.call_instance_id, strlib_malloc(local_sdp,-1),
         strlib_malloc(candidate_tmp, -1),
         msg->timecard, PC_NO_ERROR, NULL);
 
+    cpr_free(local_sdp);
     return SM_RC_END;
 }
 
@@ -4783,30 +4636,6 @@ fsmdef_ev_collectinginfo_release (sm_event_t *event)
 
    fsmdef_set_call_info_cc_call_state(dcb, CC_STATE_CALL_FAILED, CC_CAUSE_INVALID_NUMBER);
 
-    // Start onhook timer
-    if ( dcb->err_onhook_tmr) {
-        (void) cprDestroyTimer(dcb->err_onhook_tmr);
-    }
-    dcb->err_onhook_tmr = cprCreateTimer("Error Onhook",
-                                         GSM_ERROR_ONHOOK_TIMER,
-                                         TIMER_EXPIRATION,
-                                         gsm_msgq);
-    if (dcb->err_onhook_tmr == NULL) {
-        FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
-                     dcb->call_id, dcb->line, "", "Error Onhook");
-
-        return (SM_RC_CLEANUP);
-    }
-
-    if (cprStartTimer(dcb->err_onhook_tmr,
-                      FSMDEF_ERR_ONHOOK_TMR_SECS * 1000,
-                      (void *)(long)dcb->call_id) == CPR_FAILURE) {
-        FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_START_FAILED),
-                     dcb->call_id, dcb->line, "",
-                     "Error Onhook", cpr_errno);
-		return (SM_RC_CLEANUP);
-    }
-
     return (SM_RC_END);
 }
 
@@ -5001,28 +4830,6 @@ fsmdef_ev_out_alerting (sm_event_t *event)
          * used for inband ringback.
          */
         dcb->inband_received = TRUE;
-        FSM_DEBUG_SM(DEB_F_PREFIX"inband_received, cancel timer.", DEB_F_PREFIX_ARGS(FSM, fname));
-
-        /*
-         * If ringback delay timer has been started, cancel it now.
-         */
-        if (cprCancelTimer(dcb->ringback_delay_tmr) != CPR_SUCCESS) {
-            FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CANCEL_FAILED),
-                         dcb->call_id, dcb->line, fname, "Ringback Delay",
-                         cpr_errno);
-        }
-    } else {
-        /*
-         * Not inband alerting case. Set ringback delay timer so that local
-         * ringback will eventually be played. We delay the ringback for
-         * a short time to handle the case where the messages key was pressed.
-         * This is because VM server can respond very quickly with RTP, 183,
-         * and 200 and we do not want local ringback tone to interfere with
-         * the playing of the VM prompt.
-         */
-        if (!cprIsTimerRunning(dcb->ringback_delay_tmr)) {
-            fsmdef_set_ringback_delay_timer(dcb);
-        }
     }
 
     cc_call_state(dcb->call_id, dcb->line, CC_STATE_FAR_END_ALERTING,
@@ -5121,31 +4928,6 @@ fsmdef_ev_callsent_release (sm_event_t *event)
             if (src_id == CC_SRC_SIP) {
                 dcb->early_error_release = TRUE;
             }
-
-            if ( dcb->err_onhook_tmr) {
-                (void) cprDestroyTimer(dcb->err_onhook_tmr);
-            }
-            dcb->err_onhook_tmr = cprCreateTimer("Error Onhook",
-                    GSM_ERROR_ONHOOK_TIMER,
-                    TIMER_EXPIRATION,
-                    gsm_msgq);
-            if (dcb->err_onhook_tmr == NULL) {
-                FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
-                        dcb->call_id, dcb->line, "", "Error Onhook");
-                return (SM_RC_CLEANUP);
-            }
-
-            if (cprStartTimer(dcb->err_onhook_tmr,
-                        FSMDEF_ERR_ONHOOK_TMR_SECS * 1000,
-                        (void *)(long)dcb->call_id) == CPR_FAILURE) {
-
-                FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_START_FAILED),
-                        dcb->call_id, dcb->line, "",
-                        "Error Onhook", cpr_errno);
-
-                return (SM_RC_CLEANUP);
-            }
-
             break;
 
         default:
@@ -5507,9 +5289,6 @@ fsmdef_handle_inalerting_offhook_answer (sm_event_t *event)
         }
     }
 
-    /* Cancel any existing autoanswer timer */
-    (void)cprCancelTimer(dcb->autoAnswerTimer);
-
     cc_int_connected(CC_SRC_GSM, CC_SRC_SIP, dcb->call_id, dcb->line,
                      &(dcb->caller_id), NULL, &msg_body);
 
@@ -5635,11 +5414,6 @@ fsmdef_transition_to_connected (fsm_fcb_t *fcb)
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
-    if (dcb->req_pending_tmr) {
-        /* cancel any request pending timer, just in case */
-        (void) cprCancelTimer(dcb->req_pending_tmr);
-    }
-
     /*
      * Update the media capability without effecting the existing media line.
      */
@@ -5711,15 +5485,6 @@ fsmdef_ev_connected (sm_event_t *event)
                  dcb->call_id, dcb->line, fname);
 
     dcb->spoof_ringout_applied = FALSE;
-
-    /*
-     * Cancel ringback delay timer
-     */
-    if (cprCancelTimer(dcb->ringback_delay_tmr) != CPR_SUCCESS) {
-        FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CANCEL_FAILED),
-                     dcb->call_id, dcb->line, fname, "Ringback Delay",
-                     cpr_errno);
-    }
 
     cc_call_state(dcb->call_id, dcb->line, CC_STATE_CONNECTED,
                   FSMDEF_CC_CALLER_ID);
@@ -5995,28 +5760,6 @@ fsm_connected_media_pend_local_hold (fsm_fcb_t *fcb, cc_feature_data_t *data_p)
                            CC_CAUSE_NORMAL);
         FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG1), dcb->call_id, dcb->line,
                      fname, "already hold");
-        return (SM_RC_END);
-    }
-
-    if (dcb->req_pending_tmr &&
-        cprIsTimerRunning(dcb->req_pending_tmr)) {
-        /*
-         * Request timer is running, that means we are waiting
-         * to re-send media update again due to previously glare.
-         * Since the previous offer has not been accepted, we can
-         * simply just send hold instead when glare resolution timer
-         * expires.
-         */
-
-        /* store the reason to resend when glare timer expires */
-        dcb->hold_reason = data_p->hold.call_info.data.hold_resume_reason;
-        /*
-         * reset feature hold pending flag in case that there are
-         * multiple hold feature received while waiting for
-         * glare resolution to resolve.
-         */
-        FSM_RESET_FLAGS(dcb->flags, FSMDEF_F_HOLD_REQ_PENDING);
-        fsm_change_state(fcb, __LINE__, FSMDEF_S_HOLD_PENDING);
         return (SM_RC_END);
     }
 
@@ -7143,17 +6886,7 @@ void fsmdef_reversion_timeout(callid_t call_id)
         return;
     }
 
-    if  (dcb->reversionInterval > 0) {
-	    ret = cprStartTimer(dcb->revertTimer, dcb->reversionInterval * 1000, (void*)(long)call_id);
-	}
-
-	if ( ret == CPR_FAILURE ) {
-        FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_START_FAILED),
-              dcb->call_id, dcb->line, "", "Reversion", cpr_errno);
-        return;
-    }
-
-	cc_call_state(dcb->call_id, dcb->line, CC_STATE_HOLD_REVERT, NULL);
+    cc_call_state(dcb->call_id, dcb->line, CC_STATE_HOLD_REVERT, NULL);
 
 }
 
@@ -7203,8 +6936,6 @@ fsmdef_resume (sm_event_t *event)
         return;
     }
 
-    (void) cprCancelTimer(dcb->revertTimer);
-	dcb->reversionInterval = -1;
     /*
      * Make sure the connected call (if there is one) goes on hold,
      * but do not hold the connected call if it is involved in a
@@ -7225,10 +6956,6 @@ fsmdef_resume (sm_event_t *event)
 
     /* Clear all media holding status */
     fsmdef_update_media_hold_status(dcb, NULL, FALSE);
-
-    if (dcb->req_pending_tmr && cprIsTimerRunning(dcb->req_pending_tmr)) {
-        req_pending_tmr_running = TRUE;
-    }
 
     if (!req_pending_tmr_running) {
         /*
@@ -7319,12 +7046,7 @@ fsmdef_ev_holding_offhook (sm_event_t *event)
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
-    if (cprIsTimerRunning(dcb->revertTimer)) {
-		// Off hook resume calls only if HR is active else ignore this event
-		fsmdef_resume(event);
-	}
-
-	return  SM_RC_END;
+    return  SM_RC_END;
 
 }
 
@@ -7369,9 +7091,6 @@ fsmdef_ev_holding_feature (sm_event_t *event)
             return (sm_rc);
 
         case CC_FEATURE_HOLD_REVERSION:
-            // Stop the timer for alert interval
-            (void) cprCancelTimer(dcb->revertTimer);
-            dcb->reversionInterval = -1;
 
 			// Do not revert if alertInterval is negative
             if ( data->hold_reversion.alertInterval < 0 )
@@ -7385,8 +7104,6 @@ fsmdef_ev_holding_feature (sm_event_t *event)
             if ( data->hold_reversion.alertInterval > MAX_HOLD_REVERSION_INTERVAL_TIMER )
                data->hold_reversion.alertInterval = MAX_HOLD_REVERSION_INTERVAL_TIMER;
 
-            dcb->reversionInterval = data->hold_reversion.alertInterval ;
-
             fsmdef_reversion_timeout(fcb->dcb->call_id);
 
             fsmdef_handle_join_pending(dcb);
@@ -7398,8 +7115,6 @@ fsmdef_ev_holding_feature (sm_event_t *event)
 
         case CC_FEATURE_END_CALL:
             sm_rc = fsmdef_release_call(fcb, msg);
-            (void) cprCancelTimer(dcb->revertTimer);
-            dcb->reversionInterval = -1;
             fsmdef_handle_join_pending(dcb);
             return (sm_rc);
 
@@ -7447,8 +7162,6 @@ fsmdef_ev_holding_feature (sm_event_t *event)
             break;
 
         case CC_FEATURE_CALL_PRESERVATION:
-            (void) cprCancelTimer(dcb->revertTimer);
-            dcb->reversionInterval = -1;
             return (fsmdef_release(fcb, CC_CAUSE_NORMAL, dcb->send_release));
 
         case CC_FEATURE_NOTIFY:
@@ -7586,42 +7299,24 @@ fsmdef_ev_resume_pending_feature (sm_event_t *event)
              * about to hold again.
              */
             fim_unlock_ui(dcb->call_id);
-            if (dcb->req_pending_tmr &&
-                cprIsTimerRunning(dcb->req_pending_tmr)) {
-                /*
-                 * Request timer is running, that means we are waiting
-                 * to send resume or we already have sent one out
-                 * but it resulted in glare condition and that we are waiting
-                 * to resent it again. In this, just go back to hold state.
-                 */
-                (void) cprCancelTimer(dcb->req_pending_tmr);
-
-                FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG1),
-                             dcb->call_id, dcb->line, fname,
-                             "Received Hold while waiting to send resume\n");
-
-                /* Go back to holding without sending any thing out */
-                (void)fsm_hold_local_only(fcb);
+            /*
+             * We have sent resume to the network and wait for
+             * for the feature ack. The glare condition can
+             * occur but we can only assume that resume was sent out
+             * at this point. We can not send out any more request
+             * until the result is known.
+             */
+            if (msg->data_valid) {
+                dcb->hold_reason =
+                     data->hold.call_info.data.hold_resume_reason;
             } else {
-                /*
-                 * We have sent resume to the network and wait for
-                 * for the feature ack. The glare condition can
-                 * occur but we can only assume that resume was sent out
-                 * at this point. We can not send out any more request
-                 * until the result is known.
-                 */
-                if (msg->data_valid) {
-                    dcb->hold_reason =
-                         data->hold.call_info.data.hold_resume_reason;
-                } else {
-                    dcb->hold_reason = CC_REASON_NONE;
-                }
-                // since we are going to hold stop the media now
-                // else the next new call or resume will result in 2 sets of media ports open
-                (void)cc_call_action(dcb->call_id, dcb->line, CC_ACTION_STOP_MEDIA,
-                                 NULL);
-                fsm_change_state(fcb, __LINE__, FSMDEF_S_HOLD_PENDING);
+                dcb->hold_reason = CC_REASON_NONE;
             }
+            // since we are going to hold stop the media now
+            // else the next new call or resume will result in 2 sets of media ports open
+            (void)cc_call_action(dcb->call_id, dcb->line, CC_ACTION_STOP_MEDIA,
+                             NULL);
+            fsm_change_state(fcb, __LINE__, FSMDEF_S_HOLD_PENDING);
             break;
 
         default:
@@ -9291,48 +8986,6 @@ fsmdef_init (void)
     FSM_FOR_ALL_CBS(dcb, fsmdef_dcbs, FSMDEF_MAX_DCBS) {
         fsmdef_init_dcb(dcb, CC_NO_CALL_ID, FSMDEF_CALL_TYPE_NONE,
                         FSMDEF_NO_NUMBER, LSM_NO_LINE, NULL);
-        /*
-         * Allocate ringback delay timer for each dcb
-         */
-        dcb->ringback_delay_tmr = cprCreateTimer("Ringback Delay",
-                                                 GSM_RINGBACK_DELAY_TIMER,
-                                                 TIMER_EXPIRATION,
-                                                 gsm_msgq);
-        if (dcb->ringback_delay_tmr == NULL) {
-            FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
-                         dcb->call_id, dcb->line, fname, "Ringback Delay");
-            return;
-        }
-
-        /*
-         * Allocate auto answer timer for each dcb
-         */
-        dcb->autoAnswerTimer = cprCreateTimer("Auto Answer",
-                                              GSM_AUTOANSWER_TIMER,
-                                              TIMER_EXPIRATION,
-                                              gsm_msgq);
-        if (dcb->autoAnswerTimer == NULL) {
-            FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
-                         dcb->call_id, dcb->line, fname, "Auto Answer");
-            (void)cprDestroyTimer(dcb->ringback_delay_tmr);
-            dcb->ringback_delay_tmr = NULL;
-            return;
-        }
-        dcb->revertTimer = cprCreateTimer("Call Reversion",
-                                              GSM_REVERSION_TIMER,
-                                              TIMER_EXPIRATION,
-                                              gsm_msgq);
-		dcb->reversionInterval = -1;
-        if (dcb->revertTimer == NULL) {
-            FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
-                         dcb->call_id, dcb->line, fname, "Hold Revertion");
-
-            (void)cprDestroyTimer(dcb->ringback_delay_tmr);
-            dcb->ringback_delay_tmr = NULL;
-            (void)cprDestroyTimer(dcb->autoAnswerTimer);
-            dcb->autoAnswerTimer = NULL;
-            return;
-        }
         if (dcb == fsmdef_dcbs) {
             g_disable_mass_reg_debug_print = TRUE;
         }
@@ -9355,24 +9008,9 @@ fsmdef_shutdown (void)
     fsmdef_dcb_t *dcb;
 
     FSM_FOR_ALL_CBS(dcb, fsmdef_dcbs, FSMDEF_MAX_DCBS) {
-        if (dcb->req_pending_tmr) {
-            (void)cprDestroyTimer(dcb->req_pending_tmr);
-        }
-        if (dcb->err_onhook_tmr) {
-            (void)cprDestroyTimer(dcb->err_onhook_tmr);
-        }
-        if (dcb->ringback_delay_tmr) {
-            (void)cprDestroyTimer(dcb->ringback_delay_tmr);
-        }
-        if (dcb->autoAnswerTimer) {
-            (void)cprDestroyTimer(dcb->autoAnswerTimer);
-        }
-        if (dcb->revertTimer) {
-            (void)cprDestroyTimer(dcb->revertTimer);
-        }
-
         /* clean media list */
         gsmsdp_clean_media_list(dcb);
+        gsmsdp_free(dcb);
     }
 
     /* destroy free media structure list */

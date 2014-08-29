@@ -298,6 +298,8 @@ namespace CSF
 
         virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *) = 0;
 
+        virtual void foundICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *) = 0;
+
     };
 }
 

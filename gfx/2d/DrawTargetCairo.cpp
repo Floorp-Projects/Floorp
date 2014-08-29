@@ -1276,7 +1276,7 @@ DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurf
 TemporaryRef<DrawTarget>
 DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
-  cairo_surface_t* similar = cairo_surface_create_similar(cairo_get_target(mContext),
+  cairo_surface_t* similar = cairo_surface_create_similar(mSurface,
                                                           GfxFormatToCairoContent(aFormat),
                                                           aSize.width, aSize.height);
 

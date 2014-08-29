@@ -129,6 +129,7 @@ void
 ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
   mInTransaction = true;
+  mTransactionStart = TimeStamp::Now();
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("[----- BeginTransaction"));
@@ -184,7 +185,6 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 void
 ClientLayerManager::BeginTransaction()
 {
-  mInTransaction = true;
   BeginTransactionWithTarget(nullptr);
 }
 
@@ -260,6 +260,9 @@ ClientLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
   for (size_t i = 0; i < mTexturePools.Length(); i++) {
     mTexturePools[i]->ReturnDeferredClients();
   }
+
+  mInTransaction = false;
+  mTransactionStart = TimeStamp();
 }
 
 bool
@@ -448,13 +451,19 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   mPhase = PHASE_FORWARD;
 
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
+  TimeStamp transactionStart;
+  if (!mTransactionIdAllocator->GetTransactionStart().IsNull()) {
+    transactionStart = mTransactionIdAllocator->GetTransactionStart();
+  } else {
+    transactionStart = mTransactionStart;
+  }
 
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
   if (mForwarder->EndTransaction(&replies, mRegionToClear,
         mLatestTransactionId, aScheduleComposite, mPaintSequenceNumber,
-        mIsRepeatTransaction, &sent)) {
+        mIsRepeatTransaction, transactionStart, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];
 

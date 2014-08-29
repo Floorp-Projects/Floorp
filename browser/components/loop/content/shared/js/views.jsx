@@ -550,7 +550,8 @@ loop.shared.views = (function(_, OT, l10n) {
         <FeedbackLayout title={l10n.get("feedback_thank_you_heading")}>
           <p className="info thank-you">{
             l10n.get("feedback_window_will_close_in", {
-              countdown: this.state.countdown
+              countdown: this.state.countdown,
+              num: this.state.countdown
             })}</p>
         </FeedbackLayout>
       );

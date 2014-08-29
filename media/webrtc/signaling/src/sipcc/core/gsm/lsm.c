@@ -647,6 +647,7 @@ lsm_open_rx (lsm_lcb_t *lcb, cc_action_data_open_rcv_t *data,
 
           if (!status) {
             sstrncpy(dcb->ice_default_candidate_addr, default_addr, sizeof(dcb->ice_default_candidate_addr));
+            cpr_free(default_addr);
 
             data->port = (uint16_t)port_allocated;
             media->candidate_ct = candidate_ct;

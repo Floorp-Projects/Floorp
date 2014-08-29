@@ -170,7 +170,7 @@ gfxQuartzSurface::CreateSimilarSurface(gfxContentType aType,
 CGContextRef
 gfxQuartzSurface::GetCGContextWithClip(gfxContext *ctx)
 {
-	return cairo_quartz_get_cg_context_with_clip(ctx->GetCairo());
+    return cairo_quartz_get_cg_context_with_clip(ctx->GetCairo());
 }
 
 int32_t gfxQuartzSurface::GetDefaultContextFlags() const

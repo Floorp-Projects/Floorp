@@ -139,6 +139,14 @@ cc_return_t CCAPI_AddICECandidate(cc_call_handle_t handle,
     return CC_CallFeature_AddICECandidate(handle, candidate, mid, level, tc);
 }
 
+cc_return_t CCAPI_FoundICECandidate(cc_call_handle_t handle,
+                                  cc_string_t candidate,
+                                  cc_string_t mid,
+                                  cc_level_t level,
+                                  Timecard *tc) {
+    return CC_CallFeature_FoundICECandidate(handle, candidate, mid, level, tc);
+}
+
 /**
  * Dial digits on the call
  * @param [in] handle - call handle
