@@ -7,7 +7,6 @@
 #define GFX_3DMATRIX_H
 
 #include <gfxTypes.h>
-#include <gfxPoint3D.h>
 #include <gfxPointH3D.h>
 #include <gfxQuad.h>
 
@@ -30,6 +29,7 @@ class gfxMatrix;
  */
 class gfx3DMatrix
 {
+  typedef mozilla::gfx::Point3D Point3D;
 public:
   /**
    * Create matrix.
@@ -145,7 +145,7 @@ public:
    * |  0        0        1         0 |
    * |  aPoint.x aPoint.y aPoint.z  1 |
    */
-  void Translate(const gfxPoint3D& aPoint);
+  void Translate(const Point3D& aPoint);
 
   /** 
    * Skew the matrix.
@@ -244,7 +244,7 @@ public:
    * This is functionally equivalent to:
    * matrix * gfx3DMatrix::Translation(aPoint)
    */
-  void TranslatePost(const gfxPoint3D& aPoint);
+  void TranslatePost(const Point3D& aPoint);
 
   void ScalePost(float aX, float aY, float aZ);
 
@@ -258,7 +258,7 @@ public:
    * @param aOrigin The origin to translate to
    * @return The modified matrix
    */
-  void ChangeBasis(const gfxPoint3D& aOrigin);
+  void ChangeBasis(const Point3D& aOrigin);
 
   /**
    * Transforms a point according to this matrix.
@@ -276,7 +276,7 @@ public:
   /** 
    * Transforms a 3D vector according to this matrix.
    */
-  gfxPoint3D Transform3D(const gfxPoint3D& point) const;
+  Point3D Transform3D(const Point3D& point) const;
   gfxPointH3D Transform4D(const gfxPointH3D& aPoint) const;
   gfxPointH3D TransposeTransform4D(const gfxPointH3D& aPoint) const;
 
@@ -322,7 +322,7 @@ public:
    * Returns a unit vector that is perpendicular to the plane formed
    * by transform the screen plane (z=0) by this matrix.
    */
-  gfxPoint3D GetNormalVector() const;
+  Point3D GetNormalVector() const;
 
   /**
    * Returns true if a plane transformed by this matrix will
@@ -343,7 +343,7 @@ public:
    * \param aZ Translation on Z-axis.
    */
   static gfx3DMatrix Translation(float aX, float aY, float aZ);
-  static gfx3DMatrix Translation(const gfxPoint3D& aPoint);
+  static gfx3DMatrix Translation(const Point3D& aPoint);
 
   /**
    * Create a scale matrix. Scales uniformly along all axes.
