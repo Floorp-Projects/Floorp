@@ -139,11 +139,6 @@ MediaSourceReader::OnVideoEOS()
     MSE_DEBUG("MediaSourceReader(%p)::OnVideoEOS reader=%p EOS (readers=%u)",
               this, mVideoReader.get(), mDecoders.Length());
     GetCallback()->OnVideoEOS();
-  } else {
-    // If a new decoder isn't ready to respond with frames yet, we're going to
-    // keep hitting this path at 1/frame_duration Hz. Bug 1058422 is raised to
-    // address this issue.
-    RequestVideoData(false, mTimeThreshold);
   }
 }
 
