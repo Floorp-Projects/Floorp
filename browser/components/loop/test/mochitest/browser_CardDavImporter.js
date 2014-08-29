@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource:///modules/loop/CardDavImporter.jsm");
+const {CardDavImporter} = Cu.import("resource:///modules/loop/CardDavImporter.jsm", {});
 
 const mockDb = {
   _store: { },
