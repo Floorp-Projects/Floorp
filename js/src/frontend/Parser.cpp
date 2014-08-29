@@ -3084,37 +3084,38 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data, P
 
     if (left->isKind(PNK_ARRAY)) {
         for (ParseNode *element = left->pn_head; element; element = element->pn_next) {
-            if (!element->isKind(PNK_ELISION)) {
-                ParseNode *target = element;
-                if (target->isKind(PNK_SPREAD)) {
-                    if (target->pn_next) {
-                        report(ParseError, false, target->pn_next, JSMSG_PARAMETER_AFTER_REST);
-                        return false;
-                    }
-                    target = target->pn_kid;
+            if (element->isKind(PNK_ELISION))
+                continue;
 
-                    // The RestElement should not support nested patterns.
-                    if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
-                        report(ParseError, false, target, JSMSG_BAD_DESTRUCT_TARGET);
+            ParseNode *target = element;
+            if (target->isKind(PNK_SPREAD)) {
+                if (target->pn_next) {
+                    report(ParseError, false, target->pn_next, JSMSG_PARAMETER_AFTER_REST);
+                    return false;
+                }
+                target = target->pn_kid;
+
+                // The RestElement should not support nested patterns.
+                if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
+                    report(ParseError, false, target, JSMSG_BAD_DESTRUCT_TARGET);
+                    return false;
+                }
+            }
+            if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
+                ok = checkDestructuring(data, target);
+            } else {
+                if (data) {
+                    if (!target->isKind(PNK_NAME)) {
+                        report(ParseError, false, target, JSMSG_NO_VARIABLE_NAME);
                         return false;
                     }
-                }
-                if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
-                    ok = checkDestructuring(data, target);
+                    ok = bindDestructuringVar(data, target);
                 } else {
-                    if (data) {
-                        if (!target->isKind(PNK_NAME)) {
-                            report(ParseError, false, target, JSMSG_NO_VARIABLE_NAME);
-                            return false;
-                        }
-                        ok = bindDestructuringVar(data, target);
-                    } else {
-                        ok = checkAndMarkAsAssignmentLhs(target, KeyedDestructuringAssignment);
-                    }
+                    ok = checkAndMarkAsAssignmentLhs(target, KeyedDestructuringAssignment);
                 }
-                if (!ok)
-                    return false;
             }
+            if (!ok)
+                return false;
         }
     } else {
         JS_ASSERT(left->isKind(PNK_OBJECT));
