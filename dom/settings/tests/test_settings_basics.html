@@ -25,6 +25,8 @@ if (SpecialPowers.isMainProcess()) {
   SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
 }
 
+SpecialPowers.addPermission("settings-api-read", true, document);
+SpecialPowers.addPermission("settings-api-write", true, document);
 SpecialPowers.addPermission("settings-read", true, document);
 SpecialPowers.addPermission("settings-write", true, document);
 

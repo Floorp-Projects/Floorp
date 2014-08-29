@@ -201,10 +201,21 @@ uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes, nsIPrincipa
 NS_IMETHODIMP
 nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
                                      bool* aWillNotify,
-                                     bool* aIsAlternate)
+                                     bool* aIsAlternate,
+                                     bool aForceReload)
 {
+  if (aForceReload) {
+    // We remove this stylesheet from the cache to load a new version.
+    nsCOMPtr<nsIContent> thisContent;
+    CallQueryInterface(this, getter_AddRefs(thisContent));
+    nsIDocument* doc = thisContent->GetCrossShadowCurrentDoc();
+    if (doc && doc->CSSLoader()->GetEnabled() &&
+        mStyleSheet && mStyleSheet->GetOriginalURI()) {
+      doc->CSSLoader()->ObsoleteSheet(mStyleSheet->GetOriginalURI());
+    }
+  }
   return DoUpdateStyleSheet(nullptr, nullptr, aObserver, aWillNotify,
-                            aIsAlternate, false);
+                            aIsAlternate, aForceReload);
 }
 
 nsresult
