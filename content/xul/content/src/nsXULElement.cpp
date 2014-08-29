@@ -828,6 +828,7 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
 {
   if (!aBindingParent &&
       aDocument &&
+      !aDocument->IsLoadedAsInteractiveData() &&
       !aDocument->AllowXULXBL() &&
       !aDocument->HasWarnedAbout(nsIDocument::eImportXULIntoContent)) {
     nsContentUtils::AddScriptRunner(new XULInContentErrorReporter(aDocument));
