@@ -144,6 +144,58 @@ add_task(function newLowRankedLink() {
   NewTabUtils.links.removeProvider(provider);
 });
 
+add_task(function extractSite() {
+  // All these should extract to the same site
+  [ "mozilla.org",
+    "m.mozilla.org",
+    "mobile.mozilla.org",
+    "www.mozilla.org",
+    "www3.mozilla.org",
+  ].forEach(host => {
+    let url = "http://" + host;
+    do_check_eq(NewTabUtils.extractSite(url), "mozilla.org", "extracted same " + host);
+  });
+
+  // All these should extract to the same subdomain
+  [ "bugzilla.mozilla.org",
+    "www.bugzilla.mozilla.org",
+  ].forEach(host => {
+    let url = "http://" + host;
+    do_check_eq(NewTabUtils.extractSite(url), "bugzilla.mozilla.org", "extracted eTLD+2 " + host);
+  });
+
+  // All these should not extract to the same site
+  [ "bugzilla.mozilla.org",
+    "bug123.bugzilla.mozilla.org",
+    "too.many.levels.bugzilla.mozilla.org",
+    "m2.mozilla.org",
+    "mobile30.mozilla.org",
+    "ww.mozilla.org",
+    "ww2.mozilla.org",
+    "wwwww.mozilla.org",
+    "wwwww50.mozilla.org",
+    "wwws.mozilla.org",
+    "secure.mozilla.org",
+    "secure10.mozilla.org",
+    "many.levels.deep.mozilla.org",
+    "just.check.in",
+    "192.168.0.1",
+    "localhost",
+  ].forEach(host => {
+    let url = "http://" + host;
+    do_check_neq(NewTabUtils.extractSite(url), "mozilla.org", "extracted diff " + host);
+  });
+
+  // All these should not extract to the same site
+  [ "about:blank",
+    "file:///Users/user/file",
+    "chrome://browser/something",
+    "ftp://ftp.mozilla.org/",
+  ].forEach(url => {
+    do_check_neq(NewTabUtils.extractSite(url), "mozilla.org", "extracted diff url " + url);
+  });
+});
+
 function TestProvider(getLinksFn) {
   this.getLinks = getLinksFn;
   this._observers = new Set();
