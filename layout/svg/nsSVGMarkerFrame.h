@@ -85,6 +85,7 @@ public:
 
   // nsSVGMarkerFrame methods:
   nsresult PaintMark(nsRenderingContext *aContext,
+                     const gfxMatrix& aToMarkedFrameUserSpace,
                      nsSVGPathGeometryFrame *aMarkedFrame,
                      nsSVGMark *aMark,
                      float aStrokeWidth);

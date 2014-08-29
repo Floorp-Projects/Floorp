@@ -573,13 +573,21 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
 
   nsRect clipRect = mVisibleRect.Intersect(viewportRect);
 
+  uint32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+
   nsIntRect contentAreaDirtyRect =
     (clipRect - viewportRect.TopLeft()).
-      ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
+      ToOutsidePixels(appUnitsPerDevPixel);
+
+  gfxPoint devPixelOffset =
+    nsLayoutUtils::PointToGfxPoint(viewportRect.TopLeft(), appUnitsPerDevPixel);
 
   aContext->PushState();
-  aContext->Translate(viewportRect.TopLeft());
-  nsSVGUtils::PaintFrameWithEffects(aContext, &contentAreaDirtyRect, mFrame);
+  // We include the offset of our frame and a scale from device pixels to user
+  // units (i.e. CSS px) in the matrix that we pass to our children):
+  gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(mFrame) *
+                   gfxMatrix::Translation(devPixelOffset);
+  nsSVGUtils::PaintFrameWithEffects(mFrame, aContext, tm, &contentAreaDirtyRect);
   aContext->PopState();
 
   NS_ASSERTION(!aContext->ThebesContext()->HasError(), "Cairo in error state");
@@ -802,8 +810,8 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 
 nsresult
 nsSVGOuterSVGFrame::PaintSVG(nsRenderingContext* aContext,
-                             const nsIntRect *aDirtyRect,
-                             nsIFrame* aTransformRoot)
+                             const gfxMatrix& aTransform,
+                             const nsIntRect* aDirtyRect)
 {
   NS_ASSERTION(GetFirstPrincipalChild()->GetType() ==
                  nsGkAtoms::svgOuterSVGAnonChildFrame &&
@@ -811,7 +819,7 @@ nsSVGOuterSVGFrame::PaintSVG(nsRenderingContext* aContext,
                "We should have a single, anonymous, child");
   nsSVGOuterSVGAnonChildFrame *anonKid =
     static_cast<nsSVGOuterSVGAnonChildFrame*>(GetFirstPrincipalChild());
-  return anonKid->PaintSVG(aContext, aDirtyRect, aTransformRoot);
+  return anonKid->PaintSVG(aContext, aTransform, aDirtyRect);
 }
 
 SVGBBox

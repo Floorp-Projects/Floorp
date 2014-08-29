@@ -53,8 +53,8 @@ public:
 
   // nsISVGChildFrame interface:
   virtual nsresult PaintSVG(nsRenderingContext* aContext,
-                            const nsIntRect *aDirtyRect,
-                            nsIFrame* aTransformRoot) MOZ_OVERRIDE;
+                            const gfxMatrix& aTransform,
+                            const nsIntRect* aDirtyRect = nullptr) MOZ_OVERRIDE;
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) MOZ_OVERRIDE;
   nsRect GetCoveredRegion() MOZ_OVERRIDE;
   virtual void ReflowSVG() MOZ_OVERRIDE;
@@ -108,8 +108,8 @@ nsSVGSwitchFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 nsresult
 nsSVGSwitchFrame::PaintSVG(nsRenderingContext* aContext,
-                           const nsIntRect *aDirtyRect,
-                           nsIFrame* aTransformRoot)
+                           const gfxMatrix& aTransform,
+                           const nsIntRect* aDirtyRect)
 {
   NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
                (mState & NS_FRAME_IS_NONDISPLAY),
@@ -121,7 +121,12 @@ nsSVGSwitchFrame::PaintSVG(nsRenderingContext* aContext,
 
   nsIFrame *kid = GetActiveChildFrame();
   if (kid) {
-    nsSVGUtils::PaintFrameWithEffects(aContext, aDirtyRect, kid, aTransformRoot);
+    gfxMatrix tm = aTransform;
+    if (kid->GetContent()->IsSVG()) {
+      tm = static_cast<nsSVGElement*>(kid->GetContent())->
+             PrependLocalTransformsTo(tm, nsSVGElement::eUserSpaceToParent);
+    }
+    nsSVGUtils::PaintFrameWithEffects(kid, aContext, tm, aDirtyRect);
   }
   return NS_OK;
 }
