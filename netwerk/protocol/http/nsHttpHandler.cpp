@@ -47,6 +47,7 @@
 #include "SpdyZlibReporter.h"
 #include "nsIMemoryReporter.h"
 #include "nsIParentalControlsService.h"
+#include "nsINetworkLinkService.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Telemetry.h"
@@ -347,6 +348,7 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "net:failed-to-process-uri-content", true);
         mObserverService->AddObserver(this, "last-pb-context-exited", true);
         mObserverService->AddObserver(this, "browser:purge-session-history", true);
+        mObserverService->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
     }
 
     MakeNewRequestTokenBucket();
@@ -1777,9 +1779,8 @@ nsHttpHandler::Observe(nsISupports *subject,
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUTF16toUTF8(data).get());
-    }
-    else if (strcmp(topic, "profile-change-net-teardown")    == 0 ||
-             strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)    == 0) {
+    } else if (strcmp(topic, "profile-change-net-teardown")    == 0 ||
+               strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)    == 0) {
 
         mHandlerActive = false;
 
@@ -1799,36 +1800,39 @@ nsHttpHandler::Observe(nsISupports *subject,
 
         if (!mDoNotTrackEnabled) {
             Telemetry::Accumulate(Telemetry::DNT_USAGE, DONOTTRACK_VALUE_UNSET);
-        }
-        else {
+        } else {
             Telemetry::Accumulate(Telemetry::DNT_USAGE, mDoNotTrackValue);
         }
-    }
-    else if (strcmp(topic, "profile-change-net-restore") == 0) {
+    } else if (strcmp(topic, "profile-change-net-restore") == 0) {
         // initialize connection manager
         InitConnectionMgr();
-    }
-    else if (strcmp(topic, "net:clear-active-logins") == 0) {
+    } else if (strcmp(topic, "net:clear-active-logins") == 0) {
         mAuthCache.ClearAll();
         mPrivateAuthCache.ClearAll();
-    }
-    else if (strcmp(topic, "net:prune-dead-connections") == 0) {
+    } else if (strcmp(topic, "net:prune-dead-connections") == 0) {
         if (mConnMgr) {
             mConnMgr->PruneDeadConnections();
         }
-    }
-    else if (strcmp(topic, "net:failed-to-process-uri-content") == 0) {
+    } else if (strcmp(topic, "net:failed-to-process-uri-content") == 0) {
         nsCOMPtr<nsIURI> uri = do_QueryInterface(subject);
-        if (uri && mConnMgr)
+        if (uri && mConnMgr) {
             mConnMgr->ReportFailedToProcess(uri);
-    }
-    else if (strcmp(topic, "last-pb-context-exited") == 0) {
+        }
+    } else if (strcmp(topic, "last-pb-context-exited") == 0) {
         mPrivateAuthCache.ClearAll();
     } else if (strcmp(topic, "browser:purge-session-history") == 0) {
         if (mConnMgr && gSocketTransportService) {
             nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(mConnMgr,
                 &nsHttpConnectionMgr::ClearConnectionHistory);
             gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
+        }
+    } else if (strcmp(topic, NS_NETWORK_LINK_TOPIC) == 0) {
+        nsCString converted = NS_ConvertUTF16toUTF8(data);
+        const char *state = converted.get();
+        if (strcmp(state, NS_NETWORK_LINK_DATA_CHANGED) == 0) {
+            if (mConnMgr) {
+                mConnMgr->PruneDeadConnections();
+            }
         }
     }
 
