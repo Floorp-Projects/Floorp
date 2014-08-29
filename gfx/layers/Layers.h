@@ -1171,17 +1171,6 @@ public:
     }
   }
 
-  void SetContentDescription(const std::string& aContentDescription)
-  {
-    if (mContentDescription == aContentDescription) {
-      return;
-    }
-
-    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ContentDescription", this));
-    mContentDescription = aContentDescription;
-    Mutated();
-  }
-
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
   gfx::CompositionOp GetMixBlendMode() const { return mMixBlendMode; }
@@ -1215,7 +1204,6 @@ public:
   FrameMetrics::ViewID GetScrollbarTargetContainerId() { return mScrollbarTargetId; }
   ScrollDirection GetScrollbarDirection() { return mScrollbarDirection; }
   Layer* GetMaskLayer() const { return mMaskLayer; }
-  const std::string& GetContentDescription() const { return mContentDescription; }
 
 
   // Note that all lengths in animation data are either in CSS pixels or app
@@ -1643,10 +1631,6 @@ protected:
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager
   uint64_t mAnimationGeneration;
-  // A description of the content element corresponding to this frame.
-  // This is empty unless this is a scrollable ContainerLayer and the
-  // apz.printtree pref is turned on.
-  std::string mContentDescription;
 #ifdef MOZ_DUMP_PAINTING
   nsTArray<nsCString> mExtraDumpInfo;
 #endif
