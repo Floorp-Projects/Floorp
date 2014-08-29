@@ -448,11 +448,11 @@ let SettingsRequestManager = {
     let data = aTask.data;
     if (DEBUG) debug("Finalizing tasks for lock " + data.lockID);
     let lock = this.lockInfo[data.lockID];
-    lock.finalizing = true;
 
     if (!lock) {
       return Promise.reject({task: aTask, error: "Lock died, can't finalize"});
     }
+    lock.finalizing = true;
     if (lock._failed) {
       this.removeLock(data.lockID);
       return Promise.reject({task: aTask, error: "Lock failed a permissions check, all requests now failing."});
@@ -815,7 +815,6 @@ let SettingsRequestManager = {
           kill_process = true;
         }
         else if (!this.lockInfo[msg.lockID]) {
-          Cu.reportError("Process trying to access unknown settings lock.");
           if (DEBUG) debug("Cannot find lock ID " + msg.lockID);
           // This doesn't kill, because we can have things that file
           // finalize, then die, and we may get the observer
