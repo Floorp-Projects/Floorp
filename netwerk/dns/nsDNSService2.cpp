@@ -30,15 +30,12 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsNetAddr.h"
 #include "nsProxyRelease.h"
-#include "nsIObserverService.h"
-#include "nsINetworkLinkService.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/VisualEventTracer.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/ChildDNSService.h"
 #include "mozilla/net/DNSListenerProxy.h"
-#include "mozilla/Services.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -543,13 +540,12 @@ nsDNSService::Init()
             prefs->AddObserver("network.proxy.type", this, false);
         }
 
+        nsresult rv;
         nsCOMPtr<nsIObserverService> observerService =
-            mozilla::services::GetObserverService();
-        if (observerService) {
+            do_GetService("@mozilla.org/observer-service;1", &rv);
+        if (NS_SUCCEEDED(rv)) {
             observerService->AddObserver(this, "last-pb-context-exited", false);
-            observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
         }
-
     }
 
     nsDNSPrefetch::Initialize(this);
@@ -874,21 +870,10 @@ nsDNSService::GetMyHostName(nsACString &result)
 NS_IMETHODIMP
 nsDNSService::Observe(nsISupports *subject, const char *topic, const char16_t *data)
 {
-    // We are only getting called if a preference has changed or there's a
-    // network link event.
+    // we are only getting called if a preference has changed. 
     NS_ASSERTION(strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0 ||
-                 strcmp(topic, "last-pb-context-exited") == 0 ||
-                 strcmp(topic, NS_NETWORK_LINK_TOPIC) == 0,
-                 "unexpected observe call");
-
-    if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
-        nsCString converted = NS_ConvertUTF16toUTF8(data);
-        const char *state = converted.get();
-        if (!strcmp(state, NS_NETWORK_LINK_DATA_CHANGED)) {
-            mResolver->FlushCache();
-        }
-        return NS_OK;
-    }
+        strcmp(topic, "last-pb-context-exited") == 0,
+        "unexpected observe call");
 
     //
     // Shutdown and this function are both only called on the UI thread, so we don't
