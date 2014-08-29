@@ -278,7 +278,6 @@ public:
     context.producedAt = producedAt;
     context.certs = certs;
 
-    context.certIDHashAlg = SEC_OID_SHA1;
     context.certStatus = certStatus;
     context.thisUpdate = thisUpdate;
     context.nextUpdate = nextUpdate ? *nextUpdate : 0;
@@ -389,14 +388,14 @@ protected:
               const char* certSubjectName,
               OCSPResponseContext::CertStatus certStatus,
               const char* signerName,
-              SECOidTag signerEKU = SEC_OID_OCSP_RESPONDER,
+              /*optional*/ const Input* signerEKUDER = &OCSPSigningEKUDER,
               /*optional, out*/ Input* signerDEROut = nullptr)
   {
     assert(certSubjectName);
 
     const SECItem* extensions[] = {
-      signerEKU != SEC_OID_UNKNOWN
-        ? CreateEncodedEKUExtension(arena.get(), &signerEKU, 1,
+      signerEKUDER
+        ? CreateEncodedEKUExtension(arena.get(), *signerEKUDER,
                                     ExtensionCriticality::NotCritical)
         : nullptr,
       nullptr
@@ -405,7 +404,7 @@ protected:
     SECItem* signerDER(CreateEncodedCertificate(
                           arena.get(), ++rootIssuedCount, rootName,
                           oneDayBeforeNow, oneDayAfterNow, certSubjectName,
-                          signerEKU != SEC_OID_UNKNOWN ? extensions : nullptr,
+                          signerEKUDER ? extensions : nullptr,
                           rootPrivateKey.get(), signerPrivateKey));
     EXPECT_TRUE(signerDER);
     if (signerDEROut) {
@@ -451,12 +450,19 @@ protected:
     }
     return ::mozilla::pkix::test::CreateEncodedCertificate(
                                     arena, v3,
-                                    SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+                                    sha256WithRSAEncryption,
                                     serialNumberDER, issuerDER, notBefore,
                                     notAfter, subjectDER, extensions,
-                                    signerKey, SEC_OID_SHA256, privateKey);
+                                    signerKey,
+                                    SignatureAlgorithm::rsa_pkcs1_with_sha256,
+                                    privateKey);
   }
+
+  static const Input OCSPSigningEKUDER;
 };
+
+/*static*/ const Input pkixocsp_VerifyEncodedResponse_DelegatedResponder::
+  OCSPSigningEKUDER(tlv_id_kp_OCSPSigning);
 
 TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_byKey)
 {
@@ -524,11 +530,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
 
 TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_expired)
 {
-  static const SECOidTag signerEKU = SEC_OID_OCSP_RESPONDER;
   static const char* signerName = "CN=good_indirect_expired";
 
   const SECItem* extensions[] = {
-    CreateEncodedEKUExtension(arena.get(), &signerEKU, 1,
+    CreateEncodedEKUExtension(arena.get(), OCSPSigningEKUDER,
                               ExtensionCriticality::NotCritical),
     nullptr
   };
@@ -557,11 +562,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_expired)
 
 TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_future)
 {
-  static const SECOidTag signerEKU = SEC_OID_OCSP_RESPONDER;
   static const char* signerName = "CN=good_indirect_future";
 
   const SECItem* extensions[] = {
-    CreateEncodedEKUExtension(arena.get(), &signerEKU, 1,
+    CreateEncodedEKUExtension(arena.get(), OCSPSigningEKUDER,
                               ExtensionCriticality::NotCritical),
     nullptr
   };
@@ -593,7 +597,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_no_eku)
 {
   Input response(CreateEncodedIndirectOCSPSuccessfulResponse(
                          "CN=good_indirect_wrong_eku",
-                         OCSPResponseContext::good, byKey, SEC_OID_UNKNOWN));
+                         OCSPResponseContext::good, byKey, nullptr));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
             VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
@@ -602,13 +606,15 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_no_eku)
   ASSERT_FALSE(expired);
 }
 
+static const Input serverAuthEKUDER(tlv_id_kp_serverAuth);
+
 TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
        good_indirect_wrong_eku)
 {
   Input response(CreateEncodedIndirectOCSPSuccessfulResponse(
                         "CN=good_indirect_wrong_eku",
                         OCSPResponseContext::good, byKey,
-                        SEC_OID_EXT_KEY_USAGE_SERVER_AUTH));
+                        &serverAuthEKUDER));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
             VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
@@ -623,26 +629,23 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_tampered_eku)
   Input response(CreateEncodedIndirectOCSPSuccessfulResponse(
                          "CN=good_indirect_tampered_eku",
                          OCSPResponseContext::good, byKey,
-                         SEC_OID_EXT_KEY_USAGE_SERVER_AUTH));
-
-#define EKU_PREFIX \
-  0x06, 8, /* OBJECT IDENTIFIER, 8 bytes */ \
-  0x2B, 6, 1, 5, 5, 7, /* id-pkix */ \
-  0x03 /* id-kp */
-  static const uint8_t EKU_SERVER_AUTH[] = { EKU_PREFIX, 0x01 }; // serverAuth
-  static const uint8_t EKU_OCSP_SIGNER[] = { EKU_PREFIX, 0x09 }; // OCSPSigning
-#undef EKU_PREFIX
-  SECItem responseSECItem = UnsafeMapInputToSECItem(response);
+                         &serverAuthEKUDER));
+  ByteString tamperedResponse(response.UnsafeGetData(),
+                              response.GetLength());
   ASSERT_EQ(Success,
-            TamperOnce(responseSECItem,
-                       EKU_SERVER_AUTH, sizeof(EKU_SERVER_AUTH),
-                       EKU_OCSP_SIGNER, sizeof(EKU_OCSP_SIGNER)));
-
+            TamperOnce(tamperedResponse,
+                       ByteString(tlv_id_kp_serverAuth,
+                                  sizeof(tlv_id_kp_serverAuth)),
+                       ByteString(tlv_id_kp_OCSPSigning,
+                                  sizeof(tlv_id_kp_OCSPSigning))));
+  Input tamperedResponseInput;
+  ASSERT_EQ(Success, tamperedResponseInput.Init(tamperedResponse.data(),
+                                                tamperedResponse.length()));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
             VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                      response, expired));
+                                      tamperedResponseInput, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -657,9 +660,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_unknown_issuer)
   ASSERT_EQ(Success, GenerateKeyPair(unknownPublicKey, unknownPrivateKey));
 
   // Delegated responder cert signed by unknown issuer
-  static const SECOidTag signerEKU = SEC_OID_OCSP_RESPONDER;
   const SECItem* extensions[] = {
-    CreateEncodedEKUExtension(arena.get(), &signerEKU, 1,
+    CreateEncodedEKUExtension(arena.get(), OCSPSigningEKUDER,
                               ExtensionCriticality::NotCritical),
     nullptr
   };
@@ -709,9 +711,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   ASSERT_TRUE(subCADER);
 
   // Delegated responder cert signed by that sub-CA
-  static const SECOidTag signerEKU = SEC_OID_OCSP_RESPONDER;
   const SECItem* extensions[] = {
-    CreateEncodedEKUExtension(arena.get(), &signerEKU, 1,
+    CreateEncodedEKUExtension(arena.get(), OCSPSigningEKUDER,
                               ExtensionCriticality::NotCritical),
     nullptr
   };
@@ -763,9 +764,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   ASSERT_TRUE(subCADER);
 
   // Delegated responder cert signed by that sub-CA
-  static const SECOidTag signerEKU = SEC_OID_OCSP_RESPONDER;
   const SECItem* extensions[] = {
-    CreateEncodedEKUExtension(arena.get(), &signerEKU, 1,
+    CreateEncodedEKUExtension(arena.get(), OCSPSigningEKUDER,
                               ExtensionCriticality::NotCritical),
     nullptr
   };
@@ -803,7 +803,7 @@ public:
       createdResponse(
         CreateEncodedIndirectOCSPSuccessfulResponse(
           "CN=OCSPGetCertTrustTest Signer", OCSPResponseContext::good,
-          byKey, SEC_OID_OCSP_RESPONDER, &signerCertDER));
+          byKey, &OCSPSigningEKUDER, &signerCertDER));
     if (response.Init(createdResponse) != Success) {
       abort();
     }

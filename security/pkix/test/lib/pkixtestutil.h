@@ -26,7 +26,8 @@
 #define mozilla_pkix_test__pkixtestutils_h
 
 #include <ctime>
-#include <stdint.h>
+#include <stdint.h> // Some Mozilla-supported compilers lack <cstdint>
+#include <string>
 
 #include "keyhi.h"
 #include "pkix/enumclass.h"
@@ -35,6 +36,8 @@
 #include "seccomon.h"
 
 namespace mozilla { namespace pkix { namespace test {
+
+typedef std::basic_string<uint8_t> ByteString;
 
 // XXX: Ideally, we should define this instead:
 //
@@ -77,6 +80,18 @@ typedef mozilla::pkix::ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
 typedef mozilla::pkix::ScopedPtr<SECKEYPrivateKey, SECKEY_DestroyPrivateKey>
   ScopedSECKEYPrivateKey;
 
+// python DottedOIDToCode.py --tlv id-kp-OCSPSigning 1.3.6.1.5.5.7.3.9
+static const uint8_t tlv_id_kp_OCSPSigning[] = {
+  0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x09
+};
+
+// python DottedOIDToCode.py --tlv id-kp-serverAuth 1.3.6.1.5.5.7.3.1
+static const uint8_t tlv_id_kp_serverAuth[] = {
+  0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01
+};
+
+extern const Input sha256WithRSAEncryption;
+
 // e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
 mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
                            int16_t hour, int16_t minutes, int16_t seconds);
@@ -88,16 +103,15 @@ Result GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
 const SECItem* ASCIIToDERName(PLArenaPool* arena, const char* cn);
 
 // Replace one substring in item with another of the same length, but only if
-// the substring was found exactly once. The "only once" restriction is helpful
-// for avoiding making multiple changes at once.
+// the substring was found exactly once. The "same length" restriction is
+// useful for avoiding invalidating lengths encoded within the item. The
+// "only once" restriction is helpful for avoiding making accidental changes.
 //
 // The string to search for must be 8 or more bytes long so that it is
 // extremely unlikely that there will ever be any false positive matches
 // in digital signatures, keys, hashes, etc.
-//
-// Returns true on success, false on failure.
-Result TamperOnce(SECItem& item, const uint8_t* from, size_t fromLen,
-                  const uint8_t* to, size_t toLen);
+Result TamperOnce(/*in/out*/ ByteString& item, const ByteString& from,
+                  const ByteString& to);
 
 Result InitInputFromSECItem(const SECItem* secItem, /*out*/ Input& input);
 
@@ -106,6 +120,7 @@ Result InitInputFromSECItem(const SECItem* secItem, /*out*/ Input& input);
 
 enum Version { v1 = 0, v2 = 1, v3 = 2 };
 
+// signature is assumed to be the DER encoding of an AlgorithmIdentifer.
 // serialNumber is assumed to be the DER encoding of an INTEGER.
 //
 // If extensions is null, then no extensions will be encoded. Otherwise,
@@ -119,14 +134,14 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // The return value, if non-null, is owned by the arena in the context and
 // MUST NOT be freed.
 SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
-                                  SECOidTag signature,
+                                  Input signature,
                                   const SECItem* serialNumber,
                                   const SECItem* issuerNameDER,
                                   std::time_t notBefore, std::time_t notAfter,
                                   const SECItem* subjectNameDER,
                      /*optional*/ SECItem const* const* extensions,
                      /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
-                                  SECOidTag signatureHashAlg,
+                                  SignatureAlgorithm signatureAlgorithm,
                           /*out*/ ScopedSECKEYPrivateKey& privateKey);
 
 SECItem* CreateEncodedSerialNumber(PLArenaPool* arena, long value);
@@ -138,13 +153,9 @@ SECItem* CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
                                        /*optional*/ long* pathLenConstraint,
                                        ExtensionCriticality criticality);
 
-// ekus must be non-null and must must point to a SEC_OID_UNKNOWN-terminated
-// array of SECOidTags. If the first item of the array is SEC_OID_UNKNOWN then
-// an empty EKU extension will be encoded.
-//
-// The return value, if non-null, is owned by the arena and MUST NOT be freed.
-SECItem* CreateEncodedEKUExtension(PLArenaPool* arena,
-                                   const SECOidTag* ekus, size_t ekusCount,
+// Creates a DER-encoded extKeyUsage extension with one EKU OID. The return
+// value, if non-null, is owned by the arena and MUST NOT be freed.
+SECItem* CreateEncodedEKUExtension(PLArenaPool* arena, Input eku,
                                    ExtensionCriticality criticality);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -199,7 +210,6 @@ public:
 
   // The following fields are on a per-SingleResponse basis. In the future we
   // may support including multiple SingleResponses per response.
-  SECOidTag certIDHashAlg;
   enum CertStatus {
     good = 0,
     revoked = 1,

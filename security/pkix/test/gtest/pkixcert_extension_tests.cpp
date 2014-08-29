@@ -47,12 +47,13 @@ CreateCert(PLArenaPool* arena, const char* subjectStr,
   const SECItem* subjectDER(ASCIIToDERName(arena, subjectStr));
   EXPECT_TRUE(subjectDER);
   SECItem* cert = CreateEncodedCertificate(
-                                  arena, v3,
-                                  SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+                                  arena, v3, sha256WithRSAEncryption,
                                   serialNumber, issuerDER,
                                   oneDayBeforeNow, oneDayAfterNow,
                                   subjectDER, extensions,
-                                  nullptr, SEC_OID_SHA256, subjectKey);
+                                  nullptr,
+                                  SignatureAlgorithm::rsa_pkcs1_with_sha256,
+                                  subjectKey);
   EXPECT_TRUE(cert);
   Input result;
   EXPECT_EQ(Success, result.Init(cert->data, cert->len));

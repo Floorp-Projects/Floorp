@@ -38,12 +38,17 @@
 #include "pkixutil.h"
 #include "prinit.h"
 #include "prprf.h"
-#include "secder.h"
 #include "secerr.h"
 
 using namespace std;
 
 namespace mozilla { namespace pkix { namespace test {
+
+// python DottedOIDToCode.py --alg sha256WithRSAEncryption 1.2.840.113549.1.1.11
+static const uint8_t alg_sha256WithRSAEncryption[] = {
+  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b
+};
+const Input sha256WithRSAEncryption(alg_sha256WithRSAEncryption);
 
 namespace {
 
@@ -97,50 +102,24 @@ OpenFile(const char* dir, const char* filename, const char* mode)
 } // unnamed namespace
 
 Result
-TamperOnce(SECItem& item,
-           const uint8_t* from, size_t fromLen,
-           const uint8_t* to, size_t toLen)
+TamperOnce(/*in/out*/ ByteString& item, const ByteString& from,
+           const ByteString& to)
 {
-  if (!item.data || !from || !to || fromLen != toLen) {
+  if (from.length() < 8) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
-
-  if (fromLen < 8) {
+  if (from.length() != to.length()) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
-
-  uint8_t* p = item.data;
-  size_t remaining = item.len;
-  bool alreadyFoundMatch = false;
-  for (;;) {
-    uint8_t* foundFirstByte = static_cast<uint8_t*>(memchr(p, from[0],
-                                                           remaining));
-    if (!foundFirstByte) {
-      if (alreadyFoundMatch) {
-        return Success;
-      }
-      return Result::FATAL_ERROR_INVALID_ARGS;
-    }
-    remaining -= (foundFirstByte - p);
-    if (remaining < fromLen) {
-      if (alreadyFoundMatch) {
-        return Success;
-      }
-      return Result::FATAL_ERROR_INVALID_ARGS;
-    }
-    if (!memcmp(foundFirstByte, from, fromLen)) {
-      if (alreadyFoundMatch) {
-        return Result::FATAL_ERROR_INVALID_ARGS;
-      }
-      alreadyFoundMatch = true;
-      memmove(foundFirstByte, to, toLen);
-      p = foundFirstByte + toLen;
-      remaining -= toLen;
-    } else {
-      p = foundFirstByte + 1;
-      --remaining;
-    }
+  size_t pos = item.find(from);
+  if (pos == string::npos) {
+    return Result::FATAL_ERROR_INVALID_ARGS; // No matches.
   }
+  if (item.find(from, pos + from.length()) != string::npos) {
+    return Result::FATAL_ERROR_INVALID_ARGS; // More than once match.
+  }
+  item.replace(pos, from.length(), to);
+  return Success;
 }
 
 Result
@@ -248,7 +227,6 @@ OCSPResponseContext::OCSPResponseContext(PLArenaPool* arena,
   , badSignature(false)
   , certs(nullptr)
 
-  , certIDHashAlg(SEC_OID_SHA1)
   , certStatus(good)
   , revocationTime(0)
   , thisUpdate(time)
@@ -276,39 +254,19 @@ EncodeNested(PLArenaPool* arena, uint8_t tag, const SECItem* inner)
   return output.Squash(arena, tag);
 }
 
-// A return value of 0 is an error, but this should never happen in practice
-// because this function aborts in that case.
-static size_t
-HashAlgorithmToLength(SECOidTag hashAlg)
-{
-  switch (hashAlg) {
-    case SEC_OID_SHA1:
-      return SHA1_LENGTH;
-    case SEC_OID_SHA256:
-      return SHA256_LENGTH;
-    case SEC_OID_SHA384:
-      return SHA384_LENGTH;
-    case SEC_OID_SHA512:
-      return SHA512_LENGTH;
-    default:
-      abort();
-  }
-  return 0;
-}
-
 static SECItem*
-HashedOctetString(PLArenaPool* arena, const SECItem& bytes, SECOidTag hashAlg)
+HashedOctetString(PLArenaPool* arena, const SECItem& bytes)
 {
-  size_t hashLen = HashAlgorithmToLength(hashAlg);
-  if (hashLen == 0) {
-    return nullptr;
-  }
-  SECItem* hashBuf = SECITEM_AllocItem(arena, nullptr, hashLen);
+  SECItem* hashBuf = SECITEM_AllocItem(arena, nullptr, SHA1_LENGTH);
   if (!hashBuf) {
     return nullptr;
   }
-  if (PK11_HashBuf(hashAlg, hashBuf->data, bytes.data, bytes.len)
-        != SECSuccess) {
+
+  Input input;
+  if (input.Init(bytes.data, bytes.len) != Success) {
+    return nullptr;
+  }
+  if (DigestBuf(input, hashBuf->data, hashBuf->len) != Success) {
     return nullptr;
   }
 
@@ -321,29 +279,7 @@ KeyHashHelper(PLArenaPool* arena, const CERTSubjectPublicKeyInfo* spki)
   // We only need a shallow copy here.
   SECItem spk = spki->subjectPublicKey;
   DER_ConvertBitString(&spk); // bits to bytes
-  return HashedOctetString(arena, spk, SEC_OID_SHA1);
-}
-
-static SECItem*
-AlgorithmIdentifier(PLArenaPool* arena, SECOidTag algTag)
-{
-  SECAlgorithmIDStr aid;
-  aid.algorithm.data = nullptr;
-  aid.algorithm.len = 0;
-  aid.parameters.data = nullptr;
-  aid.parameters.len = 0;
-  if (SECOID_SetAlgorithmID(arena, &aid, algTag, nullptr) != SECSuccess) {
-    return nullptr;
-  }
-  static const SEC_ASN1Template algorithmIDTemplate[] = {
-    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SECAlgorithmID) },
-    { SEC_ASN1_OBJECT_ID, offsetof(SECAlgorithmID, algorithm) },
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_ANY, offsetof(SECAlgorithmID, parameters) },
-    { 0 }
-  };
-  SECItem* algorithmID = SEC_ASN1EncodeItem(arena, nullptr, &aid,
-                                            algorithmIDTemplate);
-  return algorithmID;
+  return HashedOctetString(arena, spk);
 }
 
 static SECItem*
@@ -395,16 +331,6 @@ Integer(PLArenaPool* arena, long value)
   encoded->data[1] = 1; // length
   encoded->data[2] = value;
   return encoded;
-}
-
-static SECItem*
-OID(PLArenaPool* arena, SECOidTag tag)
-{
-  const SECOidData* extnIDData(SECOID_FindOIDByTag(tag));
-  if (!extnIDData) {
-    return nullptr;
-  }
-  return EncodeNested(arena, der::OIDTag, &extnIDData->oid);
 }
 
 enum TimeEncoding { UTCTime = 0, GeneralizedTime = 1 };
@@ -558,7 +484,8 @@ YMDHMS(int16_t year, int16_t month, int16_t day,
 
 static SECItem*
 SignedData(PLArenaPool* arena, const SECItem* tbsData,
-           SECKEYPrivateKey* privKey, SECOidTag hashAlg,
+           SECKEYPrivateKey* privKey,
+           SignatureAlgorithm signatureAlgorithm,
            bool corrupt, /*optional*/ SECItem const* const* certs)
 {
   assert(arena);
@@ -568,21 +495,26 @@ SignedData(PLArenaPool* arena, const SECItem* tbsData,
     return nullptr;
   }
 
-  SECOidTag signatureAlgTag = SEC_GetSignatureAlgorithmOidTag(privKey->keyType,
-                                                              hashAlg);
-  if (signatureAlgTag == SEC_OID_UNKNOWN) {
-    return nullptr;
-  }
-  SECItem* signatureAlgorithm = AlgorithmIdentifier(arena, signatureAlgTag);
-  if (!signatureAlgorithm) {
-    return nullptr;
+  SECOidTag signatureAlgorithmOidTag;
+  Input signatureAlgorithmDER;
+  switch (signatureAlgorithm) {
+    case SignatureAlgorithm::rsa_pkcs1_with_sha256:
+      signatureAlgorithmOidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
+      if (signatureAlgorithmDER.Init(alg_sha256WithRSAEncryption,
+                                     sizeof(alg_sha256WithRSAEncryption))
+            != Success) {
+        return nullptr;
+      }
+      break;
+    default:
+      return nullptr;
   }
 
   // SEC_SignData doesn't take an arena parameter, so we have to manage
   // the memory allocated in signature.
   SECItem signature;
   if (SEC_SignData(&signature, tbsData->data, tbsData->len, privKey,
-                   signatureAlgTag) != SECSuccess)
+                   signatureAlgorithmOidTag) != SECSuccess)
   {
     return nullptr;
   }
@@ -617,7 +549,10 @@ SignedData(PLArenaPool* arena, const SECItem* tbsData,
   if (output.Add(tbsData) != Success) {
     return nullptr;
   }
-  if (output.Add(signatureAlgorithm) != Success) {
+
+  SECItem sigantureAlgorithmDERItem =
+    UnsafeMapInputToSECItem(signatureAlgorithmDER);
+  if (output.Add(&sigantureAlgorithmDERItem) != Success) {
     return nullptr;
   }
   if (output.Add(signatureNested) != Success) {
@@ -640,7 +575,7 @@ SignedData(PLArenaPool* arena, const SECItem* tbsData,
 //                  -- by extnID
 //      }
 static SECItem*
-Extension(PLArenaPool* arena, SECOidTag extnIDTag,
+Extension(PLArenaPool* arena, Input extnID,
           ExtensionCriticality criticality, Output& value)
 {
   assert(arena);
@@ -650,11 +585,8 @@ Extension(PLArenaPool* arena, SECOidTag extnIDTag,
 
   Output output;
 
-  const SECItem* extnID(OID(arena, extnIDTag));
-  if (!extnID) {
-    return nullptr;
-  }
-  if (output.Add(extnID) != Success) {
+  const SECItem extnIDItem = UnsafeMapInputToSECItem(extnID);
+  if (output.Add(&extnIDItem) != Success) {
     return nullptr;
   }
 
@@ -762,7 +694,7 @@ GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
 // Certificates
 
 static SECItem* TBSCertificate(PLArenaPool* arena, long version,
-                               const SECItem* serialNumber, SECOidTag signature,
+                               const SECItem* serialNumber, Input signature,
                                const SECItem* issuer, time_t notBefore,
                                time_t notAfter, const SECItem* subject,
                                const SECKEYPublicKey* subjectPublicKey,
@@ -774,12 +706,12 @@ static SECItem* TBSCertificate(PLArenaPool* arena, long version,
 //         signatureValue       BIT STRING  }
 SECItem*
 CreateEncodedCertificate(PLArenaPool* arena, long version,
-                         SECOidTag signature, const SECItem* serialNumber,
+                         Input signature, const SECItem* serialNumber,
                          const SECItem* issuerNameDER, time_t notBefore,
                          time_t notAfter, const SECItem* subjectNameDER,
                          /*optional*/ SECItem const* const* extensions,
                          /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
-                         SECOidTag signatureHashAlg,
+                         SignatureAlgorithm signatureAlgorithm,
                          /*out*/ ScopedSECKEYPrivateKey& privateKeyResult)
 {
   assert(arena);
@@ -810,7 +742,7 @@ CreateEncodedCertificate(PLArenaPool* arena, long version,
     result(MaybeLogOutput(SignedData(arena, tbsCertificate,
                                      issuerPrivateKey ? issuerPrivateKey
                                                       : privateKeyTemp.get(),
-                                     signatureHashAlg, false, nullptr),
+                                     signatureAlgorithm, false, nullptr),
                           "cert"));
   if (!result) {
     return nullptr;
@@ -835,7 +767,7 @@ CreateEncodedCertificate(PLArenaPool* arena, long version,
 //                           -- If present, version MUST be v3 --  }
 static SECItem*
 TBSCertificate(PLArenaPool* arena, long versionValue,
-               const SECItem* serialNumber, SECOidTag signatureOidTag,
+               const SECItem* serialNumber, Input signature,
                const SECItem* issuer, time_t notBeforeTime,
                time_t notAfterTime, const SECItem* subject,
                const SECKEYPublicKey* subjectPublicKey,
@@ -871,11 +803,8 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
     return nullptr;
   }
 
-  SECItem* signature(AlgorithmIdentifier(arena, signatureOidTag));
-  if (!signature) {
-    return nullptr;
-  }
-  if (output.Add(signature) != Success) {
+  SECItem signatureItem = UnsafeMapInputToSECItem(signature);
+  if (output.Add(&signatureItem) != Success) {
     return nullptr;
   }
 
@@ -1002,33 +931,34 @@ CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
     }
   }
 
-  return Extension(arena, SEC_OID_X509_BASIC_CONSTRAINTS, criticality, value);
+  // python DottedOIDToCode.py --tlv id-ce-basicConstraints 2.5.29.19
+  static const uint8_t tlv_id_ce_basicConstraints[] = {
+    0x06, 0x03, 0x55, 0x1d, 0x13
+  };
+
+  return Extension(arena, Input(tlv_id_ce_basicConstraints), criticality, value);
 }
 
 // ExtKeyUsageSyntax ::= SEQUENCE SIZE (1..MAX) OF KeyPurposeId
 // KeyPurposeId ::= OBJECT IDENTIFIER
 SECItem*
-CreateEncodedEKUExtension(PLArenaPool* arena, SECOidTag const* ekus,
-                          size_t ekusCount, ExtensionCriticality criticality)
+CreateEncodedEKUExtension(PLArenaPool* arena, Input ekuOID,
+                          ExtensionCriticality criticality)
 {
   assert(arena);
-  assert(ekus);
-  if (!arena || (!ekus && ekusCount != 0)) {
+
+  Output value;
+  SECItem ekuOIDItem = UnsafeMapInputToSECItem(ekuOID);
+  if (value.Add(&ekuOIDItem) != Success) {
     return nullptr;
   }
 
-  Output value;
-  for (size_t i = 0; i < ekusCount; ++i) {
-    SECItem* encodedEKUOID = OID(arena, ekus[i]);
-    if (!encodedEKUOID) {
-      return nullptr;
-    }
-    if (value.Add(encodedEKUOID) != Success) {
-      return nullptr;
-    }
-  }
+  // python DottedOIDToCode.py --tlv id-ce-extKeyUsage 2.5.29.37
+  static const uint8_t tlv_id_ce_extKeyUsage[] = {
+    0x06, 0x03, 0x55, 0x1d, 0x25
+  };
 
-  return Extension(arena, SEC_OID_X509_EXT_KEY_USAGE, criticality, value);
+  return Extension(arena, Input(tlv_id_ce_extKeyUsage), criticality, value);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1146,7 +1076,8 @@ BasicOCSPResponse(OCSPResponseContext& context)
 
   // TODO(bug 980538): certs
   return SignedData(context.arena, tbsResponseData,
-                    context.signerPrivateKey.get(), SEC_OID_SHA1,
+                    context.signerPrivateKey.get(),
+                    SignatureAlgorithm::rsa_pkcs1_with_sha256,
                     context.badSignature, context.certs);
 }
 
@@ -1375,14 +1306,8 @@ SingleResponse(OCSPResponseContext& context)
 SECItem*
 CertID(OCSPResponseContext& context)
 {
-  SECItem* hashAlgorithm = AlgorithmIdentifier(context.arena,
-                                               context.certIDHashAlg);
-  if (!hashAlgorithm) {
-    return nullptr;
-  }
   SECItem issuerSECItem = UnsafeMapInputToSECItem(context.certID.issuer);
-  SECItem* issuerNameHash = HashedOctetString(context.arena, issuerSECItem,
-                                              context.certIDHashAlg);
+  SECItem* issuerNameHash = HashedOctetString(context.arena, issuerSECItem);
   if (!issuerNameHash) {
     return nullptr;
   }
@@ -1414,7 +1339,18 @@ CertID(OCSPResponseContext& context)
   }
 
   Output output;
-  if (output.Add(hashAlgorithm) != Success) {
+
+  // python DottedOIDToCode.py --alg id-sha1 1.3.14.3.2.26
+  static const uint8_t alg_id_sha1[] = {
+    0x30, 0x07, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a
+  };
+  static const SECItem id_sha1 = {
+    siBuffer,
+    const_cast<uint8_t*>(alg_id_sha1),
+    sizeof(alg_id_sha1)
+  };
+
+  if (output.Add(&id_sha1) != Success) {
     return nullptr;
   }
   if (output.Add(issuerNameHash) != Success) {

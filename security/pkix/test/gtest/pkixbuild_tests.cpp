@@ -65,9 +65,10 @@ CreateCert(PLArenaPool* arena, const char* issuerStr,
   }
 
   SECItem* certDER(CreateEncodedCertificate(
-                     arena, v3, SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+                     arena, v3, sha256WithRSAEncryption,
                      serialNumber, issuerDER, oneDayBeforeNow, oneDayAfterNow,
-                     subjectDER, extensions, issuerKey, SEC_OID_SHA256,
+                     subjectDER, extensions, issuerKey,
+                     SignatureAlgorithm::rsa_pkcs1_with_sha256,
                      subjectKey));
   EXPECT_TRUE(certDER);
   if (subjectCert) {
