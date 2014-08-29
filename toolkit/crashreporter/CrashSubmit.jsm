@@ -297,6 +297,9 @@ Submitter.prototype = {
                                    manager.SUBMISSION_RESULT_FAILED;
           manager.addSubmissionResult(self.id, submissionID, new Date(),
                                       result);
+          if (submitted) {
+            manager.setRemoteCrashID(self.id, ret.CrashID);
+          }
         }
 
         if (submitted) {
