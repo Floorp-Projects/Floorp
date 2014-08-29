@@ -22,8 +22,7 @@ Interpose(JSContext *cx, JS::HandleObject target, const nsIID *iid, JS::HandleId
 template<typename Base>
 class AddonWrapper : public Base {
   public:
-    AddonWrapper(unsigned flags);
-    virtual ~AddonWrapper();
+    explicit MOZ_CONSTEXPR AddonWrapper(unsigned flags) : Base(flags) { }
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,

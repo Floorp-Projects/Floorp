@@ -43,7 +43,6 @@
 #include "sip_interface_regmgr.h"
 #include "ccsip_publish.h"
 #include "platform_api.h"
-#include "thread_monitor.h"
 
 #ifdef SAPP_SAPP_GSM
 #define SAPP_APP_GSM 3
@@ -61,12 +60,10 @@ extern sipSCB_t *find_scb_by_callid(const char *callID, int *scb_index);
 extern int platThreadInit(char *);
 void sip_platform_handle_service_control_notify(sipServiceControl_t *scp);
 short SIPTaskProcessTimerExpiration(void *msg, uint32_t *cmd);
-extern cprMsgQueue_t sip_msgq;
 extern cprMsgQueue_t gsm_msgq;
 extern void ccsip_dump_recv_msg_info(sipMessage_t *pSIPMessage,
                                cpr_ip_addr_t *cc_remote_ipaddr,
                                uint16_t cc_remote_port);
-void destroy_sip_thread(void);
 
 // Global variables
 
@@ -116,9 +113,6 @@ typedef struct ccsip_shutdown_req_t_ {
     int action;
     int reason;
 } ccsip_shutdown_req_t;
-
-
-extern cprThread_t sip_thread;
 
 
 /*---------------------------------------------------------
@@ -317,28 +311,11 @@ SIPTaskInit (void)
 cpr_status_e
 SIPTaskSendMsg (uint32_t cmd, void *msg, uint16_t len, void *usr)
 {
-    phn_syshdr_t *syshdr;
-
-    syshdr = (phn_syshdr_t *) cprGetSysHeader(msg);
-    if (!syshdr) {
-        return CPR_FAILURE;
-    }
-    syshdr->Cmd = cmd;
-    syshdr->Len = len;
-    syshdr->Usr.UsrPtr = usr;
-
-    /*
-     * If we send a message to the task too soon the sip variable is not set yet.
-     * so just use the global for now. This happens if we create sip thread
-     * and immediately send a CFG_DONE message to sip thread from the main thread.
-     * This can be solved by waiting for an echo roundtrip from Thread before sending
-     * any other message. Will do someday.
-     */
-    if (cprSendMessage(sip_msgq /*sip.msgQueue */ , (cprBuffer_t)msg, (void **)&syshdr)
-        == CPR_FAILURE) {
-        cprReleaseSysHeader(syshdr);
-        return CPR_FAILURE;
-    }
+    /* Mozilla hack: just ignore everything that is posted here */
+    (void)cmd;
+    cpr_free(msg);
+    (void)len;
+    (void)usr;
     return CPR_SUCCESS;
 }
 
@@ -877,10 +854,6 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
         break;
 
     case THREAD_UNLOAD:
-        {
-            thread_ended(THREADMON_SIP);
-            destroy_sip_thread();
-        }
         break;
 
     case SIP_TMR_GLARE_AVOIDANCE:
@@ -3018,18 +2991,4 @@ SIPTaskProcessShutdown (int action, int reason)
     /* Shutdown SIP components */
     sip_shutdown_phase1(action, reason);
 }
-/*
- *  Function: destroy_sip_thread
- *  Description:  kill sip msgQ and sip thread
- *  Parameters:   none
- *  Returns: none
- */
-void destroy_sip_thread()
-{
-    static const char fname[] = "destroy_sip_thread";
-    DEF_DEBUG(DEB_F_PREFIX"Unloading SIP and destroying sip thread",
-        DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
 
-    /* kill msgQ thread first, then itself */
-    (void) cprDestroyThread(sip_thread);
-}

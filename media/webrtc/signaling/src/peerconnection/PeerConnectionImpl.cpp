@@ -255,6 +255,7 @@ public:
       streams = aInfo->getMediaStreams();
       mRemoteStream = mPC->media()->GetRemoteStream(streams->media_stream_id);
       MOZ_ASSERT(mRemoteStream);
+      cpr_free(streams);
     } else if (mCallState == FOUNDICECANDIDATE) {
         mCandidateStr = aInfo->getCandidate();
     } else if ((mCallState == CREATEOFFERSUCCESS) ||
@@ -373,6 +374,7 @@ public:
         // providing non-fatal warnings.
         mPC->ClearSdpParseErrorMessages();
         mObserver->OnSetLocalDescriptionSuccess(rv);
+        mPC->StartTrickle();
         break;
 
       case SETREMOTEDESCSUCCESS:
@@ -439,6 +441,8 @@ public:
 
             std::string candidate = mCandidateStr.substr(end_of_mid + 1);
 
+            CSFLogDebug(logTag, "Passing local candidate to content: %s",
+                        candidate.c_str());
             mObserver->OnIceCandidate(level_long & 0xffff,
                                       ObString(mid.c_str()),
                                       ObString(candidate.c_str()), rv);
@@ -525,6 +529,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mNumAudioStreams(0)
   , mNumVideoStreams(0)
   , mHaveDataStream(false)
+  , mNumMlines(0)
   , mAddCandidateErrorCount(0)
   , mTrickle(true) // TODO(ekr@rtfm.com): Use pref
 {
@@ -876,6 +881,8 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
       this,
       &PeerConnectionImpl::IceConnectionStateChange);
 
+  mMedia->SignalCandidate.connect(this, &PeerConnectionImpl::CandidateReady_s);
+
   // Initialize the media object.
   res = mMedia->Init(aConfiguration->getStunServers(),
                      aConfiguration->getTurnServers());
@@ -1218,7 +1225,18 @@ PeerConnectionImpl::CreateOffer(const SipccOfferOptions& aOptions)
 
   cc_media_options_t* cc_options = aOptions.build();
   NS_ENSURE_TRUE(cc_options, NS_ERROR_UNEXPECTED);
-  mInternal->mCall->createOffer(cc_options, tc);
+
+  if (!PeerConnectionCtx::GetInstance()->isReady()) {
+    // Uh oh. We're not ready yet. Enqueue this operation.
+    PeerConnectionCtx::GetInstance()->queueJSEPOperation(
+        WrapRunnable(mInternal->mCall,
+                     &CSF::CC_Call::createOffer,
+                     cc_options,
+                     tc));
+  } else {
+    mInternal->mCall->createOffer(cc_options, tc);
+  }
+
   return NS_OK;
 }
 
@@ -1275,8 +1293,21 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
   STAMP_TIMECARD(tc, "Set Remote Description");
 
   mRemoteRequestedSDP = aSDP;
-  mInternal->mCall->setRemoteDescription((cc_jsep_action_t)action,
-                                         mRemoteRequestedSDP, tc);
+
+  if (!PeerConnectionCtx::GetInstance()->isReady()) {
+    // Uh oh. We're not ready yet. Enqueue this operation. (This must be a
+    // remote offer, or else we would not have gotten this far)
+    PeerConnectionCtx::GetInstance()->queueJSEPOperation(
+        WrapRunnable(mInternal->mCall,
+                     &CSF::CC_Call::setRemoteDescription,
+                     (cc_jsep_action_t)action,
+                     mRemoteRequestedSDP,
+                     tc));
+  } else {
+    mInternal->mCall->setRemoteDescription((cc_jsep_action_t)action,
+                                           mRemoteRequestedSDP, tc);
+  }
+
   return NS_OK;
 }
 
@@ -1755,8 +1786,6 @@ PeerConnectionImpl::Close()
 
   nsresult res = CloseInt();
 
-  SetSignalingState_m(PCImplSignalingState::SignalingClosed);
-
   return res;
 }
 
@@ -1838,18 +1867,23 @@ PeerConnectionImpl::CloseInt()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
+  if (IsClosed()) {
+    return NS_OK;
+  }
+
+  SetSignalingState_m(PCImplSignalingState::SignalingClosed);
+
   // We do this at the end of the call because we want to make sure we've waited
   // for all trickle ICE candidates to come in; this can happen well after we've
   // transitioned to connected. As a bonus, this allows us to detect race
   // conditions where a stats dispatch happens right as the PC closes.
-  if (!IsClosed()) {
-    RecordLongtermICEStatistics();
-  }
+  RecordLongtermICEStatistics();
 
   if (mInternal->mCall) {
     CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %s; "
                "ending call", __FUNCTION__, mHandle.c_str());
     mInternal->mCall->endCall();
+    mInternal->mCall = nullptr;
   }
 #ifdef MOZILLA_INTERNAL_API
   if (mDataConnection) {
@@ -2086,6 +2120,75 @@ PeerConnectionImpl::IceGatheringStateChange(
                 NS_DISPATCH_NORMAL);
 }
 
+void
+PeerConnectionImpl::CandidateReady_s(const std::string& candidate,
+                                     uint16_t level)
+{
+  ASSERT_ON_THREAD(mSTSThread);
+  nsRefPtr<PeerConnectionImpl> pc(this);
+  RUN_ON_THREAD(mThread,
+                WrapRunnable(pc,
+                             &PeerConnectionImpl::CandidateReady_m,
+                             candidate,
+                             level),
+                NS_DISPATCH_NORMAL);
+}
+
+nsresult
+PeerConnectionImpl::CandidateReady_m(const std::string& candidate,
+                                     uint16_t level) {
+  PC_AUTO_ENTER_API_CALL(false);
+
+  if (mLocalSDP.empty()) {
+    // It is not appropriate to trickle yet; buffer.
+    mCandidateBuffer.push_back(std::make_pair(candidate, level));
+  } else {
+    if (level <= mNumMlines) {
+      mInternal->mCall->foundICECandidate(candidate, "", level, nullptr);
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+PeerConnectionImpl::StartTrickle() {
+  for (auto it = mCandidateBuffer.begin(); it != mCandidateBuffer.end(); ++it) {
+    if (it->second <= mNumMlines) {
+      mInternal->mCall->foundICECandidate(it->first, "", it->second, nullptr);
+    }
+  }
+
+  // If the buffer was empty to begin with, we have already sent the
+  // end-of-candidates event in IceGatheringStateChange_m.
+  if (mIceGatheringState == PCImplIceGatheringState::Complete &&
+      !mCandidateBuffer.empty()) {
+    SendEndOfCandidates();
+  }
+
+  mCandidateBuffer.clear();
+}
+
+static void
+SendEndOfCandidatesImpl(nsWeakPtr weakPCObserver) {
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(weakPCObserver);
+  if (!pco) {
+    return;
+  }
+
+  JSErrorResult rv;
+  pco->OnIceCandidate(0, ObString(""), ObString(""), rv);
+}
+
+void
+PeerConnectionImpl::SendEndOfCandidates() {
+  // We dispatch this because real candidates do a dispatch in
+  // PeerConnectionImpl::onCallEvent, and we don't want this to jump ahead.
+  NS_DispatchToMainThread(
+      WrapRunnableNM(&SendEndOfCandidatesImpl, mPCObserver),
+      NS_DISPATCH_NORMAL);
+}
+
 #ifdef MOZILLA_INTERNAL_API
 static bool isDone(PCImplIceConnectionState state) {
   return state != PCImplIceConnectionState::Checking &&
@@ -2221,6 +2324,12 @@ PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
                              PCObserverStateType::IceGatheringState,
                              rv, static_cast<JSCompartment*>(nullptr)),
                 NS_DISPATCH_NORMAL);
+
+  if (mIceGatheringState == PCImplIceGatheringState::Complete &&
+      mCandidateBuffer.empty()) {
+    SendEndOfCandidates();
+  }
+
   return NS_OK;
 }
 

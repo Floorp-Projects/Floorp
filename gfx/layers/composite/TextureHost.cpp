@@ -348,7 +348,7 @@ BufferTextureHost::BufferTextureHost(gfx::SurfaceFormat aFormat,
 , mFormat(aFormat)
 , mUpdateSerial(1)
 , mLocked(false)
-, mPartialUpdate(false)
+, mNeedsFullUpdate(false)
 {}
 
 BufferTextureHost::~BufferTextureHost()
@@ -360,15 +360,13 @@ BufferTextureHost::Updated(const nsIntRegion* aRegion)
   ++mUpdateSerial;
   // If the last frame wasn't uploaded yet, and we -don't- have a partial update,
   // we still need to update the full surface.
-  // XXX - Clean this up a little bit, this is a little confusing.
-  if (aRegion && ((mFirstSource && mFirstSource->GetUpdateSerial() == mUpdateSerial) || mPartialUpdate)) {
-    mPartialUpdate = true;
+  if (aRegion && !mNeedsFullUpdate) {
     mMaybeUpdatedRegion = mMaybeUpdatedRegion.Or(mMaybeUpdatedRegion, *aRegion);
   } else {
-    mPartialUpdate = false;
+    mNeedsFullUpdate = true;
   }
   if (GetFlags() & TextureFlags::IMMEDIATE_UPLOAD) {
-    DebugOnly<bool> result = MaybeUpload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr);
+    DebugOnly<bool> result = MaybeUpload(!mNeedsFullUpdate ? &mMaybeUpdatedRegion : nullptr);
     NS_WARN_IF_FALSE(result, "Failed to upload a texture");
   }
 }
@@ -401,7 +399,7 @@ bool
 BufferTextureHost::Lock()
 {
   MOZ_ASSERT(!mLocked);
-  if (!MaybeUpload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr)) {
+  if (!MaybeUpload(!mNeedsFullUpdate ? &mMaybeUpdatedRegion : nullptr)) {
       return false;
   }
   mLocked = !!mFirstSource;
@@ -450,7 +448,7 @@ BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
   }
 
   // We no longer have an invalid region.
-  mPartialUpdate = false;
+  mNeedsFullUpdate = false;
   mMaybeUpdatedRegion.SetEmpty();
 
   // If upload returns true we know mFirstSource is not null

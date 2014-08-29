@@ -165,7 +165,7 @@ function String_static_fromCodePoint() {
         var nextCP = ToNumber(next);
 
         // Step 5d.
-        if (nextCP !== ToInteger(nextCP) || std_isNaN(nextCP))
+        if (nextCP !== ToInteger(nextCP) || Number_isNaN(nextCP))
             ThrowError(JSMSG_NOT_A_CODEPOINT, ToString(nextCP));
 
         // Step 5e.
