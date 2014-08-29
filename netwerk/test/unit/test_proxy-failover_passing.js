@@ -36,6 +36,9 @@ function run_test()
     "function FindProxyForURL(url, host) {return 'PROXY a_non_existent_domain_x7x6c572v:80; PROXY localhost:" +
     httpServer.identity.primaryPort + "';}"
   );
+  // disable network changed events to avoid the the risk of having the 
+  // proxyservice reset in the middle
+  prefserv.setBoolPref("network.notify.changed", false);
 
   var chan = make_channel("http://localhost:" +
                           httpServer.identity.primaryPort + "/content");
