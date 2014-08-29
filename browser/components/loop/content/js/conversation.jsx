@@ -193,6 +193,7 @@ loop.conversation = (function(OT, mozL10n) {
      */
     accept: function() {
       window.navigator.mozLoop.stopAlerting();
+      this._websocket.accept();
       this._conversation.incoming();
     },
 
