@@ -316,8 +316,8 @@ AudioManager::HandleAudioChannelProcessChanged()
     return;
   }
 
-  AudioChannelService *service = AudioChannelService::GetAudioChannelService();
-  NS_ENSURE_TRUE_VOID(service);
+  AudioChannelService *service = AudioChannelService::GetOrCreateAudioChannelService();
+  MOZ_ASSERT(service);
 
   bool telephonyChannelIsActive = service->TelephonyChannelIsActive();
   telephonyChannelIsActive ? SetPhoneState(PHONE_STATE_IN_COMMUNICATION) :

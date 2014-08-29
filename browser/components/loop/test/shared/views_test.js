@@ -357,15 +357,14 @@ describe("loop.shared.views", function() {
           sinon.assert.calledOnce(fakeSDK.initPublisher);
         });
 
-        it("should publish remote streams on session:stream-created",
+        it("should publish remote stream on session:stream-created",
           function() {
             var s1 = {connection: {connectionId: 42}};
-            var s2 = {connection: {connectionId: 43}};
 
-            model.trigger("session:stream-created", {streams: [s1, s2]});
+            model.trigger("session:stream-created", {stream: s1});
 
             sinon.assert.calledOnce(fakeSession.subscribe);
-            sinon.assert.calledWith(fakeSession.subscribe, s2);
+            sinon.assert.calledWith(fakeSession.subscribe, s1);
           });
 
         it("should unpublish local stream on session:ended", function() {

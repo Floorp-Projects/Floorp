@@ -6,73 +6,74 @@
 #ifndef InsertTextTxn_h__
 #define InsertTextTxn_h__
 
-#include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
-#include "nsCOMPtr.h"                   // for nsCOMPtr
-#include "nsCycleCollectionParticipant.h"
-#include "nsID.h"                       // for nsIID
-#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
-#include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED
-#include "nsString.h"                   // for nsString
-#include "nscore.h"                     // for NS_IMETHOD, nsAString
+#include "EditTxn.h"                    // base class
+#include "nsAutoPtr.h"                  // nsRefPtr members
+#include "nsCycleCollectionParticipant.h" // various macros
+#include "nsID.h"                       // NS_DECLARE_STATIC_IID_ACCESSOR
+#include "nsISupportsImpl.h"            // NS_DECL_ISUPPORTS_INHERITED
+#include "nsString.h"                   // nsString members
+#include "nscore.h"                     // NS_IMETHOD, nsAString
 
-class nsIEditor;
+class nsEditor;
 class nsITransaction;
 
+#define NS_INSERTTEXTTXN_IID \
+{ 0x8c9ad77f, 0x22a7, 0x4d01, \
+  { 0xb1, 0x59, 0x8a, 0x0f, 0xdb, 0x1d, 0x08, 0xe9 } }
 
-#define INSERT_TEXT_TXN_CID \
-{/* 93276f00-ab2c-11d2-8f4b-006008159b0c*/ \
-0x93276f00, 0xab2c, 0x11d2, \
-{0x8f, 0xb4, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc} }
+namespace mozilla {
+namespace dom {
+
+class Text;
 
 /**
-  * A transaction that inserts text into a content node. 
+  * A transaction that inserts text into a content node.
   */
 class InsertTextTxn : public EditTxn
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSERTTEXTTXN_IID)
 
-  static const nsIID& GetCID() { static const nsIID iid = INSERT_TEXT_TXN_CID; return iid; }
-
-  /** initialize the transaction
-    * @param aElement the text content node
+  /** @param aElement the text content node
     * @param aOffset  the location in aElement to do the insertion
     * @param aString  the new text to insert
     * @param aPresShell used to get and set the selection
     */
-  NS_IMETHOD Init(nsIDOMCharacterData *aElement,
-                  uint32_t aOffset,
-                  const nsAString& aString,
-                  nsIEditor *aEditor);
-
-  InsertTextTxn();
+  InsertTextTxn(Text& aTextNode, uint32_t aOffset, const nsAString& aString,
+                nsEditor& aEditor);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertTextTxn, EditTxn)
 	
   NS_DECL_EDITTXN
 
-  NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge);
+  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) MOZ_OVERRIDE;
 
-  /** return the string data associated with this transaction */
-  NS_IMETHOD GetData(nsString& aResult);
+  /** Return the string data associated with this transaction */
+  void GetData(nsString& aResult);
 
-protected:
+private:
   virtual ~InsertTextTxn();
 
-  /** return true if aOtherTxn immediately follows this txn */
-  virtual bool IsSequentialInsert(InsertTextTxn *aOtherTxn);
-  
-  /** the text element to operate upon */
-  nsCOMPtr<nsIDOMCharacterData> mElement;
-  
-  /** the offset into mElement where the insertion is to take place */
+  /** Return true if aOtherTxn immediately follows this txn */
+  bool IsSequentialInsert(InsertTextTxn& aOtherTxn);
+
+  /** The Text node to operate upon */
+  nsRefPtr<Text> mTextNode;
+
+  /** The offset into mTextNode where the insertion is to take place */
   uint32_t mOffset;
 
-  /** the text to insert into mElement at mOffset */
+  /** The text to insert into mTextNode at mOffset */
   nsString mStringToInsert;
 
-  /** the editor, which we'll need to get the selection */
-  nsIEditor *mEditor;   
+  /** The editor, which we'll need to get the selection */
+  nsEditor& mEditor;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(InsertTextTxn, NS_INSERTTEXTTXN_IID)
+
+}
+}
 
 #endif

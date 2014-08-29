@@ -2582,7 +2582,7 @@ RilObject.prototype = {
       case MMI_SC_BA_MT:
         return MMI_KS_SC_CALL_BARRING;
       case MMI_SC_CALL_WAITING:
-        return MMI_SC_CALL_WAITING;
+        return MMI_KS_SC_CALL_WAITING;
       default:
         return MMI_KS_SC_USSD;
     }
