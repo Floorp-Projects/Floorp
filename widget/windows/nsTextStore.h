@@ -51,10 +51,11 @@ struct MSGResult;
  * Text Services Framework text store
  */
 
-class nsTextStore MOZ_FINAL : public ITextStoreACP,
-                              public ITfContextOwnerCompositionSink,
-                              public ITfActiveLanguageProfileNotifySink,
-                              public ITfInputProcessorProfileActivationSink
+class nsTextStore MOZ_FINAL : public ITextStoreACP
+                            , public ITfContextOwnerCompositionSink
+                            , public ITfActiveLanguageProfileNotifySink
+                            , public ITfInputProcessorProfileActivationSink
+                            , public ITfMouseTrackerACP
 {
 public: /*IUnknown*/
   STDMETHODIMP          QueryInterface(REFIID, void**);
@@ -106,6 +107,10 @@ public: /*ITfActiveLanguageProfileNotifySink*/
 public: /*ITfInputProcessorProfileActivationSink*/
   STDMETHODIMP OnActivated(DWORD, LANGID, REFCLSID, REFGUID, REFGUID,
                            HKL, DWORD);
+
+public: /*ITfMouseTrackerACP*/
+  STDMETHODIMP AdviseMouseSink(ITfRangeACP*, ITfMouseSink*, DWORD*);
+  STDMETHODIMP UnadviseMouseSink(DWORD);
 
 protected:
   typedef mozilla::widget::IMENotification IMENotification;
@@ -670,6 +675,31 @@ protected:
   // While the documet is locked, this returns the text stored by
   // mLockedContent.  Otherwise, return the current text content.
   bool GetCurrentText(nsAString& aTextContent);
+
+  class MouseTracker MOZ_FINAL
+  {
+  public:
+    static const DWORD kInvalidCookie = static_cast<DWORD>(-1);
+
+    MouseTracker();
+
+    HRESULT Init(nsTextStore* aTextStore);
+    HRESULT AdviseSink(nsTextStore* aTextStore,
+                       ITfRangeACP* aTextRange, ITfMouseSink* aMouseSink);
+    void UnadviseSink();
+
+    bool IsUsing() const { return mSink != nullptr; }
+    DWORD Cookie() const { return mCookie; }
+  
+  private:
+    nsRefPtr<ITfMouseSink> mSink;
+    LONG mStart;
+    LONG mLength;
+    DWORD mCookie;
+  };
+  // mMouseTrackers is an array to store each information of installed
+  // ITfMouseSink instance.
+  nsTArray<MouseTracker> mMouseTrackers;
 
   // The input scopes for this context, defaults to IS_DEFAULT.
   nsTArray<InputScope>         mInputScopes;
