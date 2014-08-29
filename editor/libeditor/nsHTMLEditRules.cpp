@@ -9074,13 +9074,15 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+  nsCOMPtr<Element> element = do_QueryInterface(aNode);
   if (!element) {
     return NS_OK;
   }
 
   NS_ENSURE_STATE(mHTMLEditor);
-  nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, element);    
+  nsIAtom* marginProperty =
+    MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils,
+                                GetAsDOMNode(element));
   nsAutoString value;
   NS_ENSURE_STATE(mHTMLEditor);
   mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(aNode, marginProperty, value);
@@ -9119,12 +9121,14 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_
     newValue.AppendFloat(f);
     newValue.Append(nsDependentAtomString(unit));
     NS_ENSURE_STATE(mHTMLEditor);
-    mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(element, marginProperty, newValue, false);
+    mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(*element, *marginProperty,
+                                               newValue);
     return NS_OK;
   }
 
   NS_ENSURE_STATE(mHTMLEditor);
-  mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(element, marginProperty, value, false);
+  mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(*element, *marginProperty,
+                                                value);
 
   // remove unnecessary DIV blocks:
   // we could skip this section but that would cause a FAIL in
