@@ -32,6 +32,8 @@ import java.io.Serializable;
 import ch.boye.httpclientandroidlib.FormattedHeader;
 import ch.boye.httpclientandroidlib.HeaderElement;
 import ch.boye.httpclientandroidlib.ParseException;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import ch.boye.httpclientandroidlib.util.Args;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 
 /**
@@ -40,6 +42,7 @@ import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
  *
  * @since 4.0
  */
+@NotThreadSafe
 public class BufferedHeader implements FormattedHeader, Cloneable, Serializable {
 
     private static final long serialVersionUID = -2768352615787625448L;
@@ -73,16 +76,13 @@ public class BufferedHeader implements FormattedHeader, Cloneable, Serializable 
         throws ParseException {
 
         super();
-        if (buffer == null) {
-            throw new IllegalArgumentException
-                ("Char array buffer may not be null");
-        }
-        int colon = buffer.indexOf(':');
+        Args.notNull(buffer, "Char array buffer");
+        final int colon = buffer.indexOf(':');
         if (colon == -1) {
             throw new ParseException
                 ("Invalid header: " + buffer.toString());
         }
-        String s = buffer.substringTrimmed(0, colon);
+        final String s = buffer.substringTrimmed(0, colon);
         if (s.length() == 0) {
             throw new ParseException
                 ("Invalid header: " + buffer.toString());
@@ -102,10 +102,9 @@ public class BufferedHeader implements FormattedHeader, Cloneable, Serializable 
     }
 
     public HeaderElement[] getElements() throws ParseException {
-        ParserCursor cursor = new ParserCursor(0, this.buffer.length());
+        final ParserCursor cursor = new ParserCursor(0, this.buffer.length());
         cursor.updatePos(this.valuePos);
-        return BasicHeaderValueParser.DEFAULT
-            .parseElements(this.buffer, cursor);
+        return BasicHeaderValueParser.INSTANCE.parseElements(this.buffer, cursor);
     }
 
     public int getValuePos() {
@@ -116,10 +115,12 @@ public class BufferedHeader implements FormattedHeader, Cloneable, Serializable 
         return this.buffer;
     }
 
+    @Override
     public String toString() {
         return this.buffer.toString();
     }
 
+    @Override
     public Object clone() throws CloneNotSupportedException {
         // buffer is considered immutable
         // no need to make a copy of it

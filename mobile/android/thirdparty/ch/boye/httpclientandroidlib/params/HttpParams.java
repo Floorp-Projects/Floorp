@@ -42,10 +42,12 @@ package ch.boye.httpclientandroidlib.params;
  * In the simplest form one set of parameters can use content of another one
  * to obtain default values of parameters not present in the local set.
  *
- * @see DefaultedHttpParams
- *
  * @since 4.0
+ *
+ * @deprecated (4.3) use configuration classes provided 'ch.boye.httpclientandroidlib.config'
+ *  and 'ch.boye.httpclientandroidlib.client.config'
  */
+@Deprecated
 public interface HttpParams {
 
     /**
@@ -73,8 +75,6 @@ public interface HttpParams {
      * Creates a copy of these parameters.
      *
      * @return  a new set of parameters holding the same values as this one
-     *
-     * @deprecated
      */
     HttpParams copy();
 

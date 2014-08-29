@@ -30,15 +30,15 @@ package ch.boye.httpclientandroidlib.impl.cookie;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.HeaderElement;
 import ch.boye.httpclientandroidlib.NameValuePair;
 import ch.boye.httpclientandroidlib.ParseException;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
 import ch.boye.httpclientandroidlib.message.BasicHeaderElement;
 import ch.boye.httpclientandroidlib.message.BasicNameValuePair;
 import ch.boye.httpclientandroidlib.message.ParserCursor;
 import ch.boye.httpclientandroidlib.protocol.HTTP;
+import ch.boye.httpclientandroidlib.util.Args;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 
 /**
@@ -57,16 +57,12 @@ public class NetscapeDraftHeaderParser {
     public HeaderElement parseHeader(
             final CharArrayBuffer buffer,
             final ParserCursor cursor) throws ParseException {
-        if (buffer == null) {
-            throw new IllegalArgumentException("Char array buffer may not be null");
-        }
-        if (cursor == null) {
-            throw new IllegalArgumentException("Parser cursor may not be null");
-        }
-        NameValuePair nvp = parseNameValuePair(buffer, cursor);
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        Args.notNull(buffer, "Char array buffer");
+        Args.notNull(cursor, "Parser cursor");
+        final NameValuePair nvp = parseNameValuePair(buffer, cursor);
+        final List<NameValuePair> params = new ArrayList<NameValuePair>();
         while (!cursor.atEnd()) {
-            NameValuePair param = parseNameValuePair(buffer, cursor);
+            final NameValuePair param = parseNameValuePair(buffer, cursor);
             params.add(param);
         }
         return new BasicHeaderElement(
@@ -79,13 +75,13 @@ public class NetscapeDraftHeaderParser {
         boolean terminated = false;
 
         int pos = cursor.getPos();
-        int indexFrom = cursor.getPos();
-        int indexTo = cursor.getUpperBound();
+        final int indexFrom = cursor.getPos();
+        final int indexTo = cursor.getUpperBound();
 
         // Find name
         String name = null;
         while (pos < indexTo) {
-            char ch = buffer.charAt(pos);
+            final char ch = buffer.charAt(pos);
             if (ch == '=') {
                 break;
             }
@@ -114,7 +110,7 @@ public class NetscapeDraftHeaderParser {
         int i1 = pos;
 
         while (pos < indexTo) {
-            char ch = buffer.charAt(pos);
+            final char ch = buffer.charAt(pos);
             if (ch == ';') {
                 terminated = true;
                 break;

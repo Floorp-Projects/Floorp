@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<!--
+====================================================================
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+====================================================================
+
+This software consists of voluntary contributions made by many
+individuals on behalf of the Apache Software Foundation.  For more
+information on the Apache Software Foundation, please see
+<http://www.apache.org/>.
+-->
+</head>
+<body bgcolor="white">
+
+<p>
+This package consists largely of constants and interfaces that are
+necessary for building new storage backends for the
+{@link org.apache.http.impl.client.cache.CachingHttpClient} or for
+those clients wanting to get a little more behavioral information
+out of the cache module (for example, whether a particular response
+was a cache hit or not). Developers that simply want to instantiate
+and make use of the caching module will be better off looking at
+the {@code CachingHttpClient} documentation itself.
+</p>
+<p>
+The classes in this package can be divided into two main groups:
+reference constants and interfaces needed for storage backends. In
+the former group,
+{@link org.apache.http.client.cache.HeaderConstants} contains a list
+of HTTP header names encoded as static fields, and the
+{@link org.apache.http.client.cache.CacheResponseStatus} enumeration
+values are set in an {@link org.apache.http.protocol.HttpContext} by
+the {@code CachingHttpClient} to indicate how the request was
+processed by the caching module itself.
+</p>
+<p>
+New storage backends will need to implement the
+{@link org.apache.http.client.cache.HttpCacheStorage}
+interface; they can then be passed to one of the {@code CachingHttpClient}
+constructors, which will happily make use of the new storage mechanism.
+The {@link org.apache.http.client.cache.HttpCacheEntry} class shows the
+datastructure for a cache entry that must be stored by the
+{@code HttpCacheStorage}.
+There is, in addition, the notion of a
+{@link org.apache.http.client.cache.Resource} and an associated
+{@link org.apache.http.client.cache.ResourceFactory}, which are used for
+managing the handling of cached response bodies. The default implementation
+used by the {@code CachingHttpClient} stores response bodies in memory;
+alternative implementations might involve storing these in a filesystem. A new
+{@code ResourceFactory} can be provided along with a {@code HttpCacheStorage}
+in one of the constructors to the {@code CachingHttpClient}. Finally, some
+of the additional storage backends we provide, like the
+{@link org.apache.http.impl.client.cache.ehcache.EhcacheHttpCacheStorage} and
+{@link org.apache.http.impl.client.cache.memcached.MemcachedHttpCacheStorage},
+can be provided with different serializers for the cache entry metadata;
+developers wanting to experiment with different serialization techniques
+should implement the
+{@link org.apache.http.client.cache.HttpCacheEntrySerializer} interface.
+</p>
+</body>
+</html>
