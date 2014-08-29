@@ -155,16 +155,15 @@ nsHTMLEditor::RelativeChangeElementZIndex(nsIDOMElement * aElement,
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetElementZIndex(nsIDOMElement * aElement,
-                               int32_t aZindex)
+nsHTMLEditor::SetElementZIndex(nsIDOMElement* aElement, int32_t aZindex)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
-  
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(element);
+
   nsAutoString zIndexStr;
   zIndexStr.AppendInt(aZindex);
 
-  mHTMLCSSUtils->SetCSSProperty(aElement, nsGkAtoms::z_index, zIndexStr,
-                                false);
+  mHTMLCSSUtils->SetCSSProperty(*element, *nsGkAtoms::z_index, zIndexStr);
   return NS_OK;
 }
 
@@ -467,10 +466,13 @@ nsHTMLEditor::SetFinalPosition(int32_t aX, int32_t aY)
   // we want one transaction only from a user's point of view
   nsAutoEditBatch batchIt(this);
 
-  mHTMLCSSUtils->SetCSSPropertyPixels(mAbsolutelyPositionedObject,
-                                      nsGkAtoms::top, newY, false);
-  mHTMLCSSUtils->SetCSSPropertyPixels(mAbsolutelyPositionedObject,
-                                      nsGkAtoms::left, newX, false);
+  nsCOMPtr<Element> absolutelyPositionedObject =
+    do_QueryInterface(mAbsolutelyPositionedObject);
+  NS_ENSURE_STATE(absolutelyPositionedObject);
+  mHTMLCSSUtils->SetCSSPropertyPixels(*absolutelyPositionedObject,
+                                      *nsGkAtoms::top, newY);
+  mHTMLCSSUtils->SetCSSPropertyPixels(*absolutelyPositionedObject,
+                                      *nsGkAtoms::left, newX);
   // keep track of that size
   mPositionedObjectX  = newX;
   mPositionedObjectY  = newY;
@@ -490,10 +492,11 @@ nsHTMLEditor::AddPositioningOffset(int32_t & aX, int32_t & aY)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
+nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
                                         bool aEnabled)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(element);
 
   nsAutoString positionStr;
   mHTMLCSSUtils->GetComputedProperty(aElement, nsGkAtoms::position,
@@ -510,9 +513,8 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     int32_t x, y;
     GetElementOrigin(aElement, x, y);
 
-    mHTMLCSSUtils->SetCSSProperty(aElement, nsGkAtoms::position,
-                                  NS_LITERAL_STRING("absolute"),
-                                  false);
+    mHTMLCSSUtils->SetCSSProperty(*element, *nsGkAtoms::position,
+                                  NS_LITERAL_STRING("absolute"));
 
     AddPositioningOffset(x, y);
     SnapToGrid(x, y);
@@ -531,20 +533,20 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     }
   }
   else {
-    mHTMLCSSUtils->RemoveCSSProperty(aElement, nsGkAtoms::position,
-                                     EmptyString(), false);
-    mHTMLCSSUtils->RemoveCSSProperty(aElement, nsGkAtoms::top,
-                                     EmptyString(), false);
-    mHTMLCSSUtils->RemoveCSSProperty(aElement, nsGkAtoms::left,
-                                     EmptyString(), false);
-    mHTMLCSSUtils->RemoveCSSProperty(aElement, nsGkAtoms::z_index,
-                                     EmptyString(), false);
+    mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::position,
+                                     EmptyString());
+    mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::top,
+                                     EmptyString());
+    mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::left,
+                                     EmptyString());
+    mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::z_index,
+                                     EmptyString());
 
     if (!nsHTMLEditUtils::IsImage(aElement)) {
-      mHTMLCSSUtils->RemoveCSSProperty(aElement, nsGkAtoms::width,
-                                       EmptyString(), false);
-      mHTMLCSSUtils->RemoveCSSProperty(aElement, nsGkAtoms::height,
-                                       EmptyString(), false);
+      mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::width,
+                                       EmptyString());
+      mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::height,
+                                       EmptyString());
     }
 
     nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
@@ -592,10 +594,12 @@ nsHTMLEditor::GetGridSize(uint32_t * aSize)
 NS_IMETHODIMP
 nsHTMLEditor::SetElementPosition(nsIDOMElement *aElement, int32_t aX, int32_t aY)
 {
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_STATE(element);
   nsAutoEditBatch batchIt(this);
 
-  mHTMLCSSUtils->SetCSSPropertyPixels(aElement, nsGkAtoms::left, aX, false);
-  mHTMLCSSUtils->SetCSSPropertyPixels(aElement, nsGkAtoms::top, aY, false);
+  mHTMLCSSUtils->SetCSSPropertyPixels(*element, *nsGkAtoms::left, aX);
+  mHTMLCSSUtils->SetCSSPropertyPixels(*element, *nsGkAtoms::top, aY);
   return NS_OK;
 }
 
