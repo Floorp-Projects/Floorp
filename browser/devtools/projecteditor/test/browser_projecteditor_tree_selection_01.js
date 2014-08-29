@@ -35,8 +35,14 @@ let test = asyncTest(function*() {
 function selectFileFirstLoad(projecteditor, resource) {
   ok (resource && resource.path, "A valid resource has been passed in for selection " + (resource && resource.path));
   projecteditor.projectTree.selectResource(resource);
+  let container = projecteditor.projectTree.getViewContainer(resource);
 
+  if (resource.isRoot) {
+    ok (container.expanded, "The root directory is expanded by default.");
+    return;
+  }
   if (resource.isDir) {
+    ok (!container.expanded, "A directory is not expanded by default.");
     return;
   }
 
