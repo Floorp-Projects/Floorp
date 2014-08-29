@@ -1358,6 +1358,35 @@ class MSimdExtractElement : public MUnaryInstruction
     }
 };
 
+// Extracts the sign bits from a given vector, returning an MIRType_Int32.
+class MSimdSignMask : public MUnaryInstruction
+{
+  protected:
+    explicit MSimdSignMask(MDefinition *obj)
+      : MUnaryInstruction(obj)
+    {
+        MOZ_ASSERT(IsSimdType(obj->type()));
+        setResultType(MIRType_Int32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdSignMask);
+    static MSimdSignMask *NewAsmJS(TempAllocator &alloc, MDefinition *obj)
+    {
+        return new(alloc) MSimdSignMask(obj);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        if (!ins->isSimdSignMask())
+            return false;
+        return congruentIfOperandsEqual(ins);
+    }
+};
+
 // Compares each value of a SIMD vector to each corresponding lane's value of
 // another SIMD vector, and returns a int32x4 vector containing the results of
 // the comparison: all bits are set to 1 if the comparison is true, 0 otherwise.

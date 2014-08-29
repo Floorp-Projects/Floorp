@@ -2193,6 +2193,17 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdSignMaskX4(LSimdSignMaskX4 *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    // For Float32x4 and Int32x4.
+    masm.movmskps(input, output);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
