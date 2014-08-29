@@ -23,6 +23,12 @@ class FFmpegH264Decoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
   typedef mozilla::layers::Image Image;
   typedef mozilla::layers::ImageContainer ImageContainer;
 
+  enum DecodeResult {
+    DECODE_FRAME,
+    DECODE_NO_FRAME,
+    DECODE_ERROR
+  };
+
 public:
   FFmpegH264Decoder(MediaTaskQueue* aTaskQueue,
                     MediaDataDecoderCallback* aCallback,
@@ -37,7 +43,8 @@ public:
 
 private:
   void DecodeFrame(mp4_demuxer::MP4Sample* aSample);
-  void NotifyDrain();
+  DecodeResult DoDecodeFrame(mp4_demuxer::MP4Sample* aSample);
+  void DoDrain();
   void OutputDelayedFrames();
 
   /**
