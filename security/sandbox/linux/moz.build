@@ -13,8 +13,6 @@ EXPORTS.mozilla += [
 ]
 
 SOURCES += [
-    # Bug 1059038 workaround:
-    '../../../xpcom/glue/unused.cpp',
     '../chromium/base/shim/base/logging.cpp',
     '../chromium/sandbox/linux/seccomp-bpf/basicblock.cc',
     '../chromium/sandbox/linux/seccomp-bpf/codegen.cc',
