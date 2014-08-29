@@ -1630,7 +1630,9 @@ var BrowserApp = {
         break;
 
       case "Browser:Quit":
-        this.quit(aData ? JSON.parse(aData) : null);
+        // Add-ons like QuitNow and CleanQuit provide aData as an empty-string ("").
+        // Pass undefined to invoke the methods default parms.
+        this.quit(aData ? JSON.parse(aData) : undefined);
         break;
 
       case "SaveAs:PDF":
