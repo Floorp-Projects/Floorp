@@ -7,3 +7,30 @@
 PYTHON_UNIT_TESTS += [
     'test.py',
 ]
+
+python_modules = [
+    'manifestparser',
+    'mozcrash',
+    'mozdebug',
+    'mozdevice',
+    'mozfile',
+    'mozhttpd',
+    'mozinfo',
+    'mozinstall',
+    'mozlog',
+    'moznetwork',
+    'mozprocess',
+    'mozprofile',
+    'mozrunner',
+    'mozsystemmonitor',
+    'moztest',
+    'mozversion',
+]
+
+TEST_HARNESS_FILES.mozbase += [m + '/**' for m in python_modules]
+
+TEST_HARNESS_FILES.mozbase += [
+    'setup_development.py',
+    'test-manifest.ini',
+    'test.py',
+]

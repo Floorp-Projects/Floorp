@@ -216,11 +216,12 @@ class TestHarnessFiles(ContextDerived):
     this object fills that role. It just has a reference to the underlying
     HierarchicalStringList, which is created when parsing TEST_HARNESS_FILES.
     """
-    __slots__ = ('srcdir_files', 'objdir_files')
+    __slots__ = ('srcdir_files', 'srcdir_pattern_files', 'objdir_files')
 
-    def __init__(self, context, srcdir_files, objdir_files):
+    def __init__(self, context, srcdir_files, srcdir_pattern_files, objdir_files):
         ContextDerived.__init__(self, context)
         self.srcdir_files = srcdir_files
+        self.srcdir_pattern_files = srcdir_pattern_files
         self.objdir_files = objdir_files
 
 class Resources(ContextDerived):
