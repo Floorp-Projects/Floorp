@@ -168,14 +168,14 @@ public class FxAccountStatusActivity extends LocaleAwareFragmentActivity {
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     int itemId = item.getItemId();
-    switch (itemId) {
-    case android.R.id.home:
+    if (itemId == android.R.id.home) {
       finish();
       return true;
-    case R.id.remove_account:
+    } else if (itemId == R.id.remove_account) {
       maybeDeleteAndroidAccount(FirefoxAccounts.getFirefoxAccount(this));
       return true;
     }
+
     return super.onOptionsItemSelected(item);
   }
 
