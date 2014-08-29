@@ -175,7 +175,7 @@ public:
    */
   void SampleContentTransformForFrame(ViewTransform* aOutTransform,
                                       ScreenPoint& aScrollOffset,
-                                      ViewTransform* aOutOverscrollTransform);
+                                      Matrix4x4* aOutOverscrollTransform);
 
   /**
    * A shadow layer update has arrived. |aLayerMetrics| is the new FrameMetrics
@@ -576,7 +576,7 @@ private:
    * Return in |aTransform| a visual effect that reflects this apzc's
    * overscrolled state, if any.
    */
-  void GetOverscrollTransform(ViewTransform* aTransform) const;
+  void GetOverscrollTransform(Matrix4x4* aTransform) const;
 
   enum AxisLockMode {
     FREE,     /* No locking at all */

@@ -567,7 +567,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
 
     hasAsyncTransform = true;
 
-    ViewTransform asyncTransformWithoutOverscroll, overscrollTransform;
+    ViewTransform asyncTransformWithoutOverscroll;
+    Matrix4x4 overscrollTransform;
     ScreenPoint scrollOffset;
     controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
                                                scrollOffset,
@@ -591,7 +592,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
     combinedAsyncTransformWithoutOverscroll *= asyncTransformWithoutOverscroll;
-    combinedAsyncTransform *= (asyncTransformWithoutOverscroll * overscrollTransform);
+    combinedAsyncTransform *= (Matrix4x4(asyncTransformWithoutOverscroll) * overscrollTransform);
   }
 
   if (hasAsyncTransform) {
