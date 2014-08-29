@@ -1426,11 +1426,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         PopRegsInMask(liveRegs);
     }
 
-    void assertStackAlignment() {
+    void assertStackAlignment(uint32_t alignment) {
 #ifdef DEBUG
         Label ok;
-        JS_ASSERT(IsPowerOfTwo(StackAlignment));
-        branchTestPtr(Assembler::Zero, StackPointer, Imm32(StackAlignment - 1), &ok);
+        JS_ASSERT(IsPowerOfTwo(alignment));
+        branchTestPtr(Assembler::Zero, StackPointer, Imm32(alignment - 1), &ok);
         breakpoint();
         bind(&ok);
 #endif
@@ -1508,10 +1508,10 @@ JSOpToCondition(JSOp op, bool isSigned)
 }
 
 static inline size_t
-StackDecrementForCall(size_t bytesAlreadyPushed, size_t bytesToPush)
+StackDecrementForCall(uint32_t alignment, size_t bytesAlreadyPushed, size_t bytesToPush)
 {
     return bytesToPush +
-           ComputeByteAlignment(bytesAlreadyPushed + bytesToPush, StackAlignment);
+           ComputeByteAlignment(bytesAlreadyPushed + bytesToPush, alignment);
 }
 
 } // namespace jit
