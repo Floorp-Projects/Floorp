@@ -848,20 +848,20 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     metrics.SetHasScrollgrab(true);
   }
 
-  aRoot->SetFrameMetrics(metrics);
-
-  // Also compute and set the background color on the container.
+  // Also compute and set the background color.
   // This is needed for APZ overscrolling support.
   if (aScrollFrame) {
     if (isRootScrollFrame) {
-      aRoot->SetBackgroundColor(presShell->GetCanvasBackground());
+      metrics.SetBackgroundColor(presShell->GetCanvasBackground());
     } else {
       nsStyleContext* backgroundStyle;
       if (nsCSSRendering::FindBackground(aScrollFrame, &backgroundStyle)) {
-        aRoot->SetBackgroundColor(backgroundStyle->StyleBackground()->mBackgroundColor);
+        metrics.SetBackgroundColor(backgroundStyle->StyleBackground()->mBackgroundColor);
       }
     }
   }
+
+  aRoot->SetFrameMetrics(metrics);
 }
 
 nsDisplayListBuilder::~nsDisplayListBuilder() {
