@@ -2421,6 +2421,9 @@ template <>
 bool
 Parser<FullParseHandler>::asmJS(Node list)
 {
+    // Disable syntax parsing in anything nested inside the asm.js module.
+    handler.disableSyntaxParser();
+
     // We should be encountering the "use asm" directive for the first time; if
     // the directive is already, we must have failed asm.js validation and we're
     // reparsing. In that case, don't try to validate again. A non-null
