@@ -11,4 +11,6 @@ if (typeof Symbol === "function") {
         g();
     } catch (e) {}
     g();
+} else {
+    throw new TypeError("pass");
 }
