@@ -3728,6 +3728,25 @@ LIRGenerator::visitSimdExtractElement(MSimdExtractElement *ins)
 }
 
 bool
+LIRGenerator::visitSimdSignMask(MSimdSignMask *ins)
+{
+    MDefinition *input = ins->input();
+    MOZ_ASSERT(IsSimdType(input->type()));
+    MOZ_ASSERT(ins->type() == MIRType_Int32);
+
+    LUse use = useRegisterAtStart(input);
+
+    switch (input->type()) {
+      case MIRType_Int32x4:
+      case MIRType_Float32x4:
+        return define(new(alloc()) LSimdSignMaskX4(use), ins);
+      default:
+        MOZ_CRASH("Unexpected SIMD type extracting sign bits.");
+        break;
+    }
+}
+
+bool
 LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp *ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Int32x4);
