@@ -1552,6 +1552,9 @@ class Assembler : public AssemblerShared
     static bool SupportsFloatingPoint() {
         return HasVFP();
     }
+    static bool SupportsSimd() {
+        return js::jit::SupportsSimd;
+    }
 
   protected:
     void addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind kind) {
