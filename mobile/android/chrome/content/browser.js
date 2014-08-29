@@ -2044,16 +2044,17 @@ var NativeWindow = {
       }
     }
   },
+
   contextmenus: {
     items: {}, //  a list of context menu items that we may show
     DEFAULT_HTML5_ORDER: -1, // Sort order for HTML5 context menu items
 
     init: function() {
-      Services.obs.addObserver(this, "Gesture:LongPress", false);
+      BrowserApp.deck.addEventListener("contextmenu", this.show.bind(this), false);
     },
 
     uninit: function() {
-      Services.obs.removeObserver(this, "Gesture:LongPress");
+      BrowserApp.deck.removeEventListener("contextmenu", this.show.bind(this), false);
     },
 
     add: function() {
@@ -2295,7 +2296,7 @@ var NativeWindow = {
     },
 
     // Returns true if there are any context menu items to show
-    shouldShow: function() {
+    _shouldShow: function() {
       for (let context in this.menus) {
         let menu = this.menus[context];
         if (menu.length > 0) {
@@ -2378,36 +2379,51 @@ var NativeWindow = {
      * any html5 context menus we are about to show, and fire some local notifications
      * for chrome consumers to do lazy menuitem construction
      */
-    _sendToContent: function(x, y) {
-      let target = this._findTarget(x, y);
-      if (!target)
+    show: function(event) {
+      // Android Long-press / contextmenu event provides clientX/Y data. This is not provided
+      // by mochitest: test_browserElement_inproc_ContextmenuEvents.html.
+      if (!event.clientX || !event.clientY) {
         return;
+      }
 
-      this._target = target;
+      // Find the target of the long-press / contextmenu event.
+      this._target = this._findTarget(event.clientX, event.clientY);
+      if (!this._target) {
+        return;
+      }
 
-      Services.obs.notifyObservers(null, "before-build-contextmenu", "");
-      this._buildMenu(x, y);
+      // Try to build a list of contextmenu items. If successful, actually show the
+      // native context menu by passing the list to Java.
+      this._buildMenu(event.clientX, event.clientY);
+      if (this._shouldShow()) {
+        BrowserEventHandler._cancelTapHighlight();
 
-      // only send the contextmenu event to content if we are planning to show a context menu (i.e. not on every long tap)
-      if (this.shouldShow()) {
-        let event = target.ownerDocument.createEvent("MouseEvent");
-        event.initMouseEvent("contextmenu", true, true, target.defaultView,
-                             0, x, y, x, y, false, false, false, false,
-                             0, null);
-        target.ownerDocument.defaultView.addEventListener("contextmenu", this, false);
-        target.dispatchEvent(event);
-      } else {
-        this.menus = null;
-        Services.obs.notifyObservers({target: target, x: x, y: y}, "context-menu-not-shown", "");
+        // Consume / preventDefault the event, and show the contextmenu.
+        event.preventDefault();
+        this._innerShow(this._target, event.clientX, event.clientY);
+        this._target = null;
 
-        if (SelectionHandler.canSelect(target)) {
-          if (!SelectionHandler.startSelection(target, {
-            mode: SelectionHandler.SELECT_AT_POINT,
-            x: x,
-            y: y
-          })) { 
-            SelectionHandler.attachCaret(target);
-          }
+        return;
+      }
+
+      // If no context-menu for long-press event, it may be meant to trigger text-selection.
+      this.menus = null;
+      Services.obs.notifyObservers(
+        {target: this._target, x: event.clientX, y: event.clientY}, "context-menu-not-shown", "");
+
+      if (SelectionHandler.canSelect(this._target)) {
+        // If textSelection WORD is successful,
+        // consume / preventDefault the context menu event.
+        if (SelectionHandler.startSelection(this._target,
+          { mode: SelectionHandler.SELECT_AT_POINT, x: event.clientX, y: event.clientY })) {
+          event.preventDefault();
+          return;
+        }
+        // If textSelection caret-attachment is successful,
+        // consume / preventDefault the context menu event.
+        if (SelectionHandler.attachCaret(this._target)) {
+          event.preventDefault();
+          return;
         }
       }
     },
@@ -2475,17 +2491,6 @@ var NativeWindow = {
         // walk up the tree and find more items to show
         element = element.parentNode;
       }
-    },
-
-    // Actually shows the native context menu by passing a list of context menu items to
-    // show to the Java.
-    _show: function(aEvent) {
-      let popupNode = this._target;
-      this._target = null;
-      if (aEvent.defaultPrevented || !popupNode) {
-        return;
-      }
-      this._innerShow(popupNode, aEvent.clientX, aEvent.clientY);
     },
 
     // Walks the DOM tree to find a title from a node
@@ -2643,20 +2648,6 @@ var NativeWindow = {
         }
         target = target.parentNode;
       }
-    },
-
-    // Called when the contextmenu is done propagating to content. If the event wasn't cancelled, will show a contextmenu.
-    handleEvent: function(aEvent) {
-      BrowserEventHandler._cancelTapHighlight();
-      aEvent.target.ownerDocument.defaultView.removeEventListener("contextmenu", this, false);
-      this._show(aEvent);
-    },
-
-    // Called when a long press is observed in the native Java frontend. Will start the process of generating/showing a contextmenu.
-    observe: function(aSubject, aTopic, aData) {
-      let data = JSON.parse(aData);
-      // content gets first crack at cancelling context menus
-      this._sendToContent(data.x, data.y);
     },
 
     // XXX - These are stolen from Util.js, we should remove them if we bring it back
