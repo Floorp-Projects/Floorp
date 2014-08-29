@@ -3778,7 +3778,7 @@ MacroAssemblerARMCompat::setupUnalignedABICall(uint32_t args, Register scratch)
     ma_mov(sp, scratch);
 
     // Force sp to be aligned.
-    ma_and(Imm32(~(StackAlignment - 1)), sp, sp);
+    ma_and(Imm32(~(ABIStackAlignment - 1)), sp, sp);
     ma_push(scratch);
 }
 
@@ -3937,7 +3937,7 @@ MacroAssemblerARMCompat::passABIArg(FloatRegister freg, MoveOp::Type type)
 void MacroAssemblerARMCompat::checkStackAlignment()
 {
 #ifdef DEBUG
-    ma_tst(sp, Imm32(StackAlignment - 1));
+    ma_tst(sp, Imm32(ABIStackAlignment - 1));
     breakpoint(NonZero);
 #endif
 }
@@ -3956,11 +3956,11 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust, bool callFromAsmJ
 
     if (!dynamicAlignment_) {
         *stackAdjust += ComputeByteAlignment(framePushed_ + *stackAdjust + alignmentAtPrologue,
-                                             StackAlignment);
+                                             ABIStackAlignment);
     } else {
         // sizeof(intptr_t) accounts for the saved stack pointer pushed by
         // setupUnalignedABICall.
-        *stackAdjust += ComputeByteAlignment(*stackAdjust + sizeof(intptr_t), StackAlignment);
+        *stackAdjust += ComputeByteAlignment(*stackAdjust + sizeof(intptr_t), ABIStackAlignment);
     }
 
     reserveStack(*stackAdjust);
