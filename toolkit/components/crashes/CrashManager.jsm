@@ -112,6 +112,10 @@ this.CrashManager = function (options) {
   // The CrashStore currently attached to this object.
   this._store = null;
 
+  // A Task to retrieve the store. This is needed to avoid races when
+  // _getStore() is called multiple times in a short interval.
+  this._getStoreTask = null;
+
   // The timer controlling the expiration of the CrashStore instance.
   this._storeTimer = null;
 
@@ -575,47 +579,57 @@ this.CrashManager.prototype = Object.freeze({
   },
 
   _getStore: function () {
-    return Task.spawn(function* () {
-      if (!this._store) {
-        yield OS.File.makeDir(this._storeDir, {
-          ignoreExisting: true,
-          unixMode: OS.Constants.libc.S_IRWXU,
-        });
+    if (this._getStoreTask) {
+      return this._getStoreTask;
+    }
 
-        let store = new CrashStore(this._storeDir, this._telemetryStoreSizeKey);
-        yield store.load();
+    return this._getStoreTask = Task.spawn(function* () {
+      try {
+        if (!this._store) {
+          yield OS.File.makeDir(this._storeDir, {
+            ignoreExisting: true,
+            unixMode: OS.Constants.libc.S_IRWXU,
+          });
 
-        this._store = store;
-        this._storeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      }
+          let store = new CrashStore(this._storeDir,
+                                     this._telemetryStoreSizeKey);
+          yield store.load();
 
-      // The application can go long periods without interacting with the
-      // store. Since the store takes up resources, we automatically "free"
-      // the store after inactivity so resources can be returned to the system.
-      // We do this via a timer and a mechanism that tracks when the store
-      // is being accessed.
-      this._storeTimer.cancel();
-
-      // This callback frees resources from the store unless the store
-      // is protected from freeing by some other process.
-      let timerCB = function () {
-        if (this._storeProtectedCount) {
-          this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
-                                            this._storeTimer.TYPE_ONE_SHOT);
-          return;
+          this._store = store;
+          this._storeTimer = Cc["@mozilla.org/timer;1"]
+                               .createInstance(Ci.nsITimer);
         }
 
-        // We kill the reference that we hold. GC will kill it later. If
-        // someone else holds a reference, that will prevent GC until that
-        // reference is gone.
-        this._store = null;
-        this._storeTimer = null;
-      }.bind(this);
+        // The application can go long periods without interacting with the
+        // store. Since the store takes up resources, we automatically "free"
+        // the store after inactivity so resources can be returned to the
+        // system. We do this via a timer and a mechanism that tracks when the
+        // store is being accessed.
+        this._storeTimer.cancel();
 
-      this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
-                                        this._storeTimer.TYPE_ONE_SHOT);
+        // This callback frees resources from the store unless the store
+        // is protected from freeing by some other process.
+        let timerCB = function () {
+          if (this._storeProtectedCount) {
+            this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
+                                              this._storeTimer.TYPE_ONE_SHOT);
+            return;
+          }
 
-      return this._store;
+          // We kill the reference that we hold. GC will kill it later. If
+          // someone else holds a reference, that will prevent GC until that
+          // reference is gone.
+          this._store = null;
+          this._storeTimer = null;
+        }.bind(this);
+
+        this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
+                                          this._storeTimer.TYPE_ONE_SHOT);
+
+        return this._store;
+      } finally {
+        this._getStoreTask = null;
+      }
     }.bind(this));
   },
 
