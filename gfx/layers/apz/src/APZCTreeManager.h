@@ -285,6 +285,8 @@ public:
    *   handoff chain that should be scrolled.
    *
    * Returns true iff. some APZC accepted the scroll and scrolled.
+   * This is to allow the sending APZC to go into an overscrolled state if
+   * no APZC further up in the handoff chain accepted the overscroll.
    *
    * The way this method works is best illustrated with an example.
    * Consider three nested APZCs, A, B, and C, with C being the innermost one.
