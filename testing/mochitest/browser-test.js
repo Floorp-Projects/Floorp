@@ -494,6 +494,10 @@ Tester.prototype = {
           promise = ContentSearch.destroy();
         }
 
+        // Simulate memory pressure so that we're forced to free more resources
+        // and thus get rid of more false leaks like already terminated workers.
+        Services.obs.notifyObservers(null, "memory-pressure", "heap-minimize");
+
         // Schedule GC and CC runs before finishing in order to detect
         // DOM windows leaked by our tests or the tested code. Note that we
         // use a shrinking GC so that the JS engine will discard JIT code and

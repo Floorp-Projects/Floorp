@@ -77,24 +77,22 @@ loop.panel = (function(_, mozL10n) {
                               __("display_name_available_status");
 
       return (
-        React.DOM.div({className: "footer"}, 
-          React.DOM.div({className: "do-not-disturb"}, 
-            React.DOM.div({className: "dnd-status", onClick: this.showDropdownMenu}, 
-              React.DOM.span(null, availabilityText), 
-              React.DOM.i({className: availabilityStatus})
+        React.DOM.div({className: "do-not-disturb"}, 
+          React.DOM.p({className: "dnd-status", onClick: this.showDropdownMenu}, 
+            React.DOM.span(null, availabilityText), 
+            React.DOM.i({className: availabilityStatus})
+          ), 
+          React.DOM.ul({className: availabilityDropdown, 
+              onMouseLeave: this.hideDropdownMenu}, 
+            React.DOM.li({onClick: this.changeAvailability("available"), 
+                className: "dnd-menu-item dnd-make-available"}, 
+              React.DOM.i({className: "status status-available"}), 
+              React.DOM.span(null, __("display_name_available_status"))
             ), 
-            React.DOM.ul({className: availabilityDropdown, 
-                onMouseLeave: this.hideDropdownMenu}, 
-              React.DOM.li({onClick: this.changeAvailability("available"), 
-                  className: "dnd-menu-item dnd-make-available"}, 
-                React.DOM.i({className: "status status-available"}), 
-                React.DOM.span(null, __("display_name_available_status"))
-              ), 
-              React.DOM.li({onClick: this.changeAvailability("do-not-disturb"), 
-                  className: "dnd-menu-item dnd-make-unavailable"}, 
-                React.DOM.i({className: "status status-dnd"}), 
-                React.DOM.span(null, __("display_name_dnd_status"))
-              )
+            React.DOM.li({onClick: this.changeAvailability("do-not-disturb"), 
+                className: "dnd-menu-item dnd-make-unavailable"}, 
+              React.DOM.i({className: "status status-dnd"}), 
+              React.DOM.span(null, __("display_name_dnd_status"))
             )
           )
         )
@@ -272,6 +270,10 @@ loop.panel = (function(_, mozL10n) {
       callUrl: React.PropTypes.string
     },
 
+    handleSignUpLinkClick: function() {
+      navigator.mozLoop.logInToFxA();
+    },
+
     render: function() {
       return (
         React.DOM.div(null, 
@@ -279,7 +281,12 @@ loop.panel = (function(_, mozL10n) {
                          notifier: this.props.notifier, 
                          callUrl: this.props.callUrl}), 
           ToSView(null), 
-          AvailabilityDropdown(null)
+          React.DOM.div({className: "footer"}, 
+            AvailabilityDropdown(null), 
+            React.DOM.a({className: "signin-link", href: "#", onClick: this.handleSignUpLinkClick}, 
+              __("panel_footer_signin_or_signup_link")
+            )
+          )
         )
       );
     }

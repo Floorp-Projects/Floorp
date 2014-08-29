@@ -411,6 +411,18 @@ loop.webapp = (function($, _, OT, webL10n) {
     },
 
     /**
+     * Checks if the streams have been connected, and notifies the
+     * websocket that the media is now connected.
+     */
+    _checkConnected: function() {
+      // Check we've had both local and remote streams connected before
+      // sending the media up message.
+      if (this._conversation.streamsConnected()) {
+        this._websocket.mediaUp();
+      }
+    },
+
+    /**
      * Used to receive websocket progress and to determine how to handle
      * it if appropraite.
      */
@@ -495,6 +507,8 @@ loop.webapp = (function($, _, OT, webL10n) {
         client: this._client
       });
       this._conversation.once("call:outgoing:setup", this.setupOutgoingCall, this);
+      this._conversation.once("change:publishedStream", this._checkConnected, this);
+      this._conversation.once("change:subscribedStream", this._checkConnected, this);
       this.loadReactComponent(startView);
     },
 

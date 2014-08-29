@@ -45,7 +45,8 @@ public:
   NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) MOZ_OVERRIDE;
   NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
                               bool* aWillNotify,
-                              bool* aIsAlternate) MOZ_OVERRIDE;
+                              bool* aIsAlternate,
+                              bool aForceReload) MOZ_OVERRIDE;
   NS_IMETHOD SetEnableUpdates(bool aEnableUpdates) MOZ_OVERRIDE;
   NS_IMETHOD GetCharset(nsAString& aCharset) MOZ_OVERRIDE;
 

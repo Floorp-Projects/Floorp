@@ -138,6 +138,17 @@
   border: 1px solid #888;
 }
 
+/* Sign in/up link */
+
+.signin-link {
+  display: none; /* XXX This should be removed as soon bugs 1047144 & 979845 land */
+  line-height: 100%;
+  font-size: .9em;
+  text-decoration: none;
+  color: #888;
+  margin-top: 16px;
+}
+
 /* Terms of Service */
 
 .terms-service {
@@ -157,14 +168,17 @@
 /* Footer */
 
 .footer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-content: stretch;
+  align-items: flex-start;
   font-size: 1em;
   border-top: 1px solid #D1D1D1;
   background: #EAEAEA;
   color: #7F7F7F;
-  display: flex;
-  align-items: center;
-  margin-top: 14px;
-  flex-direction: row;
   padding: 14px;
+  margin-top: 14px;
 }
 

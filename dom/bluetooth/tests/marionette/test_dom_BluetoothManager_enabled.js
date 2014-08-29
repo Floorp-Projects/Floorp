@@ -58,7 +58,7 @@ function test(aEnabled) {
   return deferred.promise;
 }
 
-startBluetoothTestBase(["settings-read", "settings-write"],
+startBluetoothTestBase(["settings-read", "settings-write", "settings-api-read", "settings-api-write"],
                        function testCaseMain() {
   return getBluetoothEnabled()
     .then(function(aEnabled) {

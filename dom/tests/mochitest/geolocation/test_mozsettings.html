@@ -31,7 +31,11 @@ if (SpecialPowers.isMainProcess()) {
 
 function test1() {
   //This pushPermissions call is after pushPrefEnv call and pushPrefEnv calls follow after this
-  SpecialPowers.pushPermissions([{'type': 'settings-read', 'allow': true, 'context': document}, {'type': 'settings-write', 'allow': true, 'context': document}], test2);
+  SpecialPowers.pushPermissions([{'type': 'settings-read', 'allow': true, 'context': document},
+                                 {'type': 'settings-write', 'allow': true, 'context': document},
+                                 {'type': 'settings-api-write', 'allow': true, 'context': document},
+                                 {'type': 'settings-api-read', 'allow': true, 'context': document}
+  ], test2);
 }
 
 function test2() {

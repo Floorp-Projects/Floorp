@@ -209,6 +209,8 @@ let gTestSuite = (function() {
     let permissions = [{ 'type': 'wifi-manage', 'allow': 1, 'context': window.document },
                        { 'type': 'settings-write', 'allow': 1, 'context': window.document },
                        { 'type': 'settings-read', 'allow': 1, 'context': window.document },
+                       { 'type': 'settings-api-write', 'allow': 1, 'context': window.document },
+                       { 'type': 'settings-api-read', 'allow': 1, 'context': window.document },
                        { 'type': 'mobileconnection', 'allow': 1, 'context': window.document }];
 
     SpecialPowers.pushPermissions(permissions, function() {

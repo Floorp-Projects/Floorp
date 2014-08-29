@@ -125,4 +125,4 @@ startTestCommon(function() {
         return setDataApnSettings(origApnSettings);
       }
     });
-}, ["settings-read", "settings-write"]);
+}, ["settings-read", "settings-write", "settings-api-read", "settings-api-write"]);
