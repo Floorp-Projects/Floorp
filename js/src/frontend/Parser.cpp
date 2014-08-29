@@ -2069,7 +2069,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
                 return false;
 
             if (!parser->functionArgsAndBodyGeneric(SyntaxParseHandler::NodeGeneric,
-                                                    fun, type, kind, newDirectives))
+                                                    fun, type, kind))
             {
                 if (parser->hadAbortedSyntaxParse()) {
                     // Try again with a full parse.
@@ -2105,7 +2105,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
     if (!funpc.init(tokenStream))
         return false;
 
-    if (!functionArgsAndBodyGeneric(pn, fun, type, kind, newDirectives))
+    if (!functionArgsAndBodyGeneric(pn, fun, type, kind))
         return false;
 
     if (!leaveFunction(pn, outerpc, kind))
@@ -2145,7 +2145,7 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
     if (!funpc.init(tokenStream))
         return false;
 
-    if (!functionArgsAndBodyGeneric(pn, fun, type, kind, newDirectives))
+    if (!functionArgsAndBodyGeneric(pn, fun, type, kind))
         return false;
 
     if (!leaveFunction(pn, outerpc, kind))
@@ -2199,7 +2199,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
     if (!funpc.init(tokenStream))
         return null();
 
-    if (!functionArgsAndBodyGeneric(pn, fun, Normal, Statement, &newDirectives)) {
+    if (!functionArgsAndBodyGeneric(pn, fun, Normal, Statement)) {
         JS_ASSERT(directives == newDirectives);
         return null();
     }
@@ -2226,8 +2226,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, FunctionType type,
-                                                 FunctionSyntaxKind kind,
-                                                 Directives *newDirectives)
+                                                 FunctionSyntaxKind kind)
 {
     // Given a properly initialized parse context, try to parse an actual
     // function without concern for conversion to strict mode, use of lazy
