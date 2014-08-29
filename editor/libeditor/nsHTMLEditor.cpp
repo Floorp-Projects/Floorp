@@ -708,31 +708,30 @@ AssertParserServiceIsCorrect(nsIAtom* aTag, bool aIsBlock)
 {
 #ifdef DEBUG
   // Check this against what we would have said with the old code:
-  if (aTag==nsEditProperty::p          ||
-      aTag==nsEditProperty::div        ||
-      aTag==nsEditProperty::blockquote ||
-      aTag==nsEditProperty::h1         ||
-      aTag==nsEditProperty::h2         ||
-      aTag==nsEditProperty::h3         ||
-      aTag==nsEditProperty::h4         ||
-      aTag==nsEditProperty::h5         ||
-      aTag==nsEditProperty::h6         ||
-      aTag==nsEditProperty::ul         ||
-      aTag==nsEditProperty::ol         ||
-      aTag==nsEditProperty::dl         ||
-      aTag==nsEditProperty::noscript   ||
-      aTag==nsEditProperty::form       ||
-      aTag==nsEditProperty::hr         ||
-      aTag==nsEditProperty::table      ||
-      aTag==nsEditProperty::fieldset   ||
-      aTag==nsEditProperty::address    ||
-      aTag==nsEditProperty::col        ||
-      aTag==nsEditProperty::colgroup   ||
-      aTag==nsEditProperty::li         ||
-      aTag==nsEditProperty::dt         ||
-      aTag==nsEditProperty::dd         ||
-      aTag==nsEditProperty::legend     )
-  {
+  if (aTag == nsGkAtoms::p ||
+      aTag == nsGkAtoms::div ||
+      aTag == nsGkAtoms::blockquote ||
+      aTag == nsGkAtoms::h1 ||
+      aTag == nsGkAtoms::h2 ||
+      aTag == nsGkAtoms::h3 ||
+      aTag == nsGkAtoms::h4 ||
+      aTag == nsGkAtoms::h5 ||
+      aTag == nsGkAtoms::h6 ||
+      aTag == nsGkAtoms::ul ||
+      aTag == nsGkAtoms::ol ||
+      aTag == nsGkAtoms::dl ||
+      aTag == nsGkAtoms::noscript ||
+      aTag == nsGkAtoms::form ||
+      aTag == nsGkAtoms::hr ||
+      aTag == nsGkAtoms::table ||
+      aTag == nsGkAtoms::fieldset ||
+      aTag == nsGkAtoms::address ||
+      aTag == nsGkAtoms::col ||
+      aTag == nsGkAtoms::colgroup ||
+      aTag == nsGkAtoms::li ||
+      aTag == nsGkAtoms::dt ||
+      aTag == nsGkAtoms::dd ||
+      aTag == nsGkAtoms::legend) {
     if (!aIsBlock) {
       nsAutoString assertmsg (NS_LITERAL_STRING("Parser and editor disagree on blockness: "));
 
@@ -761,19 +760,18 @@ nsHTMLEditor::NodeIsBlockStatic(const dom::Element* aElement)
 
   // Nodes we know we want to treat as block
   // even though the parser says they're not:
-  if (tagAtom==nsEditProperty::body       ||
-      tagAtom==nsEditProperty::head       ||
-      tagAtom==nsEditProperty::tbody      ||
-      tagAtom==nsEditProperty::thead      ||
-      tagAtom==nsEditProperty::tfoot      ||
-      tagAtom==nsEditProperty::tr         ||
-      tagAtom==nsEditProperty::th         ||
-      tagAtom==nsEditProperty::td         ||
-      tagAtom==nsEditProperty::li         ||
-      tagAtom==nsEditProperty::dt         ||
-      tagAtom==nsEditProperty::dd         ||
-      tagAtom==nsEditProperty::pre)
-  {
+  if (tagAtom == nsGkAtoms::body ||
+      tagAtom == nsGkAtoms::head ||
+      tagAtom == nsGkAtoms::tbody ||
+      tagAtom == nsGkAtoms::thead ||
+      tagAtom == nsGkAtoms::tfoot ||
+      tagAtom == nsGkAtoms::tr ||
+      tagAtom == nsGkAtoms::th ||
+      tagAtom == nsGkAtoms::td ||
+      tagAtom == nsGkAtoms::li ||
+      tagAtom == nsGkAtoms::dt ||
+      tagAtom == nsGkAtoms::dd ||
+      tagAtom == nsGkAtoms::pre) {
     return true;
   }
 
@@ -1797,7 +1795,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
     do {
       // retrieve the computed style of background-color for blockParent
       mHTMLCSSUtils->GetComputedProperty(blockParent,
-                                         nsEditProperty::cssBackgroundColor,
+                                         nsGkAtoms::backgroundColor,
                                          aOutColor);
       tmp.swap(blockParent);
       res = tmp->GetParentNode(getter_AddRefs(blockParent));
@@ -1832,8 +1830,9 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
       else {
         // no, it's not; let's retrieve the computed style of background-color for the
         // node to examine
-        mHTMLCSSUtils->GetComputedProperty(nodeToExamine, nsEditProperty::cssBackgroundColor,
-                            aOutColor);
+        mHTMLCSSUtils->GetComputedProperty(nodeToExamine,
+                                           nsGkAtoms::backgroundColor,
+                                           aOutColor);
         if (!aOutColor.EqualsLiteral("transparent")) {
           break;
         }
@@ -2681,7 +2680,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
       res = attribute->GetValue(value);
       NS_ENSURE_SUCCESS(res, res);
 
-      res = SetInlineProperty(nsEditProperty::a, name, value);
+      res = SetInlineProperty(nsGkAtoms::a, name, value);
       NS_ENSURE_SUCCESS(res, res);
     }
   }

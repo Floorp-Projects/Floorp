@@ -872,20 +872,6 @@ nsBaseWidget::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
   aHints.AppendElement(LayersBackend::LAYERS_BASIC);
 }
 
-static void
-CheckForBasicBackends(nsTArray<LayersBackend>& aHints)
-{
-#ifndef XP_WIN
-  for (size_t i = 0; i < aHints.Length(); ++i) {
-    if (aHints[i] == LayersBackend::LAYERS_BASIC &&
-        !Preferences::GetBool("layers.offmainthreadcomposition.force-basic", false)) {
-      // basic compositor is not stable enough for regular use
-      aHints[i] = LayersBackend::LAYERS_NONE;
-    }
-  }
-#endif
-}
-
 void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 {
   MOZ_ASSERT(gfxPlatform::UsesOffMainThreadCompositing(),
@@ -914,10 +900,6 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   PLayerTransactionChild* shadowManager = nullptr;
   nsTArray<LayersBackend> backendHints;
   GetPreferredCompositorBackends(backendHints);
-
-  if (!mRequireOffMainThreadCompositing) {
-    CheckForBasicBackends(backendHints);
-  }
 
   bool success = false;
   if (!backendHints.IsEmpty()) {

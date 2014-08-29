@@ -1495,6 +1495,14 @@ BluetoothServiceBluedroid::DiscoveryStateChangedNotification(bool aState)
   DistributeSignal(
     BluetoothSignal(NS_LITERAL_STRING(DISCOVERY_STATE_CHANGED_ID),
                     NS_LITERAL_STRING(KEY_ADAPTER), isDiscovering));
+
+  // Distribute "PropertyChanged" signal to notice adapter this change since
+  // Bluedroid don' treat "discovering" as a property of adapter.
+  InfallibleTArray<BluetoothNamedValue> props;
+  BT_APPEND_NAMED_VALUE(props, "Discovering", BluetoothValue(isDiscovering));
+  DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PropertyChanged"),
+                                   NS_LITERAL_STRING(KEY_ADAPTER),
+                                   BluetoothValue(props)));
 }
 
 void

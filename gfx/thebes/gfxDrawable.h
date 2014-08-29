@@ -38,6 +38,7 @@ public:
                         const gfxRect& aFillRect,
                         bool aRepeat,
                         const GraphicsFilter& aFilter,
+                        gfxFloat aOpacity = 1.0,
                         const gfxMatrix& aTransform = gfxMatrix()) = 0;
     virtual gfxIntSize Size() { return mSize; }
 
@@ -62,6 +63,7 @@ public:
                         const gfxRect& aFillRect,
                         bool aRepeat,
                         const GraphicsFilter& aFilter,
+                        gfxFloat aOpacity = 1.0,
                         const gfxMatrix& aTransform = gfxMatrix());
     
 protected:
@@ -107,6 +109,7 @@ public:
                         const gfxRect& aFillRect,
                         bool aRepeat,
                         const GraphicsFilter& aFilter,
+                        gfxFloat aOpacity = 1.0,
                         const gfxMatrix& aTransform = gfxMatrix());
 
 protected:
@@ -130,6 +133,7 @@ public:
                         const gfxRect& aFillRect,
                         bool aRepeat,
                         const GraphicsFilter& aFilter,
+                        gfxFloat aOpacity = 1.0,
                         const gfxMatrix& aTransform = gfxMatrix());
 
 protected:

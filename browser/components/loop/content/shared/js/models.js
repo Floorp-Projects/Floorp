@@ -34,8 +34,12 @@ loop.shared.models = (function() {
                                    // other peer ("audio" or "audio-video")
       selectedCallType: undefined, // The selected type for the call that was
                                    // initiated ("audio" or "audio-video")
-      callToken:    undefined      // Incoming call token.
+      callToken:    undefined,     // Incoming call token.
                                    // Used for blocking a call url
+      subscribedStream: false,     // Used to indicate that a stream has been
+                                   // subscribed to
+      publishedStream: false       // Used to indicate that a stream has been
+                                   // published
     },
 
     /**
@@ -217,6 +221,39 @@ loop.shared.models = (function() {
         return this.get("selectedCallType") === "audio-video";
       }
       return undefined;
+    },
+
+    /**
+     * Publishes a local stream.
+     *
+     * @param {Publisher} publisher The publisher object to publish
+     *                              to the session.
+     */
+    publish: function(publisher) {
+      this.session.publish(publisher);
+      this.set("publishedStream", true);
+    },
+
+    /**
+     * Subscribes to a remote stream.
+     *
+     * @param {Stream} stream The remote stream to subscribe to.
+     * @param {DOMElement} element The element to display the stream in.
+     * @param {Object} config The display properties to set on the stream as
+     *                        documented in:
+     * https://tokbox.com/opentok/libraries/client/js/reference/Session.html#subscribe
+     */
+    subscribe: function(stream, element, config) {
+      this.session.subscribe(stream, element, config);
+      this.set("subscribedStream", true);
+    },
+
+    /**
+     * Returns true if a stream has been published and a stream has been
+     * subscribed to.
+     */
+    streamsConnected: function() {
+      return this.get("publishedStream") && this.get("subscribedStream");
     },
 
     /**
