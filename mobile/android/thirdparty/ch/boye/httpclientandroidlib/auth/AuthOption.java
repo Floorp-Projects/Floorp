@@ -60,4 +60,3 @@ public final class AuthOption {
     }
 
 }
-
