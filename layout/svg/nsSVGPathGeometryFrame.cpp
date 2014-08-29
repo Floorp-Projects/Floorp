@@ -97,14 +97,20 @@ void
 nsDisplaySVGPathGeometry::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx)
 {
+  uint32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+
   // ToReferenceFrame includes our mRect offset, but painting takes
   // account of that too. To avoid double counting, we subtract that
   // here.
   nsPoint offset = ToReferenceFrame() - mFrame->GetPosition();
 
+  gfxPoint devPixelOffset =
+    nsLayoutUtils::PointToGfxPoint(offset, appUnitsPerDevPixel);
+
   aCtx->PushState();
-  aCtx->Translate(offset);
-  static_cast<nsSVGPathGeometryFrame*>(mFrame)->PaintSVG(aCtx, nullptr);
+  gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(mFrame) *
+                   gfxMatrix::Translation(devPixelOffset);
+  static_cast<nsSVGPathGeometryFrame*>(mFrame)->PaintSVG(aCtx, tm);
   aCtx->PopState();
 }
 
@@ -207,29 +213,29 @@ nsSVGPathGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 nsresult
 nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
-                                 const nsIntRect *aDirtyRect,
-                                 nsIFrame* aTransformRoot)
+                                 const gfxMatrix& aTransform,
+                                 const nsIntRect* aDirtyRect)
 {
   if (!StyleVisibility()->IsVisible())
     return NS_OK;
 
   uint32_t paintOrder = StyleSVG()->mPaintOrder;
   if (paintOrder == NS_STYLE_PAINT_ORDER_NORMAL) {
-    Render(aContext, eRenderFill | eRenderStroke, aTransformRoot);
-    PaintMarkers(aContext);
+    Render(aContext, eRenderFill | eRenderStroke, aTransform);
+    PaintMarkers(aContext, aTransform);
   } else {
     while (paintOrder) {
       uint32_t component =
         paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
       switch (component) {
         case NS_STYLE_PAINT_ORDER_FILL:
-          Render(aContext, eRenderFill, aTransformRoot);
+          Render(aContext, eRenderFill, aTransform);
           break;
         case NS_STYLE_PAINT_ORDER_STROKE:
-          Render(aContext, eRenderStroke, aTransformRoot);
+          Render(aContext, eRenderStroke, aTransform);
           break;
         case NS_STYLE_PAINT_ORDER_MARKERS:
-          PaintMarkers(aContext);
+          PaintMarkers(aContext, aTransform);
           break;
       }
       paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
@@ -613,7 +619,7 @@ nsSVGPathGeometryFrame::MarkerProperties::GetMarkerEndFrame()
 void
 nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
                                uint32_t aRenderComponents,
-                               nsIFrame* aTransformRoot)
+                               const gfxMatrix& aTransform)
 {
   gfxContext *gfx = aContext->ThebesContext();
 
@@ -653,7 +659,7 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
       autoSaveRestore.SetContext(gfx);
     //}
 
-    GeneratePath(gfx, ToMatrix(GetCanvasTM(FOR_PAINTING, aTransformRoot)));
+    GeneratePath(gfx, ToMatrix(aTransform));
 
     // We used to call gfx->Restore() here, since for the
     // SVGAutoRenderState::CLIP case it is important to leave the fill rule
@@ -682,7 +688,7 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
 
   gfxContextAutoSaveRestore autoSaveRestore(gfx);
 
-  GeneratePath(gfx, ToMatrix(GetCanvasTM(FOR_PAINTING, aTransformRoot)));
+  GeneratePath(gfx, ToMatrix(aTransform));
 
   gfxTextContextPaint *contextPaint =
     (gfxTextContextPaint*)aContext->GetUserData(&gfxTextContextPaint::sUserDataKey);
@@ -723,7 +729,8 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
 }
 
 void
-nsSVGPathGeometryFrame::PaintMarkers(nsRenderingContext* aContext)
+nsSVGPathGeometryFrame::PaintMarkers(nsRenderingContext* aContext,
+                                     const gfxMatrix& aTransform)
 {
   gfxTextContextPaint *contextPaint =
     (gfxTextContextPaint*)aContext->GetUserData(&gfxTextContextPaint::sUserDataKey);
@@ -752,7 +759,7 @@ nsSVGPathGeometryFrame::PaintMarkers(nsRenderingContext* aContext)
           nsSVGMark& mark = marks[i];
           nsSVGMarkerFrame* frame = markerFrames[mark.type];
           if (frame) {
-            frame->PaintMark(aContext, this, &mark, strokeWidth);
+            frame->PaintMark(aContext, aTransform, this, &mark, strokeWidth);
           }
         }
       }

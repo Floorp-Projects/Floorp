@@ -3134,14 +3134,21 @@ nsDisplaySVGText::Paint(nsDisplayListBuilder* aBuilder,
   gfxContextAutoDisableSubpixelAntialiasing
     disable(aCtx->ThebesContext(), mDisableSubpixelAA);
 
+  uint32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+
   // ToReferenceFrame includes our mRect offset, but painting takes
   // account of that too. To avoid double counting, we subtract that
   // here.
   nsPoint offset = ToReferenceFrame() - mFrame->GetPosition();
 
+  gfxPoint devPixelOffset =
+    nsLayoutUtils::PointToGfxPoint(offset, appUnitsPerDevPixel);
+
+  gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(mFrame) *
+                   gfxMatrix::Translation(devPixelOffset);
+
   aCtx->PushState();
-  aCtx->Translate(offset);
-  static_cast<SVGTextFrame*>(mFrame)->PaintSVG(aCtx, nullptr);
+  static_cast<SVGTextFrame*>(mFrame)->PaintSVG(aCtx, tm);
   aCtx->PopState();
 }
 
@@ -3565,8 +3572,8 @@ ShouldPaintCaret(const TextRenderedRun& aThisRun, nsCaret* aCaret)
 
 nsresult
 SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
-                       const nsIntRect *aDirtyRect,
-                       nsIFrame* aTransformRoot)
+                       const gfxMatrix& aTransform,
+                       const nsIntRect *aDirtyRect)
 {
   nsIFrame* kid = GetFirstPrincipalChild();
   if (!kid)
@@ -3596,13 +3603,12 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
     return NS_OK;
   }
 
-  gfxMatrix canvasTM = GetCanvasTM(FOR_PAINTING, aTransformRoot);
-  if (canvasTM.IsSingular()) {
+  if (aTransform.IsSingular()) {
     NS_WARNING("Can't render text element!");
     return NS_ERROR_FAILURE;
   }
 
-  gfxMatrix matrixForPaintServers = canvasTM * initialMatrix;
+  gfxMatrix matrixForPaintServers = aTransform * initialMatrix;
 
   // Check if we need to draw anything.
   if (aDirtyRect) {
@@ -3625,12 +3631,12 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
     }
   }
 
-  // SVG paints in CSS px, but normally frames paint in dev pixels. Here we
-  // multiply a CSS-px-to-dev-pixel factor onto canvasTM so our children paint
-  // correctly.
+  // SVG frames' PaintSVG methods paint in CSS px, but normally frames paint in
+  // dev pixels. Here we multiply a CSS-px-to-dev-pixel factor onto aTransform
+  // so our non-SVG nsTextFrame children paint correctly.
   float cssPxPerDevPx = presContext->
     AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
-  gfxMatrix canvasTMForChildren = canvasTM;
+  gfxMatrix canvasTMForChildren = aTransform;
   canvasTMForChildren.Scale(cssPxPerDevPx, cssPxPerDevPx);
   initialMatrix.Scale(1 / cssPxPerDevPx, 1 / cssPxPerDevPx);
 

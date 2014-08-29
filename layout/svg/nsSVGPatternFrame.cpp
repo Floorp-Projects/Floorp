@@ -413,7 +413,12 @@ nsSVGPatternFrame::PaintPattern(Matrix* patternMatrix,
       if (SVGFrame) {
         SVGFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
       }
-      nsSVGUtils::PaintFrameWithEffects(context, nullptr, kid);
+      gfxMatrix tm = *(patternFrame->mCTM);
+      if (kid->GetContent()->IsSVG()) {
+        tm = static_cast<nsSVGElement*>(kid->GetContent())->
+              PrependLocalTransformsTo(tm, nsSVGElement::eUserSpaceToParent);
+      }
+      nsSVGUtils::PaintFrameWithEffects(kid, context, tm);
     }
     patternFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
   }
