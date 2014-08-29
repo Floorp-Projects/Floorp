@@ -21,6 +21,10 @@ public:
   GMPChild();
   virtual ~GMPChild();
 
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+  void OnChannelConnected(int32_t aPid);
+#endif
+
   bool Init(const std::string& aPluginPath,
             base::ProcessHandle aParentProcessHandle,
             MessageLoop* aIOLoop,
@@ -49,6 +53,10 @@ private:
   PRLibrary* mLib;
   GMPGetAPIFunc mGetAPIFunc;
   MessageLoop* mGMPMessageLoop;
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+  std::string mPluginPath;
+  nsCString mPluginBinaryPath;
+#endif
 };
 
 } // namespace gmp
