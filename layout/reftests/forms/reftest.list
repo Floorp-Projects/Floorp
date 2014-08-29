@@ -1,4 +1,4 @@
-skip-if(B2G) fails-if(Android) HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
+skip-if(B2G) HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
 
 # button element
 include button/reftest.list

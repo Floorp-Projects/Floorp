@@ -1,7 +1,7 @@
 == input-valid.html input-ref.html
 fuzzy(64,4) == input-customerror.html input-ref.html
-fails-if(Android||B2G) == input-disabled.html input-ref.html
-fails-if(Android||B2G) == input-dyn-disabled.html input-ref.html
+fails-if(B2G) == input-disabled.html input-ref.html
+fails-if(B2G) == input-dyn-disabled.html input-ref.html
 == input-dyn-not-disabled.html input-ref.html
 == input-readonly.html input-ref.html
 == input-dyn-readonly.html input-ref.html
