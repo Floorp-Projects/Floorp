@@ -10,7 +10,7 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.setup.activities.LocaleAware.LocaleAwareFragmentActivity;
+import org.mozilla.gecko.LocaleAware.LocaleAwareFragmentActivity;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;

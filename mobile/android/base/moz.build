@@ -314,6 +314,7 @@ gbjar.sources += [
     'JavaAddonManager.java',
     'LightweightTheme.java',
     'LightweightThemeDrawable.java',
+    'LocaleAware.java',
     'LocaleManager.java',
     'MediaCastingBar.java',
     'MemoryMonitor.java',
