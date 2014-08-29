@@ -161,6 +161,21 @@ CheckF4('', 'var x=f4(' + (INT32_MAX + 1) + ', 2, 3, 4)', [INT32_MAX + 1, 2, 3, 
 CheckF4('', 'var x=f4(1.3, 2.4, 3.5, 98.76)', [1.3, 2.4, 3.5, 98.76]);
 CheckF4('', 'var x=f4(13.37, 2., 3., -0)', [13.37, 2, 3, -0]);
 
+// signMask
+assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); var y=0.0; y=x.signMask;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + FROUND + "function f() {var x=i4(1,2,3,4); var y=f32(0.0); y=x.signMask;} return f");
+
+assertAsmTypeFail('glob', USE_ASM + "function f() {var x=42; return x.signMask;} return f");
+assertAsmTypeFail('glob', USE_ASM + "function f() {var x=42.; return x.signMask;} return f");
+assertAsmTypeFail('glob', USE_ASM + FROUND + "function f() {var x=f32(42.); return x.signMask;} return f");
+
+assertEq(asmLink(asmCompile('glob', USE_ASM + I32 + 'function f() { var x=i4(1,2,3,4); return x.signMask | 0 } return f'), this)(), 0b0000);
+assertEq(asmLink(asmCompile('glob', USE_ASM + I32 + 'function f() { var x=i4(0,-1, ' + INT32_MAX + ',' + INT32_MIN  + '); return x.signMask | 0 } return f'), this)(), 0b1010);
+
+assertEq(asmLink(asmCompile('glob', USE_ASM + F32 + 'var Infinity = glob.Infinity; function f() { var x=f4(0,0,0,0); x=f4(1, -13.37, 42, -Infinity); return x.signMask | 0 } return f'), this)(), 0b1010);
+assertEq(asmLink(asmCompile('glob', USE_ASM + F32 + 'var Infinity = glob.Infinity; function f() { var x=f4(0,0,0,0); x=f4(-1, 0, -0.000001, Infinity); return x.signMask | 0 } return f'), this)(), 0b0101);
+assertEq(asmLink(asmCompile('glob', USE_ASM + F32 + 'var NaN = glob.NaN; function f() { var x=f4(0,0,0,0); x=f4(-1, NaN, 3., 4.); return x.signMask | 0 } return f'), this)(), 0b0001);
+
 // 1.3.3. Variable assignments
 assertAsmTypeFail('glob', USE_ASM + I32 + I32A + "function f() {var x=i4(1,2,3,4); x=i4();} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + I32A + "function f() {var x=i4(1,2,3,4); x=i4(1);} return f");

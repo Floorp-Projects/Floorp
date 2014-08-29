@@ -2586,6 +2586,17 @@ class FunctionCompiler
         return ins;
     }
 
+    MDefinition *extractSignMask(MDefinition *base)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        JS_ASSERT(IsSimdType(base->type()));
+        MSimdSignMask *ins = MSimdSignMask::NewAsmJS(alloc(), base);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     template<typename T>
     MDefinition *constructSimd(MDefinition *x, MDefinition *y, MDefinition *z, MDefinition *w,
                                MIRType type)
@@ -4027,6 +4038,13 @@ CheckDotAccess(FunctionCompiler &f, ParseNode *elem, MDefinition **def, Type *ty
 
     SimdLane lane;
     JSAtomState &names = m.cx()->names();
+
+    if (field == names.signMask) {
+        *type = Type::Int;
+        *def = f.extractSignMask(baseDef);
+        return true;
+    }
+
     if (field == names.x)
         lane = LaneX;
     else if (field == names.y)
@@ -4036,7 +4054,7 @@ CheckDotAccess(FunctionCompiler &f, ParseNode *elem, MDefinition **def, Type *ty
     else if (field == names.w)
         lane = LaneW;
     else
-        return f.fail(base, "dot access field must be a lane name (x, y, z, w)");
+        return f.fail(base, "dot access field must be a lane name (x, y, z, w) or signMask");
 
     *type = baseType.simdToScalarType();
     *def = f.extractSimdElement(lane, baseDef, type->toMIRType());
