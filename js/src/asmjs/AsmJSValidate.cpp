@@ -6062,7 +6062,7 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     if (!funpc.init(tokenStream))
         return false;
 
-    if (!m.parser().functionArgsAndBodyGeneric(fn, fun, Normal, Statement, &newDirectives))
+    if (!m.parser().functionArgsAndBodyGeneric(fn, fun, Normal, Statement))
         return false;
 
     if (tokenStream.hadError() || directives != newDirectives)
