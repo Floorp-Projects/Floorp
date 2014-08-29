@@ -28,7 +28,6 @@
 #include "nscore.h"                     // for nsresult, nsAString, etc
 
 class AddStyleSheetTxn;
-class ChangeAttributeTxn;
 class DeleteNodeTxn;
 class EditAggregateTxn;
 class IMETextTxn;
@@ -68,6 +67,7 @@ class ErrorResult;
 class TextComposition;
 
 namespace dom {
+class ChangeAttributeTxn;
 class CreateElementTxn;
 class DataTransfer;
 class DeleteTextTxn;
@@ -254,18 +254,19 @@ protected:
   nsresult DetermineCurrentDirection();
   void FireInputEvent();
 
-  /** create a transaction for setting aAttribute to aValue on aElement
+  /** Create a transaction for setting aAttribute to aValue on aElement.  Never
+    * returns null.
     */
-  NS_IMETHOD CreateTxnForSetAttribute(nsIDOMElement *aElement,
-                                      const nsAString &  aAttribute,
-                                      const nsAString &  aValue,
-                                      ChangeAttributeTxn ** aTxn);
+  already_AddRefed<mozilla::dom::ChangeAttributeTxn>
+  CreateTxnForSetAttribute(mozilla::dom::Element& aElement,
+                           nsIAtom& aAttribute, const nsAString& aValue);
 
-  /** create a transaction for removing aAttribute on aElement
+  /** Create a transaction for removing aAttribute on aElement.  Never returns
+    * null.
     */
-  NS_IMETHOD CreateTxnForRemoveAttribute(nsIDOMElement *aElement,
-                                         const nsAString &  aAttribute,
-                                         ChangeAttributeTxn ** aTxn);
+  already_AddRefed<mozilla::dom::ChangeAttributeTxn>
+  CreateTxnForRemoveAttribute(mozilla::dom::Element& aElement,
+                              nsIAtom& aAttribute);
 
   /** create a transaction for creating a new child node of aParent of type aTag.
     */

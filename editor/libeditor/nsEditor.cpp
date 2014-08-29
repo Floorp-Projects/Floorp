@@ -1174,16 +1174,17 @@ nsEditor::CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste)
   return NS_ERROR_NOT_IMPLEMENTED; 
 }
 
-NS_IMETHODIMP 
-nsEditor::SetAttribute(nsIDOMElement *aElement, const nsAString & aAttribute, const nsAString & aValue)
+NS_IMETHODIMP
+nsEditor::SetAttribute(nsIDOMElement* aElement, const nsAString& aAttribute,
+                       const nsAString& aValue)
 {
-  nsRefPtr<ChangeAttributeTxn> txn;
-  nsresult result = CreateTxnForSetAttribute(aElement, aAttribute, aValue,
-                                             getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))  {
-    result = DoTransaction(txn);  
-  }
-  return result;
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIAtom> attribute = do_GetAtom(aAttribute);
+
+  nsRefPtr<ChangeAttributeTxn> txn =
+    CreateTxnForSetAttribute(*element, *attribute, aValue);
+  return DoTransaction(txn);
 }
 
 NS_IMETHODIMP 
@@ -1207,16 +1208,16 @@ nsEditor::GetAttributeValue(nsIDOMElement *aElement,
   return rv;
 }
 
-NS_IMETHODIMP 
-nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsAString& aAttribute)
+NS_IMETHODIMP
+nsEditor::RemoveAttribute(nsIDOMElement* aElement, const nsAString& aAttribute)
 {
-  nsRefPtr<ChangeAttributeTxn> txn;
-  nsresult result = CreateTxnForRemoveAttribute(aElement, aAttribute,
-                                                getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))  {
-    result = DoTransaction(txn);  
-  }
-  return result;
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIAtom> attribute = do_GetAtom(aAttribute);
+
+  nsRefPtr<ChangeAttributeTxn> txn =
+    CreateTxnForRemoveAttribute(*element, *attribute);
+  return DoTransaction(txn);
 }
 
 
@@ -4233,42 +4234,24 @@ nsEditor::DoAfterRedoTransaction()
     IncrementModificationCount(1)));
 }
 
-NS_IMETHODIMP 
-nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement, 
-                                   const nsAString& aAttribute, 
-                                   const nsAString& aValue,
-                                   ChangeAttributeTxn ** aTxn)
+already_AddRefed<ChangeAttributeTxn>
+nsEditor::CreateTxnForSetAttribute(Element& aElement, nsIAtom& aAttribute,
+                                   const nsAString& aValue)
 {
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
+  nsRefPtr<ChangeAttributeTxn> txn =
+    new ChangeAttributeTxn(aElement, aAttribute, &aValue);
 
-  nsRefPtr<ChangeAttributeTxn> txn = new ChangeAttributeTxn();
-
-  nsresult rv = txn->Init(this, aElement, aAttribute, aValue, false);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
-  }
-
-  return rv;
+  return txn.forget();
 }
 
 
-NS_IMETHODIMP 
-nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
-                                      const nsAString& aAttribute,
-                                      ChangeAttributeTxn ** aTxn)
+already_AddRefed<ChangeAttributeTxn>
+nsEditor::CreateTxnForRemoveAttribute(Element& aElement, nsIAtom& aAttribute)
 {
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
+  nsRefPtr<ChangeAttributeTxn> txn =
+    new ChangeAttributeTxn(aElement, aAttribute, nullptr);
 
-  nsRefPtr<ChangeAttributeTxn> txn = new ChangeAttributeTxn();
-
-  nsresult rv = txn->Init(this, aElement, aAttribute, EmptyString(), true);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
-  }
-
-  return rv;
+  return txn.forget();
 }
 
 
