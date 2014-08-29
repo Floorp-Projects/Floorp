@@ -898,13 +898,14 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
         audioOutputStream->mBlockedAudioTime = 0;
         audioOutputStream->mLastTickWritten = 0;
         audioOutputStream->mTrackID = tracks->GetID();
-      }
-    }
 
-    if (!CurrentDriver()->AsAudioCallbackDriver()) {
-      AudioCallbackDriver* driver = new AudioCallbackDriver(this);
-      mMixer.AddCallback(driver);
-      CurrentDriver()->SwitchAtNextIteration(driver);
+        if (!CurrentDriver()->AsAudioCallbackDriver() &&
+            !CurrentDriver()->Switching()) {
+          AudioCallbackDriver* driver = new AudioCallbackDriver(this);
+          mMixer.AddCallback(driver);
+          CurrentDriver()->SwitchAtNextIteration(driver);
+        }
+      }
     }
   }
 
