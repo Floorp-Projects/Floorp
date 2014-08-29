@@ -1040,17 +1040,17 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority,
                                                  ProcessCPUPriority aCPUPriority,
                                                  uint32_t aBackgroundLRU)
 {
-  if (aPriority == PROCESS_PRIORITY_UNKNOWN) {
-    MOZ_ASSERT(false);
-    return;
-  }
-
 #ifdef MOZ_NUWA_PROCESS
   // Do not attempt to change the priority of the Nuwa process
   if (mContentParent->IsNuwaProcess()) {
     return;
   }
 #endif
+
+  if (aPriority == PROCESS_PRIORITY_UNKNOWN) {
+    MOZ_ASSERT(false);
+    return;
+  }
 
   if (aBackgroundLRU > 0 &&
       aPriority == PROCESS_PRIORITY_BACKGROUND &&
