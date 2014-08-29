@@ -20,6 +20,7 @@ class nsRange;
 namespace mozilla {
 namespace dom {
 class Selection;
+class Text;
 }
 }
 
@@ -108,9 +109,8 @@ class nsRangeUpdater
                              nsIDOMNode *aParent, 
                              int32_t aOffset,
                              int32_t aOldLeftNodeLength);
-    nsresult SelAdjInsertText(nsIContent* aTextNode, int32_t aOffset,
+    void     SelAdjInsertText(mozilla::dom::Text& aTextNode, int32_t aOffset,
                               const nsAString &aString);
-    nsresult SelAdjInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString);
     nsresult SelAdjDeleteText(nsIContent* aTextNode, int32_t aOffset,
                               int32_t aLength);
     nsresult SelAdjDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength);
