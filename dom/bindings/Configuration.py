@@ -551,12 +551,7 @@ class Descriptor(DescriptorProvider):
                  self.interface.isExposedOnlyInSomeWorkers()))
 
     def isExposedConditionally(self):
-        return (self.interface.getExtendedAttribute("Pref") or
-                self.interface.getExtendedAttribute("ChromeOnly") or
-                self.interface.getExtendedAttribute("Func") or
-                self.interface.getExtendedAttribute("AvailableIn") or
-                self.interface.getExtendedAttribute("CheckPermissions") or
-                self.hasThreadChecks())
+        return self.interface.isExposedConditionally() or self.hasThreadChecks()
 
     def needsXrayResolveHooks(self):
         """
