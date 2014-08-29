@@ -97,6 +97,21 @@ add_task(function* testImport(){
   checkOldStore();
 });
 
+add_task(function* testTruncation() {
+  let dos = Array(8192).join("~");
+  // Long id names should trigger an exception
+  Assert.throws(() => XULStore.setValue(browserURI, dos, "foo", "foo"), /NS_ERROR_ILLEGAL_VALUE/);
+
+  // Long attr names should trigger an exception
+  Assert.throws(() => XULStore.setValue(browserURI, "foo", dos, "foo"), /NS_ERROR_ILLEGAL_VALUE/);
+
+  // Long values should be truncated
+  XULStore.setValue(browserURI, "dos", "dos", dos);
+  dos =XULStore.getValue(browserURI, "dos", "dos");
+  do_check_true(dos.length == 4096)
+  XULStore.removeValue(browserURI, "dos", "dos")
+});
+
 add_task(function* testGetValue() {
   // Get non-existing property
   checkValue(browserURI, "side-window", "height", "");
