@@ -215,11 +215,13 @@ assertEq(a.hey, 3);
 assertThrowsValue(() => { a.hey = 5; }, 2);
 
 // Symbols with duplicate get and set.
-expr = Symbol("hey");
-a = {get [expr]() { return 3; }, set[expr](v) { throw 2; },
-     set [expr] (w) { throw 4; }, get[expr](){return 5; }};
-assertEq(a[expr], 5);
-assertThrowsValue(() => { a[expr] = 7; }, 4);
+if (typeof Symbol === "function") {
+    expr = Symbol("hey");
+    a = {get [expr]() { return 3; }, set[expr](v) { throw 2; },
+         set [expr] (w) { throw 4; }, get[expr](){return 5; }};
+    assertEq(a[expr], 5);
+    assertThrowsValue(() => { a[expr] = 7; }, 4);
+}
 
 // expressions with side effects are called in the right order
 log = "";
