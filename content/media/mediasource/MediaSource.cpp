@@ -131,6 +131,9 @@ MediaSource::~MediaSource()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("MediaSource(%p)::~MediaSource()", this);
+  if (mDecoder) {
+    mDecoder->DetachMediaSource();
+  }
 }
 
 SourceBufferList*
@@ -210,7 +213,7 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
-  nsRefPtr<SourceBuffer> sourceBuffer = SourceBuffer::Create(this, NS_ConvertUTF16toUTF8(mimeType));
+  nsRefPtr<SourceBuffer> sourceBuffer = new SourceBuffer(this, NS_ConvertUTF16toUTF8(mimeType));
   if (!sourceBuffer) {
     aRv.Throw(NS_ERROR_FAILURE); // XXX need a better error here
     return nullptr;
@@ -311,6 +314,7 @@ MediaSource::Attach(MediaSourceDecoder* aDecoder)
   if (mReadyState != MediaSourceReadyState::Closed) {
     return false;
   }
+  MOZ_ASSERT(!mDecoder);
   mDecoder = aDecoder;
   mDecoder->AttachMediaSource(this);
   SetReadyState(MediaSourceReadyState::Open);
@@ -322,14 +326,22 @@ MediaSource::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("MediaSource(%p)::Detach() mDecoder=%p owner=%p",
-            this, mDecoder.get(), mDecoder->GetOwner());
-  MOZ_ASSERT(mDecoder);
+            this, mDecoder.get(), mDecoder ? mDecoder->GetOwner() : nullptr);
+  if (!mDecoder) {
+    MOZ_ASSERT(mReadyState == MediaSourceReadyState::Closed);
+    MOZ_ASSERT(mActiveSourceBuffers->IsEmpty() && mSourceBuffers->IsEmpty());
+    return;
+  }
   mDecoder->DetachMediaSource();
   mDecoder = nullptr;
-  mDuration = UnspecifiedNaN<double>();
-  mActiveSourceBuffers->Clear();
-  mSourceBuffers->Clear();
   SetReadyState(MediaSourceReadyState::Closed);
+  mDuration = UnspecifiedNaN<double>();
+  if (mActiveSourceBuffers) {
+    mActiveSourceBuffers->Clear();
+  }
+  if (mSourceBuffers) {
+    mSourceBuffers->Clear();
+  }
 }
 
 void

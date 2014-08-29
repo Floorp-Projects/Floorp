@@ -98,7 +98,7 @@ struct MathGlyphConstruction {
 };
 
 struct GlyphPartRecord {
-  GlyphID	              mGlyph;
+  GlyphID                    mGlyph;
   mozilla::AutoSwap_PRUint16 mStartConnectorLength;
   mozilla::AutoSwap_PRUint16 mEndConnectorLength;
   mozilla::AutoSwap_PRUint16 mFullAdvance;

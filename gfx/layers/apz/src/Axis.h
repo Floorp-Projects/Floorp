@@ -88,8 +88,8 @@ public:
    * were changed.
    */
   bool AdjustDisplacement(CSSCoord aDisplacement,
-                          CSSCoord& aDisplacementOut,
-                          CSSCoord& aOverscrollAmountOut);
+                          /* CSSCoord */ float& aDisplacementOut,
+                          /* CSSCoord */ float& aOverscrollAmountOut);
 
   /**
    * Overscrolls this axis by the requested amount in the requested direction.

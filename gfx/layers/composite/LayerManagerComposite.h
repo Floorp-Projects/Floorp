@@ -239,6 +239,19 @@ public:
 
   TextRenderer* GetTextRenderer() { return mTextRenderer; }
 
+  /**
+   * Add an on frame warning.
+   * @param severity ranges from 0 to 1. It's used to compute the warning color.
+   */
+  void VisualFrameWarning(float severity) {
+    mozilla::TimeStamp now = TimeStamp::Now();
+    if (severity > mWarningLevel ||
+        mWarnTime + TimeDuration::FromMilliseconds(1500) < now) {
+      mWarnTime = now;
+      mWarningLevel = severity;
+    }
+  }
+
 private:
   /** Region we're clipping our current drawing to. */
   nsIntRegion mClippingRegion;
@@ -277,6 +290,8 @@ private:
                                bool aInvertEffect,
                                float aContrastEffect);
 
+  float mWarningLevel;
+  mozilla::TimeStamp mWarnTime;
   RefPtr<Compositor> mCompositor;
   UniquePtr<LayerProperties> mClonedLayerTreeProperties;
 

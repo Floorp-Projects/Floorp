@@ -84,9 +84,11 @@ let WebProgressListener = {
     json.location = aLocationURI ? aLocationURI.spec : "";
     json.flags = aFlags;
 
+    // These properties can change even for a sub-frame navigation.
+    json.canGoBack = docShell.canGoBack;
+    json.canGoForward = docShell.canGoForward;
+
     if (json.isTopLevel) {
-      json.canGoBack = docShell.canGoBack;
-      json.canGoForward = docShell.canGoForward;
       json.documentURI = content.document.documentURIObject.spec;
       json.charset = content.document.characterSet;
       json.mayEnableCharacterEncodingMenu = docShell.mayEnableCharacterEncodingMenu;
@@ -171,8 +173,9 @@ let WebNavigation =  {
   },
 
   goBack: function() {
-    if (this._webNavigation.canGoBack)
+    if (this._webNavigation.canGoBack) {
       this._webNavigation.goBack();
+    }
   },
 
   goForward: function() {

@@ -240,10 +240,10 @@ SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::Noise2(Point aVec, c
   uint8_t i = mLatticeSelector[b0.x & sBM];
   uint8_t j = mLatticeSelector[b1.x & sBM];
 
-  const f32x4_t* qua = mGradient[(i + b0.y.value) & sBM];
-  const f32x4_t* qub = mGradient[(i + b1.y.value) & sBM];
-  const f32x4_t* qva = mGradient[(j + b0.y.value) & sBM];
-  const f32x4_t* qvb = mGradient[(j + b1.y.value) & sBM];
+  const f32x4_t* qua = mGradient[(i + b0.y) & sBM];
+  const f32x4_t* qub = mGradient[(i + b1.y) & sBM];
+  const f32x4_t* qva = mGradient[(j + b0.y) & sBM];
+  const f32x4_t* qvb = mGradient[(j + b1.y) & sBM];
 
   return BiMix(simd::WSumF32(qua[0], qua[1], r.x, r.y),
                simd::WSumF32(qva[0], qva[1], r.x - 1.f, r.y),

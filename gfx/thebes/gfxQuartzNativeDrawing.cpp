@@ -7,19 +7,17 @@
 #include "gfxQuartzSurface.h"
 #include "gfxPlatform.h"
 #include "cairo-quartz.h"
+#include "gfx2DGlue.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla;
 
 gfxQuartzNativeDrawing::gfxQuartzNativeDrawing(gfxContext* ctx,
-                                               const gfxRect& nativeRect,
-                                               gfxFloat aBackingScale)
+                                               const gfxRect& nativeRect)
   : mContext(ctx)
-  , mNativeRect(nativeRect)
-  , mBackingScale(aBackingScale)
+  , mNativeRect(ToRect(nativeRect))
   , mCGContext(nullptr)
 {
-  mNativeRect.RoundOut();
 }
 
 CGContextRef
@@ -28,19 +26,26 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
   NS_ASSERTION(!mCGContext, "BeginNativeDrawing called when drawing already in progress");
 
   DrawTarget *dt = mContext->GetDrawTarget();
-  if (dt->GetBackendType() != BackendType::COREGRAPHICS || dt->IsDualDrawTarget()) {
-    IntSize backingSize(NSToIntFloor(mNativeRect.width * mBackingScale),
-                        NSToIntFloor(mNativeRect.height * mBackingScale));
+  if (dt->GetBackendType() != BackendType::COREGRAPHICS ||
+      dt->IsDualDrawTarget() ||
+      dt->IsTiledDrawTarget()) {
+    Matrix transform = dt->GetTransform();
+    mNativeRect = transform.TransformBounds(mNativeRect);
+    mNativeRect.RoundOut();
 
-    if (backingSize.IsEmpty()) {
+    // Quartz theme drawing often adjusts drawing rects, so make
+    // sure our surface is big enough for that.
+    mNativeRect.Inflate(5);
+
+    if (mNativeRect.IsEmpty()) {
       return nullptr;
     }
 
-    mDrawTarget = Factory::CreateDrawTarget(BackendType::COREGRAPHICS, backingSize, SurfaceFormat::B8G8R8A8);
+    mDrawTarget = Factory::CreateDrawTarget(BackendType::COREGRAPHICS,
+                                            IntSize(mNativeRect.width, mNativeRect.height),
+                                            SurfaceFormat::B8G8R8A8);
 
-    Matrix transform;
-    transform.Scale(mBackingScale, mBackingScale);
-    transform.Translate(-mNativeRect.x, -mNativeRect.y);
+    transform.PostTranslate(-mNativeRect.x, -mNativeRect.y);
 
     mDrawTarget->SetTransform(transform);
     dt = mDrawTarget;
@@ -61,19 +66,12 @@ gfxQuartzNativeDrawing::EndNativeDrawing()
     DrawTarget *dest = mContext->GetDrawTarget();
     RefPtr<SourceSurface> source = mDrawTarget->Snapshot();
 
-    IntSize backingSize(NSToIntFloor(mNativeRect.width * mBackingScale),
-                        NSToIntFloor(mNativeRect.height * mBackingScale));
-
     Matrix oldTransform = dest->GetTransform();
-    Matrix newTransform = oldTransform;
-    newTransform.Translate(mNativeRect.x, mNativeRect.y);
-    newTransform.Scale(1.0f / mBackingScale, 1.0f / mBackingScale);
-
-    dest->SetTransform(newTransform);
+    dest->SetTransform(Matrix());
 
     dest->DrawSurface(source,
-                      gfx::Rect(0, 0, backingSize.width, backingSize.height),
-                      gfx::Rect(0, 0, backingSize.width, backingSize.height));
+                      mNativeRect,
+                      gfx::Rect(0, 0, mNativeRect.width, mNativeRect.height));
 
 
     dest->SetTransform(oldTransform);
