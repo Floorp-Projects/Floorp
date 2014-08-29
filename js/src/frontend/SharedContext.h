@@ -245,8 +245,8 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool            inWith:1;               /* some enclosing scope is a with-statement */
     bool            inGenexpLambda:1;       /* lambda from generator expression */
     bool            hasDestructuringArgs:1; /* arguments list contains destructuring expression */
-    bool            useAsm:1;               /* function contains "use asm" directive */
-    bool            insideUseAsm:1;         /* nested function of function of "use asm" directive */
+    bool            useAsm:1;               /* see useAsmOrInsideUseAsm */
+    bool            insideUseAsm:1;         /* see useAsmOrInsideUseAsm */
 
     // Fields for use in heuristics.
     bool            usesArguments:1;  /* contains a free use of 'arguments' */
@@ -292,8 +292,11 @@ class FunctionBox : public ObjectBox, public SharedContext
         return length != function()->nargs() - function()->hasRest();
     }
 
-    // Return whether this function has either specified "use asm" or is
-    // (transitively) nested inside a function that has.
+    // Return whether this or an enclosing function is being parsed and
+    // validated as asm.js. Note: if asm.js validation fails, this will be false
+    // while the function is being reparsed. This flag can be used to disable
+    // certain parsing features that are necessary in general, but unnecessary
+    // for validated asm.js.
     bool useAsmOrInsideUseAsm() const {
         return useAsm || insideUseAsm;
     }
