@@ -1305,9 +1305,9 @@ skip-if(B2G) == 478811-1.html 478811-1-ref.html
 == 480880-2a.html about:blank
 == 480880-2b.html about:blank
 == 480880-2c.html about:blank
-skip-if(B2G) fails-if(Android) == 481024-1a.html 481024-1-ref.html
-skip-if(B2G) fails-if(Android) == 481024-1b.html 481024-1-ref.html
-skip-if(B2G) fails-if(Android) == 481024-1c.html 481024-1-ref.html
+skip-if(B2G) == 481024-1a.html 481024-1-ref.html
+skip-if(B2G) == 481024-1b.html 481024-1-ref.html
+skip-if(B2G) == 481024-1c.html 481024-1-ref.html
 == 481024-1d.html 481024-1-ref.html
 == 481024-1e.html 481024-1-ref.html
 != 481948-1.html 481948-1-ref.html
@@ -1501,7 +1501,7 @@ skip-if(B2G) fails-if(Android) == 557087-2.html 557087-ref.html
 == 557736-1.html 557736-1-ref.html
 skip-if(B2G&&browserIsRemote) != 558011-1.xul 558011-1-ref.xul # bug 974780
 == 559284-1.html 559284-1-ref.html
-skip-if(B2G) fails-if(Android) == 560455-1.xul 560455-1-ref.xul
+skip-if(B2G) == 560455-1.xul 560455-1-ref.xul
 == 561981-1.html 561981-1-ref.html
 == 561981-2.html 561981-2-ref.html
 == 561981-3.html 561981-3-ref.html
