@@ -13,6 +13,7 @@
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/gfx/Logging.h"        // for Log
 #include "gfxColor.h"
+#include "nsString.h"
 
 namespace IPC {
 template <typename T> struct ParamTraits;
@@ -99,7 +100,9 @@ public:
     , mPresShellId(-1)
     , mViewport(0, 0, 0, 0)
     , mBackgroundColor(0, 0, 0, 0)
-  {}
+  {
+    mContentDescription[0] = '\0';
+  }
 
   // Default copy ctor and operator= are fine
 
@@ -125,7 +128,8 @@ public:
            mScrollOffset == aOther.mScrollOffset &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
            mUpdateScrollOffset == aOther.mUpdateScrollOffset &&
-           mBackgroundColor == aOther.mBackgroundColor;
+           mBackgroundColor == aOther.mBackgroundColor &&
+           !strcmp(mContentDescription, aOther.mContentDescription);
   }
   bool operator!=(const FrameMetrics& aOther) const
   {
@@ -480,6 +484,18 @@ public:
     mBackgroundColor = aBackgroundColor;
   }
 
+  nsCString GetContentDescription() const
+  {
+    return nsCString(mContentDescription);
+  }
+
+  void SetContentDescription(const nsCString& aContentDescription)
+  {
+    strncpy(mContentDescription, aContentDescription.get(),
+            sizeof(mContentDescription));
+    mContentDescription[sizeof(mContentDescription) - 1] = 0;
+  }
+
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
@@ -551,6 +567,11 @@ private:
 
   // The background color to use when overscrolling.
   gfxRGBA mBackgroundColor;
+
+  // A description of the content element corresponding to this frame.
+  // This is empty unless this is a scrollable ContainerLayer and the
+  // apz.printtree pref is turned on.
+  char mContentDescription[20];
 };
 
 /**
