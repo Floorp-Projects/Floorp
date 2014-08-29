@@ -48,12 +48,12 @@ public class IgnoreSpec extends CookieSpecBase {
         return 0;
     }
 
-    public List<Cookie> parse(Header header, CookieOrigin origin)
+    public List<Cookie> parse(final Header header, final CookieOrigin origin)
             throws MalformedCookieException {
         return Collections.emptyList();
     }
 
-    public List<Header> formatCookies(List<Cookie> cookies) {
+    public List<Header> formatCookies(final List<Cookie> cookies) {
         return Collections.emptyList();
     }
 

@@ -30,19 +30,23 @@ package ch.boye.httpclientandroidlib.impl.cookie;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.FormattedHeader;
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HeaderElement;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import ch.boye.httpclientandroidlib.client.utils.DateUtils;
 import ch.boye.httpclientandroidlib.cookie.ClientCookie;
 import ch.boye.httpclientandroidlib.cookie.Cookie;
 import ch.boye.httpclientandroidlib.cookie.CookieOrigin;
 import ch.boye.httpclientandroidlib.cookie.MalformedCookieException;
 import ch.boye.httpclientandroidlib.cookie.SM;
+import ch.boye.httpclientandroidlib.message.BasicHeaderElement;
+import ch.boye.httpclientandroidlib.message.BasicHeaderValueFormatter;
 import ch.boye.httpclientandroidlib.message.BufferedHeader;
 import ch.boye.httpclientandroidlib.message.ParserCursor;
+import ch.boye.httpclientandroidlib.util.Args;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
+
 
 /**
  * Cookie specification that strives to closely mimic (mis)behavior of
@@ -55,23 +59,6 @@ import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 @NotThreadSafe // superclass is @NotThreadSafe
 public class BrowserCompatSpec extends CookieSpecBase {
 
-    @Deprecated
-    protected static final String[] DATE_PATTERNS = new String[] {
-            DateUtils.PATTERN_RFC1123,
-            DateUtils.PATTERN_RFC1036,
-            DateUtils.PATTERN_ASCTIME,
-            "EEE, dd-MMM-yyyy HH:mm:ss z",
-            "EEE, dd-MMM-yyyy HH-mm-ss z",
-            "EEE, dd MMM yy HH:mm:ss z",
-            "EEE dd-MMM-yyyy HH:mm:ss z",
-            "EEE dd MMM yyyy HH:mm:ss z",
-            "EEE dd-MMM-yyyy HH-mm-ss z",
-            "EEE dd-MMM-yy HH:mm:ss z",
-            "EEE dd MMM yy HH:mm:ss z",
-            "EEE,dd-MMM-yy HH:mm:ss z",
-            "EEE,dd-MMM-yyyy HH:mm:ss z",
-            "EEE, dd-MM-yyyy HH:mm:ss z",
-        };
 
     private static final String[] DEFAULT_DATE_PATTERNS = new String[] {
         DateUtils.PATTERN_RFC1123,
@@ -93,36 +80,54 @@ public class BrowserCompatSpec extends CookieSpecBase {
     private final String[] datepatterns;
 
     /** Default constructor */
-    public BrowserCompatSpec(final String[] datepatterns) {
+    public BrowserCompatSpec(final String[] datepatterns, final BrowserCompatSpecFactory.SecurityLevel securityLevel) {
         super();
         if (datepatterns != null) {
             this.datepatterns = datepatterns.clone();
         } else {
             this.datepatterns = DEFAULT_DATE_PATTERNS;
         }
-        registerAttribHandler(ClientCookie.PATH_ATTR, new BasicPathHandler());
+        switch (securityLevel) {
+            case SECURITYLEVEL_DEFAULT:
+                registerAttribHandler(ClientCookie.PATH_ATTR, new BasicPathHandler());
+                break;
+            case SECURITYLEVEL_IE_MEDIUM:
+                registerAttribHandler(ClientCookie.PATH_ATTR, new BasicPathHandler() {
+                        @Override
+                        public void validate(final Cookie cookie, final CookieOrigin origin) throws MalformedCookieException {
+                            // No validation
+                        }
+                    }
+                );
+                break;
+            default:
+                throw new RuntimeException("Unknown security level");
+        }
+
         registerAttribHandler(ClientCookie.DOMAIN_ATTR, new BasicDomainHandler());
         registerAttribHandler(ClientCookie.MAX_AGE_ATTR, new BasicMaxAgeHandler());
         registerAttribHandler(ClientCookie.SECURE_ATTR, new BasicSecureHandler());
         registerAttribHandler(ClientCookie.COMMENT_ATTR, new BasicCommentHandler());
         registerAttribHandler(ClientCookie.EXPIRES_ATTR, new BasicExpiresHandler(
                 this.datepatterns));
+        registerAttribHandler(ClientCookie.VERSION_ATTR, new BrowserCompatVersionAttributeHandler());
+    }
+
+    /** Default constructor */
+    public BrowserCompatSpec(final String[] datepatterns) {
+        this(datepatterns, BrowserCompatSpecFactory.SecurityLevel.SECURITYLEVEL_DEFAULT);
     }
 
     /** Default constructor */
     public BrowserCompatSpec() {
-        this(null);
+        this(null, BrowserCompatSpecFactory.SecurityLevel.SECURITYLEVEL_DEFAULT);
     }
 
     public List<Cookie> parse(final Header header, final CookieOrigin origin)
             throws MalformedCookieException {
-        if (header == null) {
-            throw new IllegalArgumentException("Header may not be null");
-        }
-        if (origin == null) {
-            throw new IllegalArgumentException("Cookie origin may not be null");
-        }
-        String headername = header.getName();
+        Args.notNull(header, "Header");
+        Args.notNull(origin, "Cookie origin");
+        final String headername = header.getName();
         if (!headername.equalsIgnoreCase(SM.SET_COOKIE)) {
             throw new MalformedCookieException("Unrecognized cookie header '"
                     + header.toString() + "'");
@@ -130,7 +135,7 @@ public class BrowserCompatSpec extends CookieSpecBase {
         HeaderElement[] helems = header.getElements();
         boolean versioned = false;
         boolean netscape = false;
-        for (HeaderElement helem: helems) {
+        for (final HeaderElement helem: helems) {
             if (helem.getParameterByName("version") != null) {
                 versioned = true;
             }
@@ -141,16 +146,16 @@ public class BrowserCompatSpec extends CookieSpecBase {
         if (netscape || !versioned) {
             // Need to parse the header again, because Netscape style cookies do not correctly
             // support multiple header elements (comma cannot be treated as an element separator)
-            NetscapeDraftHeaderParser parser = NetscapeDraftHeaderParser.DEFAULT;
-            CharArrayBuffer buffer;
-            ParserCursor cursor;
+            final NetscapeDraftHeaderParser parser = NetscapeDraftHeaderParser.DEFAULT;
+            final CharArrayBuffer buffer;
+            final ParserCursor cursor;
             if (header instanceof FormattedHeader) {
                 buffer = ((FormattedHeader) header).getBuffer();
                 cursor = new ParserCursor(
                         ((FormattedHeader) header).getValuePos(),
                         buffer.length());
             } else {
-                String s = header.getValue();
+                final String s = header.getValue();
                 if (s == null) {
                     throw new MalformedCookieException("Header value is null");
                 }
@@ -163,29 +168,37 @@ public class BrowserCompatSpec extends CookieSpecBase {
         return parse(helems, origin);
     }
 
+    private static boolean isQuoteEnclosed(final String s) {
+        return s != null && s.startsWith("\"") && s.endsWith("\"");
+    }
+
     public List<Header> formatCookies(final List<Cookie> cookies) {
-        if (cookies == null) {
-            throw new IllegalArgumentException("List of cookies may not be null");
-        }
-        if (cookies.isEmpty()) {
-            throw new IllegalArgumentException("List of cookies may not be empty");
-        }
-        CharArrayBuffer buffer = new CharArrayBuffer(20 * cookies.size());
+        Args.notEmpty(cookies, "List of cookies");
+        final CharArrayBuffer buffer = new CharArrayBuffer(20 * cookies.size());
         buffer.append(SM.COOKIE);
         buffer.append(": ");
         for (int i = 0; i < cookies.size(); i++) {
-            Cookie cookie = cookies.get(i);
+            final Cookie cookie = cookies.get(i);
             if (i > 0) {
                 buffer.append("; ");
             }
-            buffer.append(cookie.getName());
-            buffer.append("=");
-            String s = cookie.getValue();
-            if (s != null) {
-                buffer.append(s);
+            final String cookieName = cookie.getName();
+            final String cookieValue = cookie.getValue();
+            if (cookie.getVersion() > 0 && !isQuoteEnclosed(cookieValue)) {
+                BasicHeaderValueFormatter.INSTANCE.formatHeaderElement(
+                        buffer,
+                        new BasicHeaderElement(cookieName, cookieValue),
+                        false);
+            } else {
+                // Netscape style cookies do not support quoted values
+                buffer.append(cookieName);
+                buffer.append("=");
+                if (cookieValue != null) {
+                    buffer.append(cookieValue);
+                }
             }
         }
-        List<Header> headers = new ArrayList<Header>(1);
+        final List<Header> headers = new ArrayList<Header>(1);
         headers.add(new BufferedHeader(buffer));
         return headers;
     }

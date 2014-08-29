@@ -29,9 +29,8 @@ package ch.boye.httpclientandroidlib.conn.params;
 
 import java.net.InetAddress;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.HttpHost;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.conn.routing.HttpRoute;
 import ch.boye.httpclientandroidlib.params.HttpAbstractParamBean;
 import ch.boye.httpclientandroidlib.params.HttpParams;
@@ -42,7 +41,10 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
  * using Java Beans conventions.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link ch.boye.httpclientandroidlib.client.config.RequestConfig}.
  */
+@Deprecated
 @NotThreadSafe
 public class ConnRouteParamBean extends HttpAbstractParamBean {
 

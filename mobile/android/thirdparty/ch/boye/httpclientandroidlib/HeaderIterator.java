@@ -34,7 +34,7 @@ import java.util.Iterator;
  *
  * @since 4.0
  */
-public interface HeaderIterator extends Iterator {
+public interface HeaderIterator extends Iterator<Object> {
 
     /**
      * Indicates whether there is another header in this iteration.
