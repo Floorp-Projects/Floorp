@@ -326,4 +326,3 @@ public class PoolingClientConnectionManager implements ClientConnectionManager, 
     }
 
 }
-
