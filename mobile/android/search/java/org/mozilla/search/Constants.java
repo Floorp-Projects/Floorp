@@ -26,5 +26,5 @@ public class Constants {
 
     // The default search engine for new users. This should match one of
     // the SearchEngineFactory.Engine enum values.
-    public static final String DEFAULT_SEARCH_ENGINE = "YAHOO";
+    public static final String DEFAULT_SEARCH_ENGINE = "yahoo";
 }
