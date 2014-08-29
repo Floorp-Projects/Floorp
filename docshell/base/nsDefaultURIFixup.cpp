@@ -142,10 +142,11 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI, uint32_t aFixup
     nsresult rv;
 
     nsAutoCString uriString(aStringURI);
-    uriString.Trim(" ");  // Cleanup the empty spaces that might be on each end.
 
     // Eliminate embedded newlines, which single-line text fields now allow:
     uriString.StripChars("\r\n");
+    // Cleanup the empty spaces that might be on each end:
+    uriString.Trim(" ");
 
     NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
@@ -950,7 +951,7 @@ void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
          (spaceLoc < qMarkLoc || quoteLoc < qMarkLoc)) ||
         qMarkLoc == 0)
     {
-        rv = KeywordToURI(aURIString, aPostData,
+        rv = KeywordToURI(aFixupInfo->mOriginalInput, aPostData,
                           getter_AddRefs(aFixupInfo->mPreferredURI));
         if (NS_SUCCEEDED(rv) && aFixupInfo->mPreferredURI)
         {
