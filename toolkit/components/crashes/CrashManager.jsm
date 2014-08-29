@@ -707,19 +707,26 @@ CrashStore.prototype = Object.freeze({
   HIGH_WATER_DAILY_THRESHOLD: 100,
 
   /**
+   * Reset all data.
+   */
+  reset() {
+    this._data = {
+      v: 1,
+      crashes: new Map(),
+      corruptDate: null,
+    };
+    this._countsByDay = new Map();
+  },
+
+  /**
    * Load data from disk.
    *
    * @return Promise
    */
   load: function () {
     return Task.spawn(function* () {
-      // Loading replaces data. So reset data structures.
-      this._data = {
-        v: 1,
-        crashes: new Map(),
-        corruptDate: null,
-      };
-      this._countsByDay = new Map();
+      // Loading replaces data.
+      this.reset();
 
       try {
         let decoder = new TextDecoder();
