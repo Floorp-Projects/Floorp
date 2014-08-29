@@ -13,9 +13,9 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsEditProperty.h"
 #include "nsEditorUtils.h"
 #include "nsError.h"
+#include "nsGkAtoms.h"
 #include "nsHTMLCSSUtils.h"
 #include "nsHTMLEditUtils.h"
 #include "nsHTMLEditor.h"
@@ -249,9 +249,9 @@ nsHTMLEditor::SetAllResizersPosition()
   nsAutoString value;
   float resizerWidth, resizerHeight;
   nsCOMPtr<nsIAtom> dummyUnit;
-  mHTMLCSSUtils->GetComputedProperty(mTopLeftHandle, nsEditProperty::cssWidth, value);
+  mHTMLCSSUtils->GetComputedProperty(mTopLeftHandle, nsGkAtoms::width, value);
   mHTMLCSSUtils->ParseLength(value, &resizerWidth, getter_AddRefs(dummyUnit));
-  mHTMLCSSUtils->GetComputedProperty(mTopLeftHandle, nsEditProperty::cssHeight, value);
+  mHTMLCSSUtils->GetComputedProperty(mTopLeftHandle, nsGkAtoms::height, value);
   mHTMLCSSUtils->ParseLength(value, &resizerHeight, getter_AddRefs(dummyUnit));
 
   int32_t rw  = (int32_t)((resizerWidth + 1) / 2);
@@ -934,14 +934,10 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
   bool hasAttr = false;
   if (mResizedObjectIsAbsolutelyPositioned) {
     if (setHeight)
-      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject,
-                                          nsEditProperty::cssTop,
-                                          y,
+      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject, nsGkAtoms::top, y,
                                           false);
     if (setWidth)
-      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject,
-                                          nsEditProperty::cssLeft,
-                                          x,
+      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject, nsGkAtoms::left, x,
                                           false);
   }
   if (IsCSSEnabled() || mResizedObjectIsAbsolutelyPositioned) {
@@ -953,15 +949,11 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
       RemoveAttribute(mResizedObject, heightStr);
 
     if (setWidth)
-      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject,
-                                          nsEditProperty::cssWidth,
-                                          width,
-                                          false);
+      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject, nsGkAtoms::width,
+                                          width, false);
     if (setHeight)
-      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject,
-                                    nsEditProperty::cssHeight,
-                                    height,
-                                    false);
+      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject, nsGkAtoms::height,
+                                          height, false);
   }
   else {
     // we use HTML size and remove all equivalent CSS properties
@@ -970,15 +962,11 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
     // triggering an immediate reflow; otherwise, we have problems
     // with asynchronous reflow
     if (setWidth)
-      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject,
-                                          nsEditProperty::cssWidth,
-                                          width,
-                                          false);
+      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject, nsGkAtoms::width,
+                                          width, false);
     if (setHeight)
-      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject,
-                                          nsEditProperty::cssHeight,
-                                          height,
-                                          false);
+      mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject, nsGkAtoms::height,
+                                          height, false);
 
     if (setWidth) {
       nsAutoString w;
@@ -992,15 +980,11 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
     }
 
     if (setWidth)
-      mHTMLCSSUtils->RemoveCSSProperty(mResizedObject,
-                                       nsEditProperty::cssWidth,
-                                       EmptyString(),
-                                       false);
+      mHTMLCSSUtils->RemoveCSSProperty(mResizedObject, nsGkAtoms::width,
+                                       EmptyString(), false);
     if (setHeight)
-      mHTMLCSSUtils->RemoveCSSProperty(mResizedObject,
-                                      nsEditProperty::cssHeight,
-                                      EmptyString(),
-                                      false);
+      mHTMLCSSUtils->RemoveCSSProperty(mResizedObject, nsGkAtoms::height,
+                                       EmptyString(), false);
   }
   // finally notify the listeners if any
   int32_t listenersCount = objectResizeEventListeners.Count();

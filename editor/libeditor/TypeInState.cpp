@@ -10,9 +10,9 @@
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsDebug.h"
-#include "nsEditProperty.h"
 #include "nsEditor.h"
 #include "nsError.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
 #include "nsISupportsBase.h"
@@ -131,11 +131,11 @@ TypeInState::SetProp(nsIAtom* aProp, const nsAString& aAttr,
                      const nsAString& aValue)
 {
   // special case for big/small, these nest
-  if (nsEditProperty::big == aProp) {
+  if (nsGkAtoms::big == aProp) {
     mRelativeFontSize++;
     return;
   }
-  if (nsEditProperty::small == aProp) {
+  if (nsGkAtoms::small == aProp) {
     mRelativeFontSize--;
     return;
   }

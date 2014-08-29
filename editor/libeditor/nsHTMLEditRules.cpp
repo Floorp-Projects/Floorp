@@ -20,7 +20,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
-#include "nsEditProperty.h"
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
 #include "nsError.h"
@@ -190,25 +189,25 @@ nsHTMLEditRules::InitFields()
   mNewBlock = nullptr;
   mRangeItem = new nsRangeStore();
   // populate mCachedStyles
-  mCachedStyles[0] = StyleCache(nsEditProperty::b, EmptyString(), EmptyString());
-  mCachedStyles[1] = StyleCache(nsEditProperty::i, EmptyString(), EmptyString());
-  mCachedStyles[2] = StyleCache(nsEditProperty::u, EmptyString(), EmptyString());
-  mCachedStyles[3] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("face"), EmptyString());
-  mCachedStyles[4] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("size"), EmptyString());
-  mCachedStyles[5] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("color"), EmptyString());
-  mCachedStyles[6] = StyleCache(nsEditProperty::tt, EmptyString(), EmptyString());
-  mCachedStyles[7] = StyleCache(nsEditProperty::em, EmptyString(), EmptyString());
-  mCachedStyles[8] = StyleCache(nsEditProperty::strong, EmptyString(), EmptyString());
-  mCachedStyles[9] = StyleCache(nsEditProperty::dfn, EmptyString(), EmptyString());
-  mCachedStyles[10] = StyleCache(nsEditProperty::code, EmptyString(), EmptyString());
-  mCachedStyles[11] = StyleCache(nsEditProperty::samp, EmptyString(), EmptyString());
-  mCachedStyles[12] = StyleCache(nsEditProperty::var, EmptyString(), EmptyString());
-  mCachedStyles[13] = StyleCache(nsEditProperty::cite, EmptyString(), EmptyString());
-  mCachedStyles[14] = StyleCache(nsEditProperty::abbr, EmptyString(), EmptyString());
-  mCachedStyles[15] = StyleCache(nsEditProperty::acronym, EmptyString(), EmptyString());
-  mCachedStyles[16] = StyleCache(nsEditProperty::cssBackgroundColor, EmptyString(), EmptyString());
-  mCachedStyles[17] = StyleCache(nsEditProperty::sub, EmptyString(), EmptyString());
-  mCachedStyles[18] = StyleCache(nsEditProperty::sup, EmptyString(), EmptyString());
+  mCachedStyles[0] = StyleCache(nsGkAtoms::b, EmptyString(), EmptyString());
+  mCachedStyles[1] = StyleCache(nsGkAtoms::i, EmptyString(), EmptyString());
+  mCachedStyles[2] = StyleCache(nsGkAtoms::u, EmptyString(), EmptyString());
+  mCachedStyles[3] = StyleCache(nsGkAtoms::font, NS_LITERAL_STRING("face"), EmptyString());
+  mCachedStyles[4] = StyleCache(nsGkAtoms::font, NS_LITERAL_STRING("size"), EmptyString());
+  mCachedStyles[5] = StyleCache(nsGkAtoms::font, NS_LITERAL_STRING("color"), EmptyString());
+  mCachedStyles[6] = StyleCache(nsGkAtoms::tt, EmptyString(), EmptyString());
+  mCachedStyles[7] = StyleCache(nsGkAtoms::em, EmptyString(), EmptyString());
+  mCachedStyles[8] = StyleCache(nsGkAtoms::strong, EmptyString(), EmptyString());
+  mCachedStyles[9] = StyleCache(nsGkAtoms::dfn, EmptyString(), EmptyString());
+  mCachedStyles[10] = StyleCache(nsGkAtoms::code, EmptyString(), EmptyString());
+  mCachedStyles[11] = StyleCache(nsGkAtoms::samp, EmptyString(), EmptyString());
+  mCachedStyles[12] = StyleCache(nsGkAtoms::var, EmptyString(), EmptyString());
+  mCachedStyles[13] = StyleCache(nsGkAtoms::cite, EmptyString(), EmptyString());
+  mCachedStyles[14] = StyleCache(nsGkAtoms::abbr, EmptyString(), EmptyString());
+  mCachedStyles[15] = StyleCache(nsGkAtoms::acronym, EmptyString(), EmptyString());
+  mCachedStyles[16] = StyleCache(nsGkAtoms::backgroundColor, EmptyString(), EmptyString());
+  mCachedStyles[17] = StyleCache(nsGkAtoms::sub, EmptyString(), EmptyString());
+  mCachedStyles[18] = StyleCache(nsGkAtoms::sup, EmptyString(), EmptyString());
 }
 
 nsHTMLEditRules::~nsHTMLEditRules()
@@ -827,10 +826,8 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   {
     // if we are in a text node, then that is the node of interest
     nodeToExamine = parent;
-  }
-  else if (nsEditor::NodeIsType(parent, nsEditProperty::html) &&
-           offset == rootOffset)
-  {
+  } else if (nsEditor::NodeIsType(parent, nsGkAtoms::html) &&
+             offset == rootOffset) {
     // if we have selected the body, let's look at the first editable node
     NS_ENSURE_STATE(mHTMLEditor);
     mHTMLEditor->GetNextNode(parent, offset, true, address_of(nodeToExamine));
@@ -948,9 +945,9 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 
 nsIAtom* MarginPropertyAtomForIndent(nsHTMLCSSUtils* aHTMLCSSUtils, nsIDOMNode* aNode) {
   nsAutoString direction;
-  aHTMLCSSUtils->GetComputedProperty(aNode, nsEditProperty::cssDirection, direction);
+  aHTMLCSSUtils->GetComputedProperty(aNode, nsGkAtoms::direction, direction);
   return direction.EqualsLiteral("rtl") ?
-    nsEditProperty::cssMarginRight : nsEditProperty::cssMarginLeft;
+    nsGkAtoms::marginRight : nsGkAtoms::marginLeft;
 }
 
 nsresult 
@@ -7024,12 +7021,12 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
       if (bIsEmptyNode) 
       {
         nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aListItem);
-        if (nodeAtom == nsEditProperty::dd || nodeAtom == nsEditProperty::dt)
-        {
+        if (nodeAtom == nsGkAtoms::dd || nodeAtom == nsGkAtoms::dt) {
           int32_t itemOffset;
           nsCOMPtr<nsIDOMNode> list = nsEditor::GetNodeLocation(aListItem, &itemOffset);
 
-          nsAutoString listTag((nodeAtom == nsEditProperty::dt) ? NS_LITERAL_STRING("dd") : NS_LITERAL_STRING("dt"));
+          nsAutoString listTag(nodeAtom == nsGkAtoms::dt
+            ? NS_LITERAL_STRING("dd") : NS_LITERAL_STRING("dt"));
           nsCOMPtr<nsIDOMNode> newListItem;
           NS_ENSURE_STATE(mHTMLEditor);
           res = mHTMLEditor->CreateNode(listTag, list, itemOffset+1, getter_AddRefs(newListItem));
@@ -8890,8 +8887,7 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignTyp
     res = mHTMLEditor->NodeIsBlockStatic(child, &isBlock);
     NS_ENSURE_SUCCESS(res, res);
 
-    if (nsEditor::NodeIsType(child, nsEditProperty::center))
-    {
+    if (nsEditor::NodeIsType(child, nsGkAtoms::center)) {
       // the current node is a CENTER element
       // first remove children's alignment
       res = RemoveAlignment(child, aAlignType, true);
@@ -8931,7 +8927,8 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignTyp
         {
           nsAutoString dummyCssValue;
           NS_ENSURE_STATE(mHTMLEditor);
-          res = mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child, nsEditProperty::cssTextAlign, dummyCssValue);
+          res = mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child,
+            nsGkAtoms::textAlign, dummyCssValue);
         }
         NS_ENSURE_SUCCESS(res, res);
       }
@@ -9097,24 +9094,25 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_
     mHTMLEditor->mHTMLCSSUtils->GetDefaultLengthUnit(defaultLengthUnit);
     unit = do_GetAtom(defaultLengthUnit);
   }
-  if      (nsEditProperty::cssInUnit == unit)
+  if        (nsGkAtoms::in == unit) {
             f += NS_EDITOR_INDENT_INCREMENT_IN * aRelativeChange;
-  else if (nsEditProperty::cssCmUnit == unit)
+  } else if (nsGkAtoms::cm == unit) {
             f += NS_EDITOR_INDENT_INCREMENT_CM * aRelativeChange;
-  else if (nsEditProperty::cssMmUnit == unit)
+  } else if (nsGkAtoms::mm == unit) {
             f += NS_EDITOR_INDENT_INCREMENT_MM * aRelativeChange;
-  else if (nsEditProperty::cssPtUnit == unit)
+  } else if (nsGkAtoms::pt == unit) {
             f += NS_EDITOR_INDENT_INCREMENT_PT * aRelativeChange;
-  else if (nsEditProperty::cssPcUnit == unit)
+  } else if (nsGkAtoms::pc == unit) {
             f += NS_EDITOR_INDENT_INCREMENT_PC * aRelativeChange;
-  else if (nsEditProperty::cssEmUnit == unit)
+  } else if (nsGkAtoms::em == unit) {
             f += NS_EDITOR_INDENT_INCREMENT_EM * aRelativeChange;
-  else if (nsEditProperty::cssExUnit == unit)
+  } else if (nsGkAtoms::ex == unit) {
             f += NS_EDITOR_INDENT_INCREMENT_EX * aRelativeChange;
-  else if (nsEditProperty::cssPxUnit == unit)
+  } else if (nsGkAtoms::px == unit) {
             f += NS_EDITOR_INDENT_INCREMENT_PX * aRelativeChange;
-  else if (nsEditProperty::cssPercentUnit == unit)
+  } else if (nsGkAtoms::percentage == unit) {
             f += NS_EDITOR_INDENT_INCREMENT_PERCENT * aRelativeChange;    
+  }
 
   if (0 < f) {
     nsAutoString newValue;
