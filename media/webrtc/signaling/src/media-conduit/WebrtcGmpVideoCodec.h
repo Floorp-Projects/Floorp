@@ -90,6 +90,8 @@ private:
   nsCOMPtr<nsIThread> mGMPThread;
   GMPVideoEncoderProxy* mGMP;
   GMPVideoHost* mHost;
+  GMPVideoCodec mCodecParams;
+  uint32_t mMaxPayloadSize;
   webrtc::EncodedImageCallback* mCallback;
   uint64_t mCachedPluginId;
 };
