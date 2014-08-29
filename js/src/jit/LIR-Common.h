@@ -185,6 +185,16 @@ class LSimdExtractElementF : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LSimdSignMaskX4 : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(SimdSignMaskX4);
+
+    LSimdSignMaskX4(const LAllocation &input) {
+        setOperand(0, input);
+    }
+};
+
 // Binary SIMD comparison operation between two SIMD operands
 class LSimdBinaryComp: public LInstructionHelper<1, 2, 0>
 {
