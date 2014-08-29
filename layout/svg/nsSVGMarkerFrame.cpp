@@ -104,6 +104,7 @@ GetAnonymousChildFrame(nsIFrame* aFrame)
 
 nsresult
 nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
+                            const gfxMatrix& aToMarkedFrameUserSpace,
                             nsSVGPathGeometryFrame *aMarkedFrame,
                             nsSVGMark *aMark, float aStrokeWidth)
 {
@@ -133,6 +134,14 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
   mAutoAngle = aMark->angle;
   mIsStart = aMark->type == nsSVGMark::eStart;
 
+  Matrix viewBoxTM = marker->GetViewBoxTransform();
+
+  Matrix markerTM = marker->GetMarkerTransform(mStrokeWidth, mX, mY,
+                                               mAutoAngle, mIsStart);
+
+  gfxMatrix markTM = ThebesMatrix(viewBoxTM) * ThebesMatrix(markerTM) *
+                     aToMarkedFrameUserSpace;
+
   gfxContext *gfx = aContext->ThebesContext();
 
   if (StyleDisplay()->IsScrollableOverflow()) {
@@ -140,15 +149,15 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
     gfxRect clipRect =
       nsSVGUtils::GetClipRectForFrame(this, viewBox.x, viewBox.y,
                                       viewBox.width, viewBox.height);
-    nsSVGUtils::SetClipRect(gfx, GetCanvasTM(nsISVGChildFrame::FOR_PAINTING),
-                            clipRect);
+    nsSVGUtils::SetClipRect(gfx, markTM, clipRect);
   }
+
 
   nsIFrame* kid = GetAnonymousChildFrame(this);
   nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
   // The CTM of each frame referencing us may be different.
   SVGFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
-  nsSVGUtils::PaintFrameWithEffects(aContext, nullptr, kid);
+  nsSVGUtils::PaintFrameWithEffects(kid, aContext, markTM);
 
   if (StyleDisplay()->IsScrollableOverflow())
     gfx->Restore();

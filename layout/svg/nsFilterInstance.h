@@ -55,11 +55,11 @@ public:
    *   frame space (i.e. relative to its origin, the top-left corner of its
    *   border box).
    */
-  static nsresult PaintFilteredFrame(nsRenderingContext *aContext,
-                                     nsIFrame *aFilteredFrame,
+  static nsresult PaintFilteredFrame(nsIFrame *aFilteredFrame,
+                                     nsRenderingContext *aContext,
+                                     const gfxMatrix& aTransform,
                                      nsSVGFilterPaintCallback *aPaintCallback,
-                                     const nsRegion* aDirtyArea,
-                                     nsIFrame* aTransformRoot = nullptr);
+                                     const nsRegion* aDirtyArea);
 
   /**
    * Returns the post-filter area that could be dirtied when the given
@@ -95,6 +95,8 @@ public:
    * @param aTargetFrame The frame of the filtered element under consideration.
    * @param aPaintCallback [optional] The callback that Render() should use to
    *   paint. Only required if you will call Render().
+   * @param aPaintTransform The transform to apply to convert to
+   *   aTargetFrame's SVG user space. Only used when painting.
    * @param aPostFilterDirtyRegion [optional] The post-filter area
    *   that has to be repainted, in app units. Only required if you will
    *   call ComputeSourceNeededRect() or Render().
@@ -105,15 +107,14 @@ public:
    *   visual overflow rect for the target element.
    * @param aOverrideBBox [optional] Use a different SVG bbox for the target
    *   element.
-   * @param aTransformRoot [optional] The transform root frame for painting.
    */
   nsFilterInstance(nsIFrame *aTargetFrame,
                    nsSVGFilterPaintCallback *aPaintCallback,
+                   const gfxMatrix& aPaintTransform,
                    const nsRegion *aPostFilterDirtyRegion = nullptr,
                    const nsRegion *aPreFilterDirtyRegion = nullptr,
                    const nsRect *aOverridePreFilterVisualOverflowRect = nullptr,
-                   const gfxRect *aOverrideBBox = nullptr,
-                   nsIFrame* aTransformRoot = nullptr);
+                   const gfxRect *aOverrideBBox = nullptr);
 
   /**
    * Returns true if the filter instance was created successfully.
@@ -313,7 +314,12 @@ private:
   SourceInfo mSourceGraphic;
   SourceInfo mFillPaint;
   SourceInfo mStrokePaint;
-  nsIFrame* mTransformRoot;
+
+  /**
+   * The transform to the SVG user space of mTargetFrame.
+   */
+  gfxMatrix               mPaintTransform;
+
   nsTArray<mozilla::RefPtr<SourceSurface>> mInputImages;
   nsTArray<FilterPrimitiveDescription> mPrimitiveDescriptions;
   int32_t mAppUnitsPerCSSPx;

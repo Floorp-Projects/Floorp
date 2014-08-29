@@ -238,7 +238,12 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
     if (SVGFrame) {
       SVGFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
     }
-    nsSVGUtils::PaintFrameWithEffects(tmpCtx, nullptr, kid);
+    gfxMatrix m = mMatrixForChildren;
+    if (kid->GetContent()->IsSVG()) {
+      m = static_cast<nsSVGElement*>(kid->GetContent())->
+            PrependLocalTransformsTo(m);
+    }
+    nsSVGUtils::PaintFrameWithEffects(kid, tmpCtx, mMatrixForChildren);
   }
 
   RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();

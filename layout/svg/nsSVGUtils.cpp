@@ -448,8 +448,8 @@ class SVGPaintCallback : public nsSVGFilterPaintCallback
 {
 public:
   virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
-                     const nsIntRect* aDirtyRect,
-                     nsIFrame* aTransformRoot) MOZ_OVERRIDE
+                     const gfxMatrix& aTransform,
+                     const nsIntRect* aDirtyRect) MOZ_OVERRIDE
   {
     nsISVGChildFrame *svgChildFrame = do_QueryFrame(aTarget);
     NS_ASSERTION(svgChildFrame, "Expected SVG frame here");
@@ -460,8 +460,7 @@ public:
     // aDirtyRect is in user-space pixels, we need to convert to
     // outer-SVG-frame-relative device pixels.
     if (aDirtyRect) {
-      gfxMatrix userToDeviceSpace =
-        nsSVGUtils::GetCanvasTM(aTarget, nsISVGChildFrame::FOR_PAINTING, aTransformRoot);
+      gfxMatrix userToDeviceSpace = aTransform;
       if (userToDeviceSpace.IsSingular()) {
         return;
       }
@@ -473,15 +472,15 @@ public:
       }
     }
 
-    svgChildFrame->PaintSVG(aContext, dirtyRect, aTransformRoot);
+    svgChildFrame->PaintSVG(aContext, aTransform, dirtyRect);
   }
 };
 
 void
-nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
-                                  const nsIntRect *aDirtyRect,
-                                  nsIFrame *aFrame,
-                                  nsIFrame *aTransformRoot)
+nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
+                                  nsRenderingContext *aContext,
+                                  const gfxMatrix& aTransform,
+                                  const nsIntRect *aDirtyRect)
 {
   NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
                (aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY) ||
@@ -525,7 +524,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       overflowRect = overflowRect + aFrame->GetPosition();
     }
     int32_t appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
-    gfxMatrix tm = GetCanvasTM(aFrame, nsISVGChildFrame::FOR_PAINTING, aTransformRoot);
+    gfxMatrix tm = aTransform;
     if (aFrame->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
       gfx::Matrix childrenOnlyTM;
       if (static_cast<nsSVGContainerFrame*>(aFrame)->
@@ -576,10 +575,6 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
     // Some resource is invalid. We shouldn't paint anything.
     return;
   }
-  
-  gfxMatrix matrix;
-  if (clipPathFrame || maskFrame)
-    matrix = GetCanvasTM(aFrame, nsISVGChildFrame::FOR_PAINTING, aTransformRoot);
 
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
@@ -591,7 +586,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       // aFrame has a valid visual overflow rect, so clip to it before calling
       // PushGroup() to minimize the size of the surfaces we'll composite:
       gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
-      gfx->Multiply(GetCanvasTM(aFrame, nsISVGChildFrame::FOR_PAINTING, aTransformRoot));
+      gfx->Multiply(aTransform);
       nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
       if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
           aFrame->IsSVGText()) {
@@ -609,7 +604,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
    */
   if (clipPathFrame && isTrivialClip) {
     gfx->Save();
-    clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, matrix);
+    clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, aTransform);
   }
 
   /* Paint the child */
@@ -636,10 +631,10 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       dirtyRegion = &tmpDirtyRegion;
     }
     SVGPaintCallback paintCallback;
-    nsFilterInstance::PaintFilteredFrame(aContext, aFrame, &paintCallback,
-                                         dirtyRegion, aTransformRoot);
+    nsFilterInstance::PaintFilteredFrame(aFrame, aContext, aTransform,
+                                         &paintCallback, dirtyRegion);
   } else {
-    svgChildFrame->PaintSVG(aContext, aDirtyRect, aTransformRoot);
+    svgChildFrame->PaintSVG(aContext, aTransform, aDirtyRect);
   }
 
   if (clipPathFrame && isTrivialClip) {
@@ -654,14 +649,14 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
 
   nsRefPtr<gfxPattern> maskSurface =
     maskFrame ? maskFrame->GetMaskForMaskedFrame(aContext->ThebesContext(),
-                                                 aFrame, matrix, opacity)
+                                                 aFrame, aTransform, opacity)
               : nullptr;
 
   nsRefPtr<gfxPattern> clipMaskSurface;
   if (clipPathFrame && !isTrivialClip) {
     gfx->PushGroup(gfxContentType::COLOR_ALPHA);
 
-    nsresult rv = clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, matrix);
+    nsresult rv = clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, aTransform);
     clipMaskSurface = gfx->PopGroup();
 
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {
@@ -1606,7 +1601,14 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
   context->AddUserData(&gfxTextContextPaint::sUserDataKey, aContextPaint,
                        nullptr);
   svgFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
-  nsresult rv = svgFrame->PaintSVG(context, nullptr, frame);
+  gfxMatrix m;
+  if (frame->GetContent()->IsSVG()) {
+    // PaintSVG() expects the passed transform to be the transform to its own
+    // SVG user space, so we need to account for any 'transform' attribute:
+    m = static_cast<nsSVGElement*>(frame->GetContent())->
+          PrependLocalTransformsTo(gfxMatrix(), nsSVGElement::eUserSpaceToParent);
+  }
+  nsresult rv = svgFrame->PaintSVG(context, m);
   return NS_SUCCEEDED(rv);
 }
 

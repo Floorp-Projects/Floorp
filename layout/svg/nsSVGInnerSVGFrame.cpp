@@ -61,8 +61,8 @@ nsSVGInnerSVGFrame::GetType() const
 
 nsresult
 nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
-                             const nsIntRect *aDirtyRect,
-                             nsIFrame* aTransformRoot)
+                             const gfxMatrix& aTransform,
+                             const nsIntRect *aDirtyRect)
 {
   NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
                (mState & NS_FRAME_IS_NONDISPLAY),
@@ -80,17 +80,14 @@ nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
       return NS_OK;
     }
 
-    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
-    gfxMatrix clipTransform = parent->GetCanvasTM(FOR_PAINTING, aTransformRoot);
-
     gfxContext *gfx = aContext->ThebesContext();
     autoSR.SetContext(gfx);
     gfxRect clipRect =
       nsSVGUtils::GetClipRectForFrame(this, x, y, width, height);
-    nsSVGUtils::SetClipRect(gfx, clipTransform, clipRect);
+    nsSVGUtils::SetClipRect(gfx, aTransform, clipRect);
   }
 
-  return nsSVGInnerSVGFrameBase::PaintSVG(aContext, aDirtyRect);
+  return nsSVGInnerSVGFrameBase::PaintSVG(aContext, aTransform, aDirtyRect);
 }
 
 nsRect
