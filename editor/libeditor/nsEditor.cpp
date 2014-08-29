@@ -2378,7 +2378,7 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   // IME insertion.
   if (mComposition && !aSuppressIME) {
     if (!mIMETextNode) {
-      mIMETextNode = do_QueryInterface(&aTextNode);
+      mIMETextNode = &aTextNode;
       mIMETextOffset = aOffset;
     }
     // Modify mPhonetic with raw text input clauses.
@@ -2397,11 +2397,7 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
                          textRange.mStartOffset, textRange.Length());
     }
 
-    nsRefPtr<IMETextTxn> imeTxn;
-    nsresult res = CreateTxnForIMEText(aStringToInsert,
-                                       getter_AddRefs(imeTxn));
-    NS_ENSURE_SUCCESS(res, res);
-    txn = imeTxn;
+    txn = CreateTxnForIMEText(aStringToInsert);
     isIMETransaction = true;
   } else {
     txn = CreateTxnForInsertText(aStringToInsert, aTextNode, aOffset);
@@ -2440,8 +2436,7 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
 
   // Delete empty IME text node if there is one
   if (isIMETransaction && mIMETextNode) {
-    uint32_t len;
-    mIMETextNode->GetLength(&len);
+    uint32_t len = mIMETextNode->Length();
     if (!len) {
       DeleteNode(mIMETextNode);
       mIMETextNode = nullptr;
@@ -4290,25 +4285,16 @@ nsEditor::CreateTxnForDeleteNode(nsINode* aNode, DeleteNodeTxn** aTxn)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert,
-                              IMETextTxn ** aTxn)
+already_AddRefed<IMETextTxn>
+nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert)
 {
-  NS_ASSERTION(aTxn, "illegal value- null ptr- aTxn");
-     
-  nsRefPtr<IMETextTxn> txn = new IMETextTxn();
-
   // During handling IME composition, mComposition must have been initialized.
   // TODO: We can simplify IMETextTxn::Init() with TextComposition class.
-  nsresult rv = txn->Init(mIMETextNode, mIMETextOffset,
-                          mComposition->String().Length(),
-                          mComposition->GetRanges(), aStringToInsert, this);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
-  }
-
-  return rv;
+  nsRefPtr<IMETextTxn> txn = new IMETextTxn(*mIMETextNode, mIMETextOffset,
+                                            mComposition->String().Length(),
+                                            mComposition->GetRanges(),
+                                            aStringToInsert, *this);
+  return txn.forget();
 }
 
 
