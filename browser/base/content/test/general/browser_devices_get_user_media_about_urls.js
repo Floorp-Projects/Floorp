@@ -122,7 +122,7 @@ function closeStream(aAlreadyClosed) {
   if (!aAlreadyClosed)
     expectObserverCalled("recording-window-ended");
 
-  assertWebRTCIndicatorStatus(false);
+  assertWebRTCIndicatorStatus(null);
 }
 
 function loadPage(aUrl) {
