@@ -491,6 +491,7 @@ class TreeMetadataEmitter(LoggingMixin):
         test_harness_files = context.get('TEST_HARNESS_FILES')
         if test_harness_files:
             srcdir_files = defaultdict(list)
+            srcdir_pattern_files = defaultdict(list)
             objdir_files = defaultdict(list)
 
             for path, strings in test_harness_files.walk():
@@ -506,12 +507,16 @@ class TreeMetadataEmitter(LoggingMixin):
                         objdir_files[path].append(s[1:])
                     else:
                         resolved = context.resolve_path(s)
-                        if not os.path.exists(resolved):
+                        if '*' in s:
+                            srcdir_pattern_files[path].append(s);
+                        elif not os.path.exists(resolved):
                             raise SandboxValidationError(
                                 'File listed in TEST_HARNESS_FILES does not exist: %s' % s, context)
-                        srcdir_files[path].append(resolved)
+                        else:
+                            srcdir_files[path].append(resolved)
 
-            yield TestHarnessFiles(context, srcdir_files, objdir_files)
+            yield TestHarnessFiles(context, srcdir_files,
+                                   srcdir_pattern_files, objdir_files)
 
         defines = context.get('DEFINES')
         if defines:
