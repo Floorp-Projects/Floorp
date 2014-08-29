@@ -138,6 +138,17 @@ loop.CallConnectionWebSocket = (function() {
     },
 
     /**
+     * Notifies the server that the outgoing media is up, and the
+     * incoming media is being received.
+     */
+    mediaUp: function() {
+      this._send({
+        messageType: "action",
+        event: "media-up"
+      });
+    },
+
+    /**
      * Sends data on the websocket.
      *
      * @param {Object} data The data to send.
