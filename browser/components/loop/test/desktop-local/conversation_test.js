@@ -37,6 +37,7 @@ describe("loop.conversation", function() {
       },
       setLoopCharPref: sandbox.stub(),
       getLoopCharPref: sandbox.stub(),
+      getLoopBoolPref: sandbox.stub(),
       startAlerting: function() {},
       stopAlerting: function() {},
       ensureRegistered: function() {},
@@ -311,14 +312,35 @@ describe("loop.conversation", function() {
       });
 
       describe("#accept", function() {
+        beforeEach(function() {
+          conversation.setIncomingSessionData({
+            sessionId:      "sessionId",
+            sessionToken:   "sessionToken",
+            apiKey:         "apiKey",
+            callType:       "callType",
+            callId:         "Hello",
+            progressURL:    "http://progress.example.com",
+            websocketToken: 123
+          });
+          router._setupWebSocketAndCallView();
+
+          sandbox.stub(router._websocket, "accept");
+          sandbox.stub(navigator.mozLoop, "stopAlerting");
+        });
+
         it("should initiate the conversation", function() {
           router.accept();
 
           sinon.assert.calledOnce(conversation.incoming);
         });
 
+        it("should notify the websocket of the user acceptance", function() {
+          router.accept();
+
+          sinon.assert.calledOnce(router._websocket.accept);
+        });
+
         it("should stop alerting", function() {
-          sandbox.stub(navigator.mozLoop, "stopAlerting");
           router.accept();
 
           sinon.assert.calledOnce(navigator.mozLoop.stopAlerting);

@@ -240,6 +240,7 @@ loop.conversation = (function(OT, mozL10n) {
      */
     accept: function() {
       navigator.mozLoop.stopAlerting();
+      this._websocket.accept();
       this._conversation.incoming();
     },
 

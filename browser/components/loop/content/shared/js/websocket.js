@@ -128,6 +128,16 @@ loop.CallConnectionWebSocket = (function() {
     },
 
     /**
+     * Notifies the server that the user has accepted the call.
+     */
+    accept: function() {
+      this._send({
+        messageType: "action",
+        event: "accept"
+      });
+    },
+
+    /**
      * Sends data on the websocket.
      *
      * @param {Object} data The data to send.
