@@ -163,7 +163,18 @@ AccountState.prototype = {
   },
 
   getKeyPair: function(mustBeValidUntil) {
-    if (this.keyPair && (this.keyPair.validUntil > mustBeValidUntil)) {
+    // If the debugging pref to ignore cached authentication credentials is set for Sync,
+    // then don't use any cached key pair, i.e., generate a new one and get it signed.
+    // The purpose of this pref is to expedite any auth errors as the result of a
+    // expired or revoked FxA session token, e.g., from resetting or changing the FxA
+    // password.
+    let ignoreCachedAuthCredentials = false;
+    try {
+      ignoreCachedAuthCredentials = Services.prefs.getBoolPref("services.sync.debug.ignoreCachedAuthCredentials");
+    } catch(e) {
+      // Pref doesn't exist
+    }
+    if (!ignoreCachedAuthCredentials && this.keyPair && (this.keyPair.validUntil > mustBeValidUntil)) {
       log.debug("getKeyPair: already have a keyPair");
       return this.resolve(this.keyPair.keyPair);
     }
