@@ -612,6 +612,121 @@ GetDisplayAttrStr(const TF_DISPLAYATTRIBUTE &aDispAttr)
   return str;
 }
 
+static const char*
+GetEventMessageName(uint32_t aMessage)
+{
+  switch (aMessage) {
+    case NS_MOUSE_BUTTON_DOWN:
+      return "NS_MOUSE_BUTTON_DOWN";
+    case NS_MOUSE_BUTTON_UP:
+      return "NS_MOUSE_BUTTON_UP";
+    default:
+      return "Unknown";
+  }
+}
+
+static const char*
+GetMouseButtonName(int16_t aButton)
+{
+  switch (aButton) {
+    case WidgetMouseEventBase::eLeftButton:
+      return "LeftButton";
+    case WidgetMouseEventBase::eMiddleButton:
+      return "MiddleButton";
+    case WidgetMouseEventBase::eRightButton:
+      return "RightButton";
+    default:
+      return "UnknownButton";
+  }
+}
+
+#define ADD_SEPARATOR_IF_NECESSARY(aStr) \
+  if (!aStr.IsEmpty()) { \
+    aStr.AppendLiteral(", "); \
+  }
+
+static nsCString
+GetMouseButtonsName(int16_t aButtons)
+{
+  if (!aButtons) {
+    return NS_LITERAL_CSTRING("no buttons");
+  }
+  nsAutoCString names;
+  if (aButtons & WidgetMouseEventBase::eLeftButtonFlag) {
+    names = "LeftButton";
+  }
+  if (aButtons & WidgetMouseEventBase::eRightButtonFlag) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += "RightButton";
+  }
+  if (aButtons & WidgetMouseEventBase::eMiddleButtonFlag) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += "MiddleButton";
+  }
+  if (aButtons & WidgetMouseEventBase::e4thButtonFlag) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += "4thButton";
+  }
+  if (aButtons & WidgetMouseEventBase::e5thButtonFlag) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += "5thButton";
+  }
+  return names;
+}
+
+static nsCString
+GetModifiersName(Modifiers aModifiers)
+{
+  if (aModifiers == MODIFIER_NONE) {
+    return NS_LITERAL_CSTRING("no modifiers");
+  }
+  nsAutoCString names;
+  if (aModifiers & MODIFIER_ALT) {
+    names = NS_DOM_KEYNAME_ALT;
+  }
+  if (aModifiers & MODIFIER_ALTGRAPH) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_ALTGRAPH;
+  }
+  if (aModifiers & MODIFIER_CAPSLOCK) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_CAPSLOCK;
+  }
+  if (aModifiers & MODIFIER_CONTROL) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_CONTROL;
+  }
+  if (aModifiers & MODIFIER_FN) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_FN;
+  }
+  if (aModifiers & MODIFIER_META) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_META;
+  }
+  if (aModifiers & MODIFIER_NUMLOCK) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_NUMLOCK;
+  }
+  if (aModifiers & MODIFIER_SCROLLLOCK) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_SCROLLLOCK;
+  }
+  if (aModifiers & MODIFIER_SHIFT) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_SHIFT;
+  }
+  if (aModifiers & MODIFIER_SYMBOLLOCK) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_SYMBOLLOCK;
+  }
+  if (aModifiers & MODIFIER_OS) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_OS;
+  }
+  return names;
+}
+
 #endif // #ifdef PR_LOGGING
 
 nsTextStore::nsTextStore()
@@ -3605,6 +3720,7 @@ nsTextStore::GetIMEUpdatePreference()
         nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
         nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
         nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE |
+        nsIMEUpdatePreference::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR |
         nsIMEUpdatePreference::NOTIFY_DURING_DEACTIVE);
       // nsTextStore shouldn't notify TSF of selection change and text change
       // which are caused by composition.
@@ -3737,6 +3853,80 @@ nsTextStore::OnLayoutChangeInternal()
   HRESULT hr = mSink->OnLayoutChange(TS_LC_CHANGE, TEXTSTORE_DEFAULT_VIEW);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
+  return NS_OK;
+}
+
+nsresult
+nsTextStore::OnMouseButtonEventInternal(const IMENotification& aIMENotification)
+{
+  if (mMouseTrackers.IsEmpty()) {
+    return NS_OK;
+  }
+
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p   nsTextStore::OnMouseButtonEventInternal("
+          "aIMENotification={ mEventMessage=%s, mOffset=%u, mCursorPos={ "
+          "mX=%d, mY=%d }, mCharRect={ mX=%d, mY=%d, mWidth=%d, mHeight=%d }, "
+          "mButton=%s, mButtons=%s, mModifiers=%s })",
+          this, GetEventMessageName(
+                  aIMENotification.mMouseButtonEventData.mEventMessage),
+          aIMENotification.mMouseButtonEventData.mOffset,
+          aIMENotification.mMouseButtonEventData.mCursorPos.mX,
+          aIMENotification.mMouseButtonEventData.mCursorPos.mY,
+          aIMENotification.mMouseButtonEventData.mCharRect.mX,
+          aIMENotification.mMouseButtonEventData.mCharRect.mY,
+          aIMENotification.mMouseButtonEventData.mCharRect.mWidth,
+          aIMENotification.mMouseButtonEventData.mCharRect.mHeight,
+          GetMouseButtonName(aIMENotification.mMouseButtonEventData.mButton),
+          GetMouseButtonsName(
+            aIMENotification.mMouseButtonEventData.mButtons).get(),
+          GetModifiersName(
+            aIMENotification.mMouseButtonEventData.mModifiers).get()));
+
+  uint32_t offset = aIMENotification.mMouseButtonEventData.mOffset;
+  nsIntRect charRect =
+    aIMENotification.mMouseButtonEventData.mCharRect.AsIntRect();
+  nsIntPoint cursorPos =
+    aIMENotification.mMouseButtonEventData.mCursorPos.AsIntPoint();
+  ULONG quadrant = 1;
+  if (charRect.width > 0) {
+    int32_t cursorXInChar = cursorPos.x - charRect.x;
+    quadrant = cursorXInChar * 4 / charRect.width;
+    quadrant = (quadrant + 2) % 4;
+  }
+  ULONG edge = quadrant < 2 ? offset + 1 : offset;
+  DWORD buttonStatus = 0;
+  bool isMouseUp =
+    aIMENotification.mMouseButtonEventData.mEventMessage == NS_MOUSE_BUTTON_UP;
+  if (!isMouseUp) {
+    switch (aIMENotification.mMouseButtonEventData.mButton) {
+      case WidgetMouseEventBase::eLeftButton:
+        buttonStatus = MK_LBUTTON;
+        break;
+      case WidgetMouseEventBase::eMiddleButton:
+        buttonStatus = MK_MBUTTON;
+        break;
+      case WidgetMouseEventBase::eRightButton:
+        buttonStatus = MK_RBUTTON;
+        break;
+    }
+  }
+  if (aIMENotification.mMouseButtonEventData.mModifiers & MODIFIER_CONTROL) {
+    buttonStatus |= MK_CONTROL;
+  }
+  if (aIMENotification.mMouseButtonEventData.mModifiers & MODIFIER_SHIFT) {
+    buttonStatus |= MK_SHIFT;
+  }
+  for (size_t i = 0; i < mMouseTrackers.Length(); i++) {
+    MouseTracker& tracker = mMouseTrackers[i];
+    if (!tracker.IsUsing() || !tracker.InRange(offset)) {
+      continue;
+    }
+    if (tracker.OnMouseButtonEvent(edge - tracker.RangeStart(),
+                                   quadrant, buttonStatus)) {
+      return NS_SUCCESS_EVENT_CONSUMED;
+    }
+  }
   return NS_OK;
 }
 
@@ -4639,6 +4829,24 @@ nsTextStore::MouseTracker::UnadviseSink()
           this, mCookie, mSink, mStart, mLength));
   mSink = nullptr;
   mStart = mLength = -1;
+}
+
+bool
+nsTextStore::MouseTracker::OnMouseButtonEvent(ULONG aEdge,
+                                              ULONG aQuadrant,
+                                              DWORD aButtonStatus)
+{
+  MOZ_ASSERT(IsUsing(), "The caller must check before calling OnMouseEvent()");
+
+  BOOL eaten = FALSE;
+  HRESULT hr = mSink->OnMouseEvent(aEdge, aQuadrant, aButtonStatus, &eaten);
+
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p   nsTextStore::MouseTracker::OnMouseEvent(aEdge=%d, "
+          "aQuadrant=%d, aButtonStatus=0x%08X), hr=0x%08X, eaten=%s",
+          this, aEdge, aQuadrant, aButtonStatus, hr, GetBoolName(!!eaten)));
+
+  return SUCCEEDED(hr) && eaten;
 }
 
 #ifdef DEBUG

@@ -162,6 +162,14 @@ public:
     return sTsfTextStore->OnLayoutChangeInternal();
   }
 
+  static nsresult OnMouseButtonEvent(const IMENotification& aIMENotification)
+  {
+    if (NS_WARN_IF(!sTsfTextStore)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    return sTsfTextStore->OnMouseButtonEventInternal(aIMENotification);
+  }
+
   static nsIMEUpdatePreference GetIMEUpdatePreference();
 
   // Returns the address of the pointer so that the TSF automatic test can
@@ -274,6 +282,7 @@ protected:
   void     CommitCompositionInternal(bool);
   nsresult OnTextChangeInternal(const IMENotification& aIMENotification);
   nsresult OnSelectionChangeInternal(void);
+  nsresult OnMouseButtonEventInternal(const IMENotification& aIMENotification);
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
                                ITfRange* aRange,
                                TF_DISPLAYATTRIBUTE* aResult);
@@ -689,7 +698,18 @@ protected:
     void UnadviseSink();
 
     bool IsUsing() const { return mSink != nullptr; }
+    bool InRange(uint32_t aOffset) const
+    {
+      if (NS_WARN_IF(mStart < 0) ||
+          NS_WARN_IF(mLength <= 0)) {
+        return false;
+      }
+      return aOffset >= static_cast<uint32_t>(mStart) &&
+             aOffset < static_cast<uint32_t>(mStart + mLength);
+    }
     DWORD Cookie() const { return mCookie; }
+    bool OnMouseButtonEvent(ULONG aEdge, ULONG aQuadrant, DWORD aButtonStatus);
+    LONG RangeStart() const { return mStart; }
   
   private:
     nsRefPtr<ITfMouseSink> mSink;
