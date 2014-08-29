@@ -311,6 +311,17 @@ public:
   Float _31, _32, _33, _34;
   Float _41, _42, _43, _44;
 
+  Point4D& operator[](int aIndex)
+  {
+      MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
+      return *reinterpret_cast<Point4D*>((&_11)+4*aIndex);
+  }
+  const Point4D& operator[](int aIndex) const
+  {
+      MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
+      return *reinterpret_cast<const Point4D*>((&_11)+4*aIndex);
+  }
+
   /**
    * Returns true if the matrix is isomorphic to a 2D affine transformation.
    */
@@ -404,6 +415,16 @@ public:
     return Is2D() && As2D().IsIntegerTranslation();
   }
 
+  Point4D TransposeTransform4D(const Point4D& aPoint) const
+  {
+      Float x = aPoint.x * _11 + aPoint.y * _12 + aPoint.z * _13 + aPoint.w * _14;
+      Float y = aPoint.x * _21 + aPoint.y * _22 + aPoint.z * _23 + aPoint.w * _24;
+      Float z = aPoint.x * _31 + aPoint.y * _32 + aPoint.z * _33 + aPoint.w * _34;
+      Float w = aPoint.x * _41 + aPoint.y * _42 + aPoint.z * _43 + aPoint.w * _44;
+
+      return Point4D(x, y, z, w);
+  }
+
   Point4D operator *(const Point4D& aPoint) const
   {
     Point4D retPoint;
@@ -483,6 +504,21 @@ public:
     _43 += _44 * aZ;
 
     return *this;
+  }
+
+  void SkewXY(Float aSkew)
+  {
+    (*this)[1] += (*this)[0] * aSkew;
+  }
+
+  void SkewXZ(Float aSkew)
+  {
+      (*this)[2] += (*this)[0] * aSkew;
+  }
+
+  void SkewYZ(Float aSkew)
+  {
+      (*this)[2] += (*this)[1] * aSkew;
   }
 
   Matrix4x4 &ChangeBasis(Float aX, Float aY, Float aZ)
@@ -585,6 +621,15 @@ public:
 
   bool Invert();
 
+  void Normalize()
+  {
+      for (int i = 0; i < 4; i++) {
+          for (int j = 0; j < 4; j++) {
+              (*this)[i][j] /= (*this)[3][3];
+         }
+      }
+  }
+
   void ScalePost(Float aX, Float aY, Float aZ)
   {
     _11 *= aX;
@@ -662,6 +707,21 @@ public:
     NudgeToInteger(&_42, error);
     NudgeToInteger(&_43, error);
     NudgeToInteger(&_44, error);
+  }
+
+  Point4D TransposedVector(int aIndex) const
+  {
+      MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
+      return Point4D(*((&_11)+aIndex), *((&_21)+aIndex), *((&_31)+aIndex), *((&_41)+aIndex));
+  }
+
+  void SetTransposedVector(int aIndex, Point4D &aVector)
+  {
+      MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
+      *((&_11)+aIndex) = aVector.x;
+      *((&_21)+aIndex) = aVector.y;
+      *((&_31)+aIndex) = aVector.z;
+      *((&_41)+aIndex) = aVector.w;
   }
 
   // Set all the members of the matrix to NaN

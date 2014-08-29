@@ -5051,16 +5051,17 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
    */
 
   /* Now, apply the transform and pass it down the channel. */
+  matrix.Invert();
   nsRect resultingRect;
   if (aRect.width == 1 && aRect.height == 1) {
     // Magic width/height indicating we're hit testing a point, not a rect
-    gfxPointH3D point = To3DMatrix(matrix).Inverse().ProjectPoint(gfxPoint(NSAppUnitsToFloatPixels(aRect.x, factor),
-                                                               NSAppUnitsToFloatPixels(aRect.y, factor)));
+    Point4D point = matrix.ProjectPoint(Point(NSAppUnitsToFloatPixels(aRect.x, factor),
+                                              NSAppUnitsToFloatPixels(aRect.y, factor)));
     if (!point.HasPositiveWCoord()) {
       return;
     }
 
-    gfxPoint point2d = point.As2DPoint();
+    Point point2d = point.As2DPoint();
 
     resultingRect = nsRect(NSFloatPixelsToAppUnits(float(point2d.x), factor),
                            NSFloatPixelsToAppUnits(float(point2d.y), factor),
@@ -5072,7 +5073,6 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
                       NSAppUnitsToFloatPixels(aRect.width, factor),
                       NSAppUnitsToFloatPixels(aRect.height, factor));
 
-    matrix.Invert();
     Rect rect = matrix.ProjectRectBounds(originalRect);
 
     bool snap;
@@ -5120,11 +5120,13 @@ nsDisplayTransform::GetHitDepthAtPoint(nsDisplayListBuilder* aBuilder, const nsP
 
   NS_ASSERTION(IsFrameVisible(mFrame, matrix), "We can't have hit a frame that isn't visible!");
 
-  gfxPointH3D point = To3DMatrix(matrix).Inverse().ProjectPoint(gfxPoint(NSAppUnitsToFloatPixels(aPoint.x, factor),
-                                                             NSAppUnitsToFloatPixels(aPoint.y, factor)));
+  Matrix4x4 inverse = matrix;
+  inverse.Invert();
+  Point4D point = inverse.ProjectPoint(Point(NSAppUnitsToFloatPixels(aPoint.x, factor),
+                                             NSAppUnitsToFloatPixels(aPoint.y, factor)));
   NS_ASSERTION(point.HasPositiveWCoord(), "Why are we trying to get the depth for a point we didn't hit?");
 
-  gfxPoint point2d = point.As2DPoint();
+  Point point2d = point.As2DPoint();
 
   Point3D transformed = matrix * Point3D(point2d.x, point2d.y, 0);
   return transformed.z;
