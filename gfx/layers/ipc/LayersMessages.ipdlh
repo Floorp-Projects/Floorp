@@ -216,7 +216,6 @@ struct CommonLayerAttributes {
   Animation[] animations;
   nsIntRegion invalidRegion;
   FrameMetrics[] metrics;
-  LayerColor backgroundColor;
   string contentDescription;
 };
 
