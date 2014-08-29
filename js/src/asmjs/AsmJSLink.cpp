@@ -258,6 +258,7 @@ ValidateMathBuiltinFunction(JSContext *cx, AsmJSModule::Global &global, HandleVa
       case AsmJSMathBuiltin_abs: native = math_abs; break;
       case AsmJSMathBuiltin_atan2: native = math_atan2; break;
       case AsmJSMathBuiltin_imul: native = math_imul; break;
+      case AsmJSMathBuiltin_clz32: native = math_clz32; break;
       case AsmJSMathBuiltin_fround: native = math_fround; break;
     }
 
