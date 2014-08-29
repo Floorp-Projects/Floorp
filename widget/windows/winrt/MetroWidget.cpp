@@ -1579,6 +1579,8 @@ MetroWidget::NotifyIME(const IMENotification& aIMENotification)
       return nsTextStore::OnTextChange(aIMENotification);
     case NOTIFY_IME_OF_POSITION_CHANGE:
       return nsTextStore::OnLayoutChange();
+    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      return nsTextStore::OnMouseButtonEvent(aIMENotification);
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }

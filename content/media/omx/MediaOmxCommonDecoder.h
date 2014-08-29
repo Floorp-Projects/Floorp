@@ -45,6 +45,7 @@ public:
   virtual MediaDecoderStateMachine* CreateStateMachine(MediaOmxCommonReader* aReader) = 0;
 
 protected:
+  virtual ~MediaOmxCommonDecoder();
   void PauseStateMachine();
   void ResumeStateMachine();
 

@@ -10,6 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/TextComposition.h"
@@ -469,6 +470,63 @@ IMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
     aInstalling ? InputContextAction::MENU_GOT_PSEUDO_FOCUS :
                   InputContextAction::MENU_LOST_PSEUDO_FOCUS);
   OnChangeFocusInternal(sPresContext, sContent, action);
+}
+
+// static
+bool
+IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
+                                            nsIContent* aContent,
+                                            nsIDOMMouseEvent* aMouseEvent)
+{
+  PR_LOG(sISMLog, PR_LOG_ALWAYS,
+    ("ISM: IMEStateManager::OnMouseButtonEventInEditor(aPresContext=0x%p, "
+     "aContent=0x%p, aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p",
+     aPresContext, aContent, aMouseEvent, sPresContext, sContent));
+
+  if (sPresContext != aPresContext || sContent != aContent) {
+    PR_LOG(sISMLog, PR_LOG_DEBUG,
+      ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
+       "the mouse event isn't fired on the editor managed by ISM"));
+    return false;
+  }
+
+  if (!sActiveIMEContentObserver) {
+    PR_LOG(sISMLog, PR_LOG_DEBUG,
+      ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
+       "there is no active IMEContentObserver"));
+    return false;
+  }
+
+  if (!sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
+    PR_LOG(sISMLog, PR_LOG_DEBUG,
+      ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
+       "the active IMEContentObserver isn't managing the editor"));
+    return false;
+  }
+
+  WidgetMouseEvent* internalEvent =
+    aMouseEvent->GetInternalNSEvent()->AsMouseEvent();
+  if (NS_WARN_IF(!internalEvent)) {
+    PR_LOG(sISMLog, PR_LOG_DEBUG,
+      ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
+       "the internal event of aMouseEvent isn't WidgetMouseEvent"));
+    return false;
+  }
+
+  bool consumed =
+    sActiveIMEContentObserver->OnMouseButtonEvent(aPresContext, internalEvent);
+
+#ifdef PR_LOGGING
+  nsAutoString eventType;
+  aMouseEvent->GetType(eventType);
+  PR_LOG(sISMLog, PR_LOG_ALWAYS,
+    ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
+     "mouse event (type=%s, button=%d) is %s",
+     NS_ConvertUTF16toUTF8(eventType).get(), internalEvent->button,
+     consumed ? "consumed" : "not consumed"));
+#endif
+
+  return consumed;
 }
 
 // static
