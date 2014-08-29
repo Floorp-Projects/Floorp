@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_ARCH'] == 'Linux':
-
     DIRS += ['linux']
-
+elif CONFIG['OS_ARCH'] == 'Darwin':
+    DIRS += ['mac']
 elif CONFIG['OS_ARCH'] == 'WINNT':
     LIBRARY_NAME = 'sandbox_s'
     FORCE_STATIC_LIB = True
