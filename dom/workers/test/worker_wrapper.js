@@ -86,6 +86,19 @@ function workerTestGetUserAgent(cb) {
   });
 }
 
+function workerTestGetOSCPU(cb) {
+  addEventListener('message', function workerTestGetOSCPUCB(e) {
+    if (e.data.type !== 'returnOSCPU') {
+      return;
+    }
+    removeEventListener('message', workerTestGetOSCPUCB);
+    cb(e.data.result);
+  });
+  postMessage({
+    type: 'getOSCPU'
+  });
+}
+
 addEventListener('message', function workerWrapperOnMessage(e) {
   removeEventListener('message', workerWrapperOnMessage);
   var data = e.data;
