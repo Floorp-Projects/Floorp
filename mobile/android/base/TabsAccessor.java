@@ -4,127 +4,241 @@
 
 package org.mozilla.gecko;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.text.TextUtils;
+import android.text.format.DateUtils;
 import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Pattern;
 
 public final class TabsAccessor {
     private static final String LOGTAG = "GeckoTabsAccessor";
 
-    private static final String[] CLIENTS_AVAILABILITY_PROJECTION = new String[] {
-                                                                        BrowserContract.Clients.GUID
-                                                                    };
-
-    private static final String[] TABS_PROJECTION_COLUMNS = new String[] {
+    public static final String[] TABS_PROJECTION_COLUMNS = new String[] {
                                                                 BrowserContract.Tabs.TITLE,
                                                                 BrowserContract.Tabs.URL,
                                                                 BrowserContract.Clients.GUID,
                                                                 BrowserContract.Clients.NAME,
                                                                 BrowserContract.Clients.LAST_MODIFIED,
+                                                                BrowserContract.Clients.DEVICE_TYPE,
                                                             };
 
-    // Projection column numbers
-    public static enum TABS_COLUMN {
-        TITLE,
-        URL,
-        GUID,
-        NAME,
-        LAST_MODIFIED,
-    };
+    private static final String LOCAL_TABS_SELECTION = BrowserContract.Tabs.CLIENT_GUID + " IS NULL";
+    private static final String REMOTE_TABS_SELECTION = BrowserContract.Tabs.CLIENT_GUID + " IS NOT NULL";
 
-    private static final String CLIENTS_SELECTION = BrowserContract.Clients.GUID + " IS NOT NULL";
-    private static final String TABS_SELECTION = BrowserContract.Tabs.CLIENT_GUID + " IS NOT NULL";
+    private static final String REMOTE_TABS_SORT_ORDER =
+            // Most recently synced clients first.
+            BrowserContract.Clients.LAST_MODIFIED + " DESC, " +
+            // If two clients somehow had the same last modified time, this will
+            // group them (arbitrarily).
+            BrowserContract.Clients.GUID + " DESC, " +
+            // Within a single client, most recently used tabs first.
+            BrowserContract.Tabs.LAST_USED + " DESC";
 
     private static final String LOCAL_CLIENT_SELECTION = BrowserContract.Clients.GUID + " IS NULL";
-    private static final String LOCAL_TABS_SELECTION = BrowserContract.Tabs.CLIENT_GUID + " IS NULL";
+
     private static final Pattern FILTERED_URL_PATTERN = Pattern.compile("^(about|chrome|wyciwyg|file):");
 
+    /**
+     * A thin representation of a remote client.
+     * <p>
+     * We use the hash of the client's GUID as the ID in
+     * {@link RemoteTabsExpandableListAdapter#getGroupId(int)}.
+     */
+    public static class RemoteClient {
+        public final String guid;
+        public final String name;
+        public final long lastModified;
+        public final String deviceType;
+        public final ArrayList<RemoteTab> tabs;
+
+        public RemoteClient(String guid, String name, long lastModified, String deviceType) {
+            this.guid = guid;
+            this.name = name;
+            this.lastModified = lastModified;
+            this.deviceType = deviceType;
+            this.tabs = new ArrayList<RemoteTab>();
+        }
+    }
+
+    /**
+     * A thin representation of a remote tab.
+     * <p>
+     * We use the hash of the tab as the ID in
+     * {@link RemoteTabsExpandableListAdapter#getClientId(int)}, and therefore we
+     * must implement equality as well. These are generated functions.
+     */
     public static class RemoteTab {
-        public String title;
-        public String url;
-        public String guid;
-        public String name;
-        /**
-         * This is the last time the remote client uploaded a tabs record; that
-         * is, it is not per tab, but per remote client.
-         */
-        public long lastModified;
+        public final String title;
+        public final String url;
+
+        public RemoteTab(String title, String url) {
+            this.title = title;
+            this.url = url;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((title == null) ? 0 : title.hashCode());
+            result = prime * result + ((url == null) ? 0 : url.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            RemoteTab other = (RemoteTab) obj;
+            if (title == null) {
+                if (other.title != null) {
+                    return false;
+                }
+            } else if (!title.equals(other.title)) {
+                return false;
+            }
+            if (url == null) {
+                if (other.url != null) {
+                    return false;
+                }
+            } else if (!url.equals(other.url)) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    /**
+     * Extract client and tab records from a cursor.
+     * <p>
+     * The position of the cursor is moved to before the first record before
+     * reading. The cursor is advanced until there are no more records to be
+     * read. The position of the cursor is restored before returning.
+     *
+     * @param cursor
+     *            to extract records from. The records should already be grouped
+     *            by client GUID.
+     * @return list of clients, each containing list of tabs.
+     */
+    public static List<RemoteClient> getClientsFromCursor(final Cursor cursor) {
+        final ArrayList<RemoteClient> clients = new ArrayList<TabsAccessor.RemoteClient>();
+
+        final int originalPosition = cursor.getPosition();
+        try {
+            if (!cursor.moveToFirst()) {
+                return clients;
+            }
+
+            final int tabTitleIndex = cursor.getColumnIndex(BrowserContract.Tabs.TITLE);
+            final int tabUrlIndex = cursor.getColumnIndex(BrowserContract.Tabs.URL);
+            final int clientGuidIndex = cursor.getColumnIndex(BrowserContract.Clients.GUID);
+            final int clientNameIndex = cursor.getColumnIndex(BrowserContract.Clients.NAME);
+            final int clientLastModifiedIndex = cursor.getColumnIndex(BrowserContract.Clients.LAST_MODIFIED);
+            final int clientDeviceTypeIndex = cursor.getColumnIndex(BrowserContract.Clients.DEVICE_TYPE);
+
+            // A walking partition, chunking by client GUID. We assume the
+            // cursor records are already grouped by client GUID; see the query
+            // sort order.
+            RemoteClient lastClient = null;
+            while (!cursor.isAfterLast()) {
+                final String clientGuid = cursor.getString(clientGuidIndex);
+                if (lastClient == null || !TextUtils.equals(lastClient.guid, clientGuid)) {
+                    final String clientName = cursor.getString(clientNameIndex);
+                    final long lastModified = cursor.getLong(clientLastModifiedIndex);
+                    final String deviceType = cursor.getString(clientDeviceTypeIndex);
+                    lastClient = new RemoteClient(clientGuid, clientName, lastModified, deviceType);
+                    clients.add(lastClient);
+                }
+
+                final String tabTitle = cursor.getString(tabTitleIndex);
+                final String tabUrl = cursor.getString(tabUrlIndex);
+                lastClient.tabs.add(new RemoteTab(tabTitle, tabUrl));
+
+                cursor.moveToNext();
+            }
+        } finally {
+            cursor.moveToPosition(originalPosition);
+        }
+
+        return clients;
+    }
+
+    public static Cursor getRemoteTabsCursor(Context context) {
+        return getRemoteTabsCursor(context, -1);
+    }
+
+    public static Cursor getRemoteTabsCursor(Context context, int limit) {
+        Uri uri = BrowserContract.Tabs.CONTENT_URI;
+
+        if (limit > 0) {
+            uri = uri.buildUpon()
+                     .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(limit))
+                     .build();
+        }
+
+        final Cursor cursor =  context.getContentResolver().query(uri,
+                                                            TABS_PROJECTION_COLUMNS,
+                                                            REMOTE_TABS_SELECTION,
+                                                            null,
+                                                            REMOTE_TABS_SORT_ORDER);
+        return cursor;
     }
 
     public interface OnQueryTabsCompleteListener {
-        public void onQueryTabsComplete(List<RemoteTab> tabs);
+        public void onQueryTabsComplete(List<RemoteClient> clients);
     }
 
-    // This method returns all tabs from all remote clients, 
-    // ordered by most recent client first, most recent tab first 
+    // This method returns all tabs from all remote clients,
+    // ordered by most recent client first, most recent tab first
     public static void getTabs(final Context context, final OnQueryTabsCompleteListener listener) {
         getTabs(context, 0, listener);
     }
 
-    // This method returns limited number of tabs from all remote clients, 
-    // ordered by most recent client first, most recent tab first 
+    // This method returns limited number of tabs from all remote clients,
+    // ordered by most recent client first, most recent tab first
     public static void getTabs(final Context context, final int limit, final OnQueryTabsCompleteListener listener) {
         // If there is no listener, no point in doing work.
         if (listener == null)
             return;
 
-        (new UIAsyncTask.WithoutParams<List<RemoteTab>>(ThreadUtils.getBackgroundHandler()) {
+        (new UIAsyncTask.WithoutParams<List<RemoteClient>>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            protected List<RemoteTab> doInBackground() {
-                Uri uri = BrowserContract.Tabs.CONTENT_URI;
-
-                if (limit > 0) {
-                    uri = uri.buildUpon()
-                             .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(limit))
-                             .build();
-                }
-                    
-                Cursor cursor =  context.getContentResolver().query(uri,
-                                                                    TABS_PROJECTION_COLUMNS,
-                                                                    TABS_SELECTION,
-                                                                    null,
-                                                                    null);
-                
+            protected List<RemoteClient> doInBackground() {
+                final Cursor cursor = getRemoteTabsCursor(context, limit);
                 if (cursor == null)
                     return null;
-                
-                RemoteTab tab;
-                final ArrayList<RemoteTab> tabs = new ArrayList<RemoteTab> ();
-                try {
-                    while (cursor.moveToNext()) {
-                        tab = new RemoteTab();
-                        tab.title = cursor.getString(TABS_COLUMN.TITLE.ordinal());
-                        tab.url = cursor.getString(TABS_COLUMN.URL.ordinal());
-                        tab.guid = cursor.getString(TABS_COLUMN.GUID.ordinal());
-                        tab.name = cursor.getString(TABS_COLUMN.NAME.ordinal());
-                        tab.lastModified = cursor.getLong(TABS_COLUMN.LAST_MODIFIED.ordinal());
 
-                        tabs.add(tab);
-                    }
+                try {
+                    return Collections.unmodifiableList(getClientsFromCursor(cursor));
                 } finally {
                     cursor.close();
                 }
-
-                return Collections.unmodifiableList(tabs);
-           }
+            }
 
             @Override
-            protected void onPostExecute(List<RemoteTab> tabs) {
-                listener.onQueryTabsComplete(tabs);
+            protected void onPostExecute(List<RemoteClient> clients) {
+                listener.onQueryTabsComplete(clients);
             }
         }).execute();
     }
@@ -209,5 +323,17 @@ public final class TabsAccessor {
      */
     private static boolean isFilteredURL(String url) {
         return FILTERED_URL_PATTERN.matcher(url).lookingAt();
+    }
+
+    /**
+     * Return a relative "Last synced" time span for the given tab record.
+     *
+     * @param now local time.
+     * @param time to format string for.
+     * @return string describing time span
+     */
+    public static String getLastSyncedString(Context context, long now, long time) {
+        final CharSequence relativeTimeSpanString = DateUtils.getRelativeTimeSpanString(time, now, DateUtils.MINUTE_IN_MILLIS);
+        return context.getResources().getString(R.string.remote_tabs_last_synced, relativeTimeSpanString);
     }
 }
