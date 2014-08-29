@@ -29,7 +29,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
 #include "nsISystemProxySettings.h"
-#include "nsINetworkLinkService.h"
 
 //----------------------------------------------------------------------------
 
@@ -415,14 +414,10 @@ nsProtocolProxyService::Init()
         PrefsChanged(prefBranch, nullptr);
     }
 
+    // register for shutdown notification so we can clean ourselves up properly.
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-        // register for shutdown notification so we can clean ourselves up
-        // properly.
+    if (obs)
         obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-
-        obs->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
-    }
 
     return NS_OK;
 }
@@ -444,13 +439,6 @@ nsProtocolProxyService::Observe(nsISupports     *aSubject,
         if (mPACMan) {
             mPACMan->Shutdown();
             mPACMan = nullptr;
-        }
-    } else if (strcmp(aTopic, NS_NETWORK_LINK_TOPIC) == 0) {
-        nsCString converted = NS_ConvertUTF16toUTF8(aData);
-        const char *state = converted.get();
-        if (strcmp(state, NS_NETWORK_LINK_DATA_CHANGED) == 0) {
-            LOG((": received network event: %s, reload PAC", state));
-            ReloadPAC();
         }
     }
     else {
