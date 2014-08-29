@@ -588,6 +588,7 @@ static const char* sObserverTopics[] = {
 #ifdef ACCESSIBILITY
     "a11y-init-or-shutdown",
 #endif
+    "app-theme-changed",
 };
 
 /* static */ already_AddRefed<ContentParent>
@@ -2744,7 +2745,9 @@ ContentParent::Observe(nsISupports* aSubject,
         unused << SendActivateA11y();
     }
 #endif
-
+    else if (!strcmp(aTopic, "app-theme-changed")) {
+        unused << SendOnAppThemeChanged();
+    }
     return NS_OK;
 }
 
