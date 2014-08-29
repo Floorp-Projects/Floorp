@@ -1735,12 +1735,21 @@ bool AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
     return true;
   }
 
-  // If there is overscroll, try to hand it off to an APZC later
-  // in the handoff chain to consume.
+  // If there is overscroll, first try to hand it off to an APZC later
+  // in the handoff chain to consume (either as a normal scroll or as
+  // overscroll).
   // Note: "+ overscroll" rather than "- overscroll" because "overscroll"
   // is what's left of "displacement", and "displacement" is "start - end".
-  return CallDispatchScroll(aEndPoint + overscroll, aEndPoint, 
-                            aOverscrollHandoffChain, aOverscrollHandoffChainIndex + 1);
+  if (CallDispatchScroll(aEndPoint + overscroll, aEndPoint,
+                         aOverscrollHandoffChain, aOverscrollHandoffChainIndex + 1)) {
+    return true;
+  }
+
+  // If there is no APZC later in the handoff chain that accepted the
+  // overscroll, try to accept it ourselves. We only accept it if we
+  // are pannable.
+  APZC_LOG("%p taking overscroll during panning\n", this);
+  return OverscrollBy(cssOverscroll);
 }
 
 bool AsyncPanZoomController::OverscrollBy(const CSSPoint& aOverscroll) {
