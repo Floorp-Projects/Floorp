@@ -2184,7 +2184,7 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
   return false;
 }
 
-void AsyncPanZoomController::GetOverscrollTransform(ViewTransform* aTransform) const {
+void AsyncPanZoomController::GetOverscrollTransform(Matrix4x4* aTransform) const {
   // The overscroll effect is a combination of a translation in
   // the direction of overscroll, and shrinking in both directions.
   // With the effect applied, we can think of the composited region as being
@@ -2265,9 +2265,10 @@ void AsyncPanZoomController::GetOverscrollTransform(ViewTransform* aTransform) c
 
   float scale = 1 - (kZEffect * spaceProp);
 
-  // Finally, apply the transformations.
-  aTransform->mScale.scale *= scale;
-  aTransform->mTranslation += translation * mFrameMetrics.GetZoom();
+  // Finally, create a matrix representing the transformations.
+  ScreenPoint screenTranslation = translation * mFrameMetrics.GetZoom();
+  *aTransform = Matrix4x4().Scale(scale, scale, 1)
+                           .PostTranslate(screenTranslation.x, screenTranslation.y, 0);
 }
 
 bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
@@ -2336,7 +2337,7 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
 
 void AsyncPanZoomController::SampleContentTransformForFrame(ViewTransform* aOutTransform,
                                                             ScreenPoint& aScrollOffset,
-                                                            ViewTransform* aOutOverscrollTransform)
+                                                            Matrix4x4* aOutOverscrollTransform)
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
