@@ -148,6 +148,20 @@ describe("loop.CallConnectionWebSocket", function() {
       });
     });
 
+    describe("#accept", function() {
+      it("should send an accept message to the server", function() {
+        callWebSocket.promiseConnect();
+
+        callWebSocket.accept();
+
+        sinon.assert.calledOnce(dummySocket.send);
+        sinon.assert.calledWithExactly(dummySocket.send, JSON.stringify({
+          messageType: "action",
+          event: "accept"
+        }));
+      });
+    });
+
     describe("Events", function() {
       beforeEach(function() {
         sandbox.stub(callWebSocket, "trigger");
