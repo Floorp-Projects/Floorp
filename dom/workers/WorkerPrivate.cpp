@@ -21,6 +21,7 @@
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsPerformance.h"
 #include "nsPIDOMWindow.h"
 #include "nsITextToSubURI.h"
 #include "nsIThreadInternal.h"
@@ -2127,11 +2128,22 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
     aParent->AssertIsOnWorkerThread();
 
     aParent->CopyJSSettings(mJSSettings);
+
+    MOZ_ASSERT(IsDedicatedWorker());
+    mNowBaseTimeStamp = aParent->NowBaseTimeStamp();
   }
   else {
     AssertIsOnMainThread();
 
     RuntimeService::GetDefaultJSSettings(mJSSettings);
+
+    if (IsDedicatedWorker() && aLoadInfo.mWindow &&
+        aLoadInfo.mWindow->GetPerformance()) {
+      mNowBaseTimeStamp = aLoadInfo.mWindow->GetPerformance()->GetDOMTiming()->
+        GetNavigationStartTimeStamp();
+    } else {
+      mNowBaseTimeStamp = CreationTimeStamp();
+    }
   }
 }
 
