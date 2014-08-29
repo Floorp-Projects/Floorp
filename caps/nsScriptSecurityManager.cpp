@@ -694,11 +694,27 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (hasFlags) {
+            // Let apps load the whitelisted theme resources even if they don't
+            // have the webapps-manage permission but have the themeable one.
+            // Resources from the theme origin are also allowed to load from
+            // the theme origin (eg. stylesheets using images from the theme).
+            auto themeOrigin = Preferences::GetCString("b2g.theme.origin");
+            if (themeOrigin) {
+                nsAutoCString targetOrigin;
+                nsPrincipal::GetOriginForURI(targetBaseURI, getter_Copies(targetOrigin));
+                if (targetOrigin.Equals(themeOrigin)) {
+                    nsAutoCString pOrigin;
+                    aPrincipal->GetOrigin(getter_Copies(pOrigin));
+                    return nsContentUtils::IsExactSitePermAllow(aPrincipal, "themeable") ||
+                           pOrigin.Equals(themeOrigin)
+                        ? NS_OK : NS_ERROR_DOM_BAD_URI;
+                }
+            }
             // In this case, we allow opening only if the source and target URIS
             // are on the same domain, or the opening URI has the webapps
             // permision granted
-            if (!SecurityCompareURIs(sourceBaseURI,targetBaseURI) &&
-                !nsContentUtils::IsExactSitePermAllow(aPrincipal,WEBAPPS_PERM_NAME)){
+            if (!SecurityCompareURIs(sourceBaseURI, targetBaseURI) &&
+                !nsContentUtils::IsExactSitePermAllow(aPrincipal, WEBAPPS_PERM_NAME)) {
                 return NS_ERROR_DOM_BAD_URI;
             }
         }

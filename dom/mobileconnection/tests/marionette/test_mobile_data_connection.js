@@ -108,4 +108,4 @@ startTestCommon(function() {
     .then(() => setEmulatorRoamingAndWait(false))
     .then(() => setDataRoamingEnabled(false));
 
-}, ["settings-read", "settings-write"]);
+}, ["settings-read", "settings-write", "settings-api-read", "settings-api-write"]);
