@@ -1719,11 +1719,12 @@ static int vcmEnsureExternalCodec(
 
     // Register H.264 codec.
     if (send) {
-      VideoEncoder* encoder = nullptr;
+	VideoEncoder* encoder = nullptr;
 #ifdef MOZ_WEBRTC_OMX
-      encoder = OMXVideoCodec::CreateEncoder(OMXVideoCodec::CodecType::CODEC_H264);
+	encoder = OMXVideoCodec::CreateEncoder(
+	    OMXVideoCodec::CodecType::CODEC_H264);
 #else
-      encoder = mozilla::GmpVideoCodec::CreateEncoder();
+	encoder = mozilla::GmpVideoCodec::CreateEncoder();
 #endif
       if (encoder) {
         return conduit->SetExternalSendCodec(config, encoder);
@@ -2310,15 +2311,16 @@ int vcmGetH264SupportedPacketizationModes()
  */
 uint32_t vcmGetVideoH264ProfileLevelID()
 {
-  // For OMX, constrained baseline level 1.2 (via a pref)
+  // constrained baseline level 1.2
+  // XXX make variable based on openh264 and OMX support
+#ifdef MOZ_WEBRTC_OMX
   // Max resolution CIF; we should include max-mbps
-  int32_t level = 13; // minimum suggested for WebRTC spec
-
-  vcmGetVideoLevel(0, &level);
-  level &= 0xFF;
-  level |= 0x42E000;
-
-  return (uint32_t) level;
+  return 0x42E00C;
+#else
+  // XXX See bug 1043515 - we may want to support a higher profile than
+  // 1.3, depending on hardware(?)
+  return 0x42E00D;
+#endif
 }
 
 /**
@@ -2782,13 +2784,6 @@ static short vcmGetVideoPref(uint16_t codec,
     return 0;
   }
   return VCM_ERROR;
-}
-
-short vcmGetVideoLevel(uint16_t codec,
-                       int32_t *level) {
-  return vcmGetVideoPref(codec,
-                         "media.navigator.video.h264.level",
-                         level);
 }
 
 short vcmGetVideoMaxFs(uint16_t codec,
