@@ -113,8 +113,6 @@ ByteString CNToDERName(const char* cn);
 Result TamperOnce(/*in/out*/ ByteString& item, const ByteString& from,
                   const ByteString& to);
 
-Result InitInputFromSECItem(const SECItem* secItem, /*out*/ Input& input);
-
 ///////////////////////////////////////////////////////////////////////////////
 // Encode Certificates
 
