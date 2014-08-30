@@ -39,9 +39,8 @@ CreateCert(PLArenaPool* arena, const char* subjectCN,
 {
   static long serialNumberValue = 0;
   ++serialNumberValue;
-  const SECItem* serialNumber(CreateEncodedSerialNumber(arena,
-                                                        serialNumberValue));
-  EXPECT_TRUE(serialNumber);
+  ByteString serialNumber(CreateEncodedSerialNumber(serialNumberValue));
+  EXPECT_NE(ENCODING_FAILED, serialNumber);
   ByteString issuerDER(CNToDERName(subjectCN));
   EXPECT_NE(ENCODING_FAILED, issuerDER);
   ByteString subjectDER(CNToDERName(subjectCN));
