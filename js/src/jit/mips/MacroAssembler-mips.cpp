@@ -1574,7 +1574,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
     // Double values have to be aligned. We reserve extra space so that we can
     // start writing from the first aligned location.
     // We reserve a whole extra double so that the buffer has even size.
-    ma_and(SecondScratchReg, sp, Imm32(~(ABIStackAlignment - 1)));
+    ma_and(SecondScratchReg, sp, Imm32(~(StackAlignment - 1)));
     reserveStack(diffF + sizeof(double));
 
     for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); iter++) {
@@ -1596,7 +1596,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
 
     // Read the buffer form the first aligned location.
     ma_addu(SecondScratchReg, sp, Imm32(reservedF + sizeof(double)));
-    ma_and(SecondScratchReg, SecondScratchReg, Imm32(~(ABIStackAlignment - 1)));
+    ma_and(SecondScratchReg, SecondScratchReg, Imm32(~(StackAlignment - 1)));
 
     for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); iter++) {
         if (!ignore.has(*iter) && ((*iter).code() % 2 == 0))
@@ -3158,7 +3158,7 @@ MacroAssemblerMIPSCompat::setupUnalignedABICall(uint32_t args, Register scratch)
 
     // Force sp to be aligned
     ma_subu(StackPointer, StackPointer, Imm32(sizeof(uint32_t)));
-    ma_and(StackPointer, StackPointer, Imm32(~(ABIStackAlignment - 1)));
+    ma_and(StackPointer, StackPointer, Imm32(~(StackAlignment - 1)));
     as_sw(scratch, StackPointer, 0);
 }
 
@@ -3259,7 +3259,7 @@ MacroAssemblerMIPSCompat::checkStackAlignment()
 {
 #ifdef DEBUG
     Label aligned;
-    as_andi(ScratchRegister, sp, ABIStackAlignment - 1);
+    as_andi(ScratchRegister, sp, StackAlignment - 1);
     ma_b(ScratchRegister, zero, &aligned, Equal, ShortJump);
     as_break(MAX_BREAK_CODE);
     bind(&aligned);
@@ -3271,7 +3271,7 @@ MacroAssemblerMIPSCompat::alignStackPointer()
 {
     movePtr(StackPointer, SecondScratchReg);
     subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
-    andPtr(Imm32(~(ABIStackAlignment - 1)), StackPointer);
+    andPtr(Imm32(~(StackAlignment - 1)), StackPointer);
     storePtr(SecondScratchReg, Address(StackPointer, 0));
 }
 
@@ -3284,13 +3284,13 @@ MacroAssemblerMIPSCompat::restoreStackPointer()
 void
 MacroAssembler::alignFrameForICArguments(AfterICSaveLive &aic)
 {
-    if (framePushed() % ABIStackAlignment != 0) {
-        aic.alignmentPadding = ABIStackAlignment - (framePushed() % StackAlignment);
+    if (framePushed() % StackAlignment != 0) {
+        aic.alignmentPadding = StackAlignment - (framePushed() % StackAlignment);
         reserveStack(aic.alignmentPadding);
     } else {
         aic.alignmentPadding = 0;
     }
-    MOZ_ASSERT(framePushed() % ABIStackAlignment == 0);
+    MOZ_ASSERT(framePushed() % StackAlignment == 0);
     checkStackAlignment();
 }
 
@@ -3316,10 +3316,10 @@ MacroAssemblerMIPSCompat::callWithABIPre(uint32_t *stackAdjust, bool callFromAsm
     uint32_t alignmentAtPrologue = callFromAsmJS ? sizeof(AsmJSFrame) : 0;
 
     if (dynamicAlignment_) {
-        *stackAdjust += ComputeByteAlignment(*stackAdjust, ABIStackAlignment);
+        *stackAdjust += ComputeByteAlignment(*stackAdjust, StackAlignment);
     } else {
         *stackAdjust += ComputeByteAlignment(framePushed_ + alignmentAtPrologue + *stackAdjust,
-                                             ABIStackAlignment);
+                                             StackAlignment);
     }
 
     reserveStack(*stackAdjust);
@@ -3444,7 +3444,7 @@ void
 MacroAssemblerMIPSCompat::handleFailureWithHandler(void *handler)
 {
     // Reserve space for exception information.
-    int size = (sizeof(ResumeFromException) + ABIStackAlignment) & ~(ABIStackAlignment - 1);
+    int size = (sizeof(ResumeFromException) + StackAlignment) & ~(StackAlignment - 1);
     ma_subu(StackPointer, StackPointer, Imm32(size));
     ma_move(a0, StackPointer); // Use a0 since it is a first function argument
 

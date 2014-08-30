@@ -2978,21 +2978,6 @@ public:
         m_formatter.prefix(PRE_SSE_F3);
         m_formatter.twoByteOp(OP2_MOVSD_WsdVsd, (RegisterID)src, address);
     }
-
-    void movdqa_rm(XMMRegisterID src, const void* address)
-    {
-        spew("movdqa     %s, %p",
-             nameFPReg(src), address);
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_MOVDQ_WdqVdq, (RegisterID)src, address);
-    }
-
-    void movaps_rm(XMMRegisterID src, const void* address)
-    {
-        spew("movaps     %s, %p",
-             nameFPReg(src), address);
-        m_formatter.twoByteOp(OP2_MOVPS_WpsVps, (RegisterID)src, address);
-    }
 #else
     JmpSrc movsd_ripr(XMMRegisterID dst)
     {
@@ -3016,29 +3001,6 @@ public:
              nameFPReg(src));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteRipOp(OP2_MOVSD_WsdVsd, (RegisterID)src, 0);
-        return JmpSrc(m_formatter.size());
-    }
-    JmpSrc movss_rrip(XMMRegisterID src)
-    {
-        spew("movss      %s, ?(%%rip)",
-             nameFPReg(src));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteRipOp(OP2_MOVSD_WsdVsd, (RegisterID)src, 0);
-        return JmpSrc(m_formatter.size());
-    }
-    JmpSrc movdqa_rrip(XMMRegisterID src)
-    {
-        spew("movdqa      %s, ?(%%rip)",
-             nameFPReg(src));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteRipOp(OP2_MOVDQ_WdqVdq, (RegisterID)src, 0);
-        return JmpSrc(m_formatter.size());
-    }
-    JmpSrc movaps_rrip(XMMRegisterID src)
-    {
-        spew("movaps      %s, ?(%%rip)",
-             nameFPReg(src));
-        m_formatter.twoByteRipOp(OP2_MOVPS_WpsVps, (RegisterID)src, 0);
         return JmpSrc(m_formatter.size());
     }
 #endif
