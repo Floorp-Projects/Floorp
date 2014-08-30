@@ -48,10 +48,10 @@ var conn = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnectio
  */
 function getColumn(table, column, fromColumnName, fromColumnValue)
 {
-  let sql = "SELECT " + column + " " +
-            "FROM " + table + " " +
-            "WHERE " + fromColumnName + " = :val " +
-            "LIMIT 1";
+  let sql = `SELECT ${column}
+             FROM ${table}
+             WHERE ${fromColumnName} = :val
+             LIMIT 1`;
   let stmt = conn.createStatement(sql);
   try {
     stmt.params.val = fromColumnValue;
