@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bug 983985</title>
+<style>
+@font-face {
+  font-family: test;
+  src: url(../fonts/dejavu-sans/DejaVuSans.ttf);
+}
+.outer {
+  font: italic 36px test;
+  width: 2.5em; /* enough to display "hello" but not the hexbox */
+  overflow: hidden;
+}
+.inner {
+  width: 10em;
+}
+</style>
+</head>
+<body>
+<div class="outer">
+<div class="inner">
+hello &#x530; world
+</div>
+</div>
+</body>
+</html>
