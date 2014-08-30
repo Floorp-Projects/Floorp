@@ -14,7 +14,7 @@ interface nsIURL;
  *                    future releases.
  */
 
-[scriptable, uuid(a2080795-e54c-4ecb-b001-bdc08a2021dd)]
+[scriptable, uuid(ee431adc-21dd-42d9-968b-e19b4c62960a)]
 interface nsICrashReporter : nsISupports
 {
   /**
@@ -117,4 +117,12 @@ interface nsICrashReporter : nsISupports
    * change.
    */
   void UpdateCrashEventsDir();
+
+  /**
+   * Save an anonymized memory report file for inclusion in a future crash
+   * report in this session.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED if crash reporting is disabled.
+   */
+  void saveMemoryReport();
 };
