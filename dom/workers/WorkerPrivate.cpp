@@ -2137,9 +2137,9 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
 
     RuntimeService::GetDefaultJSSettings(mJSSettings);
 
-    if (IsDedicatedWorker() && aLoadInfo.mWindow &&
-        aLoadInfo.mWindow->GetPerformance()) {
-      mNowBaseTimeStamp = aLoadInfo.mWindow->GetPerformance()->GetDOMTiming()->
+    if (IsDedicatedWorker() && mLoadInfo.mWindow &&
+        mLoadInfo.mWindow->GetPerformance()) {
+      mNowBaseTimeStamp = mLoadInfo.mWindow->GetPerformance()->GetDOMTiming()->
         GetNavigationStartTimeStamp();
     } else {
       mNowBaseTimeStamp = CreationTimeStamp();
