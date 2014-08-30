@@ -367,7 +367,12 @@ pref("media.navigator.enabled", true);
 #endif
 
 pref("media.getusermedia.screensharing.enabled", true);
+#ifdef RELEASE_BUILD
 pref("media.getusermedia.screensharing.allowed_domains", "");
+#else
+// temporary value, not intended for release - bug 1049087
+pref("media.getusermedia.screensharing.allowed_domains", "mozilla.github.io");
+#endif
 
 // TextTrack support
 pref("media.webvtt.enabled", true);
