@@ -135,7 +135,7 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // MUST NOT be freed.
 SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
                                   Input signature,
-                                  const SECItem* serialNumber,
+                                  const ByteString& serialNumber,
                                   const ByteString& issuerNameDER,
                                   std::time_t notBefore, std::time_t notAfter,
                                   const ByteString& subjectNameDER,
@@ -144,7 +144,7 @@ SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
                                   SignatureAlgorithm signatureAlgorithm,
                           /*out*/ ScopedSECKEYPrivateKey& privateKey);
 
-SECItem* CreateEncodedSerialNumber(PLArenaPool* arena, long value);
+ByteString CreateEncodedSerialNumber(long value);
 
 MOZILLA_PKIX_ENUM_CLASS ExtensionCriticality { NotCritical = 0, Critical = 1 };
 

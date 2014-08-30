@@ -141,11 +141,13 @@ public:
       abort();
     }
 
-    Input serialNumberDER;
-    // The result of CreateEncodedSerialNumber is owned by the arena
-    if (InitInputFromSECItem(
-          CreateEncodedSerialNumber(arena.get(), ++rootIssuedCount),
-          serialNumberDER) != Success) {
+    serialNumberDER = CreateEncodedSerialNumber(++rootIssuedCount);
+    if (serialNumberDER == ENCODING_FAILED) {
+      abort();
+    }
+    Input serialNumberDERInput;
+    if (serialNumberDERInput.Init(serialNumberDER.data(),
+                                  serialNumberDER.length()) != Success) {
       abort();
     }
 
@@ -154,7 +156,7 @@ public:
       abort();
     }
     endEntityCertID = new (std::nothrow) CertID(rootNameDERInput, rootSPKIDER,
-                                                serialNumberDER);
+                                                serialNumberDERInput);
     if (!endEntityCertID) {
       abort();
     }
@@ -166,7 +168,8 @@ public:
   OCSPTestTrustDomain trustDomain;
 
   ByteString rootNameDER;
-  // endEntityCertID references items owned by arena, rootSPKI, and rootNameDER.
+  ByteString serialNumberDER;
+  // endEntityCertID references rootSPKI, rootNameDER, and serialNumberDER.
   ScopedPtr<CertID, deleteCertID> endEntityCertID;
 };
 
@@ -439,9 +442,8 @@ protected:
                               /*optional*/ SECKEYPrivateKey* signerKey,
                                    /*out*/ ScopedSECKEYPrivateKey& privateKey)
   {
-    const SECItem* serialNumberDER(CreateEncodedSerialNumber(arena,
-                                                             serialNumber));
-    if (!serialNumberDER) {
+    ByteString serialNumberDER(CreateEncodedSerialNumber(serialNumber));
+    if (serialNumberDER == ENCODING_FAILED) {
       return nullptr;
     }
     ByteString issuerDER(CNToDERName(issuer));

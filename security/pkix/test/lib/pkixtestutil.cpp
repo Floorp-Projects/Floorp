@@ -320,22 +320,17 @@ Boolean(PLArenaPool* arena, bool value)
   return result;
 }
 
-static SECItem*
-Integer(PLArenaPool* arena, long value)
+static ByteString
+Integer(long value)
 {
   if (value < 0 || value > 127) {
     // TODO: add encoding of larger values
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
-  SECItem* encoded = SECITEM_AllocItem(arena, nullptr, 3);
-  if (!encoded) {
-    return nullptr;
-  }
-  encoded->data[0] = der::INTEGER;
-  encoded->data[1] = 1; // length
-  encoded->data[2] = value;
-  return encoded;
+  ByteString encodedValue;
+  encodedValue.push_back(static_cast<uint8_t>(value));
+  return TLV(der::INTEGER, encodedValue);
 }
 
 enum TimeEncoding { UTCTime = 0, GeneralizedTime = 1 };
@@ -699,7 +694,7 @@ GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
 // Certificates
 
 static SECItem* TBSCertificate(PLArenaPool* arena, long version,
-                               const SECItem* serialNumber, Input signature,
+                               const ByteString& serialNumber, Input signature,
                                const ByteString& issuer, time_t notBefore,
                                time_t notAfter, const ByteString& subject,
                                const SECKEYPublicKey* subjectPublicKey,
@@ -711,7 +706,7 @@ static SECItem* TBSCertificate(PLArenaPool* arena, long version,
 //         signatureValue       BIT STRING  }
 SECItem*
 CreateEncodedCertificate(PLArenaPool* arena, long version, Input signature,
-                         const SECItem* serialNumber,
+                         const ByteString& serialNumber,
                          const ByteString& issuerNameDER,
                          time_t notBefore, time_t notAfter,
                          const ByteString& subjectNameDER,
@@ -771,7 +766,7 @@ CreateEncodedCertificate(PLArenaPool* arena, long version, Input signature,
 //                           -- If present, version MUST be v3 --  }
 static SECItem*
 TBSCertificate(PLArenaPool* arena, long versionValue,
-               const SECItem* serialNumber, Input signature,
+               const ByteString& serialNumber, Input signature,
                const ByteString& issuer, time_t notBeforeTime,
                time_t notAfterTime, const ByteString& subject,
                const SECKEYPublicKey* subjectPublicKey,
@@ -786,24 +781,19 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
   Output output;
 
   if (versionValue != static_cast<long>(der::Version::v1)) {
-    SECItem* versionInteger(Integer(arena, versionValue));
-    if (!versionInteger) {
+    ByteString versionInteger(Integer(versionValue));
+    if (versionInteger == ENCODING_FAILED) {
       return nullptr;
     }
-    SECItem* version(EncodeNested(arena,
-                                  der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
-                                  versionInteger));
-    if (!version) {
+    ByteString version(TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
+                           versionInteger));
+    if (version == ENCODING_FAILED) {
       return nullptr;
     }
-    if (output.Add(version) != Success) {
-      return nullptr;
-    }
+    output.Add(version);
   }
 
-  if (output.Add(serialNumber) != Success) {
-    return nullptr;
-  }
+  output.Add(serialNumber);
 
   SECItem signatureItem = UnsafeMapInputToSECItem(signature);
   if (output.Add(&signatureItem) != Success) {
@@ -934,10 +924,10 @@ CNToDERName(const char* cn)
   return TLV(der::SEQUENCE, rdn);
 }
 
-SECItem*
-CreateEncodedSerialNumber(PLArenaPool* arena, long serialNumberValue)
+ByteString
+CreateEncodedSerialNumber(long serialNumberValue)
 {
-  return Integer(arena, serialNumberValue);
+  return Integer(serialNumberValue);
 }
 
 // BasicConstraints ::= SEQUENCE {
@@ -962,13 +952,11 @@ CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
   }
 
   if (pathLenConstraintValue) {
-    SECItem* pathLenConstraint(Integer(arena, *pathLenConstraintValue));
-    if (!pathLenConstraint) {
+    ByteString pathLenConstraint(Integer(*pathLenConstraintValue));
+    if (pathLenConstraint == ENCODING_FAILED) {
       return nullptr;
     }
-    if (value.Add(pathLenConstraint) != Success) {
-      return nullptr;
-    }
+    value.Add(pathLenConstraint);
   }
 
   // python DottedOIDToCode.py --tlv id-ce-basicConstraints 2.5.29.19
@@ -1360,16 +1348,10 @@ CertID(OCSPResponseContext& context)
     return nullptr;
   }
 
-  static const SEC_ASN1Template serialTemplate[] = {
-    { SEC_ASN1_INTEGER, 0 },
-    { 0 }
-  };
-  SECItem serialNumberSECItem =
-    UnsafeMapInputToSECItem(context.certID.serialNumber);
-  SECItem* serialNumber = SEC_ASN1EncodeItem(context.arena, nullptr,
-                                             &serialNumberSECItem,
-                                             serialTemplate);
-  if (!serialNumber) {
+  ByteString serialNumberValue(context.certID.serialNumber.UnsafeGetData(),
+                               context.certID.serialNumber.GetLength());
+  ByteString serialNumber(TLV(der::INTEGER, serialNumberValue));
+  if (serialNumber == ENCODING_FAILED) {
     return nullptr;
   }
 
@@ -1390,9 +1372,7 @@ CertID(OCSPResponseContext& context)
   }
   output.Add(issuerNameHash);
   output.Add(issuerKeyHash);
-  if (output.Add(serialNumber) != Success) {
-    return nullptr;
-  }
+  output.Add(serialNumber);
   return output.Squash(context.arena, der::SEQUENCE);
 }
 
