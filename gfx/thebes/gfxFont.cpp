@@ -3385,9 +3385,26 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
                             gfxFloat height = GetMetrics().maxAscent;
                             gfxRect glyphRect(pt.x, pt.y - height,
                                               advanceDevUnits, height);
+
+                            // If there's a fake-italic skew in effect as part
+                            // of the drawTarget's transform, we need to remove
+                            // this before drawing the hexbox. (Bug 983985)
+                            Matrix oldMat;
+                            if (aFontParams.passedInvMatrix) {
+                                oldMat = aRunParams.dt->GetTransform();
+                                aRunParams.dt->SetTransform(
+                                    *aFontParams.passedInvMatrix * oldMat);
+                            }
+
                             gfxFontMissingGlyphs::DrawMissingGlyph(
                                 aRunParams.context, glyphRect, details->mGlyphID,
                                 aShapedText->GetAppUnitsPerDevUnit());
+
+                            // Restore the matrix, if we modified it before
+                            // drawing the hexbox.
+                            if (aFontParams.passedInvMatrix) {
+                                aRunParams.dt->SetTransform(oldMat);
+                            }
                         }
                     } else {
                         gfxPoint glyphXY(*aPt);
