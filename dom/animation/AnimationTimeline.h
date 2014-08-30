@@ -41,9 +41,9 @@ public:
   Nullable<TimeDuration> ToTimelineTime(const TimeStamp& aTimeStamp) const;
   TimeStamp ToTimeStamp(const TimeDuration& aTimelineTime) const;
 
+protected:
   TimeStamp GetCurrentTimeStamp() const;
 
-protected:
   virtual ~AnimationTimeline() { }
 
   nsCOMPtr<nsIDocument> mDocument;

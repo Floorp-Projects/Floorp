@@ -67,23 +67,12 @@ public:
   bool IsCurrent() const;
 
   // Return the duration since the start time of the player, taking into
-  // account the pause state.  May be negative.
-  // Returns a null value if the timeline associated with this object has a
-  // current timestamp that is null or if the start time of this object is
-  // null.
-  Nullable<TimeDuration> GetCurrentTimeDuration() const {
-    Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTimeDuration();
-    Nullable<TimeDuration> holdDuration = mTimeline->ToTimelineTime(mHoldTime);
-    Nullable<TimeDuration> result; // Initializes to null
-    if (!timelineTime.IsNull() && !mStartTime.IsNull()) {
-      result.SetValue((IsPaused() ? holdDuration.Value() : timelineTime.Value()) - mStartTime.Value());
-    }
-    return result;
-  }
+  // account the pause state.  May be negative or null.
+  Nullable<TimeDuration> GetCurrentTimeDuration() const;
 
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime;
-  TimeStamp mHoldTime;
+  Nullable<TimeDuration> mHoldTime;
   uint8_t mPlayState;
   bool mIsRunningOnCompositor;
 
