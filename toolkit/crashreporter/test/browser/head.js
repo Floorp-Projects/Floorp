@@ -129,7 +129,11 @@ function addPendingCrashreport(crD, date, extra) {
     extradata += x + "=" + extra[x] + "\n";
   }
   writeDataToFile(extrafile, extradata);
+  let memoryfile = pendingdir.clone();
+  memoryfile.append(uuid + ".memory.json.gz");
+  writeDataToFile(memoryfile, "Let's pretend this is a memory report");
   dumpfile.lastModifiedTime = date;
   extrafile.lastModifiedTime = date;
+  memoryfile.lastModifiedTime = date;
   return {'id': uuid, 'date': date, 'pending': true, 'extra': extra};
 }
