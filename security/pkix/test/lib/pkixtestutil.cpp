@@ -287,23 +287,20 @@ KeyHashHelper(const CERTSubjectPublicKeyInfo* spki)
   return HashedOctetString(spk);
 }
 
-static SECItem*
-BitString(PLArenaPool* arena, const SECItem* rawBytes, bool corrupt)
+static ByteString
+BitString(const ByteString& rawBytes, bool corrupt)
 {
+  ByteString prefixed;
   // We have to add a byte at the beginning indicating no unused bits.
   // TODO: add ability to have bit strings of bit length not divisible by 8,
   // resulting in unused bits in the bitstring encoding
-  SECItem* prefixed = SECITEM_AllocItem(arena, nullptr, rawBytes->len + 1);
-  if (!prefixed) {
-    return nullptr;
-  }
-  prefixed->data[0] = 0;
-  memcpy(prefixed->data + 1, rawBytes->data, rawBytes->len);
+  prefixed.push_back(0);
+  prefixed.append(rawBytes);
   if (corrupt) {
-    assert(prefixed->len > 8);
-    prefixed->data[8]++;
+    assert(prefixed.length() > 8);
+    prefixed[8]++;
   }
-  return EncodeNested(arena, der::BIT_STRING, prefixed);
+  return TLV(der::BIT_STRING, prefixed);
 }
 
 static SECItem*
@@ -520,9 +517,10 @@ SignedData(PLArenaPool* arena, const SECItem* tbsData,
   }
   // TODO: add ability to have signatures of bit length not divisible by 8,
   // resulting in unused bits in the bitstring encoding
-  SECItem* signatureNested = BitString(arena, &signature, corrupt);
+  ByteString signatureNested(BitString(ByteString(signature.data, signature.len),
+                                       corrupt));
   SECITEM_FreeItem(&signature, false);
-  if (!signatureNested) {
+  if (signatureNested == ENCODING_FAILED) {
     return nullptr;
   }
 
@@ -555,9 +553,7 @@ SignedData(PLArenaPool* arena, const SECItem* tbsData,
   if (output.Add(&sigantureAlgorithmDERItem) != Success) {
     return nullptr;
   }
-  if (output.Add(signatureNested) != Success) {
-    return nullptr;
-  }
+  output.Add(signatureNested);
   if (certsNested) {
     if (output.Add(certsNested) != Success) {
       return nullptr;
