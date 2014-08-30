@@ -3051,7 +3051,7 @@ EmitDestructuringDecls(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp prologOp
 }
 
 static bool
-EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
+EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pattern,
                            VarEmitOption emitOption);
 
 /*
@@ -3230,7 +3230,7 @@ EmitIteratorNext(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn=nullp
  * lhs expression. (Same post-condition as EmitDestructuringLHS)
  */
 static bool
-EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
+EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pattern,
                            VarEmitOption emitOption)
 {
     JS_ASSERT(emitOption != DefineVars);
@@ -3242,15 +3242,15 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
 #ifdef DEBUG
     int stackDepth = bce->stackDepth;
     JS_ASSERT(stackDepth != 0);
-    JS_ASSERT(pn->isArity(PN_LIST));
-    JS_ASSERT(pn->isKind(PNK_ARRAY) || pn->isKind(PNK_OBJECT));
+    JS_ASSERT(pattern->isArity(PN_LIST));
+    JS_ASSERT(pattern->isKind(PNK_ARRAY) || pattern->isKind(PNK_OBJECT));
 #endif
 
     /*
      * When destructuring an array, use an iterator to walk it, instead of index lookup.
      * InitializeVars expects us to leave the *original* value on the stack.
      */
-    if (pn->isKind(PNK_ARRAY)) {
+    if (pattern->isKind(PNK_ARRAY)) {
         if (emitOption == InitializeVars) {
             if (Emit1(cx, bce, JSOP_DUP) < 0)                      // OBJ OBJ
                 return false;
@@ -3260,13 +3260,13 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
         needToPopIterator = true;
     }
 
-    for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+    for (pn2 = pattern->pn_head; pn2; pn2 = pn2->pn_next) {
         /*
          * Now push the property name currently being matched, which is the
          * current property name "label" on the left of a colon in the object initialiser.
          * Set pn3 to the lvalue node, which is in the value-initializing position.
          */
-        if (pn->isKind(PNK_OBJECT)) {
+        if (pattern->isKind(PNK_OBJECT)) {
             doElemOp = true;
             JS_ASSERT(pn2->isKind(PNK_COLON) || pn2->isKind(PNK_SHORTHAND));
 
@@ -3312,7 +3312,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
 
             pn3 = pn2->pn_right;
         } else {
-            JS_ASSERT(pn->isKind(PNK_ARRAY));
+            JS_ASSERT(pattern->isKind(PNK_ARRAY));
 
             if (pn2->isKind(PNK_SPREAD)) {
                 /* Create a new array with the rest of the iterator */
@@ -3335,7 +3335,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
             } else {
                 if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER ITER
                     return false;
-                if (!EmitIteratorNext(cx, bce, pn))                        // ITER RESULT
+                if (!EmitIteratorNext(cx, bce, pattern))                   // ITER RESULT
                     return false;
                 if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER RESULT RESULT
                     return false;
@@ -3376,7 +3376,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
 
         /* Elision node makes a hole in the array destructurer. */
         if (pn3->isKind(PNK_ELISION)) {
-            JS_ASSERT(pn->isKind(PNK_ARRAY));
+            JS_ASSERT(pattern->isKind(PNK_ARRAY));
             JS_ASSERT(pn2 == pn3);
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
@@ -3386,7 +3386,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                 return false;
 
             if (emitOption == PushInitialValues &&
-                (pn->isKind(PNK_OBJECT) || needToPopIterator)) {
+                (pattern->isKind(PNK_OBJECT) || needToPopIterator)) {
                 /*
                  * After '[x,y]' in 'let ([[x,y], z] = o)', the stack is
                  *   | to-be-destructured-value | x | y |
@@ -3414,7 +3414,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
     if (needToPopIterator && Emit1(cx, bce, JSOP_POP) < 0)
         return false;
 
-    if (emitOption == PushInitialValues && pn->isKind(PNK_OBJECT)) {
+    if (emitOption == PushInitialValues && pattern->isKind(PNK_OBJECT)) {
         /*
          * Per the above loop invariant, to-be-destructured-value is at the top
          * of the stack. To achieve the post-condition, pop it.
@@ -3428,14 +3428,15 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
 }
 
 static bool
-EmitDestructuringOps(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool isLet = false)
+EmitDestructuringOps(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pattern,
+                     bool isLet = false)
 {
     /*
      * Call our recursive helper to emit the destructuring assignments and
      * related stack manipulations.
      */
     VarEmitOption emitOption = isLet ? PushInitialValues : InitializeVars;
-    return EmitDestructuringOpsHelper(cx, bce, pn, emitOption);
+    return EmitDestructuringOpsHelper(cx, bce, pattern, emitOption);
 }
 
 static bool
