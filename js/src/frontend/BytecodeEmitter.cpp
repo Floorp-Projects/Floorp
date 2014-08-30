@@ -3216,24 +3216,11 @@ EmitIteratorNext(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn=nullp
     return true;
 }
 
-/*
- * Recursive helper for EmitDestructuringOps.
- * EmitDestructuringOpsHelper assumes the to-be-destructured value has been
- * pushed on the stack and emits code to destructure each part of a [] or {}
- * lhs expression.
- *
- * If emitOption is InitializeVars, the initial to-be-destructured value is
- * left untouched on the stack and the overall depth is not changed.
- *
- * If emitOption is PushInitialValues, the to-be-destructured value is replaced
- * with the initial values of the N (where 0 <= N) variables assigned in the
- * lhs expression. (Same post-condition as EmitDestructuringLHS)
- */
 static bool
-EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pattern,
-                           VarEmitOption emitOption)
+EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pattern,
+                                VarEmitOption emitOption)
 {
-    JS_ASSERT(emitOption != DefineVars);
+    MOZ_ASSERT(pattern->isKind(PNK_ARRAY));
 
     bool doElemOp;
     bool needToPopIterator = false;
@@ -3426,6 +3413,229 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
     }
 
     return true;
+}
+
+static bool
+EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pattern,
+                                 VarEmitOption emitOption)
+{
+    MOZ_ASSERT(pattern->isKind(PNK_OBJECT));
+
+    bool doElemOp;
+    bool needToPopIterator = false;
+
+#ifdef DEBUG
+    int stackDepth = bce->stackDepth;
+    JS_ASSERT(stackDepth != 0);
+    JS_ASSERT(pattern->isArity(PN_LIST));
+    JS_ASSERT(pattern->isKind(PNK_ARRAY) || pattern->isKind(PNK_OBJECT));
+#endif
+
+    /*
+     * When destructuring an array, use an iterator to walk it, instead of index lookup.
+     * InitializeVars expects us to leave the *original* value on the stack.
+     */
+    if (pattern->isKind(PNK_ARRAY)) {
+        if (emitOption == InitializeVars) {
+            if (Emit1(cx, bce, JSOP_DUP) < 0)                      // OBJ OBJ
+                return false;
+        }
+        if (!EmitIterator(cx, bce))                                // OBJ? ITER
+            return false;
+        needToPopIterator = true;
+    }
+
+    for (ParseNode *member = pattern->pn_head; member; member = member->pn_next) {
+        /*
+         * Now push the property name currently being matched, which is the
+         * current property name "label" on the left of a colon in the object
+         * initialiser.  Set |subpattern| to the lvalue node, which is in the
+         * value-initializing position.
+         */
+        ParseNode *subpattern;
+        if (pattern->isKind(PNK_OBJECT)) {
+            doElemOp = true;
+            JS_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
+
+            /* Duplicate the value being destructured to use as a reference base. */
+            if (Emit1(cx, bce, JSOP_DUP) < 0)
+                return false;
+
+            ParseNode *key = member->pn_left;
+            if (key->isKind(PNK_NUMBER)) {
+                if (!EmitNumberOp(cx, key->pn_dval, bce))
+                    return false;
+            } else if (key->isKind(PNK_NAME) || key->isKind(PNK_STRING)) {
+                PropertyName *name = key->pn_atom->asPropertyName();
+
+                // The parser already checked for atoms representing indexes and
+                // used PNK_NUMBER instead, but also watch for ids which TI treats
+                // as indexes for simplification of downstream analysis.
+                jsid id = NameToId(name);
+                if (id != types::IdToTypeId(id)) {
+                    if (!EmitTree(cx, bce, key))
+                        return false;
+                } else {
+                    if (!EmitAtomOp(cx, name, JSOP_GETPROP, bce))
+                        return false;
+                    doElemOp = false;
+                }
+            } else {
+                JS_ASSERT(key->isKind(PNK_COMPUTED_NAME));
+                if (!EmitTree(cx, bce, key->pn_kid))
+                    return false;
+            }
+
+            if (doElemOp) {
+                /*
+                 * Ok, get the value of the matching property name.  This leaves
+                 * that value on top of the value being destructured, so the stack
+                 * is one deeper than when we started.
+                 */
+                if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
+                    return false;
+                JS_ASSERT(bce->stackDepth >= stackDepth + 1);
+            }
+
+            subpattern = member->pn_right;
+        } else {
+            JS_ASSERT(pattern->isKind(PNK_ARRAY));
+
+            if (member->isKind(PNK_SPREAD)) {
+                /* Create a new array with the rest of the iterator */
+                ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);          // ITER ARRAY
+                if (off < 0)
+                    return false;
+                CheckTypeSet(cx, bce, JSOP_NEWARRAY);
+                jsbytecode *pc = bce->code(off);
+                SET_UINT24(pc, 0);
+
+                if (!EmitNumberOp(cx, 0, bce))                             // ITER ARRAY INDEX
+                    return false;
+                if (!EmitSpread(cx, bce))                                  // ARRAY INDEX
+                    return false;
+                if (Emit1(cx, bce, JSOP_POP) < 0)                          // ARRAY
+                    return false;
+                if (Emit1(cx, bce, JSOP_ENDINIT) < 0)
+                    return false;
+                needToPopIterator = false;
+            } else {
+                if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER ITER
+                    return false;
+                if (!EmitIteratorNext(cx, bce, pattern))                   // ITER RESULT
+                    return false;
+                if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER RESULT RESULT
+                    return false;
+                if (!EmitAtomOp(cx, cx->names().done, JSOP_GETPROP, bce))  // ITER RESULT DONE?
+                    return false;
+
+                // Emit (result.done ? undefined : result.value)
+                // This is mostly copied from EmitConditionalExpression, except that this code
+                // does not push new values onto the stack.
+                ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_COND);
+                if (noteIndex < 0)
+                    return false;
+                ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFEQ, 0);
+                if (beq < 0)
+                    return false;
+
+                if (Emit1(cx, bce, JSOP_POP) < 0)                          // ITER
+                    return false;
+                if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                    // ITER UNDEFINED
+                    return false;
+
+                /* Jump around else, fixup the branch, emit else, fixup jump. */
+                ptrdiff_t jmp = EmitJump(cx, bce, JSOP_GOTO, 0);
+                if (jmp < 0)
+                    return false;
+                SetJumpOffsetAt(bce, beq);
+
+                if (!EmitAtomOp(cx, cx->names().value, JSOP_GETPROP, bce)) // ITER VALUE
+                    return false;
+
+                SetJumpOffsetAt(bce, jmp);
+                if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq))
+                    return false;
+            }
+
+            subpattern = member;
+        }
+
+        /* Elision node makes a hole in the array destructurer. */
+        if (subpattern->isKind(PNK_ELISION)) {
+            JS_ASSERT(pattern->isKind(PNK_ARRAY));
+            JS_ASSERT(member == subpattern);
+            if (Emit1(cx, bce, JSOP_POP) < 0)
+                return false;
+        } else {
+            int32_t depthBefore = bce->stackDepth;
+            if (!EmitDestructuringLHS(cx, bce, subpattern, emitOption))
+                return false;
+
+            if (emitOption == PushInitialValues &&
+                (pattern->isKind(PNK_OBJECT) || needToPopIterator)) {
+                /*
+                 * After '[x,y]' in 'let ([[x,y], z] = o)', the stack is
+                 *   | to-be-destructured-value | x | y |
+                 * The goal is:
+                 *   | x | y | z |
+                 * so emit a pick to produce the intermediate state
+                 *   | x | y | to-be-destructured-value |
+                 * before destructuring z. This gives the loop invariant that
+                 * the to-be-destructured-value is always on top of the stack.
+                 */
+                JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
+                uint32_t pickDistance = (uint32_t)((bce->stackDepth + 1) - depthBefore);
+                if (pickDistance > 0) {
+                    if (pickDistance > UINT8_MAX) {
+                        bce->reportError(subpattern, JSMSG_TOO_MANY_LOCALS);
+                        return false;
+                    }
+                    if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)pickDistance) < 0)
+                        return false;
+                }
+            }
+        }
+    }
+
+    if (needToPopIterator && Emit1(cx, bce, JSOP_POP) < 0)
+        return false;
+
+    if (emitOption == PushInitialValues && pattern->isKind(PNK_OBJECT)) {
+        /*
+         * Per the above loop invariant, to-be-destructured-value is at the top
+         * of the stack. To achieve the post-condition, pop it.
+         * In case of array destructuring, the above POP already took care of the iterator.
+         */
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
+    }
+
+    return true;
+}
+
+/*
+ * Recursive helper for EmitDestructuringOps.
+ * EmitDestructuringOpsHelper assumes the to-be-destructured value has been
+ * pushed on the stack and emits code to destructure each part of a [] or {}
+ * lhs expression.
+ *
+ * If emitOption is InitializeVars, the initial to-be-destructured value is
+ * left untouched on the stack and the overall depth is not changed.
+ *
+ * If emitOption is PushInitialValues, the to-be-destructured value is replaced
+ * with the initial values of the N (where 0 <= N) variables assigned in the
+ * lhs expression. (Same post-condition as EmitDestructuringLHS)
+ */
+static bool
+EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pattern,
+                           VarEmitOption emitOption)
+{
+    MOZ_ASSERT(emitOption != DefineVars);
+
+    if (pattern->isKind(PNK_ARRAY))
+        return EmitDestructuringOpsArrayHelper(cx, bce, pattern, emitOption);
+    return EmitDestructuringOpsObjectHelper(cx, bce, pattern, emitOption);
 }
 
 static bool
