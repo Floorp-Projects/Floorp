@@ -30,7 +30,6 @@ package ch.boye.httpclientandroidlib.impl.cookie;
 import java.util.Locale;
 
 import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.cookie.ClientCookie;
 import ch.boye.httpclientandroidlib.cookie.Cookie;
 import ch.boye.httpclientandroidlib.cookie.CookieAttributeHandler;
@@ -38,6 +37,7 @@ import ch.boye.httpclientandroidlib.cookie.CookieOrigin;
 import ch.boye.httpclientandroidlib.cookie.CookieRestrictionViolationException;
 import ch.boye.httpclientandroidlib.cookie.MalformedCookieException;
 import ch.boye.httpclientandroidlib.cookie.SetCookie;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * <tt>"Domain"</tt> cookie attribute handler for RFC 2965 cookie spec.
@@ -55,11 +55,9 @@ public class RFC2965DomainAttributeHandler implements CookieAttributeHandler {
     /**
      * Parse cookie domain attribute.
      */
-    public void parse(final SetCookie cookie, String domain)
-            throws MalformedCookieException {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
+    public void parse(
+            final SetCookie cookie, final String domain) throws MalformedCookieException {
+        Args.notNull(cookie, "Cookie");
         if (domain == null) {
             throw new MalformedCookieException(
                     "Missing value for domain attribute");
@@ -68,16 +66,17 @@ public class RFC2965DomainAttributeHandler implements CookieAttributeHandler {
             throw new MalformedCookieException(
                     "Blank value for domain attribute");
         }
-        domain = domain.toLowerCase(Locale.ENGLISH);
+        String s = domain;
+        s = s.toLowerCase(Locale.ENGLISH);
         if (!domain.startsWith(".")) {
             // Per RFC 2965 section 3.2.2
             // "... If an explicitly specified value does not start with
             // a dot, the user agent supplies a leading dot ..."
             // That effectively implies that the domain attribute
             // MAY NOT be an IP address of a host name
-            domain = '.' + domain;
+            s = '.' + s;
         }
-        cookie.setDomain(domain);
+        cookie.setDomain(s);
     }
 
     /**
@@ -95,8 +94,8 @@ public class RFC2965DomainAttributeHandler implements CookieAttributeHandler {
      * @param domain The cookie domain attribute.
      * @return true if the specified host matches the given domain.
      */
-    public boolean domainMatch(String host, String domain) {
-        boolean match = host.equals(domain)
+    public boolean domainMatch(final String host, final String domain) {
+        final boolean match = host.equals(domain)
                         || (domain.startsWith(".") && host.endsWith(domain));
 
         return match;
@@ -107,18 +106,14 @@ public class RFC2965DomainAttributeHandler implements CookieAttributeHandler {
      */
     public void validate(final Cookie cookie, final CookieOrigin origin)
             throws MalformedCookieException {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
-        if (origin == null) {
-            throw new IllegalArgumentException("Cookie origin may not be null");
-        }
-        String host = origin.getHost().toLowerCase(Locale.ENGLISH);
+        Args.notNull(cookie, "Cookie");
+        Args.notNull(origin, "Cookie origin");
+        final String host = origin.getHost().toLowerCase(Locale.ENGLISH);
         if (cookie.getDomain() == null) {
             throw new CookieRestrictionViolationException("Invalid cookie state: " +
                                                "domain not specified");
         }
-        String cookieDomain = cookie.getDomain().toLowerCase(Locale.ENGLISH);
+        final String cookieDomain = cookie.getDomain().toLowerCase(Locale.ENGLISH);
 
         if (cookie instanceof ClientCookie
                 && ((ClientCookie) cookie).containsAttribute(ClientCookie.DOMAIN_ATTR)) {
@@ -130,7 +125,7 @@ public class RFC2965DomainAttributeHandler implements CookieAttributeHandler {
 
             // Domain attribute must contain at least one embedded dot,
             // or the value must be equal to .local.
-            int dotIndex = cookieDomain.indexOf('.', 1);
+            final int dotIndex = cookieDomain.indexOf('.', 1);
             if (((dotIndex < 0) || (dotIndex == cookieDomain.length() - 1))
                 && (!cookieDomain.equals(".local"))) {
                 throw new CookieRestrictionViolationException(
@@ -148,7 +143,7 @@ public class RFC2965DomainAttributeHandler implements CookieAttributeHandler {
             }
 
             // effective host name minus domain must not contain any dots
-            String effectiveHostWithoutDomain = host.substring(
+            final String effectiveHostWithoutDomain = host.substring(
                     0, host.length() - cookieDomain.length());
             if (effectiveHostWithoutDomain.indexOf('.') != -1) {
                 throw new CookieRestrictionViolationException("Domain attribute \""
@@ -171,14 +166,10 @@ public class RFC2965DomainAttributeHandler implements CookieAttributeHandler {
      * Match cookie domain attribute.
      */
     public boolean match(final Cookie cookie, final CookieOrigin origin) {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
-        if (origin == null) {
-            throw new IllegalArgumentException("Cookie origin may not be null");
-        }
-        String host = origin.getHost().toLowerCase(Locale.ENGLISH);
-        String cookieDomain = cookie.getDomain();
+        Args.notNull(cookie, "Cookie");
+        Args.notNull(origin, "Cookie origin");
+        final String host = origin.getHost().toLowerCase(Locale.ENGLISH);
+        final String cookieDomain = cookie.getDomain();
 
         // The effective host name MUST domain-match the Domain
         // attribute of the cookie.
@@ -186,7 +177,7 @@ public class RFC2965DomainAttributeHandler implements CookieAttributeHandler {
             return false;
         }
         // effective host name minus domain must not contain any dots
-        String effectiveHostWithoutDomain = host.substring(
+        final String effectiveHostWithoutDomain = host.substring(
                 0, host.length() - cookieDomain.length());
         return effectiveHostWithoutDomain.indexOf('.') == -1;
     }

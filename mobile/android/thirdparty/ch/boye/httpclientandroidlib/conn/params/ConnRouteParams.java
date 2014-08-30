@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -23,23 +24,25 @@
  * <http://www.apache.org/>.
  *
  */
-
 package ch.boye.httpclientandroidlib.conn.params;
 
 import java.net.InetAddress;
 
-import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.HttpHost;
-import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
 import ch.boye.httpclientandroidlib.conn.routing.HttpRoute;
+import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * An adaptor for manipulating HTTP routing parameters
  * in {@link HttpParams}.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link ch.boye.httpclientandroidlib.client.config.RequestConfig}.
  */
+@Deprecated
 @Immutable
 public class ConnRouteParams implements ConnRoutePNames {
 
@@ -73,10 +76,8 @@ public class ConnRouteParams implements ConnRoutePNames {
      * @return  the default proxy set in the argument parameters, or
      *          <code>null</code> if not set
      */
-    public static HttpHost getDefaultProxy(HttpParams params) {
-        if (params == null) {
-            throw new IllegalArgumentException("Parameters must not be null.");
-        }
+    public static HttpHost getDefaultProxy(final HttpParams params) {
+        Args.notNull(params, "Parameters");
         HttpHost proxy = (HttpHost)
             params.getParameter(DEFAULT_PROXY);
         if ((proxy != null) && NO_HOST.equals(proxy)) {
@@ -96,11 +97,9 @@ public class ConnRouteParams implements ConnRoutePNames {
      *                  <code>null</code> by {@link #getDefaultProxy},
      *                  to allow for explicit unsetting in hierarchies.
      */
-    public static void setDefaultProxy(HttpParams params,
-                                             HttpHost proxy) {
-        if (params == null) {
-            throw new IllegalArgumentException("Parameters must not be null.");
-        }
+    public static void setDefaultProxy(final HttpParams params,
+                                             final HttpHost proxy) {
+        Args.notNull(params, "Parameters");
         params.setParameter(DEFAULT_PROXY, proxy);
     }
 
@@ -115,10 +114,8 @@ public class ConnRouteParams implements ConnRoutePNames {
      * @return  the forced route set in the argument parameters, or
      *          <code>null</code> if not set
      */
-    public static HttpRoute getForcedRoute(HttpParams params) {
-        if (params == null) {
-            throw new IllegalArgumentException("Parameters must not be null.");
-        }
+    public static HttpRoute getForcedRoute(final HttpParams params) {
+        Args.notNull(params, "Parameters");
         HttpRoute route = (HttpRoute)
             params.getParameter(FORCED_ROUTE);
         if ((route != null) && NO_ROUTE.equals(route)) {
@@ -138,11 +135,9 @@ public class ConnRouteParams implements ConnRoutePNames {
      *                  <code>null</code> by {@link #getForcedRoute},
      *                  to allow for explicit unsetting in hierarchies.
      */
-    public static void setForcedRoute(HttpParams params,
-                                            HttpRoute route) {
-        if (params == null) {
-            throw new IllegalArgumentException("Parameters must not be null.");
-        }
+    public static void setForcedRoute(final HttpParams params,
+                                            final HttpRoute route) {
+        Args.notNull(params, "Parameters");
         params.setParameter(FORCED_ROUTE, route);
     }
 
@@ -158,11 +153,9 @@ public class ConnRouteParams implements ConnRoutePNames {
      * @return  the local address set in the argument parameters, or
      *          <code>null</code> if not set
      */
-    public static InetAddress getLocalAddress(HttpParams params) {
-        if (params == null) {
-            throw new IllegalArgumentException("Parameters must not be null.");
-        }
-        InetAddress local = (InetAddress)
+    public static InetAddress getLocalAddress(final HttpParams params) {
+        Args.notNull(params, "Parameters");
+        final InetAddress local = (InetAddress)
             params.getParameter(LOCAL_ADDRESS);
         // no explicit unsetting
         return local;
@@ -175,11 +168,9 @@ public class ConnRouteParams implements ConnRoutePNames {
      * @param params    the parameters in which to set the value
      * @param local     the value to set, may be <code>null</code>
      */
-    public static void setLocalAddress(HttpParams params,
-                                             InetAddress local) {
-        if (params == null) {
-            throw new IllegalArgumentException("Parameters must not be null.");
-        }
+    public static void setLocalAddress(final HttpParams params,
+                                             final InetAddress local) {
+        Args.notNull(params, "Parameters");
         params.setParameter(LOCAL_ADDRESS, local);
     }
 

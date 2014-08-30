@@ -27,28 +27,10 @@
 
 package ch.boye.httpclientandroidlib.conn.ssl;
 
-import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
-
-import ch.boye.httpclientandroidlib.conn.ConnectTimeoutException;
-import ch.boye.httpclientandroidlib.conn.scheme.HostNameResolver;
-import ch.boye.httpclientandroidlib.conn.scheme.LayeredSchemeSocketFactory;
-import ch.boye.httpclientandroidlib.conn.scheme.LayeredSocketFactory;
-import ch.boye.httpclientandroidlib.params.HttpConnectionParams;
-import ch.boye.httpclientandroidlib.params.HttpParams;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -56,6 +38,25 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+
+import ch.boye.httpclientandroidlib.HttpHost;
+import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
+import ch.boye.httpclientandroidlib.conn.ConnectTimeoutException;
+import ch.boye.httpclientandroidlib.conn.HttpInetSocketAddress;
+import ch.boye.httpclientandroidlib.conn.scheme.HostNameResolver;
+import ch.boye.httpclientandroidlib.conn.scheme.LayeredSchemeSocketFactory;
+import ch.boye.httpclientandroidlib.conn.scheme.LayeredSocketFactory;
+import ch.boye.httpclientandroidlib.conn.scheme.SchemeLayeredSocketFactory;
+import ch.boye.httpclientandroidlib.conn.socket.LayeredConnectionSocketFactory;
+import ch.boye.httpclientandroidlib.params.HttpConnectionParams;
+import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.util.Args;
+import ch.boye.httpclientandroidlib.util.Asserts;
+import ch.boye.httpclientandroidlib.util.TextUtils;
 
 /**
  * Layered socket factory for TLS/SSL connections.
@@ -77,21 +78,13 @@ import java.security.UnrecoverableKeyException;
  * {@link TrustStrategy}. This interface is primarily intended for allowing self-signed
  * certificates to be accepted as trusted without having to add them to the trust-store file.
  * <p>
- * The following parameters can be used to customize the behavior of this
- * class:
- * <ul>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#CONNECTION_TIMEOUT}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#SO_TIMEOUT}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#SO_REUSEADDR}</li>
- * </ul>
- * <p>
  * SSLSocketFactory will enable client authentication when supplied with
  * a {@link KeyStore key-store} file containing a private key/public certificate
  * pair. The client secure socket will use the private key to authenticate
  * itself to the target HTTPS server during the SSL session handshake if
  * requested to do so by the server.
  * The target HTTPS server will in its turn verify the certificate presented
- * by the client in order to establish client's authenticity
+ * by the client in order to establish client's authenticity.
  * <p>
  * Use the following sequence of actions to generate a key-store file
  * </p>
@@ -137,10 +130,13 @@ import java.security.UnrecoverableKeyException;
  *   </ul>
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link SSLConnectionSocketFactory}.
  */
-@SuppressWarnings("deprecation")
 @ThreadSafe
-public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSocketFactory {
+@Deprecated
+public class SSLSocketFactory implements LayeredConnectionSocketFactory, SchemeLayeredSocketFactory,
+                                         LayeredSchemeSocketFactory, LayeredSocketFactory {
 
     public static final String TLS   = "TLS";
     public static final String SSL   = "SSL";
@@ -156,76 +152,63 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
         = new StrictHostnameVerifier();
 
     /**
-     * Gets the default factory, which uses the default JVM settings for secure
-     * connections.
+     * Obtains default SSL socket factory with an SSL context based on the standard JSSE
+     * trust material (<code>cacerts</code> file in the security properties directory).
+     * System properties are not taken into consideration.
      *
-     * @return the default factory
+     * @return default SSL socket factory
      */
-    public static SSLSocketFactory getSocketFactory() {
-        return new SSLSocketFactory();
+    public static SSLSocketFactory getSocketFactory() throws SSLInitializationException {
+        return new SSLSocketFactory(
+            SSLContexts.createDefault(),
+            BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+    }
+
+    private static String[] split(final String s) {
+        if (TextUtils.isBlank(s)) {
+            return null;
+        }
+        return s.split(" *, *");
+    }
+
+    /**
+     * Obtains default SSL socket factory with an SSL context based on system properties
+     * as described in
+     * <a href="http://docs.oracle.com/javase/1.5.0/docs/guide/security/jsse/JSSERefGuide.html">
+     * "JavaTM Secure Socket Extension (JSSE) Reference Guide for the JavaTM 2 Platform
+     * Standard Edition 5</a>
+     *
+     * @return default system SSL socket factory
+     */
+    public static SSLSocketFactory getSystemSocketFactory() throws SSLInitializationException {
+        return new SSLSocketFactory(
+            (javax.net.ssl.SSLSocketFactory) javax.net.ssl.SSLSocketFactory.getDefault(),
+            split(System.getProperty("https.protocols")),
+            split(System.getProperty("https.cipherSuites")),
+            BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
     }
 
     private final javax.net.ssl.SSLSocketFactory socketfactory;
     private final HostNameResolver nameResolver;
     // TODO: make final
     private volatile X509HostnameVerifier hostnameVerifier;
+    private final String[] supportedProtocols;
+    private final String[] supportedCipherSuites;
 
-    private static SSLContext createSSLContext(
-            String algorithm,
-            final KeyStore keystore,
-            final String keystorePassword,
-            final KeyStore truststore,
-            final SecureRandom random,
-            final TrustStrategy trustStrategy)
-                throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException, KeyManagementException {
-        if (algorithm == null) {
-            algorithm = TLS;
-        }
-        KeyManagerFactory kmfactory = KeyManagerFactory.getInstance(
-                KeyManagerFactory.getDefaultAlgorithm());
-        kmfactory.init(keystore, keystorePassword != null ? keystorePassword.toCharArray(): null);
-        KeyManager[] keymanagers =  kmfactory.getKeyManagers();
-        TrustManagerFactory tmfactory = TrustManagerFactory.getInstance(
-                TrustManagerFactory.getDefaultAlgorithm());
-        tmfactory.init(truststore);
-        TrustManager[] trustmanagers = tmfactory.getTrustManagers();
-        if (trustmanagers != null && trustStrategy != null) {
-            for (int i = 0; i < trustmanagers.length; i++) {
-                TrustManager tm = trustmanagers[i];
-                if (tm instanceof X509TrustManager) {
-                    trustmanagers[i] = new TrustManagerDecorator(
-                            (X509TrustManager) tm, trustStrategy);
-                }
-            }
-        }
-
-        SSLContext sslcontext = SSLContext.getInstance(algorithm);
-        sslcontext.init(keymanagers, trustmanagers, random);
-        return sslcontext;
-    }
-
-    private static SSLContext createDefaultSSLContext() {
-        try {
-            return createSSLContext(TLS, null, null, null, null, null);
-        } catch (Exception ex) {
-            throw new IllegalStateException("Failure initializing default SSL context", ex);
-        }
-    }
-
-    /**
-     * @deprecated Use {@link #SSLSocketFactory(String, KeyStore, String, KeyStore, SecureRandom, X509HostnameVerifier)}
-     */
-    @Deprecated
     public SSLSocketFactory(
             final String algorithm,
             final KeyStore keystore,
-            final String keystorePassword,
+            final String keyPassword,
             final KeyStore truststore,
             final SecureRandom random,
             final HostNameResolver nameResolver)
                 throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, UnrecoverableKeyException {
-        this(createSSLContext(
-                algorithm, keystore, keystorePassword, truststore, random, null),
+        this(SSLContexts.custom()
+                .useProtocol(algorithm)
+                .setSecureRandom(random)
+                .loadKeyMaterial(keystore, keyPassword != null ? keyPassword.toCharArray() : null)
+                .loadTrustMaterial(truststore)
+                .build(),
                 nameResolver);
     }
 
@@ -233,15 +216,20 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
      * @since 4.1
      */
     public SSLSocketFactory(
-            String algorithm,
+            final String algorithm,
             final KeyStore keystore,
-            final String keystorePassword,
+            final String keyPassword,
             final KeyStore truststore,
             final SecureRandom random,
+            final TrustStrategy trustStrategy,
             final X509HostnameVerifier hostnameVerifier)
                 throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, UnrecoverableKeyException {
-        this(createSSLContext(
-                algorithm, keystore, keystorePassword, truststore, random, null),
+        this(SSLContexts.custom()
+                .useProtocol(algorithm)
+                .setSecureRandom(random)
+                .loadKeyMaterial(keystore, keyPassword != null ? keyPassword.toCharArray() : null)
+                .loadTrustMaterial(truststore, trustStrategy)
+                .build(),
                 hostnameVerifier);
     }
 
@@ -249,16 +237,19 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
      * @since 4.1
      */
     public SSLSocketFactory(
-            String algorithm,
+            final String algorithm,
             final KeyStore keystore,
-            final String keystorePassword,
+            final String keyPassword,
             final KeyStore truststore,
             final SecureRandom random,
-            final TrustStrategy trustStrategy,
             final X509HostnameVerifier hostnameVerifier)
                 throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, UnrecoverableKeyException {
-        this(createSSLContext(
-                algorithm, keystore, keystorePassword, truststore, random, trustStrategy),
+        this(SSLContexts.custom()
+                .useProtocol(algorithm)
+                .setSecureRandom(random)
+                .loadKeyMaterial(keystore, keyPassword != null ? keyPassword.toCharArray() : null)
+                .loadTrustMaterial(truststore)
+                .build(),
                 hostnameVerifier);
     }
 
@@ -267,20 +258,30 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
             final String keystorePassword,
             final KeyStore truststore)
                 throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, UnrecoverableKeyException {
-        this(TLS, keystore, keystorePassword, truststore, null, null, BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+        this(SSLContexts.custom()
+                .loadKeyMaterial(keystore, keystorePassword != null ? keystorePassword.toCharArray() : null)
+                .loadTrustMaterial(truststore)
+                .build(),
+                BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
     }
 
     public SSLSocketFactory(
             final KeyStore keystore,
             final String keystorePassword)
                 throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, UnrecoverableKeyException{
-        this(TLS, keystore, keystorePassword, null, null, null, BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+        this(SSLContexts.custom()
+                .loadKeyMaterial(keystore, keystorePassword != null ? keystorePassword.toCharArray() : null)
+                .build(),
+                BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
     }
 
     public SSLSocketFactory(
             final KeyStore truststore)
                 throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, UnrecoverableKeyException {
-        this(TLS, null, null, truststore, null, null, BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+        this(SSLContexts.custom()
+                .loadTrustMaterial(truststore)
+                .build(),
+                BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
     }
 
     /**
@@ -290,7 +291,10 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
             final TrustStrategy trustStrategy,
             final X509HostnameVerifier hostnameVerifier)
                 throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, UnrecoverableKeyException {
-        this(TLS, null, null, null, null, trustStrategy, hostnameVerifier);
+        this(SSLContexts.custom()
+                .loadTrustMaterial(null, trustStrategy)
+                .build(),
+                hostnameVerifier);
     }
 
     /**
@@ -299,23 +303,24 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
     public SSLSocketFactory(
             final TrustStrategy trustStrategy)
                 throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, UnrecoverableKeyException {
-        this(TLS, null, null, null, null, trustStrategy, BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+        this(SSLContexts.custom()
+                .loadTrustMaterial(null, trustStrategy)
+                .build(),
+                BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
     }
 
     public SSLSocketFactory(final SSLContext sslContext) {
         this(sslContext, BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
     }
 
-    /**
-     * @deprecated Use {@link #SSLSocketFactory(SSLContext)}
-     */
-    @Deprecated
     public SSLSocketFactory(
             final SSLContext sslContext, final HostNameResolver nameResolver) {
         super();
         this.socketfactory = sslContext.getSocketFactory();
         this.hostnameVerifier = BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
         this.nameResolver = nameResolver;
+        this.supportedProtocols = null;
+        this.supportedCipherSuites = null;
     }
 
     /**
@@ -323,14 +328,44 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
      */
     public SSLSocketFactory(
             final SSLContext sslContext, final X509HostnameVerifier hostnameVerifier) {
-        super();
-        this.socketfactory = sslContext.getSocketFactory();
-        this.hostnameVerifier = hostnameVerifier;
-        this.nameResolver = null;
+        this(Args.notNull(sslContext, "SSL context").getSocketFactory(),
+                null, null, hostnameVerifier);
     }
 
-    private SSLSocketFactory() {
-        this(createDefaultSSLContext());
+    /**
+     * @since 4.3
+     */
+    public SSLSocketFactory(
+            final SSLContext sslContext,
+            final String[] supportedProtocols,
+            final String[] supportedCipherSuites,
+            final X509HostnameVerifier hostnameVerifier) {
+        this(Args.notNull(sslContext, "SSL context").getSocketFactory(),
+                supportedProtocols, supportedCipherSuites, hostnameVerifier);
+    }
+
+    /**
+     * @since 4.2
+     */
+    public SSLSocketFactory(
+            final javax.net.ssl.SSLSocketFactory socketfactory,
+            final X509HostnameVerifier hostnameVerifier) {
+        this(socketfactory, null, null, hostnameVerifier);
+    }
+
+    /**
+     * @since 4.3
+     */
+    public SSLSocketFactory(
+            final javax.net.ssl.SSLSocketFactory socketfactory,
+            final String[] supportedProtocols,
+            final String[] supportedCipherSuites,
+            final X509HostnameVerifier hostnameVerifier) {
+        this.socketfactory = Args.notNull(socketfactory, "SSL socket factory");
+        this.supportedProtocols = supportedProtocols;
+        this.supportedCipherSuites = supportedCipherSuites;
+        this.hostnameVerifier = hostnameVerifier != null ? hostnameVerifier : BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
+        this.nameResolver = null;
     }
 
     /**
@@ -339,12 +374,11 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
      * @since 4.1
      */
     public Socket createSocket(final HttpParams params) throws IOException {
-        return this.socketfactory.createSocket();
+        return createSocket((HttpContext) null);
     }
 
-    @Deprecated
     public Socket createSocket() throws IOException {
-        return this.socketfactory.createSocket();
+        return createSocket((HttpContext) null);
     }
 
     /**
@@ -355,56 +389,19 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
             final InetSocketAddress remoteAddress,
             final InetSocketAddress localAddress,
             final HttpParams params) throws IOException, UnknownHostException, ConnectTimeoutException {
-        if (remoteAddress == null) {
-            throw new IllegalArgumentException("Remote address may not be null");
-        }
-        if (params == null) {
-            throw new IllegalArgumentException("HTTP parameters may not be null");
-        }
-        Socket sock = socket != null ? socket : new Socket();
-        if (localAddress != null) {
-            sock.setReuseAddress(HttpConnectionParams.getSoReuseaddr(params));
-            sock.bind(localAddress);
-        }
-
-        int connTimeout = HttpConnectionParams.getConnectionTimeout(params);
-        int soTimeout = HttpConnectionParams.getSoTimeout(params);
-
-        try {
-            sock.setSoTimeout(soTimeout);
-            sock.connect(remoteAddress, connTimeout);
-        } catch (SocketTimeoutException ex) {
-            throw new ConnectTimeoutException("Connect to " + remoteAddress + " timed out");
-        }
-
-        // HttpInetSocketAddress#toString() returns original hostname value of the remote address
-        String hostname = remoteAddress.toString();
-        int port = remoteAddress.getPort();
-        String s = ":" + port;
-        if (hostname.endsWith(s)) {
-            hostname = hostname.substring(0, hostname.length() - s.length());
-        }
-
-        SSLSocket sslsock;
-        // Setup SSL layering if necessary
-        if (sock instanceof SSLSocket) {
-            sslsock = (SSLSocket) sock;
+        Args.notNull(remoteAddress, "Remote address");
+        Args.notNull(params, "HTTP parameters");
+        final HttpHost host;
+        if (remoteAddress instanceof HttpInetSocketAddress) {
+            host = ((HttpInetSocketAddress) remoteAddress).getHttpHost();
         } else {
-            sslsock = (SSLSocket) this.socketfactory.createSocket(sock, hostname, port, true);
+            host = new HttpHost(remoteAddress.getHostName(), remoteAddress.getPort(), "https");
         }
-        if (this.hostnameVerifier != null) {
-            try {
-                this.hostnameVerifier.verify(hostname, sslsock);
-                // verifyHostName() didn't blowup - good!
-            } catch (IOException iox) {
-                // close the socket before re-throwing the exception
-                try { sslsock.close(); } catch (Exception x) { /*ignore*/ }
-                throw iox;
-            }
-        }
-        return sslsock;
+        final int socketTimeout = HttpConnectionParams.getSoTimeout(params);
+        final int connectTimeout = HttpConnectionParams.getConnectionTimeout(params);
+        socket.setSoTimeout(socketTimeout);
+        return connectSocket(connectTimeout, socket, host, remoteAddress, localAddress, null);
     }
-
 
     /**
      * Checks whether a socket connection is secure.
@@ -421,46 +418,33 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
      * @throws IllegalArgumentException if the argument is invalid
      */
     public boolean isSecure(final Socket sock) throws IllegalArgumentException {
-        if (sock == null) {
-            throw new IllegalArgumentException("Socket may not be null");
-        }
-        // This instanceof check is in line with createSocket() above.
-        if (!(sock instanceof SSLSocket)) {
-            throw new IllegalArgumentException("Socket not created by this factory");
-        }
-        // This check is performed last since it calls the argument object.
-        if (sock.isClosed()) {
-            throw new IllegalArgumentException("Socket is closed");
-        }
+        Args.notNull(sock, "Socket");
+        Asserts.check(sock instanceof SSLSocket, "Socket not created by this factory");
+        Asserts.check(!sock.isClosed(), "Socket is closed");
         return true;
     }
 
     /**
-     * @since 4.1
+     * @since 4.2
      */
     public Socket createLayeredSocket(
         final Socket socket,
         final String host,
         final int port,
-        final boolean autoClose) throws IOException, UnknownHostException {
-        SSLSocket sslSocket = (SSLSocket) this.socketfactory.createSocket(
-              socket,
-              host,
-              port,
-              autoClose
-        );
-        if (this.hostnameVerifier != null) {
-            this.hostnameVerifier.verify(host, sslSocket);
-        }
-        // verifyHostName() didn't blowup - good!
-        return sslSocket;
+        final HttpParams params) throws IOException, UnknownHostException {
+        return createLayeredSocket(socket, host, port, (HttpContext) null);
     }
 
-    @Deprecated
-    public void setHostnameVerifier(X509HostnameVerifier hostnameVerifier) {
-        if ( hostnameVerifier == null ) {
-            throw new IllegalArgumentException("Hostname verifier may not be null");
-        }
+    public Socket createLayeredSocket(
+        final Socket socket,
+        final String host,
+        final int port,
+        final boolean autoClose) throws IOException, UnknownHostException {
+        return createLayeredSocket(socket, host, port, (HttpContext) null);
+    }
+
+    public void setHostnameVerifier(final X509HostnameVerifier hostnameVerifier) {
+        Args.notNull(hostnameVerifier, "Hostname verifier");
         this.hostnameVerifier = hostnameVerifier;
     }
 
@@ -468,42 +452,119 @@ public class SSLSocketFactory implements LayeredSchemeSocketFactory, LayeredSock
         return this.hostnameVerifier;
     }
 
-    /**
-     * @deprecated Use {@link #connectSocket(Socket, InetSocketAddress, InetSocketAddress, HttpParams)}
-     */
-    @Deprecated
     public Socket connectSocket(
             final Socket socket,
-            final String host, int port,
-            final InetAddress localAddress, int localPort,
+            final String host, final int port,
+            final InetAddress local, final int localPort,
             final HttpParams params) throws IOException, UnknownHostException, ConnectTimeoutException {
-        InetSocketAddress local = null;
-        if (localAddress != null || localPort > 0) {
-            // we need to bind explicitly
-            if (localPort < 0) {
-                localPort = 0; // indicates "any"
-            }
-            local = new InetSocketAddress(localAddress, localPort);
-        }
-        InetAddress remoteAddress;
+        final InetAddress remote;
         if (this.nameResolver != null) {
-            remoteAddress = this.nameResolver.resolve(host);
+            remote = this.nameResolver.resolve(host);
         } else {
-            remoteAddress = InetAddress.getByName(host);
+            remote = InetAddress.getByName(host);
         }
-        InetSocketAddress remote = new InetSocketAddress(remoteAddress, port);
-        return connectSocket(socket, remote, local, params);
+        InetSocketAddress localAddress = null;
+        if (local != null || localPort > 0) {
+            localAddress = new InetSocketAddress(local, localPort > 0 ? localPort : 0);
+        }
+        final InetSocketAddress remoteAddress = new HttpInetSocketAddress(
+                new HttpHost(host, port), remote, port);
+        return connectSocket(socket, remoteAddress, localAddress, params);
+    }
+
+    public Socket createSocket(
+            final Socket socket,
+            final String host, final int port,
+            final boolean autoClose) throws IOException, UnknownHostException {
+        return createLayeredSocket(socket, host, port, autoClose);
     }
 
     /**
-     * @deprecated Use {@link #createLayeredSocket(Socket, String, int, boolean)}
+     * Performs any custom initialization for a newly created SSLSocket
+     * (before the SSL handshake happens).
+     *
+     * The default implementation is a no-op, but could be overridden to, e.g.,
+     * call {@link SSLSocket#setEnabledCipherSuites(java.lang.String[])}.
+     *
+     * @since 4.2
      */
-    @Deprecated
-    public Socket createSocket(
+    protected void prepareSocket(final SSLSocket socket) throws IOException {
+    }
+
+    private void internalPrepareSocket(final SSLSocket socket) throws IOException {
+        if (supportedProtocols != null) {
+            socket.setEnabledProtocols(supportedProtocols);
+        }
+        if (supportedCipherSuites != null) {
+            socket.setEnabledCipherSuites(supportedCipherSuites);
+        }
+        prepareSocket(socket);
+    }
+
+    public Socket createSocket(final HttpContext context) throws IOException {
+        final SSLSocket sock = (SSLSocket) this.socketfactory.createSocket();
+        internalPrepareSocket(sock);
+        return sock;
+    }
+
+    public Socket connectSocket(
+            final int connectTimeout,
             final Socket socket,
-            final String host, int port,
-            boolean autoClose) throws IOException, UnknownHostException {
-        return createLayeredSocket(socket, host, port, autoClose);
+            final HttpHost host,
+            final InetSocketAddress remoteAddress,
+            final InetSocketAddress localAddress,
+            final HttpContext context) throws IOException {
+        Args.notNull(host, "HTTP host");
+        Args.notNull(remoteAddress, "Remote address");
+        final Socket sock = socket != null ? socket : createSocket(context);
+        if (localAddress != null) {
+            sock.bind(localAddress);
+        }
+        try {
+            sock.connect(remoteAddress, connectTimeout);
+        } catch (final IOException ex) {
+            try {
+                sock.close();
+            } catch (final IOException ignore) {
+            }
+            throw ex;
+        }
+        // Setup SSL layering if necessary
+        if (sock instanceof SSLSocket) {
+            final SSLSocket sslsock = (SSLSocket) sock;
+            sslsock.startHandshake();
+            verifyHostname(sslsock, host.getHostName());
+            return sock;
+        } else {
+            return createLayeredSocket(sock, host.getHostName(), remoteAddress.getPort(), context);
+        }
+    }
+
+    public Socket createLayeredSocket(
+            final Socket socket,
+            final String target,
+            final int port,
+            final HttpContext context) throws IOException {
+        final SSLSocket sslsock = (SSLSocket) this.socketfactory.createSocket(
+                socket,
+                target,
+                port,
+                true);
+        internalPrepareSocket(sslsock);
+        sslsock.startHandshake();
+        verifyHostname(sslsock, target);
+        return sslsock;
+    }
+
+    private void verifyHostname(final SSLSocket sslsock, final String hostname) throws IOException {
+        try {
+            this.hostnameVerifier.verify(hostname, sslsock);
+            // verifyHostName() didn't blowup - good!
+        } catch (final IOException iox) {
+            // close the socket before re-throwing the exception
+            try { sslsock.close(); } catch (final Exception x) { /*ignore*/ }
+            throw iox;
+        }
     }
 
 }

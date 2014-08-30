@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -23,43 +24,38 @@
  * <http://www.apache.org/>.
  *
  */
-
 package ch.boye.httpclientandroidlib.impl.conn.tsccm;
 
 import java.lang.ref.ReferenceQueue;
 import java.util.concurrent.TimeUnit;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-import ch.boye.httpclientandroidlib.conn.OperatedClientConnection;
 import ch.boye.httpclientandroidlib.conn.ClientConnectionOperator;
+import ch.boye.httpclientandroidlib.conn.OperatedClientConnection;
 import ch.boye.httpclientandroidlib.conn.routing.HttpRoute;
 import ch.boye.httpclientandroidlib.impl.conn.AbstractPoolEntry;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Basic implementation of a connection pool entry.
  *
  * @since 4.0
+ *
+ * @deprecated (4.2)  use {@link ch.boye.httpclientandroidlib.pool.PoolEntry}
  */
-@NotThreadSafe
+@Deprecated
 public class BasicPoolEntry extends AbstractPoolEntry {
 
     private final long created;
 
     private long updated;
-    private long validUntil;
+    private final long validUntil;
     private long expiry;
 
-    /**
-     * @deprecated do not use
-     */
-    @Deprecated
-    public BasicPoolEntry(ClientConnectionOperator op,
-                          HttpRoute route,
-                          ReferenceQueue<Object> queue) {
+    public BasicPoolEntry(final ClientConnectionOperator op,
+                          final HttpRoute route,
+                          final ReferenceQueue<Object> queue) {
         super(op, route);
-        if (route == null) {
-            throw new IllegalArgumentException("HTTP route may not be null");
-        }
+        Args.notNull(route, "HTTP route");
         this.created = System.currentTimeMillis();
         this.validUntil = Long.MAX_VALUE;
         this.expiry = this.validUntil;
@@ -71,8 +67,8 @@ public class BasicPoolEntry extends AbstractPoolEntry {
      * @param op      the connection operator
      * @param route   the planned route for the connection
      */
-    public BasicPoolEntry(ClientConnectionOperator op,
-                          HttpRoute route) {
+    public BasicPoolEntry(final ClientConnectionOperator op,
+                          final HttpRoute route) {
         this(op, route, -1, TimeUnit.MILLISECONDS);
     }
 
@@ -86,12 +82,10 @@ public class BasicPoolEntry extends AbstractPoolEntry {
      *
      * @since 4.1
      */
-    public BasicPoolEntry(ClientConnectionOperator op,
-                          HttpRoute route, long connTTL, TimeUnit timeunit) {
+    public BasicPoolEntry(final ClientConnectionOperator op,
+                          final HttpRoute route, final long connTTL, final TimeUnit timeunit) {
         super(op, route);
-        if (route == null) {
-            throw new IllegalArgumentException("HTTP route may not be null");
-        }
+        Args.notNull(route, "HTTP route");
         this.created = System.currentTimeMillis();
         if (connTTL > 0) {
             this.validUntil = this.created + timeunit.toMillis(connTTL);
@@ -109,7 +103,6 @@ public class BasicPoolEntry extends AbstractPoolEntry {
         return super.route;
     }
 
-    @Deprecated
     protected final BasicPoolEntryRef getWeakRef() {
         return null;
     }
@@ -147,9 +140,9 @@ public class BasicPoolEntry extends AbstractPoolEntry {
     /**
      * @since 4.1
      */
-    public void updateExpiry(long time, TimeUnit timeunit) {
+    public void updateExpiry(final long time, final TimeUnit timeunit) {
         this.updated = System.currentTimeMillis();
-        long newExpiry;
+        final long newExpiry;
         if (time > 0) {
             newExpiry = this.updated + timeunit.toMillis(time);
         } else {
@@ -161,7 +154,7 @@ public class BasicPoolEntry extends AbstractPoolEntry {
     /**
      * @since 4.1
      */
-    public boolean isExpired(long now) {
+    public boolean isExpired(final long now) {
         return now >= this.expiry;
     }
 

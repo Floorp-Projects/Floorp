@@ -27,7 +27,7 @@
 
 package ch.boye.httpclientandroidlib.message;
 
-import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 
 /**
  * This class represents a context of a parsing operation:
@@ -38,13 +38,14 @@ import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
  *
  * @since 4.0
  */
+@NotThreadSafe
 public class ParserCursor {
 
     private final int lowerBound;
     private final int upperBound;
     private int pos;
 
-    public ParserCursor(int lowerBound, int upperBound) {
+    public ParserCursor(final int lowerBound, final int upperBound) {
         super();
         if (lowerBound < 0) {
             throw new IndexOutOfBoundsException("Lower bound cannot be negative");
@@ -69,7 +70,7 @@ public class ParserCursor {
         return this.pos;
     }
 
-    public void updatePos(int pos) {
+    public void updatePos(final int pos) {
         if (pos < this.lowerBound) {
             throw new IndexOutOfBoundsException("pos: "+pos+" < lowerBound: "+this.lowerBound);
         }
@@ -83,8 +84,9 @@ public class ParserCursor {
         return this.pos >= this.upperBound;
     }
 
+    @Override
     public String toString() {
-        CharArrayBuffer buffer = new CharArrayBuffer(16);
+        final StringBuilder buffer = new StringBuilder();
         buffer.append('[');
         buffer.append(Integer.toString(this.lowerBound));
         buffer.append('>');

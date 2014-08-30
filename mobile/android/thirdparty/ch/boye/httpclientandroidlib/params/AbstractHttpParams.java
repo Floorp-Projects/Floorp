@@ -27,7 +27,7 @@
 
 package ch.boye.httpclientandroidlib.params;
 
-import ch.boye.httpclientandroidlib.params.HttpParams;
+import java.util.Set;
 
 /**
  * Abstract base class for parameter collections.
@@ -35,8 +35,12 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
  * generic getters and setters.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use configuration classes provided 'ch.boye.httpclientandroidlib.config'
+ *  and 'ch.boye.httpclientandroidlib.client.config'
  */
-public abstract class AbstractHttpParams implements HttpParams {
+@Deprecated
+public abstract class AbstractHttpParams implements HttpParams, HttpParamsNames {
 
     /**
      * Instantiates parameters.
@@ -45,54 +49,54 @@ public abstract class AbstractHttpParams implements HttpParams {
         super();
     }
 
-    public long getLongParameter(final String name, long defaultValue) {
-        Object param = getParameter(name);
+    public long getLongParameter(final String name, final long defaultValue) {
+        final Object param = getParameter(name);
         if (param == null) {
             return defaultValue;
         }
-        return ((Long)param).longValue();
+        return ((Long) param).longValue();
     }
 
-    public HttpParams setLongParameter(final String name, long value) {
-        setParameter(name, new Long(value));
+    public HttpParams setLongParameter(final String name, final long value) {
+        setParameter(name, Long.valueOf(value));
         return this;
     }
 
-    public int getIntParameter(final String name, int defaultValue) {
-        Object param = getParameter(name);
+    public int getIntParameter(final String name, final int defaultValue) {
+        final Object param = getParameter(name);
         if (param == null) {
             return defaultValue;
         }
-        return ((Integer)param).intValue();
+        return ((Integer) param).intValue();
     }
 
-    public HttpParams setIntParameter(final String name, int value) {
-        setParameter(name, new Integer(value));
+    public HttpParams setIntParameter(final String name, final int value) {
+        setParameter(name, Integer.valueOf(value));
         return this;
     }
 
-    public double getDoubleParameter(final String name, double defaultValue) {
-        Object param = getParameter(name);
+    public double getDoubleParameter(final String name, final double defaultValue) {
+        final Object param = getParameter(name);
         if (param == null) {
             return defaultValue;
         }
-        return ((Double)param).doubleValue();
+        return ((Double) param).doubleValue();
     }
 
-    public HttpParams setDoubleParameter(final String name, double value) {
-        setParameter(name, new Double(value));
+    public HttpParams setDoubleParameter(final String name, final double value) {
+        setParameter(name, Double.valueOf(value));
         return this;
     }
 
-    public boolean getBooleanParameter(final String name, boolean defaultValue) {
-        Object param = getParameter(name);
+    public boolean getBooleanParameter(final String name, final boolean defaultValue) {
+        final Object param = getParameter(name);
         if (param == null) {
             return defaultValue;
         }
-        return ((Boolean)param).booleanValue();
+        return ((Boolean) param).booleanValue();
     }
 
-    public HttpParams setBooleanParameter(final String name, boolean value) {
+    public HttpParams setBooleanParameter(final String name, final boolean value) {
         setParameter(name, value ? Boolean.TRUE : Boolean.FALSE);
         return this;
     }
@@ -103,6 +107,18 @@ public abstract class AbstractHttpParams implements HttpParams {
 
     public boolean isParameterFalse(final String name) {
         return !getBooleanParameter(name, false);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Dummy implementation - must be overridden by subclasses.
+     *
+     * @since 4.2
+     * @throws UnsupportedOperationException - always
+     */
+    public Set<String> getNames(){
+        throw new UnsupportedOperationException();
     }
 
 } // class AbstractHttpParams

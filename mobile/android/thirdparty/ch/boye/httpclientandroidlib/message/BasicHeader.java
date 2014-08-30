@@ -32,12 +32,15 @@ import java.io.Serializable;
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HeaderElement;
 import ch.boye.httpclientandroidlib.ParseException;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Basic implementation of {@link Header}.
  *
  * @since 4.0
  */
+@Immutable
 public class BasicHeader implements Header, Cloneable, Serializable {
 
     private static final long serialVersionUID = -5427236326487562174L;
@@ -53,10 +56,7 @@ public class BasicHeader implements Header, Cloneable, Serializable {
      */
     public BasicHeader(final String name, final String value) {
         super();
-        if (name == null) {
-            throw new IllegalArgumentException("Name may not be null");
-        }
-        this.name = name;
+        this.name = Args.notNull(name, "Name");
         this.value = value;
     }
 
@@ -68,9 +68,10 @@ public class BasicHeader implements Header, Cloneable, Serializable {
         return this.value;
     }
 
+    @Override
     public String toString() {
         // no need for non-default formatting in toString()
-        return BasicLineFormatter.DEFAULT.formatHeader(null, this).toString();
+        return BasicLineFormatter.INSTANCE.formatHeader(null, this).toString();
     }
 
     public HeaderElement[] getElements() throws ParseException {
@@ -82,6 +83,7 @@ public class BasicHeader implements Header, Cloneable, Serializable {
         }
     }
 
+    @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }

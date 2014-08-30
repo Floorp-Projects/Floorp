@@ -108,7 +108,8 @@ public class GeckoEvent {
         TELEMETRY_UI_SESSION_STOP(43),
         TELEMETRY_UI_EVENT(44),
         GAMEPAD_ADDREMOVE(45),
-        GAMEPAD_DATA(46);
+        GAMEPAD_DATA(46),
+        LONG_PRESS(47);
 
         public final int value;
 
@@ -417,6 +418,16 @@ public class GeckoEvent {
     public static GeckoEvent createMotionEvent(MotionEvent m, boolean keepInViewCoordinates) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.MOTION_EVENT);
         event.initMotionEvent(m, keepInViewCoordinates);
+        return event;
+    }
+
+    /**
+     * Creates a GeckoEvent that contains the data from the LongPressEvent, to be
+     * dispatched in CSS pixels relative to gecko's scroll position.
+     */
+    public static GeckoEvent createLongPressEvent(MotionEvent m) {
+        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LONG_PRESS);
+        event.initMotionEvent(m, false);
         return event;
     }
 

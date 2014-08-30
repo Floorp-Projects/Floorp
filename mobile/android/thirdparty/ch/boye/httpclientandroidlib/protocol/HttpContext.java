@@ -27,18 +27,19 @@
 
 package ch.boye.httpclientandroidlib.protocol;
 
-import java.util.HashMap;
-
 /**
  * HttpContext represents execution state of an HTTP process. It is a structure
- * that can be used to map an attribute name to an attribute value. Internally
- * HTTP context implementations are usually backed by a {@link HashMap}.
- * <p>
+ * that can be used to map an attribute name to an attribute value.
+ * <p/>
  * The primary purpose of the HTTP context is to facilitate information sharing
  * among various  logically related components. HTTP context can be used
  * to store a processing state for one message or several consecutive messages.
  * Multiple logically related messages can participate in a logical session
  * if the same context is reused between consecutive messages.
+ * <p>/
+ * IMPORTANT: Please note HTTP context implementation, even when thread safe,
+ * may not be used concurrently by multiple threads, as the context may contain
+ * thread unsafe attributes.
  *
  * @since 4.0
  */

@@ -31,12 +31,12 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HeaderElement;
 import ch.boye.httpclientandroidlib.HeaderIterator;
 import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * HTTP OPTIONS method.
@@ -83,16 +83,14 @@ public class HttpOptions extends HttpRequestBase {
     }
 
     public Set<String> getAllowedMethods(final HttpResponse response) {
-        if (response == null) {
-            throw new IllegalArgumentException("HTTP response may not be null");
-        }
+        Args.notNull(response, "HTTP response");
 
-        HeaderIterator it = response.headerIterator("Allow");
-        Set<String> methods = new HashSet<String>();
+        final HeaderIterator it = response.headerIterator("Allow");
+        final Set<String> methods = new HashSet<String>();
         while (it.hasNext()) {
-            Header header = it.nextHeader();
-            HeaderElement[] elements = header.getElements();
-            for (HeaderElement element : elements) {
+            final Header header = it.nextHeader();
+            final HeaderElement[] elements = header.getElements();
+            for (final HeaderElement element : elements) {
                 methods.add(element.getName());
             }
         }

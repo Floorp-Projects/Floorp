@@ -27,11 +27,10 @@
 
 package ch.boye.httpclientandroidlib.client.methods;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpEntityEnclosingRequest;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.client.utils.CloneUtils;
 import ch.boye.httpclientandroidlib.protocol.HTTP;
 
@@ -60,16 +59,16 @@ public abstract class HttpEntityEnclosingRequestBase
     }
 
     public boolean expectContinue() {
-        Header expect = getFirstHeader(HTTP.EXPECT_DIRECTIVE);
+        final Header expect = getFirstHeader(HTTP.EXPECT_DIRECTIVE);
         return expect != null && HTTP.EXPECT_CONTINUE.equalsIgnoreCase(expect.getValue());
     }
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        HttpEntityEnclosingRequestBase clone =
+        final HttpEntityEnclosingRequestBase clone =
             (HttpEntityEnclosingRequestBase) super.clone();
         if (this.entity != null) {
-            clone.entity = (HttpEntity) CloneUtils.clone(this.entity);
+            clone.entity = CloneUtils.cloneObject(this.entity);
         }
         return clone;
     }

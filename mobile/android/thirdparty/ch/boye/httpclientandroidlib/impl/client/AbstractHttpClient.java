@@ -29,52 +29,53 @@ package ch.boye.httpclientandroidlib.impl.client;
 
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.net.URI;
 
 import ch.boye.httpclientandroidlib.androidextra.HttpClientAndroidLog;
 /* LogFactory removed by HttpClient for Android script. */
 import ch.boye.httpclientandroidlib.ConnectionReuseStrategy;
-import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpException;
 import ch.boye.httpclientandroidlib.HttpHost;
 import ch.boye.httpclientandroidlib.HttpRequest;
 import ch.boye.httpclientandroidlib.HttpRequestInterceptor;
-import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.HttpResponseInterceptor;
 import ch.boye.httpclientandroidlib.annotation.GuardedBy;
 import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
 import ch.boye.httpclientandroidlib.auth.AuthSchemeRegistry;
 import ch.boye.httpclientandroidlib.client.AuthenticationHandler;
+import ch.boye.httpclientandroidlib.client.AuthenticationStrategy;
+import ch.boye.httpclientandroidlib.client.BackoffManager;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
+import ch.boye.httpclientandroidlib.client.ConnectionBackoffStrategy;
 import ch.boye.httpclientandroidlib.client.CookieStore;
 import ch.boye.httpclientandroidlib.client.CredentialsProvider;
-import ch.boye.httpclientandroidlib.client.HttpClient;
 import ch.boye.httpclientandroidlib.client.HttpRequestRetryHandler;
 import ch.boye.httpclientandroidlib.client.RedirectHandler;
 import ch.boye.httpclientandroidlib.client.RedirectStrategy;
 import ch.boye.httpclientandroidlib.client.RequestDirector;
-import ch.boye.httpclientandroidlib.client.ResponseHandler;
 import ch.boye.httpclientandroidlib.client.UserTokenHandler;
-import ch.boye.httpclientandroidlib.client.methods.HttpUriRequest;
+import ch.boye.httpclientandroidlib.client.config.RequestConfig;
+import ch.boye.httpclientandroidlib.client.methods.CloseableHttpResponse;
 import ch.boye.httpclientandroidlib.client.params.AuthPolicy;
 import ch.boye.httpclientandroidlib.client.params.ClientPNames;
 import ch.boye.httpclientandroidlib.client.params.CookiePolicy;
+import ch.boye.httpclientandroidlib.client.params.HttpClientParamConfig;
 import ch.boye.httpclientandroidlib.client.protocol.ClientContext;
-import ch.boye.httpclientandroidlib.client.utils.URIUtils;
 import ch.boye.httpclientandroidlib.conn.ClientConnectionManager;
 import ch.boye.httpclientandroidlib.conn.ClientConnectionManagerFactory;
 import ch.boye.httpclientandroidlib.conn.ConnectionKeepAliveStrategy;
+import ch.boye.httpclientandroidlib.conn.routing.HttpRoute;
 import ch.boye.httpclientandroidlib.conn.routing.HttpRoutePlanner;
 import ch.boye.httpclientandroidlib.conn.scheme.SchemeRegistry;
 import ch.boye.httpclientandroidlib.cookie.CookieSpecRegistry;
 import ch.boye.httpclientandroidlib.impl.DefaultConnectionReuseStrategy;
 import ch.boye.httpclientandroidlib.impl.auth.BasicSchemeFactory;
 import ch.boye.httpclientandroidlib.impl.auth.DigestSchemeFactory;
+/* KerberosSchemeFactory removed by HttpClient for Android script. */
 import ch.boye.httpclientandroidlib.impl.auth.NTLMSchemeFactory;
-/* NegotiateSchemeFactory removed by HttpClient for Android script. */
+/* SPNegoSchemeFactory removed by HttpClient for Android script. */
+import ch.boye.httpclientandroidlib.impl.conn.BasicClientConnectionManager;
 import ch.boye.httpclientandroidlib.impl.conn.DefaultHttpRoutePlanner;
 import ch.boye.httpclientandroidlib.impl.conn.SchemeRegistryFactory;
-import ch.boye.httpclientandroidlib.impl.conn.SingleClientConnManager;
 import ch.boye.httpclientandroidlib.impl.cookie.BestMatchSpecFactory;
 import ch.boye.httpclientandroidlib.impl.cookie.BrowserCompatSpecFactory;
 import ch.boye.httpclientandroidlib.impl.cookie.IgnoreSpecFactory;
@@ -89,13 +90,13 @@ import ch.boye.httpclientandroidlib.protocol.HttpContext;
 import ch.boye.httpclientandroidlib.protocol.HttpProcessor;
 import ch.boye.httpclientandroidlib.protocol.HttpRequestExecutor;
 import ch.boye.httpclientandroidlib.protocol.ImmutableHttpProcessor;
-import ch.boye.httpclientandroidlib.util.EntityUtils;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
- * Base class for {@link HttpClient} implementations. This class acts as
- * a facade to a number of special purpose handler or strategy
- * implementations responsible for handling of a particular aspect of
- * the HTTP protocol such as redirect or authentication handling or
+ * Base class for {@link ch.boye.httpclientandroidlib.client.HttpClient} implementations.
+ * This class acts as a facade to a number of special purpose handler or
+ * strategy implementations responsible for handling of a particular aspect
+ * of the HTTP protocol such as redirect or authentication handling or
  * making decision about connection persistence and keep alive duration.
  * This enables the users to selectively replace default implementation
  * of those aspects with custom, application specific ones. This class
@@ -137,13 +138,13 @@ import ch.boye.httpclientandroidlib.util.EntityUtils;
  *    a collection user credentials. The {@link #createCredentialsProvider()}
  *    must be implemented by concrete super classes to instantiate
  *    this object.
- *   <li>{@link AuthenticationHandler}</li> object used to authenticate
+ *   <li>{@link AuthenticationStrategy}</li> object used to authenticate
  *    against the target host.
- *    The {@link #createTargetAuthenticationHandler()} must be implemented
+ *    The {@link #createTargetAuthenticationStrategy()} must be implemented
  *    by concrete super classes to instantiate this object.
- *   <li>{@link AuthenticationHandler}</li> object used to authenticate
+ *   <li>{@link AuthenticationStrategy}</li> object used to authenticate
  *    against the proxy host.
- *    The {@link #createProxyAuthenticationHandler()} must be implemented
+ *    The {@link #createProxyAuthenticationStrategy()} must be implemented
  *    by concrete super classes to instantiate this object.
  *   <li>{@link HttpRoutePlanner}</li> object used to calculate a route
  *    for establishing a connection to the target host. The route
@@ -174,10 +175,12 @@ import ch.boye.httpclientandroidlib.util.EntityUtils;
  *   shut down by calling {@link ClientConnectionManager#shutdown()}!
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link HttpClientBuilder}.
  */
 @ThreadSafe
-@SuppressWarnings("deprecation")
-public abstract class AbstractHttpClient implements HttpClient {
+@Deprecated
+public abstract class AbstractHttpClient extends CloseableHttpClient {
 
     public HttpClientAndroidLog log = new HttpClientAndroidLog(getClass());
 
@@ -226,11 +229,11 @@ public abstract class AbstractHttpClient implements HttpClient {
 
     /** The target authentication handler. */
     @GuardedBy("this")
-    private AuthenticationHandler targetAuthHandler;
+    private AuthenticationStrategy targetAuthStrategy;
 
     /** The proxy authentication handler. */
     @GuardedBy("this")
-    private AuthenticationHandler proxyAuthHandler;
+    private AuthenticationStrategy proxyAuthStrategy;
 
     /** The cookie store. */
     @GuardedBy("this")
@@ -248,6 +251,13 @@ public abstract class AbstractHttpClient implements HttpClient {
     @GuardedBy("this")
     private UserTokenHandler userTokenHandler;
 
+    /** The connection backoff strategy. */
+    @GuardedBy("this")
+    private ConnectionBackoffStrategy connectionBackoffStrategy;
+
+    /** The backoff manager. */
+    @GuardedBy("this")
+    private BackoffManager backoffManager;
 
     /**
      * Creates a new HTTP client.
@@ -258,6 +268,7 @@ public abstract class AbstractHttpClient implements HttpClient {
     protected AbstractHttpClient(
             final ClientConnectionManager conman,
             final HttpParams params) {
+        super();
         defaultParams        = params;
         connManager          = conman;
     } // constructor
@@ -270,7 +281,7 @@ public abstract class AbstractHttpClient implements HttpClient {
 
 
     protected HttpContext createHttpContext() {
-        HttpContext context = new BasicHttpContext();
+        final HttpContext context = new BasicHttpContext();
         context.setAttribute(
                 ClientContext.SCHEME_REGISTRY,
                 getConnectionManager().getSchemeRegistry());
@@ -291,31 +302,31 @@ public abstract class AbstractHttpClient implements HttpClient {
 
 
     protected ClientConnectionManager createClientConnectionManager() {
-        SchemeRegistry registry = SchemeRegistryFactory.createDefault();
+        final SchemeRegistry registry = SchemeRegistryFactory.createDefault();
 
         ClientConnectionManager connManager = null;
-        HttpParams params = getParams();
+        final HttpParams params = getParams();
 
         ClientConnectionManagerFactory factory = null;
 
-        String className = (String) params.getParameter(
+        final String className = (String) params.getParameter(
                 ClientPNames.CONNECTION_MANAGER_FACTORY_CLASS_NAME);
         if (className != null) {
             try {
-                Class<?> clazz = Class.forName(className);
+                final Class<?> clazz = Class.forName(className);
                 factory = (ClientConnectionManagerFactory) clazz.newInstance();
-            } catch (ClassNotFoundException ex) {
+            } catch (final ClassNotFoundException ex) {
                 throw new IllegalStateException("Invalid class name: " + className);
-            } catch (IllegalAccessException ex) {
+            } catch (final IllegalAccessException ex) {
                 throw new IllegalAccessError(ex.getMessage());
-            } catch (InstantiationException ex) {
+            } catch (final InstantiationException ex) {
                 throw new InstantiationError(ex.getMessage());
             }
         }
         if (factory != null) {
             connManager = factory.newInstance(params, registry);
         } else {
-            connManager = new SingleClientConnManager(registry);
+            connManager = new BasicClientConnectionManager(registry);
         }
 
         return connManager;
@@ -323,7 +334,7 @@ public abstract class AbstractHttpClient implements HttpClient {
 
 
     protected AuthSchemeRegistry createAuthSchemeRegistry() {
-        AuthSchemeRegistry registry = new AuthSchemeRegistry();
+        final AuthSchemeRegistry registry = new AuthSchemeRegistry();
         registry.register(
                 AuthPolicy.BASIC,
                 new BasicSchemeFactory());
@@ -333,13 +344,14 @@ public abstract class AbstractHttpClient implements HttpClient {
         registry.register(
                 AuthPolicy.NTLM,
                 new NTLMSchemeFactory());
-        /* NegotiateSchemeFactory removed by HttpClient for Android script. */
+        /* SPNegoSchemeFactory removed by HttpClient for Android script. */
+        /* KerberosSchemeFactory removed by HttpClient for Android script. */
         return registry;
     }
 
 
     protected CookieSpecRegistry createCookieSpecRegistry() {
-        CookieSpecRegistry registry = new CookieSpecRegistry();
+        final CookieSpecRegistry registry = new CookieSpecRegistry();
         registry.register(
                 CookiePolicy.BEST_MATCH,
                 new BestMatchSpecFactory());
@@ -361,62 +373,69 @@ public abstract class AbstractHttpClient implements HttpClient {
         return registry;
     }
 
-
     protected HttpRequestExecutor createRequestExecutor() {
         return new HttpRequestExecutor();
     }
-
 
     protected ConnectionReuseStrategy createConnectionReuseStrategy() {
         return new DefaultConnectionReuseStrategy();
     }
 
-
     protected ConnectionKeepAliveStrategy createConnectionKeepAliveStrategy() {
         return new DefaultConnectionKeepAliveStrategy();
     }
-
 
     protected HttpRequestRetryHandler createHttpRequestRetryHandler() {
         return new DefaultHttpRequestRetryHandler();
     }
 
-
+    /**
+     * @deprecated (4.1) do not use
+     */
     @Deprecated
     protected RedirectHandler createRedirectHandler() {
         return new DefaultRedirectHandler();
     }
 
+    protected AuthenticationStrategy createTargetAuthenticationStrategy() {
+        return new TargetAuthenticationStrategy();
+    }
 
+    /**
+     * @deprecated (4.2) do not use
+     */
+    @Deprecated
     protected AuthenticationHandler createTargetAuthenticationHandler() {
         return new DefaultTargetAuthenticationHandler();
     }
 
+    protected AuthenticationStrategy createProxyAuthenticationStrategy() {
+        return new ProxyAuthenticationStrategy();
+    }
 
+    /**
+     * @deprecated (4.2) do not use
+     */
+    @Deprecated
     protected AuthenticationHandler createProxyAuthenticationHandler() {
         return new DefaultProxyAuthenticationHandler();
     }
-
 
     protected CookieStore createCookieStore() {
         return new BasicCookieStore();
     }
 
-
     protected CredentialsProvider createCredentialsProvider() {
         return new BasicCredentialsProvider();
     }
-
 
     protected HttpRoutePlanner createHttpRoutePlanner() {
         return new DefaultHttpRoutePlanner(getConnectionManager().getSchemeRegistry());
     }
 
-
     protected UserTokenHandler createUserTokenHandler() {
         return new DefaultUserTokenHandler();
     }
-
 
     // non-javadoc, see interface HttpClient
     public synchronized final HttpParams getParams() {
@@ -426,14 +445,13 @@ public abstract class AbstractHttpClient implements HttpClient {
         return defaultParams;
     }
 
-
     /**
      * Replaces the parameters.
      * The implementation here does not update parameters of dependent objects.
      *
      * @param params    the new default parameters
      */
-    public synchronized void setParams(HttpParams params) {
+    public synchronized void setParams(final HttpParams params) {
         defaultParams = params;
     }
 
@@ -461,11 +479,17 @@ public abstract class AbstractHttpClient implements HttpClient {
         return supportedAuthSchemes;
     }
 
-
-    public synchronized void setAuthSchemes(final AuthSchemeRegistry authSchemeRegistry) {
-        supportedAuthSchemes = authSchemeRegistry;
+    public synchronized void setAuthSchemes(final AuthSchemeRegistry registry) {
+        supportedAuthSchemes = registry;
     }
 
+    public synchronized final ConnectionBackoffStrategy getConnectionBackoffStrategy() {
+        return connectionBackoffStrategy;
+    }
+
+    public synchronized void setConnectionBackoffStrategy(final ConnectionBackoffStrategy strategy) {
+        connectionBackoffStrategy = strategy;
+    }
 
     public synchronized final CookieSpecRegistry getCookieSpecs() {
         if (supportedCookieSpecs == null) {
@@ -474,11 +498,17 @@ public abstract class AbstractHttpClient implements HttpClient {
         return supportedCookieSpecs;
     }
 
-
-    public synchronized void setCookieSpecs(final CookieSpecRegistry cookieSpecRegistry) {
-        supportedCookieSpecs = cookieSpecRegistry;
+    public synchronized final BackoffManager getBackoffManager() {
+        return backoffManager;
     }
 
+    public synchronized void setBackoffManager(final BackoffManager manager) {
+        backoffManager = manager;
+    }
+
+    public synchronized void setCookieSpecs(final CookieSpecRegistry registry) {
+        supportedCookieSpecs = registry;
+    }
 
     public synchronized final ConnectionReuseStrategy getConnectionReuseStrategy() {
         if (reuseStrategy == null) {
@@ -488,8 +518,8 @@ public abstract class AbstractHttpClient implements HttpClient {
     }
 
 
-    public synchronized void setReuseStrategy(final ConnectionReuseStrategy reuseStrategy) {
-        this.reuseStrategy = reuseStrategy;
+    public synchronized void setReuseStrategy(final ConnectionReuseStrategy strategy) {
+        this.reuseStrategy = strategy;
     }
 
 
@@ -501,8 +531,8 @@ public abstract class AbstractHttpClient implements HttpClient {
     }
 
 
-    public synchronized void setKeepAliveStrategy(final ConnectionKeepAliveStrategy keepAliveStrategy) {
-        this.keepAliveStrategy = keepAliveStrategy;
+    public synchronized void setKeepAliveStrategy(final ConnectionKeepAliveStrategy strategy) {
+        this.keepAliveStrategy = strategy;
     }
 
 
@@ -513,21 +543,24 @@ public abstract class AbstractHttpClient implements HttpClient {
         return retryHandler;
     }
 
-
-    public synchronized void setHttpRequestRetryHandler(final HttpRequestRetryHandler retryHandler) {
-        this.retryHandler = retryHandler;
+    public synchronized void setHttpRequestRetryHandler(final HttpRequestRetryHandler handler) {
+        this.retryHandler = handler;
     }
 
-
+    /**
+     * @deprecated (4.1) do not use
+     */
     @Deprecated
     public synchronized final RedirectHandler getRedirectHandler() {
         return createRedirectHandler();
     }
 
-
+    /**
+     * @deprecated (4.1) do not use
+     */
     @Deprecated
-    public synchronized void setRedirectHandler(final RedirectHandler redirectHandler) {
-        this.redirectStrategy = new DefaultRedirectStrategyAdaptor(redirectHandler);
+    public synchronized void setRedirectHandler(final RedirectHandler handler) {
+        this.redirectStrategy = new DefaultRedirectStrategyAdaptor(handler);
     }
 
     /**
@@ -543,38 +576,75 @@ public abstract class AbstractHttpClient implements HttpClient {
     /**
      * @since 4.1
      */
-    public synchronized void setRedirectStrategy(final RedirectStrategy redirectStrategy) {
-        this.redirectStrategy = redirectStrategy;
+    public synchronized void setRedirectStrategy(final RedirectStrategy strategy) {
+        this.redirectStrategy = strategy;
     }
 
-
+    /**
+     * @deprecated (4.2) do not use
+     */
+    @Deprecated
     public synchronized final AuthenticationHandler getTargetAuthenticationHandler() {
-        if (targetAuthHandler == null) {
-            targetAuthHandler = createTargetAuthenticationHandler();
+        return createTargetAuthenticationHandler();
+    }
+
+    /**
+     * @deprecated (4.2) do not use
+     */
+    @Deprecated
+    public synchronized void setTargetAuthenticationHandler(final AuthenticationHandler handler) {
+        this.targetAuthStrategy = new AuthenticationStrategyAdaptor(handler);
+    }
+
+    /**
+     * @since 4.2
+     */
+    public synchronized final AuthenticationStrategy getTargetAuthenticationStrategy() {
+        if (targetAuthStrategy == null) {
+            targetAuthStrategy = createTargetAuthenticationStrategy();
         }
-        return targetAuthHandler;
+        return targetAuthStrategy;
     }
 
-
-    public synchronized void setTargetAuthenticationHandler(
-            final AuthenticationHandler targetAuthHandler) {
-        this.targetAuthHandler = targetAuthHandler;
+    /**
+     * @since 4.2
+     */
+    public synchronized void setTargetAuthenticationStrategy(final AuthenticationStrategy strategy) {
+        this.targetAuthStrategy = strategy;
     }
 
-
+    /**
+     * @deprecated (4.2) do not use
+     */
+    @Deprecated
     public synchronized final AuthenticationHandler getProxyAuthenticationHandler() {
-        if (proxyAuthHandler == null) {
-            proxyAuthHandler = createProxyAuthenticationHandler();
+        return createProxyAuthenticationHandler();
+    }
+
+    /**
+     * @deprecated (4.2) do not use
+     */
+    @Deprecated
+    public synchronized void setProxyAuthenticationHandler(final AuthenticationHandler handler) {
+        this.proxyAuthStrategy = new AuthenticationStrategyAdaptor(handler);
+    }
+
+    /**
+     * @since 4.2
+     */
+    public synchronized final AuthenticationStrategy getProxyAuthenticationStrategy() {
+        if (proxyAuthStrategy == null) {
+            proxyAuthStrategy = createProxyAuthenticationStrategy();
         }
-        return proxyAuthHandler;
+        return proxyAuthStrategy;
     }
 
-
-    public synchronized void setProxyAuthenticationHandler(
-            final AuthenticationHandler proxyAuthHandler) {
-        this.proxyAuthHandler = proxyAuthHandler;
+    /**
+     * @since 4.2
+     */
+    public synchronized void setProxyAuthenticationStrategy(final AuthenticationStrategy strategy) {
+        this.proxyAuthStrategy = strategy;
     }
-
 
     public synchronized final CookieStore getCookieStore() {
         if (cookieStore == null) {
@@ -583,11 +653,9 @@ public abstract class AbstractHttpClient implements HttpClient {
         return cookieStore;
     }
 
-
     public synchronized void setCookieStore(final CookieStore cookieStore) {
         this.cookieStore = cookieStore;
     }
-
 
     public synchronized final CredentialsProvider getCredentialsProvider() {
         if (credsProvider == null) {
@@ -596,11 +664,9 @@ public abstract class AbstractHttpClient implements HttpClient {
         return credsProvider;
     }
 
-
     public synchronized void setCredentialsProvider(final CredentialsProvider credsProvider) {
         this.credsProvider = credsProvider;
     }
-
 
     public synchronized final HttpRoutePlanner getRoutePlanner() {
         if (this.routePlanner == null) {
@@ -609,11 +675,9 @@ public abstract class AbstractHttpClient implements HttpClient {
         return this.routePlanner;
     }
 
-
     public synchronized void setRoutePlanner(final HttpRoutePlanner routePlanner) {
         this.routePlanner = routePlanner;
     }
-
 
     public synchronized final UserTokenHandler getUserTokenHandler() {
         if (this.userTokenHandler == null) {
@@ -622,11 +686,9 @@ public abstract class AbstractHttpClient implements HttpClient {
         return this.userTokenHandler;
     }
 
-
-    public synchronized void setUserTokenHandler(final UserTokenHandler userTokenHandler) {
-        this.userTokenHandler = userTokenHandler;
+    public synchronized void setUserTokenHandler(final UserTokenHandler handler) {
+        this.userTokenHandler = handler;
     }
-
 
     protected synchronized final BasicHttpProcessor getHttpProcessor() {
         if (mutableProcessor == null) {
@@ -635,19 +697,18 @@ public abstract class AbstractHttpClient implements HttpClient {
         return mutableProcessor;
     }
 
-
-    private synchronized final HttpProcessor getProtocolProcessor() {
+    private synchronized HttpProcessor getProtocolProcessor() {
         if (protocolProcessor == null) {
             // Get mutable HTTP processor
-            BasicHttpProcessor proc = getHttpProcessor();
+            final BasicHttpProcessor proc = getHttpProcessor();
             // and create an immutable copy of it
-            int reqc = proc.getRequestInterceptorCount();
-            HttpRequestInterceptor[] reqinterceptors = new HttpRequestInterceptor[reqc];
+            final int reqc = proc.getRequestInterceptorCount();
+            final HttpRequestInterceptor[] reqinterceptors = new HttpRequestInterceptor[reqc];
             for (int i = 0; i < reqc; i++) {
                 reqinterceptors[i] = proc.getRequestInterceptor(i);
             }
-            int resc = proc.getResponseInterceptorCount();
-            HttpResponseInterceptor[] resinterceptors = new HttpResponseInterceptor[resc];
+            final int resc = proc.getResponseInterceptorCount();
+            final HttpResponseInterceptor[] resinterceptors = new HttpResponseInterceptor[resc];
             for (int i = 0; i < resc; i++) {
                 resinterceptors[i] = proc.getResponseInterceptor(i);
             }
@@ -656,148 +717,91 @@ public abstract class AbstractHttpClient implements HttpClient {
         return protocolProcessor;
     }
 
-
     public synchronized int getResponseInterceptorCount() {
         return getHttpProcessor().getResponseInterceptorCount();
     }
 
-
-    public synchronized HttpResponseInterceptor getResponseInterceptor(int index) {
+    public synchronized HttpResponseInterceptor getResponseInterceptor(final int index) {
         return getHttpProcessor().getResponseInterceptor(index);
     }
 
-
-    public synchronized HttpRequestInterceptor getRequestInterceptor(int index) {
+    public synchronized HttpRequestInterceptor getRequestInterceptor(final int index) {
         return getHttpProcessor().getRequestInterceptor(index);
     }
-
 
     public synchronized int getRequestInterceptorCount() {
         return getHttpProcessor().getRequestInterceptorCount();
     }
-
 
     public synchronized void addResponseInterceptor(final HttpResponseInterceptor itcp) {
         getHttpProcessor().addInterceptor(itcp);
         protocolProcessor = null;
     }
 
-
-    public synchronized void addResponseInterceptor(final HttpResponseInterceptor itcp, int index) {
+    public synchronized void addResponseInterceptor(final HttpResponseInterceptor itcp, final int index) {
         getHttpProcessor().addInterceptor(itcp, index);
         protocolProcessor = null;
     }
-
 
     public synchronized void clearResponseInterceptors() {
         getHttpProcessor().clearResponseInterceptors();
         protocolProcessor = null;
     }
 
-
-    public synchronized void removeResponseInterceptorByClass(Class<? extends HttpResponseInterceptor> clazz) {
+    public synchronized void removeResponseInterceptorByClass(final Class<? extends HttpResponseInterceptor> clazz) {
         getHttpProcessor().removeResponseInterceptorByClass(clazz);
         protocolProcessor = null;
     }
-
 
     public synchronized void addRequestInterceptor(final HttpRequestInterceptor itcp) {
         getHttpProcessor().addInterceptor(itcp);
         protocolProcessor = null;
     }
 
-
-    public synchronized void addRequestInterceptor(final HttpRequestInterceptor itcp, int index) {
+    public synchronized void addRequestInterceptor(final HttpRequestInterceptor itcp, final int index) {
         getHttpProcessor().addInterceptor(itcp, index);
         protocolProcessor = null;
     }
-
 
     public synchronized void clearRequestInterceptors() {
         getHttpProcessor().clearRequestInterceptors();
         protocolProcessor = null;
     }
 
-
-    public synchronized void removeRequestInterceptorByClass(Class<? extends HttpRequestInterceptor> clazz) {
+    public synchronized void removeRequestInterceptorByClass(final Class<? extends HttpRequestInterceptor> clazz) {
         getHttpProcessor().removeRequestInterceptorByClass(clazz);
         protocolProcessor = null;
     }
 
-    public final HttpResponse execute(HttpUriRequest request)
+    @Override
+    protected final CloseableHttpResponse doExecute(final HttpHost target, final HttpRequest request,
+                                      final HttpContext context)
         throws IOException, ClientProtocolException {
 
-        return execute(request, (HttpContext) null);
-    }
-
-
-    /**
-     * Maps to {@link HttpClient#execute(HttpHost,HttpRequest,HttpContext)
-     *                           execute(target, request, context)}.
-     * The target is determined from the URI of the request.
-     *
-     * @param request   the request to execute
-     * @param context   the request-specific execution context,
-     *                  or <code>null</code> to use a default context
-     */
-    public final HttpResponse execute(HttpUriRequest request,
-                                      HttpContext context)
-        throws IOException, ClientProtocolException {
-
-        if (request == null) {
-            throw new IllegalArgumentException
-                ("Request must not be null.");
-        }
-
-        return execute(determineTarget(request), request, context);
-    }
-
-    private static HttpHost determineTarget(HttpUriRequest request) throws ClientProtocolException {
-        // A null target may be acceptable if there is a default target.
-        // Otherwise, the null target is detected in the director.
-        HttpHost target = null;
-
-        URI requestURI = request.getURI();
-        if (requestURI.isAbsolute()) {
-            target = URIUtils.extractHost(requestURI);
-            if (target == null) {
-                throw new ClientProtocolException(
-                        "URI does not specify a valid host name: " + requestURI);
-            }
-        }
-        return target;
-    }
-
-    public final HttpResponse execute(HttpHost target, HttpRequest request)
-        throws IOException, ClientProtocolException {
-
-        return execute(target, request, (HttpContext) null);
-    }
-
-    public final HttpResponse execute(HttpHost target, HttpRequest request,
-                                      HttpContext context)
-        throws IOException, ClientProtocolException {
-
-        if (request == null) {
-            throw new IllegalArgumentException
-                ("Request must not be null.");
-        }
+        Args.notNull(request, "HTTP request");
         // a null target may be acceptable, this depends on the route planner
         // a null context is acceptable, default context created below
 
         HttpContext execContext = null;
         RequestDirector director = null;
+        HttpRoutePlanner routePlanner = null;
+        ConnectionBackoffStrategy connectionBackoffStrategy = null;
+        BackoffManager backoffManager = null;
 
         // Initialize the request execution context making copies of
         // all shared objects that are potentially threading unsafe.
         synchronized (this) {
 
-            HttpContext defaultContext = createHttpContext();
+            final HttpContext defaultContext = createHttpContext();
             if (context == null) {
                 execContext = defaultContext;
             } else {
                 execContext = new DefaultedHttpContext(context, defaultContext);
             }
+            final HttpParams params = determineParams(request);
+            final RequestConfig config = HttpClientParamConfig.getRequestConfig(params);
+            execContext.setAttribute(ClientContext.REQUEST_CONFIG, config);
+
             // Create a director for this request
             director = createClientRequestDirector(
                     getRequestExecutor(),
@@ -808,19 +812,61 @@ public abstract class AbstractHttpClient implements HttpClient {
                     getProtocolProcessor(),
                     getHttpRequestRetryHandler(),
                     getRedirectStrategy(),
-                    getTargetAuthenticationHandler(),
-                    getProxyAuthenticationHandler(),
+                    getTargetAuthenticationStrategy(),
+                    getProxyAuthenticationStrategy(),
                     getUserTokenHandler(),
-                    determineParams(request));
+                    params);
+            routePlanner = getRoutePlanner();
+            connectionBackoffStrategy = getConnectionBackoffStrategy();
+            backoffManager = getBackoffManager();
         }
 
         try {
-            return director.execute(target, request, execContext);
-        } catch(HttpException httpException) {
+            if (connectionBackoffStrategy != null && backoffManager != null) {
+                final HttpHost targetForRoute = (target != null) ? target
+                        : (HttpHost) determineParams(request).getParameter(
+                                ClientPNames.DEFAULT_HOST);
+                final HttpRoute route = routePlanner.determineRoute(targetForRoute, request, execContext);
+
+                final CloseableHttpResponse out;
+                try {
+                    out = CloseableHttpResponseProxy.newProxy(
+                            director.execute(target, request, execContext));
+                } catch (final RuntimeException re) {
+                    if (connectionBackoffStrategy.shouldBackoff(re)) {
+                        backoffManager.backOff(route);
+                    }
+                    throw re;
+                } catch (final Exception e) {
+                    if (connectionBackoffStrategy.shouldBackoff(e)) {
+                        backoffManager.backOff(route);
+                    }
+                    if (e instanceof HttpException) {
+                        throw (HttpException)e;
+                    }
+                    if (e instanceof IOException) {
+                        throw (IOException)e;
+                    }
+                    throw new UndeclaredThrowableException(e);
+                }
+                if (connectionBackoffStrategy.shouldBackoff(out)) {
+                    backoffManager.backOff(route);
+                } else {
+                    backoffManager.probe(route);
+                }
+                return out;
+            } else {
+                return CloseableHttpResponseProxy.newProxy(
+                        director.execute(target, request, execContext));
+            }
+        } catch(final HttpException httpException) {
             throw new ClientProtocolException(httpException);
         }
     }
 
+    /**
+     * @deprecated (4.1) do not use
+     */
     @Deprecated
     protected RequestDirector createClientRequestDirector(
             final HttpRequestExecutor requestExec,
@@ -830,10 +876,10 @@ public abstract class AbstractHttpClient implements HttpClient {
             final HttpRoutePlanner rouplan,
             final HttpProcessor httpProcessor,
             final HttpRequestRetryHandler retryHandler,
-            final ch.boye.httpclientandroidlib.client.RedirectHandler redirectHandler,
+            final RedirectHandler redirectHandler,
             final AuthenticationHandler targetAuthHandler,
             final AuthenticationHandler proxyAuthHandler,
-            final UserTokenHandler stateHandler,
+            final UserTokenHandler userTokenHandler,
             final HttpParams params) {
         return new DefaultRequestDirector(
                 requestExec,
@@ -846,13 +892,14 @@ public abstract class AbstractHttpClient implements HttpClient {
                 redirectHandler,
                 targetAuthHandler,
                 proxyAuthHandler,
-                stateHandler,
+                userTokenHandler,
                 params);
     }
 
     /**
-     * @since 4.1
+     * @deprecated (4.2) do not use
      */
+    @Deprecated
     protected RequestDirector createClientRequestDirector(
             final HttpRequestExecutor requestExec,
             final ClientConnectionManager conman,
@@ -864,7 +911,7 @@ public abstract class AbstractHttpClient implements HttpClient {
             final RedirectStrategy redirectStrategy,
             final AuthenticationHandler targetAuthHandler,
             final AuthenticationHandler proxyAuthHandler,
-            final UserTokenHandler stateHandler,
+            final UserTokenHandler userTokenHandler,
             final HttpParams params) {
         return new DefaultRequestDirector(
                 log,
@@ -878,9 +925,43 @@ public abstract class AbstractHttpClient implements HttpClient {
                 redirectStrategy,
                 targetAuthHandler,
                 proxyAuthHandler,
-                stateHandler,
+                userTokenHandler,
                 params);
     }
+
+
+    /**
+     * @since 4.2
+     */
+    protected RequestDirector createClientRequestDirector(
+            final HttpRequestExecutor requestExec,
+            final ClientConnectionManager conman,
+            final ConnectionReuseStrategy reustrat,
+            final ConnectionKeepAliveStrategy kastrat,
+            final HttpRoutePlanner rouplan,
+            final HttpProcessor httpProcessor,
+            final HttpRequestRetryHandler retryHandler,
+            final RedirectStrategy redirectStrategy,
+            final AuthenticationStrategy targetAuthStrategy,
+            final AuthenticationStrategy proxyAuthStrategy,
+            final UserTokenHandler userTokenHandler,
+            final HttpParams params) {
+        return new DefaultRequestDirector(
+                log,
+                requestExec,
+                conman,
+                reustrat,
+                kastrat,
+                rouplan,
+                httpProcessor,
+                retryHandler,
+                redirectStrategy,
+                targetAuthStrategy,
+                proxyAuthStrategy,
+                userTokenHandler,
+                params);
+    }
+
     /**
      * Obtains parameters for executing a request.
      * The default implementation in this class creates a new
@@ -896,81 +977,14 @@ public abstract class AbstractHttpClient implements HttpClient {
      *
      * @return  the parameters to use
      */
-    protected HttpParams determineParams(HttpRequest req) {
+    protected HttpParams determineParams(final HttpRequest req) {
         return new ClientParamsStack
             (null, getParams(), req.getParams(), null);
     }
 
-    public <T> T execute(
-            final HttpUriRequest request,
-            final ResponseHandler<? extends T> responseHandler)
-                throws IOException, ClientProtocolException {
-        return execute(request, responseHandler, null);
-    }
 
-    public <T> T execute(
-            final HttpUriRequest request,
-            final ResponseHandler<? extends T> responseHandler,
-            final HttpContext context)
-                throws IOException, ClientProtocolException {
-        HttpHost target = determineTarget(request);
-        return execute(target, request, responseHandler, context);
-    }
-
-    public <T> T execute(
-            final HttpHost target,
-            final HttpRequest request,
-            final ResponseHandler<? extends T> responseHandler)
-                throws IOException, ClientProtocolException {
-        return execute(target, request, responseHandler, null);
-    }
-
-    public <T> T execute(
-            final HttpHost target,
-            final HttpRequest request,
-            final ResponseHandler<? extends T> responseHandler,
-            final HttpContext context)
-                throws IOException, ClientProtocolException {
-        if (responseHandler == null) {
-            throw new IllegalArgumentException
-                ("Response handler must not be null.");
-        }
-
-        HttpResponse response = execute(target, request, context);
-
-        T result;
-        try {
-            result = responseHandler.handleResponse(response);
-        } catch (Throwable t) {
-            HttpEntity entity = response.getEntity();
-            try {
-                EntityUtils.consume(entity);
-            } catch (Exception t2) {
-                // Log this exception. The original exception is more
-                // important and will be thrown to the caller.
-                this.log.warn("Error consuming content after an exception.", t2);
-            }
-
-            if (t instanceof Error) {
-                throw (Error) t;
-            }
-
-            if (t instanceof RuntimeException) {
-                throw (RuntimeException) t;
-            }
-
-            if (t instanceof IOException) {
-                throw (IOException) t;
-            }
-
-            throw new UndeclaredThrowableException(t);
-        }
-
-        // Handling the response was successful. Ensure that the content has
-        // been fully consumed.
-        HttpEntity entity = response.getEntity();
-        EntityUtils.consume(entity);
-        return result;
+    public void close() {
+        getConnectionManager().shutdown();
     }
 
 }

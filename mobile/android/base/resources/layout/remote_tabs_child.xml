@@ -12,7 +12,7 @@
               android:paddingLeft="4dp"
               android:paddingRight="4dp">
 
-    <TextView android:id="@+id/tab"
+    <TextView android:id="@+id/title"
               style="@style/TabRowTextAppearance"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"

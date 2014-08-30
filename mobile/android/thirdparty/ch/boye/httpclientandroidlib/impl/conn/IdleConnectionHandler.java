@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -45,7 +46,7 @@ import ch.boye.httpclientandroidlib.HttpConnection;
  *
  * @since 4.0
  *
- * @deprecated no longer used
+ * @deprecated (4.1)  no longer used
  */
 @Deprecated
 public class IdleConnectionHandler {
@@ -69,9 +70,9 @@ public class IdleConnectionHandler {
      *
      * @see #remove
      */
-    public void add(HttpConnection connection, long validDuration, TimeUnit unit) {
+    public void add(final HttpConnection connection, final long validDuration, final TimeUnit unit) {
 
-        long timeAdded = System.currentTimeMillis();
+        final long timeAdded = System.currentTimeMillis();
 
         if (log.isDebugEnabled()) {
             log.debug("Adding connection at: " + timeAdded);
@@ -88,8 +89,8 @@ public class IdleConnectionHandler {
      * @param connection
      * @return True if the connection is still valid.
      */
-    public boolean remove(HttpConnection connection) {
-        TimeValues times = connectionToTimes.remove(connection);
+    public boolean remove(final HttpConnection connection) {
+        final TimeValues times = connectionToTimes.remove(connection);
         if(times == null) {
             log.warn("Removing a connection that never existed!");
             return true;
@@ -110,26 +111,26 @@ public class IdleConnectionHandler {
      *
      * @param idleTime the minimum idle time, in milliseconds, for connections to be closed
      */
-    public void closeIdleConnections(long idleTime) {
+    public void closeIdleConnections(final long idleTime) {
 
         // the latest time for which connections will be closed
-        long idleTimeout = System.currentTimeMillis() - idleTime;
+        final long idleTimeout = System.currentTimeMillis() - idleTime;
 
         if (log.isDebugEnabled()) {
             log.debug("Checking for connections, idle timeout: "  + idleTimeout);
         }
 
-        for (Entry<HttpConnection, TimeValues> entry : connectionToTimes.entrySet()) {
-            HttpConnection conn = entry.getKey();
-            TimeValues times = entry.getValue();
-            long connectionTime = times.timeAdded;
+        for (final Entry<HttpConnection, TimeValues> entry : connectionToTimes.entrySet()) {
+            final HttpConnection conn = entry.getKey();
+            final TimeValues times = entry.getValue();
+            final long connectionTime = times.timeAdded;
             if (connectionTime <= idleTimeout) {
                 if (log.isDebugEnabled()) {
                     log.debug("Closing idle connection, connection time: "  + connectionTime);
                 }
                 try {
                     conn.close();
-                } catch (IOException ex) {
+                } catch (final IOException ex) {
                     log.debug("I/O error closing connection", ex);
                 }
             }
@@ -138,21 +139,21 @@ public class IdleConnectionHandler {
 
 
     public void closeExpiredConnections() {
-        long now = System.currentTimeMillis();
+        final long now = System.currentTimeMillis();
         if (log.isDebugEnabled()) {
             log.debug("Checking for expired connections, now: "  + now);
         }
 
-        for (Entry<HttpConnection, TimeValues> entry : connectionToTimes.entrySet()) {
-            HttpConnection conn = entry.getKey();
-            TimeValues times = entry.getValue();
+        for (final Entry<HttpConnection, TimeValues> entry : connectionToTimes.entrySet()) {
+            final HttpConnection conn = entry.getKey();
+            final TimeValues times = entry.getValue();
             if(times.timeExpires <= now) {
                 if (log.isDebugEnabled()) {
                     log.debug("Closing connection, expired @: "  + times.timeExpires);
                 }
                 try {
                     conn.close();
-                } catch (IOException ex) {
+                } catch (final IOException ex) {
                     log.debug("I/O error closing connection", ex);
                 }
             }
@@ -168,7 +169,7 @@ public class IdleConnectionHandler {
          * @param validDuration The duration this connection is valid for
          * @param validUnit The unit of time the duration is specified in.
          */
-        TimeValues(long now, long validDuration, TimeUnit validUnit) {
+        TimeValues(final long now, final long validDuration, final TimeUnit validUnit) {
             this.timeAdded = now;
             if(validDuration > 0) {
                 this.timeExpires = now + validUnit.toMillis(validDuration);
