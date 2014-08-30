@@ -272,6 +272,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       // (or potentially optimize BuildAnimations to avoid rebuilding it
       // in the first place).
       if (!collection->mPlayers.IsEmpty()) {
+
+        Nullable<TimeDuration> now = timeline->GetCurrentTimeDuration();
+
         for (size_t newIdx = newPlayers.Length(); newIdx-- != 0;) {
           AnimationPlayer* newPlayer = newPlayers[newIdx];
 
@@ -309,18 +312,15 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           // Handle changes in play state.
           if (!oldPlayer->IsPaused() && newPlayer->IsPaused()) {
             // Start pause at current time.
-            oldPlayer->mHoldTime = timeline->GetCurrentTimeStamp();
+            oldPlayer->mHoldTime = oldPlayer->GetCurrentTimeDuration();
           } else if (oldPlayer->IsPaused() && !newPlayer->IsPaused()) {
-            const TimeStamp& now = timeline->GetCurrentTimeStamp();
-            if (!now.IsNull()) {
-              // FIXME: Once we store the start time and pause start as
-              // offsets (not timestamps) we should be able to update the
-              // start time to something more appropriate when now IsNull.
-              // Handle change in pause state by adjusting start time to
-              // unpause.
-              oldPlayer->mStartTime.SetValue(now + oldPlayer->mStartTime.Value() - oldPlayer->mHoldTime);
+            if (now.IsNull()) {
+              oldPlayer->mStartTime.SetNull();
+            } else {
+              oldPlayer->mStartTime.SetValue(now.Value() -
+                                               oldPlayer->mHoldTime.Value());
             }
-            oldPlayer->mHoldTime = TimeStamp();
+            oldPlayer->mHoldTime.SetNull();
           }
           oldPlayer->mPlayState = newPlayer->mPlayState;
 
@@ -419,7 +419,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
   ResolvedStyleCache resolvedStyles;
 
   const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
-  TimeStamp now = aTimeline->GetCurrentTimeStamp();
+  Nullable<TimeDuration> now = aTimeline->GetCurrentTimeDuration();
 
   for (size_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
@@ -454,12 +454,10 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       new Animation(mPresContext->Document(), timing, src.GetName());
     dest->SetSource(destAnim);
 
-    dest->mStartTime = aTimeline->GetCurrentTimeDuration();
+    dest->mStartTime = now;
     dest->mPlayState = src.GetPlayState();
     if (dest->IsPaused()) {
       dest->mHoldTime = now;
-    } else {
-      dest->mHoldTime = TimeStamp();
     }
 
     // While current drafts of css3-animations say that later keyframes
