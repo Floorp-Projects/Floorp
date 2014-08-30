@@ -27,39 +27,37 @@
 
 package ch.boye.httpclientandroidlib.client.methods;
 
-import java.io.IOException;
-
-import ch.boye.httpclientandroidlib.client.HttpClient;
-import ch.boye.httpclientandroidlib.conn.ClientConnectionManager;
 import ch.boye.httpclientandroidlib.conn.ClientConnectionRequest;
 import ch.boye.httpclientandroidlib.conn.ConnectionReleaseTrigger;
-import ch.boye.httpclientandroidlib.conn.ManagedClientConnection;
-import ch.boye.httpclientandroidlib.impl.conn.tsccm.ThreadSafeClientConnManager;
+
+import java.io.IOException;
+
 
 /**
  * Interface representing an HTTP request that can be aborted by shutting
  * down the underlying HTTP connection.
  *
- *
- * <!-- empty lines to avoid svn diff problems -->
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link HttpExecutionAware}
  */
+@Deprecated
 public interface AbortableHttpRequest {
 
     /**
-     * Sets the {@link ClientConnectionRequest} callback that can be
-     * used to abort a long-lived request for a connection.
+     * Sets the {@link ch.boye.httpclientandroidlib.conn.ClientConnectionRequest}
+     * callback that can be used to abort a long-lived request for a connection.
      * If the request is already aborted, throws an {@link IOException}.
      *
-     * @see ClientConnectionManager
-     * @see ThreadSafeClientConnManager
+     * @see ch.boye.httpclientandroidlib.conn.ClientConnectionManager
      */
     void setConnectionRequest(ClientConnectionRequest connRequest) throws IOException;
 
     /**
      * Sets the {@link ConnectionReleaseTrigger} callback that can
      * be used to abort an active connection.
-     * Typically, this will be the {@link ManagedClientConnection} itself.
+     * Typically, this will be the
+     *   {@link ch.boye.httpclientandroidlib.conn.ManagedClientConnection} itself.
      * If the request is already aborted, throws an {@link IOException}.
      */
     void setReleaseTrigger(ConnectionReleaseTrigger releaseTrigger) throws IOException;
@@ -70,12 +68,12 @@ public interface AbortableHttpRequest {
      * the next execution. Aborting this request will cause all subsequent
      * executions with this request to fail.
      *
-     * @see HttpClient#execute(HttpUriRequest)
-     * @see HttpClient#execute(ch.boye.httpclientandroidlib.HttpHost,
+     * @see ch.boye.httpclientandroidlib.client.HttpClient#execute(HttpUriRequest)
+     * @see ch.boye.httpclientandroidlib.client.HttpClient#execute(ch.boye.httpclientandroidlib.HttpHost,
      *      ch.boye.httpclientandroidlib.HttpRequest)
-     * @see HttpClient#execute(HttpUriRequest,
+     * @see ch.boye.httpclientandroidlib.client.HttpClient#execute(HttpUriRequest,
      *      ch.boye.httpclientandroidlib.protocol.HttpContext)
-     * @see HttpClient#execute(ch.boye.httpclientandroidlib.HttpHost,
+     * @see ch.boye.httpclientandroidlib.client.HttpClient#execute(ch.boye.httpclientandroidlib.HttpHost,
      *      ch.boye.httpclientandroidlib.HttpRequest, ch.boye.httpclientandroidlib.protocol.HttpContext)
      */
     void abort();

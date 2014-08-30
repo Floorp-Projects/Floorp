@@ -33,6 +33,8 @@ import java.io.OutputStream;
 
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Base class for wrapping entities.
@@ -43,6 +45,7 @@ import ch.boye.httpclientandroidlib.HttpEntity;
  *
  * @since 4.0
  */
+@NotThreadSafe
 public class HttpEntityWrapper implements HttpEntity {
 
     /** The wrapped entity. */
@@ -50,21 +53,11 @@ public class HttpEntityWrapper implements HttpEntity {
 
     /**
      * Creates a new entity wrapper.
-     *
-     * @param wrapped   the entity to wrap, not null
-     * @throws IllegalArgumentException if wrapped is null
      */
-    public HttpEntityWrapper(HttpEntity wrapped) {
+    public HttpEntityWrapper(final HttpEntity wrappedEntity) {
         super();
-
-        if (wrapped == null) {
-            throw new IllegalArgumentException
-                ("wrapped entity must not be null");
-        }
-        wrappedEntity = wrapped;
-
+        this.wrappedEntity = Args.notNull(wrappedEntity, "Wrapped entity");
     } // constructor
-
 
     public boolean isRepeatable() {
         return wrappedEntity.isRepeatable();
@@ -91,7 +84,7 @@ public class HttpEntityWrapper implements HttpEntity {
         return wrappedEntity.getContent();
     }
 
-    public void writeTo(OutputStream outstream)
+    public void writeTo(final OutputStream outstream)
         throws IOException {
         wrappedEntity.writeTo(outstream);
     }
@@ -101,9 +94,10 @@ public class HttpEntityWrapper implements HttpEntity {
     }
 
     /**
-     * @deprecated Either use {@link #getContent()} and call {@link java.io.InputStream#close()} on that;
+     * @deprecated (4.1) Either use {@link #getContent()} and call {@link java.io.InputStream#close()} on that;
      * otherwise call {@link #writeTo(OutputStream)} which is required to free the resources.
      */
+    @Deprecated
     public void consumeContent() throws IOException {
         wrappedEntity.consumeContent();
     }

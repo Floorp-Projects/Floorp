@@ -28,18 +28,19 @@
 package ch.boye.httpclientandroidlib.impl;
 
 import ch.boye.httpclientandroidlib.ConnectionReuseStrategy;
-import ch.boye.httpclientandroidlib.HttpConnection;
+import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HeaderIterator;
-import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.HttpStatus;
 import ch.boye.httpclientandroidlib.HttpVersion;
 import ch.boye.httpclientandroidlib.ParseException;
 import ch.boye.httpclientandroidlib.ProtocolVersion;
+import ch.boye.httpclientandroidlib.TokenIterator;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
+import ch.boye.httpclientandroidlib.message.BasicTokenIterator;
 import ch.boye.httpclientandroidlib.protocol.HTTP;
 import ch.boye.httpclientandroidlib.protocol.HttpContext;
-import ch.boye.httpclientandroidlib.protocol.ExecutionContext;
-import ch.boye.httpclientandroidlib.TokenIterator;
-import ch.boye.httpclientandroidlib.message.BasicTokenIterator;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Default implementation of a strategy deciding about connection re-use.
@@ -59,7 +60,10 @@ import ch.boye.httpclientandroidlib.message.BasicTokenIterator;
  *
  * @since 4.0
  */
+@Immutable
 public class DefaultConnectionReuseStrategy implements ConnectionReuseStrategy {
+
+    public static final DefaultConnectionReuseStrategy INSTANCE = new DefaultConnectionReuseStrategy();
 
     public DefaultConnectionReuseStrategy() {
         super();
@@ -68,32 +72,32 @@ public class DefaultConnectionReuseStrategy implements ConnectionReuseStrategy {
     // see interface ConnectionReuseStrategy
     public boolean keepAlive(final HttpResponse response,
                              final HttpContext context) {
-        if (response == null) {
-            throw new IllegalArgumentException
-                ("HTTP response may not be null.");
-        }
-        if (context == null) {
-            throw new IllegalArgumentException
-                ("HTTP context may not be null.");
-        }
-
-        HttpConnection conn = (HttpConnection)
-            context.getAttribute(ExecutionContext.HTTP_CONNECTION);
-
-        if (conn != null && !conn.isOpen())
-            return false;
-        // do NOT check for stale connection, that is an expensive operation
+        Args.notNull(response, "HTTP response");
+        Args.notNull(context, "HTTP context");
 
         // Check for a self-terminating entity. If the end of the entity will
         // be indicated by closing the connection, there is no keep-alive.
-        HttpEntity entity = response.getEntity();
-        ProtocolVersion ver = response.getStatusLine().getProtocolVersion();
-        if (entity != null) {
-            if (entity.getContentLength() < 0) {
-                if (!entity.isChunked() ||
-                    ver.lessEquals(HttpVersion.HTTP_1_0)) {
-                    // if the content length is not known and is not chunk
-                    // encoded, the connection cannot be reused
+        final ProtocolVersion ver = response.getStatusLine().getProtocolVersion();
+        final Header teh = response.getFirstHeader(HTTP.TRANSFER_ENCODING);
+        if (teh != null) {
+            if (!HTTP.CHUNK_CODING.equalsIgnoreCase(teh.getValue())) {
+                return false;
+            }
+        } else {
+            if (canResponseHaveBody(response)) {
+                final Header[] clhs = response.getHeaders(HTTP.CONTENT_LEN);
+                // Do not reuse if not properly content-length delimited
+                if (clhs.length == 1) {
+                    final Header clh = clhs[0];
+                    try {
+                        final int contentLen = Integer.parseInt(clh.getValue());
+                        if (contentLen < 0) {
+                            return false;
+                        }
+                    } catch (final NumberFormatException ex) {
+                        return false;
+                    }
+                } else {
                     return false;
                 }
             }
@@ -103,8 +107,9 @@ public class DefaultConnectionReuseStrategy implements ConnectionReuseStrategy {
         // the "Proxy-Connection" header. The latter is an unspecified and
         // broken but unfortunately common extension of HTTP.
         HeaderIterator hit = response.headerIterator(HTTP.CONN_DIRECTIVE);
-        if (!hit.hasNext())
+        if (!hit.hasNext()) {
             hit = response.headerIterator("Proxy-Connection");
+        }
 
         // Experimental usage of the "Connection" header in HTTP/1.0 is
         // documented in RFC 2068, section 19.7.1. A token "keep-alive" is
@@ -131,7 +136,7 @@ public class DefaultConnectionReuseStrategy implements ConnectionReuseStrategy {
 
         if (hit.hasNext()) {
             try {
-                TokenIterator ti = createTokenIterator(hit);
+                final TokenIterator ti = createTokenIterator(hit);
                 boolean keepalive = false;
                 while (ti.hasNext()) {
                     final String token = ti.nextToken();
@@ -143,10 +148,12 @@ public class DefaultConnectionReuseStrategy implements ConnectionReuseStrategy {
                     }
                 }
                 if (keepalive)
+                 {
                     return true;
                 // neither "close" nor "keep-alive", use default policy
+                }
 
-            } catch (ParseException px) {
+            } catch (final ParseException px) {
                 // invalid connection header means no persistent connection
                 // we don't have logging in HttpCore, so the exception is lost
                 return false;
@@ -167,7 +174,16 @@ public class DefaultConnectionReuseStrategy implements ConnectionReuseStrategy {
      *
      * @return  the token iterator
      */
-    protected TokenIterator createTokenIterator(HeaderIterator hit) {
+    protected TokenIterator createTokenIterator(final HeaderIterator hit) {
         return new BasicTokenIterator(hit);
     }
+
+    private boolean canResponseHaveBody(final HttpResponse response) {
+        final int status = response.getStatusLine().getStatusCode();
+        return status >= HttpStatus.SC_OK
+            && status != HttpStatus.SC_NO_CONTENT
+            && status != HttpStatus.SC_NOT_MODIFIED
+            && status != HttpStatus.SC_RESET_CONTENT;
+    }
+
 }

@@ -28,7 +28,10 @@
 package ch.boye.httpclientandroidlib.impl;
 
 import java.util.HashMap;
+import java.util.Map;
+
 import ch.boye.httpclientandroidlib.HttpConnectionMetrics;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.io.HttpTransportMetrics;
 
 /**
@@ -36,6 +39,7 @@ import ch.boye.httpclientandroidlib.io.HttpTransportMetrics;
  *
  * @since 4.0
  */
+@NotThreadSafe
 public class HttpConnectionMetricsImpl implements HttpConnectionMetrics {
 
     public static final String REQUEST_COUNT = "http.request-count";
@@ -51,7 +55,7 @@ public class HttpConnectionMetricsImpl implements HttpConnectionMetrics {
     /**
      * The cache map for all metrics values.
      */
-    private HashMap metricsCache;
+    private Map<String, Object> metricsCache;
 
     public HttpConnectionMetricsImpl(
             final HttpTransportMetrics inTransportMetric,
@@ -102,18 +106,18 @@ public class HttpConnectionMetricsImpl implements HttpConnectionMetrics {
         }
         if (value == null) {
             if (REQUEST_COUNT.equals(metricName)) {
-                value = new Long(requestCount);
+                value = Long.valueOf(requestCount);
             } else if (RESPONSE_COUNT.equals(metricName)) {
-                value = new Long(responseCount);
+                value = Long.valueOf(responseCount);
             } else if (RECEIVED_BYTES_COUNT.equals(metricName)) {
                 if (this.inTransportMetric != null) {
-                    return new Long(this.inTransportMetric.getBytesTransferred());
+                    return Long.valueOf(this.inTransportMetric.getBytesTransferred());
                 } else {
                     return null;
                 }
             } else if (SENT_BYTES_COUNT.equals(metricName)) {
                 if (this.outTransportMetric != null) {
-                    return new Long(this.outTransportMetric.getBytesTransferred());
+                    return Long.valueOf(this.outTransportMetric.getBytesTransferred());
                 } else {
                     return null;
                 }
@@ -122,9 +126,9 @@ public class HttpConnectionMetricsImpl implements HttpConnectionMetrics {
         return value;
     }
 
-    public void setMetric(final String metricName, Object obj) {
+    public void setMetric(final String metricName, final Object obj) {
         if (this.metricsCache == null) {
-            this.metricsCache = new HashMap();
+            this.metricsCache = new HashMap<String, Object>();
         }
         this.metricsCache.put(metricName, obj);
     }

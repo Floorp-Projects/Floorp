@@ -48,25 +48,21 @@ class SocketFactoryAdaptor implements SocketFactory {
     }
 
     public Socket createSocket() throws IOException {
-        HttpParams params = new BasicHttpParams();
+        final HttpParams params = new BasicHttpParams();
         return this.factory.createSocket(params);
     }
 
     public Socket connectSocket(
             final Socket socket,
-            final String host, int port,
-            final InetAddress localAddress, int localPort,
+            final String host, final int port,
+            final InetAddress localAddress, final int localPort,
             final HttpParams params) throws IOException, UnknownHostException, ConnectTimeoutException {
         InetSocketAddress local = null;
         if (localAddress != null || localPort > 0) {
-            // we need to bind explicitly
-            if (localPort < 0) {
-                localPort = 0; // indicates "any"
-            }
-            local = new InetSocketAddress(localAddress, localPort);
+            local = new InetSocketAddress(localAddress, localPort > 0 ? localPort : 0);
         }
-        InetAddress remoteAddress = InetAddress.getByName(host);
-        InetSocketAddress remote = new InetSocketAddress(remoteAddress, port);
+        final InetAddress remoteAddress = InetAddress.getByName(host);
+        final InetSocketAddress remote = new InetSocketAddress(remoteAddress, port);
         return this.factory.connectSocket(socket, remote, local, params);
     }
 
@@ -80,8 +76,12 @@ class SocketFactoryAdaptor implements SocketFactory {
 
     @Override
     public boolean equals(final Object obj) {
-        if (obj == null) return false;
-        if (this == obj) return true;
+        if (obj == null) {
+            return false;
+        }
+        if (this == obj) {
+            return true;
+        }
         if (obj instanceof SocketFactoryAdaptor) {
             return this.factory.equals(((SocketFactoryAdaptor)obj).factory);
         } else {

@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -23,7 +24,6 @@
  * <http://www.apache.org/>.
  *
  */
-
 package ch.boye.httpclientandroidlib.impl.conn;
 
 import java.io.IOException;
@@ -32,17 +32,18 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 
+import ch.boye.httpclientandroidlib.HttpConnectionMetrics;
+import ch.boye.httpclientandroidlib.HttpEntityEnclosingRequest;
 import ch.boye.httpclientandroidlib.HttpException;
 import ch.boye.httpclientandroidlib.HttpRequest;
-import ch.boye.httpclientandroidlib.HttpEntityEnclosingRequest;
 import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.HttpConnectionMetrics;
-import ch.boye.httpclientandroidlib.conn.OperatedClientConnection;
-import ch.boye.httpclientandroidlib.conn.ManagedClientConnection;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.conn.ClientConnectionManager;
+import ch.boye.httpclientandroidlib.conn.ManagedClientConnection;
+import ch.boye.httpclientandroidlib.conn.OperatedClientConnection;
 import ch.boye.httpclientandroidlib.protocol.HttpContext;
 
 /**
@@ -65,16 +66,17 @@ import ch.boye.httpclientandroidlib.protocol.HttpContext;
  * expected to tolerate multiple calls to the release method.
  *
  * @since 4.0
+ *
+ * @deprecated (4.2)  do not use
  */
-public abstract class AbstractClientConnAdapter
-                            implements ManagedClientConnection, HttpContext {
+@Deprecated
+@NotThreadSafe
+public abstract class AbstractClientConnAdapter implements ManagedClientConnection, HttpContext {
 
     /**
-     * The connection manager, if any.
-     * This attribute MUST NOT be final, so the adapter can be detached
-     * from the connection manager without keeping a hard reference there.
+     * The connection manager.
      */
-    private volatile ClientConnectionManager connManager;
+    private final ClientConnectionManager connManager;
 
     /** The wrapped connection. */
     private volatile OperatedClientConnection wrappedConnection;
@@ -96,8 +98,8 @@ public abstract class AbstractClientConnAdapter
      * @param mgr       the connection manager, or <code>null</code>
      * @param conn      the connection to wrap, or <code>null</code>
      */
-    protected AbstractClientConnAdapter(ClientConnectionManager mgr,
-                                        OperatedClientConnection conn) {
+    protected AbstractClientConnAdapter(final ClientConnectionManager mgr,
+                                        final OperatedClientConnection conn) {
         super();
         connManager = mgr;
         wrappedConnection = conn;
@@ -112,7 +114,6 @@ public abstract class AbstractClientConnAdapter
      */
     protected synchronized void detach() {
         wrappedConnection = null;
-        connManager = null; // base class attribute
         duration = Long.MAX_VALUE;
     }
 
@@ -125,7 +126,7 @@ public abstract class AbstractClientConnAdapter
     }
 
     /**
-     * @deprecated use {@link #assertValid(OperatedClientConnection)}
+     * @deprecated (4.1)  use {@link #assertValid(OperatedClientConnection)}
      */
     @Deprecated
     protected final void assertNotAborted() throws InterruptedIOException {
@@ -156,56 +157,59 @@ public abstract class AbstractClientConnAdapter
     }
 
     public boolean isOpen() {
-        OperatedClientConnection conn = getWrappedConnection();
-        if (conn == null)
+        final OperatedClientConnection conn = getWrappedConnection();
+        if (conn == null) {
             return false;
+        }
 
         return conn.isOpen();
     }
 
     public boolean isStale() {
-        if (isReleased())
+        if (isReleased()) {
             return true;
-        OperatedClientConnection conn = getWrappedConnection();
-        if (conn == null)
+        }
+        final OperatedClientConnection conn = getWrappedConnection();
+        if (conn == null) {
             return true;
+        }
 
         return conn.isStale();
     }
 
-    public void setSocketTimeout(int timeout) {
-        OperatedClientConnection conn = getWrappedConnection();
+    public void setSocketTimeout(final int timeout) {
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         conn.setSocketTimeout(timeout);
     }
 
     public int getSocketTimeout() {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         return conn.getSocketTimeout();
     }
 
     public HttpConnectionMetrics getMetrics() {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         return conn.getMetrics();
     }
 
     public void flush() throws IOException {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         conn.flush();
     }
 
-    public boolean isResponseAvailable(int timeout) throws IOException {
-        OperatedClientConnection conn = getWrappedConnection();
+    public boolean isResponseAvailable(final int timeout) throws IOException {
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         return conn.isResponseAvailable(timeout);
     }
 
-    public void receiveResponseEntity(HttpResponse response)
+    public void receiveResponseEntity(final HttpResponse response)
         throws HttpException, IOException {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         unmarkReusable();
         conn.receiveResponseEntity(response);
@@ -213,66 +217,80 @@ public abstract class AbstractClientConnAdapter
 
     public HttpResponse receiveResponseHeader()
         throws HttpException, IOException {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         unmarkReusable();
         return conn.receiveResponseHeader();
     }
 
-    public void sendRequestEntity(HttpEntityEnclosingRequest request)
+    public void sendRequestEntity(final HttpEntityEnclosingRequest request)
         throws HttpException, IOException {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         unmarkReusable();
         conn.sendRequestEntity(request);
     }
 
-    public void sendRequestHeader(HttpRequest request)
+    public void sendRequestHeader(final HttpRequest request)
         throws HttpException, IOException {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         unmarkReusable();
         conn.sendRequestHeader(request);
     }
 
     public InetAddress getLocalAddress() {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         return conn.getLocalAddress();
     }
 
     public int getLocalPort() {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         return conn.getLocalPort();
     }
 
     public InetAddress getRemoteAddress() {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         return conn.getRemoteAddress();
     }
 
     public int getRemotePort() {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         return conn.getRemotePort();
     }
 
     public boolean isSecure() {
-        OperatedClientConnection conn = getWrappedConnection();
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         return conn.isSecure();
     }
 
-    public SSLSession getSSLSession() {
-        OperatedClientConnection conn = getWrappedConnection();
+    public void bind(final Socket socket) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    public Socket getSocket() {
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
-        if (!isOpen())
+        if (!isOpen()) {
             return null;
+        }
+        return conn.getSocket();
+    }
+
+    public SSLSession getSSLSession() {
+        final OperatedClientConnection conn = getWrappedConnection();
+        assertValid(conn);
+        if (!isOpen()) {
+            return null;
+        }
 
         SSLSession result = null;
-        Socket    sock    = conn.getSocket();
+        final Socket    sock    = conn.getSocket();
         if (sock instanceof SSLSocket) {
             result = ((SSLSocket)sock).getSession();
         }
@@ -291,7 +309,7 @@ public abstract class AbstractClientConnAdapter
         return markedReusable;
     }
 
-    public void setIdleDuration(long duration, TimeUnit unit) {
+    public void setIdleDuration(final long duration, final TimeUnit unit) {
         if(duration > 0) {
             this.duration = unit.toMillis(duration);
         } else {
@@ -304,9 +322,7 @@ public abstract class AbstractClientConnAdapter
             return;
         }
         released = true;
-        if (connManager != null) {
-            connManager.releaseConnection(this, duration, TimeUnit.MILLISECONDS);
-        }
+        connManager.releaseConnection(this, duration, TimeUnit.MILLISECONDS);
     }
 
     public synchronized void abortConnection() {
@@ -317,15 +333,13 @@ public abstract class AbstractClientConnAdapter
         unmarkReusable();
         try {
             shutdown();
-        } catch (IOException ignore) {
+        } catch (final IOException ignore) {
         }
-        if (connManager != null) {
-            connManager.releaseConnection(this, duration, TimeUnit.MILLISECONDS);
-        }
+        connManager.releaseConnection(this, duration, TimeUnit.MILLISECONDS);
     }
 
-    public synchronized Object getAttribute(final String id) {
-        OperatedClientConnection conn = getWrappedConnection();
+    public Object getAttribute(final String id) {
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         if (conn instanceof HttpContext) {
             return ((HttpContext) conn).getAttribute(id);
@@ -334,8 +348,8 @@ public abstract class AbstractClientConnAdapter
         }
     }
 
-    public synchronized Object removeAttribute(final String id) {
-        OperatedClientConnection conn = getWrappedConnection();
+    public Object removeAttribute(final String id) {
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         if (conn instanceof HttpContext) {
             return ((HttpContext) conn).removeAttribute(id);
@@ -344,8 +358,8 @@ public abstract class AbstractClientConnAdapter
         }
     }
 
-    public synchronized void setAttribute(final String id, final Object obj) {
-        OperatedClientConnection conn = getWrappedConnection();
+    public void setAttribute(final String id, final Object obj) {
+        final OperatedClientConnection conn = getWrappedConnection();
         assertValid(conn);
         if (conn instanceof HttpContext) {
             ((HttpContext) conn).setAttribute(id, obj);

@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -23,15 +24,17 @@
  * <http://www.apache.org/>.
  *
  */
-
 package ch.boye.httpclientandroidlib.impl.client;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TreeSet;
 
 import ch.boye.httpclientandroidlib.annotation.GuardedBy;
 import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
-
 import ch.boye.httpclientandroidlib.client.CookieStore;
 import ch.boye.httpclientandroidlib.cookie.Cookie;
 import ch.boye.httpclientandroidlib.cookie.CookieIdentityComparator;
@@ -65,7 +68,7 @@ public class BasicCookieStore implements CookieStore, Serializable {
      * @see #addCookies(Cookie[])
      *
      */
-    public synchronized void addCookie(Cookie cookie) {
+    public synchronized void addCookie(final Cookie cookie) {
         if (cookie != null) {
             // first remove any old cookie that is equivalent
             cookies.remove(cookie);
@@ -85,9 +88,9 @@ public class BasicCookieStore implements CookieStore, Serializable {
      * @see #addCookie(Cookie)
      *
      */
-    public synchronized void addCookies(Cookie[] cookies) {
+    public synchronized void addCookies(final Cookie[] cookies) {
         if (cookies != null) {
-            for (Cookie cooky : cookies) {
+            for (final Cookie cooky : cookies) {
                 this.addCookie(cooky);
             }
         }
@@ -117,7 +120,7 @@ public class BasicCookieStore implements CookieStore, Serializable {
             return false;
         }
         boolean removed = false;
-        for (Iterator<Cookie> it = cookies.iterator(); it.hasNext();) {
+        for (final Iterator<Cookie> it = cookies.iterator(); it.hasNext();) {
             if (it.next().isExpired(date)) {
                 it.remove();
                 removed = true;

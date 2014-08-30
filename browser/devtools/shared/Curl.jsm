@@ -120,6 +120,10 @@ this.Curl = {
     }
     for (let i = 0; i < headers.length; i++) {
       let header = headers[i];
+      if (header.name === "Accept-Encoding"){
+        command.push("--compressed");
+        continue;
+      }
       if (ignoredHeaders.has(header.name)) {
         continue;
       }

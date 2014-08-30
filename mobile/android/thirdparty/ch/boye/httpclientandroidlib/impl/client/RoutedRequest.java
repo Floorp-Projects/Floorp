@@ -28,14 +28,16 @@
 package ch.boye.httpclientandroidlib.impl.client;
 
 import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.conn.routing.HttpRoute;
 
 /**
  * A request with the route along which it should be sent.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) do not use.
  */
+@Deprecated
 @NotThreadSafe // RequestWrapper is @NotThreadSafe
 public class RoutedRequest {
 
