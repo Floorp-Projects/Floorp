@@ -3235,7 +3235,6 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
 {
     JS_ASSERT(emitOption != DefineVars);
 
-    ParseNode *pn3;
     bool doElemOp;
     bool needToPopIterator = false;
 
@@ -3263,9 +3262,11 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
     for (ParseNode *member = pattern->pn_head; member; member = member->pn_next) {
         /*
          * Now push the property name currently being matched, which is the
-         * current property name "label" on the left of a colon in the object initialiser.
-         * Set pn3 to the lvalue node, which is in the value-initializing position.
+         * current property name "label" on the left of a colon in the object
+         * initialiser.  Set |subpattern| to the lvalue node, which is in the
+         * value-initializing position.
          */
+        ParseNode *subpattern;
         if (pattern->isKind(PNK_OBJECT)) {
             doElemOp = true;
             JS_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
@@ -3310,7 +3311,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                 JS_ASSERT(bce->stackDepth >= stackDepth + 1);
             }
 
-            pn3 = member->pn_right;
+            subpattern = member->pn_right;
         } else {
             JS_ASSERT(pattern->isKind(PNK_ARRAY));
 
@@ -3371,18 +3372,18 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                     return false;
             }
 
-            pn3 = member;
+            subpattern = member;
         }
 
         /* Elision node makes a hole in the array destructurer. */
-        if (pn3->isKind(PNK_ELISION)) {
+        if (subpattern->isKind(PNK_ELISION)) {
             JS_ASSERT(pattern->isKind(PNK_ARRAY));
-            JS_ASSERT(member == pn3);
+            JS_ASSERT(member == subpattern);
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
         } else {
             int32_t depthBefore = bce->stackDepth;
-            if (!EmitDestructuringLHS(cx, bce, pn3, emitOption))
+            if (!EmitDestructuringLHS(cx, bce, subpattern, emitOption))
                 return false;
 
             if (emitOption == PushInitialValues &&
@@ -3401,7 +3402,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                 uint32_t pickDistance = (uint32_t)((bce->stackDepth + 1) - depthBefore);
                 if (pickDistance > 0) {
                     if (pickDistance > UINT8_MAX) {
-                        bce->reportError(pn3, JSMSG_TOO_MANY_LOCALS);
+                        bce->reportError(subpattern, JSMSG_TOO_MANY_LOCALS);
                         return false;
                     }
                     if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)pickDistance) < 0)
