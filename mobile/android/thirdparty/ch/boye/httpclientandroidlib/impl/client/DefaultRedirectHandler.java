@@ -30,8 +30,6 @@ package ch.boye.httpclientandroidlib.impl.client;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.androidextra.HttpClientAndroidLog;
 /* LogFactory removed by HttpClient for Android script. */
 import ch.boye.httpclientandroidlib.Header;
@@ -40,6 +38,7 @@ import ch.boye.httpclientandroidlib.HttpRequest;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.HttpStatus;
 import ch.boye.httpclientandroidlib.ProtocolException;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
 import ch.boye.httpclientandroidlib.client.CircularRedirectException;
 import ch.boye.httpclientandroidlib.client.RedirectHandler;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
@@ -47,15 +46,17 @@ import ch.boye.httpclientandroidlib.client.methods.HttpHead;
 import ch.boye.httpclientandroidlib.client.params.ClientPNames;
 import ch.boye.httpclientandroidlib.client.utils.URIUtils;
 import ch.boye.httpclientandroidlib.params.HttpParams;
-import ch.boye.httpclientandroidlib.protocol.HttpContext;
 import ch.boye.httpclientandroidlib.protocol.ExecutionContext;
+import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.util.Args;
+import ch.boye.httpclientandroidlib.util.Asserts;
 
 /**
  * Default implementation of {@link RedirectHandler}.
  *
  * @since 4.0
  *
- * @deprecated use {@link DefaultRedirectStrategy}.
+ * @deprecated (4.1)  use {@link DefaultRedirectStrategy}.
  */
 @Immutable
 @Deprecated
@@ -72,18 +73,16 @@ public class DefaultRedirectHandler implements RedirectHandler {
     public boolean isRedirectRequested(
             final HttpResponse response,
             final HttpContext context) {
-        if (response == null) {
-            throw new IllegalArgumentException("HTTP response may not be null");
-        }
+        Args.notNull(response, "HTTP response");
 
-        int statusCode = response.getStatusLine().getStatusCode();
+        final int statusCode = response.getStatusLine().getStatusCode();
         switch (statusCode) {
         case HttpStatus.SC_MOVED_TEMPORARILY:
         case HttpStatus.SC_MOVED_PERMANENTLY:
         case HttpStatus.SC_TEMPORARY_REDIRECT:
-            HttpRequest request = (HttpRequest) context.getAttribute(
+            final HttpRequest request = (HttpRequest) context.getAttribute(
                     ExecutionContext.HTTP_REQUEST);
-            String method = request.getRequestLine().getMethod();
+            final String method = request.getRequestLine().getMethod();
             return method.equalsIgnoreCase(HttpGet.METHOD_NAME)
                 || method.equalsIgnoreCase(HttpHead.METHOD_NAME);
         case HttpStatus.SC_SEE_OTHER:
@@ -96,18 +95,16 @@ public class DefaultRedirectHandler implements RedirectHandler {
     public URI getLocationURI(
             final HttpResponse response,
             final HttpContext context) throws ProtocolException {
-        if (response == null) {
-            throw new IllegalArgumentException("HTTP response may not be null");
-        }
+        Args.notNull(response, "HTTP response");
         //get the location header to find out where to redirect to
-        Header locationHeader = response.getFirstHeader("location");
+        final Header locationHeader = response.getFirstHeader("location");
         if (locationHeader == null) {
             // got a redirect response, but no location header
             throw new ProtocolException(
                     "Received redirect response " + response.getStatusLine()
                     + " but no location header");
         }
-        String location = locationHeader.getValue();
+        final String location = locationHeader.getValue();
         if (this.log.isDebugEnabled()) {
             this.log.debug("Redirect requested to location '" + location + "'");
         }
@@ -115,11 +112,11 @@ public class DefaultRedirectHandler implements RedirectHandler {
         URI uri;
         try {
             uri = new URI(location);
-        } catch (URISyntaxException ex) {
+        } catch (final URISyntaxException ex) {
             throw new ProtocolException("Invalid redirect URI: " + location, ex);
         }
 
-        HttpParams params = response.getParams();
+        final HttpParams params = response.getParams();
         // rfc2616 demands the location value be a complete URI
         // Location       = "Location" ":" absoluteURI
         if (!uri.isAbsolute()) {
@@ -128,21 +125,18 @@ public class DefaultRedirectHandler implements RedirectHandler {
                         + uri + "' not allowed");
             }
             // Adjust location URI
-            HttpHost target = (HttpHost) context.getAttribute(
+            final HttpHost target = (HttpHost) context.getAttribute(
                     ExecutionContext.HTTP_TARGET_HOST);
-            if (target == null) {
-                throw new IllegalStateException("Target host not available " +
-                        "in the HTTP context");
-            }
+            Asserts.notNull(target, "Target host");
 
-            HttpRequest request = (HttpRequest) context.getAttribute(
+            final HttpRequest request = (HttpRequest) context.getAttribute(
                     ExecutionContext.HTTP_REQUEST);
 
             try {
-                URI requestURI = new URI(request.getRequestLine().getUri());
-                URI absoluteRequestURI = URIUtils.rewriteURI(requestURI, target, true);
+                final URI requestURI = new URI(request.getRequestLine().getUri());
+                final URI absoluteRequestURI = URIUtils.rewriteURI(requestURI, target, true);
                 uri = URIUtils.resolve(absoluteRequestURI, uri);
-            } catch (URISyntaxException ex) {
+            } catch (final URISyntaxException ex) {
                 throw new ProtocolException(ex.getMessage(), ex);
             }
         }
@@ -157,15 +151,15 @@ public class DefaultRedirectHandler implements RedirectHandler {
                 context.setAttribute(REDIRECT_LOCATIONS, redirectLocations);
             }
 
-            URI redirectURI;
+            final URI redirectURI;
             if (uri.getFragment() != null) {
                 try {
-                    HttpHost target = new HttpHost(
+                    final HttpHost target = new HttpHost(
                             uri.getHost(),
                             uri.getPort(),
                             uri.getScheme());
                     redirectURI = URIUtils.rewriteURI(uri, target, true);
-                } catch (URISyntaxException ex) {
+                } catch (final URISyntaxException ex) {
                     throw new ProtocolException(ex.getMessage(), ex);
                 }
             } else {

@@ -34,19 +34,21 @@ import javax.net.ssl.SSLSession;
 
 import ch.boye.httpclientandroidlib.HttpClientConnection;
 import ch.boye.httpclientandroidlib.HttpHost;
+import ch.boye.httpclientandroidlib.conn.routing.HttpRoute;
 import ch.boye.httpclientandroidlib.params.HttpParams;
 import ch.boye.httpclientandroidlib.protocol.HttpContext;
-
-import ch.boye.httpclientandroidlib.conn.routing.HttpRoute;
 
 /**
  * A client-side connection with advanced connection logic.
  * Instances are typically obtained from a connection manager.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) replaced by {@link HttpClientConnectionManager}.
  */
+@Deprecated
 public interface ManagedClientConnection extends
-    HttpClientConnection, HttpRoutedConnection, ConnectionReleaseTrigger {
+    HttpClientConnection, HttpRoutedConnection, ManagedHttpClientConnection, ConnectionReleaseTrigger {
 
     /**
      * Indicates whether this connection is secure.

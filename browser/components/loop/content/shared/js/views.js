@@ -543,7 +543,7 @@ loop.shared.views = (function(_, OT, l10n) {
       return (
         FeedbackLayout({title: l10n.get("feedback_thank_you_heading")}, 
           React.DOM.p({className: "info thank-you"}, 
-            l10n.get("feedback_window_will_close_in", {
+            l10n.get("feedback_window_will_close_in2", {
               countdown: this.state.countdown,
               num: this.state.countdown
             }))

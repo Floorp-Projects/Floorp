@@ -78,11 +78,17 @@
             android:persistent="false"
             android:title="@string/fxaccount_status_device_name" />
 
-		<Preference
+        <Preference
             android:editable="false"
             android:key="sync_server"
             android:persistent="false"
             android:title="@string/fxaccount_status_sync_server" />
+
+        <Preference
+            android:editable="false"
+            android:key="more"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_more" />
 
     </PreferenceCategory>
     <PreferenceCategory

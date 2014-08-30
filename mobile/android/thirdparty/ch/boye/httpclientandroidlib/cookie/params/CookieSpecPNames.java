@@ -31,7 +31,11 @@ package ch.boye.httpclientandroidlib.cookie.params;
  * Parameter names for HTTP cookie management classes.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use constructor parameters of {@link
+ *   ch.boye.httpclientandroidlib.cookie.CookieSpecProvider}s.
  */
+@Deprecated
 public interface CookieSpecPNames {
 
     /**

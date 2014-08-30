@@ -18,6 +18,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
+  "resource://gre/modules/NewTabUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm")
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
@@ -178,18 +180,6 @@ let DirectoryLinksProvider = {
       let prefName = this._observedPrefs[pref];
       Services.prefs.removeObserver(prefName, this);
     }
-  },
-
-  /**
-   * Get the eTLD+1 / base domain from a url spec
-   */
-  _extractSite: function DirectoryLinksProvider_extractSite(url) {
-    let linkURI = Services.io.newURI(url, null, null);
-    try {
-      return Services.eTLD.getBaseDomain(linkURI);
-    }
-    catch(ex) {}
-    return linkURI.asciiHost;
   },
 
   _fetchAndCacheLinks: function DirectoryLinksProvider_fetchAndCacheLinks(uri) {
@@ -366,7 +356,7 @@ let DirectoryLinksProvider = {
   getEnhancedLink: function DirectoryLinksProvider_getEnhancedLink(link) {
     // Use the provided link if it's already enhanced
     return link.enhancedImageURI && link ||
-           this._enhancedLinks.get(this._extractSite(link.url));
+           this._enhancedLinks.get(NewTabUtils.extractSite(link.url));
   },
 
   /**
@@ -382,7 +372,7 @@ let DirectoryLinksProvider = {
       aCallback(rawLinks.map((link, position) => {
         // Stash the enhanced image for the site
         if (link.enhancedImageURI) {
-          this._enhancedLinks.set(this._extractSite(link.url), link);
+          this._enhancedLinks.set(NewTabUtils.extractSite(link.url), link);
         }
 
         link.frecency = DIRECTORY_FRECENCY;

@@ -79,6 +79,15 @@ add_task(function test_add_crash() {
   Assert.equal(s.crashesCount, 2);
 });
 
+add_task(function test_reset() {
+  let s = yield getStore();
+
+  Assert.ok(s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "id1", DUMMY_DATE));
+  Assert.equal(s.crashes.length, 1);
+  s.reset();
+  Assert.equal(s.crashes.length, 0);
+});
+
 add_task(function test_save_load() {
   let s = yield getStore();
 

@@ -29,10 +29,12 @@ package ch.boye.httpclientandroidlib.protocol;
 
 import java.io.IOException;
 
+import ch.boye.httpclientandroidlib.HttpEntityEnclosingRequest;
 import ch.boye.httpclientandroidlib.HttpException;
 import ch.boye.httpclientandroidlib.HttpRequest;
-import ch.boye.httpclientandroidlib.HttpEntityEnclosingRequest;
 import ch.boye.httpclientandroidlib.HttpRequestInterceptor;
+import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * RequestDate interceptor is responsible for adding <code>Date</code> header
@@ -41,6 +43,7 @@ import ch.boye.httpclientandroidlib.HttpRequestInterceptor;
  *
  * @since 4.0
  */
+@ThreadSafe
 public class RequestDate implements HttpRequestInterceptor {
 
     private static final HttpDateGenerator DATE_GENERATOR = new HttpDateGenerator();
@@ -51,13 +54,10 @@ public class RequestDate implements HttpRequestInterceptor {
 
     public void process(final HttpRequest request, final HttpContext context)
             throws HttpException, IOException {
-        if (request == null) {
-            throw new IllegalArgumentException
-                ("HTTP request may not be null.");
-        }
+        Args.notNull(request, "HTTP request");
         if ((request instanceof HttpEntityEnclosingRequest) &&
             !request.containsHeader(HTTP.DATE_HEADER)) {
-            String httpdate = DATE_GENERATOR.getCurrentDate();
+            final String httpdate = DATE_GENERATOR.getCurrentDate();
             request.setHeader(HTTP.DATE_HEADER, httpdate);
         }
     }

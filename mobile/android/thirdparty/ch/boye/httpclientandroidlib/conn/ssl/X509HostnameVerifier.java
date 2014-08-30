@@ -27,11 +27,12 @@
 
 package ch.boye.httpclientandroidlib.conn.ssl;
 
+import java.io.IOException;
+import java.security.cert.X509Certificate;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocket;
-import java.io.IOException;
-import java.security.cert.X509Certificate;
 
 /**
  * Interface for checking if a hostname matches the names stored inside the

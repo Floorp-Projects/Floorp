@@ -54,7 +54,7 @@ public class ParseException extends RuntimeException {
      *
      * @param message the exception detail message, or <code>null</code>
      */
-    public ParseException(String message) {
+    public ParseException(final String message) {
         super(message);
     }
 

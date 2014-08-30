@@ -1203,6 +1203,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             !addStandardLibraryMathName("abs", AsmJSMathBuiltin_abs) ||
             !addStandardLibraryMathName("atan2", AsmJSMathBuiltin_atan2) ||
             !addStandardLibraryMathName("imul", AsmJSMathBuiltin_imul) ||
+            !addStandardLibraryMathName("clz32", AsmJSMathBuiltin_clz32) ||
             !addStandardLibraryMathName("fround", AsmJSMathBuiltin_fround) ||
             !addStandardLibraryMathName("min", AsmJSMathBuiltin_min) ||
             !addStandardLibraryMathName("max", AsmJSMathBuiltin_max) ||
@@ -3623,6 +3624,27 @@ CheckMathIMul(FunctionCompiler &f, ParseNode *call, MDefinition **def, MathRetTy
 }
 
 static bool
+CheckMathClz32(FunctionCompiler &f, ParseNode *call, MDefinition **def, MathRetType *type)
+{
+    if (CallArgListLength(call) != 1)
+        return f.fail(call, "Math.clz32 must be passed 1 argument");
+
+    ParseNode *arg = CallArgList(call);
+
+    MDefinition *argDef;
+    Type argType;
+    if (!CheckExpr(f, arg, &argDef, &argType))
+        return false;
+
+    if (!argType.isIntish())
+        return f.failf(arg, "%s is not a subtype of intish", argType.toChars());
+
+    *def = f.unary<MClz>(argDef);
+    *type = MathRetType::Signed;
+    return true;
+}
+
+static bool
 CheckMathAbs(FunctionCompiler &f, ParseNode *call, MDefinition **def, MathRetType *type)
 {
     if (CallArgListLength(call) != 1)
@@ -3972,6 +3994,7 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinF
     AsmJSImmKind doubleCallee, floatCallee;
     switch (func) {
       case AsmJSMathBuiltin_imul:   return CheckMathIMul(f, callNode, def, type);
+      case AsmJSMathBuiltin_clz32:  return CheckMathClz32(f, callNode, def, type);
       case AsmJSMathBuiltin_abs:    return CheckMathAbs(f, callNode, def, type);
       case AsmJSMathBuiltin_sqrt:   return CheckMathSqrt(f, callNode, def, type);
       case AsmJSMathBuiltin_fround: return CheckMathFRound(f, callNode, def, type);
@@ -5344,7 +5367,7 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     if (!funpc.init(tokenStream))
         return false;
 
-    if (!m.parser().functionArgsAndBodyGeneric(fn, fun, Normal, Statement, &newDirectives))
+    if (!m.parser().functionArgsAndBodyGeneric(fn, fun, Normal, Statement))
         return false;
 
     if (tokenStream.hadError() || directives != newDirectives)

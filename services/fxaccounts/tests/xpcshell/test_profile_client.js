@@ -125,7 +125,6 @@ add_test(function networkErrorResponse () {
         do_check_eq(e.code, null);
         do_check_eq(e.errno, ERRNO_NETWORK);
         do_check_eq(e.error, ERROR_NETWORK);
-        do_check_true(e.message.indexOf("NS_ERROR_UNKNOWN_HOST") >= 0);
         run_next_test();
       }
     );

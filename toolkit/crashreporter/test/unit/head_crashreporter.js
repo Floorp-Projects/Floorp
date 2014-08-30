@@ -108,12 +108,17 @@ function handleMinidump(callback)
   let extrafile = minidump.clone();
   extrafile.leafName = extrafile.leafName.slice(0, -4) + ".extra";
 
+  let memoryfile = minidump.clone();
+  memoryfile.leafName = memoryfile.leafName.slice(0, -4) + ".memory.json.gz";
+
   // Just in case, don't let these files linger.
   do_register_cleanup(function() {
           if (minidump.exists())
               minidump.remove(false);
           if (extrafile.exists())
               extrafile.remove(false);
+          if (memoryfile.exists())
+              memoryfile.remove(false);
       });
   do_check_true(extrafile.exists());
   let extra = parseKeyValuePairsFromFile(extrafile);
@@ -125,6 +130,8 @@ function handleMinidump(callback)
     minidump.remove(false);
   if (extrafile.exists())
     extrafile.remove(false);
+  if (memoryfile.exists())
+    memoryfile.remove(false);
 }
 
 function do_content_crash(setup, callback)

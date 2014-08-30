@@ -60,6 +60,10 @@ void VCMQmMethod::UpdateContent(const VideoContentMetrics*  contentMetrics) {
 }
 
 void VCMQmMethod::ComputeMotionNFD() {
+#if defined(WEBRTC_GONK)
+  motion_.value = (kHighMotionNfd + kLowMotionNfd)/2;
+  motion_.level = kDefault;
+#else
   if (content_metrics_) {
     motion_.value = content_metrics_->motion_magnitude;
   }
@@ -71,9 +75,15 @@ void VCMQmMethod::ComputeMotionNFD() {
   } else {
     motion_.level = kDefault;
   }
+#endif
 }
 
 void VCMQmMethod::ComputeSpatial() {
+#if defined(WEBRTC_GONK)
+  float scale2 = image_type_ > kVGA ? kScaleTexture : 1.0;
+  spatial_.value = (kHighTexture + kLowTexture)*scale2/2;
+  spatial_.level = kDefault;
+#else
   float spatial_err = 0.0;
   float spatial_err_h = 0.0;
   float spatial_err_v = 0.0;
@@ -95,6 +105,7 @@ void VCMQmMethod::ComputeSpatial() {
   } else {
     spatial_.level = kDefault;
   }
+#endif
 }
 
 ImageType VCMQmMethod::GetImageType(uint16_t width,

@@ -23,6 +23,7 @@
 //  workerTestGetPermissions() - request an array permissions from the MT
 //  workerTestGetVersion() - request the current version string from the MT
 //  workerTestGetUserAgent() - request the user agent string from the MT
+//  workerTestGetOSCPU() - request the navigator.oscpu string from the MT
 //
 // For an example see test_worker_interfaces.html and test_worker_interfaces.js.
 
@@ -69,6 +70,11 @@ function workerTestExec(script) {
       worker.postMessage({
         type: 'returnUserAgent',
         result: navigator.userAgent
+      });
+    } else if (event.data.type == 'getOSCPU') {
+      worker.postMessage({
+        type: 'returnOSCPU',
+        result: navigator.oscpu
       });
     }
   }
