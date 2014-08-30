@@ -32,9 +32,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.cookie.CookieAttributeHandler;
 import ch.boye.httpclientandroidlib.cookie.CookieSpec;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Abstract cookie specification which can delegate the job of parsing,
@@ -62,12 +62,8 @@ public abstract class AbstractCookieSpec implements CookieSpec {
 
     public void registerAttribHandler(
             final String name, final CookieAttributeHandler handler) {
-        if (name == null) {
-            throw new IllegalArgumentException("Attribute name may not be null");
-        }
-        if (handler == null) {
-            throw new IllegalArgumentException("Attribute handler may not be null");
-        }
+        Args.notNull(name, "Attribute name");
+        Args.notNull(handler, "Attribute handler");
         this.attribHandlerMap.put(name, handler);
     }
 
@@ -92,7 +88,7 @@ public abstract class AbstractCookieSpec implements CookieSpec {
      *          specified attribute.
      */
     protected CookieAttributeHandler getAttribHandler(final String name) {
-        CookieAttributeHandler handler = findAttribHandler(name);
+        final CookieAttributeHandler handler = findAttribHandler(name);
         if (handler == null) {
             throw new IllegalStateException("Handler not registered for " +
                                             name + " attribute.");

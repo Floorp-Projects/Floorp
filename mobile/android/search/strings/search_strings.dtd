@@ -18,9 +18,8 @@
 
 <!ENTITY pref_searchProvider_title 'Search engine'>
 
-<!ENTITY pref_searchProvider_bing 'Bing'>
-<!ENTITY pref_searchProvider_google 'Google'>
-<!ENTITY pref_searchProvider_yahoo 'Yahoo'>
-
 <!ENTITY search_widget_button_label 'Search'>
 
+<!--  Localization note (default_engine_identifier): Search engine identifier for the default
+      engine. This should be one of the identifiers listed in /searchplugins/list.txt -->
+<!ENTITY default_engine_identifier 'yahoo'>

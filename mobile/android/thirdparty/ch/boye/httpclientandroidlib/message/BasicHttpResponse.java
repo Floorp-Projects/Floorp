@@ -31,23 +31,30 @@ import java.util.Locale;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.HttpVersion;
 import ch.boye.httpclientandroidlib.ProtocolVersion;
-import ch.boye.httpclientandroidlib.StatusLine;
 import ch.boye.httpclientandroidlib.ReasonPhraseCatalog;
+import ch.boye.httpclientandroidlib.StatusLine;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Basic implementation of {@link HttpResponse}.
  *
+ * @see ch.boye.httpclientandroidlib.impl.DefaultHttpResponseFactory
+ *
  * @since 4.0
  */
-public class BasicHttpResponse extends AbstractHttpMessage
-    implements HttpResponse {
+@NotThreadSafe
+public class BasicHttpResponse extends AbstractHttpMessage implements HttpResponse {
 
     private StatusLine          statusline;
+    private ProtocolVersion     ver;
+    private int                 code;
+    private String              reasonPhrase;
     private HttpEntity          entity;
-    private ReasonPhraseCatalog reasonCatalog;
+    private final ReasonPhraseCatalog reasonCatalog;
     private Locale              locale;
-
 
     /**
      * Creates a new response.
@@ -64,12 +71,12 @@ public class BasicHttpResponse extends AbstractHttpMessage
                              final ReasonPhraseCatalog catalog,
                              final Locale locale) {
         super();
-        if (statusline == null) {
-            throw new IllegalArgumentException("Status line may not be null.");
-        }
-        this.statusline    = statusline;
+        this.statusline = Args.notNull(statusline, "Status line");
+        this.ver = statusline.getProtocolVersion();
+        this.code = statusline.getStatusCode();
+        this.reasonPhrase = statusline.getReasonPhrase();
         this.reasonCatalog = catalog;
-        this.locale        = (locale != null) ? locale : Locale.getDefault();
+        this.locale = locale;
     }
 
     /**
@@ -80,7 +87,13 @@ public class BasicHttpResponse extends AbstractHttpMessage
      * @param statusline        the status line
      */
     public BasicHttpResponse(final StatusLine statusline) {
-        this(statusline, null, null);
+        super();
+        this.statusline = Args.notNull(statusline, "Status line");
+        this.ver = statusline.getProtocolVersion();
+        this.code = statusline.getStatusCode();
+        this.reasonPhrase = statusline.getReasonPhrase();
+        this.reasonCatalog = null;
+        this.locale = null;
     }
 
     /**
@@ -96,17 +109,30 @@ public class BasicHttpResponse extends AbstractHttpMessage
     public BasicHttpResponse(final ProtocolVersion ver,
                              final int code,
                              final String reason) {
-        this(new BasicStatusLine(ver, code, reason), null, null);
+        super();
+        Args.notNegative(code, "Status code");
+        this.statusline = null;
+        this.ver = ver;
+        this.code = code;
+        this.reasonPhrase = reason;
+        this.reasonCatalog = null;
+        this.locale = null;
     }
 
 
     // non-javadoc, see interface HttpMessage
     public ProtocolVersion getProtocolVersion() {
-        return this.statusline.getProtocolVersion();
+        return this.ver;
     }
 
     // non-javadoc, see interface HttpResponse
     public StatusLine getStatusLine() {
+        if (this.statusline == null) {
+            this.statusline = new BasicStatusLine(
+                    this.ver != null ? this.ver : HttpVersion.HTTP_1_1,
+                    this.code,
+                    this.reasonPhrase != null ? this.reasonPhrase : getReason(this.code));
+        }
         return this.statusline;
     }
 
@@ -115,50 +141,49 @@ public class BasicHttpResponse extends AbstractHttpMessage
         return this.entity;
     }
 
-    // non-javadoc, see interface HttpResponse
     public Locale getLocale() {
         return this.locale;
     }
 
     // non-javadoc, see interface HttpResponse
     public void setStatusLine(final StatusLine statusline) {
-        if (statusline == null) {
-            throw new IllegalArgumentException("Status line may not be null");
-        }
-        this.statusline = statusline;
+        this.statusline = Args.notNull(statusline, "Status line");
+        this.ver = statusline.getProtocolVersion();
+        this.code = statusline.getStatusCode();
+        this.reasonPhrase = statusline.getReasonPhrase();
     }
 
     // non-javadoc, see interface HttpResponse
     public void setStatusLine(final ProtocolVersion ver, final int code) {
-        // arguments checked in BasicStatusLine constructor
-        this.statusline = new BasicStatusLine(ver, code, getReason(code));
+        Args.notNegative(code, "Status code");
+        this.statusline = null;
+        this.ver = ver;
+        this.code = code;
+        this.reasonPhrase = null;
     }
 
     // non-javadoc, see interface HttpResponse
-    public void setStatusLine(final ProtocolVersion ver, final int code,
-                              final String reason) {
-        // arguments checked in BasicStatusLine constructor
-        this.statusline = new BasicStatusLine(ver, code, reason);
+    public void setStatusLine(
+            final ProtocolVersion ver, final int code, final String reason) {
+        Args.notNegative(code, "Status code");
+        this.statusline = null;
+        this.ver = ver;
+        this.code = code;
+        this.reasonPhrase = reason;
     }
 
     // non-javadoc, see interface HttpResponse
-    public void setStatusCode(int code) {
-        // argument checked in BasicStatusLine constructor
-        ProtocolVersion ver = this.statusline.getProtocolVersion();
-        this.statusline = new BasicStatusLine(ver, code, getReason(code));
+    public void setStatusCode(final int code) {
+        Args.notNegative(code, "Status code");
+        this.statusline = null;
+        this.code = code;
+        this.reasonPhrase = null;
     }
 
     // non-javadoc, see interface HttpResponse
-    public void setReasonPhrase(String reason) {
-
-        if ((reason != null) && ((reason.indexOf('\n') >= 0) ||
-                                 (reason.indexOf('\r') >= 0))
-            ) {
-            throw new IllegalArgumentException("Line break in reason phrase.");
-        }
-        this.statusline = new BasicStatusLine(this.statusline.getProtocolVersion(),
-                                              this.statusline.getStatusCode(),
-                                              reason);
+    public void setReasonPhrase(final String reason) {
+        this.statusline = null;
+        this.reasonPhrase = reason;
     }
 
     // non-javadoc, see interface HttpResponse
@@ -166,15 +191,9 @@ public class BasicHttpResponse extends AbstractHttpMessage
         this.entity = entity;
     }
 
-    // non-javadoc, see interface HttpResponse
-    public void setLocale(Locale loc) {
-        if (loc == null) {
-            throw new IllegalArgumentException("Locale may not be null.");
-        }
-        this.locale = loc;
-        final int code = this.statusline.getStatusCode();
-        this.statusline = new BasicStatusLine
-            (this.statusline.getProtocolVersion(), code, getReason(code));
+    public void setLocale(final Locale locale) {
+        this.locale =  Args.notNull(locale, "Locale");
+        this.statusline = null;
     }
 
     /**
@@ -186,13 +205,14 @@ public class BasicHttpResponse extends AbstractHttpMessage
      *
      * @return  the reason phrase, or <code>null</code> if there is none
      */
-    protected String getReason(int code) {
-        return (this.reasonCatalog == null) ?
-            null : this.reasonCatalog.getReason(code, this.locale);
+    protected String getReason(final int code) {
+        return this.reasonCatalog != null ? this.reasonCatalog.getReason(code,
+                this.locale != null ? this.locale : Locale.getDefault()) : null;
     }
 
+    @Override
     public String toString() {
-        return this.statusline + " " + this.headergroup;
+        return getStatusLine() + " " + this.headergroup;
     }
 
 }

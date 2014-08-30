@@ -29,13 +29,13 @@ package ch.boye.httpclientandroidlib.impl.cookie;
 import java.util.Locale;
 
 import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.cookie.Cookie;
 import ch.boye.httpclientandroidlib.cookie.CookieAttributeHandler;
 import ch.boye.httpclientandroidlib.cookie.CookieOrigin;
 import ch.boye.httpclientandroidlib.cookie.CookieRestrictionViolationException;
 import ch.boye.httpclientandroidlib.cookie.MalformedCookieException;
 import ch.boye.httpclientandroidlib.cookie.SetCookie;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  *
@@ -50,9 +50,7 @@ public class RFC2109DomainHandler implements CookieAttributeHandler {
 
     public void parse(final SetCookie cookie, final String value)
             throws MalformedCookieException {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
+        Args.notNull(cookie, "Cookie");
         if (value == null) {
             throw new MalformedCookieException("Missing value for domain attribute");
         }
@@ -64,14 +62,10 @@ public class RFC2109DomainHandler implements CookieAttributeHandler {
 
     public void validate(final Cookie cookie, final CookieOrigin origin)
             throws MalformedCookieException {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
-        if (origin == null) {
-            throw new IllegalArgumentException("Cookie origin may not be null");
-        }
+        Args.notNull(cookie, "Cookie");
+        Args.notNull(origin, "Cookie origin");
         String host = origin.getHost();
-        String domain = cookie.getDomain();
+        final String domain = cookie.getDomain();
         if (domain == null) {
             throw new CookieRestrictionViolationException("Cookie domain may not be null");
         }
@@ -103,7 +97,7 @@ public class RFC2109DomainHandler implements CookieAttributeHandler {
                     + "\". Domain of origin: \"" + host + "\"");
             }
             // host minus domain may not contain any dots
-            String hostWithoutDomain = host.substring(0, host.length() - domain.length());
+            final String hostWithoutDomain = host.substring(0, host.length() - domain.length());
             if (hostWithoutDomain.indexOf('.') != -1) {
                 throw new CookieRestrictionViolationException("Domain attribute \""
                     + domain
@@ -113,14 +107,10 @@ public class RFC2109DomainHandler implements CookieAttributeHandler {
     }
 
     public boolean match(final Cookie cookie, final CookieOrigin origin) {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
-        if (origin == null) {
-            throw new IllegalArgumentException("Cookie origin may not be null");
-        }
-        String host = origin.getHost();
-        String domain = cookie.getDomain();
+        Args.notNull(cookie, "Cookie");
+        Args.notNull(origin, "Cookie origin");
+        final String host = origin.getHost();
+        final String domain = cookie.getDomain();
         if (domain == null) {
             return false;
         }

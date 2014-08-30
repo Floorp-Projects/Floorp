@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 965872 - Storage inspector actor with cookies, local storage and session storage.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector blank html for tests</title>
+</head>
+<body>
+<script>
+
+window.addCookie = function(name, value, path, domain, expires, secure) {
+  var cookieString = name + "=" + value + ";";
+  if (path) {
+    cookieString += "path=" + path + ";";
+  }
+  if (domain) {
+    cookieString += "domain=" + domain + ";";
+  }
+  if (expires) {
+    cookieString += "expires=" + expires + ";";
+  }
+  if (secure) {
+    cookieString += "secure=true;";
+  }
+  document.cookie = cookieString;
+};
+
+window.removeCookie = function(name, path) {
+  document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=" + path;
+}
+
+window.clear = function*(callback) {
+  var cookies = document.cookie;
+  for (var cookie of cookies.split(";")) {
+    removeCookie(cookie.split("=")[0]);
+    removeCookie(cookie.split("=")[0], "/browser");
+  }
+  localStorage.clear();
+  sessionStorage.clear();
+  callback();
+}
+
+window.onload = function() {
+  addCookie("c1", "1.2.3.4.5.6.7", "/browser");
+  addCookie("c2", "foobar", "/browser");
+
+  localStorage.setItem("ls1", "testing");
+  localStorage.setItem("ls2", "testing");
+  localStorage.setItem("ls3", "testing");
+  localStorage.setItem("ls4", "testing");
+  localStorage.setItem("ls5", "testing");
+  localStorage.setItem("ls6", "testing");
+  localStorage.setItem("ls7", "testing");
+
+  sessionStorage.setItem("ss1", "foobar");
+  sessionStorage.setItem("ss2", "foobar");
+  sessionStorage.setItem("ss3", "foobar");
+}
+</script>
+</body>
+</html>

@@ -29,11 +29,10 @@ package ch.boye.httpclientandroidlib.impl.cookie;
 
 import java.util.List;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.FormattedHeader;
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HeaderElement;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.cookie.Cookie;
 import ch.boye.httpclientandroidlib.cookie.CookieOrigin;
 import ch.boye.httpclientandroidlib.cookie.CookieSpec;
@@ -41,6 +40,7 @@ import ch.boye.httpclientandroidlib.cookie.MalformedCookieException;
 import ch.boye.httpclientandroidlib.cookie.SM;
 import ch.boye.httpclientandroidlib.cookie.SetCookie2;
 import ch.boye.httpclientandroidlib.message.ParserCursor;
+import ch.boye.httpclientandroidlib.util.Args;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 
 /**
@@ -60,7 +60,7 @@ public class BestMatchSpec implements CookieSpec {
     private RFC2109Spec obsoleteStrict; // @NotThreadSafe
     private BrowserCompatSpec compat; // @NotThreadSafe
 
-    public BestMatchSpec(final String[] datepatterns, boolean oneHeader) {
+    public BestMatchSpec(final String[] datepatterns, final boolean oneHeader) {
         super();
         this.datepatterns = datepatterns == null ? null : datepatterns.clone();
         this.oneHeader = oneHeader;
@@ -94,16 +94,12 @@ public class BestMatchSpec implements CookieSpec {
     public List<Cookie> parse(
             final Header header,
             final CookieOrigin origin) throws MalformedCookieException {
-        if (header == null) {
-            throw new IllegalArgumentException("Header may not be null");
-        }
-        if (origin == null) {
-           throw new IllegalArgumentException("Cookie origin may not be null");
-        }
+        Args.notNull(header, "Header");
+        Args.notNull(origin, "Cookie origin");
         HeaderElement[] helems = header.getElements();
         boolean versioned = false;
         boolean netscape = false;
-        for (HeaderElement helem: helems) {
+        for (final HeaderElement helem: helems) {
             if (helem.getParameterByName("version") != null) {
                 versioned = true;
             }
@@ -114,16 +110,16 @@ public class BestMatchSpec implements CookieSpec {
         if (netscape || !versioned) {
             // Need to parse the header again, because Netscape style cookies do not correctly
             // support multiple header elements (comma cannot be treated as an element separator)
-            NetscapeDraftHeaderParser parser = NetscapeDraftHeaderParser.DEFAULT;
-            CharArrayBuffer buffer;
-            ParserCursor cursor;
+            final NetscapeDraftHeaderParser parser = NetscapeDraftHeaderParser.DEFAULT;
+            final CharArrayBuffer buffer;
+            final ParserCursor cursor;
             if (header instanceof FormattedHeader) {
                 buffer = ((FormattedHeader) header).getBuffer();
                 cursor = new ParserCursor(
                         ((FormattedHeader) header).getValuePos(),
                         buffer.length());
             } else {
-                String s = header.getValue();
+                final String s = header.getValue();
                 if (s == null) {
                     throw new MalformedCookieException("Header value is null");
                 }
@@ -145,12 +141,8 @@ public class BestMatchSpec implements CookieSpec {
     public void validate(
             final Cookie cookie,
             final CookieOrigin origin) throws MalformedCookieException {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
-        if (origin == null) {
-            throw new IllegalArgumentException("Cookie origin may not be null");
-        }
+        Args.notNull(cookie, "Cookie");
+        Args.notNull(origin, "Cookie origin");
         if (cookie.getVersion() > 0) {
             if (cookie instanceof SetCookie2) {
                 getStrict().validate(cookie, origin);
@@ -163,12 +155,8 @@ public class BestMatchSpec implements CookieSpec {
     }
 
     public boolean match(final Cookie cookie, final CookieOrigin origin) {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
-        if (origin == null) {
-            throw new IllegalArgumentException("Cookie origin may not be null");
-        }
+        Args.notNull(cookie, "Cookie");
+        Args.notNull(origin, "Cookie origin");
         if (cookie.getVersion() > 0) {
             if (cookie instanceof SetCookie2) {
                 return getStrict().match(cookie, origin);
@@ -181,12 +169,10 @@ public class BestMatchSpec implements CookieSpec {
     }
 
     public List<Header> formatCookies(final List<Cookie> cookies) {
-        if (cookies == null) {
-            throw new IllegalArgumentException("List of cookies may not be null");
-        }
+        Args.notNull(cookies, "List of cookies");
         int version = Integer.MAX_VALUE;
         boolean isSetCookie2 = true;
-        for (Cookie cookie: cookies) {
+        for (final Cookie cookie: cookies) {
             if (!(cookie instanceof SetCookie2)) {
                 isSetCookie2 = false;
             }

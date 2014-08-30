@@ -9,7 +9,7 @@ import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
-import org.mozilla.gecko.sync.setup.activities.LocaleAware.LocaleAwareActivity;
+import org.mozilla.gecko.LocaleAware.LocaleAwareActivity;
 
 import android.accounts.Account;
 import android.app.Activity;

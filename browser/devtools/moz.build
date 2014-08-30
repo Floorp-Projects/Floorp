@@ -23,6 +23,7 @@ DIRS += [
     'shadereditor',
     'shared',
     'sourceeditor',
+    'storage',
     'styleeditor',
     'styleinspector',
     'tilt',

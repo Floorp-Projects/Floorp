@@ -53,7 +53,7 @@ public class ConnectionPoolTimeoutException extends ConnectTimeoutException {
      *
      * @param message The exception detail message
      */
-    public ConnectionPoolTimeoutException(String message) {
+    public ConnectionPoolTimeoutException(final String message) {
         super(message);
     }
 

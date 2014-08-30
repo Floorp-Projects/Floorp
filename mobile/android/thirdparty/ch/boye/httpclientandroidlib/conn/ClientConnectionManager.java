@@ -44,7 +44,10 @@ import ch.boye.httpclientandroidlib.conn.scheme.SchemeRegistry;
  * from multiple threads.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) replaced by {@link HttpClientConnectionManager}.
  */
+@Deprecated
 public interface ClientConnectionManager {
 
     /**

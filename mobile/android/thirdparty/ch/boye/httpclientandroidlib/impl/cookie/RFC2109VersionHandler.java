@@ -27,12 +27,12 @@
 package ch.boye.httpclientandroidlib.impl.cookie;
 
 import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.cookie.Cookie;
 import ch.boye.httpclientandroidlib.cookie.CookieOrigin;
 import ch.boye.httpclientandroidlib.cookie.CookieRestrictionViolationException;
 import ch.boye.httpclientandroidlib.cookie.MalformedCookieException;
 import ch.boye.httpclientandroidlib.cookie.SetCookie;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  *
@@ -47,9 +47,7 @@ public class RFC2109VersionHandler extends AbstractCookieAttributeHandler {
 
     public void parse(final SetCookie cookie, final String value)
             throws MalformedCookieException {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
+        Args.notNull(cookie, "Cookie");
         if (value == null) {
             throw new MalformedCookieException("Missing value for version attribute");
         }
@@ -58,7 +56,7 @@ public class RFC2109VersionHandler extends AbstractCookieAttributeHandler {
         }
         try {
            cookie.setVersion(Integer.parseInt(value));
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             throw new MalformedCookieException("Invalid version: "
                 + e.getMessage());
         }
@@ -67,9 +65,7 @@ public class RFC2109VersionHandler extends AbstractCookieAttributeHandler {
     @Override
     public void validate(final Cookie cookie, final CookieOrigin origin)
             throws MalformedCookieException {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
+        Args.notNull(cookie, "Cookie");
         if (cookie.getVersion() < 0) {
             throw new CookieRestrictionViolationException("Cookie version may not be negative");
         }

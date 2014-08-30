@@ -22,8 +22,8 @@
  * individuals on behalf of the Apache Software Foundation.  For more
  * information on the Apache Software Foundation, please see
  * <http://www.apache.org/>.
+ *
  */
-
 package ch.boye.httpclientandroidlib.impl.client;
 
 import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
@@ -37,8 +37,19 @@ import ch.boye.httpclientandroidlib.protocol.BasicHttpProcessor;
  * {@link DefaultHttpClient} sub-class which includes a {@link RequestAcceptEncoding}
  * for the request and response.
  *
+ * <b>Deprecation note:</b> due to the way this class modifies a response body
+ * without changing the response headers to reflect the entity changes, it cannot
+ * be used as the &quot;backend&quot; for a caching {@link
+ * ch.boye.httpclientandroidlib.client.HttpClient} and still have uncompressed responses be cached.
+ * Users are encouraged to use the {@link DecompressingHttpClient} instead
+ * of this class, which can be wired in either before or after caching, depending on
+ * whether you want to cache responses in compressed or uncompressed form.
+ *
  * @since 4.1
+ *
+ * @deprecated (4.2) use {@link HttpClientBuilder}
  */
+@Deprecated
 @ThreadSafe // since DefaultHttpClient is
 public class ContentEncodingHttpClient extends DefaultHttpClient {
 
@@ -48,14 +59,14 @@ public class ContentEncodingHttpClient extends DefaultHttpClient {
      * @param params    the parameters
      * @param conman    the connection manager
      */
-    public ContentEncodingHttpClient(ClientConnectionManager conman, HttpParams params) {
+    public ContentEncodingHttpClient(final ClientConnectionManager conman, final HttpParams params) {
         super(conman, params);
     }
 
     /**
      * @param params
      */
-    public ContentEncodingHttpClient(HttpParams params) {
+    public ContentEncodingHttpClient(final HttpParams params) {
         this(null, params);
     }
 
@@ -71,7 +82,7 @@ public class ContentEncodingHttpClient extends DefaultHttpClient {
      */
     @Override
     protected BasicHttpProcessor createHttpProcessor() {
-        BasicHttpProcessor result = super.createHttpProcessor();
+        final BasicHttpProcessor result = super.createHttpProcessor();
 
         result.addRequestInterceptor(new RequestAcceptEncoding());
         result.addResponseInterceptor(new ResponseContentEncoding());
