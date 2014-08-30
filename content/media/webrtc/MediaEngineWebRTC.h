@@ -214,8 +214,6 @@ public:
     return NS_OK;
   }
 
-  void Refresh(int aIndex);
-
 protected:
   ~MediaEngineWebRTCVideoSource() { Shutdown(); }
 
