@@ -3,8 +3,6 @@
 
 "use strict";
 
-const Cu = Components.utils;
-
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 Services.prefs.setBoolPref("devtools.discovery.log", true);
 
@@ -12,8 +10,6 @@ do_register_cleanup(() => {
   Services.prefs.clearUserPref("devtools.discovery.log");
 });
 
-const { devtools } =
-  Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { Promise: promise } =
   Cu.import("resource://gre/modules/Promise.jsm", {});
 const { require } = devtools;
