@@ -32,11 +32,13 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 /**
- * A {@link SocketFactory SocketFactory} for layered sockets (SSL/TLS).
- * See there for things to consider when implementing a socket factory.
+ * Extended {@link SchemeSocketFactory} interface for layered sockets such as SSL/TLS.
  *
  * @since 4.1
+ *
+ * @deprecated (4.2)  use {@link SchemeLayeredSocketFactory}
  */
+@Deprecated
 public interface LayeredSchemeSocketFactory extends SchemeSocketFactory {
 
     /**

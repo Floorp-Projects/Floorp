@@ -27,28 +27,34 @@
 
 package ch.boye.httpclientandroidlib.conn.ssl;
 
-import ch.boye.httpclientandroidlib.annotation.Immutable;
-
-import ch.boye.httpclientandroidlib.conn.util.InetAddressUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.StringTokenizer;
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import java.util.NoSuchElementException;
 
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
+
+import ch.boye.httpclientandroidlib.androidextra.HttpClientAndroidLog;
+/* LogFactory removed by HttpClient for Android script. */
+import ch.boye.httpclientandroidlib.annotation.Immutable;
+import ch.boye.httpclientandroidlib.conn.util.InetAddressUtils;
+import ch.boye.httpclientandroidlib.util.TextUtils;
+
+import ch.boye.httpclientandroidlib.NameValuePair;
+
 
 /**
  * Abstract base class for all standard {@link X509HostnameVerifier}
@@ -78,11 +84,13 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
         Arrays.sort(BAD_COUNTRY_2LDS);
     }
 
+    public HttpClientAndroidLog log = new HttpClientAndroidLog(getClass());
+
     public AbstractVerifier() {
         super();
     }
 
-    public final void verify(String host, SSLSocket ssl)
+    public final void verify(final String host, final SSLSocket ssl)
           throws IOException {
         if(host == null) {
             throw new NullPointerException("host to verify is null");
@@ -93,7 +101,7 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
             // In our experience this only happens under IBM 1.4.x when
             // spurious (unrelated) certificates show up in the server'
             // chain.  Hopefully this will unearth the real problem:
-            InputStream in = ssl.getInputStream();
+            final InputStream in = ssl.getInputStream();
             in.available();
             /*
               If you're looking at the 2 lines of code above because
@@ -125,27 +133,27 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
             }
         }
 
-        Certificate[] certs = session.getPeerCertificates();
-        X509Certificate x509 = (X509Certificate) certs[0];
+        final Certificate[] certs = session.getPeerCertificates();
+        final X509Certificate x509 = (X509Certificate) certs[0];
         verify(host, x509);
     }
 
-    public final boolean verify(String host, SSLSession session) {
+    public final boolean verify(final String host, final SSLSession session) {
         try {
-            Certificate[] certs = session.getPeerCertificates();
-            X509Certificate x509 = (X509Certificate) certs[0];
+            final Certificate[] certs = session.getPeerCertificates();
+            final X509Certificate x509 = (X509Certificate) certs[0];
             verify(host, x509);
             return true;
         }
-        catch(SSLException e) {
+        catch(final SSLException e) {
             return false;
         }
     }
 
-    public final void verify(String host, X509Certificate cert)
+    public final void verify(final String host, final X509Certificate cert)
           throws SSLException {
-        String[] cns = getCNs(cert);
-        String[] subjectAlts = getSubjectAlts(cert, host);
+        final String[] cns = getCNs(cert);
+        final String[] subjectAlts = getSubjectAlts(cert, host);
         verify(host, cns, subjectAlts);
     }
 
@@ -158,12 +166,12 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
         // STRICT implementations of the HostnameVerifier only use the
         // first CN provided.  All other CNs are ignored.
         // (Firefox, wget, curl, Sun Java 1.4, 5, 6 all work this way).
-        LinkedList<String> names = new LinkedList<String>();
+        final LinkedList<String> names = new LinkedList<String>();
         if(cns != null && cns.length > 0 && cns[0] != null) {
             names.add(cns[0]);
         }
         if(subjectAlts != null) {
-            for (String subjectAlt : subjectAlts) {
+            for (final String subjectAlt : subjectAlts) {
                 if (subjectAlt != null) {
                     names.add(subjectAlt);
                 }
@@ -171,18 +179,18 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
         }
 
         if(names.isEmpty()) {
-            String msg = "Certificate for <" + host + "> doesn't contain CN or DNS subjectAlt";
+            final String msg = "Certificate for <" + host + "> doesn't contain CN or DNS subjectAlt";
             throw new SSLException(msg);
         }
 
         // StringBuilder for building the error message.
-        StringBuilder buf = new StringBuilder();
+        final StringBuilder buf = new StringBuilder();
 
         // We're can be case-insensitive when comparing the host we used to
         // establish the socket to the hostname in the certificate.
-        String hostName = host.trim().toLowerCase(Locale.ENGLISH);
+        final String hostName = normaliseIPv6Address(host.trim().toLowerCase(Locale.ENGLISH));
         boolean match = false;
-        for(Iterator<String> it = names.iterator(); it.hasNext();) {
+        for(final Iterator<String> it = names.iterator(); it.hasNext();) {
             // Don't trim the CN, though!
             String cn = it.next();
             cn = cn.toLowerCase(Locale.ENGLISH);
@@ -197,20 +205,20 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
             // The CN better have at least two dots if it wants wildcard
             // action.  It also can't be [*.co.uk] or [*.co.jp] or
             // [*.org.uk], etc...
-            String parts[] = cn.split("\\.");
-            boolean doWildcard = parts.length >= 3 &&
-                                 parts[0].endsWith("*") &&
-                                 acceptableCountryWildcard(cn) &&
-                                 !isIPAddress(host);
+            final String parts[] = cn.split("\\.");
+            final boolean doWildcard =
+                    parts.length >= 3 && parts[0].endsWith("*") &&
+                    validCountryWildcard(cn) && !isIPAddress(host);
 
             if(doWildcard) {
-                if (parts[0].length() > 1) { // e.g. server*
-                    String prefix = parts[0].substring(0, parts.length-2); // e.g. server
-                    String suffix = cn.substring(parts[0].length()); // skip wildcard part from cn
-                    String hostSuffix = hostName.substring(prefix.length()); // skip wildcard part from host
+                final String firstpart = parts[0];
+                if (firstpart.length() > 1) { // e.g. server*
+                    final String prefix = firstpart.substring(0, firstpart.length() - 1); // e.g. server
+                    final String suffix = cn.substring(firstpart.length()); // skip wildcard part from cn
+                    final String hostSuffix = hostName.substring(prefix.length()); // skip wildcard part from host
                     match = hostName.startsWith(prefix) && hostSuffix.endsWith(suffix);
                 } else {
-                    match = hostName.endsWith(cn.substring(1));                    
+                    match = hostName.endsWith(cn.substring(1));
                 }
                 if(match && strictWithSubDomains) {
                     // If we're in strict mode, then [*.foo.com] is not
@@ -218,7 +226,7 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
                     match = countDots(hostName) == countDots(cn);
                 }
             } else {
-                match = hostName.equals(cn);
+                match = hostName.equals(normaliseIPv6Address(cn));
             }
             if(match) {
                 break;
@@ -229,54 +237,53 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
         }
     }
 
-    public static boolean acceptableCountryWildcard(String cn) {
-        String parts[] = cn.split("\\.");
+    /**
+     * @deprecated (4.3.1) should not be a part of public APIs.
+     */
+    @Deprecated
+    public static boolean acceptableCountryWildcard(final String cn) {
+        final String parts[] = cn.split("\\.");
         if (parts.length != 3 || parts[2].length() != 2) {
             return true; // it's not an attempt to wildcard a 2TLD within a country code
         }
         return Arrays.binarySearch(BAD_COUNTRY_2LDS, parts[1]) < 0;
     }
 
-    public static String[] getCNs(X509Certificate cert) {
-        LinkedList<String> cnList = new LinkedList<String>();
-        /*
-          Sebastian Hauer's original StrictSSLProtocolSocketFactory used
-          getName() and had the following comment:
-
-                Parses a X.500 distinguished name for the value of the
-                "Common Name" field.  This is done a bit sloppy right
-                 now and should probably be done a bit more according to
-                <code>RFC 2253</code>.
-
-           I've noticed that toString() seems to do a better job than
-           getName() on these X500Principal objects, so I'm hoping that
-           addresses Sebastian's concern.
-
-           For example, getName() gives me this:
-           1.2.840.113549.1.9.1=#16166a756c6975736461766965734063756362632e636f6d
-
-           whereas toString() gives me this:
-           EMAILADDRESS=juliusdavies@cucbc.com
-
-           Looks like toString() even works with non-ascii domain names!
-           I tested it with "&#x82b1;&#x5b50;.co.jp" and it worked fine.
-        */
-        String subjectPrincipal = cert.getSubjectX500Principal().toString();
-        StringTokenizer st = new StringTokenizer(subjectPrincipal, ",");
-        while(st.hasMoreTokens()) {
-            String tok = st.nextToken();
-            int x = tok.indexOf("CN=");
-            if(x >= 0) {
-                cnList.add(tok.substring(x + 3));
-            }
+    boolean validCountryWildcard(final String cn) {
+        final String parts[] = cn.split("\\.");
+        if (parts.length != 3 || parts[2].length() != 2) {
+            return true; // it's not an attempt to wildcard a 2TLD within a country code
         }
-        if(!cnList.isEmpty()) {
-            String[] cns = new String[cnList.size()];
-            cnList.toArray(cns);
-            return cns;
-        } else {
+        return Arrays.binarySearch(BAD_COUNTRY_2LDS, parts[1]) < 0;
+    }
+
+    public static String[] getCNs(final X509Certificate cert) {
+        final String subjectPrincipal = cert.getSubjectX500Principal().toString();
+        try {
+            return extractCNs(subjectPrincipal);
+        } catch (SSLException ex) {
             return null;
         }
+    }
+
+    static String[] extractCNs(final String subjectPrincipal) throws SSLException {
+        if (subjectPrincipal == null) {
+            return null;
+        }
+        final List<String> cns = new ArrayList<String>();
+        final List<NameValuePair> nvps = DistinguishedNameParser.INSTANCE.parse(subjectPrincipal);
+        for (int i = 0; i < nvps.size(); i++) {
+            final NameValuePair nvp = nvps.get(i);
+            final String attribName = nvp.getName();
+            final String attribValue = nvp.getValue();
+            if (TextUtils.isBlank(attribValue)) {
+                throw new SSLException(subjectPrincipal + " is not a valid X500 distinguished name");
+            }
+            if (attribName.equalsIgnoreCase("cn")) {
+                cns.add(attribValue);
+            }
+        }
+        return cns.isEmpty() ? null : cns.toArray(new String[ cns.size() ]);
     }
 
     /**
@@ -289,34 +296,32 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
      */
     private static String[] getSubjectAlts(
             final X509Certificate cert, final String hostname) {
-        int subjectType;
+        final int subjectType;
         if (isIPAddress(hostname)) {
             subjectType = 7;
         } else {
             subjectType = 2;
         }
 
-        LinkedList<String> subjectAltList = new LinkedList<String>();
+        final LinkedList<String> subjectAltList = new LinkedList<String>();
         Collection<List<?>> c = null;
         try {
             c = cert.getSubjectAlternativeNames();
         }
-        catch(CertificateParsingException cpe) {
-            Logger.getLogger(AbstractVerifier.class.getName())
-                    .log(Level.FINE, "Error parsing certificate.", cpe);
+        catch(final CertificateParsingException cpe) {
         }
         if(c != null) {
-            for (List<?> aC : c) {
-                List<?> list = aC;
-                int type = ((Integer) list.get(0)).intValue();
+            for (final List<?> aC : c) {
+                final List<?> list = aC;
+                final int type = ((Integer) list.get(0)).intValue();
                 if (type == subjectType) {
-                    String s = (String) list.get(1);
+                    final String s = (String) list.get(1);
                     subjectAltList.add(s);
                 }
             }
         }
         if(!subjectAltList.isEmpty()) {
-            String[] subjectAlts = new String[subjectAltList.size()];
+            final String[] subjectAlts = new String[subjectAltList.size()];
             subjectAltList.toArray(subjectAlts);
             return subjectAlts;
         } else {
@@ -338,7 +343,7 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
      * @param cert X509Certificate
      * @return Array of SubjectALT DNS names stored in the certificate.
      */
-    public static String[] getDNSSubjectAlts(X509Certificate cert) {
+    public static String[] getDNSSubjectAlts(final X509Certificate cert) {
         return getSubjectAlts(cert, null);
     }
 
@@ -363,4 +368,19 @@ public abstract class AbstractVerifier implements X509HostnameVerifier {
                     InetAddressUtils.isIPv6Address(hostname));
     }
 
+    /*
+     * Check if hostname is IPv6, and if so, convert to standard format.
+     */
+    private String normaliseIPv6Address(final String hostname) {
+        if (hostname == null || !InetAddressUtils.isIPv6Address(hostname)) {
+            return hostname;
+        }
+        try {
+            final InetAddress inetAddress = InetAddress.getByName(hostname);
+            return inetAddress.getHostAddress();
+        } catch (final UnknownHostException uhe) { // Should not happen, because we check for IPv6 address above
+            log.error("Unexpected error converting "+hostname, uhe);
+            return hostname;
+        }
+    }
 }
