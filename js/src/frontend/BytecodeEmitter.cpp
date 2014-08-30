@@ -3398,27 +3398,47 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
         if (!EmitDestructuringLHS(cx, bce, subpattern, emitOption))
             return false;
 
-        if (emitOption == PushInitialValues) {
-            /*
-             * After '[x,y]' in 'let ([[x,y], z] = o)', the stack is
-             *   | to-be-destructured-value | x | y |
-             * The goal is:
-             *   | x | y | z |
-             * so emit a pick to produce the intermediate state
-             *   | x | y | to-be-destructured-value |
-             * before destructuring z. This gives the loop invariant that
-             * the to-be-destructured-value is always on top of the stack.
-             */
-            JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
-            uint32_t pickDistance = (uint32_t)((bce->stackDepth + 1) - depthBefore);
-            if (pickDistance > 0) {
-                if (pickDistance > UINT8_MAX) {
-                    bce->reportError(subpattern, JSMSG_TOO_MANY_LOCALS);
-                    return false;
-                }
-                if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)pickDistance) < 0)
-                    return false;
+        // If emitOption is InitializeVars, destructuring initialized each
+        // target in the subpattern's LHS as it went, then popped PROP.  We've
+        // correctly returned to the loop-entry stack, and we continue to the
+        // next member.
+        if (emitOption == InitializeVars)                              // ... OBJ
+            continue;
+
+        MOZ_ASSERT(emitOption == PushInitialValues);
+
+        // EmitDestructuringLHS removed PROP, and it pushed a value per target
+        // name in LHS (for |emitOption == PushInitialValues| only makes sense
+        // when multiple values need to be pushed onto the stack to initialize
+        // a single lexical scope). It also preserved OBJ deep in the stack as
+        // the original object to be destructed into remaining target names in
+        // the LHS object pattern. (We use PushInitialValues *only* as part of
+        // SpiderMonkey's proprietary let block statements, which assign their
+        // targets all in a single go [akin to Scheme's let, and distinct from
+        // let*/letrec].) Thus for:
+        //
+        //   let ({arr: [x, y], z} = obj) { ... }
+        //
+        // we have this stack after the above acts upon the [x, y] subpattern:
+        //
+        //     ... OBJ x y
+        //
+        // (where of course x = obj.arr[0] and y = obj.arr[1], and []-indexing
+        // is really iteration-indexing). We want to have:
+        //
+        //     ... x y OBJ
+        //
+        // so that we can continue, ready to destruct z from OBJ. Pick OBJ out
+        // of the stack, moving it to the top, to accomplish this.
+        JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
+        uint32_t pickDistance = (uint32_t)((bce->stackDepth + 1) - depthBefore);
+        if (pickDistance > 0) {
+            if (pickDistance > UINT8_MAX) {
+                bce->reportError(subpattern, JSMSG_TOO_MANY_LOCALS);
+                return false;
             }
+            if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)pickDistance) < 0)
+                return false;
         }
     }
 
@@ -3426,7 +3446,7 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
         // Per the above loop invariant, the value being destructured into this
         // object pattern is atop the stack.  Pop it to achieve the
         // post-condition.
-        if (Emit1(cx, bce, JSOP_POP) < 0)                              // ...
+        if (Emit1(cx, bce, JSOP_POP) < 0)                              // ... <pattern's target name values, seriatim>
             return false;
     }
 
