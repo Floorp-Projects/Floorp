@@ -72,23 +72,17 @@ public:
   // current timestamp that is null or if the start time of this object is
   // null.
   Nullable<TimeDuration> GetCurrentTimeDuration() const {
-    const TimeStamp& timelineTime = mTimeline->GetCurrentTimeStamp();
-    // FIXME: In order to support arbitrary timelines we will need to fix
-    // the pause logic to handle the timeline time going backwards.
-    MOZ_ASSERT(timelineTime.IsNull() || !IsPaused() ||
-               timelineTime >= mHoldTime,
-               "if paused, any non-null value of aTime must be at least"
-               " mHoldTime");
-
+    Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTimeDuration();
+    Nullable<TimeDuration> holdDuration = mTimeline->ToTimelineTime(mHoldTime);
     Nullable<TimeDuration> result; // Initializes to null
     if (!timelineTime.IsNull() && !mStartTime.IsNull()) {
-      result.SetValue((IsPaused() ? mHoldTime : timelineTime) - mStartTime);
+      result.SetValue((IsPaused() ? holdDuration.Value() : timelineTime.Value()) - mStartTime.Value());
     }
     return result;
   }
 
   // The beginning of the delay period.
-  TimeStamp mStartTime;
+  Nullable<TimeDuration> mStartTime;
   TimeStamp mHoldTime;
   uint8_t mPlayState;
   bool mIsRunningOnCompositor;

@@ -318,7 +318,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
               // start time to something more appropriate when now IsNull.
               // Handle change in pause state by adjusting start time to
               // unpause.
-              oldPlayer->mStartTime += now - oldPlayer->mHoldTime;
+              oldPlayer->mStartTime.SetValue(now + oldPlayer->mStartTime.Value() - oldPlayer->mHoldTime);
             }
             oldPlayer->mHoldTime = TimeStamp();
           }
@@ -454,7 +454,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       new Animation(mPresContext->Document(), timing, src.GetName());
     dest->SetSource(destAnim);
 
-    dest->mStartTime = now;
+    dest->mStartTime = aTimeline->GetCurrentTimeDuration();
     dest->mPlayState = src.GetPlayState();
     if (dest->IsPaused()) {
       dest->mHoldTime = now;

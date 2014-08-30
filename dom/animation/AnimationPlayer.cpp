@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AnimationPlayer.h"
+#include "AnimationUtils.h"
 #include "mozilla/dom/AnimationPlayerBinding.h"
 
 namespace mozilla {
@@ -23,7 +24,7 @@ AnimationPlayer::WrapObject(JSContext* aCx)
 Nullable<double>
 AnimationPlayer::GetStartTime() const
 {
-  return mTimeline->ToTimelineTime(mStartTime);
+  return AnimationUtils::TimeDurationToDouble(mStartTime);
 }
 
 Nullable<double>
