@@ -77,7 +77,16 @@ int VCMContentMetricsProcessing::UpdateContentData(
   if (contentMetrics == NULL) {
     return VCM_OK;
   }
+#if defined(WEBRTC_GONK)
+  // "average" values that should yield kDefault in qm_select.cc
+  contentMetrics->motion_magnitude = 0.05f;
+  contentMetrics->spatial_pred_err = 0.03f;
+  contentMetrics->spatial_pred_err_h = 0.03f;
+  contentMetrics->spatial_pred_err_v = 0.03f;
+  return VCM_OK;
+#else
   return ProcessContent(contentMetrics);
+#endif
 }
 
 int VCMContentMetricsProcessing::ProcessContent(
