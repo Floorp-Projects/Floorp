@@ -3235,7 +3235,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
 {
     JS_ASSERT(emitOption != DefineVars);
 
-    ParseNode *pn2, *pn3;
+    ParseNode *pn3;
     bool doElemOp;
     bool needToPopIterator = false;
 
@@ -3260,7 +3260,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
         needToPopIterator = true;
     }
 
-    for (pn2 = pattern->pn_head; pn2; pn2 = pn2->pn_next) {
+    for (ParseNode *member = pattern->pn_head; member; member = member->pn_next) {
         /*
          * Now push the property name currently being matched, which is the
          * current property name "label" on the left of a colon in the object initialiser.
@@ -3268,13 +3268,13 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
          */
         if (pattern->isKind(PNK_OBJECT)) {
             doElemOp = true;
-            JS_ASSERT(pn2->isKind(PNK_COLON) || pn2->isKind(PNK_SHORTHAND));
+            JS_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
 
             /* Duplicate the value being destructured to use as a reference base. */
             if (Emit1(cx, bce, JSOP_DUP) < 0)
                 return false;
 
-            ParseNode *key = pn2->pn_left;
+            ParseNode *key = member->pn_left;
             if (key->isKind(PNK_NUMBER)) {
                 if (!EmitNumberOp(cx, key->pn_dval, bce))
                     return false;
@@ -3310,11 +3310,11 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                 JS_ASSERT(bce->stackDepth >= stackDepth + 1);
             }
 
-            pn3 = pn2->pn_right;
+            pn3 = member->pn_right;
         } else {
             JS_ASSERT(pattern->isKind(PNK_ARRAY));
 
-            if (pn2->isKind(PNK_SPREAD)) {
+            if (member->isKind(PNK_SPREAD)) {
                 /* Create a new array with the rest of the iterator */
                 ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);          // ITER ARRAY
                 if (off < 0)
@@ -3371,13 +3371,13 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                     return false;
             }
 
-            pn3 = pn2;
+            pn3 = member;
         }
 
         /* Elision node makes a hole in the array destructurer. */
         if (pn3->isKind(PNK_ELISION)) {
             JS_ASSERT(pattern->isKind(PNK_ARRAY));
-            JS_ASSERT(pn2 == pn3);
+            JS_ASSERT(member == pn3);
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
         } else {
