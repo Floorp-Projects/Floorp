@@ -3346,30 +3346,14 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
                                  VarEmitOption emitOption)
 {
     MOZ_ASSERT(pattern->isKind(PNK_OBJECT));
+    MOZ_ASSERT(pattern->isArity(PN_LIST));
 
     bool doElemOp;
-    bool needToPopIterator = false;
 
 #ifdef DEBUG
     int stackDepth = bce->stackDepth;
-    JS_ASSERT(stackDepth != 0);
-    JS_ASSERT(pattern->isArity(PN_LIST));
-    JS_ASSERT(pattern->isKind(PNK_ARRAY) || pattern->isKind(PNK_OBJECT));
+    MOZ_ASSERT(bce->stackDepth != 0);
 #endif
-
-    /*
-     * When destructuring an array, use an iterator to walk it, instead of index lookup.
-     * InitializeVars expects us to leave the *original* value on the stack.
-     */
-    if (pattern->isKind(PNK_ARRAY)) {
-        if (emitOption == InitializeVars) {
-            if (Emit1(cx, bce, JSOP_DUP) < 0)                      // OBJ OBJ
-                return false;
-        }
-        if (!EmitIterator(cx, bce))                                // OBJ? ITER
-            return false;
-        needToPopIterator = true;
-    }
 
     for (ParseNode *member = pattern->pn_head; member; member = member->pn_next) {
         /*
@@ -3379,7 +3363,7 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
          * value-initializing position.
          */
         ParseNode *subpattern;
-        if (pattern->isKind(PNK_OBJECT)) {
+        {
             doElemOp = true;
             JS_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
 
@@ -3424,82 +3408,14 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
             }
 
             subpattern = member->pn_right;
-        } else {
-            JS_ASSERT(pattern->isKind(PNK_ARRAY));
-
-            if (member->isKind(PNK_SPREAD)) {
-                /* Create a new array with the rest of the iterator */
-                ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);          // ITER ARRAY
-                if (off < 0)
-                    return false;
-                CheckTypeSet(cx, bce, JSOP_NEWARRAY);
-                jsbytecode *pc = bce->code(off);
-                SET_UINT24(pc, 0);
-
-                if (!EmitNumberOp(cx, 0, bce))                             // ITER ARRAY INDEX
-                    return false;
-                if (!EmitSpread(cx, bce))                                  // ARRAY INDEX
-                    return false;
-                if (Emit1(cx, bce, JSOP_POP) < 0)                          // ARRAY
-                    return false;
-                if (Emit1(cx, bce, JSOP_ENDINIT) < 0)
-                    return false;
-                needToPopIterator = false;
-            } else {
-                if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER ITER
-                    return false;
-                if (!EmitIteratorNext(cx, bce, pattern))                   // ITER RESULT
-                    return false;
-                if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER RESULT RESULT
-                    return false;
-                if (!EmitAtomOp(cx, cx->names().done, JSOP_GETPROP, bce))  // ITER RESULT DONE?
-                    return false;
-
-                // Emit (result.done ? undefined : result.value)
-                // This is mostly copied from EmitConditionalExpression, except that this code
-                // does not push new values onto the stack.
-                ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_COND);
-                if (noteIndex < 0)
-                    return false;
-                ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFEQ, 0);
-                if (beq < 0)
-                    return false;
-
-                if (Emit1(cx, bce, JSOP_POP) < 0)                          // ITER
-                    return false;
-                if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                    // ITER UNDEFINED
-                    return false;
-
-                /* Jump around else, fixup the branch, emit else, fixup jump. */
-                ptrdiff_t jmp = EmitJump(cx, bce, JSOP_GOTO, 0);
-                if (jmp < 0)
-                    return false;
-                SetJumpOffsetAt(bce, beq);
-
-                if (!EmitAtomOp(cx, cx->names().value, JSOP_GETPROP, bce)) // ITER VALUE
-                    return false;
-
-                SetJumpOffsetAt(bce, jmp);
-                if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq))
-                    return false;
-            }
-
-            subpattern = member;
         }
 
-        /* Elision node makes a hole in the array destructurer. */
-        if (subpattern->isKind(PNK_ELISION)) {
-            JS_ASSERT(pattern->isKind(PNK_ARRAY));
-            JS_ASSERT(member == subpattern);
-            if (Emit1(cx, bce, JSOP_POP) < 0)
-                return false;
-        } else {
+        {
             int32_t depthBefore = bce->stackDepth;
             if (!EmitDestructuringLHS(cx, bce, subpattern, emitOption))
                 return false;
 
-            if (emitOption == PushInitialValues &&
-                (pattern->isKind(PNK_OBJECT) || needToPopIterator)) {
+            if (emitOption == PushInitialValues) {
                 /*
                  * After '[x,y]' in 'let ([[x,y], z] = o)', the stack is
                  *   | to-be-destructured-value | x | y |
@@ -3524,15 +3440,9 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
         }
     }
 
-    if (needToPopIterator && Emit1(cx, bce, JSOP_POP) < 0)
-        return false;
-
-    if (emitOption == PushInitialValues && pattern->isKind(PNK_OBJECT)) {
-        /*
-         * Per the above loop invariant, to-be-destructured-value is at the top
-         * of the stack. To achieve the post-condition, pop it.
-         * In case of array destructuring, the above POP already took care of the iterator.
-         */
+    if (emitOption == PushInitialValues) {
+        // Per the above loop invariant, to-be-destructured-value is at the top
+        // of the stack. To achieve the post-condition, pop it.
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
     }
