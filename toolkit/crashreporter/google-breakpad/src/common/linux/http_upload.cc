@@ -56,8 +56,7 @@ static const char kUserAgent[] = "Breakpad/1.0 (Linux)";
 // static
 bool HTTPUpload::SendRequest(const string &url,
                              const map<string, string> &parameters,
-                             const string &upload_file,
-                             const string &file_part_name,
+                             const map<string, string> &files,
                              const string &proxy,
                              const string &proxy_user_pwd,
                              const string &ca_certificate_file,
@@ -125,11 +124,13 @@ bool HTTPUpload::SendRequest(const string &url,
                  CURLFORM_COPYCONTENTS, iter->second.c_str(),
                  CURLFORM_END);
 
-  // Add form file.
-  (*curl_formadd)(&formpost, &lastptr,
-               CURLFORM_COPYNAME, file_part_name.c_str(),
-               CURLFORM_FILE, upload_file.c_str(),
-               CURLFORM_END);
+  // Add form files.
+  for (iter = files.begin(); iter != files.end(); ++iter) {
+    (*curl_formadd)(&formpost, &lastptr,
+                 CURLFORM_COPYNAME, iter->first.c_str(),
+                 CURLFORM_FILE, iter->second.c_str(),
+                 CURLFORM_END);
+  }
 
   (*curl_easy_setopt)(curl, CURLOPT_HTTPPOST, formpost);
 

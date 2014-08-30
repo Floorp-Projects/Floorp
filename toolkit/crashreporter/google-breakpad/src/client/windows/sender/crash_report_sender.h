@@ -77,7 +77,7 @@ class CrashReportSender {
 
   int max_reports_per_day() const { return max_reports_per_day_; }
 
-  // Sends the specified minidump file, along with the map of
+  // Sends the specified files, along with the map of
   // name value pairs, as a multipart POST request to the given URL.
   // Parameter names must contain only printable ASCII characters,
   // and may not contain a quote (") character.
@@ -89,7 +89,7 @@ class CrashReportSender {
   // (Otherwise, report_code will be unchanged.)
   ReportResult SendCrashReport(const wstring &url,
                                const map<wstring, wstring> &parameters,
-                               const wstring &dump_file_name,
+                               const map<wstring, wstring> &files,
                                wstring *report_code);
 
  private:
