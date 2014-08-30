@@ -7837,62 +7837,115 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     const JSAtomState &names = GetIonContext()->runtime->names();
     Label done;
 
-    OutOfLineTypeOfV *ool = nullptr;
-    if (lir->mir()->inputMaybeCallableOrEmulatesUndefined()) {
-        // The input may be a callable object (result is "function") or may
-        // emulate undefined (result is "undefined"). Use an OOL path.
-        ool = new(alloc()) OutOfLineTypeOfV(lir);
-        if (!addOutOfLineCode(ool, lir->mir()))
-            return false;
+    MDefinition *input = lir->mir()->input();
 
-        masm.branchTestObject(Assembler::Equal, tag, ool->entry());
-    } else {
-        // Input is not callable and does not emulate undefined, so if
-        // it's an object the result is always "object".
-        Label notObject;
-        masm.branchTestObject(Assembler::NotEqual, tag, &notObject);
-        masm.movePtr(ImmGCPtr(names.object), output);
-        masm.jump(&done);
-        masm.bind(&notObject);
+    bool testObject = input->mightBeType(MIRType_Object);
+    bool testNumber = input->mightBeType(MIRType_Int32) || input->mightBeType(MIRType_Double);
+    bool testBoolean = input->mightBeType(MIRType_Boolean);
+    bool testUndefined = input->mightBeType(MIRType_Undefined);
+    bool testNull = input->mightBeType(MIRType_Null);
+    bool testString = input->mightBeType(MIRType_String);
+    bool testSymbol = input->mightBeType(MIRType_Symbol);
+
+    unsigned numTests = unsigned(testObject) + unsigned(testNumber) + unsigned(testBoolean) +
+        unsigned(testUndefined) + unsigned(testNull) + unsigned(testString) + unsigned(testSymbol);
+
+    MOZ_ASSERT_IF(!input->emptyResultTypeSet(), numTests > 0);
+
+    OutOfLineTypeOfV *ool = nullptr;
+    if (testObject) {
+        if (lir->mir()->inputMaybeCallableOrEmulatesUndefined()) {
+            // The input may be a callable object (result is "function") or may
+            // emulate undefined (result is "undefined"). Use an OOL path.
+            ool = new(alloc()) OutOfLineTypeOfV(lir);
+            if (!addOutOfLineCode(ool, lir->mir()))
+                return false;
+
+            if (numTests > 1)
+                masm.branchTestObject(Assembler::Equal, tag, ool->entry());
+            else
+                masm.jump(ool->entry());
+        } else {
+            // Input is not callable and does not emulate undefined, so if
+            // it's an object the result is always "object".
+            Label notObject;
+            if (numTests > 1)
+                masm.branchTestObject(Assembler::NotEqual, tag, &notObject);
+            masm.movePtr(ImmGCPtr(names.object), output);
+            if (numTests > 1)
+                masm.jump(&done);
+            masm.bind(&notObject);
+        }
+        numTests--;
     }
 
-    Label notNumber;
-    masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
-    masm.movePtr(ImmGCPtr(names.number), output);
-    masm.jump(&done);
-    masm.bind(&notNumber);
+    if (testNumber) {
+        Label notNumber;
+        if (numTests > 1)
+            masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
+        masm.movePtr(ImmGCPtr(names.number), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notNumber);
+        numTests--;
+    }
 
-    Label notUndefined;
-    masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
-    masm.movePtr(ImmGCPtr(names.undefined), output);
-    masm.jump(&done);
-    masm.bind(&notUndefined);
+    if (testUndefined) {
+        Label notUndefined;
+        if (numTests > 1)
+            masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
+        masm.movePtr(ImmGCPtr(names.undefined), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notUndefined);
+        numTests--;
+    }
 
-    Label notNull;
-    masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
-    masm.movePtr(ImmGCPtr(names.object), output);
-    masm.jump(&done);
-    masm.bind(&notNull);
+    if (testNull) {
+        Label notNull;
+        if (numTests > 1)
+            masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
+        masm.movePtr(ImmGCPtr(names.object), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notNull);
+        numTests--;
+    }
 
-    Label notBoolean;
-    masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-    masm.movePtr(ImmGCPtr(names.boolean), output);
-    masm.jump(&done);
-    masm.bind(&notBoolean);
+    if (testBoolean) {
+        Label notBoolean;
+        if (numTests > 1)
+            masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
+        masm.movePtr(ImmGCPtr(names.boolean), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notBoolean);
+        numTests--;
+    }
 
-    Label notString;
-    masm.branchTestString(Assembler::NotEqual, tag, &notString);
-    masm.movePtr(ImmGCPtr(names.string), output);
-    masm.jump(&done);
-    masm.bind(&notString);
+    if (testString) {
+        Label notString;
+        if (numTests > 1)
+            masm.branchTestString(Assembler::NotEqual, tag, &notString);
+        masm.movePtr(ImmGCPtr(names.string), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notString);
+        numTests--;
+    }
 
-#ifdef DEBUG
-    Label isSymbol;
-    masm.branchTestSymbol(Assembler::Equal, tag, &isSymbol);
-    masm.assumeUnreachable("Unexpected type for TypeOfV");
-    masm.bind(&isSymbol);
-#endif
-    masm.movePtr(ImmGCPtr(names.symbol), output);
+    if (testSymbol) {
+        Label notSymbol;
+        if (numTests > 1)
+            masm.branchTestSymbol(Assembler::NotEqual, tag, &notSymbol);
+        masm.movePtr(ImmGCPtr(names.symbol), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notSymbol);
+        numTests--;
+    }
+
+    MOZ_ASSERT(numTests == 0);
 
     masm.bind(&done);
     if (ool)
