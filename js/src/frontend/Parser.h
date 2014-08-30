@@ -475,7 +475,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node functionBody(FunctionSyntaxKind kind, FunctionBodyType type);
 
     bool functionArgsAndBodyGeneric(Node pn, HandleFunction fun, FunctionType type,
-                                    FunctionSyntaxKind kind, Directives *newDirectives);
+                                    FunctionSyntaxKind kind);
 
     // Determine whether |yield| is a valid name in the current context, or
     // whether it's prohibited due to strictness, JS version, or occurrence

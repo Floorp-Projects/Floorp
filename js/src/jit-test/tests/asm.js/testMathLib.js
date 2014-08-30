@@ -61,6 +61,10 @@ var f = asmLink(asmCompile('glob', USE_ASM + 'var abs=glob.Math.abs; function f(
 for (n of [-Math.pow(2,31)-1, -Math.pow(2,31), -Math.pow(2,31)+1, -1, 0, 1, Math.pow(2,31)-2, Math.pow(2,31)-1, Math.pow(2,31)])
     assertEq(f(n), Math.abs(n|0)|0);
 
+var f = asmLink(asmCompile('glob', USE_ASM + 'var clz32=glob.Math.clz32; function f(i) { i=i|0; return clz32(i)|0 } return f'), this);
+for (n of [0, 1, 2, 15, 16, Math.pow(2,31)-1, Math.pow(2,31), Math.pow(2,31)+1, Math.pow(2,32)-1, Math.pow(2,32), Math.pow(2,32)+1])
+    assertEq(f(n), Math.clz32(n|0));
+
 var doubleNumbers = [NaN, Infinity, -Infinity, -10000, -3.4, -0, 0, 3.4, 10000];
 var intNumbers = [-10000, -3, -1, 0, 3, 10000];
 function testBinary(f, g, numbers) {
