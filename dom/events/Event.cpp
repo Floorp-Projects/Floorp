@@ -997,16 +997,14 @@ Event::TimeStamp() const
   }
 
   // For dedicated workers, we should make times relative to the navigation
-  // start of the document that created the worker. We currently don't have
-  // that information handy so for now we treat shared workers and dedicated
-  // workers alike and make times relative to the worker creation time. We can
-  // fix this when we implement WorkerPerformance.
+  // start of the document that created the worker, which is the same as the
+  // timebase for performance.now().
   workers::WorkerPrivate* workerPrivate =
     workers::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
   TimeDuration duration =
-    mEvent->timeStamp - workerPrivate->CreationTimeStamp();
+    mEvent->timeStamp - workerPrivate->NowBaseTimeStamp();
   return duration.ToMilliseconds();
 }
 
