@@ -57,13 +57,13 @@ function test_initial_state()
 
   // There should be five item annotations for a bookmark guid.
   stmt = db.createStatement(
-    "SELECT content AS guid, item_id "
-  + "FROM moz_items_annos "
-  + "WHERE anno_attribute_id = ( "
-  +   "SELECT id "
-  +   "FROM moz_anno_attributes "
-  +   "WHERE name = :attr_name "
-  + ") "
+    `SELECT content AS guid, item_id
+     FROM moz_items_annos
+     WHERE anno_attribute_id = (
+       SELECT id
+       FROM moz_anno_attributes
+       WHERE name = :attr_name
+     )`
   );
   stmt.params.attr_name = kGuidAnnotationName;
   while (stmt.executeStep()) {
@@ -76,13 +76,13 @@ function test_initial_state()
 
   // There should be five item annotations for a place guid.
   stmt = db.createStatement(
-    "SELECT content AS guid, place_id "
-  + "FROM moz_annos "
-  + "WHERE anno_attribute_id = ( "
-  +   "SELECT id "
-  +   "FROM moz_anno_attributes "
-  +   "WHERE name = :attr_name "
-  + ") "
+    `SELECT content AS guid, place_id
+     FROM moz_annos
+     WHERE anno_attribute_id = (
+       SELECT id
+       FROM moz_anno_attributes
+       WHERE name = :attr_name
+     )`
   );
   stmt.params.attr_name = kGuidAnnotationName;
   while (stmt.executeStep()) {
@@ -104,8 +104,8 @@ function test_moz_bookmarks_guid_exists()
 {
   // This will throw if the column does not exist
   let stmt = DBConn().createStatement(
-    "SELECT guid "
-  + "FROM moz_bookmarks "
+    `SELECT guid
+     FROM moz_bookmarks`
   );
   stmt.finalize();
 
@@ -116,8 +116,8 @@ function test_bookmark_guids_non_null()
 {
   // First, sanity check that we have a non-zero amount of bookmarks.
   let stmt = DBConn().createStatement(
-    "SELECT COUNT(1) "
-  + "FROM moz_bookmarks "
+    `SELECT COUNT(1)
+     FROM moz_bookmarks`
   );
   do_check_true(stmt.executeStep());
   do_check_neq(stmt.getInt32(0), 0);
@@ -125,9 +125,9 @@ function test_bookmark_guids_non_null()
 
   // Now, make sure we have no NULL guid entry.
   stmt = DBConn().createStatement(
-    "SELECT guid "
-  + "FROM moz_bookmarks "
-  + "WHERE guid IS NULL "
+    `SELECT guid
+     FROM moz_bookmarks
+     WHERE guid IS NULL`
   );
   do_check_false(stmt.executeStep());
   stmt.finalize();
@@ -138,10 +138,10 @@ function test_bookmark_guid_annotation_imported()
 {
   // Make sure we have the imported guid; not a newly generated one.
   let stmt = DBConn().createStatement(
-    "SELECT id "
-  + "FROM moz_bookmarks "
-  + "WHERE guid = :guid "
-  + "AND id = :item_id "
+    `SELECT id
+     FROM moz_bookmarks
+     WHERE guid = :guid
+     AND id = :item_id`
   );
   let validGuids = 0;
   let seenGuids = [];
@@ -173,13 +173,13 @@ function test_bookmark_guid_annotation_imported()
 function test_bookmark_guid_annotation_removed()
 {
   let stmt = DBConn().createStatement(
-    "SELECT COUNT(1) "
-  + "FROM moz_items_annos "
-  + "WHERE anno_attribute_id = ( "
-  +   "SELECT id "
-  +   "FROM moz_anno_attributes "
-  +   "WHERE name = :attr_name "
-  + ") "
+    `SELECT COUNT(1)
+     FROM moz_items_annos
+     WHERE anno_attribute_id = (
+       SELECT id
+       FROM moz_anno_attributes
+       WHERE name = :attr_name
+     )`
   );
   stmt.params.attr_name = kGuidAnnotationName;
   do_check_true(stmt.executeStep());
@@ -193,8 +193,8 @@ function test_moz_places_guid_exists()
 {
   // This will throw if the column does not exist
   let stmt = DBConn().createStatement(
-    "SELECT guid "
-  + "FROM moz_places "
+    `SELECT guid
+     FROM moz_places`
   );
   stmt.finalize();
 
@@ -205,8 +205,8 @@ function test_place_guids_non_null()
 {
   // First, sanity check that we have a non-zero amount of places.
   let stmt = DBConn().createStatement(
-    "SELECT COUNT(1) "
-  + "FROM moz_places "
+    `SELECT COUNT(1)
+     FROM moz_places`
   );
   do_check_true(stmt.executeStep());
   do_check_neq(stmt.getInt32(0), 0);
@@ -214,9 +214,9 @@ function test_place_guids_non_null()
 
   // Now, make sure we have no NULL guid entry.
   stmt = DBConn().createStatement(
-    "SELECT guid "
-  + "FROM moz_places "
-  + "WHERE guid IS NULL "
+    `SELECT guid
+     FROM moz_places
+     WHERE guid IS NULL`
   );
   do_check_false(stmt.executeStep());
   stmt.finalize();
@@ -227,10 +227,10 @@ function test_place_guid_annotation_imported()
 {
   // Make sure we have the imported guid; not a newly generated one.
   let stmt = DBConn().createStatement(
-    "SELECT id "
-  + "FROM moz_places "
-  + "WHERE guid = :guid "
-  + "AND id = :item_id "
+    `SELECT id
+     FROM moz_places
+     WHERE guid = :guid
+     AND id = :item_id`
   );
   let validGuids = 0;
   let seenGuids = [];
@@ -262,13 +262,13 @@ function test_place_guid_annotation_imported()
 function test_place_guid_annotation_removed()
 {
   let stmt = DBConn().createStatement(
-    "SELECT COUNT(1) "
-  + "FROM moz_annos "
-  + "WHERE anno_attribute_id = ( "
-  +   "SELECT id "
-  +   "FROM moz_anno_attributes "
-  +   "WHERE name = :attr_name "
-  + ") "
+    `SELECT COUNT(1)
+     FROM moz_annos
+     WHERE anno_attribute_id = (
+       SELECT id
+       FROM moz_anno_attributes
+       WHERE name = :attr_name
+     )`
   );
   stmt.params.attr_name = kGuidAnnotationName;
   do_check_true(stmt.executeStep());
@@ -282,8 +282,8 @@ function test_moz_hosts()
 {
   // This will throw if the column does not exist
   let stmt = DBConn().createStatement(
-    "SELECT host, frecency, typed, prefix "
-  + "FROM moz_hosts "
+    `SELECT host, frecency, typed, prefix
+     FROM moz_hosts`
   );
   stmt.finalize();
 
@@ -292,10 +292,10 @@ function test_moz_hosts()
   // check the number of entries in moz_hosts equals the number of
   // unique rev_host in moz_places
   stmt = DBConn().createAsyncStatement(
-    "SELECT (SELECT COUNT(host) FROM moz_hosts), " +
-           "(SELECT COUNT(DISTINCT rev_host) " +
-            "FROM moz_places " +
-            "WHERE LENGTH(rev_host) > 1)");
+    `SELECT (SELECT COUNT(host) FROM moz_hosts),
+            (SELECT COUNT(DISTINCT rev_host)
+             FROM moz_places
+             WHERE LENGTH(rev_host) > 1)`);
   try {
     stmt.executeAsync({
       handleResult: function (aResult) {
