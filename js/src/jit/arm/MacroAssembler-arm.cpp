@@ -1880,7 +1880,7 @@ MacroAssemblerARMCompat::freeStack(Register amount)
 void
 MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 {
-    JS_ASSERT(!SupportsSimd() && simdSet.size() == 0);
+    JS_ASSERT(!SupportsSimd && simdSet.size() == 0);
     int32_t diffF = set.fpus().getPushSizeInBytes();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
@@ -1909,7 +1909,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 void
 MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet)
 {
-    JS_ASSERT(!SupportsSimd() && simdSet.size() == 0);
+    JS_ASSERT(!SupportsSimd && simdSet.size() == 0);
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
     int32_t diffF = set.fpus().getPushSizeInBytes();
     const int32_t reservedG = diffG;
@@ -3778,7 +3778,7 @@ MacroAssemblerARMCompat::setupUnalignedABICall(uint32_t args, Register scratch)
     ma_mov(sp, scratch);
 
     // Force sp to be aligned.
-    ma_and(Imm32(~(ABIStackAlignment - 1)), sp, sp);
+    ma_and(Imm32(~(StackAlignment - 1)), sp, sp);
     ma_push(scratch);
 }
 
@@ -3937,7 +3937,7 @@ MacroAssemblerARMCompat::passABIArg(FloatRegister freg, MoveOp::Type type)
 void MacroAssemblerARMCompat::checkStackAlignment()
 {
 #ifdef DEBUG
-    ma_tst(sp, Imm32(ABIStackAlignment - 1));
+    ma_tst(sp, Imm32(StackAlignment - 1));
     breakpoint(NonZero);
 #endif
 }
@@ -3956,11 +3956,11 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust, bool callFromAsmJ
 
     if (!dynamicAlignment_) {
         *stackAdjust += ComputeByteAlignment(framePushed_ + *stackAdjust + alignmentAtPrologue,
-                                             ABIStackAlignment);
+                                             StackAlignment);
     } else {
         // sizeof(intptr_t) accounts for the saved stack pointer pushed by
         // setupUnalignedABICall.
-        *stackAdjust += ComputeByteAlignment(*stackAdjust + sizeof(intptr_t), ABIStackAlignment);
+        *stackAdjust += ComputeByteAlignment(*stackAdjust + sizeof(intptr_t), StackAlignment);
     }
 
     reserveStack(*stackAdjust);

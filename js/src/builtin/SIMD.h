@@ -166,12 +166,6 @@ struct Int32x4 {
 template<typename V>
 JSObject *CreateSimd(JSContext *cx, typename V::Elem *data);
 
-template<typename V>
-bool IsVectorObject(HandleValue v);
-
-template<typename V>
-bool ToSimdConstant(JSContext *cx, HandleValue v, jit::SimdConstant *out);
-
 #define DECLARE_SIMD_FLOAT32X4_FUNCTION(Name, Func, Operands, Flags) \
 extern bool                                                          \
 simd_float32x4_##Name(JSContext *cx, unsigned argc, Value *vp);

@@ -154,12 +154,6 @@ LIRGeneratorShared::defineReturn(LInstruction *lir, MDefinition *mir)
       case MIRType_Double:
         lir->setDef(0, LDefinition(vreg, LDefinition::DOUBLE, LFloatReg(ReturnDoubleReg)));
         break;
-      case MIRType_Int32x4:
-        lir->setDef(0, LDefinition(vreg, LDefinition::INT32X4, LFloatReg(ReturnSimdReg)));
-        break;
-      case MIRType_Float32x4:
-        lir->setDef(0, LDefinition(vreg, LDefinition::FLOAT32X4, LFloatReg(ReturnSimdReg)));
-        break;
       default:
         LDefinition::Type type = LDefinition::TypeFrom(mir->type());
         JS_ASSERT(type != LDefinition::DOUBLE && type != LDefinition::FLOAT32);

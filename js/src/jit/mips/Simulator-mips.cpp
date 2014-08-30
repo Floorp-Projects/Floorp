@@ -1871,7 +1871,7 @@ Simulator::softwareInterrupt(SimInstruction *instr)
 
         intptr_t external = reinterpret_cast<intptr_t>(redirection->nativeFunction());
 
-        bool stack_aligned = (getRegister(sp) & (ABIStackAlignment - 1)) == 0;
+        bool stack_aligned = (getRegister(sp) & (StackAlignment - 1)) == 0;
         if (!stack_aligned) {
             fprintf(stderr, "Runtime call with unaligned stack!\n");
             MOZ_CRASH();
@@ -3405,7 +3405,7 @@ Simulator::call(uint8_t *entry, int argument_count, ...)
     else
         entry_stack = entry_stack - kCArgsSlotsSize;
 
-    entry_stack &= ~ABIStackAlignment;
+    entry_stack &= ~StackAlignment;
 
     intptr_t *stack_argument = reinterpret_cast<intptr_t*>(entry_stack);
 

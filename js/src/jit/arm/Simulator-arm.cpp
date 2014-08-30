@@ -2117,7 +2117,7 @@ Simulator::softwareInterrupt(SimInstruction *instr)
         int32_t saved_lr = get_register(lr);
         intptr_t external = reinterpret_cast<intptr_t>(redirection->nativeFunction());
 
-        bool stack_aligned = (get_register(sp) & (ABIStackAlignment - 1)) == 0;
+        bool stack_aligned = (get_register(sp) & (StackAlignment - 1)) == 0;
         if (!stack_aligned) {
             fprintf(stderr, "Runtime call with unaligned stack!\n");
             MOZ_CRASH();
@@ -4258,7 +4258,7 @@ Simulator::call(uint8_t* entry, int argument_count, ...)
     if (argument_count >= 4)
         entry_stack -= (argument_count - 4) * sizeof(int32_t);
 
-    entry_stack &= ~ABIStackAlignment;
+    entry_stack &= ~StackAlignment;
 
     // Store remaining arguments on stack, from low to high memory.
     intptr_t *stack_argument = reinterpret_cast<intptr_t*>(entry_stack);
