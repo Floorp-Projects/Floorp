@@ -3353,10 +3353,26 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                               gfxFloat advanceDevUnits = ToDeviceUnits(advance, devUnitsPerAppUnit);
                               gfxFloat height = GetMetrics().maxAscent;
                               gfxRect glyphRect(pt.x, pt.y - height, advanceDevUnits, height);
+
+                              // If there's a fake-italic skew in effect as part
+                              // of the drawTarget's transform, we need to remove
+                              // this before drawing the hexbox. (Bug 983985)
+                              Matrix saveMat;
+                              if (passedInvMatrix) {
+                                  saveMat = dt->GetTransform();
+                                  dt->SetTransform(*passedInvMatrix * saveMat);
+                              }
+
                               gfxFontMissingGlyphs::DrawMissingGlyph(aContext,
                                                                      glyphRect,
                                                                      details->mGlyphID,
                                                                      appUnitsPerDevUnit);
+
+                              // Restore the matrix, if we modified it before
+                              // drawing the hexbox.
+                              if (passedInvMatrix) {
+                                  dt->SetTransform(saveMat);
+                              }
                           }
                       } else {
                           double glyphX = x + details->mXOffset;
