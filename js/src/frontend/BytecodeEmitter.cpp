@@ -3240,76 +3240,69 @@ EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Pars
         /*
          * Now push the property name currently being matched, which is the
          * current property name "label" on the left of a colon in the object
-         * initialiser.  Set |subpattern| to the lvalue node, which is in the
-         * value-initializing position.
+         * initializer.
          */
-        ParseNode *subpattern;
-        if (true) {
-            JS_ASSERT(pattern->isKind(PNK_ARRAY));
+        if (member->isKind(PNK_SPREAD)) {
+            /* Create a new array with the rest of the iterator */
+            ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);          // ITER ARRAY
+            if (off < 0)
+                return false;
+            CheckTypeSet(cx, bce, JSOP_NEWARRAY);
+            jsbytecode *pc = bce->code(off);
+            SET_UINT24(pc, 0);
 
-            if (member->isKind(PNK_SPREAD)) {
-                /* Create a new array with the rest of the iterator */
-                ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);          // ITER ARRAY
-                if (off < 0)
-                    return false;
-                CheckTypeSet(cx, bce, JSOP_NEWARRAY);
-                jsbytecode *pc = bce->code(off);
-                SET_UINT24(pc, 0);
+            if (!EmitNumberOp(cx, 0, bce))                             // ITER ARRAY INDEX
+                return false;
+            if (!EmitSpread(cx, bce))                                  // ARRAY INDEX
+                return false;
+            if (Emit1(cx, bce, JSOP_POP) < 0)                          // ARRAY
+                return false;
+            if (Emit1(cx, bce, JSOP_ENDINIT) < 0)
+                return false;
+            needToPopIterator = false;
+        } else {
+            if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER ITER
+                return false;
+            if (!EmitIteratorNext(cx, bce, pattern))                   // ITER RESULT
+                return false;
+            if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER RESULT RESULT
+                return false;
+            if (!EmitAtomOp(cx, cx->names().done, JSOP_GETPROP, bce))  // ITER RESULT DONE?
+                return false;
 
-                if (!EmitNumberOp(cx, 0, bce))                             // ITER ARRAY INDEX
-                    return false;
-                if (!EmitSpread(cx, bce))                                  // ARRAY INDEX
-                    return false;
-                if (Emit1(cx, bce, JSOP_POP) < 0)                          // ARRAY
-                    return false;
-                if (Emit1(cx, bce, JSOP_ENDINIT) < 0)
-                    return false;
-                needToPopIterator = false;
-            } else {
-                if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER ITER
-                    return false;
-                if (!EmitIteratorNext(cx, bce, pattern))                   // ITER RESULT
-                    return false;
-                if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER RESULT RESULT
-                    return false;
-                if (!EmitAtomOp(cx, cx->names().done, JSOP_GETPROP, bce))  // ITER RESULT DONE?
-                    return false;
+            // Emit (result.done ? undefined : result.value)
+            // This is mostly copied from EmitConditionalExpression, except that this code
+            // does not push new values onto the stack.
+            ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_COND);
+            if (noteIndex < 0)
+                return false;
+            ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFEQ, 0);
+            if (beq < 0)
+                return false;
 
-                // Emit (result.done ? undefined : result.value)
-                // This is mostly copied from EmitConditionalExpression, except that this code
-                // does not push new values onto the stack.
-                ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_COND);
-                if (noteIndex < 0)
-                    return false;
-                ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFEQ, 0);
-                if (beq < 0)
-                    return false;
+            if (Emit1(cx, bce, JSOP_POP) < 0)                          // ITER
+                return false;
+            if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                    // ITER UNDEFINED
+                return false;
 
-                if (Emit1(cx, bce, JSOP_POP) < 0)                          // ITER
-                    return false;
-                if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                    // ITER UNDEFINED
-                    return false;
+            /* Jump around else, fixup the branch, emit else, fixup jump. */
+            ptrdiff_t jmp = EmitJump(cx, bce, JSOP_GOTO, 0);
+            if (jmp < 0)
+                return false;
+            SetJumpOffsetAt(bce, beq);
 
-                /* Jump around else, fixup the branch, emit else, fixup jump. */
-                ptrdiff_t jmp = EmitJump(cx, bce, JSOP_GOTO, 0);
-                if (jmp < 0)
-                    return false;
-                SetJumpOffsetAt(bce, beq);
+            if (!EmitAtomOp(cx, cx->names().value, JSOP_GETPROP, bce)) // ITER VALUE
+                return false;
 
-                if (!EmitAtomOp(cx, cx->names().value, JSOP_GETPROP, bce)) // ITER VALUE
-                    return false;
-
-                SetJumpOffsetAt(bce, jmp);
-                if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq))
-                    return false;
-            }
-
-            subpattern = member;
+            SetJumpOffsetAt(bce, jmp);
+            if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq))
+                return false;
         }
 
-        /* Elision node makes a hole in the array destructurer. */
+        // Destructure into the pattern the element contains.
+        ParseNode *subpattern = member;
         if (subpattern->isKind(PNK_ELISION)) {
-            JS_ASSERT(member == subpattern);
+            // The value destructuring into an elision just gets ignored.
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
         } else {
