@@ -161,6 +161,7 @@ static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
 
 static XP_CHAR* pendingDirectory;
 static XP_CHAR* crashReporterPath;
+static XP_CHAR* memoryReportPath;
 
 // Where crash events should go.
 static XP_CHAR* eventsDirectory;
@@ -1532,6 +1533,11 @@ nsresult UnsetExceptionHandler()
     eventsDirectory = nullptr;
   }
 
+  if (memoryReportPath) {
+    NS_Free(memoryReportPath);
+    memoryReportPath = nullptr;
+  }
+
 #ifdef XP_MACOSX
   posix_spawnattr_destroy(&spawnattr);
 #endif
@@ -2197,6 +2203,23 @@ bool GetCrashEventsDir(nsAString& aPath)
 
   aPath = CONVERT_XP_CHAR_TO_UTF16(eventsDirectory);
   return true;
+}
+
+void
+SetMemoryReportFile(nsIFile* aFile)
+{
+  if (!gExceptionHandler) {
+    return;
+  }
+#ifdef XP_WIN
+  nsString path;
+  aFile->GetPath(path);
+  memoryReportPath = ToNewUnicode(path);
+#else
+  nsCString path;
+  aFile->GetNativePath(path);
+  memoryReportPath = ToNewCString(path);
+#endif
 }
 
 static void
