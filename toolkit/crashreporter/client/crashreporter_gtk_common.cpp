@@ -193,11 +193,13 @@ gpointer SendThread(gpointer args)
   string response, error;
   long response_code;
 
+  std::map<string, string> files;
+  files["upload_file_minidump"] = gDumpFile;
+
   bool success = google_breakpad::HTTPUpload::SendRequest
     (gSendURL,
      gQueryParameters,
-     gDumpFile,
-     "upload_file_minidump",
+     files,
      gHttpProxy, gAuth,
      gCACertificateFile,
      &response,

@@ -397,9 +397,12 @@ static DWORD WINAPI SendThreadProc(LPVOID param)
     LogMessage("No server URL, not sending report");
   } else {
     google_breakpad::CrashReportSender sender(L"");
+    std::map<wstring, wstring> files;
+    files[L"upload_file_minidump"] = td->dumpFile;
+
     finishedOk = (sender.SendCrashReport(td->sendURL,
                                          td->queryParameters,
-                                         td->dumpFile,
+                                         files,
                                          &td->serverResponse)
                   == google_breakpad::RESULT_SUCCEEDED);
     if (finishedOk) {
