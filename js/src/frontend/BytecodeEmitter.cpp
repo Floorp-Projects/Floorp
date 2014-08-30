@@ -3348,30 +3348,23 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
     MOZ_ASSERT(pattern->isKind(PNK_OBJECT));
     MOZ_ASSERT(pattern->isArity(PN_LIST));
 
-    bool doElemOp;
-
-#ifdef DEBUG
-    int stackDepth = bce->stackDepth;
-    MOZ_ASSERT(bce->stackDepth != 0);
-#endif
+    MOZ_ASSERT(bce->stackDepth != 0);                                  // ... OBJ
 
     for (ParseNode *member = pattern->pn_head; member; member = member->pn_next) {
-        /*
-         * Now push the property name currently being matched, which is the
-         * current property name "label" on the left of a colon in the object
-         * initialiser.  Set |subpattern| to the lvalue node, which is in the
-         * value-initializing position.
-         */
-        doElemOp = true;
-        JS_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
-
-        /* Duplicate the value being destructured to use as a reference base. */
-        if (Emit1(cx, bce, JSOP_DUP) < 0)
+        // Duplicate the value being destructured to use as a reference base.
+        if (Emit1(cx, bce, JSOP_DUP) < 0)                              // ... OBJ OBJ
             return false;
 
+        // Now push the property name currently being matched, which is the
+        // current property name "label" on the left of a colon in the object
+        // initialiser.
+        bool needsGetElem = true;
+
+        JS_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
         ParseNode *key = member->pn_left;
+
         if (key->isKind(PNK_NUMBER)) {
-            if (!EmitNumberOp(cx, key->pn_dval, bce))
+            if (!EmitNumberOp(cx, key->pn_dval, bce))                  // ... OBJ OBJ KEY
                 return false;
         } else if (key->isKind(PNK_NAME) || key->isKind(PNK_STRING)) {
             PropertyName *name = key->pn_atom->asPropertyName();
@@ -3381,30 +3374,24 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
             // as indexes for simplification of downstream analysis.
             jsid id = NameToId(name);
             if (id != types::IdToTypeId(id)) {
-                if (!EmitTree(cx, bce, key))
+                if (!EmitTree(cx, bce, key))                           // ... OBJ OBJ KEY
                     return false;
             } else {
-                if (!EmitAtomOp(cx, name, JSOP_GETPROP, bce))
+                if (!EmitAtomOp(cx, name, JSOP_GETPROP, bce))          // ... OBJ PROP
                     return false;
-                doElemOp = false;
+                needsGetElem = false;
             }
         } else {
             JS_ASSERT(key->isKind(PNK_COMPUTED_NAME));
-            if (!EmitTree(cx, bce, key->pn_kid))
+            if (!EmitTree(cx, bce, key->pn_kid))                       // ... OBJ OBJ KEY
                 return false;
         }
 
-        if (doElemOp) {
-            /*
-             * Ok, get the value of the matching property name.  This leaves
-             * that value on top of the value being destructured, so the stack
-             * is one deeper than when we started.
-             */
-            if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
-                return false;
-            JS_ASSERT(bce->stackDepth >= stackDepth + 1);
-        }
+        // Get the property value if not done already.
+        if (needsGetElem && !EmitElemOpBase(cx, bce, JSOP_GETELEM))    // ... OBJ PROP
+            return false;
 
+        // Destructure PROP per this member's subpattern.
         ParseNode *subpattern = member->pn_right;
         int32_t depthBefore = bce->stackDepth;
         if (!EmitDestructuringLHS(cx, bce, subpattern, emitOption))
@@ -3435,9 +3422,10 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
     }
 
     if (emitOption == PushInitialValues) {
-        // Per the above loop invariant, to-be-destructured-value is at the top
-        // of the stack. To achieve the post-condition, pop it.
-        if (Emit1(cx, bce, JSOP_POP) < 0)
+        // Per the above loop invariant, the value being destructured into this
+        // object pattern is atop the stack.  Pop it to achieve the
+        // post-condition.
+        if (Emit1(cx, bce, JSOP_POP) < 0)                              // ...
             return false;
     }
 
