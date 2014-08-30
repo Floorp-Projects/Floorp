@@ -3044,8 +3044,13 @@ Parser<FullParseHandler>::checkDestructuringObject(BindData<FullParseHandler> *d
     MOZ_ASSERT(objectPattern->isKind(PNK_OBJECT));
 
     for (ParseNode *member = objectPattern->pn_head; member; member = member->pn_next) {
-        MOZ_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
-        ParseNode *expr = member->pn_right;
+        ParseNode *expr;
+        if (member->isKind(PNK_MUTATEPROTO)) {
+            expr = member->pn_kid;
+        } else {
+            MOZ_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
+            expr = member->pn_right;
+        }
 
         bool ok;
         if (expr->isKind(PNK_ARRAY) || expr->isKind(PNK_OBJECT)) {
@@ -3063,7 +3068,7 @@ Parser<FullParseHandler>::checkDestructuringObject(BindData<FullParseHandler> *d
              * hasn't been officially linked to its def or registered in
              * lexdeps.  Do that now.
              */
-            if (member->pn_right == member->pn_left) {
+            if (!member->isKind(PNK_MUTATEPROTO) && member->pn_right == member->pn_left) {
                 RootedPropertyName name(context, expr->pn_atom->asPropertyName());
                 if (!noteNameUse(name, expr))
                     return false;
@@ -7158,6 +7163,8 @@ Parser<ParseHandler>::objectLiteral()
             ltok = tokenStream.getToken(TokenStream::KeywordIsName);
         }
 
+        atom = nullptr;
+
         JSOp op = JSOP_INITPROP;
         Node propname;
         switch (ltok) {
@@ -7269,29 +7276,37 @@ Parser<ParseHandler>::objectLiteral()
 
         if (op == JSOP_INITPROP) {
             TokenKind tt = tokenStream.getToken();
-            Node propexpr;
+            if (tt == TOK_ERROR)
+                return null();
+
             if (tt == TOK_COLON) {
                 if (isGenerator) {
                     report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
                     return null();
                 }
-                propexpr = assignExpr();
+
+                Node propexpr = assignExpr();
                 if (!propexpr)
                     return null();
 
                 if (foldConstants && !FoldConstants(context, &propexpr, this))
                     return null();
 
-                /*
-                 * Treat initializers which mutate __proto__ as non-constant,
-                 * so that we can later assume singleton objects delegate to
-                 * the default Object.prototype.
-                 */
-                if (!handler.isConstant(propexpr) || atom == context->names().proto)
-                    handler.setListFlag(literal, PNX_NONCONST);
+                if (atom == context->names().proto) {
+                    // Note: this occurs *only* if we observe TOK_COLON!  Only
+                    // __proto__: v mutates [[Prototype]].  Getters, setters,
+                    // method/generator definitions, computed property name
+                    // versions of all of these, and shorthands do not.
+                    uint32_t begin = handler.getPosition(propname).begin;
+                    if (!handler.addPrototypeMutation(literal, begin, propexpr))
+                        return null();
+                } else {
+                    if (!handler.isConstant(propexpr))
+                        handler.setListFlag(literal, PNX_NONCONST);
 
-                if (!handler.addPropertyDefinition(literal, propname, propexpr))
-                    return null();
+                    if (!handler.addPropertyDefinition(literal, propname, propexpr))
+                        return null();
+                }
             } else if (ltok == TOK_NAME && (tt == TOK_COMMA || tt == TOK_RC)) {
                 /*
                  * Support, e.g., |var {x, y} = o| as destructuring shorthand
