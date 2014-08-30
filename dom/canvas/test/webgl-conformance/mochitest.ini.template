@@ -1,0 +1,8 @@
+[DEFAULT]
+%%DEFAULT_ERRATA%%
+
+support-files = mochi-single.html
+                mochi-wrapper.css
+                %%SUPPORT_FILES%%
+
+%%MANIFEST_TESTS%%

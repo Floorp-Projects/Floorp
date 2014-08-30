@@ -35,8 +35,10 @@ import ch.boye.httpclientandroidlib.HttpException;
 import ch.boye.httpclientandroidlib.HttpRequest;
 import ch.boye.httpclientandroidlib.HttpRequestInterceptor;
 import ch.boye.httpclientandroidlib.HttpVersion;
-import ch.boye.httpclientandroidlib.ProtocolVersion;
 import ch.boye.httpclientandroidlib.ProtocolException;
+import ch.boye.httpclientandroidlib.ProtocolVersion;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * RequestContent is the most important interceptor for outgoing requests.
@@ -48,26 +50,53 @@ import ch.boye.httpclientandroidlib.ProtocolException;
  *
  * @since 4.0
  */
+@Immutable
 public class RequestContent implements HttpRequestInterceptor {
 
+    private final boolean overwrite;
+
+    /**
+     * Default constructor. The <code>Content-Length</code> or <code>Transfer-Encoding</code>
+     * will cause the interceptor to throw {@link ProtocolException} if already present in the
+     * response message.
+     */
     public RequestContent() {
-        super();
+        this(false);
+    }
+
+    /**
+     * Constructor that can be used to fine-tune behavior of this interceptor.
+     *
+     * @param overwrite If set to <code>true</code> the <code>Content-Length</code> and
+     * <code>Transfer-Encoding</code> headers will be created or updated if already present.
+     * If set to <code>false</code> the <code>Content-Length</code> and
+     * <code>Transfer-Encoding</code> headers will cause the interceptor to throw
+     * {@link ProtocolException} if already present in the response message.
+     *
+     * @since 4.2
+     */
+     public RequestContent(final boolean overwrite) {
+         super();
+         this.overwrite = overwrite;
     }
 
     public void process(final HttpRequest request, final HttpContext context)
             throws HttpException, IOException {
-        if (request == null) {
-            throw new IllegalArgumentException("HTTP request may not be null");
-        }
+        Args.notNull(request, "HTTP request");
         if (request instanceof HttpEntityEnclosingRequest) {
-            if (request.containsHeader(HTTP.TRANSFER_ENCODING)) {
-                throw new ProtocolException("Transfer-encoding header already present");
+            if (this.overwrite) {
+                request.removeHeaders(HTTP.TRANSFER_ENCODING);
+                request.removeHeaders(HTTP.CONTENT_LEN);
+            } else {
+                if (request.containsHeader(HTTP.TRANSFER_ENCODING)) {
+                    throw new ProtocolException("Transfer-encoding header already present");
+                }
+                if (request.containsHeader(HTTP.CONTENT_LEN)) {
+                    throw new ProtocolException("Content-Length header already present");
+                }
             }
-            if (request.containsHeader(HTTP.CONTENT_LEN)) {
-                throw new ProtocolException("Content-Length header already present");
-            }
-            ProtocolVersion ver = request.getRequestLine().getProtocolVersion();
-            HttpEntity entity = ((HttpEntityEnclosingRequest)request).getEntity();
+            final ProtocolVersion ver = request.getRequestLine().getProtocolVersion();
+            final HttpEntity entity = ((HttpEntityEnclosingRequest)request).getEntity();
             if (entity == null) {
                 request.addHeader(HTTP.CONTENT_LEN, "0");
                 return;

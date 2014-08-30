@@ -207,6 +207,8 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
 
   // Assume active (high risk) content and blocked by default
   MixedContentTypes classification = eMixedScript;
+  // Make decision to block/reject by default
+  *aDecision = REJECT_REQUEST;
 
 
   // Notes on non-obvious decisions:
@@ -339,10 +341,12 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
       NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA, &schemeNoReturnData)) ||
       NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT, &schemeInherits)) ||
       NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT, &schemeSecure))) {
+    *aDecision = REJECT_REQUEST;
     return NS_ERROR_FAILURE;
   }
 
   if (schemeLocal || schemeNoReturnData || schemeInherits || schemeSecure) {
+    *aDecision = ACCEPT;
      return NS_OK;
   }
 
@@ -441,6 +445,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
   bool isRootDocShell = false;
   rv = docShell->GetAllowMixedContentAndConnectionData(&rootHasSecureConnection, &allowMixedContent, &isRootDocShell);
   if (NS_FAILED(rv)) {
+    *aDecision = REJECT_REQUEST;
      return rv;
   }
 
@@ -590,6 +595,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     // from within ShouldLoad
     nsContentUtils::AddScriptRunner(
       new nsMixedContentEvent(aRequestingContext, classification));
+    *aDecision = ACCEPT;
     return NS_OK;
   }
 
@@ -610,8 +616,10 @@ nsMixedContentBlocker::ShouldProcess(uint32_t aContentType,
   if (!aContentLocation) {
     // aContentLocation may be null when a plugin is loading without an associated URI resource
     if (aContentType == TYPE_OBJECT) {
+       *aDecision = ACCEPT;
        return NS_OK;
     } else {
+       *aDecision = REJECT_REQUEST;
        return NS_ERROR_FAILURE;
     }
   }

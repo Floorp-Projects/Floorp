@@ -371,7 +371,7 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
     return Success;
   }
 
-  PORT_Assert(endEntityOrCA == EndEntityOrCA::MustBeCA);
+  assert(endEntityOrCA == EndEntityOrCA::MustBeCA);
 
   // End-entity certificates are not allowed to act as CA certs.
   if (!isCA) {

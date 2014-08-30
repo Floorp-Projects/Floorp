@@ -25,14 +25,15 @@
 #ifndef mozilla_pkix__nssgtest_h
 #define mozilla_pkix__nssgtest_h
 
-#include "stdint.h"
 #include "gtest/gtest.h"
 #include "pkix/pkixtypes.h"
 #include "pkixtestutil.h"
-#include "prtime.h"
-#include "seccomon.h"
 
 namespace mozilla { namespace pkix { namespace test {
+
+extern const std::time_t now;
+extern const std::time_t oneDayBeforeNow;
+extern const std::time_t oneDayAfterNow;
 
 inline void
 PORT_FreeArena_false(PLArenaPool* arena)
@@ -53,10 +54,6 @@ protected:
   NSSTest();
 
   ScopedPLArenaPool arena;
-  static mozilla::pkix::Time now;
-  static PRTime pr_now;
-  static PRTime pr_oneDayBeforeNow;
-  static PRTime pr_oneDayAfterNow;
 };
 
 } } } // namespace mozilla::pkix::test

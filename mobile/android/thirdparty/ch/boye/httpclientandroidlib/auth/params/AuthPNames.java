@@ -27,13 +27,16 @@
 
 package ch.boye.httpclientandroidlib.auth.params;
 
-import ch.boye.httpclientandroidlib.auth.AuthScheme;
-
 /**
  * Parameter names for HTTP authentication classes.
  *
  * @since 4.0
- */
+ *
+ * @deprecated (4.3) use {@link ch.boye.httpclientandroidlib.client.config.RequestConfig}
+ *   and constructor parameters of
+ *   {@link ch.boye.httpclientandroidlib.auth.AuthSchemeProvider}s.
+*/
+@Deprecated
 public interface AuthPNames {
 
     /**
@@ -45,24 +48,26 @@ public interface AuthPNames {
     public static final String CREDENTIAL_CHARSET = "http.auth.credential-charset";
 
     /**
-     * Defines the order of preference for supported {@link AuthScheme}s when
-     * authenticating with the target host.
+     * Defines the order of preference for supported
+     *  {@link ch.boye.httpclientandroidlib.auth.AuthScheme}s when authenticating with
+     *  the target host.
      * <p>
      * This parameter expects a value of type {@link java.util.Collection}. The
      * collection is expected to contain {@link String} instances representing
      * a name of an authentication scheme as returned by
-     * {@link AuthScheme#getSchemeName()}.
+     * {@link ch.boye.httpclientandroidlib.auth.AuthScheme#getSchemeName()}.
      */
     public static final String TARGET_AUTH_PREF = "http.auth.target-scheme-pref";
 
     /**
-     * Defines the order of preference for supported {@link AuthScheme}s when
-     * authenticating with the proxy host.
+     * Defines the order of preference for supported
+     *  {@link ch.boye.httpclientandroidlib.auth.AuthScheme}s when authenticating with the
+     *  proxy host.
      * <p>
      * This parameter expects a value of type {@link java.util.Collection}. The
      * collection is expected to contain {@link String} instances representing
      * a name of an authentication scheme as returned by
-     * {@link AuthScheme#getSchemeName()}.
+     * {@link ch.boye.httpclientandroidlib.auth.AuthScheme#getSchemeName()}.
      */
     public static final String PROXY_AUTH_PREF = "http.auth.proxy-scheme-pref";
 

@@ -31,12 +31,15 @@ import java.io.Serializable;
 
 import ch.boye.httpclientandroidlib.ProtocolVersion;
 import ch.boye.httpclientandroidlib.RequestLine;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Basic implementation of {@link RequestLine}.
  *
  * @since 4.0
  */
+@Immutable
 public class BasicRequestLine implements RequestLine, Cloneable, Serializable {
 
     private static final long serialVersionUID = 2810581718468737193L;
@@ -49,21 +52,9 @@ public class BasicRequestLine implements RequestLine, Cloneable, Serializable {
                             final String uri,
                             final ProtocolVersion version) {
         super();
-        if (method == null) {
-            throw new IllegalArgumentException
-                ("Method must not be null.");
-        }
-        if (uri == null) {
-            throw new IllegalArgumentException
-                ("URI must not be null.");
-        }
-        if (version == null) {
-            throw new IllegalArgumentException
-                ("Protocol version must not be null.");
-        }
-        this.method = method;
-        this.uri = uri;
-        this.protoversion = version;
+        this.method = Args.notNull(method, "Method");
+        this.uri = Args.notNull(uri, "URI");
+        this.protoversion = Args.notNull(version, "Version");
     }
 
     public String getMethod() {
@@ -78,12 +69,13 @@ public class BasicRequestLine implements RequestLine, Cloneable, Serializable {
         return this.uri;
     }
 
+    @Override
     public String toString() {
         // no need for non-default formatting in toString()
-        return BasicLineFormatter.DEFAULT
-            .formatRequestLine(null, this).toString();
+        return BasicLineFormatter.INSTANCE.formatRequestLine(null, this).toString();
     }
 
+    @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }

@@ -30,11 +30,11 @@ import java.util.Locale;
 import java.util.StringTokenizer;
 
 import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.cookie.Cookie;
 import ch.boye.httpclientandroidlib.cookie.CookieOrigin;
 import ch.boye.httpclientandroidlib.cookie.CookieRestrictionViolationException;
 import ch.boye.httpclientandroidlib.cookie.MalformedCookieException;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  *
@@ -52,10 +52,10 @@ public class NetscapeDomainHandler extends BasicDomainHandler {
             throws MalformedCookieException {
         super.validate(cookie, origin);
         // Perform Netscape Cookie draft specific validation
-        String host = origin.getHost();
-        String domain = cookie.getDomain();
+        final String host = origin.getHost();
+        final String domain = cookie.getDomain();
         if (host.contains(".")) {
-            int domainParts = new StringTokenizer(domain, ".").countTokens();
+            final int domainParts = new StringTokenizer(domain, ".").countTokens();
 
             if (isSpecialDomain(domain)) {
                 if (domainParts < 2) {
@@ -92,15 +92,11 @@ public class NetscapeDomainHandler extends BasicDomainHandler {
    }
 
    @Override
-   public boolean match(Cookie cookie, CookieOrigin origin) {
-       if (cookie == null) {
-           throw new IllegalArgumentException("Cookie may not be null");
-       }
-       if (origin == null) {
-           throw new IllegalArgumentException("Cookie origin may not be null");
-       }
-       String host = origin.getHost();
-       String domain = cookie.getDomain();
+   public boolean match(final Cookie cookie, final CookieOrigin origin) {
+       Args.notNull(cookie, "Cookie");
+       Args.notNull(origin, "Cookie origin");
+       final String host = origin.getHost();
+       final String domain = cookie.getDomain();
        if (domain == null) {
            return false;
        }

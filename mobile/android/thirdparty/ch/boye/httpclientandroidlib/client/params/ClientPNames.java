@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -23,29 +24,19 @@
  * <http://www.apache.org/>.
  *
  */
-
 package ch.boye.httpclientandroidlib.client.params;
 
 /**
  * Parameter names for HTTP client parameters.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link ch.boye.httpclientandroidlib.client.config.RequestConfig}.
  */
+@Deprecated
 public interface ClientPNames {
 
-    /**
-     * Defines the class name of the default {@link ch.boye.httpclientandroidlib.conn.ClientConnectionManager}
-     * <p>
-     * This parameter expects a value of type {@link String}.
-     * </p>
-     */
     public static final String CONNECTION_MANAGER_FACTORY_CLASS_NAME = "http.connection-manager.factory-class-name";
-
-    /**
-     * @deprecated use #CONNECTION_MANAGER_FACTORY_CLASS_NAME
-     */
-    @Deprecated
-    public static final String CONNECTION_MANAGER_FACTORY = "http.connection-manager.factory-object";
 
     /**
      * Defines whether redirects should be handled automatically
@@ -126,6 +117,17 @@ public interface ClientPNames {
      * </p>
      */
     public static final String DEFAULT_HOST = "http.default-host";
+
+    /**
+     * Defines the timeout in milliseconds used when retrieving an instance of
+     * {@link ch.boye.httpclientandroidlib.conn.ManagedClientConnection} from the
+     * {@link ch.boye.httpclientandroidlib.conn.ClientConnectionManager}.
+     * <p>
+     * This parameter expects a value of type {@link Long}.
+     * <p>
+     * @since 4.2
+     */
+    public static final String CONN_MANAGER_TIMEOUT = "http.conn-manager.timeout";
 
 }
 

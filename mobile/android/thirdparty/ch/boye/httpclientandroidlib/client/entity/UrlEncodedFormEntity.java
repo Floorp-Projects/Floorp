@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -23,16 +24,16 @@
  * <http://www.apache.org/>.
  *
  */
-
 package ch.boye.httpclientandroidlib.client.entity;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.List;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.NameValuePair;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.client.utils.URLEncodedUtils;
+import ch.boye.httpclientandroidlib.entity.ContentType;
 import ch.boye.httpclientandroidlib.entity.StringEntity;
 import ch.boye.httpclientandroidlib.protocol.HTTP;
 
@@ -50,15 +51,32 @@ public class UrlEncodedFormEntity extends StringEntity {
      * of parameters in the specified encoding.
      *
      * @param parameters list of name/value pairs
-     * @param encoding encoding the name/value pairs be encoded with
+     * @param charset encoding the name/value pairs be encoded with
      * @throws UnsupportedEncodingException if the encoding isn't supported
      */
     public UrlEncodedFormEntity (
         final List <? extends NameValuePair> parameters,
-        final String encoding) throws UnsupportedEncodingException {
-        super(URLEncodedUtils.format(parameters, encoding), encoding);
-        setContentType(URLEncodedUtils.CONTENT_TYPE + HTTP.CHARSET_PARAM +
-                (encoding != null ? encoding : HTTP.DEFAULT_CONTENT_CHARSET));
+        final String charset) throws UnsupportedEncodingException {
+        super(URLEncodedUtils.format(parameters,
+                charset != null ? charset : HTTP.DEF_CONTENT_CHARSET.name()),
+                ContentType.create(URLEncodedUtils.CONTENT_TYPE, charset));
+    }
+
+    /**
+     * Constructs a new {@link UrlEncodedFormEntity} with the list
+     * of parameters in the specified encoding.
+     *
+     * @param parameters iterable collection of name/value pairs
+     * @param charset encoding the name/value pairs be encoded with
+     *
+     * @since 4.2
+     */
+    public UrlEncodedFormEntity (
+        final Iterable <? extends NameValuePair> parameters,
+        final Charset charset) {
+        super(URLEncodedUtils.format(parameters,
+                charset != null ? charset : HTTP.DEF_CONTENT_CHARSET),
+                ContentType.create(URLEncodedUtils.CONTENT_TYPE, charset));
     }
 
     /**
@@ -70,7 +88,20 @@ public class UrlEncodedFormEntity extends StringEntity {
      */
     public UrlEncodedFormEntity (
         final List <? extends NameValuePair> parameters) throws UnsupportedEncodingException {
-        this(parameters, HTTP.DEFAULT_CONTENT_CHARSET);
+        this(parameters, (Charset) null);
+    }
+
+    /**
+     * Constructs a new {@link UrlEncodedFormEntity} with the list
+     * of parameters with the default encoding of {@link HTTP#DEFAULT_CONTENT_CHARSET}
+     *
+     * @param parameters iterable collection of name/value pairs
+     *
+     * @since 4.2
+     */
+    public UrlEncodedFormEntity (
+        final Iterable <? extends NameValuePair> parameters) {
+        this(parameters, null);
     }
 
 }

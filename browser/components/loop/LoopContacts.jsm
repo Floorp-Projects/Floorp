@@ -10,6 +10,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoopStorage",
                                   "resource:///modules/loop/LoopStorage.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CardDavImporter",
+                                  "resource:///modules/loop/CardDavImporter.jsm");
 XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
   const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
   return new EventEmitter();
@@ -318,6 +320,13 @@ LoopStorage.on("upgrade", function(e, db) {
  * violated. You'll notice this as well in the documentation for each method.
  */
 let LoopContactsInternal = Object.freeze({
+  /**
+   * Map of contact importer names to instances
+   */
+  _importServices: {
+    "carddav": new CardDavImporter()
+  },
+
   /**
    * Add a contact to the data store.
    *
@@ -757,8 +766,15 @@ let LoopContactsInternal = Object.freeze({
    *                            be the result of the operation, if successfull.
    */
   startImport: function(options, callback) {
-    //TODO in bug 972000.
-    callback(new Error("Not implemented yet!"));
+    if (!("service" in options)) {
+      callback(new Error("No import service specified in options"));
+      return;
+    }
+    if (!(options.service in this._importServices)) {
+      callback(new Error("Unknown import service specified: " + options.service));
+      return;
+    }
+    this._importServices[options.service].startImport(options, callback, this);
   },
 
   /**

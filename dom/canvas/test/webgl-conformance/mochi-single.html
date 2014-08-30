@@ -1,0 +1,261 @@
+<!DOCTYPE HTML>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<html>
+<head>
+<title>
+WebGL Conformance Test Suite Single Test Wrapper
+</title>
+<!-- Uncomment this to use this without mochi-wrapper.html files.
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+-->
+<script src="../webgl-mochitest/driver-info.js"></script>
+</head>
+<body>
+<div>Status: <span id='status'>Initializing</span></div>
+<div>Path: <span id='path'>-</span></div>
+<div>Failures: <span id='results'>-</span></div>
+<iframe id='test-frame' width='100%' scrolling='no'></iframe>
+<script>
+'use strict';
+
+var IFRAME_BODY_MARGIN = 8;
+var IFRAME_SIZE_UPDATE_INTERVAL = 100; // ms
+
+var statusElem = document.getElementById('status');
+var pathElem = document.getElementById('path');
+var resultsElem = document.getElementById('results');
+var frameElem = document.getElementById('test-frame');
+
+////////////////////////////////////////////////////////////////////////
+// Forward SimpleTest functions and replace if missing.
+
+if (!window.ok) {
+  window.ok = parent.ok;
+}
+if (!window.todo) {
+  window.todo = parent.todo;
+}
+if (!window.SimpleTest) {
+  window.SimpleTest = parent.SimpleTest;
+}
+
+if (!window.ok) {
+  window.ok = function(status, message) {
+    console.log('ok(' + status + ', "' + message + '")');
+  }
+}
+if (!window.todo) {
+  window.todo = function(status, message) {
+    console.log('todo(' + status + ', "' + message + '")');
+  }
+}
+if (!window.SimpleTest) {
+  window.SimpleTest = {
+    waitForExplicitFinish: function(){},
+    finish: function(){},
+  };
+}
+
+////////////////////////////////////////////////////////////////////////
+// Implement our own version of `fail-if` expected failure handling.
+// `fail-if` in mochitest.ini doesn't work yet. (bug 987849)
+
+var OS_VERSION_WIN7 = 6.1;
+var OS_VERSION_OSX_10_6 = 10.6;
+var OS_VERSION_OSX_10_8 = 10.8;
+
+// ICS 4.0-4.0.2 was 14, 4.0.3+ was 15.
+var OS_VERSION_ANDROID_ICS = 14;
+
+var ALWAYS_FAIL_TEST_FILEPATH = 'always-fail.html';
+
+function GetExpectedTestFailSet() {
+  var failSet = {};
+
+  failSet[ALWAYS_FAIL_TEST_FILEPATH] = true;
+
+  switch (DriverInfo.getOS()) {
+    case DriverInfo.OS.WINDOWS:
+      if (DriverInfo.getOSVersion() >= OS_VERSION_WIN7) {
+        // Win7 and Win8 slaves.
+        failSet['conformance/textures/tex-image-and-sub-image-2d-with-video.html'] = true;
+        failSet['conformance/textures/texture-npot-video.html'] = true;
+      }
+      break;
+
+    case DriverInfo.OS.MAC:
+      if (DriverInfo.getOSVersion() == OS_VERSION_OSX_10_8) {
+        failSet['conformance/glsl/functions/glsl-function-smoothstep-gentype.html'] = true;
+        failSet['conformance/glsl/variables/gl-pointcoord.html'] = true;
+        failSet['conformance/limits/gl-max-texture-dimensions.html'] = true;
+        failSet['conformance/textures/texture-size.html'] = true;
+      } else if (DriverInfo.getOSVersion() == OS_VERSION_OSX_10_6) {
+        failSet['conformance/glsl/misc/glsl-function-nodes.html'] = true;
+      }
+      break;
+
+    case DriverInfo.OS.LINUX:
+      failSet['conformance/extensions/oes-texture-float.html'] = true;
+      failSet['conformance/glsl/functions/glsl-function-sin.html'] = true;
+      failSet['conformance/misc/type-conversion-test.html'] = true;
+      failSet['conformance/textures/texture-mips.html'] = true;
+      failSet['conformance/textures/texture-size-cube-maps.html'] = true;
+      break;
+
+    case DriverInfo.OS.ANDROID:
+      failSet['conformance/extensions/oes-texture-float.html'] = true;
+
+      if (DriverInfo.getOSVersion() >= OS_VERSION_ANDROID_ICS) {
+        // Android 4.0 slaves.
+        failSet['conformance/extensions/oes-vertex-array-object.html'] = true;
+        failSet['conformance/glsl/functions/glsl-function-abs.html'] = true;
+        failSet['conformance/glsl/functions/glsl-function-faceforward.html'] = true;
+        failSet['conformance/glsl/functions/glsl-function-sign.html'] = true;
+        failSet['conformance/glsl/functions/glsl-function-smoothstep-float.html'] = true;
+        failSet['conformance/glsl/functions/glsl-function-step-float.html'] = true;
+        failSet['conformance/glsl/functions/glsl-function-step-gentype.html'] = true;
+        failSet['conformance/limits/gl-max-texture-dimensions.html'] = true;
+        failSet['conformance/limits/gl-min-textures.html'] = true;
+        failSet['conformance/rendering/draw-elements-out-of-bounds.html'] = true;
+        failSet['conformance/state/gl-get-calls.html'] = true;
+        failSet['conformance/textures/tex-image-with-format-and-type.html'] = true;
+        failSet['conformance/textures/tex-sub-image-2d.html'] = true;
+        failSet['conformance/textures/texture-mips.html'] = true;
+        failSet['conformance/textures/texture-npot.html'] = true;
+        failSet['conformance/textures/texture-size-cube-maps.html'] = true;
+      } else {
+        // Android 2.3 slaves.
+        failSet['conformance/glsl/functions/glsl-function-sin.html'] = true;
+        failSet['conformance/misc/error-reporting.html'] = true;
+        failSet['conformance/misc/object-deletion-behaviour.html'] = true;
+        failSet['conformance/programs/get-active-test.html'] = true;
+        failSet['conformance/textures/tex-image-and-sub-image-2d-with-video.html'] = true;
+        failSet['conformance/textures/texture-mips.html'] = true;
+        failSet['conformance/textures/texture-npot.html'] = true;
+      }
+      break;
+
+    case DriverInfo.OS.B2G:
+      failSet['conformance/context/context-attributes-alpha-depth-stencil-antialias.html'] = true;
+      failSet['conformance/extensions/oes-texture-float.html'] = true;
+      failSet['conformance/glsl/functions/glsl-function-sin.html'] = true;
+      failSet['conformance/glsl/reserved/_webgl_function.vert.html'] = true;
+      failSet['conformance/glsl/reserved/webgl_function.vert.html'] = true;
+      failSet['conformance/misc/error-reporting.html'] = true;
+      failSet['conformance/misc/object-deletion-behaviour.html'] = true;
+      failSet['conformance/programs/get-active-test.html'] = true;
+      failSet['conformance/textures/tex-input-validation.html'] = true;
+      failSet['conformance/textures/texture-mips.html'] = true;
+      failSet['conformance/textures/texture-npot.html'] = true;
+      failSet['conformance/textures/texture-size-cube-maps.html'] = true;
+      failSet['conformance/textures/texture-size.html'] = true;
+      break;
+  }
+
+  return failSet;
+}
+
+////////////////////////////////////////////////////////////////////////
+// Test running and harness.
+
+var gTestPath = null;
+
+function RunTest(testPath) {
+  console.log('testPath: ' + testPath);
+
+  if (testPath == ALWAYS_FAIL_TEST_FILEPATH) {
+    // Make it easier to respond to new test failures.
+    console.log('OS: ' + DriverInfo.getOS());
+    console.log('OS version: ' + DriverInfo.getOSVersion());
+    console.log('Driver: ' + DriverInfo.getDriver());
+  }
+
+  pathElem.innerHTML = testPath;
+  gTestPath = testPath;
+
+  // Auto-update to grow the size of the doc.
+  function UpdateFrameSize() {
+    var frameBody = frameElem.contentWindow.document.body;
+
+    if (frameBody) {
+      var scrollHeight = frameBody.scrollHeight;
+      frameElem.height = scrollHeight + 2*IFRAME_BODY_MARGIN;
+    }
+
+    setTimeout(UpdateFrameSize, IFRAME_SIZE_UPDATE_INTERVAL);
+  }
+  UpdateFrameSize();
+
+  // Load the iframe.
+  statusElem.innerHTML = 'Loading';
+
+  frameElem.onloadstart = function() {
+    statusElem.innerHTML = 'Running';
+  };
+  frameElem.src = testPath;
+}
+
+var failureCount = 0;
+var resultCount = 0;
+window.webglTestHarness = {
+  reportResults: function(success, message) {
+    resultCount++;
+    if (!success) {
+      failureCount++;
+    }
+
+    var color = failureCount ? 'red' : 'green';
+
+    resultsElem.innerHTML = [
+      '<font color="' + color + '">',
+      '' + failureCount + '/' + resultCount,
+      '</font>',
+    ].join('\n');
+  },
+
+  notifyFinished: function(testPath) {
+    OnTestComplete();
+  },
+};
+
+function OnTestComplete() {
+  statusElem.innerHTML = 'Complete';
+
+  var passed = failureCount == 0;
+
+  var passExpected = true;
+  if (gTestPath in GetExpectedTestFailSet())
+    passExpected = false;
+
+  var expectedStatus = passExpected ? 'pass' : 'fail';
+  var text = 'Should ' + expectedStatus + ': ' + gTestPath;
+
+  ok(passed == passExpected, text);
+  SimpleTest.finish();
+}
+
+////////////////////////////////////////////////////////////////////////
+// Begin execution
+
+SimpleTest.waitForExplicitFinish();
+
+do {
+  var arg = location.search.substr(1);
+  if (arg == 'dump') {
+    statusElem.innerHTML = 'Dumping';
+
+    ok(true, 'OS:' + DriverInfo.getOS());
+    ok(true, 'OS version:' + DriverInfo.getOSVersion());
+    ok(true, 'Driver:' + DriverInfo.getDriver());
+
+    statusElem.innerHTML = 'Complete';
+    break;
+  }
+
+  RunTest(arg);
+} while (false);
+
+</script>
+</body>
+</html>

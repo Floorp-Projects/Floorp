@@ -509,7 +509,7 @@ FunctionBox::FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunct
     inWith(false),                  // initialized below
     inGenexpLambda(false),
     hasDestructuringArgs(false),
-    useAsm(directives.asmJS()),
+    useAsm(false),
     insideUseAsm(outerpc && outerpc->useAsmOrInsideUseAsm()),
     usesArguments(false),
     usesApply(false),
@@ -2069,7 +2069,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
                 return false;
 
             if (!parser->functionArgsAndBodyGeneric(SyntaxParseHandler::NodeGeneric,
-                                                    fun, type, kind, newDirectives))
+                                                    fun, type, kind))
             {
                 if (parser->hadAbortedSyntaxParse()) {
                     // Try again with a full parse.
@@ -2105,7 +2105,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
     if (!funpc.init(tokenStream))
         return false;
 
-    if (!functionArgsAndBodyGeneric(pn, fun, type, kind, newDirectives))
+    if (!functionArgsAndBodyGeneric(pn, fun, type, kind))
         return false;
 
     if (!leaveFunction(pn, outerpc, kind))
@@ -2145,7 +2145,7 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
     if (!funpc.init(tokenStream))
         return false;
 
-    if (!functionArgsAndBodyGeneric(pn, fun, type, kind, newDirectives))
+    if (!functionArgsAndBodyGeneric(pn, fun, type, kind))
         return false;
 
     if (!leaveFunction(pn, outerpc, kind))
@@ -2199,7 +2199,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
     if (!funpc.init(tokenStream))
         return null();
 
-    if (!functionArgsAndBodyGeneric(pn, fun, Normal, Statement, &newDirectives)) {
+    if (!functionArgsAndBodyGeneric(pn, fun, Normal, Statement)) {
         JS_ASSERT(directives == newDirectives);
         return null();
     }
@@ -2226,8 +2226,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, FunctionType type,
-                                                 FunctionSyntaxKind kind,
-                                                 Directives *newDirectives)
+                                                 FunctionSyntaxKind kind)
 {
     // Given a properly initialized parse context, try to parse an actual
     // function without concern for conversion to strict mode, use of lazy
@@ -2422,10 +2421,14 @@ template <>
 bool
 Parser<FullParseHandler>::asmJS(Node list)
 {
-    // If we are already inside "use asm" that means we are either actively
-    // compiling or we are reparsing after asm.js validation failure. In either
-    // case, nothing to do here.
-    if (pc->useAsmOrInsideUseAsm())
+    // Disable syntax parsing in anything nested inside the asm.js module.
+    handler.disableSyntaxParser();
+
+    // We should be encountering the "use asm" directive for the first time; if
+    // the directive is already, we must have failed asm.js validation and we're
+    // reparsing. In that case, don't try to validate again. A non-null
+    // newDirectives means we're not in a normal function.
+    if (!pc->newDirectives || pc->newDirectives->asmJS())
         return true;
 
     // If there is no ScriptSource, then we are doing a non-compiling parse and
@@ -2961,6 +2964,15 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::noteNameUse(HandlePropertyName name, Node pn)
 {
+    /*
+     * The asm.js validator does all its own symbol-table management so, as an
+     * optimization, avoid doing any work here. Use-def links are only necessary
+     * for emitting bytecode and successfully-validated asm.js does not emit
+     * bytecode. (On validation failure, the asm.js module is reparsed.)
+     */
+    if (pc->useAsmOrInsideUseAsm())
+        return true;
+
     StmtInfoPC *stmt = LexicalLookup(pc, name, nullptr, (StmtInfoPC *)nullptr);
 
     DefinitionList::Range defs = pc->decls().lookupMulti(name);
@@ -7559,10 +7571,11 @@ Parser<ParseHandler>::accumulateTelemetry()
     if (!filename)
         return;
 
+    bool isAddon = !!cx->compartment()->addonId;
     bool isHTTP = strncmp(filename, "http://", 7) == 0 || strncmp(filename, "https://", 8) == 0;
 
     // Only report telemetry for web content, not add-ons or chrome JS.
-    if (!isHTTP)
+    if (isAddon || !isHTTP)
         return;
 
     enum DeprecatedLanguageExtensions {

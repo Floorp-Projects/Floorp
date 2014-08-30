@@ -31,14 +31,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.HeaderElement;
 import ch.boye.httpclientandroidlib.NameValuePair;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.cookie.Cookie;
 import ch.boye.httpclientandroidlib.cookie.CookieAttributeHandler;
 import ch.boye.httpclientandroidlib.cookie.CookieOrigin;
 import ch.boye.httpclientandroidlib.cookie.MalformedCookieException;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Cookie management functions shared by all specification.
@@ -68,27 +68,27 @@ public abstract class CookieSpecBase extends AbstractCookieSpec {
 
     protected List<Cookie> parse(final HeaderElement[] elems, final CookieOrigin origin)
                 throws MalformedCookieException {
-        List<Cookie> cookies = new ArrayList<Cookie>(elems.length);
-        for (HeaderElement headerelement : elems) {
-            String name = headerelement.getName();
-            String value = headerelement.getValue();
+        final List<Cookie> cookies = new ArrayList<Cookie>(elems.length);
+        for (final HeaderElement headerelement : elems) {
+            final String name = headerelement.getName();
+            final String value = headerelement.getValue();
             if (name == null || name.length() == 0) {
                 throw new MalformedCookieException("Cookie name may not be empty");
             }
 
-            BasicClientCookie cookie = new BasicClientCookie(name, value);
+            final BasicClientCookie cookie = new BasicClientCookie(name, value);
             cookie.setPath(getDefaultPath(origin));
             cookie.setDomain(getDefaultDomain(origin));
 
             // cycle through the parameters
-            NameValuePair[] attribs = headerelement.getParameters();
+            final NameValuePair[] attribs = headerelement.getParameters();
             for (int j = attribs.length - 1; j >= 0; j--) {
-                NameValuePair attrib = attribs[j];
-                String s = attrib.getName().toLowerCase(Locale.ENGLISH);
+                final NameValuePair attrib = attribs[j];
+                final String s = attrib.getName().toLowerCase(Locale.ENGLISH);
 
                 cookie.setAttribute(s, attrib.getValue());
 
-                CookieAttributeHandler handler = findAttribHandler(s);
+                final CookieAttributeHandler handler = findAttribHandler(s);
                 if (handler != null) {
                     handler.parse(cookie, attrib.getValue());
                 }
@@ -100,25 +100,17 @@ public abstract class CookieSpecBase extends AbstractCookieSpec {
 
     public void validate(final Cookie cookie, final CookieOrigin origin)
             throws MalformedCookieException {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
-        if (origin == null) {
-            throw new IllegalArgumentException("Cookie origin may not be null");
-        }
-        for (CookieAttributeHandler handler: getAttribHandlers()) {
+        Args.notNull(cookie, "Cookie");
+        Args.notNull(origin, "Cookie origin");
+        for (final CookieAttributeHandler handler: getAttribHandlers()) {
             handler.validate(cookie, origin);
         }
     }
 
     public boolean match(final Cookie cookie, final CookieOrigin origin) {
-        if (cookie == null) {
-            throw new IllegalArgumentException("Cookie may not be null");
-        }
-        if (origin == null) {
-            throw new IllegalArgumentException("Cookie origin may not be null");
-        }
-        for (CookieAttributeHandler handler: getAttribHandlers()) {
+        Args.notNull(cookie, "Cookie");
+        Args.notNull(origin, "Cookie origin");
+        for (final CookieAttributeHandler handler: getAttribHandlers()) {
             if (!handler.match(cookie, origin)) {
                 return false;
             }

@@ -29,11 +29,13 @@ package ch.boye.httpclientandroidlib.message;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HeaderIterator;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 
 /**
@@ -44,18 +46,19 @@ import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
  *
  * @since 4.0
  */
+@NotThreadSafe
 public class HeaderGroup implements Cloneable, Serializable {
 
     private static final long serialVersionUID = 2608834160639271617L;
 
     /** The list of headers for this group, in the order in which they were added */
-    private final List headers;
+    private final List<Header> headers;
 
     /**
      * Constructor for HeaderGroup.
      */
     public HeaderGroup() {
-        this.headers = new ArrayList(16);
+        this.headers = new ArrayList<Header>(16);
     }
 
     /**
@@ -71,7 +74,7 @@ public class HeaderGroup implements Cloneable, Serializable {
      *
      * @param header the header to add
      */
-    public void addHeader(Header header) {
+    public void addHeader(final Header header) {
         if (header == null) {
             return;
         }
@@ -83,7 +86,7 @@ public class HeaderGroup implements Cloneable, Serializable {
      *
      * @param header the header to remove
      */
-    public void removeHeader(Header header) {
+    public void removeHeader(final Header header) {
         if (header == null) {
             return;
         }
@@ -97,12 +100,15 @@ public class HeaderGroup implements Cloneable, Serializable {
      * @param header the new header that should replace the first header with the same
      * name if present in the list.
      */
-    public void updateHeader(Header header) {
+    public void updateHeader(final Header header) {
         if (header == null) {
             return;
         }
+        // HTTPCORE-361 : we don't use the for-each syntax, i.e.
+        //     for (Header header : headers)
+        // as that creates an Iterator that needs to be garbage-collected
         for (int i = 0; i < this.headers.size(); i++) {
-            Header current = (Header) this.headers.get(i);
+            final Header current = this.headers.get(i);
             if (current.getName().equalsIgnoreCase(header.getName())) {
                 this.headers.set(i, header);
                 return;
@@ -118,14 +124,12 @@ public class HeaderGroup implements Cloneable, Serializable {
      *
      * @param headers the headers to set
      */
-    public void setHeaders(Header[] headers) {
+    public void setHeaders(final Header[] headers) {
         clear();
         if (headers == null) {
             return;
         }
-        for (int i = 0; i < headers.length; i++) {
-            this.headers.add(headers[i]);
-        }
+        Collections.addAll(this.headers, headers);
     }
 
     /**
@@ -139,19 +143,19 @@ public class HeaderGroup implements Cloneable, Serializable {
      * @return a header with a condensed value or <code>null</code> if no
      * headers by the given name are present
      */
-    public Header getCondensedHeader(String name) {
-        Header[] headers = getHeaders(name);
+    public Header getCondensedHeader(final String name) {
+        final Header[] hdrs = getHeaders(name);
 
-        if (headers.length == 0) {
+        if (hdrs.length == 0) {
             return null;
-        } else if (headers.length == 1) {
-            return headers[0];
+        } else if (hdrs.length == 1) {
+            return hdrs[0];
         } else {
-            CharArrayBuffer valueBuffer = new CharArrayBuffer(128);
-            valueBuffer.append(headers[0].getValue());
-            for (int i = 1; i < headers.length; i++) {
+            final CharArrayBuffer valueBuffer = new CharArrayBuffer(128);
+            valueBuffer.append(hdrs[0].getValue());
+            for (int i = 1; i < hdrs.length; i++) {
                 valueBuffer.append(", ");
-                valueBuffer.append(headers[i].getValue());
+                valueBuffer.append(hdrs[i].getValue());
             }
 
             return new BasicHeader(name.toLowerCase(Locale.ENGLISH), valueBuffer.toString());
@@ -168,17 +172,19 @@ public class HeaderGroup implements Cloneable, Serializable {
      *
      * @return an array of length >= 0
      */
-    public Header[] getHeaders(String name) {
-        ArrayList headersFound = new ArrayList();
-
-        for (int i = 0; i < headers.size(); i++) {
-            Header header = (Header) headers.get(i);
+    public Header[] getHeaders(final String name) {
+        final List<Header> headersFound = new ArrayList<Header>();
+        // HTTPCORE-361 : we don't use the for-each syntax, i.e.
+        //     for (Header header : headers)
+        // as that creates an Iterator that needs to be garbage-collected
+        for (int i = 0; i < this.headers.size(); i++) {
+            final Header header = this.headers.get(i);
             if (header.getName().equalsIgnoreCase(name)) {
                 headersFound.add(header);
             }
         }
 
-        return (Header[]) headersFound.toArray(new Header[headersFound.size()]);
+        return headersFound.toArray(new Header[headersFound.size()]);
     }
 
     /**
@@ -189,9 +195,12 @@ public class HeaderGroup implements Cloneable, Serializable {
      * @param name the name of the header to get
      * @return the first header or <code>null</code>
      */
-    public Header getFirstHeader(String name) {
-        for (int i = 0; i < headers.size(); i++) {
-            Header header = (Header) headers.get(i);
+    public Header getFirstHeader(final String name) {
+        // HTTPCORE-361 : we don't use the for-each syntax, i.e.
+        //     for (Header header : headers)
+        // as that creates an Iterator that needs to be garbage-collected
+        for (int i = 0; i < this.headers.size(); i++) {
+            final Header header = this.headers.get(i);
             if (header.getName().equalsIgnoreCase(name)) {
                 return header;
             }
@@ -207,10 +216,10 @@ public class HeaderGroup implements Cloneable, Serializable {
      * @param name the name of the header to get
      * @return the last header or <code>null</code>
      */
-    public Header getLastHeader(String name) {
+    public Header getLastHeader(final String name) {
         // start at the end of the list and work backwards
         for (int i = headers.size() - 1; i >= 0; i--) {
-            Header header = (Header) headers.get(i);
+            final Header header = headers.get(i);
             if (header.getName().equalsIgnoreCase(name)) {
                 return header;
             }
@@ -225,7 +234,7 @@ public class HeaderGroup implements Cloneable, Serializable {
      * @return an array of length >= 0
      */
     public Header[] getAllHeaders() {
-        return (Header[]) headers.toArray(new Header[headers.size()]);
+        return headers.toArray(new Header[headers.size()]);
     }
 
     /**
@@ -237,9 +246,12 @@ public class HeaderGroup implements Cloneable, Serializable {
      * @return <code>true</code> if at least one header with the name is
      * contained, <code>false</code> otherwise
      */
-    public boolean containsHeader(String name) {
-        for (int i = 0; i < headers.size(); i++) {
-            Header header = (Header) headers.get(i);
+    public boolean containsHeader(final String name) {
+        // HTTPCORE-361 : we don't use the for-each syntax, i.e.
+        //     for (Header header : headers)
+        // as that creates an Iterator that needs to be garbage-collected
+        for (int i = 0; i < this.headers.size(); i++) {
+            final Header header = this.headers.get(i);
             if (header.getName().equalsIgnoreCase(name)) {
                 return true;
             }
@@ -281,18 +293,17 @@ public class HeaderGroup implements Cloneable, Serializable {
      * @since 4.0
      */
     public HeaderGroup copy() {
-        HeaderGroup clone = new HeaderGroup();
+        final HeaderGroup clone = new HeaderGroup();
         clone.headers.addAll(this.headers);
         return clone;
     }
 
+    @Override
     public Object clone() throws CloneNotSupportedException {
-        HeaderGroup clone = (HeaderGroup) super.clone();
-        clone.headers.clear();
-        clone.headers.addAll(this.headers);
-        return clone;
+        return super.clone();
     }
 
+    @Override
     public String toString() {
         return this.headers.toString();
     }

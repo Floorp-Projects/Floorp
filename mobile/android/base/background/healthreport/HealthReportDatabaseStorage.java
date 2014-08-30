@@ -24,7 +24,6 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
 import android.util.SparseArray;
 
 /**
@@ -234,22 +233,14 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       return parent.getAbsolutePath() + File.separator + name;
     }
 
-    public static boolean CAN_USE_ABSOLUTE_DB_PATH = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO);
     public HealthReportSQLiteOpenHelper(Context context, File profileDirectory, String name) {
       this(context, profileDirectory, name, CURRENT_VERSION);
     }
 
     // For testing DBs of different versions.
     public HealthReportSQLiteOpenHelper(Context context, File profileDirectory, String name, int version) {
-      super(
-          (CAN_USE_ABSOLUTE_DB_PATH ? context : new AbsolutePathContext(context, profileDirectory)),
-          (CAN_USE_ABSOLUTE_DB_PATH ? getAbsolutePath(profileDirectory, name) : name),
-          null,
-          version);
-
-      if (CAN_USE_ABSOLUTE_DB_PATH) {
-        Logger.pii(LOG_TAG, "Opening: " + getAbsolutePath(profileDirectory, name));
-      }
+      super(context, getAbsolutePath(profileDirectory, name), null, version);
+      Logger.pii(LOG_TAG, "Opening: " + getAbsolutePath(profileDirectory, name));
     }
 
     @Override
