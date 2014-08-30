@@ -76,20 +76,20 @@ public:
     // FIXME: In order to support arbitrary timelines we will need to fix
     // the pause logic to handle the timeline time going backwards.
     MOZ_ASSERT(timelineTime.IsNull() || !IsPaused() ||
-               timelineTime >= mPauseStart,
+               timelineTime >= mHoldTime,
                "if paused, any non-null value of aTime must be at least"
-               " mPauseStart");
+               " mHoldTime");
 
     Nullable<TimeDuration> result; // Initializes to null
     if (!timelineTime.IsNull() && !mStartTime.IsNull()) {
-      result.SetValue((IsPaused() ? mPauseStart : timelineTime) - mStartTime);
+      result.SetValue((IsPaused() ? mHoldTime : timelineTime) - mStartTime);
     }
     return result;
   }
 
   // The beginning of the delay period.
   TimeStamp mStartTime;
-  TimeStamp mPauseStart;
+  TimeStamp mHoldTime;
   uint8_t mPlayState;
   bool mIsRunningOnCompositor;
 
