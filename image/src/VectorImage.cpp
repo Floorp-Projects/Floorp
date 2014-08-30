@@ -540,9 +540,8 @@ VectorImage::RequestRefresh(const TimeStamp& aTime)
     return;
   }
 
+  // TODO: Implement for b666446.
   EvaluateAnimation();
-
-  mSVGDocumentWrapper->TickRefreshDriver();
 
   if (mHasPendingInvalidation) {
     SendInvalidationNotifications();

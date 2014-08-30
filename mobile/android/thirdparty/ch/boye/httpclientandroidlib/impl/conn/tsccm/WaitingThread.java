@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -23,14 +24,13 @@
  * <http://www.apache.org/>.
  *
  */
-
 package ch.boye.httpclientandroidlib.impl.conn.tsccm;
 
 
 import java.util.Date;
 import java.util.concurrent.locks.Condition;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Represents a thread waiting for a connection.
@@ -44,8 +44,10 @@ import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
  *
  *
  * @since 4.0
+ *
+ * @deprecated (4.2)  do not use
  */
-@NotThreadSafe
+@Deprecated
 public class WaitingThread {
 
     /** The condition on which the thread is waiting. */
@@ -69,11 +71,9 @@ public class WaitingThread {
      * @param pool      the pool on which the thread will be waiting,
      *                  or <code>null</code>
      */
-    public WaitingThread(Condition cond, RouteSpecificPool pool) {
+    public WaitingThread(final Condition cond, final RouteSpecificPool pool) {
 
-        if (cond == null) {
-            throw new IllegalArgumentException("Condition must not be null.");
-        }
+        Args.notNull(cond, "Condition");
 
         this.cond = cond;
         this.pool = pool;
@@ -133,7 +133,7 @@ public class WaitingThread {
      *
      * @see #wakeup
      */
-    public boolean await(Date deadline)
+    public boolean await(final Date deadline)
         throws InterruptedException {
 
         // This is only a sanity check. We cannot synchronize here,
@@ -145,8 +145,9 @@ public class WaitingThread {
                  "\nwaiter: " + this.waiter);
         }
 
-        if (aborted)
+        if (aborted) {
             throw new InterruptedException("Operation interrupted");
+        }
 
         this.waiter = Thread.currentThread();
 
@@ -158,8 +159,9 @@ public class WaitingThread {
                 this.cond.await();
                 success = true;
             }
-            if (aborted)
+            if (aborted) {
                 throw new InterruptedException("Operation interrupted");
+            }
         } finally {
             this.waiter = null;
         }

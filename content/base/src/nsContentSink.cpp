@@ -1177,7 +1177,7 @@ nsContentSink::StartLayout(bool aIgnorePendingSheets)
   // If the document we are loading has a reference or it is a
   // frameset document, disable the scroll bars on the views.
 
-  mDocument->SetScrollToRef(mDocumentURI);
+  mDocument->SetScrollToRef(mDocument->GetDocumentURI());
 }
 
 void

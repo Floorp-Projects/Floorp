@@ -107,6 +107,7 @@ namespace CrashReporter {
 #ifdef XP_WIN32
 typedef wchar_t XP_CHAR;
 typedef std::wstring xpstring;
+#define XP_TEXT(x) L##x
 #define CONVERT_XP_CHAR_TO_UTF16(x) x
 #define XP_STRLEN(x) wcslen(x)
 #define my_strlen strlen
@@ -126,6 +127,7 @@ typedef std::wstring xpstring;
 #else
 typedef char XP_CHAR;
 typedef std::string xpstring;
+#define XP_TEXT(x) x
 #define CONVERT_XP_CHAR_TO_UTF16(x) NS_ConvertUTF8toUTF16(x)
 #define CRASH_REPORTER_FILENAME "crashreporter"
 #define PATH_SEPARATOR "/"
@@ -143,17 +145,17 @@ typedef std::string xpstring;
 #define sys_close close
 #define sys_fork fork
 #define sys_open open
+#define sys_read read
 #define sys_write write
 #endif
 #endif // XP_WIN32
 
 #ifndef XP_LINUX
-static const XP_CHAR dumpFileExtension[] = {'.', 'd', 'm', 'p',
-                                            '\0'}; // .dmp
+static const XP_CHAR dumpFileExtension[] = XP_TEXT(".dmp");
 #endif
 
-static const XP_CHAR extraFileExtension[] = {'.', 'e', 'x', 't',
-                                             'r', 'a', '\0'}; // .extra
+static const XP_CHAR extraFileExtension[] = XP_TEXT(".extra");
+static const XP_CHAR memoryReportExtension[] = XP_TEXT(".memory.json.gz");
 
 static const char kCrashMainID[] = "crash.main.1\n";
 
@@ -161,6 +163,7 @@ static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
 
 static XP_CHAR* pendingDirectory;
 static XP_CHAR* crashReporterPath;
+static XP_CHAR* memoryReportPath;
 
 // Where crash events should go.
 static XP_CHAR* eventsDirectory;
@@ -208,7 +211,6 @@ static const char kOOMAllocationSizeParameter[] = "OOMAllocationSize=";
 static const int kOOMAllocationSizeParameterLen =
   sizeof(kOOMAllocationSizeParameter)-1;
 
-
 #ifdef XP_WIN32
 static const char kSysMemoryParameter[] = "SystemMemoryUsePercentage=";
 static const int kSysMemoryParameterLen = sizeof(kSysMemoryParameter)-1;
@@ -255,6 +257,10 @@ static const char kBreakpadReserveSizeParameter[] = "BreakpadReserveSize=";
 static const int kBreakpadReserveSizeParameterLen =
   sizeof(kBreakpadReserveSizeParameter)-1;
 #endif
+
+static const char kMemoryReportParameter[] = "ContainsMemoryReport=1\n";
+static const int kMemoryReportParameterLen =
+  sizeof(kMemoryReportParameter)-1;
 
 // this holds additional data sent via the API
 static Mutex* crashReporterAPILock;
@@ -462,6 +468,56 @@ void AnnotateOOMAllocationSize(size_t size)
   gOOMAllocationSize = size;
 }
 
+#ifndef XP_WIN
+// Like Windows CopyFile for *nix
+bool copy_file(const char* from, const char* to)
+{
+  const int kBufSize = 4096;
+  int fdfrom = sys_open(from, O_RDONLY, 0);
+  if (fdfrom < 0) {
+    return false;
+  }
+
+  bool ok = false;
+
+  int fdto = sys_open(to, O_WRONLY | O_CREAT, 0666);
+  if (fdto < 0) {
+    sys_close(fdfrom);
+    return false;
+  }
+
+  char buf[kBufSize];
+  while (true) {
+    int r = sys_read(fdfrom, buf, kBufSize);
+    if (r == 0) {
+      ok = true;
+      break;
+    }
+    if (r < 0) {
+      break;
+    }
+    char* wbuf = buf;
+    while (r) {
+      int w = sys_write(fdto, wbuf, r);
+      if (w > 0) {
+        r -= w;
+        wbuf += w;
+      } else if (errno != EINTR) {
+        break;
+      }
+    }
+    if (r) {
+      break;
+    }
+  }
+
+  sys_close(fdfrom);
+  sys_close(fdto);
+
+  return ok;
+}
+#endif
+
 bool MinidumpCallback(
 #ifdef XP_LINUX
                       const MinidumpDescriptor& descriptor,
@@ -502,6 +558,27 @@ bool MinidumpCallback(
   p -= 4;
 #endif
   Concat(p, extraFileExtension, &size);
+
+  static XP_CHAR memoryReportLocalPath[XP_PATH_MAX];
+  size = XP_PATH_MAX;
+#ifndef XP_LINUX
+  p = Concat(memoryReportLocalPath, dump_path, &size);
+  p = Concat(p, XP_PATH_SEPARATOR, &size);
+  p = Concat(p, minidump_id, &size);
+#else
+  p = Concat(memoryReportLocalPath, descriptor.path(), &size);
+  // Skip back past the .dmp extension
+  p -= 4;
+#endif
+  Concat(p, memoryReportExtension, &size);
+
+  if (memoryReportPath) {
+#ifdef XP_WIN
+    CopyFile(memoryReportPath, memoryReportLocalPath, false);
+#else
+    copy_file(memoryReportPath, memoryReportLocalPath);
+#endif
+  }
 
   if (headlessClient) {
     // Leave a marker indicating that there was a crash.
@@ -720,6 +797,11 @@ bool MinidumpCallback(
                   &nBytes, nullptr);
         WriteFile(hFile, "\n", 1, &nBytes, nullptr);
       }
+
+      if (memoryReportPath) {
+        WriteFile(hFile, kMemoryReportParameter,
+                  kMemoryReportParameterLen, &nBytes, nullptr);
+      }
       CloseHandle(hFile);
     }
   }
@@ -791,6 +873,10 @@ bool MinidumpCallback(
         unused << sys_write(fd, oomAllocationSizeBuffer,
                             oomAllocationSizeBufferLen);
         unused << sys_write(fd, "\n", 1);
+      }
+      if (memoryReportPath) {
+        unused << sys_write(fd, kMemoryReportParameter,
+                            kMemoryReportParameterLen);
       }
       sys_close(fd);
     }
@@ -1532,6 +1618,11 @@ nsresult UnsetExceptionHandler()
     eventsDirectory = nullptr;
   }
 
+  if (memoryReportPath) {
+    NS_Free(memoryReportPath);
+    memoryReportPath = nullptr;
+  }
+
 #ifdef XP_MACOSX
   posix_spawnattr_destroy(&spawnattr);
 #endif
@@ -2197,6 +2288,23 @@ bool GetCrashEventsDir(nsAString& aPath)
 
   aPath = CONVERT_XP_CHAR_TO_UTF16(eventsDirectory);
   return true;
+}
+
+void
+SetMemoryReportFile(nsIFile* aFile)
+{
+  if (!gExceptionHandler) {
+    return;
+  }
+#ifdef XP_WIN
+  nsString path;
+  aFile->GetPath(path);
+  memoryReportPath = ToNewUnicode(path);
+#else
+  nsCString path;
+  aFile->GetNativePath(path);
+  memoryReportPath = ToNewCString(path);
+#endif
 }
 
 static void

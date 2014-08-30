@@ -33,6 +33,7 @@ import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpException;
 import ch.boye.httpclientandroidlib.HttpMessage;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
 import ch.boye.httpclientandroidlib.entity.BasicHttpEntity;
 import ch.boye.httpclientandroidlib.entity.ContentLengthStrategy;
 import ch.boye.httpclientandroidlib.impl.io.ChunkedInputStream;
@@ -40,6 +41,7 @@ import ch.boye.httpclientandroidlib.impl.io.ContentLengthInputStream;
 import ch.boye.httpclientandroidlib.impl.io.IdentityInputStream;
 import ch.boye.httpclientandroidlib.io.SessionInputBuffer;
 import ch.boye.httpclientandroidlib.protocol.HTTP;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * HTTP entity deserializer.
@@ -56,17 +58,18 @@ import ch.boye.httpclientandroidlib.protocol.HTTP;
  * transparently for the consumer.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link ch.boye.httpclientandroidlib.impl.BHttpConnectionBase}
  */
+@Immutable // assuming injected dependencies are immutable
+@Deprecated
 public class EntityDeserializer {
 
     private final ContentLengthStrategy lenStrategy;
 
     public EntityDeserializer(final ContentLengthStrategy lenStrategy) {
         super();
-        if (lenStrategy == null) {
-            throw new IllegalArgumentException("Content length strategy may not be null");
-        }
-        this.lenStrategy = lenStrategy;
+        this.lenStrategy = Args.notNull(lenStrategy, "Content length strategy");
     }
 
     /**
@@ -87,9 +90,9 @@ public class EntityDeserializer {
     protected BasicHttpEntity doDeserialize(
             final SessionInputBuffer inbuffer,
             final HttpMessage message) throws HttpException, IOException {
-        BasicHttpEntity entity = new BasicHttpEntity();
+        final BasicHttpEntity entity = new BasicHttpEntity();
 
-        long len = this.lenStrategy.determineLength(message);
+        final long len = this.lenStrategy.determineLength(message);
         if (len == ContentLengthStrategy.CHUNKED) {
             entity.setChunked(true);
             entity.setContentLength(-1);
@@ -104,11 +107,11 @@ public class EntityDeserializer {
             entity.setContent(new ContentLengthInputStream(inbuffer, len));
         }
 
-        Header contentTypeHeader = message.getFirstHeader(HTTP.CONTENT_TYPE);
+        final Header contentTypeHeader = message.getFirstHeader(HTTP.CONTENT_TYPE);
         if (contentTypeHeader != null) {
             entity.setContentType(contentTypeHeader);
         }
-        Header contentEncodingHeader = message.getFirstHeader(HTTP.CONTENT_ENCODING);
+        final Header contentEncodingHeader = message.getFirstHeader(HTTP.CONTENT_ENCODING);
         if (contentEncodingHeader != null) {
             entity.setContentEncoding(contentEncodingHeader);
         }
@@ -132,12 +135,8 @@ public class EntityDeserializer {
     public HttpEntity deserialize(
             final SessionInputBuffer inbuffer,
             final HttpMessage message) throws HttpException, IOException {
-        if (inbuffer == null) {
-            throw new IllegalArgumentException("Session input buffer may not be null");
-        }
-        if (message == null) {
-            throw new IllegalArgumentException("HTTP message may not be null");
-        }
+        Args.notNull(inbuffer, "Session input buffer");
+        Args.notNull(message, "HTTP message");
         return doDeserialize(inbuffer, message);
     }
 

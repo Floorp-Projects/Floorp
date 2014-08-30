@@ -52,8 +52,8 @@ using namespace CrashReporter;
 
 typedef struct {
   HWND hDlg;
-  wstring dumpFile;
   map<wstring,wstring> queryParameters;
+  map<wstring,wstring> files;
   wstring sendURL;
 
   wstring serverResponse;
@@ -399,7 +399,7 @@ static DWORD WINAPI SendThreadProc(LPVOID param)
     google_breakpad::CrashReportSender sender(L"");
     finishedOk = (sender.SendCrashReport(td->sendURL,
                                          td->queryParameters,
-                                         td->dumpFile,
+                                         td->files,
                                          &td->serverResponse)
                   == google_breakpad::RESULT_SUCCEEDED);
     if (finishedOk) {
@@ -1293,14 +1293,19 @@ void UIShowDefaultUI()
              MB_OK | MB_ICONSTOP);
 }
 
-bool UIShowCrashUI(const string& dumpFile,
+bool UIShowCrashUI(const StringTable& files,
                    const StringTable& queryParameters,
                    const string& sendURL,
                    const vector<string>& restartArgs)
 {
   gSendData.hDlg = nullptr;
-  gSendData.dumpFile = UTF8ToWide(dumpFile);
   gSendData.sendURL = UTF8ToWide(sendURL);
+
+  for (StringTable::const_iterator i = files.begin();
+       i != files.end();
+       i++) {
+    gSendData.files[UTF8ToWide(i->first)] = UTF8ToWide(i->second);
+  }
 
   for (StringTable::const_iterator i = queryParameters.begin();
        i != queryParameters.end();

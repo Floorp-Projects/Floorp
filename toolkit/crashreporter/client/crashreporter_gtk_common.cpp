@@ -47,7 +47,7 @@ GtkWidget* gRestartButton = 0;
 
 bool gInitialized = false;
 bool gDidTrySend = false;
-string gDumpFile;
+StringTable gFiles;
 StringTable gQueryParameters;
 string gHttpProxy;
 string gAuth;
@@ -196,8 +196,7 @@ gpointer SendThread(gpointer args)
   bool success = google_breakpad::HTTPUpload::SendRequest
     (gSendURL,
      gQueryParameters,
-     gDumpFile,
-     "upload_file_minidump",
+     gFiles,
      gHttpProxy, gAuth,
      gCACertificateFile,
      &response,

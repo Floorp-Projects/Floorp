@@ -56,10 +56,13 @@ function check_submit_pending(tab, crashes) {
       // check the JSON content vs. what we submitted
       let result = JSON.parse(browser.contentDocument.documentElement.textContent);
       is(result.upload_file_minidump, "MDMP", "minidump file sent properly");
+      is(result.memory_report, "Let's pretend this is a memory report",
+         "memory report sent properly");
       is(result.Throttleable, 0, "correctly sent as non-throttleable");
       // we checked these, they're set by the submission process,
       // so they won't be in the "extra" data.
       delete result.upload_file_minidump;
+      delete result.memory_report;
       delete result.Throttleable;
       // Likewise, this is discarded before it gets to the server
       delete SubmittedCrash.extra.ServerURL;

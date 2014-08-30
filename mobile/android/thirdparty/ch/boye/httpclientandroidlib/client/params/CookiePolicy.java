@@ -33,7 +33,10 @@ import ch.boye.httpclientandroidlib.annotation.Immutable;
  * Standard cookie specifications supported by HttpClient.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link ch.boye.httpclientandroidlib.client.config.CookieSpecs}.
  */
+@Deprecated
 @Immutable
 public final class CookiePolicy {
 
@@ -64,12 +67,12 @@ public final class CookiePolicy {
     public static final String BEST_MATCH = "best-match";
 
     /**
-     * The policy that ignores cookies. 
-     * 
+     * The policy that ignores cookies.
+     *
      * @since 4.1-beta1
      */
     public static final String IGNORE_COOKIES = "ignoreCookies";
-    
+
     private CookiePolicy() {
         super();
     }
