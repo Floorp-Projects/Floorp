@@ -551,6 +551,7 @@ class NodeBuilder
     bool catchClause(HandleValue var, HandleValue guard, HandleValue body, TokenPos *pos,
                      MutableHandleValue dst);
 
+    bool prototypeMutation(HandleValue val, TokenPos *pos, MutableHandleValue dst);
     bool propertyInitializer(HandleValue key, HandleValue val, PropKind kind, bool isShorthand,
                              bool isMethod, TokenPos *pos, MutableHandleValue dst);
 
@@ -1309,6 +1310,18 @@ NodeBuilder::propertyPattern(HandleValue key, HandleValue patt, bool isShorthand
                    "value", patt,
                    "kind", kindName,
                    "shorthand", isShorthandVal,
+                   dst);
+}
+
+bool
+NodeBuilder::prototypeMutation(HandleValue val, TokenPos *pos, MutableHandleValue dst)
+{
+    RootedValue cb(cx, callbacks[AST_PROTOTYPEMUTATION]);
+    if (!cb.isNull())
+        return callback(cb, val, pos, dst);
+
+    return newNode(AST_PROTOTYPEMUTATION, pos,
+                   "value", val,
                    dst);
 }
 
@@ -3013,6 +3026,12 @@ ASTSerializer::propertyName(ParseNode *pn, MutableHandleValue dst)
 bool
 ASTSerializer::property(ParseNode *pn, MutableHandleValue dst)
 {
+    if (pn->isKind(PNK_MUTATEPROTO)) {
+        RootedValue val(cx);
+        return expression(pn->pn_kid, &val) &&
+               builder.prototypeMutation(val, &pn->pn_pos, dst);
+    }
+
     PropKind kind;
     switch (pn->getOp()) {
       case JSOP_INITPROP:

@@ -3041,7 +3041,11 @@ EmitDestructuringDecls(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp prologOp
 
     MOZ_ASSERT(pattern->isKind(PNK_OBJECT));
     for (ParseNode *member = pattern->pn_head; member; member = member->pn_next) {
-        ParseNode *target = member->pn_right;
+        MOZ_ASSERT(member->isKind(PNK_MUTATEPROTO) ||
+                   member->isKind(PNK_COLON) ||
+                   member->isKind(PNK_SHORTHAND));
+
+        ParseNode *target = member->isKind(PNK_MUTATEPROTO) ? member->pn_kid : member->pn_right;
         DestructuringDeclEmitter emitter =
             target->isKind(PNK_NAME) ? EmitDestructuringDecl : EmitDestructuringDecls;
         if (!emitter(cx, bce, prologOp, target))
@@ -3361,31 +3365,41 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
         // initialiser.
         bool needsGetElem = true;
 
-        JS_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
-        ParseNode *key = member->pn_left;
-
-        if (key->isKind(PNK_NUMBER)) {
-            if (!EmitNumberOp(cx, key->pn_dval, bce))                  // ... OBJ OBJ KEY
+        ParseNode *subpattern;
+        if (member->isKind(PNK_MUTATEPROTO)) {
+            if (!EmitAtomOp(cx, cx->names().proto, JSOP_GETPROP, bce)) // ... OBJ PROP
                 return false;
-        } else if (key->isKind(PNK_NAME) || key->isKind(PNK_STRING)) {
-            PropertyName *name = key->pn_atom->asPropertyName();
-
-            // The parser already checked for atoms representing indexes and
-            // used PNK_NUMBER instead, but also watch for ids which TI treats
-            // as indexes for simplification of downstream analysis.
-            jsid id = NameToId(name);
-            if (id != types::IdToTypeId(id)) {
-                if (!EmitTree(cx, bce, key))                           // ... OBJ OBJ KEY
-                    return false;
-            } else {
-                if (!EmitAtomOp(cx, name, JSOP_GETPROP, bce))          // ... OBJ PROP
-                    return false;
-                needsGetElem = false;
-            }
+            needsGetElem = false;
+            subpattern = member->pn_kid;
         } else {
-            JS_ASSERT(key->isKind(PNK_COMPUTED_NAME));
-            if (!EmitTree(cx, bce, key->pn_kid))                       // ... OBJ OBJ KEY
-                return false;
+            MOZ_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
+
+            ParseNode *key = member->pn_left;
+            if (key->isKind(PNK_NUMBER)) {
+                if (!EmitNumberOp(cx, key->pn_dval, bce))              // ... OBJ OBJ KEY
+                    return false;
+            } else if (key->isKind(PNK_NAME) || key->isKind(PNK_STRING)) {
+                PropertyName *name = key->pn_atom->asPropertyName();
+
+                // The parser already checked for atoms representing indexes and
+                // used PNK_NUMBER instead, but also watch for ids which TI treats
+                // as indexes for simplification of downstream analysis.
+                jsid id = NameToId(name);
+                if (id != types::IdToTypeId(id)) {
+                    if (!EmitTree(cx, bce, key))                       // ... OBJ OBJ KEY
+                        return false;
+                } else {
+                    if (!EmitAtomOp(cx, name, JSOP_GETPROP, bce))      // ...OBJ PROP
+                        return false;
+                    needsGetElem = false;
+                }
+            } else {
+                JS_ASSERT(key->isKind(PNK_COMPUTED_NAME));
+                if (!EmitTree(cx, bce, key->pn_kid))                   // ... OBJ OBJ KEY
+                    return false;
+            }
+
+            subpattern = member->pn_right;
         }
 
         // Get the property value if not done already.
@@ -3393,7 +3407,6 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
             return false;
 
         // Destructure PROP per this member's subpattern.
-        ParseNode *subpattern = member->pn_right;
         int32_t depthBefore = bce->stackDepth;
         if (!EmitDestructuringLHS(cx, bce, subpattern, emitOption))
             return false;
@@ -6060,6 +6073,17 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!UpdateSourceCoordNotes(cx, bce, member->pn_pos.begin))
             return false;
 
+        // Handle __proto__: v specially because *only* this form, and no other
+        // involving "__proto__", performs [[Prototype]] mutation.
+        if (member->isKind(PNK_MUTATEPROTO)) {
+            if (!EmitTree(cx, bce, member->pn_kid))
+                return false;
+            obj = nullptr;
+            if (!Emit1(cx, bce, JSOP_MUTATEPROTO))
+                return false;
+            continue;
+        }
+
         /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
         ParseNode *key = member->pn_left;
         bool isIndex = false;
@@ -6089,9 +6113,9 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
 
         JSOp op = member->getOp();
-        JS_ASSERT(op == JSOP_INITPROP ||
-                  op == JSOP_INITPROP_GETTER ||
-                  op == JSOP_INITPROP_SETTER);
+        MOZ_ASSERT(op == JSOP_INITPROP ||
+                   op == JSOP_INITPROP_GETTER ||
+                   op == JSOP_INITPROP_SETTER);
 
         if (op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER)
             obj = nullptr;
@@ -6109,21 +6133,9 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         } else {
             JS_ASSERT(key->isKind(PNK_NAME) || key->isKind(PNK_STRING));
 
-            // If we have { __proto__: expr }, implement prototype mutation.
-            if (op == JSOP_INITPROP && key->pn_atom == cx->names().proto) {
-                obj = nullptr;
-                if (Emit1(cx, bce, JSOP_MUTATEPROTO) < 0)
-                    return false;
-                continue;
-            }
-
             jsatomid index;
             if (!bce->makeAtomIndex(key->pn_atom, &index))
                 return false;
-
-            MOZ_ASSERT(op == JSOP_INITPROP ||
-                       op == JSOP_INITPROP_GETTER ||
-                       op == JSOP_INITPROP_SETTER);
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());

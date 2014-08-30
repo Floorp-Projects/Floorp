@@ -82,6 +82,7 @@ enum PropKind {
     PROP_INIT = 0,
     PROP_GETTER,
     PROP_SETTER,
+    PROP_MUTATEPROTO,
     PROP_LIMIT
 };
 

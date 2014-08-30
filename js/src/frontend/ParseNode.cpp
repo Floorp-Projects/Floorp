@@ -459,17 +459,24 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
         for (ParseNode *opn2 = opn->pn_head; opn2; opn2 = opn2->pn_next) {
             ParseNode *pn2;
             if (opn->isKind(PNK_OBJECT)) {
-                JS_ASSERT(opn2->isArity(PN_BINARY));
-                JS_ASSERT(opn2->isKind(PNK_COLON) || opn2->isKind(PNK_SHORTHAND));
+                if (opn2->isKind(PNK_MUTATEPROTO)) {
+                    ParseNode *target = cloneLeftHandSide(opn2->pn_kid);
+                    if (!target)
+                        return nullptr;
+                    pn2 = handler.new_<UnaryNode>(PNK_MUTATEPROTO, JSOP_NOP, opn2->pn_pos, target);
+                } else {
+                    JS_ASSERT(opn2->isArity(PN_BINARY));
+                    JS_ASSERT(opn2->isKind(PNK_COLON) || opn2->isKind(PNK_SHORTHAND));
 
-                ParseNode *tag = cloneParseTree(opn2->pn_left);
-                if (!tag)
-                    return nullptr;
-                ParseNode *target = cloneLeftHandSide(opn2->pn_right);
-                if (!target)
-                    return nullptr;
+                    ParseNode *tag = cloneParseTree(opn2->pn_left);
+                    if (!tag)
+                        return nullptr;
+                    ParseNode *target = cloneLeftHandSide(opn2->pn_right);
+                    if (!target)
+                        return nullptr;
 
-                pn2 = handler.new_<BinaryNode>(opn2->getKind(), JSOP_INITPROP, opn2->pn_pos, tag, target);
+                    pn2 = handler.new_<BinaryNode>(opn2->getKind(), JSOP_INITPROP, opn2->pn_pos, tag, target);
+                }
             } else if (opn2->isArity(PN_NULLARY)) {
                 JS_ASSERT(opn2->isKind(PNK_ELISION));
                 pn2 = cloneParseTree(opn2);
