@@ -239,22 +239,6 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
         MOZ_ASSERT(node->isArity(PN_BINARY));
         return ContainsHoistedDeclaration(cx, node->pn_right, result);
 
-      // PNK_SEQ has two purposes.
-      //
-      // The first is to prepend destructuring operations to the body of a
-      // deprecated function expression closure: irrelevant here, as this
-      // function doesn't recur into PNK_FUNCTION, and this method's sole
-      // caller acts upon statements nested in if-statements not found in
-      // destructuring operations.
-      //
-      // The second is to provide a place for a hoisted declaration to go, in
-      // the bizarre for-in/of loops that have as target a declaration with an
-      // assignment, e.g. |for (var i = 0 in expr)|.  This case is sadly still
-      // relevant, so we can't banish this ParseNodeKind to the unreachable
-      // list and must check every list member.
-      case PNK_SEQ:
-        return ListContainsHoistedDeclaration(cx, &node->as<ListNode>(), result);
-
       case PNK_FOR: {
         MOZ_ASSERT(node->isArity(PN_BINARY));
 
@@ -287,11 +271,8 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
             // for (target of ...), where only target may introduce hoisted
             // declarations.
             //
-            // Either way, if |target| contains a declaration, it's either
-            // |loopHead|'s first kid, *or* that declaration was hoisted to
-            // become a child of an ancestral PNK_SEQ node.  The former case we
-            // detect here.  The latter case is handled by this method
-            // recurring on PNK_SEQ, above.
+            // Either way, if |target| contains a declaration, it's |loopHead|'s
+            // first kid.
             MOZ_ASSERT(loopHead->isArity(PN_TERNARY));
 
             ParseNode* decl = loopHead->pn_kid1;

@@ -141,7 +141,6 @@ class UpvarCookie
     F(EXPORT_SPEC_LIST) \
     F(EXPORT_SPEC) \
     F(EXPORT_BATCH_SPEC) \
-    F(SEQ) \
     F(FORIN) \
     F(FOROF) \
     F(FORHEAD) \
@@ -240,12 +239,21 @@ enum ParseNodeKind
  *                          pn_cookie: static level and var index for function
  *                          pn_dflags: PND_* definition/use flags (see below)
  *                          pn_blockid: block id number
- * PNK_ARGSBODY list        list of formal parameters followed by:
+ * PNK_ARGSBODY list        list of formal parameters with
+ *                              PNK_NAME node with non-empty name for
+ *                                SingleNameBinding without Initializer
+ *                              PNK_ASSIGN node for SingleNameBinding with
+ *                                Initializer
+ *                              PNK_NAME node with empty name for destructuring
+ *                                pn_expr: PNK_ARRAY, PNK_OBJECT, or PNK_ASSIGN
+ *                                  PNK_ARRAY or PNK_OBJECT for BindingPattern
+ *                                    without Initializer
+ *                                  PNK_ASSIGN for BindingPattern with
+ *                                    Initializer
+ *                          followed by:
  *                              PNK_STATEMENTLIST node for function body
  *                                statements,
- *                              PNK_RETURN for expression closure, or
- *                              PNK_SEQ for expression closure with
- *                                destructured formal parameters
+ *                              PNK_RETURN for expression closure
  *                          pn_count: 1 + number of formal parameters
  *                          pn_tree: PNK_ARGSBODY or PNK_STATEMENTLIST node
  * PNK_SPREAD   unary       pn_kid: expression being spread
@@ -689,7 +697,7 @@ class ParseNode
                                            still valid, but this use no longer
                                            optimizable via an upvar opcode */
 #define PND_CLOSED              0x40    /* variable is closed over */
-#define PND_DEFAULT             0x80    /* definition is an arg with a default */
+// 0x80 is available
 #define PND_IMPLICITARGUMENTS  0x100    /* the definition is a placeholder for
                                            'arguments' that has been converted
                                            into a definition after the function
@@ -706,8 +714,7 @@ class ParseNode
                                            needs popping */
 #define PNX_FUNCDEFS    0x02            /* contains top-level function statements */
 #define PNX_SETCALL     0x04            /* call expression in lvalue context */
-#define PNX_DESTRUCT    0x08            /* code evaluating destructuring
-                                           arguments occurs before function body */
+/* 0x08 is available */
 #define PNX_ARRAYHOLESPREAD 0x10        /* one or more of
                                            1. array initialiser has holes
                                            2. array initializer has spread node */
