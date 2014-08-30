@@ -111,11 +111,12 @@ public:
     if (GenerateKeyPair(rootPublicKey, rootPrivateKey) != Success) {
       return false;
     }
-    rootSPKI = SECKEY_EncodeDERSubjectPublicKeyInfo(rootPublicKey.get());
-    if (!rootSPKI) {
+    ScopedSECItem rootSPKIItem(
+      SECKEY_EncodeDERSubjectPublicKeyInfo(rootPublicKey.get()));
+    if (!rootSPKIItem) {
       return false;
     }
-
+    rootSPKI.assign(rootSPKIItem->data, rootSPKIItem->len);
     return true;
   }
 
@@ -152,7 +153,7 @@ public:
     }
 
     Input rootSPKIDER;
-    if (InitInputFromSECItem(rootSPKI.get(), rootSPKIDER) != Success) {
+    if (rootSPKIDER.Init(rootSPKI.data(), rootSPKI.length()) != Success) {
       abort();
     }
     endEntityCertID = new (std::nothrow) CertID(rootNameDERInput, rootSPKIDER,
@@ -163,7 +164,7 @@ public:
   }
 
   static ScopedSECKEYPrivateKey rootPrivateKey;
-  static ScopedSECItem rootSPKI;
+  static ByteString rootSPKI;
   static long rootIssuedCount;
   OCSPTestTrustDomain trustDomain;
 
@@ -175,7 +176,7 @@ public:
 
 /*static*/ ScopedSECKEYPrivateKey
               pkixocsp_VerifyEncodedResponse::rootPrivateKey;
-/*static*/ ScopedSECItem pkixocsp_VerifyEncodedResponse::rootSPKI;
+/*static*/ ByteString pkixocsp_VerifyEncodedResponse::rootSPKI;
 /*static*/ long pkixocsp_VerifyEncodedResponse::rootIssuedCount = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
