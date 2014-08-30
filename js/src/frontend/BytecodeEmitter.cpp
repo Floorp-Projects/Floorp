@@ -3362,80 +3362,74 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
          * initialiser.  Set |subpattern| to the lvalue node, which is in the
          * value-initializing position.
          */
-        ParseNode *subpattern;
-        {
-            doElemOp = true;
-            JS_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
+        doElemOp = true;
+        JS_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
 
-            /* Duplicate the value being destructured to use as a reference base. */
-            if (Emit1(cx, bce, JSOP_DUP) < 0)
+        /* Duplicate the value being destructured to use as a reference base. */
+        if (Emit1(cx, bce, JSOP_DUP) < 0)
+            return false;
+
+        ParseNode *key = member->pn_left;
+        if (key->isKind(PNK_NUMBER)) {
+            if (!EmitNumberOp(cx, key->pn_dval, bce))
                 return false;
+        } else if (key->isKind(PNK_NAME) || key->isKind(PNK_STRING)) {
+            PropertyName *name = key->pn_atom->asPropertyName();
 
-            ParseNode *key = member->pn_left;
-            if (key->isKind(PNK_NUMBER)) {
-                if (!EmitNumberOp(cx, key->pn_dval, bce))
+            // The parser already checked for atoms representing indexes and
+            // used PNK_NUMBER instead, but also watch for ids which TI treats
+            // as indexes for simplification of downstream analysis.
+            jsid id = NameToId(name);
+            if (id != types::IdToTypeId(id)) {
+                if (!EmitTree(cx, bce, key))
                     return false;
-            } else if (key->isKind(PNK_NAME) || key->isKind(PNK_STRING)) {
-                PropertyName *name = key->pn_atom->asPropertyName();
-
-                // The parser already checked for atoms representing indexes and
-                // used PNK_NUMBER instead, but also watch for ids which TI treats
-                // as indexes for simplification of downstream analysis.
-                jsid id = NameToId(name);
-                if (id != types::IdToTypeId(id)) {
-                    if (!EmitTree(cx, bce, key))
-                        return false;
-                } else {
-                    if (!EmitAtomOp(cx, name, JSOP_GETPROP, bce))
-                        return false;
-                    doElemOp = false;
-                }
             } else {
-                JS_ASSERT(key->isKind(PNK_COMPUTED_NAME));
-                if (!EmitTree(cx, bce, key->pn_kid))
+                if (!EmitAtomOp(cx, name, JSOP_GETPROP, bce))
                     return false;
+                doElemOp = false;
             }
-
-            if (doElemOp) {
-                /*
-                 * Ok, get the value of the matching property name.  This leaves
-                 * that value on top of the value being destructured, so the stack
-                 * is one deeper than when we started.
-                 */
-                if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
-                    return false;
-                JS_ASSERT(bce->stackDepth >= stackDepth + 1);
-            }
-
-            subpattern = member->pn_right;
+        } else {
+            JS_ASSERT(key->isKind(PNK_COMPUTED_NAME));
+            if (!EmitTree(cx, bce, key->pn_kid))
+                return false;
         }
 
-        {
-            int32_t depthBefore = bce->stackDepth;
-            if (!EmitDestructuringLHS(cx, bce, subpattern, emitOption))
+        if (doElemOp) {
+            /*
+             * Ok, get the value of the matching property name.  This leaves
+             * that value on top of the value being destructured, so the stack
+             * is one deeper than when we started.
+             */
+            if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
                 return false;
+            JS_ASSERT(bce->stackDepth >= stackDepth + 1);
+        }
 
-            if (emitOption == PushInitialValues) {
-                /*
-                 * After '[x,y]' in 'let ([[x,y], z] = o)', the stack is
-                 *   | to-be-destructured-value | x | y |
-                 * The goal is:
-                 *   | x | y | z |
-                 * so emit a pick to produce the intermediate state
-                 *   | x | y | to-be-destructured-value |
-                 * before destructuring z. This gives the loop invariant that
-                 * the to-be-destructured-value is always on top of the stack.
-                 */
-                JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
-                uint32_t pickDistance = (uint32_t)((bce->stackDepth + 1) - depthBefore);
-                if (pickDistance > 0) {
-                    if (pickDistance > UINT8_MAX) {
-                        bce->reportError(subpattern, JSMSG_TOO_MANY_LOCALS);
-                        return false;
-                    }
-                    if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)pickDistance) < 0)
-                        return false;
+        ParseNode *subpattern = member->pn_right;
+        int32_t depthBefore = bce->stackDepth;
+        if (!EmitDestructuringLHS(cx, bce, subpattern, emitOption))
+            return false;
+
+        if (emitOption == PushInitialValues) {
+            /*
+             * After '[x,y]' in 'let ([[x,y], z] = o)', the stack is
+             *   | to-be-destructured-value | x | y |
+             * The goal is:
+             *   | x | y | z |
+             * so emit a pick to produce the intermediate state
+             *   | x | y | to-be-destructured-value |
+             * before destructuring z. This gives the loop invariant that
+             * the to-be-destructured-value is always on top of the stack.
+             */
+            JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
+            uint32_t pickDistance = (uint32_t)((bce->stackDepth + 1) - depthBefore);
+            if (pickDistance > 0) {
+                if (pickDistance > UINT8_MAX) {
+                    bce->reportError(subpattern, JSMSG_TOO_MANY_LOCALS);
+                    return false;
                 }
+                if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)pickDistance) < 0)
+                    return false;
             }
         }
     }
