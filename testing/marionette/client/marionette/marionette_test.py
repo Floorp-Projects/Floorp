@@ -85,8 +85,101 @@ def skip_if_b2g(target):
             sys.stderr.write('skipping ... ')
     return wrapper
 
+def parameterized(func_suffix, *args, **kwargs):
+    """
+    A decorator that can generate methods given a base method and some data.
+
+    **func_suffix** is used as a suffix for the new created method and must be
+    unique given a base method. if **func_suffix** countains characters that
+    are not allowed in normal python function name, these characters will be
+    replaced with "_".
+
+    This decorator can be used more than once on a single base method. The class
+    must have a metaclass of :class:`MetaParameterized`.
+
+    Example::
+
+      # This example will generate two methods:
+      #
+      # - MyTestCase.test_it_1
+      # - MyTestCase.test_it_2
+      #
+      class MyTestCase(MarionetteTestCase):
+          @parameterized("1", 5, named='name')
+          @parameterized("2", 6, named='name2')
+          def test_it(self, value, named=None):
+              print value, named
+
+    :param func_suffix: will be used as a suffix for the new method
+    :param \*args: arguments to pass to the new method
+    :param \*\*kwargs: named arguments to pass to the new method
+    """
+    def wrapped(func):
+        if not hasattr(func, 'metaparameters'):
+            func.metaparameters = []
+        func.metaparameters.append((func_suffix, args, kwargs))
+        return func
+    return wrapped
+
+def with_parameters(parameters):
+    """
+    A decorator that can generate methods given a base method and some data.
+    Acts like :func:`parameterized`, but define all methods in one call.
+
+    Example::
+
+      # This example will generate two methods:
+      #
+      # - MyTestCase.test_it_1
+      # - MyTestCase.test_it_2
+      #
+
+      DATA = [("1", [5], {'named':'name'}), ("2", [6], {'named':'name2'})]
+
+      class MyTestCase(MarionetteTestCase):
+          @with_parameters(DATA)
+          def test_it(self, value, named=None):
+              print value, named
+
+    :param parameters: list of tuples (**func_suffix**, **args**, **kwargs**)
+                       defining parameters like in :func:`todo`.
+    """
+    def wrapped(func):
+        func.metaparameters = parameters
+        return func
+    return wrapped
+
+def wraps_parameterized(func, func_suffix, args, kwargs):
+    """Internal: for MetaParameterized"""
+    def wrapper(self):
+        return func(self, *args, **kwargs)
+    wrapper.__name__ = func.__name__ + '_' + str(func_suffix)
+    wrapper.__doc__ = '[%s] %s' % (func_suffix, func.__doc__)
+    return wrapper
+
+class MetaParameterized(type):
+    """
+    A metaclass that allow a class to use decorators like :func:`parameterized`
+    or :func:`with_parameters` to generate new methods.
+    """
+    RE_ESCAPE_BAD_CHARS = re.compile(r'[\.\(\) -/]')
+    def __new__(cls, name, bases, attrs):
+        for k, v in attrs.items():
+            if callable(v) and hasattr(v, 'metaparameters'):
+                for func_suffix, args, kwargs in v.metaparameters:
+                    func_suffix = cls.RE_ESCAPE_BAD_CHARS.sub('_', func_suffix)
+                    wrapper = wraps_parameterized(v, func_suffix, args, kwargs)
+                    if wrapper.__name__ in attrs:
+                        raise KeyError("%s is already a defined method on %s" %
+                                        (wrapper.__name__, name))
+                    attrs[wrapper.__name__] = wrapper
+                del attrs[k]
+
+        return type.__new__(cls, name, bases, attrs)
+
 class CommonTestCase(unittest.TestCase):
 
+    __metaclass__ = MetaParameterized
     match_re = None
     failureException = AssertionError
 
