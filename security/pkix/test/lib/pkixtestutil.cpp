@@ -252,7 +252,7 @@ static ByteString ResponderID(OCSPResponseContext& context);
 static ByteString KeyHash(OCSPResponseContext& context);
 static SECItem* SingleResponse(OCSPResponseContext& context);
 static SECItem* CertID(OCSPResponseContext& context);
-static SECItem* CertStatus(OCSPResponseContext& context);
+static ByteString CertStatus(OCSPResponseContext& context);
 
 static SECItem*
 EncodeNested(PLArenaPool* arena, uint8_t tag, const SECItem* inner)
@@ -350,14 +350,14 @@ gmtime_r(const time_t* t, /*out*/ tm* exploded)
 //
 // This assumes that time/time_t are POSIX-compliant in that time() returns
 // the number of seconds since the Unix epoch.
-static SECItem*
-TimeToEncodedTime(PLArenaPool* arena, time_t time, TimeEncoding encoding)
+static ByteString
+TimeToEncodedTime(time_t time, TimeEncoding encoding)
 {
   assert(encoding == UTCTime || encoding == GeneralizedTime);
 
   tm exploded;
   if (!gmtime_r(&time, &exploded)) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
   if (exploded.tm_sec >= 60) {
@@ -369,46 +369,38 @@ TimeToEncodedTime(PLArenaPool* arena, time_t time, TimeEncoding encoding)
   int year = exploded.tm_year + 1900;
 
   if (encoding == UTCTime && (year < 1950 || year >= 2050)) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
-  SECItem* derTime = SECITEM_AllocItem(arena, nullptr,
-                                       encoding == UTCTime ? 15 : 17);
-  if (!derTime) {
-    return nullptr;
-  }
-
-  size_t i = 0;
-
-  derTime->data[i++] = encoding == GeneralizedTime ? 0x18 : 0x17; // tag
-  derTime->data[i++] = static_cast<uint8_t>(derTime->len - 2); // length
+  ByteString value;
 
   if (encoding == GeneralizedTime) {
-    derTime->data[i++] = '0' + (year / 1000);
-    derTime->data[i++] = '0' + ((year % 1000) / 100);
+    value.push_back('0' + (year / 1000));
+    value.push_back('0' + ((year % 1000) / 100));
   }
 
-  derTime->data[i++] = '0' + ((year % 100) / 10);
-  derTime->data[i++] = '0' + (year % 10);
-  derTime->data[i++] = '0' + ((exploded.tm_mon + 1) / 10);
-  derTime->data[i++] = '0' + ((exploded.tm_mon + 1) % 10);
-  derTime->data[i++] = '0' + (exploded.tm_mday / 10);
-  derTime->data[i++] = '0' + (exploded.tm_mday % 10);
-  derTime->data[i++] = '0' + (exploded.tm_hour / 10);
-  derTime->data[i++] = '0' + (exploded.tm_hour % 10);
-  derTime->data[i++] = '0' + (exploded.tm_min / 10);
-  derTime->data[i++] = '0' + (exploded.tm_min % 10);
-  derTime->data[i++] = '0' + (exploded.tm_sec / 10);
-  derTime->data[i++] = '0' + (exploded.tm_sec % 10);
-  derTime->data[i++] = 'Z';
+  value.push_back('0' + ((year % 100) / 10));
+  value.push_back('0' + (year % 10));
+  value.push_back('0' + ((exploded.tm_mon + 1) / 10));
+  value.push_back('0' + ((exploded.tm_mon + 1) % 10));
+  value.push_back('0' + (exploded.tm_mday / 10));
+  value.push_back('0' + (exploded.tm_mday % 10));
+  value.push_back('0' + (exploded.tm_hour / 10));
+  value.push_back('0' + (exploded.tm_hour % 10));
+  value.push_back('0' + (exploded.tm_min / 10));
+  value.push_back('0' + (exploded.tm_min % 10));
+  value.push_back('0' + (exploded.tm_sec / 10));
+  value.push_back('0' + (exploded.tm_sec % 10));
+  value.push_back('Z');
 
-  return derTime;
+  return TLV(encoding == GeneralizedTime ? der::GENERALIZED_TIME : der::UTCTime,
+             value);
 }
 
-static SECItem*
-TimeToGeneralizedTime(PLArenaPool* arena, time_t time)
+static ByteString
+TimeToGeneralizedTime(time_t time)
 {
-  return TimeToEncodedTime(arena, time, GeneralizedTime);
+  return TimeToEncodedTime(time, GeneralizedTime);
 }
 
 // http://tools.ietf.org/html/rfc5280#section-4.1.2.5: "CAs conforming to this
@@ -416,19 +408,19 @@ TimeToGeneralizedTime(PLArenaPool* arena, time_t time)
 // as UTCTime; certificate validity dates in 2050 or later MUST be encoded as
 // GeneralizedTime." (This is a special case of the rule that we must always
 // use the shortest possible encoding.)
-static SECItem*
-TimeToTimeChoice(PLArenaPool* arena, time_t time)
+static ByteString
+TimeToTimeChoice(time_t time)
 {
   tm exploded;
   if (!gmtime_r(&time, &exploded)) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   TimeEncoding encoding = (exploded.tm_year + 1900 >= 1950 &&
                            exploded.tm_year + 1900 < 2050)
                         ? UTCTime
                         : GeneralizedTime;
 
-  return TimeToEncodedTime(arena, time, encoding);
+  return TimeToEncodedTime(time, encoding);
 }
 
 Time
@@ -801,31 +793,25 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
   // Validity ::= SEQUENCE {
   //       notBefore      Time,
   //       notAfter       Time }
-  SECItem* validity;
+  ByteString validity;
   {
-    SECItem* notBefore(TimeToTimeChoice(arena, notBeforeTime));
-    if (!notBefore) {
+    ByteString notBefore(TimeToTimeChoice(notBeforeTime));
+    if (notBefore == ENCODING_FAILED) {
       return nullptr;
     }
-    SECItem* notAfter(TimeToTimeChoice(arena, notAfterTime));
-    if (!notAfter) {
+    ByteString notAfter(TimeToTimeChoice(notAfterTime));
+    if (notAfter == ENCODING_FAILED) {
       return nullptr;
     }
-    Output validityOutput;
-    if (validityOutput.Add(notBefore) != Success) {
-      return nullptr;
-    }
-    if (validityOutput.Add(notAfter) != Success) {
-      return nullptr;
-    }
-    validity = validityOutput.Squash(arena, der::SEQUENCE);
-    if (!validity) {
+    ByteString validityValue;
+    validityValue.append(notBefore);
+    validityValue.append(notAfter);
+    validity = TLV(der::SEQUENCE, validityValue);
+    if (validity == ENCODING_FAILED) {
       return nullptr;
     }
   }
-  if (output.Add(validity) != Success) {
-    return nullptr;
-  }
+  output.Add(validity);
 
   output.Add(subject);
 
@@ -1180,9 +1166,8 @@ ResponseData(OCSPResponseContext& context)
   if (responderID == ENCODING_FAILED) {
     return nullptr;
   }
-  SECItem* producedAtEncoded = TimeToGeneralizedTime(context.arena,
-                                                     context.producedAt);
-  if (!producedAtEncoded) {
+  ByteString producedAtEncoded(TimeToGeneralizedTime(context.producedAt));
+  if (producedAtEncoded == ENCODING_FAILED) {
     return nullptr;
   }
   SECItem* responses = SingleResponse(context);
@@ -1201,9 +1186,7 @@ ResponseData(OCSPResponseContext& context)
 
   Output output;
   output.Add(responderID);
-  if (output.Add(producedAtEncoded) != Success) {
-    return nullptr;
-  }
+  output.Add(producedAtEncoded);
   if (output.Add(responsesNested) != Success) {
     return nullptr;
   }
@@ -1273,28 +1256,23 @@ SingleResponse(OCSPResponseContext& context)
   if (!certID) {
     return nullptr;
   }
-  SECItem* certStatus = CertStatus(context);
-  if (!certStatus) {
+  ByteString certStatus(CertStatus(context));
+  if (certStatus == ENCODING_FAILED) {
     return nullptr;
   }
-  SECItem* thisUpdateEncoded = TimeToGeneralizedTime(context.arena,
-                                                     context.thisUpdate);
-  if (!thisUpdateEncoded) {
+  ByteString thisUpdateEncoded(TimeToGeneralizedTime(context.thisUpdate));
+  if (thisUpdateEncoded == ENCODING_FAILED) {
     return nullptr;
   }
-  SECItem* nextUpdateEncodedNested = nullptr;
+  ByteString nextUpdateEncodedNested;
   if (context.includeNextUpdate) {
-    SECItem* nextUpdateEncoded = TimeToGeneralizedTime(context.arena,
-                                                       context.nextUpdate);
-    if (!nextUpdateEncoded) {
+    ByteString nextUpdateEncoded(TimeToGeneralizedTime(context.nextUpdate));
+    if (nextUpdateEncoded == ENCODING_FAILED) {
       return nullptr;
     }
-    nextUpdateEncodedNested = EncodeNested(context.arena,
-                                           der::CONSTRUCTED |
-                                           der::CONTEXT_SPECIFIC |
-                                           0,
-                                           nextUpdateEncoded);
-    if (!nextUpdateEncodedNested) {
+    nextUpdateEncodedNested = TLV(der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0,
+                                  nextUpdateEncoded);
+    if (nextUpdateEncodedNested == ENCODING_FAILED) {
       return nullptr;
     }
   }
@@ -1303,16 +1281,10 @@ SingleResponse(OCSPResponseContext& context)
   if (output.Add(certID) != Success) {
     return nullptr;
   }
-  if (output.Add(certStatus) != Success) {
-    return nullptr;
-  }
-  if (output.Add(thisUpdateEncoded) != Success) {
-    return nullptr;
-  }
-  if (nextUpdateEncodedNested) {
-    if (output.Add(nextUpdateEncodedNested) != Success) {
-      return nullptr;
-    }
+  output.Add(certStatus);
+  output.Add(thisUpdateEncoded);
+  if (!nextUpdateEncodedNested.empty()) {
+    output.Add(nextUpdateEncodedNested);
   }
   return output.Squash(context.arena, der::SEQUENCE);
 }
@@ -1383,7 +1355,7 @@ CertID(OCSPResponseContext& context)
 //
 // UnknownInfo ::= NULL
 //
-SECItem*
+ByteString
 CertStatus(OCSPResponseContext& context)
 {
   switch (context.certStatus) {
@@ -1392,31 +1364,22 @@ CertStatus(OCSPResponseContext& context)
     case 0:
     case 2:
     {
-      SECItem* status = SECITEM_AllocItem(context.arena, nullptr, 2);
-      if (!status) {
-        return nullptr;
-      }
-      status->data[0] = der::CONTEXT_SPECIFIC | context.certStatus;
-      status->data[1] = 0;
-      return status;
+      return TLV(der::CONTEXT_SPECIFIC | context.certStatus, ByteString());
     }
     case 1:
     {
-      SECItem* revocationTime = TimeToGeneralizedTime(context.arena,
-                                                      context.revocationTime);
-      if (!revocationTime) {
-        return nullptr;
+      ByteString revocationTime(TimeToGeneralizedTime(context.revocationTime));
+      if (revocationTime == ENCODING_FAILED) {
+        return ENCODING_FAILED;
       }
       // TODO(bug 980536): add support for revocationReason
-      return EncodeNested(context.arena,
-                          der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
-                          revocationTime);
+      return TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1, revocationTime);
     }
     default:
       assert(false);
       // fall through
   }
-  return nullptr;
+  return ENCODING_FAILED;
 }
 
 } } } // namespace mozilla::pkix::test
