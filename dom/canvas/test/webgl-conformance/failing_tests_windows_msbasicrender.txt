@@ -1,4 +1,3 @@
-conformance/context/context-attributes-alpha-depth-stencil-antialias.html
 conformance/renderbuffers/framebuffer-object-attachment.html
 conformance/state/gl-object-get-calls.html
 conformance/more/functions/isTests.html

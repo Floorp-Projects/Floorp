@@ -48,8 +48,8 @@ public:
   // AnimationPlayer methods
   Animation* GetSource() const { return mSource; }
   AnimationTimeline* Timeline() const { return mTimeline; }
-  double StartTime() const;
-  double CurrentTime() const;
+  Nullable<double> GetStartTime() const;
+  Nullable<double> GetCurrentTime() const;
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
   void SetSource(Animation* aSource);
@@ -67,29 +67,12 @@ public:
   bool IsCurrent() const;
 
   // Return the duration since the start time of the player, taking into
-  // account the pause state.  May be negative.
-  // Returns a null value if the timeline associated with this object has a
-  // current timestamp that is null or if the start time of this object is
-  // null.
-  Nullable<TimeDuration> GetCurrentTimeDuration() const {
-    const TimeStamp& timelineTime = mTimeline->GetCurrentTimeStamp();
-    // FIXME: In order to support arbitrary timelines we will need to fix
-    // the pause logic to handle the timeline time going backwards.
-    MOZ_ASSERT(timelineTime.IsNull() || !IsPaused() ||
-               timelineTime >= mPauseStart,
-               "if paused, any non-null value of aTime must be at least"
-               " mPauseStart");
-
-    Nullable<TimeDuration> result; // Initializes to null
-    if (!timelineTime.IsNull() && !mStartTime.IsNull()) {
-      result.SetValue((IsPaused() ? mPauseStart : timelineTime) - mStartTime);
-    }
-    return result;
-  }
+  // account the pause state.  May be negative or null.
+  Nullable<TimeDuration> GetCurrentTimeDuration() const;
 
   // The beginning of the delay period.
-  TimeStamp mStartTime;
-  TimeStamp mPauseStart;
+  Nullable<TimeDuration> mStartTime;
+  Nullable<TimeDuration> mHoldTime;
   uint8_t mPlayState;
   bool mIsRunningOnCompositor;
 
