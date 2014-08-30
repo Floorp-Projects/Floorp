@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Iframe for testing multiple host detetion in storage actor
+-->
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<script type="application/javascript;version=1.7">
+
+document.cookie = "sc1=foobar;";
+localStorage.setItem("iframe-s-ls1", "foobar");
+sessionStorage.setItem("iframe-s-ss1", "foobar-2");
+
+function success(event) {
+  setupIDB.next(event);
+}
+
+window.idbGenerator = function*(callback) {
+  let request = indexedDB.open("idb-s1", 1);
+  request.onupgradeneeded = success;
+  request.onerror = function(e) {
+    throw new Error("error opening db connection");
+  };
+  let event = yield undefined;
+  let db = event.target.result;
+  let store1 = db.createObjectStore("obj-s1", { keyPath: "id" });
+
+  store1.add({id: 6, name: "foo", email: "foo@bar.com"}).onsuccess = success;
+  yield undefined;
+  store1.add({id: 7, name: "foo2", email: "foo2@bar.com"}).onsuccess = success;
+  yield undefined;
+  store1.transaction.oncomplete = success;
+  yield undefined;
+  db.close();
+
+  request = indexedDB.open("idb-s2", 1);
+  request.onupgradeneeded = success;
+  event = yield undefined;
+
+  let db2 = event.target.result;
+  let store3 = db2.createObjectStore("obj-s2", { keyPath: "id3", autoIncrement: true });
+  store3.createIndex("name2", "name2", { unique: true });
+  store3.add({id3: 16, name2: "foo", email: "foo@bar.com"}).onsuccess = success;
+  yield undefined;
+  store3.transaction.oncomplete = success;
+  yield undefined;
+  db2.close();
+  console.log("added cookies and stuff from secured iframe");
+  callback();
+}
+
+function successClear(event) {
+  clearIterator.next(event);
+}
+
+window.clear = function*(callback) {
+  document.cookie = "sc1=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  localStorage.clear();
+  sessionStorage.clear();
+  indexedDB.deleteDatabase("idb-s1").onsuccess = successClear;
+  yield undefined;
+  indexedDB.deleteDatabase("idb-s2").onsuccess = successClear;
+  yield undefined;
+  console.log("removed cookies and stuff from secured iframe");
+  callback();
+}
+</script>
+</body>
+</html>

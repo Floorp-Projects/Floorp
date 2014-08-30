@@ -29,18 +29,14 @@ package ch.boye.httpclientandroidlib.impl.client;
 
 import ch.boye.httpclientandroidlib.HttpVersion;
 import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
-import ch.boye.httpclientandroidlib.client.HttpClient;
 import ch.boye.httpclientandroidlib.client.protocol.RequestAddCookies;
 import ch.boye.httpclientandroidlib.client.protocol.RequestAuthCache;
 import ch.boye.httpclientandroidlib.client.protocol.RequestClientConnControl;
 import ch.boye.httpclientandroidlib.client.protocol.RequestDefaultHeaders;
 import ch.boye.httpclientandroidlib.client.protocol.RequestProxyAuthentication;
 import ch.boye.httpclientandroidlib.client.protocol.RequestTargetAuthentication;
-import ch.boye.httpclientandroidlib.client.protocol.ResponseAuthCache;
 import ch.boye.httpclientandroidlib.client.protocol.ResponseProcessCookies;
 import ch.boye.httpclientandroidlib.conn.ClientConnectionManager;
-import ch.boye.httpclientandroidlib.params.CoreConnectionPNames;
-import ch.boye.httpclientandroidlib.params.CoreProtocolPNames;
 import ch.boye.httpclientandroidlib.params.HttpConnectionParams;
 import ch.boye.httpclientandroidlib.params.HttpParams;
 import ch.boye.httpclientandroidlib.params.HttpProtocolParams;
@@ -51,24 +47,21 @@ import ch.boye.httpclientandroidlib.protocol.RequestContent;
 import ch.boye.httpclientandroidlib.protocol.RequestExpectContinue;
 import ch.boye.httpclientandroidlib.protocol.RequestTargetHost;
 import ch.boye.httpclientandroidlib.protocol.RequestUserAgent;
-import ch.boye.httpclientandroidlib.util.VersionInfo;
 
 /**
- * Default implementation of {@link HttpClient} pre-configured for most common use scenarios.
+ * Default implementation of {@link ch.boye.httpclientandroidlib.client.HttpClient} pre-configured
+ * for most common use scenarios.
  * <p>
- * This class creates the following chain of protocol interceptors per default:
- * <ul>
- * <li>{@link RequestDefaultHeaders}</li>
- * <li>{@link RequestContent}</li>
- * <li>{@link RequestTargetHost}</li>
- * <li>{@link RequestClientConnControl}</li>
- * <li>{@link RequestUserAgent}</li>
- * <li>{@link RequestExpectContinue}</li>
- * <li>{@link RequestAddCookies}</li>
- * <li>{@link ResponseProcessCookies}</li>
- * <li>{@link RequestTargetAuthentication}</li>
- * <li>{@link RequestProxyAuthentication}</li>
- * </ul>
+ * Please see the Javadoc for {@link #createHttpProcessor()} for the details of the interceptors
+ * that are set up by default.
+ * <p>
+ * Additional interceptors can be added as follows, but
+ * take care not to add the same interceptor more than once.
+ * <pre>
+ * DefaultHttpClient httpclient = new DefaultHttpClient();
+ * httpclient.addRequestInterceptor(new RequestAcceptEncoding());
+ * httpclient.addResponseInterceptor(new ResponseContentEncoding());
+ * </pre>
  * <p>
  * This class sets up the following parameters if not explicitly set:
  * <ul>
@@ -111,12 +104,15 @@ import ch.boye.httpclientandroidlib.util.VersionInfo;
  *  <li>{@link ch.boye.httpclientandroidlib.client.params.ClientPNames#VIRTUAL_HOST}</li>
  *  <li>{@link ch.boye.httpclientandroidlib.client.params.ClientPNames#DEFAULT_HOST}</li>
  *  <li>{@link ch.boye.httpclientandroidlib.client.params.ClientPNames#DEFAULT_HEADERS}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.client.params.ClientPNames#CONNECTION_MANAGER_FACTORY_CLASS_NAME}</li>
+ *  <li>{@link ch.boye.httpclientandroidlib.client.params.ClientPNames#CONN_MANAGER_TIMEOUT}</li>
  * </ul>
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link HttpClientBuilder}.
  */
 @ThreadSafe
+@Deprecated
 public class DefaultHttpClient extends AbstractHttpClient {
 
     /**
@@ -158,7 +154,7 @@ public class DefaultHttpClient extends AbstractHttpClient {
      */
     @Override
     protected HttpParams createHttpParams() {
-        HttpParams params = new SyncBasicHttpParams();
+        final HttpParams params = new SyncBasicHttpParams();
         setDefaultHttpParams(params);
         return params;
     }
@@ -167,32 +163,47 @@ public class DefaultHttpClient extends AbstractHttpClient {
      * Saves the default set of HttpParams in the provided parameter.
      * These are:
      * <ul>
-     * <li>{@link CoreProtocolPNames#PROTOCOL_VERSION}: 1.1</li>
-     * <li>{@link CoreProtocolPNames#HTTP_CONTENT_CHARSET}: ISO-8859-1</li>
-     * <li>{@link CoreConnectionPNames#TCP_NODELAY}: true</li>
-     * <li>{@link CoreConnectionPNames#SOCKET_BUFFER_SIZE}: 8192</li>
-     * <li>{@link CoreProtocolPNames#USER_AGENT}: Apache-HttpClient/<release> (java 1.5)</li>
+     * <li>{@link ch.boye.httpclientandroidlib.params.CoreProtocolPNames#PROTOCOL_VERSION}:
+     *   1.1</li>
+     * <li>{@link ch.boye.httpclientandroidlib.params.CoreProtocolPNames#HTTP_CONTENT_CHARSET}:
+     *   ISO-8859-1</li>
+     * <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#TCP_NODELAY}:
+     *   true</li>
+     * <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#SOCKET_BUFFER_SIZE}:
+     *   8192</li>
+     * <li>{@link ch.boye.httpclientandroidlib.params.CoreProtocolPNames#USER_AGENT}:
+     *   Apache-HttpClient/<release> (java 1.5)</li>
      * </ul>
      */
-    public static void setDefaultHttpParams(HttpParams params) {
+    public static void setDefaultHttpParams(final HttpParams params) {
         HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-        HttpProtocolParams.setContentCharset(params, HTTP.DEFAULT_CONTENT_CHARSET);
+        HttpProtocolParams.setContentCharset(params, HTTP.DEF_CONTENT_CHARSET.name());
         HttpConnectionParams.setTcpNoDelay(params, true);
         HttpConnectionParams.setSocketBufferSize(params, 8192);
-
-        // determine the release version from packaged version info
-        final VersionInfo vi = VersionInfo.loadVersionInfo
-            ("ch.boye.httpclientandroidlib.client", DefaultHttpClient.class.getClassLoader());
-        final String release = (vi != null) ?
-            vi.getRelease() : VersionInfo.UNAVAILABLE;
-        HttpProtocolParams.setUserAgent(params,
-                "Apache-HttpClient/" + release + " (java 1.5)");
+        HttpProtocolParams.setUserAgent(params, HttpClientBuilder.DEFAULT_USER_AGENT);
     }
 
-
+    /**
+    * Create the processor with the following interceptors:
+    * <ul>
+    * <li>{@link RequestDefaultHeaders}</li>
+    * <li>{@link RequestContent}</li>
+    * <li>{@link RequestTargetHost}</li>
+    * <li>{@link RequestClientConnControl}</li>
+    * <li>{@link RequestUserAgent}</li>
+    * <li>{@link RequestExpectContinue}</li>
+    * <li>{@link RequestAddCookies}</li>
+    * <li>{@link ResponseProcessCookies}</li>
+    * <li>{@link RequestAuthCache}</li>
+    * <li>{@link RequestTargetAuthentication}</li>
+    * <li>{@link RequestProxyAuthentication}</li>
+    * </ul>
+    * <p>
+    * @return the processor with the added interceptors.
+    */
     @Override
     protected BasicHttpProcessor createHttpProcessor() {
-        BasicHttpProcessor httpproc = new BasicHttpProcessor();
+        final BasicHttpProcessor httpproc = new BasicHttpProcessor();
         httpproc.addInterceptor(new RequestDefaultHeaders());
         // Required protocol interceptors
         httpproc.addInterceptor(new RequestContent());
@@ -206,7 +217,6 @@ public class DefaultHttpClient extends AbstractHttpClient {
         httpproc.addInterceptor(new ResponseProcessCookies());
         // HTTP authentication interceptors
         httpproc.addInterceptor(new RequestAuthCache());
-        httpproc.addInterceptor(new ResponseAuthCache());
         httpproc.addInterceptor(new RequestTargetAuthentication());
         httpproc.addInterceptor(new RequestProxyAuthentication());
         return httpproc;

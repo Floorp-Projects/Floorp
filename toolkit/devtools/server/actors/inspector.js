@@ -69,6 +69,8 @@ const {
 const {getLayoutChangesObserver, releaseLayoutChangesObserver} =
   require("devtools/server/actors/layout");
 
+const {EventParsers} = require("devtools/toolkit/event-parsers");
+
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
@@ -188,6 +190,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, null);
     this.walker = walker;
     this.rawNode = node;
+    this._eventParsers = new EventParsers().parsers;
 
     // Storing the original display of the node, to track changes when reflows
     // occur
@@ -291,11 +294,11 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
 
   /**
    * Are there event listeners that are listening on this node? This method
-   * uses all parsers registered via gDevTools.registerEventParser() to check if
-   * there are any event listeners.
+   * uses all parsers registered via event-parsers.js.registerEventParser() to
+   * check if there are any event listeners.
    */
   get _hasEventListeners() {
-    let parsers = gDevTools.eventParsers;
+    let parsers = this._eventParsers;
     for (let [,{hasListeners}] of parsers) {
       if (hasListeners && hasListeners(this.rawNode)) {
         return true;
@@ -333,7 +336,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    *         Node for which we are to get listeners.
    */
   getEventListeners: function(node) {
-    let parsers = gDevTools.eventParsers;
+    let parsers = this._eventParsers;
     let dbg = this.parent().tabActor.makeDebugger();
     let events = [];
 
@@ -367,7 +370,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    * @param  {Debugger} dbg
    *         JSDebugger instance.
    * @param  {Object} eventInfo
-   *         See gDevTools.registerEventParser() for a description of the
+   *         See event-parsers.js.registerEventParser() for a description of the
    *         eventInfo object.
    *
    * @return {Array}
