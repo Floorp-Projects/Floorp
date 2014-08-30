@@ -705,8 +705,7 @@ void ViEEncoder::DeliverFrame(int id,
     return;
   }
 #endif
-  if (vcm_.AddVideoFrame(*decimated_frame,
-                         vpm_.ContentMetrics()) != VCM_OK) {
+  if (vcm_.AddVideoFrame(*decimated_frame) != VCM_OK) {
     WEBRTC_TRACE(webrtc::kTraceError,
                  webrtc::kTraceVideo,
                  ViEId(engine_id_, channel_id_),
