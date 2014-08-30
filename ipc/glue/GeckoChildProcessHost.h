@@ -166,6 +166,7 @@ protected:
   void InitWindowsGroupID();
   nsString mGroupId;
   SandboxBroker mSandboxBroker;
+  std::vector<std::wstring> mAllowedFilesRead;
 #endif // XP_WIN
 
 #if defined(OS_POSIX)

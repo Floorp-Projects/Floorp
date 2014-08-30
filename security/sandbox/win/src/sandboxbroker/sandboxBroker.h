@@ -35,6 +35,11 @@ public:
   bool SetSecurityLevelForIPDLUnitTestProcess();
   bool SetSecurityLevelForGMPlugin();
 
+  // File system permissions
+  bool AllowReadFile(wchar_t const *file);
+  bool AllowReadWriteFile(wchar_t const *file);
+  bool AllowDirectory(wchar_t const *dir);
+
 private:
   static sandbox::BrokerServices *sBrokerService;
   sandbox::TargetPolicy *mPolicy;
