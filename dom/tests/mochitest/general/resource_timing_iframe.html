@@ -25,8 +25,8 @@
 <script>
 function doTest() {
   window.parent.ok(!!window.performance.getEntriesByName(
-    "http://example.com/tests/image/test/mochitest/damon.jpg").length,
-    "http://example.com/tests/image/test/mochitest/damon.jpg should be a valid entry name");
+    "http://mochi.test:8888/tests/image/test/mochitest/damon.jpg").length,
+    "http://mochi.test:8888/tests/image/test/mochitest/damon.jpg should be a valid entry name");
   window.parent.ok(!window.performance.getEntriesByName(
     "http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing_iframe.html").length,
     "This iframe should NOT contain itself as an entry");
@@ -43,6 +43,6 @@ function doTest() {
 }
 </script>
 <body onLoad="doTest()">
-  <img src="http://example.com/tests/image/test/mochitest/damon.jpg"/>
+  <img src="http://mochi.test:8888/tests/image/test/mochitest/damon.jpg"/>
 </body>
 </html>
