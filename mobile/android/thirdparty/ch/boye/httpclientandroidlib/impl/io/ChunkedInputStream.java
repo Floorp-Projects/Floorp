@@ -34,10 +34,11 @@ import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpException;
 import ch.boye.httpclientandroidlib.MalformedChunkCodingException;
 import ch.boye.httpclientandroidlib.TruncatedChunkException;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.io.BufferInfo;
 import ch.boye.httpclientandroidlib.io.SessionInputBuffer;
+import ch.boye.httpclientandroidlib.util.Args;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
-import ch.boye.httpclientandroidlib.util.ExceptionUtils;
 
 /**
  * Implements chunked transfer coding. The content is received in small chunks.
@@ -55,6 +56,7 @@ import ch.boye.httpclientandroidlib.util.ExceptionUtils;
  * @since 4.0
  *
  */
+@NotThreadSafe
 public class ChunkedInputStream extends InputStream {
 
     private static final int CHUNK_LEN               = 1;
@@ -91,18 +93,16 @@ public class ChunkedInputStream extends InputStream {
      */
     public ChunkedInputStream(final SessionInputBuffer in) {
         super();
-        if (in == null) {
-            throw new IllegalArgumentException("Session input buffer may not be null");
-        }
-        this.in = in;
+        this.in = Args.notNull(in, "Session input buffer");
         this.pos = 0;
         this.buffer = new CharArrayBuffer(16);
         this.state = CHUNK_LEN;
     }
 
+    @Override
     public int available() throws IOException {
         if (this.in instanceof BufferInfo) {
-            int len = ((BufferInfo) this.in).length();
+            final int len = ((BufferInfo) this.in).length();
             return Math.min(len, this.chunkSize - this.pos);
         } else {
             return 0;
@@ -121,6 +121,7 @@ public class ChunkedInputStream extends InputStream {
      * byte
      * @throws IOException in case of an I/O error
      */
+    @Override
     public int read() throws IOException {
         if (this.closed) {
             throw new IOException("Attempted read from closed stream.");
@@ -134,7 +135,7 @@ public class ChunkedInputStream extends InputStream {
                 return -1;
             }
         }
-        int b = in.read();
+        final int b = in.read();
         if (b != -1) {
             pos++;
             if (pos >= chunkSize) {
@@ -154,7 +155,8 @@ public class ChunkedInputStream extends InputStream {
      * reached.
      * @throws IOException in case of an I/O error
      */
-    public int read (byte[] b, int off, int len) throws IOException {
+    @Override
+    public int read (final byte[] b, final int off, final int len) throws IOException {
 
         if (closed) {
             throw new IOException("Attempted read from closed stream.");
@@ -169,8 +171,7 @@ public class ChunkedInputStream extends InputStream {
                 return -1;
             }
         }
-        len = Math.min(len, chunkSize - pos);
-        int bytesRead = in.read(b, off, len);
+        final int bytesRead = in.read(b, off, Math.min(len, chunkSize - pos));
         if (bytesRead != -1) {
             pos += bytesRead;
             if (pos >= chunkSize) {
@@ -192,7 +193,8 @@ public class ChunkedInputStream extends InputStream {
      * reached.
      * @throws IOException in case of an I/O error
      */
-    public int read (byte[] b) throws IOException {
+    @Override
+    public int read (final byte[] b) throws IOException {
         return read(b, 0, b.length);
     }
 
@@ -217,22 +219,14 @@ public class ChunkedInputStream extends InputStream {
      * Expects the stream to start with a chunksize in hex with optional
      * comments after a semicolon. The line must end with a CRLF: "a3; some
      * comment\r\n" Positions the stream at the start of the next line.
-     *
-     * @param in The new input stream.
-     * @param required <tt>true<tt/> if a valid chunk must be present,
-     *                 <tt>false<tt/> otherwise.
-     *
-     * @return the chunk size as integer
-     *
-     * @throws IOException when the chunk size could not be parsed
      */
     private int getChunkSize() throws IOException {
-        int st = this.state;
+        final int st = this.state;
         switch (st) {
         case CHUNK_CRLF:
             this.buffer.clear();
-            int i = this.in.readLine(this.buffer);
-            if (i == -1) {
+            final int bytesRead1 = this.in.readLine(this.buffer);
+            if (bytesRead1 == -1) {
                 return 0;
             }
             if (!this.buffer.isEmpty()) {
@@ -243,8 +237,8 @@ public class ChunkedInputStream extends InputStream {
             //$FALL-THROUGH$
         case CHUNK_LEN:
             this.buffer.clear();
-            i = this.in.readLine(this.buffer);
-            if (i == -1) {
+            final int bytesRead2 = this.in.readLine(this.buffer);
+            if (bytesRead2 == -1) {
                 return 0;
             }
             int separator = this.buffer.indexOf(';');
@@ -253,7 +247,7 @@ public class ChunkedInputStream extends InputStream {
             }
             try {
                 return Integer.parseInt(this.buffer.substringTrimmed(0, separator), 16);
-            } catch (NumberFormatException e) {
+            } catch (final NumberFormatException e) {
                 throw new MalformedChunkCodingException("Bad chunk header");
             }
         default:
@@ -269,10 +263,10 @@ public class ChunkedInputStream extends InputStream {
         try {
             this.footers = AbstractMessageParser.parseHeaders
                 (in, -1, -1, null);
-        } catch (HttpException e) {
-            IOException ioe = new MalformedChunkCodingException("Invalid footer: "
-                    + e.getMessage());
-            ExceptionUtils.initCause(ioe, e);
+        } catch (final HttpException ex) {
+            final IOException ioe = new MalformedChunkCodingException("Invalid footer: "
+                    + ex.getMessage());
+            ioe.initCause(ex);
             throw ioe;
         }
     }
@@ -283,13 +277,14 @@ public class ChunkedInputStream extends InputStream {
      * next response without scanning.
      * @throws IOException in case of an I/O error
      */
+    @Override
     public void close() throws IOException {
         if (!closed) {
             try {
                 if (!eof) {
                     // read and discard the remainder of the message
-                    byte buffer[] = new byte[BUFFER_SIZE];
-                    while (read(buffer) >= 0) {
+                    final byte buff[] = new byte[BUFFER_SIZE];
+                    while (read(buff) >= 0) {
                     }
                 }
             } finally {
@@ -300,7 +295,7 @@ public class ChunkedInputStream extends InputStream {
     }
 
     public Header[] getFooters() {
-        return (Header[])this.footers.clone();
+        return this.footers.clone();
     }
 
 }

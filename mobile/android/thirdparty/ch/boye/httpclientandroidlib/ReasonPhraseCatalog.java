@@ -46,6 +46,6 @@ public interface ReasonPhraseCatalog {
      *
      * @return  the reason phrase, or <code>null</code> if unknown
      */
-    public String getReason(int status, Locale loc);
+    String getReason(int status, Locale loc);
 
 }

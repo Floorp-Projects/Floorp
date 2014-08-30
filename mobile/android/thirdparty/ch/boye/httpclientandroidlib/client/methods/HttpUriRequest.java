@@ -36,8 +36,6 @@ import ch.boye.httpclientandroidlib.HttpRequest;
  * convenience methods to access request properties such as request URI
  * and method type.
  *
- *
- * <!-- empty lines to avoid svn diff problems -->
  * @since 4.0
  */
 public interface HttpUriRequest extends HttpRequest {

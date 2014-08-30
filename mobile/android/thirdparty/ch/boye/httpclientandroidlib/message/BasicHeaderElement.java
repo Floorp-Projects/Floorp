@@ -29,7 +29,8 @@ package ch.boye.httpclientandroidlib.message;
 
 import ch.boye.httpclientandroidlib.HeaderElement;
 import ch.boye.httpclientandroidlib.NameValuePair;
-import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import ch.boye.httpclientandroidlib.util.Args;
 import ch.boye.httpclientandroidlib.util.LangUtils;
 
 /**
@@ -37,6 +38,7 @@ import ch.boye.httpclientandroidlib.util.LangUtils;
  *
  * @since 4.0
  */
+@NotThreadSafe
 public class BasicHeaderElement implements HeaderElement, Cloneable {
 
     private final String name;
@@ -56,10 +58,7 @@ public class BasicHeaderElement implements HeaderElement, Cloneable {
             final String value,
             final NameValuePair[] parameters) {
         super();
-        if (name == null) {
-            throw new IllegalArgumentException("Name may not be null");
-        }
-        this.name = name;
+        this.name = Args.notNull(name, "Name");
         this.value = value;
         if (parameters != null) {
             this.parameters = parameters;
@@ -87,25 +86,22 @@ public class BasicHeaderElement implements HeaderElement, Cloneable {
     }
 
     public NameValuePair[] getParameters() {
-        return (NameValuePair[])this.parameters.clone();
+        return this.parameters.clone();
     }
 
     public int getParameterCount() {
         return this.parameters.length;
     }
 
-    public NameValuePair getParameter(int index) {
+    public NameValuePair getParameter(final int index) {
         // ArrayIndexOutOfBoundsException is appropriate
         return this.parameters[index];
     }
 
     public NameValuePair getParameterByName(final String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("Name may not be null");
-        }
+        Args.notNull(name, "Name");
         NameValuePair found = null;
-        for (int i = 0; i < this.parameters.length; i++) {
-            NameValuePair current = this.parameters[ i ];
+        for (final NameValuePair current : this.parameters) {
             if (current.getName().equalsIgnoreCase(name)) {
                 found = current;
                 break;
@@ -114,10 +110,13 @@ public class BasicHeaderElement implements HeaderElement, Cloneable {
         return found;
     }
 
+    @Override
     public boolean equals(final Object object) {
-        if (this == object) return true;
+        if (this == object) {
+            return true;
+        }
         if (object instanceof HeaderElement) {
-            BasicHeaderElement that = (BasicHeaderElement) object;
+            final BasicHeaderElement that = (BasicHeaderElement) object;
             return this.name.equals(that.name)
                 && LangUtils.equals(this.value, that.value)
                 && LangUtils.equals(this.parameters, that.parameters);
@@ -126,30 +125,33 @@ public class BasicHeaderElement implements HeaderElement, Cloneable {
         }
     }
 
+    @Override
     public int hashCode() {
         int hash = LangUtils.HASH_SEED;
         hash = LangUtils.hashCode(hash, this.name);
         hash = LangUtils.hashCode(hash, this.value);
-        for (int i = 0; i < this.parameters.length; i++) {
-            hash = LangUtils.hashCode(hash, this.parameters[i]);
+        for (final NameValuePair parameter : this.parameters) {
+            hash = LangUtils.hashCode(hash, parameter);
         }
         return hash;
     }
 
+    @Override
     public String toString() {
-        CharArrayBuffer buffer = new CharArrayBuffer(64);
+        final StringBuilder buffer = new StringBuilder();
         buffer.append(this.name);
         if (this.value != null) {
             buffer.append("=");
             buffer.append(this.value);
         }
-        for (int i = 0; i < this.parameters.length; i++) {
+        for (final NameValuePair parameter : this.parameters) {
             buffer.append("; ");
-            buffer.append(this.parameters[i]);
+            buffer.append(parameter);
         }
         return buffer.toString();
     }
 
+    @Override
     public Object clone() throws CloneNotSupportedException {
         // parameters array is considered immutable
         // no need to make a copy of it

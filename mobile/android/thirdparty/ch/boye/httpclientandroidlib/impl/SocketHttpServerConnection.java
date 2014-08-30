@@ -29,7 +29,9 @@ package ch.boye.httpclientandroidlib.impl;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
 
 import ch.boye.httpclientandroidlib.HttpInetConnection;
@@ -37,25 +39,12 @@ import ch.boye.httpclientandroidlib.impl.io.SocketInputBuffer;
 import ch.boye.httpclientandroidlib.impl.io.SocketOutputBuffer;
 import ch.boye.httpclientandroidlib.io.SessionInputBuffer;
 import ch.boye.httpclientandroidlib.io.SessionOutputBuffer;
-import ch.boye.httpclientandroidlib.params.HttpConnectionParams;
+import ch.boye.httpclientandroidlib.params.CoreConnectionPNames;
 import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.util.Args;
+import ch.boye.httpclientandroidlib.util.Asserts;
 
-/**
- * Implementation of a server-side HTTP connection that can be bound to a
- * network Socket in order to receive and transmit data.
- * <p>
- * The following parameters can be used to customize the behavior of this
- * class:
- * <ul>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreProtocolPNames#STRICT_TRANSFER_ENCODING}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreProtocolPNames#HTTP_ELEMENT_CHARSET}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#SOCKET_BUFFER_SIZE}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#MAX_LINE_LENGTH}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#MAX_HEADER_COUNT}</li>
- * </ul>
- *
- * @since 4.0
- */
+@Deprecated
 public class SocketHttpServerConnection extends
         AbstractHttpServerConnection implements HttpInetConnection {
 
@@ -67,35 +56,12 @@ public class SocketHttpServerConnection extends
     }
 
     protected void assertNotOpen() {
-        if (this.open) {
-            throw new IllegalStateException("Connection is already open");
-        }
+        Asserts.check(!this.open, "Connection is already open");
     }
 
+    @Override
     protected void assertOpen() {
-        if (!this.open) {
-            throw new IllegalStateException("Connection is not open");
-        }
-    }
-
-    /**
-     * @deprecated Use {@link #createSessionInputBuffer(Socket, int, HttpParams)}
-     */
-    protected SessionInputBuffer createHttpDataReceiver(
-            final Socket socket,
-            int buffersize,
-            final HttpParams params) throws IOException {
-        return createSessionInputBuffer(socket, buffersize, params);
-    }
-
-    /**
-     * @deprecated Use {@link #createSessionOutputBuffer(Socket, int, HttpParams)}
-     */
-    protected SessionOutputBuffer createHttpDataTransmitter(
-            final Socket socket,
-            int buffersize,
-            final HttpParams params) throws IOException {
-        return createSessionOutputBuffer(socket, buffersize, params);
+        Asserts.check(this.open, "Connection is not open");
     }
 
     /**
@@ -115,7 +81,7 @@ public class SocketHttpServerConnection extends
      */
     protected SessionInputBuffer createSessionInputBuffer(
             final Socket socket,
-            int buffersize,
+            final int buffersize,
             final HttpParams params) throws IOException {
         return new SocketInputBuffer(socket, buffersize, params);
     }
@@ -137,7 +103,7 @@ public class SocketHttpServerConnection extends
      */
     protected SessionOutputBuffer createSessionOutputBuffer(
             final Socket socket,
-            int buffersize,
+            final int buffersize,
             final HttpParams params) throws IOException {
         return new SocketOutputBuffer(socket, buffersize, params);
     }
@@ -161,19 +127,14 @@ public class SocketHttpServerConnection extends
      * @throws IOException in case of an I/O error.
      */
     protected void bind(final Socket socket, final HttpParams params) throws IOException {
-        if (socket == null) {
-            throw new IllegalArgumentException("Socket may not be null");
-        }
-        if (params == null) {
-            throw new IllegalArgumentException("HTTP parameters may not be null");
-        }
+        Args.notNull(socket, "Socket");
+        Args.notNull(params, "HTTP parameters");
         this.socket = socket;
 
-        int buffersize = HttpConnectionParams.getSocketBufferSize(params);
-
+        final int buffersize = params.getIntParameter(CoreConnectionPNames.SOCKET_BUFFER_SIZE, -1);
         init(
-                createHttpDataReceiver(socket, buffersize, params),
-                createHttpDataTransmitter(socket, buffersize, params),
+                createSessionInputBuffer(socket, buffersize, params),
+                createSessionOutputBuffer(socket, buffersize, params),
                 params);
 
         this.open = true;
@@ -219,12 +180,12 @@ public class SocketHttpServerConnection extends
         }
     }
 
-    public void setSocketTimeout(int timeout) {
+    public void setSocketTimeout(final int timeout) {
         assertOpen();
         if (this.socket != null) {
             try {
                 this.socket.setSoTimeout(timeout);
-            } catch (SocketException ignore) {
+            } catch (final SocketException ignore) {
                 // It is not quite clear from the Sun's documentation if there are any
                 // other legitimate cases for a socket exception to be thrown when setting
                 // SO_TIMEOUT besides the socket being already closed
@@ -236,7 +197,7 @@ public class SocketHttpServerConnection extends
         if (this.socket != null) {
             try {
                 return this.socket.getSoTimeout();
-            } catch (SocketException ignore) {
+            } catch (final SocketException ignore) {
                 return -1;
             }
         } else {
@@ -246,7 +207,7 @@ public class SocketHttpServerConnection extends
 
     public void shutdown() throws IOException {
         this.open = false;
-        Socket tmpsocket = this.socket;
+        final Socket tmpsocket = this.socket;
         if (tmpsocket != null) {
             tmpsocket.close();
         }
@@ -258,23 +219,52 @@ public class SocketHttpServerConnection extends
         }
         this.open = false;
         this.open = false;
-        Socket sock = this.socket;
+        final Socket sock = this.socket;
         try {
             doFlush();
             try {
                 try {
                     sock.shutdownOutput();
-                } catch (IOException ignore) {
+                } catch (final IOException ignore) {
                 }
                 try {
                     sock.shutdownInput();
-                } catch (IOException ignore) {
+                } catch (final IOException ignore) {
                 }
-            } catch (UnsupportedOperationException ignore) {
+            } catch (final UnsupportedOperationException ignore) {
                 // if one isn't supported, the other one isn't either
             }
         } finally {
             sock.close();
+        }
+    }
+
+    private static void formatAddress(final StringBuilder buffer, final SocketAddress socketAddress) {
+        if (socketAddress instanceof InetSocketAddress) {
+            final InetSocketAddress addr = ((InetSocketAddress) socketAddress);
+            buffer.append(addr.getAddress() != null ? addr.getAddress().getHostAddress() :
+                addr.getAddress())
+            .append(':')
+            .append(addr.getPort());
+        } else {
+            buffer.append(socketAddress);
+        }
+    }
+
+    @Override
+    public String toString() {
+        if (this.socket != null) {
+            final StringBuilder buffer = new StringBuilder();
+            final SocketAddress remoteAddress = this.socket.getRemoteSocketAddress();
+            final SocketAddress localAddress = this.socket.getLocalSocketAddress();
+            if (remoteAddress != null && localAddress != null) {
+                formatAddress(buffer, localAddress);
+                buffer.append("<->");
+                formatAddress(buffer, remoteAddress);
+            }
+            return buffer.toString();
+        } else {
+            return super.toString();
         }
     }
 

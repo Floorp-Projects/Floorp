@@ -33,7 +33,10 @@ import java.util.concurrent.TimeUnit;
  * Encapsulates a request for a {@link ManagedClientConnection}.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) replaced by {@link ConnectionRequest}.
  */
+@Deprecated
 public interface ClientConnectionRequest {
 
     /**

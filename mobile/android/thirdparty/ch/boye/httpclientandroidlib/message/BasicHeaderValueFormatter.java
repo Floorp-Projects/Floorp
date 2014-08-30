@@ -29,6 +29,8 @@ package ch.boye.httpclientandroidlib.message;
 
 import ch.boye.httpclientandroidlib.HeaderElement;
 import ch.boye.httpclientandroidlib.NameValuePair;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
+import ch.boye.httpclientandroidlib.util.Args;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 
 /**
@@ -38,6 +40,7 @@ import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
  *
  * @since 4.0
  */
+@Immutable
 public class BasicHeaderValueFormatter implements HeaderValueFormatter {
 
     /**
@@ -45,10 +48,14 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * Note that {@link BasicHeaderValueFormatter} is not a singleton, there
      * can be many instances of the class itself and of derived classes.
      * The instance here provides non-customized, default behavior.
+     *
+     * @deprecated (4.3) use {@link #INSTANCE}
      */
+    @Deprecated
     public final static
         BasicHeaderValueFormatter DEFAULT = new BasicHeaderValueFormatter();
 
+    public final static BasicHeaderValueFormatter INSTANCE = new BasicHeaderValueFormatter();
 
     /**
      * Special characters that can be used as separators in HTTP parameters.
@@ -57,18 +64,15 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      */
     public final static String SEPARATORS = " ;,:@()<>\\\"/[]?={}\t";
 
-
     /**
      * Unsafe special characters that must be escaped using the backslash
      * character
      */
     public final static String UNSAFE_CHARS = "\"\\";
 
-
-
-    // public default constructor
-
-
+    public BasicHeaderValueFormatter() {
+        super();
+    }
 
     /**
      * Formats an array of header elements.
@@ -77,30 +81,26 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * @param quote     <code>true</code> to always format with quoted values,
      *                  <code>false</code> to use quotes only when necessary
      * @param formatter         the formatter to use, or <code>null</code>
-     *                          for the {@link #DEFAULT default}
+     *                          for the {@link #INSTANCE default}
      *
      * @return  the formatted header elements
      */
-    public final static
+    public static
         String formatElements(final HeaderElement[] elems,
                               final boolean quote,
-                              HeaderValueFormatter formatter) {
-        if (formatter == null)
-            formatter = BasicHeaderValueFormatter.DEFAULT;
-        return formatter.formatElements(null, elems, quote).toString();
+                              final HeaderValueFormatter formatter) {
+        return (formatter != null ? formatter : BasicHeaderValueFormatter.INSTANCE)
+                .formatElements(null, elems, quote).toString();
     }
 
 
     // non-javadoc, see interface HeaderValueFormatter
-    public CharArrayBuffer formatElements(CharArrayBuffer buffer,
+    public CharArrayBuffer formatElements(final CharArrayBuffer charBuffer,
                                           final HeaderElement[] elems,
                                           final boolean quote) {
-        if (elems == null) {
-            throw new IllegalArgumentException
-                ("Header element array must not be null.");
-        }
-
-        int len = estimateElementsLen(elems);
+        Args.notNull(elems, "Header element array");
+        final int len = estimateElementsLen(elems);
+        CharArrayBuffer buffer = charBuffer;
         if (buffer == null) {
             buffer = new CharArrayBuffer(len);
         } else {
@@ -126,12 +126,13 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * @return  a length estimate, in number of characters
      */
     protected int estimateElementsLen(final HeaderElement[] elems) {
-        if ((elems == null) || (elems.length < 1))
+        if ((elems == null) || (elems.length < 1)) {
             return 0;
+        }
 
         int result = (elems.length-1) * 2; // elements separated by ", "
-        for (int i=0; i<elems.length; i++) {
-            result += estimateHeaderElementLen(elems[i]);
+        for (final HeaderElement elem : elems) {
+            result += estimateHeaderElementLen(elem);
         }
 
         return result;
@@ -146,30 +147,26 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * @param quote     <code>true</code> to always format with quoted values,
      *                  <code>false</code> to use quotes only when necessary
      * @param formatter         the formatter to use, or <code>null</code>
-     *                          for the {@link #DEFAULT default}
+     *                          for the {@link #INSTANCE default}
      *
      * @return  the formatted header element
      */
-    public final static
+    public static
         String formatHeaderElement(final HeaderElement elem,
-                                   boolean quote,
-                                   HeaderValueFormatter formatter) {
-        if (formatter == null)
-            formatter = BasicHeaderValueFormatter.DEFAULT;
-        return formatter.formatHeaderElement(null, elem, quote).toString();
+                                   final boolean quote,
+                                   final HeaderValueFormatter formatter) {
+        return (formatter != null ? formatter : BasicHeaderValueFormatter.INSTANCE)
+                .formatHeaderElement(null, elem, quote).toString();
     }
 
 
     // non-javadoc, see interface HeaderValueFormatter
-    public CharArrayBuffer formatHeaderElement(CharArrayBuffer buffer,
+    public CharArrayBuffer formatHeaderElement(final CharArrayBuffer charBuffer,
                                                final HeaderElement elem,
                                                final boolean quote) {
-        if (elem == null) {
-            throw new IllegalArgumentException
-                ("Header element must not be null.");
-        }
-
-        int len = estimateHeaderElementLen(elem);
+        Args.notNull(elem, "Header element");
+        final int len = estimateHeaderElementLen(elem);
+        CharArrayBuffer buffer = charBuffer;
         if (buffer == null) {
             buffer = new CharArrayBuffer(len);
         } else {
@@ -203,8 +200,9 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * @return  a length estimate, in number of characters
      */
     protected int estimateHeaderElementLen(final HeaderElement elem) {
-        if (elem == null)
+        if (elem == null) {
             return 0;
+        }
 
         int result = elem.getName().length(); // name
         final String value = elem.getValue();
@@ -234,30 +232,26 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * @param quote     <code>true</code> to always format with quoted values,
      *                  <code>false</code> to use quotes only when necessary
      * @param formatter         the formatter to use, or <code>null</code>
-     *                          for the {@link #DEFAULT default}
+     *                          for the {@link #INSTANCE default}
      *
      * @return  the formatted parameters
      */
-    public final static
+    public static
         String formatParameters(final NameValuePair[] nvps,
                                 final boolean quote,
-                                HeaderValueFormatter formatter) {
-        if (formatter == null)
-            formatter = BasicHeaderValueFormatter.DEFAULT;
-        return formatter.formatParameters(null, nvps, quote).toString();
+                                final HeaderValueFormatter formatter) {
+        return (formatter != null ? formatter : BasicHeaderValueFormatter.INSTANCE)
+                .formatParameters(null, nvps, quote).toString();
     }
 
 
     // non-javadoc, see interface HeaderValueFormatter
-    public CharArrayBuffer formatParameters(CharArrayBuffer buffer,
-                                            NameValuePair[] nvps,
-                                            boolean quote) {
-        if (nvps == null) {
-            throw new IllegalArgumentException
-                ("Parameters must not be null.");
-        }
-
-        int len = estimateParametersLen(nvps);
+    public CharArrayBuffer formatParameters(final CharArrayBuffer charBuffer,
+                                            final NameValuePair[] nvps,
+                                            final boolean quote) {
+        Args.notNull(nvps, "Header parameter array");
+        final int len = estimateParametersLen(nvps);
+        CharArrayBuffer buffer = charBuffer;
         if (buffer == null) {
             buffer = new CharArrayBuffer(len);
         } else {
@@ -283,12 +277,13 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * @return  a length estimate, in number of characters
      */
     protected int estimateParametersLen(final NameValuePair[] nvps) {
-        if ((nvps == null) || (nvps.length < 1))
+        if ((nvps == null) || (nvps.length < 1)) {
             return 0;
+        }
 
         int result = (nvps.length-1) * 2; // "; " between the parameters
-        for (int i=0; i<nvps.length; i++) {
-            result += estimateNameValuePairLen(nvps[i]);
+        for (final NameValuePair nvp : nvps) {
+            result += estimateNameValuePairLen(nvp);
         }
 
         return result;
@@ -302,30 +297,26 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * @param quote     <code>true</code> to always format with a quoted value,
      *                  <code>false</code> to use quotes only when necessary
      * @param formatter         the formatter to use, or <code>null</code>
-     *                          for the {@link #DEFAULT default}
+     *                          for the {@link #INSTANCE default}
      *
      * @return  the formatted name-value pair
      */
-    public final static
+    public static
         String formatNameValuePair(final NameValuePair nvp,
                                    final boolean quote,
-                                   HeaderValueFormatter formatter) {
-        if (formatter == null)
-            formatter = BasicHeaderValueFormatter.DEFAULT;
-        return formatter.formatNameValuePair(null, nvp, quote).toString();
+                                   final HeaderValueFormatter formatter) {
+        return (formatter != null ? formatter : BasicHeaderValueFormatter.INSTANCE)
+                .formatNameValuePair(null, nvp, quote).toString();
     }
 
 
     // non-javadoc, see interface HeaderValueFormatter
-    public CharArrayBuffer formatNameValuePair(CharArrayBuffer buffer,
+    public CharArrayBuffer formatNameValuePair(final CharArrayBuffer charBuffer,
                                                final NameValuePair nvp,
                                                final boolean quote) {
-        if (nvp == null) {
-            throw new IllegalArgumentException
-                ("NameValuePair must not be null.");
-        }
-
-        int len = estimateNameValuePairLen(nvp);
+        Args.notNull(nvp, "Name / value pair");
+        final int len = estimateNameValuePairLen(nvp);
+        CharArrayBuffer buffer = charBuffer;
         if (buffer == null) {
             buffer = new CharArrayBuffer(len);
         } else {
@@ -351,8 +342,9 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * @return  a length estimate, in number of characters
      */
     protected int estimateNameValuePairLen(final NameValuePair nvp) {
-        if (nvp == null)
+        if (nvp == null) {
             return 0;
+        }
 
         int result = nvp.getName().length(); // name
         final String value = nvp.getValue();
@@ -376,25 +368,26 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      */
     protected void doFormatValue(final CharArrayBuffer buffer,
                                  final String value,
-                                 boolean quote) {
+                                 final boolean quote) {
 
-        if (!quote) {
-            for (int i = 0; (i < value.length()) && !quote; i++) {
-                quote = isSeparator(value.charAt(i));
+        boolean quoteFlag = quote;
+        if (!quoteFlag) {
+            for (int i = 0; (i < value.length()) && !quoteFlag; i++) {
+                quoteFlag = isSeparator(value.charAt(i));
             }
         }
 
-        if (quote) {
+        if (quoteFlag) {
             buffer.append('"');
         }
         for (int i = 0; i < value.length(); i++) {
-            char ch = value.charAt(i);
+            final char ch = value.charAt(i);
             if (isUnsafe(ch)) {
                 buffer.append('\\');
             }
             buffer.append(ch);
         }
-        if (quote) {
+        if (quoteFlag) {
             buffer.append('"');
         }
     }
@@ -408,7 +401,7 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * @return  <code>true</code> if the character is a separator,
      *          <code>false</code> otherwise
      */
-    protected boolean isSeparator(char ch) {
+    protected boolean isSeparator(final char ch) {
         return SEPARATORS.indexOf(ch) >= 0;
     }
 
@@ -421,7 +414,7 @@ public class BasicHeaderValueFormatter implements HeaderValueFormatter {
      * @return  <code>true</code> if the character is unsafe,
      *          <code>false</code> otherwise
      */
-    protected boolean isUnsafe(char ch) {
+    protected boolean isUnsafe(final char ch) {
         return UNSAFE_CHARS.indexOf(ch) >= 0;
     }
 

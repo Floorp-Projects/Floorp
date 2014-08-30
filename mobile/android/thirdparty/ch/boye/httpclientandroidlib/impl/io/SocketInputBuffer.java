@@ -28,50 +28,24 @@
 package ch.boye.httpclientandroidlib.impl.io;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.net.Socket;
 
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.io.EofSensor;
-import ch.boye.httpclientandroidlib.io.SessionInputBuffer;
 import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
- * {@link SessionInputBuffer} implementation bound to a {@link Socket}.
- * <p>
- * The following parameters can be used to customize the behavior of this
- * class:
- * <ul>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreProtocolPNames#HTTP_ELEMENT_CHARSET}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#MAX_LINE_LENGTH}</li>
- * </ul>
+ * {@link ch.boye.httpclientandroidlib.io.SessionInputBuffer} implementation
+ * bound to a {@link Socket}.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link SessionInputBufferImpl}
  */
+@NotThreadSafe
+@Deprecated
 public class SocketInputBuffer extends AbstractSessionInputBuffer implements EofSensor {
-
-    static private final Class SOCKET_TIMEOUT_CLASS = SocketTimeoutExceptionClass();
-
-    /**
-     * Returns <code>SocketTimeoutExceptionClass<code> or <code>null</code> if the class
-     * does not exist.
-     *
-     * @return <code>SocketTimeoutExceptionClass<code>, or <code>null</code> if unavailable.
-     */
-    static private Class SocketTimeoutExceptionClass() {
-        try {
-            return Class.forName("java.net.SocketTimeoutException");
-        } catch (ClassNotFoundException e) {
-            return null;
-        }
-    }
-
-    private static boolean isSocketTimeoutException(final InterruptedIOException e) {
-        if (SOCKET_TIMEOUT_CLASS != null) {
-            return SOCKET_TIMEOUT_CLASS.isInstance(e);
-        } else {
-            return true;
-        }
-    }
 
     private final Socket socket;
 
@@ -89,41 +63,37 @@ public class SocketInputBuffer extends AbstractSessionInputBuffer implements Eof
      */
     public SocketInputBuffer(
             final Socket socket,
-            int buffersize,
+            final int buffersize,
             final HttpParams params) throws IOException {
         super();
-        if (socket == null) {
-            throw new IllegalArgumentException("Socket may not be null");
-        }
+        Args.notNull(socket, "Socket");
         this.socket = socket;
         this.eof = false;
-        if (buffersize < 0) {
-            buffersize = socket.getReceiveBufferSize();
+        int n = buffersize;
+        if (n < 0) {
+            n = socket.getReceiveBufferSize();
         }
-        if (buffersize < 1024) {
-            buffersize = 1024;
+        if (n < 1024) {
+            n = 1024;
         }
-        init(socket.getInputStream(), buffersize, params);
+        init(socket.getInputStream(), n, params);
     }
 
+    @Override
     protected int fillBuffer() throws IOException {
-        int i = super.fillBuffer();
+        final int i = super.fillBuffer();
         this.eof = i == -1;
         return i;
     }
 
-    public boolean isDataAvailable(int timeout) throws IOException {
+    public boolean isDataAvailable(final int timeout) throws IOException {
         boolean result = hasBufferedData();
         if (!result) {
-            int oldtimeout = this.socket.getSoTimeout();
+            final int oldtimeout = this.socket.getSoTimeout();
             try {
                 this.socket.setSoTimeout(timeout);
                 fillBuffer();
                 result = hasBufferedData();
-            } catch (InterruptedIOException e) {
-                if (!isSocketTimeoutException(e)) {
-                    throw e;
-                }
             } finally {
                 socket.setSoTimeout(oldtimeout);
             }

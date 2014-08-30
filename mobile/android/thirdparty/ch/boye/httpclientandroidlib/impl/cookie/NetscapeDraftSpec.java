@@ -30,25 +30,25 @@ package ch.boye.httpclientandroidlib.impl.cookie;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.FormattedHeader;
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HeaderElement;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.cookie.ClientCookie;
 import ch.boye.httpclientandroidlib.cookie.Cookie;
 import ch.boye.httpclientandroidlib.cookie.CookieOrigin;
-import ch.boye.httpclientandroidlib.cookie.CookieSpec;
 import ch.boye.httpclientandroidlib.cookie.MalformedCookieException;
 import ch.boye.httpclientandroidlib.cookie.SM;
 import ch.boye.httpclientandroidlib.message.BufferedHeader;
 import ch.boye.httpclientandroidlib.message.ParserCursor;
+import ch.boye.httpclientandroidlib.util.Args;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 
 /**
- * This {@link CookieSpec} implementation conforms to the original draft
- * specification published by Netscape Communications. It should be avoided
- * unless absolutely necessary for compatibility with legacy code.
+ * This {@link ch.boye.httpclientandroidlib.cookie.CookieSpec} implementation conforms to
+ * the original draft specification published by Netscape Communications.
+ * It should be avoided unless absolutely necessary for compatibility with
+ * legacy applications.
  *
  * @since 4.0
  */
@@ -107,26 +107,22 @@ public class NetscapeDraftSpec extends CookieSpecBase {
       */
     public List<Cookie> parse(final Header header, final CookieOrigin origin)
             throws MalformedCookieException {
-        if (header == null) {
-            throw new IllegalArgumentException("Header may not be null");
-        }
-        if (origin == null) {
-            throw new IllegalArgumentException("Cookie origin may not be null");
-        }
+        Args.notNull(header, "Header");
+        Args.notNull(origin, "Cookie origin");
         if (!header.getName().equalsIgnoreCase(SM.SET_COOKIE)) {
             throw new MalformedCookieException("Unrecognized cookie header '"
                     + header.toString() + "'");
         }
-        NetscapeDraftHeaderParser parser = NetscapeDraftHeaderParser.DEFAULT;
-        CharArrayBuffer buffer;
-        ParserCursor cursor;
+        final NetscapeDraftHeaderParser parser = NetscapeDraftHeaderParser.DEFAULT;
+        final CharArrayBuffer buffer;
+        final ParserCursor cursor;
         if (header instanceof FormattedHeader) {
             buffer = ((FormattedHeader) header).getBuffer();
             cursor = new ParserCursor(
                     ((FormattedHeader) header).getValuePos(),
                     buffer.length());
         } else {
-            String s = header.getValue();
+            final String s = header.getValue();
             if (s == null) {
                 throw new MalformedCookieException("Header value is null");
             }
@@ -138,28 +134,23 @@ public class NetscapeDraftSpec extends CookieSpecBase {
     }
 
     public List<Header> formatCookies(final List<Cookie> cookies) {
-        if (cookies == null) {
-            throw new IllegalArgumentException("List of cookies may not be null");
-        }
-        if (cookies.isEmpty()) {
-            throw new IllegalArgumentException("List of cookies may not be empty");
-        }
-        CharArrayBuffer buffer = new CharArrayBuffer(20 * cookies.size());
+        Args.notEmpty(cookies, "List of cookies");
+        final CharArrayBuffer buffer = new CharArrayBuffer(20 * cookies.size());
         buffer.append(SM.COOKIE);
         buffer.append(": ");
         for (int i = 0; i < cookies.size(); i++) {
-            Cookie cookie = cookies.get(i);
+            final Cookie cookie = cookies.get(i);
             if (i > 0) {
                 buffer.append("; ");
             }
             buffer.append(cookie.getName());
-            String s = cookie.getValue();
+            final String s = cookie.getValue();
             if (s != null) {
                 buffer.append("=");
                 buffer.append(s);
             }
         }
-        List<Header> headers = new ArrayList<Header>(1);
+        final List<Header> headers = new ArrayList<Header>(1);
         headers.add(new BufferedHeader(buffer));
         return headers;
     }

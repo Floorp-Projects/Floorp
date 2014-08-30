@@ -29,6 +29,7 @@ package ch.boye.httpclientandroidlib.util;
 
 import java.io.Serializable;
 
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.protocol.HTTP;
 
 /**
@@ -36,6 +37,7 @@ import ch.boye.httpclientandroidlib.protocol.HTTP;
  *
  * @since 4.0
  */
+@NotThreadSafe
 public final class CharArrayBuffer implements Serializable {
 
     private static final long serialVersionUID = -6208952725094867135L;
@@ -49,16 +51,14 @@ public final class CharArrayBuffer implements Serializable {
      *
      * @param capacity the capacity
      */
-    public CharArrayBuffer(int capacity) {
+    public CharArrayBuffer(final int capacity) {
         super();
-        if (capacity < 0) {
-            throw new IllegalArgumentException("Buffer capacity may not be negative");
-        }
+        Args.notNegative(capacity, "Buffer capacity");
         this.buffer = new char[capacity];
     }
 
-    private void expand(int newlen) {
-        char newbuffer[] = new char[Math.max(this.buffer.length << 1, newlen)];
+    private void expand(final int newlen) {
+        final char newbuffer[] = new char[Math.max(this.buffer.length << 1, newlen)];
         System.arraycopy(this.buffer, 0, newbuffer, 0, this.len);
         this.buffer = newbuffer;
     }
@@ -75,7 +75,7 @@ public final class CharArrayBuffer implements Serializable {
      * range, <code>len</code> is negative, or
      * <code>off</code> + <code>len</code> is out of range.
      */
-    public void append(final char[] b, int off, int len) {
+    public void append(final char[] b, final int off, final int len) {
         if (b == null) {
             return;
         }
@@ -86,7 +86,7 @@ public final class CharArrayBuffer implements Serializable {
         if (len == 0) {
             return;
         }
-        int newlen = this.len + len;
+        final int newlen = this.len + len;
         if (newlen > this.buffer.length) {
             expand(newlen);
         }
@@ -100,16 +100,14 @@ public final class CharArrayBuffer implements Serializable {
      *
      * @param str    the string.
      */
-    public void append(String str) {
-        if (str == null) {
-            str = "null";
-        }
-        int strlen = str.length();
-        int newlen = this.len + strlen;
+    public void append(final String str) {
+        final String s = str != null ? str : "null";
+        final int strlen = s.length();
+        final int newlen = this.len + strlen;
         if (newlen > this.buffer.length) {
             expand(newlen);
         }
-        str.getChars(0, strlen, this.buffer, this.len);
+        s.getChars(0, strlen, this.buffer, this.len);
         this.len = newlen;
     }
 
@@ -126,7 +124,7 @@ public final class CharArrayBuffer implements Serializable {
      * range, <code>len</code> is negative, or
      * <code>off</code> + <code>len</code> is out of range.
      */
-    public void append(final CharArrayBuffer b, int off, int len) {
+    public void append(final CharArrayBuffer b, final int off, final int len) {
         if (b == null) {
             return;
         }
@@ -153,8 +151,8 @@ public final class CharArrayBuffer implements Serializable {
      *
      * @param   ch        the char to be appended.
      */
-    public void append(char ch) {
-        int newlen = this.len + 1;
+    public void append(final char ch) {
+        final int newlen = this.len + 1;
         if (newlen > this.buffer.length) {
             expand(newlen);
         }
@@ -176,7 +174,7 @@ public final class CharArrayBuffer implements Serializable {
      * range, <code>len</code> is negative, or
      * <code>off</code> + <code>len</code> is out of range.
      */
-    public void append(final byte[] b, int off, int len) {
+    public void append(final byte[] b, final int off, final int len) {
         if (b == null) {
             return;
         }
@@ -187,8 +185,8 @@ public final class CharArrayBuffer implements Serializable {
         if (len == 0) {
             return;
         }
-        int oldlen = this.len;
-        int newlen = oldlen + len;
+        final int oldlen = this.len;
+        final int newlen = oldlen + len;
         if (newlen > this.buffer.length) {
             expand(newlen);
         }
@@ -212,7 +210,7 @@ public final class CharArrayBuffer implements Serializable {
      * range, <code>len</code> is negative, or
      * <code>off</code> + <code>len</code> is out of range.
      */
-    public void append(final ByteArrayBuffer b, int off, int len) {
+    public void append(final ByteArrayBuffer b, final int off, final int len) {
         if (b == null) {
             return;
         }
@@ -243,7 +241,7 @@ public final class CharArrayBuffer implements Serializable {
      * @return char array
      */
     public char[] toCharArray() {
-        char[] b = new char[this.len];
+        final char[] b = new char[this.len];
         if (this.len > 0) {
             System.arraycopy(this.buffer, 0, b, 0, this.len);
         }
@@ -260,7 +258,7 @@ public final class CharArrayBuffer implements Serializable {
      * @throws     IndexOutOfBoundsException  if <code>index</code> is
      *             negative or greater than or equal to {@link #length()}.
      */
-    public char charAt(int i) {
+    public char charAt(final int i) {
         return this.buffer[i];
     }
 
@@ -301,11 +299,11 @@ public final class CharArrayBuffer implements Serializable {
      *
      * @param   required   the minimum required capacity.
      */
-    public void ensureCapacity(int required) {
+    public void ensureCapacity(final int required) {
         if (required <= 0) {
             return;
         }
-        int available = this.buffer.length - this.len;
+        final int available = this.buffer.length - this.len;
         if (required > available) {
             expand(this.len + required);
         }
@@ -321,7 +319,7 @@ public final class CharArrayBuffer implements Serializable {
      *               <code>len</code> argument is greater than the current
      *               capacity of the buffer or less than <code>0</code>.
      */
-    public void setLength(int len) {
+    public void setLength(final int len) {
         if (len < 0 || len > this.buffer.length) {
             throw new IndexOutOfBoundsException("len: "+len+" < 0 or > buffer len: "+this.buffer.length);
         }
@@ -362,17 +360,19 @@ public final class CharArrayBuffer implements Serializable {
      * {@link #length()}. If the <code>beginIndex</code> is greater than
      * the <code>endIndex</code>, <code>-1</code> is returned.
      *
-     * @param   ch          the char to search for.
-     * @param   beginIndex   the index to start the search from.
-     * @param   endIndex   the index to finish the search at.
+     * @param   ch     the char to search for.
+     * @param   from   the index to start the search from.
+     * @param   to     the index to finish the search at.
      * @return  the index of the first occurrence of the character in the buffer
      *   within the given bounds, or <code>-1</code> if the character does
      *   not occur.
      */
-    public int indexOf(int ch, int beginIndex, int endIndex) {
+    public int indexOf(final int ch, final int from, final int to) {
+        int beginIndex = from;
         if (beginIndex < 0) {
             beginIndex = 0;
         }
+        int endIndex = to;
         if (endIndex > this.len) {
             endIndex = this.len;
         }
@@ -397,7 +397,7 @@ public final class CharArrayBuffer implements Serializable {
      * @return  the index of the first occurrence of the character in the
      *   buffer, or <code>-1</code> if the character does not occur.
      */
-    public int indexOf(int ch) {
+    public int indexOf(final int ch) {
         return indexOf(ch, 0, this.len);
     }
 
@@ -415,7 +415,7 @@ public final class CharArrayBuffer implements Serializable {
      *             buffer, or <code>beginIndex</code> is larger than
      *             <code>endIndex</code>.
      */
-    public String substring(int beginIndex, int endIndex) {
+    public String substring(final int beginIndex, final int endIndex) {
         return new String(this.buffer, beginIndex, endIndex - beginIndex);
     }
 
@@ -426,8 +426,8 @@ public final class CharArrayBuffer implements Serializable {
      * non-whitespace character with the index lesser than
      * <code>endIndex</code>.
      *
-     * @param      beginIndex   the beginning index, inclusive.
-     * @param      endIndex     the ending index, exclusive.
+     * @param      from   the beginning index, inclusive.
+     * @param      to     the ending index, exclusive.
      * @return     the specified substring.
      * @exception  IndexOutOfBoundsException  if the
      *             <code>beginIndex</code> is negative, or
@@ -435,7 +435,9 @@ public final class CharArrayBuffer implements Serializable {
      *             buffer, or <code>beginIndex</code> is larger than
      *             <code>endIndex</code>.
      */
-    public String substringTrimmed(int beginIndex, int endIndex) {
+    public String substringTrimmed(final int from, final int to) {
+        int beginIndex = from;
+        int endIndex = to;
         if (beginIndex < 0) {
             throw new IndexOutOfBoundsException("Negative beginIndex: "+beginIndex);
         }
@@ -454,6 +456,7 @@ public final class CharArrayBuffer implements Serializable {
         return new String(this.buffer, beginIndex, endIndex - beginIndex);
     }
 
+    @Override
     public String toString() {
         return new String(this.buffer, 0, this.len);
     }

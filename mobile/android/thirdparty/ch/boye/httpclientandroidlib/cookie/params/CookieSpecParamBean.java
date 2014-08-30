@@ -30,7 +30,6 @@ package ch.boye.httpclientandroidlib.cookie.params;
 import java.util.Collection;
 
 import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.params.HttpAbstractParamBean;
 import ch.boye.httpclientandroidlib.params.HttpParams;
 
@@ -40,7 +39,11 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
  * conventions.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use constructor parameters of {@link
+ *   ch.boye.httpclientandroidlib.cookie.CookieSpecProvider}s.
  */
+@Deprecated
 @NotThreadSafe
 public class CookieSpecParamBean extends HttpAbstractParamBean {
 

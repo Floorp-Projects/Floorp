@@ -702,7 +702,7 @@ var SelectionHandler = {
   attachCaret: function sh_attachCaret(aElement) {
     // Ensure it isn't disabled, isn't handled by Android native dialog, and is editable text element
     if (aElement.disabled || InputWidgetHelper.hasInputWidget(aElement) || !this.isElementEditableText(aElement)) {
-      return;
+      return false;
     }
 
     this._initTargetInfo(aElement, this.TYPE_CURSOR);
@@ -722,6 +722,8 @@ var SelectionHandler = {
       handles: [this.HANDLE_TYPE_MIDDLE]
     });
     this._updateMenu();
+
+    return true;
   },
 
   // Target initialization for both TYPE_CURSOR and TYPE_SELECTION

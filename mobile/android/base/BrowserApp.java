@@ -669,6 +669,10 @@ public class BrowserApp extends GeckoApp
         super.onResume();
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Prompt:ShowTop");
+        if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
+            // Starts or pings the stumbler lib, see also usage in handleMessage(): Gecko:DelayedStartup.
+            GeckoPreferences.broadcastStumblerPref(this);
+        }
     }
 
     @Override
@@ -1418,6 +1422,11 @@ public class BrowserApp extends GeckoApp
                     }
                 });
 
+                if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
+                    // Start (this acts as ping if started already) the stumbler lib; if the stumbler has queued data it will upload it.
+                    // Stumbler operates on its own thread, and startup impact is further minimized by delaying work (such as upload) a few seconds.
+                    GeckoPreferences.broadcastStumblerPref(this);
+                }
                 super.handleMessage(event, message);
             } else if (event.equals("Gecko:Ready")) {
                 // Handle this message in GeckoApp, but also enable the Settings

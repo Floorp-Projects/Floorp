@@ -26,6 +26,7 @@ browser.jar:
     content/browser/devtools/frame-script-utils.js                     (shared/frame-script-utils.js)
     content/browser/devtools/styleeditor.xul                           (styleeditor/styleeditor.xul)
     content/browser/devtools/styleeditor.css                           (styleeditor/styleeditor.css)
+    content/browser/devtools/storage.xul                               (storage/storage.xul)
     content/browser/devtools/computedview.xhtml                        (styleinspector/computedview.xhtml)
     content/browser/devtools/cssruleview.xhtml                         (styleinspector/cssruleview.xhtml)
     content/browser/devtools/ruleview.css                              (styleinspector/ruleview.css)

@@ -27,30 +27,29 @@
 
 package ch.boye.httpclientandroidlib.client.protocol;
 
-import java.util.List;
-
 import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.auth.AuthSchemeRegistry;
 import ch.boye.httpclientandroidlib.client.CookieStore;
 import ch.boye.httpclientandroidlib.client.CredentialsProvider;
 import ch.boye.httpclientandroidlib.cookie.CookieSpecRegistry;
-import ch.boye.httpclientandroidlib.params.HttpParams;
 import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Configuration facade for {@link HttpContext} instances.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link HttpClientContext}
  */
 @NotThreadSafe
+@Deprecated
 public class ClientContextConfigurer implements ClientContext {
 
     private final HttpContext context;
 
     public ClientContextConfigurer (final HttpContext context) {
-        if (context == null)
-            throw new IllegalArgumentException("HTTP context may not be null");
+        Args.notNull(context, "HTTP context");
         this.context = context;
     }
 
@@ -68,16 +67,6 @@ public class ClientContextConfigurer implements ClientContext {
 
     public void setCredentialsProvider(final CredentialsProvider provider) {
         this.context.setAttribute(CREDS_PROVIDER, provider);
-    }
-
-    /**
-     * @deprecated (4.1-alpha1) Use {@link HttpParams#setParameter(String, Object)} to set the parameters
-     * {@link ch.boye.httpclientandroidlib.auth.params.AuthPNames#TARGET_AUTH_PREF AuthPNames#TARGET_AUTH_PREF} and 
-     * {@link ch.boye.httpclientandroidlib.auth.params.AuthPNames#PROXY_AUTH_PREF AuthPNames#PROXY_AUTH_PREF} instead
-     */
-    @Deprecated
-    public void setAuthSchemePref(final List<String> list) {
-        this.context.setAttribute(AUTH_SCHEME_PREF, list);
     }
 
 }

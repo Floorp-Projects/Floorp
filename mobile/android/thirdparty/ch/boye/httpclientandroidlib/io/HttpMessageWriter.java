@@ -38,17 +38,17 @@ import ch.boye.httpclientandroidlib.HttpMessage;
  *
  * @since 4.0
  */
-public interface HttpMessageWriter {
+public interface HttpMessageWriter<T extends HttpMessage> {
 
     /**
      * Serializes an instance of {@link HttpMessage} to the underlying data
      * sink.
      *
-     * @param message
+     * @param message HTTP message
      * @throws IOException in case of an I/O error
      * @throws HttpException in case of HTTP protocol violation
      */
-    void write(HttpMessage message)
+    void write(T message)
         throws IOException, HttpException;
 
 }

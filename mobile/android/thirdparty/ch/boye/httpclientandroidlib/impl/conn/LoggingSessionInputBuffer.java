@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -23,26 +24,26 @@
  * <http://www.apache.org/>.
  *
  */
-
 package ch.boye.httpclientandroidlib.impl.conn;
 
 import java.io.IOException;
 
+import ch.boye.httpclientandroidlib.Consts;
 import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.io.EofSensor;
 import ch.boye.httpclientandroidlib.io.HttpTransportMetrics;
 import ch.boye.httpclientandroidlib.io.SessionInputBuffer;
-import ch.boye.httpclientandroidlib.protocol.HTTP;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 
 /**
  * Logs all data read to the wire LOG.
  *
- *
  * @since 4.0
+ *
+ * @deprecated (4.3) no longer used.
  */
 @Immutable
+@Deprecated
 public class LoggingSessionInputBuffer implements SessionInputBuffer, EofSensor {
 
     /** Original session input buffer. */
@@ -67,19 +68,19 @@ public class LoggingSessionInputBuffer implements SessionInputBuffer, EofSensor 
         this.in = in;
         this.eofSensor = in instanceof EofSensor ? (EofSensor) in : null;
         this.wire = wire;
-        this.charset = charset != null ? charset : HTTP.ASCII;
+        this.charset = charset != null ? charset : Consts.ASCII.name();
     }
 
     public LoggingSessionInputBuffer(final SessionInputBuffer in, final Wire wire) {
         this(in, wire, null);
     }
 
-    public boolean isDataAvailable(int timeout) throws IOException {
+    public boolean isDataAvailable(final int timeout) throws IOException {
         return this.in.isDataAvailable(timeout);
     }
 
-    public int read(byte[] b, int off, int len) throws IOException {
-        int l = this.in.read(b,  off,  len);
+    public int read(final byte[] b, final int off, final int len) throws IOException {
+        final int l = this.in.read(b,  off,  len);
         if (this.wire.enabled() && l > 0) {
             this.wire.input(b, off, l);
         }
@@ -87,15 +88,15 @@ public class LoggingSessionInputBuffer implements SessionInputBuffer, EofSensor 
     }
 
     public int read() throws IOException {
-        int l = this.in.read();
+        final int l = this.in.read();
         if (this.wire.enabled() && l != -1) {
             this.wire.input(l);
         }
         return l;
     }
 
-    public int read(byte[] b) throws IOException {
-        int l = this.in.read(b);
+    public int read(final byte[] b) throws IOException {
+        final int l = this.in.read(b);
         if (this.wire.enabled() && l > 0) {
             this.wire.input(b, 0, l);
         }
@@ -103,20 +104,20 @@ public class LoggingSessionInputBuffer implements SessionInputBuffer, EofSensor 
     }
 
     public String readLine() throws IOException {
-        String s = this.in.readLine();
+        final String s = this.in.readLine();
         if (this.wire.enabled() && s != null) {
-            String tmp = s + "\r\n";
+            final String tmp = s + "\r\n";
             this.wire.input(tmp.getBytes(this.charset));
         }
         return s;
     }
 
     public int readLine(final CharArrayBuffer buffer) throws IOException {
-        int l = this.in.readLine(buffer);
+        final int l = this.in.readLine(buffer);
         if (this.wire.enabled() && l >= 0) {
-            int pos = buffer.length() - l;
-            String s = new String(buffer.buffer(), pos, l);
-            String tmp = s + "\r\n";
+            final int pos = buffer.length() - l;
+            final String s = new String(buffer.buffer(), pos, l);
+            final String tmp = s + "\r\n";
             this.wire.input(tmp.getBytes(this.charset));
         }
         return l;

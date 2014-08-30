@@ -10,7 +10,5 @@
     <ListPreference
         android:key="search.engines.default"
         android:title="@string/pref_searchProvider_title"
-        android:dialogTitle="@string/pref_searchProvider_title"
-        android:entries="@array/pref_searchProvider_entries"
-        android:entryValues="@array/pref_searchProvider_values" />
+        android:dialogTitle="@string/pref_searchProvider_title" />
 </PreferenceScreen>

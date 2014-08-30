@@ -5,6 +5,7 @@
 package org.mozilla.search.providers;
 
 import android.net.Uri;
+import android.util.Log;
 import android.util.Xml;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -19,6 +20,7 @@ import java.util.Locale;
  * the search activity.
  */
 public class SearchEngine {
+    private static final String LOG_TAG = "SearchEngine";
 
     private static final String URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
     private static final String URLTYPE_SEARCH_HTML  = "text/html";
@@ -166,6 +168,10 @@ public class SearchEngine {
         return String.format(STYLE_INJECTION_SCRIPT, css);
     }
 
+    public String getIdentifier() {
+        return identifier;
+    }
+
     public String getName() {
         return shortName;
     }
@@ -184,6 +190,10 @@ public class SearchEngine {
      * @param query The user's query. This method will escape and encode the query.
      */
     public String resultsUriForQuery(String query) {
+        if (resultsUri == null) {
+            Log.e(LOG_TAG, "No results URL for search engine: " + identifier);
+            return "";
+        }
         final String template = Uri.decode(resultsUri.toString());
         return paramSubstitution(template, Uri.encode(query));
     }
@@ -194,6 +204,10 @@ public class SearchEngine {
      * @param query The user's query. This method will escape and encode the query.
      */
     public String getSuggestionTemplate(String query) {
+        if (suggestUri == null) {
+            Log.e(LOG_TAG, "No suggestions template for search engine: " + identifier);
+            return "";
+        }
         final String template = Uri.decode(suggestUri.toString());
         return paramSubstitution(template, Uri.encode(query));
     }

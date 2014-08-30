@@ -27,7 +27,6 @@
 
 package ch.boye.httpclientandroidlib;
 
-import ch.boye.httpclientandroidlib.ProtocolException;
 
 /**
  * Signals an unsupported version of the HTTP protocol.

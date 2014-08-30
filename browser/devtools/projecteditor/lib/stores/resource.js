@@ -58,6 +58,13 @@ var Resource = Class({
   get hasChildren() { return this.children && this.children.size > 0; },
 
   /**
+   * Is this Resource the root (top level for the store)?
+   */
+  get isRoot() {
+    return !this.parent
+  },
+
+  /**
    * Sorted array of children for display
    */
   get childrenSorted() {

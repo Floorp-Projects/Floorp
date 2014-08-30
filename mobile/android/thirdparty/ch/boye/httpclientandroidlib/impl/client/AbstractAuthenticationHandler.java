@@ -50,13 +50,17 @@ import ch.boye.httpclientandroidlib.client.params.AuthPolicy;
 import ch.boye.httpclientandroidlib.client.protocol.ClientContext;
 import ch.boye.httpclientandroidlib.protocol.HTTP;
 import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.util.Asserts;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 
 /**
  * Base class for {@link AuthenticationHandler} implementations.
  *
  * @since 4.0
+ *
+ * @deprecated (4.2)  use {@link ch.boye.httpclientandroidlib.client.AuthenticationStrategy}
  */
+@Deprecated
 @Immutable
 public abstract class AbstractAuthenticationHandler implements AuthenticationHandler {
 
@@ -77,15 +81,15 @@ public abstract class AbstractAuthenticationHandler implements AuthenticationHan
     protected Map<String, Header> parseChallenges(
             final Header[] headers) throws MalformedChallengeException {
 
-        Map<String, Header> map = new HashMap<String, Header>(headers.length);
-        for (Header header : headers) {
-            CharArrayBuffer buffer;
+        final Map<String, Header> map = new HashMap<String, Header>(headers.length);
+        for (final Header header : headers) {
+            final CharArrayBuffer buffer;
             int pos;
             if (header instanceof FormattedHeader) {
                 buffer = ((FormattedHeader) header).getBuffer();
                 pos = ((FormattedHeader) header).getValuePos();
             } else {
-                String s = header.getValue();
+                final String s = header.getValue();
                 if (s == null) {
                     throw new MalformedChallengeException("Header value is null");
                 }
@@ -96,12 +100,12 @@ public abstract class AbstractAuthenticationHandler implements AuthenticationHan
             while (pos < buffer.length() && HTTP.isWhitespace(buffer.charAt(pos))) {
                 pos++;
             }
-            int beginIndex = pos;
+            final int beginIndex = pos;
             while (pos < buffer.length() && !HTTP.isWhitespace(buffer.charAt(pos))) {
                 pos++;
             }
-            int endIndex = pos;
-            String s = buffer.substring(beginIndex, endIndex);
+            final int endIndex = pos;
+            final String s = buffer.substring(beginIndex, endIndex);
             map.put(s.toLowerCase(Locale.ENGLISH), header);
         }
         return map;
@@ -136,12 +140,9 @@ public abstract class AbstractAuthenticationHandler implements AuthenticationHan
             final HttpResponse response,
             final HttpContext context) throws AuthenticationException {
 
-        AuthSchemeRegistry registry = (AuthSchemeRegistry) context.getAttribute(
+        final AuthSchemeRegistry registry = (AuthSchemeRegistry) context.getAttribute(
                 ClientContext.AUTHSCHEME_REGISTRY);
-        if (registry == null) {
-            throw new IllegalStateException("AuthScheme registry not set in HTTP context");
-        }
-
+        Asserts.notNull(registry, "AuthScheme registry");
         Collection<String> authPrefs = getAuthPreferences(response, context);
         if (authPrefs == null) {
             authPrefs = DEFAULT_SCHEME_PRIORITY;
@@ -153,8 +154,8 @@ public abstract class AbstractAuthenticationHandler implements AuthenticationHan
         }
 
         AuthScheme authScheme = null;
-        for (String id: authPrefs) {
-            Header challenge = challenges.get(id.toLowerCase(Locale.ENGLISH));
+        for (final String id: authPrefs) {
+            final Header challenge = challenges.get(id.toLowerCase(Locale.ENGLISH));
 
             if (challenge != null) {
                 if (this.log.isDebugEnabled()) {
@@ -163,7 +164,7 @@ public abstract class AbstractAuthenticationHandler implements AuthenticationHan
                 try {
                     authScheme = registry.getAuthScheme(id, response.getParams());
                     break;
-                } catch (IllegalStateException e) {
+                } catch (final IllegalStateException e) {
                     if (this.log.isWarnEnabled()) {
                         this.log.warn("Authentication scheme " + id + " not supported");
                         // Try again

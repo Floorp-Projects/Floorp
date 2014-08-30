@@ -36,7 +36,10 @@ import ch.boye.httpclientandroidlib.conn.routing.HttpRoute;
  * Interface to access routing information of a client side connection.
  *
  * @since 4.1
+ *
+ * @deprecated (4.3) replaced by {@link HttpClientConnectionManager}.
  */
+@Deprecated
 public interface HttpRoutedConnection extends HttpInetConnection {
 
     /**

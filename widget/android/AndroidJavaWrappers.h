@@ -720,6 +720,7 @@ public:
         TELEMETRY_UI_EVENT = 44,
         GAMEPAD_ADDREMOVE = 45,
         GAMEPAD_DATA = 46,
+        LONG_PRESS = 47,
         dummy_java_enum_list_end
     };
 
