@@ -222,6 +222,48 @@ add_task(function* test_main_crash_event_file() {
   Assert.equal(count, 0);
 });
 
+add_task(function* test_crash_submission_event_file() {
+  let m = yield getManager();
+  yield m.createEventsFile("1", "crash.main.1", DUMMY_DATE, "crash1");
+  yield m.createEventsFile("1-submission", "crash.submission.1", DUMMY_DATE_2,
+                           "crash1\nfalse\n");
+
+  // The line below has been intentionally commented out to make sure that
+  // the crash record is created when one does not exist.
+  //yield m.createEventsFile("2", "crash.main.1", DUMMY_DATE, "crash2");
+  yield m.createEventsFile("2-submission", "crash.submission.1", DUMMY_DATE_2,
+                           "crash2\ntrue\nbp-2");
+  let count = yield m.aggregateEventsFiles();
+  Assert.equal(count, 3);
+
+  let crashes = yield m.getCrashes();
+  Assert.equal(crashes.length, 2);
+
+  let map = new Map(crashes.map(crash => [crash.id, crash]));
+
+  let crash1 = map.get("crash1");
+  Assert.ok(!!crash1);
+  Assert.equal(crash1.remoteID, null);
+  let crash2 = map.get("crash2");
+  Assert.ok(!!crash2);
+  Assert.equal(crash2.remoteID, "bp-2");
+
+  Assert.equal(crash1.submissions.size, 1);
+  let submission = crash1.submissions.values().next().value;
+  Assert.equal(submission.result, m.SUBMISSION_RESULT_FAILED);
+  Assert.equal(submission.requestDate.getTime(), DUMMY_DATE_2.getTime());
+  Assert.equal(submission.responseDate.getTime(), DUMMY_DATE_2.getTime());
+
+  Assert.equal(crash2.submissions.size, 1);
+  submission = crash2.submissions.values().next().value;
+  Assert.equal(submission.result, m.SUBMISSION_RESULT_OK);
+  Assert.equal(submission.requestDate.getTime(), DUMMY_DATE_2.getTime());
+  Assert.equal(submission.responseDate.getTime(), DUMMY_DATE_2.getTime());
+
+  count = yield m.aggregateEventsFiles();
+  Assert.equal(count, 0);
+});
+
 add_task(function* test_multiline_crash_id_rejected() {
   let m = yield getManager();
   yield m.createEventsFile("1", "crash.main.1", DUMMY_DATE, "id1\nid2");

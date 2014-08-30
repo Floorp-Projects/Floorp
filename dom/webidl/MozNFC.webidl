@@ -4,8 +4,7 @@
 
  /* Copyright © 2013 Deutsche Telekom, Inc. */
 
-[NoInterfaceObject,
- CheckPermissions="nfc-manager", AvailableIn="CertifiedApps"]
+[NoInterfaceObject]
 interface MozNFCManager {
    /**
     * API to check if the given application's manifest

@@ -218,19 +218,6 @@ SVGDocumentWrapper::SetCurrentTime(float aTime)
   }
 }
 
-void
-SVGDocumentWrapper::TickRefreshDriver()
-{
-  nsCOMPtr<nsIPresShell> presShell;
-  mViewer->GetPresShell(getter_AddRefs(presShell));
-  if (presShell) {
-    nsPresContext* presContext = presShell->GetPresContext();
-    if (presContext) {
-      presContext->RefreshDriver()->DoTick();
-    }
-  }
-}
-
 /** nsIStreamListener methods **/
 
 /* void onDataAvailable (in nsIRequest request, in nsISupports ctxt,

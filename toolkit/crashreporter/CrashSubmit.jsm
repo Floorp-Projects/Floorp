@@ -101,9 +101,11 @@ function getPendingMinidump(id) {
   let pendingDir = getDir("pending");
   let dump = pendingDir.clone();
   let extra = pendingDir.clone();
+  let memory = pendingDir.clone();
   dump.append(id + ".dmp");
   extra.append(id + ".extra");
-  return [dump, extra];
+  memory.append(id + ".memory.json.gz");
+  return [dump, extra, memory];
 }
 
 function getAllPendingMinidumpsIDs() {
@@ -162,6 +164,13 @@ function pruneSavedDumps() {
         let dump = extra.clone();
         dump.leafName = matches[1] + '.dmp';
         dump.remove(false);
+
+        let memory = extra.clone();
+        memory.leafName = matches[1] + '.memory.json.gz';
+        if (memory.exists()) {
+          memory.remove(false);
+        }
+
         extra.remove(false);
       }
     }
@@ -206,6 +215,11 @@ Submitter.prototype = {
     try {
       this.dump.remove(false);
       this.extra.remove(false);
+
+      if (this.memory) {
+        this.memory.remove(false);
+      }
+
       for (let i of this.additionalDumps) {
         i.dump.remove(false);
       }
@@ -225,6 +239,7 @@ Submitter.prototype = {
     this.iframe = null;
     this.dump = null;
     this.extra = null;
+    this.memory = null;
     this.additionalDumps = null;
     // remove this object from the list of active submissions
     let idx = CrashSubmit._activeSubmissions.indexOf(this);
@@ -271,6 +286,9 @@ Submitter.prototype = {
     }
     // add the minidumps
     formData.append("upload_file_minidump", File(this.dump.path));
+    if (this.memory) {
+      formData.append("memory_report", File(this.memory.path));
+    }
     if (this.additionalDumps.length > 0) {
       let names = [];
       for (let i of this.additionalDumps) {
@@ -280,9 +298,9 @@ Submitter.prototype = {
       }
     }
 
-    let submissionID = Cc["@mozilla.org/uuid-generator;1"]
-                         .getService(Ci.nsIUUIDGenerator)
-                         .generateUUID().toString().slice(1, -1);
+    let submissionID = "sub-" + Cc["@mozilla.org/uuid-generator;1"]
+                                  .getService(Ci.nsIUUIDGenerator)
+                                  .generateUUID().toString().slice(1, -1);
     let manager = Services.crashmanager;
 
     let self = this;
@@ -353,11 +371,19 @@ Submitter.prototype = {
 
   submit: function Submitter_submit()
   {
-    let [dump, extra] = getPendingMinidump(this.id);
+    let [dump, extra, memory] = getPendingMinidump(this.id);
+
     if (!dump.exists() || !extra.exists()) {
       this.notifyStatus(FAILED);
       this.cleanup();
       return false;
+    }
+    this.dump = dump;
+    this.extra = extra;
+
+    // The memory file may or may not exist
+    if (memory.exists()) {
+      this.memory = memory;
     }
 
     let extraKeyVals = parseKeyValuePairsFromFile(extra);
@@ -371,7 +397,7 @@ Submitter.prototype = {
     if ("additional_minidumps" in this.extraKeyVals) {
       let names = this.extraKeyVals.additional_minidumps.split(',');
       for (let name of names) {
-        let [dump, extra] = getPendingMinidump(this.id + "-" + name);
+        let [dump, extra, memory] = getPendingMinidump(this.id + "-" + name);
         if (!dump.exists()) {
           this.notifyStatus(FAILED);
           this.cleanup();
@@ -383,8 +409,6 @@ Submitter.prototype = {
 
     this.notifyStatus(SUBMITTING);
 
-    this.dump = dump;
-    this.extra = extra;
     this.additionalDumps = additionalDumps;
 
     if (!this.submitForm()) {
@@ -467,9 +491,12 @@ this.CrashSubmit = {
    *        Filename (minus .dmp extension) of the minidump to delete.
    */
   delete: function CrashSubmit_delete(id) {
-    let [dump, extra] = getPendingMinidump(id);
-    dump.QueryInterface(Ci.nsIFile).remove(false);
-    extra.QueryInterface(Ci.nsIFile).remove(false);
+    let [dump, extra, memory] = getPendingMinidump(id);
+    dump.remove(false);
+    extra.remove(false);
+    if (memory.exists()) {
+      memory.remove(false);
+    }
   },
 
   /**

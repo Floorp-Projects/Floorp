@@ -335,11 +335,11 @@ nr_reg_fetch_node(char *name, unsigned char type, nr_registry_node **node, int *
 {
     int r, _status;
 
-    if ((r=nr_reg_is_valid(name)))
-      ABORT(r);
-
     *node = 0;
     *free_node = 0;
+
+    if ((r=nr_reg_is_valid(name)))
+      ABORT(r);
 
     if ((r=r_assoc_fetch(nr_registry, name, strlen(name)+1, (void*)node)))
       ABORT(r);
