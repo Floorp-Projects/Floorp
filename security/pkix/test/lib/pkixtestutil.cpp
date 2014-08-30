@@ -149,15 +149,6 @@ TLV(uint8_t tag, const ByteString& value)
   return result;
 }
 
-Result
-InitInputFromSECItem(const SECItem* secItem, /*out*/ Input& input)
-{
-  if (!secItem) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-  return input.Init(secItem->data, secItem->len);
-}
-
 class Output
 {
 public:
