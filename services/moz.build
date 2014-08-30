@@ -28,7 +28,4 @@ if CONFIG['MOZ_SERVICES_SYNC']:
 if CONFIG['MOZ_B2G']:
     DIRS += ['mobileid']
 
-if CONFIG['MOZ_SERVICES_CLOUDSYNC']:
-    DIRS += ['cloudsync']
-
 SPHINX_TREES['services'] = 'docs'

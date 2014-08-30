@@ -19,9 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CloudSync",
-                                  "resource://gre/modules/CloudSync.jsm");
-
 #ifdef MOZ_SERVICES_SYNC
 XPCOMUtils.defineLazyModuleGetter(this, "Weave",
                                   "resource://services-sync/main.js");
@@ -572,7 +569,7 @@ this.PlacesUIUtils = {
       var uriList = PlacesUtils.toISupportsString(urls.join("|"));
       var args = Cc["@mozilla.org/supports-array;1"].
                   createInstance(Ci.nsISupportsArray);
-      args.AppendElement(uriList);
+      args.AppendElement(uriList);      
       browserWindow = Services.ww.openWindow(aWindow,
                                              "chrome://browser/content/browser.xul",
                                              null, "chrome,dialog=no,all", args);
@@ -1005,18 +1002,17 @@ this.PlacesUIUtils = {
   },
 
   shouldShowTabsFromOtherComputersMenuitem: function() {
-    let weaveOK = Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED &&
-                  Weave.Svc.Prefs.get("firstSync", "") != "notReady";
-    let cloudSyncOK = CloudSync.ready && CloudSync().tabsReady && CloudSync().tabs.hasRemoteTabs();
-    return weaveOK || cloudSyncOK;
+    // If Sync isn't configured yet, then don't show the menuitem.
+    return Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED &&
+           Weave.Svc.Prefs.get("firstSync", "") != "notReady";
   },
 
   shouldEnableTabsFromOtherComputersMenuitem: function() {
-    let weaveEnabled = Weave.Service.isLoggedIn &&
-                       Weave.Service.engineManager.get("tabs") &&
-                       Weave.Service.engineManager.get("tabs").enabled;
-    let cloudSyncEnabled = CloudSync.ready && CloudSync().tabsReady && CloudSync().tabs.hasRemoteTabs();
-    return weaveEnabled || cloudSyncEnabled;
+    // The tabs engine might never be inited (if services.sync.registerEngines
+    // is modified), so make sure we avoid undefined errors.
+    return Weave.Service.isLoggedIn &&
+           Weave.Service.engineManager.get("tabs") &&
+           Weave.Service.engineManager.get("tabs").enabled;
   },
 };
 
