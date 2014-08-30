@@ -319,26 +319,10 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
     if (ins->arg()->isConstant()) {
         masm.storePtr(ImmWord(ToInt32(ins->arg())), dst);
     } else {
-        if (ins->arg()->isGeneralReg()) {
+        if (ins->arg()->isGeneralReg())
             masm.storePtr(ToRegister(ins->arg()), dst);
-        } else {
-            switch (mir->input()->type()) {
-              case MIRType_Double:
-              case MIRType_Float32:
-                masm.storeDouble(ToFloatRegister(ins->arg()), dst);
-                return true;
-              // StackPointer is SimdStackAlignment-aligned and ABIArgGenerator guarantees stack
-              // offsets are SimdStackAlignment-aligned.
-              case MIRType_Int32x4:
-                masm.storeAlignedInt32x4(ToFloatRegister(ins->arg()), dst);
-                return true;
-              case MIRType_Float32x4:
-                masm.storeAlignedFloat32x4(ToFloatRegister(ins->arg()), dst);
-                return true;
-              default: break;
-            }
-            MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected mir type in AsmJSPassStackArg");
-        }
+        else
+            masm.storeDouble(ToFloatRegister(ins->arg()), dst);
     }
     return true;
 }

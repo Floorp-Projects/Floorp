@@ -39,8 +39,8 @@ extern const JSFunctionSpec Int32x4Methods[];
 static const char *laneNames[] = {"lane 0", "lane 1", "lane 2", "lane3"};
 
 template<typename V>
-bool
-js::IsVectorObject(HandleValue v)
+static bool
+IsVectorObject(HandleValue v)
 {
     if (!v.isObject())
         return false;
@@ -55,24 +55,6 @@ js::IsVectorObject(HandleValue v)
 
     return typeRepr.as<X4TypeDescr>().type() == V::type;
 }
-
-template<typename V>
-bool
-js::ToSimdConstant(JSContext *cx, HandleValue v, jit::SimdConstant *out)
-{
-    typedef typename V::Elem Elem;
-    if (!IsVectorObject<V>(v)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR);
-        return false;
-    }
-
-    Elem *mem = reinterpret_cast<Elem *>(v.toObject().as<TypedObject>().typedMem());
-    *out = jit::SimdConstant::CreateX4(mem);
-    return true;
-}
-
-template bool js::ToSimdConstant<Int32x4>(JSContext *cx, HandleValue v, jit::SimdConstant *out);
-template bool js::ToSimdConstant<Float32x4>(JSContext *cx, HandleValue v, jit::SimdConstant *out);
 
 template<typename Elem>
 static Elem

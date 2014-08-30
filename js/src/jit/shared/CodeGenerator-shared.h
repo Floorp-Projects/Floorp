@@ -496,6 +496,8 @@ class CodeGeneratorShared : public LInstructionVisitor
   private:
     void generateInvalidateEpilogue();
 
+    void setupSimdAlignment(unsigned fixup);
+
   public:
     CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);
 

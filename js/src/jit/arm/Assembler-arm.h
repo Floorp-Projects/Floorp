@@ -145,8 +145,9 @@ static MOZ_CONSTEXPR_VAR FloatRegister d15 = {FloatRegisters::d15, VFPRegister::
 // load/store) operate in a single cycle when the address they are dealing with
 // is 8 byte aligned. Also, the ARM abi wants the stack to be 8 byte aligned at
 // function boundaries. I'm trying to make sure this is always true.
-static const uint32_t ABIStackAlignment = 8;
+static const uint32_t StackAlignment = 8;
 static const uint32_t CodeAlignment = 8;
+static const bool StackKeptAligned = true;
 
 // This boolean indicates whether we support SIMD instructions flavoured for
 // this architecture or not. Rather than a method in the LIRGenerator, it is
@@ -154,8 +155,6 @@ static const uint32_t CodeAlignment = 8;
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
 static const bool SupportsSimd = false;
 static const uint32_t SimdStackAlignment = 8;
-
-static const uint32_t AsmJSStackAlignment = SimdStackAlignment;
 
 static const Scale ScalePointer = TimesFour;
 
@@ -1552,9 +1551,6 @@ class Assembler : public AssemblerShared
 
     static bool SupportsFloatingPoint() {
         return HasVFP();
-    }
-    static bool SupportsSimd() {
-        return js::jit::SupportsSimd;
     }
 
   protected:

@@ -11187,7 +11187,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
     MAsmJSLoadGlobalVar(MIRType type, unsigned globalDataOffset, bool isConstant)
       : globalDataOffset_(globalDataOffset), isConstant_(isConstant)
     {
-        JS_ASSERT(IsNumberType(type) || IsSimdType(type));
+        JS_ASSERT(IsNumberType(type));
         setResultType(type);
         setMovable();
     }

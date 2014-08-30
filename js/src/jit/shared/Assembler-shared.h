@@ -640,9 +640,9 @@ class CallSite : public CallSiteDesc
 typedef Vector<CallSite, 0, SystemAllocPolicy> CallSiteVector;
 
 // As an invariant across architectures, within asm.js code:
-//   $sp % AsmJSStackAlignment = (sizeof(AsmJSFrame) + masm.framePushed) % AsmJSStackAlignment
+//   $sp % StackAlignment = (sizeof(AsmJSFrame) + masm.framePushed) % StackAlignment
 // Thus, AsmJSFrame represents the bytes pushed after the call (which occurred
-// with a AsmJSStackAlignment-aligned StackPointer) that are not included in
+// with a StackAlignment-aligned StackPointer) that are not included in
 // masm.framePushed.
 struct AsmJSFrame
 {
