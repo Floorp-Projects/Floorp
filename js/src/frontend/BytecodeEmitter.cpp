@@ -6056,12 +6056,7 @@ BytecodeEmitter::emitStatementList(ParseNode* pn, ptrdiff_t top)
     StmtInfoBCE stmtInfo(cx);
     pushStatement(&stmtInfo, STMT_BLOCK, top);
 
-    ParseNode* pnchild = pn->pn_head;
-
-    if (pn->pn_xflags & PNX_DESTRUCT)
-        pnchild = pnchild->pn_next;
-
-    for (ParseNode* pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
+    for (ParseNode* pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
         if (!emitTree(pn2))
             return false;
     }
@@ -6644,27 +6639,6 @@ BytecodeEmitter::emitLabeledStatement(const LabeledStatement* pn)
 }
 
 bool
-BytecodeEmitter::emitSyntheticStatements(ParseNode* pn, ptrdiff_t top)
-{
-    MOZ_ASSERT(pn->isArity(PN_LIST));
-
-    StmtInfoBCE stmtInfo(cx);
-    pushStatement(&stmtInfo, STMT_SEQ, top);
-
-    ParseNode* pn2 = pn->pn_head;
-    if (pn->pn_xflags & PNX_DESTRUCT)
-        pn2 = pn2->pn_next;
-
-    for (; pn2; pn2 = pn2->pn_next) {
-        if (!emitTree(pn2))
-            return false;
-    }
-
-    popStatement();
-    return true;
-}
-
-bool
 BytecodeEmitter::emitConditionalExpression(ConditionalExpression& conditional)
 {
     /* Emit the condition, then branch if false to the else part. */
@@ -7003,18 +6977,32 @@ BytecodeEmitter::emitUnary(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitDefaultsAndDestructuring(ParseNode* pn, ParseNode* pndestruct)
+BytecodeEmitter::emitDefaultsAndDestructuring(ParseNode* pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_ARGSBODY));
 
-    uint32_t i = 0;
     ParseNode* pnlast = pn->last();
-    ParseNode* destruct = pndestruct ? pndestruct->pn_head : nullptr;
     for (ParseNode* arg = pn->pn_head; arg != pnlast; arg = arg->pn_next) {
-        if (arg->pn_dflags & PND_DEFAULT) {
-            if (!bindNameToSlot(arg))
+        MOZ_ASSERT(arg->isKind(PNK_NAME) || arg->isKind(PNK_ASSIGN));
+        ParseNode* argName = nullptr;
+        ParseNode* defNode = nullptr;
+        ParseNode* destruct = nullptr;
+        if (arg->isKind(PNK_ASSIGN)) {
+            argName = arg->pn_left;
+            defNode = arg->pn_right;
+        } else if (arg->pn_atom == cx->names().empty) {
+            argName = arg;
+            destruct = arg->expr();
+            MOZ_ASSERT(destruct);
+            if (destruct->isKind(PNK_ASSIGN)) {
+                defNode = destruct->pn_right;
+                destruct = destruct->pn_left;
+            }
+        }
+        if (defNode) {
+            if (!bindNameToSlot(argName))
                 return false;
-            if (!emitVarOp(arg, JSOP_GETARG))
+            if (!emitVarOp(argName, JSOP_GETARG))
                 return false;
             if (!emit1(JSOP_UNDEFINED))
                 return false;
@@ -7026,22 +7014,22 @@ BytecodeEmitter::emitDefaultsAndDestructuring(ParseNode* pn, ParseNode* pndestru
             ptrdiff_t jump;
             if (!emitJump(JSOP_IFEQ, 0, &jump))
                 return false;
-            if (!emitTree(arg->expr()))
+            if (!emitTree(defNode))
                 return false;
-            if (!emitVarOp(arg, JSOP_SETARG))
+            if (!emitVarOp(argName, JSOP_SETARG))
                 return false;
             if (!emit1(JSOP_POP))
                 return false;
             SET_JUMP_OFFSET(code(jump), offset() - jump);
         }
-        if (destruct && destruct->pn_head->pn_right->frameSlot() == i) {
-            if (!emitTree(destruct))
+        if (destruct) {
+            if (!emitTree(argName))
                 return false;
+            if (!emitDestructuringOps(destruct, false))
+                 return false;
             if (!emit1(JSOP_POP))
                 return false;
-            destruct = destruct->pn_next;
         }
-        ++i;
     }
 
     return true;
@@ -7220,18 +7208,6 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         // 1. Defaults and Destructuring for each argument
         // 2. Functions
         ParseNode* pnchild = pnlast->pn_head;
-        ParseNode* pndestruct = nullptr;
-        bool hasDestructuring = pnlast->pn_xflags & PNX_DESTRUCT;
-        if (hasDestructuring) {
-            MOZ_ASSERT(pnchild->isKind(PNK_SEMI));
-            MOZ_ASSERT(pnchild->pn_kid->isKind(PNK_SEQ));
-#ifdef DEBUG
-            for (ParseNode* pnvar = pnchild->pn_kid->pn_head; pnvar; pnvar = pnvar->pn_next)
-                MOZ_ASSERT(pnvar->isKind(PNK_VAR) || pnvar->isKind(PNK_GLOBALCONST));
-#endif
-            pndestruct = pnchild->pn_head;
-            pnchild = pnchild->pn_next;
-        }
         bool hasDefaults = sc->asFunctionBox()->hasDefaults();
         ParseNode* rest = nullptr;
         bool restIsDefn = false;
@@ -7265,7 +7241,7 @@ BytecodeEmitter::emitTree(ParseNode* pn)
                     return false;
             }
         }
-        if (!emitDefaultsAndDestructuring(pn, pndestruct))
+        if (!emitDefaultsAndDestructuring(pn))
             return false;
         if (fun->hasRest() && hasDefaults) {
             if (restIsDefn && !emitVarOp(rest, JSOP_SETARG))
@@ -7382,10 +7358,6 @@ BytecodeEmitter::emitTree(ParseNode* pn)
 
       case PNK_STATEMENTLIST:
         ok = emitStatementList(pn, top);
-        break;
-
-      case PNK_SEQ:
-        ok = emitSyntheticStatements(pn, top);
         break;
 
       case PNK_SEMI:
