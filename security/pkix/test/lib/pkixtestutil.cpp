@@ -294,18 +294,12 @@ BitString(const ByteString& rawBytes, bool corrupt)
   return TLV(der::BIT_STRING, prefixed);
 }
 
-static SECItem*
-Boolean(PLArenaPool* arena, bool value)
+static ByteString
+Boolean(bool value)
 {
-  assert(arena);
-  SECItem* result(SECITEM_AllocItem(arena, nullptr, 3));
-  if (!result) {
-    return nullptr;
-  }
-  result->data[0] = der::BOOLEAN;
-  result->data[1] = 1; // length
-  result->data[2] = value ? 0xff : 0x00;
-  return result;
+  ByteString encodedValue;
+  encodedValue.push_back(value ? 0xff : 0x00);
+  return TLV(der::BOOLEAN, encodedValue);
 }
 
 static ByteString
@@ -570,10 +564,11 @@ Extension(PLArenaPool* arena, Input extnID,
   }
 
   if (criticality == ExtensionCriticality::Critical) {
-    SECItem* critical(Boolean(arena, true));
-    if (output.Add(critical) != Success) {
+    ByteString critical(Boolean(true));
+    if (critical == ENCODING_FAILED) {
       return nullptr;
     }
+    output.Add(critical);
   }
 
   SECItem* extnValueBytes(value.Squash(arena, der::SEQUENCE));
@@ -919,9 +914,11 @@ CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
   Output value;
 
   if (isCA) {
-    if (value.Add(Boolean(arena, true)) != Success) {
+    ByteString cA(Boolean(true));
+    if (cA == ENCODING_FAILED) {
       return nullptr;
     }
+    value.Add(cA);
   }
 
   if (pathLenConstraintValue) {
