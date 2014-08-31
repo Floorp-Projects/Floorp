@@ -252,7 +252,7 @@ static ByteString BasicOCSPResponse(OCSPResponseContext& context);
 static SECItem* ResponseData(OCSPResponseContext& context);
 static ByteString ResponderID(OCSPResponseContext& context);
 static ByteString KeyHash(OCSPResponseContext& context);
-static SECItem* SingleResponse(OCSPResponseContext& context);
+static ByteString SingleResponse(OCSPResponseContext& context);
 static ByteString CertID(OCSPResponseContext& context);
 static ByteString CertStatus(OCSPResponseContext& context);
 
@@ -1135,13 +1135,12 @@ ResponseData(OCSPResponseContext& context)
   if (producedAtEncoded == ENCODING_FAILED) {
     return nullptr;
   }
-  SECItem* responses = SingleResponse(context);
-  if (!responses) {
+  ByteString response(SingleResponse(context));
+  if (response == ENCODING_FAILED) {
     return nullptr;
   }
-  SECItem* responsesNested = EncodeNested(context.arena, der::SEQUENCE,
-                                          responses);
-  if (!responsesNested) {
+  ByteString responses(TLV(der::SEQUENCE, response));
+  if (responses == ENCODING_FAILED) {
     return nullptr;
   }
   SECItem* responseExtensions = nullptr;
@@ -1152,9 +1151,7 @@ ResponseData(OCSPResponseContext& context)
   Output output;
   output.Add(responderID);
   output.Add(producedAtEncoded);
-  if (output.Add(responsesNested) != Success) {
-    return nullptr;
-  }
+  output.Add(responses);
   if (responseExtensions) {
     if (output.Add(responseExtensions) != Success) {
       return nullptr;
@@ -1214,42 +1211,40 @@ KeyHash(OCSPResponseContext& context)
 //    thisUpdate              GeneralizedTime,
 //    nextUpdate          [0] EXPLICIT GeneralizedTime OPTIONAL,
 //    singleExtensions    [1] EXPLICIT Extensions OPTIONAL }
-SECItem*
+ByteString
 SingleResponse(OCSPResponseContext& context)
 {
   ByteString certID(CertID(context));
   if (certID == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   ByteString certStatus(CertStatus(context));
   if (certStatus == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   ByteString thisUpdateEncoded(TimeToGeneralizedTime(context.thisUpdate));
   if (thisUpdateEncoded == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   ByteString nextUpdateEncodedNested;
   if (context.includeNextUpdate) {
     ByteString nextUpdateEncoded(TimeToGeneralizedTime(context.nextUpdate));
     if (nextUpdateEncoded == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
     nextUpdateEncodedNested = TLV(der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0,
                                   nextUpdateEncoded);
     if (nextUpdateEncodedNested == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
   }
 
-  Output output;
-  output.Add(certID);
-  output.Add(certStatus);
-  output.Add(thisUpdateEncoded);
-  if (!nextUpdateEncodedNested.empty()) {
-    output.Add(nextUpdateEncodedNested);
-  }
-  return output.Squash(context.arena, der::SEQUENCE);
+  ByteString value;
+  value.append(certID);
+  value.append(certStatus);
+  value.append(thisUpdateEncoded);
+  value.append(nextUpdateEncodedNested);
+  return TLV(der::SEQUENCE, value);
 }
 
 // CertID          ::=     SEQUENCE {
