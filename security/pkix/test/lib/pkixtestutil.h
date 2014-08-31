@@ -38,6 +38,7 @@
 namespace mozilla { namespace pkix { namespace test {
 
 typedef std::basic_string<uint8_t> ByteString;
+extern const ByteString ENCODING_FAILED;
 
 // XXX: Ideally, we should define this instead:
 //
@@ -99,8 +100,7 @@ mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
 Result GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
                        /*out*/ ScopedSECKEYPrivateKey& privateKey);
 
-// The result will be owned by the arena
-const SECItem* ASCIIToDERName(PLArenaPool* arena, const char* cn);
+ByteString CNToDERName(const char* cn);
 
 // Replace one substring in item with another of the same length, but only if
 // the substring was found exactly once. The "same length" restriction is
@@ -136,9 +136,9 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
                                   Input signature,
                                   const SECItem* serialNumber,
-                                  const SECItem* issuerNameDER,
+                                  const ByteString& issuerNameDER,
                                   std::time_t notBefore, std::time_t notAfter,
-                                  const SECItem* subjectNameDER,
+                                  const ByteString& subjectNameDER,
                      /*optional*/ SECItem const* const* extensions,
                      /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
                                   SignatureAlgorithm signatureAlgorithm,
@@ -194,9 +194,9 @@ public:
   bool skipResponseBytes; // If true, don't include responseBytes
 
   // responderID
-  const SECItem* signerNameDER; // If set, responderID will use the byName
-                                // form; otherwise responderID will use the
-                                // byKeyHash form.
+  ByteString signerNameDER; // If set, responderID will use the byName
+                            // form; otherwise responderID will use the
+                            // byKeyHash form.
 
   std::time_t producedAt;
 

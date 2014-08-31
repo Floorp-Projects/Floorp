@@ -40,8 +40,8 @@ typedef ScopedPtr<CERTCertList, CERT_DestroyCertList> ScopedCERTCertList;
 
 // The result is owned by the arena
 static Input
-CreateCert(PLArenaPool* arena, const char* issuerStr,
-           const char* subjectStr, EndEntityOrCA endEntityOrCA,
+CreateCert(PLArenaPool* arena, const char* issuerCN,
+           const char* subjectCN, EndEntityOrCA endEntityOrCA,
            /*optional*/ SECKEYPrivateKey* issuerKey,
            /*out*/ ScopedSECKEYPrivateKey& subjectKey,
            /*out*/ ScopedCERTCertificate* subjectCert = nullptr)
@@ -51,10 +51,11 @@ CreateCert(PLArenaPool* arena, const char* issuerStr,
   const SECItem* serialNumber(CreateEncodedSerialNumber(arena,
                                                         serialNumberValue));
   EXPECT_TRUE(serialNumber);
-  const SECItem* issuerDER(ASCIIToDERName(arena, issuerStr));
-  EXPECT_TRUE(issuerDER);
-  const SECItem* subjectDER(ASCIIToDERName(arena, subjectStr));
-  EXPECT_TRUE(subjectDER);
+
+  ByteString issuerDER(CNToDERName(issuerCN));
+  EXPECT_NE(ENCODING_FAILED, issuerDER);
+  ByteString subjectDER(CNToDERName(subjectCN));
+  EXPECT_NE(ENCODING_FAILED, subjectDER);
 
   const SECItem* extensions[2] = { nullptr, nullptr };
   if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
@@ -90,8 +91,7 @@ public:
   bool SetUpCertChainTail()
   {
     static char const* const names[] = {
-        "CN=CA1 (Root)", "CN=CA2", "CN=CA3", "CN=CA4", "CN=CA5", "CN=CA6",
-        "CN=CA7"
+        "CA1 (Root)", "CA2", "CA3", "CA4", "CA5", "CA6", "CA7"
     };
 
     static_assert(MOZILLA_PKIX_ARRAY_LENGTH(names) ==
@@ -104,8 +104,7 @@ public:
     }
 
     for (size_t i = 0; i < MOZILLA_PKIX_ARRAY_LENGTH(names); ++i) {
-      const char* issuerName = i == 0 ? names[0]
-                                      : certChainTail[i - 1]->subjectName;
+      const char* issuerName = i == 0 ? names[0] : names[i-1];
       (void) CreateCert(arena.get(), issuerName, names[i],
                  EndEntityOrCA::MustBeCA, leafCAKey.get(), leafCAKey,
                  &certChainTail[i]);
@@ -245,8 +244,7 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
     ScopedSECKEYPrivateKey privateKey;
     ScopedCERTCertificate cert;
     Input certDER(CreateCert(arena.get(),
-                             trustDomain.GetLeafCACert()->subjectName,
-                             "CN=Direct End-Entity",
+                             "CA7", "Direct End-Entity",
                              EndEntityOrCA::MustBeEndEntity,
                              trustDomain.leafCAKey.get(), privateKey));
     ASSERT_EQ(Success,
@@ -261,7 +259,7 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
 
 TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
 {
-  static char const* const caCertName = "CN=CA Too Far";
+  static char const* const caCertName = "CA Too Far";
   ScopedSECKEYPrivateKey caPrivateKey;
 
   // We need a CERTCertificate for caCert so that the trustdomain's FindIssuer
@@ -269,8 +267,7 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
   ScopedCERTCertificate caCert;
 
   {
-    Input cert(CreateCert(arena.get(),
-                          trustDomain.GetLeafCACert()->subjectName,
+    Input cert(CreateCert(arena.get(), "CA7",
                           caCertName, EndEntityOrCA::MustBeCA,
                           trustDomain.leafCAKey.get(), caPrivateKey,
                           &caCert));
@@ -286,7 +283,7 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
   {
     ScopedSECKEYPrivateKey privateKey;
     Input cert(CreateCert(arena.get(), caCertName,
-                          "CN=End-Entity Too Far",
+                          "End-Entity Too Far",
                           EndEntityOrCA::MustBeEndEntity,
                           caPrivateKey.get(), privateKey));
     ASSERT_EQ(Result::ERROR_UNKNOWN_ISSUER,

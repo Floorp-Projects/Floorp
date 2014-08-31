@@ -33,7 +33,7 @@ using namespace mozilla::pkix::test;
 
 // Creates a self-signed certificate with the given extension.
 static Input
-CreateCert(PLArenaPool* arena, const char* subjectStr,
+CreateCert(PLArenaPool* arena, const char* subjectCN,
            SECItem const* const* extensions, // null-terminated array
            /*out*/ ScopedSECKEYPrivateKey& subjectKey)
 {
@@ -42,10 +42,10 @@ CreateCert(PLArenaPool* arena, const char* subjectStr,
   const SECItem* serialNumber(CreateEncodedSerialNumber(arena,
                                                         serialNumberValue));
   EXPECT_TRUE(serialNumber);
-  const SECItem* issuerDER(ASCIIToDERName(arena, subjectStr));
-  EXPECT_TRUE(issuerDER);
-  const SECItem* subjectDER(ASCIIToDERName(arena, subjectStr));
-  EXPECT_TRUE(subjectDER);
+  ByteString issuerDER(CNToDERName(subjectCN));
+  EXPECT_NE(ENCODING_FAILED, issuerDER);
+  ByteString subjectDER(CNToDERName(subjectCN));
+  EXPECT_NE(ENCODING_FAILED, subjectDER);
   SECItem* cert = CreateEncodedCertificate(
                                   arena, v3, sha256WithRSAEncryption,
                                   serialNumber, issuerDER,
@@ -152,7 +152,7 @@ TEST_F(pkixcert_extension, UnknownCriticalExtension)
     const_cast<unsigned char*>(unknownCriticalExtensionBytes),
     sizeof(unknownCriticalExtensionBytes)
   };
-  const char* certCN = "CN=Cert With Unknown Critical Extension";
+  const char* certCN = "Cert With Unknown Critical Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
   Input cert(CreateCert(arena.get(), certCN,
@@ -183,7 +183,7 @@ TEST_F(pkixcert_extension, UnknownNonCriticalExtension)
     const_cast<unsigned char*>(unknownNonCriticalExtensionBytes),
     sizeof(unknownNonCriticalExtensionBytes)
   };
-  const char* certCN = "CN=Cert With Unknown NonCritical Extension";
+  const char* certCN = "Cert With Unknown NonCritical Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
   Input cert(CreateCert(arena.get(), certCN,
@@ -215,7 +215,7 @@ TEST_F(pkixcert_extension, WrongOIDCriticalExtension)
     const_cast<unsigned char*>(wrongOIDCriticalExtensionBytes),
     sizeof(wrongOIDCriticalExtensionBytes)
   };
-  const char* certCN = "CN=Cert With Critical Wrong OID Extension";
+  const char* certCN = "Cert With Critical Wrong OID Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
   Input cert(CreateCert(arena.get(), certCN,
@@ -249,7 +249,7 @@ TEST_F(pkixcert_extension, CriticalAIAExtension)
     const_cast<unsigned char*>(criticalAIAExtensionBytes),
     sizeof(criticalAIAExtensionBytes)
   };
-  const char* certCN = "CN=Cert With Critical AIA Extension";
+  const char* certCN = "Cert With Critical AIA Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
   Input cert(CreateCert(arena.get(), certCN, &criticalAIAExtension, key));
@@ -279,7 +279,7 @@ TEST_F(pkixcert_extension, UnknownCriticalCEExtension)
     const_cast<unsigned char*>(unknownCriticalCEExtensionBytes),
     sizeof(unknownCriticalCEExtensionBytes)
   };
-  const char* certCN = "CN=Cert With Unknown Critical id-ce Extension";
+  const char* certCN = "Cert With Unknown Critical id-ce Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
   Input cert(CreateCert(arena.get(), certCN,
@@ -310,7 +310,7 @@ TEST_F(pkixcert_extension, KnownCriticalCEExtension)
     const_cast<unsigned char*>(criticalCEExtensionBytes),
     sizeof(criticalCEExtensionBytes)
   };
-  const char* certCN = "CN=Cert With Known Critical id-ce Extension";
+  const char* certCN = "Cert With Known Critical id-ce Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
   Input cert(CreateCert(arena.get(), certCN, &criticalCEExtension, key));
@@ -341,7 +341,7 @@ TEST_F(pkixcert_extension, DuplicateSubjectAltName)
     sizeof(DER_BYTES)
   };
   static SECItem const* const extensions[] = { &DER, &DER, nullptr };
-  static const char* certCN = "CN=Cert With Duplicate subjectAltName";
+  static const char* certCN = "Cert With Duplicate subjectAltName";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
   Input cert(CreateCert(arena.get(), certCN, extensions, key));
