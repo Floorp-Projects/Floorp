@@ -113,15 +113,12 @@ protected:
     longestRequiredSerialNumber->data[2] = 0x01; // value is 0x010000...00
   }
 
-  // The resultant issuerDER and issuerSPKI are owned by the arena.
   void MakeIssuerCertIDComponents(const char* issuerASCII,
-                                  /*out*/ Input& issuerDER,
-                                  /*out*/ Input& issuerSPKI)
+                                  /*out*/ ByteString& issuerDER,
+                                  /*out*/ ByteString& issuerSPKI)
   {
-    const SECItem* issuerDERSECItem = ASCIIToDERName(arena.get(), issuerASCII);
-    ASSERT_TRUE(issuerDERSECItem);
-    ASSERT_EQ(Success,
-              issuerDER.Init(issuerDERSECItem->data, issuerDERSECItem->len));
+    issuerDER = CNToDERName(issuerASCII);
+    ASSERT_NE(ENCODING_FAILED, issuerDER);
 
     ScopedSECKEYPublicKey issuerPublicKey;
     ScopedSECKEYPrivateKey issuerPrivateKey;
@@ -131,12 +128,7 @@ protected:
       SECKEY_EncodeDERSubjectPublicKeyInfo(issuerPublicKey.get()));
     ASSERT_TRUE(issuerSPKIOriginal);
 
-    SECItem issuerSPKICopy;
-    ASSERT_EQ(SECSuccess,
-              SECITEM_CopyItem(arena.get(), &issuerSPKICopy,
-                               issuerSPKIOriginal.get()));
-    ASSERT_EQ(Success,
-              issuerSPKI.Init(issuerSPKICopy.data, issuerSPKICopy.len));
+    issuerSPKI.assign(issuerSPKIOriginal->data, issuerSPKIOriginal->len);
   }
 
   CreateEncodedOCSPRequestTrustDomain trustDomain;
@@ -146,18 +138,26 @@ protected:
 // CreateEncodedOCSPRequest to fail.
 TEST_F(pkixocsp_CreateEncodedOCSPRequest, ChildCertLongSerialNumberTest)
 {
-  Input issuerDER;
-  Input issuerSPKI;
-  MakeIssuerCertIDComponents("CN=CA", issuerDER, issuerSPKI);
+  ByteString issuerDER;
+  ByteString issuerSPKI;
+  ASSERT_NO_FATAL_FAILURE(MakeIssuerCertIDComponents("CA", issuerDER,
+                                                     issuerSPKI));
+
+  Input issuer;
+  ASSERT_EQ(Success, issuer.Init(issuerDER.data(), issuerDER.length()));
+
+  Input spki;
+  ASSERT_EQ(Success, spki.Init(issuerSPKI.data(), issuerSPKI.length()));
+
   Input serialNumber;
   ASSERT_EQ(Success, serialNumber.Init(unsupportedLongSerialNumber->data,
                                        unsupportedLongSerialNumber->len));
+
   uint8_t ocspRequest[OCSP_REQUEST_MAX_LENGTH];
   size_t ocspRequestLength;
   ASSERT_EQ(Result::ERROR_BAD_DER,
             CreateEncodedOCSPRequest(trustDomain,
-                                     CertID(issuerDER, issuerSPKI,
-                                            serialNumber),
+                                     CertID(issuer, spki, serialNumber),
                                      ocspRequest, ocspRequestLength));
 }
 
@@ -165,17 +165,25 @@ TEST_F(pkixocsp_CreateEncodedOCSPRequest, ChildCertLongSerialNumberTest)
 // it's required to support (i.e. 20 octets).
 TEST_F(pkixocsp_CreateEncodedOCSPRequest, LongestSupportedSerialNumberTest)
 {
-  Input issuerDER;
-  Input issuerSPKI;
-  MakeIssuerCertIDComponents("CN=CA", issuerDER, issuerSPKI);
+  ByteString issuerDER;
+  ByteString issuerSPKI;
+  ASSERT_NO_FATAL_FAILURE(MakeIssuerCertIDComponents("CA", issuerDER,
+                                                     issuerSPKI));
+
+  Input issuer;
+  ASSERT_EQ(Success, issuer.Init(issuerDER.data(), issuerDER.length()));
+
+  Input spki;
+  ASSERT_EQ(Success, spki.Init(issuerSPKI.data(), issuerSPKI.length()));
+
   Input serialNumber;
   ASSERT_EQ(Success, serialNumber.Init(longestRequiredSerialNumber->data,
                                        longestRequiredSerialNumber->len));
+
   uint8_t ocspRequest[OCSP_REQUEST_MAX_LENGTH];
   size_t ocspRequestLength;
   ASSERT_EQ(Success,
             CreateEncodedOCSPRequest(trustDomain,
-                                     CertID(issuerDER, issuerSPKI,
-                                            serialNumber),
+                                     CertID(issuer, spki, serialNumber),
                                      ocspRequest, ocspRequestLength));
 }
