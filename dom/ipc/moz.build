@@ -100,7 +100,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    '../src/storage',
     '/chrome',
     '/content/base/src',
     '/content/media/webspeech/synth/ipc',
@@ -115,6 +114,7 @@ LOCAL_INCLUDES += [
     '/dom/indexedDB',
     '/dom/indexedDB/ipc',
     '/dom/mobilemessage/ipc',
+    '/dom/storage',
     '/extensions/cookie',
     '/hal/sandbox',
     '/js/ipc',
