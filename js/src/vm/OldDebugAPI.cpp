@@ -154,34 +154,6 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, bool debug)
     return comp->setDebugModeFromC(cx, !!debug, invalidate);
 }
 
-static bool
-CheckDebugMode(JSContext *cx)
-{
-    bool debugMode = JS_GetDebugMode(cx);
-    /*
-     * :TODO:
-     * This probably should be an assertion, since it's indicative of a severe
-     * API misuse.
-     */
-    if (!debugMode) {
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
-                                     nullptr, JSMSG_NEED_DEBUG_MODE);
-    }
-    return debugMode;
-}
-
-JS_PUBLIC_API(bool)
-JS_SetSingleStepMode(JSContext *cx, HandleScript script, bool singleStep)
-{
-    assertSameCompartment(cx, script);
-
-    if (!CheckDebugMode(cx))
-        return false;
-
-    return script->setStepModeFlag(cx, singleStep);
-}
-
-
 /************************************************************************/
 
 JS_PUBLIC_API(unsigned)
