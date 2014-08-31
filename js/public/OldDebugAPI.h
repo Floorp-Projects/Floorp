@@ -98,10 +98,6 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, bool debug);
 JS_FRIEND_API(bool)
 JS_SetDebugMode(JSContext *cx, bool debug);
 
-/* Turn on single step mode. */
-extern JS_PUBLIC_API(bool)
-JS_SetSingleStepMode(JSContext *cx, JS::HandleScript script, bool singleStep);
-
 
 /************************************************************************/
 
