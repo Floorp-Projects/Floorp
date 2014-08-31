@@ -306,3 +306,19 @@ LIRGeneratorX86Shared::visitForkJoinGetSlice(MForkJoinGetSlice *ins)
                           tempFixed(ForkJoinGetSliceReg_temp1));
     return defineFixed(lir, ins, LAllocation(AnyRegister(ForkJoinGetSliceReg_output)));
 }
+
+bool
+LIRGeneratorX86Shared::visitSimdSplatX4(MSimdSplatX4 *ins)
+{
+    LAllocation x = useRegisterAtStart(ins->getOperand(0));
+    LSimdSplatX4 *lir = new(alloc()) LSimdSplatX4(x);
+
+    switch (ins->type()) {
+      case MIRType_Int32x4:
+        return define(lir, ins);
+      case MIRType_Float32x4:
+        return defineReuseInput(lir, ins, 0);
+      default:
+        MOZ_CRASH("Unknown SIMD kind");
+    }
+}
