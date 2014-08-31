@@ -187,6 +187,10 @@ public:
    */
   void EnsureNextIterationLocked();
 
+  MediaStreamGraphImpl* GraphImpl() {
+    return mGraphImpl;
+  }
+
 protected:
   // Time of the start of this graph iteration.
   GraphTime mIterationStart;
