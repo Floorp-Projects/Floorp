@@ -27,6 +27,10 @@ SurfaceFormatToDXGIFormat(gfx::SurfaceFormat aFormat)
       return DXGI_FORMAT_B8G8R8A8_UNORM;
     case SurfaceFormat::B8G8R8X8:
       return DXGI_FORMAT_B8G8R8A8_UNORM;
+    case SurfaceFormat::R8G8B8A8:
+      return DXGI_FORMAT_R8G8B8A8_UNORM;
+    case SurfaceFormat::R8G8B8X8:
+      return DXGI_FORMAT_R8G8B8A8_UNORM;
     case SurfaceFormat::A8:
       return DXGI_FORMAT_A8_UNORM;
     default:
