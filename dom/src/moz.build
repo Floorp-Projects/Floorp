@@ -6,7 +6,6 @@
 
 DIRS += [
     'storage',
-    'offline',
 ]
 
 JAR_MANIFESTS += ['jar.mn']

@@ -64,6 +64,7 @@ DIRS += [
     'media',
     'messages',
     'notification',
+    'offline',
     'power',
     'push',
     'quota',
