@@ -493,6 +493,7 @@ MConstant::New(TempAllocator &alloc, const Value &v, types::CompilerConstraintLi
 MConstant *
 MConstant::NewAsmJS(TempAllocator &alloc, const Value &v, MIRType type)
 {
+    JS_ASSERT(!IsSimdType(type));
     MConstant *constant = new(alloc) MConstant(v, nullptr);
     constant->setResultType(type);
     return constant;

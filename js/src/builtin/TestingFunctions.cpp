@@ -1974,6 +1974,19 @@ EvalReturningScope(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+IsSimdAvailable(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef JS_CODEGEN_NONE
+    bool available = false;
+#else
+    bool available = cx->jitSupportsSimd();
+#endif
+    args.rval().set(BooleanValue(available));
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -2156,6 +2169,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "isAsmJSCompilationAvailable",
 "  Returns whether asm.js compilation is currently available or whether it is disabled\n"
 "  (e.g., by the debugger)."),
+
+    JS_FN_HELP("isSimdAvailable", IsSimdAvailable, 0, 0,
+"isSimdAvailable",
+"  Returns true if SIMD extensions are supported on this platform."),
 
     JS_FN_HELP("getJitCompilerOptions", GetJitCompilerOptions, 0, 0,
 "getCompilerOptions()",

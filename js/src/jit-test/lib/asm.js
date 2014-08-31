@@ -108,8 +108,8 @@ function assertAsmLinkFail(f)
 
     assertEq(isAsmJSFunction(ret), false);
     if (typeof ret === 'object')
-        for (f of ret)
-            assertEq(isAsmJSFunction(f), false);
+        for (var i in ret)
+            assertEq(isAsmJSFunction(ret[i]), false);
 
     // Turn on warnings-as-errors
     var oldOpts = options("werror");

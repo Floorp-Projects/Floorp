@@ -207,6 +207,7 @@ bool UpdateForDebugMode(JSContext *maybecx, JSCompartment *comp,
                         AutoDebugModeInvalidation &invalidate);
 
 bool JitSupportsFloatingPoint();
+bool JitSupportsSimd();
 
 } // namespace jit
 } // namespace js
