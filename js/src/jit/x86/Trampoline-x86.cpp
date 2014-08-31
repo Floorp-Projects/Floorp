@@ -590,7 +590,6 @@ JitRuntime::generateBailoutHandler(JSContext *cx, ExecutionMode mode)
 JitCode *
 JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 {
-    JS_ASSERT(!StackKeptAligned);
     JS_ASSERT(functionWrappers_);
     JS_ASSERT(functionWrappers_->initialized());
     VMWrapperMap::AddPtr p = functionWrappers_->lookupForAdd(&f);
