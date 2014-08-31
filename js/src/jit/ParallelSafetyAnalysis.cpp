@@ -113,6 +113,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
 
     SAFE_OP(Constant)
     SAFE_OP(SimdValueX4)
+    SAFE_OP(SimdSplatX4)
     SAFE_OP(SimdConstant)
     SAFE_OP(SimdExtractElement)
     SAFE_OP(SimdSignMask)

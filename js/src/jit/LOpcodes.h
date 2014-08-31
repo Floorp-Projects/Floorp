@@ -17,6 +17,7 @@
     _(Double)                       \
     _(Float32)                      \
     _(SimdValueX4)                  \
+    _(SimdSplatX4)                  \
     _(Int32x4)                      \
     _(Float32x4)                    \
     _(SimdExtractElementI)          \

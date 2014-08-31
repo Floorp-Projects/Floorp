@@ -2154,6 +2154,35 @@ CodeGeneratorX86Shared::visitSimdValueX4(LSimdValueX4 *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4 *ins)
+{
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    MSimdSplatX4 *mir = ins->mir();
+    MOZ_ASSERT(IsSimdType(mir->type()));
+    JS_STATIC_ASSERT(sizeof(float) == sizeof(int32_t));
+
+    switch (mir->type()) {
+      case MIRType_Int32x4: {
+        Register r = ToRegister(ins->getOperand(0));
+        masm.movd(r, output);
+        masm.pshufd(0, output, output);
+        break;
+      }
+      case MIRType_Float32x4: {
+        FloatRegister r = ToFloatRegister(ins->getOperand(0));
+        MOZ_ASSERT(r == output);
+        masm.shufps(0, r, output);
+        break;
+      }
+      default:
+        MOZ_CRASH("Unknown SIMD kind");
+    }
+
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdExtractElementI(LSimdExtractElementI *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
