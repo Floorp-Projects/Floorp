@@ -128,19 +128,16 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // If issuerPrivateKey is null, then the certificate will be self-signed.
 // Parameter order is based on the order of the attributes of the certificate
 // in RFC 5280.
-//
-// The return value, if non-null, is owned by the arena in the context and
-// MUST NOT be freed.
-SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
-                                  Input signature,
-                                  const ByteString& serialNumber,
-                                  const ByteString& issuerNameDER,
-                                  std::time_t notBefore, std::time_t notAfter,
-                                  const ByteString& subjectNameDER,
-                     /*optional*/ const ByteString* extensions,
-                     /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
-                                  SignatureAlgorithm signatureAlgorithm,
-                          /*out*/ ScopedSECKEYPrivateKey& privateKey);
+ByteString CreateEncodedCertificate(long version,
+                                    Input signature,
+                                    const ByteString& serialNumber,
+                                    const ByteString& issuerNameDER,
+                                    std::time_t notBefore, std::time_t notAfter,
+                                    const ByteString& subjectNameDER,
+                       /*optional*/ const ByteString* extensions,
+                       /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
+                                    SignatureAlgorithm signatureAlgorithm,
+                            /*out*/ ScopedSECKEYPrivateKey& privateKey);
 
 ByteString CreateEncodedSerialNumber(long value);
 
@@ -202,7 +199,7 @@ public:
                                // extensions.
   ScopedSECKEYPrivateKey signerPrivateKey;
   bool badSignature; // If true, alter the signature to fail verification
-  SECItem const* const* certs; // non-owning pointer to certs to embed
+  const ByteString* certs; // optional; array terminated by an empty string
 
   // The following fields are on a per-SingleResponse basis. In the future we
   // may support including multiple SingleResponses per response.

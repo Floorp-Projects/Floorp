@@ -394,7 +394,7 @@ static ByteString
 SignedData(const ByteString& tbsData,
            SECKEYPrivateKey* privKey,
            SignatureAlgorithm signatureAlgorithm,
-           bool corrupt, /*optional*/ SECItem const* const* certs)
+           bool corrupt, /*optional*/ const ByteString* certs)
 {
   assert(privKey);
   if (!privKey) {
@@ -431,8 +431,8 @@ SignedData(const ByteString& tbsData,
   ByteString certsNested;
   if (certs) {
     ByteString certsSequenceValue;
-    while (*certs) {
-      certsSequenceValue.append(ByteString((*certs)->data, (*certs)->len));
+    while (!(*certs).empty()) {
+      certsSequenceValue.append(*certs);
       ++certs;
     }
     ByteString certsSequence(TLV(der::SEQUENCE, certsSequenceValue));
@@ -576,8 +576,8 @@ static ByteString TBSCertificate(long version, const ByteString& serialNumber,
 //         tbsCertificate       TBSCertificate,
 //         signatureAlgorithm   AlgorithmIdentifier,
 //         signatureValue       BIT STRING  }
-SECItem*
-CreateEncodedCertificate(PLArenaPool* arena, long version, Input signature,
+ByteString
+CreateEncodedCertificate(long version, Input signature,
                          const ByteString& serialNumber,
                          const ByteString& issuerNameDER,
                          time_t notBefore, time_t notAfter,
@@ -587,18 +587,13 @@ CreateEncodedCertificate(PLArenaPool* arena, long version, Input signature,
                          SignatureAlgorithm signatureAlgorithm,
                          /*out*/ ScopedSECKEYPrivateKey& privateKeyResult)
 {
-  assert(arena);
-  if (!arena) {
-    return nullptr;
-  }
-
   // It may be the case that privateKeyResult refers to the
   // ScopedSECKEYPrivateKey that owns issuerPrivateKey; thus, we can't set
   // privateKeyResult until after we're done with issuerPrivateKey.
   ScopedSECKEYPublicKey publicKey;
   ScopedSECKEYPrivateKey privateKeyTemp;
   if (GenerateKeyPair(publicKey, privateKeyTemp) != Success) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
   ByteString tbsCertificate(TBSCertificate(version, serialNumber,
@@ -606,7 +601,7 @@ CreateEncodedCertificate(PLArenaPool* arena, long version, Input signature,
                                            notAfter, subjectNameDER,
                                            publicKey.get(), extensions));
   if (tbsCertificate == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
   ByteString result(SignedData(tbsCertificate,
@@ -614,14 +609,14 @@ CreateEncodedCertificate(PLArenaPool* arena, long version, Input signature,
                                                 : privateKeyTemp.get(),
                                signatureAlgorithm, false, nullptr));
   if (result == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
   MaybeLogOutput(result, "cert");
 
   privateKeyResult = privateKeyTemp.release();
 
-  return ArenaDupByteString(arena, result);
+  return result;
 }
 
 // TBSCertificate  ::=  SEQUENCE  {
