@@ -672,6 +672,39 @@ MSimdValueX4::foldsTo(TempAllocator &alloc)
     return MSimdConstant::New(alloc, cst, type());
 }
 
+MDefinition*
+MSimdSplatX4::foldsTo(TempAllocator &alloc)
+{
+    DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type());
+    MDefinition *op = getOperand(0);
+    if (!op->isConstant())
+        return this;
+    JS_ASSERT(op->type() == scalarType);
+
+    SimdConstant cst;
+    switch (type()) {
+      case MIRType_Int32x4: {
+        int32_t a[4];
+        int32_t v = getOperand(0)->toConstant()->value().toInt32();
+        for (size_t i = 0; i < 4; ++i)
+            a[i] = v;
+        cst = SimdConstant::CreateX4(a);
+        break;
+      }
+      case MIRType_Float32x4: {
+        float a[4];
+        float v = getOperand(0)->toConstant()->value().toNumber();
+        for (size_t i = 0; i < 4; ++i)
+            a[i] = v;
+        cst = SimdConstant::CreateX4(a);
+        break;
+      }
+      default: MOZ_ASSUME_UNREACHABLE("unexpected type in MSimdSplatX4::foldsTo");
+    }
+
+    return MSimdConstant::New(alloc, cst, type());
+}
+
 MCloneLiteral *
 MCloneLiteral::New(TempAllocator &alloc, MDefinition *obj)
 {
