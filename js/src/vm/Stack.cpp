@@ -1550,7 +1550,7 @@ jit::JitActivation::markRematerializedFrames(JSTracer *trc)
 AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
   : Activation(cx, AsmJS),
     module_(module),
-    errorRejoinSP_(nullptr),
+    entrySP_(nullptr),
     profiler_(nullptr),
     resumePC_(nullptr),
     fp_(nullptr),
@@ -1573,7 +1573,7 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
     JSRuntime::AutoLockForInterrupt lock(cx->runtime());
     cx->mainThread().asmJSActivationStack_ = this;
 
-    (void) errorRejoinSP_;  // squelch GCC warning
+    (void) entrySP_;  // squelch GCC warning
 }
 
 AsmJSActivation::~AsmJSActivation()

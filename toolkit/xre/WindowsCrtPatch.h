@@ -92,7 +92,7 @@ PatchModuleImports(HMODULE module, PIMAGE_NT_HEADERS headers)
       RVAPtr<IMAGE_THUNK_DATA> thunk(module, descriptor->OriginalFirstThunk);
       for (; thunk->u1.AddressOfData; ++thunk) {
         RVAPtr<IMAGE_IMPORT_BY_NAME> import(module, thunk->u1.AddressOfData);
-        if (!strcmp(import->Name, "GetLogicalProcessorInformation")) {
+        if (!strcmp((char*)import->Name, "GetLogicalProcessorInformation")) {
           memcpy(import->Name, "DebugBreak", sizeof("DebugBreak"));
         }
       }

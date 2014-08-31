@@ -27,8 +27,10 @@
 
 #include "asmjs/AsmJSFrameIterator.h"
 #include "asmjs/AsmJSValidate.h"
+#include "builtin/SIMD.h"
 #include "gc/Marking.h"
 #include "jit/IonMacroAssembler.h"
+#include "jit/IonTypes.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
@@ -47,7 +49,9 @@ enum AsmJSCoercion
 {
     AsmJS_ToInt32,
     AsmJS_ToNumber,
-    AsmJS_FRound
+    AsmJS_FRound,
+    AsmJS_ToInt32x4,
+    AsmJS_ToFloat32x4
 };
 
 // The asm.js spec recognizes this set of builtin Math functions.
@@ -60,6 +64,22 @@ enum AsmJSMathBuiltinFunction
     AsmJSMathBuiltin_abs, AsmJSMathBuiltin_atan2, AsmJSMathBuiltin_imul,
     AsmJSMathBuiltin_fround, AsmJSMathBuiltin_min, AsmJSMathBuiltin_max,
     AsmJSMathBuiltin_clz32
+};
+
+// Set of known global object SIMD's attributes, i.e. types
+enum AsmJSSimdType
+{
+    AsmJSSimdType_int32x4,
+    AsmJSSimdType_float32x4
+};
+
+// Set of known operations, for a given SIMD type (int32x4, float32x4,...)
+enum AsmJSSimdOperation
+{
+    AsmJSSimdOperation_add,
+    AsmJSSimdOperation_sub,
+    AsmJSSimdOperation_mul,
+    AsmJSSimdOperation_div
 };
 
 // These labels describe positions in the prologue/epilogue of functions while
@@ -98,18 +118,32 @@ class AsmJSNumLit
         BigUnsigned,
         Double,
         Float,
+        Int32x4,
+        Float32x4,
         OutOfRangeInt = -1
     };
 
   private:
     Which which_;
-    Value value_;
+    union {
+        Value scalar_;
+        jit::SimdConstant simd_;
+    } value;
 
   public:
     static AsmJSNumLit Create(Which w, Value v) {
         AsmJSNumLit lit;
         lit.which_ = w;
-        lit.value_ = v;
+        lit.value.scalar_ = v;
+        JS_ASSERT(!lit.isSimd());
+        return lit;
+    }
+
+    static AsmJSNumLit Create(Which w, jit::SimdConstant c) {
+        AsmJSNumLit lit;
+        lit.which_ = w;
+        lit.value.simd_ = c;
+        JS_ASSERT(lit.isSimd());
         return lit;
     }
 
@@ -119,22 +153,31 @@ class AsmJSNumLit
 
     int32_t toInt32() const {
         JS_ASSERT(which_ == Fixnum || which_ == NegativeInt || which_ == BigUnsigned);
-        return value_.toInt32();
+        return value.scalar_.toInt32();
     }
 
     double toDouble() const {
         JS_ASSERT(which_ == Double);
-        return value_.toDouble();
+        return value.scalar_.toDouble();
     }
 
     float toFloat() const {
         JS_ASSERT(which_ == Float);
-        return float(value_.toDouble());
+        return float(value.scalar_.toDouble());
     }
 
-    Value value() const {
+    Value scalarValue() const {
         JS_ASSERT(which_ != OutOfRangeInt);
-        return value_;
+        return value.scalar_;
+    }
+
+    bool isSimd() const {
+        return which_ == Int32x4 || which_ == Float32x4;
+    }
+
+    const jit::SimdConstant &simdValue() const {
+        JS_ASSERT(isSimd());
+        return value.simd_;
     }
 
     bool hasType() const {
@@ -158,7 +201,8 @@ class AsmJSModule
     class Global
     {
       public:
-        enum Which { Variable, FFI, ArrayView, MathBuiltinFunction, Constant };
+        enum Which { Variable, FFI, ArrayView, MathBuiltinFunction, Constant,
+                     SimdCtor, SimdOperation};
         enum VarInitKind { InitConstant, InitImport };
         enum ConstantKind { GlobalConstant, MathConstant };
 
@@ -177,6 +221,11 @@ class AsmJSModule
                 uint32_t ffiIndex_;
                 Scalar::Type viewType_;
                 AsmJSMathBuiltinFunction mathBuiltinFunc_;
+                AsmJSSimdType simdCtorType_;
+                struct {
+                    AsmJSSimdType type_;
+                    AsmJSSimdOperation which_;
+                } simdOp;
                 struct {
                     ConstantKind kind_;
                     double value_;
@@ -197,7 +246,7 @@ class AsmJSModule
             if (name_)
                 MarkStringUnbarriered(trc, &name_, "asm.js global name");
             JS_ASSERT_IF(pod.which_ == Variable && pod.u.var.initKind_ == InitConstant,
-                         !pod.u.var.u.numLit_.value().isMarkable());
+                         !pod.u.var.u.numLit_.scalarValue().isMarkable());
         }
 
       public:
@@ -251,6 +300,26 @@ class AsmJSModule
         AsmJSMathBuiltinFunction mathBuiltinFunction() const {
             JS_ASSERT(pod.which_ == MathBuiltinFunction);
             return pod.u.mathBuiltinFunc_;
+        }
+        AsmJSSimdType simdCtorType() const {
+            JS_ASSERT(pod.which_ == SimdCtor);
+            return pod.u.simdCtorType_;
+        }
+        PropertyName *simdCtorName() const {
+            JS_ASSERT(pod.which_ == SimdCtor);
+            return name_;
+        }
+        PropertyName *simdOperationName() const {
+            JS_ASSERT(pod.which_ == SimdOperation);
+            return name_;
+        }
+        AsmJSSimdOperation simdOperation() const {
+            JS_ASSERT(pod.which_ == SimdOperation);
+            return pod.u.simdOp.which_;
+        }
+        AsmJSSimdType simdOperationType() const {
+            JS_ASSERT(pod.which_ == SimdOperation);
+            return pod.u.simdOp.type_;
         }
         PropertyName *constantName() const {
             JS_ASSERT(pod.which_ == Constant);
@@ -310,7 +379,13 @@ class AsmJSModule
         const uint8_t *deserialize(ExclusiveContext *cx, const uint8_t *cursor);
         bool clone(ExclusiveContext *cx, Exit *out) const;
     };
-    typedef int32_t (*CodePtr)(uint64_t *args, uint8_t *global);
+
+    struct EntryArg {
+        uint64_t lo;
+        uint64_t hi;
+    };
+    JS_STATIC_ASSERT(sizeof(EntryArg) >= jit::Simd128DataSize);
+    typedef int32_t (*CodePtr)(EntryArg *args, uint8_t *global);
 
     // An Exit holds bookkeeping information about an exit; the ExitDatum
     // struct overlays the actual runtime data stored in the global data
@@ -323,7 +398,7 @@ class AsmJSModule
 
     typedef Vector<AsmJSCoercion, 0, SystemAllocPolicy> ArgCoercionVector;
 
-    enum ReturnType { Return_Int32, Return_Double, Return_Void };
+    enum ReturnType { Return_Int32, Return_Double, Return_Int32x4, Return_Float32x4, Return_Void };
 
     class ExportedFunction
     {
@@ -673,7 +748,8 @@ class AsmJSModule
         size_t                            codeBytes_;     // function bodies and stubs
         size_t                            totalBytes_;    // function bodies, stubs, and global data
         uint32_t                          minHeapLength_;
-        uint32_t                          numGlobalVars_;
+        uint32_t                          numGlobalScalarVars_;
+        uint32_t                          numGlobalSimdVars_;
         uint32_t                          numFFIs_;
         uint32_t                          srcLength_;
         uint32_t                          srcLengthWithRightBrace_;
@@ -820,20 +896,43 @@ class AsmJSModule
     }
     bool addGlobalVarInit(const AsmJSNumLit &lit, uint32_t *globalIndex) {
         JS_ASSERT(!isFinishedWithModulePrologue());
-        if (pod.numGlobalVars_ == UINT32_MAX)
-            return false;
         Global g(Global::Variable, nullptr);
         g.pod.u.var.initKind_ = Global::InitConstant;
         g.pod.u.var.u.numLit_ = lit;
-        g.pod.u.var.index_ = *globalIndex = pod.numGlobalVars_++;
+
+        if (lit.isSimd()) {
+            if (pod.numGlobalSimdVars_ == UINT32_MAX)
+                return false;
+            *globalIndex = pod.numGlobalSimdVars_++;
+        } else {
+            if (pod.numGlobalScalarVars_ == UINT32_MAX)
+                return false;
+            *globalIndex = pod.numGlobalScalarVars_++;
+        }
+
+        g.pod.u.var.index_ = *globalIndex;
         return globals_.append(g);
+    }
+    static bool IsSimdCoercion(AsmJSCoercion c) {
+        switch (c) {
+          case AsmJS_ToInt32:
+          case AsmJS_ToNumber:
+          case AsmJS_FRound:
+            return false;
+          case AsmJS_ToInt32x4:
+          case AsmJS_ToFloat32x4:
+            return true;
+        }
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected AsmJSCoercion");
     }
     bool addGlobalVarImport(PropertyName *name, AsmJSCoercion coercion, uint32_t *globalIndex) {
         JS_ASSERT(!isFinishedWithModulePrologue());
         Global g(Global::Variable, name);
         g.pod.u.var.initKind_ = Global::InitImport;
         g.pod.u.var.u.coercion_ = coercion;
-        g.pod.u.var.index_ = *globalIndex = pod.numGlobalVars_++;
+        *globalIndex = IsSimdCoercion(coercion) ? pod.numGlobalSimdVars_++
+                                                : pod.numGlobalScalarVars_++;
+        g.pod.u.var.index_ = *globalIndex;
         return globals_.append(g);
     }
     bool addFFI(PropertyName *field, uint32_t *ffiIndex) {
@@ -862,6 +961,17 @@ class AsmJSModule
         Global g(Global::Constant, field);
         g.pod.u.constant.value_ = value;
         g.pod.u.constant.kind_ = Global::MathConstant;
+        return globals_.append(g);
+    }
+    bool addSimdCtor(AsmJSSimdType type, PropertyName *field) {
+        Global g(Global::SimdCtor, field);
+        g.pod.u.simdCtorType_ = type;
+        return globals_.append(g);
+    }
+    bool addSimdOperation(AsmJSSimdType type, AsmJSSimdOperation op, PropertyName *field) {
+        Global g(Global::SimdOperation, field);
+        g.pod.u.simdOp.type_ = type;
+        g.pod.u.simdOp.which_ = op;
         return globals_.append(g);
     }
     bool addGlobalConstant(double value, PropertyName *name) {
@@ -1110,10 +1220,11 @@ class AsmJSModule
     // are laid out in this order:
     //   0. a pointer to the current AsmJSActivation
     //   1. a pointer to the heap that was linked to the module
-    //   2. the double float constant NaN.
-    //   3. the float32 constant NaN, padded to sizeof(double).
-    //   4. global variable state (elements are sizeof(uint64_t))
-    //   5. interleaved function-pointer tables and exits. These are allocated
+    //   2. the double float constant NaN
+    //   3. the float32 constant NaN, padded to Simd128DataSize
+    //   4. global SIMD variable state (elements are Simd128DataSize)
+    //   5. global variable state (elements are sizeof(uint64_t))
+    //   6. interleaved function-pointer tables and exits. These are allocated
     //      while type checking function bodies (as exits and uses of
     //      function-pointer tables are encountered).
     size_t offsetOfGlobalData() const {
@@ -1124,13 +1235,18 @@ class AsmJSModule
         JS_ASSERT(isFinished());
         return code_ + offsetOfGlobalData();
     }
+    size_t globalSimdVarsOffset() const {
+        return AlignBytes(/* 0 */ sizeof(void*) +
+                          /* 1 */ sizeof(void*) +
+                          /* 2 */ sizeof(double) +
+                          /* 3 */ sizeof(float),
+                          jit::Simd128DataSize);
+    }
     size_t globalDataBytes() const {
-        return sizeof(void*) +
-               sizeof(void*) +
-               sizeof(double) +
-               sizeof(double) +
-               pod.numGlobalVars_ * sizeof(uint64_t) +
-               pod.funcPtrTableAndExitBytes_;
+        return globalSimdVarsOffset() +
+               /* 4 */ pod.numGlobalSimdVars_ * jit::Simd128DataSize +
+               /* 5 */ pod.numGlobalScalarVars_ * sizeof(uint64_t) +
+               /* 6 */ pod.funcPtrTableAndExitBytes_;
     }
     static unsigned activationGlobalDataOffset() {
         JS_STATIC_ASSERT(jit::AsmJSActivationGlobalDataOffset == 0);
@@ -1165,20 +1281,39 @@ class AsmJSModule
         *(double *)(globalData() + nan64GlobalDataOffset()) = GenericNaN();
         *(float *)(globalData() + nan32GlobalDataOffset()) = GenericNaN();
     }
-    unsigned globalVariableOffset() const {
-        static_assert((2 * sizeof(void*) + 2 * sizeof(double)) % sizeof(double) == 0,
-                      "Global data should be aligned");
-        return 2 * sizeof(void*) + 2 * sizeof(double);
-    }
-    unsigned globalVarIndexToGlobalDataOffset(unsigned i) const {
+    unsigned globalSimdVarIndexToGlobalDataOffset(unsigned i) const {
         JS_ASSERT(isFinishedWithModulePrologue());
-        JS_ASSERT(i < pod.numGlobalVars_);
-        return globalVariableOffset() +
+        JS_ASSERT(i < pod.numGlobalSimdVars_);
+        return globalSimdVarsOffset() +
+               i * jit::Simd128DataSize;
+    }
+    unsigned globalScalarVarIndexToGlobalDataOffset(unsigned i) const {
+        JS_ASSERT(isFinishedWithModulePrologue());
+        JS_ASSERT(i < pod.numGlobalScalarVars_);
+        return globalSimdVarsOffset() +
+               pod.numGlobalSimdVars_ * jit::Simd128DataSize +
                i * sizeof(uint64_t);
     }
-    void *globalVarIndexToGlobalDatum(unsigned i) const {
+    void *globalScalarVarIndexToGlobalDatum(unsigned i) const {
         JS_ASSERT(isFinished());
-        return (void *)(globalData() + globalVarIndexToGlobalDataOffset(i));
+        return (void *)(globalData() + globalScalarVarIndexToGlobalDataOffset(i));
+    }
+    void *globalSimdVarIndexToGlobalDatum(unsigned i) const {
+        JS_ASSERT(isFinished());
+        return (void *)(globalData() + globalSimdVarIndexToGlobalDataOffset(i));
+    }
+    void *globalVarToGlobalDatum(const Global &g) const {
+        unsigned index = g.varIndex();
+        if (g.varInitKind() == Global::VarInitKind::InitConstant) {
+            return g.varInitNumLit().isSimd()
+                   ? globalSimdVarIndexToGlobalDatum(index)
+                   : globalScalarVarIndexToGlobalDatum(index);
+        }
+
+        JS_ASSERT(g.varInitKind() == Global::VarInitKind::InitImport);
+        return IsSimdCoercion(g.varInitCoercion())
+               ? globalSimdVarIndexToGlobalDatum(index)
+               : globalScalarVarIndexToGlobalDatum(index);
     }
     uint8_t **globalDataOffsetToFuncPtrTable(unsigned globalDataOffset) const {
         JS_ASSERT(isFinished());
