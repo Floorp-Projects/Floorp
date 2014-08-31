@@ -6,6 +6,8 @@
  * Test encoding a simple message.
  */
 
+const { utils: Cu } = Components;
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { require } = devtools;
 
 const QR = require("devtools/toolkit/qrcode/index");
