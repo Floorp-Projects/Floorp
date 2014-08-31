@@ -1,10 +1,26 @@
-skip-if(!asyncPanZoom) == bg-fixed-1.html bg-fixed-1-ref.html
-skip-if(!asyncPanZoom) == bg-fixed-cover-1.html bg-fixed-cover-1-ref.html
-skip-if(!asyncPanZoom) == bg-fixed-cover-2.html bg-fixed-cover-2-ref.html
-skip-if(!asyncPanZoom) == bg-fixed-cover-3.html bg-fixed-cover-3-ref.html
-skip-if(!asyncPanZoom) == element-1.html element-1-ref.html
-skip-if(!asyncPanZoom) == position-fixed-1.html position-fixed-1-ref.html
-skip-if(!asyncPanZoom) == position-fixed-2.html position-fixed-2-ref.html
-skip-if(!asyncPanZoom) == position-fixed-cover-1.html position-fixed-cover-1-ref.html
-skip-if(!asyncPanZoom) == position-fixed-cover-2.html position-fixed-cover-2-ref.html
-skip-if(!asyncPanZoom) == position-fixed-cover-3.html position-fixed-cover-3-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == bg-fixed-1.html bg-fixed-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == bg-fixed-cover-1.html bg-fixed-cover-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == bg-fixed-cover-2.html bg-fixed-cover-2-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == bg-fixed-cover-3.html bg-fixed-cover-3-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == element-1.html element-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == nested-1.html nested-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == position-fixed-1.html position-fixed-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == position-fixed-2.html position-fixed-2-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == position-fixed-cover-1.html position-fixed-cover-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == position-fixed-cover-2.html position-fixed-cover-2-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == position-fixed-cover-3.html position-fixed-cover-3-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == split-layers-1.html split-layers-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == split-layers-multi-scrolling-1.html split-layers-multi-scrolling-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
+
+pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == bg-fixed-1.html bg-fixed-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == bg-fixed-cover-1.html bg-fixed-cover-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == bg-fixed-cover-2.html bg-fixed-cover-2-ref.html
+pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == bg-fixed-cover-3.html bg-fixed-cover-3-ref.html
+pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == element-1.html element-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == position-fixed-1.html position-fixed-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == position-fixed-2.html position-fixed-2-ref.html
+pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == position-fixed-cover-1.html position-fixed-cover-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == position-fixed-cover-2.html position-fixed-cover-2-ref.html
+pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == position-fixed-cover-3.html position-fixed-cover-3-ref.html
+
