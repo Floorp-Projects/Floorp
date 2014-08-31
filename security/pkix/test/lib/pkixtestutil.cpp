@@ -249,7 +249,7 @@ OCSPResponseContext::OCSPResponseContext(PLArenaPool* arena,
 
 static ByteString ResponseBytes(OCSPResponseContext& context);
 static ByteString BasicOCSPResponse(OCSPResponseContext& context);
-static SECItem* ResponseData(OCSPResponseContext& context);
+static ByteString ResponseData(OCSPResponseContext& context);
 static ByteString ResponderID(OCSPResponseContext& context);
 static ByteString KeyHash(OCSPResponseContext& context);
 static ByteString SingleResponse(OCSPResponseContext& context);
@@ -484,7 +484,7 @@ SignedData(const ByteString& tbsData,
   if (SEC_SignData(&signature, tbsData.data(), tbsData.length(), privKey,
                    signatureAlgorithmOidTag) != SECSuccess)
   {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   // TODO: add ability to have signatures of bit length not divisible by 8,
   // resulting in unused bits in the bitstring encoding
@@ -492,7 +492,7 @@ SignedData(const ByteString& tbsData,
                                        corrupt));
   SECITEM_FreeItem(&signature, false);
   if (signatureNested == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
   ByteString certsNested;
@@ -997,13 +997,13 @@ ResponseBytes(OCSPResponseContext& context)
 ByteString
 BasicOCSPResponse(OCSPResponseContext& context)
 {
-  SECItem* tbsResponseData = ResponseData(context);
-  if (!tbsResponseData) {
-    return nullptr;
+  ByteString tbsResponseData(ResponseData(context));
+  if (tbsResponseData == ENCODING_FAILED) {
+    return ENCODING_FAILED;
   }
 
   // TODO(bug 980538): certs
-  return SignedData(ByteString(tbsResponseData->data, tbsResponseData->len),
+  return SignedData(tbsResponseData,
                     context.signerPrivateKey.get(),
                     SignatureAlgorithm::rsa_pkcs1_with_sha256,
                     context.badSignature, context.certs);
@@ -1062,36 +1062,36 @@ Extensions(OCSPResponseContext& context)
 //    producedAt              GeneralizedTime,
 //    responses               SEQUENCE OF SingleResponse,
 //    responseExtensions  [1] EXPLICIT Extensions OPTIONAL }
-SECItem*
+ByteString
 ResponseData(OCSPResponseContext& context)
 {
   ByteString responderID(ResponderID(context));
   if (responderID == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   ByteString producedAtEncoded(TimeToGeneralizedTime(context.producedAt));
   if (producedAtEncoded == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   ByteString response(SingleResponse(context));
   if (response == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   ByteString responses(TLV(der::SEQUENCE, response));
   if (responses == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   ByteString responseExtensions;
   if (context.extensions || context.includeEmptyExtensions) {
     responseExtensions = Extensions(context);
   }
 
-  Output output;
-  output.Add(responderID);
-  output.Add(producedAtEncoded);
-  output.Add(responses);
-  output.Add(responseExtensions);
-  return output.Squash(context.arena, der::SEQUENCE);
+  ByteString value;
+  value.append(responderID);
+  value.append(producedAtEncoded);
+  value.append(responses);
+  value.append(responseExtensions);
+  return TLV(der::SEQUENCE, value);
 }
 
 // ResponderID ::= CHOICE {
