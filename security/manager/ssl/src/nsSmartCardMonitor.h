@@ -36,7 +36,7 @@ private:
 class SmartCardMonitoringThread
 {
  public:
-  SmartCardMonitoringThread(SECMODModule* module);
+  explicit SmartCardMonitoringThread(SECMODModule* module);
   ~SmartCardMonitoringThread();
   
   nsresult Start();
