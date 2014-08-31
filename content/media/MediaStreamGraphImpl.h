@@ -520,6 +520,9 @@ public:
    * is not deleted. New messages for the graph are processed synchronously on
    * the main thread if necessary. When the last stream is destroyed, the
    * graph object is deleted.
+   *
+   * This should be kept in sync with the LifecycleState_str array in
+   * MediaStreamGraph.cpp
    */
   enum LifecycleState {
     // The graph thread hasn't started yet.
