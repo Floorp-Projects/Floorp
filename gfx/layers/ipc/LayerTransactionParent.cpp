@@ -687,26 +687,35 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   return true;
 }
 
+static AsyncPanZoomController*
+GetAPZCForViewID(Layer* aLayer, FrameMetrics::ViewID aScrollID)
+{
+  for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
+    if (aLayer->GetFrameMetrics(i).GetScrollId() == aScrollID) {
+      return aLayer->GetAsyncPanZoomController(i);
+    }
+  }
+  ContainerLayer* container = aLayer->AsContainerLayer();
+  if (container) {
+    for (Layer* l = container->GetFirstChild(); l; l = l->GetNextSibling()) {
+      AsyncPanZoomController* c = GetAPZCForViewID(l, aScrollID);
+      if (c) {
+        return c;
+      }
+    }
+  }
+  return nullptr;
+}
+
 bool
-LayerTransactionParent::RecvSetAsyncScrollOffset(PLayerParent* aLayer,
-                                                 const FrameMetrics::ViewID& aId,
+LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollID,
                                                  const int32_t& aX, const int32_t& aY)
 {
   if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
     return false;
   }
 
-  Layer* layer = cast(aLayer)->AsLayer();
-  if (!layer) {
-    return false;
-  }
-  AsyncPanZoomController* controller = nullptr;
-  for (uint32_t i = 0; i < layer->GetFrameMetricsCount(); i++) {
-    if (layer->GetFrameMetrics(i).GetScrollId() == aId) {
-      controller = layer->GetAsyncPanZoomController(i);
-      break;
-    }
-  }
+  AsyncPanZoomController* controller = GetAPZCForViewID(mRoot, aScrollID);
   if (!controller) {
     return false;
   }
