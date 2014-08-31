@@ -647,15 +647,17 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
   }
 }
 
-static void RecordFrameMetrics(nsIFrame* aForFrame,
-                               nsIFrame* aScrollFrame,
-                               const nsIFrame* aReferenceFrame,
-                               ContainerLayer* aRoot,
-                               ViewID aScrollParentId,
-                               const nsRect& aViewport,
-                               bool aForceNullScrollId,
-                               bool aIsRoot,
-                               const ContainerLayerParameters& aContainerParameters) {
+/* static */ FrameMetrics
+nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
+                                          nsIFrame* aScrollFrame,
+                                          const nsIFrame* aReferenceFrame,
+                                          Layer* aLayer,
+                                          ViewID aScrollParentId,
+                                          const nsRect& aViewport,
+                                          bool aForceNullScrollId,
+                                          bool aIsRoot,
+                                          const ContainerLayerParameters& aContainerParameters)
+{
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
   LayoutDeviceToLayerScale resolution(aContainerParameters.mXScale, aContainerParameters.mYScale);
@@ -673,7 +675,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     nsRect dp;
     if (nsLayoutUtils::GetDisplayPort(content, &dp)) {
       metrics.mDisplayPort = CSSRect::FromAppUnits(dp);
-      nsLayoutUtils::LogTestDataForPaint(aRoot->Manager(), scrollId, "displayport",
+      nsLayoutUtils::LogTestDataForPaint(aLayer->Manager(), scrollId, "displayport",
           metrics.mDisplayPort);
     }
     if (nsLayoutUtils::GetCriticalDisplayPort(content, &dp)) {
@@ -861,7 +863,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     }
   }
 
-  aRoot->SetFrameMetrics(metrics);
+  return metrics;
 }
 
 nsDisplayListBuilder::~nsDisplayListBuilder() {
@@ -1292,10 +1294,11 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   nsRect viewport(aBuilder->ToReferenceFrame(aForFrame), aForFrame->GetSize());
 
-  RecordFrameMetrics(aForFrame, rootScrollFrame,
-                     aBuilder->FindReferenceFrameFor(aForFrame),
-                     root, FrameMetrics::NULL_SCROLL_ID, viewport,
-                     !isRoot, isRoot, containerParameters);
+  root->SetFrameMetrics(
+    nsDisplayScrollLayer::ComputeFrameMetrics(aForFrame, rootScrollFrame,
+                       aBuilder->FindReferenceFrameFor(aForFrame),
+                       root, FrameMetrics::NULL_SCROLL_ID, viewport,
+                       !isRoot, isRoot, containerParameters));
 
   // NS_WARNING is debug-only, so don't even bother checking the conditions in
   // a release build.
@@ -3668,28 +3671,35 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
     params.mInLowPrecisionDisplayPort = true; 
   }
 
-  nsRefPtr<Layer> layer = nsDisplayOwnLayer::BuildLayer(
-    aBuilder, aManager, params);
+  return nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, params);
+}
 
+UniquePtr<FrameMetrics>
+nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
+                                          const ContainerLayerParameters& aContainerParameters)
+{
   if (!(mFlags & GENERATE_SCROLLABLE_LAYER)) {
-    return layer.forget();
+    return UniquePtr<FrameMetrics>(nullptr);
   }
 
-  NS_ASSERTION(layer->AsContainerLayer(), "nsDisplayOwnLayer should have made a ContainerLayer");
-  if (ContainerLayer* container = layer->AsContainerLayer()) {
-    nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
-    bool isRootContentDocument = presContext->IsRootContentDocument();
-
-    nsRect viewport = mFrame->GetRect() -
-                      mFrame->GetPosition() +
-                      mFrame->GetOffsetToCrossDoc(ReferenceFrame());
-
-    RecordFrameMetrics(mFrame, rootScrollFrame, ReferenceFrame(),
-                       container, mScrollParentId, viewport,
-                       false, isRootContentDocument, params);
+  nsPresContext* presContext = mFrame->PresContext();
+  nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
+  bool isRootContentDocument = presContext->IsRootContentDocument();
+  ContainerLayerParameters params = aContainerParameters;
+  if ((mFlags & GENERATE_SCROLLABLE_LAYER) &&
+      rootScrollFrame->GetContent() &&
+      nsLayoutUtils::GetCriticalDisplayPort(rootScrollFrame->GetContent(), nullptr)) {
+    params.mInLowPrecisionDisplayPort = true;
   }
 
-  return layer.forget();
+  nsRect viewport = mFrame->GetRect() -
+                    mFrame->GetPosition() +
+                    mFrame->GetOffsetToCrossDoc(ReferenceFrame());
+
+  return MakeUnique<FrameMetrics>(
+    nsDisplayScrollLayer::ComputeFrameMetrics(mFrame, rootScrollFrame, ReferenceFrame(),
+                       aLayer, mScrollParentId, viewport,
+                       false, isRootContentDocument, params));
 }
 
 nsRect
@@ -3978,24 +3988,13 @@ nsDisplayScrollLayer::GetScrolledContentRectToDraw(nsDisplayListBuilder* aBuilde
 already_AddRefed<Layer>
 nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                  LayerManager* aManager,
-                                 const ContainerLayerParameters& aContainerParameters) {
-
+                                 const ContainerLayerParameters& aContainerParameters)
+{
   ContainerLayerParameters params = aContainerParameters;
   if (mScrolledFrame->GetContent() &&
       nsLayoutUtils::GetCriticalDisplayPort(mScrolledFrame->GetContent(), nullptr)) {
-    params.mInLowPrecisionDisplayPort = true; 
+    params.mInLowPrecisionDisplayPort = true;
   }
-
-  nsRefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
-                           params, nullptr);
-
-  nsRect viewport = mScrollFrame->GetRect() -
-                    mScrollFrame->GetPosition() +
-                    mScrollFrame->GetOffsetToCrossDoc(ReferenceFrame());
-
-  RecordFrameMetrics(mScrolledFrame, mScrollFrame, ReferenceFrame(), layer,
-                     mScrollParentId, viewport, false, false, params);
 
   if (mList.IsOpaque()) {
     nsRect displayport;
@@ -4007,14 +4006,28 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     mDisplayPortContentsOpaque = false;
   }
 
-  return layer.forget();
+  return aManager->GetLayerBuilder()->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
+                           params, nullptr);
 }
 
-bool
-nsDisplayScrollLayer::IsConstructingScrollLayerForScrolledFrame(const nsIFrame* aScrolledFrame)
+UniquePtr<FrameMetrics>
+nsDisplayScrollLayer::ComputeFrameMetrics(Layer* aLayer,
+                                          const ContainerLayerParameters& aContainerParameters)
 {
-  FrameProperties props = aScrolledFrame->Properties();
-  return reinterpret_cast<intptr_t>(props.Get(nsIFrame::ScrollLayerCount())) != 0;
+  ContainerLayerParameters params = aContainerParameters;
+  if (mScrolledFrame->GetContent() &&
+      nsLayoutUtils::GetCriticalDisplayPort(mScrolledFrame->GetContent(), nullptr)) {
+    params.mInLowPrecisionDisplayPort = true; 
+  }
+
+  nsRect viewport = mScrollFrame->GetRect() -
+                    mScrollFrame->GetPosition() +
+                    mScrollFrame->GetOffsetToCrossDoc(ReferenceFrame());
+
+  return UniquePtr<FrameMetrics>(new FrameMetrics(
+    ComputeFrameMetrics(mScrolledFrame, mScrollFrame, ReferenceFrame(), aLayer,
+                        mScrollParentId, viewport, false, false, params)));
 }
 
 bool
