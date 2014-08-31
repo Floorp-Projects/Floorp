@@ -256,16 +256,6 @@ static ByteString SingleResponse(OCSPResponseContext& context);
 static ByteString CertID(OCSPResponseContext& context);
 static ByteString CertStatus(OCSPResponseContext& context);
 
-static SECItem*
-EncodeNested(PLArenaPool* arena, uint8_t tag, const SECItem* inner)
-{
-  Output output;
-  if (output.Add(inner) != Success) {
-    return nullptr;
-  }
-  return output.Squash(arena, tag);
-}
-
 static ByteString
 HashedOctetString(const SECItem& bytes)
 {
@@ -540,43 +530,32 @@ SignedData(const SECItem* tbsData,
 //                  -- corresponding to the extension type identified
 //                  -- by extnID
 //      }
-static SECItem*
-Extension(PLArenaPool* arena, Input extnID,
-          ExtensionCriticality criticality, Output& value)
+static ByteString
+Extension(Input extnID, ExtensionCriticality criticality,
+          const ByteString& extnValueBytes)
 {
-  assert(arena);
-  if (!arena) {
-    return nullptr;
-  }
+  ByteString encoded;
 
-  Output output;
-
-  const SECItem extnIDItem = UnsafeMapInputToSECItem(extnID);
-  if (output.Add(&extnIDItem) != Success) {
-    return nullptr;
-  }
+  encoded.append(ByteString(extnID.UnsafeGetData(), extnID.GetLength()));
 
   if (criticality == ExtensionCriticality::Critical) {
     ByteString critical(Boolean(true));
     if (critical == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
-    output.Add(critical);
+    encoded.append(critical);
   }
 
-  SECItem* extnValueBytes(value.Squash(arena, der::SEQUENCE));
-  if (!extnValueBytes) {
-    return nullptr;
+  ByteString extnValueSequence(TLV(der::SEQUENCE, extnValueBytes));
+  if (extnValueBytes == ENCODING_FAILED) {
+    return ENCODING_FAILED;
   }
-  SECItem* extnValue(EncodeNested(arena, der::OCTET_STRING, extnValueBytes));
-  if (!extnValue) {
-    return nullptr;
+  ByteString extnValue(TLV(der::OCTET_STRING, extnValueSequence));
+  if (extnValue == ENCODING_FAILED) {
+    return ENCODING_FAILED;
   }
-  if (output.Add(extnValue) != Success) {
-    return nullptr;
-  }
-
-  return output.Squash(arena, der::SEQUENCE);
+  encoded.append(extnValue);
+  return TLV(der::SEQUENCE, encoded);
 }
 
 void
@@ -659,7 +638,7 @@ static SECItem* TBSCertificate(PLArenaPool* arena, long version,
                                const ByteString& issuer, time_t notBefore,
                                time_t notAfter, const ByteString& subject,
                                const SECKEYPublicKey* subjectPublicKey,
-                               /*optional*/ SECItem const* const* extensions);
+                               /*optional*/ const ByteString* extensions);
 
 // Certificate  ::=  SEQUENCE  {
 //         tbsCertificate       TBSCertificate,
@@ -671,7 +650,7 @@ CreateEncodedCertificate(PLArenaPool* arena, long version, Input signature,
                          const ByteString& issuerNameDER,
                          time_t notBefore, time_t notAfter,
                          const ByteString& subjectNameDER,
-                         /*optional*/ SECItem const* const* extensions,
+                         /*optional*/ const ByteString* extensions,
                          /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
                          SignatureAlgorithm signatureAlgorithm,
                          /*out*/ ScopedSECKEYPrivateKey& privateKeyResult)
@@ -733,7 +712,7 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
                const ByteString& issuer, time_t notBeforeTime,
                time_t notAfterTime, const ByteString& subject,
                const SECKEYPublicKey* subjectPublicKey,
-               /*optional*/ SECItem const* const* extensions)
+               /*optional*/ const ByteString* extensions)
 {
   assert(arena);
   assert(subjectPublicKey);
@@ -803,26 +782,21 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
   }
 
   if (extensions) {
-    Output extensionsOutput;
-    while (*extensions) {
-      if (extensionsOutput.Add(*extensions) != Success) {
-        return nullptr;
-      }
+    ByteString extensionsValue;
+    while (!(*extensions).empty()) {
+      extensionsValue.append(*extensions);
       ++extensions;
     }
-    SECItem* allExtensions(extensionsOutput.Squash(arena, der::SEQUENCE));
-    if (!allExtensions) {
+    ByteString extensionsSequence(TLV(der::SEQUENCE, extensionsValue));
+    if (extensionsSequence == ENCODING_FAILED) {
       return nullptr;
     }
-    SECItem* extensionsWrapped(
-      EncodeNested(arena, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 3,
-                   allExtensions));
-    if (!extensions) {
+    ByteString extensionsWrapped(
+      TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 3, extensionsSequence));
+    if (extensionsWrapped == ENCODING_FAILED) {
       return nullptr;
     }
-    if (output.Add(extensionsWrapped) != Success) {
-      return nullptr;
-    }
+    output.Add(extensionsWrapped);
   }
 
   return output.Squash(arena, der::SEQUENCE);
@@ -890,62 +864,49 @@ CreateEncodedSerialNumber(long serialNumberValue)
 // BasicConstraints ::= SEQUENCE {
 //         cA                      BOOLEAN DEFAULT FALSE,
 //         pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
-SECItem*
-CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
+ByteString
+CreateEncodedBasicConstraints(bool isCA,
                               /*optional*/ long* pathLenConstraintValue,
                               ExtensionCriticality criticality)
 {
-  assert(arena);
-  if (!arena) {
-    return nullptr;
-  }
-
-  Output value;
+  ByteString value;
 
   if (isCA) {
     ByteString cA(Boolean(true));
     if (cA == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
-    value.Add(cA);
+    value.append(cA);
   }
 
   if (pathLenConstraintValue) {
     ByteString pathLenConstraint(Integer(*pathLenConstraintValue));
     if (pathLenConstraint == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
-    value.Add(pathLenConstraint);
+    value.append(pathLenConstraint);
   }
 
   // python DottedOIDToCode.py --tlv id-ce-basicConstraints 2.5.29.19
   static const uint8_t tlv_id_ce_basicConstraints[] = {
     0x06, 0x03, 0x55, 0x1d, 0x13
   };
-
-  return Extension(arena, Input(tlv_id_ce_basicConstraints), criticality, value);
+  return Extension(Input(tlv_id_ce_basicConstraints), criticality, value);
 }
 
 // ExtKeyUsageSyntax ::= SEQUENCE SIZE (1..MAX) OF KeyPurposeId
 // KeyPurposeId ::= OBJECT IDENTIFIER
-SECItem*
-CreateEncodedEKUExtension(PLArenaPool* arena, Input ekuOID,
-                          ExtensionCriticality criticality)
+ByteString
+CreateEncodedEKUExtension(Input ekuOID, ExtensionCriticality criticality)
 {
-  assert(arena);
-
-  Output value;
-  SECItem ekuOIDItem = UnsafeMapInputToSECItem(ekuOID);
-  if (value.Add(&ekuOIDItem) != Success) {
-    return nullptr;
-  }
+  ByteString value(ekuOID.UnsafeGetData(), ekuOID.GetLength());
 
   // python DottedOIDToCode.py --tlv id-ce-extKeyUsage 2.5.29.37
   static const uint8_t tlv_id_ce_extKeyUsage[] = {
     0x06, 0x03, 0x55, 0x1d, 0x25
   };
 
-  return Extension(arena, Input(tlv_id_ce_extKeyUsage), criticality, value);
+  return Extension(Input(tlv_id_ce_extKeyUsage), criticality, value);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1061,61 +1022,46 @@ BasicOCSPResponse(OCSPResponseContext& context)
 //   critical         BOOLEAN DEFAULT FALSE
 //   value            OCTET STRING
 // }
-static SECItem*
-OCSPExtension(OCSPResponseContext& context, OCSPResponseExtension* extension)
+static ByteString
+OCSPExtension(OCSPResponseContext& context, OCSPResponseExtension& extension)
 {
-  Output output;
-  if (output.Add(&extension->id) != Success) {
-    return nullptr;
-  }
-  if (extension->critical) {
-    static const uint8_t trueEncoded[3] = { 0x01, 0x01, 0xFF };
-    SECItem critical = {
-      siBuffer,
-      const_cast<uint8_t*>(trueEncoded),
-      sizeof(trueEncoded)
-    };
-    if (output.Add(&critical) != Success) {
-      return nullptr;
+  ByteString encoded;
+  encoded.append(extension.id);
+  if (extension.critical) {
+    ByteString critical(Boolean(true));
+    if (critical == ENCODING_FAILED) {
+      return ENCODING_FAILED;
     }
+    encoded.append(critical);
   }
-  SECItem* value = EncodeNested(context.arena, der::OCTET_STRING,
-                                &extension->value);
-  if (!value) {
-    return nullptr;
+  ByteString value(TLV(der::OCTET_STRING, extension.value));
+  if (value == ENCODING_FAILED) {
+    return ENCODING_FAILED;
   }
-  if (output.Add(value) != Success) {
-    return nullptr;
-  }
-  return output.Squash(context.arena, der::SEQUENCE);
+  encoded.append(value);
+  return TLV(der::SEQUENCE, encoded);
 }
 
 // Extensions ::= [1] {
 //   SEQUENCE OF Extension
 // }
-static SECItem*
+static ByteString
 Extensions(OCSPResponseContext& context)
 {
-  Output output;
+  ByteString value;
   for (OCSPResponseExtension* extension = context.extensions;
        extension; extension = extension->next) {
-    SECItem* extensionEncoded = OCSPExtension(context, extension);
-    if (!extensionEncoded) {
-      return nullptr;
+    ByteString extensionEncoded(OCSPExtension(context, *extension));
+    if (extensionEncoded == ENCODING_FAILED) {
+      return ENCODING_FAILED;
     }
-    if (output.Add(extensionEncoded) != Success) {
-      return nullptr;
-    }
+    value.append(extensionEncoded);
   }
-  SECItem* extensionsEncoded = output.Squash(context.arena, der::SEQUENCE);
-  if (!extensionsEncoded) {
-    return nullptr;
+  ByteString sequence(TLV(der::SEQUENCE, value));
+  if (sequence == ENCODING_FAILED) {
+    return ENCODING_FAILED;
   }
-  return EncodeNested(context.arena,
-                      der::CONSTRUCTED |
-                      der::CONTEXT_SPECIFIC |
-                      1,
-                      extensionsEncoded);
+  return TLV(der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 1, sequence);
 }
 
 // ResponseData ::= SEQUENCE {
@@ -1143,7 +1089,7 @@ ResponseData(OCSPResponseContext& context)
   if (responses == ENCODING_FAILED) {
     return nullptr;
   }
-  SECItem* responseExtensions = nullptr;
+  ByteString responseExtensions;
   if (context.extensions || context.includeEmptyExtensions) {
     responseExtensions = Extensions(context);
   }
@@ -1152,11 +1098,7 @@ ResponseData(OCSPResponseContext& context)
   output.Add(responderID);
   output.Add(producedAtEncoded);
   output.Add(responses);
-  if (responseExtensions) {
-    if (output.Add(responseExtensions) != Success) {
-      return nullptr;
-    }
-  }
+  output.Add(responseExtensions);
   return output.Squash(context.arena, der::SEQUENCE);
 }
 

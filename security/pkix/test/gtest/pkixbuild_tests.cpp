@@ -56,12 +56,12 @@ CreateCert(PLArenaPool* arena, const char* issuerCN,
   ByteString subjectDER(CNToDERName(subjectCN));
   EXPECT_NE(ENCODING_FAILED, subjectDER);
 
-  const SECItem* extensions[2] = { nullptr, nullptr };
+  ByteString extensions[2];
   if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
     extensions[0] =
-      CreateEncodedBasicConstraints(arena, true, nullptr,
+      CreateEncodedBasicConstraints(true, nullptr,
                                     ExtensionCriticality::Critical);
-    EXPECT_TRUE(extensions[0]);
+    EXPECT_NE(ENCODING_FAILED, extensions[0]);
   }
 
   SECItem* certDER(CreateEncodedCertificate(
