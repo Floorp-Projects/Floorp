@@ -238,7 +238,7 @@ SmsIPCService::CreateMessageCursor(bool aHasStartDate,
   data.hasStartDate() = aHasStartDate;
   data.startDate() = aStartDate;
   data.hasEndDate() = aHasEndDate;
-  data.startDate() = aEndDate;
+  data.endDate() = aEndDate;
 
   if (aNumbersCount && aNumbers) {
     nsTArray<nsString>& numbers = data.numbers();
