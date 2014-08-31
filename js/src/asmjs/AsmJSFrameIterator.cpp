@@ -356,11 +356,11 @@ js::GenerateAsmJSStackOverflowExit(MacroAssembler &masm, Label *overflowExit, La
     masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfFP()));
 
     // Prepare the stack for calling C++.
-    if (unsigned stackDec = StackDecrementForCall(sizeof(AsmJSFrame), ShadowStackSpace))
-        masm.subPtr(Imm32(stackDec), StackPointer);
+    if (uint32_t d = StackDecrementForCall(ABIStackAlignment, sizeof(AsmJSFrame), ShadowStackSpace))
+        masm.subPtr(Imm32(d), StackPointer);
 
     // No need to restore the stack; the throw stub pops everything.
-    masm.assertStackAlignment();
+    masm.assertStackAlignment(ABIStackAlignment);
     masm.call(AsmJSImmPtr(AsmJSImm_ReportOverRecursed));
     masm.jump(throwLabel);
 }

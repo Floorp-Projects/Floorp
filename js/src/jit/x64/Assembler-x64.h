@@ -184,10 +184,7 @@ static MOZ_CONSTEXPR_VAR Register OsrFrameReg = IntArgReg3;
 
 static MOZ_CONSTEXPR_VAR Register PreBarrierReg = rdx;
 
-// GCC stack is aligned on 16 bytes, but we don't maintain the invariant in
-// jitted code.
-static const uint32_t StackAlignment = 16;
-static const bool StackKeptAligned = false;
+static const uint32_t ABIStackAlignment = 16;
 static const uint32_t CodeAlignment = 8;
 
 // This boolean indicates whether we support SIMD instructions flavoured for
@@ -196,6 +193,8 @@ static const uint32_t CodeAlignment = 8;
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
 static const bool SupportsSimd = true;
 static const uint32_t SimdStackAlignment = 16;
+
+static const uint32_t AsmJSStackAlignment = SimdStackAlignment;
 
 static const Scale ScalePointer = TimesEight;
 
@@ -603,11 +602,29 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel loadRipRelativeDouble(FloatRegister dest) {
         return CodeOffsetLabel(masm.movsd_ripr(dest.code()).offset());
     }
+    CodeOffsetLabel loadRipRelativeFloat32(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movss_ripr(dest.code()).offset());
+    }
+    CodeOffsetLabel loadRipRelativeInt32x4(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movdqa_ripr(dest.code()).offset());
+    }
+    CodeOffsetLabel loadRipRelativeFloat32x4(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movaps_ripr(dest.code()).offset());
+    }
     CodeOffsetLabel storeRipRelativeInt32(Register dest) {
         return CodeOffsetLabel(masm.movl_rrip(dest.code()).offset());
     }
     CodeOffsetLabel storeRipRelativeDouble(FloatRegister dest) {
         return CodeOffsetLabel(masm.movsd_rrip(dest.code()).offset());
+    }
+    CodeOffsetLabel storeRipRelativeFloat32(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movss_rrip(dest.code()).offset());
+    }
+    CodeOffsetLabel storeRipRelativeInt32x4(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movdqa_rrip(dest.code()).offset());
+    }
+    CodeOffsetLabel storeRipRelativeFloat32x4(FloatRegister dest) {
+        return CodeOffsetLabel(masm.movaps_rrip(dest.code()).offset());
     }
     CodeOffsetLabel leaRipRelative(Register dest) {
         return CodeOffsetLabel(masm.leaq_rip(dest.code()).offset());
