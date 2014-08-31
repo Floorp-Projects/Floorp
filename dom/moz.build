@@ -63,6 +63,7 @@ DIRS += [
     'mathml',
     'media',
     'messages',
+    'notification',
     'power',
     'push',
     'quota',

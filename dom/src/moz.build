@@ -7,7 +7,6 @@
 DIRS += [
     'storage',
     'offline',
-    'notification',
 ]
 
 JAR_MANIFESTS += ['jar.mn']
