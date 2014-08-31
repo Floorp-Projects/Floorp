@@ -58,6 +58,7 @@ DIRS += [
     'fmradio',
     'geolocation',
     'json',
+    'jsurl',
     'asmjscache',
     'mathml',
     'media',
