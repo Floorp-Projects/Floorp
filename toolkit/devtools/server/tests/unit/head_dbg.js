@@ -7,10 +7,6 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-// We also need a valid nsIXulAppInfo
-Cu.import("resource://testing-common/AppInfo.jsm");
-updateAppInfo();
-
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { worker } = Cu.import("resource://gre/modules/devtools/worker-loader.js", {})
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});

@@ -4,10 +4,6 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-// We also need a valid nsIXulAppInfo
-Cu.import("resource://testing-common/AppInfo.jsm");
-updateAppInfo();
-
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 
@@ -45,4 +41,3 @@ let listener = {
 
 let consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
 consoleService.registerListener(listener);
-
