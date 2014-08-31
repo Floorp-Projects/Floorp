@@ -56,7 +56,7 @@ LOCAL_INCLUDES += [
     '/dom/media',
     '/dom/offline',
     '/dom/speakermanager',
-    '/dom/src/storage',
+    '/dom/storage',
     '/dom/telephony',
     '/dom/xbl',
     '/dom/xslt/base',
