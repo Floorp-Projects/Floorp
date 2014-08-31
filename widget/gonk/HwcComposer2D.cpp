@@ -28,7 +28,6 @@
 #include "mozilla/StaticPtr.h"
 #include "cutils/properties.h"
 #include "gfx2DGlue.h"
-#include "GeckoTouchDispatcher.h"
 
 #if ANDROID_VERSION >= 17
 #include "libdisplay/FramebufferSurface.h"
@@ -150,10 +149,6 @@ HwcComposer2D::Init(hwc_display_t dpy, hwc_surface_t sur, gl::GLContext* aGLCont
         mColorFill = false;
         mRBSwapSupport = false;
     }
-
-    if (RegisterHwcEventCallback()) {
-        EnableVsync(true);
-    }
 #else
     char propValue[PROPERTY_VALUE_MAX];
     property_get("ro.display.colorfill", propValue, "0");
@@ -228,7 +223,7 @@ HwcComposer2D::RunVsyncEventControl(bool aEnable)
 void
 HwcComposer2D::Vsync(int aDisplay, int64_t aTimestamp)
 {
-    GeckoTouchDispatcher::NotifyVsync(aTimestamp);
+    // TODO: Handle Vsync event here
 }
 #endif
 
