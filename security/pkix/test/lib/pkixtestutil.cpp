@@ -458,14 +458,13 @@ YMDHMS(int16_t year, int16_t month, int16_t day,
 }
 
 static ByteString
-SignedData(const SECItem* tbsData,
+SignedData(const ByteString& tbsData,
            SECKEYPrivateKey* privKey,
            SignatureAlgorithm signatureAlgorithm,
            bool corrupt, /*optional*/ SECItem const* const* certs)
 {
-  assert(tbsData);
   assert(privKey);
-  if (!tbsData || !privKey) {
+  if (!privKey) {
     return ENCODING_FAILED;
   }
 
@@ -482,7 +481,7 @@ SignedData(const SECItem* tbsData,
   }
 
   SECItem signature;
-  if (SEC_SignData(&signature, tbsData->data, tbsData->len, privKey,
+  if (SEC_SignData(&signature, tbsData.data(), tbsData.length(), privKey,
                    signatureAlgorithmOidTag) != SECSuccess)
   {
     return nullptr;
@@ -515,7 +514,7 @@ SignedData(const SECItem* tbsData,
   }
 
   ByteString value;
-  value.append(ByteString(tbsData->data, tbsData->len));
+  value.append(tbsData);
   value.append(signatureAlgorithmDER);
   value.append(signatureNested);
   value.append(certsNested);
@@ -633,12 +632,12 @@ GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
 ///////////////////////////////////////////////////////////////////////////////
 // Certificates
 
-static SECItem* TBSCertificate(PLArenaPool* arena, long version,
-                               const ByteString& serialNumber, Input signature,
-                               const ByteString& issuer, time_t notBefore,
-                               time_t notAfter, const ByteString& subject,
-                               const SECKEYPublicKey* subjectPublicKey,
-                               /*optional*/ const ByteString* extensions);
+static ByteString TBSCertificate(long version, const ByteString& serialNumber,
+                                 Input signature, const ByteString& issuer,
+                                 time_t notBefore, time_t notAfter,
+                                 const ByteString& subject,
+                                 const SECKEYPublicKey* subjectPublicKey,
+                                 /*optional*/ const ByteString* extensions);
 
 // Certificate  ::=  SEQUENCE  {
 //         tbsCertificate       TBSCertificate,
@@ -669,11 +668,11 @@ CreateEncodedCertificate(PLArenaPool* arena, long version, Input signature,
     return nullptr;
   }
 
-  SECItem* tbsCertificate(TBSCertificate(arena, version, serialNumber,
-                                         signature, issuerNameDER, notBefore,
-                                         notAfter, subjectNameDER,
-                                         publicKey.get(), extensions));
-  if (!tbsCertificate) {
+  ByteString tbsCertificate(TBSCertificate(version, serialNumber,
+                                           signature, issuerNameDER, notBefore,
+                                           notAfter, subjectNameDER,
+                                           publicKey.get(), extensions));
+  if (tbsCertificate == ENCODING_FAILED) {
     return nullptr;
   }
 
@@ -706,43 +705,37 @@ CreateEncodedCertificate(PLArenaPool* arena, long version, Input signature,
 //                           -- If present, version MUST be v2 or v3
 //      extensions      [3]  Extensions OPTIONAL
 //                           -- If present, version MUST be v3 --  }
-static SECItem*
-TBSCertificate(PLArenaPool* arena, long versionValue,
+static ByteString
+TBSCertificate(long versionValue,
                const ByteString& serialNumber, Input signature,
                const ByteString& issuer, time_t notBeforeTime,
                time_t notAfterTime, const ByteString& subject,
                const SECKEYPublicKey* subjectPublicKey,
                /*optional*/ const ByteString* extensions)
 {
-  assert(arena);
   assert(subjectPublicKey);
-  if (!arena || !subjectPublicKey) {
-    return nullptr;
+  if (!subjectPublicKey) {
+    return ENCODING_FAILED;
   }
 
-  Output output;
+  ByteString value;
 
   if (versionValue != static_cast<long>(der::Version::v1)) {
     ByteString versionInteger(Integer(versionValue));
     if (versionInteger == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
     ByteString version(TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
                            versionInteger));
     if (version == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
-    output.Add(version);
+    value.append(version);
   }
 
-  output.Add(serialNumber);
-
-  SECItem signatureItem = UnsafeMapInputToSECItem(signature);
-  if (output.Add(&signatureItem) != Success) {
-    return nullptr;
-  }
-
-  output.Add(issuer);
+  value.append(serialNumber);
+  value.append(signature.UnsafeGetData(), signature.GetLength());
+  value.append(issuer);
 
   // Validity ::= SEQUENCE {
   //       notBefore      Time,
@@ -751,23 +744,23 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
   {
     ByteString notBefore(TimeToTimeChoice(notBeforeTime));
     if (notBefore == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
     ByteString notAfter(TimeToTimeChoice(notAfterTime));
     if (notAfter == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
     ByteString validityValue;
     validityValue.append(notBefore);
     validityValue.append(notAfter);
     validity = TLV(der::SEQUENCE, validityValue);
     if (validity == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
   }
-  output.Add(validity);
+  value.append(validity);
 
-  output.Add(subject);
+  value.append(subject);
 
   // SubjectPublicKeyInfo  ::=  SEQUENCE  {
   //       algorithm            AlgorithmIdentifier,
@@ -775,11 +768,9 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
   ScopedSECItem subjectPublicKeyInfo(
     SECKEY_EncodeDERSubjectPublicKeyInfo(subjectPublicKey));
   if (!subjectPublicKeyInfo) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
-  if (output.Add(subjectPublicKeyInfo.get()) != Success) {
-    return nullptr;
-  }
+  value.append(subjectPublicKeyInfo->data, subjectPublicKeyInfo->len);
 
   if (extensions) {
     ByteString extensionsValue;
@@ -789,17 +780,17 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
     }
     ByteString extensionsSequence(TLV(der::SEQUENCE, extensionsValue));
     if (extensionsSequence == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
     ByteString extensionsWrapped(
       TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 3, extensionsSequence));
     if (extensionsWrapped == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
-    output.Add(extensionsWrapped);
+    value.append(extensionsWrapped);
   }
 
-  return output.Squash(arena, der::SEQUENCE);
+  return TLV(der::SEQUENCE, value);
 }
 
 ByteString
@@ -1012,7 +1003,8 @@ BasicOCSPResponse(OCSPResponseContext& context)
   }
 
   // TODO(bug 980538): certs
-  return SignedData(tbsResponseData, context.signerPrivateKey.get(),
+  return SignedData(ByteString(tbsResponseData->data, tbsResponseData->len),
+                    context.signerPrivateKey.get(),
                     SignatureAlgorithm::rsa_pkcs1_with_sha256,
                     context.badSignature, context.certs);
 }
