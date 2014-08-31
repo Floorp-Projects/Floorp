@@ -253,7 +253,7 @@ static SECItem* ResponseData(OCSPResponseContext& context);
 static ByteString ResponderID(OCSPResponseContext& context);
 static ByteString KeyHash(OCSPResponseContext& context);
 static SECItem* SingleResponse(OCSPResponseContext& context);
-static SECItem* CertID(OCSPResponseContext& context);
+static ByteString CertID(OCSPResponseContext& context);
 static ByteString CertStatus(OCSPResponseContext& context);
 
 static SECItem*
@@ -1217,8 +1217,8 @@ KeyHash(OCSPResponseContext& context)
 SECItem*
 SingleResponse(OCSPResponseContext& context)
 {
-  SECItem* certID = CertID(context);
-  if (!certID) {
+  ByteString certID(CertID(context));
+  if (certID == ENCODING_FAILED) {
     return nullptr;
   }
   ByteString certStatus(CertStatus(context));
@@ -1243,9 +1243,7 @@ SingleResponse(OCSPResponseContext& context)
   }
 
   Output output;
-  if (output.Add(certID) != Success) {
-    return nullptr;
-  }
+  output.Add(certID);
   output.Add(certStatus);
   output.Add(thisUpdateEncoded);
   if (!nextUpdateEncodedNested.empty()) {
@@ -1259,13 +1257,13 @@ SingleResponse(OCSPResponseContext& context)
 //        issuerNameHash      OCTET STRING, -- Hash of issuer's DN
 //        issuerKeyHash       OCTET STRING, -- Hash of issuer's public key
 //        serialNumber        CertificateSerialNumber }
-SECItem*
+ByteString
 CertID(OCSPResponseContext& context)
 {
   SECItem issuerSECItem = UnsafeMapInputToSECItem(context.certID.issuer);
   ByteString issuerNameHash(HashedOctetString(issuerSECItem));
   if (issuerNameHash == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
   SECItem issuerSubjectPublicKeyInfoSECItem =
@@ -1274,39 +1272,31 @@ CertID(OCSPResponseContext& context)
     spki(SECKEY_DecodeDERSubjectPublicKeyInfo(
            &issuerSubjectPublicKeyInfoSECItem));
   if (!spki) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   ByteString issuerKeyHash(KeyHashHelper(spki.get()));
   if (issuerKeyHash == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
   ByteString serialNumberValue(context.certID.serialNumber.UnsafeGetData(),
                                context.certID.serialNumber.GetLength());
   ByteString serialNumber(TLV(der::INTEGER, serialNumberValue));
   if (serialNumber == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
-
-  Output output;
 
   // python DottedOIDToCode.py --alg id-sha1 1.3.14.3.2.26
   static const uint8_t alg_id_sha1[] = {
     0x30, 0x07, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a
   };
-  static const SECItem id_sha1 = {
-    siBuffer,
-    const_cast<uint8_t*>(alg_id_sha1),
-    sizeof(alg_id_sha1)
-  };
 
-  if (output.Add(&id_sha1) != Success) {
-    return nullptr;
-  }
-  output.Add(issuerNameHash);
-  output.Add(issuerKeyHash);
-  output.Add(serialNumber);
-  return output.Squash(context.arena, der::SEQUENCE);
+  ByteString value;
+  value.append(alg_id_sha1, sizeof(alg_id_sha1));
+  value.append(issuerNameHash);
+  value.append(issuerKeyHash);
+  value.append(serialNumber);
+  return TLV(der::SEQUENCE, value);
 }
 
 // CertStatus ::= CHOICE {
