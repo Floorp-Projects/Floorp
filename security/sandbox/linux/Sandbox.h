@@ -21,13 +21,13 @@ namespace mozilla {
 
 #ifdef MOZ_CONTENT_SANDBOX
 // Disabled by setting env var MOZ_DISABLE_CONTENT_SANDBOX.
-MFBT_API bool CanSandboxContentProcess();
-MFBT_API void SetContentProcessSandbox();
+MOZ_EXPORT bool CanSandboxContentProcess();
+MOZ_EXPORT void SetContentProcessSandbox();
 #endif
 #ifdef MOZ_GMP_SANDBOX
 // Disabled by setting env var MOZ_DISABLE_GMP_SANDBOX.
-MFBT_API bool CanSandboxMediaPlugin();
-MFBT_API void SetMediaPluginSandbox(const char *aFilePath);
+MOZ_EXPORT bool CanSandboxMediaPlugin();
+MOZ_EXPORT void SetMediaPluginSandbox(const char *aFilePath);
 #endif
 
 } // namespace mozilla
