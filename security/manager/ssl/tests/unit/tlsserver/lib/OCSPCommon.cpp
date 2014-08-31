@@ -83,18 +83,18 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     }
   }
 
-  const SECItem* certs[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
+  ByteString certs[5];
 
   if (aORT == ORTDelegatedIncluded) {
-    certs[0] = &signerCert->derCert;
+    certs[0].assign(signerCert->derCert.data, signerCert->derCert.len);
     context.certs = certs;
   }
   if (aORT == ORTDelegatedIncludedLast || aORT == ORTDelegatedMissingMultiple) {
-    certs[0] = &issuerCert->derCert;
-    certs[1] = &cert->derCert;
-    certs[2] = &issuerCert->derCert;
+    certs[0].assign(issuerCert->derCert.data, issuerCert->derCert.len);
+    certs[1].assign(cert->derCert.data, cert->derCert.len);
+    certs[2].assign(issuerCert->derCert.data, issuerCert->derCert.len);
     if (aORT != ORTDelegatedMissingMultiple) {
-      certs[3] = &signerCert->derCert;
+      certs[3].assign(signerCert->derCert.data, signerCert->derCert.len);
     }
     context.certs = certs;
   }
