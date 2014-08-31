@@ -149,6 +149,17 @@ TLV(uint8_t tag, const ByteString& value)
   return result;
 }
 
+static SECItem*
+ArenaDupByteString(PLArenaPool* arena, const ByteString& value)
+{
+  SECItem* result = SECITEM_AllocItem(arena, nullptr, value.length());
+  if (!result) {
+    return nullptr;
+  }
+  memcpy(result->data, value.data(), value.length());
+  return result;
+}
+
 class Output
 {
 public:
@@ -236,8 +247,8 @@ OCSPResponseContext::OCSPResponseContext(PLArenaPool* arena,
 {
 }
 
-static SECItem* ResponseBytes(OCSPResponseContext& context);
-static SECItem* BasicOCSPResponse(OCSPResponseContext& context);
+static ByteString ResponseBytes(OCSPResponseContext& context);
+static ByteString BasicOCSPResponse(OCSPResponseContext& context);
 static SECItem* ResponseData(OCSPResponseContext& context);
 static ByteString ResponderID(OCSPResponseContext& context);
 static ByteString KeyHash(OCSPResponseContext& context);
@@ -456,36 +467,30 @@ YMDHMS(int16_t year, int16_t month, int16_t day,
   return TimeFromElapsedSecondsAD(totalSeconds);
 }
 
-static SECItem*
-SignedData(PLArenaPool* arena, const SECItem* tbsData,
+static ByteString
+SignedData(const SECItem* tbsData,
            SECKEYPrivateKey* privKey,
            SignatureAlgorithm signatureAlgorithm,
            bool corrupt, /*optional*/ SECItem const* const* certs)
 {
-  assert(arena);
   assert(tbsData);
   assert(privKey);
-  if (!arena || !tbsData || !privKey) {
-    return nullptr;
+  if (!tbsData || !privKey) {
+    return ENCODING_FAILED;
   }
 
   SECOidTag signatureAlgorithmOidTag;
-  Input signatureAlgorithmDER;
+  ByteString signatureAlgorithmDER;
   switch (signatureAlgorithm) {
     case SignatureAlgorithm::rsa_pkcs1_with_sha256:
       signatureAlgorithmOidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
-      if (signatureAlgorithmDER.Init(alg_sha256WithRSAEncryption,
-                                     sizeof(alg_sha256WithRSAEncryption))
-            != Success) {
-        return nullptr;
-      }
+      signatureAlgorithmDER.assign(alg_sha256WithRSAEncryption,
+                                   sizeof(alg_sha256WithRSAEncryption));
       break;
     default:
-      return nullptr;
+      return ENCODING_FAILED;
   }
 
-  // SEC_SignData doesn't take an arena parameter, so we have to manage
-  // the memory allocated in signature.
   SECItem signature;
   if (SEC_SignData(&signature, tbsData->data, tbsData->len, privKey,
                    signatureAlgorithmOidTag) != SECSuccess)
@@ -501,42 +506,30 @@ SignedData(PLArenaPool* arena, const SECItem* tbsData,
     return nullptr;
   }
 
-  SECItem* certsNested = nullptr;
+  ByteString certsNested;
   if (certs) {
-    Output certsOutput;
+    ByteString certsSequenceValue;
     while (*certs) {
-      certsOutput.Add(*certs);
+      certsSequenceValue.append(ByteString((*certs)->data, (*certs)->len));
       ++certs;
     }
-    SECItem* certsSequence = certsOutput.Squash(arena, der::SEQUENCE);
-    if (!certsSequence) {
-      return nullptr;
+    ByteString certsSequence(TLV(der::SEQUENCE, certsSequenceValue));
+    if (certsSequence == ENCODING_FAILED) {
+      return ENCODING_FAILED;
     }
-    certsNested = EncodeNested(arena,
-                               der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
-                               certsSequence);
-    if (!certsNested) {
-      return nullptr;
+    certsNested = TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
+                      certsSequence);
+    if (certsNested == ENCODING_FAILED) {
+      return ENCODING_FAILED;
     }
   }
 
-  Output output;
-  if (output.Add(tbsData) != Success) {
-    return nullptr;
-  }
-
-  SECItem sigantureAlgorithmDERItem =
-    UnsafeMapInputToSECItem(signatureAlgorithmDER);
-  if (output.Add(&sigantureAlgorithmDERItem) != Success) {
-    return nullptr;
-  }
-  output.Add(signatureNested);
-  if (certsNested) {
-    if (output.Add(certsNested) != Success) {
-      return nullptr;
-    }
-  }
-  return output.Squash(arena, der::SEQUENCE);
+  ByteString value;
+  value.append(ByteString(tbsData->data, tbsData->len));
+  value.append(signatureAlgorithmDER);
+  value.append(signatureNested);
+  value.append(certsNested);
+  return TLV(der::SEQUENCE, value);
 }
 
 // Extension  ::=  SEQUENCE  {
@@ -586,14 +579,10 @@ Extension(PLArenaPool* arena, Input extnID,
   return output.Squash(arena, der::SEQUENCE);
 }
 
-SECItem*
-MaybeLogOutput(SECItem* result, const char* suffix)
+void
+MaybeLogOutput(const ByteString& result, const char* suffix)
 {
   assert(suffix);
-
-  if (!result) {
-    return nullptr;
-  }
 
   // This allows us to more easily debug the generated output, by creating a
   // file in the directory given by MOZILLA_PKIX_TEST_LOG_DIR for each
@@ -607,12 +596,10 @@ MaybeLogOutput(SECItem* result, const char* suffix)
     if (filename) {
       ScopedFILE file(OpenFile(logPath, filename.get(), "wb"));
       if (file) {
-        (void) fwrite(result->data, result->len, 1, file.get());
+        (void) fwrite(result.data(), result.length(), 1, file.get());
       }
     }
   }
-
-  return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -711,17 +698,19 @@ CreateEncodedCertificate(PLArenaPool* arena, long version, Input signature,
     return nullptr;
   }
 
-  SECItem*
-    result(MaybeLogOutput(SignedData(arena, tbsCertificate,
-                                     issuerPrivateKey ? issuerPrivateKey
-                                                      : privateKeyTemp.get(),
-                                     signatureAlgorithm, false, nullptr),
-                          "cert"));
-  if (!result) {
+  ByteString result(SignedData(tbsCertificate,
+                               issuerPrivateKey ? issuerPrivateKey
+                                                : privateKeyTemp.get(),
+                               signatureAlgorithm, false, nullptr));
+  if (result == ENCODING_FAILED) {
     return nullptr;
   }
+
+  MaybeLogOutput(result, "cert");
+
   privateKeyResult = privateKeyTemp.release();
-  return result;
+
+  return ArenaDupByteString(arena, result);
 }
 
 // TBSCertificate  ::=  SEQUENCE  {
@@ -988,75 +977,64 @@ CreateEncodedOCSPResponse(OCSPResponseContext& context)
   //    sigRequired         (5),  -- Must sign the request
   //    unauthorized        (6)   -- Request unauthorized
   // }
-  SECItem* responseStatus = SECITEM_AllocItem(context.arena, nullptr, 3);
-  if (!responseStatus) {
+  ByteString reponseStatusValue;
+  reponseStatusValue.push_back(context.responseStatus);
+  ByteString responseStatus(TLV(der::ENUMERATED, reponseStatusValue));
+  if (responseStatus == ENCODING_FAILED) {
     return nullptr;
   }
-  responseStatus->data[0] = der::ENUMERATED;
-  responseStatus->data[1] = 1;
-  responseStatus->data[2] = context.responseStatus;
 
-  SECItem* responseBytesNested = nullptr;
+  ByteString responseBytesNested;
   if (!context.skipResponseBytes) {
-    SECItem* responseBytes = ResponseBytes(context);
-    if (!responseBytes) {
+    ByteString responseBytes(ResponseBytes(context));
+    if (responseBytes == ENCODING_FAILED) {
       return nullptr;
     }
 
-    responseBytesNested = EncodeNested(context.arena,
-                                       der::CONSTRUCTED |
-                                       der::CONTEXT_SPECIFIC,
-                                       responseBytes);
-    if (!responseBytesNested) {
+    responseBytesNested = TLV(der::CONSTRUCTED | der::CONTEXT_SPECIFIC,
+                              responseBytes);
+    if (responseBytesNested == ENCODING_FAILED) {
       return nullptr;
     }
   }
 
-  Output output;
-  if (output.Add(responseStatus) != Success) {
+  ByteString value;
+  value.append(responseStatus);
+  value.append(responseBytesNested);
+  ByteString result(TLV(der::SEQUENCE, value));
+  if (result == ENCODING_FAILED) {
     return nullptr;
   }
-  if (responseBytesNested) {
-    if (output.Add(responseBytesNested) != Success) {
-      return nullptr;
-    }
-  }
-  return MaybeLogOutput(output.Squash(context.arena, der::SEQUENCE), "ocsp");
+
+  MaybeLogOutput(result, "ocsp");
+
+  return ArenaDupByteString(context.arena, result);
 }
 
 // ResponseBytes ::= SEQUENCE {
 //    responseType            OBJECT IDENTIFIER,
 //    response                OCTET STRING }
-SECItem*
+ByteString
 ResponseBytes(OCSPResponseContext& context)
 {
   // Includes tag and length
   static const uint8_t id_pkix_ocsp_basic_encoded[] = {
     0x06, 0x09, 0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x01
   };
-  SECItem id_pkix_ocsp_basic = {
-    siBuffer,
-    const_cast<uint8_t*>(id_pkix_ocsp_basic_encoded),
-    sizeof(id_pkix_ocsp_basic_encoded)
-  };
-  SECItem* response = BasicOCSPResponse(context);
-  if (!response) {
+  ByteString response(BasicOCSPResponse(context));
+  if (response == ENCODING_FAILED) {
     return nullptr;
   }
-  SECItem* responseNested = EncodeNested(context.arena, der::OCTET_STRING,
-                                         response);
-  if (!responseNested) {
+  ByteString responseNested = TLV(der::OCTET_STRING, response);
+  if (responseNested == ENCODING_FAILED) {
     return nullptr;
   }
 
-  Output output;
-  if (output.Add(&id_pkix_ocsp_basic) != Success) {
-    return nullptr;
-  }
-  if (output.Add(responseNested) != Success) {
-    return nullptr;
-  }
-  return output.Squash(context.arena, der::SEQUENCE);
+  ByteString value;
+  value.append(id_pkix_ocsp_basic_encoded,
+               sizeof(id_pkix_ocsp_basic_encoded));
+  value.append(responseNested);
+  return TLV(der::SEQUENCE, value);
 }
 
 // BasicOCSPResponse ::= SEQUENCE {
@@ -1064,7 +1042,7 @@ ResponseBytes(OCSPResponseContext& context)
 //   signatureAlgorithm       AlgorithmIdentifier,
 //   signature                BIT STRING,
 //   certs                [0] EXPLICIT SEQUENCE OF Certificate OPTIONAL }
-SECItem*
+ByteString
 BasicOCSPResponse(OCSPResponseContext& context)
 {
   SECItem* tbsResponseData = ResponseData(context);
@@ -1073,8 +1051,7 @@ BasicOCSPResponse(OCSPResponseContext& context)
   }
 
   // TODO(bug 980538): certs
-  return SignedData(context.arena, tbsResponseData,
-                    context.signerPrivateKey.get(),
+  return SignedData(tbsResponseData, context.signerPrivateKey.get(),
                     SignatureAlgorithm::rsa_pkcs1_with_sha256,
                     context.badSignature, context.certs);
 }
