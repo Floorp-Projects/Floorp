@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
+const Cu = Components.utils;
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
