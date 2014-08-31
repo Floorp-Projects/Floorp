@@ -9,7 +9,6 @@ DIRS += [
     'storage',
     'offline',
     'json',
-    'geolocation',
     'notification',
 ]
 
