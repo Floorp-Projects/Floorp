@@ -9,6 +9,7 @@
 
 class SimpleTest : public nsISimpleTest
 {
+  ~SimpleTest() {}
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLETEST
