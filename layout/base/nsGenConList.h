@@ -32,7 +32,7 @@ struct nsGenConNode : public PRCList {
   // counter nodes for increments and resets (rather than uses)
   nsRefPtr<nsTextNode> mText;
 
-  nsGenConNode(int32_t aContentIndex)
+  explicit nsGenConNode(int32_t aContentIndex)
     : mPseudoFrame(nullptr)
     , mContentIndex(aContentIndex)
   {

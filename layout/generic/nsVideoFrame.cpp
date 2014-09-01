@@ -234,7 +234,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 class DispatchResizeToControls : public nsRunnable
 {
 public:
-  DispatchResizeToControls(nsIContent* aContent)
+  explicit DispatchResizeToControls(nsIContent* aContent)
     : mContent(aContent) {}
   NS_IMETHOD Run() MOZ_OVERRIDE {
     nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent,

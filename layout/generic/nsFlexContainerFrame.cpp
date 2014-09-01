@@ -172,7 +172,7 @@ PhysicalPosFromLogicalPos(nscoord aLogicalPosn,
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
 public:
-  FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame);
+  explicit FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame);
 
   // Accessors:
   AxisOrientationType GetMainAxis() const  { return mMainAxis;  }
@@ -1659,7 +1659,7 @@ public:
 
 protected:
   // Protected constructor, to be sure we're only instantiated via a subclass.
-  PositionTracker(AxisOrientationType aAxis)
+  explicit PositionTracker(AxisOrientationType aAxis)
     : mPosition(0),
       mAxis(aAxis)
   {}
@@ -1746,7 +1746,7 @@ private:
 // single flex line.
 class MOZ_STACK_CLASS SingleLineCrossAxisPositionTracker : public PositionTracker {
 public:
-  SingleLineCrossAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker);
+  explicit SingleLineCrossAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker);
 
   void ResolveAutoMarginsInCrossAxis(const FlexLine& aLine,
                                      FlexItem& aItem);
@@ -3443,8 +3443,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 class MOZ_STACK_CLASS AutoFlexLineListClearer
 {
 public:
-  AutoFlexLineListClearer(LinkedList<FlexLine>& aLines
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoFlexLineListClearer(LinkedList<FlexLine>& aLines
+                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   : mLines(aLines)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;

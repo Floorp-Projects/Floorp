@@ -312,7 +312,7 @@ nsCounterManager::SetAllCounterStylesDirty()
 }
 
 struct DestroyNodesData {
-    DestroyNodesData(nsIFrame *aFrame)
+    explicit DestroyNodesData(nsIFrame *aFrame)
         : mFrame(aFrame)
         , mDestroyedAny(false)
     {

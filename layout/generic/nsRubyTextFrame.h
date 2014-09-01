@@ -48,7 +48,7 @@ public:
 protected:
   friend nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
-  nsRubyTextFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+  explicit nsRubyTextFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
   nscoord mBaseline;
 };
 

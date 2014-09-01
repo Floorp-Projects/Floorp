@@ -46,7 +46,7 @@ public:
   }
 
 protected:
-  nsMathMLmtableOuterFrame(nsStyleContext* aContext) : nsTableOuterFrame(aContext) {}
+  explicit nsMathMLmtableOuterFrame(nsStyleContext* aContext) : nsTableOuterFrame(aContext) {}
   virtual ~nsMathMLmtableOuterFrame();
 
   // helper to find the row frame at a given index, positive or negative, e.g.,
@@ -157,7 +157,7 @@ public:
   }
 
 protected:
-  nsMathMLmtableFrame(nsStyleContext* aContext) : nsTableFrame(aContext) {}
+  explicit nsMathMLmtableFrame(nsStyleContext* aContext) : nsTableFrame(aContext) {}
   virtual ~nsMathMLmtableFrame();
 
 private:
@@ -226,7 +226,7 @@ public:
   }
 
 protected:
-  nsMathMLmtrFrame(nsStyleContext* aContext) : nsTableRowFrame(aContext) {}
+  explicit nsMathMLmtrFrame(nsStyleContext* aContext) : nsTableRowFrame(aContext) {}
   virtual ~nsMathMLmtrFrame();
 }; // class nsMathMLmtrFrame
 
@@ -264,7 +264,7 @@ public:
   virtual nsMargin GetBorderOverflow() MOZ_OVERRIDE;
 
 protected:
-  nsMathMLmtdFrame(nsStyleContext* aContext) : nsTableCellFrame(aContext) {}
+  explicit nsMathMLmtdFrame(nsStyleContext* aContext) : nsTableCellFrame(aContext) {}
   virtual ~nsMathMLmtdFrame();
 }; // class nsMathMLmtdFrame
 
@@ -313,7 +313,7 @@ public:
   }
 
 protected:
-  nsMathMLmtdInnerFrame(nsStyleContext* aContext);
+  explicit nsMathMLmtdInnerFrame(nsStyleContext* aContext);
   virtual ~nsMathMLmtdInnerFrame();
 
   nsStyleText* mUniqueStyleText;

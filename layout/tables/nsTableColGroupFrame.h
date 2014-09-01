@@ -202,7 +202,7 @@ public:
   virtual void InvalidateFrameForRemoval() MOZ_OVERRIDE { InvalidateFrameSubtree(); }
 
 protected:
-  nsTableColGroupFrame(nsStyleContext* aContext);
+  explicit nsTableColGroupFrame(nsStyleContext* aContext);
 
   void InsertColsReflow(int32_t                   aColIndex,
                         const nsFrameList::Slice& aCols);

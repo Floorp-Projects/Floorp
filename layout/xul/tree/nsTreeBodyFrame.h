@@ -458,7 +458,7 @@ protected:
   class ScrollEvent : public nsRunnable {
   public:
     NS_DECL_NSIRUNNABLE
-    ScrollEvent(nsTreeBodyFrame *aInner) : mInner(aInner) {}
+    explicit ScrollEvent(nsTreeBodyFrame *aInner) : mInner(aInner) {}
     void Revoke() { mInner = nullptr; }
   private:
     nsTreeBodyFrame* mInner;

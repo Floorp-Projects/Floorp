@@ -186,7 +186,7 @@ protected:
     typedef const MaskLayerImageKey& KeyType;
     typedef const MaskLayerImageKey* KeyTypePointer;
 
-    MaskLayerImageEntry(KeyTypePointer aKey)
+    explicit MaskLayerImageEntry(KeyTypePointer aKey)
       : mKey(aKey)
     {
       MOZ_COUNT_CTOR(MaskLayerImageEntry);
