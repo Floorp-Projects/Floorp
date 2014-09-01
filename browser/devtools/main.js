@@ -321,16 +321,18 @@ Tools.netMonitor = {
 
 Tools.storage = {
   id: "storage",
-  key: l10n("open.commandkey", storageStrings),
+  key: l10n("storage.commandkey", storageStrings),
   ordinal: 9,
-  accesskey: l10n("open.accesskey", storageStrings),
+  accesskey: l10n("storage.accesskey", storageStrings),
   modifiers: "shift",
   visibilityswitch: "devtools.storage.enabled",
   icon: "chrome://browser/skin/devtools/tool-storage.svg",
   invertIconForLightTheme: true,
   url: "chrome://browser/content/devtools/storage.xul",
   label: l10n("storage.label", storageStrings),
-  tooltip: l10n("storage.tooltip", storageStrings),
+  menuLabel: l10n("storage.menuLabel", storageStrings),
+  panelLabel: l10n("storage.panelLabel", storageStrings),
+  tooltip: l10n("storage.tooltip2", storageStrings),
   inMenu: true,
 
   isTargetSupported: function(target) {
