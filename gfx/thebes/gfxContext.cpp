@@ -24,7 +24,6 @@
 #include "GeckoProfiler.h"
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/PathHelpers.h"
-#include "mozilla/gfx/DrawTargetTiled.h"
 #include <algorithm>
 
 #if CAIRO_HAS_DWRITE_FONT
@@ -1119,32 +1118,12 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
 
     Point offset = CurrentState().deviceOffset - oldDeviceOffset;
     Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
-    Rect sourceRect = surfRect + offset;
+    Rect sourceRect = surfRect;
+    sourceRect.x += offset.x;
+    sourceRect.y += offset.y;
 
     mDT->SetTransform(Matrix());
-
-    // XXX: It's really sad that we have to do this (for performance).
-    // Once DrawTarget gets a PushLayer API we can implement this within
-    // DrawTargetTiled.
-    if (source->GetType() == SurfaceType::TILED) {
-      SnapshotTiled *sourceTiled = static_cast<SnapshotTiled*>(source.get());
-      for (uint32_t i = 0; i < sourceTiled->mSnapshots.size(); i++) {
-        Rect tileSourceRect = sourceRect.Intersect(Rect(sourceTiled->mOrigins[i].x,
-                                                        sourceTiled->mOrigins[i].y,
-                                                        sourceTiled->mSnapshots[i]->GetSize().width,
-                                                        sourceTiled->mSnapshots[i]->GetSize().height));
-
-        if (tileSourceRect.IsEmpty()) {
-          continue;
-        }
-        Rect tileDestRect = tileSourceRect - offset;
-        tileSourceRect -= sourceTiled->mOrigins[i];
-
-        mDT->DrawSurface(sourceTiled->mSnapshots[i], tileDestRect, tileSourceRect);
-      }
-    } else {
-      mDT->DrawSurface(source, surfRect, sourceRect);
-    }
+    mDT->DrawSurface(source, surfRect, sourceRect);
     mDT->SetOpaqueRect(oldDT->GetOpaqueRect());
 
     PushClipsToDT(mDT);
