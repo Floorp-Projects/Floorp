@@ -2670,23 +2670,48 @@ nsDOMWindowUtils::SetAsyncScrollOffset(nsIDOMNode* aNode,
   if (!element) {
     return NS_ERROR_INVALID_ARG;
   }
+  nsIFrame* frame = element->GetPrimaryFrame();
+  if (!frame) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  nsIScrollableFrame* scrollable = do_QueryFrame(frame);
+  nsPresContext* presContext = frame->PresContext();
+  nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
+  if (!scrollable) {
+    if (rootScrollFrame && rootScrollFrame->GetContent() == element) {
+      frame = rootScrollFrame;
+      scrollable = do_QueryFrame(frame);
+    }
+  }
+  if (!scrollable) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  Layer* layer = FrameLayerBuilder::GetDedicatedLayer(scrollable->GetScrolledFrame(),
+    nsDisplayItem::TYPE_SCROLL_LAYER);
+  if (!layer) {
+    if (rootScrollFrame == frame && !presContext->GetParentPresContext()) {
+      nsIWidget* widget = GetWidget();
+      if (widget) {
+        LayerManager* manager = widget->GetLayerManager();
+        if (manager) {
+          layer = manager->GetRoot();
+        }
+      }
+    }
+    if (!layer) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
   FrameMetrics::ViewID viewId;
   if (!nsLayoutUtils::FindIDFor(element, &viewId)) {
     return NS_ERROR_UNEXPECTED;
   }
-  nsIWidget* widget = GetWidget();
-  if (!widget) {
-    return NS_ERROR_FAILURE;
-  }
-  LayerManager* manager = widget->GetLayerManager();
-  if (!manager) {
-    return NS_ERROR_FAILURE;
-  }
-  ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
+  ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
   if (!forwarder || !forwarder->HasShadowManager()) {
     return NS_ERROR_UNEXPECTED;
   }
-  forwarder->GetShadowManager()->SendSetAsyncScrollOffset(viewId, aX, aY);
+  forwarder->GetShadowManager()->SendSetAsyncScrollOffset(
+    layer->AsShadowableLayer()->GetShadow(), viewId, aX, aY);
   return NS_OK;
 }
 

@@ -24,8 +24,6 @@
 #include "nsDisplayListInvalidation.h"
 #include "DisplayListClipState.h"
 #include "LayerState.h"
-#include "FrameMetrics.h"
-#include "mozilla/UniquePtr.h"
 
 #include <stdint.h>
 
@@ -45,8 +43,8 @@ namespace layers {
 class Layer;
 class ImageLayer;
 class ImageContainer;
-} //namespace
-} //namespace
+} //namepsace
+} //namepsace
 
 // A set of blend modes, that never includes OP_OVER (since it's
 // considered the default, rather than a specific blend mode).
@@ -808,7 +806,6 @@ class nsDisplayItem : public nsDisplayItemLink {
 public:
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::DisplayItemClip DisplayItemClip;
-  typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::FrameMetrics::ViewID ViewID;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -2888,10 +2885,6 @@ public:
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE;
 
   NS_DISPLAY_DECL_NAME("SubDocument", TYPE_SUBDOCUMENT)
-
-  mozilla::UniquePtr<FrameMetrics> ComputeFrameMetrics(Layer* aLayer,
-                                                       const ContainerLayerParameters& aContainerParameters);
-
 protected:
   ViewID mScrollParentId;
 };
@@ -3018,6 +3011,8 @@ public:
   // after merging, all the nsDisplayScrollLayers should flatten away.
   intptr_t GetScrollLayerCount();
 
+  static bool IsConstructingScrollLayerForScrolledFrame(const nsIFrame* aScrolledFrame);
+
   virtual nsIFrame* GetScrollFrame() { return mScrollFrame; }
   virtual nsIFrame* GetScrolledFrame() { return mScrolledFrame; }
 
@@ -3026,19 +3021,6 @@ public:
 #endif
 
   bool IsDisplayPortOpaque() { return mDisplayPortContentsOpaque; }
-
-  static FrameMetrics ComputeFrameMetrics(nsIFrame* aForFrame,
-                                          nsIFrame* aScrollFrame,
-                                          const nsIFrame* aReferenceFrame,
-                                          Layer* aLayer,
-                                          ViewID aScrollParentId,
-                                          const nsRect& aViewport,
-                                          bool aForceNullScrollId,
-                                          bool aIsRoot,
-                                          const ContainerLayerParameters& aContainerParameters);
-
-  mozilla::UniquePtr<FrameMetrics> ComputeFrameMetrics(Layer* aLayer,
-                                                       const ContainerLayerParameters& aContainerParameters);
 
 protected:
   nsRect GetScrolledContentRectToDraw(nsDisplayListBuilder* aBuilder,

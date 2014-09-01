@@ -268,16 +268,15 @@ RenderLayers(ContainerT* aContainer,
   // placeholder for APZ purposes.
   if (aContainer->HasScrollableFrameMetrics() && !aContainer->IsScrollInfoLayer()) {
     bool overscrolled = false;
-    gfxRGBA color;
     for (uint32_t i = 0; i < aContainer->GetFrameMetricsCount(); i++) {
       AsyncPanZoomController* apzc = aContainer->GetAsyncPanZoomController(i);
       if (apzc && apzc->IsOverscrolled()) {
         overscrolled = true;
-        color = aContainer->GetFrameMetrics(i).GetBackgroundColor();
         break;
       }
     }
     if (overscrolled) {
+      gfxRGBA color = aContainer->GetBackgroundColor();
       // If the background is completely transparent, there's no point in
       // drawing anything for it. Hopefully the layers behind, if any, will
       // provide suitable content for the overscroll effect.

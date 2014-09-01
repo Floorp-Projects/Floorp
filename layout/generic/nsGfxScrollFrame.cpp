@@ -63,22 +63,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layout;
 
-static bool
-BuildScrollContainerLayers()
-{
-  static bool sContainerlessScrollingEnabled;
-  static bool sContainerlessScrollingPrefCached = false;
-
-  if (!sContainerlessScrollingPrefCached) {
-    sContainerlessScrollingPrefCached = true;
-    Preferences::AddBoolVarCache(&sContainerlessScrollingEnabled,
-                                 "layout.async-containerless-scrolling.enabled",
-                                 true);
-  }
-
-  return !sContainerlessScrollingEnabled;
-}
-
 //----------------------------------------------------------------------
 
 //----------nsHTMLScrollFrame-------------------------------------------
@@ -2902,8 +2886,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (!mIsRoot || aBuilder->RootReferenceFrame()->PresContext() != mOuter->PresContext());
   }
 
-  mScrollParentID = aBuilder->GetCurrentScrollParentId();
-
   nsDisplayListCollection scrolledContent;
   {
     // Note that setting the current scroll parent id here means that positioned children
@@ -2972,7 +2954,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // scroll layer count. The display lists depend on this.
     ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
 
-    if (mShouldBuildScrollableLayer && BuildScrollContainerLayers()) {
+    if (mShouldBuildScrollableLayer) {
       DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
       // For root scrollframes in documents where the CSS viewport has been
@@ -3012,31 +2994,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   AppendScrollPartsTo(aBuilder, scrollbarDirty, scrolledContent,
                       createLayersForScrollbars, true);
   scrolledContent.MoveTo(aLists);
-}
-
-void
-ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
-                                       nsIFrame* aContainerReferenceFrame,
-                                       const ContainerLayerParameters& aParameters,
-                                       nsRect* aClipRect,
-                                       nsTArray<FrameMetrics>* aOutput) const
-{
-  if (!mShouldBuildScrollableLayer || BuildScrollContainerLayers()) {
-    return;
-  }
-
-  MOZ_ASSERT(mScrolledFrame->GetContent());
-
-  nsRect viewport = mScrollPort +
-    mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
-
-  if (!(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden())) {
-    *aClipRect = viewport;
-  }
-  *aOutput->AppendElement() =
-      nsDisplayScrollLayer::ComputeFrameMetrics(mScrolledFrame, mOuter,
-        aContainerReferenceFrame, aLayer, mScrollParentID,
-        viewport, false, false, aParameters);
 }
 
 bool

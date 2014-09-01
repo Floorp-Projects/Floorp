@@ -753,18 +753,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mUpdateScrollOffset);
     WriteParam(aMsg, aParam.mScrollGeneration);
     WriteParam(aMsg, aParam.mTransformScale);
-    WriteParam(aMsg, aParam.mBackgroundColor);
-    WriteParam(aMsg, aParam.GetContentDescription());
-  }
-
-  static bool ReadContentDescription(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    nsCString str;
-    if (!ReadParam(aMsg, aIter, &str)) {
-      return false;
-    }
-    aResult->SetContentDescription(str);
-    return true;
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -791,9 +779,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mHasScrollgrab) &&
             ReadParam(aMsg, aIter, &aResult->mUpdateScrollOffset) &&
             ReadParam(aMsg, aIter, &aResult->mScrollGeneration) &&
-            ReadParam(aMsg, aIter, &aResult->mTransformScale) &&
-            ReadParam(aMsg, aIter, &aResult->mBackgroundColor) &&
-            ReadContentDescription(aMsg, aIter, aResult));
+            ReadParam(aMsg, aIter, &aResult->mTransformScale));
   }
 };
 
