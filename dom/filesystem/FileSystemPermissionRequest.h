@@ -32,7 +32,7 @@ public:
   NS_DECL_NSICONTENTPERMISSIONREQUEST
   NS_DECL_NSIRUNNABLE
 private:
-  FileSystemPermissionRequest(FileSystemTaskBase* aTask);
+  explicit FileSystemPermissionRequest(FileSystemTaskBase* aTask);
 
   virtual
   ~FileSystemPermissionRequest();

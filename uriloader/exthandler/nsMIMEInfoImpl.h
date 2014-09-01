@@ -67,8 +67,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     };
 
     // nsMIMEInfoBase methods
-    nsMIMEInfoBase(const char *aMIMEType = "");
-    nsMIMEInfoBase(const nsACString& aMIMEType);
+    explicit nsMIMEInfoBase(const char *aMIMEType = "");
+    explicit nsMIMEInfoBase(const nsACString& aMIMEType);
     nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass);
 
     void SetMIMEType(const nsACString & aMIMEType) { mSchemeOrType = aMIMEType; }
@@ -159,8 +159,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
  */
 class nsMIMEInfoImpl : public nsMIMEInfoBase {
   public:
-    nsMIMEInfoImpl(const char *aMIMEType = "") : nsMIMEInfoBase(aMIMEType) {}
-    nsMIMEInfoImpl(const nsACString& aMIMEType) : nsMIMEInfoBase(aMIMEType) {}
+    explicit nsMIMEInfoImpl(const char *aMIMEType = "") : nsMIMEInfoBase(aMIMEType) {}
+    explicit nsMIMEInfoImpl(const nsACString& aMIMEType) : nsMIMEInfoBase(aMIMEType) {}
     nsMIMEInfoImpl(const nsACString& aType, HandlerClass aClass) :
       nsMIMEInfoBase(aType, aClass) {}
     virtual ~nsMIMEInfoImpl() {}
