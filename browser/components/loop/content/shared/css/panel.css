@@ -104,8 +104,13 @@
   border-radius: 2px;
 }
 
+body[dir=rtl] .dnd-menu {
+  left: auto;
+  right: 10px;
+}
+
 .dnd-menu-item {
-  text-align: left;
+  text-align: start;
   margin: .3em 0;
   padding: .2em .5em;
   cursor: pointer;
