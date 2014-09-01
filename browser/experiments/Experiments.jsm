@@ -65,6 +65,7 @@ const URI_EXTENSION_STRINGS     = "chrome://mozapps/locale/extensions/extensions
 const STRING_TYPE_NAME          = "type.%ID%.name";
 
 const CACHE_WRITE_RETRY_DELAY_SEC = 60 * 3;
+const MANIFEST_FETCH_TIMEOUT_MSEC = 60 * 3 * 1000; // 3 minutes
 
 const TELEMETRY_LOG = {
   // log(key, [kind, experimentId, details])
@@ -406,6 +407,7 @@ Experiments.Experiments = function (policy=new Experiments.Policy()) {
   this._timer = null;
 
   this._shutdown = false;
+  this._networkRequest = null;
 
   // We need to tell when we first evaluated the experiments to fire an
   // experiments-changed notification when we only loaded completed experiments.
@@ -486,6 +488,14 @@ Experiments.Experiments.prototype = {
 
     this._shutdown = true;
     if (this._mainTask) {
+      if (this._networkRequest) {
+	try {
+	  this._log.trace("Aborting pending network request: " + this._networkRequest);
+	  this._networkRequest.abort();
+	} catch (e) {
+	  // pass
+	}
+      }
       try {
         this._log.trace("uninit: waiting on _mainTask");
         yield this._mainTask;
@@ -960,28 +970,36 @@ Experiments.Experiments.prototype = {
       return Promise.reject(new Error("Experiments - Error opening XHR for " + url));
     }
 
+    this._networkRequest = xhr;
     let deferred = Promise.defer();
 
     let log = this._log;
-    xhr.onerror = function (e) {
-      log.error("httpGetRequest::onError() - Error making request to " + url + ": " + e.error);
-      deferred.reject(new Error("Experiments - XHR error for " + url + " - " + e.error));
+    let errorhandler = (evt) => {
+      log.error("httpGetRequest::onError() - Error making request to " + url + ": " + evt.type);
+      deferred.reject(new Error("Experiments - XHR error for " + url + " - " + evt.type));
+      this._networkRequest = null;
     };
+    xhr.onerror = errorhandler;
+    xhr.ontimeout = errorhandler;
+    xhr.onabort = errorhandler;
 
-    xhr.onload = function (event) {
+    xhr.onload = (event) => {
       if (xhr.status !== 200 && xhr.state !== 0) {
         log.error("httpGetRequest::onLoad() - Request to " + url + " returned status " + xhr.status);
         deferred.reject(new Error("Experiments - XHR status for " + url + " is " + xhr.status));
+	this._networkRequest = null;
         return;
       }
 
       deferred.resolve(xhr.responseText);
+      this._networkRequest = null;
     };
 
     if (xhr.channel instanceof Ci.nsISupportsPriority) {
       xhr.channel.priority = Ci.nsISupportsPriority.PRIORITY_LOWEST;
     }
 
+    xhr.timeout = MANIFEST_FETCH_TIMEOUT_MSEC;
     xhr.send(null);
     return deferred.promise;
   },
