@@ -119,7 +119,7 @@ EvaluateConstantOperands(TempAllocator &alloc, MBinaryInstruction *ins, bool *pt
         ret.setNumber(NumberMod(lhs.toNumber(), rhs.toNumber()));
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("NYI");
+        MOZ_CRASH("NYI");
     }
 
     // setNumber eagerly transforms a number to int32.
@@ -622,7 +622,7 @@ MConstant::printOpcode(FILE *fp) const
         fprintf(fp, "magic optimized-out");
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unexpected type");
+        MOZ_CRASH("unexpected type");
     }
 }
 
@@ -666,7 +666,7 @@ MSimdValueX4::foldsTo(TempAllocator &alloc)
         cst = SimdConstant::CreateX4(a);
         break;
       }
-      default: MOZ_ASSUME_UNREACHABLE("unexpected type in MSimdValueX4::foldsTo");
+      default: MOZ_CRASH("unexpected type in MSimdValueX4::foldsTo");
     }
 
     return MSimdConstant::New(alloc, cst, type());
@@ -699,7 +699,7 @@ MSimdSplatX4::foldsTo(TempAllocator &alloc)
         cst = SimdConstant::CreateX4(a);
         break;
       }
-      default: MOZ_ASSUME_UNREACHABLE("unexpected type in MSimdSplatX4::foldsTo");
+      default: MOZ_CRASH("unexpected type in MSimdSplatX4::foldsTo");
     }
 
     return MSimdConstant::New(alloc, cst, type());
@@ -779,7 +779,7 @@ MMathFunction::FunctionName(Function function)
       case Ceil:   return "Ceil";
       case Round:  return "Round";
       default:
-        MOZ_ASSUME_UNREACHABLE("Unknown math function");
+        MOZ_CRASH("Unknown math function");
     }
 }
 
@@ -2091,7 +2091,7 @@ MCompare::inputType()
       case Compare_Value:
         return MIRType_Value;
       default:
-        MOZ_ASSUME_UNREACHABLE("No known conversion");
+        MOZ_CRASH("No known conversion");
     }
 }
 
@@ -2688,7 +2688,7 @@ MCompare::tryFold(bool *result)
             *result = (op == JSOP_NE || op == JSOP_STRICTNE);
             return true;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected type");
+            MOZ_CRASH("Unexpected type");
         }
     }
 
@@ -2711,9 +2711,9 @@ MCompare::tryFold(bool *result)
             return true;
           case MIRType_Boolean:
             // Int32 specialization should handle this.
-            MOZ_ASSUME_UNREACHABLE("Wrong specialization");
+            MOZ_CRASH("Wrong specialization");
           default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected type");
+            MOZ_CRASH("Unexpected type");
         }
     }
 
@@ -2736,9 +2736,9 @@ MCompare::tryFold(bool *result)
             return true;
           case MIRType_String:
             // Compare_String specialization should handle this.
-            MOZ_ASSUME_UNREACHABLE("Wrong specialization");
+            MOZ_CRASH("Wrong specialization");
           default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected type");
+            MOZ_CRASH("Unexpected type");
         }
     }
 
@@ -2788,7 +2788,7 @@ MCompare::evaluateConstantOperands(bool *result)
             *result = (comp != 0);
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected op.");
+            MOZ_CRASH("Unexpected op.");
         }
 
         return true;
@@ -2820,7 +2820,7 @@ MCompare::evaluateConstantOperands(bool *result)
             *result = (lhsUint != rhsUint);
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected op.");
+            MOZ_CRASH("Unexpected op.");
         }
 
         return true;
