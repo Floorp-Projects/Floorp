@@ -1322,6 +1322,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     list-style-image: url("chrome://browser/skin/loop/toolbar-inverted@2x.png");
   }
 
+  #loop-call-button[state="disabled"] > .toolbarbutton-badge-container,
   #loop-call-button[disabled="true"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 72px, 36px, 36px);
   }
@@ -1357,6 +1358,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(0, 64px, 64px, 0) !important;
   }
 
+  #loop-call-button[cui-areatype="menu-panel"][state="disabled"] > .toolbarbutton-badge-container,
   #loop-call-button[cui-areatype="menu-panel"][disabled="true"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 128px, 64px, 64px);
   }
