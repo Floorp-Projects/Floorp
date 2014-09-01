@@ -6,6 +6,9 @@
 #include "DrawTargetTiled.h"
 #include "Logging.h"
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 using namespace std;
 
 namespace mozilla {
