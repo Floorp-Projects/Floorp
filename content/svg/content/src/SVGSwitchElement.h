@@ -24,7 +24,7 @@ class SVGSwitchElement MOZ_FINAL : public SVGSwitchElementBase
 protected:
   friend nsresult (::NS_NewSVGSwitchElement(nsIContent **aResult,
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGSwitchElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGSwitchElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   ~SVGSwitchElement();
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 

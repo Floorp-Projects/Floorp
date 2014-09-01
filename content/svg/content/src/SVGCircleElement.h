@@ -20,7 +20,7 @@ namespace dom {
 class SVGCircleElement MOZ_FINAL : public SVGCircleElementBase
 {
 protected:
-  SVGCircleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGCircleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGCircleElement(nsIContent **aResult,
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

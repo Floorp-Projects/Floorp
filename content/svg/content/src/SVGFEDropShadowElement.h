@@ -24,7 +24,7 @@ class SVGFEDropShadowElement : public SVGFEDropShadowElementBase
   friend nsresult (::NS_NewSVGFEDropShadowElement(nsIContent **aResult,
                                                   already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFEDropShadowElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFEDropShadowElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEDropShadowElementBase(aNodeInfo)
   {
   }

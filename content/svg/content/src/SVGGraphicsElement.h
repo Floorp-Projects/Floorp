@@ -18,7 +18,7 @@ class SVGGraphicsElement : public SVGGraphicsElementBase,
                            public SVGTests
 {
 protected:
-  SVGGraphicsElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGGraphicsElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   ~SVGGraphicsElement();
 
 public:
