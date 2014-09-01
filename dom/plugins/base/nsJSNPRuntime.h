@@ -48,7 +48,7 @@ public:
                                 JS::Handle<JSObject*> obj);
 
 protected:
-  explicit nsJSObjWrapper(NPP npp);
+  nsJSObjWrapper(NPP npp);
   ~nsJSObjWrapper();
 
   static NPObject * NP_Allocate(NPP npp, NPClass *aClass);

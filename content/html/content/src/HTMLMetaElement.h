@@ -17,7 +17,7 @@ class HTMLMetaElement MOZ_FINAL : public nsGenericHTMLElement,
                                   public nsIDOMHTMLMetaElement
 {
 public:
-  explicit HTMLMetaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLMetaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

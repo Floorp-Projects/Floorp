@@ -22,7 +22,7 @@ public:
 
     NS_DECL_NSIXULTEMPLATERESULT
 
-    explicit nsXULTemplateResultStorage(nsXULTemplateResultSetStorage* aResultSet);
+    nsXULTemplateResultStorage(nsXULTemplateResultSetStorage* aResultSet);
 
 protected:
 

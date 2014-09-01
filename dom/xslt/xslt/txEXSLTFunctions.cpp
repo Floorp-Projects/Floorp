@@ -228,8 +228,8 @@ public:
         LOWEST,
         DATE_TIME
     };
-
-    explicit txEXSLTFunctionCall(eType aType)
+    
+    txEXSLTFunctionCall(eType aType)
       : mType(aType)
     {
     }

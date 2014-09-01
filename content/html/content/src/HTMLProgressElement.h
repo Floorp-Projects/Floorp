@@ -18,7 +18,7 @@ namespace dom {
 class HTMLProgressElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLProgressElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLProgressElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   EventStates IntrinsicState() const MOZ_OVERRIDE;
 

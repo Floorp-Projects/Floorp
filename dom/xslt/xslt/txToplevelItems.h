@@ -56,7 +56,7 @@ public:
 class txAttributeSetItem : public txInstructionContainer
 {
 public:
-    explicit txAttributeSetItem(const txExpandedName aName) : mName(aName)
+    txAttributeSetItem(const txExpandedName aName) : mName(aName)
     {
     }
 

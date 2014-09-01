@@ -23,7 +23,7 @@ class ResponsiveImageSelector : public nsISupports
   friend class ResponsiveImageCandidate;
 public:
   NS_DECL_ISUPPORTS
-  explicit ResponsiveImageSelector(nsIContent* aContent);
+  ResponsiveImageSelector(nsIContent *aContent);
 
   // Given a srcset string, parse and replace current candidates (does not
   // replace default source)

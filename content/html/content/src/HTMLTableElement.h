@@ -22,7 +22,7 @@ class HTMLTableElement MOZ_FINAL : public nsGenericHTMLElement,
                                    public nsIDOMHTMLTableElement
 {
 public:
-  explicit HTMLTableElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLTableElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLTableElement, table)
 

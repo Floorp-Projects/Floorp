@@ -22,7 +22,7 @@ class nsHostObjectURI : public nsSimpleURI,
                         public nsIURIWithPrincipal
 {
 public:
-  explicit nsHostObjectURI(nsIPrincipal* aPrincipal) :
+  nsHostObjectURI(nsIPrincipal* aPrincipal) :
       nsSimpleURI(), mPrincipal(aPrincipal)
   {}
 

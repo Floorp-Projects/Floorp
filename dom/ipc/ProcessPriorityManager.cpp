@@ -232,7 +232,7 @@ class ParticularProcessPriorityManager MOZ_FINAL
 {
   ~ParticularProcessPriorityManager();
 public:
-  explicit ParticularProcessPriorityManager(ContentParent* aContentParent);
+  ParticularProcessPriorityManager(ContentParent* aContentParent);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER

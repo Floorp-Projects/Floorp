@@ -117,7 +117,7 @@ class nsHtml5ExecutorFlusher : public nsRunnable
   private:
     nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
   public:
-    explicit nsHtml5ExecutorFlusher(nsHtml5TreeOpExecutor* aExecutor)
+    nsHtml5ExecutorFlusher(nsHtml5TreeOpExecutor* aExecutor)
       : mExecutor(aExecutor)
     {}
     NS_IMETHODIMP Run()
@@ -134,7 +134,7 @@ class nsHtml5LoadFlusher : public nsRunnable
   private:
     nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
   public:
-    explicit nsHtml5LoadFlusher(nsHtml5TreeOpExecutor* aExecutor)
+    nsHtml5LoadFlusher(nsHtml5TreeOpExecutor* aExecutor)
       : mExecutor(aExecutor)
     {}
     NS_IMETHODIMP Run()
@@ -1024,7 +1024,7 @@ class nsHtml5RequestStopper : public nsRunnable
   private:
     nsHtml5RefPtr<nsHtml5StreamParser> mStreamParser;
   public:
-    explicit nsHtml5RequestStopper(nsHtml5StreamParser* aStreamParser)
+    nsHtml5RequestStopper(nsHtml5StreamParser* aStreamParser)
       : mStreamParser(aStreamParser)
     {}
     NS_IMETHODIMP Run()
@@ -1410,7 +1410,7 @@ class nsHtml5StreamParserContinuation : public nsRunnable
 private:
   nsHtml5RefPtr<nsHtml5StreamParser> mStreamParser;
 public:
-  explicit nsHtml5StreamParserContinuation(nsHtml5StreamParser* aStreamParser)
+  nsHtml5StreamParserContinuation(nsHtml5StreamParser* aStreamParser)
     : mStreamParser(aStreamParser)
   {}
   NS_IMETHODIMP Run()
@@ -1575,7 +1575,7 @@ class nsHtml5TimerKungFu : public nsRunnable
 private:
   nsHtml5RefPtr<nsHtml5StreamParser> mStreamParser;
 public:
-  explicit nsHtml5TimerKungFu(nsHtml5StreamParser* aStreamParser)
+  nsHtml5TimerKungFu(nsHtml5StreamParser* aStreamParser)
     : mStreamParser(aStreamParser)
   {}
   NS_IMETHODIMP Run()

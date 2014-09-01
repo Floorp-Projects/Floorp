@@ -13,7 +13,7 @@
 
 struct nsNameSpaceEntry
 {
-  explicit nsNameSpaceEntry(nsIAtom* aPrefix)
+  nsNameSpaceEntry(nsIAtom *aPrefix)
     : prefix(aPrefix) {}
 
   nsCOMPtr<nsIAtom> prefix;

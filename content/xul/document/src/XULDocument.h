@@ -49,11 +49,11 @@ struct PRLogModuleInfo;
 class nsRefMapEntry : public nsStringHashKey
 {
 public:
-  explicit nsRefMapEntry(const nsAString& aKey) :
+  nsRefMapEntry(const nsAString& aKey) :
     nsStringHashKey(&aKey)
   {
   }
-  explicit nsRefMapEntry(const nsAString* aKey) :
+  nsRefMapEntry(const nsAString *aKey) :
     nsStringHashKey(aKey)
   {
   }
@@ -563,7 +563,7 @@ protected:
         nsCOMPtr<nsIContent> mElement; // [OWNER]
 
     public:
-        explicit TemplateBuilderHookup(nsIContent* aElement)
+        TemplateBuilderHookup(nsIContent* aElement)
             : mElement(aElement) {}
 
         virtual Phase GetPhase() MOZ_OVERRIDE { return eHookup; }

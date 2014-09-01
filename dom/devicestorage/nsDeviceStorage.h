@@ -176,8 +176,8 @@ private:
 class ContinueCursorEvent MOZ_FINAL : public nsRunnable
 {
 public:
-  explicit ContinueCursorEvent(already_AddRefed<mozilla::dom::DOMRequest> aRequest);
-  explicit ContinueCursorEvent(mozilla::dom::DOMRequest* aRequest);
+  ContinueCursorEvent(already_AddRefed<mozilla::dom::DOMRequest> aRequest);
+  ContinueCursorEvent(mozilla::dom::DOMRequest* aRequest);
   ~ContinueCursorEvent();
   void Continue();
 

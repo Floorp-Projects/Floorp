@@ -25,7 +25,7 @@
 
 class AutoError {
 public:
-  explicit AutoError(mozilla::dom::ImportLoader* loader, bool scriptsBlocked = true)
+  AutoError(mozilla::dom::ImportLoader* loader, bool scriptsBlocked = true)
     : mLoader(loader)
     , mPassed(false)
     , mScriptsBlocked(scriptsBlocked)

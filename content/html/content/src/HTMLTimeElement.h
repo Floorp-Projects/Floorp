@@ -17,7 +17,7 @@ namespace dom {
 class HTMLTimeElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLTimeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLTimeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~HTMLTimeElement();
 
   // HTMLTimeElement WebIDL

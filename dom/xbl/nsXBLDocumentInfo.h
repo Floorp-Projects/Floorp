@@ -20,7 +20,7 @@ class nsXBLDocumentInfo MOZ_FINAL : public nsSupportsWeakReference
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  explicit nsXBLDocumentInfo(nsIDocument* aDocument);
+  nsXBLDocumentInfo(nsIDocument* aDocument);
 
   already_AddRefed<nsIDocument> GetDocument()
     { nsCOMPtr<nsIDocument> copy = mDocument; return copy.forget(); }

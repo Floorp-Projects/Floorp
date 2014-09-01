@@ -146,7 +146,7 @@ public:
   virtual void EventListenerAdded(nsIAtom* aType) MOZ_OVERRIDE;
 
 private:
-  explicit Telephony(nsPIDOMWindow* aOwner);
+  Telephony(nsPIDOMWindow* aOwner);
   ~Telephony();
 
   void

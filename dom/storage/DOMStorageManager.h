@@ -41,7 +41,7 @@ public:
   already_AddRefed<DOMStorageUsage> GetScopeUsage(const nsACString& aScope);
 
 protected:
-  explicit DOMStorageManager(DOMStorage::StorageType aType);
+  DOMStorageManager(DOMStorage::StorageType aType);
   virtual ~DOMStorageManager();
 
 private:
@@ -53,7 +53,7 @@ private:
   class DOMStorageCacheHashKey : public nsCStringHashKey
   {
   public:
-    explicit DOMStorageCacheHashKey(const nsACString* aKey)
+    DOMStorageCacheHashKey(const nsACString* aKey)
       : nsCStringHashKey(aKey)
       , mCache(new DOMStorageCache(aKey))
     {}

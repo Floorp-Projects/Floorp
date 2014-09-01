@@ -33,7 +33,7 @@ public:
     return mElement;
   }
 
-  explicit nsDOMStringMap(nsGenericHTMLElement* aElement);
+  nsDOMStringMap(nsGenericHTMLElement* aElement);
 
   // WebIDL API
   virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;

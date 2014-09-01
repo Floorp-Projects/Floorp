@@ -27,7 +27,7 @@ class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
                                public nsSupportsWeakReference
 {
 public:
-    explicit nsXULCommandDispatcher(nsIDocument* aDocument);
+    nsXULCommandDispatcher(nsIDocument* aDocument);
 
     // nsISupports
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS

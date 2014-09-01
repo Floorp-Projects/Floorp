@@ -33,7 +33,7 @@ class WebGLFramebuffer MOZ_FINAL
 public:
     MOZ_DECLARE_REFCOUNTED_TYPENAME(WebGLFramebuffer)
 
-    explicit WebGLFramebuffer(WebGLContext* context);
+    WebGLFramebuffer(WebGLContext* context);
 
     struct Attachment
     {
@@ -45,7 +45,7 @@ public:
         GLint mTexImageLevel;
         mutable bool mNeedsFinalize;
 
-        explicit Attachment(GLenum aAttachmentPoint = LOCAL_GL_COLOR_ATTACHMENT0);
+        Attachment(GLenum aAttachmentPoint = LOCAL_GL_COLOR_ATTACHMENT0);
         ~Attachment();
 
         bool IsDefined() const {

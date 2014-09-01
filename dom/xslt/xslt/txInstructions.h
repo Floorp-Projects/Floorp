@@ -61,7 +61,7 @@ public:
 class txApplyTemplates : public txInstruction
 {
 public:
-    explicit txApplyTemplates(const txExpandedName& aMode);
+    txApplyTemplates(const txExpandedName& aMode);
 
     TX_DECL_TXINSTRUCTION
     
@@ -84,7 +84,7 @@ public:
 class txCallTemplate : public txInstruction
 {
 public:
-    explicit txCallTemplate(const txExpandedName& aName);
+    txCallTemplate(const txExpandedName& aName);
 
     TX_DECL_TXINSTRUCTION
 
@@ -94,7 +94,7 @@ public:
 class txCheckParam : public txInstruction
 {
 public:
-    explicit txCheckParam(const txExpandedName& aName);
+    txCheckParam(const txExpandedName& aName);
 
     TX_DECL_TXINSTRUCTION
 
@@ -138,7 +138,7 @@ public:
 class txCopyOf : public txCopyBase
 {
 public:
-    explicit txCopyOf(nsAutoPtr<Expr>&& aSelect);
+    txCopyOf(nsAutoPtr<Expr>&& aSelect);
 
     TX_DECL_TXINSTRUCTION
     
@@ -160,7 +160,7 @@ public:
 class txGoTo : public txInstruction
 {
 public:
-    explicit txGoTo(txInstruction* aTarget);
+    txGoTo(txInstruction* aTarget);
 
     TX_DECL_TXINSTRUCTION
     
@@ -170,7 +170,7 @@ public:
 class txInsertAttrSet : public txInstruction
 {
 public:
-    explicit txInsertAttrSet(const txExpandedName& aName);
+    txInsertAttrSet(const txExpandedName& aName);
 
     TX_DECL_TXINSTRUCTION
 
@@ -180,7 +180,7 @@ public:
 class txLoopNodeSet : public txInstruction
 {
 public:
-    explicit txLoopNodeSet(txInstruction* aTarget);
+    txLoopNodeSet(txInstruction* aTarget);
 
     TX_DECL_TXINSTRUCTION
     
@@ -205,7 +205,7 @@ public:
 class txMessage : public txInstruction
 {
 public:
-    explicit txMessage(bool aTerminate);
+    txMessage(bool aTerminate);
 
     TX_DECL_TXINSTRUCTION
 
@@ -240,7 +240,7 @@ public:
 class txProcessingInstruction : public txInstruction
 {
 public:
-    explicit txProcessingInstruction(nsAutoPtr<Expr>&& aName);
+    txProcessingInstruction(nsAutoPtr<Expr>&& aName);
 
     TX_DECL_TXINSTRUCTION
 
@@ -250,7 +250,7 @@ public:
 class txPushNewContext : public txInstruction
 {
 public:
-    explicit txPushNewContext(nsAutoPtr<Expr>&& aSelect);
+    txPushNewContext(nsAutoPtr<Expr>&& aSelect);
     ~txPushNewContext();
 
     TX_DECL_TXINSTRUCTION
@@ -296,7 +296,7 @@ public:
 class txPushStringHandler : public txInstruction
 {
 public:
-    explicit txPushStringHandler(bool aOnlyText);
+    txPushStringHandler(bool aOnlyText);
 
     TX_DECL_TXINSTRUCTION
 
@@ -306,7 +306,7 @@ public:
 class txRemoveVariable : public txInstruction
 {
 public:
-    explicit txRemoveVariable(const txExpandedName& aName);
+    txRemoveVariable(const txExpandedName& aName);
 
     TX_DECL_TXINSTRUCTION
 

@@ -15,11 +15,11 @@ namespace dom {
 class Text : public nsGenericDOMDataNode
 {
 public:
-  explicit Text(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  Text(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericDOMDataNode(aNodeInfo)
   {}
 
-  explicit Text(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  Text(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericDOMDataNode(aNodeInfo)
   {}
 

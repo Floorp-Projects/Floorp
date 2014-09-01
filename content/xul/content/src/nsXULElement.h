@@ -142,7 +142,7 @@ public:
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsXULPrototypeNode)
 
 protected:
-    explicit nsXULPrototypeNode(Type aType)
+    nsXULPrototypeNode(Type aType)
         : mType(aType) {}
     virtual ~nsXULPrototypeNode() {}
 };
@@ -369,7 +369,7 @@ class nsXULElement MOZ_FINAL : public nsStyledElement,
                                public nsIDOMXULElement
 {
 public:
-    explicit nsXULElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo);
+    nsXULElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo);
 
     static nsresult
     Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument,

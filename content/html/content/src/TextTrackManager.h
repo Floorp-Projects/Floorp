@@ -24,7 +24,7 @@ class CompareTextTracks {
 private:
   HTMLMediaElement* mMediaElement;
 public:
-  explicit CompareTextTracks(HTMLMediaElement* aMediaElement);
+  CompareTextTracks(HTMLMediaElement* aMediaElement);
   int32_t TrackChildPosition(TextTrack* aTrack) const;
   bool Equals(TextTrack* aOne, TextTrack* aTwo) const;
   bool LessThan(TextTrack* aOne, TextTrack* aTwo) const;
@@ -43,7 +43,7 @@ public:
 
   NS_DECL_NSIDOMEVENTLISTENER
 
-  explicit TextTrackManager(HTMLMediaElement* aMediaElement);
+  TextTrackManager(HTMLMediaElement *aMediaElement);
 
   TextTrackList* TextTracks() const;
   already_AddRefed<TextTrack> AddTextTrack(TextTrackKind aKind,

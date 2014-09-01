@@ -23,7 +23,6 @@
 #ifndef jArray_h
 #define jArray_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/NullPtr.h"
 #include "nsDebug.h"
 
@@ -78,7 +77,7 @@ class autoJArray {
      , length(0)
     {
     }
-    MOZ_IMPLICIT autoJArray(const jArray<T,L>& other)
+    autoJArray(const jArray<T,L>& other)
      : arr(other.arr)
      , length(other.length)
     {

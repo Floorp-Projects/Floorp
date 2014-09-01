@@ -29,7 +29,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
 
-  explicit nsScriptElement(mozilla::dom::FromParser aFromParser)
+  nsScriptElement(mozilla::dom::FromParser aFromParser)
     : nsIScriptElement(aFromParser)
   {
   }

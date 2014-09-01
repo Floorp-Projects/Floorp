@@ -26,7 +26,7 @@ class ContentProcess : public mozilla::ipc::ProcessChild
     typedef mozilla::ipc::ProcessChild ProcessChild;
 
 public:
-    explicit ContentProcess(ProcessHandle mParentHandle)
+    ContentProcess(ProcessHandle mParentHandle)
         : ProcessChild(mParentHandle)
     { }
 

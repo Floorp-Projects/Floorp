@@ -110,7 +110,7 @@ class Navigator MOZ_FINAL : public nsIDOMNavigator
                           , public nsWrapperCache
 {
 public:
-  explicit Navigator(nsPIDOMWindow* aInnerWindow);
+  Navigator(nsPIDOMWindow *aInnerWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Navigator,

@@ -149,7 +149,7 @@ NS_IMPL_ISUPPORTS(nsXHRParseEndListener, nsIDOMEventListener)
 class nsResumeTimeoutsEvent : public nsRunnable
 {
 public:
-  explicit nsResumeTimeoutsEvent(nsPIDOMWindow* aWindow) : mWindow(aWindow) {}
+  nsResumeTimeoutsEvent(nsPIDOMWindow* aWindow) : mWindow(aWindow) {}
 
   NS_IMETHOD Run()
   {
@@ -3415,7 +3415,7 @@ nsXMLHttpRequest::ChangeState(uint32_t aState, bool aBroadcast)
 class AsyncVerifyRedirectCallbackForwarder MOZ_FINAL : public nsIAsyncVerifyRedirectCallback
 {
 public:
-  explicit AsyncVerifyRedirectCallbackForwarder(nsXMLHttpRequest* xhr)
+  AsyncVerifyRedirectCallbackForwarder(nsXMLHttpRequest *xhr)
     : mXHR(xhr)
   {
   }

@@ -86,8 +86,8 @@ public:
      * @param aStack the stack to create an iterator for.
      */
     inline
-    explicit txStackIterator(txStack* aStack) : mStack(aStack),
-                                                mPosition(0)
+    txStackIterator(txStack* aStack) : mStack(aStack),
+                                       mPosition(0)
     {
     }
 

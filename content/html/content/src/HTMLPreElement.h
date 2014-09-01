@@ -18,7 +18,7 @@ class HTMLPreElement MOZ_FINAL : public nsGenericHTMLElement,
                                  public nsIDOMHTMLPreElement
 {
 public:
-  explicit HTMLPreElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  HTMLPreElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

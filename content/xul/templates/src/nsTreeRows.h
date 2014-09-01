@@ -99,7 +99,7 @@ public:
         /**
          * Creates a subtree with the specified parent.
          */
-        explicit Subtree(Subtree* aParent)
+        Subtree(Subtree* aParent)
             : mParent(aParent),
               mCount(0),
               mCapacity(0),

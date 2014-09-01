@@ -144,7 +144,7 @@ private:
     NS_DECL_NSIDOMEVENTLISTENER
   };
 
-  explicit nsScreen(nsPIDOMWindow* aWindow);
+  nsScreen(nsPIDOMWindow* aWindow);
   virtual ~nsScreen();
 
   enum LockPermission {

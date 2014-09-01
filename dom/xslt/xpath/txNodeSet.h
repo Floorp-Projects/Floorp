@@ -20,7 +20,7 @@ public:
     /**
      * Creates a new empty NodeSet
      */
-    explicit txNodeSet(txResultRecycler* aRecycler);
+    txNodeSet(txResultRecycler* aRecycler);
 
     /**
      * Creates a new NodeSet with one node.

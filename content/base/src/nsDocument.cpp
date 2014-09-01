@@ -684,7 +684,7 @@ public:
 
 struct FindContentData
 {
-  explicit FindContentData(nsIDocument* aSubDoc)
+  FindContentData(nsIDocument *aSubDoc)
     : mSubDocument(aSubDoc), mResult(nullptr)
   {
   }
@@ -1398,7 +1398,7 @@ nsExternalResourceMap::ExternalResource::~ExternalResource()
 class nsDOMStyleSheetSetList MOZ_FINAL : public DOMStringList
 {
 public:
-  explicit nsDOMStyleSheetSetList(nsIDocument* aDocument);
+  nsDOMStyleSheetSetList(nsIDocument* aDocument);
 
   void Disconnect()
   {
@@ -5546,7 +5546,7 @@ class ProcessStackRunner MOZ_FINAL : public nsIRunnable
 {
   ~ProcessStackRunner() {}
 public:
-  explicit ProcessStackRunner(bool aIsBaseQueue = false)
+  ProcessStackRunner(bool aIsBaseQueue = false)
     : mIsBaseQueue(aIsBaseQueue)
   {
   }
@@ -8715,7 +8715,7 @@ nsDocument::UnblockOnload(bool aFireSync)
 
 class nsUnblockOnloadEvent : public nsRunnable {
 public:
-  explicit nsUnblockOnloadEvent(nsDocument* aDoc) : mDoc(doc) {}
+  nsUnblockOnloadEvent(nsDocument *doc) : mDoc(doc) {}
   NS_IMETHOD Run() {
     mDoc->DoUnblockOnload();
     return NS_OK;
@@ -9424,7 +9424,7 @@ nsDocument::LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
 class nsDelayedEventDispatcher : public nsRunnable
 {
 public:
-  explicit nsDelayedEventDispatcher(nsTArray<nsCOMPtr<nsIDocument>>& aDocuments)
+  nsDelayedEventDispatcher(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments)
   {
     mDocuments.SwapElements(aDocuments);
   }
@@ -9444,7 +9444,7 @@ namespace {
 
 struct UnsuppressArgs
 {
-  explicit UnsuppressArgs(nsIDocument::SuppressionType aWhat)
+  UnsuppressArgs(nsIDocument::SuppressionType aWhat)
     : mWhat(aWhat)
   {
   }
@@ -10547,7 +10547,7 @@ SetWindowFullScreen(nsIDocument* aDoc, bool aValue)
 
 class nsCallExitFullscreen : public nsRunnable {
 public:
-  explicit nsCallExitFullscreen(nsIDocument* aDoc)
+  nsCallExitFullscreen(nsIDocument* aDoc)
     : mDoc(aDoc) {}
   NS_IMETHOD Run()
   {
@@ -10861,7 +10861,7 @@ nsDocument::IsFullScreenDoc()
 class nsCallRequestFullScreen : public nsRunnable
 {
 public:
-  explicit nsCallRequestFullScreen(Element* aElement)
+  nsCallRequestFullScreen(Element* aElement)
     : mElement(aElement),
       mDoc(aElement->OwnerDoc()),
       mWasCallerChrome(nsContentUtils::IsCallerChrome()),

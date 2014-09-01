@@ -20,7 +20,7 @@ public:
   nsPluginPlayPreviewInfo(const char* aMimeType,
                           bool aIgnoreCTP,
                           const char* aRedirectURL);
-  explicit nsPluginPlayPreviewInfo(const nsPluginPlayPreviewInfo* aSource);
+  nsPluginPlayPreviewInfo(const nsPluginPlayPreviewInfo* aSource);
 
   nsCString mMimeType;
   bool      mIgnoreCTP;

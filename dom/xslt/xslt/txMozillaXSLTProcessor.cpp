@@ -68,7 +68,7 @@ private:
 class txToFragmentHandlerFactory : public txAOutputHandlerFactory
 {
 public:
-    explicit txToFragmentHandlerFactory(nsIDOMDocumentFragment* aFragment)
+    txToFragmentHandlerFactory(nsIDOMDocumentFragment* aFragment)
         : mFragment(aFragment)
     {
     }
@@ -236,11 +236,11 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 class txVariable : public txIGlobalParameter
 {
 public:
-    explicit txVariable(nsIVariant* aValue) : mValue(aValue)
+    txVariable(nsIVariant *aValue) : mValue(aValue)
     {
         NS_ASSERTION(aValue, "missing value");
     }
-    explicit txVariable(txAExprResult* aValue) : mTxValue(aValue)
+    txVariable(txAExprResult* aValue) : mTxValue(aValue)
     {
         NS_ASSERTION(aValue, "missing value");
     }
@@ -514,7 +514,7 @@ class nsTransformBlockerEvent : public nsRunnable {
 public:
   nsRefPtr<txMozillaXSLTProcessor> mProcessor;
 
-  explicit nsTransformBlockerEvent(txMozillaXSLTProcessor* processor)
+  nsTransformBlockerEvent(txMozillaXSLTProcessor *processor)
     : mProcessor(processor)
   {}
 

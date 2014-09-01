@@ -256,7 +256,7 @@ class DOMStorageCacheHolder : public nsITimerCallback
   nsRefPtr<DOMStorageCache> mCache;
 
 public:
-  explicit DOMStorageCacheHolder(DOMStorageCache* aCache) : mCache(aCache) {}
+  DOMStorageCacheHolder(DOMStorageCache* aCache) : mCache(aCache) {}
 };
 
 NS_IMPL_ISUPPORTS(DOMStorageCacheHolder, nsITimerCallback)
@@ -301,7 +301,7 @@ namespace { // anon
 class TelemetryAutoTimer
 {
 public:
-  explicit TelemetryAutoTimer(Telemetry::ID aId)
+  TelemetryAutoTimer(Telemetry::ID aId)
     : id(aId), start(TimeStamp::Now()) {}
   ~TelemetryAutoTimer()
     { Telemetry::AccumulateDelta_impl<Telemetry::Millisecond>::compute(id, start); }
