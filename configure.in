@@ -9119,6 +9119,11 @@ if test -n "$_WRAP_MALLOC"; then
     _SUBDIR_CONFIG_ARGS="`echo $_SUBDIR_CONFIG_ARGS | sed -e 's/--enable-wrap-malloc *//'`"
 fi
 
+if test -n "$MOZ_USING_CCACHE"; then
+    # Avoid double prepending ccache by omitting --with-ccache in building NSPR.
+    _SUBDIR_CONFIG_ARGS="`echo $_SUBDIR_CONFIG_ARGS | sed -e 's/--with-ccache\S* *//'`"
+fi
+
 MOZ_SUBCONFIGURE_NSPR()
 
 dnl ========================================================
