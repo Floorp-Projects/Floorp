@@ -43,9 +43,9 @@ public:
   ScriptIncrement(nsIFrame* aFrame) MOZ_OVERRIDE;
 
 protected:
-  nsMathMLmunderoverFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext),
-                                                      mIncrementUnder(false),
-                                                      mIncrementOver(false) {}
+  explicit nsMathMLmunderoverFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext),
+                                                               mIncrementUnder(false),
+                                                               mIncrementOver(false) {}
   virtual ~nsMathMLmunderoverFrame();
 
 private:

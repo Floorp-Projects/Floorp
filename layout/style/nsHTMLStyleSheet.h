@@ -28,7 +28,7 @@ class nsMappedAttributes;
 class nsHTMLStyleSheet MOZ_FINAL : public nsIStyleRuleProcessor
 {
 public:
-  nsHTMLStyleSheet(nsIDocument* aDocument);
+  explicit nsHTMLStyleSheet(nsIDocument* aDocument);
 
   void SetOwningDocument(nsIDocument* aDocument);
 
@@ -136,7 +136,7 @@ public: // for mLangRuleTable structures only
   private:
     ~LangRule() {}
   public:
-    LangRule(const nsSubstring& aLang) : mLang(aLang) {}
+    explicit LangRule(const nsSubstring& aLang) : mLang(aLang) {}
 
     NS_DECL_ISUPPORTS
 

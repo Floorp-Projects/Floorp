@@ -22,7 +22,7 @@ class SVGFEContainerFrame : public SVGFEContainerFrameBase
   friend nsIFrame*
   NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  SVGFEContainerFrame(nsStyleContext* aContext)
+  explicit SVGFEContainerFrame(nsStyleContext* aContext)
     : SVGFEContainerFrameBase(aContext)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);

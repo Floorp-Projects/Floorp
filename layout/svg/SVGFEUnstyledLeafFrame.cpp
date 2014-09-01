@@ -16,7 +16,7 @@ class SVGFEUnstyledLeafFrame : public SVGFEUnstyledLeafFrameBase
   friend nsIFrame*
   NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  SVGFEUnstyledLeafFrame(nsStyleContext* aContext)
+  explicit SVGFEUnstyledLeafFrame(nsStyleContext* aContext)
     : SVGFEUnstyledLeafFrameBase(aContext)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);

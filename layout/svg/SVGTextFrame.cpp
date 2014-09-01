@@ -1140,7 +1140,7 @@ public:
    * Constructs a TextNodeIterator with the specified root node and optional
    * subtree.
    */
-  TextNodeIterator(nsIContent* aRoot, nsIContent* aSubtree = nullptr)
+  explicit TextNodeIterator(nsIContent* aRoot, nsIContent* aSubtree = nullptr)
     : mRoot(aRoot),
       mSubtree(aSubtree == aRoot ? nullptr : aSubtree),
       mCurrent(aRoot),
@@ -1268,7 +1268,7 @@ TextNodeIterator::Next()
  */
 struct TextNodeCorrespondence
 {
-  TextNodeCorrespondence(uint32_t aUndisplayedCharacters)
+  explicit TextNodeCorrespondence(uint32_t aUndisplayedCharacters)
     : mUndisplayedCharacters(aUndisplayedCharacters)
   {
   }
@@ -1317,7 +1317,7 @@ public:
   static void RecordCorrespondence(SVGTextFrame* aRoot);
 
 private:
-  TextNodeCorrespondenceRecorder(SVGTextFrame* aRoot)
+  explicit TextNodeCorrespondenceRecorder(SVGTextFrame* aRoot)
     : mNodeIterator(aRoot->GetContent()),
       mPreviousNode(nullptr),
       mNodeCharIndex(0)
@@ -1518,7 +1518,7 @@ public:
    * Constructs a TextFrameIterator for the specified SVGTextFrame
    * with an optional frame subtree to restrict iterated text frames to.
    */
-  TextFrameIterator(SVGTextFrame* aRoot, nsIFrame* aSubtree = nullptr)
+  explicit TextFrameIterator(SVGTextFrame* aRoot, nsIFrame* aSubtree = nullptr)
     : mRootFrame(aRoot),
       mSubtree(aSubtree),
       mCurrentFrame(aRoot),
@@ -1829,9 +1829,9 @@ public:
    * @param aSubtree An optional frame subtree to restrict iterated rendered
    *   runs to.
    */
-  TextRenderedRunIterator(SVGTextFrame* aSVGTextFrame,
-                          RenderedRunFilter aFilter = eAllFrames,
-                          nsIFrame* aSubtree = nullptr)
+  explicit TextRenderedRunIterator(SVGTextFrame* aSVGTextFrame,
+                                   RenderedRunFilter aFilter = eAllFrames,
+                                   nsIFrame* aSubtree = nullptr)
     : mFrameIterator(FrameIfAnonymousChildReflowed(aSVGTextFrame), aSubtree),
       mFilter(aFilter),
       mTextElementCharIndex(0),
@@ -2668,7 +2668,7 @@ CharIterator::MatchesFilter() const
  */
 class SVGCharClipDisplayItem : public nsCharClipDisplayItem {
 public:
-  SVGCharClipDisplayItem(const TextRenderedRun& aRun)
+  explicit SVGCharClipDisplayItem(const TextRenderedRun& aRun)
     : nsCharClipDisplayItem(aRun.mFrame)
   {
     aRun.GetClipEdges(mLeftEdge, mRightEdge);

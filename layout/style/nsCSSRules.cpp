@@ -138,7 +138,7 @@ Rule::SizeOfCOMArrayElementIncludingThis(css::Rule* aElement,
 class GroupRuleRuleList MOZ_FINAL : public dom::CSSRuleList
 {
 public:
-  GroupRuleRuleList(GroupRule *aGroupRule);
+  explicit GroupRuleRuleList(GroupRule *aGroupRule);
 
   virtual CSSStyleSheet* GetParentObject() MOZ_OVERRIDE;
 
@@ -2077,7 +2077,7 @@ nsCSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText)
 }
 
 struct MakeFamilyArray {
-  MakeFamilyArray(nsTArray<nsString>& aFamilyArray)
+  explicit MakeFamilyArray(nsTArray<nsString>& aFamilyArray)
     : familyArray(aFamilyArray), hasGeneric(false)
   {}
 
