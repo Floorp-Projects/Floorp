@@ -552,7 +552,7 @@ class NotificationType {
     NOTIFICATION_TYPE_COUNT
   };
 
-  NotificationType(Type v) : value(v) {}
+  explicit NotificationType(Type v) : value(v) {}
 
   bool operator==(NotificationType t) const { return value == t.value; }
   bool operator!=(NotificationType t) const { return value != t.value; }
