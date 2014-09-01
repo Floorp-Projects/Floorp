@@ -74,7 +74,7 @@ class nsHtml5ElementName
     static int32_t bufToHash(char16_t* buf, int32_t len);
     nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, int32_t flags);
   protected:
-    nsHtml5ElementName(nsIAtom* name);
+    explicit nsHtml5ElementName(nsIAtom* name);
   public:
     virtual void release();
     virtual ~nsHtml5ElementName();
