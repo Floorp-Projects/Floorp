@@ -73,7 +73,7 @@ loop.webapp = (function($, _, OT, webL10n) {
           React.DOM.div({className: "info-panel"}, 
             React.DOM.div({className: "firefox-logo"}), 
             React.DOM.h1(null, __("call_url_unavailable_notification_heading")), 
-            React.DOM.h4(null, __("call_url_unavailable_notification_message"))
+            React.DOM.h4(null, __("call_url_unavailable_notification_message2"))
           ), 
           PromoteFirefoxView({helper: this.props.helper})
         )
