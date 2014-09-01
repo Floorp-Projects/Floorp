@@ -132,7 +132,8 @@ loop.panel = (function(_, mozL10n) {
       if (this.state.seenToS == "unseen") {
         var terms_of_use_url = navigator.mozLoop.getLoopCharPref('legal.ToS_url');
         var privacy_notice_url = navigator.mozLoop.getLoopCharPref('legal.privacy_url');
-        var tosHTML = __("legal_text_and_links2", {
+        var tosHTML = __("legal_text_and_links3", {
+          "clientShortname": __("client_shortname_fallback"),
           "terms_of_use": React.renderComponentToStaticMarkup(
             React.DOM.a({href: terms_of_use_url, target: "_blank"}, 
               __("legal_text_tos")
