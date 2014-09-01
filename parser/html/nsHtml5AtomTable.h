@@ -16,7 +16,7 @@ class nsHtml5Atom;
 class nsHtml5AtomEntry : public nsStringHashKey
 {
   public:
-    nsHtml5AtomEntry(KeyTypePointer aStr);
+    explicit nsHtml5AtomEntry(KeyTypePointer aStr);
     nsHtml5AtomEntry(const nsHtml5AtomEntry& aOther);
     ~nsHtml5AtomEntry();
     inline nsHtml5Atom* GetAtom()
