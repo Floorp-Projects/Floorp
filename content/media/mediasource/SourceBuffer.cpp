@@ -197,6 +197,16 @@ public:
     byteRanges.AppendElement(MediaByteRange(0, aLength));
     parser.RebuildFragmentedIndex(byteRanges);
 
+    if (IsInitSegmentPresent(aData, aLength)) {
+      const MediaByteRange& range = parser.mInitRange;
+      MSE_DEBUG("MP4ContainerParser(%p)::ParseStartAndEndTimestamps: Stashed init of %u bytes.",
+                this, range.mEnd - range.mStart);
+
+      mInitData.ReplaceElementsAt(0, mInitData.Length(),
+                                  aData + range.mStart,
+                                  range.mEnd - range.mStart);
+    }
+
     // Persist the timescale for when it is absent in later chunks
     mTimescale = parser.mMdhd.mTimescale;
 
@@ -208,6 +218,8 @@ public:
     }
     aStart = static_cast<double>(compositionRange.start) / USECS_PER_S;
     aEnd = static_cast<double>(compositionRange.end) / USECS_PER_S;
+    MSE_DEBUG("MP4ContainerParser(%p)::ParseStartAndEndTimestamps: [%f, %f]",
+              this, aStart, aEnd);
     return true;
   }
 
