@@ -204,7 +204,7 @@ public:
     typedef const ChangeCallback* KeyTypePointer;
 
     explicit ChangeCallbackEntry(const ChangeCallback* aKey) :
-      mKey(*key) { }
+      mKey(*aKey) { }
     ChangeCallbackEntry(const ChangeCallbackEntry& toCopy) :
       mKey(toCopy.mKey) { }
 
