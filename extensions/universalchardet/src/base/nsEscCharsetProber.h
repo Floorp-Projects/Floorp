@@ -13,7 +13,7 @@
 
 class nsEscCharSetProber: public nsCharSetProber {
 public:
-  nsEscCharSetProber(uint32_t aLanguageFilter);
+  explicit nsEscCharSetProber(uint32_t aLanguageFilter);
   virtual ~nsEscCharSetProber(void);
   nsProbingState HandleData(const char* aBuf, uint32_t aLen);
   const char* GetCharSetName() {return mDetectedCharset;}
