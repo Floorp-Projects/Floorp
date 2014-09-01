@@ -29,7 +29,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaEncryptedEvent, Event)
 protected:
   virtual ~MediaEncryptedEvent();
-  MediaEncryptedEvent(EventTarget* aOwner);
+  explicit MediaEncryptedEvent(EventTarget* aOwner);
 
   nsString mInitDataType;
   JS::Heap<JSObject*> mInitData;

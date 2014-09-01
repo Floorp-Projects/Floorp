@@ -93,7 +93,7 @@ public:
 
     // This block is waiting in memory to be written.
     // Stores a copy of the block, so we can write it asynchronously.
-    BlockChange(const uint8_t* aData)
+    explicit BlockChange(const uint8_t* aData)
       : mSourceBlockIndex(-1)
     {
       mData = new uint8_t[BLOCK_SIZE];
@@ -102,7 +102,7 @@ public:
 
     // This block's contents are located in another file
     // block, i.e. this block has been moved.
-    BlockChange(int32_t aSourceBlockIndex)
+    explicit BlockChange(int32_t aSourceBlockIndex)
       : mSourceBlockIndex(aSourceBlockIndex) {}
 
     nsAutoArrayPtr<uint8_t> mData;

@@ -76,7 +76,7 @@ class LoadManager MOZ_FINAL : public webrtc::CPULoadStateCallbackInvoker,
                               public webrtc::CpuOveruseObserver
 {
 public:
-    LoadManager(LoadManagerSingleton* aManager)
+    explicit LoadManager(LoadManagerSingleton* aManager)
         : mManager(aManager)
     {}
     ~LoadManager() {}

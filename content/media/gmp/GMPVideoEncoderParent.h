@@ -26,7 +26,7 @@ class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPVideoEncoderParent)
 
-  GMPVideoEncoderParent(GMPParent *aPlugin);
+  explicit GMPVideoEncoderParent(GMPParent *aPlugin);
 
   GMPVideoHostImpl& Host();
   void Shutdown();

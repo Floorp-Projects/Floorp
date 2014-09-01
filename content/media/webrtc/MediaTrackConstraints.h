@@ -7,6 +7,7 @@
 #ifndef MEDIATRACKCONSTRAINTS_H_
 #define MEDIATRACKCONSTRAINTS_H_
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 
 namespace mozilla {
@@ -82,7 +83,7 @@ private:
 struct AudioTrackConstraintsN :
   public MediaTrackConstraintsN<dom::SupportedAudioConstraints>
 {
-  AudioTrackConstraintsN(const dom::MediaTrackConstraints &aOther)
+  MOZ_IMPLICIT AudioTrackConstraintsN(const dom::MediaTrackConstraints &aOther)
   : MediaTrackConstraintsN<dom::SupportedAudioConstraints>(aOther, // B2G ICS compiler bug
                            dom::SupportedAudioConstraintsValues::strings) {}
 };
@@ -90,7 +91,7 @@ struct AudioTrackConstraintsN :
 struct VideoTrackConstraintsN :
     public MediaTrackConstraintsN<dom::SupportedVideoConstraints>
 {
-  VideoTrackConstraintsN(const dom::MediaTrackConstraints &aOther)
+  MOZ_IMPLICIT VideoTrackConstraintsN(const dom::MediaTrackConstraints &aOther)
   : MediaTrackConstraintsN<dom::SupportedVideoConstraints>(aOther,
                            dom::SupportedVideoConstraintsValues::strings) {
     if (mFacingMode.WasPassed()) {

@@ -29,7 +29,7 @@ class MP4Stream;
 class MP4Reader : public MediaDecoderReader
 {
 public:
-  MP4Reader(AbstractMediaDecoder* aDecoder);
+  explicit MP4Reader(AbstractMediaDecoder* aDecoder);
 
   virtual ~MP4Reader();
 

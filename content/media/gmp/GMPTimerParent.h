@@ -21,7 +21,7 @@ namespace gmp {
 class GMPTimerParent : public PGMPTimerParent {
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPTimerParent)
-  GMPTimerParent(nsIThread* aGMPThread);
+  explicit GMPTimerParent(nsIThread* aGMPThread);
 
   void Shutdown();
 
