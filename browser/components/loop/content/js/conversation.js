@@ -87,7 +87,7 @@ loop.conversation = (function(OT, mozL10n) {
       });
       return (
         React.DOM.div({className: conversationPanelClass}, 
-          React.DOM.h2(null, __("incoming_call")), 
+          React.DOM.h2(null, __("incoming_call_title2")), 
           React.DOM.div({className: "btn-group incoming-call-action-group"}, 
 
             React.DOM.div({className: "fx-embedded-incoming-call-button-spacer"}), 
@@ -362,7 +362,7 @@ loop.conversation = (function(OT, mozL10n) {
     // else to ensure the L10n environment is setup correctly.
     mozL10n.initialize(navigator.mozLoop);
 
-    document.title = mozL10n.get("incoming_call_title");
+    document.title = mozL10n.get("incoming_call_title2");
 
     document.body.classList.add(loop.shared.utils.getTargetPlatform());
 
