@@ -130,6 +130,12 @@ typedef ScopedPtr<TestKeyPair, DeleteTestKeyPair> ScopedTestKeyPair;
 
 ByteString SHA1(const ByteString& toHash);
 
+Result TestCheckPublicKey(Input subjectPublicKeyInfo);
+Result TestVerifySignedData(const SignedDataWithSignature& signedData,
+                            Input subjectPublicKeyInfo);
+Result TestDigestBuf(Input item, /*out*/ uint8_t* digestBuf,
+                     size_t digestBufLen);
+
 // Replace one substring in item with another of the same length, but only if
 // the substring was found exactly once. The "same length" restriction is
 // useful for avoiding invalidating lengths encoded within the item. The

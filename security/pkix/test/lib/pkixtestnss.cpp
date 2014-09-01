@@ -181,4 +181,23 @@ SHA1(const ByteString& toHash)
   return ByteString(digestBuf, sizeof(digestBuf));
 }
 
+Result
+TestCheckPublicKey(Input subjectPublicKeyInfo)
+{
+  return CheckPublicKey(subjectPublicKeyInfo);
+}
+
+Result
+TestVerifySignedData(const SignedDataWithSignature& signedData,
+                     Input subjectPublicKeyInfo)
+{
+  return VerifySignedData(signedData, subjectPublicKeyInfo, nullptr);
+}
+
+Result
+TestDigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+{
+  return DigestBuf(item, digestBuf, digestBufLen);
+}
+
 } } } // namespace mozilla::pkix::test
