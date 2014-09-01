@@ -2641,16 +2641,18 @@ ContentParent::Observe(nsISupports* aSubject,
             MOZ_ASSERT(cmsg[identOffset - 1] == '=');
             FileDescriptor dmdFileDesc;
 #ifdef MOZ_DMD
-            FILE *dmdFile;
             nsAutoString dmdIdent(Substring(msg, identOffset));
-            nsresult rv = nsMemoryInfoDumper::OpenDMDFile(dmdIdent, Pid(), &dmdFile);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-                // Proceed with the memory report as if DMD were disabled.
-                dmdFile = nullptr;
-            }
-            if (dmdFile) {
-                dmdFileDesc = FILEToFileDescriptor(dmdFile);
-                fclose(dmdFile);
+            if (!dmdIdent.IsEmpty()) {
+                FILE *dmdFile = nullptr;
+                nsresult rv = nsMemoryInfoDumper::OpenDMDFile(dmdIdent, Pid(), &dmdFile);
+                if (NS_WARN_IF(NS_FAILED(rv))) {
+                    // Proceed with the memory report as if DMD were disabled.
+                    dmdFile = nullptr;
+                }
+                if (dmdFile) {
+                    dmdFileDesc = FILEToFileDescriptor(dmdFile);
+                    fclose(dmdFile);
+                }
             }
 #endif
             unused << SendPMemoryReportRequestConstructor(
