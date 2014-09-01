@@ -75,7 +75,8 @@ private:
 
   virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
   {
-    return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 };
 
