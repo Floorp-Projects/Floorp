@@ -235,6 +235,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       debug("Received '" + JSON.stringify(message) + "' message from content process");
       if (message.name == "child-process-shutdown") {
         this.removePeerTarget(message.target);
+        this.nfc.removeTarget(message.target);
         return null;
       }
 
@@ -565,6 +566,14 @@ Nfc.prototype = {
     this.targetsByRequestId[message.data.requestId] = message.target;
 
     return null;
+  },
+
+  removeTarget: function removeTarget(target) {
+    Object.keys(this.targetsByRequestId).forEach((requestId) => {
+      if (this.targetsByRequestId[requestId] === target) {
+        delete this.targetsByRequestId[requestId];
+      }
+    });
   },
 
   /**
