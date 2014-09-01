@@ -138,6 +138,7 @@ public:
   void ParseMdia(Box& aBox, Tkhd& aTkhd);
   void ParseMvex(Box& aBox);
 
+  mozilla::MediaByteRange mInitRange;
   nsRefPtr<Stream> mSource;
   uint64_t mOffset;
   nsTArray<uint64_t> mMoofOffsets;
