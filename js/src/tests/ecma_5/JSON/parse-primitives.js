@@ -1,5 +1,3 @@
-// Ported from dom/src/json/test/unit/test_decode_primitives.js
-
 var x;
 
 // check an empty object, just for sanity

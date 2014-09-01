@@ -34,8 +34,8 @@ var conn = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnectio
 function getColumn(table, column, fromColumnName, fromColumnValue)
 {
   var stmt = conn.createStatement(
-    "SELECT " + column + " FROM " + table + " WHERE " + fromColumnName + "=:val " +
-    "LIMIT 1");
+    `SELECT ${column} FROM ${table} WHERE ${fromColumnName} = :val
+     LIMIT 1`);
   try {
     stmt.params.val = fromColumnValue;
     stmt.executeStep();

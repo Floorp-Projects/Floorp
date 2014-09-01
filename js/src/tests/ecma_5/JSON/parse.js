@@ -1,6 +1,3 @@
-// Ported from dom/src/json/test/unit/test_wrappers.js and
-// dom/src/json/test/unit/test_decode.js
-
 function assertIsObject(x)
 {
   assertEq(typeof x, "object");
