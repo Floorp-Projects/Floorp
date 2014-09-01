@@ -149,17 +149,11 @@ DrawTargetTiled::Snapshot()
   }
 
 TILED_COMMAND(Flush)
-TILED_COMMAND5(DrawSurface, SourceSurface*, const Rect&,
-                            const Rect&, const DrawSurfaceOptions&,
-                            const DrawOptions&)
 TILED_COMMAND4(DrawFilter, FilterNode*, const Rect&, const Point&, const DrawOptions&)
 TILED_COMMAND1(ClearRect, const Rect&)
 TILED_COMMAND4(MaskSurface, const Pattern&, SourceSurface*, Point, const DrawOptions&)
-TILED_COMMAND3(FillRect, const Rect&, const Pattern&, const DrawOptions&)
 TILED_COMMAND4(StrokeRect, const Rect&, const Pattern&, const StrokeOptions&, const DrawOptions&)
 TILED_COMMAND5(StrokeLine, const Point&, const Point&, const Pattern&, const StrokeOptions&, const DrawOptions&)
-TILED_COMMAND4(Stroke, const Path*, const Pattern&, const StrokeOptions&, const DrawOptions&)
-TILED_COMMAND3(Fill, const Path*, const Pattern&, const DrawOptions&)
 TILED_COMMAND5(FillGlyphs, ScaledFont*, const GlyphBuffer&, const Pattern&, const DrawOptions&, const GlyphRenderingOptions*)
 TILED_COMMAND3(Mask, const Pattern&, const Pattern&, const DrawOptions&)
 TILED_COMMAND1(PushClip, const Path*)
@@ -196,6 +190,62 @@ DrawTargetTiled::SetTransform(const Matrix& aTransform)
     mTiles[i].mDrawTarget->SetTransform(mat);
   }
   DrawTarget::SetTransform(aTransform);
+}
+
+void
+DrawTargetTiled::DrawSurface(SourceSurface* aSurface, const Rect& aDest, const Rect& aSource, const DrawSurfaceOptions& aSurfaceOptions, const DrawOptions& aDrawOptions)
+{
+  Rect deviceRect = mTransform.TransformBounds(aDest);
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
+                                   mTiles[i].mTileOrigin.y,
+                                   mTiles[i].mDrawTarget->GetSize().width,
+                                   mTiles[i].mDrawTarget->GetSize().height))) {
+      mTiles[i].mDrawTarget->DrawSurface(aSurface, aDest, aSource, aSurfaceOptions, aDrawOptions);
+    }
+  }
+}
+
+void
+DrawTargetTiled::FillRect(const Rect& aRect, const Pattern& aPattern, const DrawOptions& aDrawOptions)
+{
+  Rect deviceRect = mTransform.TransformBounds(aRect);
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
+                                   mTiles[i].mTileOrigin.y,
+                                   mTiles[i].mDrawTarget->GetSize().width,
+                                   mTiles[i].mDrawTarget->GetSize().height))) {
+      mTiles[i].mDrawTarget->FillRect(aRect, aPattern, aDrawOptions);
+    }
+  }
+}
+
+void
+DrawTargetTiled::Stroke(const Path* aPath, const Pattern& aPattern, const StrokeOptions& aStrokeOptions, const DrawOptions& aDrawOptions)
+{
+  Rect deviceRect = aPath->GetStrokedBounds(aStrokeOptions, mTransform);
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
+                                   mTiles[i].mTileOrigin.y,
+                                   mTiles[i].mDrawTarget->GetSize().width,
+                                   mTiles[i].mDrawTarget->GetSize().height))) {
+      mTiles[i].mDrawTarget->Stroke(aPath, aPattern, aStrokeOptions, aDrawOptions);
+    }
+  }
+}
+
+void
+DrawTargetTiled::Fill(const Path* aPath, const Pattern& aPattern, const DrawOptions& aDrawOptions)
+{
+  Rect deviceRect = aPath->GetBounds(mTransform);
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
+                                   mTiles[i].mTileOrigin.y,
+                                   mTiles[i].mDrawTarget->GetSize().width,
+                                   mTiles[i].mDrawTarget->GetSize().height))) {
+      mTiles[i].mDrawTarget->Fill(aPath, aPattern, aDrawOptions);
+    }
+  }
 }
 
 }
