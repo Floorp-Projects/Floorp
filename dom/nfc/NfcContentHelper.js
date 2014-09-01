@@ -23,10 +23,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
-                                   "@mozilla.org/settingsService;1",
-                                   "nsISettingsService");
-
 XPCOMUtils.defineLazyGetter(this, "NFC", function () {
   let obj = {};
   Cu.import("resource://gre/modules/nfc_consts.js", obj);
@@ -40,16 +36,13 @@ const NFC_ENABLED = libcutils.property_get("ro.moz.nfc.enabled", "false") === "t
 let DEBUG = NFC.DEBUG_CONTENT_HELPER;
 
 let debug;
-function updateDebug() {
-  if (DEBUG) {
-    debug = function (s) {
-      dump("-*- NfcContentHelper: " + s + "\n");
-    };
-  } else {
-    debug = function (s) {};
-  }
-};
-updateDebug();
+if (DEBUG) {
+  debug = function (s) {
+    dump("-*- NfcContentHelper: " + s + "\n");
+  };
+} else {
+  debug = function (s) {};
+}
 
 const NFCCONTENTHELPER_CID =
   Components.ID("{4d72c120-da5f-11e1-9b23-0800200c9a66}");
@@ -84,11 +77,6 @@ GetDetailsNDEFResponse.prototype = {
 
 function NfcContentHelper() {
   this.initDOMRequestHelper(/* aWindow */ null, NFC_IPC_MSG_NAMES);
-
-  let lock = gSettingsService.createLock();
-  lock.get(NFC.SETTING_NFC_DEBUG, this);
-
-  Services.obs.addObserver(this, NFC.TOPIC_MOZSETTINGS_CHANGED, false);
   Services.obs.addObserver(this, "xpcom-shutdown", false);
 
   this._requestMap = [];
@@ -367,14 +355,8 @@ NfcContentHelper.prototype = {
   observe: function observe(subject, topic, data) {
     if (topic == "xpcom-shutdown") {
       this.destroyDOMRequestHelper();
-      Services.obs.removeObserver(this, NFC.TOPIC_MOZSETTINGS_CHANGED);
       Services.obs.removeObserver(this, "xpcom-shutdown");
       cpmm = null;
-    } else if (topic == NFC.TOPIC_MOZSETTINGS_CHANGED) {
-      let setting = JSON.parse(data);
-      if (setting) {
-        this.handle(setting.key, setting.value);
-      }
     }
   },
 
@@ -441,15 +423,6 @@ NfcContentHelper.prototype = {
             this.peerEventListener.notifyPeerLost(result.sessionToken);
             break;
         }
-        break;
-    }
-  },
-
-  handle: function handle(name, result) {
-    switch (name) {
-      case NFC.SETTING_NFC_DEBUG:
-        DEBUG = result;
-        updateDebug();
         break;
     }
   },
