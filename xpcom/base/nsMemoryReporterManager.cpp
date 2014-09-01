@@ -1094,7 +1094,7 @@ nsMemoryReporterManager::GetReports(
                             aFinishReporting, aFinishReportingData,
                             aAnonymize,
                             /* minimize = */ false,
-                            /* DMDident = */ nsString());
+                            /* DMDident = */ EmptyString());
 }
 
 NS_IMETHODIMP
