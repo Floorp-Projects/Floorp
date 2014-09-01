@@ -22,11 +22,11 @@ class ExplicitChildIterator;
 class XBLChildrenElement : public nsXMLElement
 {
 public:
-  XBLChildrenElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit XBLChildrenElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsXMLElement(aNodeInfo)
   {
   }
-  XBLChildrenElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  explicit XBLChildrenElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsXMLElement(aNodeInfo)
   {
   }
@@ -148,7 +148,7 @@ private:
 class nsAnonymousContentList : public nsINodeList
 {
 public:
-  nsAnonymousContentList(nsIContent* aParent)
+  explicit nsAnonymousContentList(nsIContent* aParent)
     : mParent(aParent)
   {
     MOZ_COUNT_CTOR(nsAnonymousContentList);

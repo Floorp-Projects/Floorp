@@ -29,7 +29,7 @@ class DocumentTypeForward : public nsGenericDOMDataNode,
                             public nsIDOMDocumentType
 {
 public:
-  DocumentTypeForward(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit DocumentTypeForward(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericDOMDataNode(aNodeInfo)
   {
   }

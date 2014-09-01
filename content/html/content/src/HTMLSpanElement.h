@@ -20,7 +20,7 @@ namespace dom {
 class HTMLSpanElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLSpanElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit HTMLSpanElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

@@ -604,7 +604,7 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
 class txSyncCompileObserver MOZ_FINAL : public txACompileObserver
 {
 public:
-    txSyncCompileObserver(txMozillaXSLTProcessor* aProcessor);
+    explicit txSyncCompileObserver(txMozillaXSLTProcessor* aProcessor);
 
     TX_DECL_ACOMPILEOBSERVER
     NS_INLINE_DECL_REFCOUNTING(txSyncCompileObserver)

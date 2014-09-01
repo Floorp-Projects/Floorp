@@ -26,10 +26,10 @@ class nsXBLMaybeCompiled
 public:
   nsXBLMaybeCompiled() : mUncompiled(BIT_UNCOMPILED) {}
 
-  nsXBLMaybeCompiled(UncompiledT* uncompiled)
+  explicit nsXBLMaybeCompiled(UncompiledT* uncompiled)
     : mUncompiled(reinterpret_cast<uintptr_t>(uncompiled) | BIT_UNCOMPILED) {}
 
-  nsXBLMaybeCompiled(JSObject* compiled) : mCompiled(compiled) {}
+  explicit nsXBLMaybeCompiled(JSObject* compiled) : mCompiled(compiled) {}
 
   bool IsCompiled() const
   {

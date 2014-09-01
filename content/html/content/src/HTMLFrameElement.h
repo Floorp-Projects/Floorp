@@ -22,8 +22,8 @@ class HTMLFrameElement MOZ_FINAL : public nsGenericHTMLFrameElement,
 public:
   using nsGenericHTMLFrameElement::SwapFrameLoaders;
 
-  HTMLFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                   FromParser aFromParser = NOT_FROM_PARSER);
+  explicit HTMLFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+                            FromParser aFromParser = NOT_FROM_PARSER);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

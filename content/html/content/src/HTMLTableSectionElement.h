@@ -15,7 +15,7 @@ namespace dom {
 class HTMLTableSectionElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLTableSectionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit HTMLTableSectionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
     SetHasWeirdParserInsertionMode();

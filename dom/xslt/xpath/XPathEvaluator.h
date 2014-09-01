@@ -32,7 +32,7 @@ class XPathEvaluator MOZ_FINAL : public nsIDOMXPathEvaluator
     ~XPathEvaluator();
 
 public:
-    XPathEvaluator(nsIDocument* aDocument = nullptr);
+    explicit XPathEvaluator(nsIDocument* aDocument = nullptr);
 
     NS_DECL_ISUPPORTS
 

@@ -59,7 +59,7 @@ public:
 class GetCheckedVisitor : public Visitor
 {
 public:
-  GetCheckedVisitor(HTMLMenuItemElement** aResult)
+  explicit GetCheckedVisitor(HTMLMenuItemElement** aResult)
     : mResult(aResult)
     { }
   virtual bool Visit(HTMLMenuItemElement* aMenuItem)
@@ -78,7 +78,7 @@ protected:
 class ClearCheckedVisitor : public Visitor
 {
 public:
-  ClearCheckedVisitor(HTMLMenuItemElement* aExcludeMenuItem)
+  explicit ClearCheckedVisitor(HTMLMenuItemElement* aExcludeMenuItem)
     : mExcludeMenuItem(aExcludeMenuItem)
     { }
   virtual bool Visit(HTMLMenuItemElement* aMenuItem)

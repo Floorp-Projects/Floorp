@@ -17,7 +17,7 @@ namespace dom {
 class HTMLTemplateElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLTemplateElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLTemplateElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

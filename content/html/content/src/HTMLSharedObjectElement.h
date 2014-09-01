@@ -24,8 +24,8 @@ class HTMLSharedObjectElement MOZ_FINAL : public nsGenericHTMLElement
                                         , public nsIDOMHTMLEmbedElement
 {
 public:
-  HTMLSharedObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                          mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
+  explicit HTMLSharedObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+                                   mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

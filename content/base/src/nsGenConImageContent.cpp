@@ -24,7 +24,7 @@ class nsGenConImageContent MOZ_FINAL : public nsXMLElement,
                                        public nsImageLoadingContent
 {
 public:
-  nsGenConImageContent(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit nsGenConImageContent(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsXMLElement(aNodeInfo)
   {
     // nsImageLoadingContent starts out broken, so we start out

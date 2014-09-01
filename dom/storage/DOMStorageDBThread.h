@@ -118,10 +118,10 @@ public:
       opClearMatchingScope,
     } OperationType;
 
-    DBOperation(const OperationType aType,
-                DOMStorageCacheBridge* aCache = nullptr,
-                const nsAString& aKey = EmptyString(),
-                const nsAString& aValue = EmptyString());
+    explicit DBOperation(const OperationType aType,
+                         DOMStorageCacheBridge* aCache = nullptr,
+                         const nsAString& aKey = EmptyString(),
+                         const nsAString& aValue = EmptyString());
     DBOperation(const OperationType aType,
                 DOMStorageUsageBridge* aUsage);
     DBOperation(const OperationType aType,

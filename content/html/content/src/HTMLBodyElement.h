@@ -21,7 +21,7 @@ class BodyRule: public nsIStyleRule
   virtual ~BodyRule();
 
 public:
-  BodyRule(HTMLBodyElement* aPart);
+  explicit BodyRule(HTMLBodyElement* aPart);
 
   NS_DECL_ISUPPORTS
 
@@ -41,7 +41,7 @@ public:
   using Element::GetText;
   using Element::SetText;
 
-  HTMLBodyElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit HTMLBodyElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

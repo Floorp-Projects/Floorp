@@ -21,7 +21,7 @@ namespace dom {
 class RadioNodeList : public nsSimpleContentList
 {
 public:
-  RadioNodeList(HTMLFormElement* aForm) : nsSimpleContentList(aForm) { }
+  explicit RadioNodeList(HTMLFormElement* aForm) : nsSimpleContentList(aForm) { }
 
   virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
   void GetValue(nsString& retval);

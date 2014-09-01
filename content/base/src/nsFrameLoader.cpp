@@ -106,7 +106,7 @@ typedef FrameMetrics::ViewID ViewID;
 class nsAsyncDocShellDestroyer : public nsRunnable
 {
 public:
-  nsAsyncDocShellDestroyer(nsIDocShell* aDocShell)
+  explicit nsAsyncDocShellDestroyer(nsIDocShell* aDocShell)
     : mDocShell(aDocShell)
   {
   }
@@ -308,7 +308,7 @@ nsFrameLoader::ReallyStartLoading()
 class DelayedStartLoadingRunnable : public nsRunnable
 {
 public:
-  DelayedStartLoadingRunnable(nsFrameLoader* aFrameLoader)
+  explicit DelayedStartLoadingRunnable(nsFrameLoader* aFrameLoader)
     : mFrameLoader(aFrameLoader)
   {
   }
@@ -708,7 +708,7 @@ class MOZ_STACK_CLASS AutoResetInShow {
     nsFrameLoader* mFrameLoader;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   public:
-    AutoResetInShow(nsFrameLoader* aFrameLoader MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit AutoResetInShow(nsFrameLoader* aFrameLoader MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mFrameLoader(aFrameLoader)
     {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;

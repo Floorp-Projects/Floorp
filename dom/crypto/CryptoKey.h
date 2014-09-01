@@ -88,7 +88,7 @@ public:
     UNWRAPKEY  = 0x00800000
   };
 
-  CryptoKey(nsIGlobalObject* aWindow);
+  explicit CryptoKey(nsIGlobalObject* aWindow);
 
   nsIGlobalObject* GetParentObject() const
   {

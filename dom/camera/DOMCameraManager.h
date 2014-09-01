@@ -90,7 +90,7 @@ protected:
 
 private:
   nsDOMCameraManager() MOZ_DELETE;
-  nsDOMCameraManager(nsPIDOMWindow* aWindow);
+  explicit nsDOMCameraManager(nsPIDOMWindow* aWindow);
   nsDOMCameraManager(const nsDOMCameraManager&) MOZ_DELETE;
   nsDOMCameraManager& operator=(const nsDOMCameraManager&) MOZ_DELETE;
 

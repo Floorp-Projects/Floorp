@@ -22,7 +22,7 @@ class MOZ_STACK_CLASS nsJSONWriter
 {
 public:
   nsJSONWriter();
-  nsJSONWriter(nsIOutputStream *aStream);
+  explicit nsJSONWriter(nsIOutputStream* aStream);
   virtual ~nsJSONWriter();
   nsresult SetCharset(const char *aCharset);
   nsCOMPtr<nsIOutputStream> mStream;
