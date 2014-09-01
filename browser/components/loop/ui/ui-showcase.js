@@ -34,6 +34,8 @@
     return false;
   }
 
+  function noop(){}
+
   // Feedback API client configured to send data to the stage input server,
   // which is available at https://input.allizom.org
   var stageFeedbackApiClient = new loop.FeedbackAPIClient(
@@ -43,10 +45,14 @@
   );
 
   var mockClient = {
-    requestCallUrl: function() {}
+    requestCallUrl: noop,
+    requestCallUrlInfo: noop
   };
 
   var mockConversationModel = new loop.shared.models.ConversationModel({}, {sdk: {}});
+
+  // Fake notifier
+  var mockNotifier = {};
 
   var Example = React.createClass({displayName: 'Example',
     render: function() {
@@ -105,16 +111,17 @@
               React.DOM.strong(null, "Note:"), " 332px wide."
             ), 
             Example({summary: "Call URL retrieved", dashed: "true", style: {width: "332px"}}, 
-              PanelView({callUrl: "http://invalid.example.url/", client: mockClient})
+              PanelView({client: mockClient, notifier: mockNotifier, 
+                         callUrl: "http://invalid.example.url/"})
             ), 
             Example({summary: "Pending call url retrieval", dashed: "true", style: {width: "332px"}}, 
-              PanelView({client: mockClient})
+              PanelView({client: mockClient, notifier: mockNotifier})
             )
           ), 
 
           Section({name: "IncomingCallView"}, 
             Example({summary: "Default", dashed: "true", style: {width: "280px"}}, 
-              IncomingCallView(null)
+              IncomingCallView({model: mockConversationModel})
             )
           ), 
 
@@ -122,55 +129,81 @@
             React.DOM.h3(null, "Desktop Conversation Window"), 
             React.DOM.div({className: "conversation-window"}, 
               Example({summary: "Default (260x265)", dashed: "true"}, 
-                ConversationToolbar({video: {enabled: true}, audio: {enabled: true}})
+                ConversationToolbar({video: {enabled: true}, 
+                                     audio: {enabled: true}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
               ), 
               Example({summary: "Video muted"}, 
-                ConversationToolbar({video: {enabled: false}, audio: {enabled: true}})
+                ConversationToolbar({video: {enabled: false}, 
+                                     audio: {enabled: true}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
               ), 
               Example({summary: "Audio muted"}, 
-                ConversationToolbar({video: {enabled: true}, audio: {enabled: false}})
+                ConversationToolbar({video: {enabled: true}, 
+                                     audio: {enabled: false}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
               )
             ), 
 
             React.DOM.h3(null, "Standalone"), 
             React.DOM.div({className: "standalone"}, 
               Example({summary: "Default"}, 
-                ConversationToolbar({video: {enabled: true}, audio: {enabled: true}})
+                ConversationToolbar({video: {enabled: true}, 
+                                     audio: {enabled: true}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
               ), 
               Example({summary: "Video muted"}, 
-                ConversationToolbar({video: {enabled: false}, audio: {enabled: true}})
+                ConversationToolbar({video: {enabled: false}, 
+                                     audio: {enabled: true}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
               ), 
               Example({summary: "Audio muted"}, 
-                ConversationToolbar({video: {enabled: true}, audio: {enabled: false}})
+                ConversationToolbar({video: {enabled: true}, 
+                                     audio: {enabled: false}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
               )
             )
           ), 
 
           Section({name: "StartConversationView"}, 
-
             Example({summary: "Start conversation view", dashed: "true"}, 
               React.DOM.div({className: "standalone"}, 
                 StartConversationView({model: mockConversationModel, 
-                  client: mockClient})
+                                       client: mockClient, 
+                                       notifier: mockNotifier})
               )
             )
-
           ), 
 
           Section({name: "ConversationView"}, 
-
             Example({summary: "Desktop conversation window", dashed: "true", 
                      style: {width: "260px", height: "265px"}}, 
               React.DOM.div({className: "conversation-window"}, 
-                ConversationView({video: {enabled: true}, audio: {enabled: true}, 
-                                  model: mockConversationModel})
+                ConversationView({sdk: {}, 
+                                  model: mockConversationModel, 
+                                  video: {enabled: true}, 
+                                  audio: {enabled: true}})
               )
             ), 
             Example({summary: "Standalone version"}, 
               React.DOM.div({className: "standalone"}, 
-                ConversationView({video: {enabled: true}, audio: {enabled: true}, 
-                                  model: mockConversationModel})
+                ConversationView({sdk: {}, 
+                                  model: mockConversationModel, 
+                                  video: {enabled: true}, 
+                                  audio: {enabled: true}})
               )
+            ), 
+            Example({summary: "Default"}, 
+              ConversationView({sdk: {}, 
+                                model: mockConversationModel, 
+                                video: {enabled: true}, 
+                                audio: {enabled: true}})
             )
           ), 
 
@@ -183,10 +216,10 @@
               FeedbackView({feedbackApiClient: stageFeedbackApiClient})
             ), 
             Example({summary: "Detailed form", dashed: "true", style: {width: "280px"}}, 
-              FeedbackView({step: "form"})
+              FeedbackView({feedbackApiClient: stageFeedbackApiClient, step: "form"})
             ), 
             Example({summary: "Thank you!", dashed: "true", style: {width: "280px"}}, 
-              FeedbackView({step: "finished"})
+              FeedbackView({feedbackApiClient: stageFeedbackApiClient, step: "finished"})
             )
           ), 
 

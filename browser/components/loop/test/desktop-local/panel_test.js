@@ -217,17 +217,89 @@ describe("loop.panel", function() {
       }));
     });
 
-    describe("FxA sign in/up link", function() {
+    describe("AuthLink", function() {
       it("should trigger the FxA sign in/up process when clicking the link",
         function() {
+          navigator.mozLoop.loggedInToFxA = false;
           navigator.mozLoop.logInToFxA = sandbox.stub();
 
           TestUtils.Simulate.click(
-            view.getDOMNode().querySelector(".signin-link"));
+            view.getDOMNode().querySelector(".signin-link a"));
 
           sinon.assert.calledOnce(navigator.mozLoop.logInToFxA);
         });
       });
+
+    describe("SettingsDropdown", function() {
+      var view;
+
+      beforeEach(function() {
+        navigator.mozLoop.logInToFxA = sandbox.stub();
+        navigator.mozLoop.logOutFromFxA = sandbox.stub();
+      });
+
+      it("should show a signin entry when user is not authenticated",
+        function() {
+          navigator.mozLoop.loggedInToFxA = false;
+
+          var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+          expect(view.getDOMNode().querySelectorAll(".icon-signout"))
+            .to.have.length.of(0);
+          expect(view.getDOMNode().querySelectorAll(".icon-signin"))
+            .to.have.length.of(1);
+        });
+
+      it("should show a signout entry when user is authenticated", function() {
+        navigator.mozLoop.loggedInToFxA = true;
+
+        var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+        expect(view.getDOMNode().querySelectorAll(".icon-signout"))
+          .to.have.length.of(1);
+        expect(view.getDOMNode().querySelectorAll(".icon-signin"))
+          .to.have.length.of(0);
+      });
+
+      it("should show an account entry when user is authenticated", function() {
+        navigator.mozLoop.loggedInToFxA = true;
+
+        var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+        expect(view.getDOMNode().querySelectorAll(".icon-account"))
+          .to.have.length.of(1);
+      });
+
+      it("should hide any account entry when user is not authenticated",
+        function() {
+          navigator.mozLoop.loggedInToFxA = false;
+
+          var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+          expect(view.getDOMNode().querySelectorAll(".icon-account"))
+            .to.have.length.of(0);
+        });
+
+      it("should sign in the user on click when unauthenticated", function() {
+        navigator.mozLoop.loggedInToFxA = false;
+        var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector(".icon-signin"));
+
+        sinon.assert.calledOnce(navigator.mozLoop.logInToFxA);
+      });
+
+      it("should sign out the user on click when authenticated", function() {
+        navigator.mozLoop.loggedInToFxA = true;
+        var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector(".icon-signout"));
+
+        sinon.assert.calledOnce(navigator.mozLoop.logOutFromFxA);
+      });
+    });
 
     describe("#render", function() {
       it("should render a ToSView", function() {
