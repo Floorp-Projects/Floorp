@@ -289,7 +289,7 @@ namespace {
 // OMTC BasicLayers drawing.
 class RectTextureImage {
 public:
-  RectTextureImage(GLContext* aGLContext)
+  explicit RectTextureImage(GLContext* aGLContext)
    : mGLContext(aGLContext)
    , mTexture(0)
    , mInUpdate(false)
@@ -357,7 +357,7 @@ public:
     return context ? new GLPresenter(context) : nullptr;
   }
 
-  GLPresenter(GLContext* aContext);
+  explicit GLPresenter(GLContext* aContext);
   virtual ~GLPresenter();
 
   virtual GLContext* gl() const MOZ_OVERRIDE { return mGLContext; }
@@ -398,7 +398,7 @@ class APZCTMController : public mozilla::layers::GeckoContentController
   class RequestContentRepaintEvent : public nsRunnable
   {
   public:
-    RequestContentRepaintEvent(const FrameMetrics& aFrameMetrics)
+    explicit RequestContentRepaintEvent(const FrameMetrics& aFrameMetrics)
       : mFrameMetrics(aFrameMetrics)
     {
     }
