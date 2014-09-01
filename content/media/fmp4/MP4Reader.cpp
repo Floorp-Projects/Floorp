@@ -62,7 +62,7 @@ TrackTypeToStr(TrackType aTrack)
 class MP4Stream : public Stream {
 public:
 
-  MP4Stream(MediaResource* aResource)
+  explicit MP4Stream(MediaResource* aResource)
     : mResource(aResource)
   {
     MOZ_COUNT_CTOR(MP4Stream);

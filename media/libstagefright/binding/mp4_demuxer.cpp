@@ -36,7 +36,7 @@ struct StageFrightPrivate
 class DataSourceAdapter : public DataSource
 {
 public:
-  DataSourceAdapter(Stream* aSource) : mSource(aSource) {}
+  explicit DataSourceAdapter(Stream* aSource) : mSource(aSource) {}
 
   ~DataSourceAdapter() {}
 
