@@ -195,8 +195,8 @@ namespace {
 
 class MOZ_STACK_CLASS MaybeScriptBlocker {
 public:
-    MaybeScriptBlocker(MessageChannel *aChannel
-                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit MaybeScriptBlocker(MessageChannel *aChannel
+                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mBlocked(aChannel->ShouldBlockScripts())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;

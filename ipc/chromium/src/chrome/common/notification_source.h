@@ -31,7 +31,7 @@ class NotificationSource {
   }
 
  protected:
-  NotificationSource(void* ptr) : ptr_(ptr) {}
+  explicit NotificationSource(void* ptr) : ptr_(ptr) {}
 
   void* ptr_;
 };
@@ -39,9 +39,9 @@ class NotificationSource {
 template <class T>
 class Source : public NotificationSource {
  public:
-  Source(T* ptr) : NotificationSource(ptr) {}
+  explicit Source(T* ptr) : NotificationSource(ptr) {}
 
-  Source(const NotificationSource& other)
+  explicit Source(const NotificationSource& other)
     : NotificationSource(other) {}
 
   T* operator->() const { return ptr(); }
