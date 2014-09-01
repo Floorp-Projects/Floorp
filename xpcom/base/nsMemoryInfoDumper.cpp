@@ -677,7 +677,7 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
                                finishReport, nullptr,
                                aAnonymize,
                                aMinimizeMemoryUsage,
-                               identifier);
+                               /* DMDident = */ identifier);
   return rv;
 }
 
@@ -740,21 +740,6 @@ nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
   rv = dmdWriter->Finish();
   NS_WARN_IF(NS_FAILED(rv));
   return rv;
-}
-
-nsresult
-nsMemoryInfoDumper::DumpDMD(const nsAString& aIdentifier)
-{
-  nsresult rv;
-  FILE* dmdFile;
-  rv = OpenDMDFile(aIdentifier, getpid(), &dmdFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (!dmdFile) {
-    return NS_OK;
-  }
-  return DumpDMDToFile(dmdFile);
 }
 #endif  // MOZ_DMD
 
@@ -922,11 +907,11 @@ nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
   }
 
   // Process reports and finish up.
+  nsCOMPtr<nsIMemoryReporterManager> mgr =
+    do_GetService("@mozilla.org/memory-reporter-manager;1");
   nsRefPtr<DumpReportCallback> dumpReport = new DumpReportCallback(mrWriter);
   nsRefPtr<FinishReportingCallback> finishReporting =
     new FinishReportingCallback(aFinishDumping, aFinishDumpingData);
-  nsCOMPtr<nsIMemoryReporterManager> mgr =
-    do_GetService("@mozilla.org/memory-reporter-manager;1");
   return mgr->GetReports(dumpReport, nullptr, finishReporting, mrWriter,
                          aAnonymize);
 }
