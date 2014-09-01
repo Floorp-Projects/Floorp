@@ -16,7 +16,7 @@ namespace CSF
     {
     private:
         cc_featureinfo_ref_t featureinfo_ref;
-        CC_SIPCCFeatureInfo (cc_featureinfo_ref_t aFeatureInfo);
+        explicit CC_SIPCCFeatureInfo (cc_featureinfo_ref_t aFeatureInfo);
         CSF_DECLARE_WRAP(CC_SIPCCFeatureInfo, cc_featureinfo_ref_t);
 
     public:

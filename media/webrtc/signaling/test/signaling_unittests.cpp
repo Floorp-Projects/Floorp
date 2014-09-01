@@ -527,7 +527,7 @@ TestObserver::OnAddIceCandidateError(uint32_t code, const char *message, ER&)
 class ParsedSDP {
  public:
 
-  ParsedSDP(const std::string &sdp)
+  explicit ParsedSDP(const std::string &sdp)
   {
     Parse(sdp);
   }
@@ -684,7 +684,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
   virtual ~PCDispatchWrapper() {}
 
  public:
-  PCDispatchWrapper(sipcc::PeerConnectionImpl *peerConnection) {
+  explicit PCDispatchWrapper(sipcc::PeerConnectionImpl *peerConnection) {
     pc_ = peerConnection;
   }
 
@@ -941,7 +941,7 @@ NS_IMPL_ISUPPORTS(PCDispatchWrapper, nsISupportsWeakReference)
 
 class SignalingAgent {
  public:
-  SignalingAgent(const std::string &aName,
+  explicit SignalingAgent(const std::string &aName,
     const std::string stun_addr = g_stun_server_address,
     uint16_t stun_port = g_stun_server_port) : pc(nullptr), name(aName) {
     cfg_.addStunServer(stun_addr, stun_port);
@@ -1972,7 +1972,7 @@ static void SetMaxFsFr(nsCOMPtr<nsIPrefBranch> prefs,
 
 class FsFrPrefClearer {
   public:
-    FsFrPrefClearer(nsCOMPtr<nsIPrefBranch> prefs): mPrefs(prefs) {}
+    explicit FsFrPrefClearer(nsCOMPtr<nsIPrefBranch> prefs): mPrefs(prefs) {}
     ~FsFrPrefClearer() {
       gMainThread->Dispatch(
         WrapRunnableNM(FsFrPrefClearer::ClearUserPrefOnMainThread,
