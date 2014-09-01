@@ -878,6 +878,35 @@ Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 3 || !IsVectorObject<Int32x4>(args[0]) ||
+        !IsVectorObject<Int32x4>(args[1]) || !IsVectorObject<Int32x4>(args[2]))
+    {
+        return ErrorBadArgs(cx);
+    }
+
+    int32_t *val = TypedObjectMemory<int32_t *>(args[0]);
+    int32_t *tv = TypedObjectMemory<int32_t *>(args[1]);
+    int32_t *fv = TypedObjectMemory<int32_t *>(args[2]);
+
+    int32_t tr[Int32x4::lanes];
+    for (unsigned i = 0; i < Int32x4::lanes; i++)
+        tr[i] = And<int32_t>::apply(val[i], tv[i]);
+
+    int32_t fr[Int32x4::lanes];
+    for (unsigned i = 0; i < Int32x4::lanes; i++)
+        fr[i] = And<int32_t>::apply(Not<int32_t>::apply(val[i]), fv[i]);
+
+    int32_t orInt[Int32x4::lanes];
+    for (unsigned i = 0; i < Int32x4::lanes; i++)
+        orInt[i] = Or<int32_t>::apply(tr[i], fr[i]);
+
+    return StoreResult<Int32x4>(cx, args, orInt);
+}
+
+static bool
+Float32x4Select(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 3 || !IsVectorObject<Int32x4>(args[0]) ||
         !IsVectorObject<Float32x4>(args[1]) || !IsVectorObject<Float32x4>(args[2]))
     {
         return ErrorBadArgs(cx);
