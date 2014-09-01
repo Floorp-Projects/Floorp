@@ -37,7 +37,7 @@ enum TrackType { kVideo = 1, kAudio };
 class MP4Demuxer
 {
 public:
-  MP4Demuxer(Stream* aSource);
+  explicit MP4Demuxer(Stream* aSource);
   ~MP4Demuxer();
 
   bool Init();

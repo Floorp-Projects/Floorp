@@ -31,7 +31,7 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
-    LoadMonitor(int aLoadUpdateInterval);
+    explicit LoadMonitor(int aLoadUpdateInterval);
 
     nsresult Init(nsRefPtr<LoadMonitor> &self);
     void SetLoadChangeCallback(LoadNotificationCallback* aCallback);

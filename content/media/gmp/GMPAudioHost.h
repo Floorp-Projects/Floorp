@@ -20,8 +20,8 @@ namespace gmp {
 
 class GMPAudioSamplesImpl : public GMPAudioSamples {
 public:
-  GMPAudioSamplesImpl(GMPAudioFormat aFormat);
-  GMPAudioSamplesImpl(const GMPAudioEncodedSampleData& aData);
+  explicit GMPAudioSamplesImpl(GMPAudioFormat aFormat);
+  explicit GMPAudioSamplesImpl(const GMPAudioEncodedSampleData& aData);
   GMPAudioSamplesImpl(mp4_demuxer::MP4Sample* aSample,
                       uint32_t aChannels,
                       uint32_t aRate);

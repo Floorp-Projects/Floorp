@@ -59,7 +59,7 @@ class SpeechRecognition MOZ_FINAL : public DOMEventTargetHelper,
 {
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(SpeechRecognition)
-  SpeechRecognition(nsPIDOMWindow* aOwnerWindow);
+  explicit SpeechRecognition(nsPIDOMWindow* aOwnerWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -182,7 +182,7 @@ private:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOMGETUSERMEDIASUCCESSCALLBACK
 
-    GetUserMediaSuccessCallback(SpeechRecognition* aRecognition)
+    explicit GetUserMediaSuccessCallback(SpeechRecognition* aRecognition)
       : mRecognition(aRecognition)
     {}
 
@@ -198,7 +198,7 @@ private:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOMGETUSERMEDIAERRORCALLBACK
 
-    GetUserMediaErrorCallback(SpeechRecognition* aRecognition)
+    explicit GetUserMediaErrorCallback(SpeechRecognition* aRecognition)
       : mRecognition(aRecognition)
     {}
 

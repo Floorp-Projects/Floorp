@@ -24,7 +24,7 @@ public:
     , mDuration(0)
   {
   }
-  Tkhd(Box& aBox);
+  explicit Tkhd(Box& aBox);
 
   uint64_t mCreationTime;
   uint64_t mModificationTime;
@@ -42,7 +42,7 @@ public:
     , mDuration(0)
   {
   }
-  Mdhd(Box& aBox);
+  explicit Mdhd(Box& aBox);
 
   Microseconds ToMicroseconds(uint64_t aTimescaleUnits)
   {
@@ -58,7 +58,7 @@ public:
 class Trex
 {
 public:
-  Trex(uint32_t aTrackId)
+  explicit Trex(uint32_t aTrackId)
     : mFlags(0)
     , mTrackId(aTrackId)
     , mDefaultSampleDescriptionIndex(0)
@@ -68,7 +68,7 @@ public:
   {
   }
 
-  Trex(Box& aBox);
+  explicit Trex(Box& aBox);
 
   uint32_t mFlags;
   uint32_t mTrackId;
@@ -81,7 +81,7 @@ public:
 class Tfhd : public Trex
 {
 public:
-  Tfhd(Trex& aTrex) : Trex(aTrex), mBaseDataOffset(0) {}
+  explicit Tfhd(Trex& aTrex) : Trex(aTrex), mBaseDataOffset(0) {}
   Tfhd(Box& aBox, Trex& aTrex);
 
   uint64_t mBaseDataOffset;
@@ -91,7 +91,7 @@ class Tfdt
 {
 public:
   Tfdt() : mBaseMediaDecodeTime(0) {}
-  Tfdt(Box& aBox);
+  explicit Tfdt(Box& aBox);
 
   uint64_t mBaseMediaDecodeTime;
 };
