@@ -1412,7 +1412,7 @@ public:
     NS_DECL_NSIOBSERVER
     NS_DECL_NSIDOMEVENTLISTENER
 
-    explicit WebGLObserver(WebGLContext* aContext);
+    WebGLObserver(WebGLContext* aContext);
 
     void Destroy();
 

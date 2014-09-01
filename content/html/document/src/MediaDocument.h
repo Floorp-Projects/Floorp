@@ -84,7 +84,7 @@ protected:
   virtual ~MediaDocumentStreamListener();
 
 public:
-  explicit MediaDocumentStreamListener(MediaDocument* aDocument);
+  MediaDocumentStreamListener(MediaDocument *aDocument);
   void SetStreamListener(nsIStreamListener *aListener);
 
   NS_DECL_ISUPPORTS

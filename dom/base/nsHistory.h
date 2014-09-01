@@ -30,7 +30,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsHistory)
 
 public:
-  explicit nsHistory(nsPIDOMWindow* aInnerWindow);
+  nsHistory(nsPIDOMWindow* aInnerWindow);
 
   nsPIDOMWindow* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;

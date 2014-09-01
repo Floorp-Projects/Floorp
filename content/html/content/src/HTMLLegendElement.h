@@ -16,7 +16,7 @@ namespace dom {
 class HTMLLegendElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLLegendElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  HTMLLegendElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

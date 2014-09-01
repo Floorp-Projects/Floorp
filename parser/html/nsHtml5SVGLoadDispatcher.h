@@ -14,7 +14,7 @@ class nsHtml5SVGLoadDispatcher : public nsRunnable
     nsCOMPtr<nsIContent> mElement;
     nsCOMPtr<nsIDocument> mDocument;
   public:
-    explicit nsHtml5SVGLoadDispatcher(nsIContent* aElement);
+    nsHtml5SVGLoadDispatcher(nsIContent* aElement);
     NS_IMETHOD Run();
 };
 

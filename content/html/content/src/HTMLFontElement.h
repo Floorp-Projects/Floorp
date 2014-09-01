@@ -14,7 +14,7 @@ namespace dom {
 class HTMLFontElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLFontElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  HTMLFontElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

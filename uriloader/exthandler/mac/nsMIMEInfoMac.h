@@ -9,8 +9,8 @@
 
 class nsMIMEInfoMac : public nsMIMEInfoImpl {
   public:
-    explicit nsMIMEInfoMac(const char* aMIMEType = "") : nsMIMEInfoImpl(aMIMEType) {}
-    explicit nsMIMEInfoMac(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
+    nsMIMEInfoMac(const char* aMIMEType = "") : nsMIMEInfoImpl(aMIMEType) {}
+    nsMIMEInfoMac(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
     nsMIMEInfoMac(const nsACString& aType, HandlerClass aClass) :
       nsMIMEInfoImpl(aType, aClass) {}
 

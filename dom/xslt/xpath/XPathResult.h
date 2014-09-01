@@ -51,7 +51,7 @@ class XPathResult MOZ_FINAL : public nsIXPathResult,
     ~XPathResult();
 
 public:
-    explicit XPathResult(nsINode* aParent);
+    XPathResult(nsINode* aParent);
     XPathResult(const XPathResult &aResult);
 
     enum {

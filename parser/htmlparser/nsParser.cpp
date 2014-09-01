@@ -113,7 +113,7 @@ class nsParserContinueEvent : public nsRunnable
 public:
   nsRefPtr<nsParser> mParser;
 
-  explicit nsParserContinueEvent(nsParser* aParser)
+  nsParserContinueEvent(nsParser* aParser)
     : mParser(aParser)
   {}
 

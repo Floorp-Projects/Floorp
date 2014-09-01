@@ -3703,7 +3703,7 @@ namespace {
 class HandlingUserInputHelper MOZ_FINAL : public nsIJSRAIIHelper
 {
 public:
-  explicit HandlingUserInputHelper(bool aHandlingUserInput);
+  HandlingUserInputHelper(bool aHandlingUserInput);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIJSRAIIHELPER

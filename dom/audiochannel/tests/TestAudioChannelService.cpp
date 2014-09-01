@@ -52,7 +52,7 @@ protected:
 public:
   NS_DECL_ISUPPORTS
 
-  explicit Agent(AudioChannel aChannel)
+  Agent(AudioChannel aChannel)
   : mChannel(aChannel)
   , mWaitCallback(false)
   , mRegistered(false)

@@ -35,7 +35,7 @@ public:
         RESULT_TREE_FRAGMENT
     };
 
-    explicit txAExprResult(txResultRecycler* aRecycler) : mRecycler(aRecycler)
+    txAExprResult(txResultRecycler* aRecycler) : mRecycler(aRecycler)
     {
     }
     virtual ~txAExprResult()
@@ -97,7 +97,7 @@ private:
 class BooleanResult : public txAExprResult {
 
 public:
-    explicit BooleanResult(bool aValue);
+    BooleanResult(bool aValue);
 
     TX_DECL_EXPRRESULT
 
@@ -119,7 +119,7 @@ public:
 
 class StringResult : public txAExprResult {
 public:
-    explicit StringResult(txResultRecycler* aRecycler);
+    StringResult(txResultRecycler* aRecycler);
     StringResult(const nsAString& aValue, txResultRecycler* aRecycler);
 
     TX_DECL_EXPRRESULT

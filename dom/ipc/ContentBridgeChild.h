@@ -17,7 +17,7 @@ class ContentBridgeChild MOZ_FINAL : public PContentBridgeChild
                                    , public nsIContentChild
 {
 public:
-  explicit ContentBridgeChild(Transport* aTransport);
+  ContentBridgeChild(Transport* aTransport);
 
   NS_DECL_ISUPPORTS
 

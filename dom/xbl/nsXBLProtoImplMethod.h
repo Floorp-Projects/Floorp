@@ -20,7 +20,7 @@ struct nsXBLParameter {
   nsXBLParameter* mNext;
   char* mName;
 
-  explicit nsXBLParameter(const nsAString& aName) {
+  nsXBLParameter(const nsAString& aName) {
     MOZ_COUNT_CTOR(nsXBLParameter);
     mName = ToNewCString(aName);
     mNext = nullptr;
@@ -81,7 +81,7 @@ struct nsXBLUncompiledMethod {
 class nsXBLProtoImplMethod: public nsXBLProtoImplMember
 {
 public:
-  explicit nsXBLProtoImplMethod(const char16_t* aName);
+  nsXBLProtoImplMethod(const char16_t* aName);
   virtual ~nsXBLProtoImplMethod();
 
   void AppendBodyText(const nsAString& aBody);
@@ -135,7 +135,7 @@ protected:
 
 class nsXBLProtoImplAnonymousMethod : public nsXBLProtoImplMethod {
 public:
-  explicit nsXBLProtoImplAnonymousMethod(const char16_t* aName) :
+  nsXBLProtoImplAnonymousMethod(const char16_t* aName) :
     nsXBLProtoImplMethod(aName)
   {}
   

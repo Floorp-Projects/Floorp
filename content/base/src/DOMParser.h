@@ -81,7 +81,7 @@ public:
   }
 
 private:
-  explicit DOMParser(nsISupports* aOwner) : mOwner(aOwner), mAttemptedInit(false)
+  DOMParser(nsISupports* aOwner) : mOwner(aOwner), mAttemptedInit(false)
   {
     MOZ_ASSERT(aOwner);
     SetIsDOMBinding();
@@ -98,7 +98,7 @@ private:
 
   class AttemptedInitMarker {
   public:
-    explicit AttemptedInitMarker(bool* aAttemptedInit) :
+    AttemptedInitMarker(bool* aAttemptedInit) :
       mAttemptedInit(aAttemptedInit)
     {}
 

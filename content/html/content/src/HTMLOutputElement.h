@@ -21,8 +21,8 @@ class HTMLOutputElement MOZ_FINAL : public nsGenericHTMLFormElement,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  explicit HTMLOutputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                             FromParser aFromParser = NOT_FROM_PARSER);
+  HTMLOutputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+                    FromParser aFromParser = NOT_FROM_PARSER);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

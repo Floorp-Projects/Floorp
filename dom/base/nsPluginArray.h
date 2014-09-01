@@ -29,7 +29,7 @@ public:
   // nsIObserver
   NS_DECL_NSIOBSERVER
 
-  explicit nsPluginArray(nsPIDOMWindow* aWindow);
+  nsPluginArray(nsPIDOMWindow* aWindow);
   nsPIDOMWindow* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 

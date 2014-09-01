@@ -21,12 +21,12 @@
 class MOZ_STACK_CLASS nsAttrValueOrString
 {
 public:
-  explicit nsAttrValueOrString(const nsAString& aValue)
+  nsAttrValueOrString(const nsAString& aValue)
     : mAttrValue(nullptr)
     , mStringPtr(&aValue)
     , mCheapString(nullptr)
   { }
-  explicit nsAttrValueOrString(const nsAttrValue& aValue)
+  nsAttrValueOrString(const nsAttrValue& aValue)
     : mAttrValue(&aValue)
     , mStringPtr(nullptr)
     , mCheapString(nullptr)

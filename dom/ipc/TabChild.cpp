@@ -161,7 +161,7 @@ class TabChild::DelayedFireContextMenuEvent MOZ_FINAL : public nsITimerCallback
 public:
   NS_DECL_ISUPPORTS
 
-  explicit DelayedFireContextMenuEvent(TabChild* tabChild)
+  DelayedFireContextMenuEvent(TabChild* tabChild)
     : mTabChild(tabChild)
   {
   }
@@ -663,7 +663,7 @@ public:
     nsCOMPtr<nsICachedFileDescriptorListener> mCallback;
     bool mCanceled;
 
-    explicit CachedFileDescriptorInfo(const nsAString& aPath)
+    CachedFileDescriptorInfo(const nsAString& aPath)
       : mPath(aPath), mCanceled(false)
     { }
 
@@ -700,7 +700,7 @@ class TabChild::CachedFileDescriptorCallbackRunnable : public nsRunnable
     nsAutoPtr<CachedFileDescriptorInfo> mInfo;
 
 public:
-    explicit CachedFileDescriptorCallbackRunnable(CachedFileDescriptorInfo* aInfo)
+    CachedFileDescriptorCallbackRunnable(CachedFileDescriptorInfo* aInfo)
       : mInfo(aInfo)
     {
         MOZ_ASSERT(NS_IsMainThread());

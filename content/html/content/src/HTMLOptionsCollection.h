@@ -35,7 +35,7 @@ class HTMLOptionsCollection MOZ_FINAL : public nsIHTMLCollection
 {
   typedef HTMLOptionElementOrHTMLOptGroupElement HTMLOptionOrOptGroupElement;
 public:
-  explicit HTMLOptionsCollection(HTMLSelectElement* aSelect);
+  HTMLOptionsCollection(HTMLSelectElement* aSelect);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 

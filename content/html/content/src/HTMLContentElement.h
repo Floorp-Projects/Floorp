@@ -19,7 +19,7 @@ class DistributedContentList;
 class HTMLContentElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLContentElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLContentElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLContentElement, content)
 
@@ -98,7 +98,7 @@ protected:
 class DistributedContentList : public nsINodeList
 {
 public:
-  explicit DistributedContentList(HTMLContentElement* aHostElement);
+  DistributedContentList(HTMLContentElement* aHostElement);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(DistributedContentList)

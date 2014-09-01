@@ -51,8 +51,8 @@ namespace dom {
 class CallDispatchConnectionCloseEvents: public nsRunnable
 {
 public:
-  explicit CallDispatchConnectionCloseEvents(WebSocket* aWebSocket)
-    : mWebSocket(aWebSocket)
+CallDispatchConnectionCloseEvents(WebSocket* aWebSocket)
+  : mWebSocket(aWebSocket)
   {}
 
   NS_IMETHOD Run()
@@ -754,7 +754,7 @@ WebSocket::Init(JSContext* aCx,
 class nsAutoCloseWS
 {
 public:
-  explicit nsAutoCloseWS(WebSocket* aWebSocket)
+  nsAutoCloseWS(WebSocket* aWebSocket)
     : mWebSocket(aWebSocket)
   {}
 

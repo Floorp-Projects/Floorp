@@ -337,7 +337,7 @@ class DirPickerRecursiveFileEnumerator MOZ_FINAL
 public:
   NS_DECL_ISUPPORTS
 
-  explicit DirPickerRecursiveFileEnumerator(nsIFile* aTopDir)
+  DirPickerRecursiveFileEnumerator(nsIFile* aTopDir)
     : mTopDir(aTopDir)
   {
     MOZ_ASSERT(!NS_IsMainThread(), "This class blocks on I/O!");

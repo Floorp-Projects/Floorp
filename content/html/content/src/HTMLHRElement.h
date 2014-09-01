@@ -20,7 +20,7 @@ class HTMLHRElement MOZ_FINAL : public nsGenericHTMLElement,
                                 public nsIDOMHTMLHRElement
 {
 public:
-  explicit HTMLHRElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLHRElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

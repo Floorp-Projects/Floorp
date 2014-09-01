@@ -43,7 +43,7 @@ class FilePickerParent : public PFilePickerParent
   class FilePickerShownCallback : public nsIFilePickerShownCallback
   {
   public:
-    explicit FilePickerShownCallback(FilePickerParent* aFilePickerParent)
+    FilePickerShownCallback(FilePickerParent* aFilePickerParent)
       : mFilePickerParent(aFilePickerParent)
     { }
 

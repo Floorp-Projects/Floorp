@@ -26,8 +26,8 @@ class txIOutputHandlerFactory;
 class txLoadedDocumentEntry : public nsStringHashKey
 {
 public:
-    explicit txLoadedDocumentEntry(KeyTypePointer aStr) : nsStringHashKey(aStr),
-                                                          mLoadResult(NS_OK)
+    txLoadedDocumentEntry(KeyTypePointer aStr) : nsStringHashKey(aStr),
+                                                 mLoadResult(NS_OK)
     {
     }
     txLoadedDocumentEntry(const txLoadedDocumentEntry& aToCopy)

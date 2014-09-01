@@ -34,7 +34,7 @@ class Element;
 class PropertyStringList : public DOMStringList
 {
 public:
-  explicit PropertyStringList(HTMLPropertiesCollection* aCollection);
+  PropertyStringList(HTMLPropertiesCollection* aCollection);
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PropertyStringList, DOMStringList)
 
@@ -55,7 +55,7 @@ class HTMLPropertiesCollection : public nsIHTMLCollection,
   friend class PropertyNodeList;
   friend class PropertyStringList;
 public:
-  explicit HTMLPropertiesCollection(nsGenericHTMLElement* aRoot);
+  HTMLPropertiesCollection(nsGenericHTMLElement* aRoot);
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;

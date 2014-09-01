@@ -31,13 +31,13 @@ private:
   }
 
 public:
-  explicit nsTextNode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  nsTextNode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : mozilla::dom::Text(aNodeInfo)
   {
     Init();
   }
 
-  explicit nsTextNode(nsNodeInfoManager* aNodeInfoManager)
+  nsTextNode(nsNodeInfoManager* aNodeInfoManager)
     : mozilla::dom::Text(aNodeInfoManager->GetTextNodeInfo())
   {
     Init();

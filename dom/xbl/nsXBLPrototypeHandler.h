@@ -60,10 +60,10 @@ public:
                         uint32_t aLineNumber);
 
   // This constructor is used only by XUL key handlers (e.g., <key>)
-  explicit nsXBLPrototypeHandler(nsIContent* aKeyElement);
+  nsXBLPrototypeHandler(nsIContent* aKeyElement);
 
   // This constructor is used for handlers loaded from the cache
-  explicit nsXBLPrototypeHandler(nsXBLPrototypeBinding* aBinding);
+  nsXBLPrototypeHandler(nsXBLPrototypeBinding* aBinding);
 
   ~nsXBLPrototypeHandler();
 

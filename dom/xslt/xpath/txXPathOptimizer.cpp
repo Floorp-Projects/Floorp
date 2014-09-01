@@ -14,7 +14,7 @@
 class txEarlyEvalContext : public txIEvalContext
 {
 public:
-    explicit txEarlyEvalContext(txResultRecycler* aRecycler)
+    txEarlyEvalContext(txResultRecycler* aRecycler)
         : mRecycler(aRecycler)
     {
     }

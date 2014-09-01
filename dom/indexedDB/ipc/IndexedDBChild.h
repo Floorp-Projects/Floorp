@@ -224,7 +224,7 @@ class IndexedDBObjectStoreChild : public PIndexedDBObjectStoreChild
   IDBObjectStore* mObjectStore;
 
 public:
-  explicit IndexedDBObjectStoreChild(IDBObjectStore* aObjectStore);
+  IndexedDBObjectStoreChild(IDBObjectStore* aObjectStore);
   virtual ~IndexedDBObjectStoreChild();
 
   void
@@ -269,7 +269,7 @@ class IndexedDBIndexChild : public PIndexedDBIndexChild
   IDBIndex* mIndex;
 
 public:
-  explicit IndexedDBIndexChild(IDBIndex* aIndex);
+  IndexedDBIndexChild(IDBIndex* aIndex);
   virtual ~IndexedDBIndexChild();
 
   void
@@ -352,7 +352,7 @@ public:
   Disconnect();
 
 protected:
-  explicit IndexedDBRequestChildBase(AsyncConnectionHelper* aHelper);
+  IndexedDBRequestChildBase(AsyncConnectionHelper* aHelper);
   virtual ~IndexedDBRequestChildBase();
 
   virtual bool

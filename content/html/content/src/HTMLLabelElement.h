@@ -21,7 +21,7 @@ class HTMLLabelElement MOZ_FINAL : public nsGenericHTMLFormElement,
                                    public nsIDOMHTMLLabelElement
 {
 public:
-  explicit HTMLLabelElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  HTMLLabelElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLFormElement(aNodeInfo),
       mHandlingEvent(false)
   {

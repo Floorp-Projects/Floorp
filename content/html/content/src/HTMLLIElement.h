@@ -18,7 +18,7 @@ class HTMLLIElement MOZ_FINAL : public nsGenericHTMLElement,
                                 public nsIDOMHTMLLIElement
 {
 public:
-  explicit HTMLLIElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  HTMLLIElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

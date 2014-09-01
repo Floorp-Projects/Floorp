@@ -239,7 +239,7 @@ public:
   virtual void LastRelease() MOZ_OVERRIDE;
 
 private:
-  explicit IDBDatabase(IDBWrapperCache* aOwnerCache);
+  IDBDatabase(IDBWrapperCache* aOwnerCache);
   ~IDBDatabase();
 
   void OnUnlink();

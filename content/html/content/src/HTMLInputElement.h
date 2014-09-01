@@ -1357,7 +1357,7 @@ private:
     nsFilePickerFilter()
       : mFilterMask(0), mIsTrusted(false) {}
 
-    explicit nsFilePickerFilter(int32_t aFilterMask)
+    nsFilePickerFilter(int32_t aFilterMask)
       : mFilterMask(aFilterMask), mIsTrusted(true) {}
 
     nsFilePickerFilter(const nsString& aTitle,

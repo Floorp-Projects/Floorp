@@ -2362,7 +2362,7 @@ class HasDataStoreSupportRunnable MOZ_FINAL
 public:
   bool mResult;
 
-  explicit HasDataStoreSupportRunnable(workers::WorkerPrivate* aWorkerPrivate)
+  HasDataStoreSupportRunnable(workers::WorkerPrivate* aWorkerPrivate)
     : workers::WorkerMainThreadRunnable(aWorkerPrivate)
     , mResult(false)
   {

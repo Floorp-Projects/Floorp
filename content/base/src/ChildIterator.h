@@ -35,7 +35,7 @@ namespace dom {
 class ExplicitChildIterator
 {
 public:
-  explicit ExplicitChildIterator(nsIContent* aParent, bool aStartAtBeginning = true)
+  ExplicitChildIterator(nsIContent* aParent, bool aStartAtBeginning = true)
     : mParent(aParent),
       mChild(nullptr),
       mDefaultChild(nullptr),
@@ -126,7 +126,7 @@ protected:
 class FlattenedChildIterator : public ExplicitChildIterator
 {
 public:
-  explicit FlattenedChildIterator(nsIContent* aParent)
+  FlattenedChildIterator(nsIContent* aParent)
     : ExplicitChildIterator(aParent), mXBLInvolved(false)
   {
     Init(false);

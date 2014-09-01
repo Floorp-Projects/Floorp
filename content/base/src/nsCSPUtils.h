@@ -198,7 +198,7 @@ class nsCSPBaseSrc {
 
 class nsCSPSchemeSrc : public nsCSPBaseSrc {
   public:
-    explicit nsCSPSchemeSrc(const nsAString& aScheme);
+    nsCSPSchemeSrc(const nsAString& aScheme);
     virtual ~nsCSPSchemeSrc();
 
     bool permits(nsIURI* aUri, const nsAString& aNonce) const;
@@ -212,7 +212,7 @@ class nsCSPSchemeSrc : public nsCSPBaseSrc {
 
 class nsCSPHostSrc : public nsCSPBaseSrc {
   public:
-    explicit nsCSPHostSrc(const nsAString& aHost);
+    nsCSPHostSrc(const nsAString& aHost);
     virtual ~nsCSPHostSrc();
 
     bool permits(nsIURI* aUri, const nsAString& aNonce) const;
@@ -235,7 +235,7 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
 
 class nsCSPKeywordSrc : public nsCSPBaseSrc {
   public:
-    explicit nsCSPKeywordSrc(CSPKeyword aKeyword);
+    nsCSPKeywordSrc(CSPKeyword aKeyword);
     virtual ~nsCSPKeywordSrc();
 
     bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const;
@@ -249,7 +249,7 @@ class nsCSPKeywordSrc : public nsCSPBaseSrc {
 
 class nsCSPNonceSrc : public nsCSPBaseSrc {
   public:
-    explicit nsCSPNonceSrc(const nsAString& aNonce);
+    nsCSPNonceSrc(const nsAString& aNonce);
     virtual ~nsCSPNonceSrc();
 
     bool permits(nsIURI* aUri, const nsAString& aNonce) const;
@@ -279,7 +279,7 @@ class nsCSPHashSrc : public nsCSPBaseSrc {
 
 class nsCSPReportURI : public nsCSPBaseSrc {
   public:
-    explicit nsCSPReportURI(nsIURI* aURI);
+    nsCSPReportURI(nsIURI *aURI);
     virtual ~nsCSPReportURI();
 
     void toString(nsAString& outStr) const;
@@ -293,7 +293,7 @@ class nsCSPReportURI : public nsCSPBaseSrc {
 class nsCSPDirective {
   public:
     nsCSPDirective();
-    explicit nsCSPDirective(enum CSPDirective aDirective);
+    nsCSPDirective(enum CSPDirective aDirective);
     virtual ~nsCSPDirective();
 
     bool permits(nsIURI* aUri, const nsAString& aNonce) const;

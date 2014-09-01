@@ -107,7 +107,7 @@ public:
 
 protected:
 
-  explicit nsHtml5DocumentBuilder(bool aRunsToCompletion);
+  nsHtml5DocumentBuilder(bool aRunsToCompletion);
   virtual ~nsHtml5DocumentBuilder();
 
 protected:

@@ -122,12 +122,12 @@ class nsIdentifierMapEntry : public nsStringHashKey
 {
 public:
   typedef mozilla::dom::Element Element;
-
-  explicit nsIdentifierMapEntry(const nsAString& aKey) :
+  
+  nsIdentifierMapEntry(const nsAString& aKey) :
     nsStringHashKey(&aKey), mNameContentList(nullptr)
   {
   }
-  explicit nsIdentifierMapEntry(const nsAString* aKey) :
+  nsIdentifierMapEntry(const nsAString *aKey) :
     nsStringHashKey(aKey), mNameContentList(nullptr)
   {
   }
@@ -203,8 +203,8 @@ public:
     typedef const ChangeCallback KeyType;
     typedef const ChangeCallback* KeyTypePointer;
 
-    explicit ChangeCallbackEntry(const ChangeCallback* aKey) :
-      mKey(*aKey) { }
+    ChangeCallbackEntry(const ChangeCallback* key) :
+      mKey(*key) { }
     ChangeCallbackEntry(const ChangeCallbackEntry& toCopy) :
       mKey(toCopy.mKey) { }
 
@@ -252,7 +252,7 @@ public:
     : mNamespaceID(aNamespaceID),
       mAtom(aAtom)
   {}
-  explicit CustomElementHashKey(const CustomElementHashKey* aKey)
+  CustomElementHashKey(const CustomElementHashKey *aKey)
     : mNamespaceID(aKey->mNamespaceID),
       mAtom(aKey->mAtom)
   {}
@@ -326,7 +326,7 @@ private:
 // being created flag.
 struct CustomElementData
 {
-  explicit CustomElementData(nsIAtom* aType);
+  CustomElementData(nsIAtom* aType);
   // Objects in this array are transient and empty after each microtask
   // checkpoint.
   nsTArray<nsAutoPtr<CustomElementCallback>> mCallbackQueue;
@@ -438,7 +438,7 @@ class nsDOMStyleSheetList : public mozilla::dom::StyleSheetList,
                             public nsStubDocumentObserver
 {
 public:
-  explicit nsDOMStyleSheetList(nsIDocument* aDocument);
+  nsDOMStyleSheetList(nsIDocument *aDocument);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -541,7 +541,7 @@ protected:
     ~PendingLoad() {}
 
   public:
-    explicit PendingLoad(nsDocument* aDisplayDocument) :
+    PendingLoad(nsDocument* aDisplayDocument) :
       mDisplayDocument(aDisplayDocument)
     {}
 
@@ -573,7 +573,7 @@ protected:
   {
     ~LoadgroupCallbacks() {}
   public:
-    explicit LoadgroupCallbacks(nsIInterfaceRequestor* aOtherCallbacks)
+    LoadgroupCallbacks(nsIInterfaceRequestor* aOtherCallbacks)
       : mCallbacks(aOtherCallbacks)
     {}
     NS_DECL_ISUPPORTS
@@ -1447,7 +1447,7 @@ protected:
   void VerifyRootContentState();
 #endif
 
-  explicit nsDocument(const char* aContentType);
+  nsDocument(const char* aContentType);
   virtual ~nsDocument();
 
   void EnsureOnloadBlocker();
@@ -1763,7 +1763,7 @@ public:
 class nsDocumentOnStack
 {
 public:
-  explicit nsDocumentOnStack(nsDocument* aDoc) : mDoc(aDoc)
+  nsDocumentOnStack(nsDocument* aDoc) : mDoc(aDoc)
   {
     mDoc->IncreaseStackRefCnt();
   }
