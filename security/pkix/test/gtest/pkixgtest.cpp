@@ -22,25 +22,19 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__nssgtest_h
-#define mozilla_pkix__nssgtest_h
+#include "pkixgtest.h"
 
-#include "gtest/gtest.h"
-#include "pkix/pkixtypes.h"
-#include "pkixtestutil.h"
+#include <ctime>
+
+#include "pkix/nullptr.h"
+#include "pkix/Time.h"
 
 namespace mozilla { namespace pkix { namespace test {
 
-extern const std::time_t now;
-extern const std::time_t oneDayBeforeNow;
-extern const std::time_t oneDayAfterNow;
-
-class NSSTest : public ::testing::Test
-{
-public:
-  static void SetUpTestCase();
-};
+// This assumes that time/time_t are POSIX-compliant in that time() returns
+// the number of seconds since the Unix epoch.
+const std::time_t now(time(nullptr));
+const std::time_t oneDayBeforeNow(time(nullptr) - Time::ONE_DAY_IN_SECONDS);
+const std::time_t oneDayAfterNow(time(nullptr) + Time::ONE_DAY_IN_SECONDS);
 
 } } } // namespace mozilla::pkix::test
-
-#endif // mozilla_pkix__nssgtest_h
