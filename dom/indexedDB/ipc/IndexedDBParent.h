@@ -58,7 +58,7 @@ class IndexedDBVersionChangeObjectStoreParent;
 class AutoSetCurrentTransaction
 {
 public:
-  AutoSetCurrentTransaction(IDBTransaction* aTransaction);
+  explicit AutoSetCurrentTransaction(IDBTransaction* aTransaction);
   ~AutoSetCurrentTransaction();
 };
 
@@ -86,7 +86,7 @@ class WeakEventListener : public WeakEventListenerBase
   T* mActor;
 
 public:
-  WeakEventListener(T* aActor)
+  explicit WeakEventListener(T* aActor)
   : mActor(aActor)
   { }
 
@@ -113,7 +113,7 @@ class AutoWeakEventListener
   nsRefPtr<WeakEventListener<T> > mEventListener;
 
 public:
-  AutoWeakEventListener(T* aActor)
+  explicit AutoWeakEventListener(T* aActor)
   {
     mEventListener = new WeakEventListener<T>(aActor);
   }
@@ -156,8 +156,8 @@ class IndexedDBParent : private PIndexedDBParent
   bool mDisconnected;
 
 public:
-  IndexedDBParent(ContentParent* aContentParent);
-  IndexedDBParent(TabParent* aTabParent);
+  explicit IndexedDBParent(ContentParent* aContentParent);
+  explicit IndexedDBParent(TabParent* aTabParent);
 
   virtual ~IndexedDBParent();
 
@@ -429,7 +429,7 @@ public:
   IsDisconnected() const;
 
 protected:
-  IndexedDBCursorParent(IDBCursor* aCursor);
+  explicit IndexedDBCursorParent(IDBCursor* aCursor);
   virtual ~IndexedDBCursorParent();
 
   virtual void
@@ -860,7 +860,7 @@ public:
   HandleEvent(nsIDOMEvent* aEvent);
 
 protected:
-  IndexedDBDeleteDatabaseRequestParent(IDBFactory* aFactory);
+  explicit IndexedDBDeleteDatabaseRequestParent(IDBFactory* aFactory);
   virtual ~IndexedDBDeleteDatabaseRequestParent();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;

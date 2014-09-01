@@ -19,7 +19,7 @@ class HTMLMenuElement MOZ_FINAL : public nsGenericHTMLElement,
                                   public nsIHTMLMenu
 {
 public:
-  HTMLMenuElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLMenuElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLMenuElement, menu)
 

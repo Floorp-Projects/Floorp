@@ -16,7 +16,7 @@ class nsIDOMWindow;
 class nsDOMWindowList : public nsIDOMWindowCollection
 {
 public:
-  nsDOMWindowList(nsIDocShell *aDocShell);
+  explicit nsDOMWindowList(nsIDocShell* aDocShell);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMWINDOWCOLLECTION

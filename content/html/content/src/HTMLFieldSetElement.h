@@ -27,7 +27,7 @@ public:
   using nsIConstraintValidation::CheckValidity;
   using nsIConstraintValidation::GetValidationMessage;
 
-  HTMLFieldSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLFieldSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLFieldSetElement, fieldset)
 

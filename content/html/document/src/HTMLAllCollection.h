@@ -35,7 +35,7 @@ class HTMLAllCollection MOZ_FINAL : public nsISupports
   ~HTMLAllCollection();
 
 public:
-  HTMLAllCollection(nsHTMLDocument* aDocument);
+  explicit HTMLAllCollection(nsHTMLDocument* aDocument);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HTMLAllCollection)

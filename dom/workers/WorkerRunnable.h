@@ -296,7 +296,7 @@ private:
 class MainThreadWorkerControlRunnable : public WorkerControlRunnable
 {
 protected:
-  MainThreadWorkerControlRunnable(WorkerPrivate* aWorkerPrivate)
+  explicit MainThreadWorkerControlRunnable(WorkerPrivate* aWorkerPrivate)
   : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
   { }
 
@@ -324,7 +324,7 @@ protected:
 class WorkerSameThreadRunnable : public WorkerRunnable
 {
 protected:
-  WorkerSameThreadRunnable(WorkerPrivate* aWorkerPrivate)
+  explicit WorkerSameThreadRunnable(WorkerPrivate* aWorkerPrivate)
   : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
   { }
 
@@ -353,7 +353,7 @@ protected:
   WorkerPrivate* mWorkerPrivate;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
 
-  WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate);
+  explicit WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate);
   ~WorkerMainThreadRunnable() {}
 
   virtual bool MainThreadRun() = 0;

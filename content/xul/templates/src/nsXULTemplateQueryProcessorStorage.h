@@ -38,7 +38,7 @@ public:
     // nsISimpleEnumerator interface
     NS_DECL_NSISIMPLEENUMERATOR
 
-    nsXULTemplateResultSetStorage(mozIStorageStatement* aStatement);
+    explicit nsXULTemplateResultSetStorage(mozIStorageStatement* aStatement);
 
     int32_t GetColumnIndex(nsIAtom* aColumnName);
 

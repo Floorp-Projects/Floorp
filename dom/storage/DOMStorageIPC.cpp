@@ -293,7 +293,7 @@ namespace { // anon
 class SendInitialChildDataRunnable : public nsRunnable
 {
 public:
-  SendInitialChildDataRunnable(DOMStorageDBParent* aParent)
+  explicit SendInitialChildDataRunnable(DOMStorageDBParent* aParent)
     : mParent(aParent)
   {}
 

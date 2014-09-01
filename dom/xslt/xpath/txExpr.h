@@ -362,7 +362,7 @@ public:
     /*
      * Creates a txCoreFunctionCall of the given type
      */
-    txCoreFunctionCall(eType aType) : mType(aType)
+    explicit txCoreFunctionCall(eType aType) : mType(aType)
     {
     }
 
@@ -470,7 +470,7 @@ public:
     /*
      * Creates a new txNodeTypeTest of the given type
      */
-    txNodeTypeTest(NodeType aNodeType)
+    explicit txNodeTypeTest(NodeType aNodeType)
         : mNodeType(aNodeType)
     {
     }
@@ -650,7 +650,7 @@ public:
      * Creates a new FilterExpr using the given Expr
      * @param expr the Expr to use for evaluation
      */
-    FilterExpr(Expr* aExpr)
+    explicit FilterExpr(Expr* aExpr)
         : expr(aExpr)
     {
     }
@@ -665,15 +665,15 @@ private:
 
 class txLiteralExpr : public Expr {
 public:
-    txLiteralExpr(double aDbl)
+    explicit txLiteralExpr(double aDbl)
         : mValue(new NumberResult(aDbl, nullptr))
     {
     }
-    txLiteralExpr(const nsAString& aStr)
+    explicit txLiteralExpr(const nsAString& aStr)
         : mValue(new StringResult(aStr, nullptr))
     {
     }
-    txLiteralExpr(txAExprResult* aValue)
+    explicit txLiteralExpr(txAExprResult* aValue)
         : mValue(aValue)
     {
     }
@@ -691,7 +691,7 @@ class UnaryExpr : public Expr {
 
 public:
 
-    UnaryExpr(Expr* aExpr)
+    explicit UnaryExpr(Expr* aExpr)
         : expr(aExpr)
     {
     }
@@ -987,7 +987,7 @@ class txErrorExpr : public Expr
 {
 public:
 #ifdef TX_TO_STRING
-    txErrorExpr(const nsAString& aStr)
+    explicit txErrorExpr(const nsAString& aStr)
       : mStr(aStr)
     {
     }

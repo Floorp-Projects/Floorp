@@ -21,8 +21,8 @@ class nsIContent;
 class txMozillaTextOutput : public txAOutputXMLEventHandler
 {
 public:
-    txMozillaTextOutput(nsITransformObserver* aObserver);
-    txMozillaTextOutput(nsIDOMDocumentFragment* aDest);
+    explicit txMozillaTextOutput(nsITransformObserver* aObserver);
+    explicit txMozillaTextOutput(nsIDOMDocumentFragment* aDest);
     virtual ~txMozillaTextOutput();
 
     TX_DECL_TXAXMLEVENTHANDLER

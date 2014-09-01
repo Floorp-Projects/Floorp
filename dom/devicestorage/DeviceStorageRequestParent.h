@@ -22,7 +22,7 @@ namespace devicestorage {
 class DeviceStorageRequestParent : public PDeviceStorageRequestParent
 {
 public:
-  DeviceStorageRequestParent(const DeviceStorageParams& aParams);
+  explicit DeviceStorageRequestParent(const DeviceStorageParams& aParams);
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef();
   NS_IMETHOD_(MozExternalRefCountType) Release();
@@ -43,7 +43,7 @@ private:
   class CancelableRunnable : public nsRunnable
   {
   public:
-    CancelableRunnable(DeviceStorageRequestParent* aParent)
+    explicit CancelableRunnable(DeviceStorageRequestParent* aParent)
       : mParent(aParent)
     {
       mCanceled = !(mParent->AddRunnable(this));
@@ -86,7 +86,7 @@ private:
   class PostSuccessEvent : public CancelableRunnable
   {
     public:
-      PostSuccessEvent(DeviceStorageRequestParent* aParent);
+      explicit PostSuccessEvent(DeviceStorageRequestParent* aParent);
       virtual ~PostSuccessEvent();
       virtual nsresult CancelableRun();
   };
