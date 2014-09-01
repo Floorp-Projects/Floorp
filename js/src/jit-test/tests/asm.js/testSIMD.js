@@ -180,6 +180,10 @@ CheckF4('', 'var x=f4(1.,2.,3.,4.); x=f4(1,2,3,4)', [1, 2, 3, 4]);
 CheckF4(FROUND, 'var x=f4(1.,2.,3.,4.); var y=f32(7.); x=f4(9, 4, 2, 1)', [9, 4, 2, 1]);
 CheckF4('', 'var x=f4(8.,7.,6.,5.); x=f4(x.w, x.z, x.y, x.x)', [5, 6, 7, 8]);
 
+// Optimization for all lanes from the same definition.
+CheckI4('', 'var x=i4(1,2,3,4); var c=6; x=i4(c|0,c|0,c|0,c|0)', [6, 6, 6, 6]);
+CheckF4(FROUND, 'var x=f4(1,2,3,4); var y=f32(7.); x=f4(y,y,y,y)', [7, 7, 7, 7]);
+
 // 1.3.4 Return values
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=1; return i4(x)} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=1; return i4(x + x)} return f");
