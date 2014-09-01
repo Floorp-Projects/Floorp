@@ -14,7 +14,7 @@ namespace mozilla {
 class RemoteSpellcheckEngineChild : public mozilla::PRemoteSpellcheckEngineChild
 {
 public:
-  RemoteSpellcheckEngineChild(mozSpellChecker *aOwner);
+  explicit RemoteSpellcheckEngineChild(mozSpellChecker *aOwner);
   ~RemoteSpellcheckEngineChild();
 
 private:
