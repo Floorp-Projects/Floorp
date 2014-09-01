@@ -282,7 +282,7 @@ Link::GetOrigin(nsAString &aOrigin, ErrorResult& aError)
   }
 
   nsString origin;
-  nsContentUtils::GetUTFNonNullOrigin(uri, origin);
+  nsContentUtils::GetUTFOrigin(uri, origin);
   aOrigin.Assign(origin);
 }
 
