@@ -334,7 +334,7 @@ class DtlsInspectorInjector : public DtlsRecordInspector {
 // Make a copy of the first instance of a message.
 class DtlsInspectorRecordHandshakeMessage : public DtlsRecordInspector {
  public:
-  DtlsInspectorRecordHandshakeMessage(uint8_t handshake_type)
+  explicit DtlsInspectorRecordHandshakeMessage(uint8_t handshake_type)
       : handshake_type_(handshake_type),
         buffer_() {}
 
