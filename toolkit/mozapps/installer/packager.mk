@@ -749,6 +749,12 @@ ifdef MOZ_CODE_COVERAGE
 	$(PYTHON) -mmozbuild.codecoverage.packager \
 		--output-file='$(DIST)/$(PKG_PATH)$(CODE_COVERAGE_ARCHIVE_BASENAME).zip'
 endif
+ifeq (Darwin, $(OS_ARCH))
+ifdef MOZ_ASAN
+	@echo "Rewriting ASan runtime dylib paths for all binaries in $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) ..."
+	$(PYTHON) $(MOZILLA_DIR)/build/unix/rewrite_asan_dylib.py $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
+endif # MOZ_ASAN
+endif # Darwin
 
 prepare-package: stage-package
 
