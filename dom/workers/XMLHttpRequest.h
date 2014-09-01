@@ -260,7 +260,7 @@ public:
   }
 
 private:
-  XMLHttpRequest(WorkerPrivate* aWorkerPrivate);
+  explicit XMLHttpRequest(WorkerPrivate* aWorkerPrivate);
   ~XMLHttpRequest();
 
   enum ReleaseType { Default, XHRIsGoingAway, WorkerIsGoingAway };

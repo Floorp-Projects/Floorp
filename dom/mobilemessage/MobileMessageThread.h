@@ -31,7 +31,7 @@ public:
                       uint64_t aUnreadCount,
                       mobilemessage::MessageType aLastMessageType);
 
-  MobileMessageThread(const ThreadData& aData);
+  explicit MobileMessageThread(const ThreadData& aData);
 
   static nsresult Create(uint64_t aId,
                          const JS::Value& aParticipants,

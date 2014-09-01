@@ -22,7 +22,7 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Performance)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(Performance)
 
-  Performance(WorkerPrivate* aWorkerPrivate);
+  explicit Performance(WorkerPrivate* aWorkerPrivate);
 
 private:
   ~Performance();

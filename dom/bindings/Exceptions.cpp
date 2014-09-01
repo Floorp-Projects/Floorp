@@ -269,7 +269,7 @@ public:
                                                          StackFrame)
 
   // aStack must not be null.
-  JSStackFrame(JS::Handle<JSObject*> aStack);
+  explicit JSStackFrame(JS::Handle<JSObject*> aStack);
 
   static already_AddRefed<nsIStackFrame>
   CreateStack(JSContext* aCx, int32_t aMaxDepth = -1);
