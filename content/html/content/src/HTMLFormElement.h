@@ -42,7 +42,7 @@ class HTMLFormElement MOZ_FINAL : public nsGenericHTMLElement,
   friend class HTMLFormControlsCollection;
 
 public:
-  explicit HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   enum {
     FORM_CONTROL_LIST_HASHTABLE_LENGTH = 8
@@ -437,7 +437,7 @@ protected:
 
   class RemoveElementRunnable : public nsRunnable {
   public:
-    explicit RemoveElementRunnable(HTMLFormElement* aForm)
+    RemoveElementRunnable(HTMLFormElement* aForm)
       : mForm(aForm)
     {}
 

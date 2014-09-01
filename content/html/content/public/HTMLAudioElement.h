@@ -21,7 +21,7 @@ class HTMLAudioElement MOZ_FINAL : public HTMLMediaElement
 public:
   typedef mozilla::dom::NodeInfo NodeInfo;
 
-  explicit HTMLAudioElement(already_AddRefed<NodeInfo>& aNodeInfo);
+  HTMLAudioElement(already_AddRefed<NodeInfo>& aNodeInfo);
 
   // nsIDOMHTMLMediaElement
   using HTMLMediaElement::GetPaused;

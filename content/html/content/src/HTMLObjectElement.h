@@ -22,8 +22,8 @@ class HTMLObjectElement MOZ_FINAL : public nsGenericHTMLFormElement
                                   , public nsIConstraintValidation
 {
 public:
-  explicit HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                             FromParser aFromParser = NOT_FROM_PARSER);
+  HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+                    FromParser aFromParser = NOT_FROM_PARSER);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

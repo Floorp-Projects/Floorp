@@ -14,7 +14,7 @@ class nsHtml5OwningUTF16Buffer : public nsHtml5UTF16Buffer
     /**
      * Passes a buffer and its length to the superclass constructor.
      */
-    explicit nsHtml5OwningUTF16Buffer(char16_t* aBuffer);
+    nsHtml5OwningUTF16Buffer(char16_t* aBuffer);
 
   public:
 
@@ -22,7 +22,7 @@ class nsHtml5OwningUTF16Buffer : public nsHtml5UTF16Buffer
      * Constructor for a parser key placeholder. (No actual buffer.)
      * @param aKey a parser key
      */
-    explicit nsHtml5OwningUTF16Buffer(void* aKey);
+    nsHtml5OwningUTF16Buffer(void* aKey);
 
 protected:
     /**

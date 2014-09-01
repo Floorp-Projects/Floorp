@@ -98,7 +98,7 @@ public:
     return mCORSMode;
   }
 
-  explicit HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   /**
    * This is used when the browser is constructing a video element to play
@@ -617,7 +617,7 @@ protected:
 
   class WakeLockBoolWrapper {
   public:
-    explicit WakeLockBoolWrapper(bool val = false)
+    WakeLockBoolWrapper(bool val = false)
       : mValue(val), mCanPlay(true), mOuter(nullptr) {}
 
     ~WakeLockBoolWrapper();

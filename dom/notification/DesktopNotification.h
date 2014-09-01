@@ -41,7 +41,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DesktopNotificationCenter)
 
-  explicit DesktopNotificationCenter(nsPIDOMWindow* aWindow)
+  DesktopNotificationCenter(nsPIDOMWindow *aWindow)
   {
     MOZ_ASSERT(aWindow);
     mOwner = aWindow;
@@ -146,7 +146,7 @@ class AlertServiceObserver: public nsIObserver
  public:
   NS_DECL_ISUPPORTS
 
-  explicit AlertServiceObserver(DesktopNotification* notification)
+    AlertServiceObserver(DesktopNotification* notification)
     : mNotification(notification) {}
 
   void Disconnect() { mNotification = nullptr; }

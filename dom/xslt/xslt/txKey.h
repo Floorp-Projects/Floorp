@@ -39,7 +39,7 @@ public:
     typedef const txKeyValueHashKey& KeyType;
     typedef const txKeyValueHashKey* KeyTypePointer;
 
-    explicit txKeyValueHashEntry(KeyTypePointer aKey)
+    txKeyValueHashEntry(KeyTypePointer aKey)
         : mKey(*aKey),
           mNodeSet(new txNodeSet(nullptr)) { }
 
@@ -81,7 +81,7 @@ public:
     typedef const txIndexedKeyHashKey& KeyType;
     typedef const txIndexedKeyHashKey* KeyTypePointer;
 
-    explicit txIndexedKeyHashEntry(KeyTypePointer aKey)
+    txIndexedKeyHashEntry(KeyTypePointer aKey)
         : mKey(*aKey),
           mIndexed(false) { }
 
@@ -110,7 +110,7 @@ typedef nsTHashtable<txIndexedKeyHashEntry> txIndexedKeyHash;
 class txXSLKey {
     
 public:
-    explicit txXSLKey(const txExpandedName& aName) : mName(aName)
+    txXSLKey(const txExpandedName& aName) : mName(aName)
     {
     }
     
@@ -178,7 +178,7 @@ private:
 class txKeyHash
 {
 public:
-    explicit txKeyHash(const txOwningExpandedNameMap<txXSLKey>& aKeys)
+    txKeyHash(const txOwningExpandedNameMap<txXSLKey>& aKeys)
         : mKeyValues(4)
         , mIndexedKeys(1)
         , mKeys(aKeys)

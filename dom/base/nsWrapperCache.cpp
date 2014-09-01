@@ -43,7 +43,7 @@ nsWrapperCache::ReleaseWrapper(void* aScriptObjectHolder)
 class DebugWrapperTraversalCallback : public nsCycleCollectionTraversalCallback
 {
 public:
-  explicit DebugWrapperTraversalCallback(void* aWrapper)
+  DebugWrapperTraversalCallback(void* aWrapper)
     : mFound(false)
     , mWrapper(aWrapper)
   {

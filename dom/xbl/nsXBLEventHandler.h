@@ -18,7 +18,7 @@ class nsXBLPrototypeHandler;
 class nsXBLEventHandler : public nsIDOMEventListener
 {
 public:
-  explicit nsXBLEventHandler(nsXBLPrototypeHandler* aHandler);
+  nsXBLEventHandler(nsXBLPrototypeHandler* aHandler);
 
   NS_DECL_ISUPPORTS
 
@@ -39,7 +39,7 @@ private:
 class nsXBLMouseEventHandler : public nsXBLEventHandler
 {
 public:
-  explicit nsXBLMouseEventHandler(nsXBLPrototypeHandler* aHandler);
+  nsXBLMouseEventHandler(nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLMouseEventHandler();
 
 private:

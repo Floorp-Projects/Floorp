@@ -60,7 +60,7 @@ class nsScriptLoader : public nsIStreamLoaderObserver
   friend class AutoCurrentScriptUpdater;
 
 public:
-  explicit nsScriptLoader(nsIDocument* aDocument);
+  nsScriptLoader(nsIDocument* aDocument);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER
@@ -372,7 +372,7 @@ private:
 class nsAutoScriptLoaderDisabler
 {
 public:
-  explicit nsAutoScriptLoaderDisabler(nsIDocument* aDoc)
+  nsAutoScriptLoaderDisabler(nsIDocument* aDoc)
   {
     mLoader = aDoc->ScriptLoader();
     mWasEnabled = mLoader->GetEnabled();

@@ -26,7 +26,7 @@ private:
 
 class txAlphaCounter : public txFormattedCounter {
 public:
-    explicit txAlphaCounter(char16_t aOffset) : mOffset(aOffset)
+    txAlphaCounter(char16_t aOffset) : mOffset(aOffset)
     {
     }
 
@@ -38,7 +38,7 @@ private:
 
 class txRomanCounter : public txFormattedCounter {
 public:
-    explicit txRomanCounter(bool aUpper) : mTableOffset(aUpper ? 30 : 0)
+    txRomanCounter(bool aUpper) : mTableOffset(aUpper ? 30 : 0)
     {
     }
 

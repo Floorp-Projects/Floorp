@@ -16,7 +16,7 @@
 class nsDocElementCreatedNotificationRunner : public nsRunnable
 {
 public:
-  explicit nsDocElementCreatedNotificationRunner(nsIDocument* aDoc)
+  nsDocElementCreatedNotificationRunner(nsIDocument* aDoc)
     : mDoc(aDoc)
   {
   }

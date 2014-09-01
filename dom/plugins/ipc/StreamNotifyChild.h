@@ -20,7 +20,7 @@ class StreamNotifyChild : public PStreamNotifyChild
   friend class BrowserStreamChild;
 
 public:
-  explicit StreamNotifyChild(const nsCString& aURL)
+  StreamNotifyChild(const nsCString& aURL)
     : mURL(aURL)
     , mClosure(nullptr)
     , mBrowserStream(nullptr)

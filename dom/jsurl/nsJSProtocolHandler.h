@@ -69,7 +69,7 @@ public:
 
     nsJSURI() {}
 
-    explicit nsJSURI(nsIURI* aBaseURI) : mBaseURI(aBaseURI) {}
+    nsJSURI(nsIURI* aBaseURI) : mBaseURI(aBaseURI) {}
 
     nsIURI* GetBaseURI() const
     {

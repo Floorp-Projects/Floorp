@@ -27,7 +27,7 @@ class HTMLAreaElement MOZ_FINAL : public nsGenericHTMLElement,
                                   public Link
 {
 public:
-  explicit HTMLAreaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLAreaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

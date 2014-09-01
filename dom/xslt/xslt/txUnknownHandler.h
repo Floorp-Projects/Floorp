@@ -14,7 +14,7 @@ class txExecutionState;
 class txUnknownHandler : public txBufferingHandler
 {
 public:
-    explicit txUnknownHandler(txExecutionState* aEs);
+    txUnknownHandler(txExecutionState* aEs);
     virtual ~txUnknownHandler();
 
     TX_DECL_TXAXMLEVENTHANDLER

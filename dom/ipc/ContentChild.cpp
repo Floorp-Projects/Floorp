@@ -361,7 +361,7 @@ private:
 class ConsoleListener MOZ_FINAL : public nsIConsoleListener
 {
 public:
-    explicit ConsoleListener(ContentChild* aChild)
+    ConsoleListener(ContentChild* aChild)
     : mChild(aChild) {}
 
     NS_DECL_ISUPPORTS
@@ -717,7 +717,7 @@ class MemoryReportsWrapper MOZ_FINAL : public nsISupports {
     ~MemoryReportsWrapper() {}
 public:
     NS_DECL_ISUPPORTS
-    explicit MemoryReportsWrapper(InfallibleTArray<MemoryReport>* r) : mReports(r) { }
+    MemoryReportsWrapper(InfallibleTArray<MemoryReport> *r) : mReports(r) { }
     InfallibleTArray<MemoryReport> *mReports;
 };
 NS_IMPL_ISUPPORTS0(MemoryReportsWrapper)
@@ -727,7 +727,7 @@ class MemoryReportCallback MOZ_FINAL : public nsIMemoryReporterCallback
 public:
     NS_DECL_ISUPPORTS
 
-    explicit MemoryReportCallback(const nsACString& aProcess)
+    MemoryReportCallback(const nsACString &aProcess)
     : mProcess(aProcess)
     {
     }

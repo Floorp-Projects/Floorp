@@ -17,7 +17,7 @@ namespace dom {
 class HTMLDataElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLDataElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLDataElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   // HTMLDataElement WebIDL
   void GetValue(nsAString& aValue)

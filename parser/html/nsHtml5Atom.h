@@ -21,7 +21,7 @@ class nsHtml5Atom MOZ_FINAL : public nsIAtom
     NS_DECL_ISUPPORTS
     NS_DECL_NSIATOM
 
-    explicit nsHtml5Atom(const nsAString& aString);
+    nsHtml5Atom(const nsAString& aString);
     ~nsHtml5Atom();
 };
 

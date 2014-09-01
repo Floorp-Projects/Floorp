@@ -39,7 +39,7 @@ public:
 class nsRadioSetCheckedChangedVisitor : public nsRadioVisitor
 {
 public:
-  explicit nsRadioSetCheckedChangedVisitor(bool aCheckedChanged)
+  nsRadioSetCheckedChangedVisitor(bool aCheckedChanged)
     : mCheckedChanged(aCheckedChanged)
     { }
 

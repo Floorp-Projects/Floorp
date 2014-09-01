@@ -31,7 +31,7 @@ class nsXULElement;
 class nsElementFrameLoaderOwner : public nsIFrameLoaderOwner
 {
 public:
-  explicit nsElementFrameLoaderOwner(mozilla::dom::FromParser aFromParser)
+  nsElementFrameLoaderOwner(mozilla::dom::FromParser aFromParser)
     : mNetworkCreated(aFromParser == mozilla::dom::FROM_PARSER_NETWORK)
     , mBrowserFrameListenersRegistered(false)
     , mFrameLoaderCreationDisallowed(false)

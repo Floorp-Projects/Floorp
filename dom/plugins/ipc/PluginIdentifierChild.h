@@ -48,7 +48,7 @@ public:
   class MOZ_STACK_CLASS StackIdentifier
   {
   public:
-    explicit StackIdentifier(PPluginIdentifierChild* actor)
+    StackIdentifier(PPluginIdentifierChild* actor)
       : mIdentifier(static_cast<PluginIdentifierChild*>(actor))
     {
       if (mIdentifier)
@@ -67,7 +67,7 @@ public:
   };
 
 protected:
-  explicit PluginIdentifierChild(bool aIsString)
+  PluginIdentifierChild(bool aIsString)
     : mCanonicalIdentifier(nullptr)
     , mHashed(false)
     , mTemporaryRefs(0)
@@ -124,7 +124,7 @@ public:
   }
 
 protected:
-  explicit PluginIdentifierChildString(const nsCString& aString)
+  PluginIdentifierChildString(const nsCString& aString)
     : PluginIdentifierChild(true),
       mString(aString)
   { }
@@ -146,7 +146,7 @@ public:
   }
 
 protected:
-  explicit PluginIdentifierChildInt(int32_t aInt)
+  PluginIdentifierChildInt(int32_t aInt)
     : PluginIdentifierChild(false),
       mInt(aInt)
   { }

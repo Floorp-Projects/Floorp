@@ -12,7 +12,7 @@
 class txTextHandler : public txAXMLEventHandler
 {
 public:
-    explicit txTextHandler(bool aOnlyText);
+    txTextHandler(bool aOnlyText);
 
     TX_DECL_TXAXMLEVENTHANDLER
 

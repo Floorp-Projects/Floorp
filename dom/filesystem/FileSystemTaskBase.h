@@ -142,7 +142,7 @@ protected:
   /*
    * To create a task to handle the page content request.
    */
-  explicit FileSystemTaskBase(FileSystemBase* aFileSystem);
+  FileSystemTaskBase(FileSystemBase* aFileSystem);
 
   /*
    * To create a parent process task delivered from the child process through

@@ -27,7 +27,7 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTELEMENT_IID)
 
-  explicit nsIScriptElement(mozilla::dom::FromParser aFromParser)
+  nsIScriptElement(mozilla::dom::FromParser aFromParser)
     : mLineNumber(0),
       mAlreadyStarted(false),
       mMalformed(false),

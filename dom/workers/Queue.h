@@ -89,7 +89,7 @@ protected:
     LockingWithMutex& mHost;
 
   public:
-    explicit AutoLock(LockingWithMutex& aHost)
+    AutoLock(LockingWithMutex& aHost)
     : mHost(aHost)
     {
       mHost.Lock();
@@ -116,7 +116,7 @@ protected:
   class AutoLock
   {
   public:
-    explicit AutoLock(NoLocking& aHost)
+    AutoLock(NoLocking& aHost)
     { }
 
     ~AutoLock()

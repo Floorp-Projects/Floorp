@@ -18,7 +18,7 @@ class HTMLParagraphElement MOZ_FINAL : public nsGenericHTMLElement,
                                        public nsIDOMHTMLParagraphElement
 {
 public:
-  explicit HTMLParagraphElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  HTMLParagraphElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

@@ -182,7 +182,7 @@ public:
         AddRefOnPtr(mRawPtr);
     }
 
-    explicit WebGLRefPtr(T* aRawPtr)
+    WebGLRefPtr(T *aRawPtr)
         : mRawPtr(aRawPtr)
     {
         AddRefOnPtr(mRawPtr);
@@ -261,7 +261,7 @@ protected:
 class WebGLContextBoundObject
 {
 public:
-    explicit WebGLContextBoundObject(WebGLContext* context);
+    WebGLContextBoundObject(WebGLContext *context);
 
     bool IsCompatibleWithContext(WebGLContext *other);
 

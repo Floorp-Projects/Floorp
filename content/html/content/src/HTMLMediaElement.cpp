@@ -173,7 +173,7 @@ class nsMediaEvent : public nsRunnable
 {
 public:
 
-  explicit nsMediaEvent(HTMLMediaElement* aElement) :
+  nsMediaEvent(HTMLMediaElement* aElement) :
     mElement(aElement),
     mLoadID(mElement->GetCurrentLoadID()) {}
   ~nsMediaEvent() {}
@@ -256,7 +256,7 @@ class HTMLMediaElement::MediaLoadListener MOZ_FINAL : public nsIStreamListener,
   NS_DECL_NSIINTERFACEREQUESTOR
 
 public:
-  explicit MediaLoadListener(HTMLMediaElement* aElement)
+  MediaLoadListener(HTMLMediaElement* aElement)
     : mElement(aElement),
       mLoadID(aElement->GetCurrentLoadID())
   {
@@ -1904,7 +1904,7 @@ NS_IMETHODIMP HTMLMediaElement::GetMozAudioCaptured(bool* aCaptured)
 
 class MediaElementSetForURI : public nsURIHashKey {
 public:
-  explicit MediaElementSetForURI(const nsIURI* aKey) : nsURIHashKey(aKey) {}
+  MediaElementSetForURI(const nsIURI* aKey) : nsURIHashKey(aKey) {}
   MediaElementSetForURI(const MediaElementSetForURI& toCopy)
     : nsURIHashKey(toCopy), mElements(toCopy.mElements) {}
   nsTArray<HTMLMediaElement*> mElements;
@@ -2708,7 +2708,7 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
 
 class HTMLMediaElement::StreamListener : public MediaStreamListener {
 public:
-  explicit StreamListener(HTMLMediaElement* aElement) :
+  StreamListener(HTMLMediaElement* aElement) :
     mElement(aElement),
     mHaveCurrentData(false),
     mBlocked(false),

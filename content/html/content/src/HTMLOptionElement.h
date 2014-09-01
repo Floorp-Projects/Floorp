@@ -22,7 +22,7 @@ class HTMLOptionElement MOZ_FINAL : public nsGenericHTMLElement,
                                     public nsIDOMHTMLOptionElement
 {
 public:
-  explicit HTMLOptionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  HTMLOptionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   static already_AddRefed<HTMLOptionElement>
     Option(const GlobalObject& aGlobal,

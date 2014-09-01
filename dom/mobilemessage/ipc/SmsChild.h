@@ -87,7 +87,7 @@ class SmsRequestChild : public PSmsRequestChild
   nsCOMPtr<nsIMobileMessageCallback> mReplyRequest;
 
 public:
-  explicit SmsRequestChild(nsIMobileMessageCallback* aReplyRequest);
+  SmsRequestChild(nsIMobileMessageCallback* aReplyRequest);
 
 protected:
   virtual ~SmsRequestChild()
@@ -113,7 +113,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICURSORCONTINUECALLBACK
 
-  explicit MobileMessageCursorChild(nsIMobileMessageCursorCallback* aCallback);
+  MobileMessageCursorChild(nsIMobileMessageCursorCallback* aCallback);
 
 protected:
   virtual ~MobileMessageCursorChild()

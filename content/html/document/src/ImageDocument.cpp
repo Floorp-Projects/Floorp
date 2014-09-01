@@ -57,7 +57,7 @@ class ImageListener : public MediaDocumentStreamListener
 public:
   NS_DECL_NSIREQUESTOBSERVER
 
-  explicit ImageListener(ImageDocument* aDocument);
+  ImageListener(ImageDocument* aDocument);
   virtual ~ImageListener();
 };
 

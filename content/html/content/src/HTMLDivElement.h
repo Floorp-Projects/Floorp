@@ -16,7 +16,7 @@ class HTMLDivElement MOZ_FINAL : public nsGenericHTMLElement,
                                  public nsIDOMHTMLDivElement
 {
 public:
-  explicit HTMLDivElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  HTMLDivElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

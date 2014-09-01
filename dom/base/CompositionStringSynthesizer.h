@@ -22,7 +22,7 @@ class CompositionStringSynthesizer MOZ_FINAL :
   public nsICompositionStringSynthesizer
 {
 public:
-  explicit CompositionStringSynthesizer(nsPIDOMWindow* aWindow);
+  CompositionStringSynthesizer(nsPIDOMWindow* aWindow);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOMPOSITIONSTRINGSYNTHESIZER

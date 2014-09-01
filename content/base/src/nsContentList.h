@@ -117,8 +117,8 @@ protected:
 class nsSimpleContentList : public nsBaseContentList
 {
 public:
-  explicit nsSimpleContentList(nsINode* aRoot) : nsBaseContentList(),
-                                                 mRoot(aRoot)
+  nsSimpleContentList(nsINode *aRoot) : nsBaseContentList(),
+                                        mRoot(aRoot)
   {
   }
 
