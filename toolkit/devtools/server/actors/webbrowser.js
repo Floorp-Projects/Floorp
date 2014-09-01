@@ -1230,7 +1230,7 @@ TabActor.prototype = {
     // to let a chance to unregister it
     this._willNavigate(this.window, window.location.href, null, true);
 
-    this._windowDestroyed(this.window);
+    this._windowDestroyed(this.window, null, true);
 
     DevToolsUtils.executeSoon(() => {
       this._setWindow(window);
@@ -1311,11 +1311,12 @@ TabActor.prototype = {
     }
   },
 
-  _windowDestroyed: function (window, id = null) {
+  _windowDestroyed: function (window, id = null, isFrozen = false) {
     events.emit(this, "window-destroyed", {
       window: window,
       isTopLevel: window == this.window,
-      id: id || getWindowID(window)
+      id: id || getWindowID(window),
+      isFrozen: isFrozen
     });
   },
 
@@ -1969,7 +1970,7 @@ DebuggerProgressListener.prototype = {
     }
 
     let window = evt.target.defaultView;
-    this._tabActor._windowDestroyed(window);
+    this._tabActor._windowDestroyed(window, null, true);
   }, "DebuggerProgressListener.prototype.onWindowHidden"),
 
   observe: DevToolsUtils.makeInfallible(function(subject, topic) {
