@@ -3840,9 +3840,9 @@ HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv)
 
   mPlaybackRate = ClampPlaybackRate(aPlaybackRate);
 
-  if (mPlaybackRate < 0 ||
-      mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
-      mPlaybackRate < THRESHOLD_LOW_PLAYBACKRATE_AUDIO) {
+  if (mPlaybackRate != 0.0 &&
+      (mPlaybackRate < 0 || mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
+       mPlaybackRate < THRESHOLD_LOW_PLAYBACKRATE_AUDIO)) {
     SetMutedInternal(mMuted | MUTED_BY_INVALID_PLAYBACK_RATE);
   } else {
     SetMutedInternal(mMuted & ~MUTED_BY_INVALID_PLAYBACK_RATE);
