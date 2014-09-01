@@ -23,7 +23,6 @@
  */
 
 #include "nssgtest.h"
-#include "pkix/pkixnss.h"
 #include "pkix/pkix.h"
 #include "pkixder.h"
 #include "pkixtestutil.h"
@@ -70,7 +69,7 @@ private:
   virtual Result DigestBuf(Input item, /*out*/ uint8_t *digestBuf,
                            size_t digestBufLen)
   {
-    return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
+    return TestDigestBuf(item, digestBuf, digestBufLen);
   }
 
   virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
