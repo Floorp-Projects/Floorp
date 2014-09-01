@@ -28,6 +28,7 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/DebugOnly.h"
 #include "base/process_util.h"
+#include "mozilla/Preferences.h"
 
 #include "prenv.h"
 
@@ -180,6 +181,14 @@ ProcLoaderClientGeckoInit()
   MOZ_ASSERT(sProcLoaderClientInitialized, "call ProcLoaderClientInit() at first");
   MOZ_ASSERT(!sProcLoaderClientGeckoInitialized,
              "call ProcLoaderClientGeckoInit() more than once");
+
+  if (!Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false)) {
+    kill(sProcLoaderPid, SIGKILL);
+    sProcLoaderPid = 0;
+    close(sProcLoaderChannelFd);
+    sProcLoaderChannelFd = -1;
+    return;
+  }
 
   sProcLoaderClientGeckoInitialized = true;
 
