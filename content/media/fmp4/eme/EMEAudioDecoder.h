@@ -68,7 +68,7 @@ private:
 
   class InitTask : public nsRunnable {
   public:
-    InitTask(EMEAudioDecoder* aDecoder)
+    explicit InitTask(EMEAudioDecoder* aDecoder)
       : mDecoder(aDecoder)
     {}
     NS_IMETHOD Run() {

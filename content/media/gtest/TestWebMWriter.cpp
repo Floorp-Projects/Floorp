@@ -45,7 +45,7 @@ const uint32_t FIXED_FRAMESIZE = 500;
 class TestWebMWriter: public WebMWriter
 {
 public:
-  TestWebMWriter(int aTrackTypes)
+  explicit TestWebMWriter(int aTrackTypes)
   : WebMWriter(aTrackTypes),
     mTimestamp(0)
   {}
