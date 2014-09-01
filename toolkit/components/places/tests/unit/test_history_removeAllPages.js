@@ -113,8 +113,8 @@ add_task(function test_history_removeAllPages()
   stmt.finalize();
 
   stmt = mDBConn.createStatement(
-    "SELECT h.id FROM moz_places h WHERE h.frecency < 0 " +
-      "AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1");
+    `SELECT h.id FROM moz_places h WHERE h.frecency < 0
+       AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1`);
   do_check_true(stmt.executeStep());
   stmt.finalize();
 
@@ -132,36 +132,36 @@ add_task(function test_history_removeAllPages()
 
   // Check that all moz_places entries except bookmarks and place: have been removed
   stmt = mDBConn.createStatement(
-    "SELECT h.id FROM moz_places h WHERE SUBSTR(h.url, 1, 6) <> 'place:' "+
-      "AND NOT EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1");
+    `SELECT h.id FROM moz_places h WHERE SUBSTR(h.url, 1, 6) <> 'place:'
+       AND NOT EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1`);
   do_check_false(stmt.executeStep());
   stmt.finalize();
 
   // Check that we only have favicons for retained places
   stmt = mDBConn.createStatement(
-    "SELECT f.id FROM moz_favicons f WHERE NOT EXISTS " +
-      "(SELECT id FROM moz_places WHERE favicon_id = f.id) LIMIT 1");
+    `SELECT f.id FROM moz_favicons f WHERE NOT EXISTS
+       (SELECT id FROM moz_places WHERE favicon_id = f.id) LIMIT 1`);
   do_check_false(stmt.executeStep());
   stmt.finalize();
 
   // Check that we only have annotations for retained places
   stmt = mDBConn.createStatement(
-    "SELECT a.id FROM moz_annos a WHERE NOT EXISTS " +
-      "(SELECT id FROM moz_places WHERE id = a.place_id) LIMIT 1");
+    `SELECT a.id FROM moz_annos a WHERE NOT EXISTS
+       (SELECT id FROM moz_places WHERE id = a.place_id) LIMIT 1`);
   do_check_false(stmt.executeStep());
   stmt.finalize();
 
   // Check that we only have inputhistory for retained places
   stmt = mDBConn.createStatement(
-    "SELECT i.place_id FROM moz_inputhistory i WHERE NOT EXISTS " +
-      "(SELECT id FROM moz_places WHERE id = i.place_id) LIMIT 1");
+    `SELECT i.place_id FROM moz_inputhistory i WHERE NOT EXISTS
+       (SELECT id FROM moz_places WHERE id = i.place_id) LIMIT 1`);
   do_check_false(stmt.executeStep());
   stmt.finalize();
 
   // Check that place:uris have frecency 0
   stmt = mDBConn.createStatement(
-    "SELECT h.id FROM moz_places h " +
-    "WHERE SUBSTR(h.url, 1, 6) = 'place:' AND h.frecency <> 0 LIMIT 1");
+    `SELECT h.id FROM moz_places h
+     WHERE SUBSTR(h.url, 1, 6) = 'place:' AND h.frecency <> 0 LIMIT 1`);
   do_check_false(stmt.executeStep());
   stmt.finalize();
 });

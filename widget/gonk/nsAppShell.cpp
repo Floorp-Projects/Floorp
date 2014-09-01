@@ -72,6 +72,7 @@
 
 // Defines kKeyMapping and GetKeyNameIndex()
 #include "GonkKeyMapping.h"
+#include "GeckoTouchDispatcher.h"
 
 #define LOG(args...)                                            \
     __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
@@ -157,14 +158,12 @@ struct UserInputData {
             ::Touch touches[MAX_POINTERS];
         } motion;
     };
-
-    Modifiers DOMModifiers() const;
 };
 
-Modifiers
-UserInputData::DOMModifiers() const
+static mozilla::Modifiers
+getDOMModifiers(int32_t metaState)
 {
-    Modifiers result = 0;
+    mozilla::Modifiers result = 0;
     if (metaState & (AMETA_ALT_ON | AMETA_ALT_LEFT_ON | AMETA_ALT_RIGHT_ON)) {
         result |= MODIFIER_ALT;
     }
@@ -193,106 +192,6 @@ UserInputData::DOMModifiers() const
         result |= MODIFIER_SCROLLLOCK;
     }
     return result;
-}
-
-static void
-sendMouseEvent(uint32_t msg, UserInputData& data, bool forwardToChildren)
-{
-    WidgetMouseEvent event(true, msg, nullptr,
-                           WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
-
-    event.refPoint.x = data.motion.touches[0].coords.getX();
-    event.refPoint.y = data.motion.touches[0].coords.getY();
-    event.time = data.timeMs;
-    event.button = WidgetMouseEvent::eLeftButton;
-    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-    if (msg != NS_MOUSE_MOVE)
-        event.clickCount = 1;
-    event.modifiers = data.DOMModifiers();
-
-    event.mFlags.mNoCrossProcessBoundaryForwarding = !forwardToChildren;
-
-    nsWindow::DispatchInputEvent(event);
-}
-
-static void
-addDOMTouch(UserInputData& data, WidgetTouchEvent& event, int i)
-{
-    const ::Touch& touch = data.motion.touches[i];
-    event.touches.AppendElement(
-        new dom::Touch(touch.id,
-                       nsIntPoint(floor(touch.coords.getX() + 0.5), floor(touch.coords.getY() + 0.5)),
-                       nsIntPoint(touch.coords.getAxisValue(AMOTION_EVENT_AXIS_SIZE),
-                                  touch.coords.getAxisValue(AMOTION_EVENT_AXIS_SIZE)),
-                       0,
-                       touch.coords.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE))
-    );
-}
-
-static void
-printUniformityInfo(UserInputData& aData)
-{
-    char* touchAction;
-    const ::Touch& touch = aData.motion.touches[0];
-    int32_t action = aData.action & AMOTION_EVENT_ACTION_MASK;
-    switch (action) {
-    case AMOTION_EVENT_ACTION_DOWN:
-         touchAction = "Touch_Event_Down";
-         break;
-    case AMOTION_EVENT_ACTION_MOVE:
-         touchAction = "Touch_Event_Move";
-          break;
-    case AMOTION_EVENT_ACTION_UP:
-         touchAction = "Touch_Event_Up";
-         break;
-    default :
-         return;
-    }
-    LOG("UniformityInfo %s %llu %f %f", touchAction, systemTime(SYSTEM_TIME_MONOTONIC),
-        touch.coords.getX(),  touch.coords.getY() );
-}
-
-static nsEventStatus
-sendTouchEvent(UserInputData& data, bool* captured)
-{
-    uint32_t msg;
-    int32_t action = data.action & AMOTION_EVENT_ACTION_MASK;
-    switch (action) {
-    case AMOTION_EVENT_ACTION_DOWN:
-    case AMOTION_EVENT_ACTION_POINTER_DOWN:
-        msg = NS_TOUCH_START;
-        break;
-    case AMOTION_EVENT_ACTION_MOVE:
-        msg = NS_TOUCH_MOVE;
-        break;
-    case AMOTION_EVENT_ACTION_UP:
-    case AMOTION_EVENT_ACTION_POINTER_UP:
-        msg = NS_TOUCH_END;
-        break;
-    case AMOTION_EVENT_ACTION_OUTSIDE:
-    case AMOTION_EVENT_ACTION_CANCEL:
-        msg = NS_TOUCH_CANCEL;
-        break;
-    default:
-        return nsEventStatus_eIgnore;
-    }
-
-    WidgetTouchEvent event(true, msg, nullptr);
-
-    event.time = data.timeMs;
-    event.modifiers = data.DOMModifiers();
-
-    int32_t i;
-    if (msg == NS_TOUCH_END) {
-        i = data.action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK;
-        i >>= AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-        addDOMTouch(data, event, i);
-    } else {
-        for (i = 0; i < data.motion.touchCount; ++i)
-            addDOMTouch(data, event, i);
-    }
-
-    return nsWindow::DispatchInputEvent(event, captured);
 }
 
 class MOZ_STACK_CLASS KeyEventDispatcher
@@ -405,7 +304,7 @@ KeyEventDispatcher::DispatchKeyEventInternal(uint32_t aEventMessage)
         event.mKeyValue = mDOMPrintableKeyValue;
     }
     event.mCodeNameIndex = mDOMCodeNameIndex;
-    event.modifiers = mData.DOMModifiers();
+    event.modifiers = getDOMModifiers(mData.metaState);
     event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
     event.time = mData.timeMs;
     return nsWindow::DispatchInputEvent(event);
@@ -594,12 +493,10 @@ public:
     GeckoInputDispatcher(sp<EventHub> &aEventHub)
         : mQueueLock("GeckoInputDispatcher::mQueueMutex")
         , mEventHub(aEventHub)
-        , mTouchDownCount(0)
         , mKeyDownCount(0)
-        , mTouchEventsFiltered(false)
         , mKeyEventsFiltered(false)
     {
-      mEnabledUniformityInfo = Preferences::GetBool("layers.uniformity-info", false);
+        mTouchDispatcher = new GeckoTouchDispatcher();
     }
 
     virtual void dump(String8& dump);
@@ -635,7 +532,7 @@ public:
 
 
 protected:
-    virtual ~GeckoInputDispatcher() {}
+    virtual ~GeckoInputDispatcher() { }
 
 private:
     // mQueueLock should generally be locked while using mEventQueue.
@@ -644,13 +541,10 @@ private:
     mozilla::Mutex mQueueLock;
     std::queue<UserInputData> mEventQueue;
     sp<EventHub> mEventHub;
+    nsRefPtr<GeckoTouchDispatcher> mTouchDispatcher;
 
-    int mTouchDownCount;
     int mKeyDownCount;
-    bool mTouchEventsFiltered;
     bool mKeyEventsFiltered;
-    BitSet32 mTouchDown;
-    bool mEnabledUniformityInfo;
 };
 
 // GeckoInputReaderPolicy
@@ -722,80 +616,7 @@ GeckoInputDispatcher::dispatchOnce()
 
     switch (data.type) {
     case UserInputData::MOTION_DATA: {
-        if (!mTouchDownCount) {
-            // No pending events, the filter state can be updated.
-            mTouchEventsFiltered = isExpired(data);
-        }
-
-        int32_t action = data.action & AMOTION_EVENT_ACTION_MASK;
-        int32_t index = data.action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK;
-        index >>= AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-        int32_t id = data.motion.touches[index].id;
-        switch (action) {
-        case AMOTION_EVENT_ACTION_DOWN:
-        case AMOTION_EVENT_ACTION_POINTER_DOWN:
-            if (!mTouchDown.hasBit(id)) {
-                mTouchDown.markBit(id);
-                mTouchDownCount++;
-            }
-            break;
-        case AMOTION_EVENT_ACTION_MOVE:
-        case AMOTION_EVENT_ACTION_HOVER_MOVE:
-            // No need to update the count on move.
-            break;
-        case AMOTION_EVENT_ACTION_UP:
-        case AMOTION_EVENT_ACTION_POINTER_UP:
-        case AMOTION_EVENT_ACTION_OUTSIDE:
-        case AMOTION_EVENT_ACTION_CANCEL:
-            if (mTouchDown.hasBit(id)) {
-                mTouchDown.clearBit(id);
-                mTouchDownCount--;
-            }
-            break;
-        default:
-            break;
-        }
-
-        if (mTouchEventsFiltered) {
-            return;
-        }
-
-        nsEventStatus status = nsEventStatus_eIgnore;
-        if (action != AMOTION_EVENT_ACTION_HOVER_MOVE) {
-            bool captured;
-            status = sendTouchEvent(data, &captured);
-            if (mEnabledUniformityInfo) {
-                printUniformityInfo(data);
-            }
-            if (captured) {
-                return;
-            }
-        }
-
-        uint32_t msg;
-        switch (action) {
-        case AMOTION_EVENT_ACTION_DOWN:
-            msg = NS_MOUSE_BUTTON_DOWN;
-            break;
-        case AMOTION_EVENT_ACTION_POINTER_DOWN:
-        case AMOTION_EVENT_ACTION_POINTER_UP:
-        case AMOTION_EVENT_ACTION_MOVE:
-        case AMOTION_EVENT_ACTION_HOVER_MOVE:
-            msg = NS_MOUSE_MOVE;
-            break;
-        case AMOTION_EVENT_ACTION_OUTSIDE:
-        case AMOTION_EVENT_ACTION_CANCEL:
-        case AMOTION_EVENT_ACTION_UP:
-            msg = NS_MOUSE_BUTTON_UP;
-            break;
-        default:
-            msg = NS_EVENT_NULL;
-            break;
-        }
-        if (msg != NS_EVENT_NULL) {
-            sendMouseEvent(msg, data, 
-                           status != nsEventStatus_eConsumeNoDefault);
-        }
+        MOZ_ASSERT_UNREACHABLE("Should not dispatch touch events here anymore");
         break;
     }
     case UserInputData::KEY_DATA: {
@@ -841,40 +662,71 @@ GeckoInputDispatcher::notifyKey(const NotifyKeyArgs* args)
     gAppShell->NotifyNativeEvent();
 }
 
+static void
+addMultiTouch(MultiTouchInput& aMultiTouch,
+                                    const NotifyMotionArgs* args, int aIndex)
+{
+    int32_t id = args->pointerProperties[aIndex].id;
+    PointerCoords coords = args->pointerCoords[aIndex];
+    float force = coords.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE);
+    ScreenIntPoint point(floor(coords.getX() + 0.5),
+                         floor(coords.getY() + 0.5));
+
+    SingleTouchData touchData(id, point, ScreenSize(0, 0),
+                              0, force);
+
+    aMultiTouch.mTouches.AppendElement(touchData);
+}
 
 void
 GeckoInputDispatcher::notifyMotion(const NotifyMotionArgs* args)
 {
-    UserInputData data;
-    data.timeMs = nanosecsToMillisecs(args->eventTime);
-    data.type = UserInputData::MOTION_DATA;
-    data.action = args->action;
-    data.flags = args->flags;
-    data.metaState = args->metaState;
-    data.deviceId = args->deviceId;
-    MOZ_ASSERT(args->pointerCount <= MAX_POINTERS);
-    data.motion.touchCount = args->pointerCount;
-    for (uint32_t i = 0; i < args->pointerCount; ++i) {
-        ::Touch& touch = data.motion.touches[i];
-        touch.id = args->pointerProperties[i].id;
-        memcpy(&touch.coords, &args->pointerCoords[i], sizeof(*args->pointerCoords));
+    uint32_t time = nanosecsToMillisecs(args->eventTime);
+    int32_t action = args->action & AMOTION_EVENT_ACTION_MASK;
+    int touchCount = args->pointerCount;
+    MOZ_ASSERT(touchCount <= MAX_POINTERS);
+    TimeStamp timestamp = TimeStamp::Now();
+    Modifiers modifiers = getDOMModifiers(args->metaState);
+
+    MultiTouchInput::MultiTouchType touchType = MultiTouchInput::MULTITOUCH_CANCEL;
+    switch (action) {
+    case AMOTION_EVENT_ACTION_DOWN:
+    case AMOTION_EVENT_ACTION_POINTER_DOWN:
+        touchType = MultiTouchInput::MULTITOUCH_START;
+        break;
+    case AMOTION_EVENT_ACTION_MOVE:
+        touchType = MultiTouchInput::MULTITOUCH_MOVE;
+        break;
+    case AMOTION_EVENT_ACTION_UP:
+    case AMOTION_EVENT_ACTION_POINTER_UP:
+        touchType = MultiTouchInput::MULTITOUCH_END;
+        break;
+    case AMOTION_EVENT_ACTION_OUTSIDE:
+    case AMOTION_EVENT_ACTION_CANCEL:
+        touchType = MultiTouchInput::MULTITOUCH_CANCEL;
+        break;
+    default:
+        MOZ_ASSERT_UNREACHABLE("Could not assign a touch type");
+        break;
     }
-    {
-        MutexAutoLock lock(mQueueLock);
-        if (!mEventQueue.empty() &&
-             mEventQueue.back().type == UserInputData::MOTION_DATA &&
-           ((mEventQueue.back().action & AMOTION_EVENT_ACTION_MASK) ==
-             AMOTION_EVENT_ACTION_MOVE ||
-            (mEventQueue.back().action & AMOTION_EVENT_ACTION_MASK) ==
-             AMOTION_EVENT_ACTION_HOVER_MOVE))
-            mEventQueue.back() = data;
-        else
-            mEventQueue.push(data);
+
+    MultiTouchInput touchData(touchType, time, timestamp, modifiers);
+
+    // For touch ends, we have to filter out which finger is actually
+    // the touch end since the touch array has all fingers, not just the touch
+    // that we want to end
+    if (touchType == MultiTouchInput::MULTITOUCH_END) {
+        int touchIndex = args->action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK;
+        touchIndex >>= AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+        addMultiTouch(touchData, args, touchIndex);
+    } else {
+        for (int32_t i = 0; i < touchCount; ++i) {
+            addMultiTouch(touchData, args, i);
+        }
     }
-    gAppShell->NotifyNativeEvent();
+
+    mTouchDispatcher->NotifyTouch(touchData, args->eventTime);
 }
-
-
 
 void GeckoInputDispatcher::notifySwitch(const NotifySwitchArgs* args)
 {

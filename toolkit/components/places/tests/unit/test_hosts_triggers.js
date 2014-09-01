@@ -16,9 +16,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gHistory",
 function isHostInMozPlaces(aURI)
 {
   let stmt = DBConn().createStatement(
-    "SELECT url "
-    + "FROM moz_places "
-    + "WHERE url = :host"
+    `SELECT url
+       FROM moz_places
+       WHERE url = :host`
   );
   let result = false;
   stmt.params.host = aURI.spec;
@@ -35,10 +35,10 @@ function isHostInMozPlaces(aURI)
 function isHostInMozHosts(aURI, aTyped, aPrefix)
 {
   let stmt = DBConn().createStatement(
-    "SELECT host, typed, prefix "
-    + "FROM moz_hosts "
-    + "WHERE host = fixup_url(:host) "
-    + "AND frecency NOTNULL "
+    `SELECT host, typed, prefix
+       FROM moz_hosts
+       WHERE host = fixup_url(:host)
+       AND frecency NOTNULL`
   );
   let result = false;
   stmt.params.host = aURI.host;

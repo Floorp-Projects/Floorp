@@ -135,9 +135,9 @@ function do_check_title_for_uri(aURI,
 {
   let stack = Components.stack.caller;
   let stmt = DBConn().createStatement(
-    "SELECT title " +
-    "FROM moz_places " +
-    "WHERE url = :url "
+    `SELECT title
+     FROM moz_places
+     WHERE url = :url`
   );
   stmt.params.url = aURI.spec;
   do_check_true(stmt.executeStep(), stack);
@@ -470,9 +470,9 @@ function test_invalid_referrerURI_ignored()
 
   // Check to make sure from_visit is zero in database.
   let stmt = DBConn().createStatement(
-    "SELECT from_visit " +
-    "FROM moz_historyvisits " +
-    "WHERE id = :visit_id"
+    `SELECT from_visit
+     FROM moz_historyvisits
+     WHERE id = :visit_id`
   );
   stmt.params.visit_id = placeInfo.visits[0].visitId;
   do_check_true(stmt.executeStep());
@@ -503,9 +503,9 @@ function test_nonnsIURI_referrerURI_ignored()
 
   // Check to make sure from_visit is zero in database.
   let stmt = DBConn().createStatement(
-    "SELECT from_visit " +
-    "FROM moz_historyvisits " +
-    "WHERE id = :visit_id"
+    `SELECT from_visit
+     FROM moz_historyvisits
+     WHERE id = :visit_id`
   );
   stmt.params.visit_id = placeInfo.visits[0].visitId;
   do_check_true(stmt.executeStep());
@@ -562,10 +562,10 @@ function test_old_referrer_ignored()
   // database to be sure.
   do_check_eq(placeInfo.visits[0].referrerURI, null);
   let stmt = DBConn().createStatement(
-    "SELECT COUNT(1) AS count " +
-    "FROM moz_historyvisits " +
-    "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) " +
-    "AND from_visit = 0 "
+    `SELECT COUNT(1) AS count
+     FROM moz_historyvisits
+     WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url)
+     AND from_visit = 0`
   );
   stmt.params.page_url = place.uri.spec;
   do_check_true(stmt.executeStep());
@@ -758,12 +758,12 @@ function test_properties_saved()
 
     // mozIVisitInfo::date
     let stmt = DBConn().createStatement(
-      "SELECT COUNT(1) AS count " +
-      "FROM moz_places h " +
-      "JOIN moz_historyvisits v " +
-      "ON h.id = v.place_id " +
-      "WHERE h.url = :page_url " +
-      "AND v.visit_date = :visit_date "
+      `SELECT COUNT(1) AS count
+       FROM moz_places h
+       JOIN moz_historyvisits v
+       ON h.id = v.place_id
+       WHERE h.url = :page_url
+       AND v.visit_date = :visit_date`
     );
     stmt.params.page_url = uri.spec;
     stmt.params.visit_date = visit.visitDate;
@@ -773,12 +773,12 @@ function test_properties_saved()
 
     // mozIVisitInfo::transitionType
     stmt = DBConn().createStatement(
-      "SELECT COUNT(1) AS count " +
-      "FROM moz_places h " +
-      "JOIN moz_historyvisits v " +
-      "ON h.id = v.place_id " +
-      "WHERE h.url = :page_url " +
-      "AND v.visit_type = :transition_type "
+      `SELECT COUNT(1) AS count
+       FROM moz_places h
+       JOIN moz_historyvisits v
+       ON h.id = v.place_id
+       WHERE h.url = :page_url
+       AND v.visit_type = :transition_type`
     );
     stmt.params.page_url = uri.spec;
     stmt.params.transition_type = visit.transitionType;
@@ -788,10 +788,10 @@ function test_properties_saved()
 
     // mozIPlaceInfo::title
     stmt = DBConn().createStatement(
-      "SELECT COUNT(1) AS count " +
-      "FROM moz_places h " +
-      "WHERE h.url = :page_url " +
-      "AND h.title = :title "
+      `SELECT COUNT(1) AS count
+       FROM moz_places h
+       WHERE h.url = :page_url
+       AND h.title = :title`
     );
     stmt.params.page_url = uri.spec;
     stmt.params.title = placeInfo.title;
@@ -863,14 +863,14 @@ function test_referrer_saved()
       do_check_true(places[0].uri.equals(visit.referrerURI));
 
       let stmt = DBConn().createStatement(
-        "SELECT COUNT(1) AS count " +
-        "FROM moz_historyvisits " +
-        "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) " +
-        "AND from_visit = ( " +
-          "SELECT id " +
-          "FROM moz_historyvisits " +
-          "WHERE place_id = (SELECT id FROM moz_places WHERE url = :referrer) " +
-        ") "
+        `SELECT COUNT(1) AS count
+         FROM moz_historyvisits
+         WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url)
+         AND from_visit = (
+           SELECT id
+           FROM moz_historyvisits
+           WHERE place_id = (SELECT id FROM moz_places WHERE url = :referrer)
+         )`
       );
       stmt.params.page_url = uri.spec;
       stmt.params.referrer = visit.referrerURI.spec;
