@@ -28,6 +28,7 @@
 #include <cstdio>
 #include <limits>
 #include <new>
+#include <sstream>
 
 #include "cert.h"
 #include "cryptohi.h"
@@ -37,7 +38,6 @@
 #include "pkixder.h"
 #include "pkixutil.h"
 #include "prinit.h"
-#include "prprf.h"
 #include "secerr.h"
 
 using namespace std;
@@ -66,27 +66,15 @@ fclose_void(FILE* file) {
 typedef mozilla::pkix::ScopedPtr<FILE, fclose_void> ScopedFILE;
 
 FILE*
-OpenFile(const char* dir, const char* filename, const char* mode)
+OpenFile(const string& dir, const string& filename, const string& mode)
 {
-  assert(dir);
-  assert(*dir);
-  assert(filename);
-  assert(*filename);
-
-  ScopedPtr<char, deleteCharArray>
-    path(new (nothrow) char[strlen(dir) + 1 + strlen(filename) + 1]);
-  if (!path) {
-    return nullptr;
-  }
-  strcpy(path.get(), dir);
-  strcat(path.get(), "/");
-  strcat(path.get(), filename);
+  string path = dir + '/' + filename;
 
   ScopedFILE file;
 #ifdef _MSC_VER
   {
     FILE* rawFile;
-    errno_t error = fopen_s(&rawFile, path.get(), mode);
+    errno_t error = fopen_s(&rawFile, path.c_str(), mode.c_str());
     if (error) {
       // TODO: map error to NSPR error code
       rawFile = nullptr;
@@ -94,7 +82,7 @@ OpenFile(const char* dir, const char* filename, const char* mode)
     file = rawFile;
   }
 #else
-  file = fopen(path.get(), mode);
+  file = fopen(path.c_str(), mode.c_str());
 #endif
   return file.release();
 }
@@ -488,14 +476,19 @@ MaybeLogOutput(const ByteString& result, const char* suffix)
   const char* logPath = getenv("MOZILLA_PKIX_TEST_LOG_DIR");
   if (logPath) {
     static int counter = 0;
-    ScopedPtr<char, PR_smprintf_free>
-      filename(PR_smprintf("%u-%s.der", counter, suffix));
+
+    std::ostringstream counterStream;
+    counterStream << counter;
+    if (!counterStream) {
+      assert(false);
+      return;
+    }
+    string filename = counterStream.str() + '-' + suffix + ".der";
+
     ++counter;
-    if (filename) {
-      ScopedFILE file(OpenFile(logPath, filename.get(), "wb"));
-      if (file) {
-        (void) fwrite(result.data(), result.length(), 1, file.get());
-      }
+    ScopedFILE file(OpenFile(logPath, filename, "wb"));
+    if (file) {
+      (void) fwrite(result.data(), result.length(), 1, file.get());
     }
   }
 }
