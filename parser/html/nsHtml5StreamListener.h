@@ -32,7 +32,7 @@ class nsHtml5StreamListener : public nsIStreamListener,
                               public nsIThreadRetargetableStreamListener
 {
 public:
-  nsHtml5StreamListener(nsHtml5StreamParser* aDelegate);
+  explicit nsHtml5StreamListener(nsHtml5StreamParser* aDelegate);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER

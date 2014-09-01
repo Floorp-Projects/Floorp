@@ -14,7 +14,7 @@ class nsHtml5RefPtrReleaser : public nsRunnable
     private:
       T* mPtr;
     public:
-      nsHtml5RefPtrReleaser(T* aPtr)
+      explicit nsHtml5RefPtrReleaser(T* aPtr)
           : mPtr(aPtr)
         {}
       NS_IMETHODIMP Run()
@@ -97,7 +97,7 @@ class nsHtml5RefPtr
             mRawPtr->AddRef();
         }
 
-      nsHtml5RefPtr( T* aRawPtr )
+      explicit nsHtml5RefPtr( T* aRawPtr )
             : mRawPtr(aRawPtr)
           // construct from a raw pointer (of the right type)
         {
@@ -105,7 +105,7 @@ class nsHtml5RefPtr
             mRawPtr->AddRef();
         }
 
-      nsHtml5RefPtr( const already_AddRefed<T>& aSmartPtr )
+      explicit nsHtml5RefPtr( const already_AddRefed<T>& aSmartPtr )
             : mRawPtr(aSmartPtr.mRawPtr)
           // construct from |dont_AddRef(expr)|
         {
