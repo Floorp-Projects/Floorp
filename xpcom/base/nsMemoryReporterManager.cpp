@@ -1189,11 +1189,13 @@ nsMemoryReporterManager::StartGettingReports()
   // Get reports for this process.
   FILE* parentDMDFile = nullptr;
 #ifdef MOZ_DMD
-  nsresult rv = nsMemoryInfoDumper::OpenDMDFile(s->mDMDDumpIdent, getpid(),
-                                                &parentDMDFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // Proceed with the memory report as if DMD were disabled.
-    parentDMDFile = nullptr;
+  if (!s->mDMDDumpIdent.IsEmpty()) {
+    nsresult rv = nsMemoryInfoDumper::OpenDMDFile(s->mDMDDumpIdent, getpid(),
+                                                  &parentDMDFile);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // Proceed with the memory report as if DMD were disabled.
+      parentDMDFile = nullptr;
+    }
   }
 #endif
   GetReportsForThisProcessExtended(s->mHandleReport, s->mHandleReportData,
