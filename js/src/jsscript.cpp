@@ -3202,18 +3202,6 @@ JSScript::setNewStepMode(FreeOp *fop, uint32_t newValue)
 }
 
 bool
-JSScript::setStepModeFlag(JSContext *cx, bool step)
-{
-    if (!ensureHasDebugScript(cx))
-        return false;
-
-    setNewStepMode(cx->runtime()->defaultFreeOp(),
-                   (debugScript()->stepMode & stepCountMask) |
-                   (step ? stepFlagMask : 0));
-    return true;
-}
-
-bool
 JSScript::incrementStepModeCount(JSContext *cx)
 {
     assertSameCompartment(cx, this);
@@ -3223,12 +3211,8 @@ JSScript::incrementStepModeCount(JSContext *cx)
         return false;
 
     DebugScript *debug = debugScript();
-    uint32_t count = debug->stepMode & stepCountMask;
-    MOZ_ASSERT(((count + 1) & stepCountMask) == count + 1);
-
-    setNewStepMode(cx->runtime()->defaultFreeOp(),
-                   (debug->stepMode & stepFlagMask) |
-                   ((count + 1) & stepCountMask));
+    uint32_t count = debug->stepMode;
+    setNewStepMode(cx->runtime()->defaultFreeOp(), count + 1);
     return true;
 }
 
@@ -3236,11 +3220,9 @@ void
 JSScript::decrementStepModeCount(FreeOp *fop)
 {
     DebugScript *debug = debugScript();
-    uint32_t count = debug->stepMode & stepCountMask;
-
-    setNewStepMode(fop,
-                   (debug->stepMode & stepFlagMask) |
-                   ((count - 1) & stepCountMask));
+    uint32_t count = debug->stepMode;
+    JS_ASSERT(count > 0);
+    setNewStepMode(fop, count - 1);
 }
 
 BreakpointSite *

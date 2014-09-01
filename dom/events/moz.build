@@ -133,7 +133,7 @@ LOCAL_INCLUDES += [
     '/content/xul/content/src',
     '/dom/base',
     '/dom/settings',
-    '/dom/src/storage',
+    '/dom/storage',
     '/dom/workers',
     '/dom/xml',
     '/js/xpconnect/wrappers',

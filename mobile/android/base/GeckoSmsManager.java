@@ -291,7 +291,7 @@ public class GeckoSmsManager
 
   /*
    * Make sure that the following error codes are in sync with |ErrorType| in:
-   * dom/mobilemessage/src/Types.h
+   * dom/mobilemessage/Types.h
    * The error code are owned by the DOM.
    */
   public final static int kNoError               = 0;
@@ -317,7 +317,7 @@ public class GeckoSmsManager
 
   /*
    * Keep the following state codes in syng with |DeliveryState| in:
-   * dom/mobilemessage/src/Types.h
+   * dom/mobilemessage/Types.h
    */
   private final static int kDeliveryStateSent          = 0;
   private final static int kDeliveryStateReceived      = 1;
@@ -329,7 +329,7 @@ public class GeckoSmsManager
 
   /*
    * Keep the following status codes in sync with |DeliveryStatus| in:
-   * dom/mobilemessage/src/Types.h
+   * dom/mobilemessage/Types.h
    */
   private final static int kDeliveryStatusNotApplicable = 0;
   private final static int kDeliveryStatusSuccess       = 1;
@@ -347,7 +347,7 @@ public class GeckoSmsManager
 
   /*
    * Keep the following values in sync with |MessageClass| in:
-   * dom/mobilemessage/src/Types.h
+   * dom/mobilemessage/Types.h
    */
   private final static int kMessageClassNormal  = 0;
   private final static int kMessageClassClass0  = 1;

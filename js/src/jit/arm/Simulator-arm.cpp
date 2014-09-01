@@ -1650,7 +1650,7 @@ Simulator::conditionallyExecute(SimInstruction *instr)
       case Assembler::GT: return !z_flag_ && (n_flag_ == v_flag_);
       case Assembler::LE: return z_flag_ || (n_flag_ != v_flag_);
       case Assembler::AL: return true;
-      default: MOZ_ASSUME_UNREACHABLE();
+      default: MOZ_CRASH();
     }
     return false;
 }
@@ -1765,7 +1765,7 @@ Simulator::getShiftRm(SimInstruction *instr, bool *carry_out)
     if (instr->bit(4) == 0) {
         // By immediate.
         if (shift == ROR && shift_amount == 0) {
-            MOZ_ASSUME_UNREACHABLE("NYI");
+            MOZ_CRASH("NYI");
             return result;
         }
         if ((shift == LSR || shift == ASR) && shift_amount == 0)
@@ -1826,8 +1826,7 @@ Simulator::getShiftRm(SimInstruction *instr, bool *carry_out)
           }
 
           default:
-            MOZ_ASSUME_UNREACHABLE();
-            break;
+            MOZ_CRASH();
         }
     } else {
         // By register.
@@ -1904,8 +1903,7 @@ Simulator::getShiftRm(SimInstruction *instr, bool *carry_out)
           }
 
           default:
-            MOZ_ASSUME_UNREACHABLE();
-            break;
+            MOZ_CRASH();
         }
     }
     return result;
@@ -1949,8 +1947,7 @@ Simulator::processPU(SimInstruction *instr, int num_regs, int reg_size,
         rn_val = *end_address;
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE();
-        break;
+        MOZ_CRASH();
     }
     return rn_val;
 }
@@ -2291,7 +2288,7 @@ Simulator::softwareInterrupt(SimInstruction *instr)
             break;
           }
           default:
-            MOZ_ASSUME_UNREACHABLE("call");
+            MOZ_CRASH("call");
         }
 
         if (single_stepping_)
@@ -3335,7 +3332,7 @@ Simulator::decodeTypeVFP(SimInstruction *instr)
             const bool is_vmls = (instr->opc3Value() & 0x1);
 
             if (instr->szValue() != 0x1)
-                MOZ_ASSUME_UNREACHABLE();  // Not used by V8.
+                MOZ_CRASH("Not used by V8.");
 
             const double dd_val = get_double_from_d_register(vd);
             const double dn_val = get_double_from_d_register(vn);
@@ -3742,7 +3739,7 @@ Simulator::decodeVCVTBetweenFloatingPointAndIntegerFrac(SimInstruction *instr)
             set_s_register_from_sinteger(dst, temp);
         }
     } else {
-        MOZ_ASSUME_UNREACHABLE();  // Not implemented, fixed to float.
+        MOZ_CRASH();  // Not implemented, fixed to float.
     }
 }
 

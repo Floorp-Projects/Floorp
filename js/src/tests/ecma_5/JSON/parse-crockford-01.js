@@ -1,5 +1,3 @@
-// Ported from dom/src/json/test/unit/test_decode.js
-
 var str =
   '[\n' +
   '    "JSON Test Pattern pass1",\n' +
