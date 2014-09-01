@@ -30,6 +30,7 @@ const DESTROY_NODES_URL = EXAMPLE_URL + "doc_destroy-nodes.html";
 const CONNECT_TOGGLE_URL = EXAMPLE_URL + "doc_connect-toggle.html";
 const CONNECT_PARAM_URL = EXAMPLE_URL + "doc_connect-param.html";
 const CONNECT_MULTI_PARAM_URL = EXAMPLE_URL + "doc_connect-multi-param.html";
+const IFRAME_CONTEXT_URL = EXAMPLE_URL + "doc_iframe-context.html";
 
 // All tests are asynchronous.
 waitForExplicitFinish();
@@ -150,7 +151,7 @@ function initWebAudioEditor(aUrl) {
     Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
     let toolbox = yield gDevTools.showToolbox(target, "webaudioeditor");
     let panel = toolbox.getCurrentPanel();
-    return [target, debuggee, panel];
+    return [target, debuggee, panel, toolbox];
   });
 }
 
