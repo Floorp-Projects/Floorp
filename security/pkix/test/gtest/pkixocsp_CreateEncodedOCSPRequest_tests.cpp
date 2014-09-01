@@ -22,7 +22,7 @@
  * limitations under the License.
  */
 
-#include "nssgtest.h"
+#include "gtest/gtest.h"
 #include "pkix/pkix.h"
 #include "pkixder.h"
 #include "pkixtestutil.h"
@@ -79,7 +79,7 @@ private:
   }
 };
 
-class pkixocsp_CreateEncodedOCSPRequest : public NSSTest
+class pkixocsp_CreateEncodedOCSPRequest : public ::testing::Test
 {
 protected:
   void MakeIssuerCertIDComponents(const char* issuerASCII,
