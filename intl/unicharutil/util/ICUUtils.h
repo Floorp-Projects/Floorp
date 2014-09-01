@@ -38,7 +38,7 @@ public:
    */
   class LanguageTagIterForContent {
   public:
-    LanguageTagIterForContent(nsIContent* aContent)
+    explicit LanguageTagIterForContent(nsIContent* aContent)
       : mContent(aContent)
       , mCurrentFallbackIndex(-1)
     {}
