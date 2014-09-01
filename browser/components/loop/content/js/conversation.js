@@ -98,7 +98,7 @@ loop.conversation = (function(OT, mozL10n) {
 
                   React.DOM.button({className: btnClassDecline, 
                           onClick: this._handleDecline}, 
-                    __("incoming_call_decline_button")
+                    __("incoming_call_cancel_button")
                   ), 
                   React.DOM.div({className: "btn-chevron", 
                        onClick: this._toggleDeclineMenu}
@@ -107,7 +107,7 @@ loop.conversation = (function(OT, mozL10n) {
 
                 React.DOM.ul({className: dropdownMenuClassesDecline}, 
                   React.DOM.li({className: "btn-block", onClick: this._handleDeclineBlock}, 
-                    __("incoming_call_decline_and_block_button")
+                    __("incoming_call_cancel_and_block_button")
                   )
                 )
 
@@ -121,14 +121,14 @@ loop.conversation = (function(OT, mozL10n) {
                 React.DOM.button({className: btnClassAccept, 
                         onClick: this._handleAccept("audio-video")}, 
                   React.DOM.span({className: "fx-embedded-answer-btn-text"}, 
-                    __("incoming_call_answer_button")
+                    __("incoming_call_accept_button")
                   ), 
                   React.DOM.span({className: "fx-embedded-btn-icon-video"}
                   )
                 ), 
                 React.DOM.div({className: "call-audio-only", 
                      onClick: this._handleAccept("audio"), 
-                     title: __("incoming_call_answer_audio_only_tooltip")}
+                     title: __("incoming_call_accept_audio_only_tooltip")}
                 )
               )
             ), 
@@ -334,7 +334,7 @@ loop.conversation = (function(OT, mozL10n) {
      * Call has ended, display a feedback form.
      */
     feedback: function() {
-      document.title = mozL10n.get("call_has_ended");
+      document.title = mozL10n.get("conversation_has_ended");
 
       var feebackAPIBaseUrl = navigator.mozLoop.getLoopCharPref(
         "feedback.baseUrl");

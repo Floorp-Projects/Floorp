@@ -73,7 +73,7 @@ loop.webapp = (function($, _, OT, webL10n) {
           <div className="info-panel">
             <div className="firefox-logo" />
             <h1>{__("call_url_unavailable_notification_heading")}</h1>
-            <h4>{__("call_url_unavailable_notification_message")}</h4>
+            <h4>{__("call_url_unavailable_notification_message2")}</h4>
           </div>
           <PromoteFirefoxView helper={this.props.helper} />
         </div>

@@ -207,8 +207,8 @@ loop.panel = (function(_, mozL10n) {
 
     _generateMailTo: function() {
       return encodeURI([
-        "mailto:?subject=" + __("share_email_subject2") + "&",
-        "body=" + __("share_email_body2", {callUrl: this.state.callUrl})
+        "mailto:?subject=" + __("share_email_subject3") + "&",
+        "body=" + __("share_email_body3", {callUrl: this.state.callUrl})
       ].join(""));
     },
 
