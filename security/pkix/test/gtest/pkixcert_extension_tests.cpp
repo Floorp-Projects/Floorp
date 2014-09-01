@@ -24,7 +24,6 @@
 
 #include "nssgtest.h"
 #include "pkix/pkix.h"
-#include "pkix/pkixnss.h"
 #include "pkixtestutil.h"
 
 using namespace mozilla::pkix;
@@ -96,8 +95,7 @@ private:
   virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
                                   Input subjectPublicKeyInfo)
   {
-    return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
-                                             nullptr);
+    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
   }
 
   virtual Result DigestBuf(Input, /*out*/ uint8_t*, size_t)
@@ -108,7 +106,7 @@ private:
 
   virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
   {
-    return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+    return TestCheckPublicKey(subjectPublicKeyInfo);
   }
 };
 

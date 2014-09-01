@@ -73,19 +73,18 @@ public:
   virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
                                   Input subjectPublicKeyInfo)
   {
-    return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
-                                             nullptr);
+    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
   }
 
   virtual Result DigestBuf(Input item, /*out*/ uint8_t *digestBuf,
                            size_t digestBufLen)
   {
-    return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
+    return TestDigestBuf(item, digestBuf, digestBufLen);
   }
 
   virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
   {
-    return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+    return TestCheckPublicKey(subjectPublicKeyInfo);
   }
 
 private:
