@@ -1165,7 +1165,7 @@ holder_set(JSContext *cx, HandleObject wrapper, HandleId id, bool strict, Mutabl
 class AutoSetWrapperNotShadowing
 {
 public:
-    AutoSetWrapperNotShadowing(ResolvingId *resolvingId MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit AutoSetWrapperNotShadowing(ResolvingId *resolvingId MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         MOZ_ASSERT(resolvingId);

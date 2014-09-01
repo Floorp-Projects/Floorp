@@ -1657,7 +1657,7 @@ class MOZ_STACK_CLASS CallMethodHelper
 
 public:
 
-    CallMethodHelper(XPCCallContext& ccx)
+    explicit CallMethodHelper(XPCCallContext& ccx)
         : mCallContext(ccx)
         , mInvokeResult(NS_ERROR_UNEXPECTED)
         , mIFaceInfo(ccx.GetInterface()->GetInterfaceInfo())
