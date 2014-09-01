@@ -12,10 +12,36 @@
 #include "secder.h"
 #include "secerr.h"
 
+namespace mozilla { namespace pkix { namespace test {
+
+// Ownership of privateKey is transfered.
+TestKeyPair* CreateTestKeyPair(const ByteString& spki,
+                               const ByteString& spk,
+                               SECKEYPrivateKey* privateKey);
+
+} } } // namespace mozilla::pkix::test
+
 using namespace mozilla;
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 using namespace mozilla::test;
+
+static TestKeyPair*
+CreateTestKeyPairFromCert(CERTCertificate& cert)
+{
+  ScopedSECKEYPrivateKey privateKey(PK11_FindKeyByAnyCert(&cert, nullptr));
+  if (!privateKey) {
+    return nullptr;
+  }
+  ByteString subjectPublicKeyInfo(cert.derPublicKey.data,
+                                  cert.derPublicKey.len);
+  SECItem subjectPublicKeyItem = cert.subjectPublicKeyInfo.subjectPublicKey;
+  DER_ConvertBitString(&subjectPublicKeyItem); // bits to bytes
+  ByteString subjectPublicKey(subjectPublicKeyItem.data,
+                              subjectPublicKeyItem.len);
+  return CreateTestKeyPair(subjectPublicKeyInfo, subjectPublicKey,
+                           privateKey.forget());
+}
 
 SECItemArray *
 GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
@@ -166,8 +192,8 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   if (!signerCert) {
     signerCert = CERT_DupCertificate(issuerCert.get());
   }
-  context.signerPrivateKey = PK11_FindKeyByAnyCert(signerCert.get(), nullptr);
-  if (!context.signerPrivateKey) {
+  context.signerKeyPair = CreateTestKeyPairFromCert(*signerCert);
+  if (!context.signerKeyPair) {
     PrintPRError("PK11_FindKeyByAnyCert failed");
     return nullptr;
   }

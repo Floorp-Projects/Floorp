@@ -30,15 +30,10 @@
 #include <new>
 #include <sstream>
 
-#include "cert.h"
-#include "cryptohi.h"
-#include "hasht.h"
-#include "pk11pub.h"
 #include "pkix/pkixnss.h"
 #include "pkixder.h"
 #include "pkixutil.h"
-#include "prinit.h"
-#include "secerr.h"
+#include "prprf.h"
 
 using namespace std;
 
@@ -153,32 +148,23 @@ static ByteString ResponseBytes(OCSPResponseContext& context);
 static ByteString BasicOCSPResponse(OCSPResponseContext& context);
 static ByteString ResponseData(OCSPResponseContext& context);
 static ByteString ResponderID(OCSPResponseContext& context);
-static ByteString KeyHash(OCSPResponseContext& context);
+static ByteString KeyHash(const ByteString& subjectPublicKeyInfo);
 static ByteString SingleResponse(OCSPResponseContext& context);
 static ByteString CertID(OCSPResponseContext& context);
 static ByteString CertStatus(OCSPResponseContext& context);
 
 static ByteString
-HashedOctetString(const SECItem& bytes)
+HashedOctetString(const ByteString& bytes)
 {
   uint8_t hashBuf[TrustDomain::DIGEST_LENGTH];
   Input input;
-  if (input.Init(bytes.data, bytes.len) != Success) {
+  if (input.Init(bytes.data(), bytes.length()) != Success) {
     return ENCODING_FAILED;
   }
   if (DigestBuf(input, hashBuf, sizeof(hashBuf)) != Success) {
     return ENCODING_FAILED;
   }
   return TLV(der::OCTET_STRING, ByteString(hashBuf, sizeof(hashBuf)));
-}
-
-static ByteString
-KeyHashHelper(const CERTSubjectPublicKeyInfo* spki)
-{
-  // We only need a shallow copy here.
-  SECItem spk = spki->subjectPublicKey;
-  DER_ConvertBitString(&spk); // bits to bytes
-  return HashedOctetString(spk);
 }
 
 static ByteString
@@ -361,20 +347,18 @@ YMDHMS(int16_t year, int16_t month, int16_t day,
 
 static ByteString
 SignedData(const ByteString& tbsData,
-           SECKEYPrivateKey* privKey,
+           TestKeyPair& keyPair,
            SignatureAlgorithm signatureAlgorithm,
            bool corrupt, /*optional*/ const ByteString* certs)
 {
-  assert(privKey);
-  if (!privKey) {
-    return ENCODING_FAILED;
-  }
+  ByteString signature;
+  if (keyPair.SignData(tbsData, signatureAlgorithm, signature) != Success) {
+     return ENCODING_FAILED;
+   }
 
-  SECOidTag signatureAlgorithmOidTag;
   ByteString signatureAlgorithmDER;
   switch (signatureAlgorithm) {
     case SignatureAlgorithm::rsa_pkcs1_with_sha256:
-      signatureAlgorithmOidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
       signatureAlgorithmDER.assign(alg_sha256WithRSAEncryption,
                                    sizeof(alg_sha256WithRSAEncryption));
       break;
@@ -382,17 +366,9 @@ SignedData(const ByteString& tbsData,
       return ENCODING_FAILED;
   }
 
-  SECItem signature;
-  if (SEC_SignData(&signature, tbsData.data(), tbsData.length(), privKey,
-                   signatureAlgorithmOidTag) != SECSuccess)
-  {
-    return ENCODING_FAILED;
-  }
   // TODO: add ability to have signatures of bit length not divisible by 8,
   // resulting in unused bits in the bitstring encoding
-  ByteString signatureNested(BitString(ByteString(signature.data, signature.len),
-                                       corrupt));
-  SECITEM_FreeItem(&signature, false);
+  ByteString signatureNested(BitString(signature, corrupt));
   if (signatureNested == ENCODING_FAILED) {
     return ENCODING_FAILED;
   }
@@ -488,62 +464,13 @@ MaybeLogOutput(const ByteString& result, const char* suffix)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Key Pairs
-
-Result
-GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
-                /*out*/ ScopedSECKEYPrivateKey& privateKey)
-{
-  ScopedPtr<PK11SlotInfo, PK11_FreeSlot> slot(PK11_GetInternalSlot());
-  if (!slot) {
-    return MapPRErrorCodeToResult(PR_GetError());
-  }
-
-  // Bug 1012786: PK11_GenerateKeyPair can fail if there is insufficient
-  // entropy to generate a random key. Attempting to add some entropy and
-  // retrying appears to solve this issue.
-  for (uint32_t retries = 0; retries < 10; retries++) {
-    PK11RSAGenParams params;
-    params.keySizeInBits = 2048;
-    params.pe = 3;
-    SECKEYPublicKey* publicKeyTemp = nullptr;
-    privateKey = PK11_GenerateKeyPair(slot.get(), CKM_RSA_PKCS_KEY_PAIR_GEN,
-                                      &params, &publicKeyTemp, false, true,
-                                      nullptr);
-    if (privateKey) {
-      publicKey = publicKeyTemp;
-      assert(publicKey);
-      return Success;
-    }
-
-    assert(!publicKeyTemp);
-
-    if (PR_GetError() != SEC_ERROR_PKCS11_FUNCTION_FAILED) {
-      break;
-    }
-
-    // Since these keys are only for testing, we don't need them to be good,
-    // random keys.
-    // https://xkcd.com/221/
-    static const uint8_t RANDOM_NUMBER[] = { 4, 4, 4, 4, 4, 4, 4, 4 };
-    if (PK11_RandomUpdate((void*) &RANDOM_NUMBER,
-                          sizeof(RANDOM_NUMBER)) != SECSuccess) {
-      break;
-    }
-  }
-
-  return MapPRErrorCodeToResult(PR_GetError());
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // Certificates
 
 static ByteString TBSCertificate(long version, const ByteString& serialNumber,
                                  Input signature, const ByteString& issuer,
                                  time_t notBefore, time_t notAfter,
                                  const ByteString& subject,
-                                 const SECKEYPublicKey* subjectPublicKey,
+                                 const ByteString& subjectPublicKeyInfo,
                                  /*optional*/ const ByteString* extensions);
 
 // Certificate  ::=  SEQUENCE  {
@@ -557,30 +484,30 @@ CreateEncodedCertificate(long version, Input signature,
                          time_t notBefore, time_t notAfter,
                          const ByteString& subjectNameDER,
                          /*optional*/ const ByteString* extensions,
-                         /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
+                         /*optional*/ TestKeyPair* issuerKeyPair,
                          SignatureAlgorithm signatureAlgorithm,
-                         /*out*/ ScopedSECKEYPrivateKey& privateKeyResult)
+                         /*out*/ ScopedTestKeyPair& keyPairResult)
 {
-  // It may be the case that privateKeyResult refers to the
-  // ScopedSECKEYPrivateKey that owns issuerPrivateKey; thus, we can't set
-  // privateKeyResult until after we're done with issuerPrivateKey.
-  ScopedSECKEYPublicKey publicKey;
-  ScopedSECKEYPrivateKey privateKeyTemp;
-  if (GenerateKeyPair(publicKey, privateKeyTemp) != Success) {
+  // It may be the case that privateKeyResult references the same TestKeyPair
+  // as issuerKeyPair. Thus, we can't set keyPairResult until after we're done
+  // with issuerKeyPair.
+  ScopedTestKeyPair subjectKeyPair(GenerateKeyPair());
+  if (!subjectKeyPair) {
     return ENCODING_FAILED;
   }
 
   ByteString tbsCertificate(TBSCertificate(version, serialNumber,
                                            signature, issuerNameDER, notBefore,
                                            notAfter, subjectNameDER,
-                                           publicKey.get(), extensions));
+                                           subjectKeyPair->subjectPublicKeyInfo,
+                                           extensions));
   if (tbsCertificate == ENCODING_FAILED) {
     return ENCODING_FAILED;
   }
 
   ByteString result(SignedData(tbsCertificate,
-                               issuerPrivateKey ? issuerPrivateKey
-                                                : privateKeyTemp.get(),
+                               issuerKeyPair ? *issuerKeyPair
+                                             : *subjectKeyPair,
                                signatureAlgorithm, false, nullptr));
   if (result == ENCODING_FAILED) {
     return ENCODING_FAILED;
@@ -588,7 +515,7 @@ CreateEncodedCertificate(long version, Input signature,
 
   MaybeLogOutput(result, "cert");
 
-  privateKeyResult = privateKeyTemp.release();
+  keyPairResult = subjectKeyPair.release();
 
   return result;
 }
@@ -612,14 +539,9 @@ TBSCertificate(long versionValue,
                const ByteString& serialNumber, Input signature,
                const ByteString& issuer, time_t notBeforeTime,
                time_t notAfterTime, const ByteString& subject,
-               const SECKEYPublicKey* subjectPublicKey,
+               const ByteString& subjectPublicKeyInfo,
                /*optional*/ const ByteString* extensions)
 {
-  assert(subjectPublicKey);
-  if (!subjectPublicKey) {
-    return ENCODING_FAILED;
-  }
-
   ByteString value;
 
   if (versionValue != static_cast<long>(der::Version::v1)) {
@@ -664,15 +586,7 @@ TBSCertificate(long versionValue,
 
   value.append(subject);
 
-  // SubjectPublicKeyInfo  ::=  SEQUENCE  {
-  //       algorithm            AlgorithmIdentifier,
-  //       subjectPublicKey     BIT STRING  }
-  ScopedSECItem subjectPublicKeyInfo(
-    SECKEY_EncodeDERSubjectPublicKeyInfo(subjectPublicKey));
-  if (!subjectPublicKeyInfo) {
-    return ENCODING_FAILED;
-  }
-  value.append(subjectPublicKeyInfo->data, subjectPublicKeyInfo->len);
+  value.append(subjectPublicKeyInfo);
 
   if (extensions) {
     ByteString extensionsValue;
@@ -809,7 +723,7 @@ ByteString
 CreateEncodedOCSPResponse(OCSPResponseContext& context)
 {
   if (!context.skipResponseBytes) {
-    if (!context.signerPrivateKey) {
+    if (!context.signerKeyPair) {
       return ENCODING_FAILED;
     }
   }
@@ -901,8 +815,7 @@ BasicOCSPResponse(OCSPResponseContext& context)
   }
 
   // TODO(bug 980538): certs
-  return SignedData(tbsResponseData,
-                    context.signerPrivateKey.get(),
+  return SignedData(tbsResponseData, *context.signerKeyPair,
                     SignatureAlgorithm::rsa_pkcs1_with_sha256,
                     context.badSignature, context.certs);
 }
@@ -1005,7 +918,7 @@ ResponderID(OCSPResponseContext& context)
     contents = context.signerNameDER;
     responderIDType = 1; // byName
   } else {
-    contents = KeyHash(context);
+    contents = KeyHash(context.signerKeyPair->subjectPublicKey);
     if (contents == ENCODING_FAILED) {
       return ENCODING_FAILED;
     }
@@ -1022,19 +935,9 @@ ResponderID(OCSPResponseContext& context)
 //                          -- the tag, length, and number of unused
 //                          -- bits] in the responder's certificate)
 ByteString
-KeyHash(OCSPResponseContext& context)
+KeyHash(const ByteString& subjectPublicKey)
 {
-  ScopedSECKEYPublicKey
-    signerPublicKey(SECKEY_ConvertToPublicKey(context.signerPrivateKey.get()));
-  if (!signerPublicKey) {
-    return nullptr;
-  }
-  ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
-    signerSPKI(SECKEY_CreateSubjectPublicKeyInfo(signerPublicKey.get()));
-  if (!signerSPKI) {
-    return nullptr;
-  }
-  return KeyHashHelper(signerSPKI.get());
+  return HashedOctetString(subjectPublicKey);
 }
 
 // SingleResponse ::= SEQUENCE {
@@ -1087,23 +990,37 @@ SingleResponse(OCSPResponseContext& context)
 ByteString
 CertID(OCSPResponseContext& context)
 {
-  SECItem issuerSECItem = UnsafeMapInputToSECItem(context.certID.issuer);
-  ByteString issuerNameHash(HashedOctetString(issuerSECItem));
+  ByteString issuerName(context.certID.issuer.UnsafeGetData(),
+                        context.certID.issuer.GetLength());
+  ByteString issuerNameHash(HashedOctetString(issuerName));
   if (issuerNameHash == ENCODING_FAILED) {
     return ENCODING_FAILED;
   }
 
-  SECItem issuerSubjectPublicKeyInfoSECItem =
-    UnsafeMapInputToSECItem(context.certID.issuerSubjectPublicKeyInfo);
-  ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
-    spki(SECKEY_DecodeDERSubjectPublicKeyInfo(
-           &issuerSubjectPublicKeyInfoSECItem));
-  if (!spki) {
-    return ENCODING_FAILED;
-  }
-  ByteString issuerKeyHash(KeyHashHelper(spki.get()));
-  if (issuerKeyHash == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  ByteString issuerKeyHash;
+  {
+    // context.certID.issuerSubjectPublicKeyInfo is the entire
+    // SubjectPublicKeyInfo structure, but we need just the subjectPublicKey
+    // part.
+    Reader input(context.certID.issuerSubjectPublicKeyInfo);
+    Reader contents;
+    if (der::ExpectTagAndGetValue(input, der::SEQUENCE, contents) != Success) {
+      return ENCODING_FAILED;
+    }
+    // Skip AlgorithmIdentifier
+    if (der::ExpectTagAndSkipValue(contents, der::SEQUENCE) != Success) {
+      return ENCODING_FAILED;
+    }
+    Input subjectPublicKey;
+    if (der::BitStringWithNoUnusedBits(contents, subjectPublicKey)
+          != Success) {
+      return ENCODING_FAILED;
+    }
+    issuerKeyHash = KeyHash(ByteString(subjectPublicKey.UnsafeGetData(),
+                                       subjectPublicKey.GetLength()));
+    if (issuerKeyHash == ENCODING_FAILED) {
+      return ENCODING_FAILED;
+    }
   }
 
   ByteString serialNumberValue(context.certID.serialNumber.UnsafeGetData(),
