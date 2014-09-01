@@ -611,7 +611,7 @@ loop.shared.views = (function(_, OT, l10n) {
         default:
           return (
             FeedbackLayout({title: 
-              l10n.get("feedback_call_experience_heading")}, 
+              l10n.get("feedback_call_experience_heading2")}, 
               React.DOM.div({className: "faces"}, 
                 React.DOM.button({className: "face face-happy", 
                         onClick: this.handleHappyClick}), 
