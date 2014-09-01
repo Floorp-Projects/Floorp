@@ -25,11 +25,8 @@
 #include "cert.h"
 #include "nssgtest.h"
 #include "pkix/pkix.h"
-#include "pkix/pkixnss.h"
 #include "pkixgtest.h"
 #include "pkixtestutil.h"
-#include "prinit.h"
-#include "secerr.h"
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
@@ -42,8 +39,8 @@ static ByteString
 CreateCert(const char* issuerCN,
            const char* subjectCN,
            EndEntityOrCA endEntityOrCA,
-           /*optional*/ SECKEYPrivateKey* issuerKey,
-           /*out*/ ScopedSECKEYPrivateKey& subjectKey,
+           /*optional*/ TestKeyPair* issuerKey,
+           /*out*/ ScopedTestKeyPair& subjectKey,
            /*out*/ ScopedCERTCertificate* subjectCert = nullptr)
 {
   static long serialNumberValue = 0;
@@ -196,7 +193,7 @@ private:
   ScopedCERTCertificate certChainTail[7];
 
 public:
-  ScopedSECKEYPrivateKey leafCAKey;
+  ScopedTestKeyPair leafCAKey;
   CERTCertificate* GetLeafCACert() const
   {
     return certChainTail[MOZILLA_PKIX_ARRAY_LENGTH(certChainTail) - 1].get();
@@ -238,11 +235,11 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
   }
 
   {
-    ScopedSECKEYPrivateKey privateKey;
+    ScopedTestKeyPair unusedKeyPair;
     ScopedCERTCertificate cert;
     ByteString certDER(CreateCert("CA7", "Direct End-Entity",
                                   EndEntityOrCA::MustBeEndEntity,
-                                  trustDomain.leafCAKey.get(), privateKey));
+                                  trustDomain.leafCAKey.get(), unusedKeyPair));
     ASSERT_NE(ENCODING_FAILED, certDER);
     Input certDERInput;
     ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
@@ -259,7 +256,7 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
 TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
 {
   static char const* const caCertName = "CA Too Far";
-  ScopedSECKEYPrivateKey caPrivateKey;
+  ScopedTestKeyPair caKeyPair;
 
   // We need a CERTCertificate for caCert so that the trustdomain's FindIssuer
   // method can find it through the NSS cert DB.
@@ -267,7 +264,7 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
 
   {
     ByteString certDER(CreateCert("CA7", caCertName, EndEntityOrCA::MustBeCA,
-                                  trustDomain.leafCAKey.get(), caPrivateKey,
+                                  trustDomain.leafCAKey.get(), caKeyPair,
                                   &caCert));
     ASSERT_NE(ENCODING_FAILED, certDER);
     Input certDERInput;
@@ -282,10 +279,10 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
   }
 
   {
-    ScopedSECKEYPrivateKey privateKey;
+    ScopedTestKeyPair unusedKeyPair;
     ByteString certDER(CreateCert(caCertName, "End-Entity Too Far",
                                   EndEntityOrCA::MustBeEndEntity,
-                                  caPrivateKey.get(), privateKey));
+                                  caKeyPair.get(), unusedKeyPair));
     ASSERT_NE(ENCODING_FAILED, certDER);
     Input certDERInput;
     ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
