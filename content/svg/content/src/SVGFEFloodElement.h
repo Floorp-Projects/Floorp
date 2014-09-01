@@ -21,7 +21,7 @@ class SVGFEFloodElement : public SVGFEFloodElementBase
   friend nsresult (::NS_NewSVGFEFloodElement(nsIContent **aResult,
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFEFloodElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFEFloodElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEFloodElementBase(aNodeInfo)
   {
   }

@@ -105,7 +105,7 @@ class SVGMarkerElement : public SVGMarkerElementBase
 protected:
   friend nsresult (::NS_NewSVGMarkerElement(nsIContent **aResult,
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGMarkerElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGMarkerElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:

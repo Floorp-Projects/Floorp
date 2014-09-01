@@ -32,7 +32,7 @@ class SVGPatternElement MOZ_FINAL : public SVGPatternElementBase
 protected:
   friend nsresult (::NS_NewSVGPatternElement(nsIContent **aResult,
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGPatternElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGPatternElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:

@@ -49,7 +49,7 @@ public:
   DOMSVGTranslatePoint(SVGPoint* aPt, SVGSVGElement *aElement)
     : nsISVGPoint(aPt, true), mElement(aElement) {}
 
-  DOMSVGTranslatePoint(DOMSVGTranslatePoint* aPt)
+  explicit DOMSVGTranslatePoint(DOMSVGTranslatePoint* aPt)
     : nsISVGPoint(&aPt->mPt, true), mElement(aPt->mElement) {}
 
   NS_DECL_ISUPPORTS_INHERITED
