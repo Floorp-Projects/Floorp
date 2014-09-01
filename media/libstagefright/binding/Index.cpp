@@ -23,7 +23,7 @@ public:
   // Given that we're processing this in order we don't use a binary search
   // to find the apropriate time range. Instead we search linearly from the
   // last used point.
-  RangeFinder(const nsTArray<mozilla::MediaByteRange>& ranges)
+  explicit RangeFinder(const nsTArray<mozilla::MediaByteRange>& ranges)
     : mRanges(ranges), mIndex(0)
   {
     // Ranges must be normalised for this to work
