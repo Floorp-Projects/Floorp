@@ -18,7 +18,7 @@ class TelephonyIPCService;
 class TelephonyChild : public PTelephonyChild
 {
 public:
-  TelephonyChild(TelephonyIPCService* aService);
+  explicit TelephonyChild(TelephonyIPCService* aService);
 
 protected:
   virtual ~TelephonyChild();

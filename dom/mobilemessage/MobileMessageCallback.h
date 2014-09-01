@@ -22,7 +22,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMOBILEMESSAGECALLBACK
 
-  MobileMessageCallback(DOMRequest* aDOMRequest);
+  explicit MobileMessageCallback(DOMRequest* aDOMRequest);
 
 private:
   ~MobileMessageCallback();
