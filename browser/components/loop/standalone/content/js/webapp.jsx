@@ -250,7 +250,7 @@ loop.webapp = (function($, _, OT, webL10n) {
               urlCreationDateString={this.state.urlCreationDateString} />
 
             <p className="standalone-call-btn-label">
-              {__("initiate_call_button_label")}
+              {__("initiate_call_button_label2")}
             </p>
 
             <div id="messages"></div>
@@ -264,9 +264,9 @@ loop.webapp = (function($, _, OT, webL10n) {
                     <button className={btnClassStartCall}
                             onClick={this._initiateOutgoingCall("audio-video")}
                             disabled={this.state.disableCallButton}
-                            title={__("initiate_audio_video_call_tooltip")} >
+                            title={__("initiate_audio_video_call_tooltip2")} >
                       <span className="standalone-call-btn-text">
-                        {__("initiate_audio_video_call_button")}
+                        {__("initiate_audio_video_call_button2")}
                       </span>
                       <span className="standalone-call-btn-video-icon"></span>
                     </button>
@@ -285,7 +285,7 @@ loop.webapp = (function($, _, OT, webL10n) {
                       <button className="start-audio-only-call"
                               onClick={this._initiateOutgoingCall("audio")}
                               disabled={this.state.disableCallButton} >
-                        {__("initiate_audio_call_button")}
+                        {__("initiate_audio_call_button2")}
                       </button>
                     </li>
                   </ul>

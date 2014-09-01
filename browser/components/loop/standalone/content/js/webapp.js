@@ -250,7 +250,7 @@ loop.webapp = (function($, _, OT, webL10n) {
               urlCreationDateString: this.state.urlCreationDateString}), 
 
             React.DOM.p({className: "standalone-call-btn-label"}, 
-              __("initiate_call_button_label")
+              __("initiate_call_button_label2")
             ), 
 
             React.DOM.div({id: "messages"}), 
@@ -264,9 +264,9 @@ loop.webapp = (function($, _, OT, webL10n) {
                     React.DOM.button({className: btnClassStartCall, 
                             onClick: this._initiateOutgoingCall("audio-video"), 
                             disabled: this.state.disableCallButton, 
-                            title: __("initiate_audio_video_call_tooltip")}, 
+                            title: __("initiate_audio_video_call_tooltip2")}, 
                       React.DOM.span({className: "standalone-call-btn-text"}, 
-                        __("initiate_audio_video_call_button")
+                        __("initiate_audio_video_call_button2")
                       ), 
                       React.DOM.span({className: "standalone-call-btn-video-icon"})
                     ), 
@@ -285,7 +285,7 @@ loop.webapp = (function($, _, OT, webL10n) {
                       React.DOM.button({className: "start-audio-only-call", 
                               onClick: this._initiateOutgoingCall("audio"), 
                               disabled: this.state.disableCallButton}, 
-                        __("initiate_audio_call_button")
+                        __("initiate_audio_call_button2")
                       )
                     )
                   )
