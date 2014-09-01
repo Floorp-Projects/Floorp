@@ -15,7 +15,7 @@ if CONFIG['MOZ_ENABLE_QT5GEOPOSITION']:
     CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']
 
     LOCAL_INCLUDES += [
-        '/dom/src/geolocation',
+        '/dom/geolocation',
     ]
 
 if CONFIG['MOZ_ENABLE_QT5FEEDBACK']:

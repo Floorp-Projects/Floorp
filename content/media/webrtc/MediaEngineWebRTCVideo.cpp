@@ -700,6 +700,25 @@ MediaEngineWebRTCVideoSource::Shutdown()
   mInitDone = false;
 }
 
+void MediaEngineWebRTCVideoSource::Refresh(int aIndex) {
+  // NOTE: mCaptureIndex might have changed when allocated!
+  // Use aIndex to update information, but don't change mCaptureIndex!!
+#ifdef MOZ_B2G_CAMERA
+  // Caller looked up this source by uniqueId; since deviceName == uniqueId nothing else changes
+#else
+  // Caller looked up this source by uniqueId, so it shouldn't change
+  const uint32_t KMaxDeviceNameLength = 128;
+  char deviceName[KMaxDeviceNameLength];
+  if (mViECapture->GetCaptureDevice(aIndex,
+                                    deviceName, KMaxDeviceNameLength,
+                                    nullptr, 0)) {
+    return;
+  }
+
+  CopyUTF8toUTF16(deviceName, mDeviceName);
+#endif
+}
+
 #ifdef MOZ_B2G_CAMERA
 
 // All these functions must be run on MainThread!
