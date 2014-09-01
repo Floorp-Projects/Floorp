@@ -74,6 +74,8 @@ private:
 
   nsAutoPtr<StageFrightPrivate> mPrivate;
   nsRefPtr<Stream> mSource;
+  nsTArray<mozilla::MediaByteRange> mCachedByteRanges;
+  nsTArray<Interval<Microseconds>> mCachedTimeRanges;
 };
 
 } // namespace mozilla
