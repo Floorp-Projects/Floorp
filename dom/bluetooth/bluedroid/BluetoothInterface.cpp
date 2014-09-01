@@ -2902,10 +2902,19 @@ BluetoothA2dpInterface::~BluetoothA2dpInterface()
 { }
 
 void
-BluetoothA2dpInterface::Init(btav_callbacks_t* aCallbacks,
-                             BluetoothA2dpResultHandler* aRes)
+BluetoothA2dpInterface::Init(
+  BluetoothA2dpNotificationHandler* aNotificationHandler,
+  BluetoothA2dpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->init(aCallbacks);
+  static btav_callbacks_t sCallbacks = {
+    sizeof(sCallbacks),
+    BluetoothA2dpCallback::ConnectionState,
+    BluetoothA2dpCallback::AudioState
+  };
+
+  sA2dpNotificationHandler = aNotificationHandler;
+
+  bt_status_t status = mInterface->init(&sCallbacks);
 
   if (aRes) {
     DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Init,
@@ -3214,10 +3223,34 @@ BluetoothAvrcpInterface::~BluetoothAvrcpInterface()
 { }
 
 void
-BluetoothAvrcpInterface::Init(btrc_callbacks_t* aCallbacks,
-                              BluetoothAvrcpResultHandler* aRes)
+BluetoothAvrcpInterface::Init(
+  BluetoothAvrcpNotificationHandler* aNotificationHandler,
+  BluetoothAvrcpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->init(aCallbacks);
+  static btrc_callbacks_t sCallbacks = {
+    sizeof(sCallbacks),
+#if ANDROID_VERSION >= 19
+    BluetoothAvrcpCallback::RemoteFeature,
+#endif
+    BluetoothAvrcpCallback::GetPlayStatus,
+    BluetoothAvrcpCallback::ListPlayerAppAttr,
+    BluetoothAvrcpCallback::ListPlayerAppValues,
+    BluetoothAvrcpCallback::GetPlayerAppValue,
+    BluetoothAvrcpCallback::GetPlayerAppAttrsText,
+    BluetoothAvrcpCallback::GetPlayerAppValuesText,
+    BluetoothAvrcpCallback::SetPlayerAppValue,
+    BluetoothAvrcpCallback::GetElementAttr,
+    BluetoothAvrcpCallback::RegisterNotification
+#if ANDROID_VERSION >= 19
+    ,
+    BluetoothAvrcpCallback::VolumeChange,
+    BluetoothAvrcpCallback::PassthroughCmd
+#endif
+  };
+
+  sAvrcpNotificationHandler = aNotificationHandler;
+
+  bt_status_t status = mInterface->init(&sCallbacks);
 
   if (aRes) {
     DispatchBluetoothAvrcpResult(aRes, &BluetoothAvrcpResultHandler::Init,
