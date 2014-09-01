@@ -46,7 +46,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsIdleServiceDaily(nsIIdleService* aIdleService);
+  explicit nsIdleServiceDaily(nsIIdleService* aIdleService);
 
   /**
    * Initializes the daily idle observer.
