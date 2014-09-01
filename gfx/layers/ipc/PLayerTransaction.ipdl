@@ -81,10 +81,10 @@ parent:
   // be void_t.
   sync GetAnimationTransform(PLayer layer) returns (MaybeTransform transform);
 
-  // The next time the layer tree is composited, add this async scroll offset in
-  // CSS pixels for the given ViewID.
+  // The next time this layer is composited, add this async scroll offset in
+  // CSS pixels.
   // Useful for testing rendering of async scrolling.
-  async SetAsyncScrollOffset(ViewID id, int32_t x, int32_t y);
+  async SetAsyncScrollOffset(PLayer layer, ViewID id, int32_t x, int32_t y);
 
   // Drop any front buffers that might be retained on the compositor
   // side.
