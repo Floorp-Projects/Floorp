@@ -43,7 +43,7 @@ class nsScanner {
       /**
        *  Use this constructor for the XML fragment parsing case
        */
-      nsScanner(const nsAString& anHTMLString);
+      explicit nsScanner(const nsAString& anHTMLString);
 
       /**
        *  Use this constructor if you want i/o to be based on 
