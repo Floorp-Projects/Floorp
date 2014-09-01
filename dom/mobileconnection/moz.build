@@ -4,6 +4,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['interfaces', 'src']
+DIRS += ['interfaces']
 
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
+
+EXPORTS.mozilla.dom += [
+    'DOMMMIError.h',
+    'MobileCellInfo.h',
+    'MobileConnection.h',
+    'MobileConnectionArray.h',
+    'MobileConnectionInfo.h',
+    'MobileNetworkInfo.h',
+]
+
+SOURCES += [
+    'DOMMMIError.cpp',
+    'MobileCellInfo.cpp',
+    'MobileConnection.cpp',
+    'MobileConnectionArray.cpp',
+    'MobileConnectionInfo.cpp',
+    'MobileNetworkInfo.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'

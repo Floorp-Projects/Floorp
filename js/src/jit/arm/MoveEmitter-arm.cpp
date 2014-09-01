@@ -151,7 +151,7 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to,
         }
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+        MOZ_CRASH("Unexpected move type");
     }
 }
 
@@ -194,7 +194,7 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
         }
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+        MOZ_CRASH("Unexpected move type");
     }
 }
 
@@ -223,7 +223,7 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
             masm.ma_str(from.reg(), toOperand(to, false));
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("strange move!");
+            MOZ_CRASH("strange move!");
         }
     } else if (to.isGeneralReg()) {
         JS_ASSERT(from.isMemoryOrEffectiveAddress());
@@ -326,7 +326,7 @@ MoveEmitterARM::emit(const MoveOp &move)
         emitMove(from, to);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+        MOZ_CRASH("Unexpected move type");
     }
 }
 

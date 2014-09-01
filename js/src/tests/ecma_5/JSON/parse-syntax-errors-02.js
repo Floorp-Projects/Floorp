@@ -1,6 +1,3 @@
-// Ported from dom/src/json/test/unit/test_decode.js and
-// dom/src/json/test/unit/fail[1 to 34, minus 13].json
-
 testJSON('"Unterminated string literal', true);
 testJSON('["Unclosed array"', true);
 testJSON('{unquoted_key: "keys must be quoted"}', true);

@@ -301,7 +301,7 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
 {
   Init();
 
-  nsresult rv = GenerateURIString(aScheme, aUri);
+  nsresult rv = GenerateURIString(aScheme, aPrincipal, aUri);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!gDataTable) {
@@ -340,6 +340,7 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri)
 
 nsresult
 nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
+                                               nsIPrincipal* aPrincipal,
                                                nsACString& aUri)
 {
   nsresult rv;
@@ -354,8 +355,20 @@ nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
   char chars[NSID_LENGTH];
   id.ToProvidedString(chars);
 
-  aUri += aScheme;
-  aUri += NS_LITERAL_CSTRING(":");
+  aUri = aScheme;
+  aUri.Append(':');
+
+  if (aPrincipal) {
+    nsAutoString origin;
+    rv = nsContentUtils::GetUTFOrigin(aPrincipal, origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    AppendUTF16toUTF8(origin, aUri);
+    aUri.Append('/');
+  }
+
   aUri += Substring(chars + 1, chars + NSID_LENGTH - 2);
 
   return NS_OK;
