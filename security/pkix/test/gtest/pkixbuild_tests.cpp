@@ -25,6 +25,7 @@
 #include "cert.h"
 #include "nssgtest.h"
 #include "pkix/pkix.h"
+#include "pkix/pkixnss.h"
 #include "pkixgtest.h"
 #include "pkixtestutil.h"
 
