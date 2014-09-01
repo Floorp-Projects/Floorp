@@ -26,7 +26,7 @@ class SpeechRecognitionResultList MOZ_FINAL : public nsISupports,
                                               public nsWrapperCache
 {
 public:
-  SpeechRecognitionResultList(SpeechRecognition* aParent);
+  explicit SpeechRecognitionResultList(SpeechRecognition* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SpeechRecognitionResultList)

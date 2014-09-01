@@ -50,7 +50,7 @@ class GMPVideoEncodedFrameImpl: public GMPVideoEncodedFrame
 {
   friend struct IPC::ParamTraits<mozilla::gmp::GMPVideoEncodedFrameImpl>;
 public:
-  GMPVideoEncodedFrameImpl(GMPVideoHostImpl* aHost);
+  explicit GMPVideoEncodedFrameImpl(GMPVideoHostImpl* aHost);
   GMPVideoEncodedFrameImpl(const GMPVideoEncodedFrameData& aFrameData, GMPVideoHostImpl* aHost);
   virtual ~GMPVideoEncodedFrameImpl();
 

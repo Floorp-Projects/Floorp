@@ -194,7 +194,7 @@ public:
 
   // aClient provides the underlying transport that cache will use to read
   // data for this stream.
-  MediaCacheStream(ChannelMediaResource* aClient);
+  explicit MediaCacheStream(ChannelMediaResource* aClient);
   ~MediaCacheStream();
 
   // Set up this stream with the cache. Can fail on OOM. One
@@ -396,7 +396,7 @@ private:
 
   private:
     struct Entry : public nsUint32HashKey {
-      Entry(KeyTypePointer aKey) : nsUint32HashKey(aKey) { }
+      explicit Entry(KeyTypePointer aKey) : nsUint32HashKey(aKey) { }
       Entry(const Entry& toCopy) : nsUint32HashKey(&toCopy.GetKey()),
         mNextBlock(toCopy.mNextBlock), mPrevBlock(toCopy.mPrevBlock) {}
 

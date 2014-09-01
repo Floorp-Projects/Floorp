@@ -19,7 +19,7 @@ class GMPPlaneImpl : public GMPPlane
 {
   friend struct IPC::ParamTraits<mozilla::gmp::GMPPlaneImpl>;
 public:
-  GMPPlaneImpl(GMPVideoHostImpl* aHost);
+  explicit GMPPlaneImpl(GMPVideoHostImpl* aHost);
   GMPPlaneImpl(const GMPPlaneData& aPlaneData, GMPVideoHostImpl* aHost);
   virtual ~GMPPlaneImpl();
 

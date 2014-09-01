@@ -21,7 +21,7 @@ class GMPDecryptorChild : public GMPDecryptorCallback
                         , public PGMPDecryptorChild
 {
 public:
-  GMPDecryptorChild(GMPChild* aPlugin);
+  explicit GMPDecryptorChild(GMPChild* aPlugin);
   ~GMPDecryptorChild();
 
   void Init(GMPDecryptor* aSession);

@@ -82,7 +82,7 @@ private:
 class ShutdownThreadEvent : public nsRunnable
 {
 public:
-  ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
+  explicit ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
   ~ShutdownThreadEvent() {}
   NS_IMETHOD Run() MOZ_OVERRIDE {
     mThread->Shutdown();
@@ -96,7 +96,7 @@ private:
 template<class T>
 class DeleteObjectTask: public nsRunnable {
 public:
-  DeleteObjectTask(nsAutoPtr<T>& aObject)
+  explicit DeleteObjectTask(nsAutoPtr<T>& aObject)
     : mObject(aObject)
   {
   }

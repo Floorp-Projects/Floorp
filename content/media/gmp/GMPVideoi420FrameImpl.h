@@ -20,7 +20,7 @@ class GMPVideoi420FrameImpl : public GMPVideoi420Frame
 {
   friend struct IPC::ParamTraits<mozilla::gmp::GMPVideoi420FrameImpl>;
 public:
-  GMPVideoi420FrameImpl(GMPVideoHostImpl* aHost);
+  explicit GMPVideoi420FrameImpl(GMPVideoHostImpl* aHost);
   GMPVideoi420FrameImpl(const GMPVideoi420FrameData& aFrameData, GMPVideoHostImpl* aHost);
   virtual ~GMPVideoi420FrameImpl();
 

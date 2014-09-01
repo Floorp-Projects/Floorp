@@ -18,8 +18,8 @@ class GMPEncryptedBufferDataImpl : public GMPEncryptedBufferMetadata {
 private:
   typedef mp4_demuxer::CryptoSample CryptoSample;
 public:
-  GMPEncryptedBufferDataImpl(const CryptoSample& aCrypto);
-  GMPEncryptedBufferDataImpl(const GMPDecryptionData& aData);
+  explicit GMPEncryptedBufferDataImpl(const CryptoSample& aCrypto);
+  explicit GMPEncryptedBufferDataImpl(const GMPDecryptionData& aData);
   virtual ~GMPEncryptedBufferDataImpl();
 
   void RelinquishData(GMPDecryptionData& aData);
