@@ -146,14 +146,14 @@ add_task(function* () {
     compareContacts(contacts[i], kContacts[i]);
   }
 
-  // Add a contact.
+  info("Add a contact.");
   let deferred = Promise.defer();
   gExpectedAdds.push(kDanglingContact);
   LoopContacts.add(kDanglingContact, (err, contact) => {
     Assert.ok(!err, "There shouldn't be an error");
     compareContacts(contact, kDanglingContact);
 
-    // Check if it's persisted.
+    info("Check if it's persisted.");
     LoopContacts.get(contact._guid, (err, contact) => {
       Assert.ok(!err, "There shouldn't be an error");
       compareContacts(contact, kDanglingContact);
@@ -163,8 +163,8 @@ add_task(function* () {
   yield deferred.promise;
 });
 
-// Test removing all contacts.
 add_task(function* () {
+  info("Test removing all contacts.");
   let contacts = yield promiseLoadContacts();
 
   let deferred = Promise.defer();
@@ -183,7 +183,7 @@ add_task(function* () {
 add_task(function* () {
   let contacts = yield promiseLoadContacts();
 
-  // Get a single contact.
+  info("Get a single contact.");
   let deferred = Promise.defer();
   LoopContacts.get(contacts[1]._guid, (err, contact) => {
     Assert.ok(!err, "There shouldn't be an error");
@@ -192,7 +192,7 @@ add_task(function* () {
   });
   yield deferred.promise;
 
-  // Get a single contact by id.
+  info("Get a single contact by id.");
   let deferred = Promise.defer();
   LoopContacts.getByServiceId(2, (err, contact) => {
     Assert.ok(!err, "There shouldn't be an error");
@@ -201,7 +201,7 @@ add_task(function* () {
   });
   yield deferred.promise;
 
-  // Get a couple of contacts.
+  info("Get a couple of contacts.");
   let deferred = Promise.defer();
   let toRetrieve = [contacts[0], contacts[2], contacts[3]];
   LoopContacts.getMany(toRetrieve.map(contact => contact._guid), (err, result) => {
@@ -217,7 +217,7 @@ add_task(function* () {
   });
   yield deferred.promise;
 
-  // Get all contacts.
+  info("Get all contacts.");
   deferred = Promise.defer();
   LoopContacts.getAll((err, contacts) => {
     Assert.ok(!err, "There shouldn't be an error");
@@ -228,7 +228,7 @@ add_task(function* () {
   });
   yield deferred.promise;
 
-  // Get a non-existent contact.
+  info("Get a non-existent contact.");
   deferred = Promise.defer();
   LoopContacts.get(1000, (err, contact) => {
     Assert.ok(!err, "There shouldn't be an error");
@@ -242,7 +242,7 @@ add_task(function* () {
 add_task(function* () {
   let contacts = yield promiseLoadContacts();
 
-  // Remove a single contact.
+  info("Remove a single contact.");
   let deferred = Promise.defer();
   let toRemove = contacts[2]._guid;
   gExpectedRemovals.push(toRemove);
@@ -257,7 +257,7 @@ add_task(function* () {
   });
   yield deferred.promise;
 
-  // Remove a non-existing contact.
+  info("Remove a non-existing contact.");
   deferred = Promise.defer();
   LoopContacts.remove(1000, (err, contact) => {
     Assert.ok(!err, "There shouldn't be an error");
@@ -266,7 +266,7 @@ add_task(function* () {
   });
   yield deferred.promise;
 
-  // Remove multiple contacts.
+  info("Remove multiple contacts.");
   deferred = Promise.defer();
   toRemove = [contacts[0]._guid, contacts[1]._guid];
   gExpectedRemovals.push(...toRemove);
@@ -292,7 +292,7 @@ add_task(function* () {
 
   const newBday = (new Date(403920000000)).toISOString();
 
-  // Update a single contact.
+  info("Update a single contact.");
   let deferred = Promise.defer();
   let toUpdate = {
     _guid: contacts[2]._guid,
@@ -306,7 +306,7 @@ add_task(function* () {
     LoopContacts.get(toUpdate._guid, (err, contact) => {
       Assert.ok(!err, "There shouldn't be an error");
       Assert.equal(contact.bday, newBday, "Birthday should be the same");
-      // Check that all other properties were left intact.
+      info("Check that all other properties were left intact.");
       contacts[2].bday = newBday;
       compareContacts(contact, contacts[2]);
       deferred.resolve();
@@ -314,7 +314,7 @@ add_task(function* () {
   });
   yield deferred.promise;
 
-  // Update a non-existing contact.
+  info("Update a non-existing contact.");
   deferred = Promise.defer();
   toUpdate = {
     _guid: 1000,
@@ -333,7 +333,7 @@ add_task(function* () {
 add_task(function* () {
   let contacts = yield promiseLoadContacts();
 
-  // Block contact.
+  info("Block contact.");
   let deferred = Promise.defer();
   let toBlock = contacts[1]._guid;
   gExpectedUpdates.push(toBlock);
@@ -344,7 +344,7 @@ add_task(function* () {
     LoopContacts.get(toBlock, (err, contact) => {
       Assert.ok(!err, "There shouldn't be an error");
       Assert.strictEqual(contact.blocked, true, "Blocked status should be set");
-      // Check that all other properties were left intact.
+      info("Check that all other properties were left intact.");
       delete contact.blocked;
       compareContacts(contact, contacts[1]);
       deferred.resolve();
@@ -352,7 +352,7 @@ add_task(function* () {
   });
   yield deferred.promise;
 
-  // Block a non-existing contact.
+  info("Block a non-existing contact.");
   deferred = Promise.defer();
   LoopContacts.block(1000, err => {
     Assert.ok(err, "There should be an error");
@@ -362,7 +362,7 @@ add_task(function* () {
   });
   yield deferred.promise;
 
-  // Unblock a contact.
+  info("Unblock a contact.");
   deferred = Promise.defer();
   let toUnblock = contacts[1]._guid;
   gExpectedUpdates.push(toUnblock);
@@ -373,7 +373,7 @@ add_task(function* () {
     LoopContacts.get(toUnblock, (err, contact) => {
       Assert.ok(!err, "There shouldn't be an error");
       Assert.strictEqual(contact.blocked, false, "Blocked status should be set");
-      // Check that all other properties were left intact.
+      info("Check that all other properties were left intact.");
       delete contact.blocked;
       compareContacts(contact, contacts[1]);
       deferred.resolve();
@@ -381,7 +381,7 @@ add_task(function* () {
   });
   yield deferred.promise;
 
-  // Unblock a non-existing contact.
+  info("Unblock a non-existing contact.");
   deferred = Promise.defer();
   LoopContacts.unblock(1000, err => {
     Assert.ok(err, "There should be an error");
