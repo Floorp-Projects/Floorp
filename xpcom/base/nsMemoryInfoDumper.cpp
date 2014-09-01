@@ -614,12 +614,6 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
   nsString identifier(aIdentifier);
   EnsureNonEmptyIdentifier(identifier);
 
-#ifdef MOZ_DMD
-  // Clear DMD's reportedness state before running the memory reporters, to
-  // avoid spurious twice-reported warnings.
-  dmd::ClearReports();
-#endif
-
   // Open a new file named something like
   //
   //   incomplete-memory-report-<identifier>-<pid>.json.gz
