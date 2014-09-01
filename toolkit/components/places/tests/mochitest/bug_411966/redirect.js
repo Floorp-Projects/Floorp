@@ -117,12 +117,12 @@ function checkDB(data){
       referrer: referrer},
     function() {
       // Get all pages visited from the original typed one
-      var sql = "SELECT url FROM moz_historyvisits " +
-                "JOIN moz_places h ON h.id = place_id " +
-                "WHERE from_visit IN " +
-                   "(SELECT v.id FROM moz_historyvisits v " +
-                   "JOIN moz_places p ON p.id = v.place_id " +
-                   "WHERE p.url = ?1)";
+      var sql = `SELECT url FROM moz_historyvisits
+                 JOIN moz_places h ON h.id = place_id
+                 WHERE from_visit IN
+                    (SELECT v.id FROM moz_historyvisits v
+                    JOIN moz_places p ON p.id = v.place_id
+                    WHERE p.url = ?1)`;
       var stmt = mDBConn.createStatement(sql);
       stmt.bindByIndex(0, typedURI.spec);
 

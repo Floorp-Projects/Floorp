@@ -44,6 +44,7 @@ SOURCES += ['libui/' + src for src in [
 ]]
 
 SOURCES += [
+    'GeckoTouchDispatcher.cpp',
     'GfxInfo.cpp',
     'GonkMemoryPressureMonitoring.cpp',
     'GonkPermission.cpp',

@@ -28,9 +28,9 @@ function check_uri_keyword(aURI, aKeyword)
 function check_orphans()
 {
   stmt = DBConn().createStatement(
-    "SELECT id FROM moz_keywords k WHERE NOT EXISTS ("
-  +    "SELECT id FROM moz_bookmarks WHERE keyword_id = k.id "
-  + ")"
+    `SELECT id FROM moz_keywords k WHERE NOT EXISTS (
+        SELECT id FROM moz_bookmarks WHERE keyword_id = k.id
+     )`
   );
   try {
     do_check_false(stmt.executeStep());
@@ -40,9 +40,9 @@ function check_orphans()
 
   print("Check there are no orphan database entries");
   let stmt = DBConn().createStatement(
-    "SELECT b.id FROM moz_bookmarks b "
-  + "LEFT JOIN moz_keywords k ON b.keyword_id = k.id "
-  + "WHERE keyword_id NOTNULL AND k.id ISNULL"
+    `SELECT b.id FROM moz_bookmarks b
+     LEFT JOIN moz_keywords k ON b.keyword_id = k.id
+     WHERE keyword_id NOTNULL AND k.id ISNULL`
   );
   try {
     do_check_false(stmt.executeStep());
