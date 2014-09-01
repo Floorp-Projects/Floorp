@@ -150,7 +150,7 @@ CreateFileTask::Work()
   class AutoClose
   {
   public:
-    AutoClose(nsIOutputStream* aStream)
+    explicit AutoClose(nsIOutputStream* aStream)
       : mStream(aStream)
     {
       MOZ_ASSERT(aStream);

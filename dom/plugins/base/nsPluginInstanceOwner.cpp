@@ -102,7 +102,7 @@ class nsPluginDOMContextMenuListener : public nsIDOMEventListener
   virtual ~nsPluginDOMContextMenuListener();
 
 public:
-  nsPluginDOMContextMenuListener(nsIContent* aContent);
+  explicit nsPluginDOMContextMenuListener(nsIContent* aContent);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER

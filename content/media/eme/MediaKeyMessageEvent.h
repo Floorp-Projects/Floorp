@@ -29,7 +29,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaKeyMessageEvent, Event)
 protected:
   virtual ~MediaKeyMessageEvent();
-  MediaKeyMessageEvent(EventTarget* aOwner);
+  explicit MediaKeyMessageEvent(EventTarget* aOwner);
 
   JS::Heap<JSObject*> mMessage;
   nsString mDestinationURL;

@@ -40,7 +40,7 @@ public:
   // Great Renaming proposed in bug 983177.
   static bool HasSupport(JSContext* aCx, JSObject* aGlobal);
 
-  CameraCapabilities(nsPIDOMWindow* aWindow);
+  explicit CameraCapabilities(nsPIDOMWindow* aWindow);
 
   // Populate the camera capabilities interface from the specific
   // camera control object.
