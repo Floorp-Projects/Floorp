@@ -17,7 +17,7 @@ class ChildThread : public IPC::Channel::Listener,
                     public base::Thread {
  public:
   // Creates the thread.
-  ChildThread(Thread::Options options);
+  explicit ChildThread(Thread::Options options);
   virtual ~ChildThread();
 
   // IPC::Message::Sender implementation:
