@@ -452,7 +452,7 @@ XrayTraits* GetXrayTraits(JSObject *obj);
 template <typename Base, typename Traits = XPCWrappedNativeXrayTraits >
 class XrayWrapper : public Base {
   public:
-    MOZ_CONSTEXPR XrayWrapper(unsigned flags)
+    MOZ_CONSTEXPR explicit XrayWrapper(unsigned flags)
       : Base(flags | WrapperFactory::IS_XRAY_WRAPPER_FLAG, Traits::HasPrototype)
     { };
 
