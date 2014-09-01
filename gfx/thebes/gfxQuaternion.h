@@ -17,7 +17,7 @@ struct gfxQuaternion : public mozilla::gfx::BasePoint4D<gfxFloat, gfxQuaternion>
     gfxQuaternion() : Super() {}
     gfxQuaternion(gfxFloat aX, gfxFloat aY, gfxFloat aZ, gfxFloat aW) : Super(aX, aY, aZ, aW) {}
 
-    gfxQuaternion(const mozilla::gfx::Matrix4x4& aMatrix) {
+    explicit gfxQuaternion(const mozilla::gfx::Matrix4x4& aMatrix) {
         w = 0.5 * sqrt(std::max(1 + aMatrix[0][0] + aMatrix[1][1] + aMatrix[2][2], 0.0f));
         x = 0.5 * sqrt(std::max(1 + aMatrix[0][0] - aMatrix[1][1] - aMatrix[2][2], 0.0f));
         y = 0.5 * sqrt(std::max(1 - aMatrix[0][0] + aMatrix[1][1] - aMatrix[2][2], 0.0f));
