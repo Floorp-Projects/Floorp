@@ -104,8 +104,8 @@ class Fake_MediaStream {
 
 class Fake_MediaPeriodic : public nsITimerCallback {
 public:
-Fake_MediaPeriodic(Fake_MediaStream *aStream) : mStream(aStream),
-                                                mCount(0) {}
+  explicit Fake_MediaPeriodic(Fake_MediaStream *aStream) : mStream(aStream),
+                                                           mCount(0) {}
   void Detach() {
     mStream = nullptr;
   }
@@ -217,7 +217,7 @@ class Fake_DOMMediaStream;
 class Fake_MediaStreamTrack : public mozilla::RefCounted<Fake_MediaStreamTrack>
 {
 public:
-  Fake_MediaStreamTrack(bool aIsVideo) : mIsVideo (aIsVideo) {}
+  explicit Fake_MediaStreamTrack(bool aIsVideo) : mIsVideo (aIsVideo) {}
   mozilla::TrackID GetTrackID() { return mIsVideo ? 1 : 0; }
   Fake_DOMMediaStream *GetStream() { return nullptr; }
   const Fake_MediaStreamTrack* AsVideoStreamTrack() const
@@ -241,7 +241,7 @@ protected:
   }
 
 public:
-  Fake_DOMMediaStream(Fake_MediaStream *stream = nullptr)
+  explicit Fake_DOMMediaStream(Fake_MediaStream *stream = nullptr)
     : mMediaStream(stream? stream : new Fake_MediaStream())
     , mVideoTrack(new Fake_MediaStreamTrack(true))
     , mAudioTrack(new Fake_MediaStreamTrack(false)) {}
