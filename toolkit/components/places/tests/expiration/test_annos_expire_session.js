@@ -54,9 +54,9 @@ add_task(function test_annos_expire_session() {
   let deferred = Promise.defer();
   waitForConnectionClosed(function() {
     let stmt = DBConn(true).createAsyncStatement(
-      "SELECT id FROM moz_annos "
-    + "UNION ALL "
-    + "SELECT id FROM moz_items_annos "
+      `SELECT id FROM moz_annos
+       UNION ALL
+       SELECT id FROM moz_items_annos`
     );
     stmt.executeAsync({
       handleResult: function(aResultSet) {

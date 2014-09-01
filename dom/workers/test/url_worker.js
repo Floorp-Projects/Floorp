@@ -78,5 +78,14 @@ onmessage = function(event) {
 
   postMessage({type: 'status', status: status, msg: 'Exception wanted' });
 
+  var blob = new Blob([123]);
+  var uri = URL.createObjectURL(blob);
+  postMessage({type: 'status', status: !!uri,
+               msg: "The URI has been generated from the blob"});
+
+  var u = new URL(uri);
+  postMessage({type: 'status', status: u.origin == 'http://mochi.test:8888',
+               msg: "The URL generated from a blob URI has an origin."});
+
   postMessage({type: 'finish' });
 }
