@@ -321,6 +321,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       layer->SetAnimations(common.animations());
       layer->SetInvalidRegion(common.invalidRegion());
       layer->SetFrameMetrics(common.metrics());
+      layer->SetBackgroundColor(common.backgroundColor().value());
+      layer->SetContentDescription(common.contentDescription());
 
       typedef SpecificLayerAttributes Specific;
       const SpecificLayerAttributes& specific = attrs.specific();
@@ -687,35 +689,26 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   return true;
 }
 
-static AsyncPanZoomController*
-GetAPZCForViewID(Layer* aLayer, FrameMetrics::ViewID aScrollID)
-{
-  for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
-    if (aLayer->GetFrameMetrics(i).GetScrollId() == aScrollID) {
-      return aLayer->GetAsyncPanZoomController(i);
-    }
-  }
-  ContainerLayer* container = aLayer->AsContainerLayer();
-  if (container) {
-    for (Layer* l = container->GetFirstChild(); l; l = l->GetNextSibling()) {
-      AsyncPanZoomController* c = GetAPZCForViewID(l, aScrollID);
-      if (c) {
-        return c;
-      }
-    }
-  }
-  return nullptr;
-}
-
 bool
-LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollID,
+LayerTransactionParent::RecvSetAsyncScrollOffset(PLayerParent* aLayer,
+                                                 const FrameMetrics::ViewID& aId,
                                                  const int32_t& aX, const int32_t& aY)
 {
   if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
     return false;
   }
 
-  AsyncPanZoomController* controller = GetAPZCForViewID(mRoot, aScrollID);
+  Layer* layer = cast(aLayer)->AsLayer();
+  if (!layer) {
+    return false;
+  }
+  AsyncPanZoomController* controller = nullptr;
+  for (uint32_t i = 0; i < layer->GetFrameMetricsCount(); i++) {
+    if (layer->GetFrameMetrics(i).GetScrollId() == aId) {
+      controller = layer->GetAsyncPanZoomController(i);
+      break;
+    }
+  }
   if (!controller) {
     return false;
   }

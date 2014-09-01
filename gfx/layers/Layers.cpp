@@ -209,7 +209,8 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mScrollbarTargetId(FrameMetrics::NULL_SCROLL_ID),
   mScrollbarDirection(ScrollDirection::NONE),
   mDebugColorIndex(0),
-  mAnimationGeneration(0)
+  mAnimationGeneration(0),
+  mBackgroundColor(0, 0, 0, 0)
 {}
 
 Layer::~Layer()
