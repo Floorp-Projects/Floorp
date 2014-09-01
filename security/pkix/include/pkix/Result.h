@@ -80,15 +80,117 @@ MOZILLA_PKIX_ENUM_CLASS Result
   ERROR_CA_CERT_USED_AS_END_ENTITY = 39,
   ERROR_INADEQUATE_KEY_SIZE = 40,
 
-  // Keep this in sync with MAP_LIST in pkixnss.cpp
+  // Keep this in sync with MAP_LIST below
 
   FATAL_ERROR_INVALID_ARGS = FATAL_ERROR_FLAG | 1,
   FATAL_ERROR_INVALID_STATE = FATAL_ERROR_FLAG | 2,
   FATAL_ERROR_LIBRARY_FAILURE = FATAL_ERROR_FLAG | 3,
   FATAL_ERROR_NO_MEMORY = FATAL_ERROR_FLAG | 4,
 
-  // Keep this in sync with MAP_LIST in pkixnss.cpp
+  // Keep this in sync with MAP_LIST below
 };
+
+// The first argument to MOZILLA_PKIX_MAP() is used for building the mapping
+// from error code to error name in MapResultToName.
+//
+// The second argument to MOZILLA_PKIX_MAP() is used, along with the first
+// argument, for maintaining the mapping of mozilla::pkix error codes to
+// NSS/NSPR error codes in pkixnss.cpp.
+#define MOZILLA_PKIX_MAP_LIST \
+    MOZILLA_PKIX_MAP(Result::Success, 0) \
+    MOZILLA_PKIX_MAP(Result::ERROR_BAD_DER, \
+                         SEC_ERROR_BAD_DER) \
+    MOZILLA_PKIX_MAP(Result::ERROR_CA_CERT_INVALID, \
+                         SEC_ERROR_CA_CERT_INVALID) \
+    MOZILLA_PKIX_MAP(Result::ERROR_BAD_SIGNATURE, \
+                         SEC_ERROR_BAD_SIGNATURE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_CERT_BAD_ACCESS_LOCATION, \
+                         SEC_ERROR_CERT_BAD_ACCESS_LOCATION) \
+    MOZILLA_PKIX_MAP(Result::ERROR_CERT_NOT_IN_NAME_SPACE, \
+                         SEC_ERROR_CERT_NOT_IN_NAME_SPACE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED, \
+                         SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED) \
+    MOZILLA_PKIX_MAP(Result::ERROR_CONNECT_REFUSED, \
+                                PR_CONNECT_REFUSED_ERROR) \
+    MOZILLA_PKIX_MAP(Result::ERROR_EXPIRED_CERTIFICATE, \
+                         SEC_ERROR_EXPIRED_CERTIFICATE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_EXTENSION_VALUE_INVALID, \
+                         SEC_ERROR_EXTENSION_VALUE_INVALID) \
+    MOZILLA_PKIX_MAP(Result::ERROR_INADEQUATE_CERT_TYPE, \
+                         SEC_ERROR_INADEQUATE_CERT_TYPE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_INADEQUATE_KEY_USAGE, \
+                         SEC_ERROR_INADEQUATE_KEY_USAGE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_INVALID_ALGORITHM, \
+                         SEC_ERROR_INVALID_ALGORITHM) \
+    MOZILLA_PKIX_MAP(Result::ERROR_INVALID_TIME, \
+                         SEC_ERROR_INVALID_TIME) \
+    MOZILLA_PKIX_MAP(Result::ERROR_KEY_PINNING_FAILURE, \
+                MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_PATH_LEN_CONSTRAINT_INVALID, \
+                         SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID) \
+    MOZILLA_PKIX_MAP(Result::ERROR_POLICY_VALIDATION_FAILED, \
+                         SEC_ERROR_POLICY_VALIDATION_FAILED) \
+    MOZILLA_PKIX_MAP(Result::ERROR_REVOKED_CERTIFICATE, \
+                         SEC_ERROR_REVOKED_CERTIFICATE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION, \
+                         SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION) \
+    MOZILLA_PKIX_MAP(Result::ERROR_UNKNOWN_ERROR, \
+                                PR_UNKNOWN_ERROR) \
+    MOZILLA_PKIX_MAP(Result::ERROR_UNKNOWN_ISSUER, \
+                         SEC_ERROR_UNKNOWN_ISSUER) \
+    MOZILLA_PKIX_MAP(Result::ERROR_UNTRUSTED_CERT, \
+                         SEC_ERROR_UNTRUSTED_CERT) \
+    MOZILLA_PKIX_MAP(Result::ERROR_UNTRUSTED_ISSUER, \
+                         SEC_ERROR_UNTRUSTED_ISSUER) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_BAD_SIGNATURE, \
+                         SEC_ERROR_OCSP_BAD_SIGNATURE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_INVALID_SIGNING_CERT, \
+                         SEC_ERROR_OCSP_INVALID_SIGNING_CERT) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_MALFORMED_REQUEST, \
+                         SEC_ERROR_OCSP_MALFORMED_REQUEST) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_MALFORMED_RESPONSE, \
+                         SEC_ERROR_OCSP_MALFORMED_RESPONSE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_OLD_RESPONSE, \
+                         SEC_ERROR_OCSP_OLD_RESPONSE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_REQUEST_NEEDS_SIG, \
+                         SEC_ERROR_OCSP_REQUEST_NEEDS_SIG) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_RESPONDER_CERT_INVALID, \
+                         SEC_ERROR_OCSP_RESPONDER_CERT_INVALID) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_SERVER_ERROR, \
+                         SEC_ERROR_OCSP_SERVER_ERROR) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_TRY_SERVER_LATER, \
+                         SEC_ERROR_OCSP_TRY_SERVER_LATER) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_UNAUTHORIZED_REQUEST, \
+                         SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_UNKNOWN_RESPONSE_STATUS, \
+                         SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_UNKNOWN_CERT, \
+                         SEC_ERROR_OCSP_UNKNOWN_CERT) \
+    MOZILLA_PKIX_MAP(Result::ERROR_OCSP_FUTURE_RESPONSE, \
+                         SEC_ERROR_OCSP_FUTURE_RESPONSE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_INVALID_KEY, \
+                         SEC_ERROR_INVALID_KEY) \
+    MOZILLA_PKIX_MAP(Result::ERROR_UNSUPPORTED_KEYALG, \
+                         SEC_ERROR_UNSUPPORTED_KEYALG) \
+    MOZILLA_PKIX_MAP(Result::ERROR_EXPIRED_ISSUER_CERTIFICATE, \
+                         SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE) \
+    MOZILLA_PKIX_MAP(Result::ERROR_CA_CERT_USED_AS_END_ENTITY, \
+                MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY) \
+    MOZILLA_PKIX_MAP(Result::ERROR_INADEQUATE_KEY_SIZE, \
+                MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE) \
+    MOZILLA_PKIX_MAP(Result::FATAL_ERROR_INVALID_ARGS, \
+                               SEC_ERROR_INVALID_ARGS) \
+    MOZILLA_PKIX_MAP(Result::FATAL_ERROR_INVALID_STATE, \
+                                      PR_INVALID_STATE_ERROR) \
+    MOZILLA_PKIX_MAP(Result::FATAL_ERROR_LIBRARY_FAILURE, \
+                               SEC_ERROR_LIBRARY_FAILURE) \
+    MOZILLA_PKIX_MAP(Result::FATAL_ERROR_NO_MEMORY, \
+                               SEC_ERROR_NO_MEMORY) \
+    /* nothing here */
+
+// Returns the stringified name of the given result, e.g. "Result::Success",
+// or nullptr if result is unknown (invalid).
+const char* MapResultToName(Result result);
 
 // We write many comparisons as (x != Success), and this shortened name makes
 // those comparisons clearer, especially because the shortened name often

@@ -56,10 +56,6 @@ Result CheckPublicKey(Input subjectPublicKeyInfo);
 Result MapPRErrorCodeToResult(PRErrorCode errorCode);
 PRErrorCode MapResultToPRErrorCode(Result result);
 
-// Returns the stringified name of the given result, e.g. "Result::Success",
-// or nullptr if result is unknown (invalid).
-const char* MapResultToName(Result result);
-
 // The error codes within each module must fit in 16 bits. We want these
 // errors to fit in the same module as the NSS errors but not overlap with
 // any of them. Converting an NSS SEC, NSS SSL, or PSM error to an NS error
