@@ -12,7 +12,7 @@ namespace layers {
 
 struct TestTiledLayerTile {
   int value;
-  TestTiledLayerTile(int v = 0) {
+  explicit TestTiledLayerTile(int v = 0) {
     value = v;
   }
   bool operator== (const TestTiledLayerTile& o) const {
