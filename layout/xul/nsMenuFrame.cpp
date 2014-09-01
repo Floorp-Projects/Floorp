@@ -204,7 +204,7 @@ nsMenuFrame::GetMenuParent() const
 class nsASyncMenuInitialization MOZ_FINAL : public nsIReflowCallback
 {
 public:
-  nsASyncMenuInitialization(nsIFrame* aFrame)
+  explicit nsASyncMenuInitialization(nsIFrame* aFrame)
     : mWeakFrame(aFrame)
   {
   }

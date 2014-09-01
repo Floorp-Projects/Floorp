@@ -4673,7 +4673,7 @@ nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx, int32_t aEndRowIdx,
 class nsOverflowChecker : public nsRunnable
 {
 public:
-  nsOverflowChecker(nsTreeBodyFrame* aFrame) : mFrame(aFrame) {}
+  explicit nsOverflowChecker(nsTreeBodyFrame* aFrame) : mFrame(aFrame) {}
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
     if (mFrame.IsAlive()) {

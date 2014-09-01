@@ -67,7 +67,7 @@ class nsTransitionManager MOZ_FINAL
   : public mozilla::css::CommonAnimationManager
 {
 public:
-  nsTransitionManager(nsPresContext *aPresContext)
+  explicit nsTransitionManager(nsPresContext *aPresContext)
     : mozilla::css::CommonAnimationManager(aPresContext)
     , mInAnimationOnlyStyleUpdate(false)
   {

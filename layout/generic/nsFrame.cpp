@@ -1875,7 +1875,7 @@ class AutoSaveRestoreBlendMode
   nsDisplayListBuilder& mBuilder;
   EnumSet<gfx::CompositionOp> mSavedBlendModes;
 public:
-  AutoSaveRestoreBlendMode(nsDisplayListBuilder& aBuilder)
+  explicit AutoSaveRestoreBlendMode(nsDisplayListBuilder& aBuilder)
     : mBuilder(aBuilder)
     , mSavedBlendModes(aBuilder.ContainedBlendModes())
   { }
@@ -8959,7 +8959,7 @@ static DR_State *DR_state; // the one and only DR_State
 
 struct DR_RulePart 
 {
-  DR_RulePart(nsIAtom* aFrameType) : mFrameType(aFrameType), mNext(0) {}
+  explicit DR_RulePart(nsIAtom* aFrameType) : mFrameType(aFrameType), mNext(0) {}
   void Destroy();
 
   nsIAtom*     mFrameType;

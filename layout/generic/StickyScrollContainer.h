@@ -87,7 +87,7 @@ public:
   virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) MOZ_OVERRIDE;
 
 private:
-  StickyScrollContainer(nsIScrollableFrame* aScrollFrame);
+  explicit StickyScrollContainer(nsIScrollableFrame* aScrollFrame);
   ~StickyScrollContainer();
 
   /**

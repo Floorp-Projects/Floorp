@@ -38,7 +38,7 @@ public:
   }
 
 protected:
-  nsMathMLmphantomFrame(nsStyleContext* aContext)
+  explicit nsMathMLmphantomFrame(nsStyleContext* aContext)
     : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmphantomFrame();
 };

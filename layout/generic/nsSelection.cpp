@@ -151,7 +151,7 @@ class MOZ_STACK_CLASS nsSelectionBatcher MOZ_FINAL
 private:
   nsCOMPtr<nsISelectionPrivate> mSelection;
 public:
-  nsSelectionBatcher(nsISelectionPrivate *aSelection) : mSelection(aSelection)
+  explicit nsSelectionBatcher(nsISelectionPrivate *aSelection) : mSelection(aSelection)
   {
     if (mSelection) mSelection->StartBatchChanges();
   }

@@ -27,7 +27,7 @@ class nsFontFaceLoader;
 class nsUserFontSet : public gfxUserFontSet
 {
 public:
-  nsUserFontSet(nsPresContext* aContext);
+  explicit nsUserFontSet(nsPresContext* aContext);
 
   // Called when this font set is no longer associated with a presentation.
   void Destroy();

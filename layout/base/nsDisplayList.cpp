@@ -1441,7 +1441,7 @@ IsFrameReceivingPointerEvents(nsIFrame* aFrame)
 // the results of hit testing.
 struct FramesWithDepth
 {
-  FramesWithDepth(float aDepth) :
+  explicit FramesWithDepth(float aDepth) :
     mDepth(aDepth)
   {}
 

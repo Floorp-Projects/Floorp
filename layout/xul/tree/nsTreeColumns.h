@@ -130,7 +130,7 @@ private:
   ~nsTreeColumns();
 
 public:
-  nsTreeColumns(nsTreeBodyFrame* aTree);
+  explicit nsTreeColumns(nsTreeBodyFrame* aTree);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsTreeColumns)

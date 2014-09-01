@@ -53,7 +53,7 @@ using namespace mozilla::dom;
 class CSSRuleListImpl MOZ_FINAL : public CSSRuleList
 {
 public:
-  CSSRuleListImpl(CSSStyleSheet *aStyleSheet);
+  explicit CSSRuleListImpl(CSSStyleSheet *aStyleSheet);
 
   virtual CSSStyleSheet* GetParentObject() MOZ_OVERRIDE;
 
