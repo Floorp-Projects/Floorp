@@ -354,7 +354,7 @@ NS_IMPL_ISUPPORTS(DOMEventListenerManagersHashReporter, nsIMemoryReporter)
 class EventListenerManagerMapEntry : public PLDHashEntryHdr
 {
 public:
-  EventListenerManagerMapEntry(const void *aKey)
+  explicit EventListenerManagerMapEntry(const void* aKey)
     : mKey(aKey)
   {
   }
@@ -1292,7 +1292,7 @@ struct NormalizeNewlinesCharTraits {
     typedef typename OutputIterator::value_type value_type;
 
   public:
-    NormalizeNewlinesCharTraits(OutputIterator& aIterator) : mIterator(aIterator) { }
+    explicit NormalizeNewlinesCharTraits(OutputIterator& aIterator) : mIterator(aIterator) { }
     void writechar(typename OutputIterator::value_type aChar) {
       *mIterator++ = aChar;
     }
@@ -1307,7 +1307,7 @@ struct NormalizeNewlinesCharTraits<CharT*> {
     typedef CharT value_type;
 
   public:
-    NormalizeNewlinesCharTraits(CharT* aCharPtr) : mCharPtr(aCharPtr) { }
+    explicit NormalizeNewlinesCharTraits(CharT* aCharPtr) : mCharPtr(aCharPtr) { }
     void writechar(CharT aChar) {
       *mCharPtr++ = aChar;
     }
@@ -1323,8 +1323,8 @@ class CopyNormalizeNewlines
     typedef typename OutputIterator::value_type value_type;
 
   public:
-    CopyNormalizeNewlines(OutputIterator* aDestination,
-                          bool aLastCharCR=false) :
+    explicit CopyNormalizeNewlines(OutputIterator* aDestination,
+                                   bool aLastCharCR = false) :
       mLastCharCR(aLastCharCR),
       mDestination(aDestination),
       mWritten(0)
@@ -4546,12 +4546,12 @@ nsContentUtils::IsInSameAnonymousTree(const nsINode* aNode,
 
 class AnonymousContentDestroyer : public nsRunnable {
 public:
-  AnonymousContentDestroyer(nsCOMPtr<nsIContent>* aContent) {
+  explicit AnonymousContentDestroyer(nsCOMPtr<nsIContent>* aContent) {
     mContent.swap(*aContent);
     mParent = mContent->GetParent();
     mDoc = mContent->OwnerDoc();
   }
-  AnonymousContentDestroyer(nsCOMPtr<Element>* aElement) {
+  explicit AnonymousContentDestroyer(nsCOMPtr<Element>* aElement) {
     mContent = aElement->forget();
     mParent = mContent->GetParent();
     mDoc = mContent->OwnerDoc();

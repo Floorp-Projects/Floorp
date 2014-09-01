@@ -49,8 +49,8 @@ class DOMPoint MOZ_FINAL : public DOMPointReadOnly
   ~DOMPoint() {}
 
 public:
-  DOMPoint(nsISupports* aParent, double aX = 0.0, double aY = 0.0,
-           double aZ = 0.0, double aW = 1.0)
+  explicit DOMPoint(nsISupports* aParent, double aX = 0.0, double aY = 0.0,
+                    double aZ = 0.0, double aW = 1.0)
     : DOMPointReadOnly(aParent, aX, aY, aZ, aW)
   {}
 

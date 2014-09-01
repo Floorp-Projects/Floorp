@@ -274,7 +274,7 @@ private:
                  bool aDispatchDelayed,
                  bool aIsVersionChangeTransactionChild);
 
-  IDBTransaction(IDBDatabase* aDatabase);
+  explicit IDBTransaction(IDBDatabase* aDatabase);
   ~IDBTransaction();
 
   nsresult CommitOrRollback();
@@ -374,7 +374,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
-  UpdateRefcountFunction(FileManager* aFileManager)
+  explicit UpdateRefcountFunction(FileManager* aFileManager)
   : mFileManager(aFileManager), mInSavepoint(false)
   { }
 
@@ -419,7 +419,7 @@ private:
   class FileInfoEntry
   {
   public:
-    FileInfoEntry(FileInfo* aFileInfo)
+    explicit FileInfoEntry(FileInfo* aFileInfo)
     : mFileInfo(aFileInfo), mDelta(0), mSavepointDelta(0)
     { }
 

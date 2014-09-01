@@ -26,7 +26,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TouchList)
 
-  TouchList(nsISupports* aParent)
+  explicit TouchList(nsISupports* aParent)
     : mParent(aParent)
   {
     SetIsDOMBinding();

@@ -46,7 +46,7 @@ class EventSource : public DOMEventTargetHelper
 friend class AsyncVerifyRedirectCallbackFwr;
 
 public:
-  EventSource(nsPIDOMWindow* aOwnerWindow);
+  explicit EventSource(nsPIDOMWindow* aOwnerWindow);
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(
     EventSource, DOMEventTargetHelper)

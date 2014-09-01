@@ -511,7 +511,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     public:
       NS_DECL_ISUPPORTS
 
-      SetupProtoChainRunner(nsObjectLoadingContent* aContent);
+      explicit SetupProtoChainRunner(nsObjectLoadingContent* aContent);
 
       NS_IMETHOD Run() MOZ_OVERRIDE;
 

@@ -73,7 +73,7 @@ public:
   void FireError(nsresult aError);
   void FireDetailedError(DOMError* aError);
 
-  DOMRequest(nsPIDOMWindow* aWindow);
+  explicit DOMRequest(nsPIDOMWindow* aWindow);
 
 protected:
   virtual ~DOMRequest()

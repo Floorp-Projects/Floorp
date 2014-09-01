@@ -61,7 +61,7 @@ struct nsXBLTextWithLineNumber
 class nsXBLProtoImplMember
 {
 public:
-  nsXBLProtoImplMember(const char16_t* aName)
+  explicit nsXBLProtoImplMember(const char16_t* aName)
     : mNext(nullptr)
     , mExposeToUntrustedContent(false)
   {

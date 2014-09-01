@@ -26,7 +26,7 @@ public:
 
     NS_DECL_NSIXULTEMPLATERESULT
 
-    nsXULTemplateResultRDF(nsIRDFResource* aNode);
+    explicit nsXULTemplateResultRDF(nsIRDFResource* aNode);
 
     nsXULTemplateResultRDF(nsRDFQuery* aQuery,
                            const Instantiation& aInst,

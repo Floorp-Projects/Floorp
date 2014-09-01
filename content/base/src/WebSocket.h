@@ -139,7 +139,7 @@ public: // WebIDL interface:
             ErrorResult& aRv);
 
 private: // constructor && distructor
-  WebSocket(nsPIDOMWindow* aOwnerWindow);
+  explicit WebSocket(nsPIDOMWindow* aOwnerWindow);
   virtual ~WebSocket();
 
 protected:

@@ -124,7 +124,7 @@ public:
 
   struct CacheEntry : public LinkedListElement<CacheEntry>
   {
-    CacheEntry(nsCString& aKey)
+    explicit CacheEntry(nsCString& aKey)
       : mKey(aKey)
     {
       MOZ_COUNT_CTOR(nsPreflightCache::CacheEntry);

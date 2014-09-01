@@ -61,7 +61,7 @@ protected:
 class PluginStreamListener : public MediaDocumentStreamListener
 {
 public:
-  PluginStreamListener(PluginDocument* doc)
+  explicit PluginStreamListener(PluginDocument* aDoc)
     : MediaDocumentStreamListener(doc)
     , mPluginDoc(doc)
   {}

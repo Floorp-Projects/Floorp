@@ -857,7 +857,7 @@ txStylesheetCompilerState::resolveNamespacePrefix(nsIAtom* aPrefix,
 class txErrorFunctionCall : public FunctionCall
 {
 public:
-    txErrorFunctionCall(nsIAtom* aName)
+    explicit txErrorFunctionCall(nsIAtom* aName)
       : mName(aName)
     {
     }

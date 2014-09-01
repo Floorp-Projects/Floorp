@@ -26,7 +26,7 @@ class WebGLRenderbuffer MOZ_FINAL
     , public WebGLFramebufferAttachable
 {
 public:
-    WebGLRenderbuffer(WebGLContext *context);
+    explicit WebGLRenderbuffer(WebGLContext* context);
 
     void Delete();
 

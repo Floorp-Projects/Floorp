@@ -70,7 +70,7 @@ public:
             return mCurrent != aConstIterator.mCurrent; }
 
     protected:
-        ConstIterator(nsIRDFResource** aProperty) : mCurrent(aProperty) {}
+        explicit ConstIterator(nsIRDFResource** aProperty) : mCurrent(aProperty) {}
         friend class nsResourceSet;
     };
 

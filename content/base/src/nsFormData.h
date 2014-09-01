@@ -34,7 +34,7 @@ class nsFormData : public nsIDOMFormData,
   ~nsFormData() {}
 
 public:
-  nsFormData(nsISupports* aOwner = nullptr);
+  explicit nsFormData(nsISupports* aOwner = nullptr);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFormData,

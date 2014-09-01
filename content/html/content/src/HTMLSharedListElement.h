@@ -20,7 +20,7 @@ class HTMLSharedListElement MOZ_FINAL : public nsGenericHTMLElement,
                                         public nsIDOMHTMLUListElement
 {
 public:
-  HTMLSharedListElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit HTMLSharedListElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

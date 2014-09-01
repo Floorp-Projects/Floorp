@@ -501,7 +501,7 @@ EventSource::OnStopRequest(nsIRequest *aRequest,
 class AsyncVerifyRedirectCallbackFwr MOZ_FINAL : public nsIAsyncVerifyRedirectCallback
 {
 public:
-  AsyncVerifyRedirectCallbackFwr(EventSource* aEventsource)
+  explicit AsyncVerifyRedirectCallbackFwr(EventSource* aEventsource)
     : mEventSource(aEventsource)
   {
   }

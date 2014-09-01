@@ -18,10 +18,10 @@ namespace dom {
 
 class MatchedNodes {
 public:
-  MatchedNodes(HTMLContentElement* aInsertionPoint)
+  explicit MatchedNodes(HTMLContentElement* aInsertionPoint)
     : mIsContentElement(true), mContentElement(aInsertionPoint) {}
 
-  MatchedNodes(XBLChildrenElement* aInsertionPoint)
+  explicit MatchedNodes(XBLChildrenElement* aInsertionPoint)
     : mIsContentElement(false), mChildrenElement(aInsertionPoint) {}
 
   uint32_t Length() const

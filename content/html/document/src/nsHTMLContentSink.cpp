@@ -200,7 +200,7 @@ protected:
 class SinkContext
 {
 public:
-  SinkContext(HTMLContentSink* aSink);
+  explicit SinkContext(HTMLContentSink* aSink);
   ~SinkContext();
 
   nsresult Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,

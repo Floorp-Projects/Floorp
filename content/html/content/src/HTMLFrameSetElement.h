@@ -46,7 +46,7 @@ class HTMLFrameSetElement MOZ_FINAL : public nsGenericHTMLElement,
                                       public nsIDOMHTMLFrameSetElement
 {
 public:
-  HTMLFrameSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit HTMLFrameSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo),
       mNumRows(0),
       mNumCols(0),

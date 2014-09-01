@@ -36,7 +36,7 @@ public:
   /**
    * aElement is the element pointer corresponding to this link.
    */
-  Link(Element* aElement);
+  explicit Link(Element* aElement);
   virtual void SetLinkState(nsLinkState aState);
 
   /**

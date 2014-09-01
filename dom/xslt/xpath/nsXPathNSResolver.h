@@ -20,7 +20,7 @@ class nsXPathNSResolver MOZ_FINAL : public nsIDOMXPathNSResolver
     ~nsXPathNSResolver() {}
 
 public:
-    nsXPathNSResolver(nsIDOMNode* aNode);
+    explicit nsXPathNSResolver(nsIDOMNode* aNode);
 
     // nsISupports interface
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
