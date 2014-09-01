@@ -308,7 +308,7 @@ class BluetoothA2dpInterface
 public:
   friend class BluetoothInterface;
 
-  void Init(btav_callbacks_t *aCallbacks,
+  void Init(BluetoothA2dpNotificationHandler* aNotificationHandler,
             BluetoothA2dpResultHandler* aRes);
   void Cleanup(BluetoothA2dpResultHandler* aRes);
 
@@ -431,7 +431,7 @@ class BluetoothAvrcpInterface
 public:
   friend class BluetoothInterface;
 
-  void Init(btrc_callbacks_t* aCallbacks,
+  void Init(BluetoothAvrcpNotificationHandler* aNotificationHandler,
             BluetoothAvrcpResultHandler* aRes);
   void Cleanup(BluetoothAvrcpResultHandler* aRes);
 
