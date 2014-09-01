@@ -21,7 +21,7 @@ class SVGTSpanElement MOZ_FINAL : public SVGTSpanElementBase
 protected:
   friend nsresult (::NS_NewSVGTSpanElement(nsIContent **aResult,
                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGTSpanElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGTSpanElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:

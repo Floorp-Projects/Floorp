@@ -46,7 +46,7 @@ public:
 
 protected:
 
-  SVGTextContentElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGTextContentElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGTextContentElementBase(aNodeInfo)
   {}
 

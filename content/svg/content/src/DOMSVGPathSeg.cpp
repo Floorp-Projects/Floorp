@@ -47,7 +47,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGPathSeg, Release)
 class MOZ_STACK_CLASS AutoChangePathSegNotifier
 {
 public:
-  AutoChangePathSegNotifier(DOMSVGPathSeg* aPathSeg MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoChangePathSegNotifier(DOMSVGPathSeg* aPathSeg MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mPathSeg(aPathSeg)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
