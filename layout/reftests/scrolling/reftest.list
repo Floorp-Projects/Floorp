@@ -1,6 +1,6 @@
 skip-if(B2G&&browserIsRemote) HTTP == deferred-anchor.xhtml#d deferred-anchor-ref.xhtml#d
 == deferred-anchor2.xhtml deferred-anchor-ref.xhtml#d
-HTTP == fixed-1.html fixed-1.html?ref
+ffuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,4) HTTP == fixed-1.html fixed-1.html?ref
 HTTP == fixed-opacity-1.html fixed-opacity-1.html?ref
 skip-if(B2G) HTTP == fixed-opacity-2.html fixed-opacity-2.html?ref
 skip-if(B2G) random-if(gtk2Widget) fuzzy-if(Android,3,60) HTTP == fixed-text-1.html fixed-text-1.html?ref
