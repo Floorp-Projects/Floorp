@@ -34,7 +34,7 @@ public:
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  nsNullPrincipalURI(const nsCString &aSpec);
+  explicit nsNullPrincipalURI(const nsCString &aSpec);
 
 private:
   ~nsNullPrincipalURI() {}
