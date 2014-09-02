@@ -634,6 +634,33 @@ let DOMFullscreenHandler = {
 };
 DOMFullscreenHandler.init();
 
+function gKeywordURIFixup(fixupInfo) {
+  fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);
+
+  // Ignore info from other docshells
+  let parent = fixupInfo.consumer.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeRootTreeItem;
+  if (parent != docShell)
+    return;
+
+  let data = {};
+  for (let f of Object.keys(fixupInfo)) {
+    if (f == "consumer" || typeof fixupInfo[f] == "function")
+      continue;
+
+    if (fixupInfo[f] && fixupInfo[f] instanceof Ci.nsIURI) {
+      data[f] = fixupInfo[f].spec;
+    } else {
+      data[f] = fixupInfo[f];
+    }
+  }
+
+  sendAsyncMessage("Browser:URIFixup", data);
+}
+Services.obs.addObserver(gKeywordURIFixup, "keyword-uri-fixup", false);
+addEventListener("unload", () => {
+  Services.obs.removeObserver(gKeywordURIFixup, "keyword-uri-fixup");
+}, false);
+
 addMessageListener("Browser:AppTab", function(message) {
   docShell.isAppTab = message.data.isAppTab;
 });
