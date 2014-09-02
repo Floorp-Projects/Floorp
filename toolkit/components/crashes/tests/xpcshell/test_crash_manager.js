@@ -371,6 +371,15 @@ add_task(function* test_addCrash() {
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG));
 });
 
+add_task(function* test_generateSubmissionID() {
+  let m = yield getManager();
+
+  const SUBMISSION_ID_REGEX =
+    /^(sub-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+  let id = m.generateSubmissionID();
+  Assert.ok(SUBMISSION_ID_REGEX.test(id));
+});
+
 add_task(function* test_addSubmissionAttemptAndResult() {
   let m = yield getManager();
 
