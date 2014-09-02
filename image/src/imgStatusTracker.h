@@ -117,7 +117,7 @@ public:
   // aImage is the image that this status tracker will pass to the
   // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
-  imgStatusTracker(mozilla::image::Image* aImage);
+  explicit imgStatusTracker(mozilla::image::Image* aImage);
 
   // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
   // are created before their Image is created.  This method should only

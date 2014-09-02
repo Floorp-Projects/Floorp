@@ -331,7 +331,7 @@ private:
 
     class DisplayInfo {
     public:
-        DisplayInfo(Display* display) : mDisplay(display) { }
+        explicit DisplayInfo(Display* display) : mDisplay(display) { }
         Display* mDisplay;
         nsTArray<ColormapEntry> mColormapEntries;
     };

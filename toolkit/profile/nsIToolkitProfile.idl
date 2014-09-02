@@ -12,7 +12,7 @@ interface nsIProfileUnlocker;
  * Hold on to a profile lock. Once you release the last reference to this
  * interface, the profile lock is released.
  */
-[scriptable, uuid(7c58c703-d245-4864-8d75-9648ca4a6139)]
+[builtinclass, scriptable, uuid(b1c2f328-de6e-45af-a53a-5ec7ce23166e)]
 interface nsIProfileLock : nsISupports
 {
     /**
@@ -43,10 +43,8 @@ interface nsIProfileLock : nsISupports
 
 /**
  * A interface representing a profile.
- * @note THIS INTERFACE SHOULD BE IMPLEMENTED BY THE TOOLKIT CODE ONLY! DON'T
- *       EVEN THINK ABOUT IMPLEMENTING THIS IN JAVASCRIPT!
  */
-[scriptable, uuid(7422b090-4a86-4407-972e-75468a625388)]
+[builtinclass, scriptable, uuid(cc53f90b-d1a5-4524-a4db-dc929e656f6b)]
 interface nsIToolkitProfile : nsISupports
 {
     /**

@@ -43,7 +43,7 @@ namespace {
 class CursorHelper : public AsyncConnectionHelper
 {
 public:
-  CursorHelper(IDBCursor* aCursor)
+  explicit CursorHelper(IDBCursor* aCursor)
   : AsyncConnectionHelper(aCursor->Transaction(), aCursor->Request()),
     mCursor(aCursor), mActor(nullptr)
   {

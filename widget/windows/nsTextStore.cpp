@@ -4827,7 +4827,7 @@ nsTextStore::MouseTracker::UnadviseSink()
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::MouseTracker::UnadviseSink(), "
           "mCookie=%d, mSink=0x%p, mStart=%d, mLength=%d",
-          this, mCookie, mSink, mStart, mLength));
+          this, mCookie, mSink.get(), mStart, mLength));
   mSink = nullptr;
   mStart = mLength = -1;
 }

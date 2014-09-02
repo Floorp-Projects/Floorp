@@ -92,7 +92,7 @@ private:
 
   private:
     inline
-    FileHandleQueue(FileHandleBase* aFileHandle);
+    explicit FileHandleQueue(FileHandleBase* aFileHandle);
 
     ~FileHandleQueue();
 
