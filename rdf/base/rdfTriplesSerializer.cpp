@@ -24,7 +24,7 @@
 class TriplesVisitor MOZ_FINAL : public rdfITripleVisitor
 {
 public:
-    TriplesVisitor(nsIOutputStream* aOut) : mOut(aOut) {}
+    explicit TriplesVisitor(nsIOutputStream* aOut) : mOut(aOut) {}
     NS_DECL_RDFITRIPLEVISITOR
     NS_DECL_ISUPPORTS
 protected:
