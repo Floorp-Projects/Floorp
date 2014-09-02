@@ -79,8 +79,6 @@ private:
 };
 
 void InitCertVerifierLog();
-SECStatus IsCertBuiltInRoot(CERTCertificate* cert, bool& result);
-
 } } // namespace mozilla::psm
 
 #endif // mozilla_psm__CertVerifier_h
