@@ -37,6 +37,7 @@ protected:
     const EGLContext mContext;
     const EGLSurface mPBuffer;
     const HANDLE mShareHandle;
+    const GLuint mFence;
 
     SharedSurface_ANGLEShareHandle(GLContext* gl,
                                    GLLibraryEGL* egl,
@@ -44,17 +45,8 @@ protected:
                                    bool hasAlpha,
                                    EGLContext context,
                                    EGLSurface pbuffer,
-                                   HANDLE shareHandle)
-        : SharedSurface(SharedSurfaceType::EGLSurfaceANGLE,
-                        AttachmentType::Screen,
-                        gl,
-                        size,
-                        hasAlpha)
-        , mEGL(egl)
-        , mContext(context)
-        , mPBuffer(pbuffer)
-        , mShareHandle(shareHandle)
-    {}
+                                   HANDLE shareHandle,
+                                   GLuint fence);
 
     EGLDisplay Display();
 
@@ -65,8 +57,12 @@ public:
     virtual void UnlockProdImpl() MOZ_OVERRIDE;
 
     virtual void Fence() MOZ_OVERRIDE;
-    virtual bool WaitSync() MOZ_OVERRIDE { return true; } // Fence is glFinish.
-    virtual bool PollSync() MOZ_OVERRIDE { return true; }
+    virtual bool WaitSync() MOZ_OVERRIDE;
+    virtual bool PollSync() MOZ_OVERRIDE;
+
+    virtual void Fence_ContentThread_Impl() MOZ_OVERRIDE;
+    virtual bool WaitSync_ContentThread_Impl() MOZ_OVERRIDE;
+    virtual bool PollSync_ContentThread_Impl() MOZ_OVERRIDE;
 
     // Implementation-specific functions below:
     HANDLE GetShareHandle() {

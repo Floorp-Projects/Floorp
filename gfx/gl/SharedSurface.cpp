@@ -5,8 +5,9 @@
 
 #include "SharedSurface.h"
 
-#include "GLContext.h"
 #include "GLBlitHelper.h"
+#include "GLContext.h"
+#include "nsThreadUtils.h"
 #include "ScopedGLHelpers.h"
 #include "SharedSurfaceGL.h"
 
@@ -195,6 +196,24 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
 ////////////////////////////////////////////////////////////////////////
 // SharedSurface
 
+
+SharedSurface::SharedSurface(SharedSurfaceType type,
+                             AttachmentType attachType,
+                             GLContext* gl,
+                             const gfx::IntSize& size,
+                             bool hasAlpha)
+    : mType(type)
+    , mAttachType(attachType)
+    , mGL(gl)
+    , mSize(size)
+    , mHasAlpha(hasAlpha)
+    , mIsLocked(false)
+#ifdef DEBUG
+    , mOwningThread(NS_GetCurrentThread())
+#endif
+{
+}
+
 void
 SharedSurface::LockProd()
 {
@@ -217,6 +236,29 @@ SharedSurface::UnlockProd()
     mGL->UnlockSurface(this);
     mIsLocked = false;
 }
+
+void
+SharedSurface::Fence_ContentThread()
+{
+    MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+    Fence_ContentThread_Impl();
+}
+
+bool
+SharedSurface::WaitSync_ContentThread()
+{
+    MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+    return WaitSync_ContentThread_Impl();
+}
+
+bool
+SharedSurface::PollSync_ContentThread()
+{
+    MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+    return PollSync_ContentThread_Impl();
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // SurfaceFactory

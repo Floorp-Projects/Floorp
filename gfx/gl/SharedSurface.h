@@ -21,10 +21,13 @@
 #include "GLContextTypes.h"
 #include "GLDefs.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "SurfaceTypes.h"
+
+class nsIThread;
 
 namespace mozilla {
 namespace gl {
@@ -45,20 +48,13 @@ public:
     const bool mHasAlpha;
 protected:
     bool mIsLocked;
+    DebugOnly<nsIThread* const> mOwningThread;
 
     SharedSurface(SharedSurfaceType type,
                   AttachmentType attachType,
                   GLContext* gl,
                   const gfx::IntSize& size,
-                  bool hasAlpha)
-        : mType(type)
-        , mAttachType(attachType)
-        , mGL(gl)
-        , mSize(size)
-        , mHasAlpha(hasAlpha)
-        , mIsLocked(false)
-    {
-    }
+                  bool hasAlpha);
 
 public:
     virtual ~SharedSurface() {
@@ -84,6 +80,24 @@ public:
     virtual bool WaitSync() = 0;
     virtual bool PollSync() = 0;
 
+    // Use these if you can. They can only be called from the Content
+    // thread, though!
+    void Fence_ContentThread();
+    bool WaitSync_ContentThread();
+    bool PollSync_ContentThread();
+
+protected:
+    virtual void Fence_ContentThread_Impl() {
+        Fence();
+    }
+    virtual bool WaitSync_ContentThread_Impl() {
+        return WaitSync();
+    }
+    virtual bool PollSync_ContentThread_Impl() {
+        return PollSync();
+    }
+
+public:
     // This function waits until the buffer is no longer being used.
     // To optimize the performance, some implementaions recycle SharedSurfaces
     // even when its buffer is still being used.
