@@ -8714,6 +8714,10 @@ outsystemscloud.com
 // Submitted by Tim Kramer <tkramer@rhcloud.com> 2012-10-24
 rhcloud.com
 
+// GDS : https://www.gov.uk/service-manual/operations/operating-servicegovuk-subdomains
+// Submitted by David Illsley <david.illsley@digital.cabinet-office.gov.uk> 2014-08-28
+service.gov.uk
+
 // priv.at : http://www.nic.priv.at/
 // Submitted by registry <lendl@nic.at> 2008-06-09
 priv.at
