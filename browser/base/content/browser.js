@@ -1213,7 +1213,7 @@ var gBrowserInit = {
     gDataNotificationInfoBar.init();
 #endif
 
-    LoopUI.initialize();
+    LoopUI.init();
 
     gBrowserThumbnails.init();
 
@@ -1384,6 +1384,7 @@ var gBrowserInit = {
       TabView.uninit();
       SocialUI.uninit();
       gBrowserThumbnails.uninit();
+      LoopUI.uninit();
       FullZoom.destroy();
 
       Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
