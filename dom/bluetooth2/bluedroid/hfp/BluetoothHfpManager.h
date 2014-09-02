@@ -134,8 +134,8 @@ public:
 private:
   class GetVolumeTask;
   class CloseScoTask;
+  class CloseScoRunnable;
   class RespondToBLDNTask;
-  class MainThreadTask;
 
   friend class BluetoothHfpManagerObserver;
   friend class GetVolumeTask;
