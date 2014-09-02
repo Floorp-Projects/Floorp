@@ -922,7 +922,8 @@ StartGonkBluetooth()
     return NS_OK;
   }
 
-  sBtInterface->Init(&sBluetoothCallbacks, new InitResultHandler());
+  sBtInterface->Init(reinterpret_cast<BluetoothServiceBluedroid*>(bs),
+                     new InitResultHandler());
 
   return NS_OK;
 }
