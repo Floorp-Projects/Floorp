@@ -12,8 +12,27 @@
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
 
-using namespace mozilla;
 using namespace mozilla::a11y;
+
+////////////////////////////////////////////////////////////////////////////////
+// WalkState
+////////////////////////////////////////////////////////////////////////////////
+
+namespace mozilla {
+namespace a11y {
+
+struct WalkState
+{
+  WalkState(nsIContent *aContent, uint32_t aFilter) :
+    content(aContent), prevState(nullptr), iter(aContent, aFilter) {}
+
+  nsCOMPtr<nsIContent> content;
+  WalkState *prevState;
+  dom::AllChildrenIterator iter;
+};
+
+} // namespace a11y
+} // namespace mozilla
 
 ////////////////////////////////////////////////////////////////////////////////
 // TreeWalker
@@ -21,8 +40,8 @@ using namespace mozilla::a11y;
 
 TreeWalker::
   TreeWalker(Accessible* aContext, nsIContent* aContent, uint32_t aFlags) :
-  mDoc(aContext->Document()), mContext(aContext), mAnchorNode(aContent),
-  mFlags(aFlags)
+  mDoc(aContext->Document()), mContext(aContext),
+  mFlags(aFlags), mState(nullptr)
 {
   NS_ASSERTION(aContent, "No node for the accessible tree walker!");
 
@@ -31,13 +50,17 @@ TreeWalker::
   mChildFilter |= nsIContent::eSkipPlaceholderContent;
 
   if (aContent)
-    PushState(aContent);
+    mState = new WalkState(aContent, mChildFilter);
 
   MOZ_COUNT_CTOR(TreeWalker);
 }
 
 TreeWalker::~TreeWalker()
 {
+  // Clear state stack from memory
+  while (mState)
+    PopState();
+
   MOZ_COUNT_DTOR(TreeWalker);
 }
 
@@ -45,60 +68,74 @@ TreeWalker::~TreeWalker()
 // TreeWalker: private
 
 Accessible*
-TreeWalker::NextChild()
+TreeWalker::NextChildInternal(bool aNoWalkUp)
 {
-  if (mStateStack.IsEmpty())
+  if (!mState || !mState->content)
     return nullptr;
 
-  dom::AllChildrenIterator* top = &mStateStack[mStateStack.Length() - 1];
-  while (top) {
-    while (nsIContent* childNode = top->GetNextChild()) {
-      bool isSubtreeHidden = false;
-      Accessible* accessible = mFlags & eWalkCache ?
-        mDoc->GetAccessible(childNode) :
-        GetAccService()->GetOrCreateAccessible(childNode, mContext,
-                                               &isSubtreeHidden);
+  while (nsIContent* childNode = mState->iter.GetNextChild()) {
+    bool isSubtreeHidden = false;
+    Accessible* accessible = mFlags & eWalkCache ?
+      mDoc->GetAccessible(childNode) :
+      GetAccService()->GetOrCreateAccessible(childNode, mContext,
+                                             &isSubtreeHidden);
 
+    if (accessible)
+      return accessible;
+
+    // Walk down into subtree to find accessibles.
+    if (!isSubtreeHidden && childNode->IsElement()) {
+      PushState(childNode);
+      accessible = NextChildInternal(true);
       if (accessible)
         return accessible;
-
-      // Walk down into subtree to find accessibles.
-      if (!isSubtreeHidden && childNode->IsElement())
-        top = PushState(childNode);
     }
-
-    top = PopState();
   }
+
+  // No more children, get back to the parent.
+  nsIContent* anchorNode = mState->content;
+  PopState();
+  if (aNoWalkUp)
+    return nullptr;
+
+  if (mState)
+    return NextChildInternal(false);
 
   // If we traversed the whole subtree of the anchor node. Move to next node
   // relative anchor node within the context subtree if possible.
   if (mFlags != eWalkContextTree)
     return nullptr;
 
-  nsINode* contextNode = mContext->GetNode();
-  while (mAnchorNode != contextNode) {
-    nsINode* parentNode = mAnchorNode->GetFlattenedTreeParent();
+  while (anchorNode != mContext->GetNode()) {
+    nsINode* parentNode = anchorNode->GetFlattenedTreeParent();
     if (!parentNode || !parentNode->IsElement())
       return nullptr;
 
-    nsIContent* parent = parentNode->AsElement();
-    top = mStateStack.AppendElement(dom::AllChildrenIterator(parent,
-                                                             mChildFilter));
-    while (nsIContent* childNode = top->GetNextChild()) {
-      if (childNode == mAnchorNode) {
-        mAnchorNode = parent;
-        return NextChild();
-      }
+    PushState(parentNode->AsElement());
+    while (nsIContent* childNode = mState->iter.GetNextChild()) {
+      if (childNode == anchorNode)
+        return NextChildInternal(false);
     }
+    PopState();
+
+    anchorNode = parentNode->AsElement();
   }
 
   return nullptr;
 }
 
-dom::AllChildrenIterator*
+void
 TreeWalker::PopState()
 {
-  size_t length = mStateStack.Length();
-  mStateStack.RemoveElementAt(length - 1);
-  return mStateStack.IsEmpty() ? nullptr : &mStateStack[mStateStack.Length() - 1];
+  WalkState* prevToLastState = mState->prevState;
+  delete mState;
+  mState = prevToLastState;
+}
+
+void
+TreeWalker::PushState(nsIContent* aContent)
+{
+  WalkState* nextToLastState = new WalkState(aContent, mChildFilter);
+  nextToLastState->prevState = mState;
+  mState = nextToLastState;
 }

@@ -74,6 +74,7 @@
             </intent-filter>
         </receiver>
 
+#ifndef MOZ_ANDROID_SHARE_OVERLAY
         <activity
             android:theme="@style/SyncTheme"
             android:excludeFromRecents="true"
@@ -90,3 +91,4 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+#endif
