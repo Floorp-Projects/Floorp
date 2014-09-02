@@ -12,4 +12,4 @@
       android:layout_width="@dimen/menu_item_row_width"
       android:layout_height="@dimen/browser_toolbar_height"
       android:orientation="horizontal"
-      android:background="#FFD6DEE4"/>
+      android:background="#FFE1E1E6"/>
