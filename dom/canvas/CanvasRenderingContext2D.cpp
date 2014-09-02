@@ -3496,22 +3496,6 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
   NS_ENSURE_SUCCESS_VOID(rv);
 }
 
-static bool
-IsStandardCompositeOp(CompositionOp op)
-{
-    return (op == CompositionOp::OP_SOURCE ||
-            op == CompositionOp::OP_ATOP ||
-            op == CompositionOp::OP_IN ||
-            op == CompositionOp::OP_OUT ||
-            op == CompositionOp::OP_OVER ||
-            op == CompositionOp::OP_DEST_IN ||
-            op == CompositionOp::OP_DEST_OUT ||
-            op == CompositionOp::OP_DEST_OVER ||
-            op == CompositionOp::OP_DEST_ATOP ||
-            op == CompositionOp::OP_ADD ||
-            op == CompositionOp::OP_XOR);
-}
-
 void
 CanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op,
                                                       ErrorResult& error)
@@ -3550,10 +3534,6 @@ CanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op,
   else CANVAS_OP_TO_GFX_OP("luminosity", LUMINOSITY)
   // XXX ERRMSG we need to report an error to developers here! (bug 329026)
   else return;
-
-  if (!IsStandardCompositeOp(comp_op)) {
-    Demote();
-  }
 
 #undef CANVAS_OP_TO_GFX_OP
   CurrentState().op = comp_op;
@@ -3597,10 +3577,6 @@ CanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op,
   else CANVAS_OP_TO_GFX_OP("luminosity", LUMINOSITY)
   else {
     error.Throw(NS_ERROR_FAILURE);
-  }
-
-  if (!IsStandardCompositeOp(comp_op)) {
-    Demote();
   }
 
 #undef CANVAS_OP_TO_GFX_OP
