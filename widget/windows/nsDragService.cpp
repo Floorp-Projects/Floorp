@@ -424,7 +424,7 @@ nsDragService::GetData(nsITransferable * aTransferable, uint32_t anItem)
     // multiple items, use |anItem| as an index into our collection
     nsDataObjCollection * dataObjCol = GetDataObjCollection(mDataObject);
     uint32_t cnt = dataObjCol->GetNumDataObjects();
-    if (anItem >= 0 && anItem < cnt) {
+    if (anItem < cnt) {
       IDataObject * dataObj = dataObjCol->GetDataObjectAt(anItem);
       dataFound = nsClipboard::GetDataFromDataObject(dataObj, 0, nullptr,
                                                      aTransferable);
