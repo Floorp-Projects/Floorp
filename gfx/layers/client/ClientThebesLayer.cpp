@@ -163,7 +163,7 @@ ClientLayerManager::CreateThebesLayerWithHint(ThebesLayerCreationHint aHint)
 #ifdef MOZ_B2G
       aHint == SCROLLABLE &&
 #endif
-      gfxPlatform::GetPlatform()->UseTiling() &&
+      gfxPrefs::LayersTilesEnabled() &&
       (AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_OPENGL ||
        AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D9 ||
        AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D11)) {
