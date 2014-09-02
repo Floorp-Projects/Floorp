@@ -460,7 +460,7 @@ class AutoFree
 public:
   AutoFree() : mBuffer(nullptr) {}
 
-  AutoFree(char *buffer) : mBuffer(buffer) {}
+  explicit AutoFree(char *buffer) : mBuffer(buffer) {}
 
   ~AutoFree() {
     free(mBuffer);
@@ -488,7 +488,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         return NS_ERROR_FAILURE;
 
     nsresult rv = NS_OK;
-    AutoFree buffer = nullptr;
+    AutoFree buffer(nullptr);
     uint32_t bufLen = 0, read = 0;
 
     NS_ASSERTION(request, "multimixed converter needs a request");
