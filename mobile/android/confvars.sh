@@ -81,8 +81,10 @@ else
   MOZ_ANDROID_SEARCH_ACTIVITY=
 fi
 
-# Don't enable the share overlay.
-# MOZ_ANDROID_SHARE_OVERLAY=1
+# Enable the share handler in pre-release builds.
+if test ! "$RELEASE_BUILD"; then
+  MOZ_ANDROID_SHARE_OVERLAY=1
+fi
 
 # Don't enable the Mozilla Location Service stumbler.
 # MOZ_ANDROID_MLS_STUMBLER=1

@@ -374,7 +374,7 @@
 #ifdef MOZ_ANDROID_SHARE_OVERLAY
         <!-- Share overlay activity -->
         <activity android:name="org.mozilla.gecko.overlays.ui.ShareDialog"
-                  android:label="@string/overlay_share_header"
+                  android:label="@string/overlay_share_label"
                   android:theme="@style/ShareOverlayActivity"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|locale|layoutDirection"
                   android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
