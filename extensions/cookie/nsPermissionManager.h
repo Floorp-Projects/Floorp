@@ -67,7 +67,7 @@ public:
   class PermissionKey
   {
   public:
-    PermissionKey(nsIPrincipal* aPrincipal);
+    explicit PermissionKey(nsIPrincipal* aPrincipal);
     PermissionKey(const nsACString& aHost,
                   uint32_t aAppId,
                   bool aIsInBrowserElement)
@@ -109,7 +109,7 @@ public:
   class PermissionHashKey : public nsRefPtrHashKey<PermissionKey>
   {
   public:
-    PermissionHashKey(const PermissionKey* aPermissionKey)
+    explicit PermissionHashKey(const PermissionKey* aPermissionKey)
       : nsRefPtrHashKey<PermissionKey>(aPermissionKey)
     {}
 
