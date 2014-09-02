@@ -28,12 +28,12 @@
         "MOZILLA_OFFICIAL": "1",
         "MOZ_TELEMETRY_REPORTING": "1",
         "ANDROIDFS_DIR": "{workdir}/helix-ics",
-        "B2G_UPDATE_CHANNEL": "nightly"
+        "B2G_UPDATE_CHANNEL": "aurora"
     },
     "b2g_manifest": "helix.xml",
     "b2g_manifest_intree": true,
     "additional_source_tarballs": ["helix-ics.tar.xz"],
-    "gecko_l10n_root": "https://hg.mozilla.org/l10n-central",
+    "gecko_l10n_root": "https://hg.mozilla.org/releases/l10n/mozilla-aurora",
     "gaia": {
         "l10n": {
             "vcs": "hgtool",
