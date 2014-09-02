@@ -5,11 +5,14 @@
 
 #include "domstubs.idl"
 interface nsIContentFrameMessageManager;
+interface nsIWebBrowserChrome3;
 
 [scriptable, uuid(2eb3bc54-78bf-40f2-b301-a5b5b70f7da0)]
 interface nsITabChild : nsISupports
 {
   readonly attribute nsIContentFrameMessageManager messageManager;
+
+  attribute nsIWebBrowserChrome3 webBrowserChrome;
 
   [notxpcom] void sendRequestFocus(in boolean canFocus);
 };
