@@ -38,7 +38,7 @@ class GStreamerReader : public MediaDecoderReader
   typedef gfx::IntRect IntRect;
 
 public:
-  GStreamerReader(AbstractMediaDecoder* aDecoder);
+  explicit GStreamerReader(AbstractMediaDecoder* aDecoder);
   virtual ~GStreamerReader();
 
   virtual nsresult Init(MediaDecoderReader* aCloneDonor);
