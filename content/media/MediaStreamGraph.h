@@ -688,7 +688,8 @@ public:
     mMutex("mozilla::media::SourceMediaStream"),
     mUpdateKnownTracksTime(0),
     mPullEnabled(false),
-    mUpdateFinished(false)
+    mUpdateFinished(false),
+    mNeedsMixing(false)
   {}
 
   virtual SourceMediaStream* AsSourceStream() { return this; }
