@@ -61,8 +61,6 @@ public:
 
     bool UseAcceleratedCanvas();
 
-    virtual bool UseTiling() MOZ_OVERRIDE;
-
     // lower threshold on font anti-aliasing
     uint32_t GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
 
