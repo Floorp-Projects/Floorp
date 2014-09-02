@@ -1,0 +1,28 @@
+_VSPATH="/c/tools/vs2013"
+export WIN32_REDIST_DIR=${_VSPATH}/VC/redist/x86/Microsoft.VC120.CRT
+
+## moz tools location for 64-bit builders ##
+export MOZ_TOOLS=C:/mozilla-build/moztools
+
+## includes: win8 sdk includes, winrt headers for metro, msvc std library, directx sdk for d3d9 ##
+export INCLUDE=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/shared:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/um:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/winrt:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/winrt/wrl:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/winrt/wrl/wrappers:${_VSPATH}/vc/include:${_VSPATH}/vc/atlmfc/include:/c/tools/sdks/dx10/include
+
+## libs: win8 sdk x86 (32-bit) libs, msvc (32-bit) std library, msvc atl libs, directx sdk (32-bit) for d3d9  ##
+export LIBPATH=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/Lib/win8/um/x86:${_VSPATH}/vc/lib:${_VSPATH}/vc/atlmfc/lib:/c/tools/sdks/dx10/lib
+export LIB=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/Lib/win8/um/x86:${_VSPATH}/vc/lib:${_VSPATH}/vc/atlmfc/lib:/c/tools/sdks/dx10/lib
+
+## paths: win8 sdk x86 (32-bit) tools, msvc (64-bit compiling 32-bit) build toolchain, moz tools  ##
+export PATH="/c/Program Files (x86)/Windows Kits/8.0/bin/x86:${_VSPATH}/Common7/IDE:${_VSPATH}/VC/BIN/amd64_x86:${_VSPATH}/VC/BIN/amd64:${_VSPATH}/Common7/Tools:${_VSPATH}/VC/VCPackages:/c/mozilla-build/moztools:${PATH}"
+
+## WindowsSDKDir ##
+export WINDOWSSDKDIR="/c/Program Files (x86)/Windows Kits/8.0/"
+
+. $topsrcdir/build/mozconfig.vs-common
+
+mk_export_correct_style LIB
+mk_export_correct_style LIBPATH
+mk_export_correct_style PATH
+mk_export_correct_style INCLUDE
+mk_export_correct_style WIN32_REDIST_DIR
+
+mk_add_options "export MOZ_TOOLS=$MOZ_TOOLS"
