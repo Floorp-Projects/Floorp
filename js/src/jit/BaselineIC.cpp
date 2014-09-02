@@ -408,6 +408,8 @@ ICStub::trace(JSTracer *trc)
         ICSetProp_NativeAdd *propStub = toSetProp_NativeAdd();
         MarkTypeObject(trc, &propStub->type(), "baseline-setpropnativeadd-stub-type");
         MarkShape(trc, &propStub->newShape(), "baseline-setpropnativeadd-stub-newshape");
+        if (propStub->newType())
+            MarkTypeObject(trc, &propStub->newType(), "baseline-setpropnativeadd-stub-new-type");
         JS_STATIC_ASSERT(ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH == 4);
         switch (propStub->protoChainDepth()) {
           case 0: propStub->toImpl<0>()->traceShapes(trc); break;
@@ -6211,6 +6213,39 @@ UpdateExistingGenerationalDOMProxyStub(ICGetProp_Fallback *stub,
 }
 
 static bool
+HasUnanalyzedNewScript(JSObject *obj)
+{
+    if (obj->hasSingletonType())
+        return false;
+
+    types::TypeNewScript *newScript = obj->type()->newScript();
+    if (newScript && !newScript->analyzed())
+        return true;
+
+    return false;
+}
+
+static void
+StripPreliminaryObjectStubs(JSContext *cx, ICFallbackStub *stub)
+{
+    // Before the new script properties analysis has been performed on a type,
+    // all instances of that type have the maximum number of fixed slots.
+    // Afterwards, the objects (even the preliminary ones) might be changed
+    // to reduce the number of fixed slots they have. If we generate stubs for
+    // both the old and new number of fixed slots, the stub will look
+    // polymorphic to IonBuilder when it is actually monomorphic. To avoid
+    // this, strip out any stubs for preliminary objects before attaching a new
+    // stub which isn't on a preliminary object.
+
+    for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
+        if (iter->isGetProp_Native() && iter->toGetProp_Native()->hasPreliminaryObject())
+            iter.unlink(cx);
+        else if (iter->isSetProp_Native() && iter->toSetProp_Native()->hasPreliminaryObject())
+            iter.unlink(cx);
+    }
+}
+
+static bool
 TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
                            ICGetProp_Fallback *stub, HandlePropertyName name,
                            HandleValue val, HandleValue res, bool *attached)
@@ -6256,9 +6291,14 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
                     (obj == holder) ? "direct" : "prototype");
         ICGetPropNativeCompiler compiler(cx, kind, isCallProp, monitorStub, obj, holder,
                                          name, isFixedSlot, offset);
-        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+        ICGetPropNativeStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
+
+        if (HasUnanalyzedNewScript(obj))
+            newStub->notePreliminaryObject();
+        else
+            StripPreliminaryObjectStubs(cx, stub);
 
         stub->addNewStub(newStub);
         *attached = true;
@@ -7414,7 +7454,7 @@ BaselineScript::noteAccessedGetter(uint32_t pcOffset)
 // Attach an optimized stub for a SETPROP/SETGNAME/SETNAME op.
 static bool
 TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetProp_Fallback *stub,
-                     HandleObject obj, HandleShape oldShape, uint32_t oldSlots,
+                     HandleObject obj, HandleShape oldShape, HandleTypeObject oldType, uint32_t oldSlots,
                      HandlePropertyName name, HandleId id, HandleValue rhs, bool *attached)
 {
     JS_ASSERT(!*attached);
@@ -7433,12 +7473,22 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
         if (chainDepth > ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH)
             return true;
 
+        // Don't attach if we are adding a property to an object which the new
+        // script properties analysis hasn't been performed for yet, as there
+        // may be a shape change required here afterwards. Pretend we attached
+        // a stub, though, so the access is not marked as unoptimizable.
+        if (oldType->newScript() && !oldType->newScript()->analyzed()) {
+            *attached = true;
+            return true;
+        }
+
         bool isFixedSlot;
         uint32_t offset;
         GetFixedOrDynamicSlotOffset(obj, shape->slot(), &isFixedSlot, &offset);
 
         JitSpew(JitSpew_BaselineIC, "  Generating SetProp(NativeObject.ADD) stub");
-        ICSetPropNativeAddCompiler compiler(cx, obj, oldShape, chainDepth, isFixedSlot, offset);
+        ICSetPropNativeAddCompiler compiler(cx, obj, oldShape, oldType,
+                                            chainDepth, isFixedSlot, offset);
         ICUpdatedStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -7457,11 +7507,16 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
 
         JitSpew(JitSpew_BaselineIC, "  Generating SetProp(NativeObject.PROP) stub");
         ICSetProp_Native::Compiler compiler(cx, obj, isFixedSlot, offset);
-        ICUpdatedStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+        ICSetProp_Native *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
         if (!newStub->addUpdateStubForValue(cx, script, obj, id, rhs))
             return false;
+
+        if (HasUnanalyzedNewScript(obj))
+            newStub->notePreliminaryObject();
+        else
+            StripPreliminaryObjectStubs(cx, stub);
 
         stub->addNewStub(newStub);
         *attached = true;
@@ -7541,6 +7596,9 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     if (!obj)
         return false;
     RootedShape oldShape(cx, obj->lastProperty());
+    RootedTypeObject oldType(cx, obj->getType(cx));
+    if (!oldType)
+        return false;
     uint32_t oldSlots = obj->numDynamicSlots();
 
     if (op == JSOP_INITPROP) {
@@ -7577,8 +7635,8 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     }
 
     bool attached = false;
-    if (!TryAttachSetPropStub(cx, script, pc, stub, obj, oldShape, oldSlots, name, id, rhs,
-         &attached))
+    if (!TryAttachSetPropStub(cx, script, pc, stub, obj, oldShape, oldType, oldSlots,
+                              name, id, rhs, &attached))
     {
         return false;
     }
@@ -7798,6 +7856,15 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
     EmitPreBarrier(masm, shapeAddr, MIRType_Shape);
     masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfNewShape()), scratch);
     masm.storePtr(scratch, shapeAddr);
+
+    // Change the object's type if required.
+    Label noTypeChange;
+    masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfNewType()), scratch);
+    masm.branchTestPtr(Assembler::Zero, scratch, scratch, &noTypeChange);
+    Address typeAddr(objReg, JSObject::offsetOfType());
+    EmitPreBarrier(masm, typeAddr, MIRType_TypeObject);
+    masm.storePtr(scratch, typeAddr);
+    masm.bind(&noTypeChange);
 
     Register holderReg;
     regs.add(R0);
@@ -8272,6 +8339,21 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
             templateObject = CreateThisForFunction(cx, fun, MaybeSingletonObject);
             if (!templateObject)
                 return false;
+
+            // If we are calling a constructor for which the new script
+            // properties analysis has not been performed yet, don't attach a
+            // stub. After the analysis is performed, CreateThisForFunction may
+            // start returning objects with a different type, and the Ion
+            // compiler might get confused.
+            if (templateObject->type()->newScript() &&
+                !templateObject->type()->newScript()->analyzed())
+            {
+                // Clear the object just created from the preliminary objects
+                // on the TypeNewScript, as it will not be used or filled in by
+                // running code.
+                templateObject->type()->newScript()->unregisterNewObject(templateObject);
+                return true;
+            }
         }
 
         JitSpew(JitSpew_BaselineIC,
@@ -10496,7 +10578,7 @@ ICSetProp_Native::ICSetProp_Native(JitCode *stubCode, HandleTypeObject type, Han
     offset_(offset)
 { }
 
-ICUpdatedStub *
+ICSetProp_Native *
 ICSetProp_Native::Compiler::getStub(ICStubSpace *space)
 {
     RootedTypeObject type(cx, obj_->getType(cx));
@@ -10504,7 +10586,7 @@ ICSetProp_Native::Compiler::getStub(ICStubSpace *space)
         return nullptr;
 
     RootedShape shape(cx, obj_->lastProperty());
-    ICUpdatedStub *stub = ICSetProp_Native::New(space, getStubCode(), type, shape, offset_);
+    ICSetProp_Native *stub = ICSetProp_Native::New(space, getStubCode(), type, shape, offset_);
     if (!stub || !stub->initUpdatingChain(cx, space))
         return nullptr;
     return stub;
@@ -10513,10 +10595,12 @@ ICSetProp_Native::Compiler::getStub(ICStubSpace *space)
 ICSetProp_NativeAdd::ICSetProp_NativeAdd(JitCode *stubCode, HandleTypeObject type,
                                          size_t protoChainDepth,
                                          HandleShape newShape,
+                                         HandleTypeObject newType,
                                          uint32_t offset)
   : ICUpdatedStub(SetProp_NativeAdd, stubCode),
     type_(type),
     newShape_(newShape),
+    newType_(newType),
     offset_(offset)
 {
     JS_ASSERT(protoChainDepth <= MAX_PROTO_CHAIN_DEPTH);
@@ -10528,8 +10612,9 @@ ICSetProp_NativeAddImpl<ProtoChainDepth>::ICSetProp_NativeAddImpl(JitCode *stubC
                                                                   HandleTypeObject type,
                                                                   const AutoShapeVector *shapes,
                                                                   HandleShape newShape,
+                                                                  HandleTypeObject newType,
                                                                   uint32_t offset)
-  : ICSetProp_NativeAdd(stubCode, type, ProtoChainDepth, newShape, offset)
+  : ICSetProp_NativeAdd(stubCode, type, ProtoChainDepth, newShape, newType, offset)
 {
     JS_ASSERT(shapes->length() == NumShapes);
     for (size_t i = 0; i < NumShapes; i++)
@@ -10538,12 +10623,14 @@ ICSetProp_NativeAddImpl<ProtoChainDepth>::ICSetProp_NativeAddImpl(JitCode *stubC
 
 ICSetPropNativeAddCompiler::ICSetPropNativeAddCompiler(JSContext *cx, HandleObject obj,
                                                        HandleShape oldShape,
+                                                       HandleTypeObject oldType,
                                                        size_t protoChainDepth,
                                                        bool isFixedSlot,
                                                        uint32_t offset)
   : ICStubCompiler(cx, ICStub::SetProp_NativeAdd),
     obj_(cx, obj),
     oldShape_(cx, oldShape),
+    oldType_(cx, oldType),
     protoChainDepth_(protoChainDepth),
     isFixedSlot_(isFixedSlot),
     offset_(offset)

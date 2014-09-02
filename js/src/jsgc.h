@@ -266,20 +266,6 @@ GetBackgroundAllocKind(AllocKind kind)
     return (AllocKind) (kind + 1);
 }
 
-/*
- * Try to get the next larger size for an object, keeping BACKGROUND
- * consistent.
- */
-static inline bool
-TryIncrementAllocKind(AllocKind *kindp)
-{
-    size_t next = size_t(*kindp) + 2;
-    if (next >= size_t(FINALIZE_OBJECT_LIMIT))
-        return false;
-    *kindp = AllocKind(next);
-    return true;
-}
-
 /* Get the number of fixed slots and initial capacity associated with a kind. */
 static inline size_t
 GetGCKindSlots(AllocKind thingKind)
