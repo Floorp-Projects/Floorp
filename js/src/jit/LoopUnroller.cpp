@@ -112,7 +112,7 @@ LoopUnroller::go(LoopIterationBound *bound)
     // For now we always unroll loops the same number of times.
     static const size_t UnrollCount = 10;
 
-    IonSpew(IonSpew_Unrolling, "Attempting to unroll loop");
+    JitSpew(JitSpew_Unrolling, "Attempting to unroll loop");
 
     header = bound->header;
     JS_ASSERT(header->isLoopHeader());
@@ -151,7 +151,7 @@ LoopUnroller::go(LoopIterationBound *bound)
                 continue;
             if (ins->isTest() || ins->isGoto() || ins->isInterruptCheck())
                 continue;
-            IonSpew(IonSpew_Unrolling, "Aborting: can't clone instruction %s", ins->opName());
+            JitSpew(JitSpew_Unrolling, "Aborting: can't clone instruction %s", ins->opName());
             return;
         }
     }
@@ -179,7 +179,7 @@ LoopUnroller::go(LoopIterationBound *bound)
 
     // OK, we've checked everything, now unroll the loop.
 
-    IonSpew(IonSpew_Unrolling, "Unrolling loop");
+    JitSpew(JitSpew_Unrolling, "Unrolling loop");
 
     // The old preheader will go before the unrolled loop, and the old loop
     // will need a new empty preheader.

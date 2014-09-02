@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_IonSpewer_h
-#define jit_IonSpewer_h
+#ifndef jit_JitSpewer_h
+#define jit_JitSpewer_h
 
 #include "mozilla/DebugOnly.h"
 
@@ -19,7 +19,7 @@ namespace js {
 namespace jit {
 
 // New channels may be added below.
-#define IONSPEW_CHANNEL_LIST(_)             \
+#define JITSPEW_CHANNEL_LIST(_)             \
     /* Used to abort SSA construction */    \
     _(Abort)                                \
     /* Information about compiled scripts */\
@@ -83,15 +83,15 @@ namespace jit {
     _(BaselineDebugModeOSR)
 
 
-enum IonSpewChannel {
-#define IONSPEW_CHANNEL(name) IonSpew_##name,
-    IONSPEW_CHANNEL_LIST(IONSPEW_CHANNEL)
-#undef IONSPEW_CHANNEL
-    IonSpew_Terminator
+enum JitSpewChannel {
+#define JITSPEW_CHANNEL(name) JitSpew_##name,
+    JITSPEW_CHANNEL_LIST(JITSPEW_CHANNEL)
+#undef JITSPEW_CHANNEL
+    JitSpew_Terminator
 };
 
 
-// The IonSpewer is only available on debug builds.
+// The JitSpewer is only available on debug builds.
 // None of the global functions have effect on non-debug builds.
 static const int NULL_ID = -1;
 
@@ -134,20 +134,20 @@ void IonSpewPass(const char *pass, LinearScanAllocator *ra);
 void IonSpewEndFunction();
 
 void CheckLogging();
-extern FILE *IonSpewFile;
-void IonSpew(IonSpewChannel channel, const char *fmt, ...);
-void IonSpewStart(IonSpewChannel channel, const char *fmt, ...);
-void IonSpewCont(IonSpewChannel channel, const char *fmt, ...);
-void IonSpewFin(IonSpewChannel channel);
-void IonSpewHeader(IonSpewChannel channel);
-bool IonSpewEnabled(IonSpewChannel channel);
-void IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap);
-void IonSpewStartVA(IonSpewChannel channel, const char *fmt, va_list ap);
-void IonSpewContVA(IonSpewChannel channel, const char *fmt, va_list ap);
-void IonSpewDef(IonSpewChannel channel, const char *str, MDefinition *def);
+extern FILE *JitSpewFile;
+void JitSpew(JitSpewChannel channel, const char *fmt, ...);
+void JitSpewStart(JitSpewChannel channel, const char *fmt, ...);
+void JitSpewCont(JitSpewChannel channel, const char *fmt, ...);
+void JitSpewFin(JitSpewChannel channel);
+void JitSpewHeader(JitSpewChannel channel);
+bool JitSpewEnabled(JitSpewChannel channel);
+void JitSpewVA(JitSpewChannel channel, const char *fmt, va_list ap);
+void JitSpewStartVA(JitSpewChannel channel, const char *fmt, va_list ap);
+void JitSpewContVA(JitSpewChannel channel, const char *fmt, va_list ap);
+void JitSpewDef(JitSpewChannel channel, const char *str, MDefinition *def);
 
-void EnableChannel(IonSpewChannel channel);
-void DisableChannel(IonSpewChannel channel);
+void EnableChannel(JitSpewChannel channel);
+void DisableChannel(JitSpewChannel channel);
 void EnableIonDebugLogging();
 
 #else
@@ -163,42 +163,42 @@ static inline void IonSpewEndFunction()
 
 static inline void CheckLogging()
 { }
-static FILE *const IonSpewFile = nullptr;
-static inline void IonSpew(IonSpewChannel, const char *fmt, ...)
+static FILE *const JitSpewFile = nullptr;
+static inline void JitSpew(JitSpewChannel, const char *fmt, ...)
 { }
-static inline void IonSpewStart(IonSpewChannel channel, const char *fmt, ...)
+static inline void JitSpewStart(JitSpewChannel channel, const char *fmt, ...)
 { }
-static inline void IonSpewCont(IonSpewChannel channel, const char *fmt, ...)
+static inline void JitSpewCont(JitSpewChannel channel, const char *fmt, ...)
 { }
-static inline void IonSpewFin(IonSpewChannel channel)
+static inline void JitSpewFin(JitSpewChannel channel)
 { }
 
-static inline void IonSpewHeader(IonSpewChannel channel)
+static inline void JitSpewHeader(JitSpewChannel channel)
 { }
-static inline bool IonSpewEnabled(IonSpewChannel channel)
+static inline bool JitSpewEnabled(JitSpewChannel channel)
 { return false; }
-static inline void IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap)
+static inline void JitSpewVA(JitSpewChannel channel, const char *fmt, va_list ap)
 { }
-static inline void IonSpewDef(IonSpewChannel channel, const char *str, MDefinition *def)
+static inline void JitSpewDef(JitSpewChannel channel, const char *str, MDefinition *def)
 { }
 
-static inline void EnableChannel(IonSpewChannel)
+static inline void EnableChannel(JitSpewChannel)
 { }
-static inline void DisableChannel(IonSpewChannel)
+static inline void DisableChannel(JitSpewChannel)
 { }
 static inline void EnableIonDebugLogging()
 { }
 
 #endif /* DEBUG */
 
-template <IonSpewChannel Channel>
+template <JitSpewChannel Channel>
 class AutoDisableSpew
 {
     mozilla::DebugOnly<bool> enabled_;
 
   public:
     AutoDisableSpew()
-      : enabled_(IonSpewEnabled(Channel))
+      : enabled_(JitSpewEnabled(Channel))
     {
         DisableChannel(Channel);
     }
@@ -215,4 +215,4 @@ class AutoDisableSpew
 } /* ion */
 } /* js */
 
-#endif /* jit_IonSpewer_h */
+#endif /* jit_JitSpewer_h */

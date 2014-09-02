@@ -18,9 +18,9 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonMacroAssembler.h"
-#include "jit/IonSpewer.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitCompartment.h"
+#include "jit/JitSpewer.h"
 #include "jit/ParallelFunctions.h"
 #include "jit/PcScriptCache.h"
 #include "jit/Recover.h"
@@ -628,7 +628,7 @@ HandleException(ResumeFromException *rfe)
 
     rfe->kind = ResumeFromException::RESUME_ENTRY_FRAME;
 
-    IonSpew(IonSpew_Invalidate, "handling exception");
+    JitSpew(JitSpew_Invalidate, "handling exception");
 
     // Clear any Ion return override that's been set.
     // This may happen if a callVM function causes an invalidation (setting the
@@ -1360,7 +1360,7 @@ void UpdateJitActivationsForMinorGC<gc::ForkJoinNursery>(PerThreadData *ptd, JST
 void
 GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
-    IonSpew(IonSpew_Snapshots, "Recover PC & Script from the last frame.");
+    JitSpew(JitSpew_Snapshots, "Recover PC & Script from the last frame.");
 
     JSRuntime *rt = cx->runtime();
 
@@ -2264,7 +2264,7 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
     if (!jitrt->getJitcodeGlobalTable()->lookup(returnAddressToFp_, &entry))
         return true;
 
-    IonSpew(IonSpew_Profiling, "Found nativeToBytecode entry for %p: %p - %p",
+    JitSpew(JitSpew_Profiling, "Found nativeToBytecode entry for %p: %p - %p",
             returnAddressToFp_, entry.nativeStartAddr(), entry.nativeEndAddr());
 
     JitcodeGlobalEntry::BytecodeLocationVector location;
@@ -2274,9 +2274,9 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
     JS_ASSERT(depth > 0 && depth != UINT32_MAX);
     JS_ASSERT(location.length() == depth);
 
-    IonSpew(IonSpew_Profiling, "Found bytecode location of depth %d:", depth);
+    JitSpew(JitSpew_Profiling, "Found bytecode location of depth %d:", depth);
     for (size_t i = 0; i < location.length(); i++) {
-        IonSpew(IonSpew_Profiling, "   %s:%d - %d",
+        JitSpew(JitSpew_Profiling, "   %s:%d - %d",
                 location[i].script->filename(), location[i].script->lineno(),
                 (int) (location[i].pc - location[i].script->code()));
     }
@@ -2288,7 +2288,7 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
             JS_ASSERT(idx < location.length());
             JS_ASSERT_IF(idx < location.length() - 1, inlineFrames.more());
 
-            IonSpew(IonSpew_Profiling, "Match %d: ION %s:%d(%d) vs N2B %s:%d(%d)",
+            JitSpew(JitSpew_Profiling, "Match %d: ION %s:%d(%d) vs N2B %s:%d(%d)",
                     (int)idx,
                     inlineFrames.script()->filename(),
                     inlineFrames.script()->lineno(),

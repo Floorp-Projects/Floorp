@@ -11,8 +11,8 @@
 #include "jit/BaselineCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/CompileInfo.h"
-#include "jit/IonSpewer.h"
 #include "jit/JitCommon.h"
+#include "jit/JitSpewer.h"
 #include "vm/Interpreter.h"
 #include "vm/TraceLogging.h"
 
@@ -62,20 +62,20 @@ static bool
 CheckFrame(InterpreterFrame *fp)
 {
     if (fp->isGeneratorFrame()) {
-        IonSpew(IonSpew_BaselineAbort, "generator frame");
+        JitSpew(JitSpew_BaselineAbort, "generator frame");
         return false;
     }
 
     if (fp->isDebuggerFrame()) {
         // Debugger eval-in-frame. These are likely short-running scripts so
         // don't bother compiling them for now.
-        IonSpew(IonSpew_BaselineAbort, "debugger frame");
+        JitSpew(JitSpew_BaselineAbort, "debugger frame");
         return false;
     }
 
     if (fp->isNonEvalFunctionFrame() && fp->numActualArgs() > BASELINE_MAX_ARGS_LENGTH) {
         // Fall back to the interpreter to avoid running out of stack space.
-        IonSpew(IonSpew_BaselineAbort, "Too many arguments (%u)", fp->numActualArgs());
+        JitSpew(JitSpew_BaselineAbort, "Too many arguments (%u)", fp->numActualArgs());
         return false;
     }
 
@@ -317,7 +317,7 @@ jit::CanEnterBaselineMethod(JSContext *cx, RunState &state)
         InvokeState &invoke = *state.asInvoke();
 
         if (invoke.args().length() > BASELINE_MAX_ARGS_LENGTH) {
-            IonSpew(IonSpew_BaselineAbort, "Too many arguments (%u)", invoke.args().length());
+            JitSpew(JitSpew_BaselineAbort, "Too many arguments (%u)", invoke.args().length());
             return Method_CantCompile;
         }
 
@@ -326,12 +326,12 @@ jit::CanEnterBaselineMethod(JSContext *cx, RunState &state)
     } else if (state.isExecute()) {
         ExecuteType type = state.asExecute()->type();
         if (type == EXECUTE_DEBUG || type == EXECUTE_DEBUG_GLOBAL) {
-            IonSpew(IonSpew_BaselineAbort, "debugger frame");
+            JitSpew(JitSpew_BaselineAbort, "debugger frame");
             return Method_CantCompile;
         }
     } else {
         JS_ASSERT(state.isGenerator());
-        IonSpew(IonSpew_BaselineAbort, "generator frame");
+        JitSpew(JitSpew_BaselineAbort, "generator frame");
         return Method_CantCompile;
     }
 
@@ -803,7 +803,7 @@ BaselineScript::toggleSPS(bool enable)
 {
     JS_ASSERT(enable == !(bool)spsOn_);
 
-    IonSpew(IonSpew_BaselineIC, "  toggling SPS %s for BaselineScript %p",
+    JitSpew(JitSpew_BaselineIC, "  toggling SPS %s for BaselineScript %p",
             enable ? "on" : "off", this);
 
     // Toggle the jump
@@ -820,7 +820,7 @@ BaselineScript::toggleSPS(bool enable)
 void
 BaselineScript::purgeOptimizedStubs(Zone *zone)
 {
-    IonSpew(IonSpew_BaselineIC, "Purging optimized stubs");
+    JitSpew(JitSpew_BaselineIC, "Purging optimized stubs");
 
     for (size_t i = 0; i < numICEntries(); i++) {
         ICEntry &entry = icEntry(i);

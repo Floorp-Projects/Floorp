@@ -261,7 +261,7 @@ static void
 SpewPatchBaselineFrame(uint8_t *oldReturnAddress, uint8_t *newReturnAddress,
                        JSScript *script, ICEntry::Kind frameKind, jsbytecode *pc)
 {
-    IonSpew(IonSpew_BaselineDebugModeOSR,
+    JitSpew(JitSpew_BaselineDebugModeOSR,
             "Patch return %p -> %p on BaselineJS frame (%s:%d) from %s at %s",
             oldReturnAddress, newReturnAddress, script->filename(), script->lineno(),
             ICEntryKindToString(frameKind), js_CodeName[(JSOp)*pc]);
@@ -270,7 +270,7 @@ SpewPatchBaselineFrame(uint8_t *oldReturnAddress, uint8_t *newReturnAddress,
 static void
 SpewPatchStubFrame(ICStub *oldStub, ICStub *newStub)
 {
-    IonSpew(IonSpew_BaselineDebugModeOSR,
+    JitSpew(JitSpew_BaselineDebugModeOSR,
             "Patch   stub %p -> %p on BaselineStub frame (%s)",
             oldStub, newStub, ICStub::KindString(newStub->kind()));
 }
@@ -501,7 +501,7 @@ RecompileBaselineScriptForDebugMode(JSContext *cx, JSScript *script)
     if (oldBaselineScript->debugMode() == expectedDebugMode)
         return true;
 
-    IonSpew(IonSpew_BaselineDebugModeOSR, "Recompiling (%s:%d) for debug mode %s",
+    JitSpew(JitSpew_BaselineDebugModeOSR, "Recompiling (%s:%d) for debug mode %s",
             script->filename(), script->lineno(), expectedDebugMode ? "ON" : "OFF");
 
     CancelOffThreadIonCompile(cx->compartment(), script);
