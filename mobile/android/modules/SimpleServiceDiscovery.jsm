@@ -176,7 +176,7 @@ var SimpleServiceDiscovery = {
   },
 
   getAndroidDevices: function() {
-    sendMessageToJava({ type: "MediaPlayer:Get" }, (result) => {
+    Messaging.sendRequestForResult({ type: "MediaPlayer:Get" }).then((result) => {
       for (let id in result.displays) {
         let display = result.displays[id];
 
@@ -193,7 +193,7 @@ var SimpleServiceDiscovery = {
 
         this._addService(service);
       }
-    })
+    });
   },
 
   _searchFixedTargets: function _searchFixedTargets() {

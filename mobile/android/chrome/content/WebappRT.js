@@ -64,7 +64,7 @@ let WebappRT = {
     }
 
     // If the app is in debug mode, configure and enable the remote debugger.
-    sendMessageToJava({ type: "NativeApp:IsDebuggable" }, (response) => {
+    Messaging.sendRequestForResult({ type: "NativeApp:IsDebuggable" }).then((response) => {
       if (response.isDebuggable) {
         this._enableRemoteDebugger(aUrl);
       }
