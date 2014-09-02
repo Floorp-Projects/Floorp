@@ -5,6 +5,9 @@
 #include "base/tracked_objects.h"
 
 #include <math.h>
+#if defined(OS_WIN)
+#include <windows.h>
+#endif
 
 #include "base/string_util.h"
 
