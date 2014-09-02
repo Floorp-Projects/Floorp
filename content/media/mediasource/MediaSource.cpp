@@ -63,14 +63,19 @@ static const unsigned int MAX_SOURCE_BUFFERS = 16;
 namespace mozilla {
 
 static const char* const gMediaSourceTypes[6] = {
-  "video/webm",
-  "audio/webm",
-// XXX: Disabled other codecs temporarily to allow WebM testing.  For now, set
-// the developer-only media.mediasource.ignore_codecs pref to true to test other
-// codecs, and expect things to be broken.
-#if 0
+// XXX: Disabled other temporarily on desktop to allow WebM testing.  For now,
+// set the developer-only media.mediasource.ignore_codecs pref to true to test
+// other codecs, and expect things to be broken.
+//
+// Disabled WebM in favour of MP4 on Firefox OS.
+#ifdef MOZ_GONK_MEDIACODEC
   "video/mp4",
   "audio/mp4",
+#else
+  "video/webm",
+  "audio/webm",
+#endif
+#if 0
   "audio/mpeg",
 #endif
   nullptr
