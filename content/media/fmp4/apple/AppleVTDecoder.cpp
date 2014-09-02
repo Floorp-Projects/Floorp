@@ -449,6 +449,9 @@ AppleVTDecoder::InitializeSession()
     CFDictionaryCreateMutable(NULL, 0,
                               &kCFTypeDictionaryKeyCallBacks,
                               &kCFTypeDictionaryValueCallBacks);
+// FIXME: Enabling hardware acceleration causes crashes in
+// VTDecompressionSessionCreate() with multiple videos. Bug 1055694
+#if 0
   // This key is supported (or ignored) but not declared prior to OSX 10.9.
   AutoCFRelease<CFStringRef>
         kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder =
@@ -458,6 +461,7 @@ AppleVTDecoder::InitializeSession()
   CFDictionarySetValue(spec,
       kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder,
       kCFBooleanTrue);
+#endif
 
   VTDecompressionOutputCallbackRecord cb = { PlatformCallback, this };
   rv = VTDecompressionSessionCreate(NULL, // Allocator.
