@@ -8,11 +8,14 @@
 #define mozilla_dom_bluetooth_bluetootha2dpmanager_h__
 
 #include "BluetoothCommon.h"
+#include "BluetoothInterface.h"
 #include "BluetoothProfileController.h"
 #include "BluetoothProfileManagerBase.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothA2dpManager : public BluetoothProfileManagerBase
+                           , public BluetoothA2dpNotificationHandler
+                           , public BluetoothAvrcpNotificationHandler
 {
 public:
   BT_DECL_PROFILE_MGR_BASE
@@ -63,13 +66,52 @@ public:
   void GetArtist(nsAString& aArtist);
 
 private:
-  class SinkPropertyChangedHandler;
   BluetoothA2dpManager();
   void ResetA2dp();
   void ResetAvrcp();
 
   void HandleShutdown();
   void NotifyConnectionStatusChanged();
+
+  void ConnectionStateNotification(BluetoothA2dpConnectionState aState,
+                                   const nsAString& aBdAddr) MOZ_OVERRIDE;
+  void AudioStateNotification(BluetoothA2dpAudioState aState,
+                              const nsAString& aBdAddr) MOZ_OVERRIDE;
+
+  void GetPlayStatusNotification() MOZ_OVERRIDE;
+
+  void ListPlayerAppAttrNotification() MOZ_OVERRIDE;
+
+  void ListPlayerAppValuesNotification(
+    BluetoothAvrcpPlayerAttribute aAttrId) MOZ_OVERRIDE;
+
+  void GetPlayerAppValueNotification(
+    uint8_t aNumAttrs,
+    const BluetoothAvrcpPlayerAttribute* aAttrs) MOZ_OVERRIDE;
+
+  void GetPlayerAppAttrsTextNotification(
+    uint8_t aNumAttrs,
+    const BluetoothAvrcpPlayerAttribute* aAttrs) MOZ_OVERRIDE;
+
+  void GetPlayerAppValuesTextNotification(
+    uint8_t aAttrId, uint8_t aNumVals, const uint8_t* aValues) MOZ_OVERRIDE;
+
+  void SetPlayerAppValueNotification(
+    const BluetoothAvrcpPlayerSettings& aSettings) MOZ_OVERRIDE;
+
+  void GetElementAttrNotification(
+    uint8_t aNumAttrs,
+    const BluetoothAvrcpMediaAttribute* aAttrs) MOZ_OVERRIDE;
+
+  void RegisterNotificationNotification(
+    BluetoothAvrcpEvent aEvent, uint32_t aParam) MOZ_OVERRIDE;
+
+  void RemoteFeatureNotification(
+    const nsAString& aBdAddr, unsigned long aFeatures) MOZ_OVERRIDE;
+
+  void VolumeChangeNotification(uint8_t aVolume, uint8_t aCType) MOZ_OVERRIDE;
+
+  void PassthroughCmdNotification(int aId, int aKeyState) MOZ_OVERRIDE;
 
   nsString mDeviceAddress;
   nsRefPtr<BluetoothProfileController> mController;
