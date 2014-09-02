@@ -385,6 +385,19 @@ ClientLayerManager::GetCompositorSideAPZTestData(APZTestData* aData) const
   }
 }
 
+float
+ClientLayerManager::RequestProperty(const nsAString& aProperty)
+{
+  if (mForwarder->HasShadowManager()) {
+    float value;
+    if (!mForwarder->GetShadowManager()->SendRequestProperty(nsString(aProperty), &value)) {
+      NS_WARNING("Call to PLayerTransactionChild::SendGetAPZTestData() failed");
+    }
+    return value;
+  }
+  return -1;
+}
+
 void
 ClientLayerManager::StartNewRepaintRequest(SequenceNumber aSequenceNumber)
 {
