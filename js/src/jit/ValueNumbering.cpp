@@ -144,14 +144,16 @@ IsDead(const MDefinition *def)
     return !def->hasUses() && DeadIfUnused(def);
 }
 
-// Call MDefinition::replaceAllUsesWith, and add some GVN-specific asserts.
+// Call MDefinition::justReplaceAllUsesWith, and add some GVN-specific asserts.
 static void
 ReplaceAllUsesWith(MDefinition *from, MDefinition *to)
 {
     MOZ_ASSERT(from != to, "GVN shouldn't try to replace a value with itself");
     MOZ_ASSERT(from->type() == to->type(), "Def replacement has different type");
 
-    from->replaceAllUsesWith(to);
+    // We don't need the extra setting of UseRemoved flags that the regular
+    // replaceAllUsesWith does because we do it ourselves.
+    from->justReplaceAllUsesWith(to);
 }
 
 // Test whether succ is a successor of newControl.
@@ -222,7 +224,8 @@ ValueNumberer::deleteDefsRecursively(MDefinition *def)
 // Assuming phi is dead, discard its operands. If an operand which is not
 // dominated by the phi becomes dead, push it to the delete worklist.
 bool
-ValueNumberer::discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
+ValueNumberer::discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock,
+                                  UseRemovedOption useRemovedOption)
 {
     // MPhi saves operands in a vector so we iterate in reverse.
     for (int o = phi->numOperands() - 1; o >= 0; --o) {
@@ -232,7 +235,8 @@ ValueNumberer::discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
             if (!deadDefs_.append(op))
                 return false;
         } else {
-            op->setUseRemovedUnchecked();
+            if (useRemovedOption == SetUseRemoved)
+                op->setUseRemovedUnchecked();
         }
     }
     return true;
@@ -241,7 +245,8 @@ ValueNumberer::discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
 // Assuming ins is dead, discard its operands. If an operand becomes dead, push
 // it to the delete worklist.
 bool
-ValueNumberer::discardInsOperands(MInstruction *ins)
+ValueNumberer::discardInsOperands(MInstruction *ins,
+                                  UseRemovedOption useRemovedOption)
 {
     for (size_t o = 0, e = ins->numOperands(); o != e; ++o) {
         MDefinition *op = ins->getOperand(o);
@@ -250,14 +255,16 @@ ValueNumberer::discardInsOperands(MInstruction *ins)
             if (!deadDefs_.append(op))
                 return false;
         } else {
-            op->setUseRemovedUnchecked();
+            if (useRemovedOption == SetUseRemoved)
+                op->setUseRemovedUnchecked();
         }
     }
     return true;
 }
 
 bool
-ValueNumberer::deleteDef(MDefinition *def)
+ValueNumberer::deleteDef(MDefinition *def,
+                         UseRemovedOption useRemovedOption)
 {
     JitSpew(JitSpew_GVN, "    Deleting %s%u", def->opName(), def->id());
     MOZ_ASSERT(IsDead(def), "Deleting non-dead definition");
@@ -266,13 +273,13 @@ ValueNumberer::deleteDef(MDefinition *def)
     if (def->isPhi()) {
         MPhi *phi = def->toPhi();
         MBasicBlock *phiBlock = phi->block();
-        if (!discardPhiOperands(phi, phiBlock))
+        if (!discardPhiOperands(phi, phiBlock, useRemovedOption))
              return false;
         MPhiIterator at(phiBlock->phisBegin(phi));
         phiBlock->discardPhiAt(at);
     } else {
         MInstruction *ins = def->toInstruction();
-        if (!discardInsOperands(ins))
+        if (!discardInsOperands(ins, useRemovedOption))
              return false;
         ins->block()->discardIgnoreOperands(ins);
     }
@@ -500,7 +507,7 @@ ValueNumberer::visitDefinition(MDefinition *def)
             if (DeadIfUnused(def)) {
                 // deleteDef should not add anything to the deadDefs, as the
                 // redundant operation should have the same input operands.
-                mozilla::DebugOnly<bool> r = deleteDef(def);
+                mozilla::DebugOnly<bool> r = deleteDef(def, DontSetUseRemoved);
                 MOZ_ASSERT(r, "deleteDef shouldn't have tried to add anything to the worklist, "
                               "so it shouldn't have failed");
                 MOZ_ASSERT(deadDefs_.empty(),
