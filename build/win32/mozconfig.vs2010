@@ -4,7 +4,7 @@ export LIB=/d/msvs10/vc/lib:/d/msvs10/vc/atlmfc/lib:/d/sdks/v7.0/lib:/d/msvs8/VC
 export PATH="/d/msvs10/VSTSDB/Deploy:/d/msvs10/Common7/IDE/:/d/msvs10/VC/BIN:/d/msvs10/Common7/Tools:/d/msvs10/VC/VCPackages:${PATH}"
 export WIN32_REDIST_DIR=/d/msvs10/VC/redist/x86/Microsoft.VC100.CRT
 
-. $topsrcdir/build/mozconfig.vs2010-common
+. $topsrcdir/build/mozconfig.vs-common
 
 mk_export_correct_style LIB
 mk_export_correct_style LIBPATH
