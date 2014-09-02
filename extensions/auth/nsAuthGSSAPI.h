@@ -41,7 +41,7 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIAUTHMODULE
 
-    nsAuthGSSAPI(pType package);
+    explicit nsAuthGSSAPI(pType package);
 
     static void Shutdown();
 
