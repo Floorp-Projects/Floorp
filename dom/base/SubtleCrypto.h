@@ -31,7 +31,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SubtleCrypto)
 
 public:
-  SubtleCrypto(nsPIDOMWindow* aWindow);
+  explicit SubtleCrypto(nsPIDOMWindow* aWindow);
 
   nsPIDOMWindow* GetParentObject() const
   {

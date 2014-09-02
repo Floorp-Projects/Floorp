@@ -56,7 +56,7 @@ protected:
 
     class iterator_base {
     public:
-        iterator_base(txExpandedNameMap_base& aMap)
+        explicit iterator_base(txExpandedNameMap_base& aMap)
             : mMap(aMap),
               mCurrentPos(uint32_t(-1))
         {
@@ -133,7 +133,7 @@ public:
     class iterator : public iterator_base
     {
     public:
-        iterator(txExpandedNameMap& aMap)
+        explicit iterator(txExpandedNameMap& aMap)
             : iterator_base(aMap)
         {
         }
@@ -187,7 +187,7 @@ public:
     class iterator : public iterator_base
     {
     public:
-        iterator(txOwningExpandedNameMap& aMap)
+        explicit iterator(txOwningExpandedNameMap& aMap)
             : iterator_base(aMap)
         {
         }

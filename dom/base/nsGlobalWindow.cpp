@@ -481,7 +481,7 @@ class nsGlobalWindowObserver MOZ_FINAL : public nsIObserver,
                                          public nsIInterfaceRequestor
 {
 public:
-  nsGlobalWindowObserver(nsGlobalWindow* aWindow) : mWindow(aWindow) {}
+  explicit nsGlobalWindowObserver(nsGlobalWindow* aWindow) : mWindow(aWindow) {}
   NS_DECL_ISUPPORTS
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
   {
@@ -8768,7 +8768,7 @@ nsGlobalWindow::RunPendingTimeoutsRecursive(nsGlobalWindow *aTopWindow,
 class nsPendingTimeoutRunner : public nsRunnable
 {
 public:
-  nsPendingTimeoutRunner(nsGlobalWindow *aWindow)
+  explicit nsPendingTimeoutRunner(nsGlobalWindow* aWindow)
     : mWindow(aWindow)
   {
     NS_ASSERTION(mWindow, "mWindow is null.");
@@ -11712,7 +11712,7 @@ class AutoUnblockScriptClosing
 private:
   nsRefPtr<nsGlobalWindow> mWin;
 public:
-  AutoUnblockScriptClosing(nsGlobalWindow* aWin)
+  explicit AutoUnblockScriptClosing(nsGlobalWindow* aWin)
     : mWin(aWin)
   {
     MOZ_ASSERT(mWin);

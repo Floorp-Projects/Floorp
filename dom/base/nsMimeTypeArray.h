@@ -20,7 +20,7 @@ class nsMimeTypeArray MOZ_FINAL : public nsISupports,
                                   public nsWrapperCache
 {
 public:
-  nsMimeTypeArray(nsPIDOMWindow* aWindow);
+  explicit nsMimeTypeArray(nsPIDOMWindow* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsMimeTypeArray)

@@ -661,7 +661,7 @@ AudioChannelService::NotifyEnumerator(AudioChannelAgent* aAgent,
 class NotifyRunnable : public nsRunnable
 {
 public:
-  NotifyRunnable(AudioChannelService* aService)
+  explicit NotifyRunnable(AudioChannelService* aService)
     : mService(aService)
   {}
 
@@ -905,7 +905,7 @@ AudioChannelService::GetInternalType(AudioChannel aChannel,
 
 struct RefreshAgentsVolumeData
 {
-  RefreshAgentsVolumeData(nsPIDOMWindow* aWindow)
+  explicit RefreshAgentsVolumeData(nsPIDOMWindow* aWindow)
     : mWindow(aWindow)
   {}
 
@@ -946,7 +946,7 @@ AudioChannelService::RefreshAgentsVolume(nsPIDOMWindow* aWindow)
 
 struct CountWindowData
 {
-  CountWindowData(nsIDOMWindow* aWindow)
+  explicit CountWindowData(nsIDOMWindow* aWindow)
     : mWindow(aWindow)
     , mCount(0)
   {}

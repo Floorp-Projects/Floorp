@@ -16,9 +16,9 @@ class GamepadButton : public nsISupports,
                       public nsWrapperCache
 {
 public:
-  GamepadButton(nsISupports* aParent) : mParent(aParent),
-                                        mPressed(false),
-                                        mValue(0)
+  explicit GamepadButton(nsISupports* aParent) : mParent(aParent),
+                                                 mPressed(false),
+                                                 mValue(0)
   {
     SetIsDOMBinding();
   }

@@ -69,7 +69,7 @@ class DOMStorageCache : public DOMStorageCacheBridge
 public:
   NS_IMETHOD_(void) Release(void);
 
-  DOMStorageCache(const nsACString* aScope);
+  explicit DOMStorageCache(const nsACString* aScope);
 
 protected:
   virtual ~DOMStorageCache();
@@ -251,7 +251,7 @@ protected:
 class DOMStorageUsage : public DOMStorageUsageBridge
 {
 public:
-  DOMStorageUsage(const nsACString& aScope);
+  explicit DOMStorageUsage(const nsACString& aScope);
 
   bool CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex, int64_t aUsageDelta);
 

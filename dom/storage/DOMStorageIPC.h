@@ -28,7 +28,7 @@ class DOMStorageDBChild MOZ_FINAL : public DOMStorageDBBridge
   virtual ~DOMStorageDBChild();
 
 public:
-  DOMStorageDBChild(DOMLocalStorageManager* aManager);
+  explicit DOMStorageDBChild(DOMLocalStorageManager* aManager);
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);

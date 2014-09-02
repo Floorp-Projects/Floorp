@@ -18,8 +18,8 @@ class HTMLIFrameElement MOZ_FINAL : public nsGenericHTMLFrameElement
                                   , public nsIDOMHTMLIFrameElement
 {
 public:
-  HTMLIFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                    FromParser aFromParser = NOT_FROM_PARSER);
+  explicit HTMLIFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+                             FromParser aFromParser = NOT_FROM_PARSER);
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLIFrameElement, iframe)
 

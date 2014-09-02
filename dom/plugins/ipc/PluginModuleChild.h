@@ -373,7 +373,7 @@ private:
 
     struct NPObjectData : public nsPtrHashKey<NPObject>
     {
-        NPObjectData(const NPObject* key)
+        explicit NPObjectData(const NPObject* key)
             : nsPtrHashKey<NPObject>(key)
             , instance(nullptr)
             , actor(nullptr)
