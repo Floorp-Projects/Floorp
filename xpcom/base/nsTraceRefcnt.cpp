@@ -936,8 +936,9 @@ PrintStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
   char buf[1024];
 
   NS_DescribeCodeAddress(aPC, &details);
-  NS_FormatCodeAddressDetails(aFrameNumber, aPC, &details, buf, sizeof(buf));
-  fputs(buf, stream);
+  NS_FormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
+  fprintf(stream, "%s\n", buf);
+  fflush(stream);
 }
 
 static void
@@ -949,6 +950,7 @@ PrintStackFrameCached(uint32_t aFrameNumber, void* aPC, void* aSP,
   char buf[buflen];
   gCodeAddressService->GetLocation(aFrameNumber, aPC, buf, buflen);
   fprintf(stream, "    %s\n", buf);
+  fflush(stream);
 }
 #endif
 
