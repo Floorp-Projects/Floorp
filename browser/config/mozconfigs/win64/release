@@ -1,5 +1,6 @@
 # This make file should be identical to the beta mozconfig, apart from the
 # safeguard below
+. "$topsrcdir/build/mozconfig.win-common"
 . "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
 . "$topsrcdir/browser/config/mozconfigs/win64/common-opt"
 
