@@ -362,6 +362,11 @@ BaseProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy) const
 {
 }
 
+void
+BaseProxyHandler::objectMoved(JSObject *proxy, const JSObject *old) const
+{
+}
+
 JSObject *
 BaseProxyHandler::weakmapKeyDelegate(JSObject *proxy) const
 {
@@ -2876,6 +2881,13 @@ js::proxy_Finalize(FreeOp *fop, JSObject *obj)
 {
     JS_ASSERT(obj->is<ProxyObject>());
     obj->as<ProxyObject>().handler()->finalize(fop, obj);
+}
+
+void
+js::proxy_ObjectMoved(JSObject *obj, const JSObject *old)
+{
+    JS_ASSERT(obj->is<ProxyObject>());
+    obj->as<ProxyObject>().handler()->objectMoved(obj, old);
 }
 
 bool
