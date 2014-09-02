@@ -76,7 +76,7 @@
 
   <color name="doorhanger_text">#FF222222</color>
   <color name="doorhanger_link">#FF2AA1FE</color>
-  <color name="doorhanger_divider_light">#FFD1D5DA</color>
+  <color name="doorhanger_divider_light">#FFD7D9DB</color>
   <color name="doorhanger_divider_dark">#FFB3C2CE</color>
   <color name="doorhanger_background_dark">#FFDDE4EA</color>
 
@@ -120,6 +120,6 @@
   <color name="toast_background">#DD363B40</color>
   <color name="toast_button_background">#00000000</color>
   <color name="toast_button_pressed">#DD2C3136</color>
-  <color name="toast_button_divider">#FFD1D5DA</color>
+  <color name="toast_button_divider">#FFD7D9DB</color>
   <color name="toast_button_text">#FFFFFFFF</color>
 </resources>
