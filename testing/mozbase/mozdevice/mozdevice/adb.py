@@ -449,7 +449,8 @@ class ADBDevice(ADBCommand):
 
     """
 
-    def __init__(self, device_serial,
+    def __init__(self,
+                 device=None,
                  adb='adb',
                  test_root='',
                  logger_name='adb',
@@ -459,8 +460,23 @@ class ADBDevice(ADBCommand):
                  device_ready_retry_attempts=3):
         """Initializes the ADBDevice object.
 
-        :param device_serial: adb serial number of the device.
-        :param adb: path to adb executable. Defaults to 'adb'.
+        :param device: can be either a dictionary, a string or None.
+            When a string is passed, it is interpreted as the
+            device serial number. This form is not compatible with
+            devices containing a ":" in the serial; in this case
+            ValueError will be raised.
+            When a dictionary is passed it must have one or both of
+            the keys "device_serial" and "usb". This is compatible
+            with the dictionaries in the list returned by
+            ADBHost.devices(). If the value of device_serial is a
+            valid serial not containing a ":" it will be used to
+            identify the device, otherwise the value of the usb key,
+            prefixed with "usb:" is used.
+            If None is passed and there is exactly one device attached
+            to the host, that device is used. If there is more than one
+            device attached, ValueError is raised. If no device is
+            attached the constructor will block until a device is
+            attached or the timeout is reached.
         :param logger_name: logging logger name. Defaults to 'adb'.
         :param device_ready_retry_wait: number of seconds to wait
             between attempts to check if the device is ready after a
@@ -470,11 +486,13 @@ class ADBDevice(ADBCommand):
 
         :raises: * ADBError
                  * ADBTimeoutError
+                 * ValueError
+
 
         """
         ADBCommand.__init__(self, adb=adb, logger_name=logger_name,
                             timeout=timeout, verbose=verbose)
-        self._device_serial = device_serial
+        self._device_serial = self._get_device_serial(device)
         self.test_root = test_root
         self._device_ready_retry_wait = device_ready_retry_wait
         self._device_ready_retry_attempts = device_ready_retry_attempts
@@ -525,6 +543,39 @@ class ADBDevice(ADBCommand):
         self._logger.debug("ADBDevice: %s" % self.__dict__)
 
         self._setup_test_root()
+ 
+    def _get_device_serial(self, device):
+        if device is None:
+            devices = ADBHost().devices()
+            if len(devices) > 1:
+                raise ValueError("ADBDevice called with multiple devices "
+                                 "attached and no device specified")
+            elif len(devices) == 0:
+                # We could error here, but this way we'll wait-for-device before we next
+                # run a command, which seems more friendly
+                return
+            device = devices[0]
+
+        def is_valid_serial(serial):
+            return ":" not in serial or serial.startswith("usb:")
+
+        if isinstance(device, (str, unicode)):
+            # Treat this as a device serial
+            if not is_valid_serial(device):
+                raise ValueError("Device serials containing ':' characters are "
+                                 "invalid. Pass the output from "
+                                 "ADBHost.devices() for the device instead")
+            return device
+
+        serial = device.get("device_serial")
+        if serial is not None and is_valid_serial(serial):
+            return serial
+        usb = device.get("usb")
+        if usb is not None:
+            return "usb:%s" % usb
+
+        raise ValueError("Unable to get device serial")
+
 
     @staticmethod
     def _escape_command_line(cmd):
