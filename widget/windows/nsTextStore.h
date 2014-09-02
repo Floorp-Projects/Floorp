@@ -732,6 +732,9 @@ protected:
   // ITfContextOwnerServices::OnLayoutChange() after the layout is fixed and
   // the document is unlocked.
   bool                         mPendingOnLayoutChange;
+  // During the documet is locked, we shouldn't destroy the instance.
+  // If this is true, the instance will be destroyed after unlocked.
+  bool                         mPendingDestroy;
   // While there is native caret, this is true.  Otherwise, false.
   bool                         mNativeCaretIsCreated;
 
