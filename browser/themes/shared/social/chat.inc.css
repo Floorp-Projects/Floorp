@@ -47,10 +47,17 @@
 .chat-toolbarbutton {
   -moz-appearance: none;
   border: none;
-  padding: 0;
+  padding: 0 3px;
   margin: 0;
   background: none;
-  width: 16px;
+}
+
+.chat-toolbarbutton:hover {
+  background-color: rgba(255,255,255,.35);
+}
+
+.chat-toolbarbutton:hover:active {
+  background-color: rgba(255,255,255,.5);
 }
 
 .chat-toolbarbutton > .toolbarbutton-text {
@@ -58,113 +65,37 @@
 }
 
 .chat-toolbarbutton > .toolbarbutton-icon {
-  width: inherit;
+  width: 16px;
+  height: 16px;
 }
 
 .chat-close-button {
-  list-style-image: url('chrome://browser/skin/social/chat-icons.png');
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#close");
 }
 
-.chat-close-button:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.chat-close-button:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
+.chat-close-button:-moz-any(:hover,:hover:active) {
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#close-active");
 }
 
 .chat-minimize-button {
-  list-style-image: url('chrome://browser/skin/social/chat-icons.png');
-  -moz-image-region: rect(16px, 16px, 32px, 0);
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#minimize");
 }
 
-.chat-minimize-button:hover {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
-}
-
-.chat-minimize-button:hover:active {
-  -moz-image-region: rect(16px, 48px, 32px, 32px);
+.chat-minimize-button:-moz-any(:hover,:hover:active) {
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#minimize-active");
 }
 
 .chat-swap-button {
-  list-style-image: url('chrome://browser/skin/social/chat-icons.png');
-  -moz-image-region: rect(48px, 16px, 64px, 0);
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#expand");
+  transform: rotate(180deg);
 }
 
-.chat-swap-button:hover {
-  -moz-image-region: rect(48px, 32px, 64px, 16px);
-}
-
-.chat-swap-button:hover:active {
-  -moz-image-region: rect(48px, 48px, 64px, 32px);
+.chat-swap-button:-moz-any(:hover,:hover:active) {
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#expand-active");
 }
 
 chatbar > chatbox > .chat-titlebar > .chat-swap-button {
-  list-style-image: url('chrome://browser/skin/social/chat-icons.png');
-  -moz-image-region: rect(32px, 16px, 48px, 0);
-}
-
-chatbar > chatbox > .chat-titlebar > .chat-swap-button:hover {
-  -moz-image-region: rect(32px, 32px, 48px, 16px);
-}
-
-chatbar > chatbox > .chat-titlebar > .chat-swap-button:hover:active {
-  -moz-image-region: rect(32px, 48px, 48px, 32px);
-}
-
-@media (min-resolution: 2dppx) {
-  .chat-close-button {
-    list-style-image: url('chrome://browser/skin/social/chat-icons@2x.png');
-    -moz-image-region: rect(0, 32px, 32px, 0);
-  }
-
-  .chat-close-button:hover {
-    -moz-image-region: rect(0, 64px, 32px, 32px);
-  }
-
-  .chat-close-button:hover:active {
-    -moz-image-region: rect(0, 96px, 32px, 64px);
-  }
-
-  .chat-minimize-button {
-    list-style-image: url('chrome://browser/skin/social/chat-icons@2x.png');
-    -moz-image-region: rect(32px, 32px, 64px, 0);
-  }
-
-  .chat-minimize-button:hover {
-    -moz-image-region: rect(32px, 64px, 64px, 32px);
-  }
-
-  .chat-minimize-button:hover:active {
-    -moz-image-region: rect(32px, 96px, 64px, 64px);
-  }
-
-  .chat-swap-button {
-    list-style-image: url('chrome://browser/skin/social/chat-icons@2x.png');
-    -moz-image-region: rect(96px, 32px, 128px, 0);
-  }
-
-  .chat-swap-button:hover {
-    -moz-image-region: rect(96px, 64px, 128px, 32px);
-  }
-
-  .chat-swap-button:hover:active {
-    -moz-image-region: rect(96px, 96px, 128px, 64px);
-  }
-
-  chatbar > chatbox > .chat-titlebar > .chat-swap-button {
-    list-style-image: url('chrome://browser/skin/social/chat-icons@2x.png');
-    -moz-image-region: rect(64px, 32px, 96px, 0);
-  }
-
-  chatbar > chatbox > .chat-titlebar > .chat-swap-button:hover {
-    -moz-image-region: rect(64px, 64px, 96px, 32px);
-  }
-
-  chatbar > chatbox > .chat-titlebar > .chat-swap-button:hover:active {
-    -moz-image-region: rect(64px, 96px, 96px, 64px);
-  }
+  transform: none;
 }
 
 .chat-title {
@@ -175,12 +106,11 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button:hover:active {
 }
 
 .chat-titlebar {
-  height: 20px;
-  min-height: 20px;
+  height: 30px;
+  min-height: 30px;
   width: 100%;
   margin: 0;
-  padding: 2px;
-  -moz-padding-start: 6px;
+  padding: 7px 6px;
   border: none;
   border-bottom: 1px solid #ccc;
   cursor: pointer;
@@ -200,6 +130,18 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button:hover:active {
   background-repeat: no-repeat;
   background-size: 100% 20px;
   background-position: 0 -10px;
+}
+
+chatbox[dark=true] > .chat-titlebar,
+chatbox[dark=true] > .chat-titlebar[selected] {
+  border-bottom: none;
+  background-color: #000;
+  background-image: none;
+}
+
+chatbox[dark=true] > .chat-titlebar > hbox > .chat-title {
+  font-weight: normal;
+  color: #c1c1c1;
 }
 
 .chat-frame {
