@@ -18,7 +18,6 @@
 #include "mozilla/Preferences.h"
 #include "qcms.h"
 #include "gfx2DGlue.h"
-#include "gfxPrefs.h"
 
 #include <dlfcn.h>
 
@@ -385,16 +384,6 @@ gfxPlatformMac::UseAcceleratedCanvas()
 {
   // Lion or later is required
   return nsCocoaFeatures::OnLionOrLater() && Preferences::GetBool("gfx.canvas.azure.accelerated", false);
-}
-
-bool
-gfxPlatformMac::UseTiling()
-{
-  if (gfxPrefs::LayersTilesForceEnabled()) {
-    return true;
-  }
-  // Tiling seems to be slow on 10.6 so disable it until we figure it out
-  return nsCocoaFeatures::OnLionOrLater() && gfxPlatform::UseTiling();
 }
 
 void
