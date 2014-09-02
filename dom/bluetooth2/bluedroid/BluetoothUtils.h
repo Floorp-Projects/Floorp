@@ -27,9 +27,6 @@ BdAddressTypeToString(bt_bdaddr_t* aBdAddressType,
                       nsAString& aRetBdAddress);
 
 void
-UuidToString(bt_uuid_t* aUuid, nsAString& aString);
-
-void
 UuidToString(const BluetoothUuid& aUuid, nsAString& aString);
 
 bool
