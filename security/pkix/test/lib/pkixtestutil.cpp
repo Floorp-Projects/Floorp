@@ -149,21 +149,8 @@ TLV(uint8_t tag, const ByteString& value)
   return result;
 }
 
-static SECItem*
-ArenaDupByteString(PLArenaPool* arena, const ByteString& value)
-{
-  SECItem* result = SECITEM_AllocItem(arena, nullptr, value.length());
-  if (!result) {
-    return nullptr;
-  }
-  memcpy(result->data, value.data(), value.length());
-  return result;
-}
-
-OCSPResponseContext::OCSPResponseContext(PLArenaPool* arena,
-                                         const CertID& certID, time_t time)
-  : arena(arena)
-  , certID(certID)
+OCSPResponseContext::OCSPResponseContext(const CertID& certID, time_t time)
+  : certID(certID)
   , responseStatus(successful)
   , skipResponseBytes(false)
   , producedAt(time)
@@ -831,16 +818,12 @@ CreateEncodedEKUExtension(Input ekuOID, ExtensionCriticality criticality)
 ///////////////////////////////////////////////////////////////////////////////
 // OCSP responses
 
-SECItem*
+ByteString
 CreateEncodedOCSPResponse(OCSPResponseContext& context)
 {
-  if (!context.arena) {
-    return nullptr;
-  }
-
   if (!context.skipResponseBytes) {
     if (!context.signerPrivateKey) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
   }
 
@@ -861,20 +844,20 @@ CreateEncodedOCSPResponse(OCSPResponseContext& context)
   reponseStatusValue.push_back(context.responseStatus);
   ByteString responseStatus(TLV(der::ENUMERATED, reponseStatusValue));
   if (responseStatus == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
   ByteString responseBytesNested;
   if (!context.skipResponseBytes) {
     ByteString responseBytes(ResponseBytes(context));
     if (responseBytes == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
 
     responseBytesNested = TLV(der::CONSTRUCTED | der::CONTEXT_SPECIFIC,
                               responseBytes);
     if (responseBytesNested == ENCODING_FAILED) {
-      return nullptr;
+      return ENCODING_FAILED;
     }
   }
 
@@ -883,12 +866,12 @@ CreateEncodedOCSPResponse(OCSPResponseContext& context)
   value.append(responseBytesNested);
   ByteString result(TLV(der::SEQUENCE, value));
   if (result == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
   MaybeLogOutput(result, "ocsp");
 
-  return ArenaDupByteString(context.arena, result);
+  return result;
 }
 
 // ResponseBytes ::= SEQUENCE {
@@ -903,11 +886,11 @@ ResponseBytes(OCSPResponseContext& context)
   };
   ByteString response(BasicOCSPResponse(context));
   if (response == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
   ByteString responseNested = TLV(der::OCTET_STRING, response);
   if (responseNested == ENCODING_FAILED) {
-    return nullptr;
+    return ENCODING_FAILED;
   }
 
   ByteString value;

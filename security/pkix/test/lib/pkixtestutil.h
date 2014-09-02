@@ -166,9 +166,8 @@ public:
 class OCSPResponseContext
 {
 public:
-  OCSPResponseContext(PLArenaPool* arena, const CertID& certID, std::time_t time);
+  OCSPResponseContext(const CertID& certID, std::time_t time);
 
-  PLArenaPool* arena;
   const CertID& certID;
   // TODO(bug 980538): add a way to specify what certificates are included.
 
@@ -215,9 +214,7 @@ public:
   bool includeNextUpdate;
 };
 
-// The return value, if non-null, is owned by the arena in the context
-// and MUST NOT be freed. A null return value indicates an error occurred.
-SECItem* CreateEncodedOCSPResponse(OCSPResponseContext& context);
+ByteString CreateEncodedOCSPResponse(OCSPResponseContext& context);
 
 } } } // namespace mozilla::pkix::test
 
