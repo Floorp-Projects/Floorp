@@ -2948,6 +2948,7 @@ struct BluetoothCallback
       aOpcode, ConvertArray<uint8_t>(aBuf, aLen), aLen);
   }
 
+#if ANDROID_VERSION >= 18
   static void
   LeTestMode(bt_status_t aStatus, uint16_t aNumPackets)
   {
@@ -2955,6 +2956,7 @@ struct BluetoothCallback
       &BluetoothNotificationHandler::LeTestModeNotification,
       aStatus, aNumPackets);
   }
+#endif // ANDROID_VERSION >= 18
 };
 
 // Interface
@@ -3032,10 +3034,31 @@ BluetoothInterface::~BluetoothInterface()
 { }
 
 void
-BluetoothInterface::Init(bt_callbacks_t* aCallbacks,
+BluetoothInterface::Init(BluetoothNotificationHandler* aNotificationHandler,
                          BluetoothResultHandler* aRes)
 {
-  int status = mInterface->init(aCallbacks);
+  static bt_callbacks_t sBluetoothCallbacks = {
+    sizeof(sBluetoothCallbacks),
+    BluetoothCallback::AdapterStateChanged,
+    BluetoothCallback::AdapterProperties,
+    BluetoothCallback::RemoteDeviceProperties,
+    BluetoothCallback::DeviceFound,
+    BluetoothCallback::DiscoveryStateChanged,
+    BluetoothCallback::PinRequest,
+    BluetoothCallback::SspRequest,
+    BluetoothCallback::BondStateChanged,
+    BluetoothCallback::AclStateChanged,
+    BluetoothCallback::ThreadEvt,
+    BluetoothCallback::DutModeRecv
+#if ANDROID_VERSION >= 18
+    ,
+    BluetoothCallback::LeTestMode
+#endif
+  };
+
+  sNotificationHandler = aNotificationHandler;
+
+  int status = mInterface->init(&sBluetoothCallbacks);
 
   if (aRes) {
     DispatchBluetoothResult(aRes, &BluetoothResultHandler::Init,
@@ -3052,6 +3075,8 @@ BluetoothInterface::Cleanup(BluetoothResultHandler* aRes)
     DispatchBluetoothResult(aRes, &BluetoothResultHandler::Cleanup,
                             STATUS_SUCCESS);
   }
+
+  sNotificationHandler = nullptr;
 }
 
 void
