@@ -16,7 +16,7 @@
 
 #include "jit/BaselineInspector.h"
 #include "jit/IonBuilder.h"
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 #include "jit/MIRGraph.h"
 #include "jit/RangeAnalysis.h"
 
@@ -3270,7 +3270,7 @@ InlinePropertyTable::trimTo(ObjectVector &targets, BoolVector &choiceSet)
 void
 InlinePropertyTable::trimToTargets(ObjectVector &targets)
 {
-    IonSpew(IonSpew_Inlining, "Got inlineable property cache with %d cases",
+    JitSpew(JitSpew_Inlining, "Got inlineable property cache with %d cases",
             (int)numEntries());
 
     size_t i = 0;
@@ -3288,7 +3288,7 @@ InlinePropertyTable::trimToTargets(ObjectVector &targets)
             i++;
     }
 
-    IonSpew(IonSpew_Inlining, "%d inlineable cases left after trimming to %d targets",
+    JitSpew(JitSpew_Inlining, "%d inlineable cases left after trimming to %d targets",
             (int)numEntries(), (int)targets.length());
 }
 

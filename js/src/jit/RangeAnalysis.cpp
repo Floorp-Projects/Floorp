@@ -10,7 +10,7 @@
 
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
@@ -110,11 +110,11 @@ static inline void
 SpewRange(MDefinition *def)
 {
 #ifdef DEBUG
-    if (IonSpewEnabled(IonSpew_Range) && def->type() != MIRType_None && def->range()) {
-        IonSpewHeader(IonSpew_Range);
-        def->printName(IonSpewFile);
-        fprintf(IonSpewFile, " has range ");
-        def->range()->dump(IonSpewFile);
+    if (JitSpewEnabled(JitSpew_Range) && def->type() != MIRType_None && def->range()) {
+        JitSpewHeader(JitSpew_Range);
+        def->printName(JitSpewFile);
+        fprintf(JitSpewFile, " has range ");
+        def->range()->dump(JitSpewFile);
     }
 #endif
 }
@@ -139,11 +139,11 @@ RangeAnalysis::replaceDominatedUsesWith(MDefinition *orig, MDefinition *dom,
 bool
 RangeAnalysis::addBetaNodes()
 {
-    IonSpew(IonSpew_Range, "Adding beta nodes");
+    JitSpew(JitSpew_Range, "Adding beta nodes");
 
     for (PostorderIterator i(graph_.poBegin()); i != graph_.poEnd(); i++) {
         MBasicBlock *block = *i;
-        IonSpew(IonSpew_Range, "Looking at block %d", block->id());
+        JitSpew(JitSpew_Range, "Looking at block %d", block->id());
 
         BranchDirection branch_dir;
         MTest *test = block->immediateDominatorBranch(&branch_dir);
@@ -195,12 +195,12 @@ RangeAnalysis::addBetaNodes()
                                   Range::NewInt32Range(alloc(), JSVAL_INT_MIN, JSVAL_INT_MAX-1));
                 block->insertBefore(*block->begin(), beta);
                 replaceDominatedUsesWith(smaller, beta, block);
-                IonSpew(IonSpew_Range, "Adding beta node for smaller %d", smaller->id());
+                JitSpew(JitSpew_Range, "Adding beta node for smaller %d", smaller->id());
                 beta = MBeta::New(alloc(), greater,
                                   Range::NewInt32Range(alloc(), JSVAL_INT_MIN+1, JSVAL_INT_MAX));
                 block->insertBefore(*block->begin(), beta);
                 replaceDominatedUsesWith(greater, beta, block);
-                IonSpew(IonSpew_Range, "Adding beta node for greater %d", greater->id());
+                JitSpew(JitSpew_Range, "Adding beta node for greater %d", greater->id());
             }
             continue;
         } else {
@@ -245,10 +245,10 @@ RangeAnalysis::addBetaNodes()
                       // [-\inf, bound-1] U [bound+1, \inf] but we only use contiguous ranges.
         }
 
-        if (IonSpewEnabled(IonSpew_Range)) {
-            IonSpewHeader(IonSpew_Range);
-            fprintf(IonSpewFile, "Adding beta node for %d with range ", val->id());
-            comp.dump(IonSpewFile);
+        if (JitSpewEnabled(JitSpew_Range)) {
+            JitSpewHeader(JitSpew_Range);
+            fprintf(JitSpewFile, "Adding beta node for %d with range ", val->id());
+            comp.dump(JitSpewFile);
         }
 
         MBeta *beta = MBeta::New(alloc(), val, new(alloc()) Range(comp));
@@ -262,7 +262,7 @@ RangeAnalysis::addBetaNodes()
 bool
 RangeAnalysis::removeBetaNodes()
 {
-    IonSpew(IonSpew_Range, "Removing beta nodes");
+    JitSpew(JitSpew_Range, "Removing beta nodes");
 
     for (PostorderIterator i(graph_.poBegin()); i != graph_.poEnd(); i++) {
         MBasicBlock *block = *i;
@@ -270,7 +270,7 @@ RangeAnalysis::removeBetaNodes()
             MDefinition *def = *iter;
             if (def->isBeta()) {
                 MDefinition *op = def->getOperand(0);
-                IonSpew(IonSpew_Range, "Removing beta node %d for %d",
+                JitSpew(JitSpew_Range, "Removing beta node %d for %d",
                         def->id(), op->id());
                 def->replaceAllUsesWith(op);
                 iter = block->discardDefAt(iter);
@@ -1038,7 +1038,7 @@ MPhi::computeRange(TempAllocator &alloc)
     Range *range = nullptr;
     for (size_t i = 0, e = numOperands(); i < e; i++) {
         if (getOperand(i)->block()->unreachable()) {
-            IonSpew(IonSpew_Range, "Ignoring unreachable input %d", getOperand(i)->id());
+            JitSpew(JitSpew_Range, "Ignoring unreachable input %d", getOperand(i)->id());
             continue;
         }
 
@@ -1066,7 +1066,7 @@ MBeta::computeRange(TempAllocator &alloc)
     Range opRange(getOperand(0));
     Range *range = Range::intersect(alloc, &opRange, comparison_, &emptyRange);
     if (emptyRange) {
-        IonSpew(IonSpew_Range, "Marking block for inst %d unreachable", id());
+        JitSpew(JitSpew_Range, "Marking block for inst %d unreachable", id());
         block()->setUnreachableUnchecked();
     } else {
         setRange(range);
@@ -1636,11 +1636,11 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
         return false;
 
 #ifdef DEBUG
-    if (IonSpewEnabled(IonSpew_Range)) {
+    if (JitSpewEnabled(JitSpew_Range)) {
         Sprinter sp(GetIonContext()->cx);
         sp.init();
         iterationBound->boundSum.print(sp);
-        IonSpew(IonSpew_Range, "computed symbolic bound on backedges: %s",
+        JitSpew(JitSpew_Range, "computed symbolic bound on backedges: %s",
                 sp.string());
     }
 #endif
@@ -1877,7 +1877,7 @@ RangeAnalysis::analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound
         phi->range()->setSymbolicLower(SymbolicBound::New(alloc(), loopBound, limitSum));
     }
 
-    IonSpew(IonSpew_Range, "added symbolic range on %d", phi->id());
+    JitSpew(JitSpew_Range, "added symbolic range on %d", phi->id());
     SpewRange(phi);
 }
 
@@ -1974,7 +1974,7 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins)
 bool
 RangeAnalysis::analyze()
 {
-    IonSpew(IonSpew_Range, "Doing range propagation");
+    JitSpew(JitSpew_Range, "Doing range propagation");
 
     for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
         MBasicBlock *block = *iter;
@@ -1992,7 +1992,7 @@ RangeAnalysis::analyze()
             MDefinition *def = *iter;
 
             def->computeRange(alloc());
-            IonSpew(IonSpew_Range, "computing range on %d", def->id());
+            JitSpew(JitSpew_Range, "computing range on %d", def->id());
             SpewRange(def);
         }
 
@@ -2583,7 +2583,7 @@ AdjustTruncatedInputs(TempAllocator &alloc, MInstruction *truncated)
 bool
 RangeAnalysis::truncate()
 {
-    IonSpew(IonSpew_Range, "Do range-base truncation (backward loop)");
+    JitSpew(JitSpew_Range, "Do range-base truncation (backward loop)");
 
     // Automatic truncation is disabled for AsmJS because the truncation logic
     // is based on IonMonkey which assumes that we can bailout if the truncation
@@ -2632,7 +2632,7 @@ RangeAnalysis::truncate()
     }
 
     // Update inputs/outputs of truncated instructions.
-    IonSpew(IonSpew_Range, "Do graph type fixup (dequeue)");
+    JitSpew(JitSpew_Range, "Do graph type fixup (dequeue)");
     while (!worklist.empty()) {
         MInstruction *ins = worklist.popCopy();
         ins->setNotInWorklist();
@@ -2835,7 +2835,7 @@ RangeAnalysis::prepareForUCE(bool *shouldRemoveDeadCode)
         }
         test->block()->insertBefore(test, constant);
         test->replaceOperand(0, constant);
-        IonSpew(IonSpew_Range, "Update condition of %d to reflect unreachable branches.",
+        JitSpew(JitSpew_Range, "Update condition of %d to reflect unreachable branches.",
                 test->id());
 
         *shouldRemoveDeadCode = true;

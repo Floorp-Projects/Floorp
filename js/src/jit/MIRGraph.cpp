@@ -9,7 +9,7 @@
 #include "asmjs/AsmJSValidate.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/Ion.h"
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 
@@ -73,7 +73,7 @@ MIRGenerator::usesSimd()
 bool
 MIRGenerator::abortFmt(const char *message, va_list ap)
 {
-    IonSpewVA(IonSpew_Abort, message, ap);
+    JitSpewVA(JitSpew_Abort, message, ap);
     error_ = true;
     return false;
 }

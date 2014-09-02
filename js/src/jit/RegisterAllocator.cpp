@@ -84,7 +84,7 @@ AllocationIntegrityState::check(bool populateSafepoints)
     JS_ASSERT(!instructions.empty());
 
 #ifdef DEBUG
-    if (IonSpewEnabled(IonSpew_RegAlloc))
+    if (JitSpewEnabled(JitSpew_RegAlloc))
         dump();
 
     for (size_t blockIndex = 0; blockIndex < graph.numBlocks(); blockIndex++) {
@@ -285,7 +285,7 @@ AllocationIntegrityState::checkSafepointAllocation(LInstruction *ins,
     switch (type) {
       case LDefinition::OBJECT:
         if (populateSafepoints) {
-            IonSpew(IonSpew_RegAlloc, "Safepoint object v%u i%u %s",
+            JitSpew(JitSpew_RegAlloc, "Safepoint object v%u i%u %s",
                     vreg, ins->id(), alloc.toString());
             if (!safepoint->addGcPointer(alloc))
                 return false;
@@ -294,7 +294,7 @@ AllocationIntegrityState::checkSafepointAllocation(LInstruction *ins,
         break;
       case LDefinition::SLOTS:
         if (populateSafepoints) {
-            IonSpew(IonSpew_RegAlloc, "Safepoint slots v%u i%u %s",
+            JitSpew(JitSpew_RegAlloc, "Safepoint slots v%u i%u %s",
                     vreg, ins->id(), alloc.toString());
             if (!safepoint->addSlotsOrElementsPointer(alloc))
                 return false;
@@ -308,7 +308,7 @@ AllocationIntegrityState::checkSafepointAllocation(LInstruction *ins,
       // of payloads must be reflected, however, for generational GC.
       case LDefinition::TYPE:
         if (populateSafepoints) {
-            IonSpew(IonSpew_RegAlloc, "Safepoint type v%u i%u %s",
+            JitSpew(JitSpew_RegAlloc, "Safepoint type v%u i%u %s",
                     vreg, ins->id(), alloc.toString());
             if (!safepoint->addNunboxType(vreg, alloc))
                 return false;
@@ -316,7 +316,7 @@ AllocationIntegrityState::checkSafepointAllocation(LInstruction *ins,
         break;
       case LDefinition::PAYLOAD:
         if (populateSafepoints) {
-            IonSpew(IonSpew_RegAlloc, "Safepoint payload v%u i%u %s",
+            JitSpew(JitSpew_RegAlloc, "Safepoint payload v%u i%u %s",
                     vreg, ins->id(), alloc.toString());
             if (!safepoint->addNunboxPayload(vreg, alloc))
                 return false;
@@ -326,7 +326,7 @@ AllocationIntegrityState::checkSafepointAllocation(LInstruction *ins,
 #else
       case LDefinition::BOX:
         if (populateSafepoints) {
-            IonSpew(IonSpew_RegAlloc, "Safepoint boxed value v%u i%u %s",
+            JitSpew(JitSpew_RegAlloc, "Safepoint boxed value v%u i%u %s",
                     vreg, ins->id(), alloc.toString());
             if (!safepoint->addBoxedValue(alloc))
                 return false;

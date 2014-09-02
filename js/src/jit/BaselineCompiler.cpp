@@ -12,8 +12,8 @@
 #include "jit/FixedList.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonLinker.h"
-#include "jit/IonSpewer.h"
 #include "jit/JitcodeMap.h"
+#include "jit/JitSpewer.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
@@ -71,10 +71,10 @@ BaselineCompiler::addPCMappingEntry(bool addIndexEntry)
 MethodStatus
 BaselineCompiler::compile()
 {
-    IonSpew(IonSpew_BaselineScripts, "Baseline compiling script %s:%d (%p)",
+    JitSpew(JitSpew_BaselineScripts, "Baseline compiling script %s:%d (%p)",
             script->filename(), script->lineno(), script);
 
-    IonSpew(IonSpew_Codegen, "# Emitting baseline code for script %s:%d",
+    JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%d",
             script->filename(), script->lineno());
 
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
@@ -192,7 +192,7 @@ BaselineCompiler::compile()
     baselineScript->setMethod(code);
     baselineScript->setTemplateScope(templateScope);
 
-    IonSpew(IonSpew_BaselineScripts, "Created BaselineScript %p (raw %p) for %s:%d",
+    JitSpew(JitSpew_BaselineScripts, "Created BaselineScript %p (raw %p) for %s:%d",
             (void *) baselineScript, (void *) code->raw(),
             script->filename(), script->lineno());
 
@@ -247,7 +247,7 @@ BaselineCompiler::compile()
 
     // Register a native => bytecode mapping entry for this script if needed.
     if (cx->runtime()->jitRuntime()->isNativeToBytecodeMapEnabled(cx->runtime())) {
-        IonSpew(IonSpew_Profiling, "Added JitcodeGlobalEntry for baseline script %s:%d (%p)",
+        JitSpew(JitSpew_Profiling, "Added JitcodeGlobalEntry for baseline script %s:%d (%p)",
                     script->filename(), script->lineno(), baselineScript);
         JitcodeGlobalEntry::BaselineEntry entry;
         entry.init(code->raw(), code->raw() + code->instructionsSize(), script);
@@ -789,7 +789,7 @@ BaselineCompiler::emitBody()
 
     while (true) {
         JSOp op = JSOp(*pc);
-        IonSpew(IonSpew_BaselineOp, "Compiling op @ %d: %s",
+        JitSpew(JitSpew_BaselineOp, "Compiling op @ %d: %s",
                 int(script->pcToOffset(pc)), js_CodeName[op]);
 
         BytecodeInfo *info = analysis_.maybeInfo(pc);
@@ -840,7 +840,7 @@ BaselineCompiler::emitBody()
 
         switch (op) {
           default:
-            IonSpew(IonSpew_BaselineAbort, "Unhandled op: %s", js_CodeName[op]);
+            JitSpew(JitSpew_BaselineAbort, "Unhandled op: %s", js_CodeName[op]);
             return Method_CantCompile;
 
 #define EMIT_OP(OP)                            \

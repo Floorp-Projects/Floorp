@@ -6,20 +6,20 @@
 
 #ifdef DEBUG
 
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 
 #include "jit/Ion.h"
 #include "jit/MIR.h"
 
 #include "vm/HelperThreads.h"
 
-#ifndef ION_SPEW_DIR
+#ifndef JIT_SPEW_DIR
 # if defined(_WIN32)
-#  define ION_SPEW_DIR ""
+#  define JIT_SPEW_DIR ""
 # elif defined(__ANDROID__)
-#  define ION_SPEW_DIR "/data/local/tmp/"
+#  define JIT_SPEW_DIR "/data/local/tmp/"
 # else
-#  define ION_SPEW_DIR "/tmp/"
+#  define JIT_SPEW_DIR "/tmp/"
 # endif
 #endif
 
@@ -35,9 +35,9 @@ static uint32_t filteredOutCompilations = 0;
 
 static const char * const ChannelNames[] =
 {
-#define IONSPEW_CHANNEL(name) #name,
-    IONSPEW_CHANNEL_LIST(IONSPEW_CHANNEL)
-#undef IONSPEW_CHANNEL
+#define JITSPEW_CHANNEL(name) #name,
+    JITSPEW_CHANNEL_LIST(JITSPEW_CHANNEL)
+#undef JITSPEW_CHANNEL
 };
 
 static bool
@@ -75,7 +75,7 @@ FilterContainsLocation(HandleScript function)
 void
 jit::EnableIonDebugLogging()
 {
-    EnableChannel(IonSpew_Logs);
+    EnableChannel(JitSpew_Logs);
     ionspewer.init();
 }
 
@@ -123,9 +123,9 @@ IonSpewer::init()
     if (inited_)
         return true;
 
-    if (!c1Spewer.init(ION_SPEW_DIR "ion.cfg"))
+    if (!c1Spewer.init(JIT_SPEW_DIR "ion.cfg"))
         return false;
-    if (!jsonSpewer.init(ION_SPEW_DIR "ion.json"))
+    if (!jsonSpewer.init(JIT_SPEW_DIR "ion.json"))
         return false;
 
     inited_ = true;
@@ -203,7 +203,7 @@ IonSpewer::endFunction()
 }
 
 
-FILE *jit::IonSpewFile = nullptr;
+FILE *jit::JitSpewFile = nullptr;
 
 static bool
 ContainsFlag(const char *str, const char *flag)
@@ -271,178 +271,178 @@ jit::CheckLogging()
         /*NOTREACHED*/
     }
     if (ContainsFlag(env, "aborts"))
-        EnableChannel(IonSpew_Abort);
+        EnableChannel(JitSpew_Abort);
     if (ContainsFlag(env, "escape"))
-        EnableChannel(IonSpew_Escape);
+        EnableChannel(JitSpew_Escape);
     if (ContainsFlag(env, "alias"))
-        EnableChannel(IonSpew_Alias);
+        EnableChannel(JitSpew_Alias);
     if (ContainsFlag(env, "scripts"))
-        EnableChannel(IonSpew_Scripts);
+        EnableChannel(JitSpew_Scripts);
     if (ContainsFlag(env, "mir"))
-        EnableChannel(IonSpew_MIR);
+        EnableChannel(JitSpew_MIR);
     if (ContainsFlag(env, "gvn"))
-        EnableChannel(IonSpew_GVN);
+        EnableChannel(JitSpew_GVN);
     if (ContainsFlag(env, "range"))
-        EnableChannel(IonSpew_Range);
+        EnableChannel(JitSpew_Range);
     if (ContainsFlag(env, "unroll"))
-        EnableChannel(IonSpew_Unrolling);
+        EnableChannel(JitSpew_Unrolling);
     if (ContainsFlag(env, "licm"))
-        EnableChannel(IonSpew_LICM);
+        EnableChannel(JitSpew_LICM);
     if (ContainsFlag(env, "regalloc"))
-        EnableChannel(IonSpew_RegAlloc);
+        EnableChannel(JitSpew_RegAlloc);
     if (ContainsFlag(env, "inline"))
-        EnableChannel(IonSpew_Inlining);
+        EnableChannel(JitSpew_Inlining);
     if (ContainsFlag(env, "snapshots"))
-        EnableChannel(IonSpew_Snapshots);
+        EnableChannel(JitSpew_Snapshots);
     if (ContainsFlag(env, "codegen"))
-        EnableChannel(IonSpew_Codegen);
+        EnableChannel(JitSpew_Codegen);
     if (ContainsFlag(env, "bailouts"))
-        EnableChannel(IonSpew_Bailouts);
+        EnableChannel(JitSpew_Bailouts);
     if (ContainsFlag(env, "osi"))
-        EnableChannel(IonSpew_Invalidate);
+        EnableChannel(JitSpew_Invalidate);
     if (ContainsFlag(env, "caches"))
-        EnableChannel(IonSpew_InlineCaches);
+        EnableChannel(JitSpew_InlineCaches);
     if (ContainsFlag(env, "safepoints"))
-        EnableChannel(IonSpew_Safepoints);
+        EnableChannel(JitSpew_Safepoints);
     if (ContainsFlag(env, "pools"))
-        EnableChannel(IonSpew_Pools);
+        EnableChannel(JitSpew_Pools);
     if (ContainsFlag(env, "cacheflush"))
-        EnableChannel(IonSpew_CacheFlush);
+        EnableChannel(JitSpew_CacheFlush);
     if (ContainsFlag(env, "logs"))
         EnableIonDebugLogging();
     if (ContainsFlag(env, "profiling"))
-        EnableChannel(IonSpew_Profiling);
+        EnableChannel(JitSpew_Profiling);
     if (ContainsFlag(env, "all"))
         LoggingBits = uint32_t(-1);
 
     if (ContainsFlag(env, "bl-aborts"))
-        EnableChannel(IonSpew_BaselineAbort);
+        EnableChannel(JitSpew_BaselineAbort);
     if (ContainsFlag(env, "bl-scripts"))
-        EnableChannel(IonSpew_BaselineScripts);
+        EnableChannel(JitSpew_BaselineScripts);
     if (ContainsFlag(env, "bl-op"))
-        EnableChannel(IonSpew_BaselineOp);
+        EnableChannel(JitSpew_BaselineOp);
     if (ContainsFlag(env, "bl-ic"))
-        EnableChannel(IonSpew_BaselineIC);
+        EnableChannel(JitSpew_BaselineIC);
     if (ContainsFlag(env, "bl-ic-fb"))
-        EnableChannel(IonSpew_BaselineICFallback);
+        EnableChannel(JitSpew_BaselineICFallback);
     if (ContainsFlag(env, "bl-osr"))
-        EnableChannel(IonSpew_BaselineOSR);
+        EnableChannel(JitSpew_BaselineOSR);
     if (ContainsFlag(env, "bl-bails"))
-        EnableChannel(IonSpew_BaselineBailouts);
+        EnableChannel(JitSpew_BaselineBailouts);
     if (ContainsFlag(env, "bl-dbg-osr"))
-        EnableChannel(IonSpew_BaselineDebugModeOSR);
+        EnableChannel(JitSpew_BaselineDebugModeOSR);
     if (ContainsFlag(env, "bl-all")) {
-        EnableChannel(IonSpew_BaselineAbort);
-        EnableChannel(IonSpew_BaselineScripts);
-        EnableChannel(IonSpew_BaselineOp);
-        EnableChannel(IonSpew_BaselineIC);
-        EnableChannel(IonSpew_BaselineICFallback);
-        EnableChannel(IonSpew_BaselineOSR);
-        EnableChannel(IonSpew_BaselineBailouts);
-        EnableChannel(IonSpew_BaselineDebugModeOSR);
+        EnableChannel(JitSpew_BaselineAbort);
+        EnableChannel(JitSpew_BaselineScripts);
+        EnableChannel(JitSpew_BaselineOp);
+        EnableChannel(JitSpew_BaselineIC);
+        EnableChannel(JitSpew_BaselineICFallback);
+        EnableChannel(JitSpew_BaselineOSR);
+        EnableChannel(JitSpew_BaselineBailouts);
+        EnableChannel(JitSpew_BaselineDebugModeOSR);
     }
 
-    IonSpewFile = stderr;
+    JitSpewFile = stderr;
 }
 
 void
-jit::IonSpewStartVA(IonSpewChannel channel, const char *fmt, va_list ap)
+jit::JitSpewStartVA(JitSpewChannel channel, const char *fmt, va_list ap)
 {
-    if (!IonSpewEnabled(channel))
+    if (!JitSpewEnabled(channel))
         return;
 
-    IonSpewHeader(channel);
+    JitSpewHeader(channel);
     vfprintf(stderr, fmt, ap);
 }
 
 void
-jit::IonSpewContVA(IonSpewChannel channel, const char *fmt, va_list ap)
+jit::JitSpewContVA(JitSpewChannel channel, const char *fmt, va_list ap)
 {
-    if (!IonSpewEnabled(channel))
+    if (!JitSpewEnabled(channel))
         return;
 
     vfprintf(stderr, fmt, ap);
 }
 
 void
-jit::IonSpewFin(IonSpewChannel channel)
+jit::JitSpewFin(JitSpewChannel channel)
 {
-    if (!IonSpewEnabled(channel))
+    if (!JitSpewEnabled(channel))
         return;
 
     fprintf(stderr, "\n");
 }
 
 void
-jit::IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap)
+jit::JitSpewVA(JitSpewChannel channel, const char *fmt, va_list ap)
 {
-    IonSpewStartVA(channel, fmt, ap);
-    IonSpewFin(channel);
+    JitSpewStartVA(channel, fmt, ap);
+    JitSpewFin(channel);
 }
 
 void
-jit::IonSpew(IonSpewChannel channel, const char *fmt, ...)
+jit::JitSpew(JitSpewChannel channel, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    IonSpewVA(channel, fmt, ap);
+    JitSpewVA(channel, fmt, ap);
     va_end(ap);
 }
 
 void
-jit::IonSpewDef(IonSpewChannel channel, const char *str, MDefinition *def)
+jit::JitSpewDef(JitSpewChannel channel, const char *str, MDefinition *def)
 {
-    if (!IonSpewEnabled(channel))
+    if (!JitSpewEnabled(channel))
         return;
 
-    IonSpewHeader(channel);
-    fprintf(IonSpewFile, "%s", str);
-    def->dump(IonSpewFile);
-    def->dumpLocation(IonSpewFile);
+    JitSpewHeader(channel);
+    fprintf(JitSpewFile, "%s", str);
+    def->dump(JitSpewFile);
+    def->dumpLocation(JitSpewFile);
 }
 
 void
-jit::IonSpewStart(IonSpewChannel channel, const char *fmt, ...)
+jit::JitSpewStart(JitSpewChannel channel, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    IonSpewStartVA(channel, fmt, ap);
+    JitSpewStartVA(channel, fmt, ap);
     va_end(ap);
 }
 void
-jit::IonSpewCont(IonSpewChannel channel, const char *fmt, ...)
+jit::JitSpewCont(JitSpewChannel channel, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    IonSpewContVA(channel, fmt, ap);
+    JitSpewContVA(channel, fmt, ap);
     va_end(ap);
 }
 
 void
-jit::IonSpewHeader(IonSpewChannel channel)
+jit::JitSpewHeader(JitSpewChannel channel)
 {
-    if (!IonSpewEnabled(channel))
+    if (!JitSpewEnabled(channel))
         return;
 
     fprintf(stderr, "[%s] ", ChannelNames[channel]);
 }
 
 bool
-jit::IonSpewEnabled(IonSpewChannel channel)
+jit::JitSpewEnabled(JitSpewChannel channel)
 {
     JS_ASSERT(LoggingChecked);
     return (LoggingBits & (1 << uint32_t(channel))) && !filteredOutCompilations;
 }
 
 void
-jit::EnableChannel(IonSpewChannel channel)
+jit::EnableChannel(JitSpewChannel channel)
 {
     JS_ASSERT(LoggingChecked);
     LoggingBits |= (1 << uint32_t(channel));
 }
 
 void
-jit::DisableChannel(IonSpewChannel channel)
+jit::DisableChannel(JitSpewChannel channel)
 {
     JS_ASSERT(LoggingChecked);
     LoggingBits &= ~(1 << uint32_t(channel));
