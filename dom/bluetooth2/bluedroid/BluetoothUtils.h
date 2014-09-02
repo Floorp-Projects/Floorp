@@ -29,6 +29,9 @@ BdAddressTypeToString(bt_bdaddr_t* aBdAddressType,
 void
 UuidToString(bt_uuid_t* aUuid, nsAString& aString);
 
+void
+UuidToString(const BluetoothUuid& aUuid, nsAString& aString);
+
 bool
 SetJsObject(JSContext* aContext,
             const BluetoothValue& aValue,
