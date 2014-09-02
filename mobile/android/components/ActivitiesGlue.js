@@ -19,10 +19,10 @@ ActivitiesGlue.prototype = {
 
   // Ignore aActivities results on Android, go straight to Android intents.
   chooseActivity: function ap_chooseActivity(aOptions, aActivities, aCallback) {
-    sendMessageToJava({
+    Messaging.sendRequestForResult({
       type: "WebActivity:Open",
       activity: { name: aOptions.name, data: aOptions.data }
-    }, (result) => {
+    }).then((result) => {
       aCallback.handleEvent(Ci.nsIActivityUIGlueCallback.NATIVE_ACTIVITY, result);
     });
   }
