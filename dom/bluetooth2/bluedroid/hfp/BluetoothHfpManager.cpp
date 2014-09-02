@@ -469,7 +469,9 @@ public:
 
   void RunInit()
   {
-    mInterface->Init(&sBluetoothHfpCallbacks, this);
+    BluetoothHfpManager* hfpManager = BluetoothHfpManager::Get();
+
+    mInterface->Init(hfpManager, this);
   }
 
 private:

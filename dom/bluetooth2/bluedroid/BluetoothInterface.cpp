@@ -2300,7 +2300,7 @@ struct BluetoothHandsfreeCallback
   }
 
   static void
-  KeyPressedCallback()
+  KeyPressed()
   {
     KeyPressedNotification::Dispatch(
       &BluetoothHandsfreeNotificationHandler::KeyPressedNotification);
@@ -2321,10 +2321,33 @@ BluetoothHandsfreeInterface::~BluetoothHandsfreeInterface()
 { }
 
 void
-BluetoothHandsfreeInterface::Init(bthf_callbacks_t* aCallbacks,
-                                  BluetoothHandsfreeResultHandler* aRes)
+BluetoothHandsfreeInterface::Init(
+  BluetoothHandsfreeNotificationHandler* aNotificationHandler,
+  BluetoothHandsfreeResultHandler* aRes)
 {
-  bt_status_t status = mInterface->init(aCallbacks);
+  static bthf_callbacks_t sCallbacks = {
+    .size = sizeof(sCallbacks),
+    .connection_state_cb = BluetoothHandsfreeCallback::ConnectionState,
+    .audio_state_cb = BluetoothHandsfreeCallback::AudioState,
+    .vr_cmd_cb = BluetoothHandsfreeCallback::VoiceRecognition,
+    .answer_call_cmd_cb = BluetoothHandsfreeCallback::AnswerCall,
+    .hangup_call_cmd_cb = BluetoothHandsfreeCallback::HangupCall,
+    .volume_cmd_cb = BluetoothHandsfreeCallback::Volume,
+    .dial_call_cmd_cb = BluetoothHandsfreeCallback::DialCall,
+    .dtmf_cmd_cb = BluetoothHandsfreeCallback::Dtmf,
+    .nrec_cmd_cb = BluetoothHandsfreeCallback::NoiseReductionEchoCancellation,
+    .chld_cmd_cb = BluetoothHandsfreeCallback::CallHold,
+    .cnum_cmd_cb = BluetoothHandsfreeCallback::Cnum,
+    .cind_cmd_cb = BluetoothHandsfreeCallback::Cind,
+    .cops_cmd_cb = BluetoothHandsfreeCallback::Cops,
+    .clcc_cmd_cb = BluetoothHandsfreeCallback::Clcc,
+    .unknown_at_cmd_cb = BluetoothHandsfreeCallback::UnknownAt,
+    .key_pressed_cmd_cb = BluetoothHandsfreeCallback::KeyPressed
+  };
+
+  sHandsfreeNotificationHandler = aNotificationHandler;
+
+  bt_status_t status = mInterface->init(&sCallbacks);
 
   if (aRes) {
     DispatchBluetoothHandsfreeResult(aRes,
