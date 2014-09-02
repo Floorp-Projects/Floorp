@@ -21,7 +21,7 @@ public:
         eStartElementAtomTransaction,
         eStartElementTransaction
     };
-    txOutputTransaction(txTransactionType aType)
+    explicit txOutputTransaction(txTransactionType aType)
         : mType(aType)
     {
         MOZ_COUNT_CTOR(txOutputTransaction);
@@ -52,7 +52,7 @@ public:
 class txCommentTransaction : public txOutputTransaction
 {
 public:
-    txCommentTransaction(const nsAString& aValue)
+    explicit txCommentTransaction(const nsAString& aValue)
         : txOutputTransaction(eCommentTransaction),
           mValue(aValue)
     {

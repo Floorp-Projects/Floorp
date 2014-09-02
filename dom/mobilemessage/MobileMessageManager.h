@@ -34,7 +34,7 @@ public:
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
-  MobileMessageManager(nsPIDOMWindow* aWindow);
+  explicit MobileMessageManager(nsPIDOMWindow* aWindow);
 
   void Init();
   void Shutdown();

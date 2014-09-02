@@ -39,7 +39,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(URL)
 
-  URL(nsIURI* aURI);
+  explicit URL(nsIURI* aURI);
 
   // WebIDL methods
   JSObject*

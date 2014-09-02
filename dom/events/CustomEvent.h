@@ -22,9 +22,9 @@ private:
   nsCOMPtr<nsIVariant> mDetail;
 
 public:
-  CustomEvent(mozilla::dom::EventTarget* aOwner,
-              nsPresContext* aPresContext = nullptr,
-              mozilla::WidgetEvent* aEvent = nullptr);
+  explicit CustomEvent(mozilla::dom::EventTarget* aOwner,
+                       nsPresContext* aPresContext = nullptr,
+                       mozilla::WidgetEvent* aEvent = nullptr);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CustomEvent, Event)

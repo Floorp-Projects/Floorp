@@ -43,7 +43,7 @@ class nsRDFQuery MOZ_FINAL : public nsITemplateRDFQuery
 
 public:
 
-    nsRDFQuery(nsXULTemplateQueryProcessorRDF* aProcessor)
+    explicit nsRDFQuery(nsXULTemplateQueryProcessorRDF* aProcessor)
       : mProcessor(aProcessor),
         mSimple(false),
         mRoot(nullptr),

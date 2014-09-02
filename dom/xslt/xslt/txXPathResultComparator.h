@@ -77,7 +77,7 @@ private:
 class txResultNumberComparator : public txXPathResultComparator
 {
 public:
-    txResultNumberComparator(bool aAscending);
+    explicit txResultNumberComparator(bool aAscending);
 
     int compareValues(txObject* aVal1, txObject* aVal2) MOZ_OVERRIDE;
     nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,

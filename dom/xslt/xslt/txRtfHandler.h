@@ -14,7 +14,7 @@
 class txResultTreeFragment : public txAExprResult
 {
 public:
-    txResultTreeFragment(nsAutoPtr<txResultBuffer>&& aBuffer);
+    explicit txResultTreeFragment(nsAutoPtr<txResultBuffer>&& aBuffer);
 
     TX_DECL_EXPRRESULT
 

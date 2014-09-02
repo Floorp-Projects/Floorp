@@ -26,7 +26,7 @@ public:
     /**
      * Creates a new document() function call
     **/
-    DocumentFunctionCall(const nsAString& aBaseURI);
+    explicit DocumentFunctionCall(const nsAString& aBaseURI);
 
     TX_DECL_FUNCTION
 
@@ -44,7 +44,7 @@ public:
     /*
      * Creates a new key() function call
      */
-    txKeyFunctionCall(txNamespaceMap* aMappings);
+    explicit txKeyFunctionCall(txNamespaceMap* aMappings);
 
     TX_DECL_FUNCTION
 

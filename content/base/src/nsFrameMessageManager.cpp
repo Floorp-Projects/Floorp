@@ -893,7 +893,7 @@ nsFrameMessageManager::AssertAppHasStatus(unsigned short aStatus,
 class MMListenerRemover
 {
 public:
-  MMListenerRemover(nsFrameMessageManager* aMM)
+  explicit MMListenerRemover(nsFrameMessageManager* aMM)
     : mWasHandlingMessage(aMM->mHandlingMessage)
     , mMM(aMM)
   {

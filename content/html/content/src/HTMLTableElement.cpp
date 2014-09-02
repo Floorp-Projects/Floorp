@@ -28,7 +28,7 @@ class TableRowsCollection : public nsIHTMLCollection,
                             public nsWrapperCache
 {
 public:
-  TableRowsCollection(HTMLTableElement *aParent);
+  explicit TableRowsCollection(HTMLTableElement* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMHTMLCOLLECTION

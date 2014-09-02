@@ -21,7 +21,7 @@ class nsXBLProtoImplField
 {
 public:
   nsXBLProtoImplField(const char16_t* aName, const char16_t* aReadOnly);
-  nsXBLProtoImplField(const bool aIsReadOnly);
+  explicit nsXBLProtoImplField(const bool aIsReadOnly);
   ~nsXBLProtoImplField();
 
   void AppendFieldText(const nsAString& aText);
