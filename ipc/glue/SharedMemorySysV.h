@@ -46,7 +46,7 @@ public:
   {
   }
 
-  SharedMemorySysV(Handle aHandle) :
+  explicit SharedMemorySysV(Handle aHandle) :
     mHandle(aHandle),
     mData(nullptr)
   {

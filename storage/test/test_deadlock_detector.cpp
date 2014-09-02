@@ -31,7 +31,7 @@ using namespace mozilla;
 class TestMutex : public mozilla::storage::SQLiteMutex
 {
 public:
-    TestMutex(const char* aName)
+    explicit TestMutex(const char* aName)
     : mozilla::storage::SQLiteMutex(aName)
     , mInner(sqlite3_mutex_alloc(SQLITE_MUTEX_FAST))
     {
@@ -94,7 +94,7 @@ public:
     nsCString mStdout;
     nsCString mStderr;
 
-    Subprocess(const char* aTestName) {
+    explicit Subprocess(const char* aTestName) {
         // set up stdio redirection
         PRFileDesc* readStdin;  PRFileDesc* writeStdin;
         PRFileDesc* readStdout; PRFileDesc* writeStdout;
