@@ -125,11 +125,14 @@ class DeviceRunner(BaseRunner):
     def on_finish(self):
         self.check_for_crashes()
 
-    def check_for_crashes(self, test_name=None):
+    def check_for_crashes(self, dump_save_path=None, test_name=None):
         test_name = test_name or self.last_test
         dump_dir = self.device.pull_minidumps()
         crashed = BaseRunner.check_for_crashes(
-            self, dump_directory=dump_dir, test_name=test_name)
+            self,
+            dump_directory=dump_dir,
+            dump_save_path=dump_save_path,
+            test_name=test_name)
         mozfile.remove(dump_dir)
         return crashed
 
