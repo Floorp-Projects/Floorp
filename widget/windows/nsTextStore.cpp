@@ -1177,6 +1177,7 @@ nsTextStore::nsTextStore()
   , mIsRecordingActionsWithoutLock(false)
   , mPendingOnSelectionChange(false)
   , mPendingOnLayoutChange(false)
+  , mPendingDestroy(false)
   , mNativeCaretIsCreated(false)
 {
   for (int32_t i = 0; i < NUM_OF_SUPPORTED_ATTRS; i++) {
@@ -1258,8 +1259,15 @@ bool
 nsTextStore::Destroy()
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF: 0x%p nsTextStore::Destroy(), mComposition.IsComposing()=%s",
-     this, GetBoolName(mComposition.IsComposing())));
+    ("TSF: 0x%p nsTextStore::Destroy(), mLock=%s, "
+     "mComposition.IsComposing()=%s",
+     this, GetLockFlagNameStr(mLock).get(),
+     GetBoolName(mComposition.IsComposing())));
+
+  if (mLock) {
+    mPendingDestroy = true;
+    return true;
+  }
 
   // If there is composition, TSF keeps the composition even after the text
   // store destroyed.  So, we should clear the composition here.
@@ -1430,6 +1438,9 @@ nsTextStore::RequestLock(DWORD dwLockFlags,
       ("TSF: 0x%p   Locking (%s) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
        ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
        this, GetLockFlagNameStr(mLock).get()));
+    // Don't release this instance during this lock because this is called by
+    // TSF but they don't grab us during this call.
+    nsRefPtr<nsTextStore> kungFuDeathGrip(this);
     *phrSession = mSink->OnLockGranted(mLock);
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
       ("TSF: 0x%p   Unlocked (%s) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
@@ -1454,7 +1465,7 @@ nsTextStore::RequestLock(DWORD dwLockFlags,
     // The document is now completely unlocked.
     mLock = 0;
 
-    if (mPendingOnLayoutChange) {
+    if (!mPendingDestroy && mPendingOnLayoutChange) {
       mPendingOnLayoutChange = false;
       if (mSink) {
         PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
@@ -1478,7 +1489,7 @@ nsTextStore::RequestLock(DWORD dwLockFlags,
       }
     }
 
-    if (mPendingOnSelectionChange) {
+    if (!mPendingDestroy && mPendingOnSelectionChange) {
       mPendingOnSelectionChange = false;
       if (mSink) {
         PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
@@ -1486,6 +1497,10 @@ nsTextStore::RequestLock(DWORD dwLockFlags,
                 "calling ITextStoreACPSink::OnSelectionChange()...", this));
         mSink->OnSelectionChange();
       }
+    }
+
+    if (mPendingDestroy) {
+      Destroy();
     }
 
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
