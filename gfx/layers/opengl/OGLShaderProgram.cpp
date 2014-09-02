@@ -312,7 +312,7 @@ For [0,1] instead of [0,255], and to 5 places:
       fs << "vec4 blur(vec4 color, vec2 coord) {" << endl;
       fs << "  vec4 total = color * uBlurGaussianKernel[0];" << endl;
       fs << "  for (int i = 1; i < " << GAUSSIAN_KERNEL_HALF_WIDTH << "; ++i) {" << endl;
-      fs << "    float r = float(i) * " << GAUSSIAN_KERNEL_STEP << " << endl;" << endl;
+      fs << "    float r = float(i) * " << GAUSSIAN_KERNEL_STEP << ";" << endl;
       fs << "    float k = uBlurGaussianKernel[i];" << endl;
       fs << "    total += sampleAtRadius(coord, r) * k;" << endl;
       fs << "    total += sampleAtRadius(coord, -r) * k;" << endl;
