@@ -132,7 +132,7 @@ ITfDocumentMgr*         nsTextStore::sTsfDisabledDocumentMgr = nullptr;
 ITfContext*             nsTextStore::sTsfDisabledContext = nullptr;
 ITfInputProcessorProfiles* nsTextStore::sInputProcessorProfiles = nullptr;
 DWORD         nsTextStore::sTsfClientId  = 0;
-nsTextStore*  nsTextStore::sTsfTextStore = nullptr;
+StaticRefPtr<nsTextStore> nsTextStore::sEnabledTextStore;
 
 bool nsTextStore::sCreateNativeCaretForATOK = false;
 bool nsTextStore::sDoNotReturnNoLayoutErrorToFreeChangJie = false;
@@ -3663,44 +3663,45 @@ nsTextStore::OnFocusChange(bool aGotFocus,
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF:   nsTextStore::OnFocusChange(aGotFocus=%s, "
           "aFocusedWidget=0x%p, aIMEState={ mEnabled=%s }), "
-          "sTsfThreadMgr=0x%p, sTsfTextStore=0x%p",
+          "sTsfThreadMgr=0x%p, sEnabledTextStore=0x%p",
           GetBoolName(aGotFocus), aFocusedWidget,
           GetIMEEnabledName(aIMEState.mEnabled),
-          sTsfThreadMgr, sTsfTextStore));
+          sTsfThreadMgr, sEnabledTextStore));
 
   // no change notifications if TSF is disabled
-  NS_ENSURE_TRUE(sTsfThreadMgr && sTsfTextStore, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(sTsfThreadMgr && sEnabledTextStore, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<ITfDocumentMgr> prevFocusedDocumentMgr;
   if (aGotFocus && aIMEState.IsEditable()) {
-    bool bRet = sTsfTextStore->Create(aFocusedWidget);
+    bool bRet = sEnabledTextStore->Create(aFocusedWidget);
     NS_ENSURE_TRUE(bRet, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(sTsfTextStore->mDocumentMgr, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(sEnabledTextStore->mDocumentMgr, NS_ERROR_FAILURE);
     if (aIMEState.mEnabled == IMEState::PASSWORD) {
-      MarkContextAsKeyboardDisabled(sTsfTextStore->mContext);
+      MarkContextAsKeyboardDisabled(sEnabledTextStore->mContext);
       nsRefPtr<ITfContext> topContext;
-      sTsfTextStore->mDocumentMgr->GetTop(getter_AddRefs(topContext));
-      if (topContext && topContext != sTsfTextStore->mContext) {
+      sEnabledTextStore->mDocumentMgr->GetTop(getter_AddRefs(topContext));
+      if (topContext && topContext != sEnabledTextStore->mContext) {
         MarkContextAsKeyboardDisabled(topContext);
       }
     }
-    HRESULT hr = sTsfThreadMgr->SetFocus(sTsfTextStore->mDocumentMgr);
+    HRESULT hr = sTsfThreadMgr->SetFocus(sEnabledTextStore->mDocumentMgr);
     NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
     // Use AssociateFocus() for ensuring that any native focus event
     // never steal focus from our documentMgr.
     hr = sTsfThreadMgr->AssociateFocus(aFocusedWidget->GetWindowHandle(),
-                                       sTsfTextStore->mDocumentMgr,
+                                       sEnabledTextStore->mDocumentMgr,
                                        getter_AddRefs(prevFocusedDocumentMgr));
     NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
   } else {
     if (ThinksHavingFocus()) {
-      DebugOnly<HRESULT> hr = sTsfThreadMgr->AssociateFocus(
-                                sTsfTextStore->mWidget->GetWindowHandle(),
-                                nullptr, getter_AddRefs(prevFocusedDocumentMgr));
+      DebugOnly<HRESULT> hr =
+        sTsfThreadMgr->AssociateFocus(
+          sEnabledTextStore->mWidget->GetWindowHandle(),
+          nullptr, getter_AddRefs(prevFocusedDocumentMgr));
       NS_ASSERTION(SUCCEEDED(hr), "Disassociating focus failed");
-      NS_ASSERTION(prevFocusedDocumentMgr == sTsfTextStore->mDocumentMgr,
+      NS_ASSERTION(prevFocusedDocumentMgr == sEnabledTextStore->mDocumentMgr,
                    "different documentMgr has been associated with the window");
-      sTsfTextStore->Destroy();
+      sEnabledTextStore->Destroy();
     }
     HRESULT hr = sTsfThreadMgr->SetFocus(sTsfDisabledDocumentMgr);
     NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
@@ -3712,10 +3713,10 @@ nsTextStore::OnFocusChange(bool aGotFocus,
 nsIMEUpdatePreference
 nsTextStore::GetIMEUpdatePreference()
 {
-  if (sTsfThreadMgr && sTsfTextStore && sTsfTextStore->mDocumentMgr) {
+  if (sTsfThreadMgr && sEnabledTextStore && sEnabledTextStore->mDocumentMgr) {
     nsRefPtr<ITfDocumentMgr> docMgr;
     sTsfThreadMgr->GetFocus(getter_AddRefs(docMgr));
-    if (docMgr == sTsfTextStore->mDocumentMgr) {
+    if (docMgr == sEnabledTextStore->mDocumentMgr) {
       nsIMEUpdatePreference updatePreference(
         nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
         nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
@@ -4212,8 +4213,8 @@ nsTextStore::SetInputContext(nsWindowBase* aWidget,
           GetFocusChangeName(aAction.mFocusChange),
           GetBoolName(ThinksHavingFocus())));
 
-  NS_ENSURE_TRUE_VOID(sTsfTextStore);
-  sTsfTextStore->SetInputScope(aContext.mHTMLInputType);
+  NS_ENSURE_TRUE_VOID(sEnabledTextStore);
+  sEnabledTextStore->SetInputScope(aContext.mHTMLInputType);
 
   if (aAction.mFocusChange != InputContextAction::FOCUS_NOT_CHANGED) {
     return;
@@ -4489,7 +4490,7 @@ nsTextStore::Initialize()
   categoryMgr.swap(sCategoryMgr);
   disabledDocumentMgr.swap(sTsfDisabledDocumentMgr);
   disabledContext.swap(sTsfDisabledContext);
-  textStore.swap(sTsfTextStore);
+  sEnabledTextStore = textStore;
 
   sCreateNativeCaretForATOK =
     Preferences::GetBool("intl.tsf.hack.atok.create_native_caret", true);
@@ -4505,13 +4506,13 @@ nsTextStore::Initialize()
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), sTsfThreadMgr=0x%p, "
-     "sTsfClientId=0x%08X, sTsfTextStore=0x%p, sDisplayAttrMgr=0x%p, "
+     "sTsfClientId=0x%08X, sEnabledTextStore=0x%p, sDisplayAttrMgr=0x%p, "
      "sCategoryMgr=0x%p, sTsfDisabledDocumentMgr=0x%p, sTsfDisabledContext=%p, "
      "sCreateNativeCaretForATOK=%s, "
      "sDoNotReturnNoLayoutErrorToFreeChangJie=%s, "
      "sDoNotReturnNoLayoutErrorToEasyChangjei=%s",
-     sTsfThreadMgr, sTsfClientId, sTsfTextStore, sDisplayAttrMgr, sCategoryMgr,
-     sTsfDisabledDocumentMgr, sTsfDisabledContext,
+     sTsfThreadMgr, sTsfClientId, sEnabledTextStore, sDisplayAttrMgr,
+     sCategoryMgr, sTsfDisabledDocumentMgr, sTsfDisabledContext,
      GetBoolName(sCreateNativeCaretForATOK),
      GetBoolName(sDoNotReturnNoLayoutErrorToFreeChangJie),
      GetBoolName(sDoNotReturnNoLayoutErrorToEasyChangjei)));
@@ -4523,13 +4524,13 @@ nsTextStore::Terminate(void)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS, ("TSF: nsTextStore::Terminate()"));
 
-  if (sTsfTextStore) {
-    sTsfTextStore->Shutdown();
+  if (sEnabledTextStore) {
+    sEnabledTextStore->Shutdown();
   }
 
   NS_IF_RELEASE(sDisplayAttrMgr);
   NS_IF_RELEASE(sCategoryMgr);
-  NS_IF_RELEASE(sTsfTextStore);
+  sEnabledTextStore = nullptr;
   NS_IF_RELEASE(sTsfDisabledDocumentMgr);
   NS_IF_RELEASE(sTsfDisabledContext);
   NS_IF_RELEASE(sInputProcessorProfiles);
