@@ -5,12 +5,17 @@
 
 let runAppObj;
 window.addEventListener('load', function() {
-  if (!window.arguments) {
+  // Get the command line arguments that were passed to the b2g client
+  let args;
+  try {
+    let service = Cc["@mozilla.org/commandlinehandler/general-startup;1?type=b2gcmds"].getService(Ci.nsISupports);
+    args = service.wrappedJSObject.cmdLine;
+  } catch(e) {}
+
+  if (!args) {
     return;
   }
 
-  // Get the command line arguments that were passed to the b2g client
-  let args = window.arguments[0].QueryInterface(Ci.nsICommandLine);
   let appname;
 
   // - Check if the argument is present before doing any work.

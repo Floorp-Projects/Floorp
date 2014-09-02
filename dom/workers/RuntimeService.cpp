@@ -918,7 +918,7 @@ class WorkerBackgroundChildCallback MOZ_FINAL :
   bool* mDone;
 
 public:
-  WorkerBackgroundChildCallback(bool* aDone)
+  explicit WorkerBackgroundChildCallback(bool* aDone)
   : mDone(aDone)
   {
     MOZ_ASSERT(!NS_IsMainThread());
@@ -955,7 +955,7 @@ class WorkerThreadPrimaryRunnable MOZ_FINAL : public nsRunnable
     nsRefPtr<RuntimeService::WorkerThread> mThread;
 
   public:
-    FinishedRunnable(already_AddRefed<RuntimeService::WorkerThread> aThread)
+    explicit FinishedRunnable(already_AddRefed<RuntimeService::WorkerThread> aThread)
     : mThread(aThread)
     {
       MOZ_ASSERT(mThread);
@@ -1034,7 +1034,7 @@ class RuntimeService::WorkerThread MOZ_FINAL : public nsThread
     WorkerPrivate* mWorkerPrivate;
 
   public:
-    Observer(WorkerPrivate* aWorkerPrivate)
+    explicit Observer(WorkerPrivate* aWorkerPrivate)
     : mWorkerPrivate(aWorkerPrivate)
     {
       MOZ_ASSERT(aWorkerPrivate);

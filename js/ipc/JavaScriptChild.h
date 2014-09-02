@@ -21,7 +21,7 @@ class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
     virtual ~JavaScriptChild();
 
     bool init();
-    void finalize(JSFreeOp *fop);
+    void finalize();
 
     void drop(JSObject *obj);
 

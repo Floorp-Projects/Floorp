@@ -324,10 +324,18 @@ IsDirectShowSupportedType(const nsACString& aType)
 
 #ifdef MOZ_FMP4
 static bool
-IsMP4SupportedType(const nsACString& aType)
+IsMP4SupportedType(const nsACString& aType,
+                   const nsAString& aCodecs = EmptyString())
 {
+// Currently on B2G, FMP4 is only working for MSE playback.
+// For other normal MP4, it still uses current omx decoder.
+// Bug 1061034 is a follow-up bug to enable all MP4s with MOZ_FMP4
+#ifdef MOZ_OMX_DECODER
+  return false;
+#else
   return Preferences::GetBool("media.fragmented-mp4.exposed", false) &&
-         MP4Decoder::CanHandleMediaType(aType);
+         MP4Decoder::CanHandleMediaType(aType, aCodecs);
+#endif
 }
 #endif
 
@@ -410,7 +418,7 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   }
 #endif
 #ifdef MOZ_FMP4
-  if (MP4Decoder::CanHandleMediaType(nsDependentCString(aMIMEType),
+  if (IsMP4SupportedType(nsDependentCString(aMIMEType),
                                      aRequestedCodecs)) {
     return aHaveRequestedCodecs ? CANPLAY_YES : CANPLAY_MAYBE;
   }

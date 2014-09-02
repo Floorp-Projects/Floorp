@@ -78,8 +78,8 @@ public:
   void OnSVGDocumentError();
 
 protected:
-  VectorImage(imgStatusTracker* aStatusTracker = nullptr,
-              ImageURL* aURI = nullptr);
+  explicit VectorImage(imgStatusTracker* aStatusTracker = nullptr,
+                       ImageURL* aURI = nullptr);
   virtual ~VectorImage();
 
   virtual nsresult StartAnimation();

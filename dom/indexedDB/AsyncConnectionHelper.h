@@ -47,7 +47,7 @@ public:
   }
 
 protected:
-  HelperBase(IDBRequest* aRequest)
+  explicit HelperBase(IDBRequest* aRequest)
     : mRequest(aRequest)
   { }
 

@@ -19,7 +19,7 @@ protected:
     typedef mozilla::ipc::ProcessChild ProcessChild;
 
 public:
-    PluginProcessChild(ProcessHandle parentHandle) : ProcessChild(parentHandle)
+    explicit PluginProcessChild(ProcessHandle aParentHandle) : ProcessChild(aParentHandle)
     { }
 
     virtual ~PluginProcessChild()

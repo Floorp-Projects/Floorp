@@ -23,7 +23,7 @@ using mozilla::WeakPtr;
 class imgStatusTrackerObserver : public imgDecoderObserver
 {
 public:
-  imgStatusTrackerObserver(imgStatusTracker* aTracker)
+  explicit imgStatusTrackerObserver(imgStatusTracker* aTracker)
   : mTracker(aTracker)
   {
     MOZ_ASSERT(aTracker);

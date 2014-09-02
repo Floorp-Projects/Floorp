@@ -292,7 +292,7 @@ class AsyncTeardownRunnable MOZ_FINAL : public nsRunnable
   nsRefPtr<Proxy> mProxy;
 
 public:
-  AsyncTeardownRunnable(Proxy* aProxy)
+  explicit AsyncTeardownRunnable(Proxy* aProxy)
   : mProxy(aProxy)
   {
     MOZ_ASSERT(aProxy);
@@ -868,7 +868,7 @@ class AutoUnpinXHR
   XMLHttpRequest* mXMLHttpRequestPrivate;
 
 public:
-  AutoUnpinXHR(XMLHttpRequest* aXMLHttpRequestPrivate)
+  explicit AutoUnpinXHR(XMLHttpRequest* aXMLHttpRequestPrivate)
   : mXMLHttpRequestPrivate(aXMLHttpRequestPrivate)
   {
     MOZ_ASSERT(aXMLHttpRequestPrivate);

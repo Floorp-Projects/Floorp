@@ -184,7 +184,7 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
 }
 
 struct SubprocessClosure {
-  SubprocessClosure(JSStreamWriter *aWriter)
+  explicit SubprocessClosure(JSStreamWriter *aWriter)
     : mWriter(aWriter)
   {}
 

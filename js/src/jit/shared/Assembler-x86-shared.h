@@ -1681,6 +1681,22 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void andnps(const Operand &src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.andnps_rr(src.fpu(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.andnps_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.andnps_mr(src.address(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void orps(const Operand &src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {

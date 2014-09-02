@@ -60,8 +60,8 @@ class StructuredTestResult(TextTestResult):
         exc_msg = "".join(traceback.format_exception_only(exc_ty, val))
         if self.buffer:
             output_msg = "\n".join([sys.stdout.getvalue(), sys.stderr.getvalue()])
-            return "\n".join([exc_msg, output_msg])
-        return exc_msg
+            return "".join([exc_msg, output_msg])
+        return exc_msg.rstrip()
 
     def _extract_stacktrace(self, err, test):
         # Format an exception stack in the style of unittest's _exc_info_to_string

@@ -28,7 +28,7 @@ class InstallPhaseEvent : public Event
   nsRefPtr<Promise> mPromise;
 
 protected:
-  InstallPhaseEvent(mozilla::dom::EventTarget* aOwner);
+  explicit InstallPhaseEvent(mozilla::dom::EventTarget* aOwner);
   ~InstallPhaseEvent() {}
 
 public:
@@ -80,7 +80,7 @@ class InstallEvent MOZ_FINAL : public InstallPhaseEvent
   nsRefPtr<ServiceWorker> mActiveWorker;
 
 protected:
-  InstallEvent(mozilla::dom::EventTarget* aOwner);
+  explicit InstallEvent(mozilla::dom::EventTarget* aOwner);
   ~InstallEvent() {}
 
 public:

@@ -31,7 +31,7 @@ DOMCameraControlListener::~DOMCameraControlListener()
 class DOMCameraControlListener::DOMCallback : public nsRunnable
 {
 public:
-  DOMCallback(nsMainThreadPtrHandle<nsDOMCameraControl> aDOMCameraControl)
+  explicit DOMCallback(nsMainThreadPtrHandle<nsDOMCameraControl> aDOMCameraControl)
     : mDOMCameraControl(aDOMCameraControl)
   {
     MOZ_COUNT_CTOR(DOMCameraControlListener::DOMCallback);
@@ -276,7 +276,7 @@ DOMCameraControlListener::OnShutter()
   class Callback : public DOMCallback
   {
   public:
-    Callback(nsMainThreadPtrHandle<nsDOMCameraControl> aDOMCameraControl)
+    explicit Callback(nsMainThreadPtrHandle<nsDOMCameraControl> aDOMCameraControl)
       : DOMCallback(aDOMCameraControl)
     { }
 
