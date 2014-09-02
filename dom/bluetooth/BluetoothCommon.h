@@ -362,6 +362,10 @@ enum ControlPlayStatus {
   PLAYSTATUS_ERROR    = 0xFF,
 };
 
+enum {
+  AVRCP_UID_SIZE = 8
+};
+
 enum BluetoothAvrcpMediaAttribute {
   AVRCP_MEDIA_ATTRIBUTE_TITLE,
   AVRCP_MEDIA_ATTRIBUTE_ARTIST,

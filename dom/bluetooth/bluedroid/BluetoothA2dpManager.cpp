@@ -732,8 +732,8 @@ BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
     BluetoothAvrcpNotificationParam param;
     // convert to network big endian format
     // since track stores as uint8[8]
-    // 56 = 8 * (BTRC_UID_SIZE -1)
-    for (int i = 0; i < BTRC_UID_SIZE; ++i) {
+    // 56 = 8 * (AVRCP_UID_SIZE -1)
+    for (int i = 0; i < AVRCP_UID_SIZE; ++i) {
       param.mTrack[i] = (aMediaNumber >> (56 - 8 * i));
     }
     mTrackChangedNotifyType = AVRCP_NTF_CHANGED;
@@ -836,7 +836,7 @@ BluetoothA2dpManager::UpdateRegisterNotification(BluetoothAvrcpEvent aEvent,
       mTrackChangedNotifyType = AVRCP_NTF_INTERIM;
       // needs to convert to network big endian format since track stores
       // as uint8[8]. 56 = 8 * (BTRC_UID_SIZE -1).
-      for (int index = 0; index < BTRC_UID_SIZE; ++index) {
+      for (int index = 0; index < AVRCP_UID_SIZE; ++index) {
         // We cannot easily check if a track is selected, so whenever A2DP is
         // streaming, we assume a track is selected.
         if (mSinkState == BluetoothA2dpManager::SinkState::SINK_PLAYING) {
