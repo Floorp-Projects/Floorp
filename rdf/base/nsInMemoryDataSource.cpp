@@ -87,7 +87,7 @@ public:
               nsIRDFResource* aProperty,
               nsIRDFNode* aTarget,
               bool aTruthValue);
-    Assertion(nsIRDFResource* aSource);     // PLDHashTable assertion variant
+    explicit Assertion(nsIRDFResource* aSource);     // PLDHashTable assertion variant
 
 private:
     ~Assertion();
@@ -285,7 +285,7 @@ protected:
                    nsIRDFResource* property,
                    nsIRDFNode* target);
 
-    InMemoryDataSource(nsISupports* aOuter);
+    explicit InMemoryDataSource(nsISupports* aOuter);
     virtual ~InMemoryDataSource();
     nsresult Init();
 
@@ -1998,7 +1998,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
 class VisitorClosure
 {
 public:
-    VisitorClosure(rdfITripleVisitor* aVisitor) :
+    explicit VisitorClosure(rdfITripleVisitor* aVisitor) :
         mVisitor(aVisitor),
         mRv(NS_OK)
     {}
