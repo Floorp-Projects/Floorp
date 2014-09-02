@@ -45,7 +45,7 @@
     </style>
 
     <style name="Widget.ListView" parent="Widget.BaseListView">
-        <item name="android:divider">#D1D5DA</item>
+        <item name="android:divider">#D7D9DB</item>
         <item name="android:dividerHeight">1dp</item>
         <item name="android:cacheColorHint">@android:color/transparent</item>
         <item name="android:listSelector">@drawable/action_bar_button</item>
