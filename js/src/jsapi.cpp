@@ -1889,6 +1889,19 @@ JS_RemoveFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb)
 }
 
 JS_PUBLIC_API(bool)
+JS_AddMovingGCCallback(JSRuntime *rt, JSMovingGCCallback cb, void *data)
+{
+    AssertHeapIsIdle(rt);
+    return rt->gc.addMovingGCCallback(cb, data);
+}
+
+JS_PUBLIC_API(void)
+JS_RemoveMovingGCCallback(JSRuntime *rt, JSMovingGCCallback cb)
+{
+    rt->gc.removeMovingGCCallback(cb);
+}
+
+JS_PUBLIC_API(bool)
 JS_IsAboutToBeFinalized(JS::Heap<JSObject *> *objp)
 {
     return IsObjectAboutToBeFinalized(objp->unsafeGet());

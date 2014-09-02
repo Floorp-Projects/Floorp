@@ -1595,6 +1595,25 @@ GCRuntime::removeFinalizeCallback(JSFinalizeCallback callback)
     }
 }
 
+bool
+GCRuntime::addMovingGCCallback(JSMovingGCCallback callback, void *data)
+{
+    return movingCallbacks.append(Callback<JSMovingGCCallback>(callback, data));
+}
+
+void
+GCRuntime::removeMovingGCCallback(JSMovingGCCallback callback)
+{
+    for (Callback<JSMovingGCCallback> *p = movingCallbacks.begin();
+         p < movingCallbacks.end(); p++)
+    {
+        if (p->op == callback) {
+            movingCallbacks.erase(p);
+            break;
+        }
+    }
+}
+
 JS::GCSliceCallback
 GCRuntime::setSliceCallback(JS::GCSliceCallback callback) {
     return stats.setSliceCallback(callback);
@@ -2426,6 +2445,13 @@ GCRuntime::updatePointersToRelocatedCells()
         (*op)(&trc, grayRootTracer.data);
 
     MovingTracer::Sweep(&trc);
+
+    // Call callbacks to get the rest of the system to fixup other untraced pointers.
+    for (Callback<JSMovingGCCallback> *p = rt->gc.movingCallbacks.begin();
+         p < rt->gc.movingCallbacks.end(); p++)
+    {
+        p->op(rt, p->data);
+    }
 }
 
 void
