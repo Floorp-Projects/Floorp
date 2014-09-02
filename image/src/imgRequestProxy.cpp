@@ -1050,7 +1050,7 @@ imgRequestProxy::GetOwner() const
 class StaticBehaviour : public ProxyBehaviour
 {
 public:
-  StaticBehaviour(mozilla::image::Image* aImage) : mImage(aImage) {}
+  explicit StaticBehaviour(mozilla::image::Image* aImage) : mImage(aImage) {}
 
   virtual already_AddRefed<mozilla::image::Image>
   GetImage() const MOZ_OVERRIDE {

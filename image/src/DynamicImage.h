@@ -25,7 +25,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGICONTAINER
 
-  DynamicImage(gfxDrawable* aDrawable)
+  explicit DynamicImage(gfxDrawable* aDrawable)
     : mDrawable(aDrawable)
   {
     MOZ_ASSERT(aDrawable, "Must have a gfxDrawable to wrap");
