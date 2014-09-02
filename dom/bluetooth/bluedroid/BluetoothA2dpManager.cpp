@@ -105,17 +105,23 @@ BluetoothA2dpManager::Reset()
 static void
 AvStatusToSinkString(BluetoothA2dpConnectionState aState, nsAString& aString)
 {
-  static const nsLiteralString sString[] = {
-    [A2DP_CONNECTION_STATE_DISCONNECTED] = NS_LITERAL_STRING("disconnected"),
-    [A2DP_CONNECTION_STATE_CONNECTING] = NS_LITERAL_STRING("connecting"),
-    [A2DP_CONNECTION_STATE_CONNECTED] = NS_LITERAL_STRING("connected"),
-    [A2DP_CONNECTION_STATE_DISCONNECTING] = NS_LITERAL_STRING("disconnecting")
-  };
-  if (aState >= MOZ_ARRAY_LENGTH(sString)) {
-    BT_WARNING("Unknown sink state %d", static_cast<int>(aState));
-    return;
+  switch (aState) {
+    case A2DP_CONNECTION_STATE_DISCONNECTED:
+      aString.AssignLiteral("disconnected");
+      break;
+    case A2DP_CONNECTION_STATE_CONNECTING:
+      aString.AssignLiteral("connecting");
+      break;
+    case A2DP_CONNECTION_STATE_CONNECTED:
+      aString.AssignLiteral("connected");
+      break;
+    case A2DP_CONNECTION_STATE_DISCONNECTING:
+      aString.AssignLiteral("disconnecting");
+      break;
+    default:
+      BT_WARNING("Unknown sink state %d", static_cast<int>(aState));
+      return;
   }
-  aString = sString[aState];
 }
 
 #if ANDROID_VERSION > 17
