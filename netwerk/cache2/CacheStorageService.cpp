@@ -155,6 +155,11 @@ void CacheStorageService::ShutdownBackground()
 {
   MOZ_ASSERT(IsOnManagementThread());
 
+  // Cancel purge timer to avoid leaking.
+  if (mPurgeTimer) {
+    mPurgeTimer->Cancel();
+  }
+
   Pool(false).mFrecencyArray.Clear();
   Pool(false).mExpirationArray.Clear();
   Pool(true).mFrecencyArray.Clear();
