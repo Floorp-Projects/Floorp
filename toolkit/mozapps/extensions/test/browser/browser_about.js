@@ -58,7 +58,7 @@ function test_about_window(aAddonItemName, aExpectedAboutUri, aCallback) {
       Services.ww.unregisterNotification(TEST_ww_observer);
 
       info("About dialog closed, waiting for focus on browser window");
-      waitForFocus(aCallback);
+      waitForFocus(() => executeSoon(aCallback));
     } else if (aTopic == "domwindowopened") {
       info("About dialog opened, waiting for focus");
 
@@ -74,7 +74,7 @@ function test_about_window(aAddonItemName, aExpectedAboutUri, aCallback) {
            aAddonItemName,
            "window.arguments[0] should refer to the add-on object");
 
-        win.close();
+        executeSoon(() => win.close());
       }, win);
     }
   });
