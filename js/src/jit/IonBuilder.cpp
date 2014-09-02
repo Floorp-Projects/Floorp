@@ -15,7 +15,7 @@
 #include "jit/BaselineInspector.h"
 #include "jit/Ion.h"
 #include "jit/IonOptimizationLevels.h"
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
@@ -173,7 +173,7 @@ IonBuilder::abort(const char *message, ...)
     va_start(ap, message);
     abortFmt(message, ap);
     va_end(ap);
-    IonSpew(IonSpew_Abort, "aborted @ %s:%d", script()->filename(), PCToLineNumber(script(), pc));
+    JitSpew(JitSpew_Abort, "aborted @ %s:%d", script()->filename(), PCToLineNumber(script(), pc));
 #endif
     return false;
 }
@@ -183,7 +183,7 @@ IonBuilder::spew(const char *message)
 {
     // Don't call PCToLineNumber in release builds.
 #ifdef DEBUG
-    IonSpew(IonSpew_MIR, "%s @ %s:%d", message, script()->filename(), PCToLineNumber(script(), pc));
+    JitSpew(JitSpew_MIR, "%s @ %s:%d", message, script()->filename(), PCToLineNumber(script(), pc));
 #endif
 }
 
@@ -328,10 +328,10 @@ IonBuilder::InliningDecision
 IonBuilder::DontInline(JSScript *targetScript, const char *reason)
 {
     if (targetScript) {
-        IonSpew(IonSpew_Inlining, "Cannot inline %s:%u: %s",
+        JitSpew(JitSpew_Inlining, "Cannot inline %s:%u: %s",
                 targetScript->filename(), targetScript->lineno(), reason);
     } else {
-        IonSpew(IonSpew_Inlining, "Cannot inline: %s", reason);
+        JitSpew(JitSpew_Inlining, "Cannot inline: %s", reason);
     }
 
     return InliningDecision_DontInline;
@@ -649,15 +649,15 @@ IonBuilder::build()
 
 #ifdef DEBUG
     if (info().executionModeIsAnalysis()) {
-        IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) %s",
+        JitSpew(JitSpew_Scripts, "Analyzing script %s:%d (%p) %s",
                 script()->filename(), script()->lineno(), (void *)script(),
                 ExecutionModeString(info().executionMode()));
     } else if (info().executionMode() == SequentialExecution && script()->hasIonScript()) {
-        IonSpew(IonSpew_Scripts, "Recompiling script %s:%d (%p) (usecount=%d, level=%s)",
+        JitSpew(JitSpew_Scripts, "Recompiling script %s:%d (%p) (usecount=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
                 (int)script()->getUseCount(), OptimizationLevelString(optimizationInfo().level()));
     } else {
-        IonSpew(IonSpew_Scripts, "Compiling script %s:%d (%p) (usecount=%d, level=%s)",
+        JitSpew(JitSpew_Scripts, "Compiling script %s:%d (%p) (usecount=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
                 (int)script()->getUseCount(), OptimizationLevelString(optimizationInfo().level()));
     }
@@ -802,7 +802,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     inlineCallInfo_ = &callInfo;
 
-    IonSpew(IonSpew_Scripts, "Inlining script %s:%d (%p)",
+    JitSpew(JitSpew_Scripts, "Inlining script %s:%d (%p)",
             script()->filename(), script()->lineno(), (void *)script());
 
     callerBuilder_ = callerBuilder;
@@ -850,7 +850,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     // Initialize |this| slot.
     current->initSlot(info().thisSlot(), callInfo.thisArg());
 
-    IonSpew(IonSpew_Inlining, "Initializing %u arg slots", info().nargs());
+    JitSpew(JitSpew_Inlining, "Initializing %u arg slots", info().nargs());
 
     // NB: Ion does not inline functions which |needsArgsObj|.  So using argSlot()
     // instead of argSlotUnchecked() below is OK
@@ -874,7 +874,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     if (!initScopeChain(callInfo.fun()))
         return false;
 
-    IonSpew(IonSpew_Inlining, "Initializing %u local slots", info().nlocals());
+    JitSpew(JitSpew_Inlining, "Initializing %u local slots", info().nlocals());
 
     // Initialize local variables.
     for (uint32_t i = 0; i < info().nlocals(); i++) {
@@ -883,7 +883,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
         current->initSlot(info().localSlot(i), undef);
     }
 
-    IonSpew(IonSpew_Inlining, "Inline entry block MResumePoint %p, %u operands",
+    JitSpew(JitSpew_Inlining, "Inline entry block MResumePoint %p, %u operands",
             (void *) current->entryResumePoint(), current->entryResumePoint()->numOperands());
 
     // +2 for the scope chain and |this|, maybe another +1 for arguments object slot.
@@ -1025,7 +1025,7 @@ IonBuilder::initScopeChain(MDefinition *callee)
 bool
 IonBuilder::initArgumentsObject()
 {
-    IonSpew(IonSpew_MIR, "%s:%d - Emitting code to initialize arguments object! block=%p",
+    JitSpew(JitSpew_MIR, "%s:%d - Emitting code to initialize arguments object! block=%p",
                               script()->filename(), script()->lineno(), current);
     JS_ASSERT(info().needsArgsObj());
     MCreateArgumentsObject *argsObj = MCreateArgumentsObject::New(alloc(), current->scopeChain());
@@ -4035,7 +4035,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
                              loopDepth_);
     if (!inlineBuilder.buildInline(this, outerResumePoint, callInfo)) {
         if (analysisContext && analysisContext->isExceptionPending()) {
-            IonSpew(IonSpew_Abort, "Inline builder raised exception.");
+            JitSpew(JitSpew_Abort, "Inline builder raised exception.");
             abortReason_ = AbortReason_Error;
             return false;
         }
@@ -8568,7 +8568,7 @@ IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPro
 
 #ifdef DEBUG
     if (inlinePropTable->numEntries() > 0)
-        IonSpew(IonSpew_Inlining, "Annotated GetPropertyCache with %d/%d inline cases",
+        JitSpew(JitSpew_Inlining, "Annotated GetPropertyCache with %d/%d inline cases",
                                     (int) inlinePropTable->numEntries(), (int) objCount);
 #endif
 
