@@ -3305,32 +3305,33 @@ EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Pars
             // The value destructuring into an elision just gets ignored.
             if (Emit1(cx, bce, JSOP_POP) < 0)                          // ... OBJ? ITER
                 return false;
-        } else {
-            int32_t depthBefore = bce->stackDepth;
-            if (!EmitDestructuringLHS(cx, bce, subpattern, emitOption))
-                return false;
+            continue;
+        }
 
-            if (emitOption == PushInitialValues && needToPopIterator) {
-                /*
-                 * After '[x,y]' in 'let ([[x,y], z] = o)', the stack is
-                 *   | to-be-destructured-value | x | y |
-                 * The goal is:
-                 *   | x | y | z |
-                 * so emit a pick to produce the intermediate state
-                 *   | x | y | to-be-destructured-value |
-                 * before destructuring z. This gives the loop invariant that
-                 * the to-be-destructured-value is always on top of the stack.
-                 */
-                JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
-                uint32_t pickDistance = (uint32_t)((bce->stackDepth + 1) - depthBefore);
-                if (pickDistance > 0) {
-                    if (pickDistance > UINT8_MAX) {
-                        bce->reportError(subpattern, JSMSG_TOO_MANY_LOCALS);
-                        return false;
-                    }
-                    if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)pickDistance) < 0)
-                        return false;
+        int32_t depthBefore = bce->stackDepth;
+        if (!EmitDestructuringLHS(cx, bce, subpattern, emitOption))
+            return false;
+
+        if (emitOption == PushInitialValues && needToPopIterator) {
+            /*
+             * After '[x,y]' in 'let ([[x,y], z] = o)', the stack is
+             *   | to-be-destructured-value | x | y |
+             * The goal is:
+             *   | x | y | z |
+             * so emit a pick to produce the intermediate state
+             *   | x | y | to-be-destructured-value |
+             * before destructuring z. This gives the loop invariant that
+             * the to-be-destructured-value is always on top of the stack.
+             */
+            JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
+            uint32_t pickDistance = (uint32_t)((bce->stackDepth + 1) - depthBefore);
+            if (pickDistance > 0) {
+                if (pickDistance > UINT8_MAX) {
+                    bce->reportError(subpattern, JSMSG_TOO_MANY_LOCALS);
+                    return false;
                 }
+                if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)pickDistance) < 0)
+                    return false;
             }
         }
     }
