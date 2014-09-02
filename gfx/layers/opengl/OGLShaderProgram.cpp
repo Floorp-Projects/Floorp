@@ -49,6 +49,10 @@ AddUniforms(ProgramProfileOGL& aProfile)
         "uTexturePass2",
         "uColorMatrix",
         "uColorMatrixVector",
+        "uBlurRadius",
+        "uBlurOffset",
+        "uBlurAlpha",
+        "uBlurGaussianKernel",
         nullptr
     };
 
@@ -547,6 +551,26 @@ ShaderProgramOGL::Activate()
   }
   NS_ASSERTION(HasInitialized(), "Attempting to activate a program that's not in use!");
   mGL->fUseProgram(mProgram);
+}
+
+void
+ShaderProgramOGL::SetBlurRadius(float aRX, float aRY)
+{
+  float f[] = {aRX, aRY};
+  SetUniform(KnownUniform::BlurRadius, 2, f);
+
+  float gaussianKernel[GAUSSIAN_KERNEL_HALF_WIDTH];
+  float sum = 0.0f;
+  for (int i = 0; i < GAUSSIAN_KERNEL_HALF_WIDTH; i++) {
+    float x = i * GAUSSIAN_KERNEL_STEP;
+    float sigma = 1.0f;
+    gaussianKernel[i] = exp(-x * x / (2 * sigma * sigma)) / sqrt(2 * M_PI * sigma * sigma);
+    sum += gaussianKernel[i] * (i == 0 ? 1 : 2);
+  }
+  for (int i = 0; i < GAUSSIAN_KERNEL_HALF_WIDTH; i++) {
+    gaussianKernel[i] /= sum;
+  }
+  SetArrayUniform(KnownUniform::BlurGaussianKernel, GAUSSIAN_KERNEL_HALF_WIDTH, gaussianKernel);
 }
 
 } /* layers */
