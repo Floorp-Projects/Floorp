@@ -3229,10 +3229,10 @@ EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Pars
      * InitializeVars expects us to leave the *original* value on the stack.
      */
     if (emitOption == InitializeVars) {
-        if (Emit1(cx, bce, JSOP_DUP) < 0)                      // OBJ OBJ
+        if (Emit1(cx, bce, JSOP_DUP) < 0)                              // ... OBJ OBJ
             return false;
     }
-    if (!EmitIterator(cx, bce))                                // OBJ? ITER
+    if (!EmitIterator(cx, bce))                                        // ... OBJ? ITER
         return false;
     bool needToPopIterator = true;
 
@@ -3244,30 +3244,30 @@ EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Pars
          */
         if (member->isKind(PNK_SPREAD)) {
             /* Create a new array with the rest of the iterator */
-            ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);          // ITER ARRAY
+            ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);          // ... OBJ? ITER ARRAY
             if (off < 0)
                 return false;
             CheckTypeSet(cx, bce, JSOP_NEWARRAY);
             jsbytecode *pc = bce->code(off);
             SET_UINT24(pc, 0);
 
-            if (!EmitNumberOp(cx, 0, bce))                             // ITER ARRAY INDEX
+            if (!EmitNumberOp(cx, 0, bce))                             // ... OBJ? ITER ARRAY INDEX
                 return false;
-            if (!EmitSpread(cx, bce))                                  // ARRAY INDEX
+            if (!EmitSpread(cx, bce))                                  // ... OBJ? ARRAY INDEX
                 return false;
-            if (Emit1(cx, bce, JSOP_POP) < 0)                          // ARRAY
+            if (Emit1(cx, bce, JSOP_POP) < 0)                          // ... OBJ? ARRAY
                 return false;
             if (Emit1(cx, bce, JSOP_ENDINIT) < 0)
                 return false;
             needToPopIterator = false;
         } else {
-            if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER ITER
+            if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ... OBJ? ITER ITER
                 return false;
-            if (!EmitIteratorNext(cx, bce, pattern))                   // ITER RESULT
+            if (!EmitIteratorNext(cx, bce, pattern))                   // ... OBJ? ITER RESULT
                 return false;
-            if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ITER RESULT RESULT
+            if (Emit1(cx, bce, JSOP_DUP) < 0)                          // ... OBJ? ITER RESULT RESULT
                 return false;
-            if (!EmitAtomOp(cx, cx->names().done, JSOP_GETPROP, bce))  // ITER RESULT DONE?
+            if (!EmitAtomOp(cx, cx->names().done, JSOP_GETPROP, bce))  // ... OBJ? ITER RESULT DONE?
                 return false;
 
             // Emit (result.done ? undefined : result.value)
@@ -3280,9 +3280,9 @@ EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Pars
             if (beq < 0)
                 return false;
 
-            if (Emit1(cx, bce, JSOP_POP) < 0)                          // ITER
+            if (Emit1(cx, bce, JSOP_POP) < 0)                          // ... OBJ? ITER
                 return false;
-            if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                    // ITER UNDEFINED
+            if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                    // ... OBJ? ITER UNDEFINED
                 return false;
 
             /* Jump around else, fixup the branch, emit else, fixup jump. */
@@ -3291,7 +3291,7 @@ EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Pars
                 return false;
             SetJumpOffsetAt(bce, beq);
 
-            if (!EmitAtomOp(cx, cx->names().value, JSOP_GETPROP, bce)) // ITER VALUE
+            if (!EmitAtomOp(cx, cx->names().value, JSOP_GETPROP, bce)) // ... OBJ? ITER VALUE
                 return false;
 
             SetJumpOffsetAt(bce, jmp);
@@ -3303,7 +3303,7 @@ EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Pars
         ParseNode *subpattern = member;
         if (subpattern->isKind(PNK_ELISION)) {
             // The value destructuring into an elision just gets ignored.
-            if (Emit1(cx, bce, JSOP_POP) < 0)
+            if (Emit1(cx, bce, JSOP_POP) < 0)                          // ... OBJ? ITER
                 return false;
         } else {
             int32_t depthBefore = bce->stackDepth;
