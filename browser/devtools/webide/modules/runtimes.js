@@ -89,6 +89,7 @@ SimulatorRuntime.prototype = {
       return promise.reject("Can't find simulator: " + this.getName());
     }
     return simulator.launch({port: port}).then(() => {
+      connection.host = "localhost";
       connection.port = port;
       connection.keepConnecting = true;
       connection.once(Connection.Events.DISCONNECTED, simulator.close);
@@ -109,8 +110,8 @@ let gLocalRuntime = {
       DebuggerServer.init();
       DebuggerServer.addBrowserActors();
     }
-    connection.port = null;
     connection.host = null; // Force Pipe transport
+    connection.port = null;
     connection.connect();
     return promise.resolve();
   },
