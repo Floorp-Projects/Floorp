@@ -20,6 +20,7 @@ import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorSet;
 import com.nineoldandroids.animation.ObjectAnimator;
 
+import org.mozilla.gecko.LocaleAware;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
@@ -32,7 +33,7 @@ import org.mozilla.search.autocomplete.SuggestionsFragment;
  * State management is delegated to child fragments. Fragments communicate
  * with each other by passing messages through this activity.
  */
-public class MainActivity extends FragmentActivity implements AcceptsSearchQuery {
+public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity implements AcceptsSearchQuery {
 
     private static final String KEY_SEARCH_STATE = "search_state";
     private static final String KEY_EDIT_STATE = "edit_state";
