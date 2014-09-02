@@ -23,7 +23,7 @@ let test = asyncTest(function*() {
   yield selectNode("div", inspector);
 
   info("Expanding the first property");
-  yield expandComputedViewPropertyByIndex(view, inspector, 0);
+  yield expandComputedViewPropertyByIndex(view, 0);
 
   info("Verifying the link text");
   yield verifyLinkText(view, SCSS_LOC);
