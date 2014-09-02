@@ -114,8 +114,6 @@
 
     <style name="Widget.TwoLinePageRow.Title">
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemTitle</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:ellipsize">none</item>
     </style>
 
     <style name="Widget.TwoLinePageRow.Url">
@@ -126,6 +124,8 @@
     </style>
 
     <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">none</item>
         <item name="android:paddingLeft">10dip</item>
         <item name="android:drawablePadding">10dip</item>
         <item name="android:drawableLeft">@drawable/bookmark_folder</item>
@@ -189,8 +189,6 @@
     <style name="Widget.TopSitesGridItemTitle">
       <item name="android:textColor">@color/top_sites_grid_item_title</item>
       <item name="android:textSize">12sp</item>
-      <item name="android:singleLine">true</item>
-      <item name="android:ellipsize">none</item>
       <item name="android:paddingTop">5dip</item>
       <item name="android:gravity">left</item>
     </style>
