@@ -3669,7 +3669,7 @@ nsTextStore::OnFocusChange(bool aGotFocus,
           sTsfThreadMgr, sEnabledTextStore));
 
   // no change notifications if TSF is disabled
-  NS_ENSURE_TRUE(sTsfThreadMgr && sEnabledTextStore, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(IsInTSFMode(), NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<ITfDocumentMgr> prevFocusedDocumentMgr;
   if (aGotFocus && aIMEState.IsEditable()) {
@@ -4208,12 +4208,17 @@ nsTextStore::SetInputContext(nsWindowBase* aWidget,
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: nsTextStore::SetInputContext(aWidget=%p, "
           "aContext.mIMEState.mEnabled=%s, aAction.mFocusChange=%s), "
-          "ThinksHavingFocus()=%s",
+          "sEnabledTextStore=0x%p, ThinksHavingFocus()=%s",
           aWidget, GetIMEEnabledName(aContext.mIMEState.mEnabled),
-          GetFocusChangeName(aAction.mFocusChange),
+          GetFocusChangeName(aAction.mFocusChange), sEnabledTextStore,
           GetBoolName(ThinksHavingFocus())));
 
-  NS_ENSURE_TRUE_VOID(sEnabledTextStore);
+  NS_ENSURE_TRUE_VOID(IsInTSFMode());
+
+  if (!sEnabledTextStore) {
+    return;
+  }
+
   sEnabledTextStore->SetInputScope(aContext.mHTMLInputType);
 
   if (aAction.mFocusChange != InputContextAction::FOCUS_NOT_CHANGED) {
