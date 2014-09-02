@@ -41,7 +41,6 @@ class nsWindow;
 #ifdef MOZ_METRO
 class MetroWidget;
 #endif
-class TSFStaticSink;
 
 namespace mozilla {
 namespace widget {
@@ -55,6 +54,8 @@ struct MSGResult;
 
 class nsTextStore MOZ_FINAL : public ITextStoreACP
                             , public ITfContextOwnerCompositionSink
+                            , public ITfActiveLanguageProfileNotifySink
+                            , public ITfInputProcessorProfileActivationSink
                             , public ITfMouseTrackerACP
 {
 public: /*IUnknown*/
@@ -100,6 +101,14 @@ public: /*ITfContextOwnerCompositionSink*/
   STDMETHODIMP OnUpdateComposition(ITfCompositionView*, ITfRange*);
   STDMETHODIMP OnEndComposition(ITfCompositionView*);
 
+public: /*ITfActiveLanguageProfileNotifySink*/
+  STDMETHODIMP OnActivated(REFCLSID clsid, REFGUID guidProfile,
+                           BOOL fActivated);
+
+public: /*ITfInputProcessorProfileActivationSink*/
+  STDMETHODIMP OnActivated(DWORD, LANGID, REFCLSID, REFGUID, REFGUID,
+                           HKL, DWORD);
+
 public: /*ITfMouseTrackerACP*/
   STDMETHODIMP AdviseMouseSink(ITfRangeACP*, ITfMouseSink*, DWORD*);
   STDMETHODIMP UnadviseMouseSink(DWORD);
@@ -125,10 +134,8 @@ public:
 
   static void     CommitComposition(bool aDiscard)
   {
-    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
-    if (sEnabledTextStore) {
-      sEnabledTextStore->CommitCompositionInternal(aDiscard);
-    }
+    NS_ENSURE_TRUE_VOID(sEnabledTextStore);
+    sEnabledTextStore->CommitCompositionInternal(aDiscard);
   }
 
   static void SetInputContext(nsWindowBase* aWidget,
@@ -137,33 +144,31 @@ public:
 
   static nsresult OnFocusChange(bool aGotFocus,
                                 nsWindowBase* aFocusedWidget,
-                                const InputContext& aContext);
+                                const IMEState& aIMEState);
   static nsresult OnTextChange(const IMENotification& aIMENotification)
   {
-    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
-    return sEnabledTextStore ?
-      sEnabledTextStore->OnTextChangeInternal(aIMENotification) : NS_OK;
+    NS_ENSURE_TRUE(sEnabledTextStore, NS_ERROR_NOT_AVAILABLE);
+    return sEnabledTextStore->OnTextChangeInternal(aIMENotification);
   }
 
   static nsresult OnSelectionChange(void)
   {
-    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
-    return sEnabledTextStore ?
-      sEnabledTextStore->OnSelectionChangeInternal() : NS_OK;
+    NS_ENSURE_TRUE(sEnabledTextStore, NS_ERROR_NOT_AVAILABLE);
+    return sEnabledTextStore->OnSelectionChangeInternal();
   }
 
   static nsresult OnLayoutChange()
   {
-    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
-    return sEnabledTextStore ?
-      sEnabledTextStore->OnLayoutChangeInternal() : NS_OK;
+    NS_ENSURE_TRUE(sEnabledTextStore, NS_ERROR_NOT_AVAILABLE);
+    return sEnabledTextStore->OnLayoutChangeInternal();
   }
 
   static nsresult OnMouseButtonEvent(const IMENotification& aIMENotification)
   {
-    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
-    return sEnabledTextStore ?
-      sEnabledTextStore->OnMouseButtonEventInternal(aIMENotification) : NS_OK;
+    if (NS_WARN_IF(!sEnabledTextStore)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    return sEnabledTextStore->OnMouseButtonEventInternal(aIMENotification);
   }
 
   static nsIMEUpdatePreference GetIMEUpdatePreference();
@@ -190,32 +195,44 @@ public:
     return sMessagePump;
   }
 
-  static void* GetThreadManager()
+  static void*    GetTextStore()
   {
-    return static_cast<void*>(sTsfThreadMgr);
+    return static_cast<void*>(sEnabledTextStore);
   }
 
-  static bool ThinksHavingFocus()
+  static bool     ThinksHavingFocus()
   {
     return (sEnabledTextStore && sEnabledTextStore->mContext);
   }
 
-  static bool IsInTSFMode()
+  static bool     IsInTSFMode()
   {
     return sTsfThreadMgr != nullptr;
   }
 
-  static bool IsComposing()
+  static bool     IsComposing()
   {
     return (sEnabledTextStore && sEnabledTextStore->mComposition.IsComposing());
   }
 
-  static bool IsComposingOn(nsWindowBase* aWidget)
+  static bool     IsComposingOn(nsWindowBase* aWidget)
   {
     return (IsComposing() && sEnabledTextStore->mWidget == aWidget);
   }
 
-  static bool IsIMM_IME();
+  static bool     IsIMM_IME()
+  {
+    if (!sEnabledTextStore ||
+        !sEnabledTextStore->EnsureInitActiveTIPKeyboard()) {
+      return IsIMM_IME(::GetKeyboardLayout(0));
+    }
+    return sEnabledTextStore->mIsIMM_IME;
+  }
+
+  static bool     IsIMM_IME(HKL aHKL)
+  {
+     return (::ImmGetIMEFileNameW(aHKL, nullptr, 0) > 0);
+  }
 
 #ifdef DEBUG
   // Returns true when keyboard layout has IME (TIP).
@@ -226,13 +243,19 @@ protected:
   nsTextStore();
   ~nsTextStore();
 
-  static bool CreateAndSetFocus(nsWindowBase* aFocusedWidget,
-                                const InputContext& aContext);
+  bool Init(ITfThreadMgr* aThreadMgr);
+  void Shutdown();
+
   static void MarkContextAsKeyboardDisabled(ITfContext* aContext);
   static void MarkContextAsEmpty(ITfContext* aContext);
 
-  bool     Init(nsWindowBase* aWidget);
-  bool     Destroy();
+  static bool IsTIPCategoryKeyboard(REFCLSID aTextService, LANGID aLangID,
+                                    REFGUID aProfile);
+  static void GetTIPDescription(REFCLSID aTextService, LANGID aLangID,
+                                REFGUID aProfile, nsAString& aDescription);
+
+  bool     Create(nsWindowBase* aWidget);
+  bool     Destroy(void);
 
   bool     IsReadLock(DWORD aLock) const
   {
@@ -291,12 +314,18 @@ protected:
   // application.  Otherwise, this does nothing.
   void     CreateNativeCaret();
 
+  bool     EnsureInitActiveTIPKeyboard();
+
   // Holds the pointer to our current win32 or metro widget
   nsRefPtr<nsWindowBase>       mWidget;
   // Document manager for the currently focused editor
   nsRefPtr<ITfDocumentMgr>     mDocumentMgr;
   // Edit cookie associated with the current editing context
   DWORD                        mEditCookie;
+  // Cookie of installing ITfInputProcessorProfileActivationSink
+  DWORD                        mIPProfileCookie;
+  // Cookie of installing ITfActiveLanguageProfileNotifySink
+  DWORD                        mLangProfileCookie;
   // Editing context at the bottom of mDocumentMgr's context stack
   nsRefPtr<ITfContext>         mContext;
   // Currently installed notification sink
@@ -307,6 +336,9 @@ protected:
   DWORD                        mLock;
   // 0 if no lock is queued, otherwise TS_LF_* indicating the queue lock
   DWORD                        mLockQueued;
+  // Active TIP keyboard's description.  If active language profile isn't TIP,
+  // i.e., IMM-IME or just a keyboard layout, this is empty.
+  nsString                     mActiveTIPKeyboardDescription;
 
   class Composition MOZ_FINAL
   {
@@ -732,11 +764,13 @@ protected:
   // ITfContextOwnerServices::OnLayoutChange() after the layout is fixed and
   // the document is unlocked.
   bool                         mPendingOnLayoutChange;
-  // During the documet is locked, we shouldn't destroy the instance.
-  // If this is true, the instance will be destroyed after unlocked.
-  bool                         mPendingDestroy;
   // While there is native caret, this is true.  Otherwise, false.
   bool                         mNativeCaretIsCreated;
+
+  // True if current IME is implemented with IMM.
+  bool                         mIsIMM_IME;
+  // True if OnActivated() is already called
+  bool                         mOnActivatedCalled;
 
   // TSF thread manager object for the current application
   static ITfThreadMgr*  sTsfThreadMgr;
@@ -767,6 +801,10 @@ protected:
   static bool sCreateNativeCaretForATOK;
   static bool sDoNotReturnNoLayoutErrorToFreeChangJie;
   static bool sDoNotReturnNoLayoutErrorToEasyChangjei;
+
+  // Message the Tablet Input Panel uses to flush text during blurring.
+  // See comments in Destroy
+  static UINT           sFlushTIPInputMessage;
 };
 
 #endif /*NSTEXTSTORE_H_*/
