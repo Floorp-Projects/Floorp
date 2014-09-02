@@ -1587,6 +1587,42 @@ class MSimdBinaryBitwise : public MBinaryInstruction
     }
 };
 
+class MSimdTernaryBitwise : public MTernaryInstruction
+{
+  public:
+    enum Operation {
+        select
+    };
+
+  private:
+    Operation operation_;
+
+    MSimdTernaryBitwise(MDefinition *mask, MDefinition *lhs, MDefinition *rhs, Operation op, MIRType type)
+      : MTernaryInstruction(mask, lhs, rhs), operation_(op)
+    {
+        MOZ_ASSERT(IsSimdType(type));
+        MOZ_ASSERT(mask->type() == MIRType_Int32x4);
+        MOZ_ASSERT(lhs->type() == rhs->type());
+        MOZ_ASSERT(lhs->type() == type);
+        setResultType(type);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdTernaryBitwise);
+    static MSimdTernaryBitwise *NewAsmJS(TempAllocator &alloc, MDefinition *mask, MDefinition *lhs,
+                                         MDefinition *rhs, Operation op, MIRType t)
+    {
+        return new(alloc) MSimdTernaryBitwise(mask, lhs, rhs, op, t);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    Operation operation() const { return operation_; }
+};
+
 // Deep clone a constant JSObject.
 class MCloneLiteral
   : public MUnaryInstruction,

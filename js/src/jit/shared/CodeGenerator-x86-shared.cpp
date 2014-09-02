@@ -2372,6 +2372,22 @@ CodeGeneratorX86Shared::visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4 *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect *ins)
+{
+    FloatRegister mask = ToFloatRegister(ins->mask());
+    FloatRegister onTrue = ToFloatRegister(ins->lhs());
+    FloatRegister onFalse = ToFloatRegister(ins->rhs());
+
+    MOZ_ASSERT(onTrue == ToFloatRegister(ins->output()));
+    // The onFalse argument is not destroyed but due to limitations of the
+    // register allocator its life ends at the start of the operation.
+    masm.bitwiseAndX4(Operand(mask), onTrue);
+    masm.bitwiseAndNotX4(Operand(onFalse), mask);
+    masm.bitwiseOrX4(Operand(mask), onTrue);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitForkJoinGetSlice(LForkJoinGetSlice *ins)
 {
     MOZ_ASSERT(gen->info().executionMode() == ParallelExecution);
