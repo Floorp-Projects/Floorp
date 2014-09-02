@@ -24,19 +24,6 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 void
-StringToBdAddressType(const nsAString& aBdAddress,
-                      bt_bdaddr_t *aRetBdAddressType)
-{
-  NS_ConvertUTF16toUTF8 bdAddressUTF8(aBdAddress);
-  const char* str = bdAddressUTF8.get();
-
-  for (int i = 0; i < 6; i++) {
-    aRetBdAddressType->address[i] = (uint8_t) strtoul(str, (char **)&str, 16);
-    str++;
-  }
-}
-
-void
 BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
 {
   uint8_t* addr = aBdAddressType->address;
@@ -47,29 +34,6 @@ BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
           (int)addr[3],(int)addr[4],(int)addr[5]);
 
   aRetBdAddress = NS_ConvertUTF8toUTF16(bdstr);
-}
-
-void
-UuidToString(bt_uuid_t* aUuid, nsAString& aString) {
-  char uuidStr[37];
-
-  uint32_t uuid0, uuid4;
-  uint16_t uuid1, uuid2, uuid3, uuid5;
-
-  memcpy(&uuid0, &(aUuid->uu[0]), sizeof(uint32_t));
-  memcpy(&uuid1, &(aUuid->uu[4]), sizeof(uint16_t));
-  memcpy(&uuid2, &(aUuid->uu[6]), sizeof(uint16_t));
-  memcpy(&uuid3, &(aUuid->uu[8]), sizeof(uint16_t));
-  memcpy(&uuid4, &(aUuid->uu[10]), sizeof(uint32_t));
-  memcpy(&uuid5, &(aUuid->uu[14]), sizeof(uint16_t));
-
-  sprintf(uuidStr, "%.8x-%.4x-%.4x-%.4x-%.8x%.4x",
-          ntohl(uuid0), ntohs(uuid1),
-          ntohs(uuid2), ntohs(uuid3),
-          ntohl(uuid4), ntohs(uuid5));
-
-  aString.Truncate();
-  aString.AssignLiteral(uuidStr);
 }
 
 void
