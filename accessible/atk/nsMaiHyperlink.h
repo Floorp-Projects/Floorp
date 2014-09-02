@@ -23,7 +23,7 @@ namespace a11y {
 class MaiHyperlink
 {
 public:
-  MaiHyperlink(Accessible* aHyperLink);
+  explicit MaiHyperlink(Accessible* aHyperLink);
   ~MaiHyperlink();
 
 public:
