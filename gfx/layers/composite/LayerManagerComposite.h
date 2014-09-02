@@ -245,8 +245,9 @@ public:
    */
   void VisualFrameWarning(float severity) {
     mozilla::TimeStamp now = TimeStamp::Now();
-    if (severity > mWarningLevel ||
-        mWarnTime + TimeDuration::FromMilliseconds(1500) < now) {
+    if (mWarnTime.IsNull() ||
+        severity > mWarningLevel ||
+        mWarnTime + TimeDuration::FromMilliseconds(150) < now) {
       mWarnTime = now;
       mWarningLevel = severity;
     }
