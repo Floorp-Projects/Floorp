@@ -1121,6 +1121,38 @@ class ADBDevice(ADBCommand):
         output = self.command_output(["get-state"], timeout=timeout).strip()
         return output
 
+    def get_ip_address(self, interfaces=None, timeout=None):
+        """Returns the device's ip address, or None if it doesn't have one
+
+        :param interfaces: List of interfaces to allow, or None to alow any
+                           non-loopback interface
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before throwing
+            an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :returns: string ip address of the device or None if it could not
+            be found.
+        :raises: * ADBTimeoutError
+                 * ADBError
+
+        """
+        ip_regexp = re.compile(r'(\w+)\s+UP\s+([1-9]\d{0,2}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
+        data = self.shell_output('netcfg')
+        for line in data.split("\n"):
+            match = ip_regexp.search(line)
+            if match:
+                interface, ip = match.groups()
+
+                if interface == "lo" or ip == "127.0.0.1":
+                    continue
+
+                if interfaces is None or interface in interfaces:
+                    return ip
+
+        return None
+
     # File management methods
 
     def remount(self, timeout=None):
