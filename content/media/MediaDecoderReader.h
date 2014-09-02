@@ -20,6 +20,7 @@ class TimeRanges;
 
 class RequestSampleCallback;
 class MediaDecoderReader;
+class SharedDecoderManager;
 
 // Encapsulates the decoding and reading of media data. Reading can either
 // synchronous and done on the calling "decode" thread, or asynchronous and
@@ -43,7 +44,8 @@ public:
   virtual bool IsDormantNeeded() { return false; }
   // Release media resources they should be released in dormant state
   // The reader can be made usable again by calling ReadMetadata().
-  virtual void ReleaseMediaResources() {};
+  virtual void ReleaseMediaResources() {}
+  virtual void SetSharedDecoderManager(SharedDecoderManager* aManager) {}
   // Breaks reference-counted cycles. Called during shutdown.
   // WARNING: If you override this, you must call the base implementation
   // in your override.
