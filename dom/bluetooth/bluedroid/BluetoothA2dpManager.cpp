@@ -31,12 +31,9 @@ namespace {
   StaticRefPtr<BluetoothA2dpManager> sBluetoothA2dpManager;
   bool sInShutdown = false;
   static BluetoothA2dpInterface* sBtA2dpInterface;
-#if ANDROID_VERSION > 17
   static BluetoothAvrcpInterface* sBtAvrcpInterface;
-#endif
 } // anonymous namespace
 
-#if ANDROID_VERSION > 17
 /*
  * This function maps attribute id and returns corresponding values
  */
@@ -72,7 +69,6 @@ ConvertAttributeString(BluetoothAvrcpMediaAttribute aAttrId,
       break;
   }
 }
-#endif
 
 NS_IMETHODIMP
 BluetoothA2dpManager::Observe(nsISupports* aSubject,
@@ -105,20 +101,25 @@ BluetoothA2dpManager::Reset()
 static void
 AvStatusToSinkString(BluetoothA2dpConnectionState aState, nsAString& aString)
 {
-  static const nsLiteralString sString[] = {
-    [A2DP_CONNECTION_STATE_DISCONNECTED] = NS_LITERAL_STRING("disconnected"),
-    [A2DP_CONNECTION_STATE_CONNECTING] = NS_LITERAL_STRING("connecting"),
-    [A2DP_CONNECTION_STATE_CONNECTED] = NS_LITERAL_STRING("connected"),
-    [A2DP_CONNECTION_STATE_DISCONNECTING] = NS_LITERAL_STRING("disconnecting")
-  };
-  if (aState >= MOZ_ARRAY_LENGTH(sString)) {
-    BT_WARNING("Unknown sink state %d", static_cast<int>(aState));
-    return;
+  switch (aState) {
+    case A2DP_CONNECTION_STATE_DISCONNECTED:
+      aString.AssignLiteral("disconnected");
+      break;
+    case A2DP_CONNECTION_STATE_CONNECTING:
+      aString.AssignLiteral("connecting");
+      break;
+    case A2DP_CONNECTION_STATE_CONNECTED:
+      aString.AssignLiteral("connected");
+      break;
+    case A2DP_CONNECTION_STATE_DISCONNECTING:
+      aString.AssignLiteral("disconnecting");
+      break;
+    default:
+      BT_WARNING("Unknown sink state %d", static_cast<int>(aState));
+      return;
   }
-  aString = sString[aState];
 }
 
-#if ANDROID_VERSION > 17
 class InitAvrcpResultHandler MOZ_FINAL : public BluetoothAvrcpResultHandler
 {
 public:
@@ -131,7 +132,15 @@ public:
     BT_WARNING("BluetoothAvrcpInterface::Init failed: %d",
                (int)aStatus);
     if (mRes) {
-      mRes->OnError(NS_ERROR_FAILURE);
+      if (aStatus == STATUS_UNSUPPORTED) {
+        /* Not all versions of Bluedroid support AVRCP. So if the
+         * initialization fails with STATUS_UNSUPPORTED, we still
+         * signal success.
+         */
+        mRes->Init();
+      } else {
+        mRes->OnError(NS_ERROR_FAILURE);
+      }
     }
   }
 
@@ -145,7 +154,6 @@ public:
 private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
-#endif
 
 class InitA2dpResultHandler MOZ_FINAL : public BluetoothA2dpResultHandler
 {
@@ -165,22 +173,20 @@ public:
 
   void Init() MOZ_OVERRIDE
   {
-#if ANDROID_VERSION > 17
-    /* Also init AVRCP if it's available, ... */
     BluetoothInterface* btInf = BluetoothInterface::GetInstance();
-    NS_ENSURE_TRUE_VOID(btInf);
+    if (NS_WARN_IF(!btInf)) {
+      mRes->OnError(NS_ERROR_FAILURE);
+      return;
+    }
 
     sBtAvrcpInterface = btInf->GetBluetoothAvrcpInterface();
-    NS_ENSURE_TRUE_VOID(sBtAvrcpInterface);
+    if (NS_WARN_IF(!sBtAvrcpInterface)) {
+      mRes->OnError(NS_ERROR_FAILURE);
+      return;
+    }
 
     BluetoothA2dpManager* a2dpManager = BluetoothA2dpManager::Get();
     sBtAvrcpInterface->Init(a2dpManager, new InitAvrcpResultHandler(mRes));
-#else
-    /* ...or signal success otherwise. */
-    if (mRes) {
-      mRes->Init();
-    }
-#endif
   }
 
 private:
@@ -278,7 +284,6 @@ BluetoothA2dpManager::Get()
   return sBluetoothA2dpManager;
 }
 
-#if ANDROID_VERSION > 17
 class CleanupAvrcpResultHandler MOZ_FINAL : public BluetoothAvrcpResultHandler
 {
 public:
@@ -291,7 +296,15 @@ public:
     BT_WARNING("BluetoothAvrcpInterface::Cleanup failed: %d",
                (int)aStatus);
     if (mRes) {
-      mRes->OnError(NS_ERROR_FAILURE);
+      if (aStatus == STATUS_UNSUPPORTED) {
+        /* Not all versions of Bluedroid support AVRCP. So if the
+         * cleanup fails with STATUS_UNSUPPORTED, we still signal
+         * success.
+         */
+        mRes->Deinit();
+      } else {
+        mRes->OnError(NS_ERROR_FAILURE);
+      }
     }
   }
 
@@ -306,7 +319,6 @@ public:
 private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
-#endif
 
 class CleanupA2dpResultHandler MOZ_FINAL : public BluetoothA2dpResultHandler
 {
@@ -327,15 +339,8 @@ public:
   void Cleanup() MOZ_OVERRIDE
   {
     sBtA2dpInterface = nullptr;
-#if ANDROID_VERSION > 17
-    /* Cleanup AVRCP if it's available and initialized, ...*/
     if (sBtAvrcpInterface) {
       sBtAvrcpInterface->Cleanup(new CleanupAvrcpResultHandler(mRes));
-    } else
-#endif
-    if (mRes) {
-      /* ...or simply signal success from here. */
-      mRes->Deinit();
     }
   }
 
@@ -353,15 +358,8 @@ public:
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
     sBtA2dpInterface = nullptr;
-#if ANDROID_VERSION > 17
-    /* Cleanup AVRCP if it's available and initialized, ...*/
     if (sBtAvrcpInterface) {
       sBtAvrcpInterface->Cleanup(new CleanupAvrcpResultHandler(mRes));
-    } else
-#endif
-    if (mRes) {
-      /* ...or simply signal success from here. */
-      mRes->Deinit();
     }
 
     return NS_OK;
@@ -718,7 +716,6 @@ BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#if ANDROID_VERSION > 17
   NS_ENSURE_TRUE_VOID(sBtAvrcpInterface);
 
   // Send track changed and position changed if track num is not the same.
@@ -728,8 +725,8 @@ BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
     BluetoothAvrcpNotificationParam param;
     // convert to network big endian format
     // since track stores as uint8[8]
-    // 56 = 8 * (BTRC_UID_SIZE -1)
-    for (int i = 0; i < BTRC_UID_SIZE; ++i) {
+    // 56 = 8 * (AVRCP_UID_SIZE -1)
+    for (int i = 0; i < AVRCP_UID_SIZE; ++i) {
       param.mTrack[i] = (aMediaNumber >> (56 - 8 * i));
     }
     mTrackChangedNotifyType = AVRCP_NTF_CHANGED;
@@ -752,7 +749,6 @@ BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
   mMediaNumber = aMediaNumber;
   mTotalMediaCount = aTotalMediaCount;
   mDuration = aDuration;
-#endif
 }
 
 /*
@@ -766,7 +762,6 @@ BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#if ANDROID_VERSION > 17
   NS_ENSURE_TRUE_VOID(sBtAvrcpInterface);
   // always update playstatus first
   sBtAvrcpInterface->GetPlayStatusRsp(aPlayStatus, aDuration,
@@ -795,7 +790,6 @@ BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
   mDuration = aDuration;
   mPosition = aPosition;
   mPlayStatus = aPlayStatus;
-#endif
 }
 
 /*
@@ -811,7 +805,6 @@ BluetoothA2dpManager::UpdateRegisterNotification(BluetoothAvrcpEvent aEvent,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#if ANDROID_VERSION > 17
   NS_ENSURE_TRUE_VOID(sBtAvrcpInterface);
 
   BluetoothAvrcpNotificationParam param;
@@ -832,7 +825,7 @@ BluetoothA2dpManager::UpdateRegisterNotification(BluetoothAvrcpEvent aEvent,
       mTrackChangedNotifyType = AVRCP_NTF_INTERIM;
       // needs to convert to network big endian format since track stores
       // as uint8[8]. 56 = 8 * (BTRC_UID_SIZE -1).
-      for (int index = 0; index < BTRC_UID_SIZE; ++index) {
+      for (int index = 0; index < AVRCP_UID_SIZE; ++index) {
         // We cannot easily check if a track is selected, so whenever A2DP is
         // streaming, we assume a track is selected.
         if (mSinkState == BluetoothA2dpManager::SinkState::SINK_PLAYING) {
@@ -858,7 +851,6 @@ BluetoothA2dpManager::UpdateRegisterNotification(BluetoothAvrcpEvent aEvent,
 
   sBtAvrcpInterface->RegisterNotificationRsp(aEvent, AVRCP_NTF_INTERIM,
                                              param, nullptr);
-#endif
 }
 
 void
@@ -1052,10 +1044,8 @@ BluetoothA2dpManager::GetElementAttrNotification(
       attrs[i].mValue);
   }
 
-#if ANDROID_VERSION >= 18
   MOZ_ASSERT(sBtAvrcpInterface);
   sBtAvrcpInterface->GetElementAttrRsp(aNumAttrs, attrs, nullptr);
-#endif // ANDROID_VERSION >= 18
 }
 
 void
@@ -1069,9 +1059,7 @@ BluetoothA2dpManager::RegisterNotificationNotification(
     return;
   }
 
-#if ANDROID_VERSION >= 18
   a2dp->UpdateRegisterNotification(aEvent, aParam);
-#endif // ANDROID_VERSION >= 18
 }
 
 /* This method is used to get CT features from the Feature Bit Mask. If

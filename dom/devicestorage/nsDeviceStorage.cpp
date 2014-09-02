@@ -1790,7 +1790,7 @@ public:
 
   NS_FORWARD_NSICONTENTPERMISSIONREQUEST(mCursor->);
 
-  DeviceStorageCursorRequest(nsDOMDeviceStorageCursor* aCursor)
+  explicit DeviceStorageCursorRequest(nsDOMDeviceStorageCursor* aCursor)
     : mCursor(aCursor) { }
 
 private:

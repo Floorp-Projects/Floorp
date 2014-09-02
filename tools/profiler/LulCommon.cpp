@@ -72,7 +72,7 @@ Module::~Module() {
 //
 class UniqueString {
  public:
-  UniqueString(string str) { str_ = strdup(str.c_str()); }
+  explicit UniqueString(string str) { str_ = strdup(str.c_str()); }
   ~UniqueString() { free(reinterpret_cast<void*>(const_cast<char*>(str_))); }
   const char* str_;
 };

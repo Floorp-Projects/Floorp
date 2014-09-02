@@ -1153,7 +1153,7 @@ nsNPAPIPluginInstance::IsWindowless(bool* isWindowless)
 class MOZ_STACK_CLASS AutoPluginLibraryCall
 {
 public:
-  AutoPluginLibraryCall(nsNPAPIPluginInstance* aThis)
+  explicit AutoPluginLibraryCall(nsNPAPIPluginInstance* aThis)
     : mThis(aThis), mGuard(aThis), mLibrary(nullptr)
   {
     nsNPAPIPlugin* plugin = mThis->GetPlugin();
@@ -1669,7 +1669,7 @@ class CarbonEventModelFailureEvent : public nsRunnable {
 public:
   nsCOMPtr<nsIContent> mContent;
 
-  CarbonEventModelFailureEvent(nsIContent* aContent)
+  explicit CarbonEventModelFailureEvent(nsIContent* aContent)
     : mContent(aContent)
   {}
 

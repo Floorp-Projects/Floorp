@@ -12,6 +12,8 @@
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/gfx/Logging.h"        // for Log
+#include "gfxColor.h"
+#include "nsString.h"
 
 namespace IPC {
 template <typename T> struct ParamTraits;
@@ -97,7 +99,10 @@ public:
     , mUseDisplayPortMargins(false)
     , mPresShellId(-1)
     , mViewport(0, 0, 0, 0)
-  {}
+    , mBackgroundColor(0, 0, 0, 0)
+  {
+    mContentDescription[0] = '\0';
+  }
 
   // Default copy ctor and operator= are fine
 
@@ -122,7 +127,9 @@ public:
            mScrollParentId == aOther.mScrollParentId &&
            mScrollOffset == aOther.mScrollOffset &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
-           mUpdateScrollOffset == aOther.mUpdateScrollOffset;
+           mUpdateScrollOffset == aOther.mUpdateScrollOffset &&
+           mBackgroundColor == aOther.mBackgroundColor &&
+           !strcmp(mContentDescription, aOther.mContentDescription);
   }
   bool operator!=(const FrameMetrics& aOther) const
   {
@@ -467,6 +474,28 @@ public:
     return mViewport;
   }
 
+  const gfxRGBA& GetBackgroundColor() const
+  {
+    return mBackgroundColor;
+  }
+
+  void SetBackgroundColor(const gfxRGBA& aBackgroundColor)
+  {
+    mBackgroundColor = aBackgroundColor;
+  }
+
+  nsCString GetContentDescription() const
+  {
+    return nsCString(mContentDescription);
+  }
+
+  void SetContentDescription(const nsCString& aContentDescription)
+  {
+    strncpy(mContentDescription, aContentDescription.get(),
+            sizeof(mContentDescription));
+    mContentDescription[sizeof(mContentDescription) - 1] = 0;
+  }
+
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
@@ -535,6 +564,14 @@ private:
   // iframe. For layers that don't correspond to a document, this metric is
   // meaningless and invalid.
   CSSRect mViewport;
+
+  // The background color to use when overscrolling.
+  gfxRGBA mBackgroundColor;
+
+  // A description of the content element corresponding to this frame.
+  // This is empty unless this is a scrollable ContainerLayer and the
+  // apz.printtree pref is turned on.
+  char mContentDescription[20];
 };
 
 /**

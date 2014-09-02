@@ -18,7 +18,7 @@ namespace dom {
 class MediaStreamAudioSourceNodeEngine : public AudioNodeEngine
 {
 public:
-  MediaStreamAudioSourceNodeEngine(AudioNode* aNode)
+  explicit MediaStreamAudioSourceNodeEngine(AudioNode* aNode)
     : AudioNodeEngine(aNode), mEnabled(false) {}
 
   bool IsEnabled() const { return mEnabled; }

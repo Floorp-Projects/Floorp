@@ -28,7 +28,7 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WorkerDataStoreCursor)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(WorkerDataStoreCursor)
 
-  WorkerDataStoreCursor(WorkerDataStore* aWorkerStore);
+  explicit WorkerDataStoreCursor(WorkerDataStore* aWorkerStore);
 
   // WebIDL (internal functions)
 

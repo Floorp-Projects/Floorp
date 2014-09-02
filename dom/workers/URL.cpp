@@ -31,7 +31,7 @@ class URLProxy MOZ_FINAL
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLProxy)
 
-  URLProxy(mozilla::dom::URL* aURL)
+  explicit URLProxy(mozilla::dom::URL* aURL)
     : mURL(aURL)
   {
     AssertIsOnMainThread();
@@ -265,7 +265,7 @@ public:
 class TeardownURLRunnable : public nsRunnable
 {
 public:
-  TeardownURLRunnable(URLProxy* aURLProxy)
+  explicit TeardownURLRunnable(URLProxy* aURLProxy)
     : mURLProxy(aURLProxy)
   {
   }

@@ -32,7 +32,7 @@ class Decoder
 {
 public:
 
-  Decoder(RasterImage& aImage);
+  explicit Decoder(RasterImage& aImage);
   virtual ~Decoder();
 
   /**

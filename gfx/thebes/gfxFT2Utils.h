@@ -22,7 +22,7 @@ typedef struct FT_FaceRec_* FT_Face;
 
 class gfxFT2LockedFace {
 public:
-    gfxFT2LockedFace(gfxFT2FontBase *aFont) :
+    explicit gfxFT2LockedFace(gfxFT2FontBase *aFont) :
         mGfxFont(aFont),
         mFace(cairo_ft_scaled_font_lock_face(aFont->CairoScaledFont()))
     { }
