@@ -12,8 +12,8 @@
 class nsMIMEInfoUnix : public nsMIMEInfoImpl
 {
 public:
-  nsMIMEInfoUnix(const char *aMIMEType = "") : nsMIMEInfoImpl(aMIMEType) {}
-  nsMIMEInfoUnix(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
+  explicit nsMIMEInfoUnix(const char *aMIMEType = "") : nsMIMEInfoImpl(aMIMEType) {}
+  explicit nsMIMEInfoUnix(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
   nsMIMEInfoUnix(const nsACString& aType, HandlerClass aClass) :
     nsMIMEInfoImpl(aType, aClass) {}
   static bool HandlerExists(const char *aProtocolScheme);
