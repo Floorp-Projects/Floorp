@@ -72,7 +72,7 @@ namespace mozilla {
 class EnvironmentLog
 {
 public:
-  EnvironmentLog(const char* varname);
+  explicit EnvironmentLog(const char* varname);
   ~EnvironmentLog();
 
   void print(const char* format, ...);

@@ -332,11 +332,9 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
       holdWeak: true,
       storeCalls: false
     });
-    // Bind to the `global-destroyed` event on the content observer so we can
-    // unbind events between the global destruction and the `finalize` cleanup
-    // method on the actor.
-    // TODO expose these events on CallWatcherActor itself, bug 1021321
-    on(this._callWatcher._contentObserver, "global-destroyed", this._onGlobalDestroyed);
+    // Bind to the `window-destroyed` event so we can unbind events between
+    // the global destruction and the `finalize` cleanup method on the actor.
+    on(this.tabActor, "window-destroyed", this._onGlobalDestroyed);
   }, {
     request: { reload: Option(0, "boolean") },
     oneway: true
@@ -406,7 +404,7 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     }
     this.tabActor = null;
     this._initialized = false;
-    off(this._callWatcher._contentObserver, "global-destroyed", this._onGlobalDestroyed);
+    off(this.tabActor, "window-destroyed", this._onGlobalDestroyed);
     this._nativeToActorID = null;
     this._callWatcher.eraseRecording();
     this._callWatcher.finalize();
@@ -586,7 +584,7 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
    * so we can cleanup some things between the global being destroyed and
    * when the actor's `finalize` method gets called.
    */
-  _onGlobalDestroyed: function (id) {
+  _onGlobalDestroyed: function ({id}) {
     if (this._callWatcher._tracedWindowId !== id) {
       return;
     }

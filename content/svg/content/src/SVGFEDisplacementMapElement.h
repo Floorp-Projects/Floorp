@@ -22,7 +22,7 @@ class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase
 protected:
   friend nsresult (::NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
                                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGFEDisplacementMapElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFEDisplacementMapElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEDisplacementMapElementBase(aNodeInfo)
   {
   }

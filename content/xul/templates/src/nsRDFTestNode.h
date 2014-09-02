@@ -19,7 +19,7 @@ class nsIRDFNode;
 class nsRDFTestNode : public TestNode
 {
 public:
-    nsRDFTestNode(TestNode* aParent)
+    explicit nsRDFTestNode(TestNode* aParent)
         : TestNode(aParent) {}
 
     /**

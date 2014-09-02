@@ -160,7 +160,7 @@ class ArrayBufferObject : public JSObject
 
     static void sweep(JSCompartment *rt);
 
-    static void fixupDataPointerAfterMovingGC(const ArrayBufferObject &src, ArrayBufferObject &dst);
+    static void objectMoved(JSObject *obj, const JSObject *old);
 
     static void resetArrayBufferList(JSCompartment *rt);
     static bool saveArrayBufferList(JSCompartment *c, ArrayBufferVector &vector);

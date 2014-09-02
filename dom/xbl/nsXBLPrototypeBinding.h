@@ -311,7 +311,7 @@ protected:
     typedef const nsIID& KeyType;
     typedef const nsIID* KeyTypePointer;
 
-    IIDHashKey(const nsIID* aKey)
+    explicit IIDHashKey(const nsIID* aKey)
       : mKey(*aKey)
     {}
     IIDHashKey(const IIDHashKey& aOther)

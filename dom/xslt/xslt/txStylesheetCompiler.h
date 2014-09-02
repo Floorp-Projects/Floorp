@@ -31,7 +31,7 @@ class txInScopeVariable;
 class txElementContext : public txObject
 {
 public:
-    txElementContext(const nsAString& aBaseURI);
+    explicit txElementContext(const nsAString& aBaseURI);
     txElementContext(const txElementContext& aOther);
 
     bool mPreserveWhitespace;
@@ -67,7 +67,7 @@ public:
 class txStylesheetCompilerState : public txIParseContext
 {
 public:
-    txStylesheetCompilerState(txACompileObserver* aObserver);
+    explicit txStylesheetCompilerState(txACompileObserver* aObserver);
     ~txStylesheetCompilerState();
     
     nsresult init(const nsAString& aStylesheetURI, txStylesheet* aStylesheet,
@@ -236,7 +236,7 @@ private:
 
 class txInScopeVariable {
 public:
-    txInScopeVariable(const txExpandedName& aName) : mName(aName), mLevel(1)
+    explicit txInScopeVariable(const txExpandedName& aName) : mName(aName), mLevel(1)
     {
     }
     txExpandedName mName;

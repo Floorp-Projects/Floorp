@@ -21,7 +21,7 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
   friend nsIFrame*
   NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  nsSVGClipPathFrame(nsStyleContext* aContext)
+  explicit nsSVGClipPathFrame(nsStyleContext* aContext)
     : nsSVGClipPathFrameBase(aContext)
     , mInUse(false)
   {
@@ -107,8 +107,8 @@ public:
   class MOZ_STACK_CLASS AutoClipPathReferencer
   {
   public:
-    AutoClipPathReferencer(nsSVGClipPathFrame *aFrame
-                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit AutoClipPathReferencer(nsSVGClipPathFrame *aFrame
+                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
        : mFrame(aFrame) {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       NS_ASSERTION(!mFrame->mInUse, "reference loop!");

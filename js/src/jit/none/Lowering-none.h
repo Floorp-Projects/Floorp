@@ -73,6 +73,8 @@ class LIRGeneratorNone : public LIRGeneratorShared
 
     LTableSwitch *newLTableSwitch(LAllocation, LDefinition, MTableSwitch *) { MOZ_CRASH(); }
     LTableSwitchV *newLTableSwitchV(MTableSwitch *) { MOZ_CRASH(); }
+    bool visitSimdTernaryBitwise(MSimdTernaryBitwise *ins) { MOZ_CRASH(); }
+    bool visitSimdSplatX4(MSimdSplatX4 *ins) { MOZ_CRASH(); }
 };
 
 typedef LIRGeneratorNone LIRGeneratorSpecific;

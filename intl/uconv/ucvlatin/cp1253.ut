@@ -5,10 +5,11 @@
 /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
-  If you have any problem of this file. Please contact 
-  Netscape Client International Team or 
-  ftang@netscape <Frank Tang> 
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
+  If you have any problems with this file, please file a bug
+  under the "Internationalization" component in
+  https://bugzilla.mozilla.org/enter_bug.cgi?product=Core
 
               Table in Debug form 
 Begin of Item 0000
@@ -45,10 +46,10 @@ Begin of Item 0004
   srcEnd = 00BD
   mappingOffset = 0000
  Mapping  = 
-  20AC FFFD 201A 0192 201E 2026 2020 2021 
-  FFFD 2030 FFFD 2039 FFFD FFFD FFFD FFFD 
-  FFFD 2018 2019 201C 201D 2022 2013 2014 
-  FFFD 2122 FFFD 203A FFFD FFFD FFFD FFFD 
+  20AC 0081 201A 0192 201E 2026 2020 2021 
+  0088 2030 008A 2039 008C 008D 008E 008F 
+  0090 2018 2019 201C 201D 2022 2013 2014 
+  0098 2122 009A 203A 009C 009D 009E 009F 
   00A0 0385 0386 FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD 00AB 00AC 00AD 00AE 2015 
   00B0 00B1 00B2 00B3 0384 00B5 00B6 00B7 
@@ -85,10 +86,10 @@ End of Item 0004
 /*-------------------------------------------------------*/
 /*       Offset=0x0015   Start of MappingTable */ 
 
-/* 0000 */    0x20AC, 0xFFFD, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 
-/* 0008 */    0xFFFD, 0x2030, 0xFFFD, 0x2039, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0010 */    0xFFFD, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 
-/* 0018 */    0xFFFD, 0x2122, 0xFFFD, 0x203A, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0000 */    0x20AC, 0x0081, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 
+/* 0008 */    0x0088, 0x2030, 0x008A, 0x2039, 0x008C, 0x008D, 0x008E, 0x008F, 
+/* 0010 */    0x0090, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 
+/* 0018 */    0x0098, 0x2122, 0x009A, 0x203A, 0x009C, 0x009D, 0x009E, 0x009F, 
 /* 0020 */    0x00A0, 0x0385, 0x0386, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
 /* 0028 */    0xFFFD, 0xFFFD, 0xFFFD, 0x00AB, 0x00AC, 0x00AD, 0x00AE, 0x2015, 
 /* 0030 */    0x00B0, 0x00B1, 0x00B2, 0x00B3, 0x0384, 0x00B5, 0x00B6, 0x00B7, 

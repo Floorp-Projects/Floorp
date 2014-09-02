@@ -175,7 +175,7 @@ protected:
 class ShadowRootStyleSheetList : public StyleSheetList
 {
 public:
-  ShadowRootStyleSheetList(ShadowRoot* aShadowRoot);
+  explicit ShadowRootStyleSheetList(ShadowRoot* aShadowRoot);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ShadowRootStyleSheetList, StyleSheetList)

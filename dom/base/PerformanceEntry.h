@@ -20,7 +20,7 @@ protected:
   virtual ~PerformanceEntry();
 
 public:
-  PerformanceEntry(nsPerformance* aPerformance);
+  explicit PerformanceEntry(nsPerformance* aPerformance);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PerformanceEntry)

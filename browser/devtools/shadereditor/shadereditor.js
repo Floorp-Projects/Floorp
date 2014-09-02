@@ -120,17 +120,26 @@ let EventsHandler = {
   /**
    * Called for each location change in the debugged tab.
    */
-  _onTabNavigated: function(event) {
+  _onTabNavigated: function(event, {isFrameSwitching}) {
     switch (event) {
       case "will-navigate": {
         Task.spawn(function() {
           // Make sure the backend is prepared to handle WebGL contexts.
-          gFront.setup({ reload: false });
+          if (!isFrameSwitching) {
+            gFront.setup({ reload: false });
+          }
 
           // Reset UI.
           ShadersListView.empty();
-          $("#reload-notice").hidden = true;
-          $("#waiting-notice").hidden = false;
+          // When switching to an iframe, ensure displaying the reload button.
+          // As the document has already been loaded without being hooked.
+          if (isFrameSwitching) {
+            $("#reload-notice").hidden = false;
+            $("#waiting-notice").hidden = true;
+          } else {
+            $("#reload-notice").hidden = true;
+            $("#waiting-notice").hidden = false;
+          }
           yield ShadersEditorsView.setText({ vs: "", fs: "" });
           $("#content").hidden = true;
         }).then(() => window.emit(EVENTS.UI_RESET));

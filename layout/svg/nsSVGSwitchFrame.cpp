@@ -21,7 +21,7 @@ class nsSVGSwitchFrame : public nsSVGSwitchFrameBase
   friend nsIFrame*
   NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  nsSVGSwitchFrame(nsStyleContext* aContext) :
+  explicit nsSVGSwitchFrame(nsStyleContext* aContext) :
     nsSVGSwitchFrameBase(aContext) {}
 
 public:

@@ -240,7 +240,7 @@ protected:
 class ICameraControlParameterSetAutoEnter
 {
 public:
-  ICameraControlParameterSetAutoEnter(ICameraControl* aCameraControl)
+  explicit ICameraControlParameterSetAutoEnter(ICameraControl* aCameraControl)
     : mCameraControl(aCameraControl)
   {
     mCameraControl->BeginBatchParameterSet();

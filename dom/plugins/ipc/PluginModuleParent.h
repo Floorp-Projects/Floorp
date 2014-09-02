@@ -87,7 +87,7 @@ protected:
 
 public:
     // aFilePath is UTF8, not native!
-    PluginModuleParent(const char* aFilePath);
+    explicit PluginModuleParent(const char* aFilePath);
     virtual ~PluginModuleParent();
 
     virtual void SetPlugin(nsNPAPIPlugin* plugin) MOZ_OVERRIDE

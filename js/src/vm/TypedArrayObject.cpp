@@ -134,6 +134,16 @@ TypedArrayObject::dataOffset()
     return JSObject::getPrivateDataOffset(DATA_SLOT);
 }
 
+/* static */ void
+TypedArrayObject::ObjectMoved(JSObject *obj, const JSObject *old)
+{
+    const TypedArrayObject &src = old->as<TypedArrayObject>();
+    if (!src.hasBuffer()) {
+        JS_ASSERT(old->getPrivate() == old->fixedData(FIXED_DATA_START));
+        obj->setPrivate(obj->fixedData(FIXED_DATA_START));
+    }
+}
+
 /* Helper clamped uint8_t type */
 
 uint32_t JS_FASTCALL
@@ -2222,7 +2232,15 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     nullptr,                 /* hasInstance */                                 \
     nullptr,                 /* construct   */                                 \
     ArrayBufferViewObject::trace, /* trace  */                                 \
-    TYPED_ARRAY_CLASS_SPEC(_typedArray)                                        \
+    TYPED_ARRAY_CLASS_SPEC(_typedArray),                                       \
+    {                                                                          \
+        nullptr,             /* outerObject */                                 \
+        nullptr,             /* innerObject */                                 \
+        nullptr,             /* iteratorObject */                              \
+        false,               /* isWrappedNative */                             \
+        nullptr,             /* weakmapKeyDelegateOp */                        \
+        TypedArrayObject::ObjectMoved                                          \
+    }                                                                          \
 }
 
 template<typename NativeType>

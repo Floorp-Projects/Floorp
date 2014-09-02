@@ -57,6 +57,7 @@
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                          \
   V(clamp, Float32x4Clamp, 3, 0)                                                    \
+  V(select, Float32x4Select, 3, 0)                                                  \
   V(shuffleMix, FuncShuffle<Float32x4>, 3, 0)
 
 #define FLOAT32X4_FUNCTION_LIST(V)                                                  \

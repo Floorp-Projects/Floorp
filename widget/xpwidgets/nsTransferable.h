@@ -22,7 +22,7 @@ class nsDataObj;
 //
 struct DataStruct
 {
-  DataStruct ( const char* aFlavor )
+  explicit DataStruct ( const char* aFlavor )
     : mDataLen(0), mFlavor(aFlavor), mCacheFileName(nullptr) { }
   ~DataStruct();
   

@@ -11,7 +11,7 @@
 class nsHtml5ReleasableElementName MOZ_FINAL : public nsHtml5ElementName
 {
   public:
-    nsHtml5ReleasableElementName(nsIAtom* name);
+    explicit nsHtml5ReleasableElementName(nsIAtom* name);
     virtual void release();
     virtual nsHtml5ElementName* cloneElementName(nsHtml5AtomTable* interner);
 };

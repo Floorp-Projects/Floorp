@@ -38,7 +38,7 @@ public:
 
 private:
 
-  nsFontInflationData(nsIFrame* aBFCFrame);
+  explicit nsFontInflationData(nsIFrame* aBFCFrame);
 
   nsFontInflationData(const nsFontInflationData&) MOZ_DELETE;
   void operator=(const nsFontInflationData&) MOZ_DELETE;

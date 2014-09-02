@@ -256,7 +256,7 @@ public:
   NS_DECL_NSIRUNNABLE
 
 private:
-  FinishHelper(FileHandleBase* aFileHandle);
+  explicit FinishHelper(FileHandleBase* aFileHandle);
   ~FinishHelper()
   { }
 

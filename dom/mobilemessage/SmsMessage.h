@@ -35,7 +35,7 @@ public:
              uint64_t aDeliveryTimestamp,
              bool aRead);
 
-  SmsMessage(const mobilemessage::SmsMessageData& aData);
+  explicit SmsMessage(const mobilemessage::SmsMessageData& aData);
 
   static nsresult Create(int32_t aId,
                          uint64_t aThreadId,

@@ -15,7 +15,7 @@
 class nsGfxRadioControlFrame : public nsFormControlFrame
 {
 public:
-  nsGfxRadioControlFrame(nsStyleContext* aContext);
+  explicit nsGfxRadioControlFrame(nsStyleContext* aContext);
   ~nsGfxRadioControlFrame();
 
   NS_DECL_FRAMEARENA_HELPERS

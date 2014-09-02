@@ -22,7 +22,7 @@ namespace dom {
 class XMLDocument : public nsDocument
 {
 public:
-  XMLDocument(const char* aContentType = "application/xml");
+  explicit XMLDocument(const char* aContentType = "application/xml");
 
   NS_DECL_ISUPPORTS_INHERITED
 

@@ -2746,9 +2746,9 @@ var LightWeightThemeWebInstaller = {
   },
 
   uninit: function() {
-    BrowserApp.deck.addEventListener("InstallBrowserTheme", this, false, true);
-    BrowserApp.deck.addEventListener("PreviewBrowserTheme", this, false, true);
-    BrowserApp.deck.addEventListener("ResetBrowserThemePreview", this, false, true);
+    BrowserApp.deck.removeEventListener("InstallBrowserTheme", this, false, true);
+    BrowserApp.deck.removeEventListener("PreviewBrowserTheme", this, false, true);
+    BrowserApp.deck.removeEventListener("ResetBrowserThemePreview", this, false, true);
   },
 
   handleEvent: function (event) {

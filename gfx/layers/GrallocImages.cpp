@@ -317,11 +317,30 @@ ConvertOmxYUVFormatToRGB565(android::sp<GraphicBuffer>& aBuffer,
   }
 
   if (format == HAL_PIXEL_FORMAT_YV12) {
-    gfx::ConvertYCbCrToRGB(aYcbcrData,
+    // Depend on platforms, it is possible for HW decoder to output YV12 format.
+    // It means the mData won't be configured during the SetData API because the
+    // yuv data has already stored in GraphicBuffer. Here we try to confgiure the
+    // mData if it doesn't contain valid configuration.
+    layers::PlanarYCbCrData ycbcrData = aYcbcrData;
+    if (!ycbcrData.mYChannel) {
+      ycbcrData.mYChannel     = buffer;
+      ycbcrData.mYSkip        = 0;
+      ycbcrData.mYStride      = aBuffer->getStride();
+      ycbcrData.mYSize        = aSurface->GetSize();
+      ycbcrData.mCbSkip       = 0;
+      ycbcrData.mCbCrSize     = aSurface->GetSize() / 2;
+      ycbcrData.mPicSize      = aSurface->GetSize();
+      ycbcrData.mCrChannel    = buffer + ycbcrData.mYStride * ycbcrData.mYSize.height;
+      ycbcrData.mCrSkip       = 0;
+      // Align to 16 bytes boundary
+      ycbcrData.mCbCrStride   = ((ycbcrData.mYStride / 2) + 15) & ~0x0F;
+      ycbcrData.mCbChannel    = ycbcrData.mCrChannel + (ycbcrData.mCbCrStride * ycbcrData.mCbCrSize.height);
+    }
+    gfx::ConvertYCbCrToRGB(ycbcrData,
                            aSurface->GetFormat(),
                            aSurface->GetSize(),
-                           aSurface->GetData(),
-                           aSurface->Stride());
+                           aMappedSurface->mData,
+                           aMappedSurface->mStride);
     return OK;
   }
 

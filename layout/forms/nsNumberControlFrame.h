@@ -38,7 +38,7 @@ class nsNumberControlFrame MOZ_FINAL : public nsContainerFrame
   typedef mozilla::WidgetEvent WidgetEvent;
   typedef mozilla::WidgetGUIEvent WidgetGUIEvent;
 
-  nsNumberControlFrame(nsStyleContext* aContext);
+  explicit nsNumberControlFrame(nsStyleContext* aContext);
 
 public:
   NS_DECL_QUERYFRAME_TARGET(nsNumberControlFrame)
@@ -204,7 +204,7 @@ private:
   class SyncDisabledStateEvent : public nsRunnable
   {
   public:
-    SyncDisabledStateEvent(nsNumberControlFrame* aFrame)
+    explicit SyncDisabledStateEvent(nsNumberControlFrame* aFrame)
     : mFrame(aFrame)
     {}
 

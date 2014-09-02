@@ -33,7 +33,7 @@ public:
   AsyncWork(nsIRequestObserver* aObserver, nsISupports* aCtxt);
 
 protected:
-  AsyncHelper(nsISupports* aStream)
+  explicit AsyncHelper(nsISupports* aStream)
   : mStream(aStream),
     mStatus(NS_OK)
   { }

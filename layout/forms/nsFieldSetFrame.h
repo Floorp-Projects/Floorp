@@ -14,7 +14,7 @@ class nsFieldSetFrame MOZ_FINAL : public nsContainerFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsFieldSetFrame(nsStyleContext* aContext);
+  explicit nsFieldSetFrame(nsStyleContext* aContext);
 
   nscoord
     GetIntrinsicISize(nsRenderingContext* aRenderingContext,

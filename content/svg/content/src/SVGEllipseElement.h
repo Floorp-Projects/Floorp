@@ -20,7 +20,7 @@ typedef nsSVGPathGeometryElement SVGEllipseElementBase;
 class SVGEllipseElement MOZ_FINAL : public SVGEllipseElementBase
 {
 protected:
-  SVGEllipseElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGEllipseElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGEllipseElement(nsIContent **aResult,
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

@@ -275,7 +275,7 @@ public:
 
 protected:
 
-  nsTableColFrame(nsStyleContext* aContext);
+  explicit nsTableColFrame(nsStyleContext* aContext);
   ~nsTableColFrame();
 
   nscoord mMinCoord;

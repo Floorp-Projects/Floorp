@@ -103,7 +103,7 @@ public:
   NotifyError(const nsAString& aName, const nsAString& aMessage);
 
 private:
-  TelephonyCallGroup(nsPIDOMWindow* aOwner);
+  explicit TelephonyCallGroup(nsPIDOMWindow* aOwner);
   ~TelephonyCallGroup();
 
   nsresult
