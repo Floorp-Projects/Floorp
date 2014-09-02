@@ -1165,8 +1165,6 @@ bool nsTextStore::sDoNotReturnNoLayoutErrorToEasyChangjei = false;
   (NS_LITERAL_STRING( \
      "\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"))
 
-UINT nsTextStore::sFlushTIPInputMessage  = 0;
-
 #define TEXTSTORE_DEFAULT_VIEW (1)
 
 nsTextStore::nsTextStore()
@@ -1273,18 +1271,6 @@ nsTextStore::Destroy(void)
   mLockedContent.Clear();
   mSelection.MarkDirty();
 
-  if (mWidget) {
-    // When blurred, Tablet Input Panel posts "blur" messages
-    // and try to insert text when the message is retrieved later.
-    // But by that time the text store is already destroyed,
-    // so try to get the message early
-    MSG msg;
-    if (WinUtils::PeekMessage(&msg, mWidget->GetWindowHandle(),
-                              sFlushTIPInputMessage, sFlushTIPInputMessage,
-                              PM_REMOVE)) {
-      ::DispatchMessageW(&msg);
-    }
-  }
   mContext = nullptr;
   if (mDocumentMgr) {
     mDocumentMgr->Pop(TF_POPF_ALL);
@@ -4621,9 +4607,6 @@ nsTextStore::Initialize()
   sDoNotReturnNoLayoutErrorToEasyChangjei =
     Preferences::GetBool(
       "intl.tsf.hack.easy_changjei.do_not_return_no_layout_error", true);
-
-  MOZ_ASSERT(!sFlushTIPInputMessage);
-  sFlushTIPInputMessage = ::RegisterWindowMessageW(L"Flush TIP Input Message");
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), sTsfThreadMgr=0x%p, "
