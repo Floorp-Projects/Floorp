@@ -763,6 +763,29 @@
         <item name="android:gravity">right</item>
     </style>
 
+    <style name="ShareOverlayButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">60dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingRight">15dp</item>
+        <item name="android:paddingTop">17dp</item>
+        <item name="android:paddingBottom">17dp</item>
+        <item name="android:focusableInTouchMode">false</item>
+        <item name="android:clickable">true</item>
+        <item name="android:background">@android:drawable/list_selector_background</item>
+        <item name="android:layout_margin">0dp</item>
+    </style>
+
+    <style name="ShareOverlayButton.Text">
+        <item name="android:drawablePadding">15dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_color_overlaybtn</item>
+        <item name="android:ellipsize">marquee</item>
+    </style>
+
     <style name="TabInput"></style>
 
     <style name="TabInput.TabWidget">
@@ -780,6 +803,13 @@
         <item name="android:paddingTop">0dp</item>
     </style>
 
+    <!-- Make the share overlay activity appear like an overlay. -->
+    <style name="ShareOverlayActivity">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
     <style name="OnboardStartLayout">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
