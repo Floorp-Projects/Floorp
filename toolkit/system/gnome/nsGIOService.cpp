@@ -46,7 +46,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGIOMIMEAPP
 
-  nsGIOMimeApp(GAppInfo* aApp) : mApp(aApp) {}
+  explicit nsGIOMimeApp(GAppInfo* aApp) : mApp(aApp) {}
 
 private:
   ~nsGIOMimeApp() { g_object_unref(mApp); }
