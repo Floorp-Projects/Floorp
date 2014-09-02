@@ -969,6 +969,7 @@ static bool
 XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                                JS::MutableHandle<JSPropertyDescriptor> desc,
+                               bool& cacheOnHolder,
                                const NativeProperties* nativeProperties);
 
 static bool
@@ -976,13 +977,17 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           const NativePropertyHooks* nativePropertyHooks,
                           DOMObjectType type, JS::Handle<JSObject*> obj,
                           JS::Handle<jsid> id,
-                          JS::MutableHandle<JSPropertyDescriptor> desc);
+                          JS::MutableHandle<JSPropertyDescriptor> desc,
+                          bool& cacheOnHolder);
 
 bool
 XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                       JS::MutableHandle<JSPropertyDescriptor> desc)
+                       JS::MutableHandle<JSPropertyDescriptor> desc,
+                       bool& cacheOnHolder)
 {
+  cacheOnHolder = false;
+
   DOMObjectType type;
   const NativePropertyHooks *nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type);
@@ -991,20 +996,20 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     // For prototype objects and interface objects, just return their
     // normal set of properties.
     return XrayResolveNativeProperty(cx, wrapper, nativePropertyHooks, type,
-                                     obj, id, desc);
+                                     obj, id, desc, cacheOnHolder);
   }
 
   // Check for unforgeable properties before doing mResolveOwnProperty weirdness
   const NativePropertiesHolder& nativeProperties =
     nativePropertyHooks->mNativeProperties;
-  if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc,
+  if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
                                       nativeProperties.regular)) {
     return false;
   }
   if (desc.object()) {
     return true;
   }
-  if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc,
+  if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
                                       nativeProperties.chromeOnly)) {
     return false;
   }
@@ -1020,7 +1025,8 @@ static bool
 XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
                      JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                      const Prefable<const JSPropertySpec>* attributes, jsid* attributeIds,
-                     const JSPropertySpec* attributeSpecs, JS::MutableHandle<JSPropertyDescriptor> desc)
+                     const JSPropertySpec* attributeSpecs, JS::MutableHandle<JSPropertyDescriptor> desc,
+                     bool& cacheOnHolder)
 {
   for (; attributes->specs; ++attributes) {
     if (attributes->isEnabled(cx, obj)) {
@@ -1029,6 +1035,8 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
       size_t i = attributes->specs - attributeSpecs;
       for ( ; attributeIds[i] != JSID_VOID; ++i) {
         if (id == attributeIds[i]) {
+          cacheOnHolder = true;
+
           const JSPropertySpec& attrSpec = attributeSpecs[i];
           // Because of centralization, we need to make sure we fault in the
           // JitInfos as well. At present, until the JSAPI changes, the easiest
@@ -1072,7 +1080,8 @@ XrayResolveMethod(JSContext* cx, JS::Handle<JSObject*> wrapper,
                   const Prefable<const JSFunctionSpec>* methods,
                   jsid* methodIds,
                   const JSFunctionSpec* methodSpecs,
-                  JS::MutableHandle<JSPropertyDescriptor> desc)
+                  JS::MutableHandle<JSPropertyDescriptor> desc,
+                  bool& cacheOnHolder)
 {
   const Prefable<const JSFunctionSpec>* method;
   for (method = methods; method->specs; ++method) {
@@ -1082,6 +1091,8 @@ XrayResolveMethod(JSContext* cx, JS::Handle<JSObject*> wrapper,
       size_t i = method->specs - methodSpecs;
       for ( ; methodIds[i] != JSID_VOID; ++i) {
         if (id == methodIds[i]) {
+          cacheOnHolder = true;
+
           const JSFunctionSpec& methodSpec = methodSpecs[i];
           JSFunction *fun;
           if (methodSpec.selfHostedName) {
@@ -1116,6 +1127,7 @@ XrayResolveMethod(JSContext* cx, JS::Handle<JSObject*> wrapper,
 XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                                JS::MutableHandle<JSPropertyDescriptor> desc,
+                               bool& cacheOnHolder,
                                const NativeProperties* nativeProperties)
 {
   if (!nativeProperties) {
@@ -1127,7 +1139,7 @@ XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                               nativeProperties->unforgeableAttributes,
                               nativeProperties->unforgeableAttributeIds,
                               nativeProperties->unforgeableAttributeSpecs,
-                              desc)) {
+                              desc, cacheOnHolder)) {
       return false;
     }
 
@@ -1141,7 +1153,7 @@ XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                            nativeProperties->unforgeableMethods,
                            nativeProperties->unforgeableMethodIds,
                            nativeProperties->unforgeableMethodSpecs,
-                           desc)) {
+                           desc, cacheOnHolder)) {
       return false;
     }
 
@@ -1156,7 +1168,8 @@ XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 static bool
 XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                     JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                    JS::MutableHandle<JSPropertyDescriptor> desc, DOMObjectType type,
+                    JS::MutableHandle<JSPropertyDescriptor> desc,
+                    bool& cacheOnHolder, DOMObjectType type,
                     const NativeProperties* nativeProperties)
 {
   const Prefable<const JSFunctionSpec>* methods;
@@ -1173,7 +1186,7 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   }
   if (methods) {
     if (!XrayResolveMethod(cx, wrapper, obj, id, methods, methodIds,
-                           methodSpecs, desc)) {
+                           methodSpecs, desc, cacheOnHolder)) {
       return false;
     }
     if (desc.object()) {
@@ -1186,7 +1199,8 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
       if (!XrayResolveAttribute(cx, wrapper, obj, id,
                                 nativeProperties->staticAttributes,
                                 nativeProperties->staticAttributeIds,
-                                nativeProperties->staticAttributeSpecs, desc)) {
+                                nativeProperties->staticAttributeSpecs, desc,
+                                cacheOnHolder)) {
         return false;
       }
       if (desc.object()) {
@@ -1198,7 +1212,8 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
       if (!XrayResolveAttribute(cx, wrapper, obj, id,
                                 nativeProperties->attributes,
                                 nativeProperties->attributeIds,
-                                nativeProperties->attributeSpecs, desc)) {
+                                nativeProperties->attributeSpecs, desc,
+                                cacheOnHolder)) {
         return false;
       }
       if (desc.object()) {
@@ -1216,6 +1231,8 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
         size_t i = constant->specs - nativeProperties->constantSpecs;
         for ( ; nativeProperties->constantIds[i] != JSID_VOID; ++i) {
           if (id == nativeProperties->constantIds[i]) {
+            cacheOnHolder = true;
+
             desc.setAttributes(JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
             desc.object().set(wrapper);
             desc.value().set(nativeProperties->constantSpecs[i].value);
@@ -1233,7 +1250,8 @@ static bool
 ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
                               JS::Handle<JSObject*> obj,
                               size_t protoAndIfaceCacheIndex, unsigned attrs,
-                              JS::MutableHandle<JSPropertyDescriptor> desc)
+                              JS::MutableHandle<JSPropertyDescriptor> desc,
+                              bool& cacheOnHolder)
 {
   JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
   {
@@ -1244,6 +1262,9 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
     if (!protoOrIface) {
       return false;
     }
+
+    cacheOnHolder = true;
+
     desc.object().set(wrapper);
     desc.setAttributes(attrs);
     desc.setGetter(JS_PropertyStub);
@@ -1258,28 +1279,29 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           const NativePropertyHooks* nativePropertyHooks,
                           DOMObjectType type, JS::Handle<JSObject*> obj,
                           JS::Handle<jsid> id,
-                          JS::MutableHandle<JSPropertyDescriptor> desc)
+                          JS::MutableHandle<JSPropertyDescriptor> desc,
+                          bool& cacheOnHolder)
 {
   if (type == eInterface && IdEquals(id, "prototype")) {
     return nativePropertyHooks->mPrototypeID == prototypes::id::_ID_Count ||
            ResolvePrototypeOrConstructor(cx, wrapper, obj,
                                          nativePropertyHooks->mPrototypeID,
                                          JSPROP_PERMANENT | JSPROP_READONLY,
-                                         desc);
+                                         desc, cacheOnHolder);
   }
 
   if (type == eInterfacePrototype && IdEquals(id, "constructor")) {
     return nativePropertyHooks->mConstructorID == constructors::id::_ID_Count ||
            ResolvePrototypeOrConstructor(cx, wrapper, obj,
                                          nativePropertyHooks->mConstructorID,
-                                         0, desc);
+                                         0, desc, cacheOnHolder);
   }
 
   const NativePropertiesHolder& nativeProperties =
     nativePropertyHooks->mNativeProperties;
 
   if (nativeProperties.regular &&
-      !XrayResolveProperty(cx, wrapper, obj, id, desc, type,
+      !XrayResolveProperty(cx, wrapper, obj, id, desc, cacheOnHolder, type,
                            nativeProperties.regular)) {
     return false;
   }
@@ -1287,7 +1309,7 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   if (!desc.object() &&
       nativeProperties.chromeOnly &&
       xpc::AccessCheck::isChrome(js::GetObjectCompartment(wrapper)) &&
-      !XrayResolveProperty(cx, wrapper, obj, id, desc, type,
+      !XrayResolveProperty(cx, wrapper, obj, id, desc, cacheOnHolder, type,
                            nativeProperties.chromeOnly)) {
     return false;
   }
@@ -1298,8 +1320,11 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 bool
 XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           JS::Handle<JSObject*> obj,
-                          JS::Handle<jsid> id, JS::MutableHandle<JSPropertyDescriptor> desc)
+                          JS::Handle<jsid> id, JS::MutableHandle<JSPropertyDescriptor> desc,
+                          bool& cacheOnHolder)
 {
+  cacheOnHolder = false;
+
   DOMObjectType type;
   const NativePropertyHooks* nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type);
@@ -1313,7 +1338,7 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   if (type == eInterfacePrototype) {
     do {
       if (!XrayResolveNativeProperty(cx, wrapper, nativePropertyHooks, type,
-                                     obj, id, desc)) {
+                                     obj, id, desc, cacheOnHolder)) {
         return false;
       }
 
@@ -1326,7 +1351,7 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   }
 
   return XrayResolveNativeProperty(cx, wrapper, nativePropertyHooks, type, obj,
-                                   id, desc);
+                                   id, desc, cacheOnHolder);
 }
 
 bool
@@ -1665,7 +1690,8 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
   toStringDesc.value().set(JS::UndefinedValue());
   JS::Rooted<jsid> id(cx,
     nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING));
-  if (!XrayResolveNativeProperty(cx, wrapper, obj, id, &toStringDesc)) {
+  bool unused;
+  if (!XrayResolveNativeProperty(cx, wrapper, obj, id, &toStringDesc, unused)) {
     return false;
   }
 
