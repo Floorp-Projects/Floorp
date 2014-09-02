@@ -1812,8 +1812,13 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
     return;
   }
 
-  // Redirect to main thread to avoid racing problem
-  NS_DispatchToMainThread(new AdapterStateChangedCallbackTask());
+  // Resolve promise if existed
+  if (!sChangeAdapterStateRunnableArray.IsEmpty()) {
+    DispatchBluetoothReply(sChangeAdapterStateRunnableArray[0],
+                           BluetoothValue(true), EmptyString());
+
+    sChangeAdapterStateRunnableArray.RemoveElementAt(0);
+  }
 }
 
 /**
@@ -1871,17 +1876,16 @@ BluetoothServiceBluedroid::AdapterPropertiesNotification(
 
   NS_ENSURE_TRUE_VOID(propertiesArray.Length() > 0);
 
-  BluetoothValue value(propertiesArray);
-  BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
-                         NS_LITERAL_STRING(KEY_ADAPTER), value);
-  nsRefPtr<DistributeBluetoothSignalTask>
-    t = new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    BT_WARNING("Failed to dispatch to main thread!");
-  }
+  DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PropertyChanged"),
+                                   NS_LITERAL_STRING(KEY_ADAPTER),
+                                   BluetoothValue(propertiesArray)));
 
-  // Redirect to main thread to avoid racing problem
-  NS_DispatchToMainThread(new AdapterPropertiesCallbackTask());
+  // Send reply for SetProperty
+  if (!sSetPropertyRunnableArray.IsEmpty()) {
+    DispatchBluetoothReply(sSetPropertyRunnableArray[0],
+                           BluetoothValue(true), EmptyString());
+    sSetPropertyRunnableArray.RemoveElementAt(0);
+  }
 }
 
 /**
@@ -1932,9 +1936,56 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
     }
   }
 
-  // Redirect to main thread to avoid racing problem
-  NS_DispatchToMainThread(
-    new RemoteDevicePropertiesCallbackTask(propertiesArray, aBdAddr));
+  // The order of operations below is
+  //
+  //  (1) modify global state (i.e., the variables starting with 's'),
+  //  (2) distribute the signal, and finally
+  //  (3) send any pending Bluetooth replies.
+  //
+  // |DispatchBluetoothReply| creates its own internal runnable, which is
+  // always run after we completed the current method. This means that we
+  // can exchange |DistributeBluetoothReply| with other operations without
+  // changing the order of (1,2) and (3).
+
+  // Update to registered BluetoothDevice objects
+  BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
+                         nsString(aBdAddr), propertiesArray);
+
+  // FetchUuids task
+  if (!sFetchUuidsRunnableArray.IsEmpty()) {
+    // propertiesArray contains Address and Uuids only
+    DispatchBluetoothReply(sFetchUuidsRunnableArray[0],
+                           propertiesArray[1].value() /* Uuids */,
+                           EmptyString());
+    sFetchUuidsRunnableArray.RemoveElementAt(0);
+    DistributeSignal(signal);
+    return;
+  }
+
+  // GetDevices task
+  if (sRequestedDeviceCountArray.IsEmpty()) {
+    // This is possible because the callback would be called after turning
+    // Bluetooth on.
+    DistributeSignal(signal);
+    return;
+  }
+
+  // Use address as the index
+  sRemoteDevicesPack.AppendElement(
+    BluetoothNamedValue(nsString(aBdAddr), propertiesArray));
+
+  if (--sRequestedDeviceCountArray[0] == 0) {
+    if (!sGetDeviceRunnableArray.IsEmpty()) {
+      DispatchBluetoothReply(sGetDeviceRunnableArray[0],
+                             sRemoteDevicesPack, EmptyString());
+      sGetDeviceRunnableArray.RemoveElementAt(0);
+    }
+
+    sRequestedDeviceCountArray.RemoveElementAt(0);
+    sRemoteDevicesPack.Clear();
+  }
+
+  DistributeSignal(signal);
 }
 
 void
@@ -1978,14 +2029,9 @@ BluetoothServiceBluedroid::DeviceFoundNotification(
     }
   }
 
-  BluetoothValue value = propertiesArray;
-  BluetoothSignal signal(NS_LITERAL_STRING("DeviceFound"),
-                         NS_LITERAL_STRING(KEY_ADAPTER), value);
-  nsRefPtr<DistributeBluetoothSignalTask>
-    t = new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    BT_WARNING("Failed to dispatch to main thread!");
-  }
+  DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("DeviceFound"),
+                                   NS_LITERAL_STRING(KEY_ADAPTER),
+                                   BluetoothValue(propertiesArray)));
 }
 
 void
@@ -1995,8 +2041,21 @@ BluetoothServiceBluedroid::DiscoveryStateChangedNotification(bool aState)
 
   sAdapterDiscovering = aState;
 
-  // Redirect to main thread to avoid racing problem
-  NS_DispatchToMainThread(new DiscoveryStateChangedCallbackTask());
+  // Fire PropertyChanged of Discovering
+  InfallibleTArray<BluetoothNamedValue> propertiesArray;
+  BT_APPEND_NAMED_VALUE(propertiesArray, "Discovering", sAdapterDiscovering);
+
+  DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PropertyChanged"),
+                                   NS_LITERAL_STRING(KEY_ADAPTER),
+                                   BluetoothValue(propertiesArray)));
+
+  // Reply that Promise is resolved
+  if (!sChangeDiscoveryRunnableArray.IsEmpty()) {
+    DispatchBluetoothReply(sChangeDiscoveryRunnableArray[0],
+                           BluetoothValue(true), EmptyString());
+
+    sChangeDiscoveryRunnableArray.RemoveElementAt(0);
+  }
 }
 
 void
@@ -2013,15 +2072,9 @@ BluetoothServiceBluedroid::PinRequestNotification(const nsAString& aRemoteBdAddr
   BT_APPEND_NAMED_VALUE(propertiesArray, "type",
                         NS_LITERAL_STRING(PAIRING_REQ_TYPE_ENTERPINCODE));
 
-  BluetoothSignal signal(NS_LITERAL_STRING("PairingRequest"),
-                         NS_LITERAL_STRING(KEY_ADAPTER),
-                         BluetoothValue(propertiesArray));
-
-  nsRefPtr<DistributeBluetoothSignalTask> task =
-    new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(task))) {
-    BT_WARNING("Failed to dispatch to main thread!");
-  }
+  DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PairingRequest"),
+                                   NS_LITERAL_STRING(KEY_ADAPTER),
+                                   BluetoothValue(propertiesArray)));
 }
 
 void
@@ -2064,15 +2117,9 @@ BluetoothServiceBluedroid::SspRequestNotification(
   BT_APPEND_NAMED_VALUE(propertiesArray, "passkey", passkey);
   BT_APPEND_NAMED_VALUE(propertiesArray, "type", pairingType);
 
-  BluetoothSignal signal(NS_LITERAL_STRING("PairingRequest"),
-                         NS_LITERAL_STRING(KEY_ADAPTER),
-                         BluetoothValue(propertiesArray));
-
-  nsRefPtr<DistributeBluetoothSignalTask> task =
-    new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(task))) {
-    BT_WARNING("Failed to dispatch to main thread!");
-  }
+  DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PairingRequest"),
+                                   NS_LITERAL_STRING(KEY_ADAPTER),
+                                   BluetoothValue(propertiesArray)));
 }
 
 void
@@ -2093,11 +2140,9 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
   BT_APPEND_NAMED_VALUE(propertiesArray, "Paired", bonded);
 
-  BluetoothSignal deviceSignal(NS_LITERAL_STRING("PropertyChanged"),
-                               nsString(aRemoteBdAddr),
-                               BluetoothValue(propertiesArray));
-  NS_DispatchToMainThread(new DistributeBluetoothSignalTask(deviceSignal));
-
+  DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PropertyChanged"),
+                                   nsString(aRemoteBdAddr),
+                                   BluetoothValue(propertiesArray)));
   propertiesArray.Clear();
 
   // Append signal properties and notify adapter.
@@ -2107,13 +2152,20 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
   nsString signalName = bonded ? NS_LITERAL_STRING(DEVICE_PAIRED_ID)
                                : NS_LITERAL_STRING(DEVICE_UNPAIRED_ID);
 
-  BluetoothSignal adapterSignal(signalName,
-                                NS_LITERAL_STRING(KEY_ADAPTER),
-                                BluetoothValue(propertiesArray));
-  NS_DispatchToMainThread(new DistributeBluetoothSignalTask(adapterSignal));
+  DistributeSignal(BluetoothSignal(signalName,
+                                   NS_LITERAL_STRING(KEY_ADAPTER),
+                                   BluetoothValue(propertiesArray)));
 
-  // Redirect to main thread to avoid racing problem
-  NS_DispatchToMainThread(new BondStateChangedCallbackTask(bonded));
+  if (bonded && !sBondingRunnableArray.IsEmpty()) {
+    DispatchBluetoothReply(sBondingRunnableArray[0],
+                           BluetoothValue(true), EmptyString());
+    sBondingRunnableArray.RemoveElementAt(0);
+
+  } else if (!bonded && !sUnbondingRunnableArray.IsEmpty()) {
+    DispatchBluetoothReply(sUnbondingRunnableArray[0],
+                           BluetoothValue(true), EmptyString());
+    sUnbondingRunnableArray.RemoveElementAt(0);
+  }
 }
 
 void
