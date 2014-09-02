@@ -2531,7 +2531,8 @@ SetPropertyIC::attachCallSetter(JSContext *cx, HandleScript outerScript, IonScri
 
 static void
 GenerateAddSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
-                JSObject *obj, Shape *oldShape, Register object, ConstantOrRegister value,
+                JSObject *obj, Shape *oldShape, types::TypeObject *oldType,
+                Register object, ConstantOrRegister value,
                 bool checkTypeset)
 {
     JS_ASSERT(obj->isNative());
@@ -2540,7 +2541,7 @@ GenerateAddSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &att
 
     // Guard the type of the object
     masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfType()),
-                   ImmGCPtr(obj->type()), &failures);
+                   ImmGCPtr(oldType), &failures);
 
     // Guard shapes along prototype chain.
     masm.branchTestObjShape(Assembler::NotEqual, object, oldShape, &failures);
@@ -2588,6 +2589,15 @@ GenerateAddSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &att
         masm.callPreBarrier(shapeAddr, MIRType_Shape);
     masm.storePtr(ImmGCPtr(newShape), shapeAddr);
 
+    if (oldType != obj->type()) {
+        // Changing object's type from a partially to fully initialized type,
+        // per the acquired properties analysis.
+        Address typeAddr(object, JSObject::offsetOfType());
+        if (cx->zone()->needsIncrementalBarrier())
+            masm.callPreBarrier(typeAddr, MIRType_TypeObject);
+        masm.storePtr(ImmGCPtr(obj->type()), typeAddr);
+    }
+
     // Set the value on the object. Since this is an add, obj->lastProperty()
     // must be the shape of the property we are adding.
     if (obj->isFixedSlot(newShape->slot())) {
@@ -2615,13 +2625,14 @@ GenerateAddSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &att
 
 bool
 SetPropertyIC::attachAddSlot(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                             HandleObject obj, HandleShape oldShape, bool checkTypeset)
+                             HandleObject obj, HandleShape oldShape, HandleTypeObject oldType,
+                             bool checkTypeset)
 {
     JS_ASSERT_IF(!needsTypeBarrier(), !checkTypeset);
 
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
     RepatchStubAppender attacher(*this);
-    GenerateAddSlot(cx, masm, attacher, obj, oldShape, object(), value(), checkTypeset);
+    GenerateAddSlot(cx, masm, attacher, obj, oldShape, oldType, object(), value(), checkTypeset);
     return linkAndAttachStub(cx, masm, attacher, ion, "adding");
 }
 
@@ -2745,6 +2756,12 @@ IsPropertyAddInlineable(HandleObject obj, HandleId id, ConstantOrRegister val, u
     if (obj->numDynamicSlots() != oldSlots)
         return false;
 
+    // Don't attach if we are adding a property to an object which the new
+    // script properties analysis hasn't been performed for yet, as there
+    // may be a shape change required here afterwards.
+    if (obj->type()->newScript() && !obj->type()->newScript()->analyzed())
+        return false;
+
     if (needsTypeBarrier)
         return CanInlineSetPropTypeCheck(obj, id, val, checkTypeset);
 
@@ -2798,10 +2815,9 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
 
     // Stop generating new stubs once we hit the stub count limit, see
     // GetPropertyCache.
-    bool inlinable = cache.canAttachStub() && !obj->watched();
     NativeSetPropCacheability canCache = CanAttachNone;
     bool addedSetterStub = false;
-    if (inlinable) {
+    if (cache.canAttachStub() && !obj->watched()) {
         if (!addedSetterStub && obj->is<ProxyObject>()) {
             if (IsCacheableDOMProxy(obj)) {
                 DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
@@ -2855,6 +2871,7 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
 
     uint32_t oldSlots = obj->numDynamicSlots();
     RootedShape oldShape(cx, obj->lastProperty());
+    RootedTypeObject oldType(cx, obj->type());
 
     // Set/Add the property on the object, the inlined cache are setup for the next execution.
     if (!SetProperty(cx, obj, name, value, cache.strict(), cache.pc()))
@@ -2866,7 +2883,7 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
         IsPropertyAddInlineable(obj, id, cache.value(), oldSlots, oldShape, cache.needsTypeBarrier(),
                                 &checkTypeset))
     {
-        if (!cache.attachAddSlot(cx, script, ion, obj, oldShape, checkTypeset))
+        if (!cache.attachAddSlot(cx, script, ion, obj, oldShape, oldType, checkTypeset))
             return false;
     }
 
@@ -2937,6 +2954,7 @@ SetPropertyParIC::update(ForkJoinContext *cx, size_t cacheIndex, HandleObject ob
 
     uint32_t oldSlots = obj->numDynamicSlots();
     RootedShape oldShape(cx, obj->lastProperty());
+    RootedTypeObject oldType(cx, obj->type());
 
     if (!baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, baseops::Qualified, &v,
                                                        cache.strict()))
@@ -2950,7 +2968,7 @@ SetPropertyParIC::update(ForkJoinContext *cx, size_t cacheIndex, HandleObject ob
                                 &checkTypeset))
     {
         LockedJSContext ncx(cx);
-        if (cache.canAttachStub() && !cache.attachAddSlot(ncx, ion, obj, oldShape, checkTypeset))
+        if (cache.canAttachStub() && !cache.attachAddSlot(ncx, ion, obj, oldShape, oldType, checkTypeset))
             return cx->setPendingAbortFatal(ParallelBailoutOutOfMemory);
     }
 
@@ -2970,13 +2988,13 @@ SetPropertyParIC::attachSetSlot(LockedJSContext &cx, IonScript *ion, HandleObjec
 
 bool
 SetPropertyParIC::attachAddSlot(LockedJSContext &cx, IonScript *ion, HandleObject obj,
-                                HandleShape oldShape, bool checkTypeset)
+                                HandleShape oldShape, HandleTypeObject oldType, bool checkTypeset)
 {
     JS_ASSERT_IF(!needsTypeBarrier(), !checkTypeset);
 
     MacroAssembler masm(cx, ion);
     DispatchStubPrepender attacher(*this);
-    GenerateAddSlot(cx, masm, attacher, obj, oldShape, object(), value(), checkTypeset);
+    GenerateAddSlot(cx, masm, attacher, obj, oldShape, oldType, object(), value(), checkTypeset);
     return linkAndAttachStub(cx, masm, attacher, ion, "parallel adding");
 }
 

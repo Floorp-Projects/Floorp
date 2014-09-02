@@ -25,6 +25,7 @@ MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOpti
     alloc_(alloc),
     graph_(graph),
     abortReason_(AbortReason_NoAbort),
+    abortedNewScriptPropertiesTypes_(*alloc_),
     error_(false),
     pauseBuild_(nullptr),
     cancelBuild_(false),
@@ -86,6 +87,17 @@ MIRGenerator::abort(const char *message, ...)
     abortFmt(message, ap);
     va_end(ap);
     return false;
+}
+
+void
+MIRGenerator::addAbortedNewScriptPropertiesType(types::TypeObject *type)
+{
+    for (size_t i = 0; i < abortedNewScriptPropertiesTypes_.length(); i++) {
+        if (type == abortedNewScriptPropertiesTypes_[i])
+            return;
+    }
+    if (!abortedNewScriptPropertiesTypes_.append(type))
+        CrashAtUnhandlableOOM("addAbortedNewScriptPropertiesType");
 }
 
 void
