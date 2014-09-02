@@ -2134,7 +2134,7 @@ ArenaList::pickArenasToRelocate()
 
 #ifdef DEBUG
 inline bool
-PtrIsInRange(void *ptr, void *start, size_t length)
+PtrIsInRange(const void *ptr, const void *start, size_t length)
 {
     return uintptr_t(ptr) - uintptr_t(start) < length;
 }
@@ -2176,7 +2176,7 @@ RelocateCell(Zone *zone, Cell *src, AllocKind thingKind, size_t thingSize)
 
 
         JS_ASSERT_IF(dstObj->isNative(),
-                     !PtrIsInRange((HeapSlot*)dstObj->getDenseElements(), src, thingSize));
+                     !PtrIsInRange((const Value*)dstObj->getDenseElements(), src, thingSize));
     }
 
     // Copy the mark bits.
@@ -2293,13 +2293,6 @@ GCRuntime::relocateArenas()
     return relocatedList;
 }
 
-struct MovingTracer : JSTracer {
-    MovingTracer(JSRuntime *rt) : JSTracer(rt, Visit, TraceWeakMapValues) {}
-
-    static void Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind);
-    static void Sweep(JSTracer *jstrc);
-};
-
 void
 MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
@@ -2346,8 +2339,11 @@ MovingTracer::Sweep(JSTracer *jstrc)
     /* Type inference may put more blocks here to free. */
     rt->freeLifoAlloc.freeAll();
 
-    /* Clear the new object cache as this can contain cell pointers. */
+    /* Clear runtime caches that can contain cell pointers. */
+    // TODO: Should possibly just call PurgeRuntime() here.
     rt->newObjectCache.purge();
+    rt->nativeIterCache.purge();
+    rt->regExpTestCache.purge();
 }
 
 /*
@@ -2423,8 +2419,8 @@ GCRuntime::updatePointersToRelocatedCells()
 
     // Mark all gray roots, making sure we call the trace callback to get the
     // current set.
-    marker.resetBufferedGrayRoots();
-    markAllGrayReferences(gcstats::PHASE_COMPACT_UPDATE_GRAY);
+    if (JSTraceDataOp op = grayRootTracer.op)
+        (*op)(&trc, grayRootTracer.data);
 
     MovingTracer::Sweep(&trc);
 }
