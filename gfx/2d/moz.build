@@ -21,6 +21,7 @@ EXPORTS.mozilla.gfx += [
     'BorrowedContext.h',
     'Coord.h',
     'DataSurfaceHelpers.h',
+    'DrawTargetTiled.h',
     'Filters.h',
     'Helpers.h',
     'Logging.h',
