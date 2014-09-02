@@ -14,6 +14,20 @@
 namespace mozilla {
 namespace gfx {
 
+struct TileInternal : public Tile {
+  TileInternal()
+    : mClippedOut(false)
+  {}
+
+  TileInternal(const Tile& aOther)
+    : Tile(aOther)
+    , mClippedOut(false)
+  {}
+
+  bool mClippedOut;
+};
+
+
 class DrawTargetTiled : public DrawTarget
 {
 public:
@@ -130,7 +144,8 @@ public:
   }
 
 private:
-  std::vector<Tile> mTiles;
+  std::vector<TileInternal> mTiles;
+  std::vector<std::vector<uint32_t> > mClippedOutTilesStack;
   IntRect mRect;
 };
 
