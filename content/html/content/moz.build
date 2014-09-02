@@ -8,7 +8,6 @@ DIRS += ['public', 'src']
 
 MOCHITEST_MANIFESTS += [
     'test/forms/mochitest.ini',
-    'test/imports/mochitest.ini',
     'test/mochitest.ini',
 ]
 
