@@ -220,7 +220,13 @@ function jQueryLiveGetListeners(node, boolOnEventFound) {
           continue;
         }
 
-        let matches = node.matches && node.matches(selector);
+        let matches;
+        try {
+          matches = node.matches && node.matches(selector);
+        } catch(e) {
+          // Invalid selector, do nothing.
+        }
+
         if (boolOnEventFound && matches) {
           return true;
         }
