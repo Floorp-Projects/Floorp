@@ -5,7 +5,7 @@ ac_add_options --with-arch=armv6
 
 export MOZ_PKG_SPECIAL=armv6
 
-ac_add_options --with-branding=mobile/android/branding/aurora
+ac_add_options --with-branding=mobile/android/branding/beta
 
 export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
