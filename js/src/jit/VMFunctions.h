@@ -380,6 +380,18 @@ template <> struct TypeToRootType<HandleShape> {
 template <> struct TypeToRootType<HandleTypeObject> {
     static const uint32_t result = VMFunction::RootCell;
 };
+template <> struct TypeToRootType<HandleScript> {
+    static const uint32_t result = VMFunction::RootCell;
+};
+template <> struct TypeToRootType<Handle<StaticBlockObject *> > {
+    static const uint32_t result = VMFunction::RootObject;
+};
+template <> struct TypeToRootType<Handle<StaticWithObject *> > {
+    static const uint32_t result = VMFunction::RootCell;
+};
+template <class T> struct TypeToRootType<Handle<T> > {
+    // Fail for Handle types that aren't specialized above.
+};
 
 template <class> struct OutParamToDataType { static const DataType result = Type_Void; };
 template <> struct OutParamToDataType<Value *> { static const DataType result = Type_Value; };
