@@ -86,9 +86,15 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
             @Override
             protected SearchEngine doInBackground(Void... params) {
                 String identifier = GeckoSharedPrefs.forApp(context).getString(SearchPreferenceActivity.PREF_SEARCH_ENGINE_KEY, null);
-                if (TextUtils.isEmpty(identifier)) {
-                    identifier = context.getResources().getString(R.string.default_engine_identifier);
+                if (!TextUtils.isEmpty(identifier)) {
+                    try {
+                        return createEngine(identifier);
+                    } catch (IllegalArgumentException e) {
+                        Log.e(LOG_TAG, "Exception creating search engine from pref. Falling back to default engine.", e);
+                    }
                 }
+
+                identifier = context.getResources().getString(R.string.default_engine_identifier);
                 return createEngine(identifier);
             }
 
