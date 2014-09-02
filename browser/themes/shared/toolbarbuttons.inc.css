@@ -177,6 +177,7 @@ toolbar[brighttext] #loop-call-button > .toolbarbutton-badge-container {
   list-style-image: url(chrome://browser/skin/loop/toolbar-inverted.png);
 }
 
+#loop-call-button[state="disabled"] > .toolbarbutton-badge-container,
 #loop-call-button[disabled="true"] > .toolbarbutton-badge-container {
   -moz-image-region: rect(0, 36px, 18px, 18px);
 }
