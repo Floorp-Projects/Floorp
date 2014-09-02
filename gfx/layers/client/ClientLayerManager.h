@@ -237,6 +237,7 @@ public:
 
   void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) { mTransactionIdAllocator = aAllocator; }
 
+  float RequestProperty(const nsAString& aProperty) MOZ_OVERRIDE;
 protected:
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
