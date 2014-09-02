@@ -87,7 +87,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     {
         "draw_buffers",
         200, // OpenGL version
-        300, // OpenGL ES version
+        0, // Only enable when we have the extension on ES, bug 1056947
         GLContext::Extension_None,
         {
             GLContext::ARB_draw_buffers,
