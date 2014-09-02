@@ -105,7 +105,7 @@
   <string name="find_next">&find_next;</string>
   <string name="find_close">&find_close;</string>
 
-  <string name="media_casting_to">&media_casting_to;</string>
+  <string name="media_sending_to">&media_sending_to;</string>
   <string name="media_play">&media_play;</string>
   <string name="media_pause">&media_pause;</string>
   <string name="media_stop">&media_stop;</string>
