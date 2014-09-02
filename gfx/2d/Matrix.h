@@ -166,8 +166,8 @@ public:
 
   Matrix& operator*=(const Matrix &aMatrix)
   {
-    Matrix resultMatrix = *this * aMatrix;
-    return *this = resultMatrix;
+    *this = *this * aMatrix;
+    return *this;
   }
 
   /* Returns true if the other matrix is fuzzy-equal to this matrix.
@@ -572,8 +572,8 @@ public:
 
   Matrix4x4& operator*=(const Matrix4x4 &aMatrix)
   {
-    Matrix4x4 resultMatrix = *this * aMatrix;
-    return *this = resultMatrix;
+    *this = *this * aMatrix;
+    return *this;
   }
 
   /* Returns true if the matrix is an identity matrix.
@@ -790,6 +790,12 @@ public:
     resultMatrix._54 = this->_51 * aMatrix._14 + this->_52 * aMatrix._24 + this->_53 * aMatrix._34 + this->_54 * aMatrix._44 + aMatrix._54;
 
     return resultMatrix;
+  }
+
+  Matrix5x4& operator*=(const Matrix5x4 &aMatrix)
+  {
+    *this = *this * aMatrix;
+    return *this;
   }
 
   Float _11, _12, _13, _14;
