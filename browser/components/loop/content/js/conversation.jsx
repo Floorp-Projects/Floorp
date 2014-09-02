@@ -87,7 +87,7 @@ loop.conversation = (function(OT, mozL10n) {
       });
       return (
         <div className={conversationPanelClass}>
-          <h2>{__("incoming_call")}</h2>
+          <h2>{__("incoming_call_title2")}</h2>
           <div className="btn-group incoming-call-action-group">
 
             <div className="fx-embedded-incoming-call-button-spacer"></div>
@@ -98,7 +98,7 @@ loop.conversation = (function(OT, mozL10n) {
 
                   <button className={btnClassDecline}
                           onClick={this._handleDecline}>
-                    {__("incoming_call_decline_button")}
+                    {__("incoming_call_cancel_button")}
                   </button>
                   <div className="btn-chevron"
                        onClick={this._toggleDeclineMenu}>
@@ -107,7 +107,7 @@ loop.conversation = (function(OT, mozL10n) {
 
                 <ul className={dropdownMenuClassesDecline}>
                   <li className="btn-block" onClick={this._handleDeclineBlock}>
-                    {__("incoming_call_decline_and_block_button")}
+                    {__("incoming_call_cancel_and_block_button")}
                   </li>
                 </ul>
 
@@ -121,14 +121,14 @@ loop.conversation = (function(OT, mozL10n) {
                 <button className={btnClassAccept}
                         onClick={this._handleAccept("audio-video")}>
                   <span className="fx-embedded-answer-btn-text">
-                    {__("incoming_call_answer_button")}
+                    {__("incoming_call_accept_button")}
                   </span>
                   <span className="fx-embedded-btn-icon-video">
                   </span>
                 </button>
                 <div className="call-audio-only"
                      onClick={this._handleAccept("audio")}
-                     title={__("incoming_call_answer_audio_only_tooltip")} >
+                     title={__("incoming_call_accept_audio_only_tooltip")} >
                 </div>
               </div>
             </div>
@@ -334,7 +334,7 @@ loop.conversation = (function(OT, mozL10n) {
      * Call has ended, display a feedback form.
      */
     feedback: function() {
-      document.title = mozL10n.get("call_has_ended");
+      document.title = mozL10n.get("conversation_has_ended");
 
       var feebackAPIBaseUrl = navigator.mozLoop.getLoopCharPref(
         "feedback.baseUrl");
@@ -362,7 +362,7 @@ loop.conversation = (function(OT, mozL10n) {
     // else to ensure the L10n environment is setup correctly.
     mozL10n.initialize(navigator.mozLoop);
 
-    document.title = mozL10n.get("incoming_call_title");
+    document.title = mozL10n.get("incoming_call_title2");
 
     document.body.classList.add(loop.shared.utils.getTargetPlatform());
 

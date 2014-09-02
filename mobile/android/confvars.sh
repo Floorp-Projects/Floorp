@@ -81,5 +81,8 @@ else
   MOZ_ANDROID_SEARCH_ACTIVITY=
 fi
 
+# Don't enable the share overlay.
+# MOZ_ANDROID_SHARE_OVERLAY=1
+
 # Don't enable the Mozilla Location Service stumbler.
 # MOZ_ANDROID_MLS_STUMBLER=1
