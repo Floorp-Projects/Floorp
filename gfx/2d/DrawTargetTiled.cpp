@@ -51,7 +51,7 @@ DrawTargetTiled::Init(const TileSet& aTiles)
 class SnapshotTiled : public SourceSurface
 {
 public:
-  SnapshotTiled(const vector<Tile>& aTiles, const IntRect& aRect)
+  SnapshotTiled(const vector<TileInternal>& aTiles, const IntRect& aRect)
     : mRect(aRect)
   {
     for (size_t i = 0; i < aTiles.size(); i++) {
@@ -100,14 +100,14 @@ DrawTargetTiled::Snapshot()
   return new SnapshotTiled(mTiles, mRect);
 }
 
+// Skip the mClippedOut check since this is only used for Flush() which
+// should happen even if we're clipped.
 #define TILED_COMMAND(command) \
   void \
   DrawTargetTiled::command() \
   { \
     for (size_t i = 0; i < mTiles.size(); i++) { \
-    \
-    \
-    mTiles[i].mDrawTarget->command(); \
+      mTiles[i].mDrawTarget->command(); \
     } \
   }
 #define TILED_COMMAND1(command, type1) \
@@ -115,9 +115,8 @@ DrawTargetTiled::Snapshot()
   DrawTargetTiled::command(type1 arg1) \
   { \
     for (size_t i = 0; i < mTiles.size(); i++) { \
-    \
-    \
-    mTiles[i].mDrawTarget->command(arg1); \
+      if (!mTiles[i].mClippedOut) \
+        mTiles[i].mDrawTarget->command(arg1); \
     } \
   }
 #define TILED_COMMAND3(command, type1, type2, type3) \
@@ -125,9 +124,8 @@ DrawTargetTiled::Snapshot()
   DrawTargetTiled::command(type1 arg1, type2 arg2, type3 arg3) \
   { \
     for (size_t i = 0; i < mTiles.size(); i++) { \
-    \
-    \
-    mTiles[i].mDrawTarget->command(arg1, arg2, arg3); \
+      if (!mTiles[i].mClippedOut) \
+        mTiles[i].mDrawTarget->command(arg1, arg2, arg3); \
     } \
   }
 #define TILED_COMMAND4(command, type1, type2, type3, type4) \
@@ -135,9 +133,8 @@ DrawTargetTiled::Snapshot()
   DrawTargetTiled::command(type1 arg1, type2 arg2, type3 arg3, type4 arg4) \
   { \
     for (size_t i = 0; i < mTiles.size(); i++) { \
-    \
-    \
-    mTiles[i].mDrawTarget->command(arg1, arg2, arg3, arg4); \
+      if (!mTiles[i].mClippedOut) \
+        mTiles[i].mDrawTarget->command(arg1, arg2, arg3, arg4); \
     } \
   }
 #define TILED_COMMAND5(command, type1, type2, type3, type4, type5) \
@@ -145,9 +142,8 @@ DrawTargetTiled::Snapshot()
   DrawTargetTiled::command(type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5) \
   { \
     for (size_t i = 0; i < mTiles.size(); i++) { \
-    \
-    \
-    mTiles[i].mDrawTarget->command(arg1, arg2, arg3, arg4, arg5); \
+      if (!mTiles[i].mClippedOut) \
+        mTiles[i].mDrawTarget->command(arg1, arg2, arg3, arg4, arg5); \
     } \
   }
 
@@ -159,9 +155,69 @@ TILED_COMMAND4(StrokeRect, const Rect&, const Pattern&, const StrokeOptions&, co
 TILED_COMMAND5(StrokeLine, const Point&, const Point&, const Pattern&, const StrokeOptions&, const DrawOptions&)
 TILED_COMMAND5(FillGlyphs, ScaledFont*, const GlyphBuffer&, const Pattern&, const DrawOptions&, const GlyphRenderingOptions*)
 TILED_COMMAND3(Mask, const Pattern&, const Pattern&, const DrawOptions&)
-TILED_COMMAND1(PushClip, const Path*)
-TILED_COMMAND1(PushClipRect, const Rect&)
-TILED_COMMAND(PopClip)
+
+void
+DrawTargetTiled::PushClip(const Path* aPath)
+{
+  mClippedOutTilesStack.push_back(std::vector<uint32_t>());
+  std::vector<uint32_t>& clippedTiles = mClippedOutTilesStack.back();
+
+  Rect deviceRect = aPath->GetBounds(mTransform);
+
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    if (!mTiles[i].mClippedOut) {
+      if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
+                                   mTiles[i].mTileOrigin.y,
+                                   mTiles[i].mDrawTarget->GetSize().width,
+                                   mTiles[i].mDrawTarget->GetSize().height))) {
+        mTiles[i].mDrawTarget->PushClip(aPath);
+      } else {
+        mTiles[i].mClippedOut = true;
+        clippedTiles.push_back(i);
+      }
+    }
+  }
+}
+
+void
+DrawTargetTiled::PushClipRect(const Rect& aRect)
+{
+  mClippedOutTilesStack.push_back(std::vector<uint32_t>());
+  std::vector<uint32_t>& clippedTiles = mClippedOutTilesStack.back();
+
+  Rect deviceRect = mTransform.TransformBounds(aRect);
+
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    if (!mTiles[i].mClippedOut) {
+      if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
+                                   mTiles[i].mTileOrigin.y,
+                                   mTiles[i].mDrawTarget->GetSize().width,
+                                   mTiles[i].mDrawTarget->GetSize().height))) {
+        mTiles[i].mDrawTarget->PushClipRect(aRect);
+      } else {
+        mTiles[i].mClippedOut = true;
+        clippedTiles.push_back(i);
+      }
+    }
+  }
+}
+
+void
+DrawTargetTiled::PopClip()
+{
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    if (!mTiles[i].mClippedOut) {
+      mTiles[i].mDrawTarget->PopClip();
+    }
+  }
+
+  std::vector<uint32_t>& clippedTiles = mClippedOutTilesStack.back();
+  for (size_t i = 0; i < clippedTiles.size(); i++) {
+    mTiles[clippedTiles[i]].mClippedOut = false;
+  }
+
+  mClippedOutTilesStack.pop_back();
+}
 
 void
 DrawTargetTiled::CopySurface(SourceSurface *aSurface,
@@ -200,7 +256,8 @@ DrawTargetTiled::DrawSurface(SourceSurface* aSurface, const Rect& aDest, const R
 {
   Rect deviceRect = mTransform.TransformBounds(aDest);
   for (size_t i = 0; i < mTiles.size(); i++) {
-    if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
+    if (!mTiles[i].mClippedOut &&
+        deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
                                    mTiles[i].mTileOrigin.y,
                                    mTiles[i].mDrawTarget->GetSize().width,
                                    mTiles[i].mDrawTarget->GetSize().height))) {
@@ -214,7 +271,8 @@ DrawTargetTiled::FillRect(const Rect& aRect, const Pattern& aPattern, const Draw
 {
   Rect deviceRect = mTransform.TransformBounds(aRect);
   for (size_t i = 0; i < mTiles.size(); i++) {
-    if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
+    if (!mTiles[i].mClippedOut &&
+        deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
                                    mTiles[i].mTileOrigin.y,
                                    mTiles[i].mDrawTarget->GetSize().width,
                                    mTiles[i].mDrawTarget->GetSize().height))) {
@@ -258,7 +316,8 @@ DrawTargetTiled::Stroke(const Path* aPath, const Pattern& aPattern, const Stroke
                                                  aPath->GetBounds(mTransform),
                                                  mTransform);
   for (size_t i = 0; i < mTiles.size(); i++) {
-    if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
+    if (!mTiles[i].mClippedOut &&
+        deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
                                    mTiles[i].mTileOrigin.y,
                                    mTiles[i].mDrawTarget->GetSize().width,
                                    mTiles[i].mDrawTarget->GetSize().height))) {
@@ -272,7 +331,8 @@ DrawTargetTiled::Fill(const Path* aPath, const Pattern& aPattern, const DrawOpti
 {
   Rect deviceRect = aPath->GetBounds(mTransform);
   for (size_t i = 0; i < mTiles.size(); i++) {
-    if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
+    if (!mTiles[i].mClippedOut &&
+        deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
                                    mTiles[i].mTileOrigin.y,
                                    mTiles[i].mDrawTarget->GetSize().width,
                                    mTiles[i].mDrawTarget->GetSize().height))) {
