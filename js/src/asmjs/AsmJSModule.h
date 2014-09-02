@@ -86,6 +86,9 @@ enum AsmJSSimdOperation
     AsmJSSimdOperation_notEqual,
     AsmJSSimdOperation_greaterThan,
     AsmJSSimdOperation_greaterThanOrEqual,
+    AsmJSSimdOperation_and,
+    AsmJSSimdOperation_or,
+    AsmJSSimdOperation_xor,
 };
 
 // These labels describe positions in the prologue/epilogue of functions while

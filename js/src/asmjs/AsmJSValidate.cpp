@@ -1374,7 +1374,10 @@ class MOZ_STACK_CLASS ModuleCompiler
             !addStandardLibrarySimdOpName("equal", AsmJSSimdOperation_equal) ||
             !addStandardLibrarySimdOpName("notEqual", AsmJSSimdOperation_notEqual) ||
             !addStandardLibrarySimdOpName("greaterThan", AsmJSSimdOperation_greaterThan) ||
-            !addStandardLibrarySimdOpName("greaterThanOrEqual", AsmJSSimdOperation_greaterThanOrEqual))
+            !addStandardLibrarySimdOpName("greaterThanOrEqual", AsmJSSimdOperation_greaterThanOrEqual) ||
+            !addStandardLibrarySimdOpName("and", AsmJSSimdOperation_and) ||
+            !addStandardLibrarySimdOpName("or", AsmJSSimdOperation_or) ||
+            !addStandardLibrarySimdOpName("xor", AsmJSSimdOperation_xor))
         {
             return false;
         }
@@ -2403,6 +2406,19 @@ class FunctionCompiler
         JS_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         JS_ASSERT(lhs->type() == type);
         MSimdBinaryArith *ins = MSimdBinaryArith::NewAsmJS(alloc(), lhs, rhs, op, type);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    MDefinition *binarySimd(MDefinition *lhs, MDefinition *rhs, MSimdBinaryBitwise::Operation op,
+                            MIRType type)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        JS_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
+        JS_ASSERT(lhs->type() == type);
+        MSimdBinaryBitwise *ins = MSimdBinaryBitwise::NewAsmJS(alloc(), lhs, rhs, op, type);
         curBlock_->add(ins);
         return ins;
     }
@@ -3477,6 +3493,9 @@ IsSimdValidOperationType(AsmJSSimdType type, AsmJSSimdOperation op)
       case AsmJSSimdOperation_lessThan:
       case AsmJSSimdOperation_equal:
       case AsmJSSimdOperation_greaterThan:
+      case AsmJSSimdOperation_and:
+      case AsmJSSimdOperation_or:
+      case AsmJSSimdOperation_xor:
         return true;
       case AsmJSSimdOperation_mul:
       case AsmJSSimdOperation_div:
@@ -4708,6 +4727,18 @@ CheckBinarySimd(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Glob
         *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryComp::greaterThanOrEqual);
         *type = Type::Int32x4;
         break;
+      case AsmJSSimdOperation_and:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryBitwise::and_, opType);
+        *type = retType;
+        break;
+      case AsmJSSimdOperation_or:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryBitwise::or_, opType);
+        *type = retType;
+        break;
+      case AsmJSSimdOperation_xor:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryBitwise::xor_, opType);
+        *type = retType;
+        break;
     }
 
     return true;
@@ -4729,6 +4760,9 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
       case AsmJSSimdOperation_notEqual:
       case AsmJSSimdOperation_greaterThan:
       case AsmJSSimdOperation_greaterThanOrEqual:
+      case AsmJSSimdOperation_and:
+      case AsmJSSimdOperation_or:
+      case AsmJSSimdOperation_xor:
         return CheckBinarySimd(f, call, global, def, type);
     }
     MOZ_CRASH("unexpected simd operation in CheckSimdOperationCall");
