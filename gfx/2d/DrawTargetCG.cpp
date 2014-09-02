@@ -254,7 +254,12 @@ DrawTargetCG::OptimizeSourceSurface(SourceSurface *aSurface) const
       aSurface->GetType() == SurfaceType::COREGRAPHICS_CGCONTEXT) {
     return aSurface;
   }
-  return aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+
+  return CreateSourceSurfaceFromData(data->GetData(),
+                                     data->GetSize(),
+                                     data->Stride(),
+                                     data->GetFormat());
 }
 
 class UnboundnessFixer
