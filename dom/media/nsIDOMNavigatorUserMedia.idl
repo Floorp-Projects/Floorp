@@ -6,7 +6,7 @@
 #include "nsIVariant.idl"
 #include "nsIDOMMediaStream.idl"
 
-[scriptable, builtinclass, uuid(4af2bdb7-1547-4d10-8886-02a78c3c0b83)]
+[scriptable, builtinclass, uuid(1cbc6b7b-dbf4-41fb-96cb-ec52c84cf409)]
 interface nsIMediaDevice : nsISupports
 {
   readonly attribute DOMString type;
