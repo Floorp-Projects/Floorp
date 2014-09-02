@@ -79,7 +79,13 @@ enum AsmJSSimdOperation
     AsmJSSimdOperation_add,
     AsmJSSimdOperation_sub,
     AsmJSSimdOperation_mul,
-    AsmJSSimdOperation_div
+    AsmJSSimdOperation_div,
+    AsmJSSimdOperation_lessThan,
+    AsmJSSimdOperation_lessThanOrEqual,
+    AsmJSSimdOperation_equal,
+    AsmJSSimdOperation_notEqual,
+    AsmJSSimdOperation_greaterThan,
+    AsmJSSimdOperation_greaterThanOrEqual,
 };
 
 // These labels describe positions in the prologue/epilogue of functions while

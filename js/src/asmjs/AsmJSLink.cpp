@@ -345,10 +345,16 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
         switch (global.simdOperation()) {
           case AsmJSSimdOperation_add: native = simd_int32x4_add; break;
           case AsmJSSimdOperation_sub: native = simd_int32x4_sub; break;
+          case AsmJSSimdOperation_lessThan: native = simd_int32x4_lessThan; break;
+          case AsmJSSimdOperation_greaterThan: native = simd_int32x4_greaterThan; break;
+          case AsmJSSimdOperation_equal: native = simd_int32x4_equal; break;
+          case AsmJSSimdOperation_lessThanOrEqual:
+          case AsmJSSimdOperation_greaterThanOrEqual:
+          case AsmJSSimdOperation_notEqual:
           case AsmJSSimdOperation_mul:
           case AsmJSSimdOperation_div:
-            MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Mul and div shouldn't have been validated in "
-                                                    "the first place");
+            MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("shouldn't have been validated in the first "
+                                                    "place");
         }
         break;
       case AsmJSSimdType_float32x4:
@@ -357,6 +363,12 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
           case AsmJSSimdOperation_sub: native = simd_float32x4_sub; break;
           case AsmJSSimdOperation_mul: native = simd_float32x4_mul; break;
           case AsmJSSimdOperation_div: native = simd_float32x4_div; break;
+          case AsmJSSimdOperation_lessThan: native = simd_float32x4_lessThan ; break;
+          case AsmJSSimdOperation_lessThanOrEqual: native = simd_float32x4_lessThanOrEqual; break;
+          case AsmJSSimdOperation_equal: native = simd_float32x4_equal; break;
+          case AsmJSSimdOperation_notEqual: native = simd_float32x4_notEqual ; break;
+          case AsmJSSimdOperation_greaterThan: native = simd_float32x4_greaterThan; break;
+          case AsmJSSimdOperation_greaterThanOrEqual: native = simd_float32x4_greaterThanOrEqual ; break;
         }
         break;
     }
