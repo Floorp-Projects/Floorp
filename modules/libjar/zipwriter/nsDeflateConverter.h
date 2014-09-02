@@ -31,7 +31,7 @@ public:
         mLevel = 6;
     }
 
-    nsDeflateConverter(int32_t level)
+    explicit nsDeflateConverter(int32_t level)
     {
         mLevel = level;
     }

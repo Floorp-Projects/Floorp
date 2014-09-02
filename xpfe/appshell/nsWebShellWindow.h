@@ -28,7 +28,7 @@ class nsWebShellWindow MOZ_FINAL : public nsXULWindow,
                                    public nsIWidgetListener
 {
 public:
-  nsWebShellWindow(uint32_t aChromeFlags);
+  explicit nsWebShellWindow(uint32_t aChromeFlags);
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS_INHERITED
