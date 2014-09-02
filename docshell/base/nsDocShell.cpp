@@ -1322,8 +1322,12 @@ nsDocShell::LoadURI(nsIURI * aURI,
     NS_PRECONDITION((aLoadFlags & 0xf) == 0, "Should not have these flags set");
     
     // Note: we allow loads to get through here even if mFiredUnloadEvent is
-    // true; that case will get handled in LoadInternal or LoadHistoryEntry.
-    if (IsPrintingOrPP()) {
+    // true; that case will get handled in LoadInternal or LoadHistoryEntry,
+    // so we pass false as the second parameter to IsNavigationAllowed.
+    // However, we don't allow the page to change location *in the middle of*
+    // firing beforeunload, so we do need to check if *beforeunload* is currently
+    // firing, so we call IsNavigationAllowed rather than just IsPrintingOrPP.
+    if (!IsNavigationAllowed(true, false)) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsCOMPtr<nsIURI> referrer;
@@ -4279,9 +4283,11 @@ nsDocShell::IsPrintingOrPP(bool aDisplayErrorDialog)
 }
 
 bool
-nsDocShell::IsNavigationAllowed(bool aDisplayPrintErrorDialog)
+nsDocShell::IsNavigationAllowed(bool aDisplayPrintErrorDialog,
+                                bool aCheckIfUnloadFired)
 {
-  bool isAllowed = !IsPrintingOrPP(aDisplayPrintErrorDialog) && !mFiredUnloadEvent;
+  bool isAllowed = !IsPrintingOrPP(aDisplayPrintErrorDialog) &&
+                   (!aCheckIfUnloadFired || !mFiredUnloadEvent);
   if (!isAllowed) {
     return false;
   }
