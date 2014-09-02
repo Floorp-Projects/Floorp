@@ -46,6 +46,15 @@ typedef struct {
     AutoSwap_PRUint16 reserved;
     AutoSwap_PRUint32 length;
     AutoSwap_PRUint32 language;
+    AutoSwap_PRUint32 startCharCode;
+    AutoSwap_PRUint32 numChars;
+} Format10CmapHeader;
+
+typedef struct {
+    AutoSwap_PRUint16 format;
+    AutoSwap_PRUint16 reserved;
+    AutoSwap_PRUint32 length;
+    AutoSwap_PRUint32 language;
     AutoSwap_PRUint32 numGroups;
 } Format12CmapHeader;
 
@@ -87,6 +96,53 @@ gfxSparseBitSet::Dump(const char* aPrefix, eGfxLog aWhichLog) const
 }
 #endif
 
+nsresult
+gfxFontUtils::ReadCMAPTableFormat10(const uint8_t *aBuf, uint32_t aLength,
+                                    gfxSparseBitSet& aCharacterMap)
+{
+    // Ensure table is large enough that we can safely read the header
+    NS_ENSURE_TRUE(aLength >= sizeof(Format10CmapHeader),
+                    NS_ERROR_GFX_CMAP_MALFORMED);
+
+    // Sanity-check header fields
+    const Format10CmapHeader *cmap10 =
+        reinterpret_cast<const Format10CmapHeader*>(aBuf);
+    NS_ENSURE_TRUE(uint16_t(cmap10->format) == 10,
+                   NS_ERROR_GFX_CMAP_MALFORMED);
+    NS_ENSURE_TRUE(uint16_t(cmap10->reserved) == 0,
+                   NS_ERROR_GFX_CMAP_MALFORMED);
+
+    uint32_t tablelen = cmap10->length;
+    NS_ENSURE_TRUE(tablelen >= sizeof(Format10CmapHeader) &&
+                   tablelen <= aLength, NS_ERROR_GFX_CMAP_MALFORMED);
+
+    NS_ENSURE_TRUE(cmap10->language == 0, NS_ERROR_GFX_CMAP_MALFORMED);
+
+    uint32_t numChars = cmap10->numChars;
+    NS_ENSURE_TRUE(tablelen == sizeof(Format10CmapHeader) +
+                   numChars * sizeof(uint16_t), NS_ERROR_GFX_CMAP_MALFORMED);
+
+    uint32_t charCode = cmap10->startCharCode;
+    NS_ENSURE_TRUE(charCode <= CMAP_MAX_CODEPOINT &&
+                   charCode + numChars <= CMAP_MAX_CODEPOINT,
+                   NS_ERROR_GFX_CMAP_MALFORMED);
+
+    // glyphs[] array immediately follows the subtable header
+    const AutoSwap_PRUint16 *glyphs =
+        reinterpret_cast<const AutoSwap_PRUint16 *>(cmap10 + 1);
+
+    for (uint32_t i = 0; i < numChars; ++i) {
+        if (uint16_t(*glyphs) != 0) {
+            aCharacterMap.set(charCode);
+        }
+        ++charCode;
+        ++glyphs;
+    }
+
+    aCharacterMap.Compact();
+
+    return NS_OK;
+}
 
 nsresult
 gfxFontUtils::ReadCMAPTableFormat12(const uint8_t *aBuf, uint32_t aLength,
@@ -422,7 +478,8 @@ gfxFontUtils::FindPreferredSubtable(const uint8_t *aBuf, uint32_t aBufLength,
             keepFormat = format;
             *aTableOffset = offset;
             *aSymbolEncoding = false;
-        } else if (format == 12 && acceptableUCS4Encoding(platformID, encodingID, keepFormat)) {
+        } else if ((format == 10 || format == 12) &&
+                   acceptableUCS4Encoding(platformID, encodingID, keepFormat)) {
             keepFormat = format;
             *aTableOffset = offset;
             *aSymbolEncoding = false;
@@ -431,7 +488,7 @@ gfxFontUtils::FindPreferredSubtable(const uint8_t *aBuf, uint32_t aBufLength,
             }
         } else if (format == 14 && isUVSEncoding(platformID, encodingID) && aUVSTableOffset) {
             *aUVSTableOffset = offset;
-            if (keepFormat == 12) {
+            if (keepFormat == 10 || keepFormat == 12) {
                 break;
             }
         }
@@ -451,7 +508,8 @@ gfxFontUtils::ReadCMAP(const uint8_t *aBuf, uint32_t aBufLength,
     uint32_t format = FindPreferredSubtable(aBuf, aBufLength,
                                             &offset, &aUVSOffset, &symbol);
 
-    if (format == 4) {
+    switch (format) {
+    case 4:
         if (symbol) {
             aUnicodeFont = false;
             aSymbolFont = true;
@@ -461,13 +519,21 @@ gfxFontUtils::ReadCMAP(const uint8_t *aBuf, uint32_t aBufLength,
         }
         return ReadCMAPTableFormat4(aBuf + offset, aBufLength - offset,
                                     aCharacterMap);
-    }
 
-    if (format == 12) {
+    case 10:
+        aUnicodeFont = true;
+        aSymbolFont = false;
+        return ReadCMAPTableFormat10(aBuf + offset, aBufLength - offset,
+                                     aCharacterMap);
+
+    case 12:
         aUnicodeFont = true;
         aSymbolFont = false;
         return ReadCMAPTableFormat12(aBuf + offset, aBufLength - offset,
                                      aCharacterMap);
+
+    default:
+        break;
     }
 
     return NS_ERROR_FAILURE;
@@ -568,6 +634,26 @@ gfxFontUtils::MapCharToGlyphFormat4(const uint8_t *aBuf, char16_t aCh)
     }
 
     return 0;
+}
+
+uint32_t
+gfxFontUtils::MapCharToGlyphFormat10(const uint8_t *aBuf, uint32_t aCh)
+{
+    const Format10CmapHeader *cmap10 =
+        reinterpret_cast<const Format10CmapHeader*>(aBuf);
+
+    uint32_t startChar = cmap10->startCharCode;
+    uint32_t numChars = cmap10->numChars;
+
+    if (aCh < startChar || aCh >= startChar + numChars) {
+        return 0;
+    }
+
+    const AutoSwap_PRUint16 *glyphs =
+        reinterpret_cast<const AutoSwap_PRUint16 *>(cmap10 + 1);
+
+    uint16_t glyph = glyphs[aCh - startChar];
+    return glyph;
 }
 
 uint32_t
@@ -681,6 +767,9 @@ gfxFontUtils::MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
         gid = aUnicode < UNICODE_BMP_LIMIT ?
             MapCharToGlyphFormat4(aCmapBuf + offset, char16_t(aUnicode)) : 0;
         break;
+    case 10:
+        gid = MapCharToGlyphFormat10(aCmapBuf + offset, aUnicode);
+        break;
     case 12:
         gid = MapCharToGlyphFormat12(aCmapBuf + offset, aUnicode);
         break;
@@ -702,6 +791,10 @@ gfxFontUtils::MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
                         varGID = MapCharToGlyphFormat4(aCmapBuf + offset,
                                                        char16_t(aUnicode));
                     }
+                    break;
+                case 10:
+                    varGID = MapCharToGlyphFormat10(aCmapBuf + offset,
+                                                    aUnicode);
                     break;
                 case 12:
                     varGID = MapCharToGlyphFormat12(aCmapBuf + offset,
