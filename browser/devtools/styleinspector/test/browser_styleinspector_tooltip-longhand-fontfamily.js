@@ -35,6 +35,8 @@ let test = asyncTest(function*() {
   let {toolbox, inspector, view} = yield openComputedView();
 
   yield testComputedView(view, inspector.selection.nodeFront);
+
+  yield testExpandedComputedViewProperty(view, inspector.selection.nodeFront);
 });
 
 function* testRuleView(ruleView, nodeFront) {
@@ -76,4 +78,40 @@ function* testComputedView(computedView, nodeFront) {
 
   let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL, "Tooltip contains the correct data-uri image");
+}
+
+function* testExpandedComputedViewProperty(computedView, nodeFront) {
+  info("Testing font-family tooltips in expanded properties of the computed view");
+
+  info("Expanding the font-family property to reveal matched selectors");
+  let propertyView = getPropertyView(computedView, "font-family");
+  propertyView.matchedExpanded = true;
+  yield propertyView.refreshMatchedSelectors();
+
+  let valueSpan = propertyView.matchedSelectorsContainer
+    .querySelector(".bestmatch .other-property-value");
+
+  let tooltip = computedView.tooltips.previewTooltip;
+  let panel = tooltip.panel;
+
+  yield assertHoverTooltipOn(tooltip, valueSpan);
+
+  let images = panel.getElementsByTagName("image");
+  is(images.length, 1, "Tooltip contains an image");
+  ok(images[0].getAttribute("src").startsWith("data:"), "Tooltip contains a data-uri image as expected");
+
+  let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
+  is(images[0].getAttribute("src"), dataURL, "Tooltip contains the correct data-uri image");
+}
+
+function getPropertyView(computedView, name) {
+  let propertyView = null;
+  computedView.propertyViews.some(function(view) {
+    if (view.name == name) {
+      propertyView = view;
+      return true;
+    }
+    return false;
+  });
+  return propertyView;
 }

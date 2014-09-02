@@ -752,32 +752,6 @@ let createNewRuleViewProperty = Task.async(function*(ruleEditor, inputValue) {
   yield onFocus;
 });
 
-// TO BE UNCOMMENTED WHEN THE EYEDROPPER FINALLY LANDS
-// /**
-//  * Given a color swatch in the ruleview, click on it to open the color picker
-//  * and then click on the eyedropper button to start the eyedropper tool
-//  * @param {CssRuleView} view The instance of the rule-view panel
-//  * @param {DOMNode} swatch The color swatch to be clicked on
-//  * @return A promise that resolves when the dropper is opened
-//  */
-// let openRuleViewEyeDropper = Task.async(function*(view, swatch) {
-//   info("Opening the colorpicker tooltip on a colorswatch");
-//   let tooltip = view.colorPicker.tooltip;
-//   let onTooltipShown = tooltip.once("shown");
-//   swatch.click();
-//   yield onTooltipShown;
-
-//   info("Finding the eyedropper icon in the colorpicker document");
-//   let tooltipDoc = tooltip.content.contentDocument;
-//   let dropperButton = tooltipDoc.querySelector("#eyedropper-button");
-//   ok(dropperButton, "Found the eyedropper icon");
-
-//   info("Opening the eyedropper");
-//   let onOpen = tooltip.once("eyedropper-opened");
-//   dropperButton.click();
-//   return yield onOpen;
-// });
-
 /* *********************************************
  * COMPUTED-VIEW
  * *********************************************
@@ -807,14 +781,48 @@ function getComputedViewProperty(view, name) {
 }
 
 /**
+ * Get a reference to the property-content element for a given property name in
+ * the computed-view.
+ * A property-content element always follows (nextSibling) the property itself
+ * and is only shown when the twisty icon is expanded on the property.
+ * A property-content element contains matched rules, with selectors, properties,
+ * values and stylesheet links
+ * @param {CssHtmlTree} view The instance of the computed view panel
+ * @param {String} name The name of the property to retrieve
+ * @return {Promise} A promise that resolves to the property matched rules
+ * container
+ */
+let getComputedViewMatchedRules = Task.async(function*(view, name) {
+  let expander;
+  let propertyContent;
+  for (let property of view.styleDocument.querySelectorAll(".property-view")) {
+    let nameSpan = property.querySelector(".property-name");
+    if (nameSpan.textContent === name) {
+      expander = property.querySelector(".expandable");
+      propertyContent = property.nextSibling;
+      break;
+    }
+  }
+
+  if (!expander.hasAttribute("open")) {
+    // Need to expand the property
+    let onExpand = view.inspector.once("computed-view-property-expanded");
+    expander.click();
+    yield onExpand;
+  }
+
+  return propertyContent;
+});
+
+/**
  * Get the text value of the property corresponding to a given name in the
  * computed-view
  * @param {CssHtmlTree} view The instance of the computed view panel
  * @param {String} name The name of the property to retrieve
  * @return {String} The property value
  */
-function getComputedViewPropertyValue(view, selectorText, propertyName) {
-  return getComputedViewProperty(view, selectorText, propertyName)
+function getComputedViewPropertyValue(view, name, propertyName) {
+  return getComputedViewProperty(view, name, propertyName)
     .valueSpan.textContent;
 }
 
@@ -822,19 +830,18 @@ function getComputedViewPropertyValue(view, selectorText, propertyName) {
  * Expand a given property, given its index in the current property list of
  * the computed view
  * @param {CssHtmlTree} view The instance of the computed view panel
- * @param {InspectorPanel} inspector The instance of the inspector panel
  * @param {Number} index The index of the property to be expanded
  * @return a promise that resolves when the property has been expanded, or
  * rejects if the property was not found
  */
-function expandComputedViewPropertyByIndex(view, inspector, index) {
+function expandComputedViewPropertyByIndex(view, index) {
   info("Expanding property " + index + " in the computed view");
   let expandos = view.styleDocument.querySelectorAll(".expandable");
   if (!expandos.length || !expandos[index]) {
     return promise.reject();
   }
 
-  let onExpand = inspector.once("computed-view-property-expanded");
+  let onExpand = view.inspector.once("computed-view-property-expanded");
   expandos[index].click();
   return onExpand;
 }
