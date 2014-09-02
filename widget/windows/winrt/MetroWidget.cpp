@@ -1542,7 +1542,6 @@ NS_IMETHODIMP_(void)
 MetroWidget::SetInputContext(const InputContext& aContext,
                              const InputContextAction& aAction)
 {
-  // XXX This should set mInputContext.mNativeIMEContext properly
   mInputContext = aContext;
   nsTextStore::SetInputContext(this, mInputContext, aAction);
   bool enable = (mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
@@ -1571,9 +1570,9 @@ MetroWidget::NotifyIME(const IMENotification& aIMENotification)
       nsTextStore::CommitComposition(true);
       return NS_OK;
     case NOTIFY_IME_OF_FOCUS:
-      return nsTextStore::OnFocusChange(true, this, mInputContext);
+      return nsTextStore::OnFocusChange(true, this, mInputContext.mIMEState);
     case NOTIFY_IME_OF_BLUR:
-      return nsTextStore::OnFocusChange(false, this, mInputContext);
+      return nsTextStore::OnFocusChange(false, this, mInputContext.mIMEState);
     case NOTIFY_IME_OF_SELECTION_CHANGE:
       return nsTextStore::OnSelectionChange();
     case NOTIFY_IME_OF_TEXT_CHANGE:
