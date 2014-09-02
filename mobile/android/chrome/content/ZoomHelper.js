@@ -37,13 +37,13 @@ var ZoomHelper = {
     rect.h = viewport.cssHeight;
     rect.animate = false;
 
-    sendMessageToJava(rect);
+    Messaging.sendRequest(rect);
     BrowserApp.selectedTab._mReflozPoint = null;
   },
 
   zoomOut: function() {
     BrowserEventHandler.resetMaxLineBoxWidth();
-    sendMessageToJava({ type: "Browser:ZoomToPageWidth" });
+    Messaging.sendRequest({ type: "Browser:ZoomToPageWidth" });
   },
 
   isRectZoomedIn: function(aRect, aViewport) {
@@ -145,6 +145,6 @@ var ZoomHelper = {
       BrowserEventHandler.resetMaxLineBoxWidth();
     }
 
-    sendMessageToJava(rect);
+    Messaging.sendRequest(rect);
   },
 };

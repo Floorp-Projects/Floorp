@@ -563,7 +563,7 @@ var CastingApps = {
     }
 
     aRemoteMedia.load(this.session.data);
-    sendMessageToJava({ type: "Casting:Started", device: this.session.service.friendlyName });
+    Messaging.sendRequest({ type: "Casting:Started", device: this.session.service.friendlyName });
 
     let video = this.session.videoRef.get();
     if (video) {
@@ -573,7 +573,7 @@ var CastingApps = {
   },
 
   onRemoteMediaStop: function(aRemoteMedia) {
-    sendMessageToJava({ type: "Casting:Stopped" });
+    Messaging.sendRequest({ type: "Casting:Stopped" });
     this._shutdown();
   },
 
