@@ -38,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(a4bf4fc5-b5a9-4098-bd20-409d71bf18e6)]
+[scriptable, uuid(7630dd2f-b705-4373-9eba-e7f8110a99dc)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
