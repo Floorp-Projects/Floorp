@@ -23,10 +23,10 @@ class Relation
 public:
   Relation() : mFirstIter(nullptr), mLastIter(nullptr) { }
 
-  Relation(AccIterable* aIter) :
+  explicit Relation(AccIterable* aIter) :
     mFirstIter(aIter), mLastIter(aIter) { }
 
-  Relation(Accessible* aAcc) :
+  explicit Relation(Accessible* aAcc) :
     mFirstIter(nullptr), mLastIter(nullptr)
     { AppendTarget(aAcc); }
 
