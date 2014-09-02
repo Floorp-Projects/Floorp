@@ -82,7 +82,7 @@ PR_STATIC_ASSERT(CH_SHY <= 255);
 class nsFindContentIterator : public nsIContentIterator
 {
 public:
-  nsFindContentIterator(bool aFindBackward)
+  explicit nsFindContentIterator(bool aFindBackward)
     : mStartOffset(0),
       mEndOffset(0),
       mFindBackward(aFindBackward)
