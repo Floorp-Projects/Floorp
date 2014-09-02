@@ -48,52 +48,6 @@ DrawTargetTiled::Init(const TileSet& aTiles)
   return true;
 }
 
-class SnapshotTiled : public SourceSurface
-{
-public:
-  SnapshotTiled(const vector<TileInternal>& aTiles, const IntRect& aRect)
-    : mRect(aRect)
-  {
-    for (size_t i = 0; i < aTiles.size(); i++) {
-      mSnapshots.push_back(aTiles[i].mDrawTarget->Snapshot());
-      mOrigins.push_back(aTiles[i].mTileOrigin);
-    }
-  }
-
-  virtual SurfaceType GetType() const { return SurfaceType::TILED; }
-  virtual IntSize GetSize() const { return IntSize(mRect.XMost(), mRect.YMost()); }
-  virtual SurfaceFormat GetFormat() const { return mSnapshots[0]->GetFormat(); }
-
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface()
-  {
-    RefPtr<DataSourceSurface> surf = Factory::CreateDataSourceSurface(GetSize(), GetFormat());
-    if (MOZ2D_WARN_IF(!surf)) {
-      return nullptr;
-    }
-
-    DataSourceSurface::MappedSurface mappedSurf;
-    surf->Map(DataSourceSurface::MapType::WRITE, &mappedSurf);
-
-    {
-      RefPtr<DrawTarget> dt =
-        Factory::CreateDrawTargetForData(BackendType::CAIRO, mappedSurf.mData,
-        GetSize(), mappedSurf.mStride, GetFormat());
-
-      for (size_t i = 0; i < mSnapshots.size(); i++) {
-        RefPtr<DataSourceSurface> dataSurf = mSnapshots[i]->GetDataSurface();
-        dt->CopySurface(dataSurf, IntRect(IntPoint(0, 0), mSnapshots[i]->GetSize()), mOrigins[i]);
-      }
-    }
-    surf->Unmap();
-
-    return surf.forget();
-  }
-private:
-  vector<RefPtr<SourceSurface>> mSnapshots;
-  vector<IntPoint> mOrigins;
-  IntRect mRect;
-};
-
 TemporaryRef<SourceSurface>
 DrawTargetTiled::Snapshot()
 {
