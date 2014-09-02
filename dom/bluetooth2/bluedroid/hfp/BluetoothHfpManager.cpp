@@ -31,12 +31,6 @@
 #define MOZSETTINGS_CHANGED_ID               "mozsettings-changed"
 #define AUDIO_VOLUME_BT_SCO_ID               "audio.volume.bt_sco"
 
-/**
- * Dispatch task with arguments to main thread.
- */
-#define BT_HF_DISPATCH_MAIN(args...) \
-  NS_DispatchToMainThread(new MainThreadTask(args))
-
 using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
@@ -57,15 +51,6 @@ namespace {
   // Dialer stops playing.
   static int sBusyToneInterval = 3700; //unit: ms
 } // anonymous namespace
-
-// Main thread task commands
-enum MainThreadTaskCmd {
-  NOTIFY_CONN_STATE_CHANGED,
-  NOTIFY_DIALER,
-  NOTIFY_SCO_VOLUME_CHANGED,
-  POST_TASK_RESPOND_TO_BLDN,
-  POST_TASK_CLOSE_SCO
-};
 
 static bool
 IsValidDtmf(const char aChar) {
@@ -117,6 +102,20 @@ private:
   }
 };
 
+class BluetoothHfpManager::CloseScoRunnable : public nsRunnable
+{
+public:
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    MessageLoop::current()->PostDelayedTask(
+      FROM_HERE, new CloseScoTask(), sBusyToneInterval);
+
+    return NS_OK;
+  }
+};
+
 class BluetoothHfpManager::RespondToBLDNTask : public Task
 {
 private:
@@ -129,60 +128,6 @@ private:
       sBluetoothHfpManager->SendResponse(HFP_AT_RESPONSE_ERROR);
     }
   }
-};
-
-class BluetoothHfpManager::MainThreadTask : public nsRunnable
-{
-public:
-  MainThreadTask(const int aCommand,
-                 const nsAString& aParameter = EmptyString())
-    : mCommand(aCommand), mParameter(aParameter)
-  {
-  }
-
-  nsresult Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(sBluetoothHfpManager);
-
-    switch (mCommand) {
-      case MainThreadTaskCmd::NOTIFY_CONN_STATE_CHANGED:
-        sBluetoothHfpManager->NotifyConnectionStateChanged(mParameter);
-        break;
-      case MainThreadTaskCmd::NOTIFY_DIALER:
-        sBluetoothHfpManager->NotifyDialer(mParameter);
-        break;
-      case MainThreadTaskCmd::NOTIFY_SCO_VOLUME_CHANGED:
-        {
-          nsCOMPtr<nsIObserverService> os =
-            mozilla::services::GetObserverService();
-          NS_ENSURE_TRUE(os, NS_OK);
-
-          os->NotifyObservers(nullptr, "bluetooth-volume-change",
-                              mParameter.get());
-        }
-        break;
-      case MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN:
-        MessageLoop::current()->
-          PostDelayedTask(FROM_HERE, new RespondToBLDNTask(),
-                          sWaitingForDialingInterval);
-        break;
-      case MainThreadTaskCmd::POST_TASK_CLOSE_SCO:
-        MessageLoop::current()->
-          PostDelayedTask(FROM_HERE, new CloseScoTask(),
-                          sBusyToneInterval);
-        break;
-      default:
-        BT_WARNING("MainThreadTask: Unknown command %d", mCommand);
-        break;
-    }
-
-    return NS_OK;
-  }
-
-private:
-  int mCommand;
-  nsString mParameter;
 };
 
 NS_IMPL_ISUPPORTS(BluetoothHfpManager::GetVolumeTask,
@@ -1041,7 +986,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
         if (aError.Equals(NS_LITERAL_STRING("BusyError"))) {
           // FIXME: UpdatePhoneCIND later since it causes SCO close but
           // Dialer is still playing busy tone via HF.
-          BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_CLOSE_SCO);
+          NS_DispatchToMainThread(new CloseScoRunnable());
         }
 
         ResetCallArray();
