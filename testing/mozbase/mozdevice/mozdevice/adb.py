@@ -752,6 +752,94 @@ class ADBDevice(ADBCommand):
                                          device_serial=self._device_serial,
                                          timeout=timeout)
 
+    # Port forwarding methods
+
+    def _validate_port(self, port, is_local=True):
+        """Validate a port forwarding specifier. Raises ValueError on failure.
+
+        :param port: The port specifier to validate
+        :is_local: Boolean indicating whether the port represents a local port.
+        """
+        prefixes = ["tcp", "localabstract", "localreserved", "localfilesystem", "dev"]
+
+        if not is_local:
+            prefixes += ["jdwp"]
+
+        parts = port.split(":", 1)
+        if len(parts) != 2 or parts[0] not in prefixes:
+            raise ValueError("Invalid forward specifier %s" % port)
+
+    def forward(self, local, remote, allow_rebind=True, timeout=None):
+        """Forward a local port to a specific port on the device.
+
+        Ports are specified in the form:
+            tcp:<port>
+            localabstract:<unix domain socket name>
+            localreserved:<unix domain socket name>
+            localfilesystem:<unix domain socket name>
+            dev:<character device name>
+            jdwp:<process pid> (remote only)
+
+        :param local: Local port to forward
+        :param remote: Remote port to which to forward
+        :param allow_rebind: Don't error if the local port is already forwarded
+        :param timeout: optional integer specifying the maximum time in seconds
+            for any spawned adb process to complete before throwing
+            an ADBTimeoutError. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+
+        :raises: * ValueError
+                 * ADBTimeoutError
+                 * ADBError
+        """
+
+        for port, is_local in [(local, True), (remote, False)]:
+            self._validate_port(port, is_local=is_local)
+
+        cmd = ["forward", local, remote]
+        if not allow_rebind:
+            cmd.insert(1, "--no-rebind")
+        self.command_output(cmd, timeout=timeout)
+
+    def list_forwards(self, timeout=None):
+        """Return a list of tuples specifying active forwards
+
+        Return values are of the form (device, local, remote).
+
+        :param timeout: optional integer specifying the maximum time in seconds
+            for any spawned adb process to complete before throwing
+            an ADBTimeoutError. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+
+        :raises: * ADBTimeoutError
+                 * ADBError
+        """
+        forwards = self.command_output(["forward", "--list"], timeout=timeout)
+        return [tuple(line.split(" ")) for line in forwards.split("\n") if line.strip()]
+
+    def remove_forwards(self, local=None, timeout=None):
+        """Remove existing port forwards.
+
+        :param local: local port specifier as for ADBDevice.forward. If local
+            is not specified removes all forwards.
+        :param timeout: optional integer specifying the maximum time in seconds
+            for any spawned adb process to complete before throwing
+            an ADBTimeoutError. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+
+        :raises: * ValueError
+                 * ADBTimeoutError
+                 * ADBError
+        """
+        cmd = ["forward"]
+        if local is None:
+            cmd.extend(["--remove-all"])
+        else:
+            self._validate_port(local, is_local=True)
+            cmd.extend(["--remove", local])
+
+        self.command_output(cmd, timeout=timeout)
+
     # Device Shell methods
 
     def shell(self, cmd, env=None, cwd=None, timeout=None, root=False):
@@ -1035,6 +1123,22 @@ class ADBDevice(ADBCommand):
 
     # File management methods
 
+    def remount(self, timeout=None):
+        """Remount /system/ in read/write mode
+
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before throwing
+            an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :raises: * ADBTimeoutError
+                 * ADBError"""
+
+        rv = self.command_output(["remount"], timeout=timeout)
+        if not rv.startswith("remount succeeded"):
+            raise ADBError("Unable to remount device")
+
     def chmod(self, path, recursive=False, mask="777", timeout=None, root=False):
         """Recursively changes the permissions of a directory on the
         device.
@@ -1248,10 +1352,31 @@ class ADBDevice(ADBCommand):
         self.command_output(["push", os.path.realpath(local), remote],
                             timeout=timeout)
 
+    def pull(self, remote, local, timeout=None):
+        """Pulls a file or directory from the device.
+
+        :param remote: string containing the path of the remote file or
+            directory.
+        :param local: string containing the path of the local file or
+            directory name.
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :raises: * ADBTimeoutError
+                 * ADBError
+
+        """
+        self.command_output(["pull", remote, os.path.realpath(local)],
+                            timeout=timeout)
+
     def rm(self, path, recursive=False, force=False, timeout=None, root=False):
         """Delete files or directories on the device.
 
-        :param path: string containing the file name on the device.
+        :param path: string containing the path of the remote file or
+            directory.
         :param recursive: optional boolean specifying if the command is
             to be applied recursively to the target. Default is False.
         :param force: optional boolean which if True will not raise an
