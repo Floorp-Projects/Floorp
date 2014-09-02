@@ -14,6 +14,7 @@
 #include "MediaSourceDecoder.h"
 #include "MediaSourceUtils.h"
 #include "SourceBufferDecoder.h"
+#include "SharedDecoderManager.h"
 
 #ifdef MOZ_FMP4
 #include "MP4Decoder.h"
@@ -41,6 +42,7 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
   , mEnded(false)
+  , mSharedDecoderManager(new SharedDecoderManager())
 {
 }
 
@@ -354,6 +356,7 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType)
   // reader's callback.
   RefPtr<MediaDataDecodedListener<MediaSourceReader>> callback =
     new MediaDataDecodedListener<MediaSourceReader>(this, GetTaskQueue());
+  reader->SetSharedDecoderManager(mSharedDecoderManager);
   reader->SetCallback(callback);
   reader->SetTaskQueue(GetTaskQueue());
   reader->Init(nullptr);

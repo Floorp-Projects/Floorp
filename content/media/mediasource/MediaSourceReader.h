@@ -116,6 +116,7 @@ private:
   nsRefPtr<MediaDecoderReader> mVideoReader;
 
   bool mEnded;
+  nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 };
 
 } // namespace mozilla

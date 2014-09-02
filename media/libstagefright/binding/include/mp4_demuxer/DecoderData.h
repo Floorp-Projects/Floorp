@@ -113,6 +113,13 @@ class VideoDecoderConfig : public TrackConfig
 {
 public:
   VideoDecoderConfig() : display_width(0), display_height(0) {}
+  void operator=(const VideoDecoderConfig& aConfig)
+  {
+    display_width = aConfig.display_width;
+    display_height = aConfig.display_height;
+    extra_data.appendAll(aConfig.extra_data);
+    annex_b.appendAll(aConfig.annex_b);
+  }
 
   int32_t display_width;
   int32_t display_height;

@@ -59,7 +59,7 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   mVideoWidth  = aConfig.display_width;
   mVideoHeight = aConfig.display_height;
   mDisplayWidth = aConfig.display_width;
-  mDisplayHeight = aConfig.display_width;
+  mDisplayHeight = aConfig.display_height;
   mInfo.mVideo.mHasVideo = true;
   nsIntSize displaySize(mDisplayWidth, mDisplayHeight);
   mInfo.mVideo.mDisplay = displaySize;
