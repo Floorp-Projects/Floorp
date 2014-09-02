@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include "DrawTargetTiled.h"
 #include "Logging.h"
 
@@ -220,10 +223,40 @@ DrawTargetTiled::FillRect(const Rect& aRect, const Pattern& aPattern, const Draw
   }
 }
 
+// The logic for this comes from _cairo_stroke_style_max_distance_from_path
+static Rect
+PathExtentsToMaxStrokeExtents(const StrokeOptions &aStrokeOptions,
+                              const Rect &aRect,
+                              const Matrix &aTransform)
+{
+  double styleExpansionFactor = 0.5f;
+
+  if (aStrokeOptions.mLineCap == CapStyle::SQUARE) {
+    styleExpansionFactor = M_SQRT1_2;
+  }
+
+  if (aStrokeOptions.mLineJoin == JoinStyle::MITER &&
+      styleExpansionFactor < M_SQRT2 * aStrokeOptions.mMiterLimit) {
+    styleExpansionFactor = M_SQRT2 * aStrokeOptions.mMiterLimit;
+  }
+
+  styleExpansionFactor *= aStrokeOptions.mLineWidth;
+
+  double dx = styleExpansionFactor * hypot(aTransform._11, aTransform._21);
+  double dy = styleExpansionFactor * hypot(aTransform._22, aTransform._12);
+
+  Rect result = aRect;
+  result.Inflate(dx, dy);
+  return result;
+}
+
 void
 DrawTargetTiled::Stroke(const Path* aPath, const Pattern& aPattern, const StrokeOptions& aStrokeOptions, const DrawOptions& aDrawOptions)
 {
-  Rect deviceRect = aPath->GetStrokedBounds(aStrokeOptions, mTransform);
+  // Approximate the stroke extents, since Path::GetStrokeExtents can be slow
+  Rect deviceRect = PathExtentsToMaxStrokeExtents(aStrokeOptions,
+                                                 aPath->GetBounds(mTransform),
+                                                 mTransform);
   for (size_t i = 0; i < mTiles.size(); i++) {
     if (deviceRect.Intersects(Rect(mTiles[i].mTileOrigin.x,
                                    mTiles[i].mTileOrigin.y,
