@@ -59,7 +59,7 @@
     <!-- DropDown List View -->
     <style name="DropDownListView" parent="@android:style/Widget.Holo.ListView.DropDown">
          <item name="android:listSelector">@drawable/action_bar_button</item>
-         <item name="android:divider">#FFD1D5DA</item>
+         <item name="android:divider">@color/divider_light</item>
          <item name="android:dividerHeight">1dp</item>
     </style>
 
