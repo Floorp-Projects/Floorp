@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- Serves to position the content on the screen (bottom, centered) and provide the drop-shadow -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/sharedialog"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="15dp"
+    android:layout_marginRight="15dp"
+    android:layout_marginBottom="-12dp"
+    android:paddingTop="30dp"
+    android:layout_gravity="bottom|center"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <LinearLayout
+        android:id="@+id/share_overlay_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:orientation="vertical"
+        android:background="@drawable/share_overlay_background">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:background="@color/background_light"
+            android:orientation="vertical"
+            android:paddingTop="10dp"
+            android:paddingBottom="15dp"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:layout_gravity="center">
+
+            <!-- Title -->
+            <TextView
+                android:id="@id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="7dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:scrollHorizontally="true"
+                android:textColor="@color/text_color_primary"
+                android:textSize="17sp"/>
+
+            <!-- Subtitle (url) -->
+            <TextView
+                android:id="@+id/subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_color_secondary"/>
+
+        </LinearLayout>
+
+        <!-- Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/overlay_share_background_colour"
+            android:orientation="vertical">
+
+            <!-- TODO: Once API 11 is available, stick "showDividers=middle" into the parent and get rid
+                       of these evil separator views. -->
+
+            <!-- "Send to Firefox Sync" -->
+            <org.mozilla.gecko.overlays.ui.SendTabList
+                style="@style/ShareOverlayButton"
+                android:id="@+id/overlay_send_tab_btn"
+                android:background="@color/overlay_share_background_colour"
+                android:padding="0dp"/>
+
+            <!-- Evil separator -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/background_light"/>
+
+            <!-- "Add to reading list" -->
+            <TextView
+                style="@style/ShareOverlayButton.Text"
+                android:id="@+id/overlay_share_reading_list_btn"
+                android:text="@string/overlay_share_reading_list_btn_label"
+                android:drawableLeft="@drawable/overlay_readinglist_icon"/>
+
+            <!-- Evil separator -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/background_light"/>
+
+            <!-- "Add bookmark" -->
+            <TextView
+                style="@style/ShareOverlayButton.Text"
+                android:id="@+id/overlay_share_bookmark_btn"
+                android:text="@string/overlay_share_bookmark_btn_label"
+                android:drawableLeft="@drawable/overlay_bookmark_icon"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Firefox logo (has to appear higher in the z-order than the content. -->
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/share_overlay_content"
+        android:scaleType="center"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/icon"
+        android:layout_marginBottom="-6dp"/>
+</RelativeLayout>
