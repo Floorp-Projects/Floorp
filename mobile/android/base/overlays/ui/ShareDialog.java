@@ -103,6 +103,7 @@ public class ShareDialog extends LocaleAware.LocaleAwareActivity implements Send
             // trying to send a share intent).
             Toast toast = Toast.makeText(this, getResources().getText(R.string.overlay_share_no_url), Toast.LENGTH_SHORT);
             toast.show();
+            finish();
 
             return;
         }
