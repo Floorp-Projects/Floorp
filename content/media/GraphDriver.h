@@ -72,7 +72,7 @@ class AudioCallbackDriver;
 class GraphDriver
 {
 public:
-  GraphDriver(MediaStreamGraphImpl* aGraphImpl);
+  explicit GraphDriver(MediaStreamGraphImpl* aGraphImpl);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
   /* When the graph wakes up to do an iteration, this returns the range of time
@@ -236,7 +236,7 @@ class MediaStreamGraphInitThreadRunnable;
 class ThreadedDriver : public GraphDriver
 {
 public:
-  ThreadedDriver(MediaStreamGraphImpl* aGraphImpl);
+  explicit ThreadedDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~ThreadedDriver();
   virtual void Start() MOZ_OVERRIDE;
   virtual void Stop() MOZ_OVERRIDE;
@@ -262,7 +262,7 @@ protected:
 class SystemClockDriver : public ThreadedDriver
 {
 public:
-  SystemClockDriver(MediaStreamGraphImpl* aGraphImpl);
+  explicit SystemClockDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~SystemClockDriver();
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) MOZ_OVERRIDE;
@@ -321,8 +321,8 @@ class AudioCallbackDriver : public GraphDriver,
                             public MixerCallbackReceiver
 {
 public:
-  AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl,
-                      dom::AudioChannel aChannel = dom::AudioChannel::Normal);
+  explicit AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl,
+                               dom::AudioChannel aChannel = dom::AudioChannel::Normal);
   virtual ~AudioCallbackDriver();
 
   virtual void Destroy() MOZ_OVERRIDE;
@@ -429,7 +429,7 @@ private:
 
   struct AutoInCallback
   {
-    AutoInCallback(AudioCallbackDriver* aDriver);
+    explicit AutoInCallback(AudioCallbackDriver* aDriver);
     ~AutoInCallback();
     AudioCallbackDriver* mDriver;
   };

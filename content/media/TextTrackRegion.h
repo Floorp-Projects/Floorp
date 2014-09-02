@@ -42,7 +42,7 @@ public:
     return mParent;
   }
 
-  TextTrackRegion(nsISupports* aGlobal);
+  explicit TextTrackRegion(nsISupports* aGlobal);
 
   /** WebIDL Methods. */
 

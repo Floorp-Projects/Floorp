@@ -1200,7 +1200,7 @@ namespace {
 class ImageRequestAutoLock
 {
 public:
-  ImageRequestAutoLock(imgIRequest* aRequest)
+  explicit ImageRequestAutoLock(imgIRequest* aRequest)
     : mRequest(aRequest)
   {
     if (mRequest) {

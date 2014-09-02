@@ -79,7 +79,7 @@ class SharedMutex
   class RefCountedMutex MOZ_FINAL : public Mutex
   {
   public:
-    RefCountedMutex(const char* aName)
+    explicit RefCountedMutex(const char* aName)
     : Mutex(aName)
     { }
 
@@ -93,7 +93,7 @@ class SharedMutex
   nsRefPtr<RefCountedMutex> mMutex;
 
 public:
-  SharedMutex(const char* aName)
+  explicit SharedMutex(const char* aName)
   : mMutex(new RefCountedMutex(aName))
   { }
 
@@ -752,7 +752,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 
   struct SyncLoopInfo
   {
-    SyncLoopInfo(EventTarget* aEventTarget);
+    explicit SyncLoopInfo(EventTarget* aEventTarget);
 
     nsRefPtr<EventTarget> mEventTarget;
     bool mCompleted;
@@ -1238,7 +1238,7 @@ class AutoSyncLoopHolder
   uint32_t mIndex;
 
 public:
-  AutoSyncLoopHolder(WorkerPrivate* aWorkerPrivate)
+  explicit AutoSyncLoopHolder(WorkerPrivate* aWorkerPrivate)
   : mWorkerPrivate(aWorkerPrivate)
   , mTarget(aWorkerPrivate->CreateNewSyncLoop())
   , mIndex(aWorkerPrivate->mSyncLoopStack.Length() - 1)

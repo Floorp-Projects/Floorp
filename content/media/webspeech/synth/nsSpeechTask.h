@@ -28,7 +28,7 @@ public:
 
   NS_DECL_NSISPEECHTASK
 
-  nsSpeechTask(SpeechSynthesisUtterance* aUtterance);
+  explicit nsSpeechTask(SpeechSynthesisUtterance* aUtterance);
   nsSpeechTask(float aVolume, const nsAString& aText);
 
   virtual void Pause();

@@ -22,7 +22,7 @@ class nsICODecoder : public Decoder
 {
 public:
 
-  nsICODecoder(RasterImage &aImage);
+  explicit nsICODecoder(RasterImage &aImage);
   virtual ~nsICODecoder();
 
   // Obtains the width of the icon directory entry

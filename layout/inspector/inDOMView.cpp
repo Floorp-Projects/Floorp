@@ -40,7 +40,7 @@ class inDOMViewNode
 {
 public:
   inDOMViewNode() {}
-  inDOMViewNode(nsIDOMNode* aNode);
+  explicit inDOMViewNode(nsIDOMNode* aNode);
   ~inDOMViewNode();
 
   nsCOMPtr<nsIDOMNode> node;

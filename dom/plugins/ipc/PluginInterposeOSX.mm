@@ -743,10 +743,10 @@ void NotifyBrowserOfPopCursor()
 struct WindowInfo {
   uint32_t window_id;
   CGRect bounds;
-  WindowInfo(NSWindow* window) {
-    NSInteger window_num = [window windowNumber];
+  explicit WindowInfo(NSWindow* aWindow) {
+    NSInteger window_num = [aWindow windowNumber];
     window_id = window_num > 0 ? window_num : 0;
-    bounds = NSRectToCGRect([window frame]);
+    bounds = NSRectToCGRect([aWindow frame]);
   }
 };
 

@@ -256,7 +256,7 @@ NullableStringGet(const nsCString& str)
 
 struct DeletingObjectEntry : public nsPtrHashKey<NPObject>
 {
-  DeletingObjectEntry(const NPObject* key)
+  explicit DeletingObjectEntry(const NPObject* key)
     : nsPtrHashKey<NPObject>(key)
     , mDeleted(false)
   { }

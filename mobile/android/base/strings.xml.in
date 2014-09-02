@@ -111,7 +111,7 @@
   <string name="media_stop">&media_stop;</string>
 
   <string name="overlay_share_send_other">&overlay_share_send_other;</string>
-  <string name="overlay_share_header">&overlay_share_header;</string>
+  <string name="overlay_share_label">&overlay_share_label;</string>
   <string name="overlay_share_bookmark_btn_label">&overlay_share_bookmark_btn_label;</string>
   <string name="overlay_share_reading_list_btn_label">&overlay_share_reading_list_btn_label;</string>
   <string name="overlay_share_send_tab_btn_label">&overlay_share_send_tab_btn_label;</string>

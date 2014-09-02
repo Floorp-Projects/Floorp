@@ -211,7 +211,7 @@ public:
   void SetInstanceOwner(nsPluginInstanceOwner* aOwner);
 
 protected:
-  nsObjectFrame(nsStyleContext* aContext);
+  explicit nsObjectFrame(nsStyleContext* aContext);
   virtual ~nsObjectFrame();
 
   // NOTE:  This frame class does not inherit from |nsLeafFrame|, so
@@ -260,7 +260,7 @@ private:
 
   class PluginEventNotifier : public nsRunnable {
   public:
-    PluginEventNotifier(const nsString &aEventType) : 
+    explicit PluginEventNotifier(const nsString &aEventType) : 
       mEventType(aEventType) {}
     
     NS_IMETHOD Run() MOZ_OVERRIDE;

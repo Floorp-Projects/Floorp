@@ -25,7 +25,7 @@ class nsSVGGenericContainerFrame : public nsSVGGenericContainerFrameBase
   friend nsIFrame*
   NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  nsSVGGenericContainerFrame(nsStyleContext* aContext) : nsSVGGenericContainerFrameBase(aContext) {}
+  explicit nsSVGGenericContainerFrame(nsStyleContext* aContext) : nsSVGGenericContainerFrameBase(aContext) {}
   
 public:
   NS_DECL_FRAMEARENA_HELPERS

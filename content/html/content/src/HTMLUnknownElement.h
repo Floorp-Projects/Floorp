@@ -14,7 +14,7 @@ namespace dom {
 class HTMLUnknownElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLUnknownElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit HTMLUnknownElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
     if (NodeInfo()->Equals(nsGkAtoms::bdi)) {

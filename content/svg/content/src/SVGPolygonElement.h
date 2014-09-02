@@ -20,7 +20,7 @@ namespace dom {
 class SVGPolygonElement MOZ_FINAL : public SVGPolygonElementBase
 {
 protected:
-  SVGPolygonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGPolygonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGPolygonElement(nsIContent **aResult,
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

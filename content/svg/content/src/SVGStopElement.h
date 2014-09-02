@@ -22,7 +22,7 @@ class SVGStopElement MOZ_FINAL : public SVGStopElementBase
 protected:
   friend nsresult (::NS_NewSVGStopElement(nsIContent **aResult,
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGStopElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGStopElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
 public:

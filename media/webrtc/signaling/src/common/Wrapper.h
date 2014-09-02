@@ -69,7 +69,7 @@ private:
 
 class AutoLockNSPR {
 public:
-  AutoLockNSPR(LockNSPR& lock) : lock_(lock) {
+  explicit AutoLockNSPR(LockNSPR& lock) : lock_(lock) {
     lock_.Acquire();
   }
   ~AutoLockNSPR() {

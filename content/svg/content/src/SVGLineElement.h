@@ -20,7 +20,7 @@ typedef nsSVGPathGeometryElement SVGLineElementBase;
 class SVGLineElement MOZ_FINAL : public SVGLineElementBase
 {
 protected:
-  SVGLineElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGLineElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGLineElement(nsIContent **aResult,
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

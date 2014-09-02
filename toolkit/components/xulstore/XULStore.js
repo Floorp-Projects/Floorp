@@ -201,8 +201,14 @@ XULStore.prototype = {
     }
 
     // bug 319846 -- don't save really long attributes or values.
-    if (id.length > 1024 || attr.length > 1024 || value.length > 1024)
-      throw Components.Exception("id, attribute, or value too long", Cr.NS_ERROR_ILLEGAL_VALUE);
+    if (id.length > 512 || attr.length > 512) {
+      throw Components.Exception("id or attribute name too long", Cr.NS_ERROR_ILLEGAL_VALUE);
+    }
+
+    if (value.length > 4096) {
+      Services.console.logStringMessage("XULStore: Warning, truncating long attribute value")
+      value = value.substr(0, 4096);
+    }
 
     let obj = this._data;
     if (!(docURI in obj)) {

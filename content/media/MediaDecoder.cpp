@@ -609,6 +609,9 @@ nsresult MediaDecoder::Play()
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   NS_ASSERTION(mDecoderStateMachine != nullptr, "Should have state machine.");
+  if (mPausedForPlaybackRateNull) {
+    return NS_OK;
+  }
   nsresult res = ScheduleStateMachineThread();
   NS_ENSURE_SUCCESS(res,res);
   if ((mPlayState == PLAY_STATE_LOADING && mIsDormant) || mPlayState == PLAY_STATE_SEEKING) {
@@ -1437,17 +1440,23 @@ bool MediaDecoder::OnStateMachineThread() const
 
 void MediaDecoder::SetPlaybackRate(double aPlaybackRate)
 {
-  if (aPlaybackRate == 0) {
+  if (aPlaybackRate == mInitialPlaybackRate) {
+    return;
+  }
+
+  if (aPlaybackRate == 0.0) {
     mPausedForPlaybackRateNull = true;
+    mInitialPlaybackRate = aPlaybackRate;
     Pause();
     return;
   } else if (mPausedForPlaybackRateNull) {
+    // Play() uses mPausedForPlaybackRateNull value, so must reset it first
+    mPausedForPlaybackRateNull = false;
     // If the playbackRate is no longer null, restart the playback, iff the
     // media was playing.
     if (mOwner && !mOwner->GetPaused()) {
       Play();
     }
-    mPausedForPlaybackRateNull = false;
   }
 
   if (mDecoderStateMachine) {

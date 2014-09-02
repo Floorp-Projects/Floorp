@@ -129,7 +129,7 @@ InActiveDocument(nsIContent *aContent)
 
 class nsAsyncInstantiateEvent : public nsRunnable {
 public:
-  nsAsyncInstantiateEvent(nsObjectLoadingContent *aContent)
+  explicit nsAsyncInstantiateEvent(nsObjectLoadingContent* aContent)
   : mContent(aContent) {}
 
   ~nsAsyncInstantiateEvent() {}
@@ -162,7 +162,7 @@ nsAsyncInstantiateEvent::Run()
 // without re-instantiating it.
 class CheckPluginStopEvent : public nsRunnable {
 public:
-  CheckPluginStopEvent(nsObjectLoadingContent *aContent)
+  explicit CheckPluginStopEvent(nsObjectLoadingContent* aContent)
   : mContent(aContent) {}
 
   ~CheckPluginStopEvent() {}
@@ -459,7 +459,7 @@ nsStopPluginRunnable::Run()
 // Sets a object's mInstantiating bit to false when destroyed
 class AutoSetInstantiatingToFalse {
 public:
-  AutoSetInstantiatingToFalse(nsObjectLoadingContent *aContent)
+  explicit AutoSetInstantiatingToFalse(nsObjectLoadingContent* aContent)
     : mContent(aContent) {}
   ~AutoSetInstantiatingToFalse() { mContent->mInstantiating = false; }
 private:
@@ -469,7 +469,7 @@ private:
 // Sets a object's mInstantiating bit to false when destroyed
 class AutoSetLoadingToFalse {
 public:
-  AutoSetLoadingToFalse(nsObjectLoadingContent *aContent)
+  explicit AutoSetLoadingToFalse(nsObjectLoadingContent* aContent)
     : mContent(aContent) {}
   ~AutoSetLoadingToFalse() { mContent->mIsLoading = false; }
 private:
@@ -1341,7 +1341,7 @@ public:
   NS_FORWARD_NSIREQUESTOBSERVER (static_cast<nsObjectLoadingContent *>
                                  (mContent.get())->)
 
-  ObjectInterfaceRequestorShim(nsIObjectLoadingContent* aContent)
+  explicit ObjectInterfaceRequestorShim(nsIObjectLoadingContent* aContent)
     : mContent(aContent)
   {}
 

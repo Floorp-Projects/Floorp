@@ -51,7 +51,7 @@ protected:
 class GMPSharedMemManager
 {
 public:
-  GMPSharedMemManager(GMPSharedMem *aData) : mData(aData) {}
+  explicit GMPSharedMemManager(GMPSharedMem *aData) : mData(aData) {}
   virtual ~GMPSharedMemManager() {}
 
   virtual bool MgrAllocShmem(GMPSharedMem::GMPMemoryClasses aClass, size_t aSize,

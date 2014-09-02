@@ -294,7 +294,7 @@ public:
 class DrawRunner : public nsRunnable
 {
 public:
-  DrawRunner(ScaleRequest* request)
+  explicit DrawRunner(ScaleRequest* request)
    : mScaleRequest(request)
   {}
 

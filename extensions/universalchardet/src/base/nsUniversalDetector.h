@@ -31,7 +31,7 @@ typedef enum {
 
 class nsUniversalDetector {
 public:
-   nsUniversalDetector(uint32_t aLanguageFilter);
+   explicit nsUniversalDetector(uint32_t aLanguageFilter);
    virtual ~nsUniversalDetector();
    virtual nsresult HandleData(const char* aBuf, uint32_t aLen);
    virtual void DataEnd(void);

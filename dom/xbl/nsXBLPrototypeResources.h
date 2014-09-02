@@ -25,7 +25,7 @@ class CSSStyleSheet;
 class nsXBLPrototypeResources
 {
 public:
-  nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding);
+  explicit nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding);
   ~nsXBLPrototypeResources();
 
   void LoadResources(bool* aResult);

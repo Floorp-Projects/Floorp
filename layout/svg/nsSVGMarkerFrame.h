@@ -34,7 +34,7 @@ class nsSVGMarkerFrame : public nsSVGMarkerFrameBase
   friend nsContainerFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  nsSVGMarkerFrame(nsStyleContext* aContext)
+  explicit nsSVGMarkerFrame(nsStyleContext* aContext)
     : nsSVGMarkerFrameBase(aContext)
     , mMarkedFrame(nullptr)
     , mInUse(false)
@@ -146,7 +146,7 @@ class nsSVGMarkerAnonChildFrame
   NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
                                 nsStyleContext* aContext);
 
-  nsSVGMarkerAnonChildFrame(nsStyleContext* aContext)
+  explicit nsSVGMarkerAnonChildFrame(nsStyleContext* aContext)
     : nsSVGMarkerAnonChildFrameBase(aContext)
   {}
 

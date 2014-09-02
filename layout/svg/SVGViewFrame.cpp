@@ -25,7 +25,7 @@ class SVGViewFrame : public SVGViewFrameBase
   friend nsIFrame*
   NS_NewSVGViewFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  SVGViewFrame(nsStyleContext* aContext)
+  explicit SVGViewFrame(nsStyleContext* aContext)
     : SVGViewFrameBase(aContext)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

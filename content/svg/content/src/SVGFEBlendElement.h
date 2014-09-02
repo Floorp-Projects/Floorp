@@ -21,7 +21,7 @@ class SVGFEBlendElement : public SVGFEBlendElementBase
   friend nsresult (::NS_NewSVGFEBlendElement(nsIContent **aResult,
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFEBlendElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFEBlendElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEBlendElementBase(aNodeInfo)
   {
   }

@@ -88,7 +88,7 @@ public:
      * Creates a new txListIterator for the given txList
      * @param list, the txList to create an Iterator for
     **/
-    txListIterator(txList* list);
+    explicit txListIterator(txList* list);
 
     /**
      * Adds the Object pointer to the txList pointed to by this txListIterator.

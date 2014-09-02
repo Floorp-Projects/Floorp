@@ -1220,7 +1220,7 @@ namespace { // anon
 class FindPendingOperationForScopeData
 {
 public:
-  FindPendingOperationForScopeData(const nsACString& aScope) : mScope(aScope), mFound(false) {}
+  explicit FindPendingOperationForScopeData(const nsACString& aScope) : mScope(aScope), mFound(false) {}
   nsCString mScope;
   bool mFound;
 };

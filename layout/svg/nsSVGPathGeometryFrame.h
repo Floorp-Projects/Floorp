@@ -40,7 +40,7 @@ class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
   friend class nsDisplaySVGPathGeometry;
 
 protected:
-  nsSVGPathGeometryFrame(nsStyleContext* aContext)
+  explicit nsSVGPathGeometryFrame(nsStyleContext* aContext)
     : nsSVGPathGeometryFrameBase(aContext)
   {
      AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_MAY_BE_TRANSFORMED);

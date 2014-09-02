@@ -39,7 +39,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_FORWARD_SAFE_NSITELEPHONYLISTENER(mTelephony)
 
-  Listener(Telephony* aTelephony)
+  explicit Listener(Telephony* aTelephony)
     : mTelephony(aTelephony)
   {
     MOZ_ASSERT(mTelephony);

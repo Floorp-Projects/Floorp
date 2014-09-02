@@ -1448,7 +1448,7 @@ namespace {
 
 class MediaStreamGraphShutDownRunnable : public nsRunnable {
 public:
-  MediaStreamGraphShutDownRunnable(MediaStreamGraphImpl* aGraph)
+  explicit MediaStreamGraphShutDownRunnable(MediaStreamGraphImpl* aGraph)
     : mGraph(aGraph)
   {}
   NS_IMETHOD Run()
@@ -1516,7 +1516,7 @@ private:
  */
 class CreateMessage : public ControlMessage {
 public:
-  CreateMessage(MediaStream* aStream) : ControlMessage(aStream) {}
+  explicit CreateMessage(MediaStream* aStream) : ControlMessage(aStream) {}
   virtual void Run() MOZ_OVERRIDE
   {
     mStream->GraphImpl()->AddStream(mStream);
@@ -1906,7 +1906,7 @@ MediaStream::Destroy()
 
   class Message : public ControlMessage {
   public:
-    Message(MediaStream* aStream) : ControlMessage(aStream) {}
+    explicit Message(MediaStream* aStream) : ControlMessage(aStream) {}
     virtual void Run()
     {
       mStream->RemoveAllListenersImpl();
@@ -2531,7 +2531,7 @@ MediaInputPort::Destroy()
 {
   class Message : public ControlMessage {
   public:
-    Message(MediaInputPort* aPort)
+    explicit Message(MediaInputPort* aPort)
       : ControlMessage(nullptr), mPort(aPort) {}
     virtual void Run()
     {
@@ -2576,7 +2576,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags,
   // the main thread, and one for the MediaStreamGraph.
   class Message : public ControlMessage {
   public:
-    Message(MediaInputPort* aPort)
+    explicit Message(MediaInputPort* aPort)
       : ControlMessage(aPort->GetDestination()),
         mPort(aPort) {}
     virtual void Run()
@@ -2604,7 +2604,7 @@ ProcessedMediaStream::Finish()
 {
   class Message : public ControlMessage {
   public:
-    Message(ProcessedMediaStream* aStream)
+    explicit Message(ProcessedMediaStream* aStream)
       : ControlMessage(aStream) {}
     virtual void Run()
     {
@@ -2776,7 +2776,7 @@ NS_IMPL_ISUPPORTS(MediaStreamGraphImpl, nsIMemoryReporter)
 
 struct ArrayClearer
 {
-  ArrayClearer(nsTArray<AudioNodeSizes>& aArray) : mArray(aArray) {}
+  explicit ArrayClearer(nsTArray<AudioNodeSizes>& aArray) : mArray(aArray) {}
   ~ArrayClearer() { mArray.Clear(); }
   nsTArray<AudioNodeSizes>& mArray;
 };

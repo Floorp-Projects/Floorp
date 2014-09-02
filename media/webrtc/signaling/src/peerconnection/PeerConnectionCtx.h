@@ -35,7 +35,7 @@ class WebrtcGlobalInformation;
 class SipccOfferOptions {
 public:
   SipccOfferOptions();
-  SipccOfferOptions(const dom::RTCOfferOptions &aOther);
+  explicit SipccOfferOptions(const dom::RTCOfferOptions &aOther);
   cc_media_options_t* build() const;
 protected:
   cc_media_options_t mOptions;
