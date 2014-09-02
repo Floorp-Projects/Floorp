@@ -24,7 +24,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CryptoKeyPair)
 
 public:
-  CryptoKeyPair(nsIGlobalObject* aGlobal)
+  explicit CryptoKeyPair(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal)
     , mPublicKey(new CryptoKey(aGlobal))
     , mPrivateKey(new CryptoKey(aGlobal))

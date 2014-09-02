@@ -349,7 +349,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginUsesDOMForCursor(
 class NotificationSink : public CompositionNotifySink
 {
 public:
-  NotificationSink(PluginInstanceParent *aInstance) : mInstance(aInstance)
+  explicit NotificationSink(PluginInstanceParent* aInstance) : mInstance(aInstance)
   { }
 
   virtual void DidComposite() { mInstance->DidComposite(); }

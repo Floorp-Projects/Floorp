@@ -121,18 +121,11 @@ AsmJSModule::~AsmJSModule()
     if (code_) {
         for (unsigned i = 0; i < numExits(); i++) {
             AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
-            if (!exitDatum.fun)
-                continue;
-
-            if (!exitDatum.fun->hasScript())
-                continue;
-
-            JSScript *script = exitDatum.fun->nonLazyScript();
-            if (!script->hasIonScript())
+            if (!exitDatum.ionScript)
                 continue;
 
             jit::DependentAsmJSModuleExit exit(this, i);
-            script->ionScript()->removeDependentAsmJSModule(exit);
+            exitDatum.ionScript->removeDependentAsmJSModule(exit);
         }
 
         DeallocateExecutableMemory(code_, pod.totalBytes_);
@@ -536,7 +529,9 @@ TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t 
     if (!ionScript->addDependentAsmJSModule(cx, DependentAsmJSModuleExit(&module, exitIndex)))
         return false;
 
-    module.exitIndexToGlobalDatum(exitIndex).exit = module.ionExitTrampoline(module.exit(exitIndex));
+    AsmJSModule::ExitDatum &exitDatum = module.exitIndexToGlobalDatum(exitIndex);
+    exitDatum.exit = module.ionExitTrampoline(module.exit(exitIndex));
+    exitDatum.ionScript = ionScript;
     return true;
 }
 
@@ -737,8 +732,10 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
     // Initialize global data segment
 
     for (size_t i = 0; i < exits_.length(); i++) {
-        exitIndexToGlobalDatum(i).exit = interpExitTrampoline(exits_[i]);
-        exitIndexToGlobalDatum(i).fun = nullptr;
+        AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
+        exitDatum.exit = interpExitTrampoline(exits_[i]);
+        exitDatum.fun = nullptr;
+        exitDatum.ionScript = nullptr;
     }
 
     JS_ASSERT(isStaticallyLinked());

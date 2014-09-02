@@ -41,7 +41,7 @@ class MOZ_STACK_CLASS TransactionPoolEventTarget : public StackBasedEventTarget
 public:
   NS_DECL_NSIEVENTTARGET
 
-  TransactionPoolEventTarget(IDBTransaction* aTransaction)
+  explicit TransactionPoolEventTarget(IDBTransaction* aTransaction)
   : mTransaction(aTransaction)
   { }
 
