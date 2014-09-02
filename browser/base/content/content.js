@@ -633,3 +633,19 @@ let DOMFullscreenHandler = {
   }
 };
 DOMFullscreenHandler.init();
+
+addMessageListener("Browser:AppTab", function(message) {
+  docShell.isAppTab = message.data.isAppTab;
+});
+
+let WebBrowserChrome = {
+  onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {
+    return BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab);
+  },
+};
+
+if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+  let tabchild = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsITabChild);
+  tabchild.webBrowserChrome = WebBrowserChrome;
+}
