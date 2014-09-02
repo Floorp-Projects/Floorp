@@ -571,8 +571,9 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
   TimeDuration latency = TimeStamp::Now() - aTransactionStart;
   // Theshold is 200ms to trigger, 1000ms to hit red
-  if (latency > TimeDuration::FromMilliseconds(200)) {
-    float severity = (latency - TimeDuration::FromMilliseconds(200)).ToMilliseconds() / 800;
+  if (latency > TimeDuration::FromMilliseconds(kVisualWarningTrigger)) {
+    float severity = (latency - TimeDuration::FromMilliseconds(kVisualWarningTrigger)).ToMilliseconds() /
+                       (kVisualWarningMax - kVisualWarningTrigger);
     if (severity > 1.f) {
       severity = 1.f;
     }
