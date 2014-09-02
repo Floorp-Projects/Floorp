@@ -348,6 +348,9 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
           case AsmJSSimdOperation_lessThan: native = simd_int32x4_lessThan; break;
           case AsmJSSimdOperation_greaterThan: native = simd_int32x4_greaterThan; break;
           case AsmJSSimdOperation_equal: native = simd_int32x4_equal; break;
+          case AsmJSSimdOperation_and: native = simd_int32x4_and; break;
+          case AsmJSSimdOperation_or: native = simd_int32x4_or; break;
+          case AsmJSSimdOperation_xor: native = simd_int32x4_xor; break;
           case AsmJSSimdOperation_lessThanOrEqual:
           case AsmJSSimdOperation_greaterThanOrEqual:
           case AsmJSSimdOperation_notEqual:
@@ -369,6 +372,9 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
           case AsmJSSimdOperation_notEqual: native = simd_float32x4_notEqual ; break;
           case AsmJSSimdOperation_greaterThan: native = simd_float32x4_greaterThan; break;
           case AsmJSSimdOperation_greaterThanOrEqual: native = simd_float32x4_greaterThanOrEqual ; break;
+          case AsmJSSimdOperation_and: native = simd_float32x4_and; break;
+          case AsmJSSimdOperation_or: native = simd_float32x4_or; break;
+          case AsmJSSimdOperation_xor: native = simd_float32x4_xor; break;
         }
         break;
     }
