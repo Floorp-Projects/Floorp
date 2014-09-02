@@ -28,7 +28,7 @@
     "b2g_manifest": "dolphin.xml",
     "b2g_manifest_intree": true,
     "additional_source_tarballs": [],
-    "gecko_l10n_root": "https://hg.mozilla.org/l10n-central",
+    "gecko_l10n_root": "https://hg.mozilla.org/releases/l10n/mozilla-aurora",
     "gaia": {
         "l10n": {
             "vcs": "hgtool",
