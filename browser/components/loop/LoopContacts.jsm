@@ -436,7 +436,9 @@ let LoopContactsInternal = Object.freeze({
         }
 
         request.onsuccess = event => {
-          eventEmitter.emit("remove", contact);
+          if (contact) {
+            eventEmitter.emit("remove", contact);
+          }
           callback(null, event.target.result);
         };
         request.onerror = event => callback(event.target.error);
@@ -674,6 +676,7 @@ let LoopContactsInternal = Object.freeze({
       if (!contact) {
         callback(new Error("Contact with " + kKeyPath + " '" +
                            guid + "' could not be found"));
+        return;
       }
 
       LoopStorage.getStore(kObjectStoreName, (err, store) => {
@@ -723,6 +726,7 @@ let LoopContactsInternal = Object.freeze({
       if (!contact) {
         callback(new Error("Contact with " + kKeyPath + " '" +
                            guid + "' could not be found"));
+        return;
       }
 
       contact.blocked = true;
@@ -749,6 +753,7 @@ let LoopContactsInternal = Object.freeze({
       if (!contact) {
         callback(new Error("Contact with " + kKeyPath + " '" +
                            guid + "' could not be found"));
+        return;
       }
 
       contact.blocked = false;

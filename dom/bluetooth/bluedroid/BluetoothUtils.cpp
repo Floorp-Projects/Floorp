@@ -22,19 +22,6 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-void
-BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
-{
-  uint8_t* addr = aBdAddressType->address;
-  char bdstr[18];
-
-  sprintf(bdstr, "%02x:%02x:%02x:%02x:%02x:%02x",
-          (int)addr[0],(int)addr[1],(int)addr[2],
-          (int)addr[3],(int)addr[4],(int)addr[5]);
-
-  aRetBdAddress = NS_ConvertUTF8toUTF16(bdstr);
-}
-
 uint16_t
 UuidToServiceClassInt(const BluetoothUuid& mUuid)
 {
