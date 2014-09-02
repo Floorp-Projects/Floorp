@@ -3555,6 +3555,25 @@ JSObject::CopyElementsForWrite(ThreadSafeContext *cx, JSObject *obj)
     return true;
 }
 
+void
+JSObject::fixupAfterMovingGC()
+{
+    /*
+     * If this is a copy-on-write elements we may need to fix up both the
+     * elements' pointer back to the owner object, and the elements pointer
+     * itself if it points to inline elements in another object.
+     */
+    if (hasDynamicElements()) {
+        ObjectElements *header = getElementsHeader();
+        if (header->isCopyOnWrite()) {
+            HeapPtrObject &owner = header->ownerObject();
+            if (IsForwarded(owner.get()))
+                owner = Forwarded(owner.get());
+            elements = owner->getElementsHeader()->elements();
+        }
+    }
+}
+
 bool
 js::SetClassAndProto(JSContext *cx, HandleObject obj,
                      const Class *clasp, Handle<js::TaggedProto> proto,

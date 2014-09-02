@@ -15,7 +15,7 @@ class TestChild MOZ_FINAL : public mozilla::ipc::PBackgroundTestChild
 
   nsCString mTestArg;
 
-  TestChild(const nsCString& aTestArg)
+  explicit TestChild(const nsCString& aTestArg)
   : mTestArg(aTestArg)
   {
     MOZ_COUNT_CTOR(TestChild);

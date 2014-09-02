@@ -17,12 +17,18 @@
     _(Double)                       \
     _(Float32)                      \
     _(SimdValueX4)                  \
+    _(SimdSplatX4)                  \
     _(Int32x4)                      \
     _(Float32x4)                    \
     _(SimdExtractElementI)          \
     _(SimdExtractElementF)          \
+    _(SimdSignMaskX4)               \
+    _(SimdBinaryCompIx4)            \
+    _(SimdBinaryCompFx4)            \
     _(SimdBinaryArithIx4)           \
     _(SimdBinaryArithFx4)           \
+    _(SimdBinaryBitwiseX4)          \
+    _(SimdSelect)                   \
     _(Value)                        \
     _(CloneLiteral)                 \
     _(Parameter)                    \

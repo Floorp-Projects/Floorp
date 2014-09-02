@@ -24,7 +24,7 @@ class SVGForeignObjectElement MOZ_FINAL : public SVGGraphicsElement
 protected:
   friend nsresult (::NS_NewSVGForeignObjectElement(nsIContent **aResult,
                                                    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGForeignObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGForeignObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:

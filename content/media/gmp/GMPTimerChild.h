@@ -23,7 +23,7 @@ class GMPTimerChild : public PGMPTimerChild
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPTimerChild)
 
-  GMPTimerChild(GMPChild* aPlugin);
+  explicit GMPTimerChild(GMPChild* aPlugin);
 
   GMPErr SetTimer(GMPTask* aTask, int64_t aTimeoutMS);
 

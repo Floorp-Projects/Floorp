@@ -52,7 +52,7 @@ protected:
 class SpeechSynthesisRequestParent : public PSpeechSynthesisRequestParent
 {
 public:
-  SpeechSynthesisRequestParent(SpeechTaskParent* aTask);
+  explicit SpeechSynthesisRequestParent(SpeechTaskParent* aTask);
   virtual ~SpeechSynthesisRequestParent();
 
   nsRefPtr<SpeechTaskParent> mTask;

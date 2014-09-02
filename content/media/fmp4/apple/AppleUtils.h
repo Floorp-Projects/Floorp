@@ -8,6 +8,7 @@
 #define mozilla_AppleUtils_h
 
 #include <AudioToolbox/AudioToolbox.h>
+#include "mozilla/Attributes.h"
 #include "nsError.h"
 
 namespace mozilla {
@@ -43,7 +44,7 @@ struct AppleUtils {
 template <class T>
 class AutoCFRelease {
 public:
-  AutoCFRelease(T aRef)
+  MOZ_IMPLICIT AutoCFRelease(T aRef)
     : mRef(aRef)
   {
   }

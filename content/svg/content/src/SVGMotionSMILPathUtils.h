@@ -33,7 +33,7 @@ public:
   // coordinates in the <animateMotion> from/by/to/values attributes.
   class PathGenerator {
   public:
-    PathGenerator(const nsSVGElement* aSVGElement)
+    explicit PathGenerator(const nsSVGElement* aSVGElement)
       : mSVGElement(aSVGElement),
         mHaveReceivedCommands(false)
     {

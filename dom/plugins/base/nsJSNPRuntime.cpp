@@ -101,8 +101,8 @@ NPObjectIsOutOfProcessProxy(NPObject *obj)
 class AutoJSExceptionReporter
 {
 public:
-  AutoJSExceptionReporter(JSContext *cx)
-    : mCx(cx)
+  explicit AutoJSExceptionReporter(JSContext* aCx)
+    : mCx(aCx)
   {
   }
 

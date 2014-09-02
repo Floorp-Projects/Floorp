@@ -16,7 +16,7 @@ class HTMLTableCaptionElement MOZ_FINAL : public nsGenericHTMLElement,
                                           public nsIDOMHTMLTableCaptionElement
 {
 public:
-  HTMLTableCaptionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit HTMLTableCaptionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
     SetHasWeirdParserInsertionMode();

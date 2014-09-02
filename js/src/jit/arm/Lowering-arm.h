@@ -91,6 +91,8 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
     bool visitForkJoinGetSlice(MForkJoinGetSlice *ins);
+    bool visitSimdTernaryBitwise(MSimdTernaryBitwise *ins);
+    bool visitSimdSplatX4(MSimdSplatX4 *ins);
 };
 
 typedef LIRGeneratorARM LIRGeneratorSpecific;

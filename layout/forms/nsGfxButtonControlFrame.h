@@ -22,7 +22,7 @@ class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame,
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsGfxButtonControlFrame(nsStyleContext* aContext);
+  explicit nsGfxButtonControlFrame(nsStyleContext* aContext);
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 

@@ -23,7 +23,7 @@ class SVGFESpecularLightingElement : public SVGFESpecularLightingElementBase
   friend nsresult (::NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
                                                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFESpecularLightingElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFESpecularLightingElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFESpecularLightingElementBase(aNodeInfo)
   {
   }

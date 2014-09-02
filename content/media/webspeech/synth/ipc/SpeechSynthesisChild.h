@@ -44,7 +44,7 @@ protected:
 class SpeechSynthesisRequestChild : public PSpeechSynthesisRequestChild
 {
 public:
-  SpeechSynthesisRequestChild(SpeechTaskChild* aTask);
+  explicit SpeechSynthesisRequestChild(SpeechTaskChild* aTask);
   virtual ~SpeechSynthesisRequestChild();
 
 protected:
@@ -72,7 +72,7 @@ class SpeechTaskChild : public nsSpeechTask
   friend class SpeechSynthesisRequestChild;
 public:
 
-  SpeechTaskChild(SpeechSynthesisUtterance* aUtterance);
+  explicit SpeechTaskChild(SpeechSynthesisUtterance* aUtterance);
 
   NS_IMETHOD Setup(nsISpeechTaskCallback* aCallback,
                    uint32_t aChannels, uint32_t aRate, uint8_t argc) MOZ_OVERRIDE;

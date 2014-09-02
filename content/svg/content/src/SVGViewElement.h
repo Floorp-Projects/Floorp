@@ -35,7 +35,7 @@ protected:
   friend class mozilla::SVGFragmentIdentifier;
   friend class SVGSVGElement;
   friend class ::nsSVGOuterSVGFrame;
-  SVGViewElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGViewElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   friend nsresult (::NS_NewSVGViewElement(nsIContent **aResult,
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;

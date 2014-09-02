@@ -35,7 +35,7 @@ class mozInlineSpellResume;
 class mozInlineSpellStatus
 {
 public:
-  mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
+  explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
 
   nsresult InitForEditorChange(EditAction aAction,
                                nsIDOMNode* aAnchorNode, int32_t aAnchorOffset,

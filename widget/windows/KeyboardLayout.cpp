@@ -606,7 +606,7 @@ UniCharsAndModifiers
 VirtualKey::GetNativeUniChars(ShiftState aShiftState) const
 {
 #ifdef DEBUG
-  if (aShiftState < 0 || aShiftState >= ArrayLength(mShiftStates)) {
+  if (aShiftState >= ArrayLength(mShiftStates)) {
     nsPrintfCString warning("Shift state is out of range: "
                             "aShiftState=%d, ArrayLength(mShiftState)=%d",
                             aShiftState, ArrayLength(mShiftStates));
@@ -2259,8 +2259,8 @@ KeyboardLayout::LoadLayout(HKL aLayout)
     static const UINT kMapType =
       IsVistaOrLater() ? MAPVK_VSC_TO_VK_EX : MAPVK_VSC_TO_VK;
     PR_LOG(sKeyboardLayoutLogger, PR_LOG_DEBUG,
-           ("Logging virtual keycode values for scancode (0x%08X)...",
-            reinterpret_cast<const uint32_t>(mKeyboardLayout)));
+           ("Logging virtual keycode values for scancode (0x%p)...",
+            mKeyboardLayout));
     for (uint32_t i = 0; i < ArrayLength(kExtendedScanCode); i++) {
       for (uint32_t j = 1; j <= 0xFF; j++) {
         UINT scanCode = kExtendedScanCode[i] + j;

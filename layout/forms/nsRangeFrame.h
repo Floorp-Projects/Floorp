@@ -24,7 +24,7 @@ class nsRangeFrame : public nsContainerFrame,
 
   friend class nsDisplayRangeFocusRing;
 
-  nsRangeFrame(nsStyleContext* aContext);
+  explicit nsRangeFrame(nsStyleContext* aContext);
   virtual ~nsRangeFrame();
 
   typedef mozilla::dom::Element Element;

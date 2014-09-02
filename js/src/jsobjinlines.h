@@ -582,6 +582,18 @@ JSObject::createArrayInternal(js::ExclusiveContext *cx, js::gc::AllocKind kind, 
 }
 
 /* static */ inline js::ArrayObject *
+JSObject::finishCreateArray(JSObject *obj, js::HandleShape shape)
+{
+    size_t span = shape->slotSpan();
+    if (span)
+        obj->initializeSlotRange(0, span);
+
+    js::gc::TraceCreateObject(obj);
+
+    return &obj->as<js::ArrayObject>();
+}
+
+/* static */ inline js::ArrayObject *
 JSObject::createArray(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
                       js::HandleShape shape, js::HandleTypeObject type,
                       uint32_t length)
@@ -595,13 +607,7 @@ JSObject::createArray(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::
     obj->setFixedElements();
     new (obj->getElementsHeader()) js::ObjectElements(capacity, length);
 
-    size_t span = shape->slotSpan();
-    if (span)
-        obj->initializeSlotRange(0, span);
-
-    js::gc::TraceCreateObject(obj);
-
-    return &obj->as<js::ArrayObject>();
+    return finishCreateArray(obj, shape);
 }
 
 /* static */ inline js::ArrayObject *
@@ -610,8 +616,8 @@ JSObject::createArray(js::ExclusiveContext *cx, js::gc::InitialHeap heap,
                       js::HeapSlot *elements)
 {
     // Use the smallest allocation kind for the array, as it can't have any
-    // fixed slots (see assert in the above function) and will not be using its
-    // fixed elements.
+    // fixed slots (see the assert in createArrayInternal) and will not be using
+    // its fixed elements.
     js::gc::AllocKind kind = js::gc::FINALIZE_OBJECT0_BACKGROUND;
 
     JSObject *obj = createArrayInternal(cx, kind, heap, shape, type);
@@ -620,13 +626,30 @@ JSObject::createArray(js::ExclusiveContext *cx, js::gc::InitialHeap heap,
 
     obj->elements = elements;
 
-    size_t span = shape->slotSpan();
-    if (span)
-        obj->initializeSlotRange(0, span);
+    return finishCreateArray(obj, shape);
+}
 
-    js::gc::TraceCreateObject(obj);
+/* static */ inline js::ArrayObject *
+JSObject::createCopyOnWriteArray(js::ExclusiveContext *cx, js::gc::InitialHeap heap,
+                                 js::HandleShape shape,
+                                 js::HandleObject sharedElementsOwner)
+{
+    MOZ_ASSERT(sharedElementsOwner->getElementsHeader()->isCopyOnWrite());
+    MOZ_ASSERT(sharedElementsOwner->getElementsHeader()->ownerObject() == sharedElementsOwner);
 
-    return &obj->as<js::ArrayObject>();
+    // Use the smallest allocation kind for the array, as it can't have any
+    // fixed slots (see the assert in createArrayInternal) and will not be using
+    // its fixed elements.
+    js::gc::AllocKind kind = js::gc::FINALIZE_OBJECT0_BACKGROUND;
+
+    js::RootedTypeObject type(cx, sharedElementsOwner->type());
+    JSObject *obj = createArrayInternal(cx, kind, heap, shape, type);
+    if (!obj)
+        return nullptr;
+
+    obj->elements = sharedElementsOwner->getDenseElementsAllowCopyOnWrite();
+
+    return finishCreateArray(obj, shape);
 }
 
 inline void

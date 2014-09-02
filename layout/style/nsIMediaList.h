@@ -61,7 +61,7 @@ struct nsMediaExpression {
  */
 class nsMediaQueryResultCacheKey {
 public:
-  nsMediaQueryResultCacheKey(nsIAtom* aMedium)
+  explicit nsMediaQueryResultCacheKey(nsIAtom* aMedium)
     : mMedium(aMedium)
   {}
 

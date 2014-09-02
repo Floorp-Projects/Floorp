@@ -23,7 +23,7 @@ class SVGFECompositeElement : public SVGFECompositeElementBase
   friend nsresult (::NS_NewSVGFECompositeElement(nsIContent **aResult,
                                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFECompositeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFECompositeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFECompositeElementBase(aNodeInfo)
   {
   }

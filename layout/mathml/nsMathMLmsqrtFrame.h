@@ -60,7 +60,7 @@ public:
   }
 
 protected:
-  nsMathMLmsqrtFrame(nsStyleContext* aContext);
+  explicit nsMathMLmsqrtFrame(nsStyleContext* aContext);
   virtual ~nsMathMLmsqrtFrame();
 };
 

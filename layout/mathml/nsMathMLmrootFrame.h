@@ -61,7 +61,7 @@ public:
   }
 
 protected:
-  nsMathMLmrootFrame(nsStyleContext* aContext);
+  explicit nsMathMLmrootFrame(nsStyleContext* aContext);
   virtual ~nsMathMLmrootFrame();
   
   nsMathMLChar mSqrChar;

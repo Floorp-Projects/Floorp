@@ -36,7 +36,7 @@ class SVGUseElement MOZ_FINAL : public SVGUseElementBase,
 protected:
   friend nsresult (::NS_NewSVGUseElement(nsIContent **aResult,
                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGUseElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGUseElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~SVGUseElement();
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
@@ -77,7 +77,7 @@ public:
 protected:
   class SourceReference : public nsReferencedElement {
   public:
-    SourceReference(SVGUseElement* aContainer) : mContainer(aContainer) {}
+    explicit SourceReference(SVGUseElement* aContainer) : mContainer(aContainer) {}
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) MOZ_OVERRIDE {
       nsReferencedElement::ElementChanged(aFrom, aTo);

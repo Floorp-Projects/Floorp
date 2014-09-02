@@ -32,7 +32,7 @@ class SVGFilterElement : public SVGFilterElementBase
 protected:
   friend nsresult (::NS_NewSVGFilterElement(nsIContent **aResult,
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGFilterElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGFilterElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:

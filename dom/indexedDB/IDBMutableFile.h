@@ -129,7 +129,7 @@ public:
   IMPL_EVENT_HANDLER(error)
 
 private:
-  IDBMutableFile(IDBDatabase* aOwner);
+  explicit IDBMutableFile(IDBDatabase* aOwner);
   ~IDBMutableFile();
 
   nsString mName;

@@ -16,7 +16,7 @@ class nsColumnSetFrame MOZ_FINAL : public nsContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsColumnSetFrame(nsStyleContext* aContext);
+  explicit nsColumnSetFrame(nsStyleContext* aContext);
 
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,

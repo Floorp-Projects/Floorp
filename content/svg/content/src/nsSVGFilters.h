@@ -50,7 +50,7 @@ protected:
   typedef mozilla::gfx::ColorSpace ColorSpace;
   typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
 
-  nsSVGFE(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit nsSVGFE(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsSVGFEBase(aNodeInfo) {}
   virtual ~nsSVGFE() {}
 
@@ -155,7 +155,7 @@ typedef nsSVGElement SVGFEUnstyledElementBase;
 class SVGFEUnstyledElement : public SVGFEUnstyledElementBase
 {
 protected:
-  SVGFEUnstyledElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFEUnstyledElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEUnstyledElementBase(aNodeInfo) {}
 
 public:
@@ -174,7 +174,7 @@ typedef nsSVGFE nsSVGFELightingElementBase;
 class nsSVGFELightingElement : public nsSVGFELightingElementBase
 {
 protected:
-  nsSVGFELightingElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit nsSVGFELightingElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsSVGFELightingElementBase(aNodeInfo) {}
 
   virtual ~nsSVGFELightingElement() {}
@@ -226,7 +226,7 @@ typedef SVGFEUnstyledElement SVGFELightElementBase;
 class SVGFELightElement : public SVGFELightElementBase
 {
 protected:
-  SVGFELightElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFELightElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFELightElementBase(aNodeInfo) {}
 
 public:

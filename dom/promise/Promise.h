@@ -40,7 +40,7 @@ class PromiseReportRejectFeature : public workers::WorkerFeature
   Promise* mPromise;
 
 public:
-  PromiseReportRejectFeature(Promise* aPromise)
+  explicit PromiseReportRejectFeature(Promise* aPromise)
     : mPromise(aPromise)
   {
     MOZ_ASSERT(mPromise);
@@ -162,7 +162,7 @@ public:
 private:
   // Do NOT call this unless you're Promise::Create.  I wish we could enforce
   // that from inside this class too, somehow.
-  Promise(nsIGlobalObject* aGlobal);
+  explicit Promise(nsIGlobalObject* aGlobal);
 
   friend class PromiseDebugging;
 

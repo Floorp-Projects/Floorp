@@ -255,7 +255,7 @@ MediaSourceReader::SwitchReaders(SwitchType aType)
 
 class ReleaseDecodersTask : public nsRunnable {
 public:
-  ReleaseDecodersTask(nsTArray<nsRefPtr<SourceBufferDecoder>>& aDecoders)
+  explicit ReleaseDecodersTask(nsTArray<nsRefPtr<SourceBufferDecoder>>& aDecoders)
   {
     mDecoders.SwapElements(aDecoders);
   }
@@ -375,7 +375,7 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType)
 namespace {
 class ChangeToHaveMetadata : public nsRunnable {
 public:
-  ChangeToHaveMetadata(AbstractMediaDecoder* aDecoder) :
+  explicit ChangeToHaveMetadata(AbstractMediaDecoder* aDecoder) :
     mDecoder(aDecoder)
   {
   }

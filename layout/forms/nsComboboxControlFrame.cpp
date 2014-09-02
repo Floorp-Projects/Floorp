@@ -86,7 +86,7 @@ public:
     return NS_OK;
   }
 
-  nsComboButtonListener(nsComboboxControlFrame* aCombobox)
+  explicit nsComboButtonListener(nsComboboxControlFrame* aCombobox)
   {
     mComboBox = aCombobox;
   }
@@ -364,7 +364,7 @@ class nsResizeDropdownAtFinalPosition MOZ_FINAL
   : public nsIReflowCallback, public nsRunnable
 {
 public:
-  nsResizeDropdownAtFinalPosition(nsComboboxControlFrame* aFrame)
+  explicit nsResizeDropdownAtFinalPosition(nsComboboxControlFrame* aFrame)
     : mFrame(aFrame)
   {
     MOZ_COUNT_CTOR(nsResizeDropdownAtFinalPosition);
@@ -494,7 +494,7 @@ nsComboboxControlFrame::GetCSSTransformTranslation()
 class nsAsyncRollup : public nsRunnable
 {
 public:
-  nsAsyncRollup(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
+  explicit nsAsyncRollup(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
   NS_IMETHODIMP Run()
   {
     if (mFrame.IsAlive()) {
@@ -509,7 +509,7 @@ public:
 class nsAsyncResize : public nsRunnable
 {
 public:
-  nsAsyncResize(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
+  explicit nsAsyncResize(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
   NS_IMETHODIMP Run()
   {
     if (mFrame.IsAlive()) {

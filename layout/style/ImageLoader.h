@@ -33,7 +33,7 @@ class ImageLoader MOZ_FINAL : public imgINotificationObserver,
 public:
   typedef mozilla::css::ImageValue Image;
 
-  ImageLoader(nsIDocument* aDocument)
+  explicit ImageLoader(nsIDocument* aDocument)
   : mDocument(aDocument),
     mInClone(false)
   {

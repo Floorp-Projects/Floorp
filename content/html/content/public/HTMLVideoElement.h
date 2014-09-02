@@ -21,7 +21,7 @@ class HTMLVideoElement MOZ_FINAL : public HTMLMediaElement
 public:
   typedef mozilla::dom::NodeInfo NodeInfo;
 
-  HTMLVideoElement(already_AddRefed<NodeInfo>& aNodeInfo);
+  explicit HTMLVideoElement(already_AddRefed<NodeInfo>& aNodeInfo);
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLVideoElement, video)
 

@@ -639,13 +639,13 @@ public:
   };
 
   struct ExtraData {
-    ExtraData(const nsRect& aBounds) : mOverflowAreas(aBounds, aBounds) {
+    explicit ExtraData(const nsRect& aBounds) : mOverflowAreas(aBounds, aBounds) {
     }
     nsOverflowAreas mOverflowAreas;
   };
 
   struct ExtraBlockData : public ExtraData {
-    ExtraBlockData(const nsRect& aBounds)
+    explicit ExtraBlockData(const nsRect& aBounds)
       : ExtraData(aBounds),
         mCarriedOutBEndMargin()
     {
@@ -654,7 +654,7 @@ public:
   };
 
   struct ExtraInlineData : public ExtraData {
-    ExtraInlineData(const nsRect& aBounds) : ExtraData(aBounds) {
+    explicit ExtraInlineData(const nsRect& aBounds) : ExtraData(aBounds) {
     }
     nsFloatCacheList mFloats;
   };

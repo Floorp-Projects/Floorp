@@ -46,7 +46,7 @@ class WebMWriter : public ContainerWriter
 public:
   // aTrackTypes indicate this muxer should multiplex into Video only or A/V foramt.
   // Run in MediaRecorder thread
-  WebMWriter(uint32_t aTrackTypes);
+  explicit WebMWriter(uint32_t aTrackTypes);
   virtual ~WebMWriter();
 
   // WriteEncodedTrack inserts raw packets into WebM stream.

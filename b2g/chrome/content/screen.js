@@ -62,8 +62,8 @@ window.addEventListener('ContentStart', function() {
   // Get the command line arguments that were passed to the b2g client
   let args;
   try {
-    // On Firefox Mulet, we don't always have a command line argument
-    args = window.arguments[0].QueryInterface(Ci.nsICommandLine);
+    let service = Cc["@mozilla.org/commandlinehandler/general-startup;1?type=b2gcmds"].getService(Ci.nsISupports);
+    args = service.wrappedJSObject.cmdLine;
   } catch(e) {}
 
   let screenarg = null;

@@ -75,7 +75,7 @@ NS_INTERFACE_MAP_END
 class MOZ_STACK_CLASS AutoChangePointListNotifier
 {
 public:
-  AutoChangePointListNotifier(DOMSVGPointList* aPointList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoChangePointListNotifier(DOMSVGPointList* aPointList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mPointList(aPointList)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;

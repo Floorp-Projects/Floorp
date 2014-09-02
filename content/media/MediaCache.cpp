@@ -223,7 +223,7 @@ public:
    */
   class ResourceStreamIterator {
   public:
-    ResourceStreamIterator(int64_t aResourceID) :
+    explicit ResourceStreamIterator(int64_t aResourceID) :
       mResourceID(aResourceID), mNext(0) {}
     MediaCacheStream* Next()
     {

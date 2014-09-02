@@ -36,7 +36,7 @@ public:
          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
   
 protected:
-  nsMathMLmspaceFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
+  explicit nsMathMLmspaceFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmspaceFrame();
 
   virtual nsresult

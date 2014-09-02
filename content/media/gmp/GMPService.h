@@ -10,6 +10,7 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -93,7 +94,7 @@ private:
   template<typename T>
   class MainThreadOnly {
   public:
-    MainThreadOnly(T aValue)
+    MOZ_IMPLICIT MainThreadOnly(T aValue)
       : mValue(aValue)
     {}
     operator T&() {

@@ -64,7 +64,7 @@ namespace CSF
     CSF_DECLARE_WRAP(CC_SIPCCCall, cc_call_handle_t);
     private:
         cc_call_handle_t callHandle;
-        CC_SIPCCCall (cc_call_handle_t aCallHandle);
+        explicit CC_SIPCCCall (cc_call_handle_t aCallHandle);
         CC_SIPCCCallMediaDataPtr  pMediaData;
         std::string peerconnection;  // The peerconnection handle
 

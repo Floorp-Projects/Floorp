@@ -50,13 +50,13 @@ public:
   // interface nsIDOMDocumentFragment
   NS_DECL_NSIDOMDOCUMENTFRAGMENT
 
-  DocumentFragment(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit DocumentFragment(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : FragmentOrElement(aNodeInfo), mHost(nullptr)
   {
     Init();
   }
 
-  DocumentFragment(nsNodeInfoManager* aNodeInfoManager)
+  explicit DocumentFragment(nsNodeInfoManager* aNodeInfoManager)
     : FragmentOrElement(aNodeInfoManager->GetNodeInfo(
                                             nsGkAtoms::documentFragmentNodeName,
                                             nullptr, kNameSpaceID_None,

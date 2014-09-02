@@ -37,7 +37,7 @@ public:
 
 class TestContainerLayer: public ContainerLayer {
 public:
-  TestContainerLayer(LayerManager* aManager)
+  explicit TestContainerLayer(LayerManager* aManager)
     : ContainerLayer(aManager, nullptr)
   {}
 
@@ -56,7 +56,7 @@ public:
 
 class TestThebesLayer: public ThebesLayer {
 public:
-  TestThebesLayer(LayerManager* aManager)
+  explicit TestThebesLayer(LayerManager* aManager)
     : ThebesLayer(aManager, nullptr)
   {}
 

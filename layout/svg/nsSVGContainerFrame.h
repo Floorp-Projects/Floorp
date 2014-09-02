@@ -44,7 +44,7 @@ class nsSVGContainerFrame : public nsSVGContainerFrameBase
   friend nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 protected:
-  nsSVGContainerFrame(nsStyleContext* aContext)
+  explicit nsSVGContainerFrame(nsStyleContext* aContext)
     : nsSVGContainerFrameBase(aContext)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT);
@@ -116,7 +116,7 @@ class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
                                    public nsISVGChildFrame
 {
 protected:
-  nsSVGDisplayContainerFrame(nsStyleContext* aContext)
+  explicit nsSVGDisplayContainerFrame(nsStyleContext* aContext)
     : nsSVGContainerFrame(aContext)
   {
      AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);

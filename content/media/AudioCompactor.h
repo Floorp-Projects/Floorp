@@ -15,7 +15,7 @@ namespace mozilla {
 class AudioCompactor
 {
 public:
-  AudioCompactor(MediaQueue<AudioData>& aQueue)
+  explicit AudioCompactor(MediaQueue<AudioData>& aQueue)
     : mQueue(aQueue)
   { }
 

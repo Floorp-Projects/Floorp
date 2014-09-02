@@ -30,7 +30,7 @@ namespace mozilla {
 class PeerIdentity MOZ_FINAL
 {
 public:
-  PeerIdentity(const nsAString& aPeerIdentity)
+  explicit PeerIdentity(const nsAString& aPeerIdentity)
     : mPeerIdentity(aPeerIdentity) {}
   ~PeerIdentity() {}
 

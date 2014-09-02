@@ -191,7 +191,7 @@ public:
 
   class OnTracksAvailableCallback {
   public:
-    OnTracksAvailableCallback(uint8_t aExpectedTracks = 0)
+    explicit OnTracksAvailableCallback(uint8_t aExpectedTracks = 0)
       : mExpectedTracks(aExpectedTracks) {}
     virtual ~OnTracksAvailableCallback() {}
     virtual void NotifyTracksAvailable(DOMMediaStream* aStream) = 0;
@@ -321,7 +321,7 @@ class DOMAudioNodeMediaStream : public DOMMediaStream
 {
   typedef dom::AudioNode AudioNode;
 public:
-  DOMAudioNodeMediaStream(AudioNode* aNode);
+  explicit DOMAudioNodeMediaStream(AudioNode* aNode);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)

@@ -259,16 +259,18 @@ loop.panel = (function(_, mozL10n) {
 
   var CallUrlResult = React.createClass({
     propTypes: {
-      callUrl:  React.PropTypes.string,
-      notifier: React.PropTypes.object.isRequired,
-      client:   React.PropTypes.object.isRequired
+      callUrl:        React.PropTypes.string,
+      callUrlExpiry:  React.PropTypes.number,
+      notifier:       React.PropTypes.object.isRequired,
+      client:         React.PropTypes.object.isRequired
     },
 
     getInitialState: function() {
       return {
         pending: false,
         copied: false,
-        callUrl: this.props.callUrl || ""
+        callUrl: this.props.callUrl || "",
+        callUrlExpiry: 0
       };
     },
 
@@ -307,7 +309,9 @@ loop.panel = (function(_, mozL10n) {
           var token = callUrlData.callToken ||
                       callUrl.pathname.split('/').pop();
 
-          this.setState({pending: false, copied: false, callUrl: callUrl.href});
+          this.setState({pending: false, copied: false,
+                         callUrl: callUrl.href,
+                         callUrlExpiry: callUrlData.expiresAt});
         } catch(e) {
           console.log(e);
           this.props.notifier.errorL10n("unable_retrieve_url");
@@ -324,15 +328,24 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleEmailButtonClick: function(event) {
+      this.handleLinkExfiltration(event);
       // Note: side effect
       document.location = event.target.dataset.mailto;
     },
 
     handleCopyButtonClick: function(event) {
+      this.handleLinkExfiltration(event);
       // XXX the mozLoop object should be passed as a prop, to ease testing and
       //     using a fake implementation in UI components showcase.
       navigator.mozLoop.copyString(this.state.callUrl);
       this.setState({copied: true});
+    },
+
+    handleLinkExfiltration: function(event) {
+      // TODO Bug 1015988 -- Increase link exfiltration telemetry count
+      if (this.state.callUrlExpiry) {
+        navigator.mozLoop.noteCallUrlExpiry(this.state.callUrlExpiry);
+      }
     },
 
     render: function() {
@@ -351,6 +364,7 @@ loop.panel = (function(_, mozL10n) {
         <PanelLayout summary={__("share_link_header_text")}>
           <div className="invite">
             <input type="url" value={this.state.callUrl} readOnly="true"
+                   onCopy={this.handleLinkExfiltration}
                    className={inputCSSClass} />
             <p className="btn-group url-actions">
               <button className="btn btn-email" disabled={!this.state.callUrl}

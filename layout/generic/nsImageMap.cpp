@@ -29,7 +29,7 @@ using namespace mozilla;
 
 class Area {
 public:
-  Area(nsIContent* aArea);
+  explicit Area(nsIContent* aArea);
   virtual ~Area();
 
   virtual void ParseCoords(const nsAString& aSpec);
@@ -264,7 +264,7 @@ void Area::HasFocus(bool aHasFocus)
 
 class DefaultArea : public Area {
 public:
-  DefaultArea(nsIContent* aArea);
+  explicit DefaultArea(nsIContent* aArea);
 
   virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
   virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC) MOZ_OVERRIDE;
@@ -309,7 +309,7 @@ void DefaultArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 
 class RectArea : public Area {
 public:
-  RectArea(nsIContent* aArea);
+  explicit RectArea(nsIContent* aArea);
 
   virtual void ParseCoords(const nsAString& aSpec) MOZ_OVERRIDE;
   virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
@@ -411,7 +411,7 @@ void RectArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 
 class PolyArea : public Area {
 public:
-  PolyArea(nsIContent* aArea);
+  explicit PolyArea(nsIContent* aArea);
 
   virtual void ParseCoords(const nsAString& aSpec) MOZ_OVERRIDE;
   virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
@@ -551,7 +551,7 @@ void PolyArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 
 class CircleArea : public Area {
 public:
-  CircleArea(nsIContent* aArea);
+  explicit CircleArea(nsIContent* aArea);
 
   virtual void ParseCoords(const nsAString& aSpec) MOZ_OVERRIDE;
   virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;

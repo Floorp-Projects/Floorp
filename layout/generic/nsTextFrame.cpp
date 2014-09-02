@@ -98,7 +98,7 @@ struct TabWidth {
 };
 
 struct TabWidthStore {
-  TabWidthStore(int32_t aValidForContentOffset)
+  explicit TabWidthStore(int32_t aValidForContentOffset)
     : mLimit(0)
     , mValidForContentOffset(aValidForContentOffset)
   { }
@@ -276,7 +276,7 @@ struct TextRunUserData {
  */
 class nsTextPaintStyle {
 public:
-  nsTextPaintStyle(nsTextFrame* aFrame);
+  explicit nsTextPaintStyle(nsTextFrame* aFrame);
 
   void SetResolveColors(bool aResolveColors) {
     NS_ASSERTION(mFrame->IsSVGText() || aResolveColors,
@@ -2970,17 +2970,22 @@ static void FindClusterStart(gfxTextRun* aTextRun, int32_t aOriginalStart,
 }
 
 /**
- * Finds the offset of the last character of the cluster containing aPos
+ * Finds the offset of the last character of the cluster containing aPos.
+ * If aAllowSplitLigature is false, we also check for a ligature-group
+ * start.
  */
 static void FindClusterEnd(gfxTextRun* aTextRun, int32_t aOriginalEnd,
-                           gfxSkipCharsIterator* aPos)
+                           gfxSkipCharsIterator* aPos,
+                           bool aAllowSplitLigature = true)
 {
   NS_PRECONDITION(aPos->GetOriginalOffset() < aOriginalEnd,
                   "character outside string");
   aPos->AdvanceOriginal(1);
   while (aPos->GetOriginalOffset() < aOriginalEnd) {
     if (aPos->IsOriginalCharSkipped() ||
-        aTextRun->IsClusterStart(aPos->GetSkippedOffset())) {
+        (aTextRun->IsClusterStart(aPos->GetSkippedOffset()) &&
+         (aAllowSplitLigature ||
+          aTextRun->IsLigatureGroupStart(aPos->GetSkippedOffset())))) {
       break;
     }
     aPos->AdvanceOriginal(1);
@@ -3979,7 +3984,7 @@ public:
   { return NS_ERROR_NOT_IMPLEMENTED; } // Call on a primary text frame only
 
 protected:
-  nsContinuingTextFrame(nsStyleContext* aContext) : nsTextFrame(aContext) {}
+  explicit nsContinuingTextFrame(nsStyleContext* aContext) : nsTextFrame(aContext) {}
   nsIFrame* mPrevContinuation;
 };
 
@@ -6965,8 +6970,68 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   }
 
   // consume another cluster (the actual first letter)
+
+  // For complex scripts such as Indic and SEAsian, where first-letter
+  // should extend to entire orthographic "syllable" clusters, we don't
+  // want to allow this to split a ligature.
+  bool allowSplitLigature;
+
+  switch (unicode::GetScriptCode(aFrag->CharAt(aOffset + i))) {
+    default:
+      allowSplitLigature = true;
+      break;
+
+    // For now, lacking any definitive specification of when to apply this
+    // behavior, we'll base the decision on the HarfBuzz shaping engine
+    // used for each script: those that are handled by the Indic, Tibetan,
+    // Myanmar and SEAsian shapers will apply the "don't split ligatures"
+    // rule.
+
+    // Indic
+    case MOZ_SCRIPT_BENGALI:
+    case MOZ_SCRIPT_DEVANAGARI:
+    case MOZ_SCRIPT_GUJARATI:
+    case MOZ_SCRIPT_GURMUKHI:
+    case MOZ_SCRIPT_KANNADA:
+    case MOZ_SCRIPT_MALAYALAM:
+    case MOZ_SCRIPT_ORIYA:
+    case MOZ_SCRIPT_TAMIL:
+    case MOZ_SCRIPT_TELUGU:
+    case MOZ_SCRIPT_SINHALA:
+    case MOZ_SCRIPT_BALINESE:
+    case MOZ_SCRIPT_LEPCHA:
+    case MOZ_SCRIPT_REJANG:
+    case MOZ_SCRIPT_SUNDANESE:
+    case MOZ_SCRIPT_JAVANESE:
+    case MOZ_SCRIPT_KAITHI:
+    case MOZ_SCRIPT_MEETEI_MAYEK:
+    case MOZ_SCRIPT_CHAKMA:
+    case MOZ_SCRIPT_SHARADA:
+    case MOZ_SCRIPT_TAKRI:
+    case MOZ_SCRIPT_KHMER:
+
+    // Tibetan
+    case MOZ_SCRIPT_TIBETAN:
+
+    // Myanmar
+    case MOZ_SCRIPT_MYANMAR:
+
+    // Other SEAsian
+    case MOZ_SCRIPT_BUGINESE:
+    case MOZ_SCRIPT_NEW_TAI_LUE:
+    case MOZ_SCRIPT_CHAM:
+    case MOZ_SCRIPT_TAI_THAM:
+
+    // What about Thai/Lao - any special handling needed?
+    // Should we special-case Arabic lam-alef?
+
+      allowSplitLigature = false;
+      break;
+  }
+
   iter.SetOriginalOffset(aOffset + i);
-  FindClusterEnd(aTextRun, endOffset, &iter);
+  FindClusterEnd(aTextRun, endOffset, &iter, allowSplitLigature);
+
   i = iter.GetOriginalOffset() - aOffset;
   if (i + 1 == length)
     return true;

@@ -25,7 +25,7 @@ class GMPDecryptorParent MOZ_FINAL : public GMPDecryptorProxy
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPDecryptorParent)
 
-  GMPDecryptorParent(GMPParent *aPlugin);
+  explicit GMPDecryptorParent(GMPParent *aPlugin);
 
   // GMPDecryptorProxy
   virtual nsresult Init(GMPDecryptorProxyCallback* aCallback) MOZ_OVERRIDE;

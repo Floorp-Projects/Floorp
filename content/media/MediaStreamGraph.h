@@ -310,7 +310,7 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStream)
 
-  MediaStream(DOMMediaStream* aWrapper);
+  explicit MediaStream(DOMMediaStream* aWrapper);
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
@@ -580,7 +580,7 @@ protected:
 
   // Client-set volume of this stream
   struct AudioOutput {
-    AudioOutput(void* aKey) : mKey(aKey), mVolume(1.0f) {}
+    explicit AudioOutput(void* aKey) : mKey(aKey), mVolume(1.0f) {}
     void* mKey;
     float mVolume;
   };
@@ -682,7 +682,7 @@ protected:
  */
 class SourceMediaStream : public MediaStream {
 public:
-  SourceMediaStream(DOMMediaStream* aWrapper) :
+  explicit SourceMediaStream(DOMMediaStream* aWrapper) :
     MediaStream(aWrapper),
     mLastConsumptionState(MediaStreamListener::NOT_CONSUMED),
     mMutex("mozilla::media::SourceMediaStream"),
@@ -1014,7 +1014,7 @@ private:
  */
 class ProcessedMediaStream : public MediaStream {
 public:
-  ProcessedMediaStream(DOMMediaStream* aWrapper)
+  explicit ProcessedMediaStream(DOMMediaStream* aWrapper)
     : MediaStream(aWrapper), mAutofinish(false)
   {}
 

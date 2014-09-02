@@ -7,6 +7,7 @@
 
 #include "nscore.h"
 #include "nsCoord.h"
+#include "mozilla/Attributes.h"
 
 class nsIFrame;
 struct nsRect;
@@ -105,7 +106,7 @@ class nsAutoLineIterator
 {
 public:
   nsAutoLineIterator() : mRawPtr(nullptr) { }
-  nsAutoLineIterator(nsILineIterator *i) : mRawPtr(i) { }
+  MOZ_IMPLICIT nsAutoLineIterator(nsILineIterator *i) : mRawPtr(i) { }
 
   ~nsAutoLineIterator() {
     if (mRawPtr)

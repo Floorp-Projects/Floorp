@@ -29,7 +29,7 @@ class MediaTaskQueue MOZ_FINAL {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaTaskQueue)
 
-  MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool);
+  explicit MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool);
 
   nsresult Dispatch(TemporaryRef<nsIRunnable> aRunnable);
 
@@ -89,7 +89,7 @@ private:
   class MOZ_STACK_CLASS AutoSetFlushing
   {
   public:
-    AutoSetFlushing(MediaTaskQueue* aTaskQueue) : mTaskQueue(aTaskQueue)
+    explicit AutoSetFlushing(MediaTaskQueue* aTaskQueue) : mTaskQueue(aTaskQueue)
     {
       mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
       mTaskQueue->mIsFlushing = true;
@@ -109,7 +109,7 @@ private:
 
   class Runner : public nsRunnable {
   public:
-    Runner(MediaTaskQueue* aQueue)
+    explicit Runner(MediaTaskQueue* aQueue)
       : mQueue(aQueue)
     {
     }

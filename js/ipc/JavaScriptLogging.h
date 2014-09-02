@@ -34,19 +34,19 @@ namespace jsipc {
 struct ReceiverObj
 {
     ObjectId id;
-    ReceiverObj(ObjectId id) : id(id) {}
+    explicit ReceiverObj(ObjectId id) : id(id) {}
 };
 
 struct InVariant
 {
     JSVariant variant;
-    InVariant(const JSVariant &variant) : variant(variant) {}
+    explicit InVariant(const JSVariant &variant) : variant(variant) {}
 };
 
 struct OutVariant
 {
     JSVariant variant;
-    OutVariant(const JSVariant &variant) : variant(variant) {}
+    explicit OutVariant(const JSVariant &variant) : variant(variant) {}
 };
 
 class Logging

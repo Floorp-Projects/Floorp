@@ -25,7 +25,7 @@ typedef nsSVGContainerFrame nsSVGPaintServerFrameBase;
 class nsSVGPaintServerFrame : public nsSVGPaintServerFrameBase
 {
 protected:
-  nsSVGPaintServerFrame(nsStyleContext* aContext)
+  explicit nsSVGPaintServerFrame(nsStyleContext* aContext)
     : nsSVGPaintServerFrameBase(aContext)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

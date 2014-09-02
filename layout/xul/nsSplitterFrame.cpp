@@ -60,7 +60,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  nsSplitterFrameInner(nsSplitterFrame* aSplitter)
+  explicit nsSplitterFrameInner(nsSplitterFrame* aSplitter)
   {
     mOuter = aSplitter;
     mPressed = false;

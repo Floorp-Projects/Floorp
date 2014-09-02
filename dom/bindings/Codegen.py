@@ -14544,7 +14544,7 @@ class CGEventClass(CGBindingImplClass):
               NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(${nativeType}, ${parentType})
             protected:
               virtual ~${nativeType}();
-              ${nativeType}(mozilla::dom::EventTarget* aOwner);
+              explicit ${nativeType}(mozilla::dom::EventTarget* aOwner);
 
             """,
             nativeType=self.descriptor.nativeType.split('::')[-1],

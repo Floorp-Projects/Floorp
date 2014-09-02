@@ -124,7 +124,7 @@ protected:
 
   class SourceReference : public nsReferencedElement {
   public:
-    SourceReference(nsSVGIDRenderingObserver* aContainer) : mContainer(aContainer) {}
+    explicit SourceReference(nsSVGIDRenderingObserver* aContainer) : mContainer(aContainer) {}
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) MOZ_OVERRIDE {
       mContainer->StopListening();

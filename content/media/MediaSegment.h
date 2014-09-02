@@ -116,7 +116,7 @@ public:
   }
 
 protected:
-  MediaSegment(Type aType) : mDuration(0), mType(aType)
+  explicit MediaSegment(Type aType) : mDuration(0), mType(aType)
   {
     MOZ_COUNT_CTOR(MediaSegment);
   }
@@ -220,7 +220,7 @@ public:
 
   class ChunkIterator {
   public:
-    ChunkIterator(MediaSegmentBase<C, Chunk>& aSegment)
+    explicit ChunkIterator(MediaSegmentBase<C, Chunk>& aSegment)
       : mSegment(aSegment), mIndex(0) {}
     bool IsEnded() { return mIndex >= mSegment.mChunks.Length(); }
     void Next() { ++mIndex; }
@@ -257,7 +257,7 @@ public:
   }
 
 protected:
-  MediaSegmentBase(Type aType) : MediaSegment(aType) {}
+  explicit MediaSegmentBase(Type aType) : MediaSegment(aType) {}
 
   /**
    * Appends the contents of aSource to this segment, clearing aSource.

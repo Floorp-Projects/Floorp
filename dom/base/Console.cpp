@@ -191,7 +191,7 @@ public:
 class ClearException
 {
 public:
-  ClearException(JSContext* aCx)
+  explicit ClearException(JSContext* aCx)
     : mCx(aCx)
   {
   }
@@ -278,7 +278,7 @@ private:
 class ConsoleCallDataRunnable MOZ_FINAL : public ConsoleRunnable
 {
 public:
-  ConsoleCallDataRunnable(ConsoleCallData* aCallData)
+  explicit ConsoleCallDataRunnable(ConsoleCallData* aCallData)
     : mCallData(aCallData)
   {
   }
@@ -809,7 +809,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
   // goes wrong.
   class RAII {
   public:
-    RAII(LinkedList<ConsoleCallData>& aList)
+    explicit RAII(LinkedList<ConsoleCallData>& aList)
       : mList(aList)
       , mUnfinished(true)
     {

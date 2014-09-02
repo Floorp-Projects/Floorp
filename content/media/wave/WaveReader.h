@@ -20,7 +20,7 @@ namespace mozilla {
 class WaveReader : public MediaDecoderReader
 {
 public:
-  WaveReader(AbstractMediaDecoder* aDecoder);
+  explicit WaveReader(AbstractMediaDecoder* aDecoder);
 
 protected:
   ~WaveReader();

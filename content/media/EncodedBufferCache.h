@@ -26,7 +26,7 @@ class ReentrantMonitor;
 class EncodedBufferCache
 {
 public:
-  EncodedBufferCache(uint32_t aMaxMemoryStorage)
+  explicit EncodedBufferCache(uint32_t aMaxMemoryStorage)
   : mFD(nullptr),
     mMutex("EncodedBufferCache.Data.Mutex"),
     mDataSize(0),

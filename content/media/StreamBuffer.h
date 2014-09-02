@@ -284,7 +284,7 @@ public:
     /**
      * Iterate through the tracks of aBuffer in order of ID.
      */
-    TrackIter(const StreamBuffer& aBuffer) :
+    explicit TrackIter(const StreamBuffer& aBuffer) :
       mBuffer(&aBuffer.mTracks), mIndex(0), mMatchType(false) {}
     /**
      * Iterate through the tracks of aBuffer with type aType, in order of ID.

@@ -3728,6 +3728,44 @@ LIRGenerator::visitSimdExtractElement(MSimdExtractElement *ins)
 }
 
 bool
+LIRGenerator::visitSimdSignMask(MSimdSignMask *ins)
+{
+    MDefinition *input = ins->input();
+    MOZ_ASSERT(IsSimdType(input->type()));
+    MOZ_ASSERT(ins->type() == MIRType_Int32);
+
+    LUse use = useRegisterAtStart(input);
+
+    switch (input->type()) {
+      case MIRType_Int32x4:
+      case MIRType_Float32x4:
+        return define(new(alloc()) LSimdSignMaskX4(use), ins);
+      default:
+        MOZ_CRASH("Unexpected SIMD type extracting sign bits.");
+        break;
+    }
+}
+
+bool
+LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp *ins)
+{
+    MOZ_ASSERT(ins->type() == MIRType_Int32x4);
+
+    if (ins->compareType() == MSimdBinaryComp::CompareInt32x4) {
+        LSimdBinaryCompIx4 *add = new(alloc()) LSimdBinaryCompIx4();
+        return lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+    }
+
+    if (ins->compareType() == MSimdBinaryComp::CompareFloat32x4) {
+        LSimdBinaryCompFx4 *add = new(alloc()) LSimdBinaryCompFx4();
+        return lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+    }
+
+    MOZ_CRASH("Unknown compare type when comparing values");
+    return false;
+}
+
+bool
 LIRGenerator::visitSimdBinaryArith(MSimdBinaryArith *ins)
 {
     JS_ASSERT(IsSimdType(ins->type()));
@@ -3743,6 +3781,20 @@ LIRGenerator::visitSimdBinaryArith(MSimdBinaryArith *ins)
     }
 
     MOZ_ASSUME_UNREACHABLE("Unknown SIMD kind when adding values");
+    return false;
+}
+
+bool
+LIRGenerator::visitSimdBinaryBitwise(MSimdBinaryBitwise *ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    if (ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Float32x4) {
+        LSimdBinaryBitwiseX4 *add = new(alloc()) LSimdBinaryBitwiseX4;
+        return lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+    }
+
+    MOZ_CRASH("Unknown SIMD kind when doing bitwise operations");
     return false;
 }
 

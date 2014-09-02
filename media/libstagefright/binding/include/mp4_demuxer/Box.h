@@ -65,7 +65,7 @@ private:
 class BoxReader
 {
 public:
-  BoxReader(Box& aBox)
+  explicit BoxReader(Box& aBox)
   {
     aBox.Read(&mBuffer);
     mReader.SetData(mBuffer);

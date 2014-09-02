@@ -15,7 +15,7 @@ namespace dom {
 class HTMLDataListElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLDataListElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit HTMLDataListElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

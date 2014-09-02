@@ -21,7 +21,7 @@ public:
                                               nsStyleContext* aContext);
 
 protected:
-  nsMathMLsemanticsFrame(nsStyleContext* aContext) :
+  explicit nsMathMLsemanticsFrame(nsStyleContext* aContext) :
     nsMathMLSelectedFrame(aContext) {}
   virtual ~nsMathMLsemanticsFrame();
 

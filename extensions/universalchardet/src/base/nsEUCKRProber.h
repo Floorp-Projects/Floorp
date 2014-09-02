@@ -12,7 +12,7 @@
 
 class nsEUCKRProber: public nsCharSetProber {
 public:
-  nsEUCKRProber(bool aIsPreferredLanguage)
+  explicit nsEUCKRProber(bool aIsPreferredLanguage)
     :mIsPreferredLanguage(aIsPreferredLanguage)
   {mCodingSM = new nsCodingStateMachine(&EUCKRSMModel);
     Reset();

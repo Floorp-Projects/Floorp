@@ -33,7 +33,7 @@ public:
   nscoord HeightOfARow() const { return mHeightOfARow; }
   
 protected:
-  nsSelectsAreaFrame(nsStyleContext* aContext) :
+  explicit nsSelectsAreaFrame(nsStyleContext* aContext) :
     nsBlockFrame(aContext),
     mHeightOfARow(0)
   {}

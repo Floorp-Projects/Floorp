@@ -74,7 +74,7 @@ class nsBaseFilePickerEnumerator : public nsISimpleEnumerator
 public:
   NS_DECL_ISUPPORTS
 
-  nsBaseFilePickerEnumerator(nsISimpleEnumerator* iterator)
+  explicit nsBaseFilePickerEnumerator(nsISimpleEnumerator* iterator)
     : mIterator(iterator)
   {}
 

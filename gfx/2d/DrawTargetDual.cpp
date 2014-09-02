@@ -12,7 +12,7 @@ namespace gfx {
 class DualSurface
 {
 public:
-  inline DualSurface(SourceSurface *aSurface)
+  inline explicit DualSurface(SourceSurface *aSurface)
   {
     if (aSurface->GetType() != SurfaceType::DUAL_DT) {
       mA = mB = aSurface;
@@ -36,7 +36,7 @@ public:
 class DualPattern
 {
 public:
-  inline DualPattern(const Pattern &aPattern)
+  inline explicit DualPattern(const Pattern &aPattern)
     : mPatternsInitialized(false)
   {
     if (aPattern.GetType() != PatternType::SURFACE) {

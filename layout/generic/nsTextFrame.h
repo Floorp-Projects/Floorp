@@ -39,7 +39,7 @@ public:
   friend class nsDisplayTextGeometry;
   friend class nsDisplayText;
 
-  nsTextFrame(nsStyleContext* aContext)
+  explicit nsTextFrame(nsStyleContext* aContext)
     : nsTextFrameBase(aContext)
   {
     NS_ASSERTION(mContentOffset == 0, "Bogus content offset");
@@ -318,7 +318,7 @@ public:
     /**
      * @param aShouldPaintSVGGlyphs Whether SVG glyphs should be painted.
      */
-    DrawPathCallbacks(bool aShouldPaintSVGGlyphs = false)
+    explicit DrawPathCallbacks(bool aShouldPaintSVGGlyphs = false)
       : gfxTextRunDrawCallbacks(aShouldPaintSVGGlyphs)
     {
     }

@@ -7,9 +7,9 @@
 
   The tool which used to generate this file is called umaptable.
   You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
-  If you have any problem of this file. Please contact 
-  Netscape Client International Team or 
-  ftang@netscape <Frank Tang> 
+  If you have any problems with this file, please file a bug
+  under the "Internationalization" component in
+  https://bugzilla.mozilla.org/enter_bug.cgi?product=Core
 
               Table in Debug form 
 Begin of Item 0000
@@ -60,10 +60,10 @@ Begin of Item 0006
   srcEnd = 009F
   mappingOffset = 0000
  Mapping  = 
-  20AC FFFD 201A 0192 201E 2026 2020 2021 
-  02C6 2030 FFFD 2039 0152 FFFD FFFD FFFD 
-  FFFD 2018 2019 201C 201D 2022 2013 2014 
-  02DC 2122 FFFD 203A 0153 FFFD FFFD 0178 
+  20AC 0081 201A 0192 201E 2026 2020 2021 
+  02C6 2030 008A 2039 0152 008D 008E 008F 
+  0090 2018 2019 201C 201D 2022 2013 2014 
+  02DC 2122 009A 203A 0153 009D 009E 0178 
 End of Item 0006 
 
 Begin of Item 0007
@@ -115,10 +115,10 @@ End of Item 0007
 /*-------------------------------------------------------*/
 /*       Offset=0x001F   Start of MappingTable */ 
 
-/* 0000 */    0x20AC, 0xFFFD, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 
-/* 0008 */    0x02C6, 0x2030, 0xFFFD, 0x2039, 0x0152, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0010 */    0xFFFD, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 
-/* 0018 */    0x02DC, 0x2122, 0xFFFD, 0x203A, 0x0153, 0xFFFD, 0xFFFD, 0x0178, 
+/* 0000 */    0x20AC, 0x0081, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 
+/* 0008 */    0x02C6, 0x2030, 0x008A, 0x2039, 0x0152, 0x008D, 0x008E, 0x008F, 
+/* 0010 */    0x0090, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 
+/* 0018 */    0x02DC, 0x2122, 0x009A, 0x203A, 0x0153, 0x009D, 0x009E, 0x0178, 
 /* 0020 */    0x0102, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
 /* 0028 */    0xFFFD, 0x0300, 0x00CD, 0x00CE, 0x00CF, 0x0110, 0x00D1, 0x0309, 
 /* 0030 */    0x00D3, 0x00D4, 0x01A0, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 

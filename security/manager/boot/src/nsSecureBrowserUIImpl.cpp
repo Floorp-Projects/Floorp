@@ -97,7 +97,7 @@ static const PLDHashTableOps gMapOps = {
 #ifdef DEBUG
 class nsAutoAtomic {
   public:
-    nsAutoAtomic(Atomic<int32_t> &i)
+    explicit nsAutoAtomic(Atomic<int32_t> &i)
     :mI(i) {
       mI++;
     }
@@ -1645,7 +1645,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  nsUIContext(nsIDOMWindow *window);
+  explicit nsUIContext(nsIDOMWindow *window);
 
 protected:
   virtual ~nsUIContext();

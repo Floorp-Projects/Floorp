@@ -29,7 +29,7 @@ public:
 
   typedef nsContainerFrame Super;
 
-  ViewportFrame(nsStyleContext* aContext)
+  explicit ViewportFrame(nsStyleContext* aContext)
     : nsContainerFrame(aContext)
   {}
   virtual ~ViewportFrame() { } // useful for debugging

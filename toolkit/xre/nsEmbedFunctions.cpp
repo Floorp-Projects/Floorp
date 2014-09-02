@@ -329,14 +329,14 @@ XRE_InitChildProcess(int aArgc,
   const int kTimeoutMs = 1000;
 
   MachSendMessage child_message(0);
-  if (!child_message.AddDescriptor(mach_task_self())) {
+  if (!child_message.AddDescriptor(MachMsgPortDescriptor(mach_task_self()))) {
     NS_WARNING("child AddDescriptor(mach_task_self()) failed.");
     return NS_ERROR_FAILURE;
   }
 
   ReceivePort child_recv_port;
   mach_port_t raw_child_recv_port = child_recv_port.GetPort();
-  if (!child_message.AddDescriptor(raw_child_recv_port)) {
+  if (!child_message.AddDescriptor(MachMsgPortDescriptor(raw_child_recv_port))) {
     NS_WARNING("Adding descriptor to message failed");
     return NS_ERROR_FAILURE;
   }

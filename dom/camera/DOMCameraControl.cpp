@@ -81,7 +81,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  StartRecordingHelper(nsDOMCameraControl* aDOMCameraControl)
+  explicit StartRecordingHelper(nsDOMCameraControl* aDOMCameraControl)
     : mDOMCameraControl(aDOMCameraControl)
   {
     MOZ_COUNT_CTOR(StartRecordingHelper);

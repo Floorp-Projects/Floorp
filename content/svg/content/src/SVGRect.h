@@ -19,8 +19,8 @@ namespace dom {
 class SVGRect MOZ_FINAL : public SVGIRect
 {
 public:
-  SVGRect(nsIContent* aParent, float x=0.0f, float y=0.0f, float w=0.0f,
-          float h=0.0f);
+  explicit SVGRect(nsIContent* aParent, float x=0.0f, float y=0.0f, float w=0.0f,
+                   float h=0.0f);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGRect)

@@ -22,7 +22,7 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     typedef WrapperAnswer Answer;
 
   public:
-    JavaScriptBase(JSRuntime *rt)
+    explicit JavaScriptBase(JSRuntime *rt)
       : JavaScriptShared(rt),
         WrapperOwner(rt),
         WrapperAnswer(rt)

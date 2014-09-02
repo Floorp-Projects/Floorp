@@ -55,7 +55,7 @@ public:
   NS_IMETHOD_(float) GetFrameIndex(uint32_t aWhichFrame) MOZ_OVERRIDE;
 
 protected:
-  FrozenImage(Image* aImage) : ImageWrapper(aImage) { }
+  explicit FrozenImage(Image* aImage) : ImageWrapper(aImage) { }
   virtual ~FrozenImage() { }
 
 private:

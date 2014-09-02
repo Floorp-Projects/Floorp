@@ -69,7 +69,7 @@ static ca_proplist_sets_fn ca_proplist_sets;
 static ca_context_play_full_fn ca_context_play_full;
 
 struct ScopedCanberraFile {
-    ScopedCanberraFile(nsIFile *file): mFile(file) {};
+    explicit ScopedCanberraFile(nsIFile *file): mFile(file) {};
 
     ~ScopedCanberraFile() {
         if (mFile) {

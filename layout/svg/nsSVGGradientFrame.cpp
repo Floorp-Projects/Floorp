@@ -27,8 +27,8 @@ using namespace mozilla::dom;
 class MOZ_STACK_CLASS nsSVGGradientFrame::AutoGradientReferencer
 {
 public:
-  AutoGradientReferencer(nsSVGGradientFrame *aFrame
-                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoGradientReferencer(nsSVGGradientFrame *aFrame
+                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mFrame(aFrame)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;

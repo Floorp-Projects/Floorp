@@ -48,7 +48,7 @@ protected:
   friend nsContainerFrame*
     NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
-  nsRubyBaseContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+  explicit nsRubyBaseContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
   /*
    * The ruby text containers that belong to the ruby segment defined by
    * this ruby base container. These text containers are located at the start

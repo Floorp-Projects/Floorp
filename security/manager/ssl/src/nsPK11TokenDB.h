@@ -23,7 +23,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPK11TOKEN
 
-  nsPK11Token(PK11SlotInfo *slot);
+  explicit nsPK11Token(PK11SlotInfo *slot);
   /* additional members */
 
 protected:

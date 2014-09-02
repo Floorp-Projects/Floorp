@@ -26,7 +26,7 @@ class SVGClipPathElement MOZ_FINAL : public SVGClipPathElementBase
 protected:
   friend nsresult (::NS_NewSVGClipPathElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGClipPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGClipPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:

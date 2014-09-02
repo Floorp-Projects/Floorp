@@ -28,6 +28,7 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/DebugOnly.h"
 #include "base/process_util.h"
+#include "mozilla/Preferences.h"
 
 #include "prenv.h"
 
@@ -121,12 +122,22 @@ public:
 void
 ProcLoaderParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  if (aWhy == AbnormalShutdown) {
+    NS_WARNING("ProcLoaderParent is destroyed abnormally.");
+  }
+
+  if (sProcLoaderClientOnDeinit) {
+    // Get error for closing while the channel is already error.
+    return;
+  }
+
+  // Destroy self asynchronously.
+  ProcLoaderClientDeinit();
 }
 
 static void
 _ProcLoaderParentDestroy(PProcLoaderParent *aLoader)
 {
-  aLoader->Close();
   delete aLoader;
   sProcLoaderClientOnDeinit = false;
 }
@@ -135,7 +146,6 @@ bool
 ProcLoaderParent::RecvLoadComplete(const int32_t &aPid,
                                    const int32_t &aCookie)
 {
-  ProcLoaderClientDeinit();
   return true;
 }
 
@@ -180,6 +190,14 @@ ProcLoaderClientGeckoInit()
   MOZ_ASSERT(sProcLoaderClientInitialized, "call ProcLoaderClientInit() at first");
   MOZ_ASSERT(!sProcLoaderClientGeckoInitialized,
              "call ProcLoaderClientGeckoInit() more than once");
+
+  if (!Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false)) {
+    kill(sProcLoaderPid, SIGKILL);
+    sProcLoaderPid = 0;
+    close(sProcLoaderChannelFd);
+    sProcLoaderChannelFd = -1;
+    return;
+  }
 
   sProcLoaderClientGeckoInitialized = true;
 

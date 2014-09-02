@@ -25,7 +25,7 @@ namespace CSF
     private:
     	cc_callinfo_ref_t callinfo_ref;
 
-        CC_SIPCCCallInfo (cc_callinfo_ref_t callinfo);
+        explicit CC_SIPCCCallInfo (cc_callinfo_ref_t callinfo);
 
         CSF_DECLARE_WRAP(CC_SIPCCCallInfo, cc_callinfo_ref_t);
 

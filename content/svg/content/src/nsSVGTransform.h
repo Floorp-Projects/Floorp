@@ -36,7 +36,7 @@ public:
     , mType(SVG_TRANSFORM_MATRIX)
   { }
 
-  nsSVGTransform(const gfxMatrix& aMatrix)
+  explicit nsSVGTransform(const gfxMatrix& aMatrix)
     : mMatrix(aMatrix)
     , mAngle(0.f)
     , mOriginX(0.f)
@@ -149,7 +149,7 @@ public:
   }
 
   // Conversion to/from a fully-fledged nsSVGTransform
-  SVGTransformSMILData(const nsSVGTransform& aTransform);
+  explicit SVGTransformSMILData(const nsSVGTransform& aTransform);
   nsSVGTransform ToSVGTransform() const;
 
   bool operator==(const SVGTransformSMILData& aOther) const

@@ -36,7 +36,7 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsHTMLCanvasFrame(nsStyleContext* aContext)
+  explicit nsHTMLCanvasFrame(nsStyleContext* aContext)
   : nsContainerFrame(aContext)
     , mBorderPadding(GetWritingMode()) {}
 

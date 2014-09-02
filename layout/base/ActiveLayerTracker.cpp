@@ -27,7 +27,7 @@ namespace mozilla {
  */
 class LayerActivity {
 public:
-  LayerActivity(nsIFrame* aFrame)
+  explicit LayerActivity(nsIFrame* aFrame)
     : mFrame(aFrame)
     , mContent(nullptr)
     , mOpacityRestyleCount(0)

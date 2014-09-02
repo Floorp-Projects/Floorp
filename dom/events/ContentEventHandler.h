@@ -34,7 +34,7 @@ enum LineBreakType
 class MOZ_STACK_CLASS ContentEventHandler
 {
 public:
-  ContentEventHandler(nsPresContext* aPresContext);
+  explicit ContentEventHandler(nsPresContext* aPresContext);
 
   // NS_QUERY_SELECTED_TEXT event handler
   nsresult OnQuerySelectedText(WidgetQueryContentEvent* aEvent);

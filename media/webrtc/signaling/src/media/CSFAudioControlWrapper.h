@@ -16,7 +16,7 @@ namespace CSF
 	public:
 		// device names are in UTF-8 encoding
 
-		AudioControlWrapper(AudioControl * audioControl){_realAudioControl = audioControl;};
+		explicit AudioControlWrapper(AudioControl * audioControl){_realAudioControl = audioControl;};
 		virtual std::vector<std::string> getRecordingDevices();
 		virtual std::vector<std::string> getPlayoutDevices();
 

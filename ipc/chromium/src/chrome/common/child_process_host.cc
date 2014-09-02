@@ -113,7 +113,7 @@ void ChildProcessHost::SetHandle(base::ProcessHandle process) {
 }
 
 void ChildProcessHost::InstanceCreated() {
-  Notify(NotificationType::CHILD_INSTANCE_CREATED);
+  Notify(NotificationType(NotificationType::CHILD_INSTANCE_CREATED));
 }
 
 bool ChildProcessHost::Send(IPC::Message* msg) {
@@ -143,10 +143,10 @@ void ChildProcessHost::OnWaitableEventSignaled(base::WaitableEvent *event) {
   bool did_crash = base::DidProcessCrash(NULL, object);
   if (did_crash) {
     // Report that this child process crashed.
-    Notify(NotificationType::CHILD_PROCESS_CRASHED);
+    Notify(NotificationType(NotificationType::CHILD_PROCESS_CRASHED));
   }
   // Notify in the main loop of the disconnection.
-  Notify(NotificationType::CHILD_PROCESS_HOST_DISCONNECTED);
+  Notify(NotificationType(NotificationType::CHILD_PROCESS_HOST_DISCONNECTED));
 #endif
 }
 
@@ -188,7 +188,7 @@ void ChildProcessHost::ListenerHook::OnChannelConnected(int32_t peer_pid) {
   host_->OnChannelConnected(peer_pid);
 
   // Notify in the main loop of the connection.
-  host_->Notify(NotificationType::CHILD_PROCESS_HOST_CONNECTED);
+  host_->Notify(NotificationType(NotificationType::CHILD_PROCESS_HOST_CONNECTED));
 }
 
 void ChildProcessHost::ListenerHook::OnChannelError() {

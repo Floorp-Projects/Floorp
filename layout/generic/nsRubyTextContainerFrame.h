@@ -54,7 +54,7 @@ protected:
   friend nsContainerFrame*
     NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
-  nsRubyTextContainerFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
+  explicit nsRubyTextContainerFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
   // This pointer is active only during reflow of the ruby structure. It gets
   // created when the corresponding ruby base container is reflowed, and it is
   // destroyed when the ruby text container itself is reflowed.

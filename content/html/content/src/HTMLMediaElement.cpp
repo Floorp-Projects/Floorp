@@ -173,7 +173,7 @@ class nsMediaEvent : public nsRunnable
 {
 public:
 
-  nsMediaEvent(HTMLMediaElement* aElement) :
+  explicit nsMediaEvent(HTMLMediaElement* aElement) :
     mElement(aElement),
     mLoadID(mElement->GetCurrentLoadID()) {}
   ~nsMediaEvent() {}
@@ -256,7 +256,7 @@ class HTMLMediaElement::MediaLoadListener MOZ_FINAL : public nsIStreamListener,
   NS_DECL_NSIINTERFACEREQUESTOR
 
 public:
-  MediaLoadListener(HTMLMediaElement* aElement)
+  explicit MediaLoadListener(HTMLMediaElement* aElement)
     : mElement(aElement),
       mLoadID(aElement->GetCurrentLoadID())
   {
@@ -1904,7 +1904,7 @@ NS_IMETHODIMP HTMLMediaElement::GetMozAudioCaptured(bool* aCaptured)
 
 class MediaElementSetForURI : public nsURIHashKey {
 public:
-  MediaElementSetForURI(const nsIURI* aKey) : nsURIHashKey(aKey) {}
+  explicit MediaElementSetForURI(const nsIURI* aKey) : nsURIHashKey(aKey) {}
   MediaElementSetForURI(const MediaElementSetForURI& toCopy)
     : nsURIHashKey(toCopy), mElements(toCopy.mElements) {}
   nsTArray<HTMLMediaElement*> mElements;
@@ -2358,10 +2358,23 @@ bool HTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
 
       AudioChannel audioChannel = static_cast<AudioChannel>(aResult.GetEnumValue());
 
-      if (audioChannel != mAudioChannel &&
-          !mDecoder &&
-          CheckAudioChannelPermissions(aValue)) {
-        mAudioChannel = audioChannel;
+      if (audioChannel == mAudioChannel ||
+          !CheckAudioChannelPermissions(aValue)) {
+        return true;
+      }
+
+      // We cannot change the AudioChannel of a decoder.
+      if (mDecoder) {
+        return true;
+      }
+
+      mAudioChannel = audioChannel;
+
+      if (mSrcStream) {
+        nsRefPtr<MediaStream> stream = mSrcStream->GetStream();
+        if (stream) {
+          stream->SetAudioChannelType(mAudioChannel);
+        }
       }
 
       return true;
@@ -2708,7 +2721,7 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
 
 class HTMLMediaElement::StreamListener : public MediaStreamListener {
 public:
-  StreamListener(HTMLMediaElement* aElement) :
+  explicit StreamListener(HTMLMediaElement* aElement) :
     mElement(aElement),
     mHaveCurrentData(false),
     mBlocked(false),
@@ -2822,6 +2835,12 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   NS_ASSERTION(!mSrcStream && !mSrcStreamListener, "Should have been ended already");
 
   mSrcStream = aStream;
+
+  nsRefPtr<MediaStream> stream = mSrcStream->GetStream();
+  if (stream) {
+    stream->SetAudioChannelType(mAudioChannel);
+  }
+
   // XXX if we ever support capturing the output of a media element which is
   // playing a stream, we'll need to add a CombineWithPrincipal call here.
   mSrcStreamListener = new StreamListener(this);
@@ -3840,9 +3859,9 @@ HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv)
 
   mPlaybackRate = ClampPlaybackRate(aPlaybackRate);
 
-  if (mPlaybackRate < 0 ||
-      mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
-      mPlaybackRate < THRESHOLD_LOW_PLAYBACKRATE_AUDIO) {
+  if (mPlaybackRate != 0.0 &&
+      (mPlaybackRate < 0 || mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
+       mPlaybackRate < THRESHOLD_LOW_PLAYBACKRATE_AUDIO)) {
     SetMutedInternal(mMuted | MUTED_BY_INVALID_PLAYBACK_RATE);
   } else {
     SetMutedInternal(mMuted & ~MUTED_BY_INVALID_PLAYBACK_RATE);

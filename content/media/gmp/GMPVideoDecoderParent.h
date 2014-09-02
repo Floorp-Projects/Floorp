@@ -26,7 +26,7 @@ class GMPVideoDecoderParent MOZ_FINAL : public PGMPVideoDecoderParent
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPVideoDecoderParent)
 
-  GMPVideoDecoderParent(GMPParent *aPlugin);
+  explicit GMPVideoDecoderParent(GMPParent *aPlugin);
 
   GMPVideoHostImpl& Host();
   nsresult Shutdown();

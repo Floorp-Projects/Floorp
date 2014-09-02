@@ -19,7 +19,7 @@ class GMPAudioDecoderChild : public PGMPAudioDecoderChild,
                              public GMPAudioDecoderCallback
 {
 public:
-  GMPAudioDecoderChild(GMPChild* aPlugin);
+  explicit GMPAudioDecoderChild(GMPChild* aPlugin);
   virtual ~GMPAudioDecoderChild();
 
   void Init(GMPAudioDecoder* aDecoder);

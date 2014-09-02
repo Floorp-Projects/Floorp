@@ -94,7 +94,7 @@ WindowHook::DeleteIfEmpty(MessageData *data) {
 
   MessageDataArray::index_type idx;
   idx = data - mMessageData.Elements();
-  NS_ASSERTION(idx >= 0 && idx < mMessageData.Length(), "Attempted to delete MessageData that doesn't belong to this array!");
+  NS_ASSERTION(idx < mMessageData.Length(), "Attempted to delete MessageData that doesn't belong to this array!");
   mMessageData.RemoveElementAt(idx);
 }
 

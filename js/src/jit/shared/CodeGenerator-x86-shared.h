@@ -207,12 +207,18 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     // SIMD operators
     bool visitSimdValueX4(LSimdValueX4 *lir);
+    bool visitSimdSplatX4(LSimdSplatX4 *lir);
     bool visitInt32x4(LInt32x4 *ins);
     bool visitFloat32x4(LFloat32x4 *ins);
     bool visitSimdExtractElementI(LSimdExtractElementI *lir);
     bool visitSimdExtractElementF(LSimdExtractElementF *lir);
+    bool visitSimdSignMaskX4(LSimdSignMaskX4 *ins);
+    bool visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *lir);
+    bool visitSimdBinaryCompFx4(LSimdBinaryCompFx4 *lir);
     bool visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *lir);
     bool visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *lir);
+    bool visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4 *lir);
+    bool visitSimdSelect(LSimdSelect *ins);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);

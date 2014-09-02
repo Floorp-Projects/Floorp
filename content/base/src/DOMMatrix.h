@@ -25,7 +25,7 @@ class DOMMatrix;
 class DOMMatrixReadOnly : public nsWrapperCache
 {
 public:
-  DOMMatrixReadOnly(nsISupports* aParent)
+  explicit DOMMatrixReadOnly(nsISupports* aParent)
     : mParent(aParent), mMatrix2D(new gfx::Matrix())
   {
     SetIsDOMBinding();
@@ -144,7 +144,7 @@ private:
 class DOMMatrix MOZ_FINAL : public DOMMatrixReadOnly
 {
 public:
-  DOMMatrix(nsISupports* aParent)
+  explicit DOMMatrix(nsISupports* aParent)
     : DOMMatrixReadOnly(aParent)
   {}
 

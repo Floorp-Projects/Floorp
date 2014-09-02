@@ -624,7 +624,7 @@ public:
         bool mHasBeenChecked;
 
     public:
-        ScopedLocalErrorCheck(GLContext* gl)
+        explicit ScopedLocalErrorCheck(GLContext* gl)
             : mGL(gl)
             , mHasBeenChecked(false)
         {
@@ -2641,6 +2641,9 @@ protected:
 public:
     virtual ~GLContext();
 
+    // Mark this context as destroyed.  This will nullptr out all
+    // the GL function pointers!
+    void MarkDestroyed();
 
 // -----------------------------------------------------------------------------
 // Everything that isn't standard GL APIs
@@ -2682,10 +2685,6 @@ public:
     virtual bool SetupLookupFunction() = 0;
 
     virtual void ReleaseSurface() {}
-
-    // Mark this context as destroyed.  This will nullptr out all
-    // the GL function pointers!
-    void MarkDestroyed();
 
     bool IsDestroyed() {
         // MarkDestroyed will mark all these as null.

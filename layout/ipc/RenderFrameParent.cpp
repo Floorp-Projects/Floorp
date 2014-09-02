@@ -78,7 +78,7 @@ GetFrom(nsFrameLoader* aFrameLoader)
 
 class RemoteContentController : public GeckoContentController {
 public:
-  RemoteContentController(RenderFrameParent* aRenderFrame)
+  explicit RemoteContentController(RenderFrameParent* aRenderFrame)
     : mUILoop(MessageLoop::current())
     , mRenderFrame(aRenderFrame)
     , mHaveZoomConstraints(false)

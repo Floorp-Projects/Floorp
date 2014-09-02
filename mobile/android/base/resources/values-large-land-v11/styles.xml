@@ -11,6 +11,8 @@
     </style>
 
     <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">none</item>
         <item name="android:paddingLeft">60dip</item>
         <item name="android:drawablePadding">10dip</item>
         <item name="android:drawableLeft">@drawable/bookmark_folder</item>

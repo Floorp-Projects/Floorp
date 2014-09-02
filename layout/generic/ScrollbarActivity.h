@@ -58,7 +58,7 @@ namespace layout {
 class ScrollbarActivity MOZ_FINAL : public nsIDOMEventListener,
                                     public nsARefreshObserver {
 public:
-  ScrollbarActivity(nsIScrollbarMediator* aScrollableFrame)
+  explicit ScrollbarActivity(nsIScrollbarMediator* aScrollableFrame)
    : mScrollableFrame(aScrollableFrame)
    , mNestedActivityCounter(0)
    , mIsActive(false)

@@ -21,7 +21,7 @@ class SVGFETileElement : public SVGFETileElementBase
   friend nsresult (::NS_NewSVGFETileElement(nsIContent **aResult,
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFETileElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFETileElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFETileElementBase(aNodeInfo)
   {
   }

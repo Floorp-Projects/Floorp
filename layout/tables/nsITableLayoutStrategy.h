@@ -47,7 +47,7 @@ public:
     Type GetType() const { return mType; }
 
 protected:
-    nsITableLayoutStrategy(Type aType) : mType(aType) {}
+    explicit nsITableLayoutStrategy(Type aType) : mType(aType) {}
 private:
     Type mType;
 };

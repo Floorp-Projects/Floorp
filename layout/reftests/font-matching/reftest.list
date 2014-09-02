@@ -93,3 +93,7 @@ random-if(!(cocoaWidget||winWidget)) == arial-arabic.html arial-arabic-ref.html
 
 HTTP(..) == font-synthesis-1.html font-synthesis-1-ref.html
 HTTP(..) == font-synthesis-2.html font-synthesis-2-ref.html
+
+# Bug 1060791 - support for format 10 cmap in Apple Symbols;
+# relevant fonts not present on other platforms.
+skip-if(!cocoaWidget) HTTP(..) != apple-symbols-1.html apple-symbols-1-notref.html

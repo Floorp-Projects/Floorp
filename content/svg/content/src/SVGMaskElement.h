@@ -29,7 +29,7 @@ class SVGMaskElement MOZ_FINAL : public SVGMaskElementBase
 protected:
   friend nsresult (::NS_NewSVGMaskElement(nsIContent **aResult,
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGMaskElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGMaskElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:

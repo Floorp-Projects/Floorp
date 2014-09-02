@@ -24,7 +24,7 @@ class ThreadLocalStorage {
   // A key representing one value stored in TLS.
   class Slot {
    public:
-    Slot(TLSDestructorFunc destructor = NULL);
+    explicit Slot(TLSDestructorFunc destructor = NULL);
 
     // This constructor should be used for statics.
     // It returns an uninitialized Slot.

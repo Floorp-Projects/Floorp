@@ -101,7 +101,7 @@ LoadMonitor::Observe(nsISupports* /* aSubject */,
 class LoadMonitorAddObserver : public nsRunnable
 {
 public:
-  LoadMonitorAddObserver(nsRefPtr<LoadMonitor> loadMonitor)
+  explicit LoadMonitorAddObserver(nsRefPtr<LoadMonitor> loadMonitor)
   {
     mLoadMonitor = loadMonitor;
   }
@@ -126,7 +126,7 @@ private:
 class LoadMonitorRemoveObserver : public nsRunnable
 {
 public:
-  LoadMonitorRemoveObserver(nsRefPtr<LoadMonitor> loadMonitor)
+  explicit LoadMonitorRemoveObserver(nsRefPtr<LoadMonitor> loadMonitor)
   {
     mLoadMonitor = loadMonitor;
   }

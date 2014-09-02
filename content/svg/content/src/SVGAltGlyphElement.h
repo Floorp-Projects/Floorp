@@ -22,7 +22,7 @@ class SVGAltGlyphElement MOZ_FINAL : public SVGAltGlyphElementBase
 protected:
   friend nsresult (::NS_NewSVGAltGlyphElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  SVGAltGlyphElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGAltGlyphElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:

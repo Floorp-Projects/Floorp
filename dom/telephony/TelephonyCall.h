@@ -174,7 +174,7 @@ public:
   ChangeGroup(TelephonyCallGroup* aGroup);
 
 private:
-  TelephonyCall(nsPIDOMWindow* aOwner);
+  explicit TelephonyCall(nsPIDOMWindow* aOwner);
 
   ~TelephonyCall();
 

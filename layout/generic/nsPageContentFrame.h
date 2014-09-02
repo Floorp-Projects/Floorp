@@ -49,7 +49,7 @@ public:
 #endif
 
 protected:
-  nsPageContentFrame(nsStyleContext* aContext) : ViewportFrame(aContext) {}
+  explicit nsPageContentFrame(nsStyleContext* aContext) : ViewportFrame(aContext) {}
 
   nsSharedPageData*         mPD;
 };
