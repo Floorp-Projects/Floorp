@@ -754,13 +754,11 @@ pref("hal.processPriorityManager.gonk.notifyLowMemUnderKB", 14336);
 // blocked on a poll(), and this pref has no effect.)
 pref("gonk.systemMemoryPressureRecoveryPollMS", 5000);
 
-#ifndef DEBUG
 // Enable pre-launching content processes for improved startup time
 // (hiding latency).
 pref("dom.ipc.processPrelaunch.enabled", true);
 // Wait this long before pre-launching a new subprocess.
 pref("dom.ipc.processPrelaunch.delayMs", 5000);
-#endif
 
 pref("dom.ipc.reuse_parent_app", false);
 

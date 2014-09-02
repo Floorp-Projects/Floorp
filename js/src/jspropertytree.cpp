@@ -277,6 +277,14 @@ Shape::fixupDictionaryShapeAfterMovingGC()
     if (!listp)
         return;
 
+    // It's possible that this shape is unreachable and that listp points to the
+    // location of a dead object in the nursery. In this case we should never
+    // touch it again, so poison it for good measure.
+    if (IsInsideNursery(reinterpret_cast<Cell *>(listp))) {
+        JS_POISON(reinterpret_cast<void *>(this), JS_SWEPT_TENURED_PATTERN, sizeof(Shape));
+        return;
+    }
+
     JS_ASSERT(!IsInsideNursery(reinterpret_cast<Cell *>(listp)));
     AllocKind kind = reinterpret_cast<Cell *>(listp)->tenuredGetAllocKind();
     JS_ASSERT(kind == FINALIZE_SHAPE || kind <= FINALIZE_OBJECT_LAST);

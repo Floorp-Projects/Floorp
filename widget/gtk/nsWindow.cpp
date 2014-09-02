@@ -294,7 +294,7 @@ protected:
     typedef pixman_region32 RawRef;
 
     nsSimpleRef() { data = nullptr; }
-    nsSimpleRef(const RawRef &aRawRef) : pixman_region32(aRawRef) { }
+    explicit nsSimpleRef(const RawRef &aRawRef) : pixman_region32(aRawRef) { }
 
     static void Release(pixman_region32& region) {
         pixman_region32_fini(&region);

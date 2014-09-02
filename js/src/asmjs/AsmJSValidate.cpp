@@ -1368,7 +1368,16 @@ class MOZ_STACK_CLASS ModuleCompiler
             !addStandardLibrarySimdOpName("add", AsmJSSimdOperation_add) ||
             !addStandardLibrarySimdOpName("sub", AsmJSSimdOperation_sub) ||
             !addStandardLibrarySimdOpName("mul", AsmJSSimdOperation_mul) ||
-            !addStandardLibrarySimdOpName("div", AsmJSSimdOperation_div))
+            !addStandardLibrarySimdOpName("div", AsmJSSimdOperation_div) ||
+            !addStandardLibrarySimdOpName("lessThanOrEqual", AsmJSSimdOperation_lessThanOrEqual) ||
+            !addStandardLibrarySimdOpName("lessThan", AsmJSSimdOperation_lessThan) ||
+            !addStandardLibrarySimdOpName("equal", AsmJSSimdOperation_equal) ||
+            !addStandardLibrarySimdOpName("notEqual", AsmJSSimdOperation_notEqual) ||
+            !addStandardLibrarySimdOpName("greaterThan", AsmJSSimdOperation_greaterThan) ||
+            !addStandardLibrarySimdOpName("greaterThanOrEqual", AsmJSSimdOperation_greaterThanOrEqual) ||
+            !addStandardLibrarySimdOpName("and", AsmJSSimdOperation_and) ||
+            !addStandardLibrarySimdOpName("or", AsmJSSimdOperation_or) ||
+            !addStandardLibrarySimdOpName("xor", AsmJSSimdOperation_xor))
         {
             return false;
         }
@@ -2401,6 +2410,30 @@ class FunctionCompiler
         return ins;
     }
 
+    MDefinition *binarySimd(MDefinition *lhs, MDefinition *rhs, MSimdBinaryBitwise::Operation op,
+                            MIRType type)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        JS_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
+        JS_ASSERT(lhs->type() == type);
+        MSimdBinaryBitwise *ins = MSimdBinaryBitwise::NewAsmJS(alloc(), lhs, rhs, op, type);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    MDefinition *binarySimd(MDefinition *lhs, MDefinition *rhs, MSimdBinaryComp::Operation op)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        JS_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
+        MSimdBinaryComp *ins = MSimdBinaryComp::NewAsmJS(alloc(), lhs, rhs, op);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     MDefinition *minMax(MDefinition *lhs, MDefinition *rhs, MIRType type, bool isMax) {
         if (inDeadCode())
             return nullptr;
@@ -2549,6 +2582,17 @@ class FunctionCompiler
         JS_ASSERT(IsSimdType(base->type()));
         JS_ASSERT(!IsSimdType(type));
         MSimdExtractElement *ins = MSimdExtractElement::NewAsmJS(alloc(), base, type, lane);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    MDefinition *extractSignMask(MDefinition *base)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        JS_ASSERT(IsSimdType(base->type()));
+        MSimdSignMask *ins = MSimdSignMask::NewAsmJS(alloc(), base);
         curBlock_->add(ins);
         return ins;
     }
@@ -3457,9 +3501,18 @@ IsSimdValidOperationType(AsmJSSimdType type, AsmJSSimdOperation op)
     switch (op) {
       case AsmJSSimdOperation_add:
       case AsmJSSimdOperation_sub:
+      case AsmJSSimdOperation_lessThan:
+      case AsmJSSimdOperation_equal:
+      case AsmJSSimdOperation_greaterThan:
+      case AsmJSSimdOperation_and:
+      case AsmJSSimdOperation_or:
+      case AsmJSSimdOperation_xor:
         return true;
       case AsmJSSimdOperation_mul:
       case AsmJSSimdOperation_div:
+      case AsmJSSimdOperation_lessThanOrEqual:
+      case AsmJSSimdOperation_notEqual:
+      case AsmJSSimdOperation_greaterThanOrEqual:
         return type == AsmJSSimdType_float32x4;
     }
     return false;
@@ -3985,6 +4038,13 @@ CheckDotAccess(FunctionCompiler &f, ParseNode *elem, MDefinition **def, Type *ty
 
     SimdLane lane;
     JSAtomState &names = m.cx()->names();
+
+    if (field == names.signMask) {
+        *type = Type::Int;
+        *def = f.extractSignMask(baseDef);
+        return true;
+    }
+
     if (field == names.x)
         lane = LaneX;
     else if (field == names.y)
@@ -3994,7 +4054,7 @@ CheckDotAccess(FunctionCompiler &f, ParseNode *elem, MDefinition **def, Type *ty
     else if (field == names.w)
         lane = LaneW;
     else
-        return f.fail(base, "dot access field must be a lane name (x, y, z, w)");
+        return f.fail(base, "dot access field must be a lane name (x, y, z, w) or signMask");
 
     *type = baseType.simdToScalarType();
     *def = f.extractSimdElement(lane, baseDef, type->toMIRType());
@@ -4616,8 +4676,8 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinF
 }
 
 static bool
-CheckBinarySimd(FunctionCompiler &f, ParseNode *call, AsmJSSimdType simdType,
-                MSimdBinaryArith::Operation op, MDefinition **def, Type *type)
+CheckBinarySimd(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Global *global,
+                MDefinition **def, Type *type)
 {
     unsigned numArgs = CallArgListLength(call);
     if (numArgs != 2)
@@ -4633,13 +4693,72 @@ CheckBinarySimd(FunctionCompiler &f, ParseNode *call, AsmJSSimdType simdType,
     if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
         return false;
 
-    Type retType = simdType;
-    JS_ASSERT_IF(retType.isInt32x4(), op != MSimdBinaryArith::Mul && op != MSimdBinaryArith::Div);
+    Type retType = global->simdOperationType();
     if (lhsType != retType || rhsType != retType)
         return f.failf(lhs, "arguments to SIMD binary op should both be %s", retType.toChars());
 
-    *type = retType;
-    *def = f.binarySimd(lhsDef, rhsDef, op, retType.toMIRType());
+
+    MIRType opType = retType.toMIRType();
+    switch (global->simdOperation()) {
+      case AsmJSSimdOperation_add:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryArith::Add, opType);
+        *type = retType;
+        break;
+      case AsmJSSimdOperation_sub:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryArith::Sub, opType);
+        *type = retType;
+        break;
+      case AsmJSSimdOperation_mul:
+        JS_ASSERT(!retType.isInt32x4());
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryArith::Mul, opType);
+        *type = retType;
+        break;
+      case AsmJSSimdOperation_div:
+        JS_ASSERT(!retType.isInt32x4());
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryArith::Div, opType);
+        *type = retType;
+        break;
+      case AsmJSSimdOperation_lessThan:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryComp::lessThan);
+        *type = Type::Int32x4;
+        break;
+      case AsmJSSimdOperation_lessThanOrEqual:
+        JS_ASSERT(!retType.isInt32x4());
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryComp::lessThanOrEqual);
+        *type = Type::Int32x4;
+        break;
+      case AsmJSSimdOperation_equal:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryComp::equal);
+        *type = Type::Int32x4;
+        break;
+      case AsmJSSimdOperation_notEqual:
+        JS_ASSERT(!retType.isInt32x4());
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryComp::notEqual);
+        *type = Type::Int32x4;
+        break;
+      case AsmJSSimdOperation_greaterThan:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryComp::greaterThan);
+        *type = Type::Int32x4;
+        break;
+      case AsmJSSimdOperation_greaterThanOrEqual:
+        JS_ASSERT(!retType.isInt32x4());
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryComp::greaterThanOrEqual);
+        *type = Type::Int32x4;
+        break;
+      case AsmJSSimdOperation_and:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryBitwise::and_, opType);
+        *type = retType;
+        break;
+      case AsmJSSimdOperation_or:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryBitwise::or_, opType);
+        *type = retType;
+        break;
+      case AsmJSSimdOperation_xor:
+        *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryBitwise::xor_, opType);
+        *type = retType;
+        break;
+    }
+
     return true;
 }
 
@@ -4650,13 +4769,19 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
     JS_ASSERT(global->isSimdOperation());
     switch (global->simdOperation()) {
       case AsmJSSimdOperation_add:
-        return CheckBinarySimd(f, call, global->simdOperationType(), MSimdBinaryArith::Add, def, type);
       case AsmJSSimdOperation_sub:
-        return CheckBinarySimd(f, call, global->simdOperationType(), MSimdBinaryArith::Sub, def, type);
       case AsmJSSimdOperation_mul:
-        return CheckBinarySimd(f, call, global->simdOperationType(), MSimdBinaryArith::Mul, def, type);
       case AsmJSSimdOperation_div:
-        return CheckBinarySimd(f, call, global->simdOperationType(), MSimdBinaryArith::Div, def, type);
+      case AsmJSSimdOperation_lessThan:
+      case AsmJSSimdOperation_lessThanOrEqual:
+      case AsmJSSimdOperation_equal:
+      case AsmJSSimdOperation_notEqual:
+      case AsmJSSimdOperation_greaterThan:
+      case AsmJSSimdOperation_greaterThanOrEqual:
+      case AsmJSSimdOperation_and:
+      case AsmJSSimdOperation_or:
+      case AsmJSSimdOperation_xor:
+        return CheckBinarySimd(f, call, global, def, type);
     }
     MOZ_CRASH("unexpected simd operation in CheckSimdOperationCall");
 }

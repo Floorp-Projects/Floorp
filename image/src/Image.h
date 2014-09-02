@@ -179,7 +179,7 @@ public:
   virtual ImageURL* GetURI() MOZ_OVERRIDE { return mURI.get(); }
 
 protected:
-  ImageResource(ImageURL* aURI);
+  explicit ImageResource(ImageURL* aURI);
 
   // Shared functionality for implementors of imgIContainer. Every
   // implementation of attribute animationMode should forward here.

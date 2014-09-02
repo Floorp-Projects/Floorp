@@ -49,6 +49,10 @@ AddUniforms(ProgramProfileOGL& aProfile)
         "uTexturePass2",
         "uColorMatrix",
         "uColorMatrixVector",
+        "uBlurRadius",
+        "uBlurOffset",
+        "uBlurAlpha",
+        "uBlurGaussianKernel",
         nullptr
     };
 
@@ -312,7 +316,7 @@ For [0,1] instead of [0,255], and to 5 places:
       fs << "vec4 blur(vec4 color, vec2 coord) {" << endl;
       fs << "  vec4 total = color * uBlurGaussianKernel[0];" << endl;
       fs << "  for (int i = 1; i < " << GAUSSIAN_KERNEL_HALF_WIDTH << "; ++i) {" << endl;
-      fs << "    float r = float(i) * " << GAUSSIAN_KERNEL_STEP << " << endl;" << endl;
+      fs << "    float r = float(i) * " << GAUSSIAN_KERNEL_STEP << ";" << endl;
       fs << "    float k = uBlurGaussianKernel[i];" << endl;
       fs << "    total += sampleAtRadius(coord, r) * k;" << endl;
       fs << "    total += sampleAtRadius(coord, -r) * k;" << endl;
@@ -547,6 +551,26 @@ ShaderProgramOGL::Activate()
   }
   NS_ASSERTION(HasInitialized(), "Attempting to activate a program that's not in use!");
   mGL->fUseProgram(mProgram);
+}
+
+void
+ShaderProgramOGL::SetBlurRadius(float aRX, float aRY)
+{
+  float f[] = {aRX, aRY};
+  SetUniform(KnownUniform::BlurRadius, 2, f);
+
+  float gaussianKernel[GAUSSIAN_KERNEL_HALF_WIDTH];
+  float sum = 0.0f;
+  for (int i = 0; i < GAUSSIAN_KERNEL_HALF_WIDTH; i++) {
+    float x = i * GAUSSIAN_KERNEL_STEP;
+    float sigma = 1.0f;
+    gaussianKernel[i] = exp(-x * x / (2 * sigma * sigma)) / sqrt(2 * M_PI * sigma * sigma);
+    sum += gaussianKernel[i] * (i == 0 ? 1 : 2);
+  }
+  for (int i = 0; i < GAUSSIAN_KERNEL_HALF_WIDTH; i++) {
+    gaussianKernel[i] /= sum;
+  }
+  SetArrayUniform(KnownUniform::BlurGaussianKernel, GAUSSIAN_KERNEL_HALF_WIDTH, gaussianKernel);
 }
 
 } /* layers */

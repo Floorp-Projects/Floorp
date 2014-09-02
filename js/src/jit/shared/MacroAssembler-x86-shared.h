@@ -472,6 +472,9 @@ class MacroAssemblerX86Shared : public Assembler
         // penalty for integer types and double.
         andps(src, dest);
     }
+    void bitwiseAndNotX4(const Operand &src, FloatRegister dest) {
+        andnps(src, dest);
+    }
     void bitwiseOrX4(const Operand &src, FloatRegister dest) {
         orps(src, dest);
     }
