@@ -521,8 +521,9 @@ protected:
                              const char16_t *aDescription,
                              const char *aCSSClass,
                              nsIChannel* aFailedChannel);
-    bool IsNavigationAllowed(bool aDisplayPrintErrorDialog = true);
     bool IsPrintingOrPP(bool aDisplayErrorDialog = true);
+    bool IsNavigationAllowed(bool aDisplayPrintErrorDialog = true,
+                             bool aCheckIfUnloadFired = true);
 
     nsresult SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer);
 
