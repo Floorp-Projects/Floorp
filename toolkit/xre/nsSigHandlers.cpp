@@ -63,8 +63,9 @@ static void PrintStackFrame(uint32_t aFrameNumber, void *aPC, void *aSP,
   nsCodeAddressDetails details;
 
   NS_DescribeCodeAddress(aPC, &details);
-  NS_FormatCodeAddressDetails(aFrameNumber, aPC, &details, buf, sizeof(buf));
-  fputs(buf, stdout);
+  NS_FormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
+  fprintf(stdout, "%s\n", buf);
+  fflush(stdout);
 }
 
 }
