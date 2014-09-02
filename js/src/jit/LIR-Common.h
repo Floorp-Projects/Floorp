@@ -307,6 +307,26 @@ class LSimdBinaryBitwiseX4 : public LInstructionHelper<1, 2, 0>
     }
 };
 
+// SIMD selection of lanes from two int32x4 or float32x4 arguments based on a
+// int32x4 argument.
+class LSimdSelect : public LInstructionHelper<1, 3, 0>
+{
+  public:
+    LIR_HEADER(SimdSelect);
+    const LAllocation *mask() {
+        return getOperand(0);
+    }
+    const LAllocation *lhs() {
+        return getOperand(1);
+    }
+    const LAllocation *rhs() {
+        return getOperand(2);
+    }
+    MSimdTernaryBitwise::Operation operation() const {
+        return mir_->toSimdTernaryBitwise()->operation();
+    }
+};
+
 // Constant 32-bit integer.
 class LInteger : public LInstructionHelper<1, 0, 0>
 {
