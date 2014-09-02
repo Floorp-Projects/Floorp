@@ -25,7 +25,7 @@ namespace plugins {
 class PluginProcessParent : public mozilla::ipc::GeckoChildProcessHost
 {
 public:
-    PluginProcessParent(const std::string& aPluginFilePath);
+    explicit PluginProcessParent(const std::string& aPluginFilePath);
     ~PluginProcessParent();
 
     /**

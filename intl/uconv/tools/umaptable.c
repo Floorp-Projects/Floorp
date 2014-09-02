@@ -172,9 +172,9 @@ void gentable()
 	printf("  The tool which used to generate this file is called umaptable.\n");
 	printf("  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.\n");
 
-	printf("  If you have any problem of this file. Please contact \n"); 
-	printf("  Netscape Client International Team or \n");
-	printf("  ftang@netscape <Frank Tang> \n");
+	printf("  If you have any problems with this file, please file a bug\n");
+	printf("  under the \"Internationalization\" component in\n");
+	printf("  https://bugzilla.mozilla.org/enter_bug.cgi?product=Core\n");
 	printf("\n");
 	printf("              Table in Debug form \n");
 
@@ -433,11 +433,19 @@ void getinput()
   {
      if(buf[0]=='0' && buf[1] == 'x')
         {
+          u=-1;
           sscanf(buf,"%hx %hx",&c,&u);
-          if(bGenerateFromUnicodeTable)
-            SetMapValue(u, c);
-          else
-            SetMapValue(c, u);
+          if (u == -1 && 0x80 <= c && c <=0x9f)
+            {
+              u = c;
+            }
+          if (u != -1)
+            {
+              if(bGenerateFromUnicodeTable)
+                SetMapValue(u, c);
+              else
+                SetMapValue(c, u);
+            }
         }
   }
 }

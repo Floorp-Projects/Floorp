@@ -24,8 +24,14 @@ static void
 FinalizeChild(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartment, void *data)
 {
     if (status == JSFINALIZE_GROUP_START) {
-        static_cast<JavaScriptChild *>(data)->finalize(fop);
+        static_cast<JavaScriptChild *>(data)->finalize();
     }
+}
+
+static void
+FixupChildAfterMovingGC(JSRuntime *rt, void *data)
+{
+    static_cast<JavaScriptChild *>(data)->fixupAfterMovingGC();
 }
 
 JavaScriptChild::JavaScriptChild(JSRuntime *rt)
@@ -37,6 +43,7 @@ JavaScriptChild::JavaScriptChild(JSRuntime *rt)
 JavaScriptChild::~JavaScriptChild()
 {
     JS_RemoveFinalizeCallback(rt_, FinalizeChild);
+    JS_RemoveMovingGCCallback(rt_, FixupChildAfterMovingGC);
 }
 
 bool
@@ -48,14 +55,15 @@ JavaScriptChild::init()
         return false;
 
     JS_AddFinalizeCallback(rt_, FinalizeChild, this);
+    JS_AddMovingGCCallback(rt_, FixupChildAfterMovingGC, this);
     return true;
 }
 
 void
-JavaScriptChild::finalize(JSFreeOp *fop)
+JavaScriptChild::finalize()
 {
-    objects_.finalize(fop);
-    objectIds_.finalize(fop);
+    objects_.sweep();
+    objectIds_.sweep();
 }
 
 JSObject *

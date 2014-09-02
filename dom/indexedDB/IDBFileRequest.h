@@ -65,7 +65,7 @@ public:
   IMPL_EVENT_HANDLER(progress)
 
 private:
-  IDBFileRequest(nsPIDOMWindow* aWindow);
+  explicit IDBFileRequest(nsPIDOMWindow* aWindow);
   ~IDBFileRequest();
 
   void

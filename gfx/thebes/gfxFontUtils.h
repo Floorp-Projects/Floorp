@@ -771,6 +771,10 @@ public:
     }
 
     static nsresult
+    ReadCMAPTableFormat10(const uint8_t *aBuf, uint32_t aLength,
+                          gfxSparseBitSet& aCharacterMap);
+
+    static nsresult
     ReadCMAPTableFormat12(const uint8_t *aBuf, uint32_t aLength, 
                           gfxSparseBitSet& aCharacterMap);
 
@@ -795,6 +799,9 @@ public:
 
     static uint32_t
     MapCharToGlyphFormat4(const uint8_t *aBuf, char16_t aCh);
+
+    static uint32_t
+    MapCharToGlyphFormat10(const uint8_t *aBuf, uint32_t aCh);
 
     static uint32_t
     MapCharToGlyphFormat12(const uint8_t *aBuf, uint32_t aCh);

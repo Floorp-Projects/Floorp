@@ -18,7 +18,7 @@ namespace dom {
 class AnimationEffect MOZ_FINAL : public nsWrapperCache
 {
 public:
-  AnimationEffect(Animation* aAnimation)
+  explicit AnimationEffect(Animation* aAnimation)
     : mAnimation(aAnimation)
   {
     SetIsDOMBinding();

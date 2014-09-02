@@ -10,7 +10,7 @@
 #define js_Class_h
 
 #include "mozilla/NullPtr.h"
- 
+
 #include "jstypes.h"
 
 #include "js/CallArgs.h"
@@ -185,6 +185,9 @@ typedef JSObject *
 typedef JSObject *
 (* JSWeakmapKeyDelegateOp)(JSObject *obj);
 
+typedef void
+(* JSObjectMovedOp)(JSObject *obj, const JSObject *old);
+
 /* js::Class operation signatures. */
 
 namespace js {
@@ -318,10 +321,19 @@ struct ClassExtension
      * wrapped object is collected.
      */
     JSWeakmapKeyDelegateOp weakmapKeyDelegateOp;
+
+    /*
+     * Optional hook called when an object is moved by a compacting GC.
+     *
+     * There may exist weak pointers to an object that are not traced through
+     * when the normal trace APIs are used, for example objects in the wrapper
+     * cache.  This hook allows these pointers to be updated.
+     */
+    JSObjectMovedOp objectMovedOp;
 };
 
 #define JS_NULL_CLASS_SPEC  {nullptr,nullptr,nullptr,nullptr,nullptr,nullptr}
-#define JS_NULL_CLASS_EXT   {nullptr,nullptr,nullptr,false,nullptr}
+#define JS_NULL_CLASS_EXT   {nullptr,nullptr,nullptr,false,nullptr,nullptr}
 
 struct ObjectOps
 {
@@ -361,7 +373,7 @@ typedef void (*JSClassInternal)();
 struct JSClass {
     JS_CLASS_MEMBERS(JSFinalizeOp);
 
-    void                *reserved[31];
+    void                *reserved[32];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
@@ -539,6 +551,11 @@ IsObjectWithClass(const JS::Value &v, ESClassValue classValue, JSContext *cx);
 /* Fills |vp| with the unboxed value for boxed types, or undefined otherwise. */
 inline bool
 Unbox(JSContext *cx, JS::HandleObject obj, JS::MutableHandleValue vp);
+
+#ifdef DEBUG
+JS_FRIEND_API(bool)
+HasObjectMovedOp(JSObject *obj);
+#endif
 
 }  /* namespace js */
 

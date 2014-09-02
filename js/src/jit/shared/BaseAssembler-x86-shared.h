@@ -296,6 +296,7 @@ private:
         OP2_UCOMISD_VsdWsd  = 0x2E,
         OP2_MOVMSKPD_EdVd   = 0x50,
         OP2_ANDPS_VpsWps    = 0x54,
+        OP2_ANDNPS_VpsWps   = 0x55,
         OP2_ORPS_VpsWps     = 0x56,
         OP2_XORPS_VpsWps    = 0x57,
         OP2_ADDSD_VsdWsd    = 0x58,
@@ -3460,6 +3461,27 @@ public:
     void andps_mr(const void* address, XMMRegisterID dst)
     {
         spew("andps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ANDPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void andnps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("andnps     %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ANDNPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void andnps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("andnps     %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ANDNPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+
+    void andnps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("andnps     %p, %s",
              address, nameFPReg(dst));
         m_formatter.twoByteOp(OP2_ANDPS_VpsWps, (RegisterID)dst, address);
     }

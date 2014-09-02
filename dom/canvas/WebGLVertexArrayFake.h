@@ -19,8 +19,8 @@ public:
     virtual void GenVertexArray() MOZ_OVERRIDE { };
 
 private:
-    WebGLVertexArrayFake(WebGLContext *context)
-        : WebGLVertexArray(context)
+    explicit WebGLVertexArrayFake(WebGLContext* aContext)
+        : WebGLVertexArray(aContext)
     { }
 
     ~WebGLVertexArrayFake() {

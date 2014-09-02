@@ -3544,7 +3544,7 @@ EventStateManager::SetCursor(int32_t aCursor, imgIContainer* aContainer,
 class MOZ_STACK_CLASS ESMEventCB : public EventDispatchingCallback
 {
 public:
-  ESMEventCB(nsIContent* aTarget) : mTarget(aTarget) {}
+  explicit ESMEventCB(nsIContent* aTarget) : mTarget(aTarget) {}
 
   virtual void HandleEvent(EventChainPostVisitor& aVisitor)
   {

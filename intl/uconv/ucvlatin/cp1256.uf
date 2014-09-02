@@ -7,9 +7,9 @@
 
   The tool which used to generate this file is called umaptable.
   You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
-  If you have any problem of this file. Please contact 
-  Netscape Client International Team or 
-  ftang@netscape <Frank Tang> 
+  If you have any problems with this file, please file a bug
+  under the "Internationalization" component in
+  https://bugzilla.mozilla.org/enter_bug.cgi?product=Core
 
               Table in Debug form 
 Begin of Item 0000

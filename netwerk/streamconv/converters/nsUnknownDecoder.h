@@ -50,7 +50,7 @@ protected:
   class ConvertedStreamListener: public nsIStreamListener
   {
   public:
-    ConvertedStreamListener(nsUnknownDecoder *aDecoder);
+    explicit ConvertedStreamListener(nsUnknownDecoder *aDecoder);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER

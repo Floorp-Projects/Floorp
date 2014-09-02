@@ -426,6 +426,9 @@ pref("media.audio_data.enabled", false);
 // Whether to use async panning and zooming
 pref("layers.async-pan-zoom.enabled", false);
 
+// Whether to enable containerless async scrolling
+pref("layout.async-containerless-scrolling.enabled", true);
+
 // APZ preferences. For documentation/details on what these prefs do, check 
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
 pref("apz.allow_checkerboarding", true);
@@ -1963,11 +1966,7 @@ pref("layout.css.dpi", -1);
 pref("layout.css.devPixelsPerPx", "-1.0");
 
 // Is support for CSS Masking features enabled?
-#ifdef RELEASE_BUILD
-pref("layout.css.masking.enabled", false);
-#else
 pref("layout.css.masking.enabled", true);
-#endif
 
 // Is support for mix-blend-mode enabled?
 pref("layout.css.mix-blend-mode.enabled", true);
