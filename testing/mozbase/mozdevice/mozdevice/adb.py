@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import logging
 import os
 import posixpath
 import re
 import subprocess
 import tempfile
 import time
+import traceback
+
 
 class ADBProcess(object):
     """ADBProcess encapsulates the data related to executing the adb process.
@@ -122,13 +123,12 @@ class ADBCommand(object):
     def __init__(self,
                  adb='adb',
                  logger_name='adb',
-                 log_level=logging.INFO,
-                 timeout=300):
+                 timeout=300,
+                 verbose=False):
         """Initializes the ADBCommand object.
 
         :param adb: path to adb executable. Defaults to 'adb'.
         :param logger_name: logging logger name. Defaults to 'adb'.
-        :param log_level: logging level. Defaults to logging.INFO.
 
         :raises: * ADBError
                  * ADBTimeoutError
@@ -137,14 +137,27 @@ class ADBCommand(object):
         if self.__class__ == ADBCommand:
             raise NotImplementedError
 
-        self._logger = logging.getLogger(logger_name)
+        self._logger = self._get_logger(logger_name)
+        self._verbose = verbose
         self._adb_path = adb
-        self._log_level = log_level
         self._timeout = timeout
         self._polling_interval = 0.1
 
         self._logger.debug("%s: %s" % (self.__class__.__name__,
                                        self.__dict__))
+
+    def _get_logger(self, logger_name):
+        logger = None
+        try:
+            from mozlog import structured
+            logger = structured.get_default_logger(logger_name)
+        except ImportError:
+            pass
+
+        if logger is None:
+            import logging
+            logger = logging.getLogger(logger_name)
+        return logger
 
     # Host Command methods
 
@@ -241,15 +254,17 @@ class ADBCommand(object):
             elif adb_process.exitcode:
                 raise ADBError("%s" % adb_process)
             output = adb_process.stdout_file.read().rstrip()
-            self._logger.debug('command_output: %s, '
-                               'timeout: %s, '
-                               'timedout: %s, '
-                               'exitcode: %s, output: %s' %
-                               (' '.join(adb_process.args),
-                                timeout,
-                                adb_process.timedout,
-                                adb_process.exitcode,
-                                output))
+            if self._verbose:
+                self._logger.debug('command_output: %s, '
+                                   'timeout: %s, '
+                                   'timedout: %s, '
+                                   'exitcode: %s, output: %s' %
+                                   (' '.join(adb_process.args),
+                                    timeout,
+                                    adb_process.timedout,
+                                    adb_process.exitcode,
+                                    output))
+
             return output
         finally:
             if adb_process and isinstance(adb_process.stdout_file, file):
@@ -272,20 +287,19 @@ class ADBHost(ADBCommand):
     def __init__(self,
                  adb='adb',
                  logger_name='adb',
-                 log_level=logging.INFO,
-                 timeout=300):
+                 timeout=300,
+                 verbose=False):
         """Initializes the ADBHost object.
 
         :param adb: path to adb executable. Defaults to 'adb'.
         :param logger_name: logging logger name. Defaults to 'adb'.
-        :param log_level: logging level. Defaults to logging.INFO.
 
         :raises: * ADBError
                  * ADBTimeoutError
 
         """
         ADBCommand.__init__(self, adb=adb, logger_name=logger_name,
-                            log_level=log_level, timeout=timeout)
+                            timeout=timeout, verbose=verbose)
 
     def command(self, cmds, timeout=None):
         """Executes an adb command on the host.
@@ -439,8 +453,8 @@ class ADBDevice(ADBCommand):
                  adb='adb',
                  test_root='',
                  logger_name='adb',
-                 log_level=logging.INFO,
                  timeout=300,
+                 verbose=False,
                  device_ready_retry_wait=20,
                  device_ready_retry_attempts=3):
         """Initializes the ADBDevice object.
@@ -448,7 +462,6 @@ class ADBDevice(ADBCommand):
         :param device_serial: adb serial number of the device.
         :param adb: path to adb executable. Defaults to 'adb'.
         :param logger_name: logging logger name. Defaults to 'adb'.
-        :param log_level: logging level. Defaults to logging.INFO.
         :param device_ready_retry_wait: number of seconds to wait
             between attempts to check if the device is ready after a
             reboot.
@@ -460,8 +473,7 @@ class ADBDevice(ADBCommand):
 
         """
         ADBCommand.__init__(self, adb=adb, logger_name=logger_name,
-                            log_level=log_level,
-                            timeout=timeout)
+                            timeout=timeout, verbose=verbose)
         self._device_serial = device_serial
         self.test_root = test_root
         self._device_ready_retry_wait = device_ready_retry_wait
@@ -859,18 +871,20 @@ class ADBDevice(ADBCommand):
             elif adb_process.exitcode:
                 raise ADBError("%s" % adb_process)
             output = adb_process.stdout_file.read().rstrip()
-            self._logger.debug('shell_output: %s, '
-                               'timeout: %s, '
-                               'root: %s, '
-                               'timedout: %s, '
-                               'exitcode: %s, '
-                               'output: %s' %
-                               (' '.join(adb_process.args),
-                                timeout,
-                                root,
-                                adb_process.timedout,
-                                adb_process.exitcode,
-                                output))
+            if self._verbose:
+                self._logger.debug('shell_output: %s, '
+                                   'timeout: %s, '
+                                   'root: %s, '
+                                   'timedout: %s, '
+                                   'exitcode: %s, '
+                                   'output: %s' %
+                                (' '.join(adb_process.args),
+                                 timeout,
+                                    root,
+                                 adb_process.timedout,
+                                 adb_process.exitcode,
+                                 output))
+
             return output
         finally:
             if adb_process and isinstance(adb_process.stdout_file, file):
@@ -1109,7 +1123,8 @@ class ADBDevice(ADBCommand):
                                          root=root).split('\r\n')
                 self._logger.debug('list_files: data: %s' % data)
             except ADBError:
-                self._logger.exception('Ignoring exception in ADBDevice.list_files')
+                self._logger.error('Ignoring exception in ADBDevice.list_files\n%s' %
+                                   traceback.format_exc())
                 pass
         data[:] = [item for item in data if item]
         self._logger.debug('list_files: %s' % data)
@@ -1281,8 +1296,8 @@ class ADBDevice(ADBCommand):
                 try:
                     ret.append([int(els[pid_i]), els[-1], els[user_i]])
                 except ValueError:
-                    self._logger.exception('get_process_list: %s %s' % (
-                        header, line))
+                    self._logger.error('get_process_list: %s %s\n%s' % (
+                        header, line, traceback.format_exc()))
                     raise ADBError('get_process_list: %s: %s: %s' % (
                         header, line, adb_process))
                 line = adb_process.stdout_file.readline()
