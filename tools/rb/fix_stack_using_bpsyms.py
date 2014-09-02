@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# This script uses breakpad symbols to post-process the entries produced by
+# NS_FormatCodeAddress(), which on TBPL builds often lack a file name and a
+# line number (and on Linux even the symbol is often bad).
+
 from __future__ import with_statement
 
 import sys
@@ -112,18 +116,14 @@ def addressToSymbol(file, address, symbolsDir):
   else:
     return ""
 
-line_re = re.compile("^(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,16})\](.*)$")
-balance_tree_re = re.compile("^([ \|0-9-]*)")
+# Matches lines produced by NS_FormatCodeAddress().
+line_re = re.compile("^(.*#\d+: )(.+)\[(.+) \+(0x.+)\](.*)$")
 
 def fixSymbols(line, symbolsDir):
   result = line_re.match(line)
   if result is not None:
-    # before allows preservation of balance trees
-    # after allows preservation of counts
-    (before, file, address, after) = result.groups()
+    (before, fn, file, address, after) = result.groups()
     address = int(address, 16)
-    # throw away the bad symbol, but keep balance tree structure
-    before = balance_tree_re.match(before).groups()[0]
     symbol = addressToSymbol(file, address, symbolsDir)
     if not symbol:
       symbol = "%s + 0x%x" % (os.path.basename(file), address)
