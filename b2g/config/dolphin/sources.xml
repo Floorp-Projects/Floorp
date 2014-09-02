@@ -15,9 +15,9 @@
   <project name="platform_build" path="build" remote="b2g" revision="4b4336c73c081b39776d399835ce4853aee5cc1c">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="44bf2e3bc5ddea9db9a8c851bd353cb234aa883c"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="7e469783859785a8bd4bf02a802f32561c84be7b"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3bb61a27cd2941b2ba9b616a11aaa44269210396"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="6969df171e5295f855f12d12db0382048e6892e7"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="562d357b72279a9e35d4af5aeecc8e1ffa2f44f1"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
@@ -127,7 +127,7 @@
   <!-- Stock Android things -->
   <project name="platform/external/icu4c" path="external/icu4c" revision="2bb01561780583cc37bc667f0ea79f48a122d8a2"/>
   <!-- dolphin specific things -->
-  <project name="device/sprd" path="device/sprd" revision="ee67887cb2b7171db34b92d3f72b159d7dc51f10"/>
+  <project name="device/sprd" path="device/sprd" revision="4eac1e31bf69596bf229a6877c9aa3493ecd9fce"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="4e58336019b5cbcfd134caf55b142236cf986618"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="facca8d3e35431b66f85a4eb42bc6c5b24bd04da"/>
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>
