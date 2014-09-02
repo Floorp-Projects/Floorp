@@ -220,9 +220,6 @@ protected:
   ~MediaEngineWebRTCVideoSource() { Shutdown(); }
 
 private:
-  static const unsigned int KMaxDeviceNameLength = 128;
-  static const unsigned int KMaxUniqueIdLength = 256;
-
   // Initialize the needed Video engine interfaces.
   void Init();
   void Shutdown();
@@ -350,9 +347,6 @@ protected:
   int mSamples;
 
 private:
-  static const unsigned int KMaxDeviceNameLength = 128;
-  static const unsigned int KMaxUniqueIdLength = 256;
-
   void Init();
   void Shutdown();
 
