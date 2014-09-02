@@ -14,7 +14,6 @@
 #include "SharedThreadPool.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/TimeRanges.h"
-#include "SharedDecoderManager.h"
 
 #ifdef MOZ_EME
 #include "mozilla/CDMProxy.h"
@@ -404,21 +403,12 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     const VideoDecoderConfig& video = mDemuxer->VideoConfig();
     mInfo.mVideo.mDisplay =
       nsIntSize(video.display_width, video.display_height);
-    mVideo.mCallback = new DecoderCallback(this, kVideo);
-    if (mSharedDecoderManager) {
-      mVideo.mDecoder =
-        mSharedDecoderManager->CreateH264Decoder(video,
-                                                 mLayersBackendType,
-                                                 mDecoder->GetImageContainer(),
-                                                 mVideo.mTaskQueue,
-                                                 mVideo.mCallback);
-    } else {
-      mVideo.mDecoder = mPlatform->CreateH264Decoder(video,
-                                                     mLayersBackendType,
-                                                     mDecoder->GetImageContainer(),
-                                                     mVideo.mTaskQueue,
-                                                     mVideo.mCallback);
-    }
+    mVideo.mCallback = new  DecoderCallback(this, kVideo);
+    mVideo.mDecoder = mPlatform->CreateH264Decoder(video,
+                                                   mLayersBackendType,
+                                                   mDecoder->GetImageContainer(),
+                                                   mVideo.mTaskQueue,
+                                                   mVideo.mCallback);
     NS_ENSURE_TRUE(mVideo.mDecoder != nullptr, NS_ERROR_FAILURE);
     nsresult rv = mVideo.mDecoder->Init();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -464,6 +454,12 @@ MP4Reader::GetDecoderData(TrackType aTrack)
 {
   MOZ_ASSERT(aTrack == kAudio || aTrack == kVideo);
   return (aTrack == kAudio) ? mAudio : mVideo;
+}
+
+MediaDataDecoder*
+MP4Reader::Decoder(TrackType aTrack)
+{
+  return GetDecoderData(aTrack).mDecoder;
 }
 
 MP4Sample*
@@ -870,23 +866,6 @@ void MP4Reader::NotifyResourcesStatusChanged()
   if (mDecoder) {
     mDecoder->NotifyWaitingForResourcesStatusChanged();
   }
-#endif
-}
-
-void
-MP4Reader::SetIdle()
-{
-  if (mSharedDecoderManager && mVideo.mDecoder) {
-    mSharedDecoderManager->SetIdle(mVideo.mDecoder);
-    NotifyResourcesStatusChanged();
-  }
-}
-
-void
-MP4Reader::SetSharedDecoderManager(SharedDecoderManager* aManager)
-{
-#ifdef MOZ_GONK_MEDIACODEC
-  mSharedDecoderManager = aManager;
 #endif
 }
 
