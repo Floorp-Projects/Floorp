@@ -38,8 +38,12 @@ browser.jar:
   content/browser/loop/shared/img/mute-inverse-14x14@2x.png     (content/shared/img/mute-inverse-14x14@2x.png)
   content/browser/loop/shared/img/video-inverse-14x14.png       (content/shared/img/video-inverse-14x14.png)
   content/browser/loop/shared/img/video-inverse-14x14@2x.png    (content/shared/img/video-inverse-14x14@2x.png)
-  content/browser/loop/shared/img/dropdown-inverse.png       (content/shared/img/dropdown-inverse.png)
-  content/browser/loop/shared/img/dropdown-inverse@2x.png    (content/shared/img/dropdown-inverse@2x.png)
+  content/browser/loop/shared/img/dropdown-inverse.png          (content/shared/img/dropdown-inverse.png)
+  content/browser/loop/shared/img/dropdown-inverse@2x.png       (content/shared/img/dropdown-inverse@2x.png)
+  content/browser/loop/shared/img/svg/glyph-settings-16x16.svg  (content/shared/img/svg/glyph-settings-16x16.svg)
+  content/browser/loop/shared/img/svg/glyph-account-16x16.svg   (content/shared/img/svg/glyph-account-16x16.svg)
+  content/browser/loop/shared/img/svg/glyph-signin-16x16.svg    (content/shared/img/svg/glyph-signin-16x16.svg)
+  content/browser/loop/shared/img/svg/glyph-signout-16x16.svg   (content/shared/img/svg/glyph-signout-16x16.svg)
 
   # Shared scripts
   content/browser/loop/shared/js/feedbackApiClient.js (content/shared/js/feedbackApiClient.js)
