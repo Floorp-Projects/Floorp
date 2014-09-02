@@ -242,7 +242,7 @@ ValueNumberer::pushDeadPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
             if (!deadDefs_.append(op))
                 return false;
         } else {
-           op->setUseRemovedUnchecked();
+            op->setUseRemovedUnchecked();
         }
     }
     return true;
@@ -259,7 +259,7 @@ ValueNumberer::pushDeadInsOperands(MInstruction *ins)
             if (!deadDefs_.append(op))
                 return false;
         } else {
-           op->setUseRemovedUnchecked();
+            op->setUseRemovedUnchecked();
         }
     }
     return true;
@@ -485,8 +485,10 @@ ValueNumberer::visitDefinition(MDefinition *def)
         // needed, so we can clear |def|'s guard flag and let it be deleted.
         def->setNotGuardUnchecked();
 
-        if (IsDead(def) && !deleteDefsRecursively(def))
-            return false;
+        if (DeadIfUnused(def)) {
+            if (!deleteDefsRecursively(def))
+                return false;
+        }
         def = sim;
     }
 
@@ -506,8 +508,15 @@ ValueNumberer::visitDefinition(MDefinition *def)
             // so we can clear |def|'s guard flag and let it be deleted.
             def->setNotGuardUnchecked();
 
-            if (IsDead(def) && !deleteDefsRecursively(def))
-                return false;
+            if (DeadIfUnused(def)) {
+                // deleteDef should not add anything to the deadDefs, as the
+                // redundant operation should have the same input operands.
+                mozilla::DebugOnly<bool> r = deleteDef(def);
+                MOZ_ASSERT(r, "deleteDef shouldn't have tried to add anything to the worklist, "
+                              "so it shouldn't have failed");
+                MOZ_ASSERT(deadDefs_.empty(),
+                           "deleteDef shouldn't have added anything to the worklist");
+            }
             def = rep;
         }
     }
