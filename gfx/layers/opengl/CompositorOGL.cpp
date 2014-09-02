@@ -173,6 +173,13 @@ CompositorOGL::CleanupResources()
     mQuadVBO = 0;
   }
 
+  // On the main thread the Widget will be destroyed soon and calling MakeCurrent
+  // after that could cause a crash (at least with GLX, see bug 1059793), unless
+  // context is marked as destroyed.
+  // There may be some textures still alive that will try to call MakeCurrent on
+  // the context so let's make sure it is marked destroyed now.
+  mGLContext->MarkDestroyed();
+
   mGLContext = nullptr;
 }
 
