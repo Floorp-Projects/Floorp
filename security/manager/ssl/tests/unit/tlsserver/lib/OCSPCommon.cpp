@@ -70,7 +70,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     return nullptr;
   }
   CertID certID(issuer, issuerPublicKey, serialNumber);
-  OCSPResponseContext context(aArena, certID, now);
+  OCSPResponseContext context(certID, now);
 
   mozilla::ScopedCERTCertificate signerCert;
   if (aORT == ORTGoodOtherCA || aORT == ORTDelegatedIncluded ||
@@ -172,19 +172,17 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     return nullptr;
   }
 
-  SECItem* response = CreateEncodedOCSPResponse(context);
-  if (!response) {
+  ByteString response(CreateEncodedOCSPResponse(context));
+  if (response == ENCODING_FAILED) {
     PrintPRError("CreateEncodedOCSPResponse failed");
     return nullptr;
   }
 
-  SECItemArray* arr = SECITEM_AllocArray(aArena, nullptr, 1);
-  if (!arr) {
-    PrintPRError("SECITEM_AllocArray failed");
-    return nullptr;
-  }
-  arr->items[0].data = response->data;
-  arr->items[0].len = response->len;
-
-  return arr;
+  SECItem item = {
+    siBuffer,
+    const_cast<uint8_t*>(response.data()),
+    static_cast<unsigned int>(response.length())
+  };
+  SECItemArray arr = { &item, 1 };
+  return SECITEM_DupArray(aArena, &arr);
 }
