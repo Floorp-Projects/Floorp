@@ -41,6 +41,7 @@ class nsWindow;
 #ifdef MOZ_METRO
 class MetroWidget;
 #endif
+class TSFStaticSink;
 
 namespace mozilla {
 namespace widget {
@@ -54,8 +55,6 @@ struct MSGResult;
 
 class nsTextStore MOZ_FINAL : public ITextStoreACP
                             , public ITfContextOwnerCompositionSink
-                            , public ITfActiveLanguageProfileNotifySink
-                            , public ITfInputProcessorProfileActivationSink
                             , public ITfMouseTrackerACP
 {
 public: /*IUnknown*/
@@ -100,14 +99,6 @@ public: /*ITfContextOwnerCompositionSink*/
   STDMETHODIMP OnStartComposition(ITfCompositionView*, BOOL*);
   STDMETHODIMP OnUpdateComposition(ITfCompositionView*, ITfRange*);
   STDMETHODIMP OnEndComposition(ITfCompositionView*);
-
-public: /*ITfActiveLanguageProfileNotifySink*/
-  STDMETHODIMP OnActivated(REFCLSID clsid, REFGUID guidProfile,
-                           BOOL fActivated);
-
-public: /*ITfInputProcessorProfileActivationSink*/
-  STDMETHODIMP OnActivated(DWORD, LANGID, REFCLSID, REFGUID, REFGUID,
-                           HKL, DWORD);
 
 public: /*ITfMouseTrackerACP*/
   STDMETHODIMP AdviseMouseSink(ITfRangeACP*, ITfMouseSink*, DWORD*);
@@ -224,19 +215,7 @@ public:
     return (IsComposing() && sEnabledTextStore->mWidget == aWidget);
   }
 
-  static bool IsIMM_IME()
-  {
-    if (!sEnabledTextStore ||
-        !sEnabledTextStore->EnsureInitActiveTIPKeyboard()) {
-      return IsIMM_IME(::GetKeyboardLayout(0));
-    }
-    return sEnabledTextStore->mIsIMM_IME;
-  }
-
-  static bool IsIMM_IME(HKL aHKL)
-  {
-     return (::ImmGetIMEFileNameW(aHKL, nullptr, 0) > 0);
-  }
+  static bool IsIMM_IME();
 
 #ifdef DEBUG
   // Returns true when keyboard layout has IME (TIP).
@@ -247,16 +226,8 @@ protected:
   nsTextStore();
   ~nsTextStore();
 
-  bool Init(ITfThreadMgr* aThreadMgr);
-  void Shutdown();
-
   static void MarkContextAsKeyboardDisabled(ITfContext* aContext);
   static void MarkContextAsEmpty(ITfContext* aContext);
-
-  static bool IsTIPCategoryKeyboard(REFCLSID aTextService, LANGID aLangID,
-                                    REFGUID aProfile);
-  static void GetTIPDescription(REFCLSID aTextService, LANGID aLangID,
-                                REFGUID aProfile, nsAString& aDescription);
 
   bool     Create(nsWindowBase* aWidget);
   bool     Destroy(void);
@@ -318,18 +289,12 @@ protected:
   // application.  Otherwise, this does nothing.
   void     CreateNativeCaret();
 
-  bool     EnsureInitActiveTIPKeyboard();
-
   // Holds the pointer to our current win32 or metro widget
   nsRefPtr<nsWindowBase>       mWidget;
   // Document manager for the currently focused editor
   nsRefPtr<ITfDocumentMgr>     mDocumentMgr;
   // Edit cookie associated with the current editing context
   DWORD                        mEditCookie;
-  // Cookie of installing ITfInputProcessorProfileActivationSink
-  DWORD                        mIPProfileCookie;
-  // Cookie of installing ITfActiveLanguageProfileNotifySink
-  DWORD                        mLangProfileCookie;
   // Editing context at the bottom of mDocumentMgr's context stack
   nsRefPtr<ITfContext>         mContext;
   // Currently installed notification sink
@@ -340,9 +305,6 @@ protected:
   DWORD                        mLock;
   // 0 if no lock is queued, otherwise TS_LF_* indicating the queue lock
   DWORD                        mLockQueued;
-  // Active TIP keyboard's description.  If active language profile isn't TIP,
-  // i.e., IMM-IME or just a keyboard layout, this is empty.
-  nsString                     mActiveTIPKeyboardDescription;
 
   class Composition MOZ_FINAL
   {
@@ -770,11 +732,6 @@ protected:
   bool                         mPendingOnLayoutChange;
   // While there is native caret, this is true.  Otherwise, false.
   bool                         mNativeCaretIsCreated;
-
-  // True if current IME is implemented with IMM.
-  bool                         mIsIMM_IME;
-  // True if OnActivated() is already called
-  bool                         mOnActivatedCalled;
 
   // TSF thread manager object for the current application
   static ITfThreadMgr*  sTsfThreadMgr;
