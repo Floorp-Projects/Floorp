@@ -1294,10 +1294,8 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
         return;
 
     JS::Zone *zone = newScript->fun->zoneFromAnyThread();
-    if (zone->needsIncrementalBarrier()) {
-        MarkObject(zone->barrierTracer(), &newScript->fun, "write barrier");
-        MarkObject(zone->barrierTracer(), &newScript->templateObject, "write barrier");
-    }
+    if (zone->needsIncrementalBarrier())
+        newScript->trace(zone->barrierTracer());
 #endif
 }
 

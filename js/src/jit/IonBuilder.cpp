@@ -754,6 +754,12 @@ IonBuilder::build()
     if (!processIterators())
         return false;
 
+    if (!abortedNewScriptPropertiesTypes().empty()) {
+        JS_ASSERT(!info().executionModeIsAnalysis());
+        abortReason_ = AbortReason_NewScriptProperties;
+        return false;
+    }
+
     JS_ASSERT(loopDepth_ == 0);
     abortReason_ = AbortReason_NoAbort;
     return true;
@@ -4047,6 +4053,12 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
             abortReason_ = AbortReason_Inlining;
         } else if (inlineBuilder.abortReason_ == AbortReason_Inlining) {
             abortReason_ = AbortReason_Inlining;
+        } else if (inlineBuilder.abortReason_ == AbortReason_NewScriptProperties) {
+            const TypeObjectVector &types = inlineBuilder.abortedNewScriptPropertiesTypes();
+            JS_ASSERT(!types.empty());
+            for (size_t i = 0; i < types.length(); i++)
+                addAbortedNewScriptPropertiesType(types[i]);
+            abortReason_ = AbortReason_NewScriptProperties;
         }
 
         return false;
@@ -4920,19 +4932,6 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
         return nullptr;
     if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(templateObject)))
         return nullptr;
-
-    // For template objects with NewScript info, the appropriate allocation
-    // kind to use may change due to dynamic property adds. In these cases
-    // calling Ion code will be invalidated, but any baseline template object
-    // may be stale. Update to the correct template object in this case.
-    types::TypeObject *templateType = templateObject->type();
-    if (templateType->newScript()) {
-        templateObject = templateType->newScript()->templateObject;
-        JS_ASSERT(templateObject->type() == templateType);
-
-        // Trigger recompilation if the templateObject changes.
-        types::TypeObjectKey::get(templateType)->watchStateChangeForNewScriptTemplate(constraints());
-    }
 
     // Generate an inline path to create a new |this| object with
     // the given singleton prototype.
@@ -8348,23 +8347,62 @@ IonBuilder::jsop_rest()
     return true;
 }
 
-bool
-IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name,
-                            types::HeapTypeSetKey *property)
+uint32_t
+IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name)
 {
-    if (!types || types->unknownObject() || types->getObjectCount() != 1)
-        return false;
+    if (!types || types->unknownObject())
+        return UINT32_MAX;
 
-    types::TypeObjectKey *type = types->getObject(0);
-    if (type->unknownProperties() || type->singleton())
-        return false;
+    // Watch for types which the new script properties analysis has not been
+    // performed on yet. Normally this is done after a small number of the
+    // objects have been created, but if only a few have been created we can
+    // still perform the analysis with a smaller object population. The
+    // analysis can have side effects so abort the builder and retry later.
+    //
+    // We always check this, so that even if we aren't able to find a common
+    // slot we ensure that the new script analysis is performed on all accessed
+    // objects. Later, this will let us elide baseline IC stubs for preliminary
+    // objects, which often have a different number of fixed slots from
+    // subsequent objects.
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObjectKey *type = types->getObject(i);
+        if (!type)
+            continue;
 
-    jsid id = NameToId(name);
+        if (types::TypeObject *typeObject = type->maybeType()) {
+            if (typeObject->newScript() && !typeObject->newScript()->analyzed()) {
+                addAbortedNewScriptPropertiesType(typeObject);
+                return UINT32_MAX;
+            }
+        }
+    }
 
-    *property = type->property(id);
-    return property->maybeTypes() &&
-           property->maybeTypes()->definiteProperty() &&
-           !property->nonData(constraints());
+    uint32_t slot = UINT32_MAX;
+
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObjectKey *type = types->getObject(i);
+        if (!type)
+            continue;
+
+        if (type->unknownProperties() || type->singleton())
+            return UINT32_MAX;
+
+        types::HeapTypeSetKey property = type->property(NameToId(name));
+        if (!property.maybeTypes() ||
+            !property.maybeTypes()->definiteProperty() ||
+            property.nonData(constraints()))
+        {
+            return UINT32_MAX;
+        }
+
+        uint32_t propertySlot = property.maybeTypes()->definiteSlot();
+        if (slot == UINT32_MAX)
+            slot = propertySlot;
+        else if (slot != propertySlot)
+            return UINT32_MAX;
+    }
+
+    return slot;
 }
 
 bool
@@ -8953,25 +8991,33 @@ IonBuilder::getPropTryDefiniteSlot(bool *emitted, MDefinition *obj, PropertyName
                                    BarrierKind barrier, types::TemporaryTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
-    types::HeapTypeSetKey property;
-    if (!getDefiniteSlot(obj->resultTypeSet(), name, &property))
+    uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), name);
+    if (slot == UINT32_MAX)
         return true;
 
-    MDefinition *useObj = obj;
     if (obj->type() != MIRType_Object) {
         MGuardObject *guard = MGuardObject::New(alloc(), obj);
         current->add(guard);
-        useObj = guard;
+        obj = guard;
     }
 
-    MLoadFixedSlot *fixed = MLoadFixedSlot::New(alloc(), useObj, property.maybeTypes()->definiteSlot());
+    MInstruction *load;
+    if (slot < JSObject::MAX_FIXED_SLOTS) {
+        load = MLoadFixedSlot::New(alloc(), obj, slot);
+    } else {
+        MInstruction *slots = MSlots::New(alloc(), obj);
+        current->add(slots);
+
+        load = MLoadSlot::New(alloc(), slots, slot - JSObject::MAX_FIXED_SLOTS);
+    }
+
     if (barrier == BarrierKind::NoBarrier)
-        fixed->setResultType(types->getKnownMIRType());
+        load->setResultType(types->getKnownMIRType());
 
-    current->add(fixed);
-    current->push(fixed);
+    current->add(load);
+    current->push(load);
 
-    if (!pushTypeBarrier(fixed, types, barrier))
+    if (!pushTypeBarrier(load, types, barrier))
         return false;
 
     *emitted = true;
@@ -9597,21 +9643,40 @@ IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
     if (barrier)
         return true;
 
-    types::HeapTypeSetKey property;
-    if (!getDefiniteSlot(obj->resultTypeSet(), name, &property))
+    uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), name);
+    if (slot == UINT32_MAX)
         return true;
 
-    if (property.nonWritable(constraints()))
-        return true;
+    bool writeBarrier = false;
+    for (size_t i = 0; i < obj->resultTypeSet()->getObjectCount(); i++) {
+        types::TypeObjectKey *type = obj->resultTypeSet()->getObject(i);
+        if (!type)
+            continue;
 
-    MStoreFixedSlot *fixed = MStoreFixedSlot::New(alloc(), obj, property.maybeTypes()->definiteSlot(), value);
-    current->add(fixed);
+        types::HeapTypeSetKey property = type->property(NameToId(name));
+        if (property.nonWritable(constraints()))
+            return true;
+        writeBarrier |= property.needsBarrier(constraints());
+    }
+
+    MInstruction *store;
+    if (slot < JSObject::MAX_FIXED_SLOTS) {
+        store = MStoreFixedSlot::New(alloc(), obj, slot, value);
+        if (writeBarrier)
+            store->toStoreFixedSlot()->setNeedsBarrier();
+    } else {
+        MInstruction *slots = MSlots::New(alloc(), obj);
+        current->add(slots);
+
+        store = MStoreSlot::New(alloc(), slots, slot - JSObject::MAX_FIXED_SLOTS, value);
+        if (writeBarrier)
+            store->toStoreSlot()->setNeedsBarrier();
+    }
+
+    current->add(store);
     current->push(value);
 
-    if (property.needsBarrier(constraints()))
-        fixed->setNeedsBarrier();
-
-    if (!resumeAfter(fixed))
+    if (!resumeAfter(store))
         return false;
 
     *emitted = true;

@@ -530,6 +530,12 @@ TypeSet::addType(Type type, LifoAlloc *alloc)
         JS_ASSERT(!nobject->singleton());
         if (nobject->unknownProperties())
             goto unknownObject;
+
+        // If we add a partially initialized type to a type set, add the
+        // corresponding fully initialized type, as an object's type may change
+        // from the former to the latter via the acquired properties analysis.
+        if (nobject->newScript() && nobject->newScript()->initializedType())
+            addType(Type::ObjectType(nobject->newScript()->initializedType()), alloc);
     }
 
     if (false) {
@@ -1561,37 +1567,6 @@ class ConstraintDataFreezeObjectForInlinedCall
     bool shouldSweep() { return false; }
 };
 
-// Constraint which triggers recompilation when the template object for a
-// type's new script changes.
-class ConstraintDataFreezeObjectForNewScriptTemplate
-{
-    JSObject *templateObject;
-
-  public:
-    explicit ConstraintDataFreezeObjectForNewScriptTemplate(JSObject *templateObject)
-      : templateObject(templateObject)
-    {}
-
-    const char *kind() { return "freezeObjectForNewScriptTemplate"; }
-
-    bool invalidateOnNewType(Type type) { return false; }
-    bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
-    bool invalidateOnNewObjectState(TypeObject *object) {
-        return !object->newScript() || object->newScript()->templateObject != templateObject;
-    }
-
-    bool constraintHolds(JSContext *cx,
-                         const HeapTypeSetKey &property, TemporaryTypeSet *expected)
-    {
-        return !invalidateOnNewObjectState(property.object()->maybeType());
-    }
-
-    bool shouldSweep() {
-        // Note: |templateObject| is only used for equality testing.
-        return false;
-    }
-};
-
 // Constraint which triggers recompilation when a typed array's data becomes
 // invalid.
 class ConstraintDataFreezeObjectForTypedArrayData
@@ -1639,18 +1614,6 @@ TypeObjectKey::watchStateChangeForInlinedCall(CompilerConstraintList *constraint
 }
 
 void
-TypeObjectKey::watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints)
-{
-    JSObject *templateObject = asTypeObject()->newScript()->templateObject;
-    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
-    LifoAlloc *alloc = constraints->alloc();
-
-    typedef CompilerConstraintInstance<ConstraintDataFreezeObjectForNewScriptTemplate> T;
-    constraints->add(alloc->new_<T>(alloc, objectProperty,
-                                    ConstraintDataFreezeObjectForNewScriptTemplate(templateObject)));
-}
-
-void
 TypeObjectKey::watchStateChangeForTypedArrayData(CompilerConstraintList *constraints)
 {
     TypedArrayObject &tarray = asSingleObject()->as<TypedArrayObject>();
@@ -1687,9 +1650,6 @@ ObjectStateChange(ExclusiveContext *cxArg, TypeObject *object, bool markingUnkno
         }
     }
 }
-
-static void
-CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun);
 
 namespace {
 
@@ -2234,7 +2194,7 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
          */
         RootedObject baseobj(cx, key.script->getObject(GET_UINT32_INDEX(pc)));
 
-        if (!res->addDefiniteProperties(cx, baseobj))
+        if (!res->addDefiniteProperties(cx, baseobj->lastProperty()))
             return nullptr;
     }
 
@@ -2791,7 +2751,7 @@ TypeCompartment::fixObjectType(ExclusiveContext *cx, JSObject *obj)
     /* Make a new type to use for the object and similar future ones. */
     Rooted<TaggedProto> objProto(cx, obj->getTaggedProto());
     TypeObject *objType = newTypeObject(cx, &JSObject::class_, objProto);
-    if (!objType || !objType->addDefiniteProperties(cx, obj))
+    if (!objType || !objType->addDefiniteProperties(cx, obj->lastProperty()))
         return;
 
     if (obj->isIndexed())
@@ -3000,23 +2960,26 @@ TypeObject::updateNewPropertyTypes(ExclusiveContext *cx, jsid id, HeapTypeSet *t
 }
 
 bool
-TypeObject::addDefiniteProperties(ExclusiveContext *cx, JSObject *obj)
+TypeObject::addDefiniteProperties(ExclusiveContext *cx, Shape *shape)
 {
     if (unknownProperties())
         return true;
 
-    /* Mark all properties of obj as definite properties of this type. */
+    /* Mark all properties of shape as definite properties of this type. */
     AutoEnterAnalysis enter(cx);
 
-    RootedShape shape(cx, obj->lastProperty());
     while (!shape->isEmptyShape()) {
         jsid id = IdToTypeId(shape->propid());
-        if (!JSID_IS_VOID(id) && obj->isFixedSlot(shape->slot())) {
+        if (!JSID_IS_VOID(id)) {
+            JS_ASSERT_IF(shape->slot() >= shape->numFixedSlots(),
+                         shape->numFixedSlots() == JSObject::MAX_FIXED_SLOTS);
             TypeSet *types = getProperty(cx, id);
             if (!types)
                 return false;
-            types->setDefinite(shape->slot());
+            if (types->canSetDefinite(shape->slot()))
+                types->setDefinite(shape->slot());
         }
+
         shape = shape->previous();
     }
 
@@ -3075,6 +3038,17 @@ InlineAddTypeProperty(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
     InferSpew(ISpewOps, "externalType: property %s %s: %s",
               TypeObjectString(obj), TypeIdString(id), TypeString(type));
     types->addType(cx, type);
+
+    // Propagate new types from partially initialized types to fully
+    // initialized types for the acquired properties analysis. Note that we
+    // don't need to do this for other property changes, as these will also be
+    // reflected via shape changes on the object that will prevent the object
+    // from acquiring the fully initialized type.
+    if (obj->newScript() && obj->newScript()->initializedType()) {
+        if (type.isObjectUnchecked() && types->unknownObject())
+            type = Type::AnyObjectType();
+        obj->newScript()->initializedType()->addPropertyType(cx, id, type);
+    }
 }
 
 void
@@ -3171,6 +3145,11 @@ TypeObject::setFlags(ExclusiveContext *cx, TypeObjectFlags flags)
     InferSpew(ISpewOps, "%s: setFlags 0x%x", TypeObjectString(this), flags);
 
     ObjectStateChange(cx, this, false);
+
+    // Propagate flag changes from partially to fully initialized types for the
+    // acquired properties analysis.
+    if (newScript() && newScript()->initializedType())
+        newScript()->initializedType()->setFlags(cx, flags);
 }
 
 void
@@ -3231,11 +3210,11 @@ TypeObject::maybeClearNewScriptOnOOM()
 void
 TypeObject::clearNewScript(ExclusiveContext *cx)
 {
-    if (!newScript_)
+    if (!newScript())
         return;
 
-    TypeNewScript *newScript = newScript_;
-    newScript_ = nullptr;
+    TypeNewScript *newScript = this->newScript();
+    setNewScript(nullptr);
 
     AutoEnterAnalysis enter(cx);
 
@@ -3256,88 +3235,14 @@ TypeObject::clearNewScript(ExclusiveContext *cx)
             prop->types.setNonDataProperty(cx);
     }
 
-    /*
-     * If we cleared the new script while in the middle of initializing an
-     * object, it will still have the new script's shape and reflect the no
-     * longer correct state of the object once its initialization is completed.
-     * We can't detect the possibility of this statically while remaining
-     * robust, but the new script keeps track of where each property is
-     * initialized so we can walk the stack and fix up any such objects.
-     */
     if (cx->isJSContext()) {
-        Vector<uint32_t, 32> pcOffsets(cx);
-        for (ScriptFrameIter iter(cx->asJSContext()); !iter.done(); ++iter) {
-            pcOffsets.append(iter.script()->pcToOffset(iter.pc()));
-            if (!iter.isConstructing() ||
-                iter.callee() != newScript->fun ||
-                !iter.thisv().isObject() ||
-                iter.thisv().toObject().hasLazyType() ||
-                iter.thisv().toObject().type() != this)
-            {
-                continue;
-            }
-
-            // Found a matching frame.
-            RootedObject obj(cx, &iter.thisv().toObject());
-
-            // Whether all identified 'new' properties have been initialized.
-            bool finished = false;
-
-            // If not finished, number of properties that have been added.
-            uint32_t numProperties = 0;
-
-            // Whether the current SETPROP is within an inner frame which has
-            // finished entirely.
-            bool pastProperty = false;
-
-            // Index in pcOffsets of the outermost frame.
-            int callDepth = pcOffsets.length() - 1;
-
-            // Index in pcOffsets of the frame currently being checked for a SETPROP.
-            int setpropDepth = callDepth;
-
-            for (TypeNewScript::Initializer *init = newScript->initializerList;; init++) {
-                if (init->kind == TypeNewScript::Initializer::SETPROP) {
-                    if (!pastProperty && pcOffsets[setpropDepth] < init->offset) {
-                        // Have not yet reached this setprop.
-                        break;
-                    }
-                    // This setprop has executed, reset state for the next one.
-                    numProperties++;
-                    pastProperty = false;
-                    setpropDepth = callDepth;
-                } else if (init->kind == TypeNewScript::Initializer::SETPROP_FRAME) {
-                    if (!pastProperty) {
-                        if (pcOffsets[setpropDepth] < init->offset) {
-                            // Have not yet reached this inner call.
-                            break;
-                        } else if (pcOffsets[setpropDepth] > init->offset) {
-                            // Have advanced past this inner call.
-                            pastProperty = true;
-                        } else if (setpropDepth == 0) {
-                            // Have reached this call but not yet in it.
-                            break;
-                        } else {
-                            // Somewhere inside this inner call.
-                            setpropDepth--;
-                        }
-                    }
-                } else {
-                    JS_ASSERT(init->kind == TypeNewScript::Initializer::DONE);
-                    finished = true;
-                    break;
-                }
-            }
-
-            if (!finished)
-                (void) JSObject::rollbackProperties(cx, obj, numProperties);
-        }
+        newScript->rollbackPartiallyInitializedObjects(cx->asJSContext(), this);
     } else {
         // Threads with an ExclusiveContext are not allowed to run scripts.
         JS_ASSERT(!cx->perThreadData->activation());
     }
 
-    js_free(newScript);
+    js_delete(newScript);
     markStateChange(cx);
 }
 
@@ -3373,6 +3278,18 @@ TypeObject::print()
     }
 
     fprintf(stderr, " {");
+
+    if (newScript()) {
+        if (newScript()->analyzed()) {
+            fprintf(stderr, "\n    newScript %d properties", (int) newScript()->templateObject()->slotSpan());
+            if (newScript()->initializedType()) {
+                fprintf(stderr, " initializedType %p with %d properties",
+                        newScript()->initializedType(), (int) newScript()->initializedShape()->slotSpan());
+            }
+        } else {
+            fprintf(stderr, "\n    newScript unanalyzed");
+        }
+    }
 
     for (unsigned i = 0; i < count; i++) {
         Property *prop = getProperty(i);
@@ -3516,72 +3433,6 @@ types::AddClearDefiniteFunctionUsesInScript(JSContext *cx, TypeObject *type,
     }
 
     return true;
-}
-
-/*
- * Either make the newScript information for type when it is constructed
- * by the specified script, or regenerate the constraints for an existing
- * newScript on the type after they were cleared by a GC.
- */
-static void
-CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
-{
-    JS_ASSERT(cx->compartment()->activeAnalysis);
-    JS_ASSERT(!type->newScript());
-
-    /* Strawman object to add properties to and watch for duplicates. */
-    RootedObject baseobj(cx, NewBuiltinClassInstance(cx, &JSObject::class_, gc::FINALIZE_OBJECT16));
-    if (!baseobj)
-        return;
-
-    Vector<TypeNewScript::Initializer> initializerList(cx);
-
-    if (!jit::AnalyzeNewScriptProperties(cx, fun, type, baseobj, &initializerList))
-        return;
-
-    if (baseobj->slotSpan() == 0 || type->unknownProperties())
-        return;
-
-    gc::AllocKind kind = gc::GetGCObjectKind(baseobj->slotSpan());
-
-    /* We should not have overflowed the maximum number of fixed slots for an object. */
-    JS_ASSERT(gc::GetGCKindSlots(kind) >= baseobj->slotSpan());
-
-    TypeNewScript::Initializer done(TypeNewScript::Initializer::DONE, 0);
-
-    /*
-     * The base object may have been created with a different finalize kind
-     * than we will use for subsequent new objects. Generate an object with the
-     * appropriate final shape.
-     */
-    Rooted<TypeObject *> rootedType(cx, type);
-    RootedShape shape(cx, baseobj->lastProperty());
-    baseobj = NewReshapedObject(cx, rootedType, baseobj->getParent(), kind, shape, MaybeSingletonObject);
-    if (!baseobj ||
-        !type->addDefiniteProperties(cx, baseobj) ||
-        !initializerList.append(done))
-    {
-        return;
-    }
-
-    TypeNewScript *newScript = type->pod_calloc_with_extra<TypeNewScript, TypeNewScript::Initializer>(
-                                   initializerList.length());
-    if (!newScript)
-        return;
-
-    new (newScript) TypeNewScript();
-
-    type->setNewScript(newScript);
-
-    newScript->fun = fun;
-    newScript->templateObject = baseobj;
-
-    newScript->initializerList = reinterpret_cast<TypeNewScript::Initializer *>(newScript + 1);
-    PodCopy(newScript->initializerList,
-            initializerList.begin(),
-            initializerList.length());
-
-    js::gc::TraceTypeNewScript(type);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -3758,6 +3609,7 @@ types::UseNewTypeForClone(JSFunction *fun)
 
     return end - begin <= 100;
 }
+
 /////////////////////////////////////////////////////////////////////
 // TypeScript
 /////////////////////////////////////////////////////////////////////
@@ -3821,6 +3673,466 @@ JSFunction::setTypeForScriptedFunction(ExclusiveContext *cx, HandleFunction fun,
     }
 
     return true;
+}
+
+/////////////////////////////////////////////////////////////////////
+// TypeNewScript
+/////////////////////////////////////////////////////////////////////
+
+// Make a TypeNewScript for |type|, and set it up to hold the initial
+// PRELIMINARY_OBJECT_COUNT objects created with the type.
+/* static */ void
+TypeNewScript::make(JSContext *cx, TypeObject *type, JSFunction *fun)
+{
+    JS_ASSERT(cx->compartment()->activeAnalysis);
+    JS_ASSERT(!type->newScript());
+
+    if (type->unknownProperties())
+        return;
+
+    ScopedJSDeletePtr<TypeNewScript> newScript(cx->new_<TypeNewScript>());
+    if (!newScript)
+        return;
+
+    newScript->fun = fun;
+
+    JSObject **preliminaryObjects = type->pod_calloc<JSObject *>(PRELIMINARY_OBJECT_COUNT);
+    if (!preliminaryObjects)
+        return;
+
+    newScript->preliminaryObjects = preliminaryObjects;
+    type->setNewScript(newScript.forget());
+
+    gc::TraceTypeNewScript(type);
+}
+
+void
+TypeNewScript::registerNewObject(JSObject *res)
+{
+    JS_ASSERT(!analyzed());
+
+    // The preliminary object pointers are weak, and won't be swept properly
+    // during nursery collections, so the preliminary objects need to be
+    // initially tenured.
+    JS_ASSERT(!IsInsideNursery(res));
+
+    // New script objects must have the maximum number of fixed slots, so that
+    // we can adjust their shape later to match the number of fixed slots used
+    // by the template object we eventually create.
+    JS_ASSERT(res->numFixedSlots() == JSObject::MAX_FIXED_SLOTS);
+
+    for (size_t i = 0; i < PRELIMINARY_OBJECT_COUNT; i++) {
+        if (!preliminaryObjects[i]) {
+            preliminaryObjects[i] = res;
+            return;
+        }
+    }
+
+    MOZ_CRASH("There should be room for registering the new object");
+}
+
+void
+TypeNewScript::unregisterNewObject(JSObject *res)
+{
+    JS_ASSERT(!analyzed());
+
+    for (size_t i = 0; i < PRELIMINARY_OBJECT_COUNT; i++) {
+        if (preliminaryObjects[i] == res) {
+            preliminaryObjects[i] = nullptr;
+            return;
+        }
+    }
+
+    // The object should be one of the preliminary objects.
+    MOZ_CRASH();
+}
+
+// Return whether shape consists entirely of plain data properties.
+static bool
+OnlyHasDataProperties(Shape *shape)
+{
+    JS_ASSERT(!shape->inDictionary());
+
+    while (!shape->isEmptyShape()) {
+        if (!shape->isDataDescriptor() ||
+            !shape->configurable() ||
+            !shape->enumerable() ||
+            !shape->writable() ||
+            !shape->hasSlot())
+        {
+            return false;
+        }
+        shape = shape->previous();
+    }
+
+    return true;
+}
+
+// Find the most recent common ancestor of two shapes, or an empty shape if
+// the two shapes have no common ancestor.
+static Shape *
+CommonPrefix(Shape *first, Shape *second)
+{
+    JS_ASSERT(OnlyHasDataProperties(first));
+    JS_ASSERT(OnlyHasDataProperties(second));
+
+    while (first->slotSpan() > second->slotSpan())
+        first = first->previous();
+    while (second->slotSpan() > first->slotSpan())
+        second = second->previous();
+
+    while (first != second && !first->isEmptyShape()) {
+        first = first->previous();
+        second = second->previous();
+    }
+
+    return first;
+}
+
+static bool
+ChangeObjectFixedSlotCount(JSContext *cx, JSObject *obj, gc::AllocKind allocKind)
+{
+    JS_ASSERT(OnlyHasDataProperties(obj->lastProperty()));
+
+    // Make a clone of the object, with the new allocation kind.
+    RootedShape oldShape(cx, obj->lastProperty());
+    RootedTypeObject type(cx, obj->type());
+    JSObject *clone = NewReshapedObject(cx, type, obj->getParent(), allocKind, oldShape);
+    if (!clone)
+        return false;
+
+    obj->setLastPropertyShrinkFixedSlots(clone->lastProperty());
+    return true;
+}
+
+namespace {
+
+struct DestroyTypeNewScript
+{
+    JSContext *cx;
+    TypeObject *type;
+
+    DestroyTypeNewScript(JSContext *cx, TypeObject *type)
+      : cx(cx), type(type)
+    {}
+
+    ~DestroyTypeNewScript() {
+        if (type)
+            type->clearNewScript(cx);
+    }
+};
+
+} // anonymous namespace
+
+bool
+TypeNewScript::maybeAnalyze(JSContext *cx, TypeObject *type, bool *regenerate, bool force)
+{
+    // Perform the new script properties analysis if necessary, returning
+    // whether the new type table was updated and type needs to be refreshed.
+    JS_ASSERT(this == type->newScript());
+
+    if (regenerate)
+        *regenerate = false;
+
+    if (analyzed()) {
+        // The analyses have already been performed.
+        return true;
+    }
+
+    if (!force) {
+        // Don't perform the analyses until sufficient preliminary objects have
+        // been allocated.
+        for (size_t i = 0; i < PRELIMINARY_OBJECT_COUNT; i++) {
+            if (!preliminaryObjects[i])
+                return true;
+        }
+    }
+
+    AutoEnterAnalysis enter(cx);
+
+    // Any failures after this point will clear out this TypeNewScript.
+    DestroyTypeNewScript destroyNewScript(cx, type);
+
+    // Compute the greatest common shape prefix and the largest slot span of
+    // the preliminary objects.
+    Shape *prefixShape = nullptr;
+    size_t maxSlotSpan = 0;
+    for (size_t i = 0; i < PRELIMINARY_OBJECT_COUNT; i++) {
+        JSObject *obj = preliminaryObjects[i];
+        if (!obj)
+            continue;
+
+        // For now, we require all preliminary objects to have only simple
+        // lineages of plain data properties.
+        Shape *shape = obj->lastProperty();
+        if (shape->inDictionary() || !OnlyHasDataProperties(shape))
+            return true;
+
+        maxSlotSpan = Max<size_t>(maxSlotSpan, obj->slotSpan());
+
+        if (prefixShape) {
+            JS_ASSERT(shape->numFixedSlots() == prefixShape->numFixedSlots());
+            prefixShape = CommonPrefix(prefixShape, shape);
+        } else {
+            prefixShape = shape;
+        }
+        if (prefixShape->isEmptyShape()) {
+            // The preliminary objects don't have any common properties.
+            return true;
+        }
+    }
+    if (!prefixShape)
+        return true;
+
+    gc::AllocKind kind = gc::GetGCObjectKind(maxSlotSpan);
+
+    if (kind != gc::GetGCObjectKind(JSObject::MAX_FIXED_SLOTS)) {
+        // The template object will have a different allocation kind from the
+        // preliminary objects that have already been constructed. Optimizing
+        // definite property accesses requires both that the property is
+        // definitely in a particular slot and that the object has a specific
+        // number of fixed slots. So, adjust the shape and slot layout of all
+        // the preliminary objects so that their structure matches that of the
+        // template object. Also recompute the prefix shape, as it reflects the
+        // old number of fixed slots.
+        Shape *newPrefixShape = nullptr;
+        for (size_t i = 0; i < PRELIMINARY_OBJECT_COUNT; i++) {
+            JSObject *obj = preliminaryObjects[i];
+            if (!obj)
+                continue;
+            if (!ChangeObjectFixedSlotCount(cx, obj, kind))
+                return false;
+            if (newPrefixShape) {
+                JS_ASSERT(CommonPrefix(obj->lastProperty(), newPrefixShape) == newPrefixShape);
+            } else {
+                newPrefixShape = obj->lastProperty();
+                while (newPrefixShape->slotSpan() > prefixShape->slotSpan())
+                    newPrefixShape = newPrefixShape->previous();
+            }
+        }
+        prefixShape = newPrefixShape;
+    }
+
+    RootedTypeObject typeRoot(cx, type);
+    templateObject_ = NewObjectWithType(cx, typeRoot, cx->global(), kind, MaybeSingletonObject);
+    if (!templateObject_)
+        return false;
+
+    Vector<Initializer> initializerVector(cx);
+
+    RootedObject templateRoot(cx, templateObject());
+    if (!jit::AnalyzeNewScriptDefiniteProperties(cx, fun, type, templateRoot, &initializerVector))
+        return false;
+
+    if (type->unknownProperties())
+        return true;
+
+    JS_ASSERT(OnlyHasDataProperties(templateObject()->lastProperty()));
+
+    if (templateObject()->slotSpan() != 0) {
+        // Make sure that all definite properties found are reflected in the
+        // prefix shape. Otherwise, the constructor behaved differently before
+        // we baseline compiled it and started observing types. Compare
+        // property names rather than looking at the shapes directly, as the
+        // allocation kind and other non-property parts of the template and
+        // existing objects may differ.
+        if (templateObject()->slotSpan() > prefixShape->slotSpan())
+            return true;
+        {
+            Shape *shape = prefixShape;
+            while (shape->slotSpan() != templateObject()->slotSpan())
+                shape = shape->previous();
+            Shape *templateShape = templateObject()->lastProperty();
+            while (!shape->isEmptyShape()) {
+                if (shape->slot() != templateShape->slot())
+                    return true;
+                if (shape->propid() != templateShape->propid())
+                    return true;
+                shape = shape->previous();
+                templateShape = templateShape->previous();
+            }
+            if (!templateShape->isEmptyShape())
+                return true;
+        }
+
+        Initializer done(Initializer::DONE, 0);
+
+        if (!initializerVector.append(done))
+            return false;
+
+        initializerList = type->pod_calloc<Initializer>(initializerVector.length());
+        if (!initializerList)
+            return false;
+        PodCopy(initializerList, initializerVector.begin(), initializerVector.length());
+    }
+
+    js_free(preliminaryObjects);
+    preliminaryObjects = nullptr;
+
+    if (prefixShape->slotSpan() == templateObject()->slotSpan()) {
+        // The definite properties analysis found exactly the properties that
+        // are held in common by the preliminary objects. No further analysis
+        // is needed.
+        if (!type->addDefiniteProperties(cx, templateObject()->lastProperty()))
+            return false;
+
+        destroyNewScript.type = nullptr;
+        return true;
+    }
+
+    // There are more properties consistently added to objects of this type
+    // than were discovered by the definite properties analysis. Use the
+    // existing type to represent fully initialized objects with all
+    // definite properties in the prefix shape, and make a new type object
+    // to represent partially initialized objects.
+    JS_ASSERT(prefixShape->slotSpan() > templateObject()->slotSpan());
+
+    TypeObjectFlags initialFlags = type->flags() & OBJECT_FLAG_UNKNOWN_MASK;
+
+    Rooted<TaggedProto> protoRoot(cx, type->proto());
+    TypeObject *initialType =
+        cx->compartment()->types.newTypeObject(cx, type->clasp(), protoRoot, initialFlags);
+    if (!initialType)
+        return false;
+
+    if (!initialType->addDefiniteProperties(cx, templateObject()->lastProperty()))
+        return false;
+    if (!type->addDefiniteProperties(cx, prefixShape))
+        return false;
+
+    TypeObjectWithNewScriptSet &table = cx->compartment()->newTypeObjects;
+    TypeObjectWithNewScriptSet::Lookup lookup(type->clasp(), type->proto(), fun);
+
+    JS_ASSERT(table.lookup(lookup)->object == type);
+    table.remove(lookup);
+    table.putNew(lookup, TypeObjectWithNewScriptEntry(initialType, fun));
+
+    templateObject()->setType(initialType);
+
+    // Transfer this TypeNewScript from the fully initialized type to the
+    // partially initialized type.
+    type->setNewScript(nullptr);
+    initialType->setNewScript(this);
+
+    initializedShape_ = prefixShape;
+    initializedType_ = type;
+
+    destroyNewScript.type = nullptr;
+
+    if (regenerate)
+        *regenerate = true;
+    return true;
+}
+
+void
+TypeNewScript::rollbackPartiallyInitializedObjects(JSContext *cx, TypeObject *type)
+{
+    // If we cleared this new script while in the middle of initializing an
+    // object, it will still have the new script's shape and reflect the no
+    // longer correct state of the object once its initialization is completed.
+    // We can't detect the possibility of this statically while remaining
+    // robust, but the new script keeps track of where each property is
+    // initialized so we can walk the stack and fix up any such objects.
+
+    if (!initializerList)
+        return;
+
+    Vector<uint32_t, 32> pcOffsets(cx);
+    for (ScriptFrameIter iter(cx); !iter.done(); ++iter) {
+        pcOffsets.append(iter.script()->pcToOffset(iter.pc()));
+        if (!iter.isConstructing() ||
+            iter.callee() != fun ||
+            !iter.thisv().isObject() ||
+            iter.thisv().toObject().hasLazyType() ||
+            iter.thisv().toObject().type() != type)
+        {
+            continue;
+        }
+
+        // Found a matching frame.
+        RootedObject obj(cx, &iter.thisv().toObject());
+
+        // Whether all identified 'new' properties have been initialized.
+        bool finished = false;
+
+        // If not finished, number of properties that have been added.
+        uint32_t numProperties = 0;
+
+        // Whether the current SETPROP is within an inner frame which has
+        // finished entirely.
+        bool pastProperty = false;
+
+        // Index in pcOffsets of the outermost frame.
+        int callDepth = pcOffsets.length() - 1;
+
+        // Index in pcOffsets of the frame currently being checked for a SETPROP.
+        int setpropDepth = callDepth;
+
+        for (Initializer *init = initializerList;; init++) {
+            if (init->kind == Initializer::SETPROP) {
+                if (!pastProperty && pcOffsets[setpropDepth] < init->offset) {
+                    // Have not yet reached this setprop.
+                    break;
+                }
+                // This setprop has executed, reset state for the next one.
+                numProperties++;
+                pastProperty = false;
+                setpropDepth = callDepth;
+            } else if (init->kind == Initializer::SETPROP_FRAME) {
+                if (!pastProperty) {
+                    if (pcOffsets[setpropDepth] < init->offset) {
+                        // Have not yet reached this inner call.
+                        break;
+                    } else if (pcOffsets[setpropDepth] > init->offset) {
+                        // Have advanced past this inner call.
+                        pastProperty = true;
+                    } else if (setpropDepth == 0) {
+                        // Have reached this call but not yet in it.
+                        break;
+                    } else {
+                        // Somewhere inside this inner call.
+                        setpropDepth--;
+                    }
+                }
+            } else {
+                JS_ASSERT(init->kind == Initializer::DONE);
+                finished = true;
+                break;
+            }
+        }
+
+        if (!finished)
+            (void) JSObject::rollbackProperties(cx, obj, numProperties);
+    }
+}
+
+void
+TypeNewScript::trace(JSTracer *trc)
+{
+    MarkObject(trc, &fun, "TypeNewScript_function");
+
+    if (templateObject_)
+        MarkObject(trc, &templateObject_, "TypeNewScript_templateObject");
+
+    if (initializedShape_)
+        MarkShape(trc, &initializedShape_, "TypeNewScript_initializedShape");
+
+    if (initializedType_)
+        MarkTypeObject(trc, &initializedType_, "TypeNewScript_initializedType");
+}
+
+void
+TypeNewScript::sweep(FreeOp *fop)
+{
+    // preliminaryObjects only holds weak pointers, so clear any objects that
+    // are about to be destroyed.
+    if (preliminaryObjects) {
+        for (size_t i = 0; i < PRELIMINARY_OBJECT_COUNT; i++) {
+            JSObject **ptr = &preliminaryObjects[i];
+            if (*ptr && IsObjectAboutToBeFinalized(ptr))
+                *ptr = nullptr;
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -4054,7 +4366,6 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
         TypeObject *type = p->object;
         JS_ASSERT(type->clasp() == clasp);
         JS_ASSERT(type->proto() == proto);
-        JS_ASSERT_IF(type->newScript(), type->newScript()->fun == fun);
         return type;
     }
 
@@ -4090,7 +4401,7 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
         RootedObject obj(this, proto.toObject());
 
         if (fun)
-            CheckNewScriptProperties(asJSContext(), type, fun);
+            TypeNewScript::make(asJSContext(), type, fun);
 
         /*
          * Some builtin objects have slotful native properties baked in at
@@ -4246,10 +4557,14 @@ inline void
 TypeObject::sweep(FreeOp *fop, bool *oom)
 {
     if (!isMarked()) {
-        if (newScript_)
-            fop->free_(newScript_);
+        // Take care of any finalization required for this object.
+        if (newScript())
+            fop->delete_(newScript());
         return;
     }
+
+    if (newScript())
+        newScript()->sweep(fop);
 
     LifoAlloc &typeLifoAlloc = zone()->types.typeLifoAlloc;
 
@@ -4767,6 +5082,5 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
 void
 TypeObject::setNewScript(TypeNewScript *newScript)
 {
-    JS_ASSERT(!newScript_);
     newScript_ = newScript;
 }

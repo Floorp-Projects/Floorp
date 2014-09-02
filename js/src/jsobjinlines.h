@@ -96,18 +96,6 @@ JSObject::finalize(js::FreeOp *fop)
 }
 
 inline void
-JSObject::setLastPropertyInfallible(js::Shape *shape)
-{
-    JS_ASSERT(!shape->inDictionary());
-    JS_ASSERT(shape->compartment() == compartment());
-    JS_ASSERT(!inDictionaryMode());
-    JS_ASSERT(slotSpan() == shape->slotSpan());
-    JS_ASSERT(numFixedSlots() == shape->numFixedSlots());
-
-    shape_ = shape;
-}
-
-inline void
 JSObject::removeLastProperty(js::ExclusiveContext *cx)
 {
     JS_ASSERT(canRemoveLastProperty());

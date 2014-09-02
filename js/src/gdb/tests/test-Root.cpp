@@ -1,7 +1,7 @@
 #include "gdb-tests.h"
 
 #include "jsapi.h"
-#include "jsobj.h"
+#include "jsfun.h"
 
 #include "gc/Barrier.h"
 
