@@ -142,7 +142,7 @@ CrashReporterParent::GenerateChildData(const AnnotationTable* processNotes)
     class NotifyOnMainThread : public nsRunnable
     {
     public:
-        NotifyOnMainThread(CrashReporterParent* aCR)
+        explicit NotifyOnMainThread(CrashReporterParent* aCR)
             : mCR(aCR)
         { }
 

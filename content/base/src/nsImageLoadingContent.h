@@ -196,7 +196,7 @@ private:
    * Struct used to manage the image observers.
    */
   struct ImageObserver {
-    ImageObserver(imgINotificationObserver* aObserver);
+    explicit ImageObserver(imgINotificationObserver* aObserver);
     ~ImageObserver();
 
     nsCOMPtr<imgINotificationObserver> mObserver;

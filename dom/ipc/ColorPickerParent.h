@@ -29,7 +29,7 @@ class ColorPickerParent : public PColorPickerParent
     : public nsIColorPickerShownCallback
   {
   public:
-    ColorPickerShownCallback(ColorPickerParent* aColorPickerParnet)
+    explicit ColorPickerShownCallback(ColorPickerParent* aColorPickerParnet)
       : mColorPickerParent(aColorPickerParnet)
     {}
 

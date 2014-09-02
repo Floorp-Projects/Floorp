@@ -437,7 +437,7 @@ class nsTextNodeDirectionalityMap
   }
 
 public:
-  nsTextNodeDirectionalityMap(nsINode* aTextNode)
+  explicit nsTextNodeDirectionalityMap(nsINode* aTextNode)
   {
     MOZ_ASSERT(aTextNode, "Null text node");
     MOZ_COUNT_CTOR(nsTextNodeDirectionalityMap);

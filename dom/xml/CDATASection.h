@@ -26,13 +26,13 @@ private:
   virtual ~CDATASection();
 
 public:
-  CDATASection(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
+  explicit CDATASection(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
     : Text(aNodeInfo)
   {
     Init();
   }
 
-  CDATASection(nsNodeInfoManager* aNodeInfoManager)
+  explicit CDATASection(nsNodeInfoManager* aNodeInfoManager)
     : Text(aNodeInfoManager->GetNodeInfo(nsGkAtoms::cdataTagName,
                                          nullptr, kNameSpaceID_None,
                                          nsIDOMNode::CDATA_SECTION_NODE))

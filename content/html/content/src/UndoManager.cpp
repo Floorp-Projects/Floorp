@@ -333,7 +333,7 @@ class UndoContentAppend : public UndoTxn {
   nsresult Init(int32_t aFirstIndex);
   NS_IMETHOD RedoTransaction();
   NS_IMETHOD UndoTransaction();
-  UndoContentAppend(nsIContent* aContent);
+  explicit UndoContentAppend(nsIContent* aContent);
 protected:
   ~UndoContentAppend() {}
   nsCOMPtr<nsIContent> mContent;

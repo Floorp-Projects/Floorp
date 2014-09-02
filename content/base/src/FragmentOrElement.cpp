@@ -2268,7 +2268,7 @@ private:
     return mLast->mUnits.AppendElement();
   }
 
-  StringBuilder(StringBuilder* aFirst)
+  explicit StringBuilder(StringBuilder* aFirst)
   : mLast(nullptr), mLength(0)
   {
     MOZ_COUNT_CTOR(StringBuilder);

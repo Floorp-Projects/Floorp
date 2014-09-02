@@ -19,7 +19,7 @@ class txNodeSetAdaptor : public txXPathObjectAdaptor,
 {
 public:
     txNodeSetAdaptor();
-    txNodeSetAdaptor(txNodeSet *aNodeSet);
+    explicit txNodeSetAdaptor(txNodeSet* aNodeSet);
 
     nsresult Init();
 

@@ -26,13 +26,13 @@ private:
   virtual ~Comment();
 
 public:
-  Comment(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  explicit Comment(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericDOMDataNode(aNodeInfo)
   {
     Init();
   }
 
-  Comment(nsNodeInfoManager* aNodeInfoManager)
+  explicit Comment(nsNodeInfoManager* aNodeInfoManager)
     : nsGenericDOMDataNode(aNodeInfoManager->GetCommentNodeInfo())
   {
     Init();

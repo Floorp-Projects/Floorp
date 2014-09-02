@@ -228,7 +228,7 @@ NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
 
     struct AutoClear {
         NodePointer* mPtr;
-        AutoClear(NodePointer* ptr) : mPtr(ptr) {}
+        explicit AutoClear(NodePointer* ptr) : mPtr(ptr) {}
        ~AutoClear() { mPtr->Clear(); }
     } ac(&mWorkingPointer);
 

@@ -13,7 +13,7 @@ namespace dom {
 class HTMLElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~HTMLElement();
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) MOZ_OVERRIDE;

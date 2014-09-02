@@ -116,7 +116,7 @@ using namespace mozilla::dom;
 class nsAutoFocusEvent : public nsRunnable
 {
 public:
-  nsAutoFocusEvent(nsGenericHTMLFormElement* aElement) : mElement(aElement) {}
+  explicit nsAutoFocusEvent(nsGenericHTMLFormElement* aElement) : mElement(aElement) {}
 
   NS_IMETHOD Run() {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -172,7 +172,7 @@ class nsGenericHTMLElementTearoff : public nsIDOMElementCSSInlineStyle
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  nsGenericHTMLElementTearoff(nsGenericHTMLElement *aElement)
+  explicit nsGenericHTMLElementTearoff(nsGenericHTMLElement* aElement)
     : mElement(aElement)
   {
   }
