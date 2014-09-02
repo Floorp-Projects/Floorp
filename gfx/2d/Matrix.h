@@ -750,6 +750,20 @@ public:
     , _51(a51), _52(a52), _53(a53), _54(a54)
   {}
 
+  bool operator==(const Matrix5x4 &o) const
+  {
+    return _11 == o._11 && _12 == o._12 && _13 == o._13 && _14 == o._14 &&
+           _21 == o._21 && _22 == o._22 && _23 == o._23 && _24 == o._24 &&
+           _31 == o._31 && _32 == o._32 && _33 == o._33 && _34 == o._34 &&
+           _41 == o._41 && _42 == o._42 && _43 == o._43 && _44 == o._44 &&
+           _51 == o._51 && _52 == o._52 && _53 == o._53 && _54 == o._54;
+  }
+
+  bool operator!=(const Matrix5x4 &aMatrix) const
+  {
+    return !(*this == aMatrix);
+  }
+
   Matrix5x4 operator*(const Matrix5x4 &aMatrix) const
   {
     Matrix5x4 resultMatrix;
