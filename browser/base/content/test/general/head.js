@@ -394,27 +394,42 @@ function promiseClearHistory() {
  *        The URL of the document that is expected to load.
  * @return promise
  */
-function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser) {
-  let deferred = Promise.defer();
-  let progressListener = {
-    onStateChange: function (webProgress, req, flags, status) {
-      info("waitForDocLoadAndStopIt: onStateChange: " + req.name);
-      let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
-                     Ci.nsIWebProgressListener.STATE_START;
-      if ((flags & docStart) && webProgress.isTopLevel) {
-        info("waitForDocLoadAndStopIt: Document start: " +
-             req.QueryInterface(Ci.nsIChannel).URI.spec);
-        is(req.originalURI.spec, aExpectedURL,
-           "waitForDocLoadAndStopIt: The expected URL was loaded");
-        req.cancel(Components.results.NS_ERROR_FAILURE);
-        aBrowser.removeProgressListener(progressListener);
-        deferred.resolve();
-      }
-    },
-  };
-  aBrowser.addProgressListener(progressListener);
-  info("waitForDocLoadAndStopIt: Waiting for URL: " + aExpectedURL);
-  return deferred.promise;
+function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser.selectedBrowser) {
+  function content_script() {
+    let { interfaces: Ci, utils: Cu } = Components;
+    Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+    let wp = docShell.QueryInterface(Ci.nsIWebProgress);
+
+    let progressListener = {
+      onStateChange: function (webProgress, req, flags, status) {
+        dump("waitForDocLoadAndStopIt: onStateChange " + flags.toString(16) + ": " + req.name + "\n");
+        let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
+                       Ci.nsIWebProgressListener.STATE_START;
+        if (((flags & docStart) == docStart) && webProgress.isTopLevel) {
+          dump("waitForDocLoadAndStopIt: Document start: " +
+               req.QueryInterface(Ci.nsIChannel).URI.spec + "\n");
+          req.cancel(Components.results.NS_ERROR_FAILURE);
+          wp.removeProgressListener(progressListener);
+          sendAsyncMessage("Test:WaitForDocLoadAndStopIt", { uri: req.originalURI.spec });
+        }
+      },
+      QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference"])
+    };
+    wp.addProgressListener(progressListener, wp.NOTIFY_ALL);
+  }
+
+  return new Promise((resolve, reject) => {
+    function complete({ data }) {
+      is(data.uri, aExpectedURL, "waitForDocLoadAndStopIt: The expected URL was loaded");
+      mm.removeMessageListener("Test:WaitForDocLoadAndStopIt", complete);
+      resolve();
+    }
+
+    let mm = aBrowser.messageManager;
+    mm.loadFrameScript("data:,(" + content_script.toString() + ")();", true);
+    mm.addMessageListener("Test:WaitForDocLoadAndStopIt", complete);
+    info("waitForDocLoadAndStopIt: Waiting for URL: " + aExpectedURL);
+  });
 }
 
 /**
