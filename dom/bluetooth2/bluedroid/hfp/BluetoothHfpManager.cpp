@@ -1739,12 +1739,13 @@ BluetoothHfpManager::ConnectionStateNotification(
 
   if (aState == HFP_CONNECTION_STATE_SLC_CONNECTED) {
     mDeviceAddress = aBdAddress;
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_CONN_STATE_CHANGED,
-                        NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
+    NotifyConnectionStateChanged(
+      NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
+
   } else if (aState == HFP_CONNECTION_STATE_DISCONNECTED) {
     DisconnectSco();
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_CONN_STATE_CHANGED,
-                        NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
+    NotifyConnectionStateChanged(
+      NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
   }
 }
 
@@ -1760,8 +1761,8 @@ BluetoothHfpManager::AudioStateNotification(
 
   if (aState == HFP_AUDIO_STATE_CONNECTED ||
       aState == HFP_AUDIO_STATE_DISCONNECTED) {
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_CONN_STATE_CHANGED,
-                        NS_LITERAL_STRING(BLUETOOTH_SCO_STATUS_CHANGED_ID));
+    NotifyConnectionStateChanged(
+      NS_LITERAL_STRING(BLUETOOTH_SCO_STATUS_CHANGED_ID));
   }
 }
 
@@ -1770,8 +1771,7 @@ BluetoothHfpManager::AnswerCallNotification()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
-                      NS_LITERAL_STRING("ATA"));
+  NotifyDialer(NS_LITERAL_STRING("ATA"));
 }
 
 void
@@ -1779,8 +1779,7 @@ BluetoothHfpManager::HangupCallNotification()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
-                      NS_LITERAL_STRING("CHUP"));
+  NotifyDialer(NS_LITERAL_STRING("CHUP"));
 }
 
 void
@@ -1803,7 +1802,11 @@ BluetoothHfpManager::VolumeNotification(
 
     nsString data;
     data.AppendInt(aVolume);
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_SCO_VOLUME_CHANGED, data);
+
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    NS_ENSURE_TRUE_VOID(os);
+
+    os->NotifyObservers(nullptr, "bluetooth-volume-change", data.get());
   }
 }
 
@@ -1816,8 +1819,7 @@ BluetoothHfpManager::DtmfNotification(char aDtmf)
 
   nsAutoCString message("VTS=");
   message += aDtmf;
-  BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
-                      NS_ConvertUTF8toUTF16(message));
+  NotifyDialer(NS_ConvertUTF8toUTF16(message));
 }
 
 void
@@ -1825,12 +1827,11 @@ BluetoothHfpManager::CallHoldNotification(BluetoothHandsfreeCallHoldType aChld)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  SendResponse(HFP_AT_RESPONSE_OK);
+
   nsAutoCString message("CHLD=");
   message.AppendInt((int)aChld);
-  BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
-                      NS_ConvertUTF8toUTF16(message));
-
-  SendResponse(HFP_AT_RESPONSE_OK);
+  NotifyDialer(NS_ConvertUTF8toUTF16(message));
 }
 
 void BluetoothHfpManager::DialCallNotification(const nsAString& aNumber)
@@ -1849,22 +1850,27 @@ void BluetoothHfpManager::DialCallNotification(const nsAString& aNumber)
   // 3):                Respond here
   if (message.IsEmpty()) {
     mDialingRequestProcessed = false;
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
-                        NS_LITERAL_STRING("BLDN"));
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN);
+    NotifyDialer(NS_LITERAL_STRING("BLDN"));
+
+    MessageLoop::current()->PostDelayedTask(FROM_HERE,
+                                            new RespondToBLDNTask(),
+                                            sWaitingForDialingInterval);
   } else if (message[0] == '>') {
     mDialingRequestProcessed = false;
+
     nsAutoCString newMsg("ATD");
     newMsg += StringHead(message, message.Length() - 1);
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
-                        NS_ConvertUTF8toUTF16(newMsg));
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN);
+    NotifyDialer(NS_ConvertUTF8toUTF16(newMsg));
+
+    MessageLoop::current()->PostDelayedTask(FROM_HERE,
+                                            new RespondToBLDNTask(),
+                                            sWaitingForDialingInterval);
   } else {
+    SendResponse(HFP_AT_RESPONSE_OK);
+
     nsAutoCString newMsg("ATD");
     newMsg += StringHead(message, message.Length() - 1);
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
-                        NS_ConvertUTF8toUTF16(newMsg));
-    SendResponse(HFP_AT_RESPONSE_OK);
+    NotifyDialer(NS_ConvertUTF8toUTF16(newMsg));
   }
 }
 
@@ -1968,7 +1974,7 @@ BluetoothHfpManager::KeyPressedNotification()
      * and SCO will be established after we get the CallStateChanged event
      * indicating the call is answered successfully.
      */
-    ProcessAnswerCall();
+    NotifyDialer(NS_LITERAL_STRING("ATA"));
   } else if (hasActiveCall) {
     if (!IsScoConnected()) {
       /**
@@ -1983,14 +1989,17 @@ BluetoothHfpManager::KeyPressedNotification()
        * SCO socket directly. We notify dialer only if there is at least one
        * active call.
        */
-      ProcessHangupCall();
+      NotifyDialer(NS_LITERAL_STRING("CHUP"));
     }
   } else {
     // BLDN
     mDialingRequestProcessed = false;
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
-                        NS_LITERAL_STRING("BLDN"));
-    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN);
+
+    NotifyDialer(NS_LITERAL_STRING("BLDN"));
+
+    MessageLoop::current()->PostDelayedTask(FROM_HERE,
+                                            new RespondToBLDNTask(),
+                                            sWaitingForDialingInterval);
   }
 }
 
