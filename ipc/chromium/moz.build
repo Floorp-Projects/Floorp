@@ -56,7 +56,6 @@ UNIFIED_SOURCES += [
     'src/base/revocable_store.cc',
     'src/base/scoped_temp_dir.cc',
     'src/base/simple_thread.cc',
-    'src/base/stats_table.cc',
     'src/base/string_piece.cc',
     'src/base/string_util.cc',
     'src/base/system_monitor.cc',
