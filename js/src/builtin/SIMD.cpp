@@ -38,9 +38,8 @@ extern const JSFunctionSpec Int32x4Methods[];
 
 static const char *laneNames[] = {"lane 0", "lane 1", "lane 2", "lane3"};
 
-template<typename V>
-bool
-js::IsVectorObject(HandleValue v)
+static bool
+CheckVectorObject(HandleValue v, X4TypeDescr::Type expectedType)
 {
     if (!v.isObject())
         return false;
@@ -53,7 +52,14 @@ js::IsVectorObject(HandleValue v)
     if (typeRepr.kind() != type::X4)
         return false;
 
-    return typeRepr.as<X4TypeDescr>().type() == V::type;
+    return typeRepr.as<X4TypeDescr>().type() == expectedType;
+}
+
+template<class V>
+bool
+js::IsVectorObject(HandleValue v)
+{
+    return CheckVectorObject(v, V::type);
 }
 
 template bool js::IsVectorObject<Int32x4>(HandleValue v);
@@ -300,6 +306,18 @@ X4TypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     const unsigned LANES = 4;
 
+    Rooted<X4TypeDescr*> descr(cx, &args.callee().as<X4TypeDescr>());
+    if (args.length() == 1) {
+        // X4 type used as a coercion
+        if (!CheckVectorObject(args[0], descr->type())) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR);
+            return false;
+        }
+
+        args.rval().setObject(args[0].toObject());
+        return true;
+    }
+
     if (args.length() < LANES) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              args.callee().getClass()->name, "3", "s");
@@ -312,7 +330,6 @@ X4TypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    Rooted<X4TypeDescr*> descr(cx, &args.callee().as<X4TypeDescr>());
     Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, descr, 0));
     if (!result)
         return false;
