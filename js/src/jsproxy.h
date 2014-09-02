@@ -220,6 +220,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp) const;
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp) const;
     virtual void finalize(JSFreeOp *fop, JSObject *proxy) const;
+    virtual void objectMoved(JSObject *proxy, const JSObject *old) const;
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp) const;
 
