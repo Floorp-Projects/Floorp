@@ -493,7 +493,8 @@ class ADBDevice(ADBCommand):
         ADBCommand.__init__(self, adb=adb, logger_name=logger_name,
                             timeout=timeout, verbose=verbose)
         self._device_serial = self._get_device_serial(device)
-        self.test_root = test_root
+        self._initial_test_root = test_root
+        self._test_root = None
         self._device_ready_retry_wait = device_ready_retry_wait
         self._device_ready_retry_attempts = device_ready_retry_attempts
         self._have_root_shell = False
@@ -509,19 +510,21 @@ class ADBDevice(ADBCommand):
             if self.shell_output("id").find(uid) != -1:
                 self._have_root_shell = True
         except ADBError:
-            self._logger.exception('ADBDevice.__init__: id')
+            self._logger.debug("Check for root shell failed")
+
         # Do we have a 'Superuser' sh like su?
         try:
             if self.shell_output("su -c '%s'" % cmd_id).find(uid) != -1:
                 self._have_su = True
         except ADBError:
-            self._logger.exception('ADBDevice.__init__: id')
+            self._logger.debug("Check for su failed")
+
         # Do we have Android's su?
         try:
             if self.shell_output("su 0 id").find(uid) != -1:
                 self._have_android_su = True
         except ADBError:
-            self._logger.exception('ADBDevice.__init__: id')
+            self._logger.debug("Check for Android su failed")
 
         self._mkdir_p = None
         # Force the use of /system/bin/ls or /system/xbin/ls in case
@@ -542,8 +545,6 @@ class ADBDevice(ADBCommand):
 
         self._logger.debug("ADBDevice: %s" % self.__dict__)
 
-        self._setup_test_root()
- 
     def _get_device_serial(self, device):
         if device is None:
             devices = ADBHost().devices()
@@ -633,60 +634,61 @@ class ADBDevice(ADBCommand):
 
         return exitcode
 
-    def _setup_test_root(self, timeout=None, root=False):
-        """setup the device root and cache its value
-
-        :param timeout: optional integer specifying the maximum time in
-            seconds for any spawned adb process to complete before
-            throwing an ADBTimeoutError.
-            This timeout is per adb call. The total time spent
-            may exceed this value. If it is not specified, the value
-            set in the ADBDevice constructor is used.
-        :param root: optional boolean specifying if the command should
-            be executed as root.
+    @property
+    def test_root(self):
+        """Set up the test root and cache its value
         :raises: * ADBTimeoutError
                  * ADBRootError
                  * ADBError
 
         """
-        # In order to catch situations where the file
-        # system is temporily read only, attempt to
-        # remove the old test root if it exists, then
-        # recreate it.
-        if self.test_root:
-            for attempt in range(3):
-                try:
-                    if self.is_dir(self.test_root, timeout=timeout, root=root):
-                        self.rm(self.test_root, recursive=True, timeout=timeout, root=root)
-                    self.mkdir(self.test_root, timeout=timeout, root=root)
-                    return
-                except:
-                    self._logger.exception("Attempt %d of 3 failed to create device root %s" %
-                                           (attempt+1, self.test_root))
+        if self._test_root is not None:
+            return self._test_root
+
+        if self._initial_test_root:
+            paths = [self._initial_test_root]
+        else:
+            paths = ['/storage/sdcard0/tests',
+                     '/storage/sdcard1/tests',
+                     '/sdcard/tests',
+                     '/mnt/sdcard/tests',
+                     '/data/local/tests']
+
+        max_attempts = 3
+        for attempt in range(1, max_attempts + 1):
+            for test_root in paths:
+                self._logger.debug("Setting test root to %s attempt %d of %d" %
+                                   (test_root, attempt, max_attempts))
+
+                if self._try_test_root(test_root):
+                    self._test_root = test_root
+                    return self._test_root
+
+                self._logger.debug('_setup_test_root: '
+                                   'Attempt %d of %d failed to set test_root to %s' %
+                                   (attempt, max_attempts, test_root))
+
+            if attempt != max_attempts:
                 time.sleep(20)
-            raise ADBError('Unable to set test root to %s' % self.test_root)
 
-        paths = [('/mnt/sdcard', 'tests'),
-                 ('/data/local', 'tests')]
-        for (base_path, sub_path) in paths:
-            if self.is_dir(base_path, timeout=timeout, root=root):
-                test_root = os.path.join(base_path, sub_path)
-                for attempt in range(3):
-                    try:
-                        if self.is_dir(test_root):
-                            self.rm(test_root, recursive=True, timeout=timeout, root=root)
-                        self.mkdir(test_root, timeout=timeout, root=root)
-                        self.test_root = test_root
-                        return
-                    except:
-                        self._logger.exception('_setup_test_root: '
-                                               'Attempt %d of 3 failed to set test_root to %s' %
-                                               (attempt+1, test_root))
-                        time.sleep(20)
+        raise ADBError("Unable to set up test root using paths: [%s]"
+                       % ", ".join(paths))
 
-        raise ADBError("Unable to set up device root using paths: [%s]"
-                       % ", ".join(["'%s'" % os.path.join(b, s)
-                                    for b, s in paths]))
+    def _try_test_root(self, test_root):
+        base_path, sub_path = posixpath.split(test_root)
+        if not self.is_dir(base_path):
+            return False
+
+        try:
+            dummy_dir = posixpath.join(test_root, 'dummy')
+            if self.is_dir(dummy_dir):
+                self.rm(dummy_dir, recursive=True)
+            self.mkdir(dummy_dir, parents=True)
+        except ADBError:
+            self._logger.debug("%s is not writable" % test_root)
+            return False
+
+        return True
 
     # Host Command methods
 
