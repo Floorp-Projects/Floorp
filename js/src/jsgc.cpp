@@ -2351,15 +2351,18 @@ MovingTracer::Sweep(JSTracer *jstrc)
  */
 static void
 UpdateCellPointers(MovingTracer *trc, Cell *cell, JSGCTraceKind traceKind) {
-    TraceChildren(trc, cell, traceKind);
-
-    if (traceKind == JSTRACE_SHAPE) {
+    if (traceKind == JSTRACE_OBJECT) {
+        JSObject *obj = static_cast<JSObject *>(cell);
+        obj->fixupAfterMovingGC();
+    } else if (traceKind == JSTRACE_SHAPE) {
         Shape *shape = static_cast<Shape *>(cell);
         shape->fixupAfterMovingGC();
     } else if (traceKind == JSTRACE_BASE_SHAPE) {
         BaseShape *base = static_cast<BaseShape *>(cell);
         base->fixupAfterMovingGC();
     }
+
+    TraceChildren(trc, cell, traceKind);
 }
 
 /*
