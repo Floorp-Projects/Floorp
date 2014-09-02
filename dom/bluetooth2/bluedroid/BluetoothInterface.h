@@ -419,7 +419,8 @@ class BluetoothInterface
 public:
   static BluetoothInterface* GetInstance();
 
-  void Init(bt_callbacks_t* aCallbacks, BluetoothResultHandler* aRes);
+  void Init(BluetoothNotificationHandler* aNotificationHandler,
+            BluetoothResultHandler* aRes);
   void Cleanup(BluetoothResultHandler* aRes);
 
   void Enable(BluetoothResultHandler* aRes);
