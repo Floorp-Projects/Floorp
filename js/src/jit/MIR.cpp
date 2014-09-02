@@ -467,11 +467,17 @@ MDefinition::hasLiveDefUses() const
 void
 MDefinition::replaceAllUsesWith(MDefinition *dom)
 {
+    for (size_t i = 0, e = numOperands(); i < e; ++i)
+        getOperand(i)->setUseRemovedUnchecked();
+
+    justReplaceAllUsesWith(dom);
+}
+
+void
+MDefinition::justReplaceAllUsesWith(MDefinition *dom)
+{
     JS_ASSERT(dom != nullptr);
     JS_ASSERT(dom != this);
-
-    for (size_t i = 0, e = numOperands(); i < e; i++)
-        getOperand(i)->setUseRemovedUnchecked();
 
     for (MUseIterator i(usesBegin()); i != usesEnd(); i++)
         i->setProducerUnchecked(dom);
