@@ -36,7 +36,6 @@ namespace {
 #endif
 } // anonymous namespace
 
-#if ANDROID_VERSION > 17
 /*
  * This function maps attribute id and returns corresponding values
  */
@@ -72,7 +71,6 @@ ConvertAttributeString(BluetoothAvrcpMediaAttribute aAttrId,
       break;
   }
 }
-#endif
 
 NS_IMETHODIMP
 BluetoothA2dpManager::Observe(nsISupports* aSubject,
