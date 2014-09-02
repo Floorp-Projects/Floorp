@@ -5,10 +5,11 @@
 /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
-  If you have any problem of this file. Please contact 
-  Netscape Client International Team or 
-  ftang@netscape <Frank Tang> 
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
+  If you have any problems with this file, please file a bug
+  under the "Internationalization" component in
+  https://bugzilla.mozilla.org/enter_bug.cgi?product=Core
 
               Table in Debug form 
 Begin of Item 0000
@@ -20,40 +21,53 @@ End of Item 0000
 
 Begin of Item 0001
  Format 0
-  srcBegin = 00A1
-  srcEnd = 00DA
-  destBegin = 0E01
+  srcBegin = 0086
+  srcEnd = 0090
+  destBegin = 0086
 End of Item 0001 
 
 Begin of Item 0002
  Format 0
-  srcBegin = 00DF
-  srcEnd = 00FB
-  destBegin = 0E3F
+  srcBegin = 0098
+  srcEnd = 00A0
+  destBegin = 0098
 End of Item 0002 
 
 Begin of Item 0003
+ Format 0
+  srcBegin = 00A1
+  srcEnd = 00DA
+  destBegin = 0E01
+End of Item 0003 
+
+Begin of Item 0004
+ Format 0
+  srcBegin = 00DF
+  srcEnd = 00FB
+  destBegin = 0E3F
+End of Item 0004 
+
+Begin of Item 0005
  Format 1
   srcBegin = 0080
   srcEnd = 0085
   mappingOffset = 0000
  Mapping  = 
-  20AC FFFD FFFD FFFD FFFD 2026 
-End of Item 0003 
+  20AC 0081 0082 0083 0084 2026 
+End of Item 0005 
 
-Begin of Item 0004
+Begin of Item 0006
  Format 1
   srcBegin = 0091
-  srcEnd = 00A0
+  srcEnd = 0097
   mappingOffset = 0006
  Mapping  = 
-  2018 2019 201C 201D 2022 2013 2014 FFFD 
-  FFFD FFFD FFFD FFFD FFFD FFFD FFFD 00A0 
-End of Item 0004 
+  2018 2019 201C 201D 2022 2013 2014 
+End of Item 0006 
 
 ========================================================*/
 /* Offset=0x0000  ItemOfList */
-  0x0005,
+  0x0007,
 /*-------------------------------------------------------*/
 /* Offset=0x0001  offsetToFormatArray */
   0x0004,
@@ -62,26 +76,27 @@ End of Item 0004
   0x0006,
 /*-------------------------------------------------------*/
 /* Offset=0x0003  offsetToMappingTable */ 
-  0x0015,
+  0x001B,
 /*-------------------------------------------------------*/
 /*       Offset=0x0004   Start of Format Array */ 
-/*	Total of Format 0 : 0x0003			 */
+/*	Total of Format 0 : 0x0005			 */
 /*	Total of Format 1 : 0x0002			 */
 /*	Total of Format 2 : 0x0000			 */
 /*	Total of Format 3 : 0x0000			 */
 
-0x1000, 0x0001, 
+0x0000, 0x0110, 
 /*-------------------------------------------------------*/
 /*       Offset=0x0006   Start of MapCell Array */ 
 /* 0000 */    0x0000, 0x007F, 0x0000, 
-/* 0001 */    0x00A1, 0x00DA, 0x0E01, 
-/* 0002 */    0x00DF, 0x00FB, 0x0E3F, 
-/* 0003 */    0x0080, 0x0085, 0x0000, 
-/* 0004 */    0x0091, 0x00A0, 0x0006, 
+/* 0001 */    0x0086, 0x0090, 0x0086, 
+/* 0002 */    0x0098, 0x00A0, 0x0098, 
+/* 0003 */    0x00A1, 0x00DA, 0x0E01, 
+/* 0004 */    0x00DF, 0x00FB, 0x0E3F, 
+/* 0005 */    0x0080, 0x0085, 0x0000, 
+/* 0006 */    0x0091, 0x0097, 0x0006, 
 /*-------------------------------------------------------*/
-/*       Offset=0x0015   Start of MappingTable */ 
+/*       Offset=0x001B   Start of MappingTable */ 
 
-/* 0000 */    0x20AC, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x2026, 0x2018, 0x2019, 
-/* 0008 */    0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0010 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x00A0, 
-/*	End of table Total Length = 0x002B * 2 */
+/* 0000 */    0x20AC, 0x0081, 0x0082, 0x0083, 0x0084, 0x2026, 0x2018, 0x2019, 
+/* 0008 */    0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 
+/*	End of table Total Length = 0x0028 * 2 */
