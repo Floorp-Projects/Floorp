@@ -1377,7 +1377,8 @@ class MOZ_STACK_CLASS ModuleCompiler
             !addStandardLibrarySimdOpName("greaterThanOrEqual", AsmJSSimdOperation_greaterThanOrEqual) ||
             !addStandardLibrarySimdOpName("and", AsmJSSimdOperation_and) ||
             !addStandardLibrarySimdOpName("or", AsmJSSimdOperation_or) ||
-            !addStandardLibrarySimdOpName("xor", AsmJSSimdOperation_xor))
+            !addStandardLibrarySimdOpName("xor", AsmJSSimdOperation_xor) ||
+            !addStandardLibrarySimdOpName("select", AsmJSSimdOperation_select))
         {
             return false;
         }
@@ -2430,6 +2431,21 @@ class FunctionCompiler
 
         JS_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         MSimdBinaryComp *ins = MSimdBinaryComp::NewAsmJS(alloc(), lhs, rhs, op);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    MDefinition *ternarySimd(MDefinition *mask, MDefinition *lhs, MDefinition *rhs,
+                             MSimdTernaryBitwise::Operation op, MIRType type)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        MOZ_ASSERT(IsSimdType(mask->type()));
+        MOZ_ASSERT(mask->type() == MIRType_Int32x4);
+        MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
+        MOZ_ASSERT(lhs->type() == type);
+        MSimdTernaryBitwise *ins = MSimdTernaryBitwise::NewAsmJS(alloc(), mask, lhs, rhs, op, type);
         curBlock_->add(ins);
         return ins;
     }
@@ -3507,6 +3523,7 @@ IsSimdValidOperationType(AsmJSSimdType type, AsmJSSimdOperation op)
       case AsmJSSimdOperation_and:
       case AsmJSSimdOperation_or:
       case AsmJSSimdOperation_xor:
+      case AsmJSSimdOperation_select:
         return true;
       case AsmJSSimdOperation_mul:
       case AsmJSSimdOperation_div:
@@ -4757,8 +4774,47 @@ CheckBinarySimd(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Glob
         *def = f.binarySimd(lhsDef, rhsDef, MSimdBinaryBitwise::xor_, opType);
         *type = retType;
         break;
+      case AsmJSSimdOperation_select:
+        MOZ_CRASH("unexpected SIMD binary operation");
     }
 
+    return true;
+}
+
+static bool
+CheckSimdSelect(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Global *global,
+                MDefinition **def, Type *type)
+{
+    MOZ_ASSERT(global->simdOperation() == AsmJSSimdOperation_select);
+
+    unsigned numArgs = CallArgListLength(call);
+    if (numArgs != 3)
+        return f.failf(call, "expected 3 arguments to ternary SIMD operation, got %u", numArgs);
+
+    ParseNode *mask = CallArgList(call);
+    ParseNode *lhs = NextNode(mask);
+    ParseNode *rhs = NextNode(lhs);
+
+    MDefinition *maskDef;
+    Type maskType;
+    if (!CheckExpr(f, mask, &maskDef, &maskType))
+        return false;
+    if (maskType != Type::Int32x4)
+        return f.failf(mask, "%s is not a subtype of int32x4", maskType.toChars());
+
+    MDefinition *lhsDef, *rhsDef;
+    Type lhsType, rhsType;
+    if (!CheckExpr(f, lhs, &lhsDef, &lhsType))
+        return false;
+    if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
+        return false;
+
+    Type retType = global->simdOperationType();
+    if (lhsType != retType || rhsType != retType)
+        return f.failf(mask, "last two arguments to SIMD ternary op should both be %s", retType.toChars());
+
+    *type = retType;
+    *def = f.ternarySimd(maskDef, lhsDef, rhsDef, MSimdTernaryBitwise::select, retType.toMIRType());
     return true;
 }
 
@@ -4782,6 +4838,8 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
       case AsmJSSimdOperation_or:
       case AsmJSSimdOperation_xor:
         return CheckBinarySimd(f, call, global, def, type);
+      case AsmJSSimdOperation_select:
+        return CheckSimdSelect(f, call, global, def, type);
     }
     MOZ_CRASH("unexpected simd operation in CheckSimdOperationCall");
 }
