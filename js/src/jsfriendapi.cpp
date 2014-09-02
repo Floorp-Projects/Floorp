@@ -1195,6 +1195,11 @@ js::IsInRequest(JSContext *cx)
 {
     return !!cx->runtime()->requestDepth;
 }
+
+bool
+js::HasObjectMovedOp(JSObject *obj) {
+    return !!GetObjectClass(obj)->ext.objectMovedOp;
+}
 #endif
 
 #ifdef JSGC_GENERATIONAL
