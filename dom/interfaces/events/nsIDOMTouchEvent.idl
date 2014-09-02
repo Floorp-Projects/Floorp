@@ -10,7 +10,7 @@
 %}
 interface nsIVariant;
 
-[scriptable, uuid(6d5484f7-92ac-45f8-9388-39b5bad055ce)]
+[scriptable, uuid(fb52e547-9cfc-4304-9ef0-e43be1207fd6)]
 interface nsITouchEventReceiver : nsISupports {
   [implicit_jscontext] attribute jsval           ontouchstart;
   [implicit_jscontext] attribute jsval           ontouchend;
