@@ -134,8 +134,10 @@ public:
 
   static void     CommitComposition(bool aDiscard)
   {
-    NS_ENSURE_TRUE_VOID(sEnabledTextStore);
-    sEnabledTextStore->CommitCompositionInternal(aDiscard);
+    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
+    if (sEnabledTextStore) {
+      sEnabledTextStore->CommitCompositionInternal(aDiscard);
+    }
   }
 
   static void SetInputContext(nsWindowBase* aWidget,
@@ -147,28 +149,30 @@ public:
                                 const IMEState& aIMEState);
   static nsresult OnTextChange(const IMENotification& aIMENotification)
   {
-    NS_ENSURE_TRUE(sEnabledTextStore, NS_ERROR_NOT_AVAILABLE);
-    return sEnabledTextStore->OnTextChangeInternal(aIMENotification);
+    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
+    return sEnabledTextStore ?
+      sEnabledTextStore->OnTextChangeInternal(aIMENotification) : NS_OK;
   }
 
   static nsresult OnSelectionChange(void)
   {
-    NS_ENSURE_TRUE(sEnabledTextStore, NS_ERROR_NOT_AVAILABLE);
-    return sEnabledTextStore->OnSelectionChangeInternal();
+    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
+    return sEnabledTextStore ?
+      sEnabledTextStore->OnSelectionChangeInternal() : NS_OK;
   }
 
   static nsresult OnLayoutChange()
   {
-    NS_ENSURE_TRUE(sEnabledTextStore, NS_ERROR_NOT_AVAILABLE);
-    return sEnabledTextStore->OnLayoutChangeInternal();
+    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
+    return sEnabledTextStore ?
+      sEnabledTextStore->OnLayoutChangeInternal() : NS_OK;
   }
 
   static nsresult OnMouseButtonEvent(const IMENotification& aIMENotification)
   {
-    if (NS_WARN_IF(!sEnabledTextStore)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    return sEnabledTextStore->OnMouseButtonEventInternal(aIMENotification);
+    NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
+    return sEnabledTextStore ?
+      sEnabledTextStore->OnMouseButtonEventInternal(aIMENotification) : NS_OK;
   }
 
   static nsIMEUpdatePreference GetIMEUpdatePreference();
@@ -195,32 +199,32 @@ public:
     return sMessagePump;
   }
 
-  static void*    GetTextStore()
+  static void* GetThreadManager()
   {
-    return static_cast<void*>(sEnabledTextStore);
+    return static_cast<void*>(sTsfThreadMgr);
   }
 
-  static bool     ThinksHavingFocus()
+  static bool ThinksHavingFocus()
   {
     return (sEnabledTextStore && sEnabledTextStore->mContext);
   }
 
-  static bool     IsInTSFMode()
+  static bool IsInTSFMode()
   {
     return sTsfThreadMgr != nullptr;
   }
 
-  static bool     IsComposing()
+  static bool IsComposing()
   {
     return (sEnabledTextStore && sEnabledTextStore->mComposition.IsComposing());
   }
 
-  static bool     IsComposingOn(nsWindowBase* aWidget)
+  static bool IsComposingOn(nsWindowBase* aWidget)
   {
     return (IsComposing() && sEnabledTextStore->mWidget == aWidget);
   }
 
-  static bool     IsIMM_IME()
+  static bool IsIMM_IME()
   {
     if (!sEnabledTextStore ||
         !sEnabledTextStore->EnsureInitActiveTIPKeyboard()) {
@@ -229,7 +233,7 @@ public:
     return sEnabledTextStore->mIsIMM_IME;
   }
 
-  static bool     IsIMM_IME(HKL aHKL)
+  static bool IsIMM_IME(HKL aHKL)
   {
      return (::ImmGetIMEFileNameW(aHKL, nullptr, 0) > 0);
   }
