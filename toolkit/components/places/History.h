@@ -170,7 +170,7 @@ private:
   class KeyClass : public nsURIHashKey
   {
   public:
-    KeyClass(const nsIURI* aURI)
+    explicit KeyClass(const nsIURI* aURI)
     : nsURIHashKey(aURI)
     {
     }

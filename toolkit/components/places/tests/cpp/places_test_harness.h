@@ -102,7 +102,7 @@ class WaitForTopicSpinner MOZ_FINAL : public nsIObserver
 public:
   NS_DECL_ISUPPORTS
 
-  WaitForTopicSpinner(const char* const aTopic)
+  explicit WaitForTopicSpinner(const char* const aTopic)
   : mTopicReceived(false)
   , mStartTime(PR_IntervalNow())
   {
