@@ -19,7 +19,7 @@ struct TileInternal : public Tile {
     : mClippedOut(false)
   {}
 
-  TileInternal(const Tile& aOther)
+  explicit TileInternal(const Tile& aOther)
     : Tile(aOther)
     , mClippedOut(false)
   {}
