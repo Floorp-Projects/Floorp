@@ -707,7 +707,8 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSocket);
 
-  nsAutoCString msg((const char*)aMessage->mData.get(), aMessage->mSize);
+  nsAutoCString msg(reinterpret_cast<const char*>(aMessage->GetData()),
+                    aMessage->GetSize());
   msg.StripWhitespace();
 
   nsTArray<nsCString> atCommandValues;
