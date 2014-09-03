@@ -1197,17 +1197,17 @@ nsTextStore::~nsTextStore()
 }
 
 bool
-nsTextStore::Create(nsWindowBase* aWidget)
+nsTextStore::Init(nsWindowBase* aWidget)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF: 0x%p nsTextStore::Create(aWidget=0x%p)",
+    ("TSF: 0x%p nsTextStore::Init(aWidget=0x%p)",
      this, aWidget));
 
   TSFStaticSink::GetInstance()->EnsureInitActiveTIPKeyboard();
 
   if (mDocumentMgr) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-      ("TSF: 0x%p   nsTextStore::Create() FAILED due to already initialized",
+      ("TSF: 0x%p   nsTextStore::Init() FAILED due to already initialized",
        this));
     return false;
   }
@@ -1217,7 +1217,7 @@ nsTextStore::Create(nsWindowBase* aWidget)
                                   getter_AddRefs(mDocumentMgr));
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-      ("TSF: 0x%p   nsTextStore::Create() FAILED to create DocumentMgr "
+      ("TSF: 0x%p   nsTextStore::Init() FAILED to create DocumentMgr "
        "(0x%08X)", this, hr));
     return false;
   }
@@ -1229,7 +1229,7 @@ nsTextStore::Create(nsWindowBase* aWidget)
                                    getter_AddRefs(mContext), &mEditCookie);
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-      ("TSF: 0x%p   nsTextStore::Create() FAILED to create the context "
+      ("TSF: 0x%p   nsTextStore::Init() FAILED to create the context "
        "(0x%08X)", this, hr));
     mDocumentMgr = nullptr;
     return false;
@@ -1238,7 +1238,7 @@ nsTextStore::Create(nsWindowBase* aWidget)
   hr = mDocumentMgr->Push(mContext);
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-      ("TSF: 0x%p   nsTextStore::Create() FAILED to push the context (0x%08X)",
+      ("TSF: 0x%p   nsTextStore::Init() FAILED to push the context (0x%08X)",
        this, hr));
     // XXX Why don't we use NS_IF_RELEASE() here??
     mContext = nullptr;
@@ -1247,7 +1247,7 @@ nsTextStore::Create(nsWindowBase* aWidget)
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF: 0x%p   nsTextStore::Create() succeeded: "
+    ("TSF: 0x%p   nsTextStore::Init() succeeded: "
      "mDocumentMgr=0x%p, mContext=0x%p, mEditCookie=0x%08X",
      this, mDocumentMgr.get(), mContext.get(), mEditCookie));
 
@@ -1255,7 +1255,7 @@ nsTextStore::Create(nsWindowBase* aWidget)
 }
 
 bool
-nsTextStore::Destroy(void)
+nsTextStore::Destroy()
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: 0x%p nsTextStore::Destroy(), mComposition.IsComposing()=%s",
@@ -3910,55 +3910,120 @@ nsTextStore::UnadviseMouseSink(DWORD dwCookie)
 nsresult
 nsTextStore::OnFocusChange(bool aGotFocus,
                            nsWindowBase* aFocusedWidget,
-                           const IMEState& aIMEState)
+                           const InputContext& aContext)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF:   nsTextStore::OnFocusChange(aGotFocus=%s, "
-          "aFocusedWidget=0x%p, aIMEState={ mEnabled=%s }), "
+          "aFocusedWidget=0x%p, aContext={ mIMEState={ mEnabled=%s }, "
+          "mHTMLInputType=\"%s\" }), "
           "sTsfThreadMgr=0x%p, sEnabledTextStore=0x%p",
           GetBoolName(aGotFocus), aFocusedWidget,
-          GetIMEEnabledName(aIMEState.mEnabled),
+          GetIMEEnabledName(aContext.mIMEState.mEnabled),
+          NS_ConvertUTF16toUTF8(aContext.mHTMLInputType).get(),
           sTsfThreadMgr, sEnabledTextStore));
 
-  // no change notifications if TSF is disabled
-  NS_ENSURE_TRUE(IsInTSFMode(), NS_ERROR_NOT_AVAILABLE);
+  if (NS_WARN_IF(!IsInTSFMode())) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  nsRefPtr<ITfDocumentMgr> prevFocusedDocumentMgr;
-  if (aGotFocus && aIMEState.IsEditable()) {
-    bool bRet = sEnabledTextStore->Create(aFocusedWidget);
-    NS_ENSURE_TRUE(bRet, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(sEnabledTextStore->mDocumentMgr, NS_ERROR_FAILURE);
-    if (aIMEState.mEnabled == IMEState::PASSWORD) {
-      MarkContextAsKeyboardDisabled(sEnabledTextStore->mContext);
-      nsRefPtr<ITfContext> topContext;
-      sEnabledTextStore->mDocumentMgr->GetTop(getter_AddRefs(topContext));
-      if (topContext && topContext != sEnabledTextStore->mContext) {
-        MarkContextAsKeyboardDisabled(topContext);
-      }
-    }
-    HRESULT hr = sTsfThreadMgr->SetFocus(sEnabledTextStore->mDocumentMgr);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
-    // Use AssociateFocus() for ensuring that any native focus event
-    // never steal focus from our documentMgr.
-    hr = sTsfThreadMgr->AssociateFocus(aFocusedWidget->GetWindowHandle(),
-                                       sEnabledTextStore->mDocumentMgr,
-                                       getter_AddRefs(prevFocusedDocumentMgr));
-    NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
-  } else {
-    if (ThinksHavingFocus()) {
-      DebugOnly<HRESULT> hr =
-        sTsfThreadMgr->AssociateFocus(
-          sEnabledTextStore->mWidget->GetWindowHandle(),
-          nullptr, getter_AddRefs(prevFocusedDocumentMgr));
-      NS_ASSERTION(SUCCEEDED(hr), "Disassociating focus failed");
-      NS_ASSERTION(prevFocusedDocumentMgr == sEnabledTextStore->mDocumentMgr,
-                   "different documentMgr has been associated with the window");
-      sEnabledTextStore->Destroy();
-    }
+  // If currently sEnableTextStore has focus, notifies TSF of losing focus.
+  if (ThinksHavingFocus()) {
+    nsRefPtr<ITfDocumentMgr> prevFocusedDocumentMgr;
+    DebugOnly<HRESULT> hr =
+      sTsfThreadMgr->AssociateFocus(
+        sEnabledTextStore->mWidget->GetWindowHandle(),
+        nullptr, getter_AddRefs(prevFocusedDocumentMgr));
+    NS_ASSERTION(SUCCEEDED(hr), "Disassociating focus failed");
+    NS_ASSERTION(prevFocusedDocumentMgr == sEnabledTextStore->mDocumentMgr,
+                 "different documentMgr has been associated with the window");
+  }
+
+  // If there is sEnabledTextStore, we don't use it in the new focused editor.
+  // Release it now.
+  if (sEnabledTextStore) {
+    sEnabledTextStore->Destroy();
+    NS_RELEASE(sEnabledTextStore);
+  }
+
+  // If this is a notification of blur, move focus to the dummy document
+  // manager.
+  if (!aGotFocus || !aContext.mIMEState.IsEditable()) {
     HRESULT hr = sTsfThreadMgr->SetFocus(sTsfDisabledDocumentMgr);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+    if (NS_WARN_IF(FAILED(hr))) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF:   nsTextStore::OnFocusChange() FAILED due to "
+              "ITfThreadMgr::SetFocus() failure"));
+      return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+  }
+
+  // If an editor is getting focus, create new TextStore and set focus.
+  if (NS_WARN_IF(!CreateAndSetFocus(aFocusedWidget, aContext))) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF:   nsTextStore::OnFocusChange() FAILED due to "
+            "ITfThreadMgr::CreateAndSetFocus() failure"));
+    // If setting focus, we should destroy the TextStore completely because
+    // it causes memory leak.
+    if (sEnabledTextStore) {
+      sEnabledTextStore->Destroy();
+      NS_RELEASE(sEnabledTextStore);
+    }
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
+}
+
+// static
+bool
+nsTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
+                               const InputContext& aContext)
+{
+  // TSF might do something which causes that we need to access static methods
+  // of nsTextStore.  At that time, sEnabledTextStore may be necessary.
+  // So, we should set sEnabledTextStore directly.
+  NS_ADDREF(sEnabledTextStore = new nsTextStore());
+  if (NS_WARN_IF(!sEnabledTextStore->Init(aFocusedWidget))) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF:   nsTextStore::CreateAndSetFocus() FAILED due to "
+            "nsTextStore::Init() failure"));
+    return false;
+  }
+  if (NS_WARN_IF(!sEnabledTextStore->mDocumentMgr)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF:   nsTextStore::CreateAndSetFocus() FAILED due to "
+            "invalid nsTextStore::mDocumentMgr"));
+    return false;
+  }
+  if (aContext.mIMEState.mEnabled == IMEState::PASSWORD) {
+    MarkContextAsKeyboardDisabled(sEnabledTextStore->mContext);
+    nsRefPtr<ITfContext> topContext;
+    sEnabledTextStore->mDocumentMgr->GetTop(getter_AddRefs(topContext));
+    if (topContext && topContext != sEnabledTextStore->mContext) {
+      MarkContextAsKeyboardDisabled(topContext);
+    }
+  }
+  HRESULT hr = sTsfThreadMgr->SetFocus(sEnabledTextStore->mDocumentMgr);
+  if (NS_WARN_IF(FAILED(hr))) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF:   nsTextStore::CreateAndSetFocus() FAILED due to "
+            "ITfTheadMgr::SetFocus() failure"));
+    return false;
+  }
+  // Use AssociateFocus() for ensuring that any native focus event
+  // never steal focus from our documentMgr.
+  nsRefPtr<ITfDocumentMgr> prevFocusedDocumentMgr;
+  hr = sTsfThreadMgr->AssociateFocus(aFocusedWidget->GetWindowHandle(),
+                                     sEnabledTextStore->mDocumentMgr,
+                                     getter_AddRefs(prevFocusedDocumentMgr));
+  if (NS_WARN_IF(FAILED(hr))) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF:   nsTextStore::CreateAndSetFocus() FAILED due to "
+            "ITfTheadMgr::AssociateFocus() failure"));
+    return false;
+  }
+  sEnabledTextStore->SetInputScope(aContext.mHTMLInputType);
+  return true;
 }
 
 // static
@@ -4374,22 +4439,19 @@ nsTextStore::SetInputContext(nsWindowBase* aWidget,
 
   NS_ENSURE_TRUE_VOID(IsInTSFMode());
 
-  if (!sEnabledTextStore) {
-    return;
-  }
-
-  sEnabledTextStore->SetInputScope(aContext.mHTMLInputType);
-
   if (aAction.mFocusChange != InputContextAction::FOCUS_NOT_CHANGED) {
+    if (sEnabledTextStore) {
+      sEnabledTextStore->SetInputScope(aContext.mHTMLInputType);
+    }
     return;
   }
 
   // If focus isn't actually changed but the enabled state is changed,
   // emulate the focus move.
   if (!ThinksHavingFocus() && aContext.mIMEState.IsEditable()) {
-    OnFocusChange(true, aWidget, aContext.mIMEState);
+    OnFocusChange(true, aWidget, aContext);
   } else if (ThinksHavingFocus() && !aContext.mIMEState.IsEditable()) {
-    OnFocusChange(false, aWidget, aContext.mIMEState);
+    OnFocusChange(false, aWidget, aContext);
   }
 }
 
@@ -4584,11 +4646,6 @@ nsTextStore::Initialize()
     return;
   }
 
-  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF:   nsTextStore::Initialize() is creating "
-     "an nsTextStore instance..."));
-  nsRefPtr<nsTextStore> textStore = new nsTextStore();
-
   inputProcessorProfiles.swap(sInputProcessorProfiles);
   threadMgr.swap(sTsfThreadMgr);
   messagePump.swap(sMessagePump);
@@ -4597,7 +4654,6 @@ nsTextStore::Initialize()
   categoryMgr.swap(sCategoryMgr);
   disabledDocumentMgr.swap(sTsfDisabledDocumentMgr);
   disabledContext.swap(sTsfDisabledContext);
-  sEnabledTextStore = textStore;
 
   sCreateNativeCaretForATOK =
     Preferences::GetBool("intl.tsf.hack.atok.create_native_caret", true);
@@ -4610,12 +4666,12 @@ nsTextStore::Initialize()
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), sTsfThreadMgr=0x%p, "
-     "sTsfClientId=0x%08X, sEnabledTextStore=0x%p, sDisplayAttrMgr=0x%p, "
+     "sTsfClientId=0x%08X, sDisplayAttrMgr=0x%p, "
      "sCategoryMgr=0x%p, sTsfDisabledDocumentMgr=0x%p, sTsfDisabledContext=%p, "
      "sCreateNativeCaretForATOK=%s, "
      "sDoNotReturnNoLayoutErrorToFreeChangJie=%s, "
      "sDoNotReturnNoLayoutErrorToEasyChangjei=%s",
-     sTsfThreadMgr, sTsfClientId, sEnabledTextStore, sDisplayAttrMgr,
+     sTsfThreadMgr, sTsfClientId, sDisplayAttrMgr,
      sCategoryMgr, sTsfDisabledDocumentMgr, sTsfDisabledContext,
      GetBoolName(sCreateNativeCaretForATOK),
      GetBoolName(sDoNotReturnNoLayoutErrorToFreeChangJie),
