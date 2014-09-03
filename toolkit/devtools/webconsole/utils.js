@@ -1583,7 +1583,7 @@ function JSTermHelpers(aOwner)
       return aOwner.makeDebuggeeValue(aOwner.selectedNode)
     },
     enumerable: true,
-    configurable: false
+    configurable: true
   });
 
   /**
