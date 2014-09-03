@@ -1450,6 +1450,7 @@ void MediaDecoderStateMachine::Play()
 
 void MediaDecoderStateMachine::ResetPlayback()
 {
+  AssertCurrentThreadInMonitor();
   MOZ_ASSERT(mState == DECODER_STATE_SEEKING ||
              mState == DECODER_STATE_SHUTDOWN ||
              mState == DECODER_STATE_DORMANT);
@@ -2485,7 +2486,7 @@ MediaDecoderStateMachine::FlushDecoding()
 {
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
-  mDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
+  AssertCurrentThreadInMonitor();
 
   {
     // Put a task in the decode queue to abort any decoding operations.
