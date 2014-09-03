@@ -24,7 +24,6 @@
 
 #include "RuntimeService.h"
 #include "ServiceWorker.h"
-#include "ServiceWorkerClient.h"
 #include "ServiceWorkerRegistration.h"
 #include "ServiceWorkerEvents.h"
 #include "WorkerInlines.h"
@@ -2172,56 +2171,6 @@ ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerReg
       target->InvalidateWorkerReference(aWhichOnes);
     }
   }
-}
-
-namespace {
-
-class MOZ_STACK_CLASS FilterRegistrationData
-{
-public:
-  FilterRegistrationData(nsTArray<uint64_t>* aDocuments,
-                     ServiceWorkerRegistrationInfo* aRegistration)
-  : mDocuments(aDocuments),
-    mRegistration(aRegistration)
-  {
-  }
-
-  nsTArray<uint64_t>* mDocuments;
-  nsRefPtr<ServiceWorkerRegistrationInfo> mRegistration;
-};
-
-static PLDHashOperator
-EnumControlledDocuments(nsISupports* aKey,
-                        ServiceWorkerRegistrationInfo* aRegistration,
-                        void* aData)
-{
-  FilterRegistrationData* data = static_cast<FilterRegistrationData*>(aData);
-  if (data->mRegistration != aRegistration) {
-    return PL_DHASH_NEXT;
-  }
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(aKey);
-  if (!document || !document->GetInnerWindow()) {
-      return PL_DHASH_NEXT;
-  }
-
-  data->mDocuments->AppendElement(document->GetInnerWindow()->WindowID());
-  return PL_DHASH_NEXT;
-}
-
-} // anonymous namespace
-
-void
-ServiceWorkerManager::GetServicedClients(const nsCString& aScope,
-                                     nsTArray<uint64_t>* aControlledDocuments)
-{
-  nsRefPtr<ServiceWorkerDomainInfo> domainInfo = GetDomainInfo(aScope);
-  nsRefPtr<ServiceWorkerRegistrationInfo> registration =
-    domainInfo->GetRegistration(aScope);
-  MOZ_ASSERT(registration);
-  FilterRegistrationData data(aControlledDocuments, registration);
-
-  domainInfo->mControlledDocuments.EnumerateRead(EnumControlledDocuments,
-                                                 &data);
 }
 
 END_WORKERS_NAMESPACE
