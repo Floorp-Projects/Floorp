@@ -21,10 +21,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gNetworkService",
-                                   "@mozilla.org/network/service;1",
-                                   "nsINetworkService");
-
 this.EXPORTED_SYMBOLS = ["WifiP2pManager"];
 
 const EVENT_IGNORED                      = -1;
@@ -651,7 +647,7 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
 
           // Step 4: Enable p2p0 net interface. wpa_supplicant may have
           //         already done it for us.
-          gNetworkService.enableInterface(P2P_INTERFACE_NAME, function (success) {
+          aNetUtil.enableInterface(P2P_INTERFACE_NAME, function (success) {
             onSuccess();
           });
         });
@@ -1322,7 +1318,7 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
           debug('P2P function disabled');
           aP2pCommand.closeSupplicantConnection(function (status) {
             debug('Supplicant connection closed');
-            gNetworkService.disableInterface(P2P_INTERFACE_NAME, function (success){
+            aNetUtil.disableInterface(P2P_INTERFACE_NAME, function (success){
               debug('Disabled interface: ' + P2P_INTERFACE_NAME);
               _onDisabled(true);
               _sm.gotoState(stateDisabled);
