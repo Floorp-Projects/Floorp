@@ -202,6 +202,16 @@ void ASSERT_SimpleCase(uint8_t unusedBits, uint8_t bits, KeyUsage usage)
   ASSERT_BAD(CheckKeyUsage(EndEntityOrCA::MustBeEndEntity, &twoByteNotGood,
                            usage));
   ASSERT_BAD(CheckKeyUsage(EndEntityOrCA::MustBeCA, &twoByteNotGood, usage));
+
+  // If an end-entity certificate does assert keyCertSign, this is allowed
+  // as long as that isn't the required key usage.
+  NAMED_SIMPLE_KU(digitalSignatureAndKeyCertSign, 2, 0x84);
+  ASSERT_EQ(Success, CheckKeyUsage(EndEntityOrCA::MustBeEndEntity,
+                                   &digitalSignatureAndKeyCertSign,
+                                   KeyUsage::digitalSignature));
+  ASSERT_BAD(CheckKeyUsage(EndEntityOrCA::MustBeEndEntity,
+                           &digitalSignatureAndKeyCertSign,
+                           KeyUsage::keyCertSign));
 }
 
 TEST_F(pkixcheck_CheckKeyUsage, simpleCases)
@@ -213,7 +223,9 @@ TEST_F(pkixcheck_CheckKeyUsage, simpleCases)
   ASSERT_SimpleCase(3, 0x08, KeyUsage::keyAgreement);
 }
 
-// Only CAs are allowed to assert keyCertSign
+// Only CAs are allowed to assert keyCertSign.
+// End-entity certs may assert it along with other key usages if keyCertSign
+// isn't the required key usage. This is for compatibility.
 TEST_F(pkixcheck_CheckKeyUsage, keyCertSign)
 {
   NAMED_SIMPLE_KU(good, 2, 0x04);

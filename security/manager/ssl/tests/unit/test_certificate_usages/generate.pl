@@ -24,6 +24,7 @@ my @base_usages=("",
 my @ee_usages=("",
                "digitalSignature,keyEncipherment,dataEncipherment",
                "digitalSignature,nonRepudiation,keyEncipherment,dataEncipherment,keyAgreement",
+               "digitalSignature,keyEncipherment,dataEncipherment,certSigning",
                "certSigning");
 my @eku_usages=("serverAuth,clientAuth,codeSigning,emailProtection,timeStamp,ocspResponder,stepUp,msTrustListSign",
                 "serverAuth,clientAuth",

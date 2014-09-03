@@ -60,11 +60,18 @@ function run_test() {
   // it.
   test_cert_for_usages(["ee-int-no-extensions", "int-no-extensions"], "");
 
-  // a certificate with bsaicConstraints.cA==false is considered an EE.
+  // a certificate with basicConstraints.cA==false is considered an EE.
   test_cert_for_usages(["int-not-a-ca"], ee_usage1);
 
   // int-not-a-ca is an EE (see previous case), so no certs can chain to it.
   test_cert_for_usages(["ee-int-not-a-ca", "int-not-a-ca"], "");
+
+  // a certificate with basicConstraints.cA==false but with the keyCertSign
+  // key usage may not act as a CA (it can act like an end-entity).
+  test_cert_for_usages(["int-cA-FALSE-asserts-keyCertSign"], ee_usage1);
+  test_cert_for_usages(["ee-int-cA-FALSE-asserts-keyCertSign",
+                        "int-cA-FALSE-asserts-keyCertSign"], "");
+
 
   // int-limited-depth has cA==true and a path length constraint of zero.
   test_cert_for_usages(["int-limited-depth"], ca_usage1);
