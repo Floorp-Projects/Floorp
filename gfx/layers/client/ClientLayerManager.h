@@ -46,6 +46,12 @@ class ClientLayerManager MOZ_FINAL : public LayerManager
 public:
   explicit ClientLayerManager(nsIWidget* aWidget);
 
+  virtual void Destroy()
+  {
+    LayerManager::Destroy();
+    ClearCachedResources();
+  }
+
 protected:
   virtual ~ClientLayerManager();
 
