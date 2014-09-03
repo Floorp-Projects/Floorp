@@ -744,7 +744,7 @@ random_generateSeed()
     int fd = open("/dev/urandom", O_RDONLY);
     MOZ_ASSERT(fd >= 0, "Can't open /dev/urandom");
     if (fd >= 0) {
-        read(fd, seed.u8, mozilla::ArrayLength(seed.u8));
+        (void)read(fd, seed.u8, mozilla::ArrayLength(seed.u8));
         close(fd);
     }
     seed.u32[0] ^= fd;
