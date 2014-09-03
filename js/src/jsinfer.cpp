@@ -3498,8 +3498,10 @@ types::GetOrFixupCopyOnWriteObject(JSContext *cx, HandleScript script, jsbytecod
     JS_ASSERT(obj->is<ArrayObject>());
     JS_ASSERT(obj->denseElementsAreCopyOnWrite());
 
-    if (obj->type()->hasAnyFlags(OBJECT_FLAG_COPY_ON_WRITE))
+    if (obj->type()->fromAllocationSite()) {
+        JS_ASSERT(obj->type()->hasAnyFlags(OBJECT_FLAG_COPY_ON_WRITE));
         return obj;
+    }
 
     RootedTypeObject type(cx, TypeScript::InitObject(cx, script, pc, JSProto_Array));
     if (!type)

@@ -1162,7 +1162,11 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
         // this bit reliably.
         if (unknownProperties())
             return false;
-        return (flags() & OBJECT_FLAG_FROM_ALLOCATION_SITE) || newScript();
+        return fromAllocationSite() || newScript();
+    }
+
+    bool fromAllocationSite() {
+        return flags() & OBJECT_FLAG_FROM_ALLOCATION_SITE;
     }
 
     void setShouldPreTenure(ExclusiveContext *cx) {
