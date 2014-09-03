@@ -415,8 +415,8 @@ var WifiManager = (function() {
         // and routing table is changed but still cannot connect to network
         // so the workaround here is disable interface the enable again to
         // trigger network reconnect with static ip.
-        gNetworkService.disableInterface(manager.ifname, function (ok) {
-          gNetworkService.enableInterface(manager.ifname, function (ok) {
+        netUtil.disableInterface(manager.ifname, function (ok) {
+          netUtil.enableInterface(manager.ifname, function (ok) {
           });
         });
       }
@@ -442,12 +442,12 @@ var WifiManager = (function() {
     }
 
     // Set ip, mask length, gateway, dns to network interface
-    gNetworkService.configureInterface( { ifname: ifname,
-                                          ipaddr: staticIpInfo.ipaddr,
-                                          mask: staticIpInfo.maskLength,
-                                          gateway: staticIpInfo.gateway,
-                                          dns1: staticIpInfo.dns1,
-                                          dns2: staticIpInfo.dns2 }, function (data) {
+    netUtil.configureInterface( { ifname: ifname,
+                                  ipaddr: staticIpInfo.ipaddr,
+                                  mask: staticIpInfo.maskLength,
+                                  gateway: staticIpInfo.gateway,
+                                  dns1: staticIpInfo.dns1,
+                                  dns2: staticIpInfo.dns2 }, function (data) {
       netUtil.runIpConfig(ifname, staticIpInfo, function(data) {
         dhcpInfo = data.info;
         notify("networkconnected", data);
@@ -587,17 +587,17 @@ var WifiManager = (function() {
 
   manager.connectionDropped = function(callback) {
     // Reset network interface when connection drop
-    gNetworkService.configureInterface( { ifname: manager.ifname,
-                                          ipaddr: 0,
-                                          mask: 0,
-                                          gateway: 0,
-                                          dns1: 0,
-                                          dns2: 0 }, function (data) {
+    netUtil.configureInterface( { ifname: manager.ifname,
+                                  ipaddr: 0,
+                                  mask: 0,
+                                  gateway: 0,
+                                  dns1: 0,
+                                  dns2: 0 }, function (data) {
     });
 
     // If we got disconnected, kill the DHCP client in preparation for
     // reconnection.
-    gNetworkService.resetConnections(manager.ifname, function() {
+    netUtil.resetConnections(manager.ifname, function() {
       netUtil.stopDhcp(manager.ifname, function() {
         callback();
       });
@@ -889,7 +889,7 @@ var WifiManager = (function() {
       }
       suppressEvents = true;
       wifiCommand.killSupplicant(function() {
-        gNetworkService.disableInterface(manager.ifname, function (ok) {
+        netUtil.disableInterface(manager.ifname, function (ok) {
           suppressEvents = false;
           callback();
         });
@@ -996,7 +996,7 @@ var WifiManager = (function() {
                 }
 
                 manager.supplicantStarted = true;
-                gNetworkService.enableInterface(manager.ifname, function (ok) {
+                netUtil.enableInterface(manager.ifname, function (ok) {
                   callback(ok ? 0 : -1);
                 });
               });
@@ -1040,7 +1040,7 @@ var WifiManager = (function() {
             wifiCommand.closeSupplicantConnection(function() {
               manager.connectToSupplicant = false;
               manager.state = "UNINITIALIZED";
-              gNetworkService.disableInterface(manager.ifname, function (ok) {
+              netUtil.disableInterface(manager.ifname, function (ok) {
                 unloadDriver(WIFI_FIRMWARE_STATION, callback);
               });
             });
