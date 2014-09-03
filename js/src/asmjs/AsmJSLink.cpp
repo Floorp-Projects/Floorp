@@ -651,7 +651,7 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         // very fast) can avoid doing so. The JitActivation is marked as
         // inactive so stack iteration will skip over it.
         AsmJSActivation activation(cx, module);
-        JitActivation jitActivation(cx, /* firstFrameIsConstructing = */ false, /* active */ false);
+        JitActivation jitActivation(cx, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
         AsmJSModule::CodePtr enter = module.entryTrampoline(func);
