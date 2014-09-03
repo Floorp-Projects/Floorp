@@ -20,7 +20,7 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/FileUtils.h"
 
-class nsUrlClassifierPrefixSet
+class nsUrlClassifierPrefixSet MOZ_FINAL
   : public nsIUrlClassifierPrefixSet
   , public nsIMemoryReporter
 {

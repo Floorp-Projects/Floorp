@@ -15,7 +15,7 @@
 #include "jit/BaselineInspector.h"
 #include "jit/Ion.h"
 #include "jit/IonOptimizationLevels.h"
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
@@ -173,7 +173,7 @@ IonBuilder::abort(const char *message, ...)
     va_start(ap, message);
     abortFmt(message, ap);
     va_end(ap);
-    IonSpew(IonSpew_Abort, "aborted @ %s:%d", script()->filename(), PCToLineNumber(script(), pc));
+    JitSpew(JitSpew_Abort, "aborted @ %s:%d", script()->filename(), PCToLineNumber(script(), pc));
 #endif
     return false;
 }
@@ -183,7 +183,7 @@ IonBuilder::spew(const char *message)
 {
     // Don't call PCToLineNumber in release builds.
 #ifdef DEBUG
-    IonSpew(IonSpew_MIR, "%s @ %s:%d", message, script()->filename(), PCToLineNumber(script(), pc));
+    JitSpew(JitSpew_MIR, "%s @ %s:%d", message, script()->filename(), PCToLineNumber(script(), pc));
 #endif
 }
 
@@ -328,10 +328,10 @@ IonBuilder::InliningDecision
 IonBuilder::DontInline(JSScript *targetScript, const char *reason)
 {
     if (targetScript) {
-        IonSpew(IonSpew_Inlining, "Cannot inline %s:%u: %s",
+        JitSpew(JitSpew_Inlining, "Cannot inline %s:%u: %s",
                 targetScript->filename(), targetScript->lineno(), reason);
     } else {
-        IonSpew(IonSpew_Inlining, "Cannot inline: %s", reason);
+        JitSpew(JitSpew_Inlining, "Cannot inline: %s", reason);
     }
 
     return InliningDecision_DontInline;
@@ -649,15 +649,15 @@ IonBuilder::build()
 
 #ifdef DEBUG
     if (info().executionModeIsAnalysis()) {
-        IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) %s",
+        JitSpew(JitSpew_Scripts, "Analyzing script %s:%d (%p) %s",
                 script()->filename(), script()->lineno(), (void *)script(),
                 ExecutionModeString(info().executionMode()));
     } else if (info().executionMode() == SequentialExecution && script()->hasIonScript()) {
-        IonSpew(IonSpew_Scripts, "Recompiling script %s:%d (%p) (usecount=%d, level=%s)",
+        JitSpew(JitSpew_Scripts, "Recompiling script %s:%d (%p) (usecount=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
                 (int)script()->getUseCount(), OptimizationLevelString(optimizationInfo().level()));
     } else {
-        IonSpew(IonSpew_Scripts, "Compiling script %s:%d (%p) (usecount=%d, level=%s)",
+        JitSpew(JitSpew_Scripts, "Compiling script %s:%d (%p) (usecount=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
                 (int)script()->getUseCount(), OptimizationLevelString(optimizationInfo().level()));
     }
@@ -754,6 +754,12 @@ IonBuilder::build()
     if (!processIterators())
         return false;
 
+    if (!abortedNewScriptPropertiesTypes().empty()) {
+        JS_ASSERT(!info().executionModeIsAnalysis());
+        abortReason_ = AbortReason_NewScriptProperties;
+        return false;
+    }
+
     JS_ASSERT(loopDepth_ == 0);
     abortReason_ = AbortReason_NoAbort;
     return true;
@@ -802,7 +808,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     inlineCallInfo_ = &callInfo;
 
-    IonSpew(IonSpew_Scripts, "Inlining script %s:%d (%p)",
+    JitSpew(JitSpew_Scripts, "Inlining script %s:%d (%p)",
             script()->filename(), script()->lineno(), (void *)script());
 
     callerBuilder_ = callerBuilder;
@@ -850,7 +856,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     // Initialize |this| slot.
     current->initSlot(info().thisSlot(), callInfo.thisArg());
 
-    IonSpew(IonSpew_Inlining, "Initializing %u arg slots", info().nargs());
+    JitSpew(JitSpew_Inlining, "Initializing %u arg slots", info().nargs());
 
     // NB: Ion does not inline functions which |needsArgsObj|.  So using argSlot()
     // instead of argSlotUnchecked() below is OK
@@ -874,7 +880,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     if (!initScopeChain(callInfo.fun()))
         return false;
 
-    IonSpew(IonSpew_Inlining, "Initializing %u local slots", info().nlocals());
+    JitSpew(JitSpew_Inlining, "Initializing %u local slots", info().nlocals());
 
     // Initialize local variables.
     for (uint32_t i = 0; i < info().nlocals(); i++) {
@@ -883,7 +889,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
         current->initSlot(info().localSlot(i), undef);
     }
 
-    IonSpew(IonSpew_Inlining, "Inline entry block MResumePoint %p, %u operands",
+    JitSpew(JitSpew_Inlining, "Inline entry block MResumePoint %p, %u operands",
             (void *) current->entryResumePoint(), current->entryResumePoint()->numOperands());
 
     // +2 for the scope chain and |this|, maybe another +1 for arguments object slot.
@@ -1025,7 +1031,7 @@ IonBuilder::initScopeChain(MDefinition *callee)
 bool
 IonBuilder::initArgumentsObject()
 {
-    IonSpew(IonSpew_MIR, "%s:%d - Emitting code to initialize arguments object! block=%p",
+    JitSpew(JitSpew_MIR, "%s:%d - Emitting code to initialize arguments object! block=%p",
                               script()->filename(), script()->lineno(), current);
     JS_ASSERT(info().needsArgsObj());
     MCreateArgumentsObject *argsObj = MCreateArgumentsObject::New(alloc(), current->scopeChain());
@@ -1057,7 +1063,8 @@ IonBuilder::addOsrValueTypeBarrier(uint32_t slot, MInstruction **def_,
         // No unbox instruction will be added below, so check the type by
         // adding a type barrier for a singleton type set.
         types::Type ntype = types::Type::PrimitiveType(ValueTypeFromMIRType(type));
-        typeSet = alloc_->lifoAlloc()->new_<types::TemporaryTypeSet>(ntype);
+        LifoAlloc *lifoAlloc = alloc().lifoAlloc();
+        typeSet = lifoAlloc->new_<types::TemporaryTypeSet>(lifoAlloc, ntype);
         if (!typeSet)
             return false;
         MInstruction *barrier = MTypeBarrier::New(alloc(), def, typeSet);
@@ -4035,7 +4042,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
                              loopDepth_);
     if (!inlineBuilder.buildInline(this, outerResumePoint, callInfo)) {
         if (analysisContext && analysisContext->isExceptionPending()) {
-            IonSpew(IonSpew_Abort, "Inline builder raised exception.");
+            JitSpew(JitSpew_Abort, "Inline builder raised exception.");
             abortReason_ = AbortReason_Error;
             return false;
         }
@@ -4047,6 +4054,12 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
             abortReason_ = AbortReason_Inlining;
         } else if (inlineBuilder.abortReason_ == AbortReason_Inlining) {
             abortReason_ = AbortReason_Inlining;
+        } else if (inlineBuilder.abortReason_ == AbortReason_NewScriptProperties) {
+            const TypeObjectVector &types = inlineBuilder.abortedNewScriptPropertiesTypes();
+            JS_ASSERT(!types.empty());
+            for (size_t i = 0; i < types.length(); i++)
+                addAbortedNewScriptPropertiesType(types[i]);
+            abortReason_ = AbortReason_NewScriptProperties;
         }
 
         return false;
@@ -4920,19 +4933,6 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
         return nullptr;
     if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(templateObject)))
         return nullptr;
-
-    // For template objects with NewScript info, the appropriate allocation
-    // kind to use may change due to dynamic property adds. In these cases
-    // calling Ion code will be invalidated, but any baseline template object
-    // may be stale. Update to the correct template object in this case.
-    types::TypeObject *templateType = templateObject->type();
-    if (templateType->newScript()) {
-        templateObject = templateType->newScript()->templateObject;
-        JS_ASSERT(templateObject->type() == templateType);
-
-        // Trigger recompilation if the templateObject changes.
-        types::TypeObjectKey::get(templateType)->watchStateChangeForNewScriptTemplate(constraints());
-    }
 
     // Generate an inline path to create a new |this| object with
     // the given singleton prototype.
@@ -6073,8 +6073,9 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
                 existingType = baselineFrame_->varTypes[var];
 
             // Extract typeset from value.
+            LifoAlloc *lifoAlloc = alloc().lifoAlloc();
             types::TemporaryTypeSet *typeSet =
-                alloc_->lifoAlloc()->new_<types::TemporaryTypeSet>(existingType);
+                lifoAlloc->new_<types::TemporaryTypeSet>(lifoAlloc, existingType);
             if (!typeSet)
                 return nullptr;
             MIRType type = typeSet->getKnownMIRType();
@@ -6562,11 +6563,18 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
 
     MIRType knownType = types->getKnownMIRType();
     if (barrier == BarrierKind::NoBarrier) {
+        // Try to inline properties holding a known constant object.
         if (singleton) {
-            // Try to inline a known constant value.
             if (testSingletonProperty(staticObject, name) == singleton)
                 return pushConstant(ObjectValue(*singleton));
         }
+
+        // Try to inline properties that have never been overwritten.
+        Value constantValue;
+        if (property.constant(constraints(), &constantValue))
+            return pushConstant(constantValue);
+
+        // Try to inline properties that can only have one value.
         if (knownType == MIRType_Undefined)
             return pushConstant(UndefinedValue());
         if (knownType == MIRType_Null)
@@ -6648,7 +6656,7 @@ IonBuilder::setStaticName(JSObject *staticObject, PropertyName *name)
         return jsop_setprop(name);
     }
 
-    if (!TypeSetIncludes(property.maybeTypes(), value->type(), value->resultTypeSet()))
+    if (!CanWriteProperty(constraints(), property, value))
         return jsop_setprop(name);
 
     current->pop();
@@ -7510,7 +7518,8 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
         objTypes->convertDoubleElements(constraints()) == types::TemporaryTypeSet::AlwaysConvertToDoubles)
     {
         // Note: double implies int32 as well for typesets
-        types = alloc_->lifoAlloc()->new_<types::TemporaryTypeSet>(types::Type::DoubleType());
+        LifoAlloc *lifoAlloc = alloc().lifoAlloc();
+        types = lifoAlloc->new_<types::TemporaryTypeSet>(lifoAlloc, types::Type::DoubleType());
         if (!types)
             return false;
 
@@ -8348,23 +8357,62 @@ IonBuilder::jsop_rest()
     return true;
 }
 
-bool
-IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name,
-                            types::HeapTypeSetKey *property)
+uint32_t
+IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name)
 {
-    if (!types || types->unknownObject() || types->getObjectCount() != 1)
-        return false;
+    if (!types || types->unknownObject())
+        return UINT32_MAX;
 
-    types::TypeObjectKey *type = types->getObject(0);
-    if (type->unknownProperties() || type->singleton())
-        return false;
+    // Watch for types which the new script properties analysis has not been
+    // performed on yet. Normally this is done after a small number of the
+    // objects have been created, but if only a few have been created we can
+    // still perform the analysis with a smaller object population. The
+    // analysis can have side effects so abort the builder and retry later.
+    //
+    // We always check this, so that even if we aren't able to find a common
+    // slot we ensure that the new script analysis is performed on all accessed
+    // objects. Later, this will let us elide baseline IC stubs for preliminary
+    // objects, which often have a different number of fixed slots from
+    // subsequent objects.
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObjectKey *type = types->getObject(i);
+        if (!type)
+            continue;
 
-    jsid id = NameToId(name);
+        if (types::TypeObject *typeObject = type->maybeType()) {
+            if (typeObject->newScript() && !typeObject->newScript()->analyzed()) {
+                addAbortedNewScriptPropertiesType(typeObject);
+                return UINT32_MAX;
+            }
+        }
+    }
 
-    *property = type->property(id);
-    return property->maybeTypes() &&
-           property->maybeTypes()->definiteProperty() &&
-           !property->nonData(constraints());
+    uint32_t slot = UINT32_MAX;
+
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObjectKey *type = types->getObject(i);
+        if (!type)
+            continue;
+
+        if (type->unknownProperties() || type->singleton())
+            return UINT32_MAX;
+
+        types::HeapTypeSetKey property = type->property(NameToId(name));
+        if (!property.maybeTypes() ||
+            !property.maybeTypes()->definiteProperty() ||
+            property.nonData(constraints()))
+        {
+            return UINT32_MAX;
+        }
+
+        uint32_t propertySlot = property.maybeTypes()->definiteSlot();
+        if (slot == UINT32_MAX)
+            slot = propertySlot;
+        else if (slot != propertySlot)
+            return UINT32_MAX;
+    }
+
+    return slot;
 }
 
 bool
@@ -8568,7 +8616,7 @@ IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPro
 
 #ifdef DEBUG
     if (inlinePropTable->numEntries() > 0)
-        IonSpew(IonSpew_Inlining, "Annotated GetPropertyCache with %d/%d inline cases",
+        JitSpew(JitSpew_Inlining, "Annotated GetPropertyCache with %d/%d inline cases",
                                     (int) inlinePropTable->numEntries(), (int) objCount);
 #endif
 
@@ -8676,9 +8724,10 @@ IonBuilder::jsop_getprop(PropertyName *name)
     bool emitted = false;
 
     MDefinition *obj = current->pop();
+    types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
     // Try to optimize to a specific constant.
-    if (!getPropTryInferredConstant(&emitted, obj, name) || emitted)
+    if (!getPropTryInferredConstant(&emitted, obj, name, types) || emitted)
         return emitted;
 
     // Try to optimize arguments.length.
@@ -8689,7 +8738,6 @@ IonBuilder::jsop_getprop(PropertyName *name)
     if (!getPropTryArgumentsCallee(&emitted, obj, name) || emitted)
         return emitted;
 
-    types::TemporaryTypeSet *types = bytecodeTypes(pc);
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                        obj, name, types);
 
@@ -8771,7 +8819,8 @@ IonBuilder::checkIsDefinitelyOptimizedArguments(MDefinition *obj, bool *isOptimi
 }
 
 bool
-IonBuilder::getPropTryInferredConstant(bool *emitted, MDefinition *obj, PropertyName *name)
+IonBuilder::getPropTryInferredConstant(bool *emitted, MDefinition *obj, PropertyName *name,
+                                       types::TemporaryTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
 
@@ -8780,12 +8829,23 @@ IonBuilder::getPropTryInferredConstant(bool *emitted, MDefinition *obj, Property
     if (!objTypes)
         return true;
 
-    Value constVal = UndefinedValue();
-    if (objTypes->propertyIsConstant(constraints(), NameToId(name), &constVal)) {
+    JSObject *singleton = objTypes->getSingleton();
+    if (!singleton)
+        return true;
+
+    types::TypeObjectKey *type = types::TypeObjectKey::get(singleton);
+    if (type->unknownProperties())
+        return true;
+
+    types::HeapTypeSetKey property = type->property(NameToId(name));
+
+    Value constantValue = UndefinedValue();
+    if (property.constant(constraints(), &constantValue)) {
         spew("Optimized constant property");
         obj->setImplicitlyUsedUnchecked();
-        if (!pushConstant(constVal))
+        if (!pushConstant(constantValue))
             return false;
+        types->addType(types::GetValueType(constantValue), alloc_->lifoAlloc());
         *emitted = true;
     }
 
@@ -8953,25 +9013,33 @@ IonBuilder::getPropTryDefiniteSlot(bool *emitted, MDefinition *obj, PropertyName
                                    BarrierKind barrier, types::TemporaryTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
-    types::HeapTypeSetKey property;
-    if (!getDefiniteSlot(obj->resultTypeSet(), name, &property))
+    uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), name);
+    if (slot == UINT32_MAX)
         return true;
 
-    MDefinition *useObj = obj;
     if (obj->type() != MIRType_Object) {
         MGuardObject *guard = MGuardObject::New(alloc(), obj);
         current->add(guard);
-        useObj = guard;
+        obj = guard;
     }
 
-    MLoadFixedSlot *fixed = MLoadFixedSlot::New(alloc(), useObj, property.maybeTypes()->definiteSlot());
+    MInstruction *load;
+    if (slot < JSObject::MAX_FIXED_SLOTS) {
+        load = MLoadFixedSlot::New(alloc(), obj, slot);
+    } else {
+        MInstruction *slots = MSlots::New(alloc(), obj);
+        current->add(slots);
+
+        load = MLoadSlot::New(alloc(), slots, slot - JSObject::MAX_FIXED_SLOTS);
+    }
+
     if (barrier == BarrierKind::NoBarrier)
-        fixed->setResultType(types->getKnownMIRType());
+        load->setResultType(types->getKnownMIRType());
 
-    current->add(fixed);
-    current->push(fixed);
+    current->add(load);
+    current->push(load);
 
-    if (!pushTypeBarrier(fixed, types, barrier))
+    if (!pushTypeBarrier(load, types, barrier))
         return false;
 
     *emitted = true;
@@ -9406,14 +9474,13 @@ IonBuilder::jsop_setprop(PropertyName *name)
     if (!setPropTryTypedObject(&emitted, obj, name, value) || emitted)
         return emitted;
 
-    // Do not emit optimized stores to slots that may be constant.
-    if (objTypes && !objTypes->propertyMightBeConstant(constraints(), NameToId(name))) {
+    if (!barrier) {
         // Try to emit store from definite slots.
-        if (!setPropTryDefiniteSlot(&emitted, obj, name, value, barrier, objTypes) || emitted)
+        if (!setPropTryDefiniteSlot(&emitted, obj, name, value, objTypes) || emitted)
             return emitted;
 
         // Try to emit a monomorphic/polymorphic store based on baseline caches.
-        if (!setPropTryInlineAccess(&emitted, obj, name, value, barrier, objTypes) || emitted)
+        if (!setPropTryInlineAccess(&emitted, obj, name, value, objTypes) || emitted)
             return emitted;
     }
 
@@ -9590,28 +9657,44 @@ IonBuilder::setPropTryScalarPropOfTypedObject(bool *emitted,
 bool
 IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
                                    PropertyName *name, MDefinition *value,
-                                   bool barrier, types::TemporaryTypeSet *objTypes)
+                                   types::TemporaryTypeSet *objTypes)
 {
     JS_ASSERT(*emitted == false);
 
-    if (barrier)
+    uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), name);
+    if (slot == UINT32_MAX)
         return true;
 
-    types::HeapTypeSetKey property;
-    if (!getDefiniteSlot(obj->resultTypeSet(), name, &property))
-        return true;
+    bool writeBarrier = false;
+    for (size_t i = 0; i < obj->resultTypeSet()->getObjectCount(); i++) {
+        types::TypeObjectKey *type = obj->resultTypeSet()->getObject(i);
+        if (!type)
+            continue;
 
-    if (property.nonWritable(constraints()))
-        return true;
+        types::HeapTypeSetKey property = type->property(NameToId(name));
+        if (property.nonWritable(constraints()))
+            return true;
+        writeBarrier |= property.needsBarrier(constraints());
+    }
 
-    MStoreFixedSlot *fixed = MStoreFixedSlot::New(alloc(), obj, property.maybeTypes()->definiteSlot(), value);
-    current->add(fixed);
+    MInstruction *store;
+    if (slot < JSObject::MAX_FIXED_SLOTS) {
+        store = MStoreFixedSlot::New(alloc(), obj, slot, value);
+        if (writeBarrier)
+            store->toStoreFixedSlot()->setNeedsBarrier();
+    } else {
+        MInstruction *slots = MSlots::New(alloc(), obj);
+        current->add(slots);
+
+        store = MStoreSlot::New(alloc(), slots, slot - JSObject::MAX_FIXED_SLOTS, value);
+        if (writeBarrier)
+            store->toStoreSlot()->setNeedsBarrier();
+    }
+
+    current->add(store);
     current->push(value);
 
-    if (property.needsBarrier(constraints()))
-        fixed->setNeedsBarrier();
-
-    if (!resumeAfter(fixed))
+    if (!resumeAfter(store))
         return false;
 
     *emitted = true;
@@ -9620,14 +9703,10 @@ IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
 
 bool
 IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
-                                   PropertyName *name,
-                                   MDefinition *value, bool barrier,
+                                   PropertyName *name, MDefinition *value,
                                    types::TemporaryTypeSet *objTypes)
 {
     JS_ASSERT(*emitted == false);
-
-    if (barrier)
-        return true;
 
     BaselineInspector::ShapeVector shapes(alloc());
     if (!inspector->maybeShapesForPropertyOp(pc, shapes))

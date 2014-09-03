@@ -225,8 +225,11 @@ class JSObject : public js::ObjectImpl
     static bool setLastProperty(js::ThreadSafeContext *cx,
                                 JS::HandleObject obj, js::HandleShape shape);
 
-    /* As above, but does not change the slot span. */
-    inline void setLastPropertyInfallible(js::Shape *shape);
+    // As for setLastProperty(), but allows the number of fixed slots to
+    // change. This can only be used when fixed slots are being erased from the
+    // object, and only when the object will not require dynamic slots to cover
+    // the new properties.
+    void setLastPropertyShrinkFixedSlots(js::Shape *shape);
 
     /*
      * Make a non-array object with the specified initial state. This method

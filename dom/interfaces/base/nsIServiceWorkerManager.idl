@@ -8,7 +8,7 @@
 interface nsIDocument;
 interface nsIURI;
 
-[uuid(91b9d3fc-1654-44da-b438-15123cdbe7aa)]
+[uuid(8d2f64db-5585-4876-a1c9-391e16549068)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -61,10 +61,19 @@ interface nsIServiceWorkerManager : nsISupports
    */
   [notxpcom,nostdcall] void MaybeStopControlling(in nsIDocument aDoc);
 
-  // Returns a ServiceWorker
-  [noscript] nsISupports GetInstalling(in nsIDOMWindow aWindow);
-  [noscript] nsISupports GetWaiting(in nsIDOMWindow aWindow);
-  [noscript] nsISupports GetActive(in nsIDOMWindow aWindow);
+  /*
+   * Returns a ServiceWorker.
+   * window is the window of the caller. scope is the registration's scope and must be
+   * a valid entry that window is allowed to load, otherwise this will return nullptr.
+   * These are only meant to be called from ServiceWorkerRegistration instances.
+   */
+  [noscript] nsISupports GetInstalling(in nsIDOMWindow aWindow, in DOMString aScope);
+  [noscript] nsISupports GetWaiting(in nsIDOMWindow aWindow, in DOMString aScope);
+  [noscript] nsISupports GetActive(in nsIDOMWindow aWindow, in DOMString aScope);
+
+  /*
+   * Returns a ServiceWorker.
+   */
   [noscript] nsISupports GetDocumentController(in nsIDOMWindow aWindow);
 
   // Testing

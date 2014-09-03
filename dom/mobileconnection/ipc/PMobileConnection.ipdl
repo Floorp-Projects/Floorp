@@ -1,0 +1,188 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PMobileConnectionRequest;
+include PMobileConnectionTypes;
+
+namespace mozilla {
+namespace dom {
+
+sync protocol PMobileConnection
+{
+  manager PContent;
+  manages PMobileConnectionRequest;
+
+child:
+  NotifyVoiceInfoChanged(nsMobileConnectionInfo aInfo);
+  NotifyDataInfoChanged(nsMobileConnectionInfo aInfo);
+  NotifyUssdReceived(nsString aMessage, bool aSessionEnd);
+  NotifyDataError(nsString aMessage);
+  NotifyCFStateChanged(bool aSuccess, uint16_t aAction, uint16_t aReason,
+                       nsString aNumber, uint16_t aTimeSeconds,
+                       uint16_t aServiceClass);
+  NotifyEmergencyCbModeChanged(bool aActive, uint32_t aTimeoutMs);
+  NotifyOtaStatusChanged(nsString aStatus);
+  NotifyIccChanged(nsString aIccId);
+  NotifyRadioStateChanged(nsString aRadioState);
+  NotifyClirModeChanged(uint32_t aMode);
+  NotifyLastNetworkChanged(nsString aNetwork);
+  NotifyLastHomeNetworkChanged(nsString aNetwork);
+  NotifyNetworkSelectionModeChanged(nsString aMode);
+
+parent:
+  /**
+   * Send when child no longer needs to use PMobileConnection.
+   */
+  __delete__();
+
+  /**
+   * Sent when the child makes an asynchronous request to the parent.
+   */
+  PMobileConnectionRequest(MobileConnectionRequest aRequest);
+
+  /**
+   * Sync call only be called once per child actor for initialization.
+   */
+  sync Init()
+    returns (nsMobileConnectionInfo aVoice, nsMobileConnectionInfo aData,
+             nsString aLastKnownNetwork, nsString aLastKnownHomeNetwork,
+             nsString aIccId, nsString aNetworkSelectionMode,
+             nsString aRadioState, nsString[] aSupportedNetworkTypes);
+};
+
+/**
+ * MobileConnectionRequest
+ */
+struct GetNetworksRequest
+{
+};
+
+struct SelectNetworkRequest
+{
+  nsMobileNetworkInfo network;
+};
+
+struct SelectNetworkAutoRequest
+{
+};
+
+struct SetPreferredNetworkTypeRequest
+{
+  nsString type;
+};
+
+struct GetPreferredNetworkTypeRequest
+{
+};
+
+struct SetRoamingPreferenceRequest
+{
+  nsString mode;
+};
+
+struct GetRoamingPreferenceRequest
+{
+};
+
+struct SetVoicePrivacyModeRequest
+{
+  bool enabled;
+};
+
+struct GetVoicePrivacyModeRequest
+{
+};
+
+struct SendMmiRequest
+{
+  nsString mmi;
+};
+
+struct CancelMmiRequest
+{
+};
+
+struct SetCallForwardingRequest
+{
+  MozCallForwardingOptions options;
+};
+
+struct GetCallForwardingRequest
+{
+  int16_t reason;
+};
+
+struct SetCallBarringRequest
+{
+  MozCallBarringOptions options;
+};
+
+struct GetCallBarringRequest
+{
+  MozCallBarringOptions options;
+};
+
+struct ChangeCallBarringPasswordRequest
+{
+  MozCallBarringOptions options;
+};
+
+struct SetCallWaitingRequest
+{
+  bool enabled;
+};
+
+struct GetCallWaitingRequest
+{
+};
+
+struct SetCallingLineIdRestrictionRequest
+{
+  uint16_t mode;
+};
+
+struct GetCallingLineIdRestrictionRequest
+{
+};
+
+struct ExitEmergencyCbModeRequest
+{
+};
+
+struct SetRadioEnabledRequest
+{
+  bool enabled;
+};
+
+union MobileConnectionRequest
+{
+  GetNetworksRequest;
+  SelectNetworkRequest;
+  SelectNetworkAutoRequest;
+  SetPreferredNetworkTypeRequest;
+  GetPreferredNetworkTypeRequest;
+  SetRoamingPreferenceRequest;
+  GetRoamingPreferenceRequest;
+  SetVoicePrivacyModeRequest;
+  GetVoicePrivacyModeRequest;
+  SendMmiRequest;
+  CancelMmiRequest;
+  SetCallForwardingRequest;
+  GetCallForwardingRequest;
+  SetCallBarringRequest;
+  GetCallBarringRequest;
+  ChangeCallBarringPasswordRequest;
+  SetCallWaitingRequest;
+  GetCallWaitingRequest;
+  SetCallingLineIdRestrictionRequest;
+  GetCallingLineIdRestrictionRequest;
+  ExitEmergencyCbModeRequest;
+  SetRadioEnabledRequest;
+};
+
+} // namespace mozilla
+} // namespace dom

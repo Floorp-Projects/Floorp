@@ -21,6 +21,7 @@ EXPORTS.mozilla.gfx += [
     'BorrowedContext.h',
     'Coord.h',
     'DataSurfaceHelpers.h',
+    'DrawTargetTiled.h',
     'Filters.h',
     'Helpers.h',
     'Logging.h',
@@ -107,7 +108,6 @@ UNIFIED_SOURCES += [
     'DrawTargetCapture.cpp',
     'DrawTargetDual.cpp',
     'DrawTargetRecording.cpp',
-    'DrawTargetTiled.cpp',
     'Factory.cpp',
     'FilterNodeSoftware.cpp',
     'FilterProcessing.cpp',
@@ -124,6 +124,10 @@ UNIFIED_SOURCES += [
     'ScaledFontCairo.cpp',
     'SourceSurfaceCairo.cpp',
     'SourceSurfaceRawData.cpp',
+]
+
+SOURCES += [
+    'DrawTargetTiled.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

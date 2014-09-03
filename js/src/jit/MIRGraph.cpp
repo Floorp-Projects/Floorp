@@ -9,7 +9,7 @@
 #include "asmjs/AsmJSValidate.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/Ion.h"
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 
@@ -25,6 +25,7 @@ MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOpti
     alloc_(alloc),
     graph_(graph),
     abortReason_(AbortReason_NoAbort),
+    abortedNewScriptPropertiesTypes_(*alloc_),
     error_(false),
     pauseBuild_(nullptr),
     cancelBuild_(false),
@@ -73,7 +74,7 @@ MIRGenerator::usesSimd()
 bool
 MIRGenerator::abortFmt(const char *message, va_list ap)
 {
-    IonSpewVA(IonSpew_Abort, message, ap);
+    JitSpewVA(JitSpew_Abort, message, ap);
     error_ = true;
     return false;
 }
@@ -86,6 +87,17 @@ MIRGenerator::abort(const char *message, ...)
     abortFmt(message, ap);
     va_end(ap);
     return false;
+}
+
+void
+MIRGenerator::addAbortedNewScriptPropertiesType(types::TypeObject *type)
+{
+    for (size_t i = 0; i < abortedNewScriptPropertiesTypes_.length(); i++) {
+        if (type == abortedNewScriptPropertiesTypes_[i])
+            return;
+    }
+    if (!abortedNewScriptPropertiesTypes_.append(type))
+        CrashAtUnhandlableOOM("addAbortedNewScriptPropertiesType");
 }
 
 void
