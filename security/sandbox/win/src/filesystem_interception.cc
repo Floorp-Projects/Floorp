@@ -12,6 +12,9 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
+#ifdef MOZ_CONTENT_SANDBOX // For upstream merging, use patch in bug 1018966 to reapply warn only sandbox code
+#include "mozilla/warnonlysandbox/warnOnlySandbox.h"
+#endif
 
 namespace sandbox {
 
@@ -30,6 +33,12 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
                                     options, ea_buffer, ea_length);
   if (STATUS_ACCESS_DENIED != status)
     return status;
+
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("NtCreateFile",
+                                       object_attributes->ObjectName->Buffer,
+                                       object_attributes->ObjectName->Length);
+#endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -86,6 +95,11 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
+#ifdef MOZ_CONTENT_SANDBOX
+    mozilla::warnonlysandbox::LogAllowed("NtCreateFile",
+                                         object_attributes->ObjectName->Buffer,
+                                         object_attributes->ObjectName->Length);
+#endif
   } while (false);
 
   return status;
@@ -101,6 +115,12 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
                                   io_status, sharing, options);
   if (STATUS_ACCESS_DENIED != status)
     return status;
+
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("NtOpenFile",
+                                       object_attributes->ObjectName->Buffer,
+                                       object_attributes->ObjectName->Length);
+#endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -154,6 +174,11 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
+#ifdef MOZ_CONTENT_SANDBOX
+    mozilla::warnonlysandbox::LogAllowed("NtOpenFile",
+                                        object_attributes->ObjectName->Buffer,
+                                        object_attributes->ObjectName->Length);
+#endif
   } while (false);
 
   return status;
@@ -167,6 +192,12 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
   NTSTATUS status = orig_QueryAttributes(object_attributes, file_attributes);
   if (STATUS_ACCESS_DENIED != status)
     return status;
+
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("NtQueryAttributesFile",
+                                       object_attributes->ObjectName->Buffer,
+                                       object_attributes->ObjectName->Length);
+#endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -208,6 +239,11 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
     if (SBOX_ALL_OK != code)
       break;
 
+#ifdef MOZ_CONTENT_SANDBOX
+    mozilla::warnonlysandbox::LogAllowed("NtQueryAttributesFile",
+                                         object_attributes->ObjectName->Buffer,
+                                         object_attributes->ObjectName->Length);
+#endif
     return answer.nt_status;
 
   } while (false);
@@ -224,6 +260,12 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
                                              file_attributes);
   if (STATUS_ACCESS_DENIED != status)
     return status;
+
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("NtQueryFullAttributesFile",
+                                       object_attributes->ObjectName->Buffer,
+                                       object_attributes->ObjectName->Length);
+#endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -266,6 +308,11 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
     if (SBOX_ALL_OK != code)
       break;
 
+#ifdef MOZ_CONTENT_SANDBOX
+    mozilla::warnonlysandbox::LogAllowed("NtQueryFullAttributesFile",
+                                         object_attributes->ObjectName->Buffer,
+                                         object_attributes->ObjectName->Length);
+#endif
     return answer.nt_status;
   } while (false);
 
@@ -281,6 +328,10 @@ NTSTATUS WINAPI TargetNtSetInformationFile(
                                             file_info_class);
   if (STATUS_ACCESS_DENIED != status)
     return status;
+
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("NtSetInformationFile");
+#endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -343,6 +394,9 @@ NTSTATUS WINAPI TargetNtSetInformationFile(
       break;
 
     status = answer.nt_status;
+#ifdef MOZ_CONTENT_SANDBOX
+    mozilla::warnonlysandbox::LogAllowed("NtSetInformationFile");
+#endif
   } while (false);
 
   return status;
