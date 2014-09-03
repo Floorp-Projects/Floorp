@@ -339,9 +339,6 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
           apzc->GetParent()->GetGuid().mScrollId);
     }
 
-    // Let this apzc be the parent of other controllers when we recurse downwards
-    aOutParent = apzc;
-
     if (newApzc) {
       if (apzc->IsRootForLayersId()) {
         // If we just created a new apzc that is the root for its layers ID, then
@@ -381,6 +378,9 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     apzc->AddHitTestRegion(unobscured);
     APZCTM_LOG("Adding region %s to visible region of APZC %p\n", Stringify(unobscured).c_str(), apzc);
   }
+
+  // Let this apzc be the parent of other controllers when we recurse downwards
+  aOutParent = apzc;
 
   return apzc;
 }
