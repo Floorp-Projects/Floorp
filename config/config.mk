@@ -756,20 +756,5 @@ export NONASCII
 
 DEFINES += -DNO_NSPR_10_SUPPORT
 
-ifdef IS_GYP_DIR
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/ipc/chromium/src \
-  -I$(topsrcdir)/ipc/glue \
-  -I$(DEPTH)/ipc/ipdl/_ipdlheaders \
-  $(NULL)
-
-ifeq (WINNT,$(OS_TARGET))
-# These get set via VC project file settings for normal GYP builds.
-DEFINES += -DUNICODE -D_UNICODE
-endif
-
-DISABLE_STL_WRAPPING := 1
-endif
-
 # Freeze the values specified by moz.build to catch them if they fail.
 $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES) $(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
