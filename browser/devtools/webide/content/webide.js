@@ -139,6 +139,7 @@ let UI = {
         break;
       case "project-is-not-running":
       case "project-is-running":
+      case "list-tabs-response":
         this.updateCommands();
         break;
       case "runtime":
@@ -596,16 +597,18 @@ let UI = {
 
     let runtimePanelButton = document.querySelector("#runtime-panel-button");
     if (AppManager.connection.status == Connection.Status.CONNECTED) {
-      screenshotCmd.removeAttribute("disabled");
-      permissionsCmd.removeAttribute("disabled");
+      if (AppManager.deviceFront) {
+        detailsCmd.removeAttribute("disabled");
+        permissionsCmd.removeAttribute("disabled");
+        screenshotCmd.removeAttribute("disabled");
+      }
       disconnectCmd.removeAttribute("disabled");
-      detailsCmd.removeAttribute("disabled");
       runtimePanelButton.setAttribute("active", "true");
     } else {
-      screenshotCmd.setAttribute("disabled", "true");
-      permissionsCmd.setAttribute("disabled", "true");
-      disconnectCmd.setAttribute("disabled", "true");
       detailsCmd.setAttribute("disabled", "true");
+      permissionsCmd.setAttribute("disabled", "true");
+      screenshotCmd.setAttribute("disabled", "true");
+      disconnectCmd.setAttribute("disabled", "true");
       runtimePanelButton.removeAttribute("active");
     }
 
@@ -826,7 +829,13 @@ let Cmds = {
 
 
     let runtimeappsHeaderNode = document.querySelector("#panel-header-runtimeapps");
-    if (AppManager.connection.status == Connection.Status.CONNECTED) {
+    let sortedApps = AppManager.webAppsStore.object.all;
+    sortedApps = sortedApps.sort((a, b) => {
+      return a.name > b.name;
+    });
+    let mainProcess = AppManager.isMainProcessDebuggable();
+    if (AppManager.connection.status == Connection.Status.CONNECTED &&
+        (sortedApps.length > 0 || mainProcess)) {
       runtimeappsHeaderNode.removeAttribute("hidden");
     } else {
       runtimeappsHeaderNode.setAttribute("hidden", "true");
@@ -837,7 +846,7 @@ let Cmds = {
       runtimeAppsNode.firstChild.remove();
     }
 
-    if (AppManager.isMainProcessDebuggable()) {
+    if (mainProcess) {
       let panelItemNode = document.createElement("toolbarbutton");
       panelItemNode.className = "panel-item";
       panelItemNode.setAttribute("label", Strings.GetStringFromName("mainProcess_label"));
@@ -853,10 +862,6 @@ let Cmds = {
       }, true);
     }
 
-    let sortedApps = AppManager.webAppsStore.object.all;
-    sortedApps = sortedApps.sort((a, b) => {
-      return a.name > b.name;
-    });
     for (let i = 0; i < sortedApps.length; i++) {
       let app = sortedApps[i];
       let panelItemNode = document.createElement("toolbarbutton");
