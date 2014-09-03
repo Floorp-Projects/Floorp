@@ -542,8 +542,11 @@ MediaStreamGraphImpl::UpdateStreamOrder()
       started = CurrentDriver()->AsAudioCallbackDriver()->IsStarted();
     }
     if (started) {
-      SystemClockDriver* driver = new SystemClockDriver(this);
-      CurrentDriver()->SwitchAtNextIteration(driver);
+      MonitorAutoLock mon(mMonitor);
+      if (mLifecycleState == LIFECYCLE_RUNNING) {
+        SystemClockDriver* driver = new SystemClockDriver(this);
+        CurrentDriver()->SwitchAtNextIteration(driver);
+      }
     }
   }
 
@@ -921,9 +924,12 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
 
         if (!CurrentDriver()->AsAudioCallbackDriver() &&
             !CurrentDriver()->Switching()) {
-          AudioCallbackDriver* driver = new AudioCallbackDriver(this);
-          mMixer.AddCallback(driver);
-          CurrentDriver()->SwitchAtNextIteration(driver);
+          MonitorAutoLock mon(mMonitor);
+          if (mLifecycleState == LIFECYCLE_RUNNING) {
+            AudioCallbackDriver* driver = new AudioCallbackDriver(this);
+            mMixer.AddCallback(driver);
+            CurrentDriver()->SwitchAtNextIteration(driver);
+          }
         }
       }
     }
@@ -1478,7 +1484,7 @@ public:
       MOZ_ASSERT(!mGraph->CurrentDriver()->AsAudioCallbackDriver()->InCallback());
     }
 
-    mGraph->CurrentDriver()->Stop();
+    mGraph->CurrentDriver()->Shutdown();
 
     // mGraph's thread is not running so it's OK to do whatever here
     if (mGraph->IsEmpty()) {
@@ -1605,11 +1611,6 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       if (mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP && IsEmpty()) {
         // Complete shutdown. First, ensure that this graph is no longer used.
         // A new graph graph will be created if one is needed.
-        LIFECYCLE_LOG("Disconnecting MediaStreamGraph %p", this);
-        if (this == gGraph) {
-          // null out gGraph if that's the graph being shut down
-          gGraph = nullptr;
-        }
         // Asynchronously clean up old graph. We don't want to do this
         // synchronously because it spins the event loop waiting for threads
         // to shut down, and we don't want to do that in a stable state handler.
@@ -1617,6 +1618,12 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         LIFECYCLE_LOG("Sending MediaStreamGraphShutDownRunnable %p", this);
         nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this );
         NS_DispatchToMainThread(event);
+
+        LIFECYCLE_LOG("Disconnecting MediaStreamGraph %p", this);
+        if (this == gGraph) {
+          // null out gGraph if that's the graph being shut down
+          gGraph = nullptr;
+        }
       }
     } else {
       if (mLifecycleState <= LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
