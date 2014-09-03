@@ -3132,6 +3132,7 @@ void
 JSScript::destroyDebugScript(FreeOp *fop)
 {
     if (hasDebugScript_) {
+#ifdef DEBUG
         for (jsbytecode *pc = code(); pc < codeEnd(); pc++) {
             if (BreakpointSite *site = getBreakpointSite(pc)) {
                 /* Breakpoints are swept before finalization. */
@@ -3139,6 +3140,7 @@ JSScript::destroyDebugScript(FreeOp *fop)
                 JS_ASSERT(getBreakpointSite(pc) == nullptr);
             }
         }
+#endif
         fop->free_(releaseDebugScript());
     }
 }
