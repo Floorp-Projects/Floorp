@@ -7,24 +7,25 @@ var tests = [
 
 var LENGTH = 1024, SYMBOL_INDEX = 999;
 
-var sym = this.Symbol ? () => Symbol.for("comet") : () => NaN;
-var big = [];
-for (var i = 0; i < LENGTH; i++)
-    big[i] = (i === SYMBOL_INDEX ? sym() : i);
-
-function copy(arr, big) {
+if (typeof Symbol === "function") {
+    var big = [];
     for (var i = 0; i < LENGTH; i++)
-        arr[i] = big[i];
-}
+        big[i] = (i === SYMBOL_INDEX ? Symbol.for("comet") : i);
 
-for (var {T, result} of tests) {
-    // Typed array constructors convert symbols to NaN or 0.
-    arr = new T(big);
-    assertEq(arr[SYMBOL_INDEX], result);
+    var copy = function copy(arr, big) {
+        for (var i = 0; i < LENGTH; i++)
+            arr[i] = big[i];
+    };
 
-    // Element assignment does the same.
-    for (var k = 0; k < 3; k++) {
-        copy(arr, big);
+    for (var {T, result} of tests) {
+        // Typed array constructors convert symbols to NaN or 0.
+        arr = new T(big);
         assertEq(arr[SYMBOL_INDEX], result);
+
+        // Element assignment does the same.
+        for (var k = 0; k < 3; k++) {
+            copy(arr, big);
+            assertEq(arr[SYMBOL_INDEX], result);
+        }
     }
 }
