@@ -1017,6 +1017,7 @@ LiveInterval::rangesToString() const
 #endif
 }
 
+#ifdef DEBUG
 static bool
 IsHintInteresting(const Requirement &requirement, const Requirement &hint)
 {
@@ -1032,6 +1033,7 @@ IsHintInteresting(const Requirement &requirement, const Requirement &hint)
 
     return merge.kind() != requirement.kind();
 }
+#endif
 
 const char *
 LiveInterval::toString() const

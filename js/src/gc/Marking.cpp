@@ -1873,11 +1873,13 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
     }
 }
 
+#ifdef DEBUG
 static void
 AssertNonGrayGCThing(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     MOZ_ASSERT(!JS::GCThingIsMarkedGray(*thingp));
 }
+#endif
 
 static void
 UnmarkGrayGCThing(void *thing)
