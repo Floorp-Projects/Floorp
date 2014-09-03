@@ -175,7 +175,7 @@
                            xbl:inherits="accesskey=findnextaccesskey"/>
       </xul:hbox>
       <xul:toolbarbutton anonid="highlight"
-                         class="findbar-highlight findbar-button tabbable"
+                         class="findbar-highlight tabbable"
                          label="&highlightAll.label;"
                          accesskey="&highlightAll.accesskey;"
                          tooltiptext="&highlightAll.tooltiptext;"
@@ -183,7 +183,7 @@
                          type="checkbox"
                          xbl:inherits="accesskey=highlightaccesskey"/>
       <xul:toolbarbutton anonid="find-case-sensitive"
-                         class="findbar-case-sensitive findbar-button tabbable"
+                         class="findbar-case-sensitive tabbable"
                          label="&caseSensitive.label;"
                          accesskey="&caseSensitive.accesskey;"
                          tooltiptext="&caseSensitive.tooltiptext;"
