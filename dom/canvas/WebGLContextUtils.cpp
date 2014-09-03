@@ -56,6 +56,24 @@ FormatHasAlpha(GLenum webGLFormat)
            webGLFormat == LOCAL_GL_SRGB_ALPHA;
 }
 
+GLenum
+TexImageTargetToTexTarget(GLenum texImageTarget)
+{
+    switch (texImageTarget) {
+    case LOCAL_GL_TEXTURE_2D:
+        return LOCAL_GL_TEXTURE_2D;
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        return LOCAL_GL_TEXTURE_CUBE_MAP;
+    default:
+        return LOCAL_GL_NONE;
+    }
+}
+
 GLComponents::GLComponents(GLenum format)
 {
     mComponents = 0;

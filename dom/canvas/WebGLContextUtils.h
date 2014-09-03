@@ -19,6 +19,20 @@ void DriverFormatsFromFormatAndType(gl::GLContext* gl, GLenum webGLFormat, GLenu
                                     GLenum* out_driverInternalFormat, GLenum* out_driverFormat);
 GLenum DriverTypeFromType(gl::GLContext* gl, GLenum webGLType);
 
+// For use with the different texture calls, i.e.
+//   TexImage2D, CopyTex[Sub]Image2D, ...
+// that take a "target" parameter. This parameter is not always the same as
+// the texture binding location, like GL_TEXTURE_2D or GL_TEXTURE_CUBE_MAP.
+// For example, cube maps would pass GL_TEXTURE_CUBE_MAP_[POS|NEG]_[X|Y|Z]
+// instead of just GL_TEXTURE_CUBE_MAP.
+//
+// This function converts the texture image target to the texture target a.k.a.
+// binding location. The returned binding location can be used to check that
+// the currently bound texture is appropriate for this texImageTarget.
+//
+// Returns GL_NONE if passed an invalid texture image target
+GLenum TexImageTargetToTexTarget(GLenum texImageTarget);
+
 struct GLComponents
 {
     unsigned char mComponents;
