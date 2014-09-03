@@ -16,7 +16,7 @@ namespace jit {
 
 static const bool SupportsSimd = false;
 static const uint32_t SimdStackAlignment = 0;
-static const uint32_t AsmJSStackAlignment = 0;
+static const uint32_t AsmJSStackAlignment = 4;
 
 class Registers
 {
