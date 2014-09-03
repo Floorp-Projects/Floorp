@@ -8,7 +8,7 @@
 
 #include "jit/AliasAnalysis.h"
 #include "jit/IonAnalysis.h"
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 #include "jit/MIRGenerator.h"
 
 using namespace js;
@@ -144,14 +144,16 @@ IsDead(const MDefinition *def)
     return !def->hasUses() && DeadIfUnused(def);
 }
 
-// Call MDefinition::replaceAllUsesWith, and add some GVN-specific asserts.
+// Call MDefinition::justReplaceAllUsesWith, and add some GVN-specific asserts.
 static void
 ReplaceAllUsesWith(MDefinition *from, MDefinition *to)
 {
     MOZ_ASSERT(from != to, "GVN shouldn't try to replace a value with itself");
     MOZ_ASSERT(from->type() == to->type(), "Def replacement has different type");
 
-    from->replaceAllUsesWith(to);
+    // We don't need the extra setting of UseRemoved flags that the regular
+    // replaceAllUsesWith does because we do it ourselves.
+    from->justReplaceAllUsesWith(to);
 }
 
 // Test whether succ is a successor of newControl.
@@ -222,7 +224,8 @@ ValueNumberer::deleteDefsRecursively(MDefinition *def)
 // Assuming phi is dead, discard its operands. If an operand which is not
 // dominated by the phi becomes dead, push it to the delete worklist.
 bool
-ValueNumberer::discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
+ValueNumberer::discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock,
+                                  UseRemovedOption useRemovedOption)
 {
     // MPhi saves operands in a vector so we iterate in reverse.
     for (int o = phi->numOperands() - 1; o >= 0; --o) {
@@ -232,7 +235,8 @@ ValueNumberer::discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
             if (!deadDefs_.append(op))
                 return false;
         } else {
-           op->setUseRemovedUnchecked();
+            if (useRemovedOption == SetUseRemoved)
+                op->setUseRemovedUnchecked();
         }
     }
     return true;
@@ -241,7 +245,8 @@ ValueNumberer::discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
 // Assuming ins is dead, discard its operands. If an operand becomes dead, push
 // it to the delete worklist.
 bool
-ValueNumberer::discardInsOperands(MInstruction *ins)
+ValueNumberer::discardInsOperands(MInstruction *ins,
+                                  UseRemovedOption useRemovedOption)
 {
     for (size_t o = 0, e = ins->numOperands(); o != e; ++o) {
         MDefinition *op = ins->getOperand(o);
@@ -250,29 +255,31 @@ ValueNumberer::discardInsOperands(MInstruction *ins)
             if (!deadDefs_.append(op))
                 return false;
         } else {
-           op->setUseRemovedUnchecked();
+            if (useRemovedOption == SetUseRemoved)
+                op->setUseRemovedUnchecked();
         }
     }
     return true;
 }
 
 bool
-ValueNumberer::deleteDef(MDefinition *def)
+ValueNumberer::deleteDef(MDefinition *def,
+                         UseRemovedOption useRemovedOption)
 {
-    IonSpew(IonSpew_GVN, "    Deleting %s%u", def->opName(), def->id());
+    JitSpew(JitSpew_GVN, "    Deleting %s%u", def->opName(), def->id());
     MOZ_ASSERT(IsDead(def), "Deleting non-dead definition");
     MOZ_ASSERT(!values_.has(def), "Deleting an instruction still in the set");
 
     if (def->isPhi()) {
         MPhi *phi = def->toPhi();
         MBasicBlock *phiBlock = phi->block();
-        if (!discardPhiOperands(phi, phiBlock))
+        if (!discardPhiOperands(phi, phiBlock, useRemovedOption))
              return false;
         MPhiIterator at(phiBlock->phisBegin(phi));
         phiBlock->discardPhiAt(at);
     } else {
         MInstruction *ins = def->toInstruction();
-        if (!discardInsOperands(ins))
+        if (!discardInsOperands(ins, useRemovedOption))
              return false;
         ins->block()->discardIgnoreOperands(ins);
     }
@@ -302,10 +309,10 @@ ValueNumberer::removePredecessor(MBasicBlock *block, MBasicBlock *pred)
         if (block->loopPredecessor() == pred) {
             // Deleting the entry into the loop makes the loop unreachable.
             isUnreachableLoop = true;
-            IonSpew(IonSpew_GVN, "    Loop with header block%u is no longer reachable", block->id());
+            JitSpew(JitSpew_GVN, "    Loop with header block%u is no longer reachable", block->id());
 #ifdef DEBUG
         } else if (block->hasUniqueBackedge() && block->backedge() == pred) {
-            IonSpew(IonSpew_GVN, "    Loop with header block%u is no longer a loop", block->id());
+            JitSpew(JitSpew_GVN, "    Loop with header block%u is no longer a loop", block->id());
 #endif
         }
     }
@@ -354,16 +361,16 @@ ValueNumberer::removeBlocksRecursively(MBasicBlock *start, const MBasicBlock *do
         }
 
 #ifdef DEBUG
-        IonSpew(IonSpew_GVN, "    Deleting block%u%s%s%s", block->id(),
+        JitSpew(JitSpew_GVN, "    Deleting block%u%s%s%s", block->id(),
                 block->isLoopHeader() ? " (loop header)" : "",
                 block->isSplitEdge() ? " (split edge)" : "",
                 block->immediateDominator() == block ? " (dominator root)" : "");
         for (MDefinitionIterator iter(block); iter; iter++) {
             MDefinition *def = *iter;
-            IonSpew(IonSpew_GVN, "      Deleting %s%u", def->opName(), def->id());
+            JitSpew(JitSpew_GVN, "      Deleting %s%u", def->opName(), def->id());
         }
         MControlInstruction *control = block->lastIns();
-        IonSpew(IonSpew_GVN, "      Deleting %s%u", control->opName(), control->id());
+        JitSpew(JitSpew_GVN, "      Deleting %s%u", control->opName(), control->id());
 #endif
 
         // Keep track of how many blocks within dominatorRoot's tree have been deleted.
@@ -465,7 +472,7 @@ ValueNumberer::visitDefinition(MDefinition *def)
         if (sim->block() == nullptr)
             def->block()->insertAfter(def->toInstruction(), sim->toInstruction());
 
-        IonSpew(IonSpew_GVN, "    Folded %s%u to %s%u",
+        JitSpew(JitSpew_GVN, "    Folded %s%u to %s%u",
                 def->opName(), def->id(), sim->opName(), sim->id());
         ReplaceAllUsesWith(def, sim);
 
@@ -474,8 +481,10 @@ ValueNumberer::visitDefinition(MDefinition *def)
         // needed, so we can clear |def|'s guard flag and let it be deleted.
         def->setNotGuardUnchecked();
 
-        if (IsDead(def) && !deleteDefsRecursively(def))
-            return false;
+        if (DeadIfUnused(def)) {
+            if (!deleteDefsRecursively(def))
+                return false;
+        }
         def = sim;
     }
 
@@ -485,7 +494,7 @@ ValueNumberer::visitDefinition(MDefinition *def)
         if (rep == nullptr)
             return false;
         if (rep->updateForReplacement(def)) {
-            IonSpew(IonSpew_GVN,
+            JitSpew(JitSpew_GVN,
                     "    Replacing %s%u with %s%u",
                     def->opName(), def->id(), rep->opName(), rep->id());
             ReplaceAllUsesWith(def, rep);
@@ -495,8 +504,15 @@ ValueNumberer::visitDefinition(MDefinition *def)
             // so we can clear |def|'s guard flag and let it be deleted.
             def->setNotGuardUnchecked();
 
-            if (IsDead(def) && !deleteDefsRecursively(def))
-                return false;
+            if (DeadIfUnused(def)) {
+                // deleteDef should not add anything to the deadDefs, as the
+                // redundant operation should have the same input operands.
+                mozilla::DebugOnly<bool> r = deleteDef(def, DontSetUseRemoved);
+                MOZ_ASSERT(r, "deleteDef shouldn't have tried to add anything to the worklist, "
+                              "so it shouldn't have failed");
+                MOZ_ASSERT(deadDefs_.empty(),
+                           "deleteDef shouldn't have added anything to the worklist");
+            }
             def = rep;
         }
     }
@@ -506,7 +522,7 @@ ValueNumberer::visitDefinition(MDefinition *def)
     if (updateAliasAnalysis_ && !dependenciesBroken_) {
         const MDefinition *dep = def->dependency();
         if (dep != nullptr && dep->block()->isDead()) {
-            IonSpew(IonSpew_GVN, "    AliasAnalysis invalidated; will recompute!");
+            JitSpew(JitSpew_GVN, "    AliasAnalysis invalidated; will recompute!");
             dependenciesBroken_ = true;
         }
     }
@@ -530,7 +546,7 @@ ValueNumberer::visitControlInstruction(MBasicBlock *block, const MBasicBlock *do
     MControlInstruction *newControl = rep->toControlInstruction();
     MOZ_ASSERT(!newControl->block(),
                "Control instruction replacement shouldn't already be in a block");
-    IonSpew(IonSpew_GVN, "    Folded control instruction %s%u to %s%u",
+    JitSpew(JitSpew_GVN, "    Folded control instruction %s%u to %s%u",
             control->opName(), control->id(), newControl->opName(), graph_.getNumInstructionIds());
 
     // If the simplification removes any CFG edges, update the CFG and remove
@@ -589,7 +605,7 @@ ValueNumberer::visitBlock(MBasicBlock *block, const MBasicBlock *dominatorRoot)
 bool
 ValueNumberer::visitDominatorTree(MBasicBlock *dominatorRoot, size_t *totalNumVisited)
 {
-    IonSpew(IonSpew_GVN, "  Visiting dominator tree (with %llu blocks) rooted at block%u%s",
+    JitSpew(JitSpew_GVN, "  Visiting dominator tree (with %llu blocks) rooted at block%u%s",
             uint64_t(dominatorRoot->numDominated()), dominatorRoot->id(),
             dominatorRoot == graph_.entryBlock() ? " (normal entry block)" :
             dominatorRoot == graph_.osrBlock() ? " (OSR entry block)" :
@@ -613,7 +629,7 @@ ValueNumberer::visitDominatorTree(MBasicBlock *dominatorRoot, size_t *totalNumVi
             return false;
         // If this was the end of a loop, check for optimization in the header.
         if (!rerun_ && block->isLoopBackedge() && loopHasOptimizablePhi(block)) {
-            IonSpew(IonSpew_GVN, "    Loop phi in block%u can now be optimized; will re-run GVN!",
+            JitSpew(JitSpew_GVN, "    Loop phi in block%u can now be optimized; will re-run GVN!",
                     block->id());
             rerun_ = true;
             remainingBlocks_.clear();
@@ -682,7 +698,7 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
     if (!values_.init())
         return false;
 
-    IonSpew(IonSpew_GVN, "Running GVN on graph (with %llu blocks)",
+    JitSpew(JitSpew_GVN, "Running GVN on graph (with %llu blocks)",
             uint64_t(graph_.numBlocks()));
 
     // Top level non-sparse iteration loop. If an iteration performs a
@@ -698,7 +714,7 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
         while (!remainingBlocks_.empty()) {
             MBasicBlock *block = remainingBlocks_.popCopy();
             if (!block->isDead() && IsDominatorRefined(block)) {
-                IonSpew(IonSpew_GVN, "  Dominator for block%u can now be refined; will re-run GVN!",
+                JitSpew(JitSpew_GVN, "  Dominator for block%u can now be refined; will re-run GVN!",
                         block->id());
                 rerun_ = true;
                 remainingBlocks_.clear();
@@ -721,7 +737,7 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
         if (!rerun_)
             break;
 
-        IonSpew(IonSpew_GVN, "Re-running GVN on graph (run %d, now with %llu blocks)",
+        JitSpew(JitSpew_GVN, "Re-running GVN on graph (run %d, now with %llu blocks)",
                 runs, uint64_t(graph_.numBlocks()));
         rerun_ = false;
 
@@ -732,7 +748,7 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
         // does help avoid slow compile times on pathlogical code.
         ++runs;
         if (runs == 6) {
-            IonSpew(IonSpew_GVN, "Re-run cutoff reached. Terminating GVN!");
+            JitSpew(JitSpew_GVN, "Re-run cutoff reached. Terminating GVN!");
             break;
         }
     }

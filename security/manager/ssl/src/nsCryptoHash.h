@@ -18,7 +18,7 @@ class nsIInputStream;
 #define NS_CRYPTO_HASH_CID {0x36a1d3b3, 0xd886, 0x4317, {0x96, 0xff, 0x87, 0xb0, 0x00, 0x5c, 0xfe, 0xf7}}
 #define NS_CRYPTO_HMAC_CID {0xa496d0a2, 0xdff7, 0x4e23, {0xbd, 0x65, 0x1c, 0xa7, 0x42, 0xfa, 0x17, 0x8a}}
 
-class nsCryptoHash : public nsICryptoHash, public nsNSSShutDownObject
+class nsCryptoHash MOZ_FINAL : public nsICryptoHash, public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS

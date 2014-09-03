@@ -17,10 +17,36 @@ SharedSurface_ANGLEShareHandle::Display()
     return mEGL->Display();
 }
 
+SharedSurface_ANGLEShareHandle::SharedSurface_ANGLEShareHandle(GLContext* gl,
+                                                               GLLibraryEGL* egl,
+                                                               const gfx::IntSize& size,
+                                                               bool hasAlpha,
+                                                               EGLContext context,
+                                                               EGLSurface pbuffer,
+                                                               HANDLE shareHandle,
+                                                               GLuint fence)
+    : SharedSurface(SharedSurfaceType::EGLSurfaceANGLE,
+                    AttachmentType::Screen,
+                    gl,
+                    size,
+                    hasAlpha)
+    , mEGL(egl)
+    , mContext(context)
+    , mPBuffer(pbuffer)
+    , mShareHandle(shareHandle)
+    , mFence(fence)
+{
+}
+
 
 SharedSurface_ANGLEShareHandle::~SharedSurface_ANGLEShareHandle()
 {
     mEGL->fDestroySurface(Display(), mPBuffer);
+
+    if (mFence) {
+        mGL->MakeCurrent();
+        mGL->fDeleteFences(1, &mFence);
+    }
 }
 
 void
@@ -38,6 +64,54 @@ void
 SharedSurface_ANGLEShareHandle::Fence()
 {
     mGL->fFinish();
+}
+
+bool
+SharedSurface_ANGLEShareHandle::WaitSync()
+{
+    return true;
+}
+
+bool
+SharedSurface_ANGLEShareHandle::PollSync()
+{
+    return true;
+}
+
+void
+SharedSurface_ANGLEShareHandle::Fence_ContentThread_Impl()
+{
+    if (mFence) {
+        MOZ_ASSERT(mGL->IsExtensionSupported(GLContext::NV_fence));
+        mGL->fSetFence(mFence, LOCAL_GL_ALL_COMPLETED_NV);
+        mGL->fFlush();
+        return;
+    }
+
+    Fence();
+}
+
+bool
+SharedSurface_ANGLEShareHandle::WaitSync_ContentThread_Impl()
+{
+    if (mFence) {
+        mGL->MakeCurrent();
+        mGL->fFinishFence(mFence);
+        return true;
+    }
+
+    return WaitSync();
+}
+
+bool
+SharedSurface_ANGLEShareHandle::PollSync_ContentThread_Impl()
+{
+    if (mFence) {
+        mGL->MakeCurrent();
+        return mGL->fTestFence(mFence);
+    }
+
+    return PollSync();
 }
 
 static void
@@ -199,9 +273,15 @@ SharedSurface_ANGLEShareHandle::Create(GLContext* gl,
         return nullptr;
     }
 
+    GLuint fence = 0;
+    if (gl->IsExtensionSupported(GLContext::NV_fence)) {
+        gl->MakeCurrent();
+        gl->fGenFences(1, &fence);
+    }
+
     typedef SharedSurface_ANGLEShareHandle ptrT;
     UniquePtr<ptrT> ret( new ptrT(gl, egl, size, hasAlpha, context,
-                                  pbuffer, shareHandle) );
+                                  pbuffer, shareHandle, fence) );
     return Move(ret);
 }
 

@@ -361,9 +361,10 @@ private:
   GetDomainInfo(const nsCString& aURL);
 
   NS_IMETHODIMP
-  GetServiceWorkerForWindow(nsIDOMWindow* aWindow,
-                            WhichServiceWorker aWhichWorker,
-                            nsISupports** aServiceWorker);
+  GetServiceWorkerForScope(nsIDOMWindow* aWindow,
+                           const nsAString& aScope,
+                           WhichServiceWorker aWhichWorker,
+                           nsISupports** aServiceWorker);
 
   void
   InvalidateServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,

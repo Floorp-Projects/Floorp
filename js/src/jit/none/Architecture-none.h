@@ -7,16 +7,16 @@
 #ifndef jit_none_Architecture_none_h
 #define jit_none_Architecture_none_h
 
-// IonSpewer.h is included through MacroAssembler implementations for other
+// JitSpewer.h is included through MacroAssembler implementations for other
 // platforms, so include it here to avoid inadvertent build bustage.
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 
 namespace js {
 namespace jit {
 
 static const bool SupportsSimd = false;
 static const uint32_t SimdStackAlignment = 0;
-static const uint32_t AsmJSStackAlignment = 0;
+static const uint32_t AsmJSStackAlignment = 4;
 
 class Registers
 {

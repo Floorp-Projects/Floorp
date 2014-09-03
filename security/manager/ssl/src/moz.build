@@ -17,7 +17,7 @@ EXPORTS.mozilla += [
     'PublicSSL.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'CryptoTask.cpp',
     'nsCertificatePrincipal.cpp',
     'nsCertOverrideService.cpp',
@@ -74,16 +74,16 @@ SOURCES += [
 ]
 
 if not CONFIG['MOZ_NO_SMART_CARDS']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsSmartCardMonitor.cpp',
     ]
 
 if CONFIG['MOZ_XUL']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsCertTree.cpp',
     ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'md4.c',
 ]
 

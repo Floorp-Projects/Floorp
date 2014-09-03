@@ -238,26 +238,6 @@ struct CodeAddressServiceStringAlloc MOZ_FINAL
   static void free(char* aPtr) { ::free(aPtr); }
 };
 
-class CodeAddressServiceWriter MOZ_FINAL
-{
-public:
-  explicit CodeAddressServiceWriter(FILE* aFile)
-    : mFile(aFile)
-  {
-  }
-
-  void Write(const char* aFmt, ...) const
-  {
-    va_list ap;
-    va_start(ap, aFmt);
-    vfprintf(mFile, aFmt, ap);
-    va_end(ap);
-  }
-
-private:
-  FILE* mFile;
-};
-
 // WalkTheStack does not hold any locks needed by NS_DescribeCodeAddress, so
 // this class does not need to do anything.
 struct CodeAddressServiceLock MOZ_FINAL
@@ -269,7 +249,6 @@ struct CodeAddressServiceLock MOZ_FINAL
 
 typedef mozilla::CodeAddressService<CodeAddressServiceStringTable,
                                     CodeAddressServiceStringAlloc,
-                                    CodeAddressServiceWriter,
                                     CodeAddressServiceLock> WalkTheStackCodeAddressService;
 
 mozilla::StaticAutoPtr<WalkTheStackCodeAddressService> gCodeAddressService;
@@ -968,8 +947,11 @@ PrintStackFrame(void* aPC, void* aSP, void* aClosure)
 static void
 PrintStackFrameCached(void* aPC, void* aSP, void* aClosure)
 {
-  auto writer = static_cast<CodeAddressServiceWriter*>(aClosure);
-  gCodeAddressService->WriteLocation(*writer, aPC);
+  auto stream = static_cast<FILE*>(aClosure);
+  static const size_t buflen = 1024;
+  char buf[buflen];
+  gCodeAddressService->GetLocation(aPC, buf, buflen);
+  fprintf(stream, "    %s\n", buf);
 }
 #endif
 
@@ -991,9 +973,8 @@ nsTraceRefcnt::WalkTheStackCached(FILE* aStream)
   if (!gCodeAddressService) {
     gCodeAddressService = new WalkTheStackCodeAddressService();
   }
-  CodeAddressServiceWriter writer(aStream);
   NS_StackWalk(PrintStackFrameCached, /* skipFrames */ 2, /* maxFrames */ 0,
-               &writer, 0, nullptr);
+               aStream, 0, nullptr);
 #endif
 }
 

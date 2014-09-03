@@ -1853,9 +1853,6 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
 
     Label negative, end, bailout;
 
-    // Load 0.5 in the temp register.
-    masm.loadConstantDouble(0.5, temp);
-
     // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
     masm.xorpd(scratch, scratch);
     masm.branchDouble(Assembler::DoubleLessThan, input, scratch, &negative);
@@ -1865,18 +1862,21 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
     if (!bailoutFrom(&bailout, lir->snapshot()))
         return false;
 
-    // Input is non-negative. Add 0.5 and truncate, rounding down. Note that we
-    // have to add the input to the temp register (which contains 0.5) because
-    // we're not allowed to modify the input register.
+    // Input is non-negative. Add the biggest double less than 0.5 and
+    // truncate, rounding down (because if the input is the biggest double less
+    // than 0.5, adding 0.5 would undesirably round up to 1). Note that we have
+    // to add the input to the temp register because we're not allowed to
+    // modify the input register.
+    masm.loadConstantDouble(GetBiggestNumberLessThan(0.5), temp);
     masm.addsd(input, temp);
     if (!bailoutCvttsd2si(temp, output, lir->snapshot()))
         return false;
 
     masm.jump(&end);
 
-
     // Input is negative, but isn't -0.
     masm.bind(&negative);
+    masm.loadConstantDouble(0.5, temp);
 
     if (AssemblerX86Shared::HasSSE41()) {
         // Add 0.5 and round toward -Infinity. The result is stored in the temp
@@ -1934,9 +1934,6 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
 
     Label negative, end, bailout;
 
-    // Load 0.5 in the temp register.
-    masm.loadConstantFloat32(0.5f, temp);
-
     // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
     masm.xorps(scratch, scratch);
     masm.branchFloat(Assembler::DoubleLessThan, input, scratch, &negative);
@@ -1946,9 +1943,12 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
     if (!bailoutFrom(&bailout, lir->snapshot()))
         return false;
 
-    // Input is non-negative. Add 0.5 and truncate, rounding down. Note that we
-    // have to add the input to the temp register (which contains 0.5) because
-    // we're not allowed to modify the input register.
+    // Input is non-negative. Add the biggest float less than 0.5 and truncate,
+    // rounding down (because if the input is the biggest float less than 0.5,
+    // adding 0.5 would undesirably round up to 1). Note that we have to add
+    // the input to the temp register because we're not allowed to modify the
+    // input register.
+    masm.loadConstantFloat32(GetBiggestNumberLessThan(0.5f), temp);
     masm.addss(input, temp);
 
     if (!bailoutCvttss2si(temp, output, lir->snapshot()))
@@ -1956,9 +1956,9 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
 
     masm.jump(&end);
 
-
     // Input is negative, but isn't -0.
     masm.bind(&negative);
+    masm.loadConstantFloat32(0.5f, temp);
 
     if (AssemblerX86Shared::HasSSE41()) {
         // Add 0.5 and round toward -Infinity. The result is stored in the temp

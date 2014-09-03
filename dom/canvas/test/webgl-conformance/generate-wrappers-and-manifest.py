@@ -26,7 +26,7 @@ def AccumTests(path, listFile, out_testList):
     listFilePath = os.path.join(path, listFile)
     assert os.path.exists(listFilePath), 'Bad `listFilePath`: ' + listFilePath
 
-    with open(listFilePath) as fIn:
+    with open(listFilePath, 'rb') as fIn:
         for line in fIn:
             line = line.rstrip()
             if not line:
@@ -46,6 +46,7 @@ def AccumTests(path, listFile, out_testList):
 
             if ext == 'html':
                 newTestFilePath = os.path.join(path, line)
+                newTestFilePath = newTestFilePath.replace(os.sep, '/')
                 out_testList.append(newTestFilePath)
                 continue
 
@@ -73,14 +74,14 @@ def FillTemplate(inFilePath, templateDict, outFilePath):
 
 
 def ImportTemplate(inFilePath):
-    with open(inFilePath, 'r') as f:
+    with open(inFilePath, 'rb') as f:
         return TemplateShell(f)
 
 
 def OutputFilledTemplate(templateShell, templateDict, outFilePath):
     spanStrList = templateShell.Fill(templateDict)
 
-    with open(outFilePath, 'w') as f:
+    with open(outFilePath, 'wb') as f:
         f.writelines(spanStrList)
     return
 
@@ -188,38 +189,37 @@ class TemplateShell:
 ########################################################################
 # Output
 
-def WriteWrappers(testFilePathList):
+def WriteWrappers(testWebPathList):
     templateShell = ImportTemplate(WRAPPER_TEMPLATE_FILEPATH)
 
     if not os.path.exists(WRAPPERS_DIR):
         os.mkdir(WRAPPERS_DIR)
     assert os.path.isdir(WRAPPERS_DIR)
 
-    wrapperFilePathList = []
-    for testFilePath in testFilePathList:
+    wrapperManifestPathList = []
+    for testWebPath in testWebPathList:
         # Mochitests must start with 'test_' or similar, or the test
         # runner will ignore our tests.
         # The error text is "is not a valid test".
-        wrapperFilePath = 'test_' + testFilePath.replace(os.sep, '__')
+        wrapperFilePath = 'test_' + testWebPath.replace('/', '__')
         wrapperFilePath = os.path.join(WRAPPERS_DIR, wrapperFilePath)
 
-        testFilePath = testFilePath.replace(os.sep, '/')
-
         templateDict = {
-            'TEST_PATH': testFilePath,
+            'TEST_PATH': testWebPath,
         }
 
         print('Writing \'' + wrapperFilePath + '\'')
         OutputFilledTemplate(templateShell, templateDict,
                              wrapperFilePath)
 
-        wrapperFilePathList.append(wrapperFilePath)
+        wrapperManifestPath = wrapperFilePath.replace(os.sep, '/')
+        wrapperManifestPathList.append(wrapperManifestPath)
         continue
 
-    return wrapperFilePathList
+    return wrapperManifestPathList
 
 
-def WriteManifest(wrapperFilePathList, supportFilePathList):
+def WriteManifest(wrapperManifestPathList, supportFilePathList):
     errataMap = LoadErrata()
 
     # DEFAULT_ERRATA
@@ -234,7 +234,7 @@ def WriteManifest(wrapperFilePathList, supportFilePathList):
     supportFilesStr = '\n'.join(supportFilePathList)
 
     # MANIFEST_TESTS
-    headerList = ['[' + x + ']' for x in wrapperFilePathList]
+    headerList = ['[' + x + ']' for x in wrapperManifestPathList]
 
     manifestTestLineList = []
     for header in headerList:
@@ -279,7 +279,7 @@ def LoadErrata():
 
     nodeHeader = None
     nodeLineList = []
-    with open(ERRATA_FILEPATH, 'r') as f:
+    with open(ERRATA_FILEPATH, 'rb') as f:
         for line in f:
             line = line.rstrip()
             cur = line.lstrip()
@@ -331,6 +331,7 @@ def GetFilePathListForDir(baseDir):
     for root, folders, files in os.walk(baseDir):
         for f in files:
             filePath = os.path.join(root, f)
+            filePath = filePath.replace(os.sep, '/')
             ret.append(filePath)
 
     return ret
@@ -340,9 +341,9 @@ if __name__ == '__main__':
     fileDir = os.path.dirname(__file__)
     assert not fileDir, 'Run this file from its directory, not ' + fileDir
 
-    testFilePathList = GetTestList()
+    testWebPathList = GetTestList()
 
-    wrapperFilePathList = WriteWrappers(testFilePathList)
+    wrapperFilePathList = WriteWrappers(testWebPathList)
 
     supportFilePathList = GetSupportFileList()
     WriteManifest(wrapperFilePathList, supportFilePathList)

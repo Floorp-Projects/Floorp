@@ -21,6 +21,7 @@ ToInt32(const LAllocation *a)
         return a->toConstantIndex()->index();
     MOZ_ASSUME_UNREACHABLE("this is not a constant!");
 }
+
 static inline double
 ToDouble(const LAllocation *a)
 {

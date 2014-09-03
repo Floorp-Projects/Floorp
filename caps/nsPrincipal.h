@@ -123,7 +123,7 @@ protected:
 class nsExpandedPrincipal : public nsIExpandedPrincipal, public nsBasePrincipal
 {
 public:
-  nsExpandedPrincipal(nsTArray< nsCOMPtr<nsIPrincipal> > &aWhiteList);
+  explicit nsExpandedPrincipal(nsTArray< nsCOMPtr<nsIPrincipal> > &aWhiteList);
 
 protected:
   virtual ~nsExpandedPrincipal();
