@@ -12,8 +12,6 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'signaling_unittests',
     ])
 
-SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 if CONFIG['OS_TARGET'] in ('Darwin', 'Android'):

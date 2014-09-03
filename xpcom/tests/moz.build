@@ -48,10 +48,6 @@ if CONFIG['WRAP_STL_INCLUDES'] and not CONFIG['CLANG_CL']:
         'TestSTLWrappers',
     ])
 
-SOURCES += [
-    '%s.cpp' % s for s in sorted(SIMPLE_PROGRAMS)
-]
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 CppUnitTests([
@@ -113,8 +109,6 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT'):
         'TestDeadlockDetector',
         'TestDeadlockDetectorScalability',
     ])
-
-SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
 LOCAL_INCLUDES += [
     '../ds',

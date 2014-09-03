@@ -148,15 +148,24 @@ directory, in which case we can use the ``SimplePrograms`` template
        'SecondProgram',
    ])
 
-The corresponding ``SOURCES`` must match:
+Contrary to ``Program``, which requires corresponding ``SOURCES``, when using
+``SimplePrograms``, the corresponding ``SOURCES`` are implied. If the
+corresponding ``sources`` have an extension different from ``.cpp``, it is
+possible to specify the proper extension:
 
-   SOURCES += [
-       'FirstProgram.cpp',
-       'SecondProgram.c',
-   ]
+   SimplePrograms([
+       'ThirdProgram',
+       'FourthProgram',
+   ], ext='.c')
+
+Please note this construct was added for compatibility with what already lives
+in the mozilla tree ; it is recommended not to add new simple programs with
+sources with a different extension than ``.cpp``.
 
 Similar to ``SimplePrograms``, is the ``CppUnitTests`` template, which defines,
-with the same rules, C++ unit tests programs.
+with the same rules, C++ unit tests programs. Like ``SimplePrograms``, it takes
+an ``ext`` argument to specify the extension for the corresponding ``SOURCES``,
+if it's different from ``.cpp``.
 
 
 Linking with system libraries

@@ -17,8 +17,6 @@ CppUnitTests([
     'TestPlainTextSerializer',
 ])
 
-SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
-
 MOCHITEST_MANIFESTS += [
     'chrome/mochitest.ini',
     'csp/mochitest.ini',

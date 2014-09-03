@@ -15,30 +15,19 @@ if not CONFIG['MOZ_PROFILE_GENERATE']:
 bin_suffix = CONFIG['BIN_SUFFIX']
 
 
-simple_c_sources = [
-    'leakstats',
-    'tmstats',
-]
-
-SOURCES += [
-    '%s.c' % s for s in simple_c_sources
-]
 SOURCES += [
     'tmreader.c',
 ]
 
-SimplePrograms(simple_c_sources)
+SimplePrograms([
+    'leakstats',
+    'tmstats',
+], ext='.c')
 
-simple_cpp_sources = [
+SimplePrograms([
     'bloatblame',
     'leaksoup',
-]
-
-SOURCES += [
-    '%s.cpp' % s for s in simple_cpp_sources
-]
-
-SimplePrograms(simple_cpp_sources)
+])
 
 RESOURCE_FILES += [
     'spacetrace.css'

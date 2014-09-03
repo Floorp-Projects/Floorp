@@ -6,10 +6,6 @@
 
 DISABLE_STL_WRAPPING = True
 
-SOURCES += [
-    'ShowSSEConfig.cpp',
-]
-
 CppUnitTests([
     'ShowSSEConfig',
 ])

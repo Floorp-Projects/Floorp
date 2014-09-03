@@ -423,12 +423,8 @@ else:
 if CONFIG['_MSC_VER'] != '1600':
     MSVC_ENABLE_PGO = True
 
-HOST_SOURCES += [
-    'jskwgen.cpp',
-]
-
 HostSimplePrograms([
-    'host_%s' % f.replace('.cpp', '') for f in HOST_SOURCES
+    'host_jskwgen',
 ])
 
 # JavaScript must be built shared, even for static builds, as it is used by

@@ -23,8 +23,6 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
             'sctp_unittest',
         ])
 
-    SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
-
 FAIL_ON_WARNINGS = True
 
 for var in ('HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR', 'SCTP_DEBUG', 'INET'):

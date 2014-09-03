@@ -8,8 +8,6 @@ CppUnitTests([
     'TestAudioChannelService',
 ])
 
-SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['NOMINMAX'] = True
 

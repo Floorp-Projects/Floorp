@@ -8,8 +8,6 @@ CppUnitTests([
     'TestStartupCache',
 ])
 
-SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
-
 EXTRA_COMPONENTS += [
     'TestStartupCacheTelemetry.js',
     'TestStartupCacheTelemetry.manifest',
