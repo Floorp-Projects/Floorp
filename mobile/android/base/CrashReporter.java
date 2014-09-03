@@ -137,7 +137,7 @@ public class CrashReporter extends Activity
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, true);
         editor.putBoolean(GeckoApp.PREFS_CRASHED, true);
-        editor.commit();
+        editor.apply();
 
         final CheckBox allowContactCheckBox = (CheckBox) findViewById(R.id.allow_contact);
         final CheckBox includeUrlCheckBox = (CheckBox) findViewById(R.id.include_url);
