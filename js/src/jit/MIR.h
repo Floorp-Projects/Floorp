@@ -11742,6 +11742,8 @@ bool PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
                               MDefinition *obj, PropertyName *name);
 void AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
                                types::TemporaryTypeSet *observed);
+bool CanWriteProperty(types::CompilerConstraintList *constraints,
+                      types::HeapTypeSetKey property, MDefinition *value);
 bool PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstraintList *constraints,
                                    MBasicBlock *current, MDefinition **pobj,
                                    PropertyName *name, MDefinition **pvalue,

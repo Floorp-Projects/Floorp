@@ -2646,6 +2646,8 @@ CanInlineSetPropTypeCheck(JSObject *obj, jsid id, ConstantOrRegister val, bool *
         if (!propTypes)
             return false;
         if (!propTypes->unknown()) {
+            if (obj->hasSingletonType() && !propTypes->nonConstantProperty())
+                return false;
             shouldCheck = true;
             if (val.constant()) {
                 // If the input is a constant, then don't bother if the barrier will always fail.
