@@ -1,0 +1,96 @@
+#-----------------------------------------------------------------
+
+Invocation {
+  $DMD = '--mode=test'
+  Sample-below size = 1
+}
+
+#-----------------------------------------------------------------
+
+Live {
+  9 blocks in heap block record 1 of 9
+  1,008 bytes (900 requested / 108 slop)
+  35.49% of the heap (35.49% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+Live {
+  6 blocks in heap block record 2 of 9
+  528 bytes (528 requested / 0 slop)
+  18.59% of the heap (54.08% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+Live {
+  6 blocks in heap block record 3 of 9
+  528 bytes (528 requested / 0 slop)
+  18.59% of the heap (72.68% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+Live {
+  1 block in heap block record 4 of 9
+  512 bytes (512 requested / 0 slop)
+  18.03% of the heap (90.70% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+Live {
+  1 block in heap block record 5 of 9
+  80 bytes (79 requested / 1 slop)
+  2.82% of the heap (93.52% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+Live {
+  1 block in heap block record 6 of 9
+  80 bytes (78 requested / 2 slop)
+  2.82% of the heap (96.34% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+Live {
+  1 block in heap block record 7 of 9
+  80 bytes (77 requested / 3 slop)
+  2.82% of the heap (99.15% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+Live {
+  1 block in heap block record 8 of 9
+  16 bytes (10 requested / 6 slop)
+  0.56% of the heap (99.72% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+Live {
+  1 block in heap block record 9 of 9
+  8 bytes (0 requested / 8 slop)
+  0.28% of the heap (100.00% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: 2,840 bytes in 27 blocks
+}
+
