@@ -18,23 +18,23 @@ namespace ipc {
 // UnixSocketRawData
 //
 
-UnixSocketRawData::UnixSocketRawData(size_t aSize)
-: mSize(0)
-, mCurrentWriteOffset(0)
-, mAvailableSpace(aSize)
-{
-  mData = new uint8_t[mAvailableSpace];
-}
-
 UnixSocketRawData::UnixSocketRawData(const void* aData, size_t aSize)
 : mSize(aSize)
-, mCurrentWriteOffset(0)
+, mOffset(0)
 , mAvailableSpace(aSize)
 {
   MOZ_ASSERT(aData || !mSize);
 
   mData = new uint8_t[mAvailableSpace];
   memcpy(mData, aData, mSize);
+}
+
+UnixSocketRawData::UnixSocketRawData(size_t aSize)
+: mSize(0)
+, mOffset(0)
+, mAvailableSpace(aSize)
+{
+  mData = new uint8_t[mAvailableSpace];
 }
 
 nsresult
@@ -50,7 +50,7 @@ UnixSocketRawData::Receive(int aFd)
     } else {
       memmove(mData, GetData(), GetSize());
     }
-    mCurrentWriteOffset = 0;
+    mOffset = 0;
   }
 
   ssize_t res =
@@ -195,7 +195,7 @@ SocketIOBase::~SocketIOBase()
 void
 SocketIOBase::EnqueueData(UnixSocketRawData* aData)
 {
-  if (!aData->mSize) {
+  if (!aData->GetSize()) {
     delete aData; // delete empty data immediately
     return;
   }
