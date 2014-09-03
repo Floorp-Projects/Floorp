@@ -219,7 +219,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
 
-  PlacesEvent(const char* aTopic);
+  explicit PlacesEvent(const char* aTopic);
 protected:
   ~PlacesEvent() {}
   void Notify();
@@ -233,7 +233,7 @@ protected:
 class AsyncStatementCallbackNotifier : public AsyncStatementCallback
 {
 public:
-  AsyncStatementCallbackNotifier(const char* aTopic)
+  explicit AsyncStatementCallbackNotifier(const char* aTopic)
     : mTopic(aTopic)
   {
   }
@@ -250,8 +250,8 @@ private:
 class AsyncStatementTelemetryTimer : public AsyncStatementCallback
 {
 public:
-  AsyncStatementTelemetryTimer(Telemetry::ID aHistogramId,
-                               TimeStamp aStart = TimeStamp::Now())
+  explicit AsyncStatementTelemetryTimer(Telemetry::ID aHistogramId,
+                                        TimeStamp aStart = TimeStamp::Now())
     : mHistogramId(aHistogramId)
     , mStart(aStart)
   {
