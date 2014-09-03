@@ -6507,6 +6507,18 @@
     "n_buckets": 10,
     "description": "Sidebar showing: seconds that the sidebar has been opened"
   },
+  "BR_9_2_1_SUBJECT_ALT_NAMES": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "Baseline Requirements section 9.2.1: subject alternative names extension (0: ok, 1 or more: error)"
+  },
+  "BR_9_2_2_SUBJECT_COMMON_NAME": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "Baseline Requirements section 9.2.2: subject common name field (0: present, in subject alt. names; 1: not present; 2: not present in subject alt. names)"
+  },
   "TRACKING_PROTECTION_ENABLED": {
     "expires_in_version": "never",
     "kind": "boolean",
