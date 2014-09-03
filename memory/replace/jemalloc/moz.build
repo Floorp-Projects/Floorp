@@ -17,7 +17,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'pthread_atfork.c',
     ]
 
-LIBRARY_NAME = 'replace_jemalloc'
+Library('replace_jemalloc')
 
 USE_LIBS += [
     'jemalloc',

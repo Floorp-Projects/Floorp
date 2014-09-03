@@ -8,7 +8,7 @@ SOURCES += [
     'OmxPluginKitKat.cpp',
 ]
 
-LIBRARY_NAME = 'omxpluginkk'
+Library('omxpluginkk')
 
 FORCE_SHARED_LIB = True
 

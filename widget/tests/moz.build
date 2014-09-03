@@ -8,9 +8,9 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 
-CPP_UNIT_TESTS += [
+CppUnitTests([
     'TestAppShellSteadyState',
-]
+])
 
 FAIL_ON_WARNINGS = True
 

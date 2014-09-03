@@ -23,7 +23,7 @@ EXPORTS.testing += [
     'TestHarness.h',
 ]
 
-SIMPLE_PROGRAMS = [
+SimplePrograms([
     'nsIFileEnumerator',
     'TestArguments',
     'TestBlockingProcess',
@@ -36,17 +36,17 @@ SIMPLE_PROGRAMS = [
     'TestThreadPoolListener',
     'TestTimers',
     'TestUnicodeArguments',
-]
+])
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-    SIMPLE_PROGRAMS += [
+    SimplePrograms([
         'TestBase64',
-    ]
+    ])
 
 if CONFIG['WRAP_STL_INCLUDES'] and not CONFIG['CLANG_CL']:
-    SIMPLE_PROGRAMS += [
+    SimplePrograms([
         'TestSTLWrappers',
-    ]
+    ])
 
 SOURCES += [
     '%s.cpp' % s for s in sorted(SIMPLE_PROGRAMS)
@@ -54,7 +54,7 @@ SOURCES += [
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
-CPP_UNIT_TESTS += [
+CppUnitTests([
     'ShowAlignments',
     'TestAutoPtr',
     'TestAutoRef',
@@ -74,12 +74,12 @@ CPP_UNIT_TESTS += [
     'TestTArray',
     'TestTextFormatter',
     'TestThreadUtils'
-]
+])
 
 if CONFIG['MOZ_MEMORY']:
-    CPP_UNIT_TESTS += [
+    CppUnitTests([
         'TestJemalloc',
-    ]
+    ])
 
 # XXX Make these tests work in libxul builds.
 #CPP_UNIT_TESTS += [
@@ -109,10 +109,10 @@ if CONFIG['MOZ_MEMORY']:
 if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT'):
     # FIXME bug 523392: TestDeadlockDetector doesn't like Windows
     # FIXME bug 523378: also fails on OS X
-    CPP_UNIT_TESTS += [
+    CppUnitTests([
         'TestDeadlockDetector',
         'TestDeadlockDetectorScalability',
-    ]
+    ])
 
 SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 

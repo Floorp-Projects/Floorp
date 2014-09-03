@@ -16,7 +16,7 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
 
-SIMPLE_PROGRAMS = [
+SimplePrograms([
     'PropertiesTest',
     'ReadNTLM',
     'TestBlockingSocket',
@@ -32,7 +32,7 @@ SIMPLE_PROGRAMS = [
     'TestUpload',
     'TestURLParser',
     'urltest',
-]
+])
 
 # XXX Make this work in libxul builds.
 #SIMPLE_PROGRAMS += [
@@ -50,11 +50,11 @@ SOURCES += [
     '%s.cpp' % s for s in SIMPLE_PROGRAMS
 ]
 
-CPP_UNIT_TESTS += [
+CppUnitTests([
     'TestCookie',
     'TestSTSParser',
     'TestUDPSocket',
-]
+])
 
 SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 

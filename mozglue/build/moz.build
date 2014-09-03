@@ -69,7 +69,7 @@ if CONFIG['MOZ_ASAN']:
     ]
 
 
-LIBRARY_NAME = 'mozglue'
+Library('mozglue')
 
 USE_LIBS += [
     'mfbt',

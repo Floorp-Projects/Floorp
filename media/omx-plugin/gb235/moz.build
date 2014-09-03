@@ -8,7 +8,7 @@ SOURCES += [
     'OmxPlugin235.cpp',
 ]
 
-LIBRARY_NAME = 'omxplugingb235'
+Library('omxplugingb235')
 
 FORCE_SHARED_LIB = True
 

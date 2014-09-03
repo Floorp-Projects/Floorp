@@ -8,6 +8,6 @@ SOURCES += [
     'windbgdlg.cpp',
 ]
 
-SIMPLE_PROGRAMS += [
+SimplePrograms([
     'windbgdlg'
-]
+])

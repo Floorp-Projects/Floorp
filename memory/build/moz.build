@@ -36,7 +36,7 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
         'replace_malloc.c',
     ]
 
-LIBRARY_NAME = 'memory'
+Library('memory')
 
 if CONFIG['MOZ_JEMALLOC3']:
     if not CONFIG['MOZ_NATIVE_JEMALLOC']:

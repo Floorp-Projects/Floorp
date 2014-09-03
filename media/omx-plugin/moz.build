@@ -18,7 +18,7 @@ SOURCES += [
     'OmxPlugin.cpp',
 ]
 
-LIBRARY_NAME = 'omxplugin'
+Library('omxplugin')
 
 FORCE_SHARED_LIB = True
 

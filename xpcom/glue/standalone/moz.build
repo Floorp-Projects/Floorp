@@ -18,7 +18,7 @@ SOURCES += [
     'nsXPCOMGlue.cpp',
 ]
 
-LIBRARY_NAME = 'xpcomglue'
+Library('xpcomglue')
 
 EXPORTS += [
     'nsXPCOMGlue.h',

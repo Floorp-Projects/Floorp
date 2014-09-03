@@ -9,9 +9,9 @@ NO_DIST_INSTALL = True
 SOURCES += [
     'TestZip.cpp',
 ]
-SIMPLE_PROGRAMS += [
+SimplePrograms([
     'TestZip',
-]
+])
 LOCAL_INCLUDES += ['..']
 USE_LIBS += [
     'linker',

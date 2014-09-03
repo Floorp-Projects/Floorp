@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['JS_SHELL_NAME']:
-    PROGRAM = CONFIG['JS_SHELL_NAME']
+    Program(CONFIG['JS_SHELL_NAME'])
     if CONFIG['JS_BUNDLED_EDITLINE']:
         USE_LIBS += ['editline']
     USE_LIBS += ['static:js']

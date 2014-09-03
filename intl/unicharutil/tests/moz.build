@@ -11,9 +11,9 @@ SOURCES += [
     'UnicharSelfTest.cpp',
 ]
 
-SIMPLE_PROGRAMS += [
+SimplePrograms([
     "%s" % (fyl[0:-4]) for fyl in SOURCES
-]
+])
 
 USE_STATIC_LIBS = True
 

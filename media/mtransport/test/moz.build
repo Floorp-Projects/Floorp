@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    CPP_UNIT_TESTS += [
+    CppUnitTests([
         'buffered_stun_socket_unittest',
         'ice_unittest',
         'nrappkit_unittest',
@@ -16,12 +16,12 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'TestSyncRunnable',
         'transport_unittests',
         'turn_unittest',
-    ]
+    ])
 
     if CONFIG['MOZ_SCTP']:
-        CPP_UNIT_TESTS += [
+        CppUnitTests([
             'sctp_unittest',
-        ]
+        ])
 
     SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 

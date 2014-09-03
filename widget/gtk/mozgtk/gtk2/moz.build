@@ -10,7 +10,7 @@ SOURCES += [
 
 DEFINES['GTK3_SYMBOLS'] = True
 
-LIBRARY_NAME = 'mozgtk2'
+Library('mozgtk2')
 
 SONAME = 'mozgtk'
 

@@ -17,7 +17,7 @@ UNIFIED_SOURCES += [
     'nsTestCrasher.cpp',
 ]
 
-LIBRARY_NAME = 'testcrasher'
+Library('testcrasher')
 
 EXTRA_JS_MODULES += [
     'CrashTestUtils.jsm',

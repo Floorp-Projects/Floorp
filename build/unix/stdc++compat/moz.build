@@ -5,11 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_LIBSTDCXX_TARGET_VERSION']:
-    LIBRARY_NAME = 'stdc++compat'
+    Library('stdc++compat')
     SOURCES += ['stdc++compat.cpp']
 
 if CONFIG['MOZ_LIBSTDCXX_HOST_VERSION']:
-    HOST_LIBRARY_NAME = 'host_stdc++compat'
+    HostLibrary('host_stdc++compat')
     HOST_SOURCES += [
         'stdc++compat.cpp',
     ]
