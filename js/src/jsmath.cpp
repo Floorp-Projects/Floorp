@@ -825,6 +825,21 @@ js::math_round_handle(JSContext *cx, HandleValue arg, MutableHandleValue res)
     return true;
 }
 
+template<typename T>
+T
+js::GetBiggestNumberLessThan(T x)
+{
+    MOZ_ASSERT(!IsNegative(x));
+    MOZ_ASSERT(IsFinite(x));
+    typedef typename mozilla::FloatingPoint<T>::Bits Bits;
+    Bits bits = mozilla::BitwiseCast<Bits>(x);
+    MOZ_ASSERT(bits > 0, "will underflow");
+    return mozilla::BitwiseCast<T>(bits - 1);
+}
+
+template double js::GetBiggestNumberLessThan<>(double x);
+template float js::GetBiggestNumberLessThan<>(float x);
+
 double
 js::math_round_impl(double x)
 {
@@ -836,7 +851,8 @@ js::math_round_impl(double x)
     if (ExponentComponent(x) >= int_fast16_t(FloatingPoint<double>::kExponentShift))
         return x;
 
-    return js_copysign(floor(x + 0.5), x);
+    double add = (x >= 0) ? GetBiggestNumberLessThan(0.5) : 0.5;
+    return js_copysign(floor(x + add), x);
 }
 
 float
@@ -850,7 +866,8 @@ js::math_roundf_impl(float x)
     if (ExponentComponent(x) >= int_fast16_t(FloatingPoint<float>::kExponentShift))
         return x;
 
-    return js_copysign(floorf(x + 0.5f), x);
+    float add = (x >= 0) ? GetBiggestNumberLessThan(0.5f) : 0.5f;
+    return js_copysign(floorf(x + add), x);
 }
 
 bool /* ES5 15.8.2.15. */

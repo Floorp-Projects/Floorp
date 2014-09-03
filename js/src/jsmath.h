@@ -294,6 +294,9 @@ math_floor(JSContext *cx, unsigned argc, Value *vp);
 extern double
 math_floor_impl(double x);
 
+template<typename T>
+extern T GetBiggestNumberLessThan(T x);
+
 extern bool
 math_round_handle(JSContext *cx, HandleValue arg, MutableHandleValue res);
 
