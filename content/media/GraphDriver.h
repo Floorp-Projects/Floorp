@@ -96,6 +96,7 @@ public:
   virtual void Resume() = 0;
   /* Revive this driver, as more messages just arrived. */
   virtual void Revive() = 0;
+  void Shutdown();
   /* Rate at which the GraphDriver runs, in ms. This can either be user
    * controlled (because we are using a {System,Offline}ClockDriver, and decide
    * how often we want to wakeup/how much we want to process per iteration), or
@@ -464,12 +465,7 @@ public:
   };
 
 
-  AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation)
-    : mDriver(aDriver),
-      mOperation(aOperation)
-  {
-    MOZ_ASSERT(mDriver->mAudioStream || aOperation == INIT, "No audio stream !");
-  }
+  AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation);
 
   nsresult Dispatch()
   {
@@ -483,13 +479,14 @@ public:
   }
 
 protected:
-  virtual ~AsyncCubebTask() {};
+  virtual ~AsyncCubebTask();
 
 private:
   NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL;
   nsCOMPtr<nsIThread> mThread;
   nsRefPtr<AudioCallbackDriver> mDriver;
   AsyncCubebOperation mOperation;
+  nsRefPtr<MediaStreamGraphImpl> mShutdownGrip;
 };
 
 }
