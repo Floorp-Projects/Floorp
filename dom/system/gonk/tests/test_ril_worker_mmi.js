@@ -14,7 +14,7 @@ function testSendMMI(mmi, error) {
 
   do_print("worker.postMessage " + worker.postMessage);
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({rilMessageType: "sendMMI", mmi: mmi});
 
   let postedMessage = workerhelper.postedMessage;
@@ -60,7 +60,7 @@ add_test(function test_sendMMI_short_code() {
 
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "**"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -89,7 +89,7 @@ add_test(function test_sendMMI_change_PIN() {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "**04*1234*4567*4567#"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -135,7 +135,7 @@ add_test(function test_sendMMI_change_PIN2() {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "**042*1234*4567*4567#"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -181,7 +181,7 @@ add_test(function test_sendMMI_unblock_PIN() {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "**05*1234*4567*4567#"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -227,7 +227,7 @@ add_test(function test_sendMMI_unblock_PIN2() {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "**052*1234*4567*4567#"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -327,7 +327,7 @@ add_test(function test_sendMMI_call_barring_BAIC_interrogation_voice() {
       });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "*#33#"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -357,7 +357,7 @@ add_test(function test_sendMMI_call_barring_BAIC_activation() {
       });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "*33#"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -385,7 +385,7 @@ add_test(function test_sendMMI_call_barring_BAIC_deactivation() {
       });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "#33#"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -416,7 +416,7 @@ add_test(function test_sendMMI_USSD() {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "*123#"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -442,7 +442,7 @@ add_test(function test_sendMMI_USSD_error() {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "*123#"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -466,7 +466,7 @@ function setCallWaitingSuccess(mmi) {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: mmi});
 
   let postedMessage = workerhelper.postedMessage;
@@ -519,7 +519,7 @@ add_test(function test_sendMMI_call_waiting_interrogation() {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "*#43#"});
 
   let postedMessage = workerhelper.postedMessage;

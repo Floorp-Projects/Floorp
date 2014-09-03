@@ -16,6 +16,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
+#include "builtin/SIMDShuffleMaskConstants.h"
 #include "builtin/TypedObject.h"
 #include "js/Value.h"
 
@@ -390,6 +391,8 @@ SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
                                                   global, SingletonObject));
     if (!SIMD)
         return nullptr;
+
+    SET_ALL_SHUFFLE_MASKS;
 
     // float32x4
     RootedObject float32x4Object(cx);

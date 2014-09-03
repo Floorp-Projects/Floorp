@@ -16,7 +16,6 @@
 
 #include <queue>
 
-// Forwards:
 namespace mozilla {
     namespace gl {
         class GLContext;
@@ -48,8 +47,8 @@ public:
 protected:
     const GLuint mTex;
     GLuint mFB;
-
     RefPtr<gfx::DataSourceSurface> mData;
+    bool mIsDataCurrent;
 
     SharedSurface_Basic(GLContext* gl,
                         const gfx::IntSize& size,
@@ -65,12 +64,12 @@ public:
 
 
     virtual void Fence() MOZ_OVERRIDE;
+    virtual bool WaitSync() MOZ_OVERRIDE;
+    virtual bool PollSync() MOZ_OVERRIDE;
 
-    virtual bool WaitSync() MOZ_OVERRIDE {
-        // Since we already store the data in Fence, we're always done already.
-        return true;
-    }
-    virtual bool PollSync() MOZ_OVERRIDE { return true; }
+    virtual void Fence_ContentThread_Impl() MOZ_OVERRIDE;
+    virtual bool WaitSync_ContentThread_Impl() MOZ_OVERRIDE;
+    virtual bool PollSync_ContentThread_Impl() MOZ_OVERRIDE;
 
     virtual GLuint ProdTexture() MOZ_OVERRIDE {
         return mTex;

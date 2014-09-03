@@ -27,8 +27,8 @@
 #include "nsWeakReference.h"
 #include "nsHtml5StreamListener.h"
 
-class nsHtml5Parser : public nsIParser,
-                      public nsSupportsWeakReference
+class nsHtml5Parser MOZ_FINAL : public nsIParser,
+                                public nsSupportsWeakReference
 {
   public:
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW

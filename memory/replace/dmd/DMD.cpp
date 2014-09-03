@@ -660,7 +660,8 @@ struct DescribeCodeAddressLock
   static bool IsLocked() { return gStateLock->IsLocked(); }
 };
 
-typedef CodeAddressService<StringTable, StringAlloc, Writer, DescribeCodeAddressLock> CodeAddressService;
+typedef CodeAddressService<StringTable, StringAlloc, DescribeCodeAddressLock>
+  CodeAddressService;
 
 //---------------------------------------------------------------------------
 // Stack traces
@@ -746,8 +747,11 @@ StackTrace::Print(const Writer& aWriter, CodeAddressService* aLocService) const
     return;
   }
 
+  static const size_t buflen = 1024;
+  char buf[buflen];
   for (uint32_t i = 0; i < mLength; i++) {
-    aLocService->WriteLocation(aWriter, Pc(i));
+    aLocService->GetLocation(Pc(i), buf, buflen);
+    aWriter.Write("    %s\n", buf);
   }
 }
 

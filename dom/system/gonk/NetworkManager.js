@@ -34,6 +34,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkService",
                                    "@mozilla.org/network/service;1",
                                    "nsINetworkService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
+                                   "@mozilla.org/mobileconnection/mobileconnectionservice;1",
+                                   "nsIMobileConnectionService");
+
 const TOPIC_INTERFACE_REGISTERED     = "network-interface-registered";
 const TOPIC_INTERFACE_UNREGISTERED   = "network-interface-unregistered";
 const TOPIC_ACTIVE_CHANGED           = "network-active-changed";
@@ -854,10 +858,8 @@ NetworkManager.prototype = {
   dunRetryTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
   setupDunConnection: function() {
     this.dunRetryTimer.cancel();
-    let ril = this.mRil.getRadioInterface(this._dataDefaultServiceId);
-
-    if (ril.rilContext && ril.rilContext.data &&
-        ril.rilContext.data.state === "registered") {
+    let data = gMobileConnectionService.getDataConnectionInfo(this._dataDefaultServiceId);
+    if (data && data.state === "registered") {
       this.dunRetryTimes = 0;
       ril.setupDataCallByType("dun");
       this.dunConnectTimer.cancel();

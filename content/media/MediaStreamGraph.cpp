@@ -45,6 +45,21 @@ PRLogModuleInfo* gMediaStreamGraphLog;
 #define STREAM_LOG(type, msg)
 #endif
 
+// #define ENABLE_LIFECYCLE_LOG
+
+// We don't use NSPR log here because we want this interleaved with adb logcat
+// on Android/B2G
+#ifdef ENABLE_LIFECYCLE_LOG
+#  ifdef ANDROID
+#    include "android/log.h"
+#    define LIFECYCLE_LOG(...)  __android_log_print(ANDROID_LOG_INFO, "Gecko - MSG", ## __VA_ARGS__); printf(__VA_ARGS__);printf("\n");
+#  else
+#    define LIFECYCLE_LOG(...) printf(__VA_ARGS__);printf("\n");
+#  endif
+#else
+#  define LIFECYCLE_LOG(...)
+#endif
+
 /**
  * The singleton graph instance.
  */
@@ -55,6 +70,7 @@ MediaStreamGraphImpl::~MediaStreamGraphImpl()
   NS_ASSERTION(IsEmpty(),
                "All streams should have been destroyed by messages from the main thread");
   STREAM_LOG(PR_LOG_DEBUG, ("MediaStreamGraph %p destroyed", this));
+  LIFECYCLE_LOG("MediaStreamGraphImpl::~MediaStreamGraphImpl\n");
 }
 
 
@@ -526,8 +542,11 @@ MediaStreamGraphImpl::UpdateStreamOrder()
       started = CurrentDriver()->AsAudioCallbackDriver()->IsStarted();
     }
     if (started) {
-      SystemClockDriver* driver = new SystemClockDriver(this);
-      CurrentDriver()->SwitchAtNextIteration(driver);
+      MonitorAutoLock mon(mMonitor);
+      if (mLifecycleState == LIFECYCLE_RUNNING) {
+        SystemClockDriver* driver = new SystemClockDriver(this);
+        CurrentDriver()->SwitchAtNextIteration(driver);
+      }
     }
   }
 
@@ -905,9 +924,12 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
 
         if (!CurrentDriver()->AsAudioCallbackDriver() &&
             !CurrentDriver()->Switching()) {
-          AudioCallbackDriver* driver = new AudioCallbackDriver(this);
-          mMixer.AddCallback(driver);
-          CurrentDriver()->SwitchAtNextIteration(driver);
+          MonitorAutoLock mon(mMonitor);
+          if (mLifecycleState == LIFECYCLE_RUNNING) {
+            AudioCallbackDriver* driver = new AudioCallbackDriver(this);
+            mMixer.AddCallback(driver);
+            CurrentDriver()->SwitchAtNextIteration(driver);
+          }
         }
       }
     }
@@ -1456,13 +1478,13 @@ public:
     NS_ASSERTION(mGraph->mDetectedNotRunning,
                  "We should know the graph thread control loop isn't running!");
 
-    STREAM_LOG(PR_LOG_DEBUG, ("Shutting down graph %p", mGraph.get()));
+    LIFECYCLE_LOG("Shutting down graph %p", mGraph.get());
 
     if (mGraph->CurrentDriver()->AsAudioCallbackDriver()) {
       MOZ_ASSERT(!mGraph->CurrentDriver()->AsAudioCallbackDriver()->InCallback());
     }
 
-    mGraph->CurrentDriver()->Stop();
+    mGraph->CurrentDriver()->Shutdown();
 
     // mGraph's thread is not running so it's OK to do whatever here
     if (mGraph->IsEmpty()) {
@@ -1559,6 +1581,23 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       mPostedRunInStableStateEvent = false;
     }
 
+#ifdef ENABLE_LIFECYCLE_LOG
+  // This should be kept in sync with the LifecycleState enum in
+  // MediaStreamGraphImpl.h
+  const char * LifecycleState_str[] = {
+    "LIFECYCLE_THREAD_NOT_STARTED",
+    "LIFECYCLE_RUNNING",
+    "LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP",
+    "LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN",
+    "LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION"
+  };
+
+  if (mLifecycleState != LIFECYCLE_RUNNING) {
+    LIFECYCLE_LOG("Running %p in stable state. Current state: %s\n",
+        this, LifecycleState_str[mLifecycleState]);
+  }
+#endif
+
     runnables.SwapElements(mUpdateRunnables);
     for (uint32_t i = 0; i < mStreamUpdates.Length(); ++i) {
       StreamUpdate* update = &mStreamUpdates[i];
@@ -1572,17 +1611,19 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       if (mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP && IsEmpty()) {
         // Complete shutdown. First, ensure that this graph is no longer used.
         // A new graph graph will be created if one is needed.
-        STREAM_LOG(PR_LOG_DEBUG, ("Disconnecting MediaStreamGraph %p", this));
-        if (this == gGraph) {
-          // null out gGraph if that's the graph being shut down
-          gGraph = nullptr;
-        }
         // Asynchronously clean up old graph. We don't want to do this
         // synchronously because it spins the event loop waiting for threads
         // to shut down, and we don't want to do that in a stable state handler.
         mLifecycleState = LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
+        LIFECYCLE_LOG("Sending MediaStreamGraphShutDownRunnable %p", this);
         nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this );
         NS_DispatchToMainThread(event);
+
+        LIFECYCLE_LOG("Disconnecting MediaStreamGraph %p", this);
+        if (this == gGraph) {
+          // null out gGraph if that's the graph being shut down
+          gGraph = nullptr;
+        }
       }
     } else {
       if (mLifecycleState <= LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
@@ -1605,6 +1646,9 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         // or it might exit immediately.
         {
           MonitorAutoUnlock unlock(mMonitor);
+          LIFECYCLE_LOG("Reviving a graph (%p) ! %s\n",
+              this, CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
+                                                               "SystemDriver");
           CurrentDriver()->Revive();
         }
       }
@@ -1622,7 +1666,10 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         // We should exit the monitor for now, because starting a stream might
         // take locks, and we don't want to deadlock.
         MonitorAutoUnlock unlock(mMonitor);
-        STREAM_LOG(PR_LOG_DEBUG, ("Starting a graph ! %s\n", CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" : "SystemDriver"));
+        LIFECYCLE_LOG("Starting a graph (%p) ! %s\n",
+                      this,
+                      CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
+                                                                 "SystemDriver");
         CurrentDriver()->Start();
       }
     }

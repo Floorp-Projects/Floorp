@@ -194,6 +194,24 @@ SettingsListener.observe('devtools.overlay', false, (value) => {
   }
 });
 
+#ifdef MOZ_WIDGET_GONK
+let LogShake;
+SettingsListener.observe('devtools.logshake', false, (value) => {
+  if (value) {
+    if (!LogShake) {
+      let scope = {};
+      Cu.import('resource://gre/modules/LogShake.jsm', scope);
+      LogShake = scope.LogShake;
+    }
+    LogShake.init();
+  } else {
+    if (LogShake) {
+      LogShake.uninit();
+    }
+  }
+});
+#endif
+
 // =================== Device Storage ====================
 SettingsListener.observe('device.storage.writable.name', 'sdcard', function(value) {
   if (Services.prefs.getPrefType('device.storage.writable.name') != Ci.nsIPrefBranch.PREF_STRING) {

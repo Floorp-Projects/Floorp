@@ -399,7 +399,8 @@ class IonBuilder : public MIRGenerator
 
     // jsop_getprop() helpers.
     bool checkIsDefinitelyOptimizedArguments(MDefinition *obj, bool *isOptimizedArgs);
-    bool getPropTryInferredConstant(bool *emitted, MDefinition *obj, PropertyName *name);
+    bool getPropTryInferredConstant(bool *emitted, MDefinition *obj, PropertyName *name,
+                                    types::TemporaryTypeSet *types);
     bool getPropTryArgumentsLength(bool *emitted, MDefinition *obj);
     bool getPropTryArgumentsCallee(bool *emitted, MDefinition *obj, PropertyName *name);
     bool getPropTryConstant(bool *emitted, MDefinition *obj, PropertyName *name,
@@ -435,9 +436,9 @@ class IonBuilder : public MIRGenerator
                                    bool isDOM);
     bool setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
                                 PropertyName *name, MDefinition *value,
-                                bool barrier, types::TemporaryTypeSet *objTypes);
+                                types::TemporaryTypeSet *objTypes);
     bool setPropTryInlineAccess(bool *emitted, MDefinition *obj,
-                                PropertyName *name, MDefinition *value, bool barrier,
+                                PropertyName *name, MDefinition *value,
                                 types::TemporaryTypeSet *objTypes);
     bool setPropTryTypedObject(bool *emitted, MDefinition *obj,
                                PropertyName *name, MDefinition *value);
@@ -746,6 +747,7 @@ class IonBuilder : public MIRGenerator
         return inlineHasClasses(callInfo, clasp, nullptr);
     }
     InliningStatus inlineHasClasses(CallInfo &callInfo, const Class *clasp1, const Class *clasp2);
+    InliningStatus inlineIsConstructing(CallInfo &callInfo);
 
     // Testing functions.
     InliningStatus inlineForceSequentialOrInParallelSection(CallInfo &callInfo);
@@ -802,8 +804,7 @@ class IonBuilder : public MIRGenerator
     JSObject *testSingletonProperty(JSObject *obj, PropertyName *name);
     bool testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, PropertyName *name,
                                     bool *testObject, bool *testString);
-    bool getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name,
-                         types::HeapTypeSetKey *property);
+    uint32_t getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name);
     bool freezePropTypeSets(types::TemporaryTypeSet *types,
                             JSObject *foundProto, PropertyName *name);
 

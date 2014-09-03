@@ -37,7 +37,6 @@ public:
   virtual bool IsTransportSeekable() MOZ_FINAL MOZ_OVERRIDE;
   virtual bool OnDecodeThread() const MOZ_FINAL MOZ_OVERRIDE;
   virtual bool OnStateMachineThread() const MOZ_FINAL MOZ_OVERRIDE;
-  virtual int64_t GetEndMediaTime() const MOZ_FINAL MOZ_OVERRIDE;
   virtual int64_t GetMediaDuration() MOZ_FINAL MOZ_OVERRIDE;
   virtual layers::ImageContainer* GetImageContainer() MOZ_FINAL MOZ_OVERRIDE;
   virtual MediaDecoderOwner* GetOwner() MOZ_FINAL MOZ_OVERRIDE;
