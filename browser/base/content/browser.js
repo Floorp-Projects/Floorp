@@ -1010,15 +1010,12 @@ var gBrowserInit = {
 
     // This pageshow listener needs to be registered before we may call
     // swapBrowsersAndCloseOther() to receive pageshow events fired by that.
-    if (!gMultiProcessBrowser) {
-      // pageshow handlers are being migrated to
-      // content.js. Eventually this code should be removed.
-      gBrowser.addEventListener("pageshow", function(event) {
-        // Filter out events that are not about the document load we are interested in
-        if (content && event.target == content.document)
-          setTimeout(pageShowEventHandlers, 0, event.persisted);
-      }, true);
-    }
+    let mm = window.messageManager;
+    mm.addMessageListener("PageVisibility:Show", function(message) {
+      if (message.target == gBrowser.selectedBrowser) {
+        setTimeout(pageShowEventHandlers, 0, message.data.persisted);
+      }
+    });
 
     if (uriToLoad && uriToLoad != "about:blank") {
       if (uriToLoad instanceof Ci.nsISupportsArray) {
