@@ -938,9 +938,9 @@ class RunDmd(MachCommandBase):
         help='The sample size to use, [1..n]. Default is 4093.')
     @CommandArgument('--max-frames', default=None, type=str,
         help='The max number of stack frames to capture in allocation traces, [1..24] Default is 24.')
-    @CommandArgument('--max-records', default=None, type=str,
-        help='Number of stack trace records to print of each kind, [1..1000000]. Default is 1000.')
-    def dmd(self, params, remote, background, sample_below, max_frames, max_records):
+    @CommandArgument('--show-dump-stats', action='store_true',
+        help='Show stats when doing dumps.')
+    def dmd(self, params, remote, background, sample_below, max_frames, show_dump_stats):
         args = get_run_args(self, params, remote, background)
         if not args:
             return 1
@@ -958,8 +958,8 @@ class RunDmd(MachCommandBase):
             dmd_params.append('--sample-below=' + sample_below)
         if max_frames:
             dmd_params.append('--max-frames=' + max_frames)
-        if max_records:
-            dmd_params.append('--max-records=' + max_records)
+        if show_dump_stats:
+            dmd_params.append('--show-dump-stats=yes')
 
         if dmd_params:
             dmd_str = " ".join(dmd_params)

@@ -1,0 +1,136 @@
+#-----------------------------------------------------------------
+
+Invocation {
+  $DMD = '--mode=test'
+  Sample-below size = 1
+}
+
+#-----------------------------------------------------------------
+
+Twice-reported {
+  1 block in heap block record 1 of 2
+  80 bytes (77 requested / 3 slop)
+  2.82% of the heap (2.82% cumulative)
+  90.91% of twice-reported (90.91% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+  Reported at {
+    ... DMD.cpp
+  }
+  Reported again at {
+    ... DMD.cpp
+  }
+}
+
+Twice-reported {
+  1 block in heap block record 2 of 2
+  8 bytes (0 requested / 8 slop)
+  0.28% of the heap (3.10% cumulative)
+  9.09% of twice-reported (100.00% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+  Reported at {
+    ... DMD.cpp
+  }
+  Reported again at {
+    ... DMD.cpp
+  }
+}
+
+#-----------------------------------------------------------------
+
+Unreported {
+  9 blocks in heap block record 1 of 3
+  1,008 bytes (900 requested / 108 slop)
+  35.49% of the heap (35.49% cumulative)
+  48.84% of unreported (48.84% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+Unreported {
+  6 blocks in heap block record 2 of 3
+  528 bytes (528 requested / 0 slop)
+  18.59% of the heap (54.08% cumulative)
+  25.58% of unreported (74.42% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+Unreported {
+  6 blocks in heap block record 3 of 3
+  528 bytes (528 requested / 0 slop)
+  18.59% of the heap (72.68% cumulative)
+  25.58% of unreported (100.00% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+}
+
+#-----------------------------------------------------------------
+
+Once-reported {
+  1 block in heap block record 1 of 4
+  512 bytes (512 requested / 0 slop)
+  18.03% of the heap (18.03% cumulative)
+  74.42% of once-reported (74.42% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+  Reported at {
+    ... DMD.cpp
+  }
+}
+
+Once-reported {
+  1 block in heap block record 2 of 4
+  80 bytes (79 requested / 1 slop)
+  2.82% of the heap (20.85% cumulative)
+  11.63% of once-reported (86.05% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+  Reported at {
+    ... DMD.cpp
+  }
+}
+
+Once-reported {
+  1 block in heap block record 3 of 4
+  80 bytes (78 requested / 2 slop)
+  2.82% of the heap (23.66% cumulative)
+  11.63% of once-reported (97.67% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+  Reported at {
+    ... DMD.cpp
+  }
+}
+
+Once-reported {
+  1 block in heap block record 4 of 4
+  16 bytes (10 requested / 6 slop)
+  0.56% of the heap (24.23% cumulative)
+  2.33% of once-reported (100.00% cumulative)
+  Allocated at {
+    ... DMD.cpp
+  }
+  Reported at {
+    ... DMD.cpp
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total:                 2,840 bytes (100.00%) in      27 blocks (100.00%)
+  Unreported:            2,064 bytes ( 72.68%) in      21 blocks ( 77.78%)
+  Once-reported:           688 bytes ( 24.23%) in       4 blocks ( 14.81%)
+  Twice-reported:           88 bytes (  3.10%) in       2 blocks (  7.41%)
+}
+
