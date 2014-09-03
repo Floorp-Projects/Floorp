@@ -19,7 +19,7 @@
 
     </RelativeLayout>
 
-    <TextView android:id="@+id/media_casting_to"
+    <TextView android:id="@+id/media_sending_to"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:layout_marginLeft="5dip"
@@ -30,7 +30,7 @@
               android:singleLine="true"
               android:ellipsize="end"
               android:textColor="#FFFFFFFF"
-              android:contentDescription="@string/media_casting_to"/>
+              android:contentDescription="@string/media_sending_to"/>
 
     <ImageButton android:id="@+id/media_stop"
                  style="@style/FindBar.ImageButton"

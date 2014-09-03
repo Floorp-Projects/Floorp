@@ -300,7 +300,7 @@ function refreshDataset(datasetId) {
   timer.initWithCallback(function(timer) {
     delete gRefreshTimers[datasetId];
 
-    sendMessageToJava({
+    Messaging.sendRequest({
       type: "HomePanels:RefreshDataset",
       datasetId: datasetId
     });
