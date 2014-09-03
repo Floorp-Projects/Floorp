@@ -163,6 +163,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
+                                   "@mozilla.org/mobileconnection/mobileconnectionservice;1",
+                                   "nsIMobileConnectionService");
+
 XPCOMUtils.defineLazyGetter(this, "MMS", function() {
   let MMS = {};
   Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
@@ -324,7 +328,8 @@ MmsConnection.prototype = {
    * @return true if voice call is roaming.
    */
   isVoiceRoaming: function() {
-    let isRoaming = this.radioInterface.rilContext.voice.roaming;
+    let voice = gMobileConnectionService.getVoiceConnectionInfo(this.serviceId);
+    let isRoaming = voice.roaming;
     if (DEBUG) debug("isVoiceRoaming = " + isRoaming);
     return isRoaming;
   },

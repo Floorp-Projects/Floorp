@@ -381,7 +381,11 @@ sp<ABuffer> AMPEG4AudioAssembler::removeLATMFraming(const sp<ABuffer> &buffer) {
                 unsigned muxSlotLengthBytes = 0;
                 unsigned tmp;
                 do {
-                    CHECK_LT(offset, buffer->size());
+                    if (offset >= buffer->size()) {
+                        LOGI("Malformed packet found in removeLATMFraming");
+                        mAccessUnitDamaged = true;
+                        return out;
+                    }
                     tmp = ptr[offset++];
                     muxSlotLengthBytes += tmp;
                 } while (tmp == 0xff);
@@ -407,7 +411,11 @@ sp<ABuffer> AMPEG4AudioAssembler::removeLATMFraming(const sp<ABuffer> &buffer) {
             }
         }
 
-        CHECK_LE(offset + payloadLength, buffer->size());
+        if ((offset + payloadLength) > buffer->size()) {
+            LOGI("Malformed packet found in removeLATMFraming");
+            mAccessUnitDamaged = true;
+            return out;
+        }
 
         memcpy(out->data() + out->size(), &ptr[offset], payloadLength);
         out->setRange(0, out->size() + payloadLength);
@@ -552,16 +560,12 @@ void AMPEG4AudioAssembler::submitAccessUnit() {
         memcpy((uint8_t *)accessUnit->data() + offset,
                unit->data(), unit->size());
 
+        offset += unit->size();
         ++it;
     }
 
     accessUnit = removeLATMFraming(accessUnit);
     CopyTimes(accessUnit, *mPackets.begin());
-
-#if 0
-    printf(mAccessUnitDamaged ? "X" : ".");
-    fflush(stdout);
-#endif
 
     if (mAccessUnitDamaged) {
         accessUnit->meta()->setInt32("damaged", true);

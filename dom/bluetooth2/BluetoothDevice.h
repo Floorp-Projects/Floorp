@@ -33,15 +33,12 @@ class BluetoothDevice MOZ_FINAL : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BluetoothDevice,
                                            DOMEventTargetHelper)
 
-  static already_AddRefed<BluetoothDevice>
-  Create(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
-
-  void Notify(const BluetoothSignal& aParam);
-
+  /****************************************************************************
+   * Attribute Getters
+   ***************************************************************************/
   void GetAddress(nsString& aAddress) const
   {
     aAddress = mAddress;
@@ -62,27 +59,28 @@ public:
     return mPaired;
   }
 
-  void GetUuids(nsTArray<nsString>& aUuids) {
+  void GetUuids(nsTArray<nsString>& aUuids) const
+  {
     aUuids = mUuids;
   }
 
-  already_AddRefed<Promise> FetchUuids(ErrorResult& aRv);
-
-  void SetPropertyByValue(const BluetoothNamedValue& aValue);
-
-  BluetoothDeviceAttribute
-  ConvertStringToDeviceAttribute(const nsAString& aString);
-
-  bool
-  IsDeviceAttributeChanged(BluetoothDeviceAttribute aType,
-                           const BluetoothValue& aValue);
-
-  void HandlePropertyChanged(const BluetoothValue& aValue);
-
-  void DispatchAttributeEvent(const nsTArray<nsString>& aTypes);
-
+  /****************************************************************************
+   * Event Handlers
+   ***************************************************************************/
   IMPL_EVENT_HANDLER(attributechanged);
 
+  /****************************************************************************
+   * Methods (Web API Implementation)
+   ***************************************************************************/
+  already_AddRefed<Promise> FetchUuids(ErrorResult& aRv);
+
+  /****************************************************************************
+   * Others
+   ***************************************************************************/
+  static already_AddRefed<BluetoothDevice>
+    Create(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
+
+  void Notify(const BluetoothSignal& aParam); // BluetoothSignalObserver
   nsPIDOMWindow* GetParentObject() const
   {
      return GetOwner();
@@ -91,16 +89,83 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
   virtual void DisconnectFromOwner() MOZ_OVERRIDE;
 
+  /**
+   * Override operator== for device comparison
+   */
+  bool operator==(BluetoothDevice& aDevice) const
+  {
+    nsString address;
+    aDevice.GetAddress(address);
+    return mAddress.Equals(address);
+  }
+
 private:
   BluetoothDevice(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
   ~BluetoothDevice();
 
-  nsString mAddress;
-  nsRefPtr<BluetoothClassOfDevice> mCod;
-  nsString mName;
-  bool mPaired;
-  nsTArray<nsString> mUuids;
+  /**
+   * Set device properties according to properties array
+   *
+   * @param aValue [in] Properties array to set with
+   */
+  void SetPropertyByValue(const BluetoothNamedValue& aValue);
 
+  /**
+   * Handle "PropertyChanged" bluetooth signal.
+   *
+   * @param aValue [in] Array of changed properties
+   */
+  void HandlePropertyChanged(const BluetoothValue& aValue);
+
+  /**
+   * Fire BluetoothAttributeEvent to trigger onattributechanged event handler.
+   */
+  void DispatchAttributeEvent(const nsTArray<nsString>& aTypes);
+
+  /**
+   * Convert string to BluetoothDeviceAttribute.
+   *
+   * @param aString [in] String to convert
+   */
+  BluetoothDeviceAttribute
+    ConvertStringToDeviceAttribute(const nsAString& aString);
+
+  /**
+   * Check whether value of given device property has changed.
+   *
+   * @param aType  [in] Device property to check
+   * @param aValue [in] New value of the device property
+   */
+  bool IsDeviceAttributeChanged(BluetoothDeviceAttribute aType,
+                                const BluetoothValue& aValue);
+
+  /****************************************************************************
+   * Variables
+   ***************************************************************************/
+  /**
+   * BD address of this device.
+   */
+  nsString mAddress;
+
+  /**
+   * Class of device (CoD) that describes this device's capabilities.
+   */
+  nsRefPtr<BluetoothClassOfDevice> mCod;
+
+  /**
+   * Human-readable name of this device.
+   */
+  nsString mName;
+
+  /**
+   * Whether this device is paired or not.
+   */
+  bool mPaired;
+
+  /**
+   * Cached UUID list of services which this device provides.
+   */
+  nsTArray<nsString> mUuids;
 };
 
 END_BLUETOOTH_NAMESPACE

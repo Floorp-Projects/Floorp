@@ -38,27 +38,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(BluetoothAdapter, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothAdapter, DOMEventTargetHelper)
 
-/*
- * A comparator that does the comparison of BluetoothDevice instances.
- * Two BluetoothDevices are equivalent if they have an identical address.
- */
-class BluetoothDeviceComparator
-{
-public:
-  bool Equals(const BluetoothDevice* aDeviceA,
-              const BluetoothDevice* aDeviceB) const
-  {
-    nsString addressA;
-    nsString addressB;
-
-    aDeviceA->GetAddress(addressA);
-    aDeviceB->GetAddress(addressB);
-
-    return addressA.Equals(addressB);
-  }
-};
-
-class StartDiscoveryTask : public BluetoothReplyRunnable
+class StartDiscoveryTask MOZ_FINAL : public BluetoothReplyRunnable
 {
 public:
   StartDiscoveryTask(BluetoothAdapter* aAdapter, Promise* aPromise)
@@ -209,10 +189,10 @@ static int kCreatePairedDeviceTimeout = 50000; // unit: msec
 BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
                                    const BluetoothValue& aValue)
   : DOMEventTargetHelper(aWindow)
-  , mDiscoveryHandleInUse(nullptr)
   , mState(BluetoothAdapterState::Disabled)
   , mDiscoverable(false)
   , mDiscovering(false)
+  , mDiscoveryHandleInUse(nullptr)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(IsDOMBinding());
@@ -304,7 +284,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
         BluetoothDevice::Create(GetOwner(), BluetoothValue(props));
 
       // Append to adapter's device array if the device hasn't been created
-      if (!mDevices.Contains(pairedDevice, BluetoothDeviceComparator())) {
+      if (!mDevices.Contains(pairedDevice)) {
         mDevices.AppendElement(pairedDevice);
       }
     }
@@ -661,7 +641,7 @@ BluetoothAdapter::Unpair(const nsAString& aDeviceAddress, ErrorResult& aRv)
 }
 
 already_AddRefed<Promise>
-BluetoothAdapter::EnableDisable(bool aEnable, ErrorResult& aRv)
+BluetoothAdapter::Enable(ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (!global) {
@@ -672,41 +652,28 @@ BluetoothAdapter::EnableDisable(bool aEnable, ErrorResult& aRv)
   nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
-  // Ensure BluetoothService is available before modifying adapter state
+  /**
+   * Ensure
+   * - adapter is disabled, and
+   * - BluetoothService is available.
+   */
+  BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Disabled,
+                        NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
 
-  // Modify adapter state to Enabling/Disabling if adapter is in a valid state
-  nsAutoString methodName;
-  if (aEnable) {
-    // Enable local adapter
-    BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Disabled,
-                          NS_ERROR_DOM_INVALID_STATE_ERR);
-    methodName.AssignLiteral("Enable");
-    mState = BluetoothAdapterState::Enabling;
-  } else {
-    // Disable local adapter
-    BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
-                          NS_ERROR_DOM_INVALID_STATE_ERR);
-    methodName.AssignLiteral("Disable");
-    mState = BluetoothAdapterState::Disabling;
-  }
-
-  // Notify applications of adapter state change to Enabling/Disabling
-  HandleAdapterStateChanged();
+  // Set adapter state "Enabling"
+  SetAdapterState(BluetoothAdapterState::Enabling);
 
   // Wrap runnable to handle result
   nsRefPtr<BluetoothReplyRunnable> result =
     new BluetoothVoidReplyRunnable(nullptr, /* DOMRequest */
                                    promise,
-                                   methodName);
+                                   NS_LITERAL_STRING("Enable"));
 
-  if (NS_FAILED(bs->EnableDisable(aEnable, result))) {
-    // Restore mState and notify applications of adapter state change
-    mState = aEnable ? BluetoothAdapterState::Disabled
-                     : BluetoothAdapterState::Enabled;
-    HandleAdapterStateChanged();
-
+  if (NS_FAILED(bs->EnableDisable(true, result))) {
+    // Restore adapter state and reject promise
+    SetAdapterState(BluetoothAdapterState::Disabled);
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }
 
@@ -714,15 +681,43 @@ BluetoothAdapter::EnableDisable(bool aEnable, ErrorResult& aRv)
 }
 
 already_AddRefed<Promise>
-BluetoothAdapter::Enable(ErrorResult& aRv)
-{
-  return EnableDisable(true, aRv);
-}
-
-already_AddRefed<Promise>
 BluetoothAdapter::Disable(ErrorResult& aRv)
 {
-  return EnableDisable(false, aRv);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  /**
+   * Ensure
+   * - adapter is enabled, and
+   * - BluetoothService is available.
+   */
+  BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
+                        NS_ERROR_DOM_INVALID_STATE_ERR);
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+
+  // Set adapter state "Disabling"
+  SetAdapterState(BluetoothAdapterState::Disabling);
+
+  // Wrap runnable to handle result
+  nsRefPtr<BluetoothReplyRunnable> result =
+    new BluetoothVoidReplyRunnable(nullptr, /* DOMRequest */
+                                   promise,
+                                   NS_LITERAL_STRING("Disable"));
+
+  if (NS_FAILED(bs->EnableDisable(false, result))) {
+    // Restore adapter state and reject promise
+    SetAdapterState(BluetoothAdapterState::Enabled);
+    promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+  }
+
+  return promise.forget();
 }
 
 BluetoothAdapterAttribute
@@ -768,8 +763,15 @@ BluetoothAdapter::IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
 }
 
 void
-BluetoothAdapter::HandleAdapterStateChanged()
+BluetoothAdapter::SetAdapterState(BluetoothAdapterState aState)
 {
+  if (mState == aState) {
+    return;
+  }
+
+  mState = aState;
+
+  // Fire BluetoothAttributeEvent for changed adapter state
   nsTArray<nsString> types;
   BT_APPEND_ENUM_STRING(types,
                         BluetoothAdapterAttribute,
@@ -816,10 +818,7 @@ BluetoothAdapter::HandleDeviceFound(const BluetoothValue& aValue)
   nsRefPtr<BluetoothDevice> discoveredDevice =
     BluetoothDevice::Create(GetOwner(), aValue);
 
-  size_t index = mDevices.IndexOf(discoveredDevice,
-                                  0, /* aStart */
-                                  BluetoothDeviceComparator());
-
+  size_t index = mDevices.IndexOf(discoveredDevice);
   if (index == mDevices.NoIndex) {
     // New device, append it to adapter's device array
     mDevices.AppendElement(discoveredDevice);
@@ -857,10 +856,7 @@ BluetoothAdapter::HandlePairingRequest(const BluetoothValue& aValue)
     BluetoothDevice::Create(GetOwner(), props);
 
   // Find the remote device by address
-  size_t index = mDevices.IndexOf(device,
-                                  0, /* aStart */
-                                  BluetoothDeviceComparator());
-
+  size_t index = mDevices.IndexOf(device);
   if (index == mDevices.NoIndex) {
     BT_WARNING("Cannot find the remote device with address %s",
                NS_ConvertUTF16toUTF8(deviceAddress).get());
@@ -909,14 +905,11 @@ BluetoothAdapter::HandleDevicePaired(const BluetoothValue& aValue)
   nsRefPtr<BluetoothDevice> pairedDevice =
     BluetoothDevice::Create(GetOwner(), aValue);
 
-  size_t index = mDevices.IndexOf(pairedDevice,
-                                  0, /* aStart */
-                                  BluetoothDeviceComparator());
-
-  if (index != mDevices.NoIndex) {
-    pairedDevice = mDevices[index];
-  } else {
+  size_t index = mDevices.IndexOf(pairedDevice);
+  if (index == mDevices.NoIndex) {
     mDevices.AppendElement(pairedDevice);
+  } else {
+    pairedDevice = mDevices[index];
   }
 
   // Notify application of paired device
@@ -939,16 +932,14 @@ BluetoothAdapter::HandleDeviceUnpaired(const BluetoothValue& aValue)
   nsRefPtr<BluetoothDevice> unpairedDevice =
     BluetoothDevice::Create(GetOwner(), aValue);
 
-  size_t index = mDevices.IndexOf(unpairedDevice,
-                                  0, /* aStart */
-                                  BluetoothDeviceComparator());
+  size_t index = mDevices.IndexOf(unpairedDevice);
 
   nsString deviceAddress;
-  if (index != mDevices.NoIndex) {
+  if (index == mDevices.NoIndex) {
+    unpairedDevice->GetAddress(deviceAddress);
+  } else {
     mDevices[index]->GetAddress(deviceAddress);
     mDevices.RemoveElementAt(index);
-  } else {
-    unpairedDevice->GetAddress(deviceAddress);
   }
 
   // Notify application of unpaired device
