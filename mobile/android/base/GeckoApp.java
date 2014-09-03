@@ -2094,6 +2094,7 @@ public abstract class GeckoApp
             mTextSelection.destroy();
         NotificationHelper.destroy();
         IntentHelper.destroy();
+        GeckoNetworkManager.destroy();
 
         if (SmsManager.getInstance() != null) {
             SmsManager.getInstance().stop();
