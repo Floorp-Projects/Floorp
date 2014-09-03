@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import random
 import errno
-import types
+import random
 import os
+import subprocess
+import types
 import xml.etree.ElementTree as ET
 from .common import CommonBackend
 
@@ -28,6 +29,7 @@ class CppEclipseBackend(CommonBackend):
         self._paths_to_defines = {}
         self._workspace_dir = self.get_workspace_path()
         self._project_dir = os.path.join(self._workspace_dir, 'gecko')
+        self._overwriting_workspace = os.path.isdir(self._workspace_dir)
 
         self._macbundle = self.environment.substs['MOZ_MACBUNDLE_NAME']
         self._appname = self.environment.substs['MOZ_APP_NAME']
@@ -37,13 +39,11 @@ class CppEclipseBackend(CommonBackend):
         self._cppflags = self.environment.substs.get('CPPFLAGS', '')
 
         def detailed(summary):
-            return ('\n' + \
-                   'Generated Cpp Eclipse workspace in "%s".\n' + \
-                   'OPTIONAL: Setup & index the project using: eclipse -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data %s -importAll %s\n' + \
-                   'NOTE: This will take about 10 minutes.\n\n' \
-                   'Run with: eclipse -data %s\n' \
-                   'Import the project using File > Import > General > Existing Project into workspace') \
-                   % (self._workspace_dir, self._workspace_dir, self._project_dir, self._workspace_dir)
+            return ('Generated Cpp Eclipse workspace in "%s".\n' + \
+                   'If missing, import the project using File > Import > General > Existing Project into workspace\n' + \
+                   '\n' + \
+                   'Run with: eclipse -data %s\n') \
+                   % (self._workspace_dir, self._workspace_dir)
 
         self.summary.backend_detailed_summary = types.MethodType(detailed,
             self.summary)
@@ -108,6 +108,36 @@ class CppEclipseBackend(CommonBackend):
         editor_prefs_path = os.path.join(workspace_settings_dir, "org.eclipse.ui.editors.prefs");
         with open(editor_prefs_path, 'wb') as fh:
             fh.write(EDITOR_SETTINGS);
+
+        # Now import the project into the workspace
+        self._import_project()
+
+    def _import_project(self):
+        # If the workspace already exists then don't import the project again because
+        # eclipse doesn't handle this properly
+        if self._overwriting_workspace:
+            return
+
+        # We disable the indexer otherwise we're forced to index
+        # the whole codebase when importing the project. Indexing the project can take 20 minutes.
+        self._write_noindex()
+
+        try:
+            process = subprocess.check_call(
+                             ["eclipse", "-application", "-nosplash",
+                              "org.eclipse.cdt.managedbuilder.core.headlessbuild",
+                              "-data", self._workspace_dir, "-importAll", self._project_dir])
+        finally:
+            self._remove_noindex()
+
+    def _write_noindex(self):
+        noindex_path = os.path.join(self._project_dir, '.settings/org.eclipse.cdt.core.prefs')
+        with open(noindex_path, 'wb') as fh:
+            fh.write(NOINDEX_TEMPLATE);
+
+    def _remove_noindex(self):
+        noindex_path = os.path.join(self._project_dir, '.settings/org.eclipse.cdt.core.prefs')
+        os.remove(noindex_path)
 
     def _define_entry(self, name, value):
         define = ET.Element('entry')
@@ -649,4 +679,8 @@ org.eclipse.cdt.core.formatter.put_empty_statement_on_new_line=true
 org.eclipse.cdt.core.formatter.tabulation.char=space
 org.eclipse.cdt.core.formatter.tabulation.size=2
 org.eclipse.cdt.core.formatter.use_tabs_only_for_leading_indentations=false
+"""
+
+NOINDEX_TEMPLATE = """eclipse.preferences.version=1
+indexer/indexerId=org.eclipse.cdt.core.nullIndexer
 """
