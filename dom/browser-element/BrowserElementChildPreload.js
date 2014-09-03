@@ -196,6 +196,11 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
+    addEventListener('MozScrolledAreaChanged',
+                     this._mozScrollAreaChanged.bind(this),
+                     /* useCapture = */ true,
+                     /* wantsUntrusted = */ false);
+
     addEventListener('DOMMetaAdded',
                      this._metaChangedHandler.bind(this),
                      /* useCapture = */ true,
@@ -236,6 +241,7 @@ BrowserElementChild.prototype = {
     let mmCalls = {
       "purge-history": this._recvPurgeHistory,
       "get-screenshot": this._recvGetScreenshot,
+      "get-contentdimensions": this._recvGetContentDimensions,
       "set-visible": this._recvSetVisible,
       "get-visible": this._recvVisible,
       "send-mouse-event": this._recvSendMouseEvent,
@@ -872,6 +878,29 @@ BrowserElementChild.prototype = {
     // anyway.
     Cc['@mozilla.org/message-loop;1'].getService(Ci.nsIMessageLoop).postIdleTask(
       takeScreenshotClosure, maxDelayMS);
+  },
+
+  _recvGetContentDimensions: function(data) {
+    debug("Received getContentDimensions message: (" + data.json.id + ")");
+    sendAsyncMsg('got-contentdimensions', {
+      id: data.json.id,
+      successRv: this._getContentDimensions()
+    });
+  },
+
+  _mozScrollAreaChanged: function(e) {
+    let dimensions = this._getContentDimensions();
+    sendAsyncMsg('scrollareachanged', {
+      width: dimensions.width,
+      height: dimensions.height
+    });
+  },
+
+  _getContentDimensions: function() {
+    return {
+      width: content.document.body.scrollWidth,
+      height: content.document.body.scrollHeight
+    }
   },
 
   /**
