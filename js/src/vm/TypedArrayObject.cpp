@@ -47,6 +47,7 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
+using mozilla::DebugOnly;
 using mozilla::IsNaN;
 using mozilla::NegativeInfinity;
 using mozilla::PodCopy;
@@ -589,7 +590,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return false;
         }
 
-        const size_t ElementSize = sizeof(NativeType);
+        DebugOnly<const size_t> ElementSize = sizeof(NativeType);
         MOZ_ASSERT(to <= INT32_MAX / ElementSize, "overall byteLength capped at INT32_MAX");
         MOZ_ASSERT(from <= INT32_MAX / ElementSize, "overall byteLength capped at INT32_MAX");
         MOZ_ASSERT(count <= INT32_MAX / ElementSize, "overall byteLength capped at INT32_MAX");
@@ -1170,63 +1171,54 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 class Int8ArrayObject : public TypedArrayObjectTemplate<int8_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Int8 };
-    static const JSProtoKey key = JSProto_Int8Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class Uint8ArrayObject : public TypedArrayObjectTemplate<uint8_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Uint8 };
-    static const JSProtoKey key = JSProto_Uint8Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class Int16ArrayObject : public TypedArrayObjectTemplate<int16_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Int16 };
-    static const JSProtoKey key = JSProto_Int16Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class Uint16ArrayObject : public TypedArrayObjectTemplate<uint16_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Uint16 };
-    static const JSProtoKey key = JSProto_Uint16Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class Int32ArrayObject : public TypedArrayObjectTemplate<int32_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Int32 };
-    static const JSProtoKey key = JSProto_Int32Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class Uint32ArrayObject : public TypedArrayObjectTemplate<uint32_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Uint32 };
-    static const JSProtoKey key = JSProto_Uint32Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class Float32ArrayObject : public TypedArrayObjectTemplate<float> {
   public:
     enum { ACTUAL_TYPE = Scalar::Float32 };
-    static const JSProtoKey key = JSProto_Float32Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class Float64ArrayObject : public TypedArrayObjectTemplate<double> {
   public:
     enum { ACTUAL_TYPE = Scalar::Float64 };
-    static const JSProtoKey key = JSProto_Float64Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class Uint8ClampedArrayObject : public TypedArrayObjectTemplate<uint8_clamped> {
   public:
     enum { ACTUAL_TYPE = Scalar::Uint8Clamped };
-    static const JSProtoKey key = JSProto_Uint8ClampedArray;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };

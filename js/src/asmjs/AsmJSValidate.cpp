@@ -2008,10 +2008,9 @@ ExtractSimdValue(ModuleCompiler &m, ParseNode *pn)
     JS_ALWAYS_TRUE(IsSimdTuple(m, pn, &type));
 
     ParseNode *arg = CallArgList(pn);
-    unsigned length = SimdTypeToLength(type);
     switch (type) {
       case AsmJSSimdType_int32x4: {
-        JS_ASSERT(length == 4);
+        JS_ASSERT(SimdTypeToLength(type) == 4);
         int32_t val[4];
         for (size_t i = 0; i < 4; i++, arg = NextNode(arg)) {
             uint32_t u32;
@@ -2022,7 +2021,7 @@ ExtractSimdValue(ModuleCompiler &m, ParseNode *pn)
         return AsmJSNumLit::Create(AsmJSNumLit::Int32x4, SimdConstant::CreateX4(val));
       }
       case AsmJSSimdType_float32x4: {
-        JS_ASSERT(length == 4);
+        JS_ASSERT(SimdTypeToLength(type) == 4);
         float val[4];
         for (size_t i = 0; i < 4; i++, arg = NextNode(arg))
             val[i] = float(ExtractNumericNonFloatValue(arg));
