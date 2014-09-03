@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this file,
-* You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef mozilla_dom_MmiError_h
 #define mozilla_dom_MmiError_h
@@ -26,10 +26,6 @@ public:
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // WebIDL interface
-  static already_AddRefed<DOMMMIError>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aServiceCode,
-              const nsAString& aName, const nsAString& aMessage,
-              const Nullable<int16_t>& aInfo, ErrorResult& aRv);
 
   void
   GetServiceCode(nsString& aServiceCode) const
