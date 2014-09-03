@@ -27,7 +27,7 @@ DrawTargetTiled::Init(const TileSet& aTiles)
 
   mTiles.reserve(aTiles.mTileCount);
   for (size_t i = 0; i < aTiles.mTileCount; ++i) {
-    mTiles.push_back(aTiles.mTiles[i]);
+    mTiles.push_back(TileInternal(aTiles.mTiles[i]));
     if (!aTiles.mTiles[i].mDrawTarget) {
       return false;
     }
