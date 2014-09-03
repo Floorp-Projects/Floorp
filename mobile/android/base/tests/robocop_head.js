@@ -1167,7 +1167,7 @@ JavaBridge.prototype = {
     "resource://gre/modules/Services.jsm", {}).Services,
 
   _sendMessageToJava: Components.utils.import(
-    "resource://gre/modules/Messaging.jsm", {}).sendMessageToJava,
+    "resource://gre/modules/Messaging.jsm", {}).Messaging.sendRequest,
 
   _sendMessage: function (innerType, args) {
     this._sendMessageToJava({

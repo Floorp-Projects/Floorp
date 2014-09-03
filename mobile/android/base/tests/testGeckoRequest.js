@@ -8,13 +8,13 @@ do_register_cleanup(() => {
 do_test_pending();
 
 function add_request_listener(message) {
-  RequestService.addListener(function (data) {
+  Messaging.addListener(function (data) {
     return { result: data + "bar" };
   }, message);
 }
 
 function add_exception_listener(message) {
-  RequestService.addListener(function (data) {
+  Messaging.addListener(function (data) {
     throw "error!";
   }, message);
 }
@@ -23,7 +23,7 @@ function add_second_request_listener(message) {
   let exceptionCaught = false;
 
   try {
-    RequestService.addListener(() => {}, message);
+    Messaging.addListener(() => {}, message);
   } catch (e) {
     exceptionCaught = true;
   }
@@ -32,7 +32,7 @@ function add_second_request_listener(message) {
 }
 
 function remove_request_listener(message) {
-  RequestService.removeListener(message);
+  Messaging.removeListener(message);
 }
 
 function finish_test() {
