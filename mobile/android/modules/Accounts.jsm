@@ -72,7 +72,7 @@ let Accounts = Object.freeze({
    * There is no return value from this method.
    */
   launchSetup: function (extras) {
-    sendMessageToJava({
+    Messaging.sendRequest({
       type: "Accounts:Create",
       extras: extras,
     });

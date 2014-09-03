@@ -70,7 +70,7 @@ function sendOrderedBroadcast(action, token, callback, permission) {
 
   Services.obs.addObserver(observer, responseEvent, false);
 
-  sendMessageToJava({
+  Messaging.sendRequest({
     type: "OrderedBroadcast:Send",
     action: action,
     responseEvent: responseEvent,
