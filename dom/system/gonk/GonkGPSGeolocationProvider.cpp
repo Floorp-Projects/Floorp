@@ -41,7 +41,9 @@
 #include "nsIRadioInterfaceLayer.h"
 #endif
 
+// Both of these settings can be toggled in the Gaia Developer settings screen
 #define SETTING_DEBUG_ENABLED "geolocation.debugging.enabled"
+#define SETTING_DEBUG_GPS_IGNORED "geolocation.debugging.gps-locations-ignored"
 
 #ifdef AGPS_TYPE_INVALID
 #define AGPS_HAVE_DUAL_APN
@@ -53,8 +55,10 @@ using namespace mozilla;
 
 static const int kDefaultPeriod = 1000; // ms
 static int gGPSDebugging = false;
+static bool gDebug_isGPSLocationIgnored = false;
 
 static const char* kNetworkConnStateChangedTopic = "network-connection-state-changed";
+static const char* kMozSettingsChangedTopic = "mozsettings-changed";
 
 // While most methods of GonkGPSGeolocationProvider should only be
 // called from main thread, we deliberately put the Init and ShutdownGPS
@@ -75,6 +79,10 @@ AGpsRilCallbacks GonkGPSGeolocationProvider::mAGPSRILCallbacks;
 void
 GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
 {
+  if (gDebug_isGPSLocationIgnored) {
+    return;
+  }
+
   class UpdateLocationEvent : public nsRunnable {
   public:
     UpdateLocationEvent(nsGeoPosition* aPosition)
@@ -808,6 +816,17 @@ GonkGPSGeolocationProvider::Startup()
   MOZ_ASSERT(NS_IsMainThread());
 
   RequestSettingValue(SETTING_DEBUG_ENABLED);
+  RequestSettingValue(SETTING_DEBUG_GPS_IGNORED);
+
+  // Setup an observer to watch changes to the setting.
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  if (observerService) {
+    nsresult rv = observerService->AddObserver(this, kMozSettingsChangedTopic, false);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("geo: Gonk GPS AddObserver failed");
+    }
+  }
+
   if (mStarted) {
     return NS_OK;
   }
@@ -855,12 +874,14 @@ GonkGPSGeolocationProvider::Shutdown()
     mNetworkLocationProvider->Shutdown();
     mNetworkLocationProvider = nullptr;
   }
-#ifdef MOZ_B2G_RIL
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
+#ifdef MOZ_B2G_RIL
     obs->RemoveObserver(this, kNetworkConnStateChangedTopic);
-  }
 #endif
+    obs->RemoveObserver(this, kMozSettingsChangedTopic);
+  }
 
   mInitThread->Dispatch(NS_NewRunnableMethod(this, &GonkGPSGeolocationProvider::ShutdownGPS),
                         NS_DISPATCH_NORMAL);
@@ -958,6 +979,11 @@ GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,
   }
 #endif
 
+  if (!strcmp(aTopic, kMozSettingsChangedTopic)) {
+    RequestSettingValue(SETTING_DEBUG_ENABLED);
+    RequestSettingValue(SETTING_DEBUG_GPS_IGNORED);
+  }
+
   return NS_OK;
 }
 
@@ -985,7 +1011,13 @@ GonkGPSGeolocationProvider::Handle(const nsAString& aName,
     }
   } else
 #endif // MOZ_B2G_RIL
-  if (aName.EqualsLiteral(SETTING_DEBUG_ENABLED)) {
+  if (aName.EqualsLiteral(SETTING_DEBUG_GPS_IGNORED)) {
+    gDebug_isGPSLocationIgnored = aResult.isBoolean() ? aResult.toBoolean() : false;
+    if (gGPSDebugging) {
+      nsContentUtils::LogMessageToConsole("geo: Debug: GPS ignored %d\n", gDebug_isGPSLocationIgnored);
+    }
+    return NS_OK;
+  } else if (aName.EqualsLiteral(SETTING_DEBUG_ENABLED)) {
     gGPSDebugging = aResult.isBoolean() ? aResult.toBoolean() : false;
     return NS_OK;
   }
