@@ -120,6 +120,9 @@ function checkValue(aName, aValue, aExpected)
   else if (aValue === undefined) {
     ok(false, "'" + aName + "' is undefined");
   }
+  else if (aValue === null) {
+    ok(false, "'" + aName + "' is null");
+  }
   else if (typeof aExpected == "string" || typeof aExpected == "number" ||
            typeof aExpected == "boolean") {
     is(aValue, aExpected, "property '" + aName + "'");
