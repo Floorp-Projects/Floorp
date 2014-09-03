@@ -18,7 +18,7 @@ SOURCES += [
     '../../../nsprpub/lib/libc/src/strcpy.c',
 ]
 
-LIBRARY_NAME = 'dmd'
+Library('dmd')
 
 FORCE_SHARED_LIB = True
 

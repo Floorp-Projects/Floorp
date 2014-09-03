@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CPP_UNIT_TESTS += [
+CppUnitTests([
     'TestArrayUtils',
     'TestAtomics',
     'TestBinarySearch',
@@ -30,12 +30,12 @@ CPP_UNIT_TESTS += [
     'TestTypeTraits',
     'TestUniquePtr',
     'TestWeakPtr',
-]
+])
 
 if not CONFIG['MOZ_ASAN']:
-    CPP_UNIT_TESTS += [
+    CppUnitTests([
         'TestPoisonArea',
-    ]
+    ])
 
 SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 

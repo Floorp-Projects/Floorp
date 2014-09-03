@@ -427,9 +427,9 @@ HOST_SOURCES += [
     'jskwgen.cpp',
 ]
 
-HOST_SIMPLE_PROGRAMS += [
+HostSimplePrograms([
     'host_%s' % f.replace('.cpp', '') for f in HOST_SOURCES
-]
+])
 
 # JavaScript must be built shared, even for static builds, as it is used by
 # other modules which are always built shared. Failure to do so results in
@@ -439,7 +439,7 @@ HOST_SIMPLE_PROGRAMS += [
 # In fact, we now build both a static and a shared library, as the
 # JS shell would like to link to the static library.
 
-LIBRARY_NAME = 'js'
+Library('js')
 
 if CONFIG['JS_SHARED_LIBRARY']:
     FORCE_SHARED_LIB = True

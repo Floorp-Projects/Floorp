@@ -13,7 +13,7 @@ if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
         'build/make/obj_int_extract.c',
     ]
 
-    HOST_PROGRAM = 'host_obj_int_extract'
+    HostProgram('host_obj_int_extract')
 
 # Unify fewer files together to reduce the chance of name collision
 FILES_PER_UNIFIED_FILE = 8

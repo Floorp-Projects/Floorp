@@ -8,7 +8,7 @@ UNIFIED_SOURCES += [
     'pkcs11testmodule.cpp',
 ]
 
-LIBRARY_NAME = 'pkcs11testmodule'
+Library('pkcs11testmodule')
 
 FORCE_SHARED_LIB = True
 # C_GetFunctionList needs to be exported. As it turns out, it's much easier to

@@ -15,7 +15,7 @@ if CONFIG['MOZ_PROFILELOCKING']:
         UNIFIED_SOURCES += ['ProfileUnlockerWin.cpp']
         EXPORTS.mozilla += ['ProfileUnlockerWin.h']
 
-LIBRARY_NAME = 'profdirserviceprovidersa_s'
+Library('profdirserviceprovidersa_s')
 
 FORCE_STATIC_LIB = True
 

@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if not CONFIG['MOZ_PROFILE_GENERATE']:
-    PROGRAM = 'spacetrace'
+    Program('spacetrace')
     SOURCES += [
         'formdata.c',
         'spacecategory.c',
@@ -27,7 +27,7 @@ SOURCES += [
     'tmreader.c',
 ]
 
-SIMPLE_PROGRAMS += simple_c_sources
+SimplePrograms(simple_c_sources)
 
 simple_cpp_sources = [
     'bloatblame',
@@ -38,7 +38,7 @@ SOURCES += [
     '%s.cpp' % s for s in simple_cpp_sources
 ]
 
-SIMPLE_PROGRAMS += simple_cpp_sources
+SimplePrograms(simple_cpp_sources)
 
 RESOURCE_FILES += [
     'spacetrace.css'

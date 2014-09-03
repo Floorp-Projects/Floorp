@@ -8,7 +8,7 @@ SOURCES += [
     'OmxPluginHoneycomb.cpp',
 ]
 
-LIBRARY_NAME = 'omxpluginhc'
+Library('omxpluginhc')
 
 FORCE_SHARED_LIB = True
 

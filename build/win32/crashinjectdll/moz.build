@@ -8,7 +8,7 @@ SOURCES += [
     'crashinjectdll.cpp',
 ]
 
-LIBRARY_NAME = 'crashinjectdll'
+Library('crashinjectdll')
 
 FORCE_SHARED_LIB = True
 

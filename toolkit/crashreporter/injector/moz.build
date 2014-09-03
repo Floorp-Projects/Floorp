@@ -8,7 +8,7 @@ SOURCES += [
     'injector.cpp',
 ]
 
-LIBRARY_NAME = 'breakpadinjector'
+Library('breakpadinjector')
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

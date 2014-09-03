@@ -10,7 +10,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'libutils.cpp',
     ]
 
-LIBRARY_NAME = 'utils'
+Library('utils')
 
 FORCE_SHARED_LIB = True
 

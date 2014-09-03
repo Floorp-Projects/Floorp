@@ -10,9 +10,9 @@ UNIFIED_SOURCES += [
     'guid_creator.cc',
 ]
 
-HOST_LIBRARY_NAME = 'host_breakpad_solaris_common_s'
+HostLibrary('host_breakpad_solaris_common_s')
 
-LIBRARY_NAME = 'breakpad_solaris_common_s'
+Library('breakpad_solaris_common_s')
 
 # not compiling http_upload.cc currently
 # since it depends on libcurl

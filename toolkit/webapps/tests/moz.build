@@ -6,4 +6,4 @@
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 SOURCES += ['TestWebappRT.cpp' ]
-SIMPLE_PROGRAMS += ['TestWebappRT']
+SimplePrograms(['TestWebappRT'])

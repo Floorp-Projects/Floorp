@@ -6,12 +6,12 @@
 
 FAIL_ON_WARNINGS = True
 
-SIMPLE_PROGRAMS = [
+SimplePrograms([
     'BadCertServer',
     'ClientAuthServer',
     'GenerateOCSPResponse',
     'OCSPStaplingServer',
-]
+])
 
 SOURCES += [
     '%s.cpp' % s for s in SIMPLE_PROGRAMS

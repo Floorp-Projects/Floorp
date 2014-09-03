@@ -13,10 +13,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     if CONFIG['MOZ_MAINTENANCE_SERVICE'] and not CONFIG['HAVE_64BIT_BUILD']:
         XPCSHELL_TESTS_MANIFESTS += ['unit_service_updater/xpcshell.ini']
 
-    SIMPLE_PROGRAMS = [
+    SimplePrograms([
         'TestAUSHelper',
         'TestAUSReadStrings',
-    ]
+    ])
 
     SOURCES += [
         '%s.cpp' % s for s in SIMPLE_PROGRAMS
