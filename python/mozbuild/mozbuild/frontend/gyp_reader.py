@@ -213,6 +213,19 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
             # added when that becomes necessary.
             raise NotImplementedError('Unsupported gyp target type: %s' % spec['type'])
 
+        # Add some features to all contexts. Put here in case LOCAL_INCLUDES
+        # order matters.
+        context['LOCAL_INCLUDES'] += [
+            '/ipc/chromium/src',
+            '/ipc/glue',
+        ]
+        context['GENERATED_INCLUDES'] += ['/ipc/ipdl/_ipdlheaders']
+        # These get set via VC project file settings for normal GYP builds.
+        if config.substs['OS_TARGET'] == 'WINNT':
+            context['DEFINES']['UNICODE'] = True
+            context['DEFINES']['_UNICODE'] = True
+        context['DISABLE_STL_WRAPPING'] = True
+
         context.execution_time = time.time() - time_start
         yield context
         time_start = time.time()
