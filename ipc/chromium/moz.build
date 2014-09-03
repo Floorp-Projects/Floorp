@@ -193,7 +193,6 @@ if os_macosx:
         'src/base/process_util_mac.mm',
         'src/base/scoped_nsautorelease_pool.mm',
         'src/base/sys_string_conversions_mac.mm',
-        'src/base/worker_pool_mac.mm',
         'src/chrome/common/mach_ipc_mac.mm',
     ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
