@@ -1552,11 +1552,6 @@ bool MediaDecoder::IsShutdown() const {
   return GetStateMachine()->IsShutdown();
 }
 
-int64_t MediaDecoder::GetEndMediaTime() const {
-  NS_ENSURE_TRUE(GetStateMachine(), -1);
-  return GetStateMachine()->GetEndMediaTime();
-}
-
 // Drop reference to state machine.  Only called during shutdown dance.
 void MediaDecoder::BreakCycles() {
   mDecoderStateMachine = nullptr;
