@@ -5,6 +5,7 @@
 #ifndef mozilla_dom_Icc_h
 #define mozilla_dom_Icc_h
 
+#include "mozilla/dom/MozIccBinding.h" // For IccCardState
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
@@ -57,8 +58,8 @@ public:
   void
   GetIccInfo(Nullable<OwningMozIccInfoOrMozGsmIccInfoOrMozCdmaIccInfo>& aIccInfo) const;
 
-  void
-  GetCardState(nsString& aCardState) const;
+  Nullable<IccCardState>
+  GetCardState() const;
 
   void
   SendStkResponse(const JSContext* aCx, JS::Handle<JS::Value> aCommand,
