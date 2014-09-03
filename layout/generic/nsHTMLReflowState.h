@@ -266,6 +266,15 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // This takes on an arbitrary value the first time a block is reflowed
   nscoord mBlockDelta;
 
+  // If an nsHTMLReflowState finds itself initialized with an unconstrained
+  // inline-size, it will look up its parentReflowState chain for a state
+  // with an orthogonal writing mode and a non-NS_UNCONSTRAINEDSIZE value for
+  // orthogonal limit; when it finds such a reflow-state, it will use its
+  // orthogonal-limit value to constrain inline-size.
+  // This is initialized to NS_UNCONSTRAINEDSIZE (so it will be ignored),
+  // but reset to a suitable value for the reflow root by nsPresShell.
+  nscoord mOrthogonalLimit;
+
   // Accessors for the private fields below. Forcing all callers to use these
   // will allow us to introduce logical-coordinate versions and gradually
   // change clients from physical to logical as needed; and potentially switch
