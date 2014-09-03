@@ -8,9 +8,14 @@ XPIDL_SOURCES += [
     'nsICellInfo.idl',
     'nsIMobileCellInfo.idl',
     'nsIMobileConnectionInfo.idl',
-    'nsIMobileConnectionProvider.idl',
+    'nsIMobileConnectionService.idl',
     'nsIMobileNetworkInfo.idl',
     'nsINeighboringCellInfo.idl',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
+    XPIDL_SOURCES += [
+        'nsIMobileConnectionGonkService.idl',
+    ]
 
 XPIDL_MODULE = 'dom_mobileconnection'
