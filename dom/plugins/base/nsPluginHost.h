@@ -307,7 +307,7 @@ class MOZ_STACK_CLASS PluginDestructionGuard : protected PRCList
 public:
   explicit PluginDestructionGuard(nsNPAPIPluginInstance *aInstance);
 
-  PluginDestructionGuard(NPP npp);
+  explicit PluginDestructionGuard(NPP npp);
 
   ~PluginDestructionGuard();
 
