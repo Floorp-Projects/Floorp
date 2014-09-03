@@ -828,17 +828,18 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
 CalleeToken
 MarkCalleeToken(JSTracer *trc, CalleeToken token)
 {
-    switch (GetCalleeTokenTag(token)) {
+    switch (CalleeTokenTag tag = GetCalleeTokenTag(token)) {
       case CalleeToken_Function:
+      case CalleeToken_FunctionConstructing:
       {
         JSFunction *fun = CalleeTokenToFunction(token);
-        MarkObjectRoot(trc, &fun, "ion-callee");
-        return CalleeToToken(fun);
+        MarkObjectRoot(trc, &fun, "jit-callee");
+        return CalleeToToken(fun, tag == CalleeToken_FunctionConstructing);
       }
       case CalleeToken_Script:
       {
         JSScript *script = CalleeTokenToScript(token);
-        MarkScriptRoot(trc, &script, "ion-entry");
+        MarkScriptRoot(trc, &script, "jit-script");
         return CalleeToToken(script);
       }
       default:
@@ -1767,19 +1768,13 @@ JitFrameIterator::ionScriptFromCalleeToken() const
     JS_ASSERT(type() == JitFrame_IonJS);
     JS_ASSERT(!checkInvalidation());
 
-    switch (GetCalleeTokenTag(calleeToken())) {
-      case CalleeToken_Function:
-      case CalleeToken_Script:
-        switch (mode_) {
-          case SequentialExecution:
-            return script()->ionScript();
-          case ParallelExecution:
-            return script()->parallelIonScript();
-          default:
-            MOZ_CRASH("No such execution mode");
-        }
+    switch (mode_) {
+      case SequentialExecution:
+        return script()->ionScript();
+      case ParallelExecution:
+        return script()->parallelIonScript();
       default:
-        MOZ_CRASH("unknown callee token type");
+        MOZ_CRASH("No such execution mode");
     }
 }
 
@@ -2020,42 +2015,7 @@ InlineFrameIterator::isConstructing() const
 bool
 JitFrameIterator::isConstructing() const
 {
-    JitFrameIterator parent(*this);
-
-    // Skip the current frame and look at the caller's.
-    do {
-        ++parent;
-    } while (!parent.done() && !parent.isScripted());
-
-    if (parent.isIonJS()) {
-        // In the case of a JS frame, look up the pc from the snapshot.
-        InlineFrameIterator inlinedParent(GetJSContextFromJitCode(), &parent);
-
-        //Inlined Getters and Setters are never constructing.
-        if (IsGetPropPC(inlinedParent.pc()) || IsSetPropPC(inlinedParent.pc()))
-            return false;
-
-        JS_ASSERT(IsCallPC(inlinedParent.pc()));
-
-        return (JSOp)*inlinedParent.pc() == JSOP_NEW;
-    }
-
-    if (parent.isBaselineJS()) {
-        jsbytecode *pc;
-        parent.baselineScriptAndPc(nullptr, &pc);
-
-        // Inlined Getters and Setters are never constructing.
-        // Baseline may call getters from [GET|SET]PROP or [GET|SET]ELEM ops.
-        if (IsGetPropPC(pc) || IsSetPropPC(pc) || IsGetElemPC(pc) || IsSetElemPC(pc))
-            return false;
-
-        JS_ASSERT(IsCallPC(pc));
-
-        return JSOp(*pc) == JSOP_NEW;
-    }
-
-    JS_ASSERT(parent.done());
-    return activation_->firstFrameIsConstructing();
+    return GetCalleeTokenTag(calleeToken()) == CalleeToken_FunctionConstructing;
 }
 
 unsigned

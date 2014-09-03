@@ -71,6 +71,12 @@ LIRGenerator::visitCallee(MCallee *ins)
 }
 
 bool
+LIRGenerator::visitIsConstructing(MIsConstructing *ins)
+{
+    return define(new(alloc()) LIsConstructing(), ins);
+}
+
+bool
 LIRGenerator::visitGoto(MGoto *ins)
 {
     return add(new(alloc()) LGoto(ins->target()));

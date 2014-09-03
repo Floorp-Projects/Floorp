@@ -7437,7 +7437,7 @@ ICGetProp_ArgumentsCallee::Compiler::generateStubCode(MacroAssembler &masm)
                       &failure);
 
     Address callee(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
-    masm.loadPtr(callee, R0.scratchReg());
+    masm.loadFunctionFromCalleeToken(callee, R0.scratchReg());
     masm.tagValue(JSVAL_TYPE_OBJECT, R0.scratchReg(), R0);
 
     EmitEnterTypeMonitorIC(masm);
@@ -9167,7 +9167,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
     // Note that we use Push, not push, so that callIon will align the stack
     // properly on ARM.
     masm.Push(argcReg);
-    masm.Push(callee);
+    masm.PushCalleeToken(callee, isConstructing_);
     masm.Push(scratch);
 
     // Handle arguments underflow.

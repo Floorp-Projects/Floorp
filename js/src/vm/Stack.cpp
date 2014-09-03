@@ -1398,9 +1398,8 @@ js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, uint
 }
 #endif
 
-jit::JitActivation::JitActivation(JSContext *cx, bool firstFrameIsConstructing, bool active)
+jit::JitActivation::JitActivation(JSContext *cx, bool active)
   : Activation(cx, Jit),
-    firstFrameIsConstructing_(firstFrameIsConstructing),
     active_(active),
     rematerializedFrames_(nullptr)
 {
@@ -1416,7 +1415,6 @@ jit::JitActivation::JitActivation(JSContext *cx, bool firstFrameIsConstructing, 
 
 jit::JitActivation::JitActivation(ForkJoinContext *cx)
   : Activation(cx, Jit),
-    firstFrameIsConstructing_(false),
     active_(true),
     rematerializedFrames_(nullptr)
 {

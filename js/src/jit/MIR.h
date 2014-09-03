@@ -1698,6 +1698,28 @@ class MCallee : public MNullaryInstruction
     }
 };
 
+class MIsConstructing : public MNullaryInstruction
+{
+  public:
+    MIsConstructing() {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(IsConstructing)
+
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    static MIsConstructing *New(TempAllocator &alloc) {
+        return new(alloc) MIsConstructing();
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MControlInstruction : public MInstruction
 {
   public:
