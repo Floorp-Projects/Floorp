@@ -1,5 +1,5 @@
 load(libdir + "asm.js");
-var heap = new ArrayBuffer(4096);
+var heap = new ArrayBuffer(0x10000);
 
 // Set to true to see more JS debugging spew
 const DEBUG = false;
@@ -523,6 +523,63 @@ var bitwise = (function() {
 CheckF4(ANDF32, 'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=andd(x,y)', bitwise.and([42, 13.37, -1.42, 23.10], [19.89, 2.4, 8.15, 16.36]));
 CheckF4(ORF32,  'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=orr(x,y)',  bitwise.or( [42, 13.37, -1.42, 23.10], [19.89, 2.4, 8.15, 16.36]));
 CheckF4(XORF32, 'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=xorr(x,y)', bitwise.xor([42, 13.37, -1.42, 23.10], [19.89, 2.4, 8.15, 16.36]));
+
+// Select
+const I32SEL = 'var i4sel = i4.select;'
+const F32SEL = 'var f4sel = f4.select;'
+
+assertAsmTypeFail('glob', USE_ASM + F32 + I32SEL + "function f() {var m=f4(1,2,3,4); return i4(i4sel(x,x,x));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + I32SEL + "function f() {var m=f4(1,2,3,4); var x=i4(1,2,3,4); return i4(i4sel(m,x,x));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + I32SEL + "function f() {var m=f4(1,2,3,4); var x=f4(1,2,3,4); return i4(i4sel(m,x,x));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + I32SEL + "function f() {var m=i4(1,2,3,4); var x=f4(1,2,3,4); return i4(i4sel(m,x,x));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + I32SEL + "function f() {var m=i4(1,2,3,4); var x=f4(1,2,3,4); var y=i4(5,6,7,8); return i4(i4sel(m,x,y));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + I32SEL + "function f() {var m=i4(1,2,3,4); var x=i4(1,2,3,4); var y=f4(5,6,7,8); return i4(i4sel(m,x,y));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + I32SEL + "function f() {var m=i4(1,2,3,4); var x=f4(1,2,3,4); var y=f4(5,6,7,8); return i4(i4sel(m,x,y));} return f");
+
+
+assertAsmTypeFail('glob', USE_ASM + F32 + F32SEL + "function f() {var m=f4(1,2,3,4); return f4(f4sel(x,x,x));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + F32SEL + "function f() {var m=f4(1,2,3,4); var x=i4(1,2,3,4); return f4(f4sel(m,x,x));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + F32SEL + "function f() {var m=f4(1,2,3,4); var x=f4(1,2,3,4); return f4(f4sel(m,x,x));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + F32SEL + "function f() {var m=i4(1,2,3,4); var x=f4(1,2,3,4); var y=i4(5,6,7,8); return f4(f4sel(m,x,y));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + F32SEL + "function f() {var m=i4(1,2,3,4); var x=i4(1,2,3,4); var y=f4(5,6,7,8); return f4(f4sel(m,x,y));} return f");
+
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + I32SEL + "function f() {var m=i4(0,0,0,0); var x=i4(1,2,3,4); var y=i4(5,6,7,8); return i4(i4sel(m,x,y)); } return f"), this)(), [5, 6, 7, 8]);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + I32SEL + "function f() {var m=i4(0xffffffff,0xffffffff,0xffffffff,0xffffffff); var x=i4(1,2,3,4); var y=i4(5,6,7,8); return i4(i4sel(m,x,y)); } return f"), this)(), [1, 2, 3, 4]);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + I32SEL + "function f() {var m=i4(0,0xffffffff,0,0xffffffff); var x=i4(1,2,3,4); var y=i4(5,6,7,8); return i4(i4sel(m,x,y)); } return f"), this)(), [5, 2, 7, 4]);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + I32SEL + "function f() {var m=i4(0,0,0xffffffff,0xffffffff); var x=i4(1,2,3,4); var y=i4(5,6,7,8); return i4(i4sel(m,x,y)); } return f"), this)(), [5, 6, 3, 4]);
+
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + F32 + F32SEL + "function f() {var m=i4(0,0,0,0); var x=f4(1,2,3,4); var y=f4(5,6,7,8); return f4(f4sel(m,x,y)); } return f"), this)(), [5, 6, 7, 8]);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + F32 + F32SEL + "function f() {var m=i4(0xffffffff,0xffffffff,0xffffffff,0xffffffff); var x=f4(1,2,3,4); var y=f4(5,6,7,8); return f4(f4sel(m,x,y)); } return f"), this)(), [1, 2, 3, 4]);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + F32 + F32SEL + "function f() {var m=i4(0,0xffffffff,0,0xffffffff); var x=f4(1,2,3,4); var y=f4(5,6,7,8); return f4(f4sel(m,x,y)); } return f"), this)(), [5, 2, 7, 4]);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + F32 + F32SEL + "function f() {var m=i4(0,0,0xffffffff,0xffffffff); var x=f4(1,2,3,4); var y=f4(5,6,7,8); return f4(f4sel(m,x,y)); } return f"), this)(), [5, 6, 3, 4]);
+
+// Splat
+const I32SPLAT = 'var splat=i4.splat;'
+const F32SPLAT = 'var splat=f4.splat;'
+
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + I32SPLAT + "function f() {var m=i4(1,2,3,4); var p=f4(1.,2.,3.,4.); p=splat(1);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + I32SPLAT + "function f() {var m=i4(1,2,3,4); m=splat(1, 2)} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + I32SPLAT + "function f() {var m=i4(1,2,3,4); m=splat()} return f");
+
+assertAsmTypeFail('glob', USE_ASM + I32 + I32SPLAT + "function f() {var m=i4(1,2,3,4); m=splat(m);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + I32SPLAT + "function f() {var m=i4(1,2,3,4); m=splat(1.0);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + I32SPLAT + FROUND + "function f() {var m=i4(1,2,3,4); m=splat(f32(1.0));} return f");
+
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + I32SPLAT + 'function f(){return i4(splat(42));} return f'), this)(), [42, 42, 42, 42]);
+
+const l33t = Math.fround(13.37);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + F32SPLAT + FROUND + 'function f(){return f4(splat(1));} return f'), this)(), [1, 1, 1, 1]);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + F32SPLAT + FROUND + 'function f(){return f4(splat(1 >>> 0));} return f'), this)(), [1, 1, 1, 1]);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + F32SPLAT + FROUND + 'function f(){return f4(splat(13.37));} return f'), this)(), [l33t, l33t, l33t, l33t]);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + F32SPLAT + FROUND + 'function f(){return f4(splat(f32(13.37)));} return f'), this)(), [l33t, l33t, l33t, l33t]);
+
+var i32view = new Int32Array(heap);
+var f32view = new Float32Array(heap);
+i32view[0] = 42;
+assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + I32 + I32SPLAT + 'var i32=new glob.Int32Array(heap); function f(){return i4(splat(i32[0]));} return f'), this, {}, heap)(), [42, 42, 42, 42]);
+f32view[0] = 42;
+assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + F32 + F32SPLAT + 'var f32=new glob.Float32Array(heap); function f(){return f4(splat(f32[0]));} return f'), this, {}, heap)(), [42, 42, 42, 42]);
+assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + F32 + F32SPLAT + FROUND + 'function f(){return f4(splat(f32(1) + f32(2)));} return f'), this, {}, heap)(), [3, 3, 3, 3]);
 
 // Dead code
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + 'function f(){var x=i4(1,2,3,4); return i4(x); x=i4(5,6,7,8); return i4(x);} return f'), this)(), [1, 2, 3, 4]);

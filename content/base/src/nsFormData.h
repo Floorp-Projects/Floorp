@@ -26,10 +26,10 @@ class GlobalObject;
 } // namespace dom
 } // namespace mozilla
 
-class nsFormData : public nsIDOMFormData,
-                   public nsIXHRSendable,
-                   public nsFormSubmission,
-                   public nsWrapperCache
+class nsFormData MOZ_FINAL : public nsIDOMFormData,
+                             public nsIXHRSendable,
+                             public nsFormSubmission,
+                             public nsWrapperCache
 {
   ~nsFormData() {}
 

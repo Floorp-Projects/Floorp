@@ -22,8 +22,11 @@ typedef void * CalleeToken;
 enum CalleeTokenTag
 {
     CalleeToken_Function = 0x0, // untagged
-    CalleeToken_Script = 0x1
+    CalleeToken_FunctionConstructing = 0x1,
+    CalleeToken_Script = 0x2
 };
+
+static const uintptr_t CalleeTokenMask = ~uintptr_t(0x3);
 
 static inline CalleeTokenTag
 GetCalleeTokenTag(CalleeToken token)
@@ -33,9 +36,10 @@ GetCalleeTokenTag(CalleeToken token)
     return tag;
 }
 static inline CalleeToken
-CalleeToToken(JSFunction *fun)
+CalleeToToken(JSFunction *fun, bool constructing)
 {
-    return CalleeToken(uintptr_t(fun) | uintptr_t(CalleeToken_Function));
+    CalleeTokenTag tag = constructing ? CalleeToken_FunctionConstructing : CalleeToken_Function;
+    return CalleeToken(uintptr_t(fun) | uintptr_t(tag));
 }
 static inline CalleeToken
 CalleeToToken(JSScript *script)
@@ -45,19 +49,20 @@ CalleeToToken(JSScript *script)
 static inline bool
 CalleeTokenIsFunction(CalleeToken token)
 {
-    return GetCalleeTokenTag(token) == CalleeToken_Function;
+    CalleeTokenTag tag = GetCalleeTokenTag(token);
+    return tag == CalleeToken_Function || tag == CalleeToken_FunctionConstructing;
 }
 static inline JSFunction *
 CalleeTokenToFunction(CalleeToken token)
 {
-    JS_ASSERT(CalleeTokenIsFunction(token));
-    return (JSFunction *)token;
+    MOZ_ASSERT(CalleeTokenIsFunction(token));
+    return (JSFunction *)(uintptr_t(token) & CalleeTokenMask);
 }
 static inline JSScript *
 CalleeTokenToScript(CalleeToken token)
 {
     JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Script);
-    return (JSScript *)(uintptr_t(token) & ~uintptr_t(0x3));
+    return (JSScript *)(uintptr_t(token) & CalleeTokenMask);
 }
 
 static inline JSScript *
@@ -67,6 +72,7 @@ ScriptFromCalleeToken(CalleeToken token)
       case CalleeToken_Script:
         return CalleeTokenToScript(token);
       case CalleeToken_Function:
+      case CalleeToken_FunctionConstructing:
         return CalleeTokenToFunction(token)->nonLazyScript();
     }
     MOZ_CRASH("invalid callee token tag");

@@ -92,10 +92,10 @@ struct ScopedArrayBufferContentsTraits {
 };
 
 struct ScopedArrayBufferContents: public Scoped<ScopedArrayBufferContentsTraits> {
-  ScopedArrayBufferContents(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM):
+  explicit ScopedArrayBufferContents(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM):
     Scoped<ScopedArrayBufferContentsTraits>(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT)
   { }
-  ScopedArrayBufferContents(const ArrayBufferContents& v
+  explicit ScopedArrayBufferContents(const ArrayBufferContents& v
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM):
     Scoped<ScopedArrayBufferContentsTraits>(v MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
   { }
@@ -171,7 +171,7 @@ public:
    * @param aStartDate The instant at which the operation was
    * requested.  Used to collect Telemetry statistics.
    */
-  AbstractResult(TimeStamp aStartDate)
+  explicit AbstractResult(TimeStamp aStartDate)
     : mStartDate(aStartDate)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -277,7 +277,7 @@ AbstractResult::GetResult(JSContext *cx, JS::MutableHandleValue aResult)
 class StringResult MOZ_FINAL : public AbstractResult
 {
 public:
-  StringResult(TimeStamp aStartDate)
+  explicit StringResult(TimeStamp aStartDate)
     : AbstractResult(aStartDate)
   {
   }
@@ -328,7 +328,7 @@ StringResult::GetCacheableResult(JSContext* cx, JS::MutableHandleValue aResult)
 class TypedArrayResult MOZ_FINAL : public AbstractResult
 {
 public:
-  TypedArrayResult(TimeStamp aStartDate)
+  explicit TypedArrayResult(TimeStamp aStartDate)
     : AbstractResult(aStartDate)
   {
   }

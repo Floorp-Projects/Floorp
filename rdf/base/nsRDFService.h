@@ -33,8 +33,8 @@ class nsIRDFInt;
 class nsIRDFDate;
 class BlobImpl;
 
-class RDFServiceImpl : public nsIRDFService,
-                       public nsSupportsWeakReference
+class RDFServiceImpl MOZ_FINAL : public nsIRDFService,
+                                 public nsSupportsWeakReference
 {
 protected:
     PLHashTable* mNamedDataSources;
