@@ -17,8 +17,8 @@ var phases = { "phase1": "profile1",
  */
 
 var tabs1 = [
-  { uri: "http://hg.mozilla.org/automation/crossweave/raw-file/2d9aca9585b6/pages/page1.html",
-    title: "Crossweave Test Page 1",
+  { uri: "http://mozqa.com/data/firefox/layout/mozilla.html",
+    title: "Mozilla",
     profile: "profile1"
   },
   { uri: "data:text/html,<html><head><title>Hello</title></head><body>Hello</body></html>",
@@ -28,8 +28,8 @@ var tabs1 = [
 ];
 
 var tabs2 = [
-  { uri: "http://hg.mozilla.org/automation/crossweave/raw-file/2d9aca9585b6/pages/page3.html",
-    title: "Crossweave Test Page 3",
+  { uri: "http://mozqa.com/data/firefox/layout/mozilla_community.html",
+    title: "Mozilla Community",
     profile: "profile2"
   },
   { uri: "data:text/html,<html><head><title>Bye</title></head><body>Bye</body></html>",
