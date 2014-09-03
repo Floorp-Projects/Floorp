@@ -1,0 +1,8 @@
+<html>
+<head><title>Sandboxed iframe</title></head>
+<body>
+  <iframe id="sandboxed-iframe"
+          sandbox="allow-scripts"
+          srcdoc="<script>var foobarObject = {bug1051224: 'sandboxed'};</script>"></iframe>
+</body>
+</html>
