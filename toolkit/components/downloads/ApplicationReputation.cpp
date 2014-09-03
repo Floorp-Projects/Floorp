@@ -212,7 +212,7 @@ public:
   NS_DECL_NSIURLCLASSIFIERCALLBACK
 
   // Constructor and destructor
-  PendingDBLookup(PendingLookup* aPendingLookup);
+  explicit PendingDBLookup(PendingLookup* aPendingLookup);
 
   // Look up the given URI in the safebrowsing DBs, optionally on both the allow
   // list and the blocklist. If there is a match, call

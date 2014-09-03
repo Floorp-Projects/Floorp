@@ -351,6 +351,8 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
           case AsmJSSimdOperation_and: native = simd_int32x4_and; break;
           case AsmJSSimdOperation_or: native = simd_int32x4_or; break;
           case AsmJSSimdOperation_xor: native = simd_int32x4_xor; break;
+          case AsmJSSimdOperation_select: native = simd_int32x4_select; break;
+          case AsmJSSimdOperation_splat: native = simd_int32x4_splat; break;
           case AsmJSSimdOperation_lessThanOrEqual:
           case AsmJSSimdOperation_greaterThanOrEqual:
           case AsmJSSimdOperation_notEqual:
@@ -375,6 +377,8 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
           case AsmJSSimdOperation_and: native = simd_float32x4_and; break;
           case AsmJSSimdOperation_or: native = simd_float32x4_or; break;
           case AsmJSSimdOperation_xor: native = simd_float32x4_xor; break;
+          case AsmJSSimdOperation_select: native = simd_float32x4_select; break;
+          case AsmJSSimdOperation_splat: native = simd_float32x4_splat; break;
         }
         break;
     }
@@ -647,7 +651,7 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         // very fast) can avoid doing so. The JitActivation is marked as
         // inactive so stack iteration will skip over it.
         AsmJSActivation activation(cx, module);
-        JitActivation jitActivation(cx, /* firstFrameIsConstructing = */ false, /* active */ false);
+        JitActivation jitActivation(cx, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
         AsmJSModule::CodePtr enter = module.entryTrampoline(func);

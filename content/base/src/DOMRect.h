@@ -142,6 +142,9 @@ public:
 
 protected:
   double mX, mY, mWidth, mHeight;
+
+private:
+  ~DOMRect() {};
 };
 
 class DOMRectList MOZ_FINAL : public nsIDOMClientRectList,
@@ -209,12 +212,6 @@ protected:
 };
 
 }
-
-template<>
-struct HasDangerousPublicDestructor<dom::DOMRect>
-{
-  static const bool value = true;
-};
 
 }
 

@@ -1474,6 +1474,12 @@ public:
   static gfxRect RectToGfxRect(const nsRect& aRect,
                                int32_t aAppUnitsPerDevPixel);
 
+  static gfxPoint PointToGfxPoint(const nsPoint& aPoint,
+                                  int32_t aAppUnitsPerPixel) {
+    return gfxPoint(gfxFloat(aPoint.x) / aAppUnitsPerPixel,
+                    gfxFloat(aPoint.y) / aAppUnitsPerPixel);
+  }
+
   /**
    * Draw a whole image without scaling or tiling.
    *

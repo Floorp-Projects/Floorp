@@ -101,7 +101,7 @@ private:
   nsRefPtr<nsAppStartup> mService;
 
 public:
-  nsAppExitEvent(nsAppStartup *service) : mService(service) {}
+  explicit nsAppExitEvent(nsAppStartup *service) : mService(service) {}
 
   NS_IMETHOD Run() {
     // Tell the appshell to exit
