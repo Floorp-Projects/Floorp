@@ -468,7 +468,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
   if (IsWaitingMediaResources()) {
     return NS_OK;
   }
-  if (!mAudioTrack || !mVideoTrack) {
+  if (!mAudioTrack && !mVideoTrack) {
     MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata missing track: mAudioTrack=%p mVideoTrack=%p",
               this, mAudioTrack.get(), mVideoTrack.get());
     return NS_ERROR_FAILURE;
