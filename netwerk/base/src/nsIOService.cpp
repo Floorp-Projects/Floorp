@@ -55,6 +55,7 @@ using namespace mozilla;
 // but the old names are still used to preserve backward compatibility.
 #define NECKO_BUFFER_CACHE_COUNT_PREF "network.buffer.cache.count"
 #define NECKO_BUFFER_CACHE_SIZE_PREF  "network.buffer.cache.size"
+#define NETWORK_NOTIFY_CHANGED_PREF   "network.notify.changed"
 
 #define MAX_RECURSION_COUNT 50
 
@@ -149,6 +150,7 @@ nsIOService::nsIOService()
     , mNetworkLinkServiceInitialized(false)
     , mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY)
     , mAutoDialEnabled(false)
+    , mNetworkNotifyChanged(true)
 {
 }
 
@@ -188,6 +190,7 @@ nsIOService::Init()
         prefBranch->AddObserver(MANAGE_OFFLINE_STATUS_PREF, this, true);
         prefBranch->AddObserver(NECKO_BUFFER_CACHE_COUNT_PREF, this, true);
         prefBranch->AddObserver(NECKO_BUFFER_CACHE_SIZE_PREF, this, true);
+        prefBranch->AddObserver(NETWORK_NOTIFY_CHANGED_PREF, this, true);
         PrefsChanged(prefBranch);
     }
     
@@ -852,6 +855,14 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                 gDefaultSegmentSize = size;
         NS_WARN_IF_FALSE( (!(size & (size - 1))) , "network segment size is not a power of 2!");
     }
+
+    if (!pref || strcmp(pref, NETWORK_NOTIFY_CHANGED_PREF) == 0) {
+        bool allow;
+        nsresult rv = prefs->GetBoolPref(NETWORK_NOTIFY_CHANGED_PREF, &allow);
+        if (NS_SUCCEEDED(rv)) {
+            mNetworkNotifyChanged = allow;
+        }
+    }
 }
 
 void
@@ -958,7 +969,7 @@ nsIOService::Observe(nsISupports *subject,
 
         NS_ASSERTION(observerService, "The observer service should not be null");
 
-        if (observerService) {
+        if (observerService && mNetworkNotifyChanged) {
             (void)observerService->
                 NotifyObservers(nullptr,
                                 NS_NETWORK_LINK_TOPIC,
