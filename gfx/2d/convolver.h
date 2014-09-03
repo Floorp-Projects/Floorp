@@ -184,8 +184,8 @@ void BGRAConvolve2D(const unsigned char* source_data,
                     const ConvolutionFilter1D& xfilter,
                     const ConvolutionFilter1D& yfilter,
                     int output_byte_row_stride,
-                    unsigned char* output,
-                    bool use_sse2);
+                    unsigned char* output);
+
 }  // namespace skia
 
 #endif  // SKIA_EXT_CONVOLVER_H_
