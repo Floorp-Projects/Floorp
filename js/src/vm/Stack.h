@@ -1302,7 +1302,6 @@ class JitActivation : public Activation
 {
     uint8_t *prevJitTop_;
     JSContext *prevJitJSContext_;
-    bool firstFrameIsConstructing_;
     bool active_;
 
     // Rematerialized Ion frames which has info copied out of snapshots. Maps
@@ -1325,7 +1324,7 @@ class JitActivation : public Activation
 #endif
 
   public:
-    JitActivation(JSContext *cx, bool firstFrameIsConstructing, bool active = true);
+    explicit JitActivation(JSContext *cx, bool active = true);
     explicit JitActivation(ForkJoinContext *cx);
     ~JitActivation();
 
@@ -1340,9 +1339,6 @@ class JitActivation : public Activation
 
     uint8_t *prevJitTop() const {
         return prevJitTop_;
-    }
-    bool firstFrameIsConstructing() const {
-        return firstFrameIsConstructing_;
     }
     static size_t offsetOfPrevJitTop() {
         return offsetof(JitActivation, prevJitTop_);

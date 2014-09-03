@@ -487,6 +487,12 @@ class LCallee : public LInstructionHelper<1, 0, 0>
     LIR_HEADER(Callee)
 };
 
+class LIsConstructing : public LInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(IsConstructing)
+};
+
 // Base class for control instructions (goto, branch, etc.)
 template <size_t Succs, size_t Operands, size_t Temps>
 class LControlInstructionHelper : public LInstructionHelper<0, Operands, Temps> {

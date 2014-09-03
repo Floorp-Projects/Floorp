@@ -1598,6 +1598,12 @@ public:
 
   bool mAsyncFullscreenPending:1;
 
+  // Whether we're observing the "app-theme-changed" observer service
+  // notification.  We need to keep track of this because we might get multiple
+  // OnPageShow notifications in a row without an OnPageHide in between, if
+  // we're getting document.open()/close() called on us.
+  bool mObservingAppThemeChanged:1;
+
   // Keeps track of whether we have a pending
   // 'style-sheet-applicable-state-changed' notification.
   bool mSSApplicableStateNotificationPending:1;

@@ -11,7 +11,7 @@
 #endif
 
 #ifdef JS_ION_PERF
-# include "jit/IonSpewer.h"
+# include "jit/JitSpewer.h"
 # include "jit/LinearScan.h"
 # include "jit/LIR.h"
 # include "jit/MIR.h"

@@ -52,7 +52,7 @@ typedef enum
  * nsJAR serves as an XPCOM wrapper for nsZipArchive with the addition of
  * JAR manifest file parsing.
  *------------------------------------------------------------------------*/
-class nsJAR : public nsIZipReader
+class nsJAR MOZ_FINAL : public nsIZipReader
 {
   // Allows nsJARInputStream to call the verification functions
   friend class nsJARInputStream;
@@ -140,7 +140,7 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIZIPENTRY
 
-    nsJARItem(nsZipItem* aZipItem);
+    explicit nsJARItem(nsZipItem* aZipItem);
 
 private:
     virtual ~nsJARItem() {}
@@ -167,7 +167,7 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIUTF8STRINGENUMERATOR
 
-    nsJAREnumerator(nsZipFind *aFind) : mFind(aFind), mName(nullptr) {
+    explicit nsJAREnumerator(nsZipFind *aFind) : mFind(aFind), mName(nullptr) {
       NS_ASSERTION(mFind, "nsJAREnumerator: Missing zipFind.");
     }
 

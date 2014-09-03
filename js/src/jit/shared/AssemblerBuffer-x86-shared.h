@@ -39,7 +39,7 @@
 #include "jsutil.h"
 
 #include "jit/ExecutableAllocator.h"
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 #include "js/RootingAPI.h"
 
 #define PRETTY_PRINT_OFFSET(os) (((os)<0)?"-":""), (((os)<0)?-(os):(os))
@@ -287,7 +287,7 @@ namespace jit {
             __attribute__ ((format (printf, 2, 3)))
 #endif
         {
-            if (printer || js::jit::IonSpewEnabled(js::jit::IonSpew_Codegen)) {
+            if (printer || js::jit::JitSpewEnabled(js::jit::JitSpew_Codegen)) {
                 // Buffer to hold the formatted string. Note that this may contain
                 // '%' characters, so do not pass it directly to printf functions.
                 char buf[200];
@@ -300,7 +300,7 @@ namespace jit {
                 if (i > -1) {
                     if (printer)
                         printer->printf("%s\n", buf);
-                    js::jit::IonSpew(js::jit::IonSpew_Codegen, "%s", buf);
+                    js::jit::JitSpew(js::jit::JitSpew_Codegen, "%s", buf);
                 }
             }
         }
@@ -310,7 +310,7 @@ namespace jit {
             __attribute__ ((format (printf, 1, 2)))
 #endif
         {
-            if (js::jit::IonSpewEnabled(js::jit::IonSpew_Codegen)) {
+            if (js::jit::JitSpewEnabled(js::jit::JitSpew_Codegen)) {
                 char buf[200];
 
                 va_list va;
@@ -319,7 +319,7 @@ namespace jit {
                 va_end(va);
 
                 if (i > -1)
-                    js::jit::IonSpew(js::jit::IonSpew_Codegen, "%s", buf);
+                    js::jit::JitSpew(js::jit::JitSpew_Codegen, "%s", buf);
             }
         }
     };

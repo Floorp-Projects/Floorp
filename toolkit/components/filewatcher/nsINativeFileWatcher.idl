@@ -1,0 +1,111 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The interface for the callback invoked when there is an error.
+ */
+[scriptable, function, uuid(5DAEDDC3-FC94-4880-8A4F-26D910B92662)]
+interface nsINativeFileWatcherErrorCallback: nsISupports
+{
+  /**
+   * @param xpcomError The XPCOM error code.
+   * @param osError The native OS error (errno under Unix, GetLastError under Windows).
+   */
+  void complete(in nsresult xpcomError, in long osError);
+};
+
+/**
+ * The interface for the callback invoked when a change on a watched
+ * resource is detected.
+ */
+[scriptable, function, uuid(FE4D86C9-243F-4195-B544-AECE3DF4B86A)]
+interface nsINativeFileWatcherCallback: nsISupports
+{
+  /**
+   * @param resourcePath
+   *        The path of the changed resource. If there were too many changes,
+   *        the string "*" is passed.
+   * @param flags Reserved for future uses, not currently used.
+   */
+  void changed(in AString resourcePath, in int32_t flags);
+};
+
+/**
+ * The interface for the callback invoked when a file watcher operation
+ * successfully completes.
+ */
+[scriptable, function, uuid(C3D7F542-681B-4ABD-9D65-9D799B29A42B)]
+interface nsINativeFileWatcherSuccessCallback: nsISupports
+{
+  /**
+   * @param resourcePath
+   *        The path of the resource for which the operation completes.
+   */
+  void complete(in AString resourcePath);
+};
+
+/**
+ * A service providing native implementations of path changes notification.
+ */
+[scriptable, builtinclass, uuid(B3A4E8D8-7DC8-47DB-A8B4-83736D7AC1AA)]
+interface nsINativeFileWatcherService: nsISupports
+{
+  /**
+   * Watches the passed path for changes. If it's a directory, every file
+   * it contains is watched. Recursively watches subdirectories. If the
+   * resource is already being watched, does nothing. If the passed path
+   * is a file, the behaviour is not specified.
+   *
+   * @param pathToWatch The path to watch for changes.
+   * @param onChange
+   *        The callback invoked whenever a change on a watched
+   *        resource is detected.
+   * @param onError
+   *        The optional callback invoked whenever an error occurs.
+   * @param onSuccess
+   *        The optional callback invoked when the file watcher starts
+   *        watching the resource for changes.
+   */
+  void addPath(in AString pathToWatch,
+               in nsINativeFileWatcherCallback onChange,
+               [optional] in nsINativeFileWatcherErrorCallback onError,
+               [optional] in nsINativeFileWatcherSuccessCallback onSuccess);
+
+  /**
+   * Removes the provided path from the watched resources. If the path
+   * was not being watched or the callbacks were not registered, silently
+   * ignores the request.
+   * Please note that the file watcher only considers the onChange callbacks
+   * when deciding to close a watch on a resource. If there are no more onChange
+   * callbacks associated to the watch, it gets closed (even though it still has
+   * some error callbacks associated).
+   *
+   * @param pathToUnwatch The path to un-watch.
+   * @param onChange
+   *        The registered callback invoked whenever a change on a watched
+   *        resource is detected.
+   * @param onError
+   *        The optionally registered callback invoked whenever an error
+   *        occurs.
+   * @param onSuccess
+   *        The optional callback invoked when the file watcher stops
+   *        watching the resource for changes.
+   */
+  void removePath(in AString pathToUnwatch,
+                  in nsINativeFileWatcherCallback onChange,
+                  [optional] in nsINativeFileWatcherErrorCallback onError,
+                  [optional] in nsINativeFileWatcherSuccessCallback onSuccess);
+};
+
+
+%{ C++
+
+#define NATIVE_FILEWATCHER_SERVICE_CID {0x6F488507, 0x469D, 0x4350, {0xA6, 0x8D, 0x99, 0xC8, 0x7, 0xBE, 0xA, 0x78}}
+#define NATIVE_FILEWATCHER_SERVICE_CONTRACTID "@mozilla.org/toolkit/filewatcher/native-file-watcher;1"
+
+%}

@@ -29,7 +29,7 @@ struct Connection
   PRFileDesc *mSocket;
   char mByte;
 
-  Connection(PRFileDesc *aSocket);
+  explicit Connection(PRFileDesc *aSocket);
   ~Connection();
 };
 

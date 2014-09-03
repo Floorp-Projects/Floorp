@@ -62,8 +62,8 @@ var gAdvancedPane = {
                      gAdvancedPane.clearOfflineAppCache);
     setEventListener("offlineNotifyExceptions", "command",
                      gAdvancedPane.showOfflineExceptions);
-    setEventListener("offlineNotifyExceptions", "command", function (event) {
-      gAdvancedPane.offlineAppSelected(event); })
+    setEventListener("offlineAppsList", "select",
+                     gAdvancedPane.offlineAppSelected);
     let bundlePrefs = document.getElementById("bundlePreferences");
     document.getElementById("offlineAppsList")
             .style.height = bundlePrefs.getString("offlineAppsList.height");
@@ -72,9 +72,9 @@ var gAdvancedPane = {
 #ifdef MOZ_UPDATER
     setEventListener("updateRadioGroup", "command",
                      gAdvancedPane.updateWritePrefs);
-#endif
     setEventListener("showUpdateHistory", "command",
                      gAdvancedPane.showUpdates);
+#endif
     setEventListener("viewCertificatesButton", "command",
                      gAdvancedPane.showCertificates);
     setEventListener("viewSecurityDevicesButton", "command",

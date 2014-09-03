@@ -11,7 +11,7 @@
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/dom/MozMobileConnectionBinding.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIMobileConnectionProvider.h"
+#include "nsIMobileConnectionService.h"
 #include "nsWeakPtr.h"
 
 namespace mozilla {
@@ -24,7 +24,7 @@ class MobileConnection MOZ_FINAL : public DOMEventTargetHelper,
    * Class MobileConnection doesn't actually expose
    * nsIMobileConnectionListener. Instead, it owns an
    * nsIMobileConnectionListener derived instance mListener and passes it to
-   * nsIMobileConnectionProvider. The onreceived events are first delivered to
+   * nsIMobileConnectionService. The onreceived events are first delivered to
    * mListener and then forwarded to its owner, MobileConnection. See also bug
    * 775997 comment #51.
    */
@@ -164,7 +164,7 @@ private:
 
 private:
   uint32_t mClientId;
-  nsCOMPtr<nsIMobileConnectionProvider> mProvider;
+  nsCOMPtr<nsIMobileConnectionService> mService;
   nsRefPtr<Listener> mListener;
   nsRefPtr<MobileConnectionInfo> mVoice;
   nsRefPtr<MobileConnectionInfo> mData;

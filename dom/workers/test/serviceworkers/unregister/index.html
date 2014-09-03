@@ -14,32 +14,26 @@
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
-  function fail(msg) {
-  info("unregister/index.html: " + msg);
-    opener.postMessage("FAIL", "*");
-  }
 
-  if (!opener) {
+  if (!parent) {
     info("unregister/index.html should not to be launched directly!");
   }
 
-  window.addEventListener("message", function(e) {
-    if (!e.data) {
-      return fail("Message had no data!");
+  var tId = setTimeout(function() {
+    parent.postMessage({ controlled: false }, "*");
+    tId = null;
+  }, 2000);
+
+  navigator.serviceWorker.ready.then(function() {
+    if (tId == null) {
+      parent.postMessage("FAIL!!!", "*");
+      return;
     }
 
-    if (e.data.controlled === true && !navigator.serviceWorker.controller) {
-      return fail("Not controlled!");
-    } else if (e.data.controlled === false && navigator.serviceWorker.controller) {
-      return fail("Controlled when it shouldn't be!");
-    }
+    clearTimeout(tId);
+    parent.postMessage({ controlled: true }, "*");
+  });
 
-    opener.postMessage("SUCCESS", "*");
-  }, false);
-
-  window.onload = function() {
-    opener.postMessage("READY", "*");
-  }
 </script>
 </pre>
 </body>

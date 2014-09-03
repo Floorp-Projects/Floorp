@@ -127,7 +127,7 @@ class nsChromeRegistryChrome : public nsChromeRegistry
     typedef nsURIHashKey::KeyType        KeyType;
     typedef nsURIHashKey::KeyTypePointer KeyTypePointer;
 
-    OverlayListEntry(KeyTypePointer aKey) : nsURIHashKey(aKey) { }
+    explicit OverlayListEntry(KeyTypePointer aKey) : nsURIHashKey(aKey) { }
     OverlayListEntry(OverlayListEntry&& toMove) : nsURIHashKey(mozilla::Move(toMove)),
                                                   mArray(mozilla::Move(toMove.mArray)) { }
     ~OverlayListEntry() { }

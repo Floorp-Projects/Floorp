@@ -62,7 +62,13 @@
 
       info(wr.scope);
       ok(wr.scope == (new URL("realworker", document.baseURI)).href, "Scope should match");
-
+      // active, waiting, installing should return valid worker instances
+      // because the registration is for the realworker scope, so the workers
+      // should be obtained for that scope and not for
+      // test_installation_simple.html
+      var worker = wr.installing || wr.waiting || wr.active;
+      ok(worker && worker.scope.match(/realworker$/) &&
+         worker.url.match(/worker.js$/), "Valid worker instance should be available.");
     }, function(e) {
       info("Error: " + e.name);
       ok(false, "realWorker Registration should have succeeded!");

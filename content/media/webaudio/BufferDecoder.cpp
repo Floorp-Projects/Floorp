@@ -89,13 +89,6 @@ BufferDecoder::NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded)
 }
 
 int64_t
-BufferDecoder::GetEndMediaTime() const
-{
-  // unknown
-  return -1;
-}
-
-int64_t
 BufferDecoder::GetMediaDuration()
 {
   // unknown

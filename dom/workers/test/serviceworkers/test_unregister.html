@@ -22,27 +22,27 @@
   function testControlled() {
     var testPromise = new Promise(function(res, rej) {
       window.onmessage = function(e) {
-        if (e.data === "READY") {
-          w.postMessage({ "controlled": true }, "*");
-        } else if (e.data === "SUCCESS") {
-          ok(true, "New window should be controlled.");
-          res();
-        } else if (e.data === "FAIL") {
-          ok(false, "New window should be controlled");
-          res();
+        if (!("controlled" in e.data)) {
+          ok(false, "Something went wrong.");
+          rej();
+          return;
         }
+
+        ok(e.data.controlled, "New window should be controlled.");
+        res();
       }
+    })
+
+    var div = document.getElementById("content");
+    ok(div, "Parent exists");
+
+    var ifr = document.createElement("iframe");
+    ifr.setAttribute('src', "unregister/index.html");
+    div.appendChild(ifr);
+
+    return testPromise.then(function() {
+      div.removeChild(ifr);
     });
-
-    // This setTimeout is temporary to allow the ServiceWorker to get
-    // activated. Once Bug 1025077 is implemented, this can be replaced to use
-    // ready().
-
-    var w;
-    setTimeout(function() {
-      w = window.open("unregister/index.html", "_blank", "width=700, height=400");
-    }, 150);
-    return testPromise.then(() => w.close());
   }
 
   function unregister() {
@@ -59,23 +59,27 @@
   function testUncontrolled() {
     var testPromise = new Promise(function(res, rej) {
       window.onmessage = function(e) {
-        if (e.data === "READY") {
-          w.postMessage({ "controlled": false }, "*");
-        } else if (e.data === "SUCCESS") {
-          ok(true, "New window should not be controlled.");
-          res();
-        } else if (e.data === "FAIL") {
-          ok(false, "New window should not be controlled");
-          res();
+        if (!("controlled" in e.data)) {
+          ok(false, "Something went wrong.");
+          rej();
+          return;
         }
+
+        ok(!e.data.controlled, "New window should not be controlled.");
+        res();
       }
     });
 
-    var w;
-    setTimeout(function() {
-      w = window.open("unregister/index.html", "_blank", "width=700, height=400");
-    }, 150);
-    return testPromise.then(() => w.close());
+    var div = document.getElementById("content");
+    ok(div, "Parent exists");
+
+    var ifr = document.createElement("iframe");
+    ifr.setAttribute('src', "unregister/index.html");
+    div.appendChild(ifr);
+
+    return testPromise.then(function() {
+      div.removeChild(ifr);
+    });
   }
 
   function runTest() {

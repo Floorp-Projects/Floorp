@@ -41,7 +41,7 @@ public:
     RecvFinish(const bool& succeeded,
                const bool& isUpgrade) MOZ_OVERRIDE;
 
-    OfflineCacheUpdateChild(nsIDOMWindow* aWindow);
+    explicit OfflineCacheUpdateChild(nsIDOMWindow* aWindow);
 
     void SetDocument(nsIDOMDocument *aDocument);
 
