@@ -87,7 +87,7 @@ MediaSourceReader::OnAudioEOS()
   if (SwitchReaders(SWITCH_FORCED)) {
     // Success! Resume decoding with next audio decoder.
     RequestAudioData();
-  } else {
+  } else if (IsEnded()) {
     // End of stream.
     MSE_DEBUG("MediaSourceReader(%p)::OnAudioEOS reader=%p EOS (readers=%u)",
               this, mAudioReader.get(), mDecoders.Length());
