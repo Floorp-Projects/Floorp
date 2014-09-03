@@ -39,20 +39,20 @@ Static Libraries
 ================
 
 To build a static library, other than defining the source files (see above), one
-just needs to define a library name with the ``LIBRARY_NAME`` variable.
+just needs to define a library name with the ``Library`` template.
 
-   LIBRARY_NAME = 'foo'
+   Library('foo')
 
 The library file name will be ``libfoo.a`` on UNIX systems and ``foo.lib`` on
 Windows.
 
 If the static library needs to aggregate other static libraries, a list of
-``LIBRARY_NAME`` can be added to the ``USE_LIBS`` variable. Like ``SOURCES``, it
+``Library`` names can be added to the ``USE_LIBS`` variable. Like ``SOURCES``, it
 requires the appended list to be alphanumerically ordered.
 
    USE_LIBS += ['bar', 'baz']
 
-If there are multiple directories containing the same ``LIBRARY_NAME``, it is
+If there are multiple directories containing the same ``Library`` name, it is
 possible to disambiguate by prefixing with the path to the wanted one (relative
 or absolute):
 
@@ -61,7 +61,7 @@ or absolute):
        '../relative/baz',
    ]
 
-Note that the leaf name in those paths is the ``LIBRARY_NAME``, not an actual
+Note that the leaf name in those paths is the ``Library`` name, not an actual
 file name.
 
 Note that currently, the build system may not create an actual library for
@@ -84,10 +84,10 @@ be linked to that bigger library, with the ``FINAL_LIBRARY`` variable.
 
    FINAL_LIBRARY = 'xul'
 
-The ``FINAL_LIBRARY`` value must match a unique ``LIBRARY_NAME`` somewhere
+The ``FINAL_LIBRARY`` value must match a unique ``Library`` name somewhere
 in the tree.
 
-As a special rule, those intermediate libraries don't need a ``LIBRARY_NAME``
+As a special rule, those intermediate libraries don't need a ``Library`` name
 for themselves.
 
 
@@ -103,7 +103,7 @@ the ``FORCE_SHARED_LIB`` boolean variable:
 When this variable is set, no static library is built. See further below to
 build both types of libraries.
 
-With a ``LIBRARY_NAME`` of ``foo``, the library file name will be
+With a ``Library`` name of ``foo``, the library file name will be
 ``libfoo.dylib`` on OSX, ``libfoo.so`` on ELF systems (Linux, etc.), and
 ``foo.dll`` on Windows. On Windows, there is also an import library named
 ``foo.lib``, used on the linker command line. ``libfoo.dylib`` and
@@ -115,7 +115,7 @@ This is done with the ``IS_FRAMEWORK`` boolean variable.
 
    IS_FRAMEWORK = True
 
-With a ``LIBRARY_NAME`` of ``foo``, the framework file name will be ``foo``.
+With a ``Library`` name of ``foo``, the framework file name will be ``foo``.
 This variable however affects the behavior on all platforms, so it needs to
 be set only on OSX.
 
@@ -129,23 +129,24 @@ Executables
 ===========
 
 Executables, a.k.a. programs, are, in the simplest form, defined with the
-``PROGRAM`` variable.
+``Program`` template.
 
-   PROGRAM = 'foobar'
+   Program('foobar')
 
 On UNIX systems, the executable file name will be ``foobar``, while on Windows,
 it will be ``foobar.exe``.
 
 Like static and shared libraries, the build system can be instructed to link
-libraries to the executable with ``USE_LIBS``, listing various ``LIBRARY_NAME``.
+libraries to the executable with ``USE_LIBS``, listing various ``Library``
+names.
 
 In some cases, we want to create an executable per source file in the current
-directory, in which case we can use the ``SIMPLE_PROGRAMS`` list:
+directory, in which case we can use the ``SimplePrograms`` template
 
-   SIMPLE_PROGRAMS = [
+   SimplePrograms([
        'FirstProgram',
        'SecondProgram',
-   ]
+   ])
 
 The corresponding ``SOURCES`` must match:
 
@@ -154,8 +155,8 @@ The corresponding ``SOURCES`` must match:
        'SecondProgram.c',
    ]
 
-Similar to ``SIMPLE_PROGRAMS``, is ``CPP_UNIT_TESTS``, which defines, with the
-same rules, C++ unit tests programs.
+Similar to ``SimplePrograms``, is the ``CppUnitTests`` template, which defines,
+with the same rules, C++ unit tests programs.
 
 
 Linking with system libraries
@@ -189,10 +190,10 @@ Libraries from third party build system
 =======================================
 
 Some libraries in the tree are not built by the moz.build-governed build
-system, and there is no ``LIBRARY_NAME`` corresponding to them.
+system, and there is no ``Library`` corresponding to them.
 
 However, ``USE_LIBS`` allows to reference such libraries by giving a full
-path (like when disambiguating identical ``LIBRARY_NAME``). The same naming
+path (like when disambiguating identical ``Library`` names). The same naming
 rules apply as other uses of ``USE_LIBS``, so only the library name without
 prefix and suffix shall be given.
 
@@ -217,12 +218,12 @@ When both types of libraries are required, one needs to set both
 
 But because static libraries and Windows import libraries have the same file
 names, either the static or the shared library name needs to be different
-than ``LIBRARY_NAME``.
+than the name given to the ``Library`` template.
 
 The ``STATIC_LIBRARY_NAME`` and ``SHARED_LIBRARY_NAME`` variables can be used
 to change either the static or the shared library name.
 
-  LIBRARY_NAME = 'foo'
+  Library('foo')
   STATIC_LIBRARY_NAME = 'foo_s'
 
 With the above, on Windows, ``foo_s.lib`` will be the static library,
@@ -231,25 +232,25 @@ With the above, on Windows, ``foo_s.lib`` will be the static library,
 In some cases, for convenience, it is possible to set both
 ``STATIC_LIBRARY_NAME`` and ``SHARED_LIBRARY_NAME``. For example:
 
-  LIBRARY_NAME = 'mylib'
+  Library('mylib')
   STATIC_LIBRARY_NAME = 'mylib_s'
   SHARED_LIBRARY_NAME = CONFIG['SHARED_NAME']
 
 This allows to use ``mylib`` in the ``USE_LIBS`` of another library or
 executable.
 
-When refering to a ``LIBRARY_NAME`` building both types of libraries in
+When refering to a ``Library`` name building both types of libraries in
 ``USE_LIBS``, the shared library is chosen to be linked. But sometimes,
-it is wanted to link the static version, in which case the ``LIBRARY_NAME``
+it is wanted to link the static version, in which case the ``Library`` name
 needs to be prefixed with ``static:`` in ``USE_LIBS``
 
    a/moz.build:
-      LIBRARY_NAME = 'mylib'
+      Library('mylib')
       FORCE_SHARED_LIB = True
       FORCE_STATIC_LIB = True
       STATIC_LIBRARY_NAME = 'mylib_s'
    b/moz.build:
-      PROGRAM = 'myprog'
+      Program('myprog')
       USE_LIBS += [
           'static:mylib',
       ]
@@ -262,18 +263,18 @@ The ``SDK_LIBRARY`` boolean variable defines whether the library in the current
 directory is going to be installed in the SDK.
 
 The ``SONAME`` variable declares a "shared object name" for the library. It
-defaults to the ``LIBRARY_NAME`` or the ``SHARED_LIBRARY_NAME`` if set. When
+defaults to the ``Library`` name or the ``SHARED_LIBRARY_NAME`` if set. When
 linking to a library with a ``SONAME``, the resulting library or program will
 have a dependency on the library with the name corresponding to the ``SONAME``
-instead of ``LIBRARY_NAME``. This only impacts ELF systems.
+instead of the ``Library`` name. This only impacts ELF systems.
 
    a/moz.build:
-      LIBRARY_NAME = 'mylib'
+      Library('mylib')
    b/moz.build:
-      LIBRARY_NAME = 'otherlib'
+      Library('otherlib')
       SONAME = 'foo'
    c/moz.build:
-      PROGRAM = 'myprog'
+      Program('myprog')
       USE_LIBS += [
           'mylib',
           'otherlib',

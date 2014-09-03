@@ -14,7 +14,7 @@ UNIFIED_SOURCES += [
     'jsctypes-test.cpp',
 ]
 
-LIBRARY_NAME = 'jsctypes-test'
+Library('jsctypes-test')
 
 FORCE_SHARED_LIB = True
 

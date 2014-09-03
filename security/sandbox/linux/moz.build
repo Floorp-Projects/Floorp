@@ -6,7 +6,7 @@
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'mozsandbox'
+Library('mozsandbox')
 FORCE_SHARED_LIB = True
 
 EXPORTS.mozilla += [

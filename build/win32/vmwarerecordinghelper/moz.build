@@ -8,7 +8,7 @@ SOURCES += [
     'vmwarerecordinghelper.cpp',
 ]
 
-LIBRARY_NAME = 'vmwarerecordinghelper'
+Library('vmwarerecordinghelper')
 
 FORCE_SHARED_LIB = True
 

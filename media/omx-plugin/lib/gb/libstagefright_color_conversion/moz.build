@@ -10,7 +10,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'libstagefright_color_conversion.cpp',
     ]
 
-LIBRARY_NAME = 'stagefright_color_conversion'
+Library('stagefright_color_conversion')
 
 FORCE_SHARED_LIB = True
 

@@ -1,6 +1,15 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-PROGRAM = 'test_program'
+@template
+def Program(name):
+    PROGRAM = name
 
-SIMPLE_PROGRAMS = [ 'test_program1', 'test_program2' ]
+
+@template
+def SimplePrograms(names):
+    SIMPLE_PROGRAMS += names
+
+Program('test_program')
+
+SimplePrograms([ 'test_program1', 'test_program2' ])

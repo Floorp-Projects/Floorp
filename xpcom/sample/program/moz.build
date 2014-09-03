@@ -11,9 +11,9 @@ SOURCES += [
 ]
 
 # SIMPLE_PROGRAMS compiles a single .cpp file into an executable
-SIMPLE_PROGRAMS += [
+SimplePrograms([
     'nsTestSample'
-]
+])
 
 # Whatever code is going to be linked with the *standalone* glue must be
 # built with the XPCOM_GLUE define set.

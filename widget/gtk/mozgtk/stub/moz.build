@@ -11,7 +11,7 @@ SOURCES += [
 for var in ('COMMON_SYMBOLS', 'GTK2_SYMBOLS', 'GTK3_SYMBOLS'):
     DEFINES[var] = True
 
-LIBRARY_NAME = 'mozgtk_stub'
+Library('mozgtk_stub')
 
 SONAME = 'mozgtk'
 

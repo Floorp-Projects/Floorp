@@ -57,7 +57,7 @@ else:
         'VolatileBufferFallback.cpp',
     ]
 
-LIBRARY_NAME = 'mozalloc'
+Library('mozalloc')
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     FORCE_STATIC_LIB = True

@@ -9,7 +9,7 @@ SOURCES += [
     'dummy_replace_malloc.c',
 ]
 
-LIBRARY_NAME = 'replace_malloc'
+Library('replace_malloc')
 
 FORCE_SHARED_LIB = True
 

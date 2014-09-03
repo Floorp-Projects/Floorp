@@ -5,6 +5,57 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 @template
+def Program(name):
+    '''Template for program executables.'''
+    PROGRAM = name
+
+
+@template
+def SimplePrograms(names):
+    '''Template for simple program executables.
+
+    Those have a single source with the same base name as the executable.
+    '''
+    SIMPLE_PROGRAMS += names
+
+
+@template
+def CppUnitTests(names):
+    '''Template for C++ unit tests.
+
+    Those have a single source with the same base name as the executable.
+    '''
+    CPP_UNIT_TESTS += names
+
+
+@template
+def Library(name):
+    '''Template for libraries.'''
+    LIBRARY_NAME = name
+
+
+@template
+def HostProgram(name):
+    '''Template for build tools executables.'''
+    HOST_PROGRAM = name
+
+
+@template
+def HostSimplePrograms(names):
+    '''Template for simple build tools executables.
+
+    Those have a single source with the same base name as the executable.
+    '''
+    HOST_SIMPLE_PROGRAMS += names
+
+
+@template
+def HostLibrary(name):
+    '''Template for build tools libraries.'''
+    HOST_LIBRARY_NAME = name
+
+
+@template
 def GeckoBinary():
     '''Template for binaries using Gecko.
 

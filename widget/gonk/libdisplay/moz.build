@@ -36,7 +36,7 @@ elif CONFIG['ANDROID_VERSION'] == '15':
 elif CONFIG['ANDROID_VERSION'] and CONFIG['COMPILE_ENVIRONMENT']:
     error('Unsupported platform version: %s' % (CONFIG['ANDROID_VERSION']))
 
-LIBRARY_NAME = 'display'
+Library('display')
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

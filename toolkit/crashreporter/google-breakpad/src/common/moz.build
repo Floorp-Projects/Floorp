@@ -47,7 +47,7 @@ else:
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_CRASHREPORTER']:
     HOST_SOURCES += [ 'convert_UTF.c' ]
-    HOST_LIBRARY_NAME = 'host_breakpad_common_s'
+    HostLibrary('host_breakpad_common_s')
     HOST_SOURCES += [
         'arm_ex_reader.cc',
         'arm_ex_to_module.cc',
@@ -76,7 +76,7 @@ if CONFIG['OS_TARGET'] == 'Android':
         'android/breakpad_getcontext.S',
     ]
 
-LIBRARY_NAME = 'breakpad_common_s'
+Library('breakpad_common_s')
 
 MSVC_ENABLE_PGO = True
 

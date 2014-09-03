@@ -37,6 +37,6 @@ if CONFIG['_MSC_VER']:
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'mozillapkix'
+Library('mozillapkix')
 
 FINAL_LIBRARY = 'xul'

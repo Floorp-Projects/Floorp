@@ -12,7 +12,7 @@ SOURCES += [
     'libmalloc.cpp',
 ]
 
-LIBRARY_NAME = 'jprof'
+Library('jprof')
 
 FORCE_SHARED_LIB = True
 
