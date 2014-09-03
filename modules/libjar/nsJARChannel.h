@@ -30,13 +30,13 @@ class nsJARInputThunk;
 
 //-----------------------------------------------------------------------------
 
-class nsJARChannel : public nsIJARChannel
-                   , public nsIDownloadObserver
-                   , public nsIStreamListener
-                   , public nsIRemoteOpenFileListener
-                   , public nsIThreadRetargetableRequest
-                   , public nsIThreadRetargetableStreamListener
-                   , public nsHashPropertyBag
+class nsJARChannel MOZ_FINAL : public nsIJARChannel
+                             , public nsIDownloadObserver
+                             , public nsIStreamListener
+                             , public nsIRemoteOpenFileListener
+                             , public nsIThreadRetargetableRequest
+                             , public           nsIThreadRetargetableStreamListener
+                             , public nsHashPropertyBag
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED

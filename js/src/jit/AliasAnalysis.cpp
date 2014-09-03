@@ -10,7 +10,7 @@
 
 #include "jit/Ion.h"
 #include "jit/IonBuilder.h"
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 
@@ -125,25 +125,25 @@ BlockMightReach(MBasicBlock *src, MBasicBlock *dest)
 static void
 IonSpewDependency(MDefinition *load, MDefinition *store, const char *verb, const char *reason)
 {
-    if (!IonSpewEnabled(IonSpew_Alias))
+    if (!JitSpewEnabled(JitSpew_Alias))
         return;
 
-    fprintf(IonSpewFile, "Load ");
-    load->printName(IonSpewFile);
-    fprintf(IonSpewFile, " %s on store ", verb);
-    store->printName(IonSpewFile);
-    fprintf(IonSpewFile, " (%s)\n", reason);
+    fprintf(JitSpewFile, "Load ");
+    load->printName(JitSpewFile);
+    fprintf(JitSpewFile, " %s on store ", verb);
+    store->printName(JitSpewFile);
+    fprintf(JitSpewFile, " (%s)\n", reason);
 }
 
 static void
 IonSpewAliasInfo(const char *pre, MDefinition *ins, const char *post)
 {
-    if (!IonSpewEnabled(IonSpew_Alias))
+    if (!JitSpewEnabled(JitSpew_Alias))
         return;
 
-    fprintf(IonSpewFile, "%s ", pre);
-    ins->printName(IonSpewFile);
-    fprintf(IonSpewFile, " %s\n", post);
+    fprintf(JitSpewFile, "%s ", pre);
+    ins->printName(JitSpewFile);
+    fprintf(JitSpewFile, " %s\n", post);
 }
 
 // This pass annotates every load instruction with the last store instruction
@@ -184,7 +184,7 @@ AliasAnalysis::analyze()
             return false;
 
         if (block->isLoopHeader()) {
-            IonSpew(IonSpew_Alias, "Processing loop header %d", block->id());
+            JitSpew(JitSpew_Alias, "Processing loop header %d", block->id());
             loop_ = new(alloc()) LoopAliasInfo(alloc(), loop_, *block);
         }
 
@@ -201,10 +201,10 @@ AliasAnalysis::analyze()
                         return false;
                 }
 
-                if (IonSpewEnabled(IonSpew_Alias)) {
-                    fprintf(IonSpewFile, "Processing store ");
-                    def->printName(IonSpewFile);
-                    fprintf(IonSpewFile, " (flags %x)\n", set.flags());
+                if (JitSpewEnabled(JitSpew_Alias)) {
+                    fprintf(JitSpewFile, "Processing store ");
+                    def->printName(JitSpewFile);
+                    fprintf(JitSpewFile, " (flags %x)\n", set.flags());
                 }
             } else {
                 // Find the most recent store on which this instruction depends.
@@ -240,7 +240,7 @@ AliasAnalysis::analyze()
 
         if (block->isLoopBackedge()) {
             JS_ASSERT(loop_->loopHeader() == block->loopHeaderOfBackedge());
-            IonSpew(IonSpew_Alias, "Processing loop backedge %d (header %d)", block->id(),
+            JitSpew(JitSpew_Alias, "Processing loop backedge %d (header %d)", block->id(),
                     loop_->loopHeader()->id());
             LoopAliasInfo *outerLoop = loop_->outer();
             MInstruction *firstLoopIns = *loop_->loopHeader()->begin();

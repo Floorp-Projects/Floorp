@@ -790,6 +790,18 @@ intrinsic_RuntimeDefaultLocale(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+bool
+js::intrinsic_IsConstructing(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 0);
+
+    ScriptFrameIter iter(cx);
+    bool isConstructing = iter.isConstructing();
+    args.rval().setBoolean(isConstructing);
+    return true;
+}
+
 static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ToObject",                intrinsic_ToObject,                1,0),
     JS_FN("IsObject",                intrinsic_IsObject,                1,0),
@@ -802,6 +814,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),
     JS_FN("SetScriptHints",          intrinsic_SetScriptHints,          2,0),
     JS_FN("MakeConstructible",       intrinsic_MakeConstructible,       1,0),
+    JS_FN("_IsConstructing",         intrinsic_IsConstructing,          0,0),
     JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
 

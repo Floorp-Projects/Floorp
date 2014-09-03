@@ -103,12 +103,11 @@ this.AutoCompleteE10S = {
     this.popup.invalidate();
 
     if (count > 0) {
+      // Reset fields that were set from the last time the search popup was open
+      this.popup.mInput = null;
+      this.popup.showCommentColumn = false;
+      this.popup.showImageColumn = false;
       this.popup.openPopupAtScreen(this.x, this.y, true);
-      // Bug 947503 - This openPopup call is not triggering the "popupshowing"
-      // event, which autocomplete.xml uses to track the openness of the popup
-      // by setting its mPopupOpen flag. This flag needs to be properly set
-      // for closePopup to work. For now, we set it manually.
-      this.popup.mPopupOpen = true;
     } else {
       this.popup.closePopup();
     }

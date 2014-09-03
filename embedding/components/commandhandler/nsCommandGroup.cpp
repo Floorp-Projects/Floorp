@@ -18,7 +18,7 @@
 class nsGroupsEnumerator : public nsISimpleEnumerator
 {
 public:
-  nsGroupsEnumerator(nsControllerCommandGroup::GroupsHashtable &inHashTable);
+  explicit nsGroupsEnumerator(nsControllerCommandGroup::GroupsHashtable &inHashTable);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
@@ -132,7 +132,7 @@ nsGroupsEnumerator::Initialize()
 class nsNamedGroupEnumerator : public nsISimpleEnumerator
 {
 public:
-  nsNamedGroupEnumerator(nsTArray<nsCString> *inArray);
+  explicit nsNamedGroupEnumerator(nsTArray<nsCString> *inArray);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR

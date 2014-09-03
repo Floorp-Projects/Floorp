@@ -283,6 +283,14 @@ public:
     return mWritingMode != aOther.mWritingMode;
   }
 
+  /**
+   * Check whether two modes are orthogonal to each other.
+   */
+  bool IsOrthogonalTo(const WritingMode& aOther) const
+  {
+    return IsVertical() != aOther.IsVertical();
+  }
+
 private:
   friend class LogicalPoint;
   friend class LogicalSize;

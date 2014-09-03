@@ -48,9 +48,9 @@ protected:
   nsRefPtr<HTMLPropertiesCollection> mCollection;
 };
 
-class HTMLPropertiesCollection : public nsIHTMLCollection,
-                                 public nsStubMutationObserver,
-                                 public nsWrapperCache
+class HTMLPropertiesCollection MOZ_FINAL : public nsIHTMLCollection,
+                                           public nsStubMutationObserver,
+                                           public nsWrapperCache
 {
   friend class PropertyNodeList;
   friend class PropertyStringList;
