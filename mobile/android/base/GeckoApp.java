@@ -1223,7 +1223,7 @@ public abstract class GeckoApp
             final SharedPreferences prefs = getSharedPreferences();
             if (prefs.getBoolean(PREFS_ALLOW_STATE_BUNDLE, false)) {
                 Log.i(LOGTAG, "Restoring state from intent bundle");
-                prefs.edit().remove(PREFS_ALLOW_STATE_BUNDLE).commit();
+                prefs.edit().remove(PREFS_ALLOW_STATE_BUNDLE).apply();
                 savedInstanceState = stateBundle;
             }
         } else if (savedInstanceState != null) {
@@ -1279,7 +1279,7 @@ public abstract class GeckoApp
                 // on exit, or if we were suddenly killed (crash or native OOM).
                 editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, false);
 
-                editor.commit();
+                editor.apply();
 
                 // The lifecycle of mHealthRecorder is "shortly after onCreate"
                 // through "onDestroy" -- essentially the same as the lifecycle
@@ -1691,15 +1691,7 @@ public abstract class GeckoApp
         if (prefs.getInt(PREFS_VERSION_CODE, 0) != versionCode) {
             // If the version has changed, the user has done an upgrade, so restore
             // previous tabs.
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    prefs.edit()
-                         .putInt(PREFS_VERSION_CODE, versionCode)
-                         .commit();
-                }
-            });
-
+            prefs.edit().putInt(PREFS_VERSION_CODE, versionCode).apply();
             shouldRestore = true;
         } else if (savedInstanceState != null ||
                    getSessionRestorePreference().equals("always") ||
@@ -1708,12 +1700,7 @@ public abstract class GeckoApp
             // has chosen to always restore, or we restarted.
             shouldRestore = true;
         } else if (prefs.getBoolean(GeckoApp.PREFS_CRASHED, false)) {
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    prefs.edit().putBoolean(PREFS_CRASHED, false).commit();
-                }
-            });
+            prefs.edit().putBoolean(PREFS_CRASHED, false).apply();
             shouldRestore = true;
         }
 
@@ -1959,7 +1946,7 @@ public abstract class GeckoApp
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, false);
                 currentSession.recordBegin(editor);
-                editor.commit();
+                editor.apply();
 
                 final HealthRecorder rec = mHealthRecorder;
                 if (rec != null) {
@@ -2008,7 +1995,7 @@ public abstract class GeckoApp
                     editor.putBoolean(GeckoApp.PREFS_CLEANUP_TEMP_FILES, false);
                 }
 
-                editor.commit();
+                editor.apply();
 
                 // In theory, the first browser session will not run long enough that we need to
                 // prune during it and we'd rather run it when the browser is inactive so we wait
@@ -2027,24 +2014,22 @@ public abstract class GeckoApp
     }
 
     @Override
-    public void onRestart()
-    {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                SharedPreferences prefs = GeckoApp.this.getSharedPreferences();
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, false);
-                editor.commit();
-            }
-        });
+    public void onRestart() {
+        // Faster on main thread with an async apply().
+        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
+        try {
+            SharedPreferences.Editor editor = GeckoApp.this.getSharedPreferences().edit();
+            editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, false);
+            editor.apply();
+        } finally {
+            StrictMode.setThreadPolicy(savedPolicy);
+        }
 
         super.onRestart();
     }
 
     @Override
-    public void onDestroy()
-    {
+    public void onDestroy() {
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Gecko:Ready",
             "Gecko:DelayedStartup",
@@ -2267,7 +2252,7 @@ public abstract class GeckoApp
             if (cleanupVersion != CURRENT_CLEANUP_VERSION) {
                 SharedPreferences.Editor editor = GeckoApp.this.getSharedPreferences().edit();
                 editor.putInt(CLEANUP_VERSION, CURRENT_CLEANUP_VERSION);
-                editor.commit();
+                editor.apply();
             }
         }
     }
