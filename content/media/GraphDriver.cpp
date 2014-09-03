@@ -87,7 +87,7 @@ void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
       "AudioCallbackDriver" : "SystemClockDriver");
   // Sometimes we switch twice to a new driver per iteration, this is probably a
   // bug.
-  MOZ_ASSERT(!mNextDriver || !mNextDriver->AsAudioCallbackDriver());
+  MOZ_ASSERT(!mNextDriver || mNextDriver->AsAudioCallbackDriver());
   mNextDriver = aNextDriver;
 }
 
@@ -131,17 +131,6 @@ void GraphDriver::EnsureNextIterationLocked()
   mNeedAnotherIteration = true;
 }
 
-ThreadedDriver::ThreadedDriver(MediaStreamGraphImpl* aGraphImpl)
-  : GraphDriver(aGraphImpl)
-{ }
-
-ThreadedDriver::~ThreadedDriver()
-{
-  if (mThread) {
-    mThread->Shutdown();
-  }
-}
-
 class MediaStreamGraphShutdownThreadRunnable : public nsRunnable {
 public:
   explicit MediaStreamGraphShutdownThreadRunnable(GraphDriver* aDriver)
@@ -173,6 +162,26 @@ private:
   nsRefPtr<GraphDriver> mDriver;
 };
 
+void GraphDriver::Shutdown()
+{
+  if (AsAudioCallbackDriver()) {
+    LIFECYCLE_LOG("Releasing audio driver off main thread (GraphDriver::Shutdown).\n");
+    nsRefPtr<AsyncCubebTask> releaseEvent =
+      new AsyncCubebTask(AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
+    releaseEvent->Dispatch();
+  }
+}
+
+ThreadedDriver::ThreadedDriver(MediaStreamGraphImpl* aGraphImpl)
+  : GraphDriver(aGraphImpl)
+{ }
+
+ThreadedDriver::~ThreadedDriver()
+{
+  if (mThread) {
+    mThread->Shutdown();
+  }
+}
 class MediaStreamGraphInitThreadRunnable : public nsRunnable {
 public:
   explicit MediaStreamGraphInitThreadRunnable(ThreadedDriver* aDriver)
@@ -441,6 +450,17 @@ OfflineClockDriver::WakeUp()
   MOZ_ASSERT(false, "An offline graph should not have to wake up.");
 }
 
+AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation)
+  : mDriver(aDriver),
+    mOperation(aOperation),
+    mShutdownGrip(aDriver->GraphImpl())
+{
+  MOZ_ASSERT(mDriver->mAudioStream || aOperation == INIT, "No audio stream !");
+}
+
+AsyncCubebTask::~AsyncCubebTask()
+{
+}
 
 NS_IMETHODIMP
 AsyncCubebTask::Run()
@@ -467,6 +487,7 @@ AsyncCubebTask::Run()
       LIFECYCLE_LOG("AsyncCubebOperation::SHUTDOWN\n");
       mDriver->Stop();
       mDriver = nullptr;
+      mShutdownGrip = nullptr;
       break;
     case AsyncCubebOperation::SLEEP: {
       {
