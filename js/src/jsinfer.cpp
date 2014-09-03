@@ -293,7 +293,7 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
 // TypeSet
 /////////////////////////////////////////////////////////////////////
 
-TemporaryTypeSet::TemporaryTypeSet(Type type)
+TemporaryTypeSet::TemporaryTypeSet(LifoAlloc *alloc, Type type)
 {
     if (type.isUnknown()) {
         flags |= TYPE_FLAG_BASE_MASK;
@@ -308,6 +308,12 @@ TemporaryTypeSet::TemporaryTypeSet(Type type)
     } else {
         setBaseObjectCount(1);
         objectSet = reinterpret_cast<TypeObjectKey**>(type.objectKey());
+
+        if (type.isTypeObject()) {
+            TypeObject *nobject = type.typeObject();
+            if (nobject->newScript() && nobject->newScript()->initializedType())
+                addType(Type::ObjectType(nobject->newScript()->initializedType()), alloc);
+        }
     }
 }
 
