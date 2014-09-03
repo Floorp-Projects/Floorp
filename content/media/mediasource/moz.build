@@ -25,7 +25,6 @@ UNIFIED_SOURCES += [
     'SourceBufferDecoder.cpp',
     'SourceBufferList.cpp',
     'SourceBufferResource.cpp',
-    'TrackBuffer.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
