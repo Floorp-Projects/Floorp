@@ -178,7 +178,6 @@ if os_posix:
 if os_macosx:
     UNIFIED_SOURCES += [
         'src/base/debug_util_mac.cc',
-        'src/base/hmac_mac.cc',
         'src/base/idle_timer.cc',
         'src/base/sys_info_mac.cc',
         'src/base/time_mac.cc',
