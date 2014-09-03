@@ -24,6 +24,7 @@
 #include "webrtc/modules/video_capture/video_capture_config.h"
 #include "webrtc/modules/desktop_capture/shared_memory.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor_shape.h"
 #include "webrtc/modules/desktop_capture/desktop_device_info.h"
 #include "webrtc/modules/desktop_capture/desktop_and_cursor_composer.h"
@@ -219,6 +220,8 @@ protected:
   int32_t DeliverCapturedFrame(I420VideoFrame& captureFrame,
                                int64_t capture_time);
 
+  static const uint32_t kMaxDesktopCaptureCpuUsage = 50; // maximum CPU usage in %
+
   int32_t _id; // Module ID
   std::string _deviceUniqueId; // current Device unique name;
   CriticalSectionWrapper& _apiCs;
@@ -263,6 +266,7 @@ public:
 
 private:
   scoped_ptr<DesktopAndCursorComposer> desktop_capturer_cursor_composer_;
+  EventWrapper& time_event_;
   ThreadWrapper&  capturer_thread_;
 };
 
