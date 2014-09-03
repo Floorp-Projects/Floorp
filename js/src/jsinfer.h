@@ -775,10 +775,6 @@ class TemporaryTypeSet : public TypeSet
     /* Whether any objects in the type set needs a barrier on id. */
     bool propertyNeedsBarrier(CompilerConstraintList *constraints, jsid id);
 
-    /* Whether any objects in the type set might treat id as a constant property. */
-    bool propertyMightBeConstant(CompilerConstraintList *constraints, jsid id);
-    bool propertyIsConstant(CompilerConstraintList *constraints, jsid id, Value *valOut);
-
     /*
      * Whether this set contains all types in other, except (possibly) the
      * specified type.
@@ -1511,6 +1507,7 @@ class HeapTypeSetKey
     JSObject *singleton(CompilerConstraintList *constraints);
     bool needsBarrier(CompilerConstraintList *constraints);
     bool constant(CompilerConstraintList *constraints, Value *valOut);
+    bool couldBeConstant(CompilerConstraintList *constraints);
 };
 
 /*

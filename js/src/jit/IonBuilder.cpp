@@ -6563,11 +6563,18 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
 
     MIRType knownType = types->getKnownMIRType();
     if (barrier == BarrierKind::NoBarrier) {
+        // Try to inline properties holding a known constant object.
         if (singleton) {
-            // Try to inline a known constant value.
             if (testSingletonProperty(staticObject, name) == singleton)
                 return pushConstant(ObjectValue(*singleton));
         }
+
+        // Try to inline properties that have never been overwritten.
+        Value constantValue;
+        if (property.constant(constraints(), &constantValue))
+            return pushConstant(constantValue);
+
+        // Try to inline properties that can only have one value.
         if (knownType == MIRType_Undefined)
             return pushConstant(UndefinedValue());
         if (knownType == MIRType_Null)
@@ -6649,7 +6656,7 @@ IonBuilder::setStaticName(JSObject *staticObject, PropertyName *name)
         return jsop_setprop(name);
     }
 
-    if (!TypeSetIncludes(property.maybeTypes(), value->type(), value->resultTypeSet()))
+    if (!CanWriteProperty(constraints(), property, value))
         return jsop_setprop(name);
 
     current->pop();
@@ -8717,9 +8724,10 @@ IonBuilder::jsop_getprop(PropertyName *name)
     bool emitted = false;
 
     MDefinition *obj = current->pop();
+    types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
     // Try to optimize to a specific constant.
-    if (!getPropTryInferredConstant(&emitted, obj, name) || emitted)
+    if (!getPropTryInferredConstant(&emitted, obj, name, types) || emitted)
         return emitted;
 
     // Try to optimize arguments.length.
@@ -8730,7 +8738,6 @@ IonBuilder::jsop_getprop(PropertyName *name)
     if (!getPropTryArgumentsCallee(&emitted, obj, name) || emitted)
         return emitted;
 
-    types::TemporaryTypeSet *types = bytecodeTypes(pc);
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                        obj, name, types);
 
@@ -8812,7 +8819,8 @@ IonBuilder::checkIsDefinitelyOptimizedArguments(MDefinition *obj, bool *isOptimi
 }
 
 bool
-IonBuilder::getPropTryInferredConstant(bool *emitted, MDefinition *obj, PropertyName *name)
+IonBuilder::getPropTryInferredConstant(bool *emitted, MDefinition *obj, PropertyName *name,
+                                       types::TemporaryTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
 
@@ -8821,12 +8829,23 @@ IonBuilder::getPropTryInferredConstant(bool *emitted, MDefinition *obj, Property
     if (!objTypes)
         return true;
 
-    Value constVal = UndefinedValue();
-    if (objTypes->propertyIsConstant(constraints(), NameToId(name), &constVal)) {
+    JSObject *singleton = objTypes->getSingleton();
+    if (!singleton)
+        return true;
+
+    types::TypeObjectKey *type = types::TypeObjectKey::get(singleton);
+    if (type->unknownProperties())
+        return true;
+
+    types::HeapTypeSetKey property = type->property(NameToId(name));
+
+    Value constantValue = UndefinedValue();
+    if (property.constant(constraints(), &constantValue)) {
         spew("Optimized constant property");
         obj->setImplicitlyUsedUnchecked();
-        if (!pushConstant(constVal))
+        if (!pushConstant(constantValue))
             return false;
+        types->addType(types::GetValueType(constantValue), alloc_->lifoAlloc());
         *emitted = true;
     }
 
@@ -9455,14 +9474,13 @@ IonBuilder::jsop_setprop(PropertyName *name)
     if (!setPropTryTypedObject(&emitted, obj, name, value) || emitted)
         return emitted;
 
-    // Do not emit optimized stores to slots that may be constant.
-    if (objTypes && !objTypes->propertyMightBeConstant(constraints(), NameToId(name))) {
+    if (!barrier) {
         // Try to emit store from definite slots.
-        if (!setPropTryDefiniteSlot(&emitted, obj, name, value, barrier, objTypes) || emitted)
+        if (!setPropTryDefiniteSlot(&emitted, obj, name, value, objTypes) || emitted)
             return emitted;
 
         // Try to emit a monomorphic/polymorphic store based on baseline caches.
-        if (!setPropTryInlineAccess(&emitted, obj, name, value, barrier, objTypes) || emitted)
+        if (!setPropTryInlineAccess(&emitted, obj, name, value, objTypes) || emitted)
             return emitted;
     }
 
@@ -9639,12 +9657,9 @@ IonBuilder::setPropTryScalarPropOfTypedObject(bool *emitted,
 bool
 IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
                                    PropertyName *name, MDefinition *value,
-                                   bool barrier, types::TemporaryTypeSet *objTypes)
+                                   types::TemporaryTypeSet *objTypes)
 {
     JS_ASSERT(*emitted == false);
-
-    if (barrier)
-        return true;
 
     uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), name);
     if (slot == UINT32_MAX)
@@ -9688,14 +9703,10 @@ IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
 
 bool
 IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
-                                   PropertyName *name,
-                                   MDefinition *value, bool barrier,
+                                   PropertyName *name, MDefinition *value,
                                    types::TemporaryTypeSet *objTypes)
 {
     JS_ASSERT(*emitted == false);
-
-    if (barrier)
-        return true;
 
     BaselineInspector::ShapeVector shapes(alloc());
     if (!inspector->maybeShapesForPropertyOp(pc, shapes))

@@ -3883,7 +3883,7 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
 
         jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
-        if (!property.maybeTypes())
+        if (!property.maybeTypes() || property.couldBeConstant(constraints))
             return false;
 
         if (TypeSetIncludes(property.maybeTypes(), (*pvalue)->type(), (*pvalue)->resultTypeSet()))
@@ -3967,6 +3967,16 @@ AddTypeGuard(TempAllocator &alloc, MBasicBlock *current, MDefinition *obj,
     return guard;
 }
 
+// Whether value can be written to property without changing type information.
+bool
+jit::CanWriteProperty(types::CompilerConstraintList *constraints,
+                      types::HeapTypeSetKey property, MDefinition *value)
+{
+    if (property.couldBeConstant(constraints))
+        return false;
+    return TypeSetIncludes(property.maybeTypes(), value->type(), value->resultTypeSet());
+}
+
 bool
 jit::PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstraintList *constraints,
                                    MBasicBlock *current, MDefinition **pobj,
@@ -4000,7 +4010,7 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstrai
 
         jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
-        if (!TypeSetIncludes(property.maybeTypes(), (*pvalue)->type(), (*pvalue)->resultTypeSet())) {
+        if (!CanWriteProperty(constraints, property, *pvalue)) {
             // Either pobj or pvalue needs to be modified to filter out the
             // types which the value could have but are not in the property,
             // or a VM call is required. A VM call is always required if pobj
@@ -4032,7 +4042,7 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstrai
 
         jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
-        if (TypeSetIncludes(property.maybeTypes(), (*pvalue)->type(), (*pvalue)->resultTypeSet()))
+        if (CanWriteProperty(constraints, property, *pvalue))
             continue;
 
         if ((property.maybeTypes() && !property.maybeTypes()->empty()) || excluded)

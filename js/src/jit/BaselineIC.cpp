@@ -7550,6 +7550,16 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
     }
 
     if (IsCacheableSetPropWriteSlot(obj, oldShape, holder, shape)) {
+        // For some property writes, such as the initial overwrite of global
+        // properties, TI will not mark the property as having been
+        // overwritten. Don't attach a stub in this case, so that we don't
+        // execute another write to the property without TI seeing that write.
+        types::EnsureTrackPropertyTypes(cx, obj, id);
+        if (!types::PropertyHasBeenMarkedNonConstant(obj, id)) {
+            *attached = true;
+            return true;
+        }
+
         bool isFixedSlot;
         uint32_t offset;
         GetFixedOrDynamicSlotOffset(obj, shape->slot(), &isFixedSlot, &offset);
