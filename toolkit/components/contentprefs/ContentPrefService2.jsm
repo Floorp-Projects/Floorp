@@ -655,7 +655,7 @@ ContentPrefService2.prototype = {
 
   destroy: function CPS2_destroy() {
     if (this._statements) {
-      for (let stmt of this._statements) {
+      for each (let stmt in this._statements) {
         stmt.finalize();
       }
     }
