@@ -511,7 +511,6 @@ MConstant::NewConstraintlessObject(TempAllocator &alloc, JSObject *v)
     return new(alloc) MConstant(v);
 }
 
-
 types::TemporaryTypeSet *
 jit::MakeSingletonTypeSet(types::CompilerConstraintList *constraints, JSObject *obj)
 {
@@ -523,7 +522,8 @@ jit::MakeSingletonTypeSet(types::CompilerConstraintList *constraints, JSObject *
     types::TypeObjectKey *objType = types::TypeObjectKey::get(obj);
     objType->hasFlags(constraints, types::OBJECT_FLAG_UNKNOWN_PROPERTIES);
 
-    return GetIonContext()->temp->lifoAlloc()->new_<types::TemporaryTypeSet>(types::Type::ObjectType(obj));
+    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    return alloc->new_<types::TemporaryTypeSet>(alloc, types::Type::ObjectType(obj));
 }
 
 MConstant::MConstant(const js::Value &vp, types::CompilerConstraintList *constraints)
@@ -1192,7 +1192,8 @@ MakeMIRTypeSet(MIRType type)
     types::Type ntype = type == MIRType_Object
                         ? types::Type::AnyObjectType()
                         : types::Type::PrimitiveType(ValueTypeFromMIRType(type));
-    return GetIonContext()->temp->lifoAlloc()->new_<types::TemporaryTypeSet>(ntype);
+    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    return alloc->new_<types::TemporaryTypeSet>(alloc, ntype);
 }
 
 bool

@@ -1063,7 +1063,8 @@ IonBuilder::addOsrValueTypeBarrier(uint32_t slot, MInstruction **def_,
         // No unbox instruction will be added below, so check the type by
         // adding a type barrier for a singleton type set.
         types::Type ntype = types::Type::PrimitiveType(ValueTypeFromMIRType(type));
-        typeSet = alloc_->lifoAlloc()->new_<types::TemporaryTypeSet>(ntype);
+        LifoAlloc *lifoAlloc = alloc().lifoAlloc();
+        typeSet = lifoAlloc->new_<types::TemporaryTypeSet>(lifoAlloc, ntype);
         if (!typeSet)
             return false;
         MInstruction *barrier = MTypeBarrier::New(alloc(), def, typeSet);
@@ -6072,8 +6073,9 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
                 existingType = baselineFrame_->varTypes[var];
 
             // Extract typeset from value.
+            LifoAlloc *lifoAlloc = alloc().lifoAlloc();
             types::TemporaryTypeSet *typeSet =
-                alloc_->lifoAlloc()->new_<types::TemporaryTypeSet>(existingType);
+                lifoAlloc->new_<types::TemporaryTypeSet>(lifoAlloc, existingType);
             if (!typeSet)
                 return nullptr;
             MIRType type = typeSet->getKnownMIRType();
@@ -7509,7 +7511,8 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
         objTypes->convertDoubleElements(constraints()) == types::TemporaryTypeSet::AlwaysConvertToDoubles)
     {
         // Note: double implies int32 as well for typesets
-        types = alloc_->lifoAlloc()->new_<types::TemporaryTypeSet>(types::Type::DoubleType());
+        LifoAlloc *lifoAlloc = alloc().lifoAlloc();
+        types = lifoAlloc->new_<types::TemporaryTypeSet>(lifoAlloc, types::Type::DoubleType());
         if (!types)
             return false;
 
