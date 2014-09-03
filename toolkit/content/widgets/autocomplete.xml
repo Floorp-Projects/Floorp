@@ -893,8 +893,11 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <handler event="popupshowing"><![CDATA[
         // If normalMaxRows wasn't already set by the input, then set it here
         // so that we restore the correct number when the popup is hidden.
-        if (this._normalMaxRows < 0)
+
+        // Null-check this.mInput; see bug 1017914
+        if (this._normalMaxRows < 0 && this.mInput) {
           this._normalMaxRows = this.mInput.maxRows;
+        }
 
         this.mPopupOpen = true;
       ]]></handler>
@@ -911,11 +914,16 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         // Reset the maxRows property to the cached "normal" value, and reset
         // _normalMaxRows so that we can detect whether it was set by the input
         // when the popupshowing handler runs.
-        this.mInput.maxRows = this._normalMaxRows;
+
+        // Null-check this.mInput; see bug 1017914
+        if (this.mInput)
+          this.mInput.maxRows = this._normalMaxRows;
         this._normalMaxRows = -1;
         // If the list was being navigated and then closed, make sure
         // we fire accessible focus event back to textbox
-        if (isListActive) {
+
+        // Null-check this.mInput; see bug 1017914
+        if (isListActive && this.mInput) {
           this.mInput.mIgnoreFocus = true;
           this.mInput._focus();
           this.mInput.mIgnoreFocus = false;
