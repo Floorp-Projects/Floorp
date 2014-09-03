@@ -143,24 +143,6 @@ CryptoBuffer::ToJwkBase64(nsString& aBase64)
   return NS_OK;
 }
 
-SECItem*
-CryptoBuffer::ToSECItem() const
-{
-  uint8_t* data = (uint8_t*) moz_malloc(Length());
-  if (!data) {
-    return nullptr;
-  }
-
-  SECItem* item = ::SECITEM_AllocItem(nullptr, nullptr, 0);
-  item->type = siBuffer;
-  item->data = data;
-  item->len = Length();
-
-  memcpy(item->data, Elements(), Length());
-
-  return item;
-}
-
 bool
 CryptoBuffer::ToSECItem(PLArenaPool *aArena, SECItem* aItem) const
 {
