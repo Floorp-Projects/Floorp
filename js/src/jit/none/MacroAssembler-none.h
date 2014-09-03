@@ -22,8 +22,10 @@ static MOZ_CONSTEXPR_VAR Register FramePointer = { 0 };
 static MOZ_CONSTEXPR_VAR Register ReturnReg = { 0 };
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = { 0 };
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = { 0 };
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimdReg = { 0 };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = { 0 };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { 0 };
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = { 0 };
 static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { 0 };
 
 static MOZ_CONSTEXPR_VAR Register OsrFrameReg = { 0 };
@@ -155,6 +157,7 @@ class MacroAssemblerNone : public Assembler
     static void TraceDataRelocations(JSTracer *, JitCode *, CompactBufferReader &) { MOZ_CRASH(); }
 
     static bool SupportsFloatingPoint() { return false; }
+    static bool SupportsSimd() { return false; }
 
     void executableCopy(void *) { MOZ_CRASH(); }
     void copyJumpRelocationTable(uint8_t *) { MOZ_CRASH(); }
@@ -268,6 +271,10 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void load32(T, Register) { MOZ_CRASH(); }
     template <typename T> void loadFloat32(T, FloatRegister) { MOZ_CRASH(); }
     template <typename T> void loadDouble(T, FloatRegister) { MOZ_CRASH(); }
+    template <typename T> void loadAlignedInt32x4(T, FloatRegister) { MOZ_CRASH(); }
+    template <typename T> void loadUnalignedInt32x4(T, FloatRegister) { MOZ_CRASH(); }
+    template <typename T> void loadAlignedFloat32x4(T, FloatRegister) { MOZ_CRASH(); }
+    template <typename T> void loadUnalignedFloat32x4(T, FloatRegister) { MOZ_CRASH(); }
     template <typename T> void loadPrivate(T, Register) { MOZ_CRASH(); }
     template <typename T> void load8SignExtend(T, Register) { MOZ_CRASH(); }
     template <typename T> void load8ZeroExtend(T, Register) { MOZ_CRASH(); }
@@ -279,6 +286,10 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void store32_NoSecondScratch(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeFloat32(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeDouble(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeAlignedInt32x4(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeUnalignedInt32x4(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeAlignedFloat32x4(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeUnalignedFloat32x4(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store8(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store16(T, S) { MOZ_CRASH(); }
 
