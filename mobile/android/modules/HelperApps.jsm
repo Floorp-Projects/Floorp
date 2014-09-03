@@ -14,9 +14,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
 XPCOMUtils.defineLazyModuleGetter(this, "Messaging",
                                   "resource://gre/modules/Messaging.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "sendMessageToJava",
-                                  "resource://gre/modules/Messaging.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
   let ContentAreaUtils = {};
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", ContentAreaUtils);
@@ -147,7 +144,7 @@ var HelperApps =  {
         return [];
       return parseData(data);
     } else {
-      sendMessageToJava(msg, function(data) {
+      Messaging.sendRequestForResult(msg).then(function(data) {
         callback(parseData(data));
       });
     }
@@ -196,9 +193,7 @@ var HelperApps =  {
             className: app.activityName
         });
 
-        sendMessageToJava(msg, function(data) {
-            callback(data);
-        });
+        Messaging.sendRequestForResult(msg).then(callback);
     } else {
         let msg = this._getMessage("Intent:Open", uri, {
             packageName: app.packageName,
@@ -211,7 +206,7 @@ var HelperApps =  {
 
   _sendMessageSync: function(msg) {
     let res = null;
-    sendMessageToJava(msg, function(data) {
+    Messaging.sendRequestForResult(msg).then(function(data) {
       res = data;
     });
 

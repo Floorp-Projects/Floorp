@@ -371,7 +371,7 @@ public class Distribution {
                 checkSystemDistribution();
 
         this.state = distributionSet ? STATE_SET : STATE_NONE;
-        settings.edit().putInt(keyName, this.state).commit();
+        settings.edit().putInt(keyName, this.state).apply();
 
         runReadyQueue();
         return distributionSet;

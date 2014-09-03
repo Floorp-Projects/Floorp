@@ -17,14 +17,23 @@
 namespace mozilla {
 namespace dom {
 
-class MobileConnectionInfo MOZ_FINAL : public nsISupports
+class MobileConnectionInfo MOZ_FINAL : public nsIMobileConnectionInfo
                                      , public nsWrapperCache
 {
 public:
+  NS_DECL_NSIMOBILECONNECTIONINFO
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MobileConnectionInfo)
 
   MobileConnectionInfo(nsPIDOMWindow* aWindow);
+
+  MobileConnectionInfo(const nsAString& aState, bool aConnected,
+                       bool aEmergencyCallsOnly, bool aRoaming,
+                       nsIMobileNetworkInfo* aNetworkInfo,
+                       const nsAString& aType,
+                       const Nullable<int32_t>& aSignalStrength,
+                       const Nullable<uint16_t>& aRelSignalStrength,
+                       nsIMobileCellInfo* aCellInfo);
 
   void
   Update(nsIMobileConnectionInfo* aInfo);

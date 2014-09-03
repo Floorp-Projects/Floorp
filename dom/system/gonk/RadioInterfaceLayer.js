@@ -72,7 +72,6 @@ const LTECELLINFO_CID =
 
 const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkConnStateChangedTopic      = "network-connection-state-changed";
-const kNetworkActiveChangedTopic         = "network-active-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
 const kSilentSmsReceivedObserverTopic    = "silent-sms-received";
 const kSmsSendingObserverTopic           = "sms-sending";
@@ -109,40 +108,8 @@ const HW_DEFAULT_CLIENT_ID = 0;
 const INT32_MAX = 2147483647;
 const UNKNOWN_RSSI = 99;
 
-const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
-  "RIL:GetRilContext",
-  "RIL:GetAvailableNetworks",
-  "RIL:SelectNetwork",
-  "RIL:SelectNetworkAuto",
-  "RIL:SetPreferredNetworkType",
-  "RIL:GetPreferredNetworkType",
-  "RIL:SendMMI",
-  "RIL:CancelMMI",
-  "RIL:RegisterMobileConnectionMsg",
-  "RIL:SetCallForwardingOptions",
-  "RIL:GetCallForwardingOptions",
-  "RIL:SetCallBarringOptions",
-  "RIL:GetCallBarringOptions",
-  "RIL:ChangeCallBarringPassword",
-  "RIL:SetCallWaitingOptions",
-  "RIL:GetCallWaitingOptions",
-  "RIL:SetCallingLineIdRestriction",
-  "RIL:GetCallingLineIdRestriction",
-  "RIL:SetRoamingPreference",
-  "RIL:GetRoamingPreference",
-  "RIL:ExitEmergencyCbMode",
-  "RIL:SetRadioEnabled",
-  "RIL:SetVoicePrivacyMode",
-  "RIL:GetVoicePrivacyMode",
-  "RIL:GetSupportedNetworkTypes"
-];
-
-const RIL_IPC_MOBILENETWORK_MSG_NAMES = [
-  "RIL:GetLastKnownNetwork",
-  "RIL:GetLastKnownHomeNetwork"
-];
-
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
+  "RIL:GetRilContext",
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
   "RIL:SendStkTimerExpiration",
@@ -232,6 +199,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gTelephonyService",
                                    "@mozilla.org/telephony/telephonyservice;1",
                                    "nsIGonkTelephonyService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
+                                   "@mozilla.org/mobileconnection/mobileconnectionservice;1",
+                                   "nsIMobileConnectionGonkService");
+
 XPCOMUtils.defineLazyGetter(this, "WAP", function() {
   let wap = {};
   Cu.import("resource://gre/modules/WapPushManager.js", wap);
@@ -276,12 +247,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
 
     _registerMessageListeners: function() {
       ppmm.addMessageListener("child-process-shutdown", this);
-      for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
-        ppmm.addMessageListener(msgname, this);
-      }
-      for (let msgname of RIL_IPC_MOBILENETWORK_MSG_NAMES) {
-        ppmm.addMessageListener(msgname, this);
-      }
       for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
         ppmm.addMessageListener(msgName, this);
       }
@@ -295,12 +260,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
 
     _unregisterMessageListeners: function() {
       ppmm.removeMessageListener("child-process-shutdown", this);
-      for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
-        ppmm.removeMessageListener(msgname, this);
-      }
-      for (let msgname of RIL_IPC_MOBILENETWORK_MSG_NAMES) {
-        ppmm.removeMessageListener(msgname, this);
-      }
       for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
         ppmm.removeMessageListener(msgName, this);
       }
@@ -417,23 +376,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
         return null;
       }
 
-      if (RIL_IPC_MOBILECONNECTION_MSG_NAMES.indexOf(msg.name) != -1) {
-        if (!msg.target.assertPermission("mobileconnection")) {
-          if (DEBUG) {
-            debug("MobileConnection message " + msg.name +
-                  " from a content process with no 'mobileconnection' privileges.");
-          }
-          return null;
-        }
-      } else if (RIL_IPC_MOBILENETWORK_MSG_NAMES.indexOf(msg.name) != -1) {
-        if (!msg.target.assertPermission("mobilenetwork")) {
-          if (DEBUG) {
-            debug("MobileNetwork message " + msg.name +
-                  " from a content process with no 'mobilenetwork' privileges.");
-          }
-          return null;
-        }
-      } else if (RIL_IPC_ICCMANAGER_MSG_NAMES.indexOf(msg.name) != -1) {
+      if (RIL_IPC_ICCMANAGER_MSG_NAMES.indexOf(msg.name) != -1) {
         if (!msg.target.assertPermission("mobileconnection")) {
           if (DEBUG) {
             debug("IccManager message " + msg.name +
@@ -463,9 +406,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
       }
 
       switch (msg.name) {
-        case "RIL:RegisterMobileConnectionMsg":
-          this._registerMessageTarget("mobileconnection", msg.target);
-          return null;
         case "RIL:RegisterIccMsg":
           this._registerMessageTarget("icc", msg.target);
           return null;
@@ -482,11 +422,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
       if (!radioInterface) {
         if (DEBUG) debug("No such radio interface: " + clientId);
         return null;
-      }
-
-      if (msg.name === "RIL:SetRadioEnabled") {
-        // Special handler for SetRadioEnabled.
-        return gRadioEnabledController.receiveMessage(msg);
       }
 
       return radioInterface.receiveMessage(msg);
@@ -540,7 +475,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
 
 XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
   let _ril = null;
-  let _pendingMessages = [];  // For queueing "RIL =SetRadioEnabled" messages.
+  let _pendingMessages = [];  // For queueing "setRadioEnabled" message.
   let _isProcessingPending = false;
   let _timer = null;
   let _request = null;
@@ -566,9 +501,14 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
       }
     },
 
-    receiveMessage: function(msg) {
-      if (DEBUG) debug("RadioControl: receiveMessage: " + JSON.stringify(msg));
-      _pendingMessages.push(msg);
+    setRadioEnabled: function(clientId, data, callback) {
+      if (DEBUG) debug("setRadioEnabled: " + clientId + ": " + JSON.stringify(data));
+      let message = {
+        clientId: clientId,
+        data: data,
+        callback: callback
+      };
+      _pendingMessages.push(message);
       this._startProcessingPending();
     },
 
@@ -582,6 +522,10 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
       if (deferred) {
         deferred.resolve();
       }
+    },
+
+    notifyRadioStateChanged: function(clientId, radioState) {
+      gMobileConnectionService.notifyRadioStateChanged(clientId, radioState);
     },
 
     _startProcessingPending: function() {
@@ -616,7 +560,7 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
     _isCardPresentAtClient: function(clientId) {
       let cardState = _ril.getRadioInterface(clientId).rilContext.cardState;
       return cardState !== RIL.GECKO_CARDSTATE_UNDETECTED &&
-        cardState !== RIL.GECKO_CARDSTATE_UNKNOWN;
+             cardState !== RIL.GECKO_CARDSTATE_UNKNOWN;
     },
 
     _isRadioAbleToEnableAtClient: function(clientId, numCards) {
@@ -640,37 +584,47 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
       return false;
     },
 
-    _handleMessage: function(msg) {
-      if (DEBUG) debug("RadioControl: handleMessage: " + JSON.stringify(msg));
-      let clientId = msg.json.clientId || 0;
+    _isValidStateForSetRadioEnabled: function(clientId) {
+      let radioState = gMobileConnectionService.getRadioState(clientId);
+      return radioState == RIL.GECKO_RADIOSTATE_ENABLED ||
+             radioState == RIL.GECKO_RADIOSTATE_DISABLED;
+    },
+
+    _isDummyForSetRadioEnabled: function(clientId, data) {
+      let radioState = gMobileConnectionService.getRadioState(clientId);
+      return (radioState == RIL.GECKO_RADIOSTATE_ENABLED && data.enabled) ||
+             (radioState == RIL.GECKO_RADIOSTATE_DISABLED && !data.enabled);
+    },
+
+    _handleMessage: function(message) {
+      if (DEBUG) debug("RadioControl: handleMessage: " + JSON.stringify(message));
+      let clientId = message.clientId || 0;
       let radioInterface = _ril.getRadioInterface(clientId);
 
-      if (!radioInterface.isValidStateForSetRadioEnabled()) {
-        radioInterface.setRadioEnabledResponse(msg.target, msg.json.data,
-                                               "InvalidStateError");
+      if (!this._isValidStateForSetRadioEnabled(clientId)) {
+        message.data.errorMsg = "InvalidStateError";
+        message.callback(message.data);
         this._processNextMessage();
         return;
       }
 
-      if (radioInterface.isDummyForSetRadioEnabled(msg.json.data)) {
-        radioInterface.setRadioEnabledResponse(msg.target, msg.json.data);
+      if (this._isDummyForSetRadioEnabled(clientId, message.data)) {
+        message.callback(message.data);
         this._processNextMessage();
         return;
       }
 
-      if (msg.json.data.enabled) {
+      if (message.data.enabled) {
         if (this._isRadioAbleToEnableAtClient(clientId)) {
-          radioInterface.receiveMessage(msg);
+          this._setRadioEnabledInternal(message);
         } else {
           // Not really do it but respond success.
-          radioInterface.setRadioEnabledResponse(msg.target, msg.json.data);
+          message.callback(message.data);
         }
 
         this._processNextMessage();
       } else {
-        _request = function() {
-          radioInterface.receiveMessage(msg);
-        };
+        _request = this._setRadioEnabledInternal.bind(this, message);
 
         // In 2G network, modem takes 35+ seconds to process deactivate data
         // call request if device has active voice call (please see bug 964974
@@ -692,6 +646,27 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
 
         this._createTimer();
       }
+    },
+
+    _setRadioEnabledInternal: function(message) {
+      let clientId = message.clientId || 0;
+      let enabled = message.data.enabled || false;
+      let radioInterface = _ril.getRadioInterface(clientId);
+
+      this.notifyRadioStateChanged(clientId,
+                                   enabled ? RIL.GECKO_RADIOSTATE_ENABLING
+                                           : RIL.GECKO_RADIOSTATE_DISABLING);
+      radioInterface.workerMessenger.send("setRadioEnabled", message.data,
+                                          (function(response) {
+        if (response.errorMsg) {
+          // Request fails. Rollback to the original radioState.
+          this.notifyRadioStateChanged(clientId,
+                                       enabled ? RIL.GECKO_RADIOSTATE_DISABLED
+                                               : RIL.GECKO_RADIOSTATE_ENABLED);
+        }
+        message.callback(response);
+        return false;
+      }).bind(this));
     },
 
     _deactivateDataCalls: function() {
@@ -1429,8 +1404,8 @@ DataConnectionHandler.prototype = {
 
     // This check avoids data call connection if the radio is not ready
     // yet after toggling off airplane mode.
-    let rilContext = this.radioInterface.rilContext;
-    if (rilContext.radioState != RIL.GECKO_RADIOSTATE_READY) {
+    let radioState = gMobileConnectionService.getRadioState(this.clientId);
+    if (radioState != RIL.GECKO_RADIOSTATE_ENABLED) {
       if (DEBUG) {
         this.debug("RIL is not ready for data connection: radio's not ready");
       }
@@ -1449,7 +1424,7 @@ DataConnectionHandler.prototype = {
       return;
     }
 
-    let dataInfo = rilContext.data;
+    let dataInfo = gMobileConnectionService.getDataConnectionInfo(this.clientId);
     let isRegistered =
       dataInfo.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED;
     let haveDataConnection =
@@ -1512,10 +1487,9 @@ DataConnectionHandler.prototype = {
       return;
     }
 
-    let detailedRadioState = rilContext.detailedRadioState;
     if (gRadioEnabledController.isDeactivatingDataCalls() ||
-        detailedRadioState == RIL.GECKO_DETAILED_RADIOSTATE_ENABLING ||
-        detailedRadioState == RIL.GECKO_DETAILED_RADIOSTATE_DISABLING) {
+        radioState == RIL.GECKO_RADIOSTATE_ENABLING ||
+        radioState == RIL.GECKO_RADIOSTATE_DISABLING) {
       // We're changing the radio power currently, ignore any changes.
       return;
     }
@@ -1589,8 +1563,7 @@ DataConnectionHandler.prototype = {
     if (networkInterface && networkInterface.enabled) {
       let apnSetting = networkInterface.apnSetting;
       if (message.apn == apnSetting.apn) {
-        gMessageManager.sendMobileConnectionMessage("RIL:DataError",
-                                                    this.clientId, message);
+        gMobileConnectionService.notifyDataError(this.clientId, message);
       }
     }
 
@@ -1899,36 +1872,10 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   };
   aWorkerMessenger.registerClient(aClientId, this);
 
-  this.supportedNetworkTypes = this.getSupportedNetworkTypes();
-
   this.rilContext = {
-    radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
-    detailedRadioState: null,
     cardState:      RIL.GECKO_CARDSTATE_UNKNOWN,
-    networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
     iccInfo:        null,
-    imsi:           null,
-
-    // These objects implement the nsIMobileConnectionInfo interface,
-    // although the actual implementation lives in the content process. So are
-    // the child attributes `network` and `cell`, which implement
-    // nsIMobileNetworkInfo and nsIMobileCellInfo respectively.
-    voice:          {connected: false,
-                     emergencyCallsOnly: false,
-                     roaming: false,
-                     network: null,
-                     cell: null,
-                     type: null,
-                     signalStrength: null,
-                     relSignalStrength: null},
-    data:           {connected: false,
-                     emergencyCallsOnly: false,
-                     roaming: false,
-                     network: null,
-                     cell: null,
-                     type: null,
-                     signalStrength: null,
-                     relSignalStrength: null},
+    imsi:           null
   };
 
   this.voicemailInfo = {
@@ -1985,7 +1932,6 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   Services.obs.addObserver(this, kScreenStateChangedTopic, false);
 
   Services.obs.addObserver(this, kNetworkConnStateChangedTopic, false);
-  Services.obs.addObserver(this, kNetworkActiveChangedTopic, false);
 
   this.portAddressedSmsApps = {};
   this.portAddressedSmsApps[WAP.WDP_PORT_PUSH] = this.handleSmsWdpPortPush.bind(this);
@@ -2026,7 +1972,6 @@ RadioInterface.prototype = {
     Services.obs.removeObserver(this, kSysClockChangeObserverTopic);
     Services.obs.removeObserver(this, kScreenStateChangedTopic);
     Services.obs.removeObserver(this, kNetworkConnStateChangedTopic);
-    Services.obs.removeObserver(this, kNetworkActiveChangedTopic);
   },
 
   /**
@@ -2064,26 +2009,6 @@ RadioInterface.prototype = {
   },
 
   /**
-   * A utility function to get supportedNetworkTypes from system property
-   */
-  getSupportedNetworkTypes: function() {
-    let key = "ro.moz.ril." + this.clientId + ".network_types";
-    let supportedNetworkTypes = libcutils.property_get(key, "").split(",");
-    for (let type of supportedNetworkTypes) {
-      // If the value in system property is not valid, use the default one which
-      // is defined in ril_consts.js.
-      if (RIL.GECKO_SUPPORTED_NETWORK_TYPES.indexOf(type) < 0) {
-        if (DEBUG) this.debug("Unknown network type: " + type);
-        supportedNetworkTypes =
-          RIL.GECKO_SUPPORTED_NETWORK_TYPES_DEFAULT.split(",");
-        break;
-      }
-    }
-    if (DEBUG) this.debug("Supported Network Types: " + supportedNetworkTypes);
-    return supportedNetworkTypes;
-  },
-
-  /**
    * Process a message from the content process.
    */
   receiveMessage: function(msg) {
@@ -2091,27 +2016,6 @@ RadioInterface.prototype = {
       case "RIL:GetRilContext":
         // This message is sync.
         return this.rilContext;
-      case "RIL:GetLastKnownNetwork":
-        // This message is sync.
-        return this._lastKnownNetwork;
-      case "RIL:GetLastKnownHomeNetwork":
-        // This message is sync.
-        return this._lastKnownHomeNetwork;
-      case "RIL:GetAvailableNetworks":
-        this.workerMessenger.sendWithIPCMessage(msg, "getAvailableNetworks");
-        break;
-      case "RIL:SelectNetwork":
-        this.selectNetwork(msg.target, msg.json.data);
-        break;
-      case "RIL:SelectNetworkAuto":
-        this.selectNetworkAuto(msg.target, msg.json.data);
-        break;
-      case "RIL:SetPreferredNetworkType":
-        this.setPreferredNetworkType(msg.target, msg.json.data);
-        break;
-      case "RIL:GetPreferredNetworkType":
-        this.getPreferredNetworkType(msg.target, msg.json.data);
-        break;
       case "RIL:GetCardLockState":
         this.workerMessenger.sendWithIPCMessage(msg, "iccGetCardLockState",
                                                 "RIL:CardLockResult");
@@ -2127,12 +2031,6 @@ RadioInterface.prototype = {
       case "RIL:GetCardLockRetryCount":
         this.workerMessenger.sendWithIPCMessage(msg, "iccGetCardLockRetryCount",
                                                 "RIL:CardLockRetryCount");
-        break;
-      case "RIL:SendMMI":
-        this.sendMMI(msg.target, msg.json.data);
-        break;
-      case "RIL:CancelMMI":
-        this.workerMessenger.sendWithIPCMessage(msg, "cancelUSSD");
         break;
       case "RIL:SendStkResponse":
         this.workerMessenger.send("sendStkTerminalResponse", msg.json.data);
@@ -2164,57 +2062,9 @@ RadioInterface.prototype = {
       case "RIL:MatchMvno":
         this.matchMvno(msg.target, msg.json.data);
         break;
-      case "RIL:SetCallForwardingOptions":
-        this.setCallForwardingOptions(msg.target, msg.json.data);
-        break;
-      case "RIL:GetCallForwardingOptions":
-        this.workerMessenger.sendWithIPCMessage(msg, "queryCallForwardStatus");
-        break;
-      case "RIL:SetCallBarringOptions":
-        this.workerMessenger.sendWithIPCMessage(msg, "setCallBarring");
-        break;
-      case "RIL:GetCallBarringOptions":
-        this.workerMessenger.sendWithIPCMessage(msg, "queryCallBarringStatus");
-        break;
-      case "RIL:ChangeCallBarringPassword":
-        this.workerMessenger.sendWithIPCMessage(msg, "changeCallBarringPassword");
-        break;
-      case "RIL:SetCallWaitingOptions":
-        this.workerMessenger.sendWithIPCMessage(msg, "setCallWaiting");
-        break;
-      case "RIL:GetCallWaitingOptions":
-        this.workerMessenger.sendWithIPCMessage(msg, "queryCallWaiting");
-        break;
-      case "RIL:SetCallingLineIdRestriction":
-        this.setCallingLineIdRestriction(msg.target, msg.json.data);
-        break;
-      case "RIL:GetCallingLineIdRestriction":
-        this.workerMessenger.sendWithIPCMessage(msg, "getCLIR");
-        break;
-      case "RIL:ExitEmergencyCbMode":
-        this.workerMessenger.sendWithIPCMessage(msg, "exitEmergencyCbMode");
-        break;
-      case "RIL:SetRadioEnabled":
-        this.setRadioEnabled(msg.target, msg.json.data);
-        break;
       case "RIL:GetVoicemailInfo":
         // This message is sync.
         return this.voicemailInfo;
-      case "RIL:SetRoamingPreference":
-        this.workerMessenger.sendWithIPCMessage(msg, "setRoamingPreference");
-        break;
-      case "RIL:GetRoamingPreference":
-        this.workerMessenger.sendWithIPCMessage(msg, "queryRoamingPreference");
-        break;
-      case "RIL:SetVoicePrivacyMode":
-        this.workerMessenger.sendWithIPCMessage(msg, "setVoicePrivacyMode");
-        break;
-      case "RIL:GetVoicePrivacyMode":
-        this.workerMessenger.sendWithIPCMessage(msg, "queryVoicePrivacyMode");
-        break;
-      case "RIL:GetSupportedNetworkTypes":
-        // This message is sync.
-        return this.supportedNetworkTypes;
     }
     return null;
   },
@@ -2239,8 +2089,8 @@ RadioInterface.prototype = {
         break;
       case "suppSvcNotification":
         gTelephonyService.notifySupplementaryService(this.clientId,
-                                                      message.callIndex,
-                                                      message.notification);
+                                                     message.callIndex,
+                                                     message.notification);
         break;
       case "datacallerror":
         connHandler.handleDataCallError(message);
@@ -2260,31 +2110,45 @@ RadioInterface.prototype = {
         connHandler.handleDataCallState(message);
         break;
       case "emergencyCbModeChange":
-        this.handleEmergencyCbModeChange(message);
+        gMobileConnectionService.notifyEmergencyCallbackModeChanged(this.clientId,
+                                                                    message);
         break;
       case "networkinfochanged":
-        this.updateNetworkInfo(message);
+        gMobileConnectionService.notifyNetworkInfoChanged(this.clientId,
+                                                          message);
+        connHandler.updateRILNetworkInterface();
         break;
       case "networkselectionmodechange":
-        this.updateNetworkSelectionMode(message);
+        gMobileConnectionService.notifyNetworkSelectModeChanged(this.clientId,
+                                                                message.mode);
         break;
       case "voiceregistrationstatechange":
-        this.updateVoiceConnection(message);
+        gMobileConnectionService.notifyVoiceInfoChanged(this.clientId, message);
         break;
       case "dataregistrationstatechange":
-        this.updateDataConnection(message);
+        gMobileConnectionService.notifyDataInfoChanged(this.clientId, message);
+        connHandler.updateRILNetworkInterface();
         break;
       case "signalstrengthchange":
-        this.handleSignalStrengthChange(message);
+        gMobileConnectionService.notifySignalStrengthChanged(this.clientId,
+                                                             message);
         break;
       case "operatorchange":
-        this.handleOperatorChange(message);
+        gMobileConnectionService.notifyOperatorChanged(this.clientId, message);
         break;
       case "otastatuschange":
-        this.handleOtaStatus(message);
+        gMobileConnectionService.notifyOtaStatusChanged(this.clientId, message.status);
         break;
       case "radiostatechange":
-        this.handleRadioStateChange(message);
+        // gRadioEnabledController should know the radio state for each client,
+        // so notify gRadioEnabledController here.
+        gRadioEnabledController.notifyRadioStateChanged(this.clientId,
+                                                        message.radioState);
+        break;
+      case "ussdreceived":
+        gMobileConnectionService.notifyUssdReceived(this.clientId,
+                                                    message.message,
+                                                    message.sessionEnded);
         break;
       case "cardstatechange":
         this.rilContext.cardState = message.cardState;
@@ -2317,17 +2181,11 @@ RadioInterface.prototype = {
         gMessageManager.sendVoicemailMessage("RIL:VoicemailNotification",
                                              this.clientId, message.mwi);
         break;
-      case "ussdreceived":
-        this.handleUSSDReceived(message);
-        break;
       case "stkcommand":
         this.handleStkProactiveCommand(message);
         break;
       case "stksessionend":
         gMessageManager.sendIccMessage("RIL:StkSessionEnd", this.clientId, null);
-        break;
-      case "exitEmergencyCbMode":
-        this.handleExitEmergencyCbMode(message);
         break;
       case "cdma-info-rec-received":
         if (DEBUG) this.debug("cdma-info-rec-received: " + JSON.stringify(message));
@@ -2468,223 +2326,6 @@ RadioInterface.prototype = {
     });
   },
 
-  updateNetworkInfo: function(message) {
-    let voiceMessage = message[RIL.NETWORK_INFO_VOICE_REGISTRATION_STATE];
-    let dataMessage = message[RIL.NETWORK_INFO_DATA_REGISTRATION_STATE];
-    let operatorMessage = message[RIL.NETWORK_INFO_OPERATOR];
-    let selectionMessage = message[RIL.NETWORK_INFO_NETWORK_SELECTION_MODE];
-    let signalMessage = message[RIL.NETWORK_INFO_SIGNAL];
-
-    // Batch the *InfoChanged messages together
-    if (voiceMessage) {
-      this.updateVoiceConnection(voiceMessage, true);
-    }
-
-    if (dataMessage) {
-      this.updateDataConnection(dataMessage, true);
-    }
-
-    if (operatorMessage) {
-      this.handleOperatorChange(operatorMessage, true);
-    }
-
-    if (signalMessage) {
-      this.handleSignalStrengthChange(signalMessage, true);
-    }
-
-    let voice = this.rilContext.voice;
-    let data = this.rilContext.data;
-
-    this.checkRoamingBetweenOperators(voice);
-    this.checkRoamingBetweenOperators(data);
-
-    if (voiceMessage || operatorMessage || signalMessage) {
-      gMessageManager.sendMobileConnectionMessage("RIL:VoiceInfoChanged",
-                                                  this.clientId, voice);
-    }
-    if (dataMessage || operatorMessage || signalMessage) {
-      gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
-                                                  this.clientId, data);
-    }
-
-    if (selectionMessage) {
-      this.updateNetworkSelectionMode(selectionMessage);
-    }
-  },
-
-  /**
-    * Fix the roaming. RIL can report roaming in some case it is not
-    * really the case. See bug 787967
-    *
-    * @param registration  The voiceMessage or dataMessage from which the
-    *                      roaming state will be changed (maybe, if needed).
-    */
-  checkRoamingBetweenOperators: function(registration) {
-    let iccInfo = this.rilContext.iccInfo;
-    let operator = registration.network;
-    let state = registration.state;
-
-    if (!iccInfo || !operator ||
-        state != RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED) {
-      return;
-    }
-
-    let spn = iccInfo.spn && iccInfo.spn.toLowerCase();
-    let longName = operator.longName && operator.longName.toLowerCase();
-    let shortName = operator.shortName && operator.shortName.toLowerCase();
-
-    let equalsLongName = longName && (spn == longName);
-    let equalsShortName = shortName && (spn == shortName);
-    let equalsMcc = iccInfo.mcc == operator.mcc;
-
-    registration.roaming = registration.roaming &&
-                           !(equalsMcc && (equalsLongName || equalsShortName));
-  },
-
-  /**
-   * Handle data connection changes.
-   *
-   * @param newInfo The new voice connection information.
-   * @param batch   When batch is true, the RIL:VoiceInfoChanged message will
-   *                not be sent.
-   */
-  updateVoiceConnection: function(newInfo, batch) {
-    let voiceInfo = this.rilContext.voice;
-    voiceInfo.state = newInfo.state;
-    voiceInfo.connected = newInfo.connected;
-    voiceInfo.roaming = newInfo.roaming;
-    voiceInfo.emergencyCallsOnly = newInfo.emergencyCallsOnly;
-    voiceInfo.type = newInfo.type;
-
-    // Make sure we also reset the operator and signal strength information
-    // if we drop off the network.
-    if (newInfo.state !== RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED) {
-      voiceInfo.cell = null;
-      voiceInfo.network = null;
-      voiceInfo.signalStrength = null;
-      voiceInfo.relSignalStrength = null;
-    } else {
-      voiceInfo.cell = newInfo.cell;
-      voiceInfo.network = this.operatorInfo;
-    }
-
-    if (!batch) {
-      gMessageManager.sendMobileConnectionMessage("RIL:VoiceInfoChanged",
-                                                  this.clientId, voiceInfo);
-    }
-  },
-
-  /**
-   * Handle the data connection's state has changed.
-   *
-   * @param newInfo The new data connection information.
-   * @param batch   When batch is true, the RIL:DataInfoChanged message will
-   *                not be sent.
-   */
-  updateDataConnection: function(newInfo, batch) {
-    let dataInfo = this.rilContext.data;
-    dataInfo.state = newInfo.state;
-    dataInfo.roaming = newInfo.roaming;
-    dataInfo.emergencyCallsOnly = newInfo.emergencyCallsOnly;
-    dataInfo.type = newInfo.type;
-    // For the data connection, the `connected` flag indicates whether
-    // there's an active data call.
-    dataInfo.connected = false;
-    if (gNetworkManager.active &&
-        gNetworkManager.active.type ===
-          Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE &&
-        gNetworkManager.active.serviceId === this.clientId) {
-      dataInfo.connected = true;
-    }
-
-    // Make sure we also reset the operator and signal strength information
-    // if we drop off the network.
-    if (newInfo.state !== RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED) {
-      dataInfo.cell = null;
-      dataInfo.network = null;
-      dataInfo.signalStrength = null;
-      dataInfo.relSignalStrength = null;
-    } else {
-      dataInfo.cell = newInfo.cell;
-      dataInfo.network = this.operatorInfo;
-    }
-
-    if (!batch) {
-      gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
-                                                  this.clientId, dataInfo);
-    }
-
-    let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
-    connHandler.updateRILNetworkInterface();
-  },
-
-  getPreferredNetworkType: function(target, message) {
-    this.workerMessenger.send("getPreferredNetworkType", message, (function(response) {
-      target.sendAsyncMessage("RIL:GetPreferredNetworkType", {
-        clientId: this.clientId,
-        data: response
-      });
-      return false;
-    }).bind(this));
-  },
-
-  setPreferredNetworkType: function(target, message) {
-    this.workerMessenger.send("setPreferredNetworkType", message, (function(response) {
-      target.sendAsyncMessage("RIL:SetPreferredNetworkType", {
-        clientId: this.clientId,
-        data: response
-      });
-      return false;
-    }).bind(this));
-  },
-
-  /**
-   * The network that is currently trying to be selected (or "automatic").
-   * This helps ensure that only one network per client is selected at a time.
-   */
-  _selectingNetwork: null,
-
-  selectNetwork: function(target, message) {
-    if (this._selectingNetwork) {
-      message.errorMsg = "AlreadySelectingANetwork";
-      target.sendAsyncMessage("RIL:SelectNetwork", {
-        clientId: this.clientId,
-        data: message
-      });
-      return;
-    }
-
-    this._selectingNetwork = message;
-    this.workerMessenger.send("selectNetwork", message, (function(response) {
-      this._selectingNetwork = null;
-      target.sendAsyncMessage("RIL:SelectNetwork", {
-        clientId: this.clientId,
-        data: response
-      });
-      return false;
-    }).bind(this));
-  },
-
-  selectNetworkAuto: function(target, message) {
-    if (this._selectingNetwork) {
-      message.errorMsg = "AlreadySelectingANetwork";
-      target.sendAsyncMessage("RIL:SelectNetworkAuto", {
-        clientId: this.clientId,
-        data: message
-      });
-      return;
-    }
-
-    this._selectingNetwork = "automatic";
-    this.workerMessenger.send("selectNetworkAuto", message, (function(response) {
-      this._selectingNetwork = null;
-      target.sendAsyncMessage("RIL:SelectNetworkAuto", {
-        clientId: this.clientId,
-        data: response
-      });
-    }).bind(this));
-  },
-
   setCellBroadcastSearchList: function(settings) {
     let newSearchList =
       Array.isArray(settings) ? settings[this.clientId] : settings;
@@ -2715,114 +2356,6 @@ RadioInterface.prototype = {
     }).bind(this));
   },
 
-  /**
-   * Handle signal strength changes.
-   *
-   * @param message The new signal strength.
-   * @param batch   When batch is true, the RIL:VoiceInfoChanged and
-   *                RIL:DataInfoChanged message will not be sent.
-   */
-  handleSignalStrengthChange: function(message, batch) {
-    let voiceInfo = this.rilContext.voice;
-    // If the voice is not registered, need not to update signal information.
-    if (voiceInfo.state === RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED &&
-        this.isInfoChanged(message.voice, voiceInfo)) {
-      this.updateInfo(message.voice, voiceInfo);
-      if (!batch) {
-        gMessageManager.sendMobileConnectionMessage("RIL:VoiceInfoChanged",
-                                                    this.clientId, voiceInfo);
-      }
-    }
-
-    let dataInfo = this.rilContext.data;
-    // If the data is not registered, need not to update signal information.
-    if (dataInfo.state === RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED &&
-        this.isInfoChanged(message.data, dataInfo)) {
-      this.updateInfo(message.data, dataInfo);
-      if (!batch) {
-        gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
-                                                    this.clientId, dataInfo);
-      }
-    }
-  },
-
-  /**
-   * Handle operator information changes.
-   *
-   * @param message The new operator information.
-   * @param batch   When batch is true, the RIL:VoiceInfoChanged and
-   *                RIL:DataInfoChanged message will not be sent.
-   */
-  handleOperatorChange: function(message, batch) {
-    let operatorInfo = this.operatorInfo;
-    let voice = this.rilContext.voice;
-    let data = this.rilContext.data;
-
-    if (this.isInfoChanged(message, operatorInfo)) {
-      this.updateInfo(message, operatorInfo);
-
-      // Update lastKnownNetwork
-      if (message.mcc && message.mnc) {
-        this._lastKnownNetwork = message.mcc + "-" + message.mnc;
-      }
-
-      // If the voice is unregistered, no need to send RIL:VoiceInfoChanged.
-      if (voice.network && !batch) {
-        gMessageManager.sendMobileConnectionMessage("RIL:VoiceInfoChanged",
-                                                    this.clientId, voice);
-      }
-
-      // If the data is unregistered, no need to send RIL:DataInfoChanged.
-      if (data.network && !batch) {
-        gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
-                                                    this.clientId, data);
-      }
-    }
-  },
-
-  handleOtaStatus: function(message) {
-    if (message.status < 0 ||
-        RIL.CDMA_OTA_PROVISION_STATUS_TO_GECKO.length <= message.status) {
-      return;
-    }
-
-    let status = RIL.CDMA_OTA_PROVISION_STATUS_TO_GECKO[message.status];
-
-    gMessageManager.sendMobileConnectionMessage("RIL:OtaStatusChanged",
-                                                this.clientId, status);
-  },
-
-  _convertRadioState: function(state) {
-    switch (state) {
-      case RIL.GECKO_RADIOSTATE_OFF:
-        return RIL.GECKO_DETAILED_RADIOSTATE_DISABLED;
-      case RIL.GECKO_RADIOSTATE_READY:
-        return RIL.GECKO_DETAILED_RADIOSTATE_ENABLED;
-      default:
-        return RIL.GECKO_DETAILED_RADIOSTATE_UNKNOWN;
-    }
-  },
-
-  handleRadioStateChange: function(message) {
-    let newState = message.radioState;
-    if (this.rilContext.radioState == newState) {
-      return;
-    }
-    this.rilContext.radioState = newState;
-    this.handleDetailedRadioStateChanged(this._convertRadioState(newState));
-
-    //TODO Should we notify this change as a card state change?
-  },
-
-  handleDetailedRadioStateChanged: function(state) {
-    if (this.rilContext.detailedRadioState == state) {
-      return;
-    }
-    this.rilContext.detailedRadioState = state;
-    gMessageManager.sendMobileConnectionMessage("RIL:RadioStateChanged",
-                                                this.clientId, state);
-  },
-
   setDataRegistration: function(attach) {
     let deferred = Promise.defer();
     this.workerMessenger.send("setDataRegistration",
@@ -2842,25 +2375,6 @@ RadioInterface.prototype = {
   updateRILNetworkInterface: function() {
     let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
     connHandler.updateRILNetworkInterface();
-  },
-
-  /**
-   * Update network selection mode
-   */
-  updateNetworkSelectionMode: function(message) {
-    if (DEBUG) this.debug("updateNetworkSelectionMode: " + JSON.stringify(message));
-    this.rilContext.networkSelectionMode = message.mode;
-    gMessageManager.sendMobileConnectionMessage("RIL:NetworkSelectionModeChanged",
-                                                this.clientId, message);
-  },
-
-  /**
-   * Handle emergency callback mode change.
-   */
-  handleEmergencyCbModeChange: function(message) {
-    if (DEBUG) this.debug("handleEmergencyCbModeChange: " + JSON.stringify(message));
-    gMessageManager.sendMobileConnectionMessage("RIL:EmergencyCbModeChanged",
-                                                this.clientId, message);
   },
 
   /**
@@ -3488,6 +3002,11 @@ RadioInterface.prototype = {
                                    this.clientId,
                                    message.iccid ? message : null);
 
+    // In bug 864489, icc related code will be move to IccGonkProvider, we may
+    // need a better way to notify icc change to MobileConnectionGonkProvider.
+    gMobileConnectionService.notifyIccChanged(this.clientId,
+                                              message.iccid || null);
+
     // Update lastKnownSimMcc.
     if (message.mcc) {
       try {
@@ -3498,39 +3017,20 @@ RadioInterface.prototype = {
 
     // Update lastKnownHomeNetwork.
     if (message.mcc && message.mnc) {
-      this._lastKnownHomeNetwork = message.mcc + "-" + message.mnc;
+      let lastKnownHomeNetwork = message.mcc + "-" + message.mnc;
       // Append spn information if available.
       if (message.spn) {
-        this._lastKnownHomeNetwork += "-" + message.spn;
+        lastKnownHomeNetwork += "-" + message.spn;
       }
+
+      gMobileConnectionService.notifyLastHomeNetworkChanged(this.clientId,
+                                                            lastKnownHomeNetwork);
     }
 
     // If spn becomes available, we should check roaming again.
     if (!oldSpn && message.spn) {
-      let voice = this.rilContext.voice;
-      let data = this.rilContext.data;
-      let voiceRoaming = voice.roaming;
-      let dataRoaming = data.roaming;
-      this.checkRoamingBetweenOperators(voice);
-      this.checkRoamingBetweenOperators(data);
-      if (voiceRoaming != voice.roaming) {
-        gMessageManager.sendMobileConnectionMessage("RIL:VoiceInfoChanged",
-                                                    this.clientId, voice);
-      }
-      if (dataRoaming != data.roaming) {
-        gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
-                                                    this.clientId, data);
-      }
+      gMobileConnectionService.notifySpnAvailable(this.clientId);
     }
-  },
-
-  handleUSSDReceived: function(ussd) {
-    gSystemMessenger.broadcastMessage("ussd-received",
-                                      {message: ussd.message,
-                                       sessionEnded: ussd.sessionEnded,
-                                       serviceId: this.clientId});
-    gMessageManager.sendMobileConnectionMessage("RIL:USSDReceived",
-                                                this.clientId, ussd);
   },
 
   handleStkProactiveCommand: function(message) {
@@ -3542,11 +3042,6 @@ RadioInterface.prototype = {
                                          command: message});
     }
     gMessageManager.sendIccMessage("RIL:StkCommand", this.clientId, message);
-  },
-
-  handleExitEmergencyCbMode: function(message) {
-    if (DEBUG) this.debug("handleExitEmergencyCbMode: " + JSON.stringify(message));
-    gMessageManager.sendRequestResults("RIL:ExitEmergencyCbMode", message);
   },
 
   // nsIObserver
@@ -3589,28 +3084,11 @@ RadioInterface.prototype = {
           this._sntp.request();
         }
         break;
-      case kNetworkActiveChangedTopic:
-        let dataInfo = this.rilContext.data;
-        let connected = false;
-        if (gNetworkManager.active &&
-            gNetworkManager.active.type ===
-              Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE &&
-            gNetworkManager.active.serviceId === this.clientId) {
-          connected = true;
-        }
-        if (dataInfo.connected !== connected) {
-          dataInfo.connected = connected;
-          gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
-                                                      this.clientId, dataInfo);
-        }
-        break;
       case kScreenStateChangedTopic:
         this.workerMessenger.send("setScreenState", { on: (data === "on") });
         break;
     }
   },
-
-  supportedNetworkTypes: null,
 
   // Flag to determine whether to update system clock automatically. It
   // corresponds to the "time.clock.automatic-update.enabled" setting.
@@ -3629,12 +3107,6 @@ RadioInterface.prototype = {
 
   // Cell Broadcast settings values.
   _cellBroadcastSearchList: null,
-
-  // Operator's mcc-mnc.
-  _lastKnownNetwork: null,
-
-  // ICC's mcc-mnc.
-  _lastKnownHomeNetwork: null,
 
   handleSettingsChange: function(aName, aResult, aIsInternalSetting) {
     // Don't allow any content processes to modify the setting
@@ -3744,123 +3216,6 @@ RadioInterface.prototype = {
   // nsIRadioInterface
 
   rilContext: null,
-
-  // Handle phone functions of nsIRILContentHelper
-
-  _sendCfStateChanged: function(message) {
-    gMessageManager.sendMobileConnectionMessage("RIL:CfStateChanged",
-                                                this.clientId, message);
-  },
-
-  _sendClirModeChanged: function(message) {
-    gMessageManager.sendMobileConnectionMessage("RIL:ClirModeChanged",
-                                                this.clientId, message);
-  },
-
-  sendMMI: function(target, message) {
-    if (DEBUG) this.debug("SendMMI " + JSON.stringify(message));
-    this.workerMessenger.send("sendMMI", message, (function(response) {
-      if (response.isSetCallForward) {
-        this._sendCfStateChanged(response);
-      } else if (response.isSetCLIR && response.success) {
-        this._sendClirModeChanged(response.clirMode);
-      }
-
-      target.sendAsyncMessage("RIL:SendMMI", {
-        clientId: this.clientId,
-        data: response
-      });
-      return false;
-    }).bind(this));
-  },
-
-  setCallForwardingOptions: function(target, message) {
-    if (DEBUG) this.debug("setCallForwardingOptions: " + JSON.stringify(message));
-    message.serviceClass = RIL.ICC_SERVICE_CLASS_VOICE;
-    this.workerMessenger.send("setCallForward", message, (function(response) {
-      this._sendCfStateChanged(response);
-      target.sendAsyncMessage("RIL:SetCallForwardingOptions", {
-        clientId: this.clientId,
-        data: response
-      });
-      return false;
-    }).bind(this));
-  },
-
-  setCallingLineIdRestriction: function(target, message) {
-    if (DEBUG) {
-      this.debug("setCallingLineIdRestriction: " + JSON.stringify(message));
-    }
-    this.workerMessenger.send("setCLIR", message, (function(response) {
-      if (response.success) {
-        this._sendClirModeChanged(response.clirMode);
-      }
-      target.sendAsyncMessage("RIL:SetCallingLineIdRestriction", {
-        clientId: this.clientId,
-        data: response
-      });
-      return false;
-    }).bind(this));
-  },
-
-  isValidStateForSetRadioEnabled: function() {
-    let state = this.rilContext.detailedRadioState;
-    return state == RIL.GECKO_DETAILED_RADIOSTATE_ENABLED ||
-      state == RIL.GECKO_DETAILED_RADIOSTATE_DISABLED;
-  },
-
-  isDummyForSetRadioEnabled: function(message) {
-    let state = this.rilContext.detailedRadioState;
-    return (state == RIL.GECKO_DETAILED_RADIOSTATE_ENABLED && message.enabled) ||
-      (state == RIL.GECKO_DETAILED_RADIOSTATE_DISABLED && !message.enabled);
-  },
-
-  setRadioEnabledResponse: function(target, message, errorMsg) {
-    if (errorMsg) {
-      message.errorMsg = errorMsg;
-    }
-
-    target.sendAsyncMessage("RIL:SetRadioEnabled", {
-      clientId: this.clientId,
-      data: message
-    });
-  },
-
-  setRadioEnabled: function(target, message) {
-    if (DEBUG) {
-      this.debug("setRadioEnabled: " + JSON.stringify(message));
-    }
-
-    if (!this.isValidStateForSetRadioEnabled()) {
-      this.setRadioEnabledResponse(target, message, "InvalidStateError");
-      return;
-    }
-
-    if (this.isDummyForSetRadioEnabled(message)) {
-      this.setRadioEnabledResponse(target, message);
-      return;
-    }
-
-    let callback = (function(response) {
-      if (response.errorMsg) {
-        // Request fails. Rollback to the original radiostate.
-        let state = message.enabled ? RIL.GECKO_DETAILED_RADIOSTATE_DISABLED
-                                    : RIL.GECKO_DETAILED_RADIOSTATE_ENABLED;
-        this.handleDetailedRadioStateChanged(state);
-      }
-      this.setRadioEnabledResponse(target, response);
-      return false;
-    }).bind(this);
-
-    this.setRadioEnabledInternal(message, callback);
-  },
-
-  setRadioEnabledInternal: function(message, callback) {
-    let state = message.enabled ? RIL.GECKO_DETAILED_RADIOSTATE_ENABLING
-                                : RIL.GECKO_DETAILED_RADIOSTATE_DISABLING;
-    this.handleDetailedRadioStateChanged(state);
-    this.workerMessenger.send("setRadioEnabled", message, callback);
-  },
 
   /**
    * List of tuples of national language identifier pairs.
@@ -4350,12 +3705,12 @@ RadioInterface.prototype = {
       // If the radio is disabled or the SIM card is not ready, just directly
       // return with the corresponding error code.
       let errorCode;
+      let radioState = gMobileConnectionService.getRadioState(this.clientId);
       if (!PhoneNumberUtils.isPlainPhoneNumber(options.number)) {
         if (DEBUG) this.debug("Error! Address is invalid when sending SMS: " +
                               options.number);
         errorCode = Ci.nsIMobileMessageCallback.INVALID_ADDRESS_ERROR;
-      } else if (this.rilContext.detailedRadioState ==
-                 RIL.GECKO_DETAILED_RADIOSTATE_DISABLED) {
+      } else if (radioState == RIL.GECKO_RADIOSTATE_DISABLED) {
         if (DEBUG) this.debug("Error! Radio is disabled when sending SMS.");
         errorCode = Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR;
       } else if (this.rilContext.cardState != "ready") {
@@ -4574,6 +3929,14 @@ RadioInterface.prototype = {
   },
 
   sendWorkerMessage: function(rilMessageType, message, callback) {
+    // Special handler for setRadioEnabled.
+    if (rilMessageType === "setRadioEnabled") {
+      // Forward it to gRadioEnabledController.
+      gRadioEnabledController.setRadioEnabled(this.clientId, message,
+                                              callback.handleResponse);
+      return;
+    }
+
     if (callback) {
       this.workerMessenger.send(rilMessageType, message, function(response) {
         return callback.handleResponse(response);
@@ -4852,7 +4215,7 @@ DataCall.prototype = {
     }
 
     let radioInterface = this.gRIL.getRadioInterface(this.clientId);
-    let dataInfo = radioInterface.rilContext.data;
+    let dataInfo = gMobileConnectionService.getDataConnectionInfo(this.clientId);
     if (dataInfo.state != RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED ||
         dataInfo.type == RIL.GECKO_MOBILE_CONNECTION_STATE_UNKNOWN) {
       return;
@@ -4871,7 +4234,7 @@ DataCall.prototype = {
     }
     let pdpType = RIL.GECKO_DATACALL_PDP_TYPE_IP;
     if (RILQUIRKS_HAVE_IPV6) {
-      pdpType = !radioInterface.rilContext.data.roaming
+      pdpType = !dataInfo.roaming
               ? this.apnProfile.protocol
               : this.apnProfile.roaming_protocol;
       if (RIL.RIL_DATACALL_PDP_TYPES.indexOf(pdpType) < 0) {
