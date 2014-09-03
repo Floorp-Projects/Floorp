@@ -6,14 +6,14 @@
 #include "SourceBuffer.h"
 
 #include "AsyncEventRunner.h"
+#include "DecoderTraits.h"
+#include "MediaDecoder.h"
+#include "MediaSourceDecoder.h"
 #include "MediaSourceUtils.h"
-#include "TrackBuffer.h"
-#include "VideoUtils.h"
-#include "WebMBufferedParser.h"
+#include "SourceBufferResource.h"
 #include "mozilla/Endian.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/dom/MediaSourceBinding.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "mp4_demuxer/BufferStream.h"
@@ -23,6 +23,10 @@
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
+#include "SourceBufferDecoder.h"
+#include "mozilla/Preferences.h"
+
+#include "WebMBufferedParser.h"
 
 struct JSContext;
 class JSObject;
@@ -331,8 +335,19 @@ SourceBuffer::GetBuffered(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
+  double highestEndTime = 0;
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  double highestEndTime = mTrackBuffer->Buffered(ranges);
+  // TODO: Need to adjust mDecoders so it only tracks active decoders.
+  // Once we have an abstraction for track buffers, this needs to report the
+  // intersection of buffered ranges within those track buffers.
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    nsRefPtr<TimeRanges> r = new TimeRanges();
+    mDecoders[i]->GetBuffered(r);
+    if (r->Length() > 0) {
+      highestEndTime = std::max(highestEndTime, r->GetEndTime());
+      ranges->Union(r);
+    }
+  }
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     // Set the end time on the last range to highestEndTime by adding a
     // new range spanning the current end time to highestEndTime, which
@@ -417,7 +432,7 @@ SourceBuffer::Abort(ErrorResult& aRv)
   mAppendWindowEnd = PositiveInfinity<double>();
 
   MSE_DEBUG("SourceBuffer(%p)::Abort() Discarding decoder", this);
-  mTrackBuffer->DiscardDecoder();
+  DiscardDecoder();
 }
 
 void
@@ -449,10 +464,8 @@ SourceBuffer::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBuffer(%p)::Detach", this);
-  if (mTrackBuffer) {
-    mTrackBuffer->Detach();
-  }
-  mTrackBuffer = nullptr;
+  Ended();
+  DiscardDecoder();
   mMediaSource = nullptr;
 }
 
@@ -460,34 +473,36 @@ void
 SourceBuffer::Ended()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IsAttached());
   MSE_DEBUG("SourceBuffer(%p)::Ended", this);
-  mTrackBuffer->DiscardDecoder();
+  if (mDecoder) {
+    mDecoder->GetResource()->Ended();
+  }
 }
 
 SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   : DOMEventTargetHelper(aMediaSource->GetParentObject())
   , mMediaSource(aMediaSource)
   , mType(aType)
+  , mLastParsedTimestamp(UnspecifiedNaN<double>())
   , mAppendWindowStart(0)
   , mAppendWindowEnd(PositiveInfinity<double>())
   , mTimestampOffset(0)
   , mAppendMode(SourceBufferAppendMode::Segments)
   , mUpdating(false)
+  , mDecoderInitialized(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aMediaSource);
   mParser = ContainerParser::CreateForMIMEType(aType);
-  mTrackBuffer = new TrackBuffer(aMediaSource->GetDecoder(), aType);
-  MSE_DEBUG("SourceBuffer(%p)::SourceBuffer: Create mParser=%p mTrackBuffer=%p",
-            this, mParser.get(), mTrackBuffer.get());
+  MSE_DEBUG("SourceBuffer(%p)::SourceBuffer: Creating initial decoder, mParser=%p", this, mParser.get());
+  InitNewDecoder();
 }
 
 SourceBuffer::~SourceBuffer()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mMediaSource);
   MSE_DEBUG("SourceBuffer(%p)::~SourceBuffer", this);
+  DiscardDecoder();
 }
 
 MediaSource*
@@ -516,6 +531,37 @@ SourceBuffer::QueueAsyncSimpleEvent(const char* aName)
   MSE_DEBUG("SourceBuffer(%p) Queuing event '%s'", this, aName);
   nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBuffer>(this, aName);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+}
+
+bool
+SourceBuffer::InitNewDecoder()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("SourceBuffer(%p)::InitNewDecoder", this);
+  MOZ_ASSERT(!mDecoder);
+  MediaSourceDecoder* parentDecoder = mMediaSource->GetDecoder();
+  nsRefPtr<SourceBufferDecoder> decoder = parentDecoder->CreateSubDecoder(mType);
+  if (!decoder) {
+    return false;
+  }
+  mDecoder = decoder;
+  mDecoderInitialized = false;
+  mDecoders.AppendElement(mDecoder);
+  return true;
+}
+
+void
+SourceBuffer::DiscardDecoder()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("SourceBuffer(%p)::DiscardDecoder mDecoder=%p", this, mDecoder.get());
+  if (mDecoder) {
+    mDecoder->SetDiscarded();
+  }
+  mDecoder = nullptr;
+  mDecoderInitialized = false;
+  // XXX: Parser reset may be required?
+  mLastParsedTimestamp = UnspecifiedNaN<double>();
 }
 
 void
@@ -564,13 +610,20 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // TODO: Run buffer append algorithm asynchronously (would call StopUpdating()).
   if (mParser->IsInitSegmentPresent(aData, aLength)) {
     MSE_DEBUG("SourceBuffer(%p)::AppendData: New initialization segment.", this);
-    mTrackBuffer->DiscardDecoder();
-    if (!mTrackBuffer->NewDecoder()) {
+    if (mDecoderInitialized) {
+      // Existing decoder has been used, time for a new one.
+      DiscardDecoder();
+    }
+
+    // If we've got a decoder here, it's not initialized, so we can use it
+    // rather than creating a new one.
+    if (!mDecoder && !InitNewDecoder()) {
       aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
       return;
     }
     MSE_DEBUG("SourceBuffer(%p)::AppendData: Decoder marked as initialized.", this);
-  } else if (!mTrackBuffer->HasInitSegment()) {
+    mDecoderInitialized = true;
+  } else if (!mDecoderInitialized) {
     MSE_DEBUG("SourceBuffer(%p)::AppendData: Non-init segment appended during initialization.");
     Optional<MediaSourceEndOfStreamError> decodeError(MediaSourceEndOfStreamError::Decode);
     ErrorResult dummy;
@@ -580,33 +633,37 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   }
   double start, end;
   if (mParser->ParseStartAndEndTimestamps(aData, aLength, start, end)) {
-    double lastStart, lastEnd;
-    mTrackBuffer->LastTimestamp(lastStart, lastEnd);
     if (mParser->IsMediaSegmentPresent(aData, aLength) &&
-        (start < lastEnd || start - lastEnd > 0.1)) {
-      MSE_DEBUG("SourceBuffer(%p)::AppendData: Data last=[%f, %f] overlaps [%f, %f]",
-                this, lastStart, lastEnd, start, end);
+        (start < mLastParsedTimestamp || start - mLastParsedTimestamp > 0.1)) {
+      MSE_DEBUG("SourceBuffer(%p)::AppendData: Data (%f, %f) overlaps %f.",
+                this, start, end, mLastParsedTimestamp);
 
       // This data is earlier in the timeline than data we have already
       // processed, so we must create a new decoder to handle the decoding.
-      mTrackBuffer->DiscardDecoder();
+      DiscardDecoder();
 
       // If we've got a decoder here, it's not initialized, so we can use it
       // rather than creating a new one.
-      if (!mTrackBuffer->NewDecoder()) {
+      if (!InitNewDecoder()) {
         aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
         return;
       }
       MSE_DEBUG("SourceBuffer(%p)::AppendData: Decoder marked as initialized.", this);
+      mDecoderInitialized = true;
       const nsTArray<uint8_t>& initData = mParser->InitData();
-      mTrackBuffer->AppendData(initData.Elements(), initData.Length());
-      mTrackBuffer->SetLastStartTimestamp(start);
+      mDecoder->NotifyDataArrived(reinterpret_cast<const char*>(initData.Elements()),
+                                  initData.Length(),
+                                  0);
+      mDecoder->GetResource()->AppendData(initData.Elements(), initData.Length());
     }
-    mTrackBuffer->SetLastEndTimestamp(end);
-    MSE_DEBUG("SourceBuffer(%p)::AppendData: Segment last=[%f, %f] [%f, %f]",
-              this, lastStart, lastEnd, start, end);
+    mLastParsedTimestamp = end;
+    MSE_DEBUG("SourceBuffer(%p)::AppendData: Segment start=%f end=%f", this, start, end);
   }
-  mTrackBuffer->AppendData(aData, aLength);
+  // XXX: For future reference: NDA call must run on the main thread.
+  mDecoder->NotifyDataArrived(reinterpret_cast<const char*>(aData),
+                              aLength,
+                              mDecoder->GetResource()->GetLength());
+  mDecoder->GetResource()->AppendData(aData, aLength);
 
   // Eviction uses a byte threshold. If the buffer is greater than the
   // number of bytes then data is evicted. The time range for this
@@ -616,7 +673,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // TODO: Make the eviction threshold smaller for audio-only streams.
   // TODO: Drive evictions off memory pressure notifications.
   const uint32_t evict_threshold = 75 * (1 << 20);
-  bool evicted = mTrackBuffer->EvictData(evict_threshold);
+  bool evicted = mDecoder->GetResource()->EvictData(evict_threshold);
   if (evicted) {
     MSE_DEBUG("SourceBuffer(%p)::AppendData Evict; current buffered start=%f",
               this, GetBufferedStart());
@@ -657,13 +714,20 @@ SourceBuffer::Evict(double aStart, double aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBuffer(%p)::Evict(aStart=%f, aEnd=%f)", this, aStart, aEnd);
+  if (!mDecoder) {
+    return;
+  }
   double currentTime = mMediaSource->GetDecoder()->GetCurrentTime();
   double evictTime = aEnd;
   const double safety_threshold = 5;
   if (currentTime + safety_threshold >= evictTime) {
     evictTime -= safety_threshold;
   }
-  mTrackBuffer->EvictBefore(evictTime);
+  int64_t endOffset = mDecoder->ConvertToByteOffset(evictTime);
+  if (endOffset > 0) {
+    mDecoder->GetResource()->EvictBefore(endOffset);
+  }
+  MSE_DEBUG("SourceBuffer(%p)::Evict offset=%lld", this, endOffset);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SourceBuffer, DOMEventTargetHelper,
