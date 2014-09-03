@@ -19,7 +19,6 @@ namespace mozilla {
 
 class MediaSourceDecoder;
 class SourceBufferDecoder;
-class TrackBuffer;
 
 namespace dom {
 
@@ -71,16 +70,13 @@ public:
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
   nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
                 int64_t aCurrentTime) MOZ_OVERRIDE;
-
   already_AddRefed<SourceBufferDecoder> CreateSubDecoder(const nsACString& aType);
-
-  void AddTrackBuffer(TrackBuffer* aTrackBuffer);
-  void RemoveTrackBuffer(TrackBuffer* aTrackBuffer);
-  void OnTrackBufferConfigured(TrackBuffer* aTrackBuffer);
 
   void Shutdown();
 
   virtual void BreakCycles();
+
+  void InitializePendingDecoders();
 
   bool IsShutdown()
   {
@@ -88,8 +84,8 @@ public:
     return mDecoder->IsShutdown();
   }
 
-  // Return true if all of the active tracks contain data for the specified time.
-  bool TrackBuffersContainTime(double aTime);
+  // Return true if any of the active decoders contain data for the given time
+  bool DecodersContainTime(double aTime);
 
   // Mark the reader to indicate that EndOfStream has been called on our MediaSource
   void Ended();
@@ -98,23 +94,26 @@ public:
   bool IsEnded();
 
 private:
-  bool SwitchAudioReader(double aTarget);
-  bool SwitchVideoReader(double aTarget);
+  enum SwitchType {
+    SWITCH_OPTIONAL,
+    SWITCH_FORCED
+  };
 
-  nsRefPtr<MediaDecoderReader> mAudioReader;
-  nsRefPtr<MediaDecoderReader> mVideoReader;
+  bool SwitchReaders(SwitchType aType);
 
-  nsTArray<nsRefPtr<TrackBuffer>> mTrackBuffers;
-  nsRefPtr<TrackBuffer> mAudioTrack;
-  nsRefPtr<TrackBuffer> mVideoTrack;
+  bool SwitchAudioReader(MediaDecoderReader* aTargetReader);
+  bool SwitchVideoReader(MediaDecoderReader* aTargetReader);
 
   // These are read and written on the decode task queue threads.
-  int64_t mLastAudioTime;
-  int64_t mLastVideoTime;
-
   int64_t mTimeThreshold;
   bool mDropAudioBeforeThreshold;
   bool mDropVideoBeforeThreshold;
+
+  nsTArray<nsRefPtr<SourceBufferDecoder>> mPendingDecoders;
+  nsTArray<nsRefPtr<SourceBufferDecoder>> mDecoders;
+
+  nsRefPtr<MediaDecoderReader> mAudioReader;
+  nsRefPtr<MediaDecoderReader> mVideoReader;
 
   bool mEnded;
 
