@@ -224,6 +224,10 @@ private:
   // Number of microseconds that must be discarded from the start of the Stream.
   uint64_t mCodecDelay;
 
+  // Calculate the frame duration from the last decodeable frame using the
+  // previous frame's timestamp.  In NS.
+  uint64_t mLastVideoFrameTime;
+
   // Parser state and computed offset-time mappings.  Shared by multiple
   // readers when decoder has been cloned.  Main thread only.
   nsRefPtr<WebMBufferedState> mBufferedState;

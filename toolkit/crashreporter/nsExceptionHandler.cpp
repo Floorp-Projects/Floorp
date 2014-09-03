@@ -295,7 +295,7 @@ static const int kMagicChildCrashReportFd = 4;
 static Mutex* dumpMapLock;
 struct ChildProcessData : public nsUint32HashKey
 {
-  ChildProcessData(KeyTypePointer aKey)
+  explicit ChildProcessData(KeyTypePointer aKey)
     : nsUint32HashKey(aKey)
     , sequence(0)
 #ifdef MOZ_CRASHREPORTER_INJECTOR
@@ -323,7 +323,7 @@ static nsIThread* sInjectorThread;
 class ReportInjectedCrash : public nsRunnable
 {
 public:
-  ReportInjectedCrash(uint32_t pid) : mPID(pid) { }
+  explicit ReportInjectedCrash(uint32_t pid) : mPID(pid) { }
 
   NS_IMETHOD Run();
 
@@ -1710,7 +1710,7 @@ class DelayedNote
   DelayedNote(const nsACString& aKey, const nsACString& aData)
   : mKey(aKey), mData(aData), mType(Annotation) {}
 
-  DelayedNote(const nsACString& aData)
+  explicit DelayedNote(const nsACString& aData)
   : mData(aData), mType(AppNote) {}
 
   void Run()

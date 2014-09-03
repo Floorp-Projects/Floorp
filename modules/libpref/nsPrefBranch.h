@@ -78,7 +78,7 @@ class PrefCallback : public PLDHashEntryHdr {
     }
 
     // Copy constructor needs to be explicit or the linker complains.
-    PrefCallback(const PrefCallback *&aCopy)
+    explicit PrefCallback(const PrefCallback *&aCopy)
       : mDomain(aCopy->mDomain),
         mBranch(aCopy->mBranch),
         mWeakRef(aCopy->mWeakRef),

@@ -270,7 +270,7 @@ fuzzy-if(azureQuartz,6,47) == path-01.svg path-01-ref.svg
 # == pseudo-classes-02.svg pseudo-classes-02-ref.svg
 == radialGradient-basic-01.svg pass.svg
 == radialGradient-basic-02.svg pass.svg
-fuzzy-if(azureQuartz,3,14981) == radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
+fuzzy-if(azureQuartz,3,15934) == radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
 == radialGradient-basic-04.svg pass.svg
 == rect-01.svg pass.svg
 == rect-02.svg pass.svg

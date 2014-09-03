@@ -696,7 +696,7 @@ class TemporaryTypeSet : public TypeSet
 {
   public:
     TemporaryTypeSet() {}
-    explicit TemporaryTypeSet(Type type);
+    TemporaryTypeSet(LifoAlloc *alloc, Type type);
 
     TemporaryTypeSet(uint32_t flags, TypeObjectKey **objectSet) {
         this->flags = flags;
@@ -775,10 +775,6 @@ class TemporaryTypeSet : public TypeSet
     /* Whether any objects in the type set needs a barrier on id. */
     bool propertyNeedsBarrier(CompilerConstraintList *constraints, jsid id);
 
-    /* Whether any objects in the type set might treat id as a constant property. */
-    bool propertyMightBeConstant(CompilerConstraintList *constraints, jsid id);
-    bool propertyIsConstant(CompilerConstraintList *constraints, jsid id, Value *valOut);
-
     /*
      * Whether this set contains all types in other, except (possibly) the
      * specified type.
@@ -837,39 +833,47 @@ struct Property
     static jsid getKey(Property *p) { return p->id; }
 };
 
-/*
- * Information attached to a TypeObject if it is always constructed using 'new'
- * on a particular script. This is used to manage state related to the definite
- * properties on the type object: these definite properties depend on type
- * information which could change as the script executes (e.g. a scripted
- * setter is added to a prototype object), and we need to ensure both that the
- * appropriate type constraints are in place when necessary, and that we can
- * remove the definite property information and repair the JS stack if the
- * constraints are violated.
- */
-struct TypeNewScript
+// New script properties analyses overview.
+//
+// When constructing objects using 'new' on a script, we attempt to determine
+// the properties which that object will eventually have. This is done via two
+// analyses. One of these, the definite properties analysis, is static, and the
+// other, the acquired properties analysis, is dynamic. As objects are
+// constructed using 'new' on some script to create objects of type T, our
+// analysis strategy is as follows:
+//
+// - When the first objects are created, no analysis is immediately performed.
+//   Instead, all objects of type T are accumulated in an array.
+//
+// - After a certain number of such objects have been created, the definite
+//   properties analysis is performed. This analyzes the body of the
+//   constructor script and any other functions it calls to look for properties
+//   which will definitely be added by the constructor in a particular order,
+//   creating an object with shape S.
+//
+// - The properties in S are compared with the greatest common prefix P of the
+//   shapes of the objects that have been created. If P has more properties
+//   than S, the acquired properties analysis is performed.
+//
+// - The acquired properties analysis marks all properties in P as definite
+//   in T, and creates a new type object IT for objects which are partially
+//   initialized. Objects of type IT are initially created with shape S, and if
+//   they are later given shape P, their type can be changed to T.
+//
+// For objects which are rarely created, the definite properties analysis can
+// be triggered after only one or a few objects have been allocated, when code
+// being Ion compiled might access them. In this case type information in the
+// constructor might not be good enough for the definite properties analysis to
+// compute useful information, but the acquired properties analysis will still
+// be able to identify definite properties in this case.
+//
+// This layered approach is designed to maximize performance on easily
+// analyzable code, while still allowing us to determine definite properties
+// robustly when code consistently adds the same properties to objects, but in
+// complex ways which can't be understood statically.
+class TypeNewScript
 {
-    HeapPtrFunction fun;
-
-    /*
-     * Template object to use for newly constructed objects. Reflects all
-     * definite properties the object will have and the allocation kind to use
-     * for the object. The allocation kind --- and template object itself ---
-     * is subject to change if objects allocated with this type are given
-     * dynamic slots later on due to new properties being added after the
-     * constructor function finishes.
-     */
-    HeapPtrObject templateObject;
-
-    /*
-     * Order in which properties become initialized. We need this in case a
-     * scripted setter is added to one of the object's prototypes while it is
-     * in the middle of being initialized, so we can walk the stack and fixup
-     * any objects which look for in-progress objects which were prematurely
-     * set with their final shape. Property assignments in inner frames are
-     * preceded by a series of SETPROP_FRAME entries specifying the stack down
-     * to the frame containing the write.
-     */
+  public:
     struct Initializer {
         enum Kind {
             SETPROP,
@@ -881,10 +885,92 @@ struct TypeNewScript
           : kind(kind), offset(offset)
         {}
     };
+
+  private:
+    // Scripted function which this information was computed for.
+    // If instances of the associated type object are created without calling
+    // 'new' on this function, the new script information is cleared.
+    HeapPtrFunction fun;
+
+    // If fewer than PRELIMINARY_OBJECT_COUNT instances of the type are
+    // created, this array holds pointers to each of those objects. When the
+    // threshold has been reached, the definite and acquired properties
+    // analyses are performed and this array is cleared. The pointers in this
+    // array are weak.
+    static const uint32_t PRELIMINARY_OBJECT_COUNT = 20;
+    JSObject **preliminaryObjects;
+
+    // After the new script properties analyses have been performed, a template
+    // object to use for newly constructed objects. The shape of this object
+    // reflects all definite properties the object will have, and the
+    // allocation kind to use.
+    HeapPtrObject templateObject_;
+
+    // Order in which definite properties become initialized. We need this in
+    // case the definite properties are invalidated (such as by adding a setter
+    // to an object on the prototype chain) while an object is in the middle of
+    // being initialized, so we can walk the stack and fixup any objects which
+    // look for in-progress objects which were prematurely set with an incorrect
+    // shape. Property assignments in inner frames are preceded by a series of
+    // SETPROP_FRAME entries specifying the stack down to the frame containing
+    // the write.
     Initializer *initializerList;
+
+    // If there are additional properties found by the acquired properties
+    // analysis which were not found by the definite properties analysis, this
+    // shape contains all such additional properties (plus the definite
+    // properties). When an object of this type acquires this shape, it is
+    // fully initialized and its type can be changed to initializedType.
+    HeapPtrShape initializedShape_;
+
+    // Type object with definite properties set for all properties found by
+    // both the definite and acquired properties analyses.
+    HeapPtrTypeObject initializedType_;
+
+  public:
+    TypeNewScript() { mozilla::PodZero(this); }
+    ~TypeNewScript() {
+        js_free(preliminaryObjects);
+        js_free(initializerList);
+    }
 
     static inline void writeBarrierPre(TypeNewScript *newScript);
     static void writeBarrierPost(TypeNewScript *newScript, void *addr) {}
+
+    bool analyzed() const {
+        if (preliminaryObjects) {
+            JS_ASSERT(!templateObject());
+            JS_ASSERT(!initializerList);
+            JS_ASSERT(!initializedShape());
+            JS_ASSERT(!initializedType());
+            return false;
+        }
+        JS_ASSERT(templateObject());
+        return true;
+    }
+
+    JSObject *templateObject() const {
+        return templateObject_;
+    }
+
+    Shape *initializedShape() const {
+        return initializedShape_;
+    }
+
+    TypeObject *initializedType() const {
+        return initializedType_;
+    }
+
+    void trace(JSTracer *trc);
+    void sweep(FreeOp *fop);
+
+    void registerNewObject(JSObject *res);
+    void unregisterNewObject(JSObject *res);
+    bool maybeAnalyze(JSContext *cx, TypeObject *type, bool *regenerate, bool force = false);
+
+    void rollbackPartiallyInitializedObjects(JSContext *cx, TypeObject *type);
+
+    static void make(JSContext *cx, TypeObject *type, JSFunction *fun);
 };
 
 /*
@@ -1072,7 +1158,11 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
         // this bit reliably.
         if (unknownProperties())
             return false;
-        return (flags() & OBJECT_FLAG_FROM_ALLOCATION_SITE) || newScript();
+        return fromAllocationSite() || newScript();
+    }
+
+    bool fromAllocationSite() {
+        return flags() & OBJECT_FLAG_FROM_ALLOCATION_SITE;
     }
 
     void setShouldPreTenure(ExclusiveContext *cx) {
@@ -1095,7 +1185,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     /* Helpers */
 
     void updateNewPropertyTypes(ExclusiveContext *cx, jsid id, HeapTypeSet *types);
-    bool addDefiniteProperties(ExclusiveContext *cx, JSObject *obj);
+    bool addDefiniteProperties(ExclusiveContext *cx, Shape *shape);
     bool matchDefiniteProperties(HandleObject obj);
     void addPrototype(JSContext *cx, TypeObject *proto);
     void addPropertyType(ExclusiveContext *cx, jsid id, Type type);
@@ -1371,7 +1461,6 @@ struct TypeObjectKey
     bool unknownProperties();
     bool hasFlags(CompilerConstraintList *constraints, TypeObjectFlags flags);
     void watchStateChangeForInlinedCall(CompilerConstraintList *constraints);
-    void watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints);
     void watchStateChangeForTypedArrayData(CompilerConstraintList *constraints);
     HeapTypeSetKey property(jsid id);
     void ensureTrackedProperty(JSContext *cx, jsid id);
@@ -1418,6 +1507,7 @@ class HeapTypeSetKey
     JSObject *singleton(CompilerConstraintList *constraints);
     bool needsBarrier(CompilerConstraintList *constraints);
     bool constant(CompilerConstraintList *constraints, Value *valOut);
+    bool couldBeConstant(CompilerConstraintList *constraints);
 };
 
 /*

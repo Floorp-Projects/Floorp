@@ -217,13 +217,13 @@ private:
 
 
 //-------------------------------------------------------------
-class nsDocumentViewer : public nsIContentViewer,
-                           public nsIContentViewerEdit,
-                           public nsIContentViewerFile,
-                           public nsIDocumentViewerPrint
+class nsDocumentViewer MOZ_FINAL : public nsIContentViewer,
+                                   public nsIContentViewerEdit,
+                                   public nsIContentViewerFile,
+                                   public nsIDocumentViewerPrint
 
 #ifdef NS_PRINTING
-                           , public nsIWebBrowserPrint
+                                 , public nsIWebBrowserPrint
 #endif
 
 {

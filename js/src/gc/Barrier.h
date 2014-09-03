@@ -881,7 +881,7 @@ class JitCode;
 }
 namespace types {
 struct TypeObject;
-struct TypeNewScript;
+class TypeNewScript;
 }
 
 typedef PreBarriered<JSObject*> PreBarrieredObject;

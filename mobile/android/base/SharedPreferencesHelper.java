@@ -151,7 +151,7 @@ public final class SharedPreferencesHelper
             } else {
                 Log.w(LOGTAG, "Unknown pref value type [" + type + "] for pref [" + name + "]");
             }
-            editor.commit();
+            editor.apply();
         }
     }
 

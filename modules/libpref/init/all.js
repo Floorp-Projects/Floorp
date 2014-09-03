@@ -3825,6 +3825,8 @@ pref("layers.offmainthreadcomposition.enabled", true);
 
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
+pref("layers.enable-tiles", true);
+pref("layers.tiled-drawtarget.enabled", true);
 #endif
 
 // ANDROID covers android and b2g

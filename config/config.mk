@@ -359,19 +359,25 @@ JAVA_GEN_DIR  = _javagen
 JAVA_DIST_DIR = $(DEPTH)/$(JAVA_GEN_DIR)
 JAVA_IFACES_PKG_NAME = org/mozilla/interfaces
 
-OS_INCLUDES += $(MOZ_JPEG_CFLAGS) $(MOZ_PNG_CFLAGS) $(MOZ_ZLIB_CFLAGS) $(MOZ_PIXMAN_CFLAGS)
-
-# NSPR_CFLAGS and NSS_CFLAGS must appear ahead of OS_INCLUDES to avoid Linux
-# builds wrongly picking up system NSPR/NSS header files.
 INCLUDES = \
   -I$(srcdir) \
   -I. \
   $(LOCAL_INCLUDES) \
   -I$(DIST)/include \
+  $(NULL)
+
+ifndef IS_GYP_DIR
+# NSPR_CFLAGS and NSS_CFLAGS must appear ahead of the other flags to avoid Linux
+# builds wrongly picking up system NSPR/NSS header files.
+OS_INCLUDES := \
   $(if $(LIBXUL_SDK),-I$(LIBXUL_SDK)/include) \
   $(NSPR_CFLAGS) $(NSS_CFLAGS) \
-  $(OS_INCLUDES) \
+  $(MOZ_JPEG_CFLAGS) \
+  $(MOZ_PNG_CFLAGS) \
+  $(MOZ_ZLIB_CFLAGS) \
+  $(MOZ_PIXMAN_CFLAGS) \
   $(NULL)
+endif
 
 include $(topsrcdir)/config/static-checking-config.mk
 
@@ -483,8 +489,8 @@ OS_COMPILE_CMMFLAGS += -fobjc-abi-version=2 -fobjc-legacy-dispatch
 endif
 endif
 
-COMPILE_CFLAGS	= $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(RTL_FLAGS) $(OS_CPPFLAGS) $(OS_COMPILE_CFLAGS) $(CFLAGS) $(MOZBUILD_CFLAGS) $(EXTRA_COMPILE_FLAGS)
-COMPILE_CXXFLAGS = $(if $(DISABLE_STL_WRAPPING),,$(STL_FLAGS)) $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(RTL_FLAGS) $(OS_CPPFLAGS) $(OS_COMPILE_CXXFLAGS) $(CXXFLAGS) $(MOZBUILD_CXXFLAGS) $(EXTRA_COMPILE_FLAGS)
+COMPILE_CFLAGS	= $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(OS_INCLUDES) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(RTL_FLAGS) $(OS_CPPFLAGS) $(OS_COMPILE_CFLAGS) $(CFLAGS) $(MOZBUILD_CFLAGS) $(EXTRA_COMPILE_FLAGS)
+COMPILE_CXXFLAGS = $(if $(DISABLE_STL_WRAPPING),,$(STL_FLAGS)) $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(OS_INCLUDES) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(RTL_FLAGS) $(OS_CPPFLAGS) $(OS_COMPILE_CXXFLAGS) $(CXXFLAGS) $(MOZBUILD_CXXFLAGS) $(EXTRA_COMPILE_FLAGS)
 COMPILE_CMFLAGS = $(OS_COMPILE_CMFLAGS) $(MOZBUILD_CMFLAGS) $(EXTRA_COMPILE_FLAGS)
 COMPILE_CMMFLAGS = $(OS_COMPILE_CMMFLAGS) $(MOZBUILD_CMMFLAGS) $(EXTRA_COMPILE_FLAGS)
 ASFLAGS += $(EXTRA_ASSEMBLER_FLAGS)
@@ -749,23 +755,6 @@ export CL_INCLUDES_PREFIX
 export NONASCII
 
 DEFINES += -DNO_NSPR_10_SUPPORT
-
-ifdef IS_GYP_DIR
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/ipc/chromium/src \
-  -I$(topsrcdir)/ipc/glue \
-  -I$(DEPTH)/ipc/ipdl/_ipdlheaders \
-  $(NULL)
-
-ifeq (WINNT,$(OS_TARGET))
-# These get set via VC project file settings for normal GYP builds.
-DEFINES += -DUNICODE -D_UNICODE
-endif
-
-DISABLE_STL_WRAPPING := 1
-# Skip most Mozilla-specific include locations.
-INCLUDES = -I. $(LOCAL_INCLUDES) -I$(DEPTH)/dist/include
-endif
 
 # Freeze the values specified by moz.build to catch them if they fail.
 $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES) $(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))

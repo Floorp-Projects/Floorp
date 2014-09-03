@@ -17,6 +17,20 @@ extern PRLogModuleInfo* gMediaStreamGraphLog;
 #define STREAM_LOG(type, msg)
 #endif
 
+// We don't use NSPR log here because we want this interleaved with adb logcat
+// on Android/B2G
+// #define ENABLE_LIFECYCLE_LOG
+#ifdef ENABLE_LIFECYCLE_LOG
+#ifdef ANDROID
+#include "android/log.h"
+#define LIFECYCLE_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gecko - MSG" , ## __VA_ARGS__); printf(__VA_ARGS__);printf("\n");
+#else
+#define LIFECYCLE_LOG(...) printf(__VA_ARGS__);printf("\n");
+#endif
+#else
+#define LIFECYCLE_LOG(...)
+#endif
+
 namespace mozilla {
 
 struct AutoProfilerUnregisterThread
@@ -68,10 +82,12 @@ void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
 void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
 {
 
-  STREAM_LOG(PR_LOG_DEBUG, ("Switching to new driver: %p (%s)", aNextDriver, aNextDriver->AsAudioCallbackDriver() ? "AudioCallbackDriver" : "SystemClockDriver"));
+  LIFECYCLE_LOG("Switching to new driver: %p (%s)",
+      aNextDriver, aNextDriver->AsAudioCallbackDriver() ?
+      "AudioCallbackDriver" : "SystemClockDriver");
   // Sometimes we switch twice to a new driver per iteration, this is probably a
   // bug.
-  MOZ_ASSERT(!mNextDriver || !mNextDriver->AsAudioCallbackDriver());
+  MOZ_ASSERT(!mNextDriver || mNextDriver->AsAudioCallbackDriver());
   mNextDriver = aNextDriver;
 }
 
@@ -115,6 +131,47 @@ void GraphDriver::EnsureNextIterationLocked()
   mNeedAnotherIteration = true;
 }
 
+class MediaStreamGraphShutdownThreadRunnable : public nsRunnable {
+public:
+  explicit MediaStreamGraphShutdownThreadRunnable(GraphDriver* aDriver)
+    : mDriver(aDriver)
+  {
+  }
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    LIFECYCLE_LOG("MediaStreamGraphShutdownThreadRunnable for graph %p",
+        mDriver->GraphImpl());
+    // We can't release an audio driver on the main thread, because it can be
+    // blocking.
+    if (mDriver->AsAudioCallbackDriver()) {
+      LIFECYCLE_LOG("Releasing audio driver off main thread.");
+      nsRefPtr<AsyncCubebTask> releaseEvent =
+        new AsyncCubebTask(mDriver->AsAudioCallbackDriver(),
+                           AsyncCubebTask::SHUTDOWN);
+      mDriver = nullptr;
+      releaseEvent->Dispatch();
+    } else {
+      LIFECYCLE_LOG("Dropping driver reference for SystemClockDriver.");
+      mDriver = nullptr;
+    }
+    return NS_OK;
+  }
+private:
+  nsRefPtr<GraphDriver> mDriver;
+};
+
+void GraphDriver::Shutdown()
+{
+  if (AsAudioCallbackDriver()) {
+    LIFECYCLE_LOG("Releasing audio driver off main thread (GraphDriver::Shutdown).\n");
+    nsRefPtr<AsyncCubebTask> releaseEvent =
+      new AsyncCubebTask(AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
+    releaseEvent->Dispatch();
+  }
+}
+
 ThreadedDriver::ThreadedDriver(MediaStreamGraphImpl* aGraphImpl)
   : GraphDriver(aGraphImpl)
 { }
@@ -125,33 +182,6 @@ ThreadedDriver::~ThreadedDriver()
     mThread->Shutdown();
   }
 }
-
-class MediaStreamGraphShutdownThreadRunnable : public nsRunnable {
-public:
-  explicit MediaStreamGraphShutdownThreadRunnable(GraphDriver* aDriver)
-    : mDriver(aDriver)
-  {
-  }
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    // We can't release an audio driver on the main thread, because it can be
-    // blocking.
-    if (mDriver->AsAudioCallbackDriver()) {
-      STREAM_LOG(PR_LOG_DEBUG, ("Releasing audio driver off main thread.\n"));
-      nsRefPtr<AsyncCubebTask> releaseEvent =
-        new AsyncCubebTask(mDriver->AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
-      mDriver = nullptr;
-      releaseEvent->Dispatch();
-    } else {
-      mDriver = nullptr;
-    }
-    return NS_OK;
-  }
-private:
-  nsRefPtr<GraphDriver> mDriver;
-};
-
 class MediaStreamGraphInitThreadRunnable : public nsRunnable {
 public:
   explicit MediaStreamGraphInitThreadRunnable(ThreadedDriver* aDriver)
@@ -163,7 +193,13 @@ public:
     char aLocal;
     STREAM_LOG(PR_LOG_DEBUG, ("Starting system thread"));
     profiler_register_thread("MediaStreamGraph", &aLocal);
+    LIFECYCLE_LOG("Starting a new system driver for graph %p\n",
+                  mDriver->mGraphImpl);
     if (mDriver->mPreviousDriver) {
+      LIFECYCLE_LOG("%p releasing an AudioCallbackDriver(%p), for graph %p\n",
+                    mDriver,
+                    mDriver->mPreviousDriver.get(),
+                    mDriver->GraphImpl());
       MOZ_ASSERT(!mDriver->AsAudioCallbackDriver());
       // Stop and release the previous driver off-main-thread.
       nsRefPtr<AsyncCubebTask> releaseEvent =
@@ -185,6 +221,7 @@ private:
 void
 ThreadedDriver::Start()
 {
+  LIFECYCLE_LOG("Starting thread for a SystemClockDriver  %p\n", mGraphImpl);
   nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
   NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread), event);
 }
@@ -413,6 +450,17 @@ OfflineClockDriver::WakeUp()
   MOZ_ASSERT(false, "An offline graph should not have to wake up.");
 }
 
+AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation)
+  : mDriver(aDriver),
+    mOperation(aOperation),
+    mShutdownGrip(aDriver->GraphImpl())
+{
+  MOZ_ASSERT(mDriver->mAudioStream || aOperation == INIT, "No audio stream !");
+}
+
+AsyncCubebTask::~AsyncCubebTask()
+{
+}
 
 NS_IMETHODIMP
 AsyncCubebTask::Run()
@@ -432,14 +480,18 @@ AsyncCubebTask::Run()
 
   switch(mOperation) {
     case AsyncCubebOperation::INIT:
+      LIFECYCLE_LOG("AsyncCubebOperation::INIT\n");
       mDriver->Init();
       break;
     case AsyncCubebOperation::SHUTDOWN:
+      LIFECYCLE_LOG("AsyncCubebOperation::SHUTDOWN\n");
       mDriver->Stop();
       mDriver = nullptr;
+      mShutdownGrip = nullptr;
       break;
     case AsyncCubebOperation::SLEEP: {
       {
+        LIFECYCLE_LOG("AsyncCubebOperation::SLEEP\n");
         MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
         // We might just have been awoken
         if (mDriver->mNeedAnotherIteration) {
@@ -797,7 +849,7 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
   }
 
   if (!stillProcessing) {
-    STREAM_LOG(PR_LOG_DEBUG, ("Stopping audio thread for MediaStreamGraph %p", this));
+    LIFECYCLE_LOG("Stopping audio thread for MediaStreamGraph %p", this);
     return aFrames - 1;
   }
   return aFrames;

@@ -772,7 +772,7 @@
         <item name="android:paddingBottom">17dp</item>
         <item name="android:focusableInTouchMode">false</item>
         <item name="android:clickable">true</item>
-        <item name="android:background">@android:drawable/list_selector_background</item>
+        <item name="android:background">@drawable/overlay_share_button_background</item>
         <item name="android:layout_margin">0dp</item>
     </style>
 

@@ -1,7 +1,7 @@
 == textarea-valid.html textarea-ref.html
 == textarea-customerror.html textarea-ref.html
-fails-if(Android||B2G) == textarea-disabled.html textarea-ref.html
-random-if(Android||B2G) == textarea-dyn-disabled.html textarea-ref.html
+fails-if(B2G) == textarea-disabled.html textarea-ref.html
+random-if(B2G) == textarea-dyn-disabled.html textarea-ref.html
 == textarea-dyn-not-disabled.html textarea-ref.html
 == textarea-dyn-not-disabled-changed.html textarea-ref.html
 == textarea-readonly.html textarea-ref.html

@@ -16,9 +16,9 @@ ScrollAreaEvent::ScrollAreaEvent(EventTarget* aOwner,
                                  nsPresContext* aPresContext,
                                  InternalScrollAreaEvent* aEvent)
   : UIEvent(aOwner, aPresContext, aEvent)
-  , mClientArea(nullptr)
+  , mClientArea(new DOMRect(nullptr))
 {
-  mClientArea.SetLayoutRect(aEvent ? aEvent->mArea : nsRect());
+  mClientArea->SetLayoutRect(aEvent ? aEvent->mArea : nsRect());
 }
 
 NS_IMPL_ADDREF_INHERITED(ScrollAreaEvent, UIEvent)
@@ -57,7 +57,7 @@ ScrollAreaEvent::InitScrollAreaEvent(const nsAString& aEventType,
     UIEvent::InitUIEvent(aEventType, aCanBubble, aCancelable, aView, aDetail);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mClientArea.SetRect(aX, aY, aWidth, aHeight);
+  mClientArea->SetRect(aX, aY, aWidth, aHeight);
 
   return NS_OK;
 }
@@ -88,7 +88,7 @@ ScrollAreaEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &y), false);
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &width), false);
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &height), false);
-  mClientArea.SetRect(x, y, width, height);
+  mClientArea->SetRect(x, y, width, height);
 
   return true;
 }

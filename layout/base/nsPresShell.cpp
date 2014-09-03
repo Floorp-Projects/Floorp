@@ -8776,6 +8776,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   LogicalSize reflowSize(wm, size.ISize(wm), NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowState reflowState(mPresContext, target, rcx, reflowSize,
                                 nsHTMLReflowState::CALLER_WILL_INIT);
+  reflowState.mOrthogonalLimit = size.BSize(wm);
 
   if (rootFrame == target) {
     reflowState.Init(mPresContext);

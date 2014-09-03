@@ -89,6 +89,8 @@ enum AsmJSSimdOperation
     AsmJSSimdOperation_and,
     AsmJSSimdOperation_or,
     AsmJSSimdOperation_xor,
+    AsmJSSimdOperation_select,
+    AsmJSSimdOperation_splat
 };
 
 // These labels describe positions in the prologue/epilogue of functions while

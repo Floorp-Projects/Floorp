@@ -73,7 +73,7 @@ class nsPrefetchQueueEnumerator MOZ_FINAL : public nsISimpleEnumerator
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISIMPLEENUMERATOR
-    nsPrefetchQueueEnumerator(nsPrefetchService *aService);
+    explicit nsPrefetchQueueEnumerator(nsPrefetchService *aService);
 
 private:
     ~nsPrefetchQueueEnumerator();

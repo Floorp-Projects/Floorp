@@ -156,6 +156,14 @@ class MIRGenerator
         return modifiesFrameArguments_;
     }
 
+    typedef Vector<types::TypeObject *, 0, IonAllocPolicy> TypeObjectVector;
+
+    // When abortReason() == AbortReason_NewScriptProperties, all types which
+    // the new script properties analysis hasn't been performed on yet.
+    const TypeObjectVector &abortedNewScriptPropertiesTypes() const {
+        return abortedNewScriptPropertiesTypes_;
+    }
+
   public:
     CompileCompartment *compartment;
 
@@ -167,6 +175,7 @@ class MIRGenerator
     uint32_t nslots_;
     MIRGraph *graph_;
     AbortReason abortReason_;
+    TypeObjectVector abortedNewScriptPropertiesTypes_;
     bool error_;
     mozilla::Atomic<bool, mozilla::Relaxed> *pauseBuild_;
     mozilla::Atomic<bool, mozilla::Relaxed> cancelBuild_;
@@ -184,6 +193,8 @@ class MIRGenerator
 
     bool instrumentedProfiling_;
     bool instrumentedProfilingIsCached_;
+
+    void addAbortedNewScriptPropertiesType(types::TypeObject *type);
 
 #if defined(JS_ION_PERF)
     AsmJSPerfSpewer asmJSPerfSpewer_;

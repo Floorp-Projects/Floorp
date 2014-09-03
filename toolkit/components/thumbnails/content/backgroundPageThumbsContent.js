@@ -127,7 +127,7 @@ const backgroundPageThumbsContent = {
     capture.finalURL = this._webNav.currentURI.spec;
     capture.pageLoadTime = new Date() - capture.pageLoadStartDate;
 
-    let canvas = PageThumbs._createCanvas(content);
+    let canvas = PageThumbs.createCanvas(content);
     let canvasDrawDate = new Date();
     PageThumbs._captureToCanvas(content, canvas);
     capture.canvasDrawTime = new Date() - canvasDrawDate;

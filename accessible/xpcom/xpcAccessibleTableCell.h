@@ -25,8 +25,10 @@ class TableCellAccessible;
 class xpcAccessibleTableCell
 {
 public:
-  explicit xpcAccessibleTableCell(mozilla::a11y::TableCellAccessible* aTableCell) :
-    mTableCell(aTableCell) { }
+  explicit xpcAccessibleTableCell(TableCellAccessible* aTableCell) :
+    mTableCell(aTableCell)
+  {
+  }
 
   nsresult GetTable(nsIAccessibleTable** aTable);
   nsresult GetColumnIndex(int32_t* aColIdx);

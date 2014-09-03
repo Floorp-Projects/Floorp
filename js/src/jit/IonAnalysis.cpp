@@ -661,7 +661,7 @@ jit::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
 
             // If the phi is redundant, remove it here.
             if (MDefinition *redundant = IsPhiRedundant(*iter)) {
-                iter->replaceAllUsesWith(redundant);
+                iter->justReplaceAllUsesWith(redundant);
                 iter = block->discardPhiAt(iter);
                 continue;
             }
@@ -699,7 +699,7 @@ jit::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
                     }
                 }
             }
-            phi->replaceAllUsesWith(redundant);
+            phi->justReplaceAllUsesWith(redundant);
         } else {
             // Otherwise flag them as used.
             phi->setNotUnused();
@@ -1097,7 +1097,7 @@ TypeAnalyzer::replaceRedundantPhi(MPhi *phi)
     MConstant *c = MConstant::New(alloc(), v);
     // The instruction pass will insert the box
     block->insertBefore(*(block->begin()), c);
-    phi->replaceAllUsesWith(c);
+    phi->justReplaceAllUsesWith(c);
 }
 
 bool
@@ -2646,12 +2646,11 @@ AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
             return true;
         }
 
+        // Add the property to the object, being careful not to update type information.
         DebugOnly<unsigned> slotSpan = baseobj->slotSpan();
-        if (!DefineNativeProperty(cx, baseobj, id, UndefinedHandleValue, nullptr, nullptr,
-                                  JSPROP_ENUMERATE))
-        {
+        JS_ASSERT(!baseobj->nativeContainsPure(id));
+        if (!baseobj->addDataProperty(cx, id, baseobj->slotSpan(), JSPROP_ENUMERATE))
             return false;
-        }
         JS_ASSERT(baseobj->slotSpan() != slotSpan);
         JS_ASSERT(!baseobj->inDictionaryMode());
 
@@ -2727,9 +2726,9 @@ CmpInstructions(const void *a, const void *b)
 }
 
 bool
-jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
-                                types::TypeObject *type, HandleObject baseobj,
-                                Vector<types::TypeNewScript::Initializer> *initializerList)
+jit::AnalyzeNewScriptDefiniteProperties(JSContext *cx, JSFunction *fun,
+                                        types::TypeObject *type, HandleObject baseobj,
+                                        Vector<types::TypeNewScript::Initializer> *initializerList)
 {
     JS_ASSERT(cx->compartment()->activeAnalysis);
 

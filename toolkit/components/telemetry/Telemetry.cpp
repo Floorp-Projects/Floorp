@@ -77,7 +77,7 @@ template<class EntryType>
 class AutoHashtable : public nsTHashtable<EntryType>
 {
 public:
-  AutoHashtable(uint32_t initLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
+  explicit AutoHashtable(uint32_t initLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
   typedef bool (*ReflectEntryFunc)(EntryType *entry, JSContext *cx, JS::Handle<JSObject*> obj);
   bool ReflectIntoJS(ReflectEntryFunc entryFunc, JSContext *cx, JS::Handle<JSObject*> obj);
 private:
@@ -306,7 +306,7 @@ class TelemetryIOInterposeObserver : public IOInterposeObserver
   };
 
 public:
-  TelemetryIOInterposeObserver(nsIFile* aXreDir);
+  explicit TelemetryIOInterposeObserver(nsIFile* aXreDir);
 
   /**
    * An implementation of Observe that records statistics of all

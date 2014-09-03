@@ -173,6 +173,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineToInteger(callInfo);
     if (native == intrinsic_ToString)
         return inlineToString(callInfo);
+    if (native == intrinsic_IsConstructing)
+        return inlineIsConstructing(callInfo);
 
     // TypedObject intrinsics.
     if (native == intrinsic_ObjectIsTypedObject)
@@ -2150,6 +2152,31 @@ IonBuilder::inlineBoundFunction(CallInfo &nativeCallInfo, JSFunction *target)
     if (!makeCall(scriptedTarget, callInfo, false))
         return InliningStatus_Error;
 
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineIsConstructing(CallInfo &callInfo)
+{
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 0);
+    MOZ_ASSERT(script()->functionNonDelazifying(),
+               "isConstructing() should only be called in function scripts");
+
+    if (getInlineReturnType() != MIRType_Boolean)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    if (inliningDepth_ == 0) {
+        MInstruction *ins = MIsConstructing::New(alloc());
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
+    }
+
+    bool constructing = inlineCallInfo_->constructing();
+    pushConstant(BooleanValue(constructing));
     return InliningStatus_Inlined;
 }
 
