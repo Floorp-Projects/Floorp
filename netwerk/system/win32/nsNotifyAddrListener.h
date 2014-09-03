@@ -65,6 +65,9 @@ private:
     // This is a checksum of various meta data for all network interfaces
     // considered UP at last check.
     ULONG mIPInterfaceChecksum;
+
+    // Network changed events are enabled
+    bool mAllowChangedEvent;
 };
 
 #endif /* NSNOTIFYADDRLISTENER_H_ */
