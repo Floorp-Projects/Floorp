@@ -580,6 +580,8 @@ class JarWriter(object):
         JarFileReader instance. The latter two allow to avoid uncompressing
         data to recompress it.
         '''
+        name = mozpack.path.normsep(name)
+
         if name in self._contents:
             raise JarWriterError("File %s already in JarWriter" % name)
         if compress is None:
