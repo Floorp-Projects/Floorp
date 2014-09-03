@@ -362,11 +362,25 @@ Convert(bt_discovery_state_t aIn, bool& aOut)
 }
 
 static nsresult
-Convert(const bt_bdname_t& aIn, nsAString& aOut)
+Convert(const char* aIn, nsACString& aOut)
 {
-  aOut = NS_ConvertUTF8toUTF16(reinterpret_cast<const char*>(aIn.name));
+  aOut.Assign(aIn);
 
   return NS_OK;
+}
+
+static nsresult
+Convert(const char* aIn, nsAString& aOut)
+{
+  aOut = NS_ConvertUTF8toUTF16(aIn);
+
+  return NS_OK;
+}
+
+static nsresult
+Convert(const bt_bdname_t& aIn, nsAString& aOut)
+{
+  return Convert(reinterpret_cast<const char*>(aIn.name), aOut);
 }
 
 static nsresult
@@ -596,6 +610,103 @@ Convert(BluetoothHandsfreeVolumeType aIn, bthf_volume_type_t& aOut)
   static const bthf_volume_type_t sVolumeType[] = {
     CONVERT(HFP_VOLUME_TYPE_SPEAKER, BTHF_VOLUME_TYPE_SPK),
     CONVERT(HFP_VOLUME_TYPE_MICROPHONE, BTHF_VOLUME_TYPE_MIC)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sVolumeType)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sVolumeType[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(bthf_audio_state_t aIn, BluetoothHandsfreeAudioState& aOut)
+{
+  static const BluetoothHandsfreeAudioState sAudioState[] = {
+    CONVERT(BTHF_AUDIO_STATE_DISCONNECTED, HFP_AUDIO_STATE_DISCONNECTED),
+    CONVERT(BTHF_AUDIO_STATE_CONNECTING, HFP_AUDIO_STATE_CONNECTING),
+    CONVERT(BTHF_AUDIO_STATE_CONNECTED, HFP_AUDIO_STATE_CONNECTED),
+    CONVERT(BTHF_AUDIO_STATE_DISCONNECTING, HFP_AUDIO_STATE_DISCONNECTING)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sAudioState)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sAudioState[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(bthf_chld_type_t aIn, BluetoothHandsfreeCallHoldType& aOut)
+{
+  static const BluetoothHandsfreeCallHoldType sCallHoldType[] = {
+    CONVERT(BTHF_CHLD_TYPE_RELEASEHELD, HFP_CALL_HOLD_RELEASEHELD),
+    CONVERT(BTHF_CHLD_TYPE_RELEASEACTIVE_ACCEPTHELD,
+      HFP_CALL_HOLD_RELEASEACTIVE_ACCEPTHELD),
+    CONVERT(BTHF_CHLD_TYPE_HOLDACTIVE_ACCEPTHELD,
+      HFP_CALL_HOLD_HOLDACTIVE_ACCEPTHELD),
+    CONVERT(BTHF_CHLD_TYPE_ADDHELDTOCONF, HFP_CALL_HOLD_ADDHELDTOCONF)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sCallHoldType)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sCallHoldType[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(bthf_connection_state_t aIn, BluetoothHandsfreeConnectionState& aOut)
+{
+  static const BluetoothHandsfreeConnectionState sConnectionState[] = {
+    CONVERT(BTHF_CONNECTION_STATE_DISCONNECTED,
+      HFP_CONNECTION_STATE_DISCONNECTED),
+    CONVERT(BTHF_CONNECTION_STATE_CONNECTING, HFP_CONNECTION_STATE_CONNECTING),
+    CONVERT(BTHF_CONNECTION_STATE_CONNECTED, HFP_CONNECTION_STATE_CONNECTED),
+    CONVERT(BTHF_CONNECTION_STATE_SLC_CONNECTED,
+      HFP_CONNECTION_STATE_SLC_CONNECTED),
+    CONVERT(BTHF_CONNECTION_STATE_DISCONNECTING,
+      HFP_CONNECTION_STATE_DISCONNECTING)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sConnectionState)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sConnectionState[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(bthf_nrec_t aIn, BluetoothHandsfreeNRECState& aOut)
+{
+  static const BluetoothHandsfreeNRECState sNRECState[] = {
+    CONVERT(BTHF_NREC_STOP, HFP_NREC_STOPPED),
+    CONVERT(BTHF_NREC_START, HFP_NREC_STARTED)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sNRECState)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sNRECState[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(bthf_vr_state_t aIn, BluetoothHandsfreeVoiceRecognitionState& aOut)
+{
+  static const BluetoothHandsfreeVoiceRecognitionState
+    sVoiceRecognitionState[] = {
+    CONVERT(BTHF_VR_STATE_STOPPED, HFP_VOICE_RECOGNITION_STOPPED),
+    CONVERT(BTHF_VR_STATE_STARTED, HFP_VOICE_RECOGNITION_STARTED)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sVoiceRecognitionState)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sVoiceRecognitionState[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(bthf_volume_type_t aIn, BluetoothHandsfreeVolumeType& aOut)
+{
+  static const BluetoothHandsfreeVolumeType sVolumeType[] = {
+    CONVERT(BTHF_VOLUME_TYPE_SPK, HFP_VOLUME_TYPE_SPEAKER),
+    CONVERT(BTHF_VOLUME_TYPE_MIC, HFP_VOLUME_TYPE_MICROPHONE)
   };
   if (aIn >= MOZ_ARRAY_LENGTH(sVolumeType)) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -953,6 +1064,60 @@ private:
 //
 // Notification handling
 //
+
+template <typename ObjectWrapper, typename Res>
+class BluetoothNotificationRunnable0 : public nsRunnable
+{
+public:
+  typedef typename ObjectWrapper::ObjectType  ObjectType;
+  typedef BluetoothNotificationRunnable0<ObjectWrapper, Res> SelfType;
+
+  static already_AddRefed<SelfType> Create(Res (ObjectType::*aMethod)())
+  {
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
+
+    return runnable.forget();
+  }
+
+  static void
+  Dispatch(Res (ObjectType::*aMethod)())
+  {
+    nsRefPtr<SelfType> runnable = Create(aMethod);
+
+    if (!runnable) {
+      BT_WARNING("BluetoothNotificationRunnable0::Create failed");
+      return;
+    }
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+    }
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ObjectType* obj = ObjectWrapper::GetInstance();
+
+    if (!obj) {
+      BT_WARNING("Notification handler not initialized");
+    } else {
+      ((*obj).*mMethod)();
+    }
+    return NS_OK;
+  }
+
+private:
+  BluetoothNotificationRunnable0(Res (ObjectType::*aMethod)())
+  : mMethod(aMethod)
+  {
+    MOZ_ASSERT(mMethod);
+  }
+
+  Res (ObjectType::*mMethod)();
+};
 
 template <typename ObjectWrapper, typename Res,
           typename Tin1, typename Arg1=Tin1>
@@ -1920,6 +2085,231 @@ DispatchBluetoothHandsfreeResult(
   return rv;
 }
 
+// Notification handling
+//
+
+BluetoothHandsfreeNotificationHandler::
+  ~BluetoothHandsfreeNotificationHandler()
+{ }
+
+static BluetoothHandsfreeNotificationHandler* sHandsfreeNotificationHandler;
+
+struct BluetoothHandsfreeCallback
+{
+  class HandsfreeNotificationHandlerWrapper
+  {
+  public:
+    typedef BluetoothHandsfreeNotificationHandler ObjectType;
+
+    static ObjectType* GetInstance()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      return sHandsfreeNotificationHandler;
+    }
+  };
+
+  // Notifications
+
+  typedef BluetoothNotificationRunnable2<HandsfreeNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothHandsfreeConnectionState,
+                                         nsString,
+                                         BluetoothHandsfreeConnectionState,
+                                         const nsAString&>
+    ConnectionStateNotification;
+
+  typedef BluetoothNotificationRunnable2<HandsfreeNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothHandsfreeAudioState,
+                                         nsString,
+                                         BluetoothHandsfreeAudioState,
+                                         const nsAString&>
+    AudioStateNotification;
+
+  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothHandsfreeVoiceRecognitionState>
+    VoiceRecognitionNotification;
+
+  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
+                                         void>
+    AnswerCallNotification;
+
+  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
+                                         void>
+    HangupCallNotification;
+
+  typedef BluetoothNotificationRunnable2<HandsfreeNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothHandsfreeVolumeType, int>
+    VolumeNotification;
+
+  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
+                                         void, nsString, const nsAString&>
+    DialCallNotification;
+
+  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
+                                         void, char>
+    DtmfNotification;
+
+  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothHandsfreeNRECState>
+    NRECNotification;
+
+  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothHandsfreeCallHoldType>
+    CallHoldNotification;
+
+  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
+                                         void>
+    CnumNotification;
+
+  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
+                                         void>
+    CindNotification;
+
+  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
+                                         void>
+    CopsNotification;
+
+  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
+                                         void>
+    ClccNotification;
+
+  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
+                                         void, nsCString, const nsACString&>
+    UnknownAtNotification;
+
+  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
+                                         void>
+    KeyPressedNotification;
+
+  // Bluedroid Handsfree callbacks
+
+  static void
+  ConnectionState(bthf_connection_state_t aState, bt_bdaddr_t* aBdAddr)
+  {
+    ConnectionStateNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::ConnectionStateNotification,
+      aState, aBdAddr);
+  }
+
+  static void
+  AudioState(bthf_audio_state_t aState, bt_bdaddr_t* aBdAddr)
+  {
+    AudioStateNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::AudioStateNotification,
+      aState, aBdAddr);
+  }
+
+  static void
+  VoiceRecognition(bthf_vr_state_t aState)
+  {
+    VoiceRecognitionNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::VoiceRecognitionNotification,
+      aState);
+  }
+
+  static void
+  AnswerCall()
+  {
+    AnswerCallNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::AnswerCallNotification);
+  }
+
+  static void
+  HangupCall()
+  {
+    HangupCallNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::HangupCallNotification);
+  }
+
+  static void
+  Volume(bthf_volume_type_t aType, int aVolume)
+  {
+    VolumeNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::VolumeNotification,
+      aType, aVolume);
+  }
+
+  static void
+  DialCall(char* aNumber)
+  {
+    DialCallNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::DialCallNotification, aNumber);
+  }
+
+  static void
+  Dtmf(char aDtmf)
+  {
+    DtmfNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::DtmfNotification, aDtmf);
+  }
+
+  static void
+  NoiseReductionEchoCancellation(bthf_nrec_t aNrec)
+  {
+    NRECNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::NRECNotification, aNrec);
+  }
+
+  static void
+  CallHold(bthf_chld_type_t aChld)
+  {
+    CallHoldNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::CallHoldNotification, aChld);
+  }
+
+  static void
+  Cnum()
+  {
+    CnumNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::CnumNotification);
+  }
+
+  static void
+  Cind()
+  {
+    CindNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::CindNotification);
+  }
+
+  static void
+  Cops()
+  {
+    CopsNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::CopsNotification);
+  }
+
+  static void
+  Clcc()
+  {
+    ClccNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::ClccNotification);
+  }
+
+  static void
+  UnknownAt(char* aAtString)
+  {
+    UnknownAtNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::UnknownAtNotification,
+      aAtString);
+  }
+
+  static void
+  KeyPressed()
+  {
+    KeyPressedNotification::Dispatch(
+      &BluetoothHandsfreeNotificationHandler::KeyPressedNotification);
+  }
+};
+
+// Interface
+//
+
 BluetoothHandsfreeInterface::BluetoothHandsfreeInterface(
   const bthf_interface_t* aInterface)
 : mInterface(aInterface)
@@ -1931,10 +2321,33 @@ BluetoothHandsfreeInterface::~BluetoothHandsfreeInterface()
 { }
 
 void
-BluetoothHandsfreeInterface::Init(bthf_callbacks_t* aCallbacks,
-                                  BluetoothHandsfreeResultHandler* aRes)
+BluetoothHandsfreeInterface::Init(
+  BluetoothHandsfreeNotificationHandler* aNotificationHandler,
+  BluetoothHandsfreeResultHandler* aRes)
 {
-  bt_status_t status = mInterface->init(aCallbacks);
+  static bthf_callbacks_t sCallbacks = {
+    .size = sizeof(sCallbacks),
+    .connection_state_cb = BluetoothHandsfreeCallback::ConnectionState,
+    .audio_state_cb = BluetoothHandsfreeCallback::AudioState,
+    .vr_cmd_cb = BluetoothHandsfreeCallback::VoiceRecognition,
+    .answer_call_cmd_cb = BluetoothHandsfreeCallback::AnswerCall,
+    .hangup_call_cmd_cb = BluetoothHandsfreeCallback::HangupCall,
+    .volume_cmd_cb = BluetoothHandsfreeCallback::Volume,
+    .dial_call_cmd_cb = BluetoothHandsfreeCallback::DialCall,
+    .dtmf_cmd_cb = BluetoothHandsfreeCallback::Dtmf,
+    .nrec_cmd_cb = BluetoothHandsfreeCallback::NoiseReductionEchoCancellation,
+    .chld_cmd_cb = BluetoothHandsfreeCallback::CallHold,
+    .cnum_cmd_cb = BluetoothHandsfreeCallback::Cnum,
+    .cind_cmd_cb = BluetoothHandsfreeCallback::Cind,
+    .cops_cmd_cb = BluetoothHandsfreeCallback::Cops,
+    .clcc_cmd_cb = BluetoothHandsfreeCallback::Clcc,
+    .unknown_at_cmd_cb = BluetoothHandsfreeCallback::UnknownAt,
+    .key_pressed_cmd_cb = BluetoothHandsfreeCallback::KeyPressed
+  };
+
+  sHandsfreeNotificationHandler = aNotificationHandler;
+
+  bt_status_t status = mInterface->init(&sCallbacks);
 
   if (aRes) {
     DispatchBluetoothHandsfreeResult(aRes,
