@@ -76,6 +76,9 @@ const TEST_DATA = [
                  "  var handler9 = function divKeyDown() {\n" +
                  "    alert(9);\n" +
                  "  };\n" +
+                 "  var handler10 = function divDragOut() {\n" +
+                 "    alert(10);\n" +
+                 "  };\n" +
                  "\n" +
                  "  if ($(\"#livediv\").live) {\n" +
                  "    $(\"#livediv\").live(\"dblclick\", handler1);\n" +
@@ -90,6 +93,7 @@ const TEST_DATA = [
                  "  if ($(\"#livediv\").on) {\n" +
                  "    $(document).on(\"drop\", \"#livediv\", handler5);\n" +
                  "    $(document).on(\"dragover\", \"#livediv\", handler6);\n" +
+                 "    $(document).on(\"dragout\", \"#livediv:xxxxx\", handler10);\n" +
                  "  }\n" +
                  "\n" +
                  "  var div = $(\"div\")[0];\n" +

@@ -37,7 +37,6 @@ else:
 
 UNIFIED_SOURCES += [
     'src/base/at_exit.cc',
-    'src/base/base_paths.cc',
     'src/base/base_switches.cc',
     'src/base/command_line.cc',
     'src/base/debug_util.cc',
@@ -51,22 +50,18 @@ UNIFIED_SOURCES += [
     'src/base/message_loop.cc',
     'src/base/message_pump_default.cc',
     'src/base/non_thread_safe.cc',
-    'src/base/path_service.cc',
     'src/base/pickle.cc',
     'src/base/rand_util.cc',
     'src/base/ref_counted.cc',
     'src/base/revocable_store.cc',
     'src/base/scoped_temp_dir.cc',
     'src/base/simple_thread.cc',
-    'src/base/stats_table.cc',
     'src/base/string_piece.cc',
     'src/base/string_util.cc',
-    'src/base/system_monitor.cc',
     'src/base/thread.cc',
     'src/base/thread_collision_warner.cc',
     'src/base/time.cc',
     'src/base/timer.cc',
-    'src/base/trace_event.cc',
     'src/base/tracked.cc',
     'src/base/tracked_objects.cc',
     'src/chrome/common/child_process.cc',
@@ -88,7 +83,6 @@ UNIFIED_SOURCES += [
 
 if os_win:
     SOURCES += [
-        'src/base/base_paths_win.cc',
         'src/base/condition_variable_win.cc',
         'src/base/cpu.cc',
         'src/base/debug_util_win.cc',
@@ -107,7 +101,6 @@ if os_win:
         'src/base/shared_memory_win.cc',
         'src/base/sys_info_win.cc',
         'src/base/sys_string_conversions_win.cc',
-        'src/base/system_monitor_win.cc',
         'src/base/thread_local_storage_win.cc',
         'src/base/thread_local_win.cc',
         'src/base/time_win.cc',
@@ -164,7 +157,6 @@ if os_posix:
         'src/base/shared_memory_posix.cc',
         'src/base/string16.cc',
         'src/base/sys_info_posix.cc',
-        'src/base/system_monitor_posix.cc',
         'src/base/thread_local_posix.cc',
         'src/base/thread_local_storage_posix.cc',
         'src/base/waitable_event_posix.cc',
@@ -183,7 +175,6 @@ if os_posix:
 if os_macosx:
     UNIFIED_SOURCES += [
         'src/base/debug_util_mac.cc',
-        'src/base/hmac_mac.cc',
         'src/base/idle_timer.cc',
         'src/base/sys_info_mac.cc',
         'src/base/time_mac.cc',
@@ -191,7 +182,6 @@ if os_macosx:
         'src/chrome/common/transport_dib_mac.cc',
     ]
     SOURCES += [
-        'src/base/base_paths_mac.mm',
         'src/base/chrome_application_mac.mm',
         'src/base/file_util_mac.mm',
         'src/base/mac_util.mm',
@@ -200,7 +190,6 @@ if os_macosx:
         'src/base/process_util_mac.mm',
         'src/base/scoped_nsautorelease_pool.mm',
         'src/base/sys_string_conversions_mac.mm',
-        'src/base/worker_pool_mac.mm',
         'src/chrome/common/mach_ipc_mac.mm',
     ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
@@ -212,7 +201,6 @@ if os_macosx:
 if os_linux:
     SOURCES += [
         'src/base/atomicops_internals_x86_gcc.cc',
-        'src/base/base_paths_linux.cc',
         'src/base/idle_timer_none.cc',
         'src/base/process_util_linux.cc',
         'src/base/time_posix.cc',

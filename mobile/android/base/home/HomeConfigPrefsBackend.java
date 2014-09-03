@@ -197,7 +197,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
         newJson.put(JSON_KEY_VERSION, VERSION);
 
         prefsEditor.putString(PREFS_CONFIG_KEY, newJson.toString());
-        prefsEditor.commit();
+        prefsEditor.apply();
 
         return newJsonPanels;
     }
@@ -278,7 +278,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
         }
 
         editor.putString(PREFS_LOCALE_KEY, Locale.getDefault().toString());
-        editor.commit();
+        editor.apply();
 
         // Trigger reload listeners on all live backend instances
         sendReloadBroadcast();
@@ -295,7 +295,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
 
             final SharedPreferences.Editor editor = prefs.edit();
             editor.putString(PREFS_LOCALE_KEY, currentLocale);
-            editor.commit();
+            editor.apply();
 
             // If the user has saved HomeConfig before, return null this
             // one time to trigger a refresh and ensure we use the

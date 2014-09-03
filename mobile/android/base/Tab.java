@@ -459,6 +459,7 @@ public class Tab {
                     return;
 
                 BrowserDB.addBookmark(getContentResolver(), mTitle, url);
+                Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.BOOKMARK_ADDED);
             }
         });
     }
@@ -472,6 +473,7 @@ public class Tab {
                     return;
 
                 BrowserDB.removeBookmarksWithURL(getContentResolver(), url);
+                Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.BOOKMARK_REMOVED);
             }
         });
     }

@@ -306,7 +306,7 @@ public:
   /**
    * @param aManager The owning manager.
    */
-  DeleteFromMozHostListener(nsPermissionManager* aManager);
+  explicit DeleteFromMozHostListener(nsPermissionManager* aManager);
 
 protected:
   nsRefPtr<nsPermissionManager> mManager;
