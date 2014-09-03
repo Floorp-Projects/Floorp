@@ -335,8 +335,6 @@ Statistics::gcDuration(int64_t *total, int64_t *maxPause)
         if (slice->duration() > *maxPause)
             *maxPause = slice->duration();
     }
-    if (*maxPause > maxPauseInInterval)
-        maxPauseInInterval = *maxPause;
 }
 
 void
@@ -450,7 +448,6 @@ Statistics::Statistics(JSRuntime *rt)
     gcDepth(0),
     nonincrementalReason(nullptr),
     preBytes(0),
-    maxPauseInInterval(0),
     phaseNestingDepth(0),
     sliceCallback(nullptr)
 {
@@ -496,25 +493,10 @@ Statistics::~Statistics()
 }
 
 JS::GCSliceCallback
-Statistics::setSliceCallback(JS::GCSliceCallback newCallback)
-{
+Statistics::setSliceCallback(JS::GCSliceCallback newCallback) {
     JS::GCSliceCallback oldCallback = sliceCallback;
     sliceCallback = newCallback;
     return oldCallback;
-}
-
-int64_t
-Statistics::clearMaxGCPauseAccumulator()
-{
-    int64_t prior = maxPauseInInterval;
-    maxPauseInInterval = 0;
-    return prior;
-}
-
-int64_t
-Statistics::getMaxGCPauseSinceClear()
-{
-    return maxPauseInInterval;
 }
 
 void

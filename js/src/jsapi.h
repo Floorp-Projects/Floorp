@@ -2075,7 +2075,7 @@ typedef enum JSGCParamKey {
     /* Amount of bytes allocated by the GC. */
     JSGC_BYTES = 3,
 
-    /* Number of times GC has been invoked. Includes both major and minor GC. */
+    /* Number of times when GC was invoked. */
     JSGC_NUMBER = 4,
 
     /* Max size of the code cache in bytes. */
