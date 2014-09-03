@@ -152,7 +152,7 @@ amManager.prototype = {
   },
 
   notify: function AMC_notify(aTimer) {
-    AddonManagerPrivate.backgroundUpdateCheck();
+    AddonManagerPrivate.backgroundUpdateTimerHandler();
   },
 
   /**

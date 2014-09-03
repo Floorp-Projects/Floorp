@@ -1147,17 +1147,14 @@ var AddonManagerInternal = {
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
 
-    logger.debug("Background update check beginning");
-
-    return Task.spawn(function* backgroundUpdateTask() {
+    let buPromise = Task.spawn(function* backgroundUpdateTask() {
       let hotfixID = this.hotfixID;
 
       let checkHotfix = hotfixID &&
                         Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED) &&
                         Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO);
 
-      if (!this.updateEnabled && !checkHotfix)
-        return;
+      logger.debug("Background update check beginning");
 
       Services.obs.notifyObservers(null, "addons-background-update-start", null);
 
@@ -1295,6 +1292,9 @@ var AddonManagerInternal = {
                                    "addons-background-update-complete",
                                    null);
     }.bind(this));
+    // Fork the promise chain so we can log the error and let our caller see it too.
+    buPromise.then(null, e => logger.warn("Error in background update", e));
+    return buPromise;
   },
 
   /**
@@ -2334,6 +2334,20 @@ this.AddonManagerPrivate = {
 
   backgroundUpdateCheck: function AMP_backgroundUpdateCheck() {
     return AddonManagerInternal.backgroundUpdateCheck();
+  },
+
+  backgroundUpdateTimerHandler() {
+    // Don't call through to the real update check if no checks are enabled.
+    let checkHotfix = this.hotfixID &&
+                      Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED) &&
+                      Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO);
+
+    if (!this.updateEnabled && !checkHotfix) {
+      logger.info("Skipping background update check");
+      return;
+    }
+    // Don't return the promise here, since the caller doesn't care.
+    AddonManagerInternal.backgroundUpdateCheck();
   },
 
   addStartupChange: function AMP_addStartupChange(aType, aID) {

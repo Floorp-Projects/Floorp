@@ -385,7 +385,7 @@ public class SuggestedSites {
     private static void updateSuggestedSitesLocale(Context context) {
         final Editor editor = GeckoSharedPrefs.forProfile(context).edit();
         editor.putString(PREF_SUGGESTED_SITES_LOCALE, Locale.getDefault().toString());
-        editor.commit();
+        editor.apply();
     }
 
     private boolean isEnabled() {
@@ -582,6 +582,6 @@ public class SuggestedSites {
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
         final String prefString = prefs.getString(PREF_SUGGESTED_SITES_HIDDEN, "");
         final String siteString = prefString.concat(" " + Uri.encode(url));
-        prefs.edit().putString(PREF_SUGGESTED_SITES_HIDDEN, siteString).commit();
+        prefs.edit().putString(PREF_SUGGESTED_SITES_HIDDEN, siteString).apply();
     }
 }

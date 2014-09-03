@@ -28,11 +28,6 @@ let test = asyncTest(function*() {
   yield selectNode("#testElement", inspector);
 
   yield testRuleView(view, inspector.selection.nodeFront);
-
-  info("Opening the computed view");
-  let {toolbox, inspector, view} = yield openComputedView();
-
-  yield testComputedView(view, inspector.selection.nodeFront);
 });
 
 function* testRuleView(ruleView, nodeFront) {
@@ -54,24 +49,6 @@ function* testRuleView(ruleView, nodeFront) {
   let valueSpan = rule.querySelector(".ruleview-computed .ruleview-propertyvalue");
 
   // And verify that the tooltip gets shown on this property
-  yield assertHoverTooltipOn(tooltip, valueSpan);
-
-  let images = panel.getElementsByTagName("image");
-  is(images.length, 1, "Tooltip contains an image");
-  ok(images[0].getAttribute("src").startsWith("data:"), "Tooltip contains a data-uri image as expected");
-
-  let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
-  is(images[0].getAttribute("src"), dataURL, "Tooltip contains the correct data-uri image");
-}
-
-function* testComputedView(computedView, nodeFront) {
-  info("Testing font-family tooltips in the computed view");
-
-  let tooltip = computedView.tooltips.previewTooltip;
-  let panel = tooltip.panel;
-
-  let {valueSpan} = getComputedViewProperty(computedView, "font-family");
-
   yield assertHoverTooltipOn(tooltip, valueSpan);
 
   let images = panel.getElementsByTagName("image");

@@ -8,6 +8,10 @@ package org.mozilla.gecko.home;
 import java.util.Date;
 import java.util.EnumSet;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -25,6 +29,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -123,13 +128,16 @@ public class HistoryPanel extends HomeFragment {
                     @Override
                     public void onClick(final DialogInterface dialog, final int which) {
                         dialog.dismiss();
-                        ThreadUtils.postToBackgroundThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                final ContentResolver cr = context.getContentResolver();
-                                BrowserDB.clearHistory(cr);
-                            }
-                        });
+
+                        // Send message to Java to clear history.
+                        final JSONObject json = new JSONObject();
+                        try {
+                            json.put("history", true);
+                        } catch (JSONException e) {
+                            Log.e(LOGTAG, "JSON error", e);
+                        }
+
+                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Sanitize:ClearData", json.toString()));
 
                         Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.BUTTON, "history");
                     }

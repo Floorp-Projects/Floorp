@@ -289,9 +289,7 @@
           this.tabContainer._positionPinnedTabs();
           this.tabContainer.adjustTabstrip();
 
-          // Bug 961867 - [e10s] Implement the logic for app tabs
-          if (!gMultiProcessBrowser)
-            this.getBrowserForTab(aTab).docShell.isAppTab = true;
+          this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: true })
 
           if (aTab.selected)
             this._setCloseKeyState(false);
@@ -315,9 +313,7 @@
           this.tabContainer._positionPinnedTabs();
           this.tabContainer.adjustTabstrip();
 
-          // Bug 961867 - [e10s] Implement the logic for app tabs
-          if (!gMultiProcessBrowser)
-            this.getBrowserForTab(aTab).docShell.isAppTab = false;
+          this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: false })
 
           if (aTab.selected)
             this._setCloseKeyState(true);
@@ -5330,7 +5326,8 @@
           let switchPromise = gBrowser._prepareForTabSwitch(toTab, fromTab);
 
           var panel = this._selectedPanel;
-          this._selectedPanel = this.childNodes[val];
+          var newPanel = this.childNodes[val];
+          this._selectedPanel = newPanel;
           if (this._selectedPanel != panel) {
             var event = document.createEvent("Events");
             event.initEvent("select", true, true);
@@ -5340,8 +5337,16 @@
           this._selectedIndex = val;
 
           switchPromise.then(() => {
-            this.setAttribute("selectedIndex", val);
-            gBrowser._finalizeTabSwitch(toTab, fromTab);
+            // If we cannot find the tabpanel that we were trying to switch to, then
+            // it must have been removed before our Promise could be resolved. In
+            // that case, we just cancel the tab switch.
+            var updatedTabIndex = Array.indexOf(this.childNodes, newPanel);
+            if (updatedTabIndex == -1) {
+              gBrowser._cancelTabSwitch(toTab);
+            } else {
+              this.setAttribute("selectedIndex", updatedTabIndex);
+              gBrowser._finalizeTabSwitch(toTab, fromTab);
+            }
           }, () => {
             // If the promise rejected, that means we don't want to actually
             // flip the deck, so we cancel the tab switch.
