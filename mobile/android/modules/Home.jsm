@@ -94,7 +94,7 @@ let HomeBanner = (function () {
     for (let key in _messages) {
       let message = _messages[key];
       if (threshold < message.totalWeight) {
-        sendMessageToJava({
+        Messaging.sendRequest({
           type: "HomeBanner:Data",
           id: message.id,
           text: message.text,
@@ -214,7 +214,7 @@ let HomePanels = (function () {
         }
       }
 
-      sendMessageToJava({
+      Messaging.sendRequest({
         type: "HomePanels:Data",
         panels: panels,
         requestId: requestId
@@ -429,7 +429,7 @@ let HomePanels = (function () {
     install: function(id) {
       _assertPanelExists(id);
 
-      sendMessageToJava({
+      Messaging.sendRequest({
         type: "HomePanels:Install",
         panel: _generatePanel(id)
       });
@@ -438,7 +438,7 @@ let HomePanels = (function () {
     uninstall: function(id) {
       _assertPanelExists(id);
 
-      sendMessageToJava({
+      Messaging.sendRequest({
         type: "HomePanels:Uninstall",
         id: id
       });
@@ -447,7 +447,7 @@ let HomePanels = (function () {
     update: function(id) {
       _assertPanelExists(id);
 
-      sendMessageToJava({
+      Messaging.sendRequest({
         type: "HomePanels:Update",
         panel: _generatePanel(id)
       });
