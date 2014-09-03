@@ -506,6 +506,9 @@ pref("security.warn_viewing_mixed", false); // Warning is disabled.  See Bug 616
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 
+// Enable pinning
+pref("security.cert_pinning.enforcement_level", 1);
+
 // Override some named colors to avoid inverse OS themes
 pref("ui.-moz-dialog", "#efebe7");
 pref("ui.-moz-dialogtext", "#101010");
