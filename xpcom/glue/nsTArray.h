@@ -1880,13 +1880,8 @@ protected:
     this->AppendElements(aOther);
   }
 
-  nsAutoArrayBase(nsTArray<elem_type>&& aOther)
-  {
-    Init();
-    this->SwapElements(aOther);
-  }
-
-  nsAutoArrayBase(FallibleTArray<elem_type>&& aOther)
+  template<typename Allocator>
+  nsAutoArrayBase(nsTArray_Impl<elem_type, Allocator>&& aOther)
   {
     Init();
     this->SwapElements(aOther);
@@ -1969,11 +1964,8 @@ public:
   {
     Base::AppendElements(aOther);
   }
-  explicit nsAutoTArray(nsTArray<E>&& aOther)
-    : Base(mozilla::Move(aOther))
-  {
-  }
-  explicit nsAutoTArray(FallibleTArray<E>&& aOther)
+  template<typename Allocator>
+  explicit nsAutoTArray(nsTArray_Impl<E, Allocator>&& aOther)
     : Base(mozilla::Move(aOther))
   {
   }
@@ -2002,13 +1994,8 @@ public:
   {
     Base::AppendElements(aOther);
   }
-
-  explicit AutoFallibleTArray(nsTArray<E>&& aOther)
-    : Base(mozilla::Move(aOther))
-  {
-  }
-
-  explicit AutoFallibleTArray(FallibleTArray<E>&& aOther)
+  template<typename Allocator>
+  explicit AutoFallibleTArray(nsTArray_Impl<E, Allocator>&& aOther)
     : Base(mozilla::Move(aOther))
   {
   }
