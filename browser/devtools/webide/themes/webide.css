@@ -65,6 +65,10 @@ window.busy-determined #action-busy-undetermined {
 
 /* Panel buttons - projects */
 
+#project-panel-button {
+  -moz-box-pack: start;
+}
+
 #project-panel-button > .panel-button-image {
   width: 13px;
   height: 13px;
@@ -79,6 +83,10 @@ window.busy-determined #action-busy-undetermined {
 #project-panel-button.no-project > .panel-button-image {
   list-style-image: url("icons.png");
   -moz-image-region: rect(260px,338px,286px,312px);
+}
+
+#project-panel-button > .panel-button-label {
+  max-width: 150px;
 }
 
 /* Panel buttons - runtime */
@@ -136,6 +144,7 @@ panel > vbox {
 panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 12px 0;
   min-width: 200px;
+  max-width: 400px;
 }
 
 .panel-item {
