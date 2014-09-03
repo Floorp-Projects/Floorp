@@ -1754,6 +1754,10 @@ pref("security.mixed_content.block_display_content", false);
 
 // Disable pinning checks by default.
 pref("security.cert_pinning.enforcement_level", 0);
+// Do not process hpkp headers rooted by not built in roots by default.
+// This is to prevent accidental pinning from MITM devices and is used
+// for tests.
+pref("security.cert_pinning.process_headers_from_non_builtin_roots", false);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
