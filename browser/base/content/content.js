@@ -676,3 +676,11 @@ if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
                          .getInterface(Ci.nsITabChild);
   tabchild.webBrowserChrome = WebBrowserChrome;
 }
+
+addEventListener("pageshow", function(event) {
+  if (event.target == content.document) {
+    sendAsyncMessage("PageVisibility:Show", {
+      persisted: event.persisted,
+    });
+  }
+});
