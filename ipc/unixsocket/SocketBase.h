@@ -9,6 +9,8 @@
 #ifndef mozilla_ipc_SocketBase_h
 #define mozilla_ipc_SocketBase_h
 
+#include <errno.h>
+#include <unistd.h>
 #include "base/message_loop.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
@@ -29,64 +31,22 @@ namespace ipc {
 class UnixSocketRawData
 {
 public:
+  // Number of octets in mData.
+  size_t mSize;
+  size_t mCurrentWriteOffset;
+  nsAutoArrayPtr<uint8_t> mData;
 
-  /* This constructor copies aData of aSize bytes length into the
-   * new instance of |UnixSocketRawData|.
-   */
-  UnixSocketRawData(const void* aData, size_t aSize);
-
-  /* This constructor reserves aSize bytes of space. Currently
-   * it's only possible to fill this buffer by calling |Receive|.
+  /**
+   * Constructor for situations where only size is known beforehand
+   * (for example, when being assigned strings)
    */
   UnixSocketRawData(size_t aSize);
 
-  nsresult Receive(int aFd);
-  nsresult Send(int aFd);
-
-  const uint8_t* GetData() const
-  {
-    return mData + mOffset;
-  }
-
-  size_t GetSize() const
-  {
-    return mSize;
-  }
-
-  void Consume(size_t aSize)
-  {
-    MOZ_ASSERT(aSize <= mSize);
-
-    mSize -= aSize;
-    mOffset += aSize;
-  }
-
-protected:
-  size_t GetLeadingSpace() const
-  {
-    return mOffset;
-  }
-
-  size_t GetTrailingSpace() const
-  {
-    return mAvailableSpace - (mOffset + mSize);
-  }
-
-  size_t GetAvailableSpace() const
-  {
-    return mAvailableSpace;
-  }
-
-  void* GetTrailingBytes()
-  {
-    return mData + mOffset + mSize;
-  }
-
-private:
-  size_t mSize;
-  size_t mOffset;
-  size_t mAvailableSpace;
-  nsAutoArrayPtr<uint8_t> mData;
+  /**
+   * Constructor for situations where size and data is known
+   * beforehand (for example, when being assigned strings)
+   */
+  UnixSocketRawData(const void* aData, size_t aSize);
 };
 
 enum SocketConnectionStatus {
@@ -368,19 +328,25 @@ public:
     MOZ_ASSERT(aFd >= 0);
     MOZ_ASSERT(aIO);
 
-    while (true) {
+    do {
       nsAutoPtr<UnixSocketRawData> incoming(
         new UnixSocketRawData(mMaxReadSize));
 
-      nsresult rv = incoming->Receive(aFd);
+      ssize_t res =
+        TEMP_FAILURE_RETRY(read(aFd, incoming->mData, incoming->mSize));
 
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (res < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          return NS_OK; /* no more data available */
+        }
+        /* an error occored */
         nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
         NS_DispatchToMainThread(r);
-        return rv;
-      }
-      if (!incoming->GetSize()) {
-        /* no data available; try again later */
+        return NS_ERROR_FAILURE;
+      } else if (!res) {
+        /* EOF or peer shut down sending */
+        nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
+        NS_DispatchToMainThread(r);
         return NS_OK;
       }
 
@@ -390,10 +356,11 @@ public:
       AutoSourceEvent taskTracerEvent(SourceEventType::UNIXSOCKET);
 #endif
 
+      incoming->mSize = res;
       nsRefPtr<nsRunnable> r =
         new SocketIOReceiveRunnable<T>(aIO, incoming.forget());
       NS_DispatchToMainThread(r);
-    }
+    } while (true);
 
     return NS_OK;
   }
@@ -404,21 +371,38 @@ public:
     MOZ_ASSERT(aFd >= 0);
     MOZ_ASSERT(aIO);
 
-    while (HasPendingData()) {
+    do {
+      if (!HasPendingData()) {
+        return NS_OK;
+      }
+
       UnixSocketRawData* outgoing = mOutgoingQ.ElementAt(0);
+      MOZ_ASSERT(outgoing->mSize);
 
-      nsresult rv = outgoing->Send(aFd);
+      const uint8_t* data = outgoing->mData + outgoing->mCurrentWriteOffset;
+      size_t size = outgoing->mSize - outgoing->mCurrentWriteOffset;
 
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      ssize_t res = TEMP_FAILURE_RETRY(write(aFd, data, size));
+
+      if (res < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          return NS_OK; /* no more data available */
+        }
+        /* an error occored */
         nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
         NS_DispatchToMainThread(r);
-        return rv;
+        return NS_ERROR_FAILURE;
+      } else if (!res) {
+        return NS_OK; /* nothing written */
       }
-      if (!outgoing->GetSize()) {
+
+      outgoing->mCurrentWriteOffset += res;
+
+      if (outgoing->mCurrentWriteOffset == outgoing->mSize) {
         mOutgoingQ.RemoveElementAt(0);
         delete outgoing;
       }
-    }
+    } while (true);
 
     return NS_OK;
   }
