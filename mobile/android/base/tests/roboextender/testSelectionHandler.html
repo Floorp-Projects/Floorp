@@ -213,7 +213,7 @@ function testCloseSelection() {
  *
  */
 function finishTests() {
-  sendMessageToJava({
+  Messaging.sendRequest({
     type: "Robocop:testSelectionHandler",
     result: true,
     msg: "Done!",
