@@ -8,6 +8,8 @@
  *
  */
 
+// Still unclear what should be subclassed.
+// https://github.com/slightlyoff/ServiceWorker/issues/189
 [Pref="dom.serviceWorkers.enabled",
  // XXXbz I have no idea where this should be exposed.  The spec makes
  // no sense.  But since it's got a pref, let's say window.
@@ -18,10 +20,6 @@ interface ServiceWorker : EventTarget {
 
   readonly attribute ServiceWorkerState state;
   attribute EventHandler onstatechange;
-
-  // FIXME(catalinb): Bug 1053483 - This should be inherited from MessageUtils
-  [Throws]
-  void postMessage(any message, optional sequence<Transferable> transferable);
 };
 
 ServiceWorker implements AbstractWorker;
