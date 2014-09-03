@@ -872,19 +872,6 @@ nsBaseWidget::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
   aHints.AppendElement(LayersBackend::LAYERS_BASIC);
 }
 
-static void
-RemoveBasicBackend(nsTArray<LayersBackend>& aHints)
-{
-#ifndef XP_WIN
-  for (size_t i = 0; i < aHints.Length(); ++i) {
-    if (aHints[i] == LayersBackend::LAYERS_BASIC &&
-        !Preferences::GetBool("layers.offmainthreadcomposition.force-basic", false)) {
-      aHints[i] = LayersBackend::LAYERS_NONE;
-    }
-  }
-#endif
-}
-
 void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 {
   MOZ_ASSERT(gfxPlatform::UsesOffMainThreadCompositing(),
@@ -914,9 +901,14 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   nsTArray<LayersBackend> backendHints;
   GetPreferredCompositorBackends(backendHints);
 
-#ifndef MOZ_X11
-  if (!mRequireOffMainThreadCompositing) {
-    RemoveBasicBackend(backendHints);
+#if !defined(MOZ_X11) && !defined(XP_WIN)
+  if (!mRequireOffMainThreadCompositing &&
+      !Preferences::GetBool("layers.offmainthreadcomposition.force-basic", false)) {
+    for (size_t i = 0; i < backendHints.Length(); ++i) {
+      if (backendHints[i] == LayersBackend::LAYERS_BASIC) {
+        backendHints[i] = LayersBackend::LAYERS_NONE;
+      }
+    }
   }
 #endif
 
