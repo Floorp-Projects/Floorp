@@ -100,6 +100,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
@@ -279,8 +280,35 @@ public class BrowserApp extends GeckoApp
                     loadFavicon(tab);
                 }
                 break;
+            case BOOKMARK_ADDED:
+                showBookmarkAddedToast();
+                break;
+            case BOOKMARK_REMOVED:
+                showBookmarkRemovedToast();
+                break;
         }
         super.onTabChanged(tab, msg, data);
+    }
+
+    private void showBookmarkAddedToast() {
+        getButtonToast().show(false,
+                getResources().getString(R.string.bookmark_added),
+                ButtonToast.LENGTH_SHORT,
+                getResources().getString(R.string.bookmark_options),
+                null,
+                new ButtonToast.ToastListener() {
+                    @Override
+                    public void onButtonClicked() {
+                        showBookmarkDialog();
+                    }
+
+                    @Override
+                    public void onToastHidden(ButtonToast.ReasonHidden reason) { }
+                });
+    }
+
+    private void showBookmarkRemovedToast() {
+        Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -607,7 +635,7 @@ public class BrowserApp extends GeckoApp
                 Method init = mediaManagerClass.getMethod("init", Context.class);
                 init.invoke(null, this);
             } catch(Exception ex) {
-                Log.i(LOGTAG, "Error initializing media manager", ex);
+                Log.e(LOGTAG, "Error initializing media manager", ex);
             }
         }
     }
@@ -637,7 +665,7 @@ public class BrowserApp extends GeckoApp
                 return Class.forName("org.mozilla.gecko.MediaPlayerManager");
             } catch(Exception ex) {
                 // Ignore failures
-                Log.i(LOGTAG, "No native casting support", ex);
+                Log.e(LOGTAG, "No native casting support", ex);
             }
         }
 
@@ -859,7 +887,7 @@ public class BrowserApp extends GeckoApp
                 try {
                     args.put("tabId", tab.getId());
                 } catch (JSONException e) {
-                    Log.e(LOGTAG, "error building json arguments");
+                    Log.e(LOGTAG, "error building json arguments", e);
                 }
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feeds:Subscribe", args.toString()));
                 if (Versions.preHC) {
@@ -877,7 +905,7 @@ public class BrowserApp extends GeckoApp
                 try {
                     args.put("tabId", tab.getId());
                 } catch (JSONException e) {
-                    Log.e(LOGTAG, "error building json arguments");
+                    Log.e(LOGTAG, "error building json arguments", e);
                     return true;
                 }
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Add", args.toString()));
@@ -1003,7 +1031,7 @@ public class BrowserApp extends GeckoApp
                 Method destroy = mediaManagerClass.getMethod("onDestroy",  (Class[]) null);
                 destroy.invoke(null);
             } catch(Exception ex) {
-                Log.i(LOGTAG, "Error destroying media manager", ex);
+                Log.e(LOGTAG, "Error destroying media manager", ex);
             }
         }
 
@@ -1864,9 +1892,6 @@ public class BrowserApp extends GeckoApp
      *        {@link BrowserHealthRecorder#SEARCH_LOCATIONS}.
      */
     private static void recordSearch(SearchEngine engine, String where) {
-        Log.i(LOGTAG, "Recording search: " +
-                      ((engine == null) ? "null" : engine.name) +
-                      ", " + where);
         try {
             String identifier = (engine == null) ? "other" : engine.getEngineIdentifier();
             JSONObject message = new JSONObject();
@@ -1875,7 +1900,7 @@ public class BrowserApp extends GeckoApp
             message.put("identifier", identifier);
             EventDispatcher.getInstance().dispatchEvent(message, null);
         } catch (Exception e) {
-            Log.w(LOGTAG, "Error recording search.", e);
+            Log.e(LOGTAG, "Error recording search.", e);
         }
     }
 
@@ -2269,7 +2294,6 @@ public class BrowserApp extends GeckoApp
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                Log.i(LOGTAG, "Menu item clicked");
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(info.id - ADDON_MENU_OFFSET)));
                 return true;
             }
@@ -2620,25 +2644,10 @@ public class BrowserApp extends GeckoApp
                 if (item.isChecked()) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.removeBookmark();
-                    Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
                     item.setIcon(R.drawable.ic_menu_bookmark_add);
                 } else {
                     Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.addBookmark();
-                    getButtonToast().show(false,
-                        getResources().getString(R.string.bookmark_added),
-                        ButtonToast.LENGTH_SHORT,
-                        getResources().getString(R.string.bookmark_options),
-                        null,
-                        new ButtonToast.ToastListener() {
-                            @Override
-                            public void onButtonClicked() {
-                                showBookmarkDialog();
-                            }
-
-                            @Override
-                            public void onToastHidden(ButtonToast.ReasonHidden reason) { }
-                        });
                     item.setIcon(R.drawable.ic_menu_bookmark_remove);
                 }
             }
@@ -2729,7 +2738,7 @@ public class BrowserApp extends GeckoApp
                 args.put("desktopMode", !item.isChecked());
                 args.put("tabId", selectedTab.getId());
             } catch (JSONException e) {
-                Log.e(LOGTAG, "error building json arguments");
+                Log.e(LOGTAG, "error building json arguments", e);
             }
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("DesktopMode:Change", args.toString()));
             return true;
@@ -2859,30 +2868,27 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        (new UIAsyncTask.WithoutParams<Boolean>(ThreadUtils.getBackgroundHandler()) {
-            @Override
-            public synchronized Boolean doInBackground() {
-                // Check to see how many times the app has been launched.
-                SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
-                String keyName = getPackageName() + ".feedback_launch_count";
-                int launchCount = settings.getInt(keyName, 0);
-                if (launchCount >= FEEDBACK_LAUNCH_COUNT)
-                    return false;
+        // Check to see how many times the app has been launched.
+        final String keyName = getPackageName() + ".feedback_launch_count";
+        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
 
+        // Faster on main thread with an async apply().
+        try {
+            SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
+            int launchCount = settings.getInt(keyName, 0);
+            if (launchCount < FEEDBACK_LAUNCH_COUNT) {
                 // Increment the launch count and store the new value.
                 launchCount++;
-                settings.edit().putInt(keyName, launchCount).commit();
+                settings.edit().putInt(keyName, launchCount).apply();
 
                 // If we've reached our magic number, show the feedback page.
-                return launchCount == FEEDBACK_LAUNCH_COUNT;
-            }
-
-            @Override
-            public void onPostExecute(Boolean shouldShowFeedbackPage) {
-                if (shouldShowFeedbackPage)
+                if (launchCount == FEEDBACK_LAUNCH_COUNT) {
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feedback:Show", null));
+                }
             }
-        }).execute();
+        } finally {
+            StrictMode.setThreadPolicy(savedPolicy);
+        }
     }
 
     @Override
@@ -2893,13 +2899,8 @@ public class BrowserApp extends GeckoApp
     }
 
     private void resetFeedbackLaunchCount() {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public synchronized void run() {
-                SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
-                settings.edit().putInt(getPackageName() + ".feedback_launch_count", 0).commit();
-            }
-        });
+        SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
+        settings.edit().putInt(getPackageName() + ".feedback_launch_count", 0).apply();
     }
 
     private void getLastUrl() {

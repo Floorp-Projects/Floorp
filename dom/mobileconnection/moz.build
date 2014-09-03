@@ -10,21 +10,45 @@ MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 
 EXPORTS.mozilla.dom += [
     'DOMMMIError.h',
+    'ipc/MobileConnectionIPCSerializer.h',
     'MobileCellInfo.h',
     'MobileConnection.h',
     'MobileConnectionArray.h',
+    'MobileConnectionCallback.h',
     'MobileConnectionInfo.h',
     'MobileNetworkInfo.h',
 ]
 
+EXPORTS.mozilla.dom.mobileconnection += [
+    'ipc/MobileConnectionChild.h',
+    'ipc/MobileConnectionIPCService.h',
+    'ipc/MobileConnectionParent.h',
+]
+
 SOURCES += [
     'DOMMMIError.cpp',
+    'ipc/MobileConnectionChild.cpp',
+    'ipc/MobileConnectionIPCService.cpp',
+    'ipc/MobileConnectionParent.cpp',
     'MobileCellInfo.cpp',
     'MobileConnection.cpp',
     'MobileConnectionArray.cpp',
+    'MobileConnectionCallback.cpp',
     'MobileConnectionInfo.cpp',
     'MobileNetworkInfo.cpp',
 ]
+
+IPDL_SOURCES += [
+    'ipc/PMobileConnection.ipdl',
+    'ipc/PMobileConnectionRequest.ipdl',
+    'ipc/PMobileConnectionTypes.ipdlh',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
+    EXTRA_COMPONENTS += [
+        'gonk/MobileConnectionGonkService.js',
+        'gonk/MobileConnectionGonkService.manifest',
+    ]
 
 FAIL_ON_WARNINGS = True
 

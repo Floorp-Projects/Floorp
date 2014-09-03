@@ -1,6 +1,6 @@
 == bounds-1.html bounds-1-ref.html
 == size-1.html size-1-ref.html
-skip-if(B2G) fails-if(Android) == size-2.html size-2-ref.html
+skip-if(B2G) == size-2.html size-2-ref.html
 HTTP(..) == baseline-1.html baseline-1-ref.html
 skip-if(B2G&&browserIsRemote) HTTP(..) == centering-1.xul centering-1-ref.xul # bug 974780
 skip-if(B2G&&browserIsRemote) == dynamic-height-1.xul dynamic-height-1-ref.xul # bug 974780

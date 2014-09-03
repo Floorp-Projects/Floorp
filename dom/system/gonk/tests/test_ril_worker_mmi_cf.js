@@ -18,7 +18,7 @@ function setCallForwardSuccess(mmi) {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: mmi});
 
   let postedMessage = workerhelper.postedMessage;
@@ -66,7 +66,7 @@ add_test(function test_sendMMI_call_forwarding_interrogation() {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "*#21#"});
 
   let postedMessage = workerhelper.postedMessage;
@@ -96,7 +96,7 @@ add_test(function test_sendMMI_call_forwarding_interrogation_no_rules() {
     });
   };
 
-  context.RIL.radioState = GECKO_RADIOSTATE_READY;
+  context.RIL.radioState = GECKO_RADIOSTATE_ENABLED;
   context.RIL.sendMMI({mmi: "*#21#"});
 
   let postedMessage = workerhelper.postedMessage;

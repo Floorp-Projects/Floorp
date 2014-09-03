@@ -125,6 +125,15 @@ using mozilla::dom::gonk::AudioManager;
 using mozilla::system::nsVolumeService;
 #endif
 
+#ifdef MOZ_B2G_RIL
+#include "nsIMobileConnectionService.h"
+#include "mozilla/dom/mobileconnection/MobileConnectionIPCService.h"
+using mozilla::dom::mobileconnection::MobileConnectionIPCService;
+#ifdef MOZ_WIDGET_GONK
+#include "nsIMobileConnectionGonkService.h"
+#endif
+#endif
+
 #include "AudioChannelAgent.h"
 using mozilla::dom::AudioChannelAgent;
 
@@ -797,6 +806,10 @@ NS_DEFINE_NAMED_CID(TELEPHONY_SERVICE_CID);
 
 NS_DEFINE_NAMED_CID(GECKO_MEDIA_PLUGIN_SERVICE_CID);
 
+#ifdef MOZ_B2G_RIL
+NS_DEFINE_NAMED_CID(NS_MOBILE_CONNECTION_SERVICE_CID);
+#endif
+
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
                                     REFNSIID aIID, void **aResult)
@@ -925,6 +938,30 @@ nsEditingCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
   return commandTable->QueryInterface(aIID, aResult);
 }
 
+#ifdef MOZ_B2G_RIL
+
+static nsresult
+nsIMobileConnectionServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                      void **aResult)
+{
+  nsCOMPtr<nsIMobileConnectionService> service;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    service = MobileConnectionIPCService::GetSingleton();
+  } else {
+#ifdef MOZ_WIDGET_GONK
+    service = do_CreateInstance(NS_MOBILECONNECTION_GONK_SERVICE_CONTRACTID);
+#endif
+  }
+
+  if (!service) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return service->QueryInterface(aIID, aResult);
+}
+
+#endif
 
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   XPCONNECT_CIDENTRIES
@@ -1081,6 +1118,9 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_ACCESSIBILITY_SERVICE_CID, false, nullptr, CreateA11yService },
 #endif
   { &kTELEPHONY_SERVICE_CID, false, nullptr, nsITelephonyServiceConstructor },
+#ifdef MOZ_B2G_RIL
+  { &kNS_MOBILE_CONNECTION_SERVICE_CID, true, NULL, nsIMobileConnectionServiceConstructor },
+#endif
   { nullptr }
 };
 
@@ -1238,6 +1278,9 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
   { TELEPHONY_SERVICE_CONTRACTID, &kTELEPHONY_SERVICE_CID },
   { "@mozilla.org/gecko-media-plugin-service;1",  &kGECKO_MEDIA_PLUGIN_SERVICE_CID },
+#ifdef MOZ_B2G_RIL
+  { NS_MOBILE_CONNECTION_SERVICE_CONTRACTID, &kNS_MOBILE_CONNECTION_SERVICE_CID },
+#endif
   { nullptr }
 };
 
@@ -1259,6 +1302,9 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
 #endif
 #ifdef MOZ_B2G_BT
   { "profile-after-change", "Bluetooth Service", BLUETOOTHSERVICE_CONTRACTID },
+#endif
+#ifdef MOZ_B2G_RIL
+  { "profile-after-change", "MobileConnection Service", NS_MOBILE_CONNECTION_SERVICE_CONTRACTID },
 #endif
   { nullptr }
 };

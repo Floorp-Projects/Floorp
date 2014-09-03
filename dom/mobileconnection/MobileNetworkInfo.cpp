@@ -25,6 +25,22 @@ MobileNetworkInfo::MobileNetworkInfo(nsPIDOMWindow* aWindow)
   SetIsDOMBinding();
 }
 
+MobileNetworkInfo::MobileNetworkInfo(const nsAString& aShortName,
+                                     const nsAString& aLongName,
+                                     const nsAString& aMcc,
+                                     const nsAString& aMnc,
+                                     const nsAString& aState)
+  : mShortName(aShortName)
+  , mLongName(aLongName)
+  , mMcc(aMcc)
+  , mMnc(aMnc)
+  , mState(aState)
+{
+  // The parent object is nullptr when MobileNetworkInfo is created by this way.
+  // And it won't be exposed to web content.
+  SetIsDOMBinding();
+}
+
 void
 MobileNetworkInfo::Update(nsIMobileNetworkInfo* aInfo)
 {
@@ -43,29 +59,6 @@ JSObject*
 MobileNetworkInfo::WrapObject(JSContext* aCx)
 {
   return MozMobileNetworkInfoBinding::Wrap(aCx, this);
-}
-
-// WebIDL interface
-
-/* static */ already_AddRefed<MobileNetworkInfo>
-MobileNetworkInfo::Constructor(const GlobalObject& aGlobal,
-                               const nsAString& aShortName,
-                               const nsAString& aLongName,
-                               const nsAString& aMcc,
-                               const nsAString& aMnc,
-                               const nsAString& aState,
-                               ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<MobileNetworkInfo> info = new MobileNetworkInfo(window);
-
-  info->mShortName.Assign(aShortName);
-  info->mLongName.Assign(aLongName);
-  info->mMcc.Assign(aMcc);
-  info->mMnc.Assign(aMnc);
-  info->mState.Assign(aState);
-
-  return info.forget();
 }
 
 // nsIMobileNetworkInfo

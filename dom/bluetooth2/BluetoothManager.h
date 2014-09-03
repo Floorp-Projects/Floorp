@@ -26,10 +26,16 @@ class BluetoothManager : public DOMEventTargetHelper
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  // Never returns null
-  static already_AddRefed<BluetoothManager> Create(nsPIDOMWindow* aWindow);
-  static bool CheckPermission(nsPIDOMWindow* aWindow);
+  /****************************************************************************
+   * Event Handlers
+   ***************************************************************************/
+  IMPL_EVENT_HANDLER(attributechanged);
+  IMPL_EVENT_HANDLER(adapteradded);
+  IMPL_EVENT_HANDLER(adapterremoved);
 
+  /****************************************************************************
+   * Methods (Web API Implementation)
+   ***************************************************************************/
   /**
    * Return default adapter if it exists, nullptr otherwise. The function is
    * called when applications access property BluetoothManager.defaultAdapter
@@ -44,17 +50,12 @@ public:
    */
   void GetAdapters(nsTArray<nsRefPtr<BluetoothAdapter> >& aAdapters);
 
-  /**
-   * Create a BluetoothAdapter object based on properties array
-   * and append it into adapters array.
-   *
-   * @param aValue [in] Properties array to create BluetoothAdapter object
-   */
-  void AppendAdapter(const BluetoothValue& aValue);
-
-  IMPL_EVENT_HANDLER(attributechanged);
-  IMPL_EVENT_HANDLER(adapteradded);
-  IMPL_EVENT_HANDLER(adapterremoved);
+  /****************************************************************************
+   * Others
+   ***************************************************************************/
+  // Never returns null
+  static already_AddRefed<BluetoothManager> Create(nsPIDOMWindow* aWindow);
+  static bool CheckPermission(nsPIDOMWindow* aWindow);
 
   void Notify(const BluetoothSignal& aData); // BluetoothSignalObserver
   nsPIDOMWindow* GetParentObject() const
@@ -64,6 +65,14 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
   virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+
+  /**
+   * Create a BluetoothAdapter object based on properties array
+   * and append it into adapters array.
+   *
+   * @param aValue [in] Properties array to create BluetoothAdapter object
+   */
+  void AppendAdapter(const BluetoothValue& aValue);
 
 private:
   BluetoothManager(nsPIDOMWindow* aWindow);
