@@ -29,29 +29,23 @@ namespace ipc {
 class UnixSocketRawData
 {
 public:
-  // Number of octets in mData.
-  size_t mSize;
-  size_t mCurrentWriteOffset;
-  nsAutoArrayPtr<uint8_t> mData;
 
-  /**
-   * Constructor for situations where only size is known beforehand
-   * (for example, when being assigned strings)
-   */
-  UnixSocketRawData(size_t aSize);
-
-  /**
-   * Constructor for situations where size and data is known
-   * beforehand (for example, when being assigned strings)
+  /* This constructor copies aData of aSize bytes length into the
+   * new instance of |UnixSocketRawData|.
    */
   UnixSocketRawData(const void* aData, size_t aSize);
+
+  /* This constructor reserves aSize bytes of space. Currently
+   * it's only possible to fill this buffer by calling |Receive|.
+   */
+  UnixSocketRawData(size_t aSize);
 
   nsresult Receive(int aFd);
   nsresult Send(int aFd);
 
   const uint8_t* GetData() const
   {
-    return mData + mCurrentWriteOffset;
+    return mData + mOffset;
   }
 
   size_t GetSize() const
@@ -64,18 +58,18 @@ public:
     MOZ_ASSERT(aSize <= mSize);
 
     mSize -= aSize;
-    mCurrentWriteOffset += aSize;
+    mOffset += aSize;
   }
 
 protected:
   size_t GetLeadingSpace() const
   {
-    return mCurrentWriteOffset;
+    return mOffset;
   }
 
   size_t GetTrailingSpace() const
   {
-    return mAvailableSpace - (mCurrentWriteOffset + mSize);
+    return mAvailableSpace - (mOffset + mSize);
   }
 
   size_t GetAvailableSpace() const
@@ -85,11 +79,14 @@ protected:
 
   void* GetTrailingBytes()
   {
-    return mData + mCurrentWriteOffset + mSize;
+    return mData + mOffset + mSize;
   }
 
 private:
+  size_t mSize;
+  size_t mOffset;
   size_t mAvailableSpace;
+  nsAutoArrayPtr<uint8_t> mData;
 };
 
 enum SocketConnectionStatus {
