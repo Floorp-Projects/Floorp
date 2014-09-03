@@ -101,7 +101,7 @@ template<class T>
 class BinarySearchDefaultComparator
 {
 public:
-  BinarySearchDefaultComparator(const T& aTarget)
+  explicit BinarySearchDefaultComparator(const T& aTarget)
     : mTarget(aTarget)
   {}
 
