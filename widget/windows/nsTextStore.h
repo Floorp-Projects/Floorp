@@ -137,7 +137,7 @@ public:
 
   static nsresult OnFocusChange(bool aGotFocus,
                                 nsWindowBase* aFocusedWidget,
-                                const IMEState& aIMEState);
+                                const InputContext& aContext);
   static nsresult OnTextChange(const IMENotification& aIMENotification)
   {
     NS_ASSERTION(IsInTSFMode(), "Not in TSF mode, shouldn't be called");
@@ -226,11 +226,13 @@ protected:
   nsTextStore();
   ~nsTextStore();
 
+  static bool CreateAndSetFocus(nsWindowBase* aFocusedWidget,
+                                const InputContext& aContext);
   static void MarkContextAsKeyboardDisabled(ITfContext* aContext);
   static void MarkContextAsEmpty(ITfContext* aContext);
 
-  bool     Create(nsWindowBase* aWidget);
-  bool     Destroy(void);
+  bool     Init(nsWindowBase* aWidget);
+  bool     Destroy();
 
   bool     IsReadLock(DWORD aLock) const
   {
