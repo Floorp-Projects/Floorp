@@ -585,7 +585,7 @@ DrawTargetSkia::MaskSurface(const Pattern &aSource,
     SkMatrix transform = maskPaint.getShader()->getLocalMatrix();
     transform.postTranslate(SkFloatToScalar(aOffset.x), SkFloatToScalar(aOffset.y));
     SkShader* matrixShader = SkShader::CreateLocalMatrixShader(maskPaint.getShader(), transform);
-    SkSafeUnref(maskPaint.setShader(matrixShader));
+    maskPaint.setShader(matrixShader);
 
     SkLayerRasterizer::Builder builder;
     builder.addLayer(maskPaint);
