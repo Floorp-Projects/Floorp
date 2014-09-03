@@ -76,7 +76,7 @@ exports['test `load` events'] = function(assert, done) {
   });
 };
 
-exports['test removeing listeners'] = function(assert, done) {
+exports['test removing listeners'] = function(assert, done) {
   Loader({
     onLoad: function(window) {
       assert.equal(window, this._window, 'windows should match');
