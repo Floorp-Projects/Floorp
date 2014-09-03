@@ -17,7 +17,7 @@
                   android:layout_marginRight="10dip"
                   android:orientation="vertical">
 
-        <org.mozilla.gecko.home.FadedTextView
+        <org.mozilla.gecko.widget.FadedTextView
                 android:id="@+id/title"
                 style="@style/Widget.TwoLinePageRow.Title"
                 android:layout_width="match_parent"
