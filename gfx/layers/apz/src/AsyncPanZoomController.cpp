@@ -2868,7 +2868,7 @@ void AsyncPanZoomController::UpdateSharedCompositorFrameMetrics()
 
   if (frame && mSharedLock && gfxPrefs::UseProgressiveTilePainting()) {
     mSharedLock->Lock();
-    *frame = mFrameMetrics;
+    *frame = mFrameMetrics.MakePODObject();
     mSharedLock->Unlock();
   }
 }
