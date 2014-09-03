@@ -100,6 +100,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
@@ -2859,30 +2860,27 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        (new UIAsyncTask.WithoutParams<Boolean>(ThreadUtils.getBackgroundHandler()) {
-            @Override
-            public synchronized Boolean doInBackground() {
-                // Check to see how many times the app has been launched.
-                SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
-                String keyName = getPackageName() + ".feedback_launch_count";
-                int launchCount = settings.getInt(keyName, 0);
-                if (launchCount >= FEEDBACK_LAUNCH_COUNT)
-                    return false;
+        // Check to see how many times the app has been launched.
+        final String keyName = getPackageName() + ".feedback_launch_count";
+        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
 
+        // Faster on main thread with an async apply().
+        try {
+            SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
+            int launchCount = settings.getInt(keyName, 0);
+            if (launchCount < FEEDBACK_LAUNCH_COUNT) {
                 // Increment the launch count and store the new value.
                 launchCount++;
-                settings.edit().putInt(keyName, launchCount).commit();
+                settings.edit().putInt(keyName, launchCount).apply();
 
                 // If we've reached our magic number, show the feedback page.
-                return launchCount == FEEDBACK_LAUNCH_COUNT;
-            }
-
-            @Override
-            public void onPostExecute(Boolean shouldShowFeedbackPage) {
-                if (shouldShowFeedbackPage)
+                if (launchCount == FEEDBACK_LAUNCH_COUNT) {
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feedback:Show", null));
+                }
             }
-        }).execute();
+        } finally {
+            StrictMode.setThreadPolicy(savedPolicy);
+        }
     }
 
     @Override
@@ -2893,13 +2891,8 @@ public class BrowserApp extends GeckoApp
     }
 
     private void resetFeedbackLaunchCount() {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public synchronized void run() {
-                SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
-                settings.edit().putInt(getPackageName() + ".feedback_launch_count", 0).commit();
-            }
-        });
+        SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
+        settings.edit().putInt(getPackageName() + ".feedback_launch_count", 0).apply();
     }
 
     private void getLastUrl() {
