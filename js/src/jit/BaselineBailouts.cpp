@@ -1163,7 +1163,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     JitSpew(JitSpew_BaselineBailouts, "      Callee = %016llx", *((uint64_t *) &callee));
     JS_ASSERT(callee.isObject() && callee.toObject().is<JSFunction>());
     JSFunction *calleeFun = &callee.toObject().as<JSFunction>();
-    if (!builder.writePtr(CalleeToToken(calleeFun), "CalleeToken"))
+    if (!builder.writePtr(CalleeToToken(calleeFun, JSOp(*pc) == JSOP_NEW), "CalleeToken"))
         return false;
     nextCallee.set(calleeFun);
 
@@ -1242,7 +1242,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         return false;
 
     // Push calleeToken again.
-    if (!builder.writePtr(CalleeToToken(calleeFun), "CalleeToken"))
+    if (!builder.writePtr(CalleeToToken(calleeFun, JSOp(*pc) == JSOP_NEW), "CalleeToken"))
         return false;
 
     // Push rectifier frame descriptor

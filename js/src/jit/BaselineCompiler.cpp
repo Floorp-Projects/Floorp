@@ -593,7 +593,7 @@ BaselineCompiler::initScopeChain()
         // chain slot is properly initialized if the call triggers GC.
         Register callee = R0.scratchReg();
         Register scope = R1.scratchReg();
-        masm.loadPtr(frame.addressOfCallee(), callee);
+        masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), callee);
         masm.loadPtr(Address(callee, JSFunction::offsetOfEnvironment()), scope);
         masm.storePtr(scope, frame.addressOfScopeChain());
 
@@ -1145,7 +1145,7 @@ BaselineCompiler::emit_JSOP_THIS()
         // extended slot.
         frame.syncStack(0);
         Register scratch = R0.scratchReg();
-        masm.loadPtr(frame.addressOfCallee(), scratch);
+        masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), scratch);
         masm.loadValue(Address(scratch, FunctionExtended::offsetOfArrowThisSlot()), R0);
         frame.push(R0);
         return true;
@@ -3065,7 +3065,7 @@ BaselineCompiler::emit_JSOP_CALLEE()
 {
     JS_ASSERT(function());
     frame.syncStack(0);
-    masm.loadPtr(frame.addressOfCallee(), R0.scratchReg());
+    masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), R0.scratchReg());
     masm.tagValue(JSVAL_TYPE_OBJECT, R0.scratchReg(), R0);
     frame.push(R0);
     return true;
