@@ -8,17 +8,9 @@ SimplePrograms([
     'TestXREMakeCommandLineWin',
 ])
 
-SOURCES += [
-    '%s.cpp' % s for s in SIMPLE_PROGRAMS
-]
-
 CppUnitTests([
     'TestDllInterceptor',
 ])
-
-SOURCES += [
-    '%s.cpp' % s for s in CPP_UNIT_TESTS
-]
 
 DEFINES['NS_NO_XPCOM'] = True
 

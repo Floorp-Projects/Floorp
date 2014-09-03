@@ -37,8 +37,6 @@ if not CONFIG['MOZ_ASAN']:
         'TestPoisonArea',
     ])
 
-SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
-
 # Since we link directly with MFBT object files, define IMPL_MFBT
 DEFINES['IMPL_MFBT'] = True
 

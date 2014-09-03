@@ -8,10 +8,6 @@ SimplePrograms([
     'TestXPTCInvoke',
 ])
 
-SOURCES += [
-    '%s.cpp' % s for s in SIMPLE_PROGRAMS
-]
-
 USE_LIBS += [
     'mozalloc',
     'nspr',

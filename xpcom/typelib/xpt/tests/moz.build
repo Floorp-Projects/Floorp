@@ -9,10 +9,6 @@ SimplePrograms([
     'SimpleTypeLib',
 ])
 
-SOURCES += [
-    '%s.cpp' % s for s in SIMPLE_PROGRAMS
-]
-
 FAIL_ON_WARNINGS = True
 
 USE_LIBS += [
