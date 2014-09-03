@@ -301,6 +301,13 @@ enum BluetoothHandsfreeAtResponse {
   HFP_AT_RESPONSE_OK
 };
 
+enum BluetoothHandsfreeAudioState {
+  HFP_AUDIO_STATE_DISCONNECTED,
+  HFP_AUDIO_STATE_CONNECTING,
+  HFP_AUDIO_STATE_CONNECTED,
+  HFP_AUDIO_STATE_DISCONNECTING,
+};
+
 enum BluetoothHandsfreeCallAddressType {
   HFP_CALL_ADDRESS_TYPE_UNKNOWN,
   HFP_CALL_ADDRESS_TYPE_INTERNATIONAL
@@ -309,6 +316,13 @@ enum BluetoothHandsfreeCallAddressType {
 enum BluetoothHandsfreeCallDirection {
   HFP_CALL_DIRECTION_OUTGOING,
   HFP_CALL_DIRECTION_INCOMING
+};
+
+enum BluetoothHandsfreeCallHoldType {
+  HFP_CALL_HOLD_RELEASEHELD,
+  HFP_CALL_HOLD_RELEASEACTIVE_ACCEPTHELD,
+  HFP_CALL_HOLD_HOLDACTIVE_ACCEPTHELD,
+  HFP_CALL_HOLD_ADDHELDTOCONF
 };
 
 enum BluetoothHandsfreeCallMode {
@@ -332,14 +346,33 @@ enum BluetoothHandsfreeCallState {
   HFP_CALL_STATE_IDLE
 };
 
+enum BluetoothHandsfreeConnectionState
+{
+  HFP_CONNECTION_STATE_DISCONNECTED,
+  HFP_CONNECTION_STATE_CONNECTING,
+  HFP_CONNECTION_STATE_CONNECTED,
+  HFP_CONNECTION_STATE_SLC_CONNECTED,
+  HFP_CONNECTION_STATE_DISCONNECTING
+};
+
 enum BluetoothHandsfreeNetworkState {
   HFP_NETWORK_STATE_NOT_AVAILABLE,
   HFP_NETWORK_STATE_AVAILABLE
 };
 
+enum BluetoothHandsfreeNRECState {
+  HFP_NREC_STOPPED,
+  HFP_NREC_STARTED
+};
+
 enum BluetoothHandsfreeServiceType {
   HFP_SERVICE_TYPE_HOME,
   HFP_SERVICE_TYPE_ROAMING
+};
+
+enum BluetoothHandsfreeVoiceRecognitionState {
+  HFP_VOICE_RECOGNITION_STOPPED,
+  HFP_VOICE_RECOGNITION_STARTED
 };
 
 enum BluetoothHandsfreeVolumeType {

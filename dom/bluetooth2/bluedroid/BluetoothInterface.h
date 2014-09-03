@@ -77,6 +77,82 @@ private:
 // Handsfree Interface
 //
 
+class BluetoothHandsfreeNotificationHandler
+{
+public:
+  virtual ~BluetoothHandsfreeNotificationHandler();
+
+  virtual void
+  ConnectionStateNotification(BluetoothHandsfreeConnectionState aState,
+                              const nsAString& aBdAddr)
+  { }
+
+  virtual void
+  AudioStateNotification(BluetoothHandsfreeAudioState aState,
+                         const nsAString& aBdAddr)
+  { }
+
+  virtual void
+  VoiceRecognitionNotification(BluetoothHandsfreeVoiceRecognitionState aState)
+  { }
+
+  virtual void
+  AnswerCallNotification()
+  { }
+
+  virtual void
+  HangupCallNotification()
+  { }
+
+  virtual void
+  VolumeNotification(BluetoothHandsfreeVolumeType aType, int aVolume)
+  { }
+
+  virtual void
+  DialCallNotification(const nsAString& aNumber)
+  { }
+
+  virtual void
+  DtmfNotification(char aDtmf)
+  { }
+
+  virtual void
+  NRECNotification(BluetoothHandsfreeNRECState aNrec)
+  { }
+
+  virtual void
+  CallHoldNotification(BluetoothHandsfreeCallHoldType aChld)
+  { }
+
+  virtual void
+  CnumNotification()
+  { }
+
+  virtual void
+  CindNotification()
+  { }
+
+  virtual void
+  CopsNotification()
+  { }
+
+  virtual void
+  ClccNotification()
+  { }
+
+  virtual void
+  UnknownAtNotification(const nsACString& aAtString)
+  { }
+
+  virtual void
+  KeyPressedNotification()
+  { }
+
+protected:
+  BluetoothHandsfreeNotificationHandler()
+  { }
+};
+
 class BluetoothHandsfreeResultHandler
 {
 public:
@@ -117,7 +193,7 @@ class BluetoothHandsfreeInterface
 public:
   friend class BluetoothInterface;
 
-  void Init(bthf_callbacks_t* aCallbacks,
+  void Init(BluetoothHandsfreeNotificationHandler* aNotificationHandler,
             BluetoothHandsfreeResultHandler* aRes);
   void Cleanup(BluetoothHandsfreeResultHandler* aRes);
 

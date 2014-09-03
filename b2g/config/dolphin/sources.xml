@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="4b4336c73c081b39776d399835ce4853aee5cc1c">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="7e469783859785a8bd4bf02a802f32561c84be7b"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="52670853c17fc0d3d33065c667c0ce124c93b98f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="6969df171e5295f855f12d12db0382048e6892e7"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -35,7 +35,7 @@
   <project name="device/sample" path="device/sample" revision="1a3d8efa0ad32ec8f145367a3cf0f54b97385c3c"/>
   <project name="platform/abi/cpp" path="abi/cpp" revision="18f1b5e28734183ff8073fe86dc46bc4ebba8a59"/>
   <project name="platform/bionic" path="bionic" revision="86b1f589c313422a7da1812512b9ec8d1cf9ba3c"/>
-  <project name="platform/bootable/recovery" path="bootable/recovery" revision="a556e98f857546c94b5a9c179ee3c99a7c17d729"/>
+  <project name="platform/bootable/recovery" path="bootable/recovery" revision="4eece0d80928a2b5266b78421ebf0c8686d4ad2c"/>
   <project name="platform/external/aac" path="external/aac" revision="fa3eba16446cc8f2f5e2dfc20d86a49dbd37299e"/>
   <project name="platform/external/bison" path="external/bison" revision="c2418b886165add7f5a31fc5609f0ce2d004a90e"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="c50830cae1b748024eec7e73ad98a4e427f663c7"/>
@@ -133,9 +133,9 @@
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>
   <project groups="invensense" name="platform/hardware/invensense" path="hardware/invensense" revision="e6d9ab28b4f4e7684f6c07874ee819c9ea0002a2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="865ce3b4a2ba0b3a31421ca671f4d6c5595f8690"/>
-  <project name="kernel/common" path="kernel" revision="600fa6e2bbc9518a8c4ac9ad687d6eafd2cc9b7b"/>
+  <project name="kernel/common" path="kernel" revision="03effd4db31881b2dd8d57575694515327f9ea2e"/>
   <project name="platform/system/core" path="system/core" revision="53d584d4a4b4316e4de9ee5f210d662f89b44e7e"/>
-  <project name="u-boot" path="u-boot" revision="fc5df5228c1242cda0743231b3c63a89c802889e"/>
+  <project name="u-boot" path="u-boot" revision="df509ae75495aa409969973b97ee781037dee1fe"/>
   <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="7feb3df0e150053e0143ef525f6e082bda320aea"/>
   <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="2be9b6d4984da4a2d0afde1e149c01a12f691f30"/>
   <project name="vendor/sprd/partner" path="vendor/sprd/partner" revision="8649c7145972251af11b0639997edfecabfc7c2e"/>
