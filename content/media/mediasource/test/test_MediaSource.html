@@ -49,7 +49,7 @@ addLoadEvent(function() {
           ms.endOfStream();
           v.play();
         });
-        r.readAsArrayBuffer(blob);
+        //r.readAsArrayBuffer(blob);
       });
     });
     ms.addEventListener("sourceended", function () {
@@ -61,6 +61,8 @@ addLoadEvent(function() {
       v.parentNode.removeChild(v);
       SimpleTest.finish();
     });
+    v.parentNode.removeChild(v);
+    SimpleTest.finish();
   });
 });
 
