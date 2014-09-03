@@ -80,9 +80,8 @@ enum TelemetryAlgorithm {
   }
 
 // OOM-safe CryptoBuffer-to-SECItem copy, suitable for DoCrypto
-#define ATTEMPT_BUFFER_TO_SECITEM(dst, src) \
-  dst = src.ToSECItem(); \
-  if (!dst) { \
+#define ATTEMPT_BUFFER_TO_SECITEM(arena, dst, src) \
+  if (!src.ToSECItem(arena, dst)) { \
     return NS_ERROR_DOM_UNKNOWN_ERR; \
   }
 
@@ -511,15 +510,18 @@ private:
       return NS_ERROR_DOM_OPERATION_ERR;
     }
 
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
     // Construct the parameters object depending on algorithm
-    SECItem param;
-    ScopedSECItem cbcParam;
+    SECItem param = { siBuffer, nullptr, 0 };
     CK_AES_CTR_PARAMS ctrParams;
     CK_GCM_PARAMS gcmParams;
     switch (mMechanism) {
       case CKM_AES_CBC_PAD:
-        ATTEMPT_BUFFER_TO_SECITEM(cbcParam, mIv);
-        param = *cbcParam;
+        ATTEMPT_BUFFER_TO_SECITEM(arena, &param, mIv);
         break;
       case CKM_AES_CTR:
         ctrParams.ulCounterBits = mCounterLength;
@@ -544,12 +546,12 @@ private:
     }
 
     // Import the key
-    ScopedSECItem keyItem;
-    ATTEMPT_BUFFER_TO_SECITEM(keyItem, mSymKey);
+    SECItem keyItem = { siBuffer, nullptr, 0 };
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &keyItem, mSymKey);
     ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
     MOZ_ASSERT(slot.get());
     ScopedPK11SymKey symKey(PK11_ImportSymKey(slot, mMechanism, PK11_OriginUnwrap,
-                                              CKA_ENCRYPT, keyItem.get(), nullptr));
+                                              CKA_ENCRYPT, &keyItem, nullptr));
     if (!symKey) {
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
     }
@@ -646,20 +648,25 @@ private:
       return NS_ERROR_DOM_DATA_ERR;
     }
 
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
     // Import the key
-    ScopedSECItem keyItem;
-    ATTEMPT_BUFFER_TO_SECITEM(keyItem, mSymKey);
+    SECItem keyItem = { siBuffer, nullptr, 0 };
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &keyItem, mSymKey);
     ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
     MOZ_ASSERT(slot.get());
     ScopedPK11SymKey symKey(PK11_ImportSymKey(slot, mMechanism, PK11_OriginUnwrap,
-                                              CKA_WRAP, keyItem.get(), nullptr));
+                                              CKA_WRAP, &keyItem, nullptr));
     if (!symKey) {
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
     }
 
     // Import the data to a SECItem
-    ScopedSECItem dataItem;
-    ATTEMPT_BUFFER_TO_SECITEM(dataItem, mData);
+    SECItem dataItem = { siBuffer, nullptr, 0 };
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &dataItem, mData);
 
     // Parameters for the fake keys
     CK_MECHANISM_TYPE fakeMechanism = CKM_SHA_1_HMAC;
@@ -669,7 +676,7 @@ private:
       // Import the data into a fake PK11SymKey structure
       ScopedPK11SymKey keyToWrap(PK11_ImportSymKey(slot, fakeMechanism,
                                                    PK11_OriginUnwrap, fakeOperation,
-                                                   dataItem.get(), nullptr));
+                                                   &dataItem, nullptr));
       if (!keyToWrap) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
@@ -689,7 +696,7 @@ private:
       // Unwrapped key should be 64 bits shorter
       int keySize = mData.Length() - 8;
       ScopedPK11SymKey unwrappedKey(PK11_UnwrapSymKey(symKey, mMechanism, nullptr,
-                                                 dataItem.get(), fakeMechanism,
+                                                 &dataItem, fakeMechanism,
                                                  fakeOperation, keySize));
       if (!unwrappedKey) {
         return NS_ERROR_DOM_OPERATION_ERR;
@@ -901,15 +908,20 @@ private:
     if (!mResult.SetLength(HASH_LENGTH_MAX)) {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
-    uint32_t outLen;
+
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
 
     // Import the key
-    ScopedSECItem keyItem;
-    ATTEMPT_BUFFER_TO_SECITEM(keyItem, mSymKey);
+    uint32_t outLen;
+    SECItem keyItem = { siBuffer, nullptr, 0 };
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &keyItem, mSymKey);
     ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
     MOZ_ASSERT(slot.get());
     ScopedPK11SymKey symKey(PK11_ImportSymKey(slot, mMechanism, PK11_OriginUnwrap,
-                                              CKA_SIGN, keyItem.get(), nullptr));
+                                              CKA_SIGN, &keyItem, nullptr));
     if (!symKey) {
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
     }
@@ -1069,7 +1081,7 @@ private:
   {
     nsresult rv;
     if (mSign) {
-      ScopedSECItem signature((SECItem*) PORT_Alloc(sizeof(SECItem)));
+      ScopedSECItem signature(::SECITEM_AllocItem(nullptr, nullptr, 0));
       ScopedSGNContext ctx(SGN_NewContext(mOidTag, mPrivKey));
       if (!signature.get() || !ctx.get()) {
         return NS_ERROR_DOM_OPERATION_ERR;
@@ -1093,27 +1105,23 @@ private:
       }
 
     } else {
-      ScopedSECItem signature;
+      ScopedSECItem signature(::SECITEM_AllocItem(nullptr, nullptr, 0));
+      if (!signature.get()) {
+        return NS_ERROR_DOM_UNKNOWN_ERR;
+      }
 
       if (mEcdsa) {
         // DER-encode the signature
-        ScopedSECItem rawSignature(mSignature.ToSECItem());
-        if (!rawSignature.get()) {
+        ScopedSECItem rawSignature(::SECITEM_AllocItem(nullptr, nullptr, 0));
+        if (!rawSignature || !mSignature.ToSECItem(nullptr, rawSignature)) {
           return NS_ERROR_DOM_UNKNOWN_ERR;
         }
 
-        signature = (SECItem*) PORT_Alloc(sizeof(SECItem));
-        if (!signature.get()) {
-          return NS_ERROR_DOM_UNKNOWN_ERR;
-        }
         rv = MapSECStatus(DSAU_EncodeDerSigWithLen(signature, rawSignature,
                                                    rawSignature->len));
         NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
-      } else {
-        signature = mSignature.ToSECItem();
-        if (!signature) {
-          return NS_ERROR_DOM_UNKNOWN_ERR;
-        }
+      } else if (!mSignature.ToSECItem(nullptr, signature)) {
+        return NS_ERROR_DOM_UNKNOWN_ERR;
       }
 
       rv = MapSECStatus(VFY_VerifyData(mData.Elements(), mData.Length(),
@@ -2401,8 +2409,13 @@ private:
 
   virtual nsresult DoCrypto() MOZ_OVERRIDE
   {
-    ScopedSECItem salt;
-    ATTEMPT_BUFFER_TO_SECITEM(salt, mSalt);
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    SECItem salt = { siBuffer, nullptr, 0 };
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &salt, mSalt);
 
     // Always pass in cipherAlg=SEC_OID_HMAC_SHA1 (i.e. PBMAC1) as this
     // parameter is unused for key generation. It is currently only used
@@ -2410,7 +2423,7 @@ private:
     // encryption algorithm (PBES2).
     ScopedSECAlgorithmID alg_id(PK11_CreatePBEV2AlgorithmID(
       SEC_OID_PKCS5_PBKDF2, SEC_OID_HMAC_SHA1, mHashOidTag,
-      mLength, mIterations, salt));
+      mLength, mIterations, &salt));
 
     if (!alg_id.get()) {
       return NS_ERROR_DOM_OPERATION_ERR;
@@ -2421,10 +2434,10 @@ private:
       return NS_ERROR_DOM_OPERATION_ERR;
     }
 
-    ScopedSECItem keyItem;
-    ATTEMPT_BUFFER_TO_SECITEM(keyItem, mSymKey);
+    SECItem keyItem = { siBuffer, nullptr, 0 };
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &keyItem, mSymKey);
 
-    ScopedPK11SymKey symKey(PK11_PBEKeyGen(slot, alg_id, keyItem, false, nullptr));
+    ScopedPK11SymKey symKey(PK11_PBEKeyGen(slot, alg_id, &keyItem, false, nullptr));
     if (!symKey.get()) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
