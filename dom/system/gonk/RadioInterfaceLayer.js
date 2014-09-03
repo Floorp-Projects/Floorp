@@ -500,8 +500,8 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
 
     _isCardPresentAtClient: function(clientId) {
       let cardState = _ril.getRadioInterface(clientId).rilContext.cardState;
-      return cardState !== RIL.GECKO_CARDSTATE_UNDETECTED &&
-             cardState !== RIL.GECKO_CARDSTATE_UNKNOWN;
+      return cardState !== Ci.nsIIccProvider.CARD_STATE_UNDETECTED &&
+             cardState !== Ci.nsIIccProvider.CARD_STATE_UNKNOWN;
     },
 
     _isRadioAbleToEnableAtClient: function(clientId, numCards) {
@@ -1800,7 +1800,7 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   aWorkerMessenger.registerClient(aClientId, this);
 
   this.rilContext = {
-    cardState:      RIL.GECKO_CARDSTATE_UNKNOWN,
+    cardState:      Ci.nsIIccProvider.CARD_STATE_UNKNOWN,
     iccInfo:        null,
     imsi:           null
   };
@@ -3636,7 +3636,7 @@ RadioInterface.prototype = {
                  radioState == RIL.GECKO_RADIOSTATE_DISABLED) {
         if (DEBUG) this.debug("Error! Radio is disabled when sending SMS.");
         errorCode = Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR;
-      } else if (this.rilContext.cardState != "ready") {
+      } else if (this.rilContext.cardState != Ci.nsIIccProvider.CARD_STATE_READY) {
         if (DEBUG) this.debug("Error! SIM card is not ready when sending SMS.");
         errorCode = Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR;
       }
