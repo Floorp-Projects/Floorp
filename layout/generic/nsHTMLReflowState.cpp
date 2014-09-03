@@ -60,6 +60,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
                                      uint32_t             aFlags)
   : nsCSSOffsetState(aFrame, aRenderingContext)
   , mBlockDelta(0)
+  , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
   , mReflowDepth(0)
 {
   NS_PRECONDITION(aRenderingContext, "no rendering context");
@@ -165,6 +166,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
                                      uint32_t                 aFlags)
   : nsCSSOffsetState(aFrame, aParentReflowState.rendContext)
   , mBlockDelta(0)
+  , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
   , mReflowDepth(aParentReflowState.mReflowDepth + 1)
   , mFlags(aParentReflowState.mFlags)
 {
@@ -329,6 +331,19 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
                         const nsMargin* aBorder,
                         const nsMargin* aPadding)
 {
+  if (AvailableISize() == NS_UNCONSTRAINEDSIZE) {
+    // Look up the parent chain for an orthogonal inline limit,
+    // and reset AvailableISize() if found.
+    for (const nsHTMLReflowState *parent = parentReflowState;
+         parent != nullptr; parent = parent->parentReflowState) {
+      if (parent->GetWritingMode().IsOrthogonalTo(mWritingMode) &&
+          parent->mOrthogonalLimit != NS_UNCONSTRAINEDSIZE) {
+        AvailableISize() = parent->mOrthogonalLimit;
+        break;
+      }
+    }
+  }
+
   NS_WARN_IF_FALSE(AvailableISize() != NS_UNCONSTRAINEDSIZE,
                    "have unconstrained inline-size; this should only result from "
                    "very large sizes, not attempts at intrinsic inline-size "
