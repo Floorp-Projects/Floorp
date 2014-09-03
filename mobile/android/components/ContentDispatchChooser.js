@@ -64,7 +64,7 @@ ContentDispatchChooser.prototype =
                 url: "market://search?q=" + aURI.scheme,
               };
 
-              sendMessageToJava(message);
+              Messaging.sendRequest(message);
             }
           }
         });
