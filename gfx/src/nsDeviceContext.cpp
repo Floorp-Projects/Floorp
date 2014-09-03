@@ -399,6 +399,10 @@ nsDeviceContext::CreateRenderingContext()
       gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(printingSurface,
                                                              gfx::IntSize(mWidth, mHeight));
 
+#ifdef XP_MACOSX
+    dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
+#endif
+
     pContext->Init(this, dt);
     pContext->ThebesContext()->SetFlag(gfxContext::FLAG_DISABLE_SNAPPING);
     pContext->Scale(mPrintingScale, mPrintingScale);
