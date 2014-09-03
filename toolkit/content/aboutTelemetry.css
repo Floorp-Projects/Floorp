@@ -7,8 +7,8 @@
 }
 
 html {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
   font: message-box;
 }
 
@@ -22,7 +22,6 @@ h2 {
 }
 
 #page-description {
-  background-color: LightGray;
   border: 1px solid threedshadow;
   margin: 0px;
   padding: 10px;
@@ -37,7 +36,8 @@ h2 {
 }
 
 .data-section {
-  background-color: WhiteSmoke;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
   border-top: 1px solid threedshadow;
   border-bottom: 1px solid threedshadow;
   margin: 0px;
