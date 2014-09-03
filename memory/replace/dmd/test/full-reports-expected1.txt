@@ -1,0 +1,28 @@
+#-----------------------------------------------------------------
+
+Invocation {
+  $DMD = '--mode=test'
+  Sample-below size = 1
+}
+
+#-----------------------------------------------------------------
+
+# no twice-reported heap blocks
+
+#-----------------------------------------------------------------
+
+# no unreported heap blocks
+
+#-----------------------------------------------------------------
+
+# no once-reported heap blocks
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total:                     0 bytes (100.00%) in       0 blocks (100.00%)
+  Unreported:                0 bytes (  0.00%) in       0 blocks (  0.00%)
+  Once-reported:             0 bytes (  0.00%) in       0 blocks (  0.00%)
+  Twice-reported:            0 bytes (  0.00%) in       0 blocks (  0.00%)
+}
+
