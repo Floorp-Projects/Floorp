@@ -116,8 +116,21 @@ function onSubmitStatus(subj, topic, data) {
     if (data != "success" && data != "failed")
       return;
 
-    let extra = getPropertyBagValue(subj.QueryInterface(Ci.nsIPropertyBag),
-                                    "extra");
+    let propBag = subj.QueryInterface(Ci.nsIPropertyBag);
+    if (data == "success") {
+      let remoteID = getPropertyBagValue(propBag, "serverCrashID");
+      ok(!!remoteID, "serverCrashID should be set");
+
+      // Remove the submitted report file.
+      let file = Cc["@mozilla.org/file/local;1"]
+                   .createInstance(Ci.nsILocalFile);
+      file.initWithPath(Services.crashmanager._submittedDumpsDir);
+      file.append(remoteID + ".txt");
+      ok(file.exists(), "Submitted report file should exist");
+      file.remove(false);
+    }
+
+    let extra = getPropertyBagValue(propBag, "extra");
     ok(extra instanceof Ci.nsIPropertyBag, "Extra data should be property bag");
 
     let val = getPropertyBagValue(extra, "PluginUserComment");
