@@ -4465,15 +4465,9 @@ MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label *bail
     // Do a compare based on the original value, then do most other things based
     // on the shifted value.
     ma_vcmpz(input);
-    // Adding 0.5 is technically incorrect!
-    // We want to add 0.5 to negative numbers, and 0.49999999999999999 to
-    // positive numbers.
-    ma_vimm(0.5, ScratchDoubleReg);
     // Since we already know the sign bit, flip all numbers to be positive,
     // stored in tmp.
     ma_vabs(input, tmp);
-    // Add 0.5, storing the result into tmp.
-    ma_vadd(ScratchDoubleReg, tmp, tmp);
     as_vmrs(pc);
     ma_b(&handleZero, Assembler::Equal);
     ma_b(&handleNeg, Assembler::Signed);
@@ -4484,6 +4478,13 @@ MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label *bail
     // it is known to be > 0.0, explicitly convert to a larger range, then a
     // value that rounds to INT_MAX is explicitly different from an argument
     // that clamps to INT_MAX.
+
+    // Add the biggest number less than 0.5 (not 0.5, because adding that to
+    // the biggest number less than 0.5 would undesirably round up to 1), and
+    // store the result into tmp.
+    ma_vimm(GetBiggestNumberLessThan(0.5), ScratchDoubleReg);
+    ma_vadd(ScratchDoubleReg, tmp, tmp);
+
     ma_vcvt_F64_U32(tmp, ScratchDoubleReg.uintOverlay());
     ma_vxfer(VFPRegister(ScratchDoubleReg).uintOverlay(), output);
     ma_mov(output, output, SetCond);
@@ -4501,6 +4502,11 @@ MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label *bail
     bind(&handleNeg);
     // Negative case, negate, then start dancing. This number may be positive,
     // since we added 0.5.
+
+    // Add 0.5 to negative numbers, store the result into tmp
+    ma_vimm(0.5, ScratchDoubleReg);
+    ma_vadd(ScratchDoubleReg, tmp, tmp);
+
     ma_vcvt_F64_U32(tmp, ScratchDoubleReg.uintOverlay());
     ma_vxfer(VFPRegister(ScratchDoubleReg).uintOverlay(), output);
 
@@ -4532,15 +4538,9 @@ MacroAssemblerARMCompat::roundf(FloatRegister input, Register output, Label *bai
     // Do a compare based on the original value, then do most other things based
     // on the shifted value.
     ma_vcmpz_f32(input);
-    // Adding 0.5 is technically incorrect!
-    // We want to add 0.5 to negative numbers, and 0.49999999999999999 to
-    // positive numbers.
-    ma_vimm_f32(0.5f, ScratchFloat32Reg);
     // Since we already know the sign bit, flip all numbers to be positive,
     // stored in tmp.
     ma_vabs_f32(input, tmp);
-    // Add 0.5, storing the result into tmp.
-    ma_vadd_f32(ScratchFloat32Reg, tmp, tmp);
     as_vmrs(pc);
     ma_b(&handleZero, Assembler::Equal);
     ma_b(&handleNeg, Assembler::Signed);
@@ -4551,6 +4551,13 @@ MacroAssemblerARMCompat::roundf(FloatRegister input, Register output, Label *bai
     // it is known to be > 0.0, explicitly convert to a larger range, then a
     // value that rounds to INT_MAX is explicitly different from an argument
     // that clamps to INT_MAX.
+
+    // Add the biggest number less than 0.5f (not 0.5f, because adding that to
+    // the biggest number less than 0.5f would undesirably round up to 1), and
+    // store the result into tmp.
+    ma_vimm_f32(GetBiggestNumberLessThan(0.5f), ScratchFloat32Reg);
+    ma_vadd_f32(ScratchFloat32Reg, tmp, tmp);
+
     ma_vcvt_F32_U32(tmp, ScratchFloat32Reg.uintOverlay());
     ma_vxfer(VFPRegister(ScratchFloat32Reg).uintOverlay(), output);
     ma_mov(output, output, SetCond);
@@ -4566,6 +4573,11 @@ MacroAssemblerARMCompat::roundf(FloatRegister input, Register output, Label *bai
     ma_b(&fin);
 
     bind(&handleNeg);
+
+    // Add 0.5 to negative numbers, storing the result into tmp.
+    ma_vimm_f32(0.5f, ScratchFloat32Reg);
+    ma_vadd_f32(ScratchFloat32Reg, tmp, tmp);
+
     // Negative case, negate, then start dancing. This number may be positive,
     // since we added 0.5.
     ma_vcvt_F32_U32(tmp, ScratchFloat32Reg.uintOverlay());
