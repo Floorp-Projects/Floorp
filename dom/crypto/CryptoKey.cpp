@@ -367,8 +367,14 @@ CryptoKey::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
 {
   SECKEYPrivateKey* privKey;
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-  ScopedSECItem pkcs8Item(aKeyData.ToSECItem());
-  if (!pkcs8Item) {
+
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return nullptr;
+  }
+
+  SECItem pkcs8Item = { siBuffer, nullptr, 0 };
+  if (!aKeyData.ToSECItem(arena, &pkcs8Item)) {
     return nullptr;
   }
 
@@ -376,7 +382,7 @@ CryptoKey::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
   unsigned int usage = KU_ALL;
 
   SECStatus rv = PK11_ImportDERPrivateKeyInfoAndReturnKey(
-                 slot.get(), pkcs8Item.get(), nullptr, nullptr, false, false,
+                 slot.get(), &pkcs8Item, nullptr, nullptr, false, false,
                  usage, &privKey, nullptr);
 
   if (rv == SECFailure) {
@@ -389,12 +395,17 @@ SECKEYPublicKey*
 CryptoKey::PublicKeyFromSpki(CryptoBuffer& aKeyData,
                        const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  ScopedSECItem spkiItem(aKeyData.ToSECItem());
-  if (!spkiItem) {
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
     return nullptr;
   }
 
-  ScopedCERTSubjectPublicKeyInfo spki(SECKEY_DecodeDERSubjectPublicKeyInfo(spkiItem.get()));
+  SECItem spkiItem = { siBuffer, nullptr, 0 };
+  if (!aKeyData.ToSECItem(arena, &spkiItem)) {
+    return nullptr;
+  }
+
+  ScopedCERTSubjectPublicKeyInfo spki(SECKEY_DecodeDERSubjectPublicKeyInfo(&spkiItem));
   if (!spki) {
     return nullptr;
   }
@@ -676,14 +687,19 @@ CryptoKey::PrivateKeyFromJwk(const JsonWebKey& aJwk,
       return nullptr;
     }
 
-    // Compute the ID for this key
-    // This is generated with a SHA-1 hash, so unlikely to collide
-    ScopedSECItem nItem(n.ToSECItem());
-    if (!nItem.get()) {
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
       return nullptr;
     }
 
-    ScopedSECItem objID(PK11_MakeIDFromPubKey(nItem.get()));
+    // Compute the ID for this key
+    // This is generated with a SHA-1 hash, so unlikely to collide
+    SECItem nItem = { siBuffer, nullptr, 0 };
+    if (!n.ToSECItem(arena, &nItem)) {
+      return nullptr;
+    }
+
+    ScopedSECItem objID(PK11_MakeIDFromPubKey(&nItem));
     if (!objID.get()) {
       return nullptr;
     }
