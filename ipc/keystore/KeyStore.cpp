@@ -400,7 +400,8 @@ KeyStore::ResetHandlerInfo()
 bool
 KeyStore::CheckSize(UnixSocketRawData *aMessage, size_t aExpectSize)
 {
-  return (aMessage->GetSize() >= aExpectSize);
+  return (aMessage->mSize - aMessage->mCurrentWriteOffset >= aExpectSize) ?
+         true : false;
 }
 
 ResponseCode
@@ -416,8 +417,8 @@ KeyStore::ReadCommand(UnixSocketRawData *aMessage)
     return PROTOCOL_ERROR;
   }
 
-  mHandlerInfo.command = *aMessage->GetData();
-  aMessage->Consume(1);
+  mHandlerInfo.command = aMessage->mData[aMessage->mCurrentWriteOffset];
+  aMessage->mCurrentWriteOffset++;
 
   // Find corrsponding command pattern
   const struct ProtocolCommand *command = commands;
@@ -456,10 +457,9 @@ KeyStore::ReadLength(UnixSocketRawData *aMessage)
   }
 
   // Read length of command parameter.
-  // FIXME: Depends on endianess and (sizeof(unsigned short) == 2)
   unsigned short dataLength;
-  memcpy(&dataLength, aMessage->GetData(), 2);
-  aMessage->Consume(2);
+  memcpy(&dataLength, &aMessage->mData[aMessage->mCurrentWriteOffset], 2);
+  aMessage->mCurrentWriteOffset += 2;
   mHandlerInfo.param[mHandlerInfo.paramCount].length = ntohs(dataLength);
 
   mHandlerInfo.state = STATE_READ_PARAM_DATA;
@@ -482,9 +482,9 @@ KeyStore::ReadData(UnixSocketRawData *aMessage)
 
   // Read command parameter.
   memcpy(mHandlerInfo.param[mHandlerInfo.paramCount].data,
-         aMessage->GetData(),
+         &aMessage->mData[aMessage->mCurrentWriteOffset],
          mHandlerInfo.param[mHandlerInfo.paramCount].length);
-  aMessage->Consume(mHandlerInfo.param[mHandlerInfo.paramCount].length);
+  aMessage->mCurrentWriteOffset += mHandlerInfo.param[mHandlerInfo.paramCount].length;
   mHandlerInfo.paramCount++;
 
   if (mHandlerInfo.paramCount == mHandlerInfo.commandPattern->paramNum) {
@@ -528,7 +528,7 @@ KeyStore::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
 
   // Handle request.
   ResponseCode result = SUCCESS;
-  while (aMessage->GetSize() ||
+  while (aMessage->mCurrentWriteOffset < aMessage->mSize ||
          mHandlerInfo.state == STATE_PROCESSING) {
     switch (mHandlerInfo.state) {
       case STATE_IDLE:
