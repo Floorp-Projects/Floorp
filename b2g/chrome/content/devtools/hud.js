@@ -269,6 +269,7 @@ let consoleWatcher = {
     'Mixed Content Message',
     'CSP',
     'Invalid HSTS Headers',
+    'Invalid HPKP Headers',
     'Insecure Password Field',
     'SSL',
     'CORS'
