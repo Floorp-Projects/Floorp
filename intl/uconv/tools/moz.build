@@ -6,8 +6,4 @@
 
 SimplePrograms([
     'umaptable',
-])
-
-SOURCES += [
-    '%s.c' % s for s in SIMPLE_PROGRAMS
-]
+], ext='.c')

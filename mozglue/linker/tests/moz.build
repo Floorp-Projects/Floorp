@@ -6,9 +6,6 @@
 
 NO_DIST_INSTALL = True
 
-SOURCES += [
-    'TestZip.cpp',
-]
 SimplePrograms([
     'TestZip',
 ])

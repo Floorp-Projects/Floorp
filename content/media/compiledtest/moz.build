@@ -9,8 +9,6 @@ CppUnitTests([
     'TestAudioMixer'
 ])
 
-SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

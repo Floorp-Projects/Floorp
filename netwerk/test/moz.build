@@ -46,17 +46,11 @@ SimplePrograms([
 #    TestUDPSocketProvider',
 #]
 
-SOURCES += [
-    '%s.cpp' % s for s in SIMPLE_PROGRAMS
-]
-
 CppUnitTests([
     'TestCookie',
     'TestSTSParser',
     'TestUDPSocket',
 ])
-
-SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
 RESOURCE_FILES += [
     'urlparse.dat',

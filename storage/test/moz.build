@@ -28,8 +28,6 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT', 'Darwin'):
         'test_deadlock_detector',
     ])
 
-SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
-
 LOCAL_INCLUDES += [
     '../src',
 ]

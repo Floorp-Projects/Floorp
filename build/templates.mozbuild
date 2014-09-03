@@ -11,21 +11,23 @@ def Program(name):
 
 
 @template
-def SimplePrograms(names):
+def SimplePrograms(names, ext='.cpp'):
     '''Template for simple program executables.
 
     Those have a single source with the same base name as the executable.
     '''
     SIMPLE_PROGRAMS += names
+    SOURCES += ['%s%s' % (name, ext) for name in names]
 
 
 @template
-def CppUnitTests(names):
+def CppUnitTests(names, ext='.cpp'):
     '''Template for C++ unit tests.
 
     Those have a single source with the same base name as the executable.
     '''
     CPP_UNIT_TESTS += names
+    SOURCES += ['%s%s' % (name, ext) for name in names]
 
 
 @template
@@ -41,12 +43,14 @@ def HostProgram(name):
 
 
 @template
-def HostSimplePrograms(names):
+def HostSimplePrograms(names, ext='.cpp'):
     '''Template for simple build tools executables.
 
     Those have a single source with the same base name as the executable.
     '''
     HOST_SIMPLE_PROGRAMS += names
+    HOST_SOURCES += ['%s%s' % (name.replace('host_', ''), ext)
+        for name in names]
 
 
 @template
