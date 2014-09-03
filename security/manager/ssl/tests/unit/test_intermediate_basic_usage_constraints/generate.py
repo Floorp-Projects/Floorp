@@ -23,6 +23,7 @@ EE_basic_constraints = "basicConstraints = CA:FALSE\n"
 
 CA_min_ku = "keyUsage = critical, keyCertSign\n"
 CA_bad_ku = "keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, cRLSign\n"
+all_ku = "keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, keyCertSign, cRLSign\n"
 EE_full_ku ="keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement\n"
 
 Server_eku = "extendedKeyUsage = critical, serverAuth, clientAuth\n "
@@ -35,13 +36,13 @@ def generate_int_and_ee2(ca_key, ca_cert, suffix, int_ext_text, ee_ext_text):
     int_serial = random.randint(100, 40000000);
     ee_serial = random.randint(100, 40000000);
     [int_key, int_cert] = CertUtils.generate_cert_generic(db,
-                                                        srcdir,
-                                                        int_serial,
-                                                        key_type,
-                                                        int_name,
-                                                        int_ext_text,
-                                                        ca_key,
-                                                        ca_cert);
+                                                          srcdir,
+                                                          int_serial,
+                                                          key_type,
+                                                          int_name,
+                                                          int_ext_text,
+                                                          ca_key,
+                                                          ca_cert);
     [ee_key, ee_cert] = CertUtils.generate_cert_generic(db,
                                                         srcdir,
                                                         ee_serial,
@@ -66,6 +67,8 @@ def generate_certs():
     generate_int_and_ee2(ca_key, ca_cert, "no-extensions", "", ee_ext_text)
     generate_int_and_ee2(ca_key, ca_cert, "not-a-ca", EE_basic_constraints,
                          ee_ext_text)
+    generate_int_and_ee2(ca_key, ca_cert, "cA-FALSE-asserts-keyCertSign",
+                         EE_basic_constraints + all_ku, ee_ext_text)
 
     [int_key, int_cert, a, b] = generate_int_and_ee2(ca_key, ca_cert,
                                                      "limited-depth",
