@@ -44,7 +44,7 @@ public class DataReportingNotification {
             if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
                 SharedPreferences.Editor editor = dataPrefs.edit();
                 editor.putBoolean(GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
-                editor.commit();
+                editor.apply();
             }
             return;
         }
@@ -57,7 +57,7 @@ public class DataReportingNotification {
                 // Silently update the version.
                 SharedPreferences.Editor editor = dataPrefs.edit();
                 editor.putInt(PREFS_POLICY_VERSION, DATA_REPORTING_VERSION);
-                editor.commit();
+                editor.apply();
             }
             return;
         }
@@ -123,7 +123,7 @@ public class DataReportingNotification {
             long now = System.currentTimeMillis();
             editor.putLong(PREFS_POLICY_NOTIFIED_TIME, now);
             editor.putInt(PREFS_POLICY_VERSION, DATA_REPORTING_VERSION);
-            editor.commit();
+            editor.apply();
             result = true;
         } finally {
             // We want to track any errors, so record notification outcome.

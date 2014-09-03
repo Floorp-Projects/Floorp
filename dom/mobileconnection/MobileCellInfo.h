@@ -14,14 +14,20 @@
 namespace mozilla {
 namespace dom {
 
-class MobileCellInfo MOZ_FINAL : public nsISupports
+class MobileCellInfo MOZ_FINAL : public nsIMobileCellInfo
                                , public nsWrapperCache
 {
 public:
+  NS_DECL_NSIMOBILECELLINFO
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MobileCellInfo)
 
   MobileCellInfo(nsPIDOMWindow* aWindow);
+
+  MobileCellInfo(int32_t aGsmLocationAreaCode, int64_t aGsmCellId,
+                 int32_t aCdmaBaseStationId, int32_t aCdmaBaseStationLatitude,
+                 int32_t aCdmaBaseStationLongitude, int32_t aCdmaSystemId,
+                 int32_t aCdmaNetworkId);
 
   void
   Update(nsIMobileCellInfo* aInfo);

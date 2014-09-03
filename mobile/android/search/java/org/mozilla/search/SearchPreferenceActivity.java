@@ -18,6 +18,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.LocaleAware;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract;
@@ -49,6 +50,7 @@ public class SearchPreferenceActivity extends PreferenceActivity
     @Override
     @SuppressWarnings("deprecation")
     protected void onCreate(Bundle savedInstanceState) {
+        LocaleAware.initializeLocale(getApplicationContext());
         super.onCreate(savedInstanceState);
 
         getPreferenceManager().setSharedPreferencesName(GeckoSharedPrefs.APP_PREFS_NAME);

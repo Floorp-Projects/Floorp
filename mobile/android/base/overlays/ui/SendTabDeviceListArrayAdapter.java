@@ -36,8 +36,8 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
     // This will show the user a prompt to select a device from a longer list of devices.
     private AlertDialog dialog;
 
-    public SendTabDeviceListArrayAdapter(Context context, SendTabTargetSelectedListener aListener, int textViewResourceId) {
-        super(context, textViewResourceId);
+    public SendTabDeviceListArrayAdapter(Context context, SendTabTargetSelectedListener aListener) {
+        super(context, R.layout.overlay_share_send_tab_item);
 
         listener = aListener;
 

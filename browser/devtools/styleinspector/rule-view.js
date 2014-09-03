@@ -1248,6 +1248,10 @@ CssRuleView.prototype = {
    * returns null of the node isn't anything we care about
    */
   getNodeInfo: function(node) {
+    if (!node) {
+      return null;
+    }
+
     let type, value;
     let classes = node.classList;
     let prop = getParentTextProperty(node);

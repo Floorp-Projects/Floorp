@@ -36,6 +36,7 @@
 #ifdef MOZ_B2G_RIL
 #include "nsIDOMIccInfo.h"
 #include "nsIMobileConnectionInfo.h"
+#include "nsIMobileConnectionService.h"
 #include "nsIMobileCellInfo.h"
 #include "nsIRadioInterfaceLayer.h"
 #endif
@@ -509,8 +510,18 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
         location.u.cellID.mnc = 0;
       }
     }
+
+    nsCOMPtr<nsIMobileConnectionService> service =
+      do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
+    if (!service) {
+      NS_WARNING("Cannot get MobileConnectionService");
+      return;
+    }
+
     nsCOMPtr<nsIMobileConnectionInfo> voice;
-    rilCtx->GetVoice(getter_AddRefs(voice));
+    // TODO: Bug 878748 - B2G GPS: acquire correct RadioInterface instance in
+    // MultiSIM configuration
+    service->GetVoiceConnectionInfo(0 /* Client Id */, getter_AddRefs(voice));
     if (voice) {
       nsCOMPtr<nsIMobileCellInfo> cell;
       voice->GetCell(getter_AddRefs(cell));
@@ -920,15 +931,15 @@ GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,
       bool roaming = false;
       int gpsNetworkType = ConvertToGpsNetworkType(type);
       if (gpsNetworkType >= 0) {
-        if (rilface && mRadioInterface) {
-          nsCOMPtr<nsIRilContext> rilCtx;
-          mRadioInterface->GetRilContext(getter_AddRefs(rilCtx));
-          if (rilCtx) {
-            nsCOMPtr<nsIMobileConnectionInfo> voice;
-            rilCtx->GetVoice(getter_AddRefs(voice));
-            if (voice) {
-              voice->GetRoaming(&roaming);
-            }
+        nsCOMPtr<nsIMobileConnectionService> service =
+          do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
+        if (rilface && service) {
+          nsCOMPtr<nsIMobileConnectionInfo> voice;
+          // TODO: Bug 878748 - B2G GPS: acquire correct RadioInterface instance in
+          // MultiSIM configuration
+          service->GetVoiceConnectionInfo(0 /* Client Id */, getter_AddRefs(voice));
+          if (voice) {
+            voice->GetRoaming(&roaming);
           }
         }
         mAGpsRilInterface->update_network_state(

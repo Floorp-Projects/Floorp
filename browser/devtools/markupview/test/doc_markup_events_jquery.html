@@ -34,6 +34,7 @@
         var handler7 = function divClick1() { alert(7); };
         var handler8 = function divClick2() { alert(8); };
         var handler9 = function divKeyDown() { alert(9); };
+        var handler10 = function divDragOut() { alert(10); };
 
         if ($("#livediv").live) {
           $("#livediv").live( "dblclick", handler1);
@@ -48,6 +49,7 @@
         if ($("#livediv").on) {
           $(document).on( "drop", "#livediv", handler5);
           $(document).on( "dragover", "#livediv", handler6);
+          $(document).on( "dragout", "#livediv:xxxxx", handler10);
         }
 
         var div = $("div")[0];

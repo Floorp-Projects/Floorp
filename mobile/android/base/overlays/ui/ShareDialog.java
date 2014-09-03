@@ -103,6 +103,7 @@ public class ShareDialog extends LocaleAware.LocaleAwareActivity implements Send
             // trying to send a share intent).
             Toast toast = Toast.makeText(this, getResources().getText(R.string.overlay_share_no_url), Toast.LENGTH_SHORT);
             toast.show();
+            finish();
 
             return;
         }
@@ -162,7 +163,7 @@ public class ShareDialog extends LocaleAware.LocaleAwareActivity implements Send
         SendTabList sendTabList = (SendTabList) findViewById(R.id.overlay_send_tab_btn);
 
         // Register ourselves as both the listener and the context for the Adapter.
-        SendTabDeviceListArrayAdapter adapter = new SendTabDeviceListArrayAdapter(this, this, R.layout.sync_list_item);
+        SendTabDeviceListArrayAdapter adapter = new SendTabDeviceListArrayAdapter(this, this);
         sendTabList.setAdapter(adapter);
         sendTabList.setSendTabTargetSelectedListener(this);
     }
