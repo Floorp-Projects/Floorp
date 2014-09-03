@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0px" y="0px"
+     viewBox="-3 -3 16 16"
+     enable-background="new 0 0 16 16"
+     xml:space="preserve">
+<style>
+use:not(:target) {
+  display: none;
+}
+
+use {
+  fill: #c1c1c1;
+}
+
+use[id$="-active"] {
+  fill: #c1c1c1;
+}
+
+use[id$="-disabled"] {
+  fill: #c1c1c1;
+}
+</style>
+<defs>
+  <polygon id="close-shape" fill-rule="evenodd" clip-rule="evenodd" points="10,1.717 8.336,0.049 5.024,3.369 1.663,0 0,1.668
+    3.36,5.037 0.098,8.307 1.762,9.975 5.025,6.705 8.311,10 9.975,8.332 6.688,5.037"/>
+  <path id="dropdown-shape" fill-rule="evenodd" clip-rule="evenodd" d="M9,3L4.984,7L1,3H9z"/>
+  <polygon id="expand-shape" fill-rule="evenodd" clip-rule="evenodd" points="10,0 4.838,0 6.506,1.669 0,8.175 1.825,10 8.331,3.494
+    10,5.162"/>
+  <rect id="minimize-shape" y="3.6" fill-rule="evenodd" clip-rule="evenodd" width="10" height="2.8"/>
+</defs>
+<use id="close"               xlink:href="#close-shape"/>
+<use id="close-active"        xlink:href="#close-shape"/>
+<use id="close-disabled"      xlink:href="#close-shape"/>
+<use id="expand"              xlink:href="#expand-shape"/>
+<use id="expand-active"       xlink:href="#expand-shape"/>
+<use id="expand-disabled"     xlink:href="#expand-shape"/>
+<use id="minimize"            xlink:href="#minimize-shape"/>
+<use id="minimize-active"     xlink:href="#minimize-shape"/>
+<use id="minimize-disabled"   xlink:href="#minimize-shape"/>
+</svg>

@@ -22,6 +22,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "sendMessageToJava", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
@@ -193,7 +194,7 @@ this.WebappManager = {
 
   _postInstall: function(aProfilePath, aNewManifest, aOrigin, aApkPackageName, aManifestURL) {
     // aOrigin may now point to the app: url that hosts this app.
-    sendMessageToJava({
+    Messaging.sendRequest({
       type: "Webapps:Postinstall",
       apkPackageName: aApkPackageName,
       origin: aOrigin,
@@ -209,7 +210,7 @@ this.WebappManager = {
   launch: function({ apkPackageName }) {
     debug("launch: " + apkPackageName);
 
-    sendMessageToJava({
+    Messaging.sendRequest({
       type: "Webapps:Launch",
       packageName: apkPackageName,
     });
@@ -236,7 +237,7 @@ this.WebappManager = {
     let apkVersions = yield this._getAPKVersions([ app.apkPackageName ]);
     if (app.apkPackageName in apkVersions) {
       debug("APK is installed; requesting uninstallation");
-      sendMessageToJava({
+      Messaging.sendRequest({
         type: "Webapps:UninstallApk",
         apkPackageName: app.apkPackageName,
       });
