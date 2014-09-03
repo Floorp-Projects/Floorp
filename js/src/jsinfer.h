@@ -696,7 +696,7 @@ class TemporaryTypeSet : public TypeSet
 {
   public:
     TemporaryTypeSet() {}
-    explicit TemporaryTypeSet(Type type);
+    TemporaryTypeSet(LifoAlloc *alloc, Type type);
 
     TemporaryTypeSet(uint32_t flags, TypeObjectKey **objectSet) {
         this->flags = flags;

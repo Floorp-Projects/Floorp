@@ -3339,7 +3339,7 @@ class MBox : public MUnaryInstruction
             types::Type ntype = ins->type() == MIRType_Object
                                 ? types::Type::AnyObjectType()
                                 : types::Type::PrimitiveType(ValueTypeFromMIRType(ins->type()));
-            setResultTypeSet(alloc.lifoAlloc()->new_<types::TemporaryTypeSet>(ntype));
+            setResultTypeSet(alloc.lifoAlloc()->new_<types::TemporaryTypeSet>(alloc.lifoAlloc(), ntype));
         }
         setMovable();
     }
