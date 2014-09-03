@@ -33,20 +33,10 @@ Cu.import("resource://gre/modules/Promise.jsm");
  */
 let Accounts = Object.freeze({
   _accountsExist: function (kind) {
-    let deferred = Promise.defer();
-
-    sendMessageToJava({
+    return Messaging.sendRequestForResult({
       type: "Accounts:Exist",
       kind: kind,
-    }, (data, error) => {
-      if (error) {
-        deferred.reject(error);
-      } else {
-        deferred.resolve(data.exists);
-      }
-    });
-
-    return deferred.promise;
+    }).then(data => data.exists);
   },
 
   firefoxAccountsExist: function () {
