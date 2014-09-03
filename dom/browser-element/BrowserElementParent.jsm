@@ -138,6 +138,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
 
     defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
     defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
+    defineDOMRequestMethod('getContentDimensions', 'get-contentdimensions');
   }
 
   defineMethod('addNextPaintListener', this._addNextPaintListener);
@@ -247,6 +248,7 @@ BrowserElementParent.prototype = {
       "keyevent": this._fireKeyEvent,
       "got-purge-history": this._gotDOMRequestResult,
       "got-screenshot": this._gotDOMRequestResult,
+      "got-contentdimensions": this._gotDOMRequestResult,
       "got-can-go-back": this._gotDOMRequestResult,
       "got-can-go-forward": this._gotDOMRequestResult,
       "fullscreen-origin-change": this._remoteFullscreenOriginChange,
@@ -264,6 +266,7 @@ BrowserElementParent.prototype = {
       "securitychange": this._fireEventFromMsg,
       "locationchange": this._fireEventFromMsg,
       "iconchange": this._fireEventFromMsg,
+      "scrollareachanged": this._fireEventFromMsg,
       "titlechange": this._fireProfiledEventFromMsg,
       "opensearch": this._fireEventFromMsg,
       "manifestchange": this._fireEventFromMsg,
@@ -570,7 +573,8 @@ BrowserElementParent.prototype = {
 
     if ('successRv' in data.json) {
       debug("Successful gotDOMRequestResult.");
-      Services.DOMRequest.fireSuccess(req, data.json.successRv);
+      let clientObj = Cu.cloneInto(data.json.successRv, this._window);
+      Services.DOMRequest.fireSuccess(req, clientObj);
     }
     else {
       debug("Got error in gotDOMRequestResult.");
