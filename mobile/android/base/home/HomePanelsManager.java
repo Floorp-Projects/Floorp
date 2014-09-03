@@ -355,7 +355,7 @@ public class HomePanelsManager implements GeckoEventListener {
         public void run() {
             final HomeConfig.Editor editor = mHomeConfig.load().edit();
             executePendingChanges(editor);
-            editor.commit();
+            editor.apply();
         }
     };
 }
