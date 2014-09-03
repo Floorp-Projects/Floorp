@@ -224,10 +224,15 @@ let DeviceFront = protocol.FrontClass(DeviceActor, {
 const _knownDeviceFronts = new WeakMap();
 
 exports.getDeviceFront = function(client, form) {
-  if (_knownDeviceFronts.has(client))
+  if (!form.deviceActor) {
+    return null;
+  }
+
+  if (_knownDeviceFronts.has(client)) {
     return _knownDeviceFronts.get(client);
+  }
 
   let front = new DeviceFront(client, form);
   _knownDeviceFronts.set(client, front);
   return front;
-}
+};
