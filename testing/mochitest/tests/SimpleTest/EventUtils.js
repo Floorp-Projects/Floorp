@@ -54,7 +54,7 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
     aWindow = window;
   }
 
-  if (!(aTarget instanceof aWindow.Element)) {
+  if (typeof aTarget == "string") {
     aTarget = aWindow.document.getElementById(aTarget);
   }
 
