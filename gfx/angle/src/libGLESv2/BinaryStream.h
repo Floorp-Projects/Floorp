@@ -165,7 +165,7 @@ class BinaryOutputStream
         write(v.c_str(), v.length());
     }
 
-    void writeBytes(unsigned char *bytes, size_t count)
+    void writeBytes(const unsigned char *bytes, size_t count)
     {
         write(bytes, count);
     }
