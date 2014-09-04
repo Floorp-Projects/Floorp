@@ -329,7 +329,7 @@ let DirectoryLinksProvider = {
             pin: site.isPinned() ? 1 : undefined,
             pos: pos != tilesIndex ? pos : undefined,
             score: Math.round(link.frecency / PING_SCORE_DIVISOR) || undefined,
-            url: site.enhancedId && link.url,
+            url: site.enhancedId && "",
           });
         }
         return tiles;
