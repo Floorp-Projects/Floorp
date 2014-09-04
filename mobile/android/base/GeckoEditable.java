@@ -67,7 +67,7 @@ interface GeckoEditableListener {
     void notifyIMEContext(int state, String typeHint,
                           String modeHint, String actionHint);
     void onSelectionChange(int start, int end);
-    void onTextChange(String text, int start, int oldEnd, int newEnd);
+    void onTextChange(CharSequence text, int start, int oldEnd, int newEnd);
 }
 
 /*
@@ -131,6 +131,8 @@ final class GeckoEditable
         static final int TYPE_ACKNOWLEDGE_FOCUS = 5;
         // For switching handler; use with IME_SYNCHRONIZE
         static final int TYPE_SET_HANDLER = 6;
+        // For Editable.replace() call involving compositions; use with IME_COMPOSE_TEXT
+        static final int TYPE_COMPOSE_TEXT = 7;
 
         final int mType;
         int mStart;
@@ -150,7 +152,22 @@ final class GeckoEditable
                 throw new IllegalArgumentException(
                     "invalid replace text offsets: " + start + " to " + end);
             }
-            final Action action = new Action(TYPE_REPLACE_TEXT);
+
+            int actionType = TYPE_REPLACE_TEXT;
+
+            if (text instanceof Spanned) {
+                final Spanned spanned = (Spanned) text;
+                final Object[] spans = spanned.getSpans(0, spanned.length(), Object.class);
+
+                for (Object span : spans) {
+                    if ((spanned.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                        actionType = TYPE_COMPOSE_TEXT;
+                        break;
+                    }
+                }
+            }
+
+            final Action action = new Action(actionType);
             action.mSequence = text;
             action.mStart = start;
             action.mEnd = end;
@@ -239,6 +256,12 @@ final class GeckoEditable
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
                         GeckoEvent.ImeAction.IME_SYNCHRONIZE));
                 break;
+
+            case Action.TYPE_COMPOSE_TEXT:
+                // Send different event for composing text.
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEComposeEvent(
+                        action.mStart, action.mEnd, action.mSequence.toString()));
+                return;
 
             case Action.TYPE_REPLACE_TEXT:
                 // try key events first
@@ -685,6 +708,12 @@ final class GeckoEditable
                           getConstantName(Action.class, "TYPE_", action.mType) + ")");
         }
         switch (action.mType) {
+        case Action.TYPE_COMPOSE_TEXT:
+            // Compositions don't trigger text change notification, so notify manually.
+            onTextChange(action.mSequence, action.mStart, action.mEnd,
+                         action.mStart + action.mSequence.length());
+            break;
+
         case Action.TYPE_SET_SELECTION:
             final int len = mText.length();
             final int curStart = Selection.getSelectionStart(mText);
@@ -872,7 +901,7 @@ final class GeckoEditable
     }
 
     @Override
-    public void onTextChange(final String text, final int start,
+    public void onTextChange(final CharSequence text, final int start,
                       final int unboundedOldEnd, final int unboundedNewEnd) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
