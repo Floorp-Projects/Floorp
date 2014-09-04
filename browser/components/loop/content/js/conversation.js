@@ -27,8 +27,12 @@ loop.conversation = (function(OT, mozL10n) {
       model: React.PropTypes.object.isRequired
     },
 
-    getInitialState: function() {
+    getInitialProps: function() {
       return {showDeclineMenu: false};
+    },
+
+    getInitialState: function() {
+      return {showDeclineMenu: this.props.showDeclineMenu};
     },
 
     componentDidMount: function() {
