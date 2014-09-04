@@ -432,6 +432,31 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser.selectedBrowser
   });
 }
 
+/**
+ * Waits for the next load to complete in the current browser.
+ *
+ * @return promise
+ */
+function waitForDocLoadComplete(aBrowser=gBrowser) {
+  let deferred = Promise.defer();
+  let progressListener = {
+    onStateChange: function (webProgress, req, flags, status) {
+      let docStart = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
+                     Ci.nsIWebProgressListener.STATE_STOP;
+      if ((flags & docStart) == docStart) {
+        aBrowser.removeProgressListener(progressListener);
+        info("Browser loaded");
+        deferred.resolve();
+      }
+    },
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                           Ci.nsISupportsWeakReference])
+  };
+  aBrowser.addProgressListener(progressListener);
+  info("Waiting for browser load");
+  return deferred.promise;
+}
+
 let FullZoomHelper = {
 
   selectTabAndWaitForLocationChange: function selectTabAndWaitForLocationChange(tab) {
