@@ -248,6 +248,17 @@ MediaDecoderReader::RequestAudioData()
          !AudioQueue().IsFinished()) {
     if (!DecodeAudioData()) {
       AudioQueue().Finish();
+      break;
+    }
+    // AudioQueue size is still zero, post a task to try again. Don't spin
+    // waiting in this while loop since it somehow prevents audio EOS from
+    // coming in gstreamer 1.x when there is still video buffer waiting to be
+    // consumed. (|mVideoSinkBufferCount| > 0)
+    if (AudioQueue().GetSize() == 0 && mTaskQueue) {
+      RefPtr<nsIRunnable> task(NS_NewRunnableMethod(
+          this, &MediaDecoderReader::RequestAudioData));
+      mTaskQueue->Dispatch(task.forget());
+      return;
     }
   }
   if (AudioQueue().GetSize() > 0) {
