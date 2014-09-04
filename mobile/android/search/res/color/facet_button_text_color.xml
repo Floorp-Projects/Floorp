@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- facet is selected -->
+    <item android:state_checked="true" android:color="@color/facet_button_text_color_selected" />
+
+    <!-- default -->
+    <item android:color="@color/facet_button_text_color_default" />
+</selector>
