@@ -843,40 +843,59 @@ MobileMessageCursorParent::NotifyCursorError(int32_t aError)
 }
 
 NS_IMETHODIMP
-MobileMessageCursorParent::NotifyCursorResult(nsISupports* aResult)
+MobileMessageCursorParent::NotifyCursorResult(nsISupports** aResults,
+                                              uint32_t aSize)
 {
+  MOZ_ASSERT(aResults && *aResults && aSize);
+
   // The child process could die before this asynchronous notification, in which
   // case ActorDestroy() was called and mContinueCallback is now null. Return an
   // error here to avoid sending a message to the dead process.
   NS_ENSURE_TRUE(mContinueCallback, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMMozSmsMessage> iSms = do_QueryInterface(aResult);
-  if (iSms) {
-    SmsMessage* message = static_cast<SmsMessage*>(aResult);
-    return SendNotifyResult(MobileMessageCursorData(message->GetData()))
-      ? NS_OK : NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIDOMMozMmsMessage> iMms = do_QueryInterface(aResult);
-  if (iMms) {
-    MmsMessage* message = static_cast<MmsMessage*>(aResult);
-    ContentParent* parent = static_cast<ContentParent*>(Manager()->Manager());
-    MmsMessageData data;
-    if (!message->GetData(parent, data)) {
-      return NS_ERROR_FAILURE;
-    }
-    return SendNotifyResult(MobileMessageCursorData(data))
-      ? NS_OK : NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIDOMMozMobileMessageThread> iThread = do_QueryInterface(aResult);
+  nsCOMPtr<nsIDOMMozMobileMessageThread> iThread =
+    do_QueryInterface(aResults[0]);
   if (iThread) {
-    MobileMessageThread* thread = static_cast<MobileMessageThread*>(aResult);
-    return SendNotifyResult(MobileMessageCursorData(thread->GetData()))
+    nsTArray<ThreadData> threads;
+
+    for (uint32_t i = 0; i < aSize; i++) {
+      nsCOMPtr<nsIDOMMozMobileMessageThread> iThread =
+        do_QueryInterface(aResults[i]);
+      NS_ENSURE_TRUE(iThread, NS_ERROR_FAILURE);
+
+      MobileMessageThread* thread =
+        static_cast<MobileMessageThread*>(iThread.get());
+      threads.AppendElement(thread->GetData());
+    }
+
+    return SendNotifyResult(MobileMessageCursorData(ThreadArrayData(threads)))
       ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  MOZ_CRASH("Received invalid response parameters!");
+  ContentParent* parent = static_cast<ContentParent*>(Manager()->Manager());
+  nsTArray<MobileMessageData> messages;
+  for (uint32_t i = 0; i < aSize; i++) {
+    nsCOMPtr<nsIDOMMozSmsMessage> iSms = do_QueryInterface(aResults[i]);
+    if (iSms) {
+      SmsMessage* sms = static_cast<SmsMessage*>(iSms.get());
+      messages.AppendElement(sms->GetData());
+      continue;
+    }
+
+    nsCOMPtr<nsIDOMMozMmsMessage> iMms = do_QueryInterface(aResults[i]);
+    if (iMms) {
+      MmsMessage* mms = static_cast<MmsMessage*>(iMms.get());
+      MmsMessageData mmsData;
+      NS_ENSURE_TRUE(mms->GetData(parent, mmsData), NS_ERROR_FAILURE);
+      messages.AppendElement(mmsData);
+      continue;
+    }
+
+    return NS_ERROR_FAILURE;
+  }
+
+  return SendNotifyResult(MobileMessageCursorData(MobileMessageArrayData(messages)))
+    ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

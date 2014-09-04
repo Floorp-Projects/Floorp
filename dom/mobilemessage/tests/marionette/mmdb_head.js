@@ -303,9 +303,9 @@ function createMmdbCursor(aMmdb, aMethodName) {
       deferred.reject([aRv, results]);
     },
 
-    notifyCursorResult: function(aResult) {
-      ok(true, "notifyCursorResult: " + aResult.id);
-      results.push(aResult);
+    notifyCursorResult: function(aResults, aSize) {
+      ok(true, "notifyCursorResult: " + aResults.map(function(aElement) { return aElement.id; }));
+      results = results.concat(aResults);
       cursor.handleContinue();
     },
 
