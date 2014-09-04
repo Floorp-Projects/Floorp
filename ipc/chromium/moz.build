@@ -45,7 +45,6 @@ UNIFIED_SOURCES += [
     'src/base/lazy_instance.cc',
     'src/base/lock.cc',
     'src/base/logging.cc',
-    'src/base/memory_debug.cc',
     'src/base/message_loop.cc',
     'src/base/message_pump_default.cc',
     'src/base/non_thread_safe.cc',
@@ -54,7 +53,6 @@ UNIFIED_SOURCES += [
     'src/base/ref_counted.cc',
     'src/base/revocable_store.cc',
     'src/base/scoped_temp_dir.cc',
-    'src/base/simple_thread.cc',
     'src/base/string_piece.cc',
     'src/base/string_util.cc',
     'src/base/thread.cc',
@@ -84,7 +82,6 @@ if os_win:
     SOURCES += [
         'src/base/condition_variable_win.cc',
         'src/base/cpu.cc',
-        'src/base/event_recorder.cc',
         'src/base/file_util_win.cc',
         'src/base/idle_timer.cc',
         'src/base/lock_impl_win.cc',
@@ -141,7 +138,6 @@ elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
 if os_posix:
     SOURCES += [
         'src/base/condition_variable_posix.cc',
-        'src/base/event_recorder_stubs.cc',
         'src/base/file_descriptor_shuffle.cc',
         'src/base/file_util_posix.cc',
         'src/base/lock_impl_posix.cc',
