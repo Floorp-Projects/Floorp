@@ -11,3 +11,4 @@ TestCSPParser                       # Bug 1054246
 TestDeadlockDetector                # Bug 1054249
 test_deadlock_detector              # Bug 1054249
 TestTArray                          # Bug 1054251
+TestAudioBuffers                    # Bug 1062937
