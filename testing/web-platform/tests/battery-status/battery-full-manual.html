@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Battery Status API Test Suite</title>
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
+    <meta name="flags" content="interact">
+  </head>
+  <body>
+    <h1>Description</h1>
+    <p>
+      This test validates that all of the navigator.battery attributes exist and are set to correct values, when the battery is full.
+    </p>
+    <h2>Preconditions</h2>
+    <ol>
+      <li>
+        The device is plugged in to the charger before this test is run.
+      </li>
+      <li>
+        The battery is full.
+      </li>
+    </ol>
+    <div id="log"></div>
+    <script>
+    (function() {
+
+      test(function() {
+        assert_true(navigator.battery.charging);
+      }, 'The charging attribute must be set to true if the battery is full (the "otherwise" condition).');
+
+      test(function() {
+        assert_true(navigator.battery.chargingTime === 0);
+      }, 'The chargingTime attribute must be set to 0.');
+
+      test(function() {
+        assert_true(navigator.battery.dischargingTime === Infinity);
+      }, 'The dischargingTime attribute must be set to the value positive Infinity (the "otherwise" condition).');
+
+      test(function() {
+        assert_true(navigator.battery.level === 1.0);
+      }, 'The level attribute must be set to the value 1.0.');
+
+    })();
+    </script>
+  </body>
+</html>
