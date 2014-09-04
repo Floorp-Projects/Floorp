@@ -39,7 +39,6 @@ UNIFIED_SOURCES += [
     'src/base/at_exit.cc',
     'src/base/base_switches.cc',
     'src/base/command_line.cc',
-    'src/base/debug_util.cc',
     'src/base/file_path.cc',
     'src/base/file_util.cc',
     'src/base/histogram.cc',
@@ -85,7 +84,6 @@ if os_win:
     SOURCES += [
         'src/base/condition_variable_win.cc',
         'src/base/cpu.cc',
-        'src/base/debug_util_win.cc',
         'src/base/event_recorder.cc',
         'src/base/file_util_win.cc',
         'src/base/idle_timer.cc',
@@ -143,7 +141,6 @@ elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
 if os_posix:
     SOURCES += [
         'src/base/condition_variable_posix.cc',
-        'src/base/debug_util_posix.cc',
         'src/base/event_recorder_stubs.cc',
         'src/base/file_descriptor_shuffle.cc',
         'src/base/file_util_posix.cc',
@@ -174,7 +171,6 @@ if os_posix:
 
 if os_macosx:
     UNIFIED_SOURCES += [
-        'src/base/debug_util_mac.cc',
         'src/base/idle_timer.cc',
         'src/base/sys_info_mac.cc',
         'src/base/time_mac.cc',
@@ -258,11 +254,6 @@ if os_bsd:
             'src/third_party/libevent/kqueue.c',
         ]
         LOCAL_INCLUDES += ['src/third_party/libevent/bsd']
-
-if CONFIG['_MSC_VER']:
-    SOURCES += [
-        'src/base/debug_on_start.cc',
-    ]
 
 ost = CONFIG['OS_TEST']
 if ost.find('86') == -1 and ost.find('arm') == -1 and ost.find('mips') == -1:
