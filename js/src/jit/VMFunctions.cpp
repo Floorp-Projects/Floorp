@@ -401,19 +401,20 @@ bool
 ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
 {
     JS_ASSERT(obj->is<ArrayObject>());
-    JS_ASSERT(obj->as<ArrayObject>().lengthIsWritable());
 
-    uint32_t idx = obj->as<ArrayObject>().length();
-    JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, idx, 1);
-    if (result == JSObject::ED_FAILED)
-        return false;
+    if (MOZ_LIKELY(obj->as<ArrayObject>().lengthIsWritable())) {
+        uint32_t idx = obj->as<ArrayObject>().length();
+        JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, idx, 1);
+        if (result == JSObject::ED_FAILED)
+            return false;
 
-    if (result == JSObject::ED_OK) {
-        obj->setDenseElement(idx, v);
-        MOZ_ASSERT(idx < INT32_MAX);
-        *length = idx + 1;
-        obj->as<ArrayObject>().setLengthInt32(*length);
-        return true;
+        if (result == JSObject::ED_OK) {
+            obj->setDenseElement(idx, v);
+            MOZ_ASSERT(idx < INT32_MAX);
+            *length = idx + 1;
+            obj->as<ArrayObject>().setLengthInt32(*length);
+            return true;
+        }
     }
 
     JS::AutoValueArray<3> argv(cx);
