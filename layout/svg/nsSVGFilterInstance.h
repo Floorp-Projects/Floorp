@@ -208,7 +208,7 @@ private:
   /**
    * The frame for the element that is currently being filtered.
    */
-  nsIFrame*               mTargetFrame;
+  nsIFrame* mTargetFrame;
 
   /**
    * The filter element referenced by mTargetFrame's element.
@@ -223,24 +223,24 @@ private:
   /**
    * The SVG bbox of the element that is being filtered, in user space.
    */
-  gfxRect                 mTargetBBox;
+  gfxRect mTargetBBox;
 
   /**
    * The "filter region" in various spaces.
    */
-  gfxRect                 mUserSpaceBounds;
-  nsIntRect               mFilterSpaceBounds;
+  gfxRect mUserSpaceBounds;
+  nsIntRect mFilterSpaceBounds;
 
   /**
    * The scale factors between user space and filter space.
    */
-  gfxSize                 mUserSpaceToFilterSpaceScale;
-  gfxSize                 mFilterSpaceToUserSpaceScale;
+  gfxSize mUserSpaceToFilterSpaceScale;
+  gfxSize mFilterSpaceToUserSpaceScale;
 
   /**
    * The 'primitiveUnits' attribute value (objectBoundingBox or userSpaceOnUse).
    */
-  uint16_t                mPrimitiveUnits;
+  uint16_t mPrimitiveUnits;
 
   /**
    * The index of the FilterPrimitiveDescription that this SVG filter should use
@@ -261,7 +261,7 @@ private:
    */
   int32_t mSourceAlphaAvailable;
 
-  bool                    mInitialized;
+  bool mInitialized;
 };
 
 #endif
