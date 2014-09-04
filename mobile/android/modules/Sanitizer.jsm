@@ -120,6 +120,11 @@ Sanitizer.prototype = {
             Services.logins.setLoginSavingEnabled(host, true);
           }
 
+          // Clear site security settings
+          var sss = Cc["@mozilla.org/ssservice;1"]
+                      .getService(Ci.nsISiteSecurityService);
+          sss.clearAll();
+
           resolve();
         });
       },
