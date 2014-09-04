@@ -12,6 +12,7 @@
   background-image: linear-gradient(90deg, #a0dfff 0%, #ceeeff 100%);
   border: 0px solid rgba(0,148,221,.5);
   box-shadow: 0 1px 5px 0 rgba(0,0,0,.5), inset 0 1px 1px 0 #fff;
+  color: rgb(51,51,51);
 }
 
 #customization-tipPanel > .panel-arrowcontainer > .panel-arrowcontent:-moz-locale-dir(rtl) {

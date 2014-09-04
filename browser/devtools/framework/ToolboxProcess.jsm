@@ -8,7 +8,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const DBG_XUL = "chrome://browser/content/devtools/framework/toolbox-process-window.xul";
-const CHROME_DEBUGGER_PROFILE_NAME = "-chrome-debugger";
+const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm")
@@ -154,54 +154,33 @@ BrowserToolboxProcess.prototype = {
   _initProfile: function() {
     dumpn("Initializing the chrome toolbox user profile.");
 
-    let profileService = Cc["@mozilla.org/toolkit/profile-service;1"]
-      .createInstance(Ci.nsIToolkitProfileService);
-
-    let profileName;
+    let debuggingProfileDir = Services.dirsvc.get("ProfLD", Ci.nsIFile);
+    debuggingProfileDir.append(CHROME_DEBUGGER_PROFILE_NAME);
     try {
-      // Attempt to get the required chrome debugging profile name string.
-      profileName = profileService.selectedProfile.name + CHROME_DEBUGGER_PROFILE_NAME;
-      dumpn("Using chrome toolbox profile name: " + profileName);
-    } catch (e) {
-      // Requested profile string could not be retrieved.
-      profileName = CHROME_DEBUGGER_PROFILE_NAME;
-      let msg = "Querying the current profile failed. " + e.name + ": " + e.message;
-      dumpn(msg);
-      Cu.reportError(msg);
-    }
-
-    let profileObject;
-    try {
-      // Attempt to get the required chrome debugging profile toolkit object.
-      profileObject = profileService.getProfileByName(profileName);
-      dumpn("Using chrome toolbox profile object: " + profileObject);
-
-      // The profile exists but the corresponding folder may have been deleted.
-      var enumerator = Services.dirsvc.get("ProfD", Ci.nsIFile).parent.directoryEntries;
-      while (enumerator.hasMoreElements()) {
-        let profileDir = enumerator.getNext().QueryInterface(Ci.nsIFile);
-        if (profileDir.leafName.contains(profileName)) {
-          // Requested profile was found and the folder exists.
-          this._dbgProfile = profileObject;
-          return;
-        }
+      debuggingProfileDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+    } catch (ex) {
+      if (ex.result !== Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
+        dumpn("Error trying to create a profile directory, failing.");
+        dumpn("Error: " + (ex.message || ex));
+        return;
       }
-      // Requested profile was found but the folder was deleted. Cleanup needed.
-      profileObject.remove(true);
-      dumpn("The already existing chrome toolbox profile was invalid.");
-    } catch (e) {
-      // Requested profile object was not found.
-      let msg = "Creating a profile failed. " + e.name + ": " + e.message;
-      dumpn(msg);
-      Cu.reportError(msg);
     }
 
-    // Create a new chrome debugging profile.
-    this._dbgProfile = profileService.createProfile(null, profileName);
-    profileService.flush();
+    this._dbgProfilePath = debuggingProfileDir.path;
 
-    dumpn("Finished creating the chrome toolbox user profile.");
-    dumpn("Flushed profile service with: " + profileName);
+    // We would like to copy prefs into this new profile...
+    let prefsFile = debuggingProfileDir.clone();
+    prefsFile.append("prefs.js");
+    // ... but unfortunately, when we run tests, it seems the starting profile
+    // clears out the prefs file before re-writing it, and in practice the
+    // file is empty when we get here. So just copying doesn't work in that
+    // case.
+    // We could force a sync pref flush and then copy it... but if we're doing
+    // that, we might as well just flush directly to the new profile, which
+    // always works:
+    Services.prefs.savePrefFile(prefsFile);
+
+    dumpn("Finished creating the chrome toolbox user profile at: " + this._dbgProfilePath);
   },
 
   /**
@@ -219,7 +198,7 @@ BrowserToolboxProcess.prototype = {
     }
 
     dumpn("Running chrome debugging process.");
-    let args = ["-no-remote", "-foreground", "-P", this._dbgProfile.name, "-chrome", xulURI];
+    let args = ["-no-remote", "-foreground", "-profile", this._dbgProfilePath, "-chrome", xulURI];
 
     process.runwAsync(args, args.length, { observe: () => this.close() });
 
