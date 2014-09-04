@@ -145,9 +145,7 @@ public class RemoteTabsPanel extends HomeFragment {
 
         switch (action) {
         case None:
-            // This is only here to allow splitting commits. It will be replaced
-            // with the list of Remote Tabs in the next commits.
-            return RemoteTabsStaticFragment.newInstance(R.layout.remote_tabs_needs_upgrade);
+            return new RemoteTabsExpandableListFragment();
         case NeedsVerification:
             return RemoteTabsStaticFragment.newInstance(R.layout.remote_tabs_needs_verification);
         case NeedsPassword:
