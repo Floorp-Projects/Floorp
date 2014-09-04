@@ -572,6 +572,19 @@ class MachCommandBase(MozbuildObject):
                     e.objdir2))
             sys.exit(1)
 
+        except MozconfigLoadException as e:
+            print('Error loading mozconfig: ' + e.path)
+            print('')
+            print(e.message)
+            if e.output:
+                print('')
+                print('mozconfig output:')
+                print('')
+                for line in e.output:
+                    print(line)
+
+            sys.exit(1)
+
         MozbuildObject.__init__(self, topsrcdir, context.settings,
             context.log_manager, topobjdir=topobjdir)
 

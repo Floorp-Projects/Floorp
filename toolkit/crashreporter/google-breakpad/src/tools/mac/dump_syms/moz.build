@@ -8,7 +8,7 @@ HOST_SOURCES += [
     'dump_syms_tool.mm',
 ]
 
-HOST_PROGRAM = 'dump_syms'
+HostProgram('dump_syms')
 
 HOST_USE_LIBS += [
     'host_breakpad_common_s',

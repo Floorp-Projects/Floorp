@@ -933,13 +933,31 @@ WebConsoleActor.prototype =
     };
     JSTermHelpers(helpers);
 
-    // Make sure the helpers can be used during eval.
+    let evalWindow = this.evalWindow;
+    function maybeExport(obj, name) {
+      if (typeof obj[name] != "function") {
+        return;
+      }
+
+      // By default, chrome-implemented functions that are exposed to content
+      // refuse to accept arguments that are cross-origin for the caller. This
+      // is generally the safe thing, but causes problems for certain console
+      // helpers like cd(), where we users sometimes want to pass a cross-origin
+      // window. To circumvent this restriction, we use exportFunction along
+      // with a special option designed for this purpose. See bug 1051224.
+      obj[name] =
+        Cu.exportFunction(obj[name], evalWindow, { allowCrossOriginArguments: true });
+    }
     for (let name in helpers.sandbox) {
       let desc = Object.getOwnPropertyDescriptor(helpers.sandbox, name);
-      if (desc.get || desc.set) {
-        continue;
+      maybeExport(desc, 'get');
+      maybeExport(desc, 'set');
+      maybeExport(desc, 'value');
+      if (desc.value) {
+        // Make sure the helpers can be used during eval.
+        desc.value = aDebuggerGlobal.makeDebuggeeValue(desc.value);
       }
-      helpers.sandbox[name] = aDebuggerGlobal.makeDebuggeeValue(desc.value);
+      Object.defineProperty(helpers.sandbox, name, desc);
     }
     return helpers;
   },

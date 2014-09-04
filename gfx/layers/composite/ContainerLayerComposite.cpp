@@ -257,42 +257,6 @@ RenderLayers(ContainerT* aContainer,
 {
   Compositor* compositor = aManager->GetCompositor();
 
-  float opacity = aContainer->GetEffectiveOpacity();
-
-  // If this is a scrollable container layer, and it's overscrolled, the layer's
-  // contents are transformed in a way that would leave blank regions in the
-  // composited area. If the layer has a background color, fill these areas
-  // with the background color by drawing a rectangle of the background color
-  // over the entire composited area before drawing the container contents.
-  // Make sure not to do this on a "scrollinfo" layer because it's just a
-  // placeholder for APZ purposes.
-  if (aContainer->HasScrollableFrameMetrics() && !aContainer->IsScrollInfoLayer()) {
-    bool overscrolled = false;
-    gfxRGBA color;
-    for (uint32_t i = 0; i < aContainer->GetFrameMetricsCount(); i++) {
-      AsyncPanZoomController* apzc = aContainer->GetAsyncPanZoomController(i);
-      if (apzc && apzc->IsOverscrolled()) {
-        overscrolled = true;
-        color = aContainer->GetFrameMetrics(i).GetBackgroundColor();
-        break;
-      }
-    }
-    if (overscrolled) {
-      // If the background is completely transparent, there's no point in
-      // drawing anything for it. Hopefully the layers behind, if any, will
-      // provide suitable content for the overscroll effect.
-      if (color.a != 0.0) {
-        EffectChain effectChain(aContainer);
-        effectChain.mPrimaryEffect = new EffectSolidColor(ToColor(color));
-        gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
-        compositor->DrawQuad(
-          RenderTargetPixel::ToUnknown(
-            compositor->ClipRectInLayersCoordinates(aContainer, aClipRect)),
-          clipRect, effectChain, opacity, Matrix4x4());
-      }
-    }
-  }
-
   for (size_t i = 0u; i < aContainer->mPrepared->mLayers.Length(); i++) {
     PreparedLayer& preparedData = aContainer->mPrepared->mLayers[i];
     LayerComposite* layerToRender = preparedData.mLayer;

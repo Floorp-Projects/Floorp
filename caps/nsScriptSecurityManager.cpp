@@ -306,8 +306,8 @@ nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
-                                             nsIPrincipal** aPrincipal)
+nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
+                                                   nsIPrincipal** aPrincipal)
 {
     NS_PRECONDITION(aChannel, "Must have channel!");
     nsCOMPtr<nsISupports> owner;
@@ -336,13 +336,20 @@ nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
             return NS_OK;
         }
     }
+    return GetChannelURIPrincipal(aChannel, aPrincipal);
+}
 
-    // OK, get the principal from the URI.  Make sure this does the same thing
+NS_IMETHODIMP
+nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
+                                                nsIPrincipal** aPrincipal)
+{
+    NS_PRECONDITION(aChannel, "Must have channel!");
+
+    // Get the principal from the URI.  Make sure this does the same thing
     // as nsDocument::Reset and XULDocument::StartDocumentLoad.
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
-
 
     nsCOMPtr<nsILoadContext> loadContext;
     NS_QueryNotificationCallbacks(aChannel, loadContext);
@@ -1189,7 +1196,7 @@ nsScriptSecurityManager::AsyncOnChannelRedirect(nsIChannel* oldChannel,
                                                 nsIAsyncVerifyRedirectCallback *cb)
 {
     nsCOMPtr<nsIPrincipal> oldPrincipal;
-    GetChannelPrincipal(oldChannel, getter_AddRefs(oldPrincipal));
+    GetChannelResultPrincipal(oldChannel, getter_AddRefs(oldPrincipal));
 
     nsCOMPtr<nsIURI> newURI;
     newChannel->GetURI(getter_AddRefs(newURI));

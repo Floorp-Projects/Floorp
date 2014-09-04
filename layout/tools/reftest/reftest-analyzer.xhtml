@@ -81,6 +81,7 @@ var gMagZoom = 16;         // size of the zoomed in pixels
 var gImage1Data;           // ImageData object for the reference image
 var gImage2Data;           // ImageData object for the test output image
 var gFlashingPixels = [];  // array of <path> objects that should be flashed due to pixel color mismatch
+var gParams;
 
 function ID(id) {
   if (!(id in gIDCache))
@@ -101,10 +102,20 @@ function hash_parameters() {
 function load() {
   gPhases = [ ID("entry"), ID("loading"), ID("viewer") ];
   build_mag();
-  var params = hash_parameters();
-  if (params.log) {
-    ID("logentry").value = params.log;
+  gParams = hash_parameters();
+  if (gParams.log) {
+    ID("logentry").value = gParams.log;
     log_pasted();
+  } else if (gParams.logurl) {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function() {
+      if (req.readyState === 4) {
+        ID("logentry").value = req.responseText;
+        log_pasted();
+      }
+    };
+    req.open('GET', gParams.logurl, true);
+    req.send();
   }
   window.addEventListener('keypress', maybe_load_image, false);
   ID("image1").addEventListener('error', image_load_error, false);
@@ -262,7 +273,11 @@ function build_viewer() {
   for (var i in gTestItems) {
     var item = gTestItems[i];
 
-    // XXX skip expected pass items until we have filtering UI
+    // optional url filter for only showing unexpected results
+    if (parseInt(gParams.only_show_unexpected) && !item.unexpected)
+      continue;
+
+    // XXX regardless skip expected pass items until we have filtering UI
     if (item.pass && !item.unexpected)
       continue;
 
