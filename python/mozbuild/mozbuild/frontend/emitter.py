@@ -240,17 +240,7 @@ class TreeMetadataEmitter(LoggingMixin):
         """Add linkage declarations to a given object."""
         assert isinstance(obj, Linkable)
 
-        extra = []
-        # Add stdc++compat library when wanted and needed
-        compat_varname = 'MOZ_LIBSTDCXX_%s_VERSION' % obj.KIND.upper()
-        if context.config.substs.get(compat_varname) \
-                and not isinstance(obj, (StaticLibrary, HostLibrary)):
-            extra.append({
-                'target': 'stdc++compat',
-                'host': 'host_stdc++compat',
-            }[obj.KIND])
-
-        for path in context.get(variable, []) + extra:
+        for path in context.get(variable, []):
             force_static = path.startswith('static:') and obj.KIND == 'target'
             if force_static:
                 path = path[7:]
@@ -638,14 +628,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         if libname:
             if is_component:
-                if shared_lib:
-                    raise SandboxValidationError(
-                        'IS_COMPONENT implies FORCE_SHARED_LIB. '
-                        'Please remove the latter.', context)
-                if is_framework:
-                    raise SandboxValidationError(
-                        'IS_COMPONENT conflicts with IS_FRAMEWORK. '
-                        'Please remove one.', context)
                 if static_lib:
                     raise SandboxValidationError(
                         'IS_COMPONENT conflicts with FORCE_STATIC_LIB. '
@@ -654,10 +636,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 shared_args['variant'] = SharedLibrary.COMPONENT
 
             if is_framework:
-                if shared_lib:
-                    raise SandboxValidationError(
-                        'IS_FRAMEWORK implies FORCE_SHARED_LIB. '
-                        'Please remove the latter.', context)
                 if soname:
                     raise SandboxValidationError(
                         'IS_FRAMEWORK conflicts with SONAME. '

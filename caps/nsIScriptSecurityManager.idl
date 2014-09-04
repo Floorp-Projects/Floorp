@@ -19,7 +19,7 @@ interface nsILoadContext;
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
 
-[scriptable, uuid(f6e1e37e-14d0-44fa-a9bb-712bfad6c5f7)]
+[scriptable, uuid(3b021962-975e-43b5-8a93-9fc2d20346e9)]
 interface nsIScriptSecurityManager : nsISupports
 {
     /**
@@ -199,7 +199,13 @@ interface nsIScriptSecurityManager : nsISupports
      * channel owner if there is one, and the codebase principal for the
      * channel's URI otherwise.  aChannel must not be null.
      */
-    nsIPrincipal getChannelPrincipal(in nsIChannel aChannel);
+    nsIPrincipal getChannelResultPrincipal(in nsIChannel aChannel);
+
+    /**
+     * Get the codebase principal for the channel's URI.
+     * aChannel must not be null.
+     */
+    nsIPrincipal getChannelURIPrincipal(in nsIChannel aChannel);
 
     /**
      * Check whether a given principal is a system principal.  This allows us

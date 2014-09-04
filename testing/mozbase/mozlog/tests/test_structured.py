@@ -396,13 +396,69 @@ class TestTypeconversions(BaseStructuredTest):
         self.logger.suite_end()
 
 
-class TestMachFormatter(unittest.TestCase):
+class FormatterTest(unittest.TestCase):
+
     def setUp(self):
-        self.logger = structuredlog.StructuredLogger("test")
+        self.position = 0
+        self.logger = structuredlog.StructuredLogger("test_%s" % type(self).__name__)
         self.output_file = StringIO.StringIO()
         self.handler = handlers.StreamHandler(
-            self.output_file, formatters.MachFormatter(disable_colors=True))
+            self.output_file, self.get_formatter())
         self.logger.add_handler(self.handler)
+
+    def set_position(self, pos=None):
+        if pos is None:
+            pos = self.output_file.tell()
+        self.position = pos
+
+    def get_formatter(self):
+        raise NotImplementedError("FormatterTest subclasses must implement get_formatter")
+
+    @property
+    def loglines(self):
+        self.output_file.seek(self.position)
+        return [line.rstrip() for line in self.output_file.readlines()]
+
+class TestTBPLFormatter(FormatterTest):
+
+    def get_formatter(self):
+        return formatters.TbplFormatter()
+
+    def test_unexpected_message(self):
+        self.logger.suite_start([])
+        self.logger.test_start("timeout_test")
+        self.logger.test_end("timeout_test",
+                             "TIMEOUT",
+                             message="timed out")
+        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | timed out",
+                      self.loglines)
+        self.logger.suite_end()
+
+    def test_default_unexpected_end_message(self):
+        self.logger.suite_start([])
+        self.logger.test_start("timeout_test")
+        self.logger.test_end("timeout_test",
+                             "TIMEOUT")
+        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | expected OK",
+                      self.loglines)
+        self.logger.suite_end()
+
+    def test_default_unexpected_status_message(self):
+        self.logger.suite_start([])
+        self.logger.test_start("timeout_test")
+        self.logger.test_status("timeout_test",
+                                "subtest",
+                                status="TIMEOUT")
+        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | subtest - expected PASS",
+                      self.loglines)
+        self.logger.test_end("timeout_test", "OK")
+        self.logger.suite_end()
+
+
+class TestMachFormatter(FormatterTest):
+
+    def get_formatter(self):
+        return formatters.MachFormatter(disable_colors=True)
 
     def test_summary(self):
         self.logger.suite_start([])
@@ -417,19 +473,15 @@ class TestMachFormatter(unittest.TestCase):
         self.logger.test_start("test3")
         self.logger.test_end("test3", status="FAIL", expected="PASS")
 
-        position = self.output_file.tell()
-
+        self.set_position()
         self.logger.suite_end()
 
-        self.output_file.seek(position)
-        lines = self.output_file.read().split("\n")
-
-        self.assertIn("Ran 3 tests", lines)
-        self.assertIn("Expected results: 1", lines)
-        self.assertIn("Unexpected results: 2 (FAIL: 1, PASS: 1)", lines)
-        self.assertNotIn("test1", lines)
-        self.assertIn("PASS expected TIMEOUT test2", lines)
-        self.assertIn("FAIL test3", lines)
+        self.assertIn("Ran 3 tests", self.loglines)
+        self.assertIn("Expected results: 1", self.loglines)
+        self.assertIn("Unexpected results: 2 (FAIL: 1, PASS: 1)", self.loglines)
+        self.assertNotIn("test1", self.loglines)
+        self.assertIn("PASS expected TIMEOUT test2", self.loglines)
+        self.assertIn("FAIL test3", self.loglines)
 
     def test_summary_subtests(self):
         self.logger.suite_start([])
@@ -443,16 +495,12 @@ class TestMachFormatter(unittest.TestCase):
         self.logger.test_status("test2", "subtest1", status="TIMEOUT", expected="PASS")
         self.logger.test_end("test2", status="TIMEOUT", expected="OK")
 
-        position = self.output_file.tell()
-
+        self.set_position()
         self.logger.suite_end()
 
-        self.output_file.seek(position)
-        lines = self.output_file.read().split("\n")
-
-        self.assertIn("Ran 5 tests (2 parents, 3 subtests)", lines)
-        self.assertIn("Expected results: 2", lines)
-        self.assertIn("Unexpected results: 3 (FAIL: 1, TIMEOUT: 2)", lines)
+        self.assertIn("Ran 5 tests (2 parents, 3 subtests)", self.loglines)
+        self.assertIn("Expected results: 2", self.loglines)
+        self.assertIn("Unexpected results: 3 (FAIL: 1, TIMEOUT: 2)", self.loglines)
 
     def test_summary_ok(self):
         self.logger.suite_start([])
@@ -466,16 +514,12 @@ class TestMachFormatter(unittest.TestCase):
         self.logger.test_status("test2", "subtest1", status="PASS", expected="PASS")
         self.logger.test_end("test2", status="OK", expected="OK")
 
-        position = self.output_file.tell()
-
+        self.set_position()
         self.logger.suite_end()
 
-        self.output_file.seek(position)
-        lines = self.output_file.read().split("\n")
-
-        self.assertIn("OK", lines)
-        self.assertIn("Expected results: 5", lines)
-        self.assertIn("Unexpected results: 0", lines)
+        self.assertIn("OK", self.loglines)
+        self.assertIn("Expected results: 5", self.loglines)
+        self.assertIn("Unexpected results: 0", self.loglines)
 
 
 class TestCommandline(unittest.TestCase):
@@ -486,7 +530,7 @@ class TestCommandline(unittest.TestCase):
     @property
     def loglines(self):
         self.logfile.seek(0)
-        return [line.strip() for line in self.logfile.readlines()]
+        return [line.rstrip() for line in self.logfile.readlines()]
 
     def test_setup_logging(self):
         parser = argparse.ArgumentParser()

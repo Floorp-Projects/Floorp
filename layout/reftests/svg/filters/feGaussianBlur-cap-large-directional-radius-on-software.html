@@ -1,0 +1,16 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <filter id="blur">
+    <!--
+      When rendering in software, Firefox should cap large blur radii to a
+      smaller value in order to keep performance acceptable.
+    -->
+    <feGaussianBlur stdDeviation="1000000 0"/>
+  </filter>
+  <g filter="url(#blur)">
+    <rect x="0" y="0" width="100" height="100" fill="#0f0"/>
+  </g>
+</svg>

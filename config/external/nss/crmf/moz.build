@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LIBRARY_NAME = 'crmf'
+Library('crmf')
 
 if CONFIG['MOZ_NATIVE_NSS']:
     OS_LIBS += [l for l in CONFIG['NSS_LIBS'] if l.startswith('-L')]
