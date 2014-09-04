@@ -66,7 +66,6 @@ UNIFIED_SOURCES += [
     'src/chrome/common/child_process_info.cc',
     'src/chrome/common/child_thread.cc',
     'src/chrome/common/chrome_switches.cc',
-    'src/chrome/common/debug_flags.cc',
     'src/chrome/common/env_vars.cc',
     'src/chrome/common/ipc_channel_proxy.cc',
     'src/chrome/common/ipc_logging.cc',
@@ -75,7 +74,6 @@ UNIFIED_SOURCES += [
     'src/chrome/common/ipc_sync_message.cc',
     'src/chrome/common/message_router.cc',
     'src/chrome/common/notification_service.cc',
-    'src/chrome/common/task_queue.cc',
 ]
 
 if os_win:
