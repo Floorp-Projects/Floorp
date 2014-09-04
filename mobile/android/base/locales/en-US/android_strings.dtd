@@ -405,6 +405,10 @@ size. -->
 
 <!ENTITY home_remote_tabs_title "Synced Tabs">
 <!ENTITY home_remote_tabs_empty "Your tabs from other devices show up here.">
+<!ENTITY home_remote_tabs_unable_to_connect "Unable to connect">
+<!ENTITY home_remote_tabs_need_to_sign_in "Please sign in to reconnect your Firefox Account and continue syncing.">
+<!ENTITY home_remote_tabs_trouble_verifying "Trouble verifying your account?">
+<!ENTITY home_remote_tabs_need_to_verify "Please verify your Firefox Account to start syncing.">
 
 <!ENTITY private_browsing_title "Private Browsing">
 <!ENTITY private_tabs_panel_empty_desc "Your private tabs will show up here. While we don\'t keep any of your browsing history or cookies, bookmarks and files that you download will still be saved on your device.">
