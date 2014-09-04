@@ -8,11 +8,94 @@
 #include "nsIDOMDOMRequest.h"
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIMobileMessageCallback.h"
-#include "DOMCursor.h"
 #include "nsServiceManagerUtils.h"      // for do_GetService
 
 namespace mozilla {
 namespace dom {
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MobileMessageCursor, DOMCursor,
+                                   mPendingResults)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MobileMessageCursor)
+NS_INTERFACE_MAP_END_INHERITING(DOMCursor)
+
+NS_IMPL_ADDREF_INHERITED(MobileMessageCursor, DOMCursor)
+NS_IMPL_RELEASE_INHERITED(MobileMessageCursor, DOMCursor)
+
+MobileMessageCursor::MobileMessageCursor(nsPIDOMWindow* aWindow,
+                                         nsICursorContinueCallback* aCallback)
+  : DOMCursor(aWindow, aCallback)
+{
+}
+
+NS_IMETHODIMP
+MobileMessageCursor::Continue()
+{
+  // We have originally:
+  //
+  //   DOMCursor::Continue()
+  //   +-> DOMCursor::Continue(ErrorResult& aRv)
+  //
+  // Now it becomes:
+  //
+  //   MobileMessageCursor::Continue()
+  //   +-> DOMCursor::Continue()
+  //       +-> MobileMessageCursor::Continue(ErrorResult& aRv)
+  //           o-> DOMCursor::Continue(ErrorResult& aRv)
+  return DOMCursor::Continue();
+}
+
+void
+MobileMessageCursor::Continue(ErrorResult& aRv)
+{
+  // An ordinary DOMCursor works in following flow:
+  //
+  //   DOMCursor::Continue()
+  //   +-> DOMCursor::Reset()
+  //   +-> nsICursorContinueCallback::HandleContinue()
+  //       +-> nsIMobileMessageCursorCallback::NotifyCursorResult()
+  //           +-> DOMCursor::FireSuccess()
+  //
+  // With no pending result, we call to |DOMCursor::Continue()| as usual.
+  if (!mPendingResults.Length()) {
+    DOMCursor::Continue(aRv);
+    return;
+  }
+
+  // Otherwise, reset current result and fire a success event with the last
+  // pending one.
+  Reset();
+
+  nsresult rv = FireSuccessWithNextPendingResult();
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+}
+
+nsresult
+MobileMessageCursor::FireSuccessWithNextPendingResult()
+{
+  // We're going to pop the last element from mPendingResults, so it must not
+  // be empty.
+  MOZ_ASSERT(mPendingResults.Length());
+
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(GetOwner()))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> val(cx);
+  nsresult rv =
+    nsContentUtils::WrapNative(cx, mPendingResults.LastElement(), &val);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mPendingResults.RemoveElementAt(mPendingResults.Length() - 1);
+
+  FireSuccess(val);
+  return NS_OK;
+}
+
 namespace mobilemessage {
 
 NS_IMPL_CYCLE_COLLECTION(MobileMessageCursorCallback, mDOMCursor)
@@ -55,21 +138,29 @@ MobileMessageCursorCallback::NotifyCursorError(int32_t aError)
 }
 
 NS_IMETHODIMP
-MobileMessageCursorCallback::NotifyCursorResult(nsISupports* aResult)
+MobileMessageCursorCallback::NotifyCursorResult(nsISupports** aResults,
+                                                uint32_t aSize)
 {
   MOZ_ASSERT(mDOMCursor);
+  // We should only be notified with valid results. Or, either
+  // |NotifyCursorDone()| or |NotifyCursorError()| should be called instead.
+  MOZ_ASSERT(aResults && *aResults && aSize);
+  // There shouldn't be unexpected notifications before |Continue()| is called.
+  nsTArray<nsCOMPtr<nsISupports>>& pending = mDOMCursor->mPendingResults;
+  MOZ_ASSERT(pending.Length() == 0);
 
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mDOMCursor->GetOwner()))) {
-    return NS_ERROR_FAILURE;
+  // Push pending results in reversed order.
+  pending.SetCapacity(pending.Length() + aSize);
+  while (aSize) {
+    --aSize;
+    pending.AppendElement(aResults[aSize]);
   }
-  JSContext* cx = jsapi.cx();
 
-  JS::Rooted<JS::Value> wrappedResult(cx);
-  nsresult rv = nsContentUtils::WrapNative(cx, aResult, &wrappedResult);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = mDOMCursor->FireSuccessWithNextPendingResult();
+  if (NS_FAILED(rv)) {
+    NotifyCursorError(nsIMobileMessageCallback::INTERNAL_ERROR);
+  }
 
-  mDOMCursor->FireSuccess(wrappedResult);
   return NS_OK;
 }
 
