@@ -43,8 +43,16 @@ function testLink(aLinkIndex, pinTab, expectNewTab, nextTest, testSubFrame) {
   if (pinTab)
     gBrowser.pinTab(appTab);
   gBrowser.selectedTab = appTab;
+  appTab.linkedBrowser.addEventListener("load", onLoad, true);
 
-  waitForDocLoadComplete(appTab.linkedBrowser).then(function() {
+  let loadCount = 0;
+  function onLoad() {
+    loadCount++;
+    if (loadCount < 2)
+      return;
+
+    appTab.linkedBrowser.removeEventListener("load", onLoad, true);
+
     let browser = gBrowser.getBrowserForTab(appTab);
     if (testSubFrame)
       browser = browser.contentDocument.getElementsByTagName("iframe")[0];
@@ -54,7 +62,7 @@ function testLink(aLinkIndex, pinTab, expectNewTab, nextTest, testSubFrame) {
     if (expectNewTab)
       gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
     else
-      waitForDocLoadComplete(appTab.linkedBrowser).then(onPageLoad);
+      browser.addEventListener("load", onPageLoad, true);
 
     info("Clicking " + links[aLinkIndex].textContent);
     EventUtils.sendMouseEvent({type:"click"}, links[aLinkIndex], browser.contentWindow);
@@ -72,13 +80,11 @@ function testLink(aLinkIndex, pinTab, expectNewTab, nextTest, testSubFrame) {
     function onTabOpen(event) {
       gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
       ok(true, "Link should open a new tab");
-      waitForDocLoadComplete(event.target.linkedBrowser).then(function() {
-        executeSoon(function(){
-          gBrowser.removeTab(appTab);
-          gBrowser.removeCurrentTab();
-          nextTest();
-        });
+      executeSoon(function(){
+        gBrowser.removeTab(appTab);
+        gBrowser.removeCurrentTab();
+        nextTest();
       });
     }
-  });
+  }
 }
