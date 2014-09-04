@@ -47,13 +47,6 @@
         <item name="topDivider">true</item>
     </style>
 
-    <style name="Widget.Home.HistoryTabWidget">
-        <item name="android:showDividers">beginning|middle|end</item>
-        <item name="android:dividerPadding">0dp</item>
-        <item name="android:paddingLeft">100dp</item>
-        <item name="android:paddingTop">30dp</item>
-    </style>
-
     <!-- Tabs panel -->
     <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
         <item name="android:paddingTop">32dp</item>
