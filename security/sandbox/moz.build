@@ -9,7 +9,7 @@ if CONFIG['OS_ARCH'] == 'Linux':
 elif CONFIG['OS_ARCH'] == 'Darwin':
     DIRS += ['mac']
 elif CONFIG['OS_ARCH'] == 'WINNT':
-    LIBRARY_NAME = 'sandbox_s'
+    Library('sandbox_s')
     FORCE_STATIC_LIB = True
 
     DIRS += [

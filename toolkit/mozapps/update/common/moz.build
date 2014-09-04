@@ -18,7 +18,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'updatehelper.h',
     ]
 
-LIBRARY_NAME = 'updatecommon'
+Library('updatecommon')
 
 srcdir = '.'
 

@@ -7,14 +7,13 @@
 #ifndef mozilla_dom_SourceBuffer_h_
 #define mozilla_dom_SourceBuffer_h_
 
-#include "MediaDecoderReader.h"
 #include "MediaSource.h"
 #include "js/RootingAPI.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/SourceBufferBinding.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/mozalloc.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -31,8 +30,7 @@ namespace mozilla {
 
 class ContainerParser;
 class ErrorResult;
-class SourceBufferResource;
-class SourceBufferDecoder;
+class TrackBuffer;
 template <typename T> class AsyncEventRunner;
 
 namespace dom {
@@ -139,10 +137,7 @@ private:
 
   nsAutoPtr<ContainerParser> mParser;
 
-  double mLastParsedTimestamp;
-
-  nsRefPtr<SourceBufferDecoder> mDecoder;
-  nsTArray<nsRefPtr<SourceBufferDecoder>> mDecoders;
+  nsRefPtr<TrackBuffer> mTrackBuffer;
 
   double mAppendWindowStart;
   double mAppendWindowEnd;
@@ -151,8 +146,6 @@ private:
 
   SourceBufferAppendMode mAppendMode;
   bool mUpdating;
-
-  bool mDecoderInitialized;
 };
 
 } // namespace dom

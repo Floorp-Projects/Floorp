@@ -1480,13 +1480,8 @@ class Mochitest(MochitestUtilsMixin):
       printstatus(status, "Main app process")
       runner.process_handler = None
 
-      if timeout is None:
-        didTimeout = False
-      else:
-        didTimeout = proc.didTimeout
-
       # finalize output handler
-      outputHandler.finish(didTimeout)
+      outputHandler.finish()
 
       # record post-test information
       if status:
@@ -1853,16 +1848,12 @@ class Mochitest(MochitestUtilsMixin):
       self.lsanLeaks = lsanLeaks
       self.bisectChunk = bisectChunk
 
-      # perl binary to use
-      self.perl = which('perl')
-
       # With metro browser runs this script launches the metro test harness which launches the browser.
       # The metro test harness hands back the real browser process id via log output which we need to
       # pick up on and parse out. This variable tracks the real browser process id if we find it.
       self.browserProcessId = None
 
-      # stack fixer function and/or process
-      self.stackFixerFunction, self.stackFixerProcess = self.stackFixer()
+      self.stackFixerFunction = self.stackFixer()
 
     def processOutputLine(self, line):
       """per line handler of output for mozprocess"""
@@ -1897,14 +1888,13 @@ class Mochitest(MochitestUtilsMixin):
 
     def stackFixer(self):
       """
-      return 2-tuple, (stackFixerFunction, StackFixerProcess),
-      if any, to use on the output lines
+      return stackFixerFunction, if any, to use on the output lines
       """
 
       if not mozinfo.info.get('debug'):
-        return None, None
+        return None
 
-      stackFixerFunction = stackFixerProcess = None
+      stackFixerFunction = None
 
       def import_stackFixerModule(module_name):
         sys.path.insert(0, self.utilityPath)
@@ -1913,35 +1903,20 @@ class Mochitest(MochitestUtilsMixin):
         return module
 
       if self.symbolsPath and os.path.exists(self.symbolsPath):
-        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files)
+        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files).
         # This method is preferred for Tinderbox builds, since native symbols may have been stripped.
         stackFixerModule = import_stackFixerModule('fix_stack_using_bpsyms')
         stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line, self.symbolsPath)
 
-      elif mozinfo.isLinux and self.perl:
-        # Run logsource through fix-linux-stack.pl (uses addr2line)
+      elif mozinfo.isLinux:
+        # Run each line through fix_linux_stack.py (uses addr2line).
         # This method is preferred for developer machines, so we don't have to run "make buildsymbols".
-        stackFixerCommand = [self.perl, os.path.join(self.utilityPath, "fix-linux-stack.pl")]
-        stackFixerProcess = subprocess.Popen(stackFixerCommand, stdin=subprocess.PIPE,
-                                             stdout=subprocess.PIPE)
-        def fixFunc(lines):
-          out = []
-          for line in lines.split('\n'):
-            stackFixerProcess.stdin.write(line + '\n')
-            out.append(stackFixerProcess.stdout.readline().rstrip())
-          return '\n'.join(out)
+        stackFixerModule = import_stackFixerModule('fix_linux_stack')
+        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line)
 
-        stackFixerFunction = fixFunc
+      return stackFixerFunction
 
-      return (stackFixerFunction, stackFixerProcess)
-
-    def finish(self, didTimeout):
-      if self.stackFixerProcess:
-        self.stackFixerProcess.communicate()
-        status = self.stackFixerProcess.returncode
-        if status and not didTimeout:
-          self.harness.log.info("TEST-UNEXPECTED-FAIL | runtests.py | Stack fixer process exited with code %d during test run" % status)
-
+    def finish(self):
       if self.shutdownLeaks:
         self.shutdownLeaks.process()
 

@@ -167,7 +167,7 @@ public:
 
     uintptr_t entryPc = (uintptr_t)(entry.mPc);
     // Sometimes we get nothing useful.  Just print "???" for the entire entry
-    // so that fix-linux-stack.pl doesn't complain about an empty filename.
+    // so that fix_linux_stack.py doesn't complain about an empty filename.
     if (!entry.mFunction && !entry.mLibrary[0] && entry.mLOffset == 0) {
       snprintf(aBuf, aBufLen, "??? 0x%" PRIxPTR, entryPc);
     } else {
@@ -179,7 +179,7 @@ public:
                  entryFunction, entry.mFileName, entry.mLineNo, entryPc);
       } else {
         // On Linux and Mac we cannot get the filename and line number at
-        // runtime, so we print the offset in a form that fix-linux-stack.pl and
+        // runtime, so we print the offset in a form that fix_linux_stack.py and
         // fix_macosx_stack.py can post-process.
         snprintf(aBuf, aBufLen, "%s[%s +0x%" PRIXPTR "] 0x%" PRIxPTR,
                  entryFunction, entry.mLibrary, entry.mLOffset, entryPc);

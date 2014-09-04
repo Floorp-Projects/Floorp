@@ -219,9 +219,9 @@ class MochitestRunner(MozbuildObject):
             print('Cannot specify both --rerun-failures and a test path.')
             return 1
 
-        # Need to call relpath before os.chdir() below.
+        # Make absolute paths relative before calling os.chdir() below.
         if test_paths:
-            test_paths = [self._wrap_path_argument(p).relpath() for p in test_paths]
+            test_paths = [self._wrap_path_argument(p).relpath() if os.path.isabs(p) else p for p in test_paths]
 
         failure_file_path = os.path.join(self.statedir, 'mochitest_failures.json')
 

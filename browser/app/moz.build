@@ -6,7 +6,7 @@
 
 DIRS += ['profile/extensions']
 
-PROGRAM = CONFIG['MOZ_APP_NAME']
+Program(CONFIG['MOZ_APP_NAME'])
 
 SOURCES += [
     'nsBrowserApp.cpp',

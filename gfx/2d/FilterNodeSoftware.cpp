@@ -2921,13 +2921,20 @@ FilterNodeGaussianBlurSoftware::FilterNodeGaussianBlurSoftware()
  : mStdDeviation(0)
 {}
 
+static float
+ClampStdDeviation(float aStdDeviation)
+{
+  // Cap software blur radius for performance reasons.
+  return std::min(std::max(0.0f, aStdDeviation), 100.0f);
+}
+
 void
 FilterNodeGaussianBlurSoftware::SetAttribute(uint32_t aIndex,
                                              float aStdDeviation)
 {
   switch (aIndex) {
     case ATT_GAUSSIAN_BLUR_STD_DEVIATION:
-      mStdDeviation = std::max(0.0f, aStdDeviation);
+      mStdDeviation = ClampStdDeviation(aStdDeviation);
       break;
     default:
       MOZ_CRASH();
@@ -2951,7 +2958,7 @@ FilterNodeDirectionalBlurSoftware::SetAttribute(uint32_t aIndex,
 {
   switch (aIndex) {
     case ATT_DIRECTIONAL_BLUR_STD_DEVIATION:
-      mStdDeviation = std::max(0.0f, aStdDeviation);
+      mStdDeviation = ClampStdDeviation(aStdDeviation);
       break;
     default:
       MOZ_CRASH();

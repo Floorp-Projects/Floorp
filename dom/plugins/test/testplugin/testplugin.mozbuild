@@ -40,8 +40,6 @@ elif toolkit == 'windows':
         'msimg32',
     ]
 
-FORCE_SHARED_LIB = True
-
 # must link statically with the CRT; nptest isn't Gecko code
 USE_STATIC_LIBS = True
 

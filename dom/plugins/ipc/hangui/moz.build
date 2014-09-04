@@ -6,7 +6,7 @@
 
 FAIL_ON_WARNINGS = True
 
-PROGRAM = 'plugin-hang-ui'
+Program('plugin-hang-ui')
 
 UNIFIED_SOURCES += [
     'MiniShmChild.cpp',

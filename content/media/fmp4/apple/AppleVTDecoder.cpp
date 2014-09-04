@@ -197,6 +197,7 @@ PlatformCallback(void* decompressionOutputRefCon,
   }
   if (flags & kVTDecodeInfo_FrameDropped) {
     NS_WARNING("  ...frame dropped...");
+    return;
   }
   MOZ_ASSERT(CFGetTypeID(image) == CVPixelBufferGetTypeID(),
     "VideoToolbox returned an unexpected image type");
