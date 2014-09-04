@@ -53,12 +53,6 @@ const Input sha256WithRSAEncryption(alg_sha256WithRSAEncryption);
 namespace {
 
 inline void
-deleteCharArray(char* chars)
-{
-  delete[] chars;
-}
-
-inline void
 fclose_void(FILE* file) {
   (void) fclose(file);
 }
