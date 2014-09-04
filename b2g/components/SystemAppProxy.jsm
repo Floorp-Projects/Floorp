@@ -110,10 +110,10 @@ let SystemAppProxy = {
     if (content) {
       content.removeEventListener.apply(content, arguments);
     } else {
-      let idx = this._pendingListeners.indexOf(listener);
-      if (idx != -1) {
-        this._pendingListeners.splice(idx, 1);
-      }
+      this._pendingListeners = this._pendingListeners.filter(
+        args => {
+          return args[0] != name || args[1] != listener;
+        });
     }
   },
 
