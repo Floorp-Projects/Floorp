@@ -12,9 +12,6 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#ifdef MOZ_CONTENT_SANDBOX // For upstream merging, use patch in bug 1018966 to reapply warn only sandbox code
-#include "mozilla/warnonlysandbox/warnOnlySandbox.h"
-#endif
 
 namespace sandbox {
 
@@ -28,10 +25,6 @@ HANDLE WINAPI TargetCreateEventW(CreateEventWFunction orig_CreateEvent,
   DWORD original_error = ::GetLastError();
   if (NULL != handle)
     return handle;
-
-#ifdef MOZ_CONTENT_SANDBOX
-  mozilla::warnonlysandbox::LogBlocked("CreateEventW", name);
-#endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -60,9 +53,6 @@ HANDLE WINAPI TargetCreateEventW(CreateEventWFunction orig_CreateEvent,
       break;
 
     ::SetLastError(answer.win32_result);
-#ifdef MOZ_CONTENT_SANDBOX
-    mozilla::warnonlysandbox::LogAllowed("CreateEventW", name);
-#endif
     return answer.handle;
   } while (false);
 
@@ -80,10 +70,6 @@ HANDLE WINAPI TargetOpenEventW(OpenEventWFunction orig_OpenEvent,
   DWORD original_error = ::GetLastError();
   if (NULL != handle)
     return handle;
-
-#ifdef MOZ_CONTENT_SANDBOX
-  mozilla::warnonlysandbox::LogBlocked("OpenEventW", name);
-#endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -111,9 +97,6 @@ HANDLE WINAPI TargetOpenEventW(OpenEventWFunction orig_OpenEvent,
       break;
 
     ::SetLastError(answer.win32_result);
-#ifdef MOZ_CONTENT_SANDBOX
-    mozilla::warnonlysandbox::LogAllowed("OpenEventW", name);
-#endif
     return answer.handle;
   } while (false);
 
