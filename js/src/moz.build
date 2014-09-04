@@ -435,12 +435,12 @@ HostSimplePrograms([
 # In fact, we now build both a static and a shared library, as the
 # JS shell would like to link to the static library.
 
-Library('js')
-
 if CONFIG['JS_SHARED_LIBRARY']:
-    FORCE_SHARED_LIB = True
+    SharedLibrary('js')
     SHARED_LIBRARY_NAME = CONFIG['JS_LIBRARY_NAME']
     SDK_LIBRARY = True
+else:
+    Library('js')
 
 FORCE_STATIC_LIB = True
 STATIC_LIBRARY_NAME = 'js_static'

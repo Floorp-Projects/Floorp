@@ -95,15 +95,15 @@ Shared Libraries
 ================
 
 Sometimes, we want shared libraries, a.k.a. dynamic libraries. Such libraries
-are defined with the same variables as static libraries, with the addition of
-the ``FORCE_SHARED_LIB`` boolean variable:
+are defined similarly to static libraries, using the ``SharedLibrary`` template
+instead of ``Library``.
 
-   FORCE_SHARED_LIB = True
+   SharedLibrary('foo')
 
-When this variable is set, no static library is built. See further below to
+When this template is used, no static library is built. See further below to
 build both types of libraries.
 
-With a ``Library`` name of ``foo``, the library file name will be
+With a ``SharedLibrary`` name of ``foo``, the library file name will be
 ``libfoo.dylib`` on OSX, ``libfoo.so`` on ELF systems (Linux, etc.), and
 ``foo.dll`` on Windows. On Windows, there is also an import library named
 ``foo.lib``, used on the linker command line. ``libfoo.dylib`` and
@@ -111,18 +111,18 @@ With a ``Library`` name of ``foo``, the library file name will be
 systems.
 
 On OSX, one may want to create a special kind of dynamic library: frameworks.
-This is done with the ``IS_FRAMEWORK`` boolean variable.
+This is done with the ``Framework`` template.
 
-   IS_FRAMEWORK = True
+   Framework('foo')
 
-With a ``Library`` name of ``foo``, the framework file name will be ``foo``.
-This variable however affects the behavior on all platforms, so it needs to
+With a ``Framework`` name of ``foo``, the framework file name will be ``foo``.
+This template however affects the behavior on all platforms, so it needs to
 be set only on OSX.
 
 Another special kind of library, XPCOM-specific, are XPCOM components. One can
-build such a component with the ``IS_COMPONENT`` boolean variable.
+build such a component with the ``XPCOMBinaryComponent`` template.
 
-   IS_COMPONENT = True
+   XPCOMBinaryComponent('foo')
 
 
 Executables

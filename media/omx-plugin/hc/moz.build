@@ -8,9 +8,7 @@ SOURCES += [
     'OmxPluginHoneycomb.cpp',
 ]
 
-Library('omxpluginhc')
-
-FORCE_SHARED_LIB = True
+SharedLibrary('omxpluginhc')
 
 LOCAL_INCLUDES += [
     '../include/gb',

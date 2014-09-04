@@ -8,9 +8,7 @@ SOURCES += [
     'OmxPlugin236.cpp',
 ]
 
-Library('omxplugingb')
-
-FORCE_SHARED_LIB = True
+SharedLibrary('omxplugingb')
 
 LOCAL_INCLUDES += [
     '../include/gb',

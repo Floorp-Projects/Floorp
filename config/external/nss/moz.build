@@ -4,17 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('nss')
-
 DIRS += ['crmf']
 
 if CONFIG['MOZ_NATIVE_NSS']:
+    Library('nss')
     OS_LIBS += CONFIG['NSS_LIBS']
 elif CONFIG['MOZ_FOLD_LIBS']:
+    SharedLibrary('nss')
     # TODO: The library name can be changed when bug 845217 is fixed.
     SHARED_LIBRARY_NAME = 'nss3'
 
-    FORCE_SHARED_LIB = True
     SDK_LIBRARY = True
 
     # Normally, there should be /something/ to ensure nspr is built
@@ -38,6 +37,7 @@ elif CONFIG['MOZ_FOLD_LIBS']:
     if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['GCC_USE_GNU_LD']:
         LD_VERSION_SCRIPT = 'nss3.def'
 else:
+    Library('nss')
     USE_LIBS += [
         '/security/nss/lib/nss/nss3',
         '/security/nss/lib/smime/smime3',

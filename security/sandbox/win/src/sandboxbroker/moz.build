@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('sandboxbroker')
+SharedLibrary('sandboxbroker')
 
 USE_LIBS += [
     'nspr',
@@ -18,8 +18,6 @@ SOURCES += [
 EXPORTS += [
     'sandboxBroker.h',
 ]
-
-FORCE_SHARED_LIB = True
 
 for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'NOMINMAX',
             'SANDBOX_EXPORTS'):

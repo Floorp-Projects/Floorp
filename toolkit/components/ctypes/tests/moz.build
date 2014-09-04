@@ -14,9 +14,7 @@ UNIFIED_SOURCES += [
     'jsctypes-test.cpp',
 ]
 
-Library('jsctypes-test')
-
-FORCE_SHARED_LIB = True
+SharedLibrary('jsctypes-test')
 
 LOCAL_INCLUDES += [
     '/js/src/ctypes',
