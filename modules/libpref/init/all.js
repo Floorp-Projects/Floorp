@@ -3956,6 +3956,12 @@ pref("dom.sms.requestStatusReport", true);
 // Numeric default service id for SMS API calls with |serviceId| parameter
 // omitted.
 pref("dom.sms.defaultServiceId", 0);
+// MobileMessage GetMessages/GetThreads read ahead aggressiveness.
+//
+// positive: finite read-ahead entries,
+// 0: don't read ahead unless explicitly requested, (default)
+// negative: read ahead all IDs if possible.
+pref("dom.sms.maxReadAheadEntries", 0);
 
 // WebContacts
 pref("dom.mozContacts.enabled", false);
