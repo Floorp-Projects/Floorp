@@ -8,8 +8,8 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.home.RemoteTabsPanel;
 import org.mozilla.gecko.util.ThreadUtils;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,6 +39,7 @@ public final class HomeConfig {
         TOP_SITES("top_sites", TopSitesPanel.class),
         BOOKMARKS("bookmarks", BookmarksPanel.class),
         HISTORY("history", HistoryPanel.class),
+        REMOTE_TABS("remote_tabs", RemoteTabsPanel.class),
         READING_LIST("reading_list", ReadingListPanel.class),
         RECENT_TABS("recent_tabs", RecentTabsPanel.class),
         DYNAMIC("dynamic", DynamicPanel.class);
@@ -1495,6 +1496,7 @@ public final class HomeConfig {
     private static final String READING_LIST_PANEL_ID = "20f4549a-64ad-4c32-93e4-1dcef792733b";
     private static final String HISTORY_PANEL_ID = "f134bf20-11f7-4867-ab8b-e8e705d7fbe8";
     private static final String RECENT_TABS_PANEL_ID = "5c2601a5-eedc-4477-b297-ce4cef52adf8";
+    private static final String REMOTE_TABS_PANEL_ID = "72429afd-8d8b-43d8-9189-14b779c563d0";
 
     private final HomeConfigBackend mBackend;
 
@@ -1543,6 +1545,11 @@ public final class HomeConfig {
             case HISTORY:
                 titleId = R.string.home_history_title;
                 id = HISTORY_PANEL_ID;
+                break;
+
+            case REMOTE_TABS:
+                titleId = R.string.home_remote_tabs_title;
+                id = REMOTE_TABS_PANEL_ID;
                 break;
 
             case READING_LIST:

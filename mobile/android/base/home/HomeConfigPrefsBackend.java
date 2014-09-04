@@ -9,7 +9,6 @@ import static org.mozilla.gecko.home.HomeConfig.createBuiltinPanelConfig;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Locale;
 
 import org.json.JSONArray;
@@ -28,7 +27,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -83,15 +81,18 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
 
         final PanelConfig historyEntry = createBuiltinPanelConfig(mContext, PanelType.HISTORY);
         final PanelConfig recentTabsEntry = createBuiltinPanelConfig(mContext, PanelType.RECENT_TABS);
+        final PanelConfig remoteTabsEntry = createBuiltinPanelConfig(mContext, PanelType.REMOTE_TABS);
 
-        // On tablets, the history panel is the last.
-        // On phones, the history panel is the first one.
+        // On tablets, we go [...|History|Recent Tabs|Synced Tabs].
+        // On phones, we go [Synced Tabs|Recent Tabs|History|...].
         if (HardwareUtils.isTablet()) {
             panelConfigs.add(historyEntry);
             panelConfigs.add(recentTabsEntry);
+            panelConfigs.add(remoteTabsEntry);
         } else {
             panelConfigs.add(0, historyEntry);
             panelConfigs.add(0, recentTabsEntry);
+            panelConfigs.add(0, remoteTabsEntry);
         }
 
         return new State(panelConfigs, true);

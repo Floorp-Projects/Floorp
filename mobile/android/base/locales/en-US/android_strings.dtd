@@ -403,6 +403,9 @@ size. -->
      previous location in the navigation, such as the previous folder -->
 <!ENTITY home_move_up_to_filter "Up to &formatS;">
 
+<!ENTITY home_remote_tabs_title "Synced Tabs">
+<!ENTITY home_remote_tabs_empty "Your tabs from other devices show up here.">
+
 <!ENTITY private_browsing_title "Private Browsing">
 <!ENTITY private_tabs_panel_empty_desc "Your private tabs will show up here. While we don\'t keep any of your browsing history or cookies, bookmarks and files that you download will still be saved on your device.">
 <!ENTITY private_tabs_panel_learn_more "Want to learn more?">
