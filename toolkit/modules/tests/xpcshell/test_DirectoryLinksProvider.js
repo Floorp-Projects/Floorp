@@ -268,7 +268,7 @@ add_task(function test_reportSitesAction() {
   // Make the history tile enhanced so it reports both id and url
   sites[2].enhancedId = "id from enhanced";
   expectedPost.tiles[1].id = "id from enhanced";
-  expectedPost.tiles[1].url = sites[2].link.url;
+  expectedPost.tiles[1].url = "";
   yield sendPingAndTest("view", "view", 2);
 
   // Click the 0th site / 0th tile
