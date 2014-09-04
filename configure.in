@@ -4600,6 +4600,14 @@ AC_SUBST(MOZ_DISTRIBUTION_ID)
 
 
 dnl ========================================================
+dnl Google Play Services, placed here so it can depend on
+dnl values set by configure.sh above.
+dnl ========================================================
+
+MOZ_ANDROID_GOOGLE_PLAY_SERVICES
+
+
+dnl ========================================================
 dnl = Pango
 dnl ========================================================
 if test "$MOZ_ENABLE_GTK" -o "$MOZ_ENABLE_QT"
