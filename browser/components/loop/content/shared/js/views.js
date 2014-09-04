@@ -821,4 +821,4 @@ loop.shared.views = (function(_, OT, l10n) {
     UnsupportedBrowserView: UnsupportedBrowserView,
     UnsupportedDeviceView: UnsupportedDeviceView
   };
-})(_, window.OT, document.webL10n || document.mozL10n);
+})(_, window.OT, navigator.mozL10n || document.mozL10n);
