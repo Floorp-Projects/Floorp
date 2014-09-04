@@ -1518,17 +1518,16 @@ MediaDecoderStateMachine::EnqueueDecodeMetadataTask()
       mDispatchedDecodeMetadataTask) {
     return NS_OK;
   }
+
+  mDispatchedDecodeMetadataTask = true;
   RefPtr<nsIRunnable> task(
     NS_NewRunnableMethod(this, &MediaDecoderStateMachine::CallDecodeMetadata));
   nsresult rv = mDecodeTaskQueue->Dispatch(task);
-  if (NS_SUCCEEDED(rv)) {
-    mDispatchedDecodeMetadataTask = true;
-  } else {
+  if (NS_FAILED(rv)) {
     NS_WARNING("Dispatch ReadMetadata task failed.");
-    return rv;
+    mDispatchedDecodeMetadataTask = false;
   }
-
-  return NS_OK;
+  return rv;
 }
 
 void
@@ -1842,7 +1841,6 @@ void
 MediaDecoderStateMachine::CallDecodeMetadata()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  AutoSetOnScopeExit<bool> unsetOnExit(mDispatchedDecodeMetadataTask, false);
   if (mState != DECODER_STATE_DECODING_METADATA) {
     return;
   }
@@ -1874,6 +1872,7 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
       // change state to DECODER_STATE_WAIT_FOR_RESOURCES
       StartWaitForResources();
       // affect values only if ReadMetadata succeeds
+      mDispatchedDecodeMetadataTask = false;
       return NS_OK;
     }
   }
@@ -1996,6 +1995,7 @@ MediaDecoderStateMachine::FinishDecodeMetadata()
     StartPlayback();
   }
 
+  mDispatchedDecodeMetadataTask = false;
   return NS_OK;
 }
 
