@@ -188,15 +188,21 @@ class PlaceHashKey : public nsCStringHashKey
   public:
     explicit PlaceHashKey(const nsACString& aSpec)
     : nsCStringHashKey(&aSpec)
-    , visitCount(-1)
-    , bookmarked(-1)
+    , visitCount(0)
+    , bookmarked(false)
+#ifdef DEBUG
+    , isInitialized(false)
+#endif
     {
     }
 
     explicit PlaceHashKey(const nsACString* aSpec)
     : nsCStringHashKey(aSpec)
-    , visitCount(-1)
-    , bookmarked(-1)
+    , visitCount(0)
+    , bookmarked(false)
+#ifdef DEBUG
+    , isInitialized(false)
+#endif
     {
     }
 
@@ -206,12 +212,42 @@ class PlaceHashKey : public nsCStringHashKey
       MOZ_ASSERT(false, "Do not call me!");
     }
 
-    // Visit count for this place.
-    int32_t visitCount;
-    // Whether this place is bookmarked.
-    int32_t bookmarked;
+  void SetProperties(uint32_t aVisitCount, bool aBookmarked)
+  {
+    visitCount = aVisitCount;
+    bookmarked = aBookmarked;
+#ifdef DEBUG
+    isInitialized = true;
+#endif
+  }
+
+  uint32_t VisitCount() const
+  {
+#ifdef DEBUG
+    MOZ_ASSERT(isInitialized, "PlaceHashKey::visitCount not set");
+#endif
+    return visitCount;
+  }
+
+  bool IsBookmarked() const
+  {
+#ifdef DEBUG
+    MOZ_ASSERT(isInitialized, "PlaceHashKey::bookmarked not set");
+#endif
+    return bookmarked;
+  }
+
     // Array of VisitData objects.
     nsTArray<VisitData> visits;
+private:
+    // Visit count for this place.
+    uint32_t visitCount;
+    // Whether this place is bookmarked.
+    bool bookmarked;
+#ifdef DEBUG
+  // Whether previous attributes are set.
+  bool isInitialized;
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1568,8 +1604,7 @@ static PLDHashOperator TransferHashEntries(PlaceHashKey* aEntry,
   nsTHashtable<PlaceHashKey>* hash =
     static_cast<nsTHashtable<PlaceHashKey> *>(aHash);
   PlaceHashKey* copy = hash->PutEntry(aEntry->GetKey());
-  copy->visitCount = aEntry->visitCount;
-  copy->bookmarked = aEntry->bookmarked;
+  copy->SetProperties(aEntry->VisitCount(), aEntry->IsBookmarked());
   aEntry->visits.SwapElements(copy->visits);
   return PL_DHASH_NEXT;
 }
@@ -1584,10 +1619,9 @@ static PLDHashOperator NotifyVisitRemoval(PlaceHashKey* aEntry,
   const nsTArray<VisitData>& visits = aEntry->visits;
   nsCOMPtr<nsIURI> uri;
   (void)NS_NewURI(getter_AddRefs(uri), visits[0].spec);
-  // XXX visitCount should really just be unsigned (bug 1049812)
   bool removingPage =
-    visits.Length() == static_cast<size_t>(aEntry->visitCount) &&
-    !aEntry->bookmarked;
+    visits.Length() == aEntry->VisitCount() &&
+    !aEntry->IsBookmarked();
   // FindRemovableVisits only sets the transition type on the VisitData objects
   // it collects if the visits were filtered by transition type.
   // RemoveVisitsFilter currently only supports filtering by transition type, so
@@ -1664,9 +1698,8 @@ static PLDHashOperator ListToBeRemovedPlaceIds(PlaceHashKey* aEntry,
 {
   const nsTArray<VisitData>& visits = aEntry->visits;
   // Only orphan ids should be listed.
-  // XXX visitCount should really just be unsigned (bug 1049812)
-  if (visits.Length() == static_cast<size_t>(aEntry->visitCount) &&
-      !aEntry->bookmarked) {
+  if (visits.Length() == aEntry->VisitCount() &&
+      !aEntry->IsBookmarked()) {
     nsCString* list = static_cast<nsCString*>(aIdsList);
     if (!list->IsEmpty())
       list->Append(',');
@@ -1815,8 +1848,7 @@ private:
       if (!entry) {
         entry = aPlaces.PutEntry(visit.spec);
       }
-      entry->visitCount = visitCount;
-      entry->bookmarked = bookmarked;
+      entry->SetProperties(static_cast<uint32_t>(visitCount), static_cast<bool>(bookmarked));
       entry->visits.AppendElement(visit);
     }
     NS_ENSURE_SUCCESS(rv, rv);
