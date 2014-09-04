@@ -109,6 +109,7 @@ body,
 
 .standalone-header-title {
   font-size: 1.8rem;
+  line-height: 2.2rem;
 }
 
 .standalone-call-btn-label {
@@ -137,8 +138,9 @@ body,
 .start-audio-only-call {
   width: 100%;
   border: none;
+  color: #111;
+  background-color: #fff;
   background-size: 10px;
-  background-color: #F0F0F0;
   background-image: url("../shared/img/audio-default-16x16@1.5x.png");
   background-position: 90% center;
 }
