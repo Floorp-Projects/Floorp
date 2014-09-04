@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('AccessibleMarshal')
+SharedLibrary('AccessibleMarshal')
 
 GENERATED_SOURCES += [
     'dlldata.c',
@@ -15,8 +15,6 @@ GENERATED_SOURCES += [
     'ISimpleDOMText_i.c',
     'ISimpleDOMText_p.c',
 ]
-
-FORCE_SHARED_LIB = True
 
 DEFINES['REGISTER_PROXY_DLL'] = True
 

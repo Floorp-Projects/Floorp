@@ -37,6 +37,22 @@ def Library(name):
 
 
 @template
+def SharedLibrary(name):
+    '''Template for shared libraries.'''
+    Library(name)
+
+    FORCE_SHARED_LIB = True
+
+
+@template
+def Framework(name):
+    '''Template for OSX Frameworks.'''
+    Library(name)
+
+    IS_FRAMEWORK = True
+
+
+@template
 def HostProgram(name):
     '''Template for build tools executables.'''
     HOST_PROGRAM = name

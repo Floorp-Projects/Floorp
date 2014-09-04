@@ -18,9 +18,7 @@ SOURCES += [
     '../../../nsprpub/lib/libc/src/strcpy.c',
 ]
 
-Library('dmd')
-
-FORCE_SHARED_LIB = True
+SharedLibrary('dmd')
 
 DEFINES['MOZ_NO_MOZALLOC'] = True
 

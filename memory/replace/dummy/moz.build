@@ -9,8 +9,6 @@ SOURCES += [
     'dummy_replace_malloc.c',
 ]
 
-Library('replace_malloc')
-
-FORCE_SHARED_LIB = True
+SharedLibrary('replace_malloc')
 
 DISABLE_STL_WRAPPING = True

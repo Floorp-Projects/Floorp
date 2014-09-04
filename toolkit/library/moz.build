@@ -4,7 +4,55 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('xul')
+@template
+def Libxul(name):
+    MSVC_ENABLE_PGO = True
+
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+        # This is going to be a framework named "XUL", not an ordinary library named
+        # "libxul.dylib"
+        Framework(name)
+        SHARED_LIBRARY_NAME = 'XUL'
+    else:
+        SharedLibrary(name)
+        SHARED_LIBRARY_NAME = 'xul'
+
+    DELAYLOAD_DLLS += [
+        'comdlg32.dll',
+        'dbghelp.dll',
+        'psapi.dll',
+        'rasapi32.dll',
+        'rasdlg.dll',
+        'secur32.dll',
+        'wininet.dll',
+        'winspool.drv'
+    ]
+
+    if CONFIG['MOZ_METRO']:
+        DELAYLOAD_DLLS += [
+            'API-MS-WIN-CORE-WINRT-L' + CONFIG['CRTEXPDLLVERSION'] + '.DLL',
+            'API-MS-WIN-CORE-WINRT-STRING-L' + CONFIG['CRTEXPDLLVERSION'] + '.DLL',
+            'uiautomationcore.dll'
+        ]
+
+    if CONFIG['ACCESSIBILITY']:
+        DELAYLOAD_DLLS += ['oleacc.dll']
+
+    if CONFIG['MOZ_WEBRTC']:
+        DELAYLOAD_DLLS += ['msdmo.dll']
+
+    if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
+        LOCAL_INCLUDES += [
+            '/widget/windows',
+            '/xpcom/base',
+        ]
+        # config/version.mk says $(srcdir)/$(RCINCLUDE), and this needs to
+        # be valid in both toolkit/library and toolkit/library/gtest.
+        # Eventually, the make backend would do its own path canonicalization
+        # and config/version.mk would lift the $(srcdir)
+        RCINCLUDE = '$(DEPTH)/toolkit/library/xulrunner.rc'
+
+Libxul('xul')
 
 SDK_LIBRARY = True
 
@@ -45,8 +93,6 @@ if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
 FAIL_ON_WARNINGS = True
 
 DIRS += ['gtest']
-
-include('libxul.mozbuild')
 
 # js needs to come after xul for now, because it is an archive and its content
 # is discarded when it comes first.

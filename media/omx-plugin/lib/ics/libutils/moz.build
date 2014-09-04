@@ -10,9 +10,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'libutils.cpp',
     ]
 
-Library('utils')
-
-FORCE_SHARED_LIB = True
+SharedLibrary('utils')
 
 LOCAL_INCLUDES += [
     '/media/omx-plugin/include/ics',

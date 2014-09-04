@@ -17,13 +17,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'pthread_atfork.c',
     ]
 
-Library('replace_jemalloc')
+SharedLibrary('replace_jemalloc')
 
 USE_LIBS += [
     'jemalloc',
 ]
-
-FORCE_SHARED_LIB = True
 
 DEFINES['MOZ_JEMALLOC3'] = True
 DEFINES['MOZ_REPLACE_JEMALLOC'] = True

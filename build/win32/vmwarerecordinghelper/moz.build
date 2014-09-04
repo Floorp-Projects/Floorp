@@ -8,9 +8,7 @@ SOURCES += [
     'vmwarerecordinghelper.cpp',
 ]
 
-Library('vmwarerecordinghelper')
-
-FORCE_SHARED_LIB = True
+SharedLibrary('vmwarerecordinghelper')
 
 DEFFILE = '%s/%s.def' % (SRCDIR, LIBRARY_NAME)
 

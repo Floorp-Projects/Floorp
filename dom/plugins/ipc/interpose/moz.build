@@ -4,14 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('plugin_child_interpose')
+SharedLibrary('plugin_child_interpose')
 
 UNIFIED_SOURCES += [ "%s.mm" % (LIBRARY_NAME) ]
 
 UNIFIED_SOURCES += [
     'plugin_child_quirks.mm',
 ]
-
-FORCE_SHARED_LIB = True
 
 OS_LIBS += ['-framework Carbon']
