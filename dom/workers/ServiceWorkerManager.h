@@ -318,10 +318,6 @@ public:
               uint32_t aColumnNumber,
               uint32_t aFlags);
 
-  void
-  GetServicedClients(const nsCString& aScope,
-                     nsTArray<uint64_t>* aControlledDocuments);
-
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();
 
