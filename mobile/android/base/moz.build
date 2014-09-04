@@ -520,6 +520,7 @@ moz_native_devices_jars = [
 ]
 moz_native_devices_sources = [
     'ChromeCast.java',
+    'GeckoMediaPlayer.java',
     'MediaPlayerManager.java',
 ]
 if CONFIG['MOZ_NATIVE_DEVICES']:
