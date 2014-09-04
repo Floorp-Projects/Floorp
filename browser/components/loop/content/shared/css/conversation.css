@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Shared conversation window styles */
-.standalone .video-layout-wrapper {
+.standalone .video-layout-wrapper,
+.conversation .media video {
   background-color: #444;
 }
 
@@ -11,37 +12,25 @@
   position: relative;
 }
 
-.standalone .conversation {
-  margin: 0 auto;
-  max-height: 100vh;
-}
-
 .conversation-toolbar {
   z-index: 999; /* required to have it superimposed to the video element */
   border: 1px solid #5a5a5a;
   border-left: 0;
   border-right: 0;
-}
-
-.conversation .conversation-toolbar {
-  position: absolute;
-  left: 0;
-  right: 0;
+  background: rgba(0,0,0,.70);
 }
 
 /* desktop version */
-.conversation-window .conversation-toolbar {
+.fx-embedded .conversation-toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 26px;
-  background: rgba(0,0,0,.70);
 }
 
 /* standalone version */
 .standalone .conversation-toolbar {
-  bottom: 0;
-}
-
-.standalone .conversation-toolbar {
-  background: rgba(0,0,0,.50);
   padding: 20px;
   height: 64px;
 }
@@ -111,11 +100,11 @@
   padding: 0 20px;
 }
 
-.conversation-window .conversation-toolbar .btn-hangup {
+.fx-embedded .conversation-toolbar .btn-hangup {
   background-image: url(../img/hangup-inverse-14x14.png);
 }
 @media (min-resolution: 2dppx) {
-  .conversation-window .conversation-toolbar .btn-hangup {
+  .fx-embedded .conversation-toolbar .btn-hangup {
     background-image: url(../img/hangup-inverse-14x14@2x.png);
   }
 }
@@ -166,54 +155,17 @@
   }
 }
 
-/* Video elements */
-
-.conversation .media video {
-  background: #eee;
-}
-
-/* Nested video elements */
-
-.conversation .media.nested {
-  position: relative;
-  text-align: center;
-}
-
-/* fluid aspect ratio trick, see http://stackoverflow.com/a/10441480/330911 */
-.conversation .media.nested .remote_wrapper {
-  display: inline-block;
-  position: relative;
-  width: 100%;
-  padding-bottom: 75%; /* XXX forced 4:3 ratio, see bug 1020445 */
-}
-
-.conversation .media.nested .remote {
-  display: inline-block;
-  position: absolute; /* workaround for lack of object-fit; see bug 1020445 */
-  width: 100%;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #000;
-}
-
-.conversation .media.nested .local {
+.fx-embedded .remote_wrapper {
   position: absolute;
-  bottom: 4px;
-  right: 0;
-  width: 30%;
-  max-width: 140px;
-  /* next two lines are workaround for lack of object-fit; see bug 1020445 */
-  height: 22.5%;
-  max-height: 105px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
 }
 
-.standalone .conversation .media.nested .local {
-  /* required to have it superimposed on the control toolbar */
+.standalone .local-stream {
+  /* required to have it superimposed to the control toolbar */
   z-index: 1001;
-  bottom: 10px;
-  right: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -224,7 +176,7 @@
   float: left;
 }
 
-.conversation .media.side-by-side .local {
+.conversation .media.side-by-side .local-stream {
   width: 50%;
 }
 
@@ -262,7 +214,6 @@
 .incoming-call-action-group .btn-group-chevron,
 .incoming-call-action-group .btn-group {
   width: 100%;
-  max-width: 120px;  /* required by the UI Showcase, but the not real code */
 }
 
 /* XXX Once we get the incoming call avatar, bug 1047435, the H2 should
@@ -474,3 +425,151 @@
   color: #CCC;
   text-align: center;
 }
+
+.fx-embedded .local-stream {
+  position: absolute;
+  right: 3px;
+  bottom: 5px;
+  /* next two lines are workaround for lack of object-fit; see bug 1020445 */
+  max-width: 140px;
+  width: 30%;
+  height: 28%;
+  max-height: 105px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.conversation .media.nested .remote {
+  display: inline-block;
+  position: absolute; /* workaround for lack of object-fit; see bug 1020445 */
+  width: 100%;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+/*
+ * XXX this approach is fragile because it makes assumptions
+ * about the generated OT markup, any change will break it
+ */
+.local-stream.local-stream-audio,
+.standalone .OT_subscriber .OT_video-poster,
+.fx-embedded .OT_video-container .OT_video-poster,
+.local-stream-audio .OT_publisher .OT_video-poster {
+  background-image: url("../img/audio-call-avatar.svg");
+  background-repeat: no-repeat;
+  background-color: #4BA6E7;
+  background-size: contain;
+  background-position: center;
+}
+
+.fx-embedded .media.nested {
+  min-height: 200px;
+}
+
+@media screen and (min-width:640px) {
+
+  /* Force full height on all parents up to the video elements
+   * this way we can ensure the aspect ratio and use height 100%
+   * on the video element
+   * */
+  html, body, #main,
+  .video-layout-wrapper,
+  .conversation {
+    height: 100%;
+  }
+
+  .standalone .conversation-toolbar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .fx-embedded .local-stream {
+    position: fixed;
+  }
+
+  .standalone .local-stream {
+    position: absolute;
+    right: 15px;
+    bottom: 15px;
+    width: 20%;
+    height: 20%;
+    max-width: 400px;
+    max-height: 300px;
+  }
+
+  /* Nested video elements */
+  .conversation .media.nested {
+    position: relative;
+    height: 100%;
+  }
+
+  .standalone .remote_wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .standalone {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+}
+
+@media screen and (max-width:640px) {
+  .standalone .video-layout-wrapper,
+  .standalone .conversation {
+    height: 100%;
+  }
+
+  .standalone .media {
+    height: 90%;
+  }
+
+  .standalone .OT_subscriber {
+    height: 100%;
+    width: auto;
+  }
+
+  .standalone .media.nested {
+    min-height: 500px;
+  }
+
+  .standalone .local-stream {
+    flex: 1;
+    min-width: 120px;
+    min-height: 150px;
+    width: 100%;
+    box-shadow: none;
+  }
+
+  /* Nested video elements */
+  .conversation .media.nested {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 0%;
+  }
+
+  .standalone .video_wrapper.remote_wrapper {
+    /* Because of OT markup we need to set a high flex value
+     * Flex rule assures remote and local streams stack on top of eachother
+     * Computed width is not 100% unless the `width` rule */
+    flex: 2;
+    width: 100%;
+    position: relative;
+  }
+}
+
+@media screen and (max-width:420px) {
+  /* Restore video height so that we get
+   * vertical centering for free on a small screen
+   **/
+  .standalone .conversation .media video {
+    height: 100%;
+  }
+}
+
