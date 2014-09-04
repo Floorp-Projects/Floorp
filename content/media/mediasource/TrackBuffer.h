@@ -77,9 +77,9 @@ public:
   // Call ResetDecode() on each decoder in mDecoders.
   void ResetDecode();
 
-  // Returns a reference to mDecoders, used by MediaSourceReader to select
-  // decoders.
-  // TODO: Refactor to a clenaer interface between TrackBuffer and MediaSourceReader.
+  // Returns a reference to mInitializedDecoders, used by MediaSourceReader
+  // to select decoders.
+  // TODO: Refactor to a cleaner interface between TrackBuffer and MediaSourceReader.
   const nsTArray<nsRefPtr<SourceBufferDecoder>>& Decoders();
 
 private:
@@ -102,9 +102,13 @@ private:
   // NewDecoder.
   RefPtr<MediaTaskQueue> mTaskQueue;
 
-  // All of the initialized decoders managed by this TrackBuffer.  Access
-  // protected by mParentDecoder's monitor.
+  // All of the decoders managed by this TrackBuffer.  Access protected by
+  // mParentDecoder's monitor.
   nsTArray<nsRefPtr<SourceBufferDecoder>> mDecoders;
+
+  // Contains only the initialized decoders managed by this TrackBuffer.
+  // Access protected by mParentDecoder's monitor.
+  nsTArray<nsRefPtr<SourceBufferDecoder>> mInitializedDecoders;
 
   // The decoder that the owning SourceBuffer is currently appending data to.
   nsRefPtr<SourceBufferDecoder> mCurrentDecoder;

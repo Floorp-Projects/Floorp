@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>MSE: basic functionality</title>
+  <title>MSE: seeking in buffered range</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -47,7 +47,25 @@ addLoadEvent(function() {
         r.addEventListener("load", function (e) {
           sb.appendBuffer(new Uint8Array(e.target.result));
           ms.endOfStream();
-          v.play();
+          var target = 2;
+          v.addEventListener("loadedmetadata", function () {
+            if (v.buffered.length && v.currentTime != target &&
+                target >= v.buffered.start(0) &&
+                target < v.buffered.end(0)) {
+              v.currentTime = target;
+            }
+          });
+          var wasSeeking = false;
+          v.addEventListener("seeking", function () {
+            wasSeeking = true;
+            is(v.currentTime, target, "Video currentTime not at target");
+          });
+          v.addEventListener("seeked", function () {
+            ok(wasSeeking, "Received expected seeking and seeked events");
+            is(v.currentTime, target, "Video currentTime not at target");
+            v.parentNode.removeChild(v);
+            SimpleTest.finish();
+          });
         });
         r.readAsArrayBuffer(blob);
       });
@@ -55,11 +73,6 @@ addLoadEvent(function() {
     ms.addEventListener("sourceended", function () {
       ok(true, "Receive a sourceended event");
       is(ms.readyState, "ended", "MediaSource must be in ended state after sourceended");
-    });
-    v.addEventListener("ended", function () {
-      is(v.duration, 4, "Video has correct duration");
-      v.parentNode.removeChild(v);
-      SimpleTest.finish();
     });
   });
 });
