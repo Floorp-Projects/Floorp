@@ -187,7 +187,7 @@
                          label="&caseSensitive.label;"
                          accesskey="&caseSensitive.accesskey;"
                          tooltiptext="&caseSensitive.tooltiptext;"
-                         oncommand="_setCaseSensitivity(this.checked);"
+                         oncommand="_setCaseSensitivity(this.checked ? 1 : 0);"
                          type="checkbox"
                          xbl:inherits="accesskey=matchcaseaccesskey"/>
       <xul:label anonid="match-case-status" class="findbar-find-fast"/>
@@ -305,10 +305,7 @@
               this._self._typeAheadLinksOnly = prefsvc.getBoolPref(aPrefName);
               break;
             case "accessibility.typeaheadfind.casesensitive":
-              this._self._typeAheadCaseSensitive = prefsvc.getIntPref(aPrefName);
-              this._self._updateCaseSensitivity();
-              if (this._self.getElement("highlight").checked)
-                this._self._setHighlightTimeout();
+              this._self._setCaseSensitivity(prefsvc.getIntPref(aPrefName));
               break;
           }
         }
@@ -546,19 +543,19 @@
 
       <!--
         - Sets the findbar case-sensitivity mode
-        - @param aCaseSensitive (boolean)
-        -        Whether or not case-sensitivity should be turned on.
+        - @param aCaseSensitivity (int)
+        -   0 - case insensitive
+        -   1 - case sensitive
+        -   2 - auto = case sensitive iff match string contains upper case letters
+        -   @see _shouldBeCaseSensitive
         -->
       <method name="_setCaseSensitivity">
-        <parameter name="aCaseSensitive"/>
+        <parameter name="aCaseSensitivity"/>
         <body><![CDATA[
-          let prefsvc =
-            Components.classes["@mozilla.org/preferences-service;1"]
-                      .getService(Components.interfaces.nsIPrefBranch);
-
-          // Just set the pref; our observer will change the find bar behavior
-          prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive",
-                             aCaseSensitive ? 1 : 0);
+          this._typeAheadCaseSensitive = aCaseSensitivity;
+          this._updateCaseSensitivity();
+          if (this.getElement("highlight").checked)
+            this._setHighlightTimeout();
 
           this._dispatchFindEvent("casesensitivitychange");
         ]]></body>
