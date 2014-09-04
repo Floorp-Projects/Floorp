@@ -297,6 +297,7 @@ gbjar.sources += [
     'home/ReadingListPanel.java',
     'home/ReadingListRow.java',
     'home/RecentTabsPanel.java',
+    'home/RemoteTabsPanel.java',
     'home/SearchEngine.java',
     'home/SearchEngineRow.java',
     'home/SearchLoader.java',
