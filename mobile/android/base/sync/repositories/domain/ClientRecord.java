@@ -113,6 +113,11 @@ public class ClientRecord extends Record {
   }
 
   @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+
+  @Override
   public boolean equalPayloads(Object o) {
     if (!(o instanceof ClientRecord) || !super.equalPayloads(o)) {
       return false;
