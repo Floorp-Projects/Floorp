@@ -353,6 +353,10 @@
   <string name="home_move_up_to_filter">&home_move_up_to_filter;</string>
   <string name="home_remote_tabs_title">&home_remote_tabs_title;</string>
   <string name="home_remote_tabs_empty">&home_remote_tabs_empty;</string>
+  <string name="home_remote_tabs_unable_to_connect">&home_remote_tabs_unable_to_connect;</string>
+  <string name="home_remote_tabs_need_to_sign_in">&home_remote_tabs_need_to_sign_in;</string>
+  <string name="home_remote_tabs_trouble_verifying">&home_remote_tabs_trouble_verifying;</string>
+  <string name="home_remote_tabs_need_to_verify">&home_remote_tabs_need_to_verify;</string>
   <string name="private_browsing_title">&private_browsing_title;</string>
   <string name="private_tabs_panel_empty_desc">&private_tabs_panel_empty_desc;</string>
   <string name="private_tabs_panel_learn_more">&private_tabs_panel_learn_more;</string>
