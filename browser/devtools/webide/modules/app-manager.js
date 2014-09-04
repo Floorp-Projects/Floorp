@@ -15,6 +15,7 @@ const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.
 const {TextEncoder, OS}  = Cu.import("resource://gre/modules/osfile.jsm", {});
 const {AppProjects} = require("devtools/app-manager/app-projects");
 const WebappsStore = require("devtools/app-manager/webapps-store");
+const TabStore = require("devtools/webide/tab-store");
 const {AppValidator} = require("devtools/app-manager/app-validator");
 const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
 const AppActorFront = require("devtools/app-actor-front");
@@ -25,6 +26,7 @@ const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {USBRuntime, WiFiRuntime, SimulatorRuntime,
        gLocalRuntime, gRemoteRuntime} = require("devtools/webide/runtimes");
 const discovery = require("devtools/toolkit/discovery/discovery");
+const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
@@ -47,6 +49,11 @@ exports.AppManager = AppManager = {
     this.onWebAppsStoreready = this.onWebAppsStoreready.bind(this);
     this.webAppsStore = new WebappsStore(this.connection);
     this.webAppsStore.on("store-ready", this.onWebAppsStoreready);
+    this.tabStore = new TabStore(this.connection);
+    this.onTabNavigate = this.onTabNavigate.bind(this);
+    this.onTabClosed = this.onTabClosed.bind(this);
+    this.tabStore.on("navigate", this.onTabNavigate);
+    this.tabStore.on("closed", this.onTabClosed);
 
     this.runtimeList = {
       usb: [],
@@ -81,6 +88,10 @@ exports.AppManager = AppManager = {
     this.webAppsStore.off("store-ready", this.onWebAppsStoreready);
     this.webAppsStore.destroy();
     this.webAppsStore = null;
+    this.tabStore.off("navigate", this.onTabNavigate);
+    this.tabStore.off("closed", this.onTabClosed);
+    this.tabStore.destroy();
+    this.tabStore = null;
     this.connection.off(Connection.Events.STATUS_CHANGED, this.onConnectionChanged);
     this._listTabsResponse = null;
     this.connection.disconnect();
@@ -192,7 +203,8 @@ exports.AppManager = AppManager = {
   },
 
   isProjectRunning: function() {
-    if (this.selectedProject.type == "mainProcess") {
+    if (this.selectedProject.type == "mainProcess" ||
+        this.selectedProject.type == "tab") {
       return true;
     }
     let manifest = this.getProjectManifestURL(this.selectedProject);
@@ -209,7 +221,51 @@ exports.AppManager = AppManager = {
     }
   },
 
+  listTabs: function() {
+    return this.tabStore.listTabs();
+  },
+
+  // TODO: Merge this into TabProject as part of project-agnostic work
+  onTabNavigate: function() {
+    if (this.selectedProject.type !== "tab") {
+      return;
+    }
+    let tab = this.selectedProject.app = this.tabStore.selectedTab;
+    let uri = NetUtil.newURI(tab.url);
+    // Wanted to use nsIFaviconService here, but it only works for visited
+    // tabs, so that's no help for any remote tabs.  Maybe some favicon wizard
+    // knows how to get high-res favicons easily, or we could offer actor
+    // support for this (bug 1061654).
+    tab.favicon = uri.prePath + "/favicon.ico";
+    tab.name = tab.title || Strings.GetStringFromName("project_tab_loading");
+    if (uri.scheme.startsWith("http")) {
+      tab.name = uri.host + ": " + tab.name;
+    }
+    this.selectedProject.location = tab.url;
+    this.selectedProject.name = tab.name;
+    this.selectedProject.icon = tab.favicon;
+    this.update("project-validated");
+  },
+
+  onTabClosed: function() {
+    if (this.selectedProject.type !== "tab") {
+      return;
+    }
+    this.selectedProject = null;
+  },
+
+  reloadTab: function() {
+    if (this.selectedProject && this.selectedProject.type != "tab") {
+      return promise.reject("tried to reload non-tab project");
+    }
+    return this.getTarget().then(target => {
+      target.activeTab.reload();
+    });
+  },
+
   getTarget: function() {
+    let client = this.connection.client;
+
     if (this.selectedProject.type == "mainProcess") {
       return devtools.TargetFactory.forRemoteTab({
         form: this._listTabsResponse,
@@ -218,13 +274,16 @@ exports.AppManager = AppManager = {
       });
     }
 
+    if (this.selectedProject.type == "tab") {
+      return this.tabStore.getTargetForTab();
+    }
+
     let manifest = this.getProjectManifestURL(this.selectedProject);
     if (!manifest) {
       console.error("Can't find manifestURL for selected project");
       return promise.reject();
     }
 
-    let client = this.connection.client;
     let actor = this._listTabsResponse.webappsActor;
     return Task.spawn(function* () {
       // Once we asked the app to launch, the app isn't necessary completely loaded.
@@ -270,6 +329,9 @@ exports.AppManager = AppManager = {
     if (value != this.selectedProject) {
       this._selectedProject = value;
 
+      // Clear out tab store's selected state, if any
+      this.tabStore.selectedTab = null;
+
       if (this.selectedProject) {
         if (this.selectedProject.type == "runtimeApp") {
           this.runRuntimeApp();
@@ -277,6 +339,9 @@ exports.AppManager = AppManager = {
         if (this.selectedProject.type == "packaged" ||
             this.selectedProject.type == "hosted") {
           this.validateProject(this.selectedProject);
+        }
+        if (this.selectedProject.type == "tab") {
+          this.tabStore.selectedTab = this.selectedProject.app;
         }
       }
 
@@ -300,7 +365,8 @@ exports.AppManager = AppManager = {
     this._selectedRuntime = value;
     if (!value && this.selectedProject &&
         (this.selectedProject.type == "mainProcess" ||
-         this.selectedProject.type == "runtimeApp")) {
+         this.selectedProject.type == "runtimeApp" ||
+         this.selectedProject.type == "tab")) {
       this.selectedProject = null;
     }
     this.update("runtime");
