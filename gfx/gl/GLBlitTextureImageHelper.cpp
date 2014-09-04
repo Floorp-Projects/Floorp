@@ -38,7 +38,7 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
     NS_ASSERTION(!aSrc->InUpdate(), "Source texture is in update!");
     NS_ASSERTION(!aDst->InUpdate(), "Destination texture is in update!");
 
-    if (aSrcRect.IsEmpty() || aDstRect.IsEmpty())
+    if (!aSrc || !aDst || aSrcRect.IsEmpty() || aDstRect.IsEmpty())
         return;
 
     int savedFb = 0;

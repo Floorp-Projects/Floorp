@@ -20,9 +20,9 @@ csrcs = [
 ]
 
 HOST_SOURCES += csrcs
-HOST_LIBRARY_NAME = 'hostbz2'
+HostLibrary('hostbz2')
 
-LIBRARY_NAME = 'bz2'
+Library('bz2')
 
 UNIFIED_SOURCES += [
     'blocksort.c',

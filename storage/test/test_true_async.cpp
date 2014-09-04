@@ -107,7 +107,7 @@ void watch_for_mutex_use_on_this_thread()
 class ThreadWedger : public nsRunnable
 {
 public:
-  ThreadWedger(nsIEventTarget *aTarget)
+  explicit ThreadWedger(nsIEventTarget *aTarget)
   : mReentrantMonitor("thread wedger")
   , unwedged(false)
   {

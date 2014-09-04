@@ -20,8 +20,8 @@ class mock_Link : public mozilla::dom::Link
 public:
   NS_DECL_ISUPPORTS
 
-  mock_Link(void (*aHandlerFunction)(nsLinkState),
-            bool aRunNextTest = true)
+  explicit mock_Link(void (*aHandlerFunction)(nsLinkState),
+                     bool aRunNextTest = true)
   : mozilla::dom::Link(nullptr)
   , mHandler(aHandlerFunction)
   , mRunNextTest(aRunNextTest)
