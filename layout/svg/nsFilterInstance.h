@@ -135,7 +135,7 @@ public:
    * been specified before calling this method by passing it as the
    * aPreFilterDirtyRegion argument to the nsFilterInstance constructor.
    */
-  nsresult ComputePostFilterDirtyRegion(nsRegion* aPostFilterDirtyRegion);
+  nsRegion ComputePostFilterDirtyRegion();
 
   /**
    * Sets the aPostFilterExtents outparam to the post-filter bounds in frame
@@ -144,7 +144,7 @@ public:
    * area is dirtied, because some filter primitives can generate output
    * without any input.
    */
-  nsresult ComputePostFilterExtents(nsRect* aPostFilterExtents);
+  nsRect ComputePostFilterExtents();
 
   /**
    * Sets the aDirty outparam to the pre-filter bounds in frame space of the
@@ -153,7 +153,7 @@ public:
    * specified before calling this method by passing it as the aPostFilterDirtyRegion
    * argument to the nsFilterInstance constructor.
    */
-  nsresult ComputeSourceNeededRect(nsRect* aDirty);
+  nsRect ComputeSourceNeededRect();
 
 
   /**
