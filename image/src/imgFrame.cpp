@@ -742,15 +742,17 @@ bool imgFrame::ImageComplete() const
 }
 
 // A hint from the image decoders that this image has no alpha, even
-// though we created is ARGB32.  This changes our format to RGB24,
-// which in turn will cause us to Optimize() to RGB24.  Has no effect
-// after Optimize() is called, though in all cases it will be just a
-// performance win -- the pixels are still correct and have the A byte
-// set to 0xff.
+// though we're decoding it as B8G8R8A8. 
+// Since this is only called during decoding, there is a mImageSurface
+// that should be updated to use B8G8R8X8. This doesn't change the
+// underlying data at all, but allows DrawTargets to avoid blending
+// when drawing known opaque images.
 void imgFrame::SetHasNoAlpha()
 {
   if (mFormat == SurfaceFormat::B8G8R8A8) {
     mFormat = SurfaceFormat::B8G8R8X8;
+    MOZ_ASSERT(mImageSurface);
+    mImageSurface = CreateLockedSurface(mVBuf, mSize, mFormat);
   }
 }
 
