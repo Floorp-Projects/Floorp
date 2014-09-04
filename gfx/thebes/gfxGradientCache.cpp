@@ -208,6 +208,14 @@ gfxGradientCache::GetOrCreateGradientStops(DrawTarget *aDT, nsTArray<GradientSto
 }
 
 void
+gfxGradientCache::PurgeAllCaches()
+{
+  if (gGradientCache) {
+    gGradientCache->AgeAllGenerations();
+  }
+}
+
+void
 gfxGradientCache::Shutdown()
 {
   delete gGradientCache;
