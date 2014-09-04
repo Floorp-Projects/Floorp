@@ -73,7 +73,9 @@ class nsSVGFilterInstance
 
 public:
   /**
-   * @param aFilter The SVG reference filter to process.
+   * @param aFilter The SVG filter reference from the style system. This class
+   *   stores aFilter by reference, so callers should avoid modifying or
+   *   deleting aFilter during the lifetime of nsSVGFilterInstance.
    * @param aTargetFrame The frame of the filtered element under consideration.
    * @param aTargetBBox The SVG bbox to use for the target frame, computed by
    *   the caller. The caller may decide to override the actual SVG bbox.
@@ -203,7 +205,7 @@ private:
   /**
    * The SVG reference filter originally from the style system.
    */
-  const nsStyleFilter mFilter;
+  const nsStyleFilter& mFilter;
 
   /**
    * The frame for the element that is currently being filtered.
