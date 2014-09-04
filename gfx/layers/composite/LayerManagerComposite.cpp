@@ -103,7 +103,9 @@ LayerManagerComposite::ClearCachedResources(Layer* aSubtree)
  * LayerManagerComposite
  */
 LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
-: mCompositor(aCompositor)
+: mWarningLevel(0.0f)
+, mUnusedApzTransformWarning(false)
+, mCompositor(aCompositor)
 , mInTransaction(false)
 , mIsCompositorReady(false)
 , mDebugOverlayWantsNextFrame(false)
@@ -346,11 +348,11 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
       mFPS = MakeUnique<FPSState>();
     }
 
+    float alpha = 1;
 #ifdef ANDROID
     // Draw a translation delay warning overlay
     int width;
     int border;
-    float alpha = 1;
     if ((now - mWarnTime).ToMilliseconds() < kVisualWarningDuration) {
       EffectChain effects;
 
@@ -385,6 +387,18 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
 
     float fillRatio = mCompositor->GetFillRatio();
     mFPS->DrawFPS(now, drawFrameColorBars ? 10 : 0, 0, unsigned(fillRatio), mCompositor);
+
+    if (mUnusedApzTransformWarning) {
+      // If we have an unused APZ transform on this composite, draw a 20x20 red box
+      // in the top-right corner
+      EffectChain effects;
+      effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(1, 0, 0, 1));
+      mCompositor->DrawQuad(gfx::Rect(aBounds.width - 20, 0, aBounds.width, 20),
+                            aBounds, effects, alpha, gfx::Matrix4x4());
+
+      mUnusedApzTransformWarning = false;
+      SetDebugOverlayWantsNextFrame(true);
+    }
   } else {
     mFPS = nullptr;
   }
