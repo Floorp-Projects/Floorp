@@ -33,7 +33,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/CompositorTypes.h"
-#include "nsIWebBrowserChrome3.h"
 
 class nsICachedFileDescriptorListener;
 class nsIDOMWindowUtils;
@@ -225,7 +224,6 @@ protected:
     ScreenIntSize mInnerSize;
     mozilla::layers::FrameMetrics mLastRootMetrics;
     mozilla::layout::ScrollingBehavior mScrolling;
-    nsCOMPtr<nsIWebBrowserChrome3> mWebBrowserChrome;
 };
 
 class TabChild MOZ_FINAL : public TabChildBase,
