@@ -6,6 +6,7 @@
 #include "VP8TrackEncoder.h"
 #include "vpx/vp8cx.h"
 #include "vpx/vpx_encoder.h"
+#include "VideoSegment.h"
 #include "VideoUtils.h"
 #include "prsystem.h"
 #include "WebMWriter.h"
@@ -221,30 +222,6 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
   return NS_OK;
 }
 
-void VP8TrackEncoder::PrepareMutedFrame()
-{
-  if (mMuteFrame.IsEmpty()) {
-    CreateMutedFrame(&mMuteFrame);
-  }
-
-  uint32_t yPlaneSize = mFrameWidth * mFrameHeight;
-  uint32_t halfWidth = (mFrameWidth + 1) / 2;
-  uint32_t halfHeight = (mFrameHeight + 1) / 2;
-  uint32_t uvPlaneSize = halfWidth * halfHeight;
-
-  MOZ_ASSERT(mMuteFrame.Length() >= (yPlaneSize + uvPlaneSize * 2));
-  uint8_t *y = mMuteFrame.Elements();
-  uint8_t *cb = mMuteFrame.Elements() + yPlaneSize;
-  uint8_t *cr = mMuteFrame.Elements() + yPlaneSize + uvPlaneSize;
-
-  mVPXImageWrapper->planes[PLANE_Y] = y;
-  mVPXImageWrapper->planes[PLANE_U] = cb;
-  mVPXImageWrapper->planes[PLANE_V] = cr;
-  mVPXImageWrapper->stride[VPX_PLANE_Y] = mFrameWidth;
-  mVPXImageWrapper->stride[VPX_PLANE_U] = halfWidth;
-  mVPXImageWrapper->stride[VPX_PLANE_V] = halfWidth;
-}
-
 static bool isYUV420(const PlanarYCbCrImage::Data *aData)
 {
   if (aData->mYSize == aData->mCbCrSize * 2) {
@@ -272,95 +249,102 @@ static bool isYUV444(const PlanarYCbCrImage::Data *aData)
 
 nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
 {
+  nsRefPtr<Image> img;
   if (aChunk.mFrame.GetForceBlack() || aChunk.IsNull()) {
-    PrepareMutedFrame();
+    if (!mMuteFrame) {
+      mMuteFrame = VideoFrame::CreateBlackImage(gfxIntSize(mFrameWidth, mFrameHeight));
+      MOZ_ASSERT(mMuteFrame);
+    }
+    img = mMuteFrame;
   } else {
-    Image* img = aChunk.mFrame.GetImage();
-    ImageFormat format = img->GetFormat();
-    if (format != ImageFormat::PLANAR_YCBCR) {
-      VP8LOG("Unsupported video format\n");
-      return NS_ERROR_FAILURE;
-    }
-
-    // Cast away constness b/c some of the accessors are non-const
-    PlanarYCbCrImage* yuv =
-    const_cast<PlanarYCbCrImage *>(static_cast<const PlanarYCbCrImage *>(img));
-    // Big-time assumption here that this is all contiguous data coming
-    // from getUserMedia or other sources.
-    MOZ_ASSERT(yuv);
-    if (!yuv->IsValid()) {
-      NS_WARNING("PlanarYCbCrImage is not valid");
-      return NS_ERROR_FAILURE;
-    }
-    const PlanarYCbCrImage::Data *data = yuv->GetData();
-
-    if (isYUV420(data) && !data->mCbSkip) { // 420 planar
-      mVPXImageWrapper->planes[PLANE_Y] = data->mYChannel;
-      mVPXImageWrapper->planes[PLANE_U] = data->mCbChannel;
-      mVPXImageWrapper->planes[PLANE_V] = data->mCrChannel;
-      mVPXImageWrapper->stride[VPX_PLANE_Y] = data->mYStride;
-      mVPXImageWrapper->stride[VPX_PLANE_U] = data->mCbCrStride;
-      mVPXImageWrapper->stride[VPX_PLANE_V] = data->mCbCrStride;
-    } else {
-      uint32_t yPlaneSize = mFrameWidth * mFrameHeight;
-      uint32_t halfWidth = (mFrameWidth + 1) / 2;
-      uint32_t halfHeight = (mFrameHeight + 1) / 2;
-      uint32_t uvPlaneSize = halfWidth * halfHeight;
-      if (mI420Frame.IsEmpty()) {
-        mI420Frame.SetLength(yPlaneSize + uvPlaneSize * 2);
-      }
-
-      MOZ_ASSERT(mI420Frame.Length() >= (yPlaneSize + uvPlaneSize * 2));
-      uint8_t *y = mI420Frame.Elements();
-      uint8_t *cb = mI420Frame.Elements() + yPlaneSize;
-      uint8_t *cr = mI420Frame.Elements() + yPlaneSize + uvPlaneSize;
-
-      if (isYUV420(data) && data->mCbSkip) {
-        // If mCbSkip is set, we assume it's nv12 or nv21.
-        if (data->mCbChannel < data->mCrChannel) { // nv12
-          libyuv::NV12ToI420(data->mYChannel, data->mYStride,
-                             data->mCbChannel, data->mCbCrStride,
-                             y, mFrameWidth,
-                             cb, halfWidth,
-                             cr, halfWidth,
-                             mFrameWidth, mFrameHeight);
-        } else { // nv21
-          libyuv::NV21ToI420(data->mYChannel, data->mYStride,
-                             data->mCrChannel, data->mCbCrStride,
-                             y, mFrameWidth,
-                             cb, halfWidth,
-                             cr, halfWidth,
-                             mFrameWidth, mFrameHeight);
-        }
-      } else if (isYUV444(data) && !data->mCbSkip) {
-        libyuv::I444ToI420(data->mYChannel, data->mYStride,
-                           data->mCbChannel, data->mCbCrStride,
-                           data->mCrChannel, data->mCbCrStride,
-                           y, mFrameWidth,
-                           cb, halfWidth,
-                           cr, halfWidth,
-                           mFrameWidth, mFrameHeight);
-      } else if (isYUV422(data) && !data->mCbSkip) {
-        libyuv::I422ToI420(data->mYChannel, data->mYStride,
-                           data->mCbChannel, data->mCbCrStride,
-                           data->mCrChannel, data->mCbCrStride,
-                           y, mFrameWidth,
-                           cb, halfWidth,
-                           cr, halfWidth,
-                           mFrameWidth, mFrameHeight);
-      } else {
-        VP8LOG("Unsupported planar format\n");
-        return NS_ERROR_NOT_IMPLEMENTED;
-      }
-
-      mVPXImageWrapper->planes[PLANE_Y] = y;
-      mVPXImageWrapper->planes[PLANE_U] = cb;
-      mVPXImageWrapper->planes[PLANE_V] = cr;
-      mVPXImageWrapper->stride[VPX_PLANE_Y] = mFrameWidth;
-      mVPXImageWrapper->stride[VPX_PLANE_U] = halfWidth;
-      mVPXImageWrapper->stride[VPX_PLANE_V] = halfWidth;
-    }
+    img = aChunk.mFrame.GetImage();
   }
+
+  ImageFormat format = img->GetFormat();
+  if (format != ImageFormat::PLANAR_YCBCR) {
+    VP8LOG("Unsupported video format\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Cast away constness b/c some of the accessors are non-const
+  PlanarYCbCrImage* yuv =
+  const_cast<PlanarYCbCrImage *>(static_cast<const PlanarYCbCrImage *>(img.get()));
+  // Big-time assumption here that this is all contiguous data coming
+  // from getUserMedia or other sources.
+  MOZ_ASSERT(yuv);
+  if (!yuv->IsValid()) {
+    NS_WARNING("PlanarYCbCrImage is not valid");
+    return NS_ERROR_FAILURE;
+  }
+  const PlanarYCbCrImage::Data *data = yuv->GetData();
+
+  if (isYUV420(data) && !data->mCbSkip) { // 420 planar
+    mVPXImageWrapper->planes[PLANE_Y] = data->mYChannel;
+    mVPXImageWrapper->planes[PLANE_U] = data->mCbChannel;
+    mVPXImageWrapper->planes[PLANE_V] = data->mCrChannel;
+    mVPXImageWrapper->stride[VPX_PLANE_Y] = data->mYStride;
+    mVPXImageWrapper->stride[VPX_PLANE_U] = data->mCbCrStride;
+    mVPXImageWrapper->stride[VPX_PLANE_V] = data->mCbCrStride;
+  } else {
+    uint32_t yPlaneSize = mFrameWidth * mFrameHeight;
+    uint32_t halfWidth = (mFrameWidth + 1) / 2;
+    uint32_t halfHeight = (mFrameHeight + 1) / 2;
+    uint32_t uvPlaneSize = halfWidth * halfHeight;
+    if (mI420Frame.IsEmpty()) {
+      mI420Frame.SetLength(yPlaneSize + uvPlaneSize * 2);
+    }
+
+    MOZ_ASSERT(mI420Frame.Length() >= (yPlaneSize + uvPlaneSize * 2));
+    uint8_t *y = mI420Frame.Elements();
+    uint8_t *cb = mI420Frame.Elements() + yPlaneSize;
+    uint8_t *cr = mI420Frame.Elements() + yPlaneSize + uvPlaneSize;
+
+    if (isYUV420(data) && data->mCbSkip) {
+      // If mCbSkip is set, we assume it's nv12 or nv21.
+      if (data->mCbChannel < data->mCrChannel) { // nv12
+        libyuv::NV12ToI420(data->mYChannel, data->mYStride,
+                           data->mCbChannel, data->mCbCrStride,
+                           y, mFrameWidth,
+                           cb, halfWidth,
+                           cr, halfWidth,
+                           mFrameWidth, mFrameHeight);
+      } else { // nv21
+        libyuv::NV21ToI420(data->mYChannel, data->mYStride,
+                           data->mCrChannel, data->mCbCrStride,
+                           y, mFrameWidth,
+                           cb, halfWidth,
+                           cr, halfWidth,
+                           mFrameWidth, mFrameHeight);
+      }
+    } else if (isYUV444(data) && !data->mCbSkip) {
+      libyuv::I444ToI420(data->mYChannel, data->mYStride,
+                         data->mCbChannel, data->mCbCrStride,
+                         data->mCrChannel, data->mCbCrStride,
+                         y, mFrameWidth,
+                         cb, halfWidth,
+                         cr, halfWidth,
+                         mFrameWidth, mFrameHeight);
+    } else if (isYUV422(data) && !data->mCbSkip) {
+      libyuv::I422ToI420(data->mYChannel, data->mYStride,
+                         data->mCbChannel, data->mCbCrStride,
+                         data->mCrChannel, data->mCbCrStride,
+                         y, mFrameWidth,
+                         cb, halfWidth,
+                         cr, halfWidth,
+                         mFrameWidth, mFrameHeight);
+    } else {
+      VP8LOG("Unsupported planar format\n");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    mVPXImageWrapper->planes[PLANE_Y] = y;
+    mVPXImageWrapper->planes[PLANE_U] = cb;
+    mVPXImageWrapper->planes[PLANE_V] = cr;
+    mVPXImageWrapper->stride[VPX_PLANE_Y] = mFrameWidth;
+    mVPXImageWrapper->stride[VPX_PLANE_U] = halfWidth;
+    mVPXImageWrapper->stride[VPX_PLANE_V] = halfWidth;
+  }
+
   return NS_OK;
 }
 

@@ -59,9 +59,6 @@ private:
   // Prepare the input data to the mVPXImageWrapper for encoding.
   nsresult PrepareRawFrame(VideoChunk &aChunk);
 
-  // Prepare the muted frame data to the mVPXImageWrapper for encoding.
-  void PrepareMutedFrame();
-
   // Output frame rate.
   uint32_t mEncodedFrameRate;
   // Duration for the output frame, reciprocal to mEncodedFrameRate.
@@ -72,7 +69,7 @@ private:
   TrackTicks mRemainingTicks;
 
   // Muted frame, we only create it once.
-  nsTArray<uint8_t> mMuteFrame;
+  nsRefPtr<layers::Image> mMuteFrame;
 
   // I420 frame, convert the 4:4:4, 4:2:2 to I420.
   nsTArray<uint8_t> mI420Frame;
