@@ -111,7 +111,7 @@ browser.jar:
         content/browser/pageinfo/security.js          (content/pageinfo/security.js)
 #ifdef MOZ_SERVICES_SYNC
         content/browser/sync/aboutSyncTabs.xul        (content/sync/aboutSyncTabs.xul)
-        content/browser/sync/aboutSyncTabs.js         (content/sync/aboutSyncTabs.js)
+*       content/browser/sync/aboutSyncTabs.js         (content/sync/aboutSyncTabs.js)
         content/browser/sync/aboutSyncTabs.css        (content/sync/aboutSyncTabs.css)
         content/browser/sync/aboutSyncTabs-bindings.xml  (content/sync/aboutSyncTabs-bindings.xml)
 *       content/browser/sync/setup.xul                (content/sync/setup.xul)
