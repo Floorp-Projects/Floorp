@@ -593,7 +593,7 @@ Column.prototype = {
    * Selects the row at the `index` index
    */
   selectRowAt: function(index) {
-    if (this.selectedRow) {
+    if (this.selectedRow != null) {
       this.cells[this.items[this.selectedRow]].toggleClass("theme-selected");
     }
     if (index < 0) {
@@ -930,7 +930,7 @@ Cell.prototype = {
 
   set value(value) {
     this._value = value;
-    if (!value) {
+    if (value == null) {
       this.label.setAttribute("value", "");
       return;
     }

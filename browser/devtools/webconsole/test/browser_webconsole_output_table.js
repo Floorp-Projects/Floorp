@@ -12,27 +12,27 @@ const TEST_DATA = [
   {
     command: "console.table(languages1)",
     data: [
-        { _index: "0", name: "\"JavaScript\"", fileExtension: "Array[1]" },
-        { _index: "1", name: "Object", fileExtension: "\".ts\"" },
-        { _index: "2", name: "\"CoffeeScript\"", fileExtension: "\".coffee\"" }
+        { _index: 0, name: "\"JavaScript\"", fileExtension: "Array[1]" },
+        { _index: 1, name: "Object", fileExtension: "\".ts\"" },
+        { _index: 2, name: "\"CoffeeScript\"", fileExtension: "\".coffee\"" }
     ],
     columns: { _index: "(index)", name: "name", fileExtension: "fileExtension" }
   },
   {
     command: "console.table(languages1, 'name')",
     data: [
-        { _index: "0", name: "\"JavaScript\"", fileExtension: "Array[1]" },
-        { _index: "1", name: "Object", fileExtension: "\".ts\"" },
-        { _index: "2", name: "\"CoffeeScript\"", fileExtension: "\".coffee\"" }
+        { _index: 0, name: "\"JavaScript\"", fileExtension: "Array[1]" },
+        { _index: 1, name: "Object", fileExtension: "\".ts\"" },
+        { _index: 2, name: "\"CoffeeScript\"", fileExtension: "\".coffee\"" }
     ],
     columns: { _index: "(index)", name: "name" }
   },
   {
     command: "console.table(languages1, ['name'])",
     data: [
-        { _index: "0", name: "\"JavaScript\"", fileExtension: "Array[1]" },
-        { _index: "1", name: "Object", fileExtension: "\".ts\"" },
-        { _index: "2", name: "\"CoffeeScript\"", fileExtension: "\".coffee\"" }
+        { _index: 0, name: "\"JavaScript\"", fileExtension: "Array[1]" },
+        { _index: 1, name: "Object", fileExtension: "\".ts\"" },
+        { _index: 2, name: "\"CoffeeScript\"", fileExtension: "\".coffee\"" }
     ],
     columns: { _index: "(index)", name: "name" }
   },
@@ -47,8 +47,8 @@ const TEST_DATA = [
   {
     command: "console.table([[1, 2], [3, 4]])",
     data: [
-      { _index: "0", 0: "1", 1: "2" },
-      { _index: "1", 0: "3", 1: "4" }
+      { _index: 0, 0: "1", 1: "2" },
+      { _index: 1, 0: "3", 1: "4" }
     ],
     columns: { _index: "(index)", 0: "0", 1: "1" }
   },
@@ -93,19 +93,19 @@ const TEST_DATA = [
   {
     command: "console.table(mySet)",
     data: [
-      { _index: "0", _value: "1" },
-      { _index: "1", _value: "5" },
-      { _index: "2", _value: "\"some text\"" },
-      { _index: "3", _value: "null" },
-      { _index: "4", _value: "undefined" }
+      { _index: 0, _value: "1" },
+      { _index: 1, _value: "5" },
+      { _index: 2, _value: "\"some text\"" },
+      { _index: 3, _value: "null" },
+      { _index: 4, _value: "undefined" }
     ],
     columns: { _index: "(iteration index)", _value: "Values" }
   },
   {
     command: "console.table(myMap)",
     data: [
-      { _index: "0", _key: "\"a string\"", _value: "\"value associated with 'a string'\"" },
-      { _index: "1", _key: "5", _value: "\"value associated with 5\"" },
+      { _index: 0, _key: "\"a string\"", _value: "\"value associated with 'a string'\"" },
+      { _index: 1, _key: "5", _value: "\"value associated with 5\"" },
     ],
     columns: { _index: "(iteration index)", _key: "Key", _value: "Values" }
   }
