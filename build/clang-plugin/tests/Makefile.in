@@ -1,0 +1,14 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Build without any warning flags, and with clang verify flag for a
+# syntax-only build (no codegen).
+OS_CXXFLAGS := $(filter-out -W%,$(OS_CXXFLAGS)) -fsyntax-only -Xclang -verify
+
+include $(topsrcdir)/config/rules.mk
+
+target:: $(OBJS)
+
+# We don't actually build anything.
+.PHONY: $(OBJS)
