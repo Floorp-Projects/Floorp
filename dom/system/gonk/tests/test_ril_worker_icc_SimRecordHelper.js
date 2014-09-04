@@ -627,6 +627,19 @@ add_test(function test_reading_img_basic() {
         height: 0x05,
         codingScheme: ICC_IMG_CODING_SCHEME_BASIC,
         body: [0x11, 0x33, 0x55, 0xfe]}]},
+    {img: [0x01, 0x05, 0x05, 0x11, 0x4f, 0x00, 0x00, 0x00, 0x00, 0x06,
+           /* Padding */
+           0xff, 0xff],
+     iidf: [
+       [/* Header */
+        0x05, 0x05,
+        /* Image body */
+        0x11, 0x33, 0x55, 0xfe]],
+     expected: [
+       {width: 0x05,
+        height: 0x05,
+        codingScheme: ICC_IMG_CODING_SCHEME_BASIC,
+        body: [0x11, 0x33, 0x55, 0xfe]}]},
     {img: [0x02, 0x10, 0x01, 0x11, 0x4f, 0x04, 0x00, 0x05, 0x00, 0x04, 0x10,
            0x01, 0x11, 0x4f, 0x05, 0x00, 0x05, 0x00, 0x04],
      iidf: [
@@ -770,57 +783,66 @@ add_test(function test_reading_img_length_error() {
   let buf    = context.Buf;
   let io     = context.ICCIOHelper;
  
-  // Offset is 0x0004.
-  let img_test = [0x01, 0x05, 0x05, 0x11, 0x4f, 0x00, 0x00, 0x04, 0x00, 0x06];
-  let iidf_test = [0xff, 0xff, 0xff, // Offset length not enough.
-                   0x05, 0x05, 0x11, 0x22, 0x33, 0xfe];
+  let test_data = [
+    {/* Offset length not enough, should be 4. */
+     img: [0x01, 0x05, 0x05, 0x11, 0x4f, 0x00, 0x00, 0x04, 0x00, 0x06],
+     iidf: [0xff, 0xff, 0xff, // Offset.
+            0x05, 0x05, 0x11, 0x22, 0x33, 0xfe]},
+    {/* iidf data length not enough, should be 6. */
+     img: [0x01, 0x05, 0x05, 0x11, 0x4f, 0x00, 0x00, 0x00, 0x00, 0x06],
+     iidf: [0x05, 0x05, 0x11, 0x22, 0x33]}];
 
-  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
-    // Write data size
-    buf.writeInt32(img_test.length * 2);
+  function do_test(img, iidf) {
+    io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+      // Write data size
+      buf.writeInt32(img.length * 2);
 
-    // Write data
-    for (let i = 0; i < img_test.length; i++) {
-      helper.writeHexOctet(img_test[i]);
-    }
+      // Write data
+      for (let i = 0; i < img.length; i++) {
+        helper.writeHexOctet(img[i]);
+      }
 
-    // Write string delimiter
-    buf.writeStringDelimiter(img_test.length * 2);
+      // Write string delimiter
+      buf.writeStringDelimiter(img.length * 2);
 
-    if (options.callback) {
-      options.callback(options);
-    }
-  };
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
 
-  io.loadTransparentEF = function fakeLoadTransparentEF(options) {
-    // Write data size
-    buf.writeInt32(iidf_test.length * 2);
+    io.loadTransparentEF = function fakeLoadTransparentEF(options) {
+      // Write data size
+      buf.writeInt32(iidf.length * 2);
 
-    // Write data
-    for (let i = 0; i < iidf_test.length; i++) {
-      helper.writeHexOctet(iidf_test[i]);
-    }
+      // Write data
+      for (let i = 0; i < iidf.length; i++) {
+        helper.writeHexOctet(iidf[i]);
+      }
 
-    // Write string delimiter
-    buf.writeStringDelimiter(iidf_test.length * 2);
+      // Write string delimiter
+      buf.writeStringDelimiter(iidf.length * 2);
 
-    if (options.callback) {
-      options.callback(options);
-    }
-  };
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
 
-  let onsuccess = function() {
-    do_print("onsuccess shouldn't be called.");
-    do_check_true(false);
-  };
+    let onsuccess = function() {
+      do_print("onsuccess shouldn't be called.");
+      do_check_true(false);
+    };
 
-  let onerror = function() {
-    do_print("onerror called as expected.");
-    do_check_true(true);
-  };
+    let onerror = function() {
+      do_print("onerror called as expected.");
+      do_check_true(true);
+    };
 
-  record.readIMG(0, onsuccess, onerror);
+    record.readIMG(0, onsuccess, onerror);
+  }
 
+  for (let i = 0; i < test_data.length; i++) {
+    do_test(test_data[i].img, test_data[i].iidf);
+  }
   run_next_test();
 });
 
@@ -902,8 +924,7 @@ add_test(function test_reading_img_wrong_record_length() {
   let io     = context.ICCIOHelper;
 
   let test_data = [
-    [0x01, 0x05, 0x05, 0x11, 0x4f, 0x00, 0x00, 0x00, 0x00, 0x06,
-     0xff, 0xff],
+    [0x01, 0x05, 0x05, 0x11, 0x4f, 0x00, 0x00, 0x00],
     [0x02, 0x05, 0x05, 0x11, 0x4f, 0x00, 0x00, 0x00, 0x00, 0x06]];
 
   function do_test(img) {
