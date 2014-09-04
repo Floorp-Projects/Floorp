@@ -50,7 +50,7 @@ import android.widget.Toast;
  * <p>
  * The containing activity <b>must</b> implement {@link OnUrlOpenListener}.
  */
-abstract class HomeFragment extends Fragment {
+public abstract class HomeFragment extends Fragment {
     // Log Tag.
     private static final String LOGTAG="GeckoHomeFragment";
 
