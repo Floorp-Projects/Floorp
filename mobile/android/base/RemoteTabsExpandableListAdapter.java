@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
@@ -105,6 +106,18 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         final TextView lastModifiedView = (TextView) view.findViewById(R.id.last_synced);
         final long now = System.currentTimeMillis();
         lastModifiedView.setText(TabsAccessor.getLastSyncedString(context, now, client.lastModified));
+
+        // This view exists only in some of our group views: it's present
+        // for the home panel groups and not for the tabs tray groups.
+        // Therefore, we must handle null.
+        final ImageView deviceTypeView = (ImageView) view.findViewById(R.id.device_type);
+        if (deviceTypeView != null) {
+            if ("desktop".equals(client.deviceType)) {
+                deviceTypeView.setBackgroundResource(R.drawable.sync_desktop);
+            } else {
+                deviceTypeView.setBackgroundResource(R.drawable.sync_mobile);
+            }
+        }
 
         return view;
     }
