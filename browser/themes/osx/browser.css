@@ -509,7 +509,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */
 
-.findbar-button,
 toolbar .toolbarbutton-1:not([type="menu-button"]),
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
@@ -519,7 +518,6 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   border: 0;
 }
 
-.findbar-button,
 toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],#back-button,#forward-button)),
 toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
@@ -533,7 +531,6 @@ toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],#back-button,#forwar
   padding: 0 4px;
 }
 
-.findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover,
 toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],[open],#back-button,#forward-button)):hover,
 toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]) > .toolbarbutton-menubutton-button[open] + .toolbarbutton-menubutton-dropmarker,
 toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-button,
@@ -544,14 +541,12 @@ toolbar .toolbaritem-combined-buttons:hover > .toolbarbutton-combined {
               0 1px 0 hsla(0,0%,100%,.5) inset;
 }
 
-.findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover,
 toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],[open],#back-button,#forward-button)):hover,
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[buttonover] > .toolbarbutton-menubutton-button,
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover > .toolbarbutton-menubutton-dropmarker {
   background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
 }
 
-.findbar-button:not([disabled=true]):-moz-any([checked="true"],:hover:active),
 toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],#back-button,#forward-button)):-moz-any(:hover:active,[open],[checked]),
 toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]) > .toolbarbutton-menubutton-button[open],
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[buttonover]:active > .toolbarbutton-menubutton-button,
@@ -565,7 +560,6 @@ toolbar .toolbarbutton-1[type="menu-button"][open]:not([disabled]) > .toolbarbut
   transition-duration: 10ms;
 }
 
-.findbar-button[checked="true"]:not(:active):hover,
 toolbar .toolbarbutton-1[checked]:not(:active):hover {
   background-color: hsla(0,0%,0%,.09);
   transition: background-color 250ms;
