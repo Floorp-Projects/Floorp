@@ -12673,6 +12673,7 @@ ICCIOHelperObject.prototype = {
     options.callback = function callback(options) {
       options.callback = cb;
       options.command = ICC_COMMAND_READ_BINARY;
+      options.p2 = 0x00;
       options.p3 = options.fileSize;
       this.context.RIL.iccIO(options);
     }.bind(this);
@@ -12693,8 +12694,21 @@ ICCIOHelperObject.prototype = {
       throw new Error("Unknown pathId for " + options.fileId.toString(16));
     }
     options.p1 = 0; // For GET_RESPONSE, p1 = 0
-    options.p2 = 0; // For GET_RESPONSE, p2 = 0
-    options.p3 = GET_RESPONSE_EF_SIZE_BYTES;
+    switch (this.context.RIL.appType) {
+      case CARD_APPTYPE_USIM:
+        options.p2 = GET_RESPONSE_FCP_TEMPLATE;
+        options.p3 = 0x00;
+        break;
+      // For RUIM, CSIM and ISIM, cf bug 955946: keep the old behavior
+      case CARD_APPTYPE_RUIM:
+      case CARD_APPTYPE_CSIM:
+      case CARD_APPTYPE_ISIM:
+      // For SIM, this is what we want
+      case CARD_APPTYPE_SIM:
+        options.p2 = 0x00;
+        options.p3 = GET_RESPONSE_EF_SIZE_BYTES;
+        break;
+    }
     this.context.RIL.iccIO(options);
   },
 
