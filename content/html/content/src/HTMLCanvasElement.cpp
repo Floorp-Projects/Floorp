@@ -541,17 +541,49 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
     mCurrentContext->GetImageBuffer(&imageBuffer, &format);
   }
 
+  // Encoder callback when encoding is complete.
+  class EncodeCallback : public EncodeCompleteCallback
+  {
+  public:
+    EncodeCallback(nsIGlobalObject* aGlobal, FileCallback* aCallback)
+      : mGlobal(aGlobal)
+      , mFileCallback(aCallback) {}
+
+    // This is called on main thread.
+    nsresult ReceiveBlob(already_AddRefed<DOMFile> aBlob)
+    {
+      nsRefPtr<DOMFile> blob = aBlob;
+      uint64_t size;
+      nsresult rv = blob->GetSize(&size);
+      if (NS_SUCCEEDED(rv)) {
+        AutoJSAPI jsapi;
+        jsapi.Init(mGlobal);
+        JS_updateMallocCounter(jsapi.cx(), size);
+      }
+
+      mozilla::ErrorResult error;
+      mFileCallback->Call(blob, error);
+
+      mGlobal = nullptr;
+      mFileCallback = nullptr;
+
+      return error.ErrorCode();
+    }
+
+    nsCOMPtr<nsIGlobalObject> mGlobal;
+    nsRefPtr<FileCallback> mFileCallback;
+  };
+
   nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
   MOZ_ASSERT(global);
+  nsRefPtr<EncodeCompleteCallback> callback = new EncodeCallback(global, &aCallback);
   aRv = ImageEncoder::ExtractDataAsync(type,
                                        params,
                                        usingCustomParseOptions,
                                        imageBuffer,
                                        format,
                                        GetSize(),
-                                       mCurrentContext,
-                                       global,
-                                       aCallback);
+                                       callback);
 }
 
 already_AddRefed<nsIDOMFile>
