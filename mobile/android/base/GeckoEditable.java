@@ -229,6 +229,7 @@ final class GeckoEditable
                 mActionsActive.tryAcquire();
                 mActions.offer(action);
             }
+
             switch (action.mType) {
             case Action.TYPE_EVENT:
             case Action.TYPE_SET_SELECTION:
@@ -238,17 +239,23 @@ final class GeckoEditable
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
                         GeckoEvent.ImeAction.IME_SYNCHRONIZE));
                 break;
+
             case Action.TYPE_REPLACE_TEXT:
                 // try key events first
                 sendCharKeyEvents(action);
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEReplaceEvent(
                         action.mStart, action.mEnd, action.mSequence.toString()));
                 break;
+
             case Action.TYPE_ACKNOWLEDGE_FOCUS:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
                         GeckoEvent.ImeAction.IME_ACKNOWLEDGE_FOCUS));
                 break;
+
+            default:
+                throw new IllegalStateException("Action not processed");
             }
+
             ++mIcUpdateSeqno;
         }
 
@@ -307,12 +314,10 @@ final class GeckoEditable
                 throw new IllegalStateException("empty actions queue");
             }
             mActions.poll();
-            // Don't bother locking if queue is not empty yet
-            if (mActions.isEmpty()) {
-                synchronized(this) {
-                    if (mActions.isEmpty()) {
-                        mActionsActive.release();
-                    }
+
+            synchronized(this) {
+                if (mActions.isEmpty()) {
+                    mActionsActive.release();
                 }
             }
         }
