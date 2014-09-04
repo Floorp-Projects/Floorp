@@ -6069,14 +6069,14 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
     }
 
-    for (ParseNode *member = pn->pn_head; member; member = member->pn_next) {
-        if (!UpdateSourceCoordNotes(cx, bce, member->pn_pos.begin))
+    for (ParseNode *propdef = pn->pn_head; propdef; propdef = propdef->pn_next) {
+        if (!UpdateSourceCoordNotes(cx, bce, propdef->pn_pos.begin))
             return false;
 
         // Handle __proto__: v specially because *only* this form, and no other
         // involving "__proto__", performs [[Prototype]] mutation.
-        if (member->isKind(PNK_MUTATEPROTO)) {
-            if (!EmitTree(cx, bce, member->pn_kid))
+        if (propdef->isKind(PNK_MUTATEPROTO)) {
+            if (!EmitTree(cx, bce, propdef->pn_kid))
                 return false;
             obj = nullptr;
             if (!Emit1(cx, bce, JSOP_MUTATEPROTO))
@@ -6085,7 +6085,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
 
         /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
-        ParseNode *key = member->pn_left;
+        ParseNode *key = propdef->pn_left;
         bool isIndex = false;
         if (key->isKind(PNK_NUMBER)) {
             if (!EmitNumberOp(cx, key->pn_dval, bce))
@@ -6109,10 +6109,10 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
 
         /* Emit code for the property initializer. */
-        if (!EmitTree(cx, bce, member->pn_right))
+        if (!EmitTree(cx, bce, propdef->pn_right))
             return false;
 
-        JSOp op = member->getOp();
+        JSOp op = propdef->getOp();
         MOZ_ASSERT(op == JSOP_INITPROP ||
                    op == JSOP_INITPROP_GETTER ||
                    op == JSOP_INITPROP_SETTER);
