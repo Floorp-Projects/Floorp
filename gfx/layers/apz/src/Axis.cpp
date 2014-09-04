@@ -119,10 +119,24 @@ void Axis::OverscrollBy(CSSCoord aOverscroll) {
   MOZ_ASSERT(CanScroll());
   aOverscroll = ApplyResistance(aOverscroll);
   if (aOverscroll > 0) {
-    MOZ_ASSERT(FuzzyEqualsAdditive(GetCompositionEnd().value, GetPageEnd().value, COORDINATE_EPSILON));
+#ifdef DEBUG
+    if (!FuzzyEqualsAdditive(GetCompositionEnd().value, GetPageEnd().value, COORDINATE_EPSILON)) {
+      nsPrintfCString message("composition end (%f) is not within COORDINATE_EPISLON of page end (%f)\n",
+                              GetCompositionEnd().value, GetPageEnd().value);
+      NS_ASSERTION(false, message.get());
+      MOZ_CRASH();
+    }
+#endif
     MOZ_ASSERT(mOverscroll >= 0);
   } else if (aOverscroll < 0) {
-    MOZ_ASSERT(FuzzyEqualsAdditive(GetOrigin().value, GetPageStart().value, COORDINATE_EPSILON));
+#ifdef DEBUG
+    if (!FuzzyEqualsAdditive(GetOrigin().value, GetPageStart().value, COORDINATE_EPSILON)) {
+      nsPrintfCString message("composition origin (%f) is not within COORDINATE_EPISLON of page origin (%f)\n",
+                              GetOrigin().value, GetPageStart().value);
+      NS_ASSERTION(false, message.get());
+      MOZ_CRASH();
+    }
+#endif
     MOZ_ASSERT(mOverscroll <= 0);
   }
   mOverscroll += aOverscroll;
