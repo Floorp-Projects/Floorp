@@ -103,7 +103,8 @@ MediaOptimization::MediaOptimization(int32_t id, Clock* clock)
       suspension_enabled_(false),
       video_suspended_(false),
       suspension_threshold_bps_(0),
-      suspension_window_bps_(0) {
+      suspension_window_bps_(0),
+      loadstate_(kLoadNormal) {
   memset(send_statistics_, 0, sizeof(send_statistics_));
   memset(incoming_frame_times_, -1, sizeof(incoming_frame_times_));
 }
