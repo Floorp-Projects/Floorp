@@ -829,7 +829,7 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
     options.setNoScriptRval(true)
            .setVersion(JSVERSION_DEFAULT);
     RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
-    if (!sourceObject)
+    if (!sourceObject || !ScriptSourceObject::initFromOptions(cx, sourceObject, options))
         return nullptr;
 
     RootedScript script(cx, JSScript::Create(cx,
