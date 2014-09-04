@@ -2200,22 +2200,54 @@ function truncateString(str, maxLength) {
 function parseAttributeValues(attr, doc) {
   attr = attr.trim();
 
-  // Handle bad user inputs by appending a " or ' if it fails to parse without them.
-  let el = DOMParser.parseFromString("<div " + attr + "></div>", "text/html").body.childNodes[0] ||
-           DOMParser.parseFromString("<div " + attr + "\"></div>", "text/html").body.childNodes[0] ||
-           DOMParser.parseFromString("<div " + attr + "'></div>", "text/html").body.childNodes[0];
+  // Prepare other versions of the string to be parsed by appending a " or '
+  // and using those if the first one fails to parse without these characters
+  let stringsToParse = [
+    "<div " + attr + "></div>",
+    "<div " + attr + "\"></div>",
+    "<div " + attr + "'></div>"
+  ];
+
+  // Try to parse as XML, this way, if the string is wellformed, this will
+  // preserve the case.
+  let parsedAttributes = [];
+  for (let str of stringsToParse) {
+    let parsed = DOMParser.parseFromString(str, "text/xml");
+    // The XML parser generates a valid XML document even when parsing errors
+    // occur, in which case the document contains a <parsererror> node, so check
+    // that the document contains our expected DIV
+    if (parsed.childNodes[0].localName === "div") {
+      for (let {name, value} of parsed.childNodes[0].attributes) {
+        parsedAttributes.push({ name, value });
+      }
+      break;
+    }
+  }
+
+  // If the XML parsing failed, parse as HTML to get malformed attributes
+  if (parsedAttributes.length === 0) {
+    for (let str of stringsToParse) {
+      let parsed = DOMParser.parseFromString(str, "text/html");
+      // Check that the parsed document does contain the expected DIV as a child
+      // of <body>
+      if (parsed.body.childNodes[0]) {
+        for (let {name, value} of parsed.body.childNodes[0].attributes) {
+          parsedAttributes.push({ name, value });
+        }
+        break;
+      }
+    }
+  }
+
   let div = doc.createElement("div");
 
   let attributes = [];
-  for (let attribute of el.attributes) {
+  for (let {name, value} of parsedAttributes) {
     // Try to set on an element in the document, throws exception on bad input.
     // Prevents InvalidCharacterError - "String contains an invalid character".
     try {
-      div.setAttribute(attribute.name, attribute.value);
-      attributes.push({
-        name: attribute.name,
-        value: attribute.value
-      });
+      div.setAttribute(name, value);
+      attributes.push({ name, value });
     }
     catch(e) { }
   }
