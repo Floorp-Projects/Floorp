@@ -179,6 +179,7 @@ this.BrowserUITelemetry = {
 
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
+    Services.obs.addObserver(this, "autocomplete-did-enter-text", false);
     CustomizableUI.addListener(this);
   },
 
@@ -189,6 +190,13 @@ this.BrowserUITelemetry = {
         break;
       case "browser-delayed-startup-finished":
         this._registerWindow(aSubject);
+        break;
+      case "autocomplete-did-enter-text":
+        let input = aSubject.QueryInterface(Ci.nsIAutoCompleteInput);
+        if (input && input.id == "urlbar" && !input.inPrivateContext &&
+            input.popup.selectedIndex != -1) {
+          this._logAwesomeBarSearchResult(input.textValue);
+        }
         break;
     }
   },
@@ -561,6 +569,17 @@ this.BrowserUITelemetry = {
     }
     if (selection) {
       this._countEvent(["search", "selection", source, selection.index, selection.kind]);
+    }
+  },
+
+  _logAwesomeBarSearchResult: function (url) {
+    let spec = Services.search.parseSubmissionURL(url);
+    if (spec.engine) {
+      let matchedEngine = "default";
+      if (spec.engine.name !== Services.search.currentEngine.name) {
+        matchedEngine = "other";
+      }
+      this.countSearchEvent("autocomplete-" + matchedEngine);
     }
   },
 
