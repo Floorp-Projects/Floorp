@@ -6395,17 +6395,10 @@ if test -n "$gonkdir"; then
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
 fi
 
-case "$OS_TARGET:$NIGHTLY_BUILD" in
-WINNT:1)
-    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
-    ;;
-*)
-    MOZ_ARG_ENABLE_BOOL(content-sandbox,
-    [  --enable-content-sandbox        Enable sandboxing support for content-processes],
-        MOZ_CONTENT_SANDBOX=1,
-        MOZ_CONTENT_SANDBOX=)
-    ;;
-esac
+MOZ_ARG_ENABLE_BOOL(content-sandbox,
+[  --enable-content-sandbox        Enable sandboxing support for content-processes],
+    MOZ_CONTENT_SANDBOX=1,
+    MOZ_CONTENT_SANDBOX=)
 
 if test -n "$MOZ_CONTENT_SANDBOX"; then
     AC_DEFINE(MOZ_CONTENT_SANDBOX)

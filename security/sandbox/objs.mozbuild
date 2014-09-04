@@ -99,11 +99,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'win/src/window.cc',
     ]
 
-    if CONFIG['MOZ_CONTENT_SANDBOX']:
-        security_sandbox_lcppsrcs += [
-            'win/src/warnonlysandbox/warnOnlySandbox.cpp',
-        ]
-
     if CONFIG['CPU_ARCH'] == 'x86_64':
         security_sandbox_lcppsrcs += [
             'win/src/interceptors_64.cc',

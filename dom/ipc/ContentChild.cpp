@@ -942,12 +942,7 @@ ContentChild::RecvSetProcessSandbox()
 #endif
     SetContentProcessSandbox();
 #elif defined(XP_WIN)
-    nsAdoptingString contentSandboxPref =
-        Preferences::GetString("browser.tabs.remote.sandbox");
-    if (contentSandboxPref.EqualsLiteral("on")
-        || contentSandboxPref.EqualsLiteral("warn")) {
-        mozilla::SandboxTarget::Instance()->StartSandbox();
-    }
+    mozilla::SandboxTarget::Instance()->StartSandbox();
 #endif
 #endif
     return true;
