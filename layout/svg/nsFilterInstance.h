@@ -263,61 +263,61 @@ private:
   /**
    * The frame for the element that is currently being filtered.
    */
-  nsIFrame*               mTargetFrame;
+  nsIFrame* mTargetFrame;
 
   nsSVGFilterPaintCallback* mPaintCallback;
 
   /**
    * The SVG bbox of the element that is being filtered, in user space.
    */
-  gfxRect                 mTargetBBox;
+  gfxRect mTargetBBox;
 
   /**
    * The SVG bbox of the element that is being filtered, in filter space.
    */
-  nsIntRect               mTargetBBoxInFilterSpace;
+  nsIntRect mTargetBBoxInFilterSpace;
 
   /**
    * The transform from filter space to outer-<svg> device space.
    */
-  gfxMatrix               mFilterSpaceToDeviceSpaceTransform;
+  gfxMatrix mFilterSpaceToDeviceSpaceTransform;
 
   /**
    * Transform rects between filter space and frame space in CSS pixels.
    */
-  gfxMatrix               mFilterSpaceToFrameSpaceInCSSPxTransform;
-  gfxMatrix               mFrameSpaceInCSSPxToFilterSpaceTransform;
+  gfxMatrix mFilterSpaceToFrameSpaceInCSSPxTransform;
+  gfxMatrix mFrameSpaceInCSSPxToFilterSpaceTransform;
 
   /**
    * The scale factors between user space and filter space.
    */
-  gfxSize                 mUserSpaceToFilterSpaceScale;
-  gfxSize                 mFilterSpaceToUserSpaceScale;
+  gfxSize mUserSpaceToFilterSpaceScale;
+  gfxSize mFilterSpaceToUserSpaceScale;
 
   /**
    * Pre-filter paint bounds of the element that is being filtered, in filter
    * space.
    */
-  nsIntRect               mTargetBounds;
+  nsIntRect mTargetBounds;
 
   /**
    * The dirty area that needs to be repainted, in filter space.
    */
-  nsIntRegion             mPostFilterDirtyRegion;
+  nsIntRegion mPostFilterDirtyRegion;
 
   /**
    * The pre-filter area of the filtered element that changed, in filter space.
    */
-  nsIntRegion             mPreFilterDirtyRegion;
+  nsIntRegion mPreFilterDirtyRegion;
 
-  SourceInfo              mSourceGraphic;
-  SourceInfo              mFillPaint;
-  SourceInfo              mStrokePaint;
-  nsIFrame*               mTransformRoot;
+  SourceInfo mSourceGraphic;
+  SourceInfo mFillPaint;
+  SourceInfo mStrokePaint;
+  nsIFrame* mTransformRoot;
   nsTArray<mozilla::RefPtr<SourceSurface>> mInputImages;
   nsTArray<FilterPrimitiveDescription> mPrimitiveDescriptions;
-  int32_t                 mAppUnitsPerCSSPx;
-  bool                    mInitialized;
+  int32_t mAppUnitsPerCSSPx;
+  bool mInitialized;
 };
 
 #endif
