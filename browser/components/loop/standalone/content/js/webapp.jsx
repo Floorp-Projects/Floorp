@@ -141,11 +141,15 @@ loop.webapp = (function($, _, OT, webL10n) {
      *
      */
 
+    getInitialProps: function() {
+      return {showCallOptionsMenu: false};
+    },
+
     getInitialState: function() {
       return {
         urlCreationDateString: '',
         disableCallButton: false,
-        showCallOptionsMenu: false
+        showCallOptionsMenu: this.props.showCallOptionsMenu
       };
     },
 
@@ -229,8 +233,6 @@ loop.webapp = (function($, _, OT, webL10n) {
           "https://www.mozilla.org/privacy/'>" + privacy_notice_name + "</a>"
       });
 
-      var btnClassStartCall = "btn btn-large btn-accept " +
-                              loop.shared.utils.getTargetPlatform();
       var dropdownMenuClasses = React.addons.classSet({
         "native-dropdown-large-parent": true,
         "standalone-dropdown-menu": true,
@@ -261,7 +263,7 @@ loop.webapp = (function($, _, OT, webL10n) {
                 <div className="btn-group-chevron">
                   <div className="btn-group">
 
-                    <button className={btnClassStartCall}
+                    <button className="btn btn-large btn-accept"
                             onClick={this._initiateOutgoingCall("audio-video")}
                             disabled={this.state.disableCallButton}
                             title={__("initiate_audio_video_call_tooltip2")} >
@@ -272,7 +274,7 @@ loop.webapp = (function($, _, OT, webL10n) {
                     </button>
 
                     <div className="btn-chevron"
-                      onClick={this._toggleCallOptionsMenu}>
+                         onClick={this._toggleCallOptionsMenu}>
                     </div>
 
                   </div>
@@ -570,8 +572,6 @@ loop.webapp = (function($, _, OT, webL10n) {
     } else if (!OT.checkSystemRequirements()) {
       router.navigate("unsupportedBrowser", {trigger: true});
     }
-
-    document.body.classList.add(loop.shared.utils.getTargetPlatform());
 
     // Set the 'lang' and 'dir' attributes to <html> when the page is translated
     document.documentElement.lang = document.webL10n.getLanguage();
