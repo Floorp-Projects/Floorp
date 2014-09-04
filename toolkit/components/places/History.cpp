@@ -188,20 +188,20 @@ class PlaceHashKey : public nsCStringHashKey
 public:
   explicit PlaceHashKey(const nsACString& aSpec)
     : nsCStringHashKey(&aSpec)
-    , visitCount(0)
-    , bookmarked(false)
+    , mVisitCount(0)
+    , mBookmarked(false)
 #ifdef DEBUG
-    , isInitialized(false)
+    , mIsInitialized(false)
 #endif
   {
   }
 
   explicit PlaceHashKey(const nsACString* aSpec)
     : nsCStringHashKey(aSpec)
-    , visitCount(0)
-    , bookmarked(false)
+    , mVisitCount(0)
+    , mBookmarked(false)
 #ifdef DEBUG
-    , isInitialized(false)
+    , mIsInitialized(false)
 #endif
   {
   }
@@ -214,39 +214,39 @@ public:
 
   void SetProperties(uint32_t aVisitCount, bool aBookmarked)
   {
-    visitCount = aVisitCount;
-    bookmarked = aBookmarked;
+    mVisitCount = aVisitCount;
+    mBookmarked = aBookmarked;
 #ifdef DEBUG
-    isInitialized = true;
+    mIsInitialized = true;
 #endif
   }
 
   uint32_t VisitCount() const
   {
 #ifdef DEBUG
-    MOZ_ASSERT(isInitialized, "PlaceHashKey::visitCount not set");
+    MOZ_ASSERT(mIsInitialized, "PlaceHashKey::mVisitCount not set");
 #endif
-    return visitCount;
+    return mVisitCount;
   }
 
   bool IsBookmarked() const
   {
 #ifdef DEBUG
-    MOZ_ASSERT(isInitialized, "PlaceHashKey::bookmarked not set");
+    MOZ_ASSERT(mIsInitialized, "PlaceHashKey::mBookmarked not set");
 #endif
-    return bookmarked;
+    return mBookmarked;
   }
 
   // Array of VisitData objects.
-  nsTArray<VisitData> visits;
+  nsTArray<VisitData> mVisits;
 private:
   // Visit count for this place.
-  uint32_t visitCount;
+  uint32_t mVisitCount;
   // Whether this place is bookmarked.
-  bool bookmarked;
+  bool mBookmarked;
 #ifdef DEBUG
   // Whether previous attributes are set.
-  bool isInitialized;
+  bool mIsInitialized;
 #endif
 };
 
@@ -1605,7 +1605,7 @@ static PLDHashOperator TransferHashEntries(PlaceHashKey* aEntry,
     static_cast<nsTHashtable<PlaceHashKey> *>(aHash);
   PlaceHashKey* copy = hash->PutEntry(aEntry->GetKey());
   copy->SetProperties(aEntry->VisitCount(), aEntry->IsBookmarked());
-  aEntry->visits.SwapElements(copy->visits);
+  aEntry->mVisits.SwapElements(copy->mVisits);
   return PL_DHASH_NEXT;
 }
 
@@ -1616,7 +1616,7 @@ static PLDHashOperator NotifyVisitRemoval(PlaceHashKey* aEntry,
                                           void* aHistory)
 {
   nsNavHistory* history = static_cast<nsNavHistory *>(aHistory);
-  const nsTArray<VisitData>& visits = aEntry->visits;
+  const nsTArray<VisitData>& visits = aEntry->mVisits;
   nsCOMPtr<nsIURI> uri;
   (void)NS_NewURI(getter_AddRefs(uri), visits[0].spec);
   bool removingPage =
@@ -1696,7 +1696,7 @@ private:
 static PLDHashOperator ListToBeRemovedPlaceIds(PlaceHashKey* aEntry,
                                                void* aIdsList)
 {
-  const nsTArray<VisitData>& visits = aEntry->visits;
+  const nsTArray<VisitData>& visits = aEntry->mVisits;
   // Only orphan ids should be listed.
   if (visits.Length() == aEntry->VisitCount() &&
       !aEntry->IsBookmarked()) {
@@ -1849,7 +1849,7 @@ private:
         entry = aPlaces.PutEntry(visit.spec);
       }
       entry->SetProperties(static_cast<uint32_t>(visitCount), static_cast<bool>(bookmarked));
-      entry->visits.AppendElement(visit);
+      entry->mVisits.AppendElement(visit);
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
