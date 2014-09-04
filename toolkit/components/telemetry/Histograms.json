@@ -3186,6 +3186,33 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Time for first autocomplete result if > 50ms (ms)"
   },
+  "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 50,
+    "high": "1000",
+    "n_buckets": 30,
+    "extended_statistics_ok": true,
+    "description": "PLACES: Time for the 6 first autocomplete results (ms)"
+  },
+  "HISTORY_LASTVISITED_TREE_QUERY_TIME_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 50,
+    "high": "2000",
+    "n_buckets": 30,
+    "extended_statistics_ok": true,
+    "description": "PLACES: Time to load the sidebar history tree sorted by last visit (ms)"
+  },
+  "PLACES_HISTORY_LIBRARY_SEARCH_TIME_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 50,
+    "high": "1000",
+    "n_buckets": 30,
+    "extended_statistics_ok": true,
+    "description": "PLACES: Time to search the history library (ms)"
+  },
   "PLACES_AUTOCOMPLETE_URLINLINE_DOMAIN_QUERY_TIME_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
