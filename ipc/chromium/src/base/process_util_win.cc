@@ -12,7 +12,6 @@
 #include <winternl.h>
 #include <psapi.h>
 
-#include "base/debug_util.h"
 #include "base/histogram.h"
 #include "base/logging.h"
 #include "base/scoped_handle_win.h"
