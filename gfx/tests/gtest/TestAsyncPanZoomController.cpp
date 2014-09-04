@@ -1393,6 +1393,11 @@ protected:
     aLayer->SetFrameMetrics(metrics);
   }
 
+  static TestAsyncPanZoomController* ApzcOf(Layer* aLayer) {
+    EXPECT_EQ(1, aLayer->GetFrameMetricsCount());
+    return (TestAsyncPanZoomController*)aLayer->GetAsyncPanZoomController(0);
+  }
+
   void CreateSimpleMultiLayerTree() {
     const char* layerTreeSyntax = "c(tt)";
     // LayerID                     0 12
@@ -1496,7 +1501,7 @@ TEST_F(APZHitTestingTester, HitTesting1) {
   SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, paintSequenceNumber++);
   hit = GetTargetAPZC(ScreenPoint(15, 15));
-  EXPECT_EQ(root->GetAsyncPanZoomController(0), hit.get());
+  EXPECT_EQ(ApzcOf(root), hit.get());
   // expect hit point at LayerIntPoint(15, 15)
   EXPECT_EQ(Point(15, 15), transformToApzc * Point(15, 15));
   EXPECT_EQ(Point(15, 15), transformToGecko * Point(15, 15));
@@ -1504,9 +1509,9 @@ TEST_F(APZHitTestingTester, HitTesting1) {
   // Now we have a sub APZC with a better fit
   SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 1);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, paintSequenceNumber++);
-  EXPECT_NE(root->GetAsyncPanZoomController(0), layers[3]->GetAsyncPanZoomController(0));
+  EXPECT_NE(ApzcOf(root), ApzcOf(layers[3]));
   hit = GetTargetAPZC(ScreenPoint(25, 25));
-  EXPECT_EQ(layers[3]->GetAsyncPanZoomController(0), hit.get());
+  EXPECT_EQ(ApzcOf(layers[3]), hit.get());
   // expect hit point at LayerIntPoint(25, 25)
   EXPECT_EQ(Point(25, 25), transformToApzc * Point(25, 25));
   EXPECT_EQ(Point(25, 25), transformToGecko * Point(25, 25));
@@ -1514,20 +1519,20 @@ TEST_F(APZHitTestingTester, HitTesting1) {
   // At this point, layers[4] obscures layers[3] at the point (15, 15) so
   // hitting there should hit the root APZC
   hit = GetTargetAPZC(ScreenPoint(15, 15));
-  EXPECT_EQ(root->GetAsyncPanZoomController(0), hit.get());
+  EXPECT_EQ(ApzcOf(root), hit.get());
 
   // Now test hit testing when we have two scrollable layers
   SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 2);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, paintSequenceNumber++);
   hit = GetTargetAPZC(ScreenPoint(15, 15));
-  EXPECT_EQ(layers[4]->GetAsyncPanZoomController(0), hit.get());
+  EXPECT_EQ(ApzcOf(layers[4]), hit.get());
   // expect hit point at LayerIntPoint(15, 15)
   EXPECT_EQ(Point(15, 15), transformToApzc * Point(15, 15));
   EXPECT_EQ(Point(15, 15), transformToGecko * Point(15, 15));
 
   // Hit test ouside the reach of layer[3,4] but inside root
   hit = GetTargetAPZC(ScreenPoint(90, 90));
-  EXPECT_EQ(root->GetAsyncPanZoomController(0), hit.get());
+  EXPECT_EQ(ApzcOf(root), hit.get());
   // expect hit point at LayerIntPoint(90, 90)
   EXPECT_EQ(Point(90, 90), transformToApzc * Point(90, 90));
   EXPECT_EQ(Point(90, 90), transformToGecko * Point(90, 90));
@@ -1556,9 +1561,9 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   // layers[2] has content from (20,60)-(100,100). no clipping as it's not a scrollable layer
   // layers[3] has content from (20,60)-(180,140), clipped by composition bounds (20,60)-(100,100)
 
-  AsyncPanZoomController* apzcroot = root->GetAsyncPanZoomController(0);
-  AsyncPanZoomController* apzc1 = layers[1]->GetAsyncPanZoomController(0);
-  AsyncPanZoomController* apzc3 = layers[3]->GetAsyncPanZoomController(0);
+  AsyncPanZoomController* apzcroot = ApzcOf(root);
+  AsyncPanZoomController* apzc1 = ApzcOf(layers[1]);
+  AsyncPanZoomController* apzc3 = ApzcOf(layers[3]);
 
   // Hit an area that's clearly on the root layer but not any of the child layers.
   nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(75, 25));
@@ -1672,20 +1677,20 @@ TEST_F(APZCTreeManagerTester, ScrollableThebesLayers) {
   AsyncPanZoomController* nullAPZC = nullptr;
   // so they should have the same APZC
   EXPECT_FALSE(layers[0]->HasScrollableFrameMetrics());
-  EXPECT_NE(nullAPZC, layers[1]->GetAsyncPanZoomController(0));
-  EXPECT_NE(nullAPZC, layers[2]->GetAsyncPanZoomController(0));
-  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(0), layers[2]->GetAsyncPanZoomController(0));
+  EXPECT_NE(nullAPZC, ApzcOf(layers[1]));
+  EXPECT_NE(nullAPZC, ApzcOf(layers[2]));
+  EXPECT_EQ(ApzcOf(layers[1]), ApzcOf(layers[2]));
 
   // Change the scrollId of layers[1], and verify the APZC changes
   SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
-  EXPECT_NE(layers[1]->GetAsyncPanZoomController(0), layers[2]->GetAsyncPanZoomController(0));
+  EXPECT_NE(ApzcOf(layers[1]), ApzcOf(layers[2]));
 
   // Change the scrollId of layers[2] to match that of layers[1], ensure we get the same
   // APZC for both again
   SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
-  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(0), layers[2]->GetAsyncPanZoomController(0));
+  EXPECT_EQ(ApzcOf(layers[1]), ApzcOf(layers[2]));
 }
 
 TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
@@ -1696,31 +1701,31 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
   AsyncPanZoomController* nullAPZC = nullptr;
   // Ensure all the scrollable layers have an APZC
   EXPECT_FALSE(layers[0]->HasScrollableFrameMetrics());
-  EXPECT_NE(nullAPZC, layers[1]->GetAsyncPanZoomController(0));
-  EXPECT_NE(nullAPZC, layers[2]->GetAsyncPanZoomController(0));
+  EXPECT_NE(nullAPZC, ApzcOf(layers[1]));
+  EXPECT_NE(nullAPZC, ApzcOf(layers[2]));
   EXPECT_FALSE(layers[3]->HasScrollableFrameMetrics());
-  EXPECT_NE(nullAPZC, layers[4]->GetAsyncPanZoomController(0));
+  EXPECT_NE(nullAPZC, ApzcOf(layers[4]));
   EXPECT_FALSE(layers[5]->HasScrollableFrameMetrics());
-  EXPECT_NE(nullAPZC, layers[6]->GetAsyncPanZoomController(0));
-  EXPECT_NE(nullAPZC, layers[7]->GetAsyncPanZoomController(0));
-  EXPECT_NE(nullAPZC, layers[8]->GetAsyncPanZoomController(0));
+  EXPECT_NE(nullAPZC, ApzcOf(layers[6]));
+  EXPECT_NE(nullAPZC, ApzcOf(layers[7]));
+  EXPECT_NE(nullAPZC, ApzcOf(layers[8]));
   // Ensure those that scroll together have the same APZCs
-  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(0), layers[2]->GetAsyncPanZoomController(0));
-  EXPECT_EQ(layers[4]->GetAsyncPanZoomController(0), layers[6]->GetAsyncPanZoomController(0));
+  EXPECT_EQ(ApzcOf(layers[1]), ApzcOf(layers[2]));
+  EXPECT_EQ(ApzcOf(layers[4]), ApzcOf(layers[6]));
   // Ensure those that don't scroll together have different APZCs
-  EXPECT_NE(layers[1]->GetAsyncPanZoomController(0), layers[4]->GetAsyncPanZoomController(0));
-  EXPECT_NE(layers[1]->GetAsyncPanZoomController(0), layers[7]->GetAsyncPanZoomController(0));
-  EXPECT_NE(layers[1]->GetAsyncPanZoomController(0), layers[8]->GetAsyncPanZoomController(0));
-  EXPECT_NE(layers[4]->GetAsyncPanZoomController(0), layers[7]->GetAsyncPanZoomController(0));
-  EXPECT_NE(layers[4]->GetAsyncPanZoomController(0), layers[8]->GetAsyncPanZoomController(0));
-  EXPECT_NE(layers[7]->GetAsyncPanZoomController(0), layers[8]->GetAsyncPanZoomController(0));
+  EXPECT_NE(ApzcOf(layers[1]), ApzcOf(layers[4]));
+  EXPECT_NE(ApzcOf(layers[1]), ApzcOf(layers[7]));
+  EXPECT_NE(ApzcOf(layers[1]), ApzcOf(layers[8]));
+  EXPECT_NE(ApzcOf(layers[4]), ApzcOf(layers[7]));
+  EXPECT_NE(ApzcOf(layers[4]), ApzcOf(layers[8]));
+  EXPECT_NE(ApzcOf(layers[7]), ApzcOf(layers[8]));
 
   nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(25, 25));
-  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(0), hit.get());
+  EXPECT_EQ(ApzcOf(layers[1]), hit.get());
   hit = GetTargetAPZC(ScreenPoint(275, 375));
-  EXPECT_EQ(layers[8]->GetAsyncPanZoomController(0), hit.get());
+  EXPECT_EQ(ApzcOf(layers[8]), hit.get());
   hit = GetTargetAPZC(ScreenPoint(250, 100));
-  EXPECT_EQ(layers[7]->GetAsyncPanZoomController(0), hit.get());
+  EXPECT_EQ(ApzcOf(layers[7]), hit.get());
 }
 
 class APZOverscrollHandoffTester : public APZCTreeManagerTester {
@@ -1746,7 +1751,7 @@ protected:
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(0, root, mcc);
     manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
-    rootApzc = (TestAsyncPanZoomController*)root->GetAsyncPanZoomController(0);
+    rootApzc = ApzcOf(root);
   }
 
   void CreateOverscrollHandoffLayerTree2() {
@@ -1766,7 +1771,7 @@ protected:
     // and this is the second layer tree for a particular test.
     MOZ_ASSERT(registration);
     manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
-    rootApzc = (TestAsyncPanZoomController*)root->GetAsyncPanZoomController(0);
+    rootApzc = ApzcOf(root);
   }
 
   void CreateOverscrollHandoffLayerTree3() {
@@ -1801,7 +1806,7 @@ protected:
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(0, root, mcc);
     manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
-    rootApzc = (TestAsyncPanZoomController*)root->GetAsyncPanZoomController(0);
+    rootApzc = ApzcOf(root);
     rootApzc->GetFrameMetrics().SetHasScrollgrab(true);
   }
 };
@@ -1813,7 +1818,7 @@ TEST_F(APZOverscrollHandoffTester, DeferredInputEventProcessing) {
   // Set up the APZC tree.
   CreateOverscrollHandoffLayerTree1();
 
-  TestAsyncPanZoomController* childApzc = (TestAsyncPanZoomController*)layers[1]->GetAsyncPanZoomController(0);
+  TestAsyncPanZoomController* childApzc = ApzcOf(layers[1]);
 
   // Enable touch-listeners so that we can separate the queueing of input
   // events from them being processed.
@@ -1840,7 +1845,7 @@ TEST_F(APZOverscrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
   // Set up an initial APZC tree.
   CreateOverscrollHandoffLayerTree1();
 
-  TestAsyncPanZoomController* childApzc = (TestAsyncPanZoomController*)layers[1]->GetAsyncPanZoomController(0);
+  TestAsyncPanZoomController* childApzc = ApzcOf(layers[1]);
 
   // Enable touch-listeners so that we can separate the queueing of input
   // events from them being processed.
@@ -1855,7 +1860,7 @@ TEST_F(APZOverscrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
   CreateOverscrollHandoffLayerTree2();
   nsRefPtr<Layer> middle = layers[1];
   childApzc->GetFrameMetrics().mMayHaveTouchListeners = true;
-  TestAsyncPanZoomController* middleApzc = (TestAsyncPanZoomController*)middle->GetAsyncPanZoomController(0);
+  TestAsyncPanZoomController* middleApzc = ApzcOf(middle);
 
   // Queue input events for another pan.
   ApzcPanNoFling(childApzc, time, 30, 90);
@@ -1885,10 +1890,10 @@ TEST_F(APZOverscrollHandoffTester, SimultaneousFlings) {
   // Set up an initial APZC tree.
   CreateOverscrollHandoffLayerTree3();
 
-  TestAsyncPanZoomController* parent1 = (TestAsyncPanZoomController*)layers[1]->GetAsyncPanZoomController(0);
-  TestAsyncPanZoomController* child1 = (TestAsyncPanZoomController*)layers[2]->GetAsyncPanZoomController(0);
-  TestAsyncPanZoomController* parent2 = (TestAsyncPanZoomController*)layers[3]->GetAsyncPanZoomController(0);
-  TestAsyncPanZoomController* child2 = (TestAsyncPanZoomController*)layers[4]->GetAsyncPanZoomController(0);
+  TestAsyncPanZoomController* parent1 = ApzcOf(layers[1]);
+  TestAsyncPanZoomController* child1 = ApzcOf(layers[2]);
+  TestAsyncPanZoomController* parent2 = ApzcOf(layers[3]);
+  TestAsyncPanZoomController* child2 = ApzcOf(layers[4]);
 
   // Pan on the lower child.
   int time = 0;
@@ -1917,7 +1922,7 @@ TEST_F(APZOverscrollHandoffTester, Scrollgrab) {
   // Set up the layer tree
   CreateScrollgrabLayerTree();
 
-  TestAsyncPanZoomController* childApzc = (TestAsyncPanZoomController*)layers[1]->GetAsyncPanZoomController(0);
+  TestAsyncPanZoomController* childApzc = ApzcOf(layers[1]);
 
   // Pan on the child, enough to fully scroll the scrollgrab parent (20 px)
   // and leave some more (another 15 px) for the child.
@@ -1933,7 +1938,7 @@ TEST_F(APZOverscrollHandoffTester, ScrollgrabFling) {
   // Set up the layer tree
   CreateScrollgrabLayerTree();
 
-  TestAsyncPanZoomController* childApzc = (TestAsyncPanZoomController*)layers[1]->GetAsyncPanZoomController(0);
+  TestAsyncPanZoomController* childApzc = ApzcOf(layers[1]);
 
   // Pan on the child, not enough to fully scroll the scrollgrab parent.
   int time = 0;
