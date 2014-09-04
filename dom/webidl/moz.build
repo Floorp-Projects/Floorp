@@ -652,6 +652,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'ErrorEvent.webidl',
     'HashChangeEvent.webidl',
     'IccChangeEvent.webidl',
+    'ImageCaptureErrorEvent.webidl',
     'MediaStreamEvent.webidl',
     'MediaStreamTrackEvent.webidl',
     'MozApplicationEvent.webidl',
