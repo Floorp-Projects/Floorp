@@ -38,7 +38,7 @@ if CONFIG['MOZ_PNG_ARM_NEON']:
         'arm/filter_neon.S'
     ]
 
-LIBRARY_NAME = 'mozpng'
+Library('mozpng')
 
 MSVC_ENABLE_PGO = True
 

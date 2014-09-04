@@ -12,8 +12,6 @@ SOURCES += [
     'libmalloc.cpp',
 ]
 
-LIBRARY_NAME = 'jprof'
-
-FORCE_SHARED_LIB = True
+SharedLibrary('jprof')
 
 DEFINES['_IMPL_JPROF_API'] = True

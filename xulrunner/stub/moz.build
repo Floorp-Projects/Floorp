@@ -8,7 +8,7 @@
 # apps to override it using the --with-xulrunner-stub-name=<appname> argument.
 # If this configure argument is not present then the default name is
 # 'xulrunner-stub'.
-PROGRAM = CONFIG['XULRUNNER_STUB_NAME']
+Program(CONFIG['XULRUNNER_STUB_NAME'])
 
 SOURCES += [
     'nsXULStub.cpp',

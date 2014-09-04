@@ -5,6 +5,105 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 @template
+def StdCppCompat():
+    '''Template for libstdc++ compatibility for target binaries.'''
+
+    if CONFIG['MOZ_LIBSTDCXX_TARGET_VERSION']:
+        USE_LIBS += ['stdc++compat']
+
+
+@template
+def Program(name):
+    '''Template for program executables.'''
+    PROGRAM = name
+
+    StdCppCompat()
+
+
+@template
+def SimplePrograms(names, ext='.cpp'):
+    '''Template for simple program executables.
+
+    Those have a single source with the same base name as the executable.
+    '''
+    SIMPLE_PROGRAMS += names
+    SOURCES += ['%s%s' % (name, ext) for name in names]
+
+    StdCppCompat()
+
+
+@template
+def CppUnitTests(names, ext='.cpp'):
+    '''Template for C++ unit tests.
+
+    Those have a single source with the same base name as the executable.
+    '''
+    CPP_UNIT_TESTS += names
+    SOURCES += ['%s%s' % (name, ext) for name in names]
+
+    StdCppCompat()
+
+
+@template
+def Library(name):
+    '''Template for libraries.'''
+    LIBRARY_NAME = name
+
+
+@template
+def SharedLibrary(name):
+    '''Template for shared libraries.'''
+    Library(name)
+
+    FORCE_SHARED_LIB = True
+
+    StdCppCompat()
+
+
+@template
+def Framework(name):
+    '''Template for OSX Frameworks.'''
+    SharedLibrary(name)
+
+    IS_FRAMEWORK = True
+
+
+@template
+def HostStdCppCompat():
+    '''Template for libstdc++ compatibility for host binaries.'''
+
+    if CONFIG['MOZ_LIBSTDCXX_HOST_VERSION']:
+        HOST_USE_LIBS += ['host_stdc++compat']
+
+
+@template
+def HostProgram(name):
+    '''Template for build tools executables.'''
+    HOST_PROGRAM = name
+
+    HostStdCppCompat()
+
+
+@template
+def HostSimplePrograms(names, ext='.cpp'):
+    '''Template for simple build tools executables.
+
+    Those have a single source with the same base name as the executable.
+    '''
+    HOST_SIMPLE_PROGRAMS += names
+    HOST_SOURCES += ['%s%s' % (name.replace('host_', ''), ext)
+        for name in names]
+
+    HostStdCppCompat()
+
+
+@template
+def HostLibrary(name):
+    '''Template for build tools libraries.'''
+    HOST_LIBRARY_NAME = name
+
+
+@template
 def GeckoBinary():
     '''Template for binaries using Gecko.
 
@@ -24,7 +123,7 @@ def XPCOMBinaryComponent(name):
 
     name is the name of the component.
     '''
-    LIBRARY_NAME = name
+    SharedLibrary(name)
 
     GeckoBinary()
 

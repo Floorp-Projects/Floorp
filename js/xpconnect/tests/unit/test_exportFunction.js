@@ -35,6 +35,7 @@ function run_test() {
       wasCalled = false;
     }
     exportFunction(funToExport, subsb, { defineAs: "imported", allowCallbacks: true });
+    exportFunction((x) => x, subsb, { defineAs: "echoAllowXO", allowCallbacks: true, allowCrossOriginArguments: true });
   }.toSource() + ")()", epsb);
 
   subsb.xrayed = Cu.evalInSandbox("(" + function () {
@@ -62,6 +63,15 @@ function run_test() {
     do_check_true(false);
   } catch (e) {
     do_check_true(/denied|insecure/.test(e));
+  }
+
+  // Callers can opt-out of the above.
+  subsb.xoNative = Cu.evalInSandbox('new XMLHttpRequest()', xorigsb);
+  try {
+    do_check_eq(Cu.evalInSandbox('echoAllowXO(xoNative)', subsb), subsb.xoNative);
+    do_check_true(true);
+  } catch (e) {
+    do_check_true(false);
   }
 
   // Apply should work and |this| should carry over appropriately.

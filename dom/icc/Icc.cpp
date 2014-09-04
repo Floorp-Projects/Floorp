@@ -100,19 +100,20 @@ Icc::GetIccInfo() const
   return iccInfo.forget();
 }
 
-void
-Icc::GetCardState(nsString& aCardState) const
+Nullable<IccCardState>
+Icc::GetCardState() const
 {
-  aCardState.SetIsVoid(true);
+  Nullable<IccCardState> result;
 
-  if (!mProvider) {
-    return;
+  uint32_t cardState = nsIIccProvider::CARD_STATE_UNDETECTED;
+  if (mProvider &&
+      NS_SUCCEEDED(mProvider->GetCardState(mClientId, &cardState)) &&
+      cardState != nsIIccProvider::CARD_STATE_UNDETECTED) {
+    MOZ_ASSERT(cardState < static_cast<uint32_t>(IccCardState::EndGuard_));
+    result.SetValue(static_cast<IccCardState>(cardState));
   }
 
-  nsresult rv = mProvider->GetCardState(mClientId, aCardState);
-  if (NS_FAILED(rv)) {
-    aCardState.SetIsVoid(true);
-  }
+  return result;
 }
 
 void

@@ -9,7 +9,7 @@ include('../objs.mozbuild')
 # These files cannot be built in unified mode because they force NSPR logging.
 SOURCES += mtransport_cppsrcs
 
-LIBRARY_NAME = 'mtransport_s'
+Library('mtransport_s')
 
 LOCAL_INCLUDES += [
     '/media/mtransport/',
