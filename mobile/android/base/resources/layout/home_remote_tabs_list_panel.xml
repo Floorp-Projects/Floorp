@@ -13,16 +13,18 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"/>
 
-    <TextView android:id="@+id/title"
-              style="@style/Widget.Home.HistoryPanelTitle"
-              android:visibility="gone"/>
+    <org.mozilla.gecko.widget.GeckoSwipeRefreshLayout
+                 android:id="@+id/remote_tabs_refresh_layout"
+                 android:layout_width="match_parent"
+                 android:layout_height="match_parent">
 
-    <ExpandableListView
-            android:id="@+id/list"
-            style="@style/Widget.RemoteTabsListView"
-            android:groupIndicator="@android:color/transparent"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
+        <ExpandableListView
+                android:id="@+id/list"
+                style="@style/Widget.RemoteTabsListView"
+                android:groupIndicator="@android:color/transparent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+    </org.mozilla.gecko.widget.GeckoSwipeRefreshLayout>
 
 </LinearLayout>
