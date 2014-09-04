@@ -1349,11 +1349,11 @@ gfxRect
 nsDisplayImage::GetDestRect()
 {
   int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
 
-  nsRect dest = imageFrame->GetInnerArea() + ToReferenceFrame();
+  bool snap;
+  nsRect dest = GetBounds(&snap);
   gfxRect destRect(dest.x, dest.y, dest.width, dest.height);
-  destRect.ScaleInverse(factor); 
+  destRect.ScaleInverse(factor);
 
   return destRect;
 }
