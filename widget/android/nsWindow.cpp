@@ -1867,6 +1867,18 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 WidgetTextEvent event(true, NS_TEXT_TEXT, this);
                 InitEvent(event, nullptr);
                 event.theText = ae->Characters();
+
+                if (ae->Action() == AndroidGeckoEvent::IME_COMPOSE_TEXT) {
+                    // Because we're leaving the composition open, we need to
+                    // include proper text ranges to make the editor happy.
+                    TextRange range;
+                    range.mStartOffset = 0;
+                    range.mEndOffset = event.theText.Length();
+                    range.mRangeType = NS_TEXTRANGE_RAWINPUT;
+                    event.mRanges = new TextRangeArray();
+                    event.mRanges->AppendElement(range);
+                }
+
                 DispatchEvent(&event);
             }
 
@@ -1877,10 +1889,9 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 InitEvent(event, nullptr);
                 event.data = ae->Characters();
                 DispatchEvent(&event);
-
-                FlushIMEChanges();
             }
 
+            FlushIMEChanges();
             mozilla::widget::android::GeckoAppShell::NotifyIME(
                 AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         }

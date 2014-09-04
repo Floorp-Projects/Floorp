@@ -708,12 +708,6 @@ final class GeckoEditable
                           getConstantName(Action.class, "TYPE_", action.mType) + ")");
         }
         switch (action.mType) {
-        case Action.TYPE_COMPOSE_TEXT:
-            // Compositions don't trigger text change notification, so notify manually.
-            onTextChange(action.mSequence, action.mStart, action.mEnd,
-                         action.mStart + action.mSequence.length());
-            break;
-
         case Action.TYPE_SET_SELECTION:
             final int len = mText.length();
             final int curStart = Selection.getSelectionStart(mText);
@@ -941,7 +935,8 @@ final class GeckoEditable
 
         if (!mActionQueue.isEmpty()) {
             final Action action = mActionQueue.peek();
-            if (action.mType == Action.TYPE_REPLACE_TEXT &&
+            if ((action.mType == Action.TYPE_REPLACE_TEXT ||
+                    action.mType == Action.TYPE_COMPOSE_TEXT) &&
                     start <= action.mStart &&
                     action.mStart + action.mSequence.length() <= newEnd) {
 
