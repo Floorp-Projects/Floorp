@@ -507,9 +507,6 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
     }
 
     if (offset <= aOffset && aOffset < offset + textLength) {
-      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
-      NS_ASSERTION(domNode, "aContent doesn't have nsIDOMNode!");
-
       uint32_t xpOffset;
       if (!content->IsNodeOfType(nsINode::eTEXT)) {
         xpOffset = 0;
@@ -530,20 +527,18 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
         }
       }
 
-      rv = aRange->SetStart(domNode, int32_t(xpOffset));
+      rv = aRange->SetStart(content, int32_t(xpOffset));
       NS_ENSURE_SUCCESS(rv, rv);
       startSet = true;
       if (aLength == 0) {
         // Ensure that the end offset and the start offset are same.
-        rv = aRange->SetEnd(domNode, int32_t(xpOffset));
+        rv = aRange->SetEnd(content, int32_t(xpOffset));
         NS_ENSURE_SUCCESS(rv, rv);
         return NS_OK;
       }
     }
     if (endOffset <= offset + textLength) {
-      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
-      NS_ASSERTION(domNode, "aContent doesn't have nsIDOMNode!");
-
+      nsINode* endNode = content;
       uint32_t xpOffset;
       if (content->IsNodeOfType(nsINode::eTEXT)) {
         xpOffset = endOffset - offset;
@@ -562,10 +557,10 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
         if (iter->IsDone()) {
           break;
         }
-        domNode = do_QueryInterface(iter->GetCurrentNode());
+        endNode = iter->GetCurrentNode();
       }
 
-      rv = aRange->SetEnd(domNode, int32_t(xpOffset));
+      rv = aRange->SetEnd(endNode, int32_t(xpOffset));
       NS_ENSURE_SUCCESS(rv, rv);
       return NS_OK;
     }
@@ -577,17 +572,15 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mRootContent));
-  NS_ASSERTION(domNode, "lastContent doesn't have nsIDOMNode!");
   if (!startSet) {
     MOZ_ASSERT(!mRootContent->IsNodeOfType(nsINode::eTEXT));
-    rv = aRange->SetStart(domNode, int32_t(mRootContent->GetChildCount()));
+    rv = aRange->SetStart(mRootContent, int32_t(mRootContent->GetChildCount()));
     NS_ENSURE_SUCCESS(rv, rv);
     if (aNewOffset) {
       *aNewOffset = offset;
     }
   }
-  rv = aRange->SetEnd(domNode, int32_t(mRootContent->GetChildCount()));
+  rv = aRange->SetEnd(mRootContent, int32_t(mRootContent->GetChildCount()));
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsIDOMRange::SetEnd failed");
   return rv;
 }
