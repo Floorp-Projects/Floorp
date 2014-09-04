@@ -253,25 +253,39 @@ class TabsListLayout extends TwoWayView
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            TabsLayoutItemView item;
-
+            final View view;
             if (convertView == null) {
-                convertView = mInflater.inflate(R.layout.tabs_row, null);
-                item = new TabsLayoutItemView(convertView);
-                item.close.setOnClickListener(mOnCloseClickListener);
-                convertView.setTag(item);
+                view = newView(position, parent);
             } else {
-                item = (TabsLayoutItemView) convertView.getTag();
+                view = convertView;
+
                 // If we're recycling this view, there's a chance it was transformed during
                 // the close animation. Remove any of those properties.
-                resetTransforms(convertView);
+                resetTransforms(view);
             }
 
-            Tab tab = mTabs.get(position);
-            item.assignValues(tab);
+            final Tab tab = mTabs.get(position);
+            bindView(view, tab);
 
-            return convertView;
+            return view;
         }
+
+        View newView(int position, ViewGroup parent) {
+            final View view = mInflater.inflate(R.layout.tabs_row, parent, false);
+
+            final TabsLayoutItemView item = new TabsLayoutItemView(view);
+            item.close.setOnClickListener(mOnCloseClickListener);
+
+            view.setTag(item);
+            return view;
+        }
+
+        void bindView(View view, Tab tab) {
+            TabsLayoutItemView item = (TabsLayoutItemView) view.getTag();
+            item.assignValues(tab);
+        }
+
+
     }
 
     private void resetTransforms(View view) {
