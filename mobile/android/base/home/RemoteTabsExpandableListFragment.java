@@ -15,13 +15,18 @@ import org.mozilla.gecko.TabsAccessor.RemoteClient;
 import org.mozilla.gecko.TabsAccessor.RemoteTab;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.widget.GeckoSwipeRefreshLayout;
+import org.mozilla.gecko.widget.GeckoSwipeRefreshLayout.OnRefreshListener;
 
+import android.accounts.Account;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,11 +45,12 @@ import android.widget.TextView;
  */
 public class RemoteTabsExpandableListFragment extends HomeFragment {
     // Logging tag name.
-    @SuppressWarnings("unused")
     private static final String LOGTAG = "GeckoRemoteTabsExpList";
 
     // Cursor loader ID.
     private static final int LOADER_ID_REMOTE_TABS = 0;
+
+    private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "clients", "tabs" };
 
     // Adapter for the list of remote tabs.
     private RemoteTabsExpandableListAdapter mAdapter;
@@ -57,6 +63,12 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
 
     // Callbacks used for the loader.
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
+
+    // Child refresh layout view.
+    private GeckoSwipeRefreshLayout mRefreshLayout;
+
+    // Sync listener that stops refreshing when a sync is completed.
+    private RemoteTabsSyncListener mSyncStatusListener;
 
     public static RemoteTabsExpandableListFragment newInstance() {
         return new RemoteTabsExpandableListFragment();
@@ -73,6 +85,15 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        mRefreshLayout = (GeckoSwipeRefreshLayout) view.findViewById(R.id.remote_tabs_refresh_layout);
+        mRefreshLayout.setColorScheme(
+                R.color.swipe_refresh_orange, R.color.swipe_refresh_white,
+                R.color.swipe_refresh_orange, R.color.swipe_refresh_white);
+        mRefreshLayout.setOnRefreshListener(new RemoteTabsRefreshListener());
+
+        mSyncStatusListener = new RemoteTabsSyncListener();
+        FirefoxAccounts.addSyncStatusListener(mSyncStatusListener);
+
         mList = (ExpandableListView) view.findViewById(R.id.list);
         mList.setTag(HomePager.LIST_TAG_REMOTE_TABS);
 
@@ -108,6 +129,11 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
         super.onDestroyView();
         mList = null;
         mEmptyView = null;
+
+        if (mSyncStatusListener != null) {
+            FirefoxAccounts.removeSyncStatusListener(mSyncStatusListener);
+            mSyncStatusListener = null;
+        }
     }
 
     @Override
@@ -179,6 +205,38 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
             mAdapter.replaceClients(null);
+        }
+    }
+
+    private class RemoteTabsRefreshListener implements OnRefreshListener {
+        @Override
+        public void onRefresh() {
+            if (FirefoxAccounts.firefoxAccountsExist(getActivity())) {
+                final Account account = FirefoxAccounts.getFirefoxAccount(getActivity());
+                FirefoxAccounts.requestSync(account, FirefoxAccounts.FORCE, STAGES_TO_SYNC_ON_REFRESH, null);
+            } else {
+                Log.wtf(LOGTAG, "No Firefox Account found; this should never happen. Ignoring.");
+                mRefreshLayout.setRefreshing(false);
+            }
+        }
+    }
+
+    private class RemoteTabsSyncListener implements FirefoxAccounts.SyncStatusListener {
+        @Override
+        public Context getContext() {
+            return getActivity();
+        }
+
+        @Override
+        public Account getAccount() {
+            return FirefoxAccounts.getFirefoxAccount(getContext());
+        }
+
+        public void onSyncStarted() {
+        }
+
+        public void onSyncFinished() {
+            mRefreshLayout.setRefreshing(false);
         }
     }
 }
