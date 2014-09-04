@@ -56,7 +56,7 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
     private RemoteTabsExpandableListAdapter mAdapter;
 
     // The view shown by the fragment.
-    private ExpandableListView mList;
+    private HomeExpandableListView mList;
 
     // Reference to the View to display when there are no results.
     private View mEmptyView;
@@ -94,7 +94,7 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
         mSyncStatusListener = new RemoteTabsSyncListener();
         FirefoxAccounts.addSyncStatusListener(mSyncStatusListener);
 
-        mList = (ExpandableListView) view.findViewById(R.id.list);
+        mList = (HomeExpandableListView) view.findViewById(R.id.list);
         mList.setTag(HomePager.LIST_TAG_REMOTE_TABS);
 
         mList.setOnChildClickListener(new OnChildClickListener() {
@@ -122,6 +122,31 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
                 return true;
             }
         });
+
+        // Show a context menu only for tabs (not for clients).
+        mList.setContextMenuInfoFactory(new HomeContextMenuInfo.ExpandableFactory() {
+            @Override
+            public HomeContextMenuInfo makeInfoForAdapter(View view, int position, long id, ExpandableListAdapter adapter) {
+                long packedPosition = mList.getExpandableListPosition(position);
+                if (ExpandableListView.getPackedPositionType(packedPosition) != ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+                    return null;
+                }
+                final int groupPosition = ExpandableListView.getPackedPositionGroup(packedPosition);
+                final int childPosition = ExpandableListView.getPackedPositionChild(packedPosition);
+                final Object child = adapter.getChild(groupPosition, childPosition);
+                if (child instanceof RemoteTab) {
+                    final RemoteTab tab = (RemoteTab) child;
+                    final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
+                    info.url = tab.url;
+                    info.title = tab.title;
+                    return info;
+                } else {
+                    return null;
+                }
+            }
+        });
+
+        registerForContextMenu(mList);
     }
 
     @Override
