@@ -3062,17 +3062,6 @@ Parser<FullParseHandler>::checkDestructuringObject(BindData<FullParseHandler> *d
             }
             ok = bindDestructuringVar(data, expr);
         } else {
-            /*
-             * If this is a destructuring shorthand ({x} = ...), then
-             * identifierName wasn't used to parse |x|.  As a result, |x|
-             * hasn't been officially linked to its def or registered in
-             * lexdeps.  Do that now.
-             */
-            if (!member->isKind(PNK_MUTATEPROTO) && member->pn_right == member->pn_left) {
-                RootedPropertyName name(context, expr->pn_atom->asPropertyName());
-                if (!noteNameUse(name, expr))
-                    return false;
-            }
             ok = checkAndMarkAsAssignmentLhs(expr, KeyedDestructuringAssignment);
         }
         if (!ok)
