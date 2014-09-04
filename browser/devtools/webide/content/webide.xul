@@ -117,7 +117,7 @@
       <hbox id="panel-buttons-container">
         <toolbarbutton id="project-panel-button" class="panel-button no-project" command="cmd_showProjectPanel">
           <image class="panel-button-image"/>
-          <label class="panel-button-label" value="&projectButton_label;"/>
+          <label class="panel-button-label" value="&projectButton_label;" crop="end"/>
           <image class="panel-button-anchor"/>
         </toolbarbutton>
         <spacer flex="1"/>
@@ -143,6 +143,8 @@
         <vbox id="project-panel-projects"></vbox>
         <label class="panel-header" id="panel-header-runtimeapps" hidden="true">&projectPanel_runtimeApps;</label>
         <vbox flex="1" id="project-panel-runtimeapps"/>
+        <label class="panel-header" id="panel-header-tabs" hidden="true">&projectPanel_tabs;</label>
+        <vbox flex="1" id="project-panel-tabs"/>
       </vbox>
     </panel>
 
