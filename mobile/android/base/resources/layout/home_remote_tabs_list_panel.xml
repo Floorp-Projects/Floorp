@@ -18,7 +18,7 @@
                  android:layout_width="match_parent"
                  android:layout_height="match_parent">
 
-        <ExpandableListView
+        <org.mozilla.gecko.home.HomeExpandableListView
                 android:id="@+id/list"
                 style="@style/Widget.RemoteTabsListView"
                 android:groupIndicator="@android:color/transparent"
