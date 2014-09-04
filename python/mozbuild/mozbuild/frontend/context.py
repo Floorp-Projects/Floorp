@@ -954,9 +954,12 @@ for name, (storage_type, input_types, docs, tier) in VARIABLES.items():
 # Set of variables that are only allowed in templates:
 TEMPLATE_VARIABLES = {
     'CPP_UNIT_TESTS',
+    'FORCE_SHARED_LIB',
     'HOST_PROGRAM',
     'HOST_LIBRARY_NAME',
     'HOST_SIMPLE_PROGRAMS',
+    'IS_COMPONENT',
+    'IS_FRAMEWORK',
     'LIBRARY_NAME',
     'PROGRAM',
     'SIMPLE_PROGRAMS',
@@ -1305,6 +1308,39 @@ DEPRECATION_HINTS = {
         instead of
 
             SIMPLE_PROGRAMS += ['foo', 'bar']"
+        ''',
+
+    'FORCE_SHARED_LIB': '''
+        Please use
+
+            SharedLibrary('foo')
+
+        instead of
+
+            Library('foo') [ or LIBRARY_NAME = 'foo' ]
+            FORCE_SHARED_LIB = True
+        ''',
+
+    'IS_COMPONENT': '''
+        Please use
+
+            XPCOMBinaryComponent('foo')
+
+        instead of
+
+            Library('foo') [ or LIBRARY_NAME = 'foo' ]
+            IS_COMPONENT = True
+        ''',
+
+    'IS_FRAMEWORK': '''
+        Please use
+
+            Framework('foo')
+
+        instead of
+
+            Library('foo') [ or LIBRARY_NAME = 'foo' ]
+            IS_FRAMEWORK = True
         ''',
 
     'TOOL_DIRS': 'Please use the DIRS variable instead.',

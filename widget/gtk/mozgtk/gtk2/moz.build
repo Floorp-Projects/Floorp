@@ -10,11 +10,9 @@ SOURCES += [
 
 DEFINES['GTK3_SYMBOLS'] = True
 
-Library('mozgtk2')
+SharedLibrary('mozgtk2')
 
 SONAME = 'mozgtk'
-
-FORCE_SHARED_LIB = True
 
 # If LDFLAGS contains -Wl,--as-needed, we need to add -Wl,--no-as-needed
 # before the gtk libraries, otherwise the linker will drop those dependencies

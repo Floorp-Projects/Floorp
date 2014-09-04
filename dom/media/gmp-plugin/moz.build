@@ -9,10 +9,9 @@ SOURCES += [
         'gmp-fake.cpp'
 ]
 
-Library("fake")
+SharedLibrary("fake")
 
 USE_STATIC_LIBS = True
-FORCE_SHARED_LIB = True
 NO_VISIBILITY_FLAGS = True
 # Don't use STL wrappers; this isn't Gecko code
 DISABLE_STL_WRAPPING = True

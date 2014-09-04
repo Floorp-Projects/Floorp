@@ -8,9 +8,7 @@ SOURCES += [
     'OmxPluginKitKat.cpp',
 ]
 
-Library('omxpluginkk')
-
-FORCE_SHARED_LIB = True
+SharedLibrary('omxpluginkk')
 
 LOCAL_INCLUDES += [
     '../include/ics',

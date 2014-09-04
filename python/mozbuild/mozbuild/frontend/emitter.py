@@ -638,14 +638,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         if libname:
             if is_component:
-                if shared_lib:
-                    raise SandboxValidationError(
-                        'IS_COMPONENT implies FORCE_SHARED_LIB. '
-                        'Please remove the latter.', context)
-                if is_framework:
-                    raise SandboxValidationError(
-                        'IS_COMPONENT conflicts with IS_FRAMEWORK. '
-                        'Please remove one.', context)
                 if static_lib:
                     raise SandboxValidationError(
                         'IS_COMPONENT conflicts with FORCE_STATIC_LIB. '
@@ -654,10 +646,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 shared_args['variant'] = SharedLibrary.COMPONENT
 
             if is_framework:
-                if shared_lib:
-                    raise SandboxValidationError(
-                        'IS_FRAMEWORK implies FORCE_SHARED_LIB. '
-                        'Please remove the latter.', context)
                 if soname:
                     raise SandboxValidationError(
                         'IS_FRAMEWORK conflicts with SONAME. '

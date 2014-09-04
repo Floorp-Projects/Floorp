@@ -6,8 +6,7 @@
 
 FAIL_ON_WARNINGS = True
 
-Library('mozsandbox')
-FORCE_SHARED_LIB = True
+SharedLibrary('mozsandbox')
 
 EXPORTS.mozilla += [
     'Sandbox.h',

@@ -7,10 +7,9 @@
 # Build mozglue as a shared lib on Windows, OSX and Android.
 # If this is ever changed, update MOZ_SHARED_MOZGLUE in browser/installer/Makefile.in
 if CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android'):
-    FORCE_SHARED_LIB = True
+    SharedLibrary('mozglue')
 else:
-    FORCE_SHARED_LIB = False
-    FORCE_STATIC_LIB = True
+    Library('mozglue')
 
 SDK_LIBRARY = True
 
@@ -68,8 +67,6 @@ if CONFIG['MOZ_ASAN']:
         'AsanOptions.cpp',
     ]
 
-
-Library('mozglue')
 
 USE_LIBS += [
     'mfbt',

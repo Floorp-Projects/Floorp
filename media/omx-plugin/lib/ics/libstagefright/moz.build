@@ -10,9 +10,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'libstagefright.cpp',
     ]
 
-Library('stagefright')
-
-FORCE_SHARED_LIB = True
+SharedLibrary('stagefright')
 
 LOCAL_INCLUDES += [
     '/media/omx-plugin/include/ics',
