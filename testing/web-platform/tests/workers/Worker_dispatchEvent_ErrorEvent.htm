@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> ErrorEvent.initErrorEvent() and Worker.dispatchEvent() </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var EVENT = "error";
+    var FILENAME = './support/ErrorEvent.js';
+    var MESSAGE = 'Hello Worker';
+    var LINENO = 5;
+    var description = "ErrorEvent.initErrorEvent() and Worker.dispatchEvent()";
+    
+    var t = async_test("Test Description: " + description);
+
+    var worker = new Worker(FILENAME);
+    
+    worker.addEventListener(EVENT, t.step_func(TestErrorEvent), true);
+    
+    var evt = document.createEvent("ErrorEvent");
+
+    evt.initErrorEvent(EVENT,    /* type */
+                       true,     /* bubbles */
+                       true,     /* cancelable */
+                       MESSAGE,  /* message */
+                       FILENAME, /* filename */
+                       LINENO    /* lineno */ );
+                       
+    worker.dispatchEvent(evt);
+    
+    function TestErrorEvent(evt)
+    {
+        var ExpectedResult = [EVENT, MESSAGE, FILENAME, LINENO];
+        var ActualResult = [evt.type, evt.message, evt.filename, evt.lineno];
+        assert_array_equals(ActualResult, ExpectedResult);
+        t.done();
+    }
+</script>
+</body>
+</html>

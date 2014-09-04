@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> Worker construtor with script inside text file </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var ExpectedResult = "Pass";
+
+    var t = async_test("Test Description: Script resource is always assumed to be JavaScript, regardless of the MIME type.");
+                  
+    var worker = new Worker('./support/WorkerText.txt');
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data, ExpectedResult);
+        t.done();
+    });
+
+    worker.postMessage("start");
+</script>
+</body>
+</html>

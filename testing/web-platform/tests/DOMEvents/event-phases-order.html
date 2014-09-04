@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!-- Submitted from TestTWF Paris -->
+<title>Event phases order</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+    var t = async_test("Event phases order");
+
+    document.addEventListener('DOMContentLoaded', function(){
+        var parent = document.getElementById('parent');
+        var child = document.getElementById('child');
+
+        var order = [];
+
+        parent.addEventListener('click', t.step_func(function(){ order.push(1) }), true);
+        child.addEventListener('click', t.step_func(function(){ order.push(2) }), false);
+        parent.addEventListener('click', t.step_func(function(){ order.push(3) }), false);
+
+        child.click();
+
+        assert_array_equals(order, [1, 2, 3]);
+        t.done();
+    });
+</script>
+
+    <div id="parent">
+        <div id="child"></div>
+    </div>

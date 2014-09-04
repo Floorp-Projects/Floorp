@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerGlobalScope API: importScripts() </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = "./support/ImportScripts.js";
+    var ExpectedResult = "Pass";
+    
+    var t = async_test("Test Description: WorkerGlobalScope API: importScripts().");
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data, ExpectedResult);
+        t.done();
+    });
+    
+    worker.postMessage("ping");
+</script>
+</body>
+</html>
