@@ -28,7 +28,7 @@ enum State {
 class DatabaseLocker : public nsRunnable
 {
 public:
-  DatabaseLocker(const char* aSQL)
+  explicit DatabaseLocker(const char* aSQL)
   : monitor("DatabaseLocker::monitor")
   , mSQL(aSQL)
   , mState(STARTING)

@@ -83,8 +83,12 @@ StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t ta
       if (!JS_WrapObject(cx, &obj))
           return nullptr;
 
-      if (!xpc::NewFunctionForwarder(cx, JSID_VOIDHANDLE, obj, &functionValue))
+      FunctionForwarderOptions forwarderOptions;
+      if (!xpc::NewFunctionForwarder(cx, JSID_VOIDHANDLE, obj, forwarderOptions,
+                                     &functionValue))
+      {
           return nullptr;
+      }
 
       return &functionValue.toObject();
     }
@@ -200,8 +204,13 @@ StackScopedClone(JSContext *cx, StackScopedCloneOptions &options,
 // Note - This function mirrors the logic of CheckPassToChrome in
 // ChromeObjectWrapper.cpp.
 static bool
-CheckSameOriginArg(JSContext *cx, HandleValue v)
+CheckSameOriginArg(JSContext *cx, FunctionForwarderOptions &options, HandleValue v)
 {
+    // Consumers can explicitly opt out of this security check. This is used in
+    // the web console to allow the utility functions to accept cross-origin Windows.
+    if (options.allowCrossOriginArguments)
+        return true;
+
     // Primitives are fine.
     if (!v.isObject())
         return true;
@@ -232,6 +241,13 @@ FunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    // Grab the options from the reserved slot.
+    RootedObject optionsObj(cx, &js::GetFunctionNativeReserved(&args.callee(), 1).toObject());
+    FunctionForwarderOptions options(cx, optionsObj);
+    if (!options.Parse())
+        return false;
+
+    // Grab and unwrap the underlying callable.
     RootedValue v(cx, js::GetFunctionNativeReserved(&args.callee(), 0));
     RootedObject unwrappedFun(cx, js::UncheckedUnwrap(&v.toObject()));
 
@@ -247,11 +263,11 @@ FunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
         JSAutoCompartment ac(cx, unwrappedFun);
 
         RootedValue thisVal(cx, ObjectValue(*thisObj));
-        if (!CheckSameOriginArg(cx, thisVal) || !JS_WrapObject(cx, &thisObj))
+        if (!CheckSameOriginArg(cx, options, thisVal) || !JS_WrapObject(cx, &thisObj))
             return false;
 
         for (size_t n = 0;  n < args.length(); ++n) {
-            if (!CheckSameOriginArg(cx, args[n]) || !JS_WrapValue(cx, args[n]))
+            if (!CheckSameOriginArg(cx, options, args[n]) || !JS_WrapValue(cx, args[n]))
                 return false;
         }
 
@@ -266,7 +282,7 @@ FunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 
 bool
 NewFunctionForwarder(JSContext *cx, HandleId idArg, HandleObject callable,
-                     MutableHandleValue vp)
+                     FunctionForwarderOptions &options, MutableHandleValue vp)
 {
     RootedId id(cx, idArg);
     if (id == JSID_VOIDHANDLE)
@@ -277,8 +293,17 @@ NewFunctionForwarder(JSContext *cx, HandleId idArg, HandleObject callable,
     if (!fun)
         return false;
 
-    JSObject *funobj = JS_GetFunctionObject(fun);
+    // Stash the callable in slot 0.
+    AssertSameCompartment(cx, callable);
+    RootedObject funobj(cx, JS_GetFunctionObject(fun));
     js::SetFunctionNativeReserved(funobj, 0, ObjectValue(*callable));
+
+    // Stash the options in slot 1.
+    RootedObject optionsObj(cx, options.ToJSObject(cx));
+    if (!optionsObj)
+        return false;
+    js::SetFunctionNativeReserved(funobj, 1, ObjectValue(*optionsObj));
+
     vp.setObject(*funobj);
     return true;
 }
@@ -349,7 +374,9 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
 
         // And now, let's create the forwarder function in the target compartment
         // for the function the be exported.
-        if (!NewFunctionForwarder(cx, id, funObj, rval)) {
+        FunctionForwarderOptions forwarderOptions;
+        forwarderOptions.allowCrossOriginArguments = options.allowCrossOriginArguments;
+        if (!NewFunctionForwarder(cx, id, funObj, forwarderOptions, rval)) {
             JS_ReportError(cx, "Exporting function failed");
             return false;
         }

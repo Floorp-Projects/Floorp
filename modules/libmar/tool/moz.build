@@ -8,14 +8,14 @@ HOST_SOURCES += [
     'mar.c',
 ]
 
-HOST_PROGRAM = 'mar'
+HostProgram('mar')
 
 HOST_USE_LIBS += [
     'hostmar',
 ]
 
 if CONFIG['MOZ_ENABLE_SIGNMAR']:
-    PROGRAM = 'signmar'
+    Program('signmar')
 
     SOURCES += HOST_SOURCES
 

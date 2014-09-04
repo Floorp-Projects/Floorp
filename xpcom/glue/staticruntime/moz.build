@@ -14,7 +14,7 @@ UNIFIED_SOURCES += [
     '../nsStringAPI.cpp',
 ]
 
-LIBRARY_NAME = 'xpcomglue_staticruntime_s'
+Library('xpcomglue_staticruntime_s')
 
 SDK_LIBRARY = True
 

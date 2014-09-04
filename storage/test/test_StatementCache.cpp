@@ -6,6 +6,7 @@
 
 #include "storage_test_harness.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/storage/StatementCache.h"
 using namespace mozilla::storage;
 
@@ -19,7 +20,7 @@ using namespace mozilla::storage;
 class SyncCache : public StatementCache<mozIStorageStatement>
 {
 public:
-  SyncCache(nsCOMPtr<mozIStorageConnection>& aConnection)
+  explicit SyncCache(nsCOMPtr<mozIStorageConnection>& aConnection)
   : StatementCache<mozIStorageStatement>(aConnection)
   {
   }
@@ -28,7 +29,7 @@ public:
 class AsyncCache : public StatementCache<mozIStorageAsyncStatement>
 {
 public:
-  AsyncCache(nsCOMPtr<mozIStorageConnection>& aConnection)
+  explicit AsyncCache(nsCOMPtr<mozIStorageConnection>& aConnection)
   : StatementCache<mozIStorageAsyncStatement>(aConnection)
   {
   }
@@ -41,7 +42,7 @@ public:
 class StringWrapper : public nsCString
 {
 public:
-  StringWrapper(const char* aOther)
+  MOZ_IMPLICIT StringWrapper(const char* aOther)
   {
     this->Assign(aOther);
   }

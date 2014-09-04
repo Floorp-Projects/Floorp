@@ -8,9 +8,7 @@ SOURCES += [
     'OmxPluginFroyo.cpp',
 ]
 
-LIBRARY_NAME = 'omxpluginfroyo'
-
-FORCE_SHARED_LIB = True
+SharedLibrary('omxpluginfroyo')
 
 LOCAL_INCLUDES += [
     '../include/froyo',

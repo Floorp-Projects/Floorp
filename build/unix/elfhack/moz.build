@@ -19,7 +19,7 @@ HOST_SOURCES += [
     'elfhack.cpp',
 ]
 
-HOST_PROGRAM = 'elfhack'
+HostProgram('elfhack')
 
 DEFINES['ELFHACK_BUILD'] = True
 

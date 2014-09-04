@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    PROGRAM  = 'redit'
+    Program('redit')
     SOURCES += [
         'redit.cpp',
     ]

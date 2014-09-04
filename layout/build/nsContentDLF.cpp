@@ -123,7 +123,7 @@ MayUseXULXBL(nsIChannel* aChannel)
   }
 
   nsCOMPtr<nsIPrincipal> principal;
-  securityManager->GetChannelPrincipal(aChannel, getter_AddRefs(principal));
+  securityManager->GetChannelResultPrincipal(aChannel, getter_AddRefs(principal));
   NS_ENSURE_TRUE(principal, false);
 
   return nsContentUtils::AllowXULXBLForPrincipal(principal);

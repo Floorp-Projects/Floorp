@@ -10,6 +10,6 @@ SOURCES += [
 if '-flto' in CONFIG['OS_CXXFLAGS']:
     SOURCES['StaticXULComponentsEnd.cpp'].flags += ['-fno-lto']
 
-LIBRARY_NAME = 'StaticXULComponentsEnd'
+Library('StaticXULComponentsEnd')
 
 DEFINES['MOZILLA_INTERNAL_API'] = True

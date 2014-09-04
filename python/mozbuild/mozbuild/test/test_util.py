@@ -337,6 +337,16 @@ class TestStrictOrderingOnAppendList(unittest.TestCase):
 
         self.assertEqual(len(l), 2)
 
+    def test_add_StrictOrderingOnAppendList(self):
+        l = StrictOrderingOnAppendList()
+        l += ['c', 'd']
+        l += ['a', 'b']
+        l2 = StrictOrderingOnAppendList()
+        with self.assertRaises(UnsortedError):
+            l2 += list(l)
+        # Adding a StrictOrderingOnAppendList to another shouldn't throw
+        l2 += l
+
 
 class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
     def test_strict_ordering_on_append_list_with_flags_factory(self):

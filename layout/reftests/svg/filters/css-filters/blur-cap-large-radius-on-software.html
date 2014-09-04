@@ -1,0 +1,26 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Cap Blur Radius When Rendering in Software</title>
+  <!--
+    When rendering in software, Firefox should cap large blur radii to a smaller
+    value in order to keep performance acceptable.
+  -->
+  <style type="text/css">
+    #target {
+      filter: blur(1000000px);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blurred green square.</p>
+  <div id="target"></div>
+</body>
+</html>

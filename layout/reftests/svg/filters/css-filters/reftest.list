@@ -7,6 +7,7 @@ default-preferences pref(layout.css.filters.enabled,true)
 == blur.svg blur-ref.svg
 == blur-calc.html blur-calc-ref.html
 == blur-calc-negative.html blur-calc-negative-ref.html
+skip-if(d2d) pref(layers.acceleration.disabled,true) == blur-cap-large-radius-on-software.html blur-cap-large-radius-on-software-ref.html
 == blur-zero-radius.html blur-zero-radius-ref.html
 == blur-zoomed-page.html blur-zoomed-page-ref.html
 == brightness.html brightness-ref.html

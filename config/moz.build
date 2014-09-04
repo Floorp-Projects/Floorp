@@ -21,7 +21,7 @@ if CONFIG['HOST_OS_ARCH'] != 'WINNT':
         'nsinstall.c',
         'pathsub.c',
     ]
-    HOST_PROGRAM = 'nsinstall_real'
+    HostProgram('nsinstall_real')
 
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     DEFINES['GKMEDIAS_SHARED_LIBRARY'] = True

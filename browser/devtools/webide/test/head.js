@@ -14,7 +14,12 @@ const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
 const {AppProjects} = require("devtools/app-manager/app-projects");
 
-const TEST_BASE = "chrome://mochitests/content/chrome/browser/devtools/webide/test/";
+let TEST_BASE;
+if (window.location === "chrome://browser/content/browser.xul") {
+  TEST_BASE = "chrome://mochitests/content/browser/browser/devtools/webide/test/";
+} else {
+  TEST_BASE = "chrome://mochitests/content/chrome/browser/devtools/webide/test/";
+}
 
 Services.prefs.setBoolPref("devtools.webide.enabled", true);
 Services.prefs.setBoolPref("devtools.webide.enableLocalRuntime", true);
@@ -108,5 +113,43 @@ function documentIsLoaded(doc) {
       }
     });
   }
+  return deferred.promise;
+}
+
+function addTab(aUrl, aWindow) {
+  info("Adding tab: " + aUrl);
+
+  let deferred = promise.defer();
+  let targetWindow = aWindow || window;
+  let targetBrowser = targetWindow.gBrowser;
+
+  targetWindow.focus();
+  let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
+  let linkedBrowser = tab.linkedBrowser;
+
+  linkedBrowser.addEventListener("load", function onLoad() {
+    linkedBrowser.removeEventListener("load", onLoad, true);
+    info("Tab added and finished loading: " + aUrl);
+    deferred.resolve(tab);
+  }, true);
+
+  return deferred.promise;
+}
+
+function removeTab(aTab, aWindow) {
+  info("Removing tab.");
+
+  let deferred = promise.defer();
+  let targetWindow = aWindow || window;
+  let targetBrowser = targetWindow.gBrowser;
+  let tabContainer = targetBrowser.tabContainer;
+
+  tabContainer.addEventListener("TabClose", function onClose(aEvent) {
+    tabContainer.removeEventListener("TabClose", onClose, false);
+    info("Tab removed and finished closing.");
+    deferred.resolve();
+  }, false);
+
+  targetBrowser.removeTab(aTab);
   return deferred.promise;
 }

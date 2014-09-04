@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    LIBRARY_NAME = 'sandbox_staticruntime_s'
+    Library('sandbox_staticruntime_s')
     FORCE_STATIC_LIB = True
     USE_STATIC_LIBS = True
 

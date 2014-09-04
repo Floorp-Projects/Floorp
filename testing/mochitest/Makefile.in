@@ -131,7 +131,7 @@ TEST_HARNESS_BINS += fix_macosx_stack.py
 endif
 
 ifeq ($(OS_ARCH),Linux)
-TEST_HARNESS_BINS += fix-linux-stack.pl
+TEST_HARNESS_BINS += fix_linux_stack.py
 endif
 
 ifeq (gtk2_1,$(MOZ_WIDGET_TOOLKIT)_$(MOZ_X11))

@@ -407,6 +407,8 @@ private:
                                                       AsyncPanZoomController* aNextSibling,
                                                       const nsIntRegion& aObscured);
 
+  void PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
+                     const AsyncPanZoomController* apzc);
 private:
   /* Whenever walking or mutating the tree rooted at mRootApzc, mTreeLock must be held.
    * This lock does not need to be held while manipulating a single APZC instance in

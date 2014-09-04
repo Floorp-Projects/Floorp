@@ -4,4 +4,4 @@
 
 add_tier_dir('libs', ['dir1'])
 
-LIBRARY_NAME = 'test'
+Library('test')

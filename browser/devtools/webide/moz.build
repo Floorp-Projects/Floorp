@@ -10,11 +10,13 @@ DIRS += [
     'themes',
 ]
 
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXTRA_JS_MODULES.devtools.webide += [
     'modules/addons.js',
     'modules/app-manager.js',
     'modules/remote-resources.js',
-    'modules/runtimes.js'
+    'modules/runtimes.js',
+    'modules/tab-store.js',
 ]

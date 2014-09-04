@@ -12,14 +12,14 @@ SOURCES += [
     'Zip.cpp',
 ]
 
-LIBRARY_NAME = 'linker'
+Library('linker')
 
 HOST_SOURCES += [
     'SeekableZStream.cpp',
     'szip.cpp',
 ]
 
-HOST_PROGRAM = 'szip'
+HostProgram('szip')
 
 FINAL_LIBRARY = 'mozglue'
 

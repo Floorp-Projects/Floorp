@@ -80,10 +80,13 @@ WebappsStore.prototype = {
   },
 
   _feedStore: function() {
+    if (!this._webAppsActor) {
+      return promise.resolve();
+    }
     this._listenToApps();
     return this._getAllApps()
                .then(this._getRunningApps.bind(this))
-               .then(this._getAppsIcons.bind(this))
+               .then(this._getAppsIcons.bind(this));
   },
 
   _listenToApps: function() {

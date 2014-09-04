@@ -13,7 +13,7 @@ SOURCES += [
     '../nsXPCOMGlue.cpp',
 ]
 
-LIBRARY_NAME = 'xpcomglue_staticruntime'
+Library('xpcomglue_staticruntime')
 
 SDK_LIBRARY = True
 

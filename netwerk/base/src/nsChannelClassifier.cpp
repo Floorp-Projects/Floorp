@@ -226,8 +226,8 @@ nsChannelClassifier::Start(nsIChannel *aChannel)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIPrincipal> principal;
-    rv = securityManager->GetChannelPrincipal(aChannel,
-                                              getter_AddRefs(principal));
+    rv = securityManager->GetChannelResultPrincipal(aChannel,
+                                                    getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
     bool expectCallback;

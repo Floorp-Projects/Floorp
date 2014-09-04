@@ -68,14 +68,6 @@ class PeerIdentity;
 // For a receiving conduit, "input" is RTP and "output" is RTCP.
 //
 
-class MediaPipeline;
-
-template<>
-struct HasDangerousPublicDestructor<MediaPipeline>
-{
-  static const bool value = true;
-};
-
 class MediaPipeline : public sigslot::has_slots<> {
  public:
   enum Direction { TRANSMIT, RECEIVE };
@@ -116,8 +108,6 @@ class MediaPipeline : public sigslot::has_slots<> {
       // PipelineTransport() will access this->sts_thread_; moved here for safety
       transport_ = new PipelineTransport(this);
   }
-
-  virtual ~MediaPipeline();
 
   // Must be called on the STS thread.  Must be called after ShutdownMedia_m().
   void ShutdownTransport_s();
@@ -172,6 +162,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   } RtpType;
 
  protected:
+  virtual ~MediaPipeline();
   virtual void DetachMediaStream() {}
 
   // Separate class to allow ref counting
