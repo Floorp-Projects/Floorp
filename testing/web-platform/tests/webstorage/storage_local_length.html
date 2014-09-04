@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Web Storage</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+ </head>
+ <body>
+    <h1>storage_local_length</h1>
+    <div id="log"></div>
+    <script>
+        test(function() {
+            localStorage.clear();
+            assert_equals(localStorage.length, 0, "localStorage.length")
+
+            localStorage.setItem("name", "user1");
+            localStorage.setItem("age", "20");
+
+            assert_equals(localStorage.length, 2, "localStorage.length")
+        });
+    </script>
+ </body>
+</html>

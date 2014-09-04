@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+    <head>
+        <title>touch-action: parent > child: auto > child: none</title>
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
+        <script src="/resources/testharness.js"></script>
+        <script src="/resources/testharnessreport.js"></script>
+        <script src="pointerevent_support.js"></script>
+        <style>
+            .scroller > div {
+            touch-action: auto;
+            }
+            .scroller > div div {
+            touch-action: none;
+            }
+        </style>
+    </head>
+    <body onload="run()">
+        <h1>Pointer Events touch-action attribute support</h1>
+        <h4 id="desc">Test Description: Try to scroll text DOWN. Wait for description update. Expected: no panning.</h4>
+        <p>Note: this test is for touch-devices only</p>
+        <div class="scroller" id="target0">
+            <div>
+                <div>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diem
+                        nonummy nibh euismod tincidunt ut lacreet dolore magna aliguam erat volutpat.
+                        Ut wisis enim ad minim veniam, quis nostrud exerci tution ullamcorper suscipit
+                        lobortis nisl ut aliquip ex ea commodo consequat.
+                    </p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diem
+                        nonummy nibh euismod tincidunt ut lacreet dolore magna aliguam erat volutpat.
+                        Ut wisis enim ad minim veniam, quis nostrud exerci tution ullamcorper suscipit
+                        lobortis nisl ut aliquip ex ea commodo consequat.
+                    </p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diem
+                        nonummy nibh euismod tincidunt ut lacreet dolore magna aliguam erat volutpat.
+                        Ut wisis enim ad minim veniam, quis nostrud exerci tution ullamcorper suscipit
+                        lobortis nisl ut aliquip ex ea commodo consequat.
+                    </p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diem
+                        nonummy nibh euismod tincidunt ut lacreet dolore magna aliguam erat volutpat.
+                        Ut wisis enim ad minim veniam, quis nostrud exerci tution ullamcorper suscipit
+                        lobortis nisl ut aliquip ex ea commodo consequat.
+                    </p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                </div>
+            </div>
+        </div>
+        <script type='text/javascript'>
+            var detected_pointertypes = {};
+
+            var moveCount = 0;
+            var moveDelta = 10;
+            var countToPass = 100;
+            var isFirstScroll = true;
+            // these variables are necessary to use checkDirection() function below
+            var previousPointerX, previousPointerY, currentPointerX, currentPointerY;
+
+            add_completion_callback(showPointerTypes);
+
+            var test_touchaction = async_test("touch-action attribute test");
+
+            function run() {
+                var target0 = document.getElementById("target0");
+
+                on_event(target0, 'pointerdown', function(event) {
+                    detected_pointertypes[event.pointerType] = true;
+                    previousPointerX = event.clientX;
+                    previousPointerY = event.clientY;
+                });
+
+                // Check if touch-action attribute works properly for embedded divs
+                // Scrollable-Parent, Child: `auto`, Grand-Child: `none`
+                // TA: 15.5
+                on_event(target0, 'pointermove', function(event) {
+                    checkDirection(test_touchaction, isFirstScroll, moveCount, countToPass, moveDelta);
+
+                    moveCount++;
+                    if(moveCount >= countToPass) {
+                        updateDescriptionNextStep();
+                        if(!isFirstScroll) {
+                            test_touchaction.done();
+                            updateDescriptionComplete();
+                        }
+                        moveCount = 0;
+                        isFirstScroll = false;
+                    }
+                });
+
+                on_event(target0, 'scroll', function(event) {
+                    test_touchaction.step(failOnScroll, "scroll received while touch-action is none");
+                });
+            }
+        </script>
+        <h1>behaviour: none</h1>
+        <div id="complete-notice">
+            <p>The following pointer types were detected: <span id="pointertype-log"></span>.</p>
+        </div>
+        <div id="log"></div>
+    </body>
+</html>

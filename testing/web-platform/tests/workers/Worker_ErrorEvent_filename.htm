@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> AbstractWorker ErrorEvent.filename </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var ErrorMessage = "Error Message";
+    var FileName = './support/ErrorEvent.js';
+    var href = window.location.href;
+    var ExpectedResult = href.substring(0, href.lastIndexOf('/')) + FileName.substring(1);
+    var description = "ErrorEvent filename attribute represents the absolute URL of the script in which the error originally occurred.";
+    
+    var t = async_test("Test Description: " + description);
+                  
+    var worker = new Worker(FileName);
+
+    worker.onerror = t.step_func(function(evt)
+    {
+        assert_equals(evt.filename, ExpectedResult);
+        t.done();        
+    });
+    
+    worker.postMessage(ErrorMessage);
+</script>
+</body>
+</html>

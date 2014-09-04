@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Internet Explorer 9: Testing Center</title>
+        <link rel="Stylesheet" type="text/css" href="../support/testdrive.css" />
+        <script type="text/javascript" src="./support/navigate.js"></script>
+        <style type="text/css">
+            html, body
+            {
+                margin: 0;
+            }
+            html, body, iframe, #fullbodywrap
+            {
+                height: 100%
+            }
+            #iframeContainer
+            {
+                top: 230px;
+            }
+        </style>
+    </head>
+    <body id="demobody" onload="loadPage();">
+        <div id="demotopstripe"></div>
+        <div id="fullbodywrap">
+            <a href="../#dom" title="Return to TestCenter" id="returnbutton">Return to TestCenter</a>
+            <table id="headertable" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td class="heading"><h1 id="demobodyh1">DOM Test Suite Navigator</h1></td>
+                </tr>
+            </table>
+            <h2>DOM L3 Events</h2>
+            <div id="content">
+                <input type="text" id="testTitle" />
+                <div id="controls">
+                    <input type="text" id="testCount" value="" readonly="readonly" />&nbsp;&nbsp;<button id="prev" onclick="loadPrev();" title="Previous">&lt;&lt; Previous</button>&nbsp;&nbsp;<button id="next" onclick="loadNext();" title="Next">Next &gt;&gt;</button>
+                </div>
+                <br />
+                <div id="standaloneLink"><a id="testLink" href="#" target="_blank">Run this test without the frame.</a></div>
+                <br />
+            </div>
+            <div id="iframeContainer"><iframe id="testFrame" src="about:blank"></iframe></div>
+            <div id="footerspacer">
+                <div id="footer">
+                    <div id="legallinks">
+                        <span id="copyright">&#169; 2010 Microsoft</span> <a href="http://msdn.microsoft.com/en-us/cc300389.aspx" target="_blank">Terms of Use</a> | <a href="http://go.microsoft.com/fwlink/?LinkID=123159" target="_blank">Trademarks</a> | <a href="http://go.microsoft.com/?linkid=9707144">Privacy Statement</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

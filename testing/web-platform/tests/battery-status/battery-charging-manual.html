@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Battery Status API Test Suite</title>
+    <script src="/resources/testharness.js"></script>
+    <script src="countdown.js"></script>
+    <link rel="stylesheet" href="/resources/testharness.css" media="all"/>
+    <meta name="flags" content="interact">
+  </head>
+  <body>
+    <h1>Description</h1>
+    <p>
+      This test validates that all of the navigator.battery attributes exist and are set to correct values, when the battery is charging.
+    </p>
+    <h2>Preconditions</h2>
+    <ol>
+      <li>
+        The device is plugged in to the charger before this test is run.
+      </li>
+      <li>
+        The battery must neither be empty or full, nor reach empty or full capacity during the test.
+      </li>
+    </ol>
+    <div id="log"></div>
+    <script>
+    (function() {
+
+      setup({ explicit_timeout: true });
+
+      test(function() {
+        assert_true(navigator.battery.charging);
+      }, 'The charging attribute must be set to true.');
+      
+      test(function() {
+        assert_true(navigator.battery.chargingTime < Infinity);
+      }, 'The chargingTime attribute must be set to the time remaining in seconds until the system\'s battery is completely charged. If the reported charging time ' + navigator.battery.chargingTime + ' seconds or ' + Math.round(navigator.battery.chargingTime/60) + ' minutes is not correct, please indicate that the test has failed.');
+      
+      test(function() {
+        assert_true(navigator.battery.dischargingTime === Infinity);
+      }, 'The dischargingTime attribute must be set to the value positive Infinity.');
+      
+      test(function() {
+        assert_true(0 < navigator.battery.level && navigator.battery.level < 1.0);
+      }, 'The level attribute must be set to the current battery level scaled from 0 to 1.0. If the reported battery level ' + navigator.battery.level + ' is not correct, please indicate that the test has failed.');
+      
+      var onlevelchange_test = async_test('When the battery level is updated, must increase the level attribute\'s value and fire a levelchange event.');
+      var battery_level = navigator.battery.level;
+      navigator.battery.onlevelchange = onlevelchange_test.step_func(function (e) {
+        assert_true(navigator.battery.level > battery_level, 'The value of the level attribute must increase.');
+        onlevelchange_test.done();
+      });
+      
+    })();
+    </script>
+  </body>
+</html>

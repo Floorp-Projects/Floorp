@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Lostpointercapture triggers first and asynchronously</title>
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
+        <script src="/resources/testharness.js"></script>
+        <script src="/resources/testharnessreport.js"></script>
+        <script src="pointerevent_support.js"></script>
+    </head>
+    <body>
+        <h1>Pointer Events capture test - lostpointercapture order</h1>
+        <h4>
+            Test Description:
+            This test checks if lostpointercapture is handled asynchronously and prior to all subsequent events.
+            Complete the folowing actions:
+            <ol>
+                <li> Press and hold left mouse button over "Set Capture" button. "gotpointercapture" should be logged inside of the black rectangle
+                <li>Release left mouse button. "lostpointercapture" should be logged inside of the black rectangle
+            </ol>
+        </h4>
+        Test passes if lostpointercapture is dispatched after releasing the mouse button and before any additional pointer events.
+        <div id="target0" style="background:black; color:white"></div>
+        <br>
+        <input type="button" id="btnCapture" value="Set Capture">
+        <script type='text/javascript'>
+            var isPointerCapture = false;
+            var count=0;
+
+            var pointeroverReceived, pointeroutReceived,
+                pointermoveReceived, pointerdownReceived,
+                pointerupReceived, pointerleaveReceived,
+                pointerenterReceived;
+
+            var testStarted = false;
+            var isAsync = false;
+
+            var target0 = document.getElementById('target0');
+            var target1 = document.getElementById('target1');
+            var captureButton = document.getElementById('btnCapture');
+
+            window.onload = function() {
+
+                on_event(captureButton, 'pointerdown', function(e) {
+                    if(isPointerCapture == false) {
+                        isPointerCapture = true;
+                        captureButton.value = 'Release Capture';
+                        sPointerCapture(e);
+                        pointerupGot = false;
+                    }
+                    else {
+                        rPointerCapture(e);
+                        setTimeout(function() {
+                            isAsync = true;
+                        });
+                    }
+                 });
+
+                on_event(target0, 'gotpointercapture', function(e) {
+                    log("gotpointercapture", document.getElementById('target0'));
+                    pointeroverReceived = false;
+                    pointeroutReceived = false;
+                    pointermoveReceived = false;
+                    pointerdownReceived = false;
+                    pointerupReceived = false;
+                    pointerleaveReceived = false;
+                    pointerenterReceived = false;
+                });
+
+                on_event(target0, 'lostpointercapture', function(e) {
+                    log("lostpointercapture", document.getElementById('target0'));
+                    captureButton.value = 'Set Capture';
+                    isPointerCapture = false;
+
+                    testStarted = false;
+
+                    test(function() {
+                        // TA: 11.2
+                        assert_true(isAsync, "lostpointercapture must be fired asynchronously");
+
+                        assert_true((pointeroverReceived == false)&&
+                        (pointeroutReceived == false)&&
+                        (pointerdownReceived == false)&&
+                        (pointerupReceived == false)&&
+                        (pointermoveReceived ==false)&&
+                        (pointerenterReceived == false)&&
+                        (pointerleaveReceived == false)
+                        , "lostpointercapture is dispatched prior to subsequent events");
+                    }, "lostpointercapture is dispatched prior to subsequent events");
+                });
+
+                run();
+            }
+
+            function run() {
+                // After pointer capture is released for a pointer, and prior to any subsequent events for the pointer,
+                // the lostpointercapture event must be dispatched to the element from which pointer capture was removed.
+                // TA: 11.1
+                on_event(target0, "pointerover", function (event) {
+                    if(testStarted == true) {
+                        pointeroverReceived = true;
+                    }
+                });
+
+                on_event(target0, "pointerout", function (event) {
+                    if(testStarted == true) {
+                        pointeroutReceived = true;
+                    }
+                });
+
+                on_event(target0, "pointerdown", function (event) {
+                    if(testStarted == true) {
+                        pointerdownReceived = true;
+                    }
+                });
+
+                on_event(target0, "pointerup", function (event) {
+                    if(testStarted == true) {
+                        pointerupReceived = true;
+                    }
+                    testStarted = true;
+                });
+
+                on_event(target0, "pointermove", function (event) {
+                    if(testStarted == true) {
+                        pointermoveReceived = true;
+                    }
+                });
+
+                on_event(target0, "pointerenter", function (event) {
+                    if(testStarted == true) {
+                        pointerenterReceived = true;
+                    }
+                });
+
+                on_event(target0, "pointerleave", function (event) {
+                    if(testStarted == true) {
+                        pointerleaveReceived = true;
+                    }
+                });
+            }
+        </script>
+        <h1>Pointer Events Capture Test</h1>
+        <div id="complete-notice">
+        </div>
+        <div id="log"></div>
+    </body>
+</html>
