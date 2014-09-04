@@ -576,6 +576,16 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
+    <style name="Widget.RemoteTabsItemView" parent="Widget.TwoLinePageRow"/>
+
+    <style name="Widget.RemoteTabsClientView" parent="Widget.TwoLinePageRow">
+        <item name="android:background">#fff5f7f9</item>
+    </style>
+
+    <style name="Widget.RemoteTabsListView" parent="Widget.HomeListView">
+        <item name="android:childDivider">#E7ECF0</item>
+    </style>
+
     <!-- TabsTray Row -->
     <style name="TabRowTextAppearance">
         <item name="android:textColor">#FFFFFFFF</item>
