@@ -1508,15 +1508,18 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
   if (gDisableReplaceFallback) {
     env.set("MOZ_NO_REPLACE_FALLBACK", "1");
   }
+  env.set("MOZ_EMULATE_ELEVATION_PATH", "1");
 
   let process = AUS_Cc["@mozilla.org/process/util;1"].
                 createInstance(AUS_Ci.nsIProcess);
   process.init(updateBin);
+
   process.run(true, args, args.length);
 
   if (gDisableReplaceFallback) {
     env.set("MOZ_NO_REPLACE_FALLBACK", "");
   }
+  env.set("MOZ_EMULATE_ELEVATION_PATH", "");
 
   let status = readStatusFile();
   if (process.exitValue != aExpectedExitValue || status != aExpectedStatus) {

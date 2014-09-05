@@ -162,11 +162,15 @@ UACHelper::DisableUnneededPrivileges(HANDLE token,
   BOOL result = TRUE;
   for (size_t i = 0; i < count; i++) {
     if (SetPrivilege(token, unneededPrivs[i], FALSE)) {
+#ifdef UPDATER_LOG_PRIVS
       LOG(("Disabled unneeded token privilege: %s.",
            unneededPrivs[i]));
+#endif
     } else {
+#ifdef UPDATER_LOG_PRIVS
       LOG(("Could not disable token privilege value: %s. (%d)",
            unneededPrivs[i], GetLastError()));
+#endif
       result = FALSE;
     }
   }
