@@ -203,6 +203,23 @@ RestyleTracker::DoProcessRestyles()
       }
 
       ProcessOneRestyle(element, data.mRestyleHint, data.mChangeHint);
+
+      // Any descendant elements that we expected we would restyle,
+      // but did not up restyling, we should restyle next time around
+      // the loop.
+      //
+      // Note that data.mDescendants maintains the same invariant that
+      // mRestyleRoots does, i.e. that ancestors appear after descendants.
+      // Since we have removed |element| from the end of mRestyleRoots,
+      // and |element| is an ancestor of all elements in data.mDescendants,
+      // we are safe to simply append to the end of mRestyleRoots to
+      // maintain its invariant.
+      for (uint32_t i = 0; i < data.mDescendants.Length(); ++i) {
+        Element* descendant = data.mDescendants[i];
+        if (descendant->HasFlag(RestyleBit())) {
+          mRestyleRoots.AppendElement(descendant);
+        }
+      }
     }
 
     if (mHaveLaterSiblingRestyles) {
@@ -232,6 +249,8 @@ RestyleTracker::DoProcessRestyles()
         ProcessOneRestyle(currentRestyle->mElement,
                           currentRestyle->mRestyleHint,
                           currentRestyle->mChangeHint);
+
+        MOZ_ASSERT(currentRestyle->mDescendants.IsEmpty());
       }
     }
   }
@@ -261,6 +280,8 @@ RestyleTracker::GetRestyleData(Element* aElement, RestyleData* aData)
     // element.  Leave it around for now, but remove the other restyle
     // hints and the change hint for it.  Also unset its root bit,
     // since it's no longer a root with the new restyle data.
+    NS_ASSERTION(aData->mDescendants.IsEmpty(),
+                 "expected descendants to be handled by now");
     RestyleData newData;
     newData.mChangeHint = nsChangeHint(0);
     newData.mRestyleHint = eRestyle_LaterSiblings;

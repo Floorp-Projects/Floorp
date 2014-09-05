@@ -288,8 +288,11 @@ public:
   }
   
   struct RestyleData {
-    nsRestyleHint mRestyleHint;  // What we want to restyle
-    nsChangeHint  mChangeHint;   // The minimal change hint for "self"
+    nsRestyleHint mRestyleHint;       // What we want to restyle
+    nsChangeHint mChangeHint;         // The minimal change hint for "self"
+    nsTArray<Element*> mDescendants;  // Descendant elements we must check that
+                                      // we ended up restyling, ordered with the
+                                      // same invariant as mRestyleRoots
   };
 
   /**
@@ -400,7 +403,8 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
   // ReResolveStyleContext on it or just reframe it).
   if ((aRestyleHint & ~eRestyle_LaterSiblings) ||
       (aMinChangeHint & nsChangeHint_ReconstructFrame)) {
-    for (const Element* cur = aElement; !cur->HasFlag(RootBit()); ) {
+    Element* cur = aElement;
+    while (!cur->HasFlag(RootBit())) {
       nsIContent* parent = cur->GetFlattenedTreeParent();
       // Stop if we have no parent or the parent is not an element or
       // we're part of the viewport scrollbars (because those are not
@@ -418,6 +422,7 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
            cur->GetPrimaryFrame() &&
            cur->GetPrimaryFrame()->GetParent() != parent->GetPrimaryFrame())) {
         mRestyleRoots.AppendElement(aElement);
+        cur = aElement;
         break;
       }
       cur = parent->AsElement();
@@ -426,6 +431,22 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
     // itself) is in mRestyleRoots.  Set the root bit on aElement, to
     // speed up searching for an existing root on its descendants.
     aElement->SetFlags(RootBit());
+    if (cur != aElement) {
+      // We are already going to restyle cur, one of aElement's ancestors,
+      // but we might not end up restyling all the way down to aElement.
+      // Record it in the RestyleData so we can ensure it does get restyled
+      // after we deal with cur.
+      //
+      // As with the mRestyleRoots array, mDescendants maintains the
+      // invariant that if two elements appear in the array and one
+      // is an ancestor of the other, that the ancestor appears after
+      // the descendant.
+      RestyleData curData;
+      // XXX We should avoid copying RestyleData::mDescendants around.
+      mPendingRestyles.Get(cur, &curData);
+      curData.mDescendants.AppendElement(aElement);
+      mPendingRestyles.Put(cur, curData);
+    }
   }
 
   mHaveLaterSiblingRestyles =
