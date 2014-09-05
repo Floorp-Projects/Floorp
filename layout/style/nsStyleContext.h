@@ -95,6 +95,13 @@ public:
     return mRefCnt;
   }
 
+  bool HasSingleReference() const {
+    NS_ASSERTION(mRefCnt != 0,
+                 "do not call HasSingleReference on a newly created "
+                 "nsStyleContext with no references yet");
+    return mRefCnt == 1;
+  }
+
   nsPresContext* PresContext() const { return mRuleNode->PresContext(); }
 
   nsStyleContext* GetParent() const { return mParent; }
@@ -380,6 +387,12 @@ public:
    */
   void SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs);
 
+  /**
+   * On each descendant of this style context, clears out any cached inherited
+   * structs indicated in aStructs.
+   */
+  void ClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs);
+
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent);
   static void AssertStyleStructMaxDifferenceValid();
@@ -427,6 +440,9 @@ private:
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
+
+  // Helper for ClearCachedInheritedStyleDataOnDescendants.
+  void DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs);
 
 #ifdef DEBUG
   void AssertStructsNotUsedElsewhere(nsStyleContext* aDestroyingContext,
