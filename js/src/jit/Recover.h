@@ -505,7 +505,7 @@ class RNewArray MOZ_FINAL : public RInstruction
 {
   private:
     uint32_t count_;
-    AllocatingBehaviour allocatingBehaviour_;
+    bool isAllocating_;
 
   public:
     RINSTRUCTION_HEADER_(NewArray)

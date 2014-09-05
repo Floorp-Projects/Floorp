@@ -11,8 +11,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include <algorithm>
-
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
@@ -167,7 +165,7 @@ ToId(JSContext *cx, uint32_t index, MutableHandleId id)
  * to JSVAL_VOID. This function assumes that the location pointed by vp is
  * properly rooted and can be used as GC-protected storage for temporaries.
  */
-template <typename IndexType>
+template<typename IndexType>
 static inline bool
 DoGetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
              IndexType index, bool *hole, MutableHandleValue vp)
@@ -192,7 +190,7 @@ DoGetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
     return true;
 }
 
-template <typename IndexType>
+template<typename IndexType>
 static void
 AssertGreaterThanZero(IndexType index)
 {
@@ -206,7 +204,7 @@ AssertGreaterThanZero(uint32_t index)
 {
 }
 
-template <typename IndexType>
+template<typename IndexType>
 static bool
 GetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
            IndexType index, bool *hole, MutableHandleValue vp)
@@ -229,7 +227,7 @@ GetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
     return DoGetElement(cx, obj, receiver, index, hole, vp);
 }
 
-template <typename IndexType>
+template<typename IndexType>
 static inline bool
 GetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, MutableHandleValue vp)
 {
@@ -1740,7 +1738,7 @@ MatchNumericComparator(JSContext *cx, const Value &v)
     return Match_None;
 }
 
-template <typename K, typename C>
+template<typename K, typename C>
 static inline bool
 MergeSortByKey(K keys, size_t len, K scratch, C comparator, AutoValueVector *vec)
 {
@@ -2447,7 +2445,7 @@ js::array_splice_impl(JSContext *cx, unsigned argc, Value *vp, bool returnValueI
             TryReuseArrayType(obj, arr);
         }
     } else {
-        arr = NewDenseFullyAllocatedArray(cx, actualDeleteCount);
+        arr = NewDenseAllocatedArray(cx, actualDeleteCount);
         if (!arr)
             return false;
         TryReuseArrayType(obj, arr);
@@ -2756,7 +2754,7 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
         begin = end;
 
     Rooted<ArrayObject*> narr(cx);
-    narr = NewDenseFullyAllocatedArray(cx, end - begin);
+    narr = NewDenseAllocatedArray(cx, end - begin);
     if (!narr)
         return false;
     TryReuseArrayType(obj, narr);
@@ -2845,7 +2843,7 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
     RootedValue thisv(cx, args.length() >= 2 ? args[1] : UndefinedValue());
 
     /* Step 6. */
-    RootedObject arr(cx, NewDenseFullyAllocatedArray(cx, 0));
+    RootedObject arr(cx, NewDenseAllocatedArray(cx, 0));
     if (!arr)
         return false;
     TypeObject *newtype = GetTypeCallerInitObject(cx, JSProto_Array);
@@ -3086,13 +3084,11 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /*
-     * Allocate up to |EagerAllocationMaxLength| dense elements eagerly, to
-     * avoid reallocating elements when filling the array.
+     * Allocate dense elements eagerly for small arrays, to avoid reallocating
+     * elements when filling the array.
      */
-    AllocatingBehaviour allocating = (length <= ArrayObject::EagerAllocationMaxLength)
-                                   ? NewArray_FullyAllocating
-                                   : NewArray_PartlyAllocating;
-    RootedObject obj(cx, NewDenseArray(cx, length, type, allocating));
+    bool allocateArray = length <= ArrayObject::EagerAllocationMaxLength;
+    RootedObject obj(cx, NewDenseArray(cx, length, type, allocateArray));
     if (!obj)
         return false;
 
@@ -3182,7 +3178,7 @@ EnsureNewArrayElements(ExclusiveContext *cx, JSObject *obj, uint32_t length)
     return true;
 }
 
-template <uint32_t maxLength>
+template<bool allocateCapacity>
 static MOZ_ALWAYS_INLINE ArrayObject *
 NewArray(ExclusiveContext *cxArg, uint32_t length,
          JSObject *protoArg, NewObjectKind newKind = GenericObject)
@@ -3205,11 +3201,8 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
                 ArrayObject *arr = &obj->as<ArrayObject>();
                 arr->setFixedElements();
                 arr->setLength(cx, length);
-                if (maxLength > 0 &&
-                    !EnsureNewArrayElements(cx, arr, std::min(maxLength, length)))
-                {
+                if (allocateCapacity && !EnsureNewArrayElements(cx, arr, length))
                     return nullptr;
-                }
                 return arr;
             } else {
                 RootedObject proto(cxArg, protoArg);
@@ -3266,7 +3259,7 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
                                                                    cxArg->global(), allocKind, arr);
     }
 
-    if (maxLength > 0 && !EnsureNewArrayElements(cxArg, arr, std::min(maxLength, length)))
+    if (allocateCapacity && !EnsureNewArrayElements(cxArg, arr, length))
         return nullptr;
 
     probes::CreateObject(cxArg, arr);
@@ -3277,49 +3270,36 @@ ArrayObject * JS_FASTCALL
 js::NewDenseEmptyArray(JSContext *cx, JSObject *proto /* = nullptr */,
                        NewObjectKind newKind /* = GenericObject */)
 {
-    return NewArray<0>(cx, 0, proto, newKind);
+    return NewArray<false>(cx, 0, proto, newKind);
 }
 
 ArrayObject * JS_FASTCALL
-js::NewDenseFullyAllocatedArray(ExclusiveContext *cx, uint32_t length,
-                                JSObject *proto /* = nullptr */,
-                                NewObjectKind newKind /* = GenericObject */)
+js::NewDenseAllocatedArray(ExclusiveContext *cx, uint32_t length, JSObject *proto /* = nullptr */,
+                           NewObjectKind newKind /* = GenericObject */)
 {
-    return NewArray<JSObject::NELEMENTS_LIMIT>(cx, length, proto, newKind);
-}
-
-ArrayObject * JS_FASTCALL
-js::NewDensePartlyAllocatedArray(ExclusiveContext *cx, uint32_t length,
-                                 JSObject *proto /* = nullptr */,
-                                 NewObjectKind newKind /* = GenericObject */)
-{
-    return NewArray<ArrayObject::EagerAllocationMaxLength>(cx, length, proto, newKind);
+    return NewArray<true>(cx, length, proto, newKind);
 }
 
 ArrayObject * JS_FASTCALL
 js::NewDenseUnallocatedArray(ExclusiveContext *cx, uint32_t length, JSObject *proto /* = nullptr */,
                              NewObjectKind newKind /* = GenericObject */)
 {
-    return NewArray<0>(cx, length, proto, newKind);
+    return NewArray<false>(cx, length, proto, newKind);
 }
 
 ArrayObject * JS_FASTCALL
-js::NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleTypeObject type,
-                  AllocatingBehaviour allocating)
+js::NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleTypeObject type, bool allocateArray)
 {
     NewObjectKind newKind = !type ? SingletonObject : GenericObject;
     if (type && type->shouldPreTenure())
         newKind = TenuredObject;
 
-    ArrayObject *arr;
-    if (allocating == NewArray_Unallocating) {
-        arr = NewDenseUnallocatedArray(cx, length, nullptr, newKind);
-    } else if (allocating == NewArray_PartlyAllocating) {
-        arr = NewDensePartlyAllocatedArray(cx, length, nullptr, newKind);
-    } else {
-        JS_ASSERT(allocating == NewArray_FullyAllocating);
-        arr = NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
-    }
+    // Allocate dense elements eagerly for small arrays, to avoid reallocating
+    // elements when filling the array.
+    ArrayObject *arr = allocateArray
+                       ? NewDenseAllocatedArray(cx, length, nullptr, newKind)
+                       : NewDenseUnallocatedArray(cx, length, nullptr, newKind);
+
     if (!arr)
         return nullptr;
 
@@ -3340,7 +3320,7 @@ js::NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleObject src, uint32
 {
     JS_ASSERT(!src->isIndexed());
 
-    ArrayObject* arr = NewArray<JSObject::NELEMENTS_LIMIT>(cx, length, proto);
+    ArrayObject* arr = NewArray<true>(cx, length, proto);
     if (!arr)
         return nullptr;
 
@@ -3360,7 +3340,7 @@ ArrayObject *
 js::NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values,
                         JSObject *proto /* = nullptr */, NewObjectKind newKind /* = GenericObject */)
 {
-    ArrayObject* arr = NewArray<JSObject::NELEMENTS_LIMIT>(cx, length, proto);
+    ArrayObject* arr = NewArray<true>(cx, length, proto);
     if (!arr)
         return nullptr;
 
@@ -3375,7 +3355,7 @@ js::NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values,
 }
 
 ArrayObject *
-js::NewDenseFullyAllocatedArrayWithTemplate(JSContext *cx, uint32_t length, JSObject *templateObject)
+js::NewDenseAllocatedArrayWithTemplate(JSContext *cx, uint32_t length, JSObject *templateObject)
 {
     gc::AllocKind allocKind = GuessArrayGCKind(length);
     JS_ASSERT(CanBeFinalizedInBackground(allocKind, &ArrayObject::class_));
