@@ -22,6 +22,7 @@
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
 #include "jit/IonCode.h"
+#include "js/UbiNode.h"
 #include "vm/Shape.h"
 
 namespace JS {
@@ -2036,5 +2037,16 @@ NormalizeOriginPrincipals(JSPrincipals *principals, JSPrincipals *originPrincipa
 }
 
 } /* namespace js */
+
+namespace JS {
+namespace ubi {
+
+// A LazyScript can be traced with JS_TraceChildren, and belongs to no
+// particular compartment, so we can use the generic JS::ubi::TracerConcrete
+// template for LazyScript's JS::ubi::Concrete specialization..
+template<> struct Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> { };
+
+} // namespace ubi
+} // namespace JS
 
 #endif /* jsscript_h */
