@@ -5,10 +5,11 @@
 /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
-  If you have any problem of this file. Please contact 
-  Netscape Client International Team or 
-  ftang@netscape <Frank Tang> 
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
+  If you have any problems with this file, please file a bug
+  under the "Internationalization" component in
+  https://bugzilla.mozilla.org/enter_bug.cgi?product=Core
 
               Table in Debug form 
 Begin of Item 0000
@@ -34,7 +35,7 @@ Begin of Item 0002
   0402 0403 201A 0453 201E 2026 2020 2021 
   20AC 2030 0409 2039 040A 040C 040B 040F 
   0452 2018 2019 201C 201D 2022 2013 2014 
-  FFFD 2122 0459 203A 045A 045C 045B 045F 
+  0098 2122 0459 203A 045A 045C 045B 045F 
   00A0 040E 045E 0408 00A4 0490 00A6 00A7 
   0401 00A9 0404 00AB 00AC 00AD 00AE 0407 
   00B0 00B1 0406 0456 0491 00B5 00B6 00B7 
@@ -72,7 +73,7 @@ End of Item 0002
 /* 0000 */    0x0402, 0x0403, 0x201A, 0x0453, 0x201E, 0x2026, 0x2020, 0x2021, 
 /* 0008 */    0x20AC, 0x2030, 0x0409, 0x2039, 0x040A, 0x040C, 0x040B, 0x040F, 
 /* 0010 */    0x0452, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 
-/* 0018 */    0xFFFD, 0x2122, 0x0459, 0x203A, 0x045A, 0x045C, 0x045B, 0x045F, 
+/* 0018 */    0x0098, 0x2122, 0x0459, 0x203A, 0x045A, 0x045C, 0x045B, 0x045F, 
 /* 0020 */    0x00A0, 0x040E, 0x045E, 0x0408, 0x00A4, 0x0490, 0x00A6, 0x00A7, 
 /* 0028 */    0x0401, 0x00A9, 0x0404, 0x00AB, 0x00AC, 0x00AD, 0x00AE, 0x0407, 
 /* 0030 */    0x00B0, 0x00B1, 0x0406, 0x0456, 0x0491, 0x00B5, 0x00B6, 0x00B7, 

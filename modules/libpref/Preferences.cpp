@@ -105,7 +105,7 @@ public:
   ValueObserverHashKey(const char *aPref, PrefChangedFunc aCallback) :
     mPrefName(aPref), mCallback(aCallback) { }
 
-  ValueObserverHashKey(const ValueObserverHashKey *aOther) :
+  explicit ValueObserverHashKey(const ValueObserverHashKey *aOther) :
     mPrefName(aOther->mPrefName), mCallback(aOther->mCallback)
   { }
 
@@ -745,7 +745,7 @@ Preferences::GetPreference(PrefSetting* aPref)
 void
 Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aPrefs)
 {
-  aPrefs->SetCapacity(PL_DHASH_TABLE_CAPACITY(&gHashTable));
+  aPrefs->SetCapacity(gHashTable.Capacity());
   PL_DHashTableEnumerate(&gHashTable, pref_GetPrefs, aPrefs);
 }
 
@@ -788,6 +788,11 @@ Preferences::GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Preferences::GetDirty(bool *_retval) {
+  *_retval = gDirty;
+  return NS_OK;
+}
 
 nsresult
 Preferences::NotifyServiceObservers(const char *aTopic)
@@ -971,8 +976,8 @@ Preferences::WritePrefFile(nsIFile* aFile)
   if (NS_FAILED(rv)) 
       return rv;  
 
-  nsAutoArrayPtr<char*> valueArray(new char*[gHashTable.entryCount]);
-  memset(valueArray, 0, gHashTable.entryCount * sizeof(char*));
+  nsAutoArrayPtr<char*> valueArray(new char*[gHashTable.EntryCount()]);
+  memset(valueArray, 0, gHashTable.EntryCount() * sizeof(char*));
   pref_saveArgs saveArgs;
   saveArgs.prefArray = valueArray;
   saveArgs.saveTypes = SAVE_ALL;
@@ -981,13 +986,13 @@ Preferences::WritePrefFile(nsIFile* aFile)
   PL_DHashTableEnumerate(&gHashTable, pref_savePref, &saveArgs);
     
   /* Sort the preferences to make a readable file on disk */
-  NS_QuickSort(valueArray, gHashTable.entryCount, sizeof(char *), pref_CompareStrings, nullptr);
+  NS_QuickSort(valueArray, gHashTable.EntryCount(), sizeof(char *), pref_CompareStrings, nullptr);
   
   // write out the file header
   outStream->Write(outHeader, sizeof(outHeader) - 1, &writeAmount);
 
   char** walker = valueArray;
-  for (uint32_t valueIdx = 0; valueIdx < gHashTable.entryCount; valueIdx++, walker++) {
+  for (uint32_t valueIdx = 0; valueIdx < gHashTable.EntryCount(); valueIdx++, walker++) {
     if (*walker) {
       outStream->Write(*walker, strlen(*walker), &writeAmount);
       outStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeAmount);

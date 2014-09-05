@@ -179,7 +179,7 @@ this.PageThumbs = {
       return;
     }
 
-    let canvas = this._createCanvas();
+    let canvas = this.createCanvas();
     this.captureToCanvas(aWindow, canvas);
 
     // Fetch the canvas data on the next event loop tick so that we allow
@@ -203,7 +203,7 @@ this.PageThumbs = {
       return null;
     }
 
-    let canvas = this._createCanvas();
+    let canvas = this.createCanvas();
     this.captureToCanvas(aWindow, canvas);
 
     let deferred = Promise.defer();
@@ -418,7 +418,7 @@ this.PageThumbs = {
    *                canvas.  If not given, the hidden window will be used.
    * @return The newly created canvas.
    */
-  _createCanvas: function PageThumbs_createCanvas(aWindow) {
+  createCanvas: function PageThumbs_createCanvas(aWindow) {
     let doc = (aWindow || Services.appShell.hiddenDOMWindow).document;
     let canvas = doc.createElementNS(HTML_NAMESPACE, "canvas");
     canvas.mozOpaque = true;

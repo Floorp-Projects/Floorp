@@ -1,8 +1,8 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * Last changed in libpng 1.6.1 [March 28, 2013]
- * Copyright (c) 1998-2013 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.11 [June 5, 2014]
+ * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -124,6 +124,9 @@ png_get_x_pixels_per_meter(png_const_structrp png_ptr, png_const_inforp
          if (info_ptr->phys_unit_type == PNG_RESOLUTION_METER)
             return (info_ptr->x_pixels_per_unit);
       }
+#else
+   PNG_UNUSED(png_ptr)
+   PNG_UNUSED(info_ptr)
 #endif
 
    return (0);
@@ -142,6 +145,9 @@ png_get_y_pixels_per_meter(png_const_structrp png_ptr, png_const_inforp
       if (info_ptr->phys_unit_type == PNG_RESOLUTION_METER)
          return (info_ptr->y_pixels_per_unit);
    }
+#else
+   PNG_UNUSED(png_ptr)
+   PNG_UNUSED(info_ptr)
 #endif
 
    return (0);
@@ -159,6 +165,9 @@ png_get_pixels_per_meter(png_const_structrp png_ptr, png_const_inforp info_ptr)
           info_ptr->x_pixels_per_unit == info_ptr->y_pixels_per_unit)
          return (info_ptr->x_pixels_per_unit);
    }
+#else
+   PNG_UNUSED(png_ptr)
+   PNG_UNUSED(info_ptr)
 #endif
 
    return (0);
@@ -229,6 +238,9 @@ png_get_x_offset_microns(png_const_structrp png_ptr, png_const_inforp info_ptr)
       if (info_ptr->offset_unit_type == PNG_OFFSET_MICROMETER)
          return (info_ptr->x_offset);
    }
+#else
+   PNG_UNUSED(png_ptr)
+   PNG_UNUSED(info_ptr)
 #endif
 
    return (0);
@@ -245,6 +257,9 @@ png_get_y_offset_microns(png_const_structrp png_ptr, png_const_inforp info_ptr)
       if (info_ptr->offset_unit_type == PNG_OFFSET_MICROMETER)
          return (info_ptr->y_offset);
    }
+#else
+   PNG_UNUSED(png_ptr)
+   PNG_UNUSED(info_ptr)
 #endif
 
    return (0);
@@ -261,6 +276,9 @@ png_get_x_offset_pixels(png_const_structrp png_ptr, png_const_inforp info_ptr)
       if (info_ptr->offset_unit_type == PNG_OFFSET_PIXEL)
          return (info_ptr->x_offset);
    }
+#else
+   PNG_UNUSED(png_ptr)
+   PNG_UNUSED(info_ptr)
 #endif
 
    return (0);
@@ -277,6 +295,9 @@ png_get_y_offset_pixels(png_const_structrp png_ptr, png_const_inforp info_ptr)
       if (info_ptr->offset_unit_type == PNG_OFFSET_PIXEL)
          return (info_ptr->y_offset);
    }
+#else
+   PNG_UNUSED(png_ptr)
+   PNG_UNUSED(info_ptr)
 #endif
 
    return (0);

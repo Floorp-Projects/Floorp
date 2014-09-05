@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VERION_MAJOR 1
-#define VERION_MINOR 0
+#define VERSION_MAJOR 1
+#define VERSION_MINOR 0
 #define VERSION_POINT 7
 /* NSPR header files */
 #include <prinit.h>
@@ -174,7 +174,7 @@ PRIntn main(PRIntn ac, char **av, char **ev) {
 "\nSSL Test Suite Version %d.%d.%d\n\
 All Rights Reserved\n\
 Usage: sslt [-c client_nickname] [-n server_nickname] [-p passwd] [-d] testid\n",
-VERION_MAJOR, VERION_MINOR, VERSION_POINT);
+VERSION_MAJOR, VERSION_MINOR, VERSION_POINT);
 
     exit(0);
   }

@@ -58,7 +58,7 @@ using namespace mozilla;
 class nsSiteWindow : public nsIEmbeddingSiteWindow
 {
 public:
-  nsSiteWindow(nsContentTreeOwner *aAggregator);
+  explicit nsSiteWindow(nsContentTreeOwner *aAggregator);
   virtual ~nsSiteWindow();
 
   NS_DECL_ISUPPORTS

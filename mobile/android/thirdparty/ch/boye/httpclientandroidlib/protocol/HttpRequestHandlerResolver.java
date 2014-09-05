@@ -30,11 +30,13 @@ package ch.boye.httpclientandroidlib.protocol;
 /**
  * HttpRequestHandlerResolver can be used to resolve an instance of
  * {@link HttpRequestHandler} matching a particular request URI. Usually the
- * resolved request handler will be used to process the request with the
+ * mapped request handler will be used to process the request with the
  * specified request URI.
  *
  * @since 4.0
+ * @deprecated see {@link HttpRequestHandlerMapper}
  */
+@Deprecated
 public interface HttpRequestHandlerResolver {
 
     /**

@@ -103,7 +103,9 @@ let gBrowserThumbnails = {
   },
 
   _capture: function Thumbnails_capture(aBrowser) {
-    if (this._shouldCapture(aBrowser))
+    // Only capture about:newtab top sites.
+    if (this._topSiteURLs.indexOf(aBrowser.currentURI.spec) >= 0 &&
+        this._shouldCapture(aBrowser))
       PageThumbs.captureAndStoreIfStale(aBrowser);
   },
 
@@ -121,13 +123,10 @@ let gBrowserThumbnails = {
     this._timeouts.set(aBrowser, timeout);
   },
 
+  // FIXME: This should be part of the PageThumbs API. (bug 1062414)
   _shouldCapture: function Thumbnails_shouldCapture(aBrowser) {
     // Capture only if it's the currently selected tab.
     if (aBrowser != gBrowser.selectedBrowser)
-      return false;
-
-    // Only capture about:newtab top sites.
-    if (this._topSiteURLs.indexOf(aBrowser.currentURI.spec) < 0)
       return false;
 
     // Don't capture in per-window private browsing mode.

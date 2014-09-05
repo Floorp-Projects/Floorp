@@ -19,7 +19,7 @@
 #include "nsIDOMIccInfo.h"
 #include "nsIIccProvider.h"
 #include "nsIMobileConnectionInfo.h"
-#include "nsIMobileConnectionProvider.h"
+#include "nsIMobileConnectionService.h"
 #include "nsIMobileNetworkInfo.h"
 #include "nsIObserverService.h"
 #include "nsISettingsService.h"
@@ -201,8 +201,8 @@ BluetoothHfpManager::Cleanup()
   mReceiveVgsFlag = false;
   mDialingRequestProcessed = true;
 
-  mConnectionState = BTHF_CONNECTION_STATE_DISCONNECTED;
-  mPrevConnectionState = BTHF_CONNECTION_STATE_DISCONNECTED;
+  mConnectionState = HFP_CONNECTION_STATE_DISCONNECTED;
+  mPrevConnectionState = HFP_CONNECTION_STATE_DISCONNECTED;
   mBattChg = 5;
   mService = HFP_NETWORK_STATE_NOT_AVAILABLE;
   mRoam = HFP_SERVICE_TYPE_HOME;
@@ -217,7 +217,7 @@ BluetoothHfpManager::Reset()
   // Phone & Device CIND
   ResetCallArray();
   // Clear Sco state
-  mAudioState = BTHF_AUDIO_STATE_DISCONNECTED;
+  mAudioState = HFP_AUDIO_STATE_DISCONNECTED;
   Cleanup();
 }
 
@@ -522,9 +522,9 @@ BluetoothHfpManager::NotifyConnectionStateChanged(const nsAString& aType)
       mListener->EnumerateCalls();
 
       OnConnect(EmptyString());
-    } else if (mConnectionState == BTHF_CONNECTION_STATE_DISCONNECTED) {
+    } else if (mConnectionState == HFP_CONNECTION_STATE_DISCONNECTED) {
       mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
-      if (mPrevConnectionState == BTHF_CONNECTION_STATE_DISCONNECTED) {
+      if (mPrevConnectionState == HFP_CONNECTION_STATE_DISCONNECTED) {
         // Bug 979160: This implies the outgoing connection failure.
         // When the outgoing hfp connection fails, state changes to disconnected
         // state. Since bluedroid would not report connecting state, but only
@@ -612,8 +612,8 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
 void
 BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
 {
-  nsCOMPtr<nsIMobileConnectionProvider> connection =
-    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
+  nsCOMPtr<nsIMobileConnectionService> connection =
+    do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE_VOID(connection);
 
   nsCOMPtr<nsIMobileConnectionInfo> voiceInfo;
@@ -1114,13 +1114,13 @@ BluetoothHfpManager::DisconnectSco()
 bool
 BluetoothHfpManager::IsScoConnected()
 {
-  return (mAudioState == BTHF_AUDIO_STATE_CONNECTED);
+  return (mAudioState == HFP_AUDIO_STATE_CONNECTED);
 }
 
 bool
 BluetoothHfpManager::IsConnected()
 {
-  return (mConnectionState == BTHF_CONNECTION_STATE_SLC_CONNECTED);
+  return (mConnectionState == HFP_CONNECTION_STATE_SLC_CONNECTED);
 }
 
 void
@@ -1433,13 +1433,18 @@ void BluetoothHfpManager::DialCallNotification(const nsAString& aNumber)
 void
 BluetoothHfpManager::CnumNotification()
 {
+  static const uint8_t sAddressType[] {
+    [HFP_CALL_ADDRESS_TYPE_UNKNOWN] = 0x81,
+    [HFP_CALL_ADDRESS_TYPE_INTERNATIONAL] = 0x91 // for completeness
+  };
+
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mMsisdn.IsEmpty()) {
     nsAutoCString message("+CNUM: ,\"");
     message.Append(NS_ConvertUTF16toUTF8(mMsisdn).get());
     message.AppendLiteral("\",");
-    message.AppendInt(BTHF_CALL_ADDRTYPE_UNKNOWN);
+    message.AppendInt(sAddressType[HFP_CALL_ADDRESS_TYPE_UNKNOWN]);
     message.AppendLiteral(",,4");
 
     SendLine(message.get());

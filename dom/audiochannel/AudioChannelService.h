@@ -36,12 +36,17 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   /**
-   * Returns the AudioChannelServce singleton. Only to be called from main
-   * thread.
-   *
-   * @return NS_OK on proper assignment, NS_ERROR_FAILURE otherwise.
+   * Returns the AudioChannelServce singleton or null if the process havn't create it before.
+   * Only to be called from main thread.
    */
   static AudioChannelService* GetAudioChannelService();
+
+  /**
+   * Returns the AudioChannelServce singleton.
+   * If AudioChannelServce is not exist, create and return new one.
+   * Only to be called from main thread.
+   */
+  static AudioChannelService* GetOrCreateAudioChannelService();
 
   /**
    * Shutdown the singleton.

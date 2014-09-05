@@ -19,7 +19,7 @@ class SkiaGLGlue : public GenericAtomicRefCounted
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SkiaGLGlue)
-  SkiaGLGlue(GLContext* context);
+  explicit SkiaGLGlue(GLContext* context);
   GLContext* GetGLContext() const { return mGLContext.get(); }
   GrContext* GetGrContext() const { return mGrContext.get(); }
 

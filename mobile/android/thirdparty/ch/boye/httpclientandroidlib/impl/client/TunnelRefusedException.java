@@ -27,16 +27,18 @@
 
 package ch.boye.httpclientandroidlib.impl.client;
 
-import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.HttpException;
 import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
 
 /**
  * Signals that the tunnel request was rejected by the proxy host.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) reserved for internal use.
  */
+@Deprecated
 @Immutable
 public class TunnelRefusedException extends HttpException {
 

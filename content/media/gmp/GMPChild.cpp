@@ -24,7 +24,7 @@ using mozilla::dom::CrashReporterChild;
 #include <unistd.h> // for _exit()
 #endif
 
-#if defined(XP_WIN)
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
 #define TARGET_SANDBOX_EXPORTS
 #include "mozilla/sandboxTarget.h"
 #elif defined (MOZ_GMP_SANDBOX)
@@ -235,7 +235,7 @@ GMPChild::Init(const std::string& aPluginPath,
   return true;
 #endif
 
-#if defined(XP_WIN)
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #endif
 

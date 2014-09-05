@@ -83,8 +83,8 @@ struct VisitData {
     title.SetIsVoid(true);
   }
 
-  VisitData(nsIURI* aURI,
-            nsIURI* aReferrer = nullptr)
+  explicit VisitData(nsIURI* aURI,
+                     nsIURI* aReferrer = nullptr)
   : placeId(0)
   , visitId(0)
   , hidden(true)
@@ -186,14 +186,14 @@ struct RemoveVisitsFilter {
 class PlaceHashKey : public nsCStringHashKey
 {
   public:
-    PlaceHashKey(const nsACString& aSpec)
+    explicit PlaceHashKey(const nsACString& aSpec)
     : nsCStringHashKey(&aSpec)
     , visitCount(-1)
     , bookmarked(-1)
     {
     }
 
-    PlaceHashKey(const nsACString* aSpec)
+    explicit PlaceHashKey(const nsACString* aSpec)
     : nsCStringHashKey(aSpec)
     , visitCount(-1)
     , bookmarked(-1)
@@ -551,9 +551,9 @@ public:
   }
 
 private:
-  VisitedQuery(nsIURI* aURI,
-               mozIVisitedStatusCallback *aCallback=nullptr,
-               bool aIsVisited=false)
+  explicit VisitedQuery(nsIURI* aURI,
+                        mozIVisitedStatusCallback *aCallback=nullptr,
+                        bool aIsVisited=false)
   : mURI(aURI)
   , mCallback(aCallback)
   , mIsVisited(aIsVisited)
@@ -758,7 +758,7 @@ private:
 class NotifyCompletion : public nsRunnable
 {
 public:
-  NotifyCompletion(mozIVisitInfoCallback* aCallback)
+  explicit NotifyCompletion(mozIVisitInfoCallback* aCallback)
   : mCallback(aCallback)
   {
     MOZ_ASSERT(aCallback, "Must pass a non-null callback!");
@@ -1462,7 +1462,7 @@ class SetDownloadAnnotations MOZ_FINAL : public mozIVisitInfoCallback
 public:
   NS_DECL_ISUPPORTS
 
-  SetDownloadAnnotations(nsIURI* aDestination)
+  explicit SetDownloadAnnotations(nsIURI* aDestination)
   : mDestination(aDestination)
   , mHistory(History::GetService())
   {
@@ -1611,7 +1611,7 @@ class NotifyRemoveVisits : public nsRunnable
 {
 public:
 
-  NotifyRemoveVisits(nsTHashtable<PlaceHashKey>& aPlaces)
+  explicit NotifyRemoveVisits(nsTHashtable<PlaceHashKey>& aPlaces)
     : mPlaces(VISITS_REMOVAL_INITIAL_HASH_LENGTH)
     , mHistory(History::GetService())
   {
@@ -2029,7 +2029,7 @@ class ConcurrentStatementsHolder MOZ_FINAL : public mozIStorageCompletionCallbac
 public:
   NS_DECL_ISUPPORTS
 
-  ConcurrentStatementsHolder(mozIStorageConnection* aDBConn)
+  explicit ConcurrentStatementsHolder(mozIStorageConnection* aDBConn)
   {
     DebugOnly<nsresult> rv = aDBConn->AsyncClone(true, this);
     MOZ_ASSERT(NS_SUCCEEDED(rv));

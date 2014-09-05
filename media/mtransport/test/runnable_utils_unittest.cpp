@@ -44,7 +44,7 @@ class Destructor {
     *destroyed_ = true;
   }
  public:
-  Destructor(bool* destroyed) : destroyed_(destroyed) {}
+  explicit Destructor(bool* destroyed) : destroyed_(destroyed) {}
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Destructor)
 
@@ -54,7 +54,7 @@ class Destructor {
 
 class TargetClass {
  public:
-  TargetClass(int *ran) : ran_(ran) {}
+  explicit TargetClass(int *ran) : ran_(ran) {}
 
   void m1(int x) {
     std::cerr << __FUNCTION__ << " " << x << std::endl;

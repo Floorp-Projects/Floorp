@@ -46,6 +46,9 @@ class log_action(object):
             data = converter.convert(*args, **kwargs)
             return f(self, data)
 
+        if hasattr(f, '__doc__'):
+            setattr(inner, '__doc__', f.__doc__)
+
         return inner
 
     def convert(self, *args, **kwargs):

@@ -29,7 +29,7 @@ extern PRLogModuleInfo* GetMediaSourceAPILog();
 #define MSE_DEBUG(...)
 #endif
 
-#define UNIMPLEMENTED() MSE_DEBUG("SourceBufferResource(%p): UNIMPLEMENTED FUNCTION at line %d", this, __LINE__)
+#define UNIMPLEMENTED() MSE_DEBUG("SourceBufferResource(%p): UNIMPLEMENTED FUNCTION at %s:%d", this, __FILE__, __LINE__)
 
 class nsIStreamListener;
 
@@ -46,23 +46,12 @@ class SourceBuffer;
 class SourceBufferResource MOZ_FINAL : public MediaResource
 {
 public:
-  SourceBufferResource(nsIPrincipal* aPrincipal,
-                       const nsACString& aType);
+  explicit SourceBufferResource(const nsACString& aType);
   virtual nsresult Close() MOZ_OVERRIDE;
   virtual void Suspend(bool aCloseImmediately) MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual void Resume() MOZ_OVERRIDE { UNIMPLEMENTED(); }
-
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE
-  {
-    return nsCOMPtr<nsIPrincipal>(mPrincipal).forget();
-  }
-
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) MOZ_OVERRIDE
-  {
-    UNIMPLEMENTED();
-    return nullptr;
-  }
-
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE { UNIMPLEMENTED(); return nullptr; }
+  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) MOZ_OVERRIDE { UNIMPLEMENTED(); return nullptr; }
   virtual void SetReadMode(MediaCacheStream::ReadMode aMode) MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual void SetPlaybackRate(uint32_t aBytesPerSecond) MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
@@ -75,9 +64,17 @@ public:
   virtual void Unpin() MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { UNIMPLEMENTED(); *aIsReliable = false; return 0; }
   virtual int64_t GetLength() MOZ_OVERRIDE { return mInputBuffer.GetLength(); }
-  virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE { return GetLength() == aOffset ? -1 : aOffset; }
-  virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE { return GetLength(); }
-  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
+  virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE {
+    MOZ_ASSERT(aOffset >= 0);
+    if (uint64_t(aOffset) < mInputBuffer.GetOffset()) {
+      return mInputBuffer.GetOffset();
+    } else if (aOffset == GetLength()) {
+      return -1;
+    }
+    return aOffset;
+  }
+  virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE { UNIMPLEMENTED(); return -1; }
+  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { return false; }
   virtual bool IsSuspendedByCache() MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
   virtual bool IsSuspended() MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) MOZ_OVERRIDE;
@@ -100,8 +97,6 @@ public:
   {
     ReentrantMonitorAutoEnter mon(mMonitor);
 
-    // Not owned:
-    // - mPrincipal
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
     size += mType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
     size += mInputBuffer.SizeOfExcludingThis(aMallocSizeOf);
@@ -129,7 +124,6 @@ private:
   ~SourceBufferResource();
   nsresult SeekInternal(int64_t aOffset);
 
-  nsCOMPtr<nsIPrincipal> mPrincipal;
   const nsCString mType;
 
   // Provides synchronization between SourceBuffers and InputAdapters.

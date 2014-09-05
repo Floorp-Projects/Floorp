@@ -21,7 +21,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[builtinclass, scriptable, uuid(c3b61bc9-ccdd-4bcd-acd8-1b8dcbe6a247)]
+[scriptable, uuid(04714a01-e02f-4ef5-a388-612451d0db16)]
 
 interface nsIEditor  : nsISupports
 {
@@ -555,5 +555,5 @@ interface nsIEditor  : nsISupports
    * nsIEditorObserver::BeforeEditAction() and nsIEditorObserver::EditAction()
    * or nsIEditorObserver::CancelEditAction().  Otherwise, false.
    */
-  [infallible, noscript] readonly attribute boolean isInEditAction;
+  [noscript] readonly attribute boolean isInEditAction;
 };

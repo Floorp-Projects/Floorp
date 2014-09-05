@@ -9,16 +9,19 @@ var descs = {
         configurable: true
     }
 };
-descs[Symbol.for("quux")] = {configurable: true};
+if (typeof Symbol === "function")
+    descs[Symbol.for("quux")] = {configurable: true};
 var target = Object.create(proto, descs);
 
 for (let p of [new Proxy(target, {}), Proxy.revocable(target, {}).proxy]) {
     assertEq(({}).hasOwnProperty.call(p, 'foo'), false);
     assertEq(({}).hasOwnProperty.call(p, 'bar'), true);
     assertEq(({}).hasOwnProperty.call(p, 'quux'), false);
-    assertEq(({}).hasOwnProperty.call(p, Symbol('quux')), false);
-    assertEq(({}).hasOwnProperty.call(p, 'Symbol(quux)'), false);
-    assertEq(({}).hasOwnProperty.call(p, Symbol.for('quux')), true);
+    if (typeof Symbol === "function") {
+        assertEq(({}).hasOwnProperty.call(p, Symbol('quux')), false);
+        assertEq(({}).hasOwnProperty.call(p, 'Symbol(quux)'), false);
+        assertEq(({}).hasOwnProperty.call(p, Symbol.for('quux')), true);
+    }
 }
 
 // Make sure only the getOwnPropertyDescriptor trap is called, and not the has

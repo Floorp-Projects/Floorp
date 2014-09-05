@@ -15,7 +15,7 @@ class ByteReader
 {
 public:
   ByteReader() : mPtr(nullptr), mRemaining(0) {}
-  ByteReader(const mozilla::Vector<uint8_t>& aData)
+  explicit ByteReader(const mozilla::Vector<uint8_t>& aData)
     : mPtr(&aData[0]), mRemaining(aData.length())
   {
   }

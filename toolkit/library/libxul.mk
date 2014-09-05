@@ -45,15 +45,17 @@ endif
 # the default section rules with those from the script instead of
 # supplementing them. Which leads to a lib with a huge load of sections.
 ifneq (OpenBSD,$(OS_TARGET))
+ifneq (WINNT,$(OS_TARGET))
 ifdef LD_IS_BFD
 OS_LDFLAGS += $(topsrcdir)/toolkit/library/StaticXULComponents.ld
 endif
 endif
+endif
 
-ifeq (WINNT,$(OS_TARGET))
+ifdef _MSC_VER
 get_first_and_last = dumpbin -exports $1 | grep _NSModule@@ | sort -k 3 | sed -n 's/^.*?\([^@]*\)@@.*$$/\1/;1p;$$p'
 else
-get_first_and_last = $(TOOLCHAIN_PREFIX)nm -g $1 | grep _NSModule$$ | sort | sed -n 's/^.* _*\([^ ]*\)$$/\1/;1p;$$p'
+get_first_and_last = $(TOOLCHAIN_PREFIX)nm -g $1 | grep _NSModule$$ | grep -vw refptr | sort | sed -n 's/^.* _*\([^ ]*\)$$/\1/;1p;$$p'
 endif
 
 LOCAL_CHECKS = test "$$($(get_first_and_last) | xargs echo)" != "start_kPStaticModules_NSModule end_kPStaticModules_NSModule" && echo "NSModules are not ordered appropriately" && exit 1 || exit 0

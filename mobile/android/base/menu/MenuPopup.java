@@ -37,7 +37,7 @@ public class MenuPopup extends PopupWindow {
 
         // Setting a null background makes the popup to not close on touching outside.
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        setWindowLayoutMode(View.MeasureSpec.makeMeasureSpec(mPopupWidth, View.MeasureSpec.AT_MOST),
+        setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT,
                             ViewGroup.LayoutParams.WRAP_CONTENT);
 
         LayoutInflater inflater = LayoutInflater.from(context);

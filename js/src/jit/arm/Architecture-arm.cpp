@@ -184,7 +184,7 @@ ParseARMHwCapFlags(const char *armHwCap)
 #endif
 
     armHwCapFlags = CanonicalizeARMHwCapFlags(flags);
-    IonSpew(IonSpew_Codegen, "ARM HWCAP: 0x%x\n", armHwCapFlags);
+    JitSpew(JitSpew_Codegen, "ARM HWCAP: 0x%x\n", armHwCapFlags);
     return true;
 }
 
@@ -263,7 +263,7 @@ InitARMFlags()
 
     armHwCapFlags = CanonicalizeARMHwCapFlags(flags);
 
-    IonSpew(IonSpew_Codegen, "ARM HWCAP: 0x%x\n", armHwCapFlags);
+    JitSpew(JitSpew_Codegen, "ARM HWCAP: 0x%x\n", armHwCapFlags);
     return;
 }
 
@@ -397,7 +397,7 @@ VFPRegister::getRegisterDumpOffsetInBytes()
         return id() * sizeof(float);
     if (isDouble())
         return id() * sizeof(double);
-    MOZ_ASSUME_UNREACHABLE();
+    MOZ_CRASH("not Single or Double");
 }
 
 uint32_t

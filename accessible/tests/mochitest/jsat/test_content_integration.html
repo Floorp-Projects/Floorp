@@ -24,16 +24,22 @@
     function doTest() {
       var doc = currentTabDocument();
       var iframe = doc.createElement('iframe');
+      iframe.id = 'iframe';
       iframe.mozbrowser = true;
       iframe.addEventListener('mozbrowserloadend', function () {
       var contentTest = new AccessFuContentTest(
         [
           // Simple traversal forward
           [ContentMessages.simpleMoveNext, {
-            speak: ['Phone status bar', 'Traversal Rule test document']
+            speak: ['Phone status bar', 'Traversal Rule test document'],
+            focused: 'body'
           }],
           [ContentMessages.simpleMoveNext, {
-            speak: ['wow', {'string': 'headingLevel', 'args': [1]} ,'such app']
+            speak: ["Back", {"string": "pushbutton"}]
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]} ,'such app'],
+            focused: 'iframe'
           }],
           [ContentMessages.simpleMoveNext, {
             speak: ['many option', {'string': 'stateNotChecked'},
@@ -78,9 +84,15 @@
             speak: ['wow', {'string': 'headingLevel', 'args': [1]}]
           }],
           [ContentMessages.simpleMovePrevious, {
+            speak: ["Back", {"string": "pushbutton"}]
+          }],
+          [ContentMessages.simpleMovePrevious, {
             speak: ['Phone status bar']
           }],
 
+          [ContentMessages.simpleMoveNext, {
+            speak: ["Back", {"string": "pushbutton"}]
+          }],
           // Moving to the absolute last item from an embedded document
           // fails. Bug 972035.
           [ContentMessages.simpleMoveNext, {
@@ -98,6 +110,9 @@
           // fails. Bug 972035.
           [ContentMessages.simpleMoveNext, {
             speak: ['Phone status bar', 'Traversal Rule test document']
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: ["Back", {"string": "pushbutton"}]
           }],
           [ContentMessages.simpleMoveNext, {
             speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
@@ -133,6 +148,9 @@
             speak: ['Phone status bar', 'Traversal Rule test document']
           }],
           [ContentMessages.simpleMoveNext, {
+            speak: ["Back", {"string": "pushbutton"}]
+          }],
+          [ContentMessages.simpleMoveNext, {
             speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
           }],
           [ContentMessages.focusSelector('button#home', false), {
@@ -146,6 +164,54 @@
           // XXX: Set focus on iframe itself.
           // XXX: Set focus on element in iframe when cursor is outside of it.
           // XXX: Set focus on element in iframe when cursor is in iframe.
+
+          // aria-hidden element that the virtual cursor is positioned on
+          [ContentMessages.simpleMoveNext, {
+            speak: ['Phone status bar', 'Traversal Rule test document']
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: ["Back", {"string": "pushbutton"}]
+          }],
+          [doc.defaultView.ariaHideBack, {
+            speak: ["wow", {"string": "headingLevel","args": [1]}, "such app"],
+          }],
+          // Changing aria-hidden attribute twice and making sure that the event
+          // is fired only once when the actual change happens.
+          [doc.defaultView.ariaHideBack],
+          [doc.defaultView.ariaShowBack],
+          [ContentMessages.simpleMovePrevious, {
+            speak: ["Back", {"string": "pushbutton"}]
+          }],
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+
+          // aria-hidden on the iframe that has the vc.
+          [ContentMessages.simpleMoveNext, {
+            speak: ['Phone status bar', 'Traversal Rule test document']
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: ["Back", {"string": "pushbutton"}]
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
+          }],
+          [doc.defaultView.ariaHideIframe, {
+            speak: ['Home', {'string': 'pushbutton'}]
+          }],
+          [doc.defaultView.ariaShowIframe],
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+
+          // aria-hidden element and auto Move
+          [ContentMessages.simpleMoveNext, {
+            speak: ['Phone status bar', 'Traversal Rule test document']
+          }],
+          [doc.defaultView.ariaHideBack],
+          [ContentMessages.focusSelector('button#back', false), {
+            // Must not speak Back button as it is aria-hidden
+            speak: ["wow", {"string": "headingLevel","args": [1]}, "such app"],
+          }],
+          [doc.defaultView.ariaShowBack],
+          [ContentMessages.focusSelector('button#back', true), null],
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
           // Open dialog in outer doc, while cursor is also in outer doc
           [ContentMessages.simpleMoveNext, {
@@ -166,6 +232,9 @@
           // Open dialog in outer doc, while cursor is in inner frame
           [ContentMessages.simpleMoveNext, {
             speak: ['Phone status bar', 'Traversal Rule test document']
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: ["Back", {"string": "pushbutton"}]
           }],
           [ContentMessages.simpleMoveNext, {
             speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']

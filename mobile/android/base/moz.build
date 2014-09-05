@@ -267,7 +267,6 @@ gbjar.sources += [
     'home/BookmarksPanel.java',
     'home/BrowserSearch.java',
     'home/DynamicPanel.java',
-    'home/FadedTextView.java',
     'home/FramePanelLayout.java',
     'home/HistoryPanel.java',
     'home/HomeAdapter.java',
@@ -314,6 +313,7 @@ gbjar.sources += [
     'JavaAddonManager.java',
     'LightweightTheme.java',
     'LightweightThemeDrawable.java',
+    'LocaleAware.java',
     'LocaleManager.java',
     'MediaCastingBar.java',
     'MemoryMonitor.java',
@@ -369,6 +369,7 @@ gbjar.sources += [
     'prompts/PromptService.java',
     'prompts/TabInput.java',
     'ReaderModeUtils.java',
+    'RemoteTabsExpandableListAdapter.java',
     'Restarter.java',
     'ScrollAnimator.java',
     'ServiceNotificationClient.java',
@@ -450,6 +451,7 @@ gbjar.sources += [
     'widget/Divider.java',
     'widget/DoorHanger.java',
     'widget/EllipsisTextView.java',
+    'widget/FadedTextView.java',
     'widget/FaviconView.java',
     'widget/FloatingHintEditText.java',
     'widget/FlowLayout.java',
@@ -485,6 +487,22 @@ gbjar.generated_sources += [
 if CONFIG['MOZ_CRASHREPORTER']:
     gbjar.sources += [ 'CrashReporter.java' ]
     ANDROID_RES_DIRS += [ SRCDIR + '/crashreporter/res' ]
+
+if CONFIG['MOZ_ANDROID_SHARE_OVERLAY']:
+    gbjar.sources += [
+        'overlays/OverlayConstants.java',
+        'overlays/service/OverlayActionService.java',
+        'overlays/service/sharemethods/AddBookmark.java',
+        'overlays/service/sharemethods/AddToReadingList.java',
+        'overlays/service/sharemethods/ParcelableClientRecord.java',
+        'overlays/service/sharemethods/SendTab.java',
+        'overlays/service/sharemethods/ShareMethod.java',
+        'overlays/ui/OverlayToastHelper.java',
+        'overlays/ui/SendTabDeviceListArrayAdapter.java',
+        'overlays/ui/SendTabList.java',
+        'overlays/ui/SendTabTargetSelectedListener.java',
+        'overlays/ui/ShareDialog.java',
+    ]
 
 gbjar.sources += sync_java_files
 gbjar.generated_sources += sync_generated_java_files
@@ -594,7 +612,8 @@ ANDROID_GENERATED_RESFILES += [
 ]
 
 for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZILLA_OFFICIAL', 'MOZ_DEBUG',
-            'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES', 'MOZ_ANDROID_MLS_STUMBLER'):
+            'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES', 'MOZ_ANDROID_MLS_STUMBLER',
+            'MOZ_ANDROID_SHARE_OVERLAY'):
     if CONFIG[var]:
         DEFINES[var] = 1
 
@@ -790,6 +809,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
 if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
     main.included_projects += ['../FennecStumbler']
     main.referenced_projects += ['../FennecStumbler']
+    DEFINES['MOZ_STUMBLER_API_KEY'] = CONFIG['MOZ_MOZILLA_API_KEY']
 
 if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
     searchres = add_android_eclipse_library_project('FennecResourcesSearch')

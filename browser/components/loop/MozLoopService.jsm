@@ -10,6 +10,11 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 // https://github.com/mozilla-services/loop-server/blob/45787d34108e2f0d87d74d4ddf4ff0dbab23501c/loop/errno.json#L6
 const INVALID_AUTH_TOKEN = 110;
 
+// Ticket numbers are 24 bits in length.
+// The highest valid ticket number is 16777214 (2^24 - 2), so that a "now
+// serving" number of 2^24 - 1 is greater than it.
+const MAX_SOFT_START_TICKET_NUMBER = 16777214;
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -49,6 +54,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
+                                   "@mozilla.org/network/dns-service;1",
+                                   "nsIDNSService");
+
+
 // The current deferred for the registration process. This is set if in progress
 // or the registration was successful. This is null if a registration attempt was
 // unsuccessful.
@@ -61,6 +71,7 @@ let gInitializeTimer = null;
 let gFxAOAuthClientPromise = null;
 let gFxAOAuthClient = null;
 let gFxAOAuthTokenData = null;
+let gErrors = new Map();
 
 /**
  * Internal helper methods and state
@@ -135,6 +146,30 @@ let MozLoopServiceInternal = {
    */
   set doNotDisturb(aFlag) {
     Services.prefs.setBoolPref("loop.do_not_disturb", Boolean(aFlag));
+    this.notifyStatusChanged();
+  },
+
+  notifyStatusChanged: function() {
+    Services.obs.notifyObservers(null, "loop-status-changed", null);
+  },
+
+  /**
+   * @param {String} errorType a key to identify the type of error. Only one
+   *                           error of a type will be saved at a time.
+   * @param {Object} error     an object describing the error in the format from Hawk errors
+   */
+  setError: function(errorType, error) {
+    gErrors.set(errorType, error);
+    this.notifyStatusChanged();
+  },
+
+  clearError: function(errorType) {
+    gErrors.delete(errorType);
+    this.notifyStatusChanged();
+  },
+
+  get errors() {
+    return gErrors;
   },
 
   /**
@@ -257,6 +292,7 @@ let MozLoopServiceInternal = {
         if (!this.storeSessionToken(response.headers))
           return;
 
+        this.clearError("registration");
         gRegisteredDeferred.resolve();
         // No need to clear the promise here, everything was good, so we don't need
         // to re-register.
@@ -278,6 +314,7 @@ let MozLoopServiceInternal = {
 
         // XXX Bubble the precise details up to the UI somehow (bug 1013248).
         Cu.reportError("Failed to register with the loop server. error: " + error);
+        this.setError("registration", error);
         gRegisteredDeferred.reject(error.errno);
         gRegisteredDeferred = null;
       }
@@ -301,7 +338,7 @@ let MozLoopServiceInternal = {
     Services.prefs.setCharPref("loop.seenToS", "seen");
 
     this.openChatWindow(null,
-                        this.localizedStrings["incoming_call_title"].textContent,
+                        this.localizedStrings["incoming_call_title2"].textContent,
                         "about:loopconversation#incoming/" + version);
   },
 
@@ -426,6 +463,8 @@ let MozLoopServiceInternal = {
       if (chatbox.contentWindow.navigator.mozLoop) {
         return;
       }
+
+      chatbox.setAttribute("dark", true);
 
       chatbox.addEventListener("DOMContentLoaded", function loaded(event) {
         if (event.target != chatbox.contentDocument) {
@@ -588,22 +627,7 @@ let gInitializeTimerFunc = () => {
  * Public API
  */
 this.MozLoopService = {
-#ifdef DEBUG
-  // Test-only helpers
-  get internal() {
-    return MozLoopServiceInternal;
-  },
-
-  get gFxAOAuthTokenData() {
-    return gFxAOAuthTokenData;
-  },
-
-  resetFxA: function() {
-    gFxAOAuthClientPromise = null;
-    gFxAOAuthClient = null;
-    gFxAOAuthTokenData = null;
-  },
-#endif
+  _DNSService: gDNSService,
 
   set initializeTimerFunc(value) {
     gInitializeTimerFunc = value;
@@ -615,7 +639,8 @@ this.MozLoopService = {
    */
   initialize: function() {
     // Don't do anything if loop is not enabled.
-    if (!Services.prefs.getBoolPref("loop.enabled")) {
+    if (!Services.prefs.getBoolPref("loop.enabled") ||
+        Services.prefs.getBoolPref("loop.throttled")) {
       return;
     }
 
@@ -624,6 +649,105 @@ this.MozLoopService = {
       gInitializeTimerFunc();
     }
   },
+
+  /**
+   * If we're operating the service in "soft start" mode, and this browser
+   * isn't already activated, check whether it's time for it to become active.
+   * If so, activate the loop service.
+   *
+   * @param {Object} buttonNode DOM node representing the Loop button -- if we
+   *                            change from inactive to active, we need this
+   *                            in order to unhide the Loop button.
+   * @param {Function} doneCb   [optional] Callback that is called when the
+   *                            check has completed.
+   */
+  checkSoftStart(buttonNode, doneCb) {
+    if (!Services.prefs.getBoolPref("loop.throttled")) {
+      if (typeof(doneCb) == "function") {
+        doneCb(new Error("Throttling is not active"));
+      }
+      return;
+    }
+
+    if (Services.io.offline) {
+      if (typeof(doneCb) == "function") {
+        doneCb(new Error("Cannot check soft-start value: browser is offline"));
+      }
+      return;
+    }
+
+    let ticket = Services.prefs.getIntPref("loop.soft_start_ticket_number");
+    if (!ticket || ticket > MAX_SOFT_START_TICKET_NUMBER || ticket < 0) {
+      // Ticket value isn't valid (probably isn't set up yet) -- pick a random
+      // number from 1 to MAX_SOFT_START_TICKET_NUMBER, inclusive, and write it
+      // into prefs.
+      ticket = Math.floor(Math.random() * MAX_SOFT_START_TICKET_NUMBER) + 1;
+      // Floating point numbers can be imprecise, so we need to deal with
+      // the case that Math.random() effectively rounds to 1.0
+      if (ticket > MAX_SOFT_START_TICKET_NUMBER) {
+        ticket = MAX_SOFT_START_TICKET_NUMBER;
+      }
+      Services.prefs.setIntPref("loop.soft_start_ticket_number", ticket);
+    }
+
+    let onLookupComplete = (request, record, status) => {
+      // We don't bother checking errors -- if the DNS query fails,
+      // we just don't activate this time around. We'll check again on
+      // next startup.
+      if (!Components.isSuccessCode(status)) {
+        if (typeof(doneCb) == "function") {
+          doneCb(new Error("Error in DNS Lookup: " + status));
+        }
+        return;
+      }
+
+      let address = record.getNextAddrAsString().split(".");
+      if (address.length != 4) {
+        if (typeof(doneCb) == "function") {
+          doneCb(new Error("Invalid IP address"));
+        }
+        return;
+      }
+
+      if (address[0] != 127) {
+        if (typeof(doneCb) == "function") {
+          doneCb(new Error("Throttling IP address is not on localhost subnet"));
+        }
+        return
+      }
+
+      // Can't use bitwise operations here because JS treats all bitwise
+      // operations as 32-bit *signed* integers.
+      let now_serving = ((parseInt(address[1]) * 0x10000) +
+                         (parseInt(address[2]) * 0x100) +
+                         parseInt(address[3]));
+
+      if (now_serving > ticket) {
+        // Hot diggity! It's our turn! Activate the service.
+        console.log("MozLoopService: Activating Loop via soft-start");
+        Services.prefs.setBoolPref("loop.throttled", false);
+        buttonNode.hidden = false;
+        this.initialize();
+      }
+      if (typeof(doneCb) == "function") {
+        doneCb(null);
+      }
+    };
+
+    // We use DNS to propagate the slow-start value, since it has well-known
+    // scaling properties. Ideally, this would use something more semantic,
+    // like a TXT record; but we don't support TXT in our DNS resolution (see
+    // Bug 14328), so we instead treat the lowest 24 bits of the IP address
+    // corresponding to our "slow start DNS name" as a 24-bit integer. To
+    // ensure that these addresses aren't routable, the highest 8 bits must
+    // be "127" (reserved for localhost).
+    let host = Services.prefs.getCharPref("loop.soft_start_hostname");
+    let task = this._DNSService.asyncResolve(host,
+                                             this._DNSService.RESOLVE_DISABLE_IPV6,
+                                             onLookupComplete,
+                                             Services.tm.mainThread);
+  },
+
 
   /**
    * Starts registration of Loop with the push server, and then will register
@@ -638,6 +762,10 @@ this.MozLoopService = {
     // Don't do anything if loop is not enabled.
     if (!Services.prefs.getBoolPref("loop.enabled")) {
       throw new Error("Loop is not enabled");
+    }
+
+    if (Services.prefs.getBoolPref("loop.throttled")) {
+      throw new Error("Loop is disabled by the soft-start mechanism");
     }
 
     return MozLoopServiceInternal.promiseRegisteredWithServers(mockPushHandler);
@@ -693,6 +821,10 @@ this.MozLoopService = {
    */
   set doNotDisturb(aFlag) {
     MozLoopServiceInternal.doNotDisturb = aFlag;
+  },
+
+  get errors() {
+    return MozLoopServiceInternal.errors;
   },
 
   /**
@@ -780,6 +912,10 @@ this.MozLoopService = {
    * @return {Promise} that resolves when the FxA login flow is complete.
    */
   logInToFxA: function() {
+    if (gFxAOAuthTokenData) {
+      return Promise.resolve(gFxAOAuthTokenData);
+    }
+
     return MozLoopServiceInternal.promiseFxAOAuthAuthorization().then(response => {
       return MozLoopServiceInternal.promiseFxAOAuthToken(response.code, response.state);
     }).then(tokenData => {

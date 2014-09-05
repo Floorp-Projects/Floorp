@@ -86,8 +86,8 @@ public:
   };
 
   NSCursorInfo();
-  NSCursorInfo(NSCursor* aCursor);
-  NSCursorInfo(const Cursor* aCursor);
+  explicit NSCursorInfo(NSCursor* aCursor);
+  explicit NSCursorInfo(const Cursor* aCursor);
   ~NSCursorInfo();
 
   NSCursor* GetNSCursor() const;

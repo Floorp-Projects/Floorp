@@ -303,9 +303,9 @@ function createMmdbCursor(aMmdb, aMethodName) {
       deferred.reject([aRv, results]);
     },
 
-    notifyCursorResult: function(aResult) {
-      ok(true, "notifyCursorResult: " + aResult.id);
-      results.push(aResult);
+    notifyCursorResult: function(aResults, aSize) {
+      ok(true, "notifyCursorResult: " + aResults.map(function(aElement) { return aElement.id; }));
+      results = results.concat(aResults);
       cursor.handleContinue();
     },
 
@@ -328,8 +328,21 @@ function createMmdbCursor(aMmdb, aMethodName) {
  *
  * @return A deferred promise.
  */
-function createMessageCursor(aMmdb, aFilter, aReverse) {
-  return createMmdbCursor(aMmdb, "createMessageCursor", aFilter, aReverse);
+function createMessageCursor(aMmdb, aStartDate = null, aEndDate = null,
+                             aNumbers = null, aDelivery = null, aRead = null,
+                             aThreadId = null, aReverse = false) {
+  return createMmdbCursor(aMmdb, "createMessageCursor",
+                          aStartDate !== null,
+                          aStartDate || 0,
+                          aEndDate !== null,
+                          aEndDate || 0,
+                          aNumbers || null,
+                          aNumbers && aNumbers.length || 0,
+                          aDelivery || null,
+                          aRead !== null,
+                          aRead || false,
+                          aThreadId || 0,
+                          aReverse || false);
 }
 
 /**

@@ -3,9 +3,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "webrtc/modules/desktop_capture/mac/desktop_device_info_mac.h"
+#include <AppKit/AppKit.h>
 #include <Cocoa/Cocoa.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <map>
 
 namespace webrtc {
+
+// Helper type to track the number of window instances for a given process
+typedef std::map<ProcessId, uint32_t> AppWindowCountMap;
 
 #define MULTI_MONITOR_NO_SUPPORT 1
 
@@ -25,39 +32,89 @@ DesktopDeviceInfoMac::~DesktopDeviceInfoMac() {
 }
 
 #if !defined(MULTI_MONITOR_SCREENSHARE)
-int32_t DesktopDeviceInfoMac::MultiMonitorScreenshare()
+void DesktopDeviceInfoMac::MultiMonitorScreenshare()
 {
   DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
   if (pDesktopDeviceInfo) {
-    pDesktopDeviceInfo->setScreenId(0);
+    pDesktopDeviceInfo->setScreenId(CGMainDisplayID());
     pDesktopDeviceInfo->setDeviceName("Primary Monitor");
-    pDesktopDeviceInfo->setUniqueIdName("\\screen\\monitor#1");
 
+    char idStr[64];
+    snprintf(idStr, sizeof(idStr), "%ld", pDesktopDeviceInfo->getScreenId());
+    pDesktopDeviceInfo->setUniqueIdName(idStr);
     desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
   }
-  return 0;
 }
 #endif
 
-int32_t DesktopDeviceInfoMac::Init() {
+void DesktopDeviceInfoMac::InitializeScreenList() {
 #if !defined(MULTI_MONITOR_SCREENSHARE)
   MultiMonitorScreenshare();
 #endif
-
-  initializeWindowList();
-
-  return 0;
 }
+void DesktopDeviceInfoMac::InitializeApplicationList() {
+  //List all running applications (excluding background processes).
 
-int32_t DesktopDeviceInfoMac::Refresh() {
-#if !defined(MULTI_MONITOR_SCREENSHARE)
-  desktop_display_list_.clear();
-  MultiMonitorScreenshare();
-#endif
+  // Get a list of all windows, to match to applications
+  AppWindowCountMap appWins;
+  CFArrayRef windowInfos = CGWindowListCopyWindowInfo(
+      kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements,
+      kCGNullWindowID);
+  CFIndex windowInfosCount = CFArrayGetCount(windowInfos);
+  for (CFIndex idx = 0; idx < windowInfosCount; idx++) {
+    CFDictionaryRef info = reinterpret_cast<CFDictionaryRef>(
+        CFArrayGetValueAtIndex(windowInfos, idx));
+    CFNumberRef winOwner = reinterpret_cast<CFNumberRef>(
+        CFDictionaryGetValue(info, kCGWindowOwnerPID));
 
-  RefreshWindowList();
+    pid_t owner;
+    CFNumberGetValue(winOwner, kCFNumberIntType, &owner);
+    AppWindowCountMap::iterator itr = appWins.find(owner);
+    if (itr == appWins.end()) {
+      appWins[owner] = 1;
+    } else {
+      appWins[owner]++;
+    }
+  }
 
-  return 0;
+  NSArray *running = [[NSWorkspace sharedWorkspace] runningApplications];
+  for (NSRunningApplication *ra in running) {
+    if (ra.activationPolicy != NSApplicationActivationPolicyRegular)
+      continue;
+
+    ProcessId pid = ra.processIdentifier;
+    if (pid == 0) {
+      continue;
+    }
+    if (pid == getpid()) {
+      continue;
+    }
+
+    DesktopApplication *pDesktopApplication = new DesktopApplication;
+    if (!pDesktopApplication) {
+      continue;
+    }
+
+    pDesktopApplication->setProcessId(pid);
+    pDesktopApplication->setWindowCount(appWins[pid]);
+
+    NSString *str;
+    str = [ra.executableURL absoluteString];
+    pDesktopApplication->setProcessPathName([str UTF8String]);
+
+    // Record <window count> then <localized name>
+    // NOTE: localized names can get *VERY* long
+    str = ra.localizedName;
+    char nameStr[BUFSIZ];
+    snprintf(nameStr, sizeof(nameStr), "%d\x1e%s", pDesktopApplication->getWindowCount(), [str UTF8String]);
+    pDesktopApplication->setProcessAppName(nameStr);
+
+    char idStr[64];
+    snprintf(idStr, sizeof(idStr), "%ld", pDesktopApplication->getProcessId());
+    pDesktopApplication->setUniqueIdName(idStr);
+
+    desktop_application_list_[pDesktopApplication->getProcessId()] = pDesktopApplication;
+  }
 }
 
 } //namespace webrtc

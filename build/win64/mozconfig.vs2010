@@ -31,7 +31,7 @@ else
   export LD=c:/tools/msvs10/VC/BIN/x86_amd64/link.exe
 fi
 
-. $topsrcdir/build/mozconfig.vs2010-common
+. $topsrcdir/build/mozconfig.vs-common
 
 mk_export_correct_style LIB
 mk_export_correct_style LIBPATH

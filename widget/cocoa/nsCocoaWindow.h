@@ -20,9 +20,6 @@ class nsChildView;
 class nsMenuBarX;
 @class ChildView;
 
-// Value copied from BITMAP_MAX_AREA, used in nsNativeThemeCocoa.mm
-#define CUIDRAW_MAX_AREA 500000
-
 // If we are using an SDK older than 10.7, define bits we need that are missing
 // from it.
 #if !defined(MAC_OS_X_VERSION_10_7) || \

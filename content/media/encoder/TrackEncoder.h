@@ -267,12 +267,6 @@ protected:
   virtual void NotifyEndOfStream() MOZ_OVERRIDE;
 
   /**
-   * Create a buffer of black image in format of YUV:420. Called on the worker
-   * thread.
-   */
-  void CreateMutedFrame(nsTArray<uint8_t>* aOutputBuffer);
-
-  /**
    * The width of source video frame, ceiled if the source width is odd.
    */
   int mFrameWidth;

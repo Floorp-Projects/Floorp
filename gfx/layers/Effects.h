@@ -133,7 +133,7 @@ protected:
 // Render to a render target rather than the screen.
 struct EffectColorMatrix : public Effect
 {
-  EffectColorMatrix(gfx::Matrix5x4 aMatrix)
+  explicit EffectColorMatrix(gfx::Matrix5x4 aMatrix)
     : Effect(EffectTypes::COLOR_MATRIX)
     , mColorMatrix(aMatrix)
   {}

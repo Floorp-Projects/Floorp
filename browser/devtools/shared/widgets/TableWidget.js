@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cu } = require("chrome");
+const {Cc, Ci, Cu} = require("chrome");
 
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -38,8 +38,9 @@ const MAX_VISIBLE_STRING_SIZE = 100;
  *                    entry in the table. Default: name.
  *        - emptyText: text to display when no entries in the table to display.
  *        - highlightUpdated: true to highlight the changed/added row.
- *        - removableColumns: Whether columns are removeable. If set to true,
+ *        - removableColumns: Whether columns are removeable. If set to false,
  *                            the context menu in the headers will not appear.
+ *        - firstColumn: key of the first column that should appear.
  */
 function TableWidget(node, options={}) {
   EventEmitter.decorate(this);
@@ -48,12 +49,13 @@ function TableWidget(node, options={}) {
   this.window = this.document.defaultView;
   this._parent = node;
 
-  let {initialColumns, emptyText, uniqueId, highlightUpdated, removableColumns} =
-      options;
+  let {initialColumns, emptyText, uniqueId, highlightUpdated, removableColumns,
+       firstColumn} = options;
   this.emptyText = emptyText || "";
   this.uniqueId = uniqueId || "name";
+  this.firstColumn = firstColumn || "";
   this.highlightUpdated = highlightUpdated || false;
-  this.removableColumns = removableColumns || false;
+  this.removableColumns = removableColumns !== false;
 
   this.tbody = this.document.createElementNS(XUL_NS, "hbox");
   this.tbody.className = "table-widget-body theme-body";
@@ -237,10 +239,24 @@ TableWidget.prototype = {
       sortOn = null;
     }
 
+    if (!(this.firstColumn in columns)) {
+      this.firstColumn = null;
+    }
+
+    if (this.firstColumn) {
+      this.columns.set(this.firstColumn,
+        new Column(this, this.firstColumn, columns[this.firstColumn]));
+    }
+
     for (let id in columns) {
       if (!sortOn) {
         sortOn = id;
       }
+
+      if (this.firstColumn && id == this.firstColumn) {
+        continue;
+      }
+
       this.columns.set(id, new Column(this, id, columns[id]));
       if (hiddenColumns.indexOf(id) > -1) {
         this.columns.get(id).toggleColumn();
@@ -260,7 +276,7 @@ TableWidget.prototype = {
       item = item[this.uniqueId];
     }
 
-    return item == this.selectedRow[this.uniqueId];
+    return this.selectedRow && item == this.selectedRow[this.uniqueId];
   },
 
   /**
@@ -671,6 +687,8 @@ Column.prototype = {
   /**
    * Event handler for the command event coming from the header context menu.
    * Toggles the column if it was requested by the user.
+   * When called explicitly without parameters, it toggles the corresponding
+   * column.
    *
    * @param {string} event
    *        The name of the event. i.e. EVENTS.HEADER_CONTEXT_MENU
@@ -680,6 +698,11 @@ Column.prototype = {
    *        true if the column is visible
    */
   toggleColumn: function(event, id, checked) {
+    if (arguments.length == 0) {
+      // Act like a toggling method when called with no params
+      id = this.id;
+      checked = this.wrapper.hasAttribute("hidden");
+    }
     if (id != this.id) {
       return;
     }
@@ -754,15 +777,22 @@ Column.prototype = {
    * by this column.
    */
   sort: function(items) {
-
     // Only sort the array if we are sorting based on this column
     if (this.sorted == 1) {
       items.sort((a, b) => {
-        return a[this.id] > b[this.id]
+        let val1 = (a[this.id] instanceof Ci.nsIDOMNode) ?
+            a[this.id].textContent : a[this.id];
+        let val2 = (b[this.id] instanceof Ci.nsIDOMNode) ?
+            b[this.id].textContent : b[this.id];
+        return val1 > val2;
       });
     } else if (this.sorted > 1) {
       items.sort((a, b) => {
-        return b[this.id] > a[this.id]
+        let val1 = (a[this.id] instanceof Ci.nsIDOMNode) ?
+            a[this.id].textContent : a[this.id];
+        let val2 = (b[this.id] instanceof Ci.nsIDOMNode) ?
+            b[this.id].textContent : b[this.id];
+        return val2 > val1;
       });
     }
 
@@ -806,8 +836,18 @@ Column.prototype = {
       return;
     }
     if (event.button == 0) {
-      this.table.emit(EVENTS.ROW_SELECTED,
-        event.originalTarget.getAttribute("data-id"));
+      let target = event.originalTarget;
+      let dataid = null;
+
+      while (target) {
+        dataid = target.getAttribute("data-id");
+        if (dataid) {
+          break;
+        }
+        target = target.parentNode;
+      }
+
+      this.table.emit(EVENTS.ROW_SELECTED, dataid);
     }
   },
 
@@ -854,7 +894,9 @@ Column.prototype = {
  * @param {Column} column
  *        The column object to which the cell belongs.
  * @param {object} item
- *        The object representing the row.
+ *        The object representing the row. It contains a key value pair
+ *        representing the column id and its associated value. The value
+ *        can be a DOMNode that is appended or a string value.
  * @param {Cell} nextCell
  *        The cell object which is next to this cell. null if this cell is last
  *        cell of the column
@@ -892,10 +934,23 @@ Cell.prototype = {
       this.label.setAttribute("value", "");
       return;
     }
-    if (value.length > MAX_VISIBLE_STRING_SIZE) {
+
+    if (!(value instanceof Ci.nsIDOMNode) &&
+        value.length > MAX_VISIBLE_STRING_SIZE) {
       value = value .substr(0, MAX_VISIBLE_STRING_SIZE) + "\u2026"; // …
     }
-    this.label.setAttribute("value", value + "");
+
+    if (value instanceof Ci.nsIDOMNode) {
+      this.label.removeAttribute("value");
+
+      while (this.label.firstChild) {
+        this.label.removeChild(this.label.firstChild);
+      }
+
+      this.label.appendChild(value);
+    } else {
+      this.label.setAttribute("value", value + "");
+    }
   },
 
   get value() {
@@ -912,6 +967,8 @@ Cell.prototype = {
    */
   flash: function() {
     this.label.classList.remove("flash-out");
+    // Cause a reflow so that the animation retriggers on adding back the class
+    let a = this.label.parentNode.offsetWidth;
     this.label.classList.add("flash-out");
   },
 

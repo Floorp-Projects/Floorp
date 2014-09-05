@@ -182,6 +182,10 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
     if (IsInsideNursery(thing))
         return;
 
+#ifdef JSGC_COMPACTING
+    JS_ASSERT_IF(!MovingTracer::IsMovingTracer(trc), !IsForwarded(*thingp));
+#endif
+
     /*
      * Permanent atoms are not associated with this runtime, but will be ignored
      * during marking.
@@ -1433,10 +1437,8 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
     if (type->singleton() && !type->lazy())
         PushMarkStack(gcmarker, type->singleton());
 
-    if (type->newScript()) {
-        PushMarkStack(gcmarker, type->newScript()->fun);
-        PushMarkStack(gcmarker, type->newScript()->templateObject);
-    }
+    if (type->newScript())
+        type->newScript()->trace(gcmarker);
 
     if (type->interpretedFunction)
         PushMarkStack(gcmarker, type->interpretedFunction);
@@ -1458,10 +1460,8 @@ gc::MarkChildren(JSTracer *trc, types::TypeObject *type)
     if (type->singleton() && !type->lazy())
         MarkObject(trc, &type->singletonRaw(), "type_singleton");
 
-    if (type->newScript()) {
-        MarkObject(trc, &type->newScript()->fun, "type_new_function");
-        MarkObject(trc, &type->newScript()->templateObject, "type_new_template");
-    }
+    if (type->newScript())
+        type->newScript()->trace(trc);
 
     if (type->interpretedFunction)
         MarkObject(trc, &type->interpretedFunction, "type_function");
@@ -1873,6 +1873,14 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
     }
 }
 
+#ifdef DEBUG
+static void
+AssertNonGrayGCThing(JSTracer *trc, void **thingp, JSGCTraceKind kind)
+{
+    MOZ_ASSERT(!JS::GCThingIsMarkedGray(*thingp));
+}
+#endif
+
 static void
 UnmarkGrayGCThing(void *thing)
 {
@@ -1956,14 +1964,19 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
         return;
     }
 
-    UnmarkGrayTracer *tracer = static_cast<UnmarkGrayTracer *>(trc);
-    if (!IsInsideNursery(static_cast<Cell *>(thing))) {
-        if (!JS::GCThingIsMarkedGray(thing))
-            return;
-
-        UnmarkGrayGCThing(thing);
-        tracer->unmarkedAny = true;
+#ifdef DEBUG
+    if (gc::IsInsideNursery(static_cast<gc::Cell *>(thing))) {
+        JSTracer nongray(trc->runtime(), AssertNonGrayGCThing);
+        JS_TraceChildren(&nongray, thing, kind);
     }
+#endif
+
+    if (!JS::GCThingIsMarkedGray(thing))
+        return;
+
+    UnmarkGrayTracer *tracer = static_cast<UnmarkGrayTracer *>(trc);
+    UnmarkGrayGCThing(thing);
+    tracer->unmarkedAny = true;
 
     /*
      * Trace children of |thing|. If |thing| and its parent are both shapes,

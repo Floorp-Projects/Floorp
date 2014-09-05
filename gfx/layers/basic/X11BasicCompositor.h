@@ -45,7 +45,7 @@ class X11BasicCompositor : public BasicCompositor
 {
 public:
 
-  X11BasicCompositor(nsIWidget *aWidget) : BasicCompositor(aWidget) {}
+  explicit X11BasicCompositor(nsIWidget *aWidget) : BasicCompositor(aWidget) {}
 
   virtual TemporaryRef<DataTextureSource>
   CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) MOZ_OVERRIDE;

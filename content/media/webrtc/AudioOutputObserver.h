@@ -6,6 +6,7 @@
 #define AUDIOOUTPUTOBSERVER_H_
 
 #include "mozilla/StaticPtr.h"
+#include "AudioMixer.h"
 
 namespace webrtc {
 class SingleRwFifo;
@@ -20,11 +21,18 @@ typedef struct FarEndAudioChunk_ {
 } FarEndAudioChunk;
 
 // XXX Really a singleton currently
-class AudioOutputObserver // : public MSGOutputObserver
+class AudioOutputObserver : public MixerCallbackReceiver
 {
 public:
   AudioOutputObserver();
-  virtual ~AudioOutputObserver();
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioOutputObserver);
+
+  void MixerCallback(AudioDataValue* aMixedBuffer,
+                     AudioSampleFormat aFormat,
+                     uint32_t aChannels,
+                     uint32_t aFrames,
+                     uint32_t aSampleRate) MOZ_OVERRIDE;
 
   void Clear();
   void InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrames, bool aOverran,
@@ -36,6 +44,7 @@ public:
   uint32_t Size();
 
 private:
+  virtual ~AudioOutputObserver();
   uint32_t mPlayoutFreq;
   uint32_t mPlayoutChannels;
 
@@ -47,8 +56,7 @@ private:
   uint32_t mSamplesSaved;
 };
 
-// XXX until there's a registration API in MSG
-extern StaticAutoPtr<AudioOutputObserver> gFarendObserver;
+extern StaticRefPtr<AudioOutputObserver> gFarendObserver;
 
 }
 

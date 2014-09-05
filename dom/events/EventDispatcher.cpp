@@ -71,7 +71,7 @@ private:
 class EventTargetChainItem
 {
 private:
-  EventTargetChainItem(EventTarget* aTarget);
+  explicit EventTargetChainItem(EventTarget* aTarget);
 public:
   EventTargetChainItem()
     : mFlags(0)
@@ -521,7 +521,8 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->originalTarget);
-  bool isInAnon = (content && content->IsInAnonymousSubtree());
+  bool isInAnon = (content && (content->IsInAnonymousSubtree() ||
+                               content->IsInShadowTree()));
 
   aEvent->mFlags.mIsBeingDispatched = true;
 

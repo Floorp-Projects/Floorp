@@ -281,42 +281,6 @@ js::GetDecimalInteger(ExclusiveContext *cx, const jschar *start, const jschar *e
 }
 
 static bool
-num_isNaN(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setBoolean(true);
-        return true;
-    }
-
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    args.rval().setBoolean(mozilla::IsNaN(x));
-    return true;
-}
-
-static bool
-num_isFinite(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setBoolean(false);
-        return true;
-    }
-
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    args.rval().setBoolean(mozilla::IsFinite(x));
-    return true;
-}
-
-static bool
 num_parseFloat(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -489,8 +453,8 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static const JSFunctionSpec number_functions[] = {
-    JS_FN(js_isNaN_str,         num_isNaN,           1,0),
-    JS_FN(js_isFinite_str,      num_isFinite,        1,0),
+    JS_SELF_HOSTED_FN(js_isNaN_str, "Global_isNaN", 1,0),
+    JS_SELF_HOSTED_FN(js_isFinite_str, "Global_isFinite", 1,0),
     JS_FN(js_parseFloat_str,    num_parseFloat,      1,0),
     JS_FN(js_parseInt_str,      num_parseInt,        2,0),
     JS_FS_END
@@ -1568,10 +1532,6 @@ js::NonObjectToNumberSlow(ThreadSafeContext *cx, Value v, double *out)
     return true;
 }
 
-#if defined(_MSC_VER)
-# pragma optimize("g", off)
-#endif
-
 bool
 js::ToNumberSlow(ExclusiveContext *cx, Value v, double *out)
 {
@@ -1607,10 +1567,6 @@ js::ToNumberSlow(JSContext *cx, Value v, double *out)
 {
     return ToNumberSlow(static_cast<ExclusiveContext *>(cx), v, out);
 }
-
-#if defined(_MSC_VER)
-# pragma optimize("", on)
-#endif
 
 /*
  * Convert a value to an int64_t, according to the WebIDL rules for long long

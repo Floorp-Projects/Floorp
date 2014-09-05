@@ -23,8 +23,4 @@ public class Constants {
     public static final int SUGGESTION_MAX = 5;
 
     public static final String ABOUT_BLANK = "about:blank";
-
-    // The default search engine for new users. This should match one of
-    // the SearchEngineFactory.Engine enum values.
-    public static final String DEFAULT_SEARCH_ENGINE = "YAHOO";
 }

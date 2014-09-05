@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_WIDGET_GTK'] and CONFIG['MOZ_X11']:
-    PROGRAM = 'screentopng'
+    Program('screentopng')
     SOURCES += [
         'gdk-screenshot.cpp',
     ]
@@ -13,7 +13,7 @@ if CONFIG['MOZ_WIDGET_GTK'] and CONFIG['MOZ_X11']:
     OS_LIBS += CONFIG['TK_LIBS']
     OS_LIBS += CONFIG['XSS_LIBS']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    PROGRAM = 'screenshot'
+    Program('screenshot')
     SOURCES += [
         'win32-screenshot.cpp',
     ]

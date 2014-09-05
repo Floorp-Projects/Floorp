@@ -31,6 +31,9 @@ class nsIScrollPositionListener;
 struct ScrollReflowState;
 
 namespace mozilla {
+namespace layers {
+class Layer;
+}
 namespace layout {
 class ScrollbarActivity;
 }
@@ -43,6 +46,8 @@ public:
   typedef nsIFrame::Sides Sides;
   typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
+  typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::Layer Layer;
 
   class AsyncScroll;
   class AsyncSmoothMSDScroll;
@@ -95,7 +100,7 @@ public:
   class ScrollEvent : public nsRunnable {
   public:
     NS_DECL_NSIRUNNABLE
-    ScrollEvent(ScrollFrameHelper *helper) : mHelper(helper) {}
+    explicit ScrollEvent(ScrollFrameHelper *helper) : mHelper(helper) {}
     void Revoke() { mHelper = nullptr; }
   private:
     ScrollFrameHelper *mHelper;
@@ -104,7 +109,7 @@ public:
   class AsyncScrollPortEvent : public nsRunnable {
   public:
     NS_DECL_NSIRUNNABLE
-    AsyncScrollPortEvent(ScrollFrameHelper *helper) : mHelper(helper) {}
+    explicit AsyncScrollPortEvent(ScrollFrameHelper *helper) : mHelper(helper) {}
     void Revoke() { mHelper = nullptr; }
   private:
     ScrollFrameHelper *mHelper;
@@ -113,7 +118,7 @@ public:
   class ScrolledAreaEvent : public nsRunnable {
   public:
     NS_DECL_NSIRUNNABLE
-    ScrolledAreaEvent(ScrollFrameHelper *helper) : mHelper(helper) {}
+    explicit ScrolledAreaEvent(ScrollFrameHelper *helper) : mHelper(helper) {}
     void Revoke() { mHelper = nullptr; }
   private:
     ScrollFrameHelper *mHelper;
@@ -317,14 +322,21 @@ public:
 
   void HandleScrollbarStyleSwitching();
 
-  nsIAtom* OriginOfLastScroll() const { return mOriginOfLastScroll; }
+  nsIAtom* LastScrollOrigin() const { return mLastScrollOrigin; }
+  nsIAtom* LastSmoothScrollOrigin() const { return mLastSmoothScrollOrigin; }
   uint32_t CurrentScrollGeneration() const { return mScrollGeneration; }
-  void ResetOriginIfScrollAtGeneration(uint32_t aGeneration) {
+  nsPoint LastScrollDestination() const { return mDestination; }
+  void ResetScrollInfoIfGeneration(uint32_t aGeneration) {
     if (aGeneration == mScrollGeneration) {
-      mOriginOfLastScroll = nullptr;
+      mLastScrollOrigin = nullptr;
+      mLastSmoothScrollOrigin = nullptr;
     }
   }
   bool WantAsyncScroll() const;
+  void ComputeFrameMetrics(Layer* aLayer, nsIFrame* aContainerReferenceFrame,
+                           const ContainerLayerParameters& aParameters,
+                           nsRect* aClipRect,
+                           nsTArray<FrameMetrics>* aOutput) const;
 
   // nsIScrollbarMediator
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection);
@@ -358,7 +370,8 @@ public:
   nsRefPtr<AsyncSmoothMSDScroll> mAsyncSmoothMSDScroll;
   nsRefPtr<ScrollbarActivity> mScrollbarActivity;
   nsTArray<nsIScrollPositionListener*> mListeners;
-  nsIAtom* mOriginOfLastScroll;
+  nsIAtom* mLastScrollOrigin;
+  nsIAtom* mLastSmoothScrollOrigin;
   uint32_t mScrollGeneration;
   nsRect mScrollPort;
   // Where we're currently scrolling to, if we're scrolling asynchronously.
@@ -388,6 +401,8 @@ public:
 
   // The scroll position where we last updated image visibility.
   nsPoint mLastUpdateImagesPos;
+
+  FrameMetrics::ViewID mScrollParentID;
 
   bool mNeverHasVerticalScrollbar:1;
   bool mNeverHasHorizontalScrollbar:1;
@@ -696,17 +711,30 @@ public:
   virtual nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const MOZ_OVERRIDE {
     return mHelper.ExpandRectToNearlyVisible(aRect);
   }
-  virtual nsIAtom* OriginOfLastScroll() MOZ_OVERRIDE {
-    return mHelper.OriginOfLastScroll();
+  virtual nsIAtom* LastScrollOrigin() MOZ_OVERRIDE {
+    return mHelper.LastScrollOrigin();
+  }
+  virtual nsIAtom* LastSmoothScrollOrigin() MOZ_OVERRIDE {
+    return mHelper.LastSmoothScrollOrigin();
   }
   virtual uint32_t CurrentScrollGeneration() MOZ_OVERRIDE {
     return mHelper.CurrentScrollGeneration();
   }
-  virtual void ResetOriginIfScrollAtGeneration(uint32_t aGeneration) MOZ_OVERRIDE {
-    mHelper.ResetOriginIfScrollAtGeneration(aGeneration);
+  virtual nsPoint LastScrollDestination() MOZ_OVERRIDE {
+    return mHelper.LastScrollDestination();
+  }
+  virtual void ResetScrollInfoIfGeneration(uint32_t aGeneration) MOZ_OVERRIDE {
+    mHelper.ResetScrollInfoIfGeneration(aGeneration);
   }
   virtual bool WantAsyncScroll() const MOZ_OVERRIDE {
     return mHelper.WantAsyncScroll();
+  }
+  virtual void ComputeFrameMetrics(Layer* aLayer, nsIFrame* aContainerReferenceFrame,
+                                   const ContainerLayerParameters& aParameters,
+                                   nsRect* aClipRect,
+                                   nsTArray<FrameMetrics>* aOutput) const MOZ_OVERRIDE {
+    mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame,
+                                aParameters, aClipRect, aOutput);
   }
 
   // nsIStatefulFrame
@@ -1035,17 +1063,30 @@ public:
   virtual nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const MOZ_OVERRIDE {
     return mHelper.ExpandRectToNearlyVisible(aRect);
   }
-  virtual nsIAtom* OriginOfLastScroll() MOZ_OVERRIDE {
-    return mHelper.OriginOfLastScroll();
+  virtual nsIAtom* LastScrollOrigin() MOZ_OVERRIDE {
+    return mHelper.LastScrollOrigin();
+  }
+  virtual nsIAtom* LastSmoothScrollOrigin() MOZ_OVERRIDE {
+    return mHelper.LastSmoothScrollOrigin();
   }
   virtual uint32_t CurrentScrollGeneration() MOZ_OVERRIDE {
     return mHelper.CurrentScrollGeneration();
   }
-  virtual void ResetOriginIfScrollAtGeneration(uint32_t aGeneration) MOZ_OVERRIDE {
-    mHelper.ResetOriginIfScrollAtGeneration(aGeneration);
+  virtual nsPoint LastScrollDestination() MOZ_OVERRIDE {
+    return mHelper.LastScrollDestination();
+  }
+  virtual void ResetScrollInfoIfGeneration(uint32_t aGeneration) MOZ_OVERRIDE {
+    mHelper.ResetScrollInfoIfGeneration(aGeneration);
   }
   virtual bool WantAsyncScroll() const MOZ_OVERRIDE {
     return mHelper.WantAsyncScroll();
+  }
+  virtual void ComputeFrameMetrics(Layer* aLayer, nsIFrame* aContainerReferenceFrame,
+                                   const ContainerLayerParameters& aParameters,
+                                   nsRect* aClipRect,
+                                   nsTArray<FrameMetrics>* aOutput) const MOZ_OVERRIDE {
+    mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame,
+                                aParameters, aClipRect, aOutput);
   }
 
   // nsIStatefulFrame

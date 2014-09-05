@@ -63,6 +63,22 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layout;
 
+static bool
+BuildScrollContainerLayers()
+{
+  static bool sContainerlessScrollingEnabled;
+  static bool sContainerlessScrollingPrefCached = false;
+
+  if (!sContainerlessScrollingPrefCached) {
+    sContainerlessScrollingPrefCached = true;
+    Preferences::AddBoolVarCache(&sContainerlessScrollingEnabled,
+                                 "layout.async-containerless-scrolling.enabled",
+                                 true);
+  }
+
+  return !sContainerlessScrollingEnabled;
+}
+
 //----------------------------------------------------------------------
 
 //----------nsHTMLScrollFrame-------------------------------------------
@@ -1048,7 +1064,7 @@ ScrollFrameHelper::WantAsyncScroll() const
 static nsRect
 GetOnePixelRangeAroundPoint(nsPoint aPoint, bool aIsHorizontal)
 {
-  nsRect allowedRange;
+  nsRect allowedRange(aPoint, nsSize());
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
   if (aIsHorizontal) {
     allowedRange.x = aPoint.x - halfPixel;
@@ -1486,7 +1502,7 @@ public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  AsyncScroll(nsPoint aStartPos)
+  explicit AsyncScroll(nsPoint aStartPos)
     : mIsFirstIteration(true)
     , mStartPos(aStartPos)
     , mCallee(nullptr)
@@ -1808,7 +1824,8 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mOuter(aOuter)
   , mAsyncScroll(nullptr)
   , mAsyncSmoothMSDScroll(nullptr)
-  , mOriginOfLastScroll(nsGkAtoms::other)
+  , mLastScrollOrigin(nsGkAtoms::other)
+  , mLastSmoothScrollOrigin(nullptr)
   , mScrollGeneration(++sScrollGenerationCounter)
   , mDestination(0, 0)
   , mScrollPosAtLastPaint(0, 0)
@@ -2035,6 +2052,19 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
             currentVelocity = mAsyncScroll->VelocityAt(now);
           }
           mAsyncScroll = nullptr;
+        }
+
+        if (gfxPrefs::AsyncPanZoomEnabled()) {
+          // The animation will be handled in the compositor, pass the
+          // information needed to start the animation and skip the main-thread
+          // animation for this scroll.
+          mLastSmoothScrollOrigin = aOrigin;
+          mScrollGeneration = ++sScrollGenerationCounter;
+
+          // Schedule a paint to ensure that the frame metrics get updated on
+          // the compositor thread.
+          mOuter->SchedulePaint();
+          return;
         }
 
         mAsyncSmoothMSDScroll =
@@ -2388,7 +2418,8 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   nsPoint oldScrollFramePos = mScrolledFrame->GetPosition();
   // Update frame position for scrolling
   mScrolledFrame->SetPosition(mScrollPort.TopLeft() - pt);
-  mOriginOfLastScroll = aOrigin;
+  mLastScrollOrigin = aOrigin;
+  mLastSmoothScrollOrigin = nullptr;
   mScrollGeneration = ++sScrollGenerationCounter;
 
   // We pass in the amount to move visually
@@ -2886,6 +2917,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (!mIsRoot || aBuilder->RootReferenceFrame()->PresContext() != mOuter->PresContext());
   }
 
+  mScrollParentID = aBuilder->GetCurrentScrollParentId();
+
   nsDisplayListCollection scrolledContent;
   {
     // Note that setting the current scroll parent id here means that positioned children
@@ -2954,7 +2987,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // scroll layer count. The display lists depend on this.
     ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
 
-    if (mShouldBuildScrollableLayer) {
+    if (mShouldBuildScrollableLayer && BuildScrollContainerLayers()) {
       DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
       // For root scrollframes in documents where the CSS viewport has been
@@ -2994,6 +3027,31 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   AppendScrollPartsTo(aBuilder, scrollbarDirty, scrolledContent,
                       createLayersForScrollbars, true);
   scrolledContent.MoveTo(aLists);
+}
+
+void
+ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
+                                       nsIFrame* aContainerReferenceFrame,
+                                       const ContainerLayerParameters& aParameters,
+                                       nsRect* aClipRect,
+                                       nsTArray<FrameMetrics>* aOutput) const
+{
+  if (!mShouldBuildScrollableLayer || BuildScrollContainerLayers()) {
+    return;
+  }
+
+  MOZ_ASSERT(mScrolledFrame->GetContent());
+
+  nsRect viewport = mScrollPort +
+    mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
+
+  if (!(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden())) {
+    *aClipRect = viewport;
+  }
+  *aOutput->AppendElement() =
+      nsDisplayScrollLayer::ComputeFrameMetrics(mScrolledFrame, mOuter,
+        aContainerReferenceFrame, aLayer, mScrollParentID,
+        viewport, false, false, aParameters);
 }
 
 bool

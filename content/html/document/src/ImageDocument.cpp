@@ -57,7 +57,7 @@ class ImageListener : public MediaDocumentStreamListener
 public:
   NS_DECL_NSIREQUESTOBSERVER
 
-  ImageListener(ImageDocument* aDocument);
+  explicit ImageListener(ImageDocument* aDocument);
   virtual ~ImageListener();
 };
 
@@ -94,7 +94,7 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   nsCOMPtr<nsIPrincipal> channelPrincipal;
   if (secMan) {
-    secMan->GetChannelPrincipal(channel, getter_AddRefs(channelPrincipal));
+    secMan->GetChannelResultPrincipal(channel, getter_AddRefs(channelPrincipal));
   }
 
   int16_t decision = nsIContentPolicy::ACCEPT;

@@ -55,7 +55,7 @@ static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 class MOZ_STACK_CLASS ValueSetter
 {
 public:
-  ValueSetter(nsIEditor* aEditor)
+  explicit ValueSetter(nsIEditor* aEditor)
     : mEditor(aEditor)
   {
     MOZ_ASSERT(aEditor);
@@ -185,7 +185,7 @@ SuppressEventHandlers(nsPresContext* aPresContext)
 class nsAnonDivObserver MOZ_FINAL : public nsStubMutationObserver
 {
 public:
-  nsAnonDivObserver(nsTextEditorState* aTextEditorState)
+  explicit nsAnonDivObserver(nsTextEditorState* aTextEditorState)
   : mTextEditorState(aTextEditorState) {}
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
@@ -1521,8 +1521,10 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // If the editor is modified but nsIEditorObserver::EditAction() hasn't been
   // called yet, we need to notify it here because editor may be destroyed
   // before EditAction() is called if selection listener causes flushing layout.
+  bool isInEditAction = false;
   if (mTextListener && mEditor && mEditorInitialized &&
-      mEditor->GetIsInEditAction()) {
+      NS_SUCCEEDED(mEditor->GetIsInEditAction(&isInEditAction)) &&
+      isInEditAction) {
     mTextListener->EditAction();
   }
 

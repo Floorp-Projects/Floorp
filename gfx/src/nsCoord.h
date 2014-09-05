@@ -57,6 +57,14 @@ inline void VERIFY_COORD(nscoord aCoord) {
 #endif
 }
 
+inline nscoord NSCoordMulDiv(nscoord aMult1, nscoord aMult2, nscoord aDiv) {
+#ifdef NS_COORD_IS_FLOAT
+  return (aMult1 * aMult2 / aDiv);
+#else
+  return (int64_t(aMult1) * int64_t(aMult2) / int64_t(aDiv));
+#endif
+}
+
 inline nscoord NSToCoordRound(float aValue)
 {
 #if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && !defined(__clang__)

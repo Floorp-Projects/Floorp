@@ -41,7 +41,7 @@ this.DevTools = function DevTools() {
 
   Services.obs.addObserver(this._teardown, "devtools-unloaded", false);
   Services.obs.addObserver(this.destroy, "quit-application", false);
-}
+};
 
 DevTools.prototype = {
   /**

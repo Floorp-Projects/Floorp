@@ -1,6 +1,9 @@
 
 Changes made to pristine libpng source by mozilla.org developers.
 
+2014/08/21  -- Synced with libpng-1.6.13 (bug #1021713).
+               Renamed mozpngconf.h to pnglibconf.h.
+
 2014/03/21  -- Synced with libpng-1.6.10 (bug #980488) and disabled
                PNG_WARNINGS and PNG_ERROR_TEXT in non-debug builds.
                Limit image dimensions to 32767 (bug #251381, #591822,

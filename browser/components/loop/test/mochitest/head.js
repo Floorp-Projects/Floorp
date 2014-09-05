@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const MozLoopServiceInternal = Cu.import("resource:///modules/loop/MozLoopService.jsm", {}).
+                               MozLoopServiceInternal;
+
 var gMozLoopAPI;
 
 function promiseGetMozLoopAPI() {
@@ -57,9 +60,17 @@ function loadLoopPanel() {
   Services.prefs.setCharPref("services.push.serverURL", "ws://localhost/");
   Services.prefs.setCharPref("loop.server", "http://localhost/");
 
+  // Turn off the network for loop tests, so that we don't
+  // try to access the remote servers. If we want to turn this
+  // back on in future, be careful to check for intermittent
+  // failures.
+  let wasOffline = Services.io.offline;
+  Services.io.offline = true;
+
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("services.push.serverURL");
     Services.prefs.clearUserPref("loop.server");
+    Services.io.offline = wasOffline;
   });
 
   // Turn off animations to make tests quicker.
@@ -81,6 +92,13 @@ function promiseOAuthParamsSetup(baseURL, params) {
   xhr.send();
 
   return deferred.promise;
+}
+
+function resetFxA() {
+  let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+  global.gFxAOAuthClientPromise = null;
+  global.gFxAOAuthClient = null;
+  global.gFxAOAuthTokenData = null;
 }
 
 function promiseDeletedOAuthParams(baseURL) {

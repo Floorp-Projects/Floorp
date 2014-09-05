@@ -12,7 +12,7 @@ class nsIMIMEHeaderParam;
 
 class nsContentTypeParser {
 public:
-  nsContentTypeParser(const nsAString& aString);
+  explicit nsContentTypeParser(const nsAString& aString);
   ~nsContentTypeParser();
 
   nsresult GetParameter(const char* aParameterName, nsAString& aResult);

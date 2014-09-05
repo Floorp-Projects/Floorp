@@ -349,11 +349,32 @@ CodeGeneratorX64::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
 {
     MAsmJSLoadGlobalVar *mir = ins->mir();
 
+    MIRType type = mir->type();
+    JS_ASSERT(IsNumberType(type) || IsSimdType(type));
+
     CodeOffsetLabel label;
-    if (mir->type() == MIRType_Int32)
+    switch (type) {
+      case MIRType_Int32:
         label = masm.loadRipRelativeInt32(ToRegister(ins->output()));
-    else
+        break;
+      case MIRType_Float32:
+        label = masm.loadRipRelativeFloat32(ToFloatRegister(ins->output()));
+        break;
+      case MIRType_Double:
         label = masm.loadRipRelativeDouble(ToFloatRegister(ins->output()));
+        break;
+      // Aligned access: code is aligned on PageSize + there is padding
+      // before the global data section.
+      case MIRType_Int32x4:
+        label = masm.loadRipRelativeInt32x4(ToFloatRegister(ins->output()));
+        break;
+      case MIRType_Float32x4:
+        label = masm.loadRipRelativeFloat32x4(ToFloatRegister(ins->output()));
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("unexpected type in visitAsmJSLoadGlobalVar");
+    }
+
     masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
     return true;
 }
@@ -364,13 +385,31 @@ CodeGeneratorX64::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
     MAsmJSStoreGlobalVar *mir = ins->mir();
 
     MIRType type = mir->value()->type();
-    JS_ASSERT(IsNumberType(type));
+    JS_ASSERT(IsNumberType(type) || IsSimdType(type));
 
     CodeOffsetLabel label;
-    if (type == MIRType_Int32)
+    switch (type) {
+      case MIRType_Int32:
         label = masm.storeRipRelativeInt32(ToRegister(ins->value()));
-    else
+        break;
+      case MIRType_Float32:
+        label = masm.storeRipRelativeFloat32(ToFloatRegister(ins->value()));
+        break;
+      case MIRType_Double:
         label = masm.storeRipRelativeDouble(ToFloatRegister(ins->value()));
+        break;
+      // Aligned access: code is aligned on PageSize + there is padding
+      // before the global data section.
+      case MIRType_Int32x4:
+        label = masm.storeRipRelativeInt32x4(ToFloatRegister(ins->value()));
+        break;
+      case MIRType_Float32x4:
+        label = masm.storeRipRelativeFloat32x4(ToFloatRegister(ins->value()));
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("unexpected type in visitAsmJSStoreGlobalVar");
+    }
+
     masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
     return true;
 }

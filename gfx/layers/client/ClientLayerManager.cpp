@@ -32,12 +32,59 @@
 #include "gfxPrefs.h"
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
+#include "LayerMetricsWrapper.h"
 #endif
 
 namespace mozilla {
 namespace layers {
 
 using namespace mozilla::gfx;
+
+void
+ClientLayerManager::MemoryPressureObserver::Destroy()
+{
+  UnregisterMemoryPressureEvent();
+  mClientLayerManager = nullptr;
+}
+
+NS_IMETHODIMP
+ClientLayerManager::MemoryPressureObserver::Observe(nsISupports* aSubject,
+                                                    const char* aTopic,
+                                                    const char16_t* aSomeData)
+{
+  if (!mClientLayerManager || strcmp(aTopic, "memory-pressure")) {
+    return NS_OK;
+  }
+
+  mClientLayerManager->HandleMemoryPressure();
+  return NS_OK;
+}
+
+void
+ClientLayerManager::MemoryPressureObserver::RegisterMemoryPressureEvent()
+{
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+
+  MOZ_ASSERT(observerService);
+
+  if (observerService) {
+    observerService->AddObserver(this, "memory-pressure", false);
+  }
+}
+
+void
+ClientLayerManager::MemoryPressureObserver::UnregisterMemoryPressureEvent()
+{
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+
+  if (observerService) {
+      observerService->RemoveObserver(this, "memory-pressure");
+  }
+}
+
+NS_IMPL_ISUPPORTS(ClientLayerManager::MemoryPressureObserver, nsIObserver)
 
 ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   : mPhase(PHASE_NONE)
@@ -53,6 +100,7 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   , mForwarder(new ShadowLayerForwarder)
 {
   MOZ_COUNT_CTOR(ClientLayerManager);
+  mMemoryPressureObserver = new MemoryPressureObserver(this);
 }
 
 ClientLayerManager::~ClientLayerManager()
@@ -60,6 +108,7 @@ ClientLayerManager::~ClientLayerManager()
   if (mTransactionIdAllocator) {
     DidComposite(mLatestTransactionId);
   }
+  mMemoryPressureObserver->Destroy();
   ClearCachedResources();
   // Stop receiveing AsyncParentMessage at Forwarder.
   // After the call, the message is directly handled by LayerTransactionChild. 
@@ -128,6 +177,7 @@ void
 ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
   mInTransaction = true;
+  mTransactionStart = TimeStamp::Now();
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("[----- BeginTransaction"));
@@ -183,7 +233,6 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 void
 ClientLayerManager::BeginTransaction()
 {
-  mInTransaction = true;
   BeginTransactionWithTarget(nullptr);
 }
 
@@ -259,6 +308,9 @@ ClientLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
   for (size_t i = 0; i < mTexturePools.Length(); i++) {
     mTexturePools[i]->ReturnDeferredClients();
   }
+
+  mInTransaction = false;
+  mTransactionStart = TimeStamp();
 }
 
 bool
@@ -447,13 +499,19 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   mPhase = PHASE_FORWARD;
 
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
+  TimeStamp transactionStart;
+  if (!mTransactionIdAllocator->GetTransactionStart().IsNull()) {
+    transactionStart = mTransactionIdAllocator->GetTransactionStart();
+  } else {
+    transactionStart = mTransactionStart;
+  }
 
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
   if (mForwarder->EndTransaction(&replies, mRegionToClear,
         mLatestTransactionId, aScheduleComposite, mPaintSequenceNumber,
-        mIsRepeatTransaction, &sent)) {
+        mIsRepeatTransaction, transactionStart, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];
 
@@ -613,6 +671,14 @@ ClientLayerManager::ClearCachedResources(Layer* aSubtree)
 }
 
 void
+ClientLayerManager::HandleMemoryPressure()
+{
+  for (size_t i = 0; i < mTexturePools.Length(); i++) {
+    mTexturePools[i]->ShrinkToMinimumSize();
+  }
+}
+
+void
 ClientLayerManager::ClearLayer(Layer* aLayer)
 {
   ClientLayer::ToClientLayer(aLayer)->ClearCachedResources();
@@ -641,30 +707,26 @@ ClientLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
                                               bool aDrawingCritical)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  Layer* primaryScrollable = GetPrimaryScrollableLayer();
-  if (primaryScrollable) {
-    const FrameMetrics& metrics = primaryScrollable->GetFrameMetrics();
+  MOZ_ASSERT(aMetrics.IsScrollable());
+  // This is derived from the code in
+  // gfx/layers/ipc/CompositorParent.cpp::TransformShadowTree.
+  CSSToLayerScale paintScale = aMetrics.LayersPixelsPerCSSPixel();
+  const CSSRect& metricsDisplayPort =
+    (aDrawingCritical && !aMetrics.mCriticalDisplayPort.IsEmpty()) ?
+      aMetrics.mCriticalDisplayPort : aMetrics.mDisplayPort;
+  LayerRect displayPort = (metricsDisplayPort + aMetrics.GetScrollOffset()) * paintScale;
 
-    // This is derived from the code in
-    // gfx/layers/ipc/CompositorParent.cpp::TransformShadowTree.
-    CSSToLayerScale paintScale = metrics.LayersPixelsPerCSSPixel();
-    const CSSRect& metricsDisplayPort =
-      (aDrawingCritical && !metrics.mCriticalDisplayPort.IsEmpty()) ?
-        metrics.mCriticalDisplayPort : metrics.mDisplayPort;
-    LayerRect displayPort = (metricsDisplayPort + metrics.GetScrollOffset()) * paintScale;
-
-    ScreenPoint scrollOffset;
-    CSSToScreenScale zoom;
-    bool ret = AndroidBridge::Bridge()->ProgressiveUpdateCallback(
-      aHasPendingNewThebesContent, displayPort, paintScale.scale, aDrawingCritical,
-      scrollOffset, zoom);
-    aMetrics.SetScrollOffset(scrollOffset / zoom);
-    aMetrics.SetZoom(zoom);
-    return ret;
-  }
-#endif
-
+  ScreenPoint scrollOffset;
+  CSSToScreenScale zoom;
+  bool ret = AndroidBridge::Bridge()->ProgressiveUpdateCallback(
+    aHasPendingNewThebesContent, displayPort, paintScale.scale, aDrawingCritical,
+    scrollOffset, zoom);
+  aMetrics.SetScrollOffset(scrollOffset / zoom);
+  aMetrics.SetZoom(zoom);
+  return ret;
+#else
   return false;
+#endif
 }
 
 ClientLayer::~ClientLayer()

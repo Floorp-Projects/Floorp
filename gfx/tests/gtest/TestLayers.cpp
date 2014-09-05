@@ -6,6 +6,7 @@
 #include "TestLayers.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "mozilla/layers/LayerMetricsWrapper.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -36,7 +37,7 @@ public:
 
 class TestContainerLayer: public ContainerLayer {
 public:
-  TestContainerLayer(LayerManager* aManager)
+  explicit TestContainerLayer(LayerManager* aManager)
     : ContainerLayer(aManager, nullptr)
   {}
 
@@ -55,7 +56,7 @@ public:
 
 class TestThebesLayer: public ThebesLayer {
 public:
-  TestThebesLayer(LayerManager* aManager)
+  explicit TestThebesLayer(LayerManager* aManager)
     : ThebesLayer(aManager, nullptr)
   {}
 
@@ -321,4 +322,131 @@ TEST(Layers, RepositionChild) {
   ASSERT_EQ(layers[2], layers[3]->GetNextSibling());
   ASSERT_EQ(layers[1], layers[2]->GetNextSibling());
   ASSERT_EQ(nullptr, layers[1]->GetNextSibling());
+}
+
+TEST(LayerMetricsWrapper, SimpleTree) {
+  nsTArray<nsRefPtr<Layer> > layers;
+  nsRefPtr<LayerManager> lm;
+  nsRefPtr<Layer> root = CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
+  LayerMetricsWrapper wrapper(root);
+
+  ASSERT_EQ(root.get(), wrapper.GetLayer());
+  wrapper = wrapper.GetFirstChild();
+  ASSERT_EQ(layers[1].get(), wrapper.GetLayer());
+  ASSERT_FALSE(wrapper.GetNextSibling().IsValid());
+  wrapper = wrapper.GetFirstChild();
+  ASSERT_EQ(layers[2].get(), wrapper.GetLayer());
+  wrapper = wrapper.GetFirstChild();
+  ASSERT_EQ(layers[3].get(), wrapper.GetLayer());
+  ASSERT_FALSE(wrapper.GetFirstChild().IsValid());
+  wrapper = wrapper.GetNextSibling();
+  ASSERT_EQ(layers[4].get(), wrapper.GetLayer());
+  ASSERT_FALSE(wrapper.GetNextSibling().IsValid());
+  wrapper = wrapper.GetParent();
+  ASSERT_EQ(layers[2].get(), wrapper.GetLayer());
+  wrapper = wrapper.GetNextSibling();
+  ASSERT_EQ(layers[5].get(), wrapper.GetLayer());
+  ASSERT_FALSE(wrapper.GetNextSibling().IsValid());
+  wrapper = wrapper.GetLastChild();
+  ASSERT_EQ(layers[6].get(), wrapper.GetLayer());
+  wrapper = wrapper.GetParent();
+  ASSERT_EQ(layers[5].get(), wrapper.GetLayer());
+  LayerMetricsWrapper layer5 = wrapper;
+  wrapper = wrapper.GetPrevSibling();
+  ASSERT_EQ(layers[2].get(), wrapper.GetLayer());
+  wrapper = wrapper.GetParent();
+  ASSERT_EQ(layers[1].get(), wrapper.GetLayer());
+  ASSERT_TRUE(layer5 == wrapper.GetLastChild());
+  LayerMetricsWrapper rootWrapper(root);
+  ASSERT_TRUE(rootWrapper == wrapper.GetParent());
+}
+
+static FrameMetrics
+MakeMetrics(FrameMetrics::ViewID aId) {
+  FrameMetrics metrics;
+  metrics.SetScrollId(aId);
+  return metrics;
+}
+
+TEST(LayerMetricsWrapper, MultiFramemetricsTree) {
+  nsTArray<nsRefPtr<Layer> > layers;
+  nsRefPtr<LayerManager> lm;
+  nsRefPtr<Layer> root = CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
+
+  nsTArray<FrameMetrics> metrics;
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 0)); // topmost of root layer
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::NULL_SCROLL_ID));
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 1));
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 2));
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::NULL_SCROLL_ID));
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::NULL_SCROLL_ID));      // bottom of root layer
+  root->SetFrameMetrics(metrics);
+
+  metrics.Clear();
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 3));
+  layers[1]->SetFrameMetrics(metrics);
+
+  metrics.Clear();
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::NULL_SCROLL_ID));
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 4));
+  layers[2]->SetFrameMetrics(metrics);
+
+  metrics.Clear();
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 5));
+  layers[4]->SetFrameMetrics(metrics);
+
+  metrics.Clear();
+  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 6));
+  layers[5]->SetFrameMetrics(metrics);
+
+  LayerMetricsWrapper wrapper(root, LayerMetricsWrapper::StartAt::TOP);
+  nsTArray<Layer*> expectedLayers;
+  expectedLayers.AppendElement(layers[0].get());
+  expectedLayers.AppendElement(layers[0].get());
+  expectedLayers.AppendElement(layers[0].get());
+  expectedLayers.AppendElement(layers[0].get());
+  expectedLayers.AppendElement(layers[0].get());
+  expectedLayers.AppendElement(layers[0].get());
+  expectedLayers.AppendElement(layers[1].get());
+  expectedLayers.AppendElement(layers[2].get());
+  expectedLayers.AppendElement(layers[2].get());
+  expectedLayers.AppendElement(layers[3].get());
+  nsTArray<FrameMetrics::ViewID> expectedIds;
+  expectedIds.AppendElement(FrameMetrics::START_SCROLL_ID + 0);
+  expectedIds.AppendElement(FrameMetrics::NULL_SCROLL_ID);
+  expectedIds.AppendElement(FrameMetrics::START_SCROLL_ID + 1);
+  expectedIds.AppendElement(FrameMetrics::START_SCROLL_ID + 2);
+  expectedIds.AppendElement(FrameMetrics::NULL_SCROLL_ID);
+  expectedIds.AppendElement(FrameMetrics::NULL_SCROLL_ID);
+  expectedIds.AppendElement(FrameMetrics::START_SCROLL_ID + 3);
+  expectedIds.AppendElement(FrameMetrics::NULL_SCROLL_ID);
+  expectedIds.AppendElement(FrameMetrics::START_SCROLL_ID + 4);
+  expectedIds.AppendElement(FrameMetrics::NULL_SCROLL_ID);
+  for (int i = 0; i < 10; i++) {
+    ASSERT_EQ(expectedLayers[i], wrapper.GetLayer());
+    ASSERT_EQ(expectedIds[i], wrapper.Metrics().GetScrollId());
+    wrapper = wrapper.GetFirstChild();
+  }
+  ASSERT_FALSE(wrapper.IsValid());
+
+  wrapper = LayerMetricsWrapper(root, LayerMetricsWrapper::StartAt::BOTTOM);
+  for (int i = 5; i < 10; i++) {
+    ASSERT_EQ(expectedLayers[i], wrapper.GetLayer());
+    ASSERT_EQ(expectedIds[i], wrapper.Metrics().GetScrollId());
+    wrapper = wrapper.GetFirstChild();
+  }
+  ASSERT_FALSE(wrapper.IsValid());
+
+  wrapper = LayerMetricsWrapper(layers[4], LayerMetricsWrapper::StartAt::BOTTOM);
+  ASSERT_EQ(FrameMetrics::START_SCROLL_ID + 5, wrapper.Metrics().GetScrollId());
+  wrapper = wrapper.GetParent();
+  ASSERT_EQ(FrameMetrics::START_SCROLL_ID + 4, wrapper.Metrics().GetScrollId());
+  ASSERT_EQ(layers[2].get(), wrapper.GetLayer());
+  ASSERT_FALSE(wrapper.GetNextSibling().IsValid());
+  wrapper = wrapper.GetParent();
+  ASSERT_EQ(FrameMetrics::NULL_SCROLL_ID, wrapper.Metrics().GetScrollId());
+  ASSERT_EQ(layers[2].get(), wrapper.GetLayer());
+  wrapper = wrapper.GetNextSibling();
+  ASSERT_EQ(FrameMetrics::START_SCROLL_ID + 6, wrapper.Metrics().GetScrollId());
+  ASSERT_EQ(layers[5].get(), wrapper.GetLayer());
 }

@@ -9,6 +9,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsMathUtils.h"
+#include "SVGImageContext.h"
 
 #include "nsContentUtils.h"
 
@@ -297,7 +298,7 @@ class AdjustedTarget
 public:
   typedef CanvasRenderingContext2D::ContextState ContextState;
 
-  AdjustedTarget(CanvasRenderingContext2D *ctx,
+  explicit AdjustedTarget(CanvasRenderingContext2D* ctx,
                  mgfx::Rect *aBounds = nullptr)
     : mCtx(nullptr)
   {
@@ -437,7 +438,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasPattern, mContext)
 
 class CanvasRenderingContext2DUserData : public LayerUserData {
 public:
-    CanvasRenderingContext2DUserData(CanvasRenderingContext2D *aContext)
+  explicit CanvasRenderingContext2DUserData(CanvasRenderingContext2D *aContext)
     : mContext(aContext)
   {
     aContext->mUserDatas.AppendElement(this);
@@ -1989,7 +1990,7 @@ CanvasRenderingContext2D::ArcTo(double x1, double y1, double x2,
   }
 
   // Check for colinearity
-  dir = (p2.x - p1.x).value * (p0.y - p1.y).value + (p2.y - p1.y).value * (p1.x - p0.x).value;
+  dir = (p2.x - p1.x) * (p0.y - p1.y) + (p2.y - p1.y) * (p1.x - p0.x);
   if (dir == 0) {
     LineTo(p1.x, p1.y);
     return;
@@ -3484,11 +3485,13 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
   // FLAG_CLAMP is added for increased performance, since we never tile here.
   uint32_t modifiedFlags = image.mDrawingFlags | imgIContainer::FLAG_CLAMP;
 
+  SVGImageContext svgContext(scaledImageSize, Nothing(), CurrentState().globalAlpha);
+
   nsresult rv = image.mImgContainer->
     Draw(context, scaledImageSize,
          ImageRegion::Create(gfxRect(src.x, src.y, src.width, src.height)),
          image.mWhichFrame, GraphicsFilter::FILTER_GOOD,
-         Nothing(), modifiedFlags);
+         Some(svgContext), modifiedFlags);
 
   NS_ENSURE_SUCCESS_VOID(rv);
 }
@@ -4514,7 +4517,7 @@ CanvasPath::ArcTo(double x1, double y1, double x2, double y2, double radius,
   }
 
   // Check for colinearity
-  dir = (p2.x - p1.x).value * (p0.y - p1.y).value + (p2.y - p1.y).value * (p1.x - p0.x).value;
+  dir = (p2.x - p1.x) * (p0.y - p1.y) + (p2.y - p1.y) * (p1.x - p0.x);
   if (dir == 0) {
     LineTo(p1.x, p1.y);
     return;

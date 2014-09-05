@@ -151,16 +151,6 @@
 */
 //#undef SK_USER_TRACE_INCLUDE_FILE
 
-/*  Change the ordering to work in X windows.
- */
-#ifdef SK_SAMPLES_FOR_X
-        #define SK_R32_SHIFT    16
-        #define SK_G32_SHIFT    8
-        #define SK_B32_SHIFT    0
-        #define SK_A32_SHIFT    24
-#endif
-
-
 /* Determines whether to build code that supports the GPU backend. Some classes
    that are not GPU-specific, such as SkShader subclasses, have optional code
    that is used allows them to interact with the GPU backend. If you'd like to
@@ -202,10 +192,18 @@
 #  define SK_BARRIERS_PLATFORM_H "skia/SkBarriers_x86.h"
 #endif
 
+// On all platforms we have this byte order
+#define SK_A32_SHIFT 24
+#define SK_R32_SHIFT 16
+#define SK_G32_SHIFT 8
+#define SK_B32_SHIFT 0
+
 #define SK_ALLOW_STATIC_GLOBAL_INITIALIZERS 0
 
 #define SK_SUPPORT_LEGACY_GETDEVICE
 #define SK_SUPPORT_LEGACY_GETTOPDEVICE
 #define SK_IGNORE_ETC1_SUPPORT
+
+#define SK_RASTERIZE_EVEN_ROUNDING
 
 #endif

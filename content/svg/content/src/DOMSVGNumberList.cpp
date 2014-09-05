@@ -82,7 +82,7 @@ DOMSVGNumberList::WrapObject(JSContext *cx)
 class MOZ_STACK_CLASS AutoChangeNumberListNotifier
 {
 public:
-  AutoChangeNumberListNotifier(DOMSVGNumberList* aNumberList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoChangeNumberListNotifier(DOMSVGNumberList* aNumberList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mNumberList(aNumberList)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;

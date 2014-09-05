@@ -9,17 +9,22 @@
 
 #include "MozMtpCommon.h"
 
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsImpl.h"
 #include "nsString.h"
+#include "nsIThread.h"
 #include "nsTArray.h"
+
+class DeviceStorageFile;
 
 BEGIN_MTP_NAMESPACE // mozilla::system::mtp
 
+class RefCountedMtpServer;
+
 using namespace android;
 
-class MozMtpDatabase : public MtpDatabase
+class MozMtpDatabase MOZ_FINAL : public MtpDatabase
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MozMtpDatabase)
@@ -111,10 +116,23 @@ public:
   void AddStorage(MtpStorageID aStorageID, const char* aPath, const char *aName);
   void RemoveStorage(MtpStorageID aStorageID);
 
+  void FileWatcherUpdate(RefCountedMtpServer* aMtpServer,
+                         DeviceStorageFile* aFile,
+                         const nsACString& aEventType);
+
 private:
 
   struct DbEntry
   {
+    DbEntry()
+      : mHandle(0),
+        mStorageID(0),
+        mObjectFormat(MTP_FORMAT_DEFINED),
+        mParent(0),
+        mObjectSize(0),
+        mDateCreated(0),
+        mDateModified(0) {}
+
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DbEntry)
 
     MtpObjectHandle mHandle;        // uint32_t
@@ -128,9 +146,75 @@ private:
     PRTime          mDateCreated;
     PRTime          mDateModified;
   };
-  typedef nsTArray<mozilla::RefPtr<DbEntry> > DbArray;
 
-  DbArray mDb;
+  template<class T>
+  class ProtectedTArray : private nsTArray<T>
+  {
+  public:
+    typedef T elem_type;
+    typedef typename nsTArray<T>::size_type size_type;
+    typedef typename nsTArray<T>::index_type index_type;
+    typedef nsTArray<T> base_type;
+
+    static const index_type NoIndex = base_type::NoIndex;
+
+    ProtectedTArray(mozilla::Mutex& aMutex)
+      : mMutex(aMutex)
+    {}
+
+    size_type Length() const
+    {
+      // GRR - This assert prints to stderr and won't show up in logcat.
+      mMutex.AssertCurrentThreadOwns();
+      return base_type::Length();
+    }
+
+    template <class Item>
+    elem_type* AppendElement(const Item& aItem)
+    {
+      mMutex.AssertCurrentThreadOwns();
+      return base_type::AppendElement(aItem);
+    }
+
+    void Clear()
+    {
+      mMutex.AssertCurrentThreadOwns();
+      base_type::Clear();
+    }
+
+    void RemoveElementAt(index_type aIndex)
+    {
+      mMutex.AssertCurrentThreadOwns();
+      base_type::RemoveElementAt(aIndex);
+    }
+
+    elem_type& operator[](index_type aIndex)
+    {
+      mMutex.AssertCurrentThreadOwns();
+      return base_type::ElementAt(aIndex);
+    }
+
+    const elem_type& operator[](index_type aIndex) const
+    {
+      mMutex.AssertCurrentThreadOwns();
+      return base_type::ElementAt(aIndex);
+    }
+
+  private:
+    mozilla::Mutex& mMutex;
+  };
+  typedef nsTArray<mozilla::RefPtr<DbEntry> > UnprotectedDbArray;
+  typedef ProtectedTArray<mozilla::RefPtr<DbEntry> > ProtectedDbArray;
+
+  struct StorageEntry
+  {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StorageEntry)
+
+    MtpStorageID  mStorageID;
+    nsCString     mStoragePath;
+    nsCString     mStorageName;
+  };
+  typedef ProtectedTArray<mozilla::RefPtr<StorageEntry> > StorageArray;
 
   enum MatchType
   {
@@ -142,12 +226,13 @@ private:
     MatchParentFormat,
   };
 
-
-  void AddEntry(DbEntry *aEntry);
+  void AddEntry(DbEntry* aEntry);
+  void DumpEntries(const char* aLabel);
+  MtpObjectHandle FindEntryByPath(const nsACString& aPath);
   mozilla::TemporaryRef<DbEntry> GetEntry(MtpObjectHandle aHandle);
   void RemoveEntry(MtpObjectHandle aHandle);
   void QueryEntries(MatchType aMatchType, uint32_t aMatchField1,
-                    uint32_t aMatchField2, DbArray& aResult);
+                    uint32_t aMatchField2, UnprotectedDbArray& aResult);
 
   nsCString BaseName(const nsCString& aPath);
 
@@ -158,6 +243,22 @@ private:
   }
 
   void AddDirectory(MtpStorageID aStorageID, const char *aPath, MtpObjectHandle aParent);
+
+  MtpObjectHandle CreateEntryForFile(const nsACString& aPath, DeviceStorageFile* aFile);
+
+  StorageArray::index_type FindStorage(MtpStorageID aStorageID);
+  MtpStorageID FindStorageIDFor(const nsACString& aPath, nsCSubstring& aRemainder);
+  void FileWatcherNotify(DbEntry* aEntry, const char* aEventType);
+
+  // We need a mutex to protext mDb and mStorage. The MTP server runs on a
+  // dedicated thread, and it updates/accesses mDb. When files are updated
+  // through DeviceStorage, we need to update/access mDb and mStorage as well
+  // (from a non-MTP server thread).
+  mozilla::Mutex mMutex;
+  ProtectedDbArray mDb;
+  StorageArray mStorage;
+
+  bool mBeginSendObjectCalled;
 };
 
 END_MTP_NAMESPACE

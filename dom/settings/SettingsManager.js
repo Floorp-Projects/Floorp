@@ -5,281 +5,240 @@
 "use strict";
 
 const DEBUG = false;
-function debug(s) {
-  if (DEBUG) dump("-*- SettingsManager: " + s + "\n");
-}
+function debug(s) { dump("-*- SettingsManager: " + s + "\n"); }
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/SettingsQueue.jsm");
-Cu.import("resource://gre/modules/SettingsDB.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "DOMRequest",
+                                   "@mozilla.org/dom/dom-request-service;1",
+                                   "nsIDOMRequestService");
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 XPCOMUtils.defineLazyServiceGetter(this, "mrm",
                                    "@mozilla.org/memory-reporter-manager;1",
                                    "nsIMemoryReporterManager");
+XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
+                                   "@mozilla.org/uuid-generator;1",
+                                   "nsIUUIDGenerator");
+
+/**
+ * In order to make SettingsManager work with Privileged Apps, we need the lock
+ * to be OOP. However, the lock state needs to be managed on the child process,
+ * while the IDB functions now happen on the parent process so we don't have to
+ * expose IDB permissions at the child process level. We use the
+ * DOMRequestHelper mechanism to deal with DOMRequests/promises across the
+ * processes.
+ *
+ * However, due to the nature of the IDBTransaction lifetime, we need to relay
+ * to the parent when to finalize the transaction once the child is done with the
+ * lock. We keep a list of all open requests for a lock, and once the lock
+ * reaches the end of its receiveMessage function with no more queued requests,
+ * we consider it dead. At that point, we send a message to the parent to notify
+ * it to finalize the transaction.
+ */
 
 function SettingsLock(aSettingsManager) {
+  if (DEBUG) debug("settings lock init");
   this._open = true;
-  this._isBusy = false;
-  this._requests = new Queue();
   this._settingsManager = aSettingsManager;
-  this._transaction = null;
+  this._id = uuidgen.generateUUID().toString();
 
-  let closeHelper = function() {
-    if (DEBUG) debug("closing lock");
-    this._open = false;
-  }.bind(this);
-
-  Services.tm.currentThread.dispatch(closeHelper, Ci.nsIThread.DISPATCH_NORMAL);
+  // DOMRequestIpcHelper.initHelper sets this._window
+  this.initDOMRequestHelper(this._settingsManager._window, ["Settings:Get:OK", "Settings:Get:KO",
+                                                            "Settings:Clear:OK", "Settings:Clear:KO",
+                                                            "Settings:Set:OK", "Settings:Set:KO",
+                                                            "Settings:Finalize:OK", "Settings:Finalize:KO"]);
+  this.sendMessage("Settings:CreateLock", {lockID: this._id, isInternalLock: false});
+  Services.tm.currentThread.dispatch(this._closeHelper.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
 }
 
 SettingsLock.prototype = {
+  __proto__: DOMRequestIpcHelper.prototype,
+  set onsettingstransactionsuccess(aHandler) {
+    this.__DOM_IMPL__.setEventHandler("onsettingstransactionsuccess", aHandler);
+  },
+
+  get onsettingstransactionsuccess() {
+    return this.__DOM_IMPL__.getEventHandler("onsettingstransactionsuccess");
+  },
+
+  set onsettingstransactionfailure(aHandler) {
+    this.__DOM_IMPL__.setEventHandler("onsettingstransactionfailure", aHandler);
+  },
+
+  get onsettingstransactionfailure() {
+    return this.__DOM_IMPL__.getEventHandler("onsettingstransactionfailure");
+  },
+
   get closed() {
     return !this._open;
   },
+
+  _closeHelper: function() {
+    if (DEBUG) debug("closing lock " + this._id);
+    this._open = false;
+    if (!this._requests || Object.keys(this._requests).length == 0) {
+      if (DEBUG) debug("Requests exhausted, finalizing");
+      this._settingsManager.unregisterLock(this._id);
+      this.sendMessage("Settings:Finalize", {lockID: this._id});
+    } else {
+      if (DEBUG) debug("Requests left: " + Object.keys(this._requests).length);
+      this.sendMessage("Settings:Run", {lockID: this._id});
+    }
+  },
+
 
   _wrap: function _wrap(obj) {
     return Cu.cloneInto(obj, this._settingsManager._window);
   },
 
-  process: function process() {
-    let lock = this;
-    let store = lock._transaction.objectStore(SETTINGSSTORE_NAME);
+  sendMessage: function(aMessageName, aData) {
+    cpmm.sendAsyncMessage(aMessageName,
+                          aData,
+                          undefined,
+                          this._settingsManager._window.document.nodePrincipal);
+  },
 
-    while (!lock._requests.isEmpty()) {
-      let info = lock._requests.dequeue();
-      if (DEBUG) debug("info: " + info.intent);
-      let request = info.request;
-      switch (info.intent) {
-        case "clear":
-          let clearReq = store.clear();
-          clearReq.onsuccess = function() {
-            this._open = true;
-            Services.DOMRequest.fireSuccess(request, 0);
-            this._open = false;
-          }.bind(lock);
-          clearReq.onerror = function() {
-            Services.DOMRequest.fireError(request, 0)
-          };
+  receiveMessage: function(aMessage) {
+    let msg = aMessage.data;
+    
+    // SettingsRequestManager broadcasts changes to all locks in the child. If
+    // our lock isn't being addressed, just return.
+    if (msg.lockID != this._id) {
+      return;
+              }
+    if (DEBUG) debug("receiveMessage (" + this._id + "): " + aMessage.name);
+
+    // Finalizing a transaction does not return a request ID since we are
+    // supposed to fire callbacks.
+    if (!msg.requestID) {
+      let event;
+      switch (aMessage.name) {
+        case "Settings:Finalize:OK":
+          if (DEBUG) debug("Lock finalize ok: " + this._id);
+          event = new this._window.MozSettingsTransactionEvent("settingstransactionsuccess", {});
+          this.__DOM_IMPL__.dispatchEvent(event);
           break;
-        case "set":
-          let keys = Object.getOwnPropertyNames(info.settings);
-          if (keys.length) {
-            lock._isBusy = true;
-          }
-          for (let i = 0; i < keys.length; i++) {
-            let key = keys[i];
-            let last = i === keys.length - 1;
-            if (DEBUG) debug("key: " + key + ", val: " + JSON.stringify(info.settings[key]) + ", type: " + typeof(info.settings[key]));
-            let checkKeyRequest = store.get(key);
-
-            checkKeyRequest.onsuccess = function (event) {
-              let defaultValue;
-              let userValue = info.settings[key];
-              if (event.target.result) {
-                defaultValue = event.target.result.defaultValue;
-              } else {
-                defaultValue = null;
-                if (DEBUG) debug("MOZSETTINGS-SET-WARNING: " + key + " is not in the database.\n");
-              }
-
-              let obj = {settingName: key, defaultValue: defaultValue, userValue: userValue};
-              if (DEBUG) debug("store1: " + JSON.stringify(obj));
-              let setReq = store.put(obj);
-
-              setReq.onsuccess = function() {
-                cpmm.sendAsyncMessage("Settings:Changed", { key: key, value: userValue });
-                if (last && !request.error) {
-                  lock._open = true;
-                  Services.DOMRequest.fireSuccess(request, 0);
-                  lock._open = false;
+        case "Settings:Finalize:KO":
+          if (DEBUG) debug("Lock finalize failed: " + this._id);
+          event = new this._window.MozSettingsTransactionEvent("settingstransactionfailure", {
+            error: msg.errorMsg
+          });
+          this.__DOM_IMPL__.dispatchEvent(event);
+          break;
+        default:
+          if (DEBUG) debug("Message type " + aMessage.name + " is missing a requestID");
                 }
-              };
-
-              setReq.onerror = function() {
-                if (!request.error) {
-                  Services.DOMRequest.fireError(request, setReq.error.name)
-                }
-              };
-
-              if (last) {
-                lock._isBusy = false;
-                if (!lock._requests.isEmpty()) {
-                  lock.process();
-                }
-              }
-            };
-            checkKeyRequest.onerror = function(event) {
-              if (!request.error) {
-                Services.DOMRequest.fireError(request, checkKeyRequest.error.name)
-              }
-            };
-          }
-          // Don't break here, instead return. Once the previous requests have
-          // finished this loop will start again.
           return;
-        case "get":
-          let getReq = (info.name === "*") ? store.mozGetAll()
-                                           : store.mozGetAll(info.name);
-
-          getReq.onsuccess = function(event) {
-            if (DEBUG) debug("Request for '" + info.name + "' successful. " +
-                             "Record count: " + event.target.result.length);
-
-            if (event.target.result.length == 0) {
-              if (DEBUG) debug("MOZSETTINGS-GET-WARNING: " + info.name + " is not in the database.\n");
             }
 
-            let results = {};
 
-            for (var i in event.target.result) {
-              let result = event.target.result[i];
-              var name = result.settingName;
-              if (DEBUG) debug("VAL: " + result.userValue +", " + result.defaultValue + "\n");
-              results[name] = result.userValue !== undefined ? result.userValue : result.defaultValue;
+    let req = this.getRequest(msg.requestID);
+    if (!req) {
+      if (DEBUG) debug("Matching request not found.");
+      return;
             }
-
+    this.removeRequest(msg.requestID);
+    // DOMRequest callbacks called from here can die due to having
+    // things like marionetteScriptFinished in them. Make sure we file
+    // our call to run/finalize BEFORE opening the lock and fulfilling
+    // DOMRequests.
+    Services.tm.currentThread.dispatch(this._closeHelper.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+    if (DEBUG) debug("receiveMessage: " + aMessage.name);
+    switch (aMessage.name) {
+      case "Settings:Get:OK":
+        for (let i in msg.settings) {
+          msg.settings[i] = this._wrap(msg.settings[i]);
+        }
             this._open = true;
-            Services.DOMRequest.fireSuccess(request, this._wrap(results));
+        Services.DOMRequest.fireSuccess(req.request, this._wrap(msg.settings));
             this._open = false;
-          }.bind(lock);
-
-          getReq.onerror = function() {
-            Services.DOMRequest.fireError(request, 0)
-          };
           break;
-      }
-    }
-  },
-
-  createTransactionAndProcess: function() {
-    if (DEBUG) debug("database opened, creating transaction");
-
-    let manager = this._settingsManager;
-    let transactionType = manager.hasWritePrivileges ? "readwrite" : "readonly";
-
-    this._transaction =
-      manager._settingsDB._db.transaction(SETTINGSSTORE_NAME, transactionType);
-
-    this.process();
-  },
-
-  maybeProcess: function() {
-    if (this._transaction && !this._isBusy) {
-      this.process();
+      case "Settings:Set:OK":
+      case "Settings:Clear:OK":
+        this._open = true;
+        Services.DOMRequest.fireSuccess(req.request, 0);
+        this._open = false;
+        break;
+      case "Settings:Get:KO":
+      case "Settings:Set:KO":
+      case "Settings:Clear:KO":
+        if (DEBUG) debug("error:" + msg.errorMsg);
+        Services.DOMRequest.fireError(req.request, msg.errorMsg);
+        break;
+      default:
+        if (DEBUG) debug("Wrong message: " + aMessage.name);
     }
   },
 
   get: function get(aName) {
+    if (DEBUG) debug("get (" + this._id + "): " + aName);
     if (!this._open) {
       dump("Settings lock not open!\n");
       throw Components.results.NS_ERROR_ABORT;
     }
-
-    if (this._settingsManager.hasReadPrivileges) {
-      let req = Services.DOMRequest.createRequest(this._settingsManager._window);
-      this._requests.enqueue({ request: req, intent:"get", name: aName });
-      this.maybeProcess();
+    let req = this.createRequest();
+    let reqID = this.getRequestId({request: req});
+    this.sendMessage("Settings:Get", {requestID: reqID,
+                                      lockID: this._id,
+                                      name: aName});
       return req;
-    } else {
-      if (DEBUG) debug("get not allowed");
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    }
-  },
-
-  _serializePreservingBinaries: function _serializePreservingBinaries(aObject) {
-    function needsUUID(aValue) {
-      if (!aValue || !aValue.constructor) {
-        return false;
-      }
-      return (aValue.constructor.name == "Date") || (aValue instanceof Ci.nsIDOMFile) ||
-             (aValue instanceof Ci.nsIDOMBlob);
-    }
-    // We need to serialize settings objects, otherwise they can change between
-    // the set() call and the enqueued request being processed. We can't simply
-    // parse(stringify(obj)) because that breaks things like Blobs, Files and
-    // Dates, so we use stringify's replacer and parse's reviver parameters to
-    // preserve binaries.
-    let manager = this._settingsManager;
-    let binaries = Object.create(null);
-    let stringified = JSON.stringify(aObject, function(key, value) {
-      value = manager._settingsDB.prepareValue(value);
-      if (needsUUID(value)) {
-        let uuid = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)
-                                                      .generateUUID().toString();
-        binaries[uuid] = value;
-        return uuid;
-      }
-      return value;
-    });
-    return JSON.parse(stringified, function(key, value) {
-      if (value in binaries) {
-        return binaries[value];
-      }
-      return value;
-    });
   },
 
   set: function set(aSettings) {
+    if (DEBUG) debug("send: " + JSON.stringify(aSettings));
     if (!this._open) {
       throw "Settings lock not open";
     }
-
-    if (this._settingsManager.hasWritePrivileges) {
-      let req = Services.DOMRequest.createRequest(this._settingsManager._window);
-      if (DEBUG) debug("send: " + JSON.stringify(aSettings));
-      let settings = this._serializePreservingBinaries(aSettings);
-      this._requests.enqueue({request: req, intent: "set", settings: settings});
-      this.maybeProcess();
+    let req = this.createRequest();
+    let reqID = this.getRequestId({request: req});
+    this.sendMessage("Settings:Set", {requestID: reqID,
+                                      lockID: this._id,
+                                      settings: aSettings});
       return req;
-    } else {
-      if (DEBUG) debug("set not allowed");
-      throw "No permission to call set";
-    }
   },
 
   clear: function clear() {
+    if (DEBUG) if (DEBUG) debug("clear");
     if (!this._open) {
       throw "Settings lock not open";
     }
-
-    if (this._settingsManager.hasWritePrivileges) {
-      let req = Services.DOMRequest.createRequest(this._settingsManager._window);
-      this._requests.enqueue({ request: req, intent: "clear"});
-      this.maybeProcess();
+    let req = this.createRequest();
+    let reqID = this.getRequestId({request: req});
+    this.sendMessage("Settings:Clear", {requestID: reqID,
+                                        lockID: this._id});
       return req;
-    } else {
-      if (DEBUG) debug("clear not allowed");
-      throw "No permission to call clear";
-    }
   },
 
   classID: Components.ID("{60c9357c-3ae0-4222-8f55-da01428470d5}"),
   contractID: "@mozilla.org/settingsLock;1",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference])
 };
 
 function SettingsManager() {
-  this._settingsDB = new SettingsDB();
-  this._settingsDB.init();
+  this._callbacks = null;
+  this._isRegistered = false;
+  this._locks = [];
+  this._principal = null;
 }
 
 SettingsManager.prototype = {
-  _callbacks: null,
-
   _wrap: function _wrap(obj) {
     return Cu.cloneInto(obj, this._window);
   },
 
   set onsettingchange(aHandler) {
     this.__DOM_IMPL__.setEventHandler("onsettingchange", aHandler);
+    this.checkMessageRegistration();
   },
 
   get onsettingchange() {
@@ -287,15 +246,20 @@ SettingsManager.prototype = {
   },
 
   createLock: function() {
-    if (DEBUG) debug("get lock!");
-    var lock = new SettingsLock(this);
-    this._settingsDB.ensureDB(
-      function() { lock.createTransactionAndProcess(); },
-      function() { dump("Cannot open Settings DB. Trying to open an old version?\n"); }
-    );
+    let lock = new SettingsLock(this);
+    if (DEBUG) debug("creating lock " + lock._id);
+    this._locks.push(lock._id);
     return lock;
   },
 
+  unregisterLock: function(aLockID) {
+    let lock_index = this._locks.indexOf(aLockID);
+    if (lock_index != -1) {
+      if (DEBUG) debug("Unregistering lock " + aLockID);
+      this._locks.splice(lock_index, -1);
+    }
+  },
+  
   receiveMessage: function(aMessage) {
     if (DEBUG) debug("Settings::receiveMessage: " + aMessage.name);
     let msg = aMessage.json;
@@ -319,19 +283,37 @@ SettingsManager.prototype = {
           if (DEBUG) debug("no observers stored!");
         }
         break;
-      case "Settings:Notifier:Init:OK":
-        // If SettingManager receives this message means SettingChangeNotifier
-        // might not receive the Settings:RegisterForMessage message. We should
-        // send it again after SettingChangeNotifier is ready.
-        if (this.hasReadPrivileges) {
-          cpmm.sendAsyncMessage("Settings:RegisterForMessages");
-        }
-        break;
       default:
         if (DEBUG) debug("Wrong message: " + aMessage.name);
     }
   },
 
+  // If we have either observer callbacks or an event handler,
+  // register for messages from the main thread. Otherwise, if no one
+  // is listening, unregister to reduce parent load.
+  checkMessageRegistration: function checkRegistration() {
+    let handler = this.__DOM_IMPL__.getEventHandler("onsettingchange");
+    if (!this._isRegistered) {
+      if (DEBUG) debug("Registering for messages");
+      cpmm.sendAsyncMessage("Settings:RegisterForMessages",
+                            undefined,
+                            undefined,
+                            this._window.document.nodePrincipal);
+      this._isRegistered = true;
+    } else {
+      if ((!this._callbacks || Object.keys(this._callbacks).length == 0)  &&
+          !handler) {
+        if (DEBUG) debug("Unregistering for messages");
+        cpmm.sendAsyncMessage("Settings:UnregisterForMessages",
+                              undefined,
+                              undefined,
+                              this._window.document.nodePrincipal);
+        this._isRegistered = false;
+        this._callbacks = null;
+      }
+    }
+  },
+  
   addObserver: function addObserver(aName, aCallback) {
     if (DEBUG) debug("addObserver " + aName);
     if (!this._callbacks) {
@@ -342,58 +324,50 @@ SettingsManager.prototype = {
     } else {
       this._callbacks[aName].push(aCallback);
     }
+    this.checkMessageRegistration();
   },
 
   removeObserver: function removeObserver(aName, aCallback) {
     if (DEBUG) debug("deleteObserver " + aName);
     if (this._callbacks && this._callbacks[aName]) {
-      let index = this._callbacks[aName].indexOf(aCallback)
+      let index = this._callbacks[aName].indexOf(aCallback);
       if (index != -1) {
-        this._callbacks[aName].splice(index, 1)
+        this._callbacks[aName].splice(index, 1);
+        if (this._callbacks[aName].length == 0) {
+          delete this._callbacks[aName];
+        }
       } else {
         if (DEBUG) debug("Callback not found for: " + aName);
       }
     } else {
       if (DEBUG) debug("No observers stored for " + aName);
     }
+    this.checkMessageRegistration();
   },
 
   init: function(aWindow) {
+    if (DEBUG) debug("SettingsManager init");
     mrm.registerStrongReporter(this);
     cpmm.addMessageListener("Settings:Change:Return:OK", this);
-    cpmm.addMessageListener("Settings:Notifier:Init:OK", this);
     this._window = aWindow;
+    this._principal = this._window.document.nodePrincipal;
     Services.obs.addObserver(this, "inner-window-destroyed", false);
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     this.innerWindowID = util.currentInnerWindowID;
-
-    let readPerm = Services.perms.testExactPermissionFromPrincipal(aWindow.document.nodePrincipal, "settings-read");
-    let writePerm = Services.perms.testExactPermissionFromPrincipal(aWindow.document.nodePrincipal, "settings-write");
-    this.hasReadPrivileges = readPerm == Ci.nsIPermissionManager.ALLOW_ACTION;
-    this.hasWritePrivileges = writePerm == Ci.nsIPermissionManager.ALLOW_ACTION;
-
-    if (this.hasReadPrivileges) {
-      cpmm.sendAsyncMessage("Settings:RegisterForMessages");
-    }
-
-    if (!this.hasReadPrivileges && !this.hasWritePrivileges) {
-      dump("No settings permission for: " + aWindow.document.nodePrincipal.origin + "\n");
-      Cu.reportError("No settings permission for: " + aWindow.document.nodePrincipal.origin);
-    }
   },
 
   observe: function(aSubject, aTopic, aData) {
-    if (DEBUG) debug("Topic: " + aTopic);
     if (aTopic == "inner-window-destroyed") {
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (wId == this.innerWindowID) {
+        if (DEBUG) debug("Topic: " + aTopic);
         this.cleanup();
       }
     }
   },
 
   collectReports: function(aCallback, aData, aAnonymize) {
-    for (var topic in this._callbacks) {
+    for (let topic in this._callbacks) {
       let length = this._callbacks[topic].length;
       if (length == 0) {
         continue;
@@ -419,12 +393,19 @@ SettingsManager.prototype = {
   cleanup: function() {
     Services.obs.removeObserver(this, "inner-window-destroyed");
     cpmm.removeMessageListener("Settings:Change:Return:OK", this);
-    cpmm.removeMessageListener("Settings:Notifier:Init:OK", this);
     mrm.unregisterStrongReporter(this);
-    this._requests = null;
+    // At this point, the window is dying, so there's nothing left
+    // that we could do with our lock. Go ahead and run finalize on
+    // it to make sure changes are commited.
+    for (let i = 0; i < this._locks.length; ++i) {
+      if (DEBUG) debug("Lock alive at destroy, finalizing: " + this._locks[i]);
+      cpmm.sendAsyncMessage("Settings:Finalize",
+                            {lockID: this._locks[i]},
+                            undefined,
+                            this._principal);
+    }
     this._window = null;
     this._innerWindowID = null;
-    this._settingsDB.close();
   },
 
   classID: Components.ID("{c40b1c70-00fb-11e2-a21f-0800200c9a66}"),
@@ -435,4 +416,4 @@ SettingsManager.prototype = {
                                          Ci.nsIMemoryReporter]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SettingsManager, SettingsLock])
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SettingsManager, SettingsLock]);

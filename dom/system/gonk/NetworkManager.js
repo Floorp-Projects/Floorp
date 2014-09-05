@@ -34,6 +34,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkService",
                                    "@mozilla.org/network/service;1",
                                    "nsINetworkService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
+                                   "@mozilla.org/mobileconnection/mobileconnectionservice;1",
+                                   "nsIMobileConnectionService");
+
 const TOPIC_INTERFACE_REGISTERED     = "network-interface-registered";
 const TOPIC_INTERFACE_UNREGISTERED   = "network-interface-unregistered";
 const TOPIC_ACTIVE_CHANGED           = "network-active-changed";
@@ -279,12 +283,9 @@ NetworkManager.prototype = {
   getNetworkId: function(network) {
     let id = "device";
 #ifdef MOZ_B2G_RIL
-    if (this.isNetworkTypeMobile(network.type)) {
-      if (!(network instanceof Ci.nsIRilNetworkInterface)) {
-        throw Components.Exception("Mobile network not an nsIRilNetworkInterface",
-                                   Cr.NS_ERROR_INVALID_ARG);
-      }
-      id = "ril" + network.serviceId;
+    if (network instanceof Ci.nsIRilNetworkInterface) {
+      let rilNetwork = network.QueryInterface(Ci.nsIRilNetworkInterface);
+      id = "ril" + rilNetwork.serviceId;
     }
 #endif
 
@@ -796,9 +797,11 @@ NetworkManager.prototype = {
     for each (let network in this.networkInterfaces) {
       if (network.type == type) {
 #ifdef MOZ_B2G_RIL
-        if (serviceId != undefined && this.isNetworkTypeMobile(network.type) &&
-            network.serviceId != serviceId) {
-          continue;
+        if (network instanceof Ci.nsIRilNetworkInterface) {
+          let rilNetwork = network.QueryInterface(Ci.nsIRilNetworkInterface);
+          if (rilNetwork.serviceId != serviceId) {
+            continue;
+          }
         }
 #endif
         return network;
@@ -855,10 +858,8 @@ NetworkManager.prototype = {
   dunRetryTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
   setupDunConnection: function() {
     this.dunRetryTimer.cancel();
-    let ril = this.mRil.getRadioInterface(this._dataDefaultServiceId);
-
-    if (ril.rilContext && ril.rilContext.data &&
-        ril.rilContext.data.state === "registered") {
+    let data = gMobileConnectionService.getDataConnectionInfo(this._dataDefaultServiceId);
+    if (data && data.state === "registered") {
       this.dunRetryTimes = 0;
       ril.setupDataCallByType("dun");
       this.dunConnectTimer.cancel();

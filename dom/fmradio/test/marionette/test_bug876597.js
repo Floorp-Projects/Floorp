@@ -6,6 +6,8 @@ MARIONETTE_TIMEOUT = 10000;
 SpecialPowers.addPermission("fmradio", true, document);
 SpecialPowers.addPermission("settings-read", true, document);
 SpecialPowers.addPermission("settings-write", true, document);
+SpecialPowers.addPermission("settings-api-read", true, document);
+SpecialPowers.addPermission("settings-api-write", true, document);
 
 let FMRadio = window.navigator.mozFMRadio;
 let mozSettings = window.navigator.mozSettings;

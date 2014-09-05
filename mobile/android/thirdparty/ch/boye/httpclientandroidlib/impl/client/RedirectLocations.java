@@ -28,6 +28,7 @@
 package ch.boye.httpclientandroidlib.impl.client;
 
 import java.net.URI;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -37,12 +38,13 @@ import java.util.Set;
 import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 
 /**
- * This class represents a collection of {@link URI}s used as redirect locations.
+ * This class represents a collection of {@link java.net.URI}s used
+ * as redirect locations.
  *
  * @since 4.0
  */
-@NotThreadSafe // HashSet is not synch.
-public class RedirectLocations {
+@NotThreadSafe // HashSet/ArrayList are not synch.
+public class RedirectLocations extends AbstractList<Object> {
 
     private final Set<URI> unique;
     private final List<URI> all;
@@ -72,11 +74,11 @@ public class RedirectLocations {
      * Removes a URI from the collection.
      */
     public boolean remove(final URI uri) {
-        boolean removed = this.unique.remove(uri);
+        final boolean removed = this.unique.remove(uri);
         if (removed) {
-            Iterator<URI> it = this.all.iterator();
+            final Iterator<URI> it = this.all.iterator();
             while (it.hasNext()) {
-                URI current = it.next();
+                final URI current = it.next();
                 if (current.equals(uri)) {
                     it.remove();
                 }
@@ -94,6 +96,132 @@ public class RedirectLocations {
      */
     public List<URI> getAll() {
         return new ArrayList<URI>(this.all);
+    }
+
+    /**
+     * Returns the URI at the specified position in this list.
+     *
+     * @param index
+     *            index of the location to return
+     * @return the URI at the specified position in this list
+     * @throws IndexOutOfBoundsException
+     *             if the index is out of range (
+     *             <tt>index &lt; 0 || index &gt;= size()</tt>)
+     * @since 4.3
+     */
+    @Override
+    public URI get(final int index) {
+        return this.all.get(index);
+    }
+
+    /**
+     * Returns the number of elements in this list. If this list contains more
+     * than <tt>Integer.MAX_VALUE</tt> elements, returns
+     * <tt>Integer.MAX_VALUE</tt>.
+     *
+     * @return the number of elements in this list
+     * @since 4.3
+     */
+    @Override
+    public int size() {
+        return this.all.size();
+    }
+
+    /**
+     * Replaces the URI at the specified position in this list with the
+     * specified element (must be a URI).
+     *
+     * @param index
+     *            index of the element to replace
+     * @param element
+     *            URI to be stored at the specified position
+     * @return the URI previously at the specified position
+     * @throws UnsupportedOperationException
+     *             if the <tt>set</tt> operation is not supported by this list
+     * @throws ClassCastException
+     *             if the element is not a {@link URI}
+     * @throws NullPointerException
+     *             if the specified element is null and this list does not
+     *             permit null elements
+     * @throws IndexOutOfBoundsException
+     *             if the index is out of range (
+     *             <tt>index &lt; 0 || index &gt;= size()</tt>)
+     * @since 4.3
+     */
+    @Override
+    public Object set(final int index, final Object element) {
+        final URI removed = this.all.set(index, (URI) element);
+        this.unique.remove(removed);
+        this.unique.add((URI) element);
+        if (this.all.size() != this.unique.size()) {
+            this.unique.addAll(this.all);
+        }
+        return removed;
+    }
+
+    /**
+     * Inserts the specified element at the specified position in this list
+     * (must be a URI). Shifts the URI currently at that position (if any) and
+     * any subsequent URIs to the right (adds one to their indices).
+     *
+     * @param index
+     *            index at which the specified element is to be inserted
+     * @param element
+     *            URI to be inserted
+     * @throws UnsupportedOperationException
+     *             if the <tt>add</tt> operation is not supported by this list
+     * @throws ClassCastException
+     *             if the element is not a {@link URI}
+     * @throws NullPointerException
+     *             if the specified element is null and this list does not
+     *             permit null elements
+     * @throws IndexOutOfBoundsException
+     *             if the index is out of range (
+     *             <tt>index &lt; 0 || index &gt; size()</tt>)
+     * @since 4.3
+     */
+    @Override
+    public void add(final int index, final Object element) {
+        this.all.add(index, (URI) element);
+        this.unique.add((URI) element);
+    }
+
+    /**
+     * Removes the URI at the specified position in this list. Shifts any
+     * subsequent URIs to the left (subtracts one from their indices). Returns
+     * the URI that was removed from the list.
+     *
+     * @param index
+     *            the index of the URI to be removed
+     * @return the URI previously at the specified position
+     * @throws IndexOutOfBoundsException
+     *             if the index is out of range (
+     *             <tt>index &lt; 0 || index &gt;= size()</tt>)
+     * @since 4.3
+     */
+    @Override
+    public URI remove(final int index) {
+        final URI removed = this.all.remove(index);
+        this.unique.remove(removed);
+        if (this.all.size() != this.unique.size()) {
+            this.unique.addAll(this.all);
+        }
+        return removed;
+    }
+
+    /**
+     * Returns <tt>true</tt> if this collection contains the specified element.
+     * More formally, returns <tt>true</tt> if and only if this collection
+     * contains at least one element <tt>e</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+     *
+     * @param o element whose presence in this collection is to be tested
+     * @return <tt>true</tt> if this collection contains the specified
+     *         element
+     */
+    @Override
+    public boolean contains(final Object o) {
+        return this.unique.contains(o);
     }
 
 }

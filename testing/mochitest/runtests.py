@@ -32,7 +32,20 @@ import urllib2
 import zipfile
 import bisection
 
-from automationutils import environment, getDebuggerInfo, isURL, KeyValueParseError, parseKeyValue, processLeakLog, dumpScreen, ShutdownLeaks, printstatus, LSANLeaks
+from automationutils import (
+    environment,
+    getDebuggerInfo,
+    isURL,
+    KeyValueParseError,
+    parseKeyValue,
+    processLeakLog,
+    dumpScreen,
+    ShutdownLeaks,
+    printstatus,
+    LSANLeaks,
+    setAutomationLog,
+)
+
 from datetime import datetime
 from manifestparser import TestManifest
 from mochitest_options import MochitestOptions
@@ -40,24 +53,11 @@ from mozprofile import Profile, Preferences
 from mozprofile.permissions import ServerLocations
 from urllib import quote_plus as encodeURIComponent
 from mozlog.structured.formatters import TbplFormatter
-from mozlog.structured.commandline import add_logging_group, setup_logging
-from mozlog.structured.handlers import StreamHandler
+from mozlog.structured import commandline
 
 # This should use the `which` module already in tree, but it is
 # not yet present in the mozharness environment
 from mozrunner.utils import findInPath as which
-
-
-# Necessary to set up the global logger in automationutils.py
-import logging
-log = logging.getLogger()
-def resetGlobalLog():
-   while log.handlers:
-       log.removeHandler(log.handlers[0])
-   handler = logging.StreamHandler(sys.stdout)
-   log.setLevel(logging.INFO)
-   log.addHandler(handler)
-resetGlobalLog()
 
 ###########################
 # Option for NSPR logging #
@@ -75,16 +75,29 @@ NSPR_LOG_MODULES = ""
 
 ### output processing
 class MochitestFormatter(TbplFormatter):
+    """
+    The purpose of this class is to maintain compatibility with legacy users.
+    Mozharness' summary parser expects the count prefix, and others expect python
+    logging to contain a line prefix picked up by TBPL (bug 1043420).
+    Those directly logging "TEST-UNEXPECTED" require no prefix to log output
+    in order to turn a build orange (bug 1044206).
+
+    Once updates are propagated to Mozharness, this class may be removed.
+    """
     log_num = 0
 
     def __init__(self):
         super(MochitestFormatter, self).__init__()
 
     def __call__(self, data):
-        tbpl_output = super(MochitestFormatter, self).__call__(data)
+        output = super(MochitestFormatter, self).__call__(data)
         log_level = data.get('level', 'info').upper()
-        output = '%d %s %s' % (MochitestFormatter.log_num, log_level, tbpl_output)
-        MochitestFormatter.log_num += 1
+
+        if 'js_source' in data or log_level == 'ERROR':
+            data.pop('js_source', None)
+            output = '%d %s %s' % (MochitestFormatter.log_num, log_level, output)
+            MochitestFormatter.log_num += 1
+
         return output
 
 ### output processing
@@ -409,7 +422,7 @@ class MochitestUtilsMixin(object):
   TEST_PATH = "tests"
   CHROME_PATH = "redirect.html"
   urlOpts = []
-  structured_logger = None
+  log = None
 
   def __init__(self, logger_options):
     self.update_mozinfo()
@@ -417,20 +430,19 @@ class MochitestUtilsMixin(object):
     self.wsserver = None
     self.sslTunnel = None
     self._locations = None
-    # Structured logger
-    if self.structured_logger is None:
-        self.structured_logger = setup_logging('mochitest', logger_options, {})
-        # Add the tbpl logger if no handler is logging to stdout, to display formatted logs by default
-        has_stdout_logger = any(h.stream == sys.stdout for h in self.structured_logger.handlers)
-        if not has_stdout_logger:
-            handler = StreamHandler(sys.stdout, MochitestFormatter())
-            self.structured_logger.add_handler(handler)
-        MochitestUtilsMixin.structured_logger = self.structured_logger
 
-    self.message_logger = MessageLogger(logger=self.structured_logger)
+    if self.log is None:
+      commandline.log_formatters["tbpl"]  = (MochitestFormatter,
+                                             "Mochitest specific tbpl formatter")
+      self.log = commandline.setup_logging("mochitest",
+                                           logger_options,
+                                           {
+                                              "tbpl": sys.stdout
+                                           })
+      MochitestUtilsMixin.log = self.log
+      setAutomationLog(self.log)
 
-    # self.log should also be structured_logger, but to avoid regressions like bug 1044206 we're now logging with the stdlib's logger
-    self.log = log
+    self.message_logger = MessageLogger(logger=self.log)
 
   def update_mozinfo(self):
     """walk up directories to find mozinfo.json update the info"""
@@ -1206,7 +1218,7 @@ class Mochitest(MochitestUtilsMixin):
       if gmp_path is not None:
           browserEnv["MOZ_GMP_PATH"] = gmp_path
     except EnvironmentError:
-      log.error('Could not find path to gmp-fake plugin!')
+      self.log.error('Could not find path to gmp-fake plugin!')
       return None
 
     if options.fatalAssertions:
@@ -1468,13 +1480,8 @@ class Mochitest(MochitestUtilsMixin):
       printstatus(status, "Main app process")
       runner.process_handler = None
 
-      if timeout is None:
-        didTimeout = False
-      else:
-        didTimeout = proc.didTimeout
-
       # finalize output handler
-      outputHandler.finish(didTimeout)
+      outputHandler.finish()
 
       # record post-test information
       if status:
@@ -1841,16 +1848,12 @@ class Mochitest(MochitestUtilsMixin):
       self.lsanLeaks = lsanLeaks
       self.bisectChunk = bisectChunk
 
-      # perl binary to use
-      self.perl = which('perl')
-
       # With metro browser runs this script launches the metro test harness which launches the browser.
       # The metro test harness hands back the real browser process id via log output which we need to
       # pick up on and parse out. This variable tracks the real browser process id if we find it.
       self.browserProcessId = None
 
-      # stack fixer function and/or process
-      self.stackFixerFunction, self.stackFixerProcess = self.stackFixer()
+      self.stackFixerFunction = self.stackFixer()
 
     def processOutputLine(self, line):
       """per line handler of output for mozprocess"""
@@ -1885,14 +1888,13 @@ class Mochitest(MochitestUtilsMixin):
 
     def stackFixer(self):
       """
-      return 2-tuple, (stackFixerFunction, StackFixerProcess),
-      if any, to use on the output lines
+      return stackFixerFunction, if any, to use on the output lines
       """
 
       if not mozinfo.info.get('debug'):
-        return None, None
+        return None
 
-      stackFixerFunction = stackFixerProcess = None
+      stackFixerFunction = None
 
       def import_stackFixerModule(module_name):
         sys.path.insert(0, self.utilityPath)
@@ -1901,35 +1903,20 @@ class Mochitest(MochitestUtilsMixin):
         return module
 
       if self.symbolsPath and os.path.exists(self.symbolsPath):
-        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files)
+        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files).
         # This method is preferred for Tinderbox builds, since native symbols may have been stripped.
         stackFixerModule = import_stackFixerModule('fix_stack_using_bpsyms')
         stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line, self.symbolsPath)
 
-      elif mozinfo.isLinux and self.perl:
-        # Run logsource through fix-linux-stack.pl (uses addr2line)
+      elif mozinfo.isLinux:
+        # Run each line through fix_linux_stack.py (uses addr2line).
         # This method is preferred for developer machines, so we don't have to run "make buildsymbols".
-        stackFixerCommand = [self.perl, os.path.join(self.utilityPath, "fix-linux-stack.pl")]
-        stackFixerProcess = subprocess.Popen(stackFixerCommand, stdin=subprocess.PIPE,
-                                             stdout=subprocess.PIPE)
-        def fixFunc(lines):
-          out = []
-          for line in lines.split('\n'):
-            stackFixerProcess.stdin.write(line + '\n')
-            out.append(stackFixerProcess.stdout.readline().rstrip())
-          return '\n'.join(out)
+        stackFixerModule = import_stackFixerModule('fix_linux_stack')
+        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line)
 
-        stackFixerFunction = fixFunc
+      return stackFixerFunction
 
-      return (stackFixerFunction, stackFixerProcess)
-
-    def finish(self, didTimeout):
-      if self.stackFixerProcess:
-        self.stackFixerProcess.communicate()
-        status = self.stackFixerProcess.returncode
-        if status and not didTimeout:
-          self.harness.log.info("TEST-UNEXPECTED-FAIL | runtests.py | Stack fixer process exited with code %d during test run" % status)
-
+    def finish(self):
       if self.shutdownLeaks:
         self.shutdownLeaks.process()
 
@@ -2019,7 +2006,7 @@ class Mochitest(MochitestUtilsMixin):
     if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ["MOZ_HIDE_RESULTS_TABLE"] == "1":
       options.hideResultsTable = True
 
-    d = dict(options.__dict__)
+    d = dict((k, v) for k, v in options.__dict__.iteritems() if not k.startswith('log'))
     d['testRoot'] = self.testRoot
     content = json.dumps(d)
 
@@ -2063,7 +2050,7 @@ class Mochitest(MochitestUtilsMixin):
 def main():
   # parse command line options
   parser = MochitestOptions()
-  add_logging_group(parser)
+  commandline.add_logging_group(parser)
   options, args = parser.parse_args()
   if options is None:
     # parsing error

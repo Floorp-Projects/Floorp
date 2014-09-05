@@ -49,6 +49,18 @@ inline nsCharType GetBidiCat(uint32_t aCh) {
   return nsCharType(GetCharProps2(aCh).mBidiCategory);
 }
 
+/* This MUST match the values assigned by genUnicodePropertyData.pl! */
+enum VerticalOrientation {
+  VERTICAL_ORIENTATION_U  = 0,
+  VERTICAL_ORIENTATION_R  = 1,
+  VERTICAL_ORIENTATION_Tu = 2,
+  VERTICAL_ORIENTATION_Tr = 3
+};
+
+inline VerticalOrientation GetVerticalOrientation(uint32_t aCh) {
+  return VerticalOrientation(GetCharProps2(aCh).mVertOrient);
+}
+
 enum XidmodType {
   XIDMOD_INCLUSION,
   XIDMOD_RECOMMENDED,

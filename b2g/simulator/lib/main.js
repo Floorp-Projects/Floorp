@@ -7,9 +7,8 @@ const { Cc, Ci, Cu } = require("chrome");
 
 const { SimulatorProcess } = require("./simulator-process");
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-const Self = require("sdk/self");
-const System = require("sdk/system");
 const { Simulator } = Cu.import("resource://gre/modules/devtools/Simulator.jsm");
+const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 
 let process;
 
@@ -35,18 +34,20 @@ function close() {
   return p.kill();
 }
 
+let appinfo = {};
 
-// Load data generated at build time that
-// expose various information about the runtime we ship
-let appinfo = System.staticArgs;
+AddonManager.getAddonByID(require("addon").id, function (addon) {
+  appinfo.label = addon.name.replace(" Simulator", "");
 
-Simulator.register(appinfo.label, {
-  appinfo: appinfo,
-  launch: launch,
-  close: close
+  Simulator.register(appinfo.label, {
+    appinfo: appinfo,
+    launch: launch,
+    close: close
+  });
 });
 
-require("sdk/system/unload").when(function () {
+exports.shutdown = function () {
   Simulator.unregister(appinfo.label);
   close();
-});
+}
+

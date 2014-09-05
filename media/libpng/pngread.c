@@ -1,7 +1,7 @@
 
 /* pngread.c - read a PNG file
  *
- * Last changed in libpng 1.6.10 [March 6, 2014]
+ * Last changed in libpng 1.6.11 [June 5, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -652,7 +652,7 @@ png_read_row(png_structrp png_ptr, png_bytep row, png_bytep dsp_row)
       png_error(png_ptr, "internal sequential row size calculation error");
 
 #ifdef PNG_READ_INTERLACING_SUPPORTED
-   /* Blow up interlaced rows to full size */
+   /* Expand interlaced rows to full size */
    if (png_ptr->interlaced &&
       (png_ptr->transformations & PNG_INTERLACE))
    {
@@ -1025,7 +1025,7 @@ png_read_destroy(png_structrp png_ptr)
    png_free(png_ptr, png_ptr->save_buffer);
 #endif
 
-#if defined(PNG_STORE_UNKNOWN_CHUNKS_SUPPORTED) &&\
+#if defined(PNG_STORE_UNKNOWN_CHUNKS_SUPPORTED) && \
    defined(PNG_READ_UNKNOWN_CHUNKS_SUPPORTED)
    png_free(png_ptr, png_ptr->unknown_chunk.data);
 #endif
@@ -1300,7 +1300,7 @@ png_read_png(png_structrp png_ptr, png_inforp info_ptr,
 #  define P_LINEAR8 4 /* 8-bit linear: only from a file value */
 
 /* Color-map processing: after libpng has run on the PNG image further
- * processing may be needed to conver the data to color-map indicies.
+ * processing may be needed to convert the data to color-map indices.
  */
 #define PNG_CMAP_NONE      0
 #define PNG_CMAP_GA        1 /* Process GA data to a color-map with alpha */
@@ -1868,7 +1868,7 @@ png_create_colormap_entry(png_image_read_control *display,
    /* This is set if the color isn't gray but the output is. */
    if (encoding == P_LINEAR)
    {
-      if (convert_to_Y)
+      if (convert_to_Y != 0)
       {
          /* NOTE: these values are copied from png_do_rgb_to_gray */
          png_uint_32 y = (png_uint_32)6968 * red  + (png_uint_32)23434 * green +
@@ -2267,7 +2267,7 @@ png_image_read_colormap(png_voidp argument)
             data_encoding = P_FILE;
 
             /* The rows from libpng, while technically gray values, are now also
-             * color-map indicies; however, they may need to be expanded to 1
+             * color-map indices; however, they may need to be expanded to 1
              * byte per pixel.  This is what png_set_packing does (i.e., it
              * unpacks the bit values into bytes.)
              */
@@ -2353,8 +2353,8 @@ png_image_read_colormap(png_voidp argument)
                 * 8-bit GA and it has to be processing to single byte color-map
                 * values.  Entry 254 is replaced by either a completely
                 * transparent entry or by the background color at full
-                * precision (and the background color is not a simple gray leve
-                * in this case.)
+                * precision (and the background color is not a simple gray
+                * level in this case.)
                 */
                expand_tRNS = 1;
                output_processing = PNG_CMAP_TRANS;
@@ -2832,7 +2832,7 @@ png_image_read_colormap(png_voidp argument)
                num_trans = 0;
 
             output_processing = PNG_CMAP_NONE;
-            data_encoding = P_FILE; /* Don't change from color-map indicies */
+            data_encoding = P_FILE; /* Don't change from color-map indices */
             cmap_entries = png_ptr->num_palette;
             if (cmap_entries > 256)
                cmap_entries = 256;
@@ -2872,7 +2872,7 @@ png_image_read_colormap(png_voidp argument)
                      i < num_trans ? trans[i] : 255U, P_FILE/*8-bit*/);
             }
 
-            /* The PNG data may have indicies packed in fewer than 8 bits, it
+            /* The PNG data may have indices packed in fewer than 8 bits, it
              * must be expanded if so.
              */
             if (png_ptr->bit_depth < 8)
@@ -3397,11 +3397,11 @@ png_image_read_composite(png_voidp argument)
  * PNG_COMPOSITE
  * PNG_GAMMA
  *
- * This is a work-round for the fact that both the PNG_RGB_TO_GRAY and
+ * This is a work-around for the fact that both the PNG_RGB_TO_GRAY and
  * PNG_COMPOSITE code performs gamma correction, so we get double gamma
- * correction.  The fix-up is to prevent the PNG_COMPOSITE operation happening
- * inside libpng, so this routine sees an 8 or 16-bit gray+alpha row and handles
- * the removal or pre-multiplication of the alpha channel.
+ * correction.  The fix-up is to prevent the PNG_COMPOSITE operation from
+ * happening inside libpng, so this routine sees an 8 or 16-bit gray+alpha
+ * row and handles the removal or pre-multiplication of the alpha channel.
  */
 static int
 png_image_read_background(png_voidp argument)
@@ -3666,7 +3666,7 @@ png_image_read_background(png_voidp argument)
                         component = 0;
 
                      outrow[swap_alpha] = (png_uint_16)component;
-                     if (preserve_alpha)
+                     if (preserve_alpha != 0)
                         outrow[1 ^ swap_alpha] = alpha;
 
                      inrow += 2; /* components and alpha channel */
@@ -3759,7 +3759,7 @@ png_image_read_direct(png_voidp argument)
          png_set_alpha_mode_fixed(png_ptr, PNG_ALPHA_PNG, input_gamma_default);
       }
 
-      if (linear)
+      if (linear != 0)
       {
          /* If there *is* an alpha channel in the input it must be multiplied
           * out; use PNG_ALPHA_STANDARD, otherwise just use PNG_ALPHA_PNG.
@@ -3785,7 +3785,7 @@ png_image_read_direct(png_voidp argument)
        *
        * TODO: fix libpng and remove this.
        */
-      if (do_local_background)
+      if (do_local_background != 0)
       {
          png_fixed_point gtest;
 
@@ -3833,11 +3833,11 @@ png_image_read_direct(png_voidp argument)
              *
              * TODO: fix libpng and remove this.
              */
-            if (do_local_background)
+            if (do_local_background != 0)
                do_local_background = 2/*required*/;
 
             /* 16-bit output: just remove the channel */
-            else if (linear) /* compose on black (well, pre-multiply) */
+            else if (linear != 0) /* compose on black (well, pre-multiply) */
                png_set_strip_alpha(png_ptr);
 
             /* 8-bit output: do an appropriate compose */
@@ -3884,7 +3884,7 @@ png_image_read_direct(png_voidp argument)
             png_uint_32 filler; /* opaque filler */
             int where;
 
-            if (linear)
+            if (linear != 0)
                filler = 65535;
 
             else
@@ -3957,7 +3957,7 @@ png_image_read_direct(png_voidp argument)
       /* If the *output* is 16-bit then we need to check for a byte-swap on this
        * architecture.
        */
-      if (linear)
+      if (linear != 0)
       {
          PNG_CONST png_uint_16 le = 0x0001;
 
@@ -3966,7 +3966,7 @@ png_image_read_direct(png_voidp argument)
       }
 
       /* If change is not now 0 some transformation is missing - error out. */
-      if (change)
+      if (change != 0)
          png_error(png_ptr, "png_read_image: unsupported transformation");
    }
 
@@ -3978,7 +3978,7 @@ png_image_read_direct(png_voidp argument)
     *
     * TODO: remove the do_local_background fixup below.
     */
-   if (!do_local_compose && do_local_background != 2)
+   if (do_local_compose == 0 && do_local_background != 2)
       passes = png_set_interlace_handling(png_ptr);
 
    png_read_update_info(png_ptr, info_ptr);
@@ -3992,7 +3992,7 @@ png_image_read_direct(png_voidp argument)
       if (info_ptr->color_type & PNG_COLOR_MASK_ALPHA)
       {
          /* do_local_compose removes this channel below. */
-         if (!do_local_compose)
+         if (do_local_compose == 0)
          {
             /* do_local_background does the same if required. */
             if (do_local_background != 2 ||
@@ -4001,7 +4001,7 @@ png_image_read_direct(png_voidp argument)
          }
       }
 
-      else if (do_local_compose) /* internal error */
+      else if (do_local_compose != 0) /* internal error */
          png_error(png_ptr, "png_image_read: alpha channel lost");
 
       if (info_ptr->bit_depth == 16)
@@ -4044,7 +4044,7 @@ png_image_read_direct(png_voidp argument)
       png_voidp first_row = display->buffer;
       ptrdiff_t row_bytes = display->row_stride;
 
-      if (linear)
+      if (linear != 0)
          row_bytes *= 2;
 
       /* The following expression is designed to work correctly whether it gives
@@ -4061,7 +4061,7 @@ png_image_read_direct(png_voidp argument)
       display->row_bytes = row_bytes;
    }
 
-   if (do_local_compose)
+   if (do_local_compose != 0)
    {
       int result;
       png_voidp row = png_malloc(png_ptr, png_get_rowbytes(png_ptr, info_ptr));

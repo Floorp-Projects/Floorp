@@ -285,53 +285,53 @@ this.PlacesDBUtils = {
     // The 'weave0' idiom exploits character ordering (0 follows /) to
     // efficiently select all annos with a 'weave/' prefix.
     let deleteObsoleteAnnos = DBConn.createAsyncStatement(
-      "DELETE FROM moz_annos "                      +
-      "WHERE anno_attribute_id IN ( "               +
-      "  SELECT id FROM moz_anno_attributes "       +
-      "  WHERE name BETWEEN 'weave/' AND 'weave0' " +
-      ")");
+      `DELETE FROM moz_annos
+       WHERE anno_attribute_id IN (
+         SELECT id FROM moz_anno_attributes
+         WHERE name BETWEEN 'weave/' AND 'weave0'
+       )`);
     cleanupStatements.push(deleteObsoleteAnnos);
 
     // A.2 remove obsolete annotations from moz_items_annos.
     let deleteObsoleteItemsAnnos = DBConn.createAsyncStatement(
-      "DELETE FROM moz_items_annos "                +
-      "WHERE anno_attribute_id IN ( "               +
-      "  SELECT id FROM moz_anno_attributes "       +
-      "  WHERE name = 'sync/children' "             +
-      "     OR name = 'placesInternal/GUID' "       +
-      "     OR name BETWEEN 'weave/' AND 'weave0' " +
-      ")");
+      `DELETE FROM moz_items_annos
+       WHERE anno_attribute_id IN (
+         SELECT id FROM moz_anno_attributes
+         WHERE name = 'sync/children'
+            OR name = 'placesInternal/GUID'
+            OR name BETWEEN 'weave/' AND 'weave0'
+       )`);
     cleanupStatements.push(deleteObsoleteItemsAnnos);
 
     // A.3 remove unused attributes.
     let deleteUnusedAnnoAttributes = DBConn.createAsyncStatement(
-      "DELETE FROM moz_anno_attributes WHERE id IN ( " +
-        "SELECT id FROM moz_anno_attributes n " +
-        "WHERE NOT EXISTS " +
-            "(SELECT id FROM moz_annos WHERE anno_attribute_id = n.id LIMIT 1) " +
-          "AND NOT EXISTS " +
-            "(SELECT id FROM moz_items_annos WHERE anno_attribute_id = n.id LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_anno_attributes WHERE id IN (
+         SELECT id FROM moz_anno_attributes n
+         WHERE NOT EXISTS
+             (SELECT id FROM moz_annos WHERE anno_attribute_id = n.id LIMIT 1)
+           AND NOT EXISTS
+             (SELECT id FROM moz_items_annos WHERE anno_attribute_id = n.id LIMIT 1)
+       )`);
     cleanupStatements.push(deleteUnusedAnnoAttributes);
 
     // MOZ_ANNOS
     // B.1 remove annos with an invalid attribute
     let deleteInvalidAttributeAnnos = DBConn.createAsyncStatement(
-      "DELETE FROM moz_annos WHERE id IN ( " +
-        "SELECT id FROM moz_annos a " +
-        "WHERE NOT EXISTS " +
-          "(SELECT id FROM moz_anno_attributes " +
-            "WHERE id = a.anno_attribute_id LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_annos WHERE id IN (
+         SELECT id FROM moz_annos a
+         WHERE NOT EXISTS
+           (SELECT id FROM moz_anno_attributes
+             WHERE id = a.anno_attribute_id LIMIT 1)
+       )`);
     cleanupStatements.push(deleteInvalidAttributeAnnos);
 
     // B.2 remove orphan annos
     let deleteOrphanAnnos = DBConn.createAsyncStatement(
-      "DELETE FROM moz_annos WHERE id IN ( " +
-        "SELECT id FROM moz_annos a " +
-        "WHERE NOT EXISTS " +
-          "(SELECT id FROM moz_places WHERE id = a.place_id LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_annos WHERE id IN (
+         SELECT id FROM moz_annos a
+         WHERE NOT EXISTS
+           (SELECT id FROM moz_places WHERE id = a.place_id LIMIT 1)
+       )`);
     cleanupStatements.push(deleteOrphanAnnos);
 
     // MOZ_BOOKMARKS_ROOTS
@@ -344,18 +344,18 @@ this.PlacesDBUtils = {
     if (!selectPlacesRoot.executeStep()) {
       // We are missing the root, try to recreate it.
       let createPlacesRoot = DBConn.createAsyncStatement(
-        "INSERT INTO moz_bookmarks (id, type, fk, parent, position, title, "
-      +                            "guid) "
-      + "VALUES (:places_root, 2, NULL, 0, 0, :title, GENERATE_GUID())");
+        `INSERT INTO moz_bookmarks (id, type, fk, parent, position, title,
+                                    guid)
+         VALUES (:places_root, 2, NULL, 0, 0, :title, GENERATE_GUID())`);
       createPlacesRoot.params["places_root"] = PlacesUtils.placesRootId;
       createPlacesRoot.params["title"] = "";
       cleanupStatements.push(createPlacesRoot);
 
       // Now ensure that other roots are children of Places root.
       let fixPlacesRootChildren = DBConn.createAsyncStatement(
-        "UPDATE moz_bookmarks SET parent = :places_root WHERE id IN " +
-          "(SELECT folder_id FROM moz_bookmarks_roots " +
-            "WHERE folder_id <> :places_root)");
+        `UPDATE moz_bookmarks SET parent = :places_root WHERE id IN
+           (SELECT folder_id FROM moz_bookmarks_roots
+             WHERE folder_id <> :places_root)`);
       fixPlacesRootChildren.params["places_root"] = PlacesUtils.placesRootId;
       cleanupStatements.push(fixPlacesRootChildren);
     }
@@ -364,8 +364,8 @@ this.PlacesDBUtils = {
     // C.2 fix roots titles
     //     some alpha version has wrong roots title, and this also fixes them if
     //     locale has changed.
-    let updateRootTitleSql = "UPDATE moz_bookmarks SET title = :title " +
-                             "WHERE id = :root_id AND title <> :title";
+    let updateRootTitleSql = `UPDATE moz_bookmarks SET title = :title
+                              WHERE id = :root_id AND title <> :title`;
     // root
     let fixPlacesRootTitle = DBConn.createAsyncStatement(updateRootTitleSql);
     fixPlacesRootTitle.params["root_id"] = PlacesUtils.placesRootId;
@@ -400,67 +400,67 @@ this.PlacesDBUtils = {
     // D.1 remove items without a valid place
     // if fk IS NULL we fix them in D.7
     let deleteNoPlaceItems = DBConn.createAsyncStatement(
-      "DELETE FROM moz_bookmarks WHERE id NOT IN ( " +
-        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
-      ") AND id IN (" +
-        "SELECT b.id FROM moz_bookmarks b " +
-        "WHERE fk NOT NULL AND b.type = :bookmark_type " +
-          "AND NOT EXISTS (SELECT url FROM moz_places WHERE id = b.fk LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_bookmarks WHERE id NOT IN (
+         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+       ) AND id IN (
+         SELECT b.id FROM moz_bookmarks b
+         WHERE fk NOT NULL AND b.type = :bookmark_type
+           AND NOT EXISTS (SELECT url FROM moz_places WHERE id = b.fk LIMIT 1)
+       )`);
     deleteNoPlaceItems.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
     cleanupStatements.push(deleteNoPlaceItems);
 
     // D.2 remove items that are not uri bookmarks from tag containers
     let deleteBogusTagChildren = DBConn.createAsyncStatement(
-      "DELETE FROM moz_bookmarks WHERE id NOT IN ( " +
-        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
-      ") AND id IN (" +
-        "SELECT b.id FROM moz_bookmarks b " +
-        "WHERE b.parent IN " +
-          "(SELECT id FROM moz_bookmarks WHERE parent = :tags_folder) " +
-          "AND b.type <> :bookmark_type " +
-      ")");
+      `DELETE FROM moz_bookmarks WHERE id NOT IN (
+         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+       ) AND id IN (
+         SELECT b.id FROM moz_bookmarks b
+         WHERE b.parent IN
+           (SELECT id FROM moz_bookmarks WHERE parent = :tags_folder)
+           AND b.type <> :bookmark_type
+       )`);
     deleteBogusTagChildren.params["tags_folder"] = PlacesUtils.tagsFolderId;
     deleteBogusTagChildren.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
     cleanupStatements.push(deleteBogusTagChildren);
 
     // D.3 remove empty tags
     let deleteEmptyTags = DBConn.createAsyncStatement(
-      "DELETE FROM moz_bookmarks WHERE id NOT IN ( " +
-        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
-      ") AND id IN (" +
-        "SELECT b.id FROM moz_bookmarks b " +
-        "WHERE b.id IN " +
-          "(SELECT id FROM moz_bookmarks WHERE parent = :tags_folder) " +
-          "AND NOT EXISTS " +
-            "(SELECT id from moz_bookmarks WHERE parent = b.id LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_bookmarks WHERE id NOT IN (
+         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+       ) AND id IN (
+         SELECT b.id FROM moz_bookmarks b
+         WHERE b.id IN
+           (SELECT id FROM moz_bookmarks WHERE parent = :tags_folder)
+           AND NOT EXISTS
+             (SELECT id from moz_bookmarks WHERE parent = b.id LIMIT 1)
+       )`);
     deleteEmptyTags.params["tags_folder"] = PlacesUtils.tagsFolderId;
     cleanupStatements.push(deleteEmptyTags);
 
     // D.4 move orphan items to unsorted folder
     let fixOrphanItems = DBConn.createAsyncStatement(
-      "UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id NOT IN ( " +
-        "SELECT folder_id FROM moz_bookmarks_roots " +  // skip roots
-      ") AND id IN (" +
-        "SELECT b.id FROM moz_bookmarks b " +
-        "WHERE b.parent <> 0 " + // exclude Places root
-        "AND NOT EXISTS " +
-          "(SELECT id FROM moz_bookmarks WHERE id = b.parent LIMIT 1) " +
-      ")");
+      `UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id NOT IN (
+         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+       ) AND id IN (
+         SELECT b.id FROM moz_bookmarks b
+         WHERE b.parent <> 0 /* exclude Places root */
+         AND NOT EXISTS
+           (SELECT id FROM moz_bookmarks WHERE id = b.parent LIMIT 1)
+       )`);
     fixOrphanItems.params["unsorted_folder"] = PlacesUtils.unfiledBookmarksFolderId;
     cleanupStatements.push(fixOrphanItems);
 
     // D.5 fix wrong keywords
     let fixInvalidKeywords = DBConn.createAsyncStatement(
-      "UPDATE moz_bookmarks SET keyword_id = NULL WHERE id NOT IN ( " +
-        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
-      ") AND id IN ( " +
-        "SELECT id FROM moz_bookmarks b " +
-        "WHERE keyword_id NOT NULL " +
-          "AND NOT EXISTS " +
-            "(SELECT id FROM moz_keywords WHERE id = b.keyword_id LIMIT 1) " +
-      ")");
+      `UPDATE moz_bookmarks SET keyword_id = NULL WHERE id NOT IN (
+         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+       ) AND id IN (
+         SELECT id FROM moz_bookmarks b
+         WHERE keyword_id NOT NULL
+           AND NOT EXISTS
+             (SELECT id FROM moz_keywords WHERE id = b.keyword_id LIMIT 1)
+       )`);
     cleanupStatements.push(fixInvalidKeywords);
 
     // D.6 fix wrong item types
@@ -468,13 +468,13 @@ this.PlacesDBUtils = {
     //     If they have a valid fk convert them to bookmarks. Later in D.9 we
     //     will move eventual children to unsorted bookmarks.
     let fixBookmarksAsFolders = DBConn.createAsyncStatement(
-      "UPDATE moz_bookmarks SET type = :bookmark_type WHERE id NOT IN ( " +
-        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
-      ") AND id IN ( " +
-        "SELECT id FROM moz_bookmarks b " +
-        "WHERE type IN (:folder_type, :separator_type) " +
-          "AND fk NOTNULL " +
-      ")");
+      `UPDATE moz_bookmarks SET type = :bookmark_type WHERE id NOT IN (
+         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+       ) AND id IN (
+         SELECT id FROM moz_bookmarks b
+         WHERE type IN (:folder_type, :separator_type)
+           AND fk NOTNULL
+       )`);
     fixBookmarksAsFolders.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
     fixBookmarksAsFolders.params["folder_type"] = PlacesUtils.bookmarks.TYPE_FOLDER;
     fixBookmarksAsFolders.params["separator_type"] = PlacesUtils.bookmarks.TYPE_SEPARATOR;
@@ -484,13 +484,13 @@ this.PlacesDBUtils = {
     //     Bookmarks should have an fk, if they don't have any, convert them to
     //     folders.
     let fixFoldersAsBookmarks = DBConn.createAsyncStatement(
-      "UPDATE moz_bookmarks SET type = :folder_type WHERE id NOT IN ( " +
-        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
-      ") AND id IN ( " +
-        "SELECT id FROM moz_bookmarks b " +
-        "WHERE type = :bookmark_type " +
-          "AND fk IS NULL " +
-      ")");
+      `UPDATE moz_bookmarks SET type = :folder_type WHERE id NOT IN (
+         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+       ) AND id IN (
+         SELECT id FROM moz_bookmarks b
+         WHERE type = :bookmark_type
+           AND fk IS NULL
+       )`);
     fixFoldersAsBookmarks.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
     fixFoldersAsBookmarks.params["folder_type"] = PlacesUtils.bookmarks.TYPE_FOLDER;
     cleanupStatements.push(fixFoldersAsBookmarks);
@@ -499,15 +499,15 @@ this.PlacesDBUtils = {
     //     Items cannot have separators or other bookmarks
     //     as parent, if they have bad parent move them to unsorted bookmarks.
     let fixInvalidParents = DBConn.createAsyncStatement(
-      "UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id NOT IN ( " +
-        "SELECT folder_id FROM moz_bookmarks_roots " +  // skip roots
-      ") AND id IN ( " +
-        "SELECT id FROM moz_bookmarks b " +
-        "WHERE EXISTS " +
-          "(SELECT id FROM moz_bookmarks WHERE id = b.parent " +
-            "AND type IN (:bookmark_type, :separator_type) " +
-            "LIMIT 1) " +
-      ")");
+      `UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id NOT IN (
+         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+       ) AND id IN (
+         SELECT id FROM moz_bookmarks b
+         WHERE EXISTS
+           (SELECT id FROM moz_bookmarks WHERE id = b.parent
+             AND type IN (:bookmark_type, :separator_type)
+             LIMIT 1)
+       )`);
     fixInvalidParents.params["unsorted_folder"] = PlacesUtils.unfiledBookmarksFolderId;
     fixInvalidParents.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
     fixInvalidParents.params["separator_type"] = PlacesUtils.bookmarks.TYPE_SEPARATOR;
@@ -520,41 +520,41 @@ this.PlacesDBUtils = {
     //      triangular numbers obtained by the number of children (n).
     //      SUM(DISTINCT position + 1) == (n * (n + 1) / 2).
     cleanupStatements.push(DBConn.createAsyncStatement(
-      "CREATE TEMP TABLE IF NOT EXISTS moz_bm_reindex_temp ( " +
-      "  id INTEGER PRIMARY_KEY " +
-      ", parent INTEGER " +
-      ", position INTEGER " +
-      ") "
+      `CREATE TEMP TABLE IF NOT EXISTS moz_bm_reindex_temp (
+         id INTEGER PRIMARY_KEY
+       , parent INTEGER
+       , position INTEGER
+       )`
     ));
     cleanupStatements.push(DBConn.createAsyncStatement(
-      "INSERT INTO moz_bm_reindex_temp " +
-      "SELECT id, parent, 0 " +
-      "FROM moz_bookmarks b " +
-      "WHERE parent IN ( " +
-        "SELECT parent " +
-        "FROM moz_bookmarks " +
-        "GROUP BY parent " +
-        "HAVING (SUM(DISTINCT position + 1) - (count(*) * (count(*) + 1) / 2)) <> 0 " +
-      ") " +
-      "ORDER BY parent ASC, position ASC, ROWID ASC "
+      `INSERT INTO moz_bm_reindex_temp
+       SELECT id, parent, 0
+       FROM moz_bookmarks b
+       WHERE parent IN (
+         SELECT parent
+         FROM moz_bookmarks
+         GROUP BY parent
+         HAVING (SUM(DISTINCT position + 1) - (count(*) * (count(*) + 1) / 2)) <> 0
+       )
+       ORDER BY parent ASC, position ASC, ROWID ASC`
     ));
     cleanupStatements.push(DBConn.createAsyncStatement(
-      "CREATE INDEX IF NOT EXISTS moz_bm_reindex_temp_index " +
-      "ON moz_bm_reindex_temp(parent)"
+      `CREATE INDEX IF NOT EXISTS moz_bm_reindex_temp_index
+       ON moz_bm_reindex_temp(parent)`
     ));
     cleanupStatements.push(DBConn.createAsyncStatement(
-      "UPDATE moz_bm_reindex_temp SET position = ( " +
-        "ROWID - (SELECT MIN(t.ROWID) FROM moz_bm_reindex_temp t " +
-                 "WHERE t.parent = moz_bm_reindex_temp.parent) " +
-      ") "
+      `UPDATE moz_bm_reindex_temp SET position = (
+         ROWID - (SELECT MIN(t.ROWID) FROM moz_bm_reindex_temp t
+                  WHERE t.parent = moz_bm_reindex_temp.parent)
+       )`
     ));
     cleanupStatements.push(DBConn.createAsyncStatement(
-      "CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_reindex_temp_trigger " +
-      "BEFORE DELETE ON moz_bm_reindex_temp " +
-      "FOR EACH ROW " +
-      "BEGIN " +
-        "UPDATE moz_bookmarks SET position = OLD.position WHERE id = OLD.id; " +
-      "END "
+      `CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_reindex_temp_trigger
+       BEFORE DELETE ON moz_bm_reindex_temp
+       FOR EACH ROW
+       BEGIN
+         UPDATE moz_bookmarks SET position = OLD.position WHERE id = OLD.id;
+       END`
     ));
     cleanupStatements.push(DBConn.createAsyncStatement(
       "DELETE FROM moz_bm_reindex_temp "
@@ -573,9 +573,9 @@ this.PlacesDBUtils = {
     //      Tags were allowed to have empty names due to a UI bug.  Fix them
     //      replacing their title with "(notitle)".
     let fixEmptyNamedTags = DBConn.createAsyncStatement(
-      "UPDATE moz_bookmarks SET title = :empty_title " +
-      "WHERE length(title) = 0 AND type = :folder_type " +
-        "AND parent = :tags_folder"
+      `UPDATE moz_bookmarks SET title = :empty_title
+       WHERE length(title) = 0 AND type = :folder_type
+         AND parent = :tags_folder`
     );
     fixEmptyNamedTags.params["empty_title"] = "(notitle)";
     fixEmptyNamedTags.params["folder_type"] = PlacesUtils.bookmarks.TYPE_FOLDER;
@@ -585,107 +585,107 @@ this.PlacesDBUtils = {
     // MOZ_FAVICONS
     // E.1 remove orphan icons
     let deleteOrphanIcons = DBConn.createAsyncStatement(
-      "DELETE FROM moz_favicons WHERE id IN (" +
-        "SELECT id FROM moz_favicons f " +
-        "WHERE NOT EXISTS " +
-          "(SELECT id FROM moz_places WHERE favicon_id = f.id LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_favicons WHERE id IN (
+         SELECT id FROM moz_favicons f
+         WHERE NOT EXISTS
+           (SELECT id FROM moz_places WHERE favicon_id = f.id LIMIT 1)
+       )`);
     cleanupStatements.push(deleteOrphanIcons);
 
     // MOZ_HISTORYVISITS
     // F.1 remove orphan visits
     let deleteOrphanVisits = DBConn.createAsyncStatement(
-      "DELETE FROM moz_historyvisits WHERE id IN (" +
-        "SELECT id FROM moz_historyvisits v " +
-        "WHERE NOT EXISTS " +
-          "(SELECT id FROM moz_places WHERE id = v.place_id LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_historyvisits WHERE id IN (
+         SELECT id FROM moz_historyvisits v
+         WHERE NOT EXISTS
+           (SELECT id FROM moz_places WHERE id = v.place_id LIMIT 1)
+       )`);
     cleanupStatements.push(deleteOrphanVisits);
 
     // MOZ_INPUTHISTORY
     // G.1 remove orphan input history
     let deleteOrphanInputHistory = DBConn.createAsyncStatement(
-      "DELETE FROM moz_inputhistory WHERE place_id IN (" +
-        "SELECT place_id FROM moz_inputhistory i " +
-        "WHERE NOT EXISTS " +
-          "(SELECT id FROM moz_places WHERE id = i.place_id LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_inputhistory WHERE place_id IN (
+         SELECT place_id FROM moz_inputhistory i
+         WHERE NOT EXISTS
+           (SELECT id FROM moz_places WHERE id = i.place_id LIMIT 1)
+       )`);
     cleanupStatements.push(deleteOrphanInputHistory);
 
     // MOZ_ITEMS_ANNOS
     // H.1 remove item annos with an invalid attribute
     let deleteInvalidAttributeItemsAnnos = DBConn.createAsyncStatement(
-      "DELETE FROM moz_items_annos WHERE id IN ( " +
-        "SELECT id FROM moz_items_annos t " +
-        "WHERE NOT EXISTS " +
-          "(SELECT id FROM moz_anno_attributes " +
-            "WHERE id = t.anno_attribute_id LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_items_annos WHERE id IN (
+         SELECT id FROM moz_items_annos t
+         WHERE NOT EXISTS
+           (SELECT id FROM moz_anno_attributes
+             WHERE id = t.anno_attribute_id LIMIT 1)
+       )`);
     cleanupStatements.push(deleteInvalidAttributeItemsAnnos);
 
     // H.2 remove orphan item annos
     let deleteOrphanItemsAnnos = DBConn.createAsyncStatement(
-      "DELETE FROM moz_items_annos WHERE id IN ( " +
-        "SELECT id FROM moz_items_annos t " +
-        "WHERE NOT EXISTS " +
-          "(SELECT id FROM moz_bookmarks WHERE id = t.item_id LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_items_annos WHERE id IN (
+         SELECT id FROM moz_items_annos t
+         WHERE NOT EXISTS
+           (SELECT id FROM moz_bookmarks WHERE id = t.item_id LIMIT 1)
+       )`);
     cleanupStatements.push(deleteOrphanItemsAnnos);
 
     // MOZ_KEYWORDS
     // I.1 remove unused keywords
     let deleteUnusedKeywords = DBConn.createAsyncStatement(
-      "DELETE FROM moz_keywords WHERE id IN ( " +
-        "SELECT id FROM moz_keywords k " +
-        "WHERE NOT EXISTS " +
-          "(SELECT id FROM moz_bookmarks WHERE keyword_id = k.id LIMIT 1) " +
-      ")");
+      `DELETE FROM moz_keywords WHERE id IN (
+         SELECT id FROM moz_keywords k
+         WHERE NOT EXISTS
+           (SELECT id FROM moz_bookmarks WHERE keyword_id = k.id LIMIT 1)
+       )`);
     cleanupStatements.push(deleteUnusedKeywords);
 
     // MOZ_PLACES
     // L.1 fix wrong favicon ids
     let fixInvalidFaviconIds = DBConn.createAsyncStatement(
-      "UPDATE moz_places SET favicon_id = NULL WHERE id IN ( " +
-        "SELECT id FROM moz_places h " +
-        "WHERE favicon_id NOT NULL " +
-          "AND NOT EXISTS " +
-            "(SELECT id FROM moz_favicons WHERE id = h.favicon_id LIMIT 1) " +
-      ")");
+      `UPDATE moz_places SET favicon_id = NULL WHERE id IN (
+         SELECT id FROM moz_places h
+         WHERE favicon_id NOT NULL
+           AND NOT EXISTS
+             (SELECT id FROM moz_favicons WHERE id = h.favicon_id LIMIT 1)
+       )`);
     cleanupStatements.push(fixInvalidFaviconIds);
 
     // L.2 recalculate visit_count and last_visit_date
     let fixVisitStats = DBConn.createAsyncStatement(
-      "UPDATE moz_places " +
-      "SET visit_count = (SELECT count(*) FROM moz_historyvisits " +
-                         "WHERE place_id = moz_places.id AND visit_type NOT IN (0,4,7,8)), " +
-          "last_visit_date = (SELECT MAX(visit_date) FROM moz_historyvisits " +
-                             "WHERE place_id = moz_places.id) " +
-      "WHERE id IN ( " +
-        "SELECT h.id FROM moz_places h " +
-        "WHERE visit_count <> (SELECT count(*) FROM moz_historyvisits v " +
-                              "WHERE v.place_id = h.id AND visit_type NOT IN (0,4,7,8)) " +
-           "OR last_visit_date <> (SELECT MAX(visit_date) FROM moz_historyvisits v " +
-                                  "WHERE v.place_id = h.id) " +
-      ")");
+      `UPDATE moz_places
+       SET visit_count = (SELECT count(*) FROM moz_historyvisits
+                          WHERE place_id = moz_places.id AND visit_type NOT IN (0,4,7,8)),
+           last_visit_date = (SELECT MAX(visit_date) FROM moz_historyvisits
+                              WHERE place_id = moz_places.id)
+       WHERE id IN (
+         SELECT h.id FROM moz_places h
+         WHERE visit_count <> (SELECT count(*) FROM moz_historyvisits v
+                               WHERE v.place_id = h.id AND visit_type NOT IN (0,4,7,8))
+            OR last_visit_date <> (SELECT MAX(visit_date) FROM moz_historyvisits v
+                                   WHERE v.place_id = h.id)
+       )`);
     cleanupStatements.push(fixVisitStats);
 
     // L.3 recalculate hidden for redirects.
     let fixRedirectsHidden = DBConn.createAsyncStatement(
-      "UPDATE moz_places " +
-      "SET hidden = 1 " +
-      "WHERE id IN ( " +
-        "SELECT h.id FROM moz_places h " +
-        "JOIN moz_historyvisits src ON src.place_id = h.id " +
-        "JOIN moz_historyvisits dst ON dst.from_visit = src.id AND dst.visit_type IN (5,6) " +
-        "LEFT JOIN moz_bookmarks on fk = h.id AND fk ISNULL " +
-        "GROUP BY src.place_id HAVING count(*) = visit_count " +
-      ")");
+      `UPDATE moz_places
+       SET hidden = 1
+       WHERE id IN (
+         SELECT h.id FROM moz_places h
+         JOIN moz_historyvisits src ON src.place_id = h.id
+         JOIN moz_historyvisits dst ON dst.from_visit = src.id AND dst.visit_type IN (5,6)
+         LEFT JOIN moz_bookmarks on fk = h.id AND fk ISNULL
+         GROUP BY src.place_id HAVING count(*) = visit_count
+       )`);
     cleanupStatements.push(fixRedirectsHidden);
 
     // L.4 recalculate foreign_count.
     let fixForeignCount = DBConn.createAsyncStatement(
-      "UPDATE moz_places SET foreign_count = " +
-      "(SELECT count(*) FROM moz_bookmarks WHERE fk = moz_places.id )");
+      `UPDATE moz_places SET foreign_count =
+       (SELECT count(*) FROM moz_bookmarks WHERE fk = moz_places.id )`);
     cleanupStatements.push(fixForeignCount);
 
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
@@ -798,7 +798,7 @@ this.PlacesDBUtils = {
     while (stmt.executeStep()) {
       let tableName = stmt.getString(0);
       let countStmt = DBConn.createStatement(
-        "SELECT count(*) FROM " + tableName);
+        `SELECT count(*) FROM ${tableName}`);
       countStmt.executeStep();
       tasks.log("Table " + tableName + " has " + countStmt.getInt32(0) + " records");
       countStmt.finalize();
@@ -871,47 +871,47 @@ this.PlacesDBUtils = {
 
       { histogram: "PLACES_BOOKMARKS_COUNT",
         healthreport: true,
-        query:     "SELECT count(*) FROM moz_bookmarks b "
-                 + "JOIN moz_bookmarks t ON t.id = b.parent "
-                 + "AND t.parent <> :tags_folder "
-                 + "WHERE b.type = :type_bookmark " },
+        query:     `SELECT count(*) FROM moz_bookmarks b
+                    JOIN moz_bookmarks t ON t.id = b.parent
+                    AND t.parent <> :tags_folder
+                    WHERE b.type = :type_bookmark` },
 
       { histogram: "PLACES_TAGS_COUNT",
-        query:     "SELECT count(*) FROM moz_bookmarks "
-                 + "WHERE parent = :tags_folder " },
+        query:     `SELECT count(*) FROM moz_bookmarks
+                    WHERE parent = :tags_folder` },
 
       { histogram: "PLACES_FOLDERS_COUNT",
-        query:     "SELECT count(*) FROM moz_bookmarks "
-                 + "WHERE TYPE = :type_folder "
-                 + "AND parent NOT IN (0, :places_root, :tags_folder) " },
+        query:     `SELECT count(*) FROM moz_bookmarks
+                    WHERE TYPE = :type_folder
+                    AND parent NOT IN (0, :places_root, :tags_folder)` },
 
       { histogram: "PLACES_KEYWORDS_COUNT",
-        query:     "SELECT count(*) FROM moz_keywords " },
+        query:     "SELECT count(*) FROM moz_keywords" },
 
       { histogram: "PLACES_SORTED_BOOKMARKS_PERC",
-        query:     "SELECT IFNULL(ROUND(( "
-                 +   "SELECT count(*) FROM moz_bookmarks b "
-                 +   "JOIN moz_bookmarks t ON t.id = b.parent "
-                 +   "AND t.parent <> :tags_folder AND t.parent > :places_root "
-                 +   "WHERE b.type  = :type_bookmark "
-                 +   ") * 100 / ( "
-                 +   "SELECT count(*) FROM moz_bookmarks b "
-                 +   "JOIN moz_bookmarks t ON t.id = b.parent "
-                 +   "AND t.parent <> :tags_folder "
-                 +   "WHERE b.type = :type_bookmark "
-                 + ")), 0) " },
+        query:     `SELECT IFNULL(ROUND((
+                      SELECT count(*) FROM moz_bookmarks b
+                      JOIN moz_bookmarks t ON t.id = b.parent
+                      AND t.parent <> :tags_folder AND t.parent > :places_root
+                      WHERE b.type  = :type_bookmark
+                      ) * 100 / (
+                      SELECT count(*) FROM moz_bookmarks b
+                      JOIN moz_bookmarks t ON t.id = b.parent
+                      AND t.parent <> :tags_folder
+                      WHERE b.type = :type_bookmark
+                    )), 0)` },
 
       { histogram: "PLACES_TAGGED_BOOKMARKS_PERC",
-        query:     "SELECT IFNULL(ROUND(( "
-                 +   "SELECT count(*) FROM moz_bookmarks b "
-                 +   "JOIN moz_bookmarks t ON t.id = b.parent "
-                 +   "AND t.parent = :tags_folder "
-                 +   ") * 100 / ( "
-                 +   "SELECT count(*) FROM moz_bookmarks b "
-                 +   "JOIN moz_bookmarks t ON t.id = b.parent "
-                 +   "AND t.parent <> :tags_folder "
-                 +   "WHERE b.type = :type_bookmark "
-                 + ")), 0) " },
+        query:     `SELECT IFNULL(ROUND((
+                      SELECT count(*) FROM moz_bookmarks b
+                      JOIN moz_bookmarks t ON t.id = b.parent
+                      AND t.parent = :tags_folder
+                      ) * 100 / (
+                      SELECT count(*) FROM moz_bookmarks b
+                      JOIN moz_bookmarks t ON t.id = b.parent
+                      AND t.parent <> :tags_folder
+                      WHERE b.type = :type_bookmark
+                    )), 0)` },
 
       { histogram: "PLACES_DATABASE_FILESIZE_MB",
         callback: function () {

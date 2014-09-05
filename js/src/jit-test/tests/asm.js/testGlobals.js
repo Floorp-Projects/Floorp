@@ -123,9 +123,11 @@ assertAsmLinkFail(asmCompile('glob','foreign', USE_ASM + 'var i = foreign.x|0; f
 assertEq(asmLink(asmCompile('glob','foreign', USE_ASM + 'var i = foreign.x|0; function f() { return i|0} return f'), null, {x:"blah"})(), 0);
 assertEq(asmLink(asmCompile('glob','foreign', USE_ASM + 'var i = +foreign.x; function f() { return +i} return f'), null, {x:"blah"})(), NaN);
 assertEq(asmLink(asmCompile('glob','foreign', USE_ASM + 'var tof = glob.Math.fround; var i = tof(foreign.x); function f() { return +i} return f'), this, {x:"blah"})(), NaN);
-assertThrowsInstanceOf(() => asmCompile('glob','foreign',USE_ASM + 'var i = foreign.x|0; function f() { return i|0} return f')(null, {x:Symbol("blah")}), TypeError);
-assertThrowsInstanceOf(() => asmCompile('glob','foreign',USE_ASM + 'var i = +foreign.x; function f() { return +i} return f')(null, {x:Symbol("blah")}), TypeError);
-assertThrowsInstanceOf(() => asmCompile('glob','foreign',USE_ASM + 'var tof = glob.Math.fround; var i = tof(foreign.x); function f() { return +i} return f')(this, {x:Symbol("blah")}), TypeError);
+if (typeof Symbol === "function") {
+    assertThrowsInstanceOf(() => asmCompile('glob','foreign',USE_ASM + 'var i = foreign.x|0; function f() { return i|0} return f')(null, {x:Symbol("blah")}), TypeError);
+    assertThrowsInstanceOf(() => asmCompile('glob','foreign',USE_ASM + 'var i = +foreign.x; function f() { return +i} return f')(null, {x:Symbol("blah")}), TypeError);
+    assertThrowsInstanceOf(() => asmCompile('glob','foreign',USE_ASM + 'var tof = glob.Math.fround; var i = tof(foreign.x); function f() { return +i} return f')(this, {x:Symbol("blah")}), TypeError);
+}
 
 // Temporary workaround; this test can be removed when Emscripten is fixed and
 // the fix has propagated out to most apps:

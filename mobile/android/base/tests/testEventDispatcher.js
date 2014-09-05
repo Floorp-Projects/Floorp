@@ -28,24 +28,15 @@ function send_test_message(type) {
   outerObject.object = innerObject;
   outerObject.objectArray = [null, innerObject];
 
-  sendMessageToJava(outerObject);
+  Messaging.sendRequest(outerObject);
 }
 
 function send_message_for_response(type, response) {
-  sendMessageToJava({
+  Messaging.sendRequestForResult({
     type: type,
     response: response,
-  }, (success, error) => {
-    if (response === "success") {
-      do_check_eq(success, response);
-      do_check_eq(error, null);
-    } else if (response === "error") {
-      do_check_eq(success, null);
-      do_check_eq(error, response);
-    } else {
-      do_throw("Unexpected response: " + response);
-    }
-  });
+  }).then(result => do_check_eq(result, response),
+          error => do_check_eq(error, response));
 }
 
 function finish_test() {

@@ -100,7 +100,7 @@ class StackSlotAllocator
           case LDefinition::FLOAT32X4:
           case LDefinition::INT32X4:   return freeQuadSlot(index);
         }
-        MOZ_ASSUME_UNREACHABLE("Unknown slot type");
+        MOZ_CRASH("Unknown slot type");
     }
 
     uint32_t allocateSlot(LDefinition::Type type) {
@@ -128,7 +128,7 @@ class StackSlotAllocator
           case LDefinition::FLOAT32X4:
           case LDefinition::INT32X4:   return allocateQuadSlot();
         }
-        MOZ_ASSUME_UNREACHABLE("Unknown slot type");
+        MOZ_CRASH("Unknown slot type");
     }
 
     uint32_t stackHeight() const {

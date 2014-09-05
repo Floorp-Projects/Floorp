@@ -104,7 +104,7 @@ static const Result Success = Result::Success;
 inline bool
 IsFatalError(Result rv)
 {
-  return static_cast<unsigned int>(rv) & FATAL_ERROR_FLAG;
+  return (static_cast<unsigned int>(rv) & FATAL_ERROR_FLAG) != 0;
 }
 
 inline Result

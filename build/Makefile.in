@@ -108,7 +108,7 @@ libs:: $(topsrcdir)/tools/rb/fix_macosx_stack.py
 endif
 
 ifeq ($(OS_ARCH),Linux)
-libs:: $(topsrcdir)/tools/rb/fix-linux-stack.pl
+libs:: $(topsrcdir)/tools/rb/fix_linux_stack.py
 	$(INSTALL) $< $(DIST)/bin
 endif
 

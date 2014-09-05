@@ -105,6 +105,7 @@ protected:
                           const bool& scheduleComposite,
                           const uint32_t& paintSequenceNumber,
                           const bool& isRepeatTransaction,
+                          const mozilla::TimeStamp& aTransactionStart,
                           EditReplyArray* reply) MOZ_OVERRIDE;
 
   virtual bool RecvUpdateNoSwap(const EditArray& cset,
@@ -113,7 +114,8 @@ protected:
                                 const bool& isFirstPaint,
                                 const bool& scheduleComposite,
                                 const uint32_t& paintSequenceNumber,
-                                const bool& isRepeatTransaction) MOZ_OVERRIDE;
+                                const bool& isRepeatTransaction,
+                                const mozilla::TimeStamp& aTransactionStart) MOZ_OVERRIDE;
 
   virtual bool RecvClearCachedResources() MOZ_OVERRIDE;
   virtual bool RecvForceComposite() MOZ_OVERRIDE;
@@ -124,7 +126,7 @@ protected:
   virtual bool RecvGetAnimationTransform(PLayerParent* aParent,
                                          MaybeTransform* aTransform)
                                          MOZ_OVERRIDE;
-  virtual bool RecvSetAsyncScrollOffset(PLayerParent* aLayer,
+  virtual bool RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aId,
                                         const int32_t& aX, const int32_t& aY) MOZ_OVERRIDE;
   virtual bool RecvGetAPZTestData(APZTestData* aOutData);
 

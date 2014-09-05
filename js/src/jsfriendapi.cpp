@@ -601,7 +601,7 @@ JS_IsDeadWrapper(JSObject *obj)
         return false;
     }
 
-    return obj->as<ProxyObject>().handler()->family() == &DeadObjectProxy::sDeadObjectFamily;
+    return obj->as<ProxyObject>().handler()->family() == &DeadObjectProxy::family;
 }
 
 void
@@ -1194,6 +1194,11 @@ JS_PUBLIC_API(bool)
 js::IsInRequest(JSContext *cx)
 {
     return !!cx->runtime()->requestDepth;
+}
+
+bool
+js::HasObjectMovedOp(JSObject *obj) {
+    return !!GetObjectClass(obj)->ext.objectMovedOp;
 }
 #endif
 

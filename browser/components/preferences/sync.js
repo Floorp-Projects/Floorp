@@ -171,7 +171,7 @@ let gSyncPane = {
       this.page = PAGE_HAS_ACCOUNT;
       document.getElementById("accountName").value = Weave.Service.identity.account;
       document.getElementById("syncComputerName").value = Weave.Service.clientsEngine.localName;
-      document.getElementById("tosPP").hidden = this._usingCustomServer;
+      document.getElementById("tosPP-normal").hidden = this._usingCustomServer;
     }
   },
 

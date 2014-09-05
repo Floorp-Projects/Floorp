@@ -30,10 +30,10 @@ function run_test() {
 }
 
 function checkForUnusedGroups() {
-  var stmt = cps.DBConnection.createStatement(
-               "SELECT COUNT(*) AS count FROM groups " +
-               "WHERE id NOT IN (SELECT DISTINCT groupID FROM prefs)"
-             );
+  var stmt = cps.DBConnection.createStatement(`
+               SELECT COUNT(*) AS count FROM groups
+               WHERE id NOT IN (SELECT DISTINCT groupID FROM prefs)
+             `);
   stmt.executeStep();
   do_check_eq(0, stmt.row.count);
   stmt.reset();
@@ -41,10 +41,10 @@ function checkForUnusedGroups() {
 }
 
 function checkForUnusedSettings() {
-  var stmt = cps.DBConnection.createStatement(
-               "SELECT COUNT(*) AS count FROM settings " +
-               "WHERE id NOT IN (SELECT DISTINCT settingID FROM prefs)"
-             );
+  var stmt = cps.DBConnection.createStatement(`
+               SELECT COUNT(*) AS count FROM settings
+               WHERE id NOT IN (SELECT DISTINCT settingID FROM prefs)
+             `);
   stmt.executeStep();
   do_check_eq(0, stmt.row.count);
   stmt.reset();

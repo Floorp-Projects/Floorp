@@ -63,7 +63,7 @@ public:
   virtual ImageURL* GetURI() MOZ_OVERRIDE;
 
 protected:
-  ImageWrapper(Image* aInnerImage)
+  explicit ImageWrapper(Image* aInnerImage)
     : mInnerImage(aInnerImage)
   {
     NS_ABORT_IF_FALSE(aInnerImage, "Cannot wrap a null image");

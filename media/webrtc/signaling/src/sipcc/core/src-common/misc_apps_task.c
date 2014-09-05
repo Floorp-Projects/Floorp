@@ -27,92 +27,11 @@ extern cprThread_t misc_app_thread;
 cpr_status_e
 MiscAppTaskSendMsg (uint32_t cmd, cprBuffer_t buf, uint16_t len)
 {
-    phn_syshdr_t *syshdr_p;
-
-    syshdr_p = (phn_syshdr_t *) cprGetSysHeader(buf);
-    if (!syshdr_p)
-    {
-        return CPR_FAILURE;
-    }
-    syshdr_p->Cmd = cmd;
-    syshdr_p->Len = len;
-
-    if (cprSendMessage(s_misc_msg_queue, buf, (void **)&syshdr_p) == CPR_FAILURE)
-    {
-        cprReleaseSysHeader(syshdr_p);
-        return CPR_FAILURE;
-    }
+    /* Mozilla hack: just ignore everything that is posted here */
+    (void)cmd;
+    cpr_free(buf);
+    (void)len;
     return CPR_SUCCESS;
-}
-
-void MiscAppTask (void *arg)
-{
-    static const char fname[] = "MiscAppTask";
-    void *msg_p;
-    phn_syshdr_t *syshdr_p;
-
-    /*
-     * Get the misc apps message queue handle
-     */
-    s_misc_msg_queue  = (cprMsgQueue_t)arg;
-    if (!s_misc_msg_queue) {
-        MISC_ERROR(MISC_F_PREFIX"invalid input, exiting", fname);
-        return;
-    }
-
-    if (platThreadInit("MiscAppTask") != 0) {
-        MISC_ERROR(MISC_F_PREFIX"Failed to Initialize the thread, exiting",
-                fname);
-        return;
-    }
-
-    /*
-     * Create retry-after timers.
-     */
-    if (pres_create_retry_after_timers() == CPR_FAILURE) {
-        MISC_ERROR(MISC_F_PREFIX"failed to create retry-after Timers, exiting",
-               fname);
-        return;
-    }
-
-    while (1)
-    {
-        msg_p = cprGetMessage(s_misc_msg_queue, TRUE, (void **)&syshdr_p);
-        if (msg_p)
-        {
-            switch(syshdr_p->Cmd) {
-            case SUB_MSG_PRESENCE_SUBSCRIBE_RESP:
-            case SUB_MSG_PRESENCE_NOTIFY:
-            case SUB_MSG_PRESENCE_UNSOLICITED_NOTIFY:
-            case SUB_MSG_PRESENCE_TERMINATE:
-            case SUB_MSG_PRESENCE_GET_STATE:
-            case SUB_MSG_PRESENCE_TERM_REQ:
-            case SUB_MSG_PRESENCE_TERM_REQ_ALL:
-            case TIMER_EXPIRATION:
-            case SUB_HANDLER_INITIALIZED:
-                pres_process_msg_from_msgq(syshdr_p->Cmd, msg_p);
-                break;
-
-            case SUB_MSG_CONFIGAPP_SUBSCRIBE:
-            case SUB_MSG_CONFIGAPP_TERMINATE:
-            case SUB_MSG_CONFIGAPP_NOTIFY_ACK:
-                configapp_process_msg(syshdr_p->Cmd, msg_p);
-                break;
-
-            case THREAD_UNLOAD:
-                destroy_misc_app_thread();
-                break;
-
-            default:
-                MISC_ERROR(MISC_F_PREFIX"invalid msg <%d> received",
-                        fname, syshdr_p->Cmd);
-                break;
-            }
-
-            cprReleaseSysHeader(syshdr_p);
-            cpr_free(msg_p);
-        }
-    }
 }
 
 /**

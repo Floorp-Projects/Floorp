@@ -70,8 +70,11 @@ function WebConsoleActor(aConnection, aParentActor)
 
   this._netEvents = new Map();
   this._gripDepth = 0;
+  this._listeners = new Set();
 
   this._onWillNavigate = this._onWillNavigate.bind(this);
+  this._onChangedToplevelDocument = this._onChangedToplevelDocument.bind(this);
+  events.on(this.parentActor, "changed-toplevel-document", this._onChangedToplevelDocument);
   this._onObserverNotification = this._onObserverNotification.bind(this);
   if (this.parentActor.isRootActor) {
     Services.obs.addObserver(this._onObserverNotification,
@@ -124,6 +127,14 @@ WebConsoleActor.prototype =
    * @type Map
    */
   _netEvents: null,
+
+  /**
+   * Holds a set of all currently registered listeners.
+   *
+   * @private
+   * @type Set
+   */
+  _listeners: null,
 
   /**
    * The debugger server connection instance.
@@ -336,6 +347,7 @@ WebConsoleActor.prototype =
       this.consoleReflowListener.destroy();
       this.consoleReflowListener = null;
     }
+    events.off(this.parentActor, "changed-toplevel-document", this._onChangedToplevelDocument);
     this.conn.removeActorPool(this._actorPool);
     if (this.parentActor.isRootActor) {
       Services.obs.removeObserver(this._onObserverNotification,
@@ -564,6 +576,10 @@ WebConsoleActor.prototype =
           break;
       }
     }
+
+    // Update the live list of running listeners
+    startedListeners.forEach(this._listeners.add, this._listeners);
+
     return {
       startedListeners: startedListeners,
       nativeConsoleAPI: this.hasNativeConsoleAPI(this.window),
@@ -631,6 +647,9 @@ WebConsoleActor.prototype =
           break;
       }
     }
+
+    // Update the live list of running listeners
+    stoppedListeners.forEach(this._listeners.delete, this._listeners);
 
     return { stoppedListeners: stoppedListeners };
   },
@@ -914,13 +933,31 @@ WebConsoleActor.prototype =
     };
     JSTermHelpers(helpers);
 
-    // Make sure the helpers can be used during eval.
+    let evalWindow = this.evalWindow;
+    function maybeExport(obj, name) {
+      if (typeof obj[name] != "function") {
+        return;
+      }
+
+      // By default, chrome-implemented functions that are exposed to content
+      // refuse to accept arguments that are cross-origin for the caller. This
+      // is generally the safe thing, but causes problems for certain console
+      // helpers like cd(), where we users sometimes want to pass a cross-origin
+      // window. To circumvent this restriction, we use exportFunction along
+      // with a special option designed for this purpose. See bug 1051224.
+      obj[name] =
+        Cu.exportFunction(obj[name], evalWindow, { allowCrossOriginArguments: true });
+    }
     for (let name in helpers.sandbox) {
       let desc = Object.getOwnPropertyDescriptor(helpers.sandbox, name);
-      if (desc.get || desc.set) {
-        continue;
+      maybeExport(desc, 'get');
+      maybeExport(desc, 'set');
+      maybeExport(desc, 'value');
+      if (desc.value) {
+        // Make sure the helpers can be used during eval.
+        desc.value = aDebuggerGlobal.makeDebuggeeValue(desc.value);
       }
-      helpers.sandbox[name] = aDebuggerGlobal.makeDebuggeeValue(desc.value);
+      Object.defineProperty(helpers.sandbox, name, desc);
     }
     return helpers;
   },
@@ -1405,6 +1442,24 @@ WebConsoleActor.prototype =
       events.off(this.parentActor, "will-navigate", this._onWillNavigate);
       this._progressListenerActive = false;
     }
+  },
+
+  /**
+   * This listener is called when we switch to another frame,
+   * mostly to unregister previous listeners and start listening on the new document.
+   */
+  _onChangedToplevelDocument: function WCA__onChangedToplevelDocument()
+  {
+    // Convert the Set to an Array
+    let listeners = [...this._listeners];
+
+    // Unregister existing listener on the previous document
+    // (pass a copy of the array as it will shift from it)
+    this.onStopListeners({listeners: listeners.slice()});
+
+    // This method is called after this.window is changed,
+    // so we register new listener on this new window
+    this.onStartListeners({listeners: listeners});
   },
 };
 

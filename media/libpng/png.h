@@ -1,7 +1,7 @@
 
 /* png.h - header file for PNG reference library
  *
- * libpng version 1.6.10 - March 6, 2014
+ * libpng version 1.6.13 - August 21, 2014
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -11,7 +11,7 @@
  * Authors and maintainers:
  *   libpng versions 0.71, May 1995, through 0.88, January 1996: Guy Schalnat
  *   libpng versions 0.89c, June 1996, through 0.96, May 1997: Andreas Dilger
- *   libpng versions 0.97, January 1998, through 1.6.10 - March 6, 2014: Glenn
+ *   libpng versions 0.97, January 1998, through 1.6.13 - August 21, 2014: Glenn
  *   See also "Contributing Authors", below.
  *
  * Note about libpng version numbers:
@@ -193,8 +193,16 @@
  *    1.6.9rc01-02            16    10609  16.so.16.9[.0]
  *    1.6.9                   16    10609  16.so.16.9[.0]
  *    1.6.10beta01-03         16    10610  16.so.16.10[.0]
- *    1.6.10betarc01-04       16    10610  16.so.16.10[.0]
- *    1.6.10beta              16    10610  16.so.16.10[.0]
+ *    1.6.10rc01-03           16    10610  16.so.16.10[.0]
+ *    1.6.10                  16    10610  16.so.16.10[.0]
+ *    1.6.11beta01-06         16    10611  16.so.16.11[.0]
+ *    1.6.11rc01-02           16    10611  16.so.16.11[.0]
+ *    1.6.11                  16    10611  16.so.16.11[.0]
+ *    1.6.12rc01-03           16    10612  16.so.16.12[.0]
+ *    1.6.12                  16    10612  16.so.16.12[.0]
+ *    1.6.13beta01-04         16    10613  16.so.16.13[.0]
+ *    1.6.13rc01-02           16    10613  16.so.16.13[.0]
+ *    1.6.13                  16    10613  16.so.16.13[.0]
  *
  *   Henceforth the source version will match the shared-library major
  *   and minor numbers; the shared-library major version number will be
@@ -226,8 +234,8 @@
  *
  * This code is released under the libpng license.
  *
- * libpng versions 1.2.6, August 15, 2004, through 1.6.10, March 6, 2014, are
- * Copyright (c) 2004, 2006-2013 Glenn Randers-Pehrson, and are
+ * libpng versions 1.2.6, August 15, 2004, through 1.6.13, August 21, 2014, are
+ * Copyright (c) 2004, 2006-2014 Glenn Randers-Pehrson, and are
  * distributed according to the same disclaimer and license as libpng-1.2.5
  * with the following individual added to the list of Contributing Authors:
  *
@@ -338,13 +346,13 @@
  * Y2K compliance in libpng:
  * =========================
  *
- *    March 6, 2014
+ *    August 21, 2014
  *
  *    Since the PNG Development group is an ad-hoc body, we can't make
  *    an official declaration.
  *
  *    This is your unofficial assurance that libpng from version 0.71 and
- *    upward through 1.6.10 are Y2K compliant.  It is my belief that
+ *    upward through 1.6.13 are Y2K compliant.  It is my belief that
  *    earlier versions were also Y2K compliant.
  *
  *    Libpng only has two year fields.  One is a 2-byte unsigned integer
@@ -397,16 +405,18 @@
 /* This is not the place to learn how to use libpng. The file libpng-manual.txt
  * describes how to use libpng, and the file example.c summarizes it
  * with some code on which to build.  This file is useful for looking
- * at the actual function definitions and structure components.
+ * at the actual function definitions and structure components.  If that
+ * file has been stripped from your copy of libpng, you can find it at
+ * <http://www.libpng.org/pub/png/libpng-manual.txt>
  *
  * If you just need to read a PNG file and don't want to read the documentation
  * skip to the end of this file and read the section entitled 'simplified API'.
  */
 
 /* Version information for png.h - this should match the version in png.c */
-#define PNG_LIBPNG_VER_STRING "1.6.10"
+#define PNG_LIBPNG_VER_STRING "1.6.13"
 #define PNG_HEADER_VERSION_STRING \
-     " libpng version 1.6.10 - March 6, 2014\n"
+     " libpng version 1.6.13 - August 21, 2014\n"
 
 #define PNG_LIBPNG_VER_SONUM   16
 #define PNG_LIBPNG_VER_DLLNUM  16
@@ -414,7 +424,7 @@
 /* These should match the first 3 components of PNG_LIBPNG_VER_STRING: */
 #define PNG_LIBPNG_VER_MAJOR   1
 #define PNG_LIBPNG_VER_MINOR   6
-#define PNG_LIBPNG_VER_RELEASE 10
+#define PNG_LIBPNG_VER_RELEASE 13
 
 /* This should match the numeric part of the final component of
  * PNG_LIBPNG_VER_STRING, omitting any leading zero:
@@ -445,11 +455,17 @@
  * version 1.0.0 was mis-numbered 100 instead of 10000).  From
  * version 1.0.1 it's    xxyyzz, where x=major, y=minor, z=release
  */
-#define PNG_LIBPNG_VER 10610 /* 1.6.10 */
+#define PNG_LIBPNG_VER 10613 /* 1.6.13 */
 
 /* Library configuration: these options cannot be changed after
  * the library has been built.
  */
+#ifndef PNGLCONF_H
+    /* If pnglibconf.h is missing, you can
+     * copy scripts/pnglibconf.h.prebuilt to pnglibconf.h
+     */
+#   include "pnglibconf.h"
+#endif
 
 #define PNG_APNG_SUPPORTED
 #define PNG_READ_APNG_SUPPORTED
@@ -457,7 +473,6 @@
 
 #ifndef PNG_VERSION_INFO_ONLY
    /* Machine specific configuration. */
-#  include "mozpngconf.h"
 #  include "pngconf.h"
 #endif
 
@@ -560,7 +575,7 @@ extern "C" {
 /* This triggers a compiler error in png.c, if png.c and png.h
  * do not agree upon the version number.
  */
-typedef char* png_libpng_version_1_6_10;
+typedef char* png_libpng_version_1_6_13;
 
 /* Basic control structions.  Read libpng-manual.txt or libpng.3 for more info.
  *
@@ -1867,7 +1882,6 @@ PNG_EXPORT(219, png_size_t, png_process_data_pause, (png_structrp, int save));
  */
 PNG_EXPORT(220, png_uint_32, png_process_data_skip, (png_structrp));
 
-#ifdef PNG_READ_INTERLACING_SUPPORTED
 /* Function that combines rows.  'new_row' is a flag that should come from
  * the callback and be non-NULL if anything needs to be done; the library
  * stores its own version of the new data internally and ignores the passed
@@ -1875,7 +1889,6 @@ PNG_EXPORT(220, png_uint_32, png_process_data_skip, (png_structrp));
  */
 PNG_EXPORT(93, void, png_progressive_combine_row, (png_const_structrp png_ptr,
     png_bytep old_row, png_const_bytep new_row));
-#endif /* PNG_READ_INTERLACING_SUPPORTED */
 #endif /* PNG_PROGRESSIVE_READ_SUPPORTED */
 
 PNG_EXPORTA(94, png_voidp, png_malloc, (png_const_structrp png_ptr,
@@ -3243,7 +3256,8 @@ PNG_EXPORT(243, int, png_get_palette_max, (png_const_structp png_ptr,
 #  define PNG_ARM_NEON   0 /* HARDWARE: ARM Neon SIMD instructions supported */
 #endif
 #define PNG_MAXIMUM_INFLATE_WINDOW 2 /* SOFTWARE: force maximum window */
-#define PNG_OPTION_NEXT  4 /* Next option - numbers must be even */
+#define PNG_SKIP_sRGB_CHECK_PROFILE 4 /* SOFTWARE: Check ICC profile for sRGB */
+#define PNG_OPTION_NEXT  6 /* Next option - numbers must be even */
 
 /* Return values: NOTE: there are four values and 'off' is *not* zero */
 #define PNG_OPTION_UNSET   0 /* Unset - defaults to off */
@@ -3256,7 +3270,7 @@ PNG_EXPORT(244, int, png_set_option, (png_structrp png_ptr, int option,
 #endif
 
 /*******************************************************************************
- *  END OF HARDWARE OPTIONS
+ *  END OF HARDWARE AND SOFTWARE OPTIONS
  ******************************************************************************/
 
 #ifdef PNG_APNG_SUPPORTED

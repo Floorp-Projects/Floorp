@@ -262,7 +262,8 @@ namespace js {
         innerObject,                                                    \
         iteratorObject,                                                 \
         isWrappedNative,                                                \
-        js::proxy_WeakmapKeyDelegate                                    \
+        js::proxy_WeakmapKeyDelegate,                                   \
+        js::proxy_ObjectMoved                                           \
     }
 
 #define PROXY_CLASS_WITH_EXT(name, extraSlots, flags, callOp, constructOp, ext)         \
@@ -377,6 +378,8 @@ extern JS_FRIEND_API(bool)
 proxy_Convert(JSContext *cx, JS::HandleObject proxy, JSType hint, JS::MutableHandleValue vp);
 extern JS_FRIEND_API(void)
 proxy_Finalize(FreeOp *fop, JSObject *obj);
+extern JS_FRIEND_API(void)
+proxy_ObjectMoved(JSObject *obj, const JSObject *old);
 extern JS_FRIEND_API(bool)
 proxy_HasInstance(JSContext *cx, JS::HandleObject proxy, JS::MutableHandleValue v, bool *bp);
 extern JS_FRIEND_API(bool)

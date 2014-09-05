@@ -42,7 +42,7 @@ typedef mozilla::ipc::SharedMemoryBasic::Handle CrossProcessMutexHandle;
 typedef uintptr_t CrossProcessMutexHandle;
 #endif
 
-class NS_COM_GLUE CrossProcessMutex
+class CrossProcessMutex
 {
 public:
   /**

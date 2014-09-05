@@ -29,11 +29,9 @@ package ch.boye.httpclientandroidlib.client.params;
 
 import java.util.Collection;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
-
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpHost;
-import ch.boye.httpclientandroidlib.conn.ClientConnectionManagerFactory;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.params.HttpAbstractParamBean;
 import ch.boye.httpclientandroidlib.params.HttpParams;
 
@@ -43,7 +41,10 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
  * Java Beans conventions.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link ch.boye.httpclientandroidlib.client.config.RequestConfig}.
  */
+@Deprecated
 @NotThreadSafe
 public class ClientParamBean extends HttpAbstractParamBean {
 
@@ -51,13 +52,12 @@ public class ClientParamBean extends HttpAbstractParamBean {
         super(params);
     }
 
+    /**
+     * @deprecated (4.2)  do not use.
+     */
+    @Deprecated
     public void setConnectionManagerFactoryClassName (final String factory) {
         params.setParameter(ClientPNames.CONNECTION_MANAGER_FACTORY_CLASS_NAME, factory);
-    }
-
-    @Deprecated
-    public void setConnectionManagerFactory(ClientConnectionManagerFactory factory) {
-        params.setParameter(ClientPNames.CONNECTION_MANAGER_FACTORY, factory);
     }
 
     public void setHandleRedirects (final boolean handle) {
@@ -94,6 +94,13 @@ public class ClientParamBean extends HttpAbstractParamBean {
 
     public void setDefaultHost (final HttpHost host) {
         params.setParameter(ClientPNames.DEFAULT_HOST, host);
+    }
+
+    /**
+     * @since 4.2
+     */
+    public void setConnectionManagerTimeout(final long timeout) {
+        params.setLongParameter(ClientPNames.CONN_MANAGER_TIMEOUT, timeout);
     }
 
 }

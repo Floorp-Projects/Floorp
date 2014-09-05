@@ -130,12 +130,10 @@ void MediaDecoder::SetDormantIfNecessary(bool aDormant)
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
-  if (!mDecoderStateMachine || !mDecoderStateMachine->IsDormantNeeded() || (mPlayState == PLAY_STATE_SHUTDOWN)) {
-    return;
-  }
-
-  if (mIsDormant == aDormant) {
-    // no change to dormant state
+  if (!mDecoderStateMachine ||
+      !mDecoderStateMachine->IsDormantNeeded() ||
+      mPlayState == PLAY_STATE_SHUTDOWN ||
+      mIsDormant == aDormant) {
     return;
   }
 
@@ -149,16 +147,11 @@ void MediaDecoder::SetDormantIfNecessary(bool aDormant)
     SecondsToUsecs(mCurrentTime, timeUsecs);
     mRequestedSeekTarget = SeekTarget(timeUsecs, SeekTarget::Accurate);
 
-    if (mPlayState == PLAY_STATE_PLAYING){
-      mNextState = PLAY_STATE_PLAYING;
-    } else {
-      mNextState = PLAY_STATE_PAUSED;
-    }
     mNextState = mPlayState;
     mIsDormant = true;
     mIsExitingDormant = false;
     ChangeState(PLAY_STATE_LOADING);
-  } else if ((aDormant != true) && (mPlayState == PLAY_STATE_LOADING)) {
+  } else if (!aDormant && mPlayState == PLAY_STATE_LOADING) {
     // exit dormant state
     // trigger to state machine.
     mDecoderStateMachine->SetDormant(false);
@@ -170,7 +163,9 @@ void MediaDecoder::Pause()
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  if ((mPlayState == PLAY_STATE_LOADING && mIsDormant)  || mPlayState == PLAY_STATE_SEEKING || mPlayState == PLAY_STATE_ENDED) {
+  if ((mPlayState == PLAY_STATE_LOADING && mIsDormant) ||
+      mPlayState == PLAY_STATE_SEEKING ||
+      mPlayState == PLAY_STATE_ENDED) {
     mNextState = PLAY_STATE_PAUSED;
     return;
   }
@@ -609,6 +604,9 @@ nsresult MediaDecoder::Play()
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   NS_ASSERTION(mDecoderStateMachine != nullptr, "Should have state machine.");
+  if (mPausedForPlaybackRateNull) {
+    return NS_OK;
+  }
   nsresult res = ScheduleStateMachineThread();
   NS_ENSURE_SUCCESS(res,res);
   if ((mPlayState == PLAY_STATE_LOADING && mIsDormant) || mPlayState == PLAY_STATE_SEEKING) {
@@ -866,8 +864,11 @@ void MediaDecoder::PlaybackEnded()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mShuttingDown || mPlayState == MediaDecoder::PLAY_STATE_SEEKING)
+  if (mShuttingDown ||
+      mPlayState == PLAY_STATE_SEEKING ||
+      (mPlayState == PLAY_STATE_LOADING && mIsDormant)) {
     return;
+  }
 
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -1437,17 +1438,23 @@ bool MediaDecoder::OnStateMachineThread() const
 
 void MediaDecoder::SetPlaybackRate(double aPlaybackRate)
 {
-  if (aPlaybackRate == 0) {
+  if (aPlaybackRate == mInitialPlaybackRate) {
+    return;
+  }
+
+  if (aPlaybackRate == 0.0) {
     mPausedForPlaybackRateNull = true;
+    mInitialPlaybackRate = aPlaybackRate;
     Pause();
     return;
   } else if (mPausedForPlaybackRateNull) {
+    // Play() uses mPausedForPlaybackRateNull value, so must reset it first
+    mPausedForPlaybackRateNull = false;
     // If the playbackRate is no longer null, restart the playback, iff the
     // media was playing.
     if (mOwner && !mOwner->GetPaused()) {
       Play();
     }
-    mPausedForPlaybackRateNull = false;
   }
 
   if (mDecoderStateMachine) {
@@ -1543,11 +1550,6 @@ MediaDecoder::NotifyWaitingForResourcesStatusChanged()
 bool MediaDecoder::IsShutdown() const {
   NS_ENSURE_TRUE(GetStateMachine(), true);
   return GetStateMachine()->IsShutdown();
-}
-
-int64_t MediaDecoder::GetEndMediaTime() const {
-  NS_ENSURE_TRUE(GetStateMachine(), -1);
-  return GetStateMachine()->GetEndMediaTime();
 }
 
 // Drop reference to state machine.  Only called during shutdown dance.

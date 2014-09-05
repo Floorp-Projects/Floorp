@@ -878,20 +878,29 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& size)
     return glContext.forget();
 }
 
-// Under EGL, on Android, pbuffers are supported fine, though
-// often without the ability to texture from them directly.
 already_AddRefed<GLContext>
-GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
-                                      const SurfaceCaps& caps)
+GLContextProviderEGL::CreateHeadless()
 {
     if (!sEGLLibrary.EnsureInitialized()) {
         return nullptr;
     }
 
     gfxIntSize dummySize = gfxIntSize(16, 16);
-    nsRefPtr<GLContextEGL> glContext;
+    nsRefPtr<GLContext> glContext;
     glContext = GLContextEGL::CreateEGLPBufferOffscreenContext(dummySize);
+    if (!glContext)
+        return nullptr;
 
+    return glContext.forget();
+}
+
+// Under EGL, on Android, pbuffers are supported fine, though
+// often without the ability to texture from them directly.
+already_AddRefed<GLContext>
+GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
+                                      const SurfaceCaps& caps)
+{
+    nsRefPtr<GLContext> glContext = CreateHeadless();
     if (!glContext)
         return nullptr;
 
@@ -904,7 +913,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
 // Don't want a global context on Android as 1) share groups across 2 threads fail on many Tegra drivers (bug 759225)
 // and 2) some mobile devices have a very strict limit on global number of GL contexts (bug 754257)
 // and 3) each EGL context eats 750k on B2G (bug 813783)
-GLContext *
+GLContext*
 GLContextProviderEGL::GetGlobalContext()
 {
     return nullptr;

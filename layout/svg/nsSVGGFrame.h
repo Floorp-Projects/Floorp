@@ -17,7 +17,7 @@ class nsSVGGFrame : public nsSVGGFrameBase
   friend nsIFrame*
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  nsSVGGFrame(nsStyleContext* aContext) :
+  explicit nsSVGGFrame(nsStyleContext* aContext) :
     nsSVGGFrameBase(aContext) {}
 
 public:

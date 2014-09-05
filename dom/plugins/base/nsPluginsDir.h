@@ -51,7 +51,7 @@ public:
 	 * to a plugin file on disk. Plugins are typically located using the
 	 * nsPluginsDir class.
 	 */
-	nsPluginFile(nsIFile* spec);
+	explicit nsPluginFile(nsIFile* spec);
 	virtual ~nsPluginFile();
 
 	/**

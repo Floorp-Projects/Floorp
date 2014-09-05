@@ -19,7 +19,7 @@
 
 class nsSJISProber: public nsCharSetProber {
 public:
-  nsSJISProber(bool aIsPreferredLanguage)
+  explicit nsSJISProber(bool aIsPreferredLanguage)
     :mIsPreferredLanguage(aIsPreferredLanguage)
   {mCodingSM = new nsCodingStateMachine(&SJISSMModel);
     Reset();}

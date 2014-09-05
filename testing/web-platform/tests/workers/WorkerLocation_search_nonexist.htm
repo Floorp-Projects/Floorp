@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerLocation.search  with no &lt;query&gt; component </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = './support/WorkerLocation.js';
+    var SearchString = "";
+    var ExpectedResult = SearchString;
+    var description = "WorkerLocation.search returns an empty string when there is no &lt;query&gt; component in input URL.";
+    
+    var t = async_test("Test Description: " + description);
+                  
+    var worker = new Worker(FileName + SearchString);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data.search, ExpectedResult);
+        t.done();
+    });
+</script>
+</body>
+</html>

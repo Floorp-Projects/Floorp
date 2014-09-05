@@ -99,6 +99,7 @@ WEBIDL_FILES = [
     'DOMException.webidl',
     'DOMImplementation.webidl',
     'DOMMatrix.webidl',
+    'DOMMMIError.webidl',
     'DOMMobileMessageError.webidl',
     'DOMParser.webidl',
     'DOMPoint.webidl',
@@ -224,6 +225,7 @@ WEBIDL_FILES = [
     'IDBRequest.webidl',
     'IDBTransaction.webidl',
     'IDBVersionChangeEvent.webidl',
+    'ImageCapture.webidl',
     'ImageData.webidl',
     'ImageDocument.webidl',
     'InputEvent.webidl',
@@ -261,7 +263,12 @@ WEBIDL_FILES = [
     'MouseScrollEvent.webidl',
     'MozActivity.webidl',
     'MozMmsMessage.webidl',
+    'MozMobileCellInfo.webidl',
+    'MozMobileConnection.webidl',
+    'MozMobileConnectionArray.webidl',
+    'MozMobileConnectionInfo.webidl',
     'MozMobileMessageManager.webidl',
+    'MozMobileNetworkInfo.webidl',
     'MozPowerManager.webidl',
     'MozSelfSupport.webidl',
     'MozTetheringManager.webidl',
@@ -590,16 +597,10 @@ if CONFIG['MOZ_B2G_BT']:
 
 if CONFIG['MOZ_B2G_RIL']:
     WEBIDL_FILES += [
-        'DOMMMIError.webidl',
         'IccCardLockError.webidl',
         'MozCellBroadcast.webidl',
         'MozIcc.webidl',
         'MozIccManager.webidl',
-        'MozMobileCellInfo.webidl',
-        'MozMobileConnection.webidl',
-        'MozMobileConnectionArray.webidl',
-        'MozMobileConnectionInfo.webidl',
-        'MozMobileNetworkInfo.webidl',
         'MozVoicemail.webidl',
         'MozVoicemailStatus.webidl'
     ]
@@ -652,6 +653,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'ErrorEvent.webidl',
     'HashChangeEvent.webidl',
     'IccChangeEvent.webidl',
+    'ImageCaptureErrorEvent.webidl',
     'MediaStreamEvent.webidl',
     'MediaStreamTrackEvent.webidl',
     'MozApplicationEvent.webidl',
@@ -663,6 +665,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'MozMmsEvent.webidl',
     'MozOtaStatusEvent.webidl',
     'MozSettingsEvent.webidl',
+    'MozSettingsTransactionEvent.webidl',
     'MozSmsEvent.webidl',
     'MozStkCommandEvent.webidl',
     'PageTransitionEvent.webidl',
@@ -745,9 +748,9 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
 
 if CONFIG['MOZ_EME']:
     WEBIDL_FILES += [
+        'MediaEncryptedEvent.webidl',
         'MediaKeyError.webidl',
         'MediaKeyMessageEvent.webidl',
-        'MediaKeyNeededEvent.webidl',
         'MediaKeys.webidl',
         'MediaKeySession.webidl',
     ]

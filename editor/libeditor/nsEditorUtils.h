@@ -44,7 +44,7 @@ class MOZ_STACK_CLASS nsAutoPlaceHolderBatch
 class MOZ_STACK_CLASS nsAutoEditBatch : public nsAutoPlaceHolderBatch
 {
   public:
-    nsAutoEditBatch( nsIEditor *aEd) : nsAutoPlaceHolderBatch(aEd,nullptr)  {}
+    explicit nsAutoEditBatch( nsIEditor *aEd) : nsAutoPlaceHolderBatch(aEd,nullptr)  {}
     ~nsAutoEditBatch() {}
 };
 
@@ -109,7 +109,7 @@ class MOZ_STACK_CLASS nsAutoTxnsConserveSelection
 {
   public:
   
-  nsAutoTxnsConserveSelection(nsEditor *ed) : mEd(ed), mOldState(true)
+  explicit nsAutoTxnsConserveSelection(nsEditor *ed) : mEd(ed), mOldState(true)
   {
     if (mEd) 
     {
@@ -138,7 +138,7 @@ class MOZ_STACK_CLASS nsAutoUpdateViewBatch
 {
   public:
   
-  nsAutoUpdateViewBatch(nsEditor *ed) : mEd(ed)
+  explicit nsAutoUpdateViewBatch(nsEditor *ed) : mEd(ed)
   {
     NS_ASSERTION(mEd, "null mEd pointer!");
 

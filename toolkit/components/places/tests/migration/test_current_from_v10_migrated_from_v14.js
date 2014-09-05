@@ -30,9 +30,9 @@ function test_initial_state()
 
   // There should be a non-zero amount of bookmarks without a guid.
   stmt = db.createStatement(
-    "SELECT COUNT(1) "
-  + "FROM moz_bookmarks "
-  + "WHERE guid IS NULL "
+    `SELECT COUNT(1)
+     FROM moz_bookmarks
+     WHERE guid IS NULL`
   );
   do_check_true(stmt.executeStep());
   do_check_neq(stmt.getInt32(0), 0);
@@ -40,9 +40,9 @@ function test_initial_state()
 
   // There should be a non-zero amount of places without a guid.
   stmt = db.createStatement(
-    "SELECT COUNT(1) "
-  + "FROM moz_places "
-  + "WHERE guid IS NULL "
+    `SELECT COUNT(1)
+     FROM moz_places
+     WHERE guid IS NULL`
   );
   do_check_true(stmt.executeStep());
   do_check_neq(stmt.getInt32(0), 0);
@@ -60,8 +60,8 @@ function test_bookmark_guids_non_null()
   // First, sanity check that we have a non-zero amount of bookmarks.  If
   // migration failed, we would have zero.
   let stmt = DBConn().createStatement(
-    "SELECT COUNT(1) "
-  + "FROM moz_bookmarks "
+    `SELECT COUNT(1)
+     FROM moz_bookmarks`
   );
   do_check_true(stmt.executeStep());
   do_check_neq(stmt.getInt32(0), 0);
@@ -69,9 +69,9 @@ function test_bookmark_guids_non_null()
 
   // Now, make sure we have no NULL guid entries.
   stmt = DBConn().createStatement(
-    "SELECT guid "
-  + "FROM moz_bookmarks "
-  + "WHERE guid IS NULL "
+    `SELECT guid
+     FROM moz_bookmarks
+     WHERE guid IS NULL`
   );
   do_check_false(stmt.executeStep());
   stmt.finalize();
@@ -83,8 +83,8 @@ function test_place_guids_non_null()
   // First, sanity check that we have a non-zero amount of places.  If migration
   // failed, we would have zero.
   let stmt = DBConn().createStatement(
-    "SELECT COUNT(1) "
-  + "FROM moz_places "
+    `SELECT COUNT(1)
+     FROM moz_places`
   );
   do_check_true(stmt.executeStep());
   do_check_neq(stmt.getInt32(0), 0);
@@ -92,9 +92,9 @@ function test_place_guids_non_null()
 
   // Now, make sure we have no NULL guid entry.
   stmt = DBConn().createStatement(
-    "SELECT guid "
-  + "FROM moz_places "
-  + "WHERE guid IS NULL "
+    `SELECT guid
+     FROM moz_places
+     WHERE guid IS NULL`
   );
   do_check_false(stmt.executeStep());
   stmt.finalize();

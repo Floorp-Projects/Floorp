@@ -203,16 +203,6 @@ URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL)
   }
 }
 
-nsIPrincipal*
-URL::GetPrincipalFromURL(const GlobalObject& aGlobal, const nsAString& aURL,
-                         ErrorResult& aRv)
-{
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
-
-  NS_LossyConvertUTF16toASCII asciiurl(aURL);
-  return nsHostObjectProtocolHandler::GetDataEntryPrincipal(asciiurl);
-}
-
 void
 URL::GetHref(nsString& aHref, ErrorResult& aRv) const
 {
@@ -252,7 +242,18 @@ URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
 void
 URL::GetOrigin(nsString& aOrigin, ErrorResult& aRv) const
 {
-  nsContentUtils::GetUTFNonNullOrigin(mURI, aOrigin);
+  nsCOMPtr<nsIURIWithPrincipal> uriWithPrincipal = do_QueryInterface(mURI);
+  if (uriWithPrincipal) {
+    nsCOMPtr<nsIPrincipal> principal;
+    uriWithPrincipal->GetPrincipal(getter_AddRefs(principal));
+
+    if (principal) {
+      nsContentUtils::GetUTFOrigin(principal, aOrigin);
+      return;
+    }
+  }
+
+  nsContentUtils::GetUTFOrigin(mURI, aOrigin);
 }
 
 void

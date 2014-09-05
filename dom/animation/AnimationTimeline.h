@@ -33,12 +33,17 @@ public:
   nsISupports* GetParentObject() const { return mDocument; }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
+  // WebIDL API
   Nullable<double> GetCurrentTime() const;
-  mozilla::TimeStamp GetCurrentTimeStamp() const;
 
-  Nullable<double> ToTimelineTime(const mozilla::TimeStamp& aTimeStamp) const;
+  Nullable<TimeDuration> GetCurrentTimeDuration() const;
+
+  Nullable<TimeDuration> ToTimelineTime(const TimeStamp& aTimeStamp) const;
+  TimeStamp ToTimeStamp(const TimeDuration& aTimelineTime) const;
 
 protected:
+  TimeStamp GetCurrentTimeStamp() const;
+
   virtual ~AnimationTimeline() { }
 
   nsCOMPtr<nsIDocument> mDocument;
@@ -46,7 +51,7 @@ protected:
   // Store the most recently returned value of current time. This is used
   // in cases where we don't have a refresh driver (e.g. because we are in
   // a display:none iframe).
-  mutable mozilla::TimeStamp mLastCurrentTime;
+  mutable TimeStamp mLastCurrentTime;
 };
 
 } // namespace dom

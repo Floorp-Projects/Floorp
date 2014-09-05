@@ -36,9 +36,8 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     return arr;
   }
 
-  PRTime now = PR_Now();
-  PRTime oneDay = 60*60*24 * (PRTime)PR_USEC_PER_SEC;
-  PRTime oldNow = now - (8 * oneDay);
+  time_t now = time(nullptr);
+  time_t oldNow = now - (8 * Time::ONE_DAY_IN_SECONDS);
 
   mozilla::ScopedCERTCertificate cert(CERT_DupCertificate(aCert));
 
@@ -51,7 +50,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   }
   // XXX CERT_FindCertIssuer uses the old, deprecated path-building logic
   mozilla::ScopedCERTCertificate
-    issuerCert(CERT_FindCertIssuer(aCert, now, certUsageSSLCA));
+    issuerCert(CERT_FindCertIssuer(aCert, PR_Now(), certUsageSSLCA));
   if (!issuerCert) {
     PrintPRError("CERT_FindCertIssuer failed");
     return nullptr;
@@ -127,13 +126,13 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   if (aORT == ORTExpired || aORT == ORTExpiredFreshCA ||
       aORT == ORTRevokedOld || aORT == ORTUnknownOld) {
     context.thisUpdate = oldNow;
-    context.nextUpdate = oldNow + 10 * PR_USEC_PER_SEC;
+    context.nextUpdate = oldNow + 10;
   }
   if (aORT == ORTLongValidityAlmostExpired) {
-    context.thisUpdate = now - (320 * oneDay);
+    context.thisUpdate = now - (320 * Time::ONE_DAY_IN_SECONDS);
   }
   if (aORT == ORTAncientAlmostExpired) {
-    context.thisUpdate = now - (640 * oneDay);
+    context.thisUpdate = now - (640 * Time::ONE_DAY_IN_SECONDS);
   }
   if (aORT == ORTRevoked || aORT == ORTRevokedOld) {
     context.certStatus = 1;

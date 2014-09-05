@@ -221,6 +221,14 @@ public:
     return mIsMainThreadEvent;
   }
 
+  /**
+   * For a given current target, returns the related target adjusted with
+   * shadow DOM retargeting rules. Returns nullptr if related target
+   * is not adjusted.
+   */
+  static nsIContent* GetShadowRelatedTarget(nsIContent* aCurrentTarget,
+                                            nsIContent* aRelatedTarget);
+
 protected:
 
   // Internal helper functions

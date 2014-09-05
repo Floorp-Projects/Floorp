@@ -188,7 +188,11 @@ this.BrowserIDManager.prototype = {
       this._log.error("Could not authenticate: " + err);
     });
 
-    this._shouldHaveSyncKeyBundle = false;
+    // initializeWithCurrentIdentity() can be called after the
+    // identity module was first initialized, e.g., after the
+    // user completes a force authentication, so we should make
+    // sure all credentials are reset before proceeding.
+    this.resetCredentials();
     this._authFailureReason = null;
 
     return this._fxaService.getSignedInUser().then(accountData => {
@@ -471,6 +475,17 @@ this.BrowserIDManager.prototype = {
    * signed in?
    */
   hasValidToken: function() {
+    // If pref is set to ignore cached authentication credentials for debugging,
+    // then return false to force the fetching of a new token.
+    let ignoreCachedAuthCredentials = false;
+    try {
+      ignoreCachedAuthCredentials = Svc.Prefs.get("debug.ignoreCachedAuthCredentials");
+    } catch(e) {
+      // Pref doesn't exist
+    }
+    if (ignoreCachedAuthCredentials) {
+      return false;
+    }
     if (!this._token) {
       return false;
     }
@@ -579,9 +594,10 @@ this.BrowserIDManager.prototype = {
           // for now assume it is just a transient network related problem.
           this._authFailureReason = LOGIN_FAILED_NETWORK_ERROR;
         }
-        // Drop the sync key bundle, but still expect to have one.
-        // This will arrange for us to be in the right 'currentAuthState'
-        // such that UI will show the right error.
+        // this._authFailureReason being set to be non-null in the above if clause
+        // ensures we are in the correct currentAuthState, and
+        // this._shouldHaveSyncKeyBundle being true ensures everything that cares knows
+        // that there is no authentication dance still under way.
         this._shouldHaveSyncKeyBundle = true;
         Weave.Status.login = this._authFailureReason;
         Services.obs.notifyObservers(null, "weave:service:login:error", null);

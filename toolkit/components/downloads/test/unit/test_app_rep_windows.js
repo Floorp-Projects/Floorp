@@ -189,7 +189,7 @@ add_task(function test_setup()
   function createVerdict(aShouldBlock) {
     // We can't programmatically create a protocol buffer here, so just
     // hardcode some already serialized ones.
-    blob = String.fromCharCode(parseInt(0x08, 16));
+    let blob = String.fromCharCode(parseInt(0x08, 16));
     if (aShouldBlock) {
       // A safe_browsing::ClientDownloadRequest with a DANGEROUS verdict
       blob += String.fromCharCode(parseInt(0x01, 16));
@@ -304,6 +304,8 @@ add_task(function()
 add_task(function test_signature_whitelists()
 {
   // We should never get to the remote server.
+  Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.enabled",
+                             true);
   Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
                              "http://localhost:4444/throw");
 
@@ -333,6 +335,8 @@ add_task(function test_signature_whitelists()
 add_task(function test_blocked_binary()
 {
   // We should reach the remote server for a verdict.
+  Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.enabled",
+                             true);
   Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
                              "http://localhost:4444/download");
   // evil.com should return a malware verdict from the remote server.
@@ -344,6 +348,8 @@ add_task(function test_blocked_binary()
 add_task(function test_non_binary()
 {
   // We should not reach the remote server for a verdict for non-binary files.
+  Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.enabled",
+                             true);
   Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
                              "http://localhost:4444/throw");
   yield promiseQueryReputation({sourceURI: createURI("http://evil.com"),
@@ -354,6 +360,8 @@ add_task(function test_non_binary()
 add_task(function test_good_binary()
 {
   // We should reach the remote server for a verdict.
+  Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.enabled",
+                             true);
   Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
                              "http://localhost:4444/download");
   // mozilla.com should return a not-guilty verdict from the remote server.
@@ -364,9 +372,13 @@ add_task(function test_good_binary()
 
 add_task(function test_disabled()
 {
-  // Don't set a server, allowing only local checks.
-  Services.prefs.setCharPref("browser.safebrowsing.appRepURL", "");
+  // Explicitly disable remote checks
+  Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.enabled",
+                             false);
+  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+                             "http://localhost:4444/throw");
   let query = {sourceURI: createURI("http://example.com"),
+               suggestedFileName: "noop.bat",
                fileSize: 12};
   let deferred = Promise.defer();
   gAppRep.queryReputation(query,
@@ -380,6 +392,27 @@ add_task(function test_disabled()
   yield deferred.promise;
 });
 
+add_task(function test_disabled_through_lists()
+{
+  Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.enabled",
+                             false);
+  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+                             "http://localhost:4444/download");
+  Services.prefs.setCharPref("urlclassifier.downloadBlockTable", "");
+  let query = {sourceURI: createURI("http://example.com"),
+               suggestedFileName: "noop.bat",
+               fileSize: 12};
+  let deferred = Promise.defer();
+  gAppRep.queryReputation(query,
+    function onComplete(aShouldBlock, aStatus) {
+      // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
+      do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
+      do_check_false(aShouldBlock);
+      deferred.resolve(true);
+    }
+  );
+  yield deferred.promise;
+});
 add_task(function test_teardown()
 {
   gStillRunning = false;

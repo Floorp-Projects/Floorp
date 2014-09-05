@@ -405,8 +405,6 @@
         './src/sipcc/core/common/subscription_handler.h',
         './src/sipcc/core/common/text_strings.c',
         './src/sipcc/core/common/text_strings.h',
-        './src/sipcc/core/common/thread_monitor.h',
-        './src/sipcc/core/common/thread_monitor.c',
         './src/sipcc/core/common/ui.c',
         # GSM
         './src/sipcc/core/gsm/ccapi.c',

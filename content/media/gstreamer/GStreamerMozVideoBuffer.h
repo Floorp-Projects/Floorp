@@ -40,7 +40,7 @@ GstMozVideoBufferData* gst_moz_video_buffer_get_data(const GstMozVideoBuffer* bu
 
 class GstMozVideoBufferData {
   public:
-    GstMozVideoBufferData(layers::PlanarYCbCrImage* aImage) : mImage(aImage) {}
+    explicit GstMozVideoBufferData(layers::PlanarYCbCrImage* aImage) : mImage(aImage) {}
 
     static void* Copy(void* aData) {
       return new GstMozVideoBufferData(reinterpret_cast<GstMozVideoBufferData*>(aData)->mImage);

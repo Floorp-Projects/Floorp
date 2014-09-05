@@ -22,7 +22,7 @@ class GMPVideoEncodedFrameImpl;
 class GMPVideoHostImpl : public GMPVideoHost
 {
 public:
-  GMPVideoHostImpl(GMPSharedMemManager* aSharedMemMgr);
+  explicit GMPVideoHostImpl(GMPSharedMemManager* aSharedMemMgr);
   virtual ~GMPVideoHostImpl();
 
   // Used for shared memory allocation and deallocation.

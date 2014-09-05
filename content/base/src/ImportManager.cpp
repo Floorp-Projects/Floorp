@@ -25,7 +25,7 @@
 
 class AutoError {
 public:
-  AutoError(mozilla::dom::ImportLoader* loader, bool scriptsBlocked = true)
+  explicit AutoError(mozilla::dom::ImportLoader* loader, bool scriptsBlocked = true)
     : mLoader(loader)
     , mPassed(false)
     , mScriptsBlocked(scriptsBlocked)
@@ -343,8 +343,8 @@ ImportLoader::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   if (nsContentUtils::IsSystemPrincipal(principal)) {
     // We should never import non-system documents and run their scripts with system principal!
     nsCOMPtr<nsIPrincipal> channelPrincipal;
-    nsContentUtils::GetSecurityManager()->GetChannelPrincipal(channel,
-                                                              getter_AddRefs(channelPrincipal));
+    nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(channel,
+                                                                    getter_AddRefs(channelPrincipal));
     if (!nsContentUtils::IsSystemPrincipal(channelPrincipal)) {
       return NS_ERROR_FAILURE;
     }

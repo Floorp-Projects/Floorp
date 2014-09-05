@@ -71,6 +71,7 @@ public:
 };
 
 class BluetoothHfpManager : public BluetoothHfpManagerBase
+                          , public BluetoothHandsfreeNotificationHandler
                           , public BatteryObserver
 {
 public:
@@ -102,33 +103,39 @@ public:
   void HandleIccInfoChanged(uint32_t aClientId);
   void HandleVoiceConnectionChanged(uint32_t aClientId);
 
-  // Bluedroid hfp callback handlers
-  void ProcessConnectionState(bthf_connection_state_t aState, bt_bdaddr_t* aBdAddress);
-  void ProcessAudioState(bthf_audio_state_t aState, bt_bdaddr_t* aBdAddress);
-  void ProcessAnswerCall();
-  void ProcessHangupCall();
-  void ProcessVolumeControl(bthf_volume_type_t aType, int aVolume);
-  void ProcessDialCall(char *aNumber);
-  void ProcessDtmfCmd(char aDtmf);
-  void ProcessAtChld(bthf_chld_type_t aChld);
-  void ProcessAtCnum();
-  void ProcessAtCind();
-  void ProcessAtCops();
-  void ProcessAtClcc();
-  void ProcessUnknownAt(char *aAtString);
-  void ProcessKeyPressed();
-
   // CDMA-specific functions
   void UpdateSecondNumber(const nsAString& aNumber);
   void AnswerWaitingCall();
   void IgnoreWaitingCall();
   void ToggleCalls();
 
+  //
+  // Bluetooth notifications
+  //
+
+  void ConnectionStateNotification(BluetoothHandsfreeConnectionState aState,
+                                   const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void AudioStateNotification(BluetoothHandsfreeAudioState aState,
+                              const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void AnswerCallNotification() MOZ_OVERRIDE;
+  void HangupCallNotification() MOZ_OVERRIDE;
+  void VolumeNotification(BluetoothHandsfreeVolumeType aType,
+                          int aVolume) MOZ_OVERRIDE;
+  void DtmfNotification(char aDtmf) MOZ_OVERRIDE;
+  void CallHoldNotification(BluetoothHandsfreeCallHoldType aChld) MOZ_OVERRIDE;
+  void DialCallNotification(const nsAString& aNumber) MOZ_OVERRIDE;
+  void CnumNotification() MOZ_OVERRIDE;
+  void CindNotification() MOZ_OVERRIDE;
+  void CopsNotification() MOZ_OVERRIDE;
+  void ClccNotification() MOZ_OVERRIDE;
+  void UnknownAtNotification(const nsACString& aAtString) MOZ_OVERRIDE;
+  void KeyPressedNotification() MOZ_OVERRIDE;
+
 private:
   class GetVolumeTask;
   class CloseScoTask;
+  class CloseScoRunnable;
   class RespondToBLDNTask;
-  class MainThreadTask;
 
   friend class BluetoothHfpManagerObserver;
   friend class GetVolumeTask;

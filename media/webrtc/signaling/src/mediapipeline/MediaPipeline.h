@@ -68,14 +68,6 @@ class PeerIdentity;
 // For a receiving conduit, "input" is RTP and "output" is RTCP.
 //
 
-class MediaPipeline;
-
-template<>
-struct HasDangerousPublicDestructor<MediaPipeline>
-{
-  static const bool value = true;
-};
-
 class MediaPipeline : public sigslot::has_slots<> {
  public:
   enum Direction { TRANSMIT, RECEIVE };
@@ -116,8 +108,6 @@ class MediaPipeline : public sigslot::has_slots<> {
       // PipelineTransport() will access this->sts_thread_; moved here for safety
       transport_ = new PipelineTransport(this);
   }
-
-  virtual ~MediaPipeline();
 
   // Must be called on the STS thread.  Must be called after ShutdownMedia_m().
   void ShutdownTransport_s();
@@ -172,6 +162,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   } RtpType;
 
  protected:
+  virtual ~MediaPipeline();
   virtual void DetachMediaStream() {}
 
   // Separate class to allow ref counting
@@ -343,7 +334,7 @@ class GenericReceiveListener;
 class GenericReceiveCallback : public TrackAddedCallback
 {
  public:
-  GenericReceiveCallback(GenericReceiveListener* listener)
+  explicit GenericReceiveCallback(GenericReceiveListener* listener)
     : listener_(listener) {}
 
   void TrackAdded(TrackTicks time) {
@@ -357,7 +348,7 @@ class GenericReceiveCallback : public TrackAddedCallback
 class ConduitDeleteEvent: public nsRunnable
 {
 public:
-  ConduitDeleteEvent(TemporaryRef<MediaSessionConduit> aConduit) :
+  explicit ConduitDeleteEvent(TemporaryRef<MediaSessionConduit> aConduit) :
     mConduit(aConduit) {}
 
   /* we exist solely to proxy release of the conduit */
@@ -435,7 +426,7 @@ public:
   class PipelineListener : public MediaStreamDirectListener {
    friend class MediaPipelineTransmit;
    public:
-    PipelineListener(const RefPtr<MediaSessionConduit>& conduit)
+    explicit PipelineListener(const RefPtr<MediaSessionConduit>& conduit)
       : conduit_(conduit),
         track_id_(TRACK_INVALID),
         mMutex("MediaPipelineTransmit::PipelineListener"),
@@ -692,7 +683,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
  private:
   class PipelineRenderer : public VideoRenderer {
    public:
-    PipelineRenderer(MediaPipelineReceiveVideo *pipeline) :
+    explicit PipelineRenderer(MediaPipelineReceiveVideo *pipeline) :
       pipeline_(pipeline) {}
 
     void Detach() { pipeline_ = nullptr; }

@@ -48,7 +48,7 @@ class OggCodecStore
 class OggReader MOZ_FINAL : public MediaDecoderReader
 {
 public:
-  OggReader(AbstractMediaDecoder* aDecoder);
+  explicit OggReader(AbstractMediaDecoder* aDecoder);
 
 protected:
   ~OggReader();

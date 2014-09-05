@@ -45,7 +45,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURIFIXUPINFO
 
-    nsDefaultURIFixupInfo(const nsACString& aOriginalInput);
+    explicit nsDefaultURIFixupInfo(const nsACString& aOriginalInput);
 
     friend class nsDefaultURIFixup;
 

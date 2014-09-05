@@ -13,11 +13,16 @@
   var gLanguage = '';
 
   // fetch an l10n objects
-  function getL10nData(key) {
+  function getL10nData(key, num) {
     var response = gL10nDetails.getStrings(key);
     var data = JSON.parse(response);
     if (!data)
       console.warn('[l10n] #' + key + ' missing for [' + gLanguage + ']');
+    if (num !== undefined) {
+      for (var prop in data) {
+        data[prop] = gL10nDetails.getPluralForm(num, data[prop]);
+      }
+    }
     return data;
   }
 
@@ -33,7 +38,11 @@
 
   // translate a string
   function translateString(key, args, fallback) {
-    var data = getL10nData(key);
+    if (args && args.num) {
+      var num = args && args.num;
+      delete args.num;
+    }
+    var data = getL10nData(key, num);
     if (!data && fallback)
       data = {textContent: fallback};
     if (!data)

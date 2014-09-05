@@ -1,0 +1,33 @@
+# File containing whiteslist for lint errors
+# Format is:
+# ERROR TYPE:file/name/pattern[:line number]
+# e.g.
+# TRAILING WHITESPACE:example/file.html:128
+# to allow trailing whitespace on example/file.html line 128
+INDENT TABS:*
+TRAILING WHITESPACE:*
+CR AT EOL:WebIDL/tests/submissions/W3C/valid/idl/documentation-dos.widl
+CR AT EOL:cors/resources/cors-headers.asis
+CR AT EOL:html/semantics/embedded-content/the-canvas-element/size.attributes.parse.whitespace.html
+CR AT EOL:webvtt/webvtt-file-format-parsing/webvtt-file-parsing/support/newlines.vtt
+CR AT EOL:*.pdf
+CR AT EOL:*.jpg
+CR AT EOL:*.png
+CR AT EOL:*.gif
+CR AT EOL:*.pdf
+CR AT EOL:*.wav
+CR AT EOL:*.mp3
+CR AT EOL:*.m4a
+CR AT EOL:*.oga
+CR AT EOL:*.ogv
+CR AT EOL:*.webm
+CR AT EOL:*.mp4
+CR AT EOL:*.m4v
+PARSE-FAILED:dom/nodes/Document-createElement-namespace-tests/empty.svg
+PARSE-FAILED:dom/nodes/Document-createElement-namespace-tests/empty.xhtml
+PARSE-FAILED:dom/nodes/Document-createElement-namespace-tests/minimal_html.svg
+PARSE-FAILED:dom/nodes/Document-createElement-namespace-tests/minimal_html.xhtml
+#These have undefined entities; should probably find a way to define them
+PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-1.xhtml
+PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-2.xhtml
+PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-3.xhtml

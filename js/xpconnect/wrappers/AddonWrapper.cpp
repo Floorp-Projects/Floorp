@@ -67,16 +67,6 @@ Interpose(JSContext *cx, HandleObject target, const nsIID *iid, HandleId id,
 }
 
 template<typename Base>
-AddonWrapper<Base>::AddonWrapper(unsigned flags) : Base(flags)
-{
-}
-
-template<typename Base>
-AddonWrapper<Base>::~AddonWrapper()
-{
-}
-
-template<typename Base>
 bool
 AddonWrapper<Base>::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
                                           HandleId id, MutableHandle<JSPropertyDescriptor> desc) const

@@ -742,6 +742,9 @@ class CGList(CGThing):
             deps = deps.union(child.deps())
         return deps
 
+    def __len__(self):
+        return len(self.children)
+
 
 class CGGeneric(CGThing):
     """
@@ -2152,7 +2155,8 @@ class MethodDefiner(PropertyDefiner):
         if not static:
             stringifier = descriptor.operations['Stringifier']
             if (stringifier and
-                unforgeable == MemberIsUnforgeable(stringifier, descriptor)):
+                unforgeable == MemberIsUnforgeable(stringifier, descriptor) and
+                isMaybeExposedIn(stringifier, descriptor)):
                 toStringDesc = {
                     "name": "toString",
                     "nativeName": stringifier.identifier.name,
@@ -2165,7 +2169,9 @@ class MethodDefiner(PropertyDefiner):
                 else:
                     self.regular.append(toStringDesc)
             jsonifier = descriptor.operations['Jsonifier']
-            if jsonifier:
+            if (jsonifier and
+                unforgeable == MemberIsUnforgeable(jsonifier, descriptor) and
+                isMaybeExposedIn(jsonifier, descriptor)):
                 toJSONDesc = {
                     "name": "toJSON",
                     "nativeName": jsonifier.identifier.name,
@@ -2855,8 +2861,35 @@ class CGConstructorEnabled(CGAbstractMethod):
                                    Argument("JS::Handle<JSObject*>", "aObj")])
 
     def definition_body(self):
+        body = CGList([], "\n")
+
         conditions = []
         iface = self.descriptor.interface
+
+        if not iface.isExposedInWindow():
+            exposedInWindowCheck = dedent(
+                """
+                if (NS_IsMainThread()) {
+                  return false;
+                }
+                """)
+            body.append(CGGeneric(exposedInWindowCheck))
+
+        if iface.isExposedInAnyWorker() and iface.isExposedOnlyInSomeWorkers():
+            workerGlobals = sorted(iface.getWorkerExposureSet())
+            workerCondition = CGList((CGGeneric('strcmp(name, "%s")' % workerGlobal)
+                                      for workerGlobal in workerGlobals), " && ")
+            exposedInWorkerCheck = fill(
+                """
+                if (!NS_IsMainThread()) {
+                  const char* name = js::GetObjectClass(aObj)->name;
+                  if (${workerCondition}) {
+                    return false;
+                  }
+                }
+                """, workerCondition=workerCondition.define())
+            body.append(CGGeneric(exposedInWorkerCheck))
+
         pref = iface.getExtendedAttribute("Pref")
         if pref:
             assert isinstance(pref, list) and len(pref) == 1
@@ -2874,10 +2907,18 @@ class CGConstructorEnabled(CGAbstractMethod):
         if checkPermissions is not None:
             conditions.append("CheckPermissions(aCx, aObj, permissions_%i)" % checkPermissions)
         # We should really have some conditions
-        assert len(conditions)
-        return CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
-                                " &&\n"),
-                         pre="return ", post=";\n", reindent=True).define()
+        assert len(body) or len(conditions)
+
+        conditionsWrapper = ""
+        if len(conditions):
+          conditionsWrapper = CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
+                                               " &&\n"),
+                                        pre="return ", post=";\n", reindent=True)
+        else:
+          conditionsWrapper = CGGeneric("return true;\n")
+
+        body.append(conditionsWrapper)
+        return body.define()
 
 
 def CreateBindingJSObject(descriptor, properties, parent):
@@ -9007,12 +9048,15 @@ class ClassConstructor(ClassItem):
     body contains a string with the code for the constructor, defaults to empty.
     """
     def __init__(self, args, inline=False, bodyInHeader=False,
-                 visibility="private", explicit=False, baseConstructors=None,
+                 visibility="private", explicit=False, constexpr=False, baseConstructors=None,
                  body=""):
+        assert not (inline and constexpr)
+        assert not (bodyInHeader and constexpr)
         self.args = args
         self.inline = inline or bodyInHeader
-        self.bodyInHeader = bodyInHeader
+        self.bodyInHeader = bodyInHeader or constexpr
         self.explicit = explicit
+        self.constexpr = constexpr
         self.baseConstructors = baseConstructors or []
         self.body = body
         ClassItem.__init__(self, None, visibility)
@@ -9023,6 +9067,8 @@ class ClassConstructor(ClassItem):
             decorators.append('explicit')
         if self.inline and declaring:
             decorators.append('inline')
+        if self.constexpr and declaring:
+            decorators.append('MOZ_CONSTEXPR')
         if decorators:
             return ' '.join(decorators) + ' '
         return ''
@@ -10619,7 +10665,7 @@ class CGDOMJSProxyHandler(CGClass):
         constructors = [
             ClassConstructor(
                 [],
-                bodyInHeader=True,
+                constexpr=True,
                 visibility="public",
                 explicit=True)
         ]
@@ -11617,7 +11663,7 @@ class CGRegisterWorkerBindings(CGAbstractMethod):
         # and a non-worker descriptor.  When both are present we want the worker
         # descriptor, but otherwise we want whatever descriptor we've got.
         descriptors = self.config.getDescriptors(hasInterfaceObject=True,
-                                                 isExposedInAllWorkers=True,
+                                                 isExposedInAnyWorker=True,
                                                  register=True,
                                                  skipGen=False,
                                                  workers=True)
@@ -11627,7 +11673,7 @@ class CGRegisterWorkerBindings(CGAbstractMethod):
             filter(
                 lambda d: d.interface.identifier.name not in workerDescriptorIfaceNames,
                 self.config.getDescriptors(hasInterfaceObject=True,
-                                           isExposedInAllWorkers=True,
+                                           isExposedInAnyWorker=True,
                                            register=True,
                                            skipGen=False,
                                            workers=False)))
@@ -11928,7 +11974,13 @@ class CGBindingRoot(CGThing):
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
                                                    workers=True)) != 0
         bindingHeaders["WorkerPrivate.h"] = hasWorkerStuff
-        bindingHeaders["nsThreadUtils.h"] = hasWorkerStuff
+
+        def descriptorHasThreadChecks(desc):
+            return ((not desc.workers and not desc.interface.isExposedInWindow()) or
+                    (desc.interface.isExposedInAnyWorker() and desc.interface.isExposedOnlyInSomeWorkers()))
+
+        hasThreadChecks = hasWorkerStuff or any(d.hasThreadChecks() for d in descriptors)
+        bindingHeaders["nsThreadUtils.h"] = hasThreadChecks
 
         dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
         hasNonEmptyDictionaries = any(
@@ -14098,7 +14150,7 @@ class GlobalGenRoots():
         defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
                                                             register=True,
-                                                            isExposedInAllWorkers=True,
+                                                            isExposedInAnyWorker=True,
                                                             skipGen=False)]
 
         curr = CGHeaders([], [], [], [], [], defineIncludes,
@@ -14492,7 +14544,7 @@ class CGEventClass(CGBindingImplClass):
               NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(${nativeType}, ${parentType})
             protected:
               virtual ~${nativeType}();
-              ${nativeType}(mozilla::dom::EventTarget* aOwner);
+              explicit ${nativeType}(mozilla::dom::EventTarget* aOwner);
 
             """,
             nativeType=self.descriptor.nativeType.split('::')[-1],

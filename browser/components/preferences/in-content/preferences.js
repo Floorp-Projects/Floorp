@@ -52,6 +52,9 @@ function init_all() {
   window.addEventListener("hashchange", onHashChange);
   gotoPref();
 
+  let helpCmd = document.getElementById("help-button");
+  helpCmd.addEventListener("command", helpButtonCommand);
+
   // Wait until initialization of all preferences are complete before
   // notifying observers that the UI is now ready.
   Services.obs.notifyObservers(window, "advanced-pane-loaded", null);

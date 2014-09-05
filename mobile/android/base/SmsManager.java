@@ -28,7 +28,7 @@ interface ISmsManager
   public void send(String aNumber, String aMessage, int aRequestId);
   public void getMessage(int aMessageId, int aRequestId);
   public void deleteMessage(int aMessageId, int aRequestId);
-  public void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId);
+  public void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, long aThreadId, boolean aReverse, int aRequestId);
   public void getNextMessageInList(int aListId, int aRequestId);
   public void clearMessageList(int aListId);
 }

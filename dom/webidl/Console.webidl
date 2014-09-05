@@ -13,6 +13,7 @@ interface Console {
   void error(any... data);
   void _exception(any... data);
   void debug(any... data);
+  void table(any... data);
   void trace();
   void dir(any... data);
   void group(any... data);

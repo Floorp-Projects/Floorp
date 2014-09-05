@@ -38,13 +38,13 @@ namespace mozilla {
 static GonkDisplayJB* sGonkDisplay = nullptr;
 
 GonkDisplayJB::GonkDisplayJB()
-    : mList(nullptr)
-    , mModule(nullptr)
+    : mModule(nullptr)
     , mFBModule(nullptr)
     , mHwc(nullptr)
     , mFBDevice(nullptr)
-    , mEnabledCallback(nullptr)
     , mPowerModule(nullptr)
+    , mList(nullptr)
+    , mEnabledCallback(nullptr)
 {
     int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &mFBModule);
     ALOGW_IF(err, "%s module not found", GRALLOC_HARDWARE_MODULE_ID);
@@ -55,8 +55,8 @@ GonkDisplayJB::GonkDisplayJB()
 
     if (!err && mFBDevice) {
         mWidth = mFBDevice->width;
-	 mHeight = mFBDevice->height;
-	 xdpi = mFBDevice->xdpi;
+        mHeight = mFBDevice->height;
+        xdpi = mFBDevice->xdpi;
         /* The emulator actually reports RGBA_8888, but EGL doesn't return
          * any matching configuration. We force RGBX here to fix it. */
         surfaceformat = HAL_PIXEL_FORMAT_RGBX_8888;
@@ -158,13 +158,19 @@ GonkDisplayJB::SetEnabled(bool enabled)
         mPowerModule->setInteractive(mPowerModule, true);
     }
 
-    if (mHwc)
-        mHwc->blank(mHwc, HWC_DISPLAY_PRIMARY, !enabled);
-    else if (mFBDevice->enableScreen)
-        mFBDevice->enableScreen(mFBDevice, enabled);
-
-    if (mEnabledCallback)
+    if (!enabled && mEnabledCallback) {
         mEnabledCallback(enabled);
+    }
+
+    if (mHwc && mHwc->blank) {
+        mHwc->blank(mHwc, HWC_DISPLAY_PRIMARY, !enabled);
+    } else if (mFBDevice && mFBDevice->enableScreen) {
+        mFBDevice->enableScreen(mFBDevice, enabled);
+    }
+
+    if (enabled && mEnabledCallback) {
+        mEnabledCallback(enabled);
+    }
 
     if (!enabled) {
         autosuspend_enable();
@@ -222,7 +228,7 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
     }
 
     hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = {NULL};
-    const hwc_rect_t r = { 0, 0, mWidth, mHeight };
+    const hwc_rect_t r = { 0, 0, static_cast<int>(mWidth), static_cast<int>(mHeight) };
     displays[HWC_DISPLAY_PRIMARY] = mList;
     mList->retireFenceFd = -1;
     mList->numHwLayers = 2;

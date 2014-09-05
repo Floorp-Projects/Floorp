@@ -72,7 +72,7 @@ ABIArgGenerator::next(MIRType type)
         floatRegIndex_+=2;
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
+        MOZ_CRASH("Unexpected argument type");
     }
 
     return current_;
@@ -710,7 +710,7 @@ Assembler::GetCF32Target(Iter *iter)
 
     }
 
-    MOZ_ASSUME_UNREACHABLE("unsupported branch relocation");
+    MOZ_CRASH("unsupported branch relocation");
 }
 
 uintptr_t
@@ -774,7 +774,7 @@ Assembler::GetPtr32Target(Iter *start, Register *dest, RelocStyle *style)
         return *ptr;
     }
 
-    MOZ_ASSUME_UNREACHABLE("unsupported relocation");
+    MOZ_CRASH("unsupported relocation");
 }
 
 static JitCode *
@@ -1687,7 +1687,7 @@ Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
         extra_bits1 = 0;
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("SAY WHAT?");
+        MOZ_CRASH("SAY WHAT?");
     }
     return writeInst(extra_bits2 << 5 | extra_bits1 << 20 | 0x90 |
                      addr.encode() | RT(rt) | mode | c, dest);
@@ -1785,7 +1785,7 @@ Assembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
     int offset = (char *)constPoolAddr - (char *)loadAddr;
     switch(data.getLoadType()) {
       case PoolHintData::PoolBOGUS:
-        MOZ_ASSUME_UNREACHABLE("bogus load type!");
+        MOZ_CRASH("bogus load type!");
       case PoolHintData::PoolDTR:
         Dummy->as_dtr(IsLoad, 32, Offset, data.getReg(),
                       DTRAddr(pc, DtrOffImm(offset+4*data.getIndex() - 8)), data.getCond(), instAddr);
@@ -2010,22 +2010,20 @@ Assembler::as_vnmul(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                   Condition c)
 {
     return as_vfp_float(vd, vn, vm, OpvMul, c);
-    MOZ_ASSUME_UNREACHABLE("Feature NYI");
 }
 
 BufferOffset
 Assembler::as_vnmla(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                   Condition c)
 {
-    MOZ_ASSUME_UNREACHABLE("Feature NYI");
+    MOZ_CRASH("Feature NYI");
 }
 
 BufferOffset
 Assembler::as_vnmls(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                   Condition c)
 {
-    MOZ_ASSUME_UNREACHABLE("Feature NYI");
-    return BufferOffset();
+    MOZ_CRASH("Feature NYI");
 }
 
 BufferOffset
@@ -2259,7 +2257,7 @@ Assembler::bind(Label *label, BufferOffset boff)
             else if (branch.is<InstBLImm>())
                 as_bl(dest.diffB<BOffImm>(b), c, b);
             else
-                MOZ_ASSUME_UNREACHABLE("crazy fixup!");
+                MOZ_CRASH("crazy fixup!");
             b = next;
         } while (more);
     }
@@ -2316,7 +2314,7 @@ Assembler::retarget(Label *label, Label *target)
             else if (branch.is<InstBLImm>())
                 as_bl(BOffImm(prev), c, labelBranchOffset);
             else
-                MOZ_ASSUME_UNREACHABLE("crazy fixup!");
+                MOZ_CRASH("crazy fixup!");
         } else {
             // The target is unbound and unused. We can just take the head of
             // the list hanging off of label, and dump that into target.

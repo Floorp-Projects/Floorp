@@ -31,5 +31,3 @@ LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/xul',
 ]
-
-JAR_MANIFESTS += ['jar.mn']

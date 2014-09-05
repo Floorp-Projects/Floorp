@@ -13,7 +13,7 @@
 class JSStreamWriter
 {
 public:
-  JSStreamWriter(std::ostream& aStream);
+  explicit JSStreamWriter(std::ostream& aStream);
   ~JSStreamWriter();
 
   void BeginObject();

@@ -759,9 +759,9 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   // content.
   nsXBLBinding* binding = rootContent->GetXBLBinding();
   if (binding) {
-    nsIContent* child = binding->GetAnonymousContent()->GetFirstChild();
-    if (child) {
-      searchRootNode = do_QueryInterface(child);
+    nsIContent* anonContent = binding->GetAnonymousContent();
+    if (anonContent) {
+      searchRootNode = do_QueryInterface(anonContent->GetFirstChild());
     }
   }
   mSearchRange->SelectNodeContents(searchRootNode);

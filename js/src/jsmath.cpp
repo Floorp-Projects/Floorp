@@ -633,10 +633,6 @@ js::minmax_impl(JSContext *cx, bool max, HandleValue a, HandleValue b, MutableHa
     return true;
 }
 
-// Disable PGO for Math.pow() and related functions (see bug 791214).
-#if defined(_MSC_VER)
-# pragma optimize("g", off)
-#endif
 double
 js::powi(double x, int y)
 {
@@ -664,14 +660,7 @@ js::powi(double x, int y)
         m *= m;
     }
 }
-#if defined(_MSC_VER)
-# pragma optimize("", on)
-#endif
 
-// Disable PGO for Math.pow() and related functions (see bug 791214).
-#if defined(_MSC_VER)
-# pragma optimize("g", off)
-#endif
 double
 js::ecmaPow(double x, double y)
 {
@@ -706,14 +695,7 @@ js::ecmaPow(double x, double y)
     }
     return pow(x, y);
 }
-#if defined(_MSC_VER)
-# pragma optimize("", on)
-#endif
 
-// Disable PGO for Math.pow() and related functions (see bug 791214).
-#if defined(_MSC_VER)
-# pragma optimize("g", off)
-#endif
 bool
 js::math_pow_handle(JSContext *cx, HandleValue base, HandleValue power, MutableHandleValue result)
 {
@@ -737,9 +719,6 @@ js::math_pow(JSContext *cx, unsigned argc, Value *vp)
 
     return math_pow_handle(cx, args.get(0), args.get(1), args.rval());
 }
-#if defined(_MSC_VER)
-# pragma optimize("", on)
-#endif
 
 static uint64_t
 random_generateSeed()
@@ -765,7 +744,7 @@ random_generateSeed()
     int fd = open("/dev/urandom", O_RDONLY);
     MOZ_ASSERT(fd >= 0, "Can't open /dev/urandom");
     if (fd >= 0) {
-        read(fd, seed.u8, mozilla::ArrayLength(seed.u8));
+        (void)read(fd, seed.u8, mozilla::ArrayLength(seed.u8));
         close(fd);
     }
     seed.u32[0] ^= fd;
@@ -846,6 +825,21 @@ js::math_round_handle(JSContext *cx, HandleValue arg, MutableHandleValue res)
     return true;
 }
 
+template<typename T>
+T
+js::GetBiggestNumberLessThan(T x)
+{
+    MOZ_ASSERT(!IsNegative(x));
+    MOZ_ASSERT(IsFinite(x));
+    typedef typename mozilla::FloatingPoint<T>::Bits Bits;
+    Bits bits = mozilla::BitwiseCast<Bits>(x);
+    MOZ_ASSERT(bits > 0, "will underflow");
+    return mozilla::BitwiseCast<T>(bits - 1);
+}
+
+template double js::GetBiggestNumberLessThan<>(double x);
+template float js::GetBiggestNumberLessThan<>(float x);
+
 double
 js::math_round_impl(double x)
 {
@@ -857,7 +851,8 @@ js::math_round_impl(double x)
     if (ExponentComponent(x) >= int_fast16_t(FloatingPoint<double>::kExponentShift))
         return x;
 
-    return js_copysign(floor(x + 0.5), x);
+    double add = (x >= 0) ? GetBiggestNumberLessThan(0.5) : 0.5;
+    return js_copysign(floor(x + add), x);
 }
 
 float
@@ -871,7 +866,8 @@ js::math_roundf_impl(float x)
     if (ExponentComponent(x) >= int_fast16_t(FloatingPoint<float>::kExponentShift))
         return x;
 
-    return js_copysign(floorf(x + 0.5f), x);
+    float add = (x >= 0) ? GetBiggestNumberLessThan(0.5f) : 0.5f;
+    return js_copysign(floorf(x + add), x);
 }
 
 bool /* ES5 15.8.2.15. */

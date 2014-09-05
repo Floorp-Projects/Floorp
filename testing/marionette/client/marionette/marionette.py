@@ -725,12 +725,13 @@ class Marionette(object):
         name = None
         crashed = False
         if self.runner:
-            if self.runner.check_for_crashes():
+            if self.runner.check_for_crashes(test_name=self.test_name):
                 returncode = self.emulator.proc.returncode
                 name = 'emulator'
                 crashed = True
         elif self.instance:
-            if self.instance.check_for_crashes():
+            if self.instance.runner.check_for_crashes(
+                    test_name=self.test_name):
                 crashed = True
         if returncode is not None:
             print ('PROCESS-CRASH | %s | abnormal termination with exit code %d' %

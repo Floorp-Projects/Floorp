@@ -330,7 +330,7 @@ class Options
                       long aMin, long aMax, long* aN);
 
 public:
-  Options(const char* aDMDEnvVar);
+  explicit Options(const char* aDMDEnvVar);
 
   const char* DMDEnvVar() const { return mDMDEnvVar; }
 
@@ -567,7 +567,7 @@ class AutoBlockIntercepts
   DISALLOW_COPY_AND_ASSIGN(AutoBlockIntercepts);
 
 public:
-  AutoBlockIntercepts(Thread* aT)
+  explicit AutoBlockIntercepts(Thread* aT)
     : mT(aT)
   {
     mT->BlockIntercepts();
@@ -660,7 +660,8 @@ struct DescribeCodeAddressLock
   static bool IsLocked() { return gStateLock->IsLocked(); }
 };
 
-typedef CodeAddressService<StringTable, StringAlloc, Writer, DescribeCodeAddressLock> CodeAddressService;
+typedef CodeAddressService<StringTable, StringAlloc, DescribeCodeAddressLock>
+  CodeAddressService;
 
 //---------------------------------------------------------------------------
 // Stack traces
@@ -746,8 +747,11 @@ StackTrace::Print(const Writer& aWriter, CodeAddressService* aLocService) const
     return;
   }
 
+  static const size_t buflen = 1024;
+  char buf[buflen];
   for (uint32_t i = 0; i < mLength; i++) {
-    aLocService->WriteLocation(aWriter, Pc(i));
+    aLocService->GetLocation(Pc(i), buf, buflen);
+    aWriter.Write("    %s\n", buf);
   }
 }
 
@@ -1253,7 +1257,7 @@ protected:
   const StackTrace* const mReportStackTrace2; // nullptr if not 2x-reported
 
 public:
-  RecordKey(const Block& aB)
+  explicit RecordKey(const Block& aB)
     : mAllocStackTrace(aB.AllocStackTrace()),
       mReportStackTrace1(aB.ReportStackTrace1()),
       mReportStackTrace2(aB.ReportStackTrace2())
@@ -1741,7 +1745,7 @@ PrintSortedRecords(const Writer& aWriter, CodeAddressService* aLocService,
   StatusMsg("  printing %s heap block record array...\n", astr);
   size_t cumulativeUsableSize = 0;
 
-  // Limit the number of records printed, because fix-linux-stack.pl is too
+  // Limit the number of records printed, because fix_linux_stack.py is too
   // damn slow.  Note that we don't break out of this loop because we need to
   // keep adding to |cumulativeUsableSize|.
   uint32_t numRecords = recordArray.length();
@@ -1860,7 +1864,7 @@ public:
     size_t mUsableSize;
     size_t mNumBlocks;
 
-    RecordKindData(size_t aN)
+    explicit RecordKindData(size_t aN)
       : mUsableSize(0), mNumBlocks(0)
     {
       mRecordTable.init(aN);
@@ -2061,7 +2065,7 @@ AnalyzeImpl(Analyzer *aAnalyzer, const Writer& aWriter)
     RecordKey key(b);
     RecordTable::AddPtr p = table->lookupForAdd(key);
     if (!p) {
-      Record tr(b);
+      Record tr(key);
       (void)table->add(p, tr);
     }
     p->Add(b);

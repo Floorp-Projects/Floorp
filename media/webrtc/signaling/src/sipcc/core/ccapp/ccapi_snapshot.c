@@ -148,37 +148,34 @@ DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_ApplyTranslationMask"));
  * Before initing the line_info release any memory which has been used
  * so we do not leak any here.
  */
-void ccsnap_line_pre_init () {
+void ccsnap_line_free () {
     int i;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering line_pre_init to clear it out to avoid mem leaks", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_line_pre_init"));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, __FUNCTION__));
 
-    for (i=1;i<MAX_CONFIG_LINES;i++) {
-        if ((lineInfo[i].name) && (strlen(lineInfo[i].name) > 0)) {
+    for (i=1;i<=MAX_CONFIG_LINES;i++) {
+        if (lineInfo[i].name) {
             strlib_free(lineInfo[i].name);
         }
-        if ((lineInfo[i].dn) && (strlen(lineInfo[i].dn) > 0)) {
+        if (lineInfo[i].dn) {
             strlib_free(lineInfo[i].dn);
         }
-        if ((lineInfo[i].cfwd_dest) && (strlen(lineInfo[i].cfwd_dest) > 0)) {
+        if (lineInfo[i].cfwd_dest) {
             strlib_free(lineInfo[i].cfwd_dest);
         }
-        if ((lineInfo[i].externalNumber) &&
-            (strlen(lineInfo[i].externalNumber) > 0)) {
+        if (lineInfo[i].externalNumber) {
             strlib_free(lineInfo[i].externalNumber);
         }
-        if ((featureInfo[i].speedDialNumber) &&
-            (strlen(featureInfo[i].speedDialNumber) > 0)) {
+        if (featureInfo[i].speedDialNumber) {
             strlib_free(featureInfo[i].speedDialNumber);
         }
-        if ((featureInfo[i].contact) && (strlen(featureInfo[i].contact) > 0)) {
+        if (featureInfo[i].contact) {
             strlib_free(featureInfo[i].contact);
         }
-        if ((featureInfo[i].name) && (strlen(featureInfo[i].name) > 0)) {
+        if (featureInfo[i].name) {
             strlib_free(featureInfo[i].name);
         }
-        if ((featureInfo[i].retrievalPrefix) &&
-            (strlen(featureInfo[i].retrievalPrefix) > 0)) {
+        if (featureInfo[i].retrievalPrefix) {
             strlib_free(featureInfo[i].retrievalPrefix);
         }
     }
@@ -194,7 +191,7 @@ void ccsnap_line_init() {
    char maskStr[MAX_EXTERNAL_NUMBER_MASK_SIZE];
 
    /* clean up structure if need be */
-   ccsnap_line_pre_init();
+   ccsnap_line_free();
 
    memset(lineInfo, 0, MAX_CONFIG_LINES*sizeof(cc_line_info_t));
    memset(featureInfo, 0, MAX_CONFIG_LINES*sizeof(cc_feature_info_t));
@@ -322,18 +319,17 @@ cc_feature_info_t* ccsnap_getFeatureInfo(int featureIndex)
 /**
  * Release any used mem to avoid a leak.
  */
-void ccsnap_device_pre_init () {
+void ccsnap_device_free () {
     int i = 0;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering device_pre_init to clear it out to avoid mem leaks", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_device_pre_init"));
-    if ((g_deviceInfo.not_prompt) && (strlen(g_deviceInfo.not_prompt) > 0)) {
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, __FUNCTION__));
+    if (g_deviceInfo.not_prompt) {
         strlib_free(g_deviceInfo.not_prompt);
     }
 
     i = 0;
     while (i < CCAPI_MAX_SERVERS) {
-        if ((g_deviceInfo.ucm[i].name) &&
-            (strlen(g_deviceInfo.ucm[i].name) > 0)) {
+        if (g_deviceInfo.ucm[i].name) {
             strlib_free(g_deviceInfo.ucm[i].name);
         }
         i++;
@@ -344,7 +340,7 @@ void ccsnap_device_init() {
    char temp[MAX_SIP_URL_LENGTH];
 
    /* clean up structure if need be */
-   ccsnap_device_pre_init();
+   ccsnap_device_free();
 
    memset (&g_deviceInfo, 0, sizeof(g_deviceInfo));
    g_deviceInfo.not_prompt =strlib_empty();

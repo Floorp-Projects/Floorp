@@ -1,7 +1,7 @@
 
 /* pngtrans.c - transforms the data in a row (used by both readers and writers)
  *
- * Last changed in libpng 1.6.9 [February 6, 2014]
+ * Last changed in libpng 1.6.11 [June 5, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -327,9 +327,16 @@ png_do_swap(png_row_infop row_info, png_bytep row)
 
       for (i = 0; i < istop; i++, rp += 2)
       {
+#ifdef PNG_BUILTIN_BSWAP16_SUPPORTED
+         /* Feature added to libpng-1.6.11 for testing purposes, not
+          * enabled by default.
+          */
+         *(png_uint_16*)rp = __builtin_bswap16(*(png_uint_16*)rp);
+#else
          png_byte t = *rp;
          *rp = *(rp + 1);
          *(rp + 1) = t;
+#endif
       }
    }
 }
@@ -503,7 +510,7 @@ png_do_strip_channel(png_row_infop row_info, png_bytep row, int at_start)
    {
       if (row_info->bit_depth == 8)
       {
-         if (at_start) /* Skip initial filler */
+         if (at_start != 0) /* Skip initial filler */
             ++sp;
          else          /* Skip initial channel and, for sp, the filler */
             sp += 2, ++dp;
@@ -517,7 +524,7 @@ png_do_strip_channel(png_row_infop row_info, png_bytep row, int at_start)
 
       else if (row_info->bit_depth == 16)
       {
-         if (at_start) /* Skip initial filler */
+         if (at_start != 0) /* Skip initial filler */
             sp += 2;
          else          /* Skip initial channel and, for sp, the filler */
             sp += 4, dp += 2;
@@ -543,7 +550,7 @@ png_do_strip_channel(png_row_infop row_info, png_bytep row, int at_start)
    {
       if (row_info->bit_depth == 8)
       {
-         if (at_start) /* Skip initial filler */
+         if (at_start != 0) /* Skip initial filler */
             ++sp;
          else          /* Skip initial channels and, for sp, the filler */
             sp += 4, dp += 3;
@@ -557,7 +564,7 @@ png_do_strip_channel(png_row_infop row_info, png_bytep row, int at_start)
 
       else if (row_info->bit_depth == 16)
       {
-         if (at_start) /* Skip initial filler */
+         if (at_start != 0) /* Skip initial filler */
             sp += 2;
          else          /* Skip initial channels and, for sp, the filler */
             sp += 8, dp += 6;

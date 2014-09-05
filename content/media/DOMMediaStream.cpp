@@ -59,7 +59,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
 class DOMMediaStream::StreamListener : public MediaStreamListener {
 public:
-  StreamListener(DOMMediaStream* aStream)
+  explicit StreamListener(DOMMediaStream* aStream)
     : mStream(aStream)
   {}
 
@@ -219,7 +219,7 @@ DOMMediaStream::InitSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintCont
 {
   mWindow = aWindow;
   SetHintContents(aHintContents);
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance(aHintContents);
   InitStreamCommon(gm->CreateSourceStream(this));
 }
 
@@ -228,7 +228,7 @@ DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHint
 {
   mWindow = aWindow;
   SetHintContents(aHintContents);
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance(aHintContents);
   InitStreamCommon(gm->CreateTrackUnionStream(this));
 }
 
@@ -263,6 +263,14 @@ DOMMediaStream::SetTrackEnabled(TrackID aTrackID, bool aEnabled)
 {
   if (mStream) {
     mStream->SetTrackEnabled(aTrackID, aEnabled);
+  }
+}
+
+void
+DOMMediaStream::StopTrack(TrackID aTrackID)
+{
+  if (mStream && mStream->AsSourceStream()) {
+    mStream->AsSourceStream()->EndTrack(aTrackID);
   }
 }
 

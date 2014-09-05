@@ -5,7 +5,7 @@
 MOZ_APP_BASENAME=Fennec
 MOZ_APP_VENDOR=Mozilla
 
-MOZ_APP_VERSION=34.0a1
+MOZ_APP_VERSION=35.0a1
 MOZ_APP_UA_NAME=Firefox
 
 MOZ_BRANDING_DIRECTORY=mobile/android/branding/unofficial
@@ -79,6 +79,11 @@ if test "$NIGHTLY_BUILD"; then
   MOZ_ANDROID_SEARCH_ACTIVITY=1
 else
   MOZ_ANDROID_SEARCH_ACTIVITY=
+fi
+
+# Enable the share handler in pre-release builds.
+if test ! "$RELEASE_BUILD"; then
+  MOZ_ANDROID_SHARE_OVERLAY=1
 fi
 
 # Don't enable the Mozilla Location Service stumbler.

@@ -6,7 +6,7 @@
 
 FAIL_ON_WARNINGS = True
 
-PROGRAM = 'xpcshell'
+Program('xpcshell')
 
 SOURCES += [
     'xpcshell.cpp',

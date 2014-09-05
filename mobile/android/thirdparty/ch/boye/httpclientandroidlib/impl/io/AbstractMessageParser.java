@@ -34,68 +34,86 @@ import java.util.List;
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpException;
 import ch.boye.httpclientandroidlib.HttpMessage;
+import ch.boye.httpclientandroidlib.MessageConstraintException;
 import ch.boye.httpclientandroidlib.ParseException;
 import ch.boye.httpclientandroidlib.ProtocolException;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import ch.boye.httpclientandroidlib.config.MessageConstraints;
 import ch.boye.httpclientandroidlib.io.HttpMessageParser;
 import ch.boye.httpclientandroidlib.io.SessionInputBuffer;
-import ch.boye.httpclientandroidlib.message.LineParser;
 import ch.boye.httpclientandroidlib.message.BasicLineParser;
-import ch.boye.httpclientandroidlib.params.CoreConnectionPNames;
+import ch.boye.httpclientandroidlib.message.LineParser;
+import ch.boye.httpclientandroidlib.params.HttpParamConfig;
 import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.util.Args;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 
 /**
  * Abstract base class for HTTP message parsers that obtain input from
  * an instance of {@link SessionInputBuffer}.
- * <p>
- * The following parameters can be used to customize the behavior of this
- * class:
- * <ul>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#MAX_HEADER_COUNT}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#MAX_LINE_LENGTH}</li>
- * </ul>
  *
  * @since 4.0
  */
-public abstract class AbstractMessageParser implements HttpMessageParser {
+@SuppressWarnings("deprecation")
+@NotThreadSafe
+public abstract class AbstractMessageParser<T extends HttpMessage> implements HttpMessageParser<T> {
 
     private static final int HEAD_LINE    = 0;
     private static final int HEADERS      = 1;
 
     private final SessionInputBuffer sessionBuffer;
-    private final int maxHeaderCount;
-    private final int maxLineLen;
-    private final List headerLines;
+    private final MessageConstraints messageConstraints;
+    private final List<CharArrayBuffer> headerLines;
     protected final LineParser lineParser;
 
     private int state;
-    private HttpMessage message;
+    private T message;
 
     /**
-     * Creates an instance of this class.
+     * Creates an instance of AbstractMessageParser.
      *
      * @param buffer the session input buffer.
      * @param parser the line parser.
      * @param params HTTP parameters.
+     *
+     * @deprecated (4.3) use {@link AbstractMessageParser#AbstractMessageParser(SessionInputBuffer,
+     *   LineParser, MessageConstraints)}
      */
+    @Deprecated
     public AbstractMessageParser(
             final SessionInputBuffer buffer,
             final LineParser parser,
             final HttpParams params) {
         super();
-        if (buffer == null) {
-            throw new IllegalArgumentException("Session input buffer may not be null");
-        }
-        if (params == null) {
-            throw new IllegalArgumentException("HTTP parameters may not be null");
-        }
+        Args.notNull(buffer, "Session input buffer");
+        Args.notNull(params, "HTTP parameters");
         this.sessionBuffer = buffer;
-        this.maxHeaderCount = params.getIntParameter(
-                CoreConnectionPNames.MAX_HEADER_COUNT, -1);
-        this.maxLineLen = params.getIntParameter(
-                CoreConnectionPNames.MAX_LINE_LENGTH, -1);
-        this.lineParser = (parser != null) ? parser : BasicLineParser.DEFAULT;
-        this.headerLines = new ArrayList();
+        this.messageConstraints = HttpParamConfig.getMessageConstraints(params);
+        this.lineParser = (parser != null) ? parser : BasicLineParser.INSTANCE;
+        this.headerLines = new ArrayList<CharArrayBuffer>();
+        this.state = HEAD_LINE;
+    }
+
+    /**
+     * Creates new instance of AbstractMessageParser.
+     *
+     * @param buffer the session input buffer.
+     * @param lineParser the line parser. If <code>null</code> {@link BasicLineParser#INSTANCE}
+     *   will be used.
+     * @param constraints the message constraints. If <code>null</code>
+     *   {@link MessageConstraints#DEFAULT} will be used.
+     *
+     * @since 4.3
+     */
+    public AbstractMessageParser(
+            final SessionInputBuffer buffer,
+            final LineParser lineParser,
+            final MessageConstraints constraints) {
+        super();
+        this.sessionBuffer = Args.notNull(buffer, "Session input buffer");
+        this.lineParser = lineParser != null ? lineParser : BasicLineParser.INSTANCE;
+        this.messageConstraints = constraints != null ? constraints : MessageConstraints.DEFAULT;
+        this.headerLines = new ArrayList<CharArrayBuffer>();
         this.state = HEAD_LINE;
     }
 
@@ -120,15 +138,13 @@ public abstract class AbstractMessageParser implements HttpMessageParser {
      */
     public static Header[] parseHeaders(
             final SessionInputBuffer inbuffer,
-            int maxHeaderCount,
-            int maxLineLen,
-            LineParser parser)
-        throws HttpException, IOException {
-        if (parser == null) {
-            parser = BasicLineParser.DEFAULT;
-        }
-        List headerLines = new ArrayList();
-        return parseHeaders(inbuffer, maxHeaderCount, maxLineLen, parser, headerLines);
+            final int maxHeaderCount,
+            final int maxLineLen,
+            final LineParser parser) throws HttpException, IOException {
+        final List<CharArrayBuffer> headerLines = new ArrayList<CharArrayBuffer>();
+        return parseHeaders(inbuffer, maxHeaderCount, maxLineLen,
+                parser != null ? parser : BasicLineParser.INSTANCE,
+                headerLines);
     }
 
     /**
@@ -157,21 +173,13 @@ public abstract class AbstractMessageParser implements HttpMessageParser {
      */
     public static Header[] parseHeaders(
             final SessionInputBuffer inbuffer,
-            int maxHeaderCount,
-            int maxLineLen,
+            final int maxHeaderCount,
+            final int maxLineLen,
             final LineParser parser,
-            final List headerLines)
-        throws HttpException, IOException {
-
-        if (inbuffer == null) {
-            throw new IllegalArgumentException("Session input buffer may not be null");
-        }
-        if (parser == null) {
-            throw new IllegalArgumentException("Line parser may not be null");
-        }
-        if (headerLines == null) {
-            throw new IllegalArgumentException("Header line list may not be null");
-        }
+            final List<CharArrayBuffer> headerLines) throws HttpException, IOException {
+        Args.notNull(inbuffer, "Session input buffer");
+        Args.notNull(parser, "Line parser");
+        Args.notNull(headerLines, "Header line list");
 
         CharArrayBuffer current = null;
         CharArrayBuffer previous = null;
@@ -181,7 +189,7 @@ public abstract class AbstractMessageParser implements HttpMessageParser {
             } else {
                 current.clear();
             }
-            int l = inbuffer.readLine(current);
+            final int l = inbuffer.readLine(current);
             if (l == -1 || current.length() < 1) {
                 break;
             }
@@ -194,7 +202,7 @@ public abstract class AbstractMessageParser implements HttpMessageParser {
                 // so append value
                 int i = 0;
                 while (i < current.length()) {
-                    char ch = current.charAt(i);
+                    final char ch = current.charAt(i);
                     if (ch != ' ' && ch != '\t') {
                         break;
                     }
@@ -202,7 +210,7 @@ public abstract class AbstractMessageParser implements HttpMessageParser {
                 }
                 if (maxLineLen > 0
                         && previous.length() + 1 + current.length() - i > maxLineLen) {
-                    throw new IOException("Maximum line length limit exceeded");
+                    throw new MessageConstraintException("Maximum line length limit exceeded");
                 }
                 previous.append(' ');
                 previous.append(current, i, current.length() - i);
@@ -212,15 +220,15 @@ public abstract class AbstractMessageParser implements HttpMessageParser {
                 current = null;
             }
             if (maxHeaderCount > 0 && headerLines.size() >= maxHeaderCount) {
-                throw new IOException("Maximum header count exceeded");
+                throw new MessageConstraintException("Maximum header count exceeded");
             }
         }
-        Header[] headers = new Header[headerLines.size()];
+        final Header[] headers = new Header[headerLines.size()];
         for (int i = 0; i < headerLines.size(); i++) {
-            CharArrayBuffer buffer = (CharArrayBuffer) headerLines.get(i);
+            final CharArrayBuffer buffer = headerLines.get(i);
             try {
                 headers[i] = parser.parseHeader(buffer);
-            } catch (ParseException ex) {
+            } catch (final ParseException ex) {
                 throw new ProtocolException(ex.getMessage());
             }
         }
@@ -241,29 +249,29 @@ public abstract class AbstractMessageParser implements HttpMessageParser {
      * @throws HttpException in case of HTTP protocol violation.
      * @throws ParseException in case of a parse error.
      */
-    protected abstract HttpMessage parseHead(SessionInputBuffer sessionBuffer)
+    protected abstract T parseHead(SessionInputBuffer sessionBuffer)
         throws IOException, HttpException, ParseException;
 
-    public HttpMessage parse() throws IOException, HttpException {
-        int st = this.state;
+    public T parse() throws IOException, HttpException {
+        final int st = this.state;
         switch (st) {
         case HEAD_LINE:
             try {
                 this.message = parseHead(this.sessionBuffer);
-            } catch (ParseException px) {
+            } catch (final ParseException px) {
                 throw new ProtocolException(px.getMessage(), px);
             }
             this.state = HEADERS;
             //$FALL-THROUGH$
         case HEADERS:
-            Header[] headers = AbstractMessageParser.parseHeaders(
+            final Header[] headers = AbstractMessageParser.parseHeaders(
                     this.sessionBuffer,
-                    this.maxHeaderCount,
-                    this.maxLineLen,
+                    this.messageConstraints.getMaxHeaderCount(),
+                    this.messageConstraints.getMaxLineLength(),
                     this.lineParser,
                     this.headerLines);
             this.message.setHeaders(headers);
-            HttpMessage result = this.message;
+            final T result = this.message;
             this.message = null;
             this.headerLines.clear();
             this.state = HEAD_LINE;

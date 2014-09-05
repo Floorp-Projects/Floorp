@@ -49,7 +49,8 @@ describe("loop.panel", function() {
       },
       setLoopCharPref: sandbox.stub(),
       getLoopCharPref: sandbox.stub().returns("unseen"),
-      copyString: sandbox.stub()
+      copyString: sandbox.stub(),
+      noteCallUrlExpiry: sinon.spy()
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
@@ -217,12 +218,95 @@ describe("loop.panel", function() {
       }));
     });
 
+    describe("AuthLink", function() {
+      it("should trigger the FxA sign in/up process when clicking the link",
+        function() {
+          navigator.mozLoop.loggedInToFxA = false;
+          navigator.mozLoop.logInToFxA = sandbox.stub();
+
+          TestUtils.Simulate.click(
+            view.getDOMNode().querySelector(".signin-link a"));
+
+          sinon.assert.calledOnce(navigator.mozLoop.logInToFxA);
+        });
+      });
+
+    describe("SettingsDropdown", function() {
+      var view;
+
+      beforeEach(function() {
+        navigator.mozLoop.logInToFxA = sandbox.stub();
+        navigator.mozLoop.logOutFromFxA = sandbox.stub();
+      });
+
+      it("should show a signin entry when user is not authenticated",
+        function() {
+          navigator.mozLoop.loggedInToFxA = false;
+
+          var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+          expect(view.getDOMNode().querySelectorAll(".icon-signout"))
+            .to.have.length.of(0);
+          expect(view.getDOMNode().querySelectorAll(".icon-signin"))
+            .to.have.length.of(1);
+        });
+
+      it("should show a signout entry when user is authenticated", function() {
+        navigator.mozLoop.loggedInToFxA = true;
+
+        var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+        expect(view.getDOMNode().querySelectorAll(".icon-signout"))
+          .to.have.length.of(1);
+        expect(view.getDOMNode().querySelectorAll(".icon-signin"))
+          .to.have.length.of(0);
+      });
+
+      it("should show an account entry when user is authenticated", function() {
+        navigator.mozLoop.loggedInToFxA = true;
+
+        var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+        expect(view.getDOMNode().querySelectorAll(".icon-account"))
+          .to.have.length.of(1);
+      });
+
+      it("should hide any account entry when user is not authenticated",
+        function() {
+          navigator.mozLoop.loggedInToFxA = false;
+
+          var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+          expect(view.getDOMNode().querySelectorAll(".icon-account"))
+            .to.have.length.of(0);
+        });
+
+      it("should sign in the user on click when unauthenticated", function() {
+        navigator.mozLoop.loggedInToFxA = false;
+        var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector(".icon-signin"));
+
+        sinon.assert.calledOnce(navigator.mozLoop.logInToFxA);
+      });
+
+      it("should sign out the user on click when authenticated", function() {
+        navigator.mozLoop.loggedInToFxA = true;
+        var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector(".icon-signout"));
+
+        sinon.assert.calledOnce(navigator.mozLoop.logOutFromFxA);
+      });
+    });
+
     describe("#render", function() {
       it("should render a ToSView", function() {
         TestUtils.findRenderedComponentWithType(view, loop.panel.ToSView);
       });
     });
-
   });
 
   describe("loop.panel.CallUrlResult", function() {
@@ -253,9 +337,9 @@ describe("loop.panel", function() {
           getStrings: function(key) {
             var text;
 
-            if (key === "share_email_subject2")
+            if (key === "share_email_subject3")
               text = "email-subject";
-            else if (key === "share_email_body2")
+            else if (key === "share_email_body3")
               text = "{{callUrl}}";
 
             return JSON.stringify({textContent: text});
@@ -329,7 +413,8 @@ describe("loop.panel", function() {
         view.setState({
           pending: false,
           copied: false,
-          callUrl: "http://example.com"
+          callUrl: "http://example.com",
+          callUrlExpiry: 6000
         });
 
         TestUtils.Simulate.click(view.getDOMNode().querySelector(".btn-copy"));
@@ -338,6 +423,68 @@ describe("loop.panel", function() {
         sinon.assert.calledWithExactly(navigator.mozLoop.copyString,
           view.state.callUrl);
       });
+
+      it("should note the call url expiry when the url is copied via button",
+        function() {
+          var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
+            notifier: notifier,
+            client: fakeClient
+          }));
+          view.setState({
+            pending: false,
+            copied: false,
+            callUrl: "http://example.com",
+            callUrlExpiry: 6000
+          });
+
+          TestUtils.Simulate.click(view.getDOMNode().querySelector(".btn-copy"));
+
+          sinon.assert.calledOnce(navigator.mozLoop.noteCallUrlExpiry);
+          sinon.assert.calledWithExactly(navigator.mozLoop.noteCallUrlExpiry,
+            6000);
+        });
+
+      it("should note the call url expiry when the url is emailed",
+        function() {
+          var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
+            notifier: notifier,
+            client: fakeClient
+          }));
+          view.setState({
+            pending: false,
+            copied: false,
+            callUrl: "http://example.com",
+            callUrlExpiry: 6000
+          });
+
+          view.getDOMNode().querySelector(".btn-email").dataset.mailto = "#";
+          TestUtils.Simulate.click(view.getDOMNode().querySelector(".btn-email"));
+
+          sinon.assert.calledOnce(navigator.mozLoop.noteCallUrlExpiry);
+          sinon.assert.calledWithExactly(navigator.mozLoop.noteCallUrlExpiry,
+            6000);
+        });
+
+      it("should note the call url expiry when the url is copied manually",
+        function() {
+          var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
+            notifier: notifier,
+            client: fakeClient
+          }));
+          view.setState({
+            pending: false,
+            copied: false,
+            callUrl: "http://example.com",
+            callUrlExpiry: 6000
+          });
+
+          var urlField = view.getDOMNode().querySelector("input[type='url']");
+          TestUtils.Simulate.copy(urlField);
+
+          sinon.assert.calledOnce(navigator.mozLoop.noteCallUrlExpiry);
+          sinon.assert.calledWithExactly(navigator.mozLoop.noteCallUrlExpiry,
+            6000);
+        });
 
       it("should notify the user when the operation failed", function() {
         fakeClient.requestCallUrl = function(_, cb) {

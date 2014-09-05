@@ -21,8 +21,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "MCC_ISO3166_TABLE",
 
 #ifdef MOZ_B2G_RIL
 XPCOMUtils.defineLazyServiceGetter(this, "mobileConnection",
-                                   "@mozilla.org/ril/content-helper;1",
-                                   "nsIMobileConnectionProvider");
+                                   "@mozilla.org/mobileconnection/mobileconnectionservice;1",
+                                   "nsIMobileConnectionService");
 XPCOMUtils.defineLazyServiceGetter(this, "icc",
                                    "@mozilla.org/ril/content-helper;1",
                                    "nsIIccProvider");

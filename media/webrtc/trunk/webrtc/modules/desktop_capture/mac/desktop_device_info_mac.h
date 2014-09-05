@@ -15,13 +15,14 @@ public:
   DesktopDeviceInfoMac();
   ~DesktopDeviceInfoMac();
 
+protected:
   //DesktopDeviceInfo Interfaces
-  virtual int32_t Init();
-  virtual int32_t Refresh();
+  virtual void InitializeApplicationList() OVERRIDE;
+  virtual void InitializeScreenList() OVERRIDE;
 
 private:
 #if !defined(MULTI_MONITOR_SCREENSHARE)
-  int32_t MultiMonitorScreenshare();
+  void MultiMonitorScreenshare();
 #endif
 };
 

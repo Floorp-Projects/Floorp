@@ -5,7 +5,6 @@
  */
 
 interface MozMmsMessage;
-interface MozSmsFilter;
 interface MozSmsMessage;
 
 dictionary SmsSegmentInfo {
@@ -49,6 +48,31 @@ dictionary SmsSendParameters {
 dictionary MmsSendParameters {
   unsigned long serviceId; // The ID of the RIL service which needs to be
                            // specified under the multi-sim scenario.
+};
+
+enum MobileMessageFilterDelivery { "sent", "received" };
+
+dictionary MobileMessageFilter
+{
+  // Close lower bound range for filtering by the message timestamp.
+  // Time in milliseconds since Epoch.
+  [EnforceRange] DOMTimeStamp? startDate = null;
+
+  // Close upper bound range for filtering by the message timestamp.
+  // Time in milliseconds since Epoch.
+  [EnforceRange] DOMTimeStamp? endDate = null;
+
+  // An array of string message participant addresses that any of which
+  // appears or matches a message's sendor or recipients addresses.
+  sequence<DOMString>? numbers = null;
+
+  MobileMessageFilterDelivery? delivery = null;
+
+  // Filtering by whether a message has been read or not.
+  boolean? read = null;
+
+  // Filtering by a message's threadId attribute.
+  [EnforceRange] unsigned long long? threadId = 0;
 };
 
 [Pref="dom.sms.enabled"]
@@ -111,7 +135,7 @@ interface MozMobileMessageManager : EventTarget
 
   // Iterates through Moz{Mms,Sms}Message.
   [Throws]
-  DOMCursor getMessages(optional MozSmsFilter? filter = null,
+  DOMCursor getMessages(optional MobileMessageFilter filter,
                         optional boolean reverse = false);
 
   [Throws]

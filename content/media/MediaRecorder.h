@@ -15,15 +15,16 @@
 #define MAX_ALLOW_MEMORY_BUFFER 1024000
 namespace mozilla {
 
-class ErrorResult;
+class AudioNodeStream;
 class DOMMediaStream;
-class EncodedBufferCache;
-class MediaEncoder;
-class ProcessedMediaStream;
+class ErrorResult;
 class MediaInputPort;
 struct MediaRecorderOptions;
+class MediaStream;
 
 namespace dom {
+
+class AudioNode;
 
 /**
  * Implementation of https://dvcs.w3.org/hg/dap/raw-file/default/media-stream-capture/MediaRecorder.html
@@ -43,7 +44,8 @@ class MediaRecorder : public DOMEventTargetHelper,
   friend class CreateAndDispatchBlobEventRunnable;
 
 public:
-  MediaRecorder(DOMMediaStream&, nsPIDOMWindow* aOwnerWindow);
+  MediaRecorder(DOMMediaStream& aSourceMediaStream, nsPIDOMWindow* aOwnerWindow);
+  MediaRecorder(AudioNode& aSrcAudioNode, uint32_t aSrcOutput, nsPIDOMWindow* aOwnerWindow);
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
@@ -68,15 +70,23 @@ public:
   // Extract encoded data Blob from EncodedBufferCache.
   void RequestData(ErrorResult& aResult);
   // Return the The DOMMediaStream passed from UA.
-  DOMMediaStream* Stream() const { return mStream; }
+  DOMMediaStream* Stream() const { return mDOMStream; }
   // The current state of the MediaRecorder object.
   RecordingState State() const { return mState; }
   // Return the current encoding MIME type selected by the MediaEncoder.
   void GetMimeType(nsString &aMimeType);
 
+  // Construct a recorder with a DOM media stream object as its source.
   static already_AddRefed<MediaRecorder>
   Constructor(const GlobalObject& aGlobal,
               DOMMediaStream& aStream,
+              const MediaRecorderOptions& aInitDict,
+              ErrorResult& aRv);
+  // Construct a recorder with a Web Audio destination node as its source.
+  static already_AddRefed<MediaRecorder>
+  Constructor(const GlobalObject& aGlobal,
+              AudioNode& aSrcAudioNode,
+              uint32_t aSrcOutput,
               const MediaRecorderOptions& aInitDict,
               ErrorResult& aRv);
 
@@ -107,8 +117,20 @@ protected:
   MediaRecorder(const MediaRecorder& x) MOZ_DELETE; // prevent bad usage
   // Remove session pointer.
   void RemoveSession(Session* aSession);
-  // MediaStream passed from js context
-  nsRefPtr<DOMMediaStream> mStream;
+  // Functions for Session to query input source info.
+  MediaStream* GetSourceMediaStream();
+  nsIPrincipal* GetSourcePrincipal();
+  // DOM wrapper for source media stream. Will be null when input is audio node.
+  nsRefPtr<DOMMediaStream> mDOMStream;
+  // Source audio node. Will be null when input is a media stream.
+  nsRefPtr<AudioNode> mAudioNode;
+  // Pipe stream connecting non-destination source node and session track union
+  // stream of recorder. Will be null when input is media stream or destination
+  // node.
+  nsRefPtr<AudioNodeStream> mPipeStream;
+  // Connect source node to the pipe stream.
+  nsRefPtr<MediaInputPort> mInputPort;
+
   // The current state of the MediaRecorder object.
   RecordingState mState;
   // Hold the sessions reference and clean it when the DestroyRunnable for a

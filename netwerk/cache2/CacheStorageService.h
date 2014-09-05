@@ -64,9 +64,9 @@ protected:
   void DoMemoryReport(uint32_t aCurrentSize);
 };
 
-class CacheStorageService : public nsICacheStorageService
-                          , public nsIMemoryReporter
-                          , public nsITimerCallback
+class CacheStorageService MOZ_FINAL : public nsICacheStorageService
+                                    , public nsIMemoryReporter
+                                    , public nsITimerCallback
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

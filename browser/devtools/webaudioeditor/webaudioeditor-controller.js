@@ -20,9 +20,8 @@ const STRINGS_URI = "chrome://browser/locale/devtools/webaudioeditor.properties"
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const Telemetry = require("devtools/shared/telemetry");
 const telemetry = new Telemetry();
-let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 
-let PARAM_POLLING_FREQUENCY = 1000;
+let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 
 // The panel's window global is an EventEmitter firing the following events:
 const EVENTS = {
@@ -174,8 +173,6 @@ let WebAudioEditorController = {
     telemetry.toolOpened("webaudioeditor");
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onThemeChange = this._onThemeChange.bind(this);
-    this._onSelectNode = this._onSelectNode.bind(this);
-    this._onChangeParam = this._onChangeParam.bind(this);
     gTarget.on("will-navigate", this._onTabNavigated);
     gTarget.on("navigate", this._onTabNavigated);
     gFront.on("start-context", this._onStartContext);
@@ -197,15 +194,12 @@ let WebAudioEditorController = {
     window.on(EVENTS.DISCONNECT_NODE, this._onUpdatedContext);
     window.on(EVENTS.DESTROY_NODE, this._onUpdatedContext);
     window.on(EVENTS.CONNECT_PARAM, this._onUpdatedContext);
-
-    // Set up a controller for managing parameter changes per audio node
-    window.on(EVENTS.UI_SELECT_NODE, this._onSelectNode);
   },
 
   /**
    * Remove events emitted by the current tab target.
    */
-  destroy: Task.async(function* () {
+  destroy: function() {
     telemetry.toolClosed("webaudioeditor");
     gTarget.off("will-navigate", this._onTabNavigated);
     gTarget.off("navigate", this._onTabNavigated);
@@ -221,19 +215,14 @@ let WebAudioEditorController = {
     window.off(EVENTS.DISCONNECT_NODE, this._onUpdatedContext);
     window.off(EVENTS.DESTROY_NODE, this._onUpdatedContext);
     window.off(EVENTS.CONNECT_PARAM, this._onUpdatedContext);
-    window.off(EVENTS.UI_SELECT_NODE, this._onSelectNode);
     gDevTools.off("pref-changed", this._onThemeChange);
-
-    yield gFront.disableChangeParamEvents();
-  }),
+  },
 
   /**
    * Called when page is reloaded to show the reload notice and waiting
    * for an audio context notice.
    */
   reset: function () {
-    $("#reload-notice").hidden = true;
-    $("#waiting-notice").hidden = false;
     $("#content").hidden = true;
     WebAudioGraphView.resetUI();
     WebAudioInspectorView.resetUI();
@@ -259,15 +248,29 @@ let WebAudioEditorController = {
   /**
    * Called for each location change in the debugged tab.
    */
-  _onTabNavigated: Task.async(function* (event) {
+  _onTabNavigated: Task.async(function* (event, {isFrameSwitching}) {
     switch (event) {
       case "will-navigate": {
         // Make sure the backend is prepared to handle audio contexts.
-        yield gFront.setup({ reload: false });
+        if (!isFrameSwitching) {
+          yield gFront.setup({ reload: false });
+        }
 
-        // Reset UI to show "Waiting for Audio Context..." and clear out
-        // current UI.
+        // Clear out current UI.
         this.reset();
+
+        // When switching to an iframe, ensure displaying the reload button.
+        // As the document has already been loaded without being hooked.
+        if (isFrameSwitching) {
+          $("#reload-notice").hidden = false;
+          $("#waiting-notice").hidden = true;
+        } else {
+          // Otherwise, we are loading a new top level document,
+          // so we don't need to reload anymore and should receive
+          // new node events.
+          $("#reload-notice").hidden = true;
+          $("#waiting-notice").hidden = false;
+        }
 
         // Clear out stored audio nodes
         AudioNodes.length = 0;
@@ -354,21 +357,9 @@ let WebAudioEditorController = {
   /**
    * Called when a node param is changed.
    */
-  _onChangeParam: function (args) {
-    window.emit(EVENTS.CHANGE_PARAM, args);
-  },
-
-  /**
-   * Called on UI_SELECT_NODE, used to manage
-   * `change-param` events on that node.
-   */
-  _onSelectNode: function (_, id) {
-    let node = getViewNodeById(id);
-
-    if (node && node.actor) {
-      gFront.enableChangeParamEvents(node.actor, PARAM_POLLING_FREQUENCY);
-    }
-  },
+  _onChangeParam: function({ actor, param, value }) {
+    window.emit(EVENTS.CHANGE_PARAM, getViewNodeByActor(actor), param, value);
+  }
 };
 
 /**

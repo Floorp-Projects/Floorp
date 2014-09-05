@@ -140,6 +140,7 @@ public:
       return false;
     }
     addStunServer(*server);
+    delete server;
     return true;
   }
   bool addTurnServer(const std::string& addr, uint16_t port,
@@ -157,6 +158,7 @@ public:
       return false;
     }
     addTurnServer(*server);
+    delete server;
     return true;
   }
   void addStunServer(const NrIceStunServer& server) { mStunServers.push_back (server); }
@@ -214,7 +216,7 @@ class PeerConnectionImpl MOZ_FINAL : public nsISupports,
   struct Internal; // Avoid exposing c includes to bindings
 
 public:
-  PeerConnectionImpl(const mozilla::dom::GlobalObject* aGlobal = nullptr);
+  explicit PeerConnectionImpl(const mozilla::dom::GlobalObject* aGlobal = nullptr);
 
   enum Error {
     kNoError                          = 0,
@@ -545,6 +547,16 @@ public:
   // is called to start the list over.
   void ClearSdpParseErrorMessages();
 
+  void StartTrickle();
+
+  // Called by VcmSIPCCBinding::vcmRxAllocICE; this is how sipcc tells us about
+  // each m-line it has put in the sdp.
+  void OnNewMline(uint16_t level) {
+    if (level > mNumMlines) {
+      mNumMlines = level;
+    }
+  }
+
   void OnAddIceCandidateError() {
     ++mAddCandidateErrorCount;
   }
@@ -620,6 +632,10 @@ private:
   nsresult IceGatheringStateChange_m(
       mozilla::dom::PCImplIceGatheringState aState);
 
+  void CandidateReady_s(const std::string& candidate, uint16_t level);
+  nsresult CandidateReady_m(const std::string& candidate, uint16_t level);
+  void SendEndOfCandidates();
+
   NS_IMETHOD FingerprintSplitHelper(
       std::string& fingerprint, size_t& spaceIdx) const;
 
@@ -673,6 +689,9 @@ private:
   std::string mLocalSDP;
   std::string mRemoteSDP;
 
+  // Holding tank for trickle candidates that arrive before setLocal is done.
+  std::vector<std::pair<std::string, uint16_t>> mCandidateBuffer;
+
   // DTLS fingerprint
   std::string mFingerprint;
   std::string mRemoteFingerprint;
@@ -724,6 +743,8 @@ private:
 
   bool mHaveDataStream;
 
+  uint16_t mNumMlines;
+
   // Holder for error messages from parsing SDP
   std::vector<std::string> mSDPParseErrorMessages;
   unsigned int mAddCandidateErrorCount;
@@ -741,7 +762,7 @@ public:
 class PeerConnectionWrapper
 {
  public:
-  PeerConnectionWrapper(const std::string& handle);
+  explicit PeerConnectionWrapper(const std::string& handle);
 
   PeerConnectionImpl *impl() { return impl_; }
 

@@ -6,7 +6,7 @@
 
 #include "jit/JitOptions.h"
 
-#include "jsscript.h"
+#include "jsfun.h"
 
 using namespace js;
 using namespace js::jit;

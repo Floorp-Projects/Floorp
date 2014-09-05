@@ -29,6 +29,7 @@
 
 #include "MediaStreamSource.h"
 #include "MediaTaskQueue.h"
+#include "MP3FrameParser.h"
 #include "nsThreadUtils.h"
 #include "ImageContainer.h"
 #include "SharedThreadPool.h"
@@ -131,6 +132,7 @@ MediaCodecReader::TrackInputCopier::Copy(MediaBuffer* aSourceBuffer,
 
 MediaCodecReader::Track::Track()
   : mSourceIsStopped(true)
+  , mDurationLock("MediaCodecReader::Track::mDurationLock")
   , mDurationUs(INT64_C(0))
   , mInputIndex(sInvalidInputIndex)
   , mInputEndOfStream(false)
@@ -193,9 +195,96 @@ MediaCodecReader::CodecBufferInfo::CodecBufferInfo()
 {
 }
 
+MediaCodecReader::SignalObject::SignalObject(const char* aName)
+  : mMonitor(aName)
+  , mSignaled(false)
+{
+}
+
+MediaCodecReader::SignalObject::~SignalObject()
+{
+}
+
+void
+MediaCodecReader::SignalObject::Wait()
+{
+  MonitorAutoLock al(mMonitor);
+  if (!mSignaled) {
+    mMonitor.Wait();
+  }
+}
+
+void
+MediaCodecReader::SignalObject::Signal()
+{
+  MonitorAutoLock al(mMonitor);
+  mSignaled = true;
+  mMonitor.Notify();
+}
+
+MediaCodecReader::ParseCachedDataRunnable::ParseCachedDataRunnable(nsRefPtr<MediaCodecReader> aReader,
+                                                                   const char* aBuffer,
+                                                                   uint32_t aLength,
+                                                                   int64_t aOffset,
+                                                                   nsRefPtr<SignalObject> aSignal)
+  : mReader(aReader)
+  , mBuffer(aBuffer)
+  , mLength(aLength)
+  , mOffset(aOffset)
+  , mSignal(aSignal)
+{
+  MOZ_ASSERT(mReader, "Should have a valid MediaCodecReader.");
+  MOZ_ASSERT(mBuffer, "Should have a valid buffer.");
+  MOZ_ASSERT(mOffset >= INT64_C(0), "Should have a valid offset.");
+}
+
+NS_IMETHODIMP
+MediaCodecReader::ParseCachedDataRunnable::Run()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+
+  if (mReader->ParseDataSegment(mBuffer, mLength, mOffset)) {
+    MonitorAutoLock monLock(mReader->mParserMonitor);
+    if (mReader->mNextParserPosition >= mOffset + mLength &&
+        mReader->mParsedDataLength < mOffset + mLength) {
+      mReader->mParsedDataLength = mOffset + mLength;
+    }
+  }
+
+  if (mSignal != nullptr) {
+    mSignal->Signal();
+  }
+
+  return NS_OK;
+}
+
+MediaCodecReader::ProcessCachedDataTask::ProcessCachedDataTask(nsRefPtr<MediaCodecReader> aReader,
+                                                               int64_t aOffset)
+  : mReader(aReader)
+  , mOffset(aOffset)
+{
+  MOZ_ASSERT(mReader, "Should have a valid MediaCodecReader.");
+  MOZ_ASSERT(mOffset >= INT64_C(0), "Should have a valid offset.");
+}
+
+void
+MediaCodecReader::ProcessCachedDataTask::Run()
+{
+  mReader->ProcessCachedData(mOffset, nullptr);
+  nsRefPtr<ReferenceKeeperRunnable<MediaCodecReader>> runnable(
+      new ReferenceKeeperRunnable<MediaCodecReader>(mReader));
+  mReader = nullptr;
+  NS_DispatchToMainThread(runnable.get());
+}
+
 MediaCodecReader::MediaCodecReader(AbstractMediaDecoder* aDecoder)
   : MediaOmxCommonReader(aDecoder)
   , mColorConverterBufferSize(0)
+  , mExtractor(nullptr)
+  , mParserMonitor("MediaCodecReader::mParserMonitor")
+  , mParseDataFromCache(true)
+  , mNextParserPosition(INT64_C(0))
+  , mParsedDataLength(INT64_C(0))
 {
   mHandler = new MessageHandler(this);
   mVideoListener = new VideoResourceListener(this);
@@ -420,6 +509,144 @@ MediaCodecReader::HasVideo()
   return mInfo.mVideo.mHasVideo;
 }
 
+void
+MediaCodecReader::NotifyDataArrived(const char* aBuffer,
+                                    uint32_t aLength,
+                                    int64_t aOffset)
+{
+  MonitorAutoLock monLock(mParserMonitor);
+  if (mNextParserPosition == mParsedDataLength &&
+      mNextParserPosition >= aOffset &&
+      mNextParserPosition <= aOffset + aLength) {
+    // No pending parsing runnable currently. And available data are adjacent to
+    // parsed data.
+    int64_t shift = mNextParserPosition - aOffset;
+    const char* buffer = aBuffer + shift;
+    uint32_t length = aLength - shift;
+    int64_t offset = mNextParserPosition;
+    if (length > 0) {
+      MonitorAutoUnlock monUnlock(mParserMonitor);
+      ParseDataSegment(buffer, length, offset);
+    }
+    mParseDataFromCache = false;
+    mParsedDataLength = offset + length;
+    mNextParserPosition = mParsedDataLength;
+  }
+}
+
+int64_t
+MediaCodecReader::ProcessCachedData(int64_t aOffset,
+                                    nsRefPtr<SignalObject> aSignal)
+{
+  // We read data in chunks of 32 KiB. We can reduce this
+  // value if media, such as sdcards, is too slow.
+  // Because of SD card's slowness, need to keep sReadSize to small size.
+  // See Bug 914870.
+  static const int64_t sReadSize = 32 * 1024;
+
+  MOZ_ASSERT(!NS_IsMainThread(), "Should not be on main thread.");
+
+  {
+    MonitorAutoLock monLock(mParserMonitor);
+    if (!mParseDataFromCache) {
+      // Skip cache processing since data can be continuously be parsed by
+      // ParseDataSegment() from NotifyDataArrived() directly.
+      return INT64_C(0);
+    }
+  }
+
+  MediaResource *resource = mDecoder->GetResource();
+  MOZ_ASSERT(resource);
+
+  int64_t resourceLength = resource->GetCachedDataEnd(0);
+  NS_ENSURE_TRUE(resourceLength >= 0, INT64_C(-1));
+
+  if (aOffset >= resourceLength) {
+    return INT64_C(0); // Cache is empty, nothing to do
+  }
+
+  int64_t bufferLength = std::min<int64_t>(resourceLength - aOffset, sReadSize);
+
+  nsAutoArrayPtr<char> buffer(new char[bufferLength]);
+
+  nsresult rv = resource->ReadFromCache(buffer.get(), aOffset, bufferLength);
+  NS_ENSURE_SUCCESS(rv, INT64_C(-1));
+
+  MonitorAutoLock monLock(mParserMonitor);
+  if (mParseDataFromCache) {
+    nsRefPtr<ParseCachedDataRunnable> runnable(
+      new ParseCachedDataRunnable(this,
+                                  buffer.forget(),
+                                  bufferLength,
+                                  aOffset,
+                                  aSignal));
+
+    rv = NS_DispatchToMainThread(runnable.get());
+    NS_ENSURE_SUCCESS(rv, INT64_C(-1));
+
+    mNextParserPosition = aOffset + bufferLength;
+    if (mNextParserPosition < resource->GetCachedDataEnd(0)) {
+      // We cannot read data in the main thread because it
+      // might block for too long. Instead we post an IO task
+      // to the IO thread if there is more data available.
+      XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+          new ProcessCachedDataTask(this, mNextParserPosition));
+    }
+  }
+
+  return bufferLength;
+}
+
+bool
+MediaCodecReader::ParseDataSegment(const char* aBuffer,
+                                   uint32_t aLength,
+                                   int64_t aOffset)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+
+  int64_t duration = INT64_C(-1);
+
+  {
+    MonitorAutoLock monLock(mParserMonitor);
+
+    // currently only mp3 files are supported for incremental parsing
+    if (mMP3FrameParser == nullptr) {
+      return false;
+    }
+
+    if (!mMP3FrameParser->IsMP3()) {
+      return true; // NO-OP
+    }
+
+    mMP3FrameParser->Parse(aBuffer, aLength, aOffset);
+
+    duration = mMP3FrameParser->GetDuration();
+  }
+
+  bool durationUpdateRequired = false;
+
+  {
+    MutexAutoLock al(mAudioTrack.mDurationLock);
+    if (duration > mAudioTrack.mDurationUs) {
+      mAudioTrack.mDurationUs = duration;
+      durationUpdateRequired = true;
+    }
+  }
+
+  if (durationUpdateRequired && HasVideo()) {
+    MutexAutoLock al(mVideoTrack.mDurationLock);
+    durationUpdateRequired = duration > mVideoTrack.mDurationUs;
+  }
+
+  if (durationUpdateRequired) {
+    MOZ_ASSERT(mDecoder);
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    mDecoder->UpdateEstimatedMediaDuration(duration);
+  }
+
+  return true;
+}
+
 nsresult
 MediaCodecReader::ReadMetadata(MediaInfo* aInfo,
                                MetadataTags** aTags)
@@ -433,6 +660,10 @@ MediaCodecReader::ReadMetadata(MediaInfo* aInfo,
 #ifdef MOZ_AUDIO_OFFLOAD
   CheckAudioOffload();
 #endif
+
+  if (!TriggerIncrementalParser()) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (IsWaitingMediaResources()) {
     return NS_OK;
@@ -453,9 +684,18 @@ MediaCodecReader::ReadMetadata(MediaInfo* aInfo,
   }
 
   // Set the total duration (the max of the audio and video track).
-  int64_t duration = mAudioTrack.mDurationUs > mVideoTrack.mDurationUs ?
-    mAudioTrack.mDurationUs : mVideoTrack.mDurationUs;
-  if (duration >= 0LL) {
+  int64_t audioDuration = INT64_C(-1);
+  {
+    MutexAutoLock al(mAudioTrack.mDurationLock);
+    audioDuration = mAudioTrack.mDurationUs;
+  }
+  int64_t videoDuration = INT64_C(-1);
+  {
+    MutexAutoLock al(mVideoTrack.mDurationLock);
+    videoDuration = mVideoTrack.mDurationUs;
+  }
+  int64_t duration = audioDuration > videoDuration ? audioDuration : videoDuration;
+  if (duration >= INT64_C(0)) {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDecoder->SetMediaDuration(duration);
   }
@@ -813,8 +1053,7 @@ MediaCodecReader::CreateMediaSources()
     return false;
   }
 
-  sp<MetaData> extractorMetaData = mExtractor->getMetaData();
-  // TODO: Check MP3 file format
+  mMetaData = mExtractor->getMetaData();
 
   const ssize_t invalidTrackIndex = -1;
   ssize_t audioTrackIndex = invalidTrackIndex;
@@ -959,7 +1198,6 @@ MediaCodecReader::CreateMediaCodec(sp<ALooper>& aLooper,
 bool
 MediaCodecReader::ConfigureMediaCodec(Track& aTrack)
 {
-
   if (aTrack.mSource != nullptr && aTrack.mCodec != nullptr) {
     if (!aTrack.mCodec->allocated()) {
       return false;
@@ -1009,29 +1247,80 @@ MediaCodecReader::DestroyMediaCodecs(Track& aTrack)
 }
 
 bool
+MediaCodecReader::TriggerIncrementalParser()
+{
+  if (mMetaData == nullptr) {
+    return false;
+  }
+
+  int64_t duration = INT64_C(-1);
+
+  {
+    MonitorAutoLock monLock(mParserMonitor);
+
+    // only support incremental parsing for mp3 currently.
+    if (mMP3FrameParser != nullptr) {
+      return true;
+    }
+
+    mParseDataFromCache = true;
+    mNextParserPosition = INT64_C(0);
+    mParsedDataLength = INT64_C(0);
+
+    // MP3 file duration
+    mMP3FrameParser = new MP3FrameParser(mDecoder->GetResource()->GetLength());
+    const char* mime = nullptr;
+    if (mMetaData->findCString(kKeyMIMEType, &mime) &&
+        !strcasecmp(mime, MEDIA_MIMETYPE_AUDIO_MPEG)) {
+      {
+        MonitorAutoUnlock monUnlock(mParserMonitor);
+        // trigger parsing logic and wait for finishing parsing data in the beginning.
+        nsRefPtr<SignalObject> signalObject = new SignalObject("MediaCodecReader::UpdateDuration()");
+        if (ProcessCachedData(INT64_C(0), signalObject) > INT64_C(0)) {
+          signalObject->Wait();
+        }
+      }
+      duration = mMP3FrameParser->GetDuration();
+    }
+  }
+
+  {
+    MutexAutoLock al(mAudioTrack.mDurationLock);
+    if (duration > mAudioTrack.mDurationUs) {
+      mAudioTrack.mDurationUs = duration;
+    }
+  }
+
+  return true;
+}
+
+bool
 MediaCodecReader::UpdateDuration()
 {
   // read audio duration
   if (mAudioTrack.mSource != nullptr) {
     sp<MetaData> audioFormat = mAudioTrack.mSource->getFormat();
     if (audioFormat != nullptr) {
-      int64_t audioDurationUs = 0LL;
-      if (audioFormat->findInt64(kKeyDuration, &audioDurationUs) &&
-          audioDurationUs > mAudioTrack.mDurationUs) {
-        mAudioTrack.mDurationUs = audioDurationUs;
+      int64_t duration = INT64_C(0);
+      if (audioFormat->findInt64(kKeyDuration, &duration)) {
+        MutexAutoLock al(mAudioTrack.mDurationLock);
+        if (duration > mAudioTrack.mDurationUs) {
+          mAudioTrack.mDurationUs = duration;
+        }
       }
     }
   }
-  // TODO: MP3 file duration
 
   // read video duration
   if (mVideoTrack.mSource != nullptr) {
     sp<MetaData> videoFormat = mVideoTrack.mSource->getFormat();
     if (videoFormat != nullptr) {
-      int64_t videoDurationUs = 0LL;
-      if (videoFormat->findInt64(kKeyDuration, &videoDurationUs) &&
-          videoDurationUs > mVideoTrack.mDurationUs) {
-        mVideoTrack.mDurationUs = videoDurationUs;
+      int64_t duration = INT64_C(0);
+      if (videoFormat->findInt64(kKeyDuration, &duration)) {
+        MutexAutoLock al(mVideoTrack.mDurationLock);
+        if (duration > mVideoTrack.mDurationUs) {
+          mVideoTrack.mDurationUs = duration;
+        }
       }
     }
   }
@@ -1395,7 +1684,7 @@ MediaCodecReader::EnsureCodecFormatParsed(Track& aTrack)
   size_t index = 0;
   size_t offset = 0;
   size_t size = 0;
-  int64_t timeUs = 0LL;
+  int64_t timeUs = INT64_C(0);
   uint32_t flags = 0;
   while ((status = aTrack.mCodec->dequeueOutputBuffer(&index, &offset, &size,
                      &timeUs, &flags)) != INFO_FORMAT_CHANGED) {

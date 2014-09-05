@@ -12,6 +12,7 @@ __all__ = ['read_ini', # .ini reader
            'ManifestParser', 'TestManifest', 'convert', # manifest handling
            'parse', 'ParseError', 'ExpressionParser'] # conditional expression parser
 
+import json
 import fnmatch
 import os
 import re
@@ -384,7 +385,7 @@ def read_ini(fp, variables=None, default='DEFAULT',
         if 'skip-if' in local_dict and 'skip-if' in variables:
             local_dict['skip-if'] = "(%s) || (%s)" % (variables['skip-if'].split('#')[0], local_dict['skip-if'].split('#')[0])
         variables.update(local_dict)
-            
+
         return variables
 
     sections = [(i, interpret_variables(variables, j)) for i, j in sections]
@@ -623,6 +624,18 @@ class ManifestParser(object):
         return [test for test in tests
                 if not os.path.exists(test['path'])]
 
+    def check_missing(self, tests=None):
+        missing = self.missing(tests=tests)
+        if missing:
+            missing_paths = [test['path'] for test in missing]
+            if self.strict:
+                raise IOError("Strict mode enabled, test paths must exist. "
+                              "The following test(s) are missing: %s" %
+                              json.dumps(missing_paths, indent=2))
+            print >> sys.stderr, "Warning: The following test(s) are missing: %s" % \
+                                  json.dumps(missing_paths, indent=2)
+        return missing
+
     def verifyDirectory(self, directories, pattern=None, extensions=None):
         """
         checks what is on the filesystem vs what is in a manifest
@@ -776,14 +789,13 @@ class ManifestParser(object):
                 # sanity check
                 assert os.path.isdir(dirname)
             shutil.copy(os.path.join(rootdir, manifest), destination)
+
+        missing = self.check_missing(tests)
+        tests = [test for test in tests if test not in missing]
         for test in tests:
             if os.path.isabs(test['name']):
                 continue
             source = test['path']
-            if not os.path.exists(source):
-                print >> sys.stderr, "Missing test: '%s' does not exist!" % source
-                continue
-                # TODO: should err on strict
             destination = os.path.join(directory, relpath(test['path'], rootdir))
             shutil.copy(source, destination)
             # TODO: ensure that all of the tests are below the from_dir
@@ -810,8 +822,10 @@ class ManifestParser(object):
                 _relpath = relpath(test['path'], rootdir)
                 source = os.path.join(from_dir, _relpath)
                 if not os.path.exists(source):
-                    # TODO err on strict
-                    print >> sys.stderr, "Missing test: '%s'; skipping" % test['name']
+                    message = "Missing test: '%s' does not exist!"
+                    if self.strict:
+                        raise IOError(message)
+                    print >> sys.stderr, message + " Skipping."
                     continue
                 destination = os.path.join(rootdir, _relpath)
                 shutil.copy(source, destination)
@@ -1108,7 +1122,8 @@ class TestManifest(ManifestParser):
 
         # ignore tests that do not exist
         if exists:
-            tests = [test for test in tests if os.path.exists(test['path'])]
+            missing = self.check_missing(tests)
+            tests = [test for test in tests if test not in missing]
 
         # filter by tags
         self.filter(values, tests)

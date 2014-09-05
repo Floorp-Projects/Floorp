@@ -343,13 +343,12 @@ NS_PurgeAtomTable()
     if (dumpAtomLeaks && *dumpAtomLeaks) {
       uint32_t leaked = 0;
       printf("*** %d atoms still exist (including permanent):\n",
-             gAtomTable.entryCount);
+             gAtomTable.EntryCount());
       PL_DHashTableEnumerate(&gAtomTable, DumpAtomLeaks, &leaked);
       printf("*** %u non-permanent atoms leaked\n", leaked);
     }
 #endif
     PL_DHashTableFinish(&gAtomTable);
-    gAtomTable.entryCount = 0;
     gAtomTable.ops = nullptr;
   }
 }
@@ -406,9 +405,9 @@ AtomImpl::~AtomImpl()
   if (!IsPermanentInDestructor()) {
     AtomTableKey key(mString, mLength, mHash);
     PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_REMOVE);
-    if (gAtomTable.entryCount == 0) {
+    if (gAtomTable.ops && gAtomTable.EntryCount() == 0) {
       PL_DHashTableFinish(&gAtomTable);
-      NS_ASSERTION(gAtomTable.entryCount == 0,
+      NS_ASSERTION(gAtomTable.EntryCount() == 0,
                    "PL_DHashTableFinish changed the entry count");
     }
   }
@@ -558,7 +557,7 @@ GetAtomHashEntry(const char* aString, uint32_t aLength, uint32_t* aHashOut)
   AtomTableEntry* e = static_cast<AtomTableEntry*>(
     PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
   if (!e) {
-    NS_ABORT_OOM(gAtomTable.entryCount * gAtomTable.entrySize);
+    NS_ABORT_OOM(gAtomTable.EntryCount() * gAtomTable.EntrySize());
   }
   return e;
 }
@@ -572,7 +571,7 @@ GetAtomHashEntry(const char16_t* aString, uint32_t aLength, uint32_t* aHashOut)
   AtomTableEntry* e = static_cast<AtomTableEntry*>(
     PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
   if (!e) {
-    NS_ABORT_OOM(gAtomTable.entryCount * gAtomTable.entrySize);
+    NS_ABORT_OOM(gAtomTable.EntryCount() * gAtomTable.EntrySize());
   }
   return e;
 }
@@ -719,7 +718,7 @@ NS_NewPermanentAtom(const nsAString& aUTF16String)
 nsrefcnt
 NS_GetNumberOfAtoms(void)
 {
-  return gAtomTable.entryCount;
+  return gAtomTable.EntryCount();
 }
 
 nsIAtom*

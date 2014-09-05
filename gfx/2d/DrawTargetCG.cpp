@@ -215,6 +215,11 @@ DrawTargetCG::CreateSourceSurfaceFromData(unsigned char *aData,
   return newSurf.forget();
 }
 
+static void releaseDataSurface(void* info, const void *data, size_t size)
+{
+  static_cast<DataSourceSurface*>(info)->Release();
+}
+
 // This function returns a retained CGImage that needs to be released after
 // use. The reason for this is that we want to either reuse an existing CGImage
 // or create a new one.
@@ -234,7 +239,9 @@ GetRetainedImageFromSourceSurface(SourceSurface *aSurface)
       if (!data) {
         MOZ_CRASH("unsupported source surface");
       }
-      return CreateCGImage(nullptr, data->GetData(), data->GetSize(),
+      data->AddRef();
+      return CreateCGImage(releaseDataSurface, data.get(),
+                           data->GetData(), data->GetSize(),
                            data->Stride(), data->GetFormat());
     }
   }
@@ -247,7 +254,12 @@ DrawTargetCG::OptimizeSourceSurface(SourceSurface *aSurface) const
       aSurface->GetType() == SurfaceType::COREGRAPHICS_CGCONTEXT) {
     return aSurface;
   }
-  return aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+
+  return CreateSourceSurfaceFromData(data->GetData(),
+                                     data->GetSize(),
+                                     data->Stride(),
+                                     data->GetFormat());
 }
 
 class UnboundnessFixer

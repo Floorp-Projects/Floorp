@@ -31,7 +31,7 @@ namespace mozilla {
 class SyncRunnable : public nsRunnable
 {
 public:
-  SyncRunnable(nsIRunnable* aRunnable)
+  explicit SyncRunnable(nsIRunnable* aRunnable)
     : mRunnable(aRunnable)
     , mMonitor("SyncRunnable")
     , mDone(false)

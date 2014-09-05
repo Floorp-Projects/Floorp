@@ -185,15 +185,17 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
     return OnStopRequest(aRequest, status);
   }
 
-  if (aType == imgINotificationObserver::DECODE_COMPLETE && mFireEventsOnDecode) {
-    mFireEventsOnDecode = false;
+  if (aType == imgINotificationObserver::DECODE_COMPLETE) {
+    if (mFireEventsOnDecode) {
+      mFireEventsOnDecode = false;
 
-    uint32_t reqStatus;
-    aRequest->GetImageStatus(&reqStatus);
-    if (reqStatus & imgIRequest::STATUS_ERROR) {
-      FireEvent(NS_LITERAL_STRING("error"));
-    } else {
-      FireEvent(NS_LITERAL_STRING("load"));
+      uint32_t reqStatus;
+      aRequest->GetImageStatus(&reqStatus);
+      if (reqStatus & imgIRequest::STATUS_ERROR) {
+        FireEvent(NS_LITERAL_STRING("error"));
+      } else {
+        FireEvent(NS_LITERAL_STRING("load"));
+      }
     }
 
     UpdateImageState(true);
@@ -257,15 +259,24 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
   if (shell && shell->IsVisible() &&
       (!shell->DidInitialize() || shell->IsPaintingSuppressed())) {
 
-    // If we've gotten a frame and that frame has called FrameCreate and that
-    // frame has been reflowed then we know that it checked it's own visibility
-    // so we can trust our visible count and we don't start decode if we are not
-    // visible.
     nsIFrame* f = GetOurPrimaryFrame();
-    if (!mFrameCreateCalled || !f || (f->GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
-        mVisibleCount > 0 || shell->AssumeAllImagesVisible()) {
-      if (NS_SUCCEEDED(mCurrentRequest->StartDecoding())) {
-        startedDecoding = true;
+    // If we haven't gotten a frame yet either we aren't going to (so don't
+    // bother kicking off a decode), or we will get very soon on the next
+    // refresh driver tick when it flushes. And it will most likely be a
+    // specific image type frame (we only create generic (ie inline) type
+    // frames for images that don't have a size, and since we have all the data
+    // we should have the size) which will check its own visibility on its
+    // first reflow.
+    if (f) {
+      // If we've gotten a frame and that frame has called FrameCreate and that
+      // frame has been reflowed then we know that it checked it's own visibility
+      // so we can trust our visible count and we don't start decode if we are not
+      // visible.
+      if (!mFrameCreateCalled || (f->GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
+          mVisibleCount > 0 || shell->AssumeAllImagesVisible()) {
+        if (NS_SUCCEEDED(mCurrentRequest->StartDecoding())) {
+          startedDecoding = true;
+        }
       }
     }
   }
@@ -1189,7 +1200,7 @@ namespace {
 class ImageRequestAutoLock
 {
 public:
-  ImageRequestAutoLock(imgIRequest* aRequest)
+  explicit ImageRequestAutoLock(imgIRequest* aRequest)
     : mRequest(aRequest)
   {
     if (mRequest) {

@@ -377,12 +377,12 @@ void UIShutdown()
   // Don't dlclose gnomeLib as libgnomevfs and libORBit-2 use atexit().
 }
 
-bool UIShowCrashUI(const string& dumpfile,
+bool UIShowCrashUI(const StringTable& files,
                    const StringTable& queryParameters,
                    const string& sendURL,
                    const vector<string>& restartArgs)
 {
-  gDumpFile = dumpfile;
+  gFiles = files;
   gQueryParameters = queryParameters;
   gSendURL = sendURL;
   gRestartArgs = restartArgs;

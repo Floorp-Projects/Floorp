@@ -62,7 +62,7 @@ TrackTypeToStr(TrackType aTrack)
 class MP4Stream : public Stream {
 public:
 
-  MP4Stream(MediaResource* aResource)
+  explicit MP4Stream(MediaResource* aResource)
     : mResource(aResource)
   {
     MOZ_COUNT_CTOR(MP4Stream);
@@ -225,7 +225,7 @@ public:
     // since this event was dispatched.
     MediaDecoderOwner* owner = mDecoder->GetOwner();
     if (owner) {
-      owner->DispatchNeedKey(mInitData, mInitDataType);
+      owner->DispatchEncrypted(mInitData, mInitDataType);
     }
     mDecoder = nullptr;
     return NS_OK;
@@ -774,7 +774,10 @@ MP4Reader::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
                              int64_t aOffset)
 {
   if (NS_IsMainThread()) {
-    GetTaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MP4Reader::UpdateIndex));
+    if (GetTaskQueue()) {
+      GetTaskQueue()->Dispatch(
+        NS_NewRunnableMethod(this, &MP4Reader::UpdateIndex));
+    }
   } else {
     UpdateIndex();
   }

@@ -112,6 +112,10 @@ this.CrashManager = function (options) {
   // The CrashStore currently attached to this object.
   this._store = null;
 
+  // A Task to retrieve the store. This is needed to avoid races when
+  // _getStore() is called multiple times in a short interval.
+  this._getStoreTask = null;
+
   // The timer controlling the expiration of the CrashStore instance.
   this._storeTimer = null;
 
@@ -368,6 +372,30 @@ this.CrashManager.prototype = Object.freeze({
   },
 
   /**
+   * Record the remote ID for a crash.
+   *
+   * @param crashID (string) Crash ID. Likely a UUID.
+   * @param remoteID (Date) Server/Breakpad ID.
+   *
+   * @return boolean True if the remote ID was recorded.
+   */
+  setRemoteCrashID: Task.async(function* (crashID, remoteID) {
+    let store = yield this._getStore();
+    if (store.setRemoteCrashID(crashID, remoteID)) {
+      yield store.save();
+    }
+  }),
+
+  /**
+   * Generate a submission ID for use with addSubmission{Attempt,Result}.
+   */
+  generateSubmissionID() {
+    return "sub-" + Cc["@mozilla.org/uuid-generator;1"]
+                      .getService(Ci.nsIUUIDGenerator)
+                      .generateUUID().toString().slice(1, -1);
+  },
+
+  /**
    * Record the occurrence of a submission attempt for a crash.
    *
    * @param crashID (string) Crash ID. Likely a UUID.
@@ -396,6 +424,21 @@ this.CrashManager.prototype = Object.freeze({
   addSubmissionResult: Task.async(function* (crashID, submissionID, date, result) {
     let store = yield this._getStore();
     if (store.addSubmissionResult(crashID, submissionID, date, result)) {
+      yield store.save();
+    }
+  }),
+
+  /**
+   * Set the classification of a crash.
+   *
+   * @param crashID (string) Crash ID. Likely a UUID.
+   * @param classification (string) Crash classification/reason.
+   *
+   * @return boolean True if the classification was recorded and false if not.
+   */
+  setCrashClassification: Task.async(function* (crashID, classification) {
+    let store = yield this._getStore();
+    if (store.setCrashClassification(crashID, classification)) {
       yield store.save();
     }
   }),
@@ -475,15 +518,27 @@ this.CrashManager.prototype = Object.freeze({
                            entry.path);
             return this.EVENT_FILE_ERROR_MALFORMED;
           }
+
+          let [crashID] = lines;
           store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
-                         payload, date);
+                         crashID, date);
           break;
 
         case "crash.submission.1":
           if (lines.length == 3) {
-            this._addSubmissionAsCrash(store, this.PROCESS_TYPE_MAIN,
-                                       this.CRASH_TYPE_CRASH,
-                                       lines[1] === "true", lines[0], date);
+            let [crashID, result, remoteID] = lines;
+            store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
+                           crashID, date);
+
+            let submissionID = this.generateSubmissionID();
+            let succeeded = result === "true";
+            store.addSubmissionAttempt(crashID, submissionID, date);
+            store.addSubmissionResult(crashID, submissionID, date,
+                                      succeeded ? this.SUBMISSION_RESULT_OK :
+                                                  this.SUBMISSION_RESULT_FAILED);
+            if (succeeded) {
+              store.setRemoteCrashID(crashID, remoteID);
+            }
           } else {
             return this.EVENT_FILE_ERROR_MALFORMED;
           }
@@ -544,47 +599,57 @@ this.CrashManager.prototype = Object.freeze({
   },
 
   _getStore: function () {
-    return Task.spawn(function* () {
-      if (!this._store) {
-        yield OS.File.makeDir(this._storeDir, {
-          ignoreExisting: true,
-          unixMode: OS.Constants.libc.S_IRWXU,
-        });
+    if (this._getStoreTask) {
+      return this._getStoreTask;
+    }
 
-        let store = new CrashStore(this._storeDir, this._telemetryStoreSizeKey);
-        yield store.load();
+    return this._getStoreTask = Task.spawn(function* () {
+      try {
+        if (!this._store) {
+          yield OS.File.makeDir(this._storeDir, {
+            ignoreExisting: true,
+            unixMode: OS.Constants.libc.S_IRWXU,
+          });
 
-        this._store = store;
-        this._storeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      }
+          let store = new CrashStore(this._storeDir,
+                                     this._telemetryStoreSizeKey);
+          yield store.load();
 
-      // The application can go long periods without interacting with the
-      // store. Since the store takes up resources, we automatically "free"
-      // the store after inactivity so resources can be returned to the system.
-      // We do this via a timer and a mechanism that tracks when the store
-      // is being accessed.
-      this._storeTimer.cancel();
-
-      // This callback frees resources from the store unless the store
-      // is protected from freeing by some other process.
-      let timerCB = function () {
-        if (this._storeProtectedCount) {
-          this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
-                                            this._storeTimer.TYPE_ONE_SHOT);
-          return;
+          this._store = store;
+          this._storeTimer = Cc["@mozilla.org/timer;1"]
+                               .createInstance(Ci.nsITimer);
         }
 
-        // We kill the reference that we hold. GC will kill it later. If
-        // someone else holds a reference, that will prevent GC until that
-        // reference is gone.
-        this._store = null;
-        this._storeTimer = null;
-      }.bind(this);
+        // The application can go long periods without interacting with the
+        // store. Since the store takes up resources, we automatically "free"
+        // the store after inactivity so resources can be returned to the
+        // system. We do this via a timer and a mechanism that tracks when the
+        // store is being accessed.
+        this._storeTimer.cancel();
 
-      this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
-                                        this._storeTimer.TYPE_ONE_SHOT);
+        // This callback frees resources from the store unless the store
+        // is protected from freeing by some other process.
+        let timerCB = function () {
+          if (this._storeProtectedCount) {
+            this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
+                                              this._storeTimer.TYPE_ONE_SHOT);
+            return;
+          }
 
-      return this._store;
+          // We kill the reference that we hold. GC will kill it later. If
+          // someone else holds a reference, that will prevent GC until that
+          // reference is gone.
+          this._store = null;
+          this._storeTimer = null;
+        }.bind(this);
+
+        this._storeTimer.initWithCallback(timerCB, this.STORE_EXPIRATION_MS,
+                                          this._storeTimer.TYPE_ONE_SHOT);
+
+        return this._store;
+      } finally {
+        this._getStoreTask = null;
+      }
     }.bind(this));
   },
 
@@ -662,19 +727,26 @@ CrashStore.prototype = Object.freeze({
   HIGH_WATER_DAILY_THRESHOLD: 100,
 
   /**
+   * Reset all data.
+   */
+  reset() {
+    this._data = {
+      v: 1,
+      crashes: new Map(),
+      corruptDate: null,
+    };
+    this._countsByDay = new Map();
+  },
+
+  /**
    * Load data from disk.
    *
    * @return Promise
    */
   load: function () {
     return Task.spawn(function* () {
-      // Loading replaces data. So reset data structures.
-      this._data = {
-        v: 1,
-        crashes: new Map(),
-        corruptDate: null,
-      };
-      this._countsByDay = new Map();
+      // Loading replaces data.
+      this.reset();
 
       try {
         let decoder = new TextDecoder();
@@ -990,24 +1062,27 @@ CrashStore.prototype = Object.freeze({
       return null;
     }
 
-    let day = dateToDays(date);
-    this._ensureCountsForDay(day);
-
     let type = processType + "-" + crashType;
-    let count = (this._countsByDay.get(day).get(type) || 0) + 1;
-    this._countsByDay.get(day).set(type, count);
-
-    if (count > this.HIGH_WATER_DAILY_THRESHOLD &&
-        processType != CrashManager.prototype.PROCESS_TYPE_MAIN) {
-      return null;
-    }
 
     if (!this._data.crashes.has(id)) {
+      let day = dateToDays(date);
+      this._ensureCountsForDay(day);
+
+      let count = (this._countsByDay.get(day).get(type) || 0) + 1;
+      this._countsByDay.get(day).set(type, count);
+
+      if (count > this.HIGH_WATER_DAILY_THRESHOLD &&
+          processType != CrashManager.prototype.PROCESS_TYPE_MAIN) {
+        return null;
+      }
+
       this._data.crashes.set(id, {
         id: id,
+        remoteID: null,
         type: type,
         crashDate: date,
         submissions: new Map(),
+        classification: null,
       });
     }
 
@@ -1030,6 +1105,19 @@ CrashStore.prototype = Object.freeze({
    */
   addCrash: function (processType, crashType, id, date) {
     return !!this._ensureCrashRecord(processType, crashType, id, date);
+  },
+
+  /**
+   * @return boolean True if the remote ID was recorded and false if not.
+   */
+  setRemoteCrashID: function (crashID, remoteID) {
+    let crash = this._data.crashes.get(crashID);
+    if (!crash || !remoteID) {
+      return false;
+    }
+
+    crash.remoteID = remoteID;
+    return true;
   },
 
   getCrashesOfType: function (processType, crashType) {
@@ -1103,6 +1191,19 @@ CrashStore.prototype = Object.freeze({
     submission.result = result;
     return true;
   },
+
+  /**
+   * @return boolean True if the classification was set.
+   */
+  setCrashClassification: function (crashID, classification) {
+    let crash = this._data.crashes.get(crashID);
+    if (!crash) {
+      return false;
+    }
+
+    crash.classification = classification;
+    return true;
+  },
 });
 
 /**
@@ -1124,6 +1225,10 @@ function CrashRecord(o) {
 CrashRecord.prototype = Object.freeze({
   get id() {
     return this._o.id;
+  },
+
+  get remoteID() {
+    return this._o.remoteID;
   },
 
   get crashDate() {
@@ -1155,6 +1260,10 @@ CrashRecord.prototype = Object.freeze({
 
   get submissions() {
     return this._o.submissions;
+  },
+
+  get classification() {
+    return this._o.classification;
   },
 });
 

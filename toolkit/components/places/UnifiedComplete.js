@@ -457,14 +457,16 @@ function getUnfilteredSearchTokens(searchString)
 function stripPrefix(spec)
 {
   ["http://", "https://", "ftp://"].some(scheme => {
-    if (spec.startsWith(scheme)) {
+    // Strip protocol if not directly followed by a space
+    if (spec.startsWith(scheme) && spec[scheme.length] != " ") {
       spec = spec.slice(scheme.length);
       return true;
     }
     return false;
   });
 
-  if (spec.startsWith("www.")) {
+  // Strip www. if not directly followed by a space
+  if (spec.startsWith("www.") && spec[4] != " ") {
     spec = spec.slice(4);
   }
   return spec;

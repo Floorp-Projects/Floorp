@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "sendMessageToJava", "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "Strings", function() {
@@ -106,16 +106,14 @@ this.WebappManager = {
       return;
     }
 
-    sendMessageToJava({
+    Messaging.sendRequestForResult({
       type: "Webapps:InstallApk",
       filePath: filePath,
       data: aMessage,
-    }, (data, error) => {
-      if (!!error) {
-        aMessage.error = error;
-        aMessageManager.sendAsyncMessage("Webapps:Install:Return:KO", aMessage);
-        debug("error downloading APK: " + error);
-      }
+    }).catch(function (error) {
+      aMessage.error = error;
+      aMessageManager.sendAsyncMessage("Webapps:Install:Return:KO", aMessage);
+      debug("error downloading APK: " + error);
     });
   }).bind(this)); },
 
@@ -193,7 +191,7 @@ this.WebappManager = {
 
   _postInstall: function(aProfilePath, aNewManifest, aOrigin, aApkPackageName, aManifestURL) {
     // aOrigin may now point to the app: url that hosts this app.
-    sendMessageToJava({
+    Messaging.sendRequest({
       type: "Webapps:Postinstall",
       apkPackageName: aApkPackageName,
       origin: aOrigin,
@@ -209,7 +207,7 @@ this.WebappManager = {
   launch: function({ apkPackageName }) {
     debug("launch: " + apkPackageName);
 
-    sendMessageToJava({
+    Messaging.sendRequest({
       type: "Webapps:Launch",
       packageName: apkPackageName,
     });
@@ -236,7 +234,7 @@ this.WebappManager = {
     let apkVersions = yield this._getAPKVersions([ app.apkPackageName ]);
     if (app.apkPackageName in apkVersions) {
       debug("APK is installed; requesting uninstallation");
-      sendMessageToJava({
+      Messaging.sendRequest({
         type: "Webapps:UninstallApk",
         apkPackageName: app.apkPackageName,
       });
@@ -459,14 +457,10 @@ this.WebappManager = {
   }).bind(this)); },
 
   _getAPKVersions: function(packageNames) {
-    let deferred = Promise.defer();
-
-    sendMessageToJava({
+    return Messaging.sendRequestForResult({
       type: "Webapps:GetApkVersions",
       packageNames: packageNames 
-    }, data => deferred.resolve(data.versions));
-
-    return deferred.promise;
+    }).then(data => data.versions);
   },
 
   _getInstalledApps: function() {
@@ -584,16 +578,14 @@ this.WebappManager = {
           // TODO: figure out why Webapps:InstallApk needs the "from" property.
           from: apk.app.installOrigin,
         };
-        sendMessageToJava({
+        Messaging.sendRequestForResult({
           type: "Webapps:InstallApk",
           filePath: apk.filePath,
           data: msg,
-        }, (data, error) => {
-          if (!!error) {
-            // There's no page to report back to so drop the error.
-            // TODO: we should notify the user about this failure.
-            debug("APK install failed : " + returnError);
-          }
+        }).catch((error) => {
+          // There's no page to report back to so drop the error.
+          // TODO: we should notify the user about this failure.
+          debug("APK install failed : " + error);
         });
       }
     } else {

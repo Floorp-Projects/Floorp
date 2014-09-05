@@ -581,8 +581,6 @@ public:
   // by the MediaResource read functions.
   void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) MOZ_FINAL MOZ_OVERRIDE;
 
-  int64_t GetEndMediaTime() const MOZ_FINAL MOZ_OVERRIDE;
-
   // Return true if we are currently seeking in the media resource.
   // Call on the main thread only.
   virtual bool IsSeeking() const;
@@ -1093,7 +1091,7 @@ private:
   class RestrictedAccessMonitor
   {
   public:
-    RestrictedAccessMonitor(const char* aName) :
+    explicit RestrictedAccessMonitor(const char* aName) :
       mReentrantMonitor(aName)
     {
       MOZ_COUNT_CTOR(RestrictedAccessMonitor);
