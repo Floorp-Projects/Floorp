@@ -50,7 +50,7 @@ interface NavigatorID {
   boolean taintEnabled(); // constant false
 };
 
-[NoInterfaceObject]
+[NoInterfaceObject, Exposed=(Window,Worker)]
 interface NavigatorLanguage {
   readonly attribute DOMString? language;
   [Pure, Cached, Frozen]

@@ -13,7 +13,9 @@ var supportedProps = [
   "product",
   "taintEnabled",
   "userAgent",
-  "onLine"
+  "onLine",
+  "language",
+  "languages",
 ];
 
 var isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
