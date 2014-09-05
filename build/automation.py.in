@@ -684,7 +684,7 @@ class Automation(object):
         import fix_stack_using_bpsyms as stackFixerModule
         stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line, symbolsPath)
         del sys.path[0]
-      elif self.IS_DEBUG_BUILD and self.IS_MAC and False:
+      elif self.IS_DEBUG_BUILD and self.IS_MAC:
         # Run each line through a function in fix_macosx_stack.py (uses atos)
         sys.path.insert(0, utilityPath)
         import fix_macosx_stack as stackFixerModule
