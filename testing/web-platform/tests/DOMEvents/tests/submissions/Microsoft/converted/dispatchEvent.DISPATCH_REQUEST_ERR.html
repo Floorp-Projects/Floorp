@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> dispatchEvent() EventException.DISPATCH_REQUEST_ERR </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+
+<table id="table" border="1" style="display: none">
+    <tbody id="table-body">
+    <tr id="table-row">
+        <td id="table-cell">Shady Grove</td>
+        <td>Aeolian</td>
+    </tr>
+    <tr id="parent">
+        <td id="target">Over the river, Charlie</td>
+        <td>Dorian</td>
+    </tr>
+    </tbody>
+</table>
+
+<script>
+
+    var EVENT = "foo";
+    var TARGET = document.getElementById("target");
+
+    var description = "Test Description: " +
+                      "dispatchEvent() raises DISPATCH_REQUEST_ERR EventException if the Event object is already being dispatched.";
+
+    var t = async_test(description);
+
+    var evt = document.createEvent("Event");
+    evt.initEvent(EVENT, true, true);
+
+    TARGET.addEventListener(EVENT, t.step_func(TestEvent), true);
+    TARGET.dispatchEvent(evt);
+
+    function TestEvent(evt)
+    {
+        assert_throws("DISPATCH_REQUEST_ERR", function()
+        {
+            window.dispatchEvent(evt);
+        });
+        t.done();
+    }
+</script>
+</body>
+</html>

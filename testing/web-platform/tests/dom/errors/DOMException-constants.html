@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>DOMException constants</title>
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception">
+<link rel=help href="http://dev.w3.org/2006/webapi/WebIDL/#es-exception-constants">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  var constants = [
+    "INDEX_SIZE_ERR",
+    "DOMSTRING_SIZE_ERR",
+    "HIERARCHY_REQUEST_ERR",
+    "WRONG_DOCUMENT_ERR",
+    "INVALID_CHARACTER_ERR",
+    "NO_DATA_ALLOWED_ERR",
+    "NO_MODIFICATION_ALLOWED_ERR",
+    "NOT_FOUND_ERR",
+    "NOT_SUPPORTED_ERR",
+    "INUSE_ATTRIBUTE_ERR",
+    "INVALID_STATE_ERR",
+    "SYNTAX_ERR",
+    "INVALID_MODIFICATION_ERR",
+    "NAMESPACE_ERR",
+    "INVALID_ACCESS_ERR",
+    "VALIDATION_ERR",
+    "TYPE_MISMATCH_ERR",
+    "SECURITY_ERR",
+    "NETWORK_ERR",
+    "ABORT_ERR",
+    "URL_MISMATCH_ERR",
+    "QUOTA_EXCEEDED_ERR",
+    "TIMEOUT_ERR",
+    "INVALID_NODE_TYPE_ERR",
+    "DATA_CLONE_ERR"
+  ]
+  constants.forEach(function(name, i) {
+    test(function() {
+      assert_equals(DOMException[name], i + 1, name)
+      var pd = Object.getOwnPropertyDescriptor(DOMException, name)
+      assert_equals(pd.writable, false, "not writable")
+      assert_equals(pd.enumerable, true, "enumerable")
+      assert_equals(pd.configurable, false, "not configurable")
+    }, "Constant: " + name)
+  })
+})
+</script>

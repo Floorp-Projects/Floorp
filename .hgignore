@@ -75,3 +75,6 @@ GPATH
 # Unit tests for Loop
 ^browser/components/loop/standalone/content/config\.js$
 ^browser/components/loop/standalone/node_modules/
+
+# Git clone directory for updating web-platform-tests
+^testing/web-platform/sync/

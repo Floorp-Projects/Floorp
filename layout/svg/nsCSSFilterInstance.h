@@ -114,7 +114,7 @@ private:
   /**
    * The frame for the element that is currently being filtered.
    */
-  nsIFrame*               mTargetFrame;
+  nsIFrame* mTargetFrame;
 
   /**
    * The bounding box of the element being filtered, in filter space. Used for

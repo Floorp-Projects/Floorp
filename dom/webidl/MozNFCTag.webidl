@@ -9,18 +9,18 @@
  */
 
 enum NFCTechType {
+  "NDEF",
+  "NDEF_WRITABLE",
+  "NDEF_FORMATABLE",
+  "P2P",
   "NFC_A",
   "NFC_B",
-  "NFC_ISO_DEP",
   "NFC_F",
   "NFC_V",
-  "NDEF",
-  "NDEF_FORMATABLE",
+  "NFC_ISO_DEP",
   "MIFARE_CLASSIC",
   "MIFARE_ULTRALIGHT",
-  "NFC_BARCODE",
-  "P2P",
-  "UNKNOWN_TECH"
+  "NFC_BARCODE"
 };
 
 [JSImplementation="@mozilla.org/nfc/NFCTag;1", AvailableIn="CertifiedApps"]

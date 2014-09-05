@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerGlobalScope API: addEventListener() </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var DATA = "ping";
+    var FileName = './support/EventListener.js';
+    
+    var t = async_test("Test Description: WorkerGlobalScope API: addEventListener().");
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data, DATA);
+        t.done();
+    });
+    
+    worker.postMessage(DATA);
+</script>
+</body>
+</html>

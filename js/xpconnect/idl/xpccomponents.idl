@@ -122,7 +122,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(10bcc595-ccca-4ead-aae3-d12b47cd9fff)]
+[scriptable, uuid(60b1ddd1-7567-41da-85f6-638096acd564)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -642,6 +642,12 @@ interface nsIXPCComponents_Utils : nsISupports
 
     [implicit_jscontext]
     void setAddonInterposition(in ACString addonId, in nsIAddonInterposition interposition);
+
+    /*
+     * Return a fractional number of milliseconds from process
+     * startup, measured with a monotonic clock.
+     */
+    double now();
 };
 
 /**

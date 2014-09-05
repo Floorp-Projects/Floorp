@@ -1,0 +1,26 @@
+<!doctype html>
+<title>shared worker with multiple documents</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id=log></div>
+<script>
+var i = 0;
+var t = async_test(function() {
+  var w1 = new SharedWorker('004-2.js', 'x');
+  w1.port.onmessage = function(e) {
+    i++;
+  };
+});
+var load_count = 0;
+function iframe_loaded() {
+  load_count++;
+  if (load_count == 2) {
+    setTimeout(this.step_func(function() {
+      assert_equals(i, 3);
+      this.done();
+    }), 300);
+  }
+}
+</script>
+<iframe src=004-1.html onload="t.step(iframe_loaded);"></iframe>
+<iframe src=004-1.html onload="t.step(iframe_loaded);"></iframe>
