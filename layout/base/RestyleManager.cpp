@@ -2420,14 +2420,14 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       // we'll fail to do the restyling we need to do.
       (mContent->GetParent() || mContent->GetPrimaryFrame() == mFrame)) {
     mContent->OwnerDoc()->FlushPendingLinkUpdates();
-    RestyleTracker::RestyleData restyleData;
-    if (mRestyleTracker.GetRestyleData(mContent->AsElement(), &restyleData)) {
-      if (NS_UpdateHint(mHintsHandled, restyleData.mChangeHint)) {
-        mChangeList->AppendChange(mFrame, mContent, restyleData.mChangeHint);
+    nsAutoPtr<RestyleTracker::RestyleData> restyleData;
+    if (mRestyleTracker.GetRestyleData(mContent->AsElement(), restyleData)) {
+      if (NS_UpdateHint(mHintsHandled, restyleData->mChangeHint)) {
+        mChangeList->AppendChange(mFrame, mContent, restyleData->mChangeHint);
       }
-      hintToRestore = restyleData.mRestyleHint;
-      aRestyleHint = nsRestyleHint(aRestyleHint | restyleData.mRestyleHint);
-      descendants.SwapElements(restyleData.mDescendants);
+      hintToRestore = restyleData->mRestyleHint;
+      aRestyleHint = nsRestyleHint(aRestyleHint | restyleData->mRestyleHint);
+      descendants.SwapElements(restyleData->mDescendants);
     }
   }
 
@@ -3138,12 +3138,12 @@ ElementRestyler::RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint)
       }
 
       nsRestyleHint thisChildHint = aChildRestyleHint;
-      RestyleTracker::RestyleData undisplayedRestyleData;
+      nsAutoPtr<RestyleTracker::RestyleData> undisplayedRestyleData;
       Element* element = undisplayed->mContent->AsElement();
       if (mRestyleTracker.GetRestyleData(element,
-                                         &undisplayedRestyleData)) {
+                                         undisplayedRestyleData)) {
         thisChildHint =
-          nsRestyleHint(thisChildHint | undisplayedRestyleData.mRestyleHint);
+          nsRestyleHint(thisChildHint | undisplayedRestyleData->mRestyleHint);
       }
       nsRefPtr<nsStyleContext> undisplayedContext;
       nsStyleSet* styleSet = mPresContext->StyleSet();
