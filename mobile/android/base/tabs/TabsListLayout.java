@@ -9,22 +9,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.animation.PropertyAnimator.Property;
+import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.tabs.TabsPanel.TabsLayout;
-import org.mozilla.gecko.animation.PropertyAnimator;
-import org.mozilla.gecko.animation.PropertyAnimator.Property;
-import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.TwoWayView;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -150,7 +149,7 @@ class TabsListLayout extends TwoWayView
                     return;
 
                 TabsLayoutItemView item = (TabsLayoutItemView) view.getTag();
-                assignValues(item, tab);
+                item.assignValues(tab);
                 break;
         }
     }
@@ -269,29 +268,10 @@ class TabsListLayout extends TwoWayView
             }
 
             Tab tab = mTabs.get(position);
-            assignValues(item, tab);
+            item.assignValues(tab);
 
             return convertView;
         }
-    }
-
-    private void assignValues(TabsLayoutItemView item, Tab tab) {
-        if (item == null || tab == null)
-            return;
-
-        item.id = tab.getId();
-
-        Drawable thumbnailImage = tab.getThumbnail();
-        if (thumbnailImage != null) {
-            item.thumbnail.setImageDrawable(thumbnailImage);
-        } else {
-            item.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
-        }
-        if (item.thumbnailWrapper != null) {
-            item.thumbnailWrapper.setRecording(tab.isRecording());
-        }
-        item.title.setText(tab.getDisplayTitle());
-        item.close.setTag(item);
     }
 
     private void resetTransforms(View view) {
