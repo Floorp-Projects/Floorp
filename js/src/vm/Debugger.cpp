@@ -18,7 +18,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "jit/BaselineJIT.h"
-#include "js/DebugAPI.h"
+#include "js/Debug.h"
 #include "js/GCAPI.h"
 #include "js/Vector.h"
 #include "vm/ArgumentsObject.h"
