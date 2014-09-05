@@ -769,14 +769,15 @@ public class GeckoSmsManager
           }
 
           if (mNumbersCount > 0) {
-            String numberRestriction = "address IN ('" + mNumbers[0] + "'";
+            final StringBuilder numberRestriction = new StringBuilder("address IN ('");
+            numberRestriction.append(mNumbers[0]).append("'");
 
             for (int i=1; i<mNumbersCount; ++i) {
-              numberRestriction += ", '" + mNumbers[i] + "'";
+              numberRestriction.append(", '").append(mNumbers[i]).append("'");
             }
-            numberRestriction += ")";
+            numberRestriction.append(')');
 
-            restrictions.add(numberRestriction);
+            restrictions.add(numberRestriction.toString());
           }
 
           if (mDelivery == null) {
@@ -789,14 +790,17 @@ public class GeckoSmsManager
             throw new UnexpectedDeliveryStateException();
           }
 
-          String restrictionText = restrictions.size() > 0 ? restrictions.get(0) : "";
+          final StringBuilder restrictionText = new StringBuilder();
+          if (!restrictions.isEmpty()) {
+            restrictionText.append(restrictions.get(0));
+          }
 
           for (int i=1; i<restrictions.size(); ++i) {
-            restrictionText += " AND " + restrictions.get(i);
+            restrictionText.append(" AND ").append(restrictions.get(i));
           }
 
           ContentResolver cr = GeckoAppShell.getContext().getContentResolver();
-          cursor = cr.query(kSmsContentUri, kRequiredMessageRows, restrictionText, null,
+          cursor = cr.query(kSmsContentUri, kRequiredMessageRows, restrictionText.toString(), null,
                             mReverse ? "date DESC" : "date ASC");
 
           if (cursor.getCount() == 0) {
