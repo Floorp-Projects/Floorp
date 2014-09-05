@@ -227,15 +227,10 @@ static const DOMIfaceAndProtoJSClass WindowNamedPropertiesClass = {
 };
 
 // static
-void
-WindowNamedPropertiesHandler::Install(JSContext* aCx,
-                                      JS::Handle<JSObject*> aProto)
+JSObject*
+WindowNamedPropertiesHandler::Create(JSContext* aCx,
+                                     JS::Handle<JSObject*> aProto)
 {
-  JS::Rooted<JSObject*> protoProto(aCx);
-  if (!::JS_GetPrototype(aCx, aProto, &protoProto)) {
-    return;
-  }
-
   // Note: since the scope polluter proxy lives on the window's prototype
   // chain, it needs a singleton type to avoid polluting type information
   // for properties on the window.
@@ -243,17 +238,10 @@ WindowNamedPropertiesHandler::Install(JSContext* aCx,
   js::ProxyOptions options;
   options.setSingleton(true);
   options.setClass(&WindowNamedPropertiesClass.mBase);
-  gsp = js::NewProxyObject(aCx, WindowNamedPropertiesHandler::getInstance(),
-                           JS::NullHandleValue, protoProto,
-                           js::GetGlobalForObjectCrossCompartment(aProto),
-                           options);
-  if (!gsp) {
-    return;
-  }
-
-  // And then set the prototype of the interface prototype object to be the
-  // global scope polluter.
-  ::JS_SplicePrototype(aCx, aProto, gsp);
+  return js::NewProxyObject(aCx, WindowNamedPropertiesHandler::getInstance(),
+                            JS::NullHandleValue, aProto,
+                            js::GetGlobalForObjectCrossCompartment(aProto),
+                            options);
 }
 
 } // namespace dom
