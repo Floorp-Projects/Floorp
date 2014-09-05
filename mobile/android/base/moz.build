@@ -691,7 +691,12 @@ main.recursive_make_targets += ['generated/' + f for f in gbjar.generated_source
 
 main.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
 main.assets = TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/assets'
-main.libs = TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/lib'
+main.libs = [
+    (TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/lib/' + CONFIG['ANDROID_CPU_ARCH'] + '/libmozglue.so',
+     'libs/' + CONFIG['ANDROID_CPU_ARCH'] + '/libmozglue.so'),
+    (TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/lib/' + CONFIG['ANDROID_CPU_ARCH'] + '/libplugin-container.so',
+     'libs/' + CONFIG['ANDROID_CPU_ARCH'] + '/libplugin-container.so'),
+]
 main.res = None
 
 cpe = main.add_classpathentry('src', SRCDIR,
