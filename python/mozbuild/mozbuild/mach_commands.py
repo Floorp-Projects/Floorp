@@ -457,9 +457,9 @@ class Build(MachCommandBase):
         long_build = monitor.elapsed > 600
 
         if long_build:
-            print('We know it took a while, but your build finally finished successfully!')
+            output.on_line('We know it took a while, but your build finally finished successfully!')
         else:
-            print('Your build was successful!')
+            output.on_line('Your build was successful!')
 
         if monitor.have_resource_usage:
             excessive, swap_in, swap_out = monitor.have_excessive_swapping()
