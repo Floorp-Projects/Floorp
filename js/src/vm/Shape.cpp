@@ -1438,6 +1438,9 @@ Shape::setObjectFlag(ExclusiveContext *cx, BaseShape::Flag flag, TaggedProto pro
     return replaceLastProperty(cx, base, proto, lastRoot);
 }
 
+template<> const jschar JS::ubi::TracerConcrete<Shape>::concreteTypeName[] =
+    MOZ_UTF16("js::Shape");
+
 /* static */ inline HashNumber
 StackBaseShape::hash(const StackBaseShape *base)
 {
@@ -1568,6 +1571,9 @@ BaseShape::finalize(FreeOp *fop)
         table_ = nullptr;
     }
 }
+
+template<> const jschar JS::ubi::TracerConcrete<BaseShape>::concreteTypeName[] =
+    MOZ_UTF16("js::BaseShape");
 
 inline
 InitialShapeEntry::InitialShapeEntry() : shape(nullptr), proto(nullptr)
