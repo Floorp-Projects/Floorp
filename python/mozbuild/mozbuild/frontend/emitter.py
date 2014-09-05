@@ -204,28 +204,19 @@ class TreeMetadataEmitter(LoggingMixin):
                     '\n    '.join(shared_libs), lib.basename),
                     contexts[lib.objdir])
 
-        def recurse_libs(lib):
-            for obj in lib.linked_libraries:
-                if not isinstance(obj, StaticLibrary) or not obj.link_into:
-                    continue
-                yield obj.objdir
-                for q in recurse_libs(obj):
-                    yield q
+        # Propagate LIBRARY_DEFINES to all child libraries recursively.
+        def propagate_defines(outerlib, defines):
+            outerlib.defines.update(defines)
+            for lib in outerlib.linked_libraries:
+                # Propagate defines only along FINAL_LIBRARY paths, not USE_LIBS
+                # paths.
+                if (isinstance(lib, StaticLibrary) and
+                        lib.link_into == outerlib.basename):
+                    propagate_defines(lib, defines)
 
-        sent_passthru = set()
         for lib in (l for libs in self._libs.values() for l in libs):
-            # For all root libraries (i.e. libraries that don't have a
-            # FINAL_LIBRARY), record, for each static library it links
-            # (recursively), that its FINAL_LIBRARY is that root library.
             if isinstance(lib, Library):
-                if isinstance(lib, SharedLibrary) or not lib.link_into:
-                    for p in recurse_libs(lib):
-                        if p in sent_passthru:
-                            continue
-                        sent_passthru.add(p)
-                        passthru = VariablePassthru(contexts[p])
-                        passthru.variables['FINAL_LIBRARY'] = lib.basename
-                        yield passthru
+                propagate_defines(lib, lib.defines)
             yield lib
 
         for obj in self._binaries.values():
@@ -603,6 +594,8 @@ class TreeMetadataEmitter(LoggingMixin):
 
         soname = context.get('SONAME')
 
+        lib_defines = context.get('LIBRARY_DEFINES')
+
         shared_args = {}
         static_args = {}
 
@@ -710,6 +703,12 @@ class TreeMetadataEmitter(LoggingMixin):
                 lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
                 self._linkage.append((context, lib, 'USE_LIBS'))
+
+            if lib_defines:
+                if not libname:
+                    raise SandboxValidationError('LIBRARY_DEFINES needs a '
+                        'LIBRARY_NAME to take effect', context)
+                lib.defines.update(lib_defines)
 
         # While there are multiple test manifests, the behavior is very similar
         # across them. We enforce this by having common handling of all
