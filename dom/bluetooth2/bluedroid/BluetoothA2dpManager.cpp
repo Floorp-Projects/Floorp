@@ -111,35 +111,35 @@ private:
 
 /*
  * This function maps attribute id and returns corresponding values
- * Attribute id refers to btrc_media_attr_t in bt_rc.h
  */
 static void
-ConvertAttributeString(int aAttrId, nsAString& aAttrStr)
+ConvertAttributeString(BluetoothAvrcpMediaAttribute aAttrId,
+                       nsAString& aAttrStr)
 {
   BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
   NS_ENSURE_TRUE_VOID(a2dp);
 
   switch (aAttrId) {
-    case BTRC_MEDIA_ATTR_TITLE:
+    case AVRCP_MEDIA_ATTRIBUTE_TITLE:
       a2dp->GetTitle(aAttrStr);
       break;
-    case BTRC_MEDIA_ATTR_ARTIST:
+    case AVRCP_MEDIA_ATTRIBUTE_ARTIST:
       a2dp->GetArtist(aAttrStr);
       break;
-    case BTRC_MEDIA_ATTR_ALBUM:
+    case AVRCP_MEDIA_ATTRIBUTE_ALBUM:
       a2dp->GetAlbum(aAttrStr);
       break;
-    case BTRC_MEDIA_ATTR_TRACK_NUM:
+    case AVRCP_MEDIA_ATTRIBUTE_TRACK_NUM:
       aAttrStr.AppendInt(a2dp->GetMediaNumber());
       break;
-    case BTRC_MEDIA_ATTR_NUM_TRACKS:
+    case AVRCP_MEDIA_ATTRIBUTE_NUM_TRACKS:
       aAttrStr.AppendInt(a2dp->GetTotalMediaNumber());
       break;
-    case BTRC_MEDIA_ATTR_GENRE:
+    case AVRCP_MEDIA_ATTRIBUTE_GENRE:
       // TODO: we currently don't support genre from music player
       aAttrStr.Truncate();
       break;
-    case BTRC_MEDIA_ATTR_PLAYING_TIME:
+    case AVRCP_MEDIA_ATTRIBUTE_PLAYING_TIME:
       aAttrStr.AppendInt(a2dp->GetDuration());
       break;
   }
@@ -178,7 +178,9 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     for (uint8_t i = 0; i < mNumAttr; ++i) {
-      ConvertAttributeString(mAttrs[i].mId, mAttrs[i].mValue);
+      ConvertAttributeString(
+        static_cast<BluetoothAvrcpMediaAttribute>(mAttrs[i].mId),
+        mAttrs[i].mValue);
     }
 
     NS_ENSURE_TRUE(sBtAvrcpInterface, NS_OK);
@@ -614,8 +616,8 @@ public:
       return;
     }
 
-    sBtAvrcpInterface->Init(&sBtAvrcpCallbacks,
-                            new InitAvrcpResultHandler(mRes));
+    BluetoothA2dpManager* a2dpManager = BluetoothA2dpManager::Get();
+    sBtAvrcpInterface->Init(a2dpManager, new InitAvrcpResultHandler(mRes));
 #else
     /* ...or signal success otherwise. */
     if (mRes) {
@@ -656,7 +658,8 @@ BluetoothA2dpManager::InitA2dpInterface(BluetoothProfileResultHandler* aRes)
     return;
   }
 
-  sBtA2dpInterface->Init(&sBtA2dpCallbacks, new InitA2dpResultHandler(aRes));
+  BluetoothA2dpManager* a2dpManager = BluetoothA2dpManager::Get();
+  sBtA2dpInterface->Init(a2dpManager, new InitA2dpResultHandler(aRes));
 }
 
 BluetoothA2dpManager::~BluetoothA2dpManager()
