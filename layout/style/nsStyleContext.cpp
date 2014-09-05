@@ -637,7 +637,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
     }
   }
 
-  return hint;
+  return NS_SubtractHint(hint, nsChangeHint_NeutralChange);
 }
 
 void
