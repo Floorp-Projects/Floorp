@@ -1304,7 +1304,7 @@ MobileConnectionGonkService.prototype = {
   notifyUssdReceived: function(aClientId, aMessage, aSessionEnded) {
     if (DEBUG) {
       debug("notifyUssdReceived for " + aClientId + ": " +
-            JSON.stringify(ussd));
+            aMessage + " (sessionEnded : " + aSessionEnded + ")");
     }
 
     let provider = this._providers[aClientId];
