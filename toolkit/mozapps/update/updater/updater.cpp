@@ -2394,8 +2394,9 @@ int NS_main(int argc, NS_tchar **argv)
   bool useService = false;
   bool testOnlyFallbackKeyExists = false;
   bool noServiceFallback = getenv("MOZ_NO_SERVICE_FALLBACK") != nullptr;
+  bool emulateElevation = getenv("MOZ_EMULATE_ELEVATION_PATH") != nullptr;
   putenv(const_cast<char*>("MOZ_NO_SERVICE_FALLBACK="));
-
+  putenv(const_cast<char*>("MOZ_EMULATE_ELEVATION_PATH="));
   // We never want the service to be used unless we build with
   // the maintenance service.
 #ifdef MOZ_MAINTENANCE_SERVICE
@@ -2483,12 +2484,6 @@ int NS_main(int argc, NS_tchar **argv)
   if (!WriteStatusFile("applying")) {
     LOG(("failed setting status to 'applying'"));
     return 1;
-  }
-
-  if (sStagedUpdate) {
-    LOG(("Performing a staged update"));
-  } else if (sReplaceRequest) {
-    LOG(("Performing a replace request"));
   }
 
 #ifdef MOZ_WIDGET_GONK
@@ -2619,13 +2614,15 @@ int NS_main(int argc, NS_tchar **argv)
       return 1;
     }
 
-    updateLockFileHandle = CreateFileW(updateLockFilePath,
-                                       GENERIC_READ | GENERIC_WRITE,
-                                       0,
-                                       nullptr,
-                                       OPEN_ALWAYS,
-                                       FILE_FLAG_DELETE_ON_CLOSE,
-                                       nullptr);
+    if (!emulateElevation) {
+      updateLockFileHandle = CreateFileW(updateLockFilePath,
+                                        GENERIC_READ | GENERIC_WRITE,
+                                        0,
+                                        nullptr,
+                                        OPEN_ALWAYS,
+                                        FILE_FLAG_DELETE_ON_CLOSE,
+                                        nullptr);
+    }
 
     NS_tsnprintf(elevatedLockFilePath,
                  sizeof(elevatedLockFilePath)/sizeof(elevatedLockFilePath[0]),
@@ -2776,7 +2773,8 @@ int NS_main(int argc, NS_tchar **argv)
       // If the service can't be used when staging and update, make sure that
       // the UAC prompt is not shown! In this case, just set the status to
       // pending and the update will be applied during the next startup.
-      if (!useService && sStagedUpdate) {
+      // When emulateElevation is true fall through to the elevation code path.
+      if (!useService && sStagedUpdate && !emulateElevation) {
         if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
           CloseHandle(updateLockFileHandle);
         }
@@ -2801,6 +2799,8 @@ int NS_main(int argc, NS_tchar **argv)
           }
         }
       }
+
+      DWORD returnCode = 0;
 
       // If we didn't want to use the service at all, or if an update was
       // already happening, or launching the service command failed, then
@@ -2905,7 +2905,7 @@ int NS_main(int argc, NS_tchar **argv)
           sinfo.hwnd         = nullptr;
           sinfo.lpFile       = secureUpdaterPath;
           sinfo.lpParameters = cmdLine;
-          sinfo.lpVerb       = L"runas";
+          sinfo.lpVerb       = emulateElevation ? L"open" : L"runas";
           sinfo.nShow        = SW_SHOWNORMAL;
 
           bool result = ShellExecuteEx(&sinfo);
@@ -2913,6 +2913,8 @@ int NS_main(int argc, NS_tchar **argv)
 
           if (result) {
             WaitForSingleObject(sinfo.hProcess, INFINITE);
+            // Bubble the elevated updater return code to this updater
+            GetExitCodeProcess(sinfo.hProcess, &returnCode);
             CloseHandle(sinfo.hProcess);
           } else {
             WriteStatusFile(ELEVATION_CANCELED);
@@ -2951,7 +2953,7 @@ int NS_main(int argc, NS_tchar **argv)
         // We didn't use the service and we did run the elevated updater.exe.
         // The elevated updater.exe is responsible for writing out the
         // update.status file.
-        return 0;
+        return returnCode;
       } else if(useService) {
         // The service command was launched.  The service is responsible for 
         // writing out the update.status file.
@@ -2972,6 +2974,13 @@ int NS_main(int argc, NS_tchar **argv)
     }
   }
 #endif
+
+  if (sStagedUpdate) {
+    LOG(("Performing a staged update"));
+  }
+  else if (sReplaceRequest) {
+    LOG(("Performing a replace request"));
+  }
 
 #if defined(MOZ_WIDGET_GONK)
   // In gonk, the master b2g process sets its umask to 0027 because
@@ -3277,7 +3286,7 @@ int NS_main(int argc, NS_tchar **argv)
         }
       }
     }
-    EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 0);
+    EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, gSucceeded ? 0 : 1);
 #endif /* XP_WIN */
 #ifdef XP_MACOSX
     if (gSucceeded) {
