@@ -11120,10 +11120,9 @@ class CGDictionary(CGThing):
                  isEnforceRange=member.enforceRange,
                  isClamp=member.clamp,
                  isMember="Dictionary",
-                 isOptional=(not member.defaultValue),
+                 isOptional=member.canHaveMissingValue(),
                  defaultValue=member.defaultValue,
-                 sourceDescription=("'%s' member of %s" %
-                                    (member.identifier.name, dictionary.identifier.name))))
+                 sourceDescription=self.getMemberSourceDescription(member)))
             for member in dictionary.members]
 
         # If we have a union member containing something in the same
@@ -11323,7 +11322,7 @@ class CGDictionary(CGThing):
                 self.makeClassName(self.dictionary.parent)))
         for m, _ in self.memberInfo:
             memberName = self.makeMemberName(m.identifier.name)
-            if not m.defaultValue:
+            if m.canHaveMissingValue():
                 memberAssign = CGGeneric(fill(
                     """
                     if (aOther.${name}.WasPassed()) {
@@ -11477,6 +11476,19 @@ class CGDictionary(CGThing):
                       "}\n")
         if member.defaultValue:
             conversion += "${convert}"
+        elif not conversionInfo.dealWithOptional:
+            # We're required, but have no default value.  Make sure
+            # that we throw if we have no value provided.
+            conversion += dedent(
+                """
+                // Skip the undefined check if we have no cx.  In that
+                // situation the caller is default-constructing us and we'll
+                // just assume they know what they're doing.
+                if (cx && (isNull || temp->isUndefined())) {
+                  return ThrowErrorMessage(cx, MSG_MISSING_REQUIRED_DICTIONARY_MEMBER,
+                                           "%s");
+                }
+                ${convert}""" % self.getMemberSourceDescription(member))
         else:
             conversion += (
                 "if (!isNull && !temp->isUndefined()) {\n"
@@ -11492,7 +11504,7 @@ class CGDictionary(CGThing):
         member = memberInfo[0]
         declType = memberInfo[1].declType
         memberLoc = self.makeMemberName(member.identifier.name)
-        if member.defaultValue:
+        if not member.canHaveMissingValue():
             memberData = memberLoc
         else:
             # The data is inside the Optional<>
@@ -11548,7 +11560,7 @@ class CGDictionary(CGThing):
             pre=("do {\n"
                  "  // block for our 'break' successCode and scope for 'temp' and 'currentValue'\n"),
             post="} while(0);\n")
-        if not member.defaultValue:
+        if member.canHaveMissingValue():
             # Only do the conversion if we have a value
             conversion = CGIfWrapper(conversion, "%s.WasPassed()" % memberLoc)
         return conversion
@@ -11557,7 +11569,7 @@ class CGDictionary(CGThing):
         type = member.type
         assert typeNeedsRooting(type)
         memberLoc = self.makeMemberName(member.identifier.name)
-        if member.defaultValue:
+        if not member.canHaveMissingValue():
             memberData = memberLoc
         else:
             # The data is inside the Optional<>
@@ -11598,7 +11610,7 @@ class CGDictionary(CGThing):
         else:
             assert False  # unknown type
 
-        if not member.defaultValue:
+        if member.canHaveMissingValue():
             trace = CGIfWrapper(trace, "%s.WasPassed()" % memberLoc)
 
         return trace.define()
@@ -11610,8 +11622,8 @@ class CGDictionary(CGThing):
         value, so they're safe to trace at all times.
         """
         member, _ = memberInfo
-        if not member.defaultValue:
-            # No default value means no need to set it up front, since it's
+        if member.canHaveMissingValue():
+            # Allowed missing value means no need to set it up front, since it's
             # inside an Optional and won't get traced until it's actually set
             # up.
             return None
@@ -11621,6 +11633,10 @@ class CGDictionary(CGThing):
         if type.isObject():
             return "nullptr"
         return None
+
+    def getMemberSourceDescription(self, member):
+        return ("'%s' member of %s" %
+                (member.identifier.name, self.dictionary.identifier.name))
 
     @staticmethod
     def makeIdName(name):
