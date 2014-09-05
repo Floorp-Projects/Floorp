@@ -691,7 +691,7 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
   GeneratePath(gfx, ToMatrix(aTransform));
 
   gfxTextContextPaint *contextPaint =
-    (gfxTextContextPaint*)aContext->GetUserData(&gfxTextContextPaint::sUserDataKey);
+    (gfxTextContextPaint*)aContext->GetDrawTarget()->GetUserData(&gfxTextContextPaint::sUserDataKey);
 
   if ((aRenderComponents & eRenderFill) &&
       nsSVGUtils::SetupCairoFillPaint(this, gfx, contextPaint)) {
@@ -733,7 +733,7 @@ nsSVGPathGeometryFrame::PaintMarkers(nsRenderingContext* aContext,
                                      const gfxMatrix& aTransform)
 {
   gfxTextContextPaint *contextPaint =
-    (gfxTextContextPaint*)aContext->GetUserData(&gfxTextContextPaint::sUserDataKey);
+    (gfxTextContextPaint*)aContext->GetDrawTarget()->GetUserData(&gfxTextContextPaint::sUserDataKey);
 
   if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
     MarkerProperties properties = GetMarkerProperties(this);

@@ -91,17 +91,19 @@ SVGAutoRenderState::SVGAutoRenderState(nsRenderingContext *aContext,
   , mPaintingToWindow(false)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  mOriginalRenderState = aContext->RemoveUserData(&sSVGAutoRenderStateKey);
+  mOriginalRenderState =
+    aContext->GetDrawTarget()->RemoveUserData(&sSVGAutoRenderStateKey);
   // We always remove ourselves from aContext before it dies, so
   // passing nullptr as the destroy function is okay.
-  aContext->AddUserData(&sSVGAutoRenderStateKey, this, nullptr);
+  aContext->GetDrawTarget()->AddUserData(&sSVGAutoRenderStateKey, this, nullptr);
 }
 
 SVGAutoRenderState::~SVGAutoRenderState()
 {
-  mContext->RemoveUserData(&sSVGAutoRenderStateKey);
+  mContext->GetDrawTarget()->RemoveUserData(&sSVGAutoRenderStateKey);
   if (mOriginalRenderState) {
-    mContext->AddUserData(&sSVGAutoRenderStateKey, mOriginalRenderState, nullptr);
+    mContext->GetDrawTarget()->AddUserData(&sSVGAutoRenderStateKey,
+                                           mOriginalRenderState, nullptr);
   }
 }
 
@@ -114,7 +116,7 @@ SVGAutoRenderState::SetPaintingToWindow(bool aPaintingToWindow)
 /* static */ SVGAutoRenderState::RenderMode
 SVGAutoRenderState::GetRenderMode(nsRenderingContext *aContext)
 {
-  void *state = aContext->GetUserData(&sSVGAutoRenderStateKey);
+  void *state = aContext->GetDrawTarget()->GetUserData(&sSVGAutoRenderStateKey);
   if (state) {
     return static_cast<SVGAutoRenderState*>(state)->mMode;
   }
@@ -124,7 +126,7 @@ SVGAutoRenderState::GetRenderMode(nsRenderingContext *aContext)
 /* static */ bool
 SVGAutoRenderState::IsPaintingToWindow(nsRenderingContext *aContext)
 {
-  void *state = aContext->GetUserData(&sSVGAutoRenderStateKey);
+  void *state = aContext->GetDrawTarget()->GetUserData(&sSVGAutoRenderStateKey);
   if (state) {
     return static_cast<SVGAutoRenderState*>(state)->mPaintingToWindow;
   }
@@ -1596,10 +1598,10 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
   if (!svgFrame) {
     return false;
   }
+  aContext->GetDrawTarget()->AddUserData(&gfxTextContextPaint::sUserDataKey,
+                                         aContextPaint, nullptr);
   nsRefPtr<nsRenderingContext> context(new nsRenderingContext());
   context->Init(frame->PresContext()->DeviceContext(), aContext);
-  context->AddUserData(&gfxTextContextPaint::sUserDataKey, aContextPaint,
-                       nullptr);
   svgFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
   gfxMatrix m;
   if (frame->GetContent()->IsSVG()) {
