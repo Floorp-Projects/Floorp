@@ -42,6 +42,8 @@
 #include "mozilla/layers/APZCTreeManager.h"  // for ScrollableLayerGuid
 #include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
 #include "mozilla/layers/Axis.h"        // for AxisX, AxisY, Axis, etc
+#include "mozilla/layers/AxisPhysicsModel.h" // for AxisPhysicsModel
+#include "mozilla/layers/AxisPhysicsMSDModel.h" // for AxisPhysicsMSDModel
 #include "mozilla/layers/LayerTransactionParent.h" // for LayerTransactionParent
 #include "mozilla/layers/PCompositorParent.h" // for PCompositorParent
 #include "mozilla/layers/TaskThrottler.h"  // for TaskThrottler
@@ -269,6 +271,11 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * "apz.pan_repaint_interval"
  * Maximum amount of time while panning before sending a viewport change. This
  * will asynchronously repaint the page. It is also forced when panning stops.
+ *
+ * "apz.smooth_scroll_repaint_interval"
+ * Maximum amount of time doing a smooth scroll before sending a viewport
+ * change. This will asynchronously repaint the page.
+ * Units: milliseconds
  *
  * "apz.test.logging_enabled"
  * Enable logging of APZ test data (see bug 961289).
@@ -555,6 +562,8 @@ public:
                                                 &AsyncPanZoomController::HandleFlingOverscroll,
                                                 velocity,
                                                 mOverscrollHandoffChain));
+
+        return false;
       }
     }
 
@@ -661,6 +670,119 @@ public:
   }
 private:
   AsyncPanZoomController& mApzc;
+};
+
+class SmoothScrollAnimation : public AsyncPanZoomAnimation {
+public:
+  SmoothScrollAnimation(AsyncPanZoomController& aApzc,
+                        const nsPoint &aInitialPosition,
+                        const nsPoint &aInitialVelocity,
+                        const nsPoint& aDestination, double aSpringConstant,
+                        double aDampingRatio)
+   : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(
+                           gfxPrefs::APZSmoothScrollRepaintInterval()))
+   , mApzc(aApzc)
+   , mXAxisModel(aInitialPosition.x, aDestination.x, aInitialVelocity.x,
+                 aSpringConstant, aDampingRatio)
+   , mYAxisModel(aInitialPosition.y, aDestination.y, aInitialVelocity.y,
+                 aSpringConstant, aDampingRatio)
+  {
+  }
+
+  /**
+   * Advances a smooth scroll simulation based on the time passed in |aDelta|.
+   * This should be called whenever sampling the content transform for this
+   * frame. Returns true if the smooth scroll should be advanced by one frame,
+   * or false if the smooth scroll has ended.
+   */
+  bool Sample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) {
+
+    if (aDelta.ToMilliseconds() <= 0) {
+      return true;
+    }
+
+    if (mXAxisModel.IsFinished() && mYAxisModel.IsFinished()) {
+      return false;
+    }
+
+    mXAxisModel.Simulate(aDelta);
+    mYAxisModel.Simulate(aDelta);
+
+    CSSPoint position = CSSPoint::FromAppUnits(nsPoint(mXAxisModel.GetPosition(),
+                                                       mYAxisModel.GetPosition()));
+    CSSPoint css_velocity = CSSPoint::FromAppUnits(nsPoint(mXAxisModel.GetVelocity(),
+                                                           mYAxisModel.GetVelocity()));
+
+    // Convert from points/second to points/ms
+    ScreenPoint velocity = ScreenPoint(css_velocity.x, css_velocity.y) / 1000.0f;
+
+    // Keep the velocity updated for the Axis class so that any animations
+    // chained off of the smooth scroll will inherit it.
+    if (mXAxisModel.IsFinished()) {
+      mApzc.mX.SetVelocity(0);
+    } else {
+      mApzc.mX.SetVelocity(velocity.x);
+    }
+    if (mYAxisModel.IsFinished()) {
+      mApzc.mY.SetVelocity(0);
+    } else {
+      mApzc.mY.SetVelocity(velocity.y);
+    }
+
+    // If we overscroll, hand off to a fling animation that will complete the
+    // spring back.
+    float displacement_x = position.x - mApzc.mX.GetOrigin();
+    float displacement_y = position.y - mApzc.mY.GetOrigin();
+
+    CSSPoint overscroll;
+    CSSPoint adjustedOffset;
+    mApzc.mX.AdjustDisplacement(displacement_x, adjustedOffset.x, overscroll.x);
+    mApzc.mY.AdjustDisplacement(displacement_y, adjustedOffset.y, overscroll.y);
+
+    aFrameMetrics.ScrollBy(adjustedOffset);
+
+    // The smooth scroll may have caused us to reach the end of our scroll range.
+    // This can happen if either the layout.css.scroll-behavior.damping-ratio
+    // preference is set to less than 1 (underdamped) or if a smooth scroll
+    // inherits velocity from a fling gesture.
+    if (!IsZero(overscroll)) {
+
+      // Hand off a fling with the remaining momentum to the next APZC in the
+      // overscroll handoff chain.
+
+      // We may have reached the end of the scroll range along one axis but
+      // not the other. In such a case we only want to hand off the relevant
+      // component of the fling.
+      if (FuzzyEqualsAdditive(overscroll.x, 0.0f, COORDINATE_EPSILON)) {
+        velocity.x = 0;
+      } else if (FuzzyEqualsAdditive(overscroll.y, 0.0f, COORDINATE_EPSILON)) {
+        velocity.y = 0;
+      }
+
+      // To hand off the fling, we attempt to find a target APZC and start a new
+      // fling with the same velocity on that APZC. For simplicity, the actual
+      // overscroll of the current sample is discarded rather than being handed
+      // off. The compositor should sample animations sufficiently frequently
+      // that this is not noticeable. The target APZC is chosen by seeing if
+      // there is an APZC further in the handoff chain which is pannable; if
+      // there isn't, we take the new fling ourselves, entering an overscrolled
+      // state.
+      // Note: APZC is holding mMonitor, so directly calling
+      // HandleSmoothScrollOverscroll() (which acquires the tree lock) would violate
+      // the lock ordering. Instead we schedule HandleSmoothScrollOverscroll() to be
+      // called after mMonitor is released.
+      mDeferredTasks.append(NewRunnableMethod(&mApzc,
+                                              &AsyncPanZoomController::HandleSmoothScrollOverscroll,
+                                              velocity));
+
+      return false;
+    }
+
+    return true;
+  }
+private:
+  AsyncPanZoomController& mApzc;
+  AxisPhysicsMSDModel mXAxisModel, mYAxisModel;
 };
 
 void
@@ -1019,6 +1141,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
   switch (mState) {
     case FLING:
     case ANIMATING_ZOOM:
+    case SMOOTH_SCROLL:
       CurrentTouchBlock()->GetOverscrollHandoffChain()->CancelAnimations();
       // Fall through.
     case NOTHING: {
@@ -1053,6 +1176,7 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
   APZC_LOG("%p got a touch-move in state %d\n", this, mState);
   switch (mState) {
     case FLING:
+    case SMOOTH_SCROLL:
     case NOTHING:
     case ANIMATING_ZOOM:
       // May happen if the user double-taps and drags without lifting after the
@@ -1127,6 +1251,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     NS_WARNING("Received impossible touch end in OnTouchEnd.");
     // Fall through.
   case ANIMATING_ZOOM:
+  case SMOOTH_SCROLL:
   case NOTHING:
     // May happen if the user double-taps and drags without lifting after the
     // second tap. Ignore if this happens.
@@ -1375,6 +1500,11 @@ nsEventStatus AsyncPanZoomController::OnPanCancelled(const PanGestureInput& aEve
 nsEventStatus AsyncPanZoomController::OnPanBegin(const PanGestureInput& aEvent) {
   APZC_LOG("%p got a pan-begin in state %d\n", this, mState);
 
+  if (mState == SMOOTH_SCROLL) {
+    // SMOOTH_SCROLL scrolls are cancelled by pan gestures.
+    CancelAnimation();
+  }
+
   mPanGestureState = MakeUnique<InputBlockState>(BuildOverscrollHandoffChain());
 
   mX.StartTouch(aEvent.mPanStartPoint.x, aEvent.mTime);
@@ -1396,6 +1526,20 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(const PanGestureInput& aEvent) 
 
 nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool aFingersOnTouchpad) {
   APZC_LOG("%p got a pan-pan in state %d\n", this, mState);
+
+  if (mState == SMOOTH_SCROLL) {
+    if (aEvent.mType == PanGestureInput::PANGESTURE_MOMENTUMPAN) {
+      // When a SMOOTH_SCROLL scroll is being processed on a frame, mouse
+      // wheel and trackpad momentum scroll position updates will not cancel the
+      // SMOOTH_SCROLL scroll animations, enabling scripts that depend on
+      // them to be responsive without forcing the user to wait for the momentum
+      // scrolling to completely stop.
+      return nsEventStatus_eConsumeNoDefault;
+    } else {
+      // SMOOTH_SCROLL scrolls are cancelled by pan gestures.
+      CancelAnimation();
+    }
+  }
 
   // We need to update the axis velocity in order to get a useful display port
   // size and position. We need to do so even if this is a momentum pan (i.e.
@@ -1429,6 +1573,11 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
 
 nsEventStatus AsyncPanZoomController::OnPanMomentumStart(const PanGestureInput& aEvent) {
   APZC_LOG("%p got a pan-momentumstart in state %d\n", this, mState);
+
+  if (mState == SMOOTH_SCROLL) {
+    // SMOOTH_SCROLL scrolls are cancelled by pan gestures.
+    CancelAnimation();
+  }
 
   mPanGestureState = MakeUnique<InputBlockState>(BuildOverscrollHandoffChain());
 
@@ -1844,6 +1993,28 @@ void AsyncPanZoomController::HandleFlingOverscroll(const ScreenPoint& aVelocity,
                   true /* allow overscroll */);
     }
   }
+}
+
+void AsyncPanZoomController::HandleSmoothScrollOverscroll(const ScreenPoint& aVelocity) {
+  // We must call BuildOverscrollHandoffChain from this deferred callback
+  // function in order to avoid a deadlock when acquiring the tree lock.
+  HandleFlingOverscroll(aVelocity, BuildOverscrollHandoffChain());
+}
+
+void AsyncPanZoomController::StartSmoothScroll() {
+  SetState(SMOOTH_SCROLL);
+  nsPoint initialPosition = CSSPoint::ToAppUnits(mFrameMetrics.GetScrollOffset());
+  // Cast velocity from ScreenPoints/ms to CSSPoints/ms then convert to
+  // appunits/second
+  nsPoint initialVelocity = CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(),
+                                                          mY.GetVelocity())) * 1000.0f;
+  nsPoint destination = CSSPoint::ToAppUnits(mFrameMetrics.GetSmoothScrollOffset());
+
+  StartAnimation(new SmoothScrollAnimation(*this,
+                                           initialPosition, initialVelocity,
+                                           destination,
+                                           gfxPrefs::ScrollBehaviorSpringConstant(),
+                                           gfxPrefs::ScrollBehaviorDampingRatio()));
 }
 
 void AsyncPanZoomController::StartSnapBack() {
@@ -2434,6 +2605,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       needContentRepaint = true;
     }
   } else {
+    bool smoothScrollRequested = aLayerMetrics.GetDoSmoothScroll()
+         && (aLayerMetrics.GetScrollGeneration() != mFrameMetrics.GetScrollGeneration());
+
     // If we're not taking the aLayerMetrics wholesale we still need to pull
     // in some things into our local mFrameMetrics because these things are
     // determined by Gecko and our copy in mFrameMetrics may be stale.
@@ -2477,6 +2651,23 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       // correct this we need to update mLastDispatchedPaintMetrics to be the
       // last thing we know was painted by Gecko.
       mLastDispatchedPaintMetrics = aLayerMetrics;
+    }
+
+    if (smoothScrollRequested) {
+      // A smooth scroll has been requested for animation on the compositor
+      // thread.  This flag will be reset by the main thread when it receives
+      // the scroll update acknowledgement.
+
+      APZC_LOG("%p smooth scrolling from %s to %s\n", this,
+        Stringify(mFrameMetrics.GetScrollOffset()).c_str(),
+        Stringify(aLayerMetrics.GetSmoothScrollOffset()).c_str());
+
+      mFrameMetrics.CopySmoothScrollInfoFrom(aLayerMetrics);
+      CancelAnimation();
+      mLastDispatchedPaintMetrics = aLayerMetrics;
+      StartSmoothScroll();
+
+      scrollOffsetUpdated = true; // Ensure that AcknowledgeScrollUpdate is called
     }
   }
 

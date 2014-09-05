@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Web Storage</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+ </head>
+ <body>
+    <h1>storage_session_in</h1>
+    <div id="log"></div>
+    <script>
+        test(function() {
+            sessionStorage.clear();
+            assert_false("name" in sessionStorage);
+            sessionStorage["name"] = "user1";
+            assert_true("name" in sessionStorage);
+        });
+        test(function() {
+            sessionStorage.clear();
+            assert_false("name" in sessionStorage);
+            sessionStorage.setItem("name", "user1");
+            assert_true("name" in sessionStorage);
+            assert_equals(sessionStorage.name, "user1");
+            sessionStorage.removeItem("name");
+            assert_false("name" in sessionStorage);
+        });
+    </script>
+ </body>
+</html>

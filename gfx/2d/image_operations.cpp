@@ -160,8 +160,7 @@ class ResizeFilter {
   // for the transform is also specified.
   void ComputeFilters(int src_size,
                       int dest_subset_lo, int dest_subset_size,
-                      float scale, float src_support,
-                      ConvolutionFilter1D* output);
+                      float scale, ConvolutionFilter1D* output);
 
   // Computes the filter value given the coordinate in filter space.
   inline float ComputeFilter(float pos) {
@@ -180,11 +179,6 @@ class ResizeFilter {
   }
 
   ImageOperations::ResizeMethod method_;
-
-  // Size of the filter support on one side only in the destination space.
-  // See GetFilterSupport.
-  float x_filter_support_;
-  float y_filter_support_;
 
   // Subset of scaled destination bitmap to compute.
   SkIRect out_bounds_;
@@ -210,17 +204,10 @@ ResizeFilter::ResizeFilter(ImageOperations::ResizeMethod method,
   float scale_y = static_cast<float>(dest_height) /
                   static_cast<float>(src_full_height);
 
-  x_filter_support_ = GetFilterSupport(scale_x);
-  y_filter_support_ = GetFilterSupport(scale_y);
-
-  // Support of the filter in source space.
-  float src_x_support = x_filter_support_ / scale_x;
-  float src_y_support = y_filter_support_ / scale_y;
-
   ComputeFilters(src_full_width, dest_subset.fLeft, dest_subset.width(),
-                 scale_x, src_x_support, &x_filter_);
+                 scale_x, &x_filter_);
   ComputeFilters(src_full_height, dest_subset.fTop, dest_subset.height(),
-                 scale_y, src_y_support, &y_filter_);
+                 scale_y, &y_filter_);
 }
 
 // TODO(egouriou): Take advantage of periods in the convolution.
@@ -236,8 +223,7 @@ ResizeFilter::ResizeFilter(ImageOperations::ResizeMethod method,
 // loading the factors only once outside the borders.
 void ResizeFilter::ComputeFilters(int src_size,
                                   int dest_subset_lo, int dest_subset_size,
-                                  float scale, float src_support,
-                                  ConvolutionFilter1D* output) {
+                                  float scale, ConvolutionFilter1D* output) {
   int dest_subset_hi = dest_subset_lo + dest_subset_size;  // [lo, hi)
 
   // When we're doing a magnification, the scale will be larger than one. This
@@ -246,6 +232,8 @@ void ResizeFilter::ComputeFilters(int src_size,
   // pixel boundaries. Therefore, we use these clamped values (max of 1) for
   // some computations.
   float clamped_scale = std::min(1.0f, scale);
+
+  float src_support = GetFilterSupport(clamped_scale) / clamped_scale;
 
   // Speed up the divisions below by turning them into multiplies.
   float inv_scale = 1.0f / scale;
@@ -536,8 +524,7 @@ SkBitmap ImageOperations::ResizeBasic(const SkBitmap& source,
   BGRAConvolve2D(source_subset, static_cast<int>(source.rowBytes()),
                  !source.isOpaque(), filter.x_filter(), filter.y_filter(),
                  static_cast<int>(result.rowBytes()),
-                 static_cast<unsigned char*>(result.getPixels()),
-                 /* sse = */ false);
+                 static_cast<unsigned char*>(result.getPixels()));
 
   // Preserve the "opaque" flag for use as an optimization later.
   result.setAlphaType(source.alphaType());

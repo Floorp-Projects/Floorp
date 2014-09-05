@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerLocation.search with empty &lt;query&gt; </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = "./support/WorkerLocation.js";
+    var SearchString = "?";
+    var ExpectedResult = "";
+    var description = "WorkerLocation.search Getter Condition: input is a hierarchical URL, "
+                    + "and contained a &lt;query&gt; component (possibly an empty one).";
+    
+    var t = async_test("Test Description: " + description);
+                  
+    var worker = new Worker(FileName + SearchString);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data.search, ExpectedResult);
+        t.done();
+    });
+</script>
+</body>
+</html>

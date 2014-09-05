@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> Web Workers Basic Tests </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var EVENT = "message";
+    var FileName = './support/WorkerBasic.js';
+    var ExpectedResult = "Pass";
+                  
+    var worker = new Worker(FileName);
+    
+    test(function()
+    {
+        assert_equals(worker.toString(), "[object Worker]") 
+    }, "Test Description: Web Workers Basic Test 1: Worker constructor.");
+
+    var t = async_test("Test Description: Web Workers Basic Test 2: MessageEvent.data.");
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data, ExpectedResult);
+        t.done();
+    });
+
+    worker.postMessage("start");
+
+    var t2 = async_test("Test Description: Web Workers Basic Test 3: MessageEvent.type.");
+                  
+    var worker2 = new Worker(FileName);
+
+    worker2.addEventListener(EVENT, t2.step_func(function(evt)
+    {
+        assert_equals(evt.type, EVENT);
+        t2.done();
+    }), true);
+
+    worker2.postMessage("start");
+</script>
+</body>
+</html>

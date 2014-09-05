@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> AbstractWorker terminate(): clear event queue </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = './support/WorkerTerminate.js';
+    var ExpectedResult = 10001;    
+    var TestResult = 0;
+    var description = "terminate() should  discard any tasks queued in the event loop's task queues, without processing them.";
+    
+    var t = async_test("Test Description: " + description);
+                  
+    var worker = new Worker(FileName);
+                    
+    worker.onmessage = function(evt)
+    {
+        TestResult = evt.data;
+        
+        if (TestResult > 10000)
+        {
+            worker.terminate();
+            setTimeout(t.step_func(VerifyResult), 100);
+        }
+    };
+    
+    worker.postMessage("ping");
+
+    function VerifyResult()
+    {
+        assert_equals(TestResult, ExpectedResult);
+        t.done();
+    }
+</script>
+</body>
+</html>

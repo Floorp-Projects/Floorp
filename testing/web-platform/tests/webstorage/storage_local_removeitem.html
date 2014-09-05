@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Web Storage</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+ </head>
+ <body>
+    <h1>storage_local_removeItem</h1>
+    <div id="log"></div>
+    <script>
+        test(function() {
+            localStorage.clear();
+            localStorage.setItem("name", "user1");
+            assert_equals(localStorage.getItem("name"), "user1");
+
+            localStorage.removeItem("name");
+            localStorage.removeItem("unknown");
+            assert_equals(localStorage.getItem("name"), null, "localStorage.getItem('name')")
+        });
+    </script>
+ </body>
+</html>

@@ -22,16 +22,21 @@ function runTests() {
 
 var path = "/tests/content/base/test/";
 
-var passFiles = [['file_XHR_pass1.xml', 'GET', 200, 'text/xml'],
-                 ['file_XHR_pass2.txt', 'GET', 200, 'text/plain'],
-                 ['file_XHR_pass3.txt', 'GET', 200, 'text/plain'],
-                 ['data:text/xml,%3Cres%3Ehello%3C/res%3E%0A', 'GET', 0, 'text/xml'],
-                 ['data:text/plain,hello%20pass%0A', 'GET', 0, 'text/plain'],
-                 ['data:,foo', 'GET', 0, 'text/plain;charset=US-ASCII', 'foo'],
-                 ['data:text/plain;base64,Zm9v', 'GET', 0, 'text/plain', 'foo'],
-                 ['data:text/plain,foo#bar', 'GET', 0, 'text/plain', 'foo'],
-                 ['data:text/plain,foo%23bar', 'GET', 0, 'text/plain', 'foo#bar'],
+var passFiles = [['file_XHR_pass1.xml', 'GET', 200, 'OK', 'text/xml'],
+                 ['file_XHR_pass2.txt', 'GET', 200, 'OK', 'text/plain'],
+                 ['file_XHR_pass3.txt', 'GET', 200, 'OK', 'text/plain'],
+                 ['data:text/xml,%3Cres%3Ehello%3C/res%3E%0A', 'GET', 200, 'OK', 'text/xml'],
+                 ['data:text/plain,hello%20pass%0A', 'GET', 200, 'OK', 'text/plain'],
+                 ['data:,foo', 'GET', 200, 'OK', 'text/plain;charset=US-ASCII', 'foo'],
+                 ['data:text/plain;base64,Zm9v', 'GET', 200, 'OK', 'text/plain', 'foo'],
+                 ['data:text/plain,foo#bar', 'GET', 200, 'OK', 'text/plain', 'foo'],
+                 ['data:text/plain,foo%23bar', 'GET', 200, 'OK', 'text/plain', 'foo#bar'],
                  ];
+
+var blob = new Blob(["foo"], { type: "text/plain" });
+var blobURL = URL.createObjectURL(blob);
+
+passFiles.push([blobURL, 'GET', 200, 'OK', 'text/plain', 'foo']);
 
 var failFiles = [['//example.com' + path + 'file_XHR_pass1.xml', 'GET'],
                  ['ftp://localhost' + path + 'file_XHR_pass1.xml', 'GET'],
@@ -39,6 +44,11 @@ var failFiles = [['//example.com' + path + 'file_XHR_pass1.xml', 'GET'],
                  ];
 
 for (i = 0; i < passFiles.length; ++i) {
+  // Function to give our hacked is() a scope
+  (function(oldIs) {
+  function is(actual, expected, message) {
+    oldIs(actual, expected, message + " for " + passFiles[i][0]);
+  }
   xhr = new XMLHttpRequest();
   is(xhr.getResponseHeader("Content-Type"), null, "should be null");
   is(xhr.getAllResponseHeaders(), "", "should be empty string");
@@ -46,20 +56,24 @@ for (i = 0; i < passFiles.length; ++i) {
   xhr.open(passFiles[i][1], passFiles[i][0], false); 
   xhr.send(null);
   is(xhr.status, passFiles[i][2], "wrong status");
-  is(xhr.getResponseHeader("Content-Type"), passFiles[i][3], "wrong content type");
+  is(xhr.statusText, passFiles[i][3], "wrong statusText");
+  is(xhr.getResponseHeader("Content-Type"), passFiles[i][4], "wrong content type");
   var headers = xhr.getAllResponseHeaders();
   ok(/(?:^|\n)Content-Type:\s*([^\r\n]*)\r\n/i.test(headers) &&
-     RegExp.$1 === passFiles[i][3], "wrong response headers");
+     RegExp.$1 === passFiles[i][4], "wrong response headers");
   if (xhr.responseXML) {
     is((new XMLSerializer()).serializeToString(xhr.responseXML.documentElement),
-       passFiles[i][4] || "<res>hello</res>", "wrong responseXML");
-    is(xhr.response, passFiles[i][4] || "<res>hello</res>\n", "wrong response");
+       passFiles[i][5] || "<res>hello</res>", "wrong responseXML");
+    is(xhr.response, passFiles[i][5] || "<res>hello</res>\n", "wrong response");
   }
   else {
-    is(xhr.responseText, passFiles[i][4] || "hello pass\n", "wrong responseText");
-    is(xhr.response, passFiles[i][4] || "hello pass\n", "wrong response");
+    is(xhr.responseText, passFiles[i][5] || "hello pass\n", "wrong responseText");
+    is(xhr.response, passFiles[i][5] || "hello pass\n", "wrong response");
   }
+  })(is);
 }
+
+URL.revokeObjectURL(blobURL);
 
 for (i = 0; i < failFiles.length; ++i) {
   xhr = new XMLHttpRequest();

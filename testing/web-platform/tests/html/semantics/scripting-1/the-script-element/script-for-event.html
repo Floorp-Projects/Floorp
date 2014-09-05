@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<title>Scripts with for and event attributes</title>
+<link rel="author" title="Ms2ger" href="mailto:ms2ger@gmail.com">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+var run = [true, true, true, true, true, true, true, true];
+</script>
+<script for="w&#x130;ndow" event="onload">
+run[0] = false;
+</script>
+<script for="window" event="onload x">
+run[1] = false;
+</script>
+<script for="window" event="onload(x">
+run[2] = false;
+</script>
+<script for="window" event="onload(x)">
+run[3] = false;
+</script>
+<script for="window" event="onclick">
+run[4] = false;
+</script>
+<script for="" event="onload">
+run[5] = false;
+</script>
+<script for="window" event="">
+run[6] = false;
+</script>
+<script for="" event="">
+run[7] = false;
+</script>
+<script>
+test(function() {
+  for (var i = 0; i < run.length; ++i) {
+    test(function() {
+      assert_true(run[i]);
+    }, "Script " + i);
+  }
+});
+</script>

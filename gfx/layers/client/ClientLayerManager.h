@@ -20,6 +20,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_ABORT_IF_FALSE
+#include "nsIObserver.h"                // for nsIObserver
 #include "nsISupportsImpl.h"            // for Layer::Release, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "nsTArray.h"                   // for nsTArray
@@ -44,6 +45,12 @@ class ClientLayerManager MOZ_FINAL : public LayerManager
 
 public:
   explicit ClientLayerManager(nsIWidget* aWidget);
+
+  virtual void Destroy()
+  {
+    LayerManager::Destroy();
+    ClearCachedResources();
+  }
 
 protected:
   virtual ~ClientLayerManager();
@@ -122,6 +129,8 @@ public:
   // Drop cached resources and ask our shadow manager to do the same,
   // if we have one.
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
+
+  void HandleMemoryPressure();
 
   void SetRepeatTransaction() { mRepeatTransaction = true; }
   bool GetRepeatTransaction() { return mRepeatTransaction; }
@@ -235,6 +244,29 @@ protected:
   TransactionPhase mPhase;
 
 private:
+  // Listen memory-pressure event for ClientLayerManager
+  class MemoryPressureObserver MOZ_FINAL : public nsIObserver
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+
+    MemoryPressureObserver(ClientLayerManager* aClientLayerManager)
+      : mClientLayerManager(aClientLayerManager)
+    {
+      RegisterMemoryPressureEvent();
+    }
+
+    void Destroy();
+
+  private:
+    virtual ~MemoryPressureObserver() {}
+    void RegisterMemoryPressureEvent();
+    void UnregisterMemoryPressureEvent();
+
+    ClientLayerManager* mClientLayerManager;
+  };
+
   /**
    * Forward transaction results to the parent context.
    */
@@ -304,6 +336,8 @@ private:
 
   // indexed by gfx::SurfaceFormat
   nsTArray<RefPtr<SimpleTextureClientPool> > mSimpleTilePools;
+
+  nsRefPtr<MemoryPressureObserver> mMemoryPressureObserver;
 };
 
 class ClientLayer : public ShadowableLayer

@@ -271,7 +271,9 @@ WebGLContext::WebGLContext()
     mGLMaxVertexAttribs = 0;
     mGLMaxTextureUnits = 0;
     mGLMaxTextureSize = 0;
+    mGLMaxTextureSizeLog2 = 0;
     mGLMaxCubeMapTextureSize = 0;
+    mGLMaxCubeMapTextureSizeLog2 = 0;
     mGLMaxRenderbufferSize = 0;
     mGLMaxTextureImageUnits = 0;
     mGLMaxVertexTextureImageUnits = 0;
@@ -1738,7 +1740,7 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
     return dt->Snapshot();
 }
 
-bool WebGLContext::TexImageFromVideoElement(GLenum target, GLint level,
+bool WebGLContext::TexImageFromVideoElement(GLenum texImageTarget, GLint level,
                               GLenum internalformat, GLenum format, GLenum type,
                               mozilla::dom::Element& elt)
 {
@@ -1778,19 +1780,19 @@ bool WebGLContext::TexImageFromVideoElement(GLenum target, GLint level,
 
     gl->MakeCurrent();
     nsRefPtr<mozilla::layers::Image> srcImage = container->LockCurrentImage();
-    WebGLTexture* tex = activeBoundTextureForTarget(target);
+    WebGLTexture* tex = activeBoundTextureForTexImageTarget(texImageTarget);
 
-    const WebGLTexture::ImageInfo& info = tex->ImageInfoAt(target, 0);
+    const WebGLTexture::ImageInfo& info = tex->ImageInfoAt(texImageTarget, 0);
     bool dimensionsMatch = info.Width() == srcImage->GetSize().width &&
                            info.Height() == srcImage->GetSize().height;
     if (!dimensionsMatch) {
         // we need to allocation
-        gl->fTexImage2D(target, level, internalformat, srcImage->GetSize().width, srcImage->GetSize().height, 0, format, type, nullptr);
+        gl->fTexImage2D(texImageTarget, level, internalformat, srcImage->GetSize().width, srcImage->GetSize().height, 0, format, type, nullptr);
     }
-    bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage.get(), srcImage->GetSize(), tex->GLName(), target, mPixelStoreFlipY);
+    bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage.get(), srcImage->GetSize(), tex->GLName(), texImageTarget, mPixelStoreFlipY);
     if (ok) {
-        tex->SetImageInfo(target, level, srcImage->GetSize().width, srcImage->GetSize().height, format, type, WebGLImageDataStatus::InitializedImageData);
-        tex->Bind(target);
+        tex->SetImageInfo(texImageTarget, level, srcImage->GetSize().width, srcImage->GetSize().height, format, type, WebGLImageDataStatus::InitializedImageData);
+        tex->Bind(TexImageTargetToTexTarget(texImageTarget));
     }
     srcImage = nullptr;
     container->UnlockCurrentImage();

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerLocation URL decomposition IDL attribute: hostname </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = './support/WorkerLocation.js';
+    var ExpectedResult = window.location.hostname;
+    
+    var t = async_test("Test Description: WorkerLocation hostname attribute returns the current host in the underlying URL.");
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data.hostname, ExpectedResult);
+        t.done();
+    });
+</script>
+</body>
+</html>
