@@ -206,6 +206,26 @@ WindowNamedPropertiesHandler::delete_(JSContext* aCx,
   return true;
 }
 
+const NativePropertyHooks sWindowNamedPropertiesNativePropertyHooks[] = { {
+  nullptr,
+  nullptr,
+  { nullptr, nullptr },
+  prototypes::id::_ID_Count,
+  constructors::id::_ID_Count,
+  nullptr
+} };
+
+static const DOMIfaceAndProtoJSClass WindowNamedPropertiesClass = {
+  PROXY_CLASS_DEF("WindowProperties",
+                  DOM_INTERFACE_PROTO_SLOTS_BASE, /* extra slots */
+                  0),
+  eInterfacePrototype,
+  sWindowNamedPropertiesNativePropertyHooks,
+  "[object WindowProperties]",
+  prototypes::id::_ID_Count,
+  0,
+};
+
 // static
 void
 WindowNamedPropertiesHandler::Install(JSContext* aCx,
@@ -222,6 +242,7 @@ WindowNamedPropertiesHandler::Install(JSContext* aCx,
   JS::Rooted<JSObject*> gsp(aCx);
   js::ProxyOptions options;
   options.setSingleton(true);
+  options.setClass(&WindowNamedPropertiesClass.mBase);
   gsp = js::NewProxyObject(aCx, WindowNamedPropertiesHandler::getInstance(),
                            JS::NullHandleValue, protoProto,
                            js::GetGlobalForObjectCrossCompartment(aProto),
