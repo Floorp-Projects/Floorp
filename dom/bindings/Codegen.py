@@ -5287,7 +5287,7 @@ class CGArgumentConverter(CGThing):
             "args.hasDefined(${index})").substitute(replacer)
         self.replacementVariables["haveValue"] = haveValueCheck
         self.descriptorProvider = descriptorProvider
-        if self.argument.optional and not self.argument.defaultValue:
+        if self.argument.canHaveMissingValue():
             self.argcAndIndex = replacer
         else:
             self.argcAndIndex = None
@@ -6130,10 +6130,9 @@ class CGCallGenerator(CGThing):
                     return True
                 if a.type.isString():
                     return True
-                if a.optional and not a.defaultValue:
-                    # If a.defaultValue, then it's not going to use an Optional,
-                    # so doesn't need to be const just due to being optional.
-                    # This also covers variadic arguments.
+                if a.canHaveMissingValue():
+                    # This will need an Optional or it's a variadic;
+                    # in both cases it should be const.
                     return True
                 if a.type.isUnion():
                     return True
@@ -6350,7 +6349,7 @@ def wrapArgIntoCurrentCompartment(arg, value, isMember=True):
     As wrapTypeIntoCurrentCompartment but handles things being optional
     """
     origValue = value
-    isOptional = arg.optional and not arg.defaultValue
+    isOptional = arg.canHaveMissingValue()
     if isOptional:
         value = value + ".Value()"
     wrap = wrapTypeIntoCurrentCompartment(arg.type, value, isMember)
@@ -6857,8 +6856,7 @@ class CGMethodCall(CGThing):
                 # enough that we can examine this argument.  But note that we
                 # still want to claim that optional arguments are optional, in
                 # case undefined was passed in.
-                argIsOptional = (distinguishingArgument(signature).optional and
-                                 not distinguishingArgument(signature).defaultValue)
+                argIsOptional = distinguishingArgument(signature).canHaveMissingValue()
                 testCode = instantiateJSToNativeConversion(
                     getJSToNativeConversionInfo(type, descriptor,
                                                 failureCode=failureCode,
@@ -7143,6 +7141,9 @@ class FakeArgument():
 
     def allowTreatNonCallableAsNull(self):
         return self._allowTreatNonCallableAsNull
+
+    def canHaveMissingValue(self):
+        return False
 
 
 class CGSetterCall(CGPerSignatureCall):
@@ -12526,8 +12527,7 @@ class CGNativeMember(ClassMethod):
         """
         Get the full argument declaration for an argument
         """
-        decl, ref = self.getArgType(arg.type,
-                                    arg.optional and not arg.defaultValue,
+        decl, ref = self.getArgType(arg.type, arg.canHaveMissingValue(),
                                     "Variadic" if arg.variadic else False)
         if ref:
             decl = CGWrapper(decl, pre="const ", post="&")
@@ -13606,7 +13606,7 @@ class CallbackMember(CGNativeMember):
             jsvalIndex = "%d + idx" % i
         else:
             jsvalIndex = "%d" % i
-            if arg.optional and not arg.defaultValue:
+            if arg.canHaveMissingValue():
                 argval += ".Value()"
         if arg.type.isDOMString():
             # XPConnect string-to-JS conversion wants to mutate the string.  So
@@ -13649,7 +13649,7 @@ class CallbackMember(CGNativeMember):
                 """,
                 arg=arg.identifier.name,
                 conversion=conversion)
-        elif arg.optional and not arg.defaultValue:
+        elif arg.canHaveMissingValue():
             conversion = fill(
                 """
                 if (${argName}.WasPassed()) {
@@ -14383,7 +14383,7 @@ class CGEventMethod(CGNativeMember):
 
     def getArg(self, arg):
         decl, ref = self.getArgType(arg.type,
-                                    arg.optional and not arg.defaultValue,
+                                    arg.canHaveMissingValue(),
                                     "Variadic" if arg.variadic else False)
         if ref:
             decl = CGWrapper(decl, pre="const ", post="&")
