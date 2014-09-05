@@ -783,9 +783,9 @@ public class GeckoSmsManager
 
           if (mDelivery == null) {
             restrictions.add("type IN ('" + kSmsTypeSentbox + "', '" + kSmsTypeInbox + "')");
-          } else if (mDelivery == "sent") {
+          } else if (mDelivery.equals("sent")) {
             restrictions.add("type = " + kSmsTypeSentbox);
-          } else if (mDelivery == "received") {
+          } else if (mDelivery.equals("received")) {
             restrictions.add("type = " + kSmsTypeInbox);
           } else {
             throw new UnexpectedDeliveryStateException();
