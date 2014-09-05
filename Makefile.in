@@ -164,7 +164,7 @@ endif
 
 # For historical reasons that are unknown, $(DIST)/sdk is always blown away
 # with no regard for PGO passes. This decision could probably be revisited.
-export:: install-dist-sdk
+export:: install-dist/sdk
 
 ifndef JS_STANDALONE
 ifdef ENABLE_TESTS
