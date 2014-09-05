@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> createEvent() DOMException.NOT_SUPPORTED_ERR </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+
+<script>
+
+    var description = "Test Description: " +
+                      "createEvent - DOMException NOT_SUPPORTED_ERR raises if the implementation " +
+                      "does not support the Event interface requested.";
+
+    test(function()
+    {
+        assert_throws("NOT_SUPPORTED_ERR", function()
+        {
+            document.createEvent("foo");
+        });
+    }, description);
+</script>
+</body>
+</html>

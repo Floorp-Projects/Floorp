@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<title>Script for and onload attributes</title>
+<link rel="author" title="Matheus Kerschbaum" href="mailto:matjk7@gmail.com">
+<link rel="author" title="Ms2ger" href="mailto:ms2ger@gmail.com">
+<link rel="help" href="http://www.whatwg.org/html/#prepare-a-script">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+var t = async_test("Script for and onload attributes");
+</script>
+<script for=" window " event=" onload() ">
+var foo = "bar";
+</script>
+<script for="object" event="handler">
+// This script should fail to run
+foo = "baz";
+t.step(function() { assert_unreached("This script should fail to run."); });
+</script>
+<script>
+t.step(function() { assert_equals(foo, "bar", "Correct script was executed."); });
+t.done();
+</script>

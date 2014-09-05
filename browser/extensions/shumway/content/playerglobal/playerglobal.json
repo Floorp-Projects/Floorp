@@ -109,22 +109,22 @@
       "flash.display:Bitmap"
     ],
     "offset": 4951,
-    "length": 431
+    "length": 390
   },
   {
     "name": "flash/display/BitmapData",
     "defs": [
       "flash.display:BitmapData"
     ],
-    "offset": 5382,
-    "length": 1515
+    "offset": 5341,
+    "length": 1471
   },
   {
     "name": "flash/display/BitmapDataChannel",
     "defs": [
       "flash.display:BitmapDataChannel"
     ],
-    "offset": 6897,
+    "offset": 6812,
     "length": 274
   },
   {
@@ -132,7 +132,7 @@
     "defs": [
       "flash.display:BitmapEncodingColorSpace"
     ],
-    "offset": 7171,
+    "offset": 7086,
     "length": 355
   },
   {
@@ -140,7 +140,7 @@
     "defs": [
       "flash.display:BlendMode"
     ],
-    "offset": 7526,
+    "offset": 7441,
     "length": 624
   },
   {
@@ -148,7 +148,7 @@
     "defs": [
       "flash.display:CapsStyle"
     ],
-    "offset": 8150,
+    "offset": 8065,
     "length": 256
   },
   {
@@ -156,7 +156,7 @@
     "defs": [
       "flash.display:ColorCorrection"
     ],
-    "offset": 8406,
+    "offset": 8321,
     "length": 262
   },
   {
@@ -164,7 +164,7 @@
     "defs": [
       "flash.display:ColorCorrectionSupport"
     ],
-    "offset": 8668,
+    "offset": 8583,
     "length": 314
   },
   {
@@ -172,23 +172,23 @@
     "defs": [
       "flash.display:DisplayObject"
     ],
-    "offset": 8982,
-    "length": 1581
+    "offset": 8897,
+    "length": 1500
   },
   {
     "name": "flash/display/DisplayObjectContainer",
     "defs": [
       "flash.display:DisplayObjectContainer"
     ],
-    "offset": 10563,
-    "length": 912
+    "offset": 10397,
+    "length": 898
   },
   {
     "name": "flash/display/FocusDirection",
     "defs": [
       "flash.display:FocusDirection"
     ],
-    "offset": 11475,
+    "offset": 11295,
     "length": 262
   },
   {
@@ -196,23 +196,23 @@
     "defs": [
       "flash.display:FrameLabel"
     ],
-    "offset": 11737,
-    "length": 325
+    "offset": 11557,
+    "length": 278
   },
   {
     "name": "flash/display/Graphics",
     "defs": [
       "flash.display:Graphics"
     ],
-    "offset": 12062,
-    "length": 1042
+    "offset": 11835,
+    "length": 1028
   },
   {
     "name": "flash/display/GradientType",
     "defs": [
       "flash.display:GradientType"
     ],
-    "offset": 13104,
+    "offset": 12863,
     "length": 239
   },
   {
@@ -220,7 +220,7 @@
     "defs": [
       "flash.display:GraphicsBitmapFill"
     ],
-    "offset": 13343,
+    "offset": 13102,
     "length": 346
   },
   {
@@ -228,7 +228,7 @@
     "defs": [
       "flash.display:GraphicsEndFill"
     ],
-    "offset": 13689,
+    "offset": 13448,
     "length": 215
   },
   {
@@ -236,7 +236,7 @@
     "defs": [
       "flash.display:GraphicsGradientFill"
     ],
-    "offset": 13904,
+    "offset": 13663,
     "length": 697
   },
   {
@@ -244,7 +244,7 @@
     "defs": [
       "flash.display:GraphicsPath"
     ],
-    "offset": 14601,
+    "offset": 14360,
     "length": 1258
   },
   {
@@ -252,7 +252,7 @@
     "defs": [
       "flash.display:GraphicsPathCommand"
     ],
-    "offset": 15859,
+    "offset": 15618,
     "length": 368
   },
   {
@@ -260,7 +260,7 @@
     "defs": [
       "flash.display:GraphicsPathWinding"
     ],
-    "offset": 16227,
+    "offset": 15986,
     "length": 259
   },
   {
@@ -268,7 +268,7 @@
     "defs": [
       "flash.display:GraphicsShaderFill"
     ],
-    "offset": 16486,
+    "offset": 16245,
     "length": 299
   },
   {
@@ -276,7 +276,7 @@
     "defs": [
       "flash.display:GraphicsSolidFill"
     ],
-    "offset": 16785,
+    "offset": 16544,
     "length": 283
   },
   {
@@ -284,7 +284,7 @@
     "defs": [
       "flash.display:GraphicsStroke"
     ],
-    "offset": 17068,
+    "offset": 16827,
     "length": 1542
   },
   {
@@ -292,7 +292,7 @@
     "defs": [
       "flash.display:GraphicsTrianglePath"
     ],
-    "offset": 18610,
+    "offset": 18369,
     "length": 680
   },
   {
@@ -300,7 +300,7 @@
     "defs": [
       "flash.display:IBitmapDrawable"
     ],
-    "offset": 19290,
+    "offset": 19049,
     "length": 105
   },
   {
@@ -308,7 +308,7 @@
     "defs": [
       "flash.display:IDrawCommand"
     ],
-    "offset": 19395,
+    "offset": 19154,
     "length": 102
   },
   {
@@ -316,7 +316,7 @@
     "defs": [
       "flash.display:IGraphicsData"
     ],
-    "offset": 19497,
+    "offset": 19256,
     "length": 103
   },
   {
@@ -324,7 +324,7 @@
     "defs": [
       "flash.display:IGraphicsFill"
     ],
-    "offset": 19600,
+    "offset": 19359,
     "length": 103
   },
   {
@@ -332,7 +332,7 @@
     "defs": [
       "flash.display:IGraphicsPath"
     ],
-    "offset": 19703,
+    "offset": 19462,
     "length": 103
   },
   {
@@ -340,7 +340,7 @@
     "defs": [
       "flash.display:IGraphicsStroke"
     ],
-    "offset": 19806,
+    "offset": 19565,
     "length": 105
   },
   {
@@ -348,15 +348,15 @@
     "defs": [
       "flash.display:InteractiveObject"
     ],
-    "offset": 19911,
-    "length": 778
+    "offset": 19670,
+    "length": 764
   },
   {
     "name": "flash/display/InterpolationMethod",
     "defs": [
       "flash.display:InterpolationMethod"
     ],
-    "offset": 20689,
+    "offset": 20434,
     "length": 254
   },
   {
@@ -364,7 +364,7 @@
     "defs": [
       "flash.display:JointStyle"
     ],
-    "offset": 20943,
+    "offset": 20688,
     "length": 258
   },
   {
@@ -372,7 +372,7 @@
     "defs": [
       "flash.display:JPEGEncoderOptions"
     ],
-    "offset": 21201,
+    "offset": 20946,
     "length": 216
   },
   {
@@ -380,7 +380,7 @@
     "defs": [
       "flash.display:JPEGXREncoderOptions"
     ],
-    "offset": 21417,
+    "offset": 21162,
     "length": 295
   },
   {
@@ -388,7 +388,7 @@
     "defs": [
       "flash.display:LineScaleMode"
     ],
-    "offset": 21712,
+    "offset": 21457,
     "length": 307
   },
   {
@@ -396,39 +396,39 @@
     "defs": [
       "flash.display:Loader"
     ],
-    "offset": 22019,
-    "length": 1973
+    "offset": 21764,
+    "length": 1320
   },
   {
     "name": "flash/display/LoaderInfo",
     "defs": [
       "flash.display:LoaderInfo"
     ],
-    "offset": 23992,
-    "length": 1276
+    "offset": 23084,
+    "length": 1227
   },
   {
     "name": "flash/display/MorphShape",
     "defs": [
       "flash.display:MorphShape"
     ],
-    "offset": 25268,
-    "length": 230
+    "offset": 24311,
+    "length": 263
   },
   {
     "name": "flash/display/MovieClip",
     "defs": [
       "flash.display:MovieClip"
     ],
-    "offset": 25498,
-    "length": 885
+    "offset": 24574,
+    "length": 871
   },
   {
     "name": "flash/display/NativeMenu",
     "defs": [
       "flash.display:NativeMenu"
     ],
-    "offset": 26383,
+    "offset": 25445,
     "length": 207
   },
   {
@@ -436,15 +436,15 @@
     "defs": [
       "flash.display:NativeMenuItem"
     ],
-    "offset": 26590,
-    "length": 293
+    "offset": 25652,
+    "length": 279
   },
   {
     "name": "flash/display/PixelSnapping",
     "defs": [
       "flash.display:PixelSnapping"
     ],
-    "offset": 26883,
+    "offset": 25931,
     "length": 264
   },
   {
@@ -452,7 +452,7 @@
     "defs": [
       "flash.display:PNGEncoderOptions"
     ],
-    "offset": 27147,
+    "offset": 26195,
     "length": 224
   },
   {
@@ -460,15 +460,15 @@
     "defs": [
       "flash.display:Scene"
     ],
-    "offset": 27371,
-    "length": 344
+    "offset": 26419,
+    "length": 255
   },
   {
     "name": "flash/display/Shader",
     "defs": [
       "flash.display:Shader"
     ],
-    "offset": 27715,
+    "offset": 26674,
     "length": 368
   },
   {
@@ -476,7 +476,7 @@
     "defs": [
       "flash.display:ShaderData"
     ],
-    "offset": 28083,
+    "offset": 27042,
     "length": 195
   },
   {
@@ -484,7 +484,7 @@
     "defs": [
       "flash.display:ShaderInput"
     ],
-    "offset": 28278,
+    "offset": 27237,
     "length": 334
   },
   {
@@ -492,7 +492,7 @@
     "defs": [
       "flash.display:ShaderJob"
     ],
-    "offset": 28612,
+    "offset": 27571,
     "length": 492
   },
   {
@@ -500,7 +500,7 @@
     "defs": [
       "flash.display:ShaderParameter"
     ],
-    "offset": 29104,
+    "offset": 28063,
     "length": 308
   },
   {
@@ -508,7 +508,7 @@
     "defs": [
       "flash.display:ShaderParameterType"
     ],
-    "offset": 29412,
+    "offset": 28371,
     "length": 618
   },
   {
@@ -516,7 +516,7 @@
     "defs": [
       "flash.display:ShaderPrecision"
     ],
-    "offset": 30030,
+    "offset": 28989,
     "length": 237
   },
   {
@@ -524,15 +524,15 @@
     "defs": [
       "flash.display:Shape"
     ],
-    "offset": 30267,
-    "length": 280
+    "offset": 29226,
+    "length": 266
   },
   {
     "name": "flash/display/SimpleButton",
     "defs": [
       "flash.display:SimpleButton"
     ],
-    "offset": 30547,
+    "offset": 29492,
     "length": 682
   },
   {
@@ -540,7 +540,7 @@
     "defs": [
       "flash.display:SpreadMethod"
     ],
-    "offset": 31229,
+    "offset": 30174,
     "length": 264
   },
   {
@@ -548,23 +548,23 @@
     "defs": [
       "flash.display:Sprite"
     ],
-    "offset": 31493,
-    "length": 718
+    "offset": 30438,
+    "length": 670
   },
   {
     "name": "flash/display/Stage",
     "defs": [
       "flash.display:Stage"
     ],
-    "offset": 32211,
-    "length": 3663
+    "offset": 31108,
+    "length": 3649
   },
   {
     "name": "flash/display/Stage3D",
     "defs": [
       "flash.display:Stage3D"
     ],
-    "offset": 35874,
+    "offset": 34757,
     "length": 443
   },
   {
@@ -572,7 +572,7 @@
     "defs": [
       "flash.display:StageAlign"
     ],
-    "offset": 36317,
+    "offset": 35200,
     "length": 383
   },
   {
@@ -580,7 +580,7 @@
     "defs": [
       "flash.display:StageDisplayState"
     ],
-    "offset": 36700,
+    "offset": 35583,
     "length": 319
   },
   {
@@ -588,7 +588,7 @@
     "defs": [
       "flash.display:StageQuality"
     ],
-    "offset": 37019,
+    "offset": 35902,
     "length": 429
   },
   {
@@ -596,7 +596,7 @@
     "defs": [
       "flash.display:StageScaleMode"
     ],
-    "offset": 37448,
+    "offset": 36331,
     "length": 317
   },
   {
@@ -604,7 +604,7 @@
     "defs": [
       "flash.display:SWFVersion"
     ],
-    "offset": 37765,
+    "offset": 36648,
     "length": 454
   },
   {
@@ -612,7 +612,7 @@
     "defs": [
       "flash.display:TriangleCulling"
     ],
-    "offset": 38219,
+    "offset": 37102,
     "length": 278
   },
   {
@@ -620,7 +620,7 @@
     "defs": [
       "flash.external:ExternalInterface"
     ],
-    "offset": 38497,
+    "offset": 37380,
     "length": 3261
   },
   {
@@ -628,7 +628,7 @@
     "defs": [
       "flash.events:AccelerometerEvent"
     ],
-    "offset": 41758,
+    "offset": 40641,
     "length": 817
   },
   {
@@ -636,7 +636,7 @@
     "defs": [
       "flash.events:ActivityEvent"
     ],
-    "offset": 42575,
+    "offset": 41458,
     "length": 505
   },
   {
@@ -644,7 +644,7 @@
     "defs": [
       "flash.events:AsyncErrorEvent"
     ],
-    "offset": 43080,
+    "offset": 41963,
     "length": 522
   },
   {
@@ -652,7 +652,7 @@
     "defs": [
       "flash.events:ContextMenuEvent"
     ],
-    "offset": 43602,
+    "offset": 42485,
     "length": 829
   },
   {
@@ -660,7 +660,7 @@
     "defs": [
       "flash.events:DataEvent"
     ],
-    "offset": 44431,
+    "offset": 43314,
     "length": 546
   },
   {
@@ -668,7 +668,7 @@
     "defs": [
       "flash.events:ErrorEvent"
     ],
-    "offset": 44977,
+    "offset": 43860,
     "length": 494
   },
   {
@@ -676,23 +676,23 @@
     "defs": [
       "flash.events:Event"
     ],
-    "offset": 45471,
-    "length": 2319
+    "offset": 44354,
+    "length": 2280
   },
   {
     "name": "flash/events/EventDispatcher",
     "defs": [
       "flash.events:EventDispatcher"
     ],
-    "offset": 47790,
-    "length": 708
+    "offset": 46634,
+    "length": 649
   },
   {
     "name": "flash/events/EventPhase",
     "defs": [
       "flash.events:EventPhase"
     ],
-    "offset": 48498,
+    "offset": 47283,
     "length": 262
   },
   {
@@ -700,7 +700,7 @@
     "defs": [
       "flash.events:FocusEvent"
     ],
-    "offset": 48760,
+    "offset": 47545,
     "length": 980
   },
   {
@@ -708,7 +708,7 @@
     "defs": [
       "flash.events:FullScreenEvent"
     ],
-    "offset": 49740,
+    "offset": 48525,
     "length": 643
   },
   {
@@ -716,7 +716,7 @@
     "defs": [
       "flash.events:GameInputEvent"
     ],
-    "offset": 50383,
+    "offset": 49168,
     "length": 390
   },
   {
@@ -724,7 +724,7 @@
     "defs": [
       "flash.events:GeolocationEvent"
     ],
-    "offset": 50773,
+    "offset": 49558,
     "length": 1137
   },
   {
@@ -732,15 +732,15 @@
     "defs": [
       "flash.events:GestureEvent"
     ],
-    "offset": 51910,
-    "length": 1059
+    "offset": 50695,
+    "length": 813
   },
   {
     "name": "flash/events/GesturePhase",
     "defs": [
       "flash.events:GesturePhase"
     ],
-    "offset": 52969,
+    "offset": 51508,
     "length": 281
   },
   {
@@ -748,7 +748,7 @@
     "defs": [
       "flash.events:HTTPStatusEvent"
     ],
-    "offset": 53250,
+    "offset": 51789,
     "length": 746
   },
   {
@@ -756,7 +756,7 @@
     "defs": [
       "flash.events:IEventDispatcher"
     ],
-    "offset": 53996,
+    "offset": 52535,
     "length": 353
   },
   {
@@ -764,7 +764,7 @@
     "defs": [
       "flash.events:IMEEvent"
     ],
-    "offset": 54349,
+    "offset": 52888,
     "length": 632
   },
   {
@@ -772,7 +772,7 @@
     "defs": [
       "flash.events:IOErrorEvent"
     ],
-    "offset": 54981,
+    "offset": 53520,
     "length": 605
   },
   {
@@ -780,7 +780,7 @@
     "defs": [
       "flash.events:KeyboardEvent"
     ],
-    "offset": 55586,
+    "offset": 54125,
     "length": 1044
   },
   {
@@ -788,7 +788,7 @@
     "defs": [
       "flash.events:MouseEvent"
     ],
-    "offset": 56630,
+    "offset": 55169,
     "length": 2142
   },
   {
@@ -796,7 +796,7 @@
     "defs": [
       "flash.events:NetDataEvent"
     ],
-    "offset": 58772,
+    "offset": 57311,
     "length": 565
   },
   {
@@ -804,7 +804,7 @@
     "defs": [
       "flash.events:NetFilterEvent"
     ],
-    "offset": 59337,
+    "offset": 57876,
     "length": 454
   },
   {
@@ -812,7 +812,7 @@
     "defs": [
       "flash.events:NetMonitorEvent"
     ],
-    "offset": 59791,
+    "offset": 58330,
     "length": 516
   },
   {
@@ -820,7 +820,7 @@
     "defs": [
       "flash.events:NetStatusEvent"
     ],
-    "offset": 60307,
+    "offset": 58846,
     "length": 498
   },
   {
@@ -828,7 +828,7 @@
     "defs": [
       "flash.events:OutputProgressEvent"
     ],
-    "offset": 60805,
+    "offset": 59344,
     "length": 638
   },
   {
@@ -836,7 +836,7 @@
     "defs": [
       "flash.events:PressAndTapGestureEvent"
     ],
-    "offset": 61443,
+    "offset": 59982,
     "length": 944
   },
   {
@@ -844,15 +844,15 @@
     "defs": [
       "flash.events:ProgressEvent"
     ],
-    "offset": 62387,
-    "length": 647
+    "offset": 60926,
+    "length": 683
   },
   {
     "name": "flash/events/SampleDataEvent",
     "defs": [
       "flash.events:SampleDataEvent"
     ],
-    "offset": 63034,
+    "offset": 61609,
     "length": 639
   },
   {
@@ -860,7 +860,7 @@
     "defs": [
       "flash.events:SecurityErrorEvent"
     ],
-    "offset": 63673,
+    "offset": 62248,
     "length": 511
   },
   {
@@ -868,7 +868,7 @@
     "defs": [
       "flash.events:ShaderEvent"
     ],
-    "offset": 64184,
+    "offset": 62759,
     "length": 742
   },
   {
@@ -876,7 +876,7 @@
     "defs": [
       "flash.events:SoftKeyboardEvent"
     ],
-    "offset": 64926,
+    "offset": 63501,
     "length": 793
   },
   {
@@ -884,7 +884,7 @@
     "defs": [
       "flash.events:SoftKeyboardTrigger"
     ],
-    "offset": 65719,
+    "offset": 64294,
     "length": 287
   },
   {
@@ -892,7 +892,7 @@
     "defs": [
       "flash.events:StageVideoAvailabilityEvent"
     ],
-    "offset": 66006,
+    "offset": 64581,
     "length": 377
   },
   {
@@ -900,7 +900,7 @@
     "defs": [
       "flash.events:StageVideoEvent"
     ],
-    "offset": 66383,
+    "offset": 64958,
     "length": 535
   },
   {
@@ -908,7 +908,7 @@
     "defs": [
       "flash.events:StatusEvent"
     ],
-    "offset": 66918,
+    "offset": 65493,
     "length": 578
   },
   {
@@ -916,7 +916,7 @@
     "defs": [
       "flash.events:SyncEvent"
     ],
-    "offset": 67496,
+    "offset": 66071,
     "length": 466
   },
   {
@@ -924,7 +924,7 @@
     "defs": [
       "flash.events:TextEvent"
     ],
-    "offset": 67962,
+    "offset": 66537,
     "length": 569
   },
   {
@@ -932,7 +932,7 @@
     "defs": [
       "flash.events:ThrottleEvent"
     ],
-    "offset": 68531,
+    "offset": 67106,
     "length": 553
   },
   {
@@ -940,7 +940,7 @@
     "defs": [
       "flash.events:ThrottleType"
     ],
-    "offset": 69084,
+    "offset": 67659,
     "length": 268
   },
   {
@@ -948,7 +948,7 @@
     "defs": [
       "flash.events:TimerEvent"
     ],
-    "offset": 69352,
+    "offset": 67927,
     "length": 505
   },
   {
@@ -956,7 +956,7 @@
     "defs": [
       "flash.events:TouchEvent"
     ],
-    "offset": 69857,
+    "offset": 68432,
     "length": 2322
   },
   {
@@ -964,7 +964,7 @@
     "defs": [
       "flash.events:TransformGestureEvent"
     ],
-    "offset": 72179,
+    "offset": 70754,
     "length": 1154
   },
   {
@@ -972,7 +972,7 @@
     "defs": [
       "flash.events:UncaughtErrorEvent"
     ],
-    "offset": 73333,
+    "offset": 71908,
     "length": 525
   },
   {
@@ -980,7 +980,7 @@
     "defs": [
       "flash.events:UncaughtErrorEvents"
     ],
-    "offset": 73858,
+    "offset": 72433,
     "length": 208
   },
   {
@@ -988,7 +988,7 @@
     "defs": [
       "flash.events:VideoEvent"
     ],
-    "offset": 74066,
+    "offset": 72641,
     "length": 461
   },
   {
@@ -996,31 +996,31 @@
     "defs": [
       "flash.geom:ColorTransform"
     ],
-    "offset": 74527,
-    "length": 885
+    "offset": 73102,
+    "length": 586
   },
   {
     "name": "flash/geom/Matrix",
     "defs": [
       "flash.geom:Matrix"
     ],
-    "offset": 75412,
-    "length": 2147
+    "offset": 73688,
+    "length": 814
   },
   {
     "name": "flash/geom/Matrix3D",
     "defs": [
       "flash.geom:Matrix3D"
     ],
-    "offset": 77559,
-    "length": 1132
+    "offset": 74502,
+    "length": 1092
   },
   {
     "name": "flash/geom/Orientation3D",
     "defs": [
       "flash.geom:Orientation3D"
     ],
-    "offset": 78691,
+    "offset": 75594,
     "length": 290
   },
   {
@@ -1028,7 +1028,7 @@
     "defs": [
       "flash.geom:PerspectiveProjection"
     ],
-    "offset": 78981,
+    "offset": 75884,
     "length": 389
   },
   {
@@ -1036,31 +1036,31 @@
     "defs": [
       "flash.geom:Point"
     ],
-    "offset": 79370,
-    "length": 1010
+    "offset": 76273,
+    "length": 516
   },
   {
     "name": "flash/geom/Rectangle",
     "defs": [
       "flash.geom:Rectangle"
     ],
-    "offset": 80380,
-    "length": 1992
+    "offset": 76789,
+    "length": 889
   },
   {
     "name": "flash/geom/Transform",
     "defs": [
       "flash.geom:Transform"
     ],
-    "offset": 82372,
-    "length": 590
+    "offset": 77678,
+    "length": 553
   },
   {
     "name": "flash/geom/Utils3D",
     "defs": [
       "flash.geom:Utils3D"
     ],
-    "offset": 82962,
+    "offset": 78231,
     "length": 342
   },
   {
@@ -1068,31 +1068,31 @@
     "defs": [
       "flash.geom:Vector3D"
     ],
-    "offset": 83304,
-    "length": 1664
+    "offset": 78573,
+    "length": 830
   },
   {
     "name": "flash/filters/BevelFilter",
     "defs": [
       "flash.filters:BevelFilter"
     ],
-    "offset": 84968,
-    "length": 808
+    "offset": 79403,
+    "length": 685
   },
   {
     "name": "flash/filters/BitmapFilter",
     "defs": [
       "flash.filters:BitmapFilter"
     ],
-    "offset": 85776,
-    "length": 200
+    "offset": 80088,
+    "length": 209
   },
   {
     "name": "flash/filters/BitmapFilterQuality",
     "defs": [
       "flash.filters:BitmapFilterQuality"
     ],
-    "offset": 85976,
+    "offset": 80297,
     "length": 256
   },
   {
@@ -1100,7 +1100,7 @@
     "defs": [
       "flash.filters:BitmapFilterType"
     ],
-    "offset": 86232,
+    "offset": 80553,
     "length": 268
   },
   {
@@ -1108,39 +1108,39 @@
     "defs": [
       "flash.filters:BlurFilter"
     ],
-    "offset": 86500,
-    "length": 393
+    "offset": 80821,
+    "length": 342
   },
   {
     "name": "flash/filters/ColorMatrixFilter",
     "defs": [
       "flash.filters:ColorMatrixFilter"
     ],
-    "offset": 86893,
-    "length": 337
+    "offset": 81163,
+    "length": 294
   },
   {
     "name": "flash/filters/ConvolutionFilter",
     "defs": [
       "flash.filters:ConvolutionFilter"
     ],
-    "offset": 87230,
-    "length": 675
+    "offset": 81457,
+    "length": 570
   },
   {
     "name": "flash/filters/DisplacementMapFilter",
     "defs": [
       "flash.filters:DisplacementMapFilter"
     ],
-    "offset": 87905,
-    "length": 743
+    "offset": 82027,
+    "length": 632
   },
   {
     "name": "flash/filters/DisplacementMapFilterMode",
     "defs": [
       "flash.filters:DisplacementMapFilterMode"
     ],
-    "offset": 88648,
+    "offset": 82659,
     "length": 315
   },
   {
@@ -1148,39 +1148,39 @@
     "defs": [
       "flash.filters:DropShadowFilter"
     ],
-    "offset": 88963,
-    "length": 742
+    "offset": 82974,
+    "length": 627
   },
   {
     "name": "flash/filters/GlowFilter",
     "defs": [
       "flash.filters:GlowFilter"
     ],
-    "offset": 89705,
-    "length": 608
+    "offset": 83601,
+    "length": 517
   },
   {
     "name": "flash/filters/GradientBevelFilter",
     "defs": [
       "flash.filters:GradientBevelFilter"
     ],
-    "offset": 90313,
-    "length": 784
+    "offset": 84118,
+    "length": 649
   },
   {
     "name": "flash/filters/GradientGlowFilter",
     "defs": [
       "flash.filters:GradientGlowFilter"
     ],
-    "offset": 91097,
-    "length": 781
+    "offset": 84767,
+    "length": 646
   },
   {
     "name": "flash/filters/ShaderFilter",
     "defs": [
       "flash.filters:ShaderFilter"
     ],
-    "offset": 91878,
+    "offset": 85413,
     "length": 626
   },
   {
@@ -1188,7 +1188,7 @@
     "defs": [
       "flash.globalization:Collator"
     ],
-    "offset": 92504,
+    "offset": 86039,
     "length": 692
   },
   {
@@ -1196,7 +1196,7 @@
     "defs": [
       "flash.globalization:CollatorMode"
     ],
-    "offset": 93196,
+    "offset": 86731,
     "length": 257
   },
   {
@@ -1204,7 +1204,7 @@
     "defs": [
       "flash.globalization:CurrencyFormatter"
     ],
-    "offset": 93453,
+    "offset": 86988,
     "length": 1104
   },
   {
@@ -1212,7 +1212,7 @@
     "defs": [
       "flash.globalization:CurrencyParseResult"
     ],
-    "offset": 94557,
+    "offset": 88092,
     "length": 350
   },
   {
@@ -1220,7 +1220,7 @@
     "defs": [
       "flash.globalization:DateTimeFormatter"
     ],
-    "offset": 94907,
+    "offset": 88442,
     "length": 830
   },
   {
@@ -1228,7 +1228,7 @@
     "defs": [
       "flash.globalization:DateTimeNameContext"
     ],
-    "offset": 95737,
+    "offset": 89272,
     "length": 273
   },
   {
@@ -1236,7 +1236,7 @@
     "defs": [
       "flash.globalization:DateTimeNameStyle"
     ],
-    "offset": 96010,
+    "offset": 89545,
     "length": 330
   },
   {
@@ -1244,7 +1244,7 @@
     "defs": [
       "flash.globalization:DateTimeStyle"
     ],
-    "offset": 96340,
+    "offset": 89875,
     "length": 330
   },
   {
@@ -1252,7 +1252,7 @@
     "defs": [
       "flash.globalization:LastOperationStatus"
     ],
-    "offset": 96670,
+    "offset": 90205,
     "length": 1104
   },
   {
@@ -1260,7 +1260,7 @@
     "defs": [
       "flash.globalization:LocaleID"
     ],
-    "offset": 97774,
+    "offset": 91309,
     "length": 560
   },
   {
@@ -1268,7 +1268,7 @@
     "defs": [
       "flash.globalization:NationalDigitsType"
     ],
-    "offset": 98334,
+    "offset": 91869,
     "length": 1055
   },
   {
@@ -1276,7 +1276,7 @@
     "defs": [
       "flash.globalization:NumberFormatter"
     ],
-    "offset": 99389,
+    "offset": 92924,
     "length": 946
   },
   {
@@ -1284,7 +1284,7 @@
     "defs": [
       "flash.globalization:NumberParseResult"
     ],
-    "offset": 100335,
+    "offset": 93870,
     "length": 367
   },
   {
@@ -1292,7 +1292,7 @@
     "defs": [
       "flash.globalization:StringTools"
     ],
-    "offset": 100702,
+    "offset": 94237,
     "length": 460
   },
   {
@@ -1300,7 +1300,7 @@
     "defs": [
       "flash.media:AudioDecoder"
     ],
-    "offset": 101162,
+    "offset": 94697,
     "length": 448
   },
   {
@@ -1308,7 +1308,7 @@
     "defs": [
       "flash.media:Camera"
     ],
-    "offset": 101610,
+    "offset": 95145,
     "length": 1029
   },
   {
@@ -1316,7 +1316,7 @@
     "defs": [
       "flash.media:H264Level"
     ],
-    "offset": 102639,
+    "offset": 96174,
     "length": 613
   },
   {
@@ -1324,7 +1324,7 @@
     "defs": [
       "flash.media:H264Profile"
     ],
-    "offset": 103252,
+    "offset": 96787,
     "length": 233
   },
   {
@@ -1332,7 +1332,7 @@
     "defs": [
       "flash.media:H264VideoStreamSettings"
     ],
-    "offset": 103485,
+    "offset": 97020,
     "length": 1137
   },
   {
@@ -1340,15 +1340,15 @@
     "defs": [
       "flash.media:ID3Info"
     ],
-    "offset": 104622,
-    "length": 270
+    "offset": 98157,
+    "length": 300
   },
   {
     "name": "flash/media/Microphone",
     "defs": [
       "flash.media:Microphone"
     ],
-    "offset": 104892,
+    "offset": 98457,
     "length": 986
   },
   {
@@ -1356,7 +1356,7 @@
     "defs": [
       "flash.media:MicrophoneEnhancedMode"
     ],
-    "offset": 105878,
+    "offset": 99443,
     "length": 367
   },
   {
@@ -1364,7 +1364,7 @@
     "defs": [
       "flash.media:MicrophoneEnhancedOptions"
     ],
-    "offset": 106245,
+    "offset": 99810,
     "length": 604
   },
   {
@@ -1372,7 +1372,7 @@
     "defs": [
       "flash.media:Sound"
     ],
-    "offset": 106849,
+    "offset": 100414,
     "length": 837
   },
   {
@@ -1380,7 +1380,7 @@
     "defs": [
       "flash.media:SoundChannel"
     ],
-    "offset": 107686,
+    "offset": 101251,
     "length": 390
   },
   {
@@ -1388,7 +1388,7 @@
     "defs": [
       "flash.media:SoundCodec"
     ],
-    "offset": 108076,
+    "offset": 101641,
     "length": 287
   },
   {
@@ -1396,7 +1396,7 @@
     "defs": [
       "flash.media:SoundLoaderContext"
     ],
-    "offset": 108363,
+    "offset": 101928,
     "length": 261
   },
   {
@@ -1404,7 +1404,7 @@
     "defs": [
       "flash.media:SoundMixer"
     ],
-    "offset": 108624,
+    "offset": 102189,
     "length": 513
   },
   {
@@ -1412,15 +1412,15 @@
     "defs": [
       "flash.media:SoundTransform"
     ],
-    "offset": 109137,
-    "length": 536
+    "offset": 102702,
+    "length": 422
   },
   {
     "name": "flash/media/StageVideo",
     "defs": [
       "flash.media:StageVideo"
     ],
-    "offset": 109673,
+    "offset": 103124,
     "length": 570
   },
   {
@@ -1428,7 +1428,7 @@
     "defs": [
       "flash.media:StageVideoAvailability"
     ],
-    "offset": 110243,
+    "offset": 103694,
     "length": 271
   },
   {
@@ -1436,7 +1436,7 @@
     "defs": [
       "flash.media:Video"
     ],
-    "offset": 110514,
+    "offset": 103965,
     "length": 533
   },
   {
@@ -1444,7 +1444,7 @@
     "defs": [
       "flash.media:VideoCodec"
     ],
-    "offset": 111047,
+    "offset": 104498,
     "length": 256
   },
   {
@@ -1452,7 +1452,7 @@
     "defs": [
       "flash.media:VideoStatus"
     ],
-    "offset": 111303,
+    "offset": 104754,
     "length": 286
   },
   {
@@ -1460,7 +1460,7 @@
     "defs": [
       "flash.media:VideoStreamSettings"
     ],
-    "offset": 111589,
+    "offset": 105040,
     "length": 651
   },
   {
@@ -1468,7 +1468,7 @@
     "defs": [
       "flash.profiler:Telemetry"
     ],
-    "offset": 112240,
+    "offset": 105691,
     "length": 422
   },
   {
@@ -1476,7 +1476,7 @@
     "defs": [
       "flash.printing:PrintJob"
     ],
-    "offset": 112662,
+    "offset": 106113,
     "length": 711
   },
   {
@@ -1484,7 +1484,7 @@
     "defs": [
       "flash.printing:PrintJobOptions"
     ],
-    "offset": 113373,
+    "offset": 106824,
     "length": 216
   },
   {
@@ -1492,7 +1492,7 @@
     "defs": [
       "flash.printing:PrintJobOrientation"
     ],
-    "offset": 113589,
+    "offset": 107040,
     "length": 265
   },
   {
@@ -1500,7 +1500,7 @@
     "defs": [
       "flash.security:CertificateStatus"
     ],
-    "offset": 113854,
+    "offset": 107305,
     "length": 533
   },
   {
@@ -1508,7 +1508,7 @@
     "defs": [
       "flash.security:X500DistinguishedName"
     ],
-    "offset": 114387,
+    "offset": 107838,
     "length": 427
   },
   {
@@ -1516,7 +1516,7 @@
     "defs": [
       "flash.security:X509Certificate"
     ],
-    "offset": 114814,
+    "offset": 108265,
     "length": 635
   },
   {
@@ -1524,7 +1524,7 @@
     "defs": [
       "flash.sampler:ClassFactory"
     ],
-    "offset": 115449,
+    "offset": 108900,
     "length": 285
   },
   {
@@ -1532,7 +1532,7 @@
     "defs": [
       "flash.sampler:DeleteObjectSample"
     ],
-    "offset": 115734,
+    "offset": 109185,
     "length": 233
   },
   {
@@ -1540,7 +1540,7 @@
     "defs": [
       "flash.sampler:NewObjectSample"
     ],
-    "offset": 115967,
+    "offset": 109418,
     "length": 308
   },
   {
@@ -1548,7 +1548,7 @@
     "defs": [
       "flash.sampler:Sample"
     ],
-    "offset": 116275,
+    "offset": 109726,
     "length": 205
   },
   {
@@ -1556,7 +1556,7 @@
     "defs": [
       "flash.sampler:StackFrame"
     ],
-    "offset": 116480,
+    "offset": 109931,
     "length": 310
   },
   {
@@ -1564,15 +1564,15 @@
     "defs": [
       "flash.system:ApplicationDomain"
     ],
-    "offset": 116790,
-    "length": 543
+    "offset": 110241,
+    "length": 498
   },
   {
     "name": "flash/system/ApplicationInstaller",
     "defs": [
       "flash.system:ApplicationInstaller"
     ],
-    "offset": 117333,
+    "offset": 110739,
     "length": 426
   },
   {
@@ -1580,7 +1580,7 @@
     "defs": [
       "flash.system:AuthorizedFeatures"
     ],
-    "offset": 117759,
+    "offset": 111165,
     "length": 456
   },
   {
@@ -1588,7 +1588,7 @@
     "defs": [
       "flash.system:AuthorizedFeaturesLoader"
     ],
-    "offset": 118215,
+    "offset": 111621,
     "length": 398
   },
   {
@@ -1596,7 +1596,7 @@
     "defs": [
       "flash.system:Capabilities"
     ],
-    "offset": 118613,
+    "offset": 112019,
     "length": 1133
   },
   {
@@ -1604,7 +1604,7 @@
     "defs": [
       "flash.system:DomainMemoryWithStage3D"
     ],
-    "offset": 119746,
+    "offset": 113152,
     "length": 191
   },
   {
@@ -1613,7 +1613,7 @@
       "flash.system:FSCommand",
       "flash.system:fscommand"
     ],
-    "offset": 119937,
+    "offset": 113343,
     "length": 285
   },
   {
@@ -1621,7 +1621,7 @@
     "defs": [
       "flash.system:ImageDecodingPolicy"
     ],
-    "offset": 120222,
+    "offset": 113628,
     "length": 257
   },
   {
@@ -1629,7 +1629,7 @@
     "defs": [
       "flash.system:IME"
     ],
-    "offset": 120479,
+    "offset": 113885,
     "length": 507
   },
   {
@@ -1637,7 +1637,7 @@
     "defs": [
       "flash.system:IMEConversionMode"
     ],
-    "offset": 120986,
+    "offset": 114392,
     "length": 432
   },
   {
@@ -1645,7 +1645,7 @@
     "defs": [
       "flash.system:JPEGLoaderContext"
     ],
-    "offset": 121418,
+    "offset": 114824,
     "length": 309
   },
   {
@@ -1653,7 +1653,7 @@
     "defs": [
       "flash.system:LoaderContext"
     ],
-    "offset": 121727,
+    "offset": 115133,
     "length": 515
   },
   {
@@ -1661,7 +1661,7 @@
     "defs": [
       "flash.system:MessageChannel"
     ],
-    "offset": 122242,
+    "offset": 115648,
     "length": 584
   },
   {
@@ -1669,7 +1669,7 @@
     "defs": [
       "flash.system:MessageChannelState"
     ],
-    "offset": 122826,
+    "offset": 116232,
     "length": 278
   },
   {
@@ -1677,7 +1677,7 @@
     "defs": [
       "flash.system:Security"
     ],
-    "offset": 123104,
+    "offset": 116510,
     "length": 773
   },
   {
@@ -1685,7 +1685,7 @@
     "defs": [
       "flash.system:SecurityDomain"
     ],
-    "offset": 123877,
+    "offset": 117283,
     "length": 265
   },
   {
@@ -1693,7 +1693,7 @@
     "defs": [
       "flash.system:SecurityPanel"
     ],
-    "offset": 124142,
+    "offset": 117548,
     "length": 430
   },
   {
@@ -1701,7 +1701,7 @@
     "defs": [
       "flash.system:System"
     ],
-    "offset": 124572,
+    "offset": 117978,
     "length": 629
   },
   {
@@ -1709,7 +1709,7 @@
     "defs": [
       "flash.system:SystemUpdater"
     ],
-    "offset": 125201,
+    "offset": 118607,
     "length": 322
   },
   {
@@ -1717,7 +1717,7 @@
     "defs": [
       "flash.system:SystemUpdaterType"
     ],
-    "offset": 125523,
+    "offset": 118929,
     "length": 241
   },
   {
@@ -1725,7 +1725,7 @@
     "defs": [
       "flash.system:TouchscreenType"
     ],
-    "offset": 125764,
+    "offset": 119170,
     "length": 268
   },
   {
@@ -1733,7 +1733,7 @@
     "defs": [
       "flash.trace:Trace"
     ],
-    "offset": 126032,
+    "offset": 119438,
     "length": 488
   },
   {
@@ -1741,7 +1741,7 @@
     "defs": [
       "flash.ui:ContextMenu"
     ],
-    "offset": 126520,
+    "offset": 119926,
     "length": 1036
   },
   {
@@ -1749,7 +1749,7 @@
     "defs": [
       "flash.ui:ContextMenuBuiltInItems"
     ],
-    "offset": 127556,
+    "offset": 120962,
     "length": 871
   },
   {
@@ -1757,7 +1757,7 @@
     "defs": [
       "flash.ui:ContextMenuClipboardItems"
     ],
-    "offset": 128427,
+    "offset": 121833,
     "length": 587
   },
   {
@@ -1765,15 +1765,15 @@
     "defs": [
       "flash.ui:ContextMenuItem"
     ],
-    "offset": 129014,
-    "length": 472
+    "offset": 122420,
+    "length": 458
   },
   {
     "name": "flash/ui/GameInput",
     "defs": [
       "flash.ui:GameInput"
     ],
-    "offset": 129486,
+    "offset": 122878,
     "length": 333
   },
   {
@@ -1781,7 +1781,7 @@
     "defs": [
       "flash.ui:GameInputControl"
     ],
-    "offset": 129819,
+    "offset": 123211,
     "length": 458
   },
   {
@@ -1789,7 +1789,7 @@
     "defs": [
       "flash.ui:GameInputControlType"
     ],
-    "offset": 130277,
+    "offset": 123669,
     "length": 389
   },
   {
@@ -1797,7 +1797,7 @@
     "defs": [
       "flash.ui:GameInputDevice"
     ],
-    "offset": 130666,
+    "offset": 124058,
     "length": 623
   },
   {
@@ -1805,7 +1805,7 @@
     "defs": [
       "flash.ui:GameInputFinger"
     ],
-    "offset": 131289,
+    "offset": 124681,
     "length": 291
   },
   {
@@ -1813,7 +1813,7 @@
     "defs": [
       "flash.ui:GameInputHand"
     ],
-    "offset": 131580,
+    "offset": 124972,
     "length": 256
   },
   {
@@ -1821,7 +1821,7 @@
     "defs": [
       "flash.ui:Keyboard"
     ],
-    "offset": 131836,
+    "offset": 125228,
     "length": 9336
   },
   {
@@ -1829,7 +1829,7 @@
     "defs": [
       "flash.ui:KeyboardType"
     ],
-    "offset": 141172,
+    "offset": 134564,
     "length": 266
   },
   {
@@ -1837,7 +1837,7 @@
     "defs": [
       "flash.ui:KeyLocation"
     ],
-    "offset": 141438,
+    "offset": 134830,
     "length": 273
   },
   {
@@ -1845,7 +1845,7 @@
     "defs": [
       "flash.ui:Mouse"
     ],
-    "offset": 141711,
+    "offset": 135103,
     "length": 397
   },
   {
@@ -1853,7 +1853,7 @@
     "defs": [
       "flash.ui:MouseCursor"
     ],
-    "offset": 142108,
+    "offset": 135500,
     "length": 302
   },
   {
@@ -1861,7 +1861,7 @@
     "defs": [
       "flash.ui:MouseCursorData"
     ],
-    "offset": 142410,
+    "offset": 135802,
     "length": 352
   },
   {
@@ -1869,7 +1869,7 @@
     "defs": [
       "flash.ui:Multitouch"
     ],
-    "offset": 142762,
+    "offset": 136154,
     "length": 435
   },
   {
@@ -1877,7 +1877,7 @@
     "defs": [
       "flash.ui:MultitouchInputMode"
     ],
-    "offset": 143197,
+    "offset": 136589,
     "length": 279
   },
   {
@@ -1885,7 +1885,7 @@
     "defs": [
       "flash.sensors:Accelerometer"
     ],
-    "offset": 143476,
+    "offset": 136868,
     "length": 357
   },
   {
@@ -1893,143 +1893,143 @@
     "defs": [
       "flash.sensors:Geolocation"
     ],
-    "offset": 143833,
+    "offset": 137225,
     "length": 351
   },
   {
-    "name": "flash/display3d/Context3D",
+    "name": "flash/display3D/Context3D",
     "defs": [
       "flash.display3D:Context3D"
     ],
-    "offset": 144184,
+    "offset": 137576,
     "length": 2088
   },
   {
-    "name": "flash/display3d/Context3DBlendFactor",
+    "name": "flash/display3D/Context3DBlendFactor",
     "defs": [
       "flash.display3D:Context3DBlendFactor"
     ],
-    "offset": 146272,
+    "offset": 139664,
     "length": 681
   },
   {
-    "name": "flash/display3d/Context3DClearMask",
+    "name": "flash/display3D/Context3DClearMask",
     "defs": [
       "flash.display3D:Context3DClearMask"
     ],
-    "offset": 146953,
+    "offset": 140345,
     "length": 292
   },
   {
-    "name": "flash/display3d/Context3DProfile",
+    "name": "flash/display3D/Context3DProfile",
     "defs": [
       "flash.display3D:Context3DProfile"
     ],
-    "offset": 147245,
+    "offset": 140637,
     "length": 282
   },
   {
-    "name": "flash/display3d/Context3DProgramType",
+    "name": "flash/display3D/Context3DProgramType",
     "defs": [
       "flash.display3D:Context3DProgramType"
     ],
-    "offset": 147527,
+    "offset": 140919,
     "length": 263
   },
   {
-    "name": "flash/display3d/Context3DRenderMode",
+    "name": "flash/display3D/Context3DRenderMode",
     "defs": [
       "flash.display3D:Context3DRenderMode"
     ],
-    "offset": 147790,
+    "offset": 141182,
     "length": 257
   },
   {
-    "name": "flash/display3d/Context3DCompareMode",
+    "name": "flash/display3D/Context3DCompareMode",
     "defs": [
       "flash.display3D:Context3DCompareMode"
     ],
-    "offset": 148047,
+    "offset": 141439,
     "length": 452
   },
   {
-    "name": "flash/display3d/Context3DStencilAction",
+    "name": "flash/display3D/Context3DStencilAction",
     "defs": [
       "flash.display3D:Context3DStencilAction"
     ],
-    "offset": 148499,
+    "offset": 141891,
     "length": 499
   },
   {
-    "name": "flash/display3d/Context3DTextureFormat",
+    "name": "flash/display3D/Context3DTextureFormat",
     "defs": [
       "flash.display3D:Context3DTextureFormat"
     ],
-    "offset": 148998,
+    "offset": 142390,
     "length": 315
   },
   {
-    "name": "flash/display3d/Context3DTriangleFace",
+    "name": "flash/display3D/Context3DTriangleFace",
     "defs": [
       "flash.display3D:Context3DTriangleFace"
     ],
-    "offset": 149313,
+    "offset": 142705,
     "length": 323
   },
   {
-    "name": "flash/display3d/Context3DVertexBufferFormat",
+    "name": "flash/display3D/Context3DVertexBufferFormat",
     "defs": [
       "flash.display3D:Context3DVertexBufferFormat"
     ],
-    "offset": 149636,
+    "offset": 143028,
     "length": 365
   },
   {
-    "name": "flash/display3d/IndexBuffer3D",
+    "name": "flash/display3D/IndexBuffer3D",
     "defs": [
       "flash.display3D:IndexBuffer3D"
     ],
-    "offset": 150001,
+    "offset": 143393,
     "length": 364
   },
   {
-    "name": "flash/display3d/Program3D",
+    "name": "flash/display3D/Program3D",
     "defs": [
       "flash.display3D:Program3D"
     ],
-    "offset": 150365,
+    "offset": 143757,
     "length": 275
   },
   {
-    "name": "flash/display3d/VertexBuffer3D",
+    "name": "flash/display3D/VertexBuffer3D",
     "defs": [
       "flash.display3D:VertexBuffer3D"
     ],
-    "offset": 150640,
+    "offset": 144032,
     "length": 367
   },
   {
-    "name": "flash/display3d/textures/CubeTexture",
+    "name": "flash/display3D/textures/CubeTexture",
     "defs": [
       "flash.display3D.textures:CubeTexture"
     ],
-    "offset": 151007,
+    "offset": 144399,
     "length": 501
   },
   {
-    "name": "flash/display3d/textures/Texture",
+    "name": "flash/display3D/textures/Texture",
     "defs": [
       "flash.display3D.textures:Texture"
     ],
-    "offset": 151508,
+    "offset": 144900,
     "length": 487
   },
   {
-    "name": "flash/display3d/textures/TextureBase",
+    "name": "flash/display3D/textures/TextureBase",
     "defs": [
       "flash.display3D.textures:TextureBase"
     ],
-    "offset": 151995,
+    "offset": 145387,
     "length": 292
   },
   {
@@ -2037,7 +2037,7 @@
     "defs": [
       "flash.net:DynamicPropertyOutput"
     ],
-    "offset": 152287,
+    "offset": 145679,
     "length": 308
   },
   {
@@ -2045,7 +2045,7 @@
     "defs": [
       "flash.net:FileFilter"
     ],
-    "offset": 152595,
+    "offset": 145987,
     "length": 318
   },
   {
@@ -2053,7 +2053,7 @@
     "defs": [
       "flash.net:FileReference"
     ],
-    "offset": 152913,
+    "offset": 146305,
     "length": 666
   },
   {
@@ -2061,7 +2061,7 @@
     "defs": [
       "flash.net:FileReferenceList"
     ],
-    "offset": 153579,
+    "offset": 146971,
     "length": 315
   },
   {
@@ -2069,7 +2069,7 @@
     "defs": [
       "flash.net:GroupSpecifier"
     ],
-    "offset": 153894,
+    "offset": 147286,
     "length": 1492
   },
   {
@@ -2077,7 +2077,7 @@
     "defs": [
       "flash.net:IDynamicPropertyOutput"
     ],
-    "offset": 155386,
+    "offset": 148778,
     "length": 197
   },
   {
@@ -2085,7 +2085,7 @@
     "defs": [
       "flash.net:IDynamicPropertyWriter"
     ],
-    "offset": 155583,
+    "offset": 148975,
     "length": 225
   },
   {
@@ -2093,7 +2093,7 @@
     "defs": [
       "flash.net:LocalConnection"
     ],
-    "offset": 155808,
+    "offset": 149200,
     "length": 495
   },
   {
@@ -2101,7 +2101,7 @@
     "defs": [
       "flash.net:NetConnection"
     ],
-    "offset": 156303,
+    "offset": 149695,
     "length": 906
   },
   {
@@ -2109,7 +2109,7 @@
     "defs": [
       "flash.net:NetGroup"
     ],
-    "offset": 157209,
+    "offset": 150601,
     "length": 1299
   },
   {
@@ -2117,7 +2117,7 @@
     "defs": [
       "flash.net:NetGroupInfo"
     ],
-    "offset": 158508,
+    "offset": 151900,
     "length": 768
   },
   {
@@ -2125,7 +2125,7 @@
     "defs": [
       "flash.net:NetGroupReceiveMode"
     ],
-    "offset": 159276,
+    "offset": 152668,
     "length": 245
   },
   {
@@ -2133,7 +2133,7 @@
     "defs": [
       "flash.net:NetGroupReplicationStrategy"
     ],
-    "offset": 159521,
+    "offset": 152913,
     "length": 283
   },
   {
@@ -2141,7 +2141,7 @@
     "defs": [
       "flash.net:NetGroupSendMode"
     ],
-    "offset": 159804,
+    "offset": 153196,
     "length": 273
   },
   {
@@ -2149,7 +2149,7 @@
     "defs": [
       "flash.net:NetGroupSendResult"
     ],
-    "offset": 160077,
+    "offset": 153469,
     "length": 270
   },
   {
@@ -2157,7 +2157,7 @@
     "defs": [
       "flash.net:NetMonitor"
     ],
-    "offset": 160347,
+    "offset": 153739,
     "length": 279
   },
   {
@@ -2165,7 +2165,7 @@
     "defs": [
       "flash.net:NetStream"
     ],
-    "offset": 160626,
+    "offset": 154018,
     "length": 3103
   },
   {
@@ -2173,7 +2173,7 @@
     "defs": [
       "flash.net:NetStreamAppendBytesAction"
     ],
-    "offset": 163729,
+    "offset": 157121,
     "length": 315
   },
   {
@@ -2181,7 +2181,7 @@
     "defs": [
       "flash.net:NetStreamMulticastInfo"
     ],
-    "offset": 164044,
+    "offset": 157436,
     "length": 2712
   },
   {
@@ -2189,7 +2189,7 @@
     "defs": [
       "flash.net:NetStreamInfo"
     ],
-    "offset": 166756,
+    "offset": 160148,
     "length": 1958
   },
   {
@@ -2197,7 +2197,7 @@
     "defs": [
       "flash.net:NetStreamPlayOptions"
     ],
-    "offset": 168714,
+    "offset": 162106,
     "length": 355
   },
   {
@@ -2205,7 +2205,7 @@
     "defs": [
       "flash.net:NetStreamPlayTransitions"
     ],
-    "offset": 169069,
+    "offset": 162461,
     "length": 406
   },
   {
@@ -2213,7 +2213,7 @@
     "defs": [
       "flash.net:ObjectEncoding"
     ],
-    "offset": 169475,
+    "offset": 162867,
     "length": 345
   },
   {
@@ -2221,7 +2221,7 @@
     "defs": [
       "flash.net:Responder"
     ],
-    "offset": 169820,
+    "offset": 163212,
     "length": 239
   },
   {
@@ -2229,7 +2229,7 @@
     "defs": [
       "flash.net:SecureSocket"
     ],
-    "offset": 170059,
+    "offset": 163451,
     "length": 566
   },
   {
@@ -2237,15 +2237,15 @@
     "defs": [
       "flash.net:SharedObject"
     ],
-    "offset": 170625,
-    "length": 1122
+    "offset": 164017,
+    "length": 1108
   },
   {
     "name": "flash/net/SharedObjectFlushStatus",
     "defs": [
       "flash.net:SharedObjectFlushStatus"
     ],
-    "offset": 171747,
+    "offset": 165125,
     "length": 257
   },
   {
@@ -2253,7 +2253,7 @@
     "defs": [
       "flash.net:URLLoader"
     ],
-    "offset": 172004,
+    "offset": 165382,
     "length": 1501
   },
   {
@@ -2261,7 +2261,7 @@
     "defs": [
       "flash.net:Socket"
     ],
-    "offset": 173505,
+    "offset": 166883,
     "length": 1282
   },
   {
@@ -2269,7 +2269,7 @@
     "defs": [
       "flash.net:URLLoaderDataFormat"
     ],
-    "offset": 174787,
+    "offset": 168165,
     "length": 276
   },
   {
@@ -2277,15 +2277,15 @@
     "defs": [
       "flash.net:URLRequest"
     ],
-    "offset": 175063,
-    "length": 610
+    "offset": 168441,
+    "length": 402
   },
   {
     "name": "flash/net/URLRequestHeader",
     "defs": [
       "flash.net:URLRequestHeader"
     ],
-    "offset": 175673,
+    "offset": 168843,
     "length": 223
   },
   {
@@ -2293,7 +2293,7 @@
     "defs": [
       "flash.net:URLStream"
     ],
-    "offset": 175896,
+    "offset": 169066,
     "length": 908
   },
   {
@@ -2301,7 +2301,7 @@
     "defs": [
       "flash.net:URLRequestMethod"
     ],
-    "offset": 176804,
+    "offset": 169974,
     "length": 304
   },
   {
@@ -2309,15 +2309,15 @@
     "defs": [
       "flash.net:URLVariables"
     ],
-    "offset": 177108,
-    "length": 937
+    "offset": 170278,
+    "length": 972
   },
   {
     "name": "flash/net/XMLSocket",
     "defs": [
       "flash.net:XMLSocket"
     ],
-    "offset": 178045,
+    "offset": 171250,
     "length": 480
   },
   {
@@ -2325,7 +2325,7 @@
     "defs": [
       "flash.text:AntiAliasType"
     ],
-    "offset": 178525,
+    "offset": 171730,
     "length": 239
   },
   {
@@ -2333,7 +2333,7 @@
     "defs": [
       "flash.text:CSMSettings"
     ],
-    "offset": 178764,
+    "offset": 171969,
     "length": 248
   },
   {
@@ -2341,7 +2341,7 @@
     "defs": [
       "flash.text:Font"
     ],
-    "offset": 179012,
+    "offset": 172217,
     "length": 361
   },
   {
@@ -2349,7 +2349,7 @@
     "defs": [
       "flash.text:FontStyle"
     ],
-    "offset": 179373,
+    "offset": 172578,
     "length": 292
   },
   {
@@ -2357,7 +2357,7 @@
     "defs": [
       "flash.text:FontType"
     ],
-    "offset": 179665,
+    "offset": 172870,
     "length": 269
   },
   {
@@ -2365,7 +2365,7 @@
     "defs": [
       "flash.text:GridFitType"
     ],
-    "offset": 179934,
+    "offset": 173139,
     "length": 258
   },
   {
@@ -2373,7 +2373,7 @@
     "defs": [
       "flash.text:StaticText"
     ],
-    "offset": 180192,
+    "offset": 173397,
     "length": 299
   },
   {
@@ -2381,7 +2381,7 @@
     "defs": [
       "flash.text:StyleSheet"
     ],
-    "offset": 180491,
+    "offset": 173696,
     "length": 523
   },
   {
@@ -2389,7 +2389,7 @@
     "defs": [
       "flash.text:TextColorType"
     ],
-    "offset": 181014,
+    "offset": 174219,
     "length": 241
   },
   {
@@ -2397,7 +2397,7 @@
     "defs": [
       "flash.text:TextDisplayMode"
     ],
-    "offset": 181255,
+    "offset": 174460,
     "length": 258
   },
   {
@@ -2405,7 +2405,7 @@
     "defs": [
       "flash.text:TextField"
     ],
-    "offset": 181513,
+    "offset": 174718,
     "length": 2507
   },
   {
@@ -2413,7 +2413,7 @@
     "defs": [
       "flash.text:TextFieldAutoSize"
     ],
-    "offset": 184020,
+    "offset": 177225,
     "length": 291
   },
   {
@@ -2421,7 +2421,7 @@
     "defs": [
       "flash.text:TextFieldType"
     ],
-    "offset": 184311,
+    "offset": 177516,
     "length": 235
   },
   {
@@ -2429,15 +2429,15 @@
     "defs": [
       "flash.text:TextFormat"
     ],
-    "offset": 184546,
-    "length": 943
+    "offset": 177751,
+    "length": 778
   },
   {
     "name": "flash/text/TextFormatAlign",
     "defs": [
       "flash.text:TextFormatAlign"
     ],
-    "offset": 185489,
+    "offset": 178529,
     "length": 343
   },
   {
@@ -2445,7 +2445,7 @@
     "defs": [
       "flash.text:TextFormatDisplay"
     ],
-    "offset": 185832,
+    "offset": 178872,
     "length": 241
   },
   {
@@ -2453,7 +2453,7 @@
     "defs": [
       "flash.text:TextInteractionMode"
     ],
-    "offset": 186073,
+    "offset": 179113,
     "length": 253
   },
   {
@@ -2461,7 +2461,7 @@
     "defs": [
       "flash.text:TextLineMetrics"
     ],
-    "offset": 186326,
+    "offset": 179366,
     "length": 300
   },
   {
@@ -2469,7 +2469,7 @@
     "defs": [
       "flash.text:TextRenderer"
     ],
-    "offset": 186626,
+    "offset": 179666,
     "length": 373
   },
   {
@@ -2477,15 +2477,15 @@
     "defs": [
       "flash.text:TextRun"
     ],
-    "offset": 186999,
-    "length": 246
+    "offset": 180039,
+    "length": 294
   },
   {
     "name": "flash/text/TextSnapshot",
     "defs": [
       "flash.text:TextSnapshot"
     ],
-    "offset": 187245,
+    "offset": 180333,
     "length": 513
   },
   {
@@ -2493,7 +2493,7 @@
     "defs": [
       "flash.text.engine:BreakOpportunity"
     ],
-    "offset": 187758,
+    "offset": 180846,
     "length": 293
   },
   {
@@ -2501,7 +2501,7 @@
     "defs": [
       "flash.text.engine:CFFHinting"
     ],
-    "offset": 188051,
+    "offset": 181139,
     "length": 256
   },
   {
@@ -2509,7 +2509,7 @@
     "defs": [
       "flash.text.engine:ContentElement"
     ],
-    "offset": 188307,
+    "offset": 181395,
     "length": 624
   },
   {
@@ -2517,7 +2517,7 @@
     "defs": [
       "flash.text.engine:DigitCase"
     ],
-    "offset": 188931,
+    "offset": 182019,
     "length": 277
   },
   {
@@ -2525,7 +2525,7 @@
     "defs": [
       "flash.text.engine:DigitWidth"
     ],
-    "offset": 189208,
+    "offset": 182296,
     "length": 288
   },
   {
@@ -2533,7 +2533,7 @@
     "defs": [
       "flash.text.engine:EastAsianJustifier"
     ],
-    "offset": 189496,
+    "offset": 182584,
     "length": 495
   },
   {
@@ -2541,7 +2541,7 @@
     "defs": [
       "flash.text.engine:ElementFormat"
     ],
-    "offset": 189991,
+    "offset": 183079,
     "length": 1204
   },
   {
@@ -2549,7 +2549,7 @@
     "defs": [
       "flash.text.engine:FontDescription"
     ],
-    "offset": 191195,
+    "offset": 184283,
     "length": 672
   },
   {
@@ -2557,7 +2557,7 @@
     "defs": [
       "flash.text.engine:FontLookup"
     ],
-    "offset": 191867,
+    "offset": 184955,
     "length": 254
   },
   {
@@ -2565,7 +2565,7 @@
     "defs": [
       "flash.text.engine:FontMetrics"
     ],
-    "offset": 192121,
+    "offset": 185209,
     "length": 512
   },
   {
@@ -2573,7 +2573,7 @@
     "defs": [
       "flash.text.engine:FontPosture"
     ],
-    "offset": 192633,
+    "offset": 185721,
     "length": 245
   },
   {
@@ -2581,7 +2581,7 @@
     "defs": [
       "flash.text.engine:FontWeight"
     ],
-    "offset": 192878,
+    "offset": 185966,
     "length": 239
   },
   {
@@ -2589,7 +2589,7 @@
     "defs": [
       "flash.text.engine:GraphicElement"
     ],
-    "offset": 193117,
+    "offset": 186205,
     "length": 497
   },
   {
@@ -2597,7 +2597,7 @@
     "defs": [
       "flash.text.engine:GroupElement"
     ],
-    "offset": 193614,
+    "offset": 186702,
     "length": 714
   },
   {
@@ -2605,7 +2605,7 @@
     "defs": [
       "flash.text.engine:JustificationStyle"
     ],
-    "offset": 194328,
+    "offset": 187416,
     "length": 356
   },
   {
@@ -2613,7 +2613,7 @@
     "defs": [
       "flash.text.engine:Kerning"
     ],
-    "offset": 194684,
+    "offset": 187772,
     "length": 248
   },
   {
@@ -2621,7 +2621,7 @@
     "defs": [
       "flash.text.engine:LigatureLevel"
     ],
-    "offset": 194932,
+    "offset": 188020,
     "length": 338
   },
   {
@@ -2629,7 +2629,7 @@
     "defs": [
       "flash.text.engine:LineJustification"
     ],
-    "offset": 195270,
+    "offset": 188358,
     "length": 388
   },
   {
@@ -2637,7 +2637,7 @@
     "defs": [
       "flash.text.engine:RenderingMode"
     ],
-    "offset": 195658,
+    "offset": 188746,
     "length": 243
   },
   {
@@ -2645,7 +2645,7 @@
     "defs": [
       "flash.text.engine:SpaceJustifier"
     ],
-    "offset": 195901,
+    "offset": 188989,
     "length": 527
   },
   {
@@ -2653,7 +2653,7 @@
     "defs": [
       "flash.text.engine:TabAlignment"
     ],
-    "offset": 196428,
+    "offset": 189516,
     "length": 299
   },
   {
@@ -2661,7 +2661,7 @@
     "defs": [
       "flash.text.engine:TabStop"
     ],
-    "offset": 196727,
+    "offset": 189815,
     "length": 357
   },
   {
@@ -2669,7 +2669,7 @@
     "defs": [
       "flash.text.engine:TextBaseline"
     ],
-    "offset": 197084,
+    "offset": 190172,
     "length": 483
   },
   {
@@ -2677,7 +2677,7 @@
     "defs": [
       "flash.text.engine:TextBlock"
     ],
-    "offset": 197567,
+    "offset": 190655,
     "length": 2184
   },
   {
@@ -2685,7 +2685,7 @@
     "defs": [
       "flash.text.engine:TextElement"
     ],
-    "offset": 199751,
+    "offset": 192839,
     "length": 383
   },
   {
@@ -2693,7 +2693,7 @@
     "defs": [
       "flash.text.engine:TextJustifier"
     ],
-    "offset": 200134,
+    "offset": 193222,
     "length": 774
   },
   {
@@ -2701,7 +2701,7 @@
     "defs": [
       "flash.text.engine:TextLine"
     ],
-    "offset": 200908,
+    "offset": 193996,
     "length": 2027
   },
   {
@@ -2709,7 +2709,7 @@
     "defs": [
       "flash.text.engine:TextLineCreationResult"
     ],
-    "offset": 202935,
+    "offset": 196023,
     "length": 360
   },
   {
@@ -2717,7 +2717,7 @@
     "defs": [
       "flash.text.engine:TextLineMirrorRegion"
     ],
-    "offset": 203295,
+    "offset": 196383,
     "length": 451
   },
   {
@@ -2725,7 +2725,7 @@
     "defs": [
       "flash.text.engine:TextLineValidity"
     ],
-    "offset": 203746,
+    "offset": 196834,
     "length": 332
   },
   {
@@ -2733,7 +2733,7 @@
     "defs": [
       "flash.text.engine:TextRotation"
     ],
-    "offset": 204078,
+    "offset": 197166,
     "length": 352
   },
   {
@@ -2741,7 +2741,7 @@
     "defs": [
       "flash.text.engine:TypographicCase"
     ],
-    "offset": 204430,
+    "offset": 197518,
     "length": 436
   },
   {
@@ -2749,7 +2749,7 @@
     "defs": [
       "flash.text.ime:CompositionAttributeRange"
     ],
-    "offset": 204866,
+    "offset": 197954,
     "length": 315
   },
   {
@@ -2757,7 +2757,7 @@
     "defs": [
       "flash.text.ime:IIMEClient"
     ],
-    "offset": 205181,
+    "offset": 198269,
     "length": 525
   },
   {
@@ -2768,7 +2768,7 @@
       "flash.net:registerClassAlias",
       "flash.net:getClassByAlias"
     ],
-    "offset": 205706,
+    "offset": 198794,
     "length": 343
   },
   {
@@ -2783,7 +2783,7 @@
       "flash.utils:escapeMultiByte",
       "flash.utils:unescapeMultiByte"
     ],
-    "offset": 206049,
+    "offset": 199137,
     "length": 606
   },
   {
@@ -2791,7 +2791,7 @@
     "defs": [
       "flash.utils:Endian"
     ],
-    "offset": 206655,
+    "offset": 199743,
     "length": 243
   },
   {
@@ -2799,7 +2799,7 @@
     "defs": [
       "flash.utils:IExternalizable"
     ],
-    "offset": 206898,
+    "offset": 199986,
     "length": 223
   },
   {
@@ -2807,7 +2807,7 @@
     "defs": [
       "flash.utils:ObjectInput"
     ],
-    "offset": 207121,
+    "offset": 200209,
     "length": 706
   },
   {
@@ -2815,7 +2815,7 @@
     "defs": [
       "flash.utils:ObjectOutput"
     ],
-    "offset": 207827,
+    "offset": 200915,
     "length": 648
   },
   {
@@ -2823,7 +2823,7 @@
     "defs": [
       "flash.utils:Timer"
     ],
-    "offset": 208475,
+    "offset": 201563,
     "length": 973
   },
   {
@@ -2835,7 +2835,7 @@
       "flash.utils:clearInterval",
       "flash.utils:clearTimeout"
     ],
-    "offset": 209448,
+    "offset": 202536,
     "length": 995
   }
 ]

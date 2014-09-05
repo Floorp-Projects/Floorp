@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Web Storage</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+ </head>
+ <body>
+    <h1>storage_session_setItem</h1>
+    <div id="log"></div>
+    <script>
+        var test_error = { name: "test" };
+        test(function() {
+            sessionStorage.clear();
+            test(function() {
+                assert_false("name" in sessionStorage);
+                assert_false("age" in sessionStorage);
+            });
+            test(function() {
+                sessionStorage["name"] = "user1";
+                assert_true("name" in sessionStorage);
+                assert_equals(sessionStorage.length, 1, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("name"), "user1");
+                assert_equals(sessionStorage["name"], "user1");
+            });
+            test(function() {
+                sessionStorage["name"] = "user2";
+                assert_true("name" in sessionStorage);
+                assert_equals(sessionStorage.length, 1, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("name"), "user2");
+                assert_equals(sessionStorage["name"], "user2");
+            });
+            test(function() {
+                sessionStorage.setItem("name", "user3");
+                assert_true("name" in sessionStorage);
+                assert_equals(sessionStorage.length, 1, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("name"), "user3");
+                assert_equals(sessionStorage["name"], "user3");
+            });
+            test(function() {
+                sessionStorage.setItem("age", null);
+                assert_true("age" in sessionStorage);
+                assert_equals(sessionStorage.length, 2, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("age"), "null");
+                assert_equals(sessionStorage["age"], "null");
+            });
+            test(function() {
+                sessionStorage["age"] = null;
+                assert_true("age" in sessionStorage);
+                assert_equals(sessionStorage.length, 2, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("age"), "null");
+                assert_equals(sessionStorage["age"], "null");
+            });
+            test(function() {
+                sessionStorage.setItem("age", undefined);
+                assert_true("age" in sessionStorage);
+                assert_equals(sessionStorage.length, 2, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("age"), "undefined");
+                assert_equals(sessionStorage["age"], "undefined");
+            });
+            test(function() {
+                sessionStorage["age"] = undefined;
+                assert_true("age" in sessionStorage);
+                assert_equals(sessionStorage.length, 2, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("age"), "undefined");
+                assert_equals(sessionStorage["age"], "undefined");
+            });
+            test(function() {
+                assert_throws(test_error, function() {
+                    sessionStorage.setItem("age",
+                        { toString: function() { throw test_error; } });
+                });
+                assert_true("age" in sessionStorage);
+                assert_equals(sessionStorage.length, 2, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("age"), "undefined");
+                assert_equals(sessionStorage["age"], "undefined");
+            });
+            test(function() {
+                assert_throws(test_error, function() {
+                    sessionStorage["age"] =
+                        { toString: function() { throw test_error; } };
+                });
+                assert_true("age" in sessionStorage);
+                assert_equals(sessionStorage.length, 2, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("age"), "undefined");
+                assert_equals(sessionStorage["age"], "undefined");
+            });
+            test(function() {
+                sessionStorage.setItem(undefined, "test");
+                assert_true("undefined" in sessionStorage);
+                assert_equals(sessionStorage.length, 3, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("undefined"), "test");
+                assert_equals(sessionStorage["undefined"], "test");
+            });
+            test(function() {
+                sessionStorage[undefined] = "test2";
+                assert_true("undefined" in sessionStorage);
+                assert_equals(sessionStorage.length, 3, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("undefined"), "test2");
+                assert_equals(sessionStorage["undefined"], "test2");
+            });
+            test(function() {
+                sessionStorage.setItem(null, "test");
+                assert_true("null" in sessionStorage);
+                assert_equals(sessionStorage.length, 4, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("null"), "test");
+                assert_equals(sessionStorage["null"], "test");
+            });
+            test(function() {
+                sessionStorage[null] = "test2";
+                assert_true("null" in sessionStorage);
+                assert_equals(sessionStorage.length, 4, "sessionStorage.length")
+                assert_equals(sessionStorage.getItem("null"), "test2");
+                assert_equals(sessionStorage["null"], "test2");
+            });
+        });
+    </script>
+ </body>
+</html>
