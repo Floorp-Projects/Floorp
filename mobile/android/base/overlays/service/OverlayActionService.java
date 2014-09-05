@@ -100,22 +100,17 @@ public class OverlayActionService extends Service {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                Bundle extras = intent.getExtras();
-
-                // Fish the parameters out of the Intent.
-                final String url = extras.getString(OverlayConstants.EXTRA_URL);
-                final String title = extras.getString(OverlayConstants.EXTRA_TITLE);
-                final Parcelable extra = extras.getParcelable(OverlayConstants.EXTRA_PARAMETERS);
-
-                if (url == null) {
-                    Log.e(LOGTAG, "Null url passed to handleShare!");
+                ShareData shareData;
+                try {
+                    shareData = ShareData.fromIntent(intent);
+                } catch (IllegalArgumentException e) {
+                    Log.e(LOGTAG, "Error parsing share intent: ", e);
                     return;
                 }
 
-                ShareMethod.Type shareMethodType = (ShareMethod.Type) extras.get(EXTRA_SHARE_METHOD);
-                ShareMethod shareMethod = shareTypes.get(shareMethodType);
+                ShareMethod shareMethod = shareTypes.get(shareData.shareMethodType);
 
-                final ShareMethod.Result result = shareMethod.handle(title, url, extra);
+                final ShareMethod.Result result = shareMethod.handle(shareData);
                 // Dispatch the share to the targeted ShareMethod.
                 switch (result) {
                     case SUCCESS:
