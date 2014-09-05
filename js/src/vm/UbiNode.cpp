@@ -230,5 +230,3 @@ template<> const jschar TracerConcrete<JS::Symbol>::concreteTypeName[] =
     MOZ_UTF16("JS::Symbol");
 template<> const jschar TracerConcrete<JSScript>::concreteTypeName[] =
     MOZ_UTF16("JSScript");
-template<> const jschar TracerConcrete<js::types::TypeObject>::concreteTypeName[] =
-    MOZ_UTF16("js::types::TypeObject");
