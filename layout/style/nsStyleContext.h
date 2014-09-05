@@ -199,6 +199,11 @@ public:
   bool UsesGrandancestorStyle() const
     { return !!(mBits & NS_STYLE_USES_GRANDANCESTOR_STYLE); }
 
+  // Is this style context shared with a sibling or cousin?
+  // (See nsStyleSet::GetContext.)
+  bool IsShared() const
+    { return !!(mBits & NS_STYLE_IS_SHARED); }
+
   // Tell this style context to cache aStruct as the struct for aSID
   void SetStyle(nsStyleStructID aSID, void* aStruct);
 
