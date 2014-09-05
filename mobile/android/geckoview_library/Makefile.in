@@ -47,8 +47,9 @@ package: local.properties project.properties AndroidManifest.xml FORCE
 	cp $(DEPTH)/mobile/android/base/*.jar libs/
 	$(RM) libs/gecko-R.jar
 
-	# Copy the SOs
-	cp $(_ABS_DIST)/bin/libmozglue.so $(_ABS_DIST)/bin/lib/libplugin-container.so libs/$(ANDROID_CPU_ARCH)/
+	# Copy the SOs. The latter should be $(MOZ_CHILD_PROCESS_NAME), but
+	# it includes a "lib/" prefix.
+	cp $(_ABS_DIST)/bin/libmozglue.so $(_ABS_DIST)/bin/libplugin-container.so libs/$(ANDROID_CPU_ARCH)/
 
 	# Copy the resources
 	$(RM) -rf res
