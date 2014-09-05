@@ -3915,7 +3915,7 @@ dnl JavaScript shell
 dnl ========================================================
 
 AC_CHECK_HEADERS(malloc.h)
-AC_CHECK_FUNCS(setlocale localeconv malloc_size malloc_usable_size)
+AC_CHECK_FUNCS(setlocale localeconv malloc_usable_size)
 
 AC_SUBST(MOZILLA_VERSION)
 
