@@ -891,6 +891,10 @@ jit::FinishDiscardBaselineScript(FreeOp *fop, JSScript *script)
         // Reset |active| flag so that we don't need a separate script
         // iteration to unmark them.
         script->baselineScript()->resetActive();
+
+        // The baseline caches have been wiped out, so the script will need to
+        // warm back up before it can be inlined during Ion compilation.
+        script->baselineScript()->clearIonCompiledOrInlined();
         return;
     }
 
