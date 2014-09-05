@@ -387,6 +387,11 @@ CSSCoord AxisX::GetRectOffset(const CSSRect& aRect) const
   return aRect.x;
 }
 
+ScreenPoint AxisX::MakePoint(ScreenCoord aCoord) const
+{
+  return ScreenPoint(aCoord, 0);
+}
+
 AxisY::AxisY(AsyncPanZoomController* aAsyncPanZoomController)
   : Axis(aAsyncPanZoomController)
 {
@@ -406,6 +411,11 @@ CSSCoord AxisY::GetRectLength(const CSSRect& aRect) const
 CSSCoord AxisY::GetRectOffset(const CSSRect& aRect) const
 {
   return aRect.y;
+}
+
+ScreenPoint AxisY::MakePoint(ScreenCoord aCoord) const
+{
+  return ScreenPoint(0, aCoord);
 }
 
 }
