@@ -203,23 +203,7 @@ RestyleTracker::DoProcessRestyles()
       }
 
       ProcessOneRestyle(element, data.mRestyleHint, data.mChangeHint);
-
-      // Any descendant elements that we expected we would restyle,
-      // but did not up restyling, we should restyle next time around
-      // the loop.
-      //
-      // Note that data.mDescendants maintains the same invariant that
-      // mRestyleRoots does, i.e. that ancestors appear after descendants.
-      // Since we have removed |element| from the end of mRestyleRoots,
-      // and |element| is an ancestor of all elements in data.mDescendants,
-      // we are safe to simply append to the end of mRestyleRoots to
-      // maintain its invariant.
-      for (uint32_t i = 0; i < data.mDescendants.Length(); ++i) {
-        Element* descendant = data.mDescendants[i];
-        if (descendant->HasFlag(RestyleBit())) {
-          mRestyleRoots.AppendElement(descendant);
-        }
-      }
+      AddRestyleRootsIfAwaitingRestyle(data.mDescendants);
     }
 
     if (mHaveLaterSiblingRestyles) {
@@ -297,5 +281,31 @@ RestyleTracker::GetRestyleData(Element* aElement, RestyleData* aData)
   return true;
 }
 
-} // namespace mozilla
+void
+RestyleTracker::AddRestyleRootsIfAwaitingRestyle(
+                                   const nsTArray<nsRefPtr<Element>>& aElements)
+{
+  // The RestyleData for a given element has stored in mDescendants
+  // the list of descendants we need to end up restyling.  Since we
+  // won't necessarily end up restyling them, due to the restyle
+  // process finishing early (see how eRestyleResult_Stop is handled
+  // in ElementRestyler::Restyle), we add them to the list of restyle
+  // roots to handle the next time around the
+  // RestyleTracker::DoProcessRestyles loop.
+  //
+  // Note that aElements must maintain the same invariant
+  // that mRestyleRoots does, i.e. that ancestors appear after descendants.
+  // Since we call AddRestyleRootsIfAwaitingRestyle only after we have
+  // removed the restyle root we are currently processing from the end of
+  // mRestyleRoots, and the only elements we get here in aElements are
+  // descendants of that restyle root, we are safe to simply append to the
+  // end of mRestyleRoots to maintain its invariant.
+  for (size_t i = 0; i < aElements.Length(); i++) {
+    Element* element = aElements[i];
+    if (element->HasFlag(RestyleBit())) {
+      mRestyleRoots.AppendElement(element);
+    }
+  }
+}
 
+} // namespace mozilla
