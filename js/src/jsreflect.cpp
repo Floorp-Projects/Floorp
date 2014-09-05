@@ -724,7 +724,7 @@ NodeBuilder::newArray(NodeVector &elts, MutableHandleValue dst)
         js_ReportAllocationOverflow(cx);
         return false;
     }
-    RootedObject array(cx, NewDenseFullyAllocatedArray(cx, uint32_t(len)));
+    RootedObject array(cx, NewDenseAllocatedArray(cx, uint32_t(len)));
     if (!array)
         return false;
 

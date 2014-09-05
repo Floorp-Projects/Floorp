@@ -5581,7 +5581,7 @@ IonBuilder::jsop_newarray(uint32_t count)
 
     MNewArray *ins = MNewArray::New(alloc(), constraints(), count, templateConst,
                                     templateObject->type()->initialHeap(constraints()),
-                                    NewArray_FullyAllocating);
+                                    MNewArray::NewArray_Allocating);
     current->add(ins);
     current->push(ins);
 
@@ -8313,7 +8313,7 @@ IonBuilder::jsop_rest()
 
     MNewArray *array = MNewArray::New(alloc(), constraints(), numRest, templateConst,
                                       templateObject->type()->initialHeap(constraints()),
-                                      NewArray_FullyAllocating);
+                                      MNewArray::NewArray_Allocating);
     current->add(array);
 
     if (numRest == 0) {
