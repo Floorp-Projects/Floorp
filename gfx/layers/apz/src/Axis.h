@@ -217,6 +217,8 @@ public:
   virtual CSSCoord GetRectLength(const CSSRect& aRect) const = 0;
   virtual CSSCoord GetRectOffset(const CSSRect& aRect) const = 0;
 
+  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const = 0;
+
 protected:
   ScreenCoord mPos;
   uint32_t mPosTimeMs;
@@ -250,6 +252,7 @@ public:
   virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const;
   virtual CSSCoord GetRectLength(const CSSRect& aRect) const;
   virtual CSSCoord GetRectOffset(const CSSRect& aRect) const;
+  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const;
 };
 
 class AxisY : public Axis {
@@ -258,6 +261,7 @@ public:
   virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const;
   virtual CSSCoord GetRectLength(const CSSRect& aRect) const;
   virtual CSSCoord GetRectOffset(const CSSRect& aRect) const;
+  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const;
 };
 
 }
