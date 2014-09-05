@@ -21,6 +21,7 @@
 #include "nsStyleContext.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "GeckoProfiler.h"
+#include "nsIDocument.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -84,6 +85,24 @@ nsStyleContext::~nsStyleContext()
 
   nsPresContext *presContext = mRuleNode->PresContext();
 
+#ifdef DEBUG
+#if 0
+  // Assert that the style structs we are about to destroy are not referenced
+  // anywhere else in the style context tree.  These checks are expensive,
+  // which is why they are not enabled even #ifdef DEBUG.
+  nsStyleContext* root = this;
+  while (root->mParent) {
+    root = root->mParent;
+  }
+  root->AssertStructsNotUsedElsewhere(this,
+                                      std::numeric_limits<int32_t>::max());
+#else
+  // In DEBUG builds we perform a more limited check just of the children
+  // of this style context.
+  AssertStructsNotUsedElsewhere(this, 2);
+#endif
+#endif
+
   mRuleNode->Release();
 
   presContext->PresShell()->StyleSet()->
@@ -100,6 +119,84 @@ nsStyleContext::~nsStyleContext()
     mCachedResetData->Destroy(mBits, presContext);
   }
 }
+
+#ifdef DEBUG
+void
+nsStyleContext::AssertStructsNotUsedElsewhere(
+                                       nsStyleContext* aDestroyingContext,
+                                       int32_t aLevels) const
+{
+  if (aLevels == 0) {
+    return;
+  }
+
+  void* data;
+
+  if (this != aDestroyingContext) {
+    nsInheritedStyleData& destroyingInheritedData =
+      aDestroyingContext->mCachedInheritedData;
+#define STYLE_STRUCT_INHERITED(name_, checkdata_cb)                            \
+    data = destroyingInheritedData.mStyleStructs[eStyleStruct_##name_];        \
+    if (data &&                                                                \
+        !(aDestroyingContext->mBits & NS_STYLE_INHERIT_BIT(name_)) &&          \
+         (mCachedInheritedData.mStyleStructs[eStyleStruct_##name_] == data)) { \
+      printf("style struct %p found on style context %p\n", data, this);       \
+      nsString url;                                                            \
+      PresContext()->Document()->GetURL(url);                                  \
+      printf("  in %s\n", NS_LossyConvertUTF16toASCII(url).get());             \
+      MOZ_ASSERT(false, "destroying " #name_ " style struct still present "    \
+                        "in style context tree");                              \
+    }
+#define STYLE_STRUCT_RESET(name_, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT_RESET
+
+    if (mCachedResetData) {
+      nsResetStyleData* destroyingResetData =
+        aDestroyingContext->mCachedResetData;
+      if (destroyingResetData) {
+#define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)
+#define STYLE_STRUCT_RESET(name_, checkdata_cb)                                \
+        data = destroyingResetData->mStyleStructs[eStyleStruct_##name_];       \
+        if (data &&                                                            \
+            !(aDestroyingContext->mBits & NS_STYLE_INHERIT_BIT(name_)) &&      \
+            (mCachedResetData->mStyleStructs[eStyleStruct_##name_] == data)) { \
+          printf("style struct %p found on style context %p\n", data, this);   \
+          nsString url;                                                        \
+          PresContext()->Document()->GetURL(url);                              \
+          printf("  in %s\n", NS_LossyConvertUTF16toASCII(url).get());         \
+          MOZ_ASSERT(false, "destroying " #name_ " style struct still present "\
+                            "in style context tree");                          \
+        }
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT_RESET
+      }
+    }
+  }
+
+  if (mChild) {
+    const nsStyleContext* child = mChild;
+    do {
+      child->AssertStructsNotUsedElsewhere(aDestroyingContext, aLevels - 1);
+      child = child->mNextSibling;
+    } while (child != mChild);
+  }
+
+  if (mEmptyChild) {
+    const nsStyleContext* child = mEmptyChild;
+    do {
+      child->AssertStructsNotUsedElsewhere(aDestroyingContext, aLevels - 1);
+      child = child->mNextSibling;
+    } while (child != mEmptyChild);
+  }
+}
+#endif
 
 void nsStyleContext::AddChild(nsStyleContext* aChild)
 {
