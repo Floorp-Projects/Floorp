@@ -966,7 +966,7 @@ JSStructuredCloneWriter::traverseSet(HandleObject obj)
         RootedObject unwrapped(context(), CheckedUnwrap(obj));
         MOZ_ASSERT(unwrapped);
         JSAutoCompartment ac(context(), unwrapped);
-        if (!SetObject::keys(context(), obj, &keys))
+        if (!SetObject::keys(context(), unwrapped, &keys))
             return false;
     }
     if (!context()->compartment()->wrap(context(), keys))
