@@ -96,7 +96,7 @@ CaptureTask::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
   class EncodeComplete : public dom::EncodeCompleteCallback
   {
   public:
-    EncodeComplete(CaptureTask* aTask) : mTask(aTask) {}
+    explicit EncodeComplete(CaptureTask* aTask) : mTask(aTask) {}
 
     nsresult ReceiveBlob(already_AddRefed<dom::DOMFile> aBlob) MOZ_OVERRIDE
     {
@@ -167,7 +167,7 @@ CaptureTask::PostTrackEndEvent()
   class TrackEndRunnable : public nsRunnable
   {
   public:
-    TrackEndRunnable(CaptureTask* aTask)
+    explicit TrackEndRunnable(CaptureTask* aTask)
       : mTask(aTask) {}
 
     NS_IMETHOD Run()
