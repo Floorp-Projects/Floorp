@@ -18,6 +18,7 @@
 #include "jit/ExecutableAllocator.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonTypes.h"
+#include "js/UbiNode.h"
 
 namespace js {
 
@@ -811,5 +812,14 @@ IsMarked(const jit::VMFunction *)
 } // namespace gc
 
 } // namespace js
+
+namespace JS {
+namespace ubi {
+// JS::ubi::Node can trace JitCode using JS_TraceChildren, and JitCode instances
+// don't belong to any particular compartment, so we can use the generic
+// JS::ubi::TracerConcrete template for their JS::ubi::Concrete specialization.
+template<> struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> { };
+}
+}
 
 #endif /* jit_IonCode_h */
