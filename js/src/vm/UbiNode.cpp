@@ -52,7 +52,7 @@ Node::Node(JSGCTraceKind kind, void *ptr)
     }
 }
 
-Node::Node(Value value)
+Node::Node(HandleValue value)
 {
     if (value.isObject())
         construct(&value.toObject());
