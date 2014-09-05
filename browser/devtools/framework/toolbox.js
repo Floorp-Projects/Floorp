@@ -1520,7 +1520,7 @@ Toolbox.prototype = {
     this._telemetry.toolClosed("toolbox");
     this._telemetry.destroy();
 
-    return this._destroyer = promise.all(outstanding).then(() => {
+    this._destroyer = promise.all(outstanding).then(() => {
       // Targets need to be notified that the toolbox is being torn down.
       // This is done after other destruction tasks since it may tear down
       // fronts and the debugger transport which earlier destroy methods may
@@ -1552,6 +1552,20 @@ Toolbox.prototype = {
            .garbageCollect();
       }
     }).then(null, console.error);
+
+    let leakCheckObserver = ({wrappedJSObject: barrier}) => {
+      // Make the leak detector wait until this toolbox is properly destroyed.
+      barrier.client.addBlocker("DevTools: Wait until toolbox is destroyed",
+                                this._destroyer);
+    };
+
+    let topic = "shutdown-leaks-before-check";
+    Services.obs.addObserver(leakCheckObserver, topic, false);
+    this._destroyer.then(() => {
+      Services.obs.removeObserver(leakCheckObserver, topic);
+    });
+
+    return this._destroyer;
   },
 
   _highlighterReady: function() {
