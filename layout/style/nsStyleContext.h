@@ -360,6 +360,26 @@ public:
    */
   void MoveTo(nsStyleContext* aNewParent);
 
+  /**
+   * Swaps owned style struct pointers between this and aNewContext, on
+   * the assumption that aNewContext is the new style context for a frame
+   * and this is the old one.  aStructs indicates which structs to consider
+   * swapping; only those which are owned in both this and aNewContext
+   * will be swapped.
+   *
+   * Additionally, if there are identical struct pointers for one of the
+   * structs indicated by aStructs, and it is not an owned struct on this,
+   * then the cached struct slot on this will be set to null.  If the struct
+   * has been swapped on an ancestor, this style context (being the old one)
+   * will be left caching the struct pointer on the new ancestor, despite
+   * inheriting from the old ancestor.  This is not normally a problem, as
+   * this style context will usually be destroyed by being released at the
+   * end of ElementRestyler::Restyle; but for style contexts held on to outside
+   * of the frame, we need to clear out the cached pointer so that if we need
+   * it again we'll re-fetch it from the new ancestor.
+   */
+  void SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs);
+
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent);
   static void AssertStyleStructMaxDifferenceValid();
