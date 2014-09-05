@@ -1003,8 +1003,8 @@ pref("dom.wakelock.enabled", true);
 // Enable touch caret by default
 pref("touchcaret.enabled", true);
 
-// Disable selection caret by default
-pref("selectioncaret.enabled", false);
+// Enable selection caret by default
+pref("selectioncaret.enabled", true);
 
 // Enable sync and mozId with Firefox Accounts.
 pref("services.sync.fxaccounts.enabled", true);
