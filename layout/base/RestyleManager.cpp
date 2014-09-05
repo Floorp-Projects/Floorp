@@ -2516,6 +2516,120 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   RestyleChildren(childRestyleHint);
 }
 
+/**
+ * Depending on the details of the frame we are restyling or its old style
+ * context, we may or may not be able to stop restyling after this frame if
+ * we find we had no style changes.
+ *
+ * This function returns eRestyleResult_Stop if it does not find any
+ * conditions that would preclude stopping restyling, and
+ * eRestyleResult_Continue if it does.
+ */
+ElementRestyler::RestyleResult
+ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf)
+{
+  // We can't handle situations where the primary style context of a frame
+  // has not had any style data changes, but its additional style contexts
+  // have, so we don't considering stopping if this frame has any additional
+  // style contexts.
+  if (aSelf->GetAdditionalStyleContext(0)) {
+    return eRestyleResult_Continue;
+  }
+
+  // Style changes might have moved children between the two nsLetterFrames
+  // (the one matching ::first-letter and the one containing the rest of the
+  // content).  Continue restyling to the children of the nsLetterFrame so
+  // that they get the correct style context parent.  Similarly for
+  // nsLineFrames.
+  nsIAtom* type = aSelf->GetType();
+  if (type == nsGkAtoms::letterFrame || type == nsGkAtoms::lineFrame) {
+    return eRestyleResult_Continue;
+  }
+
+  // Some style computations depend not on the parent's style, but a grandparent
+  // or one the grandparent's ancestors.  An example is an explicit 'inherit'
+  // value for align-self, where if the parent frame's value for the property is
+  // 'auto' we end up inheriting the computed value from the grandparent.  We
+  // can't stop the restyling process on this frame (the one with 'auto', in
+  // this example), as the grandparent's computed value might have changed
+  // and we need to recompute the child's 'inherit' to that new value.
+  nsStyleContext* oldContext = aSelf->StyleContext();
+  if (oldContext->HasChildThatUsesGrandancestorStyle()) {
+    return eRestyleResult_Continue;
+  }
+
+  // We ignore all situations that involve :visited style.
+  if (oldContext->GetStyleIfVisited()) {
+    return eRestyleResult_Continue;
+  }
+
+  nsStyleContext* parentContext = oldContext->GetParent();
+  if (parentContext && parentContext->GetStyleIfVisited()) {
+    return eRestyleResult_Continue;
+  }
+
+  // We also ignore frames for pseudos, as their style contexts have
+  // inheritance structures that do not match the frame inheritance
+  // structure.  To avoid enumerating and checking all of the cases
+  // where we have this kind of inheritance, we keep restyling past
+  // pseudos.
+  nsIAtom* pseudoTag = oldContext->GetPseudo();
+  if (pseudoTag && pseudoTag != nsCSSAnonBoxes::mozNonElement) {
+    return eRestyleResult_Continue;
+  }
+
+  nsIFrame* parent = mFrame->GetParent();
+
+  if (parent) {
+    // Also if the parent has a pseudo, as this frame's style context will
+    // be inheriting from a grandparent frame's style context (or a further
+    // ancestor).
+    nsIAtom* parentPseudoTag = parent->StyleContext()->GetPseudo();
+    if (parentPseudoTag && parentPseudoTag != nsCSSAnonBoxes::mozNonElement) {
+      return eRestyleResult_Continue;
+    }
+  }
+
+  return eRestyleResult_Stop;
+}
+
+ElementRestyler::RestyleResult
+ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
+                                                    nsStyleContext* aNewContext)
+{
+  // Keep restyling if the new style context has any style-if-visted style, so
+  // that we can avoid the style context tree surgery having to deal to deal
+  // with visited styles.
+  if (aNewContext->GetStyleIfVisited()) {
+    return eRestyleResult_Continue;
+  }
+
+  // If link-related information has changed, or the pseudo for the frame has
+  // changed, or the new style context points to a different rule node, we can't
+  // leave the old style context on the frame.
+  nsStyleContext* oldContext = aSelf->StyleContext();
+  if (oldContext->IsLinkContext() != aNewContext->IsLinkContext() ||
+      oldContext->RelevantLinkVisited() != aNewContext->RelevantLinkVisited() ||
+      oldContext->GetPseudo() != aNewContext->GetPseudo() ||
+      oldContext->GetPseudoType() != aNewContext->GetPseudoType() ||
+      oldContext->RuleNode() != aNewContext->RuleNode()) {
+    return eRestyleResult_Continue;
+  }
+
+  // If the old and new style contexts differ in their
+  // NS_STYLE_HAS_TEXT_DECORATION_LINES or NS_STYLE_HAS_PSEUDO_ELEMENT_DATA
+  // bits, then we must keep restyling so that those new bit values are
+  // propagated.
+  if (oldContext->HasTextDecorationLines() !=
+        aNewContext->HasTextDecorationLines() ||
+      oldContext->HasPseudoElementData() !=
+        aNewContext->HasPseudoElementData()) {
+    return eRestyleResult_Continue;
+  }
+
+  return eRestyleResult_Stop;
+}
+
 ElementRestyler::RestyleResult
 ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
 {
@@ -2529,6 +2643,16 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
   // XXXbryner we may be able to avoid some of the refcounting goop here.
   // We do need a reference to oldContext for the lifetime of this function, and it's possible
   // that the frame has the last reference to it, so AddRef it here.
+
+  RestyleResult result;
+
+  if (aRestyleHint & eRestyle_ForceDescendants) {
+    result = eRestyleResult_ContinueAndForceDescendants;
+  } else if (aRestyleHint) {
+    result = eRestyleResult_Continue;
+  } else {
+    result = ComputeRestyleResultFromFrame(aSelf);
+  }
 
   nsChangeHint assumeDifferenceHint = NS_STYLE_HINT_NONE;
   nsRefPtr<nsStyleContext> oldContext = aSelf->StyleContext();
@@ -2579,6 +2703,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
     // Set |mResolvedChild| so we don't bother resolving the
     // provider again.
     mResolvedChild = providerFrame;
+    // Continue restyling past the odd style context inheritance.
+    result = eRestyleResult_Continue;
   }
 
   if (providerFrame != aSelf->GetParent()) {
@@ -2693,17 +2819,81 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
       // style contexts around.  However, we need to start from the
       // same root.
       newContext = oldContext;
+      // Never consider stopping restyling at the root.
+      result = eRestyleResult_Continue;
     }
   }
 
   if (newContext != oldContext) {
-    if (!copyFromContinuation) {
+    if (result == eRestyleResult_Stop) {
+      if (oldContext->IsShared()) {
+        // If the old style context was shared, then we can't return
+        // eRestyleResult_Stop and patch its parent to point to the
+        // new parent style context, as that change might not be valid
+        // for the other frames sharing the style context.
+        result = eRestyleResult_Continue;
+      } else {
+        // Look at some details of the new style context to see if it would
+        // be safe to stop restyling, if we discover it has the same style
+        // data as the old style context.
+        result = ComputeRestyleResultFromNewContext(aSelf, newContext);
+      }
+    }
+
+    if (copyFromContinuation) {
+      // In theory we should know whether there was any style data difference,
+      // since we would have calculated that in the previous call to
+      // RestyleSelf, so until we perform only one restyling per chain-of-
+      // same-style continuations (bug 918064), we need to check again here to
+      // determine whether it is safe to stop restyling.
+      if (result == eRestyleResult_Stop) {
+        uint32_t equalStructs;
+        oldContext->CalcStyleDifference(newContext, nsChangeHint(0),
+                                        &equalStructs);
+        if (equalStructs != NS_STYLE_INHERIT_MASK) {
+          // At least one struct had different data in it, so we must
+          // continue restyling children.
+          result = eRestyleResult_Continue;
+        }
+      }
+    } else {
       RestyleManager::TryStartingTransition(mPresContext, aSelf->GetContent(),
                                             oldContext, &newContext);
 
       uint32_t equalStructs;
       CaptureChange(oldContext, newContext, assumeDifferenceHint,
                     &equalStructs);
+      if (equalStructs != NS_STYLE_INHERIT_MASK) {
+        // At least one struct had different data in it, so we must
+        // continue restyling children.
+        result = eRestyleResult_Continue;
+      }
+    }
+
+    if (result == eRestyleResult_Stop) {
+      // Since we currently have eRestyleResult_Stop, we know at this
+      // point that all of our style structs are equal in terms of styles.
+      // However, some of them might be different pointers.  Since our
+      // descendants might share those pointers, we have to continue to
+      // restyling our descendants.
+      //
+      // However, because of the swapping of equal structs we've done on
+      // ancestors (XXX in a later patch), we've ensured that for structs
+      // that cannot be stored in the rule tree, we keep the old equal structs
+      // around rather than replacing them with new ones.  This means that the
+      // only time we hit this deoptimization is when at least one of the
+      // (old or new) equal structs could be stored in the rule tree, and
+      // those structs are then inherited (by pointer sharing) to
+      // descendant style contexts.
+      for (nsStyleStructID sid = nsStyleStructID(0);
+           sid < nsStyleStructID_Length;
+           sid = nsStyleStructID(sid + 1)) {
+        if (oldContext->HasCachedInheritedStyleData(sid) &&
+            !oldContext->HasSameCachedStyleData(newContext, sid)) {
+          result = eRestyleResult_Continue;
+          break;
+        }
+      }
     }
 
     if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
@@ -2714,7 +2904,10 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
       // CaptureChange because of copyFromContinuation being true,
       // since we'll have copied the existing context from the
       // previous continuation, so newContext == oldContext.
-      aSelf->SetStyleContext(newContext);
+
+      if (result != eRestyleResult_Stop) {
+        aSelf->SetStyleContext(newContext);
+      }
     }
   }
   oldContext = nullptr;
@@ -2781,7 +2974,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
     }
   }
 
-  return eRestyleResult_Continue;
+  return result;
 }
 
 void
