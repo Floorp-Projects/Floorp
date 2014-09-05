@@ -44,14 +44,20 @@
     }
   );
 
+  // Local mocks
+
   var mockClient = {
     requestCallUrl: noop,
     requestCallUrlInfo: noop
   };
 
-  var mockConversationModel = new loop.shared.models.ConversationModel({}, {sdk: {}});
+  var mockSDK = {};
 
-  // Fake notifier
+  var mockConversationModel = new loop.shared.models.ConversationModel({}, {
+    sdk: mockSDK
+  });
+  mockConversationModel.startSession = noop;
+
   var mockNotifier = {};
 
   var Example = React.createClass({
@@ -121,13 +127,23 @@
 
           <Section name="IncomingCallView">
             <Example summary="Default" dashed="true" style={{width: "280px"}}>
-              <IncomingCallView model={mockConversationModel} />
+              <div className="fx-embedded">
+                <IncomingCallView model={mockConversationModel} />
+              </div>
+            </Example>
+          </Section>
+
+          <Section name="IncomingCallView-ActiveState">
+            <Example summary="Default" dashed="true" style={{width: "280px"}}>
+              <div className="fx-embedded" >
+                <IncomingCallView  model={mockConversationModel} showDeclineMenu={true} />
+              </div>
             </Example>
           </Section>
 
           <Section name="ConversationToolbar">
-            <h3>Desktop Conversation Window</h3>
-            <div className="conversation-window">
+            <h2>Desktop Conversation Window</h2>
+            <div className="fx-embedded override-position">
               <Example summary="Default (260x265)" dashed="true">
                 <ConversationToolbar video={{enabled: true}}
                                      audio={{enabled: true}}
@@ -148,8 +164,8 @@
               </Example>
             </div>
 
-            <h3>Standalone</h3>
-            <div className="standalone">
+            <h2>Standalone</h2>
+            <div className="standalone override-position">
               <Example summary="Default">
                 <ConversationToolbar video={{enabled: true}}
                                      audio={{enabled: true}}
@@ -176,7 +192,8 @@
               <div className="standalone">
                 <StartConversationView model={mockConversationModel}
                                        client={mockClient}
-                                       notifier={mockNotifier} />
+                                       notifier={mockNotifier}
+                                       showCallOptionsMenu={true} />
               </div>
             </Example>
           </Section>
@@ -184,26 +201,70 @@
           <Section name="ConversationView">
             <Example summary="Desktop conversation window" dashed="true"
                      style={{width: "260px", height: "265px"}}>
-              <div className="conversation-window">
-                <ConversationView sdk={{}}
+              <div className="fx-embedded">
+                <ConversationView sdk={mockSDK}
                                   model={mockConversationModel}
                                   video={{enabled: true}}
                                   audio={{enabled: true}} />
               </div>
             </Example>
+
+            <Example summary="Desktop conversation window large" dashed="true">
+              <div className="breakpoint" data-breakpoint-width="800px"
+                data-breakpoint-height="600px">
+                <div className="fx-embedded">
+                  <ConversationView sdk={mockSDK}
+                    video={{enabled: true}}
+                    audio={{enabled: true}}
+                    model={mockConversationModel} />
+                </div>
+              </div>
+            </Example>
+
+            <Example summary="Desktop conversation window local audio stream"
+                     dashed="true" style={{width: "260px", height: "265px"}}>
+              <div className="fx-embedded">
+                <ConversationView sdk={mockSDK}
+                                  video={{enabled: false}}
+                                  audio={{enabled: true}}
+                                  model={mockConversationModel} />
+              </div>
+            </Example>
+
             <Example summary="Standalone version">
               <div className="standalone">
-                <ConversationView sdk={{}}
-                                  model={mockConversationModel}
+                <ConversationView sdk={mockSDK}
                                   video={{enabled: true}}
-                                  audio={{enabled: true}} />
+                                  audio={{enabled: true}}
+                                  model={mockConversationModel} />
               </div>
             </Example>
-            <Example summary="Default">
-              <ConversationView sdk={{}}
-                                model={mockConversationModel}
-                                video={{enabled: true}}
-                                audio={{enabled: true}} />
+          </Section>
+
+          <Section name="ConversationView-640">
+            <Example summary="640px breakpoint for conversation view">
+              <div className="breakpoint"
+                   style={{"text-align":"center"}}
+                   data-breakpoint-width="400px"
+                   data-breakpoint-height="780px">
+                <div className="standalone">
+                  <ConversationView sdk={mockSDK}
+                                    video={{enabled: true}}
+                                    audio={{enabled: true}}
+                                    model={mockConversationModel} />
+                </div>
+              </div>
+            </Example>
+          </Section>
+
+          <Section name="ConversationView-LocalAudio">
+            <Example summary="Local stream is audio only">
+              <div className="standalone">
+                <ConversationView sdk={mockSDK}
+                                  video={{enabled: false}}
+                                  audio={{enabled: true}}
+                                  model={mockConversationModel} />
+              </div>
             </Example>
           </Section>
 
@@ -231,14 +292,76 @@
               <CallUrlExpiredView helper={{isFirefox: returnFalse}} />
             </Example>
           </Section>
+
+          <Section name="AlertMessages">
+            <Example summary="Various alerts">
+              <div className="alert alert-warning">
+                <button className="close"></button>
+                <p className="message">
+                  The person you were calling has ended the conversation.
+                </p>
+              </div>
+              <br />
+              <div className="alert alert-error">
+                <button className="close"></button>
+                <p className="message">
+                  The person you were calling has ended the conversation.
+                </p>
+              </div>
+            </Example>
+          </Section>
+
         </ShowCase>
       );
     }
   });
 
+  /**
+   * Render components that have different styles across
+   * CSS media rules in their own iframe to mimic the viewport
+   * */
+  function _renderComponentsInIframes() {
+    var parents = document.querySelectorAll('.breakpoint');
+    [].forEach.call(parents, appendChildInIframe);
+
+    /**
+     * Extracts the component from the DOM and appends in the an iframe
+     *
+     * @type {HTMLElement} parent - Parent DOM node of a component & iframe
+     * */
+    function appendChildInIframe(parent) {
+      var styles     = document.querySelector('head').children;
+      var component  = parent.children[0];
+      var iframe     = document.createElement('iframe');
+      var width      = parent.dataset.breakpointWidth;
+      var height     = parent.dataset.breakpointHeight;
+
+      iframe.style.width  = width;
+      iframe.style.height = height;
+
+      parent.appendChild(iframe);
+      iframe.src    = "about:blank";
+      // Workaround for bug 297685
+      iframe.onload = function () {
+        var iframeHead = iframe.contentDocument.querySelector('head');
+        iframe.contentDocument.documentElement.querySelector('body')
+                                              .appendChild(component);
+
+        [].forEach.call(styles, function(style) {
+          iframeHead.appendChild(style.cloneNode(true));
+        });
+
+      };
+    }
+  }
+
   window.addEventListener("DOMContentLoaded", function() {
     var body = document.body;
     body.className = loop.shared.utils.getTargetPlatform();
-    React.renderComponent(<App />, document.body);
+
+    React.renderComponent(<App />, body);
+
+    _renderComponentsInIframes();
   });
+
 })();

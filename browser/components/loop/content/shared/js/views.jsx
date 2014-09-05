@@ -253,6 +253,25 @@ loop.shared.views = (function(_, OT, l10n) {
                                        this.stopPublishing);
 
       this.props.model.startSession();
+
+      /**
+       * OT inserts inline styles into the markup. Using a listener for
+       * resize events helps us trigger a full width/height on the element
+       * so that they update to the correct dimensions.
+       * */
+      window.addEventListener('orientationchange', this.updateVideoContainer);
+      window.addEventListener('resize', this.updateVideoContainer);
+    },
+
+    updateVideoContainer: function() {
+      var localStreamParent = document.querySelector('.local .OT_publisher');
+      var remoteStreamParent = document.querySelector('.remote .OT_subscriber');
+      if (localStreamParent) {
+        localStreamParent.style.width = "100%";
+      }
+      if (remoteStreamParent) {
+        remoteStreamParent.style.height = "100%";
+      }
     },
 
     componentWillUnmount: function() {
@@ -345,20 +364,25 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     render: function() {
+      var localStreamClasses = React.addons.classSet({
+        local: true,
+        "local-stream": true,
+        "local-stream-audio": !this.state.video.enabled
+      });
       /* jshint ignore:start */
       return (
         <div className="video-layout-wrapper">
           <div className="conversation">
-            <ConversationToolbar video={this.state.video}
-                                 audio={this.state.audio}
-                                 publishStream={this.publishStream}
-                                 hangup={this.hangup} />
             <div className="media nested">
               <div className="video_wrapper remote_wrapper">
                 <div className="video_inner remote"></div>
               </div>
-              <div className="local"></div>
+              <div className={localStreamClasses}></div>
             </div>
+            <ConversationToolbar video={this.state.video}
+                                 audio={this.state.audio}
+                                 publishStream={this.publishStream}
+                                 hangup={this.hangup} />
           </div>
         </div>
       );
@@ -735,7 +759,7 @@ loop.shared.views = (function(_, OT, l10n) {
     /**
      * Adds a l10n rror notification to the stack and renders it.
      *
-     * @param  {String} messageId L10n message id
+     * @param {String} messageId L10n message id
      */
     errorL10n: function(messageId) {
       this.error(l10n.get(messageId));
@@ -797,4 +821,4 @@ loop.shared.views = (function(_, OT, l10n) {
     UnsupportedBrowserView: UnsupportedBrowserView,
     UnsupportedDeviceView: UnsupportedDeviceView
   };
-})(_, window.OT, document.webL10n || document.mozL10n);
+})(_, window.OT, navigator.mozL10n || document.mozL10n);
