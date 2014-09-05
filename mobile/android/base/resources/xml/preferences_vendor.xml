@@ -8,13 +8,19 @@
                   android:title="@string/pref_category_vendor"
                   android:enabled="false">
 
-    <org.mozilla.gecko.preferences.LinkPreference android:title="@string/pref_about_firefox"
+    <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.about.link"
+                                                  android:title="@string/pref_about_firefox"
+                                                  android:persistent="false"
                                                   url="about:" />
 
-    <org.mozilla.gecko.preferences.LinkPreference android:title="@string/pref_vendor_faqs"
+    <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.faq.link"
+                                                  android:title="@string/pref_vendor_faqs"
+                                                  android:persistent="false"
                                                   url="https://support.mozilla.org/kb/firefox-android-faq"/>
 
-    <org.mozilla.gecko.preferences.LinkPreference android:title="@string/pref_vendor_feedback"
+    <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.feedback.link"
+                                                  android:title="@string/pref_vendor_feedback"
+                                                  android:persistent="false"
                                                   url="about:feedback" />
 
     <PreferenceCategory android:key="android.not_a_preference.datareporting.preferences"
@@ -35,6 +41,7 @@
 
         <org.mozilla.gecko.preferences.AlignRightLinkPreference android:key="android.not_a_preference.geo.learn_more"
                                                                 android:title="@string/pref_learn_more"
+                                                                android:persistent="false"
                                                                 url="https://location.services.mozilla.com/" />
 
         <CheckBoxPreference android:key="android.not_a_preference.healthreport.uploadEnabled"
@@ -44,6 +51,7 @@
 
         <org.mozilla.gecko.preferences.AlignRightLinkPreference android:key="android.not_a_preference.healthreport.link"
                                                                 android:title="@string/datareporting_abouthr_title"
+                                                                android:persistent="false"
                                                                 url="about:healthreport" />
 
     </PreferenceCategory>
