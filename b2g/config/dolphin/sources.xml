@@ -120,7 +120,7 @@
   <project name="platform/system/media" path="system/media" revision="7ff72c2ea2496fa50b5e8a915e56e901c3ccd240"/>
   <project name="platform/system/netd" path="system/netd" revision="3ae56364946d4a5bf5a5f83f12f9a45a30398e33"/>
   <project name="platform/system/security" path="system/security" revision="ee8068b9e7bfb2770635062fc9c2035be2142bd8"/>
-  <project name="platform/system/vold" path="system/vold" revision="118dec582647895a863dbbce8ec26bc7af457bbe"/>
+  <project name="platform/system/vold" path="system/vold" revision="2e43efe1b30d0b98574d293059556aebd2f46454"/>
   <!--original fetch url was http://sprdsource.spreadtrum.com:8085/b2g/android-->
   <remote fetch="https://git.mozilla.org/external/sprd-aosp" name="sprd-aosp"/>
   <default remote="sprd-aosp" revision="sprdb2g_gonk4.4" sync-j="4"/>
