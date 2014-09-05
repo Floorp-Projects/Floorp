@@ -2582,7 +2582,7 @@ AdjustTruncatedInputs(TempAllocator &alloc, MDefinition *truncated)
                 op = MTruncateToInt32::New(alloc, truncated->getOperand(i));
 
             if (truncated->isPhi()) {
-                MBasicBlock *pred = op->block()->getPredecessor(i);
+                MBasicBlock *pred = block->getPredecessor(i);
                 pred->insertBefore(pred->lastIns(), op);
             } else {
                 block->insertBefore(truncated->toInstruction(), op);

@@ -88,6 +88,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     if CONFIG['_MSC_VER'] != '1400':
         SOURCES += [
             'BlurSSE2.cpp',
+            'convolverSSE2.cpp',
             'FilterProcessingSSE2.cpp',
             'ImageScalingSSE2.cpp',
         ]
@@ -97,6 +98,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
         SOURCES['BlurSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
         SOURCES['FilterProcessingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
         SOURCES['ImageScalingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+        SOURCES['convolverSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 UNIFIED_SOURCES += [
     'Blur.cpp',

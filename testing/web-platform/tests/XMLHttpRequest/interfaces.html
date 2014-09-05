@@ -1,0 +1,116 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>XMLHttpRequest IDL tests</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src=/resources/WebIDLParser.js></script>
+<script src=/resources/idlharness.js></script>
+
+<h1>XMLHttpRequest IDL tests</h1>
+<div id=log></div>
+
+<script type=text/plain class=untested>
+interface EventTarget {
+  void addEventListener(DOMString type, EventListener? callback, optional boolean capture /* = false */);
+  void removeEventListener(DOMString type, EventListener? callback, optional boolean capture /* = false */);
+  boolean dispatchEvent(Event event);
+};
+</script>
+<script type=text/plain class=untested>
+[TreatNonCallableAsNull]
+callback EventHandlerNonNull = any (Event event);
+typedef EventHandlerNonNull? EventHandler;
+</script>
+<script type=text/plain>
+[NoInterfaceObject]
+interface XMLHttpRequestEventTarget : EventTarget {
+  // event handlers
+  attribute EventHandler onloadstart;
+  attribute EventHandler onprogress;
+  attribute EventHandler onabort;
+  attribute EventHandler onerror;
+  attribute EventHandler onload;
+  attribute EventHandler ontimeout;
+  attribute EventHandler onloadend;
+};
+
+interface XMLHttpRequestUpload : XMLHttpRequestEventTarget {
+};
+
+enum XMLHttpRequestResponseType {
+  "",
+  "arraybuffer",
+  "blob",
+  "document",
+  "json",
+  "text"
+};
+
+[Constructor]
+interface XMLHttpRequest : XMLHttpRequestEventTarget {
+  // event handler
+  attribute EventHandler onreadystatechange;
+
+  // states
+  const unsigned short UNSENT = 0;
+  const unsigned short OPENED = 1;
+  const unsigned short HEADERS_RECEIVED = 2;
+  const unsigned short LOADING = 3;
+  const unsigned short DONE = 4;
+  readonly attribute unsigned short readyState;
+
+  // request
+  void open(ByteString method, /*[EnsureUTF16]*/ DOMString url);
+  void open(ByteString method, /*[EnsureUTF16]*/ DOMString url, boolean async, optional /*[EnsureUTF16]*/ DOMString? username = null, optional /*[EnsureUTF16]*/ DOMString? password = null);
+  void setRequestHeader(ByteString name, ByteString value);
+           attribute unsigned long timeout;
+           attribute boolean withCredentials;
+  readonly attribute XMLHttpRequestUpload upload;
+  void send(optional (ArrayBufferView or Blob or Document or /*[EnsureUTF16]*/ DOMString or FormData or URLSearchParams)? data = null);
+  void abort();
+
+  // response
+  readonly attribute unsigned short status;
+  readonly attribute ByteString statusText;
+  ByteString? getResponseHeader(ByteString name);
+  ByteString getAllResponseHeaders();
+  void overrideMimeType(DOMString mime);
+           attribute XMLHttpRequestResponseType responseType;
+  readonly attribute any response;
+  readonly attribute DOMString responseText;
+  readonly attribute Document? responseXML;
+};
+
+interface FormData {
+  void append(/*[EnsureUTF16]*/ DOMString name, Blob value, optional /*[EnsureUTF16]*/ DOMString filename);
+  void append(/*[EnsureUTF16]*/ DOMString name, /*[EnsureUTF16]*/ DOMString value);
+  void delete(/*[EnsureUTF16]*/ DOMString name);
+  FormDataEntryValue? get(/*[EnsureUTF16]*/ DOMString name);
+  sequence<FormDataEntryValue> getAll(/*[EnsureUTF16]*/ DOMString name);
+  boolean has(/*[EnsureUTF16]*/ DOMString name);
+  void set(/*[EnsureUTF16]*/ DOMString name, Blob value, optional /*[EnsureUTF16]*/ DOMString filename);
+  void set(/*[EnsureUTF16]*/ DOMString name, /*[EnsureUTF16]*/ DOMString value);
+};
+</script>
+<script>
+"use strict";
+var form;
+var idlArray;
+setup(function() {
+  form = document.createElement("form");
+  idlArray = new IdlArray();
+  [].forEach.call(document.querySelectorAll("script[type=text\\/plain]"), function(node) {
+    if (node.className == "untested") {
+      idlArray.add_untested_idls(node.textContent);
+    } else {
+      idlArray.add_idls(node.textContent);
+    }
+  });
+  idlArray.add_objects({
+    XMLHttpRequest: ['new XMLHttpRequest()'],
+    XMLHttpRequestUpload: ['(new XMLHttpRequest()).upload'],
+    FormData: ['new FormData()', 'new FormData(form)']
+  });
+});
+idlArray.test();
+</script>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerGlobalScope API: setInterval() </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = './support/Timer.js';
+    var DATA = "IntervalHandler";
+    var ExpectedResult = ["hello", "worker", "worker"];
+    var ActualResult = [];
+    
+    var t = async_test("Test Description: WorkerGlobalScope API: setInterval().");
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        ActualResult.push(evt.data);
+        
+        if (ActualResult.length == 3)
+        {
+            setTimeout(t.step_func(VerifyResult), 100);
+        }
+    });
+    
+    worker.postMessage(DATA);
+    
+    function VerifyResult()
+    {
+        assert_array_equals(ActualResult, ExpectedResult)
+        t.done();
+    }
+</script>
+</body>
+</html>

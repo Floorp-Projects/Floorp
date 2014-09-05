@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>DOMImplementation.createDocumentType(qualifiedName, publicId, systemId)</title>
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-domimplementation-createdocumenttype">
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-documenttype-name">
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-documenttype-publicid">
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-documenttype-systemid">
+<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-node-ownerdocument">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  var tests = [
+        ["foo", "", "", null],
+        ["1foo", "", "", "INVALID_CHARACTER_ERR"],
+        ["foo1", "", "", null],
+        ["f1oo", "", "", null],
+        ["@foo", "", "", "INVALID_CHARACTER_ERR"],
+        ["foo@", "", "", "INVALID_CHARACTER_ERR"],
+        ["f@oo", "", "", "INVALID_CHARACTER_ERR"],
+        ["f:oo", "", "", null],
+        [":foo", "", "", "NAMESPACE_ERR"],
+        ["foo:", "", "", "NAMESPACE_ERR"],
+        ["foo", "foo", "", null],
+        ["foo", "", "foo", null],
+        ["foo", "f'oo", "", null],
+        ["foo", "", "f'oo", null],
+        ["foo", 'f"oo', "", null],
+        ["foo", "", 'f"oo', null],
+        ["foo", "f'o\"o", "", null],
+        ["foo", "", "f'o\"o", null],
+        ["foo", "foo>", "", null],
+        ["foo", "", "foo>", null]
+     ]
+
+  var doc = document.implementation.createHTMLDocument("title");
+  var doTest = function(aDocument, aQualifiedName, aPublicId, aSystemId) {
+    var doctype = aDocument.implementation.createDocumentType(aQualifiedName, aPublicId, aSystemId);
+    assert_equals(doctype.name, aQualifiedName, "name")
+    assert_equals(doctype.publicId, aPublicId, "publicId")
+    assert_equals(doctype.systemId, aSystemId, "systemId")
+    assert_equals(doctype.ownerDocument, aDocument, "ownerDocument")
+  }
+  tests.forEach(function(t) {
+    var qualifiedName = t[0], publicId = t[1], systemId = t[2], expected = t[3]
+    test(function() {
+      if (expected) {
+        assert_throws(expected, function() {
+          document.implementation.createDocumentType(qualifiedName, publicId, systemId)
+        })
+      } else {
+        doTest(document, qualifiedName, publicId, systemId);
+        doTest(doc, qualifiedName, publicId, systemId);
+      }
+    }, "createDocumentType(" + format_value(qualifiedName) + ", " + format_value(publicId) + ", " + format_value(systemId) + ") should " +
+       (expected ? "throw " + expected : "work"));
+  });
+})
+</script>

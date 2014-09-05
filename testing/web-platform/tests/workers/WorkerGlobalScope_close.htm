@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerGlobalScope Close(): clear events queue </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = './support/WorkerClose.js';
+    var ExpectedResult = "ping";    
+    var TestResult;
+    var StartTime = (new Date()).valueOf();
+    
+    var t = async_test("Test Description: close() should  discard any tasks queued in the event loop's task queues.");
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = function(evt)
+    {
+        TestResult = evt.data;
+        var time = (new Date()).valueOf() - StartTime;
+        
+        if (TestResult == ExpectedResult)
+        {
+            worker.postMessage("pong");
+            setTimeout(t.step_func(VerifyResult), time * 2);
+        }
+    };
+    
+    worker.postMessage("ping");
+
+    function VerifyResult()
+    {
+        assert_equals(TestResult, ExpectedResult);
+        t.done();
+    }
+</script>
+</body>
+</html>

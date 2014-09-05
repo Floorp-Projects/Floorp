@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> dispatchEvent() return value and Event.preventDefault() </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+
+<table id="table" border="1" style="display: none">
+    <tbody id="table-body">
+    <tr id="table-row">
+        <td id="table-cell">Shady Grove</td>
+        <td>Aeolian</td>
+    </tr>
+    <tr id="parent">    
+        <td id="target">Over the river, Charlie</td>
+        <td>Dorian</td>
+    </tr>
+    </tbody>
+</table>
+        
+<script>
+    var EVENT = "foo";
+    var TARGET = document.getElementById("target");
+    var PARENT = document.getElementById("parent");
+    var DefaultPrevented = false;
+
+    var description = "Test Description: " + 
+                      "dispatchEvent() return value indicates whether any of the listeners which handled the event called " +  
+                      "Event.preventDefault(). If Event.preventDefault() was called the returned value must be false, else " +  
+                      "it must be true.";
+
+    test(function()
+    {
+        PARENT.addEventListener(EVENT, function(e){TestEvent(e, 0)}, true);
+        TARGET.addEventListener(EVENT, function(e){TestEvent(e, 1)}, true);
+        TARGET.addEventListener(EVENT, function(e){TestEvent(e, 2)}, true);
+        
+        var evt = document.createEvent("Event");
+        evt.initEvent(EVENT, true, true);            
+        
+        var ReturnValue1 = PARENT.dispatchEvent(evt);
+        var ReturnValue2 = TARGET.dispatchEvent(evt);
+
+        assert_array_equals([DefaultPrevented, ReturnValue1, ReturnValue2], [true, true, false]);
+
+    }, description);
+         
+    function TestEvent(evt, i)
+    {
+        if (1 == i)
+        {
+            evt.preventDefault();
+            DefaultPrevented = evt.defaultPrevented;
+        }
+    }
+</script>
+</body>
+</html>
