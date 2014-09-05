@@ -10,10 +10,6 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"/>
 
-    <TextView android:id="@+id/title"
-              style="@style/Widget.Home.HistoryPanelTitle"
-              android:visibility="gone"/>
-
     <org.mozilla.gecko.home.HomeListView
             android:id="@+id/list"
             style="@style/Widget.Home.HistoryListView"

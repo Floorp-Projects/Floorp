@@ -8,6 +8,7 @@ const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/ContentRequestHelper.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function FxAccountsUIGlue() {
 }

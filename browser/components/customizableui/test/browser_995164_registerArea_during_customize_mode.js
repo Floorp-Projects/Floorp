@@ -42,12 +42,12 @@ add_task(function*() {
   info("Check that removing the area registration from within customize mode works");
   CustomizableUI.unregisterArea(TOOLBARID);
   ok(CustomizableUI.inDefaultState, "Now that the toolbar is no longer registered, should be in default state.");
-  ok(!(new Set(gCustomizeMode.areas)).has(toolbar), "Toolbar shouldn't be known to customize mode.");
+  ok(!gCustomizeMode.areas.has(toolbar), "Toolbar shouldn't be known to customize mode.");
 
   CustomizableUI.registerArea(TOOLBARID, {legacy: true, defaultPlacements: []});
   CustomizableUI.registerToolbarNode(toolbar, []);
   ok(!CustomizableUI.inDefaultState, "Now that the toolbar is registered again, should no longer be in default state.");
-  ok((new Set(gCustomizeMode.areas)).has(toolbar), "Toolbar should be known to customize mode again.");
+  ok(gCustomizeMode.areas.has(toolbar), "Toolbar should be known to customize mode again.");
 
   simulateItemDrag(syncButton, toolbar);
   ok(CustomizableUI.getPlacementOfWidget("sync-button"), "Button moved out of palette");
@@ -118,7 +118,7 @@ add_task(function*() {
   ok(wasInformedCorrectlyOfAreaDisappearing, "Should be told about window closing.");
   // Closing the other window should not be counted against this window's customize mode:
   is(syncButton.parentNode.localName, "toolbarpaletteitem", "Sync button's parent node should still be a wrapper.");
-  isnot(gCustomizeMode.areas.indexOf(toolbar), -1, "Toolbar should still be a customizable area for this customize mode instance.");
+  ok(gCustomizeMode.areas.has(toolbar), "Toolbar should still be a customizable area for this customize mode instance.");
 
   yield gCustomizeMode.reset();
 
