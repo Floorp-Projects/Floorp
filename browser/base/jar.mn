@@ -46,9 +46,7 @@ browser.jar:
         content/browser/abouthome/restore-large@2x.png (content/abouthome/restore-large@2x.png)
         content/browser/abouthome/mozilla@2x.png       (content/abouthome/mozilla@2x.png)
 
-        content/browser/aboutneterror/netError.xhtml   (content/aboutneterror/netError.xhtml)
-        content/browser/aboutneterror/netError.css     (content/aboutneterror/netError.css)
-        content/browser/aboutneterror/info.svg         (content/aboutneterror/info.svg)
+        content/browser/aboutNetError.xhtml            (content/aboutNetError.xhtml)
 
 #ifdef MOZ_SERVICES_HEALTHREPORT
         content/browser/abouthealthreport/abouthealth.xhtml   (content/abouthealthreport/abouthealth.xhtml)
@@ -175,4 +173,4 @@ browser.jar:
 % overlay chrome://browser/content/browser.xul chrome://browser/content/report-phishing-overlay.xul
 #endif
 
-% override chrome://global/content/netError.xhtml chrome://browser/content/aboutneterror/netError.xhtml
+% override chrome://global/content/netError.xhtml chrome://browser/content/aboutNetError.xhtml
