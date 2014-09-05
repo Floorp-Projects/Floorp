@@ -135,14 +135,6 @@
 // keys, etc.
 
 
-// Forward declarations of SpiderMonkey's ubi::Node reference types.
-namespace js {
-namespace types {
-struct TypeObject;
-}
-}
-
-
 namespace JS {
 namespace ubi {
 
@@ -461,7 +453,6 @@ template<> struct Concrete<JSObject> : TracerConcreteWithCompartment<JSObject> {
 template<> struct Concrete<JSString> : TracerConcrete<JSString> { };
 template<> struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> { };
 template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> { };
-template<> struct Concrete<js::types::TypeObject> : TracerConcrete<js::types::TypeObject> { };
 
 // The ubi::Node null pointer. Any attempt to operate on a null ubi::Node asserts.
 template<>
