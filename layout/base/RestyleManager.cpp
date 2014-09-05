@@ -2134,8 +2134,10 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       // Make sure to call CalcStyleDifference so that the new context ends
       // up resolving all the structs the old context resolved.
       if (!copyFromContinuation) {
+        uint32_t equalStructs;
         DebugOnly<nsChangeHint> styleChange =
-          oldContext->CalcStyleDifference(newContext, nsChangeHint(0));
+          oldContext->CalcStyleDifference(newContext, nsChangeHint(0),
+                                          &equalStructs);
         // The style change is always 0 because we have the same rulenode and
         // CalcStyleDifference optimizes us away.  That's OK, though:
         // reparenting should never trigger a frame reconstruct, and whenever
@@ -2198,9 +2200,11 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
             // Make sure to call CalcStyleDifference so that the new
             // context ends up resolving all the structs the old context
             // resolved.
+            uint32_t equalStructs;
             DebugOnly<nsChangeHint> styleChange =
               oldExtraContext->CalcStyleDifference(newExtraContext,
-                                                   nsChangeHint(0));
+                                                   nsChangeHint(0),
+                                                   &equalStructs);
             // The style change is always 0 because we have the same
             // rulenode and CalcStyleDifference optimizes us away.  That's
             // OK, though: reparenting should never trigger a frame
@@ -2332,8 +2336,11 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
   NS_ASSERTION(aOldContext->GetPseudoType() == aNewContext->GetPseudoType(),
                "old and new style contexts should have the same pseudo");
 
-  nsChangeHint ourChange = aOldContext->CalcStyleDifference(aNewContext,
-                             mParentFrameHintsNotHandledForDescendants);
+  uint32_t equalStructs;
+  nsChangeHint ourChange =
+    aOldContext->CalcStyleDifference(aNewContext,
+                                     mParentFrameHintsNotHandledForDescendants,
+                                     &equalStructs);
   NS_ASSERTION(!(ourChange & nsChangeHint_AllReflowHints) ||
                (ourChange & nsChangeHint_NeedReflow),
                "Reflow hint bits set without actually asking for a reflow");
