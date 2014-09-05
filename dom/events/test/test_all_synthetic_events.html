@@ -195,6 +195,10 @@ const kEventConstructors = {
                                                          return new IDBVersionChangeEvent(aName, aProps);
                                                        },
                                              },
+  ImageCaptureErrorEvent:                                { create: function (aName, aProps) {
+                                                         return new ImageCaptureErrorEvent(aName, aProps);
+                                                       },
+                                             },
   InputEvent:                                { create: function (aName, aProps) {
                                                          return new InputEvent(aName, aProps);
                                                        },

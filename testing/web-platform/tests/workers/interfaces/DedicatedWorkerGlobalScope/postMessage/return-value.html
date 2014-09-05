@@ -1,0 +1,27 @@
+<!--
+var rv = postMessage(1);
+postMessage(rv);
+/*
+-->
+<!doctype html>
+<title>return value of postMessage</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+(async_test()).step(function() {
+  var worker = new Worker('#');
+  var i = 0;
+  worker.onmessage = this.step_func(function(e) {
+    i++;
+    if (i == 1)
+      assert_equals(e.data, 1);
+    else
+      assert_equals(e.data, undefined);
+  });
+  setTimeout(this.step_func(function() { assert_equals(i, 2); this.done(); }), 500);
+});
+</script>
+<!--
+*/
+//-->

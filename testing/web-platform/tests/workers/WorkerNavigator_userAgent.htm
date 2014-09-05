@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerNavigator.userAgent </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = "./support/WorkerNavigator.js";
+    var description = "WorkerNavigator.userAgent returns the complete User-Agent header: " + window.navigator.userAgent;
+    
+    var t = async_test("Test Description: " + description);
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data.userAgent, window.navigator.userAgent);
+        t.done();
+    });
+</script>
+</body>
+</html>

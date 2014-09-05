@@ -22,6 +22,7 @@ SimpleTest.ignoreAllUncaughtExceptions();
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Task.jsm");
 
 var crashReporter =
   Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
@@ -38,13 +39,18 @@ var testObserver = {
     is(topic, "crash-report-status", "Checking correct topic");
     ok(subject instanceof Components.interfaces.nsIPropertyBag2,
        "Subject should be a property bag");
+
+    ok(subject.hasKey("minidumpID"), "Should have a local crash ID");
+    let crashID = subject.getPropertyAsAString("minidumpID");
+    isnot(crashID, "", "Local crash ID should not be an empty string");
+
     ok(subject.hasKey("serverCrashID"), "Should have a server crash ID");
-    let crashid = subject.getPropertyAsAString("serverCrashID");
-    isnot(crashid, "", "Server crash ID should not be an empty string");
+    let remoteID = subject.getPropertyAsAString("serverCrashID");
+    isnot(remoteID, "", "Server crash ID should not be an empty string");
 
     // Verify the data. The SJS script will return the data that was POSTed
     let req = new XMLHttpRequest();
-    req.open("GET", SERVER_URL + "?id=" + crashid, false);
+    req.open("GET", SERVER_URL + "?id=" + remoteID, false);
     req.send(null);
     is(req.status, 200, "Server response should be 200 OK");
     let submitted = JSON.parse(req.responseText);
@@ -56,7 +62,7 @@ var testObserver = {
     let file = Services.dirsvc.get("UAppData", Components.interfaces.nsILocalFile);
     file.append("Crash Reports");
     file.append("submitted");
-    file.append(crashid + ".txt");
+    file.append(remoteID + ".txt");
     file.remove(false);
 
     // Next unregister our observer
@@ -71,7 +77,28 @@ var testObserver = {
 
     // Finally re-set crashreporter URL
     crashReporter.serverURL = oldServerURL;
-    SimpleTest.finish();
+
+    // Check and cleanup CrashManager.
+    Task.spawn(function* () {
+      let cm = Services.crashmanager;
+      let store = yield cm._getStore();
+      is(store.crashesCount, 1, "Store should have only 1 item");
+
+      let crash = store.getCrash(crashID);
+      ok(!!crash, "Store should have the crash record");
+      ok(crash.isOfType(cm.PROCESS_TYPE_PLUGIN, cm.CRASH_TYPE_CRASH),
+         "Crash type should be plugin-crash");
+      is(crash.remoteID, remoteID, "Crash remoteID should match");
+
+      is(crash.submissions.size, 1, "Crash should have a submission");
+      let submission = crash.submissions.values().next().value;
+      is(submission.result, cm.SUBMISSION_RESULT_OK,
+         "Submission should be successful");
+
+      store.reset();
+
+      SimpleTest.finish();
+    });
   },
 
   QueryInterface: function(iid) {
@@ -120,7 +147,14 @@ function runTests() {
 
   var pluginElement = document.getElementById("plugin1");
   try {
-    pluginElement.crash();
+    Task.spawn(function* () {
+      // Clear data in CrashManager in case previous tests caused something
+      // to be added.
+      let store = yield Services.crashmanager._getStore();
+      store.reset();
+
+      pluginElement.crash();
+    });
   } catch (e) {
   }
 }

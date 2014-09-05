@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerGlobalScope implements EventTarget </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var DATA = "TestEventTarget";
+    var FileName = './support/EventListener.js';
+    
+    var t = async_test("Test Description: WorkerGlobalScope implements EventTarget");
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        var global = evt.data[0];
+        var target = evt.data[1];
+        
+        assert_regexp_match(target, /\[object (.*?)Worker(.+?)\]/);
+        assert_equals(target, global);
+
+        t.done();        
+    });
+    
+    worker.postMessage(DATA);
+</script>
+</body>
+</html>

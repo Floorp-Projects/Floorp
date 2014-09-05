@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> AbstractWorker ErrorEvent.type </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var ErrorMessage = "Error Message";
+    var FileName = './support/ErrorEvent.js';
+    var description = "ErrorEvent object and ErrorEvent.type";
+    
+    var t = async_test("Test Description: " + description);
+                  
+    var worker = new Worker(FileName);
+
+    worker.onerror = t.step_func(function(evt)
+    {
+        assert_array_equals([evt.toString(), evt.type], ["[object ErrorEvent]", "error"]);
+        t.done();        
+    });
+    
+    worker.postMessage(ErrorMessage);
+</script>
+</body>
+</html>

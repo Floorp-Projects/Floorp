@@ -168,6 +168,9 @@ public interface TelemetryContract {
         // Note: Only used in JavaScript for now, but here for completeness.
         TOAST("toast"),
 
+        // Action triggerred by pressing a SearchWidget button
+        WIDGET("widget"),
+
         // VALUES BELOW THIS LINE ARE EXCLUSIVE TO TESTING.
         _TEST1("_test_method_1"),
         _TEST2("_test_method_2"),

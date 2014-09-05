@@ -330,21 +330,42 @@ public:
   */
   virtual nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const = 0;
   /**
-   * Returns the origin passed in to the last ScrollToImpl call that took
-   * effect.
+   * Returns the origin that triggered the last instant scroll. Will equal
+   * nsGkAtoms::apz when the compositor's replica frame metrics includes the
+   * latest instant scroll.
    */
-  virtual nsIAtom* OriginOfLastScroll() = 0;
+  virtual nsIAtom* LastScrollOrigin() = 0;
+  /**
+   * Returns the origin that triggered the last smooth scroll.
+   * Will equal nsGkAtoms::apz when the compositor's replica frame
+   * metrics includes the latest smooth scroll.  The compositor will always
+   * perform an instant scroll prior to instantiating any smooth scrolls
+   * if LastScrollOrigin and LastSmoothScrollOrigin indicate that
+   * an instant scroll and a smooth scroll have occurred since the last
+   * replication of the frame metrics.
+   *
+   * This is set to nullptr to when the compositor thread acknowledges that
+   * the smooth scroll has been started.  If the smooth scroll has been stomped
+   * by an instant scroll before the smooth scroll could be started by the
+   * compositor, this is set to nullptr to clear the smooth scroll.
+   */
+  virtual nsIAtom* LastSmoothScrollOrigin() = 0;
   /**
    * Returns the current generation counter for the scroll. This counter
    * increments every time the scroll position is set.
    */
   virtual uint32_t CurrentScrollGeneration() = 0;
   /**
+   * LastScrollDestination returns the destination of the most recently
+   * requested smooth scroll animation.
+   */
+  virtual nsPoint LastScrollDestination() = 0;
+  /**
    * Clears the "origin of last scroll" property stored in this frame, if
    * the generation counter passed in matches the current scroll generation
    * counter.
    */
-  virtual void ResetOriginIfScrollAtGeneration(uint32_t aGeneration) = 0;
+  virtual void ResetScrollInfoIfGeneration(uint32_t aGeneration) = 0;
   /**
    * Determine whether it is desirable to be able to asynchronously scroll this
    * scroll frame.

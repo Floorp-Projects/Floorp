@@ -6,7 +6,7 @@
 /* jshint newcap:false */
 
 var expect = chai.expect;
-var l10n = document.webL10n || document.mozL10n;
+var l10n = navigator.mozL10n || document.mozL10n;
 var TestUtils = React.addons.TestUtils;
 
 describe("loop.shared.views", function() {
