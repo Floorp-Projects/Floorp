@@ -53,9 +53,12 @@ class imgIContainer;
 #define NS_STYLE_USES_GRANDANCESTOR_STYLE  0x010000000
 // See nsStyleContext::IsShared
 #define NS_STYLE_IS_SHARED                 0x020000000
+// See nsStyleContext::AssertStructsNotUsedElsewhere
+// (This bit is currently only used in #ifdef DEBUG code.)
+#define NS_STYLE_IS_GOING_AWAY             0x040000000
 // See nsStyleContext::GetPseudoEnum
-#define NS_STYLE_CONTEXT_TYPE_MASK         0x7c0000000
-#define NS_STYLE_CONTEXT_TYPE_SHIFT        30
+#define NS_STYLE_CONTEXT_TYPE_MASK         0xf80000000
+#define NS_STYLE_CONTEXT_TYPE_SHIFT        31
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_GC_MARK                0x02000000

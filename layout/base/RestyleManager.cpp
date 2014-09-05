@@ -2776,6 +2776,16 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
                                     nsChangeHint_ReconstructFrame);
           // We're reframing anyway; just keep the same context
           newContext = oldContext;
+#ifdef DEBUG
+          // oldContext's parent might have had its style structs swapped out
+          // with parentContext, so to avoid any assertions that might
+          // otherwise trigger in oldContext's parent's destructor, we set a
+          // flag on oldContext to skip it and its descendants in
+          // nsStyleContext::AssertStructsNotUsedElsewhere.
+          if (oldContext->GetParent() != parentContext) {
+            oldContext->AddStyleBit(NS_STYLE_IS_GOING_AWAY);
+          }
+#endif
         }
       } else {
         // Don't expect XUL tree stuff here, since it needs a comparator and

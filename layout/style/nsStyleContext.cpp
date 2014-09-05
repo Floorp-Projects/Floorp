@@ -132,6 +132,10 @@ nsStyleContext::AssertStructsNotUsedElsewhere(
 
   void* data;
 
+  if (mBits & NS_STYLE_IS_GOING_AWAY) {
+    return;
+  }
+
   if (this != aDestroyingContext) {
     nsInheritedStyleData& destroyingInheritedData =
       aDestroyingContext->mCachedInheritedData;
