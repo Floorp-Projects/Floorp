@@ -283,7 +283,7 @@ IonBuilder::InliningStatus
 IonBuilder::inlineArray(CallInfo &callInfo)
 {
     uint32_t initLength = 0;
-    AllocatingBehaviour allocating = NewArray_Unallocating;
+    MNewArray::AllocatingBehaviour allocating = MNewArray::NewArray_Unallocating;
 
     JSObject *templateObject = inspector->getTemplateObjectForNative(pc, js_Array);
     if (!templateObject)
@@ -293,7 +293,7 @@ IonBuilder::inlineArray(CallInfo &callInfo)
     // Multiple arguments imply array initialization, not just construction.
     if (callInfo.argc() >= 2) {
         initLength = callInfo.argc();
-        allocating = NewArray_FullyAllocating;
+        allocating = MNewArray::NewArray_Allocating;
 
         types::TypeObjectKey *type = types::TypeObjectKey::get(templateObject);
         if (!type->unknownProperties()) {
@@ -328,11 +328,8 @@ IonBuilder::inlineArray(CallInfo &callInfo)
         if (initLength != templateObject->as<ArrayObject>().length())
             return InliningStatus_NotInlined;
 
-        // Don't inline large allocations.
-        if (initLength > ArrayObject::EagerAllocationMaxLength)
-            return InliningStatus_NotInlined;
-
-        allocating = NewArray_FullyAllocating;
+        if (initLength <= ArrayObject::EagerAllocationMaxLength)
+            allocating = MNewArray::NewArray_Allocating;
     }
 
     callInfo.setImplicitlyUsedUnchecked();

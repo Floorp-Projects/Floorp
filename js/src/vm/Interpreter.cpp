@@ -3071,7 +3071,7 @@ CASE(JSOP_NEWARRAY)
     unsigned count = GET_UINT24(REGS.pc);
     RootedObject &obj = rootObject0;
     NewObjectKind newKind = UseNewTypeForInitializer(script, REGS.pc, &ArrayObject::class_);
-    obj = NewDenseFullyAllocatedArray(cx, count, nullptr, newKind);
+    obj = NewDenseAllocatedArray(cx, count, nullptr, newKind);
     if (!obj || !SetInitializerObjectType(cx, script, REGS.pc, obj, newKind))
         goto error;
 

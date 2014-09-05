@@ -2115,6 +2115,12 @@ typedef AlwaysTenured<Shape*> AlwaysTenuredShape;
 
 class MNewArray : public MUnaryInstruction
 {
+  public:
+    enum AllocatingBehaviour {
+        NewArray_Allocating,
+        NewArray_Unallocating
+    };
+
   private:
     // Number of space to allocate for the array.
     uint32_t count_;
@@ -2159,8 +2165,8 @@ class MNewArray : public MUnaryInstruction
         return initialHeap_;
     }
 
-    AllocatingBehaviour allocatingBehaviour() const {
-        return allocating_;
+    bool isAllocating() const {
+        return allocating_ == NewArray_Allocating;
     }
 
     // Returns true if the code generator should call through to the
