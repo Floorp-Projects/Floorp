@@ -9,7 +9,6 @@ import static org.mozilla.gecko.home.HomeConfig.createBuiltinPanelConfig;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Locale;
 
 import org.json.JSONArray;
@@ -28,7 +27,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -37,7 +35,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String LOGTAG = "GeckoHomeConfigBackend";
 
     // Increment this to trigger a migration.
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     // This key was originally used to store only an array of panel configs.
     private static final String PREFS_CONFIG_KEY_OLD = "home_panels";
@@ -83,15 +81,18 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
 
         final PanelConfig historyEntry = createBuiltinPanelConfig(mContext, PanelType.HISTORY);
         final PanelConfig recentTabsEntry = createBuiltinPanelConfig(mContext, PanelType.RECENT_TABS);
+        final PanelConfig remoteTabsEntry = createBuiltinPanelConfig(mContext, PanelType.REMOTE_TABS);
 
-        // On tablets, the history panel is the last.
-        // On phones, the history panel is the first one.
+        // On tablets, we go [...|History|Recent Tabs|Synced Tabs].
+        // On phones, we go [Synced Tabs|Recent Tabs|History|...].
         if (HardwareUtils.isTablet()) {
             panelConfigs.add(historyEntry);
             panelConfigs.add(recentTabsEntry);
+            panelConfigs.add(remoteTabsEntry);
         } else {
             panelConfigs.add(0, historyEntry);
             panelConfigs.add(0, recentTabsEntry);
+            panelConfigs.add(0, remoteTabsEntry);
         }
 
         return new State(panelConfigs, true);
@@ -113,6 +114,53 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
         return true;
     }
 
+    protected enum Position {
+        NONE, // Not present.
+        FRONT, // At the front of the list of panels.
+        BACK, // At the back of the list of panels.
+    }
+
+    /**
+     * Create and insert a built-in panel configuration.
+     *
+     * @param context Android context.
+     * @param jsonPanels array of JSON panels to update in place.
+     * @param panelType to add.
+     * @param positionOnPhones where to place the new panel on phones.
+     * @param positionOnTablets where to place the new panel on tablets.
+     * @throws JSONException
+     */
+    protected static void addBuiltinPanelConfig(Context context, JSONArray jsonPanels,
+            PanelType panelType, Position positionOnPhones, Position positionOnTablets) throws JSONException {
+        // Add the new panel.
+        final JSONObject jsonPanelConfig =
+                createBuiltinPanelConfig(context, panelType).toJSON();
+
+        // If any panel is enabled, then we should make the new panel enabled.
+        jsonPanelConfig.put(PanelConfig.JSON_KEY_DISABLED,
+                                 allPanelsAreDisabled(jsonPanels));
+
+        final boolean isTablet = HardwareUtils.isTablet();
+        final boolean isPhone = !isTablet;
+
+        // Maybe add the new panel to the front of the array.
+        if ((isPhone && positionOnPhones == Position.FRONT) ||
+            (isTablet && positionOnTablets == Position.FRONT)) {
+            // This is an inefficient way to stretch [a, b, c] to [a, a, b, c].
+            for (int i = jsonPanels.length(); i >= 1; i--) {
+                jsonPanels.put(i, jsonPanels.get(i - 1));
+            }
+            // And this inserts [d, a, b, c].
+            jsonPanels.put(0, jsonPanelConfig);
+        }
+
+        // Maybe add the new panel to the back of the array.
+        if ((isPhone && positionOnPhones == Position.BACK) ||
+            (isTablet && positionOnTablets == Position.BACK)) {
+            jsonPanels.put(jsonPanelConfig);
+        }
+    }
+
     /**
      * Migrates JSON config data storage.
      *
@@ -131,27 +179,26 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
         // Make sure we only do this version check once.
         sMigrationDone = true;
 
-        final JSONArray originalJsonPanels;
+        final JSONArray jsonPanels;
         final int version;
 
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
         if (prefs.contains(PREFS_CONFIG_KEY_OLD)) {
             // Our original implementation did not contain versioning, so this is implicitly version 0.
-            originalJsonPanels = new JSONArray(jsonString);
+            jsonPanels = new JSONArray(jsonString);
             version = 0;
         } else {
             final JSONObject json = new JSONObject(jsonString);
-            originalJsonPanels = json.getJSONArray(JSON_KEY_PANELS);
+            jsonPanels = json.getJSONArray(JSON_KEY_PANELS);
             version = json.getInt(JSON_KEY_VERSION);
         }
 
         if (version == VERSION) {
-            return originalJsonPanels;
+            return jsonPanels;
         }
 
         Log.d(LOGTAG, "Performing migration");
 
-        final JSONArray newJsonPanels = new JSONArray();
         final SharedPreferences.Editor prefsEditor = prefs.edit();
 
         for (int v = version + 1; v <= VERSION; v++) {
@@ -159,47 +206,31 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
 
             switch (v) {
                 case 1:
-                    // Add "Recent Tabs" panel
-                    final JSONObject jsonRecentTabsConfig =
-                            createBuiltinPanelConfig(context, PanelType.RECENT_TABS).toJSON();
-
-                    // If any panel is enabled, then we should make the recent tabs
-                    // panel enabled.
-                    jsonRecentTabsConfig.put(PanelConfig.JSON_KEY_DISABLED,
-                                             allPanelsAreDisabled(originalJsonPanels));
-
-                    // Add the new panel to the front of the array on phones.
-                    if (!HardwareUtils.isTablet()) {
-                        newJsonPanels.put(jsonRecentTabsConfig);
-                    }
-
-                    // Copy the original panel configs.
-                    final int count = originalJsonPanels.length();
-                    for (int i = 0; i < count; i++) {
-                        final JSONObject jsonPanelConfig = originalJsonPanels.getJSONObject(i);
-                        newJsonPanels.put(jsonPanelConfig);
-                    }
-
-                    // Add the new panel to the end of the array on tablets.
-                    if (HardwareUtils.isTablet()) {
-                        newJsonPanels.put(jsonRecentTabsConfig);
-                    }
+                    // Add "Recent Tabs" panel.
+                    addBuiltinPanelConfig(context, jsonPanels,
+                            PanelType.RECENT_TABS, Position.FRONT, Position.BACK);
 
                     // Remove the old pref key.
                     prefsEditor.remove(PREFS_CONFIG_KEY_OLD);
+                    break;
+
+                case 2:
+                    // Add "Remote Tabs"/"Synced Tabs" panel.
+                    addBuiltinPanelConfig(context, jsonPanels,
+                            PanelType.REMOTE_TABS, Position.FRONT, Position.BACK);
                     break;
             }
         }
 
         // Save the new panel config and the new version number.
         final JSONObject newJson = new JSONObject();
-        newJson.put(JSON_KEY_PANELS, newJsonPanels);
+        newJson.put(JSON_KEY_PANELS, jsonPanels);
         newJson.put(JSON_KEY_VERSION, VERSION);
 
         prefsEditor.putString(PREFS_CONFIG_KEY, newJson.toString());
         prefsEditor.apply();
 
-        return newJsonPanels;
+        return jsonPanels;
     }
 
     private State loadConfigFromString(String jsonString) {

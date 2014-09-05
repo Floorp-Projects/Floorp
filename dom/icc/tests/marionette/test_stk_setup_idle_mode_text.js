@@ -49,7 +49,7 @@ let tests = [
             commandQualifier: 0x00,
             text: "Idle text",
             iconSelfExplanatory: false,
-            icons: [colorIcon]}},
+            icons: [colorTransparencyIcon]}},
   {command: "d0198103012800820281828d0a0449646c6520746578749e020007",
    func: testSetupIdleModeText,
    expect: {name: "setup_idle_mode_text_cmd_6",

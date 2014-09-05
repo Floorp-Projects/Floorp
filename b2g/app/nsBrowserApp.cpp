@@ -283,15 +283,17 @@ int main(int argc, _CONST char* argv[])
      */
     _argv = new char *[argc + 1];
     for (int i = 0; i < argc; i++) {
-      _argv[i] = strdup(argv[i]);
+      size_t len = strlen(argv[i]) + 1;
+      _argv[i] = new char[len];
       MOZ_ASSERT(_argv[i] != nullptr);
+      memcpy(_argv[i], argv[i], len);
     }
     _argv[argc] = nullptr;
 
     result = do_main(argc, _argv);
 
     for (int i = 0; i < argc; i++) {
-      free(_argv[i]);
+      delete[] _argv[i];
     }
     delete[] _argv;
   }

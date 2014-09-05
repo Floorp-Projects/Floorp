@@ -19,3 +19,6 @@
 <!ENTITY aboutPage.relNotes.label               "Release Notes">
 <!ENTITY aboutPage.credits.label                "Credits">
 <!ENTITY aboutPage.license.label                "Licensing Information">
+
+<!-- LOCALIZATION NOTE (aboutPage.logoTrademark): The message is explicitly about the word "Firefox" being trademarked, that's why we use it, instead of brandShortName. -->
+<!ENTITY aboutPage.logoTrademark                "Firefox and the Firefox logos are trademarks of the Mozilla Foundation.">
