@@ -2489,7 +2489,7 @@ class MArrayState : public MVariadicInstruction
   private:
     uint32_t numElements_;
 
-    MArrayState(MDefinition *arr)
+    explicit MArrayState(MDefinition *arr)
     {
         // This instruction is only used as a summary for bailout paths.
         setRecoveredOnBailout();
@@ -4755,7 +4755,7 @@ class MClz
 {
     bool operandIsNeverZero_;
 
-    MClz(MDefinition *num)
+    explicit MClz(MDefinition *num)
       : MUnaryInstruction(num),
         operandIsNeverZero_(false)
     {

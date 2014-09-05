@@ -15,6 +15,7 @@
 
 #include "gc/Marking.h"
 #include "js/Vector.h"
+#include "mozilla/Attributes.h"
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/StringBuffer.h"
@@ -76,7 +77,7 @@ class SavedFrame::AutoLookupRooter : public JS::CustomAutoRooter
 class SavedFrame::HandleLookup
 {
   public:
-    HandleLookup(SavedFrame::AutoLookupRooter &lookup) : ref(lookup) { }
+    MOZ_IMPLICIT HandleLookup(SavedFrame::AutoLookupRooter &lookup) : ref(lookup) { }
     SavedFrame::Lookup *operator->() { return &ref.get(); }
     operator const SavedFrame::Lookup&() const { return ref; }
   private:

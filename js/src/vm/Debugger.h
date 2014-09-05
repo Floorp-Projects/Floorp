@@ -201,7 +201,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     struct AllocationSite : public mozilla::LinkedListElement<AllocationSite>
     {
-        AllocationSite(HandleObject frame) : frame(frame) {
+        explicit AllocationSite(HandleObject frame) : frame(frame) {
             JS_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>());
         };
         RelocatablePtrObject frame;
