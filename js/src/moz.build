@@ -169,6 +169,7 @@ UNIFIED_SOURCES += [
     'jit/IonMacroAssembler.cpp',
     'jit/IonOptimizationLevels.cpp',
     'jit/JitcodeMap.cpp',
+    'jit/JitOptions.cpp',
     'jit/JitSpewer.cpp',
     'jit/JSONSpewer.cpp',
     'jit/LICM.cpp',
@@ -289,7 +290,6 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'builtin/RegExp.cpp',
     'frontend/Parser.cpp',
-    'jit/JitOptions.cpp',
     'jsarray.cpp',
     'jsatom.cpp',
     'jsmath.cpp',
