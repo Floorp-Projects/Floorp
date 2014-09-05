@@ -191,6 +191,7 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
       RemoveChild(result);
       AddChild(result);
     }
+    result->mBits |= NS_STYLE_IS_SHARED;
   }
 
   return result.forget();
