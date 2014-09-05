@@ -151,7 +151,12 @@ struct BaselineScript
 
         // Flag set when compiled for use for debug mode. Handles various
         // Debugger hooks and compiles toggled calls for traps.
-        DEBUG_MODE = 1 << 3
+        DEBUG_MODE = 1 << 3,
+
+        // Flag set if this script has ever been Ion compiled, either directly
+        // or inlined into another script. This is cleared when the script's
+        // type information or caches are cleared.
+        ION_COMPILED_OR_INLINED = 1 << 4
     };
 
   private:
@@ -227,6 +232,16 @@ struct BaselineScript
     }
     bool debugMode() const {
         return flags_ & DEBUG_MODE;
+    }
+
+    void setIonCompiledOrInlined() {
+        flags_ |= ION_COMPILED_OR_INLINED;
+    }
+    void clearIonCompiledOrInlined() {
+        flags_ &= ~ION_COMPILED_OR_INLINED;
+    }
+    bool ionCompiledOrInlined() const {
+        return flags_ & ION_COMPILED_OR_INLINED;
     }
 
     uint32_t prologueOffset() const {
