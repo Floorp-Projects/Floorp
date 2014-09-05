@@ -1315,8 +1315,8 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc,
    required can be generated.
  */
 void
-APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, Matrix4x4& aTransformToApzcOut,
-                                    Matrix4x4& aTransformToGeckoOut)
+APZCTreeManager::GetInputTransforms(const AsyncPanZoomController *aApzc, Matrix4x4& aTransformToApzcOut,
+                                    Matrix4x4& aTransformToGeckoOut) const
 {
   MonitorAutoLock lock(mTreeLock);
 

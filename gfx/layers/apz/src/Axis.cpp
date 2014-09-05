@@ -207,11 +207,11 @@ void Axis::ClearOverscroll() {
   mOverscroll = 0;
 }
 
-float Axis::PanDistance() {
+float Axis::PanDistance() const {
   return fabsf((mPos - mStartPos).value);
 }
 
-float Axis::PanDistance(ScreenCoord aPos) {
+float Axis::PanDistance(ScreenCoord aPos) const {
   return fabsf((aPos - mStartPos).value);
 }
 

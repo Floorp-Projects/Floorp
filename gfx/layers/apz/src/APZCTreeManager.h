@@ -361,8 +361,9 @@ public:
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint,
                                                          bool* aOutInOverscrolledApzc);
-  void GetInputTransforms(AsyncPanZoomController *aApzc, gfx::Matrix4x4& aTransformToApzcOut,
-                          gfx::Matrix4x4& aTransformToGeckoOut);
+  void GetInputTransforms(const AsyncPanZoomController *aApzc,
+                          gfx::Matrix4x4& aTransformToApzcOut,
+                          gfx::Matrix4x4& aTransformToGeckoOut) const;
 private:
   /* Helpers */
   AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, FrameMetrics::ViewID aScrollId);
@@ -417,7 +418,7 @@ private:
    * is considered part of the APZC tree management state.
    * Finally, the lock needs to be held when accessing mOverscrollHandoffChain.
    * IMPORTANT: See the note about lock ordering at the top of this file. */
-  mozilla::Monitor mTreeLock;
+  mutable mozilla::Monitor mTreeLock;
   nsRefPtr<AsyncPanZoomController> mRootApzc;
   /* This tracks the APZC that should receive all inputs for the current input event block.
    * This allows touch points to move outside the thing they started on, but still have the
