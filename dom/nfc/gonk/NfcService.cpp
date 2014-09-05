@@ -6,11 +6,13 @@
 #include <binder/Parcel.h>
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/NfcOptionsBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
+#include "NfcGonkMessage.h"
 #include "NfcOptions.h"
 
 #define NS_NFCSERVICE_CID \
@@ -20,21 +22,6 @@
 using namespace android;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
-
-nsLiteralString NfcTechString[] = {
-  NS_LITERAL_STRING("NDEF"),
-  NS_LITERAL_STRING("NDEF_WRITEABLE"),
-  NS_LITERAL_STRING("NDEF_FORMATABLE"),
-  NS_LITERAL_STRING("P2P"),
-  NS_LITERAL_STRING("NFC_A"),
-  NS_LITERAL_STRING("NFC_B"),
-  NS_LITERAL_STRING("NFC_F"),
-  NS_LITERAL_STRING("NFC_V"),
-  NS_LITERAL_STRING("NFC_ISO_DEP"),
-  NS_LITERAL_STRING("MIFARE_CLASSIC"),
-  NS_LITERAL_STRING("MIFARE_ULTRALIGHT"),
-  NS_LITERAL_STRING("BARCODE")
-};
 
 static const nsLiteralString SEOriginString[] = {
   NS_LITERAL_STRING("SIM"),
@@ -128,8 +115,9 @@ public:
       }
 
       for (int i = 0; i < length; i++) {
-        nsString& elem = *event.mTechList.Value().AppendElement();
-        elem = NfcTechString[mEvent.mTechList[i]];
+        NFCTechType tech = static_cast<NFCTechType>(mEvent.mTechList[i]);
+        MOZ_ASSERT(tech < NFCTechType::EndGuard_);
+        *event.mTechList.Value().AppendElement() = tech;
       }
     }
 
@@ -169,14 +157,12 @@ public:
     COPY_OPT_FIELD(mMaxSupportedLength, -1)
 
     // HCI Event Transaction parameters.
-    int size = sizeof(SEOriginString) / sizeof(nsLiteralString);
-    // TODO: We need a map or something to more rigorously validate against
-    // Gonk Message header values from inside NfcService.
-    if ((mEvent.mOriginType != -1) && (mEvent.mOriginType < size)) {
-      mEvent.mOrigin.Assign(SEOriginString[mEvent.mOriginType]);
-      mEvent.mOrigin.AppendInt(mEvent.mOriginIndex, 16 /* radix */);
+    if (mEvent.mOriginType != -1) {
+      MOZ_ASSERT(mEvent.mOriginType < SecureElementOrigin::OriginEndGuard);
+
       event.mOrigin.Construct();
-      event.mOrigin.Value() = mEvent.mOrigin;
+      event.mOrigin.Value().Assign(SEOriginString[mEvent.mOriginType]);
+      event.mOrigin.Value().AppendInt(mEvent.mOriginIndex, 16 /* radix */);
     }
 
     if (mEvent.mAid.Length() > 0) {
