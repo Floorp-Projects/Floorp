@@ -88,6 +88,7 @@ public:
    * device DPI, before we start panning the screen. This is to prevent us from
    * accidentally processing taps as touch moves, and from very short/accidental
    * touches moving the screen.
+   * Note: this distance is in global screen coordinates.
    */
   static float GetTouchStartTolerance();
 
@@ -484,7 +485,9 @@ protected:
    * Gets the displacement of the current touch since it began. That is, it is
    * the distance between the current position and the initial position of the
    * current touch (this only makes sense if a touch is currently happening and
-   * OnTouchMove() is being invoked).
+   * OnTouchMove() or the equivalent for pan gestures is being invoked).
+   * Note: This function returns a distance in global screen coordinates,
+   *       not the local screen coordinates of this APZC.
    */
   float PanDistance() const;
 
@@ -521,6 +524,7 @@ protected:
 
   /**
    * Update the panning state and axis locks.
+   * Note: |aDelta| is expected to be in global screen coordinates.
    */
   void HandlePanningUpdate(const ScreenPoint& aDelta);
 
