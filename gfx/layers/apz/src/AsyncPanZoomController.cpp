@@ -1542,7 +1542,9 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool 
   mX.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.x, aEvent.mTime);
   mY.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.y, aEvent.mTime);
 
-  HandlePanningUpdate(aEvent.mPanDisplacement);
+  ScreenPoint panDisplacement = aEvent.mPanDisplacement;
+  ToGlobalScreenCoordinates(&panDisplacement, aEvent.mPanStartPoint);
+  HandlePanningUpdate(panDisplacement);
 
   // TODO: Handle pan events sent without pan begin / pan end events properly.
   if (mPanGestureState) {
@@ -1722,8 +1724,15 @@ void AsyncPanZoomController::ToLocalScreenCoordinates(ScreenPoint* aVector,
 }
 
 float AsyncPanZoomController::PanDistance() const {
-  ReentrantMonitorAutoEnter lock(mMonitor);
-  return NS_hypot(mX.PanDistance(), mY.PanDistance());
+  ScreenPoint panVector;
+  ScreenPoint panStart;
+  {
+    ReentrantMonitorAutoEnter lock(mMonitor);
+    panVector = ScreenPoint(mX.PanDistance(), mY.PanDistance());
+    panStart = PanStart();
+  }
+  ToGlobalScreenCoordinates(&panVector, panStart);
+  return NS_hypot(panVector.x, panVector.y);
 }
 
 ScreenPoint AsyncPanZoomController::PanStart() const {
@@ -2059,6 +2068,8 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
 
   ScreenPoint delta(mX.PanDistance(touchPoint.x),
                     mY.PanDistance(touchPoint.y));
+  const ScreenPoint panStart = PanStart();
+  ToGlobalScreenCoordinates(&delta, panStart);
   HandlePanningUpdate(delta);
 
   UpdateWithTouchAtDevicePoint(aEvent);
