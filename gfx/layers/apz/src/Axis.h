@@ -119,15 +119,20 @@ public:
   void ClearOverscroll();
 
   /**
+   * Gets the starting position of the touch supplied in StartTouch().
+   */
+  ScreenCoord PanStart() const;
+
+  /**
    * Gets the distance between the starting position of the touch supplied in
-   * startTouch() and the current touch from the last
-   * updateWithTouchAtDevicePoint().
+   * StartTouch() and the current touch from the last
+   * UpdateWithTouchAtDevicePoint().
    */
   ScreenCoord PanDistance() const;
 
   /**
    * Gets the distance between the starting position of the touch supplied in
-   * startTouch() and the supplied position.
+   * StartTouch() and the supplied position.
    */
   ScreenCoord PanDistance(ScreenCoord aPos) const;
 
