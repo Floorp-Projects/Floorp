@@ -450,7 +450,7 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
         return TracerBase::get().compartment();
     }
 
-    TracerConcreteWithCompartment(Referent *ptr) : TracerBase(ptr) { }
+    explicit TracerConcreteWithCompartment(Referent *ptr) : TracerBase(ptr) { }
 
   public:
     static void construct(void *storage, Referent *ptr) {
