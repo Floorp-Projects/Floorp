@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: verify correct frames selected for given position</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function () {
+  var ms = new MediaSource();
+
+  var v = document.createElement("video");
+  v.preload = "auto";
+  v.src = URL.createObjectURL(ms);
+  document.body.appendChild(v);
+
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/webm");
+
+    fetchWithXHR("seek.webm", function (arrayBuffer) {
+      // Append entire file covering range [0, 4].
+      sb.appendBuffer(new Uint8Array(arrayBuffer));
+    });
+
+    var targets = [{ currentTime: 3, videoWidth: 160, videoHeight: 120 },
+                   { currentTime: 2, videoWidth: 160, videoHeight: 120 },
+                   { currentTime: 0, videoWidth: 320, videoHeight: 240 }];
+    var target;
+
+    v.addEventListener("loadedmetadata", function () {
+      is(v.currentTime, 0, "currentTime has incorrect initial value");
+      is(v.videoWidth, 320, "videoWidth has incorrect initial value");
+      is(v.videoHeight, 240, "videoHeight has incorrect initial value");
+
+      fetchWithXHR("seek_lowres.webm", function (arrayBuffer) {
+        // Append initialization segment.
+        sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 438));
+        // Append media segment covering range [2, 4].
+        sb.appendBuffer(new Uint8Array(arrayBuffer, 51003));
+        ms.endOfStream();
+        target = targets.shift();
+        v.currentTime = target.currentTime;
+      });
+    });
+
+    v.addEventListener("seeked", function () {
+      is(v.currentTime, target.currentTime, "Video currentTime not at target");
+
+      is(v.videoWidth, target.videoWidth, "videoWidth has incorrect final value");
+      is(v.videoHeight, target.videoHeight, "videoHeight has incorrect final value");
+
+      target = targets.shift();
+      if (target) {
+        v.currentTime = target.currentTime;
+      } else {
+        v.parentNode.removeChild(v);
+        SimpleTest.finish();
+      }
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
