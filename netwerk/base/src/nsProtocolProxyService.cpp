@@ -29,6 +29,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
 #include "nsISystemProxySettings.h"
+#include "nsINetworkLinkService.h"
 
 //----------------------------------------------------------------------------
 
@@ -339,7 +340,7 @@ proxy_GetIntPref(nsIPrefBranch *aPrefBranch,
 {
     int32_t temp;
     nsresult rv = aPrefBranch->GetIntPref(aPref, &temp);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
         aResult = -1;
     else
         aResult = temp;
@@ -352,7 +353,7 @@ proxy_GetBoolPref(nsIPrefBranch *aPrefBranch,
 {
     bool temp;
     nsresult rv = aPrefBranch->GetBoolPref(aPref, &temp);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
         aResult = false;
     else
         aResult = temp;
@@ -414,13 +415,65 @@ nsProtocolProxyService::Init()
         PrefsChanged(prefBranch, nullptr);
     }
 
-    // register for shutdown notification so we can clean ourselves up properly.
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs)
+    if (obs) {
+        // register for shutdown notification so we can clean ourselves up
+        // properly.
         obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+
+        obs->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
+    }
 
     return NS_OK;
 }
+
+// ReloadNetworkPAC() checks if there's a non-networked PAC in use then avoids
+// to call ReloadPAC()
+nsresult
+nsProtocolProxyService::ReloadNetworkPAC()
+{
+    nsCOMPtr<nsIPrefBranch> prefs =
+        do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefs) {
+        return NS_OK;
+    }
+
+    int32_t type;
+    nsresult rv = prefs->GetIntPref(PROXY_PREF("type"), &type);
+    if (NS_FAILED(rv)) {
+        return NS_OK;
+    }
+
+    if (type == PROXYCONFIG_PAC) {
+        nsXPIDLCString pacSpec;
+        prefs->GetCharPref(PROXY_PREF("autoconfig_url"),
+                           getter_Copies(pacSpec));
+        if (!pacSpec.IsEmpty()) {
+            nsCOMPtr<nsIURI> pacURI;
+            rv = NS_NewURI(getter_AddRefs(pacURI), pacSpec);
+            if(!NS_SUCCEEDED(rv)) {
+                return rv;
+            }
+
+            nsProtocolInfo pac;
+            rv = GetProtocolInfo(pacURI, &pac);
+            if(!NS_SUCCEEDED(rv)) {
+                return rv;
+            }
+
+            if (!pac.scheme.EqualsLiteral("file") &&
+                !pac.scheme.EqualsLiteral("data")) {
+                LOG((": received network changed event, reload PAC"));
+                ReloadPAC();
+            }
+        }
+    } else if ((type == PROXYCONFIG_WPAD) || (type == PROXYCONFIG_SYSTEM)) {
+        ReloadPAC();
+    }
+
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsProtocolProxyService::Observe(nsISupports     *aSubject,
@@ -439,6 +492,12 @@ nsProtocolProxyService::Observe(nsISupports     *aSubject,
         if (mPACMan) {
             mPACMan->Shutdown();
             mPACMan = nullptr;
+        }
+    } else if (strcmp(aTopic, NS_NETWORK_LINK_TOPIC) == 0) {
+        nsCString converted = NS_ConvertUTF16toUTF8(aData);
+        const char *state = converted.get();
+        if (!strcmp(state, NS_NETWORK_LINK_DATA_CHANGED)) {
+            ReloadNetworkPAC();
         }
     }
     else {
@@ -513,7 +572,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
 
     if (!pref || !strcmp(pref, PROXY_PREF("socks")))
         proxy_GetStringPref(prefBranch, PROXY_PREF("socks"), mSOCKSProxyHost);
-    
+
     if (!pref || !strcmp(pref, PROXY_PREF("socks_port")))
         proxy_GetIntPref(prefBranch, PROXY_PREF("socks_port"), mSOCKSProxyPort);
 
@@ -587,14 +646,14 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
 }
 
 bool
-nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort) 
+nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort)
 {
     if (mHostFiltersArray.Length() == 0)
         return true;
 
     int32_t port;
     nsAutoCString host;
- 
+
     nsresult rv = aURI->GetAsciiHost(host);
     if (NS_FAILED(rv) || host.IsEmpty())
         return false;
@@ -624,7 +683,7 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort)
             return true; // allow proxying
         }
     }
-    
+
     // Don't use proxy for local hosts (plain hostname, no dots)
     if (!is_ipaddr && mFilterLocalHosts && (kNotFound == host.FindChar('.'))) {
         LOG(("Not using proxy for this local host [%s]!\n", host.get()));
@@ -810,7 +869,7 @@ nsProtocolProxyService::GetProxyKey(nsProxyInfo *pi, nsCString &key)
         key.Append(':');
         key.AppendInt(pi->mPort);
     }
-} 
+}
 
 uint32_t
 nsProtocolProxyService::SecondsSinceSessionStart()
@@ -1331,7 +1390,7 @@ nsProtocolProxyService::LoadHostFilters(const char *filters)
         return; // fail silently...
 
     //
-    // filter  = ( host | domain | ipaddr ["/" mask] ) [":" port] 
+    // filter  = ( host | domain | ipaddr ["/" mask] ) [":" port]
     // filters = filter *( "," LWS filter)
     //
     // Reset mFilterLocalHosts - will be set to true if "<local>" is in pref string
@@ -1343,7 +1402,7 @@ nsProtocolProxyService::LoadHostFilters(const char *filters)
 
         const char *starthost = filters;
         const char *endhost = filters + 1; // at least that...
-        const char *portLocation = 0; 
+        const char *portLocation = 0;
         const char *maskLocation = 0;
 
         while (*endhost && (*endhost != ',' && !IS_ASCII_SPACE(*endhost))) {
