@@ -399,6 +399,11 @@ private:
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
 
+#ifdef DEBUG
+  void AssertStructsNotUsedElsewhere(nsStyleContext* aDestroyingContext,
+                                     int32_t aLevels) const;
+#endif
+
   nsStyleContext* const mParent; // STRONG
 
   // Children are kept in two circularly-linked lists.  The list anchor
