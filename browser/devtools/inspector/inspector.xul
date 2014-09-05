@@ -55,6 +55,9 @@
       <menuitem id="node-menu-copyimagedatauri"
         label="&inspectorCopyImageDataUri.label;"
         oncommand="inspector.copyImageDataUri()"/>
+      <menuitem id="node-menu-showdomproperties"
+        label="&inspectorShowDOMProperties.label;"
+        oncommand="inspector.showDOMProperties()"/>
       <menuseparator/>
       <menuitem id="node-menu-pasteouterhtml"
         label="&inspectorHTMLPasteOuter.label;"
