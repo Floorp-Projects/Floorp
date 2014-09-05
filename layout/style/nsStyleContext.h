@@ -204,6 +204,10 @@ public:
   bool IsShared() const
     { return !!(mBits & NS_STYLE_IS_SHARED); }
 
+  // Does this style context have any children that return true for
+  // UsesGrandancestorStyle()?
+  bool HasChildThatUsesGrandancestorStyle() const;
+
   // Tell this style context to cache aStruct as the struct for aSID
   void SetStyle(nsStyleStructID aSID, void* aStruct);
 
@@ -343,6 +347,10 @@ private:
   void RemoveChild(nsStyleContext* aChild);
 
   void ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup);
+
+  // Helper function for HasChildThatUsesGrandancestorStyle.
+  static bool ListContainsStyleContextThatUsesGrandancestorStyle(
+                                                   const nsStyleContext* aHead);
 
   // Helper function that GetStyleData and GetUniqueStyleData use.  Only
   // returns the structs we cache ourselves; never consults the ruletree.
