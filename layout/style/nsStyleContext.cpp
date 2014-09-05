@@ -197,6 +197,29 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
   return result.forget();
 }
 
+/* static */ bool
+nsStyleContext::ListContainsStyleContextThatUsesGrandancestorStyle(const nsStyleContext* aHead)
+{
+  if (aHead) {
+    const nsStyleContext* child = aHead;
+    do {
+      if (child->UsesGrandancestorStyle()) {
+        return true;
+      }
+      child = child->mNextSibling;
+    } while (child != aHead);
+  }
+
+  return false;
+}
+
+bool
+nsStyleContext::HasChildThatUsesGrandancestorStyle() const
+{
+  return ListContainsStyleContextThatUsesGrandancestorStyle(mEmptyChild) ||
+         ListContainsStyleContextThatUsesGrandancestorStyle(mChild);
+}
+
 const void* nsStyleContext::GetCachedStyleData(nsStyleStructID aSID)
 {
   const void* cachedData;
