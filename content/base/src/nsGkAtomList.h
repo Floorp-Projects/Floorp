@@ -2004,6 +2004,7 @@ GK_ATOM(ondataavailable, "ondataavailable")
 GK_ATOM(onwarning, "onwarning")
 GK_ATOM(onstart, "onstart")
 GK_ATOM(onstop, "onstop")
+GK_ATOM(onphoto, "onphoto")
 #ifdef MOZ_GAMEPAD
 GK_ATOM(ongamepadbuttondown, "ongamepadbuttondown")
 GK_ATOM(ongamepadbuttonup, "ongamepadbuttonup")

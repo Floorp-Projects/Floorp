@@ -27,7 +27,6 @@ function run_test() {
     var ca_name = "ca-" + (i + 1);
     var ca_filename = ca_name + ".der";
     addCertFromFile(certdb, "test_certificate_usages/" + ca_filename, "CTu,CTu,CTu");
-    do_print("ca_name=" + ca_name);
     var cert = certdb.findCertByNickname(null, ca_name);
   }
 
@@ -48,6 +47,7 @@ function run_test() {
     [ basicEndEntityUsages,
       basicEndEntityUsages,
       basicEndEntityUsages,
+      basicEndEntityUsages,
       '',
       'Status Responder',
       'Client,Server',
@@ -58,6 +58,7 @@ function run_test() {
     [ basicEndEntityUsages,
       basicEndEntityUsages,
       basicEndEntityUsages,
+      basicEndEntityUsages,
       '',
       'Status Responder',
       'Client,Server',
@@ -66,6 +67,7 @@ function run_test() {
     ],
 
     [ basicEndEntityUsages,
+      basicEndEntityUsages,
       basicEndEntityUsages,
       basicEndEntityUsages,
       '',
@@ -88,6 +90,7 @@ function run_test() {
       '',
       '',
       '',
+      '',
       ''
      ]
   ];
@@ -100,7 +103,6 @@ function run_test() {
     var usages = {};
     var cert = certdb.findCertByNickname(null, ca_name);
     cert.getUsagesString(true, verified, usages);
-    do_print("usages.value=" + usages.value);
     do_check_eq(ca_usages[i], usages.value);
     if (ca_usages[i].indexOf('SSL CA') != -1) {
       checkCertErrorGeneric(certdb, cert, 0, certificateUsageVerifyCA);
@@ -109,14 +111,12 @@ function run_test() {
     for (var j = 0; j < ee_usages[i].length; j++) {
       var ee_name = "ee-" + (j + 1) + "-" + ca_name;
       var ee_filename = ee_name + ".der";
-      //do_print("ee_filename" + ee_filename);
       addCertFromFile(certdb, "test_certificate_usages/" + ee_filename, ",,");
       var ee_cert;
       ee_cert = certdb.findCertByNickname(null, ee_name);
       var verified = {};
       var usages = {};
       ee_cert.getUsagesString(true, verified, usages);
-      do_print("cert usages.value=" + usages.value);
       do_check_eq(ee_usages[i][j], usages.value);
     }
   }

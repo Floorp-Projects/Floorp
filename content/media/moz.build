@@ -49,7 +49,7 @@ if CONFIG['MOZ_OMX_DECODER']:
     DIRS += ['omx']
     DIRS += ['omx/mediaresourcemanager']
 
-DIRS += ['webspeech']
+DIRS += ['webspeech', 'imagecapture']
 
 if CONFIG['MOZ_EME']:
     DIRS += ['eme']

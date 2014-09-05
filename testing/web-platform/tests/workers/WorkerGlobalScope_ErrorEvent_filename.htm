@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerGlobalScope onerror event handler argument: location </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var ErrorMessage = "Error Message";
+    var FileName = './support/ErrorEvent.js';
+    var href = window.location.href;
+    var ExpectedResult = href.substring(0, href.lastIndexOf('/')) + FileName.substring(1);
+    var description = "WorkerGlobalScope onerror event handler 2nd argument: location";
+    
+    var t = async_test("Test Description: " + description);
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        var err = evt.data;
+        assert_equals(err.filename, ExpectedResult);
+        t.done();        
+    });
+    
+    worker.postMessage(ErrorMessage);
+</script>
+</body>
+</html>

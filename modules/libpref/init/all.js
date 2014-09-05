@@ -480,12 +480,14 @@ pref("apz.zoom_animation_duration_ms", 250);
 // Layerize scrollable subframes to allow async panning
 pref("apz.subframe.enabled", true);
 pref("apz.fling_repaint_interval", 16);
+pref("apz.smooth_scroll_repaint_interval", 16);
 pref("apz.pan_repaint_interval", 16);
 pref("apz.x_skate_size_multiplier", "2.5");
 pref("apz.y_skate_size_multiplier", "3.5");
 #else
 pref("apz.subframe.enabled", false);
 pref("apz.fling_repaint_interval", 75);
+pref("apz.smooth_scroll_repaint_interval", 75);
 pref("apz.pan_repaint_interval", 250);
 pref("apz.x_skate_size_multiplier", "1.5");
 pref("apz.y_skate_size_multiplier", "2.5");
@@ -3987,6 +3989,9 @@ pref("dom.w3c_touch_events.enabled", 2);
 
 // W3C draft pointer events
 pref("dom.w3c_pointer_events.enabled", false);
+
+// W3C draft ImageCapture API
+pref("dom.imagecapture.enabled", false);
 
 // W3C touch-action css property (related to touch and pointer events)
 pref("layout.css.touch_action.enabled", false);

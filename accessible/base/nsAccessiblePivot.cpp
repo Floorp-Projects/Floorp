@@ -677,6 +677,13 @@ nsAccessiblePivot::AdjustStartPosition(Accessible* aAccessible,
     }
   }
 
+  if (aAccessible == mPosition && mStartOffset != -1 && mEndOffset != -1) {
+    HyperTextAccessible* text = aAccessible->AsHyperText();
+    if (text) {
+      matched = text->GetChildAtOffset(mStartOffset);
+    }
+  }
+
   return matched;
 }
 

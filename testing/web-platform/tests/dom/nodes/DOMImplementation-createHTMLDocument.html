@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<meta charset=windows-1252>
+<!-- Using windows-1252 to ensure that DOMImplementation.createHTMLDocument()
+     doesn't inherit utf-8 from the parent document. -->
+<title>DOMImplementation.createHTMLDocument</title>
+<link rel=help href="http://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument">
+<link rel=help href="http://dom.spec.whatwg.org/#dom-documenttype-name">
+<link rel=help href="http://dom.spec.whatwg.org/#dom-documenttype-publicid">
+<link rel=help href="http://dom.spec.whatwg.org/#dom-documenttype-systemid">
+<link rel=help href="http://dom.spec.whatwg.org/#dom-document-documentelement">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+function checkDoc(title, expectedtitle, normalizedtitle) {
+  test(function() {
+    var doc = document.implementation.createHTMLDocument(title);
+    assert_equals(doc.doctype.name, "html")
+    assert_equals(doc.doctype.publicId, "")
+    assert_equals(doc.doctype.systemId, "")
+    assert_equals(doc.documentElement.localName, "html")
+    assert_equals(doc.documentElement.firstChild.localName, "head")
+    if (title !== undefined) {
+      assert_equals(doc.documentElement.firstChild.childNodes.length, 1)
+      assert_equals(doc.documentElement.firstChild.firstChild.localName, "title")
+      assert_equals(doc.documentElement.firstChild.firstChild.firstChild.data,
+                    expectedtitle)
+    } else {
+      assert_equals(doc.documentElement.firstChild.childNodes.length, 0)
+    }
+    assert_equals(doc.documentElement.lastChild.localName, "body")
+    assert_equals(doc.documentElement.lastChild.childNodes.length, 0)
+  })
+}
+checkDoc("", "", "")
+checkDoc(null, "null", "null")
+checkDoc(undefined, "", "")
+checkDoc("foo  bar baz", "foo  bar baz", "foo bar baz")
+checkDoc("foo\t\tbar baz", "foo\t\tbar baz", "foo bar baz")
+checkDoc("foo\n\nbar baz", "foo\n\nbar baz", "foo bar baz")
+checkDoc("foo\f\fbar baz", "foo\f\fbar baz", "foo bar baz")
+checkDoc("foo\r\rbar baz", "foo\r\rbar baz", "foo bar baz")
+
+test(function() {
+  var doc = document.implementation.createHTMLDocument();
+    assert_equals(doc.doctype.name, "html")
+    assert_equals(doc.doctype.publicId, "")
+    assert_equals(doc.doctype.systemId, "")
+    assert_equals(doc.documentElement.localName, "html")
+    assert_equals(doc.documentElement.firstChild.localName, "head")
+    assert_equals(doc.documentElement.firstChild.childNodes.length, 0)
+    assert_equals(doc.documentElement.lastChild.localName, "body")
+    assert_equals(doc.documentElement.lastChild.childNodes.length, 0)
+}, "Missing title argument");
+
+test(function() {
+  var doc = document.implementation.createHTMLDocument("test");
+  assert_equals(doc.URL, "about:blank");
+  assert_equals(doc.documentURI, "about:blank");
+  assert_equals(doc.compatMode, "CSS1Compat");
+  // XXX Spec says "utf-8", browsers do "UTF-8".
+  assert_equals(doc.characterSet.toUpperCase(), "UTF-8");
+  assert_equals(doc.contentType, "text/html");
+  assert_equals(doc.createElement("DIV").localName, "div");
+}, "createHTMLDocument(): metadata")
+
+test(function() {
+  var doc = document.implementation.createHTMLDocument("test");
+  var a = doc.createElement("a");
+  // In UTF-8: 0xC3 0xA4
+  a.href = "http://example.org/?\u00E4";
+  assert_equals(a.href, "http://example.org/?%C3%A4");
+}, "createHTMLDocument(): URL parsing")
+</script>

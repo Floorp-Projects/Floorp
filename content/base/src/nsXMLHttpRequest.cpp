@@ -1111,8 +1111,7 @@ nsXMLHttpRequest::Status()
     return 0;
   }
 
-  uint16_t readyState;
-  GetReadyState(&readyState);
+  uint16_t readyState = ReadyState();
   if (readyState == UNSENT || readyState == OPENED) {
     return 0;
   }
@@ -1136,14 +1135,8 @@ nsXMLHttpRequest::Status()
 
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
   if (!httpChannel) {
-
-    // Let's simulate the http protocol for jar/app requests:
-    nsCOMPtr<nsIJARChannel> jarChannel = GetCurrentJARChannel();
-    if (jarChannel) {
-      return 200; // Ok
-    }
-
-    return 0;
+    // Pretend like we got a 200 response, since our load was successful
+    return 200;
   }
 
   uint32_t status;
@@ -1159,13 +1152,8 @@ IMPL_CSTRING_GETTER(GetStatusText)
 void
 nsXMLHttpRequest::GetStatusText(nsCString& aStatusText)
 {
-  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
-
+  // Return an empty status text on all error loads.
   aStatusText.Truncate();
-
-  if (!httpChannel) {
-    return;
-  }
 
   // Make sure we don't leak status information from denied cross-site
   // requests.
@@ -1173,18 +1161,25 @@ nsXMLHttpRequest::GetStatusText(nsCString& aStatusText)
     return;
   }
 
-
   // Check the current XHR state to see if it is valid to obtain the statusText
   // value.  This check is to prevent the status text for redirects from being
   // available before all the redirects have been followed and HTTP headers have
   // been received.
-  uint16_t readyState;
-  GetReadyState(&readyState);
-  if (readyState != OPENED && readyState != UNSENT) {
-    httpChannel->GetResponseStatusText(aStatusText);
+  uint16_t readyState = ReadyState();
+  if (readyState == UNSENT || readyState == OPENED) {
+    return;
   }
 
+  if (mErrorLoad) {
+    return;
+  }
 
+  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
+  if (httpChannel) {
+    httpChannel->GetResponseStatusText(aStatusText);
+  } else {
+    aStatusText.AssignLiteral("OK");
+  }
 }
 
 void
