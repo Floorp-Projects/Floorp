@@ -266,6 +266,16 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
  * |nsRestyleHint| is a bitfield for the result of
  * |HasStateDependentStyle| and |HasAttributeDependentStyle|.  When no
  * restyling is necessary, use |nsRestyleHint(0)|.
+ *
+ * Without eRestyle_Force or eRestyle_ForceDescendants, the restyling process
+ * can stop processing at a frame when it detects no style changes and it is
+ * known that the styles of the subtree beneath it will not change, leaving
+ * the old style context on the frame.  eRestyle_Force can be used to skip this
+ * optimization on a frame, and to force its new style context to be used.
+ *
+ * Similarly, eRestyle_ForceDescendants will cause the frame and all of its
+ * descendants to be traversed and for the new style contexts that are created
+ * to be set on the frames.
  */
 enum nsRestyleHint {
   // Rerun selector matching on the element.  If a new style context
@@ -294,6 +304,15 @@ enum nsRestyleHint {
   // eRestyle_Subtree is also set, since those imply a superset of the
   // work.)
   eRestyle_CSSAnimations = (1<<4),
+
+  // Continue the restyling process to the current frame's children even
+  // if this frame's restyling resulted in no style changes.
+  eRestyle_Force = (1<<5),
+
+  // Continue the restyling process to all of the current frame's
+  // descendants, even if any frame's restyling resulted in no style
+  // changes.  (Implies eRestyle_Force.)
+  eRestyle_ForceDescendants = (1<<6),
 };
 
 

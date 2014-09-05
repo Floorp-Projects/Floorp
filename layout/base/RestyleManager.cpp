@@ -2418,7 +2418,12 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     }
   }
 
-  nsRestyleHint childRestyleHint = nsRestyleHint(aRestyleHint & eRestyle_Subtree);
+  // If we are restyling this frame with eRestyle_Self, we restyle
+  // children with nsRestyleHint(0).  But we pass the eRestyle_ForceDescendants
+  // flag down too.
+  nsRestyleHint childRestyleHint =
+    nsRestyleHint(aRestyleHint & (eRestyle_Subtree |
+                                  eRestyle_ForceDescendants));
 
   {
     nsRefPtr<nsStyleContext> oldContext = mFrame->StyleContext();
@@ -2539,7 +2544,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
   }
   else if (!(aRestyleHint & (eRestyle_Self | eRestyle_Subtree))) {
     Element* element = ElementForStyleContext(mParentContent, aSelf, pseudoType);
-    if (aRestyleHint == nsRestyleHint(0) &&
+    if (!(aRestyleHint & ~(eRestyle_Force | eRestyle_ForceDescendants)) &&
         !styleSet->IsInRuleTreeReconstruct()) {
       nsIContent* pseudoElementContent = aSelf->GetContent();
       Element* pseudoElement =
