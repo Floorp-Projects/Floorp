@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // IWYU pragma: private, include "nsDOMClassInfoID.h"
 
-DOMCI_CLASS(Window)
 DOMCI_CLASS(DOMPrototype)
 DOMCI_CLASS(DOMConstructor)
 
@@ -26,9 +25,6 @@ DOMCI_CLASS(TreeSelection)
 DOMCI_CLASS(TreeContentView)
 #endif
 
-// DOM Chrome Window class, almost identical to Window
-DOMCI_CLASS(ChromeWindow)
-
 #ifdef MOZ_XUL
 DOMCI_CLASS(XULTemplateBuilder)
 DOMCI_CLASS(XULTreeBuilder)
@@ -49,9 +45,6 @@ DOMCI_CLASS(XPathNSResolver)
 
 DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
-
-// DOM modal content window class, almost identical to Window
-DOMCI_CLASS(ModalContentWindow)
 
 DOMCI_CLASS(MozSmsMessage)
 DOMCI_CLASS(MozMmsMessage)
