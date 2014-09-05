@@ -128,6 +128,8 @@ TestKeyPair* GenerateKeyPair();
 inline void DeleteTestKeyPair(TestKeyPair* keyPair) { delete keyPair; }
 typedef ScopedPtr<TestKeyPair, DeleteTestKeyPair> ScopedTestKeyPair;
 
+ByteString SHA1(const ByteString& toHash);
+
 // Replace one substring in item with another of the same length, but only if
 // the substring was found exactly once. The "same length" restriction is
 // useful for avoiding invalidating lengths encoded within the item. The

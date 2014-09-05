@@ -24,6 +24,8 @@
 
 #include "pkixtestutil.h"
 
+#include <limits>
+
 #include "cryptohi.h"
 #include "keyhi.h"
 #include "pk11pub.h"
@@ -160,6 +162,23 @@ GenerateKeyPair()
   }
 
   return nullptr;
+}
+
+ByteString
+SHA1(const ByteString& toHash)
+{
+  if (toHash.length() >
+        static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
+    return ENCODING_FAILED;
+  }
+
+  uint8_t digestBuf[SHA1_LENGTH];
+  SECStatus srv = PK11_HashBuf(SEC_OID_SHA1, digestBuf, toHash.data(),
+                               static_cast<int32_t>(toHash.length()));
+  if (srv != SECSuccess) {
+    return ENCODING_FAILED;
+  }
+  return ByteString(digestBuf, sizeof(digestBuf));
 }
 
 } } } // namespace mozilla::pkix::test
