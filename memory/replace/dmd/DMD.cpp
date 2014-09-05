@@ -195,7 +195,7 @@ MallocSizeOf(const void* aPtr)
   return gMallocTable->malloc_usable_size(const_cast<void*>(aPtr));
 }
 
-static void
+MOZ_EXPORT void
 StatusMsg(const char* aFmt, ...)
 {
   va_list ap;

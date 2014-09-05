@@ -84,6 +84,10 @@ struct Sizes
 MOZ_EXPORT void
 SizeOf(Sizes* aSizes);
 
+// Prints a status message prefixed with "DMD[<pid>]". Use sparingly.
+MOZ_EXPORT void
+StatusMsg(const char* aFmt, ...);
+
 // Indicates whether or not DMD is running.
 MOZ_EXPORT bool
 IsRunning();
