@@ -472,7 +472,9 @@ private:
   /**
    * First half of Restyle().
    */
-  RestyleResult RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint);
+  RestyleResult RestyleSelf(nsIFrame* aSelf,
+                            nsRestyleHint aRestyleHint,
+                            uint32_t* aSwappedStructs);
 
   /**
    * Restyle the children of this frame (and, in turn, their children).

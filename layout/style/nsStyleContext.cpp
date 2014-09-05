@@ -1092,3 +1092,60 @@ nsStyleContext::SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs)
     }
   }
 }
+
+void
+nsStyleContext::ClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs)
+{
+  if (mChild) {
+    nsStyleContext* child = mChild;
+    do {
+      child->DoClearCachedInheritedStyleDataOnDescendants(aStructs);
+      child = child->mNextSibling;
+    } while (mChild != child);
+  }
+  if (mEmptyChild) {
+    nsStyleContext* child = mEmptyChild;
+    do {
+      child->DoClearCachedInheritedStyleDataOnDescendants(aStructs);
+      child = child->mNextSibling;
+    } while (mEmptyChild != child);
+  }
+}
+
+void
+nsStyleContext::DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs)
+{
+  for (nsStyleStructID i = nsStyleStructID_Inherited_Start;
+       i < nsStyleStructID_Inherited_Start + nsStyleStructID_Inherited_Count;
+       i = nsStyleStructID(i + 1)) {
+    uint32_t bit = nsCachedStyleData::GetBitForSID(i);
+    if (aStructs & bit) {
+      if (!(mBits & bit) && mCachedInheritedData.mStyleStructs[i]) {
+        aStructs &= ~bit;
+      } else {
+        mCachedInheritedData.mStyleStructs[i] = nullptr;
+      }
+    }
+  }
+
+  if (mCachedResetData) {
+    for (nsStyleStructID i = nsStyleStructID_Reset_Start;
+         i < nsStyleStructID_Reset_Start + nsStyleStructID_Reset_Count;
+         i = nsStyleStructID(i + 1)) {
+      uint32_t bit = nsCachedStyleData::GetBitForSID(i);
+      if (aStructs & bit) {
+        if (!(mBits & bit) && mCachedResetData->mStyleStructs[i]) {
+          aStructs &= ~bit;
+        } else {
+          mCachedResetData->mStyleStructs[i] = nullptr;
+        }
+      }
+    }
+  }
+
+  if (aStructs == 0) {
+    return;
+  }
+
+  ClearCachedInheritedStyleDataOnDescendants(aStructs);
+}
