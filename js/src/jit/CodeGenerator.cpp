@@ -1597,7 +1597,7 @@ CodeGenerator::visitMoveGroup(LMoveGroup *group)
           case LDefinition::DOUBLE:     moveType = MoveOp::DOUBLE;    break;
           case LDefinition::INT32X4:    moveType = MoveOp::INT32X4;   break;
           case LDefinition::FLOAT32X4:  moveType = MoveOp::FLOAT32X4; break;
-          default: MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+          default: MOZ_CRASH("Unexpected move type");
         }
 
         if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), moveType))
@@ -2209,7 +2209,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 
     // Test for failure.
@@ -2455,7 +2455,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 
     masm.bind(&end);
@@ -2555,7 +2555,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 
     masm.bind(&end);
@@ -3779,7 +3779,7 @@ ShouldInitFixedSlots(LInstruction *lir, JSObject *templateObj)
         iter = block->begin();
     }
 
-    MOZ_ASSUME_UNREACHABLE("Shouldn't get here");
+    MOZ_CRASH("Shouldn't get here");
 }
 
 bool
@@ -4664,7 +4664,7 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
         funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_round_impl);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unknown math function");
+        MOZ_CRASH("Unknown math function");
     }
 
 #   undef MAYBE_CACHED
@@ -4689,7 +4689,7 @@ CodeGenerator::visitMathFunctionF(LMathFunctionF *ins)
       case MMathFunction::Round: funptr = JS_FUNC_TO_DATA_PTR(void *, math_roundf_impl); break;
       case MMathFunction::Ceil:  funptr = JS_FUNC_TO_DATA_PTR(void *, ceilf);            break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unknown or unsupported float32 math function");
+        MOZ_CRASH("Unknown or unsupported float32 math function");
     }
 
     masm.callWithABI(funptr, MoveOp::FLOAT32);
@@ -4754,7 +4754,7 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
         return callVM(UrshInfo, lir);
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected binary op");
+        MOZ_CRASH("Unexpected binary op");
     }
 }
 
@@ -4887,7 +4887,7 @@ CodeGenerator::visitCompareVM(LCompareVM *lir)
         return callVM(GeInfo, lir);
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected compare op");
+        MOZ_CRASH("Unexpected compare op");
     }
 }
 
@@ -5254,7 +5254,7 @@ ConcatFatInlineString(MacroAssembler &masm, Register lhs, Register rhs, Register
         masm.pop(temp1);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 
     // Store length and flags.
@@ -5375,7 +5375,7 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
         masm.pop(temp1);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 
     // Store rope length and flags. temp1 still holds the result of AND'ing the
@@ -7020,7 +7020,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         // turn on barriers.
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 
     // Attach any generated script counts to the script.
@@ -7301,7 +7301,7 @@ CodeGenerator::addGetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Regi
         return addCache(ins, allocateCache(cache));
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad execution mode");
+        MOZ_CRASH("Bad execution mode");
     }
 }
 
@@ -7322,7 +7322,7 @@ CodeGenerator::addSetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Regi
           return addCache(ins, allocateCache(cache));
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad execution mode");
+        MOZ_CRASH("Bad execution mode");
     }
 }
 
@@ -7347,7 +7347,7 @@ CodeGenerator::addSetElementCache(LInstruction *ins, Register obj, Register unbo
         return addCache(ins, allocateCache(cache));
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad execution mode");
+        MOZ_CRASH("Bad execution mode");
     }
 }
 
@@ -7445,7 +7445,7 @@ CodeGenerator::addGetElementCache(LInstruction *ins, Register obj, ConstantOrReg
         return addCache(ins, allocateCache(cache));
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 }
 
@@ -7824,7 +7824,7 @@ CodeGenerator::visitBitOpV(LBitOpV *lir)
       default:
         break;
     }
-    MOZ_ASSUME_UNREACHABLE("unexpected bitop");
+    MOZ_CRASH("unexpected bitop");
 }
 
 class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator>
@@ -8725,7 +8725,7 @@ CodeGenerator::visitProfilerStackOp(LProfilerStackOp *lir)
             return true;
 
         default:
-            MOZ_ASSUME_UNREACHABLE("invalid LProfilerStackOp type");
+            MOZ_CRASH("invalid LProfilerStackOp type");
     }
 }
 

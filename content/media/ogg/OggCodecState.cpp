@@ -1104,6 +1104,9 @@ static const long SKELETON_4_0_MIN_HEADER_LEN = 80;
 // Minimum length in bytes of a Skeleton 4.0 index packet.
 static const long SKELETON_4_0_MIN_INDEX_LEN = 42;
 
+// Minimum length in bytes of a Skeleton 3.0/4.0 Fisbone packet.
+static const long SKELETON_MIN_FISBONE_LEN = 52;
+
 // Minimum possible size of a compressed index keypoint.
 static const size_t MIN_KEY_POINT_SIZE = 2;
 
@@ -1127,16 +1130,32 @@ static const size_t INDEX_FIRST_NUMER_OFFSET = 26;
 static const size_t INDEX_LAST_NUMER_OFFSET = 34;
 static const size_t INDEX_KEYPOINT_OFFSET = 42;
 
+// Byte-offsets of the fields in the Skeleton Fisbone packet.
+static const size_t FISBONE_MSG_FIELDS_OFFSET = 8;
+static const size_t FISBONE_SERIALNO_OFFSET = 12;
+
 static bool IsSkeletonBOS(ogg_packet* aPacket)
 {
-  return aPacket->bytes >= SKELETON_MIN_HEADER_LEN && 
+  static_assert(SKELETON_MIN_HEADER_LEN >= 8,
+                "Minimum length of skeleton BOS header incorrect");
+  return aPacket->bytes >= SKELETON_MIN_HEADER_LEN &&
          memcmp(reinterpret_cast<char*>(aPacket->packet), "fishead", 8) == 0;
 }
 
 static bool IsSkeletonIndex(ogg_packet* aPacket)
 {
+  static_assert(SKELETON_4_0_MIN_INDEX_LEN >= 5,
+                "Minimum length of skeleton index header incorrect");
   return aPacket->bytes >= SKELETON_4_0_MIN_INDEX_LEN &&
          memcmp(reinterpret_cast<char*>(aPacket->packet), "index", 5) == 0;
+}
+
+static bool IsSkeletonFisbone(ogg_packet* aPacket)
+{
+  static_assert(SKELETON_MIN_FISBONE_LEN >= 8,
+                "Minimum length of skeleton fisbone header incorrect");
+  return aPacket->bytes >= SKELETON_MIN_FISBONE_LEN &&
+         memcmp(reinterpret_cast<char*>(aPacket->packet), "fisbone", 8) == 0;
 }
 
 // Reads a variable length encoded integer at p. Will not read
@@ -1367,6 +1386,85 @@ nsresult SkeletonState::GetDuration(const nsTArray<uint32_t>& aTracks,
   return duration.isValid() ? NS_OK : NS_ERROR_FAILURE;
 }
 
+bool SkeletonState::DecodeFisbone(ogg_packet* aPacket)
+{
+  if (aPacket->bytes < static_cast<long>(FISBONE_MSG_FIELDS_OFFSET + 4)) {
+    return false;
+  }
+  uint32_t offsetMsgField = LittleEndian::readUint32(aPacket->packet + FISBONE_MSG_FIELDS_OFFSET);
+
+  if (aPacket->bytes < static_cast<long>(FISBONE_SERIALNO_OFFSET + 4)) {
+      return false;
+  }
+  uint32_t serialno = LittleEndian::readUint32(aPacket->packet + FISBONE_SERIALNO_OFFSET);
+
+  CheckedUint32 checked_fields_pos = CheckedUint32(FISBONE_MSG_FIELDS_OFFSET) + offsetMsgField;
+  if (!checked_fields_pos.isValid() ||
+      aPacket->bytes < static_cast<int64_t>(checked_fields_pos.value())) {
+    return false;
+  }
+  int64_t msgLength = aPacket->bytes - checked_fields_pos.value();
+  char* msgProbe = (char*)aPacket->packet + checked_fields_pos.value();
+  char* msgHead = msgProbe;
+  nsAutoPtr<MessageField> field(new MessageField());
+
+  const static FieldPatternType kFieldTypeMaps[] = {
+      {"Content-Type:", eContentType},
+      {"Role:", eRole},
+      {"Name:", eName},
+      {"Language:", eLanguage},
+      {"Title:", eTitle},
+      {"Display-hint:", eDisplayHint},
+      {"Altitude:", eAltitude},
+      {"TrackOrder:", eTrackOrder},
+      {"Track dependencies:", eTrackDependencies}
+  };
+
+  bool isContentTypeParsed = false;
+  while (msgLength > 1) {
+    if (*msgProbe == '\r' && *(msgProbe+1) == '\n') {
+      nsAutoCString strMsg(msgHead, msgProbe-msgHead);
+      for (size_t i = 0; i < ArrayLength(kFieldTypeMaps); i++) {
+        if (strMsg.Find(kFieldTypeMaps[i].mPatternToRecognize) != -1) {
+          // The content of message header fields follows [RFC2822], and the
+          // mandatory message field must be encoded in US-ASCII, others
+          // must be be encoded in UTF-8. "Content-Type" must come first
+          // for all of message header fields.
+          // See http://svn.annodex.net/standards/draft-pfeiffer-oggskeleton-current.txt.
+          if (i != 0 && !isContentTypeParsed) {
+            return false;
+          }
+
+          if ((i == 0 && IsASCII(strMsg)) || (i != 0 && IsUTF8(strMsg))) {
+            EMsgHeaderType eHeaderType = kFieldTypeMaps[i].mMsgHeaderType;
+            if (!field->mValuesStore.Contains(eHeaderType)) {
+              uint32_t nameLen = strlen(kFieldTypeMaps[i].mPatternToRecognize);
+              field->mValuesStore.Put(eHeaderType, new nsCString(msgHead+nameLen,
+                                                                 msgProbe-msgHead-nameLen));
+            }
+            isContentTypeParsed = i==0 ? true : isContentTypeParsed;
+          }
+          break;
+        }
+      }
+      msgProbe += 2;
+      msgLength -= 2;
+      msgHead = msgProbe;
+      continue;
+    }
+    msgLength--;
+    msgProbe++;
+  };
+
+  if (!mMsgFieldStore.Contains(serialno)) {
+    mMsgFieldStore.Put(serialno, field.forget());
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
 bool SkeletonState::DecodeHeader(ogg_packet* aPacket)
 {
   nsAutoRef<ogg_packet> autoRelease(aPacket);
@@ -1396,6 +1494,8 @@ bool SkeletonState::DecodeHeader(ogg_packet* aPacket)
     return true;
   } else if (IsSkeletonIndex(aPacket) && mVersion >= SKELETON_VERSION(4,0)) {
     return DecodeIndex(aPacket);
+  } else if (IsSkeletonFisbone(aPacket)) {
+    return DecodeFisbone(aPacket);
   } else if (aPacket->e_o_s) {
     mDoneReadingHeaders = true;
     return true;

@@ -25,7 +25,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MobileNetworkInfo)
 
-  MobileNetworkInfo(nsPIDOMWindow* aWindow);
+  explicit MobileNetworkInfo(nsPIDOMWindow* aWindow);
 
   MobileNetworkInfo(const nsAString& aShortName, const nsAString& aLongName,
                     const nsAString& aMcc, const nsAString& aMnc,

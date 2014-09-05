@@ -19,5 +19,10 @@
     <color name="widget_button_pressed">#33000000</color>
     <color name="widget_text_color">#5F6368</color>
 
-    <!-- Search suggestion highlight color is defined in SearchFragment.java -->
+    <!--Facet button colors-->
+    <color name="facet_button_background_color_default">@android:color/white</color>
+    <color name="facet_button_background_color_pressed">#FAFAFA</color>
+
+    <color name="facet_button_text_color_default">#ADB0B1</color>
+    <color name="facet_button_text_color_selected">#383E42</color>
 </resources>

@@ -38,46 +38,51 @@ typedef ScopedPtr<CERTCertificate, CERT_DestroyCertificate>
           ScopedCERTCertificate;
 typedef ScopedPtr<CERTCertList, CERT_DestroyCertList> ScopedCERTCertList;
 
-// The result is owned by the arena
-static Input
-CreateCert(PLArenaPool* arena, const char* issuerStr,
-           const char* subjectStr, EndEntityOrCA endEntityOrCA,
+static ByteString
+CreateCert(const char* issuerCN,
+           const char* subjectCN,
+           EndEntityOrCA endEntityOrCA,
            /*optional*/ SECKEYPrivateKey* issuerKey,
            /*out*/ ScopedSECKEYPrivateKey& subjectKey,
            /*out*/ ScopedCERTCertificate* subjectCert = nullptr)
 {
   static long serialNumberValue = 0;
   ++serialNumberValue;
-  const SECItem* serialNumber(CreateEncodedSerialNumber(arena,
-                                                        serialNumberValue));
-  EXPECT_TRUE(serialNumber);
-  const SECItem* issuerDER(ASCIIToDERName(arena, issuerStr));
-  EXPECT_TRUE(issuerDER);
-  const SECItem* subjectDER(ASCIIToDERName(arena, subjectStr));
-  EXPECT_TRUE(subjectDER);
+  ByteString serialNumber(CreateEncodedSerialNumber(serialNumberValue));
+  EXPECT_NE(ENCODING_FAILED, serialNumber);
 
-  const SECItem* extensions[2] = { nullptr, nullptr };
+  ByteString issuerDER(CNToDERName(issuerCN));
+  EXPECT_NE(ENCODING_FAILED, issuerDER);
+  ByteString subjectDER(CNToDERName(subjectCN));
+  EXPECT_NE(ENCODING_FAILED, subjectDER);
+
+  ByteString extensions[2];
   if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
     extensions[0] =
-      CreateEncodedBasicConstraints(arena, true, nullptr,
+      CreateEncodedBasicConstraints(true, nullptr,
                                     ExtensionCriticality::Critical);
-    EXPECT_TRUE(extensions[0]);
+    EXPECT_NE(ENCODING_FAILED, extensions[0]);
   }
 
-  SECItem* certDER(CreateEncodedCertificate(
-                     arena, v3, SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
-                     serialNumber, issuerDER, oneDayBeforeNow, oneDayAfterNow,
-                     subjectDER, extensions, issuerKey, SEC_OID_SHA256,
-                     subjectKey));
-  EXPECT_TRUE(certDER);
+  ByteString certDER(CreateEncodedCertificate(
+                       v3, sha256WithRSAEncryption,
+                       serialNumber, issuerDER,
+                       oneDayBeforeNow, oneDayAfterNow,
+                       subjectDER, extensions, issuerKey,
+                       SignatureAlgorithm::rsa_pkcs1_with_sha256,
+                       subjectKey));
+  EXPECT_NE(ENCODING_FAILED, certDER);
   if (subjectCert) {
-    *subjectCert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), certDER,
-                                           nullptr, false, true);
+    SECItem certDERItem = {
+      siBuffer,
+      const_cast<uint8_t*>(certDER.data()),
+      static_cast<unsigned int>(certDER.length())
+    };
+    *subjectCert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                                           &certDERItem, nullptr, false, true);
     EXPECT_TRUE(*subjectCert);
   }
-  Input result;
-  EXPECT_EQ(Success, result.Init(certDER->data, certDER->len));
-  return result;
+  return certDER;
 }
 
 class TestTrustDomain : public TrustDomain
@@ -89,25 +94,17 @@ public:
   bool SetUpCertChainTail()
   {
     static char const* const names[] = {
-        "CN=CA1 (Root)", "CN=CA2", "CN=CA3", "CN=CA4", "CN=CA5", "CN=CA6",
-        "CN=CA7"
+        "CA1 (Root)", "CA2", "CA3", "CA4", "CA5", "CA6", "CA7"
     };
 
     static_assert(MOZILLA_PKIX_ARRAY_LENGTH(names) ==
                     MOZILLA_PKIX_ARRAY_LENGTH(certChainTail),
                   "mismatch in sizes of names and certChainTail arrays");
 
-    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
-    if (!arena) {
-      return false;
-    }
-
     for (size_t i = 0; i < MOZILLA_PKIX_ARRAY_LENGTH(names); ++i) {
-      const char* issuerName = i == 0 ? names[0]
-                                      : certChainTail[i - 1]->subjectName;
-      (void) CreateCert(arena.get(), issuerName, names[i],
-                 EndEntityOrCA::MustBeCA, leafCAKey.get(), leafCAKey,
-                 &certChainTail[i]);
+      const char* issuerName = i == 0 ? names[0] : names[i-1];
+      (void) CreateCert(issuerName, names[i], EndEntityOrCA::MustBeCA,
+                        leafCAKey.get(), leafCAKey, &certChainTail[i]);
     }
 
     return true;
@@ -243,13 +240,14 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
   {
     ScopedSECKEYPrivateKey privateKey;
     ScopedCERTCertificate cert;
-    Input certDER(CreateCert(arena.get(),
-                             trustDomain.GetLeafCACert()->subjectName,
-                             "CN=Direct End-Entity",
-                             EndEntityOrCA::MustBeEndEntity,
-                             trustDomain.leafCAKey.get(), privateKey));
+    ByteString certDER(CreateCert("CA7", "Direct End-Entity",
+                                  EndEntityOrCA::MustBeEndEntity,
+                                  trustDomain.leafCAKey.get(), privateKey));
+    ASSERT_NE(ENCODING_FAILED, certDER);
+    Input certDERInput;
+    ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
     ASSERT_EQ(Success,
-              BuildCertChain(trustDomain, certDER, Now(),
+              BuildCertChain(trustDomain, certDERInput, Now(),
                              EndEntityOrCA::MustBeEndEntity,
                              KeyUsage::noParticularKeyUsageRequired,
                              KeyPurposeId::id_kp_serverAuth,
@@ -260,7 +258,7 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
 
 TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
 {
-  static char const* const caCertName = "CN=CA Too Far";
+  static char const* const caCertName = "CA Too Far";
   ScopedSECKEYPrivateKey caPrivateKey;
 
   // We need a CERTCertificate for caCert so that the trustdomain's FindIssuer
@@ -268,13 +266,14 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
   ScopedCERTCertificate caCert;
 
   {
-    Input cert(CreateCert(arena.get(),
-                          trustDomain.GetLeafCACert()->subjectName,
-                          caCertName, EndEntityOrCA::MustBeCA,
-                          trustDomain.leafCAKey.get(), caPrivateKey,
-                          &caCert));
+    ByteString certDER(CreateCert("CA7", caCertName, EndEntityOrCA::MustBeCA,
+                                  trustDomain.leafCAKey.get(), caPrivateKey,
+                                  &caCert));
+    ASSERT_NE(ENCODING_FAILED, certDER);
+    Input certDERInput;
+    ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
     ASSERT_EQ(Result::ERROR_UNKNOWN_ISSUER,
-              BuildCertChain(trustDomain, cert, Now(),
+              BuildCertChain(trustDomain, certDERInput, Now(),
                              EndEntityOrCA::MustBeCA,
                              KeyUsage::noParticularKeyUsageRequired,
                              KeyPurposeId::id_kp_serverAuth,
@@ -284,12 +283,14 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
 
   {
     ScopedSECKEYPrivateKey privateKey;
-    Input cert(CreateCert(arena.get(), caCertName,
-                          "CN=End-Entity Too Far",
-                          EndEntityOrCA::MustBeEndEntity,
-                          caPrivateKey.get(), privateKey));
+    ByteString certDER(CreateCert(caCertName, "End-Entity Too Far",
+                                  EndEntityOrCA::MustBeEndEntity,
+                                  caPrivateKey.get(), privateKey));
+    ASSERT_NE(ENCODING_FAILED, certDER);
+    Input certDERInput;
+    ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
     ASSERT_EQ(Result::ERROR_UNKNOWN_ISSUER,
-              BuildCertChain(trustDomain, cert, Now(),
+              BuildCertChain(trustDomain, certDERInput, Now(),
                              EndEntityOrCA::MustBeEndEntity,
                              KeyUsage::noParticularKeyUsageRequired,
                              KeyPurposeId::id_kp_serverAuth,

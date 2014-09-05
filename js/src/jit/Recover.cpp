@@ -29,8 +29,7 @@ using namespace js::jit;
 bool
 MNode::writeRecoverData(CompactBufferWriter &writer) const
 {
-    MOZ_ASSUME_UNREACHABLE("This instruction is not serializable");
-    return false;
+    MOZ_CRASH("This instruction is not serializable");
 }
 
 void
@@ -50,8 +49,7 @@ RInstruction::readRecoverData(CompactBufferReader &reader, RInstructionStorage *
 
       case Recover_Invalid:
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad decoding of the previous instruction?");
-        break;
+        MOZ_CRASH("Bad decoding of the previous instruction?");
     }
 }
 
@@ -138,7 +136,7 @@ RResumePoint::RResumePoint(CompactBufferReader &reader)
 bool
 RResumePoint::recover(JSContext *cx, SnapshotIterator &iter) const
 {
-    MOZ_ASSUME_UNREACHABLE("This instruction is not recoverable.");
+    MOZ_CRASH("This instruction is not recoverable.");
 }
 
 bool
@@ -852,8 +850,7 @@ MMathFunction::writeRecoverData(CompactBufferWriter &writer) const
         writer.writeUnsigned(uint32_t(RInstruction::Recover_Round));
         return true;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unknown math function.");
-        return false;
+        MOZ_CRASH("Unknown math function.");
     }
 }
 
@@ -981,14 +978,14 @@ MNewArray::writeRecoverData(CompactBufferWriter &writer) const
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArray));
     writer.writeUnsigned(count());
-    writer.writeByte(isAllocating());
+    writer.writeByte(uint8_t(allocatingBehaviour()));
     return true;
 }
 
 RNewArray::RNewArray(CompactBufferReader &reader)
 {
     count_ = reader.readUnsigned();
-    isAllocating_ = reader.readByte();
+    allocatingBehaviour_ = AllocatingBehaviour(reader.readByte());
 }
 
 bool
@@ -1006,7 +1003,7 @@ RNewArray::recover(JSContext *cx, SnapshotIterator &iter) const
     if (!templateObject->hasSingletonType())
         type = templateObject->type();
 
-    JSObject *resultObject = NewDenseArray(cx, count_, type, isAllocating_);
+    JSObject *resultObject = NewDenseArray(cx, count_, type, allocatingBehaviour_);
     if (!resultObject)
         return false;
 

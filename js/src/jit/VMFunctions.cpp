@@ -315,7 +315,7 @@ NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *typeArg)
     NewObjectKind newKind = !type ? SingletonObject : GenericObject;
     if (type && type->shouldPreTenure())
         newKind = TenuredObject;
-    RootedObject obj(cx, NewDenseAllocatedArray(cx, count, nullptr, newKind));
+    RootedObject obj(cx, NewDenseFullyAllocatedArray(cx, count, nullptr, newKind));
     if (!obj)
         return nullptr;
 

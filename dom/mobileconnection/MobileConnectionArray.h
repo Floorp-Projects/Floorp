@@ -20,7 +20,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MobileConnectionArray)
 
-  MobileConnectionArray(nsPIDOMWindow* aWindow);
+  explicit MobileConnectionArray(nsPIDOMWindow* aWindow);
 
   nsPIDOMWindow*
   GetParentObject() const;

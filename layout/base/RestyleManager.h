@@ -452,10 +452,29 @@ public:
   nsChangeHint HintsHandledForFrame() { return mHintsHandled; }
 
 private:
+  // Enum for the result of RestyleSelf, which indicates whether the
+  // restyle procedure should continue to the children, and how.
+  //
+  // These values must be ordered so that later values imply that all
+  // the work of the earlier values is also done.
+  enum RestyleResult {
+
+    // do not restyle children
+    eRestyleResult_Stop = 1,
+
+    // continue restyling children
+    eRestyleResult_Continue,
+
+    // continue restyling children with eRestyle_ForceDescendants set
+    eRestyleResult_ContinueAndForceDescendants
+  };
+
   /**
    * First half of Restyle().
    */
-  void RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint);
+  RestyleResult RestyleSelf(nsIFrame* aSelf,
+                            nsRestyleHint aRestyleHint,
+                            uint32_t* aSwappedStructs);
 
   /**
    * Restyle the children of this frame (and, in turn, their children).
@@ -465,11 +484,15 @@ private:
   void RestyleChildren(nsRestyleHint aChildRestyleHint);
 
   /**
-   * Helper for RestyleSelf().
+   * Helpers for RestyleSelf().
    */
   void CaptureChange(nsStyleContext* aOldContext,
                      nsStyleContext* aNewContext,
-                     nsChangeHint aChangeToAssume);
+                     nsChangeHint aChangeToAssume,
+                     uint32_t* aEqualStructs);
+  RestyleResult ComputeRestyleResultFromFrame(nsIFrame* aSelf);
+  RestyleResult ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
+                                                   nsStyleContext* aNewContext);
 
   /**
    * Helpers for RestyleChildren().
