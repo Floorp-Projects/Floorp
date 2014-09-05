@@ -2840,6 +2840,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
       }
     }
 
+    uint32_t equalStructs = 0;
+
     if (copyFromContinuation) {
       // In theory we should know whether there was any style data difference,
       // since we would have calculated that in the previous call to
@@ -2847,7 +2849,6 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
       // same-style continuations (bug 918064), we need to check again here to
       // determine whether it is safe to stop restyling.
       if (result == eRestyleResult_Stop) {
-        uint32_t equalStructs;
         oldContext->CalcStyleDifference(newContext, nsChangeHint(0),
                                         &equalStructs);
         if (equalStructs != NS_STYLE_INHERIT_MASK) {
@@ -2860,7 +2861,6 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
       RestyleManager::TryStartingTransition(mPresContext, aSelf->GetContent(),
                                             oldContext, &newContext);
 
-      uint32_t equalStructs;
       CaptureChange(oldContext, newContext, assumeDifferenceHint,
                     &equalStructs);
       if (equalStructs != NS_STYLE_INHERIT_MASK) {
@@ -2878,13 +2878,17 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
       // restyling our descendants.
       //
       // However, because of the swapping of equal structs we've done on
-      // ancestors (XXX in a later patch), we've ensured that for structs
+      // ancestors (later in this function), we've ensured that for structs
       // that cannot be stored in the rule tree, we keep the old equal structs
-      // around rather than replacing them with new ones.  This means that the
-      // only time we hit this deoptimization is when at least one of the
-      // (old or new) equal structs could be stored in the rule tree, and
-      // those structs are then inherited (by pointer sharing) to
-      // descendant style contexts.
+      // around rather than replacing them with new ones.  This means that we
+      // only time we hit this deoptimization is either
+      //
+      // (a) when at least one of the (old or new) equal structs could be stored
+      //     in the rule tree, and those structs are then inherited (by pointer
+      //     sharing) to descendant style contexts; or
+      //
+      // (b) when we were unable to swap the structs on the parent because
+      //     either or both of the old parent and new parent are shared.
       for (nsStyleStructID sid = nsStyleStructID(0);
            sid < nsStyleStructID_Length;
            sid = nsStyleStructID(sid + 1)) {
@@ -2906,6 +2910,9 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
       // previous continuation, so newContext == oldContext.
 
       if (result != eRestyleResult_Stop) {
+        if (!oldContext->IsShared() && !newContext->IsShared()) {
+          oldContext->SwapStyleData(newContext, equalStructs);
+        }
         aSelf->SetStyleContext(newContext);
       }
     }
