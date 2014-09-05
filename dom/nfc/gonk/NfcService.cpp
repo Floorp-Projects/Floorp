@@ -130,10 +130,9 @@ public:
 
       for (int i = 0; i < length; i++) {
         NDEFRecordStruct& recordStruct = mEvent.mRecords[i];
-        NDEFRecord& record = *event.mRecords.Value().AppendElement();
+        MozNDEFRecordOptions& record = *event.mRecords.Value().AppendElement();
 
-        record.mTnf.Construct();
-        record.mTnf.Value() = recordStruct.mTnf;
+        record.mTnf = recordStruct.mTnf;
 
         if (recordStruct.mType.Length() > 0) {
           record.mType.Construct();

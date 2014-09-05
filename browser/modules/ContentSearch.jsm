@@ -87,21 +87,30 @@ this.ContentSearch = {
   // { controller, previousFormHistoryResult }.  See _onMessageGetSuggestions.
   _suggestionMap: new WeakMap(),
 
+  // Resolved when we finish shutting down.
+  _destroyedPromise: null,
+
   init: function () {
     Cc["@mozilla.org/globalmessagemanager;1"].
       getService(Ci.nsIMessageListenerManager).
       addMessageListener(INBOUND_MESSAGE, this);
     Services.obs.addObserver(this, "browser-search-engine-modified", false);
+    Services.obs.addObserver(this, "shutdown-leaks-before-check", false);
   },
 
   destroy: function () {
+    if (this._destroyedPromise) {
+      return this._destroyedPromise;
+    }
+
     Cc["@mozilla.org/globalmessagemanager;1"].
       getService(Ci.nsIMessageListenerManager).
       removeMessageListener(INBOUND_MESSAGE, this);
     Services.obs.removeObserver(this, "browser-search-engine-modified");
+    Services.obs.removeObserver(this, "shutdown-leaks-before-check");
 
     this._eventQueue.length = 0;
-    return Promise.resolve(this._currentEventPromise);
+    return this._destroyedPromise = Promise.resolve(this._currentEventPromise);
   },
 
   /**
@@ -147,6 +156,10 @@ this.ContentSearch = {
         data: data,
       });
       this._processEventQueue();
+      break;
+    case "shutdown-leaks-before-check":
+      subj.wrappedJSObject.client.addBlocker(
+        "ContentSearch: Wait until the service is destroyed", () => this.destroy());
       break;
     }
   },

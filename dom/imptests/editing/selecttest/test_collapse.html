@@ -81,7 +81,9 @@ for (var i = 0; i < testRanges.length; i++) {
 	}
 }
 
-generate_tests(testCollapse, tests);
+setup(function () {
+  generate_tests(testCollapse, tests);
+}, { timeout_multiplier: 2 });
 
 testDiv.style.display = "none";
 </script>

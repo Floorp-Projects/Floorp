@@ -250,6 +250,45 @@ AC_SUBST([STLPORT_LIBS])
 
 ])
 
+AC_DEFUN([MOZ_ANDROID_GOOGLE_PLAY_SERVICES],
+[
+
+if test -n "$MOZ_NATIVE_DEVICES" ; then
+    AC_SUBST(MOZ_NATIVE_DEVICES)
+
+    AC_MSG_CHECKING([for google play services])
+    GOOGLE_PLAY_SERVICES_LIB="${ANDROID_SDK_ROOT}/extras/google/google_play_services/libproject/google-play-services_lib/libs/google-play-services.jar"
+    GOOGLE_PLAY_SERVICES_RES="${ANDROID_SDK_ROOT}/extras/google/google_play_services/libproject/google-play-services_lib/res"
+    AC_SUBST(GOOGLE_PLAY_SERVICES_LIB)
+    AC_SUBST(GOOGLE_PLAY_SERVICES_RES)
+    if ! test -e $GOOGLE_PLAY_SERVICES_LIB ; then
+        AC_MSG_ERROR([You must download Google Play Services to build with native video casting support enabled.  Run the Android SDK tool and install Google Play Services under Extras.  See http://developer.android.com/google/play-services/setup.html for more info. (looked for $GOOGLE_PLAY_SERVICES_LIB) ])
+    fi
+    AC_MSG_RESULT([$GOOGLE_PLAY_SERVICES_LIB])
+
+    ANDROID_APPCOMPAT_LIB="$ANDROID_COMPAT_DIR_BASE/v7/appcompat/libs/android-support-v7-appcompat.jar"
+    ANDROID_APPCOMPAT_RES="$ANDROID_COMPAT_DIR_BASE/v7/appcompat/res"
+    AC_MSG_CHECKING([for v7 appcompat library])
+    if ! test -e $ANDROID_APPCOMPAT_LIB ; then
+        AC_MSG_ERROR([You must download the v7 app compat Android support library when targeting Android with native video casting support enabled.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_APPCOMPAT_LIB)])
+    fi
+    AC_MSG_RESULT([$ANDROID_APPCOMPAT_LIB])
+    AC_SUBST(ANDROID_APPCOMPAT_LIB)
+    AC_SUBST(ANDROID_APPCOMPAT_RES)
+
+    ANDROID_MEDIAROUTER_LIB="$ANDROID_COMPAT_DIR_BASE/v7/mediarouter/libs/android-support-v7-mediarouter.jar"
+    ANDROID_MEDIAROUTER_RES="$ANDROID_COMPAT_DIR_BASE/v7/mediarouter/res"
+    AC_MSG_CHECKING([for v7 mediarouter library])
+    if ! test -e $ANDROID_MEDIAROUTER_LIB ; then
+        AC_MSG_ERROR([You must download the v7 media router Android support library when targeting Android with native video casting support enabled.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_MEDIAROUTER_LIB)])
+    fi
+    AC_MSG_RESULT([$ANDROID_MEDIAROUTER_LIB])
+    AC_SUBST(ANDROID_MEDIAROUTER_LIB)
+    AC_SUBST(ANDROID_MEDIAROUTER_RES)
+fi
+
+])
+
 AC_DEFUN([MOZ_ANDROID_SDK],
 [
 
@@ -346,40 +385,6 @@ case "$target" in
         AC_MSG_ERROR([You must download the Android v4 support library when targeting Android.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_COMPAT_LIB)])
     fi
     AC_MSG_RESULT([$ANDROID_COMPAT_LIB])
-
-    if test -n "$MOZ_NATIVE_DEVICES" ; then
-        AC_SUBST(MOZ_NATIVE_DEVICES)
-
-        AC_MSG_CHECKING([for google play services])
-        GOOGLE_PLAY_SERVICES_LIB="${ANDROID_SDK_ROOT}/extras/google/google_play_services/libproject/google-play-services_lib/libs/google-play-services.jar"
-        GOOGLE_PLAY_SERVICES_RES="${ANDROID_SDK_ROOT}/extras/google/google_play_services/libproject/google-play-services_lib/res"
-        AC_SUBST(GOOGLE_PLAY_SERVICES_LIB)
-        AC_SUBST(GOOGLE_PLAY_SERVICES_RES)
-        if ! test -e $GOOGLE_PLAY_SERVICES_LIB ; then
-            AC_MSG_ERROR([You must download Google Play Services to build with native video casting support enabled.  Run the Android SDK tool and install Google Play Services under Extras.  See http://developer.android.com/google/play-services/setup.html for more info. (looked for $GOOGLE_PLAY_SERVICES_LIB) ])
-        fi
-        AC_MSG_RESULT([$GOOGLE_PLAY_SERVICES_LIB])
-
-        ANDROID_APPCOMPAT_LIB="$ANDROID_COMPAT_DIR_BASE/v7/appcompat/libs/android-support-v7-appcompat.jar"
-        ANDROID_APPCOMPAT_RES="$ANDROID_COMPAT_DIR_BASE/v7/appcompat/res"
-        AC_MSG_CHECKING([for v7 appcompat library])
-        if ! test -e $ANDROID_APPCOMPAT_LIB ; then
-            AC_MSG_ERROR([You must download the v7 app compat Android support library when targeting Android with native video casting support enabled.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_APPCOMPAT_LIB)])
-        fi
-        AC_MSG_RESULT([$ANDROID_APPCOMPAT_LIB])
-        AC_SUBST(ANDROID_APPCOMPAT_LIB)
-        AC_SUBST(ANDROID_APPCOMPAT_RES)
-
-        ANDROID_MEDIAROUTER_LIB="$ANDROID_COMPAT_DIR_BASE/v7/mediarouter/libs/android-support-v7-mediarouter.jar"
-        ANDROID_MEDIAROUTER_RES="$ANDROID_COMPAT_DIR_BASE/v7/mediarouter/res"
-        AC_MSG_CHECKING([for v7 mediarouter library])
-        if ! test -e $ANDROID_MEDIAROUTER_LIB ; then
-            AC_MSG_ERROR([You must download the v7 media router Android support library when targeting Android with native video casting support enabled.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_MEDIAROUTER_LIB)])
-        fi
-        AC_MSG_RESULT([$ANDROID_MEDIAROUTER_LIB])
-        AC_SUBST(ANDROID_MEDIAROUTER_LIB)
-        AC_SUBST(ANDROID_MEDIAROUTER_RES)
-    fi
 
     dnl Google has a history of moving the Android tools around.  We don't
     dnl care where they are, so let's try to find them anywhere we can.
