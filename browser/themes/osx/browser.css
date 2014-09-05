@@ -1322,6 +1322,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     list-style-image: url("chrome://browser/skin/loop/toolbar-inverted@2x.png");
   }
 
+  #loop-call-button[state="disabled"] > .toolbarbutton-badge-container,
   #loop-call-button[disabled="true"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 72px, 36px, 36px);
   }
@@ -1357,6 +1358,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(0, 64px, 64px, 0) !important;
   }
 
+  #loop-call-button[cui-areatype="menu-panel"][state="disabled"] > .toolbarbutton-badge-container,
   #loop-call-button[cui-areatype="menu-panel"][disabled="true"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 128px, 64px, 64px);
   }
@@ -1789,6 +1791,21 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   #urlbar:-moz-window-inactive,
   .searchbar-textbox:-moz-window-inactive {
     border-color: @toolbarbuttonInactiveBorderColor@;
+  }
+}
+
+@media (-moz-mac-yosemite-theme) {
+  .searchbar-textbox,
+  #urlbar {
+    border-color: #fff;
+    border-radius: 3px;
+    box-shadow: 0 1px 0 0 #aeaeae, 1px 2px 0 0 #d8d8d8;
+    background-image: none;
+  }
+  .searchbar-textbox:-moz-window-inactive,
+  #urlbar:-moz-window-inactive {
+    box-shadow: none;
+    border-color: #dbdbdb;
   }
 }
 
@@ -2664,6 +2681,7 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 
 #sidebar,
 sidebarheader {
+  -moz-appearance: -moz-mac-vibrancy-light;
   background-color: #e2e7ed;
 }
 

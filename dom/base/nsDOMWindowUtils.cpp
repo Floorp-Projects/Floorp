@@ -2670,44 +2670,23 @@ nsDOMWindowUtils::SetAsyncScrollOffset(nsIDOMNode* aNode,
   if (!element) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsIFrame* frame = element->GetPrimaryFrame();
-  if (!frame) {
+  FrameMetrics::ViewID viewId;
+  if (!nsLayoutUtils::FindIDFor(element, &viewId)) {
     return NS_ERROR_UNEXPECTED;
   }
-  nsIScrollableFrame* scrollable = do_QueryFrame(frame);
-  nsPresContext* presContext = frame->PresContext();
-  nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
-  if (!scrollable) {
-    if (rootScrollFrame && rootScrollFrame->GetContent() == element) {
-      frame = rootScrollFrame;
-      scrollable = do_QueryFrame(frame);
-    }
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
   }
-  if (!scrollable) {
-    return NS_ERROR_UNEXPECTED;
+  LayerManager* manager = widget->GetLayerManager();
+  if (!manager) {
+    return NS_ERROR_FAILURE;
   }
-  Layer* layer = FrameLayerBuilder::GetDedicatedLayer(scrollable->GetScrolledFrame(),
-    nsDisplayItem::TYPE_SCROLL_LAYER);
-  if (!layer) {
-    if (rootScrollFrame == frame && !presContext->GetParentPresContext()) {
-      nsIWidget* widget = GetWidget();
-      if (widget) {
-        LayerManager* manager = widget->GetLayerManager();
-        if (manager) {
-          layer = manager->GetRoot();
-        }
-      }
-    }
-    if (!layer) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-  ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
+  ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
   if (!forwarder || !forwarder->HasShadowManager()) {
     return NS_ERROR_UNEXPECTED;
   }
-  forwarder->GetShadowManager()->SendSetAsyncScrollOffset(
-    layer->AsShadowableLayer()->GetShadow(), aX, aY);
+  forwarder->GetShadowManager()->SendSetAsyncScrollOffset(viewId, aX, aY);
   return NS_OK;
 }
 
@@ -3699,7 +3678,7 @@ namespace {
 class HandlingUserInputHelper MOZ_FINAL : public nsIJSRAIIHelper
 {
 public:
-  HandlingUserInputHelper(bool aHandlingUserInput);
+  explicit HandlingUserInputHelper(bool aHandlingUserInput);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIJSRAIIHELPER

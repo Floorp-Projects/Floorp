@@ -7,4 +7,15 @@
 if CONFIG["MOZ_B2G"]:
     MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
-DIRS += ['src']
+EXTRA_COMPONENTS += [
+    'DownloadsAPI.manifest',
+]
+
+EXTRA_PP_COMPONENTS = [
+    'DownloadsAPI.js',
+]
+
+EXTRA_PP_JS_MODULES += [
+    'DownloadsAPI.jsm',
+    'DownloadsIPC.jsm',
+]

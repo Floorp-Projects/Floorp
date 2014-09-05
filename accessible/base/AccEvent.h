@@ -105,7 +105,8 @@ public:
     eTextSelChangeEvent,
     eSelectionChangeEvent,
     eTableChangeEvent,
-    eVirtualCursorChangeEvent
+    eVirtualCursorChangeEvent,
+    eObjectAttrChangedEvent
   };
 
   static const EventGroup kEventGroup = eGenericEvent;
@@ -492,6 +493,32 @@ private:
   int32_t mOldStart;
   int32_t mOldEnd;
   int16_t mReason;
+};
+
+/**
+ * Accessible object attribute changed event.
+ */
+class AccObjectAttrChangedEvent: public AccEvent
+{
+public:
+  AccObjectAttrChangedEvent(Accessible* aAccessible, nsIAtom* aAttribute) :
+    AccEvent(::nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED, aAccessible),
+    mAttribute(aAttribute) { }
+
+  // AccEvent
+  static const EventGroup kEventGroup = eObjectAttrChangedEvent;
+  virtual unsigned int GetEventGroups() const
+  {
+    return AccEvent::GetEventGroups() | (1U << eObjectAttrChangedEvent);
+  }
+
+  // AccObjectAttrChangedEvent
+  nsIAtom* GetAttribute() const { return mAttribute; }
+
+private:
+  nsCOMPtr<nsIAtom> mAttribute;
+
+  virtual ~AccObjectAttrChangedEvent() { }
 };
 
 /**

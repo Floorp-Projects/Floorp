@@ -25,7 +25,7 @@ namespace mozilla {
 class MOZ_STACK_CLASS AutoChangePointNotifier
 {
 public:
-  AutoChangePointNotifier(DOMSVGPoint* aPoint MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoChangePointNotifier(DOMSVGPoint* aPoint MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mPoint(aPoint)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;

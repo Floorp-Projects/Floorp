@@ -339,6 +339,19 @@ enum BluetoothObjectType {
   TYPE_INVALID
 };
 
+enum BluetoothA2dpAudioState {
+  A2DP_AUDIO_STATE_REMOTE_SUSPEND,
+  A2DP_AUDIO_STATE_STOPPED,
+  A2DP_AUDIO_STATE_STARTED,
+};
+
+enum BluetoothA2dpConnectionState {
+  A2DP_CONNECTION_STATE_DISCONNECTED,
+  A2DP_CONNECTION_STATE_CONNECTING,
+  A2DP_CONNECTION_STATE_CONNECTED,
+  A2DP_CONNECTION_STATE_DISCONNECTING
+};
+
 enum ControlPlayStatus {
   PLAYSTATUS_STOPPED  = 0x00,
   PLAYSTATUS_PLAYING  = 0x01,
@@ -347,6 +360,20 @@ enum ControlPlayStatus {
   PLAYSTATUS_REV_SEEK = 0x04,
   PLAYSTATUS_UNKNOWN,
   PLAYSTATUS_ERROR    = 0xFF,
+};
+
+enum {
+  AVRCP_UID_SIZE = 8
+};
+
+enum BluetoothAvrcpMediaAttribute {
+  AVRCP_MEDIA_ATTRIBUTE_TITLE,
+  AVRCP_MEDIA_ATTRIBUTE_ARTIST,
+  AVRCP_MEDIA_ATTRIBUTE_ALBUM,
+  AVRCP_MEDIA_ATTRIBUTE_TRACK_NUM,
+  AVRCP_MEDIA_ATTRIBUTE_NUM_TRACKS,
+  AVRCP_MEDIA_ATTRIBUTE_GENRE,
+  AVRCP_MEDIA_ATTRIBUTE_PLAYING_TIME
 };
 
 enum BluetoothAvrcpPlayerAttribute {
@@ -378,6 +405,13 @@ enum BluetoothAvrcpNotification {
   AVRCP_NTF_CHANGED
 };
 
+enum BluetoothAvrcpRemoteFeature {
+  AVRCP_REMOTE_FEATURE_NONE,
+  AVRCP_REMOTE_FEATURE_METADATA,
+  AVRCP_REMOTE_FEATURE_ABSOLUTE_VOLUME,
+  AVRCP_REMOTE_FEATURE_BROWSE
+};
+
 struct BluetoothAvrcpElementAttribute {
   uint32_t mId;
   nsString mValue;
@@ -387,6 +421,12 @@ struct BluetoothAvrcpNotificationParam {
   ControlPlayStatus mPlayStatus;
   uint8_t mTrack[8];
   uint32_t mSongPos;
+  uint8_t mNumAttr;
+  uint8_t mIds[256];
+  uint8_t mValues[256];
+};
+
+struct BluetoothAvrcpPlayerSettings {
   uint8_t mNumAttr;
   uint8_t mIds[256];
   uint8_t mValues[256];

@@ -1,4 +1,5 @@
 x = function() {};
 y = new WeakMap;
 selectforgc({});;
-y.set(x, Symbol());
+if (typeof Symbol === "function")
+    y.set(x, Symbol());

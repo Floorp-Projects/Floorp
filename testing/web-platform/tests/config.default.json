@@ -1,0 +1,7 @@
+{"host": "web-platform.test",
+ "ports":{"http":[8000, "auto"],
+          "https":[],
+          "ws":["auto"]},
+ "check_subdomains": true,
+ "log_level":"debug",
+ "bind_hostname": true}

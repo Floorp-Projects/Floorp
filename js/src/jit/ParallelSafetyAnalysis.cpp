@@ -8,7 +8,7 @@
 
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
-#include "jit/IonSpewer.h"
+#include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
@@ -113,12 +113,18 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
 
     SAFE_OP(Constant)
     SAFE_OP(SimdValueX4)
+    SAFE_OP(SimdSplatX4)
     SAFE_OP(SimdConstant)
     SAFE_OP(SimdExtractElement)
+    SAFE_OP(SimdSignMask)
+    SAFE_OP(SimdBinaryComp)
     SAFE_OP(SimdBinaryArith)
+    SAFE_OP(SimdBinaryBitwise)
+    SAFE_OP(SimdTernaryBitwise)
     UNSAFE_OP(CloneLiteral)
     SAFE_OP(Parameter)
     SAFE_OP(Callee)
+    SAFE_OP(IsConstructing)
     SAFE_OP(TableSwitch)
     SAFE_OP(Goto)
     SAFE_OP(Test)

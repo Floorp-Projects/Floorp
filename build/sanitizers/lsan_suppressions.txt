@@ -33,41 +33,14 @@ leak:GI___strdup
 
 # WebRTC leaks added for Mochitest 2.
 leak:NR_reg_init
-leak:fsmdef_init
+# nr_reg_local_init should be redundant with NR_reg_init, but with 34 on Aurora
+# we get less stack frames for some reason.
+leak:nr_reg_local_init
 leak:r_log_register
 leak:nr_reg_set
-leak:ccsnap_device_init
-leak:ccsnap_line_init
-leak:media/webrtc/signaling/src/sipcc/core/common/init.c
-leak:cprPostMessage
-leak:mozilla::NrIceStunServer::Create
 
 # Additional WebRTC leak suppressions added for Mochitest 3.
 leak:mozilla::TransportLayerDtls::Setup
-leak:mozilla::NrIceTurnServer::Create
-# There are about 228KB of leaks from the call to |pmsg->sdp = cpr_malloc(sdp_size);|
-# in send_message_helper.
-leak:send_message_helper
-leak:fsmdef_ev_createoffer
-leak:fsmdef_ev_setremotedesc
-leak:fsmdef_ev_setlocaldesc
-leak:fsmdef_ev_createanswer
-# About 70KB of leaks under this stack.
-leak:vcmRxAllocICE_s
-leak:vcmRxStartICE_m
-# About 50KB of leaks under this stack.
-leak:ccsnap_EscapeStrToLocaleStr
-leak:gsmsdp_add_default_audio_formats_to_local_sdp
-leak:gsmsdp_add_default_video_formats_to_local_sdp
-leak:CCAPI_CallInfo_getMediaStreams
-
-# Intermittent Mochitest 3 WebRTC leaks, as seen in bug 1055910.
-leak:sdp_build_
-leak:VcmSIPCCBinding::CandidateReady
-leak:fsmdef_ev_foundcandidate
-leak:create_timecard
-leak:stamp_timecard
-
 
 ###
 ### Many leaks only affect some test suites.  The suite annotations are not checked.

@@ -32,8 +32,7 @@
   <preference id="layers.acceleration.disabled"
               name="layers.acceleration.disabled"
               type="bool"
-              inverted="true"
-              onchange="gAdvancedPane.updateHardwareAcceleration()"/>
+              inverted="true"/>
 #ifdef XP_WIN
   <preference id="gfx.direct2d.disabled"
               name="gfx.direct2d.disabled"
@@ -133,8 +132,7 @@
         handleCtrlPageUpDown="false"
         flex="1"
         data-category="paneAdvanced"
-        hidden="true"
-        onselect="gAdvancedPane.tabSelectionChanged();">
+        hidden="true">
 
   <tabs id="tabsElement">
     <tab id="generalTab" label="&generalTab.label;"/>
@@ -215,7 +213,6 @@
         <description>&healthReportDesc.label;</description>
         <hbox>
           <checkbox id="submitHealthReportBox"
-                    oncommand="gAdvancedPane.updateSubmitHealthReport();"
                     label="&enableHealthReport.label;"
                     accesskey="&enableHealthReport.accesskey;"/>
           <spacer flex="1"/>
@@ -230,7 +227,6 @@
         <description>&crashReporterDesc.label;</description>
         <hbox>
           <checkbox id="submitCrashesBox"
-                    oncommand="gAdvancedPane.updateSubmitCrashes();"
                     label="&enableCrashReporter.label;"
                     accesskey="&enableCrashReporter.accesskey;"/>
 
@@ -253,8 +249,7 @@
         <hbox align="center">
           <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
           <button id="connectionSettings" icon="network" label="&connectionSettings.label;"
-                  accesskey="&connectionSettings.accesskey;"
-                  oncommand="gAdvancedPane.showConnections();"/>
+                  accesskey="&connectionSettings.accesskey;"/>
         </hbox>
       </groupbox>
 
@@ -265,8 +260,7 @@
         <hbox align="center">
           <label id="actualDiskCacheSize" flex="1"/>
           <button id="clearCacheButton" icon="clear"
-                  label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
-                  oncommand="gAdvancedPane.clearCache();"/>
+                  label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"/>
         </hbox>
         <hbox>
           <checkbox preference="browser.cache.disk.smart_size.enabled"
@@ -296,8 +290,7 @@
         <hbox align="center">
           <label id="actualAppCacheSize" flex="1"/>
           <button id="clearOfflineAppCacheButton" icon="clear"
-                  label="&clearOfflineAppCacheNow.label;" accesskey="&clearOfflineAppCacheNow.accesskey;"
-                  oncommand="gAdvancedPane.clearOfflineAppCache();"/>
+                  label="&clearOfflineAppCacheNow.label;" accesskey="&clearOfflineAppCacheNow.accesskey;"/>
         </hbox>
         <hbox align="center">
           <checkbox id="offlineNotify"
@@ -307,25 +300,21 @@
           <spacer flex="1"/>
           <button id="offlineNotifyExceptions"
                   label="&offlineNotifyExceptions.label;"
-                  accesskey="&offlineNotifyExceptions.accesskey;"
-                  oncommand="gAdvancedPane.showOfflineExceptions();"/>
+                  accesskey="&offlineNotifyExceptions.accesskey;"/>
         </hbox>
         <hbox>
           <vbox flex="1">
             <label id="offlineAppsListLabel">&offlineAppsList2.label;</label>
             <listbox id="offlineAppsList"
-                    style="height: &offlineAppsList.height;;"
                     flex="1"
-                    aria-labelledby="offlineAppsListLabel"
-                    onselect="gAdvancedPane.offlineAppSelected(event);">
+                    aria-labelledby="offlineAppsListLabel">
             </listbox>
           </vbox>
           <vbox pack="end">
             <button id="offlineAppsListRemove"
                     disabled="true"
                     label="&offlineAppsListRemove.label;"
-                    accesskey="&offlineAppsListRemove.accesskey;"
-                    oncommand="gAdvancedPane.removeOfflineApp();"/>
+                    accesskey="&offlineAppsListRemove.accesskey;"/>
           </vbox>
         </hbox>
       </groupbox>
@@ -336,8 +325,7 @@
 #ifdef MOZ_UPDATER
       <groupbox id="updateApp" align="start">
         <caption><label>&updateApp.label;</label></caption>
-        <radiogroup id="updateRadioGroup" align="start"
-                    oncommand="gAdvancedPane.updateWritePrefs();">
+        <radiogroup id="updateRadioGroup" align="start">
 #ifdef XP_WIN
 #ifdef MOZ_METRO
               <radio id="autoMetro"
@@ -374,8 +362,7 @@
           <button id="showUpdateHistory"
                   label="&updateHistory.label;"
                   accesskey="&updateHistory.accesskey;"
-                  preference="app.update.disable_button.showUpdateHistory"
-                  oncommand="gAdvancedPane.showUpdates();"/>
+                  preference="app.update.disable_button.showUpdateHistory"/>
         </hbox>
 
 #ifdef MOZ_MAINTENANCE_SERVICE
@@ -428,11 +415,9 @@
         <hbox>
           <button id="viewCertificatesButton"
                   label="&viewCerts.label;" accesskey="&viewCerts.accesskey;"
-                  oncommand="gAdvancedPane.showCertificates();"
                   preference="security.disable_button.openCertManager"/>
           <button id="viewSecurityDevicesButton"
                   label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;"
-                  oncommand="gAdvancedPane.showSecurityDevices();"
                   preference="security.disable_button.openDeviceManager"/>
         </hbox>
     </tabpanel>

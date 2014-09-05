@@ -194,7 +194,7 @@ public:
                                    bool aUseCapture,
                                    ErrorResult& aRv) MOZ_OVERRIDE;
 
-  nsDOMDeviceStorage(nsPIDOMWindow* aWindow);
+  explicit nsDOMDeviceStorage(nsPIDOMWindow* aWindow);
 
   nsresult Init(nsPIDOMWindow* aWindow, const nsAString& aType,
                 const nsAString& aVolName);

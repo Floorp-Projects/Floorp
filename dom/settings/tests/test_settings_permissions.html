@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
+-->
+<head>
+  <title>Test for Bug {678695} Settings API</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={900551}">Mozilla Bug {900551}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+"use strict";
+
+if (SpecialPowers.isMainProcess()) {
+  SpecialPowers.Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
+}
+
+SpecialPowers.removePermission("settings-read", document);
+SpecialPowers.removePermission("settings-write", document);
+SpecialPowers.addPermission("settings-api-read", true, document);
+SpecialPowers.addPermission("settings-api-write", true, document);
+SpecialPowers.addPermission("settings:wallpaper.image-read", true, document);
+SpecialPowers.addPermission("settings:wallpaper.image-write", true, document);
+SpecialPowers.addPermission("settings-clear", true, document);
+
+function onUnwantedSuccess() {
+  ok(false, "onUnwantedSuccess: shouldn't get here");
+}
+
+function onFailure() {
+  ok(false, "in on Failure!");
+}
+
+const wifi  = {"wifi.enabled": false}
+const wallpaper = {"wallpaper.image": "test-image"};
+
+var combination = {
+  "wifi.enabled": false,
+  "wallpaper.image": "test-image"
+}
+
+function equals(o1, o2) {
+  var k1 = Object.keys(o1).sort();
+  var k2 = Object.keys(o2).sort();
+  if (k1.length != k2.length) return false;
+  return k1.zip(k2, function(keyPair) {
+    if(typeof o1[keyPair[0]] == typeof o2[keyPair[1]] == "object"){
+      return equals(o1[keyPair[0]], o2[keyPair[1]])
+    } else {
+      return o1[keyPair[0]] == o2[keyPair[1]];
+    }
+  }).all();
+};
+
+function observer1(setting) {
+  is(setting.settingName, "screen.brightness", "Same settingName");
+  is(setting.settingValue, "0.7", "Same settingvalue");
+};
+
+function onsettingschangeWithNext(event) {
+  is(event.settingName, "screen.brightness", "Same settingName");
+  is(event.settingValue, "0.7", "Same settingvalue");
+  next();
+};
+
+function check(o1, o2) {
+  is(JSON.stringify(o1), JSON.stringify(o2), "same");
+}
+
+var req, req2, req3, req4, req5, req6;
+var index = 0;
+
+var mozSettings = navigator.mozSettings;
+
+var steps = [
+  // Can't delete database here since that requires permissions we don't want
+  // to give the page.
+  function () {
+    ok(true, "Setting wallpaper");
+    var lock = mozSettings.createLock();
+    req = lock.set(wallpaper);
+    req.onsuccess = function () {
+      ok(true, "set done");
+    }
+    req.onerror = onFailure;
+
+    var lock2 = mozSettings.createLock();
+    req2 = lock2.get("wallpaper.image");
+    req2.onsuccess = function () {
+      is(Object.keys(req2.result).length, 1, "length 1");
+      check(wallpaper, req2.result);
+      ok(true, "Get wallpaper Done");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Get Wifi");
+    var lock = mozSettings.createLock();
+    req = lock.get("wifi.enabled");
+    req.onerror = function () {
+      ok(true, "get failed (expected)");
+      next();
+    }
+    req.onsuccess = onFailure;
+  },
+  function () {
+    ok(true, "Set Wifi");
+    var lock = mozSettings.createLock();
+    req = lock.set(wifi);
+    req.onerror = function () {
+      ok(true, "set failed (expected)");
+      next();
+    }
+    req.onsuccess = onFailure;
+  },
+  function () {
+    ok(true, "Set combination (1 valid 1 not valid)");
+    var lock = mozSettings.createLock();
+    req = lock.set(combination);
+    req.onerror = function () {
+      ok(true, "set failed (expected)");
+      next();
+    }
+    req.onsuccess = onFailure;
+  },
+  function () {
+    ok(true, "All requests on a failed lock should fail");
+    var lock = mozSettings.createLock();
+    lock.onsettingstransactionfailure = function (evt) {
+      // Stop listening at this point
+      lock.onsettingstransactionfailure = null;
+      ok(evt.error == "Lock failed a permissions check, all requests now failing.", "transaction failure on permissions error message correct.");
+      ok(true, "transaction failed (expected) ");
+      next();
+    };
+    lock.onsettingstransactionsuccess = onFailure;
+
+    req = lock.set(wifi);
+    req.onerror = function () {
+      ok(true, "set failed (expected)");
+    }
+    req.onsuccess = onFailure;
+    req2 = lock.get("wallpaper.image");
+    req2.onerror = function () {
+      ok(true, "get failed (expected)");
+    }
+    req2.onsuccess = onFailure;
+  },
+  function () {
+    ok(true, "Set combination (1 valid 1 not valid)");
+    var lock = mozSettings.createLock();
+    req = lock.set(combination);
+    req.onerror = function () {
+      ok(true, "set failed (expected)");
+      next();
+    }
+    req.onsuccess = onFailure;
+  },
+  function () {
+    ok(true, "all done!\n");
+    SimpleTest.finish();
+  }
+];
+
+function next() {
+  ok(true, "Begin!");
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    steps[index]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+  index += 1;
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
+</script>
+</pre>
+</body>
+</html>

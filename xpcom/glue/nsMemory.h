@@ -48,9 +48,9 @@ public:
     NS_Free(aPtr);
   }
 
-  static NS_COM_GLUE nsresult   HeapMinimize(bool aImmediate);
-  static NS_COM_GLUE void*      Clone(const void* aPtr, size_t aSize);
-  static NS_COM_GLUE nsIMemory* GetGlobalMemoryService();       // AddRefs
+  static nsresult   HeapMinimize(bool aImmediate);
+  static void*      Clone(const void* aPtr, size_t aSize);
+  static nsIMemory* GetGlobalMemoryService();       // AddRefs
 };
 
 /**

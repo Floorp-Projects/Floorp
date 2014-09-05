@@ -84,7 +84,7 @@ function CheckLockState() {
 
   if (AppManager.connection &&
       AppManager.connection.status == Connection.Status.CONNECTED &&
-      AppManager.deviceFront) {
+      AppManager.preferenceFront) {
 
     // ADB check
     if (AppManager.selectedRuntime instanceof USBRuntime) {

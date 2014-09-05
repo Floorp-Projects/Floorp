@@ -87,6 +87,14 @@ class JS_FRIEND_API(Wrapper);
  */
 class JS_FRIEND_API(BaseProxyHandler)
 {
+    /*
+     * Sometimes it's desirable to designate groups of proxy handlers as "similar".
+     * For this, we use the notion of a "family": A consumer-provided opaque pointer
+     * that designates the larger group to which this proxy belongs.
+     *
+     * If it will never be important to differentiate this proxy from others as
+     * part of a distinct group, nullptr may be used instead.
+     */
     const void *mFamily;
 
     /*
@@ -117,9 +125,12 @@ class JS_FRIEND_API(BaseProxyHandler)
     bool mHasSecurityPolicy;
 
   public:
-    explicit BaseProxyHandler(const void *family, bool hasPrototype = false,
-                              bool hasSecurityPolicy = false);
-    virtual ~BaseProxyHandler();
+    explicit MOZ_CONSTEXPR BaseProxyHandler(const void *aFamily, bool aHasPrototype = false,
+                                            bool aHasSecurityPolicy = false)
+      : mFamily(aFamily),
+        mHasPrototype(aHasPrototype),
+        mHasSecurityPolicy(aHasSecurityPolicy)
+    { }
 
     bool hasPrototype() const {
         return mHasPrototype;
@@ -209,6 +220,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp) const;
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp) const;
     virtual void finalize(JSFreeOp *fop, JSObject *proxy) const;
+    virtual void objectMoved(JSObject *proxy, const JSObject *old) const;
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp) const;
 
@@ -239,8 +251,10 @@ class JS_FRIEND_API(BaseProxyHandler)
 class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
 {
   public:
-    explicit DirectProxyHandler(const void *family, bool hasPrototype = false,
-                                bool hasSecurityPolicy = false);
+    explicit MOZ_CONSTEXPR DirectProxyHandler(const void *aFamily, bool aHasPrototype = false,
+                                              bool aHasSecurityPolicy = false)
+      : BaseProxyHandler(aFamily, aHasPrototype, aHasSecurityPolicy)
+    { }
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;

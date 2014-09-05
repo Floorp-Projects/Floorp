@@ -33,92 +33,84 @@ import ch.boye.httpclientandroidlib.HttpException;
 import ch.boye.httpclientandroidlib.HttpMessage;
 import ch.boye.httpclientandroidlib.ParseException;
 import ch.boye.httpclientandroidlib.ProtocolException;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
 import ch.boye.httpclientandroidlib.entity.ContentLengthStrategy;
-import ch.boye.httpclientandroidlib.params.HttpParams;
-import ch.boye.httpclientandroidlib.params.CoreProtocolPNames;
 import ch.boye.httpclientandroidlib.protocol.HTTP;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * The lax implementation of the content length strategy. This class will ignore
  * unrecognized transfer encodings and malformed <code>Content-Length</code>
- * header values if the {@link CoreProtocolPNames#STRICT_TRANSFER_ENCODING}
- * parameter of the given message is not set or set to <code>false</code>.
- * <p>
+ * header values.
+ * <p/>
  * This class recognizes "chunked" and "identitiy" transfer-coding only.
- * <p>
- * The following parameters can be used to customize the behavior of this class:
- * <ul>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreProtocolPNames#STRICT_TRANSFER_ENCODING}</li>
- * </ul>
  *
  * @since 4.0
  */
+@Immutable
 public class LaxContentLengthStrategy implements ContentLengthStrategy {
 
-    public LaxContentLengthStrategy() {
+    public static final LaxContentLengthStrategy INSTANCE = new LaxContentLengthStrategy();
+
+    private final int implicitLen;
+
+    /**
+     * Creates <tt>LaxContentLengthStrategy</tt> instance with the given length used per default
+     * when content length is not explicitly specified in the message.
+     *
+     * @param implicitLen implicit content length.
+     *
+     * @since 4.2
+     */
+    public LaxContentLengthStrategy(final int implicitLen) {
         super();
+        this.implicitLen = implicitLen;
+    }
+
+    /**
+     * Creates <tt>LaxContentLengthStrategy</tt> instance. {@link ContentLengthStrategy#IDENTITY}
+     * is used per default when content length is not explicitly specified in the message.
+     */
+    public LaxContentLengthStrategy() {
+        this(IDENTITY);
     }
 
     public long determineLength(final HttpMessage message) throws HttpException {
-        if (message == null) {
-            throw new IllegalArgumentException("HTTP message may not be null");
-        }
+        Args.notNull(message, "HTTP message");
 
-        HttpParams params = message.getParams();
-        boolean strict = params.isParameterTrue(CoreProtocolPNames.STRICT_TRANSFER_ENCODING);
-
-        Header transferEncodingHeader = message.getFirstHeader(HTTP.TRANSFER_ENCODING);
-        Header contentLengthHeader = message.getFirstHeader(HTTP.CONTENT_LEN);
+        final Header transferEncodingHeader = message.getFirstHeader(HTTP.TRANSFER_ENCODING);
         // We use Transfer-Encoding if present and ignore Content-Length.
         // RFC2616, 4.4 item number 3
         if (transferEncodingHeader != null) {
-            HeaderElement[] encodings = null;
+            final HeaderElement[] encodings;
             try {
                 encodings = transferEncodingHeader.getElements();
-            } catch (ParseException px) {
+            } catch (final ParseException px) {
                 throw new ProtocolException
                     ("Invalid Transfer-Encoding header value: " +
                      transferEncodingHeader, px);
             }
-            if (strict) {
-                // Currently only chunk and identity are supported
-                for (int i = 0; i < encodings.length; i++) {
-                    String encoding = encodings[i].getName();
-                    if (encoding != null && encoding.length() > 0
-                        && !encoding.equalsIgnoreCase(HTTP.CHUNK_CODING)
-                        && !encoding.equalsIgnoreCase(HTTP.IDENTITY_CODING)) {
-                        throw new ProtocolException("Unsupported transfer encoding: " + encoding);
-                    }
-                }
-            }
             // The chunked encoding must be the last one applied RFC2616, 14.41
-            int len = encodings.length;
+            final int len = encodings.length;
             if (HTTP.IDENTITY_CODING.equalsIgnoreCase(transferEncodingHeader.getValue())) {
                 return IDENTITY;
             } else if ((len > 0) && (HTTP.CHUNK_CODING.equalsIgnoreCase(
                     encodings[len - 1].getName()))) {
                 return CHUNKED;
             } else {
-                if (strict) {
-                    throw new ProtocolException("Chunk-encoding must be the last one applied");
-                }
                 return IDENTITY;
             }
-        } else if (contentLengthHeader != null) {
+        }
+        final Header contentLengthHeader = message.getFirstHeader(HTTP.CONTENT_LEN);
+        if (contentLengthHeader != null) {
             long contentlen = -1;
-            Header[] headers = message.getHeaders(HTTP.CONTENT_LEN);
-            if (strict && headers.length > 1) {
-                throw new ProtocolException("Multiple content length headers");
-            }
+            final Header[] headers = message.getHeaders(HTTP.CONTENT_LEN);
             for (int i = headers.length - 1; i >= 0; i--) {
-                Header header = headers[i];
+                final Header header = headers[i];
                 try {
                     contentlen = Long.parseLong(header.getValue());
                     break;
-                } catch (NumberFormatException e) {
-                    if (strict) {
-                        throw new ProtocolException("Invalid content length: " + header.getValue());
-                    }
+                } catch (final NumberFormatException ignore) {
                 }
                 // See if we can have better luck with another header, if present
             }
@@ -127,9 +119,8 @@ public class LaxContentLengthStrategy implements ContentLengthStrategy {
             } else {
                 return IDENTITY;
             }
-        } else {
-            return IDENTITY;
         }
+        return this.implicitLen;
     }
 
 }

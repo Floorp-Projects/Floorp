@@ -87,7 +87,7 @@ public:
               nsIRDFResource* aProperty,
               nsIRDFNode* aTarget,
               bool aTruthValue);
-    Assertion(nsIRDFResource* aSource);     // PLDHashTable assertion variant
+    explicit Assertion(nsIRDFResource* aSource);     // PLDHashTable assertion variant
 
 private:
     ~Assertion();
@@ -285,7 +285,7 @@ protected:
                    nsIRDFResource* property,
                    nsIRDFNode* target);
 
-    InMemoryDataSource(nsISupports* aOuter);
+    explicit InMemoryDataSource(nsISupports* aOuter);
     virtual ~InMemoryDataSource();
     nsresult Init();
 
@@ -1316,7 +1316,7 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
             }
             else {
                 // If this second-level hash empties out, clean it up.
-                if (!root->u.hash.mPropertyHash->entryCount) {
+                if (!root->u.hash.mPropertyHash->EntryCount()) {
                     root->Release();
                     SetForwardArcs(aSource, nullptr);
                 }
@@ -1661,7 +1661,7 @@ NS_IMETHODIMP
 InMemoryDataSource::GetAllResources(nsISimpleEnumerator** aResult)
 {
     nsCOMArray<nsIRDFNode> nodes;
-    nodes.SetCapacity(mForwardArcs.entryCount);
+    nodes.SetCapacity(mForwardArcs.EntryCount());
 
     // Enumerate all of our entries into an nsCOMArray
     PL_DHashTableEnumerate(&mForwardArcs, ResourceEnumerator, &nodes);
@@ -1920,7 +1920,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
                                SweepForwardArcsEntries, info);
 
         // If the sub-hash is now empty, clean it up.
-        if (!as->u.hash.mPropertyHash->entryCount) {
+        if (!as->u.hash.mPropertyHash->EntryCount()) {
             as->Release();
             result = PL_DHASH_REMOVE;
         }
@@ -1998,7 +1998,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
 class VisitorClosure
 {
 public:
-    VisitorClosure(rdfITripleVisitor* aVisitor) :
+    explicit VisitorClosure(rdfITripleVisitor* aVisitor) :
         mVisitor(aVisitor),
         mRv(NS_OK)
     {}

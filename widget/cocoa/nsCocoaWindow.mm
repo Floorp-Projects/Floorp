@@ -27,6 +27,7 @@
 #include "nsMenuUtilsX.h"
 #include "nsStyleConsts.h"
 #include "nsNativeThemeColors.h"
+#include "nsNativeThemeCocoa.h"
 #include "nsChildView.h"
 #include "nsCocoaFeatures.h"
 #include "nsIScreenManager.h"
@@ -3304,19 +3305,7 @@ static void
 DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
                    CGFloat aUnifiedToolbarHeight, BOOL aIsMain)
 {
-  if (aTitlebarRect.size.width * aTitlebarRect.size.height > CUIDRAW_MAX_AREA) {
-    return;
-  }
-
-  CUIDraw([NSWindow coreUIRenderer], aTitlebarRect, aContext,
-          (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
-            @"kCUIWidgetWindowFrame", @"widget",
-            @"regularwin", @"windowtype",
-            (aIsMain ? @"normal" : @"inactive"), @"state",
-            [NSNumber numberWithDouble:aUnifiedToolbarHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
-            [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawTitleSeparatorKey",
-            nil],
-          nil);
+  nsNativeThemeCocoa::DrawNativeTitlebar(aContext, aTitlebarRect, aUnifiedToolbarHeight, aIsMain, NO);
 
   if (nsCocoaFeatures::OnLionOrLater()) {
     // On Lion the call to CUIDraw doesn't draw the top pixel strip at some

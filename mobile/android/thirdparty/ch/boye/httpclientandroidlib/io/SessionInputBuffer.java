@@ -135,7 +135,11 @@ public interface SessionInputBuffer {
      * @return <code>true</code> if some data is available in the session
      *   buffer or <code>false</code> otherwise.
      * @exception  IOException  if an I/O error occurs.
+     *
+     * @deprecated (4.3) do not use. This function should be provided at the
+     *   connection level
      */
+    @Deprecated
     boolean isDataAvailable(int timeout) throws IOException;
 
     /**

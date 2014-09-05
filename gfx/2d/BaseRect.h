@@ -502,7 +502,8 @@ struct BaseRect {
     return rect;
   }
 
-  friend std::ostream& operator<<(std::ostream& stream, const Sub& aRect) {
+  friend std::ostream& operator<<(std::ostream& stream,
+      const BaseRect<T, Sub, Point, SizeT, MarginT>& aRect) {
     return stream << '(' << aRect.x << ',' << aRect.y << ','
                   << aRect.width << ',' << aRect.height << ')';
   }

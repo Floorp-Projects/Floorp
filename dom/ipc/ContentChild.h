@@ -191,6 +191,14 @@ public:
     virtual bool RecvPTestShellConstructor(PTestShellChild*) MOZ_OVERRIDE;
     jsipc::JavaScriptChild *GetCPOWManager();
 
+    PMobileConnectionChild*
+    SendPMobileConnectionConstructor(PMobileConnectionChild* aActor,
+                                     const uint32_t& aClientId);
+    virtual PMobileConnectionChild*
+    AllocPMobileConnectionChild(const uint32_t& aClientId) MOZ_OVERRIDE;
+    virtual bool
+    DeallocPMobileConnectionChild(PMobileConnectionChild* aActor) MOZ_OVERRIDE;
+
     virtual PNeckoChild* AllocPNeckoChild() MOZ_OVERRIDE;
     virtual bool DeallocPNeckoChild(PNeckoChild*) MOZ_OVERRIDE;
 
@@ -318,6 +326,9 @@ public:
     virtual bool RecvNotifyIdleObserver(const uint64_t& aObserver,
                                         const nsCString& aTopic,
                                         const nsString& aData) MOZ_OVERRIDE;
+
+    virtual bool RecvOnAppThemeChanged() MOZ_OVERRIDE;
+
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif

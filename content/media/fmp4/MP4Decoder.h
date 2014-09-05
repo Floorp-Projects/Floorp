@@ -28,12 +28,11 @@ public:
   virtual nsresult SetCDMProxy(CDMProxy* aProxy) MOZ_OVERRIDE;
 #endif
 
-  // Returns true if aType is a MIME type that we can render with the
-  // a MP4 platform decoder backend. If aCodecList is non null,
-  // it is filled with a (static const) null-terminated list of strings
-  // denoting the codecs we'll playback.
-  static bool GetSupportedCodecs(const nsACString& aType,
-                                 char const *const ** aCodecList);
+  // Returns true if aMIMEType is a type that we think we can render with the
+  // a MP4 platform decoder backend. If aCodecs is non emtpy, it is filled
+  // with a comma-delimited list of codecs to check support for.
+  static bool CanHandleMediaType(const nsACString& aMIMEType,
+                                 const nsAString& aCodecs = EmptyString());
 
   // Returns true if the MP4 backend is preffed on, and we're running on a
   // platform that is likely to have decoders for the contained formats.

@@ -206,6 +206,15 @@
      the two uses differently. -->
 <!ENTITY fxaccount_status_linktos 'Terms of Service'>
 <!ENTITY fxaccount_status_linkprivacy 'Privacy Notice'>
+<!ENTITY fxaccount_status_more 'More&ellipsis;'>
+
+<!ENTITY fxaccount_remove_account_dialog_title 'Remove Firefox Account?'>
+<!ENTITY fxaccount_remove_account_dialog_message '&brandShortName; will stop syncing with your account, but won’t delete any of your browsing data on this device.'>
+<!-- Localization note: format string below will be replaced
+     with the Firefox Account's email address. -->
+<!ENTITY fxaccount_remove_account_toast 'Firefox Account &formatS; removed.'>
+
+<!ENTITY fxaccount_remove_account_menu_item 'Remove Account'>
 
 <!-- Localization note: this is the name shown by the Android system
      itself for a Firefox Account. Don't localize this. -->
@@ -235,6 +244,6 @@
 <!ENTITY fxaccount_remote_error_COULD_NOT_CONNECT 'Cannot connect to network'>
 
 <!ENTITY fxaccount_sync_sign_in_error_notification_title2 '&syncBrand.shortName.label; is not connected'>
-<!-- Note to translators: the format string below will be replaced
+<!-- Localization note: the format string below will be replaced
      with the Firefox Account's email address. -->
 <!ENTITY fxaccount_sync_sign_in_error_notification_text2 'Tap to sign in as &formatS;'>

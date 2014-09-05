@@ -1216,9 +1216,10 @@ static void send_message_helper(
         (msg_id == CC_MSG_CREATEANSWER ||
          msg_id == CC_MSG_SETLOCALDESC ||
          msg_id == CC_MSG_SETREMOTEDESC)) {
-        size_t sdp_size = strlen(sdp) + 1;
-        pmsg->sdp = cpr_malloc(sdp_size);
-        sstrncpy(pmsg->sdp, sdp, sdp_size);
+        /* This is safe because all of the queueing has been removed.
+         * From a few minutes of looking, it appears to be very messy to
+         * clean this up down in the implementation. */
+        pmsg->sdp = sdp;
     } else {
         pmsg->sdp = NULL;
     }

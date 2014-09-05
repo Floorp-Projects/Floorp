@@ -38,7 +38,7 @@ class nsPluginByteRangeStreamListener
   , public nsIInterfaceRequestor
 {
 public:
-  nsPluginByteRangeStreamListener(nsIWeakReference* aWeakPtr);
+  explicit nsPluginByteRangeStreamListener(nsIWeakReference* aWeakPtr);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER

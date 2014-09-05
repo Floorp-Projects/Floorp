@@ -26,7 +26,7 @@ class EventChainPreVisitor;
 class nsWindowRoot : public nsPIWindowRoot
 {
 public:
-  nsWindowRoot(nsPIDOMWindow* aWindow);
+  explicit nsWindowRoot(nsPIDOMWindow* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMEVENTTARGET

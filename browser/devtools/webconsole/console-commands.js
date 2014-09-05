@@ -5,28 +5,7 @@
 "use strict";
 
 const gcli = require("gcli/index");
-const EventEmitter = require("devtools/toolkit/event-emitter");
 const { gDevTools } = require("resource:///modules/devtools/gDevTools.jsm");
-
-const eventEmitter = new EventEmitter();
-
-gDevTools.on("toolbox-ready", (e, toolbox) => {
-  if (!toolbox.target) {
-    return;
-  }
-
-  let fireChangeForTab = () => {
-    eventEmitter.emit("changed", { target: toolbox.target });
-  };
-
-  toolbox.on("split-console", fireChangeForTab);
-  toolbox.on("select", fireChangeForTab);
-
-  toolbox.once("destroyed", () => {
-    toolbox.off("split-console", fireChangeForTab);
-    toolbox.off("select", fireChangeForTab);
-  });
-});
 
 exports.items = [
   {
@@ -41,11 +20,20 @@ exports.items = [
         return !!(toolbox && toolbox.splitConsole);
       },
       onChange: function(target, changeHandler) {
-        eventEmitter.on("changed", changeHandler);
-      },
-      offChange: function(target, changeHandler) {
-        eventEmitter.off("changed", changeHandler);
-      },
+        // Register handlers for when a change event should be fired
+        // (which resets the checked state of the button).
+        let toolbox = gDevTools.getToolbox(target);
+        let callback = changeHandler.bind(null, "changed", { target: target });
+
+        if (!toolbox) {
+          return;
+        }
+
+        toolbox.on("split-console", callback);
+        toolbox.once("destroyed", () => {
+          toolbox.off("split-console", callback);
+        });
+      }
     },
     exec: function(args, context) {
       let target = context.environment.target;

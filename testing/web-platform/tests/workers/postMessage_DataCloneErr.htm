@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> postMessage() with WorkerNavigator raises DATA_CLONE_ERR </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = "./support/WorkerDataCloneErr.js";
+    var ExpectedResult = "Pass";
+    var description = "Throw a DATA_CLONE_ERR exception when a host object (e.g. a DOM node) is used with postMessage.";
+    
+    var t = async_test("Test Description: " + description);
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data, ExpectedResult);
+        t.done();
+    });
+</script>
+</body>
+</html>

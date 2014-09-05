@@ -490,7 +490,7 @@ class SegArray {
 
 class PriMap {
  public:
-  PriMap(void (*aLog)(const char*))
+  explicit PriMap(void (*aLog)(const char*))
     : mLog(aLog)
   {}
 
@@ -838,7 +838,7 @@ class PriMap {
 class CFICache {
  public:
 
-  CFICache(PriMap* aPriMap) {
+  explicit CFICache(PriMap* aPriMap) {
     Invalidate();
     mPriMap = aPriMap;
   }

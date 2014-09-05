@@ -42,7 +42,7 @@ struct HttpHeapAtom {
     char                 value[1];
 };
 
-static struct PLDHashTable  sAtomTable = {0};
+static struct PLDHashTable  sAtomTable;
 static struct HttpHeapAtom *sHeapAtoms = nullptr;
 static Mutex               *sLock = nullptr;
 

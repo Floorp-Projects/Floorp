@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>XMLHttpRequest: setRequestHeader() value argument checks</title>
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
+    <link rel="help" href="http://dvcs.w3.org/hg/xhr/raw-file/tip/Overview.html#the-setrequestheader()-method" data-tested-assertations="/following::ol/li[4]" />  
+  </head>
+  <body>
+    <div id="log"></div>
+    <script>
+      function try_value(value) {
+        test(function() {
+          var client = new XMLHttpRequest()
+          client.open("GET", "...")
+          // Older versions of the XHR spec use SyntaxError here, however,
+          // TypeError is the right error for this test per https://www.w3.org/Bugs/Public/show_bug.cgi?id=23346
+          assert_throws(new TypeError(), function() { client.setRequestHeader("x-test", value) }, ' given value ' + value+', ')
+        })
+      }
+      try_value("t\rt")
+      try_value("t\nt")
+      try_value("ﾃｽﾄ")
+      test(function() {
+        var client = new XMLHttpRequest()
+        client.open("GET", "...")
+        assert_throws(new TypeError(), function() { client.setRequestHeader("x-test") })
+      })
+    </script>
+  </body>
+</html>

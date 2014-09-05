@@ -36,7 +36,7 @@ class nsWindowSizes {
   macro(Other, mPropertyTablesSize) \
 
 public:
-  nsWindowSizes(mozilla::MallocSizeOf aMallocSizeOf)
+  explicit nsWindowSizes(mozilla::MallocSizeOf aMallocSizeOf)
     :
       #define ZERO_SIZE(kind, mSize)  mSize(0),
       FOR_EACH_SIZE(ZERO_SIZE)

@@ -225,8 +225,11 @@ class JSObject : public js::ObjectImpl
     static bool setLastProperty(js::ThreadSafeContext *cx,
                                 JS::HandleObject obj, js::HandleShape shape);
 
-    /* As above, but does not change the slot span. */
-    inline void setLastPropertyInfallible(js::Shape *shape);
+    // As for setLastProperty(), but allows the number of fixed slots to
+    // change. This can only be used when fixed slots are being erased from the
+    // object, and only when the object will not require dynamic slots to cover
+    // the new properties.
+    void setLastPropertyShrinkFixedSlots(js::Shape *shape);
 
     /*
      * Make a non-array object with the specified initial state. This method
@@ -253,11 +256,20 @@ class JSObject : public js::ObjectImpl
                                                js::HandleTypeObject type,
                                                js::HeapSlot *elements);
 
+    /* Make an copy-on-write array object which shares the elements of an existing object. */
+    static inline js::ArrayObject *createCopyOnWriteArray(js::ExclusiveContext *cx,
+                                                          js::gc::InitialHeap heap,
+                                                          js::HandleShape shape,
+                                                          js::HandleObject sharedElementsOwner);
+
   private:
     // Helper for the above two methods.
     static inline JSObject *
     createArrayInternal(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
                         js::HandleShape shape, js::HandleTypeObject type);
+
+    static inline js::ArrayObject *finishCreateArray(JSObject *obj,
+                                                     js::HandleShape shape);
   public:
 
     /*
@@ -772,6 +784,8 @@ class JSObject : public js::ObjectImpl
         JS_ASSERT(isNative());
         return getElementsHeader()->isCopyOnWrite();
     }
+
+    void fixupAfterMovingGC();
 
     /* Packed information for this object's elements. */
     inline bool writeToIndexWouldMarkNotPacked(uint32_t index);

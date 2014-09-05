@@ -39,7 +39,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(URL)
 
-  URL(nsIURI* aURI);
+  explicit URL(nsIURI* aURI);
 
   // WebIDL methods
   JSObject*
@@ -69,9 +69,6 @@ public:
                               ErrorResult& aError);
   static void RevokeObjectURL(const GlobalObject& aGlobal,
                               const nsAString& aURL);
-  static nsIPrincipal* GetPrincipalFromURL(const GlobalObject& aGlobal,
-                                           const nsAString& aURL,
-                                           ErrorResult& aError);
 
   void GetHref(nsString& aHref, ErrorResult& aRv) const;
 

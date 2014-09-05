@@ -73,6 +73,11 @@ protected:
   bool CanDrop(nsIDOMDragEvent* aEvent);
   void CleanupDragDropCaret();
   already_AddRefed<nsIPresShell> GetPresShell();
+  nsPresContext* GetPresContext();
+  nsIContent* GetFocusedRootContent();
+  // Returns true if IME consumes the mouse event.
+  bool NotifyIMEOfMouseButtonEvent(nsIDOMMouseEvent* aMouseEvent);
+  bool EditorHasFocus();
   bool IsFileControlTextBox();
   bool ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent);
   nsresult HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent);
@@ -81,6 +86,7 @@ protected:
   nsRefPtr<nsCaret> mCaret;
   bool mCommitText;
   bool mInTransaction;
+  bool mMouseDownOrUpConsumedByIME;
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   bool mHaveBidiKeyboards;
   bool mShouldSwitchTextDirection;

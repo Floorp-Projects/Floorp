@@ -53,8 +53,8 @@
 </preferences>
 
 <keyset>
-  <key key="&focusSearch1.key;" modifiers="accel" oncommand="gApplicationsPane.focusFilterBox();"/>
-  <key key="&focusSearch2.key;" modifiers="accel" oncommand="gApplicationsPane.focusFilterBox();"/>
+  <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1"/>
+  <key key="&focusSearch2.key;" modifiers="accel" id="focusSearch2"/>
 </keyset>
 
 <hbox id="header-application"
@@ -72,24 +72,21 @@
     <textbox id="filter" flex="1"
              type="search"
              placeholder="&filter.emptytext;"
-             aria-controls="handlersView"
-             oncommand="gApplicationsPane.filter();"/>
+             aria-controls="handlersView"/>
   </hbox>
 
   <separator class="thin"/>
 
   <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
                preference="pref.downloads.disable_button.edit_actions"
-               flex="1"
-               onselect="gApplicationsPane.onSelectionChanged();">
-    <listheader equalsize="always" style="border: 0; padding: 0; -moz-appearance: none;">
+               flex="1">
+    <listheader equalsize="always">
         <treecol id="typeColumn" label="&typeColumn.label;" value="type"
                  accesskey="&typeColumn.accesskey;" persist="sortDirection"
-                 flex="1" onclick="gApplicationsPane.sort(event);"
-                 sortDirection="ascending"/>
+                 flex="1" sortDirection="ascending"/>
         <treecol id="actionColumn" label="&actionColumn2.label;" value="action"
                  accesskey="&actionColumn2.accesskey;" persist="sortDirection"
-                 flex="1" onclick="gApplicationsPane.sort(event);"/>
+                 flex="1"/>
     </listheader>
   </richlistbox>
 </vbox>

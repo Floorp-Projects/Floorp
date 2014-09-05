@@ -106,7 +106,7 @@ typedef FrameMetrics::ViewID ViewID;
 class nsAsyncDocShellDestroyer : public nsRunnable
 {
 public:
-  nsAsyncDocShellDestroyer(nsIDocShell* aDocShell)
+  explicit nsAsyncDocShellDestroyer(nsIDocShell* aDocShell)
     : mDocShell(aDocShell)
   {
   }
@@ -121,113 +121,6 @@ public:
   }
   nsRefPtr<nsIDocShell> mDocShell;
 };
-
-NS_IMPL_ISUPPORTS(nsContentView, nsIContentView)
-
-nsresult
-nsContentView::Update(const ViewConfig& aConfig)
-{
-  if (aConfig == mConfig) {
-    return NS_OK;
-  }
-  mConfig = aConfig;
-
-  // View changed.  Try to locate our subdoc frame and invalidate
-  // it if found.
-  if (!mFrameLoader) {
-    if (IsRoot()) {
-      // Oops, don't have a frame right now.  That's OK; the view
-      // config persists and will apply to the next frame we get, if we
-      // ever get one.
-      return NS_OK;
-    } else {
-      // This view is no longer valid.
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentView::ScrollTo(float aXpx, float aYpx)
-{
-  ViewConfig config(mConfig);
-  config.mScrollOffset = nsPoint(nsPresContext::CSSPixelsToAppUnits(aXpx),
-                                 nsPresContext::CSSPixelsToAppUnits(aYpx));
-  return Update(config);
-}
-
-NS_IMETHODIMP
-nsContentView::ScrollBy(float aDXpx, float aDYpx)
-{
-  ViewConfig config(mConfig);
-  config.mScrollOffset.MoveBy(nsPresContext::CSSPixelsToAppUnits(aDXpx),
-                              nsPresContext::CSSPixelsToAppUnits(aDYpx));
-  return Update(config);
-}
-
-NS_IMETHODIMP
-nsContentView::SetScale(float aXScale, float aYScale)
-{
-  ViewConfig config(mConfig);
-  config.mXScale = aXScale;
-  config.mYScale = aYScale;
-  return Update(config);
-}
-
-NS_IMETHODIMP
-nsContentView::GetScrollX(float* aViewScrollX)
-{
-  *aViewScrollX = nsPresContext::AppUnitsToFloatCSSPixels(
-    mConfig.mScrollOffset.x);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentView::GetScrollY(float* aViewScrollY)
-{
-  *aViewScrollY = nsPresContext::AppUnitsToFloatCSSPixels(
-    mConfig.mScrollOffset.y);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentView::GetViewportWidth(float* aWidth)
-{
-  *aWidth = nsPresContext::AppUnitsToFloatCSSPixels(mViewportSize.width);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentView::GetViewportHeight(float* aHeight)
-{
-  *aHeight = nsPresContext::AppUnitsToFloatCSSPixels(mViewportSize.height);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentView::GetContentWidth(float* aWidth)
-{
-  *aWidth = nsPresContext::AppUnitsToFloatCSSPixels(mContentSize.width);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentView::GetContentHeight(float* aHeight)
-{
-  *aHeight = nsPresContext::AppUnitsToFloatCSSPixels(mContentSize.height);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentView::GetId(nsContentViewId* aId)
-{
-  NS_ASSERTION(sizeof(nsContentViewId) == sizeof(ViewID),
-               "ID size for XPCOM ID and internal ID type are not the same!");
-  *aId = mScrollId;
-  return NS_OK;
-}
 
 // Bug 136580: Limit to the number of nested content frames that can have the
 //             same URL. This is to stop content that is recursively loading
@@ -252,7 +145,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
   NS_INTERFACE_MAP_ENTRY(nsIFrameLoader)
-  NS_INTERFACE_MAP_ENTRY(nsIContentViewManager)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFrameLoader)
 NS_INTERFACE_MAP_END
 
@@ -416,7 +308,7 @@ nsFrameLoader::ReallyStartLoading()
 class DelayedStartLoadingRunnable : public nsRunnable
 {
 public:
-  DelayedStartLoadingRunnable(nsFrameLoader* aFrameLoader)
+  explicit DelayedStartLoadingRunnable(nsFrameLoader* aFrameLoader)
     : mFrameLoader(aFrameLoader)
   {
   }
@@ -816,7 +708,7 @@ class MOZ_STACK_CLASS AutoResetInShow {
     nsFrameLoader* mFrameLoader;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   public:
-    AutoResetInShow(nsFrameLoader* aFrameLoader MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit AutoResetInShow(nsFrameLoader* aFrameLoader MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mFrameLoader(aFrameLoader)
     {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -1159,6 +1051,9 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   nsCOMPtr<EventTarget> otherChromeEventHandler =
     do_QueryInterface(otherWindow->GetChromeEventHandler());
 
+  nsCOMPtr<EventTarget> ourEventTarget = ourWindow->GetParentTarget();
+  nsCOMPtr<EventTarget> otherEventTarget = otherWindow->GetParentTarget();
+
   NS_ASSERTION(SameCOMIdentity(ourFrameElement, ourContent) &&
                SameCOMIdentity(otherFrameElement, otherContent) &&
                SameCOMIdentity(ourChromeEventHandler, ourContent) &&
@@ -1208,25 +1103,25 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   // Fire pageshow events on still-loading pages, and then fire pagehide
   // events.  Note that we do NOT fire these in the normal way, but just fire
   // them on the chrome event handlers.
-  FirePageShowEvent(ourDocshell, ourChromeEventHandler, false);
-  FirePageShowEvent(otherDocshell, otherChromeEventHandler, false);
-  FirePageHideEvent(ourDocshell, ourChromeEventHandler);
-  FirePageHideEvent(otherDocshell, otherChromeEventHandler);
+  FirePageShowEvent(ourDocshell, ourEventTarget, false);
+  FirePageShowEvent(otherDocshell, otherEventTarget, false);
+  FirePageHideEvent(ourDocshell, ourEventTarget);
+  FirePageHideEvent(otherDocshell, otherEventTarget);
   
   nsIFrame* ourFrame = ourContent->GetPrimaryFrame();
   nsIFrame* otherFrame = otherContent->GetPrimaryFrame();
   if (!ourFrame || !otherFrame) {
     mInSwap = aOther->mInSwap = false;
-    FirePageShowEvent(ourDocshell, ourChromeEventHandler, true);
-    FirePageShowEvent(otherDocshell, otherChromeEventHandler, true);
+    FirePageShowEvent(ourDocshell, ourEventTarget, true);
+    FirePageShowEvent(otherDocshell, otherEventTarget, true);
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   nsSubDocumentFrame* ourFrameFrame = do_QueryFrame(ourFrame);
   if (!ourFrameFrame) {
     mInSwap = aOther->mInSwap = false;
-    FirePageShowEvent(ourDocshell, ourChromeEventHandler, true);
-    FirePageShowEvent(otherDocshell, otherChromeEventHandler, true);
+    FirePageShowEvent(ourDocshell, ourEventTarget, true);
+    FirePageShowEvent(otherDocshell, otherEventTarget, true);
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -1234,8 +1129,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   rv = ourFrameFrame->BeginSwapDocShells(otherFrame);
   if (NS_FAILED(rv)) {
     mInSwap = aOther->mInSwap = false;
-    FirePageShowEvent(ourDocshell, ourChromeEventHandler, true);
-    FirePageShowEvent(otherDocshell, otherChromeEventHandler, true);
+    FirePageShowEvent(ourDocshell, ourEventTarget, true);
+    FirePageShowEvent(otherDocshell, otherEventTarget, true);
     return rv;
   }
 
@@ -1338,8 +1233,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   ourParentDocument->FlushPendingNotifications(Flush_Layout);
   otherParentDocument->FlushPendingNotifications(Flush_Layout);
 
-  FirePageShowEvent(ourDocshell, otherChromeEventHandler, true);
-  FirePageShowEvent(otherDocshell, ourChromeEventHandler, true);
+  FirePageShowEvent(ourDocshell, ourEventTarget, true);
+  FirePageShowEvent(otherDocshell, otherEventTarget, true);
 
   mInSwap = aOther->mInSwap = false;
   return NS_OK;
@@ -2376,34 +2271,6 @@ nsFrameLoader::GetMessageManager(nsIMessageSender** aManager)
   if (mMessageManager) {
     CallQueryInterface(mMessageManager, aManager);
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetContentViewsIn(float aXPx, float aYPx,
-                                 float aTopSize, float aRightSize,
-                                 float aBottomSize, float aLeftSize,
-                                 uint32_t* aLength,
-                                 nsIContentView*** aResult)
-{
-  *aResult = nullptr;
-  *aLength = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetRootContentView(nsIContentView** aContentView)
-{
-  RenderFrameParent* rfp = GetCurrentRemoteFrame();
-  if (!rfp) {
-    *aContentView = nullptr;
-    return NS_OK;
-  }
-
-  nsContentView* view = rfp->GetRootContentView();
-  NS_ABORT_IF_FALSE(view, "Should always be able to create root scrollable!");
-  nsRefPtr<nsIContentView>(view).forget(aContentView);
-
   return NS_OK;
 }
 

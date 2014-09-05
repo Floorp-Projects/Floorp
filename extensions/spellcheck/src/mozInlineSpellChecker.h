@@ -35,7 +35,7 @@ class mozInlineSpellResume;
 class mozInlineSpellStatus
 {
 public:
-  mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
+  explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
 
   nsresult InitForEditorChange(EditAction aAction,
                                nsIDOMNode* aAnchorNode, int32_t aAnchorOffset,
@@ -116,10 +116,10 @@ protected:
                                     nsIDOMRange** aRange);
 };
 
-class mozInlineSpellChecker : public nsIInlineSpellChecker,
-                              public nsIEditActionListener,
-                              public nsIDOMEventListener,
-                              public nsSupportsWeakReference
+class mozInlineSpellChecker MOZ_FINAL : public nsIInlineSpellChecker,
+                                        public nsIEditActionListener,
+                                        public nsIDOMEventListener,
+                                        public nsSupportsWeakReference
 {
 private:
   friend class mozInlineSpellStatus;

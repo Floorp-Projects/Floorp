@@ -156,7 +156,8 @@ this.EventManager.prototype = {
         let reason = event.reason;
         let oldAccessible = event.oldAccessible;
 
-        if (this.editState.editing) {
+        if (this.editState.editing &&
+            !Utils.getState(position).contains(States.FOCUSED)) {
           aEvent.accessibleDocument.takeFocus();
         }
         this.present(
@@ -224,43 +225,30 @@ this.EventManager.prototype = {
         this.editState = editState;
         break;
       }
+      case Events.OBJECT_ATTRIBUTE_CHANGED:
+      {
+        let evt = aEvent.QueryInterface(
+          Ci.nsIAccessibleObjectAttributeChangedEvent);
+        if (evt.changedAttribute.toString() !== 'aria-hidden') {
+          // Only handle aria-hidden attribute change.
+          break;
+        }
+        if (Utils.isHidden(aEvent.accessible)) {
+          this._handleHide(evt);
+        } else {
+          this._handleShow(aEvent);
+        }
+        break;
+      }
       case Events.SHOW:
       {
-        let {liveRegion, isPolite} = this._handleLiveRegion(aEvent,
-          ['additions', 'all']);
-        // Only handle show if it is a relevant live region.
-        if (!liveRegion) {
-          break;
-        }
-        // Show for text is handled by the EVENT_TEXT_INSERTED handler.
-        if (aEvent.accessible.role === Roles.TEXT_LEAF) {
-          break;
-        }
-        this._dequeueLiveEvent(Events.HIDE, liveRegion);
-        this.present(Presentation.liveRegion(liveRegion, isPolite, false));
+        this._handleShow(aEvent);
         break;
       }
       case Events.HIDE:
       {
         let evt = aEvent.QueryInterface(Ci.nsIAccessibleHideEvent);
-        let {liveRegion, isPolite} = this._handleLiveRegion(
-          evt, ['removals', 'all']);
-        if (liveRegion) {
-          // Hide for text is handled by the EVENT_TEXT_REMOVED handler.
-          if (aEvent.accessible.role === Roles.TEXT_LEAF) {
-            break;
-          }
-          this._queueLiveEvent(Events.HIDE, liveRegion, isPolite);
-        } else {
-          let vc = Utils.getVirtualCursor(this.contentScope.content.document);
-          if (vc.position &&
-            (Utils.getState(vc.position).contains(States.DEFUNCT) ||
-              Utils.isInSubtree(vc.position, aEvent.accessible))) {
-            this.contentControl.autoMove(
-              evt.targetPrevSibling || evt.targetParent,
-              { moveToFocused: true, delay: 500 });
-          }
-        }
+        this._handleHide(evt);
         break;
       }
       case Events.TEXT_INSERTED:
@@ -301,6 +289,51 @@ this.EventManager.prototype = {
             Utils.getEmbeddedControl(position) === target) {
           this.present(Presentation.valueChanged(target));
         }
+      }
+    }
+  },
+
+  _handleShow: function _handleShow(aEvent) {
+    let {liveRegion, isPolite} = this._handleLiveRegion(aEvent,
+      ['additions', 'all']);
+    // Only handle show if it is a relevant live region.
+    if (!liveRegion) {
+      return;
+    }
+    // Show for text is handled by the EVENT_TEXT_INSERTED handler.
+    if (aEvent.accessible.role === Roles.TEXT_LEAF) {
+      return;
+    }
+    this._dequeueLiveEvent(Events.HIDE, liveRegion);
+    this.present(Presentation.liveRegion(liveRegion, isPolite, false));
+  },
+
+  _handleHide: function _handleHide(aEvent) {
+    let {liveRegion, isPolite} = this._handleLiveRegion(
+      aEvent, ['removals', 'all']);
+    let acc = aEvent.accessible;
+    if (liveRegion) {
+      // Hide for text is handled by the EVENT_TEXT_REMOVED handler.
+      if (acc.role === Roles.TEXT_LEAF) {
+        return;
+      }
+      this._queueLiveEvent(Events.HIDE, liveRegion, isPolite);
+    } else {
+      let vc = Utils.getVirtualCursor(this.contentScope.content.document);
+      if (vc.position &&
+        (Utils.getState(vc.position).contains(States.DEFUNCT) ||
+          Utils.isInSubtree(vc.position, acc))) {
+        let position = aEvent.targetPrevSibling || aEvent.targetParent;
+        if (!position) {
+          try {
+            position = acc.previousSibling;
+          } catch (x) {
+            // Accessible is unattached from the accessible tree.
+            position = acc.parent;
+          }
+        }
+        this.contentControl.autoMove(position,
+          { moveToFocused: true, delay: 500 });
       }
     }
   },

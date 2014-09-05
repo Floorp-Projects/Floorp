@@ -65,11 +65,6 @@ public:
   // Can be called on any thread.
   virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) = 0;
 
-  // Returns the end time of the last sample in the media. Note that a media
-  // can have a non-zero start time, so the end time may not necessarily be
-  // the same as the duration (i.e. duration is (end_time - start_time)).
-  virtual int64_t GetEndMediaTime() const = 0;
-
   // Return the duration of the media in microseconds.
   virtual int64_t GetMediaDuration() = 0;
 
@@ -181,7 +176,7 @@ class MetadataEventRunner : public nsRunnable
 class RemoveMediaTracksEventRunner : public nsRunnable
 {
 public:
-  RemoveMediaTracksEventRunner(AbstractMediaDecoder* aDecoder)
+  explicit RemoveMediaTracksEventRunner(AbstractMediaDecoder* aDecoder)
     : mDecoder(aDecoder)
   {}
 

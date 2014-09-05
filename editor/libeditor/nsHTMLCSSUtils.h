@@ -6,11 +6,11 @@
 #ifndef nsHTMLCSSUtils_h__
 #define nsHTMLCSSUtils_h__
 
+#include "ChangeStyleTxn.h"             // for ChangeStyleTxn::EChangeType
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsTArray.h"                   // for nsTArray
 #include "nscore.h"                     // for nsAString, nsresult, nullptr
 
-class ChangeCSSInlineStyleTxn;
 class nsComputedDOMStyle;
 class nsIAtom;
 class nsIContent;
@@ -94,13 +94,14 @@ public:
     * @param aSuppressTransaction [IN] a boolean indicating, when true,
     *                                  that no transaction should be recorded
     */
-  nsresult    SetCSSProperty(nsIDOMElement * aElement, nsIAtom * aProperty,
-                             const nsAString & aValue,
-                             bool aSuppressTransaction);
-  nsresult    SetCSSPropertyPixels(nsIDOMElement *aElement, nsIAtom *aProperty,
-                                   int32_t aIntValue, bool aSuppressTxn);
-  nsresult    RemoveCSSProperty(nsIDOMElement * aElement, nsIAtom * aProperty,
-                                const nsAString & aPropertyValue, bool aSuppressTransaction);
+  nsresult SetCSSProperty(mozilla::dom::Element& aElement, nsIAtom& aProperty,
+                          const nsAString& aValue, bool aSuppressTxn = false);
+  nsresult SetCSSPropertyPixels(mozilla::dom::Element& aElement,
+                                nsIAtom& aProperty, int32_t aIntValue);
+  nsresult RemoveCSSProperty(mozilla::dom::Element& aElement,
+                             nsIAtom& aProperty,
+                             const nsAString& aPropertyValue,
+                             bool aSuppressTxn = false);
 
   /** directly adds/remove a CSS declaration to the STYLE atrribute carried by
     * a given element without going through the txn manager
@@ -374,19 +375,18 @@ private:
                                                  nsTArray<nsString>& aValueArray,
                                                  bool aGetOrRemoveRequest);
 
-  /** creates a Transaction for setting or removing a css property
+  /** Creates a Transaction for setting or removing a CSS property.  Never
+    * returns null.
     *
     * @param aElement           [IN] a DOM element
     * @param aProperty          [IN] a CSS property
-    * @param aValue             [IN] the value to remove for this CSS property or the empty string if irrelevant
-    * @param aTxn               [OUT] the created transaction
-    * @param aRemoveProperty    [IN] true if we create a "remove" transaction, false for a "set"
+    * @param aValue             [IN] the value to set for this CSS property
+    * @param aChangeType        [IN] eSet to set, eRemove to remove
     */
-  nsresult    CreateCSSPropertyTxn(nsIDOMElement * aElement, 
-                                   nsIAtom * aProperty,
-                                   const nsAString & aValue,
-                                   ChangeCSSInlineStyleTxn ** aTxn,
-                                   bool aRemoveProperty);
+  already_AddRefed<mozilla::dom::ChangeStyleTxn>
+  CreateCSSPropertyTxn(mozilla::dom::Element& aElement,
+      nsIAtom& aProperty, const nsAString& aValue,
+      mozilla::dom::ChangeStyleTxn::EChangeType aChangeType);
 
   /** back-end for GetSpecifiedProperty and GetComputedProperty
    *

@@ -59,4 +59,9 @@
 #  define PRIXPTR "X"  /* uintptr_t */
 #endif
 
+/**
+ * For printing size_t.
+ */
+#define PRIuSIZE PRIuPTR
+
 #endif  /* mozilla_IntegerPrintfMacros_h_ */

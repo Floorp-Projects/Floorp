@@ -39,7 +39,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_FORWARD_SAFE_NSITELEPHONYLISTENER(mTelephony)
 
-  Listener(Telephony* aTelephony)
+  explicit Listener(Telephony* aTelephony)
     : mTelephony(aTelephony)
   {
     MOZ_ASSERT(mTelephony);
@@ -574,6 +574,21 @@ NS_IMETHODIMP
 Telephony::EnumerateCallStateComplete()
 {
   MOZ_ASSERT(!mEnumerated);
+
+  // Set conference state.
+  if (mGroup->CallsArray().Length() >= 2) {
+    const nsTArray<nsRefPtr<TelephonyCall> > &calls = mGroup->CallsArray();
+
+    uint16_t callState = calls[0]->CallState();
+    for (uint32_t i = 1; i < calls.Length(); i++) {
+      if (calls[i]->CallState() != callState) {
+        callState = nsITelephonyService::CALL_STATE_UNKNOWN;
+        break;
+      }
+    }
+
+    mGroup->ChangeState(callState);
+  }
 
   mEnumerated = true;
 

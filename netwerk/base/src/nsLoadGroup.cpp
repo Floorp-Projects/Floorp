@@ -230,7 +230,7 @@ nsLoadGroup::Cancel(nsresult status)
 
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv;
-    uint32_t count = mRequests.entryCount;
+    uint32_t count = mRequests.EntryCount();
 
     nsAutoTArray<nsIRequest*, 8> requests;
 
@@ -301,7 +301,7 @@ nsLoadGroup::Cancel(nsresult status)
     }
 
 #if defined(DEBUG)
-    NS_ASSERTION(mRequests.entryCount == 0, "Request list is not empty.");
+    NS_ASSERTION(mRequests.EntryCount() == 0, "Request list is not empty.");
     NS_ASSERTION(mForegroundCount == 0, "Foreground URLs are active.");
 #endif
 
@@ -316,7 +316,7 @@ NS_IMETHODIMP
 nsLoadGroup::Suspend()
 {
     nsresult rv, firstError;
-    uint32_t count = mRequests.entryCount;
+    uint32_t count = mRequests.EntryCount();
 
     nsAutoTArray<nsIRequest*, 8> requests;
 
@@ -368,7 +368,7 @@ NS_IMETHODIMP
 nsLoadGroup::Resume()
 {
     nsresult rv, firstError;
-    uint32_t count = mRequests.entryCount;
+    uint32_t count = mRequests.EntryCount();
 
     nsAutoTArray<nsIRequest*, 8> requests;
 
@@ -489,7 +489,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
         nsAutoCString nameStr;
         request->GetName(nameStr);
         LOG(("LOADGROUP [%x]: Adding request %x %s (count=%d).\n",
-             this, request, nameStr.get(), mRequests.entryCount));
+             this, request, nameStr.get(), mRequests.EntryCount()));
     }
 #endif /* PR_LOGGING */
 
@@ -602,7 +602,7 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
         nsAutoCString nameStr;
         request->GetName(nameStr);
         LOG(("LOADGROUP [%x]: Removing request %x %s status %x (count=%d).\n",
-            this, request, nameStr.get(), aStatus, mRequests.entryCount-1));
+            this, request, nameStr.get(), aStatus, mRequests.EntryCount() - 1));
     }
 #endif
 
@@ -664,7 +664,7 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
         }
     }
 
-    if (mRequests.entryCount == 0) {
+    if (mRequests.EntryCount() == 0) {
         TelemetryReport();
     }
 
@@ -720,7 +720,7 @@ NS_IMETHODIMP
 nsLoadGroup::GetRequests(nsISimpleEnumerator * *aRequests)
 {
     nsCOMArray<nsIRequest> requests;
-    requests.SetCapacity(mRequests.entryCount);
+    requests.SetCapacity(mRequests.EntryCount());
 
     PL_DHashTableEnumerate(&mRequests, AppendRequestsToCOMArray, &requests);
 

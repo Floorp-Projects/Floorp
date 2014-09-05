@@ -27,7 +27,7 @@ class HTMLFormControlsCollection : public nsIHTMLCollection
                                  , public nsWrapperCache
 {
 public:
-  HTMLFormControlsCollection(HTMLFormElement* aForm);
+  explicit HTMLFormControlsCollection(HTMLFormElement* aForm);
 
   void DropFormReference();
 

@@ -268,7 +268,7 @@ add_task(function test_reportSitesAction() {
   // Make the history tile enhanced so it reports both id and url
   sites[2].enhancedId = "id from enhanced";
   expectedPost.tiles[1].id = "id from enhanced";
-  expectedPost.tiles[1].url = sites[2].link.url;
+  expectedPost.tiles[1].url = "";
   yield sendPingAndTest("view", "view", 2);
 
   // Click the 0th site / 0th tile
@@ -558,9 +558,9 @@ add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
 
   // Get the expected image for the same site
   checkEnhanced("http://example.net/", "net1");
-  checkEnhanced("http://sub.example.net/", "net1");
   checkEnhanced("http://example.net/path", "net1");
   checkEnhanced("https://www.example.net/", "net1");
+  checkEnhanced("https://www3.example.net/", "net1");
 
   // Get the image of the last entry
   checkEnhanced("http://example.com", "com2");
@@ -574,6 +574,7 @@ add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
   do_check_eq(inline.url, "http://example.com/echo");
 
   // Undefined for not enhanced
+  checkEnhanced("http://sub.example.net/", undefined);
   checkEnhanced("http://example.org", undefined);
   checkEnhanced("http://localhost", undefined);
   checkEnhanced("http://127.0.0.1", undefined);

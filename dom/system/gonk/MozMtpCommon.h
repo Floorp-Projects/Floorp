@@ -10,13 +10,23 @@
 #include "mozilla/Types.h"
 #include <android/log.h>
 
+#define USE_DEBUG 0
+
+#if USE_DEBUG
+#define MTP_DBG(msg, ...)                                            \
+  __android_log_print(ANDROID_LOG_DEBUG, "MozMtp",                    \
+                      "%s: " msg, __FUNCTION__, ##__VA_ARGS__)
+#else
+#define MTP_DBG(msg, ...)
+#endif
+
 #define MTP_LOG(msg, ...)                                            \
   __android_log_print(ANDROID_LOG_INFO, "MozMtp",                    \
-                      "%s: " msg, __FUNCTION__, ##__VA_ARGS__)       \
+                      "%s: " msg, __FUNCTION__, ##__VA_ARGS__)
 
 #define MTP_ERR(msg, ...)                                            \
   __android_log_print(ANDROID_LOG_ERROR, "MozMtp",                   \
-                      "%s: " msg, __FUNCTION__, ##__VA_ARGS__)       \
+                      "%s: " msg, __FUNCTION__, ##__VA_ARGS__)
 
 #define BEGIN_MTP_NAMESPACE \
   namespace mozilla { namespace system { namespace mtp {

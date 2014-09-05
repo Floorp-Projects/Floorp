@@ -55,7 +55,7 @@ NS_INTERFACE_MAP_END
 class MOZ_STACK_CLASS AutoChangeNumberNotifier
 {
 public:
-  AutoChangeNumberNotifier(DOMSVGNumber* aNumber MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoChangeNumberNotifier(DOMSVGNumber* aNumber MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mNumber(aNumber)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;

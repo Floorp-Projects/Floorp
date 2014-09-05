@@ -61,7 +61,7 @@ let test = asyncTest(function*() {
 function* testInlineStyle(view, inspector) {
   info("Testing inline style");
 
-  yield expandComputedViewPropertyByIndex(view, inspector, 0);
+  yield expandComputedViewPropertyByIndex(view, 0);
 
   let onWindow = waitForWindow();
   info("Clicking on the first rule-link in the computed-view");

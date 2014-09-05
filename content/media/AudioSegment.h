@@ -19,7 +19,7 @@ namespace mozilla {
 template<typename T>
 class SharedChannelArrayBuffer : public ThreadSharedObject {
 public:
-  SharedChannelArrayBuffer(nsTArray<nsTArray<T> >* aBuffers)
+  explicit SharedChannelArrayBuffer(nsTArray<nsTArray<T> >* aBuffers)
   {
     mBuffers.SwapElements(*aBuffers);
   }
@@ -274,7 +274,7 @@ public:
     return chunk;
   }
   void ApplyVolume(float aVolume);
-  void WriteTo(uint64_t aID, AudioStream* aOutput, AudioMixer* aMixer = nullptr);
+  void WriteTo(uint64_t aID, AudioMixer& aMixer, uint32_t aChannelCount, uint32_t aSampleRate);
 
   int ChannelCount() {
     NS_WARN_IF_FALSE(!mChunks.IsEmpty(),

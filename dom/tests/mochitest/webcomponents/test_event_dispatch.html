@@ -1,0 +1,458 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=887541
+-->
+<head>
+  <title>Test for event model in web components</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=887541">Bug 887541</a>
+<script>
+
+var els = SpecialPowers.Cc["@mozilla.org/eventlistenerservice;1"]
+            .getService(SpecialPowers.Ci.nsIEventListenerService);
+
+function eventListener(e) {
+  eventChain.push(this);
+}
+
+function isEventChain(actual, expected, msg) {
+  is(actual.length, expected.length, msg);
+  for (var i = 0; i < expected.length; i++) {
+    is(actual[i], expected[i], msg + " at " + i);
+  }
+
+  // Check to make sure the event chain matches what we get back from nsIEventListenerService.getEventTargetChainFor
+  if (0 < actual.length) {
+    var chain = els.getEventTargetChainFor(actual[0]); // Events should be dispatched on actual[0].
+    for (var i = 0; i < expected.length; i++) {
+      ok(SpecialPowers.compare(chain[i], expected[i]), msg + " at " + i + " for nsIEventListenerService");
+    }
+  }
+}
+
+/*
+ * Test 1: Test of event dispatch through a basic ShadowRoot with content a insertion point.
+ *
+ * <div elemOne> ------ <shadow-root shadowOne>
+ *        |                        |
+ * <div elemTwo>            <span elemThree>
+ *                                 |
+ *                         <content elemFour>
+ */
+
+var elemOne = document.createElement("div");
+elemOne.addEventListener("custom", eventListener);
+
+var elemTwo = document.createElement("div");
+elemTwo.addEventListener("custom", eventListener);
+
+var elemThree = document.createElement("span");
+elemThree.addEventListener("custom", eventListener);
+
+var elemFour = document.createElement("content");
+elemFour.addEventListener("custom", eventListener);
+
+var shadowOne = elemOne.createShadowRoot();
+shadowOne.addEventListener("custom", eventListener);
+
+elemThree.appendChild(elemFour);
+shadowOne.appendChild(elemThree);
+elemOne.appendChild(elemTwo);
+
+var eventChain = [];
+var customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemTwo.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemTwo, elemFour, elemThree, shadowOne, elemOne], "Event path for test 1 for event dispatched on elemTwo.");
+
+/*
+ * Test 2: Test of event dispatch through a nested ShadowRoots with content insertion points.
+ *
+ * <div elemFive> --- <shadow-root shadowTwo>
+ *       |                       |
+ * <div elemOne>          <div elemFour> ----- <shadow-root shadowOne>
+ *                               |                        |
+ *                       <content elemTwo>           <p elemSix>
+ *                                                        |
+ *                                               <content elemThree>
+ */
+
+elemOne = document.createElement("div");
+elemOne.addEventListener("custom", eventListener);
+
+elemTwo = document.createElement("content");
+elemTwo.addEventListener("custom", eventListener);
+
+elemThree = document.createElement("content");
+elemThree.addEventListener("custom", eventListener);
+
+var elemFour = document.createElement("div");
+elemFour.addEventListener("custom", eventListener);
+
+var elemFive = document.createElement("div");
+elemFive.addEventListener("custom", eventListener);
+
+var elemSix = document.createElement("p");
+elemSix.addEventListener("custom", eventListener);
+
+var shadowOne = elemFour.createShadowRoot();
+shadowOne.addEventListener("custom", eventListener);
+
+var shadowTwo = elemFive.createShadowRoot();
+shadowTwo.addEventListener("custom", eventListener);
+
+elemFive.appendChild(elemOne);
+shadowTwo.appendChild(elemFour);
+elemFour.appendChild(elemTwo);
+shadowOne.appendChild(elemSix);
+elemSix.appendChild(elemThree);
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemOne.dispatchEvent(customEvent);
+is(elemOne.getDestinationInsertionPoints().length, 2, "yes");
+isEventChain(eventChain, [elemOne, elemThree, elemSix, shadowOne, elemTwo, elemFour, shadowTwo, elemFive], "Event path for test 2 for event dispatched on elemOne.");
+
+/*
+ * Test 3: Test of event dispatch through nested ShadowRoot with content insertion points.
+ *
+ * <div elemOne> ------- <shadow-root shadowOne>
+ *        |                        |
+ * <span elemTwo>          <span elemThree> ------------ <shadow-root shadowTwo>
+ *                                 |                               |
+ *                          <span elemFour>                <content elemSix>
+ *                                 |
+ *                         <content elemFive>
+ */
+
+elemOne = document.createElement("div");
+elemOne.addEventListener("custom", eventListener);
+
+elemTwo = document.createElement("span");
+elemTwo.addEventListener("custom", eventListener);
+
+elemThree = document.createElement("span");
+elemThree.addEventListener("custom", eventListener);
+
+elemFour = document.createElement("span");
+elemFour.addEventListener("custom", eventListener);
+
+elemFive = document.createElement("content");
+elemFive.addEventListener("custom", eventListener);
+
+elemSix = document.createElement("content");
+elemSix.addEventListener("custom", eventListener);
+
+shadowOne = elemOne.createShadowRoot();
+shadowOne.addEventListener("custom", eventListener);
+
+shadowTwo = elemThree.createShadowRoot();
+shadowTwo.addEventListener("custom", eventListener);
+
+elemOne.appendChild(elemTwo);
+shadowOne.appendChild(elemThree);
+elemThree.appendChild(elemFour);
+elemFour.appendChild(elemFive);
+shadowTwo.appendChild(elemSix);
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemTwo.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemTwo, elemFive, elemFour, elemSix, shadowTwo, elemThree, shadowOne, elemOne], "Event path for test 3 for event dispatched on elemTwo.");
+
+/*
+ * Test 4: Test of event dispatch through host with multiple ShadowRoots with shadow insertion point.
+ *
+ * <div elemSeven> --- <shadow-root shadowTwo> (younger ShadowRoot)
+ *       |         |             |
+ * <div elemOne>   |      <div elemSix> -------- <shadow-root shadowOne>
+ *                 |             |                         |
+ *                 |     <shadow elemFour>         <content elemFive>
+ *                 |             |
+ *                 |     <content elemTwo>
+ *                 |
+ *                 --- <shadow-root shadowThree> (older ShadowRoot)
+ *                         |                |
+ *                         |       <content elemThree>
+ *                         |
+ *                  <div elemEight>
+ */
+
+elemOne = document.createElement("div");
+elemOne.addEventListener("custom", eventListener);
+
+elemTwo = document.createElement("content");
+elemTwo.addEventListener("custom", eventListener);
+
+elemThree = document.createElement("content");
+elemThree.addEventListener("custom", eventListener);
+
+elemFour = document.createElement("shadow");
+elemFour.addEventListener("custom", eventListener);
+
+elemFive = document.createElement("content");
+elemFive.addEventListener("custom", eventListener);
+
+elemSix = document.createElement("div");
+elemSix.addEventListener("custom", eventListener);
+
+var elemSeven = document.createElement("div");
+elemSeven.addEventListener("custom", eventListener);
+
+var elemEight = document.createElement("div");
+elemEight.addEventListener("custom", eventListener);
+
+var shadowThree = elemSeven.createShadowRoot();
+shadowThree.addEventListener("custom", eventListener);
+
+shadowTwo = elemSeven.createShadowRoot();
+shadowTwo.addEventListener("custom", eventListener);
+
+shadowOne = elemSix.createShadowRoot();
+shadowOne.addEventListener("custom", eventListener);
+
+elemSeven.appendChild(elemOne);
+shadowTwo.appendChild(elemSix);
+elemSix.appendChild(elemFour);
+elemFour.appendChild(elemTwo);
+shadowThree.appendChild(elemEight);
+shadowThree.appendChild(elemThree);
+shadowOne.appendChild(elemFive);
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemOne.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemOne, elemFive, shadowOne, elemThree, shadowThree, elemTwo, elemFour, elemSix, shadowTwo, elemSeven], "Event path for test 4 for event dispatched on elemOne.");
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemEight.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemEight, elemFive, shadowOne, elemSix, shadowTwo, elemSeven], "Event path for test 4 for event dispatched on elemEight.");
+
+/*
+ * Test 5: Test of event dispatch through nested shadowroot with insertion points that match specific tags.
+ *
+ * <div elemOne> --------- <shadow-root shadowOne>
+ *    |      |                        |
+ *    |  <p elemThree>        <span elemFour> ------------------------ <shadow-root shadowTwo>
+ *    |                          |       |                                        |
+ * <span elemTwo>                |   <content select="p" elemFive>       <content elemSeven>
+ *                               |
+ *                       <content select="span" elemSix>
+ */
+
+elemOne = document.createElement("div");
+elemOne.addEventListener("custom", eventListener);
+
+elemTwo = document.createElement("span");
+elemTwo.addEventListener("custom", eventListener);
+
+elemThree = document.createElement("p");
+elemThree.addEventListener("custom", eventListener);
+
+elemFour = document.createElement("span");
+elemFour.addEventListener("custom", eventListener);
+
+elemFive = document.createElement("content");
+elemFive.select = "p";
+elemFive.addEventListener("custom", eventListener);
+
+elemSix = document.createElement("content");
+elemSix.select = "span";
+elemSix.addEventListener("custom", eventListener);
+
+elemSeven = document.createElement("content");
+elemSeven.addEventListener("custom", eventListener);
+
+shadowTwo = elemFour.createShadowRoot();
+shadowTwo.addEventListener("custom", eventListener);
+
+shadowOne = elemOne.createShadowRoot();
+shadowOne.addEventListener("custom", eventListener);
+
+elemOne.appendChild(elemTwo);
+elemOne.appendChild(elemThree);
+shadowOne.appendChild(elemFour);
+elemFour.appendChild(elemSix);
+elemFour.appendChild(elemFive);
+shadowTwo.appendChild(elemSeven);
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemTwo.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemTwo, elemSeven, shadowTwo, elemSix, elemFour, shadowOne, elemOne], "Event path for test 5 for event dispatched on elemTwo.");
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemSeven, shadowTwo, elemFive, elemFour, shadowOne, elemOne], "Event path for test 5 for event dispatched on elemThree.");
+
+/*
+ * Test 6: Test of event dispatch through nested shadowroot with insertion points that match specific tags.
+ *
+ * <div elemOne> --------- <shadow-root shadowOne>;
+ *    |      |                        |
+ *    |  <p elemThree>         <span elemFour> ------ <shadow-root shadowTwo>
+ *    |                               |                   |            |
+ * <span elemTwo>            <content elemFive>           |  <content select="p" elemSeven>
+ *                                                        |
+ *                                                 <content select="span" elemSix>
+ */
+
+elemOne = document.createElement("div");
+elemOne.addEventListener("custom", eventListener);
+
+elemTwo = document.createElement("span");
+elemTwo.addEventListener("custom", eventListener);
+
+elemThree = document.createElement("p");
+elemThree.addEventListener("custom", eventListener);
+
+elemFour = document.createElement("span");
+elemFour.addEventListener("custom", eventListener);
+
+elemFive = document.createElement("content");
+elemFive.addEventListener("custom", eventListener);
+
+elemSix = document.createElement("content");
+elemSix.select = "span";
+elemSix.addEventListener("custom", eventListener);
+
+elemSeven = document.createElement("content");
+elemSeven.select = "p";
+elemSeven.addEventListener("custom", eventListener);
+
+shadowTwo = elemFour.createShadowRoot();
+shadowTwo.addEventListener("custom", eventListener);
+
+shadowOne = elemOne.createShadowRoot();
+shadowOne.addEventListener("custom", eventListener);
+
+elemOne.appendChild(elemTwo);
+elemOne.appendChild(elemThree);
+shadowOne.appendChild(elemFour);
+elemFour.appendChild(elemFive);
+shadowTwo.appendChild(elemSix);
+shadowTwo.appendChild(elemSeven);
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemTwo.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemTwo, elemSix, shadowTwo, elemFive, elemFour, shadowOne, elemOne], "Event path for test 6 for event dispatched on elemTwo.");
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemSeven, shadowTwo, elemFive, elemFour, shadowOne, elemOne], "Event path for test 6 for event dispatched on elemThree.");
+
+/*
+ * Test 7: Test of event dispatch through nested shadowroot with insertion points that match specific tags.
+ *
+ * <div elemOne> --------- <shadow-root shadowOne>
+ *    |      |                        |
+ *    |  <p elemThree>         <span elemFour> ------ <shadow-root shadowTwo>
+ *    |                               |                         |
+ * <span elemTwo>            <content elemFive>           <span elemEight>
+ *                                                           |        |
+ *                                                           |   <content select="p" elemSeven>
+ *                                                           |
+ *                                              <content select="span" elemSix>
+ */
+
+elemOne = document.createElement("div");
+elemOne.addEventListener("custom", eventListener);
+
+elemTwo = document.createElement("span");
+elemTwo.addEventListener("custom", eventListener);
+
+elemThree = document.createElement("p");
+elemThree.addEventListener("custom", eventListener);
+
+elemFour = document.createElement("span");
+elemFour.addEventListener("custom", eventListener);
+
+elemFive = document.createElement("content");
+elemFive.addEventListener("custom", eventListener);
+
+elemSix = document.createElement("content");
+elemSix.select = "span";
+elemSix.addEventListener("custom", eventListener);
+
+elemSeven = document.createElement("content");
+elemSeven.select = "p";
+elemSeven.addEventListener("custom", eventListener);
+
+elemEight = document.createElement("span");
+elemEight.addEventListener("custom", eventListener);
+
+shadowTwo = elemFour.createShadowRoot();
+shadowTwo.addEventListener("custom", eventListener);
+
+shadowOne = elemOne.createShadowRoot();
+shadowOne.addEventListener("custom", eventListener);
+
+elemOne.appendChild(elemTwo);
+elemOne.appendChild(elemThree);
+shadowOne.appendChild(elemFour);
+elemFour.appendChild(elemFive);
+shadowTwo.appendChild(elemEight);
+elemEight.appendChild(elemSix);
+elemEight.appendChild(elemSeven);
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemTwo.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemTwo, elemSix, elemEight, shadowTwo, elemFive, elemFour, shadowOne, elemOne], "Event path for test 7 for event dispatched on elemTwo.");
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemSeven, elemEight, shadowTwo, elemFive, elemFour, shadowOne, elemOne], "Event path for test 7 for event dispatched on elemThree.");
+
+/*
+ * Test 8: Test of event dispatch through host with multiple ShadowRoots with shadow insertion point.
+ *
+ * <div elemOne> --- <shadow-root shadowOne> (younger ShadowRoot)
+ *               |             |
+ *               |      <div elemFour>
+ *               |             |
+ *               |     <shadow elemTwo>
+ *               |
+ *               --- <shadow-root shadowTwo> (older ShadowRoot)
+ *                             |
+ *                      <div elemThree>
+ */
+
+elemOne = document.createElement("div");
+elemOne.addEventListener("custom", eventListener);
+
+elemTwo = document.createElement("shadow");
+elemTwo.addEventListener("custom", eventListener);
+
+elemThree = document.createElement("div");
+elemThree.addEventListener("custom", eventListener);
+
+elemFour = document.createElement("div");
+elemFour.addEventListener("custom", eventListener);
+
+shadowTwo = elemOne.createShadowRoot();
+shadowTwo.addEventListener("custom", eventListener);
+
+shadowOne = elemOne.createShadowRoot();
+shadowOne.addEventListener("custom", eventListener);
+
+shadowOne.appendChild(elemFour);
+elemFour.appendChild(elemTwo);
+shadowTwo.appendChild(elemThree);
+
+eventChain = [];
+customEvent = new CustomEvent("custom", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, shadowTwo, elemTwo, elemFour, shadowOne, elemOne], "Event path for test 8 for event dispatched on elemThree.");
+
+</script>
+</body>
+</html>

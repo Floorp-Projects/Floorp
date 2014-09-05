@@ -252,7 +252,9 @@ class MochiRemote(Mochitest):
         else:
             self.log.warning("Unable to retrieve log file (%s) from remote device" % self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
-        self._dm.getDirectory(self.remoteNSPR, os.environ["MOZ_UPLOAD_DIR"])
+        blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
+        if blobberUploadDir:
+            self._dm.getDirectory(self.remoteNSPR, blobberUploadDir)
         Mochitest.cleanup(self, options)
 
     def findPath(self, paths, filename = None):
@@ -604,8 +606,7 @@ def main():
     mochitest = MochiRemote(auto, dm, options)
 
     log = mochitest.log
-    structured_logger = mochitest.structured_logger
-    message_logger.logger = mochitest.structured_logger
+    message_logger.logger = log
     mochitest.message_logger = message_logger
 
     if (options == None):
@@ -704,7 +705,7 @@ def main():
 
             active_tests.append(test)
 
-        structured_logger.suite_start([t['name'] for t in active_tests])
+        log.suite_start([t['name'] for t in active_tests])
 
         for test in active_tests:
             # When running in a loop, we need to create a fresh profile for each cycle

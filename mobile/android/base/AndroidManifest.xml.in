@@ -129,10 +129,14 @@
         <activity-alias android:name=".App"
                         android:label="@MOZ_APP_DISPLAYNAME@"
                         android:targetActivity="org.mozilla.gecko.BrowserApp">
-            <intent-filter>
+            <!-- android:priority ranges between -1000 and 1000.  We never want
+                 another activity to usurp the MAIN action, so we ratchet our
+                 priority up. -->
+            <intent-filter android:priority="999">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER"/>
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
             <meta-data android:name="com.sec.minimode.icon.portrait.normal"
@@ -232,8 +236,7 @@
 
         <activity android:name="org.mozilla.gecko.StartPane"
                   android:theme="@style/GeckoStartPane"
-                  android:excludeFromRecents="true"
-                  android:noHistory="true" />
+                  android:excludeFromRecents="true"/>
 
         <activity android:name="org.mozilla.gecko.webapp.Dispatcher"
             android:noHistory="true" >
@@ -368,6 +371,25 @@
 
         </provider>
 
+#ifdef MOZ_ANDROID_SHARE_OVERLAY
+        <!-- Share overlay activity -->
+        <activity android:name="org.mozilla.gecko.overlays.ui.ShareDialog"
+                  android:label="@string/overlay_share_label"
+                  android:theme="@style/ShareOverlayActivity"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|locale|layoutDirection"
+                  android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+        </activity>
+
+        <!-- Service to handle requests from overlays. -->
+        <service android:name="org.mozilla.gecko.overlays.service.OverlayActionService" />
+#endif
         <!--
           Ensure that passwords provider runs in its own process. (Bug 718760.)
           Process name is per-application to avoid loading CPs from multiple

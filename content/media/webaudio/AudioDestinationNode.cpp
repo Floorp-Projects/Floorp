@@ -322,7 +322,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
 {
   MediaStreamGraph* graph = aIsOffline ?
                             MediaStreamGraph::CreateNonRealtimeInstance(aSampleRate) :
-                            MediaStreamGraph::GetInstance();
+                            MediaStreamGraph::GetInstance(DOMMediaStream::HINT_CONTENTS_AUDIO, aChannel);
   AudioNodeEngine* engine = aIsOffline ?
                             new OfflineDestinationNodeEngine(this, aNumberOfChannels,
                                                              aLength, aSampleRate) :

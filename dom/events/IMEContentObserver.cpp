@@ -10,7 +10,9 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/TextComposition.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
@@ -384,7 +386,7 @@ IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
 class PositionChangeEvent MOZ_FINAL : public nsRunnable
 {
 public:
-  PositionChangeEvent(IMEContentObserver* aDispatcher)
+  explicit PositionChangeEvent(IMEContentObserver* aDispatcher)
     : mDispatcher(aDispatcher)
   {
     MOZ_ASSERT(mDispatcher);
@@ -423,6 +425,76 @@ IMEContentObserver::ReflowInterruptible(DOMHighResTimeStamp aStart,
 {
   MaybeNotifyIMEOfPositionChange();
   return NS_OK;
+}
+
+bool
+IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
+                                       WidgetMouseEvent* aMouseEvent)
+{
+  if (!mUpdatePreference.WantMouseButtonEventOnChar()) {
+    return false;
+  }
+  if (!aMouseEvent->mFlags.mIsTrusted ||
+      aMouseEvent->mFlags.mDefaultPrevented ||
+      !aMouseEvent->widget) {
+    return false;
+  }
+  // Now, we need to notify only mouse down and mouse up event.
+  switch (aMouseEvent->message) {
+    case NS_MOUSE_BUTTON_UP:
+    case NS_MOUSE_BUTTON_DOWN:
+      break;
+    default:
+      return false;
+  }
+  if (NS_WARN_IF(!mWidget)) {
+    return false;
+  }
+
+  WidgetQueryContentEvent charAtPt(true, NS_QUERY_CHARACTER_AT_POINT,
+                                   aMouseEvent->widget);
+  charAtPt.refPoint = aMouseEvent->refPoint;
+  ContentEventHandler handler(aPresContext);
+  handler.OnQueryCharacterAtPoint(&charAtPt);
+  if (NS_WARN_IF(!charAtPt.mSucceeded) ||
+      charAtPt.mReply.mOffset == WidgetQueryContentEvent::NOT_FOUND) {
+    return false;
+  }
+
+  // The result character rect is relative to the top level widget.
+  // We should notify it with offset in the widget.
+  nsIWidget* topLevelWidget = mWidget->GetTopLevelWidget();
+  if (topLevelWidget && topLevelWidget != mWidget) {
+    charAtPt.mReply.mRect.MoveBy(
+      topLevelWidget->WidgetToScreenOffset() -
+        mWidget->WidgetToScreenOffset());
+  }
+  // The refPt is relative to its widget.
+  // We should notify it with offset in the widget.
+  if (aMouseEvent->widget != mWidget) {
+    charAtPt.refPoint += LayoutDeviceIntPoint::FromUntyped(
+      aMouseEvent->widget->WidgetToScreenOffset() -
+        mWidget->WidgetToScreenOffset());
+  }
+
+  IMENotification notification(NOTIFY_IME_OF_MOUSE_BUTTON_EVENT);
+  notification.mMouseButtonEventData.mEventMessage = aMouseEvent->message;
+  notification.mMouseButtonEventData.mOffset = charAtPt.mReply.mOffset;
+  notification.mMouseButtonEventData.mCursorPos.Set(
+    LayoutDeviceIntPoint::ToUntyped(charAtPt.refPoint));
+  notification.mMouseButtonEventData.mCharRect.Set(charAtPt.mReply.mRect);
+  notification.mMouseButtonEventData.mButton = aMouseEvent->button;
+  notification.mMouseButtonEventData.mButtons = aMouseEvent->buttons;
+  notification.mMouseButtonEventData.mModifiers = aMouseEvent->modifiers;
+
+  nsresult rv = mWidget->NotifyIME(notification);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  bool consumed = (rv == NS_SUCCESS_EVENT_CONSUMED);
+  aMouseEvent->mFlags.mDefaultPrevented = consumed;
+  return consumed;
 }
 
 // Helper class, used for text change notification
@@ -965,7 +1037,7 @@ IMEContentObserver::MaybeNotifyIMEOfPositionChange()
 class AsyncMergeableNotificationsFlusher : public nsRunnable
 {
 public:
-  AsyncMergeableNotificationsFlusher(IMEContentObserver* aIMEContentObserver)
+  explicit AsyncMergeableNotificationsFlusher(IMEContentObserver* aIMEContentObserver)
     : mIMEContentObserver(aIMEContentObserver)
   {
     MOZ_ASSERT(mIMEContentObserver);
@@ -991,7 +1063,9 @@ IMEContentObserver::FlushMergeableNotifications()
   }
 
   // If we're in handling an edit action, this method will be called later.
-  if (mEditor && mEditor->GetIsInEditAction()) {
+  bool isInEditAction = false;
+  if (mEditor && NS_SUCCEEDED(mEditor->GetIsInEditAction(&isInEditAction)) &&
+      isInEditAction) {
     return;
   }
 

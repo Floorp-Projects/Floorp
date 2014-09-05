@@ -39,8 +39,7 @@
 
     <preference id="browser.privatebrowsing.autostart"
                 name="browser.privatebrowsing.autostart"
-                type="bool"
-                onchange="gMainPane.updateBrowserStartupLastSession();"/>
+                type="bool"/>
 
     <!-- Downloads -->
     <preference id="browser.download.useDownloadDir"
@@ -52,8 +51,7 @@
                 type="int"/>
     <preference id="browser.download.dir"
                 name="browser.download.dir"
-                type="file"
-                onchange="gMainPane.displayDownloadDirPref();"/>
+                type="file"/>
     <!-- Tab preferences 
     Preferences:
 
@@ -121,7 +119,6 @@
         <label id="isNotDefaultLabel" flex="1">&isNotDefault.label;</label>
         <button id="setDefaultButton"
                 label="&setAsMyDefaultBrowser.label;" accesskey="&setAsMyDefaultBrowser.accesskey;"
-                oncommand="gMainPane.setDefaultBrowser();"
                 preference="pref.general.disable_button.default_browser"/>
       </hbox>
       <hbox align="center" class="indent">
@@ -168,17 +165,14 @@
             accesskey="&useCurrentPage.accesskey;"
             label1="&useCurrentPage.label;"
             label2="&useMultiple.label;"
-            oncommand="gMainPane.setHomePageToCurrent();"
             id="useCurrent"
             preference="pref.browser.homepage.disable_button.current_page"/>
     <button label="&chooseBookmark.label;"
             accesskey="&chooseBookmark.accesskey;"
-            oncommand="gMainPane.setHomePageToBookmark();"
             id="useBookmark"
             preference="pref.browser.homepage.disable_button.bookmark_page"/>
     <button label="&restoreDefault.label;"
             accesskey="&restoreDefault.accesskey;"
-            oncommand="gMainPane.restoreDefaultHomePage();"
             id="restoreDefaultHomePage"
             preference="pref.browser.homepage.disable_button.restore_default"/>
   </hbox>
@@ -207,7 +201,6 @@
                  onsyncfrompreference="return gMainPane.displayDownloadDirPref();"
                  onsynctopreference="return gMainPane.getFolderListPref()"/>
       <button id="chooseFolder"
-              oncommand="gMainPane.chooseFolder();"
 #ifdef XP_MACOSX
               accesskey="&chooseFolderMac.accesskey;"
               label="&chooseFolderMac.label;"

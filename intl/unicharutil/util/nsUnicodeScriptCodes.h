@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Fri Aug 22 16:49:19 2014 from UCD data files with version info:
+ * Created on Tue Aug 26 10:16:12 2014 from UCD data files with version info:
  *
 
 # Date: 2014-06-12, 20:18:00 GMT [KW]
@@ -52,6 +52,9 @@ Standard.
 # Unihan_Variants.txt
 # Date: 2014-05-09 18:17:02 GMT [JHJ]
 
+# VerticalOrientation-12.txt
+# Date: 2014-07-07, 21:00:00 GMT [EM, KI, LI]
+
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
@@ -61,11 +64,14 @@ Standard.
 
 #pragma pack(1)
 
+
 struct nsCharProps1 {
   unsigned char mMirrorOffsetIndex:5;
   unsigned char mHangulType:3;
   unsigned char mCombiningClass:8;
 };
+
+
 
 struct nsCharProps2 {
   unsigned char mScriptCode:8;
@@ -73,9 +79,10 @@ struct nsCharProps2 {
   unsigned char mCategory:5;
   unsigned char mBidiCategory:5;
   unsigned char mXidmod:4;
-  signed char mNumericValue:5;
-  unsigned char mHanVariant:2;
+  signed char   mNumericValue:5;
+  unsigned char mVertOrient:2;
 };
+
 
 #pragma pack()
 

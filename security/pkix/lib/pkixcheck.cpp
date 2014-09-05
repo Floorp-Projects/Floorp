@@ -148,14 +148,17 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const Input* encodedKeyUsage,
     }
   }
 
-  if (endEntityOrCA != EndEntityOrCA::MustBeCA) {
-    // RFC 5280 says "The keyCertSign bit is asserted when the subject public
-    // key is used for verifying signatures on public key certificates. If the
-    // keyCertSign bit is asserted, then the cA bit in the basic constraints
-    // extension (Section 4.2.1.9) MUST also be asserted."
-    if ((bits & KeyUsageToBitMask(KeyUsage::keyCertSign)) != 0) {
-      return Result::ERROR_INADEQUATE_KEY_USAGE;
-    }
+  // RFC 5280 says "The keyCertSign bit is asserted when the subject public
+  // key is used for verifying signatures on public key certificates. If the
+  // keyCertSign bit is asserted, then the cA bit in the basic constraints
+  // extension (Section 4.2.1.9) MUST also be asserted."
+  // However, we allow end-entity certificates (i.e. certificates without
+  // basicConstraints.cA set to TRUE) to claim keyCertSign for compatibility
+  // reasons. This does not compromise security because we only allow
+  // certificates with basicConstraints.cA set to TRUE to act as CAs.
+  if (requiredKeyUsageIfPresent == KeyUsage::keyCertSign &&
+      endEntityOrCA != EndEntityOrCA::MustBeCA) {
+    return Result::ERROR_INADEQUATE_KEY_USAGE;
   }
 
   // The padding applies to the last byte, so skip to the last byte.
@@ -371,7 +374,7 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
     return Success;
   }
 
-  PORT_Assert(endEntityOrCA == EndEntityOrCA::MustBeCA);
+  assert(endEntityOrCA == EndEntityOrCA::MustBeCA);
 
   // End-entity certificates are not allowed to act as CA certs.
   if (!isCA) {

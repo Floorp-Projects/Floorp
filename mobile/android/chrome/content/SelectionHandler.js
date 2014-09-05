@@ -198,7 +198,7 @@ var SelectionHandler = {
       }
 
       case "TextSelection:Get":
-        sendMessageToJava({
+        Messaging.sendRequest({
           type: "TextSelection:Data",
           requestId: aData,
           text: this._getSelectedText()
@@ -212,7 +212,7 @@ var SelectionHandler = {
   _startDraggingHandles: function sh_startDraggingHandles() {
     if (!this._draggingHandles) {
       this._draggingHandles = true;
-      sendMessageToJava({ type: "TextSelection:DraggingHandle", dragging: true });
+      Messaging.sendRequest({ type: "TextSelection:DraggingHandle", dragging: true });
     }
   },
 
@@ -221,7 +221,7 @@ var SelectionHandler = {
   _stopDraggingHandles: function sh_stopDraggingHandles() {
     if (this._draggingHandles) {
       this._draggingHandles = false;
-      sendMessageToJava({ type: "TextSelection:DraggingHandle", dragging: false });
+      Messaging.sendRequest({ type: "TextSelection:DraggingHandle", dragging: false });
     }
   },
 
@@ -341,7 +341,7 @@ var SelectionHandler = {
 
     // Determine position and show handles, open actionbar
     this._positionHandles(positions);
-    sendMessageToJava({
+    Messaging.sendRequest({
       type: "TextSelection:ShowHandles",
       handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
     });
@@ -546,7 +546,7 @@ var SelectionHandler = {
 
     actions.sort((a, b) => b.order - a.order);
 
-    sendMessageToJava({
+    Messaging.sendRequest({
       type: "TextSelection:Update",
       actions: actions
     });
@@ -702,7 +702,7 @@ var SelectionHandler = {
   attachCaret: function sh_attachCaret(aElement) {
     // Ensure it isn't disabled, isn't handled by Android native dialog, and is editable text element
     if (aElement.disabled || InputWidgetHelper.hasInputWidget(aElement) || !this.isElementEditableText(aElement)) {
-      return;
+      return false;
     }
 
     this._initTargetInfo(aElement, this.TYPE_CURSOR);
@@ -717,11 +717,13 @@ var SelectionHandler = {
 
     // Determine position and show caret, open actionbar
     this._positionHandles();
-    sendMessageToJava({
+    Messaging.sendRequest({
       type: "TextSelection:ShowHandles",
       handles: [this.HANDLE_TYPE_MIDDLE]
     });
     this._updateMenu();
+
+    return true;
   },
 
   // Target initialization for both TYPE_CURSOR and TYPE_SELECTION
@@ -929,7 +931,7 @@ var SelectionHandler = {
   shareSelection: function sh_shareSelection() {
     let selectedText = this._getSelectedText();
     if (selectedText.length) {
-      sendMessageToJava({
+      Messaging.sendRequest({
         type: "Share:Text",
         text: selectedText
       });
@@ -998,7 +1000,7 @@ var SelectionHandler = {
   _deactivate: function sh_deactivate() {
     this._stopDraggingHandles();
     // Hide handle/caret, close actionbar
-    sendMessageToJava({ type: "TextSelection:HideHandles" });
+    Messaging.sendRequest({ type: "TextSelection:HideHandles" });
 
     this._removeObservers();
 
@@ -1154,7 +1156,7 @@ var SelectionHandler = {
     if (!positions) {
       positions = this._getHandlePositions(this._getScrollPos());
     }
-    sendMessageToJava({
+    Messaging.sendRequest({
       type: "TextSelection:PositionHandles",
       positions: positions,
       rtl: this._isRTL

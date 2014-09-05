@@ -252,11 +252,6 @@ js::ObjectImpl::slotInRange(uint32_t slot, SentinelAllowed sentinel) const
 }
 #endif /* DEBUG */
 
-// See bug 844580.
-#if defined(_MSC_VER)
-# pragma optimize("g", off)
-#endif
-
 #if defined(_MSC_VER) && _MSC_VER >= 1500
 /*
  * Work around a compiler bug in MSVC9 and above, where inlining this function
@@ -272,10 +267,6 @@ js::ObjectImpl::nativeLookup(ExclusiveContext *cx, jsid id)
     Shape **spp;
     return Shape::search(cx, lastProperty(), id, &spp);
 }
-
-#if defined(_MSC_VER)
-# pragma optimize("", on)
-#endif
 
 Shape *
 js::ObjectImpl::nativeLookupPure(jsid id)

@@ -485,6 +485,9 @@ public class GeckoAppShell
                 SharedPreferences prefs = getSharedPreferences();
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
+
+                // Synchronously write to disk so we know it's done before we
+                // shutdown
                 editor.commit();
             }
         } finally {
@@ -2375,12 +2378,12 @@ public class GeckoAppShell
     }
 
     @WrapElementForJNI(stubName = "CreateMessageListWrapper")
-    public static void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId) {
+    public static void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, long aThreadId, boolean aReverse, int aRequestId) {
         if (SmsManager.getInstance() == null) {
             return;
         }
 
-        SmsManager.getInstance().createMessageList(aStartDate, aEndDate, aNumbers, aNumbersCount, aDeliveryState, aReverse, aRequestId);
+        SmsManager.getInstance().createMessageList(aStartDate, aEndDate, aNumbers, aNumbersCount, aDelivery, aHasRead, aRead, aThreadId, aReverse, aRequestId);
     }
 
     @WrapElementForJNI(stubName = "GetNextMessageInListWrapper")
@@ -2483,7 +2486,16 @@ public class GeckoAppShell
             Looper.myLooper().quit();
         else
             msg.getTarget().dispatchMessage(msg);
-        msg.recycle();
+
+        try {
+            // Bug 1055166 - this sometimes throws IllegalStateException on Android L.
+            // There appears to be no way to figure out if a message is in use or not, let
+            // alone receive a notification when it is no longer being used. Just catch
+            // the exception for now, and if a better solution comes along we can use it.
+            msg.recycle();
+        } catch (IllegalStateException e) {
+            // There is nothing we can do here so just eat it
+        }
         return true;
     }
 

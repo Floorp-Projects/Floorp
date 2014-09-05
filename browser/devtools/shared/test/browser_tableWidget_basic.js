@@ -36,6 +36,7 @@ function test() {
         emptyText: "This is dummy empty text",
         highlightUpdated: true,
         removableColumns: true,
+        firstColumn: "col4"
       });
       startTests();
     });
@@ -108,11 +109,15 @@ function populateTable() {
     col3: "value27",
     col4: "value34"
   });
+
+  let span = doc.createElement("span");
+  span.textContent = "domnode";
+
   table.push({
     col1: "id9",
     col2: "value11",
     col3: "value23",
-    col4: "value38"
+    col4: span
   });
 }
 
@@ -122,11 +127,41 @@ function populateTable() {
 function testTreeItemInsertedCorrectly() {
   is(table.tbody.children.length, 4*2 /* double because splitters */,
      "4 columns exist");
-  for (let i = 0; i < 4; i++) {
-    is(table.tbody.children[i*2].firstChild.children.length, 9 + 1 /* header */,
+
+  // Test firstColumn option and check if the nodes are inserted correctly
+  is(table.tbody.children[0].firstChild.children.length, 9 + 1 /* header */,
+     "Correct rows in column 4");
+  is(table.tbody.children[0].firstChild.firstChild.value, "Column 4",
+     "Correct column header value");
+
+  for (let i = 1; i < 4; i++) {
+    is(table.tbody.children[i * 2].firstChild.children.length, 9 + 1 /* header */,
        "Correct rows in column " + i);
-    is(table.tbody.children[i*2].firstChild.firstChild.value, "Column " + (i + 1),
+    is(table.tbody.children[i * 2].firstChild.firstChild.value, "Column " + i,
        "Correct column header value");
+  }
+  for (let i = 1; i < 10; i++) {
+    is(table.tbody.children[2].firstChild.children[i].value, "id" + i,
+     "Correct value in row " + i);
+  }
+
+  // Remove firstColumn option and reset the table
+  table.clear();
+  table.firstColumn = "";
+  table.setColumns({
+    col1: "Column 1",
+    col2: "Column 2",
+    col3: "Column 3",
+    col4: "Column 4"
+  });
+  populateTable();
+
+  // Check if the nodes are inserted correctly without firstColumn option
+  for (let i = 0; i < 4; i++) {
+  is(table.tbody.children[i * 2].firstChild.children.length, 9 + 1 /* header */,
+     "Correct rows in column " + i);
+  is(table.tbody.children[i * 2].firstChild.firstChild.value, "Column " + (i + 1),
+     "Correct column header value");
   }
   for (let i = 1; i < 10; i++) {
     is(table.tbody.firstChild.firstChild.children[i].value, "id" + i,
@@ -135,7 +170,7 @@ function testTreeItemInsertedCorrectly() {
 }
 
 /**
- * Tests if the API exposed by TreeWidget works properly
+ * Tests if the API exposed by TableWidget works properly
  */
 function testAPI() {
   info("Testing TableWidget API");
@@ -300,22 +335,48 @@ function testAPI() {
   // Calling it on an unsorted column should sort by it in ascending manner
   table.sortBy("col2");
   let cell = table.tbody.children[2].firstChild.children[2];
-  while(cell) {
-    ok(cell.value >= cell.previousSibling.value, "Sorting is in ascending order");
-    cell = cell.nextSibling;
-  }
+  checkAscendingOrder(cell);
+
   // Calling it again should sort by it in descending manner
   table.sortBy("col2");
   let cell = table.tbody.children[2].firstChild.lastChild.previousSibling;
-  while(cell != cell.parentNode.firstChild) {
-    ok(cell.value >= cell.nextSibling.value, "Sorting is in descending order");
-    cell = cell.previousSibling;
-  }
+  checkDescendingOrder(cell);
+
   // Calling it again should sort by it in ascending manner
   table.sortBy("col2");
   let cell = table.tbody.children[2].firstChild.children[2];
+  checkAscendingOrder(cell);
+
+  table.clear();
+  populateTable();
+
+  // testing if sorting works should sort by ascending manner
+  table.sortBy("col4");
+  let cell = table.tbody.children[6].firstChild.children[1];
+  is(cell.textContent, "domnode", "DOMNode sorted correctly");
+  checkAscendingOrder(cell.nextSibling);
+
+  // Calling it again should sort it in descending order
+  table.sortBy("col4");
+  let cell = table.tbody.children[6].firstChild.children[9];
+  is(cell.textContent, "domnode", "DOMNode sorted correctly");
+  checkDescendingOrder(cell.previousSibling);
+}
+
+function checkAscendingOrder(cell) {
   while(cell) {
-    ok(cell.value >= cell.previousSibling.value, "Sorting is in ascending order");
+    let currentCell = cell.value || cell.textContent;
+    let prevCell = cell.previousSibling.value || cell.previousSibling.textContent;
+    ok(currentCell >= prevCell, "Sorting is in ascending order");
     cell = cell.nextSibling;
+  }
+}
+
+function checkDescendingOrder(cell) {
+  while(cell != cell.parentNode.firstChild) {
+    let currentCell = cell.value || cell.textContent;
+    let nextCell = cell.nextSibling.value || cell.nextSibling.textContent;
+    ok(currentCell >= nextCell, "Sorting is in descending order");
+    cell = cell.previousSibling;
   }
 }

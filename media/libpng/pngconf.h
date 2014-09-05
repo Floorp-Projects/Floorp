@@ -1,9 +1,9 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.6.10 - March 6, 2014
+ * libpng version 1.6.13 - August 21, 2014
  *
- * Copyright (c) 1998-2013 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -361,7 +361,7 @@
    * version 1.2.41.  Disabling these removes the warnings but may also produce
    * less efficient code.
    */
-#  if defined(__clang__)
+#  if defined(__clang__) && defined(__has_attribute)
      /* Clang defines both __clang__ and __GNUC__. Check __clang__ first. */
 #    if !defined(PNG_USE_RESULT) && __has_attribute(__warn_unused_result__)
 #      define PNG_USE_RESULT __attribute__((__warn_unused_result__))

@@ -356,15 +356,6 @@ typedef struct {
     /* TRUE if GSM has applied ringout due to CCMs request to show ringout UI */
     boolean spoof_ringout_applied;
 
-    /* Timer to go on hook after any call error */
-    cprTimer_t err_onhook_tmr;
-
-    /* Request pending timer */
-    cprTimer_t req_pending_tmr;
-
-    /* Ringback delay timer */
-    cprTimer_t ringback_delay_tmr;
-
     /*
      * save of orientation from callInfo to update UI at any time
      * other than during call info. update such as after Tx start in
@@ -384,11 +375,6 @@ typedef struct {
 
     cc_security_e security;
     cc_policy_e policy;
-
-    /* auto answer timer */
-    cprTimer_t autoAnswerTimer;
-    int32_t    reversionInterval;
-    cprTimer_t revertTimer;
 
     boolean dsp_out_of_resources;
 
@@ -433,8 +419,6 @@ typedef struct {
 
     char digest_alg[FSMDEF_MAX_DIGEST_ALG_LEN];
     char digest[FSMDEF_MAX_DIGEST_LEN];
-
-    sll_lite_list_t candidate_list;
 } fsmdef_dcb_t;
 
 typedef enum fsm_types_t_ {

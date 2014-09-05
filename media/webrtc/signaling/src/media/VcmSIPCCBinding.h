@@ -10,7 +10,6 @@ extern "C"
 #include "ccapi_types.h"
 }
 
-#include "sigslot.h"
 #include "mozIGeckoMediaPluginService.h"
 
 class nsIThread;
@@ -39,7 +38,7 @@ namespace CSF
     	  virtual void sendIFrame(cc_call_handle_t call) = 0;
     };
 
-    class VcmSIPCCBinding : public sigslot::has_slots<>
+    class VcmSIPCCBinding
     {
     public:
         VcmSIPCCBinding ();
@@ -68,20 +67,11 @@ namespace CSF
 
         static void setMainThread(nsIThread *thread);
         static nsIThread *getMainThread();
-        static nsIEventTarget *getSTSThread();
-
-        static void setSTSThread(nsIEventTarget *thread);
-
-        static void connectCandidateSignal(mozilla::NrIceMediaStream* stream);
 
         static nsCOMPtr<nsIPrefBranch> getPrefBranch();
 
         static int gVideoCodecGmpMask;
     private:
-        static bool scanForGmpCodecs();
-        void CandidateReady(mozilla::NrIceMediaStream* stream,
-                            const std::string& candidate);
-
         nsCOMPtr<mozIGeckoMediaPluginService> mGMPService;
         static VcmSIPCCBinding * gSelf;
         StreamObserver* streamObserver;

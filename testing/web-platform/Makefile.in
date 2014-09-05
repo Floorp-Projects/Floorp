@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+WPT_TESTS = \
+  tests \
+  $(NULL)
+
+WPT_METADATA = \
+  meta \
+  $(NULL)
+
+
+_DEST_DIR = $(DEPTH)/_tests/web-platform
+PKG_STAGE = $(DIST)/test-stage
+
+WEBPLATFORM_FILES = \
+  runtests.py \
+  wptrunner.ini \
+  $(NULL)
+WEBPLATFORM_DEST = $(_DEST_DIR)
+INSTALL_TARGETS += WEBPLATFORM
+
+libs::
+	$(INSTALL) $(topsrcdir)/testing/web-platform/harness/wptrunner $(_DEST_DIR)
+libs:: $(WPT_TESTS)
+	$(INSTALL) $(foreach f,$^,"$f") $(_DEST_DIR)
+libs:: $(WPT_METADATA)
+	$(INSTALL) $(foreach f,$^,"$f") $(_DEST_DIR)
+
+stage-package:
+	$(NSINSTALL) -D $(PKG_STAGE)/web-platform
+	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/web-platform
+	@(cd $(DEPTH)/_tests/ && tar $(TAR_CREATE_FLAGS) - web-platform) | (cd $(PKG_STAGE) && tar -xf -)

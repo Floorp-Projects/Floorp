@@ -73,7 +73,7 @@ fail:
 AppleCMLinker::Unlink()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(sLink && sRefCount > 0, "Unbalanced Unlink()");
+  MOZ_ASSERT(sRefCount > 0, "Unbalanced Unlink()");
   --sRefCount;
   if (sLink && sRefCount < 1) {
     LOG("Unlinking CoreMedia framework.");

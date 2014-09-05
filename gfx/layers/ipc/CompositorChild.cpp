@@ -291,6 +291,19 @@ CompositorChild::RequestNotifyAfterRemotePaint(TabChild* aTabChild)
   unused << SendRequestNotifyAfterRemotePaint();
 }
 
+void
+CompositorChild::CancelNotifyAfterRemotePaint(TabChild* aTabChild)
+{
+  nsRefPtr<nsISupports> iTabChildBase(do_QueryReferent(mWeakTabChild));
+  if (!iTabChildBase) {
+    return;
+  }
+  TabChildBase* tabChildBase = static_cast<TabChildBase*>(iTabChildBase.get());
+  TabChild* tabChild = static_cast<TabChild*>(tabChildBase);
+  if (tabChild == aTabChild) {
+    mWeakTabChild = nullptr;
+  }
+}
 
 } // namespace layers
 } // namespace mozilla

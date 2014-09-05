@@ -151,7 +151,7 @@ class MOZ_STACK_CLASS nsSelectionBatcher MOZ_FINAL
 private:
   nsCOMPtr<nsISelectionPrivate> mSelection;
 public:
-  nsSelectionBatcher(nsISelectionPrivate *aSelection) : mSelection(aSelection)
+  explicit nsSelectionBatcher(nsISelectionPrivate *aSelection) : mSelection(aSelection)
   {
     if (mSelection) mSelection->StartBatchChanges();
   }
@@ -2127,7 +2127,8 @@ nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
         return NS_OK;
 
 #ifdef DEBUG_TABLE_SELECTION
-printf(" mStartSelectedCell = %x, mEndSelectedCell = %x, childContent = %x \n", mStartSelectedCell, mEndSelectedCell, childContent);
+      printf(" mStartSelectedCell = %p, mEndSelectedCell = %p, childContent = %p \n",
+             mStartSelectedCell.get(), mEndSelectedCell.get(), childContent);
 #endif
       // aTarget can be any "cell mode",
       //  so we can easily drag-select rows and columns 
@@ -2297,7 +2298,8 @@ printf("aTarget == %d\n", aTarget);
     else
     {
 #ifdef DEBUG_TABLE_SELECTION
-printf("HandleTableSelection: Mouse UP event. mDragSelectingCells=%d, mStartSelectedCell=%d\n", mDragSelectingCells, mStartSelectedCell);
+      printf("HandleTableSelection: Mouse UP event. mDragSelectingCells=%d, mStartSelectedCell=%p\n",
+             mDragSelectingCells, mStartSelectedCell.get());
 #endif
       // First check if we are extending a block selection
       int32_t rangeCount;
@@ -2331,7 +2333,8 @@ printf("HandleTableSelection: Mouse UP event. mDragSelectingCells=%d, mStartSele
       if (!doMouseUpAction)
       {
 #ifdef DEBUG_TABLE_SELECTION
-printf("HandleTableSelection: Ending cell selection on mouseup: mAppendStartSelectedCell=%d\n", mAppendStartSelectedCell);
+        printf("HandleTableSelection: Ending cell selection on mouseup: mAppendStartSelectedCell=%p\n",
+               mAppendStartSelectedCell.get());
 #endif
         return NS_OK;
       }

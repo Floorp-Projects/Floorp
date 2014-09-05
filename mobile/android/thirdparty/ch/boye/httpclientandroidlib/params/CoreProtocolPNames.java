@@ -27,19 +27,21 @@
 
 package ch.boye.httpclientandroidlib.params;
 
-import ch.boye.httpclientandroidlib.ProtocolVersion;
-
 /**
  * Defines parameter names for protocol execution in HttpCore.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use configuration classes provided 'ch.boye.httpclientandroidlib.config'
+ *  and 'ch.boye.httpclientandroidlib.client.config'
  */
+@Deprecated
 public interface CoreProtocolPNames {
 
     /**
-     * Defines the {@link ProtocolVersion} used per default.
+     * Defines the {@link ch.boye.httpclientandroidlib.ProtocolVersion} used per default.
      * <p>
-     * This parameter expects a value of type {@link ProtocolVersion}.
+     * This parameter expects a value of type {@link ch.boye.httpclientandroidlib.ProtocolVersion}.
      * </p>
      */
     public static final String PROTOCOL_VERSION = "http.protocol.version";
@@ -121,5 +123,30 @@ public interface CoreProtocolPNames {
      * This parameter expects a value of type {@link Integer}.
      */
     public static final String WAIT_FOR_CONTINUE = "http.protocol.wait-for-continue";
+
+    /**
+     * <p>
+     * Defines the action to perform upon receiving a malformed input. If the input byte sequence
+     * is not legal for this charset then the input is said to be malformed
+     * </p>
+     *
+     * This parameter expects a value of type {@link java.nio.charset.CodingErrorAction}
+     *
+     * @since 4.2
+     */
+    public static final String HTTP_MALFORMED_INPUT_ACTION = "http.malformed.input.action";
+
+    /**
+     * <p>
+     * Defines the action to perform upon receiving an unmappable input. If the input byte sequence
+     * is legal but cannot be mapped to a valid Unicode character then the input is said to be
+     * unmappable
+     * </p>
+     *
+     * This parameter expects a value of type {@link java.nio.charset.CodingErrorAction}
+     *
+     * @since 4.2
+     */
+    public static final String HTTP_UNMAPPABLE_INPUT_ACTION = "http.unmappable.input.action";
 
 }

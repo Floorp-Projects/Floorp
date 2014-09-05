@@ -11,7 +11,7 @@ import mozpack.path as mozpath
 from mozpack.files import FileFinder
 from .sandbox import alphabetical_sorted
 from .context import (
-    Context,
+    TemplateContext,
     VARIABLES,
 )
 from mozbuild.util import (
@@ -52,7 +52,7 @@ for unused in ['RULE_INPUT_PATH', 'RULE_INPUT_ROOT', 'RULE_INPUT_NAME',
   generator_default_variables[unused] = b''
 
 
-class GypContext(Context):
+class GypContext(TemplateContext):
     """Specialized Context for use with data extracted from Gyp.
 
     config is the ConfigEnvironment for this context.
@@ -61,7 +61,8 @@ class GypContext(Context):
     """
     def __init__(self, config, relobjdir):
         self._relobjdir = relobjdir
-        Context.__init__(self, allowed_variables=self.VARIABLES(), config=config)
+        TemplateContext.__init__(self, allowed_variables=self.VARIABLES(),
+            config=config)
 
     @classmethod
     @memoize
@@ -212,6 +213,19 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
             # anything using them, and we're not testing them. They can be
             # added when that becomes necessary.
             raise NotImplementedError('Unsupported gyp target type: %s' % spec['type'])
+
+        # Add some features to all contexts. Put here in case LOCAL_INCLUDES
+        # order matters.
+        context['LOCAL_INCLUDES'] += [
+            '/ipc/chromium/src',
+            '/ipc/glue',
+        ]
+        context['GENERATED_INCLUDES'] += ['/ipc/ipdl/_ipdlheaders']
+        # These get set via VC project file settings for normal GYP builds.
+        if config.substs['OS_TARGET'] == 'WINNT':
+            context['DEFINES']['UNICODE'] = True
+            context['DEFINES']['_UNICODE'] = True
+        context['DISABLE_STL_WRAPPING'] = True
 
         context.execution_time = time.time() - time_start
         yield context

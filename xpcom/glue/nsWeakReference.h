@@ -15,12 +15,7 @@
 
 class nsWeakReference;
 
-// Set IMETHOD_VISIBILITY to empty so that the class-level NS_COM declaration
-// controls member method visibility.
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_COM_GLUE
-
-class NS_COM_GLUE nsSupportsWeakReference : public nsISupportsWeakReference
+class nsSupportsWeakReference : public nsISupportsWeakReference
 {
 public:
   nsSupportsWeakReference() : mProxy(0) {}
@@ -43,9 +38,6 @@ protected:
   void ClearWeakReferences();
   bool HasWeakReferences() const { return mProxy != 0; }
 };
-
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY
 
 inline
 nsSupportsWeakReference::~nsSupportsWeakReference()

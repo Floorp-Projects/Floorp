@@ -44,6 +44,7 @@ class AsyncPanZoomController;
 class CompositorParent;
 class APZPaintLogHelper;
 class OverscrollHandoffChain;
+class LayerMetricsWrapper;
 
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
@@ -284,6 +285,8 @@ public:
    *   handoff chain that should be scrolled.
    *
    * Returns true iff. some APZC accepted the scroll and scrolled.
+   * This is to allow the sending APZC to go into an overscrolled state if
+   * no APZC further up in the handoff chain accepted the overscroll.
    *
    * The way this method works is best illustrated with an example.
    * Consider three nested APZCs, A, B, and C, with C being the innermost one.
@@ -365,7 +368,7 @@ private:
   AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, FrameMetrics::ViewID aScrollId);
   AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid);
   AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc,
-                                         const gfxPoint& aHitTestPoint,
+                                         const gfx::Point& aHitTestPoint,
                                          bool* aOutInOverscrolledApzc);
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
   already_AddRefed<AsyncPanZoomController> RootAPZCForLayersId(AsyncPanZoomController* aApzc);
@@ -378,13 +381,13 @@ private:
   void UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
                                         const ZoomConstraints& aConstraints);
 
-  AsyncPanZoomController* PrepareAPZCForLayer(const Layer* aLayer,
+  AsyncPanZoomController* PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
                                               const FrameMetrics& aMetrics,
                                               uint64_t aLayersId,
                                               const gfx::Matrix4x4& aAncestorTransform,
                                               const nsIntRegion& aObscured,
                                               AsyncPanZoomController*& aOutParent,
-                                              AsyncPanZoomController*& aOutNextSibling,
+                                              AsyncPanZoomController* aNextSibling,
                                               TreeBuildingState& aState);
 
   /**
@@ -397,12 +400,15 @@ private:
    * code.
    */
   AsyncPanZoomController* UpdatePanZoomControllerTree(TreeBuildingState& aState,
-                                                      Layer* aLayer, uint64_t aLayersId,
+                                                      const LayerMetricsWrapper& aLayer,
+                                                      uint64_t aLayersId,
                                                       const gfx::Matrix4x4& aAncestorTransform,
                                                       AsyncPanZoomController* aParent,
                                                       AsyncPanZoomController* aNextSibling,
                                                       const nsIntRegion& aObscured);
 
+  void PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
+                     const AsyncPanZoomController* apzc);
 private:
   /* Whenever walking or mutating the tree rooted at mRootApzc, mTreeLock must be held.
    * This lock does not need to be held while manipulating a single APZC instance in

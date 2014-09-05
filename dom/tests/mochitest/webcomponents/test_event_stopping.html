@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=887541
+-->
+<head>
+  <title>Test for event model in web components</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=887541">Bug 887541</a>
+<script>
+
+var els = SpecialPowers.Cc["@mozilla.org/eventlistenerservice;1"]
+            .getService(SpecialPowers.Ci.nsIEventListenerService);
+
+function eventListener(e) {
+  eventChain.push(this);
+}
+
+function isEventChain(actual, expected, msg) {
+  is(actual.length, expected.length, msg);
+  for (var i = 0; i < expected.length; i++) {
+    is(actual[i], expected[i], msg + " at " + i);
+  }
+
+  if (0 < actual.length) {
+    var chain = els.getEventTargetChainFor(actual[0]); // Events should be dispatched on actual[0].
+    ok(expected.length < chain.length, "There should be additional chrome event targets.");
+  }
+}
+
+/*
+ * <div elemOne> ------ <shadow-root shadowOne>
+ *                                 |
+ *                          <span elemTwo>
+ *                                 |
+ *                         <span elemThree>
+ */
+
+var elemOne = document.createElement("div");
+var elemTwo = document.createElement("span");
+var elemThree = document.createElement("span");
+var shadowOne = elemOne.createShadowRoot();
+
+shadowOne.appendChild(elemTwo);
+elemTwo.appendChild(elemThree);
+
+// Test stopping "abort" event.
+
+elemOne.addEventListener("abort", eventListener);
+elemTwo.addEventListener("abort", eventListener);
+elemThree.addEventListener("abort", eventListener);
+shadowOne.addEventListener("abort", eventListener);
+
+var eventChain = [];
+
+var customEvent = new CustomEvent("abort", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemTwo, shadowOne], "Test that abort event is stopped at shadow root.");
+
+// Test stopping "error" event.
+
+elemOne.addEventListener("error", eventListener);
+elemTwo.addEventListener("error", eventListener);
+elemThree.addEventListener("error", eventListener);
+shadowOne.addEventListener("error", eventListener);
+
+eventChain = [];
+
+customEvent = new CustomEvent("error", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemTwo, shadowOne], "Test that error event is stopped at shadow root.");
+
+// Test stopping "select" event.
+
+elemOne.addEventListener("select", eventListener);
+elemTwo.addEventListener("select", eventListener);
+elemThree.addEventListener("select", eventListener);
+shadowOne.addEventListener("select", eventListener);
+
+eventChain = [];
+
+customEvent = new CustomEvent("select", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemTwo, shadowOne], "Test that select event is stopped at shadow root.");
+
+// Test stopping "change" event.
+
+elemOne.addEventListener("change", eventListener);
+elemTwo.addEventListener("change", eventListener);
+elemThree.addEventListener("change", eventListener);
+shadowOne.addEventListener("change", eventListener);
+
+eventChain = [];
+
+customEvent = new CustomEvent("change", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+
+// Test stopping "reset" event.
+
+elemOne.addEventListener("reset", eventListener);
+elemTwo.addEventListener("reset", eventListener);
+elemThree.addEventListener("reset", eventListener);
+shadowOne.addEventListener("reset", eventListener);
+
+eventChain = [];
+
+customEvent = new CustomEvent("reset", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemTwo, shadowOne], "Test that reset event is stopped at shadow root.");
+
+// Test stopping "load" event.
+
+elemOne.addEventListener("load", eventListener);
+elemTwo.addEventListener("load", eventListener);
+elemThree.addEventListener("load", eventListener);
+shadowOne.addEventListener("load", eventListener);
+
+eventChain = [];
+
+customEvent = new CustomEvent("load", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemTwo, shadowOne], "Test that load event is stopped at shadow root.");
+
+// Test stopping "resize" event.
+
+elemOne.addEventListener("resize", eventListener);
+elemTwo.addEventListener("resize", eventListener);
+elemThree.addEventListener("resize", eventListener);
+shadowOne.addEventListener("resize", eventListener);
+
+eventChain = [];
+
+customEvent = new CustomEvent("resize", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemTwo, shadowOne], "Test that resize event is stopped at shadow root.");
+
+// Test stopping "scroll" event.
+
+elemOne.addEventListener("scroll", eventListener);
+elemTwo.addEventListener("scroll", eventListener);
+elemThree.addEventListener("scroll", eventListener);
+shadowOne.addEventListener("scroll", eventListener);
+
+eventChain = [];
+
+customEvent = new CustomEvent("scroll", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemTwo, shadowOne], "Test that scroll event is stopped at shadow root.");
+
+// Test stopping "selectstart" event.
+
+elemOne.addEventListener("selectstart", eventListener);
+elemTwo.addEventListener("selectstart", eventListener);
+elemThree.addEventListener("selectstart", eventListener);
+shadowOne.addEventListener("selectstart", eventListener);
+
+eventChain = [];
+
+customEvent = new CustomEvent("selectstart", { "bubbles" : true });
+elemThree.dispatchEvent(customEvent);
+isEventChain(eventChain, [elemThree, elemTwo, shadowOne], "Test that selectstart event is stopped at shadow root.");
+
+</script>
+</body>
+</html>

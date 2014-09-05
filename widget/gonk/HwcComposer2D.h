@@ -87,6 +87,12 @@ public:
 
     bool Render(EGLDisplay dpy, EGLSurface sur);
 
+    void EnableVsync(bool aEnable);
+#if ANDROID_VERSION >= 17
+    bool RegisterHwcEventCallback();
+    void Vsync(int aDisplay, int64_t aTimestamp);
+#endif
+
 private:
     void Reset();
     void Prepare(buffer_handle_t fbHandle, int fence);
@@ -98,6 +104,10 @@ private:
     void setCrop(HwcLayer* layer, hwc_rect_t srcCrop);
     void setHwcGeometry(bool aGeometryChanged);
     void SendtoLayerScope();
+
+#if ANDROID_VERSION >= 17
+    void RunVsyncEventControl(bool aEnable);
+#endif
 
     HwcDevice*              mHwc;
     HwcList*                mList;
@@ -117,6 +127,7 @@ private:
 #endif
     nsTArray<layers::LayerComposite*> mHwcLayerMap;
     bool                    mPrepared;
+    bool                    mHasHWVsync;
 };
 
 } // namespace mozilla

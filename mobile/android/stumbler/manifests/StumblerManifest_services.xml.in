@@ -1,2 +1,15 @@
-<!-- Bug 1024708: this fragment is a place-holder for landing the
-     build integration of the background stumbler into Fennec. -->
+<service
+    android:name="org.mozilla.mozstumbler.service.stumblerthread.StumblerService"
+    android:label="stumbler">
+</service>
+
+<receiver android:name="org.mozilla.mozstumbler.service.uploadthread.UploadAlarmReceiver" />
+<service android:name="org.mozilla.mozstumbler.service.uploadthread.UploadAlarmReceiver$UploadAlarmService" />
+
+<receiver android:name="org.mozilla.mozstumbler.service.mainthread.PassiveServiceReceiver">
+  <intent-filter>
+      <action android:name="android.intent.action.BOOT_COMPLETED" />
+      <action android:name="android.intent.action.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE" />
+      <action android:name="@ANDROID_PACKAGE_NAME@.STUMBLER_PREF" />
+  </intent-filter>
+</receiver>

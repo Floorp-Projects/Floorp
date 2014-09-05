@@ -30,8 +30,10 @@ package ch.boye.httpclientandroidlib.impl.io;
 import java.io.IOException;
 import java.io.InputStream;
 
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
 import ch.boye.httpclientandroidlib.io.BufferInfo;
 import ch.boye.httpclientandroidlib.io.SessionInputBuffer;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Input stream that reads data without any transformation. The end of the
@@ -45,6 +47,7 @@ import ch.boye.httpclientandroidlib.io.SessionInputBuffer;
  *
  * @since 4.0
  */
+@NotThreadSafe
 public class IdentityInputStream extends InputStream {
 
     private final SessionInputBuffer in;
@@ -58,12 +61,10 @@ public class IdentityInputStream extends InputStream {
      */
     public IdentityInputStream(final SessionInputBuffer in) {
         super();
-        if (in == null) {
-            throw new IllegalArgumentException("Session input buffer may not be null");
-        }
-        this.in = in;
+        this.in = Args.notNull(in, "Session input buffer");
     }
 
+    @Override
     public int available() throws IOException {
         if (this.in instanceof BufferInfo) {
             return ((BufferInfo) this.in).length();
@@ -72,10 +73,12 @@ public class IdentityInputStream extends InputStream {
         }
     }
 
+    @Override
     public void close() throws IOException {
         this.closed = true;
     }
 
+    @Override
     public int read() throws IOException {
         if (this.closed) {
             return -1;
@@ -84,7 +87,8 @@ public class IdentityInputStream extends InputStream {
         }
     }
 
-    public int read(final byte[] b, int off, int len) throws IOException {
+    @Override
+    public int read(final byte[] b, final int off, final int len) throws IOException {
         if (this.closed) {
             return -1;
         } else {

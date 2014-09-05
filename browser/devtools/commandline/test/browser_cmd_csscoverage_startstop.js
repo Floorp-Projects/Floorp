@@ -55,8 +55,8 @@ function* navigate(usage, options) {
  * Check the expected pages have been visited
  */
 function* checkPages(usage) {
-  // 'load' event order. '' is for the initial location
-  let expectedVisited = [ '', PAGE_2, PAGE_1, PAGE_3 ];
+  // 'load' event order. 'null' is for the initial location
+  let expectedVisited = [ 'null', PAGE_2, PAGE_1, PAGE_3 ];
   let actualVisited = yield usage._testOnly_visitedPages();
   isEqualJson(actualVisited, expectedVisited, 'Visited');
 }

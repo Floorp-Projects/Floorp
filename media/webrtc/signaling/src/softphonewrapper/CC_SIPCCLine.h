@@ -20,7 +20,7 @@ namespace CSF
         CSF_DECLARE_WRAP(CC_SIPCCLine, cc_lineid_t);
 
         cc_lineid_t lineId;
-        CC_SIPCCLine (cc_lineid_t aLineId) : lineId(aLineId) { }
+        explicit CC_SIPCCLine (cc_lineid_t aLineId) : lineId(aLineId) { }
 
     public:
         virtual std::string toString() {

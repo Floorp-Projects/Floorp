@@ -904,6 +904,12 @@ var gApplicationsPane = {
   // Initialization & Destruction
 
   init: function() {
+    function setEventListener(aId, aEventType, aCallback)
+    {
+      document.getElementById(aId)
+              .addEventListener(aEventType, aCallback.bind(gApplicationsPane));
+    }
+
     // Initialize shortcuts to some commonly accessed elements & values.
     this._brandShortName =
       document.getElementById("bundleBrand").getString("brandShortName");
@@ -930,6 +936,14 @@ var gApplicationsPane = {
     this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_ACTION, this, false);
     this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_READER, this, false);
 
+
+    setEventListener("focusSearch1", "command", gApplicationsPane.focusFilterBox);
+    setEventListener("focusSearch2", "command", gApplicationsPane.focusFilterBox);
+    setEventListener("filter", "command", gApplicationsPane.filter);
+    setEventListener("handlersView", "select",
+      gApplicationsPane.onSelectionChanged);
+    setEventListener("typeColumn", "click", gApplicationsPane.sort);
+    setEventListener("actionColumn", "click", gApplicationsPane.sort);
 
     // Listen for window unload so we can remove our preference observers.
     window.addEventListener("unload", this, false);

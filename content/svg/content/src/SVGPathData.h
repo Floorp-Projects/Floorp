@@ -244,7 +244,7 @@ protected:
 class SVGPathDataAndInfo MOZ_FINAL : public SVGPathData
 {
 public:
-  SVGPathDataAndInfo(nsSVGElement *aElement = nullptr)
+  explicit SVGPathDataAndInfo(nsSVGElement *aElement = nullptr)
     : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement)))
   {}
 

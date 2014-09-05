@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerNavigator appName </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = "./support/WorkerNavigator.js";
+    var description = "WorkerNavigator appName: Returns the name of the browser.";
+    
+    var t = async_test("Test Description: " + description);
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data.appName, window.navigator.appName);
+        t.done();
+    });
+</script>
+</body>
+</html>

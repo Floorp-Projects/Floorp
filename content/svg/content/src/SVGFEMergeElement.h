@@ -21,7 +21,7 @@ class SVGFEMergeElement : public SVGFEMergeElementBase
   friend nsresult (::NS_NewSVGFEMergeElement(nsIContent **aResult,
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFEMergeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFEMergeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEMergeElementBase(aNodeInfo)
   {
   }

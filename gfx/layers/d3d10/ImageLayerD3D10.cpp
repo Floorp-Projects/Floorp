@@ -471,9 +471,7 @@ RemoteDXGITextureImage::GetAsSourceSurface()
                                             mFormat == RemoteImageData::BGRX32
                                               ? gfx::SurfaceFormat::B8G8R8X8
                                               : gfx::SurfaceFormat::B8G8R8A8);
-
-  if (!surface) {
-    NS_WARNING("Failed to create SourceSurface for DXGI texture.");
+  if (NS_WARN_IF(!surface)) {
     return nullptr;
   }
 

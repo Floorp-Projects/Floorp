@@ -65,7 +65,7 @@ TreeWidget.prototype = {
       this._selectedLabel = this._selectedItem = null;
       return;
     }
-    if (!typeof id == "array") {
+    if (!Array.isArray(id)) {
       return;
     }
     this._selectedLabel = this.root.setSelectedItem(id);

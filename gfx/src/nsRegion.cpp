@@ -1113,23 +1113,25 @@ nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
   return bestRect;
 }
 
+std::ostream& operator<<(std::ostream& stream, const nsRegion& m) {
+  stream << "[";
+
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(const_cast<pixman_region32_t*>(&m.mImpl), &n);
+  for (int i=0; i<n; i++) {
+    if (i != 0) {
+      stream << "; ";
+    }
+    stream << boxes[i].x1 << "," << boxes[i].y1 << "," << boxes[i].x2 << "," << boxes[i].y2;
+  }
+
+  stream << "]";
+  return stream;
+}
+
 nsCString
 nsRegion::ToString() const {
-    nsCString result;
-    result.Append('[');
-
-    int n;
-    pixman_box32_t *boxes = pixman_region32_rectangles(const_cast<pixman_region32_t*>(&mImpl), &n);
-    for (int i=0; i<n; i++) {
-        if (i != 0) {
-            result.AppendLiteral("; ");
-        }
-        result.Append(nsPrintfCString("%d,%d,%d,%d", boxes[i].x1, boxes[i].y1, boxes[i].x2, boxes[i].y2));
-
-    }
-    result.Append(']');
-
-    return result;
+  return nsCString(mozilla::ToString(this).c_str());
 }
 
 

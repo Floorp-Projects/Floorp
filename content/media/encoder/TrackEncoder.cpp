@@ -271,21 +271,4 @@ VideoTrackEncoder::NotifyEndOfStream()
   mReentrantMonitor.NotifyAll();
 }
 
-void
-VideoTrackEncoder::CreateMutedFrame(nsTArray<uint8_t>* aOutputBuffer)
-{
-  NS_ENSURE_TRUE_VOID(aOutputBuffer);
-
-  // Supports YUV420 image format only.
-  int yPlaneLen = mFrameWidth * mFrameHeight;
-  int cbcrPlaneLen = yPlaneLen / 2;
-  int frameLen = yPlaneLen + cbcrPlaneLen;
-
-  aOutputBuffer->SetLength(frameLen);
-  // Fill Y plane.
-  memset(aOutputBuffer->Elements(), 0x10, yPlaneLen);
-  // Fill Cb/Cr planes.
-  memset(aOutputBuffer->Elements() + yPlaneLen, 0x80, cbcrPlaneLen);
-}
-
 }

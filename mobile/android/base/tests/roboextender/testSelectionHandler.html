@@ -213,7 +213,7 @@ function testCloseSelection() {
  *
  */
 function finishTests() {
-  sendMessageToJava({
+  Messaging.sendRequest({
     type: "Robocop:testSelectionHandler",
     result: true,
     msg: "Done!",
@@ -233,28 +233,18 @@ function getSelectionHandler() {
 }
 
 function ok(one, msg) {
-  return new Promise(function(resolve, reject) {
-    sendMessageToJava({
-      type: "Robocop:testSelectionHandler",
-      result: one,
-      msg: msg
-    },
-    function (res, err) {
-      (err) ? reject(err) : resolve(res);
-    });
+  return Messaging.sendRequestForResult({
+    type: "Robocop:testSelectionHandler",
+    result: one,
+    msg: msg
   });
 }
 
 function is(one, two, msg) {
-  return new Promise(function(resolve, reject) {
-    sendMessageToJava({
-      type: "Robocop:testSelectionHandler",
-      result: one === two,
-      msg: msg + " : " + one + " === " + two
-    },
-    function (res, err) {
-      (err) ? reject(err) : resolve(res);
-    });
+  return Messaging.sendRequestForResult({
+    type: "Robocop:testSelectionHandler",
+    result: one === two,
+    msg: msg + " : " + one + " === " + two
   });
 }
 

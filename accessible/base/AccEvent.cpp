@@ -251,6 +251,14 @@ a11y::MakeXPCEvent(AccEvent* aEvent)
     return xpEvent.forget();
   }
 
+  if (eventGroup & (1 << AccEvent::eObjectAttrChangedEvent)) {
+    AccObjectAttrChangedEvent* oac = downcast_accEvent(aEvent);
+    xpEvent = new xpcAccObjectAttributeChangedEvent(type, acc, doc, domNode,
+                                                    fromUser,
+                                                    oac->GetAttribute());
+    return xpEvent.forget();
+  }
+
   xpEvent = new xpcAccEvent(type, acc, doc, domNode, fromUser);
   return xpEvent.forget();
   }

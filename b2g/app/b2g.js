@@ -395,7 +395,7 @@ pref("browser.dom.window.dump.enabled", false);
 // Default Content Security Policy to apply to privileged and certified apps
 pref("security.apps.privileged.CSP.default", "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'");
 // If you change this CSP, make sure to update the fast path in nsCSPService.cpp
-pref("security.apps.certified.CSP.default", "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'");
+pref("security.apps.certified.CSP.default", "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline' app://theme.gaiamobile.org");
 
 // Temporarily force-enable GL compositing.  This is default-disabled
 // deep within the bowels of the widgetry system.  Remove me when GL
@@ -928,6 +928,11 @@ pref("gfx.gralloc.fence-with-readpixels", true);
 // The url of the page used to display network error details.
 pref("b2g.neterror.url", "app://system.gaiamobile.org/net_error.html");
 
+// The origin used for the shared themes uri space.
+pref("b2g.theme.origin", "app://theme.gaiamobile.org");
+pref("dom.mozApps.themable", true);
+pref("dom.mozApps.selected_theme", "default_theme.gaiamobile.org");
+
 // Enable Web Speech synthesis API
 pref("media.webspeech.synth.enabled", true);
 
@@ -973,8 +978,7 @@ pref("apz.subframe.enabled", true);
 pref("apz.overscroll.enabled", true);
 pref("apz.overscroll.fling_friction", "0.02");
 pref("apz.overscroll.fling_stopped_threshold", "0.4");
-pref("apz.overscroll.clamping", "0.5");
-pref("apz.overscroll.z_effect", "0.5");
+pref("apz.overscroll.stretch_factor", "0.5");
 pref("apz.overscroll.snap_back.spring_stiffness", "0.6");
 pref("apz.overscroll.snap_back.spring_friction", "0.1");
 pref("apz.overscroll.snap_back.mass", "1200");

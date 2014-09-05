@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -23,16 +24,12 @@
  * <http://www.apache.org/>.
  *
  */
-
 package ch.boye.httpclientandroidlib.conn.params;
 
 import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.conn.routing.HttpRoute;
-import ch.boye.httpclientandroidlib.impl.conn.tsccm.ThreadSafeClientConnManager;
-import ch.boye.httpclientandroidlib.params.CoreConnectionPNames;
-import ch.boye.httpclientandroidlib.params.HttpConnectionParams;
 import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * An adaptor for manipulating HTTP connection management
@@ -41,8 +38,8 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
  * @since 4.0
  *
  * @see ConnManagerPNames
- * @deprecated replaced by methods in {@link HttpConnectionParams} and {@link ThreadSafeClientConnManager}.
- * See individual method descriptions for details
+ *
+ * @deprecated (4.1) use configuration methods of the specific connection manager implementation.
  */
 @Deprecated
 @Immutable
@@ -58,18 +55,13 @@ public final class ConnManagerParams implements ConnManagerPNames {
      *
      * @return timeout in milliseconds.
      *
-     * @deprecated use {@link HttpConnectionParams#getConnectionTimeout(HttpParams)}
+     * @deprecated (4.1)  use {@link
+     *   ch.boye.httpclientandroidlib.params.HttpConnectionParams#getConnectionTimeout(HttpParams)}
      */
     @Deprecated
     public static long getTimeout(final HttpParams params) {
-        if (params == null) {
-            throw new IllegalArgumentException("HTTP parameters may not be null");
-        }
-        Long param = (Long) params.getParameter(TIMEOUT);
-        if (param != null) {
-            return param.longValue();
-        }
-        return params.getIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 0);
+        Args.notNull(params, "HTTP parameters");
+        return params.getLongParameter(TIMEOUT, 0);
     }
 
     /**
@@ -79,20 +71,19 @@ public final class ConnManagerParams implements ConnManagerPNames {
      *
      * @param timeout the timeout in milliseconds
      *
-     * @deprecated use {@link HttpConnectionParams#setConnectionTimeout(HttpParams, int)}
+     * @deprecated (4.1)  use {@link
+     *   ch.boye.httpclientandroidlib.params.HttpConnectionParams#setConnectionTimeout(HttpParams, int)}
      */
     @Deprecated
-    public static void setTimeout(final HttpParams params, long timeout) {
-        if (params == null) {
-            throw new IllegalArgumentException("HTTP parameters may not be null");
-        }
+    public static void setTimeout(final HttpParams params, final long timeout) {
+        Args.notNull(params, "HTTP parameters");
         params.setLongParameter(TIMEOUT, timeout);
     }
 
     /** The default maximum number of connections allowed per host */
     private static final ConnPerRoute DEFAULT_CONN_PER_ROUTE = new ConnPerRoute() {
 
-        public int getMaxForRoute(HttpRoute route) {
+        public int getMaxForRoute(final HttpRoute route) {
             return ConnPerRouteBean.DEFAULT_MAX_CONNECTIONS_PER_ROUTE;
         }
 
@@ -104,16 +95,10 @@ public final class ConnManagerParams implements ConnManagerPNames {
      * @param params HTTP parameters
      * @param connPerRoute lookup interface for maximum number of connections allowed
      *        per route
-     *
-     * @deprecated use {@link ThreadSafeClientConnManager#setMaxForRoute(ch.boye.httpclientandroidlib.conn.routing.HttpRoute, int)}
      */
-    @Deprecated
     public static void setMaxConnectionsPerRoute(final HttpParams params,
                                                 final ConnPerRoute connPerRoute) {
-        if (params == null) {
-            throw new IllegalArgumentException
-                ("HTTP parameters must not be null.");
-        }
+        Args.notNull(params, "HTTP parameters");
         params.setParameter(MAX_CONNECTIONS_PER_ROUTE, connPerRoute);
     }
 
@@ -123,15 +108,9 @@ public final class ConnManagerParams implements ConnManagerPNames {
      * @param params HTTP parameters
      *
      * @return lookup interface for maximum number of connections allowed per route.
-     *
-     * @deprecated use {@link ThreadSafeClientConnManager#getMaxForRoute(ch.boye.httpclientandroidlib.conn.routing.HttpRoute)}
      */
-    @Deprecated
     public static ConnPerRoute getMaxConnectionsPerRoute(final HttpParams params) {
-        if (params == null) {
-            throw new IllegalArgumentException
-                ("HTTP parameters must not be null.");
-        }
+        Args.notNull(params, "HTTP parameters");
         ConnPerRoute connPerRoute = (ConnPerRoute) params.getParameter(MAX_CONNECTIONS_PER_ROUTE);
         if (connPerRoute == null) {
             connPerRoute = DEFAULT_CONN_PER_ROUTE;
@@ -144,17 +123,11 @@ public final class ConnManagerParams implements ConnManagerPNames {
      *
      * @param params HTTP parameters
      * @param maxTotalConnections The maximum number of connections allowed.
-     *
-     * @deprecated use {@link ThreadSafeClientConnManager#setMaxTotal(int)}
      */
-    @Deprecated
     public static void setMaxTotalConnections(
             final HttpParams params,
-            int maxTotalConnections) {
-        if (params == null) {
-            throw new IllegalArgumentException
-                ("HTTP parameters must not be null.");
-        }
+            final int maxTotalConnections) {
+        Args.notNull(params, "HTTP parameters");
         params.setIntParameter(MAX_TOTAL_CONNECTIONS, maxTotalConnections);
     }
 
@@ -164,16 +137,10 @@ public final class ConnManagerParams implements ConnManagerPNames {
      * @param params HTTP parameters
      *
      * @return The maximum number of connections allowed.
-     *
-     * @deprecated use {@link ThreadSafeClientConnManager#getMaxTotal()}
      */
-    @Deprecated
     public static int getMaxTotalConnections(
             final HttpParams params) {
-        if (params == null) {
-            throw new IllegalArgumentException
-                ("HTTP parameters must not be null.");
-        }
+        Args.notNull(params, "HTTP parameters");
         return params.getIntParameter(MAX_TOTAL_CONNECTIONS, DEFAULT_MAX_TOTAL_CONNECTIONS);
     }
 

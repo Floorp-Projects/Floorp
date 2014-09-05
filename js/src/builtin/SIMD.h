@@ -57,6 +57,7 @@
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                          \
   V(clamp, Float32x4Clamp, 3, 0)                                                    \
+  V(select, Float32x4Select, 3, 0)                                                  \
   V(shuffleMix, FuncShuffle<Float32x4>, 3, 0)
 
 #define FLOAT32X4_FUNCTION_LIST(V)                                                  \
@@ -165,6 +166,12 @@ struct Int32x4 {
 
 template<typename V>
 JSObject *CreateSimd(JSContext *cx, typename V::Elem *data);
+
+template<typename V>
+bool IsVectorObject(HandleValue v);
+
+template<typename V>
+bool ToSimdConstant(JSContext *cx, HandleValue v, jit::SimdConstant *out);
 
 #define DECLARE_SIMD_FLOAT32X4_FUNCTION(Name, Func, Operands, Flags) \
 extern bool                                                          \

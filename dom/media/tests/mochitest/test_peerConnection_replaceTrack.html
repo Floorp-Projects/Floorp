@@ -38,9 +38,11 @@
         var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, track);
         ok(sender, "track has a sender");
         navigator.mozGetUserMedia({video:true, fake: true}, function(newStream) {
-          sender.replaceTrack(newStream.getVideoTracks()[0],
+          var newtrack = newStream.getVideoTracks()[0];
+          sender.replaceTrack(newtrack,
             function() {
               ok(true, "replaceTrack success callback is called");
+              is(sender.track, newtrack, "sender.track has been replaced");
               test.next();
             },
             function(err) {

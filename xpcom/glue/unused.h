@@ -15,11 +15,11 @@ namespace mozilla {
 // Suppress GCC warnings about unused return values with
 //   unused << SomeFuncDeclaredWarnUnusedReturnValue();
 //
-struct NS_COM_GLUE unused_t
+struct unused_t
 {
 };
 
-extern const unused_t NS_COM_GLUE unused;
+extern const unused_t unused;
 
 template<typename T>
 inline void

@@ -29,6 +29,9 @@ package ch.boye.httpclientandroidlib.protocol;
 
 import java.util.Map;
 
+import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
+import ch.boye.httpclientandroidlib.util.Args;
+
 /**
  * Maintains a map of HTTP request handlers keyed by a request URI pattern.
  * <br>
@@ -45,13 +48,16 @@ import java.util.Map;
  * specified request URI.
  *
  * @since 4.0
+ * @deprecated (4.3) use {@link UriHttpRequestHandlerMapper}
  */
+@ThreadSafe // provided injected dependencies are thread-safe
+@Deprecated
 public class HttpRequestHandlerRegistry implements HttpRequestHandlerResolver {
 
-    private final UriPatternMatcher matcher;
+    private final UriPatternMatcher<HttpRequestHandler> matcher;
 
     public HttpRequestHandlerRegistry() {
-        matcher = new UriPatternMatcher();
+        matcher = new UriPatternMatcher<HttpRequestHandler>();
     }
 
     /**
@@ -62,12 +68,8 @@ public class HttpRequestHandlerRegistry implements HttpRequestHandlerResolver {
      * @param handler the handler.
      */
     public void register(final String pattern, final HttpRequestHandler handler) {
-        if (pattern == null) {
-            throw new IllegalArgumentException("URI request pattern may not be null");
-        }
-        if (handler == null) {
-            throw new IllegalArgumentException("Request handler may not be null");
-        }
+        Args.notNull(pattern, "URI request pattern");
+        Args.notNull(handler, "Request handler");
         matcher.register(pattern, handler);
     }
 
@@ -84,19 +86,22 @@ public class HttpRequestHandlerRegistry implements HttpRequestHandlerResolver {
      * Sets handlers from the given map.
      * @param map the map containing handlers keyed by their URI patterns.
      */
-    public void setHandlers(final Map map) {
+    public void setHandlers(final Map<String, HttpRequestHandler> map) {
         matcher.setObjects(map);
     }
 
-    public HttpRequestHandler lookup(final String requestURI) {
-        return (HttpRequestHandler) matcher.lookup(requestURI);
+    /**
+     * Get the handler map.
+     * @return The map of handlers and their associated URI patterns.
+     *
+     * @since 4.2
+     */
+    public Map<String, HttpRequestHandler> getHandlers() {
+        return matcher.getObjects();
     }
 
-    /**
-     * @deprecated
-     */
-    protected boolean matchUriRequestPattern(final String pattern, final String requestUri) {
-        return matcher.matchUriRequestPattern(pattern, requestUri);
+    public HttpRequestHandler lookup(final String requestURI) {
+        return matcher.lookup(requestURI);
     }
 
 }

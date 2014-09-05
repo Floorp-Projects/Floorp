@@ -554,7 +554,7 @@ public:
   }
 
 protected:
-  MOZ_CONSTEXPR BuiltinCounterStyle(int32_t aStyle)
+  MOZ_CONSTEXPR explicit BuiltinCounterStyle(int32_t aStyle)
     : CounterStyle(aStyle)
   {
   }

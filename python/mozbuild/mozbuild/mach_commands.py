@@ -401,7 +401,8 @@ class Build(MachCommandBase):
                 self.log(logging.INFO, 'ccache',
                          {'msg': ccache_diff.hit_rate_message()}, "{msg}")
 
-        if monitor.elapsed > 300:
+        moz_nospam = os.environ.get('MOZ_NOSPAM')
+        if monitor.elapsed > 300 and not moz_nospam:
             # Display a notification when the build completes.
             # This could probably be uplifted into the mach core or at least
             # into a helper API. It is here as an experimentation to see how it
@@ -428,7 +429,24 @@ class Build(MachCommandBase):
                     method = notify.get_dbus_method('Notify',
                                                     'org.freedesktop.Notifications')
                     method('Mozilla Build System', 0, '', 'Build complete', '', [], [], -1)
-
+                elif sys.platform.startswith('win'):
+                    from ctypes import Structure, windll, POINTER, sizeof
+                    from ctypes.wintypes import DWORD, HANDLE, WINFUNCTYPE, BOOL, UINT
+                    class FLASHWINDOW(Structure):
+                        _fields_ = [("cbSize", UINT),
+                                    ("hwnd", HANDLE),
+                                    ("dwFlags", DWORD),
+                                    ("uCount", UINT),
+                                    ("dwTimeout", DWORD)]
+                    FlashWindowExProto = WINFUNCTYPE(BOOL, POINTER(FLASHWINDOW))
+                    FlashWindowEx = FlashWindowExProto(("FlashWindowEx", windll.user32))
+                    FLASHW_CAPTION = 0x01
+                    FLASHW_TRAY = 0x02
+                    FLASHW_TIMERNOFG = 0x0C
+                    params = FLASHWINDOW(sizeof(FLASHWINDOW),
+                                        windll.kernel32.GetConsoleWindow(),
+                                        FLASHW_CAPTION | FLASHW_TRAY | FLASHW_TIMERNOFG, 3, 0)
+                    FlashWindowEx(params)
             except Exception as e:
                 self.log(logging.WARNING, 'notifier-failed', {'error':
                     e.message}, 'Notification center failed: {error}')

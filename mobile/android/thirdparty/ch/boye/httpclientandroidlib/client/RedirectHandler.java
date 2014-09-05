@@ -44,7 +44,7 @@ import ch.boye.httpclientandroidlib.protocol.HttpContext;
  *
  * @since 4.0
  *
- * @deprecated use {@link RedirectStrategy}
+ * @deprecated (4.1)  use {@link RedirectStrategy}
  */
 @Deprecated
 public interface RedirectHandler {

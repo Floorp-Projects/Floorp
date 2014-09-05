@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Web Storage</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+ </head>
+ <body>
+    <h1>storage_session_index</h1>
+    <div id="log"></div>
+    <script>
+        test(function() {
+            sessionStorage.clear();
+            sessionStorage["name"] = "user1";
+            sessionStorage["age"] = "42";
+            test(function() {
+                assert_equals(sessionStorage[-1], undefined);
+                assert_equals(sessionStorage[0], undefined);
+                assert_equals(sessionStorage[1], undefined);
+                assert_equals(sessionStorage[2], undefined);
+            })
+            test(function() {
+                assert_equals(sessionStorage["-1"], undefined);
+                assert_equals(sessionStorage["0"], undefined);
+                assert_equals(sessionStorage["1"], undefined);
+                assert_equals(sessionStorage["2"], undefined);
+            })
+            sessionStorage.setItem(1, "number");
+            test(function() {
+                assert_equals(sessionStorage[1], "number");
+                assert_equals(sessionStorage["1"], "number");
+            })
+        });
+    </script>
+ </body>
+</html>

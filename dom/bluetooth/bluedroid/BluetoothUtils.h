@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_bluetooth_bluetoothutils_h__
 #define mozilla_dom_bluetooth_bluetoothutils_h__
 
-#include <hardware/bluetooth.h>
-
 #include "BluetoothCommon.h"
 #include "js/TypeDecls.h"
 
@@ -17,10 +15,6 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothNamedValue;
 class BluetoothValue;
 class BluetoothReplyRunnable;
-
-void
-BdAddressTypeToString(bt_bdaddr_t* aBdAddressType,
-                      nsAString& aRetBdAddress);
 
 uint16_t
 UuidToServiceClassInt(const BluetoothUuid& mUuid);

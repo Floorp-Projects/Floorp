@@ -13,7 +13,7 @@
 class nsScreenCocoa : public nsBaseScreen
 {
 public:
-    nsScreenCocoa (NSScreen *screen);
+    explicit nsScreenCocoa (NSScreen *screen);
     ~nsScreenCocoa ();
 
     NS_IMETHOD GetId(uint32_t* outId);

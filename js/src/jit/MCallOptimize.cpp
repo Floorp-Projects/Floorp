@@ -173,6 +173,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineToInteger(callInfo);
     if (native == intrinsic_ToString)
         return inlineToString(callInfo);
+    if (native == intrinsic_IsConstructing)
+        return inlineIsConstructing(callInfo);
 
     // TypedObject intrinsics.
     if (native == intrinsic_ObjectIsTypedObject)
@@ -1530,7 +1532,7 @@ IonBuilder::inlineUnsafePutElements(CallInfo &callInfo)
             continue;
         }
 
-        MOZ_ASSUME_UNREACHABLE("Element access not dense array nor typed array");
+        MOZ_CRASH("Element access not dense array nor typed array");
     }
 
     return InliningStatus_Inlined;
@@ -1645,7 +1647,7 @@ IonBuilder::inlineForceSequentialOrInParallelSection(CallInfo &callInfo)
         return InliningStatus_NotInlined;
     }
 
-    MOZ_ASSUME_UNREACHABLE("Invalid execution mode");
+    MOZ_CRASH("Invalid execution mode");
 }
 
 IonBuilder::InliningStatus
@@ -1683,7 +1685,7 @@ IonBuilder::inlineForkJoinGetSlice(CallInfo &callInfo)
         return InliningStatus_Inlined;
     }
 
-    MOZ_ASSUME_UNREACHABLE("Invalid execution mode");
+    MOZ_CRASH("Invalid execution mode");
 }
 
 IonBuilder::InliningStatus
@@ -1702,7 +1704,7 @@ IonBuilder::inlineNewDenseArray(CallInfo &callInfo)
         return inlineNewDenseArrayForSequentialExecution(callInfo);
     }
 
-    MOZ_ASSUME_UNREACHABLE("unknown ExecutionMode");
+    MOZ_CRASH("unknown ExecutionMode");
 }
 
 IonBuilder::InliningStatus
@@ -2150,6 +2152,31 @@ IonBuilder::inlineBoundFunction(CallInfo &nativeCallInfo, JSFunction *target)
     if (!makeCall(scriptedTarget, callInfo, false))
         return InliningStatus_Error;
 
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineIsConstructing(CallInfo &callInfo)
+{
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 0);
+    MOZ_ASSERT(script()->functionNonDelazifying(),
+               "isConstructing() should only be called in function scripts");
+
+    if (getInlineReturnType() != MIRType_Boolean)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    if (inliningDepth_ == 0) {
+        MInstruction *ins = MIsConstructing::New(alloc());
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
+    }
+
+    bool constructing = inlineCallInfo_->constructing();
+    pushConstant(BooleanValue(constructing));
     return InliningStatus_Inlined;
 }
 

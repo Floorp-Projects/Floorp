@@ -110,62 +110,53 @@ SocialUI = {
   },
 
   observe: function SocialUI_observe(subject, topic, data) {
-    // Exceptions here sometimes don't get reported properly, report them
-    // manually :(
-    try {
-      switch (topic) {
-        case "social:provider-enabled":
-          SocialMarks.populateToolbarPalette();
-          SocialStatus.populateToolbarPalette();
-          break;
-        case "social:provider-disabled":
-          SocialMarks.removeProvider(data);
-          SocialStatus.removeProvider(data);
-          SocialSidebar.disableProvider(data);
-          break;
-        case "social:provider-reload":
-          SocialStatus.reloadProvider(data);
-          // if the reloaded provider is our current provider, fall through
-          // to social:providers-changed so the ui will be reset
-          if (!SocialSidebar.provider || SocialSidebar.provider.origin != data)
-            return;
-          // currently only the sidebar and flyout have a selected provider.
-          // sidebar provider has changed (possibly to null), ensure the content
-          // is unloaded and the frames are reset, they will be loaded in
-          // providers-changed below if necessary.
-          SocialSidebar.unloadSidebar();
-          SocialFlyout.unload();
-          // fall through to providers-changed to ensure the reloaded provider
-          // is correctly reflected in any UI and the multi-provider menu
-        case "social:providers-changed":
-          this._providersChanged();
-          break;
-
-        // Provider-specific notifications
-        case "social:ambient-notification-changed":
-          SocialStatus.updateButton(data);
-          break;
-        case "social:profile-changed":
-          // make sure anything that happens here only affects the provider for
-          // which the profile is changing, and that anything we call actually
-          // needs to change based on profile data.
-          SocialStatus.updateButton(data);
-          break;
-        case "social:frameworker-error":
-          if (this.enabled && SocialSidebar.provider && SocialSidebar.provider.origin == data) {
-            SocialSidebar.setSidebarErrorMessage();
-          }
-          break;
-
-        case "nsPref:changed":
-          if (data == "social.toast-notifications.enabled") {
-            SocialSidebar.updateToggleNotifications();
-          }
-          break;
-      }
-    } catch (e) {
-      Components.utils.reportError(e + "\n" + e.stack);
-      throw e;
+    switch (topic) {
+      case "social:provider-enabled":
+        SocialMarks.populateToolbarPalette();
+        SocialStatus.populateToolbarPalette();
+        break;
+      case "social:provider-disabled":
+        SocialMarks.removeProvider(data);
+        SocialStatus.removeProvider(data);
+        SocialSidebar.disableProvider(data);
+        break;
+      case "social:provider-reload":
+        SocialStatus.reloadProvider(data);
+        // if the reloaded provider is our current provider, fall through
+        // to social:providers-changed so the ui will be reset
+        if (!SocialSidebar.provider || SocialSidebar.provider.origin != data)
+          return;
+        // currently only the sidebar and flyout have a selected provider.
+        // sidebar provider has changed (possibly to null), ensure the content
+        // is unloaded and the frames are reset, they will be loaded in
+        // providers-changed below if necessary.
+        SocialSidebar.unloadSidebar();
+        SocialFlyout.unload();
+        // fall through to providers-changed to ensure the reloaded provider
+        // is correctly reflected in any UI and the multi-provider menu
+      case "social:providers-changed":
+        this._providersChanged();
+        break;
+      // Provider-specific notifications
+      case "social:ambient-notification-changed":
+        SocialStatus.updateButton(data);
+        break;
+      case "social:profile-changed":
+        // make sure anything that happens here only affects the provider for
+        // which the profile is changing, and that anything we call actually
+        // needs to change based on profile data.
+        SocialStatus.updateButton(data);
+        break;
+      case "social:frameworker-error":
+        if (this.enabled && SocialSidebar.provider && SocialSidebar.provider.origin == data) {
+          SocialSidebar.setSidebarErrorMessage();
+        }
+        break;
+      case "nsPref:changed":
+        if (data == "social.toast-notifications.enabled") {
+          SocialSidebar.updateToggleNotifications();
+        }
+        break;
     }
   },
 

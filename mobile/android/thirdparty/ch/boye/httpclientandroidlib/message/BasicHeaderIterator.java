@@ -31,12 +31,15 @@ import java.util.NoSuchElementException;
 
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HeaderIterator;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Basic implementation of a {@link HeaderIterator}.
  *
  * @since 4.0
  */
+@NotThreadSafe
 public class BasicHeaderIterator implements HeaderIterator {
 
     /**
@@ -70,13 +73,9 @@ public class BasicHeaderIterator implements HeaderIterator {
      * @param name      the name of the headers over which to iterate, or
      *                  <code>null</code> for any
      */
-    public BasicHeaderIterator(Header[] headers, String name) {
-        if (headers == null) {
-            throw new IllegalArgumentException
-                ("Header array must not be null.");
-        }
-
-        this.allHeaders = headers;
+    public BasicHeaderIterator(final Header[] headers, final String name) {
+        super();
+        this.allHeaders = Args.notNull(headers, "Header array");
         this.headerName = name;
         this.currentIndex = findNext(-1);
     }
@@ -85,15 +84,17 @@ public class BasicHeaderIterator implements HeaderIterator {
     /**
      * Determines the index of the next header.
      *
-     * @param from      one less than the index to consider first,
+     * @param pos      one less than the index to consider first,
      *                  -1 to search for the first header
      *
      * @return  the index of the next header that matches the filter name,
      *          or negative if there are no more headers
      */
-    protected int findNext(int from) {
-        if (from < -1)
+    protected int findNext(final int pos) {
+        int from = pos;
+        if (from < -1) {
             return -1;
+        }
 
         final int to = this.allHeaders.length-1;
         boolean found = false;
@@ -113,7 +114,7 @@ public class BasicHeaderIterator implements HeaderIterator {
      * @return  <code>true</code> if the header should be part of the
      *          iteration, <code>false</code> to skip
      */
-    protected boolean filterHeader(int index) {
+    protected boolean filterHeader(final int index) {
         return (this.headerName == null) ||
             this.headerName.equalsIgnoreCase(this.allHeaders[index].getName());
     }

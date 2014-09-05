@@ -147,8 +147,10 @@ function testGetCaches(uri, prefName) {
   insertSetting.execute();
   let settingId = cps.DBConnection.lastInsertRowID;
 
-  let insertPref = cps.DBConnection.createStatement("INSERT INTO prefs (groupID, settingID, value) " +
-                                                    "VALUES (:groupId, :settingId, :value)");
+  let insertPref = cps.DBConnection.createStatement(`
+    INSERT INTO prefs (groupID, settingID, value)
+    VALUES (:groupId, :settingId, :value)
+  `);
   insertPref.params.groupId = groupId;
   insertPref.params.settingId = settingId;
   insertPref.params.value = VALUE;

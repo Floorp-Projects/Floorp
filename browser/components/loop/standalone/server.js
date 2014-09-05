@@ -25,6 +25,8 @@ app.get('/content/config.js', function (req, res) {
 app.use('/', express.static(__dirname + '/../'));
 // This lets /content/ be mapped right for the static contents.
 app.use('/', express.static(__dirname + '/'));
+// This lets standalone components load images into the UI showcase
+app.use('/standalone/content', express.static(__dirname + '/../content'));
 
 var server = app.listen(port);
 

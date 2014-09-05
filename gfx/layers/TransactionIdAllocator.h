@@ -7,6 +7,7 @@
 #define GFX_TRANSACTION_ID_ALLOCATOR_H
 
 #include "nsISupportsImpl.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 namespace layers {
@@ -44,6 +45,11 @@ public:
    * return ordering issues.
    */
   virtual void RevokeTransactionId(uint64_t aTransactionId) = 0;
+
+  /**
+   * Get the start time of the current refresh tick.
+   */
+  virtual mozilla::TimeStamp GetTransactionStart() = 0;
 };
 
 }

@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1057176
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1057176</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1057176 **/
+  var doc = document.implementation.createDocument(null, null);
+  var elem = doc.createElementNS("http://www.w3.org/1999/xhtml", "input");
+  elem.pattern = "abc";
+  elem.value = "def";
+  ok(!elem.validity.valid, '"def" should not match the pattern "abc"');
+  elem.value = "abc";
+  ok(elem.validity.valid, '"abc" should match the pattern "abc"');
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1057176">Mozilla Bug 1057176</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

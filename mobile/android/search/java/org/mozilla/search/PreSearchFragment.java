@@ -5,7 +5,6 @@
 package org.mozilla.search;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -115,13 +114,6 @@ public class PreSearchFragment extends Fragment {
             }
         });
 
-        // Apply click handler to settings button.
-        mainView.findViewById(R.id.settings_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(getActivity(), SearchPreferenceActivity.class));
-            }
-        });
         return mainView;
     }
 

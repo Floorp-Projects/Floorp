@@ -38,6 +38,7 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(nsPIDOMWindow* aWindow,
                                                      const nsAString& aScope)
   : DOMEventTargetHelper(aWindow)
   , mScope(aScope)
+  , mListeningForEvents(false)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsInnerWindow());
@@ -47,6 +48,7 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(nsPIDOMWindow* aWindow,
 
 ServiceWorkerRegistration::~ServiceWorkerRegistration()
 {
+  StopListeningForEvents();
 }
 
 void
@@ -121,6 +123,11 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
 already_AddRefed<workers::ServiceWorker>
 ServiceWorkerRegistration::GetWorkerReference(WhichServiceWorker aWhichOne)
 {
+  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  if (!window) {
+    return nullptr;
+  }
+
   nsresult rv;
   nsCOMPtr<nsIServiceWorkerManager> swm =
     do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
@@ -131,13 +138,13 @@ ServiceWorkerRegistration::GetWorkerReference(WhichServiceWorker aWhichOne)
   nsCOMPtr<nsISupports> serviceWorker;
   switch(aWhichOne) {
     case WhichServiceWorker::INSTALLING_WORKER:
-      rv = swm->GetInstalling(GetOwner(), getter_AddRefs(serviceWorker));
+      rv = swm->GetInstalling(window, mScope, getter_AddRefs(serviceWorker));
       break;
     case WhichServiceWorker::WAITING_WORKER:
-      rv = swm->GetWaiting(GetOwner(), getter_AddRefs(serviceWorker));
+      rv = swm->GetWaiting(window, mScope, getter_AddRefs(serviceWorker));
       break;
     case WhichServiceWorker::ACTIVE_WORKER:
-      rv = swm->GetActive(GetOwner(), getter_AddRefs(serviceWorker));
+      rv = swm->GetActive(window, mScope, getter_AddRefs(serviceWorker));
       break;
     default:
       MOZ_CRASH("Invalid enum value");
@@ -176,15 +183,21 @@ ServiceWorkerRegistration::StartListeningForEvents()
   nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
   if (swm) {
     swm->AddRegistrationEventListener(GetDocumentURI(), this);
+    mListeningForEvents = true;
   }
 }
 
 void
 ServiceWorkerRegistration::StopListeningForEvents()
 {
+  if (!mListeningForEvents) {
+    return;
+  }
+
   nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
   if (swm) {
     swm->RemoveRegistrationEventListener(GetDocumentURI(), this);
+    mListeningForEvents = false;
   }
 }
 

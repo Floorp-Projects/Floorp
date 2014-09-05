@@ -31,14 +31,15 @@ import java.io.Serializable;
 
 import ch.boye.httpclientandroidlib.ProtocolVersion;
 import ch.boye.httpclientandroidlib.StatusLine;
+import ch.boye.httpclientandroidlib.annotation.Immutable;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Basic implementation of {@link StatusLine}
  *
- * @version $Id: BasicStatusLine.java 986952 2010-08-18 21:24:55Z olegk $
- *
  * @since 4.0
  */
+@Immutable
 public class BasicStatusLine implements StatusLine, Cloneable, Serializable {
 
     private static final long serialVersionUID = -2443303766890459269L;
@@ -63,19 +64,11 @@ public class BasicStatusLine implements StatusLine, Cloneable, Serializable {
      * @param reasonPhrase      the reason phrase to the status code, or
      *                          <code>null</code>
      */
-    public BasicStatusLine(final ProtocolVersion version, int statusCode,
+    public BasicStatusLine(final ProtocolVersion version, final int statusCode,
                            final String reasonPhrase) {
         super();
-        if (version == null) {
-            throw new IllegalArgumentException
-                ("Protocol version may not be null.");
-        }
-        if (statusCode < 0) {
-            throw new IllegalArgumentException
-                ("Status code may not be negative.");
-        }
-        this.protoVersion = version;
-        this.statusCode   = statusCode;
+        this.protoVersion = Args.notNull(version, "Version");
+        this.statusCode = Args.notNegative(statusCode, "Status code");
         this.reasonPhrase = reasonPhrase;
     }
 
@@ -93,12 +86,13 @@ public class BasicStatusLine implements StatusLine, Cloneable, Serializable {
         return this.reasonPhrase;
     }
 
+    @Override
     public String toString() {
         // no need for non-default formatting in toString()
-        return BasicLineFormatter.DEFAULT
-            .formatStatusLine(null, this).toString();
+        return BasicLineFormatter.INSTANCE.formatStatusLine(null, this).toString();
     }
 
+    @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }

@@ -225,6 +225,7 @@ const UnsolicitedNotifications = {
   "reflowActivity": "reflowActivity",
   "addonListChanged": "addonListChanged",
   "tabNavigated": "tabNavigated",
+  "frameUpdate": "frameUpdate",
   "pageError": "pageError",
   "documentLoad": "documentLoad",
   "enteredFrame": "enteredFrame",
@@ -1791,7 +1792,13 @@ ThreadClient.prototype = {
         aOnResponse(aResponse);
         return;
       }
-      doSetBreakpoint(this.resume.bind(this));
+
+      const { type, why } = aResponse;
+      const cleanUp = type == "paused" && why.type == "interrupted"
+        ? () => this.resume()
+        : noop;
+
+      doSetBreakpoint(cleanUp);
     });
   },
 

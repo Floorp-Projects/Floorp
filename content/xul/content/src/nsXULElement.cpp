@@ -132,7 +132,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULElementTearoff,
                                            nsIDOMElementCSSInlineStyle)
 
-  nsXULElementTearoff(nsXULElement *aElement)
+  explicit nsXULElementTearoff(nsXULElement* aElement)
     : mElement(aElement)
   {
   }
@@ -808,7 +808,7 @@ IsInFeedSubscribeLine(nsXULElement* aElement)
 class XULInContentErrorReporter : public nsRunnable
 {
 public:
-  XULInContentErrorReporter(nsIDocument* aDocument) : mDocument(aDocument) {}
+  explicit XULInContentErrorReporter(nsIDocument* aDocument) : mDocument(aDocument) {}
 
   NS_IMETHOD Run()
   {
@@ -828,6 +828,7 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
 {
   if (!aBindingParent &&
       aDocument &&
+      !aDocument->IsLoadedAsInteractiveData() &&
       !aDocument->AllowXULXBL() &&
       !aDocument->HasWarnedAbout(nsIDocument::eImportXULIntoContent)) {
     nsContentUtils::AddScriptRunner(new XULInContentErrorReporter(aDocument));
@@ -1983,7 +1984,7 @@ nsXULElement::SetDrawsTitle(bool aState)
 class MarginSetter : public nsRunnable
 {
 public:
-    MarginSetter(nsIWidget* aWidget) :
+    explicit MarginSetter(nsIWidget* aWidget) :
         mWidget(aWidget), mMargin(-1, -1, -1, -1)
     {}
     MarginSetter(nsIWidget *aWidget, const nsIntMargin& aMargin) :

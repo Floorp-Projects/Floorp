@@ -275,6 +275,7 @@ public:
   virtual uint64_t GetTransactionId() MOZ_OVERRIDE;
   void NotifyTransactionCompleted(uint64_t aTransactionId) MOZ_OVERRIDE;
   void RevokeTransactionId(uint64_t aTransactionId) MOZ_OVERRIDE;
+  mozilla::TimeStamp GetTransactionStart() MOZ_OVERRIDE;
 
   bool IsWaitingForPaint(mozilla::TimeStamp aTime);
 
@@ -360,6 +361,7 @@ private:
   int64_t mMostRecentRefreshEpochTime;
   mozilla::TimeStamp mMostRecentRefresh;
   mozilla::TimeStamp mMostRecentTick;
+  mozilla::TimeStamp mTickStart;
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];

@@ -218,7 +218,7 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
   return GuessCapability(aConstraints, aPrefs);
 #else
   NS_ConvertUTF16toUTF8 uniqueId(mUniqueId);
-  int num = mViECapture->NumberOfCapabilities(uniqueId.get(), KMaxUniqueIdLength);
+  int num = mViECapture->NumberOfCapabilities(uniqueId.get(), kMaxUniqueIdLength);
   if (num <= 0) {
     // Mac doesn't support capabilities.
     return GuessCapability(aConstraints, aPrefs);
@@ -240,7 +240,7 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
 
   for (uint32_t i = 0; i < candidateSet.Length();) {
     webrtc::CaptureCapability cap;
-    mViECapture->GetCaptureCapability(uniqueId.get(), KMaxUniqueIdLength,
+    mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
                                       candidateSet[i], cap);
     if (!SatisfyConstraintSet(aConstraints.mRequired, cap)) {
       candidateSet.RemoveElementAt(i);
@@ -260,7 +260,7 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
       SourceSet rejects;
       for (uint32_t j = 0; j < candidateSet.Length();) {
         webrtc::CaptureCapability cap;
-        mViECapture->GetCaptureCapability(uniqueId.get(), KMaxUniqueIdLength,
+        mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
                                           candidateSet[j], cap);
         if (!SatisfyConstraintSet(array[i], cap)) {
           rejects.AppendElement(candidateSet[j]);
@@ -288,7 +288,7 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
   bool higher = true;
   for (uint32_t i = 0; i < candidateSet.Length(); i++) {
     mViECapture->GetCaptureCapability(NS_ConvertUTF16toUTF8(mUniqueId).get(),
-                                      KMaxUniqueIdLength, candidateSet[i], cap);
+                                      kMaxUniqueIdLength, candidateSet[i], cap);
     if (higher) {
       if (i == 0 ||
           (mCapability.width > cap.width && mCapability.height > cap.height)) {
@@ -451,7 +451,7 @@ MediaEngineWebRTCVideoSource::Allocate(const VideoTrackConstraintsN &aConstraint
     ChooseCapability(aConstraints, aPrefs);
 
     if (mViECapture->AllocateCaptureDevice(NS_ConvertUTF16toUTF8(mUniqueId).get(),
-                                           KMaxUniqueIdLength, mCaptureIndex)) {
+                                           kMaxUniqueIdLength, mCaptureIndex)) {
       return NS_ERROR_FAILURE;
     }
     mState = kAllocated;
@@ -654,13 +654,11 @@ MediaEngineWebRTCVideoSource::Init()
     return;
   }
 
-  const uint32_t KMaxDeviceNameLength = 128;
-  const uint32_t KMaxUniqueIdLength = 256;
-  char deviceName[KMaxDeviceNameLength];
-  char uniqueId[KMaxUniqueIdLength];
+  char deviceName[kMaxDeviceNameLength];
+  char uniqueId[kMaxUniqueIdLength];
   if (mViECapture->GetCaptureDevice(mCaptureIndex,
-                                    deviceName, KMaxDeviceNameLength,
-                                    uniqueId, KMaxUniqueIdLength)) {
+                                    deviceName, kMaxDeviceNameLength,
+                                    uniqueId, kMaxUniqueIdLength)) {
     return;
   }
 
@@ -698,6 +696,31 @@ MediaEngineWebRTCVideoSource::Shutdown()
 #endif
   mState = kReleased;
   mInitDone = false;
+}
+
+void MediaEngineWebRTCVideoSource::Refresh(int aIndex) {
+  // NOTE: mCaptureIndex might have changed when allocated!
+  // Use aIndex to update information, but don't change mCaptureIndex!!
+#ifdef MOZ_B2G_CAMERA
+  // Caller looked up this source by uniqueId; since deviceName == uniqueId nothing else changes
+#else
+  // Caller looked up this source by uniqueId, so it shouldn't change
+  char deviceName[kMaxDeviceNameLength];
+  char uniqueId[kMaxUniqueIdLength];
+
+  if (mViECapture->GetCaptureDevice(aIndex,
+                                    deviceName, sizeof(deviceName),
+                                    uniqueId, sizeof(uniqueId))) {
+    return;
+  }
+
+  CopyUTF8toUTF16(deviceName, mDeviceName);
+#ifdef DEBUG
+  nsString temp;
+  CopyUTF8toUTF16(uniqueId, temp);
+  MOZ_ASSERT(temp.Equals(mUniqueId));
+#endif
+#endif
 }
 
 #ifdef MOZ_B2G_CAMERA

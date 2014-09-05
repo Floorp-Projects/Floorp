@@ -114,12 +114,6 @@ struct NrIceCandidatePair {
   std::string codeword;
 };
 
-// Abstract base class for opaque values.
-class NrIceOpaque {
- public:
-  virtual ~NrIceOpaque() {}
-};
-
 class NrIceMediaStream {
  public:
   static RefPtr<NrIceMediaStream> Create(NrIceCtx *ctx,
@@ -141,9 +135,6 @@ class NrIceMediaStream {
   // Get all candidate pairs, whether in the check list or triggered check
   // queue, in priority order. |out_pairs| is cleared before being filled.
   nsresult GetCandidatePairs(std::vector<NrIceCandidatePair>* out_pairs) const;
-
-  // Get the default candidate as host and port
-  nsresult GetDefaultCandidate(int component, std::string *host, int *port);
 
   // Parse remote attributes
   nsresult ParseAttributes(std::vector<std::string>& candidates);
@@ -179,14 +170,15 @@ class NrIceMediaStream {
   // the context has been destroyed.
   void Close();
 
-  // Set an opaque value. Owned by the media stream.
-  void SetOpaque(NrIceOpaque *opaque) { opaque_ = opaque; }
+  // So the receiver of SignalCandidate can determine which level
+  // (ie; m-line index) the candidate belongs to.
+  void SetLevel(uint16_t level) { level_ = level; }
 
-  // Get the opaque
-  NrIceOpaque* opaque() const { return opaque_; }
+  uint16_t GetLevel() const { return level_; }
 
   sigslot::signal2<NrIceMediaStream *, const std::string& >
   SignalCandidate;  // A new ICE candidate:
+
   sigslot::signal1<NrIceMediaStream *> SignalReady;  // Candidate pair ready.
   sigslot::signal1<NrIceMediaStream *> SignalFailed;  // Candidate pair failed.
   sigslot::signal4<NrIceMediaStream *, int, const unsigned char *, int>
@@ -202,7 +194,7 @@ class NrIceMediaStream {
       name_(name),
       components_(components),
       stream_(nullptr),
-      opaque_(nullptr) {}
+      level_(0) {}
 
   ~NrIceMediaStream();
 
@@ -213,7 +205,7 @@ class NrIceMediaStream {
   const std::string name_;
   const int components_;
   nr_ice_media_stream *stream_;
-  ScopedDeletePtr<NrIceOpaque> opaque_;
+  uint16_t level_;
 };
 
 

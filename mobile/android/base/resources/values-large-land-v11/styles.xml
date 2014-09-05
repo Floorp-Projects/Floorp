@@ -11,6 +11,8 @@
     </style>
 
     <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">none</item>
         <item name="android:paddingLeft">60dip</item>
         <item name="android:drawablePadding">10dip</item>
         <item name="android:drawableLeft">@drawable/bookmark_folder</item>
@@ -43,13 +45,6 @@
         <item name="android:paddingTop">30dp</item>
         <item name="android:scrollbarStyle">outsideOverlay</item>
         <item name="topDivider">true</item>
-    </style>
-
-    <style name="Widget.Home.HistoryTabWidget">
-        <item name="android:showDividers">beginning|middle|end</item>
-        <item name="android:dividerPadding">0dp</item>
-        <item name="android:paddingLeft">100dp</item>
-        <item name="android:paddingTop">30dp</item>
     </style>
 
     <!-- Tabs panel -->

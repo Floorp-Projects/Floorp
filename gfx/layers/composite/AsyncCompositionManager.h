@@ -130,7 +130,7 @@ private:
    * Update the shadow transform for aLayer assuming that is a scrollbar,
    * so that it stays in sync with the content that is being scrolled by APZ.
    */
-  void ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer);
+  void ApplyAsyncTransformToScrollbar(Layer* aLayer);
 
   void SetFirstPaintViewport(const LayerIntPoint& aOffset,
                              const CSSToLayerScale& aZoom,
@@ -169,6 +169,7 @@ private:
    * zooming.
    */
   void AlignFixedAndStickyLayers(Layer* aLayer, Layer* aTransformedSubtreeRoot,
+                                 FrameMetrics::ViewID aTransformScrollId,
                                  const gfx::Matrix4x4& aPreviousTransformForRoot,
                                  const gfx::Matrix4x4& aCurrentTransformForRoot,
                                  const LayerMargin& aFixedLayerMargins);

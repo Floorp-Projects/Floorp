@@ -175,10 +175,10 @@ skip-if(winWidget) pref(webgl.prefer-16bpp,true)                                
 skip-if(winWidget) pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?16bpp&readback  wrapper.html?colors.png
 
 # Force native GL (Windows):
-skip-if(!winWidget) pref(webgl.prefer-native-gl,true)                                == webgl-clear-test.html?native-gl        wrapper.html?green.png
-skip-if(!winWidget) pref(webgl.prefer-native-gl,true)                                == webgl-orientation-test.html?native-gl  wrapper.html?white-top-left.png
-skip-if(!winWidget) pref(webgl.prefer-native-gl,true)                                == webgl-color-test.html?native-gl        wrapper.html?colors.png
-skip-if(!winWidget) pref(webgl.prefer-native-gl,true) pref(webgl.prefer-16bpp,true)  == webgl-color-test.html?native-gl&16bpp  wrapper.html?colors.png
+skip-if(!winWidget) pref(webgl.disable-angle,true)                                == webgl-clear-test.html?native-gl        wrapper.html?green.png
+skip-if(!winWidget) pref(webgl.disable-angle,true)                                == webgl-orientation-test.html?native-gl  wrapper.html?white-top-left.png
+skip-if(!winWidget) pref(webgl.disable-angle,true)                                == webgl-color-test.html?native-gl        wrapper.html?colors.png
+skip-if(!winWidget) pref(webgl.disable-angle,true) pref(webgl.prefer-16bpp,true)  == webgl-color-test.html?native-gl&16bpp  wrapper.html?colors.png
 
 
 # Non-WebGL Reftests!

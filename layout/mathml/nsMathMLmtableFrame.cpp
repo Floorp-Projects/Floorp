@@ -236,28 +236,27 @@ ComputeBorderOverflow(nsMathMLmtdFrame* aFrame, nsStyleBorder aStyleBorder)
   nsMargin overflow;
   int32_t rowIndex;
   int32_t columnIndex;
-  nsMathMLmtableFrame* mathMLmtableFrame =
-    static_cast<nsMathMLmtableFrame*>(nsTableFrame::GetTableFrame(aFrame));
+  nsTableFrame* table = nsTableFrame::GetTableFrame(aFrame);
   aFrame->GetCellIndexes(rowIndex, columnIndex);
   if (!columnIndex) {
-    overflow.left = mathMLmtableFrame->GetCellSpacingX(-1);
-    overflow.right = mathMLmtableFrame->GetCellSpacingX(0) / 2;
-  } else if (columnIndex == mathMLmtableFrame->GetColCount() - 1) {
-    overflow.left = mathMLmtableFrame->GetCellSpacingX(columnIndex - 1) / 2;
-    overflow.right =  mathMLmtableFrame->GetCellSpacingX(columnIndex + 1);
+    overflow.left = table->GetCellSpacingX(-1);
+    overflow.right = table->GetCellSpacingX(0) / 2;
+  } else if (columnIndex == table->GetColCount() - 1) {
+    overflow.left = table->GetCellSpacingX(columnIndex - 1) / 2;
+    overflow.right =  table->GetCellSpacingX(columnIndex + 1);
   } else {
-    overflow.left = mathMLmtableFrame->GetCellSpacingX(columnIndex - 1) / 2;
-    overflow.right = mathMLmtableFrame->GetCellSpacingX(columnIndex) / 2;
+    overflow.left = table->GetCellSpacingX(columnIndex - 1) / 2;
+    overflow.right = table->GetCellSpacingX(columnIndex) / 2;
   }
   if (!rowIndex) {
-    overflow.top = mathMLmtableFrame->GetCellSpacingY(-1);
-    overflow.bottom = mathMLmtableFrame->GetCellSpacingY(0) / 2;
-  } else if (rowIndex == mathMLmtableFrame->GetRowCount() - 1) {
-    overflow.top = mathMLmtableFrame->GetCellSpacingY(rowIndex - 1) / 2;
-    overflow.bottom = mathMLmtableFrame->GetCellSpacingY(rowIndex + 1);
+    overflow.top = table->GetCellSpacingY(-1);
+    overflow.bottom = table->GetCellSpacingY(0) / 2;
+  } else if (rowIndex == table->GetRowCount() - 1) {
+    overflow.top = table->GetCellSpacingY(rowIndex - 1) / 2;
+    overflow.bottom = table->GetCellSpacingY(rowIndex + 1);
   } else {
-    overflow.top = mathMLmtableFrame->GetCellSpacingY(rowIndex - 1) / 2;
-    overflow.bottom = mathMLmtableFrame->GetCellSpacingY(rowIndex) / 2;
+    overflow.top = table->GetCellSpacingY(rowIndex - 1) / 2;
+    overflow.bottom = table->GetCellSpacingY(rowIndex) / 2;
   }
   return overflow;
 }

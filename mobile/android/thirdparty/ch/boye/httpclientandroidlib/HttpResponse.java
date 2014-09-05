@@ -83,12 +83,6 @@ public interface HttpResponse extends HttpMessage {
 
     /**
      * Updates the status line of this response with a new status code.
-     * The status line can only be updated if it is available. It must
-     * have been set either explicitly or in a constructor.
-     * <br/>
-     * The reason phrase will be updated according to the new status code,
-     * based on the current {@link #getLocale locale}. It can be set
-     * explicitly using {@link #setReasonPhrase setReasonPhrase}.
      *
      * @param code the HTTP status code.
      *
@@ -104,8 +98,6 @@ public interface HttpResponse extends HttpMessage {
 
     /**
      * Updates the status line of this response with a new reason phrase.
-     * The status line can only be updated if it is available. It must
-     * have been set either explicitly or in a constructor.
      *
      * @param reason    the new reason phrase as a single-line string, or
      *                  <code>null</code> to unset the reason phrase
@@ -130,9 +122,16 @@ public interface HttpResponse extends HttpMessage {
 
     /**
      * Associates a response entity with this response.
+     * <p/>
+     * Please note that if an entity has already been set for this response and it depends on
+     * an input stream ({@link HttpEntity#isStreaming()} returns <code>true</code>),
+     * it must be fully consumed in order to ensure release of resources.
      *
      * @param entity    the entity to associate with this response, or
      *                  <code>null</code> to unset
+     *
+     * @see HttpEntity#isStreaming()
+     * @see ch.boye.httpclientandroidlib.util.EntityUtils#updateEntity(HttpResponse, HttpEntity)
      */
     void setEntity(HttpEntity entity);
 
@@ -148,13 +147,9 @@ public interface HttpResponse extends HttpMessage {
 
     /**
      * Changes the locale of this response.
-     * If there is a status line, it's reason phrase will be updated
-     * according to the status code and new locale.
      *
      * @param loc       the new locale
-     *
-     * @see #getLocale getLocale
-     * @see #setStatusCode setStatusCode
      */
     void setLocale(Locale loc);
+
 }

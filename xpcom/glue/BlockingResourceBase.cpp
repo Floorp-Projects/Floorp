@@ -121,30 +121,6 @@ PrintCycle(const BlockingResourceBase::DDT::ResourceAcquisitionArray* aCycle,
 }
 
 #ifndef MOZ_CALLSTACK_DISABLED
-class CodeAddressServiceWriter MOZ_FINAL
-{
-public:
-  explicit CodeAddressServiceWriter(nsACString& aOut) : mOut(aOut) {}
-
-  void Write(const char* aFmt, ...) const
-  {
-    va_list ap;
-    va_start(ap, aFmt);
-
-    const size_t kMaxLength = 4096;
-    char buffer[kMaxLength];
-
-    vsnprintf(buffer, kMaxLength, aFmt, ap);
-    mOut += buffer;
-    fprintf(stderr, "%s", buffer);
-
-    va_end(ap);
-  }
-
-private:
-  nsACString& mOut;
-};
-
 struct CodeAddressServiceLock MOZ_FINAL
 {
   static void Unlock() { }
@@ -181,7 +157,6 @@ private:
 
 typedef CodeAddressService<CodeAddressServiceStringTable,
                            CodeAddressServiceStringAlloc,
-                           CodeAddressServiceWriter,
                            CodeAddressServiceLock> WalkTheStackCodeAddressService;
 #endif
 
@@ -208,9 +183,14 @@ BlockingResourceBase::Print(nsACString& aOut) const
   const AcquisitionState& state = acquired ? mAcquired : mFirstSeen;
 
   WalkTheStackCodeAddressService addressService;
-  CodeAddressServiceWriter writer(aOut);
+
   for (uint32_t i = 0; i < state.Length(); i++) {
-    addressService.WriteLocation(writer, state[i]);
+    const size_t kMaxLength = 4096;
+    char buffer[kMaxLength];
+    addressService.GetLocation(state[i], buffer, kMaxLength);
+    const char* fmt = "    %s\n";
+    aOut += nsPrintfCString(fmt, buffer);
+    fprintf(stderr, fmt, buffer);
   }
 
 #endif

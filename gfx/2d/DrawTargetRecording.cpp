@@ -157,7 +157,7 @@ GetFilterNode(FilterNode* aNode)
 
 struct AdjustedPattern
 {
-  AdjustedPattern(const Pattern &aPattern)
+  explicit AdjustedPattern(const Pattern &aPattern)
     : mPattern(nullptr)
   {
     mOrigPattern = const_cast<Pattern*>(&aPattern);

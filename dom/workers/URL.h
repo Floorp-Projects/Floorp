@@ -69,10 +69,6 @@ public:
   static void
   RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl);
 
-  static nsIPrincipal* GetPrincipalFromURL(const GlobalObject& aGlobal,
-                                           const nsAString& aURL,
-                                           ErrorResult& aError);
-
   void GetHref(nsString& aHref, ErrorResult& aRv) const;
 
   void SetHref(const nsAString& aHref, ErrorResult& aRv);

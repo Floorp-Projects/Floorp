@@ -129,7 +129,7 @@ InActiveDocument(nsIContent *aContent)
 
 class nsAsyncInstantiateEvent : public nsRunnable {
 public:
-  nsAsyncInstantiateEvent(nsObjectLoadingContent *aContent)
+  explicit nsAsyncInstantiateEvent(nsObjectLoadingContent* aContent)
   : mContent(aContent) {}
 
   ~nsAsyncInstantiateEvent() {}
@@ -162,7 +162,7 @@ nsAsyncInstantiateEvent::Run()
 // without re-instantiating it.
 class CheckPluginStopEvent : public nsRunnable {
 public:
-  CheckPluginStopEvent(nsObjectLoadingContent *aContent)
+  explicit CheckPluginStopEvent(nsObjectLoadingContent* aContent)
   : mContent(aContent) {}
 
   ~CheckPluginStopEvent() {}
@@ -459,7 +459,7 @@ nsStopPluginRunnable::Run()
 // Sets a object's mInstantiating bit to false when destroyed
 class AutoSetInstantiatingToFalse {
 public:
-  AutoSetInstantiatingToFalse(nsObjectLoadingContent *aContent)
+  explicit AutoSetInstantiatingToFalse(nsObjectLoadingContent* aContent)
     : mContent(aContent) {}
   ~AutoSetInstantiatingToFalse() { mContent->mInstantiating = false; }
 private:
@@ -469,7 +469,7 @@ private:
 // Sets a object's mInstantiating bit to false when destroyed
 class AutoSetLoadingToFalse {
 public:
-  AutoSetLoadingToFalse(nsObjectLoadingContent *aContent)
+  explicit AutoSetLoadingToFalse(nsObjectLoadingContent* aContent)
     : mContent(aContent) {}
   ~AutoSetLoadingToFalse() { mContent->mIsLoading = false; }
 private:
@@ -1035,6 +1035,16 @@ nsObjectLoadingContent::BuildParametersArray()
   }
 
   nsAdoptingCString wmodeOverride = Preferences::GetCString("plugins.force.wmode");
+#if defined(XP_WIN) || defined(XP_LINUX)
+  // Bug 923745 (/Bug 1061995) - Until we support windowed mode plugins in
+  // content processes, force flash to use a windowless rendering mode. This
+  // hack should go away when bug 923746 lands. (OS X plugins always use some
+  // native widgets, so unfortunately this does not help there)
+  if (wmodeOverride.IsEmpty() &&
+      XRE_GetProcessType() == GeckoProcessType_Content) {
+    wmodeOverride.AssignLiteral("transparent");
+  }
+#endif
 
   for (uint32_t i = 0; i < mCachedAttributes.Length(); i++) {
     if (!wmodeOverride.IsEmpty() && mCachedAttributes[i].mName.EqualsIgnoreCase("wmode")) {
@@ -1341,7 +1351,7 @@ public:
   NS_FORWARD_NSIREQUESTOBSERVER (static_cast<nsObjectLoadingContent *>
                                  (mContent.get())->)
 
-  ObjectInterfaceRequestorShim(nsIObjectLoadingContent* aContent)
+  explicit ObjectInterfaceRequestorShim(nsIObjectLoadingContent* aContent)
     : mContent(aContent)
   {}
 

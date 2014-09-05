@@ -92,14 +92,14 @@ nssSession_Destroy
   nssSession *s
 )
 {
-    CK_RV ckrv = CKR_OK;
+    PRStatus rv = PR_SUCCESS;
     if (s) {
 	if (s->isRW) {
 	    PK11_RestoreROSession(s->slot->pk11slot, s->handle);
 	}
-	nss_ZFreeIf(s);
+	rv = nss_ZFreeIf(s);
     }
-    return (ckrv == CKR_OK) ? PR_SUCCESS : PR_FAILURE;
+    return rv;
 }
 
 static NSSSlot *

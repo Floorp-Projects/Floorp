@@ -115,6 +115,16 @@
 
 
   /* ======================================================================= */
+  /* 4:  NS_ERROR_MODULE_WIDGET */
+  /* ======================================================================= */
+#define MODULE  NS_ERROR_MODULE_WIDGET
+  /* Used by nsIWidget::NotifyIME(). Returned when the notification is handled
+   * and the notified event is consumed by IME. */
+  ERROR(NS_SUCCESS_EVENT_CONSUMED,                        SUCCESS(1)),
+#undef MODULE
+
+
+  /* ======================================================================= */
   /* 6: NS_ERROR_MODULE_NETWORK */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_NETWORK

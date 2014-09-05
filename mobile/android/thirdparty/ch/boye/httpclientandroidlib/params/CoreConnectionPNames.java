@@ -31,7 +31,11 @@ package ch.boye.httpclientandroidlib.params;
  * Defines parameter names for connections in HttpCore.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use configuration classes provided 'ch.boye.httpclientandroidlib.config'
+ *  and 'ch.boye.httpclientandroidlib.client.config'
  */
+@Deprecated
 public interface CoreConnectionPNames {
 
     /**
@@ -149,5 +153,18 @@ public interface CoreConnectionPNames {
      * @since 4.1
      */
     public static final String MIN_CHUNK_LIMIT = "http.connection.min-chunk-limit";
+
+
+    /**
+     * Defines whether or not TCP is to send automatically a keepalive probe to the peer
+     * after an interval of inactivity (no data exchanged in either direction) between this
+     * host and the peer. The purpose of this option is to detect if the peer host crashes.
+     * <p>
+     * This parameter expects a value of type {@link Boolean}.
+     * </p>
+     * @see java.net.SocketOptions#SO_KEEPALIVE
+     * @since 4.2
+     */
+    public static final String SO_KEEPALIVE = "http.socket.keepalive";
 
 }

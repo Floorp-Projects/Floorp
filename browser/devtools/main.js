@@ -33,6 +33,7 @@ loader.lazyGetter(this, "WebAudioEditorPanel", () => require("devtools/webaudioe
 loader.lazyGetter(this, "ProfilerPanel", () => require("devtools/profiler/panel").ProfilerPanel);
 loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/netmonitor/panel").NetMonitorPanel);
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/scratchpad/scratchpad-panel").ScratchpadPanel);
+loader.lazyGetter(this, "StoragePanel", () => require("devtools/storage/panel").StoragePanel);
 
 // Strings
 const toolboxProps = "chrome://browser/locale/devtools/toolbox.properties";
@@ -42,11 +43,12 @@ const styleEditorProps = "chrome://browser/locale/devtools/styleeditor.propertie
 const shaderEditorProps = "chrome://browser/locale/devtools/shadereditor.properties";
 const canvasDebuggerProps = "chrome://browser/locale/devtools/canvasdebugger.properties";
 const webAudioEditorProps = "chrome://browser/locale/devtools/webaudioeditor.properties";
-
 const webConsoleProps = "chrome://browser/locale/devtools/webconsole.properties";
 const profilerProps = "chrome://browser/locale/devtools/profiler.properties";
 const netMonitorProps = "chrome://browser/locale/devtools/netmonitor.properties";
 const scratchpadProps = "chrome://browser/locale/devtools/scratchpad.properties";
+const storageProps = "chrome://browser/locale/devtools/storage.properties";
+
 loader.lazyGetter(this, "toolboxStrings", () => Services.strings.createBundle(toolboxProps));
 loader.lazyGetter(this, "webConsoleStrings", () => Services.strings.createBundle(webConsoleProps));
 loader.lazyGetter(this, "debuggerStrings", () => Services.strings.createBundle(debuggerProps));
@@ -58,6 +60,7 @@ loader.lazyGetter(this, "inspectorStrings", () => Services.strings.createBundle(
 loader.lazyGetter(this, "profilerStrings",() => Services.strings.createBundle(profilerProps));
 loader.lazyGetter(this, "netMonitorStrings", () => Services.strings.createBundle(netMonitorProps));
 loader.lazyGetter(this, "scratchpadStrings", () => Services.strings.createBundle(scratchpadProps));
+loader.lazyGetter(this, "storageStrings", () => Services.strings.createBundle(storageProps));
 
 let Tools = {};
 exports.Tools = Tools;
@@ -316,9 +319,36 @@ Tools.netMonitor = {
   }
 };
 
+Tools.storage = {
+  id: "storage",
+  key: l10n("storage.commandkey", storageStrings),
+  ordinal: 9,
+  accesskey: l10n("storage.accesskey", storageStrings),
+  modifiers: "shift",
+  visibilityswitch: "devtools.storage.enabled",
+  icon: "chrome://browser/skin/devtools/tool-storage.svg",
+  invertIconForLightTheme: true,
+  url: "chrome://browser/content/devtools/storage.xul",
+  label: l10n("storage.label", storageStrings),
+  menuLabel: l10n("storage.menuLabel", storageStrings),
+  panelLabel: l10n("storage.panelLabel", storageStrings),
+  tooltip: l10n("storage.tooltip2", storageStrings),
+  inMenu: true,
+
+  isTargetSupported: function(target) {
+    return target.isLocalTab ||
+           (target.client.traits.storageInspector && !target.isAddon);
+  },
+
+  build: function(iframeWindow, toolbox) {
+    let panel = new StoragePanel(iframeWindow, toolbox);
+    return panel.open();
+  }
+};
+
 Tools.scratchpad = {
   id: "scratchpad",
-  ordinal: 9,
+  ordinal: 10,
   visibilityswitch: "devtools.scratchpad.enabled",
   icon: "chrome://browser/skin/devtools/tool-scratchpad.svg",
   invertIconForLightTheme: true,
@@ -350,6 +380,7 @@ let defaultTools = [
   Tools.webAudioEditor,
   Tools.jsprofiler,
   Tools.netMonitor,
+  Tools.storage,
   Tools.scratchpad
 ];
 

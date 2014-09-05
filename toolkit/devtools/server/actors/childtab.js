@@ -38,7 +38,7 @@ Object.defineProperty(ContentActor.prototype, "docShell", {
     return this._chromeGlobal.docShell;
   },
   enumerable: true,
-  configurable: false
+  configurable: true
 });
 
 ContentActor.prototype.exit = function() {

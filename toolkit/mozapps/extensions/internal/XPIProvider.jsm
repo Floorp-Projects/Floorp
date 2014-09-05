@@ -5244,8 +5244,11 @@ AddonInstall.prototype = {
 
       this.channel = NetUtil.newChannel(this.sourceURI);
       this.channel.notificationCallbacks = this;
-      if (this.channel instanceof Ci.nsIHttpChannelInternal)
-        this.channel.forceAllowThirdPartyCookie = true;
+      if (this.channel instanceof Ci.nsIHttpChannel) {
+        this.channel.setRequestHeader("Moz-XPI-Update", "1", true);
+        if (this.channel instanceof Ci.nsIHttpChannelInternal)
+          this.channel.forceAllowThirdPartyCookie = true;
+      }
       this.channel.asyncOpen(listener, null);
 
       Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
@@ -6130,17 +6133,27 @@ AddonInternal.prototype = {
     }
     catch (e) { }
 
-    for (let platform of this.targetPlatforms) {
-      if (platform.os == Services.appinfo.OS) {
-        if (platform.abi) {
-          needsABI = true;
-          if (platform.abi === abi)
-            return true;
-        }
-        else {
-          matchedOS = true;
+    // Something is causing errors in here
+    try {
+      for (let platform of this.targetPlatforms) {
+        if (platform.os == Services.appinfo.OS) {
+          if (platform.abi) {
+            needsABI = true;
+            if (platform.abi === abi)
+              return true;
+          }
+          else {
+            matchedOS = true;
+          }
         }
       }
+    } catch (e) {
+      let message = "Problem with addon " + this.id + " targetPlatforms "
+                    + JSON.stringify(this.targetPlatforms);
+      logger.error(message, e);
+      AddonManagerPrivate.recordException("XPI", message, e);
+      // don't trust this add-on
+      return false;
     }
 
     return matchedOS && !needsABI;

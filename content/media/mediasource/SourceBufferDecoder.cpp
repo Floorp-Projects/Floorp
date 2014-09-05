@@ -38,7 +38,6 @@ SourceBufferDecoder::SourceBufferDecoder(MediaResource* aResource,
   , mParentDecoder(aParentDecoder)
   , mReader(nullptr)
   , mMediaDuration(-1)
-  , mDiscarded(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(SourceBufferDecoder);
@@ -61,13 +60,6 @@ void
 SourceBufferDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
 {
   MSE_DEBUG("SourceBufferDecoder(%p)::NotifyBytesConsumed UNIMPLEMENTED", this);
-}
-
-int64_t
-SourceBufferDecoder::GetEndMediaTime() const
-{
-  MSE_DEBUG("SourceBufferDecoder(%p)::GetEndMediaTime UNIMPLEMENTED", this);
-  return -1;
 }
 
 int64_t
@@ -154,6 +146,10 @@ SourceBufferDecoder::OnStateMachineThread() const
 bool
 SourceBufferDecoder::OnDecodeThread() const
 {
+  // During initialization we run on our TrackBuffer's task queue.
+  if (mTaskQueue) {
+    return mTaskQueue->IsCurrentThreadIn();
+  }
   return mParentDecoder->OnDecodeThread();
 }
 

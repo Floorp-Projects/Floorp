@@ -102,7 +102,7 @@
 #include "FFmpegRuntimeLinker.h"
 #endif
 
-#include "AudioStream.h"
+#include "CubebUtils.h"
 #include "Latency.h"
 #include "WebAudioUtils.h"
 
@@ -216,7 +216,6 @@ nsLayoutStatics::Initialize()
 
   nsMathMLOperators::AddRefTable();
 
-  nsEditProperty::RegisterAtoms();
   nsTextServicesDocument::RegisterAtoms();
 
 #ifdef DEBUG
@@ -263,7 +262,7 @@ nsLayoutStatics::Initialize()
   }
 
   AsyncLatencyLogger::InitializeStatics();
-  AudioStream::InitLibrary();
+  CubebUtils::InitLibrary();
 
   nsContentSink::InitializeStatics();
   nsHtml5Module::InitializeStatics();
@@ -379,7 +378,7 @@ nsLayoutStatics::Shutdown()
   FFmpegRuntimeLinker::Unlink();
 #endif
 
-  AudioStream::ShutdownLibrary();
+  CubebUtils::ShutdownLibrary();
   AsyncLatencyLogger::ShutdownLogger();
   WebAudioUtils::Shutdown();
 

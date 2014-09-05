@@ -694,6 +694,7 @@ Factory::CreateDataSourceSurface(const IntSize &aSize,
                                  SurfaceFormat aFormat)
 {
   if (!CheckSurfaceSize(aSize)) {
+    gfxWarning() << "CreateDataSourceSurface failed with bad size";
     return nullptr;
   }
 
@@ -702,6 +703,7 @@ Factory::CreateDataSourceSurface(const IntSize &aSize,
     return newSurf.forget();
   }
 
+  gfxWarning() << "CreateDataSourceSurface failed in init";
   return nullptr;
 }
 
@@ -711,6 +713,7 @@ Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
                                            int32_t aStride)
 {
   if (aStride < aSize.width * BytesPerPixel(aFormat)) {
+    gfxWarning() << "CreateDataSourceSurfaceWithStride failed with bad stride";
     return nullptr;
   }
 
@@ -719,6 +722,7 @@ Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
     return newSurf.forget();
   }
 
+  gfxWarning() << "CreateDataSourceSurfaceWithStride failed to initialize";
   return nullptr;
 }
 

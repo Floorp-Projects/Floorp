@@ -1323,7 +1323,7 @@ static void AddTrackAndListener(MediaStream* source,
       // to the "start" time for the track
       segment_->AppendNullData(current_ticks);
       mStream->AsSourceStream()->AddTrack(track_id_, track_rate_,
-                                          current_ticks, segment_);
+                                          current_ticks, segment_.forget());
       // AdvanceKnownTracksTicksTime(HEAT_DEATH_OF_UNIVERSE) means that in
       // theory per the API, we can't add more tracks before that
       // time. However, the impl actually allows it, and it avoids a whole
@@ -1338,7 +1338,7 @@ static void AddTrackAndListener(MediaStream* source,
    private:
     TrackID track_id_;
     TrackRate track_rate_;
-    MediaSegment* segment_;
+    nsAutoPtr<MediaSegment> segment_;
     nsRefPtr<MediaStreamListener> listener_;
     const RefPtr<TrackAddedCallback> completed_;
   };

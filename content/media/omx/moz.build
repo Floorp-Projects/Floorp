@@ -44,13 +44,24 @@ if CONFIG['MOZ_OMX_ENCODER']:
 
 if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
     EXPORTS += [
+        'RtspExtractor.h',
         'RtspOmxDecoder.h',
         'RtspOmxReader.h',
     ]
     SOURCES += [
+        'RtspExtractor.cpp',
         'RtspOmxDecoder.cpp',
         'RtspOmxReader.cpp',
     ]
+    if CONFIG['ANDROID_VERSION'] >= '18':
+        EXPORTS += [
+            'RtspMediaCodecDecoder.h',
+            'RtspMediaCodecReader.h',
+        ]
+        SOURCES += [
+            'RtspMediaCodecDecoder.cpp',
+            'RtspMediaCodecReader.cpp',
+        ]
 
 if CONFIG['ANDROID_VERSION'] >= '18':
     EXPORTS += [

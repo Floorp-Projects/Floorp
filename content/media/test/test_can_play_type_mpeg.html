@@ -17,8 +17,81 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=799315
 <video id="v"></video>
 
 <pre id="test">
-<script src="can_play_type_mpeg.js"></script>
 <script>
+
+function check_mp4(v, enabled) {
+  function check(type, expected) {
+    var ex = enabled ? expected : "";
+    is(v.canPlayType(type), ex, type + "='" + ex + "'");
+  }
+
+  check("video/mp4", "maybe");
+  check("audio/mp4", "maybe");
+  check("audio/x-m4a", "maybe");
+
+  // Not the MIME type that other browsers respond to, so we won't either.
+  check("audio/m4a", "");
+  // Only Safari responds affirmatively to "audio/aac",
+  // so we'll let x-m4a cover aac support.
+  check("audio/aac", "");
+
+  // H.264 Constrained Baseline Profile Level 3.0, AAC-LC
+  check("video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"", "probably");
+
+  // H.264 Constrained Baseline Profile Level 3.0, mp3
+  check("video/mp4; codecs=\"avc1.42E01E, mp3\"", "probably");
+  
+  check("video/mp4; codecs=\"avc1.42001E, mp4a.40.2\"", "probably");
+  check("video/mp4; codecs=\"avc1.58A01E, mp4a.40.2\"", "probably");
+  
+  const ProbablyIfNotLinux = !IsLinuxGStreamer() ? "probably" : "";
+  
+  // H.264 Main Profile Level 3.0, AAC-LC
+  check("video/mp4; codecs=\"avc1.4D401E, mp4a.40.2\"", "probably");
+  // H.264 Main Profile Level 3.1, AAC-LC
+  check("video/mp4; codecs=\"avc1.4D401F, mp4a.40.2\"", ProbablyIfNotLinux);
+  // H.264 Main Profile Level 4.0, AAC-LC
+  check("video/mp4; codecs=\"avc1.4D4028, mp4a.40.2\"", ProbablyIfNotLinux);
+  // H.264 High Profile Level 3.0, AAC-LC
+  check("video/mp4; codecs=\"avc1.64001E, mp4a.40.2\"", "probably");
+  // H.264 High Profile Level 3.1, AAC-LC
+  check("video/mp4; codecs=\"avc1.64001F, mp4a.40.2\"", "probably");
+
+  check("video/mp4; codecs=\"avc1.42E01E\"", "probably");
+  check("video/mp4; codecs=\"avc1.42001E\"", "probably");
+  check("video/mp4; codecs=\"avc1.58A01E\"", "probably");
+  check("video/mp4; codecs=\"avc1.4D401E\"", "probably");
+  check("video/mp4; codecs=\"avc1.64001F\"", "probably");
+
+  // AAC-LC
+  check("audio/mp4; codecs=\"mp4a.40.2\"", "probably");
+  check("audio/mp4; codecs=mp4a.40.2", "probably");
+  check("audio/x-m4a; codecs=\"mp4a.40.2\"", "probably");
+  check("audio/x-m4a; codecs=mp4a.40.2", "probably");
+
+  // HE-AAC v1
+  check("audio/mp4; codecs=\"mp4a.40.5\"", ProbablyIfNotLinux);
+  check("audio/mp4; codecs=mp4a.40.5", ProbablyIfNotLinux);
+  check("audio/x-m4a; codecs=\"mp4a.40.5\"", ProbablyIfNotLinux);
+  check("audio/x-m4a; codecs=mp4a.40.5", ProbablyIfNotLinux);
+  
+}
+
+function check_mp3(v, enabled) {
+  function check(type, expected) {
+    var ex = enabled ? expected : "";
+    is(v.canPlayType(type), ex, type + "='" + ex + "'");
+  }
+
+  check("audio/mpeg", "maybe");
+  check("audio/mp3", "maybe");
+
+  check("audio/mpeg; codecs=\"mp3\"", "probably");
+  check("audio/mpeg; codecs=mp3", "probably");
+
+  check("audio/mp3; codecs=\"mp3\"", "probably");
+  check("audio/mp3; codecs=mp3", "probably");
+}
 
 function IsWindowsVistaOrLater() {
   var re = /Windows NT (\d+\.\d)/;
@@ -43,6 +116,11 @@ function getPref(name) {
     pref = SpecialPowers.getBoolPref(name);
   } catch(ex) { }
   return pref;
+}
+
+function IsLinuxGStreamer() {
+  return /Linux/.test(navigator.userAgent) &&
+         getPref("media.gstreamer.enabled");
 }
 
 // Check whether we should expect the new MP4Reader-based support to work.

@@ -408,6 +408,7 @@ function UpdateParser(aId, aUpdateKey, aUrl, aObserver) {
     // Prevent the request from writing to cache.
     this.request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     this.request.overrideMimeType("text/xml");
+    this.request.setRequestHeader("Moz-XPI-Update", "1", true);
     this.request.timeout = TIMEOUT;
     var self = this;
     this.request.addEventListener("load", function loadEventListener(event) { self.onLoad() }, false);

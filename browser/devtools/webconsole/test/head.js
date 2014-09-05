@@ -912,6 +912,8 @@ function openDebugger(aOptions = {})
  *            message.
  *            - consoleGroup: boolean, set to |true| to match a console.group()
  *            message.
+ *            - consoleTable: boolean, set to |true| to match a console.table()
+ *            message.
  *            - longString: boolean, set to |true} to match long strings in the
  *            message.
  *            - collapsible: boolean, set to |true| to match messages that can
@@ -968,6 +970,22 @@ function waitForMessages(aOptions)
       result = aRule == aText;
     }
     return result;
+  }
+
+  function checkConsoleTable(aRule, aElement)
+  {
+    let elemText = aElement.textContent;
+    let table = aRule.consoleTable;
+
+    if (!checkText("console.table():", elemText)) {
+      return false;
+    }
+
+    aRule.category = CATEGORY_WEBDEV;
+    aRule.severity = SEVERITY_LOG;
+    aRule.type = Messages.ConsoleTable;
+
+    return true;
   }
 
   function checkConsoleTrace(aRule, aElement)
@@ -1143,6 +1161,10 @@ function waitForMessages(aOptions)
     }
 
     if (aRule.noText && checkText(aRule.noText, elemText)) {
+      return false;
+    }
+
+    if (aRule.consoleTable && !checkConsoleTable(aRule, aElement)) {
       return false;
     }
 
@@ -1593,3 +1615,34 @@ function checkOutputForInputs(hud, inputTests)
 
   return Task.spawn(runner);
 }
+
+/**
+ * Wait for eventName on target.
+ * @param {Object} target An observable object that either supports on/off or
+ * addEventListener/removeEventListener
+ * @param {String} eventName
+ * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
+ * @return A promise that resolves when the event has been handled
+ */
+function once(target, eventName, useCapture=false) {
+  info("Waiting for event: '" + eventName + "' on " + target + ".");
+
+  let deferred = promise.defer();
+
+  for (let [add, remove] of [
+    ["addEventListener", "removeEventListener"],
+    ["addListener", "removeListener"],
+    ["on", "off"]
+  ]) {
+    if ((add in target) && (remove in target)) {
+      target[add](eventName, function onEvent(...aArgs) {
+        target[remove](eventName, onEvent, useCapture);
+        deferred.resolve.apply(deferred, aArgs);
+      }, useCapture);
+      break;
+    }
+  }
+
+  return deferred.promise;
+}
+

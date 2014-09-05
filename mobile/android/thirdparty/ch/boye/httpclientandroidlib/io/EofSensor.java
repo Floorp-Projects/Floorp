@@ -31,7 +31,10 @@ package ch.boye.httpclientandroidlib.io;
  * EOF sensor.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) no longer used.
  */
+@Deprecated
 public interface EofSensor {
 
     boolean isEof();

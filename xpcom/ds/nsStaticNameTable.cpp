@@ -116,7 +116,7 @@ nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
 {
   if (mNameArray) {
     // manually call the destructor on placement-new'ed objects
-    for (uint32_t index = 0; index < mNameTable.entryCount; index++) {
+    for (uint32_t index = 0; index < mNameTable.EntryCount(); index++) {
       mNameArray[index].~nsDependentCString();
     }
     nsMemory::Free((void*)mNameArray);
@@ -231,7 +231,7 @@ nsStaticCaseInsensitiveNameTable::GetStringValue(int32_t aIndex)
   NS_ASSERTION(mNameArray, "not inited");
   NS_ASSERTION(mNameTable.ops, "not inited");
 
-  if ((NOT_FOUND < aIndex) && ((uint32_t)aIndex < mNameTable.entryCount)) {
+  if ((NOT_FOUND < aIndex) && ((uint32_t)aIndex < mNameTable.EntryCount())) {
     return mNameArray[aIndex];
   }
   return mNullStr;

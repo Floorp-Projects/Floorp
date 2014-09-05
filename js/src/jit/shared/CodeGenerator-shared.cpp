@@ -11,8 +11,8 @@
 #include "jit/CompactBuffer.h"
 #include "jit/IonCaches.h"
 #include "jit/IonMacroAssembler.h"
-#include "jit/IonSpewer.h"
 #include "jit/JitcodeMap.h"
+#include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/ParallelFunctions.h"
@@ -69,25 +69,25 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     if (!gen->compilingAsmJS())
         masm.setInstrumentation(&sps_);
 
-    // Since asm.js uses the system ABI which does not necessarily use a
-    // regular array where all slots are sizeof(Value), it maintains the max
-    // argument stack depth separately.
     if (gen->compilingAsmJS()) {
+        // Since asm.js uses the system ABI which does not necessarily use a
+        // regular array where all slots are sizeof(Value), it maintains the max
+        // argument stack depth separately.
         JS_ASSERT(graph->argumentSlotCount() == 0);
         frameDepth_ += gen->maxAsmJSStackArgBytes();
 
-        // An MAsmJSCall does not align the stack pointer at calls sites but instead
-        // relies on the a priori stack adjustment (in the prologue) on platforms
-        // (like x64) which require the stack to be aligned.
-        if (StackKeptAligned || gen->performsCall() || gen->usesSimd()) {
-            unsigned alignmentAtCall = sizeof(AsmJSFrame) + frameDepth_;
-            unsigned firstFixup = 0;
-            if (unsigned rem = alignmentAtCall % StackAlignment)
-                frameDepth_ += (firstFixup = StackAlignment - rem);
-
-            if (gen->usesSimd())
-                setupSimdAlignment(firstFixup);
+        // If the function uses any SIMD, we may need to insert padding so that
+        // local slots are aligned for SIMD.
+        if (gen->usesSimd()) {
+            frameInitialAdjustment_ = ComputeByteAlignment(sizeof(AsmJSFrame), AsmJSStackAlignment);
+            frameDepth_ += frameInitialAdjustment_;
         }
+
+        // An MAsmJSCall does not align the stack pointer at calls sites but instead
+        // relies on the a priori stack adjustment. This must be the last
+        // adjustment of frameDepth_.
+        if (gen->performsCall())
+            frameDepth_ += ComputeByteAlignment(sizeof(AsmJSFrame) + frameDepth_, AsmJSStackAlignment);
 
         // FrameSizeClass is only used for bailing, which cannot happen in
         // asm.js code.
@@ -95,38 +95,6 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     } else {
         frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
     }
-}
-
-void
-CodeGeneratorShared::setupSimdAlignment(unsigned fixup)
-{
-    JS_STATIC_ASSERT(SimdStackAlignment % StackAlignment == 0);
-    //  At this point, we have:
-    //      (frameDepth_ + sizeof(AsmJSFrame)) % StackAlignment == 0
-    //  which means we can add as many SimdStackAlignment as needed.
-
-    //  The next constraint is to have all stack slots
-    //  aligned for SIMD. That's done by having the first stack slot
-    //  aligned. We need an offset such that:
-    //      (frameDepth_ - offset) % SimdStackAlignment == 0
-    frameInitialAdjustment_ = frameDepth_ % SimdStackAlignment;
-
-    //  We need to ensure that the first stack slot is actually
-    //  located in this frame and not beforehand, when taking this
-    //  offset into account, i.e.:
-    //      frameDepth_ - initial adjustment >= frameDepth_ - fixup
-    //  <=>                            fixup >= initial adjustment
-    //
-    //  For instance, on x86 with gcc, if the initial frameDepth
-    //  % 16 is 8, then the fixup is 0, although the initial
-    //  adjustment is 8. The first stack slot would be located at
-    //  frameDepth - 8 in this case, which is obviously before
-    //  frameDepth.
-    //
-    //  If that's not the case, we add SimdStackAlignment to the
-    //  fixup, which will keep on satisfying other constraints.
-    if (frameInitialAdjustment_ > int32_t(fixup))
-        frameDepth_ += SimdStackAlignment;
 }
 
 bool
@@ -144,7 +112,7 @@ CodeGeneratorShared::generateOutOfLineCode()
         if (!gen->alloc().ensureBallast())
             return false;
 
-        IonSpew(IonSpew_Codegen, "# Emitting out of line code");
+        JitSpew(JitSpew_Codegen, "# Emitting out of line code");
 
         masm.setFramePushed(outOfLineCode_[i]->framePushed());
         lastPC_ = outOfLineCode_[i]->pc();
@@ -206,7 +174,7 @@ CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite &site)
         // bytecodeOffset, but the nativeOffset has changed, do nothing.
         // The same site just generated some more code.
         if (lastEntry.tree == tree && lastEntry.pc == pc) {
-            IonSpew(IonSpew_Profiling, " => In-place update [%u-%u]",
+            JitSpew(JitSpew_Profiling, " => In-place update [%u-%u]",
                     lastEntry.nativeOffset.offset(), nativeOffset);
             return true;
         }
@@ -217,14 +185,14 @@ CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite &site)
         if (lastEntry.nativeOffset.offset() == nativeOffset) {
             lastEntry.tree = tree;
             lastEntry.pc = pc;
-            IonSpew(IonSpew_Profiling, " => Overwriting zero-length native region.");
+            JitSpew(JitSpew_Profiling, " => Overwriting zero-length native region.");
 
             // This overwrite might have made the entry merge-able with a
             // previous one.  If so, merge it.
             if (lastIdx > 0) {
                 NativeToBytecode &nextToLastEntry = nativeToBytecodeList_[lastIdx - 1];
                 if (nextToLastEntry.tree == lastEntry.tree && nextToLastEntry.pc == lastEntry.pc) {
-                    IonSpew(IonSpew_Profiling, " => Merging with previous region");
+                    JitSpew(JitSpew_Profiling, " => Merging with previous region");
                     nativeToBytecodeList_.erase(&lastEntry);
                 }
             }
@@ -243,7 +211,7 @@ CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite &site)
     if (!nativeToBytecodeList_.append(entry))
         return false;
 
-    IonSpew(IonSpew_Profiling, " => Push new entry.");
+    JitSpew(JitSpew_Profiling, " => Push new entry.");
     dumpNativeToBytecodeEntry(nativeToBytecodeList_.length() - 1);
     return true;
 }
@@ -253,7 +221,7 @@ CodeGeneratorShared::dumpNativeToBytecodeEntries()
 {
 #ifdef DEBUG
     InlineScriptTree *topTree = gen->info().inlineScriptTree();
-    IonSpewStart(IonSpew_Profiling, "Native To Bytecode Entries for %s:%d\n",
+    JitSpewStart(JitSpew_Profiling, "Native To Bytecode Entries for %s:%d\n",
                  topTree->script()->filename(), topTree->script()->lineno());
     for (unsigned i = 0; i < nativeToBytecodeList_.length(); i++)
         dumpNativeToBytecodeEntry(i);
@@ -276,7 +244,7 @@ CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx)
         if (nextRef->tree == ref.tree)
             pcDelta = nextRef->pc - ref.pc;
     }
-    IonSpewStart(IonSpew_Profiling, "    %08x [+%-6d] => %-6d [%-4d] {%-10s} (%s:%d",
+    JitSpewStart(JitSpew_Profiling, "    %08x [+%-6d] => %-6d [%-4d] {%-10s} (%s:%d",
                  ref.nativeOffset.offset(),
                  nativeDelta,
                  ref.pc - script->code(),
@@ -285,11 +253,11 @@ CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx)
                  script->filename(), script->lineno());
 
     for (tree = tree->caller(); tree; tree = tree->caller()) {
-        IonSpewCont(IonSpew_Profiling, " <= %s:%d", tree->script()->filename(),
+        JitSpewCont(JitSpew_Profiling, " <= %s:%d", tree->script()->filename(),
                                                     tree->script()->lineno());
     }
-    IonSpewCont(IonSpew_Profiling, ")");
-    IonSpewFin(IonSpew_Profiling);
+    JitSpewCont(JitSpew_Profiling, ")");
+    JitSpewFin(JitSpew_Profiling);
 #endif
 }
 
@@ -427,7 +395,7 @@ CodeGeneratorShared::encode(LRecoverInfo *recover)
         return true;
 
     uint32_t numInstructions = recover->numInstructions();
-    IonSpew(IonSpew_Snapshots, "Encoding LRecoverInfo %p (frameCount %u, instructions %u)",
+    JitSpew(JitSpew_Snapshots, "Encoding LRecoverInfo %p (frameCount %u, instructions %u)",
             (void *)recover, recover->mir()->frameCount(), numInstructions);
 
     MResumePoint::Mode mode = recover->mir()->mode();
@@ -459,7 +427,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     RecoverOffset recoverOffset = recoverInfo->recoverOffset();
     MOZ_ASSERT(recoverOffset != INVALID_RECOVER_OFFSET);
 
-    IonSpew(IonSpew_Snapshots, "Encoding LSnapshot %p (LRecover %p)",
+    JitSpew(JitSpew_Snapshots, "Encoding LSnapshot %p (LRecover %p)",
             (void *)snapshot, (void*) recoverInfo);
 
     SnapshotOffset offset = snapshots_.startSnapshot(recoverOffset, snapshot->bailoutKind());
@@ -525,7 +493,7 @@ CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
 
     unsigned bailoutId = bailouts_.length();
     snapshot->setBailoutId(bailoutId);
-    IonSpew(IonSpew_Snapshots, "Assigned snapshot bailout id %u", bailoutId);
+    JitSpew(JitSpew_Snapshots, "Assigned snapshot bailout id %u", bailoutId);
     return bailouts_.append(snapshot->snapshotOffset());
 }
 
@@ -657,7 +625,7 @@ CodeGeneratorShared::generateCompactNativeToBytecodeMap(JSContext *cx, JitCode *
 
     verifyCompactNativeToBytecodeMap(code);
 
-    IonSpew(IonSpew_Profiling, "Compact Native To Bytecode Map [%p-%p]",
+    JitSpew(JitSpew_Profiling, "Compact Native To Bytecode Map [%p-%p]",
             data, data + nativeToBytecodeMapSize_);
 
     return true;

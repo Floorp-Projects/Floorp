@@ -155,6 +155,11 @@ void CacheStorageService::ShutdownBackground()
 {
   MOZ_ASSERT(IsOnManagementThread());
 
+  // Cancel purge timer to avoid leaking.
+  if (mPurgeTimer) {
+    mPurgeTimer->Cancel();
+  }
+
   Pool(false).mFrecencyArray.Clear();
   Pool(false).mExpirationArray.Clear();
   Pool(true).mFrecencyArray.Clear();
@@ -1621,7 +1626,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
   class Callback : public nsRunnable
   {
   public:
-    Callback(nsICacheEntryDoomCallback* aCallback) : mCallback(aCallback) { }
+    explicit Callback(nsICacheEntryDoomCallback* aCallback) : mCallback(aCallback) { }
     NS_IMETHODIMP Run()
     {
       mCallback->OnCacheEntryDoomed(NS_ERROR_NOT_AVAILABLE);

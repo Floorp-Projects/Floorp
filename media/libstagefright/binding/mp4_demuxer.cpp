@@ -10,6 +10,7 @@
 #include "mp4_demuxer/Adts.h"
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "mp4_demuxer/Index.h"
+#include "MediaResource.h"
 
 #include <stdint.h>
 #include <algorithm>
@@ -36,7 +37,7 @@ struct StageFrightPrivate
 class DataSourceAdapter : public DataSource
 {
 public:
-  DataSourceAdapter(Stream* aSource) : mSource(aSource) {}
+  explicit DataSourceAdapter(Stream* aSource) : mSource(aSource) {}
 
   ~DataSourceAdapter() {}
 
@@ -224,22 +225,27 @@ MP4Demuxer::ConvertByteRangesToTime(
     lastComposition = std::max(lastComposition, endComposition);
   }
 
-  for (int i = 0; i < mPrivate->mIndexes.Length(); i++) {
-    nsTArray<Interval<Microseconds>> ranges;
-    mPrivate->mIndexes[i]->ConvertByteRangesToTimeRanges(aByteRanges, &ranges);
-    if (lastComposition && endCompositions[i]) {
-      Interval<Microseconds>::SemiNormalAppend(
-        ranges, Interval<Microseconds>(endCompositions[i], lastComposition));
-    }
+  if (aByteRanges != mCachedByteRanges) {
+    mCachedByteRanges = aByteRanges;
+    mCachedTimeRanges.Clear();
+    for (int i = 0; i < mPrivate->mIndexes.Length(); i++) {
+      nsTArray<Interval<Microseconds>> ranges;
+      mPrivate->mIndexes[i]->ConvertByteRangesToTimeRanges(aByteRanges, &ranges);
+      if (lastComposition && endCompositions[i]) {
+        Interval<Microseconds>::SemiNormalAppend(
+          ranges, Interval<Microseconds>(endCompositions[i], lastComposition));
+      }
 
-    if (i) {
-      nsTArray<Interval<Microseconds>> intersection;
-      Interval<Microseconds>::Intersection(*aIntervals, ranges, &intersection);
-      *aIntervals = intersection;
-    } else {
-      *aIntervals = ranges;
+      if (i) {
+        nsTArray<Interval<Microseconds>> intersection;
+        Interval<Microseconds>::Intersection(mCachedTimeRanges, ranges, &intersection);
+        mCachedTimeRanges = intersection;
+      } else {
+        mCachedTimeRanges = ranges;
+      }
     }
   }
+  aIntervals->AppendElements(mCachedTimeRanges);
 }
 
 int64_t
@@ -253,7 +259,7 @@ MP4Demuxer::GetEvictionOffset(Microseconds aTime)
   for (int i = 0; i < mPrivate->mIndexes.Length(); i++) {
     offset = std::min(offset, mPrivate->mIndexes[i]->GetEvictionOffset(aTime));
   }
-  return offset;
+  return offset == std::numeric_limits<uint64_t>::max() ? -1 : offset;
 }
 
 } // namespace mp4_demuxer

@@ -73,21 +73,21 @@ LivemarkService.prototype = {
   get _populateCacheSQL()
   {
     function getAnnoSQLFragment(aAnnoParam) {
-      return "SELECT a.content "
-           + "FROM moz_items_annos a "
-           + "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id "
-           + "WHERE a.item_id = b.id "
-           +   "AND n.name = " + aAnnoParam;
+      return `SELECT a.content
+              FROM moz_items_annos a
+              JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+              WHERE a.item_id = b.id
+                AND n.name = ${aAnnoParam}`;
     }
 
-    return "SELECT b.id, b.title, b.parent, b.position, b.guid, b.lastModified, "
-         +        "(" + getAnnoSQLFragment(":feedURI_anno") + ") AS feedURI, "
-         +        "(" + getAnnoSQLFragment(":siteURI_anno") + ") AS siteURI "
-         + "FROM moz_bookmarks b "
-         + "JOIN moz_items_annos a ON a.item_id = b.id "
-         + "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-         + "WHERE b.type = :folder_type "
-         +   "AND n.name = :feedURI_anno ";
+    return `SELECT b.id, b.title, b.parent, b.position, b.guid, b.lastModified,
+                   ( ${getAnnoSQLFragment(":feedURI_anno")} ) AS feedURI,
+                   ( ${getAnnoSQLFragment(":siteURI_anno")} ) AS siteURI
+            FROM moz_bookmarks b
+            JOIN moz_items_annos a ON a.item_id = b.id
+            JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id
+            WHERE b.type = :folder_type
+              AND n.name = :feedURI_anno`;
   },
 
   _ensureAsynchronousCache: Task.async(function* () {

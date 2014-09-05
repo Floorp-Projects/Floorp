@@ -3,7 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['src']
-
 if CONFIG['ENABLE_TESTS']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
+    EXTRA_JS_MODULES += [
+        'gonk/CpPduHelper.jsm',
+        'gonk/SiPduHelper.jsm',
+        'gonk/SlPduHelper.jsm',
+        'gonk/WapPushManager.js',
+        'gonk/WbxmlPduHelper.jsm'
+    ]

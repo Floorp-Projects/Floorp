@@ -40,7 +40,10 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
  * for establishing a socket connection.
  *
  * @since 4.1
+ *
+ * @deprecated (4.3) use {@link ch.boye.httpclientandroidlib.conn.socket.ConnectionSocketFactory}
  */
+@Deprecated
 public interface SchemeSocketFactory {
 
     /**
@@ -63,12 +66,19 @@ public interface SchemeSocketFactory {
 
     /**
      * Connects a socket to the target host with the given remote address.
+     * <p/>
+     * Please note that {@link ch.boye.httpclientandroidlib.conn.HttpInetSocketAddress} class should
+     * be used in order to pass the target remote address along with the original
+     * {@link ch.boye.httpclientandroidlib.HttpHost} value used to resolve the address. The use of
+     * {@link ch.boye.httpclientandroidlib.conn.HttpInetSocketAddress} can also ensure that no reverse
+     * DNS lookup will be performed if the target remote address was specified
+     * as an IP address.
      *
      * @param sock      the socket to connect, as obtained from
      *                  {@link #createSocket(HttpParams) createSocket}.
      *                  <code>null</code> indicates that a new socket
      *                  should be created and connected.
-     * @param remoteAddress the remote address to connect to
+     * @param remoteAddress the remote address to connect to.
      * @param localAddress the local address to bind the socket to, or
      *                  <code>null</code> for any
      * @param params    additional {@link HttpParams parameters} for connecting
@@ -82,6 +92,8 @@ public interface SchemeSocketFactory {
      *          can not be determined
      * @throws ConnectTimeoutException if the socket cannot be connected
      *          within the time limit defined in the <code>params</code>
+     *
+     * @see ch.boye.httpclientandroidlib.conn.HttpInetSocketAddress
      */
     Socket connectSocket(
         Socket sock,

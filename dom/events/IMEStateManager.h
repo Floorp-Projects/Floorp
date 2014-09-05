@@ -67,6 +67,13 @@ public:
   static void UpdateIMEState(const IMEState &aNewIMEState,
                              nsIContent* aContent);
 
+  // This method is called when user operates mouse button in focused editor
+  // and before the editor handles it.
+  // Returns true if IME consumes the event.  Otherwise, false.
+  static bool OnMouseButtonEventInEditor(nsPresContext* aPresContext,
+                                         nsIContent* aContent,
+                                         nsIDOMMouseEvent* aMouseEvent);
+
   // This method is called when user clicked in an editor.
   // aContent must be:
   //   If the editor is for <input> or <textarea>, the element.

@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+  <title>getUserMedia() triggers error callback when auth is denied</title>
+<link rel="author" title="Dominique Hazael-Massieux" href="mailto:dom@w3.org"/>
+<link rel="help" href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#widl-NavigatorUserMedia-getUserMedia-void-MediaStreamConstraints-constraints-NavigatorUserMediaSuccessCallback-successCallback-NavigatorUserMediaErrorCallback-errorCallback">
+<link rel="help" href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-NavigatorUserMediaError">
+<link rel='stylesheet' href='/resources/testharness.css' media='all'/>
+</head>
+<body>
+<p class="instructions">When prompted, <strong>please deny</strong> access to
+the video stream.</p>
+<h1 class="instructions">Description</h1>
+<p class="instructions">This test checks that the error callback is triggered
+when user denies access to the video stream.</p>
+
+<div id='log'></div>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src="/common/vendor-prefix.js" data-prefixed-objects='[{"ancestors":["navigator"], "name":"getUserMedia"}]'></script>
+<script>
+var t = async_test("Tests that the error callback is triggered when permission is denied", {timeout:10000});
+t.step(function() {
+  navigator.getUserMedia({video: true}, t.step_func(function (stream) {
+    assert_unreached("The success callback should not be triggered since access is to be denied");
+    t.done();
+  }),
+  t.step_func(function (error) {
+    assert_equals(error.name, "PermissionDenied", "Permission denied error returned"); // see https://www.w3.org/Bugs/Public/show_bug.cgi?id=22216
+    assert_equals(error.constraintName, null, "constraintName attribute not set for permission denied");
+    t.done();
+  }));
+});
+</script>
+</body>
+</html>

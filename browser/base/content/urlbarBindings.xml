@@ -1652,7 +1652,7 @@
                 sizetopopup="none">
                 <xul:menupopup>
                   <xul:menuitem anonid="trackingContentAction.unblock"
-                    hidden="true" label="&trackingContentBlocked.unblock.label;"
+                    hidden="true" label="&trackingContentBlocked.unblock.label2;"
                     oncommand="document.getBindingParent(this).disableTrackingContentProtection();"/>
                   <xul:menuitem anonid="trackingContentAction.block"
                     hidden="true" label="&trackingContentBlocked.block.label;"
@@ -1667,6 +1667,12 @@
                 </xul:description>
             </xul:hbox>
           </xul:vbox>
+        </xul:vbox>
+        <xul:vbox pack="start">
+          <xul:toolbarbutton anonid="closebutton"
+                             class="messageCloseButton popup-notification-closebutton tabbable close-icon"
+                             xbl:inherits="oncommand=closebuttoncommand"
+                             tooltiptext="&closeNotification.tooltip;"/>
         </xul:vbox>
       </xul:hbox>
     </content>
@@ -1813,6 +1819,10 @@
           // places this host on the tracking protection white list.
           Services.perms.add(normalizedUrl,
             "trackingprotection", Services.perms.ALLOW_ACTION);
+          // Telemetry for disable protection
+          let histogram = Services.telemetry.getHistogramById(
+              "TRACKING_PROTECTION_EVENTS");
+          histogram.add(1);
           BrowserReload();
         ]]></body>
       </method>
@@ -1823,6 +1833,10 @@
           // from the tracking protection white list (any list actually).
           Services.perms.remove(gBrowser.selectedBrowser.currentURI.host,
             "trackingprotection");
+          // Telemetry for enable protection
+          let histogram = Services.telemetry.getHistogramById(
+              "TRACKING_PROTECTION_EVENTS");
+          histogram.add(2);
           BrowserReload();
         ]]></body>
       </method>

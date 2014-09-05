@@ -444,6 +444,9 @@ pref("dom.max_script_run_time", 20);
 
 // JS error console
 pref("devtools.errorconsole.enabled", false);
+// Absolute path to the devtools unix domain socket file used
+// to communicate with a usb cable via adb forward.
+pref("devtools.debugger.unix-domain-socket", "/data/data/@ANDROID_PACKAGE_NAME@/firefox-debugger-socket");
 
 pref("font.size.inflation.minTwips", 120);
 
@@ -505,6 +508,9 @@ pref("security.warn_viewing_mixed", false); // Warning is disabled.  See Bug 616
 
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
+
+// Enable pinning
+pref("security.cert_pinning.enforcement_level", 1);
 
 // Override some named colors to avoid inverse OS themes
 pref("ui.-moz-dialog", "#efebe7");

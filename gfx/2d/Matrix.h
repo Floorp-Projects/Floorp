@@ -166,8 +166,8 @@ public:
 
   Matrix& operator*=(const Matrix &aMatrix)
   {
-    Matrix resultMatrix = *this * aMatrix;
-    return *this = resultMatrix;
+    *this = *this * aMatrix;
+    return *this;
   }
 
   /* Returns true if the other matrix is fuzzy-equal to this matrix.
@@ -311,6 +311,17 @@ public:
   Float _31, _32, _33, _34;
   Float _41, _42, _43, _44;
 
+  Point4D& operator[](int aIndex)
+  {
+      MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
+      return *reinterpret_cast<Point4D*>((&_11)+4*aIndex);
+  }
+  const Point4D& operator[](int aIndex) const
+  {
+      MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
+      return *reinterpret_cast<const Point4D*>((&_11)+4*aIndex);
+  }
+
   /**
    * Returns true if the matrix is isomorphic to a 2D affine transformation.
    */
@@ -404,6 +415,16 @@ public:
     return Is2D() && As2D().IsIntegerTranslation();
   }
 
+  Point4D TransposeTransform4D(const Point4D& aPoint) const
+  {
+      Float x = aPoint.x * _11 + aPoint.y * _12 + aPoint.z * _13 + aPoint.w * _14;
+      Float y = aPoint.x * _21 + aPoint.y * _22 + aPoint.z * _23 + aPoint.w * _24;
+      Float z = aPoint.x * _31 + aPoint.y * _32 + aPoint.z * _33 + aPoint.w * _34;
+      Float w = aPoint.x * _41 + aPoint.y * _42 + aPoint.z * _43 + aPoint.w * _44;
+
+      return Point4D(x, y, z, w);
+  }
+
   Point4D operator *(const Point4D& aPoint) const
   {
     Point4D retPoint;
@@ -485,6 +506,21 @@ public:
     return *this;
   }
 
+  void SkewXY(Float aSkew)
+  {
+    (*this)[1] += (*this)[0] * aSkew;
+  }
+
+  void SkewXZ(Float aSkew)
+  {
+      (*this)[2] += (*this)[0] * aSkew;
+  }
+
+  void SkewYZ(Float aSkew)
+  {
+      (*this)[2] += (*this)[1] * aSkew;
+  }
+
   Matrix4x4 &ChangeBasis(Float aX, Float aY, Float aZ)
   {
     // Translate to the origin before applying this matrix
@@ -536,8 +572,8 @@ public:
 
   Matrix4x4& operator*=(const Matrix4x4 &aMatrix)
   {
-    Matrix4x4 resultMatrix = *this * aMatrix;
-    return *this = resultMatrix;
+    *this = *this * aMatrix;
+    return *this;
   }
 
   /* Returns true if the matrix is an identity matrix.
@@ -584,6 +620,15 @@ public:
   }
 
   bool Invert();
+
+  void Normalize()
+  {
+      for (int i = 0; i < 4; i++) {
+          for (int j = 0; j < 4; j++) {
+              (*this)[i][j] /= (*this)[3][3];
+         }
+      }
+  }
 
   void ScalePost(Float aX, Float aY, Float aZ)
   {
@@ -664,6 +709,21 @@ public:
     NudgeToInteger(&_44, error);
   }
 
+  Point4D TransposedVector(int aIndex) const
+  {
+      MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
+      return Point4D(*((&_11)+aIndex), *((&_21)+aIndex), *((&_31)+aIndex), *((&_41)+aIndex));
+  }
+
+  void SetTransposedVector(int aIndex, Point4D &aVector)
+  {
+      MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
+      *((&_11)+aIndex) = aVector.x;
+      *((&_21)+aIndex) = aVector.y;
+      *((&_31)+aIndex) = aVector.z;
+      *((&_41)+aIndex) = aVector.w;
+  }
+
   // Set all the members of the matrix to NaN
   void SetNAN();
 };
@@ -689,6 +749,20 @@ public:
     , _41(a41), _42(a42), _43(a43), _44(a44)
     , _51(a51), _52(a52), _53(a53), _54(a54)
   {}
+
+  bool operator==(const Matrix5x4 &o) const
+  {
+    return _11 == o._11 && _12 == o._12 && _13 == o._13 && _14 == o._14 &&
+           _21 == o._21 && _22 == o._22 && _23 == o._23 && _24 == o._24 &&
+           _31 == o._31 && _32 == o._32 && _33 == o._33 && _34 == o._34 &&
+           _41 == o._41 && _42 == o._42 && _43 == o._43 && _44 == o._44 &&
+           _51 == o._51 && _52 == o._52 && _53 == o._53 && _54 == o._54;
+  }
+
+  bool operator!=(const Matrix5x4 &aMatrix) const
+  {
+    return !(*this == aMatrix);
+  }
 
   Matrix5x4 operator*(const Matrix5x4 &aMatrix) const
   {
@@ -716,6 +790,12 @@ public:
     resultMatrix._54 = this->_51 * aMatrix._14 + this->_52 * aMatrix._24 + this->_53 * aMatrix._34 + this->_54 * aMatrix._44 + aMatrix._54;
 
     return resultMatrix;
+  }
+
+  Matrix5x4& operator*=(const Matrix5x4 &aMatrix)
+  {
+    *this = *this * aMatrix;
+    return *this;
   }
 
   Float _11, _12, _13, _14;

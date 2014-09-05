@@ -51,7 +51,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=10610
+MOZPNG=10613
 NSPR_VERSION=4
 NSPR_MINVER=4.10.3
 NSS_VERSION=3
@@ -2060,6 +2060,9 @@ ia64*-hpux*)
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
 
+        WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
+        WIN32_GUI_EXE_LDFLAGS=-mwindows
+
         # We use mix of both POSIX and Win32 printf format across the tree, so format
         # warnings are useless on mingw.
         MOZ_C_SUPPORTS_WARNING(-Wno-, format, ac_c_has_wno_format)
@@ -2092,7 +2095,15 @@ ia64*-hpux*)
         MKCSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ -PDB:$(LINK_PDBFILE) $(DSO_LDOPTS)'
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
-        DSO_LDOPTS=-SUBSYSTEM:WINDOWS
+        dnl Set subsystem version 5 for Windows XP.
+        if test "$CPU_ARCH" = "x86"; then
+            WIN32_SUBSYSTEM_VERSION=5.01
+        else
+            WIN32_SUBSYSTEM_VERSION=5.02
+        fi
+        WIN32_CONSOLE_EXE_LDFLAGS=-SUBSYSTEM:CONSOLE,$WIN32_SUBSYSTEM_VERSION
+        WIN32_GUI_EXE_LDFLAGS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
+        DSO_LDOPTS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
         _USE_CPP_INCLUDE_FLAG=1
         _DEFINES_CFLAGS='-FI $(DEPTH)/dist/include/mozilla-config.h -DMOZILLA_CLIENT'
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/dist/include/mozilla-config.h -DMOZILLA_CLIENT'
@@ -3822,6 +3833,7 @@ MOZ_ANDROID_BEAM=
 MOZ_LOCALE_SWITCHER=
 MOZ_ANDROID_SEARCH_ACTIVITY=
 MOZ_ANDROID_MLS_STUMBLER=
+MOZ_ANDROID_SHARE_OVERLAY=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_PAY=
@@ -3829,6 +3841,7 @@ MOZ_AUDIO_CHANNEL_MANAGER=
 NSS_NO_LIBPKIX=
 MOZ_CONTENT_SANDBOX=
 MOZ_GMP_SANDBOX=
+MOZ_SANDBOX=1
 JSGC_USE_EXACT_ROOTING=1
 JSGC_GENERATIONAL=
 
@@ -3892,6 +3905,11 @@ else
   if test "$MOZ_BUILD_APP" = "mobile" ; then
     AC_MSG_RESULT([none])
     AC_MSG_ERROR([--enable-application=mobile is no longer supported.])
+  fi
+  # Support comm-central.
+  if test -n "$EXTERNAL_SOURCE_DIR" ; then
+    MOZ_BUILD_APP="$EXTERNAL_SOURCE_DIR/$MOZ_BUILD_APP"
+    MOZ_BUILD_APP=`${PYTHON} -c "import os.path; print(os.path.relpath(\"${MOZ_BUILD_APP}\", \"${srcdir}\"))"`
   fi
   # We have a valid application only if it has a build.mk file in its top
   # directory.
@@ -4839,6 +4857,13 @@ if test -n "$MOZ_ANDROID_MLS_STUMBLER"; then
 fi
 
 dnl ========================================================
+dnl = Include share overlay on Android
+dnl ========================================================
+if test -n "$MOZ_ANDROID_SHARE_OVERLAY"; then
+    AC_DEFINE(MOZ_ANDROID_SHARE_OVERLAY)
+fi
+
+dnl ========================================================
 dnl = Enable IPDL's "expensive" unit tests
 dnl ========================================================
 MOZ_IPDL_TESTS=
@@ -5605,6 +5630,24 @@ if test -n "${JAVA_BIN_PATH}" -o \
   if test -z "$KEYTOOL" -o "$KEYTOOL" = ":"; then
     AC_MSG_ERROR([The program keytool was not found.  Set \$JAVA_HOME to your Java SDK directory or use --with-java-bin-path={java-bin-dir}])
   fi
+
+  AC_MSG_CHECKING([for minimum required javac version = 1.7])
+
+  dnl Javac spits out something like `javac 1.7.0`. This line cuts off the 'javac'
+  _javac_version=$($JAVAC -version 2>&1 | cut -d ' ' -f 2)
+
+  dnl Here, we extract the major (1) and minor (7) version numbers from the
+  dnl acquired version string.
+  _javac_major_version=$(echo $_javac_version | cut -d '.' -f 1)
+  _javac_minor_version=$(echo $_javac_version | cut -d '.' -f 2)
+
+  AC_MSG_RESULT([$_javac_version])
+
+  dnl Fail if we have a version other than 1.7.X
+  if test "$_javac_major_version" -ne "1" -o \
+      \( "$_javac_minor_version" -ne "7" \); then
+      AC_MSG_ERROR([javac 1.7 is required.])
+  fi
 fi
 
 dnl ========================================================
@@ -6338,10 +6381,18 @@ fi
 AC_SUBST(NSS_NO_LIBPKIX)
 
 dnl ========================================================
+dnl = Sandboxing support
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(sandbox,
+[  --disable-sandbox        Disable sandboxing support],
+    MOZ_SANDBOX=,
+    MOZ_SANDBOX=1)
+
+dnl ========================================================
 dnl = Content process sandboxing
 dnl ========================================================
 if test -n "$gonkdir"; then
-    MOZ_CONTENT_SANDBOX=1
+    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
 fi
 
 MOZ_ARG_ENABLE_BOOL(content-sandbox,
@@ -6360,17 +6411,17 @@ dnl = Gecko Media Plugin sandboxing
 dnl ========================================================
 case $OS_TARGET in
 WINNT)
-    MOZ_GMP_SANDBOX=1
+    MOZ_GMP_SANDBOX=$MOZ_SANDBOX
     ;;
 Linux)
     case $CPU_ARCH in
     x86_64|x86)
-        MOZ_GMP_SANDBOX=1
+        MOZ_GMP_SANDBOX=$MOZ_SANDBOX
         ;;
     esac
     ;;
 Darwin)
-    MOZ_GMP_SANDBOX=1
+    MOZ_GMP_SANDBOX=$MOZ_SANDBOX
     ;;
 esac
 
@@ -6379,6 +6430,17 @@ if test -n "$MOZ_GMP_SANDBOX"; then
 fi
 
 AC_SUBST(MOZ_GMP_SANDBOX)
+
+if test -z "$MOZ_CONTENT_SANDBOX" -a -z "$MOZ_GMP_SANDBOX"; then
+    MOZ_SANDBOX=
+fi
+
+if test -n "$MOZ_SANDBOX"; then
+    AC_DEFINE(MOZ_SANDBOX)
+fi
+
+AC_SUBST(MOZ_SANDBOX)
+
 
 dnl ========================================================
 dnl =
@@ -7188,18 +7250,7 @@ dnl ========================================================
 dnl = Enable using the clang plugin to build
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(clang-plugin,
-[  --enable-clang-plugin   Enable building with the mozilla clang plugin ],
-   ENABLE_CLANG_PLUGIN=1,
-   ENABLE_CLANG_PLUGIN= )
-if test -n "$ENABLE_CLANG_PLUGIN"; then
-    if test -z "$CLANG_CC"; then
-        AC_MSG_ERROR([Can't use clang plugin without clang.])
-    fi
-    AC_DEFINE(MOZ_CLANG_PLUGIN)
-fi
-
-AC_SUBST(ENABLE_CLANG_PLUGIN)
+MOZ_CONFIG_CLANG_PLUGIN
 
 dnl ========================================================
 dnl = Enable stripping of libs & executables
@@ -8393,6 +8444,7 @@ AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(MOZ_LOCALE_SWITCHER)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
 AC_SUBST(MOZ_ANDROID_SEARCH_ACTIVITY)
+AC_SUBST(MOZ_ANDROID_SHARE_OVERLAY)
 AC_SUBST(MOZ_ANDROID_MLS_STUMBLER)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
@@ -8693,6 +8745,8 @@ AC_SUBST(CC_VERSION)
 AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
+AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
+AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
@@ -8718,6 +8772,7 @@ AC_SUBST(VPX_X86_ASM)
 AC_SUBST(VPX_ARM_ASM)
 AC_SUBST(VPX_NEED_OBJ_INT_EXTRACT)
 AC_SUBST(MOZ_INSTRUMENT_EVENT_LOOP)
+AC_SUBST(MOZ_CODE_COVERAGE)
 AC_SUBST(LIBJPEG_TURBO_AS)
 AC_SUBST(LIBJPEG_TURBO_ASFLAGS)
 AC_SUBST(LIBJPEG_TURBO_X86_ASM)
@@ -9013,7 +9068,7 @@ if test -n "$_subconfigure_subdir"; then
   srcdir="$srcdir/.."
   _save_ac_configure_args="$ac_configure_args"
   ac_configure_args="$_subconfigure_config_args"
-  AC_OUTPUT_SUBDIRS("$_subconfigure_subdir")
+  AC_OUTPUT_SUBDIRS("$_subconfigure_subdir",$cache_file)
   ac_configure_args="$_save_ac_configure_args"
   srcdir="$_save_srcdir"
 fi
@@ -9045,11 +9100,6 @@ HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
 HOST_CXXFLAGS="$_SUBDIR_HOST_CXXFLAGS"
 HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
 RC=
-
-if test -n "$ENABLE_CLANG_PLUGIN"; then
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS"
-    AC_OUTPUT_SUBDIRS(build/clang-plugin)
-fi
 
 # Run the SpiderMonkey 'configure' script.
 dist=$MOZ_BUILD_ROOT/dist
