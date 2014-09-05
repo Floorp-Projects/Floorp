@@ -566,6 +566,17 @@ add_task(function* test_convertSubmissionsStoredAsCrashes() {
   Assert.equal(submission.responseDate.getTime(), DUMMY_DATE_2.getTime());
 });
 
+add_task(function* test_setCrashClassification() {
+  let s = yield getStore();
+
+  Assert.ok(s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "crash1",
+                       new Date()));
+  Assert.equal(s.crashes[0].classification, null);
+
+  Assert.ok(s.setCrashClassification("crash1", "foo"));
+  Assert.equal(s.crashes[0].classification, "foo");
+});
+
 add_task(function* test_setRemoteCrashID() {
   let s = yield getStore();
 

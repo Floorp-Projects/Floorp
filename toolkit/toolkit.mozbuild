@@ -182,6 +182,7 @@ if CONFIG['ENABLE_TESTS']:
         'testing/profiles',
         'testing/mozbase',
         'testing/modules',
+        'testing/web-platform',
     ])
 
     if CONFIG['MOZ_WEBRTC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':

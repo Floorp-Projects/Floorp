@@ -2,58 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CXX      := @CXX@
-CXXFLAGS := @CXXFLAGS@
-LDFLAGS  := @LDFLAGS@
-VPATH		 := @srcdir@
-DSO_LDOPTS := @DSO_LDOPTS@
-DLL_SUFFIX := @DLL_SUFFIX@
+# LLVM_CXXFLAGS comes with its own optimization flags.
+MOZ_OPTIMIZE =
 
-# Helper for end
-NULL :=
+MOZ_GLUE_LDFLAGS =
 
-CPPSRCS := \
-	clang-plugin.cpp \
-	$(NULL)
+include $(topsrcdir)/config/config.mk
 
-TESTSRCS := \
-	TestCustomHeap.cpp \
-	TestMustOverride.cpp \
-	TestNonHeapClass.cpp \
-	TestStackClass.cpp \
-	$(NULL)
-
-OBJS := $(patsubst %.cpp,%.o,$(CPPSRCS))
-TESTS := $(patsubst %.cpp,test-%,$(TESTSRCS))
-
-PLUGIN := libclang-plugin.$(DLL_SUFFIX)
-
-all: $(PLUGIN) $(TESTS)
-
-$(OBJS): %.o: %.cpp Makefile
-	$(CXX) -o $@ -c $(CXXFLAGS) $<
-
-$(PLUGIN): $(OBJS)
-	rm -f $@
-	$(CXX) $(DSO_LDOPTS) -o $@ $(CXXFLAGS) $(OBJS) $(LDFLAGS)
-
-TESTFLAGS := -fsyntax-only -Xclang -verify \
-	-Xclang -load -Xclang $(CURDIR)/$(PLUGIN) \
-	-Xclang -add-plugin -Xclang moz-check
-
-$(TESTS): test-%: tests/%.cpp $(PLUGIN)
-	$(CXX) $(TESTFLAGS) $<
-
-compile libs export tools: all
-
-distclean clean:
-	rm -f $(OBJS) $(TESTS) $(PLUGIN)
-
-check:
-
-libs: binaries
-
-binaries: all
-	@touch $@
-
-.PHONY: compile libs export tools distclean clean check
+# In the current moz.build world, we need to override essentially every
+# variable to limit ourselves to what we need to build the clang plugin.
+OS_CXXFLAGS := $(LLVM_CXXFLAGS) -fno-rtti -fno-exceptions
+OS_COMPILE_CXXFLAGS :=
+OS_LDFLAGS := $(LLVM_LDFLAGS) $(CLANG_LDFLAGS)
+DSO_LDOPTS := -shared

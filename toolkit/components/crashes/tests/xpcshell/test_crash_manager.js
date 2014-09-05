@@ -371,6 +371,15 @@ add_task(function* test_addCrash() {
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG));
 });
 
+add_task(function* test_generateSubmissionID() {
+  let m = yield getManager();
+
+  const SUBMISSION_ID_REGEX =
+    /^(sub-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+  let id = m.generateSubmissionID();
+  Assert.ok(SUBMISSION_ID_REGEX.test(id));
+});
+
 add_task(function* test_addSubmissionAttemptAndResult() {
   let m = yield getManager();
 
@@ -394,6 +403,15 @@ add_task(function* test_addSubmissionAttemptAndResult() {
   Assert.equal(submission.requestDate.getTime(), DUMMY_DATE.getTime());
   Assert.equal(submission.responseDate.getTime(), DUMMY_DATE_2.getTime());
   Assert.equal(submission.result, m.SUBMISSION_RESULT_OK);
+});
+
+add_task(function* test_setCrashClassification() {
+  let m = yield getManager();
+
+  yield m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
+                   "main-crash", DUMMY_DATE);
+  yield m.setCrashClassification("main-crash", "class");
+  Assert.equal((yield m.getCrashes())[0].classification, "class");
 });
 
 add_task(function* test_setRemoteCrashID() {

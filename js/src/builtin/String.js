@@ -148,8 +148,8 @@ function String_localeCompare(that) {
     return intl_CompareStrings(collator, S, That);
 }
 
-/* ES6 Draft September 5, 2013 21.1.2.2 */
-function String_static_fromCodePoint() {
+// ES6 draft rev27 (2014/08/24) 21.1.2.2 String.fromCodePoint(...codePoints)
+function String_static_fromCodePoint(codePoints) {
     // Step 1. is not relevant
     // Step 2.
     var length = arguments.length;

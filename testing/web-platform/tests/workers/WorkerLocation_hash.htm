@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerLocation URL decomposition IDL attribute: hash </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var FileName = "./support/WorkerLocation.js";
+    var HashString = "#HashString";
+    var ExpectedResult = HashString;
+
+    var t = async_test("Test Description: WorkerLocation.hash returns the current fragment identifier in the underlying URL.");
+                  
+    var worker = new Worker(FileName + HashString);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        assert_equals(evt.data.hash, ExpectedResult);
+        t.done();
+    });
+</script>
+</body>
+</html>
