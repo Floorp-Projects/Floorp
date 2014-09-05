@@ -3922,50 +3922,52 @@ Tab.prototype = {
           // Check that type matches opensearch.
           let isOpenSearch = (type == "application/opensearchdescription+xml");
           if (isOpenSearch && target.title && /^(?:https?|ftp):/i.test(target.href)) {
-            let visibleEngines = Services.search.getVisibleEngines();
-            // NOTE: Engines are currently identified by name, but this can be changed
-            // when Engines are identified by URL (see bug 335102).
-            if (visibleEngines.some(function(e) {
-              return e.name == target.title;
-            })) {
-              // This engine is already present, do nothing.
-              return;
-            }
-
-            if (this.browser.engines) {
-              // This engine has already been handled, do nothing.
-              if (this.browser.engines.some(function(e) {
-                return e.url == target.href;
+            Services.search.init(() => {
+              let visibleEngines = Services.search.getVisibleEngines();
+              // NOTE: Engines are currently identified by name, but this can be changed
+              // when Engines are identified by URL (see bug 335102).
+              if (visibleEngines.some(function(e) {
+                return e.name == target.title;
               })) {
-                  return;
+                // This engine is already present, do nothing.
+                return;
               }
-            } else {
-              this.browser.engines = [];
-            }
 
-            // Get favicon.
-            let iconURL = target.ownerDocument.documentURIObject.prePath + "/favicon.ico";
+              if (this.browser.engines) {
+                // This engine has already been handled, do nothing.
+                if (this.browser.engines.some(function(e) {
+                  return e.url == target.href;
+                })) {
+                    return;
+                }
+              } else {
+                this.browser.engines = [];
+              }
 
-            let newEngine = {
-              title: target.title,
-              url: target.href,
-              iconURL: iconURL
-            };
+              // Get favicon.
+              let iconURL = target.ownerDocument.documentURIObject.prePath + "/favicon.ico";
 
-            this.browser.engines.push(newEngine);
+              let newEngine = {
+                title: target.title,
+                url: target.href,
+                iconURL: iconURL
+              };
 
-            // Don't send a message to display engines if we've already handled an engine.
-            if (this.browser.engines.length > 1)
-              return;
+              this.browser.engines.push(newEngine);
 
-            // Broadcast message that this tab contains search engines that should be visible.
-            let newEngineMessage = {
-              type: "Link:OpenSearch",
-              tabID: this.id,
-              visible: true
-            };
+              // Don't send a message to display engines if we've already handled an engine.
+              if (this.browser.engines.length > 1)
+                return;
 
-            Messaging.sendRequest(newEngineMessage);
+              // Broadcast message that this tab contains search engines that should be visible.
+              let newEngineMessage = {
+                type: "Link:OpenSearch",
+                tabID: this.id,
+                visible: true
+              };
+
+              Messaging.sendRequest(newEngineMessage);
+            });
           }
         }
         break;
