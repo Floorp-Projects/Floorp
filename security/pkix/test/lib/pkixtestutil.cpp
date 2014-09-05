@@ -30,7 +30,6 @@
 #include <new>
 #include <sstream>
 
-#include "pkix/pkixnss.h"
 #include "pkixder.h"
 #include "pkixutil.h"
 #include "prprf.h"
@@ -156,15 +155,11 @@ static ByteString CertStatus(OCSPResponseContext& context);
 static ByteString
 HashedOctetString(const ByteString& bytes)
 {
-  uint8_t hashBuf[TrustDomain::DIGEST_LENGTH];
-  Input input;
-  if (input.Init(bytes.data(), bytes.length()) != Success) {
+  ByteString digest(SHA1(bytes));
+  if (digest == ENCODING_FAILED) {
     return ENCODING_FAILED;
   }
-  if (DigestBuf(input, hashBuf, sizeof(hashBuf)) != Success) {
-    return ENCODING_FAILED;
-  }
-  return TLV(der::OCTET_STRING, ByteString(hashBuf, sizeof(hashBuf)));
+  return TLV(der::OCTET_STRING, digest);
 }
 
 static ByteString
