@@ -123,6 +123,12 @@ LoginManagerPrompter.prototype = {
     },
 
 
+    setE10sData : function (aBrowser) {
+      // XXX Implement me!
+      throw new Error("Not Yet Implemented");
+    },
+
+
     /*
      * promptToSavePassword
      *

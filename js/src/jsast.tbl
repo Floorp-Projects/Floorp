@@ -11,6 +11,7 @@ ASTDEF(AST_PROGRAM,               "Program",                        "program")
 ASTDEF(AST_IDENTIFIER,            "Identifier",                     "identifier")
 ASTDEF(AST_LITERAL,               "Literal",                        "literal")
 ASTDEF(AST_PROPERTY,              "Property",                       "property")
+ASTDEF(AST_PROTOTYPEMUTATION,     "PrototypeMutation",              "prototypeMutation")
 
 ASTDEF(AST_MODULE_DECL,           "ModuleDeclaration",              "moduleDeclaration")
 ASTDEF(AST_FUNC_DECL,             "FunctionDeclaration",            "functionDeclaration")

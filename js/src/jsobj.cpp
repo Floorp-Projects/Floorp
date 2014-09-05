@@ -2372,7 +2372,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
     JS_ASSERT(srcObj->getElementsHeader()->ownerObject() == srcObj);
 
     size_t length = srcObj->as<ArrayObject>().length();
-    RootedObject res(cx, NewDenseAllocatedArray(cx, length, nullptr, MaybeSingletonObject));
+    RootedObject res(cx, NewDenseFullyAllocatedArray(cx, length, nullptr, MaybeSingletonObject));
     if (!res)
         return nullptr;
 
