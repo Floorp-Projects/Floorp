@@ -27,12 +27,9 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Services.h"
 #include "nsCRT.h"
-#include "mozilla/Preferences.h"
 
 #include <iptypes.h>
 #include <iphlpapi.h>
-
-using namespace mozilla;
 
 static HMODULE sNetshell;
 static decltype(NcFreeNetconProperties)* sNcFreeNetconProperties;
@@ -40,8 +37,6 @@ static decltype(NcFreeNetconProperties)* sNcFreeNetconProperties;
 static HMODULE sIphlpapi;
 static decltype(NotifyIpInterfaceChange)* sNotifyIpInterfaceChange;
 static decltype(CancelMibChangeNotify2)* sCancelMibChangeNotify2;
-
-#define NETWORK_NOTIFY_CHANGED_PREF "network.notify.changed"
 
 static void InitIphlpapi(void)
 {
@@ -95,7 +90,6 @@ nsNotifyAddrListener::nsNotifyAddrListener()
     , mStatusKnown(false)
     , mCheckAttempted(false)
     , mShutdownEvent(nullptr)
-    , mAllowChangedEvent(true)
 {
     InitIphlpapi();
 }
@@ -216,9 +210,6 @@ nsNotifyAddrListener::Init(void)
     nsresult rv = observerService->AddObserver(this, "xpcom-shutdown-threads",
                                                false);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    Preferences::AddBoolVarCache(&mAllowChangedEvent,
-                                 NETWORK_NOTIFY_CHANGED_PREF, true);
 
     mShutdownEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     NS_ENSURE_TRUE(mShutdownEvent, NS_ERROR_OUT_OF_MEMORY);
@@ -503,10 +494,8 @@ nsNotifyAddrListener::CheckLinkStatus(void)
 
         if (mLinkUp && (prevCsum != mIPInterfaceChecksum)) {
             // Network is online. Topology has changed. Always send CHANGED
-            // before UP - if allowed to.
-            if (mAllowChangedEvent) {
-                SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
-            }
+            // before UP.
+            SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
         }
         if (prevLinkUp != mLinkUp) {
             // UP/DOWN status changed, send appropriate UP/DOWN event
