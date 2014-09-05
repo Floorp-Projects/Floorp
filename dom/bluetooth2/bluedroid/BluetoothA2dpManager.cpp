@@ -1380,9 +1380,8 @@ BluetoothA2dpManager::ConnectionStateNotification(BluetoothA2dpConnectionState a
   InfallibleTArray<BluetoothNamedValue> props;
   BT_APPEND_NAMED_VALUE(props, "State", a2dpState);
 
-  BluetoothSignal signal(NS_LITERAL_STRING("AudioSink"),
-                         nsString(aBdAddr), props);
-  NS_DispatchToMainThread(new SinkPropertyChangedHandler(signal));
+  HandleSinkPropertyChanged(BluetoothSignal(NS_LITERAL_STRING("AudioSink"),
+                                            nsString(aBdAddr), props));
 }
 
 void
@@ -1406,9 +1405,8 @@ BluetoothA2dpManager::AudioStateNotification(BluetoothA2dpAudioState aState,
   InfallibleTArray<BluetoothNamedValue> props;
   BT_APPEND_NAMED_VALUE(props, "State", a2dpState);
 
-  BluetoothSignal signal(NS_LITERAL_STRING("AudioSink"),
-                         nsString(aBdAddr), props);
-  NS_DispatchToMainThread(new SinkPropertyChangedHandler(signal));
+  HandleSinkPropertyChanged(BluetoothSignal(NS_LITERAL_STRING("AudioSink"),
+                                            nsString(aBdAddr), props));
 }
 
 /*
@@ -1420,7 +1418,15 @@ BluetoothA2dpManager::GetPlayStatusNotification()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  NS_DispatchToMainThread(new RequestPlayStatusTask());
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    return;
+  }
+
+  bs->DistributeSignal(
+    BluetoothSignal(NS_LITERAL_STRING(REQUEST_MEDIA_PLAYSTATUS_ID),
+                    NS_LITERAL_STRING(KEY_ADAPTER),
+                    InfallibleTArray<BluetoothNamedValue>()));
 }
 
 /* Player application settings is optional for AVRCP 1.3. B2G
@@ -1491,7 +1497,20 @@ BluetoothA2dpManager::GetElementAttrNotification(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  NS_DispatchToMainThread(new UpdateElementAttrsTask(aNumAttrs, aAttrs));
+  nsAutoArrayPtr<BluetoothAvrcpElementAttribute> attrs(
+    new BluetoothAvrcpElementAttribute[aNumAttrs]);
+
+  for (uint8_t i = 0; i < aNumAttrs; ++i) {
+    attrs[i].mId = aAttrs[i];
+    ConvertAttributeString(
+      static_cast<BluetoothAvrcpMediaAttribute>(attrs[i].mId),
+      attrs[i].mValue);
+  }
+
+#if ANDROID_VERSION >= 18
+  MOZ_ASSERT(sBtAvrcpInterface);
+  sBtAvrcpInterface->GetElementAttrRsp(aNumAttrs, attrs, nullptr);
+#endif // ANDROID_VERSION >= 18
 }
 
 void
@@ -1500,7 +1519,14 @@ BluetoothA2dpManager::RegisterNotificationNotification(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  NS_DispatchToMainThread(new UpdateRegisterNotificationTask(aEvent, aParam));
+  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
+  if (!a2dp) {
+    return;
+  }
+
+#if ANDROID_VERSION >= 18
+  a2dp->UpdateRegisterNotification(aEvent, aParam);
+#endif // ANDROID_VERSION >= 18
 }
 
 /* This method is used to get CT features from the Feature Bit Mask. If
@@ -1559,7 +1585,8 @@ BluetoothA2dpManager::PassthroughCmdNotification(int aId, int aKeyState)
       return;
   }
 
-  NS_DispatchToMainThread(new UpdatePassthroughCmdTask(name));
+  NS_NAMED_LITERAL_STRING(type, "media-button");
+  BroadcastSystemMessage(type, BluetoothValue(name));
 }
 
 NS_IMPL_ISUPPORTS(BluetoothA2dpManager, nsIObserver)
