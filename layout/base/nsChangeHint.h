@@ -133,7 +133,23 @@ enum nsChangeHint {
    * This will schedule an invalidating paint. This is useful if something
    * has changed which will be invalidated by DLBI.
    */
-  nsChangeHint_SchedulePaint = 0x80000
+  nsChangeHint_SchedulePaint = 0x80000,
+
+  /**
+   * A hint reflecting that style data changed with no change handling
+   * behavior.  We need to return this, rather than NS_STYLE_HINT_NONE,
+   * so that certain optimizations that manipulate the style context tree are
+   * correct.
+   *
+   * nsChangeHint_NeutralChange must be returned by CalcDifference on a given
+   * style struct if the data in the style structs are meaningfully different
+   * and if no other change hints are returned.  If any other change hints are
+   * set, then nsChangeHint_NeutralChange need not also be included, but it is
+   * safe to do so.  (An example of style structs having non-meaningfully
+   * different data would be cached information that would be re-calculated
+   * to the same values, such as nsStyleBorder::mSubImages.)
+   */
+  nsChangeHint_NeutralChange = 0x100000
 
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
   // add them to NS_HintsNotHandledForDescendantsIn() below.
