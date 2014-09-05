@@ -71,6 +71,17 @@ object with the following properties:
    - ``move`` counts the number of times an item is moved somewhere else (but not to the palette);
    - ``remove`` counts the number of times an item is removed to the palette;
    - ``reset`` counts the number of times the 'restore defaults' button is used;
+- ``search`` is an object tracking searches of various types, keyed off the search
+    location, storing a number indicating how often the respective type of search
+    has happened.
+  - There are also two special keys that mean slightly different things.
+    - ``urlbar-keyword`` records searches that would have been an invalid-protocol
+      error, but are now keyword searches.  They are also counted in the ``urlbar``
+      keyword (along with all the other urlbar searches).
+    - ``selection`` searches records selections of search suggestions.  They include
+      the source, the index of the selection, and the kind of selection (mouse or
+      enter key).  Selection searches are also counted in their sources.
+
 
 
 ``UITour``
