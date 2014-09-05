@@ -2956,12 +2956,6 @@ def CreateBindingJSObject(descriptor, properties, parent):
             js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
             """,
             parent=parent)
-        if "Window" in descriptor.interface.identifier.name:
-            create = dedent("""
-                MOZ_ASSERT(false,
-                           "Our current reserved slot situation is unsafe for globals. Fix "
-                           "bug 760095!");
-                """) + create
     create = objDecl + create
 
     if descriptor.nativeOwnership == 'refcounted':
@@ -7676,9 +7670,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
                                                         self.attr)
         if self.attr.slotIndex is not None:
-            if (self.descriptor.hasXPConnectImpls and
-                (self.descriptor.interface.identifier.name != 'Window' or
-                 self.attr.identifier.name != 'document')):
+            if self.descriptor.hasXPConnectImpls:
                 raise TypeError("Interface '%s' has XPConnect impls, so we "
                                 "can't use our slot for property '%s'!" %
                                 (self.descriptor.interface.identifier.name,
