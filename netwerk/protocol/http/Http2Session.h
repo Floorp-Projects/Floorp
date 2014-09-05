@@ -212,8 +212,6 @@ public:
   int64_t ServerSessionWindow() { return mServerSessionWindow; }
   void DecrementServerSessionWindow (uint32_t bytes) { mServerSessionWindow -= bytes; }
 
-  void SendPing() MOZ_OVERRIDE;
-
 private:
 
   // These internal states do not correspond to the states of the HTTP/2 specification
@@ -442,9 +440,6 @@ private:
   PRIntervalTime       mLastReadEpoch;     // used for ping timeouts
   PRIntervalTime       mLastDataReadEpoch; // used for IdleTime()
   PRIntervalTime       mPingSentEpoch;
-
-  PRIntervalTime       mPreviousPingThreshold; // backup for the former value
-  bool                 mPreviousUsed;          // true when backup is used
 
   // used as a temporary buffer while enumerating the stream hash during GoAway
   nsDeque  mGoAwayStreamsToRestart;
