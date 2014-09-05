@@ -227,6 +227,19 @@ public:
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
 
+  /**
+   * Returns whether this style context and aOther both have the same
+   * cached style struct pointer for a given style struct.
+   */
+  bool HasSameCachedStyleData(nsStyleContext* aOther, nsStyleStructID aSID);
+
+  /**
+   * Returns whether this style context has cached, inherited style data for a
+   * given style struct.
+   */
+  bool HasCachedInheritedStyleData(nsStyleStructID aSID)
+    { return mBits & nsCachedStyleData::GetBitForSID(aSID); }
+
   nsRuleNode* RuleNode() { return mRuleNode; }
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
 
