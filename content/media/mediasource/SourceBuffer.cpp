@@ -564,6 +564,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // TODO: Run buffer append algorithm asynchronously (would call StopUpdating()).
   if (mParser->IsInitSegmentPresent(aData, aLength)) {
     MSE_DEBUG("SourceBuffer(%p)::AppendData: New initialization segment.", this);
+    mMediaSource->QueueInitializationEvent();
     mTrackBuffer->DiscardDecoder();
     if (!mTrackBuffer->NewDecoder()) {
       aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
