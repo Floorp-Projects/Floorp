@@ -2580,7 +2580,10 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
 
     def definition_body(self):
         parentProtoName = self.descriptor.parentPrototypeName
-        if parentProtoName is None:
+        if self.descriptor.hasNamedPropertiesObject:
+            parentProtoType = "Rooted"
+            getParentProto = "aCx, GetNamedPropertiesObject(aCx, aGlobal)"
+        elif parentProtoName is None:
             parentProtoType = "Rooted"
             if self.descriptor.interface.getExtendedAttribute("ArrayClass"):
                 getParentProto = "aCx, JS_GetArrayPrototype(aCx, aGlobal)"
@@ -2845,6 +2848,39 @@ class CGGetConstructorObjectMethod(CGGetPerInterfaceObject):
                needed. */
 
             """) + CGGetPerInterfaceObject.definition_body(self)
+
+
+class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aGlobal')]
+        CGAbstractStaticMethod.__init__(self, descriptor,
+                                        'GetNamedPropertiesObject',
+                                        'JSObject*', args)
+
+    def definition_body(self):
+        parentProtoName = self.descriptor.parentPrototypeName
+        if parentProtoName is None:
+            getParentProto = ""
+            parentProto = "nullptr"
+        else:
+            getParentProto = fill(
+                """
+                JS::Rooted<JSObject*> parentProto(aCx, ${parent}::GetProtoObject(aCx, aGlobal));
+                if (!parentProto) {
+                  return nullptr;
+                }
+                """,
+                parent=toBindingNamespace(parentProtoName))
+            parentProto = "parentProto"
+        return fill(
+            """
+            $*{getParentProto}
+            return ${nativeType}::CreateNamedPropertiesObject(aCx, ${parentProto});
+            """,
+            getParentProto=getParentProto,
+            parentProto=parentProto,
+            nativeType=self.descriptor.nativeType)
 
 
 class CGDefineDOMInterfaceMethod(CGAbstractMethod):
@@ -11013,6 +11049,9 @@ class CGDescriptor(CGThing):
         if descriptor.interface.getExtendedAttribute("NeedNewResolve"):
             cgThings.append(CGNewResolveHook(descriptor))
             cgThings.append(CGEnumerateHook(descriptor))
+
+        if descriptor.hasNamedPropertiesObject:
+            cgThings.append(CGGetNamedPropertiesObjectMethod(descriptor))
 
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGPrototypeJSClass(descriptor, properties))
