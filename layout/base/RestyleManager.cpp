@@ -2440,16 +2440,26 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     // overall decision.
     RestyleResult result = RestyleResult(0);
 
+    nsRestyleHint thisRestyleHint = aRestyleHint;
+
     bool haveMoreContinuations = false;
-    for (nsIFrame* f = mFrame; f;
-         f = GetNextContinuationWithSameStyle(f, oldContext,
-                                              &haveMoreContinuations)) {
+    for (nsIFrame* f = mFrame; f; ) {
+      RestyleResult thisResult = RestyleSelf(f, thisRestyleHint);
 
-      RestyleResult thisResult = RestyleSelf(f, aRestyleHint);
+      if (thisResult != eRestyleResult_Stop) {
+        // Calls to RestyleSelf for later same-style continuations must not
+        // return eRestyleResult_Stop, so pass eRestyle_Force in to them.
+        thisRestyleHint = nsRestyleHint(thisRestyleHint | eRestyle_Force);
 
-      // XXX we'll handle eRestyleResult_Stop in a later patch
-      NS_ASSERTION(thisResult != eRestyleResult_Stop,
-                   "cannot handle eRestyleResult_Stop yet");
+        if (result == eRestyleResult_Stop) {
+          // We received eRestyleResult_Stop for earlier same-style
+          // continuations, and eRestyleResult_Continue(AndForceDescendants) for
+          // this one; go back and force-restyle the earlier continuations.
+          result = thisResult;
+          f = mFrame;
+          continue;
+        }
+      }
 
       if (thisResult > result) {
         // We take the highest RestyleResult value when working out what to do
@@ -2457,6 +2467,33 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
         // represent a superset of the work done by lower values.
         result = thisResult;
       }
+
+      f = GetNextContinuationWithSameStyle(f, oldContext,
+                                           &haveMoreContinuations);
+    }
+
+    if (result == eRestyleResult_Stop) {
+      MOZ_ASSERT(mFrame->StyleContext() == oldContext,
+                 "frame should have been left with its old style context");
+
+      nsStyleContext* newParent =
+        mFrame->GetParentStyleContextFrame()->StyleContext();
+
+      if (oldContext->GetParent() != newParent) {
+        // If we received eRestyleResult_Stop, then the old style context was
+        // left on mFrame.  Since we ended up restyling our parent, change
+        // this old style context to point to its new parent.
+        oldContext->MoveTo(newParent);
+      }
+
+      // Send the accessibility notifications that RestyleChildren otherwise
+      // would have sent.
+      if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+        InitializeAccessibilityNotifications();
+        SendAccessibilityNotifications();
+      }
+
+      return;
     }
 
     if (result == eRestyleResult_ContinueAndForceDescendants) {
