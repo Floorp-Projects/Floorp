@@ -66,7 +66,7 @@ class Envelope
     mMessageId = -1;
     mError = GeckoSmsManager.kNoError;
 
-    int size = Envelope.SubParts.values().length;
+    int size = SubParts.values().length;
     mRemainingParts = new int[size];
     mFailing = new boolean[size];
 
@@ -76,7 +76,7 @@ class Envelope
     }
   }
 
-  public void decreaseRemainingParts(Envelope.SubParts aType) {
+  public void decreaseRemainingParts(SubParts aType) {
     --mRemainingParts[aType.ordinal()];
 
     if (mRemainingParts[SubParts.SENT_PART.ordinal()] >
@@ -85,15 +85,15 @@ class Envelope
     }
   }
 
-  public boolean arePartsRemaining(Envelope.SubParts aType) {
+  public boolean arePartsRemaining(SubParts aType) {
     return mRemainingParts[aType.ordinal()] != 0;
   }
 
-  public void markAsFailed(Envelope.SubParts aType) {
+  public void markAsFailed(SubParts aType) {
     mFailing[aType.ordinal()] = true;
   }
 
-  public boolean isFailing(Envelope.SubParts aType) {
+  public boolean isFailing(SubParts aType) {
     return mFailing[aType.ordinal()];
   }
 
@@ -345,7 +345,7 @@ public class GeckoSmsManager
   private final static int kMessageClassClass2  = 3;
   private final static int kMessageClassClass3  = 4;
 
-  private final static String[] kRequiredMessageRows = new String[] { "_id", "address", "body", "date", "type", "status" };
+  private final static String[] kRequiredMessageRows = { "_id", "address", "body", "date", "type", "status" };
 
   // Used to generate monotonically increasing GUIDs.
   private static final AtomicInteger pendingIntentGuid = new AtomicInteger(Integer.MIN_VALUE);
@@ -360,9 +360,9 @@ public class GeckoSmsManager
   @Override
   public void start() {
     IntentFilter smsFilter = new IntentFilter();
-    smsFilter.addAction(GeckoSmsManager.ACTION_SMS_RECEIVED);
-    smsFilter.addAction(GeckoSmsManager.ACTION_SMS_SENT);
-    smsFilter.addAction(GeckoSmsManager.ACTION_SMS_DELIVERED);
+    smsFilter.addAction(ACTION_SMS_RECEIVED);
+    smsFilter.addAction(ACTION_SMS_SENT);
+    smsFilter.addAction(ACTION_SMS_DELIVERED);
 
     GeckoAppShell.getContext().registerReceiver(this, smsFilter);
   }
@@ -486,8 +486,6 @@ public class GeckoSmsManager
           !envelope.arePartsRemaining(Envelope.SubParts.DELIVERED_PART)) {
         postman.destroyEnvelope(envelopeId);
       }
-
-      return;
     }
   }
 
