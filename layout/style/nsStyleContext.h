@@ -351,6 +351,15 @@ public:
     StyleBackground();
   }
 
+  /**
+   * Moves this style context to a new parent.
+   *
+   * This function violates style context tree immutability, and
+   * is a very low-level function and should only be used after verifying
+   * many conditions that make it safe to call.
+   */
+  void MoveTo(nsStyleContext* aNewParent);
+
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent);
   static void AssertStyleStructMaxDifferenceValid();
@@ -404,7 +413,7 @@ private:
                                      int32_t aLevels) const;
 #endif
 
-  nsStyleContext* const mParent; // STRONG
+  nsStyleContext* mParent; // STRONG
 
   // Children are kept in two circularly-linked lists.  The list anchor
   // is not part of the list (null for empty), and we point to the first
