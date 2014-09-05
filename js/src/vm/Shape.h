@@ -28,6 +28,7 @@
 #include "js/HashTable.h"
 #include "js/MemoryMetrics.h"
 #include "js/RootingAPI.h"
+#include "js/UbiNode.h"
 #include "vm/PropDesc.h"
 
 #ifdef _MSC_VER
@@ -1455,6 +1456,16 @@ IsImplicitDenseOrTypedArrayElement(Shape *prop)
 namespace JS {
 template<> class AnchorPermitted<js::Shape *> { };
 template<> class AnchorPermitted<const js::Shape *> { };
-}
+
+namespace ubi {
+
+// JS::ubi::Node can trace Shapes and BaseShapes with JS_TraceChildren, and both
+// have a 'compartment' method, so we can use the generic
+// JS::ubi::TracerConcrete template for their JS::ubi::Concrete specialization.
+template<> struct Concrete<js::Shape> : TracerConcreteWithCompartment<js::Shape> { };
+template<> struct Concrete<js::BaseShape> : TracerConcreteWithCompartment<js::BaseShape> { };
+
+} // namespace ubi
+} // namespace JS
 
 #endif /* vm_Shape_h */
