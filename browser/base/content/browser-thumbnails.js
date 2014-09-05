@@ -125,6 +125,10 @@ let gBrowserThumbnails = {
 
   // FIXME: This should be part of the PageThumbs API. (bug 1062414)
   _shouldCapture: function Thumbnails_shouldCapture(aBrowser) {
+    // Don't try to capture in e10s yet (because of bug 698371)
+    if (gMultiProcessBrowser)
+      return false;
+
     // Capture only if it's the currently selected tab.
     if (aBrowser != gBrowser.selectedBrowser)
       return false;
