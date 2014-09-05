@@ -31,7 +31,7 @@ typedef any Transferable;
    CrossOriginReadable] readonly attribute WindowProxy window;
   [Replaceable, Throws,
    CrossOriginReadable] readonly attribute WindowProxy self;
-  [Unforgeable, StoreInSlot, Pure, Func="nsGlobalWindow::WindowOnWebIDL"] readonly attribute Document? document;
+  [Unforgeable, StoreInSlot, Pure] readonly attribute Document? document;
   [Throws] attribute DOMString name; 
   [PutForwards=href, Unforgeable, Throws,
    CrossOriginReadable, CrossOriginWritable] readonly attribute Location? location;
