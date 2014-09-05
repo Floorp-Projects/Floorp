@@ -24,6 +24,7 @@ import android.telephony.SmsMessage;
 import android.util.Log;
 
 import static android.telephony.SmsMessage.MessageClass;
+import static org.mozilla.gecko.SmsManager.ISmsManager;
 
 import java.util.ArrayList;
 
