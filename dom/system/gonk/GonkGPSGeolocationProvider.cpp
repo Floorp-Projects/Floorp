@@ -34,7 +34,7 @@
 #include "prtime.h"
 
 #ifdef MOZ_B2G_RIL
-#include "nsIDOMIccInfo.h"
+#include "nsIIccInfo.h"
 #include "nsIMobileConnectionInfo.h"
 #include "nsIMobileConnectionService.h"
 #include "nsIMobileCellInfo.h"
@@ -459,10 +459,10 @@ GonkGPSGeolocationProvider::RequestSetID(uint32_t flags)
     }
 
     if (flags & AGPS_RIL_REQUEST_SETID_MSISDN) {
-      nsCOMPtr<nsIDOMMozIccInfo> iccInfo;
+      nsCOMPtr<nsIIccInfo> iccInfo;
       rilCtx->GetIccInfo(getter_AddRefs(iccInfo));
       if (iccInfo) {
-        nsCOMPtr<nsIDOMMozGsmIccInfo> gsmIccInfo = do_QueryInterface(iccInfo);
+        nsCOMPtr<nsIGsmIccInfo> gsmIccInfo = do_QueryInterface(iccInfo);
         if (gsmIccInfo) {
           type = AGPS_SETID_TYPE_MSISDN;
           gsmIccInfo->GetMsisdn(id);
@@ -494,7 +494,7 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
   location.type = AGPS_REF_LOCATION_TYPE_UMTS_CELLID;
 
   if (rilCtx) {
-    nsCOMPtr<nsIDOMMozIccInfo> iccInfo;
+    nsCOMPtr<nsIIccInfo> iccInfo;
     rilCtx->GetIccInfo(getter_AddRefs(iccInfo));
     if (iccInfo) {
       nsresult result;
