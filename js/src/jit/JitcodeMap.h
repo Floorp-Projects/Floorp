@@ -351,7 +351,7 @@ class JitcodeGlobalEntry
             queryEntry().destroy();
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Invalid JitcodeGlobalEntry kind.");
+            MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
         }
     }
 
@@ -451,7 +451,7 @@ class JitcodeGlobalEntry
           case IonCache:
             return ionCacheEntry().callStackAtAddr(rt, ptr, results, depth);
           default:
-            MOZ_ASSUME_UNREACHABLE("Invalid JitcodeGlobalEntry kind.");
+            MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
         }
         return false;
     }

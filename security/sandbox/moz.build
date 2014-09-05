@@ -18,6 +18,13 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'win/src/sandboxtarget',
     ]
 
+    if CONFIG['MOZ_CONTENT_SANDBOX']:
+        EXPORTS.mozilla.warnonlysandbox += [
+            'win/src/warnonlysandbox/warnOnlySandbox.h',
+            'win/src/warnonlysandbox/wosCallbacks.h',
+            'win/src/warnonlysandbox/wosTypes.h',
+        ]
+
     include('objs.mozbuild')
     SOURCES += security_sandbox_cppsrcs
 

@@ -479,7 +479,7 @@ CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
     switch (gen->info().executionMode()) {
       case SequentialExecution: break;
       case ParallelExecution: return false;
-      default: MOZ_ASSUME_UNREACHABLE("No such execution mode");
+      default: MOZ_CRASH("No such execution mode");
     }
 
     JS_ASSERT(frameClass_ != FrameSizeClass::None());

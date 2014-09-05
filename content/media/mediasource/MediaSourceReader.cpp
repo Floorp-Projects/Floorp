@@ -46,19 +46,33 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mEnded(false)
   , mAudioIsSeeking(false)
   , mVideoIsSeeking(false)
+  , mHasEssentialTrackBuffers(false)
 {
+}
+
+void
+MediaSourceReader::PrepareInitialization()
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  MSE_DEBUG("MediaSourceReader(%p)::PrepareInitialization trackBuffers=%u",
+            this, mTrackBuffers.Length());
+  mEssentialTrackBuffers.AppendElements(mTrackBuffers);
+  mHasEssentialTrackBuffers = true;
+  mDecoder->NotifyWaitingForResourcesStatusChanged();
 }
 
 bool
 MediaSourceReader::IsWaitingMediaResources()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
-    if (!mTrackBuffers[i]->IsReady()) {
+
+  for (uint32_t i = 0; i < mEssentialTrackBuffers.Length(); ++i) {
+    if (!mEssentialTrackBuffers[i]->IsReady()) {
       return true;
     }
   }
-  return mTrackBuffers.IsEmpty();
+
+  return !mHasEssentialTrackBuffers;
 }
 
 void
@@ -367,6 +381,7 @@ void
 MediaSourceReader::OnTrackBufferConfigured(TrackBuffer* aTrackBuffer, const MediaInfo& aInfo)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  MOZ_ASSERT(aTrackBuffer->IsReady());
   MOZ_ASSERT(mTrackBuffers.Contains(aTrackBuffer));
   if (aInfo.HasAudio() && !mAudioTrack) {
     MSE_DEBUG("MediaSourceReader(%p)::OnTrackBufferConfigured %p audio", this, aTrackBuffer);
@@ -472,11 +487,15 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
 nsresult
 MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
 {
-  MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata tracks=%u", this, mTrackBuffers.Length());
+  bool waiting = IsWaitingMediaResources();
+  MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata waiting=%d tracks=%u/%u audio=%p video=%p",
+            this, waiting, mEssentialTrackBuffers.Length(), mTrackBuffers.Length(),
+            mAudioTrack.get(), mVideoTrack.get());
   // ReadMetadata is called *before* checking IsWaitingMediaResources.
-  if (IsWaitingMediaResources()) {
+  if (waiting) {
     return NS_OK;
   }
+  mEssentialTrackBuffers.Clear();
   if (!mAudioTrack && !mVideoTrack) {
     MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata missing track: mAudioTrack=%p mVideoTrack=%p",
               this, mAudioTrack.get(), mVideoTrack.get());

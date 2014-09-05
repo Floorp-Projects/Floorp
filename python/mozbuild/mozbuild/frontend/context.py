@@ -449,6 +449,13 @@ VARIABLES = {
         populated by calling add_java_jar().
         """, 'libs'),
 
+    'LIBRARY_DEFINES': (OrderedDict, dict,
+        """Dictionary of compiler defines to declare for the entire library.
+
+        This variable works like DEFINES, except that declarations apply to all
+        libraries that link into this library via FINAL_LIBRARY.
+        """, None),
+
     'LIBRARY_NAME': (unicode, unicode,
         """The code name of the library generated for a directory.
 

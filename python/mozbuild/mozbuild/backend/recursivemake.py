@@ -404,12 +404,7 @@ class RecursiveMakeBackend(CommonBackend):
                     backend_file.write('%s := %s\n' % (k, v))
 
         elif isinstance(obj, Defines):
-            defines = obj.get_defines()
-            if defines:
-                backend_file.write('DEFINES +=')
-                for define in defines:
-                    backend_file.write(' %s' % define)
-                backend_file.write('\n')
+            self._process_defines(obj, backend_file)
 
         elif isinstance(obj, Exports):
             self._process_exports(obj, obj.exports, backend_file)
@@ -868,6 +863,15 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._process_hierarchy_elements(obj, element, namespace, process_element)
 
+    def _process_defines(self, obj, backend_file):
+        """Output the DEFINES rules to the given backend file."""
+        defines = list(obj.get_defines())
+        if defines:
+            backend_file.write('DEFINES +=')
+            for define in defines:
+                backend_file.write(' %s' % define)
+            backend_file.write('\n')
+
     def _process_exports(self, obj, exports, backend_file):
         # This may not be needed, but is present for backwards compatibility
         # with the old make rules, just in case.
@@ -1230,6 +1234,9 @@ class RecursiveMakeBackend(CommonBackend):
                 backend_file.write_once('OS_LIBS += %s\n' % lib)
             else:
                 backend_file.write_once('HOST_EXTRA_LIBS += %s\n' % lib)
+
+        # Process library-based defines
+        self._process_defines(obj.defines, backend_file)
 
     def _write_manifests(self, dest, manifests):
         man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',
