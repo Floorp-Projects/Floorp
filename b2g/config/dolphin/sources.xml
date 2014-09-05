@@ -12,10 +12,10 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="4b4336c73c081b39776d399835ce4853aee5cc1c">
+  <project name="platform_build" path="build" remote="b2g" revision="fe92ddd450e03b38edb2d465de7897971d68ac68">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="de59e0c3614dd0061881fe284e9f2d74fa0d1d5d"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="5765c62163bcb7fde5ebfd211881117de31a7c46"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="6969df171e5295f855f12d12db0382048e6892e7"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="68af8bfafdf9e35f4db0ae60e087cbf8f6d7ee6d"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="7af569a39a6a7d01a58093a01b16644c2c0f5657"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
@@ -137,7 +137,7 @@
   <project name="platform/system/core" path="system/core" revision="53d584d4a4b4316e4de9ee5f210d662f89b44e7e"/>
   <project name="u-boot" path="u-boot" revision="2d7a801a3e002078f885e8085fad374a564682e5"/>
   <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="7feb3df0e150053e0143ef525f6e082bda320aea"/>
-  <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="2be9b6d4984da4a2d0afde1e149c01a12f691f30"/>
+  <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="cbc0a8e207a21bfaa96e07971ac1f380d9a677cf"/>
   <project name="vendor/sprd/partner" path="vendor/sprd/partner" revision="8649c7145972251af11b0639997edfecabfc7c2e"/>
   <project name="vendor/sprd/proprietories" path="vendor/sprd/proprietories" revision="d2466593022f7078aaaf69026adf3367c2adb7bb"/>
 </manifest>

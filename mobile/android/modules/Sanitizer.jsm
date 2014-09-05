@@ -154,7 +154,7 @@ Sanitizer.prototype = {
       clear: function ()
       {
         return Messaging.sendRequestForResult({ type: "Sanitize:ClearHistory" })
-          .catch() // Purge Gecko-side data even if request failed
+          .catch(e => Cu.reportError("Java-side history clearing failed: " + e))
           .then(function() {
             try {
               Services.obs.notifyObservers(null, "browser:purge-session-history", "");

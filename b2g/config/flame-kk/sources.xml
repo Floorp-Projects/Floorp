@@ -12,10 +12,10 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="4b4336c73c081b39776d399835ce4853aee5cc1c">
+  <project name="platform_build" path="build" remote="b2g" revision="fe92ddd450e03b38edb2d465de7897971d68ac68">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="de59e0c3614dd0061881fe284e9f2d74fa0d1d5d"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="5765c62163bcb7fde5ebfd211881117de31a7c46"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="6969df171e5295f855f12d12db0382048e6892e7"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="68af8bfafdf9e35f4db0ae60e087cbf8f6d7ee6d"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="7af569a39a6a7d01a58093a01b16644c2c0f5657"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
@@ -138,8 +138,8 @@
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="082a1f98422e6a6b56f61218d6fcf465e85d4c58"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="5b71e40213f650459e95d35b6f14af7e88d8ab62"/>
   <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="t2m" revision="4186bdecb4dae911b39a8202252cc2310d91b0be"/>
-  <project name="platform/frameworks/av" path="frameworks/av" revision="9e88d2eb335f00d9d9af18f663f9d3e55b019bf8"/>
-  <project name="platform/frameworks/base" path="frameworks/base" revision="714e6634f12435c208622a2b32e8f7fcb421771e"/>
+  <project name="platform/frameworks/av" path="frameworks/av" revision="c1814713bd2d07c2af0c236007badc8732a34324"/>
+  <project name="platform/frameworks/base" path="frameworks/base" revision="6b58ab45e3e56c1fc20708cc39fa2264c52558df"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="a46a9f1ac0ed5662d614c277cbb14eb3f332f365"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="9982f697972cfab09379fd909307e993a6247ebf"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="8d7676dfb68ee0cd069affedd5d1e97316a184ba"/>
@@ -151,7 +151,7 @@
   <project name="platform/hardware/ril" path="hardware/ril" revision="12b1977cc704b35f2e9db2bb423fa405348bc2f3"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="985bf15264d865fe7b9c5b45f61c451cbaafa43d"/>
   <project name="platform/system/core" path="system/core" revision="350eac5403124dacb2a5fd9e28ac290a59fc3b8e"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="eb24caca12c1ee69a26b778f67b802a812550703"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="7e5ae3ef2fe1cbc1c9a4fc718b01b7f28b1c5486"/>
   <project name="platform/system/qcom" path="system/qcom" revision="63e3f6f176caad587d42bba4c16b66d953fb23c2"/>
   <project name="platform/vendor/qcom-opensource/wlan/prima" path="vendor/qcom/opensource/wlan/prima" revision="6ada483cf7ff87eec2a9496941352606db73291e"/>
   <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="5d1dbc698de7294697373b436dd44e240f40e1ac"/>
