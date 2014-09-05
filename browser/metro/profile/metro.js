@@ -51,6 +51,7 @@ pref("layers.componentalpha.enabled", false);
 pref("apz.touch_start_tolerance", "0.1"); // dpi * tolerance = pixel threshold
 pref("apz.pan_repaint_interval", 50);   // prefer 20 fps
 pref("apz.fling_repaint_interval", 50); // prefer 20 fps
+pref("apz.smooth_scroll_repaint_interval", 50); // prefer 20 fps
 pref("apz.fling_stopped_threshold", "0.2");
 pref("apz.x_skate_size_multiplier", "2.5");
 pref("apz.y_skate_size_multiplier", "2.5");

@@ -59,6 +59,11 @@
   text-align: center;
 }
 
+.btn-email,
+.btn-copy {
+  border-radius: 2px;
+}
+
 .share > .action .btn:hover {
   background-color: #008ACB;
   border: 1px solid #008ACB;

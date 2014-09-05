@@ -3,15 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .showcase {
-  width: 730px;
+  width: 100%;
   margin: 0 auto;
+}
+
+.showcase-menu,
+.showcase {
+  min-width: 350px;
+  max-width: 730px;
 }
 
 .showcase > header {
   position: fixed;
   top: 0;
   background-color: #fbfbfb;
-  z-index: 1000;
+  z-index: 100000;
   width: 100%;
   padding-bottom: 1em;
 }
@@ -26,15 +32,17 @@
 .showcase-menu > a {
   margin-right: .5em;
   padding: .4rem;
+  margin-top: .2rem;
 }
 
 .showcase > section {
   position: relative;
-  padding-top: 10em;
+  padding-top: 12em;
   clear: both;
 }
 
 .showcase > section > h1 {
+  margin: 1em 0;
   border-bottom: 1px solid #aaa;
 }
 
@@ -50,11 +58,18 @@
   margin-bottom: 6em;
 }
 
+.showcase > section > h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 1.5em 0;
+}
+
 .showcase > section .example > h3 {
   font-size: 1.2em;
   font-weight: bold;
   border-bottom: 1px dashed #aaa;
-  margin: .5em 0;
+  margin: 1em 0;
+  text-align: left;
 }
 
 .showcase p.note {
@@ -64,21 +79,73 @@
   font-style: italic;
 }
 
+.override-position * {
+  /* Specific for toolbar component atm
+   * disables position absolute so that the parent div can
+   * compute the dimensions and prevent collapse */
+  position: relative !important;
+}
+
+/* Just for the showcase to look sane */
+.showcase .fx-embedded .local-stream {
+  position: absolute;
+}
+
 .showcase p.note > strong {
   font-weight: bold;
 }
 
-/* Images as fake videos for conversation view */
-.conversation .media.nested .remote,
-.conversation .media.nested .local {
-  background-size: contain;
+/*
+ * Switched to using height: 100% in standalone version
+ * this mocks it for the ui so that the component has height
+ * */
+.standalone .video-layout-wrapper,
+.standalone .remote_wrapper {
+  min-height: 550px;
 }
 
-.conversation .media.nested .remote {
+@media screen and (max-width:640px) {
+
+  .standalone .local-stream {
+    background-size: cover;
+  }
+
+  .standalone .local-stream,
+  .conversation .media.nested .remote {
+    background-size: cover;
+    background-position: center;
+  }
+
+  .standalone .remote_wrapper {
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+  }
+}
+
+.remote_wrapper {
   background-image: url("sample-img/video-screen-remote.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.local-stream {
+  background-image: url("sample-img/video-screen-local.png");
   background-repeat: no-repeat;
 }
 
-.conversation .media.nested .local {
-  background-image: url("sample-img/video-screen-local.png");
+  .local-stream.local:not(.local-stream-audio) {
+    background-size: cover;
+  }
+
+.incoming-call-action-group .btn-group-chevron,
+.incoming-call-action-group .btn-group {
+  /* Prevent box overflow due to long string */
+  max-width: 120px;
+}
+
+.conversation .media.nested .remote {
+  /* Height of obsolute box covers media control buttons. UI showcase only.
+   * When tokbox inserts the markup into the page the problem goes away */
+  bottom: auto;
 }

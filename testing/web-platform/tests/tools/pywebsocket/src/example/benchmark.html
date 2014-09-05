@@ -1,0 +1,312 @@
+<!--
+Copyright 2013, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+    * Neither the name of Google Inc. nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+<head>
+<title>WebSocket benchmark</title>
+<script src="util.js"></script>
+<script>
+// Namespace for holding globals.
+var benchmark = {};
+
+var PRINT_SIZE = true;
+
+var SEND_PARAMETER = {
+  numSockets: 1,
+  // Initial size of messages.
+  startSize: 10 * 1024,
+  // Stops benchmark when the size of message exceeds this threshold.
+  stopThreshold: 100000 * 1024,
+  // If the size of each message is small, send/receive multiple messages until
+  // the sum of sizes reaches this threshold.
+  minTotal: 100000 * 1024,
+  multipliers: [5, 2],
+};
+
+var RECEIVE_PARAMETER = {
+  numSockets: 1,
+  startSize: 10 * 1024,
+  stopThreshold: 100000 * 1024,
+  minTotal: 100000 * 1024,
+  multipliers: [5, 2],
+};
+
+var sockets = [];
+var numEstablishedSockets = 0;
+
+var addressBox = null;
+
+var timerID = null;
+
+benchmark.startTimeInMs = 0;
+
+var totalSize = 0;
+var totalReplied = 0;
+
+function destroySocket(socket) {
+  socket.onopen = function() {};
+  socket.onmessage = function() {};
+  socket.onerror = function() {};
+  socket.onclose = function() {};
+  socket.close();
+}
+
+function destroyAllSockets() {
+  for (var i = 0; i < sockets.length; ++i) {
+    destroySocket(sockets[i]);
+  }
+  sockets = [];
+}
+
+function buildSendBenchmarkFunction(size, multiplierIndex, parameter) {
+  if (size > parameter.stopThreshold) {
+    addToLog('Finished');
+    destroyAllSockets();
+    return function() {};
+  }
+
+  var onMessageHandler = function(event) {
+    if (!verifyAcknowledgement(event.data, size)) {
+      destroyAllSockets();
+      return;
+    }
+
+    totalReplied += size;
+
+    if (totalReplied < totalSize) {
+      return;
+    }
+
+    calculateAndLogResult(size, benchmark.startTimeInMs, totalSize, PRINT_SIZE);
+
+    timerID = setTimeout(
+        buildSendBenchmarkFunction(
+            size * parameter.multipliers[multiplierIndex],
+            (multiplierIndex + 1) % parameter.multipliers.length,
+            parameter),
+        0);
+  };
+
+  return function() {
+    for (var i = 0; i < sockets.length; ++i) {
+      var socket = sockets[i];
+      socket.onmessage = onMessageHandler;
+    }
+
+    benchmark.startTimeInMs = getTimeStamp();
+
+    totalReplied = 0;
+
+    totalSize = 0;
+
+    var socketIndex = 0;
+    while (totalSize < parameter.minTotal) {
+      var buffer = new ArrayBuffer(size);
+
+      fillArrayBuffer(buffer, 0x61);
+
+      sockets[socketIndex].send(buffer);
+      socketIndex = (socketIndex + 1) % sockets.length;
+
+      totalSize += size;
+    }
+  };
+}
+
+function buildReceiveBenchmarkFunction(size, multiplierIndex, parameter) {
+  if (size > parameter.stopThreshold) {
+    addToLog('Finished');
+    destroyAllSockets();
+    return function() {};
+  }
+
+  var onMessageHandler = function(event) {
+    var bytesReceived = event.data.byteLength;
+    if (bytesReceived != size) {
+      addToLog('Expected ' + size + 'B but received ' + bytesReceived + 'B');
+      destroyAllSockets();
+      return;
+    }
+
+    if (!verifyArrayBuffer(event.data, 0x61)) {
+      addToLog('Response verification failed');
+      destroyAllSockets();
+      return;
+    }
+
+    totalReplied += bytesReceived;
+
+    if (totalReplied < totalSize) {
+      return;
+    }
+
+    calculateAndLogResult(size, benchmark.startTimeInMs, totalSize, PRINT_SIZE);
+
+    timerID = setTimeout(
+        buildReceiveBenchmarkFunction(
+            size * parameter.multipliers[multiplierIndex],
+            (multiplierIndex + 1) % parameter.multipliers.length,
+            parameter),
+        0);
+  };
+
+  return function() {
+    for (var i = 0; i < sockets.length; ++i) {
+      var socket = sockets[i];
+      socket.binaryType = 'arraybuffer';
+      socket.onmessage = onMessageHandler;
+    }
+
+    benchmark.startTimeInMs = getTimeStamp();
+
+    totalReplied = 0;
+
+    totalSize = 0;
+
+    var socketIndex = 0;
+    while (totalSize < parameter.minTotal) {
+      sockets[socketIndex].send(size);
+      socketIndex = (socketIndex + 1) % sockets.length;
+
+      totalSize += size;
+    }
+  };
+}
+
+function createSocket() {
+  // TODO(tyoshino): Add TCP warm up.
+
+  if (!('WebSocket' in window)) {
+    return;
+  }
+
+  var url = addressBox.value;
+
+  addToLog('Connect ' + url);
+
+  var socket = new WebSocket(url);
+  socket.onmessage = function(event) {
+    addToLog('Unexpected message received. Aborting.');
+  };
+  socket.onerror = function() {
+    addToLog('Error');
+  };
+  socket.onclose = function(event) {
+    addToLog('Closed');
+  };
+  return socket;
+}
+
+function startBenchmark(runner, numSockets) {
+  clearTimeout(timerID);
+  destroyAllSockets();
+
+  numEstablishedSockets = 0;
+
+  for (var i = 0; i < numSockets; ++i) {
+    var socket = createSocket();
+    socket.onopen = function() {
+      addToLog('Opened');
+
+      ++numEstablishedSockets;
+
+      if (numEstablishedSockets == sockets.length) {
+        setTimeout(runner, 0);
+      }
+    };
+    sockets.push(socket);
+  }
+}
+
+function sendBenchmark() {
+  addToLog('Send benchmark');
+  addToLog('Message size in KiB, Speed in kB/s');
+
+  var runner = buildSendBenchmarkFunction(
+      SEND_PARAMETER.startSize,
+      0,
+      SEND_PARAMETER);
+
+  startBenchmark(runner, SEND_PARAMETER.numSockets);
+}
+
+function receiveBenchmark() {
+  addToLog('Receive benchmark');
+  addToLog('Message size in KiB, Speed in kB/s');
+
+  var runner = buildReceiveBenchmarkFunction(
+      RECEIVE_PARAMETER.startSize,
+      0,
+      REICEVE_PARAMETER);
+
+  startBenchmark(runner, RECEIVE_PARAMETER.numSockets);
+}
+
+function stop() {
+  addToLog('Stopped');
+  destroyAllSockets();
+}
+
+function init() {
+  addressBox = document.getElementById('address');
+  logBox = document.getElementById('log');
+
+  var scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
+  var defaultAddress = scheme + window.location.host + '/benchmark_helper';
+
+  addressBox.value = defaultAddress;
+
+  addToLog(window.navigator.userAgent.toLowerCase());
+
+  if (!('WebSocket' in window)) {
+    addToLog('WebSocket is not available');
+  }
+}
+</script>
+</head>
+<body onload="init()">
+
+<div id="benchmark_div">
+  url <input type="text" id="address" size="40">
+  <input type="button" value="send" onclick="sendBenchmark()">
+  <input type="button" value="receive" onclick="receiveBenchmark()">
+  <input type="button" value="stop" onclick="stop()">
+</div>
+
+<div id="log_div">
+  <textarea
+      id="log" rows="20" style="width: 100%" readonly></textarea>
+</div>
+
+Note: Effect of RTT and time spent for ArrayBuffer creation are not eliminated.
+
+</body>
+</html>

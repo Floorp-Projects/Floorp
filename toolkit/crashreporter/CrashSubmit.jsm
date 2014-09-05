@@ -298,10 +298,8 @@ Submitter.prototype = {
       }
     }
 
-    let submissionID = "sub-" + Cc["@mozilla.org/uuid-generator;1"]
-                                  .getService(Ci.nsIUUIDGenerator)
-                                  .generateUUID().toString().slice(1, -1);
     let manager = Services.crashmanager;
+    let submissionID = manager.generateSubmissionID();
 
     let self = this;
     xhr.addEventListener("readystatechange", function (aEvt) {

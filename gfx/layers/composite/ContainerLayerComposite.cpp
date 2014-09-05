@@ -424,6 +424,24 @@ ContainerRender(ContainerT* aContainer,
     RenderLayers(aContainer, aManager, RenderTargetPixel::FromUntyped(aClipRect));
   }
   aContainer->mPrepared = nullptr;
+
+  // If it is a scrollable container layer with no child layers, and one of the APZCs
+  // attached to it has a nonempty async transform, then that transform is not applied
+  // to any visible content. Display a warning box (conditioned on the FPS display being
+  // enabled).
+  if (gfxPrefs::LayersDrawFPS() && aContainer->IsScrollInfoLayer()) {
+    // Since aContainer doesn't have any children we can just iterate from the top metrics
+    // on it down to the bottom using GetFirstChild and not worry about walking onto another
+    // underlying layer.
+    for (LayerMetricsWrapper i(aContainer); i; i = i.GetFirstChild()) {
+      if (AsyncPanZoomController* apzc = i.GetApzc()) {
+        if (!Matrix4x4(apzc->GetCurrentAsyncTransform()).IsIdentity()) {
+          aManager->UnusedApzTransformWarning();
+          break;
+        }
+      }
+    }
+  }
 }
 
 ContainerLayerComposite::ContainerLayerComposite(LayerManagerComposite *aManager)

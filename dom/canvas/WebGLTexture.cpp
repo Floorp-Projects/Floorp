@@ -137,22 +137,17 @@ WebGLTexture::Bind(GLenum aTarget) {
 }
 
 void
-WebGLTexture::SetImageInfo(GLenum aTarget, GLint aLevel,
+WebGLTexture::SetImageInfo(GLenum aTexImageTarget, GLint aLevel,
                   GLsizei aWidth, GLsizei aHeight,
                   GLenum aFormat, GLenum aType, WebGLImageDataStatus aStatus)
 {
-    // TODO(djg): I suspected the following ASSERT and check are
-    //            trying to express more than they're saying, probably
-    //            to do with cubemap targets. We should do this
-    //            properly. https://bugzilla.mozilla.org/show_bug.cgi?id=1006908
-    MOZ_ASSERT((aTarget == LOCAL_GL_TEXTURE_2D) == (mTarget == LOCAL_GL_TEXTURE_2D));
-    if ((aTarget == LOCAL_GL_TEXTURE_2D) != (mTarget == LOCAL_GL_TEXTURE_2D)) {
+    MOZ_ASSERT(TexImageTargetToTexTarget(aTexImageTarget) == mTarget);
+    if (TexImageTargetToTexTarget(aTexImageTarget) != mTarget)
         return;
-    }
 
     EnsureMaxLevelWithCustomImagesAtLeast(aLevel);
 
-    ImageInfoAt(aTarget, aLevel) = ImageInfo(aWidth, aHeight, aFormat, aType, aStatus);
+    ImageInfoAt(aTexImageTarget, aLevel) = ImageInfo(aWidth, aHeight, aFormat, aType, aStatus);
 
     if (aLevel > 0)
         SetCustomMipmap();

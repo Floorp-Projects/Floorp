@@ -1,0 +1,28 @@
+<!doctype html>
+<title>Cloning objects with getter properties</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id=log></div>
+<script>
+async_test(function() {
+   var obj = {};
+   obj.__defineGetter__( "field", this.step_func(function(){ assert_unreached(); }) );
+
+   assert_throws('DATA_CLONE_ERR', function() {
+      postMessage(obj, '*');
+   });
+
+   /* Check that getters don't linger after deletion wrt cloning. */
+   var obj1 = {};
+   obj1.__defineGetter__( "a", function(){ return 2; } );
+   obj1.__defineSetter__( "a", function(v){ return; } );
+   delete obj1.a;
+   obj1.a = 2;
+
+   postMessage(obj1, '*');
+   onmessage = this.step_func(function(e) {
+     assert_equals(e.data.a, 2);
+     this.done();
+  });
+});
+</script>

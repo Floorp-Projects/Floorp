@@ -312,6 +312,45 @@ FilterCachedColorModels::WrapForColorModel(ColorModel aColorModel)
   return FilterWrappers::LinearRGBToSRGB(mDT, unpremultipliedOriginal);
 }
 
+// When aAmount == 0, the identity matrix is returned.
+// When aAmount == 1, aToMatrix is returned.
+// When aAmount > 1, an exaggerated version of aToMatrix is returned. This can
+// be useful in certain cases, such as producing a color matrix to oversaturate
+// an image.
+//
+// This function is a shortcut of a full matrix addition and a scalar multiply,
+// and it assumes that the following elements in aToMatrix are 0 and 1:
+//   x x x 0 0
+//   x x x 0 0
+//   x x x 0 0
+//   0 0 0 1 0
+static void
+InterpolateFromIdentityMatrix(const float aToMatrix[20], float aAmount,
+                              float aOutMatrix[20])
+{
+  static const float identityMatrix[] =
+    { 1, 0, 0, 0, 0,
+      0, 1, 0, 0, 0,
+      0, 0, 1, 0, 0,
+      0, 0, 0, 1, 0 };
+
+  PodCopy(aOutMatrix, identityMatrix, 20);
+
+  float oneMinusAmount = 1 - aAmount;
+
+  aOutMatrix[0] = aAmount * aToMatrix[0] + oneMinusAmount;
+  aOutMatrix[1] = aAmount * aToMatrix[1];
+  aOutMatrix[2] = aAmount * aToMatrix[2];
+
+  aOutMatrix[5] = aAmount * aToMatrix[5];
+  aOutMatrix[6] = aAmount * aToMatrix[6] + oneMinusAmount;
+  aOutMatrix[7] = aAmount * aToMatrix[7];
+
+  aOutMatrix[10] = aAmount * aToMatrix[10];
+  aOutMatrix[11] = aAmount * aToMatrix[11];
+  aOutMatrix[12] = aAmount * aToMatrix[12] + oneMinusAmount;
+}
+
 // Create a 4x5 color matrix for the different ways to specify color matrices
 // in SVG.
 static nsresult
@@ -324,11 +363,37 @@ ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
       0, 0, 1, 0, 0,
       0, 0, 0, 1, 0 };
 
+  // Luminance coefficients.
+  static const float lumR = 0.2126f;
+  static const float lumG = 0.7152f;
+  static const float lumB = 0.0722f;
+
+  static const float oneMinusLumR = 1 - lumR;
+  static const float oneMinusLumG = 1 - lumG;
+  static const float oneMinusLumB = 1 - lumB;
+
   static const float luminanceToAlphaMatrix[] =
-    { 0,       0,       0,       0, 0,
-      0,       0,       0,       0, 0,
-      0,       0,       0,       0, 0,
-      0.2125f, 0.7154f, 0.0721f, 0, 0 };
+    { 0,    0,    0,    0, 0,
+      0,    0,    0,    0, 0,
+      0,    0,    0,    0, 0,
+      lumR, lumG, lumB, 0, 0 };
+
+  static const float saturateMatrix[] =
+    { lumR, lumG, lumB, 0, 0,
+      lumR, lumG, lumB, 0, 0,
+      lumR, lumG, lumB, 0, 0,
+      0,    0,    0,    1, 0 };
+
+  static const float sepiaMatrix[] =
+    { 0.393f, 0.769f, 0.189f, 0, 0,
+      0.349f, 0.686f, 0.168f, 0, 0,
+      0.272f, 0.534f, 0.131f, 0, 0,
+      0,      0,      0,      1, 0 };
+
+  // Hue rotate specific coefficients.
+  static const float hueRotateR = 0.143f;
+  static const float hueRotateG = 0.140f;
+  static const float hueRotateB = 0.283f;
 
   switch (aColorMatrixType) {
 
@@ -351,20 +416,7 @@ ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
       if (s < 0)
         return NS_ERROR_FAILURE;
 
-      PodCopy(aOutMatrix, identityMatrix, 20);
-
-      aOutMatrix[0] = 0.213f + 0.787f * s;
-      aOutMatrix[1] = 0.715f - 0.715f * s;
-      aOutMatrix[2] = 0.072f - 0.072f * s;
-
-      aOutMatrix[5] = 0.213f - 0.213f * s;
-      aOutMatrix[6] = 0.715f + 0.285f * s;
-      aOutMatrix[7] = 0.072f - 0.072f * s;
-
-      aOutMatrix[10] = 0.213f - 0.213f * s;
-      aOutMatrix[11] = 0.715f - 0.715f * s;
-      aOutMatrix[12] = 0.072f + 0.928f * s;
-
+      InterpolateFromIdentityMatrix(saturateMatrix, 1 - s, aOutMatrix);
       break;
     }
 
@@ -380,17 +432,17 @@ ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
       float c = static_cast<float>(cos(hueRotateValue * M_PI / 180));
       float s = static_cast<float>(sin(hueRotateValue * M_PI / 180));
 
-      aOutMatrix[0] = 0.213f + 0.787f * c - 0.213f * s;
-      aOutMatrix[1] = 0.715f - 0.715f * c - 0.715f * s;
-      aOutMatrix[2] = 0.072f - 0.072f * c + 0.928f * s;
+      aOutMatrix[0] = lumR + oneMinusLumR * c - lumR * s;
+      aOutMatrix[1] = lumG - lumG * c - lumG * s;
+      aOutMatrix[2] = lumB - lumB * c + oneMinusLumB * s;
 
-      aOutMatrix[5] = 0.213f - 0.213f * c + 0.143f * s;
-      aOutMatrix[6] = 0.715f + 0.285f * c + 0.140f * s;
-      aOutMatrix[7] = 0.072f - 0.072f * c - 0.283f * s;
+      aOutMatrix[5] = lumR - lumR * c + hueRotateR * s;
+      aOutMatrix[6] = lumG + oneMinusLumG * c + hueRotateG * s;
+      aOutMatrix[7] = lumB - oneMinusLumB * c - hueRotateB * s;
 
-      aOutMatrix[10] = 0.213f - 0.213f * c - 0.787f * s;
-      aOutMatrix[11] = 0.715f - 0.715f * c + 0.715f * s;
-      aOutMatrix[12] = 0.072f + 0.928f * c + 0.072f * s;
+      aOutMatrix[10] = lumR - lumR * c - oneMinusLumR * s;
+      aOutMatrix[11] = lumG - lumG * c + lumG * s;
+      aOutMatrix[12] = lumB + oneMinusLumB * c + lumB * s;
 
       break;
     }
@@ -411,22 +463,7 @@ ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
       if (amount < 0 || amount > 1)
         return NS_ERROR_FAILURE;
 
-      PodCopy(aOutMatrix, identityMatrix, 20);
-
-      float s = 1 - amount;
-
-      aOutMatrix[0] = 0.393f + 0.607f * s;
-      aOutMatrix[1] = 0.769f - 0.769f * s;
-      aOutMatrix[2] = 0.189f - 0.189f * s;
-
-      aOutMatrix[5] = 0.349f - 0.349f * s;
-      aOutMatrix[6] = 0.686f + 0.314f * s;
-      aOutMatrix[7] = 0.168f - 0.168f * s;
-
-      aOutMatrix[10] = 0.272f - 0.272f * s;
-      aOutMatrix[11] = 0.534f - 0.534f * s;
-      aOutMatrix[12] = 0.131f + 0.869f * s;
-
+      InterpolateFromIdentityMatrix(sepiaMatrix, amount, aOutMatrix);
       break;
     }
 

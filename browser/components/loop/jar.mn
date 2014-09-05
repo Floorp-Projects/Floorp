@@ -44,6 +44,7 @@ browser.jar:
   content/browser/loop/shared/img/svg/glyph-account-16x16.svg   (content/shared/img/svg/glyph-account-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-signin-16x16.svg    (content/shared/img/svg/glyph-signin-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-signout-16x16.svg   (content/shared/img/svg/glyph-signout-16x16.svg)
+  content/browser/loop/shared/img/audio-call-avatar.svg   (content/shared/img/audio-call-avatar.svg)
 
   # Shared scripts
   content/browser/loop/shared/js/feedbackApiClient.js (content/shared/js/feedbackApiClient.js)
@@ -54,7 +55,11 @@ browser.jar:
   content/browser/loop/shared/js/websocket.js         (content/shared/js/websocket.js)
 
   # Shared libs
+#ifdef DEBUG
   content/browser/loop/shared/libs/react-0.11.1.js    (content/shared/libs/react-0.11.1.js)
+#else
+  content/browser/loop/shared/libs/react-0.11.1.js    (content/shared/libs/react-0.11.1-prod.js)
+#endif
   content/browser/loop/shared/libs/lodash-2.4.1.js    (content/shared/libs/lodash-2.4.1.js)
   content/browser/loop/shared/libs/jquery-2.1.0.js    (content/shared/libs/jquery-2.1.0.js)
   content/browser/loop/shared/libs/backbone-1.1.2.js  (content/shared/libs/backbone-1.1.2.js)

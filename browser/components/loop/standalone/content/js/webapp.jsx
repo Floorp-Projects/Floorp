@@ -8,7 +8,7 @@
 /* jshint newcap:false */
 
 var loop = loop || {};
-loop.webapp = (function($, _, OT, webL10n) {
+loop.webapp = (function($, _, OT, mozL10n) {
   "use strict";
 
   loop.config = loop.config || {};
@@ -16,8 +16,7 @@ loop.webapp = (function($, _, OT, webL10n) {
 
   var sharedModels = loop.shared.models,
       sharedViews = loop.shared.views,
-      baseServerUrl = loop.config.serverUrl,
-      __ = webL10n.get;
+      baseServerUrl = loop.config.serverUrl;
 
   /**
    * App router.
@@ -46,11 +45,11 @@ loop.webapp = (function($, _, OT, webL10n) {
       }
       return (
         <div className="promote-firefox">
-          <h3>{__("promote_firefox_hello_heading")}</h3>
+          <h3>{mozL10n.get("promote_firefox_hello_heading")}</h3>
           <p>
             <a className="btn btn-large btn-accept"
                href="https://www.mozilla.org/firefox/">
-              {__("get_firefox_button")}
+              {mozL10n.get("get_firefox_button")}
             </a>
           </p>
         </div>
@@ -72,8 +71,8 @@ loop.webapp = (function($, _, OT, webL10n) {
         <div className="expired-url-info">
           <div className="info-panel">
             <div className="firefox-logo" />
-            <h1>{__("call_url_unavailable_notification_heading")}</h1>
-            <h4>{__("call_url_unavailable_notification_message2")}</h4>
+            <h1>{mozL10n.get("call_url_unavailable_notification_heading")}</h1>
+            <h4>{mozL10n.get("call_url_unavailable_notification_message2")}</h4>
           </div>
           <PromoteFirefoxView helper={this.props.helper} />
         </div>
@@ -94,7 +93,7 @@ loop.webapp = (function($, _, OT, webL10n) {
         "hide": !this.props.urlCreationDateString.length
       });
 
-      var callUrlCreationDateString = __("call_url_creation_date_label", {
+      var callUrlCreationDateString = mozL10n.get("call_url_creation_date_label", {
         "call_url_creation_date": this.props.urlCreationDateString
       });
 
@@ -102,7 +101,7 @@ loop.webapp = (function($, _, OT, webL10n) {
         /* jshint ignore:start */
         <header className="standalone-header container-box">
           <h1 className="standalone-header-title">
-            <strong>{__("brandShortname")}</strong> {__("clientShortname")}
+            <strong>{mozL10n.get("brandShortname")}</strong> {mozL10n.get("clientShortname")}
           </h1>
           <div className="loop-logo" title="Firefox WebRTC! logo"></div>
           <h3 className="call-url">
@@ -141,11 +140,15 @@ loop.webapp = (function($, _, OT, webL10n) {
      *
      */
 
+    getInitialProps: function() {
+      return {showCallOptionsMenu: false};
+    },
+
     getInitialState: function() {
       return {
         urlCreationDateString: '',
         disableCallButton: false,
-        showCallOptionsMenu: false
+        showCallOptionsMenu: this.props.showCallOptionsMenu
       };
     },
 
@@ -219,18 +222,16 @@ loop.webapp = (function($, _, OT, webL10n) {
     },
 
     render: function() {
-      var tos_link_name = __("terms_of_use_link_text");
-      var privacy_notice_name = __("privacy_notice_link_text");
+      var tos_link_name = mozL10n.get("terms_of_use_link_text");
+      var privacy_notice_name = mozL10n.get("privacy_notice_link_text");
 
-      var tosHTML = __("legal_text_and_links", {
+      var tosHTML = mozL10n.get("legal_text_and_links", {
         "terms_of_use_url": "<a target=_blank href='" +
           "https://accounts.firefox.com/legal/terms'>" + tos_link_name + "</a>",
         "privacy_notice_url": "<a target=_blank href='" +
           "https://www.mozilla.org/privacy/'>" + privacy_notice_name + "</a>"
       });
 
-      var btnClassStartCall = "btn btn-large btn-accept " +
-                              loop.shared.utils.getTargetPlatform();
       var dropdownMenuClasses = React.addons.classSet({
         "native-dropdown-large-parent": true,
         "standalone-dropdown-menu": true,
@@ -250,7 +251,7 @@ loop.webapp = (function($, _, OT, webL10n) {
               urlCreationDateString={this.state.urlCreationDateString} />
 
             <p className="standalone-call-btn-label">
-              {__("initiate_call_button_label2")}
+              {mozL10n.get("initiate_call_button_label2")}
             </p>
 
             <div id="messages"></div>
@@ -261,18 +262,18 @@ loop.webapp = (function($, _, OT, webL10n) {
                 <div className="btn-group-chevron">
                   <div className="btn-group">
 
-                    <button className={btnClassStartCall}
+                    <button className="btn btn-large btn-accept"
                             onClick={this._initiateOutgoingCall("audio-video")}
                             disabled={this.state.disableCallButton}
-                            title={__("initiate_audio_video_call_tooltip2")} >
+                            title={mozL10n.get("initiate_audio_video_call_tooltip2")} >
                       <span className="standalone-call-btn-text">
-                        {__("initiate_audio_video_call_button2")}
+                        {mozL10n.get("initiate_audio_video_call_button2")}
                       </span>
                       <span className="standalone-call-btn-video-icon"></span>
                     </button>
 
                     <div className="btn-chevron"
-                      onClick={this._toggleCallOptionsMenu}>
+                         onClick={this._toggleCallOptionsMenu}>
                     </div>
 
                   </div>
@@ -285,7 +286,7 @@ loop.webapp = (function($, _, OT, webL10n) {
                       <button className="start-audio-only-call"
                               onClick={this._initiateOutgoingCall("audio")}
                               disabled={this.state.disableCallButton} >
-                        {__("initiate_audio_call_button2")}
+                        {mozL10n.get("initiate_audio_call_button2")}
                       </button>
                     </li>
                   </ul>
@@ -571,11 +572,9 @@ loop.webapp = (function($, _, OT, webL10n) {
       router.navigate("unsupportedBrowser", {trigger: true});
     }
 
-    document.body.classList.add(loop.shared.utils.getTargetPlatform());
-
     // Set the 'lang' and 'dir' attributes to <html> when the page is translated
-    document.documentElement.lang = document.webL10n.getLanguage();
-    document.documentElement.dir = document.webL10n.getDirection();
+    document.documentElement.lang = mozL10n.language.code;
+    document.documentElement.dir = mozL10n.language.direction;
   }
 
   return {
@@ -588,4 +587,4 @@ loop.webapp = (function($, _, OT, webL10n) {
     WebappHelper: WebappHelper,
     WebappRouter: WebappRouter
   };
-})(jQuery, _, window.OT, document.webL10n);
+})(jQuery, _, window.OT, navigator.mozL10n);
