@@ -11,6 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 
 #include "jspubtd.h"
@@ -248,6 +249,19 @@ class BuilderOrigin : public Builder {
 
     JSObject *unwrap(Object &object) { return unwrapAny(object); }
 };
+
+
+// Finding the size of blocks allocated with malloc
+// ------------------------------------------------
+//
+// Debugger.Memory wants to be able to report how many bytes items in memory are
+// consuming. To do this, it needs a function that accepts a pointer to a block,
+// and returns the number of bytes allocated to that block. SpiderMonkey itself
+// doesn't know which function is appropriate to use, but the embedding does.
+
+// Tell Debuggers in |runtime| to use |mallocSizeOf| to find the size of
+// malloc'd blocks.
+void SetDebuggerMallocSizeOf(JSRuntime *runtime, mozilla::MallocSizeOf mallocSizeOf);
 
 } // namespace dbg
 } // namespace JS
