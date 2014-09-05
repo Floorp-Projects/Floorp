@@ -489,6 +489,16 @@ protected:
   float PanDistance() const;
 
   /**
+   * Gets the start point of the current touch.
+   * Like PanDistance(), this only makes sense if a touch is currently
+   * happening and OnTouchMove() or the equivalent for pan gestures is
+   * being invoked.
+   * Unlikely PanDistance(), this function returns a point in local screen
+   * coordinates.
+   */
+  ScreenPoint PanStart() const;
+
+  /**
    * Gets a vector of the velocities of each axis.
    */
   const ScreenPoint GetVelocityVector();
