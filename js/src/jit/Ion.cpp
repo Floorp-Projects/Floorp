@@ -820,6 +820,9 @@ JitCode::togglePreBarriers(bool enabled)
     }
 }
 
+template<> const jschar JS::ubi::TracerConcrete<JitCode>::concreteTypeName[] =
+    MOZ_UTF16("js::jit::JitCode");
+
 IonScript::IonScript()
   : method_(nullptr),
     deoptTable_(nullptr),
