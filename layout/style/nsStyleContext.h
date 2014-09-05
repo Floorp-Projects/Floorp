@@ -312,9 +312,13 @@ public:
    * must not pass less than needed; therefore if the caller doesn't
    * know, the caller should pass
    * nsChangeHint_Hints_NotHandledForDescendants.
+   *
+   * aEqualStructs must not be null.  Into it will be stored a bitfield
+   * representing which structs were compared to be non-equal.
    */
   nsChangeHint CalcStyleDifference(nsStyleContext* aOther,
-                                   nsChangeHint aParentHintsNotHandledForDescendants);
+                                   nsChangeHint aParentHintsNotHandledForDescendants,
+                                   uint32_t* aEqualStructs);
 
   /**
    * Get a color that depends on link-visitedness using this and
