@@ -29,7 +29,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
 #include "nsISystemProxySettings.h"
-#include "nsINetworkLinkService.h"
 
 //----------------------------------------------------------------------------
 
@@ -415,58 +414,13 @@ nsProtocolProxyService::Init()
         PrefsChanged(prefBranch, nullptr);
     }
 
+    // register for shutdown notification so we can clean ourselves up properly.
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-        // register for shutdown notification so we can clean ourselves up
-        // properly.
+    if (obs)
         obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
-        obs->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
-    }
-
     return NS_OK;
 }
-
-// ReloadNetworkPAC() checks if there's a non-networked PAC in use then avoids
-// to call ReloadPAC()
-nsresult
-nsProtocolProxyService::ReloadNetworkPAC()
-{
-    nsCOMPtr<nsIPrefBranch> prefs =
-        do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!prefs) {
-        return NS_OK;
-    }
-
-    int32_t type;
-    nsresult rv = prefs->GetIntPref(PROXY_PREF("type"), &type);
-    if (NS_FAILED(rv)) {
-        return NS_OK;
-    }
-
-    if (type == PROXYCONFIG_PAC) {
-        nsXPIDLCString pacSpec;
-        prefs->GetCharPref(PROXY_PREF("autoconfig_url"),
-                           getter_Copies(pacSpec));
-        if (!pacSpec.IsEmpty()) {
-            nsCOMPtr<nsIURI> pacURI;
-            NS_NewURI(getter_AddRefs(pacURI), pacSpec);
-            nsProtocolInfo pac;
-            GetProtocolInfo(pacURI, &pac);
-
-            if (!pac.scheme.EqualsLiteral("file") &&
-                !pac.scheme.EqualsLiteral("data")) {
-                LOG((": received network changed event, reload PAC"));
-                ReloadPAC();
-            }
-        }
-    } else if ((type == PROXYCONFIG_WPAD) || (type == PROXYCONFIG_SYSTEM)) {
-        ReloadPAC();
-    }
-
-    return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsProtocolProxyService::Observe(nsISupports     *aSubject,
@@ -485,12 +439,6 @@ nsProtocolProxyService::Observe(nsISupports     *aSubject,
         if (mPACMan) {
             mPACMan->Shutdown();
             mPACMan = nullptr;
-        }
-    } else if (strcmp(aTopic, NS_NETWORK_LINK_TOPIC) == 0) {
-        nsCString converted = NS_ConvertUTF16toUTF8(aData);
-        const char *state = converted.get();
-        if (!strcmp(state, NS_NETWORK_LINK_DATA_CHANGED)) {
-            ReloadNetworkPAC();
         }
     }
     else {
