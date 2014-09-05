@@ -362,9 +362,10 @@ public:
   virtual Layer* GetLayer() = 0;
 
   /**
-   * Perform a first pass over the layer tree to prepare intermediate surfaces.
-   * This allows us on to avoid framebuffer switches in the middle of our render
-   * which is inefficient. This must be called before RenderLayer.
+   * Perform a first pass over the layer tree to render all of the intermediate
+   * surfaces that we can. This allows us to avoid framebuffer switches in the
+   * middle of our render which is inefficient especially on mobile GPUs. This
+   * must be called before RenderLayer.
    */
   virtual void Prepare(const RenderTargetIntRect& aClipRect) {}
 
