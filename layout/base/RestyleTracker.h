@@ -12,7 +12,7 @@
 #define mozilla_RestyleTracker_h
 
 #include "mozilla/dom/Element.h"
-#include "nsDataHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsContainerFrame.h"
 #include "mozilla/SplayTree.h"
 
@@ -286,8 +286,18 @@ public:
   Element::FlagsType RootBit() const {
     return mRestyleBits & ~ELEMENT_PENDING_RESTYLE_FLAGS;
   }
-  
+
   struct RestyleData {
+    RestyleData() {
+      mRestyleHint = nsRestyleHint(0);
+      mChangeHint = NS_STYLE_HINT_NONE;
+    }
+
+    RestyleData(nsRestyleHint aRestyleHint, nsChangeHint aChangeHint) {
+      mRestyleHint = aRestyleHint;
+      mChangeHint = aChangeHint;
+    }
+
     nsRestyleHint mRestyleHint;       // What we want to restyle
     nsChangeHint mChangeHint;         // The minimal change hint for "self"
 
@@ -306,10 +316,9 @@ public:
    * eRestyle_LaterSiblings hint in it.
    *
    * The return value indicates whether any restyle data was found for
-   * the element.  If false is returned, then the state of *aData is
-   * undefined.
+   * the element.  aData is set to nullptr iff false is returned.
    */
-  bool GetRestyleData(Element* aElement, RestyleData* aData);
+  bool GetRestyleData(Element* aElement, nsAutoPtr<RestyleData>& aData);
 
   /**
    * For each element in aElements, appends it to mRestyleRoots if it
@@ -353,14 +362,14 @@ private:
    */
   void DoProcessRestyles();
 
-  typedef nsDataHashtable<nsISupportsHashKey, RestyleData> PendingRestyleTable;
+  typedef nsClassHashtable<nsISupportsHashKey, RestyleData> PendingRestyleTable;
   typedef nsAutoTArray< nsRefPtr<Element>, 32> RestyleRootArray;
   // Our restyle bits.  These will be a subset of ELEMENT_ALL_RESTYLE_FLAGS, and
   // will include one flag from ELEMENT_PENDING_RESTYLE_FLAGS and one flag
   // that's not in ELEMENT_PENDING_RESTYLE_FLAGS.
   Element::FlagsType mRestyleBits;
   RestyleManager* mRestyleManager; // Owns us
-  // A hashtable that maps elements to RestyleData structs.  The
+  // A hashtable that maps elements to pointers to RestyleData structs.  The
   // values only make sense if the element's current document is our
   // document and it has our RestyleBit() flag set.  In particular,
   // said bit might not be set if the element had a restyle posted and
@@ -384,9 +393,7 @@ RestyleTracker::AddPendingRestyleToTable(Element* aElement,
                                          nsRestyleHint aRestyleHint,
                                          nsChangeHint aMinChangeHint)
 {
-  RestyleData existingData;
-  existingData.mRestyleHint = nsRestyleHint(0);
-  existingData.mChangeHint = NS_STYLE_HINT_NONE;
+  RestyleData* existingData;
 
   // Check the RestyleBit() flag before doing the hashtable Get, since
   // it's possible that the data in the hashtable isn't actually
@@ -395,15 +402,20 @@ RestyleTracker::AddPendingRestyleToTable(Element* aElement,
     mPendingRestyles.Get(aElement, &existingData);
   } else {
     aElement->SetFlags(RestyleBit());
+    existingData = nullptr;
+  }
+
+  if (!existingData) {
+    mPendingRestyles.Put(aElement,
+                         new RestyleData(aRestyleHint, aMinChangeHint));
+    return false;
   }
 
   bool hadRestyleLaterSiblings =
-    (existingData.mRestyleHint & eRestyle_LaterSiblings) != 0;
-  existingData.mRestyleHint =
-    nsRestyleHint(existingData.mRestyleHint | aRestyleHint);
-  NS_UpdateHint(existingData.mChangeHint, aMinChangeHint);
-
-  mPendingRestyles.Put(aElement, existingData);
+    (existingData->mRestyleHint & eRestyle_LaterSiblings) != 0;
+  existingData->mRestyleHint =
+    nsRestyleHint(existingData->mRestyleHint | aRestyleHint);
+  NS_UpdateHint(existingData->mChangeHint, aMinChangeHint);
 
   return hadRestyleLaterSiblings;
 }
@@ -459,11 +471,10 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
       // invariant that if two elements appear in the array and one
       // is an ancestor of the other, that the ancestor appears after
       // the descendant.
-      RestyleData curData;
-      // XXX We should avoid copying RestyleData::mDescendants around.
+      RestyleData* curData;
       mPendingRestyles.Get(cur, &curData);
-      curData.mDescendants.AppendElement(aElement);
-      mPendingRestyles.Put(cur, curData);
+      NS_ASSERTION(curData, "expected to find a RestyleData for cur");
+      curData->mDescendants.AppendElement(aElement);
     }
   }
 
