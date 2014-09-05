@@ -927,7 +927,7 @@ AsyncPanZoomController::Destroy()
 }
 
 bool
-AsyncPanZoomController::IsDestroyed()
+AsyncPanZoomController::IsDestroyed() const
 {
   return mTreeManager == nullptr;
 }
@@ -1694,7 +1694,7 @@ nsEventStatus AsyncPanZoomController::OnCancelTap(const TapGestureInput& aEvent)
   return nsEventStatus_eIgnore;
 }
 
-float AsyncPanZoomController::PanDistance() {
+float AsyncPanZoomController::PanDistance() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
   return NS_hypot(mX.PanDistance(), mY.PanDistance());
 }
@@ -2465,7 +2465,7 @@ void AsyncPanZoomController::SampleContentTransformForFrame(ViewTransform* aOutT
   }
 }
 
-ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
+ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
   CSSPoint lastPaintScrollOffset;
@@ -2503,14 +2503,14 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
   return ViewTransform(scale, -translation);
 }
 
-Matrix4x4 AsyncPanZoomController::GetNontransientAsyncTransform() {
+Matrix4x4 AsyncPanZoomController::GetNontransientAsyncTransform() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
   return Matrix4x4().Scale(mLastContentPaintMetrics.mResolution.scale,
                            mLastContentPaintMetrics.mResolution.scale,
                            1.0f);
 }
 
-Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() {
+Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
   // Technically we should be taking the scroll delta in the coordinate space
