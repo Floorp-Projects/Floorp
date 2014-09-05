@@ -27,18 +27,7 @@ import static android.telephony.SmsMessage.MessageClass;
 import static org.mozilla.gecko.SmsManager.ISmsManager;
 
 import java.util.ArrayList;
-
-/**
- * This class is returning unique ids for PendingIntent requestCode attribute.
- * There are only |Integer.MAX_VALUE - Integer.MIN_VALUE| unique IDs available,
- * and they wrap around.
- */
-class PendingIntentUID
-{
-  static private int sUID = Integer.MIN_VALUE;
-
-  static public int generate() { return sUID++; }
-}
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The envelope class contains all information that are needed to keep track of
@@ -358,6 +347,9 @@ public class GeckoSmsManager
 
   private final static String[] kRequiredMessageRows = new String[] { "_id", "address", "body", "date", "type", "status" };
 
+  // Used to generate monotonically increasing GUIDs.
+  private static final AtomicInteger pendingIntentGuid = new AtomicInteger(Integer.MIN_VALUE);
+
   public GeckoSmsManager() {
     SmsIOThread.getInstance().start();
   }
@@ -531,12 +523,12 @@ public class GeckoSmsManager
          */
         PendingIntent sentPendingIntent =
           PendingIntent.getBroadcast(GeckoAppShell.getContext(),
-                                     PendingIntentUID.generate(), sentIntent,
+                                     pendingIntentGuid.incrementAndGet(), sentIntent,
                                      PendingIntent.FLAG_CANCEL_CURRENT);
 
         PendingIntent deliveredPendingIntent =
           PendingIntent.getBroadcast(GeckoAppShell.getContext(),
-                                     PendingIntentUID.generate(), deliveredIntent,
+                                     pendingIntentGuid.incrementAndGet(), deliveredIntent,
                                      PendingIntent.FLAG_CANCEL_CURRENT);
 
         sm.sendTextMessage(aNumber, "", aMessage,
@@ -557,13 +549,13 @@ public class GeckoSmsManager
         for (int i=0; i<parts.size(); ++i) {
           sentPendingIntents.add(
             PendingIntent.getBroadcast(GeckoAppShell.getContext(),
-                                       PendingIntentUID.generate(), sentIntent,
+                                       pendingIntentGuid.incrementAndGet(), sentIntent,
                                        PendingIntent.FLAG_CANCEL_CURRENT)
           );
 
           deliveredPendingIntents.add(
             PendingIntent.getBroadcast(GeckoAppShell.getContext(),
-                                       PendingIntentUID.generate(), deliveredIntent,
+                                       pendingIntentGuid.incrementAndGet(), deliveredIntent,
                                        PendingIntent.FLAG_CANCEL_CURRENT)
           );
         }
