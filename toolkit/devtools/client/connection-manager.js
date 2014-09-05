@@ -23,12 +23,12 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
  * # ConnectionManager
  *
  * Methods:
- *  ⬩ Connection createConnection(host, port)
- *  ⬩ void       destroyConnection(connection)
- *  ⬩ Number     getFreeTCPPort()
+ *  . Connection createConnection(host, port)
+ *  . void       destroyConnection(connection)
+ *  . Number     getFreeTCPPort()
  *
  * Properties:
- *  ⬩ Array      connections
+ *  . Array      connections
  *
  * # Connection
  *
@@ -38,33 +38,34 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
  * will re-create a debugger client.
  *
  * Methods:
- *  ⬩ connect()         Connect to host:port. Expect a "connecting" event. If
- *                      host is not specified, a local pipe is used
- *  ⬩ disconnect()      Disconnect if connected. Expect a "disconnecting" event
+ *  . connect()             Connect to host:port. Expect a "connecting" event.
+ *                          If no host is not specified, a local pipe is used
+ *  . connect(transport)    Connect via transport. Expect a "connecting" event.
+ *  . disconnect()          Disconnect if connected. Expect a "disconnecting" event
  *
  * Properties:
- *  ⬩ host              IP address or hostname
- *  ⬩ port              Port
- *  ⬩ logs              Current logs. "newlog" event notifies new available logs
- *  ⬩ store             Reference to a local data store (see below)
- *  ⬩ keepConnecting    Should the connection keep trying connecting
- *  ⬩ status            Connection status:
- *                        Connection.Status.CONNECTED
- *                        Connection.Status.DISCONNECTED
- *                        Connection.Status.CONNECTING
- *                        Connection.Status.DISCONNECTING
- *                        Connection.Status.DESTROYED
+ *  . host                  IP address or hostname
+ *  . port                  Port
+ *  . logs                  Current logs. "newlog" event notifies new available logs
+ *  . store                 Reference to a local data store (see below)
+ *  . keepConnecting        Should the connection keep trying connecting
+ *  . status                Connection status:
+ *                            Connection.Status.CONNECTED
+ *                            Connection.Status.DISCONNECTED
+ *                            Connection.Status.CONNECTING
+ *                            Connection.Status.DISCONNECTING
+ *                            Connection.Status.DESTROYED
  *
  * Events (as in event-emitter.js):
- *  ⬩ Connection.Events.CONNECTING      Trying to connect to host:port
- *  ⬩ Connection.Events.CONNECTED       Connection is successful
- *  ⬩ Connection.Events.DISCONNECTING   Trying to disconnect from server
- *  ⬩ Connection.Events.DISCONNECTED    Disconnected (at client request, or because of a timeout or connection error)
- *  ⬩ Connection.Events.STATUS_CHANGED  The connection status (connection.status) has changed
- *  ⬩ Connection.Events.TIMEOUT         Connection timeout
- *  ⬩ Connection.Events.HOST_CHANGED    Host has changed
- *  ⬩ Connection.Events.PORT_CHANGED    Port has changed
- *  ⬩ Connection.Events.NEW_LOG         A new log line is available
+ *  . Connection.Events.CONNECTING      Trying to connect to host:port
+ *  . Connection.Events.CONNECTED       Connection is successful
+ *  . Connection.Events.DISCONNECTING   Trying to disconnect from server
+ *  . Connection.Events.DISCONNECTED    Disconnected (at client request, or because of a timeout or connection error)
+ *  . Connection.Events.STATUS_CHANGED  The connection status (connection.status) has changed
+ *  . Connection.Events.TIMEOUT         Connection timeout
+ *  . Connection.Events.HOST_CHANGED    Host has changed
+ *  . Connection.Events.PORT_CHANGED    Port has changed
+ *  . Connection.Events.NEW_LOG         A new log line is available
  *
  */
 
@@ -187,16 +188,21 @@ Connection.prototype = {
     }
   },
 
-  connect: function() {
+  connect: function(transport) {
     if (this.status == Connection.Status.DESTROYED) {
       return;
     }
     if (!this._client) {
-      this.log("connecting to " + this.host + ":" + this.port);
+      this._transport = transport;
+      if (this._transport) {
+        this.log("connecting (custom transport)");
+      } else {
+        this.log("connecting to " + this.host + ":" + this.port);
+      }
       this._setStatus(Connection.Status.CONNECTING);
+
       let delay = Services.prefs.getIntPref("devtools.debugger.remote-timeout");
       this._timeoutID = setTimeout(this._onTimeout, delay);
-
       this._clientConnect();
     } else {
       let msg = "Can't connect. Client is not fully disconnected";
@@ -217,23 +223,24 @@ Connection.prototype = {
   },
 
   _clientConnect: function () {
-    let transport;
-    if (!this.host) {
-      transport = DebuggerServer.connectPipe();
-    } else {
-      try {
-        transport = debuggerSocketConnect(this.host, this.port);
-      } catch (e) {
-        // In some cases, especially on Mac, the openOutputStream call in
-        // debuggerSocketConnect may throw NS_ERROR_NOT_INITIALIZED.
-        // It occurs when we connect agressively to the simulator,
-        // and keep trying to open a socket to the server being started in
-        // the simulator.
-        this._onDisconnected();
-        return;
+    if (!this._transport) {
+      if (!this.host) {
+        this._transport = DebuggerServer.connectPipe();
+      } else {
+        try {
+          this._transport = debuggerSocketConnect(this.host, this.port);
+        } catch (e) {
+          // In some cases, especially on Mac, the openOutputStream call in
+          // debuggerSocketConnect may throw NS_ERROR_NOT_INITIALIZED.
+          // It occurs when we connect agressively to the simulator,
+          // and keep trying to open a socket to the server being started in
+          // the simulator.
+          this._onDisconnected();
+          return;
+        }
       }
     }
-    this._client = new DebuggerClient(transport);
+    this._client = new DebuggerClient(this._transport);
     this._client.addOneTimeListener("closed", this._onDisconnected);
     this._client.connect(this._onConnected);
   },
