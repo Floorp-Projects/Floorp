@@ -495,11 +495,13 @@ if CONFIG['MOZ_ANDROID_SHARE_OVERLAY']:
     gbjar.sources += [
         'overlays/OverlayConstants.java',
         'overlays/service/OverlayActionService.java',
+        'overlays/service/ShareData.java',
         'overlays/service/sharemethods/AddBookmark.java',
         'overlays/service/sharemethods/AddToReadingList.java',
         'overlays/service/sharemethods/ParcelableClientRecord.java',
         'overlays/service/sharemethods/SendTab.java',
         'overlays/service/sharemethods/ShareMethod.java',
+        'overlays/ui/OverlayDialogButton.java',
         'overlays/ui/OverlayToastHelper.java',
         'overlays/ui/SendTabDeviceListArrayAdapter.java',
         'overlays/ui/SendTabList.java',
