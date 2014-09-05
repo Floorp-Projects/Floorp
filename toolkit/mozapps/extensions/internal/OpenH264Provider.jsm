@@ -87,6 +87,7 @@ let OpenH264Wrapper = {
 
   get id() { return OPENH264_PLUGIN_ID; },
   get type() { return "plugin"; },
+  get isGMPlugin() { return true; },
   get name() { return pluginsBundle.GetStringFromName("openH264_name"); },
   get creator() { return null; },
   get homepageURL() { return OPENH264_HOMEPAGE_URL; },
