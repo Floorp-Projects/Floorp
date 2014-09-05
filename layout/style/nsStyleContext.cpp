@@ -883,3 +883,10 @@ nsStyleContext::AssertStyleStructMaxDifferenceValid()
 #undef STYLE_STRUCT
 }
 #endif
+
+bool
+nsStyleContext::HasSameCachedStyleData(nsStyleContext* aOther,
+                                       nsStyleStructID aSID)
+{
+  return GetCachedStyleData(aSID) == aOther->GetCachedStyleData(aSID);
+}
