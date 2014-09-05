@@ -131,7 +131,7 @@ class Postman
 
   private static final Postman sInstance = new Postman();
 
-  private ArrayList<Envelope> mEnvelopes = new ArrayList<Envelope>(1);
+  private final ArrayList<Envelope> mEnvelopes = new ArrayList<>(1);
 
   private Postman() {}
 
@@ -214,7 +214,7 @@ class MessagesListManager
     return sInstance;
   }
 
-  private ArrayList<Cursor> mCursors = new ArrayList<Cursor>(0);
+  private final ArrayList<Cursor> mCursors = new ArrayList<>();
 
   public int add(Cursor aCursor) {
     int size = mCursors.size();
@@ -610,8 +610,8 @@ public class GeckoSmsManager
   @Override
   public void getMessage(int aMessageId, int aRequestId) {
     class GetMessageRunnable implements Runnable {
-      private int mMessageId;
-      private int mRequestId;
+      private final int mMessageId;
+      private final int mRequestId;
 
       GetMessageRunnable(int aMessageId, int aRequestId) {
         mMessageId = aMessageId;
@@ -695,8 +695,8 @@ public class GeckoSmsManager
   @Override
   public void deleteMessage(int aMessageId, int aRequestId) {
     class DeleteMessageRunnable implements Runnable {
-      private int mMessageId;
-      private int mRequestId;
+      private final int mMessageId;
+      private final int mRequestId;
 
       DeleteMessageRunnable(int aMessageId, int aRequestId) {
         mMessageId = aMessageId;
@@ -735,13 +735,13 @@ public class GeckoSmsManager
   @Override
   public void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, long aThreadId, boolean aReverse, int aRequestId) {
     class CreateMessageListRunnable implements Runnable {
-      private long     mStartDate;
-      private long     mEndDate;
-      private String[] mNumbers;
-      private int      mNumbersCount;
-      private String   mDelivery;
-      private boolean  mReverse;
-      private int      mRequestId;
+      private final long     mStartDate;
+      private final long     mEndDate;
+      private final String[] mNumbers;
+      private final int      mNumbersCount;
+      private final String   mDelivery;
+      private final boolean  mReverse;
+      private final int      mRequestId;
 
       CreateMessageListRunnable(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, long aThreadId, boolean aReverse, int aRequestId) {
         mStartDate = aStartDate;
@@ -858,8 +858,8 @@ public class GeckoSmsManager
   @Override
   public void getNextMessageInList(int aListId, int aRequestId) {
     class GetNextMessageInListRunnable implements Runnable {
-      private int mListId;
-      private int mRequestId;
+      private final int mListId;
+      private final int mRequestId;
 
       GetNextMessageInListRunnable(int aListId, int aRequestId) {
         mListId = aListId;
