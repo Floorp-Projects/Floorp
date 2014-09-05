@@ -15,6 +15,7 @@
 #include "jscompartment.h"
 
 #include "gc/Marking.h"
+#include "js/Debug.h"
 #include "js/UbiNode.h"
 #include "js/UbiNodeTraverse.h"
 #include "vm/Debugger.h"
