@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Battery Status API Test Suite</title>
+    <script src="/resources/testharness.js"></script>
+    <script src="countdown.js"></script>
+    <link rel="stylesheet" href="/resources/testharness.css" media="all"/>
+    <meta name="flags" content="interact">
+  </head>
+  <body>
+    <h1>Description</h1>
+    <p>
+      This test validates that all of the navigator.battery attributes exist and are set to correct values, when the battery is discharging.
+    </p>
+    <h2>Preconditions</h2>
+    <ol>
+      <li>
+        The device is unplugged from the charger before this test is run.
+      </li>
+      <li>
+        The battery must neither be empty or full, nor reach empty or full capacity during the test.
+      </li>
+    </ol>
+    <p>
+      The highest prime number discovered so far is:  <output id="prime"></output>
+    </p>
+    <div id="log"></div>
+    <script>
+    (function() {
+
+      setup({ explicit_timeout: true });
+      
+      test(function() {
+        assert_false(navigator.battery.charging);
+      }, 'The charging attribute must be set to false.');
+      
+      test(function() {
+        assert_true(navigator.battery.chargingTime === Infinity);
+      }, 'The chargingTime attribute must be set to the value positive Infinity.');
+      
+      test(function() {
+        assert_true(navigator.battery.dischargingTime < Infinity);
+      }, 'The dischargingTime attribute must be set to the time remaining in seconds until the system\'s battery is completely discharged. If the reported discharging time ' + navigator.battery.dischargingTime + ' seconds or ' + Math.round(navigator.battery.dischargingTime/60) + ' minutes is not correct, please indicate that the test has failed.');
+      
+      test(function() {
+        assert_true(0 <= navigator.battery.level && navigator.battery.level <= 1.0);
+      }, 'The level attribute must be set to the current battery level scaled from 0 to 1.0');
+      
+      var onlevelchange_test = async_test('When the battery level is updated, must decrease the level attribute\'s value and fire a levelchange event. If the reported battery level ' + navigator.battery.level + ' is not correct, please indicate that the test has failed.');
+      var battery_level = navigator.battery.level;
+      
+      // compute primes to deplete the battery faster
+      var w = new Worker('prime.js');
+      w.postMessage('compute');
+      w.onmessage = function (e) {
+        document.querySelector('#prime').textContent = e.data;
+      };
+      
+      navigator.battery.onlevelchange = onlevelchange_test.step_func(function (e) {
+        assert_true(navigator.battery.level < battery_level, 'The value of the level attribute must decrease.');
+        onlevelchange_test.done();
+        w.terminate();
+      });
+      
+      add_completion_callback(function () {
+        w.terminate();
+      });
+      
+    })();
+    </script>
+  </body>
+</html>

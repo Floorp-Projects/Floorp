@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> WorkerGlobalScope onerror event handler argument: line </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+<script>
+    
+    var ErrorMessage = "Error Message";
+    var FileName = './support/ErrorEvent.js';
+    var description = "WorkerGlobalScope onerror event handler 3rd argument: line";
+    
+    var t = async_test("Test Description: " + description);
+                  
+    var worker = new Worker(FileName);
+
+    worker.onmessage = t.step_func(function(evt)
+    {
+        var err = evt.data;
+        assert_equals(err.lineno, 3);
+        t.done();        
+    });
+    
+    worker.postMessage(ErrorMessage);
+</script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!--
+Copyright 2013, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+    * Neither the name of Google Inc. nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+<head>
+<title>XMLHttpRequest benchmark</title>
+<script src="util.js"></script>
+<script>
+var PRINT_SIZE = true;
+
+var SEND_PARAMETER = {
+  numXHRs: 1,
+  startSize: 100 * 1024,
+  stopThreshold: 50 * 1024 * 1024,
+  multipliers: [5, 2],
+};
+
+var RECEIVE_PARAMETER = {
+  numXHRs: 1,
+  startSize: 100 * 1024,
+  stopThreshold: 50 * 1024 * 1024,
+  multipliers: [5, 2],
+};
+
+var xhrs = [];
+
+var addressBox = null;
+var logBox = null;
+
+var responseType = 'blob';
+
+var timerID = null;
+
+function destroyAllXHRs() {
+  for (var i = 0; i < xhrs.length; ++i) {
+    xhrs[i].onreadystatechange = function() {};
+    xhrs[i].abort();
+  }
+  xhrs = [];
+}
+
+function sendBenchmark(size, multiplierIndex, parameter) {
+  timerID = null;
+
+  if (size > parameter.stopThreshold) {
+    addToLog('Finished');
+    return;
+  }
+
+  var startTimeInMs = null;
+  var totalSize = 0;
+  var totalReplied = 0;
+
+  var onReadyStateChangeHandler = function () {
+    if (this.readyState != this.DONE) {
+      return;
+    }
+
+    if (this.status != 200) {
+      addToLog('Failed (status=' + this.status + ')');
+      destroyAllXHRs();
+      return;
+    }
+
+    if (!verifyAcknowledgement(this.response, size)) {
+      destroyAllXHRs();
+      return;
+    }
+
+    totalReplied += size;
+
+    if (totalReplied < totalSize) {
+      return;
+    }
+
+    if (startTimeInMs == null) {
+      addToLog('startTimeInMs not set');
+      destroyAllXHRs();
+      return;
+    }
+
+    calculateAndLogResult(size, startTimeInMs, totalSize, PRINT_SIZE);
+
+    destroyAllXHRs();
+
+    timerID = setTimeout(
+        sendBenchmark,
+        0,
+        size * parameter.multipliers[multiplierIndex],
+        (multiplierIndex + 1) % parameter.multipliers.length,
+        parameter);
+  };
+
+  for (var i = 0; i < parameter.numXHRs; ++i) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = onReadyStateChangeHandler;
+    xhrs.push(xhr);
+  }
+
+  startTimeInMs = getTimeStamp();
+
+  for (var i = 0; i < xhrs.length; ++i) {
+    var buffer = new ArrayBuffer(size);
+
+    fillArrayBuffer(buffer, 0x61);
+
+    if (responseType == 'blob') {
+      buffer = new Blob([buffer]);
+    }
+
+    var xhr = xhrs[i];
+    xhr.open('POST', addressBox.value + '_send');
+    xhr.send(buffer);
+
+    totalSize += size;
+  }
+}
+
+function receiveBenchmark(size, multiplierIndex, parameter) {
+  timerID = null;
+
+  if (size > parameter.stopThreshold) {
+    addToLog('Finished');
+    return;
+  }
+
+  var startTimeInMs = null;
+  var totalSize = 0;
+  var totalReplied = 0;
+
+  var checkResultAndContinue = function (bytesReceived, verificationResult) {
+    if (!verificationResult) {
+      addToLog('Response verification failed');
+      destroyAllXHRs();
+      return;
+    }
+
+    totalReplied += bytesReceived;
+
+    if (totalReplied < totalSize) {
+      return;
+    }
+
+    if (startTimeInMs == null) {
+      addToLog('startTimeInMs not set');
+      destroyAllXHRs();
+      return;
+    }
+
+    calculateAndLogResult(size, startTimeInMs, totalSize, PRINT_SIZE);
+
+    destroyAllXHRs();
+
+    timerID = setTimeout(
+        receiveBenchmark,
+        0,
+        size * parameter.multipliers[multiplierIndex],
+        (multiplierIndex + 1) % parameter.multipliers.length,
+        parameter);
+  }
+
+  var onReadyStateChangeHandler = function () {
+    if (this.readyState != this.DONE) {
+      return;
+    }
+
+    if (this.status != 200) {
+      addToLog('Failed (status=' + this.status + ')');
+      destroyAllXHRs();
+      return;
+    }
+
+    var bytesReceived = -1;
+    if (this.responseType == 'arraybuffer') {
+      bytesReceived = this.response.byteLength;
+    } else if (this.responseType == 'blob') {
+      bytesReceived = this.response.size;
+    }
+    if (bytesReceived != size) {
+      addToLog('Expected ' + size + 'B but received ' + bytesReceived + 'B');
+      destroyAllXHRs();
+      return;
+    }
+
+    if (this.responseType == 'arraybuffer') {
+      checkResultAndContinue(bytesReceived,
+                             verifyArrayBuffer(this.response, 0x61));
+    } else if (this.responseType == 'blob') {
+      verifyBlob(this.response, 0x61, checkResultAndContinue);
+    }
+  };
+
+  for (var i = 0; i < parameter.numXHRs; ++i) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = onReadyStateChangeHandler;
+    xhrs.push(xhr);
+  }
+
+  startTimeInMs = getTimeStamp();
+
+  for (var i = 0; i < xhrs.length; ++i) {
+    var xhr = xhrs[i];
+    xhr.open('POST', addressBox.value + '_receive');
+    xhr.responseType = responseType;
+    xhr.send(size + ' none');
+
+    totalSize += size;
+  }
+}
+
+function startSendBenchmark() {
+  addToLog('Send benchmark');
+  addToLog('Message size in KiB, Speed in kB/s');
+
+  timerID = setTimeout(
+      sendBenchmark,
+      0,
+      SEND_PARAMETER.startSize,
+      0,
+      SEND_PARAMETER);
+}
+
+function startReceiveBenchmark() {
+  addToLog('Receive benchmark');
+  addToLog('Message size in KiB, Speed in kB/s');
+
+  timerID = setTimeout(
+      receiveBenchmark,
+      0,
+      RECEIVE_PARAMETER.startSize,
+      0,
+      RECEIVE_PARAMETER);
+}
+
+function stop() {
+  destroyAllXHRs();
+  clearTimeout(timerID);
+  timerID = null;
+  addToLog('Stopped');
+}
+
+function init() {
+  addressBox = document.getElementById('address');
+  logBox = document.getElementById('log');
+
+  // Special address of pywebsocket for XHR benchmark.
+  addressBox.value = '/073be001e10950692ccbf3a2ad21c245';
+
+  addToLog(window.navigator.userAgent.toLowerCase());
+}
+</script>
+</head>
+<body onload="init()">
+
+<div id="benchmark_div">
+  url prefix <input type="text" id="address" size="40">
+  <input type="button" value="send" onclick="startSendBenchmark()">
+  <input type="button" value="receive" onclick="startReceiveBenchmark()">
+  <input type="button" value="stop" onclick="stop()">
+
+  <br/>
+
+  Set data type
+  <input type="radio"
+         name="binarytype"
+         value="blob"
+         onclick="responseType = 'blob'" checked>blob
+  <input type="radio"
+         name="binarytype"
+         value="arraybuffer"
+         onclick="responseType = 'arraybuffer'">arraybuffer
+</div>
+
+<div id="log_div">
+  <textarea
+      id="log" rows="20" style="width: 100%" readonly></textarea>
+</div>
+
+Note: Effect of RTT and time spent for ArrayBuffer creation are not eliminated.
+
+</body>
+</html>

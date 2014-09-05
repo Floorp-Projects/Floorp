@@ -33,7 +33,6 @@ UNIFIED_SOURCES += [
     'DocumentRendererChild.cpp',
     'DocumentRendererParent.cpp',
     'ImageData.cpp',
-    'ImageEncoder.cpp',
 ]
 
 # WebGL Sources

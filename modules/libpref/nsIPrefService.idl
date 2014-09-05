@@ -27,7 +27,7 @@ interface nsIFile;
  * @see nsIPrefBranch
  */
 
-[scriptable, uuid(decb9cc7-c08f-4ea5-be91-a8fc637ce2d2)]
+[scriptable, uuid(1f84fd56-3956-40df-b86a-1ea01402ee96)]
 interface nsIPrefService : nsISupports
 {
   /**
@@ -120,6 +120,11 @@ interface nsIPrefService : nsISupports
    */
   nsIPrefBranch getDefaultBranch(in string aPrefRoot);
 
+  /**
+   * The preference service is 'dirty' if there are changes to user preferences
+   * that have not been written to disk
+   */
+  readonly attribute boolean dirty;
 };
 
 %{C++

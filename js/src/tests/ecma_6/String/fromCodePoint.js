@@ -6,7 +6,7 @@ print(BUGNUMBER + ": " + summary);
 // Tests taken from:
 // https://github.com/mathiasbynens/String.fromCodePoint/blob/master/tests/tests.js
 
-assertEq(String.fromCodePoint.length, 0);
+assertEq(String.fromCodePoint.length, 1);
 assertEq(String.propertyIsEnumerable('fromCodePoint'), false);
 
 assertEq(String.fromCodePoint(''), '\0');

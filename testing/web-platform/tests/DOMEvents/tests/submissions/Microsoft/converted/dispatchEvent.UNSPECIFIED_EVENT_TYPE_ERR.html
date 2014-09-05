@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> dispatchEvent() EventException.UNSPECIFIED_EVENT_TYPE_ERR </title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id=log></div>
+
+<script>
+
+    var EVENT = "foo";
+    var TARGET = document.getElementById("target");
+
+    var description = "Test Description: " +
+                      "dispatchEvent - EventException UNSPECIFIED_EVENT_TYPE_ERR raises if the Event.type " +
+                      "was not specified by initializing the event before dispatchEvent was called.";
+
+    test(function()
+    {
+        assert_throws("UNSPECIFIED_EVENT_TYPE_ERR", function()
+        {
+            var evt = document.createEvent("Event");
+            document.body.dispatchEvent(evt);
+        });
+    }, description);
+</script>
+</body>
+</html>
