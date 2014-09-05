@@ -7,6 +7,8 @@
 
 #include "vm/SavedStacks.h"
 
+#include "mozilla/Attributes.h"
+
 #include "jsapi.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
@@ -15,7 +17,6 @@
 
 #include "gc/Marking.h"
 #include "js/Vector.h"
-#include "mozilla/Attributes.h"
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/StringBuffer.h"
