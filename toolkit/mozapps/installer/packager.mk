@@ -462,8 +462,6 @@ INNER_MAKE_PACKAGE	= \
     diff $(GECKO_APP_AP_PATH)/R.txt $(GECKO_APP_AP_PATH)/gecko-nodeps/R.txt >/dev/null || \
     (echo "*** Error: The R.txt that was built and the R.txt that is being packaged are not the same. Rebuild mobile/android/base and re-package." && exit 1)) && \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
-    mkdir -p lib/$(ANDROID_CPU_ARCH) && \
-    mv libmozglue.so $(MOZ_CHILD_PROCESS_NAME) lib/$(ANDROID_CPU_ARCH) && \
     unzip -o $(_ABS_DIST)/gecko.ap_ && \
     rm $(_ABS_DIST)/gecko.ap_ && \
     $(ZIP) $(if $(MOZ_ENABLE_SZIP),-0 )$(_ABS_DIST)/gecko.ap_ $(ASSET_SO_LIBRARIES) && \
@@ -493,9 +491,6 @@ INNER_UNMAKE_PACKAGE	= \
   mkdir $(MOZ_PKG_DIR) && \
   ( cd $(MOZ_PKG_DIR) && \
     $(UNZIP) $(UNPACKAGE) && \
-    mv lib/$(ANDROID_CPU_ARCH)/libmozglue.so . && \
-    mv lib/$(ANDROID_CPU_ARCH)/*plugin-container* $(MOZ_CHILD_PROCESS_NAME) && \
-    rm -rf lib/$(ANDROID_CPU_ARCH) && \
     rm -rf res \
     $(if $(filter-out ./,$(OMNIJAR_DIR)), \
       && mv $(OMNIJAR_DIR)$(OMNIJAR_NAME) $(OMNIJAR_NAME)) )

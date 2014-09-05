@@ -5,13 +5,13 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.database.Cursor;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.ExpandableListAdapter;
 
 /**
  * A ContextMenuInfo for HomeListView
@@ -52,10 +52,17 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
         return StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url, StringUtils.UrlFlags.STRIP_HTTPS));
     }
 
-    /*
-     * Interface for creating ContextMenuInfo from cursors
+    /**
+     * Interface for creating ContextMenuInfo instances from cursors.
      */
     public interface Factory {
         public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor);
+    }
+
+    /**
+     * Interface for creating ContextMenuInfo instances from ExpandableListAdapters.
+     */
+    public interface ExpandableFactory {
+        public HomeContextMenuInfo makeInfoForAdapter(View view, int position, long id, ExpandableListAdapter adapter);
     }
 }
