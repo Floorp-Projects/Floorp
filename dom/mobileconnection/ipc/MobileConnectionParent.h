@@ -26,7 +26,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMOBILECONNECTIONLISTENER
 
-  MobileConnectionParent(uint32_t aClientId);
+  explicit MobileConnectionParent(uint32_t aClientId);
 
 protected:
   virtual
@@ -78,7 +78,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMOBILECONNECTIONCALLBACK
 
-  MobileConnectionRequestParent(uint32_t aClientId)
+  explicit MobileConnectionRequestParent(uint32_t aClientId)
     : mClientId(aClientId)
     , mLive(true)
   {
