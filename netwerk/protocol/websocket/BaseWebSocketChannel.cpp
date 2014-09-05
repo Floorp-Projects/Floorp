@@ -24,7 +24,6 @@ BaseWebSocketChannel::BaseWebSocketChannel()
   , mWasOpened(0)
   , mClientSetPingInterval(0)
   , mClientSetPingTimeout(0)
-  , mPingForced(0)
   , mPingInterval(0)
   , mPingResponseTimeout(10000)
 {
