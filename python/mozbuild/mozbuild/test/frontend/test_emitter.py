@@ -22,6 +22,7 @@ from mozbuild.frontend.data import (
     ReaderSummary,
     Resources,
     SimpleProgram,
+    StaticLibrary,
     TestManifest,
     VariablePassthru,
 )
@@ -580,6 +581,23 @@ class TestEmitterBasic(unittest.TestCase):
             'LOCAL_INCLUDES does not exist'):
             reader = self.reader('missing-local-includes')
             self.read_topsrcdir(reader)
+
+    def test_library_defines(self):
+        """Test that LIBRARY_DEFINES is propagated properly."""
+        reader = self.reader('library-defines')
+        objs = self.read_topsrcdir(reader)
+
+        libraries = [o for o in objs if isinstance(o,StaticLibrary)]
+        expected = {
+            'liba': '-DIN_LIBA',
+            'libb': '-DIN_LIBA -DIN_LIBB',
+            'libc': '-DIN_LIBA -DIN_LIBB',
+            'libd': ''
+        }
+        defines = {}
+        for lib in libraries:
+            defines[lib.basename] = ' '.join(lib.defines.get_defines())
+        self.assertEqual(expected, defines)
 
 if __name__ == '__main__':
     main()
