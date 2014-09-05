@@ -232,7 +232,8 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
      */
 
     receiveMessage: function receiveMessage(message) {
-      debug("Received '" + JSON.stringify(message) + "' message from content process");
+      DEBUG && debug("Received message from content process: " + JSON.stringify(message));
+
       if (message.name == "child-process-shutdown") {
         this.removePeerTarget(message.target);
         this.nfc.removeTarget(message.target);
@@ -398,7 +399,7 @@ Nfc.prototype = {
    */
   onEvent: function onEvent(event) {
     let message = Cu.cloneInto(event, this);
-    debug("Received message from NFC Service: " + JSON.stringify(message));
+    DEBUG && debug("Received message from NFC Service: " + JSON.stringify(message));
 
     // mapping error code to error message
     if (message.status !== undefined && message.status !== NFC.NFC_SUCCESS) {
