@@ -290,9 +290,12 @@ public:
   struct RestyleData {
     nsRestyleHint mRestyleHint;       // What we want to restyle
     nsChangeHint mChangeHint;         // The minimal change hint for "self"
-    nsTArray<Element*> mDescendants;  // Descendant elements we must check that
-                                      // we ended up restyling, ordered with the
-                                      // same invariant as mRestyleRoots
+
+    // Descendant elements we must check that we ended up restyling, ordered
+    // with the same invariant as mRestyleRoots.  The elements here are those
+    // that we called AddPendingRestyle for and found the element this is
+    // the RestyleData for as its nearest restyle root.
+    nsTArray<nsRefPtr<Element>> mDescendants;
   };
 
   /**
@@ -307,6 +310,21 @@ public:
    * undefined.
    */
   bool GetRestyleData(Element* aElement, RestyleData* aData);
+
+  /**
+   * For each element in aElements, appends it to mRestyleRoots if it
+   * has its restyle bit set.  This is used to ensure we restyle elements
+   * that we did not add as restyle roots initially (due to there being
+   * an ancestor with the restyle root bit set), but which we might
+   * not have got around to restyling due to the restyle process
+   * terminating early with eRestyleResult_Stop (see ElementRestyler::Restyle).
+   *
+   * This function must be called with elements in order such that
+   * appending them to mRestyleRoots maintains its ordering invariant that
+   * ancestors appear after descendants.
+   */
+  void AddRestyleRootsIfAwaitingRestyle(
+                                  const nsTArray<nsRefPtr<Element>>& aElements);
 
   /**
    * The document we're associated with.

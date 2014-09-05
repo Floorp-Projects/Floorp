@@ -2402,6 +2402,12 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   MOZ_ASSERT(!(aRestyleHint & eRestyle_LaterSiblings),
              "eRestyle_LaterSiblings must not be part of aRestyleHint");
 
+  // List of descendant elements of mContent we know we will eventually need to
+  // restyle.  Before we return from this function, we call
+  // RestyleTracker::AddRestyleRootsIfAwaitingRestyle to ensure they get
+  // restyled in RestyleTracker::DoProcessRestyles.
+  nsTArray<nsRefPtr<Element>> descendants;
+
   nsRestyleHint hintToRestore = nsRestyleHint(0);
   if (mContent && mContent->IsElement() &&
       // If we're we're resolving from the root of the frame tree (which
@@ -2421,6 +2427,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       }
       hintToRestore = restyleData.mRestyleHint;
       aRestyleHint = nsRestyleHint(aRestyleHint | restyleData.mRestyleHint);
+      descendants.SwapElements(restyleData.mDescendants);
     }
   }
 
@@ -2496,6 +2503,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
         SendAccessibilityNotifications();
       }
 
+      mRestyleTracker.AddRestyleRootsIfAwaitingRestyle(descendants);
       return;
     }
 
@@ -2514,6 +2522,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   }
 
   RestyleChildren(childRestyleHint);
+  mRestyleTracker.AddRestyleRootsIfAwaitingRestyle(descendants);
 }
 
 /**
