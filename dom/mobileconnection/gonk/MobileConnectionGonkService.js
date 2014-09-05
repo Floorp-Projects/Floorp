@@ -174,6 +174,21 @@ MobileConnectionProvider.prototype = {
   _getSupportedNetworkTypes: function() {
     let key = "ro.moz.ril." + this._clientId + ".network_types";
     let supportedNetworkTypes = libcutils.property_get(key, "").split(",");
+
+    // If mozRIL system property is not available, fallback to AOSP system
+    // property for support network types.
+    if (supportedNetworkTypes.length === 1 && supportedNetworkTypes[0] === "") {
+      key = "ro.telephony.default_network";
+      let indexString = libcutils.property_get(key, "");
+      let index = parseInt(indexString, 10);
+      if (DEBUG) this._debug("Fallback to " + key + ": " + index)
+
+      let networkTypes = RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[index];
+      supportedNetworkTypes = networkTypes ?
+        networkTypes.replace("-auto", "", "g").split("/") :
+        RIL.GECKO_SUPPORTED_NETWORK_TYPES_DEFAULT.split(",");
+    }
+
     for (let type of supportedNetworkTypes) {
       // If the value in system property is not valid, use the default one which
       // is defined in ril_consts.js.
@@ -1304,7 +1319,7 @@ MobileConnectionGonkService.prototype = {
   notifyUssdReceived: function(aClientId, aMessage, aSessionEnded) {
     if (DEBUG) {
       debug("notifyUssdReceived for " + aClientId + ": " +
-            JSON.stringify(ussd));
+            aMessage + " (sessionEnded : " + aSessionEnded + ")");
     }
 
     let provider = this._providers[aClientId];

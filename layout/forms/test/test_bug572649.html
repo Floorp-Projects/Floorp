@@ -35,6 +35,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=572649
 
 /** Test for Bug 572649 **/
 SimpleTest.waitForExplicitFinish();
+
+// We intermittently trigger two "Wrong parent style context" assertions
+// on B2G emulator builds (bug XXXXXXX).  The two frames that get incorrect
+// style context parents are scroll bar parts in the <textarea>.
+SimpleTest.expectAssertions(0, 2);
+
 addLoadEvent(function() {
   var area = document.getElementById("area");
 
@@ -52,7 +58,6 @@ addLoadEvent(function() {
     synthesizeMouse(area, rect.width - 5, 5, {});
   }, 0);
 });
-
 </script>
 </pre>
 </body>

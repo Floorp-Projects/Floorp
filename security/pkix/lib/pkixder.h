@@ -64,73 +64,60 @@ enum Tag
   NULLTag = UNIVERSAL | 0x05,
   OIDTag = UNIVERSAL | 0x06,
   ENUMERATED = UNIVERSAL | 0x0a,
+  UTF8String = UNIVERSAL | 0x0c,
   SEQUENCE = UNIVERSAL | CONSTRUCTED | 0x10, // 0x30
+  SET = UNIVERSAL | CONSTRUCTED | 0x11, // 0x31
   UTCTime = UNIVERSAL | 0x17,
   GENERALIZED_TIME = UNIVERSAL | 0x18,
 };
 
 MOZILLA_PKIX_ENUM_CLASS EmptyAllowed { No = 0, Yes = 1 };
 
-inline Result
-ExpectTagAndLength(Reader& input, uint8_t expectedTag, uint8_t expectedLength)
-{
-  assert((expectedTag & 0x1F) != 0x1F); // high tag number form not allowed
-  assert(expectedLength < 128); // must be a single-byte length
-
-  uint16_t tagAndLength;
-  Result rv = input.Read(tagAndLength);
-  if (rv != Success) {
-    return rv;
-  }
-
-  uint16_t expectedTagAndLength = static_cast<uint16_t>(expectedTag << 8);
-  expectedTagAndLength |= expectedLength;
-
-  if (tagAndLength != expectedTagAndLength) {
-    return Result::ERROR_BAD_DER;
-  }
-
-  return Success;
-}
-
-namespace internal {
-
-Result
-ExpectTagAndGetLength(Reader& input, uint8_t expectedTag, uint16_t& length);
-
-} // namespace internal
-
-inline Result
-ExpectTagAndSkipValue(Reader& input, uint8_t tag)
-{
-  uint16_t length;
-  Result rv = internal::ExpectTagAndGetLength(input, tag, length);
-  if (rv != Success) {
-    return rv;
-  }
-  return input.Skip(length);
-}
+Result ReadTagAndGetValue(Reader& input, /*out*/ uint8_t& tag,
+                          /*out*/ Input& value);
+Result End(Reader& input);
 
 inline Result
 ExpectTagAndGetValue(Reader& input, uint8_t tag, /*out*/ Input& value)
 {
-  uint16_t length;
-  Result rv = internal::ExpectTagAndGetLength(input, tag, length);
+  uint8_t actualTag;
+  Result rv = ReadTagAndGetValue(input, actualTag, value);
   if (rv != Success) {
     return rv;
   }
-  return input.Skip(length, value);
+  if (tag != actualTag) {
+    return Result::ERROR_BAD_DER;
+  }
+  return Success;
 }
 
 inline Result
 ExpectTagAndGetValue(Reader& input, uint8_t tag, /*out*/ Reader& value)
 {
-  uint16_t length;
-  Result rv = internal::ExpectTagAndGetLength(input, tag, length);
+  Input valueInput;
+  Result rv = ExpectTagAndGetValue(input, tag, valueInput);
   if (rv != Success) {
     return rv;
   }
-  return input.Skip(length, value);
+  return value.Init(valueInput);
+}
+
+inline Result
+ExpectTagAndEmptyValue(Reader& input, uint8_t tag)
+{
+  Reader value;
+  Result rv = ExpectTagAndGetValue(input, tag, value);
+  if (rv != Success) {
+    return rv;
+  }
+  return End(value);
+}
+
+inline Result
+ExpectTagAndSkipValue(Reader& input, uint8_t tag)
+{
+  Input ignoredValue;
+  return ExpectTagAndGetValue(input, tag, ignoredValue);
 }
 
 // Like ExpectTagAndGetValue, except the output Input will contain the
@@ -139,12 +126,7 @@ inline Result
 ExpectTagAndGetTLV(Reader& input, uint8_t tag, /*out*/ Input& tlv)
 {
   Reader::Mark mark(input.GetMark());
-  uint16_t length;
-  Result rv = internal::ExpectTagAndGetLength(input, tag, length);
-  if (rv != Success) {
-    return rv;
-  }
-  rv = input.Skip(length);
+  Result rv = ExpectTagAndSkipValue(input, tag);
   if (rv != Success) {
     return rv;
   }
@@ -253,12 +235,13 @@ IntegralValue(Reader& input, uint8_t tag, T& value)
   // Conveniently, all the Integers that we actually have to be able to parse
   // are positive and very small. Consequently, this parser is *much* simpler
   // than a general Integer parser would need to be.
-  Result rv = ExpectTagAndLength(input, tag, 1);
+  Reader valueReader;
+  Result rv = ExpectTagAndGetValue(input, tag, valueReader);
   if (rv != Success) {
     return rv;
   }
   uint8_t valueByte;
-  rv = input.Read(valueByte);
+  rv = valueReader.Read(valueByte);
   if (rv != Success) {
     return rv;
   }
@@ -266,7 +249,7 @@ IntegralValue(Reader& input, uint8_t tag, T& value)
     return Result::ERROR_BAD_DER;
   }
   value = valueByte;
-  return Success;
+  return End(valueReader);
 }
 
 } // namespace internal
@@ -277,13 +260,18 @@ BitStringWithNoUnusedBits(Reader& input, /*out*/ Input& value);
 inline Result
 Boolean(Reader& input, /*out*/ bool& value)
 {
-  Result rv = ExpectTagAndLength(input, BOOLEAN, 1);
+  Reader valueReader;
+  Result rv = ExpectTagAndGetValue(input, BOOLEAN, valueReader);
   if (rv != Success) {
     return rv;
   }
 
   uint8_t intValue;
-  rv = input.Read(intValue);
+  rv = valueReader.Read(intValue);
+  if (rv != Success) {
+    return rv;
+  }
+  rv = End(valueReader);
   if (rv != Success) {
     return rv;
   }
@@ -393,7 +381,7 @@ OptionalInteger(Reader& input, long defaultValue, /*out*/ long& value)
 inline Result
 Null(Reader& input)
 {
-  return ExpectTagAndLength(input, NULLTag, 0);
+  return ExpectTagAndEmptyValue(input, NULLTag);
 }
 
 template <uint8_t Len>

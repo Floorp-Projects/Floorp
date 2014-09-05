@@ -491,6 +491,7 @@ SECITEM_CompareItem
 SECITEM_CompareItem_Util
 SECITEM_CopyItem
 SECITEM_CopyItem_Util
+SECITEM_DupArray
 SECITEM_DupItem
 SECITEM_DupItem_Util
 SECITEM_FreeItem

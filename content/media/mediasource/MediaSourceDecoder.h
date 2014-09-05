@@ -61,6 +61,10 @@ public:
   // Called whenever a SourceBuffer has new data appended.
   void NotifyGotData();
 
+  // Indicates the point in time at which the reader should consider
+  // registered TrackBuffers essential for initialization.
+  void PrepareReaderInitialization();
+
 private:
   // The owning MediaSource holds a strong reference to this decoder, and
   // calls Attach/DetachMediaSource on this decoder to set and clear

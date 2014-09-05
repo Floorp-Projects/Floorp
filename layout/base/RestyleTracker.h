@@ -12,7 +12,7 @@
 #define mozilla_RestyleTracker_h
 
 #include "mozilla/dom/Element.h"
-#include "nsDataHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsContainerFrame.h"
 #include "mozilla/SplayTree.h"
 
@@ -286,10 +286,26 @@ public:
   Element::FlagsType RootBit() const {
     return mRestyleBits & ~ELEMENT_PENDING_RESTYLE_FLAGS;
   }
-  
+
   struct RestyleData {
-    nsRestyleHint mRestyleHint;  // What we want to restyle
-    nsChangeHint  mChangeHint;   // The minimal change hint for "self"
+    RestyleData() {
+      mRestyleHint = nsRestyleHint(0);
+      mChangeHint = NS_STYLE_HINT_NONE;
+    }
+
+    RestyleData(nsRestyleHint aRestyleHint, nsChangeHint aChangeHint) {
+      mRestyleHint = aRestyleHint;
+      mChangeHint = aChangeHint;
+    }
+
+    nsRestyleHint mRestyleHint;       // What we want to restyle
+    nsChangeHint mChangeHint;         // The minimal change hint for "self"
+
+    // Descendant elements we must check that we ended up restyling, ordered
+    // with the same invariant as mRestyleRoots.  The elements here are those
+    // that we called AddPendingRestyle for and found the element this is
+    // the RestyleData for as its nearest restyle root.
+    nsTArray<nsRefPtr<Element>> mDescendants;
   };
 
   /**
@@ -300,10 +316,24 @@ public:
    * eRestyle_LaterSiblings hint in it.
    *
    * The return value indicates whether any restyle data was found for
-   * the element.  If false is returned, then the state of *aData is
-   * undefined.
+   * the element.  aData is set to nullptr iff false is returned.
    */
-  bool GetRestyleData(Element* aElement, RestyleData* aData);
+  bool GetRestyleData(Element* aElement, nsAutoPtr<RestyleData>& aData);
+
+  /**
+   * For each element in aElements, appends it to mRestyleRoots if it
+   * has its restyle bit set.  This is used to ensure we restyle elements
+   * that we did not add as restyle roots initially (due to there being
+   * an ancestor with the restyle root bit set), but which we might
+   * not have got around to restyling due to the restyle process
+   * terminating early with eRestyleResult_Stop (see ElementRestyler::Restyle).
+   *
+   * This function must be called with elements in order such that
+   * appending them to mRestyleRoots maintains its ordering invariant that
+   * ancestors appear after descendants.
+   */
+  void AddRestyleRootsIfAwaitingRestyle(
+                                  const nsTArray<nsRefPtr<Element>>& aElements);
 
   /**
    * The document we're associated with.
@@ -332,14 +362,14 @@ private:
    */
   void DoProcessRestyles();
 
-  typedef nsDataHashtable<nsISupportsHashKey, RestyleData> PendingRestyleTable;
+  typedef nsClassHashtable<nsISupportsHashKey, RestyleData> PendingRestyleTable;
   typedef nsAutoTArray< nsRefPtr<Element>, 32> RestyleRootArray;
   // Our restyle bits.  These will be a subset of ELEMENT_ALL_RESTYLE_FLAGS, and
   // will include one flag from ELEMENT_PENDING_RESTYLE_FLAGS and one flag
   // that's not in ELEMENT_PENDING_RESTYLE_FLAGS.
   Element::FlagsType mRestyleBits;
   RestyleManager* mRestyleManager; // Owns us
-  // A hashtable that maps elements to RestyleData structs.  The
+  // A hashtable that maps elements to pointers to RestyleData structs.  The
   // values only make sense if the element's current document is our
   // document and it has our RestyleBit() flag set.  In particular,
   // said bit might not be set if the element had a restyle posted and
@@ -363,9 +393,7 @@ RestyleTracker::AddPendingRestyleToTable(Element* aElement,
                                          nsRestyleHint aRestyleHint,
                                          nsChangeHint aMinChangeHint)
 {
-  RestyleData existingData;
-  existingData.mRestyleHint = nsRestyleHint(0);
-  existingData.mChangeHint = NS_STYLE_HINT_NONE;
+  RestyleData* existingData;
 
   // Check the RestyleBit() flag before doing the hashtable Get, since
   // it's possible that the data in the hashtable isn't actually
@@ -374,15 +402,20 @@ RestyleTracker::AddPendingRestyleToTable(Element* aElement,
     mPendingRestyles.Get(aElement, &existingData);
   } else {
     aElement->SetFlags(RestyleBit());
+    existingData = nullptr;
+  }
+
+  if (!existingData) {
+    mPendingRestyles.Put(aElement,
+                         new RestyleData(aRestyleHint, aMinChangeHint));
+    return false;
   }
 
   bool hadRestyleLaterSiblings =
-    (existingData.mRestyleHint & eRestyle_LaterSiblings) != 0;
-  existingData.mRestyleHint =
-    nsRestyleHint(existingData.mRestyleHint | aRestyleHint);
-  NS_UpdateHint(existingData.mChangeHint, aMinChangeHint);
-
-  mPendingRestyles.Put(aElement, existingData);
+    (existingData->mRestyleHint & eRestyle_LaterSiblings) != 0;
+  existingData->mRestyleHint =
+    nsRestyleHint(existingData->mRestyleHint | aRestyleHint);
+  NS_UpdateHint(existingData->mChangeHint, aMinChangeHint);
 
   return hadRestyleLaterSiblings;
 }
@@ -400,7 +433,8 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
   // ReResolveStyleContext on it or just reframe it).
   if ((aRestyleHint & ~eRestyle_LaterSiblings) ||
       (aMinChangeHint & nsChangeHint_ReconstructFrame)) {
-    for (const Element* cur = aElement; !cur->HasFlag(RootBit()); ) {
+    Element* cur = aElement;
+    while (!cur->HasFlag(RootBit())) {
       nsIContent* parent = cur->GetFlattenedTreeParent();
       // Stop if we have no parent or the parent is not an element or
       // we're part of the viewport scrollbars (because those are not
@@ -418,6 +452,7 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
            cur->GetPrimaryFrame() &&
            cur->GetPrimaryFrame()->GetParent() != parent->GetPrimaryFrame())) {
         mRestyleRoots.AppendElement(aElement);
+        cur = aElement;
         break;
       }
       cur = parent->AsElement();
@@ -426,6 +461,21 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
     // itself) is in mRestyleRoots.  Set the root bit on aElement, to
     // speed up searching for an existing root on its descendants.
     aElement->SetFlags(RootBit());
+    if (cur != aElement) {
+      // We are already going to restyle cur, one of aElement's ancestors,
+      // but we might not end up restyling all the way down to aElement.
+      // Record it in the RestyleData so we can ensure it does get restyled
+      // after we deal with cur.
+      //
+      // As with the mRestyleRoots array, mDescendants maintains the
+      // invariant that if two elements appear in the array and one
+      // is an ancestor of the other, that the ancestor appears after
+      // the descendant.
+      RestyleData* curData;
+      mPendingRestyles.Get(cur, &curData);
+      NS_ASSERTION(curData, "expected to find a RestyleData for cur");
+      curData->mDescendants.AppendElement(aElement);
+    }
   }
 
   mHaveLaterSiblingRestyles =

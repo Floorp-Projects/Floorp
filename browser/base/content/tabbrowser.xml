@@ -372,6 +372,16 @@
         </body>
       </method>
 
+      <method name="getBrowserForContentWindow">
+        <parameter name="aWindow"/>
+        <body>
+          <![CDATA[
+            var tab = this._getTabForContentWindow(aWindow);
+            return tab ? tab.linkedBrowser : null;
+          ]]>
+        </body>
+      </method>
+
       <method name="_getTabForContentWindow">
         <parameter name="aWindow"/>
         <body>
@@ -388,7 +398,9 @@
           }
 
           for (let i = 0; i < this.browsers.length; i++) {
-            if (this.browsers[i].contentWindow == aWindow)
+            // NB: We use contentWindowAsCPOW so that this code works both
+            // for remote browsers as well. aWindow may be a CPOW.
+            if (this.browsers[i].contentWindowAsCPOW == aWindow)
               return this.tabs[i];
           }
           return null;

@@ -8,8 +8,7 @@
 interface nsILoginInfo;
 interface nsIDOMWindow;
 
-[scriptable, uuid(68b3cb59-51b8-4c57-bd7f-b2ce955a593d)]
-
+[scriptable, uuid(88b75787-a78c-43aa-bfe8-52c3248b8dfd)]
 interface nsILoginManagerPrompter : nsISupports {
     /**
      * Initialize the prompter. Must be called before using other interfaces.
@@ -21,6 +20,15 @@ interface nsILoginManagerPrompter : nsISupports {
      *        is being used, topmost opener in some cases).
      */
     void init(in nsIDOMWindow aWindow);
+
+    /**
+     * If the caller knows which browser this prompter is being created for,
+     * they can call this function to avoid having to calculate it from the
+     * window passed to init.
+     *
+     * @param aBrowser the <browser> to use for this prompter.
+     */
+    void setE10sData(in jsval aData);
 
     /**
      * Ask the user if they want to save a login (Yes, Never, Not Now)

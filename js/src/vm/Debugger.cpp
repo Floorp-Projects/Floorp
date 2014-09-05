@@ -2183,7 +2183,7 @@ bool
 Debugger::getDebuggees(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "getDebuggees", args, dbg);
-    RootedObject arrobj(cx, NewDenseAllocatedArray(cx, dbg->debuggees.count()));
+    RootedObject arrobj(cx, NewDenseFullyAllocatedArray(cx, dbg->debuggees.count()));
     if (!arrobj)
         return false;
     arrobj->ensureDenseInitializedLength(cx, 0, dbg->debuggees.count());
@@ -2938,7 +2938,7 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     if (!query.findScripts(&scripts))
         return false;
 
-    RootedObject result(cx, NewDenseAllocatedArray(cx, scripts.length()));
+    RootedObject result(cx, NewDenseFullyAllocatedArray(cx, scripts.length()));
     if (!result)
         return false;
 
@@ -5217,7 +5217,7 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RootedObject result(cx, NewDenseAllocatedArray(cx, fun->nargs()));
+    RootedObject result(cx, NewDenseFullyAllocatedArray(cx, fun->nargs()));
     if (!result)
         return false;
     result->ensureDenseInitializedLength(cx, 0, fun->nargs());
