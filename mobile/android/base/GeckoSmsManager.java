@@ -350,6 +350,9 @@ public class GeckoSmsManager
   // Used to generate monotonically increasing GUIDs.
   private static final AtomicInteger pendingIntentGuid = new AtomicInteger(Integer.MIN_VALUE);
 
+  // The maximum value of a 32 bit signed integer. Used to enforce a limit on ids.
+  private static final long UNSIGNED_INTEGER_MAX_VALUE = Integer.MAX_VALUE * 2L + 1L;
+
   public GeckoSmsManager() {
     SmsIOThread.getInstance().start();
   }
@@ -590,7 +593,7 @@ public class GeckoSmsManager
 
       // The DOM API takes a 32bits unsigned int for the id. It's unlikely that
       // we happen to need more than that but it doesn't cost to check.
-      if (id > Integer.MAX_VALUE) {
+      if (id > UNSIGNED_INTEGER_MAX_VALUE) {
         throw new IdTooHighException();
       }
 
