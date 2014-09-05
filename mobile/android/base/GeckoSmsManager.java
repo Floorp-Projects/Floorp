@@ -959,27 +959,27 @@ public class GeckoSmsManager
     }
   }
 
-  class IdTooHighException extends Exception {
+  static class IdTooHighException extends Exception {
     private static final long serialVersionUID = 29935575131092050L;
   }
 
-  class InvalidTypeException extends Exception {
+  static class InvalidTypeException extends Exception {
     private static final long serialVersionUID = 47436856832535912L;
   }
 
-  class NotFoundException extends Exception {
+  static class NotFoundException extends Exception {
     private static final long serialVersionUID = 1940676816633984L;
   }
 
-  class TooManyResultsException extends Exception {
+  static class TooManyResultsException extends Exception {
     private static final long serialVersionUID = 51883196784325305L;
   }
 
-  class UnexpectedDeliveryStateException extends Exception {
+  static class UnexpectedDeliveryStateException extends Exception {
     private static final long serialVersionUID = 494122763684005716L;
   }
 
-  class UnmatchingIdException extends Exception {
+  static class UnmatchingIdException extends Exception {
     private static final long serialVersionUID = 158467542575633280L;
   }
 
