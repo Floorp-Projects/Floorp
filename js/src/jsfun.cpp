@@ -118,8 +118,11 @@ ThrowTypeErrorBehavior(JSContext *cx)
 static bool
 ArgumentsRestrictions(JSContext *cx, HandleFunction fun)
 {
-    // Throw if the function is a strict mode function or a bound function.
-    if ((!fun->isBuiltin() && fun->isInterpreted() && fun->strict()) ||
+    // Throw if the function is a builtin (note: this doesn't include asm.js),
+    // a strict mode function (FIXME: needs work handle strict asm.js functions
+    // correctly, should fall out of bug 1057208), or a bound function.
+    if (fun->isBuiltin() ||
+        (fun->isInterpreted() && fun->strict()) ||
         fun->isBoundFunction())
     {
         ThrowTypeErrorBehavior(cx);
@@ -153,14 +156,6 @@ ArgumentsGetterImpl(JSContext *cx, CallArgs args)
     RootedFunction fun(cx, &args.thisv().toObject().as<JSFunction>());
     if (!ArgumentsRestrictions(cx, fun))
         return false;
-
-    // FIXME: Bug 929642 will break "arguments" and "caller" properties on
-    //        builtin functions, at which point this condition should be added
-    //        to the early exit at the start of ArgumentsGuts.
-    if (fun->isBuiltin()) {
-        args.rval().setNull();
-        return true;
-    }
 
     // Return null if this function wasn't found on the stack.
     NonBuiltinScriptFrameIter iter(cx);
@@ -199,13 +194,6 @@ ArgumentsSetterImpl(JSContext *cx, CallArgs args)
     if (!ArgumentsRestrictions(cx, fun))
         return false;
 
-    // FIXME: Bug 929642 will break "arguments" and "caller" properties on
-    //        builtin functions, at which point this bit should be removed.
-    if (fun->isBuiltin()) {
-        args.rval().setUndefined();
-        return true;
-    }
-
     // If the function passes the gauntlet, return |undefined|.
     args.rval().setUndefined();
     return true;
@@ -227,8 +215,11 @@ ArgumentsSetter(JSContext *cx, unsigned argc, Value *vp)
 static bool
 CallerRestrictions(JSContext *cx, HandleFunction fun)
 {
-    // Throw if the function is a strict mode function or a bound function.
-    if ((!fun->isBuiltin() && fun->isInterpreted() && fun->strict()) ||
+    // Throw if the function is a builtin (note: this doesn't include asm.js),
+    // a strict mode function (FIXME: needs work handle strict asm.js functions
+    // correctly, should fall out of bug 1057208), or a bound function.
+    if (fun->isBuiltin() ||
+        (fun->isInterpreted() && fun->strict()) ||
         fun->isBoundFunction())
     {
         ThrowTypeErrorBehavior(cx);
@@ -258,14 +249,6 @@ CallerGetterImpl(JSContext *cx, CallArgs args)
     RootedFunction fun(cx, &args.thisv().toObject().as<JSFunction>());
     if (!CallerRestrictions(cx, fun))
         return false;
-
-    // FIXME: Bug 929642 will break "arguments" and "caller" properties on
-    //        builtin functions, at which point this condition should be added
-    //        to the early exit at the start of CallerRestrictions.
-    if (fun->isBuiltin()) {
-        args.rval().setNull();
-        return true;
-    }
 
     // Also return null if this function wasn't found on the stack.
     NonBuiltinScriptFrameIter iter(cx);
@@ -339,11 +322,6 @@ CallerSetterImpl(JSContext *cx, CallArgs args)
 
     // Return |undefined| unless an error must be thrown.
     args.rval().setUndefined();
-
-    // FIXME: Bug 929642 will break "arguments" and "caller" properties on
-    //        builtin functions, at which point this bit should be removed.
-    if (fun->isBuiltin())
-        return true;
 
     // We can almost just return |undefined| here -- but if the caller function
     // was strict mode code, we still have to throw a TypeError.  This requires
@@ -851,7 +829,7 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
     options.setNoScriptRval(true)
            .setVersion(JSVERSION_DEFAULT);
     RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
-    if (!sourceObject)
+    if (!sourceObject || !ScriptSourceObject::initFromOptions(cx, sourceObject, options))
         return nullptr;
 
     RootedScript script(cx, JSScript::Create(cx,

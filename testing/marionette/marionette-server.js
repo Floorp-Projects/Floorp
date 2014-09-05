@@ -1127,12 +1127,21 @@ MarionetteServerConnection.prototype = {
    * of the current resource.
    */
   getCurrentUrl: function MDA_getCurrentUrl() {
+    let isB2G = appName == "B2G";
     this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+    if (this.context === "chrome") {
       this.sendResponse(this.getCurrentWindow().location.href, this.command_id);
     }
     else {
-      this.sendAsync("getCurrentUrl", {}, this.command_id);
+      if (isB2G) {
+        this.sendAsync("getCurrentUrl", {}, this.command_id);
+      }
+      else {
+        this.sendResponse(this.curBrowser
+                              .tab
+                              .linkedBrowser
+                              .contentWindow.location.href, this.command_id);
+      }
     }
   },
 

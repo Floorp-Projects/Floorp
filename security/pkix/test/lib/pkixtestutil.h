@@ -26,7 +26,8 @@
 #define mozilla_pkix_test__pkixtestutils_h
 
 #include <ctime>
-#include <stdint.h>
+#include <stdint.h> // Some Mozilla-supported compilers lack <cstdint>
+#include <string>
 
 #include "keyhi.h"
 #include "pkix/enumclass.h"
@@ -35,6 +36,9 @@
 #include "seccomon.h"
 
 namespace mozilla { namespace pkix { namespace test {
+
+typedef std::basic_string<uint8_t> ByteString;
+extern const ByteString ENCODING_FAILED;
 
 // XXX: Ideally, we should define this instead:
 //
@@ -77,6 +81,18 @@ typedef mozilla::pkix::ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
 typedef mozilla::pkix::ScopedPtr<SECKEYPrivateKey, SECKEY_DestroyPrivateKey>
   ScopedSECKEYPrivateKey;
 
+// python DottedOIDToCode.py --tlv id-kp-OCSPSigning 1.3.6.1.5.5.7.3.9
+static const uint8_t tlv_id_kp_OCSPSigning[] = {
+  0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x09
+};
+
+// python DottedOIDToCode.py --tlv id-kp-serverAuth 1.3.6.1.5.5.7.3.1
+static const uint8_t tlv_id_kp_serverAuth[] = {
+  0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01
+};
+
+extern const Input sha256WithRSAEncryption;
+
 // e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
 mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
                            int16_t hour, int16_t minutes, int16_t seconds);
@@ -84,28 +100,25 @@ mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
 Result GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
                        /*out*/ ScopedSECKEYPrivateKey& privateKey);
 
-// The result will be owned by the arena
-const SECItem* ASCIIToDERName(PLArenaPool* arena, const char* cn);
+ByteString CNToDERName(const char* cn);
 
 // Replace one substring in item with another of the same length, but only if
-// the substring was found exactly once. The "only once" restriction is helpful
-// for avoiding making multiple changes at once.
+// the substring was found exactly once. The "same length" restriction is
+// useful for avoiding invalidating lengths encoded within the item. The
+// "only once" restriction is helpful for avoiding making accidental changes.
 //
 // The string to search for must be 8 or more bytes long so that it is
 // extremely unlikely that there will ever be any false positive matches
 // in digital signatures, keys, hashes, etc.
-//
-// Returns true on success, false on failure.
-Result TamperOnce(SECItem& item, const uint8_t* from, size_t fromLen,
-                  const uint8_t* to, size_t toLen);
-
-Result InitInputFromSECItem(const SECItem* secItem, /*out*/ Input& input);
+Result TamperOnce(/*in/out*/ ByteString& item, const ByteString& from,
+                  const ByteString& to);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Encode Certificates
 
 enum Version { v1 = 0, v2 = 1, v3 = 2 };
 
+// signature is assumed to be the DER encoding of an AlgorithmIdentifer.
 // serialNumber is assumed to be the DER encoding of an INTEGER.
 //
 // If extensions is null, then no extensions will be encoded. Otherwise,
@@ -115,37 +128,28 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // If issuerPrivateKey is null, then the certificate will be self-signed.
 // Parameter order is based on the order of the attributes of the certificate
 // in RFC 5280.
-//
-// The return value, if non-null, is owned by the arena in the context and
-// MUST NOT be freed.
-SECItem* CreateEncodedCertificate(PLArenaPool* arena, long version,
-                                  SECOidTag signature,
-                                  const SECItem* serialNumber,
-                                  const SECItem* issuerNameDER,
-                                  std::time_t notBefore, std::time_t notAfter,
-                                  const SECItem* subjectNameDER,
-                     /*optional*/ SECItem const* const* extensions,
-                     /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
-                                  SECOidTag signatureHashAlg,
-                          /*out*/ ScopedSECKEYPrivateKey& privateKey);
+ByteString CreateEncodedCertificate(long version,
+                                    Input signature,
+                                    const ByteString& serialNumber,
+                                    const ByteString& issuerNameDER,
+                                    std::time_t notBefore, std::time_t notAfter,
+                                    const ByteString& subjectNameDER,
+                       /*optional*/ const ByteString* extensions,
+                       /*optional*/ SECKEYPrivateKey* issuerPrivateKey,
+                                    SignatureAlgorithm signatureAlgorithm,
+                            /*out*/ ScopedSECKEYPrivateKey& privateKey);
 
-SECItem* CreateEncodedSerialNumber(PLArenaPool* arena, long value);
+ByteString CreateEncodedSerialNumber(long value);
 
 MOZILLA_PKIX_ENUM_CLASS ExtensionCriticality { NotCritical = 0, Critical = 1 };
 
-// The return value, if non-null, is owned by the arena and MUST NOT be freed.
-SECItem* CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
-                                       /*optional*/ long* pathLenConstraint,
-                                       ExtensionCriticality criticality);
+ByteString CreateEncodedBasicConstraints(bool isCA,
+                                         /*optional*/ long* pathLenConstraint,
+                                         ExtensionCriticality criticality);
 
-// ekus must be non-null and must must point to a SEC_OID_UNKNOWN-terminated
-// array of SECOidTags. If the first item of the array is SEC_OID_UNKNOWN then
-// an empty EKU extension will be encoded.
-//
-// The return value, if non-null, is owned by the arena and MUST NOT be freed.
-SECItem* CreateEncodedEKUExtension(PLArenaPool* arena,
-                                   const SECOidTag* ekus, size_t ekusCount,
-                                   ExtensionCriticality criticality);
+// Creates a DER-encoded extKeyUsage extension with one EKU OID.
+ByteString CreateEncodedEKUExtension(Input eku,
+                                     ExtensionCriticality criticality);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Encode OCSP responses
@@ -153,18 +157,17 @@ SECItem* CreateEncodedEKUExtension(PLArenaPool* arena,
 class OCSPResponseExtension
 {
 public:
-  SECItem id;
+  ByteString id;
   bool critical;
-  SECItem value;
+  ByteString value;
   OCSPResponseExtension* next;
 };
 
 class OCSPResponseContext
 {
 public:
-  OCSPResponseContext(PLArenaPool* arena, const CertID& certID, std::time_t time);
+  OCSPResponseContext(const CertID& certID, std::time_t time);
 
-  PLArenaPool* arena;
   const CertID& certID;
   // TODO(bug 980538): add a way to specify what certificates are included.
 
@@ -183,9 +186,9 @@ public:
   bool skipResponseBytes; // If true, don't include responseBytes
 
   // responderID
-  const SECItem* signerNameDER; // If set, responderID will use the byName
-                                // form; otherwise responderID will use the
-                                // byKeyHash form.
+  ByteString signerNameDER; // If set, responderID will use the byName
+                            // form; otherwise responderID will use the
+                            // byKeyHash form.
 
   std::time_t producedAt;
 
@@ -195,11 +198,10 @@ public:
                                // extensions.
   ScopedSECKEYPrivateKey signerPrivateKey;
   bool badSignature; // If true, alter the signature to fail verification
-  SECItem const* const* certs; // non-owning pointer to certs to embed
+  const ByteString* certs; // optional; array terminated by an empty string
 
   // The following fields are on a per-SingleResponse basis. In the future we
   // may support including multiple SingleResponses per response.
-  SECOidTag certIDHashAlg;
   enum CertStatus {
     good = 0,
     revoked = 1,
@@ -212,9 +214,7 @@ public:
   bool includeNextUpdate;
 };
 
-// The return value, if non-null, is owned by the arena in the context
-// and MUST NOT be freed. A null return value indicates an error occurred.
-SECItem* CreateEncodedOCSPResponse(OCSPResponseContext& context);
+ByteString CreateEncodedOCSPResponse(OCSPResponseContext& context);
 
 } } } // namespace mozilla::pkix::test
 

@@ -95,6 +95,13 @@ public:
     return mRefCnt;
   }
 
+  bool HasSingleReference() const {
+    NS_ASSERTION(mRefCnt != 0,
+                 "do not call HasSingleReference on a newly created "
+                 "nsStyleContext with no references yet");
+    return mRefCnt == 1;
+  }
+
   nsPresContext* PresContext() const { return mRuleNode->PresContext(); }
 
   nsStyleContext* GetParent() const { return mParent; }
@@ -193,6 +200,21 @@ public:
     }
   }
 
+  // Does this style context, or any of its descendants, have any style values
+  // that were computed based on this style context's grandparent style context
+  // or any of the grandparent's ancestors?
+  bool UsesGrandancestorStyle() const
+    { return !!(mBits & NS_STYLE_USES_GRANDANCESTOR_STYLE); }
+
+  // Is this style context shared with a sibling or cousin?
+  // (See nsStyleSet::GetContext.)
+  bool IsShared() const
+    { return !!(mBits & NS_STYLE_IS_SHARED); }
+
+  // Does this style context have any children that return true for
+  // UsesGrandancestorStyle()?
+  bool HasChildThatUsesGrandancestorStyle() const;
+
   // Tell this style context to cache aStruct as the struct for aSID
   void SetStyle(nsStyleStructID aSID, void* aStruct);
 
@@ -211,6 +233,19 @@ public:
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
+
+  /**
+   * Returns whether this style context and aOther both have the same
+   * cached style struct pointer for a given style struct.
+   */
+  bool HasSameCachedStyleData(nsStyleContext* aOther, nsStyleStructID aSID);
+
+  /**
+   * Returns whether this style context has cached, inherited style data for a
+   * given style struct.
+   */
+  bool HasCachedInheritedStyleData(nsStyleStructID aSID)
+    { return mBits & nsCachedStyleData::GetBitForSID(aSID); }
 
   nsRuleNode* RuleNode() { return mRuleNode; }
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
@@ -284,9 +319,13 @@ public:
    * must not pass less than needed; therefore if the caller doesn't
    * know, the caller should pass
    * nsChangeHint_Hints_NotHandledForDescendants.
+   *
+   * aEqualStructs must not be null.  Into it will be stored a bitfield
+   * representing which structs were compared to be non-equal.
    */
   nsChangeHint CalcStyleDifference(nsStyleContext* aOther,
-                                   nsChangeHint aParentHintsNotHandledForDescendants);
+                                   nsChangeHint aParentHintsNotHandledForDescendants,
+                                   uint32_t* aEqualStructs);
 
   /**
    * Get a color that depends on link-visitedness using this and
@@ -319,6 +358,41 @@ public:
     StyleBackground();
   }
 
+  /**
+   * Moves this style context to a new parent.
+   *
+   * This function violates style context tree immutability, and
+   * is a very low-level function and should only be used after verifying
+   * many conditions that make it safe to call.
+   */
+  void MoveTo(nsStyleContext* aNewParent);
+
+  /**
+   * Swaps owned style struct pointers between this and aNewContext, on
+   * the assumption that aNewContext is the new style context for a frame
+   * and this is the old one.  aStructs indicates which structs to consider
+   * swapping; only those which are owned in both this and aNewContext
+   * will be swapped.
+   *
+   * Additionally, if there are identical struct pointers for one of the
+   * structs indicated by aStructs, and it is not an owned struct on this,
+   * then the cached struct slot on this will be set to null.  If the struct
+   * has been swapped on an ancestor, this style context (being the old one)
+   * will be left caching the struct pointer on the new ancestor, despite
+   * inheriting from the old ancestor.  This is not normally a problem, as
+   * this style context will usually be destroyed by being released at the
+   * end of ElementRestyler::Restyle; but for style contexts held on to outside
+   * of the frame, we need to clear out the cached pointer so that if we need
+   * it again we'll re-fetch it from the new ancestor.
+   */
+  void SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs);
+
+  /**
+   * On each descendant of this style context, clears out any cached inherited
+   * structs indicated in aStructs.
+   */
+  void ClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs);
+
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent);
   static void AssertStyleStructMaxDifferenceValid();
@@ -332,6 +406,10 @@ private:
   void RemoveChild(nsStyleContext* aChild);
 
   void ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup);
+
+  // Helper function for HasChildThatUsesGrandancestorStyle.
+  static bool ListContainsStyleContextThatUsesGrandancestorStyle(
+                                                   const nsStyleContext* aHead);
 
   // Helper function that GetStyleData and GetUniqueStyleData use.  Only
   // returns the structs we cache ourselves; never consults the ruletree.
@@ -363,7 +441,15 @@ private:
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
 
-  nsStyleContext* const mParent; // STRONG
+  // Helper for ClearCachedInheritedStyleDataOnDescendants.
+  void DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs);
+
+#ifdef DEBUG
+  void AssertStructsNotUsedElsewhere(nsStyleContext* aDestroyingContext,
+                                     int32_t aLevels) const;
+#endif
+
+  nsStyleContext* mParent; // STRONG
 
   // Children are kept in two circularly-linked lists.  The list anchor
   // is not part of the list (null for empty), and we point to the first

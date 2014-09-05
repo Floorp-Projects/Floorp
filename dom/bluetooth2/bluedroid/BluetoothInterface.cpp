@@ -439,16 +439,6 @@ Convert(bt_device_type_t aIn, BluetoothDeviceType& aOut)
 }
 
 static nsresult
-Convert(const bt_remote_version_t& aIn, BluetoothRemoteInfo& aOut)
-{
-  aOut.mVerMajor = aIn.version;
-  aOut.mVerMinor = aIn.sub_ver;
-  aOut.mManufacturer = aIn.manufacturer;
-
-  return NS_OK;
-}
-
-static nsresult
 Convert(const bt_service_record_t& aIn, BluetoothServiceRecord& aOut)
 {
   nsresult rv = Convert(aIn.uuid, aOut.mUuid);
@@ -715,7 +705,52 @@ Convert(bthf_volume_type_t aIn, BluetoothHandsfreeVolumeType& aOut)
   return NS_OK;
 }
 
+static nsresult
+Convert(btav_connection_state_t aIn, BluetoothA2dpConnectionState& aOut)
+{
+  static const BluetoothA2dpConnectionState sConnectionState[] = {
+    CONVERT(BTAV_CONNECTION_STATE_DISCONNECTED,
+      A2DP_CONNECTION_STATE_DISCONNECTED),
+    CONVERT(BTAV_CONNECTION_STATE_CONNECTING,
+      A2DP_CONNECTION_STATE_CONNECTING),
+    CONVERT(BTAV_CONNECTION_STATE_CONNECTED,
+      A2DP_CONNECTION_STATE_CONNECTED),
+    CONVERT(BTAV_CONNECTION_STATE_DISCONNECTING,
+      A2DP_CONNECTION_STATE_DISCONNECTING),
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sConnectionState)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sConnectionState[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(btav_audio_state_t aIn, BluetoothA2dpAudioState& aOut)
+{
+  static const BluetoothA2dpAudioState sAudioState[] = {
+    CONVERT(BTAV_AUDIO_STATE_REMOTE_SUSPEND, A2DP_AUDIO_STATE_REMOTE_SUSPEND),
+    CONVERT(BTAV_AUDIO_STATE_STOPPED, A2DP_AUDIO_STATE_STOPPED),
+    CONVERT(BTAV_AUDIO_STATE_STARTED, A2DP_AUDIO_STATE_STARTED),
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sAudioState)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sAudioState[aIn];
+  return NS_OK;
+}
+
 #if ANDROID_VERSION >= 18
+static nsresult
+Convert(const bt_remote_version_t& aIn, BluetoothRemoteInfo& aOut)
+{
+  aOut.mVerMajor = aIn.version;
+  aOut.mVerMinor = aIn.sub_ver;
+  aOut.mManufacturer = aIn.manufacturer;
+
+  return NS_OK;
+}
+
 static nsresult
 Convert(ControlPlayStatus aIn, btrc_play_status_t& aOut)
 {
@@ -743,6 +778,23 @@ Convert(enum BluetoothAvrcpPlayerAttribute aIn, btrc_player_attr_t& aOut)
     CONVERT(AVRCP_PLAYER_ATTRIBUTE_SCAN, BTRC_PLAYER_ATTR_SCAN)
   };
   if (aIn >= MOZ_ARRAY_LENGTH(sPlayerAttr)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sPlayerAttr[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(btrc_player_attr_t aIn, enum BluetoothAvrcpPlayerAttribute& aOut)
+{
+  static const BluetoothAvrcpPlayerAttribute sPlayerAttr[] = {
+    CONVERT(0, static_cast<BluetoothAvrcpPlayerAttribute>(0)), // invalid, [0] required by gcc
+    CONVERT(BTRC_PLAYER_ATTR_EQUALIZER, AVRCP_PLAYER_ATTRIBUTE_EQUALIZER),
+    CONVERT(BTRC_PLAYER_ATTR_REPEAT, AVRCP_PLAYER_ATTRIBUTE_REPEAT),
+    CONVERT(BTRC_PLAYER_ATTR_SHUFFLE, AVRCP_PLAYER_ATTRIBUTE_SHUFFLE),
+    CONVERT(BTRC_PLAYER_ATTR_SCAN, AVRCP_PLAYER_ATTRIBUTE_SCAN)
+  };
+  if (!aIn || aIn >= MOZ_ARRAY_LENGTH(sPlayerAttr)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
   aOut = sPlayerAttr[aIn];
@@ -785,6 +837,47 @@ Convert(enum BluetoothAvrcpEvent aIn, btrc_event_id_t& aOut)
 }
 
 static nsresult
+Convert(btrc_event_id_t aIn, enum BluetoothAvrcpEvent& aOut)
+{
+  static const BluetoothAvrcpEvent sEventId[] = {
+    CONVERT(0, static_cast<BluetoothAvrcpEvent>(0)), // invalid, [0] required by gcc
+    CONVERT(BTRC_EVT_PLAY_STATUS_CHANGED, AVRCP_EVENT_PLAY_STATUS_CHANGED),
+    CONVERT(BTRC_EVT_TRACK_CHANGE, AVRCP_EVENT_TRACK_CHANGE),
+    CONVERT(BTRC_EVT_TRACK_REACHED_END, AVRCP_EVENT_TRACK_REACHED_END),
+    CONVERT(BTRC_EVT_TRACK_REACHED_START, AVRCP_EVENT_TRACK_REACHED_START),
+    CONVERT(BTRC_EVT_PLAY_POS_CHANGED, AVRCP_EVENT_PLAY_POS_CHANGED),
+    CONVERT(6, static_cast<BluetoothAvrcpEvent>(0)), // invalid, [6] required by gcc
+    CONVERT(7, static_cast<BluetoothAvrcpEvent>(0)), // invalid, [7] required by gcc
+    CONVERT(BTRC_EVT_APP_SETTINGS_CHANGED, AVRCP_EVENT_APP_SETTINGS_CHANGED)
+  };
+  if (!aIn || aIn >= MOZ_ARRAY_LENGTH(sEventId)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sEventId[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(btrc_media_attr_t aIn, enum BluetoothAvrcpMediaAttribute& aOut)
+{
+  static const BluetoothAvrcpMediaAttribute sEventId[] = {
+    CONVERT(0, static_cast<BluetoothAvrcpMediaAttribute>(0)), // invalid, [0] required by gcc
+    CONVERT(BTRC_MEDIA_ATTR_TITLE, AVRCP_MEDIA_ATTRIBUTE_TITLE),
+    CONVERT(BTRC_MEDIA_ATTR_ARTIST, AVRCP_MEDIA_ATTRIBUTE_ARTIST),
+    CONVERT(BTRC_MEDIA_ATTR_ALBUM, AVRCP_MEDIA_ATTRIBUTE_ALBUM),
+    CONVERT(BTRC_MEDIA_ATTR_TRACK_NUM, AVRCP_MEDIA_ATTRIBUTE_TRACK_NUM),
+    CONVERT(BTRC_MEDIA_ATTR_NUM_TRACKS, AVRCP_MEDIA_ATTRIBUTE_NUM_TRACKS),
+    CONVERT(BTRC_MEDIA_ATTR_GENRE, AVRCP_MEDIA_ATTRIBUTE_GENRE),
+    CONVERT(BTRC_MEDIA_ATTR_PLAYING_TIME, AVRCP_MEDIA_ATTRIBUTE_PLAYING_TIME)
+  };
+  if (!aIn || aIn >= MOZ_ARRAY_LENGTH(sEventId)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sEventId[aIn];
+  return NS_OK;
+}
+
+static nsresult
 Convert(enum BluetoothAvrcpNotification aIn, btrc_notification_type_t& aOut)
 {
   static const btrc_notification_type_t sNotificationType[] = {
@@ -811,7 +904,28 @@ Convert(const BluetoothAvrcpElementAttribute& aIn, btrc_element_attr_val_t& aOut
   return NS_OK;
 }
 
-#endif
+static nsresult
+Convert(const btrc_player_settings_t& aIn, BluetoothAvrcpPlayerSettings& aOut)
+{
+  aOut.mNumAttr = aIn.num_attr;
+  memcpy(aOut.mIds, aIn.attr_ids, aIn.num_attr);
+  memcpy(aOut.mValues, aIn.attr_values, aIn.num_attr);
+
+  return NS_OK;
+}
+#endif // ANDROID_VERSION >= 18
+
+#if ANDROID_VERSION >= 19
+static nsresult
+Convert(btrc_remote_features_t aIn, unsigned long& aOut)
+{
+  /* The input type's name is misleading. The converted value is
+   * actually a bitmask.
+   */
+  aOut = static_cast<unsigned long>(aIn);
+  return NS_OK;
+}
+#endif // ANDROID_VERSION >= 19
 
 /* |ConvertArray| is a helper for converting arrays. Pass an
  * instance of this structure as the first argument to |Convert|
@@ -2714,6 +2828,69 @@ DispatchBluetoothA2dpResult(
   return rv;
 }
 
+// Notification handling
+//
+
+BluetoothA2dpNotificationHandler::~BluetoothA2dpNotificationHandler()
+{ }
+
+static BluetoothA2dpNotificationHandler* sA2dpNotificationHandler;
+
+struct BluetoothA2dpCallback
+{
+  class A2dpNotificationHandlerWrapper
+  {
+  public:
+    typedef BluetoothA2dpNotificationHandler ObjectType;
+
+    static ObjectType* GetInstance()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      return sA2dpNotificationHandler;
+    }
+  };
+
+  // Notifications
+
+  typedef BluetoothNotificationRunnable2<A2dpNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothA2dpConnectionState,
+                                         nsString,
+                                         BluetoothA2dpConnectionState,
+                                         const nsAString&>
+    ConnectionStateNotification;
+
+  typedef BluetoothNotificationRunnable2<A2dpNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothA2dpAudioState,
+                                         nsString,
+                                         BluetoothA2dpAudioState,
+                                         const nsAString&>
+    AudioStateNotification;
+
+  // Bluedroid A2DP callbacks
+
+  static void
+  ConnectionState(btav_connection_state_t aState, bt_bdaddr_t* aBdAddr)
+  {
+    ConnectionStateNotification::Dispatch(
+      &BluetoothA2dpNotificationHandler::ConnectionStateNotification,
+      aState, aBdAddr);
+  }
+
+  static void
+  AudioState(btav_audio_state_t aState, bt_bdaddr_t* aBdAddr)
+  {
+    AudioStateNotification::Dispatch(
+      &BluetoothA2dpNotificationHandler::AudioStateNotification,
+      aState, aBdAddr);
+  }
+};
+
+// Interface
+//
+
 BluetoothA2dpInterface::BluetoothA2dpInterface(
   const btav_interface_t* aInterface)
 : mInterface(aInterface)
@@ -2725,10 +2902,19 @@ BluetoothA2dpInterface::~BluetoothA2dpInterface()
 { }
 
 void
-BluetoothA2dpInterface::Init(btav_callbacks_t* aCallbacks,
-                             BluetoothA2dpResultHandler* aRes)
+BluetoothA2dpInterface::Init(
+  BluetoothA2dpNotificationHandler* aNotificationHandler,
+  BluetoothA2dpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->init(aCallbacks);
+  static btav_callbacks_t sCallbacks = {
+    sizeof(sCallbacks),
+    BluetoothA2dpCallback::ConnectionState,
+    BluetoothA2dpCallback::AudioState
+  };
+
+  sA2dpNotificationHandler = aNotificationHandler;
+
+  bt_status_t status = mInterface->init(&sCallbacks);
 
   if (aRes) {
     DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Init,
@@ -2832,6 +3018,199 @@ DispatchBluetoothAvrcpResult(
   }
   return rv;
 }
+#endif
+
+// Notification handling
+//
+
+BluetoothAvrcpNotificationHandler::~BluetoothAvrcpNotificationHandler()
+{ }
+
+#if ANDROID_VERSION >= 18
+static BluetoothAvrcpNotificationHandler* sAvrcpNotificationHandler;
+
+struct BluetoothAvrcpCallback
+{
+  class AvrcpNotificationHandlerWrapper
+  {
+  public:
+    typedef BluetoothAvrcpNotificationHandler ObjectType;
+
+    static ObjectType* GetInstance()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      return sAvrcpNotificationHandler;
+    }
+  };
+
+  // Notifications
+
+  typedef BluetoothNotificationRunnable0<AvrcpNotificationHandlerWrapper,
+                                         void>
+    GetPlayStatusNotification;
+
+  typedef BluetoothNotificationRunnable0<AvrcpNotificationHandlerWrapper,
+                                         void>
+    ListPlayerAppAttrNotification;
+
+  typedef BluetoothNotificationRunnable1<AvrcpNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothAvrcpPlayerAttribute>
+    ListPlayerAppValuesNotification;
+
+  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper, void,
+    uint8_t, nsAutoArrayPtr<BluetoothAvrcpPlayerAttribute>,
+    uint8_t, const BluetoothAvrcpPlayerAttribute*>
+    GetPlayerAppValueNotification;
+
+  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper, void,
+    uint8_t, nsAutoArrayPtr<BluetoothAvrcpPlayerAttribute>,
+    uint8_t, const BluetoothAvrcpPlayerAttribute*>
+    GetPlayerAppAttrsTextNotification;
+
+  typedef BluetoothNotificationRunnable3<AvrcpNotificationHandlerWrapper,
+                                         void,
+                                         uint8_t, uint8_t,
+                                         nsAutoArrayPtr<uint8_t>,
+                                         uint8_t, uint8_t, const uint8_t*>
+    GetPlayerAppValuesTextNotification;
+
+  typedef BluetoothNotificationRunnable1<AvrcpNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothAvrcpPlayerSettings,
+                                         const BluetoothAvrcpPlayerSettings&>
+    SetPlayerAppValueNotification;
+
+  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper, void,
+    uint8_t, nsAutoArrayPtr<BluetoothAvrcpMediaAttribute>,
+    uint8_t, const BluetoothAvrcpMediaAttribute*>
+    GetElementAttrNotification;
+
+  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper,
+                                         void,
+                                         BluetoothAvrcpEvent, uint32_t>
+    RegisterNotificationNotification;
+
+#if ANDROID_VERSION >= 19
+  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper,
+                                         void,
+                                         nsString, unsigned long,
+                                         const nsAString&>
+    RemoteFeatureNotification;
+
+  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper,
+                                         void,
+                                         uint8_t, uint8_t>
+    VolumeChangeNotification;
+
+  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper,
+                                         void,
+                                         int, int>
+    PassthroughCmdNotification;
+#endif // ANDROID_VERSION >= 19
+
+  // Bluedroid AVRCP callbacks
+
+  static void
+  GetPlayStatus()
+  {
+    GetPlayStatusNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::GetPlayStatusNotification);
+  }
+
+  static void
+  ListPlayerAppAttr()
+  {
+    ListPlayerAppAttrNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::ListPlayerAppAttrNotification);
+  }
+
+  static void
+  ListPlayerAppValues(btrc_player_attr_t aAttrId)
+  {
+    ListPlayerAppValuesNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::ListPlayerAppValuesNotification,
+      aAttrId);
+  }
+
+  static void
+  GetPlayerAppValue(uint8_t aNumAttrs, btrc_player_attr_t* aAttrs)
+  {
+    GetPlayerAppValueNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::GetPlayerAppValueNotification,
+      aNumAttrs, ConvertArray<btrc_player_attr_t>(aAttrs, aNumAttrs));
+  }
+
+  static void
+  GetPlayerAppAttrsText(uint8_t aNumAttrs, btrc_player_attr_t* aAttrs)
+  {
+    GetPlayerAppAttrsTextNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::GetPlayerAppAttrsTextNotification,
+      aNumAttrs, ConvertArray<btrc_player_attr_t>(aAttrs, aNumAttrs));
+  }
+
+  static void
+  GetPlayerAppValuesText(uint8_t aAttrId, uint8_t aNumVals, uint8_t* aVals)
+  {
+    GetPlayerAppValuesTextNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::GetPlayerAppValuesTextNotification,
+      aAttrId, aNumVals, ConvertArray<uint8_t>(aVals, aNumVals));
+  }
+
+  static void
+  SetPlayerAppValue(btrc_player_settings_t* aVals)
+  {
+    SetPlayerAppValueNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::SetPlayerAppValueNotification,
+      *aVals);
+  }
+
+  static void
+  GetElementAttr(uint8_t aNumAttrs, btrc_media_attr_t* aAttrs)
+  {
+    GetElementAttrNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::GetElementAttrNotification,
+      aNumAttrs, ConvertArray<btrc_media_attr_t>(aAttrs, aNumAttrs));
+  }
+
+  static void
+  RegisterNotification(btrc_event_id_t aEvent, uint32_t aParam)
+  {
+    RegisterNotificationNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::RegisterNotificationNotification,
+      aEvent, aParam);
+  }
+
+#if ANDROID_VERSION >= 19
+  static void
+  RemoteFeature(bt_bdaddr_t* aBdAddr, btrc_remote_features_t aFeatures)
+  {
+    RemoteFeatureNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::RemoteFeatureNotification,
+      aBdAddr, aFeatures);
+  }
+
+  static void
+  VolumeChange(uint8_t aVolume, uint8_t aCType)
+  {
+    VolumeChangeNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::VolumeChangeNotification,
+      aVolume, aCType);
+  }
+
+  static void
+  PassthroughCmd(int aId, int aKeyState)
+  {
+    PassthroughCmdNotification::Dispatch(
+      &BluetoothAvrcpNotificationHandler::PassthroughCmdNotification,
+      aId, aKeyState);
+  }
+#endif // ANDROID_VERSION >= 19
+};
+
+// Interface
+//
 
 BluetoothAvrcpInterface::BluetoothAvrcpInterface(
   const btrc_interface_t* aInterface)
@@ -2844,10 +3223,34 @@ BluetoothAvrcpInterface::~BluetoothAvrcpInterface()
 { }
 
 void
-BluetoothAvrcpInterface::Init(btrc_callbacks_t* aCallbacks,
-                              BluetoothAvrcpResultHandler* aRes)
+BluetoothAvrcpInterface::Init(
+  BluetoothAvrcpNotificationHandler* aNotificationHandler,
+  BluetoothAvrcpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->init(aCallbacks);
+  static btrc_callbacks_t sCallbacks = {
+    sizeof(sCallbacks),
+#if ANDROID_VERSION >= 19
+    BluetoothAvrcpCallback::RemoteFeature,
+#endif
+    BluetoothAvrcpCallback::GetPlayStatus,
+    BluetoothAvrcpCallback::ListPlayerAppAttr,
+    BluetoothAvrcpCallback::ListPlayerAppValues,
+    BluetoothAvrcpCallback::GetPlayerAppValue,
+    BluetoothAvrcpCallback::GetPlayerAppAttrsText,
+    BluetoothAvrcpCallback::GetPlayerAppValuesText,
+    BluetoothAvrcpCallback::SetPlayerAppValue,
+    BluetoothAvrcpCallback::GetElementAttr,
+    BluetoothAvrcpCallback::RegisterNotification
+#if ANDROID_VERSION >= 19
+    ,
+    BluetoothAvrcpCallback::VolumeChange,
+    BluetoothAvrcpCallback::PassthroughCmd
+#endif
+  };
+
+  sAvrcpNotificationHandler = aNotificationHandler;
+
+  bt_status_t status = mInterface->init(&sCallbacks);
 
   if (aRes) {
     DispatchBluetoothAvrcpResult(aRes, &BluetoothAvrcpResultHandler::Init,
