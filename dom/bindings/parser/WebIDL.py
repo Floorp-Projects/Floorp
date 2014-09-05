@@ -3474,6 +3474,9 @@ class IDLArgument(IDLObjectWithIdentifier):
             deps.add(self.defaultValue)
         return deps
 
+    def canHaveMissingValue(self):
+        return self.optional and not self.defaultValue
+
 class IDLCallbackType(IDLType, IDLObjectWithScope):
     def __init__(self, location, parentScope, identifier, returnType, arguments):
         assert isinstance(returnType, IDLType)
