@@ -365,13 +365,11 @@ NfcContentHelper.prototype = {
   fireRequestSuccess: function fireRequestSuccess(requestId, result) {
     let request = this.takeRequest(requestId);
     if (!request) {
-      debug("not firing success for id: " + requestId +
-            ", result: " + JSON.stringify(result));
+      debug("not firing success for id: " + requestId);
       return;
     }
 
-    debug("fire request success, id: " + requestId +
-          ", result: " + JSON.stringify(result));
+    debug("fire request success, id: " + requestId);
     Services.DOMRequest.fireSuccess(request, result);
   },
 
@@ -389,7 +387,7 @@ NfcContentHelper.prototype = {
   },
 
   receiveMessage: function receiveMessage(message) {
-    debug("Message received: " + JSON.stringify(message));
+    DEBUG && debug("Message received: " + JSON.stringify(message));
     let result = message.json;
 
     switch (message.name) {
