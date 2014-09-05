@@ -347,7 +347,7 @@ nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect)
   }
 
   nsIContent* offsetParent = nullptr;
-  Element* docElement = GetCurrentDoc()->GetRootElement();
+  Element* docElement = GetComposedDoc()->GetRootElement();
   nsIContent* content = frame->GetContent();
 
   if (content && (content->IsHTML(nsGkAtoms::body) || content == docElement)) {
@@ -398,7 +398,7 @@ nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect)
       // parent chain. We want the offset parent in this case to be
       // the body, so we just get the body element from the document.
 
-      nsCOMPtr<nsIDOMHTMLDocument> html_doc(do_QueryInterface(GetCurrentDoc()));
+      nsCOMPtr<nsIDOMHTMLDocument> html_doc(do_QueryInterface(GetComposedDoc()));
 
       if (html_doc) {
         offsetParent = static_cast<nsHTMLDocument*>(html_doc.get())->GetBody();
