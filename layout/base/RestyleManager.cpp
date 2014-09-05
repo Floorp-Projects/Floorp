@@ -2434,11 +2434,34 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     // TEMPORARY (until bug 918064):  Call RestyleSelf for each
     // continuation or block-in-inline sibling.
 
+    // We must make a single decision on how to process this frame and
+    // its descendants, yet RestyleSelf might return different RestyleResult
+    // values for the different same-style continuations.  |result| is our
+    // overall decision.
+    RestyleResult result = RestyleResult(0);
+
     bool haveMoreContinuations = false;
     for (nsIFrame* f = mFrame; f;
          f = GetNextContinuationWithSameStyle(f, oldContext,
                                               &haveMoreContinuations)) {
-      RestyleSelf(f, aRestyleHint);
+
+      RestyleResult thisResult = RestyleSelf(f, aRestyleHint);
+
+      // XXX we'll handle eRestyleResult_Stop in a later patch
+      NS_ASSERTION(thisResult != eRestyleResult_Stop,
+                   "cannot handle eRestyleResult_Stop yet");
+
+      if (thisResult > result) {
+        // We take the highest RestyleResult value when working out what to do
+        // with this frame and its descendants.  Higher RestyleResult values
+        // represent a superset of the work done by lower values.
+        result = thisResult;
+      }
+    }
+
+    if (result == eRestyleResult_ContinueAndForceDescendants) {
+      childRestyleHint =
+        nsRestyleHint(childRestyleHint | eRestyle_ForceDescendants);
     }
 
     if (haveMoreContinuations && hintToRestore) {
@@ -2453,7 +2476,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   RestyleChildren(childRestyleHint);
 }
 
-void
+ElementRestyler::RestyleResult
 ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
 {
   MOZ_ASSERT(!(aRestyleHint & eRestyle_LaterSiblings),
@@ -2717,6 +2740,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
       }
     }
   }
+
+  return eRestyleResult_Continue;
 }
 
 void
