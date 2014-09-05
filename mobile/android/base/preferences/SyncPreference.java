@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko.preferences;
 
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
@@ -60,6 +63,7 @@ class SyncPreference extends Preference {
         // open the settings page.
         if (SyncAccounts.syncAccountsExist(mContext)) {
             if (SyncAccounts.openSyncSettings(mContext) != null) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, Method.SETTINGS, "sync_settings");
                 return;
             }
         }
@@ -67,5 +71,6 @@ class SyncPreference extends Preference {
         // Otherwise, launch the FxA "Get started" activity, which will
         // dispatch to the right location.
         launchFxASetup();
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, Method.SETTINGS, "sync_setup");
     }
 }
