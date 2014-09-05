@@ -554,10 +554,13 @@ this.BrowserUITelemetry = {
     this._countEvent(["customize", aEventType]);
   },
 
-  countSearchEvent: function(source, query) {
+  countSearchEvent: function(source, query, selection) {
     this._countEvent(["search", source]);
     if ((/^[a-zA-Z]+:[^\/\\]/).test(query)) {
       this._countEvent(["search", "urlbar-keyword"]);
+    }
+    if (selection) {
+      this._countEvent(["search", "selection", source, selection.index, selection.kind]);
     }
   },
 
