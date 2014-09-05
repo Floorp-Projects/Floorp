@@ -469,7 +469,8 @@ private:
    */
   void CaptureChange(nsStyleContext* aOldContext,
                      nsStyleContext* aNewContext,
-                     nsChangeHint aChangeToAssume);
+                     nsChangeHint aChangeToAssume,
+                     uint32_t* aEqualStructs);
 
   /**
    * Helpers for RestyleChildren().
