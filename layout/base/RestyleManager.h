@@ -482,12 +482,15 @@ private:
   void RestyleChildren(nsRestyleHint aChildRestyleHint);
 
   /**
-   * Helper for RestyleSelf().
+   * Helpers for RestyleSelf().
    */
   void CaptureChange(nsStyleContext* aOldContext,
                      nsStyleContext* aNewContext,
                      nsChangeHint aChangeToAssume,
                      uint32_t* aEqualStructs);
+  RestyleResult ComputeRestyleResultFromFrame(nsIFrame* aSelf);
+  RestyleResult ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
+                                                   nsStyleContext* aNewContext);
 
   /**
    * Helpers for RestyleChildren().
