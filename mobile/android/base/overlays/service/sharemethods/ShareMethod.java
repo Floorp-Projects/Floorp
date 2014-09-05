@@ -7,6 +7,7 @@ package org.mozilla.gecko.overlays.service.sharemethods;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import org.mozilla.gecko.overlays.service.ShareData;
 
 /**
  * Represents a method of sharing a URL/title. Add a bookmark? Send to a device? Add to reading list?
@@ -30,14 +31,7 @@ public abstract class ShareMethod {
      *              the ShareMethod (such as the device to share to in the case of SendTab).
      * @return true if the attempt to share was a success. False in the event of an error.
      */
-    public abstract Result handle(String title, String url, Parcelable extra);
-
-    /**
-     * Convenience method for calling handlers on objects that don't require extra data.
-     */
-    public Result handle(String title, String url) {
-        return handle(title, url, null);
-    }
+    public abstract Result handle(ShareData shareData);
 
     public abstract String getSuccessMesssage();
     public abstract String getFailureMessage();
