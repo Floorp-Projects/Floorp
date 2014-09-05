@@ -15,10 +15,9 @@ function handleSnep(msg) {
   ok(msg.records != null, "msg.records should have values");
   isnot(msg.techList.indexOf("NDEF"), -1, "check for correct tech type");
   // validate received NDEF message against reference
-  let ndef = [new MozNDEFRecord(tnf,
-                                new Uint8Array(NfcUtils.fromUTF8(type)),
-                                new Uint8Array(NfcUtils.fromUTF8(id)),
-                                new Uint8Array(NfcUtils.fromUTF8(payload)))];
+  let ndef = [new MozNDEFRecord({tnf: tnf,
+                                 type: NfcUtils.fromUTF8(type),
+                                 payload: NfcUtils.fromUTF8(payload)})];
   NDEF.compare(ndef, msg.records);
   toggleNFC(false).then(runNextTest);
 }

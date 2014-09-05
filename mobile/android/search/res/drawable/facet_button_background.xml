@@ -1,0 +1,15 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--facet button is pressed (omitting currently-selected facet)-->
+    <item
+        android:state_pressed="true"
+        android:state_checked="false"
+        android:drawable="@drawable/facet_button_background_pressed"/>
+
+    <!--default-->
+    <item
+        android:drawable="@drawable/facet_button_background_default"/>
+</selector>

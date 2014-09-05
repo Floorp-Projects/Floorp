@@ -5,7 +5,7 @@
 
 /* Copyright © 2013 Deutsche Telekom, Inc. */
 
-[Constructor(octet tnf, optional Uint8Array type, optional Uint8Array id, optional Uint8Array payload)]
+[Constructor(optional MozNDEFRecordOptions options)]
 interface MozNDEFRecord
 {
   /**
@@ -40,4 +40,11 @@ interface MozNDEFRecord
    */
   [Constant]
   readonly attribute Uint8Array? payload;
+};
+
+dictionary MozNDEFRecordOptions {
+  octet tnf = 0; // default to tnf_empty.
+  Uint8Array type;
+  Uint8Array id;
+  Uint8Array payload;
 };

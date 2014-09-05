@@ -18,6 +18,10 @@ XPCOMUtils.defineLazyServiceGetter(Services, "fm",
                                    "@mozilla.org/focus-manager;1",
                                    "nsIFocusManager");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "threadManager",
+                                   "@mozilla.org/thread-manager;1",
+                                   "nsIThreadManager");
+
 XPCOMUtils.defineLazyGetter(this, "domWindowUtils", function () {
   return content.QueryInterface(Ci.nsIInterfaceRequestor)
                 .getInterface(Ci.nsIDOMWindowUtils);
@@ -250,9 +254,6 @@ let FormAssistant = {
         this._observer.disconnect();
         this._observer = null;
       }
-      if (!element) {
-        this.focusedElement.blur();
-      }
       if (this._selectionPrivate) {
         this._selectionPrivate.removeSelectionListener(this);
         this._selectionPrivate = null;
@@ -298,8 +299,9 @@ let FormAssistant = {
           });
         });
         if (del && element === self.focusedElement) {
-          // item was deleted, fake a blur so all state gets set correctly
-          self.handleEvent({ target: element, type: "blur" });
+          self.hideKeyboard();
+          self.selectionStart = -1;
+          self.selectionEnd = -1;
         }
       });
 
@@ -378,8 +380,13 @@ let FormAssistant = {
           break;
         }
         // fall through
-      case "blur":
       case "submit":
+        if (this.focusedElement) {
+          this.focusedElement.blur();
+        }
+        break;
+
+      case "blur":
         if (this.focusedElement) {
           this.hideKeyboard();
           this.selectionStart = -1;
@@ -432,6 +439,13 @@ let FormAssistant = {
         CompositionManager.onCompositionEnd();
         break;
     }
+  },
+
+  waitForNextTick: function(callback) {
+    var tm = Services.threadManager;
+    tm.mainThread.dispatch({
+      run: callback,
+    }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
   },
 
   receiveMessage: function fa_receiveMessage(msg) {
@@ -536,7 +550,10 @@ let FormAssistant = {
         break;
 
       case "Forms:Select:Blur": {
-        this.setFocusedElement(null);
+        if (this.focusedElement) {
+          this.focusedElement.blur();
+        }
+
         break;
       }
 
@@ -649,15 +666,35 @@ let FormAssistant = {
 
     this.setFocusedElement(target);
 
-    let kbOpened = this.sendKeyboardState(target);
-    if (this.isTextInputElement(target))
-      this.isKeyboardOpened = kbOpened;
+    let count = this._focusCounter;
+    this.waitForNextTick(function fa_showKeyboardSync() {
+      if (count !== this._focusCounter) {
+        return;
+      }
+
+      let kbOpened = this.sendKeyboardState(target);
+      if (this.isTextInputElement(target))
+        this.isKeyboardOpened = kbOpened;
+    }.bind(this));
   },
 
   hideKeyboard: function fa_hideKeyboard() {
-    sendAsyncMessage("Forms:Input", { "type": "blur" });
-    this.isKeyboardOpened = false;
     this.setFocusedElement(null);
+
+    let count = this._focusCounter;
+
+    // Wait for the next tick before unset the focused element and etc.
+    // If the user move from one input from another,
+    // the remote process should get one Forms:Input message instead of two.
+    this.waitForNextTick(function fa_hideKeyboardSync() {
+      if (count !== this._focusCounter ||
+          !this.isKeyboardOpened) {
+        return;
+      }
+
+      this.isKeyboardOpened = false;
+      sendAsyncMessage("Forms:Input", { "type": "blur" });
+    }.bind(this));
   },
 
   isFocusableElement: function fa_isFocusableElement(element) {
@@ -738,7 +775,7 @@ let FormAssistant = {
     // one to [0,0] and one to actual value. Both are sent in same tick.
     // Prevent firing two events in that scenario, always only use the last 1.
     //
-    // It is also a workaround for Bug 1053048, which prevents 
+    // It is also a workaround for Bug 1053048, which prevents
     // getSelectionInfo() accessing selectionStart or selectionEnd in the
     // callback function of nsISelectionListener::NotifySelectionChanged().
     if (this._selectionTimeout) {
