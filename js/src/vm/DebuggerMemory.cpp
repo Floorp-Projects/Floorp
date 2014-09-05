@@ -249,6 +249,11 @@ DebuggerMemory::setMaxAllocationsLogLength(JSContext *cx, unsigned argc, Value *
 
 /* Debugger.Memory.prototype.takeCensus */
 
+void
+JS::dbg::SetDebuggerMallocSizeOf(JSRuntime *rt, mozilla::MallocSizeOf mallocSizeOf) {
+    rt->debuggerMallocSizeOf = mallocSizeOf;
+}
+
 namespace js {
 namespace dbg {
 
