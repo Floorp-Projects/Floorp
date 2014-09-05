@@ -36,7 +36,8 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 
 class TabsListLayout extends TwoWayView
-                     implements TabsLayout {
+                     implements TabsLayout,
+                                Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "Gecko" + TabsListLayout.class.getSimpleName();
 
     private Context mContext;
@@ -98,14 +99,14 @@ class TabsListLayout extends TwoWayView
     public void show() {
         setVisibility(View.VISIBLE);
         Tabs.getInstance().refreshThumbnails();
-        Tabs.registerOnTabsChangedListener(mTabsAdapter);
-        mTabsAdapter.refreshTabsData();
+        Tabs.registerOnTabsChangedListener(this);
+        refreshTabsData();
     }
 
     @Override
     public void hide() {
         setVisibility(View.GONE);
-        Tabs.unregisterOnTabsChangedListener(mTabsAdapter);
+        Tabs.unregisterOnTabsChangedListener(this);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel",""));
         mTabsAdapter.clear();
     }
@@ -119,10 +120,79 @@ class TabsListLayout extends TwoWayView
         mTabsPanel.autoHidePanel();
     }
 
+    @Override
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        switch (msg) {
+            case ADDED:
+                // Refresh the list to make sure the new tab is added in the right position.
+                refreshTabsData();
+                break;
 
+            case CLOSED:
+               if (tab.isPrivate() == mIsPrivate && mTabsAdapter.getCount() > 0) {
+                   if (mTabsAdapter.removeTab(tab)) {
+                       int selected = mTabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
+                       updateSelectedStyle(selected);
+                   }
+               }
+               break;
+
+            case SELECTED:
+                // Update the selected position, then fall through...
+                updateSelectedPosition();
+            case UNSELECTED:
+                // We just need to update the style for the unselected tab...
+            case THUMBNAIL:
+            case TITLE:
+            case RECORDING_CHANGE:
+                View view = getChildAt(mTabsAdapter.getPositionForTab(tab) - getFirstVisiblePosition());
+                if (view == null)
+                    return;
+
+                TabsLayoutItemView item = (TabsLayoutItemView) view.getTag();
+                assignValues(item, tab);
+                break;
+        }
+    }
+
+    // Updates the selected position in the list so that it will be scrolled to the right place.
+    private void updateSelectedPosition() {
+        int selected = mTabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
+        updateSelectedStyle(selected);
+
+        if (selected != -1) {
+            setSelection(selected);
+        }
+    }
+
+    /**
+     * Updates the selected/unselected style for the tabs.
+     *
+     * @param selected position of the selected tab
+     */
+    private void updateSelectedStyle(int selected) {
+        for (int i = 0; i < mTabsAdapter.getCount(); i++) {
+            setItemChecked(i, (i == selected));
+        }
+    }
+
+    private void refreshTabsData() {
+        // Store a different copy of the tabs, so that we don't have to worry about
+        // accidentally updating it on the wrong thread.
+        ArrayList<Tab> tabData = new ArrayList<Tab>();
+
+        Iterable<Tab> allTabs = Tabs.getInstance().getTabsInOrder();
+        for (Tab tab : allTabs) {
+            if (tab.isPrivate() == mIsPrivate)
+                tabData.add(tab);
+        }
+
+        mTabsAdapter.setTabs(tabData);
+        updateSelectedPosition();
+    }
 
     // Adapter to bind tabs into a list
-    private class TabsAdapter extends BaseAdapter implements Tabs.OnTabsChangedListener {
+    private class TabsAdapter extends BaseAdapter {
         private Context mContext;
         private ArrayList<Tab> mTabs;
         private LayoutInflater mInflater;
@@ -142,70 +212,17 @@ class TabsListLayout extends TwoWayView
             };
         }
 
-        @Override
-        public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
-            switch (msg) {
-                case ADDED:
-                    // Refresh the list to make sure the new tab is added in the right position.
-                    refreshTabsData();
-                    break;
-
-                case CLOSED:
-                    removeTab(tab);
-                    break;
-
-                case SELECTED:
-                    // Update the selected position, then fall through...
-                    updateSelectedPosition();
-                case UNSELECTED:
-                    // We just need to update the style for the unselected tab...
-                case THUMBNAIL:
-                case TITLE:
-                case RECORDING_CHANGE:
-                    View view = TabsListLayout.this.getChildAt(getPositionForTab(tab) - TabsListLayout.this.getFirstVisiblePosition());
-                    if (view == null)
-                        return;
-
-                    TabsLayoutItemView item = (TabsLayoutItemView) view.getTag();
-                    assignValues(item, tab);
-                    break;
-            }
-        }
-
-        private void refreshTabsData() {
-            // Store a different copy of the tabs, so that we don't have to worry about
-            // accidentally updating it on the wrong thread.
-            mTabs = new ArrayList<Tab>();
-
-            Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
-            for (Tab tab : tabs) {
-                if (tab.isPrivate() == mIsPrivate)
-                    mTabs.add(tab);
-            }
-
+        public void setTabs (ArrayList<Tab> tabs) {
+            mTabs = tabs;
             notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
-            updateSelectedPosition();
         }
 
-        // Updates the selected position in the list so that it will be scrolled to the right place.
-        private void updateSelectedPosition() {
-            int selected = getPositionForTab(Tabs.getInstance().getSelectedTab());
-            updateSelectedStyle(selected);
-
-            if (selected != -1) {
-                TabsListLayout.this.setSelection(selected);
+        public boolean removeTab (Tab tab) {
+            boolean tabRemoved = mTabs.remove(tab);
+            if (tabRemoved) {
+                notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
             }
-        }
-
-        /**
-         * Updates the selected/unselected style for the tabs.
-         *
-         * @param selected position of the selected tab
-         */
-        private void updateSelectedStyle(int selected) {
-            for (int i = 0; i < getCount(); i++) {
-                TabsListLayout.this.setItemChecked(i, (i == selected));
-            }
+            return tabRemoved;
         }
 
         public void clear() {
@@ -235,54 +252,6 @@ class TabsListLayout extends TwoWayView
             return mTabs.indexOf(tab);
         }
 
-        private void removeTab(Tab tab) {
-            if (tab.isPrivate() == mIsPrivate && mTabs != null) {
-                mTabs.remove(tab);
-                notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
-
-                int selected = getPositionForTab(Tabs.getInstance().getSelectedTab());
-                updateSelectedStyle(selected);
-            }
-        }
-
-        private void assignValues(TabsLayoutItemView item, Tab tab) {
-            if (item == null || tab == null)
-                return;
-
-            item.id = tab.getId();
-
-            Drawable thumbnailImage = tab.getThumbnail();
-            if (thumbnailImage != null) {
-                item.thumbnail.setImageDrawable(thumbnailImage);
-            } else {
-                item.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
-            }
-            if (item.thumbnailWrapper != null) {
-                item.thumbnailWrapper.setRecording(tab.isRecording());
-            }
-            item.title.setText(tab.getDisplayTitle());
-            item.close.setTag(item);
-        }
-
-        private void resetTransforms(View view) {
-            ViewHelper.setAlpha(view, 1);
-
-            if (isVertical()) {
-                ViewHelper.setTranslationX(view, 0);
-            } else {
-                ViewHelper.setTranslationY(view, 0);
-            }
-
-            // We only need to reset the height or width after individual tab close animations.
-            if (mOriginalSize != 0) {
-                if (isVertical()) {
-                    ViewHelper.setHeight(view, mOriginalSize);
-                } else {
-                    ViewHelper.setWidth(view, mOriginalSize);
-                }
-            }
-        }
-
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             TabsLayoutItemView item;
@@ -303,6 +272,44 @@ class TabsListLayout extends TwoWayView
             assignValues(item, tab);
 
             return convertView;
+        }
+    }
+
+    private void assignValues(TabsLayoutItemView item, Tab tab) {
+        if (item == null || tab == null)
+            return;
+
+        item.id = tab.getId();
+
+        Drawable thumbnailImage = tab.getThumbnail();
+        if (thumbnailImage != null) {
+            item.thumbnail.setImageDrawable(thumbnailImage);
+        } else {
+            item.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
+        }
+        if (item.thumbnailWrapper != null) {
+            item.thumbnailWrapper.setRecording(tab.isRecording());
+        }
+        item.title.setText(tab.getDisplayTitle());
+        item.close.setTag(item);
+    }
+
+    private void resetTransforms(View view) {
+        ViewHelper.setAlpha(view, 1);
+
+        if (isVertical()) {
+            ViewHelper.setTranslationX(view, 0);
+        } else {
+            ViewHelper.setTranslationY(view, 0);
+        }
+
+        // We only need to reset the height or width after individual tab close animations.
+        if (mOriginalSize != 0) {
+            if (isVertical()) {
+                ViewHelper.setHeight(view, mOriginalSize);
+            } else {
+                ViewHelper.setWidth(view, mOriginalSize);
+            }
         }
     }
 
