@@ -1105,9 +1105,33 @@ class TestManifest(ManifestParser):
         """
         - exists : return only existing tests
         - disabled : whether to return disabled tests
-        - tags : keys and values to filter on (e.g. `os = linux mac`)
+        - options: an optparse or argparse options object, used for subsuites
+        - values : keys and values to filter on (e.g. `os = linux mac`)
         """
         tests = [i.copy() for i in self.tests] # shallow copy
+
+        # Conditional subsuites are specified using:
+        #    subsuite = foo,condition
+        # where 'foo' is the subsuite name, and 'condition' is the same type of
+        # condition used for skip-if.  If the condition doesn't evaluate to true,
+        # the subsuite designation will be removed from the test.
+        #
+        # Look for conditional subsuites, and replace them with the subsuite itself
+        # (if the condition is true), or nothing.
+        for test in tests:
+            subsuite = test.get('subsuite')
+            if ',' in subsuite:
+                try:
+                    subsuite, condition = subsuite.split(',')
+                except ValueError:
+                    raise ParseError("subsuite condition can't contain commas")
+                # strip any comments from the condition
+                condition = condition.split('#')[0]
+                matched = parse(condition, **values)
+                if matched:
+                    test['subsuite'] = subsuite
+                else:
+                    test['subsuite'] = ''
 
         # Filter on current subsuite
         if options:
