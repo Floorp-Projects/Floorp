@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="reftest-wait">
 <head>
 <meta charset="UTF-8">
 <script>
@@ -7,11 +7,14 @@
 function boom()
 {
     document.getElementById("c").style.content = "'x'";
+    document.documentElement.removeAttribute("class");
 }
+
+window.addEventListener("MozReftestInvalidate", boom, false);
 
 </script>
 </head>
 
-<body style="display: inline-flex;" onload="boom();"><div></div><div style="display: table-caption;"></div><canvas id="c"></canvas></body>
+<body style="display: inline-flex;"><div></div><div style="display: table-caption;"></div><canvas id="c"></canvas></body>
 
 </html>
