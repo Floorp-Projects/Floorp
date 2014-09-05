@@ -33,65 +33,45 @@ add_test(function test_personalization_state() {
 
   // Test GSM personalization state.
   testPersonalization(false, CARD_PERSOSUBSTATE_SIM_NETWORK,
-                      Ci.nsIIccProvider.CARD_STATE_NETWORK_LOCKED);
-  testPersonalization(false, CARD_PERSOSUBSTATE_SIM_NETWORK_SUBSET,
-                      Ci.nsIIccProvider.CARD_STATE_NETWORK_SUBSET_LOCKED);
+                      GECKO_CARDSTATE_NETWORK_LOCKED);
   testPersonalization(false, CARD_PERSOSUBSTATE_SIM_CORPORATE,
-                      Ci.nsIIccProvider.CARD_STATE_CORPORATE_LOCKED);
+                      GECKO_CARDSTATE_CORPORATE_LOCKED);
   testPersonalization(false, CARD_PERSOSUBSTATE_SIM_SERVICE_PROVIDER,
-                      Ci.nsIIccProvider.CARD_STATE_SERVICE_PROVIDER_LOCKED);
-  testPersonalization(false, CARD_PERSOSUBSTATE_SIM_SIM,
-                      Ci.nsIIccProvider.CARD_STATE_SIM_LOCKED);
+                      GECKO_CARDSTATE_SERVICE_PROVIDER_LOCKED);
   testPersonalization(false, CARD_PERSOSUBSTATE_SIM_NETWORK_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_NETWORK_PUK_REQUIRED);
-  testPersonalization(false, CARD_PERSOSUBSTATE_SIM_NETWORK_SUBSET_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_NETWORK_SUBSET_PUK_REQUIRED);
+                      GECKO_CARDSTATE_NETWORK_PUK_REQUIRED);
   testPersonalization(false, CARD_PERSOSUBSTATE_SIM_CORPORATE_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_CORPORATE_PUK_REQUIRED);
+                      GECKO_CARDSTATE_CORPORATE_PUK_REQUIRED);
   testPersonalization(false, CARD_PERSOSUBSTATE_SIM_SERVICE_PROVIDER_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_SERVICE_PROVIDER_PUK_REQUIRED);
-  testPersonalization(false, CARD_PERSOSUBSTATE_SIM_SIM_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_SIM_PUK_REQUIRED);
-
-  testPersonalization(false, CARD_PERSOSUBSTATE_UNKNOWN,
-                      Ci.nsIIccProvider.CARD_STATE_UNKNOWN);
-  testPersonalization(false, CARD_PERSOSUBSTATE_IN_PROGRESS,
-                      Ci.nsIIccProvider.CARD_STATE_PERSONALIZATION_IN_PROGRESS);
+                      GECKO_CARDSTATE_SERVICE_PROVIDER_PUK_REQUIRED);
   testPersonalization(false, CARD_PERSOSUBSTATE_READY,
-                      Ci.nsIIccProvider.CARD_STATE_PERSONALIZATION_READY);
+                      GECKO_CARDSTATE_PERSONALIZATION_READY);
 
   // Test CDMA personalization state.
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_NETWORK1,
-                      Ci.nsIIccProvider.CARD_STATE_NETWORK1_LOCKED);
+                      GECKO_CARDSTATE_NETWORK1_LOCKED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_NETWORK2,
-                      Ci.nsIIccProvider.CARD_STATE_NETWORK2_LOCKED);
+                      GECKO_CARDSTATE_NETWORK2_LOCKED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_HRPD,
-                      Ci.nsIIccProvider.CARD_STATE_HRPD_NETWORK_LOCKED);
+                      GECKO_CARDSTATE_HRPD_NETWORK_LOCKED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_CORPORATE,
-                      Ci.nsIIccProvider.CARD_STATE_RUIM_CORPORATE_LOCKED);
+                      GECKO_CARDSTATE_RUIM_CORPORATE_LOCKED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_SERVICE_PROVIDER,
-                      Ci.nsIIccProvider.CARD_STATE_RUIM_SERVICE_PROVIDER_LOCKED);
+                      GECKO_CARDSTATE_RUIM_SERVICE_PROVIDER_LOCKED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_RUIM,
-                      Ci.nsIIccProvider.CARD_STATE_RUIM_LOCKED);
+                      GECKO_CARDSTATE_RUIM_LOCKED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_NETWORK1_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_NETWORK1_PUK_REQUIRED);
+                      GECKO_CARDSTATE_NETWORK1_PUK_REQUIRED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_NETWORK2_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_NETWORK2_PUK_REQUIRED);
+                      GECKO_CARDSTATE_NETWORK2_PUK_REQUIRED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_HRPD_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_HRPD_NETWORK_PUK_REQUIRED);
+                      GECKO_CARDSTATE_HRPD_NETWORK_PUK_REQUIRED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_CORPORATE_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_RUIM_CORPORATE_PUK_REQUIRED);
+                      GECKO_CARDSTATE_RUIM_CORPORATE_PUK_REQUIRED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_SERVICE_PROVIDER_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_RUIM_SERVICE_PROVIDER_PUK_REQUIRED);
+                      GECKO_CARDSTATE_RUIM_SERVICE_PROVIDER_PUK_REQUIRED);
   testPersonalization(true, CARD_PERSOSUBSTATE_RUIM_RUIM_PUK,
-                      Ci.nsIIccProvider.CARD_STATE_RUIM_PUK_REQUIRED);
-
-  testPersonalization(true, CARD_PERSOSUBSTATE_UNKNOWN,
-                      Ci.nsIIccProvider.CARD_STATE_UNKNOWN);
-  testPersonalization(true, CARD_PERSOSUBSTATE_IN_PROGRESS,
-                      Ci.nsIIccProvider.CARD_STATE_PERSONALIZATION_IN_PROGRESS);
-  testPersonalization(true, CARD_PERSOSUBSTATE_READY,
-                      Ci.nsIIccProvider.CARD_STATE_PERSONALIZATION_READY);
+                      GECKO_CARDSTATE_RUIM_PUK_REQUIRED);
 
   run_next_test();
 });
@@ -121,17 +101,17 @@ add_test(function test_card_app_state() {
   }
 
   testCardAppState(CARD_APPSTATE_ILLEGAL,
-                   Ci.nsIIccProvider.CARD_STATE_ILLEGAL);
+                   GECKO_CARDSTATE_ILLEGAL);
   testCardAppState(CARD_APPSTATE_PIN,
-                   Ci.nsIIccProvider.CARD_STATE_PIN_REQUIRED);
+                   GECKO_CARDSTATE_PIN_REQUIRED);
   testCardAppState(CARD_APPSTATE_PUK,
-                   Ci.nsIIccProvider.CARD_STATE_PUK_REQUIRED);
+                   GECKO_CARDSTATE_PUK_REQUIRED);
   testCardAppState(CARD_APPSTATE_READY,
-                   Ci.nsIIccProvider.CARD_STATE_READY);
+                   GECKO_CARDSTATE_READY);
   testCardAppState(CARD_APPSTATE_UNKNOWN,
-                   Ci.nsIIccProvider.CARD_STATE_UNKNOWN);
+                   GECKO_CARDSTATE_UNKNOWN);
   testCardAppState(CARD_APPSTATE_DETECTED,
-                   Ci.nsIIccProvider.CARD_STATE_UNKNOWN);
+                   GECKO_CARDSTATE_UNKNOWN);
 
   run_next_test();
 });
@@ -159,7 +139,7 @@ add_test(function test_icc_permanent_blocked() {
     };
 
     ril._processICCStatus(iccStatus);
-    do_check_eq(ril.cardState, Ci.nsIIccProvider.CARD_STATE_PERMANENT_BLOCKED);
+    do_check_eq(ril.cardState, GECKO_CARDSTATE_PERMANENT_BLOCKED);
   }
 
   testPermanentBlocked(1,
