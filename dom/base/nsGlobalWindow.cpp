@@ -1125,10 +1125,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   // Initialize the PRCList (this).
   PR_INIT_CLIST(this);
 
-  if (Preferences::GetBool("dom.window_experimental_bindings") ||
-      !aOuterWindow) {
-    SetIsDOMBinding();
-  }
+  SetIsDOMBinding();
 
   if (aOuterWindow) {
     // |this| is an inner window, add this inner window to the outer
