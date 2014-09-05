@@ -212,7 +212,7 @@ public:
   /**
    * Returns true if Destroy() has already been called on this APZC instance.
    */
-  bool IsDestroyed();
+  bool IsDestroyed() const;
 
   /**
    * Returns the incremental transformation corresponding to the async pan/zoom
@@ -220,14 +220,14 @@ public:
    * existing transform, it will make the layer appear with the desired pan/zoom
    * amount.
    */
-  ViewTransform GetCurrentAsyncTransform();
+  ViewTransform GetCurrentAsyncTransform() const;
 
   /**
    * Returns the part of the async transform that will remain once Gecko does a
    * repaint at the desired metrics. That is, in the steady state:
    * Matrix4x4(GetCurrentAsyncTransform()) === GetNontransientAsyncTransform()
    */
-  Matrix4x4 GetNontransientAsyncTransform();
+  Matrix4x4 GetNontransientAsyncTransform() const;
 
   /**
    * Returns the transform to take something from the coordinate space of the
@@ -236,7 +236,7 @@ public:
    * processed, this is needed to transform input events properly into a space
    * gecko will understand.
    */
-  Matrix4x4 GetTransformToLastDispatchedPaint();
+  Matrix4x4 GetTransformToLastDispatchedPaint() const;
 
   /**
    * Recalculates the displayport. Ideally, this should paint an area bigger
@@ -464,7 +464,7 @@ protected:
    * current touch (this only makes sense if a touch is currently happening and
    * OnTouchMove() is being invoked).
    */
-  float PanDistance();
+  float PanDistance() const;
 
   /**
    * Gets a vector of the velocities of each axis.
