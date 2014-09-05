@@ -388,7 +388,7 @@ class FreeOp : public JSFreeOp
         return static_cast<FreeOp *>(fop);
     }
 
-    FreeOp(JSRuntime *rt)
+    explicit FreeOp(JSRuntime *rt)
       : JSFreeOp(rt)
     {}
 
