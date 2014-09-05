@@ -230,8 +230,6 @@ template<> const jschar TracerConcrete<JS::Symbol>::concreteTypeName[] =
     MOZ_UTF16("JS::Symbol");
 template<> const jschar TracerConcrete<JSScript>::concreteTypeName[] =
     MOZ_UTF16("JSScript");
-template<> const jschar TracerConcrete<js::LazyScript>::concreteTypeName[] =
-    MOZ_UTF16("js::LazyScript");
 template<> const jschar TracerConcrete<js::jit::JitCode>::concreteTypeName[] =
     MOZ_UTF16("js::jit::JitCode");
 template<> const jschar TracerConcrete<js::Shape>::concreteTypeName[] =

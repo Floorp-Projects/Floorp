@@ -137,7 +137,6 @@
 
 // Forward declarations of SpiderMonkey's ubi::Node reference types.
 namespace js {
-class LazyScript;
 class Shape;
 class BaseShape;
 namespace jit {
@@ -467,7 +466,6 @@ template<> struct Concrete<JSObject> : TracerConcreteWithCompartment<JSObject> {
 template<> struct Concrete<JSString> : TracerConcrete<JSString> { };
 template<> struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> { };
 template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> { };
-template<> struct Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> { };
 template<> struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> { };
 template<> struct Concrete<js::Shape> : TracerConcreteWithCompartment<js::Shape> { };
 template<> struct Concrete<js::BaseShape> : TracerConcreteWithCompartment<js::BaseShape> { };

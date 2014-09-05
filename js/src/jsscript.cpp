@@ -3752,6 +3752,9 @@ LazyScript::staticLevel(JSContext *cx) const
     return 1;
 }
 
+template<> const jschar JS::ubi::TracerConcrete<LazyScript>::concreteTypeName[] =
+    MOZ_UTF16("js::LazyScript");
+
 void
 JSScript::updateBaselineOrIonRaw()
 {
