@@ -816,10 +816,8 @@ NetworkManager.prototype = {
   _tetheringInterface: null,
 
   handleLastRequest: function() {
-    let count = this._requestCount;
-    this._requestCount = 0;
-
-    if (count === 1) {
+    if (this._requestCount === 1) {
+      this._requestCount = 0;
       if (this.wantConnectionEvent) {
         if (this.tetheringSettings[SETTINGS_USB_ENABLED]) {
           this.wantConnectionEvent.call(this);
@@ -829,7 +827,10 @@ NetworkManager.prototype = {
       return;
     }
 
-    if (count > 1) {
+    if (this._requestCount > 1) {
+      // Set this._requestCount to 1 to prevent from subsequent usb tethering toggles
+      // triggering |handleUSBTetheringToggle|.
+      this._requestCount = 1;
       this.handleUSBTetheringToggle(this.tetheringSettings[SETTINGS_USB_ENABLED]);
       this.wantConnectionEvent = null;
     }
@@ -927,12 +928,14 @@ NetworkManager.prototype = {
         (this._usbTetheringAction === TETHERING_STATE_ONGOING ||
          this._usbTetheringAction === TETHERING_STATE_ACTIVE)) {
       debug("Usb tethering already connecting/connected.");
+      this._requestCount = 0;
       return;
     }
 
     if (!enable &&
         this._usbTetheringAction === TETHERING_STATE_IDLE) {
       debug("Usb tethering already disconnected.");
+      this._requestCount = 0;
       return;
     }
 
@@ -1134,14 +1137,14 @@ NetworkManager.prototype = {
       }
       this.setUSBTethering(enable,
                            this._tetheringInterface[TETHERING_TYPE_USB],
-                           this.usbTetheringResultReport.bind(this));
+                           this.usbTetheringResultReport.bind(this, enable));
     } else {
       this.usbTetheringResultReport("Failed to set usb function");
       throw new Error("failed to set USB Function to adb");
     }
   },
 
-  usbTetheringResultReport: function(error) {
+  usbTetheringResultReport: function(enable, error) {
     let settingsLock = gSettingsService.createLock();
 
     // Disable tethering settings when fail to enable it.
@@ -1157,7 +1160,7 @@ NetworkManager.prototype = {
       }
 #endif
     } else {
-      if (this.tetheringSettings[SETTINGS_USB_ENABLED]) {
+      if (enable) {
         this._usbTetheringAction = TETHERING_STATE_ACTIVE;
       } else {
         this._usbTetheringAction = TETHERING_STATE_IDLE;
