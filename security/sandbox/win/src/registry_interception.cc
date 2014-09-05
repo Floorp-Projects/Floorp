@@ -10,6 +10,9 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
+#ifdef MOZ_CONTENT_SANDBOX // For upstream merging, use patch in bug 1018966 to reapply warn only sandbox code
+#include "mozilla/warnonlysandbox/warnOnlySandbox.h"
+#endif
 
 namespace sandbox {
 
@@ -24,6 +27,12 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
                                    disposition);
   if (NT_SUCCESS(status))
     return status;
+
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("NtCreateKey",
+                                       object_attributes->ObjectName->Buffer,
+                                       object_attributes->ObjectName->Length);
+#endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -87,6 +96,11 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
+#ifdef MOZ_CONTENT_SANDBOX
+    mozilla::warnonlysandbox::LogAllowed("NtCreateKey",
+                                         object_attributes->ObjectName->Buffer,
+                                         object_attributes->ObjectName->Length);
+#endif
   } while (false);
 
   return status;
@@ -140,6 +154,11 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status, PHANDLE key,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
+#ifdef MOZ_CONTENT_SANDBOX
+    mozilla::warnonlysandbox::LogAllowed("NtOpenKey[Ex]",
+                                         object_attributes->ObjectName->Buffer,
+                                         object_attributes->ObjectName->Length);
+#endif
   } while (false);
 
   return status;
@@ -152,6 +171,12 @@ NTSTATUS WINAPI TargetNtOpenKey(NtOpenKeyFunction orig_OpenKey, PHANDLE key,
   NTSTATUS status = orig_OpenKey(key, desired_access, object_attributes);
   if (NT_SUCCESS(status))
     return status;
+
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("NtOpenKey",
+                                       object_attributes->ObjectName->Buffer,
+                                       object_attributes->ObjectName->Length);
+#endif
 
   return CommonNtOpenKey(status, key, desired_access, object_attributes);
 }
@@ -169,6 +194,12 @@ NTSTATUS WINAPI TargetNtOpenKeyEx(NtOpenKeyExFunction orig_OpenKeyEx,
   // REG_OPTION_BACKUP_RESTORE to open the key with special privileges.
   if (NT_SUCCESS(status) || open_options != 0)
     return status;
+
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("NtOpenKeyEx",
+                                       object_attributes->ObjectName->Buffer,
+                                       object_attributes->ObjectName->Length);
+#endif
 
   return CommonNtOpenKey(status, key, desired_access, object_attributes);
 }

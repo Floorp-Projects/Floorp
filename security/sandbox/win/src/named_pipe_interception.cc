@@ -12,6 +12,9 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
+#ifdef MOZ_CONTENT_SANDBOX // For upstream merging, use patch in bug 1018966 to reapply warn only sandbox code
+#include "mozilla/warnonlysandbox/warnOnlySandbox.h"
+#endif
 
 namespace sandbox {
 
@@ -27,6 +30,9 @@ HANDLE WINAPI TargetCreateNamedPipeW(
   if (INVALID_HANDLE_VALUE != pipe)
     return pipe;
 
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("CreateNamedPipeW", pipe_name);
+#endif
   DWORD original_error = ::GetLastError();
 
   // We don't trust that the IPC can work this early.
@@ -62,6 +68,9 @@ HANDLE WINAPI TargetCreateNamedPipeW(
     if (ERROR_SUCCESS != answer.win32_result)
       return INVALID_HANDLE_VALUE;
 
+#ifdef MOZ_CONTENT_SANDBOX
+    mozilla::warnonlysandbox::LogAllowed("CreateNamedPipeW", pipe_name);
+#endif
     return answer.handle;
   } while (false);
 

@@ -3032,6 +3032,92 @@ Parser<FullParseHandler>::bindDestructuringVar(BindData<FullParseHandler> *data,
     return true;
 }
 
+template <>
+bool
+Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data, ParseNode *left);
+
+template <>
+bool
+Parser<FullParseHandler>::checkDestructuringObject(BindData<FullParseHandler> *data,
+                                                   ParseNode *objectPattern)
+{
+    MOZ_ASSERT(objectPattern->isKind(PNK_OBJECT));
+
+    for (ParseNode *member = objectPattern->pn_head; member; member = member->pn_next) {
+        ParseNode *expr;
+        if (member->isKind(PNK_MUTATEPROTO)) {
+            expr = member->pn_kid;
+        } else {
+            MOZ_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
+            expr = member->pn_right;
+        }
+
+        bool ok;
+        if (expr->isKind(PNK_ARRAY) || expr->isKind(PNK_OBJECT)) {
+            ok = checkDestructuring(data, expr);
+        } else if (data) {
+            if (!expr->isKind(PNK_NAME)) {
+                report(ParseError, false, expr, JSMSG_NO_VARIABLE_NAME);
+                return false;
+            }
+            ok = bindDestructuringVar(data, expr);
+        } else {
+            ok = checkAndMarkAsAssignmentLhs(expr, KeyedDestructuringAssignment);
+        }
+        if (!ok)
+            return false;
+    }
+
+    return true;
+}
+
+template <>
+bool
+Parser<FullParseHandler>::checkDestructuringArray(BindData<FullParseHandler> *data,
+                                                  ParseNode *arrayPattern)
+{
+    MOZ_ASSERT(arrayPattern->isKind(PNK_ARRAY));
+
+    for (ParseNode *element = arrayPattern->pn_head; element; element = element->pn_next) {
+        if (element->isKind(PNK_ELISION))
+            continue;
+
+        ParseNode *target = element;
+        if (target->isKind(PNK_SPREAD)) {
+            if (target->pn_next) {
+                report(ParseError, false, target->pn_next, JSMSG_PARAMETER_AFTER_REST);
+                return false;
+            }
+            target = target->pn_kid;
+
+            // The RestElement should not support nested patterns.
+            if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
+                report(ParseError, false, target, JSMSG_BAD_DESTRUCT_TARGET);
+                return false;
+            }
+        }
+
+        bool ok;
+        if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
+            ok = checkDestructuring(data, target);
+        } else {
+            if (data) {
+                if (!target->isKind(PNK_NAME)) {
+                    report(ParseError, false, target, JSMSG_NO_VARIABLE_NAME);
+                    return false;
+                }
+                ok = bindDestructuringVar(data, target);
+            } else {
+                ok = checkAndMarkAsAssignmentLhs(target, KeyedDestructuringAssignment);
+            }
+        }
+        if (!ok)
+            return false;
+    }
+
+    return true;
+}
+
 /*
  * Destructuring patterns can appear in two kinds of contexts:
  *
@@ -3072,84 +3158,14 @@ template <>
 bool
 Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data, ParseNode *left)
 {
-    bool ok;
-
     if (left->isKind(PNK_ARRAYCOMP)) {
         report(ParseError, false, left, JSMSG_ARRAY_COMP_LEFTSIDE);
         return false;
     }
 
-    Rooted<StaticBlockObject *> blockObj(context);
-    blockObj = data && data->binder == bindLet ? data->let.blockObj.get() : nullptr;
-
-    if (left->isKind(PNK_ARRAY)) {
-        for (ParseNode *element = left->pn_head; element; element = element->pn_next) {
-            if (!element->isKind(PNK_ELISION)) {
-                ParseNode *target = element;
-                if (target->isKind(PNK_SPREAD)) {
-                    if (target->pn_next) {
-                        report(ParseError, false, target->pn_next, JSMSG_PARAMETER_AFTER_REST);
-                        return false;
-                    }
-                    target = target->pn_kid;
-
-                    // The RestElement should not support nested patterns.
-                    if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
-                        report(ParseError, false, target, JSMSG_BAD_DESTRUCT_TARGET);
-                        return false;
-                    }
-                }
-                if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
-                    ok = checkDestructuring(data, target);
-                } else {
-                    if (data) {
-                        if (!target->isKind(PNK_NAME)) {
-                            report(ParseError, false, target, JSMSG_NO_VARIABLE_NAME);
-                            return false;
-                        }
-                        ok = bindDestructuringVar(data, target);
-                    } else {
-                        ok = checkAndMarkAsAssignmentLhs(target, KeyedDestructuringAssignment);
-                    }
-                }
-                if (!ok)
-                    return false;
-            }
-        }
-    } else {
-        JS_ASSERT(left->isKind(PNK_OBJECT));
-        for (ParseNode *member = left->pn_head; member; member = member->pn_next) {
-            MOZ_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
-            ParseNode *expr = member->pn_right;
-
-            if (expr->isKind(PNK_ARRAY) || expr->isKind(PNK_OBJECT)) {
-                ok = checkDestructuring(data, expr);
-            } else if (data) {
-                if (!expr->isKind(PNK_NAME)) {
-                    report(ParseError, false, expr, JSMSG_NO_VARIABLE_NAME);
-                    return false;
-                }
-                ok = bindDestructuringVar(data, expr);
-            } else {
-                /*
-                 * If this is a destructuring shorthand ({x} = ...), then
-                 * identifierName wasn't used to parse |x|.  As a result, |x|
-                 * hasn't been officially linked to its def or registered in
-                 * lexdeps.  Do that now.
-                 */
-                if (member->pn_right == member->pn_left) {
-                    RootedPropertyName name(context, expr->pn_atom->asPropertyName());
-                    if (!noteNameUse(name, expr))
-                        return false;
-                }
-                ok = checkAndMarkAsAssignmentLhs(expr, KeyedDestructuringAssignment);
-            }
-            if (!ok)
-                return false;
-        }
-    }
-
-    return true;
+    if (left->isKind(PNK_ARRAY))
+        return checkDestructuringArray(data, left);
+    return checkDestructuringObject(data, left);
 }
 
 template <>
@@ -7124,6 +7140,7 @@ Parser<ParseHandler>::objectLiteral()
     if (!literal)
         return null();
 
+    bool seenPrototypeMutation = false;
     RootedAtom atom(context);
     for (;;) {
         TokenKind ltok = tokenStream.getToken(TokenStream::KeywordIsName);
@@ -7135,6 +7152,8 @@ Parser<ParseHandler>::objectLiteral()
             isGenerator = true;
             ltok = tokenStream.getToken(TokenStream::KeywordIsName);
         }
+
+        atom = nullptr;
 
         JSOp op = JSOP_INITPROP;
         Node propname;
@@ -7247,29 +7266,43 @@ Parser<ParseHandler>::objectLiteral()
 
         if (op == JSOP_INITPROP) {
             TokenKind tt = tokenStream.getToken();
-            Node propexpr;
+            if (tt == TOK_ERROR)
+                return null();
+
             if (tt == TOK_COLON) {
                 if (isGenerator) {
                     report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
                     return null();
                 }
-                propexpr = assignExpr();
+
+                Node propexpr = assignExpr();
                 if (!propexpr)
                     return null();
 
                 if (foldConstants && !FoldConstants(context, &propexpr, this))
                     return null();
 
-                /*
-                 * Treat initializers which mutate __proto__ as non-constant,
-                 * so that we can later assume singleton objects delegate to
-                 * the default Object.prototype.
-                 */
-                if (!handler.isConstant(propexpr) || atom == context->names().proto)
-                    handler.setListFlag(literal, PNX_NONCONST);
+                if (atom == context->names().proto) {
+                    if (seenPrototypeMutation) {
+                        report(ParseError, false, propname, JSMSG_DUPLICATE_PROPERTY, "__proto__");
+                        return null();
+                    }
+                    seenPrototypeMutation = true;
 
-                if (!handler.addPropertyDefinition(literal, propname, propexpr))
-                    return null();
+                    // Note: this occurs *only* if we observe TOK_COLON!  Only
+                    // __proto__: v mutates [[Prototype]].  Getters, setters,
+                    // method/generator definitions, computed property name
+                    // versions of all of these, and shorthands do not.
+                    uint32_t begin = handler.getPosition(propname).begin;
+                    if (!handler.addPrototypeMutation(literal, begin, propexpr))
+                        return null();
+                } else {
+                    if (!handler.isConstant(propexpr))
+                        handler.setListFlag(literal, PNX_NONCONST);
+
+                    if (!handler.addPropertyDefinition(literal, propname, propexpr))
+                        return null();
+                }
             } else if (ltok == TOK_NAME && (tt == TOK_COMMA || tt == TOK_RC)) {
                 /*
                  * Support, e.g., |var {x, y} = o| as destructuring shorthand

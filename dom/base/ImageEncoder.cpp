@@ -21,7 +21,7 @@ namespace dom {
 // template parameter, we need to move this class outside.
 class SurfaceHelper : public nsRunnable {
 public:
-  SurfaceHelper(TemporaryRef<layers::Image> aImage) : mImage(aImage) {}
+  explicit SurfaceHelper(TemporaryRef<layers::Image> aImage) : mImage(aImage) {}
 
   // It retrieves a SourceSurface reference and convert color format on main
   // thread and passes DataSourceSurface to caller thread.

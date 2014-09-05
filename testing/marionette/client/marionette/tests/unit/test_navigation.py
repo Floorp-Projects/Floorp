@@ -60,6 +60,7 @@ class TestNavigate(MarionetteTestCase):
         self.assertEqual("Marionette Test", self.marionette.title)
         self.assertTrue(self.marionette.execute_script("return window.document.getElementById('someDiv') == undefined;"))
 
+    ''' Disabled due to Bug 977899
     def test_navigate_frame(self):
         self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
         self.marionette.switch_to_frame(0)
@@ -67,6 +68,7 @@ class TestNavigate(MarionetteTestCase):
         self.assertTrue('empty.html' in self.marionette.get_url())
         self.marionette.switch_to_frame()
         self.assertTrue('test_iframe.html' in self.marionette.get_url())
+    '''
 
     def test_shouldnt_error_if_nonexistent_url_used(self):
         try:
@@ -95,12 +97,12 @@ class TestNavigate(MarionetteTestCase):
             self.marionette.navigate(test_html)
             self.assertTrue(self.marionette.find_element("id", "mozLink"))
             self.fail("Should have thrown a MarionetteException")
-        except MarionetteException as e:
+        except TimeoutException as e:
             self.assertTrue("Error loading page, timed out" in str(e))
         except Exception as inst:
             import traceback
             print traceback.format_exc()
-            self.fail("Should have thrown a MarionetteException instead of %s" % type(inst))
+            self.fail("Should have thrown a TimeoutException instead of %s" % type(inst))
 
     def test_navigate_iframe(self):
         test_iframe = self.marionette.absolute_url("test_iframe.html")
