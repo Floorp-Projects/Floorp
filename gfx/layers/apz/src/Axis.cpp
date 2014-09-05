@@ -207,6 +207,10 @@ void Axis::ClearOverscroll() {
   mOverscroll = 0;
 }
 
+ScreenCoord Axis::PanStart() const {
+  return mStartPos;
+}
+
 ScreenCoord Axis::PanDistance() const {
   return fabs(mPos - mStartPos);
 }

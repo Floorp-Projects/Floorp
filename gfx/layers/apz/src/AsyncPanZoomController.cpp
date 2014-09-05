@@ -1726,6 +1726,10 @@ float AsyncPanZoomController::PanDistance() const {
   return NS_hypot(mX.PanDistance(), mY.PanDistance());
 }
 
+ScreenPoint AsyncPanZoomController::PanStart() const {
+  return ScreenPoint(mX.PanStart(), mY.PanStart());
+}
+
 const ScreenPoint AsyncPanZoomController::GetVelocityVector() {
   return ScreenPoint(mX.GetVelocity(), mY.GetVelocity());
 }
