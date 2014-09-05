@@ -339,6 +339,7 @@ MediaSource::Detach()
   }
   mDecoder->DetachMediaSource();
   mDecoder = nullptr;
+  mFirstSourceBufferInitialization = false;
   SetReadyState(MediaSourceReadyState::Closed);
   mDuration = UnspecifiedNaN<double>();
   if (mActiveSourceBuffers) {
@@ -395,6 +396,7 @@ MediaSource::MediaSource(nsPIDOMWindow* aWindow)
   , mDuration(UnspecifiedNaN<double>())
   , mDecoder(nullptr)
   , mReadyState(MediaSourceReadyState::Closed)
+  , mFirstSourceBufferInitialization(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mSourceBuffers = new SourceBufferList(this);
@@ -480,6 +482,29 @@ MediaSource::NotifyEvicted(double aStart, double aEnd)
   // Cycle through all SourceBuffers and tell them to evict data in
   // the given range.
   mSourceBuffers->Evict(aStart, aEnd);
+}
+
+void
+MediaSource::QueueInitializationEvent()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mFirstSourceBufferInitialization) {
+    mFirstSourceBufferInitialization = true;
+  }
+  MSE_DEBUG("MediaSource(%p)::QueueInitializationEvent()", this);
+  nsRefPtr<nsIRunnable> task =
+    NS_NewRunnableMethod(this, &MediaSource::InitializationEvent);
+  NS_DispatchToMainThread(task);
+}
+
+void
+MediaSource::InitializationEvent()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("MediaSource(%p)::InitializationEvent()", this);
+  if (mDecoder) {
+    mDecoder->PrepareReaderInitialization();
+  }
 }
 
 nsPIDOMWindow*
