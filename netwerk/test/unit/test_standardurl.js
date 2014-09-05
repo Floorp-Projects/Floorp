@@ -220,6 +220,21 @@ function test_clearedSpec()
   symmetricEquality(true, url, ref);
 }
 
+function test_escapeQueryBrackets()
+{
+  var url = stringToURL("http://example.com/?a[x]=1");
+  do_check_eq(url.spec, "http://example.com/?a%5Bx%5D=1");
+
+  url = stringToURL("http://example.com/?a%5Bx%5D=1");
+  do_check_eq(url.spec, "http://example.com/?a%5Bx%5D=1");
+
+  url = stringToURL("http://[2001::1]/?a[x]=1");
+  do_check_eq(url.spec, "http://[2001::1]/?a%5Bx%5D=1");
+
+  url = stringToURL("http://[2001::1]/?a%5Bx%5D=1");
+  do_check_eq(url.spec, "http://[2001::1]/?a%5Bx%5D=1");
+}
+
 function run_test()
 {
   test_setEmptyPath();
@@ -228,4 +243,5 @@ function run_test()
   test_ipv6();
   test_ipv6_fail();
   test_clearedSpec();
+  test_escapeQueryBrackets();
 }
