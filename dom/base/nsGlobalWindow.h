@@ -823,8 +823,6 @@ public:
     return nullptr;
   }
 
-  static bool WindowOnWebIDL(JSContext* /* unused */, JSObject* aObj);
-
   nsIDOMWindow* GetWindow(mozilla::ErrorResult& aError);
   nsIDOMWindow* GetSelf(mozilla::ErrorResult& aError);
   nsIDocument* GetDocument()

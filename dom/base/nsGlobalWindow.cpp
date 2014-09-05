@@ -13980,17 +13980,6 @@ nsGlobalWindow::GetSidebar(OwningExternalOrWindowProxy& aResult,
 #endif
 }
 
-/* static */
-bool
-nsGlobalWindow::WindowOnWebIDL(JSContext* aCx, JSObject* aObj)
-{
-  DebugOnly<nsGlobalWindow*> win;
-  MOZ_ASSERT_IF(IsDOMObject(aObj),
-                NS_SUCCEEDED(UNWRAP_OBJECT(Window, aObj, win)));
-
-  return IsDOMObject(aObj);
-}
-
 #ifdef MOZ_B2G
 void
 nsGlobalWindow::EnableNetworkEvent(uint32_t aType)
