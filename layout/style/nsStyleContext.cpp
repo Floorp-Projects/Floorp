@@ -1039,3 +1039,52 @@ nsStyleContext::HasSameCachedStyleData(nsStyleContext* aOther,
 {
   return GetCachedStyleData(aSID) == aOther->GetCachedStyleData(aSID);
 }
+
+void
+nsStyleContext::SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs)
+{
+  static_assert(nsStyleStructID_Length <= 32, "aStructs is not big enough");
+
+  for (nsStyleStructID i = nsStyleStructID_Inherited_Start;
+       i < nsStyleStructID_Inherited_Start + nsStyleStructID_Inherited_Count;
+       i = nsStyleStructID(i + 1)) {
+    uint32_t bit = nsCachedStyleData::GetBitForSID(i);
+    if (!(aStructs & bit)) {
+      continue;
+    }
+    void*& thisData = mCachedInheritedData.mStyleStructs[i];
+    void*& otherData = aNewContext->mCachedInheritedData.mStyleStructs[i];
+    if (mBits & bit) {
+      if (thisData == otherData) {
+        thisData = nullptr;
+      }
+    } else if (!(aNewContext->mBits & bit) && thisData && otherData) {
+      std::swap(thisData, otherData);
+    }
+  }
+
+  for (nsStyleStructID i = nsStyleStructID_Reset_Start;
+       i < nsStyleStructID_Reset_Start + nsStyleStructID_Reset_Count;
+       i = nsStyleStructID(i + 1)) {
+    uint32_t bit = nsCachedStyleData::GetBitForSID(i);
+    if (!(aStructs & bit)) {
+      continue;
+    }
+    if (!mCachedResetData) {
+      mCachedResetData = new (mRuleNode->PresContext()) nsResetStyleData;
+    }
+    if (!aNewContext->mCachedResetData) {
+      aNewContext->mCachedResetData =
+        new (mRuleNode->PresContext()) nsResetStyleData;
+    }
+    void*& thisData = mCachedResetData->mStyleStructs[i];
+    void*& otherData = aNewContext->mCachedResetData->mStyleStructs[i];
+    if (mBits & bit) {
+      if (thisData == otherData) {
+        thisData = nullptr;
+      }
+    } else if (!(aNewContext->mBits & bit) && thisData && otherData) {
+      std::swap(thisData, otherData);
+    }
+  }
+}
