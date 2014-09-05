@@ -49,7 +49,7 @@ class DataSourceSurfaceCairo : public DataSourceSurface
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCairo)
-  DataSourceSurfaceCairo(cairo_surface_t* imageSurf);
+  explicit DataSourceSurfaceCairo(cairo_surface_t* imageSurf);
   virtual ~DataSourceSurfaceCairo();
   virtual unsigned char *GetData();
   virtual int32_t Stride();

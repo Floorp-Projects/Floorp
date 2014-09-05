@@ -95,6 +95,7 @@ nsEditorEventListener::nsEditorEventListener()
   : mEditor(nullptr)
   , mCommitText(false)
   , mInTransaction(false)
+  , mMouseDownOrUpConsumedByIME(false)
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   , mHaveBidiKeyboards(false)
   , mShouldSwitchTextDirection(false)
@@ -299,6 +300,42 @@ nsEditorEventListener::GetPresShell()
   return mEditor->GetPresShell();
 }
 
+nsPresContext*
+nsEditorEventListener::GetPresContext()
+{
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  return presShell ? presShell->GetPresContext() : nullptr;
+}
+
+nsIContent*
+nsEditorEventListener::GetFocusedRootContent()
+{
+  NS_ENSURE_TRUE(mEditor, nullptr);
+
+  nsCOMPtr<nsIContent> focusedContent = mEditor->GetFocusedContent();
+  if (!focusedContent) {
+    return nullptr;
+  }
+
+  nsIDocument* composedDoc = focusedContent->GetComposedDoc();
+  NS_ENSURE_TRUE(composedDoc, nullptr);
+
+  return composedDoc->HasFlag(NODE_IS_EDITABLE) ? nullptr : focusedContent;
+}
+
+bool
+nsEditorEventListener::EditorHasFocus()
+{
+  NS_PRECONDITION(mEditor,
+    "The caller must check whether this is connected to an editor");
+  nsCOMPtr<nsIContent> focusedContent = mEditor->GetFocusedContent();
+  if (!focusedContent) {
+    return false;
+  }
+  nsIDocument* composedDoc = focusedContent->GetComposedDoc();
+  return !!composedDoc;
+}
+
 /**
  *  nsISupports implementation
  */
@@ -369,16 +406,47 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     // mousedown
     case NS_MOUSE_BUTTON_DOWN: {
       nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-      return MouseDown(mouseEvent);
+      NS_ENSURE_TRUE(mouseEvent, NS_OK);
+      // nsEditorEventListener may receive (1) all mousedown, mouseup and click
+      // events, (2) only mousedown event or (3) only mouseup event.
+      // mMouseDownOrUpConsumedByIME is used only for ignoring click event if
+      // preceding mousedown and/or mouseup event is consumed by IME.
+      // Therefore, even if case #2 or case #3 occurs,
+      // mMouseDownOrUpConsumedByIME is true here.  Therefore, we should always
+      // overwrite it here.
+      mMouseDownOrUpConsumedByIME = NotifyIMEOfMouseButtonEvent(mouseEvent);
+      return mMouseDownOrUpConsumedByIME ? NS_OK : MouseDown(mouseEvent);
     }
     // mouseup
     case NS_MOUSE_BUTTON_UP: {
       nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-      return MouseUp(mouseEvent);
+      NS_ENSURE_TRUE(mouseEvent, NS_OK);
+      // See above comment in the NS_MOUSE_BUTTON_DOWN case, first.
+      // This code assumes that case #1 is occuring.  However, if case #3 may
+      // occurs after case #2 and the mousedown is consumed,
+      // mMouseDownOrUpConsumedByIME is true even though nsEditorEventListener
+      // has not received the preceding mousedown event of this mouseup event.
+      // So, mMouseDownOrUpConsumedByIME may be invalid here.  However,
+      // this is not a matter because mMouseDownOrUpConsumedByIME is referred
+      // only by NS_MOUSE_CLICK case but click event is fired only in case #1.
+      // So, before a click event is fired, mMouseDownOrUpConsumedByIME is
+      // always initialized in the NS_MOUSE_BUTTON_DOWN case if it's referred.
+      if (NotifyIMEOfMouseButtonEvent(mouseEvent)) {
+        mMouseDownOrUpConsumedByIME = true;
+      }
+      return mMouseDownOrUpConsumedByIME ? NS_OK : MouseUp(mouseEvent);
     }
     // click
     case NS_MOUSE_CLICK: {
       nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      NS_ENSURE_TRUE(mouseEvent, NS_OK);
+      // If the preceding mousedown event or mouseup event was consumed,
+      // editor shouldn't handle this click event.
+      if (mMouseDownOrUpConsumedByIME) {
+        mMouseDownOrUpConsumedByIME = false;
+        mouseEvent->PreventDefault();
+        return NS_OK;
+      }
       return MouseClick(mouseEvent);
     }
     // focus
@@ -592,8 +660,6 @@ nsEditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
 nsresult
 nsEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 {
-  NS_ENSURE_TRUE(aMouseEvent, NS_OK);
-
   // nothing to do if editor isn't editable or clicked on out of the editor.
   if (mEditor->IsReadonly() || mEditor->IsDisabled() ||
       !mEditor->IsAcceptableInputEvent(aMouseEvent)) {
@@ -602,17 +668,12 @@ nsEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 
   // Notifies clicking on editor to IMEStateManager even when the event was
   // consumed.
-  nsCOMPtr<nsIContent> focusedContent = mEditor->GetFocusedContent();
-  if (focusedContent) {
-    nsIDocument* currentDoc = focusedContent->GetCurrentDoc();
-    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-    nsPresContext* presContext =
-      presShell ? presShell->GetPresContext() : nullptr;
-    if (presContext && currentDoc) {
-      IMEStateManager::OnClickInEditor(presContext,
-        currentDoc->HasFlag(NODE_IS_EDITABLE) ? nullptr : focusedContent,
-        aMouseEvent);
-    }
+  if (EditorHasFocus()) {
+    nsPresContext* presContext = GetPresContext();
+    if (presContext) {
+      IMEStateManager::OnClickInEditor(presContext, GetFocusedRootContent(),
+                                       aMouseEvent);
+     }
   }
 
   bool preventDefault;
@@ -694,11 +755,30 @@ nsEditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
   return NS_OK;
 }
 
+bool
+nsEditorEventListener::NotifyIMEOfMouseButtonEvent(
+                         nsIDOMMouseEvent* aMouseEvent)
+{
+  if (!EditorHasFocus()) {
+    return false;
+  }
+
+  bool defaultPrevented;
+  nsresult rv = aMouseEvent->GetDefaultPrevented(&defaultPrevented);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (defaultPrevented) {
+    return false;
+  }
+  nsPresContext* presContext = GetPresContext();
+  NS_ENSURE_TRUE(presContext, false);
+  return IMEStateManager::OnMouseButtonEventInEditor(presContext,
+                                                     GetFocusedRootContent(),
+                                                     aMouseEvent);
+}
+
 nsresult
 nsEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 {
-  NS_ENSURE_TRUE(aMouseEvent, NS_OK);
-
   mEditor->ForceCompositionEnd();
   return NS_OK;
 }

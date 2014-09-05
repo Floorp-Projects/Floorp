@@ -48,6 +48,15 @@
   <color name="text_color_secondary_inverse">#DDDDDD</color>
   <color name="text_color_tertiary_inverse">#A4A7A9</color>
 
+  <!-- Colour used for share overlay button labels -->
+  <color name="text_color_overlaybtn">#666666</color>
+
+  <color name="overlay_share_header_background">#FFFFFFFF</color>
+
+  <!-- Colours used for share overlay button background -->
+  <color name="overlay_share_background">#FFEBEBF0</color>
+  <color name="overlay_share_selected">#FFF5F5F5</color>
+
   <!-- Disabled colors -->
   <color name="text_color_primary_disable_only">#999999</color>
 
@@ -63,6 +72,10 @@
   <!-- Link colors -->
   <color name="text_color_link">#22629E</color>
 
+  <!-- Divider colors -->
+  <color name="divider_light">#FFD7D9DB</color>
+  <color name="divider_dark">#FFB3C2CE</color>
+
   <color name="splash_background">#000000</color>
   <color name="splash_msgfont">#ffffff</color>
   <color name="splash_urlfont">#000000</color>
@@ -70,8 +83,6 @@
 
   <color name="doorhanger_text">#FF222222</color>
   <color name="doorhanger_link">#FF2AA1FE</color>
-  <color name="doorhanger_divider_light">#FFD1D5DA</color>
-  <color name="doorhanger_divider_dark">#FFB3C2CE</color>
   <color name="doorhanger_background_dark">#FFDDE4EA</color>
 
   <color name="validation_message_text">#ffffff</color>
@@ -114,6 +125,5 @@
   <color name="toast_background">#DD363B40</color>
   <color name="toast_button_background">#00000000</color>
   <color name="toast_button_pressed">#DD2C3136</color>
-  <color name="toast_button_divider">#FFD1D5DA</color>
   <color name="toast_button_text">#FFFFFFFF</color>
 </resources>

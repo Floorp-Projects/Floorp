@@ -110,7 +110,7 @@ class nsScannerBufferList
               {}
             
             inline
-            Position( const nsScannerIterator& aIter );
+            explicit Position( const nsScannerIterator& aIter );
 
             inline
             Position& operator=( const nsScannerIterator& aIter );
@@ -124,7 +124,7 @@ class nsScannerBufferList
       static Buffer* AllocBufferFromString( const nsAString& );
       static Buffer* AllocBuffer( uint32_t capacity ); // capacity = number of chars
 
-      nsScannerBufferList( Buffer* buf )
+      explicit nsScannerBufferList( Buffer* buf )
         : mRefCnt(0)
         {
           mBuffers.insertBack(buf);
@@ -184,7 +184,7 @@ class nsScannerSubstring
       typedef uint32_t                         size_type;
 
       nsScannerSubstring();
-      nsScannerSubstring( const nsAString& s );
+      explicit nsScannerSubstring( const nsAString& s );
 
       ~nsScannerSubstring();
 
@@ -255,7 +255,7 @@ class nsScannerString : public nsScannerSubstring
   {
     public:
 
-      nsScannerString( Buffer* );
+      explicit nsScannerString( Buffer* );
 
         // you are giving ownership to the string, it takes and keeps your
         // buffer, deleting it when done.

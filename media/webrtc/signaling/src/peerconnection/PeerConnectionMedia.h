@@ -57,7 +57,7 @@ class Fake_AudioGenerator {
  public:
   typedef mozilla::DOMMediaStream DOMMediaStream;
 
-Fake_AudioGenerator(DOMMediaStream* aStream) : mStream(aStream), mCount(0) {
+  explicit Fake_AudioGenerator(DOMMediaStream* aStream) : mStream(aStream), mCount(0) {
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
     MOZ_ASSERT(mTimer);
 
@@ -99,7 +99,7 @@ class Fake_VideoGenerator {
   typedef mozilla::DOMMediaStream DOMMediaStream;
   typedef mozilla::gfx::IntSize IntSize;
 
-  Fake_VideoGenerator(DOMMediaStream* aStream) {
+  explicit Fake_VideoGenerator(DOMMediaStream* aStream) {
     mStream = aStream;
     mCount = 0;
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
@@ -189,6 +189,10 @@ public:
     MOZ_ASSERT(mMediaStream);
   }
 
+  DOMMediaStream* GetMediaStream() const {
+    return mMediaStream;
+  }
+
   // This method exists for stats and the unittests.
   // It allows visibility into the pipelines and flows.
   const std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>>&
@@ -214,9 +218,6 @@ public:
                         PeerConnectionMedia *aParent)
       : SourceStreamInfo(aMediaStream, aParent) {}
 
-  DOMMediaStream* GetMediaStream() {
-    return mMediaStream;
-  }
   // Returns the mPipelines index for the track or -1.
 #if 0
   int HasTrack(DOMMediaStream* aStream, mozilla::TrackID aTrack);
@@ -262,9 +263,6 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
     : SourceStreamInfo(aMediaStream, aParent),
       mTrackTypeHints(0) {}
 
-  DOMMediaStream* GetMediaStream() {
-    return mMediaStream;
-  }
   void StorePipeline(int aTrack, bool aIsVideo,
                      mozilla::RefPtr<mozilla::MediaPipelineReceive> aPipeline);
 
@@ -291,7 +289,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   ~PeerConnectionMedia() {}
 
  public:
-  PeerConnectionMedia(PeerConnectionImpl *parent);
+  explicit PeerConnectionMedia(PeerConnectionImpl *parent);
 
   nsresult Init(const std::vector<mozilla::NrIceStunServer>& stun_servers,
                 const std::vector<mozilla::NrIceTurnServer>& turn_servers);
@@ -406,6 +404,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
       SignalIceGatheringStateChange;
   sigslot::signal2<mozilla::NrIceCtx*, mozilla::NrIceCtx::ConnectionState>
       SignalIceConnectionStateChange;
+  sigslot::signal2<const std::string&, uint16_t> SignalCandidate;
 
  private:
   // Shutdown media transport. Must be called on STS thread.
@@ -421,6 +420,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void IceConnectionStateChange(mozilla::NrIceCtx* ctx,
                                 mozilla::NrIceCtx::ConnectionState state);
   void IceStreamReady(mozilla::NrIceMediaStream *aStream);
+  void OnCandidateFound(mozilla::NrIceMediaStream *aStream,
+                        const std::string &candidate);
 
   // The parent PC
   PeerConnectionImpl *mParent;

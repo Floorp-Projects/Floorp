@@ -1323,10 +1323,10 @@ class DebugScopeProxy : public BaseProxyHandler
     }
 
   public:
-    static int family;
+    static const char family;
     static const DebugScopeProxy singleton;
 
-    DebugScopeProxy() : BaseProxyHandler(&family) {}
+    MOZ_CONSTEXPR DebugScopeProxy() : BaseProxyHandler(&family) {}
 
     bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE
     {
@@ -1592,7 +1592,7 @@ class DebugScopeProxy : public BaseProxyHandler
 
 } /* anonymous namespace */
 
-int DebugScopeProxy::family = 0;
+const char DebugScopeProxy::family = 0;
 const DebugScopeProxy DebugScopeProxy::singleton;
 
 /* static */ DebugScopeObject *

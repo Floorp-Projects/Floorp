@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Record AudioContext Node</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=968109">Mozilla Bug 968109</a>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function setUpSource(contextType, nodeType) {
+  // Use contextType to choose offline or real-time context.
+  var context = contextType === 'offline'?
+    new OfflineAudioContext(2 , 80920, 44100) : new AudioContext();
+  var buffer = context.createBuffer(2, 80920, context.sampleRate);
+  for (var i = 0; i < 80920; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(1000 * 2 * Math.PI * i / context.sampleRate);
+    buffer.getChannelData(1)[i] = Math.sin(1000 * 2 * Math.PI * i / context.sampleRate);
+  }
+
+  var source = context.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+
+  source.start(0);
+
+  // nodeType decides which node in graph should be the source of recording.
+  var node;
+  if (nodeType === 'source') {
+    node = source;
+  } else if (nodeType === 'splitter') {
+    var splitter = context.createChannelSplitter();
+    source.connect(splitter);
+    node = splitter;
+  } else if (nodeType == 'destination') {
+    source.connect(context.destination);
+    node = context.destination;
+  }
+  // Explicitly start offline context.
+  if (contextType === 'offline') {
+    context.startRendering();
+  }
+
+  return node;
+}
+
+function testRecord(source, done) {
+  ok(source, 'source node should be ok');
+  var recorder;
+  var didThrow = false;
+  try {
+    recorder = new MediaRecorder(source);
+  } catch (e) {
+    didThrow = true;
+  }
+  ok(!didThrow, 'MediaRecorder(AudioNode) should be visible after pref turned on');
+
+  recorder.onwarning = function() {
+    ok(false, 'should not fire onwarning');
+  };
+
+  recorder.onerror = function() {
+    ok(false, 'should not fire onerror');
+  };
+
+  recorder.onstop = function() {
+    is(recorder.state, 'inactive', 'state should become "inactive" after calling stop()');
+    done();
+  };
+
+  recorder.ondataavailable = function (e) {
+    if (recorder.state == 'recording') {
+      is('audio/ogg', recorder.mimeType, 'mimetype should be audio/ogg, not ' + recorder.mimeType);
+      ok(e.data && e.data.size > 0, 'should get data and its length should be > 0');
+      recorder.stop();
+    }
+  };
+
+  try {
+    recorder.start(1000);
+    is('recording', recorder.state, 'state should become "recording" after calling start()');
+  } catch (e) {
+    didThrow = true;
+  }
+  ok(!didThrow, 'start() should succeed');
+}
+
+addLoadEvent(function() {
+  var src = setUpSource();
+  var recorder;
+  var didThrow = false;
+  try {
+    recorder = new MediaRecorder(src);
+  } catch (e) {
+    didThrow = true;
+  }
+  ok(didThrow, 'MediaRecorder(AudioNode) should be hidden behind a pref');
+
+  SpecialPowers.pushPrefEnv({"set": [[ 'media.recorder.audio_node.enabled', true ]]},
+    function () {
+      // Test with various context and source node types.
+      var done1 = new Promise(function (resolve, reject) {
+        testRecord(setUpSource('', 'source'), resolve);
+      });
+      var done2 = new Promise(function (resolve, reject) {
+        testRecord(setUpSource('', 'splitter'), resolve);
+      });
+      var done3 = new Promise(function (resolve, reject) {
+        testRecord(setUpSource('offline', 'destination'), resolve);
+      });
+      // Finish test after all is done.
+      Promise.all([done1, done2, done3]).then(
+        function () { SimpleTest.finish(); }
+      );
+    });
+});
+
+</script>
+</pre>
+</body>
+</html>

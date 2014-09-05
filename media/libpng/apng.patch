@@ -107,7 +107,7 @@ Index: pngget.c
 ===================================================================
 --- pngget.c
 +++ pngget.c
-@@ -1174,4 +1174,166 @@
+@@ -1195,4 +1195,166 @@
  #  endif
  #endif
  
@@ -278,7 +278,7 @@ Index: png.h
 ===================================================================
 --- png.h
 +++ png.h
-@@ -457,6 +457,10 @@
+@@ -467,6 +467,10 @@
  #   include "pnglibconf.h"
  #endif
  
@@ -289,7 +289,7 @@ Index: png.h
  #ifndef PNG_VERSION_INFO_ONLY
     /* Machine specific configuration. */
  #  include "pngconf.h"
-@@ -547,6 +551,17 @@
+@@ -557,6 +561,17 @@
   * See pngconf.h for base types that vary by machine/system
   */
  
@@ -307,7 +307,7 @@ Index: png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
-@@ -867,6 +882,10 @@
+@@ -877,6 +892,10 @@
  #define PNG_INFO_sPLT 0x2000   /* ESR, 1.0.6 */
  #define PNG_INFO_sCAL 0x4000   /* ESR, 1.0.6 */
  #define PNG_INFO_IDAT 0x8000   /* ESR, 1.0.6 */
@@ -318,7 +318,7 @@ Index: png.h
  
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
-@@ -904,6 +923,10 @@
+@@ -914,6 +933,10 @@
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
  typedef PNG_CALLBACK(void, *png_progressive_end_ptr, (png_structp, png_infop));
@@ -329,8 +329,8 @@ Index: png.h
  
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
-@@ -3241,6 +3264,75 @@
-  *  END OF HARDWARE OPTIONS
+@@ -3250,6 +3273,75 @@
+  *  END OF HARDWARE AND SOFTWARE OPTIONS
   ******************************************************************************/
  
 +#ifdef PNG_APNG_SUPPORTED
@@ -405,7 +405,7 @@ Index: png.h
  /* Maintainer: Put new public prototypes here ^, in libpng.3, and project
   * defs, scripts/pnglibconf.h, and scripts/pnglibconf.h.prebuilt
   */
-@@ -3250,7 +3342,11 @@
+@@ -3259,7 +3351,11 @@
   * scripts/symbols.def as well.
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
@@ -421,7 +421,7 @@ Index: pngpriv.h
 ===================================================================
 --- pngpriv.h
 +++ pngpriv.h
-@@ -551,6 +551,10 @@
+@@ -555,6 +555,10 @@
  #define PNG_HAVE_CHUNK_AFTER_IDAT 0x2000 /* Have another chunk after IDAT */
                     /*             0x4000 (unused) */
  #define PNG_IS_READ_STRUCT        0x8000 /* Else is a write struct */
@@ -432,7 +432,7 @@ Index: pngpriv.h
  
  /* Flags for the transformations the PNG library does on the image data */
  #define PNG_BGR                 0x0001
-@@ -772,6 +776,16 @@
+@@ -776,6 +780,16 @@
  #define png_tRNS PNG_U32(116,  82,  78,  83)
  #define png_zTXt PNG_U32(122,  84,  88, 116)
  
@@ -449,7 +449,7 @@ Index: pngpriv.h
  /* The following will work on (signed char*) strings, whereas the get_uint_32
   * macro will fail on top-bit-set values because of the sign extension.
   */
-@@ -1452,6 +1466,49 @@
+@@ -1456,6 +1470,49 @@
  
  #endif /* PNG_PROGRESSIVE_READ_SUPPORTED */
  
@@ -581,7 +581,7 @@ Index: pngwrite.c
  #ifdef PNG_WRITE_CHECK_FOR_INVALID_INDEX_SUPPORTED
     if (png_ptr->num_palette_max > png_ptr->num_palette)
        png_benign_error(png_ptr, "Wrote palette index exceeding num_palette");
-@@ -2433,4 +2442,42 @@
+@@ -2434,4 +2443,42 @@
  }
  #endif /* PNG_STDIO_SUPPORTED */
  #endif /* SIMPLIFIED_WRITE */
@@ -872,7 +872,7 @@ Index: pngpread.c
     /* This routine must process all the data it has been given
      * before returning, calling the row callback as required to
      * handle the uncompressed results.
-@@ -1281,6 +1471,18 @@
+@@ -1275,6 +1465,18 @@
     png_set_read_fn(png_ptr, progressive_ptr, png_push_fill_buffer);
  }
  
@@ -1308,7 +1308,7 @@ Index: pngrutil.c
  
           if (png_ptr->zstream.avail_in > 0 || png_ptr->idat_size > 0)
              png_chunk_benign_error(png_ptr, "Extra compressed data");
-@@ -4474,4 +4688,80 @@
+@@ -4466,4 +4680,80 @@
  
     png_ptr->flags |= PNG_FLAG_ROW_INIT;
  }
@@ -1402,7 +1402,7 @@ Index: pngwutil.c
 +   png_ptr->first_frame_height = height;
 +#endif
 +
-    if (!(png_ptr->do_filter))
+    if ((png_ptr->do_filter) == PNG_NO_FILTERS)
     {
        if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE ||
 @@ -1076,7 +1081,15 @@
@@ -1437,7 +1437,7 @@ Index: pngwutil.c
           png_ptr->zstream.avail_out = 0;
           png_ptr->zstream.next_out = NULL;
           png_ptr->mode |= PNG_HAVE_IDAT | PNG_AFTER_IDAT;
-@@ -1934,6 +1955,82 @@
+@@ -1936,6 +1957,82 @@
  }
  #endif
  
@@ -1520,7 +1520,7 @@ Index: pngwutil.c
  /* Initializes the row writing capability of libpng */
  void /* PRIVATE */
  png_write_start_row(png_structrp png_ptr)
-@@ -3021,4 +3118,39 @@
+@@ -3023,4 +3120,39 @@
     }
  #endif
  }

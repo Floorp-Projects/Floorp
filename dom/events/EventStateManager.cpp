@@ -1596,8 +1596,8 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     LayoutDeviceIntPoint pt = aEvent->refPoint +
       LayoutDeviceIntPoint::FromUntyped(aEvent->widget->WidgetToScreenOffset());
     LayoutDeviceIntPoint distance = pt - mGestureDownPoint;
-    if (Abs(distance.x.value) > AssertedCast<uint32_t>(pixelThresholdX) ||
-        Abs(distance.y.value) > AssertedCast<uint32_t>(pixelThresholdY)) {
+    if (Abs(distance.x) > AssertedCast<uint32_t>(pixelThresholdX) ||
+        Abs(distance.y) > AssertedCast<uint32_t>(pixelThresholdY)) {
       if (Prefs::ClickHoldContextMenu()) {
         // stop the click-hold before we fire off the drag gesture, in case
         // it takes a long time
@@ -2704,6 +2704,15 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         break;
       }
 
+      // For remote content, capture the event in the parent process at the
+      // <xul:browser remote> element. This will ensure that subsequent mousemove/mouseup
+      // events will continue to be dispatched to this element and therefore forwarded
+      // to the child.
+      if (dispatchedToContentProcess && !nsIPresShell::GetCapturingContent()) {
+        nsIContent* content = mCurrentTarget ? mCurrentTarget->GetContent() : nullptr;
+        nsIPresShell::SetCapturingContent(content, 0);
+      }
+
       nsCOMPtr<nsIContent> activeContent;
       if (nsEventStatus_eConsumeNoDefault != *aStatus) {
         nsCOMPtr<nsIContent> newFocus;      
@@ -3544,7 +3553,7 @@ EventStateManager::SetCursor(int32_t aCursor, imgIContainer* aContainer,
 class MOZ_STACK_CLASS ESMEventCB : public EventDispatchingCallback
 {
 public:
-  ESMEventCB(nsIContent* aTarget) : mTarget(aTarget) {}
+  explicit ESMEventCB(nsIContent* aTarget) : mTarget(aTarget) {}
 
   virtual void HandleEvent(EventChainPostVisitor& aVisitor)
   {

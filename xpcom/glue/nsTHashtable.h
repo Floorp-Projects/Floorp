@@ -19,10 +19,10 @@
 #include <new>
 
 // helper function for nsTHashtable::Clear()
-NS_COM_GLUE PLDHashOperator PL_DHashStubEnumRemove(PLDHashTable* aTable,
-                                                   PLDHashEntryHdr* aEntry,
-                                                   uint32_t aOrdinal,
-                                                   void* aUserArg);
+PLDHashOperator PL_DHashStubEnumRemove(PLDHashTable* aTable,
+                                       PLDHashEntryHdr* aEntry,
+                                       uint32_t aOrdinal,
+                                       void* aUserArg);
 
 
 /**
@@ -99,7 +99,7 @@ public:
    * Return the generation number for the table. This increments whenever
    * the table data items are moved.
    */
-  uint32_t GetGeneration() const { return mTable.generation; }
+  uint32_t GetGeneration() const { return mTable.Generation(); }
 
   /**
    * KeyType is typedef'ed for ease of use.
@@ -115,7 +115,7 @@ public:
    * Return the number of entries in the table.
    * @return    number of entries
    */
-  uint32_t Count() const { return mTable.entryCount; }
+  uint32_t Count() const { return mTable.EntryCount(); }
 
   /**
    * Get the entry associated with a key.
@@ -150,7 +150,7 @@ public:
   {
     EntryType* e = PutEntry(aKey, fallible_t());
     if (!e) {
-      NS_ABORT_OOM(mTable.entrySize * mTable.entryCount);
+      NS_ABORT_OOM(mTable.EntrySize() * mTable.EntryCount());
     }
     return e;
   }

@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+JAR_MANIFESTS += ['jar.mn']
+
 interfaces = [
     'base',
     'canvas',
@@ -56,16 +58,22 @@ DIRS += [
     'filehandle',
     'filesystem',
     'fmradio',
+    'geolocation',
+    'json',
+    'jsurl',
     'asmjscache',
     'mathml',
     'media',
     'messages',
+    'mobileconnection',
+    'notification',
+    'offline',
     'power',
     'push',
     'quota',
     'settings',
+    'storage',
     'mobilemessage',
-    'src',
     'time',
     'locales',
     'network',
@@ -104,7 +112,6 @@ if CONFIG['MOZ_B2G_RIL']:
     DIRS += [
         'icc',
         'cellbroadcast',
-        'mobileconnection',
         'voicemail',
         'wappush',
     ]

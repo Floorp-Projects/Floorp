@@ -775,6 +775,8 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
     int32_t unreadable;
     int32_t keyFrame;
 
+    size_t length = mVideoBuffer->range_length();
+
     if (!mVideoBuffer->meta_data()->findInt64(kKeyTime, &timeUs) ) {
       NS_WARNING("OMX decoder did not return frame time");
       return false;
@@ -817,9 +819,8 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       // Release to hold video buffer in OmxDecoder more.
       // MediaBuffer's ref count is changed from 2 to 1.
       ReleaseVideoBuffer();
-    } else if (mVideoBuffer->range_length() > 0) {
+    } else if (length > 0) {
       char *data = static_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
-      size_t length = mVideoBuffer->range_length();
 
       if (unreadable) {
         LOG(PR_LOG_DEBUG, "video frame is unreadable");
@@ -829,8 +830,8 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
         return false;
       }
     }
-
-    if (aKeyframeSkip && timeUs < aTimeUs) {
+    // Check if this frame is valid or not. If not, skip it.
+    if ((aKeyframeSkip && timeUs < aTimeUs) || length == 0) {
       aFrame->mShouldSkip = true;
     }
   }

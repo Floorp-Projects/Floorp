@@ -17,8 +17,6 @@ typedef struct Timecard Timecard;
 
 #include "common/Wrapper.h"
 #include "common/csf_common.h"
-#include "mozilla/Mutex.h"
-#include "base/lock.h"
 
 namespace CSF
 {
@@ -38,21 +36,18 @@ namespace CSF
         NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CC_SIPCCCallMediaData)
 		CC_SIPCCCallMediaData():
           remoteWindow(nullptr),
-          streamMapMutex("CC_SIPCCCallMediaData"),
           audioMuteState(false),
           videoMuteState(false),
           volume(-1){}
 		CC_SIPCCCallMediaData(VideoWindowHandle remoteWindow,
             bool audioMuteState, bool videoMuteState, int volume):
           remoteWindow(remoteWindow),
-          streamMapMutex("CC_SIPCCCallMediaData"),
           audioMuteState(audioMuteState),
           videoMuteState(videoMuteState),
           volume(volume) {}
         VideoWindowHandle remoteWindow;
 		ExternalRendererHandle extRenderer;
 		VideoFormat videoFormat;
-        mozilla::Mutex streamMapMutex;
         StreamMapType streamMap;
         bool audioMuteState;
         bool videoMuteState;
@@ -69,7 +64,7 @@ namespace CSF
     CSF_DECLARE_WRAP(CC_SIPCCCall, cc_call_handle_t);
     private:
         cc_call_handle_t callHandle;
-        CC_SIPCCCall (cc_call_handle_t aCallHandle);
+        explicit CC_SIPCCCall (cc_call_handle_t aCallHandle);
         CC_SIPCCCallMediaDataPtr  pMediaData;
         std::string peerconnection;  // The peerconnection handle
 
@@ -130,12 +125,11 @@ namespace CSF
         virtual void removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
         virtual CC_SIPCCCallMediaDataPtr getMediaData();
         virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *);
+        virtual void foundICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *);
 
     private:
         virtual bool setAudioMute(bool mute);
         virtual bool setVideoMute(bool mute);
-
-        mozilla::Mutex m_lock;
     };
 
 }

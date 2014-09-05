@@ -52,7 +52,6 @@ var ecmaGlobals =
     {name: "SIMD", nightly: true},
     "StopIteration",
     "String",
-    "Symbol",
     "SyntaxError",
     {name: "TypedObject", nightly: true},
     "TypeError",
@@ -66,6 +65,12 @@ var ecmaGlobals =
   ];
 // IMPORTANT: Do not change the list above without review from
 //            a JavaScript Engine peer!
+
+// Symbol is conditionally defined.
+// If it's defined, insert "Symbol" before "SyntaxError".
+if (typeof Symbol === "function") {
+  ecmaGlobals.splice(ecmaGlobals.indexOf("SyntaxError"), 0, "Symbol");
+}
 
 // IMPORTANT: Do not change the list below without review from a DOM peer!
 var interfaceNamesInGlobalScope =
@@ -96,6 +101,8 @@ var interfaceNamesInGlobalScope =
     "MessageEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "MessagePort",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Performance",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Promise",
 // IMPORTANT: Do not change this list without review from a DOM peer!

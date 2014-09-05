@@ -204,7 +204,7 @@ protected:
 
   class EditorInitializer : public nsRunnable {
   public:
-    EditorInitializer(nsTextControlFrame* aFrame) :
+    explicit EditorInitializer(nsTextControlFrame* aFrame) :
       mFrame(aFrame) {}
 
     NS_IMETHOD Run() MOZ_OVERRIDE;
@@ -223,7 +223,7 @@ protected:
 
   class ScrollOnFocusEvent : public nsRunnable {
   public:
-    ScrollOnFocusEvent(nsTextControlFrame* aFrame) :
+    explicit ScrollOnFocusEvent(nsTextControlFrame* aFrame) :
       mFrame(aFrame) {}
 
     NS_DECL_NSIRUNNABLE

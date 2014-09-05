@@ -33,9 +33,9 @@ private:
 
     txXPathNode(const txXPathNode& aNode);
 
-    txXPathNode(nsIDocument* aDocument) : mNode(aDocument),
-                                          mRefCountRoot(0),
-                                          mIndex(eDocument)
+    explicit txXPathNode(nsIDocument* aDocument) : mNode(aDocument),
+                                                   mRefCountRoot(0),
+                                                   mIndex(eDocument)
     {
         MOZ_COUNT_CTOR(txXPathNode);
     }

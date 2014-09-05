@@ -2109,8 +2109,8 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
       }
 
       if (name.EqualsLiteral("mozSettings")) {
-        bool hasPermission = CheckPermission("settings-read") ||
-                             CheckPermission("settings-write");
+        bool hasPermission = CheckPermission("settings-api-read") ||
+          CheckPermission("settings-api-write");
         if (!hasPermission) {
           FillPropertyDescriptor(aDesc, aObject, JS::NullValue(), false);
           return true;
@@ -2362,7 +2362,7 @@ class HasDataStoreSupportRunnable MOZ_FINAL
 public:
   bool mResult;
 
-  HasDataStoreSupportRunnable(workers::WorkerPrivate* aWorkerPrivate)
+  explicit HasDataStoreSupportRunnable(workers::WorkerPrivate* aWorkerPrivate)
     : workers::WorkerMainThreadRunnable(aWorkerPrivate)
     , mResult(false)
   {

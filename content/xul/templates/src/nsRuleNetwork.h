@@ -128,7 +128,7 @@ public:
 public:
     class ConstIterator {
     public:
-        ConstIterator(List* aElementList) : mCurrent(aElementList) {
+        explicit ConstIterator(List* aElementList) : mCurrent(aElementList) {
             NS_IF_ADDREF(mCurrent); }
 
         ConstIterator(const ConstIterator& aConstIterator)
@@ -230,7 +230,7 @@ public:
 protected:
     class List {
     public:
-        List(const nsAssignment &aAssignment) : mAssignment(aAssignment) {
+        explicit List(const nsAssignment& aAssignment) : mAssignment(aAssignment) {
             MOZ_COUNT_CTOR(nsAssignmentSet::List); }
 
     protected:
@@ -277,7 +277,7 @@ public:
 public:
     class ConstIterator {
     public:
-        ConstIterator(List* aAssignmentList) : mCurrent(aAssignmentList) {
+        explicit ConstIterator(List* aAssignmentList) : mCurrent(aAssignmentList) {
             NS_IF_ADDREF(mCurrent); }
 
         ConstIterator(const ConstIterator& aConstIterator)
@@ -514,7 +514,7 @@ public:
         List* mCurrent;
 
     public:
-        ConstIterator(List* aList) : mCurrent(aList) {}
+        explicit ConstIterator(List* aList) : mCurrent(aList) {}
 
         ConstIterator(const ConstIterator& aConstIterator)
             : mCurrent(aConstIterator.mCurrent) {}
@@ -559,7 +559,7 @@ public:
 
     class Iterator : public ConstIterator {
     public:
-        Iterator(List* aList) : ConstIterator(aList) {}
+        explicit Iterator(List* aList) : ConstIterator(aList) {}
 
         Iterator& operator++() {
             mCurrent = mCurrent->mNext;
@@ -670,7 +670,7 @@ public:
 
     class ConstIterator {
     public:
-        ConstIterator(ReteNode** aNode) : mCurrent(aNode) {}
+        explicit ConstIterator(ReteNode** aNode) : mCurrent(aNode) {}
 
         ConstIterator(const ConstIterator& aConstIterator)
             : mCurrent(aConstIterator.mCurrent) {}
@@ -710,7 +710,7 @@ public:
 
     class Iterator : public ConstIterator {
     public:
-        Iterator(ReteNode** aNode) : ConstIterator(aNode) {}
+        explicit Iterator(ReteNode** aNode) : ConstIterator(aNode) {}
 
         Iterator& operator++() {
             ++mCurrent;
@@ -758,7 +758,7 @@ protected:
 class TestNode : public ReteNode
 {
 public:
-    TestNode(TestNode* aParent);
+    explicit TestNode(TestNode* aParent);
 
     /**
      * Retrieve the test node's parent

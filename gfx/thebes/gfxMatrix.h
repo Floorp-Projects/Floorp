@@ -50,6 +50,18 @@ public:
         _21(c),  _22(d),
         _31(tx), _32(ty) { }
 
+    friend std::ostream& operator<<(std::ostream& stream, const gfxMatrix& m) {
+      if (m.IsIdentity()) {
+        return stream << "[identity]";
+      }
+
+      return stream << "["
+             << m._11 << " " << m._12
+             << m._21 << " " << m._22
+             << m._31 << " " << m._32
+             << "]";
+    }
+
     /**
      * Post-multiplies m onto the matrix.
      */

@@ -42,6 +42,8 @@ public:
     void SetKeyUnusable(const CencKeyId& aKeyId, const nsString& aSessionId);
 
     void DropKeysForSession(const nsAString& aSessionId);
+    void GetUsableKeysForSession(const nsAString& aSessionId,
+                                 nsTArray<CencKeyId>& aOutKeyIds);
 
     // Sets the capabilities of the CDM. aCaps is the logical OR of the
     // GMP_EME_CAP_* flags from gmp-decryption.h.

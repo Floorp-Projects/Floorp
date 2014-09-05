@@ -68,7 +68,6 @@ _IS_CYGWIN = False
 #endif
 #expand _IS_CAMINO = __IS_CAMINO__ != 0
 #expand _BIN_SUFFIX = __BIN_SUFFIX__
-#expand _PERL = __PERL__
 
 #expand _DEFAULT_APP = "./" + __BROWSER_PATH__
 #expand _CERTS_SRC_DIR = __CERTS_SRC_DIR__
@@ -143,7 +142,6 @@ class Automation(object):
   IS_CYGWIN = _IS_CYGWIN
   IS_CAMINO = _IS_CAMINO
   BIN_SUFFIX = _BIN_SUFFIX
-  PERL = _PERL
 
   UNIXISH = not IS_WIN32 and not IS_MAC
 
@@ -671,7 +669,6 @@ class Automation(object):
 
   def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath):
     """ Look for timeout or crashes and return the status after the process terminates """
-    stackFixerProcess = None
     stackFixerFunction = None
     didTimeout = False
     hitMaxTime = False
@@ -694,12 +691,12 @@ class Automation(object):
         stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line)
         del sys.path[0]
       elif self.IS_DEBUG_BUILD and self.IS_LINUX:
-        # Run logsource through fix-linux-stack.pl (uses addr2line)
+        # Run each line through a function in fix_linux_stack.py (uses addr2line)
         # This method is preferred for developer machines, so we don't have to run "make buildsymbols".
-        stackFixerProcess = self.Process([self.PERL, os.path.join(utilityPath, "fix-linux-stack.pl")],
-                                         stdin=logsource,
-                                         stdout=subprocess.PIPE)
-        logsource = stackFixerProcess.stdout
+        sys.path.insert(0, utilityPath)
+        import fix_linux_stack as stackFixerModule
+        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line)
+        del sys.path[0]
 
       # With metro browser runs this script launches the metro test harness which launches the browser.
       # The metro test harness hands back the real browser process id via log output which we need to
@@ -725,7 +722,7 @@ class Automation(object):
             self.log.info("INFO | automation.py | metro browser sub process id detected: %s", browserProcessId)
 
         if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):
-          # Kill the application, but continue reading from stack fixer so as not to deadlock on stackFixerProcess.wait().
+          # Kill the application.
           hitMaxTime = True
           self.log.info("TEST-UNEXPECTED-FAIL | %s | application ran for longer than allowed maximum time of %d seconds", self.lastTestSeen, int(maxTime))
           self.killAndGetStack(proc.pid, utilityPath, debuggerInfo)
@@ -743,11 +740,6 @@ class Automation(object):
       self.lastTestSeen = "Main app process exited normally"
     if status != 0 and not didTimeout and not hitMaxTime:
       self.log.info("TEST-UNEXPECTED-FAIL | %s | Exited with code %d during test run", self.lastTestSeen, status)
-    if stackFixerProcess is not None:
-      fixerStatus = stackFixerProcess.wait()
-      automationutils.printstatus(status, "stackFixerProcess")
-      if fixerStatus != 0 and not didTimeout and not hitMaxTime:
-        self.log.info("TEST-UNEXPECTED-FAIL | automation.py | Stack fixer process exited with code %d during test run", fixerStatus)
     return status
 
   def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):

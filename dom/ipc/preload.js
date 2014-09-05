@@ -26,7 +26,6 @@ const BrowserElementIsPreloaded = true;
   Cu.import("resource://gre/modules/NetUtil.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource://gre/modules/SettingsDB.jsm");
-  Cu.import("resource://gre/modules/SettingsQueue.jsm");
   Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
   Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci["nsIAppShellService"]);

@@ -319,10 +319,26 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
     if (ins->arg()->isConstant()) {
         masm.storePtr(ImmWord(ToInt32(ins->arg())), dst);
     } else {
-        if (ins->arg()->isGeneralReg())
+        if (ins->arg()->isGeneralReg()) {
             masm.storePtr(ToRegister(ins->arg()), dst);
-        else
-            masm.storeDouble(ToFloatRegister(ins->arg()), dst);
+        } else {
+            switch (mir->input()->type()) {
+              case MIRType_Double:
+              case MIRType_Float32:
+                masm.storeDouble(ToFloatRegister(ins->arg()), dst);
+                return true;
+              // StackPointer is SimdStackAlignment-aligned and ABIArgGenerator guarantees stack
+              // offsets are SimdStackAlignment-aligned.
+              case MIRType_Int32x4:
+                masm.storeAlignedInt32x4(ToFloatRegister(ins->arg()), dst);
+                return true;
+              case MIRType_Float32x4:
+                masm.storeAlignedFloat32x4(ToFloatRegister(ins->arg()), dst);
+                return true;
+              default: break;
+            }
+            MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected mir type in AsmJSPassStackArg");
+        }
     }
     return true;
 }
@@ -1837,9 +1853,6 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
 
     Label negative, end, bailout;
 
-    // Load 0.5 in the temp register.
-    masm.loadConstantDouble(0.5, temp);
-
     // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
     masm.xorpd(scratch, scratch);
     masm.branchDouble(Assembler::DoubleLessThan, input, scratch, &negative);
@@ -1849,18 +1862,21 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
     if (!bailoutFrom(&bailout, lir->snapshot()))
         return false;
 
-    // Input is non-negative. Add 0.5 and truncate, rounding down. Note that we
-    // have to add the input to the temp register (which contains 0.5) because
-    // we're not allowed to modify the input register.
+    // Input is non-negative. Add the biggest double less than 0.5 and
+    // truncate, rounding down (because if the input is the biggest double less
+    // than 0.5, adding 0.5 would undesirably round up to 1). Note that we have
+    // to add the input to the temp register because we're not allowed to
+    // modify the input register.
+    masm.loadConstantDouble(GetBiggestNumberLessThan(0.5), temp);
     masm.addsd(input, temp);
     if (!bailoutCvttsd2si(temp, output, lir->snapshot()))
         return false;
 
     masm.jump(&end);
 
-
     // Input is negative, but isn't -0.
     masm.bind(&negative);
+    masm.loadConstantDouble(0.5, temp);
 
     if (AssemblerX86Shared::HasSSE41()) {
         // Add 0.5 and round toward -Infinity. The result is stored in the temp
@@ -1918,9 +1934,6 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
 
     Label negative, end, bailout;
 
-    // Load 0.5 in the temp register.
-    masm.loadConstantFloat32(0.5f, temp);
-
     // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
     masm.xorps(scratch, scratch);
     masm.branchFloat(Assembler::DoubleLessThan, input, scratch, &negative);
@@ -1930,9 +1943,12 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
     if (!bailoutFrom(&bailout, lir->snapshot()))
         return false;
 
-    // Input is non-negative. Add 0.5 and truncate, rounding down. Note that we
-    // have to add the input to the temp register (which contains 0.5) because
-    // we're not allowed to modify the input register.
+    // Input is non-negative. Add the biggest float less than 0.5 and truncate,
+    // rounding down (because if the input is the biggest float less than 0.5,
+    // adding 0.5 would undesirably round up to 1). Note that we have to add
+    // the input to the temp register because we're not allowed to modify the
+    // input register.
+    masm.loadConstantFloat32(GetBiggestNumberLessThan(0.5f), temp);
     masm.addss(input, temp);
 
     if (!bailoutCvttss2si(temp, output, lir->snapshot()))
@@ -1940,9 +1956,9 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
 
     masm.jump(&end);
 
-
     // Input is negative, but isn't -0.
     masm.bind(&negative);
+    masm.loadConstantFloat32(0.5f, temp);
 
     if (AssemblerX86Shared::HasSSE41()) {
         // Add 0.5 and round toward -Infinity. The result is stored in the temp
@@ -2138,6 +2154,35 @@ CodeGeneratorX86Shared::visitSimdValueX4(LSimdValueX4 *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4 *ins)
+{
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    MSimdSplatX4 *mir = ins->mir();
+    MOZ_ASSERT(IsSimdType(mir->type()));
+    JS_STATIC_ASSERT(sizeof(float) == sizeof(int32_t));
+
+    switch (mir->type()) {
+      case MIRType_Int32x4: {
+        Register r = ToRegister(ins->getOperand(0));
+        masm.movd(r, output);
+        masm.pshufd(0, output, output);
+        break;
+      }
+      case MIRType_Float32x4: {
+        FloatRegister r = ToFloatRegister(ins->getOperand(0));
+        MOZ_ASSERT(r == output);
+        masm.shufps(0, r, output);
+        break;
+      }
+      default:
+        MOZ_CRASH("Unknown SIMD kind");
+    }
+
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdExtractElementI(LSimdExtractElementI *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
@@ -2174,6 +2219,84 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF *ins)
     }
     masm.canonicalizeFloat(output);
     return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdSignMaskX4(LSimdSignMaskX4 *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    // For Float32x4 and Int32x4.
+    masm.movmskps(input, output);
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
+
+    MSimdBinaryComp::Operation op = ins->operation();
+    switch (op) {
+      case MSimdBinaryComp::greaterThan:
+        masm.packedGreaterThanInt32x4(rhs, lhs);
+        return true;
+      case MSimdBinaryComp::equal:
+        masm.packedEqualInt32x4(rhs, lhs);
+        return true;
+      case MSimdBinaryComp::lessThan:
+        // scr := rhs
+        if (rhs.kind() == Operand::FPREG)
+            masm.moveAlignedInt32x4(ToFloatRegister(ins->rhs()), ScratchSimdReg);
+        else
+            masm.loadAlignedInt32x4(rhs, ScratchSimdReg);
+
+        // scr := scr > lhs (i.e. lhs < rhs)
+        // Improve by doing custom lowering (rhs is tied to the output register)
+        masm.packedGreaterThanInt32x4(ToOperand(ins->lhs()), ScratchSimdReg);
+        masm.moveAlignedInt32x4(ScratchFloat32Reg, lhs);
+        return true;
+      case MSimdBinaryComp::notEqual:
+      case MSimdBinaryComp::greaterThanOrEqual:
+      case MSimdBinaryComp::lessThanOrEqual:
+        // These operations are not part of the spec. so are not implemented.
+        break;
+    }
+    MOZ_ASSUME_UNREACHABLE("unexpected SIMD op");
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdBinaryCompFx4(LSimdBinaryCompFx4 *ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
+
+    MSimdBinaryComp::Operation op = ins->operation();
+    switch (op) {
+      case MSimdBinaryComp::equal:
+        masm.cmpps(rhs, lhs, 0x0);
+        return true;
+      case MSimdBinaryComp::lessThan:
+        masm.cmpps(rhs, lhs, 0x1);
+        return true;
+      case MSimdBinaryComp::lessThanOrEqual:
+        masm.cmpps(rhs, lhs, 0x2);
+        return true;
+      case MSimdBinaryComp::notEqual:
+        masm.cmpps(rhs, lhs, 0x4);
+        return true;
+      case MSimdBinaryComp::greaterThanOrEqual:
+        masm.cmpps(rhs, lhs, 0x5);
+        return true;
+      case MSimdBinaryComp::greaterThan:
+        masm.cmpps(rhs, lhs, 0x6);
+        return true;
+    }
+    MOZ_ASSUME_UNREACHABLE("unexpected SIMD op");
 }
 
 bool
@@ -2224,6 +2347,44 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
         return true;
     }
     MOZ_CRASH("unexpected SIMD op");
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4 *ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
+
+    MSimdBinaryBitwise::Operation op = ins->operation();
+    switch (op) {
+      case MSimdBinaryBitwise::and_:
+        masm.bitwiseAndX4(rhs, lhs);
+        return true;
+      case MSimdBinaryBitwise::or_:
+        masm.bitwiseOrX4(rhs, lhs);
+        return true;
+      case MSimdBinaryBitwise::xor_:
+        masm.bitwiseXorX4(rhs, lhs);
+        return true;
+    }
+    MOZ_CRASH("unexpected SIMD bitwise op");
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect *ins)
+{
+    FloatRegister mask = ToFloatRegister(ins->mask());
+    FloatRegister onTrue = ToFloatRegister(ins->lhs());
+    FloatRegister onFalse = ToFloatRegister(ins->rhs());
+
+    MOZ_ASSERT(onTrue == ToFloatRegister(ins->output()));
+    // The onFalse argument is not destroyed but due to limitations of the
+    // register allocator its life ends at the start of the operation.
+    masm.bitwiseAndX4(Operand(mask), onTrue);
+    masm.bitwiseAndNotX4(Operand(onFalse), mask);
+    masm.bitwiseOrX4(Operand(mask), onTrue);
+    return true;
 }
 
 bool

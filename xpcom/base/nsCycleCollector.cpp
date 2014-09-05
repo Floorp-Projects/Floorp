@@ -878,7 +878,7 @@ public:
 
   uint32_t MapCount() const
   {
-    return mPtrToNodeMap.entryCount;
+    return mPtrToNodeMap.EntryCount();
   }
 
   void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,

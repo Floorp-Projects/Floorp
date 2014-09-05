@@ -376,6 +376,21 @@ class MacroAssembler : public MacroAssemblerSpecific
         load32(Address(str, JSString::offsetOfLength()), dest);
     }
 
+    void loadFunctionFromCalleeToken(Address token, Register dest) {
+        loadPtr(token, dest);
+        andPtr(Imm32(uint32_t(CalleeTokenMask)), dest);
+    }
+    void PushCalleeToken(Register callee, bool constructing) {
+        if (constructing) {
+            orPtr(Imm32(CalleeToken_FunctionConstructing), callee);
+            Push(callee);
+            andPtr(Imm32(uint32_t(CalleeTokenMask)), callee);
+        } else {
+            static_assert(CalleeToken_Function == 0, "Non-constructing call requires no tagging");
+            Push(callee);
+        }
+    }
+
     void loadStringChars(Register str, Register dest);
     void loadStringChar(Register str, Register index, Register output);
 
@@ -1426,11 +1441,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         PopRegsInMask(liveRegs);
     }
 
-    void assertStackAlignment() {
+    void assertStackAlignment(uint32_t alignment) {
 #ifdef DEBUG
         Label ok;
-        JS_ASSERT(IsPowerOfTwo(StackAlignment));
-        branchTestPtr(Assembler::Zero, StackPointer, Imm32(StackAlignment - 1), &ok);
+        JS_ASSERT(IsPowerOfTwo(alignment));
+        branchTestPtr(Assembler::Zero, StackPointer, Imm32(alignment - 1), &ok);
         breakpoint();
         bind(&ok);
 #endif
@@ -1508,10 +1523,10 @@ JSOpToCondition(JSOp op, bool isSigned)
 }
 
 static inline size_t
-StackDecrementForCall(size_t bytesAlreadyPushed, size_t bytesToPush)
+StackDecrementForCall(uint32_t alignment, size_t bytesAlreadyPushed, size_t bytesToPush)
 {
     return bytesToPush +
-           ComputeByteAlignment(bytesAlreadyPushed + bytesToPush, StackAlignment);
+           ComputeByteAlignment(bytesAlreadyPushed + bytesToPush, alignment);
 }
 
 } // namespace jit

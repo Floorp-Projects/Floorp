@@ -13,6 +13,8 @@ Cu.import("resource:///modules/loop/LoopContacts.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "hookWindowCloseForPanelClose",
                                         "resource://gre/modules/MozSocialAPI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+                                        "resource://gre/modules/PluralForm.jsm");
 XPCOMUtils.defineLazyGetter(this, "appInfo", function() {
   return Cc["@mozilla.org/xre/app-info;1"]
            .getService(Ci.nsIXULAppInfo)
@@ -147,6 +149,23 @@ function injectLoopAPI(targetWindow) {
       writable: true,
       value: function(key) {
         return MozLoopService.getStrings(key);
+      }
+    },
+
+    /**
+     * Returns the correct form of a semi-colon separated string
+     * based on the value of the `num` argument and the current locale.
+     *
+     * @param {Integer} num The number used to find the plural form.
+     * @param {String} str The semi-colon separated string of word forms.
+     * @returns {String} The correct word form based on the value of the number
+     *                   and the current locale.
+     */
+    getPluralForm: {
+      enumerable: true,
+      writable: true,
+      value: function(num, str) {
+        return PluralForm.get(num, str);
       }
     },
 
@@ -325,6 +344,14 @@ function injectLoopAPI(targetWindow) {
         }, (error) => {
           callback(Cu.cloneInto(error, targetWindow));
         });
+      }
+    },
+
+    logInToFxA: {
+      enumerable: true,
+      writable: true,
+      value: function() {
+        return MozLoopService.logInToFxA();
       }
     },
 

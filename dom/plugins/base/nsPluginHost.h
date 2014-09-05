@@ -46,22 +46,22 @@ class nsInvalidPluginTag : public nsISupports
 {
   virtual ~nsInvalidPluginTag();
 public:
-  nsInvalidPluginTag(const char* aFullPath, int64_t aLastModifiedTime = 0);
-  
+  explicit nsInvalidPluginTag(const char* aFullPath, int64_t aLastModifiedTime = 0);
+
   NS_DECL_ISUPPORTS
-  
+
   nsCString   mFullPath;
   int64_t     mLastModifiedTime;
   bool        mSeen;
-  
+
   nsRefPtr<nsInvalidPluginTag> mPrev;
   nsRefPtr<nsInvalidPluginTag> mNext;
 };
 
-class nsPluginHost : public nsIPluginHost,
-                     public nsIObserver,
-                     public nsITimerCallback,
-                     public nsSupportsWeakReference
+class nsPluginHost MOZ_FINAL : public nsIPluginHost,
+                               public nsIObserver,
+                               public nsITimerCallback,
+                               public nsSupportsWeakReference
 {
   virtual ~nsPluginHost();
 public:
@@ -305,9 +305,9 @@ private:
 class MOZ_STACK_CLASS PluginDestructionGuard : protected PRCList
 {
 public:
-  PluginDestructionGuard(nsNPAPIPluginInstance *aInstance);
+  explicit PluginDestructionGuard(nsNPAPIPluginInstance *aInstance);
 
-  PluginDestructionGuard(NPP npp);
+  explicit PluginDestructionGuard(NPP npp);
 
   ~PluginDestructionGuard();
 

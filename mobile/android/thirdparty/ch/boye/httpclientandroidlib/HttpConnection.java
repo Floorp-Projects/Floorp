@@ -27,6 +27,7 @@
 
 package ch.boye.httpclientandroidlib;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
@@ -34,7 +35,7 @@ import java.io.IOException;
  *
  * @since 4.0
  */
-public interface HttpConnection {
+public interface HttpConnection extends Closeable {
 
     /**
      * Closes this connection gracefully.
@@ -43,13 +44,13 @@ public interface HttpConnection {
      * This method MUST NOT be called from a different thread to force
      * shutdown of the connection. Use {@link #shutdown shutdown} instead.
      */
-    public void close() throws IOException;
+    void close() throws IOException;
 
     /**
      * Checks if this connection is open.
      * @return true if it is open, false if it is closed.
      */
-    public boolean isOpen();
+    boolean isOpen();
 
     /**
      * Checks whether this connection has gone down.
@@ -66,7 +67,7 @@ public interface HttpConnection {
      *          likely to succeed, or <code>false</code> if they are likely
      *          to fail and this connection should be closed
      */
-    public boolean isStale();
+    boolean isStale();
 
     /**
      * Sets the socket timeout value.
@@ -91,7 +92,7 @@ public interface HttpConnection {
      * This method will not attempt to flush the transmitter's
      * internal buffer prior to closing the underlying socket.
      */
-    public void shutdown() throws IOException;
+    void shutdown() throws IOException;
 
     /**
      * Returns a collection of connection metrics.

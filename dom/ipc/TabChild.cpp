@@ -80,6 +80,7 @@
 #include "UnitTransforms.h"
 #include "ClientLayerManager.h"
 #include "LayersLogging.h"
+#include "nsIWebBrowserChrome3.h"
 
 #include "nsColorPickerProxy.h"
 
@@ -161,7 +162,7 @@ class TabChild::DelayedFireContextMenuEvent MOZ_FINAL : public nsITimerCallback
 public:
   NS_DECL_ISUPPORTS
 
-  DelayedFireContextMenuEvent(TabChild* tabChild)
+  explicit DelayedFireContextMenuEvent(TabChild* tabChild)
     : mTabChild(tabChild)
   {
   }
@@ -205,12 +206,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TabChildBase)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChildGlobal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnonymousGlobalScopes)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWebBrowserChrome)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TabChildBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTabChildGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebBrowserChrome)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(TabChildBase)
@@ -663,7 +666,7 @@ public:
     nsCOMPtr<nsICachedFileDescriptorListener> mCallback;
     bool mCanceled;
 
-    CachedFileDescriptorInfo(const nsAString& aPath)
+    explicit CachedFileDescriptorInfo(const nsAString& aPath)
       : mPath(aPath), mCanceled(false)
     { }
 
@@ -700,7 +703,7 @@ class TabChild::CachedFileDescriptorCallbackRunnable : public nsRunnable
     nsAutoPtr<CachedFileDescriptorInfo> mInfo;
 
 public:
-    CachedFileDescriptorCallbackRunnable(CachedFileDescriptorInfo* aInfo)
+    explicit CachedFileDescriptorCallbackRunnable(CachedFileDescriptorInfo* aInfo)
       : mInfo(aInfo)
     {
         MOZ_ASSERT(NS_IsMainThread());
@@ -1314,6 +1317,11 @@ TabChild::FocusPrevElement()
 NS_IMETHODIMP
 TabChild::GetInterface(const nsIID & aIID, void **aSink)
 {
+    if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome3))) {
+      NS_IF_ADDREF(((nsISupports *) (*aSink = mWebBrowserChrome)));
+      return NS_OK;
+    }
+
     // XXXbz should we restrict the set of interfaces we hand out here?
     // See bug 537429
     return QueryInterface(aIID, aSink);
@@ -1532,6 +1540,8 @@ TabChild::DestroyWindow()
             runnable->Dispatch();
         }
     }
+
+    mCachedFileDescriptorInfos.Clear();
 }
 
 void
@@ -1544,6 +1554,9 @@ TabChild::ActorDestroy(ActorDestroyReason why)
       (mTabChildGlobal->mMessageManager.get())->Disconnect();
     mTabChildGlobal->mMessageManager = nullptr;
   }
+
+  CompositorChild* compositorChild = static_cast<CompositorChild*>(CompositorChild::Get());
+  compositorChild->CancelNotifyAfterRemotePaint(this);
 
   if (Id() != 0) {
     NestedTabChildMap().erase(Id());
@@ -2836,6 +2849,20 @@ TabChild::GetMessageManager(nsIContentFrameMessageManager** aResult)
   }
   *aResult = nullptr;
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+TabChild::GetWebBrowserChrome(nsIWebBrowserChrome3** aWebBrowserChrome)
+{
+  NS_IF_ADDREF(*aWebBrowserChrome = mWebBrowserChrome);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::SetWebBrowserChrome(nsIWebBrowserChrome3* aWebBrowserChrome)
+{
+  mWebBrowserChrome = aWebBrowserChrome;
+  return NS_OK;
 }
 
 void

@@ -175,7 +175,7 @@ public:
    */
   void SampleContentTransformForFrame(ViewTransform* aOutTransform,
                                       ScreenPoint& aScrollOffset,
-                                      ViewTransform* aOutOverscrollTransform);
+                                      Matrix4x4* aOutOverscrollTransform);
 
   /**
    * A shadow layer update has arrived. |aLayerMetrics| is the new FrameMetrics
@@ -344,6 +344,8 @@ protected:
     PINCHING,                 /* nth touch-start, where n > 1. this mode allows pan and zoom */
     ANIMATING_ZOOM,           /* animated zoom to a new rect */
     SNAP_BACK,                /* snap-back animation to relieve overscroll */
+    SMOOTH_SCROLL,            /* Smooth scrolling to destination. Used by
+                                 CSSOM-View smooth scroll-behavior */
   };
 
   // Protected destructor, to discourage deletion outside of Release():
@@ -576,7 +578,7 @@ private:
    * Return in |aTransform| a visual effect that reflects this apzc's
    * overscrolled state, if any.
    */
-  void GetOverscrollTransform(ViewTransform* aTransform) const;
+  void GetOverscrollTransform(Matrix4x4* aTransform) const;
 
   enum AxisLockMode {
     FREE,     /* No locking at all */
@@ -799,7 +801,8 @@ private:
 
   /* ===================================================================
    * The functions and members in this section are used to manage
-   * fling animations and handling overscroll during a fling.
+   * fling animations, smooth scroll animations, and overscroll
+   * during a fling or smooth scroll.
    */
 public:
   /**
@@ -818,6 +821,7 @@ public:
 private:
   friend class FlingAnimation;
   friend class OverscrollSnapBackAnimation;
+  friend class SmoothScrollAnimation;
   // The initial velocity of the most recent fling.
   ScreenPoint mLastFlingVelocity;
   // The time at which the most recent fling started.
@@ -831,6 +835,8 @@ private:
   void HandleFlingOverscroll(const ScreenPoint& aVelocity,
                              const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain);
 
+  void HandleSmoothScrollOverscroll(const ScreenPoint& aVelocity);
+
   // Helper function used by TakeOverFling() and HandleFlingOverscroll().
   void AcceptFling(const ScreenPoint& aVelocity,
                    const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
@@ -840,6 +846,7 @@ private:
   // Start a snap-back animation to relieve overscroll.
   void StartSnapBack();
 
+  void StartSmoothScroll();
 
   /* ===================================================================
    * The functions and members in this section are used to build a tree
@@ -896,12 +903,8 @@ private:
    * including handing off scroll to another APZC, and overscrolling.
    */
 public:
-  void SetScrollHandoffParentId(FrameMetrics::ViewID aScrollParentId) {
-    mScrollParentId = aScrollParentId;
-  }
-
   FrameMetrics::ViewID GetScrollHandoffParentId() const {
-    return mScrollParentId;
+    return mFrameMetrics.GetScrollParentId();
   }
 
   /**
@@ -920,7 +923,9 @@ public:
    * to; this function increments the chain and the index and passes it on to
    * APZCTreeManager::DispatchScroll() in the event of overscroll.
    * Returns true iff. this APZC, or an APZC further down the
-   * handoff chain, accepted the scroll.
+   * handoff chain, accepted the scroll (possibly entering an overscrolled
+   * state). If this returns false, the caller APZC knows that it should enter
+   * an overscrolled state itself if it can.
    */
   bool AttemptScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
                      const OverscrollHandoffChain& aOverscrollHandoffChain,
@@ -935,8 +940,6 @@ public:
   bool SnapBackIfOverscrolled();
 
 private:
-  FrameMetrics::ViewID mScrollParentId;
-
   /**
    * A helper function for calling APZCTreeManager::DispatchScroll().
    * Guards against the case where the APZC is being concurrently destroyed

@@ -28,11 +28,12 @@
 package ch.boye.httpclientandroidlib.params;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
 
 /**
  * Default implementation of {@link HttpParams} interface.
@@ -41,13 +42,18 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
  * synchronized and therefore this class may be thread-unsafe.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use configuration classes provided 'ch.boye.httpclientandroidlib.config'
+ *  and 'ch.boye.httpclientandroidlib.client.config'
  */
+@Deprecated
+@ThreadSafe
 public class BasicHttpParams extends AbstractHttpParams implements Serializable, Cloneable {
 
     private static final long serialVersionUID = -7086398485908701455L;
 
     /** Map of HTTP parameters that this collection contains. */
-    private final HashMap parameters = new HashMap();
+    private final Map<String, Object> parameters = new ConcurrentHashMap<String, Object>();
 
     public BasicHttpParams() {
         super();
@@ -58,11 +64,18 @@ public class BasicHttpParams extends AbstractHttpParams implements Serializable,
     }
 
     public HttpParams setParameter(final String name, final Object value) {
-        this.parameters.put(name, value);
+        if (name == null) {
+            return this;
+        }
+        if (value != null) {
+            this.parameters.put(name, value);
+        } else {
+            this.parameters.remove(name);
+        }
         return this;
     }
 
-    public boolean removeParameter(String name) {
+    public boolean removeParameter(final String name) {
         //this is to avoid the case in which the key has a null value
         if (this.parameters.containsKey(name)) {
             this.parameters.remove(name);
@@ -79,8 +92,8 @@ public class BasicHttpParams extends AbstractHttpParams implements Serializable,
      * @param value parameter value
      */
     public void setParameters(final String[] names, final Object value) {
-        for (int i = 0; i < names.length; i++) {
-            setParameter(names[i], value);
+        for (final String name : names) {
+            setParameter(name, value);
         }
     }
 
@@ -127,13 +140,12 @@ public class BasicHttpParams extends AbstractHttpParams implements Serializable,
      * @return  a new set of params holding a copy of the
      *          <i>local</i> parameters in this object.
      *
-     * @deprecated
      * @throws UnsupportedOperationException if the clone() fails
      */
     public HttpParams copy() {
         try {
             return (HttpParams) clone();
-        } catch (CloneNotSupportedException ex) {
+        } catch (final CloneNotSupportedException ex) {
             throw new UnsupportedOperationException("Cloning not supported");
         }
     }
@@ -142,19 +154,37 @@ public class BasicHttpParams extends AbstractHttpParams implements Serializable,
      * Clones the instance.
      * Uses {@link #copyParams(HttpParams)} to copy the parameters.
      */
+    @Override
     public Object clone() throws CloneNotSupportedException {
-        BasicHttpParams clone = (BasicHttpParams) super.clone();
+        final BasicHttpParams clone = (BasicHttpParams) super.clone();
         copyParams(clone);
         return clone;
     }
 
-    protected void copyParams(HttpParams target) {
-        Iterator iter = parameters.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry me = (Map.Entry) iter.next();
-            if (me.getKey() instanceof String)
-                target.setParameter((String)me.getKey(), me.getValue());
+    /**
+     * Copies the locally defined parameters to the argument parameters.
+     * This method is called from {@link #clone()}.
+     *
+     * @param target    the parameters to which to copy
+     * @since 4.2
+     */
+    public void copyParams(final HttpParams target) {
+        for (final Map.Entry<String, Object> me : this.parameters.entrySet()) {
+            target.setParameter(me.getKey(), me.getValue());
         }
     }
 
+    /**
+     * Returns the current set of names.
+     *
+     * Changes to the underlying HttpParams are not reflected
+     * in the set - it is a snapshot.
+     *
+     * @return the names, as a Set<String>
+     * @since 4.2
+     */
+    @Override
+    public Set<String> getNames() {
+        return new HashSet<String>(this.parameters.keySet());
+    }
 }

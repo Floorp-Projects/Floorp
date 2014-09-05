@@ -35,7 +35,7 @@ class PSMContentDownloader : public nsIStreamListener
 {
 public:
   PSMContentDownloader() {NS_ASSERTION(false, "don't use this constructor."); }
-  PSMContentDownloader(uint32_t type);
+  explicit PSMContentDownloader(uint32_t type);
   void setSilentDownload(bool flag);
 
   NS_DECL_ISUPPORTS

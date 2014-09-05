@@ -188,7 +188,7 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsDeviceContext * aDC
 class nsScriptSuppressor
 {
 public:
-  nsScriptSuppressor(nsPrintEngine* aPrintEngine)
+  explicit nsScriptSuppressor(nsPrintEngine* aPrintEngine)
   : mPrintEngine(aPrintEngine), mSuppressed(false) {}
 
   ~nsScriptSuppressor() { Unsuppress(); }
@@ -3601,7 +3601,7 @@ nsPrintEngine::Observe(nsISupports *aSubject, const char *aTopic, const char16_t
 //---------------------------------------------------------------
 class nsPrintCompletionEvent : public nsRunnable {
 public:
-  nsPrintCompletionEvent(nsIDocumentViewerPrint *docViewerPrint)
+  explicit nsPrintCompletionEvent(nsIDocumentViewerPrint *docViewerPrint)
     : mDocViewerPrint(docViewerPrint) {
     NS_ASSERTION(mDocViewerPrint, "mDocViewerPrint is null.");
   }

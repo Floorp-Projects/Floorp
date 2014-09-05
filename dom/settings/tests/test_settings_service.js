@@ -4,6 +4,10 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+if (SpecialPowers.isMainProcess()) {
+  SpecialPowers.Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
+}
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -80,8 +84,6 @@ let tests = [
     const TEST_OBSERVER_VALUE   = true;
     const TEST_OBSERVER_MESSAGE = "test.observer.message";
 
-    let observerCount = 2;
-
     function observer(subject, topic, data) {
 
       if (topic !== MOZSETTINGS_CHANGED) {
@@ -90,7 +92,6 @@ let tests = [
       }
 
       data = JSON.parse(data);
-
       function checkProp(name, type, value) {
         ok(name in data, "data." + name + " is present");
         is(typeof data[name], type, "data." + name + " is " + type);
@@ -99,24 +100,16 @@ let tests = [
 
       checkProp("key", "string", TEST_OBSERVER_KEY);
       checkProp("value", "boolean", TEST_OBSERVER_VALUE);
-      if (observerCount === 2) {
-        checkProp("message", "object", null);
-      } else {
-        checkProp("message", "string", TEST_OBSERVER_MESSAGE);
-      }
-      --observerCount;
+      checkProp("isInternalChange", "boolean", true);
 
-      if (observerCount === 0) {
         Services.obs.removeObserver(this, MOZSETTINGS_CHANGED);
         next();
       }
-    }
 
     Services.obs.addObserver(observer, MOZSETTINGS_CHANGED, false);
 
     let lock = SettingsService.createLock();
-    lock.set(TEST_OBSERVER_KEY, TEST_OBSERVER_VALUE, null, null);
-    lock.set(TEST_OBSERVER_KEY, TEST_OBSERVER_VALUE, null, TEST_OBSERVER_MESSAGE);
+    lock.set(TEST_OBSERVER_KEY, TEST_OBSERVER_VALUE, null);
   }
 ];
 

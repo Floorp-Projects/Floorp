@@ -111,7 +111,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jCloseNotification = getStaticMethod("closeNotification", "(Ljava/lang/String;)V");
     jConnectionGetMimeType = getStaticMethod("connectionGetMimeType", "(Ljava/net/URLConnection;)Ljava/lang/String;");
     jCreateInputStream = getStaticMethod("createInputStream", "(Ljava/net/URLConnection;)Ljava/io/InputStream;");
-    jCreateMessageListWrapper = getStaticMethod("createMessageList", "(JJ[Ljava/lang/String;IIZI)V");
+    jCreateMessageListWrapper = getStaticMethod("createMessageList", "(JJ[Ljava/lang/String;ILjava/lang/String;ZZJZI)V");
     jCreateShortcut = getStaticMethod("createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jDeleteMessageWrapper = getStaticMethod("deleteMessage", "(II)V");
     jDisableBatteryNotifications = getStaticMethod("disableBatteryNotifications", "()V");
@@ -335,21 +335,24 @@ jobject GeckoAppShell::CreateInputStream(jobject a0) {
     return ret;
 }
 
-void GeckoAppShell::CreateMessageListWrapper(int64_t a0, int64_t a1, jobjectArray a2, int32_t a3, int32_t a4, bool a5, int32_t a6) {
+void GeckoAppShell::CreateMessageListWrapper(int64_t a0, int64_t a1, jobjectArray a2, int32_t a3, const nsAString& a4, bool a5, bool a6, int64_t a7, bool a8, int32_t a9) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (env->PushLocalFrame(1) != 0) {
+    if (env->PushLocalFrame(2) != 0) {
         AndroidBridge::HandleUncaughtException(env);
         MOZ_CRASH("Exception should have caused crash.");
     }
 
-    jvalue args[7];
+    jvalue args[10];
     args[0].j = a0;
     args[1].j = a1;
     args[2].l = a2;
     args[3].i = a3;
-    args[4].i = a4;
+    args[4].l = AndroidBridge::NewJavaString(env, a4);
     args[5].z = a5;
-    args[6].i = a6;
+    args[6].z = a6;
+    args[7].j = a7;
+    args[8].z = a8;
+    args[9].i = a9;
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jCreateMessageListWrapper, args);
     AndroidBridge::HandleUncaughtException(env);

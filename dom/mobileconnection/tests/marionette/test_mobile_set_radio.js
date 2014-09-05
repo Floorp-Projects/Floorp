@@ -38,4 +38,4 @@ startTestCommon(function() {
     .then(() => setDataEnabled(false))
     .then(() => setRadioEnabledAndWait(true));
 
-}, ["settings-read", "settings-write"]);
+}, ["settings-read", "settings-write", "settings-api-read", "settings-api-write"]);

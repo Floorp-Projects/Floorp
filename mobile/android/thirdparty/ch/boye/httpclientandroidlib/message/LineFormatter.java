@@ -27,10 +27,10 @@
 
 package ch.boye.httpclientandroidlib.message;
 
+import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.ProtocolVersion;
 import ch.boye.httpclientandroidlib.RequestLine;
 import ch.boye.httpclientandroidlib.StatusLine;
-import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.util.CharArrayBuffer;
 
 /**

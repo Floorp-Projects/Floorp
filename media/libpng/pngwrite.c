@@ -1,7 +1,7 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.6.10 [March 6, 2014]
+ * Last changed in libpng 1.6.11 [June 5, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -441,6 +441,7 @@ png_write_end(png_structrp png_ptr, png_inforp info_ptr)
 
    /* Write end of PNG file */
    png_write_IEND(png_ptr);
+
    /* This flush, added in libpng-1.0.8, removed from libpng-1.0.9beta03,
     * and restored again in libpng-1.2.30, may cause some applications that
     * do not set png_ptr->output_flush_fn to crash.  If your application
@@ -488,7 +489,7 @@ png_create_write_struct,(png_const_charp user_png_ver, png_voidp error_ptr,
 {
 #ifndef PNG_USER_MEM_SUPPORTED
    png_structrp png_ptr = png_create_png_struct(user_png_ver, error_ptr,
-      error_fn, warn_fn, NULL, NULL, NULL);
+       error_fn, warn_fn, NULL, NULL, NULL);
 #else
    return png_create_write_struct_2(user_png_ver, error_ptr, error_fn,
        warn_fn, NULL, NULL, NULL);
@@ -501,7 +502,7 @@ png_create_write_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
     png_malloc_ptr malloc_fn, png_free_ptr free_fn),PNG_ALLOCATED)
 {
    png_structrp png_ptr = png_create_png_struct(user_png_ver, error_ptr,
-      error_fn, warn_fn, mem_ptr, malloc_fn, free_fn);
+       error_fn, warn_fn, mem_ptr, malloc_fn, free_fn);
 #endif /* PNG_USER_MEM_SUPPORTED */
    if (png_ptr != NULL)
    {
@@ -534,10 +535,10 @@ png_create_write_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
        * applications that must not fail to write at all costs!
        */
 #ifdef PNG_BENIGN_WRITE_ERRORS_SUPPORTED
-      png_ptr->flags |= PNG_FLAG_BENIGN_ERRORS_WARN;
       /* In stable builds only warn if an application error can be completely
        * handled.
        */
+      png_ptr->flags |= PNG_FLAG_BENIGN_ERRORS_WARN;
 #endif
 
       /* App warnings are warnings in release (or release candidate) builds but
@@ -835,7 +836,7 @@ png_write_row(png_structrp png_ptr, png_const_bytep row)
    {
       png_do_write_interlace(&row_info, png_ptr->row_buf + 1, png_ptr->pass);
       /* This should always get caught above, but still ... */
-      if (!(row_info.width))
+      if (row_info.width == 0)
       {
          png_write_finish_row(png_ptr);
          return;
@@ -2186,7 +2187,7 @@ png_image_write_main(png_voidp argument)
     * write an interlaced image.
     */
 
-   if (write_16bit)
+   if (write_16bit != 0)
    {
       /* The gamma here is 1.0 (linear) and the cHRM chunk matches sRGB. */
       png_set_gAMA_fixed(png_ptr, info_ptr, PNG_GAMMA_LINEAR);
@@ -2218,7 +2219,7 @@ png_image_write_main(png_voidp argument)
     *
     * First check for a little endian system if writing 16 bit files.
     */
-   if (write_16bit)
+   if (write_16bit != 0)
    {
       PNG_CONST png_uint_16 le = 0x0001;
 
@@ -2259,7 +2260,7 @@ png_image_write_main(png_voidp argument)
       png_const_bytep row = png_voidcast(png_const_bytep, display->buffer);
       ptrdiff_t row_bytes = display->row_stride;
 
-      if (linear)
+      if (linear != 0)
          row_bytes *= (sizeof (png_uint_16));
 
       if (row_bytes < 0)
@@ -2292,7 +2293,7 @@ png_image_write_main(png_voidp argument)
       int result;
 
       display->local_row = row;
-      if (write_16bit)
+      if (write_16bit != 0)
          result = png_safe_execute(image, png_write_image_16bit, display);
       else
          result = png_safe_execute(image, png_write_image_8bit, display);
@@ -2301,7 +2302,7 @@ png_image_write_main(png_voidp argument)
       png_free(png_ptr, row);
 
       /* Skip the 'write_end' on error: */
-      if (!result)
+      if (result == 0)
          return 0;
    }
 

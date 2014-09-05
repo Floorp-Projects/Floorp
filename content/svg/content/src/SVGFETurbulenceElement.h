@@ -25,7 +25,7 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase
   friend nsresult (::NS_NewSVGFETurbulenceElement(nsIContent **aResult,
                                                   already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFETurbulenceElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGFETurbulenceElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFETurbulenceElementBase(aNodeInfo)
   {
   }

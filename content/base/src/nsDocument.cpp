@@ -684,7 +684,7 @@ public:
 
 struct FindContentData
 {
-  FindContentData(nsIDocument *aSubDoc)
+  explicit FindContentData(nsIDocument* aSubDoc)
     : mSubDocument(aSubDoc), mResult(nullptr)
   {
   }
@@ -1398,7 +1398,7 @@ nsExternalResourceMap::ExternalResource::~ExternalResource()
 class nsDOMStyleSheetSetList MOZ_FINAL : public DOMStringList
 {
 public:
-  nsDOMStyleSheetSetList(nsIDocument* aDocument);
+  explicit nsDOMStyleSheetSetList(nsIDocument* aDocument);
 
   void Disconnect()
   {
@@ -1600,6 +1600,12 @@ nsDocument::~nsDocument()
 #endif
 
   NS_ASSERTION(!mIsShowing, "Destroying a currently-showing document");
+
+  // Note: This assert is only non-fatal because mochitest-bc triggers
+  // it... as well as the preceding assert about !mIsShowing.
+  NS_ASSERTION(!mObservingAppThemeChanged,
+               "Document leaked to shutdown, then the observer service dropped "
+               "its ref to us so we were able to go away.");
 
   if (IsTopLevelContentDocument()) {
     //don't report for about: pages
@@ -2202,15 +2208,15 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   nsCOMPtr<nsIPrincipal> principal;
   if (aChannel) {
     // Note: this code is duplicated in XULDocument::StartDocumentLoad and
-    // nsScriptSecurityManager::GetChannelPrincipal.
+    // nsScriptSecurityManager::GetChannelResultPrincipal.
     // Note: this should match nsDocShell::OnLoadingSite
     NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
 
     nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();
     if (securityManager) {
-      securityManager->GetChannelPrincipal(aChannel,
-                                           getter_AddRefs(principal));
+      securityManager->GetChannelResultPrincipal(aChannel,
+                                                 getter_AddRefs(principal));
     }
   }
 
@@ -5546,7 +5552,7 @@ class ProcessStackRunner MOZ_FINAL : public nsIRunnable
 {
   ~ProcessStackRunner() {}
 public:
-  ProcessStackRunner(bool aIsBaseQueue = false)
+  explicit ProcessStackRunner(bool aIsBaseQueue = false)
     : mIsBaseQueue(aIsBaseQueue)
   {
   }
@@ -8715,7 +8721,7 @@ nsDocument::UnblockOnload(bool aFireSync)
 
 class nsUnblockOnloadEvent : public nsRunnable {
 public:
-  nsUnblockOnloadEvent(nsDocument *doc) : mDoc(doc) {}
+  explicit nsUnblockOnloadEvent(nsDocument* aDoc) : mDoc(aDoc) {}
   NS_IMETHOD Run() {
     mDoc->DoUnblockOnload();
     return NS_OK;
@@ -8873,7 +8879,10 @@ nsDocument::OnPageShow(bool aPersisted,
                         "chrome-page-shown" :
                         "content-page-shown",
                       nullptr);
-
+  if (!mObservingAppThemeChanged) {
+    os->AddObserver(this, "app-theme-changed", /* ownsWeak */ false);
+    mObservingAppThemeChanged = true;
+  }
 
   DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted);
 }
@@ -8947,6 +8956,9 @@ nsDocument::OnPageHide(bool aPersisted,
                           "chrome-page-hidden" :
                           "content-page-hidden",
                         nullptr);
+
+    os->RemoveObserver(this, "app-theme-changed");
+    mObservingAppThemeChanged = false;
   }
 
   DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
@@ -9422,7 +9434,7 @@ nsDocument::LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
 class nsDelayedEventDispatcher : public nsRunnable
 {
 public:
-  nsDelayedEventDispatcher(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments)
+  explicit nsDelayedEventDispatcher(nsTArray<nsCOMPtr<nsIDocument>>& aDocuments)
   {
     mDocuments.SwapElements(aDocuments);
   }
@@ -9442,7 +9454,7 @@ namespace {
 
 struct UnsuppressArgs
 {
-  UnsuppressArgs(nsIDocument::SuppressionType aWhat)
+  explicit UnsuppressArgs(nsIDocument::SuppressionType aWhat)
     : mWhat(aWhat)
   {
   }
@@ -10545,7 +10557,7 @@ SetWindowFullScreen(nsIDocument* aDoc, bool aValue)
 
 class nsCallExitFullscreen : public nsRunnable {
 public:
-  nsCallExitFullscreen(nsIDocument* aDoc)
+  explicit nsCallExitFullscreen(nsIDocument* aDoc)
     : mDoc(aDoc) {}
   NS_IMETHOD Run()
   {
@@ -10859,7 +10871,7 @@ nsDocument::IsFullScreenDoc()
 class nsCallRequestFullScreen : public nsRunnable
 {
 public:
-  nsCallRequestFullScreen(Element* aElement)
+  explicit nsCallRequestFullScreen(Element* aElement)
     : mElement(aElement),
       mDoc(aElement->OwnerDoc()),
       mWasCallerChrome(nsContentUtils::IsCallerChrome()),
@@ -11656,8 +11668,55 @@ nsDocument::Observe(nsISupports *aSubject,
         NS_DispatchToMainThread(r);
       }
     }
+  } else if (strcmp("app-theme-changed", aTopic) == 0) {
+    if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()) &&
+        !IsUnstyledDocument()) {
+      // We don't want to style the chrome window, only app ones.
+      OnAppThemeChanged();
+    }
   }
   return NS_OK;
+}
+
+void
+nsDocument::OnAppThemeChanged()
+{
+  // Bail out if there is no theme support set up properly.
+  auto themeOrigin = Preferences::GetString("b2g.theme.origin");
+  if (!themeOrigin || !Preferences::GetBool("dom.mozApps.themable")) {
+    return;
+  }
+
+  for (int32_t i = 0; i < GetNumberOfStyleSheets(); i++) {
+    nsRefPtr<CSSStyleSheet> sheet =  do_QueryObject(GetStyleSheetAt(i));
+    if (!sheet) {
+      continue;
+    }
+
+    nsINode* owningNode = sheet->GetOwnerNode();
+    if (!owningNode) {
+      continue;
+    }
+    // Get a DOM stylesheet link to check the href against the theme origin.
+    nsIURI* sheetURI = sheet->GetOriginalURI();
+    if (!sheetURI) {
+      continue;
+    }
+    nsAutoString sheetOrigin;
+    nsContentUtils::GetUTFOrigin(sheetURI, sheetOrigin);
+    if (!sheetOrigin.Equals(themeOrigin)) {
+      continue;
+    }
+
+    // Finally getting a Stylesheet link.
+    nsCOMPtr<nsIStyleSheetLinkingElement> link = do_QueryInterface(owningNode);
+    if (!link) {
+      continue;
+    }
+    bool willNotify;
+    bool isAlternate;
+    link->UpdateStyleSheet(nullptr, &willNotify, &isAlternate, true);
+  }
 }
 
 void

@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include "mozilla/Attributes.h"
+#include "mozilla/ToString.h"
 
 namespace mozilla {
 namespace gfx {
@@ -19,7 +20,7 @@ namespace gfx {
  */
 template <class T, class Sub, class Coord = T>
 struct BasePoint {
-  Coord x, y;
+  T x, y;
 
   // Constructors
   MOZ_CONSTEXPR BasePoint() : x(0), y(0) {}
@@ -67,7 +68,7 @@ struct BasePoint {
   }
 
   T Length() const {
-    return hypot(x.value, y.value);
+    return hypot(x, y);
   }
 
   // Round() is *not* rounding to nearest integer if the values are negative.
@@ -77,6 +78,10 @@ struct BasePoint {
     x = Coord(floor(T(x) + T(0.5)));
     y = Coord(floor(T(y) + T(0.5)));
     return *static_cast<Sub*>(this);
+  }
+
+  friend std::ostream& operator<<(std::ostream& stream, const BasePoint<T, Sub, Coord>& aPoint) {
+    return stream << '(' << aPoint.x << ',' << aPoint.y << ')';
   }
 
 };

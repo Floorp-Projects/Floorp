@@ -21,6 +21,7 @@ EXPORTS.mozilla.gfx += [
     'BorrowedContext.h',
     'Coord.h',
     'DataSurfaceHelpers.h',
+    'DrawTargetTiled.h',
     'Filters.h',
     'Helpers.h',
     'Logging.h',
@@ -87,6 +88,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     if CONFIG['_MSC_VER'] != '1400':
         SOURCES += [
             'BlurSSE2.cpp',
+            'convolverSSE2.cpp',
             'FilterProcessingSSE2.cpp',
             'ImageScalingSSE2.cpp',
         ]
@@ -96,6 +98,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
         SOURCES['BlurSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
         SOURCES['FilterProcessingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
         SOURCES['ImageScalingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+        SOURCES['convolverSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 UNIFIED_SOURCES += [
     'Blur.cpp',
@@ -107,7 +110,6 @@ UNIFIED_SOURCES += [
     'DrawTargetCapture.cpp',
     'DrawTargetDual.cpp',
     'DrawTargetRecording.cpp',
-    'DrawTargetTiled.cpp',
     'Factory.cpp',
     'FilterNodeSoftware.cpp',
     'FilterProcessing.cpp',
@@ -124,6 +126,10 @@ UNIFIED_SOURCES += [
     'ScaledFontCairo.cpp',
     'SourceSurfaceCairo.cpp',
     'SourceSurfaceRawData.cpp',
+]
+
+SOURCES += [
+    'DrawTargetTiled.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
@@ -145,11 +151,6 @@ for var in ('USE_CAIRO', 'MOZ2D_HAS_MOZ_CAIRO'):
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
     DEFINES['MOZ_ENABLE_FREETYPE'] = True
-
-DEFINES['SK_A32_SHIFT'] = 24
-DEFINES['SK_R32_SHIFT'] = 16
-DEFINES['SK_G32_SHIFT'] = 8
-DEFINES['SK_B32_SHIFT'] = 0
 
 if CONFIG['MOZ_DEBUG']:
     DEFINES['GFX_LOG_DEBUG'] = True

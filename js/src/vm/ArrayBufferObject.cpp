@@ -122,7 +122,14 @@ const Class ArrayBufferObject::class_ = {
     nullptr,        /* construct   */
     ArrayBufferObject::obj_trace,
     JS_NULL_CLASS_SPEC,
-    JS_NULL_CLASS_EXT
+    {
+        nullptr,    /* outerObject */
+        nullptr,    /* innerObject */
+        nullptr,    /* iteratorObject */
+        false,      /* isWrappedNative */
+        nullptr,    /* weakmapKeyDelegateOp */
+        ArrayBufferObject::objectMoved
+    }
 };
 
 const JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
@@ -758,18 +765,18 @@ ArrayBufferObject::ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buf
     return true;
 }
 
-/* static */ void *
+/* static */ ArrayBufferObject::BufferContents
 ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 {
     if (!buffer->canNeuter(cx)) {
         js_ReportOverRecursed(cx);
-        return nullptr;
+        return BufferContents::createUnowned(nullptr);
     }
 
     BufferContents oldContents(buffer->dataPointer(), buffer->bufferKind());
     BufferContents newContents = AllocateArrayBufferContents(cx, buffer->byteLength());
     if (!newContents)
-        return nullptr;
+        return BufferContents::createUnowned(nullptr);
 
     if (buffer->hasStealableContents()) {
         // Return the old contents and give the neutered buffer a pointer to
@@ -777,14 +784,14 @@ ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffe
         // never get committed.
         buffer->setOwnsData(DoesntOwnData);
         ArrayBufferObject::neuter(cx, buffer, newContents);
-        return oldContents.data();
-    } else {
-        // Create a new chunk of memory to return since we cannot steal the
-        // existing contents away from the buffer.
-        memcpy(newContents.data(), oldContents.data(), buffer->byteLength());
-        ArrayBufferObject::neuter(cx, buffer, oldContents);
-        return newContents.data();
+        return oldContents;
     }
+
+    // Create a new chunk of memory to return since we cannot steal the
+    // existing contents away from the buffer.
+    memcpy(newContents.data(), oldContents.data(), buffer->byteLength());
+    ArrayBufferObject::neuter(cx, buffer, oldContents);
+    return newContents;
 }
 
 /* static */ void
@@ -929,8 +936,11 @@ ArrayBufferObject::sweep(JSCompartment *compartment)
 }
 
 /* static */ void
-ArrayBufferObject::fixupDataPointerAfterMovingGC(const ArrayBufferObject &src, ArrayBufferObject &dst)
+ArrayBufferObject::objectMoved(JSObject *obj, const JSObject *old)
 {
+    ArrayBufferObject &dst = obj->as<ArrayBufferObject>();
+    const ArrayBufferObject &src = old->as<ArrayBufferObject>();
+
     // Fix up possible inline data pointer.
     const size_t reservedSlots = JSCLASS_RESERVED_SLOTS(&ArrayBufferObject::class_);
     if (src.dataPointer() == src.fixedData(reservedSlots))
@@ -1170,7 +1180,7 @@ JS_StealArrayBufferContents(JSContext *cx, HandleObject objArg)
     }
 
     Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
-    return ArrayBufferObject::stealContents(cx, buffer);
+    return ArrayBufferObject::stealContents(cx, buffer).data();
 }
 
 JS_PUBLIC_API(JSObject *)

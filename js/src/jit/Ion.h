@@ -32,6 +32,7 @@ enum MethodStatus
 enum AbortReason {
     AbortReason_Alloc,
     AbortReason_Inlining,
+    AbortReason_NewScriptProperties,
     AbortReason_Disable,
     AbortReason_Error,
     AbortReason_NoAbort
@@ -207,6 +208,7 @@ bool UpdateForDebugMode(JSContext *maybecx, JSCompartment *comp,
                         AutoDebugModeInvalidation &invalidate);
 
 bool JitSupportsFloatingPoint();
+bool JitSupportsSimd();
 
 } // namespace jit
 } // namespace js

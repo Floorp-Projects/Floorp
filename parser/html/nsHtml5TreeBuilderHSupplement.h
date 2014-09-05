@@ -72,7 +72,7 @@
 
   public:
 
-    nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder);
+    explicit nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder);
 
     nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink,
                        nsHtml5TreeOpStage* aStage);

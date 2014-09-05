@@ -1,20 +1,21 @@
 /*
  * ====================================================================
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  * ====================================================================
  *
  * This software consists of voluntary contributions made by many
@@ -23,7 +24,6 @@
  * <http://www.apache.org/>.
  *
  */
-
 package ch.boye.httpclientandroidlib.auth;
 
 import java.util.ArrayList;
@@ -32,18 +32,25 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import ch.boye.httpclientandroidlib.HttpRequest;
 import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
-
+import ch.boye.httpclientandroidlib.config.Lookup;
 import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.protocol.ExecutionContext;
+import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Authentication scheme registry that can be used to obtain the corresponding
  * authentication scheme implementation for a given type of authorization challenge.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link ch.boye.httpclientandroidlib.config.Registry}
  */
 @ThreadSafe
-public final class AuthSchemeRegistry {
+@Deprecated
+public final class AuthSchemeRegistry implements Lookup<AuthSchemeProvider> {
 
     private final ConcurrentHashMap<String,AuthSchemeFactory> registeredSchemes;
 
@@ -70,12 +77,8 @@ public final class AuthSchemeRegistry {
     public void register(
             final String name,
             final AuthSchemeFactory factory) {
-         if (name == null) {
-             throw new IllegalArgumentException("Name may not be null");
-         }
-        if (factory == null) {
-            throw new IllegalArgumentException("Authentication scheme factory may not be null");
-        }
+         Args.notNull(name, "Name");
+        Args.notNull(factory, "Authentication scheme factory");
         registeredSchemes.put(name.toLowerCase(Locale.ENGLISH), factory);
     }
 
@@ -86,9 +89,7 @@ public final class AuthSchemeRegistry {
      * @param name the identifier of the class to unregister
      */
     public void unregister(final String name) {
-         if (name == null) {
-             throw new IllegalArgumentException("Name may not be null");
-         }
+         Args.notNull(name, "Name");
         registeredSchemes.remove(name.toLowerCase(Locale.ENGLISH));
     }
 
@@ -106,10 +107,8 @@ public final class AuthSchemeRegistry {
     public AuthScheme getAuthScheme(final String name, final HttpParams params)
         throws IllegalStateException {
 
-        if (name == null) {
-            throw new IllegalArgumentException("Name may not be null");
-        }
-        AuthSchemeFactory factory = registeredSchemes.get(name.toLowerCase(Locale.ENGLISH));
+        Args.notNull(name, "Name");
+        final AuthSchemeFactory factory = registeredSchemes.get(name.toLowerCase(Locale.ENGLISH));
         if (factory != null) {
             return factory.newInstance(params);
         } else {
@@ -139,6 +138,18 @@ public final class AuthSchemeRegistry {
         }
         registeredSchemes.clear();
         registeredSchemes.putAll(map);
+    }
+
+    public AuthSchemeProvider lookup(final String name) {
+        return new AuthSchemeProvider() {
+
+            public AuthScheme create(final HttpContext context) {
+                final HttpRequest request = (HttpRequest) context.getAttribute(
+                        ExecutionContext.HTTP_REQUEST);
+                return getAuthScheme(name, request.getParams());
+            }
+
+        };
     }
 
 }

@@ -1163,7 +1163,7 @@ CopyASCIItoUTF16(const nsACString& aSource, nsAString& aDest)
   NS_CStringToUTF16(aSource, NS_CSTRING_ENCODING_ASCII, aDest);
 }
 
-NS_COM_GLUE char*
+char*
 ToNewUTF8String(const nsAString& aSource);
 
 class NS_ConvertASCIItoUTF16 : public nsString
@@ -1359,7 +1359,7 @@ getter_Copies(nsCString& aString)
 * substrings
 */
 
-class NS_COM_GLUE nsDependentSubstring : public nsStringContainer
+class nsDependentSubstring : public nsStringContainer
 {
 public:
   typedef nsDependentSubstring self_type;
@@ -1392,7 +1392,7 @@ private:
   self_type& operator=(const self_type& aString) MOZ_DELETE;
 };
 
-class NS_COM_GLUE nsDependentCSubstring : public nsCStringContainer
+class nsDependentCSubstring : public nsCStringContainer
 {
 public:
   typedef nsDependentCSubstring self_type;

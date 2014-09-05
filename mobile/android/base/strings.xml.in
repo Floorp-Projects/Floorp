@@ -105,10 +105,19 @@
   <string name="find_next">&find_next;</string>
   <string name="find_close">&find_close;</string>
 
-  <string name="media_casting_to">&media_casting_to;</string>
+  <string name="media_sending_to">&media_sending_to;</string>
   <string name="media_play">&media_play;</string>
   <string name="media_pause">&media_pause;</string>
   <string name="media_stop">&media_stop;</string>
+
+  <string name="overlay_share_send_other">&overlay_share_send_other;</string>
+  <string name="overlay_share_label">&overlay_share_label;</string>
+  <string name="overlay_share_bookmark_btn_label">&overlay_share_bookmark_btn_label;</string>
+  <string name="overlay_share_reading_list_btn_label">&overlay_share_reading_list_btn_label;</string>
+  <string name="overlay_share_send_tab_btn_label">&overlay_share_send_tab_btn_label;</string>
+  <string name="overlay_share_no_url">&overlay_share_no_url;</string>
+  <string name="overlay_share_retry">&overlay_share_retry;</string>
+  <string name="overlay_share_select_device">&overlay_share_select_device;</string>
 
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>

@@ -20,7 +20,7 @@ class nsTableFrame;
 class BasicTableLayoutStrategy : public nsITableLayoutStrategy
 {
 public:
-    BasicTableLayoutStrategy(nsTableFrame *aTableFrame);
+    explicit BasicTableLayoutStrategy(nsTableFrame *aTableFrame);
     virtual ~BasicTableLayoutStrategy();
 
     // nsITableLayoutStrategy implementation

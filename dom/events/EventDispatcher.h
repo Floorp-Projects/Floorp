@@ -9,10 +9,12 @@
 
 #include "mozilla/EventForwards.h"
 #include "nsCOMPtr.h"
+#include "nsTArray.h"
 
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
+class nsIContent;
 class nsIDOMEvent;
 class nsIScriptGlobalObject;
 class nsPresContext;
@@ -193,6 +195,13 @@ public:
    * which should be used when the event is handled at mParentTarget.
    */
   dom::EventTarget* mEventTargetAtParent;
+
+  /**
+   * An array of destination insertion points that need to be inserted
+   * into the event path of nodes that are distributed by the
+   * web components distribution algorithm.
+   */
+  nsTArray<nsIContent*> mDestInsertionPoints;
 };
 
 class EventChainPostVisitor : public mozilla::EventChainVisitor

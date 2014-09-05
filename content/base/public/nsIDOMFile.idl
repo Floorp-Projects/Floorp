@@ -26,16 +26,13 @@ interface nsIURI;
 interface nsIPrincipal;
 interface nsIDOMBlob;
 
-[scriptable, builtinclass, uuid(b1723fac-4814-4429-82cb-dc54ba0d46d6)]
+[scriptable, builtinclass, uuid(6ef56697-7c9c-41ac-83df-e01c079fb1d1)]
 interface nsIDOMBlob : nsISupports
 {
   readonly attribute unsigned long long size;
   readonly attribute DOMString type;
 
   [noscript] readonly attribute nsIInputStream internalStream;
-  // The caller is responsible for releasing the internalUrl from the
-  // blob: protocol handler
-  [noscript] DOMString getInternalUrl(in nsIPrincipal principal);
 
   [optional_argc] nsIDOMBlob slice([optional] in long long start,
                                    [optional] in long long end,

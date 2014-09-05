@@ -319,7 +319,7 @@ PlacesTreeView.prototype = {
         let isopen = false;
 
         if (uri) {
-          let val = this._xulStore.getValue(document.documentURIObject, uri, "open");
+          let val = this._xulStore.getValue(document.documentURI, uri, "open");
           isopen = (val == "true");
         }
 
@@ -1504,7 +1504,7 @@ PlacesTreeView.prototype = {
       let uri = node.uri;
 
       if (uri) {
-        let docURI = document.documentURIObject;
+        let docURI = document.documentURI;
 
         if (node.containerOpen) {
           this._xulStore.removeValue(docURI, uri, "open");

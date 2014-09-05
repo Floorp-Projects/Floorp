@@ -672,7 +672,7 @@ struct nsAbsoluteItems : nsFrameItems {
   // containing block for absolutely positioned elements
   nsContainerFrame* containingBlock;
 
-  nsAbsoluteItems(nsContainerFrame* aContainingBlock);
+  explicit nsAbsoluteItems(nsContainerFrame* aContainingBlock);
 #ifdef DEBUG
   // XXXbz Does this need a debug-only assignment operator that nulls out the
   // childList in the nsAbsoluteItems we're copying?  Introducing a difference
@@ -10549,12 +10549,15 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       break;
     }
     else if (IsInlineFrame(kid)) {
-      // Look inside child inline frame for the letter frame
-      RemoveFirstLetterFrames(aPresContext, aPresShell,
-                              static_cast<nsContainerFrame*>(kid),
-                              aBlockFrame, aStopLooking);
-      if (*aStopLooking) {
-        break;
+      nsContainerFrame* kidAsContainerFrame = do_QueryFrame(kid);
+      if (kidAsContainerFrame) {
+        // Look inside child inline frame for the letter frame.
+        RemoveFirstLetterFrames(aPresContext, aPresShell,
+                                kidAsContainerFrame,
+                                aBlockFrame, aStopLooking);
+        if (*aStopLooking) {
+          break;
+        }
       }
     }
     prevSibling = kid;

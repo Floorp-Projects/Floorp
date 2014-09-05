@@ -227,7 +227,7 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
 // nsTArray_base stores elements into the space allocated beyond
 // sizeof(*this).  This is done to minimize the size of the nsTArray
 // object when it is empty.
-struct NS_COM_GLUE nsTArrayHeader
+struct nsTArrayHeader
 {
   static nsTArrayHeader sEmptyHdr;
 
@@ -1152,13 +1152,6 @@ public:
     return ReplaceElementsAt(aIndex, 0, aArray.Elements(), aArray.Length());
   }
 
-  // A variation on the ReplaceElementsAt method defined above.
-  template<class Item>
-  elem_type* InsertElementAt(index_type aIndex, const Item& aItem)
-  {
-    return ReplaceElementsAt(aIndex, 0, &aItem, 1);
-  }
-
   // Insert a new element without copy-constructing. This is useful to avoid
   // temporaries.
   // @return A pointer to the newly inserted element, or null on OOM.
@@ -1174,9 +1167,9 @@ public:
     return elem;
   }
 
-  // Insert an element by move constructing aItem.
-  // @return a pointer to the inserted element or NULL on oom.
-  elem_type* InsertElementAt(index_type aIndex, elem_type&& aItem)
+  // Insert a new element, move constructing if possible.
+  template<class Item>
+  elem_type* InsertElementAt(index_type aIndex, Item&& aItem)
   {
     if (!Alloc::Successful(this->EnsureCapacity(Length() + 1,
                                                 sizeof(elem_type)))) {
@@ -1184,8 +1177,7 @@ public:
     }
     this->ShiftData(aIndex, 0, 1, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
     elem_type* elem = Elements() + aIndex;
-    nsTArrayElementTraits<elem_type>::Construct(elem,
-                                                mozilla::Forward<elem_type>(aItem));
+    elem_traits::Construct(elem, mozilla::Forward<Item>(aItem));
     return elem;
   }
 
@@ -1277,28 +1269,19 @@ public:
     return AppendElements(aArray.Elements(), aArray.Length());
   }
 
-  // A variation on the AppendElements method defined above.
+  // Append a new element, move constructing if possible.
   template<class Item>
-  elem_type* AppendElement(const Item& aItem)
-  {
-    return AppendElements(&aItem, 1);
-  }
-
-  // A variation of AppendElement that takes an r-value reference
-  elem_type* AppendElement(elem_type&& aItem)
+  elem_type* AppendElement(Item&& aItem)
   {
     if (!Alloc::Successful(this->EnsureCapacity(Length() + 1,
                                                 sizeof(elem_type)))) {
       return nullptr;
     }
-    index_type len = Length();
-    elem_type* iter = Elements() + len;
-    nsTArrayElementTraits<elem_type>::Construct(iter,
-                                                mozilla::Forward<elem_type>(aItem));
+    elem_type* elem = Elements() + Length();
+    elem_traits::Construct(elem, mozilla::Forward<Item>(aItem));
     this->IncrementLength(1);
-    return iter;
+    return elem;
   }
-
 
   // Append new elements without copy-constructing. This is useful to avoid
   // temporaries.

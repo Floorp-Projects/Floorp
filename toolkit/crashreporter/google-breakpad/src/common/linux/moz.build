@@ -23,7 +23,7 @@ if CONFIG['OS_TARGET'] != 'Android':
     ]
 
 if CONFIG['MOZ_CRASHREPORTER']:
-    HOST_LIBRARY_NAME = 'host_breakpad_linux_common_s'
+    HostLibrary('host_breakpad_linux_common_s')
     HOST_SOURCES += [
         'dump_symbols.cc',
         'elf_symbols_to_module.cc',
@@ -34,7 +34,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
         'memory_mapped_file.cc',
     ]
 
-LIBRARY_NAME = 'breakpad_linux_common_s'
+Library('breakpad_linux_common_s')
 
 FINAL_LIBRARY = 'xul'
 

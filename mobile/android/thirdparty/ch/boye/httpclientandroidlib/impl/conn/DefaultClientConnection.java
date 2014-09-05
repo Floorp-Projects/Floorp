@@ -28,11 +28,13 @@
 package ch.boye.httpclientandroidlib.impl.conn;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 
 import ch.boye.httpclientandroidlib.androidextra.HttpClientAndroidLog;
 /* LogFactory removed by HttpClient for Android script. */
@@ -42,34 +44,30 @@ import ch.boye.httpclientandroidlib.HttpHost;
 import ch.boye.httpclientandroidlib.HttpRequest;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.HttpResponseFactory;
-import ch.boye.httpclientandroidlib.params.HttpParams;
-import ch.boye.httpclientandroidlib.params.HttpProtocolParams;
-import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.annotation.NotThreadSafe;
+import ch.boye.httpclientandroidlib.conn.OperatedClientConnection;
+import ch.boye.httpclientandroidlib.conn.ManagedHttpClientConnection;
 import ch.boye.httpclientandroidlib.impl.SocketHttpClientConnection;
 import ch.boye.httpclientandroidlib.io.HttpMessageParser;
 import ch.boye.httpclientandroidlib.io.SessionInputBuffer;
 import ch.boye.httpclientandroidlib.io.SessionOutputBuffer;
-
-import ch.boye.httpclientandroidlib.conn.OperatedClientConnection;
+import ch.boye.httpclientandroidlib.params.BasicHttpParams;
+import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.params.HttpProtocolParams;
+import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.util.Args;
 
 /**
  * Default implementation of an operated client connection.
- * <p>
- * The following parameters can be used to customize the behavior of this
- * class:
- * <ul>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreProtocolPNames#STRICT_TRANSFER_ENCODING}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreProtocolPNames#HTTP_ELEMENT_CHARSET}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#SOCKET_BUFFER_SIZE}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#MAX_LINE_LENGTH}</li>
- *  <li>{@link ch.boye.httpclientandroidlib.params.CoreConnectionPNames#MAX_HEADER_COUNT}</li>
- * </ul>
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link ManagedHttpClientConnectionFactory}.
  */
 @NotThreadSafe // connSecure, targetHost
+@Deprecated
 public class DefaultClientConnection extends SocketHttpClientConnection
-    implements OperatedClientConnection, HttpContext {
+    implements OperatedClientConnection, ManagedHttpClientConnection, HttpContext {
 
     public HttpClientAndroidLog log = new HttpClientAndroidLog(getClass());
     public HttpClientAndroidLog headerLog = new HttpClientAndroidLog("ch.boye.httpclientandroidlib.headers");
@@ -95,6 +93,10 @@ public class DefaultClientConnection extends SocketHttpClientConnection
         this.attributes = new HashMap<String, Object>();
     }
 
+    public String getId() {
+        return null;
+    }
+
     public final HttpHost getTargetHost() {
         return this.targetHost;
     }
@@ -108,7 +110,15 @@ public class DefaultClientConnection extends SocketHttpClientConnection
         return this.socket;
     }
 
-    public void opening(Socket sock, HttpHost target) throws IOException {
+    public SSLSession getSSLSession() {
+        if (this.socket instanceof SSLSocket) {
+            return ((SSLSocket) this.socket).getSession();
+        } else {
+            return null;
+        }
+    }
+
+    public void opening(final Socket sock, final HttpHost target) throws IOException {
         assertNotOpen();
         this.socket = sock;
         this.targetHost = target;
@@ -117,16 +127,13 @@ public class DefaultClientConnection extends SocketHttpClientConnection
         if (this.shutdown) {
             sock.close(); // allow this to throw...
             // ...but if it doesn't, explicitly throw one ourselves.
-            throw new IOException("Connection already shutdown");
+            throw new InterruptedIOException("Connection already shutdown");
         }
     }
 
-    public void openCompleted(boolean secure, HttpParams params) throws IOException {
+    public void openCompleted(final boolean secure, final HttpParams params) throws IOException {
+        Args.notNull(params, "Parameters");
         assertNotOpen();
-        if (params == null) {
-            throw new IllegalArgumentException
-                ("Parameters must not be null.");
-        }
         this.connSecure = secure;
         bind(this.socket, params);
     }
@@ -149,11 +156,14 @@ public class DefaultClientConnection extends SocketHttpClientConnection
         shutdown = true;
         try {
             super.shutdown();
-            log.debug("Connection shut down");
-            Socket sock = this.socket; // copy volatile attribute
-            if (sock != null)
+            if (log.isDebugEnabled()) {
+                log.debug("Connection " + this + " shut down");
+            }
+            final Socket sock = this.socket; // copy volatile attribute
+            if (sock != null) {
                 sock.close();
-        } catch (IOException ex) {
+            }
+        } catch (final IOException ex) {
             log.debug("I/O error shutting down connection", ex);
         }
     }
@@ -162,8 +172,10 @@ public class DefaultClientConnection extends SocketHttpClientConnection
     public void close() throws IOException {
         try {
             super.close();
-            log.debug("Connection closed");
-        } catch (IOException ex) {
+            if (log.isDebugEnabled()) {
+                log.debug("Connection " + this + " closed");
+            }
+        } catch (final IOException ex) {
             log.debug("I/O error closing connection", ex);
         }
     }
@@ -171,14 +183,11 @@ public class DefaultClientConnection extends SocketHttpClientConnection
     @Override
     protected SessionInputBuffer createSessionInputBuffer(
             final Socket socket,
-            int buffersize,
+            final int buffersize,
             final HttpParams params) throws IOException {
-        if (buffersize == -1) {
-            buffersize = 8192;
-        }
         SessionInputBuffer inbuffer = super.createSessionInputBuffer(
                 socket,
-                buffersize,
+                buffersize > 0 ? buffersize : 8192,
                 params);
         if (wireLog.isDebugEnabled()) {
             inbuffer = new LoggingSessionInputBuffer(
@@ -192,14 +201,11 @@ public class DefaultClientConnection extends SocketHttpClientConnection
     @Override
     protected SessionOutputBuffer createSessionOutputBuffer(
             final Socket socket,
-            int buffersize,
+            final int buffersize,
             final HttpParams params) throws IOException {
-        if (buffersize == -1) {
-            buffersize = 8192;
-        }
         SessionOutputBuffer outbuffer = super.createSessionOutputBuffer(
                 socket,
-                buffersize,
+                buffersize > 0 ? buffersize : 8192,
                 params);
         if (wireLog.isDebugEnabled()) {
             outbuffer = new LoggingSessionOutputBuffer(
@@ -211,28 +217,26 @@ public class DefaultClientConnection extends SocketHttpClientConnection
     }
 
     @Override
-    protected HttpMessageParser createResponseParser(
+    protected HttpMessageParser<HttpResponse> createResponseParser(
             final SessionInputBuffer buffer,
             final HttpResponseFactory responseFactory,
             final HttpParams params) {
         // override in derived class to specify a line parser
-        return new DefaultResponseParser
+        return new DefaultHttpResponseParser
             (buffer, null, responseFactory, params);
     }
 
-    public void update(Socket sock, HttpHost target,
-                       boolean secure, HttpParams params)
+    public void bind(final Socket socket) throws IOException {
+        bind(socket, new BasicHttpParams());
+    }
+
+    public void update(final Socket sock, final HttpHost target,
+                       final boolean secure, final HttpParams params)
         throws IOException {
 
         assertOpen();
-        if (target == null) {
-            throw new IllegalArgumentException
-                ("Target host must not be null.");
-        }
-        if (params == null) {
-            throw new IllegalArgumentException
-                ("Parameters must not be null.");
-        }
+        Args.notNull(target, "Target host");
+        Args.notNull(params, "Parameters");
 
         if (sock != null) {
             this.socket = sock;
@@ -244,14 +248,14 @@ public class DefaultClientConnection extends SocketHttpClientConnection
 
     @Override
     public HttpResponse receiveResponseHeader() throws HttpException, IOException {
-        HttpResponse response = super.receiveResponseHeader();
+        final HttpResponse response = super.receiveResponseHeader();
         if (log.isDebugEnabled()) {
             log.debug("Receiving response: " + response.getStatusLine());
         }
         if (headerLog.isDebugEnabled()) {
             headerLog.debug("<< " + response.getStatusLine().toString());
-            Header[] headers = response.getAllHeaders();
-            for (Header header : headers) {
+            final Header[] headers = response.getAllHeaders();
+            for (final Header header : headers) {
                 headerLog.debug("<< " + header.toString());
             }
         }
@@ -259,15 +263,15 @@ public class DefaultClientConnection extends SocketHttpClientConnection
     }
 
     @Override
-    public void sendRequestHeader(HttpRequest request) throws HttpException, IOException {
+    public void sendRequestHeader(final HttpRequest request) throws HttpException, IOException {
         if (log.isDebugEnabled()) {
             log.debug("Sending request: " + request.getRequestLine());
         }
         super.sendRequestHeader(request);
         if (headerLog.isDebugEnabled()) {
             headerLog.debug(">> " + request.getRequestLine().toString());
-            Header[] headers = request.getAllHeaders();
-            for (Header header : headers) {
+            final Header[] headers = request.getAllHeaders();
+            for (final Header header : headers) {
                 headerLog.debug(">> " + header.toString());
             }
         }

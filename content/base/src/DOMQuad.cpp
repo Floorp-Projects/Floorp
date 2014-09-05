@@ -78,7 +78,7 @@ DOMQuad::Constructor(const GlobalObject& aGlobal, const DOMRectReadOnly& aRect,
 class DOMQuad::QuadBounds MOZ_FINAL : public DOMRectReadOnly
 {
 public:
-  QuadBounds(DOMQuad* aQuad)
+  explicit QuadBounds(DOMQuad* aQuad)
     : DOMRectReadOnly(aQuad->GetParentObject())
     , mQuad(aQuad)
   {}

@@ -16,14 +16,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=77992
 <pre id="test">
 <script type="text/js-worker" id="worker-src">
   // Simply returns the event timestamp
-  // (Since we know that this isn't implemented correctly for dedicated workers
-  //  and isn't likely to be implemented correctly until we implement
-  //  WorkerPerformance, we make this return the *wrong* result so long as
-  //  'performance' is not available. Then we can use this in a todo() test
-  //  below and when we come to implement WorkerPerformance the todo() check
-  //  should fail reminding us to update this test.)
   onmessage = function(evt) {
-    postMessage(typeof performance === "object" ? evt.timeStamp : 0);
+    postMessage(evt.timeStamp);
   }
 </script>
 <script type="text/js-worker" id="shared-worker-src">
@@ -79,11 +73,11 @@ function testWorkerEvents() {
   var worker = new Worker(window.URL.createObjectURL(blob));
   worker.onmessage = function(evt) {
     var timeAfterEvent = window.performance.now();
-    todo(evt.data > timeBeforeEvent &&
-         evt.data < timeAfterEvent,
-         "Event timestamp in dedicated worker (" + evt.data +
-           ") is in expected range: (" +
-           timeBeforeEvent + ", " + timeAfterEvent + ")");
+    ok(evt.data > timeBeforeEvent &&
+       evt.data < timeAfterEvent,
+       "Event timestamp in dedicated worker (" + evt.data +
+         ") is in expected range: (" +
+         timeBeforeEvent + ", " + timeAfterEvent + ")");
     worker.terminate();
     testSharedWorkerEvents();
   };

@@ -194,7 +194,7 @@ SpeakerManagerService::SpeakerManagerService()
     }
   }
   AudioChannelService* audioChannelService =
-    AudioChannelService::GetAudioChannelService();
+    AudioChannelService::GetOrCreateAudioChannelService();
   if (audioChannelService) {
     audioChannelService->RegisterSpeakerManager(this);
   }
@@ -204,7 +204,7 @@ SpeakerManagerService::~SpeakerManagerService()
 {
   MOZ_COUNT_DTOR(SpeakerManagerService);
   AudioChannelService* audioChannelService =
-    AudioChannelService::GetAudioChannelService();
+    AudioChannelService::GetOrCreateAudioChannelService();
   if (audioChannelService)
     audioChannelService->UnregisterSpeakerManager(this);
 }

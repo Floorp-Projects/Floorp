@@ -44,4 +44,7 @@ partial interface WorkerGlobalScope {
   attribute EventHandler onclose;
 
   void dump(optional DOMString str);
+
+  // XXXbz no spec for this yet, because the webperf WG is a bit dysfunctional
+  readonly attribute Performance performance;
 };

@@ -1,7 +1,7 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Last changed in libpng 1.6.9 [February 6, 2014]
+ * Last changed in libpng 1.6.12 [June 12, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -14,7 +14,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_6_10 Your_png_h_is_not_version_1_6_10;
+typedef png_libpng_version_1_6_13 Your_png_h_is_not_version_1_6_13;
 
 /* Tells libpng that we have already handled the first "num_bytes" bytes
  * of the PNG file signature.  If the PNG data is embedded into another
@@ -165,7 +165,7 @@ png_calculate_crc(png_structrp png_ptr, png_const_bytep ptr, png_size_t length)
 int
 png_user_version_check(png_structrp png_ptr, png_const_charp user_png_ver)
 {
-   if (user_png_ver)
+   if (user_png_ver != NULL)
    {
       int i = 0;
 
@@ -773,13 +773,13 @@ png_get_copyright(png_const_structrp png_ptr)
 #else
 #  ifdef __STDC__
    return PNG_STRING_NEWLINE \
-     "libpng version 1.6.10 - March 6, 2014" PNG_STRING_NEWLINE \
+     "libpng version 1.6.13 - August 21, 2014" PNG_STRING_NEWLINE \
      "Copyright (c) 1998-2014 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
      "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
      "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
      PNG_STRING_NEWLINE;
 #  else
-      return "libpng version 1.6.10 - March 6, 2014\
+      return "libpng version 1.6.13 - August 21, 2014\
       Copyright (c) 1998-2014 Glenn Randers-Pehrson\
       Copyright (c) 1996-1997 Andreas Dilger\
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
@@ -1558,10 +1558,10 @@ png_colorspace_check_xy(png_XYZ *XYZ, const png_xy *xy)
 
    /* As a side-effect this routine also returns the XYZ endpoints. */
    result = png_XYZ_from_xy(XYZ, xy);
-   if (result) return result;
+   if (result != 0) return result;
 
    result = png_xy_from_XYZ(&xy_test, XYZ);
-   if (result) return result;
+   if (result != 0) return result;
 
    if (png_colorspace_endpoints_match(xy, &xy_test,
       5/*actually, the math is pretty accurate*/))
@@ -1581,10 +1581,10 @@ png_colorspace_check_XYZ(png_xy *xy, png_XYZ *XYZ)
    png_XYZ XYZtemp;
 
    result = png_XYZ_normalize(XYZ);
-   if (result) return result;
+   if (result != 0) return result;
 
    result = png_xy_from_XYZ(xy, XYZ);
-   if (result) return result;
+   if (result != 0) return result;
 
    XYZtemp = *XYZ;
    return png_colorspace_check_xy(&XYZtemp, xy);
@@ -1625,7 +1625,7 @@ png_colorspace_set_xy_and_XYZ(png_const_structrp png_ptr,
       }
 
       /* Only overwrite with preferred values */
-      if (!preferred)
+      if (preferred == 0)
          return 1; /* ok, but no change */
    }
 
@@ -1906,10 +1906,6 @@ png_icc_check_length(png_const_structrp png_ptr, png_colorspacerp colorspace,
       return png_icc_profile_error(png_ptr, colorspace, name, profile_length,
          "too short");
 
-   if (profile_length & 3)
-      return png_icc_profile_error(png_ptr, colorspace, name, profile_length,
-         "invalid length");
-
    return 1;
 }
 
@@ -1929,6 +1925,11 @@ png_icc_check_header(png_const_structrp png_ptr, png_colorspacerp colorspace,
    if (temp != profile_length)
       return png_icc_profile_error(png_ptr, colorspace, name, temp,
          "length does not match profile");
+
+   temp = (png_uint_32) (*(profile+8));
+   if (temp > 3 && (profile_length & 3))
+      return png_icc_profile_error(png_ptr, colorspace, name, profile_length,
+         "invalid length");
 
    temp = png_get_uint_32(profile+128); /* tag count: 12 bytes/tag */
    if (temp > 357913930 || /* (2^32-4-132)/12: maximum possible tag count */
@@ -2044,7 +2045,7 @@ png_icc_check_header(png_const_structrp png_ptr, png_colorspacerp colorspace,
             "invalid embedded Abstract ICC profile");
 
       case 0x6C696E6B: /* 'link' */
-         /* DeviceLink profiles cannnot be interpreted in a non-device specific
+         /* DeviceLink profiles cannot be interpreted in a non-device specific
           * fashion, if an app uses the AToB0Tag in the profile the results are
           * undefined unless the result is sent to the intended device,
           * therefore a DeviceLink profile should not be found embedded in a
@@ -2055,7 +2056,7 @@ png_icc_check_header(png_const_structrp png_ptr, png_colorspacerp colorspace,
 
       case 0x6E6D636C: /* 'nmcl' */
          /* A NamedColor profile is also device specific, however it doesn't
-          * contain an AToB0 tag that is open to misintrepretation.  Almost
+          * contain an AToB0 tag that is open to misinterpretation.  Almost
           * certainly it will fail the tests below.
           */
          (void)png_icc_profile_error(png_ptr, NULL, name, temp,
@@ -2136,7 +2137,7 @@ png_icc_check_tag_table(png_const_structrp png_ptr, png_colorspacerp colorspace,
    return 1; /* success, maybe with warnings */
 }
 
-#ifdef PNG_sRGB_SUPPORTED
+#if defined(PNG_sRGB_SUPPORTED) && PNG_sRGB_PROFILE_CHECKS >= 0
 /* Information about the known ICC sRGB profiles */
 static const struct
 {
@@ -2210,12 +2211,18 @@ png_compare_ICC_profile_with_sRGB(png_const_structrp png_ptr,
     * by sRGB (but maybe defined by a later ICC specification) the read of
     * the profile will fail at that point.
     */
+
    png_uint_32 length = 0;
    png_uint_32 intent = 0x10000; /* invalid */
 #if PNG_sRGB_PROFILE_CHECKS > 1
    uLong crc = 0; /* the value for 0 length data */
 #endif
    unsigned int i;
+
+   /* First see if PNG_SKIP_sRGB_CHECK_PROFILE has been set to "on" */
+   if (((png_ptr->options >> PNG_SKIP_sRGB_CHECK_PROFILE) & 3) ==
+               PNG_OPTION_ON)
+      return 0;
 
    for (i=0; i < (sizeof png_sRGB_checks) / (sizeof png_sRGB_checks[0]); ++i)
    {
@@ -2286,26 +2293,26 @@ png_compare_ICC_profile_with_sRGB(png_const_structrp png_ptr,
                    */
                   else if (!png_sRGB_checks[i].have_md5)
                   {
-                     png_chunk_report(png_ptr,
-                        "out-of-date sRGB profile with no signature",
+                     png_chunk_report(png_ptr, "out-of-date sRGB profile with"
+                        " no signature",
                         PNG_CHUNK_WARNING);
                   }
 
                   return 1+png_sRGB_checks[i].is_broken;
                }
             }
-         }
 
 # if PNG_sRGB_PROFILE_CHECKS > 0
          /* The signature matched, but the profile had been changed in some
           * way.  This probably indicates a data error or uninformed hacking.
           * Fall through to "no match".
           */
-         png_chunk_report(png_ptr,
-             "Not recognizing known sRGB profile that has been edited", 
+         png_chunk_report(png_ptr, "Not recognizing known sRGB profile that"
+             " has been edited", 
              PNG_CHUNK_WARNING);
          break;
 # endif
+         }
       }
    }
 
@@ -2321,7 +2328,9 @@ png_icc_set_sRGB(png_const_structrp png_ptr,
    /* Is this profile one of the known ICC sRGB profiles?  If it is, just set
     * the sRGB information.
     */
+#if PNG_sRGB_PROFILE_CHECKS >= 0
    if (png_compare_ICC_profile_with_sRGB(png_ptr, profile, adler))
+#endif
       (void)png_colorspace_set_sRGB(png_ptr, colorspace,
          (int)/*already checked*/png_get_uint_32(profile+64));
 }
@@ -2435,44 +2444,45 @@ png_check_IHDR(png_const_structrp png_ptr,
       png_warning(png_ptr, "Image width is zero in IHDR");
       error = 1;
    }
+   else if (width > PNG_UINT_31_MAX)
+   {
+      png_warning(png_ptr, "Invalid image width in IHDR");
+      error = 1;
+   }
+   else
+   {
+#     ifdef PNG_SET_USER_LIMITS_SUPPORTED
+      if (width > png_ptr->user_width_max)
+#     else
+      if (width > PNG_USER_WIDTH_MAX)
+#     endif
+      {
+         png_warning(png_ptr, "Image width exceeds user limit in IHDR");
+         error = 1;
+      }
+   }
 
    if (height == 0)
    {
       png_warning(png_ptr, "Image height is zero in IHDR");
       error = 1;
    }
-
-#  ifdef PNG_SET_USER_LIMITS_SUPPORTED
-   if (width > png_ptr->user_width_max)
-
-#  else
-   if (width > PNG_USER_WIDTH_MAX)
-#  endif
-   {
-      png_warning(png_ptr, "Image width exceeds user limit in IHDR");
-      error = 1;
-   }
-
-#  ifdef PNG_SET_USER_LIMITS_SUPPORTED
-   if (height > png_ptr->user_height_max)
-#  else
-   if (height > PNG_USER_HEIGHT_MAX)
-#  endif
-   {
-      png_warning(png_ptr, "Image height exceeds user limit in IHDR");
-      error = 1;
-   }
-
-   if (width > PNG_UINT_31_MAX)
-   {
-      png_warning(png_ptr, "Invalid image width in IHDR");
-      error = 1;
-   }
-
-   if (height > PNG_UINT_31_MAX)
+   else if (height > PNG_UINT_31_MAX)
    {
       png_warning(png_ptr, "Invalid image height in IHDR");
       error = 1;
+   }
+   else
+   {
+#     ifdef PNG_SET_USER_LIMITS_SUPPORTED
+      if (height > png_ptr->user_height_max)
+#     else
+      if (height > PNG_USER_HEIGHT_MAX)
+#     endif
+      {
+         png_warning(png_ptr, "Image height exceeds user limit in IHDR");
+         error = 1;
+      }
    }
 
    /* Check other values */
@@ -2738,7 +2748,7 @@ png_pow10(int power)
       }
       while (power > 0);
 
-      if (recip) d = 1/d;
+      if (recip != 0) d = 1/d;
    }
    /* else power is 0 and d is 1 */
 
@@ -3261,7 +3271,7 @@ png_muldiv(png_fixed_point_p res, png_fixed_point a, png_int_32 times,
             if (s00 >= (D >> 1))
                ++result;
 
-            if (negative)
+            if (negative != 0)
                result = -result;
 
             /* Check for overflow. */
@@ -3788,7 +3798,7 @@ png_build_16bit_table(png_structrp png_ptr, png_uint_16pp *ptable,
                double d = floor(65535*pow(ig/(double)max, gamma_val*.00001)+.5);
                sub_table[j] = (png_uint_16)d;
 #           else
-               if (shift)
+               if (shift != 0)
                   ig = (ig * 65535U + max_by_2)/max;
 
                sub_table[j] = png_gamma_16bit_correct(ig, gamma_val);
@@ -3804,7 +3814,7 @@ png_build_16bit_table(png_structrp png_ptr, png_uint_16pp *ptable,
          {
             png_uint_32 ig = (j << (8-shift)) + i;
 
-            if (shift)
+            if (shift != 0)
                ig = (ig * 65535U + max_by_2)/max;
 
             sub_table[j] = (png_uint_16)ig;
@@ -4092,7 +4102,7 @@ png_build_gamma_table(png_structrp png_ptr, int bit_depth)
 }
 #endif /* READ_GAMMA */
 
-/* HARDWARE OPTION SUPPORT */
+/* HARDWARE OR SOFTWARE OPTION SUPPORT */
 #ifdef PNG_SET_OPTION_SUPPORTED
 int PNGAPI
 png_set_option(png_structrp png_ptr, int option, int onoff)

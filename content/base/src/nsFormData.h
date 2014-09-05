@@ -26,15 +26,15 @@ class GlobalObject;
 } // namespace dom
 } // namespace mozilla
 
-class nsFormData : public nsIDOMFormData,
-                   public nsIXHRSendable,
-                   public nsFormSubmission,
-                   public nsWrapperCache
+class nsFormData MOZ_FINAL : public nsIDOMFormData,
+                             public nsIXHRSendable,
+                             public nsFormSubmission,
+                             public nsWrapperCache
 {
   ~nsFormData() {}
 
 public:
-  nsFormData(nsISupports* aOwner = nullptr);
+  explicit nsFormData(nsISupports* aOwner = nullptr);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFormData,

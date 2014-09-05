@@ -45,6 +45,10 @@ var gAdvancedPane = {
     this.updateActualCacheSize();
     this.updateActualAppCacheSize();
 
+    let bundlePrefs = document.getElementById("bundlePreferences");
+    document.getElementById("offlineAppsList")
+            .style.height = bundlePrefs.getString("offlineAppsList.height");
+
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "advanced-pane-loaded", null);
   },

@@ -26,8 +26,8 @@
 #include "jit/IonCaches.h"
 #include "jit/IonLinker.h"
 #include "jit/IonOptimizationLevels.h"
-#include "jit/IonSpewer.h"
 #include "jit/JitcodeMap.h"
+#include "jit/JitSpewer.h"
 #include "jit/Lowering.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MoveEmitter.h"
@@ -1384,7 +1384,7 @@ bool
 CodeGenerator::visitCloneLiteral(LCloneLiteral *lir)
 {
     pushArg(ImmWord(js::MaybeSingletonObject));
-    pushArg(ToRegister(lir->output()));
+    pushArg(ToRegister(lir->getObjectLiteral()));
     return callVM(DeepCloneObjectLiteralInfo, lir);
 }
 
@@ -1397,11 +1397,28 @@ CodeGenerator::visitParameter(LParameter *lir)
 bool
 CodeGenerator::visitCallee(LCallee *lir)
 {
-    // read number of actual arguments from the JS frame.
     Register callee = ToRegister(lir->output());
     Address ptr(StackPointer, frameSize() + IonJSFrameLayout::offsetOfCalleeToken());
 
-    masm.loadPtr(ptr, callee);
+    masm.loadFunctionFromCalleeToken(ptr, callee);
+    return true;
+}
+
+bool
+CodeGenerator::visitIsConstructing(LIsConstructing *lir)
+{
+    Register output = ToRegister(lir->output());
+    Address calleeToken(StackPointer, frameSize() + IonJSFrameLayout::offsetOfCalleeToken());
+    masm.loadPtr(calleeToken, output);
+
+    // We must be inside a function.
+    MOZ_ASSERT(current->mir()->info().script()->functionNonDelazifying());
+
+    // The low bit indicates whether this call is constructing, just clear the
+    // other bits.
+    static_assert(CalleeToken_Function == 0x0, "CalleeTokenTag value should match");
+    static_assert(CalleeToken_FunctionConstructing == 0x1, "CalleeTokenTag value should match");
+    masm.andPtr(Imm32(0x1), output);
     return true;
 }
 
@@ -2395,7 +2412,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     // Construct the IonFramePrefix.
     uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
     masm.Push(Imm32(call->numActualArgs()));
-    masm.Push(calleereg);
+    masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
     masm.Push(Imm32(descriptor));
 
     // Check whether the provided arguments satisfy target argc.
@@ -2510,7 +2527,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     // Construct the IonFramePrefix.
     uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
     masm.Push(Imm32(call->numActualArgs()));
-    masm.Push(calleereg);
+    masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
     masm.Push(Imm32(descriptor));
 
     // Finally call the function in objreg.
@@ -3406,7 +3423,7 @@ CodeGenerator::generateBody()
         if (current->isTrivial())
             continue;
 
-        IonSpew(IonSpew_Codegen, "# block%lu%s:", i,
+        JitSpew(JitSpew_Codegen, "# block%lu%s:", i,
                 current->mir()->isLoopHeader() ? " (loop header)" : "");
 
         masm.bind(current->label());
@@ -3424,10 +3441,10 @@ CodeGenerator::generateBody()
 
         for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
 #ifdef DEBUG
-            IonSpewStart(IonSpew_Codegen, "instruction %s", iter->opName());
+            JitSpewStart(JitSpew_Codegen, "instruction %s", iter->opName());
             if (const char *extra = iter->extraName())
-                IonSpewCont(IonSpew_Codegen, ":%s", extra);
-            IonSpewFin(IonSpew_Codegen);
+                JitSpewCont(JitSpew_Codegen, ":%s", extra);
+            JitSpewFin(JitSpew_Codegen);
 #endif
 
             if (counts)
@@ -6593,7 +6610,7 @@ CodeGenerator::visitRestPar(LRestPar *lir)
 bool
 CodeGenerator::generateAsmJS(AsmJSFunctionLabels *labels)
 {
-    IonSpew(IonSpew_Codegen, "# Emitting asm.js code");
+    JitSpew(JitSpew_Codegen, "# Emitting asm.js code");
 
     // AsmJS doesn't do SPS instrumentation.
     sps_.disable();
@@ -6642,7 +6659,7 @@ CodeGenerator::generateAsmJS(AsmJSFunctionLabels *labels)
 bool
 CodeGenerator::generate()
 {
-    IonSpew(IonSpew_Codegen, "# Emitting code for script %s:%d",
+    JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%d",
             gen->info().script()->filename(),
             gen->info().script()->lineno());
 
@@ -6921,7 +6938,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
                                        ImmPtr(ionScript),
                                        ImmPtr((void*)-1));
 
-    IonSpew(IonSpew_Codegen, "Created IonScript %p (raw %p)",
+    JitSpew(JitSpew_Codegen, "Created IonScript %p (raw %p)",
             (void *) ionScript, (void *) code->raw());
 
     ionScript->setInvalidationEpilogueDataOffset(invalidateEpilogueData_.offset());
@@ -7837,62 +7854,115 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     const JSAtomState &names = GetIonContext()->runtime->names();
     Label done;
 
-    OutOfLineTypeOfV *ool = nullptr;
-    if (lir->mir()->inputMaybeCallableOrEmulatesUndefined()) {
-        // The input may be a callable object (result is "function") or may
-        // emulate undefined (result is "undefined"). Use an OOL path.
-        ool = new(alloc()) OutOfLineTypeOfV(lir);
-        if (!addOutOfLineCode(ool, lir->mir()))
-            return false;
+    MDefinition *input = lir->mir()->input();
 
-        masm.branchTestObject(Assembler::Equal, tag, ool->entry());
-    } else {
-        // Input is not callable and does not emulate undefined, so if
-        // it's an object the result is always "object".
-        Label notObject;
-        masm.branchTestObject(Assembler::NotEqual, tag, &notObject);
-        masm.movePtr(ImmGCPtr(names.object), output);
-        masm.jump(&done);
-        masm.bind(&notObject);
+    bool testObject = input->mightBeType(MIRType_Object);
+    bool testNumber = input->mightBeType(MIRType_Int32) || input->mightBeType(MIRType_Double);
+    bool testBoolean = input->mightBeType(MIRType_Boolean);
+    bool testUndefined = input->mightBeType(MIRType_Undefined);
+    bool testNull = input->mightBeType(MIRType_Null);
+    bool testString = input->mightBeType(MIRType_String);
+    bool testSymbol = input->mightBeType(MIRType_Symbol);
+
+    unsigned numTests = unsigned(testObject) + unsigned(testNumber) + unsigned(testBoolean) +
+        unsigned(testUndefined) + unsigned(testNull) + unsigned(testString) + unsigned(testSymbol);
+
+    MOZ_ASSERT_IF(!input->emptyResultTypeSet(), numTests > 0);
+
+    OutOfLineTypeOfV *ool = nullptr;
+    if (testObject) {
+        if (lir->mir()->inputMaybeCallableOrEmulatesUndefined()) {
+            // The input may be a callable object (result is "function") or may
+            // emulate undefined (result is "undefined"). Use an OOL path.
+            ool = new(alloc()) OutOfLineTypeOfV(lir);
+            if (!addOutOfLineCode(ool, lir->mir()))
+                return false;
+
+            if (numTests > 1)
+                masm.branchTestObject(Assembler::Equal, tag, ool->entry());
+            else
+                masm.jump(ool->entry());
+        } else {
+            // Input is not callable and does not emulate undefined, so if
+            // it's an object the result is always "object".
+            Label notObject;
+            if (numTests > 1)
+                masm.branchTestObject(Assembler::NotEqual, tag, &notObject);
+            masm.movePtr(ImmGCPtr(names.object), output);
+            if (numTests > 1)
+                masm.jump(&done);
+            masm.bind(&notObject);
+        }
+        numTests--;
     }
 
-    Label notNumber;
-    masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
-    masm.movePtr(ImmGCPtr(names.number), output);
-    masm.jump(&done);
-    masm.bind(&notNumber);
+    if (testNumber) {
+        Label notNumber;
+        if (numTests > 1)
+            masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
+        masm.movePtr(ImmGCPtr(names.number), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notNumber);
+        numTests--;
+    }
 
-    Label notUndefined;
-    masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
-    masm.movePtr(ImmGCPtr(names.undefined), output);
-    masm.jump(&done);
-    masm.bind(&notUndefined);
+    if (testUndefined) {
+        Label notUndefined;
+        if (numTests > 1)
+            masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
+        masm.movePtr(ImmGCPtr(names.undefined), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notUndefined);
+        numTests--;
+    }
 
-    Label notNull;
-    masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
-    masm.movePtr(ImmGCPtr(names.object), output);
-    masm.jump(&done);
-    masm.bind(&notNull);
+    if (testNull) {
+        Label notNull;
+        if (numTests > 1)
+            masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
+        masm.movePtr(ImmGCPtr(names.object), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notNull);
+        numTests--;
+    }
 
-    Label notBoolean;
-    masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-    masm.movePtr(ImmGCPtr(names.boolean), output);
-    masm.jump(&done);
-    masm.bind(&notBoolean);
+    if (testBoolean) {
+        Label notBoolean;
+        if (numTests > 1)
+            masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
+        masm.movePtr(ImmGCPtr(names.boolean), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notBoolean);
+        numTests--;
+    }
 
-    Label notString;
-    masm.branchTestString(Assembler::NotEqual, tag, &notString);
-    masm.movePtr(ImmGCPtr(names.string), output);
-    masm.jump(&done);
-    masm.bind(&notString);
+    if (testString) {
+        Label notString;
+        if (numTests > 1)
+            masm.branchTestString(Assembler::NotEqual, tag, &notString);
+        masm.movePtr(ImmGCPtr(names.string), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notString);
+        numTests--;
+    }
 
-#ifdef DEBUG
-    Label isSymbol;
-    masm.branchTestSymbol(Assembler::Equal, tag, &isSymbol);
-    masm.assumeUnreachable("Unexpected type for TypeOfV");
-    masm.bind(&isSymbol);
-#endif
-    masm.movePtr(ImmGCPtr(names.symbol), output);
+    if (testSymbol) {
+        Label notSymbol;
+        if (numTests > 1)
+            masm.branchTestSymbol(Assembler::NotEqual, tag, &notSymbol);
+        masm.movePtr(ImmGCPtr(names.symbol), output);
+        if (numTests > 1)
+            masm.jump(&done);
+        masm.bind(&notSymbol);
+        numTests--;
+    }
+
+    MOZ_ASSERT(numTests == 0);
 
     masm.bind(&done);
     if (ool)
@@ -8769,12 +8839,15 @@ CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
     if (mir->spIncrement())
         masm.freeStack(mir->spIncrement());
 
-    JS_ASSERT((sizeof(AsmJSFrame) + masm.framePushed()) % StackAlignment == 0);
+    JS_ASSERT((sizeof(AsmJSFrame) + masm.framePushed()) % AsmJSStackAlignment == 0);
 
 #ifdef DEBUG
+    static_assert(AsmJSStackAlignment >= ABIStackAlignment,
+                  "The asm.js stack alignment should subsume the ABI-required alignment");
+    static_assert(AsmJSStackAlignment % ABIStackAlignment == 0,
+                  "The asm.js stack alignment should subsume the ABI-required alignment");
     Label ok;
-    JS_ASSERT(IsPowerOfTwo(StackAlignment));
-    masm.branchTestPtr(Assembler::Zero, StackPointer, Imm32(StackAlignment - 1), &ok);
+    masm.branchTestPtr(Assembler::Zero, StackPointer, Imm32(AsmJSStackAlignment - 1), &ok);
     masm.breakpoint();
     masm.bind(&ok);
 #endif
@@ -9013,7 +9086,7 @@ CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck *lir)
     masm.branch32(Assembler::Equal, scratch, Imm32(0), &rejoin);
     {
         uint32_t stackFixup = ComputeByteAlignment(masm.framePushed() + sizeof(AsmJSFrame),
-                                                   StackAlignment);
+                                                   ABIStackAlignment);
         masm.reserveStack(stackFixup);
         masm.call(lir->funcDesc(), lir->interruptExit());
         masm.freeStack(stackFixup);

@@ -37,7 +37,7 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIOBSERVER
 
-  Console(nsPIDOMWindow* aWindow);
+  explicit Console(nsPIDOMWindow* aWindow);
 
   // WebIDL methods
   nsISupports* GetParentObject() const
@@ -65,6 +65,9 @@ public:
 
   void
   Debug(JSContext* aCx, const Sequence<JS::Value>& aData);
+
+  void
+  Table(JSContext* aCx, const Sequence<JS::Value>& aData);
 
   void
   Trace(JSContext* aCx);
@@ -111,6 +114,7 @@ private:
     MethodError,
     MethodException,
     MethodDebug,
+    MethodTable,
     MethodTrace,
     MethodDir,
     MethodGroup,

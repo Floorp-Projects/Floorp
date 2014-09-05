@@ -121,18 +121,11 @@ AsmJSModule::~AsmJSModule()
     if (code_) {
         for (unsigned i = 0; i < numExits(); i++) {
             AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
-            if (!exitDatum.fun)
-                continue;
-
-            if (!exitDatum.fun->hasScript())
-                continue;
-
-            JSScript *script = exitDatum.fun->nonLazyScript();
-            if (!script->hasIonScript())
+            if (!exitDatum.ionScript)
                 continue;
 
             jit::DependentAsmJSModuleExit exit(this, i);
-            script->ionScript()->removeDependentAsmJSModule(exit);
+            exitDatum.ionScript->removeDependentAsmJSModule(exit);
         }
 
         DeallocateExecutableMemory(code_, pod.totalBytes_);
@@ -303,8 +296,8 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
 
     // The global data section sits immediately after the executable (and
     // other) data allocated by the MacroAssembler, so ensure it is
-    // double-aligned.
-    pod.codeBytes_ = AlignBytes(masm.bytesNeeded(), sizeof(double));
+    // SIMD-aligned.
+    pod.codeBytes_ = AlignBytes(masm.bytesNeeded(), SimdStackAlignment);
 
     // The entire region is allocated via mmap/VirtualAlloc which requires
     // units of pages.
@@ -518,11 +511,11 @@ TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t 
     if (fun->nargs() > size_t(argc))
         return true;
 
-    // Normally the types should corresond, since we just ran with those types,
+    // Normally the types should correspond, since we just ran with those types,
     // but there are reports this is asserting. Therefore doing it as a check, instead of DEBUG only.
     if (!types::TypeScript::ThisTypes(script)->hasType(types::Type::UndefinedType()))
         return true;
-    for(uint32_t i = 0; i < fun->nargs(); i++) {
+    for (uint32_t i = 0; i < fun->nargs(); i++) {
         types::StackTypeSet *typeset = types::TypeScript::ArgTypes(script, i);
         types::Type type = types::Type::DoubleType();
         if (!argv[i].isDouble())
@@ -536,7 +529,9 @@ TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t 
     if (!ionScript->addDependentAsmJSModule(cx, DependentAsmJSModuleExit(&module, exitIndex)))
         return false;
 
-    module.exitIndexToGlobalDatum(exitIndex).exit = module.ionExitTrampoline(module.exit(exitIndex));
+    AsmJSModule::ExitDatum &exitDatum = module.exitIndexToGlobalDatum(exitIndex);
+    exitDatum.exit = module.ionExitTrampoline(module.exit(exitIndex));
+    exitDatum.ionScript = ionScript;
     return true;
 }
 
@@ -737,8 +732,10 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
     // Initialize global data segment
 
     for (size_t i = 0; i < exits_.length(); i++) {
-        exitIndexToGlobalDatum(i).exit = interpExitTrampoline(exits_[i]);
-        exitIndexToGlobalDatum(i).fun = nullptr;
+        AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
+        exitDatum.exit = interpExitTrampoline(exits_[i]);
+        exitDatum.fun = nullptr;
+        exitDatum.ionScript = nullptr;
     }
 
     JS_ASSERT(isStaticallyLinked());

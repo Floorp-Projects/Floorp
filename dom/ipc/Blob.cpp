@@ -441,7 +441,7 @@ class InputStreamChild MOZ_FINAL
   nsRefPtr<RemoteInputStream> mRemoteStream;
 
 public:
-  InputStreamChild(RemoteInputStream* aRemoteStream)
+  explicit InputStreamChild(RemoteInputStream* aRemoteStream)
   : mRemoteStream(aRemoteStream)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -466,7 +466,7 @@ class InputStreamParent MOZ_FINAL
   nsRefPtr<RemoteInputStream> mRemoteStream;
 
 public:
-  InputStreamParent(RemoteInputStream* aRemoteStream)
+  explicit InputStreamParent(RemoteInputStream* aRemoteStream)
   : mRemoteStream(aRemoteStream)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -877,7 +877,7 @@ class BlobChild::RemoteBlob::SliceHelper MOZ_FINAL
   bool mDone;
 
 public:
-  SliceHelper(BlobChild* aActor)
+  explicit SliceHelper(BlobChild* aActor)
     : mMonitor("BlobChild::RemoteBlob::SliceHelper::mMonitor")
     , mActor(aActor)
     , mStart(0)
@@ -1583,7 +1583,7 @@ class BlobParent::RemoteBlob::SliceHelper MOZ_FINAL
   bool mDone;
 
 public:
-  SliceHelper(BlobParent* aActor)
+  explicit SliceHelper(BlobParent* aActor)
     : mMonitor("BlobParent::RemoteBlob::SliceHelper::mMonitor")
     , mActor(aActor)
     , mStart(0)

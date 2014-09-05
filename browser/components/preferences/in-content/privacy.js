@@ -20,11 +20,52 @@ var gPrivacyPane = {
    */
   init: function ()
   {
+    function setEventListener(aId, aEventType, aCallback)
+    {
+      document.getElementById(aId)
+              .addEventListener(aEventType, aCallback.bind(gPrivacyPane));
+    }
+
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
     this.updateHistoryModePane();
     this.updatePrivacyMicroControls();
     this.initAutoStartPrivateBrowsingReverter();
+
+    setEventListener("browser.urlbar.default.behavior", "change",
+      document.getElementById('browser.urlbar.autocomplete.enabled')
+              .updateElements
+    );
+    setEventListener("privacy.sanitize.sanitizeOnShutdown", "change",
+                     gPrivacyPane._updateSanitizeSettingsButton);
+    setEventListener("browser.privatebrowsing.autostart", "change",
+                     gPrivacyPane.updatePrivacyMicroControls);
+    setEventListener("historyMode", "command", function () {
+      gPrivacyPane.updateHistoryModePane();
+      gPrivacyPane.updateHistoryModePrefs();
+      gPrivacyPane.updatePrivacyMicroControls();
+      gPrivacyPane.updateAutostart();
+    });
+    setEventListener("historyRememberClear", "click", function () {
+      gPrivacyPane.clearPrivateDataNow(false);
+      return false;
+    });
+    setEventListener("historyRememberCookies", "click", function () {
+      gPrivacyPane.showCookies();
+      return false;
+    });
+    setEventListener("historyDontRememberClear", "click", function () {
+      gPrivacyPane.clearPrivateDataNow(true);
+      return false;
+    });
+    setEventListener("privateBrowsingAutoStart", "command",
+                     gPrivacyPane.updateAutostart);
+    setEventListener("cookieExceptions", "command",
+                     gPrivacyPane.showCookieExceptions);
+    setEventListener("showCookiesButton", "command",
+                     gPrivacyPane.showCookies);
+    setEventListener("clearDataSettings", "command",
+                     gPrivacyPane.showClearPrivateDataSettings);
   },
 
   // HISTORY MODE

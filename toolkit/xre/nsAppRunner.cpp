@@ -178,6 +178,7 @@
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #include "nsIPrefService.h"
+#include "nsIMemoryInfoDumper.h"
 #endif
 
 #include "base/command_line.h"
@@ -590,6 +591,7 @@ class nsXULAppInfo : public nsIXULAppInfo,
 #endif
 #ifdef MOZ_CRASHREPORTER
                      public nsICrashReporter,
+                     public nsIFinishDumpingCallback,
 #endif
                      public nsIXULRuntime
 
@@ -601,6 +603,7 @@ public:
   NS_DECL_NSIXULRUNTIME
 #ifdef MOZ_CRASHREPORTER
   NS_DECL_NSICRASHREPORTER
+  NS_DECL_NSIFINISHDUMPINGCALLBACK
 #endif
 #ifdef XP_WIN
   NS_DECL_NSIWINAPPHELPER
@@ -615,6 +618,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULAppInfo)
 #endif
 #ifdef MOZ_CRASHREPORTER
   NS_INTERFACE_MAP_ENTRY(nsICrashReporter)
+  NS_INTERFACE_MAP_ENTRY(nsIFinishDumpingCallback)
 #endif
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIXULAppInfo, gAppData || 
                                      XRE_GetProcessType() == GeckoProcessType_Content)
@@ -1133,6 +1137,45 @@ nsXULAppInfo::UpdateCrashEventsDir()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULAppInfo::SaveMemoryReport()
+{
+  if (!CrashReporter::GetEnabled()) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DIR_STARTUP,
+                                       getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  file->AppendNative(NS_LITERAL_CSTRING("memory-report.json.gz"));
+
+  nsString path;
+  file->GetPath(path);
+
+  nsCOMPtr<nsIMemoryInfoDumper> dumper =
+    do_GetService("@mozilla.org/memory-info-dumper;1");
+  if (NS_WARN_IF(!dumper)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  rv = dumper->DumpMemoryReportsToNamedFile(path, this, file, true /* anonymize */);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::Callback(nsISupports* aData)
+{
+  nsCOMPtr<nsIFile> file = do_QueryInterface(aData);
+  MOZ_ASSERT(file);
+
+  CrashReporter::SetMemoryReportFile(file);
+  return NS_OK;
+}
 #endif
 
 static const nsXULAppInfo kAppInfo;
@@ -1287,7 +1330,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFACTORY
 
-  nsSingletonFactory(nsISupports* aSingleton);
+  explicit nsSingletonFactory(nsISupports* aSingleton);
 
 private:
   ~nsSingletonFactory() { }
@@ -1751,15 +1794,14 @@ ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
 
     nsXPIDLString killMessage;
 #ifndef XP_MACOSX
-    static const char16_t kRestartNoUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','N','o','U','n','l','o','c','k','e','r','\0'}; // "restartMessageNoUnlocker"
-    static const char16_t kRestartUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','U','n','l','o','c','k','e','r','\0'}; // "restartMessageUnlocker"
-#else
-    static const char16_t kRestartNoUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','N','o','U','n','l','o','c','k','e','r','M','a','c','\0'}; // "restartMessageNoUnlockerMac"
-    static const char16_t kRestartUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','U','n','l','o','c','k','e','r','M','a','c','\0'}; // "restartMessageUnlockerMac"
-#endif
-
-    sb->FormatStringFromName(aUnlocker ? kRestartUnlocker : kRestartNoUnlocker,
+    sb->FormatStringFromName(aUnlocker ? MOZ_UTF16("restartMessageUnlocker")
+                                       : MOZ_UTF16("restartMessageNoUnlocker"),
                              params, 2, getter_Copies(killMessage));
+#else
+    sb->FormatStringFromName(aUnlocker ? MOZ_UTF16("restartMessageUnlockerMac")
+                                       : MOZ_UTF16("restartMessageNoUnlockerMac"),
+                             params, 2, getter_Copies(killMessage));
+#endif
 
     nsXPIDLString killTitle;
     sb->FormatStringFromName(MOZ_UTF16("restartTitle"),
@@ -1776,23 +1818,22 @@ ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
       int32_t button;
 #ifdef MOZ_WIDGET_ANDROID
       mozilla::widget::android::GeckoAppShell::KillAnyZombies();
-      button = 1;
+      button = 0;
 #else
       const uint32_t flags =
-        (nsIPromptService::BUTTON_TITLE_CANCEL * 
+        (nsIPromptService::BUTTON_TITLE_IS_STRING *
          nsIPromptService::BUTTON_POS_0) +
-        (nsIPromptService::BUTTON_TITLE_IS_STRING * 
-         nsIPromptService::BUTTON_POS_1) +
-        nsIPromptService::BUTTON_POS_1_DEFAULT;
+        (nsIPromptService::BUTTON_TITLE_CANCEL *
+         nsIPromptService::BUTTON_POS_1);
 
       bool checkState = false;
       rv = ps->ConfirmEx(nullptr, killTitle, killMessage, flags,
-                         nullptr, killTitle, nullptr, nullptr,
+                         killTitle, nullptr, nullptr, nullptr,
                          &checkState, &button);
       NS_ENSURE_SUCCESS_LOG(rv, rv);
 #endif
 
-      if (button == 1) {
+      if (button == 0) {
         rv = aUnlocker->Unlock(nsIProfileUnlocker::FORCE_QUIT);
         if (NS_FAILED(rv)) {
           return rv;
@@ -1847,8 +1888,7 @@ ProfileMissingDialog(nsINativeAppSupport* aNative)
     nsXPIDLString missingMessage;
   
     // profileMissing  
-    static const char16_t kMissing[] = {'p','r','o','f','i','l','e','M','i','s','s','i','n','g','\0'};
-    sb->FormatStringFromName(kMissing, params, 2, getter_Copies(missingMessage));
+    sb->FormatStringFromName(MOZ_UTF16("profileMissing"), params, 2, getter_Copies(missingMessage));
   
     nsXPIDLString missingTitle;
     sb->FormatStringFromName(MOZ_UTF16("profileMissingTitle"),

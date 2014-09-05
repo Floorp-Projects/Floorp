@@ -31,7 +31,7 @@ class URLProxy MOZ_FINAL
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLProxy)
 
-  URLProxy(mozilla::dom::URL* aURL)
+  explicit URLProxy(mozilla::dom::URL* aURL)
     : mURL(aURL)
   {
     AssertIsOnMainThread();
@@ -265,7 +265,7 @@ public:
 class TeardownURLRunnable : public nsRunnable
 {
 public:
-  TeardownURLRunnable(URLProxy* aURLProxy)
+  explicit TeardownURLRunnable(URLProxy* aURLProxy)
     : mURLProxy(aURLProxy)
   {
   }
@@ -891,16 +891,6 @@ URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl)
   if (!runnable->Dispatch(cx)) {
     JS_ReportPendingException(cx);
   }
-}
-
-// static
-nsIPrincipal*
-URL::GetPrincipalFromURL(const GlobalObject& aGlobal, const nsAString& aUrl,
-                         ErrorResult& aRv)
-{
-  // This method is not implemented in workers.
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
 }
 
 void

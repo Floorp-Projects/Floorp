@@ -29,28 +29,30 @@ package ch.boye.httpclientandroidlib.impl.conn;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import ch.boye.httpclientandroidlib.androidextra.HttpClientAndroidLog;
 /* LogFactory removed by HttpClient for Android script. */
-import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
-
 import ch.boye.httpclientandroidlib.HttpHost;
-import ch.boye.httpclientandroidlib.params.HttpParams;
-import ch.boye.httpclientandroidlib.params.HttpConnectionParams;
-import ch.boye.httpclientandroidlib.protocol.HttpContext;
-
-import ch.boye.httpclientandroidlib.conn.ConnectTimeoutException;
-import ch.boye.httpclientandroidlib.conn.HttpHostConnectException;
-import ch.boye.httpclientandroidlib.conn.OperatedClientConnection;
+import ch.boye.httpclientandroidlib.annotation.ThreadSafe;
+import ch.boye.httpclientandroidlib.client.protocol.ClientContext;
 import ch.boye.httpclientandroidlib.conn.ClientConnectionOperator;
-import ch.boye.httpclientandroidlib.conn.scheme.LayeredSchemeSocketFactory;
+import ch.boye.httpclientandroidlib.conn.ConnectTimeoutException;
+import ch.boye.httpclientandroidlib.conn.DnsResolver;
+import ch.boye.httpclientandroidlib.conn.HttpInetSocketAddress;
+import ch.boye.httpclientandroidlib.conn.OperatedClientConnection;
 import ch.boye.httpclientandroidlib.conn.scheme.Scheme;
+import ch.boye.httpclientandroidlib.conn.scheme.SchemeLayeredSocketFactory;
 import ch.boye.httpclientandroidlib.conn.scheme.SchemeRegistry;
 import ch.boye.httpclientandroidlib.conn.scheme.SchemeSocketFactory;
+import ch.boye.httpclientandroidlib.params.HttpConnectionParams;
+import ch.boye.httpclientandroidlib.params.HttpParams;
+import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.util.Args;
+import ch.boye.httpclientandroidlib.util.Asserts;
 
 /**
  * Default implementation of a {@link ClientConnectionOperator}. It uses a {@link SchemeRegistry}
@@ -80,7 +82,10 @@ import ch.boye.httpclientandroidlib.conn.scheme.SchemeSocketFactory;
  * </ul>
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link PoolingHttpClientConnectionManager}.
  */
+@Deprecated
 @ThreadSafe
 public class DefaultClientConnectionOperator implements ClientConnectionOperator {
 
@@ -89,20 +94,51 @@ public class DefaultClientConnectionOperator implements ClientConnectionOperator
     /** The scheme registry for looking up socket factories. */
     protected final SchemeRegistry schemeRegistry; // @ThreadSafe
 
+    /** the custom-configured DNS lookup mechanism. */
+    protected final DnsResolver dnsResolver;
+
     /**
      * Creates a new client connection operator for the given scheme registry.
      *
      * @param schemes   the scheme registry
+     *
+     * @since 4.2
      */
     public DefaultClientConnectionOperator(final SchemeRegistry schemes) {
-        if (schemes == null) {
-            throw new IllegalArgumentException("Scheme registry amy not be null");
-        }
+        Args.notNull(schemes, "Scheme registry");
         this.schemeRegistry = schemes;
+        this.dnsResolver = new SystemDefaultDnsResolver();
+    }
+
+    /**
+    * Creates a new client connection operator for the given scheme registry
+    * and the given custom DNS lookup mechanism.
+    *
+    * @param schemes
+    *            the scheme registry
+    * @param dnsResolver
+    *            the custom DNS lookup mechanism
+    */
+    public DefaultClientConnectionOperator(final SchemeRegistry schemes,final DnsResolver dnsResolver) {
+        Args.notNull(schemes, "Scheme registry");
+
+        Args.notNull(dnsResolver, "DNS resolver");
+
+        this.schemeRegistry = schemes;
+        this.dnsResolver = dnsResolver;
     }
 
     public OperatedClientConnection createConnection() {
         return new DefaultClientConnection();
+    }
+
+    private SchemeRegistry getSchemeRegistry(final HttpContext context) {
+        SchemeRegistry reg = (SchemeRegistry) context.getAttribute(
+                ClientContext.SCHEME_REGISTRY);
+        if (reg == null) {
+            reg = this.schemeRegistry;
+        }
+        return reg;
     }
 
     public void openConnection(
@@ -111,32 +147,25 @@ public class DefaultClientConnectionOperator implements ClientConnectionOperator
             final InetAddress local,
             final HttpContext context,
             final HttpParams params) throws IOException {
-        if (conn == null) {
-            throw new IllegalArgumentException("Connection may not be null");
-        }
-        if (target == null) {
-            throw new IllegalArgumentException("Target host may not be null");
-        }
-        if (params == null) {
-            throw new IllegalArgumentException("Parameters may not be null");
-        }
-        if (conn.isOpen()) {
-            throw new IllegalStateException("Connection must not be open");
-        }
+        Args.notNull(conn, "Connection");
+        Args.notNull(target, "Target host");
+        Args.notNull(params, "HTTP parameters");
+        Asserts.check(!conn.isOpen(), "Connection must not be open");
 
-        Scheme schm = schemeRegistry.getScheme(target.getSchemeName());
-        SchemeSocketFactory sf = schm.getSchemeSocketFactory();
+        final SchemeRegistry registry = getSchemeRegistry(context);
+        final Scheme schm = registry.getScheme(target.getSchemeName());
+        final SchemeSocketFactory sf = schm.getSchemeSocketFactory();
 
-        InetAddress[] addresses = resolveHostname(target.getHostName());
-        int port = schm.resolvePort(target.getPort());
+        final InetAddress[] addresses = resolveHostname(target.getHostName());
+        final int port = schm.resolvePort(target.getPort());
         for (int i = 0; i < addresses.length; i++) {
-            InetAddress address = addresses[i];
-            boolean last = i == addresses.length - 1;
+            final InetAddress address = addresses[i];
+            final boolean last = i == addresses.length - 1;
 
             Socket sock = sf.createSocket(params);
             conn.opening(sock, target);
 
-            InetSocketAddress remoteAddress = new HttpInetSocketAddress(target, address, port);
+            final InetSocketAddress remoteAddress = new HttpInetSocketAddress(target, address, port);
             InetSocketAddress localAddress = null;
             if (local != null) {
                 localAddress = new InetSocketAddress(local, 0);
@@ -145,7 +174,7 @@ public class DefaultClientConnectionOperator implements ClientConnectionOperator
                 this.log.debug("Connecting to " + remoteAddress);
             }
             try {
-                Socket connsock = sf.connectSocket(sock, remoteAddress, localAddress, params);
+                final Socket connsock = sf.connectSocket(sock, remoteAddress, localAddress, params);
                 if (sock != connsock) {
                     sock = connsock;
                     conn.opening(sock, target);
@@ -153,11 +182,11 @@ public class DefaultClientConnectionOperator implements ClientConnectionOperator
                 prepareSocket(sock, context, params);
                 conn.openCompleted(sf.isSecure(sock), params);
                 return;
-            } catch (ConnectException ex) {
+            } catch (final ConnectException ex) {
                 if (last) {
-                    throw new HttpHostConnectException(target, ex);
+                    throw ex;
                 }
-            } catch (ConnectTimeoutException ex) {
+            } catch (final ConnectTimeoutException ex) {
                 if (last) {
                     throw ex;
                 }
@@ -174,34 +203,18 @@ public class DefaultClientConnectionOperator implements ClientConnectionOperator
             final HttpHost target,
             final HttpContext context,
             final HttpParams params) throws IOException {
-        if (conn == null) {
-            throw new IllegalArgumentException("Connection may not be null");
-        }
-        if (target == null) {
-            throw new IllegalArgumentException("Target host may not be null");
-        }
-        if (params == null) {
-            throw new IllegalArgumentException("Parameters may not be null");
-        }
-        if (!conn.isOpen()) {
-            throw new IllegalStateException("Connection must be open");
-        }
+        Args.notNull(conn, "Connection");
+        Args.notNull(target, "Target host");
+        Args.notNull(params, "Parameters");
+        Asserts.check(conn.isOpen(), "Connection must be open");
 
-        final Scheme schm = schemeRegistry.getScheme(target.getSchemeName());
-        if (!(schm.getSchemeSocketFactory() instanceof LayeredSchemeSocketFactory)) {
-            throw new IllegalArgumentException
-                ("Target scheme (" + schm.getName() +
-                 ") must have layered socket factory.");
-        }
-
-        LayeredSchemeSocketFactory lsf = (LayeredSchemeSocketFactory) schm.getSchemeSocketFactory();
-        Socket sock;
-        try {
-            sock = lsf.createLayeredSocket(
-                    conn.getSocket(), target.getHostName(), target.getPort(), true);
-        } catch (ConnectException ex) {
-            throw new HttpHostConnectException(target, ex);
-        }
+        final SchemeRegistry registry = getSchemeRegistry(context);
+        final Scheme schm = registry.getScheme(target.getSchemeName());
+        Asserts.check(schm.getSchemeSocketFactory() instanceof SchemeLayeredSocketFactory,
+            "Socket factory must implement SchemeLayeredSocketFactory");
+        final SchemeLayeredSocketFactory lsf = (SchemeLayeredSocketFactory) schm.getSchemeSocketFactory();
+        final Socket sock = lsf.createLayeredSocket(
+                conn.getSocket(), target.getHostName(), schm.resolvePort(target.getPort()), params);
         prepareSocket(sock, context, params);
         conn.update(sock, target, lsf.isSecure(sock), params);
     }
@@ -222,7 +235,7 @@ public class DefaultClientConnectionOperator implements ClientConnectionOperator
         sock.setTcpNoDelay(HttpConnectionParams.getTcpNoDelay(params));
         sock.setSoTimeout(HttpConnectionParams.getSoTimeout(params));
 
-        int linger = HttpConnectionParams.getLinger(params);
+        final int linger = HttpConnectionParams.getLinger(params);
         if (linger >= 0) {
             sock.setSoLinger(linger > 0, linger);
         }
@@ -230,16 +243,20 @@ public class DefaultClientConnectionOperator implements ClientConnectionOperator
 
     /**
      * Resolves the given host name to an array of corresponding IP addresses, based on the
-     * configured name service on the system.
+     * configured name service on the provided DNS resolver. If one wasn't provided, the system
+     * configuration is used.
      *
      * @param host host name to resolve
      * @return array of IP addresses
      * @exception  UnknownHostException  if no IP address for the host could be determined.
      *
+     * @see DnsResolver
+     * @see SystemDefaultDnsResolver
+     *
      * @since 4.1
      */
     protected InetAddress[] resolveHostname(final String host) throws UnknownHostException {
-        return InetAddress.getAllByName(host);
+            return dnsResolver.resolve(host);
     }
 
 }

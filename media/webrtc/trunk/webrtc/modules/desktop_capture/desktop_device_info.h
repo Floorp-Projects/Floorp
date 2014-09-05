@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+* License, v. 2.0. If a copy of the MPL was not distributed with this file,
+* You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_DEVICE_INFO_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_DEVICE_INFO_H_
@@ -42,11 +42,13 @@ public:
   void setProcessPathName(const char *appPathNameUTF8);
   void setUniqueIdName(const char *appUniqueIdUTF8);
   void setProcessAppName(const char *appNameUTF8);
+  void setWindowCount(const uint32_t count);
 
   ProcessId getProcessId();
   const char *getProcessPathName();
   const char *getUniqueIdName();
   const char *getProcessAppName();
+  uint32_t getWindowCount();
 
   DesktopApplication& operator= (DesktopApplication& other);
 
@@ -55,9 +57,10 @@ protected:
   char* processPathNameUTF8_;
   char* applicationNameUTF8_;
   char* processUniqueIdUTF8_;
+  uint32_t windowCount_;
 };
 
-typedef std::map<intptr_t,DesktopApplication*> DesktopApplicationList;
+typedef std::map<intptr_t, DesktopApplication*> DesktopApplicationList;
 
 class DesktopDeviceInfo {
 public:
@@ -81,6 +84,8 @@ public:
   DesktopDeviceInfoImpl();
   ~DesktopDeviceInfoImpl();
 
+  virtual int32_t Init();
+  virtual int32_t Refresh();
   virtual int32_t getDisplayDeviceCount();
   virtual int32_t getDesktopDisplayDeviceInfo(int32_t nIndex,
                                               DesktopDisplayDevice & desktopDisplayDevice);
@@ -92,14 +97,24 @@ public:
                                      DesktopApplication & desktopApplication);
 
   static DesktopDeviceInfo * Create();
-
 protected:
   DesktopDisplayDeviceList desktop_display_list_;
   DesktopDisplayDeviceList desktop_window_list_;
   DesktopApplicationList desktop_application_list_;
 
-  int32_t initializeWindowList();
-  int32_t RefreshWindowList();
+  void CleanUp();
+  void CleanUpWindowList();
+  void CleanUpApplicationList();
+  void CleanUpScreenList();
+
+  void InitializeWindowList();
+  virtual void InitializeApplicationList() = 0;
+  virtual void InitializeScreenList() = 0;
+
+  void RefreshWindowList();
+  void RefreshApplicationList();
+  void RefreshScreenList();
+
 };
 };
 

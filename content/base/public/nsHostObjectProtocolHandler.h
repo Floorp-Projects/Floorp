@@ -41,7 +41,9 @@ public:
   NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel * *_retval) MOZ_OVERRIDE;
   NS_IMETHOD AllowPort(int32_t port, const char * scheme, bool *_retval) MOZ_OVERRIDE;
 
+  // If principal is not null, its origin will be used to generate the URI.
   static nsresult GenerateURIString(const nsACString &aScheme,
+                                    nsIPrincipal* aPrincipal,
                                     nsACString &aUri);
 
   // Methods for managing uri->object mapping

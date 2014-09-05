@@ -46,7 +46,7 @@ template <class T> class DeadlockDetector;
  * Base class of resources that might block clients trying to acquire them.
  * Does debugging and deadlock detection in DEBUG builds.
  **/
-class NS_COM_GLUE BlockingResourceBase
+class BlockingResourceBase
 {
 public:
   // Needs to be kept in sync with kResourceTypeNames.

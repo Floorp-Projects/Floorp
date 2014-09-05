@@ -18,7 +18,7 @@ include "ImageLayers.h";
 
 using mozilla::GraphicsFilterType from "mozilla/GfxMessageUtils.h";
 using struct gfxRGBA from "gfxColor.h";
-using struct gfxPoint3D from "gfxPoint3D.h";
+using struct mozilla::gfx::Point3D from "mozilla/gfx/Point.h";
 using class mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using nscoord from "nsCoord.h";
 using struct nsIntPoint from "nsPoint.h";
@@ -156,9 +156,9 @@ struct TransformData {
   // the origin of the frame being transformed in app units
   nsPoint origin;
   // the transform-origin property for the transform in css pixels
-  gfxPoint3D transformOrigin;
+  Point3D transformOrigin;
   // the perspective-origin property for the transform in css pixels
-  gfxPoint3D perspectiveOrigin;
+  Point3D perspectiveOrigin;
   nsRect bounds;
   nscoord perspective;
   int32_t appUnitsPerDevPixel;
@@ -215,9 +215,7 @@ struct CommonLayerAttributes {
   // Animated colors will only honored for ColorLayers.
   Animation[] animations;
   nsIntRegion invalidRegion;
-  FrameMetrics metrics;
-  ViewID scrollParentId;
-  LayerColor backgroundColor;
+  FrameMetrics[] metrics;
   string contentDescription;
 };
 

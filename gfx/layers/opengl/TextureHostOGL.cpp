@@ -310,6 +310,16 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
                                      SurfaceFormatToImageFormat(aSurface->GetFormat()));
     }
     ClearCachedFilter();
+
+    if (aDestRegion &&
+        !aSrcOffset &&
+        !aDestRegion->IsEqual(nsIntRect(0, 0, size.width, size.height))) {
+      // UpdateFromDataSource will ignore our specified aDestRegion since the texture
+      // hasn't been allocated with glTexImage2D yet. Call Resize() to force the
+      // allocation (full size, but no upload), and then we'll only upload the pixels
+      // we care about below.
+      mTexImage->Resize(size);
+    }
   }
 
   mTexImage->UpdateFromDataSource(aSurface, aDestRegion, aSrcOffset);

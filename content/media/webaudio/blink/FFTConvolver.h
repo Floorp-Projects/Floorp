@@ -41,7 +41,7 @@ using mozilla::FFTBlock;
 class FFTConvolver {
 public:
     // fftSize must be a power of two
-    FFTConvolver(size_t fftSize);
+    explicit FFTConvolver(size_t fftSize);
 
     // |fftKernel| must be pre-scaled for FFTBlock::GetInverseWithoutScaling().
     //

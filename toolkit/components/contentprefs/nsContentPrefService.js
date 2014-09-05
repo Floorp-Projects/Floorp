@@ -351,10 +351,10 @@ ContentPrefService.prototype = {
     try {
       this._dbConnection.executeSimpleSQL("DELETE FROM prefs WHERE groupID IS NOT NULL");
       this._dbConnection.executeSimpleSQL("DELETE FROM groups");
-      this._dbConnection.executeSimpleSQL(
-        "DELETE FROM settings " +
-        "WHERE id NOT IN (SELECT DISTINCT settingID FROM prefs)"
-      );
+      this._dbConnection.executeSimpleSQL(`
+        DELETE FROM settings
+        WHERE id NOT IN (SELECT DISTINCT settingID FROM prefs)
+      `);
       this._dbConnection.commitTransaction();
     }
     catch(ex) {
@@ -383,12 +383,12 @@ ContentPrefService.prototype = {
     if (!settingID)
       return;
     
-    var selectGroupsStmt = this._dbCreateStatement(
-      "SELECT groups.id AS groupID, groups.name AS groupName " +
-      "FROM prefs " +
-      "JOIN groups ON prefs.groupID = groups.id " +
-      "WHERE prefs.settingID = :setting "
-    );
+    var selectGroupsStmt = this._dbCreateStatement(`
+      SELECT groups.id AS groupID, groups.name AS groupName
+      FROM prefs
+      JOIN groups ON prefs.groupID = groups.id
+      WHERE prefs.settingID = :setting
+    `);
     
     var groupNames = [];
     var groupIDs = [];
@@ -573,14 +573,14 @@ ContentPrefService.prototype = {
   __stmtSelectPref: null,
   get _stmtSelectPref() {
     if (!this.__stmtSelectPref)
-      this.__stmtSelectPref = this._dbCreateStatement(
-        "SELECT prefs.value AS value " +
-        "FROM prefs " +
-        "JOIN groups ON prefs.groupID = groups.id " +
-        "JOIN settings ON prefs.settingID = settings.id " +
-        "WHERE groups.name = :group " +
-        "AND settings.name = :setting"
-      );
+      this.__stmtSelectPref = this._dbCreateStatement(`
+        SELECT prefs.value AS value
+        FROM prefs
+        JOIN groups ON prefs.groupID = groups.id
+        JOIN settings ON prefs.settingID = settings.id
+        WHERE groups.name = :group
+        AND settings.name = :setting
+      `);
 
     return this.__stmtSelectPref;
   },
@@ -629,13 +629,13 @@ ContentPrefService.prototype = {
   __stmtSelectGlobalPref: null,
   get _stmtSelectGlobalPref() {
     if (!this.__stmtSelectGlobalPref)
-      this.__stmtSelectGlobalPref = this._dbCreateStatement(
-        "SELECT prefs.value AS value " +
-        "FROM prefs " +
-        "JOIN settings ON prefs.settingID = settings.id " +
-        "WHERE prefs.groupID IS NULL " +
-        "AND settings.name = :name"
-      );
+      this.__stmtSelectGlobalPref = this._dbCreateStatement(`
+        SELECT prefs.value AS value
+        FROM prefs
+        JOIN settings ON prefs.settingID = settings.id
+        WHERE prefs.groupID IS NULL
+        AND settings.name = :name
+      `);
 
     return this.__stmtSelectGlobalPref;
   },
@@ -678,11 +678,11 @@ ContentPrefService.prototype = {
   __stmtSelectGroupID: null,
   get _stmtSelectGroupID() {
     if (!this.__stmtSelectGroupID)
-      this.__stmtSelectGroupID = this._dbCreateStatement(
-        "SELECT groups.id AS id " +
-        "FROM groups " +
-        "WHERE groups.name = :name "
-      );
+      this.__stmtSelectGroupID = this._dbCreateStatement(`
+        SELECT groups.id AS id
+        FROM groups
+        WHERE groups.name = :name
+      `);
 
     return this.__stmtSelectGroupID;
   },
@@ -817,10 +817,10 @@ ContentPrefService.prototype = {
   __stmtInsertPref: null,
   get _stmtInsertPref() {
     if (!this.__stmtInsertPref)
-      this.__stmtInsertPref = this._dbCreateStatement(
-        "INSERT INTO prefs (groupID, settingID, value) " +
-        "VALUES (:groupID, :settingID, :value)"
-      );
+      this.__stmtInsertPref = this._dbCreateStatement(`
+        INSERT INTO prefs (groupID, settingID, value)
+        VALUES (:groupID, :settingID, :value)
+      `);
 
     return this.__stmtInsertPref;
   },
@@ -867,10 +867,10 @@ ContentPrefService.prototype = {
   __stmtDeleteSettingIfUnused: null,
   get _stmtDeleteSettingIfUnused() {
     if (!this.__stmtDeleteSettingIfUnused)
-      this.__stmtDeleteSettingIfUnused = this._dbCreateStatement(
-        "DELETE FROM settings WHERE id = :id " +
-        "AND id NOT IN (SELECT DISTINCT settingID FROM prefs)"
-      );
+      this.__stmtDeleteSettingIfUnused = this._dbCreateStatement(`
+        DELETE FROM settings WHERE id = :id
+        AND id NOT IN (SELECT DISTINCT settingID FROM prefs)
+      `);
 
     return this.__stmtDeleteSettingIfUnused;
   },
@@ -883,10 +883,10 @@ ContentPrefService.prototype = {
   __stmtDeleteGroupIfUnused: null,
   get _stmtDeleteGroupIfUnused() {
     if (!this.__stmtDeleteGroupIfUnused)
-      this.__stmtDeleteGroupIfUnused = this._dbCreateStatement(
-        "DELETE FROM groups WHERE id = :id " +
-        "AND id NOT IN (SELECT DISTINCT groupID FROM prefs)"
-      );
+      this.__stmtDeleteGroupIfUnused = this._dbCreateStatement(`
+        DELETE FROM groups WHERE id = :id
+        AND id NOT IN (SELECT DISTINCT groupID FROM prefs)
+      `);
 
     return this.__stmtDeleteGroupIfUnused;
   },
@@ -899,13 +899,13 @@ ContentPrefService.prototype = {
   __stmtSelectPrefs: null,
   get _stmtSelectPrefs() {
     if (!this.__stmtSelectPrefs)
-      this.__stmtSelectPrefs = this._dbCreateStatement(
-        "SELECT settings.name AS name, prefs.value AS value " +
-        "FROM prefs " +
-        "JOIN groups ON prefs.groupID = groups.id " +
-        "JOIN settings ON prefs.settingID = settings.id " +
-        "WHERE groups.name = :group "
-      );
+      this.__stmtSelectPrefs = this._dbCreateStatement(`
+        SELECT settings.name AS name, prefs.value AS value
+        FROM prefs
+        JOIN groups ON prefs.groupID = groups.id
+        JOIN settings ON prefs.settingID = settings.id
+        WHERE groups.name = :group
+      `);
 
     return this.__stmtSelectPrefs;
   },
@@ -931,12 +931,12 @@ ContentPrefService.prototype = {
   __stmtSelectGlobalPrefs: null,
   get _stmtSelectGlobalPrefs() {
     if (!this.__stmtSelectGlobalPrefs)
-      this.__stmtSelectGlobalPrefs = this._dbCreateStatement(
-        "SELECT settings.name AS name, prefs.value AS value " +
-        "FROM prefs " +
-        "JOIN settings ON prefs.settingID = settings.id " +
-        "WHERE prefs.groupID IS NULL"
-      );
+      this.__stmtSelectGlobalPrefs = this._dbCreateStatement(`
+        SELECT settings.name AS name, prefs.value AS value
+        FROM prefs
+        JOIN settings ON prefs.settingID = settings.id
+        WHERE prefs.groupID IS NULL
+      `);
 
     return this.__stmtSelectGlobalPrefs;
   },
@@ -960,13 +960,13 @@ ContentPrefService.prototype = {
   __stmtSelectPrefsByName: null,
   get _stmtSelectPrefsByName() {
     if (!this.__stmtSelectPrefsByName)
-      this.__stmtSelectPrefsByName = this._dbCreateStatement(
-        "SELECT groups.name AS groupName, prefs.value AS value " +
-        "FROM prefs " +
-        "JOIN groups ON prefs.groupID = groups.id " +
-        "JOIN settings ON prefs.settingID = settings.id " +
-        "WHERE settings.name = :setting "
-      );
+      this.__stmtSelectPrefsByName = this._dbCreateStatement(`
+        SELECT groups.name AS groupName, prefs.value AS value
+        FROM prefs
+        JOIN groups ON prefs.groupID = groups.id
+        JOIN settings ON prefs.settingID = settings.id
+        WHERE settings.name = :setting
+      `);
 
     return this.__stmtSelectPrefsByName;
   },
@@ -1140,8 +1140,10 @@ ContentPrefService.prototype = {
   _dbCreateIndices: function ContentPrefService__dbCreateIndices(aDBConnection) {
     for (let name in this._dbSchema.indices) {
       let index = this._dbSchema.indices[name];
-      let statement = "CREATE INDEX IF NOT EXISTS " + name + " ON " + index.table +
-                      "(" + index.columns.join(", ") + ")";
+      let statement = `
+        CREATE INDEX IF NOT EXISTS ${name} ON ${index.table}
+        (${index.columns.join(", ")})
+      `;
       aDBConnection.executeSimpleSQL(statement);
     }
   },
@@ -1195,10 +1197,10 @@ ContentPrefService.prototype = {
   _dbMigrate1To3: function ContentPrefService___dbMigrate1To3(aDBConnection) {
     aDBConnection.executeSimpleSQL("ALTER TABLE groups RENAME TO groupsOld");
     aDBConnection.createTable("groups", this._dbSchema.tables.groups);
-    aDBConnection.executeSimpleSQL(
-      "INSERT INTO groups (id, name) " +
-      "SELECT id, name FROM groupsOld"
-    );
+    aDBConnection.executeSimpleSQL(`
+      INSERT INTO groups (id, name)
+      SELECT id, name FROM groupsOld
+    `);
 
     aDBConnection.executeSimpleSQL("DROP TABLE groupers");
     aDBConnection.executeSimpleSQL("DROP TABLE groupsOld");

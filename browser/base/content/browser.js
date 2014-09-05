@@ -40,7 +40,11 @@ var gProxyFavIcon = null;
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gContextMenu = null; // nsContextMenu instance
-var gMultiProcessBrowser = false;
+var gMultiProcessBrowser =
+  window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIWebNavigation)
+        .QueryInterface(Ci.nsILoadContext)
+        .useRemoteTabs;
 
 #ifndef XP_MACOSX
 var gEditUIVisible = true;
@@ -668,32 +672,16 @@ var gPopupBlockerObserver = {
   }
 };
 
-function gKeywordURIFixup(fixupInfo, topic, data) {
-  fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);
+function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
+  let deserializeURI = (spec) => spec ? makeURI(spec) : null;
 
   // We get called irrespective of whether we did a keyword search, or
   // whether the original input would be vaguely interpretable as a URL,
   // so figure that out first.
-  let alternativeURI = fixupInfo.fixedURI;
+  let alternativeURI = deserializeURI(fixupInfo.fixedURI);
   if (!fixupInfo.fixupUsedKeyword || !alternativeURI) {
     return;
   }
-
-  // We should have a document loader...
-  let docshellRef = fixupInfo.consumer;
-  try {
-    docshellRef.QueryInterface(Ci.nsIDocumentLoader);
-  } catch (ex) {
-    return;
-  }
-
-  if (!docshellRef.document)
-    return;
-
-  // ... from which we can deduce the browser
-  let browser = gBrowser.getBrowserForDocument(docshellRef.document);
-  if (!browser)
-    return;
 
   // At this point we're still only just about to load this URI.
   // When the async DNS lookup comes back, we may be in any of these states:
@@ -704,6 +692,7 @@ function gKeywordURIFixup(fixupInfo, topic, data) {
   // We keep track of the currentURI to detect case (1) in the DNS lookup
   // callback.
   let previousURI = browser.currentURI;
+  let preferredURI = deserializeURI(fixupInfo.preferredURI);
 
   // now swap for a weak ref so we don't hang on to browser needlessly
   // even if the DNS query takes forever
@@ -734,7 +723,7 @@ function gKeywordURIFixup(fixupInfo, topic, data) {
     let currentURI = browser.currentURI;
     // If we're in case (3) (see above), don't show an info bar.
     if (!currentURI.equals(previousURI) &&
-        !currentURI.equals(fixupInfo.preferredURI)) {
+        !currentURI.equals(preferredURI)) {
       return;
     }
 
@@ -784,12 +773,6 @@ var gBrowserInit = {
   delayedStartupFinished: false,
 
   onLoad: function() {
-    gMultiProcessBrowser =
-      window.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsILoadContext)
-      .useRemoteTabs;
-
     var mustLoadSidebar = false;
 
     gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
@@ -1027,15 +1010,12 @@ var gBrowserInit = {
 
     // This pageshow listener needs to be registered before we may call
     // swapBrowsersAndCloseOther() to receive pageshow events fired by that.
-    if (!gMultiProcessBrowser) {
-      // pageshow handlers are being migrated to
-      // content.js. Eventually this code should be removed.
-      gBrowser.addEventListener("pageshow", function(event) {
-        // Filter out events that are not about the document load we are interested in
-        if (content && event.target == content.document)
-          setTimeout(pageShowEventHandlers, 0, event.persisted);
-      }, true);
-    }
+    let mm = window.messageManager;
+    mm.addMessageListener("PageVisibility:Show", function(message) {
+      if (message.target == gBrowser.selectedBrowser) {
+        setTimeout(pageShowEventHandlers, 0, message.data.persisted);
+      }
+    });
 
     if (uriToLoad && uriToLoad != "about:blank") {
       if (uriToLoad instanceof Ci.nsISupportsArray) {
@@ -1089,7 +1069,7 @@ var gBrowserInit = {
     Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
-    Services.obs.addObserver(gKeywordURIFixup, "keyword-uri-fixup", false);
+    window.messageManager.addMessageListener("Browser:URIFixup", gKeywordURIFixup);
 
     BrowserOffline.init();
     OfflineApps.init();
@@ -1215,7 +1195,7 @@ var gBrowserInit = {
     gDataNotificationInfoBar.init();
 #endif
 
-    LoopUI.initialize();
+    LoopUI.init();
 
     gBrowserThumbnails.init();
 
@@ -1279,6 +1259,12 @@ var gBrowserInit = {
           Services.telemetry.getHistogramById("MASTER_PASSWORD_ENABLED").add(mpEnabled);
         }
       }, 5000);
+
+      // Telemetry for tracking protection.
+      let tpEnabled = gPrefService
+                      .getBoolPref("privacy.trackingprotection.enabled");
+      Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED")
+        .add(tpEnabled);
     });
     this.delayedStartupFinished = true;
 
@@ -1380,6 +1366,7 @@ var gBrowserInit = {
       TabView.uninit();
       SocialUI.uninit();
       gBrowserThumbnails.uninit();
+      LoopUI.uninit();
       FullZoom.destroy();
 
       Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
@@ -1388,7 +1375,7 @@ var gBrowserInit = {
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
-      Services.obs.removeObserver(gKeywordURIFixup, "keyword-uri-fixup");
+      window.messageManager.removeMessageListener("Browser:URIFixup", gKeywordURIFixup);
 
       try {
         gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);
@@ -3556,40 +3543,9 @@ var XULBrowserWindow = {
 
   // Called before links are navigated to to allow us to retarget them if needed.
   onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {
-    let target = this._onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab);
+    let target = BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab);
     SocialUI.closeSocialPanelForLinkTraversal(target, linkNode);
     return target;
-  },
-
-  _onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {
-    // Don't modify non-default targets or targets that aren't in top-level app
-    // tab docshells (isAppTab will be false for app tab subframes).
-    if (originalTarget != "" || !isAppTab)
-      return originalTarget;
-
-    // External links from within app tabs should always open in new tabs
-    // instead of replacing the app tab's page (Bug 575561)
-    let linkHost;
-    let docHost;
-    try {
-      linkHost = linkURI.host;
-      docHost = linkNode.ownerDocument.documentURIObject.host;
-    } catch(e) {
-      // nsIURI.host can throw for non-nsStandardURL nsIURIs.
-      // If we fail to get either host, just return originalTarget.
-      return originalTarget;
-    }
-
-    if (docHost == linkHost)
-      return originalTarget;
-
-    // Special case: ignore "www" prefix if it is part of host string
-    let [longHost, shortHost] =
-      linkHost.length > docHost.length ? [linkHost, docHost] : [docHost, linkHost];
-    if (longHost == "www." + shortHost)
-      return originalTarget;
-
-    return "_blank";
   },
 
   onProgressChange: function (aWebProgress, aRequest,
@@ -6496,6 +6452,10 @@ var gIdentityHandler = {
          nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT     |
          nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)) {
       this.showBadContentDoorhanger(state);
+    } else {
+      // We didn't show the shield
+      Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD")
+        .add(0);
     }
   },
 
@@ -6517,6 +6477,19 @@ var gIdentityHandler = {
     // default
     let iconState = "bad-content-blocked-notification-icon";
 
+    // Telemetry for whether the shield was due to tracking protection or not
+    let histogram = Services.telemetry.getHistogramById
+                      ("TRACKING_PROTECTION_SHIELD");
+    if (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) {
+      histogram.add(1);
+    } else if (state &
+               Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
+      histogram.add(2);
+    } else {
+      // The shield is due to mixed content, just keep a count so we can
+      // normalize later.
+      histogram.add(3);
+    }
     if (state &
         (Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT |
          Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)) {
@@ -7345,9 +7318,17 @@ let ToolbarIconColor = {
     toolbarSelector += ":not([type=menubar])";
 #endif
 
+    // The getComputedStyle calls and setting the brighttext are separated in
+    // two loops to avoid flushing layout and making it dirty repeatedly.
+
+    let luminances = new Map;
     for (let toolbar of document.querySelectorAll(toolbarSelector)) {
       let [r, g, b] = parseRGB(getComputedStyle(toolbar).color);
       let luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
+      luminances.set(toolbar, luminance);
+    }
+
+    for (let [toolbar, luminance] of luminances) {
       if (luminance <= 110)
         toolbar.removeAttribute("brighttext");
       else

@@ -11,6 +11,7 @@
 
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 
@@ -93,7 +94,7 @@ public:
   Maybe() : mIsSome(false) { }
   ~Maybe() { reset(); }
 
-  Maybe(Nothing) : mIsSome(false) { }
+  MOZ_IMPLICIT Maybe(Nothing) : mIsSome(false) { }
 
   Maybe(const Maybe& aOther)
     : mIsSome(false)

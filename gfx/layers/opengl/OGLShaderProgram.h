@@ -70,6 +70,10 @@ public:
     TexturePass2,
     ColorMatrix,
     ColorMatrixVector,
+    BlurRadius,
+    BlurOffset,
+    BlurAlpha,
+    BlurGaussianKernel,
 
     KnownUniformCount
   };
@@ -144,6 +148,19 @@ public:
     }
 
     NS_NOTREACHED("cnt must be 1 2 3 4 or 16");
+    return false;
+  }
+
+  bool UpdateArrayUniform(int cnt, const float *fp) {
+    if (mLocation == -1) return false;
+    if (cnt > 16) {
+      return false;
+    }
+
+    if (memcmp(mValue.f16v, fp, sizeof(float) * cnt) != 0) {
+      memcpy(mValue.f16v, fp, sizeof(float) * cnt);
+      return true;
+    }
     return false;
   }
 
@@ -389,6 +406,17 @@ public:
     SetUniform(KnownUniform::TexturePass2, aFlag ? 1 : 0);
   }
 
+  void SetBlurRadius(float aRX, float aRY);
+
+  void SetBlurAlpha(float aAlpha) {
+    SetUniform(KnownUniform::BlurAlpha, aAlpha);
+  }
+
+  void SetBlurOffset(float aOffsetX, float aOffsetY) {
+    float f[] = {aOffsetX, aOffsetY};
+    SetUniform(KnownUniform::BlurOffset, 2, f);
+  }
+
   size_t GetTextureCount() const {
     return mProfile.mTextureCount;
   }
@@ -456,6 +484,17 @@ protected:
       default:
         NS_NOTREACHED("Bogus aLength param");
       }
+    }
+  }
+
+  void SetArrayUniform(KnownUniform::KnownUniformName aKnownUniform, int aLength, float *aFloatValues)
+  {
+    ASSERT_THIS_PROGRAM;
+    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+
+    KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
+    if (ku.UpdateArrayUniform(aLength, aFloatValues)) {
+      mGL->fUniform1fv(ku.mLocation, aLength, ku.mValue.f16v);
     }
   }
 

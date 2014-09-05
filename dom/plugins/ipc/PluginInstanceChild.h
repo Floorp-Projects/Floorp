@@ -201,7 +201,7 @@ protected:
 #endif
 
 public:
-    PluginInstanceChild(const NPPluginFuncs* aPluginIface);
+    explicit PluginInstanceChild(const NPPluginFuncs* aPluginIface);
 
     virtual ~PluginInstanceChild();
 

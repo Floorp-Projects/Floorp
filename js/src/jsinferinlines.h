@@ -448,6 +448,20 @@ CanHaveEmptyPropertyTypesForOwnProperty(JSObject *obj)
 }
 
 inline bool
+PropertyHasBeenMarkedNonConstant(JSObject *obj, jsid id)
+{
+    // Non-constant properties are only relevant for singleton objects.
+    if (!obj->hasSingletonType())
+        return true;
+
+    // EnsureTrackPropertyTypes must have been called on this object.
+    if (obj->type()->unknownProperties())
+        return true;
+    HeapTypeSet *types = obj->type()->maybeGetProperty(IdToTypeId(id));
+    return types->nonConstantProperty();
+}
+
+inline bool
 HasTypePropertyId(JSObject *obj, jsid id, Type type)
 {
     if (obj->hasLazyType())
@@ -1294,10 +1308,8 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
         return;
 
     JS::Zone *zone = newScript->fun->zoneFromAnyThread();
-    if (zone->needsIncrementalBarrier()) {
-        MarkObject(zone->barrierTracer(), &newScript->fun, "write barrier");
-        MarkObject(zone->barrierTracer(), &newScript->templateObject, "write barrier");
-    }
+    if (zone->needsIncrementalBarrier())
+        newScript->trace(zone->barrierTracer());
 #endif
 }
 

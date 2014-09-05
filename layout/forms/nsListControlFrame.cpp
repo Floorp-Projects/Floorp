@@ -62,7 +62,7 @@ DOMTimeStamp nsListControlFrame::gLastKeyTime = 0;
 class nsListEventListener MOZ_FINAL : public nsIDOMEventListener
 {
 public:
-  nsListEventListener(nsListControlFrame *aFrame)
+  explicit nsListEventListener(nsListControlFrame *aFrame)
     : mFrame(aFrame) { }
 
   void SetFrame(nsListControlFrame *aFrame) { mFrame = aFrame; }

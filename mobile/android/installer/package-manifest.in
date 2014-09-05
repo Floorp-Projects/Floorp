@@ -246,6 +246,7 @@
 @BINPATH@/components/spellchecker.xpt
 @BINPATH@/components/storage.xpt
 @BINPATH@/components/telemetry.xpt
+@BINPATH@/components/toolkit_filewatcher.xpt
 @BINPATH@/components/toolkit_finalizationwitness.xpt
 @BINPATH@/components/toolkit_formautofill.xpt
 @BINPATH@/components/toolkit_osfile.xpt
@@ -543,6 +544,11 @@
 @BINPATH@/components/pippki.xpt
 @BINPATH@/chrome/pippki@JAREXT@
 @BINPATH@/chrome/pippki.manifest
+
+; For process sandboxing
+#if defined(MOZ_CONTENT_SANDBOX) || defined(MOZ_GMP_SANDBOX)
+@BINPATH@/@DLL_PREFIX@mozsandbox@DLL_SUFFIX@
+#endif
 
 ; for Solaris SPARC
 #ifdef SOLARIS

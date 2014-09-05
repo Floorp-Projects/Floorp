@@ -2,9 +2,9 @@
 <html>
 <head>
   <title>Video controls test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
@@ -45,6 +45,22 @@ const muteButtonCenterY = videoHeight - Math.round(muteButtonHeight / 2);
 const scrubberOffsetX = 0 + playButtonWidth;
 const scrubberCenterY = videoHeight - Math.round(scrubberHeight / 2);
 
+var testnum = 1;
+var video = document.getElementById("video");
+
+function getButtonByAttribute(aName, aValue) {
+  var domUtil = Components.classes["@mozilla.org/inspector/dom-utils;1"]
+                          .getService(Components.interfaces.inIDOMUtils);
+  var kids = domUtil.getChildrenForNode(video, true);
+  var videocontrols = kids[1];
+  return document.getAnonymousElementByAttribute(videocontrols, aName, aValue);
+}
+
+function isMuteButtonMuted() {
+  var muteButton = getButtonByAttribute('class', 'muteButton');
+  return muteButton.getAttribute('muted') === 'true';
+}
+
 function runTest(event) {
   ok(true, "----- test #" + testnum + " -----");
 
@@ -76,8 +92,7 @@ function runTest(event) {
       is(video.paused, true,  "checking video play state");
       is(video.muted, false,  "checking video mute state");
 
-      // Click the mute button
-      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { }); // Mute.
       break;
 
     case 4:
@@ -85,8 +100,7 @@ function runTest(event) {
       is(video.paused, true,  "checking video play state");
       is(video.muted,  true,  "checking video mute state");
 
-      // Click the unmute button
-      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { }); // Unmute.
       break;
 
     /*
@@ -201,6 +215,80 @@ function runTest(event) {
       lastPosition = (videoDuration / 2) - 0.1;
       ok(video.currentTime < lastPosition, "checking expected playback position");
 
+      // Set volume to 0.1 so one down arrow hit will decrease it to 0.
+      video.volume = 0.1;
+      break;
+
+    // See bug 694696.
+    case 16:
+      is(event.type, "volumechange", "checking event type");
+      is(video.volume, 0.1, "Volume should be set.");
+      ok(!video.muted, "Video is not muted.");
+
+      video.focus();
+      synthesizeKey("VK_DOWN", {});
+      break;
+
+    case 17:
+      is(event.type, "volumechange", "checking event type");
+      is(video.volume, 0, "Volume should be 0.");
+      ok(!video.muted, "Video is not muted.");
+      ok(isMuteButtonMuted(), "Mute button says it's muted");
+
+      synthesizeKey("VK_UP", {});
+      break;
+
+    case 18:
+      is(event.type, "volumechange", "checking event type");
+      is(video.volume, 0.1, "Volume is increased.");
+      ok(!video.muted, "Video is not muted.");
+      ok(!isMuteButtonMuted(), "Mute button says it's not muted");
+
+      synthesizeKey("VK_DOWN", {});
+      break;
+
+    case 19:
+      is(event.type, "volumechange", "checking event type");
+      is(video.volume, 0, "Volume should be 0.");
+      ok(!video.muted, "Video is not muted.");
+      ok(isMuteButtonMuted(), "Mute button says it's muted");
+
+      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      break;
+
+    case 20:
+      is(event.type, "volumechange", "checking event type");
+      is(video.volume, 0.5, "Volume should be 0.5.");
+      ok(!video.muted, "Video is not muted.");
+
+      synthesizeKey("VK_UP", {});
+      break;
+
+    case 21:
+      is(event.type, "volumechange", "checking event type");
+      is(video.volume, 0.6, "Volume should be 0.6.");
+      ok(!video.muted, "Video is not muted.");
+
+      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      break;
+
+    case 22:
+      is(event.type, "volumechange", "checking event type");
+      is(video.volume, 0.6, "Volume should be 0.6.");
+      ok(video.muted, "Video is muted.");
+
+      ok(isMuteButtonMuted(), "Mute button says it's muted");
+
+      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      break;
+
+    case 23:
+      is(event.type, "volumechange", "checking event type");
+      is(video.volume, 0.6, "Volume should be 0.6.");
+      ok(!video.muted, "Video is not muted.");
+
+      ok(!isMuteButtonMuted(), "Mute button says it's not muted");
+
       SimpleTest.finish();
       break;
 
@@ -212,8 +300,6 @@ function runTest(event) {
 }
 
 
-var testnum = 1;
-var video = document.getElementById("video");
 
 function canplaythroughevent(event) {
   video.removeEventListener("canplaythrough",  canplaythroughevent, false);

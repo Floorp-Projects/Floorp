@@ -1018,6 +1018,14 @@ class IDLInterface(IDLObjectWithScope):
                               self.parentScope.primaryGlobalName,
                               [self.location])
 
+        # Conditional exposure makes no sense for interfaces with no
+        # interface object, unless they're navigator properties.
+        if (self.isExposedConditionally() and
+            not self.hasInterfaceObject() and
+            not self.getNavigatorProperty()):
+            raise WebIDLError("Interface with no interface object is "
+                              "exposed conditionally",
+                              [self.location])
 
     def isInterface(self):
         return True
@@ -1054,6 +1062,21 @@ class IDLInterface(IDLObjectWithScope):
             # operations have the same identifier
             len(set(m.identifier.name for m in self.members if
                     m.isMethod() and not m.isStatic())) == 1)
+
+    def isExposedInWindow(self):
+        return 'Window' in self.exposureSet
+
+    def isExposedInAnyWorker(self):
+        return len(self.getWorkerExposureSet()) > 0
+
+    def isExposedOnlyInSomeWorkers(self):
+        assert self.isExposedInAnyWorker()
+        workerScopes = self.parentScope.globalNameMapping["Worker"]
+        return len(workerScopes.difference(self.exposureSet)) > 0
+
+    def getWorkerExposureSet(self):
+        workerScopes = self.parentScope.globalNameMapping["Worker"]
+        return workerScopes.intersection(self.exposureSet)
 
     def inheritanceDepth(self):
         depth = 0
@@ -1340,6 +1363,13 @@ class IDLInterface(IDLObjectWithScope):
 
     def hasMembersInSlots(self):
         return self._ownMembersInSlots != 0
+
+    def isExposedConditionally(self):
+        return (self.getExtendedAttribute("Pref") or
+                self.getExtendedAttribute("ChromeOnly") or
+                self.getExtendedAttribute("Func") or
+                self.getExtendedAttribute("AvailableIn") or
+                self.getExtendedAttribute("CheckPermissions"))
 
 class IDLDictionary(IDLObjectWithScope):
     def __init__(self, location, parentScope, name, parent, members):

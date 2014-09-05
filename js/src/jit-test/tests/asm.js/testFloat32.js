@@ -42,7 +42,6 @@ assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var inf = glob.Infin
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f() { return toF(13.37); } return f"), this)(), Math.fround(13.37));
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f() { return +toF(4.); } return f"), this)(), 4);
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f() { return +~~toF(4.5); } return f"), this)(), 4);
-assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f() { return toF(4.5) | 0; } return f"), this)(), 4);
 
 // Assign values
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "function f() { var i = toF(5.); i = 5; return toF(i); } return f");
@@ -65,6 +64,7 @@ assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + TO_FLOAT32 + HEAP32
 
 // Coercions
 // -> from Float32
+assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "function f() { var n = 0; n = toF(4.5) | 0; } return f");
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "function f() { var i = toF(5.); var n = 0; n = i | 0; return n | 0; } return f");
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "function f(x) { x = toF(x); var n = 0; n = ~~(x + x) >>> 0; return n | 0; } return f");
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f(x) { x = toF(x); var n = 0.; n = +x; return +n; } return f"), this)(16.64), Math.fround(16.64));
@@ -124,13 +124,15 @@ for (v of specials) {
 // Math builtins
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var imul = glob.Math.imul; function f() {var x = toF(1.5), y = toF(2.4); return imul(x, y) | 0;} return f");
 
-assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var abs = glob.Math.abs; function f() {var x = toF(1.5); return +abs(x);} return f");
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var abs = glob.Math.abs; function f() {var x = toF(1.5); return abs(x) | 0;} return f");
+assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var abs = glob.Math.abs; function f() {var x = toF(1.5); return +abs(x);} return f");
+assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var abs = glob.Math.abs; function f() {var x = toF(1.5); return +toF(abs(x));} return f"), this)(), 1.5);
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var abs = glob.Math.abs; function f() {var x = toF(1.5); return toF(abs(x))} return f"), this)(), Math.fround(1.5));
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var abs = glob.Math.abs; function f() {var x = toF(-1.5); return toF(abs(x))} return f"), this)(), Math.fround(1.5));
 
-assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var sqrt = glob.Math.sqrt; function f() {var x = toF(1.5); return +sqrt(x);} return f");
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var sqrt = glob.Math.sqrt; function f() {var x = toF(1.5); return sqrt(x) | 0;} return f");
+assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var sqrt = glob.Math.sqrt; function f() {var x = toF(1.5); return +sqrt(x);} return f");
+assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var sqrt = glob.Math.sqrt; function f() {var x = toF(1.5); return +toF(sqrt(x));} return f"), this)(), Math.fround(Math.sqrt(Math.fround(1.5))));
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var sqrt = glob.Math.sqrt; function f() {var x = toF(2.25); return toF(sqrt(x))} return f"), this)(), Math.fround(1.5));
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var sqrt = glob.Math.sqrt; function f() {var x = toF(-1.); return toF(sqrt(x))} return f"), this)(), NaN);
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var sqrt = glob.Math.sqrt; var inf = glob.Infinity; function f() {var x = toF(0.); x = toF(inf); return toF(sqrt(x))} return f"), this)(), Infinity);
@@ -151,20 +153,20 @@ for (v of [-10.5, -1.2345, -1, 0, 1, 3.141592653, 13.37, Math.Infinity, NaN])
 assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + HEAP32 + TO_FLOAT32 + "var ceil = glob.Math.ceil; function f(x) { x = toF(x); f32[0] = x; return toF(ceil(f32[0])) } return f"), this, null, heap)(13.37), 14);
 
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = toF(x); return toF(g(x))} return f");
-assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = +x; return toF(g(+x))} return f");
 
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = toF(x); return +(g(x))} return f");
-assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = +x; return toF(g(x))} return f");
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = x|0; return toF(g(x))} return f");
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = toF(x); return g(x) | 0} return f");
 
+assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = +x; return toF(g(+x))} return f"), this)(5), Math.fround(Math.cos(5)));
+assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = +x; return toF(g(x))} return f"), this)(5), Math.fround(Math.cos(5)));
 assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + HEAP32 + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) { x = toF(x); return toF(+g(+x)) } return f"), this, null, heap)(3.14159265358), -1);
 
 // Math functions with arity of two are not specialized for floats, so we shouldn't feed them with floats arguments or
 // return type
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.pow; function f(x) {x = toF(x); return toF(g(x, 2.))} return f");
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.pow; function f(x) {x = toF(x); return +g(x, 2.)} return f");
-assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.pow; function f(x) {x = toF(x); return toF(g(+x, 2.))} return f");
+assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.pow; function f(x) {x = toF(x); return toF(g(+x, 2.))} return f"), this)(3), 9);
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.pow; function f(x) {x = toF(x); return +g(+x, 2.)} return f"), this)(3), 9);
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.pow; function f(x) {x = toF(x); return toF(+g(+x, 2.))} return f"), this)(3), 9);
 
@@ -312,3 +314,4 @@ for (op of ['==', '!=', '<', '>', '<=', '>=']) {
     assertAsmTypeFail('glob', 'ffi', 'heap', USE_ASM + TO_FLOAT32 + HEAP32 + "function f() { if( f32[0] " + op + " toF(3.) ) return 1; else return 0; return -1; } return f");
     assertAsmTypeFail('glob', 'ffi', 'heap', USE_ASM + TO_FLOAT32 + HEAP32 + "function f() { if( (toF(1.) + toF(2.)) " + op + " toF(3.) ) return 1; else return 0; return -1; } return f");
 }
+

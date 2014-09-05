@@ -13,10 +13,10 @@ const kGuidAnnotationName = "placesInternal/GUID";
 
 function getTotalGuidAnnotationsCount(aStorageConnection) {
   stmt = aStorageConnection.createStatement(
-    "SELECT count(*) "
-  + "FROM moz_items_annos a "
-  + "JOIN moz_anno_attributes b ON a.anno_attribute_id = b.id "
-  + "WHERE b.name = :attr_name"
+    `SELECT count(*)
+     FROM moz_items_annos a
+     JOIN moz_anno_attributes b ON a.anno_attribute_id = b.id
+     WHERE b.name = :attr_name`
   );
   try {
     stmt.params.attr_name = kGuidAnnotationName;

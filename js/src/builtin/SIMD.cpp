@@ -16,6 +16,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
+#include "builtin/SIMDShuffleMaskConstants.h"
 #include "builtin/TypedObject.h"
 #include "js/Value.h"
 
@@ -38,9 +39,8 @@ extern const JSFunctionSpec Int32x4Methods[];
 
 static const char *laneNames[] = {"lane 0", "lane 1", "lane 2", "lane3"};
 
-template<typename V>
 static bool
-IsVectorObject(HandleValue v)
+CheckVectorObject(HandleValue v, X4TypeDescr::Type expectedType)
 {
     if (!v.isObject())
         return false;
@@ -53,8 +53,36 @@ IsVectorObject(HandleValue v)
     if (typeRepr.kind() != type::X4)
         return false;
 
-    return typeRepr.as<X4TypeDescr>().type() == V::type;
+    return typeRepr.as<X4TypeDescr>().type() == expectedType;
 }
+
+template<class V>
+bool
+js::IsVectorObject(HandleValue v)
+{
+    return CheckVectorObject(v, V::type);
+}
+
+template bool js::IsVectorObject<Int32x4>(HandleValue v);
+template bool js::IsVectorObject<Float32x4>(HandleValue v);
+
+template<typename V>
+bool
+js::ToSimdConstant(JSContext *cx, HandleValue v, jit::SimdConstant *out)
+{
+    typedef typename V::Elem Elem;
+    if (!IsVectorObject<V>(v)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR);
+        return false;
+    }
+
+    Elem *mem = reinterpret_cast<Elem *>(v.toObject().as<TypedObject>().typedMem());
+    *out = jit::SimdConstant::CreateX4(mem);
+    return true;
+}
+
+template bool js::ToSimdConstant<Int32x4>(JSContext *cx, HandleValue v, jit::SimdConstant *out);
+template bool js::ToSimdConstant<Float32x4>(JSContext *cx, HandleValue v, jit::SimdConstant *out);
 
 template<typename Elem>
 static Elem
@@ -279,6 +307,18 @@ X4TypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     const unsigned LANES = 4;
 
+    Rooted<X4TypeDescr*> descr(cx, &args.callee().as<X4TypeDescr>());
+    if (args.length() == 1) {
+        // X4 type used as a coercion
+        if (!CheckVectorObject(args[0], descr->type())) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR);
+            return false;
+        }
+
+        args.rval().setObject(args[0].toObject());
+        return true;
+    }
+
     if (args.length() < LANES) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              args.callee().getClass()->name, "3", "s");
@@ -291,7 +331,6 @@ X4TypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    Rooted<X4TypeDescr*> descr(cx, &args.callee().as<X4TypeDescr>());
     Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, descr, 0));
     if (!result)
         return false;
@@ -352,6 +391,8 @@ SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
                                                   global, SingletonObject));
     if (!SIMD)
         return nullptr;
+
+    SET_ALL_SHUFFLE_MASKS;
 
     // float32x4
     RootedObject float32x4Object(cx);
@@ -854,6 +895,35 @@ Float32x4Clamp(JSContext *cx, unsigned argc, Value *vp)
 
 static bool
 Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 3 || !IsVectorObject<Int32x4>(args[0]) ||
+        !IsVectorObject<Int32x4>(args[1]) || !IsVectorObject<Int32x4>(args[2]))
+    {
+        return ErrorBadArgs(cx);
+    }
+
+    int32_t *val = TypedObjectMemory<int32_t *>(args[0]);
+    int32_t *tv = TypedObjectMemory<int32_t *>(args[1]);
+    int32_t *fv = TypedObjectMemory<int32_t *>(args[2]);
+
+    int32_t tr[Int32x4::lanes];
+    for (unsigned i = 0; i < Int32x4::lanes; i++)
+        tr[i] = And<int32_t>::apply(val[i], tv[i]);
+
+    int32_t fr[Int32x4::lanes];
+    for (unsigned i = 0; i < Int32x4::lanes; i++)
+        fr[i] = And<int32_t>::apply(Not<int32_t>::apply(val[i]), fv[i]);
+
+    int32_t orInt[Int32x4::lanes];
+    for (unsigned i = 0; i < Int32x4::lanes; i++)
+        orInt[i] = Or<int32_t>::apply(tr[i], fr[i]);
+
+    return StoreResult<Int32x4>(cx, args, orInt);
+}
+
+static bool
+Float32x4Select(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 3 || !IsVectorObject<Int32x4>(args[0]) ||

@@ -84,7 +84,7 @@ static const PLDHashTableOps PlaceholderMapOps = {
 
 class nsFrameManagerBase::UndisplayedMap {
 public:
-  UndisplayedMap(uint32_t aNumBuckets = 16);
+  explicit UndisplayedMap(uint32_t aNumBuckets = 16);
   ~UndisplayedMap(void);
 
   UndisplayedNode* GetFirstNode(nsIContent* aParentContent);

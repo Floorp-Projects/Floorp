@@ -24,11 +24,11 @@ function simulateIncomingSms() {
 }
 
 function test(aStartDate, aEndDate, aExpectedMessages) {
-  let filter = new MozSmsFilter();
-  if (aStartDate) {
+  let filter = {};
+  if (aStartDate !== null) {
     filter.startDate = aStartDate;
   }
-  if (aEndDate) {
+  if (aEndDate !== null) {
     filter.endDate = aEndDate;
   }
 
@@ -64,16 +64,16 @@ startTestCommon(function testCaseMain() {
     // Should return all messages.
     //
     .then(() => log("Testing [startTime, )"))
-    .then(() => test(new Date(startTime), null, allMessages))
+    .then(() => test(startTime, null, allMessages))
     .then(() => log("Testing (, endTime]"))
-    .then(() => test(null, new Date(endTime), allMessages))
+    .then(() => test(null, endTime, allMessages))
     .then(() => log("Testing [startTime, endTime]"))
-    .then(() => test(new Date(startTime), new Date(endTime), allMessages))
+    .then(() => test(startTime, endTime, allMessages))
 
     // Should return only messages with timestamp <= startTime.
     //
     .then(() => log("Testing [, startTime)"))
-    .then(() => test(null, new Date(startTime),
+    .then(() => test(null, startTime,
                      reduceMessages(allMessages,
                                     (function(a, b) {
                                       return b <= a;
@@ -82,7 +82,7 @@ startTestCommon(function testCaseMain() {
     // Should return only messages with timestamp <= startTime + 1.
     //
     .then(() => log("Testing [, startTime + 1)"))
-    .then(() => test(null, new Date(startTime + 1),
+    .then(() => test(null, startTime + 1,
                      reduceMessages(allMessages,
                                     (function(a, b) {
                                       return b <= a;
@@ -91,7 +91,7 @@ startTestCommon(function testCaseMain() {
     // Should return only messages with timestamp >= endTime.
     //
     .then(() => log("Testing [endTime, )"))
-    .then(() => test(new Date(endTime), null,
+    .then(() => test(endTime, null,
                      reduceMessages(allMessages,
                                     (function(a, b) {
                                       return b >= a;
@@ -100,7 +100,7 @@ startTestCommon(function testCaseMain() {
     // Should return only messages with timestamp >= endTime - 1.
     //
     .then(() => log("Testing [endTime - 1, )"))
-    .then(() => test(new Date(endTime - 1), null,
+    .then(() => test(endTime - 1, null,
                      reduceMessages(allMessages,
                                     (function(a, b) {
                                       return b >= a;
@@ -109,11 +109,11 @@ startTestCommon(function testCaseMain() {
     // Should return none.
     //
     .then(() => log("Testing [endTime + 1, )"))
-    .then(() => test(new Date(endTime + 1), null, []))
+    .then(() => test(endTime + 1, null, []))
     .then(() => log("Testing [endTime + 1, endTime + 86400000]"))
-    .then(() => test(new Date(endTime + 1), new Date(endTime + 86400000), []))
+    .then(() => test(endTime + 1, endTime + 86400000, []))
     .then(() => log("Testing (, startTime - 1]"))
-    .then(() => test(null, new Date(startTime - 1), []))
+    .then(() => test(null, startTime - 1, []))
     .then(() => log("Testing [startTime - 86400000, startTime - 1]"))
-    .then(() => test(new Date(startTime - 86400000), new Date(startTime - 1), []));
+    .then(() => test(startTime - 86400000, startTime - 1, []));
 });

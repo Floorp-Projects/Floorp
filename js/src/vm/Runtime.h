@@ -1274,6 +1274,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
     bool                jitSupportsFloatingPoint;
+    bool                jitSupportsSimd;
 
     // Used to reset stack limit after a signaled interrupt (i.e. jitStackLimit_ = -1)
     // has been noticed by Ion/Baseline.
@@ -1598,7 +1599,7 @@ PerThreadData::runtimeFromMainThread()
 inline JSRuntime *
 PerThreadData::runtimeIfOnOwnerThread()
 {
-    return CurrentThreadCanAccessRuntime(runtime_) ? runtime_ : nullptr;
+    return (runtime_ && CurrentThreadCanAccessRuntime(runtime_)) ? runtime_ : nullptr;
 }
 
 inline bool

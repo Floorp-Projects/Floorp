@@ -1120,12 +1120,12 @@ menulist { /* Fixes some styling inconsistencies */
 
 /*** buttons ***/
 
-.addon-control[disabled="true"] {
+.addon-control[disabled="true"]:not(.no-auto-hide) {
   display: none;
 }
 
-.addon-control.no-auto-hide {
-  display: block;
+.no-auto-hide .addon-control {
+  display: block !important;
 }
 
 button.button-link {

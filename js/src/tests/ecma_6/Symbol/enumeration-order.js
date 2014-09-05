@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/ */
 
-// ES6 draft rev 25 (2014 May 22), 9.1.12 "[[OwnPropertyKeys]] ()":
-// 
 var log;
 function LoggingProxy() {
     return new Proxy({}, {
@@ -13,18 +11,6 @@ function LoggingProxy() {
     });
 }
 
-var keys = [
-    "before",
-    Symbol(),
-    "during",
-    Symbol.for("during"),
-    Symbol.iterator,
-    "after"
-];
-var descs = {};
-for (var k of keys)
-    descs[k] = {configurable: true, value: 0};
-
 function test(descsObj) {
     log = [];
     Object.defineProperties(LoggingProxy(), descs);
@@ -34,8 +20,24 @@ function test(descsObj) {
         assertEq(log.indexOf(key) !== -1, true);
 }
 
-test(descs);
-test(new Proxy(descs, {}));
+if (typeof Symbol === "function") {
+    // ES6 draft rev 25 (2014 May 22), 9.1.12 "[[OwnPropertyKeys]] ()":
+
+    var keys = [
+        "before",
+        Symbol(),
+        "during",
+        Symbol.for("during"),
+        Symbol.iterator,
+        "after"
+    ];
+    var descs = {};
+    for (var k of keys)
+        descs[k] = {configurable: true, value: 0};
+
+    test(descs);
+    test(new Proxy(descs, {}));
+}
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0);

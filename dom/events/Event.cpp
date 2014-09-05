@@ -7,6 +7,7 @@
 #include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventStateManager.h"
@@ -996,16 +997,14 @@ Event::TimeStamp() const
   }
 
   // For dedicated workers, we should make times relative to the navigation
-  // start of the document that created the worker. We currently don't have
-  // that information handy so for now we treat shared workers and dedicated
-  // workers alike and make times relative to the worker creation time. We can
-  // fix this when we implement WorkerPerformance.
+  // start of the document that created the worker, which is the same as the
+  // timebase for performance.now().
   workers::WorkerPrivate* workerPrivate =
     workers::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
   TimeDuration duration =
-    mEvent->timeStamp - workerPrivate->CreationTimeStamp();
+    mEvent->timeStamp - workerPrivate->NowBaseTimeStamp();
   return duration.ToMilliseconds();
 }
 
@@ -1117,6 +1116,44 @@ Event::SetOwner(mozilla::dom::EventTarget* aOwner)
   nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(aOwner);
   MOZ_ASSERT(root, "Unexpected EventTarget!");
 #endif
+}
+
+// static
+nsIContent*
+Event::GetShadowRelatedTarget(nsIContent* aCurrentTarget,
+                              nsIContent* aRelatedTarget)
+{
+  if (!aCurrentTarget || !aRelatedTarget) {
+    return nullptr;
+  }
+
+  // Walk up the ancestor node trees of the related target until
+  // we encounter the node tree of the current target in order
+  // to find the adjusted related target. Walking up the tree may
+  // not find a common ancestor node tree if the related target is in
+  // an ancestor tree, but in that case it does not need to be adjusted.
+  ShadowRoot* currentTargetShadow = aCurrentTarget->GetContainingShadow();
+  if (!currentTargetShadow) {
+    return nullptr;
+  }
+
+  nsIContent* relatedTarget = aCurrentTarget;
+  while (relatedTarget) {
+    ShadowRoot* ancestorShadow = relatedTarget->GetContainingShadow();
+    if (currentTargetShadow == ancestorShadow) {
+      return relatedTarget;
+    }
+
+    // Didn't find the ancestor tree, thus related target does not have to
+    // adjusted.
+    if (!ancestorShadow) {
+      return nullptr;
+    }
+
+    relatedTarget = ancestorShadow->GetHost();
+  }
+
+  return nullptr;
 }
 
 } // namespace dom

@@ -1,0 +1,126 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBlob;
+
+using DeliveryState from "mozilla/dom/mobilemessage/Types.h";
+using DeliveryStatus from "mozilla/dom/mobilemessage/Types.h";
+using MessageClass from "mozilla/dom/mobilemessage/Types.h";
+using ReadStatus from "mozilla/dom/mobilemessage/Types.h";
+using ReadState from "mozilla/dom/mobilemessage/Types.h";
+using MessageType from "mozilla/dom/mobilemessage/Types.h";
+
+namespace mozilla {
+namespace dom {
+namespace mobilemessage {
+
+struct SmsMessageData
+{
+  int32_t        id;
+  uint64_t       threadId;
+  nsString       iccId;
+  DeliveryState  delivery;
+  DeliveryStatus deliveryStatus;
+  nsString       sender;
+  nsString       receiver;
+  nsString       body;
+  MessageClass   messageClass;
+  uint64_t       timestamp;         // ms since epoch.
+  uint64_t       sentTimestamp;     // ms since epoch.
+  uint64_t       deliveryTimestamp; // ms since epoch.
+  bool           read;
+};
+
+struct MmsAttachmentData
+{
+  nsString id;
+  nsString location;
+  PBlob content;
+};
+
+struct MmsDeliveryInfoData
+{
+  nsString        receiver;
+  DeliveryStatus  deliveryStatus;
+  uint64_t        deliveryTimestamp;
+  ReadStatus      readStatus;
+  uint64_t        readTimestamp;
+};
+
+struct MmsMessageData
+{
+  int32_t               id;
+  uint64_t              threadId;
+  nsString              iccId;
+  DeliveryState         delivery;
+  MmsDeliveryInfoData[] deliveryInfo;
+  nsString              sender;
+  nsString[]            receivers;
+  uint64_t              timestamp;     // ms since epoch.
+  uint64_t              sentTimestamp; // ms since epoch.
+  bool                  read;
+  nsString              subject;
+  nsString              smil;
+  MmsAttachmentData[]   attachments;
+  uint64_t              expiryDate;    // ms since epoch.
+  bool                  readReportRequested;
+};
+
+union MobileMessageData
+{
+  MmsMessageData;
+  SmsMessageData;
+};
+
+struct SmsFilterData
+{
+  bool          hasStartDate;
+  uint64_t      startDate;
+  bool          hasEndDate;
+  uint64_t      endDate;
+  nsString[]    numbers;
+  nsString      delivery;
+  bool          hasRead;
+  bool          read;
+  uint64_t      threadId;
+};
+
+struct ThreadData
+{
+  uint64_t    id;
+  nsString[]  participants;
+  uint64_t    timestamp;
+  nsString    lastMessageSubject;
+  nsString    body;
+  uint64_t    unreadCount;
+  MessageType lastMessageType;
+};
+
+struct MobileMessageArrayData
+{
+  MobileMessageData[] messages;
+};
+
+struct ThreadArrayData
+{
+  ThreadData[] threads;
+};
+
+union MobileMessageCursorData
+{
+  MobileMessageArrayData;
+  ThreadArrayData;
+};
+
+struct DeletedMessageInfoData
+{
+  int32_t[] deletedMessageIds;
+  uint64_t[] deletedThreadIds;
+};
+
+}
+}
+}

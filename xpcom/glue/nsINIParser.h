@@ -21,7 +21,7 @@
 
 class nsIFile;
 
-class NS_COM_GLUE nsINIParser
+class nsINIParser
 {
 public:
   nsINIParser() {}

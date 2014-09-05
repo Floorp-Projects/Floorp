@@ -184,8 +184,8 @@ public:
   NS_IMETHOD_(void) Trace(void* aPtr, const TraceCallbacks& aCb,
                           void* aClosure) = 0;
 
-  static void NS_COM_GLUE NoteJSChild(void* aScriptThing, const char* aName,
-                                      void* aClosure);
+  static void NoteJSChild(void* aScriptThing, const char* aName,
+                          void* aClosure);
 };
 
 class NS_NO_VTABLE nsXPCOMCycleCollectionParticipant : public nsScriptObjectTracer

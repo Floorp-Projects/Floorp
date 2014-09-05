@@ -558,7 +558,7 @@ nsNSSSocketInfo::SetFileDescPtr(PRFileDesc* aFilePtr)
 class PreviousCertRunnable : public SyncRunnableBase
 {
 public:
-  PreviousCertRunnable(nsIInterfaceRequestor* callbacks)
+  explicit PreviousCertRunnable(nsIInterfaceRequestor* callbacks)
     : mCallbacks(callbacks)
   {
   }
@@ -1441,7 +1441,7 @@ class PrefObserver : public nsIObserver {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  PrefObserver(nsSSLIOLayerHelpers* aOwner) : mOwner(aOwner) {}
+  explicit PrefObserver(nsSSLIOLayerHelpers* aOwner) : mOwner(aOwner) {}
 
 protected:
   virtual ~PrefObserver() {}
@@ -1800,16 +1800,16 @@ nsGetUserCertChoice(SSM_UserCertChoice* certChoice)
 {
   char* mode = nullptr;
   nsresult ret;
-  
+
   NS_ENSURE_ARG_POINTER(certChoice);
-  
+
   nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  
+
   ret = pref->GetCharPref("security.default_personal_cert", &mode);
   if (NS_FAILED(ret)) {
     goto loser;
   }
-  
+
   if (PL_strcmp(mode, "Select Automatically") == 0) {
     *certChoice = AUTO;
   } else if (PL_strcmp(mode, "Ask Every Time") == 0) {
@@ -2394,6 +2394,8 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     return NS_ERROR_FAILURE;
   }
 
+ uint16_t maxEnabledVersion = range.max;
+
   infoObject->SharedState().IOLayerHelpers()
     .adjustForTLSIntolerance(infoObject->GetHostName(), infoObject->GetPort(),
                              range);
@@ -2406,6 +2408,16 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     return NS_ERROR_FAILURE;
   }
   infoObject->SetTLSVersionRange(range);
+
+  // when adjustForTLSIntolerance tweaks the maximum version downward,
+  // we tell the server using this SCSV so they can detect a downgrade attack
+  if (range.max < maxEnabledVersion) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("[%p] nsSSLIOLayerSetOptions: enabling TLS_FALLBACK_SCSV\n", fd));
+    if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_FALLBACK_SCSV, true)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
 
   bool enabled = infoObject->SharedState().IsOCSPStaplingEnabled();
   if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_OCSP_STAPLING, enabled)) {

@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1041393
+-->
+<head>
+  <meta charset="utf-8">
+  <title>ImageCapture tests</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1041393">ImageCapture tests</a>
+<script type="application/javascript">
+
+var repeat = 100;
+var count;
+
+// Check if the callback returns even no JS reference on it.
+function gcTest(track) {
+  return new Promise(function(resolve, reject) {
+    count = 0;
+    var i;
+    var imageCapture;
+    for(i = 0; i < repeat; i++) {
+      imageCapture = new ImageCapture(track);
+      imageCapture.onphoto = function(blob) {
+        count++;
+        if (count == repeat) {
+          ok(true, "pass gc testing");
+          resolve(track);
+        }
+      };
+      imageCapture.onerror = function(error) {
+        ok(false, "takePhoto failure in gc testing");
+        reject();
+      };
+
+      imageCapture.takePhoto();
+    }
+    SpecialPowers.gc();
+  });
+}
+
+// Continue calling takePhoto() in rapid succession.
+function rapidTest(track) {
+  return new Promise(function(resolve, reject) {
+    var imageCapture = new ImageCapture(track);
+    imageCapture.onphoto = function(blob) {
+      count++;
+      if (count == repeat) {
+        ok(true, "pass raipd takePhoto() testing");
+        resolve(track);
+      }
+    };
+    imageCapture.onerror = function(error) {
+      ok(false, "takePhoto() failure in rapid testing");
+      reject();
+    };
+
+    count = 0;
+    var i;
+    for(i = 0; i < repeat; i++) {
+      imageCapture.takePhoto();
+    }
+  });
+}
+
+// Check if the blob is decodable.
+function blobTest(track) {
+  return new Promise(function(resolve, reject) {
+    var imageCapture = new ImageCapture(track);
+    imageCapture.onphoto = function(blob) {
+      var img = new Image();
+      img.onerror = function() {
+        ok(false, "fail to decode blob");
+        reject();
+      }
+      img.onload = function() {
+        ok(true, "decode blob success");
+        resolve(track);
+      }
+      img.src = URL.createObjectURL(blob.data);
+    };
+    imageCapture.onerror = function(error) {
+      ok(false, "fail to capture image");
+    };
+
+    imageCapture.takePhoto();
+  });
+}
+
+// It should return an error event after disabling video track.
+function trackTest(track) {
+  return new Promise(function(resolve, reject) {
+    var imageCapture = new ImageCapture(track);
+    imageCapture.onphoto = function(blob) {
+      ok(false, "expect error when video track is disable");
+      reject();
+    };
+    imageCapture.onerror = function(error) {
+      ok(error.imageCaptureError.code == error.imageCaptureError.PHOTO_ERROR, "error code is PHOTO_ERROR")
+      track.enabled = true;
+      resolve(track);
+    };
+
+    track.enabled = false;
+    imageCapture.takePhoto()
+  });
+}
+
+function init() {
+  return new Promise(function(resolve, reject) {
+    window.navigator.mozGetUserMedia(
+      {video: true, fake: true},
+      function(stream) {
+        var track = stream.getVideoTracks()[0];
+        resolve(track);
+      },
+      function(err) {
+        reject(err);
+      }
+    );
+  });
+}
+
+function start() {
+  init().then(function(track) {
+    info("ImageCapture track disable test.");
+    return trackTest(track);
+  }).then(function(track) {
+    info("ImageCapture blob test.");
+    return blobTest(track);
+  }).then(function(track) {
+    info("ImageCapture rapid takePhoto() test.");
+    return rapidTest(track);
+  }).then(function(track) {
+    info("ImageCapture multiple instances test.");
+    return gcTest(track);
+  }).then(function() {
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.imagecapture.enabled", true]]}, start);
+
+</script>
+</pre>
+</body>
+</html>

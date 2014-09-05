@@ -23,8 +23,8 @@ class HTMLButtonElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  HTMLButtonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                      FromParser aFromParser = NOT_FROM_PARSER);
+  explicit HTMLButtonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+                             FromParser aFromParser = NOT_FROM_PARSER);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLButtonElement,
                                            nsGenericHTMLFormElementWithState)

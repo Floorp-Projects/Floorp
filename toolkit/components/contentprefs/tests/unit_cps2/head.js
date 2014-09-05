@@ -235,34 +235,36 @@ function arraysOfArraysOK(actual, expected, cmp) {
 
 function dbOK(expectedRows) {
   let db = sendMessage("db");
-  let stmt = db.createAsyncStatement(
-    "SELECT groups.name AS grp, settings.name AS name, prefs.value AS value " +
-    "FROM prefs " +
-    "LEFT JOIN groups ON groups.id = prefs.groupID " +
-    "LEFT JOIN settings ON settings.id = prefs.settingID " +
-    "UNION " +
+  let stmt = db.createAsyncStatement(`
+    SELECT groups.name AS grp, settings.name AS name, prefs.value AS value
+    FROM prefs
+    LEFT JOIN groups ON groups.id = prefs.groupID
+    LEFT JOIN settings ON settings.id = prefs.settingID
+    UNION
 
-    // These second two SELECTs get the rows of the groups and settings tables
-    // that aren't referenced by the prefs table.  Neither should return any
-    // rows if the component is working properly.
-    "SELECT groups.name AS grp, NULL AS name, NULL AS value " +
-    "FROM groups " +
-    "WHERE id NOT IN (" +
-      "SELECT DISTINCT groupID " +
-      "FROM prefs " +
-      "WHERE groupID NOTNULL" +
-    ") " +
-    "UNION " +
-    "SELECT NULL AS grp, settings.name AS name, NULL AS value " +
-    "FROM settings " +
-    "WHERE id NOT IN (" +
-      "SELECT DISTINCT settingID " +
-      "FROM prefs " +
-      "WHERE settingID NOTNULL" +
-    ") " +
+    /*
+      These second two SELECTs get the rows of the groups and settings tables
+      that aren't referenced by the prefs table.  Neither should return any
+      rows if the component is working properly.
+    */
+    SELECT groups.name AS grp, NULL AS name, NULL AS value
+    FROM groups
+    WHERE id NOT IN (
+      SELECT DISTINCT groupID
+      FROM prefs
+      WHERE groupID NOTNULL
+    )
+    UNION
+    SELECT NULL AS grp, settings.name AS name, NULL AS value
+    FROM settings
+    WHERE id NOT IN (
+      SELECT DISTINCT settingID
+      FROM prefs
+      WHERE settingID NOTNULL
+    )
 
-    "ORDER BY value ASC, grp ASC, name ASC"
-  );
+    ORDER BY value ASC, grp ASC, name ASC
+  `);
 
   let actualRows = [];
   let cols = ["grp", "name", "value"];

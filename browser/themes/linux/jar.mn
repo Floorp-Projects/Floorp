@@ -13,6 +13,7 @@ browser.jar:
   skin/classic/browser/aboutCertError_sectionCollapsed.png
   skin/classic/browser/aboutCertError_sectionCollapsed-rtl.png
   skin/classic/browser/aboutCertError_sectionExpanded.png
+  skin/classic/browser/aboutNetError.css                        (../shared/aboutNetError.css)
   skin/classic/browser/aboutSocialError.css
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/aboutSyncTabs.css
@@ -156,7 +157,7 @@ browser.jar:
   skin/classic/browser/social/services-64.png         (social/services-64.png)
   skin/classic/browser/social/share-button.png        (social/share-button.png)
   skin/classic/browser/social/share-button-active.png (social/share-button-active.png)
-  skin/classic/browser/social/chat-icons.png          (social/chat-icons.png)
+  skin/classic/browser/social/chat-icons.svg          (../shared/social/chat-icons.svg)
   skin/classic/browser/social/gear_default.png        (../shared/social/gear_default.png)
   skin/classic/browser/social/gear_clicked.png        (../shared/social/gear_clicked.png)
   skin/classic/browser/tabbrowser/alltabs.png         (tabbrowser/alltabs.png)
@@ -203,6 +204,7 @@ browser.jar:
   skin/classic/browser/devtools/filetype-dir-close.svg        (../shared/devtools/images/filetypes/dir-close.svg)
   skin/classic/browser/devtools/filetype-dir-open.svg         (../shared/devtools/images/filetypes/dir-open.svg)
   skin/classic/browser/devtools/filetype-globe.svg            (../shared/devtools/images/filetypes/globe.svg)
+  skin/classic/browser/devtools/filetype-store.svg            (../shared/devtools/images/filetypes/store.svg)
   skin/classic/browser/devtools/commandline-icon.png          (../shared/devtools/images/commandline-icon.png)
   skin/classic/browser/devtools/commandline-icon@2x.png       (../shared/devtools/images/commandline-icon@2x.png)
   skin/classic/browser/devtools/command-paintflashing.png     (../shared/devtools/images/command-paintflashing.png)
@@ -217,6 +219,8 @@ browser.jar:
   skin/classic/browser/devtools/command-tilt@2x.png           (../shared/devtools/images/command-tilt@2x.png)
   skin/classic/browser/devtools/command-pick.png              (../shared/devtools/images/command-pick.png)
   skin/classic/browser/devtools/command-pick@2x.png           (../shared/devtools/images/command-pick@2x.png)
+  skin/classic/browser/devtools/command-frames.png            (../shared/devtools/images/command-frames.png)
+  skin/classic/browser/devtools/command-frames@2x.png         (../shared/devtools/images/command-frames@2x.png)
   skin/classic/browser/devtools/command-console.png           (../shared/devtools/images/command-console.png)
   skin/classic/browser/devtools/command-console@2x.png        (../shared/devtools/images/command-console@2x.png)
   skin/classic/browser/devtools/command-eyedropper.png        (../shared/devtools/images/command-eyedropper.png)
@@ -246,6 +250,7 @@ browser.jar:
 * skin/classic/browser/devtools/shadereditor.css      (devtools/shadereditor.css)
 * skin/classic/browser/devtools/splitview.css         (../shared/devtools/splitview.css)
   skin/classic/browser/devtools/styleeditor.css       (../shared/devtools/styleeditor.css)
+  skin/classic/browser/devtools/storage.css           (../shared/devtools/storage.css)
 * skin/classic/browser/devtools/webaudioeditor.css    (devtools/webaudioeditor.css)
   skin/classic/browser/devtools/magnifying-glass.png        (../shared/devtools/images/magnifying-glass.png)
   skin/classic/browser/devtools/magnifying-glass@2x.png     (../shared/devtools/images/magnifying-glass@2x.png)
@@ -308,6 +313,7 @@ browser.jar:
   skin/classic/browser/devtools/tool-inspector.svg          (../shared/devtools/images/tool-inspector.svg)
   skin/classic/browser/devtools/tool-inspector.svg          (../shared/devtools/images/tool-inspector.svg)
   skin/classic/browser/devtools/tool-styleeditor.svg        (../shared/devtools/images/tool-styleeditor.svg)
+  skin/classic/browser/devtools/tool-storage.svg            (../shared/devtools/images/tool-storage.svg)
   skin/classic/browser/devtools/tool-profiler.svg           (../shared/devtools/images/tool-profiler.svg)
   skin/classic/browser/devtools/tool-network.svg            (../shared/devtools/images/tool-network.svg)
   skin/classic/browser/devtools/tool-scratchpad.svg         (../shared/devtools/images/tool-scratchpad.svg)

@@ -14,7 +14,7 @@ UNIFIED_SOURCES += [
     '../nsStringAPI.cpp',
 ]
 
-LIBRARY_NAME = 'xpcomglue_s_nomozalloc'
+Library('xpcomglue_s_nomozalloc')
 
 SDK_LIBRARY = True
 

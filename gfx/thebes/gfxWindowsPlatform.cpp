@@ -1264,7 +1264,7 @@ gfxWindowsPlatform::SetupClearTypeParams()
         // For EnhancedContrast, we override the default if the user has not set it
         // in the registry (by using the ClearType Tuner).
         if (contrast >= 0.0 && contrast <= 10.0) {
-	    contrast = contrast;
+            contrast = contrast;
         } else {
             HKEY hKey;
             if (RegOpenKeyExA(ENHANCED_CONTRAST_REGISTRY_KEY,
@@ -1305,11 +1305,11 @@ gfxWindowsPlatform::SetupClearTypeParams()
         mRenderingParams[TEXT_RENDERING_NO_CLEARTYPE] = defaultRenderingParams;
 
         GetDWriteFactory()->CreateCustomRenderingParams(gamma, contrast, level,
-	    dwriteGeometry, renderMode,
+            dwriteGeometry, renderMode,
             getter_AddRefs(mRenderingParams[TEXT_RENDERING_NORMAL]));
 
         GetDWriteFactory()->CreateCustomRenderingParams(gamma, contrast, level,
-	    dwriteGeometry, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
+            dwriteGeometry, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
             getter_AddRefs(mRenderingParams[TEXT_RENDERING_GDI_CLASSIC]));
     }
 #endif

@@ -5,6 +5,7 @@
 
 #include "AnimationTimeline.h"
 #include "mozilla/dom/AnimationTimelineBinding.h"
+#include "AnimationUtils.h"
 #include "nsContentUtils.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -28,7 +29,7 @@ AnimationTimeline::WrapObject(JSContext* aCx)
 Nullable<double>
 AnimationTimeline::GetCurrentTime() const
 {
-  return ToTimelineTime(GetCurrentTimeStamp());
+  return AnimationUtils::TimeDurationToDouble(GetCurrentTimeDuration());
 }
 
 TimeStamp
@@ -67,10 +68,16 @@ AnimationTimeline::GetCurrentTimeStamp() const
   return result;
 }
 
-Nullable<double>
-AnimationTimeline::ToTimelineTime(const mozilla::TimeStamp& aTimeStamp) const
+Nullable<TimeDuration>
+AnimationTimeline::GetCurrentTimeDuration() const
 {
-  Nullable<double> result; // Initializes to null
+  return ToTimelineTime(GetCurrentTimeStamp());
+}
+
+Nullable<TimeDuration>
+AnimationTimeline::ToTimelineTime(const TimeStamp& aTimeStamp) const
+{
+  Nullable<TimeDuration> result; // Initializes to null
   if (aTimeStamp.IsNull()) {
     return result;
   }
@@ -80,7 +87,20 @@ AnimationTimeline::ToTimelineTime(const mozilla::TimeStamp& aTimeStamp) const
     return result;
   }
 
-  result.SetValue(timing->TimeStampToDOMHighRes(aTimeStamp));
+  result.SetValue(aTimeStamp - timing->GetNavigationStartTimeStamp());
+  return result;
+}
+
+TimeStamp
+AnimationTimeline::ToTimeStamp(const TimeDuration& aTimeDuration) const
+{
+  TimeStamp result;
+  nsRefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
+  if (MOZ_UNLIKELY(!timing)) {
+    return result;
+  }
+
+  result = timing->GetNavigationStartTimeStamp() + aTimeDuration;
   return result;
 }
 

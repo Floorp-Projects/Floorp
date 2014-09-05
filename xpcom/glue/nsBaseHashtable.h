@@ -124,7 +124,7 @@ public:
   void Put(KeyType aKey, const UserDataType& aData)
   {
     if (!Put(aKey, aData, fallible_t())) {
-      NS_ABORT_OOM(this->mTable.entrySize * this->mTable.entryCount);
+      NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
     }
   }
 

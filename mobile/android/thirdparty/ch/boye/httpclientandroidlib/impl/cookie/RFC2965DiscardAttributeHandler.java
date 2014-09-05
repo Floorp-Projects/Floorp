@@ -28,7 +28,6 @@
 package ch.boye.httpclientandroidlib.impl.cookie;
 
 import ch.boye.httpclientandroidlib.annotation.Immutable;
-
 import ch.boye.httpclientandroidlib.cookie.Cookie;
 import ch.boye.httpclientandroidlib.cookie.CookieAttributeHandler;
 import ch.boye.httpclientandroidlib.cookie.CookieOrigin;
@@ -51,7 +50,7 @@ public class RFC2965DiscardAttributeHandler implements CookieAttributeHandler {
       public void parse(final SetCookie cookie, final String commenturl)
               throws MalformedCookieException {
           if (cookie instanceof SetCookie2) {
-              SetCookie2 cookie2 = (SetCookie2) cookie;
+              final SetCookie2 cookie2 = (SetCookie2) cookie;
               cookie2.setDiscard(true);
           }
       }

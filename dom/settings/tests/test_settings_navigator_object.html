@@ -32,7 +32,10 @@ function testPref() {
 
 SpecialPowers.pushPermissions([
   {type: "settings-read", allow: 0, context: document},
-  {type: "settings-write", allow: 0, context: document}
+  {type: "settings-write", allow: 0, context: document},
+  {type: "settings-api-read", allow: 0, context: document},
+  {type: "settings-api-write", allow: 0, context: document},
+  {type: "settings-clear", allow: 0, context: document}
 ], function() {
   ise(frames[0].navigator.mozSettings, null, "navigator.mozSettings is null when the page doesn't have permissions");
   testPref();

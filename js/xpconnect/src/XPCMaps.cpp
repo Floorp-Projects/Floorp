@@ -485,7 +485,7 @@ void
 IID2ThisTranslatorMap::Entry::Clear(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     static_cast<Entry*>(entry)->value = nullptr;
-    memset(entry, 0, table->entrySize);
+    memset(entry, 0, table->EntrySize());
 }
 
 const struct PLDHashTableOps IID2ThisTranslatorMap::Entry::sOps =

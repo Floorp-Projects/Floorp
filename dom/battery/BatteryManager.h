@@ -27,7 +27,7 @@ class BatteryManager : public DOMEventTargetHelper
                      , public BatteryObserver
 {
 public:
-  BatteryManager(nsPIDOMWindow* aWindow);
+  explicit BatteryManager(nsPIDOMWindow* aWindow);
 
   void Init();
   void Shutdown();

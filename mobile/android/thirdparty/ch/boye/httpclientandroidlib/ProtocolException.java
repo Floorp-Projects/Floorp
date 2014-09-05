@@ -50,7 +50,7 @@ public class ProtocolException extends HttpException {
      *
      * @param message The exception detail message
      */
-    public ProtocolException(String message) {
+    public ProtocolException(final String message) {
         super(message);
     }
 
@@ -61,7 +61,7 @@ public class ProtocolException extends HttpException {
      * @param cause the <tt>Throwable</tt> that caused this exception, or <tt>null</tt>
      * if the cause is unavailable, unknown, or not a <tt>Throwable</tt>
      */
-    public ProtocolException(String message, Throwable cause) {
+    public ProtocolException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

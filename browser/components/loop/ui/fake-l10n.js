@@ -8,8 +8,15 @@
  * for any requested string id.
  * @type {Object}
  */
-document.webL10n = document.mozL10n = {
-  get: function(sringId, vars) {
-    return "" + sringId + (vars ? ";" + JSON.stringify(vars) : "");
+navigator.mozL10n = document.mozL10n = {
+  get: function(stringId, vars) {
+
+    // upcase the first letter
+    var readableStringId = stringId.replace(/^./, function(match) {
+      "use strict";
+      return match.toUpperCase();
+    }).replace(/_/g, " ");  // and convert _ chars to spaces
+
+    return "" + readableStringId + (vars ? ";" + JSON.stringify(vars) : "");
   }
 };

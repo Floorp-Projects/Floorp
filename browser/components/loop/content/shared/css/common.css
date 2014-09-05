@@ -13,18 +13,9 @@
 }
 
 body {
-  margin: 0;
-  padding: 0;
   font-family: "Lucida Grande", sans-serif;
   font-size: 12px;
   background: #fbfbfb;
-}
-
-button {
-  /* Resetting default <button> font properties; eg. strangely enough, FF mac
-     wants to use Helvetica/12px whatever we define for parent elements */
-  font-family: "Lucida Grande", sans-serif;
-  font-size: 1em;
 }
 
 img {
@@ -32,8 +23,12 @@ img {
 }
 
 h1, h2, h3 {
-  font-family: "Open Sans", sans-serif;
   color: #666;
+}
+
+/* choose a sane default for paragraphs, since reset.css' 0px is not what we want */
+p {
+  margin: 1em 0;
 }
 
 /* Helpers */
@@ -49,8 +44,8 @@ h1, h2, h3 {
  */
 .cf:before,
 .cf:after {
-  content: " ";   /* 1 */
-  display: table; /* 2 */
+  display: table; /* 1 */
+  content: " ";   /* 2 */
 }
 
 .cf:after {
@@ -79,48 +74,25 @@ h1, h2, h3 {
   width: 100%;
 }
 
-/* Buttons */
+/* A reset for all button-appearing elements, with the lowest-common
+ * denominator of the needed rules.  Intended to be used as a base class
+ * together with .btn-*
+ */
 
 .btn {
   display: inline-block;
-  background: #a5a;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
   border: none;
+  background: #a5a;
   color: #fff;
-  text-decoration: none;
-  padding: .3em .6em;
-  border: 1px solid transparent;
-  border-radius: 2px;
-  cursor: pointer;
-  font-size: .9em;
   text-align: center;
-}
-
-  button.btn {
-       /* for some reason, buttons respond differently to setting padding than
-          regular links */
-       padding: .3em .3em .3em .5em;
-  }
-
-.btn-large {
-  /* Dimensions from spec
-   * https://people.mozilla.org/~dhenein/labs/loop-link-spec/#call-start */
-  padding: .5em;
-  font-size: 18px;
-  height: auto;
-}
-
-  .btn-large + .btn-chevron {
-    padding: 1rem;
-    height: 100%; /* match full height of button */
-  }
-
-/*
- * Left / Right padding elements
- * used to center components
- * */
-.flex-padding-1 {
-  display: flex;
-  flex: 1;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .9em;
+  cursor: pointer;
 }
 
 .btn-info {
@@ -138,20 +110,23 @@ h1, h2, h3 {
     border: 1px solid #006b9d;
   }
 
+.btn-accept,
 .btn-success,
-.btn-success + .btn-chevron {
+.btn-accept + .btn-chevron {
   background-color: #74bf43;
   border: 1px solid #74bf43;
 }
 
+  .btn-accept:hover,
   .btn-success:hover,
-  .btn-success + .btn-chevron:hover {
+  .btn-accept + .btn-chevron:hover {
     background-color: #6cb23e;
     border: 1px solid #6cb23e;
   }
 
+  .btn-accept:active,
   .btn-success:active,
-  .btn-success + .btn-chevron:active {
+  .btn-accept + .btn-chevron:active {
     background-color: #64a43a;
     border: 1px solid #64a43a;
   }
@@ -161,18 +136,21 @@ h1, h2, h3 {
 }
 
 .btn-error,
+.btn-hangup,
 .btn-error + .btn-chevron {
   background-color: #d74345;
   border: 1px solid #d74345;
 }
 
   .btn-error:hover,
+  .btn-hangup:hover,
   .btn-error + .btn-chevron:hover {
     background-color: #c53436;
     border: 1px solid #c53436;
   }
 
   .btn-error:active,
+  .btn-hangup:active,
   .btn-error + .btn-chevron:active {
     background-color: #ae2325;
     border: 1px solid #ae2325;
@@ -186,7 +164,7 @@ h1, h2, h3 {
 }
 
 /* Groups together a button and a chevron */
-.button-group-chevron {
+.btn-group-chevron {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -194,15 +172,13 @@ h1, h2, h3 {
 
 /* Groups together a button-group-chevron
  * and the dropdown menu */
-.button-chevron-menu-group {
+.btn-chevron-menu-group {
   display: flex;
-  flex-direction: row;
-  align-items: center;
   justify-content: space-between;
-  flex: 1;
+  flex: 8;
 }
 
-.button-group-chevron .btn {
+.btn-group-chevron .btn {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   flex: 2;
@@ -221,9 +197,6 @@ h1, h2, h3 {
 @media (min-resolution: 2dppx) {
   .btn-chevron {
     background-image: url(../img/dropdown-inverse@2x.png);
-    background-position: center;
-    background-size: 10px;
-    background-repeat: no-repeat;
   }
 }
 
@@ -233,15 +206,15 @@ h1, h2, h3 {
   opacity: 0.65;
 }
 
-.button-group {
+.btn-group {
   display: flex;
-  width: 100%;
   align-content: space-between;
   justify-content: center;
 }
 
-.button-group .btn {
+.btn-chevron-menu-group .btn {
   flex: 1;
+  border-radius: 2px;
   border-bottom-right-radius: 0;
   border-top-right-radius: 0;
 }
@@ -270,30 +243,42 @@ h1, h2, h3 {
 
 .alert .close {
   position: relative;
-  top: -.2em;
-  right: -1em;
+  top: -.1rem;
+  right: -1rem;
 }
 
 /* Misc */
 
+.call-url,
+.overflow-text-ellipsis,
+.standalone-call-btn-text,
+.fx-embedded-answer-btn-text {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
 .close {
   float: right;
-  font-size: 20px;
+  font-size: 1rem;
   font-weight: bold;
-  line-height: 1em;
+  line-height: 1rem;
   color: #000;
-  opacity: .2;
+  opacity: .4;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
+
+  .close:hover {
+    opacity: .6;
+  }
 
 .close:before {
   /* \2716 is unicode representation of the close button icon */
   content: '\2716';
-}
-
-.btn.close {
-  background: none;
-  border: none;
-  cursor: pointer;
 }
 
 /* Transitions */
@@ -355,42 +340,22 @@ h1, h2, h3 {
   line-height: 16px;
 }
 
-.windows {
+/* Using star selector to override
+ * the specificity of other selectors
+ * if performance is an issue we could
+ * explicitely list all the elements */
+.windows * {
   font-family: 'Segoe';
 }
 
-  .windows p {
-    font-size: 12px;
-  }
-
-  .windows h1 {
-    font-family: 'Segoe Bold';
-  }
-
-.mac {
+.mac * {
   font-family: 'Lucida Grande';
 }
 
-  .mac p {
-    font-size: 11.5px;
-  }
-
-  .mac h1 {
-    font-family: 'Lucida Grande Bold';
-  }
-
-.linux {
+.linux * {
   /* XXX requires fallbacks */
   font-family: 'Ubuntu', sans-serif;
 }
-
-  .linux p {
-    font-size: 12px;
-  }
-
-  .linux h1 {
-    font-family: 'Ubuntu Bold';
-  }
 
 /* Web panel */
 
@@ -408,7 +373,6 @@ h1, h2, h3 {
   font-weight: 700;
   padding: 20px 0;
   text-align: center;
-  margin: 0;
 }
 
 .info-panel h4 {
@@ -421,9 +385,9 @@ h1, h2, h3 {
 /* Logos */
 
 .firefox-logo {
-  background: transparent url(../img/firefox-logo.png) no-repeat center center;
-  background-size: contain;
+  margin: 0 auto; /* horizontal block centering */
   width: 100px;
   height: 100px;
-  margin: 0px auto; /* horizontal block centering */
+  background: transparent url(../img/firefox-logo.png) no-repeat center center;
+  background-size: contain;
 }

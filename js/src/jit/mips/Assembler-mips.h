@@ -13,8 +13,8 @@
 
 #include "jit/CompactBuffer.h"
 #include "jit/IonCode.h"
-#include "jit/IonSpewer.h"
 #include "jit/JitCompartment.h"
+#include "jit/JitSpewer.h"
 #include "jit/mips/Architecture-mips.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/shared/IonAssemblerBuffer.h"
@@ -119,6 +119,11 @@ static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { FloatRegisters::f18,
 static MOZ_CONSTEXPR_VAR FloatRegister SecondScratchFloat32Reg = { FloatRegisters::f16, FloatRegister::Single };
 static MOZ_CONSTEXPR_VAR FloatRegister SecondScratchDoubleReg = { FloatRegisters::f16, FloatRegister::Double };
 
+// A bias applied to the GlobalReg to allow the use of instructions with small
+// negative immediate offsets which doubles the range of global data that can be
+// accessed with a single instruction.
+static const int32_t AsmJSGlobalRegBias = 32768;
+
 // Registers used in the GenerateFFIIonExit Enable Activation block.
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = t0;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = a0;
@@ -153,9 +158,8 @@ static MOZ_CONSTEXPR_VAR FloatRegister f30 = { FloatRegisters::f30, FloatRegiste
 
 // MIPS CPUs can only load multibyte data that is "naturally"
 // four-byte-aligned, sp register should be eight-byte-aligned.
-static const uint32_t StackAlignment = 8;
+static const uint32_t ABIStackAlignment = 8;
 static const uint32_t CodeAlignment = 4;
-static const bool StackKeptAligned = true;
 
 // This boolean indicates whether we support SIMD instructions flavoured for
 // this architecture or not. Rather than a method in the LIRGenerator, it is
@@ -165,6 +169,8 @@ static const bool SupportsSimd = false;
 // TODO this is just a filler to prevent a build failure. The MIPS SIMD
 // alignment requirements still need to be explored.
 static const uint32_t SimdStackAlignment = 8;
+
+static const uint32_t AsmJSStackAlignment = SimdStackAlignment;
 
 static const Scale ScalePointer = TimesFour;
 
@@ -233,9 +239,8 @@ static const uint32_t RDMask = ((1 << RDBits) - 1) << RDShift;
 static const uint32_t SAMask = ((1 << SABits) - 1) << SAShift;
 static const uint32_t FunctionMask = ((1 << FunctionBits) - 1) << FunctionShift;
 static const uint32_t RegMask = Registers::Total - 1;
-static const uint32_t StackAlignmentMask = StackAlignment - 1;
 
-static const int32_t MAX_BREAK_CODE = 1024 - 1;
+static const uint32_t MAX_BREAK_CODE = 1024 - 1;
 
 class Instruction;
 class InstReg;
@@ -893,7 +898,7 @@ class Assembler : public AssemblerShared
     BufferOffset as_movf(Register rd, Register rs, uint16_t cc = 0);
 
     // Bit twiddling.
-    BufferOffset as_clz(Register rd, Register rs, Register rt = Register::FromCode(0));
+    BufferOffset as_clz(Register rd, Register rs);
     BufferOffset as_ins(Register rt, Register rs, uint16_t pos, uint16_t size);
     BufferOffset as_ext(Register rt, Register rs, uint16_t pos, uint16_t size);
 

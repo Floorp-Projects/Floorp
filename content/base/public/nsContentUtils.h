@@ -214,7 +214,8 @@ public:
     const nsINode* aPossibleDescendant, const nsINode* aPossibleAncestor);
 
   /**
-   * Similar to ContentIsDescendantOf except it crosses document boundaries.
+   * Similar to ContentIsDescendantOf except it crosses document boundaries,
+   * also crosses ShadowRoot boundaries from ShadowRoot to its host.
    */
   static bool ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
                                               nsINode* aPossibleAncestor);
@@ -1591,7 +1592,6 @@ public:
   static nsresult GetUTFOrigin(nsIPrincipal* aPrincipal,
                                nsString& aOrigin);
   static nsresult GetUTFOrigin(nsIURI* aURI, nsString& aOrigin);
-  static void GetUTFNonNullOrigin(nsIURI* aURI, nsString& aOrigin);
 
   /**
    * This method creates and dispatches "command" event, which implements

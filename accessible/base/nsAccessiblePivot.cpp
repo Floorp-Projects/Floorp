@@ -19,8 +19,8 @@ using namespace mozilla::a11y;
 class RuleCache
 {
 public:
-  RuleCache(nsIAccessibleTraversalRule* aRule) : mRule(aRule),
-                                                 mAcceptRoles(nullptr) { }
+  explicit RuleCache(nsIAccessibleTraversalRule* aRule) : mRule(aRule),
+                                                          mAcceptRoles(nullptr) { }
   ~RuleCache () {
     if (mAcceptRoles)
       nsMemory::Free(mAcceptRoles);
@@ -674,6 +674,13 @@ nsAccessiblePivot::AdjustStartPosition(Accessible* aAccessible,
         *aFilterResult = filtered;
         matched = temp;
       }
+    }
+  }
+
+  if (aAccessible == mPosition && mStartOffset != -1 && mEndOffset != -1) {
+    HyperTextAccessible* text = aAccessible->AsHyperText();
+    if (text) {
+      matched = text->GetChildAtOffset(mStartOffset);
     }
   }
 

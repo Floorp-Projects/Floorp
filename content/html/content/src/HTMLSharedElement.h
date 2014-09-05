@@ -29,7 +29,7 @@ class HTMLSharedElement MOZ_FINAL : public nsGenericHTMLElement,
                                     public nsIDOMHTMLHtmlElement
 {
 public:
-  HTMLSharedElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit HTMLSharedElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
     if (mNodeInfo->Equals(nsGkAtoms::head) ||

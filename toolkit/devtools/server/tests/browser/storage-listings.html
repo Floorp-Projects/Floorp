@@ -79,6 +79,7 @@ function successClear(event) {
 window.clear = function*(callback) {
   document.cookie = "c1=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "c3=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie = "cs2=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   localStorage.clear();
   indexedDB.deleteDatabase("idb1").onsuccess = successClear;
   yield undefined;

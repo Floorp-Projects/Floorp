@@ -489,7 +489,6 @@ CompositorD3D9::SetMask(const EffectChain &aEffectChain, uint32_t aMaskTexture)
 
   TextureSourceD3D9 *source = maskEffect->mMaskTexture->AsSourceD3D9();
 
-  MOZ_ASSERT(aMaskTexture >= 0);
   device()->SetTexture(aMaskTexture, source->GetD3D9Texture());
 
   const gfx::Matrix4x4& maskTransform = maskEffect->mMaskTransform;

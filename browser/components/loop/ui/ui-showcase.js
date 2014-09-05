@@ -17,7 +17,8 @@
   var IncomingCallView = loop.conversation.IncomingCallView;
 
   // 2. Standalone webapp
-  var CallUrlExpiredView = loop.webapp.CallUrlExpiredView;
+  var CallUrlExpiredView    = loop.webapp.CallUrlExpiredView;
+  var StartConversationView = loop.webapp.StartConversationView;
 
   // 3. Shared components
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
@@ -33,12 +34,31 @@
     return false;
   }
 
+  function noop(){}
+
   // Feedback API client configured to send data to the stage input server,
   // which is available at https://input.allizom.org
   var stageFeedbackApiClient = new loop.FeedbackAPIClient(
     "https://input.allizom.org/api/v1/feedback", {
       product: "Loop"
-    });
+    }
+  );
+
+  // Local mocks
+
+  var mockClient = {
+    requestCallUrl: noop,
+    requestCallUrlInfo: noop
+  };
+
+  var mockSDK = {};
+
+  var mockConversationModel = new loop.shared.models.ConversationModel({}, {
+    sdk: mockSDK
+  });
+  mockConversationModel.startSession = noop;
+
+  var mockNotifier = {};
 
   var Example = React.createClass({displayName: 'Example',
     render: function() {
@@ -72,7 +92,7 @@
         React.DOM.div({className: "showcase"}, 
           React.DOM.header(null, 
             React.DOM.h1(null, "Loop UI Components Showcase"), 
-            React.DOM.nav({className: "menu"}, 
+            React.DOM.nav({className: "showcase-menu"}, 
               React.Children.map(this.props.children, function(section) {
                 return (
                   React.DOM.a({className: "btn btn-info", href: "#" + section.props.name}, 
@@ -96,35 +116,155 @@
             React.DOM.p({className: "note"}, 
               React.DOM.strong(null, "Note:"), " 332px wide."
             ), 
-            Example({summary: "Pending call url retrieval", dashed: "true", style: {width: "332px"}}, 
-              PanelView(null)
-            ), 
             Example({summary: "Call URL retrieved", dashed: "true", style: {width: "332px"}}, 
-              PanelView({callUrl: "http://invalid.example.url/"})
+              PanelView({client: mockClient, notifier: mockNotifier, 
+                         callUrl: "http://invalid.example.url/"})
+            ), 
+            Example({summary: "Pending call url retrieval", dashed: "true", style: {width: "332px"}}, 
+              PanelView({client: mockClient, notifier: mockNotifier})
             )
           ), 
 
           Section({name: "IncomingCallView"}, 
             Example({summary: "Default", dashed: "true", style: {width: "280px"}}, 
-              IncomingCallView(null)
+              React.DOM.div({className: "fx-embedded"}, 
+                IncomingCallView({model: mockConversationModel})
+              )
+            )
+          ), 
+
+          Section({name: "IncomingCallView-ActiveState"}, 
+            Example({summary: "Default", dashed: "true", style: {width: "280px"}}, 
+              React.DOM.div({className: "fx-embedded"}, 
+                IncomingCallView({model: mockConversationModel, showDeclineMenu: true})
+              )
             )
           ), 
 
           Section({name: "ConversationToolbar"}, 
-            Example({summary: "Default"}, 
-              ConversationToolbar({video: {enabled: true}, audio: {enabled: true}})
+            React.DOM.h2(null, "Desktop Conversation Window"), 
+            React.DOM.div({className: "fx-embedded override-position"}, 
+              Example({summary: "Default (260x265)", dashed: "true"}, 
+                ConversationToolbar({video: {enabled: true}, 
+                                     audio: {enabled: true}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
+              ), 
+              Example({summary: "Video muted"}, 
+                ConversationToolbar({video: {enabled: false}, 
+                                     audio: {enabled: true}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
+              ), 
+              Example({summary: "Audio muted"}, 
+                ConversationToolbar({video: {enabled: true}, 
+                                     audio: {enabled: false}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
+              )
             ), 
-            Example({summary: "Video muted"}, 
-              ConversationToolbar({video: {enabled: false}, audio: {enabled: true}})
-            ), 
-            Example({summary: "Audio muted"}, 
-              ConversationToolbar({video: {enabled: true}, audio: {enabled: false}})
+
+            React.DOM.h2(null, "Standalone"), 
+            React.DOM.div({className: "standalone override-position"}, 
+              Example({summary: "Default"}, 
+                ConversationToolbar({video: {enabled: true}, 
+                                     audio: {enabled: true}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
+              ), 
+              Example({summary: "Video muted"}, 
+                ConversationToolbar({video: {enabled: false}, 
+                                     audio: {enabled: true}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
+              ), 
+              Example({summary: "Audio muted"}, 
+                ConversationToolbar({video: {enabled: true}, 
+                                     audio: {enabled: false}, 
+                                     hangup: noop, 
+                                     publishStream: noop})
+              )
+            )
+          ), 
+
+          Section({name: "StartConversationView"}, 
+            Example({summary: "Start conversation view", dashed: "true"}, 
+              React.DOM.div({className: "standalone"}, 
+                StartConversationView({model: mockConversationModel, 
+                                       client: mockClient, 
+                                       notifier: mockNotifier, 
+                                       showCallOptionsMenu: true})
+              )
             )
           ), 
 
           Section({name: "ConversationView"}, 
-            Example({summary: "Default"}, 
-              ConversationView({video: {enabled: true}, audio: {enabled: true}})
+            Example({summary: "Desktop conversation window", dashed: "true", 
+                     style: {width: "260px", height: "265px"}}, 
+              React.DOM.div({className: "fx-embedded"}, 
+                ConversationView({sdk: mockSDK, 
+                                  model: mockConversationModel, 
+                                  video: {enabled: true}, 
+                                  audio: {enabled: true}})
+              )
+            ), 
+
+            Example({summary: "Desktop conversation window large", dashed: "true"}, 
+              React.DOM.div({className: "breakpoint", 'data-breakpoint-width': "800px", 
+                'data-breakpoint-height': "600px"}, 
+                React.DOM.div({className: "fx-embedded"}, 
+                  ConversationView({sdk: mockSDK, 
+                    video: {enabled: true}, 
+                    audio: {enabled: true}, 
+                    model: mockConversationModel})
+                )
+              )
+            ), 
+
+            Example({summary: "Desktop conversation window local audio stream", 
+                     dashed: "true", style: {width: "260px", height: "265px"}}, 
+              React.DOM.div({className: "fx-embedded"}, 
+                ConversationView({sdk: mockSDK, 
+                                  video: {enabled: false}, 
+                                  audio: {enabled: true}, 
+                                  model: mockConversationModel})
+              )
+            ), 
+
+            Example({summary: "Standalone version"}, 
+              React.DOM.div({className: "standalone"}, 
+                ConversationView({sdk: mockSDK, 
+                                  video: {enabled: true}, 
+                                  audio: {enabled: true}, 
+                                  model: mockConversationModel})
+              )
+            )
+          ), 
+
+          Section({name: "ConversationView-640"}, 
+            Example({summary: "640px breakpoint for conversation view"}, 
+              React.DOM.div({className: "breakpoint", 
+                   style: {"text-align":"center"}, 
+                   'data-breakpoint-width': "400px", 
+                   'data-breakpoint-height': "780px"}, 
+                React.DOM.div({className: "standalone"}, 
+                  ConversationView({sdk: mockSDK, 
+                                    video: {enabled: true}, 
+                                    audio: {enabled: true}, 
+                                    model: mockConversationModel})
+                )
+              )
+            )
+          ), 
+
+          Section({name: "ConversationView-LocalAudio"}, 
+            Example({summary: "Local stream is audio only"}, 
+              React.DOM.div({className: "standalone"}, 
+                ConversationView({sdk: mockSDK, 
+                                  video: {enabled: false}, 
+                                  audio: {enabled: true}, 
+                                  model: mockConversationModel})
+              )
             )
           ), 
 
@@ -137,10 +277,10 @@
               FeedbackView({feedbackApiClient: stageFeedbackApiClient})
             ), 
             Example({summary: "Detailed form", dashed: "true", style: {width: "280px"}}, 
-              FeedbackView({step: "form"})
+              FeedbackView({feedbackApiClient: stageFeedbackApiClient, step: "form"})
             ), 
             Example({summary: "Thank you!", dashed: "true", style: {width: "280px"}}, 
-              FeedbackView({step: "finished"})
+              FeedbackView({feedbackApiClient: stageFeedbackApiClient, step: "finished"})
             )
           ), 
 
@@ -151,13 +291,77 @@
             Example({summary: "Non-Firefox User"}, 
               CallUrlExpiredView({helper: {isFirefox: returnFalse}})
             )
+          ), 
+
+          Section({name: "AlertMessages"}, 
+            Example({summary: "Various alerts"}, 
+              React.DOM.div({className: "alert alert-warning"}, 
+                React.DOM.button({className: "close"}), 
+                React.DOM.p({className: "message"}, 
+                  "The person you were calling has ended the conversation."
+                )
+              ), 
+              React.DOM.br(null), 
+              React.DOM.div({className: "alert alert-error"}, 
+                React.DOM.button({className: "close"}), 
+                React.DOM.p({className: "message"}, 
+                  "The person you were calling has ended the conversation."
+                )
+              )
+            )
           )
+
         )
       );
     }
   });
 
+  /**
+   * Render components that have different styles across
+   * CSS media rules in their own iframe to mimic the viewport
+   * */
+  function _renderComponentsInIframes() {
+    var parents = document.querySelectorAll('.breakpoint');
+    [].forEach.call(parents, appendChildInIframe);
+
+    /**
+     * Extracts the component from the DOM and appends in the an iframe
+     *
+     * @type {HTMLElement} parent - Parent DOM node of a component & iframe
+     * */
+    function appendChildInIframe(parent) {
+      var styles     = document.querySelector('head').children;
+      var component  = parent.children[0];
+      var iframe     = document.createElement('iframe');
+      var width      = parent.dataset.breakpointWidth;
+      var height     = parent.dataset.breakpointHeight;
+
+      iframe.style.width  = width;
+      iframe.style.height = height;
+
+      parent.appendChild(iframe);
+      iframe.src    = "about:blank";
+      // Workaround for bug 297685
+      iframe.onload = function () {
+        var iframeHead = iframe.contentDocument.querySelector('head');
+        iframe.contentDocument.documentElement.querySelector('body')
+                                              .appendChild(component);
+
+        [].forEach.call(styles, function(style) {
+          iframeHead.appendChild(style.cloneNode(true));
+        });
+
+      };
+    }
+  }
+
   window.addEventListener("DOMContentLoaded", function() {
-    React.renderComponent(App(null), document.body);
+    var body = document.body;
+    body.className = loop.shared.utils.getTargetPlatform();
+
+    React.renderComponent(App(null), body);
+
+    _renderComponentsInIframes();
   });
+
 })();

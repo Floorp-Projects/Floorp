@@ -85,6 +85,15 @@
   min-width: inherit;
 }
 
+/* Command buttons with menupopups should be styled slightly differently -
+   no background color and a bit more narrow */
+#toolbox-buttons .devtools-toolbarbutton:not([text-as-image]):not(:hover):not([open=true]) {
+  background: transparent;
+}
+#toolbox-buttons .devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker {
+  padding: 0 2px;
+}
+
 .devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
   display: none;
 }
@@ -380,87 +389,84 @@
   margin: 0;
   min-width: 78px;
   text-align: center;
+  background-color: transparent;
   color: inherit;
   -moz-box-flex: 1;
   border-width: 0;
+  -moz-border-start-width: 1px;
+  border-style: solid;
   border-radius: 0;
   position: static;
-  -moz-margin-start: -1px;
   text-shadow: none;
 }
 
-.devtools-sidebar-tabs > tabs > tab {
-  background-size: calc(100% - 1px) 100%, 1px 100%;
-  background-repeat: no-repeat;
-  background-position: 1px, 0;
-}
-
-.devtools-sidebar-tabs > tabs > tab:not(:last-of-type) {
-  background-size: calc(100% - 2px) 100%, 1px 100%;
-}
-
-.devtools-sidebar-tabs:-moz-locale-dir(rtl) > tabs > tab {
-  background-position: calc(100% - 1px), 100%;
-}
-
-.devtools-sidebar-tabs > tabs > tab {
-  background-color: transparent;
+.devtools-sidebar-tabs > tabs > tab:first-child {
+  -moz-border-start-width: 0;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab {
-  background-image: linear-gradient(transparent, transparent), @smallSeparatorDark@;
+  border-image: @smallSeparatorDark@ 1 1;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab:hover {
-  background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @smallSeparatorDark@;
+  background: hsla(206,37%,4%,.2);
+  border-image: @smallSeparatorDark@ 1 1;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab:hover:active {
-  background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @smallSeparatorDark@;
+  background: hsla(206,37%,4%,.4);
+  border-image: @smallSeparatorDark@ 1 1;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab {
-  background-image: linear-gradient(transparent, transparent), @solidSeparatorDark@;
+  border-image: @solidSeparatorDark@ 1 1;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover {
-  background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @solidSeparatorDark@;
+  background: hsla(206,37%,4%,.2);
+  border-image: @solidSeparatorDark@ 1 1;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover:active {
-  background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @solidSeparatorDark@;
+  background: hsla(206,37%,4%,.4);
+  border-image: @solidSeparatorDark@ 1 1;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected],
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
   color: #f5f7fa;
-  background-image: linear-gradient(#1d4f73, #1d4f73), @solidSeparatorDark@;
+  background: #1d4f73;
+  border-image: @solidSeparatorDark@ 1 1;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab {
-  background-image: linear-gradient(transparent, transparent), @smallSeparatorLight@;
+  border-image: @smallSeparatorLight@ 1 1;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab:hover {
-  background-image: linear-gradient(#ddd, #ddd), @smallSeparatorLight@;
+  background: #ddd;
+  border-image: @smallSeparatorLight@ 1 1;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab:hover:active {
-  background-image: linear-gradient(#ddd, #ddd), @smallSeparatorLight@;
+  background: #ddd;
+  border-image: @smallSeparatorLight@ 1 1;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab[selected] + tab {
-  background-image: linear-gradient(transparent, transparent), @solidSeparatorLight@;
+  border-image: @solidSeparatorLight@;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover {
-  background-image: linear-gradient(#ddd, #ddd), @solidSeparatorLight@;
+  background: #ddd;
+  border-image: @solidSeparatorLight@;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab[selected],
 .theme-light .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
   color: #f5f7fa;
-  background-image: linear-gradient(#4c9ed9, #4c9ed9), @solidSeparatorLight@;
+  background: #4c9ed9;
+  border-image: @solidSeparatorLight@;
 }
 
 /* Toolbox - moved from toolbox.css.
@@ -570,6 +576,9 @@
 .command-button[checked=true] > image {
   background-position: -48px center;
 }
+.command-button[open=true] > image {
+  background-position: 0 center;
+}
 
 #command-button-paintflashing > image {
   background-image: url("chrome://browser/skin/devtools/command-paintflashing.png");
@@ -594,6 +603,10 @@
 
 #command-button-pick > image {
   background-image: url("chrome://browser/skin/devtools/command-pick.png");
+}
+
+#command-button-frames > image {
+  background-image: url("chrome://browser/skin/devtools/command-frames.png");
 }
 
 #command-button-splitconsole > image {
@@ -627,6 +640,10 @@
 
   #command-button-pick > image {
     background-image: url("chrome://browser/skin/devtools/command-pick@2x.png");
+  }
+
+  #command-button-frames > image {
+    background-image: url("chrome://browser/skin/devtools/command-frames@2x.png");
   }
 
   #command-button-splitconsole > image {

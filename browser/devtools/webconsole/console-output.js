@@ -10,8 +10,12 @@ const {Cc, Ci, Cu} = require("chrome");
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "escapeHTML", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
-loader.lazyImporter(this, "Task","resource://gre/modules/Task.jsm");
+loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
+loader.lazyImporter(this, "ObjectClient", "resource://gre/modules/devtools/dbg-client.jsm");
+
+loader.lazyRequireGetter(this, "promise");
+loader.lazyRequireGetter(this, "TableWidget", "devtools/shared/widgets/TableWidget", true);
 
 const Heritage = require("sdk/core/heritage");
 const URI = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
@@ -81,6 +85,7 @@ const CONSOLE_API_LEVELS_TO_SEVERITIES = {
   info: "info",
   log: "log",
   trace: "log",
+  table: "log",
   debug: "log",
   dir: "log",
   group: "log",
@@ -110,6 +115,12 @@ const RE_CLEANUP_STYLES = [
   // various URL protocols
   /['"(]*(?:chrome|resource|about|app|data|https?|ftp|file):+\/*/gi,
 ];
+
+// Maximum number of rows to display in console.table().
+const TABLE_ROW_MAX_ITEMS = 1000;
+
+// Maximum number of columns to display in console.table().
+const TABLE_COLUMN_MAX_ITEMS = 10;
 
 /**
  * The ConsoleOutput object is used to manage output of messages in the Web
@@ -1616,6 +1627,344 @@ Messages.ConsoleTrace.prototype = Heritage.extend(Messages.Simple.prototype,
   _renderRepeatNode: function() { },
 }); // Messages.ConsoleTrace.prototype
 
+/**
+ * The ConsoleTable message is used for console.table() calls.
+ *
+ * @constructor
+ * @extends Messages.Extended
+ * @param object packet
+ *        The Console API call packet received from the server.
+ */
+Messages.ConsoleTable = function(packet)
+{
+  let options = {
+    className: "cm-s-mozilla",
+    timestamp: packet.timeStamp,
+    category: "webdev",
+    severity: CONSOLE_API_LEVELS_TO_SEVERITIES[packet.level],
+    private: packet.private,
+    filterDuplicates: false,
+    location: {
+      url: packet.filename,
+      line: packet.lineNumber,
+    },
+  };
+
+  this._populateTableData = this._populateTableData.bind(this);
+  this._renderTable = this._renderTable.bind(this);
+  Messages.Extended.call(this, [this._renderTable], options);
+
+  this._repeatID.consoleApiLevel = packet.level;
+  this._arguments = packet.arguments;
+};
+
+Messages.ConsoleTable.prototype = Heritage.extend(Messages.Extended.prototype,
+{
+  /**
+   * Holds the arguments the content script passed to the console.table()
+   * method.
+   *
+   * @private
+   * @type array
+   */
+  _arguments: null,
+
+  /**
+   * Array of objects that holds the data to log in the table.
+   *
+   * @private
+   * @type array
+   */
+  _data: null,
+
+  /**
+   * Key value pair of the id and display name for the columns in the table.
+   * Refer to the TableWidget API.
+   *
+   * @private
+   * @type object
+   */
+  _columns: null,
+
+  /**
+   * A promise that resolves when the table data is ready or null if invalid
+   * arguments are provided.
+   *
+   * @private
+   * @type promise|null
+   */
+  _populatePromise: null,
+
+  init: function()
+  {
+    let result = Messages.Extended.prototype.init.apply(this, arguments);
+    this._data = [];
+    this._columns = {};
+
+    this._populatePromise = this._populateTableData();
+
+    return result;
+  },
+
+  /**
+   * Sets the key value pair of the id and display name for the columns in the
+   * table.
+   *
+   * @private
+   * @param array|string columns
+   *        Either a string or array containing the names for the columns in
+   *        the output table.
+   */
+  _setColumns: function(columns)
+  {
+    if (columns.class == "Array") {
+      let items = columns.preview.items;
+
+      for (let item of items) {
+        if (typeof item == "string") {
+          this._columns[item] = item;
+        }
+      }
+    } else if (typeof columns == "string" && columns) {
+      this._columns[columns] = columns;
+    }
+  },
+
+  /**
+   * Retrieves the table data and columns from the arguments received from the
+   * server.
+   *
+   * @return Promise|null
+   *         Returns a promise that resolves when the table data is ready or
+   *         null if the arguments are invalid.
+   */
+  _populateTableData: function()
+  {
+    let deferred = promise.defer();
+
+    if (this._arguments.length <= 0) {
+      return;
+    }
+
+    let data = this._arguments[0];
+    if (data.class != "Array" && data.class != "Object" &&
+        data.class != "Map" && data.class != "Set") {
+      return;
+    }
+
+    let hasColumnsArg = false;
+    if (this._arguments.length > 1) {
+      if (data.class == "Object" || data.class == "Array") {
+        this._columns["_index"] = l10n.getStr("table.index");
+      } else {
+        this._columns["_index"] = l10n.getStr("table.iterationIndex");
+      }
+
+      this._setColumns(this._arguments[1]);
+      hasColumnsArg = true;
+    }
+
+    if (data.class == "Object" || data.class == "Array") {
+      // Get the object properties, and parse the key and value properties into
+      // the table data and columns.
+      this.client = new ObjectClient(this.output.owner.jsterm.hud.proxy.client,
+          data);
+      this.client.getPrototypeAndProperties(aResponse => {
+        let {ownProperties} = aResponse;
+        let rowCount = 0;
+        let columnCount = 0;
+
+        for (let index of Object.keys(ownProperties || {})) {
+          // Avoid outputting the length property if the data argument provided
+          // is an array
+          if (data.class == "Array" && index == "length") {
+            continue;
+          }
+
+          if (!hasColumnsArg) {
+            this._columns["_index"] = l10n.getStr("table.index");
+          }
+
+          let property = ownProperties[index].value;
+          let item = { _index: index };
+
+          if (property.class == "Object" || property.class == "Array") {
+            let {preview} = property;
+            let entries = property.class == "Object" ?
+                preview.ownProperties : preview.items;
+
+            for (let key of Object.keys(entries)) {
+              let value = property.class == "Object" ?
+                  preview.ownProperties[key].value : preview.items[key];
+
+              item[key] = this._renderValueGrip(value, { concise: true });
+
+              if (!hasColumnsArg && !(key in this._columns) &&
+                  (++columnCount <= TABLE_COLUMN_MAX_ITEMS)) {
+                this._columns[key] = key;
+              }
+            }
+          } else {
+            // Display the value for any non-object data input.
+            item["_value"] = this._renderValueGrip(property, { concise: true });
+
+            if (!hasColumnsArg && !("_value" in this._columns)) {
+              this._columns["_value"] = l10n.getStr("table.value");
+            }
+          }
+
+          this._data.push(item);
+
+          if (++rowCount == TABLE_ROW_MAX_ITEMS) {
+            break;
+          }
+        }
+
+        deferred.resolve();
+      });
+    } else if (data.class == "Map") {
+      let entries = data.preview.entries;
+
+      if (!hasColumnsArg) {
+        this._columns["_index"] = l10n.getStr("table.iterationIndex");
+        this._columns["_key"] = l10n.getStr("table.key");
+        this._columns["_value"] = l10n.getStr("table.value");
+      }
+
+      let rowCount = 0;
+      for (let index of Object.keys(entries || {})) {
+        let [key, value] = entries[index];
+        let item = {
+          _index: index,
+          _key: this._renderValueGrip(key, { concise: true }),
+          _value: this._renderValueGrip(value, { concise: true })
+        };
+
+        this._data.push(item);
+
+        if (++rowCount == TABLE_ROW_MAX_ITEMS) {
+          break;
+        }
+      }
+
+      deferred.resolve();
+    } else if (data.class == "Set") {
+      let entries = data.preview.items;
+
+      if (!hasColumnsArg) {
+        this._columns["_index"] = l10n.getStr("table.iterationIndex");
+        this._columns["_value"] = l10n.getStr("table.value");
+      }
+
+      let rowCount = 0;
+      for (let index of Object.keys(entries || {})) {
+        let value = entries[index];
+        let item = {
+          _index : index,
+          _value: this._renderValueGrip(value, { concise: true })
+        };
+
+        this._data.push(item);
+
+        if (++rowCount == TABLE_ROW_MAX_ITEMS) {
+          break;
+        }
+      }
+
+      deferred.resolve();
+    }
+
+    return deferred.promise;
+  },
+
+  render: function()
+  {
+    Messages.Extended.prototype.render.apply(this, arguments);
+    this.element.setAttribute("open", true);
+    return this;
+  },
+
+  /**
+   * Render the table.
+   *
+   * @private
+   * @return DOMElement
+   */
+  _renderTable: function()
+  {
+    let cmvar = this.document.createElementNS(XHTML_NS, "span");
+    cmvar.className = "cm-variable";
+    cmvar.textContent = "console";
+
+    let cmprop = this.document.createElementNS(XHTML_NS, "span");
+    cmprop.className = "cm-property";
+    cmprop.textContent = "table";
+
+    let title = this.document.createElementNS(XHTML_NS, "span");
+    title.className = "message-body devtools-monospace";
+    title.appendChild(cmvar);
+    title.appendChild(this.document.createTextNode("."));
+    title.appendChild(cmprop);
+    title.appendChild(this.document.createTextNode("():"));
+
+    let repeatNode = Messages.Simple.prototype._renderRepeatNode.call(this);
+    let location = Messages.Simple.prototype._renderLocation.call(this);
+    if (location) {
+      location.target = "jsdebugger";
+    }
+
+    let body = this.document.createElementNS(XHTML_NS, "span");
+    body.className = "message-flex-body";
+    body.appendChild(title);
+    if (repeatNode) {
+      body.appendChild(repeatNode);
+    }
+    if (location) {
+      body.appendChild(location);
+    }
+    body.appendChild(this.document.createTextNode("\n"));
+
+    let result = this.document.createElementNS(XHTML_NS, "div");
+    result.appendChild(body);
+
+    if (this._populatePromise) {
+      this._populatePromise.then(() => {
+        if (this._data.length > 0) {
+          let widget = new Widgets.Table(this, this._data, this._columns).render();
+          result.appendChild(widget.element);
+        }
+
+        result.scrollIntoView();
+        this.output.owner.emit("messages-table-rendered");
+
+        // Release object actors
+        if (Array.isArray(this._arguments)) {
+          for (let arg of this._arguments) {
+            if (WebConsoleUtils.isActorGrip(arg)) {
+              this.output._releaseObject(arg.actor);
+            }
+          }
+        }
+        this._arguments = null;
+      });
+    }
+
+    return result;
+  },
+
+  _renderBody: function()
+  {
+    let body = Messages.Simple.prototype._renderBody.apply(this, arguments);
+    body.classList.remove("devtools-monospace", "message-body");
+    return body;
+  },
+
+  // no-op for the message location and .repeats elements.
+  // |this._renderTable| handles customized message output.
+  _renderLocation: function() { },
+  _renderRepeatNode: function() { },
+}); // Messages.ConsoleTable.prototype
+
 let Widgets = {};
 
 /**
@@ -3011,6 +3360,63 @@ Widgets.Stacktrace.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
   },
 }); // Widgets.Stacktrace.prototype
 
+
+/**
+ * The table widget.
+ *
+ * @constructor
+ * @extends Widgets.BaseWidget
+ * @param object message
+ *        The owning message.
+ * @param array data
+ *        Array of objects that holds the data to log in the table.
+ * @param object columns
+ *        Object containing the key value pair of the id and display name for
+ *        the columns in the table.
+ */
+Widgets.Table = function(message, data, columns)
+{
+  Widgets.BaseWidget.call(this, message);
+  this.data = data;
+  this.columns = columns;
+};
+
+Widgets.Table.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
+{
+  /**
+   * Array of objects that holds the data to output in the table.
+   * @type array
+   */
+  data: null,
+
+  /**
+   * Object containing the key value pair of the id and display name for
+   * the columns in the table.
+   * @type object
+   */
+  columns: null,
+
+  render: function() {
+    if (this.element) {
+      return this;
+    }
+
+    let result = this.element = this.document.createElementNS(XHTML_NS, "div");
+    result.className = "consoletable devtools-monospace";
+
+    this.table = new TableWidget(result, {
+      initialColumns: this.columns,
+      uniqueId: "_index",
+      firstColumn: "_index"
+    });
+
+    for (let row of this.data) {
+      this.table.push(row);
+    }
+
+    return this;
+  }
+}); // Widgets.Table.prototype
 
 function gSequenceId()
 {

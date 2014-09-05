@@ -26,7 +26,7 @@ protected:
 
   struct StatusItem
   {
-    StatusItem(nsStandaloneNativeMenu* aMenu);
+    explicit StatusItem(nsStandaloneNativeMenu* aMenu);
     ~StatusItem();
 
   private:

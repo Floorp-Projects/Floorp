@@ -23,7 +23,7 @@ public:
   // Given that we're processing this in order we don't use a binary search
   // to find the apropriate time range. Instead we search linearly from the
   // last used point.
-  RangeFinder(const nsTArray<mozilla::MediaByteRange>& ranges)
+  explicit RangeFinder(const nsTArray<mozilla::MediaByteRange>& ranges)
     : mRanges(ranges), mIndex(0)
   {
     // Ranges must be normalised for this to work
@@ -153,7 +153,7 @@ Index::ConvertByteRangesToTimeRanges(
       // We need the entire moof in order to play anything
       if (rangeFinder.Contains(moof.mRange)) {
         if (rangeFinder.Contains(moof.mMdatRange)) {
-          timeRanges.AppendElements(moof.mTimeRanges);
+          Interval<Microseconds>::SemiNormalAppend(timeRanges, moof.mTimeRange);
         } else {
           indexes.AppendElement(&moof.mIndex);
         }
@@ -199,7 +199,7 @@ Index::GetEvictionOffset(Microseconds aTime)
     for (int i = 0; i < mMoofParser->mMoofs.Length(); i++) {
       Moof& moof = mMoofParser->mMoofs[i];
 
-      if (!moof.mTimeRanges.IsEmpty() && moof.mTimeRanges[0].end > aTime) {
+      if (moof.mTimeRange.Length() && moof.mTimeRange.end > aTime) {
         offset = std::min(offset, uint64_t(std::min(moof.mRange.mStart,
                                                     moof.mMdatRange.mStart)));
       }

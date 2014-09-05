@@ -33,7 +33,10 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
  * Factory for {@link CookieSpec} implementations.
  *
  * @since 4.0
+ *
+ * @deprecated (4.3) use {@link CookieSpecProvider}
  */
+@Deprecated
 public interface CookieSpecFactory {
 
     /**

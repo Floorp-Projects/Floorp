@@ -75,16 +75,14 @@ endif
 # TIERS (like for js/src).
 CURRENT_DIRS := $($(CURRENT_TIER)_dirs)
 
-# The compile tier has different rules from other tiers.
-ifeq ($(CURRENT_TIER),compile)
-
 # Need a list of compile targets because we can't use pattern rules:
 # https://savannah.gnu.org/bugs/index.php?42833
 .PHONY: $(compile_targets)
 $(compile_targets):
 	$(call SUBMAKE,$(@F),$(@D))
 
-else
+# The compile tier has different rules from other tiers.
+ifneq ($(CURRENT_TIER),compile)
 
 # Recursion rule for all directories traversed for all subtiers in the
 # current tier.
@@ -108,11 +106,6 @@ $(addsuffix /$(CURRENT_TIER),$(filter-out config,$(CURRENT_DIRS))): config/$(CUR
 # nsinstall.py there.
 ifneq (,$(filter config/host, $(compile_targets)))
 $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): config/host
-
-# Ensure rules for config/host and its possible dependencies.
-.PHONY: $(filter %/host, $(compile_targets))
-$(filter %/host, $(compile_targets)):
-	$(call SUBMAKE,host,$(@D))
 endif
 endif
 
@@ -163,3 +156,32 @@ endif # ifeq (.,$(DEPTH))
 recurse:
 	@$(RECURSED_COMMAND)
 	$(LOOP_OVER_DIRS)
+
+ifeq (.,$(DEPTH))
+# Interdependencies for parallel export.
+js/xpconnect/src/export: dom/bindings/export xpcom/xpidl/export
+accessible/xpcom/export: xpcom/xpidl/export
+ifdef ENABLE_CLANG_PLUGIN
+$(filter-out build/clang-plugin/%,$(compile_targets)): build/clang-plugin/target build/clang-plugin/tests/target
+build/clang-plugin/tests/target: build/clang-plugin/target
+endif
+
+# Interdependencies that moz.build world don't know about yet for compilation.
+# Note some others are hardcoded or "guessed" in recursivemake.py and emitter.py
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk3)
+toolkit/library/target: widget/gtk/mozgtk/gtk3/target
+endif
+ifdef MOZ_LDAP_XPCOM
+ldap/target: config/external/nss/target mozglue/build/target
+toolkit/library/target: ldap/target
+endif
+ifndef MOZ_FOLD_LIBS
+ifndef MOZ_NATIVE_SQLITE
+config/external/nss/target: db/sqlite3/src/target
+endif
+endif
+ifeq ($(MOZ_REPLACE_MALLOC_LINKAGE),dummy library)
+mozglue/build/target: memory/replace/dummy/target
+endif
+
+endif

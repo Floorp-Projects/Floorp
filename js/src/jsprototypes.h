@@ -60,6 +60,12 @@
 #define IF_SAB(real,imaginary) imaginary
 #endif
 
+#ifdef JS_HAS_SYMBOLS
+#define IF_SYMBOLS(real,imaginary) real
+#else
+#define IF_SYMBOLS(real,imaginary) imaginary
+#endif
+
 #define JS_FOR_PROTOTYPES(real,imaginary) \
     imaginary(Null,              0,     js_InitNullClass,          dummy) \
     real(Object,                 1,     js_InitViaClassSpec,       &JSObject::class_) \
@@ -97,7 +103,7 @@
     real(Map,                   33,     js_InitMapClass,           OCLASP(Map)) \
     real(Set,                   34,     js_InitSetClass,           OCLASP(Set)) \
     real(DataView,              35,     js_InitDataViewClass,      OCLASP(DataView)) \
-    real(Symbol,                36,     js_InitSymbolClass,        &js::SymbolObject::class_) \
+IF_SYMBOLS(real,imaginary)(Symbol,              36,     js_InitSymbolClass,        &js::SymbolObject::class_) \
 IF_SAB(real,imaginary)(SharedArrayBuffer,       37,     js_InitSharedArrayBufferClass, &js::SharedArrayBufferObject::protoClass) \
 IF_INTL(real,imaginary) (Intl,                  38,     js_InitIntlClass,          CLASP(Intl)) \
 IF_BDATA(real,imaginary)(TypedObject,           39,     js_InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \

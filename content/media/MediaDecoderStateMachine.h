@@ -275,11 +275,6 @@ public:
 
   void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
-  int64_t GetEndMediaTime() const {
-    AssertCurrentThreadInMonitor();
-    return mEndTime;
-  }
-
   // Returns the shared state machine thread.
   nsIEventTarget* GetStateMachineThread() const;
 
@@ -355,6 +350,8 @@ protected:
 
   void AssertCurrentThreadInMonitor() const { mDecoder->GetReentrantMonitor().AssertCurrentThreadIn(); }
 
+  void SetState(State aState);
+
   // Inserts MediaData* samples into their respective MediaQueues.
   // aSample must not be null.
   void Push(AudioData* aSample);
@@ -362,7 +359,7 @@ protected:
 
   class WakeDecoderRunnable : public nsRunnable {
   public:
-    WakeDecoderRunnable(MediaDecoderStateMachine* aSM)
+    explicit WakeDecoderRunnable(MediaDecoderStateMachine* aSM)
       : mMutex("WakeDecoderRunnable"), mStateMachine(aSM) {}
     NS_IMETHOD Run() MOZ_OVERRIDE
     {

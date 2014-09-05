@@ -37,6 +37,7 @@ describe("loop.conversation", function() {
       },
       setLoopCharPref: sandbox.stub(),
       getLoopCharPref: sandbox.stub(),
+      getLoopBoolPref: sandbox.stub(),
       startAlerting: function() {},
       stopAlerting: function() {},
       ensureRegistered: function() {},
@@ -311,14 +312,35 @@ describe("loop.conversation", function() {
       });
 
       describe("#accept", function() {
+        beforeEach(function() {
+          conversation.setIncomingSessionData({
+            sessionId:      "sessionId",
+            sessionToken:   "sessionToken",
+            apiKey:         "apiKey",
+            callType:       "callType",
+            callId:         "Hello",
+            progressURL:    "http://progress.example.com",
+            websocketToken: 123
+          });
+          router._setupWebSocketAndCallView();
+
+          sandbox.stub(router._websocket, "accept");
+          sandbox.stub(navigator.mozLoop, "stopAlerting");
+        });
+
         it("should initiate the conversation", function() {
           router.accept();
 
           sinon.assert.calledOnce(conversation.incoming);
         });
 
+        it("should notify the websocket of the user acceptance", function() {
+          router.accept();
+
+          sinon.assert.calledOnce(router._websocket.accept);
+        });
+
         it("should stop alerting", function() {
-          sandbox.stub(navigator.mozLoop, "stopAlerting");
           router.accept();
 
           sinon.assert.calledOnce(navigator.mozLoop.stopAlerting);
@@ -531,6 +553,49 @@ describe("loop.conversation", function() {
           sinon.assert.calledOnce(router.navigate);
           sinon.assert.calledWith(router.navigate, "call/feedback");
         });
+
+      describe("Published and Subscribed Streams", function() {
+        beforeEach(function() {
+          router._websocket = {
+            mediaUp: sinon.spy()
+          };
+          router.incoming("fakeVersion");
+        });
+
+        describe("publishStream", function() {
+          it("should not notify the websocket if only one stream is up",
+            function() {
+              conversation.set("publishedStream", true);
+
+              sinon.assert.notCalled(router._websocket.mediaUp);
+            });
+
+          it("should notify the websocket that media is up if both streams" +
+             "are connected", function() {
+              conversation.set("subscribedStream", true);
+              conversation.set("publishedStream", true);
+
+              sinon.assert.calledOnce(router._websocket.mediaUp);
+            });
+        });
+
+        describe("subscribedStream", function() {
+          it("should not notify the websocket if only one stream is up",
+            function() {
+              conversation.set("subscribedStream", true);
+
+              sinon.assert.notCalled(router._websocket.mediaUp);
+            });
+
+          it("should notify the websocket that media is up if both streams" +
+             "are connected", function() {
+              conversation.set("publishedStream", true);
+              conversation.set("subscribedStream", true);
+
+              sinon.assert.calledOnce(router._websocket.mediaUp);
+            });
+        });
+      });
     });
   });
 
@@ -547,27 +612,38 @@ describe("loop.conversation", function() {
     });
 
     describe("click event on .btn-accept", function() {
-      it("should trigger an 'accept' conversation model event", function() {
+      it("should trigger an 'accept' conversation model event", function () {
         var buttonAccept = view.getDOMNode().querySelector(".btn-accept");
-
+        model.trigger.withArgs("accept");
         TestUtils.Simulate.click(buttonAccept);
 
         /* Setting a model property triggers 2 events */
-        sinon.assert.calledThrice(model.trigger);
-        sinon.assert.calledWith(model.trigger, "accept");
-        sinon.assert.calledWith(model.trigger, "change:selectedCallType");
-        sinon.assert.calledWith(model.trigger, "change");
+        sinon.assert.calledOnce(model.trigger.withArgs("accept"));
       });
 
-      it("should set selectedCallType to audio-video", function() {
-        var buttonAccept = view.getDOMNode().querySelector(".call-audio-video");
+      it("should set selectedCallType to audio-video", function () {
+        var buttonAccept = view.getDOMNode().querySelector(".btn-accept");
         sandbox.stub(model, "set");
 
         TestUtils.Simulate.click(buttonAccept);
 
         sinon.assert.calledOnce(model.set);
-        sinon.assert.calledWithExactly(model.set, "selectedCallType", "audio-video");
+        sinon.assert.calledWithExactly(model.set, "selectedCallType",
+          "audio-video");
       });
+    });
+
+    describe("click event on .call-audio-only", function() {
+
+      it("should trigger an 'accept' conversation model event", function () {
+        var buttonAccept = view.getDOMNode().querySelector(".call-audio-only");
+        model.trigger.withArgs("accept");
+        TestUtils.Simulate.click(buttonAccept);
+
+        /* Setting a model property triggers 2 events */
+        sinon.assert.calledOnce(model.trigger.withArgs("accept"));
+      });
+
 
       it("should set selectedCallType to audio", function() {
         var buttonAccept = view.getDOMNode().querySelector(".call-audio-only");

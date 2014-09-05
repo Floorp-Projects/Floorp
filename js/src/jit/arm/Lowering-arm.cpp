@@ -540,13 +540,25 @@ LIRGeneratorARM::lowerTruncateFToInt32(MTruncateToInt32 *ins)
 bool
 LIRGeneratorARM::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins)
 {
-    MOZ_ASSUME_UNREACHABLE("NYI");
+    MOZ_CRASH("NYI");
 }
 
 bool
 LIRGeneratorARM::visitForkJoinGetSlice(MForkJoinGetSlice *ins)
 {
-    MOZ_ASSUME_UNREACHABLE("NYI");
+    MOZ_CRASH("NYI");
+}
+
+bool
+LIRGeneratorARM::visitSimdTernaryBitwise(MSimdTernaryBitwise *ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+bool
+LIRGeneratorARM::visitSimdSplatX4(MSimdSplatX4 *ins)
+{
+    MOZ_CRASH("NYI");
 }
 
 //__aeabi_uidiv

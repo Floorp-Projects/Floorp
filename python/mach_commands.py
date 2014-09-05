@@ -63,7 +63,7 @@ class MachCommands(MachCommandBase):
         # which produces output in the format Mozilla infrastructure expects.
         return_code = 0
         files = []
-        for test in tests:
+        for test in [mozpack.path.join(self.topsrcdir, t) for t in tests]:
             if test.endswith('.py') and os.path.isfile(test):
                 files.append(test)
             elif os.path.isfile(test + '.py'):
@@ -72,7 +72,8 @@ class MachCommands(MachCommandBase):
                 files += glob.glob(mozpack.path.join(test, 'test*.py'))
                 files += glob.glob(mozpack.path.join(test, 'unit*.py'))
             else:
-                self.log(logging.WARN, 'python-test', {'test': test},
+                self.log(logging.WARN, 'python-test',
+                         {'test': mozpack.path.relpath(test, self.topsrcdir)},
                          'TEST-UNEXPECTED-FAIL | Invalid test: {test}')
                 if stop:
                     return 1

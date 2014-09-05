@@ -3,8 +3,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "webrtc/modules/desktop_capture/win/desktop_device_info_win.h"
+#include "webrtc/modules/desktop_capture/win/win_shared.h"
+#include <stdio.h>
 
-namespace webrtc{
+// Duplicating declaration so that it always resolves in decltype use
+// typedef BOOL (WINAPI *QueryFullProcessImageNameProc)(HANDLE hProcess, DWORD dwFlags, LPTSTR lpExeName, PDWORD lpdwSize);
+BOOL WINAPI QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags, LPTSTR lpExeName, PDWORD lpdwSize);
+
+// Duplicating declaration so that it always resolves in decltype use
+// typedoef DWORD (WINAPI *GetProcessImageFileNameProc)(HANDLE hProcess, LPTSTR lpImageFileName, DWORD nSize);
+DWORD WINAPI GetProcessImageFileName(HANDLE hProcess, LPTSTR lpImageFileName, DWORD nSize);
+
+namespace webrtc {
 
 DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
   DesktopDeviceInfoWin * pDesktopDeviceInfo = new DesktopDeviceInfoWin();
@@ -22,45 +32,119 @@ DesktopDeviceInfoWin::~DesktopDeviceInfoWin() {
 }
 
 #if !defined(MULTI_MONITOR_SCREENSHARE)
-int32_t DesktopDeviceInfoWin::MultiMonitorScreenshare()
+void DesktopDeviceInfoWin::MultiMonitorScreenshare()
 {
   DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
   if (pDesktopDeviceInfo) {
-    pDesktopDeviceInfo->setScreenId(0);
+    pDesktopDeviceInfo->setScreenId(webrtc::kFullDesktopScreenId);
     pDesktopDeviceInfo->setDeviceName("Primary Monitor");
-    pDesktopDeviceInfo->setUniqueIdName("\\screen\\monitor#1");
 
+    char idStr[64];
+    _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%ld", pDesktopDeviceInfo->getScreenId());
+    pDesktopDeviceInfo->setUniqueIdName(idStr);
     desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
   }
-  return 0;
 }
 #endif
 
-int32_t DesktopDeviceInfoWin::Init() {
+void DesktopDeviceInfoWin::InitializeScreenList() {
 #if !defined(MULTI_MONITOR_SCREENSHARE)
   MultiMonitorScreenshare();
 #endif
-
-  initializeWindowList();
-
-  return 0;
 }
+void DesktopDeviceInfoWin::InitializeApplicationList() {
+  // List all running applications exclude background process.
+  HWND hWnd;
+  for (hWnd = GetWindow(GetDesktopWindow(), GW_CHILD); hWnd; hWnd = GetWindow(hWnd, GW_HWNDNEXT)) {
+    if (!IsWindowVisible(hWnd)) {
+      continue;
+    }
 
-int32_t DesktopDeviceInfoWin::Refresh() {
-#if !defined(MULTI_MONITOR_SCREENSHARE)
-  std::map<intptr_t,DesktopDisplayDevice*>::iterator iterDevice;
-  for (iterDevice=desktop_display_list_.begin(); iterDevice!=desktop_display_list_.end(); iterDevice++){
-    DesktopDisplayDevice * pDesktopDisplayDevice = iterDevice->second;
-    delete pDesktopDisplayDevice;
-    iterDevice->second = NULL;
+    DWORD dwProcessId = 0;
+    GetWindowThreadProcessId(hWnd, &dwProcessId);
+
+    // filter out non-process, current process
+    if (dwProcessId == 0 || dwProcessId == GetCurrentProcessId()) {
+      continue;
+    }
+
+    // filter out already-seen processes, after updating the window count
+    DesktopApplicationList::iterator itr = desktop_application_list_.find(dwProcessId);
+    if (itr != desktop_application_list_.end()) {
+      itr->second->setWindowCount(itr->second->getWindowCount() + 1);
+      continue;
+    }
+
+    // Add one application
+    DesktopApplication *pDesktopApplication = new DesktopApplication;
+    if (!pDesktopApplication) {
+      continue;
+    }
+
+    // process id
+    pDesktopApplication->setProcessId(dwProcessId);
+    // initialize window count to 1 (updated on subsequent finds)
+    pDesktopApplication->setWindowCount(1);
+
+    // process path name
+    WCHAR szFilePathName[MAX_PATH]={0};
+    decltype(QueryFullProcessImageName) *lpfnQueryFullProcessImageNameProc =
+      reinterpret_cast<decltype(QueryFullProcessImageName) *>(GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "QueryFullProcessImageNameW"));
+    if (lpfnQueryFullProcessImageNameProc) {
+      // After Vista
+      DWORD dwMaxSize = _MAX_PATH;
+      HANDLE hWndPro = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwProcessId);
+      if(hWndPro) {
+        lpfnQueryFullProcessImageNameProc(hWndPro, 0, szFilePathName, &dwMaxSize);
+        CloseHandle(hWndPro);
+      }
+    } else {
+      HMODULE hModPSAPI = LoadLibrary(TEXT("PSAPI.dll"));
+      if (hModPSAPI) {
+        decltype(GetProcessImageFileName) *pfnGetProcessImageFileName =
+          reinterpret_cast<decltype(GetProcessImageFileName) *>(GetProcAddress(hModPSAPI, "GetProcessImageFileNameW"));
+
+        if (pfnGetProcessImageFileName) {
+          HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, 0, dwProcessId);
+          if (hProcess) {
+            DWORD dwMaxSize = _MAX_PATH;
+            pfnGetProcessImageFileName(hProcess, szFilePathName, dwMaxSize);
+            CloseHandle(hProcess);
+          }
+        }
+        FreeLibrary(hModPSAPI);
+      }
+    }
+    pDesktopApplication->setProcessPathName(Utf16ToUtf8(szFilePathName).c_str());
+
+    // application name
+    WCHAR szWndTitle[_MAX_PATH]={0};
+    GetWindowText(hWnd, szWndTitle, MAX_PATH);
+    if (lstrlen(szWndTitle) <= 0) {
+      pDesktopApplication->setProcessAppName(Utf16ToUtf8(szFilePathName).c_str());
+    } else {
+      pDesktopApplication->setProcessAppName(Utf16ToUtf8(szWndTitle).c_str());
+    }
+
+    // unique id name
+    char idStr[64];
+    _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%ld", pDesktopApplication->getProcessId());
+    pDesktopApplication->setUniqueIdName(idStr);
+
+    desktop_application_list_[pDesktopApplication->getProcessId()] = pDesktopApplication;
   }
-  desktop_display_list_.clear();
-  MultiMonitorScreenshare();
-#endif
 
-  RefreshWindowList();
+  // re-walk the application list, prepending the window count to the application name
+  DesktopApplicationList::iterator itr;
+  for (itr = desktop_application_list_.begin(); itr != desktop_application_list_.end(); itr++) {
+    DesktopApplication *pApp = itr->second;
 
-  return 0;
+    // localized application names can be *VERY* large
+    char nameStr[BUFSIZ];
+    _snprintf_s(nameStr, sizeof(nameStr), sizeof(nameStr) - 1, "%d\x1e%s",
+                pApp->getWindowCount(), pApp->getProcessAppName());
+    pApp->setProcessAppName(nameStr);
+  }
 }
 
-} //namespace webrtc
+} // namespace webrtc

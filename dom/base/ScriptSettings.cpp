@@ -240,6 +240,7 @@ AutoJSAPI::AutoJSAPI()
 void
 AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
 {
+  MOZ_ASSERT(aCx);
   mCx = aCx;
   if (aIsMainThread) {
     // This Rooted<> is necessary only as long as AutoCxPusher::AutoCxPusher

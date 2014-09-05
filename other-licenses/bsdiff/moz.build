@@ -8,7 +8,7 @@ HOST_SOURCES += [
     'bsdiff.c',
 ]
 
-HOST_PROGRAM = 'mbsdiff'
+HostProgram('mbsdiff')
 
 if CONFIG['MOZ_NATIVE_BZ2']:
     HOST_OS_LIBS += CONFIG['MOZ_BZ2_LIBS']

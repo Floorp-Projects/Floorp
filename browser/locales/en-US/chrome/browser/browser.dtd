@@ -718,8 +718,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 
 <!ENTITY getUserMedia.selectCamera.label "Camera to share:">
 <!ENTITY getUserMedia.selectCamera.accesskey "C">
-<!ENTITY getUserMedia.selectWindowOrScreen.label "Window or screen to share:">
-<!ENTITY getUserMedia.selectWindowOrScreen.accesskey "W">
 <!ENTITY getUserMedia.selectMicrophone.label "Microphone to share:">
 <!ENTITY getUserMedia.selectMicrophone.accesskey "M">
 <!ENTITY getUserMedia.allWindowsShared.message "All visible windows on your screen will be shared.">
@@ -741,7 +739,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY trackingContentBlocked.moreinfo "Parts of the page that track your online activity have been blocked.">
 <!ENTITY trackingContentBlocked.learnMore "Learn More">
 <!ENTITY trackingContentBlocked.options "Options">
-<!ENTITY trackingContentBlocked.unblock.label "Disable protection">
+<!ENTITY trackingContentBlocked.unblock.label2 "Disable protection for this site">
 <!ENTITY trackingContentBlocked.block.label "Enable protection">
 <!ENTITY trackingContentBlocked.disabled.message "Tracking protection is disabled">
 

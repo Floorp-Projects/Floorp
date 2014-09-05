@@ -1,4 +1,5 @@
 skip-if(B2G&&browserIsRemote) HTTP == deferred-anchor.xhtml#d deferred-anchor-ref.xhtml#d
+== deferred-anchor2.xhtml deferred-anchor-ref.xhtml#d
 HTTP == fixed-1.html fixed-1.html?ref
 HTTP == fixed-opacity-1.html fixed-opacity-1.html?ref
 skip-if(B2G) HTTP == fixed-opacity-2.html fixed-opacity-2.html?ref
@@ -12,7 +13,7 @@ skip-if(B2G&&browserIsRemote) HTTP == simple-1.html simple-1.html?ref
 skip-if(B2G) HTTP == subpixel-1.html#d subpixel-1-ref.html#d
 fuzzy-if(Android,4,120) HTTP == text-1.html text-1.html?ref
 fuzzy-if(Android,4,120) HTTP == text-2.html?up text-2.html?ref
-skip-if(B2G) fuzzy-if(Android&&AndroidVersion<15,251,722) HTTP == transformed-1.html transformed-1.html?ref
+skip-if(B2G) fuzzy-if(Android&&AndroidVersion<15,251,722) fuzzy-if(d2d,1,4) HTTP == transformed-1.html transformed-1.html?ref
 HTTP == transformed-1.html?up transformed-1.html?ref
 fuzzy-if(Android,5,20000) == uncovering-1.html uncovering-1-ref.html
 fuzzy-if(Android,5,20000) == uncovering-2.html uncovering-2-ref.html

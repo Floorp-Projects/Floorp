@@ -306,8 +306,8 @@ nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
-                                             nsIPrincipal** aPrincipal)
+nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
+                                                   nsIPrincipal** aPrincipal)
 {
     NS_PRECONDITION(aChannel, "Must have channel!");
     nsCOMPtr<nsISupports> owner;
@@ -336,13 +336,20 @@ nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
             return NS_OK;
         }
     }
+    return GetChannelURIPrincipal(aChannel, aPrincipal);
+}
 
-    // OK, get the principal from the URI.  Make sure this does the same thing
+NS_IMETHODIMP
+nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
+                                                nsIPrincipal** aPrincipal)
+{
+    NS_PRECONDITION(aChannel, "Must have channel!");
+
+    // Get the principal from the URI.  Make sure this does the same thing
     // as nsDocument::Reset and XULDocument::StartDocumentLoad.
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
-
 
     nsCOMPtr<nsILoadContext> loadContext;
     NS_QueryNotificationCallbacks(aChannel, loadContext);
@@ -694,11 +701,27 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (hasFlags) {
+            // Let apps load the whitelisted theme resources even if they don't
+            // have the webapps-manage permission but have the themeable one.
+            // Resources from the theme origin are also allowed to load from
+            // the theme origin (eg. stylesheets using images from the theme).
+            auto themeOrigin = Preferences::GetCString("b2g.theme.origin");
+            if (themeOrigin) {
+                nsAutoCString targetOrigin;
+                nsPrincipal::GetOriginForURI(targetBaseURI, getter_Copies(targetOrigin));
+                if (targetOrigin.Equals(themeOrigin)) {
+                    nsAutoCString pOrigin;
+                    aPrincipal->GetOrigin(getter_Copies(pOrigin));
+                    return nsContentUtils::IsExactSitePermAllow(aPrincipal, "themeable") ||
+                           pOrigin.Equals(themeOrigin)
+                        ? NS_OK : NS_ERROR_DOM_BAD_URI;
+                }
+            }
             // In this case, we allow opening only if the source and target URIS
             // are on the same domain, or the opening URI has the webapps
             // permision granted
-            if (!SecurityCompareURIs(sourceBaseURI,targetBaseURI) &&
-                !nsContentUtils::IsExactSitePermAllow(aPrincipal,WEBAPPS_PERM_NAME)){
+            if (!SecurityCompareURIs(sourceBaseURI, targetBaseURI) &&
+                !nsContentUtils::IsExactSitePermAllow(aPrincipal, WEBAPPS_PERM_NAME)) {
                 return NS_ERROR_DOM_BAD_URI;
             }
         }
@@ -1173,7 +1196,7 @@ nsScriptSecurityManager::AsyncOnChannelRedirect(nsIChannel* oldChannel,
                                                 nsIAsyncVerifyRedirectCallback *cb)
 {
     nsCOMPtr<nsIPrincipal> oldPrincipal;
-    GetChannelPrincipal(oldChannel, getter_AddRefs(oldPrincipal));
+    GetChannelResultPrincipal(oldChannel, getter_AddRefs(oldPrincipal));
 
     nsCOMPtr<nsIURI> newURI;
     newChannel->GetURI(getter_AddRefs(newURI));

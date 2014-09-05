@@ -22,14 +22,24 @@ loop.panel = (function(_, mozL10n) {
   var router;
 
   /**
-   * Availability drop down menu subview.
+   * Dropdown menu mixin.
+   * @type {Object}
    */
-  var AvailabilityDropdown = React.createClass({displayName: 'AvailabilityDropdown',
+  var DropdownMenuMixin = {
     getInitialState: function() {
-      return {
-        doNotDisturb: navigator.mozLoop.doNotDisturb,
-        showMenu: false
-      };
+      return {showMenu: false};
+    },
+
+    _onBodyClick: function() {
+      this.setState({showMenu: false});
+    },
+
+    componentDidMount: function() {
+      document.body.addEventListener("click", this._onBodyClick);
+    },
+
+    componentWillUnmount: function() {
+      document.body.removeEventListener("click", this._onBodyClick);
     },
 
     showDropdownMenu: function() {
@@ -38,6 +48,19 @@ loop.panel = (function(_, mozL10n) {
 
     hideDropdownMenu: function() {
       this.setState({showMenu: false});
+    }
+  };
+
+  /**
+   * Availability drop down menu subview.
+   */
+  var AvailabilityDropdown = React.createClass({displayName: 'AvailabilityDropdown',
+    mixins: [DropdownMenuMixin],
+
+    getInitialState: function() {
+      return {
+        doNotDisturb: navigator.mozLoop.doNotDisturb
+      };
     },
 
     // XXX target event can either be the li, the span or the i tag
@@ -69,7 +92,7 @@ loop.panel = (function(_, mozL10n) {
         'status-available': !this.state.doNotDisturb
       });
       var availabilityDropdown = cx({
-        'dnd-menu': true,
+        'dropdown-menu': true,
         'hide': !this.state.showMenu
       });
       var availabilityText = this.state.doNotDisturb ?
@@ -77,24 +100,22 @@ loop.panel = (function(_, mozL10n) {
                               __("display_name_available_status");
 
       return (
-        React.DOM.div({className: "footer component-spacer"}, 
-          React.DOM.div({className: "do-not-disturb"}, 
-            React.DOM.p({className: "dnd-status", onClick: this.showDropdownMenu}, 
-              React.DOM.span(null, availabilityText), 
-              React.DOM.i({className: availabilityStatus})
+        React.DOM.div({className: "dropdown"}, 
+          React.DOM.p({className: "dnd-status", onClick: this.showDropdownMenu}, 
+            React.DOM.span(null, availabilityText), 
+            React.DOM.i({className: availabilityStatus})
+          ), 
+          React.DOM.ul({className: availabilityDropdown, 
+              onMouseLeave: this.hideDropdownMenu}, 
+            React.DOM.li({onClick: this.changeAvailability("available"), 
+                className: "dropdown-menu-item dnd-make-available"}, 
+              React.DOM.i({className: "status status-available"}), 
+              React.DOM.span(null, __("display_name_available_status"))
             ), 
-            React.DOM.ul({className: availabilityDropdown, 
-                onMouseLeave: this.hideDropdownMenu}, 
-              React.DOM.li({onClick: this.changeAvailability("available"), 
-                  className: "dnd-menu-item dnd-make-available"}, 
-                React.DOM.i({className: "status status-available"}), 
-                React.DOM.span(null, __("display_name_available_status"))
-              ), 
-              React.DOM.li({onClick: this.changeAvailability("do-not-disturb"), 
-                  className: "dnd-menu-item dnd-make-unavailable"}, 
-                React.DOM.i({className: "status status-dnd"}), 
-                React.DOM.span(null, __("display_name_dnd_status"))
-              )
+            React.DOM.li({onClick: this.changeAvailability("do-not-disturb"), 
+                className: "dropdown-menu-item dnd-make-unavailable"}, 
+              React.DOM.i({className: "status status-dnd"}), 
+              React.DOM.span(null, __("display_name_dnd_status"))
             )
           )
         )
@@ -111,7 +132,8 @@ loop.panel = (function(_, mozL10n) {
       if (this.state.seenToS == "unseen") {
         var terms_of_use_url = navigator.mozLoop.getLoopCharPref('legal.ToS_url');
         var privacy_notice_url = navigator.mozLoop.getLoopCharPref('legal.privacy_url');
-        var tosHTML = __("legal_text_and_links2", {
+        var tosHTML = __("legal_text_and_links3", {
+          "clientShortname": __("client_shortname_fallback"),
           "terms_of_use": React.renderComponentToStaticMarkup(
             React.DOM.a({href: terms_of_use_url, target: "_blank"}, 
               __("legal_text_tos")
@@ -131,6 +153,93 @@ loop.panel = (function(_, mozL10n) {
     }
   });
 
+  /**
+   * Panel settings (gear) menu entry.
+   */
+  var SettingsDropdownEntry = React.createClass({displayName: 'SettingsDropdownEntry',
+    propTypes: {
+      onClick: React.PropTypes.func.isRequired,
+      label: React.PropTypes.string.isRequired,
+      icon: React.PropTypes.string,
+      displayed: React.PropTypes.bool
+    },
+
+    getDefaultProps: function() {
+      return {displayed: true};
+    },
+
+    render: function() {
+      if (!this.props.displayed) {
+        return null;
+      }
+      return (
+        React.DOM.li({onClick: this.props.onClick, className: "dropdown-menu-item"}, 
+          this.props.icon ?
+            React.DOM.i({className: "icon icon-" + this.props.icon}) :
+            null, 
+          React.DOM.span(null, this.props.label)
+        )
+      );
+    }
+  });
+
+  /**
+   * Panel settings (gear) menu.
+   */
+  var SettingsDropdown = React.createClass({displayName: 'SettingsDropdown',
+    mixins: [DropdownMenuMixin],
+
+    handleClickSettingsEntry: function() {
+      // XXX to be implemented
+    },
+
+    handleClickAccountEntry: function() {
+      // XXX to be implemented
+    },
+
+    handleClickAuthEntry: function() {
+      if (this._isSignedIn()) {
+        // XXX to be implemented - bug 979845
+        navigator.mozLoop.logOutFromFxA();
+      } else {
+        navigator.mozLoop.logInToFxA();
+      }
+    },
+
+    _isSignedIn: function() {
+      // XXX to be implemented - bug 979845
+      return !!navigator.mozLoop.loggedInToFxA;
+    },
+
+    render: function() {
+      var cx = React.addons.classSet;
+      return (
+        React.DOM.div({className: "settings-menu dropdown"}, 
+          React.DOM.a({className: "btn btn-settings", onClick: this.showDropdownMenu, 
+             title: __("settings_menu_button_tooltip")}), 
+          React.DOM.ul({className: cx({"dropdown-menu": true, hide: !this.state.showMenu}), 
+              onMouseLeave: this.hideDropdownMenu}, 
+            SettingsDropdownEntry({label: __("settings_menu_item_settings"), 
+                                   onClick: this.handleClickSettingsEntry, 
+                                   icon: "settings"}), 
+            SettingsDropdownEntry({label: __("settings_menu_item_account"), 
+                                   onClick: this.handleClickAccountEntry, 
+                                   icon: "account", 
+                                   displayed: this._isSignedIn()}), 
+            SettingsDropdownEntry({label: this._isSignedIn() ?
+                                          __("settings_menu_item_signout") :
+                                          __("settings_menu_item_signin"), 
+                                   onClick: this.handleClickAuthEntry, 
+                                   icon: this._isSignedIn() ? "signout" : "signin"})
+          )
+        )
+      );
+    }
+  });
+
+  /**
+   * Panel layout.
+   */
   var PanelLayout = React.createClass({displayName: 'PanelLayout',
     propTypes: {
       summary: React.PropTypes.string.isRequired
@@ -138,10 +247,8 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       return (
-        React.DOM.div({className: "component-spacer share generate-url"}, 
-          React.DOM.div({className: "description"}, 
-            React.DOM.p({className: "description-content"}, this.props.summary)
-          ), 
+        React.DOM.div({className: "share generate-url"}, 
+          React.DOM.div({className: "description"}, this.props.summary), 
           React.DOM.div({className: "action"}, 
             this.props.children
           )
@@ -152,16 +259,18 @@ loop.panel = (function(_, mozL10n) {
 
   var CallUrlResult = React.createClass({displayName: 'CallUrlResult',
     propTypes: {
-      callUrl:  React.PropTypes.string,
-      notifier: React.PropTypes.object.isRequired,
-      client:   React.PropTypes.object.isRequired
+      callUrl:        React.PropTypes.string,
+      callUrlExpiry:  React.PropTypes.number,
+      notifier:       React.PropTypes.object.isRequired,
+      client:         React.PropTypes.object.isRequired
     },
 
     getInitialState: function() {
       return {
         pending: false,
         copied: false,
-        callUrl: this.props.callUrl || ""
+        callUrl: this.props.callUrl || "",
+        callUrlExpiry: 0
       };
     },
 
@@ -175,6 +284,12 @@ loop.panel = (function(_, mozL10n) {
     },
 
     componentDidMount: function() {
+      // If we've already got a callURL, don't bother requesting a new one.
+      // As of this writing, only used for visual testing in the UI showcase.
+      if (this.state.callUrl.length) {
+        return;
+      }
+
       this.setState({pending: true});
       this.props.client.requestCallUrl(this.conversationIdentifier(),
                                        this._onCallUrlReceived);
@@ -194,7 +309,9 @@ loop.panel = (function(_, mozL10n) {
           var token = callUrlData.callToken ||
                       callUrl.pathname.split('/').pop();
 
-          this.setState({pending: false, copied: false, callUrl: callUrl.href});
+          this.setState({pending: false, copied: false,
+                         callUrl: callUrl.href,
+                         callUrlExpiry: callUrlData.expiresAt});
         } catch(e) {
           console.log(e);
           this.props.notifier.errorL10n("unable_retrieve_url");
@@ -205,21 +322,30 @@ loop.panel = (function(_, mozL10n) {
 
     _generateMailTo: function() {
       return encodeURI([
-        "mailto:?subject=" + __("share_email_subject2") + "&",
-        "body=" + __("share_email_body2", {callUrl: this.state.callUrl})
+        "mailto:?subject=" + __("share_email_subject3") + "&",
+        "body=" + __("share_email_body3", {callUrl: this.state.callUrl})
       ].join(""));
     },
 
     handleEmailButtonClick: function(event) {
+      this.handleLinkExfiltration(event);
       // Note: side effect
       document.location = event.target.dataset.mailto;
     },
 
     handleCopyButtonClick: function(event) {
+      this.handleLinkExfiltration(event);
       // XXX the mozLoop object should be passed as a prop, to ease testing and
       //     using a fake implementation in UI components showcase.
       navigator.mozLoop.copyString(this.state.callUrl);
       this.setState({copied: true});
+    },
+
+    handleLinkExfiltration: function(event) {
+      // TODO Bug 1015988 -- Increase link exfiltration telemetry count
+      if (this.state.callUrlExpiry) {
+        navigator.mozLoop.noteCallUrlExpiry(this.state.callUrlExpiry);
+      }
     },
 
     render: function() {
@@ -238,8 +364,9 @@ loop.panel = (function(_, mozL10n) {
         PanelLayout({summary: __("share_link_header_text")}, 
           React.DOM.div({className: "invite"}, 
             React.DOM.input({type: "url", value: this.state.callUrl, readOnly: "true", 
+                   onCopy: this.handleLinkExfiltration, 
                    className: inputCSSClass}), 
-            React.DOM.p({className: "button-group url-actions"}, 
+            React.DOM.p({className: "btn-group url-actions"}, 
               React.DOM.button({className: "btn btn-email", disabled: !this.state.callUrl, 
                 onClick: this.handleEmailButtonClick, 
                 'data-mailto': this._generateMailTo()}, 
@@ -251,6 +378,28 @@ loop.panel = (function(_, mozL10n) {
                                      __("copy_url_button")
               )
             )
+          )
+        )
+      );
+    }
+  });
+
+  /**
+   * FxA sign in/up link component.
+   */
+  var AuthLink = React.createClass({displayName: 'AuthLink',
+    handleSignUpLinkClick: function() {
+      navigator.mozLoop.logInToFxA();
+    },
+
+    render: function() {
+      if (navigator.mozLoop.loggedInToFxA) { // XXX to be implemented
+        return null;
+      }
+      return (
+        React.DOM.p({className: "signin-link"}, 
+          React.DOM.a({href: "#", onClick: this.handleSignUpLinkClick}, 
+            __("panel_footer_signin_or_signup_link")
           )
         )
       );
@@ -275,7 +424,11 @@ loop.panel = (function(_, mozL10n) {
                          notifier: this.props.notifier, 
                          callUrl: this.props.callUrl}), 
           ToSView(null), 
-          AvailabilityDropdown(null)
+          React.DOM.div({className: "footer"}, 
+            AvailabilityDropdown(null), 
+            AuthLink(null), 
+            SettingsDropdown(null)
+          )
         )
       );
     }
@@ -361,6 +514,9 @@ loop.panel = (function(_, mozL10n) {
     });
     Backbone.history.start();
 
+    document.body.classList.add(loop.shared.utils.getTargetPlatform());
+    document.body.setAttribute("dir", mozL10n.getDirection());
+
     // Notify the window that we've finished initalization and initial layout
     var evtObject = document.createEvent('Event');
     evtObject.initEvent('loopPanelInitialized', true, false);
@@ -373,6 +529,7 @@ loop.panel = (function(_, mozL10n) {
     CallUrlResult: CallUrlResult,
     PanelView: PanelView,
     PanelRouter: PanelRouter,
+    SettingsDropdown: SettingsDropdown,
     ToSView: ToSView
   };
 })(_, document.mozL10n);

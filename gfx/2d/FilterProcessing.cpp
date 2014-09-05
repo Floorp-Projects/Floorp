@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FilterProcessing.h"
+#include "Logging.h"
 
 namespace mozilla {
 namespace gfx {
@@ -13,6 +14,9 @@ FilterProcessing::ExtractAlpha(DataSourceSurface* aSource)
 {
   IntSize size = aSource->GetSize();
   RefPtr<DataSourceSurface> alpha = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
+  if (MOZ2D_WARN_IF(!alpha)) {
+    return nullptr;
+  }
   uint8_t* sourceData = aSource->GetData();
   int32_t sourceStride = aSource->Stride();
   uint8_t* alphaData = alpha->GetData();
@@ -122,6 +126,10 @@ FilterProcessing::SeparateColorChannels(DataSourceSurface* aSource,
   aChannel1 = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
   aChannel2 = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
   aChannel3 = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
+  if (MOZ2D_WARN_IF(!(aChannel0 && aChannel1 && aChannel2 && aChannel3))) {
+    return;
+  }
+
   uint8_t* sourceData = aSource->GetData();
   int32_t sourceStride = aSource->Stride();
   uint8_t* channel0Data = aChannel0->GetData();
@@ -146,6 +154,9 @@ FilterProcessing::CombineColorChannels(DataSourceSurface* aChannel0, DataSourceS
   IntSize size = aChannel0->GetSize();
   RefPtr<DataSourceSurface> result =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
+  if (MOZ2D_WARN_IF(!result)) {
+    return nullptr;
+  }
   int32_t resultStride = result->Stride();
   uint8_t* resultData = result->GetData();
   int32_t channelStride = aChannel0->Stride();

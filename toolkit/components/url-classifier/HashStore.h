@@ -22,7 +22,7 @@ namespace safebrowsing {
 // new hashes.
 class TableUpdate {
 public:
-  TableUpdate(const nsACString& aTable)
+  explicit TableUpdate(const nsACString& aTable)
       : mTable(aTable), mLocalUpdate(false) {}
   const nsCString& TableName() const { return mTable; }
 

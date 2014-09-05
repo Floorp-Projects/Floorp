@@ -19,7 +19,7 @@ namespace CSF
 
     private:
         cc_lineinfo_ref_t lineinfo;
-        CC_SIPCCLineInfo (cc_lineinfo_ref_t lineinfo);
+        explicit CC_SIPCCLineInfo (cc_lineinfo_ref_t lineinfo);
         CSF_DECLARE_WRAP(CC_SIPCCLineInfo, cc_lineinfo_ref_t);
 
     public:

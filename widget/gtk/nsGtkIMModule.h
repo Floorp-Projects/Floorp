@@ -54,7 +54,7 @@ public:
     // aOwnerWindow is a pointer of the owner window.  When aOwnerWindow is
     // destroyed, the related IME contexts are released (i.e., IME cannot be
     // used with the instance after that).
-    nsGtkIMModule(nsWindow* aOwnerWindow);
+    explicit nsGtkIMModule(nsWindow* aOwnerWindow);
     ~nsGtkIMModule();
 
     // "Enabled" means the users can use all IMEs.

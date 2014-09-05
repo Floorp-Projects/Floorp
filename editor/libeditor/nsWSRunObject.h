@@ -10,6 +10,7 @@
 #include "nsIEditor.h" // for EDirection
 #include "nsINode.h"
 #include "nscore.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/Text.h"
 
 class nsHTMLEditor;
@@ -62,7 +63,7 @@ public:
    * themselves, and are only a separate type because there's no other obvious
    * way to name specific WSType values.
    */
-  WSType(const Enum& aEnum = none) : mEnum(aEnum) {}
+  MOZ_IMPLICIT WSType(const Enum& aEnum = none) : mEnum(aEnum) {}
   // operator==, &, and | need to access mEnum
   friend bool operator==(const WSType& aLeft, const WSType& aRight);
   friend const WSType operator&(const WSType& aLeft, const WSType& aRight);

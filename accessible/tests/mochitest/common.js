@@ -12,6 +12,8 @@ const nsIAccessibleTextChangeEvent =
   Components.interfaces.nsIAccessibleTextChangeEvent;
 const nsIAccessibleVirtualCursorChangeEvent =
   Components.interfaces.nsIAccessibleVirtualCursorChangeEvent;
+const nsIAccessibleObjectAttributeChangedEvent =
+  Components.interfaces.nsIAccessibleObjectAttributeChangedEvent;
 
 const nsIAccessibleStates = Components.interfaces.nsIAccessibleStates;
 const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;

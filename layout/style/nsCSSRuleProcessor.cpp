@@ -454,7 +454,7 @@ struct NodeMatchContext;
 
 class RuleHash {
 public:
-  RuleHash(bool aQuirksMode);
+  explicit RuleHash(bool aQuirksMode);
   ~RuleHash();
   void AppendRule(const RuleSelectorPair &aRuleInfo);
   void EnumerateAllRules(Element* aElement, ElementDependentRuleProcessorData* aData,
@@ -2550,7 +2550,7 @@ nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
 {
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
-  if (cascade && cascade->mAnonBoxRules.entryCount) {
+  if (cascade && cascade->mAnonBoxRules.EntryCount()) {
     RuleHashTagTableEntry* entry = static_cast<RuleHashTagTableEntry*>
       (PL_DHashTableOperate(&cascade->mAnonBoxRules, aData->mPseudoTag,
                             PL_DHASH_LOOKUP));
@@ -2571,7 +2571,7 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
 {
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
-  if (cascade && cascade->mXULTreeRules.entryCount) {
+  if (cascade && cascade->mXULTreeRules.EntryCount()) {
     RuleHashTagTableEntry* entry = static_cast<RuleHashTagTableEntry*>
       (PL_DHashTableOperate(&cascade->mXULTreeRules, aData->mPseudoTag,
                             PL_DHASH_LOOKUP));
@@ -2720,7 +2720,7 @@ nsCSSRuleProcessor::HasDocumentStateDependentStyle(StateRuleProcessorData* aData
 }
 
 struct AttributeEnumData {
-  AttributeEnumData(AttributeRuleProcessorData *aData)
+  explicit AttributeEnumData(AttributeRuleProcessorData *aData)
     : data(aData), change(nsRestyleHint(0)) {}
 
   AttributeRuleProcessorData *data;
@@ -3425,7 +3425,7 @@ static int CompareWeightData(const void* aArg1, const void* aArg2,
 
 
 struct FillWeightArrayData {
-  FillWeightArrayData(PerWeightData* aArrayData) :
+  explicit FillWeightArrayData(PerWeightData* aArrayData) :
     mIndex(0),
     mWeightArray(aArrayData)
   {
@@ -3509,7 +3509,7 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
       }
 
       // Sort the hash table of per-weight linked lists by weight.
-      uint32_t weightCount = data.mRulesByWeight.entryCount;
+      uint32_t weightCount = data.mRulesByWeight.EntryCount();
       nsAutoArrayPtr<PerWeightData> weightArray(new PerWeightData[weightCount]);
       FillWeightArrayData fwData(weightArray);
       PL_DHashTableEnumerate(&data.mRulesByWeight, FillWeightArray, &fwData);

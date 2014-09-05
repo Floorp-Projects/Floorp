@@ -24,21 +24,10 @@ enum {
 
 template<typename T> struct Prefable;
 
-// This variable exists solely to provide a unique address for use as an identifier.
-extern const char HandlerFamily;
-inline const void* ProxyFamily() { return &HandlerFamily; }
-
-inline bool IsDOMProxy(JSObject *obj)
-{
-    const js::Class* clasp = js::GetObjectClass(obj);
-    return clasp->isProxy() &&
-           js::GetProxyHandler(obj)->family() == ProxyFamily();
-}
-
 class BaseDOMProxyHandler : public js::BaseProxyHandler
 {
 public:
-  explicit BaseDOMProxyHandler(const void* aProxyFamily, bool aHasPrototype = false)
+  explicit MOZ_CONSTEXPR BaseDOMProxyHandler(const void* aProxyFamily, bool aHasPrototype = false)
     : js::BaseProxyHandler(aProxyFamily, aHasPrototype)
   {}
 
@@ -88,10 +77,9 @@ protected:
 class DOMProxyHandler : public BaseDOMProxyHandler
 {
 public:
-  DOMProxyHandler()
-    : BaseDOMProxyHandler(ProxyFamily())
-  {
-  }
+  MOZ_CONSTEXPR DOMProxyHandler()
+    : BaseDOMProxyHandler(&family)
+  {}
 
   bool preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy) const MOZ_OVERRIDE;
   bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
@@ -121,28 +109,22 @@ public:
   virtual bool setCustom(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                          JS::MutableHandle<JS::Value> vp, bool *done) const;
 
-  static JSObject* GetExpandoObject(JSObject* obj)
-  {
-    MOZ_ASSERT(IsDOMProxy(obj), "expected a DOM proxy object");
-    JS::Value v = js::GetProxyExtra(obj, JSPROXYSLOT_EXPANDO);
-    if (v.isObject()) {
-      return &v.toObject();
-    }
+  static JSObject* GetExpandoObject(JSObject* obj);
 
-    if (v.isUndefined()) {
-      return nullptr;
-    }
-
-    js::ExpandoAndGeneration* expandoAndGeneration =
-      static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
-    v = expandoAndGeneration->expando;
-    return v.isUndefined() ? nullptr : &v.toObject();
-  }
   /* GetAndClearExpandoObject does not DROP or clear the preserving wrapper flag. */
   static JSObject* GetAndClearExpandoObject(JSObject* obj);
   static JSObject* EnsureExpandoObject(JSContext* cx,
                                        JS::Handle<JSObject*> obj);
+
+  static const char family;
 };
+
+inline bool IsDOMProxy(JSObject *obj)
+{
+    const js::Class* clasp = js::GetObjectClass(obj);
+    return clasp->isProxy() &&
+           js::GetProxyHandler(obj)->family() == &DOMProxyHandler::family;
+}
 
 inline const DOMProxyHandler*
 GetDOMProxyHandler(JSObject* obj)

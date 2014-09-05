@@ -50,7 +50,7 @@ def main():
 
     sysname = platform.system()
     if sysname == "Linux":
-        fix = srcdir + os.sep + "tools/rb/fix-linux-stack.pl"
+        fix = srcdir + os.sep + "tools/rb/fix_linux_stack.py"
     elif sysname == "Darwin":
         fix = srcdir + os.sep + "tools/rb/fix_macosx_stack.py"
     else:

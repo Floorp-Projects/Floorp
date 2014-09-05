@@ -26,7 +26,7 @@ public:
   using Element::GetText;
   using Element::SetText;
 
-  HTMLAnchorElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit HTMLAnchorElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
     , Link(MOZ_THIS_IN_INITIALIZER_LIST())
   {

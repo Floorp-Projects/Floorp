@@ -18,7 +18,7 @@ namespace CSF
     	CSF_DECLARE_WRAP(CC_SIPCCDevice, cc_device_handle_t);
         static CC_DevicePtr create (const std::string & phoneConfigFileNameStr);
 
-        CC_SIPCCDevice (cc_device_handle_t aDeviceHandle);
+        explicit CC_SIPCCDevice (cc_device_handle_t aDeviceHandle);
 
     public:
 

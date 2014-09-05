@@ -153,8 +153,9 @@ Sanitizer.prototype = {
     history: {
       clear: function ()
       {
-        return new Promise(function(resolve, reject) {
-          sendMessageToJava({ type: "Sanitize:ClearHistory" }, function() {
+        return Messaging.sendRequestForResult({ type: "Sanitize:ClearHistory" })
+          .catch(e => Cu.reportError("Java-side history clearing failed: " + e))
+          .then(function() {
             try {
               Services.obs.notifyObservers(null, "browser:purge-session-history", "");
             }
@@ -164,10 +165,7 @@ Sanitizer.prototype = {
               var predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
               predictor.reset();
             } catch (e) { }
-
-            resolve();
           });
-        });
       },
 
       get canClear()

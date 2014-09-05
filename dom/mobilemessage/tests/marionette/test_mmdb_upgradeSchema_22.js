@@ -630,7 +630,7 @@ function doVerifyDatabase(aMmdb, aExpected) {
       is(aExpected.length, 0, "remaining unmatched threads");
 
       // 5) retrieve all messages.
-      return createMessageCursor(aMmdb, {})
+      return createMessageCursor(aMmdb)
         .then(function(aValues) {
           let [errorCode, domMessages] = aValues;
           is(errorCode, 0, "errorCode");

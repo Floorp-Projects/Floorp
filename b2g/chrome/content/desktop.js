@@ -55,12 +55,16 @@ function checkDebuggerPort() {
   // DebuggerServer.openListener detects that it isn't a file path (string),
   // and starts listening on the tcp port given here as command line argument.
 
-  if (!window.arguments) {
+  // Get the command line arguments that were passed to the b2g client
+  let args;
+  try {
+    let service = Cc["@mozilla.org/commandlinehandler/general-startup;1?type=b2gcmds"].getService(Ci.nsISupports);
+    args = service.wrappedJSObject.cmdLine;
+  } catch(e) {}
+
+  if (!args) {
     return;
   }
-
-  // Get the command line arguments that were passed to the b2g client
-  let args = window.arguments[0].QueryInterface(Ci.nsICommandLine);
 
   let dbgport;
   try {

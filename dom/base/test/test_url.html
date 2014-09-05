@@ -324,14 +324,8 @@
     var blob = new Blob(['a']);
     var url = URL.createObjectURL(blob);
 
-    ok(!('getPrincipalFromURL' in URL), "URL.getPrincipalFromURL is not exposed");
-    var fakeP = SpecialPowers.wrap(URL).getPrincipalFromURL("hello world!");
-    ok(!fakeP, "Principal doesn't exists.");
-
-    var p = SpecialPowers.wrap(URL).getPrincipalFromURL(url);
-    ok(p, "Principal exists.");
-    ok(p.URI, "Principal.URI exists.");
-    is(p.URI.spec, window.location.href, "Principal.URI is correct");
+    var u = new URL(url);
+    ok(u.origin, 'http://mochi.test:8888', "The URL generated from a blob URI has an origin");
   </script>
 </body>
 </html>

@@ -47,8 +47,8 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
   return NS_OK;
 }
 
-void
-FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
+FFmpegH264Decoder<LIBAV_VER>::DecodeResult
+FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(mp4_demuxer::MP4Sample* aSample)
 {
   AVPacket packet;
   av_init_packet(&packet);
@@ -56,6 +56,7 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
   aSample->Pad(FF_INPUT_BUFFER_PADDING_SIZE);
   packet.data = aSample->data;
   packet.size = aSample->size;
+  packet.dts = aSample->decode_timestamp;
   packet.pts = aSample->composition_timestamp;
   packet.flags = aSample->is_sync_point ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->byte_offset;
@@ -63,7 +64,7 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
     mCallback->Error();
-    return;
+    return DecodeResult::DECODE_ERROR;
   }
 
   int decoded;
@@ -73,7 +74,7 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
   if (bytesConsumed < 0) {
     NS_WARNING("FFmpeg video decoder error.");
     mCallback->Error();
-    return;
+    return DecodeResult::DECODE_ERROR;
   }
 
   // If we've decoded a frame then we need to output it
@@ -114,12 +115,19 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
     if (!v) {
       NS_WARNING("image allocation error.");
       mCallback->Error();
-      return;
+      return DecodeResult::DECODE_ERROR;
     }
     mCallback->Output(v);
+    return DecodeResult::DECODE_FRAME;
   }
+  return DecodeResult::DECODE_NO_FRAME;
+}
 
-  if (mTaskQueue->IsEmpty()) {
+void
+FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
+{
+  if (DoDecodeFrame(aSample) != DecodeResult::DECODE_ERROR &&
+      mTaskQueue->IsEmpty()) {
     mCallback->InputExhausted();
   }
 }
@@ -229,7 +237,7 @@ nsresult
 FFmpegH264Decoder<LIBAV_VER>::Input(mp4_demuxer::MP4Sample* aSample)
 {
   mTaskQueue->Dispatch(
-    NS_NewRunnableMethodWithArg<nsAutoPtr<mp4_demuxer::MP4Sample> >(
+    NS_NewRunnableMethodWithArg<nsAutoPtr<mp4_demuxer::MP4Sample>>(
       this, &FFmpegH264Decoder<LIBAV_VER>::DecodeFrame,
       nsAutoPtr<mp4_demuxer::MP4Sample>(aSample)));
 
@@ -237,26 +245,19 @@ FFmpegH264Decoder<LIBAV_VER>::Input(mp4_demuxer::MP4Sample* aSample)
 }
 
 void
-FFmpegH264Decoder<LIBAV_VER>::NotifyDrain()
+FFmpegH264Decoder<LIBAV_VER>::DoDrain()
 {
+  nsAutoPtr<MP4Sample> empty(new MP4Sample());
+  while (DoDecodeFrame(empty) == DecodeResult::DECODE_FRAME) {
+  }
   mCallback->DrainComplete();
 }
 
 nsresult
 FFmpegH264Decoder<LIBAV_VER>::Drain()
 {
-  // The maximum number of frames that can be waiting to be decoded is
-  // max_b_frames + 1: One P frame and max_b_frames B frames.
-  for (int32_t i = 0; i <= mCodecContext->max_b_frames; i++) {
-    // An empty frame tells FFmpeg to decode the next delayed frame it has in
-    // its queue, if it has any.
-    nsAutoPtr<MP4Sample> empty(new MP4Sample());
-
-    nsresult rv = Input(empty.forget());
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   mTaskQueue->Dispatch(
-    NS_NewRunnableMethod(this, &FFmpegH264Decoder<LIBAV_VER>::NotifyDrain));
+    NS_NewRunnableMethod(this, &FFmpegH264Decoder<LIBAV_VER>::DoDrain));
 
   return NS_OK;
 }
