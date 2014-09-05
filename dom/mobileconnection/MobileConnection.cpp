@@ -51,7 +51,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_FORWARD_SAFE_NSIMOBILECONNECTIONLISTENER(mMobileConnection)
 
-  Listener(MobileConnection* aMobileConnection)
+  explicit Listener(MobileConnection* aMobileConnection)
     : mMobileConnection(aMobileConnection)
   {
     MOZ_ASSERT(mMobileConnection);
