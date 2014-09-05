@@ -1564,6 +1564,25 @@ public:
   }
 };
 
+class UpdateLanguagesRunnable MOZ_FINAL : public WorkerRunnable
+{
+  nsTArray<nsString> mLanguages;
+
+public:
+  UpdateLanguagesRunnable(WorkerPrivate* aWorkerPrivate,
+                          const nsTArray<nsString>& aLanguages)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+      mLanguages(aLanguages)
+  { }
+
+  virtual bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  {
+    aWorkerPrivate->UpdateLanguagesInternal(aCx, mLanguages);
+    return true;
+  }
+};
+
 class UpdateJSWorkerMemoryParameterRunnable MOZ_FINAL :
   public WorkerControlRunnable
 {
@@ -2887,6 +2906,21 @@ WorkerPrivateParent<Derived>::UpdatePreference(JSContext* aCx, WorkerPreference 
     new UpdatePreferenceRunnable(ParentAsWorkerPrivate(), aPref, aValue);
   if (!runnable->Dispatch(aCx)) {
     NS_WARNING("Failed to update worker preferences!");
+    JS_ClearPendingException(aCx);
+  }
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::UpdateLanguages(JSContext* aCx,
+                                              const nsTArray<nsString>& aLanguages)
+{
+  AssertIsOnParentThread();
+
+  nsRefPtr<UpdateLanguagesRunnable> runnable =
+    new UpdateLanguagesRunnable(ParentAsWorkerPrivate(), aLanguages);
+  if (!runnable->Dispatch(aCx)) {
+    NS_WARNING("Failed to update worker languages!");
     JS_ClearPendingException(aCx);
   }
 }
@@ -5524,6 +5558,23 @@ WorkerPrivate::UpdateRuntimeOptionsInternal(
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
     mChildWorkers[index]->UpdateRuntimeOptions(aCx, aRuntimeOptions);
+  }
+}
+
+void
+WorkerPrivate::UpdateLanguagesInternal(JSContext* aCx,
+                                       const nsTArray<nsString>& aLanguages)
+{
+  WorkerGlobalScope* globalScope = GlobalScope();
+  if (globalScope) {
+    nsRefPtr<WorkerNavigator> nav = globalScope->GetExistingNavigator();
+    if (nav) {
+      nav->SetLanguages(aLanguages);
+    }
+  }
+
+  for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
+    mChildWorkers[index]->UpdateLanguages(aCx, aLanguages);
   }
 }
 
