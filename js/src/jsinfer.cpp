@@ -1047,9 +1047,6 @@ TypeObjectKey::ensureTrackedProperty(JSContext *cx, jsid id)
     }
 }
 
-template<> const jschar JS::ubi::TracerConcrete<TypeObject>::concreteTypeName[] =
-    MOZ_UTF16("js::types::TypeObject");
-
 bool
 HeapTypeSetKey::instantiate(JSContext *cx)
 {
