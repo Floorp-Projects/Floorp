@@ -43,7 +43,6 @@
 #include "nsFrameMessageManager.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
-#include "nsIInlineEventHandlers.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIIdleObserver.h"
 #include "nsIDocument.h"
@@ -329,8 +328,7 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
                        public PRCListStr,
-                       public nsIDOMWindowPerformance,
-                       public nsIInlineEventHandlers
+                       public nsIDOMWindowPerformance
 #ifdef MOZ_B2G
                      , public nsIDOMWindowB2G
 #endif // MOZ_B2G
@@ -424,9 +422,6 @@ public:
 
     return GetOuterFromCurrentInner(this);
   }
-
-  // nsIInlineEventHandlers
-  NS_DECL_NSIINLINEEVENTHANDLERS
 
   // nsPIDOMWindow
   virtual nsPIDOMWindow* GetPrivateRoot();
