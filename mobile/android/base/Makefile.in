@@ -370,6 +370,7 @@ $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 		-F $(3) \
 		-J $(4) \
 		--output-text-symbols $(5) \
+		$(if $(MOZ_ANDROID_RESOURCE_CONSTRAINED),-c hdpi,) \
 		--ignore-assets "$$(ANDROID_AAPT_IGNORE)"
 endef
 
