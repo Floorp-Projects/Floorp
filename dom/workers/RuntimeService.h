@@ -108,6 +108,7 @@ public:
     nsString mAppVersion;
     nsString mPlatform;
     nsString mUserAgent;
+    nsTArray<nsString> mLanguages;
   };
 
 private:
@@ -201,6 +202,9 @@ public:
 
   void
   UpdateAllWorkerRuntimeOptions();
+
+  void
+  UpdateAllWorkerLanguages(const nsTArray<nsString>& aLanguages);
 
   void
   UpdateAllWorkerPreference(WorkerPreference aPref, bool aValue);

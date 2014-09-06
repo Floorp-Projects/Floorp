@@ -8,7 +8,7 @@ interface nsIURI;
 interface nsIObserver;
 interface nsIHttpChannel;
 
-[scriptable, uuid(b20a9242-5732-45bc-9fa0-a178154f2721)]
+[scriptable, uuid(e7da4bd1-7c38-4d73-843d-c1d6af9b3c85)]
 interface nsISiteSecurityService : nsISupports
 {
     const uint32_t HEADER_HSTS = 0;
@@ -90,11 +90,12 @@ interface nsISiteSecurityService : nsISupports
      */
     boolean isSecureURI(in uint32_t aType, in nsIURI aURI, in uint32_t aFlags);
 
+    /**
+     * Removes all security state by resetting to factory-original settings.
+     */
+    void clearAll();
 };
 
 %{C++
 #define NS_SSSERVICE_CONTRACTID "@mozilla.org/ssservice;1"
-
-#define STS_PERMISSION "sts/use"
-#define STS_SUBDOMAIN_PERMISSION "sts/subd"
 %}
