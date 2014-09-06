@@ -51,10 +51,6 @@
 #include "Units.h"
 #include "nsComponentManagerUtils.h"
 
-#ifdef MOZ_WEBSPEECH
-#include "nsISpeechSynthesisGetter.h"
-#endif // MOZ_WEBSPEECH
-
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
 
@@ -324,9 +320,6 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
                        public PRCListStr
-#ifdef MOZ_WEBSPEECH
-                     , public nsISpeechSynthesisGetter
-#endif // MOZ_WEBSPEECH
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -374,11 +367,6 @@ public:
 
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW
-
-#ifdef MOZ_WEBSPEECH
-  // nsISpeechSynthesisGetter
-  NS_DECL_NSISPEECHSYNTHESISGETTER
-#endif // MOZ_WEBSPEECH
 
   // nsIDOMJSWindow
   NS_DECL_NSIDOMJSWINDOW

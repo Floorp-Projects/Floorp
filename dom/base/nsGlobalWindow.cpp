@@ -1643,9 +1643,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   // Make sure this matches the cast in nsGlobalWindow::FromWrapper()
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
-#ifdef MOZ_WEBSPEECH
-  NS_INTERFACE_MAP_ENTRY(nsISpeechSynthesisGetter)
-#endif // MOZ_B2G
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
   if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) {
     foundInterface = static_cast<nsIDOMWindowInternal*>(this);
@@ -3768,19 +3765,6 @@ nsGlobalWindow::GetSpeechSynthesis(ErrorResult& aError)
   }
 
   return mSpeechSynthesis;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetSpeechSynthesis(nsISupports** aSpeechSynthesis)
-{
-  ErrorResult rv;
-  nsCOMPtr<nsISupports> speechSynthesis;
-  if (Preferences::GetBool("media.webspeech.synth.enabled")) {
-    speechSynthesis = GetSpeechSynthesis(rv);
-  }
-  speechSynthesis.forget(aSpeechSynthesis);
-
-  return rv.ErrorCode();
 }
 #endif
 
