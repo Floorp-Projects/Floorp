@@ -15,7 +15,6 @@
 #include "jscompartment.h"
 
 #include "gc/Marking.h"
-#include "js/Debug.h"
 #include "js/UbiNode.h"
 #include "js/UbiNodeTraverse.h"
 #include "vm/Debugger.h"
@@ -249,11 +248,6 @@ DebuggerMemory::setMaxAllocationsLogLength(JSContext *cx, unsigned argc, Value *
 
 
 /* Debugger.Memory.prototype.takeCensus */
-
-void
-JS::dbg::SetDebuggerMallocSizeOf(JSRuntime *rt, mozilla::MallocSizeOf mallocSizeOf) {
-    rt->debuggerMallocSizeOf = mallocSizeOf;
-}
 
 namespace js {
 namespace dbg {
