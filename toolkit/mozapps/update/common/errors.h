@@ -69,6 +69,11 @@
 #define WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID 47
 #define WRITE_ERROR_SHARING_VIOLATION_NOPID 48
 
+#define FOTA_FILE_OPERATION_ERROR 49
+#define FOTA_RECOVERY_ERROR 50
+
+#define SECURE_LOCATION_UPDATE_ERROR 51
+
 // The following error codes are only used by updater.exe
 // when a fallback key exists and XPCShell tests are being run.
 #define FALLBACKKEY_UNKNOWN_ERROR 100

@@ -17,28 +17,9 @@ Observer.prototype = {
 
 var gObserver = new Observer();
 
-// nsISiteSecurityService.removeStsState removes a given domain's
-// HSTS status. This means that a domain on the preload list will be
-// considered not HSTS if this is called. So, to reset everything to its
-// original state, we have to reach into the permission manager and clear
-// any HSTS-related state manually.
-function clearStsState() {
-  var permissionManager = Cc["@mozilla.org/permissionmanager;1"]
-                            .getService(Ci.nsIPermissionManager);
-  // This is a list of every host we call processHeader with
-  // (so we can remove any state added to the sts service)
-  var hosts = ["bugzilla.mozilla.org", "login.persona.org",
-               "subdomain.www.torproject.org",
-               "subdomain.bugzilla.mozilla.org" ];
-  for (var host of hosts) {
-    permissionManager.remove(host, "sts/use");
-    permissionManager.remove(host, "sts/subd");
-  }
-}
-
 function cleanup() {
   Services.obs.removeObserver(gObserver, "last-pb-context-exited");
-  clearStsState();
+  gSSService.clearAll();
 }
 
 function run_test() {
@@ -103,7 +84,7 @@ function test_part1() {
   // but this time include subdomains was not set, so test for that
   do_check_false(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
                                          "subdomain.bugzilla.mozilla.org", 0));
-  clearStsState();
+  gSSService.clearAll();
 
   // check that processing a header with max-age: 0 from a subdomain of a site
   // will not remove that (ancestor) site from the list
@@ -150,14 +131,28 @@ function test_part1() {
   do_check_false(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
                                          "another.subdomain.bugzilla.mozilla.org", 0));
 
-  // Simulate leaving private browsing mode
-  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+  // Test that an expired non-private browsing entry results in correctly
+  // identifying a host that is on the preload list as no longer sts.
+  // (This happens when we're in regular browsing mode, we get a header from
+  // a site on the preload list, and that header later expires. We need to
+  // then treat that host as no longer an sts host.)
+  // (sanity check first - this should be in the preload list)
+  do_check_true(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                                        "login.persona.org", 0));
+  var uri = Services.io.newURI("http://login.persona.org", null, null);
+  gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
+                           "max-age=1", 0);
+  do_timeout(1250, function() {
+    do_check_false(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                                           "login.persona.org", 0));
+    run_next_test();
+  });
 }
 
 const IS_PRIVATE = Ci.nsISocketProvider.NO_PERMANENT_STORAGE;
 
 function test_private_browsing1() {
-  clearStsState();
+  gSSService.clearAll();
   // sanity - bugzilla.mozilla.org is preloaded, includeSubdomains set
   do_check_true(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
                                         "bugzilla.mozilla.org", IS_PRIVATE));
@@ -189,9 +184,6 @@ function test_private_browsing1() {
   do_check_false(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
                                          "subdomain.bugzilla.mozilla.org", IS_PRIVATE));
 
-  // TODO unfortunately we don't have a good way to know when an entry
-  // has expired in the permission manager, so we can't yet extend this test
-  // to that case.
   // Test that an expired private browsing entry results in correctly
   // identifying a host that is on the preload list as no longer sts.
   // (This happens when we're in private browsing mode, we get a header from

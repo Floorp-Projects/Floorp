@@ -1,0 +1,53 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Navigator
+-->
+<head>
+  <title>Test for DOM Worker Navigator.languages</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+
+  var tests = [ 'en,it', 'it,en,fr', '', 'en' ];
+  var expectedLanguages;
+  function runTests() {
+    if (!tests.length) {
+      worker.postMessage('finish');
+      SimpleTest.finish();
+      return;
+    }
+
+    expectedLanguages = tests.shift();
+    SpecialPowers.pushPrefEnv({"set": [["intl.accept_languages", expectedLanguages]]}, function() {
+      worker.postMessage(true);
+    });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  var worker = new Worker("navigator_languages_worker.js");
+
+  worker.onmessage = function(event) {
+    is(event.data.toString(), navigator.languages.toString(), "The languages mach.");
+    is(event.data.toString(), expectedLanguages, "This is the correct result.");
+    runTests();
+  }
+
+  runTests();
+
+</script>
+</pre>
+</body>
+</html>

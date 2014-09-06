@@ -46,6 +46,11 @@ Tests of DOM Worker Navigator
       return;
     }
 
+    if (args.name === "languages") {
+      is(navigator.languages.toString(), args.value.toString(), "languages matches");
+      return;
+    }
+
     is(navigator[args.name], args.value,
        "Mismatched navigator string for " + args.name + "!");
   };

@@ -4,6 +4,7 @@
 
 #include <windows.h>
 #include <wtsapi32.h>
+#include <aclapi.h>
 #include "uachelper.h"
 #include "updatelogging.h"
 
@@ -161,11 +162,15 @@ UACHelper::DisableUnneededPrivileges(HANDLE token,
   BOOL result = TRUE;
   for (size_t i = 0; i < count; i++) {
     if (SetPrivilege(token, unneededPrivs[i], FALSE)) {
+#ifdef UPDATER_LOG_PRIVS
       LOG(("Disabled unneeded token privilege: %s.",
            unneededPrivs[i]));
+#endif
     } else {
+#ifdef UPDATER_LOG_PRIVS
       LOG(("Could not disable token privilege value: %s. (%d)",
            unneededPrivs[i], GetLastError()));
+#endif
       result = FALSE;
     }
   }
@@ -220,3 +225,93 @@ UACHelper::CanUserElevate()
 
   return canElevate;
 }
+
+/**
+ * Denies write access for everyone on the specified path.
+ *
+ * @param path The file path to modify the DACL on
+ * @param originalACL out parameter, set only if successful.
+ *                    caller must free.
+ * @return true on success
+ */
+bool
+UACHelper::DenyWriteACLOnPath(LPCWSTR path, PACL *originalACL,
+                              PSECURITY_DESCRIPTOR *sd)
+{
+  // Get the old security information on the path.
+  // Note that the actual buffer to be freed is contained in *sd.
+  // originalACL points within *sd's buffer.
+  *originalACL = nullptr;
+  *sd = nullptr;
+  DWORD result =
+    GetNamedSecurityInfoW(path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+                          nullptr, nullptr, originalACL, nullptr, sd);
+  if (result != ERROR_SUCCESS) {
+    *sd = nullptr;
+    *originalACL = nullptr;
+    return false;
+  }
+
+  // Adjust the security for everyone to deny write
+  EXPLICIT_ACCESSW ea;
+  ZeroMemory(&ea, sizeof(EXPLICIT_ACCESSW));
+  ea.grfAccessPermissions = FILE_APPEND_DATA | FILE_WRITE_ATTRIBUTES |
+                            FILE_WRITE_DATA | FILE_WRITE_EA;
+  ea.grfAccessMode = DENY_ACCESS;
+  ea.grfInheritance = NO_INHERITANCE;
+  ea.Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+  ea.Trustee.TrusteeType = TRUSTEE_IS_GROUP;
+  ea.Trustee.ptstrName = L"EVERYONE";
+  PACL dacl = nullptr;
+  result = SetEntriesInAclW(1, &ea, *originalACL, &dacl);
+  if (result != ERROR_SUCCESS) {
+    LocalFree(*sd);
+    *originalACL = nullptr;
+    *sd = nullptr;
+    return false;
+  }
+
+  // Update the path to have a the new DACL
+  result = SetNamedSecurityInfoW(const_cast<LPWSTR>(path), SE_FILE_OBJECT,
+                                 DACL_SECURITY_INFORMATION, nullptr, nullptr,
+                                 dacl, nullptr);
+  LocalFree(dacl);
+  return result == ERROR_SUCCESS;
+}
+
+/**
+ * Determines if the specified directory only has updater.exe inside of it,
+ * and nothing else.
+ *
+ * @param inputPath the directory path to search
+ * @return true if updater.exe is the only file in the directory
+ */
+bool
+UACHelper::IsDirectorySafe(LPCWSTR inputPath)
+{
+  WIN32_FIND_DATAW findData;
+  HANDLE findHandle = nullptr;
+
+  WCHAR searchPath[MAX_PATH + 1] = { L'\0' };
+  wsprintfW(searchPath, L"%s\\*.*", inputPath);
+
+  findHandle = FindFirstFileW(searchPath, &findData);
+  if(findHandle == INVALID_HANDLE_VALUE) {
+    return false;
+  }
+
+  // Enumerate the files and if we find anything other than the current
+  // directory, the parent directory, or updater.exe. Then fail.
+  do {
+    if(wcscmp(findData.cFileName, L".") != 0 &&
+       wcscmp(findData.cFileName, L"..") != 0 &&
+       wcscmp(findData.cFileName, L"updater.exe") != 0) {
+         FindClose(findHandle);
+      return false;
+    }
+  } while(FindNextFileW(findHandle, &findData));
+  FindClose(findHandle);
+
+  return true;
+}
+
