@@ -5005,16 +5005,14 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
 
   info = new RangePaintInfo(range, ancestorFrame);
 
-  nsRect ancestorRect = ancestorFrame->GetVisualOverflowRect();
-
   // get a display list containing the range
   info->mBuilder.SetIncludeAllOutOfFlows();
   if (aForPrimarySelection) {
     info->mBuilder.SetSelectedFramesOnly();
   }
-  info->mBuilder.EnterPresShell(ancestorFrame, ancestorRect);
+  info->mBuilder.EnterPresShell(ancestorFrame);
   ancestorFrame->BuildDisplayListForStackingContext(&info->mBuilder,
-                                                    ancestorRect, &info->mList);
+      ancestorFrame->GetVisualOverflowRect(), &info->mList);
 
 #ifdef DEBUG
   if (gDumpRangePaintList) {
@@ -5025,7 +5023,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
 
   nsRect rangeRect = ClipListToRange(&info->mBuilder, &info->mList, range);
 
-  info->mBuilder.LeavePresShell(ancestorFrame, ancestorRect);
+  info->mBuilder.LeavePresShell(ancestorFrame);
 
 #ifdef DEBUG
   if (gDumpRangePaintList) {
@@ -6074,10 +6072,10 @@ public:
     nsDisplayList list;
     nsAutoTArray<nsIFrame*, 100> outFrames;
     nsDisplayItem::HitTestState hitTestState;
+    builder.EnterPresShell(mFrame);
     nsRect bounds = mShell->GetPresContext()->GetVisibleArea();
-    builder.EnterPresShell(mFrame, bounds);
     mFrame->BuildDisplayListForStackingContext(&builder, bounds, &list);
-    builder.LeavePresShell(mFrame, bounds);
+    builder.LeavePresShell(mFrame);
     list.HitTest(&builder, bounds, &hitTestState, &outFrames);
     list.DeleteAll();
     for (int32_t i = outFrames.Length() - 1; i >= 0; --i) {
