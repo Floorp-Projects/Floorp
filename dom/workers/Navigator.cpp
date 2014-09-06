@@ -38,7 +38,7 @@ WorkerNavigator::Create(bool aOnLine)
   nsRefPtr<WorkerNavigator> navigator =
     new WorkerNavigator(properties.mAppName, properties.mAppVersion,
                         properties.mPlatform, properties.mUserAgent,
-                        aOnLine);
+                        properties.mLanguages, aOnLine);
 
   return navigator.forget();
 }
@@ -276,6 +276,13 @@ WorkerNavigator::GetDataStores(JSContext* aCx,
   runnable->Dispatch(aCx);
 
   return promise.forget();
+}
+
+void
+WorkerNavigator::SetLanguages(const nsTArray<nsString>& aLanguages)
+{
+  WorkerNavigatorBinding_workers::ClearCachedLanguagesValue(this);
+  mLanguages = aLanguages;
 }
 
 END_WORKERS_NAMESPACE

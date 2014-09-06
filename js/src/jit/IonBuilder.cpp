@@ -148,6 +148,9 @@ IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
 
     JS_ASSERT(script()->hasBaselineScript() == (info->executionMode() != ArgumentsUsageAnalysis));
     JS_ASSERT(!!analysisContext == (info->executionMode() == DefinitePropertiesAnalysis));
+
+    if (!info->executionModeIsAnalysis())
+        script()->baselineScript()->setIonCompiledOrInlined();
 }
 
 void
@@ -4202,6 +4205,7 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
         // type information, except for definite properties analysis,
         // as the caller has not run yet.
         if (targetScript->getUseCount() < optimizationInfo().usesBeforeInlining() &&
+            !targetScript->baselineScript()->ionCompiledOrInlined() &&
             info().executionMode() != DefinitePropertiesAnalysis)
         {
             return DontInline(targetScript, "Vetoed: callee is insufficiently hot.");
