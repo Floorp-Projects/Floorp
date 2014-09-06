@@ -1123,35 +1123,6 @@ protected:
   nsresult GetURIListAttr(nsIAtom* aAttr, nsAString& aResult);
 
   /**
-   * Helper method for NS_IMPL_ENUM_ATTR_DEFAULT_VALUE.
-   * Gets the enum value string of an attribute and using a default value if
-   * the attribute is missing or the string is an invalid enum value.
-   *
-   * @param aType     the name of the attribute.
-   * @param aDefault  the default value if the attribute is missing or invalid.
-   * @param aResult   string corresponding to the value [out].
-   */
-  void GetEnumAttr(nsIAtom* aAttr,
-                               const char* aDefault,
-                               nsAString& aResult) const;
-
-  /**
-   * Helper method for NS_IMPL_ENUM_ATTR_DEFAULT_MISSING_INVALID_VALUES.
-   * Gets the enum value string of an attribute and using the default missing
-   * value if the attribute is missing or the default invalid value if the
-   * string is an invalid enum value.
-   *
-   * @param aType            the name of the attribute.
-   * @param aDefaultMissing  the default value if the attribute is missing.
-   * @param aDefaultInvalid  the default value if the attribute is invalid.
-   * @param aResult          string corresponding to the value [out].
-   */
-  void GetEnumAttr(nsIAtom* aAttr,
-                               const char* aDefaultMissing,
-                               const char* aDefaultInvalid,
-                               nsAString& aResult) const;
-
-  /**
    * Locates the nsIEditor associated with this node.  In general this is
    * equivalent to GetEditorInternal(), but for designmode or contenteditable,
    * this may need to get an editor that's not actually on this element's
