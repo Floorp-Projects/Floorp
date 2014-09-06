@@ -353,12 +353,14 @@ extra_packages := $(subst $(NULL) ,:,$(strip $(extra_packages)))
 # are fresher than the target, preventing a subsequent invocation from
 # thinking aapt's outputs are stale.  This is safe because Make
 # removes the target file if any recipe command fails.
+
 define aapt_command
 $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 	@$$(TOUCH) $$@
 	$$(AAPT) package -f -m \
 		-M AndroidManifest.xml \
 		-I $(ANDROID_SDK)/android.jar \
+		$(if $(MOZ_ANDROID_MAX_SDK_VERSION),--max-res-version $(MOZ_ANDROID_MAX_SDK_VERSION),) \
 		--auto-add-overlay \
 		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
 		$(if $(extra_res_dirs),$$(addprefix -S ,$$(extra_res_dirs)),) \
