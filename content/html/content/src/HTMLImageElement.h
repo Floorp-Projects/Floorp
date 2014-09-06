@@ -142,9 +142,16 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::srcset, aSrcset, aError);
   }
+  void GetCrossOrigin(nsAString& aResult)
+  {
+    // Null for both missing and invalid defaults is ok, since we
+    // always parse to an enum value, so we don't need an invalid
+    // default, and we _want_ the missing default to be null.
+    GetEnumAttr(nsGkAtoms::crossorigin, nullptr, aResult);
+  }
   void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& aError)
   {
-    SetHTMLAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
+    SetOrRemoveNullableStringAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
   }
   void SetUseMap(const nsAString& aUseMap, ErrorResult& aError)
   {

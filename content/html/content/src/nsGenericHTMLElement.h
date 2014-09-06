@@ -1011,11 +1011,11 @@ protected:
   }
   void SetHTMLAttr(nsIAtom* aName, const nsAString& aValue, mozilla::ErrorResult& aError)
   {
-    aError = SetAttr(kNameSpaceID_None, aName, aValue, true);
+    mozilla::dom::Element::SetAttr(aName, aValue, aError);
   }
   void UnsetHTMLAttr(nsIAtom* aName, mozilla::ErrorResult& aError)
   {
-    aError = UnsetAttr(kNameSpaceID_None, aName, true);
+    mozilla::dom::Element::UnsetAttr(aName, aError);
   }
   void SetHTMLBoolAttr(nsIAtom* aName, bool aValue, mozilla::ErrorResult& aError)
   {
