@@ -1643,9 +1643,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   // Make sure this matches the cast in nsGlobalWindow::FromWrapper()
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
-#ifdef MOZ_B2G
-  NS_INTERFACE_MAP_ENTRY(nsIDOMWindowB2G)
-#endif // MOZ_B2G
 #ifdef MOZ_WEBSPEECH
   NS_INTERFACE_MAP_ENTRY(nsISpeechSynthesisGetter)
 #endif // MOZ_B2G

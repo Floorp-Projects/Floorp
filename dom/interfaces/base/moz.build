@@ -38,11 +38,6 @@ XPIDL_SOURCES += [
     'nsITabParent.idl',
 ]
 
-if CONFIG['MOZ_B2G']:
-    XPIDL_SOURCES += [
-        'nsIDOMWindowB2G.idl',
-    ]
-
 if CONFIG['MOZ_WEBSPEECH']:
     XPIDL_SOURCES += [
         'nsISpeechSynthesisGetter.idl'
