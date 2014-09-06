@@ -799,7 +799,7 @@ FuncConvert(JSContext *cx, unsigned argc, Value *vp)
     Elem *val = TypedObjectMemory<Elem *>(args[0]);
     RetElem result[Vret::lanes];
     for (unsigned i = 0; i < Vret::lanes; i++)
-        result[i] = RetElem(val[i]);
+        result[i] = ConvertScalar<RetElem>(val[i]);
     return StoreResult<Vret>(cx, args, result);
 }
 
