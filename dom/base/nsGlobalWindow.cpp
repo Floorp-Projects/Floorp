@@ -2386,7 +2386,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // document.
   mDoc = aDocument;
   if (IsInnerWindow()) {
-    WindowBinding::ClearCachedDocumentValue(cx, this);
+    ClearDocumentDependentSlots(cx);
   }
 
   // Take this opportunity to clear mSuspendedDoc. Our old inner window is now
@@ -2653,7 +2653,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         newInnerWindow->mLocalStorage = nullptr;
         newInnerWindow->mSessionStorage = nullptr;
 
-        WindowBinding::ClearCachedDocumentValue(cx, newInnerWindow);
+        newInnerWindow->ClearDocumentDependentSlots(cx);
       }
     } else {
       newInnerWindow->InnerSetNewDocument(cx, aDocument);
@@ -2795,7 +2795,7 @@ nsGlobalWindow::InnerSetNewDocument(JSContext* aCx, nsIDocument* aDocument)
 #endif
 
   mDoc = aDocument;
-  WindowBinding::ClearCachedDocumentValue(aCx, this);
+  ClearDocumentDependentSlots(aCx);
   mFocusedNode = nullptr;
   mLocalStorage = nullptr;
   mSessionStorage = nullptr;
@@ -3603,25 +3603,20 @@ nsGlobalWindow::GetHistory(nsISupports** aHistory)
 }
 
 nsPerformance*
-nsGlobalWindow::GetPerformance(ErrorResult& aError)
+nsGlobalWindow::GetPerformance()
 {
-  FORWARD_TO_INNER_OR_THROW(GetPerformance, (aError), aError, nullptr);
+  FORWARD_TO_INNER(GetPerformance, (), nullptr);
 
-  nsPerformance* p = nsPIDOMWindow::GetPerformance();
-  if (!p) {
-    aError.Throw(NS_ERROR_FAILURE);
-  }
-  return p;
+  return nsPIDOMWindow::GetPerformance();
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::GetPerformance(nsISupports** aPerformance)
 {
-  ErrorResult rv;
-  nsCOMPtr<nsISupports> performance = GetPerformance(rv);
+  nsCOMPtr<nsISupports> performance = GetPerformance();
   performance.forget(aPerformance);
 
-  return rv.ErrorCode();
+  return NS_OK;
 }
 
 nsPerformance*
@@ -13977,6 +13972,15 @@ nsGlobalWindow::GetSidebar(OwningExternalOrWindowProxy& aResult,
 #else
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 #endif
+}
+
+void
+nsGlobalWindow::ClearDocumentDependentSlots(JSContext* aCx)
+{
+  MOZ_ASSERT(IsInnerWindow());
+  MOZ_ASSERT(IsDOMBinding());
+  WindowBinding::ClearCachedDocumentValue(aCx, this);
+  WindowBinding::ClearCachedPerformanceValue(aCx, this);
 }
 
 #ifdef MOZ_B2G
