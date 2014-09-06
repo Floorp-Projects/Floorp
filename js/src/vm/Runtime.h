@@ -1427,12 +1427,6 @@ struct JSRuntime : public JS::shadow::Runtime,
         }
         return (T *)onOutOfMemoryCanGC(p, newSize * sizeof(T));
     }
-
-    /*
-     * Debugger.Memory functions like takeCensus use this embedding-provided
-     * function to assess the size of malloc'd blocks of memory.
-     */
-    mozilla::MallocSizeOf debuggerMallocSizeOf;
 };
 
 namespace js {

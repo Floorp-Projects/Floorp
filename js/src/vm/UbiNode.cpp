@@ -29,15 +29,10 @@ using JS::ubi::TracerConcrete;
 
 // All operations on null ubi::Nodes crash.
 const jschar *Concrete<void>::typeName() const            { MOZ_CRASH("null ubi::Node"); }
+size_t Concrete<void>::size() const                       { MOZ_CRASH("null ubi::Node"); }
 EdgeRange *Concrete<void>::edges(JSContext *, bool) const { MOZ_CRASH("null ubi::Node"); }
 JS::Zone *Concrete<void>::zone() const                    { MOZ_CRASH("null ubi::Node"); }
 JSCompartment *Concrete<void>::compartment() const        { MOZ_CRASH("null ubi::Node"); }
-
-size_t
-Concrete<void>::size(mozilla::MallocSizeOf mallocSizeof) const
-{
-    MOZ_CRASH("null ubi::Node");
-}
 
 Node::Node(JSGCTraceKind kind, void *ptr)
 {
@@ -57,7 +52,7 @@ Node::Node(JSGCTraceKind kind, void *ptr)
     }
 }
 
-Node::Node(HandleValue value)
+Node::Node(Value value)
 {
     if (value.isObject())
         construct(&value.toObject());
@@ -235,5 +230,13 @@ template<> const jschar TracerConcrete<JS::Symbol>::concreteTypeName[] =
     MOZ_UTF16("JS::Symbol");
 template<> const jschar TracerConcrete<JSScript>::concreteTypeName[] =
     MOZ_UTF16("JSScript");
+template<> const jschar TracerConcrete<js::LazyScript>::concreteTypeName[] =
+    MOZ_UTF16("js::LazyScript");
 template<> const jschar TracerConcrete<js::jit::JitCode>::concreteTypeName[] =
     MOZ_UTF16("js::jit::JitCode");
+template<> const jschar TracerConcrete<js::Shape>::concreteTypeName[] =
+    MOZ_UTF16("js::Shape");
+template<> const jschar TracerConcrete<js::BaseShape>::concreteTypeName[] =
+    MOZ_UTF16("js::BaseShape");
+template<> const jschar TracerConcrete<js::types::TypeObject>::concreteTypeName[] =
+    MOZ_UTF16("js::types::TypeObject");
