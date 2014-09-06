@@ -548,7 +548,7 @@ void nsCaret::ResetBlinking()
 {
   mIsBlinkOn = true;
 
-  if (mReadOnly) {
+  if (mReadOnly || !mVisible) {
     StopBlinking();
     return;
   }
