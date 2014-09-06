@@ -18,7 +18,7 @@ interface HTMLLinkElement : HTMLElement {
   [SetterThrows, Pure]
            attribute DOMString href;
   [SetterThrows, Pure]
-           attribute DOMString crossOrigin;
+           attribute DOMString? crossOrigin;
   [SetterThrows, Pure]
            attribute DOMString rel;
   readonly attribute DOMTokenList relList;

@@ -20,7 +20,7 @@ interface HTMLScriptElement : HTMLElement {
   [SetterThrows]
   attribute boolean defer;
   [SetterThrows]
-  attribute DOMString crossOrigin;
+  attribute DOMString? crossOrigin;
   [SetterThrows]
   attribute DOMString text;
 };

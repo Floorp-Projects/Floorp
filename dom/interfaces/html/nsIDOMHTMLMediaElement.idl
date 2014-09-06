@@ -27,7 +27,7 @@ interface nsIDOMMediaStream;
 #endif
 %}
 
-[uuid(0e14e6ad-2074-48b7-a247-e545a3a15131)]
+[uuid(c041d76c-15ce-47ad-b61d-e8755a6db638)]
 interface nsIDOMHTMLMediaElement : nsISupports
 {
   // error state
@@ -37,7 +37,6 @@ interface nsIDOMHTMLMediaElement : nsISupports
            attribute DOMString src;
            attribute nsIDOMMediaStream mozSrcObject;
   readonly attribute DOMString currentSrc;
-           attribute DOMString crossOrigin;
   const unsigned short NETWORK_EMPTY = 0;
   const unsigned short NETWORK_IDLE = 1;
   const unsigned short NETWORK_LOADING = 2;

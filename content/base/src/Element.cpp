@@ -3128,6 +3128,8 @@ Element::GetEnumAttr(nsIAtom* aAttr,
   if (!attrVal) {
     if (aDefaultMissing) {
       AppendASCIItoUTF16(nsDependentCString(aDefaultMissing), aResult);
+    } else {
+      SetDOMStringToNull(aResult);
     }
   } else {
     if (attrVal->Type() == nsAttrValue::eEnum) {
@@ -3135,6 +3137,17 @@ Element::GetEnumAttr(nsIAtom* aAttr,
     } else if (aDefaultInvalid) {
       AppendASCIItoUTF16(nsDependentCString(aDefaultInvalid), aResult);
     }
+  }
+}
+
+void
+Element::SetOrRemoveNullableStringAttr(nsIAtom* aName, const nsAString& aValue,
+                                       ErrorResult& aError)
+{
+  if (DOMStringIsNull(aValue)) {
+    UnsetAttr(aName, aError);
+  } else {
+    SetAttr(aName, aValue, aError);
   }
 }
 
