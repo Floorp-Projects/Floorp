@@ -92,6 +92,8 @@ bool VCMCodecDataBase::Codec(int list_id,
       settings->maxFramerate = VCM_DEFAULT_FRAME_RATE;
       settings->width = VCM_DEFAULT_CODEC_WIDTH;
       settings->height = VCM_DEFAULT_CODEC_HEIGHT;
+      // consider using 2 to avoid deal with 'odd' downscales
+      settings->resolution_divisor = 1; // may not actually be needed
       settings->numberOfSimulcastStreams = 0;
       settings->qpMax = 56;
       settings->codecSpecific.VP8.resilience = kResilientStream;
@@ -118,6 +120,7 @@ bool VCMCodecDataBase::Codec(int list_id,
       settings->maxFramerate = VCM_DEFAULT_FRAME_RATE;
       settings->width = VCM_DEFAULT_CODEC_WIDTH;
       settings->height = VCM_DEFAULT_CODEC_HEIGHT;
+      settings->resolution_divisor = 1;
       settings->minBitrate = VCM_MIN_BITRATE;
       settings->numberOfSimulcastStreams = 0;
       return true;
@@ -318,6 +321,7 @@ bool VCMCodecDataBase::RequiresEncoderReset(const VideoCodec& new_send_codec) {
       new_send_codec.plType != send_codec_.plType ||
       new_send_codec.width != send_codec_.width ||
       new_send_codec.height != send_codec_.height ||
+      new_send_codec.resolution_divisor != send_codec_.resolution_divisor ||
       new_send_codec.maxBitrate != send_codec_.maxBitrate ||
       new_send_codec.minBitrate != send_codec_.minBitrate ||
       new_send_codec.qpMax != send_codec_.qpMax ||
