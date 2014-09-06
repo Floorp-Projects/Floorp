@@ -3167,29 +3167,10 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
             item->mValue.SetArrayValue(bgArray.get(), eCSSUnit_Array);
 
             const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
-            // XXXbz is there a good reason we can't just
-            // SetCalcValue(&pos.mXPosition, item->mXValue) here?
             nsCSSValue &xValue = bgArray->Item(1),
                        &yValue = bgArray->Item(3);
-            if (!pos.mXPosition.mHasPercent) {
-              NS_ABORT_IF_FALSE(pos.mXPosition.mPercent == 0.0f,
-                                "Shouldn't have mPercent!");
-              nscoordToCSSValue(pos.mXPosition.mLength, xValue);
-            } else if (pos.mXPosition.mLength == 0) {
-              xValue.SetPercentValue(pos.mXPosition.mPercent);
-            } else {
-              SetCalcValue(&pos.mXPosition, xValue);
-            }
-
-            if (!pos.mYPosition.mHasPercent) {
-              NS_ABORT_IF_FALSE(pos.mYPosition.mPercent == 0.0f,
-                                "Shouldn't have mPercent!");
-              nscoordToCSSValue(pos.mYPosition.mLength, yValue);
-            } else if (pos.mYPosition.mLength == 0) {
-              yValue.SetPercentValue(pos.mYPosition.mPercent);
-            } else {
-              SetCalcValue(&pos.mYPosition, yValue);
-            }
+            SetCalcValue(&pos.mXPosition, xValue);
+            SetCalcValue(&pos.mYPosition, yValue);
           }
 
           aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
