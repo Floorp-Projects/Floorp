@@ -586,14 +586,16 @@ public:
                  nsDisplayItem* aContainerItem,
                  const nsRect& aContainerBounds,
                  ContainerLayer* aContainerLayer,
-                 const ContainerLayerParameters& aParameters) :
+                 const ContainerLayerParameters& aParameters,
+                 bool aFlattenToSingleLayer) :
     mBuilder(aBuilder), mManager(aManager),
     mLayerBuilder(aLayerBuilder),
     mContainerFrame(aContainerFrame),
     mContainerLayer(aContainerLayer),
     mContainerBounds(aContainerBounds),
     mParameters(aParameters),
-    mNextFreeRecycledThebesLayer(0)
+    mNextFreeRecycledThebesLayer(0),
+    mFlattenToSingleLayer(aFlattenToSingleLayer)
   {
     nsPresContext* presContext = aContainerFrame->PresContext();
     mAppUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
@@ -615,15 +617,11 @@ public:
     CollectOldLayers();
   }
 
-  enum ProcessDisplayItemsFlags {
-    NO_COMPONENT_ALPHA = 0x01,
-  };
-
   /**
    * This is the method that actually walks a display list and builds
    * the child layers.
    */
-  void ProcessDisplayItems(nsDisplayList* aList, uint32_t aFlags);
+  void ProcessDisplayItems(nsDisplayList* aList);
   /**
    * This finalizes all the open ThebesLayers by popping every element off
    * mThebesLayerDataStack, then sets the children of the container layer
@@ -893,6 +891,7 @@ protected:
   uint32_t                         mNextFreeRecycledThebesLayer;
   nscoord                          mAppUnitsPerDevPixel;
   bool                             mSnappingEnabled;
+  bool                             mFlattenToSingleLayer;
 };
 
 class ThebesDisplayItemLayerUserData : public LayerUserData
@@ -2736,8 +2735,7 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
  * of ContainerState::Finish.
  */
 void
-ContainerState::ProcessDisplayItems(nsDisplayList* aList,
-                                    uint32_t aFlags)
+ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 {
   PROFILER_LABEL("ContainerState", "ProcessDisplayItems",
     js::ProfileEntry::Category::GRAPHICS);
@@ -2748,7 +2746,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
   // When NO_COMPONENT_ALPHA is set, items will be flattened into a single
   // layer, so we need to choose which active scrolled root to use for all
   // items.
-  if (aFlags & NO_COMPONENT_ALPHA) {
+  if (mFlattenToSingleLayer) {
     if (ChooseAnimatedGeometryRoot(*aList, &lastAnimatedGeometryRoot)) {
       topLeft = lastAnimatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
     }
@@ -2829,7 +2827,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
 
     bool forceInactive;
     const nsIFrame* animatedGeometryRoot;
-    if (aFlags & NO_COMPONENT_ALPHA) {
+    if (mFlattenToSingleLayer) {
       forceInactive = true;
       animatedGeometryRoot = lastAnimatedGeometryRoot;
     } else {
@@ -3476,6 +3474,12 @@ FindOpaqueRegionEntry(nsTArray<OpaqueRegionEntry>& aEntries,
 void
 ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
 {
+  if (mFlattenToSingleLayer) {
+    // animated geometry roots are forced to all match, so we can't
+    // use them and we don't get async scrolling.
+    return;
+  }
+
   nsAutoTArray<FrameMetrics,2> metricsArray;
   if (aEntry->mBaseFrameMetrics) {
     metricsArray.AppendElement(*aEntry->mBaseFrameMetrics);
@@ -3545,15 +3549,22 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
     OpaqueRegionEntry* data = FindOpaqueRegionEntry(opaqueRegions,
         e->mAnimatedGeometryRoot, e->mFixedPosFrameForLayerData);
 
+    SetupScrollingMetadata(e);
+
     if (hideAll) {
       e->mVisibleRegion.SetEmpty();
-    } else if (data) {
-      e->mVisibleRegion.Sub(e->mVisibleRegion, data->mOpaqueRegion);
+    } else {
+      const nsIntRect* clipRect = e->mLayer->GetClipRect();
+      if (clipRect && opaqueRegionForContainer >= 0 &&
+          opaqueRegions[opaqueRegionForContainer].mOpaqueRegion.Contains(*clipRect)) {
+        e->mVisibleRegion.SetEmpty();
+      } else if (data) {
+        e->mVisibleRegion.Sub(e->mVisibleRegion, data->mOpaqueRegion);
+      }
     }
 
     SetOuterVisibleRegionForLayer(e->mLayer, e->mVisibleRegion,
       e->mLayerContentsVisibleRect.width >= 0 ? &e->mLayerContentsVisibleRect : nullptr);
-    SetupScrollingMetadata(e);
 
     if (!e->mOpaqueRegion.IsEmpty()) {
       const nsIFrame* animatedGeometryRootToCover = e->mAnimatedGeometryRoot;
@@ -3968,18 +3979,18 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
   nsIntRect pixBounds;
   nscoord appUnitsPerDevPixel;
-  uint32_t stateFlags = 0;
+  bool flattenToSingleLayer = false;
   if ((aContainerFrame->GetStateBits() & NS_FRAME_NO_COMPONENT_ALPHA) &&
       mRetainingManager && mRetainingManager->ShouldAvoidComponentAlphaLayers()) {
-    stateFlags = ContainerState::NO_COMPONENT_ALPHA;
+    flattenToSingleLayer = true;
   }
   uint32_t flags;
   while (true) {
     ContainerState state(aBuilder, aManager, aManager->GetLayerBuilder(),
                          aContainerFrame, aContainerItem, bounds,
-                         containerLayer, scaleParameters);
+                         containerLayer, scaleParameters, flattenToSingleLayer);
 
-    state.ProcessDisplayItems(aChildren, stateFlags);
+    state.ProcessDisplayItems(aChildren);
 
     // Set CONTENT_COMPONENT_ALPHA if any of our children have it.
     // This is suboptimal ... a child could have text that's over transparent
@@ -3993,12 +4004,12 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
         mRetainingManager &&
         mRetainingManager->ShouldAvoidComponentAlphaLayers() &&
         containerLayer->HasMultipleChildren() &&
-        !stateFlags) {
+        !flattenToSingleLayer) {
       // Since we don't want any component alpha layers on BasicLayers, we repeat
       // the layer building process with this explicitely forced off.
       // We restore the previous FrameLayerBuilder state since the first set
       // of layer building will have changed it.
-      stateFlags = ContainerState::NO_COMPONENT_ALPHA;
+      flattenToSingleLayer = true;
       data->mDisplayItems.EnumerateEntries(RestoreDisplayItemData,
                                            &mContainerLayerGeneration);
       mThebesLayerItems.EnumerateEntries(RestoreThebesLayerItemEntries,
