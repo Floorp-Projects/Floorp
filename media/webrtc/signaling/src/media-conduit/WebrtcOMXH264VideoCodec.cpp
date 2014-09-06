@@ -220,6 +220,30 @@ private:
   bool mEnding;
 };
 
+// Assumption: SPS is first paramset or is not present
+static bool IsParamSets(uint8_t* aData, size_t aSize)
+{
+  MOZ_ASSERT(aData && aSize > sizeof(kNALStartCode));
+  return (aData[sizeof(kNALStartCode)] & 0x1f) == kNALTypeSPS;
+}
+
+// get the length of any pre-pended SPS/PPS's
+static size_t ParamSetLength(uint8_t* aData, size_t aSize)
+{
+  const uint8_t* data = aData;
+  size_t size = aSize;
+  const uint8_t* nalStart = nullptr;
+  size_t nalSize = 0;
+  while (getNextNALUnit(&data, &size, &nalStart, &nalSize, true) == OK) {
+    if ((*nalStart & 0x1f) != kNALTypeSPS &&
+        (*nalStart & 0x1f) != kNALTypePPS) {
+      MOZ_ASSERT(nalStart - sizeof(kNALStartCode) >= aData);
+      return (nalStart - sizeof(kNALStartCode)) - aData; // SPS/PPS/iframe
+    }
+  }
+  return aSize; // it's only SPS/PPS
+}
+
 // H.264 decoder using stagefright.
 // It implements gonk native window callback to receive buffers from
 // MediaCodec::RenderOutputBufferAndRelease().
@@ -619,12 +643,17 @@ protected:
 
     // Conversion to us rounds down, so we need to round up for us->90KHz
     uint32_t target_timestamp = (timeUs * 90ll + 999) / 1000; // us -> 90KHz
-    bool isParamSets = (flags & MediaCodec::BUFFER_FLAG_CODECCONFIG);
+    // 8x10 v2.0 encoder doesn't set this reliably:
+    //bool isParamSets = (flags & MediaCodec::BUFFER_FLAG_CODECCONFIG);
+    // Assume that SPS/PPS will be at the start of any buffer
+    // Assume PPS will not be in a separate buffer - SPS/PPS or SPS/PPS/iframe
+    bool isParamSets = IsParamSets(output.Elements(), output.Length());
     bool isIFrame = (flags & MediaCodec::BUFFER_FLAG_SYNCFRAME);
     CODEC_LOGD("OMX: encoded frame (%d): time %lld (%u), flags x%x",
                output.Length(), timeUs, target_timestamp, flags);
     // Should not be parameter sets and I-frame at the same time.
-    MOZ_ASSERT(!(isParamSets && isIFrame));
+    // Except that it is possible, apparently, after an encoder re-config (bug 1063883)
+    // MOZ_ASSERT(!(isParamSets && isIFrame));
 
     if (mCallback) {
       // Implementation here assumes encoder output to be a buffer containing
@@ -673,15 +702,18 @@ protected:
                  encoded._length, encoded._encodedWidth, encoded._encodedHeight,
                  isParamSets, isIFrame, encoded._timeStamp, encoded.capture_time_ms_);
       // Prepend SPS/PPS to I-frames unless they were sent last time.
-      SendEncodedDataToCallback(encoded, isIFrame && !mIsPrevFrameParamSets);
+      SendEncodedDataToCallback(encoded, isIFrame && !mIsPrevFrameParamSets && !isParamSets);
       // This will be true only for the frame following a paramset block!  So if we're
-      // working with a correct encoder that generates SPS/PPS/IDR always, we
-      // won't try to insert.
-      mIsPrevFrameParamSets = isParamSets;
+      // working with a correct encoder that generates SPS/PPS then iframe always, we
+      // won't try to insert.  (also, don't set if we get SPS/PPS/iframe in one buffer)
+      mIsPrevFrameParamSets = isParamSets && !isIFrame;
       if (isParamSets) {
         // copy off the param sets for inserting later
         mParamSets.Clear();
-        mParamSets.AppendElements(encoded._buffer, encoded._length);
+        // since we may have SPS/PPS or SPS/PPS/iframe
+        size_t length = ParamSetLength(encoded._buffer, encoded._length);
+        MOZ_ASSERT(length > 0);
+        mParamSets.AppendElements(encoded._buffer, length);
       }
     }
 
@@ -700,7 +732,7 @@ private:
 
     if (aPrependParamSets) {
       // Insert current parameter sets in front of the input encoded data.
-      MOZ_ASSERT(mParamSets.Length() > 4); // Start code + ...
+      MOZ_ASSERT(mParamSets.Length() > sizeof(kNALStartCode)); // Start code + ...
       nalu._length = mParamSets.Length();
       nalu._buffer = mParamSets.Elements();
       // Break into NALUs and send.
