@@ -1668,7 +1668,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMWindowPerformance)
 NS_INTERFACE_MAP_END
 
 
@@ -3606,15 +3605,6 @@ nsGlobalWindow::GetPerformance()
   FORWARD_TO_INNER(GetPerformance, (), nullptr);
 
   return nsPIDOMWindow::GetPerformance();
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetPerformance(nsISupports** aPerformance)
-{
-  nsCOMPtr<nsISupports> performance = GetPerformance();
-  performance.forget(aPerformance);
-
-  return NS_OK;
 }
 
 nsPerformance*

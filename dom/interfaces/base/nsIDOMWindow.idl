@@ -516,15 +516,6 @@ interface nsIDOMWindow : nsISupports
   [implicit_jscontext] attribute jsval console;
 };
 
-[scriptable, uuid(2146c906-57f7-486c-a1b4-8cdb57ef577f)]
-interface nsIDOMWindowPerformance : nsISupports
-{
-  /**
-   * A namespace to hold performance related data and statistics.
-   */
-  readonly attribute nsISupports performance;
-};
-
 /**
  * Empty interface for compatibility with older versions.
  * @deprecated Use nsIDOMWindow instead
