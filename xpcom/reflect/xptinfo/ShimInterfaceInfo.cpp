@@ -129,7 +129,6 @@
 #include "nsIDOMText.h"
 #include "nsIDOMTimeEvent.h"
 #include "nsIDOMTimeRanges.h"
-#include "nsIDOMTouchEvent.h"
 #include "nsIDOMTransitionEvent.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMUIEvent.h"

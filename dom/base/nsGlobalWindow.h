@@ -47,7 +47,6 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsIIdleObserver.h"
 #include "nsIDocument.h"
-#include "nsIDOMTouchEvent.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "Units.h"
@@ -331,7 +330,6 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
                        public nsIInterfaceRequestor,
                        public PRCListStr,
                        public nsIDOMWindowPerformance,
-                       public nsITouchEventReceiver,
                        public nsIInlineEventHandlers
 #ifdef MOZ_B2G
                      , public nsIDOMWindowB2G
@@ -426,9 +424,6 @@ public:
 
     return GetOuterFromCurrentInner(this);
   }
-
-  // nsITouchEventReceiver
-  NS_DECL_NSITOUCHEVENTRECEIVER
 
   // nsIInlineEventHandlers
   NS_DECL_NSIINLINEEVENTHANDLERS
