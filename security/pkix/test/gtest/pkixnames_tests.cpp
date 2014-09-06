@@ -32,6 +32,7 @@ namespace mozilla { namespace pkix {
 
 bool IsValidDNSName(Input hostname);
 bool ParseIPv4Address(Input hostname, /*out*/ uint8_t (&out)[4]);
+bool ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16]);
 
 } } // namespace mozilla::pkix
 
@@ -340,6 +341,238 @@ static const IPAddressParams<4> IPV4_ADDRESSES[] =
   IPV4_INVALID("192.0.0002.0xEB"), // mixed
 };
 
+#define IPV6_VALID(str, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) \
+  { \
+    ByteString(reinterpret_cast<const uint8_t*>(str), sizeof(str) - 1), \
+    true, \
+    { a, b, c, d, \
+      e, f, g, h, \
+      i, j, k, l, \
+      m, n, o, p } \
+  }
+
+#define IPV6_INVALID(str) \
+  { \
+    ByteString(reinterpret_cast<const uint8_t*>(str), sizeof(str) - 1), \
+    false, \
+    { 73, 73, 73, 73, \
+      73, 73, 73, 73, \
+      73, 73, 73, 73, \
+      73, 73, 73, 73 } \
+  }
+
+static const IPAddressParams<16> IPV6_ADDRESSES[] =
+{
+  IPV6_INVALID(""),
+  IPV6_INVALID("1234"),
+  IPV6_INVALID("1234:5678"),
+  IPV6_INVALID("1234:5678:9abc"),
+  IPV6_INVALID("1234:5678:9abc:def0"),
+  IPV6_INVALID("1234:5678:9abc:def0:1234:"),
+  IPV6_INVALID("1234:5678:9abc:def0:1234:5678:"),
+  IPV6_INVALID("1234:5678:9abc:def0:1234:5678:9abc:"),
+  IPV6_VALID("1234:5678:9abc:def0:1234:5678:9abc:def0",
+             0x12, 0x34, 0x56, 0x78,
+             0x9a, 0xbc, 0xde, 0xf0,
+             0x12, 0x34, 0x56, 0x78,
+             0x9a, 0xbc, 0xde, 0xf0),
+  IPV6_INVALID("1234:5678:9abc:def0:1234:5678:9abc:def0:"),
+  IPV6_INVALID(":1234:5678:9abc:def0:1234:5678:9abc:def0"),
+  IPV6_INVALID("1234:5678:9abc:def0:1234:5678:9abc:def0:0000"),
+
+  // Valid contractions
+  IPV6_VALID("::1",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x01),
+  IPV6_VALID("::1234",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x12, 0x34),
+  IPV6_VALID("1234::",
+             0x12, 0x34, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00),
+  IPV6_VALID("1234::5678",
+             0x12, 0x34, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x56, 0x78),
+  IPV6_VALID("1234:5678::abcd",
+             0x12, 0x34, 0x56, 0x78,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0xab, 0xcd),
+  IPV6_VALID("1234:5678:9abc:def0:1234:5678:9abc::",
+             0x12, 0x34, 0x56, 0x78,
+             0x9a, 0xbc, 0xde, 0xf0,
+             0x12, 0x34, 0x56, 0x78,
+             0x9a, 0xbc, 0x00, 0x00),
+
+  // Contraction in full IPv6 addresses not allowed
+  IPV6_INVALID("::1234:5678:9abc:def0:1234:5678:9abc:def0"), // start
+  IPV6_INVALID("1234:5678:9abc:def0:1234:5678:9abc:def0::"), // end
+  IPV6_INVALID("1234:5678::9abc:def0:1234:5678:9abc:def0"), // interior
+
+  // Multiple contractions not allowed
+  IPV6_INVALID("::1::"),
+  IPV6_INVALID("::1::2"),
+  IPV6_INVALID("1::2::"),
+
+  // Colon madness!
+  IPV6_INVALID(":"),
+  IPV6_INVALID("::"),
+  IPV6_INVALID(":::"),
+  IPV6_INVALID("::::"),
+  IPV6_INVALID(":::1"),
+  IPV6_INVALID("::::1"),
+  IPV6_INVALID("1:::2"),
+  IPV6_INVALID("1::::2"),
+  IPV6_INVALID("1:2:::"),
+  IPV6_INVALID("1:2::::"),
+  IPV6_INVALID("::1234:"),
+  IPV6_INVALID(":1234::"),
+
+  IPV6_INVALID("01234::"), // too many digits, even if zero
+  IPV6_INVALID("12345678::"), // too many digits or missing colon
+
+  // uppercase
+  IPV6_VALID("ABCD:EFAB::",
+             0xab, 0xcd, 0xef, 0xab,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00),
+
+  // miXeD CAse
+  IPV6_VALID("aBcd:eFAb::",
+             0xab, 0xcd, 0xef, 0xab,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00),
+
+  // IPv4-style
+  IPV6_VALID("::2.3.4.5",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x02, 0x03, 0x04, 0x05),
+  IPV6_VALID("1234::2.3.4.5",
+             0x12, 0x34, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x02, 0x03, 0x04, 0x05),
+  IPV6_VALID("::abcd:2.3.4.5",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0xab, 0xcd,
+             0x02, 0x03, 0x04, 0x05),
+  IPV6_VALID("1234:5678:9abc:def0:1234:5678:252.253.254.255",
+             0x12, 0x34, 0x56, 0x78,
+             0x9a, 0xbc, 0xde, 0xf0,
+             0x12, 0x34, 0x56, 0x78,
+             252,  253,  254,  255),
+  IPV6_VALID("1234:5678:9abc:def0:1234::252.253.254.255",
+             0x12, 0x34, 0x56, 0x78,
+             0x9a, 0xbc, 0xde, 0xf0,
+             0x12, 0x34, 0x00, 0x00,
+             252,  253,  254,  255),
+  IPV6_INVALID("1234::252.253.254"),
+  IPV6_INVALID("::252.253.254"),
+  IPV6_INVALID("::252.253.254.300"),
+  IPV6_INVALID("1234::252.253.254.255:"),
+  IPV6_INVALID("1234::252.253.254.255:5678"),
+
+  // Contractions that don't contract
+  IPV6_INVALID("::1234:5678:9abc:def0:1234:5678:9abc:def0"),
+  IPV6_INVALID("1234:5678:9abc:def0:1234:5678:9abc:def0::"),
+  IPV6_INVALID("1234:5678:9abc:def0::1234:5678:9abc:def0"),
+  IPV6_INVALID("1234:5678:9abc:def0:1234:5678::252.253.254.255"),
+
+  // With and without leading zeros
+  IPV6_VALID("::123",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x01, 0x23),
+  IPV6_VALID("::0123",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x01, 0x23),
+  IPV6_VALID("::012",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x12),
+  IPV6_VALID("::0012",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x12),
+  IPV6_VALID("::01",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x01),
+  IPV6_VALID("::001",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x01),
+  IPV6_VALID("::0001",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x01),
+  IPV6_VALID("::0",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00),
+  IPV6_VALID("::00",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00),
+  IPV6_VALID("::000",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00),
+  IPV6_VALID("::0000",
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00),
+  IPV6_INVALID("::01234"),
+  IPV6_INVALID("::00123"),
+  IPV6_INVALID("::000123"),
+
+  // Trailing zero
+  IPV6_INVALID("::12340"),
+
+  // Whitespace
+  IPV6_INVALID(" 1234:5678:9abc:def0:1234:5678:9abc:def0"),
+  IPV6_INVALID("\t1234:5678:9abc:def0:1234:5678:9abc:def0"),
+  IPV6_INVALID("\t1234:5678:9abc:def0:1234:5678:9abc:def0\n"),
+  IPV6_INVALID("1234 :5678:9abc:def0:1234:5678:9abc:def0"),
+  IPV6_INVALID("1234: 5678:9abc:def0:1234:5678:9abc:def0"),
+  IPV6_INVALID(":: 2.3.4.5"),
+  IPV6_INVALID("1234::252.253.254.255 "),
+  IPV6_INVALID("1234::252.253.254.255\n"),
+  IPV6_INVALID("1234::252.253. 254.255"),
+
+  // Nulls
+  IPV6_INVALID("\0"),
+  IPV6_INVALID("::1\0:2"),
+  IPV6_INVALID("::1\0"),
+  IPV6_INVALID("::1.2.3.4\0"),
+  IPV6_INVALID("::1.2\02.3.4"),
+};
+
 class pkixnames_IsValidDNSName
   : public ::testing::Test
   , public ::testing::WithParamInterface<InputValidity>
@@ -388,3 +621,29 @@ TEST_P(pkixnames_ParseIPv4Address, ParseIPv4Address)
 INSTANTIATE_TEST_CASE_P(pkixnames_ParseIPv4Address,
                         pkixnames_ParseIPv4Address,
                         testing::ValuesIn(IPV4_ADDRESSES));
+
+class pkixnames_ParseIPv6Address
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<IPAddressParams<16>>
+{
+};
+
+TEST_P(pkixnames_ParseIPv6Address, ParseIPv6Address)
+{
+  const IPAddressParams<16>& param(GetParam());
+  SCOPED_TRACE(param.input.c_str());
+  Input input;
+  ASSERT_EQ(Success, input.Init(param.input.data(),
+                                param.input.length()));
+  uint8_t ipAddress[16];
+  ASSERT_EQ(param.isValid, ParseIPv6Address(input, ipAddress));
+  if (param.isValid) {
+    for (size_t i = 0; i < sizeof(ipAddress); ++i) {
+      ASSERT_EQ(param.expectedValueIfValid[i], ipAddress[i]);
+    }
+  }
+}
+
+INSTANTIATE_TEST_CASE_P(pkixnames_ParseIPv6Address,
+                        pkixnames_ParseIPv6Address,
+                        testing::ValuesIn(IPV6_ADDRESSES));
