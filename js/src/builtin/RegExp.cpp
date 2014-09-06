@@ -56,12 +56,15 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
         if (pair.isUndefined()) {
             JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
             arr->setDenseInitializedLength(i + 1);
-            arr->initDenseElement(i, UndefinedValue());
+            arr->initDenseElementWithType(cx, i, UndefinedValue());
         } else {
             JSLinearString *str = NewDependentString(cx, input, pair.start, pair.length());
             if (!str)
                 return false;
             arr->setDenseInitializedLength(i + 1);
+
+            // We don't have to update type information here, since the match
+            // result template is already known to have string elements.
             arr->initDenseElement(i, StringValue(str));
         }
     }
