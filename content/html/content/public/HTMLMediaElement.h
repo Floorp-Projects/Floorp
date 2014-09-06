@@ -363,10 +363,16 @@ public:
 
   // XPCOM GetCurrentSrc() is OK
 
-  // XPCOM GetCrossorigin() is OK
-  void SetCrossOrigin(const nsAString& aValue, ErrorResult& aRv)
+  void GetCrossOrigin(nsAString& aResult)
   {
-    SetHTMLAttr(nsGkAtoms::crossorigin, aValue, aRv);
+    // Null for both missing and invalid defaults is ok, since we
+    // always parse to an enum value, so we don't need an invalid
+    // default, and we _want_ the missing default to be null.
+    GetEnumAttr(nsGkAtoms::crossorigin, nullptr, aResult);
+  }
+  void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& aError)
+  {
+    SetOrRemoveNullableStringAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
   }
 
   uint16_t NetworkState() const
