@@ -38,10 +38,5 @@ XPIDL_SOURCES += [
     'nsITabParent.idl',
 ]
 
-if CONFIG['MOZ_WEBSPEECH']:
-    XPIDL_SOURCES += [
-        'nsISpeechSynthesisGetter.idl'
-    ]
-
 XPIDL_MODULE = 'dom_base'
 
