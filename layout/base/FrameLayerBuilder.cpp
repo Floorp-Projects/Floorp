@@ -3531,15 +3531,22 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
     OpaqueRegionEntry* data = FindOpaqueRegionEntry(opaqueRegions,
         e->mAnimatedGeometryRoot, e->mFixedPosFrameForLayerData);
 
+    SetupScrollingMetadata(e);
+
     if (hideAll) {
       e->mVisibleRegion.SetEmpty();
-    } else if (data) {
-      e->mVisibleRegion.Sub(e->mVisibleRegion, data->mOpaqueRegion);
+    } else {
+      const nsIntRect* clipRect = e->mLayer->GetClipRect();
+      if (clipRect && opaqueRegionForContainer >= 0 &&
+          opaqueRegions[opaqueRegionForContainer].mOpaqueRegion.Contains(*clipRect)) {
+        e->mVisibleRegion.SetEmpty();
+      } else if (data) {
+        e->mVisibleRegion.Sub(e->mVisibleRegion, data->mOpaqueRegion);
+      }
     }
 
     SetOuterVisibleRegionForLayer(e->mLayer, e->mVisibleRegion,
       e->mLayerContentsVisibleRect.width >= 0 ? &e->mLayerContentsVisibleRect : nullptr);
-    SetupScrollingMetadata(e);
 
     if (!e->mOpaqueRegion.IsEmpty()) {
       const nsIFrame* animatedGeometryRootToCover = e->mAnimatedGeometryRoot;
