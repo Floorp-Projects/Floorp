@@ -1419,7 +1419,15 @@ nsScriptSecurityManager::AddSitesToFileURIWhitelist(const nsCString& aSiteList)
     {
         // Grab the current site.
         bound = SkipUntil<IsWhitespace>(aSiteList, base);
-        auto site = Substring(aSiteList, base, bound - base);
+        nsAutoCString site(Substring(aSiteList, base, bound - base));
+
+        // Check if the URI is schemeless. If so, add both http and https.
+        nsAutoCString unused;
+        if (NS_FAILED(sIOService->ExtractScheme(site, unused))) {
+            AddSitesToFileURIWhitelist(NS_LITERAL_CSTRING("http://") + site);
+            AddSitesToFileURIWhitelist(NS_LITERAL_CSTRING("https://") + site);
+            continue;
+        }
 
         // Convert it to a URI and add it to our list.
         nsCOMPtr<nsIURI> uri;
