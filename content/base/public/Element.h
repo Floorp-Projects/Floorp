@@ -984,6 +984,35 @@ public:
   nsresult SetBoolAttr(nsIAtom* aAttr, bool aValue);
 
   /**
+   * Helper method for NS_IMPL_ENUM_ATTR_DEFAULT_VALUE.
+   * Gets the enum value string of an attribute and using a default value if
+   * the attribute is missing or the string is an invalid enum value.
+   *
+   * @param aType     the name of the attribute.
+   * @param aDefault  the default value if the attribute is missing or invalid.
+   * @param aResult   string corresponding to the value [out].
+   */
+  void GetEnumAttr(nsIAtom* aAttr,
+                   const char* aDefault,
+                   nsAString& aResult) const;
+
+  /**
+   * Helper method for NS_IMPL_ENUM_ATTR_DEFAULT_MISSING_INVALID_VALUES.
+   * Gets the enum value string of an attribute and using the default missing
+   * value if the attribute is missing or the default invalid value if the
+   * string is an invalid enum value.
+   *
+   * @param aType            the name of the attribute.
+   * @param aDefaultMissing  the default value if the attribute is missing.
+   * @param aDefaultInvalid  the default value if the attribute is invalid.
+   * @param aResult          string corresponding to the value [out].
+   */
+  void GetEnumAttr(nsIAtom* aAttr,
+                   const char* aDefaultMissing,
+                   const char* aDefaultInvalid,
+                   nsAString& aResult) const;
+
+  /**
    * Retrieve the ratio of font-size-inflated text font size to computed font
    * size for this element. This will query the element for its primary frame,
    * and then use this to get font size inflation information about the frame.

@@ -3107,6 +3107,37 @@ Element::SetBoolAttr(nsIAtom* aAttr, bool aValue)
   return UnsetAttr(kNameSpaceID_None, aAttr, true);
 }
 
+void
+Element::GetEnumAttr(nsIAtom* aAttr,
+                     const char* aDefault,
+                     nsAString& aResult) const
+{
+  GetEnumAttr(aAttr, aDefault, aDefault, aResult);
+}
+
+void
+Element::GetEnumAttr(nsIAtom* aAttr,
+                     const char* aDefaultMissing,
+                     const char* aDefaultInvalid,
+                     nsAString& aResult) const
+{
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
+
+  aResult.Truncate();
+
+  if (!attrVal) {
+    if (aDefaultMissing) {
+      AppendASCIItoUTF16(nsDependentCString(aDefaultMissing), aResult);
+    }
+  } else {
+    if (attrVal->Type() == nsAttrValue::eEnum) {
+      attrVal->GetEnumString(aResult, true);
+    } else if (aDefaultInvalid) {
+      AppendASCIItoUTF16(nsDependentCString(aDefaultInvalid), aResult);
+    }
+  }
+}
+
 Directionality
 Element::GetComputedDirectionality() const
 {
