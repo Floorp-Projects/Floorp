@@ -2665,24 +2665,6 @@ IsScrollLayerItemAndOverlayScrollbarForScrollFrame(
   return false;
 }
 
-bool
-ContainerState::ItemCoversScrollableArea(nsDisplayItem* aItem, const nsRegion& aOpaque)
-{
-  nsIPresShell* presShell = aItem->Frame()->PresContext()->PresShell();
-  nsIFrame* rootFrame = presShell->GetRootFrame();
-  if (mContainerFrame != rootFrame) {
-    return false;
-  }
-  nsRect scrollableArea;
-  if (presShell->IsScrollPositionClampingScrollPortSizeSet()) {
-    scrollableArea = nsRect(nsPoint(0, 0),
-      presShell->GetScrollPositionClampingScrollPortSize());
-  } else {
-    scrollableArea = rootFrame->GetRectRelativeToSelf();
-  }
-  return aOpaque.Contains(scrollableArea);
-}
-
 nsIntRegion
 ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
                                   const nsIFrame* aAnimatedGeometryRoot,
@@ -2703,8 +2685,8 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
     }
     if (aAnimatedGeometryRoot == mContainerAnimatedGeometryRoot &&
         aFixedPosFrame == mContainerFixedPosFrame &&
-        !aList->IsOpaque() &&
         opaqueClipped.Contains(mContainerBounds)) {
+      *aHideAllLayersBelow = true;
       aList->SetIsOpaque();
     }
     // Add opaque areas to the "exclude glass" region. Only do this when our
@@ -2715,9 +2697,6 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
       mBuilder->AddWindowOpaqueRegion(opaqueClipped);
     }
     opaquePixels = ScaleRegionToInsidePixels(opaqueClipped, snapOpaque);
-    if (aFixedPosFrame && ItemCoversScrollableArea(aItem, opaque)) {
-      *aHideAllLayersBelow = true;
-    }
 
     nsIScrollableFrame* sf = nsLayoutUtils::GetScrollableFrameFor(aAnimatedGeometryRoot);
     if (sf) {
@@ -3586,7 +3565,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
 
       if (!data) {
         if (animatedGeometryRootToCover == mContainerAnimatedGeometryRoot &&
-            !e->mFixedPosFrameForLayerData) {
+            e->mFixedPosFrameForLayerData == mContainerFixedPosFrame) {
           NS_ASSERTION(opaqueRegionForContainer == -1, "Already found it?");
           opaqueRegionForContainer = opaqueRegions.Length();
         }
