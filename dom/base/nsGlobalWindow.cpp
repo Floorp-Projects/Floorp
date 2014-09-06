@@ -1669,7 +1669,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowPerformance)
-  NS_INTERFACE_MAP_ENTRY(nsIInlineEventHandlers)
 NS_INTERFACE_MAP_END
 
 
@@ -14052,7 +14051,8 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 }
 #endif // MOZ_B2G
 
-#define EVENT(name_, id_, type_, struct_)                                    \
+#define EVENT(name_, id_, type_, struct_)
+#define EVENT2(name_, id_, type_, struct_)                                    \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
                                              JS::MutableHandle<JS::Value> vp) { \
     EventHandlerNonNull* h = GetOn##name_();                                 \
@@ -14068,36 +14068,6 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
       handler = new EventHandlerNonNull(callable, GetIncumbentGlobal());     \
     }                                                                        \
     SetOn##name_(handler);                                                   \
-    return NS_OK;                                                            \
-  }
-#define ERROR_EVENT(name_, id_, type_, struct_)                              \
-  NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
-                                             JS::MutableHandle<JS::Value> vp) { \
-    EventListenerManager *elm = GetExistingListenerManager();                \
-    if (elm) {                                                               \
-      OnErrorEventHandlerNonNull* h = elm->GetOnErrorEventHandler();         \
-      if (h) {                                                               \
-        vp.setObject(*h->Callable());                                        \
-        return NS_OK;                                                        \
-      }                                                                      \
-    }                                                                        \
-    vp.setNull();                                                            \
-    return NS_OK;                                                            \
-  }                                                                          \
-  NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
-                                             JS::Handle<JS::Value> v) {      \
-    EventListenerManager *elm = GetOrCreateListenerManager();                \
-    if (!elm) {                                                              \
-      return NS_ERROR_OUT_OF_MEMORY;                                         \
-    }                                                                        \
-                                                                             \
-    nsRefPtr<OnErrorEventHandlerNonNull> handler;                            \
-    JS::Rooted<JSObject*> callable(cx);                                      \
-    if (v.isObject() &&                                                      \
-        JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      handler = new OnErrorEventHandlerNonNull(callable, GetIncumbentGlobal()); \
-    }                                                                        \
-    elm->SetEventHandler(handler);                                           \
     return NS_OK;                                                            \
   }
 #define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                       \
@@ -14131,11 +14101,13 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     elm->SetEventHandler(handler);                                           \
     return NS_OK;                                                            \
   }
-#define WINDOW_ONLY_EVENT EVENT
+#define WINDOW_ONLY_EVENT EVENT2
+#define ERROR_EVENT EVENT
 #include "mozilla/EventNameList.h"
 #undef WINDOW_ONLY_EVENT
 #undef BEFOREUNLOAD_EVENT
 #undef ERROR_EVENT
+#undef EVENT2
 #undef EVENT
 
 #ifdef _WINDOWS_
