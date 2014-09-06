@@ -6915,7 +6915,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       // document that is being captured.
       retargetEventDoc = capturingContent->GetCrossShadowCurrentDoc();
 #ifdef ANDROID
-    } else if (aEvent->mClass == eTouchEventClass) {
+    } else if (aEvent->mClass == eTouchEventClass ||
+              (aEvent->AsMouseEvent() && aEvent->AsMouseEvent()->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH)) {
       retargetEventDoc = GetTouchEventTargetDocument();
 #endif
     }
