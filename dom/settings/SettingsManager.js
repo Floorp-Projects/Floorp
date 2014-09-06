@@ -55,7 +55,7 @@ function SettingsLock(aSettingsManager) {
                                                             "Settings:Clear:OK", "Settings:Clear:KO",
                                                             "Settings:Set:OK", "Settings:Set:KO",
                                                             "Settings:Finalize:OK", "Settings:Finalize:KO"]);
-  this.sendMessage("Settings:CreateLock", {lockID: this._id, isInternalLock: false});
+  this.sendMessage("Settings:CreateLock", {lockID: this._id, isServiceLock: false});
   Services.tm.currentThread.dispatch(this._closeHelper.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
 }
 
