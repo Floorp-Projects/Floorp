@@ -113,7 +113,7 @@ MediaOptimization::~MediaOptimization(void) {
 }
 
 void MediaOptimization::Reset() {
-  SetEncodingData(kVideoCodecUnknown, 0, 0, 0, 0, 0, 0, max_payload_size_);
+  SetEncodingData(kVideoCodecUnknown, 0, 0, 0, 0, 0, 1, 0, max_payload_size_);
   memset(incoming_frame_times_, -1, sizeof(incoming_frame_times_));
   incoming_frame_rate_ = 0.0;
   frame_dropper_->Reset();
@@ -127,6 +127,8 @@ void MediaOptimization::Reset() {
   target_bit_rate_ = 0;
   codec_width_ = 0;
   codec_height_ = 0;
+  min_width_ = 0;
+  min_height_ = 0;
   user_frame_rate_ = 0;
   key_frame_cnt_ = 0;
   delta_frame_cnt_ = 0;
@@ -137,12 +139,24 @@ void MediaOptimization::Reset() {
   num_layers_ = 1;
 }
 
+// Euclid's algorithm
+// on arm, binary may be faster, but we do this rarely
+static int GreatestCommonDenominator(int a, int b) {
+  while (b != 0) {
+    int t = b;
+    b = a % b;
+    a = t;
+  }
+  return a;
+}
+
 void MediaOptimization::SetEncodingData(VideoCodecType send_codec_type,
                                         int32_t max_bit_rate,
                                         uint32_t frame_rate,
                                         uint32_t target_bitrate,
                                         uint16_t width,
                                         uint16_t height,
+                                        uint8_t  divisor,
                                         int num_layers,
                                         int32_t mtu) {
   // Everything codec specific should be reset here since this means the codec
@@ -166,6 +180,9 @@ void MediaOptimization::SetEncodingData(VideoCodecType send_codec_type,
   user_frame_rate_ = static_cast<float>(frame_rate);
   codec_width_ = width;
   codec_height_ = height;
+  int gcd = GreatestCommonDenominator(codec_width_, codec_height_);
+  min_width_ = gcd ? (codec_width_/gcd * divisor) : 0;
+  min_height_ = gcd ? (codec_height_/gcd * divisor) : 0;
   num_layers_ = (num_layers <= 1) ? 1 : num_layers;  // Can also be zero.
   max_payload_size_ = mtu;
   qm_resolution_->Initialize(target_bitrate_kbps,
@@ -554,13 +571,26 @@ bool MediaOptimization::QMUpdate(
     codec_width_ = qm->codec_width;
     codec_height_ = qm->codec_height;
   }
+  // handle codec limitations on input resolutions
+  if (codec_width_ % min_width_ != 0 || codec_height_ % min_height_ != 0) {
+    // XXX find a better algorithm for selecting sizes
+    // This uses the GCD to find options that meet alignment requirements
+    // (divisor) and at the same time retain the aspect ratio exactly.
+    codec_width_ = ((codec_width_ + min_width_-1)/min_width_)*min_width_;
+    codec_height_ = ((codec_height_ + min_height_-1)/min_height_)*min_height_;
+
+    // to avoid confusion later
+    qm->codec_width = codec_width_;
+    qm->codec_height = codec_height_;
+  }
+
 
   WEBRTC_TRACE(webrtc::kTraceDebug,
                webrtc::kTraceVideoCoding,
                id_,
-               "Resolution change from QM select: W = %d, H = %d, FR = %f",
-               qm->codec_width,
-               qm->codec_height,
+               "Resolution change from QM select: W = %d (%d), H = %d (%d), FR = %f",
+               qm->codec_width, codec_width_,
+               qm->codec_height, codec_height_,
                qm->frame_rate);
 
   // Update VPM with new target frame rate and frame size.

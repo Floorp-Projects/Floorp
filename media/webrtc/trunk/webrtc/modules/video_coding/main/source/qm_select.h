@@ -42,6 +42,11 @@ struct VCMResolutionScale {
   bool change_resolution_temporal;
 };
 
+// Other possibilities:
+// aspect 1.333*
+// kQQVGA = 160x120
+// k???     192x144
+// k???     256x192 (good step between 320x240 and 160x120)
 enum ImageType {
   kQCIF = 0,            // 176x144
   kHCIF,                // 264x216 = half(~3/4x3/4) CIF.

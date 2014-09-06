@@ -328,6 +328,8 @@ void VCMQmResolution::UpdateRates(float target_bitrate,
 //    Initialize() state are kept in |down_action_history_|.
 // 4) The total amount of down-sampling (spatial and/or temporal) from the
 //    Initialize() state (native resolution) is limited by various factors.
+// 5) If the codec can't handle arbitrary input resolutions, limit to %16==0
+//    i.e. for h.264
 int VCMQmResolution::SelectResolution(VCMResolutionScale** qm) {
   if (!init_) {
     return VCM_UNINITIALIZED;
