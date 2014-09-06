@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="fe92ddd450e03b38edb2d465de7897971d68ac68">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="0de5fcdc11a15abdf8d64f28bed2abb30041ea4d"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="c7de02ef1e0ad97d86e5bbef2d19828a236aea27"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="6969df171e5295f855f12d12db0382048e6892e7"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="2d42429985b77df4bb001dbdd2802518aa86b713"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="facdb3593e63dcbb740709303a5b2527113c50a0"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
@@ -120,7 +120,7 @@
   <project name="platform/system/media" path="system/media" revision="7ff72c2ea2496fa50b5e8a915e56e901c3ccd240"/>
   <project name="platform/system/netd" path="system/netd" revision="3ae56364946d4a5bf5a5f83f12f9a45a30398e33"/>
   <project name="platform/system/security" path="system/security" revision="ee8068b9e7bfb2770635062fc9c2035be2142bd8"/>
-  <project name="platform/system/vold" path="system/vold" revision="118dec582647895a863dbbce8ec26bc7af457bbe"/>
+  <project name="platform/system/vold" path="system/vold" revision="2e43efe1b30d0b98574d293059556aebd2f46454"/>
   <!--original fetch url was http://sprdsource.spreadtrum.com:8085/b2g/android-->
   <remote fetch="https://git.mozilla.org/external/sprd-aosp" name="sprd-aosp"/>
   <default remote="sprd-aosp" revision="sprdb2g_gonk4.4" sync-j="4"/>
