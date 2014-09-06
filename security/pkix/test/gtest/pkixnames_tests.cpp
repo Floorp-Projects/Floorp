@@ -31,6 +31,7 @@
 namespace mozilla { namespace pkix {
 
 bool IsValidDNSName(Input hostname);
+bool ParseIPv4Address(Input hostname, /*out*/ uint8_t (&out)[4]);
 
 } } // namespace mozilla::pkix
 
@@ -237,6 +238,108 @@ static const InputValidity DNSNAMES_VALIDITY_TURKISH_I[] =
   I("xn--\0xC4\0xB1", false), // latin small letter dotless i, mashup
 };
 
+template <unsigned int L>
+struct IPAddressParams
+{
+  ByteString input;
+  bool isValid;
+  uint8_t expectedValueIfValid[L];
+};
+
+#define IPV4_VALID(str, a, b, c, d) \
+  { \
+    ByteString(reinterpret_cast<const uint8_t*>(str), sizeof(str) - 1), \
+    true, \
+    { a, b, c, d } \
+  }
+
+// The value of expectedValueIfValid must be ignored for invalid IP addresses.
+// The value { 73, 73, 73, 73 } is used because it is unlikely to result in an
+// accidental match, unlike { 0, 0, 0, 0 }, which is a value we actually test.
+#define IPV4_INVALID(str) \
+  { \
+    ByteString(reinterpret_cast<const uint8_t*>(str), sizeof(str) - 1), \
+    false, \
+    { 73, 73, 73, 73 } \
+  }
+
+static const IPAddressParams<4> IPV4_ADDRESSES[] =
+{
+  IPV4_INVALID(""),
+  IPV4_INVALID("1"),
+  IPV4_INVALID("1.2"),
+  IPV4_INVALID("1.2.3"),
+  IPV4_VALID("1.2.3.4", 1, 2, 3, 4),
+  IPV4_INVALID("1.2.3.4.5"),
+
+  IPV4_INVALID("1.2.3.4a"), // a DNSName!
+  IPV4_INVALID("a.2.3.4"), // not even a DNSName!
+  IPV4_INVALID("1::2"), // IPv6 address
+
+  // Whitespace not allowed
+  IPV4_INVALID(" 1.2.3.4"),
+  IPV4_INVALID("1.2.3.4 "),
+  IPV4_INVALID("1 .2.3.4"),
+  IPV4_INVALID("\n1.2.3.4"),
+  IPV4_INVALID("1.2.3.4\n"),
+
+  // Nulls not allowed
+  IPV4_INVALID("\0"),
+  IPV4_INVALID("\0" "1.2.3.4"),
+  IPV4_INVALID("1.2.3.4\0"),
+  IPV4_INVALID("1.2.3.4\0.5"),
+
+  // Range
+  IPV4_VALID("0.0.0.0", 0, 0, 0, 0),
+  IPV4_VALID("255.255.255.255", 255, 255, 255, 255),
+  IPV4_INVALID("256.0.0.0"),
+  IPV4_INVALID("0.256.0.0"),
+  IPV4_INVALID("0.0.256.0"),
+  IPV4_INVALID("0.0.0.256"),
+  IPV4_INVALID("999.0.0.0"),
+  IPV4_INVALID("9999999999999999999.0.0.0"),
+
+  // All digits allowed
+  IPV4_VALID("0.1.2.3", 0, 1, 2, 3),
+  IPV4_VALID("4.5.6.7", 4, 5, 6, 7),
+  IPV4_VALID("8.9.0.1", 8, 9, 0, 1),
+
+  // Leading zeros not allowed
+  IPV4_INVALID("01.2.3.4"),
+  IPV4_INVALID("001.2.3.4"),
+  IPV4_INVALID("00000000001.2.3.4"),
+  IPV4_INVALID("010.2.3.4"),
+  IPV4_INVALID("1.02.3.4"),
+  IPV4_INVALID("1.2.03.4"),
+  IPV4_INVALID("1.2.3.04"),
+
+  // Empty components
+  IPV4_INVALID(".2.3.4"),
+  IPV4_INVALID("1..3.4"),
+  IPV4_INVALID("1.2..4"),
+  IPV4_INVALID("1.2.3."),
+
+  // Too many components
+  IPV4_INVALID("1.2.3.4.5"),
+  IPV4_INVALID("1.2.3.4.5.6"),
+  IPV4_INVALID("0.1.2.3.4"),
+  IPV4_INVALID("1.2.3.4.0"),
+
+  // Leading/trailing dot
+  IPV4_INVALID(".1.2.3.4"),
+  IPV4_INVALID("1.2.3.4."),
+
+  // Other common forms of IPv4 address
+  // http://en.wikipedia.org/wiki/IPv4#Address_representations
+  IPV4_VALID("192.0.2.235", 192, 0, 2, 235), // dotted decimal (control value)
+  IPV4_INVALID("0xC0.0x00.0x02.0xEB"), // dotted hex
+  IPV4_INVALID("0301.0000.0002.0353"), // dotted octal
+  IPV4_INVALID("0xC00002EB"), // non-dotted hex
+  IPV4_INVALID("3221226219"), // non-dotted decimal
+  IPV4_INVALID("030000001353"), // non-dotted octal
+  IPV4_INVALID("192.0.0002.0xEB"), // mixed
+};
+
 class pkixnames_IsValidDNSName
   : public ::testing::Test
   , public ::testing::WithParamInterface<InputValidity>
@@ -259,3 +362,29 @@ INSTANTIATE_TEST_CASE_P(pkixnames_IsValidDNSName,
 INSTANTIATE_TEST_CASE_P(pkixnames_IsValidDNSName_Turkish_I,
                         pkixnames_IsValidDNSName,
                         testing::ValuesIn(DNSNAMES_VALIDITY_TURKISH_I));
+
+class pkixnames_ParseIPv4Address
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<IPAddressParams<4>>
+{
+};
+
+TEST_P(pkixnames_ParseIPv4Address, ParseIPv4Address)
+{
+  const IPAddressParams<4>& param(GetParam());
+  SCOPED_TRACE(param.input.c_str());
+  Input input;
+  ASSERT_EQ(Success, input.Init(param.input.data(),
+                                param.input.length()));
+  uint8_t ipAddress[4];
+  ASSERT_EQ(param.isValid, ParseIPv4Address(input, ipAddress));
+  if (param.isValid) {
+    for (size_t i = 0; i < sizeof(ipAddress); ++i) {
+      ASSERT_EQ(param.expectedValueIfValid[i], ipAddress[i]);
+    }
+  }
+}
+
+INSTANTIATE_TEST_CASE_P(pkixnames_ParseIPv4Address,
+                        pkixnames_ParseIPv4Address,
+                        testing::ValuesIn(IPV4_ADDRESSES));
