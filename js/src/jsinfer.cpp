@@ -3886,7 +3886,7 @@ TypeNewScript::maybeAnalyze(JSContext *cx, TypeObject *type, bool *regenerate, b
     if (!jit::AnalyzeNewScriptDefiniteProperties(cx, fun, type, templateRoot, &initializerVector))
         return false;
 
-    if (type->unknownProperties())
+    if (!type->newScript())
         return true;
 
     JS_ASSERT(OnlyHasDataProperties(templateObject()->lastProperty()));
