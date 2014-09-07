@@ -470,7 +470,7 @@ public class BrowserApp extends GeckoApp
         (new UIAsyncTask.WithoutParams<String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public String doInBackground() {
-                return Favicons.getFaviconURLForPageURL(url);
+                return Favicons.getFaviconURLForPageURL(getContext(), url);
             }
 
             @Override
@@ -942,11 +942,13 @@ public class BrowserApp extends GeckoApp
             }
 
             final OnFaviconLoadedListener listener = new GeckoAppShell.CreateShortcutFaviconLoadedListener(url, title);
-            Favicons.getSizedFavicon(url,
-                    tab.getFaviconURL(),
-                    Integer.MAX_VALUE,
-                    LoadFaviconTask.FLAG_PERSIST,
-                    listener);
+            Favicons.getSizedFavicon(getContext(),
+                                     url,
+                                     tab.getFaviconURL(),
+                                     Integer.MAX_VALUE,
+                                     LoadFaviconTask.FLAG_PERSIST,
+                                     listener);
+
             return true;
         }
 
@@ -1743,7 +1745,7 @@ public class BrowserApp extends GeckoApp
         final int tabFaviconSize = getResources().getDimensionPixelSize(R.dimen.browser_toolbar_favicon_size);
 
         int flags = (tab.isPrivate() || tab.getErrorType() != Tab.ErrorType.NONE) ? 0 : LoadFaviconTask.FLAG_PERSIST;
-        int id = Favicons.getSizedFavicon(tab.getURL(), tab.getFaviconURL(), tabFaviconSize, flags, sFaviconLoadedListener);
+        int id = Favicons.getSizedFavicon(getContext(), tab.getURL(), tab.getFaviconURL(), tabFaviconSize, flags, sFaviconLoadedListener);
 
         tab.setFaviconLoadId(id);
     }
