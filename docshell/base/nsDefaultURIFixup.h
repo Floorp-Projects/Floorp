@@ -37,8 +37,6 @@ private:
     bool PossiblyHostPortUrl(const nsACString& aUrl);
     bool MakeAlternateURI(nsIURI *aURI);
     bool IsLikelyFTP(const nsCString& aHostSpec);
-    bool IsDomainWhitelisted(const nsAutoCString aAsciiHost,
-                             const uint32_t aDotLoc);
 };
 
 class nsDefaultURIFixupInfo : public nsIURIFixupInfo
