@@ -121,6 +121,11 @@ private:
   bool CanSelectAudioReader(MediaDecoderReader* aNewReader);
   bool CanSelectVideoReader(MediaDecoderReader* aNewReader);
 
+  // Waits on the decoder monitor for aTime to become available in the active
+  // TrackBuffers.  Used to block a Seek call until the necessary data has been
+  // provided to the relevant SourceBuffers.
+  void WaitForTimeRange(double aTime);
+
   nsRefPtr<MediaDecoderReader> mAudioReader;
   nsRefPtr<MediaDecoderReader> mVideoReader;
 

@@ -438,6 +438,21 @@ private:
   nsRefPtr<AbstractMediaDecoder> mDecoder;
 };
 
+void
+MediaSourceReader::WaitForTimeRange(double aTime)
+{
+  MSE_DEBUG("MediaSourceReader(%p)::WaitForTimeRange(%f)", this, aTime);
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+  // Loop until we have the requested time range in the active TrackBuffers.
+  // Ideally, this wait loop would use an async request and callback
+  // instead.  Bug 1056441 covers that change.
+  while (!TrackBuffersContainTime(aTime) && !IsShutdown() && !IsEnded()) {
+    MSE_DEBUG("MediaSourceReader(%p)::WaitForTimeRange(%f) waiting", this, aTime);
+    mon.Wait();
+  }
+}
+
 bool
 MediaSourceReader::TrackBuffersContainTime(double aTime)
 {
@@ -473,14 +488,7 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
     NS_DispatchToMainThread(new ChangeToHaveMetadata(mDecoder));
   }
 
-  // Loop until we have the requested time range in the source buffers.
-  // This is a workaround for our lack of async functionality in the
-  // MediaDecoderStateMachine. Bug 979104 implements what we need and
-  // we'll remove this for an async approach based on that in bug 1056441.
-  while (!TrackBuffersContainTime(target) && !IsShutdown() && !IsEnded()) {
-    MSE_DEBUG("MediaSourceReader(%p)::Seek waiting for target=%f", this, target);
-    static_cast<MediaSourceDecoder*>(mDecoder)->WaitForData();
-  }
+  WaitForTimeRange(target);
 
   if (IsShutdown()) {
     return NS_ERROR_FAILURE;

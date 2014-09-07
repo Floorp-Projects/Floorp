@@ -106,10 +106,13 @@ TrackBuffer::AppendData(const uint8_t* aData, uint32_t aLength)
   }
 
   SourceBufferResource* resource = mCurrentDecoder->GetResource();
+  int64_t appendOffset = resource->GetLength();
+  resource->AppendData(aData, aLength);
   // XXX: For future reference: NDA call must run on the main thread.
   mCurrentDecoder->NotifyDataArrived(reinterpret_cast<const char*>(aData),
-                                     aLength, resource->GetLength());
-  resource->AppendData(aData, aLength);
+                                     aLength, appendOffset);
+  mParentDecoder->NotifyTimeRangesChanged();
+
   return true;
 }
 
@@ -245,6 +248,7 @@ TrackBuffer::RegisterDecoder(nsRefPtr<SourceBufferDecoder> aDecoder)
     MSE_DEBUG("TrackBuffer(%p)::RegisterDecoder with mismatched audio/video tracks", this);
   }
   mInitializedDecoders.AppendElement(aDecoder);
+  mParentDecoder->NotifyTimeRangesChanged();
 }
 
 void
