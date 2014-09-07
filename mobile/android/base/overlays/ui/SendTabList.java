@@ -12,6 +12,8 @@ import java.util.Arrays;
 
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.overlays.service.sharemethods.ParcelableClientRecord;
 
 import android.app.AlertDialog;
@@ -142,6 +144,12 @@ public class SendTabList extends ListView {
                    @Override
                    public void onClick(DialogInterface dialog, int index) {
                        listener.onSendTabTargetSelected(records[index].guid);
+                   }
+                })
+               .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                   @Override
+                   public void onCancel(DialogInterface dialogInterface) {
+                       Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, TelemetryContract.Method.SHARE_OVERLAY, "device_selection_cancel");
                    }
                });
 
