@@ -679,16 +679,19 @@ RTCPeerConnection.prototype = {
     let idpComplete = false;
     let setRemoteComplete = false;
     let idpError = null;
+    let isDone = false;
 
     // we can run the IdP validation in parallel with setRemoteDescription this
     // complicates much more than would be ideal, but it ensures that the IdP
     // doesn't hold things up too much when it's not on the critical path
     let allDone = () => {
-      if (!setRemoteComplete || !idpComplete || !onSuccess) {
+      if (!setRemoteComplete || !idpComplete || isDone) {
         return;
       }
+      // May be null if the user didn't supply success/failure callbacks.
+      // Violation of spec, but we allow it for now
       this.callCB(onSuccess);
-      onSuccess = null;
+      isDone = true;
       this._executeNext();
     };
 
