@@ -55,11 +55,9 @@ public:
 
   void SetMediaSourceDuration(double aDuration);
 
-  // Provide a mechanism for MediaSourceReader to block waiting on data from a SourceBuffer.
-  void WaitForData();
-
-  // Called whenever a SourceBuffer has new data appended.
-  void NotifyGotData();
+  // Called whenever a TrackBuffer has new data appended or a new decoder
+  // initializes.  Safe to call from any thread.
+  void NotifyTimeRangesChanged();
 
   // Indicates the point in time at which the reader should consider
   // registered TrackBuffers essential for initialization.
