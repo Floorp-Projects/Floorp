@@ -332,7 +332,7 @@ struct IsFunction<R(A...)>
 };
 
 template<typename T>
-void ValidateAssertConditionType()
+struct AssertionConditionType
 {
   typedef typename RemoveReference<T>::Type ValueT;
   static_assert(!IsArray<ValueT>::value,
@@ -347,12 +347,15 @@ void ValidateAssertConditionType()
                 "fail. Shouldn't your code gracefully handle this case instead "
                 "of asserting? Anyway, if you really want to do that, write an "
                 "explicit boolean condition, like !!x or x!=0.");
-}
+
+  static const bool isValid = true;
+};
 
 } // namespace detail
 } // namespace mozilla
 #  define MOZ_VALIDATE_ASSERT_CONDITION_TYPE(x) \
-     mozilla::detail::ValidateAssertConditionType<decltype(x)>()
+     static_assert(mozilla::detail::AssertionConditionType<decltype(x)>::isValid, \
+                   "invalid assertion condition")
 #else
 #  define MOZ_VALIDATE_ASSERT_CONDITION_TYPE(x)
 #endif
