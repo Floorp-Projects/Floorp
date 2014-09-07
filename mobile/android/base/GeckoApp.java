@@ -1190,7 +1190,7 @@ public abstract class GeckoApp
 
         Tabs.getInstance().attachToContext(this);
         try {
-            Favicons.attachToContext(this);
+            Favicons.initializeWithContext(this);
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception starting favicon cache. Corrupt resources?", e);
         }
