@@ -1752,19 +1752,18 @@ HeapTypeSetKey::constant(CompilerConstraintList *constraints, Value *valOut)
     if (nonData(constraints))
         return false;
 
-    if (!maybeTypes())
-        return false;
-
-    if (maybeTypes()->nonConstantProperty())
-        return false;
-
     // Only singleton object properties can be marked as constants.
-    JS_ASSERT(object()->singleton());
+    if (!object()->singleton())
+        return false;
+
+    if (maybeTypes() && maybeTypes()->nonConstantProperty())
+        return false;
 
     // Get the current value of the property.
     Shape *shape = object()->singleton()->nativeLookupPure(id());
-    if (!shape)
+    if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot() || shape->hadOverwrite())
         return false;
+
     Value val = object()->singleton()->nativeGetSlot(shape->slot());
 
     // If the value is a pointer to an object in the nursery, don't optimize.
