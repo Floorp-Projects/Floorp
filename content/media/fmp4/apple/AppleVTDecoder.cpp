@@ -445,19 +445,7 @@ AppleVTDecoder::InitializeSession()
   }
 
   // Contruct video decoder selection spec.
-  AutoCFRelease<CFMutableDictionaryRef> spec =
-    CFDictionaryCreateMutable(NULL, 0,
-                              &kCFTypeDictionaryKeyCallBacks,
-                              &kCFTypeDictionaryValueCallBacks);
-  // This key is supported (or ignored) but not declared prior to OSX 10.9.
-  AutoCFRelease<CFStringRef>
-        kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder =
-        CFStringCreateWithCString(NULL, "EnableHardwareAcceleratedVideoDecoder",
-            kCFStringEncodingUTF8);
-
-  CFDictionarySetValue(spec,
-      kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder,
-      kCFBooleanTrue);
+  AutoCFRelease<CFDictionaryRef> spec = CreateDecoderSpecification();
 
   VTDecompressionOutputCallbackRecord cb = { PlatformCallback, this };
   rv = VTDecompressionSessionCreate(NULL, // Allocator.
@@ -466,12 +454,30 @@ AppleVTDecoder::InitializeSession()
                                     NULL, // Output video format.
                                     &cb,
                                     &mSession);
+
   if (rv != noErr) {
     NS_ERROR("Couldn't create decompression session!");
     return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
+}
+
+CFDictionaryRef
+AppleVTDecoder::CreateDecoderSpecification()
+{
+  if (!AppleVTLinker::GetPropHWAccel()) {
+    return nullptr;
+  }
+
+  const void* specKeys[] = { AppleVTLinker::GetPropHWAccel() };
+  const void* specValues[] = { kCFBooleanTrue };
+  return CFDictionaryCreate(NULL,
+                            specKeys,
+                            specValues,
+                            ArrayLength(specKeys),
+                            &kCFTypeDictionaryKeyCallBacks,
+                            &kCFTypeDictionaryValueCallBacks);
 }
 
 } // namespace mozilla
