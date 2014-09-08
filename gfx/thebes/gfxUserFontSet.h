@@ -258,7 +258,7 @@ public:
     // ensure that it is eventually deleted with NS_Free().
     bool OnLoadComplete(gfxMixedFontFamily *aFamily,
                         gfxProxyFontEntry *aProxy,
-                        const uint8_t *aFontData, uint32_t aLength,
+                        const uint8_t* aFontData, uint32_t aLength,
                         nsresult aDownloadStatus);
 
     // Replace a proxy with a real fontEntry; this is implemented in
@@ -570,7 +570,7 @@ protected:
     // Ownership of aFontData is passed in here; the font must
     // ensure that it is eventually deleted with NS_Free().
     gfxFontEntry* LoadFont(gfxMixedFontFamily *aFamily,
-                           const uint8_t *aFontData, uint32_t &aLength);
+                           const uint8_t* aFontData, uint32_t &aLength);
 
     // store metadata and src details for current src into aFontEntry
     void StoreUserFontData(gfxFontEntry*      aFontEntry,
