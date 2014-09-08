@@ -55,13 +55,11 @@ GetFontDownloaderLog()
 #define LOG_ENABLED() PR_LOG_TEST(GetFontDownloaderLog(), PR_LOG_DEBUG)
 
 
-nsFontFaceLoader::nsFontFaceLoader(gfxUserFontFamily* aFontFamily,
-                                   gfxUserFontEntry* aUserFontEntry,
+nsFontFaceLoader::nsFontFaceLoader(gfxUserFontEntry* aUserFontEntry,
                                    nsIURI* aFontURI,
                                    nsUserFontSet* aFontSet,
                                    nsIChannel* aChannel)
-  : mFontFamily(aFontFamily),
-    mFontEntry(aUserFontEntry),
+  : mUserFontEntry(aUserFontEntry),
     mFontURI(aFontURI),
     mFontSet(aFontSet),
     mChannel(aChannel)
@@ -70,8 +68,8 @@ nsFontFaceLoader::nsFontFaceLoader(gfxUserFontFamily* aFontFamily,
 
 nsFontFaceLoader::~nsFontFaceLoader()
 {
-  if (mFontEntry) {
-    mFontEntry->mLoader = nullptr;
+  if (mUserFontEntry) {
+    mUserFontEntry->mLoader = nullptr;
   }
   if (mLoadTimer) {
     mLoadTimer->Cancel();
@@ -96,7 +94,7 @@ nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader)
                                        nsITimer::TYPE_ONE_SHOT);
     }
   } else {
-    mFontEntry->mLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
+    mUserFontEntry->mLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
   }
   mStreamLoader = aStreamLoader;
 }
@@ -111,7 +109,7 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure)
     return;
   }
 
-  gfxUserFontEntry* ufe = loader->mFontEntry.get();
+  gfxUserFontEntry* ufe = loader->mUserFontEntry.get();
   bool updateUserFontSet = true;
 
   // If the entry is loading, check whether it's >75% done; if so,
@@ -209,14 +207,14 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
   }
 
-  // The userFontSet is responsible for freeing the downloaded data
+  // The userFontEntry is responsible for freeing the downloaded data
   // (aString) when finished with it; the pointer is no longer valid
   // after OnLoadComplete returns.
   // This is called even in the case of a failed download (HTTP 404, etc),
   // as there may still be data to be freed (e.g. an error page),
   // and we need the fontSet to initiate loading the next source.
-  bool fontUpdate = mFontSet->OnLoadComplete(mFontFamily, mFontEntry, aString,
-                                             aStringLen, aStatus);
+  bool fontUpdate = mUserFontEntry->OnLoadComplete(aString,
+                                                   aStringLen, aStatus);
 
   // when new font loaded, need to reflow
   if (fontUpdate) {
@@ -239,8 +237,8 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 void
 nsFontFaceLoader::Cancel()
 {
-  mFontEntry->mLoadingState = gfxUserFontEntry::NOT_LOADING;
-  mFontEntry->mLoader = nullptr;
+  mUserFontEntry->mLoadingState = gfxUserFontEntry::NOT_LOADING;
+  mUserFontEntry->mLoader = nullptr;
   mFontSet = nullptr;
   if (mLoadTimer) {
     mLoadTimer->Cancel();
@@ -319,8 +317,7 @@ nsUserFontSet::RemoveLoader(nsFontFaceLoader* aLoader)
 }
 
 nsresult
-nsUserFontSet::StartLoad(gfxUserFontFamily* aFamily,
-                         gfxUserFontEntry* aUserFontEntry,
+nsUserFontSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
                          const gfxFontFaceSrc* aFontFaceSrc)
 {
   nsresult rv;
@@ -354,7 +351,7 @@ nsUserFontSet::StartLoad(gfxUserFontFamily* aFamily,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<nsFontFaceLoader> fontLoader =
-    new nsFontFaceLoader(aFamily, aUserFontEntry, aFontFaceSrc->mURI, this, channel);
+    new nsFontFaceLoader(aUserFontEntry, aFontFaceSrc->mURI, this, channel);
 
   if (!fontLoader)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -474,11 +471,7 @@ nsUserFontSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
     // even after the oldRules array is deleted.
     size_t count = oldRules.Length();
     for (size_t i = 0; i < count; ++i) {
-      gfxFontEntry* fe = oldRules[i].mFontEntry;
-      if (!fe->mIsUserFontContainer) {
-        continue;
-      }
-      gfxUserFontEntry* userFontEntry = static_cast<gfxUserFontEntry*>(fe);
+      gfxUserFontEntry* userFontEntry = oldRules[i].mUserFontEntry;
       nsFontFaceLoader* loader = userFontEntry->mLoader;
       if (loader) {
         loader->Cancel();
@@ -554,7 +547,7 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
         }
       }
 
-      AddFontFace(fontfamily, ruleRec.mFontEntry);
+      AddFontFace(fontfamily, ruleRec.mUserFontEntry);
       mRules.AppendElement(ruleRec);
       aOldRules.RemoveElementAt(i);
       // note the set has been modified if an old rule was skipped to find
@@ -568,10 +561,10 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
 
   // this is a new rule:
   FontFaceRuleRecord ruleRec;
-  ruleRec.mFontEntry =
+  ruleRec.mUserFontEntry =
     FindOrCreateFontFaceFromRule(fontfamily, aRule, aSheetType);
 
-  if (!ruleRec.mFontEntry) {
+  if (!ruleRec.mUserFontEntry) {
     return;
   }
 
@@ -582,7 +575,7 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
   // returned by FindOrCreateFontFaceFromRule that was already stored on the
   // family, gfxUserFontFamily::AddFontEntry(), which AddFontFace calls,
   // will automatically remove the earlier occurrence of the same userfont entry.
-  AddFontFace(fontfamily, ruleRec.mFontEntry);
+  AddFontFace(fontfamily, ruleRec.mUserFontEntry);
 
   mRules.AppendElement(ruleRec);
 
@@ -590,7 +583,7 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
   aFontSetModified = true;
 }
 
-already_AddRefed<gfxFontEntry>
+already_AddRefed<gfxUserFontEntry>
 nsUserFontSet::FindOrCreateFontFaceFromRule(const nsAString& aFamilyName,
                                             nsCSSFontFaceRule* aRule,
                                             uint8_t aSheetType)
@@ -759,28 +752,23 @@ nsUserFontSet::FindOrCreateFontFaceFromRule(const nsAString& aFamilyName,
   return entry.forget();
 }
 
-void
-nsUserFontSet::ReplaceFontEntry(gfxUserFontFamily* aFamily,
-                                gfxUserFontEntry* aUserFontEntry,
-                                gfxFontEntry* aFontEntry)
-{
-  // aUserFontEntry is being supplanted by the "real" font aFontEntry, so we need to
-  // update any rules that refer to it. Note that there may be multiple rules
-  // that refer to the same userfont entry - e.g. if a stylesheet was loaded multiple
-  // times, so that several identical @font-face rules are present.
-  for (uint32_t i = 0; i < mRules.Length(); ++i) {
-    if (mRules[i].mFontEntry == aUserFontEntry) {
-      mRules[i].mFontEntry = aFontEntry;
-    }
-  }
-  aFamily->ReplaceFontEntry(aUserFontEntry, aFontEntry);
-}
-
 nsCSSFontFaceRule*
 nsUserFontSet::FindRuleForEntry(gfxFontEntry* aFontEntry)
 {
+  NS_ASSERTION(!aFontEntry->mIsUserFontContainer, "only platform font entries");
   for (uint32_t i = 0; i < mRules.Length(); ++i) {
-    if (mRules[i].mFontEntry == aFontEntry) {
+    if (mRules[i].mUserFontEntry->GetPlatformFontEntry() == aFontEntry) {
+      return mRules[i].mContainer.mRule;
+    }
+  }
+  return nullptr;
+}
+
+nsCSSFontFaceRule*
+nsUserFontSet::FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry)
+{
+  for (uint32_t i = 0; i < mRules.Length(); ++i) {
+    if (mRules[i].mUserFontEntry == aUserFontEntry) {
       return mRules[i].mContainer.mRule;
     }
   }
@@ -788,11 +776,10 @@ nsUserFontSet::FindRuleForEntry(gfxFontEntry* aFontEntry)
 }
 
 nsresult
-nsUserFontSet::LogMessage(gfxUserFontFamily* aFamily,
-                          gfxUserFontEntry* aUserFontEntry,
-                          const char*        aMessage,
-                          uint32_t          aFlags,
-                          nsresult          aStatus)
+nsUserFontSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
+                          const char* aMessage,
+                          uint32_t aFlags,
+                          nsresult aStatus)
 {
   nsCOMPtr<nsIConsoleService>
     console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
@@ -861,7 +848,7 @@ nsUserFontSet::LogMessage(gfxUserFontFamily* aFamily,
 #endif
 
   // try to give the user an indication of where the rule came from
-  nsCSSFontFaceRule* rule = FindRuleForEntry(aUserFontEntry);
+  nsCSSFontFaceRule* rule = FindRuleForUserFontEntry(aUserFontEntry);
   nsString href;
   nsString text;
   nsresult rv;

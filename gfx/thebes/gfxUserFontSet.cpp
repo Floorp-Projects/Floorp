@@ -27,10 +27,10 @@
 using namespace mozilla;
 
 #ifdef PR_LOGGING
-PRLogModuleInfo *
+PRLogModuleInfo*
 gfxUserFontSet::GetUserFontsLog()
 {
-    static PRLogModuleInfo *sLog;
+    static PRLogModuleInfo* sLog;
     if (!sLog)
         sLog = PR_NewLogModule("userfonts");
     return sLog;
@@ -65,7 +65,7 @@ public:
         return p;
     }
 
-    bool WriteRaw(const void *data, size_t length) {
+    bool WriteRaw(const void* data, size_t length) {
         if ((mOff + length > mLength) ||
             (mLength > std::numeric_limits<size_t>::max() - mOff)) {
             if (mLength == mLimit) {
@@ -111,14 +111,14 @@ private:
 
 // TODO: support for unicode ranges not yet implemented
 
-gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet *aFontSet,
+gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
              const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
              uint32_t aWeight,
              int32_t aStretch,
              uint32_t aItalicStyle,
              const nsTArray<gfxFontFeature>& aFeatureSettings,
              uint32_t aLanguageOverride,
-             gfxSparseBitSet *aUnicodeRanges)
+             gfxSparseBitSet* aUnicodeRanges)
     : gfxFontEntry(NS_LITERAL_STRING("userfont")),
       mLoadingState(NOT_LOADING),
       mUnsupportedFormat(false),
@@ -148,7 +148,7 @@ gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                           uint32_t aItalicStyle,
                           const nsTArray<gfxFontFeature>& aFeatureSettings,
                           uint32_t aLanguageOverride,
-                          gfxSparseBitSet *aUnicodeRanges)
+                          gfxSparseBitSet* aUnicodeRanges)
 {
     // XXX font entries don't distinguish italic from oblique (bug 543715)
     bool isItalic =
@@ -165,16 +165,19 @@ gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
 }
 
 gfxFont*
-gfxUserFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold)
+gfxUserFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeedsBold)
 {
+    NS_NOTREACHED("should only be creating a gfxFont"
+                  " with an actual platform font entry");
+
     // userfont entry is a container, can't create font from the container
     return nullptr;
 }
 
 class gfxOTSContext : public ots::OTSContext {
 public:
-    gfxOTSContext(gfxUserFontFamily *aFamily, gfxUserFontEntry *aUserFontEntry)
-        : mFamily(aFamily), mUserFontEntry(aUserFontEntry) {}
+    gfxOTSContext(gfxUserFontEntry* aUserFontEntry)
+        : mUserFontEntry(aUserFontEntry) {}
 
     virtual ots::TableAction GetTableAction(uint32_t aTag) MOZ_OVERRIDE {
         // preserve Graphite, color glyph and SVG tables
@@ -191,7 +194,7 @@ public:
         return ots::TABLE_ACTION_DEFAULT;
     }
 
-    virtual void Message(const char *format, ...) MSGFUNC_FMT_ATTR MOZ_OVERRIDE {
+    virtual void Message(const char* format, ...) MSGFUNC_FMT_ATTR MOZ_OVERRIDE {
         va_list va;
         va_start(va, format);
 
@@ -202,19 +205,17 @@ public:
 
         va_end(va);
 
-        mUserFontEntry->mFontSet->LogMessage(mFamily, mUserFontEntry, buf);
+        mUserFontEntry->mFontSet->LogMessage(mUserFontEntry, buf);
     }
 
 private:
-    gfxUserFontFamily *mFamily;
-    gfxUserFontEntry  *mUserFontEntry;
+    gfxUserFontEntry* mUserFontEntry;
 };
 
 // Call the OTS library to sanitize an sfnt before attempting to use it.
 // Returns a newly-allocated block, or nullptr in case of fatal errors.
 const uint8_t*
-gfxUserFontEntry::SanitizeOpenTypeData(gfxUserFontFamily *aFamily,
-                                       const uint8_t* aData,
+gfxUserFontEntry::SanitizeOpenTypeData(const uint8_t* aData,
                                        uint32_t       aLength,
                                        uint32_t&      aSaneLength,
                                        bool           aIsCompressed)
@@ -223,7 +224,7 @@ gfxUserFontEntry::SanitizeOpenTypeData(gfxUserFontFamily *aFamily,
     ExpandingMemoryStream output(aIsCompressed ? aLength * 2 : aLength,
                                  1024 * 1024 * 256);
 
-    gfxOTSContext otsContext(aFamily, this);
+    gfxOTSContext otsContext(this);
 
     if (otsContext.Process(&output, aData, aLength)) {
         aSaneLength = output.Tell();
@@ -310,8 +311,7 @@ CopyWOFFMetadata(const uint8_t* aFontData,
 }
 
 gfxUserFontEntry::LoadStatus
-gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
-                           bool& aLocalRulesUsed)
+gfxUserFontEntry::LoadNext()
 {
     uint32_t numSrc = mSrcList.Length();
 
@@ -336,12 +336,12 @@ gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
         // src local ==> lookup and load immediately
 
         if (currSrc.mIsLocal) {
-            gfxFontEntry *fe =
+            gfxFontEntry* fe =
                 gfxPlatform::GetPlatform()->LookupLocalFont(currSrc.mLocalName,
                                                             mWeight,
                                                             mStretch,
                                                             mItalic);
-            aLocalRulesUsed = true;
+            mFontSet->SetLocalRulesUsed();
             if (fe) {
                 LOG(("fontset (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n",
                      mFontSet, mSrcIndex,
@@ -355,7 +355,7 @@ gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
                 // a private window as there's no issue of caching resources;
                 // local fonts are just available all the time.
                 StoreUserFontData(fe, false, nsString(), nullptr, 0);
-                mFontSet->ReplaceFontEntry(aFamily, this, fe);
+                mPlatformFontEntry = fe;
                 return STATUS_LOADED;
             } else {
                 LOG(("fontset (%p) [src %d] failed local: (%s) for (%s)\n",
@@ -370,7 +370,7 @@ gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
             if (gfxPlatform::GetPlatform()->IsFontFormatSupported(currSrc.mURI,
                     currSrc.mFormatFlags)) {
 
-                nsIPrincipal *principal = nullptr;
+                nsIPrincipal* principal = nullptr;
                 bool bypassCache;
                 nsresult rv = mFontSet->CheckFontLoad(&currSrc, &principal,
                                                       &bypassCache);
@@ -378,13 +378,13 @@ gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
                 if (NS_SUCCEEDED(rv) && principal != nullptr) {
                     if (!bypassCache) {
                         // see if we have an existing entry for this source
-                        gfxFontEntry *fe = gfxUserFontSet::
+                        gfxFontEntry* fe = gfxUserFontSet::
                             UserFontCache::GetFont(currSrc.mURI,
                                                    principal,
                                                    this,
                                                    mFontSet->GetPrivateBrowsing());
                         if (fe) {
-                            mFontSet->ReplaceFontEntry(aFamily, this, fe);
+                            mPlatformFontEntry = fe;
                             return STATUS_LOADED;
                         }
                     }
@@ -400,7 +400,7 @@ gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
                            &loadDoesntSpin);
 
                     if (NS_SUCCEEDED(rv) && loadDoesntSpin) {
-                        uint8_t *buffer = nullptr;
+                        uint8_t* buffer = nullptr;
                         uint32_t bufferLength = 0;
 
                         // sync load font immediately
@@ -408,10 +408,10 @@ gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
                                                         bufferLength);
 
                         if (NS_SUCCEEDED(rv) &&
-                            LoadFont(aFamily, buffer, bufferLength)) {
+                            LoadFont(buffer, bufferLength)) {
                             return STATUS_LOADED;
                         } else {
-                            mFontSet->LogMessage(aFamily, this,
+                            mFontSet->LogMessage(this,
                                                  "font load failed",
                                                  nsIScriptError::errorFlag,
                                                  rv);
@@ -419,7 +419,7 @@ gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
 
                     } else {
                         // otherwise load font async
-                        rv = mFontSet->StartLoad(aFamily, this, &currSrc);
+                        rv = mFontSet->StartLoad(this, &currSrc);
                         bool loadOK = NS_SUCCEEDED(rv);
 
                         if (loadOK) {
@@ -434,14 +434,14 @@ gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
 #endif
                             return STATUS_LOADING;
                         } else {
-                            mFontSet->LogMessage(aFamily, this,
+                            mFontSet->LogMessage(this,
                                                  "download failed",
                                                  nsIScriptError::errorFlag,
                                                  rv);
                         }
                     }
                 } else {
-                    mFontSet->LogMessage(aFamily, this, "download not allowed",
+                    mFontSet->LogMessage(this, "download not allowed",
                                          nsIScriptError::errorFlag, rv);
                 }
             } else {
@@ -455,7 +455,7 @@ gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
     }
 
     if (mUnsupportedFormat) {
-        mFontSet->LogMessage(aFamily, this, "no supported format found",
+        mFontSet->LogMessage(this, "no supported format found",
                              nsIScriptError::warningFlag);
     }
 
@@ -467,11 +467,10 @@ gfxUserFontEntry::LoadNext(gfxUserFontFamily *aFamily,
     return STATUS_END_OF_LIST;
 }
 
-gfxFontEntry*
-gfxUserFontEntry::LoadFont(gfxUserFontFamily *aFamily,
-                           const uint8_t* aFontData, uint32_t &aLength)
+bool
+gfxUserFontEntry::LoadFont(const uint8_t* aFontData, uint32_t &aLength)
 {
-    gfxFontEntry *fe = nullptr;
+    gfxFontEntry* fe = nullptr;
 
     gfxUserFontType fontType =
         gfxFontUtils::DetermineFontDataType(aFontData, aLength);
@@ -488,10 +487,10 @@ gfxUserFontEntry::LoadFont(gfxUserFontFamily *aFamily,
     // if necessary. The original data in aFontData is left unchanged.
     uint32_t saneLen;
     const uint8_t* saneData =
-        SanitizeOpenTypeData(aFamily, aFontData, aLength, saneLen,
+        SanitizeOpenTypeData(aFontData, aLength, saneLen,
                              fontType == GFX_USERFONT_WOFF);
     if (!saneData) {
-        mFontSet->LogMessage(aFamily, this, "rejected by sanitizer");
+        mFontSet->LogMessage(this, "rejected by sanitizer");
     }
     if (saneData) {
         // The sanitizer ensures that we have a valid sfnt and a usable
@@ -510,7 +509,7 @@ gfxUserFontEntry::LoadFont(gfxUserFontFamily *aFamily,
                                                           saneData,
                                                           saneLen);
         if (!fe) {
-            mFontSet->LogMessage(aFamily, this, "not usable by platform");
+            mFontSet->LogMessage(this, "not usable by platform");
         }
     }
 
@@ -541,7 +540,7 @@ gfxUserFontEntry::LoadFont(gfxUserFontFamily *aFamily,
                  uint32_t(mFontSet->mGeneration)));
         }
 #endif
-        mFontSet->ReplaceFontEntry(aFamily, this, fe);
+        mPlatformFontEntry = fe;
         gfxUserFontSet::UserFontCache::CacheFont(fe);
     } else {
 #ifdef PR_LOGGING
@@ -560,14 +559,57 @@ gfxUserFontEntry::LoadFont(gfxUserFontFamily *aFamily,
     // sanitized copy
     NS_Free((void*)aFontData);
 
-    return fe;
+    return fe != nullptr;
+}
+
+// This is called when a font download finishes.
+// Ownership of aFontData passes in here, and the font set must
+// ensure that it is eventually deleted via NS_Free().
+bool
+gfxUserFontEntry::OnLoadComplete(const uint8_t* aFontData, uint32_t aLength,
+                                 nsresult aDownloadStatus)
+{
+    // forget about the loader, as we no longer potentially need to cancel it
+    // if the entry is obsoleted
+    mLoader = nullptr;
+
+    // download successful, make platform font using font data
+    if (NS_SUCCEEDED(aDownloadStatus)) {
+        bool loaded = LoadFont(aFontData, aLength);
+        aFontData = nullptr;
+
+        if (loaded) {
+            mFontSet->IncrementGeneration();
+            return true;
+        }
+
+    } else {
+        // download failed
+        mFontSet->LogMessage(this,
+                             "download failed", nsIScriptError::errorFlag,
+                             aDownloadStatus);
+    }
+
+    if (aFontData) {
+        moz_free((void*)aFontData);
+    }
+
+    // error occurred, load next src
+    LoadNext();
+
+    // We ignore the status returned by LoadNext();
+    // even if loading failed, we need to bump the font-set generation
+    // and return true in order to trigger reflow, so that fallback
+    // will be used where the text was "masked" by the pending download
+    mFontSet->IncrementGeneration();
+    return true;
 }
 
 gfxUserFontSet::gfxUserFontSet()
     : mFontFamilies(4), mLocalRulesUsed(false)
 {
     IncrementGeneration();
-    gfxPlatformFontList *fp = gfxPlatformFontList::PlatformFontList();
+    gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList();
     if (fp) {
         fp->AddUserFontSet(this);
     }
@@ -575,7 +617,7 @@ gfxUserFontSet::gfxUserFontSet()
 
 gfxUserFontSet::~gfxUserFontSet()
 {
-    gfxPlatformFontList *fp = gfxPlatformFontList::PlatformFontList();
+    gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList();
     if (fp) {
         fp->RemoveUserFontSet(this);
     }
@@ -686,36 +728,43 @@ gfxUserFontSet::FindExistingUserFontEntry(
 
 void
 gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
-                            gfxFontEntry     *aFontEntry)
+                            gfxUserFontEntry* aUserFontEntry)
 {
     gfxUserFontFamily* family = GetFamily(aFamilyName);
-    family->AddFontEntry(aFontEntry);
+    family->AddFontEntry(aUserFontEntry);
 
 #ifdef PR_LOGGING
     if (LOG_ENABLED()) {
         LOG(("userfonts (%p) added \"%s\" (%p)",
-             this, NS_ConvertUTF16toUTF8(aFamilyName).get(), aFontEntry));
+             this, NS_ConvertUTF16toUTF8(aFamilyName).get(), aUserFontEntry));
     }
 #endif
 }
 
-gfxFontEntry*
-gfxUserFontSet::FindFontEntry(gfxFontFamily *aFamily,
-                              const gfxFontStyle& aFontStyle,
-                              bool& aNeedsBold,
-                              bool& aWaitForUserFont)
+gfxUserFontEntry*
+gfxUserFontSet::FindUserFontEntry(gfxFontFamily* aFamily,
+                                  const gfxFontStyle& aFontStyle,
+                                  bool& aNeedsBold,
+                                  bool& aWaitForUserFont)
 {
     aWaitForUserFont = false;
-    gfxUserFontFamily *family = static_cast<gfxUserFontFamily*>(aFamily);
+    gfxUserFontFamily* family = static_cast<gfxUserFontFamily*>(aFamily);
 
     gfxFontEntry* fe = family->FindFontForStyle(aFontStyle, aNeedsBold);
 
+    NS_ASSERTION(!fe || fe->mIsUserFontContainer,
+                 "should only have userfont entries in userfont families");
+
     // if not a userfont entry, font has already been loaded
-    if (!fe->mIsUserFontContainer) {
-        return fe;
+    if (!fe || !fe->mIsUserFontContainer) {
+        return nullptr;
     }
 
-    gfxUserFontEntry *userFontEntry = static_cast<gfxUserFontEntry*> (fe);
+    gfxUserFontEntry* userFontEntry = static_cast<gfxUserFontEntry*> (fe);
+
+    if (userFontEntry->GetPlatformFontEntry()) {
+        return userFontEntry;
+    }
 
     // if currently loading, return null for now
     if (userFontEntry->mLoadingState > gfxUserFontEntry::NOT_LOADING) {
@@ -729,12 +778,11 @@ gfxUserFontSet::FindFontEntry(gfxFontFamily *aFamily,
 
     // NOTE that if all sources in the entry fail, this will delete userFontEntry,
     // so we cannot use it again if status==STATUS_END_OF_LIST
-    status = userFontEntry->LoadNext(family, mLocalRulesUsed);
+    status = userFontEntry->LoadNext();
 
-    // if the load succeeded immediately, the font entry was replaced so
-    // search again
+    // if the load succeeded immediately, return
     if (status == gfxUserFontEntry::STATUS_LOADED) {
-        return family->FindFontForStyle(aFontStyle, aNeedsBold);
+        return userFontEntry;
     }
 
     // check whether we should wait for load to complete before painting
@@ -744,51 +792,6 @@ gfxUserFontSet::FindFontEntry(gfxFontFamily *aFamily,
 
     // if either loading or an error occurred, return null
     return nullptr;
-}
-
-// This is called when a font download finishes.
-// Ownership of aFontData passes in here, and the font set must
-// ensure that it is eventually deleted via NS_Free().
-bool
-gfxUserFontSet::OnLoadComplete(gfxUserFontFamily *aFamily,
-                               gfxUserFontEntry *aUserFontEntry,
-                               const uint8_t* aFontData, uint32_t aLength,
-                               nsresult aDownloadStatus)
-{
-    // forget about the loader, as we no longer potentially need to cancel it
-    // if the entry is obsoleted
-    aUserFontEntry->mLoader = nullptr;
-
-    // download successful, make platform font using font data
-    if (NS_SUCCEEDED(aDownloadStatus)) {
-        gfxFontEntry *fe = aUserFontEntry->LoadFont(aFamily, aFontData, aLength);
-        aFontData = nullptr;
-
-        if (fe) {
-            IncrementGeneration();
-            return true;
-        }
-
-    } else {
-        // download failed
-        LogMessage(aFamily, aUserFontEntry,
-                   "download failed", nsIScriptError::errorFlag,
-                   aDownloadStatus);
-    }
-
-    if (aFontData) {
-        moz_free((void*)aFontData);
-    }
-
-    // error occurred, load next src
-    (void)aUserFontEntry->LoadNext(aFamily, mLocalRulesUsed);
-
-    // We ignore the status returned by LoadNext();
-    // even if loading failed, we need to bump the font-set generation
-    // and return true in order to trigger reflow, so that fallback
-    // will be used where the text was "masked" by the pending download
-    IncrementGeneration();
-    return true;
 }
 
 void
@@ -830,33 +833,6 @@ gfxUserFontSet::GetFamily(const nsAString& aFamilyName)
         mFontFamilies.Put(key, family);
     }
     return family;
-}
-
-struct FindFamilyCallbackData {
-    gfxFontEntry  *mFontEntry;
-    gfxFontFamily *mFamily;
-};
-
-static PLDHashOperator
-FindFamilyCallback(const nsAString& aName,
-                   gfxUserFontFamily* aFamily,
-                   void* aUserArg)
-{
-    FindFamilyCallbackData *d = static_cast<FindFamilyCallbackData*>(aUserArg);
-    if (aFamily->ContainsFace(d->mFontEntry)) {
-        d->mFamily = aFamily;
-        return PL_DHASH_STOP;
-    }
-
-    return PL_DHASH_NEXT;
-}
-
-gfxFontFamily*
-gfxUserFontSet::FindFamilyFor(gfxFontEntry* aFontEntry) const
-{
-    FindFamilyCallbackData d = { aFontEntry, nullptr };
-    mFontFamilies.EnumerateRead(FindFamilyCallback, &d);
-    return d.mFamily;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -932,7 +908,7 @@ gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
 }
 
 static bool
-IgnorePrincipal(nsIURI *aURI)
+IgnorePrincipal(nsIURI* aURI)
 {
     nsresult rv;
     bool inherits = false;
@@ -945,7 +921,7 @@ IgnorePrincipal(nsIURI *aURI)
 bool
 gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
 {
-    const gfxFontEntry *fe = aKey->mFontEntry;
+    const gfxFontEntry* fe = aKey->mFontEntry;
     // CRC32 checking mode
     if (mLength || aKey->mLength) {
         if (aKey->mLength != mLength ||
@@ -986,7 +962,7 @@ gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
 }
 
 void
-gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry,
+gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry* aFontEntry,
                                          EntryPersistence aPersistence)
 {
     NS_ASSERTION(aFontEntry->mFamilyName.Length() != 0,
@@ -997,7 +973,7 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry,
         nsCOMPtr<nsIObserverService> obs =
             mozilla::services::GetObserverService();
         if (obs) {
-            Flusher *flusher = new Flusher;
+            Flusher* flusher = new Flusher;
             obs->AddObserver(flusher, "cacheservice:empty-cache",
                              false);
             obs->AddObserver(flusher, "last-pb-context-exited", false);
@@ -1005,7 +981,7 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry,
         }
     }
 
-    gfxUserFontData *data = aFontEntry->mUserFontData;
+    gfxUserFontData* data = aFontEntry->mUserFontData;
     if (data->mLength) {
         MOZ_ASSERT(aPersistence == kPersistent);
         MOZ_ASSERT(!data->mPrivate);
@@ -1016,7 +992,7 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry,
         // For data: URIs, the principal is ignored; anyone who has the same
         // data: URI is able to load it and get an equivalent font.
         // Otherwise, the principal is used as part of the cache key.
-        nsIPrincipal *principal;
+        nsIPrincipal* principal;
         if (IgnorePrincipal(data->mURI)) {
             principal = nullptr;
         } else {
@@ -1033,7 +1009,7 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry,
 }
 
 void
-gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry *aFontEntry)
+gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry* aFontEntry)
 {
     if (!sUserFonts) {
         // if we've already deleted the cache (i.e. during shutdown),
@@ -1054,17 +1030,17 @@ gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry *aFontEntry)
 }
 
 gfxFontEntry*
-gfxUserFontSet::UserFontCache::GetFont(nsIURI            *aSrcURI,
-                                       nsIPrincipal      *aPrincipal,
-                                       gfxUserFontEntry  *aUserFontEntry,
-                                       bool               aPrivate)
+gfxUserFontSet::UserFontCache::GetFont(nsIURI* aSrcURI,
+                                       nsIPrincipal* aPrincipal,
+                                       gfxUserFontEntry* aUserFontEntry,
+                                       bool aPrivate)
 {
     if (!sUserFonts) {
         return nullptr;
     }
 
     // Ignore principal when looking up a data: URI.
-    nsIPrincipal *principal;
+    nsIPrincipal* principal;
     if (IgnorePrincipal(aSrcURI)) {
         principal = nullptr;
     } else {
