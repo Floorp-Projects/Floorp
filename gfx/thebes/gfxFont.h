@@ -288,7 +288,7 @@ public:
     uint16_t Weight() const { return mWeight; }
     int16_t Stretch() const { return mStretch; }
 
-    bool IsUserFont() const { return mIsUserFont; }
+    bool IsUserFont() const { return mIsDataUserFont || mIsLocalUserFont; }
     bool IsLocalUserFont() const { return mIsLocalUserFont; }
     bool IsFixedPitch() const { return mFixedPitch; }
     bool IsItalic() const { return mItalic; }
@@ -337,7 +337,7 @@ public:
     nsresult InitializeUVSMap();
     uint16_t GetUVSGlyph(uint32_t aCh, uint32_t aVS);
 
-    // All concrete gfxFontEntry subclasses (except gfxProxyFontEntry) need
+    // All concrete gfxFontEntry subclasses (except gfxUserFontEntry) need
     // to override this, otherwise the font will never be used as it will
     // be considered to support no characters.
     // ReadCMAP() must *always* set the mCharacterMap pointer to a valid
@@ -555,11 +555,11 @@ public:
 
     bool             mItalic      : 1;
     bool             mFixedPitch  : 1;
-    bool             mIsProxy     : 1;
     bool             mIsValid     : 1;
     bool             mIsBadUnderlineFont : 1;
-    bool             mIsUserFont  : 1;
-    bool             mIsLocalUserFont  : 1;
+    bool             mIsUserFontContainer : 1;
+    bool             mIsDataUserFont : 1;
+    bool             mIsLocalUserFont : 1;
     bool             mStandardFace : 1;
     bool             mSymbolFont  : 1;
     bool             mIgnoreGDEF  : 1;

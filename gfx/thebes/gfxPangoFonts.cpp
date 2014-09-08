@@ -335,7 +335,6 @@ protected:
         mItalic = aItalic;
         mWeight = aWeight;
         mStretch = aStretch;
-        mIsUserFont = true;
     }
 
     // Helper function to change a pattern so that it matches the CSS style
@@ -458,6 +457,7 @@ public:
           mFontData(aData), mFace(aFace)
     {
         NS_PRECONDITION(aFace != nullptr, "aFace is NULL!");
+        mIsDataUserFont = true;
         InitPattern();
     }
 

@@ -111,9 +111,10 @@ gfxCharacterMap::NotifyReleased()
 
 gfxFontEntry::gfxFontEntry() :
     mItalic(false), mFixedPitch(false),
-    mIsProxy(false), mIsValid(true),
+    mIsValid(true),
     mIsBadUnderlineFont(false),
-    mIsUserFont(false),
+    mIsUserFontContainer(false),
+    mIsDataUserFont(false),
     mIsLocalUserFont(false),
     mStandardFace(false),
     mSymbolFont(false),
@@ -146,8 +147,10 @@ gfxFontEntry::gfxFontEntry() :
 
 gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     mName(aName), mItalic(false), mFixedPitch(false),
-    mIsProxy(false), mIsValid(true),
-    mIsBadUnderlineFont(false), mIsUserFont(false),
+    mIsValid(true),
+    mIsBadUnderlineFont(false),
+    mIsUserFontContainer(false),
+    mIsDataUserFont(false),
     mIsLocalUserFont(false), mStandardFace(aIsStandardFace),
     mSymbolFont(false),
     mIgnoreGDEF(false),
@@ -196,7 +199,7 @@ gfxFontEntry::~gfxFontEntry()
 
     // For downloaded fonts, we need to tell the user font cache that this
     // entry is being deleted.
-    if (!mIsProxy && IsUserFont() && !IsLocalUserFont()) {
+    if (mIsDataUserFont) {
         gfxUserFontSet::UserFontCache::ForgetFont(this);
     }
 
@@ -1797,7 +1800,7 @@ gfxFontFamily::ReadAllCMAPs(FontInfoData *aFontInfoData)
     for (i = 0; i < numFonts; i++) {
         gfxFontEntry *fe = mAvailableFonts[i];
         // don't try to load cmaps for downloadable fonts not yet loaded
-        if (!fe || fe->mIsProxy) {
+        if (!fe || fe->mIsUserFontContainer) {
             continue;
         }
         fe->ReadCMAP(aFontInfoData);
