@@ -10,10 +10,7 @@ include $(topsrcdir)/config/rules.mk
 
 exclude_files = \
   test \
-  install.rdf \
-  bootstrap.js \
-  icon.png \
-  icon64.png \
+  README.mozilla \
   $(NULL)
 
 $(FINAL_TARGET)/chrome/pdfjs.manifest: $(GLOBAL_DEPS)
