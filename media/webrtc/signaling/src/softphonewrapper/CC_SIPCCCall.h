@@ -18,6 +18,16 @@ typedef struct Timecard Timecard;
 #include "common/Wrapper.h"
 #include "common/csf_common.h"
 
+extern "C" {
+#include "cpr_types.h"
+}
+
+struct fsm_fcb_t_;
+typedef struct fsm_fcb_t_ fsm_fcb_t;
+
+struct cc_feature_t_;
+typedef struct cc_feature_t_ cc_feature_t;
+
 namespace CSF
 {
     struct StreamInfo
@@ -65,8 +75,16 @@ namespace CSF
     private:
         cc_call_handle_t callHandle;
         explicit CC_SIPCCCall (cc_call_handle_t aCallHandle);
+        virtual ~CC_SIPCCCall();
         CC_SIPCCCallMediaDataPtr  pMediaData;
         std::string peerconnection;  // The peerconnection handle
+        fsm_fcb_t* getFcb() const;
+        fsm_fcb_t* preOperationBoilerplate(cc_feature_t *command, Timecard *tc);
+        string_t localSdp;
+        string_t remoteSdp;
+        string_t errorString;
+        pc_error error;
+
 
     public:
         virtual inline std::string toString() {
@@ -76,6 +94,13 @@ namespace CSF
             result = tmpString;
             return result;
         };
+
+        virtual void getLocalSdp(std::string *sdp) const;
+        virtual void getRemoteSdp(std::string *sdp) const;
+        virtual fsmdef_states_t getFsmState () const;
+        virtual std::string fsmStateToString (fsmdef_states_t state) const;
+        virtual void getErrorString(std::string *error) const;
+        virtual pc_error getError() const;
 
         virtual void setRemoteWindow (VideoWindowHandle window);
         virtual int setExternalRenderer(VideoFormat vFormat, ExternalRendererHandle renderer);
@@ -113,19 +138,19 @@ namespace CSF
         virtual void removeStream(int streamId);
         virtual bool setVolume(int volume);
         virtual void originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip);
-        virtual void createOffer(cc_media_options_t *options, Timecard *);
-        virtual void createAnswer(Timecard *);
-        virtual void setLocalDescription(cc_jsep_action_t action, const std::string & sdp, Timecard *);
-        virtual void setRemoteDescription(cc_jsep_action_t action, const std::string & sdp, Timecard *);
-        virtual void setPeerConnection(const std::string& handle);
+        virtual pc_error createOffer(cc_media_options_t *options, Timecard*);
+        virtual pc_error createAnswer(Timecard*);
+        virtual pc_error setLocalDescription(cc_jsep_action_t action, const std::string & sdp, Timecard*);
+        virtual pc_error setRemoteDescription(cc_jsep_action_t action, const std::string & sdp, Timecard*);
+        virtual pc_error setPeerConnection(const std::string& handle);
         virtual const std::string& getPeerConnection() const;
-        virtual void addStream(cc_media_stream_id_t stream_id,
+        virtual pc_error addStream(cc_media_stream_id_t stream_id,
                                cc_media_track_id_t track_id,
                                cc_media_type_t media_type);
-        virtual void removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
+        virtual pc_error removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
         virtual CC_SIPCCCallMediaDataPtr getMediaData();
-        virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *);
-        virtual void foundICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *);
+        virtual pc_error addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard*);
+        virtual pc_error foundICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard*);
 
     private:
         virtual bool setAudioMute(bool mute);

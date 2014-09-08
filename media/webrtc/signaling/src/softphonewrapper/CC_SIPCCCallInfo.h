@@ -79,11 +79,6 @@ namespace CSF
         virtual bool isMediaStateAvailable();
         virtual bool isAudioMuted();
         virtual bool isVideoMuted();
-        virtual std::string getSDP();
-        virtual std::string getCandidate();
-        virtual cc_int32_t getStatusCode();
-        virtual MediaStreamTable* getMediaStreams() const;
-        virtual Timecard *takeTimecard();
 
         virtual void setMediaData(CC_SIPCCCallMediaDataPtr  pMediaData);
 

@@ -748,4 +748,38 @@ void fsmdef_update_media_cap_feature_event(cc_feature_t *msg);
 boolean fsmcnd_conf_call_id_valid(fsmcnf_ccb_t   *ccb);
 
 boolean fsmdef_check_retain_fwd_info_state(void);
+
+
+pc_error fsmdef_setpeerconnection(fsm_fcb_t *fcb, cc_feature_t *msg);
+pc_error fsmdef_createoffer(fsm_fcb_t *fcb,
+                            cc_feature_t *msg,
+                            string_t *sdp_outparam,
+                            string_t *error_outparam);
+pc_error fsmdef_createanswer(fsm_fcb_t *fcb,
+                             cc_feature_t *msg,
+                             string_t *sdp_outparam,
+                             string_t *error_outparam);
+pc_error fsmdef_setlocaldesc(fsm_fcb_t *fcb,
+                             cc_feature_t *msg,
+                             string_t *sdp_outparam,
+                             string_t *error_outparam);
+pc_error fsmdef_setremotedesc(fsm_fcb_t *fcb,
+                              cc_feature_t *msg,
+                              string_t *sdp_outparam,
+                              string_t *error_outparam);
+pc_error fsmdef_addcandidate(fsm_fcb_t *fcb,
+                             cc_feature_t *msg,
+                             string_t *sdp_outparam,
+                             string_t *error_outparam);
+pc_error fsmdef_foundcandidate(fsm_fcb_t *fcb,
+                               cc_feature_t *msg,
+                               string_t *sdp_outparam,
+                               string_t *error_outparam);
+pc_error fsmdef_removestream(fsm_fcb_t *fcb,
+                             cc_feature_t *msg,
+                             string_t *error_outparam);
+pc_error fsmdef_addstream(fsm_fcb_t *fcb,
+                          cc_feature_t *msg,
+                          string_t *error_outparam);
+
 #endif
