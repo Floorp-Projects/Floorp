@@ -33,13 +33,24 @@ let gSearch = {
     if (event) {
       event.preventDefault();
     }
-    let searchStr = this._nodes.text.value;
+    let searchText = this._nodes.text;
+    let searchStr = searchText.value;
     if (this.currentEngineName && searchStr.length) {
-      this._send("Search", {
+
+      let eventData = {
         engineName: this.currentEngineName,
         searchString: searchStr,
         whence: "newtab",
-      });
+      }
+
+      if (searchText.hasAttribute("selection-index")) {
+        eventData.selection = {
+          index: searchText.getAttribute("selection-index"),
+          kind: searchText.getAttribute("selection-kind")
+        };
+      }
+
+      this._send("Search", eventData);
     }
     this._suggestionController.addInputValueToFormHistory();
   },
