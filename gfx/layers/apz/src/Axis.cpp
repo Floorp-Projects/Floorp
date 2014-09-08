@@ -207,12 +207,12 @@ void Axis::ClearOverscroll() {
   mOverscroll = 0;
 }
 
-float Axis::PanDistance() const {
-  return fabsf((mPos - mStartPos).value);
+ScreenCoord Axis::PanDistance() const {
+  return fabs(mPos - mStartPos);
 }
 
-float Axis::PanDistance(ScreenCoord aPos) const {
-  return fabsf((aPos - mStartPos).value);
+ScreenCoord Axis::PanDistance(ScreenCoord aPos) const {
+  return fabs(aPos - mStartPos);
 }
 
 void Axis::EndTouch(uint32_t aTimestampMs) {

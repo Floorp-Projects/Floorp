@@ -1544,7 +1544,7 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool 
   mX.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.x, aEvent.mTime);
   mY.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.y, aEvent.mTime);
 
-  HandlePanningUpdate(aEvent.mPanDisplacement.x, aEvent.mPanDisplacement.y);
+  HandlePanningUpdate(aEvent.mPanDisplacement);
 
   // TODO: Handle pan events sent without pan begin / pan end events properly.
   if (mPanGestureState) {
@@ -1772,16 +1772,16 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
   }
 }
 
-void AsyncPanZoomController::HandlePanningUpdate(float aDX, float aDY) {
+void AsyncPanZoomController::HandlePanningUpdate(const ScreenPoint& aDelta) {
   // If we're axis-locked, check if the user is trying to break the lock
   if (GetAxisLockMode() == STICKY && !mPanDirRestricted) {
 
-    double angle = atan2(aDY, aDX); // range [-pi, pi]
+    double angle = atan2(aDelta.y, aDelta.x); // range [-pi, pi]
     angle = fabs(angle); // range [0, pi]
 
     float breakThreshold = gfxPrefs::APZAxisBreakoutThreshold() * APZCTreeManager::GetDPI();
 
-    if (fabs(aDX) > breakThreshold || fabs(aDY) > breakThreshold) {
+    if (fabs(aDelta.x) > breakThreshold || fabs(aDelta.y) > breakThreshold) {
       if (mState == PANNING_LOCKED_X || mState == CROSS_SLIDING_X) {
         if (!IsCloseToHorizontal(angle, gfxPrefs::APZAxisBreakoutAngle())) {
           mY.SetAxisLocked(false);
@@ -2026,9 +2026,9 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
   ScreenPoint prevTouchPoint(mX.GetPos(), mY.GetPos());
   ScreenPoint touchPoint = GetFirstTouchScreenPoint(aEvent);
 
-  float dx = mX.PanDistance(touchPoint.x);
-  float dy = mY.PanDistance(touchPoint.y);
-  HandlePanningUpdate(dx, dy);
+  ScreenPoint delta(mX.PanDistance(touchPoint.x),
+                    mY.PanDistance(touchPoint.y));
+  HandlePanningUpdate(delta);
 
   UpdateWithTouchAtDevicePoint(aEvent);
 
