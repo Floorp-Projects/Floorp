@@ -326,6 +326,28 @@ public:
    */
   int32_t GetLastTouchIdentifier() const;
 
+  /**
+   * Convert the vector |aVector|, rooted at the point |aAnchor|, from
+   * this APZC's local screen coordinates into global screen coordinates.
+   * The anchor is necessary because with 3D tranforms, the location of the
+   * vector can affect the result of the transform.
+   * To respect the lock ordering, mMonitor must NOT be held when calling
+   * this function (since this function acquires the tree lock).
+   */
+  void ToGlobalScreenCoordinates(ScreenPoint* aVector,
+                                 const ScreenPoint& aAnchor) const;
+
+  /**
+   * Convert the vector |aVector|, rooted at the point |aAnchor|, from
+   * global screen coordinates into this APZC's local screen coordinates .
+   * The anchor is necessary because with 3D tranforms, the location of the
+   * vector can affect the result of the transform.
+   * To respect the lock ordering, mMonitor must NOT be held when calling
+   * this function (since this function acquires the tree lock).
+   */
+  void ToLocalScreenCoordinates(ScreenPoint* aVector,
+                                const ScreenPoint& aAnchor) const;
+
 protected:
   enum PanZoomState {
     NOTHING,                  /* no touch-start events received */
