@@ -532,32 +532,6 @@ NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)
 {
-  // We don't want to report exceptions too eagerly, but warnings in the
-  // absence of werror are swallowed whole, so report those now.
-  if (!JSREPORT_IS_WARNING(report->flags)) {
-    nsIXPConnect* xpc = nsContentUtils::XPConnect();
-    if (JS::DescribeScriptedCaller(cx)) {
-      xpc->MarkErrorUnreported(cx);
-      return;
-    }
-
-    if (xpc) {
-      nsAXPCNativeCallContext *cc = nullptr;
-      xpc->GetCurrentNativeCallContext(&cc);
-      if (cc) {
-        nsAXPCNativeCallContext *prev = cc;
-        while (NS_SUCCEEDED(prev->GetPreviousCallContext(&prev)) && prev) {
-          uint16_t lang;
-          if (NS_SUCCEEDED(prev->GetLanguage(&lang)) &&
-            lang == nsAXPCNativeCallContext::LANG_JS) {
-            xpc->MarkErrorUnreported(cx);
-            return;
-          }
-        }
-      }
-    }
-  }
-
   JS::Rooted<JS::Value> exception(cx);
   ::JS_GetPendingException(cx, &exception);
 
