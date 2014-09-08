@@ -25,7 +25,7 @@ using namespace mozilla::ipc;
 
 static const nsLiteralString SEOriginString[] = {
   NS_LITERAL_STRING("SIM"),
-  NS_LITERAL_STRING("ESE"),
+  NS_LITERAL_STRING("eSE"),
   NS_LITERAL_STRING("ASSD")
 };
 
