@@ -84,6 +84,7 @@ MediaSourceReader::RequestAudioData()
     GetCallback()->OnDecodeError();
     return;
   }
+  mAudioIsSeeking = false;
   SwitchAudioReader(double(mLastAudioTime) / USECS_PER_S);
   mAudioReader->RequestAudioData();
 }
@@ -104,14 +105,12 @@ MediaSourceReader::OnAudioDecoded(AudioData* aSample)
     mDropAudioBeforeThreshold = false;
   }
 
-  // If we are seeking we need to make sure the first sample decoded after
-  // that seek has the mDiscontinuity field set to ensure the media decoder
-  // state machine picks up that the seek is complete.
-  if (mAudioIsSeeking) {
-    mAudioIsSeeking = false;
-    aSample->mDiscontinuity = true;
+  // Any OnAudioDecoded callbacks received while mAudioIsSeeking must be not
+  // update our last used timestamp, as these are emitted by the reader we're
+  // switching away from.
+  if (!mAudioIsSeeking) {
+    mLastAudioTime = aSample->mTime + aSample->mDuration;
   }
-  mLastAudioTime = aSample->mTime + aSample->mDuration;
   GetCallback()->OnAudioDecoded(aSample);
 }
 
@@ -146,6 +145,7 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
     mDropAudioBeforeThreshold = true;
     mDropVideoBeforeThreshold = true;
   }
+  mVideoIsSeeking = false;
   SwitchVideoReader(double(mLastVideoTime) / USECS_PER_S);
   mVideoReader->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold);
 }
@@ -166,14 +166,12 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
     mDropVideoBeforeThreshold = false;
   }
 
-  // If we are seeking we need to make sure the first sample decoded after
-  // that seek has the mDiscontinuity field set to ensure the media decoder
-  // state machine picks up that the seek is complete.
-  if (mVideoIsSeeking) {
-    mVideoIsSeeking = false;
-    aSample->mDiscontinuity = true;
+  // Any OnVideoDecoded callbacks received while mVideoIsSeeking must be not
+  // update our last used timestamp, as these are emitted by the reader we're
+  // switching away from.
+  if (!mVideoIsSeeking) {
+    mLastVideoTime = aSample->mTime + aSample->mDuration;
   }
-  mLastVideoTime = aSample->mTime + aSample->mDuration;
   GetCallback()->OnVideoDecoded(aSample);
 }
 
