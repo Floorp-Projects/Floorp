@@ -490,7 +490,7 @@ protected:
   /**
    * Update the panning state and axis locks.
    */
-  void HandlePanningUpdate(float aDX, float aDY);
+  void HandlePanningUpdate(const ScreenPoint& aDelta);
 
   /**
    * Sets up anything needed for panning. This takes us out of the "TOUCHING"
