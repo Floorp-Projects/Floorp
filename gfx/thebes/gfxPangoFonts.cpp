@@ -812,16 +812,27 @@ FindFontPatterns(gfxUserFontSet *mUserFontSet,
     gfxUserFcFontEntry *fontEntry = nullptr;
     gfxFontFamily *family = mUserFontSet->LookupFamily(utf16Family);
     if (family) {
-        fontEntry = static_cast<gfxUserFcFontEntry*>
-            (mUserFontSet->FindFontEntry(family, style, needsBold,
-                                         aWaitForUserFont));
+        gfxUserFontEntry* userFontEntry =
+            mUserFontSet->FindUserFontEntry(family, style, needsBold,
+                                            aWaitForUserFont);
+        if (userFontEntry) {
+            fontEntry = static_cast<gfxUserFcFontEntry*>
+                (userFontEntry->GetPlatformFontEntry());
+        }
 
         // Accept synthetic oblique for italic and oblique.
+        // xxx - this isn't really ideal behavior, for docs that only use a
+        //       single italic face it will also pull down the normal face
+        //       and probably never use it
         if (!fontEntry && aStyle != NS_FONT_STYLE_NORMAL) {
             style.style = NS_FONT_STYLE_NORMAL;
-            fontEntry = static_cast<gfxUserFcFontEntry*>
-                (mUserFontSet->FindFontEntry(family, style, needsBold,
-                                             aWaitForUserFont));
+            userFontEntry = mUserFontSet->FindUserFontEntry(family, style,
+                                                            needsBold,
+                                                            aWaitForUserFont);
+            if (userFontEntry) {
+                fontEntry = static_cast<gfxUserFcFontEntry*>
+                    (userFontEntry->GetPlatformFontEntry());
+            }
         }
     }
 
@@ -1009,7 +1020,7 @@ gfxFcFontSet::SortPreferredFonts(bool &aWaitForUserFont)
             }
 
             // User fonts are already filtered by slant (but not size) in
-            // mUserFontSet->FindFontEntry().
+            // mUserFontSet->FindUserFontEntry().
             if (requestedSize != -1.0 && !SizeIsAcceptable(font, requestedSize))
                 continue;
 

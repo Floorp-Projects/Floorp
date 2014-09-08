@@ -1333,6 +1333,27 @@ gfxFontFamily::CheckForSimpleFamily()
     mIsSimpleFamily = true;
 }
 
+#ifdef DEBUG
+bool
+gfxFontFamily::ContainsFace(gfxFontEntry* aFontEntry) {
+    uint32_t i, numFonts = mAvailableFonts.Length();
+    for (i = 0; i < numFonts; i++) {
+        if (mAvailableFonts[i] == aFontEntry) {
+            return true;
+        }
+        // userfonts contain the actual real font entry
+        if (mAvailableFonts[i]->mIsUserFontContainer) {
+            gfxUserFontEntry* ufe =
+                static_cast<gfxUserFontEntry*>(mAvailableFonts[i].get());
+            if (ufe->GetPlatformFontEntry() == aFontEntry) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+#endif
+
 static inline uint32_t
 StyleDistance(gfxFontEntry *aFontEntry,
               bool anItalic, int16_t aStretch)
@@ -5041,8 +5062,13 @@ gfxFontGroup::FindPlatformFont(const nsAString& aName,
             family = mUserFontSet->LookupFamily(aName);
             if (family) {
                 bool waitForUserFont = false;
-                fe = mUserFontSet->FindFontEntry(family, mStyle,
-                                                 needsBold, waitForUserFont);
+                gfxUserFontEntry* userFontEntry = nullptr;
+                userFontEntry = mUserFontSet->FindUserFontEntry(family, mStyle,
+                                                                needsBold,
+                                                                waitForUserFont);
+                if (userFontEntry) {
+                    fe = userFontEntry->GetPlatformFontEntry();
+                }
                 if (!fe && waitForUserFont) {
                     mSkipDrawing = true;
                 }
@@ -5052,7 +5078,7 @@ gfxFontGroup::FindPlatformFont(const nsAString& aName,
 
     // Not known in the user font set ==> check system fonts
     if (!family) {
-        gfxPlatformFontList *fontList = gfxPlatformFontList::PlatformFontList();
+        gfxPlatformFontList* fontList = gfxPlatformFontList::PlatformFontList();
         family = fontList->FindFamily(aName, mStyle.systemFont);
         if (family) {
             fe = family->FindFontForStyle(mStyle, needsBold);
