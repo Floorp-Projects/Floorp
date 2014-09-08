@@ -63,7 +63,7 @@ interface nsIURIFixupInfo : nsISupports
 /**
  * Interface implemented by objects capable of fixing up strings into URIs
  */
-[scriptable, uuid(80d4932e-bb2e-4afb-98e0-de9cc9ea7d82)]
+[scriptable, uuid(49298f2b-3630-4874-aecc-522300a7fead)]
 interface nsIURIFixup : nsISupports
 {
     /** No fixup flags. */
@@ -83,11 +83,17 @@ interface nsIURIFixup : nsISupports
     const unsigned long FIXUP_FLAGS_MAKE_ALTERNATE_URI = 2;
 
     /**
+     * For an input that may be just a domain with only 1 level (eg, "mozilla"),
+     * require that the host be whitelisted.
+     *
+     * Overridden by FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP.
+     */
+    const unsigned long FIXUP_FLAG_REQUIRE_WHITELISTED_HOST = 4;
+
+    /*
      * Fix common scheme typos.
      */
     const unsigned long FIXUP_FLAG_FIX_SCHEME_TYPOS = 8;
-
-    /* Note that flag 4 is available. */
 
     /**
      * Converts an internal URI (e.g. a wyciwyg URI) into one which we can
