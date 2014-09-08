@@ -79,6 +79,10 @@ static const char kCybertrust_Global_RootFingerprint[] =
 static const char kDigiCert_Assured_ID_Root_CAFingerprint[] =
   "I/Lt/z7ekCWanjD0Cvj5EqXls2lOaThEA0H2Bg4BT/o=";
 
+/* DigiCert ECC Secure Server CA */
+static const char kDigiCert_ECC_Secure_Server_CAFingerprint[] =
+  "PZXN3lRAy+8tBKk2Ox6F7jIlnzr2Yzmwqc3JnyfXoCw=";
+
 /* DigiCert Global Root CA */
 static const char kDigiCert_Global_Root_CAFingerprint[] =
   "r/mIkG3eEpVdm+u/ko/cwxzOMo1bk4TyHIlByibiA5E=";
@@ -364,6 +368,7 @@ struct StaticPinset {
 
 /* PreloadedHPKPins.json pinsets */
 static const char* kPinset_facebook_sha256_Data[] = {
+  kDigiCert_ECC_Secure_Server_CAFingerprint,
   kVerisign_Class_3_Public_Primary_Certification_Authority___G3Fingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
 };
@@ -1087,4 +1092,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1418465237331000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1418659817121000);
