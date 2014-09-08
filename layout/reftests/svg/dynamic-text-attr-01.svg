@@ -1,0 +1,46 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     style="font: 16px sans-serif">
+
+  <title>Testcase for modifying attributes on child text content elements</title>
+
+  <text x="20" y="20" data-test="x=200">Test 1</text>
+  <text x="20" y="40" data-test="y=60">Test 2</text>
+  <text x="20" y="80" data-test="rotate=10">Test 3</text>
+  <text>
+    <tspan x="20" y="100" data-test="x=200">Test 4</tspan>
+  </text>
+  <text>
+    <tspan x="20" y="120" data-test="y=140">Test 5</tspan>
+  </text>
+  <text>
+    <tspan x="20" y="160" data-test="rotate=30">Test 6</tspan>
+  </text>
+  <path id="p" d="M 20,180 h 400"/>
+  <text>
+    <textPath xlink:href="#p" data-test="startOffset=180">Test 7</textPath>
+  </text>
+  <text x="20" y="200" textLength="100" lengthAdjust="spacing" data-test="lengthAdjust=spacingAndGlyphs">Test 8</text>
+  <!-- We don't support textLength/lengthAdjust on child text content
+       elements currently (bug 890692), so Test 9 doesn't really test
+       anything at the moment.  But it is the only animatable enumerated
+       attribute value on text content elements to test. -->
+  <text>
+    <tspan x="20" y="220" textLength="100" lengthAdjust="spacing" data-test="lengthAdjust=spacingAndGlyphs">Test 9</tspan>
+  </text>
+
+  <script>
+    window.addEventListener("MozReftestInvalidate", function() {
+      [...document.querySelectorAll("[data-test]")].forEach(function(e) {
+        var [name, value] = e.getAttribute("data-test").split("=");
+        e.setAttribute(name, value);
+      });
+      document.documentElement.removeAttribute("class");
+    }, false);
+  </script>
+</svg>

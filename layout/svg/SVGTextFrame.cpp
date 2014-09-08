@@ -3388,30 +3388,37 @@ SVGTextFrame::MutationObserver::AttributeChanged(
     return;
   }
 
-  // Attribute changes on this element are handled in
+  // Attribute changes on this element will be handled by
   // SVGTextFrame::AttributeChanged.
   if (aElement == mFrame->GetContent()) {
     return;
   }
 
-  // Attributes changes on descendent elements.
+  mFrame->HandleAttributeChangeInDescendant(aElement, aNameSpaceID, aAttribute);
+}
+
+void
+SVGTextFrame::HandleAttributeChangeInDescendant(Element* aElement,
+                                                int32_t aNameSpaceID,
+                                                nsIAtom* aAttribute)
+{
   if (aElement->Tag() == nsGkAtoms::textPath) {
     if (aNameSpaceID == kNameSpaceID_None &&
         aAttribute == nsGkAtoms::startOffset) {
-      mFrame->NotifyGlyphMetricsChange();
+      NotifyGlyphMetricsChange();
     } else if (aNameSpaceID == kNameSpaceID_XLink &&
                aAttribute == nsGkAtoms::href) {
       // Blow away our reference, if any
       nsIFrame* childElementFrame = aElement->GetPrimaryFrame();
       if (childElementFrame) {
         childElementFrame->Properties().Delete(nsSVGEffects::HrefProperty());
-        mFrame->NotifyGlyphMetricsChange();
+        NotifyGlyphMetricsChange();
       }
     }
   } else {
     if (aNameSpaceID == kNameSpaceID_None &&
         IsGlyphPositioningAttribute(aAttribute)) {
-      mFrame->NotifyGlyphMetricsChange();
+      NotifyGlyphMetricsChange();
     }
   }
 }

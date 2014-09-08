@@ -85,6 +85,10 @@ public:
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
+                                    nsIAtom* aAttribute,
+                                    int32_t aModType) MOZ_OVERRIDE;
+
   virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
 
   virtual void PullOverflowsFromPrevInFlow() MOZ_OVERRIDE;
