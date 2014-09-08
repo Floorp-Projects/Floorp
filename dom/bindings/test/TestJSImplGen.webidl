@@ -451,10 +451,6 @@ interface TestJSImplInterface {
   void passUnion20(optional (sequence<object> or long) arg = []);
   void passUnion21((MozMap<long> or long) arg);
   void passUnion22((MozMap<object> or long) arg);
-  void passUnion23((sequence<Node> or long) arg);
-  void passUnion24((sequence<Node?> or long) arg);
-  void passUnion25((sequence<sequence<Node>> or long) arg);
-  void passUnion26((sequence<sequence<Node?>> or long) arg);
   void passUnionWithCallback((EventHandler or long) arg);
   void passUnionWithByteString((ByteString or long) arg);
   void passUnionWithMozMap((MozMap<DOMString> or DOMString) arg);
