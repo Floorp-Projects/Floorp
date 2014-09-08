@@ -739,10 +739,6 @@ public:
 
     void DebugDump(int16_t depth);
 
-    void MarkErrorUnreported() { mErrorUnreported = true; }
-    void ClearUnreportedError() { mErrorUnreported = false; }
-    bool WasErrorReported() { return !mErrorUnreported; }
-
     ~XPCContext();
 
 private:
