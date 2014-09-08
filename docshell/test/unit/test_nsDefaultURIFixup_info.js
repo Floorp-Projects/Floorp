@@ -3,7 +3,8 @@ let urifixup = Cc["@mozilla.org/docshell/urifixup;1"].
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-let prefList = ["browser.fixup.typo.scheme", "keyword.enabled"];
+let prefList = ["browser.fixup.typo.scheme", "keyword.enabled",
+                "browser.fixup.domainwhitelist.whitelisted"];
 for (let pref of prefList) {
   Services.prefs.setBoolPref(pref, true);
 }
@@ -34,7 +35,8 @@ do_register_cleanup(function() {
 let flagInputs = [
   urifixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
   urifixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI,
-  urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
+  urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS,
+  urifixup.FIXUP_FLAG_REQUIRE_WHITELISTED_HOST,
 ];
 
 flagInputs.concat([
@@ -44,42 +46,192 @@ flagInputs.concat([
   flagInputs[0] | flagInputs[1] | flagInputs[2]
 ]);
 
-let testcases = [
-  ["http://www.mozilla.org", "http://www.mozilla.org/", null, false, false],
-  ["http://127.0.0.1/", "http://127.0.0.1/", null, false, false],
-  ["file:///foo/bar", "file:///foo/bar", null, false, false],
-  ["://www.mozilla.org", "http://www.mozilla.org/", null, false, true],
-  ["www.mozilla.org", "http://www.mozilla.org/", null, false, true],
-  ["http://mozilla/", "http://mozilla/", "http://www.mozilla.com/", false, false],
-  ["http://test./", "http://test./", "http://www.test./", false, false],
-  ["127.0.0.1", "http://127.0.0.1/", null, false, true],
-  ["1234", "http://1234/", "http://www.1234.com/", true, true],
-  ["host/foo.txt", "http://host/foo.txt", "http://www.host.com/foo.txt", false, true],
-  ["mozilla", "http://mozilla/", "http://www.mozilla.com/", true, true],
-  ["test.", "http://test./", "http://www.test./", true, true],
-  [".test", "http://.test/", "http://www..test/", true, true],
-  ["mozilla is amazing", null, null, true, true],
-  ["mozilla ", "http://mozilla/", "http://www.mozilla.com/", true, true],
-  ["   mozilla  ", "http://mozilla/", "http://www.mozilla.com/", true, true],
-  ["mozilla \\", null, null, true, true],
-  ["mozilla \\ foo.txt", null, null, true, true],
-  ["mozilla \\\r foo.txt", null, null, true, true],
-  ["mozilla\n", "http://mozilla/", "http://www.mozilla.com/", true, true],
-  ["mozilla \r\n", "http://mozilla/", "http://www.mozilla.com/", true, true],
-  ["moz\r\nfirefox\nos\r", "http://mozfirefoxos/", "http://www.mozfirefoxos.com/", true, true],
-  ["moz\r\n firefox\n", null, null, true, true],
-  ["", null, null, true, true],
-  ["[]", null, null, true, true]
-];
+/*
+  The following properties are supported for these test cases:
+  {
+    input: "", // Input string, required
+    fixedURI: "", // Expected fixedURI
+    alternateURI: "", // Expected alternateURI
+    keywordLookup: false, // Whether a keyword lookup is expected
+    protocolChange: false, // Whether a protocol change is expected
+    affectedByWhitelist: false, // Whether the input host is affected by the whitelist
+    inWhitelist: false, // Whether the input host is in the whitelist
+  }
+*/
+let testcases = [ {
+    input: "http://www.mozilla.org",
+    fixedURI: "http://www.mozilla.org/",
+  }, {
+    input: "http://127.0.0.1/",
+    fixedURI: "http://127.0.0.1/",
+  }, {
+    input: "file:///foo/bar",
+    fixedURI: "file:///foo/bar",
+  }, {
+    input: "://www.mozilla.org",
+    fixedURI: "http://www.mozilla.org/",
+    protocolChange: true,
+  }, {
+    input: "www.mozilla.org",
+    fixedURI: "http://www.mozilla.org/",
+    protocolChange: true,
+  }, {
+    input: "http://mozilla/",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+  }, {
+    input: "http://test./",
+    fixedURI: "http://test./",
+    alternateURI: "http://www.test./",
+  }, {
+    input: "127.0.0.1",
+    fixedURI: "http://127.0.0.1/",
+    protocolChange: true,
+  }, {
+    input: "1234",
+    fixedURI: "http://1234/",
+    alternateURI: "http://www.1234.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "host/foo.txt",
+    fixedURI: "http://host/foo.txt",
+    alternateURI: "http://www.host.com/foo.txt",
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "mozilla",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "test.",
+    fixedURI: "http://test./",
+    alternateURI: "http://www.test./",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: ".test",
+    fixedURI: "http://.test/",
+    alternateURI: "http://www..test/",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "mozilla is amazing",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "mozilla ",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "   mozilla  ",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "mozilla \\",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "mozilla \\ foo.txt",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "mozilla \\\r foo.txt",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "mozilla\n",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "mozilla \r\n",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "moz\r\nfirefox\nos\r",
+    fixedURI: "http://mozfirefoxos/",
+    alternateURI: "http://www.mozfirefoxos.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "moz\r\n firefox\n",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "[]",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "http://whitelisted/",
+    fixedURI: "http://whitelisted/",
+    alternateURI: "http://www.whitelisted.com/",
+    affectedByWhitelist: true,
+    inWhitelist: true,
+  }];
 
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
-  testcases.push(["C:\\some\\file.txt", "file:///C:/some/file.txt", null, false, true]);
-  testcases.push(["//mozilla", "http://mozilla/", "http://www.mozilla.com/", false, true]);
-  testcases.push(["mozilla\\", "http://mozilla/", "http://www.mozilla.com/", true, true]);
+  testcases.push({
+    input: "C:\\some\\file.txt",
+    fixedURI: "file:///C:/some/file.txt",
+    protocolChange: true,
+  });
+  testcases.push({
+    input: "//mozilla",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    protocolChange: true,
+    affectedByWhitelist: true,
+  });
+  testcases.push({
+    input: "mozilla\\",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  });
 } else {
-  testcases.push(["/some/file.txt", "file:///some/file.txt", null, false, true]);
-  testcases.push(["//mozilla", "file:////mozilla", null, false, true]);
-  testcases.push(["mozilla\\", "http://mozilla\\/", "http://www.mozilla/", true, true]);
+  testcases.push({
+    input: "/some/file.txt",
+    fixedURI: "file:///some/file.txt",
+    protocolChange: true,
+  });
+  testcases.push({
+    input: "//mozilla",
+    fixedURI: "file:////mozilla",
+    protocolChange: true,
+  });
+  testcases.push({
+    input: "mozilla\\",
+    fixedURI: "http://mozilla\\/",
+    alternateURI: "http://www.mozilla/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+  });
 }
 
 function sanitize(input) {
@@ -87,8 +239,20 @@ function sanitize(input) {
 }
 
 function run_test() {
-  for (let [testInput, expectedFixedURI, alternativeURI,
-            expectKeywordLookup, expectProtocolChange] of testcases) {
+  for (let { input: testInput,
+             fixedURI: expectedFixedURI,
+             alternateURI: alternativeURI,
+             keywordLookup: expectKeywordLookup,
+             protocolChange: expectProtocolChange,
+             affectedByWhitelist: affectedByWhitelist,
+             inWhitelist: inWhitelist } of testcases) {
+
+    // Explicitly force these into a boolean
+    expectKeywordLookup = !!expectKeywordLookup;
+    expectProtocolChange = !!expectProtocolChange;
+    affectedByWhitelist = !!affectedByWhitelist;
+    inWhitelist = !!inWhitelist;
+
     for (let flags of flagInputs) {
       let info;
       let fixupURIOnly = null;
@@ -109,10 +273,12 @@ function run_test() {
         continue;
       }
 
-      do_print("Checking " + testInput + " with flags " + flags);
+      do_print("Checking \"" + testInput + "\" with flags " + flags);
 
       // Both APIs should then also be using the same spec.
-      do_check_eq(fixupURIOnly.spec, info.preferredURI.spec);
+      do_check_eq(!!fixupURIOnly, !!info.preferredURI);
+      if (fixupURIOnly)
+        do_check_eq(fixupURIOnly.spec, info.preferredURI.spec);
 
       let isFileURL = expectedFixedURI && expectedFixedURI.startsWith("file");
 
@@ -131,10 +297,25 @@ function run_test() {
       do_check_eq(info.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null);
 
       // Check the preferred URI
-      if (couldDoKeywordLookup && expectKeywordLookup) {
+      let requiresWhitelistedDomain = flags & urifixup.FIXUP_FLAG_REQUIRE_WHITELISTED_HOST
+      if (couldDoKeywordLookup) {
+        if (expectKeywordLookup) {
+          if (!affectedByWhitelist || (affectedByWhitelist && !inWhitelist)) {
         let urlparamInput = encodeURIComponent(sanitize(testInput)).replace("%20", "+", "g");
         let searchURL = kSearchEngineURL.replace("{searchTerms}", urlparamInput);
         do_check_eq(info.preferredURI.spec, searchURL);
+      } else {
+            do_check_eq(info.preferredURI, null);
+          }
+        } else {
+          do_check_eq(info.preferredURI.spec, info.fixedURI.spec);
+        }
+      } else if (requiresWhitelistedDomain) {
+        // Not a keyword search, but we want to enforce the host whitelist
+        if (!affectedByWhitelist || (affectedByWhitelist && inWhitelist))
+          do_check_eq(info.preferredURI.spec, info.fixedURI.spec);
+        else
+          do_check_eq(info.preferredURI, null);
       } else {
         // In these cases, we should never be doing a keyword lookup and
         // the fixed URI should be preferred:
