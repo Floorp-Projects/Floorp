@@ -34,6 +34,9 @@ prefBranch.setBoolPref("browser.safebrowsing.enabled", true);
 // Enable all completions for tests
 prefBranch.setCharPref("urlclassifier.disallow_completions", "");
 
+// Hash completion timeout
+prefBranch.setIntPref("urlclassifier.gethash.timeout_ms", 5000);
+
 function delFile(name) {
   try {
     // Delete a previously created sqlite file
