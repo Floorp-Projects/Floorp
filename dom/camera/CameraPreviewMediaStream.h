@@ -11,23 +11,6 @@
 
 namespace mozilla {
 
-class FakeMediaStreamGraph : public MediaStreamGraph
-{
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FakeMediaStreamGraph)
-public:
-  FakeMediaStreamGraph()
-    : MediaStreamGraph()
-  {
-  }
-
-  virtual void
-  DispatchToMainThreadAfterStreamStateUpdate(already_AddRefed<nsIRunnable> aRunnable) MOZ_OVERRIDE;
-
-protected:
-  ~FakeMediaStreamGraph()
-  {}
-};
-
 /**
  * This is a stream for camera preview.
  *
@@ -67,7 +50,6 @@ protected:
   int32_t mInvalidatePending;
   uint32_t mDiscardedFrames;
   bool mRateLimit;
-  nsRefPtr<FakeMediaStreamGraph> mFakeMediaStreamGraph;
 };
 
 }
