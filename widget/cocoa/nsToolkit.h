@@ -37,8 +37,8 @@ public:
 
 protected:
 
-  nsresult           RegisterForSleepWakeNotifcations();
-  void               RemoveSleepWakeNotifcations();
+  nsresult           RegisterForSleepWakeNotifications();
+  void               RemoveSleepWakeNotifications();
 
 protected:
 
