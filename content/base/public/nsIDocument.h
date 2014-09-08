@@ -2349,8 +2349,6 @@ public:
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
   virtual mozilla::dom::SVGDocument* AsSVGDocument() { return nullptr; }
 
-  virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
-
   // Each import tree has exactly one master document which is
   // the root of the tree, and owns the browser context.
   virtual already_AddRefed<nsIDocument> MasterDocument() = 0;

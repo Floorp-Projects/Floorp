@@ -1908,6 +1908,12 @@ class Mochitest(MochitestUtilsMixin):
         stackFixerModule = import_stackFixerModule('fix_stack_using_bpsyms')
         stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line, self.symbolsPath)
 
+      elif mozinfo.isMac:
+        # Run each line through fix_macosx_stack.py (uses atos).
+        # This method is preferred for developer machines, so we don't have to run "make buildsymbols".
+        stackFixerModule = import_stackFixerModule('fix_macosx_stack')
+        stackFixerFunction = lambda line: stackFixerModule.fixSymbols(line)
+
       elif mozinfo.isLinux:
         # Run each line through fix_linux_stack.py (uses addr2line).
         # This method is preferred for developer machines, so we don't have to run "make buildsymbols".

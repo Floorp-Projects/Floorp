@@ -14,17 +14,16 @@
 typedef CFTypeRef IOSurfacePtr;
 typedef IOSurfacePtr (*IOSurfaceCreateFunc) (CFDictionaryRef properties);
 typedef IOSurfacePtr (*IOSurfaceLookupFunc) (uint32_t io_surface_id);
-typedef IOSurfaceID (*IOSurfaceGetIDFunc) (CFTypeRef io_surface);
-typedef IOReturn (*IOSurfaceLockFunc) (CFTypeRef io_surface, 
-                                       uint32_t options, 
-                                       uint32_t *seed);
-typedef IOReturn (*IOSurfaceUnlockFunc) (CFTypeRef io_surface, 
-                                         uint32_t options, 
-                                         uint32_t *seed);
-typedef void* (*IOSurfaceGetBaseAddressFunc) (CFTypeRef io_surface);
-typedef size_t (*IOSurfaceGetWidthFunc) (IOSurfacePtr io_surface);
-typedef size_t (*IOSurfaceGetHeightFunc) (IOSurfacePtr io_surface);
-typedef size_t (*IOSurfaceGetBytesPerRowFunc) (IOSurfacePtr io_surface);
+typedef IOSurfaceID (*IOSurfaceGetIDFunc)(IOSurfacePtr io_surface);
+typedef void (*IOSurfaceVoidFunc)(IOSurfacePtr io_surface);
+typedef IOReturn (*IOSurfaceLockFunc)(IOSurfacePtr io_surface, uint32_t options,
+                                      uint32_t *seed);
+typedef IOReturn (*IOSurfaceUnlockFunc)(IOSurfacePtr io_surface,
+                                        uint32_t options, uint32_t *seed);
+typedef void* (*IOSurfaceGetBaseAddressFunc)(IOSurfacePtr io_surface);
+typedef void* (*IOSurfaceGetBaseAddressOfPlaneFunc)(IOSurfacePtr io_surface,
+                                                    size_t planeIndex);
+typedef size_t (*IOSurfaceSizeTFunc)(IOSurfacePtr io_surface);
 typedef size_t (*IOSurfaceGetPropertyMaximumFunc) (CFStringRef property);
 typedef CGLError (*CGLTexImageIOSurface2DFunc) (CGLContextObj ctxt,
                              GLenum target, GLenum internalFormat,
@@ -38,6 +37,8 @@ typedef CGContextRef (*IOSurfaceContextCreateFunc)(CFTypeRef io_surface,
 typedef CGImageRef (*IOSurfaceContextCreateImageFunc)(CGContextRef ref);
 typedef IOSurfacePtr (*IOSurfaceContextGetSurfaceFunc)(CGContextRef ref);
 
+typedef IOSurfacePtr (*CVPixelBufferGetIOSurfaceFunc)(
+  CVPixelBufferRef pixelBuffer);
 
 #import <OpenGL/OpenGL.h>
 #include "2D.h"
@@ -64,6 +65,10 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(MacIOSurface)
   typedef mozilla::gfx::SourceSurface SourceSurface;
 
+  // The usage count of the IOSurface is increased by 1 during the lifetime
+  // of the MacIOSurface instance.
+  // MacIOSurface holds a reference to the corresponding IOSurface.
+
   static mozilla::TemporaryRef<MacIOSurface> CreateIOSurface(int aWidth, int aHeight,
                                                              double aContentsScaleFactor = 1.0,
                                                              bool aHasAlpha = true);
@@ -72,11 +77,14 @@ public:
                                                            double aContentsScaleFactor = 1.0,
                                                            bool aHasAlpha = true);
 
-  explicit MacIOSurface(const void *aIOSurfacePtr, double aContentsScaleFactor = 1.0, bool aHasAlpha = true)
-    : mIOSurfacePtr(aIOSurfacePtr), mContentsScaleFactor(aContentsScaleFactor), mHasAlpha(aHasAlpha) {}
+  explicit MacIOSurface(const void *aIOSurfacePtr,
+                        double aContentsScaleFactor = 1.0,
+                        bool aHasAlpha = true);
   virtual ~MacIOSurface();
   IOSurfaceID GetIOSurfaceID();
   void *GetBaseAddress();
+  void *GetBaseAddressOfPlane(size_t planeIndex);
+  size_t GetPlaneCount();
   // GetWidth() and GetHeight() return values in "display pixels".  A
   // "display pixel" is the smallest fully addressable part of a display.
   // But in HiDPI modes each "display pixel" corresponds to more than one
@@ -89,6 +97,8 @@ public:
   size_t GetBytesPerRow();
   void Lock();
   void Unlock();
+  void IncrementUseCount();
+  void DecrementUseCount();
   bool HasAlpha() { return mHasAlpha; }
   // We would like to forward declare NSOpenGLContext, but it is an @interface
   // and this file is also used from c++, so we use a void *.
@@ -117,21 +127,27 @@ public:
   static void                        *sIOSurfaceFramework;
   static void                        *sOpenGLFramework;
   static void                        *sCoreGraphicsFramework;
+  static void                        *sCoreVideoFramework;
   static bool                         isLoaded;
   static IOSurfaceCreateFunc          sCreate;
   static IOSurfaceGetIDFunc           sGetID;
   static IOSurfaceLookupFunc          sLookup;
   static IOSurfaceGetBaseAddressFunc  sGetBaseAddress;
+  static IOSurfaceGetBaseAddressOfPlaneFunc sGetBaseAddressOfPlane;
+  static IOSurfaceSizeTFunc           sPlaneCount;
   static IOSurfaceLockFunc            sLock;
   static IOSurfaceUnlockFunc          sUnlock;
-  static IOSurfaceGetWidthFunc        sWidth;
-  static IOSurfaceGetHeightFunc       sHeight;
-  static IOSurfaceGetBytesPerRowFunc  sBytesPerRow;
+  static IOSurfaceVoidFunc            sIncrementUseCount;
+  static IOSurfaceVoidFunc            sDecrementUseCount;
+  static IOSurfaceSizeTFunc           sWidth;
+  static IOSurfaceSizeTFunc           sHeight;
+  static IOSurfaceSizeTFunc           sBytesPerRow;
   static IOSurfaceGetPropertyMaximumFunc  sGetPropertyMaximum;
   static CGLTexImageIOSurface2DFunc   sTexImage;
   static IOSurfaceContextCreateFunc   sIOSurfaceContextCreate;
   static IOSurfaceContextCreateImageFunc  sIOSurfaceContextCreateImage;
   static IOSurfaceContextGetSurfaceFunc   sIOSurfaceContextGetSurface;
+  static CVPixelBufferGetIOSurfaceFunc    sCVPixelBufferGetIOSurface;
   static CFStringRef                  kPropWidth;
   static CFStringRef                  kPropHeight;
   static CFStringRef                  kPropBytesPerElem;
@@ -144,14 +160,19 @@ public:
   static IOSurfacePtr IOSurfaceLookup(IOSurfaceID aIOSurfaceID);
   static IOSurfaceID  IOSurfaceGetID(IOSurfacePtr aIOSurfacePtr);
   static void*        IOSurfaceGetBaseAddress(IOSurfacePtr aIOSurfacePtr);
+  static void*        IOSurfaceGetBaseAddressOfPlane(IOSurfacePtr aIOSurfacePtr,
+                                                     size_t aPlaneIndex);
+  static size_t       IOSurfaceGetPlaneCount(IOSurfacePtr aIOSurfacePtr);
   static size_t       IOSurfaceGetWidth(IOSurfacePtr aIOSurfacePtr);
   static size_t       IOSurfaceGetHeight(IOSurfacePtr aIOSurfacePtr);
   static size_t       IOSurfaceGetBytesPerRow(IOSurfacePtr aIOSurfacePtr);
   static size_t       IOSurfaceGetPropertyMaximum(CFStringRef property);
-  static IOReturn     IOSurfaceLock(IOSurfacePtr aIOSurfacePtr, 
+  static IOReturn     IOSurfaceLock(IOSurfacePtr aIOSurfacePtr,
                                     uint32_t options, uint32_t *seed);
-  static IOReturn     IOSurfaceUnlock(IOSurfacePtr aIOSurfacePtr, 
+  static IOReturn     IOSurfaceUnlock(IOSurfacePtr aIOSurfacePtr,
                                       uint32_t options, uint32_t *seed);
+  static void         IOSurfaceIncrementUseCount(IOSurfacePtr aIOSurfacePtr);
+  static void         IOSurfaceDecrementUseCount(IOSurfacePtr aIOSurfacePtr);
   static CGLError     CGLTexImageIOSurface2D(CGLContextObj ctxt,
                              GLenum target, GLenum internalFormat,
                              GLsizei width, GLsizei height,
@@ -163,6 +184,7 @@ public:
                              CGColorSpaceRef aColorSpace, CGBitmapInfo bitmapInfo);
   static CGImageRef   IOSurfaceContextCreateImage(CGContextRef ref);
   static IOSurfacePtr IOSurfaceContextGetSurface(CGContextRef ref);
+  static IOSurfacePtr CVPixelBufferGetIOSurface(CVPixelBufferRef apixelBuffer);
   static unsigned int (*sCGContextGetTypePtr) (CGContextRef);
   static void LoadLibrary();
   static void CloseLibrary();

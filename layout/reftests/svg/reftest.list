@@ -115,6 +115,7 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x2
 == dynamic-text-06.svg pass.svg
 == dynamic-text-07.svg dynamic-text-07-ref.svg
 == dynamic-text-08.svg dynamic-text-08-ref.svg
+== dynamic-text-attr-01.svg dynamic-text-attr-01-ref.svg
 == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
 == dynamic-textPath-02.svg dynamic-textPath-02-ref.svg
 == dynamic-textPath-03.svg dynamic-textPath-03-ref.svg

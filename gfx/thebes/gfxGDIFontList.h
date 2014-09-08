@@ -246,8 +246,10 @@ public:
                                          bool aFamilyHasItalicFace);
 
     // create a font entry for a font referenced by its fullname
-    static GDIFontEntry* LoadLocalFont(const gfxProxyFontEntry &aProxyEntry,
-                                       const nsAString& aFullname);
+    static GDIFontEntry* LoadLocalFont(const nsAString& aFontName,
+                                       uint16_t aWeight,
+                                       int16_t aStretch,
+                                       bool aItalic);
 
     uint8_t mWindowsFamily;
     uint8_t mWindowsPitch;
@@ -310,11 +312,17 @@ public:
     virtual gfxFontFamily* FindFamily(const nsAString& aFamily,
                                       bool aUseSystemFonts = false);
 
-    virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
-                                          const nsAString& aFontName);
+    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
+                                          uint16_t aWeight,
+                                          int16_t aStretch,
+                                          bool aItalic);
 
-    virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                           const uint8_t *aFontData, uint32_t aLength);
+    virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
+                                           uint16_t aWeight,
+                                           int16_t aStretch,
+                                           bool aItalic,
+                                           const uint8_t* aFontData,
+                                           uint32_t aLength);
 
     virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontListSizes* aSizes) const;

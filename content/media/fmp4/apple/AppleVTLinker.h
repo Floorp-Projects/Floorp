@@ -22,16 +22,20 @@ class AppleVTLinker
 public:
   static bool Link();
   static void Unlink();
+  static CFStringRef GetPropHWAccel();
 
 private:
   static void* sLink;
   static nsrefcnt sRefCount;
+  static CFStringRef skPropHWAccel;
 
   static enum LinkStatus {
     LinkStatus_INIT = 0,
     LinkStatus_FAILED,
     LinkStatus_SUCCEEDED
   } sLinkStatus;
+
+  static CFStringRef GetIOConst(const char* symbol);
 };
 
 #define LINK_FUNC(func) extern typeof(func)* func;

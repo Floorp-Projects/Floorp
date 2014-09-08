@@ -1481,7 +1481,7 @@ protected:
   }
 
   static TestAsyncPanZoomController* ApzcOf(Layer* aLayer) {
-    EXPECT_EQ(1, aLayer->GetFrameMetricsCount());
+    EXPECT_EQ(1u, aLayer->GetFrameMetricsCount());
     return (TestAsyncPanZoomController*)aLayer->GetAsyncPanZoomController(0);
   }
 
