@@ -187,25 +187,6 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 }
 
 void
-xpc::SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
-{
-    // It would be nice to assert !DescribeScriptedCaller here, to be sure
-    // that there isn't any script running that could catch the exception. But
-    // the JS engine invokes the error reporter directly if someone reports an
-    // ErrorReport that it doesn't know how to turn into an exception. Arguably
-    // it should just learn how to throw everything. But either way, if the
-    // exception is ending here, it's not going to get propagated to a caller,
-    // so it's up to us to make it known.
-
-    nsRefPtr<ErrorReport> report = new ErrorReport();
-    // Note that the only effect of the global we pass here is to distinguish
-    // between "chrome javascript" and "content javascript", so we can just
-    // hackily pass the privileged junk scope for the time being.
-    report->Init(rep, message, GetNativeForGlobal(xpc::PrivilegedJunkScope()));
-    report->LogToConsole();
-}
-
-void
 xpc::ErrorReport::Init(JSErrorReport *aReport,
                        const char *aFallbackMessage,
                        nsIGlobalObject *aGlobal)
