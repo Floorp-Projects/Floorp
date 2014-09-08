@@ -588,14 +588,14 @@ class MochiRemote(Mochitest):
 
         return self._automation.runApp(*args, **kwargs)
 
-def main():
+def main(args):
     message_logger = MessageLogger(logger=None)
     process_args = {'messageLogger': message_logger}
     auto = RemoteAutomation(None, "fennec", processArgs=process_args)
 
     parser = RemoteOptions(auto)
     structured.commandline.add_logging_group(parser)
-    options, args = parser.parse_args()
+    options, args = parser.parse_args(args)
 
     if (options.dm_trans == "adb"):
         if (options.deviceIP):
@@ -615,7 +615,7 @@ def main():
 
     if (options == None):
         log.error("Invalid options specified, use --help for a list of valid options")
-        sys.exit(1)
+        return 1
 
     productPieces = options.remoteProductName.split('.')
     if (productPieces != None):
@@ -626,7 +626,7 @@ def main():
 
     options = parser.verifyOptions(options, mochitest)
     if (options == None):
-        sys.exit(1)
+        return 1
 
     logParent = os.path.dirname(options.remoteLogFile)
     dm.mkDir(logParent);
@@ -808,7 +808,8 @@ def main():
 
     message_logger.finish()
 
-    sys.exit(retVal)
+    return retVal
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv[1:]))
