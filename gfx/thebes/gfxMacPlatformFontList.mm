@@ -725,7 +725,9 @@ gfxMacPlatformFontList::InitSingleFaceList()
         LOG_FONTLIST(("(fontlist-singleface) face name: %s\n",
                       NS_ConvertUTF16toUTF8(singleFaceFonts[i]).get()));
 #endif
-        gfxFontEntry *fontEntry = LookupLocalFont(nullptr, singleFaceFonts[i]);
+        gfxFontEntry *fontEntry = LookupLocalFont(singleFaceFonts[i],
+                                                  400, 0,
+                                                  NS_FONT_STYLE_NORMAL);
         if (fontEntry) {
             nsAutoString familyName, key;
             familyName = singleFaceFonts[i];
@@ -740,6 +742,9 @@ gfxMacPlatformFontList::InitSingleFaceList()
             if (!mFontFamilies.GetWeak(key)) {
                 gfxFontFamily *familyEntry =
                     new gfxSingleFaceMacFontFamily(familyName);
+                // LookupLocalFont sets these to true, need to clear
+                fontEntry->mIsUserFont = false;
+                fontEntry->mIsLocalUserFont = false;
                 familyEntry->AddFontEntry(fontEntry);
                 familyEntry->SetHasStyles(true);
                 mFontFamilies.Put(key, familyEntry);
@@ -904,8 +909,10 @@ gfxMacPlatformFontList::AppleWeightToCSSWeight(int32_t aAppleWeight)
 }
 
 gfxFontEntry*
-gfxMacPlatformFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
-                                        const nsAString& aFontName)
+gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
+                                        uint16_t aWeight,
+                                        int16_t aStretch,
+                                        bool aItalic)
 {
     nsAutoreleasePool localPool;
 
@@ -918,22 +925,15 @@ gfxMacPlatformFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
         return nullptr;
     }
 
-    if (aProxyEntry) {
-        uint16_t w = aProxyEntry->mWeight;
-        NS_ASSERTION(w >= 100 && w <= 900, "bogus font weight value!");
+    NS_ASSERTION(aWeight >= 100 && aWeight <= 900,
+                 "bogus font weight value!");
 
-        newFontEntry =
-            new MacOSFontEntry(aFontName, fontRef,
-                               w, aProxyEntry->mStretch,
-                               aProxyEntry->mItalic ?
-                                   NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
-                               true, true);
-    } else {
-        newFontEntry =
-            new MacOSFontEntry(aFontName, fontRef,
-                               400, 0, NS_FONT_STYLE_NORMAL,
-                               false, false);
-    }
+    newFontEntry =
+        new MacOSFontEntry(aFontName, fontRef,
+                           aWeight, aStretch,
+                           aItalic ?
+                               NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
+                           true, true);
     ::CFRelease(fontRef);
 
     return newFontEntry;
@@ -945,14 +945,16 @@ static void ReleaseData(void *info, const void *data, size_t size)
 }
 
 gfxFontEntry*
-gfxMacPlatformFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                         const uint8_t *aFontData,
+gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
+                                         uint16_t aWeight,
+                                         int16_t aStretch,
+                                         bool aItalic,
+                                         const uint8_t* aFontData,
                                          uint32_t aLength)
 {
     NS_ASSERTION(aFontData, "MakePlatformFont called with null data");
 
-    uint16_t w = aProxyEntry->mWeight;
-    NS_ASSERTION(w >= 100 && w <= 900, "bogus font weight value!");
+    NS_ASSERTION(aWeight >= 100 && aWeight <= 900, "bogus font weight value!");
 
     // create the font entry
     nsAutoString uniqueName;
@@ -973,9 +975,9 @@ gfxMacPlatformFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     }
 
     nsAutoPtr<MacOSFontEntry>
-        newFontEntry(new MacOSFontEntry(uniqueName, fontRef, w,
-                                        aProxyEntry->mStretch,
-                                        aProxyEntry->mItalic ?
+        newFontEntry(new MacOSFontEntry(uniqueName, fontRef, aWeight,
+                                        aStretch,
+                                        aItalic ?
                                             NS_FONT_STYLE_ITALIC :
                                             NS_FONT_STYLE_NORMAL,
                                         true, false));
