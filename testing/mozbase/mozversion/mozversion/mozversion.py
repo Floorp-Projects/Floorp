@@ -85,24 +85,18 @@ class LocalVersion(Version):
 
     def __init__(self, binary, **kwargs):
         Version.__init__(self, **kwargs)
-        path = os.getcwd()
+        path = None
 
         if binary:
             if not os.path.exists(binary):
                 raise IOError('Binary path does not exist: %s' % binary)
-            path = os.path.dirname(os.path.abspath(binary))
+            path = os.path.dirname(binary)
+        else:
+            if os.path.exists(os.path.join(os.getcwd(), 'application.ini')):
+                path = os.getcwd()
 
-        if not os.path.exists(os.path.join(path, 'application.ini')):
-            # With new signed builds on OS X the ini files are located inside
-            # of '/Contents/Resources'. Older builds have them next to the
-            # binaries in '/Contents/MacOS'.
-            if sys.platform == 'darwin':
-                path = os.path.join(os.path.dirname(path), 'Resources')
-
-                if not os.path.exists(os.path.join(path, 'application.ini')):
-                    raise LocalAppNotFoundError()
-            else:
-                raise LocalAppNotFoundError()
+        if not path:
+            raise LocalAppNotFoundError()
 
         self.get_gecko_info(path)
 
@@ -281,8 +275,7 @@ def cli(args=sys.argv[1:]):
     dm_type = os.environ.get('DM_TRANS', 'adb')
     host = os.environ.get('TEST_DEVICE')
 
-    version = get_version(binary=options.binary,
-                          sources=options.sources,
+    version = get_version(binary=options.binary, sources=options.sources,
                           dm_type=dm_type, host=host,
                           device_serial=options.device)
     for (key, value) in sorted(version.items()):
