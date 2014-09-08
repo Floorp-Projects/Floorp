@@ -194,6 +194,8 @@ gbjar.sources += [
     'GeckoBatteryManager.java',
     'GeckoConnectivityReceiver.java',
     'GeckoEditable.java',
+    'GeckoEditableClient.java',
+    'GeckoEditableListener.java',
     'GeckoEvent.java',
     'GeckoHalDefines.java',
     'GeckoInputConnection.java',
