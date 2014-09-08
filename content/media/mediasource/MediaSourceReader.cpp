@@ -275,7 +275,9 @@ MediaSourceReader::SelectReader(double aTarget,
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
-  for (uint32_t i = 0; i < aTrackDecoders.Length(); ++i) {
+  // Consider decoders in order of newest to oldest, as a newer decoder
+  // providing a given buffered range is expected to replace an older one.
+  for (int32_t i = aTrackDecoders.Length() - 1; i >= 0; --i) {
     nsRefPtr<MediaDecoderReader> newReader = aTrackDecoders[i]->GetReader();
 
     // Check the track-type-specific aspects first, as it's assumed these
