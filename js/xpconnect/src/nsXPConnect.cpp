@@ -197,44 +197,12 @@ xpc::SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
     // exception is ending here, it's not going to get propagated to a caller,
     // so it's up to us to make it known.
 
-    nsresult rv;
-
-    /* Use the console service to register the error. */
-    nsCOMPtr<nsIConsoleService> consoleService =
-        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-
-    /*
-     * Make an nsIScriptError, populate it with information from this
-     * error, then log it with the console service.
-     */
-    nsCOMPtr<nsIScriptError> errorObject =
-        do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
-
-    if (consoleService && errorObject) {
-        uint32_t column = rep->uctokenptr - rep->uclinebuf;
-
-        const char16_t* ucmessage =
-            static_cast<const char16_t*>(rep->ucmessage);
-        const char16_t* uclinebuf =
-            static_cast<const char16_t*>(rep->uclinebuf);
-
-        rv = errorObject->Init(
-              ucmessage ? nsDependentString(ucmessage) : EmptyString(),
-              NS_ConvertASCIItoUTF16(rep->filename),
-              uclinebuf ? nsDependentString(uclinebuf) : EmptyString(),
-              rep->lineno, column, rep->flags,
-              "system javascript");
-        if (NS_SUCCEEDED(rv))
-            consoleService->LogMessage(errorObject);
-    }
-
-    if (nsContentUtils::DOMWindowDumpEnabled()) {
-        fprintf(stderr, "System JS : %s %s:%d - %s\n",
-                JSREPORT_IS_WARNING(rep->flags) ? "WARNING" : "ERROR",
-                rep->filename, rep->lineno,
-                message ? message : "<no message>");
-    }
-
+    nsRefPtr<ErrorReport> report = new ErrorReport();
+    // Note that the only effect of the global we pass here is to distinguish
+    // between "chrome javascript" and "content javascript", so we can just
+    // hackily pass the privileged junk scope for the time being.
+    report->Init(rep, message, GetNativeForGlobal(xpc::PrivilegedJunkScope()));
+    report->LogToConsole();
 }
 
 void
