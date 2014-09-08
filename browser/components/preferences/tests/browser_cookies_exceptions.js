@@ -133,7 +133,9 @@ function windowLoad(event, win, dialog) {
         return;
 
       if (tests[currentTest].observances.length == 0) {
-        // Should fail here as we are not expecting a notification.
+        // Should fail here as we are not expecting a notification, but we don't.
+        // See bug 1063410.
+        return;
       }
 
       let permission = aSubject.QueryInterface(Ci.nsIPermission);
