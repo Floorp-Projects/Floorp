@@ -237,6 +237,65 @@ xpc::SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 
 }
 
+void
+xpc::ErrorReport::Init(JSErrorReport *aReport,
+                       const char *aFallbackMessage,
+                       nsIGlobalObject *aGlobal)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aGlobal);
+
+    mGlobal = aGlobal;
+    mWindow = do_QueryInterface(mGlobal);
+    MOZ_ASSERT_IF(mWindow, mWindow->IsInnerWindow());
+
+    nsIPrincipal *prin = mGlobal->PrincipalOrNull();
+    mIsChrome = nsContentUtils::IsSystemPrincipal(prin);
+
+    InitInternal(aReport, aFallbackMessage);
+}
+
+void
+xpc::ErrorReport::InitOnWorkerThread(JSErrorReport *aReport,
+                                     const char *aFallbackMessage,
+                                     bool aIsChrome)
+{
+    MOZ_ASSERT(!NS_IsMainThread());
+    mIsChrome = aIsChrome;
+
+    InitInternal(aReport, aFallbackMessage);
+}
+
+void
+xpc::ErrorReport::InitInternal(JSErrorReport *aReport,
+                               const char *aFallbackMessage)
+{
+    const char16_t* m = static_cast<const char16_t*>(aReport->ucmessage);
+    if (m) {
+        JSFlatString* name = js::GetErrorTypeName(CycleCollectedJSRuntime::Get()->Runtime(), aReport->exnType);
+        if (name) {
+            AssignJSFlatString(mErrorMsg, name);
+            mErrorMsg.AppendLiteral(": ");
+        }
+        mErrorMsg.Append(m);
+    }
+
+    if (mErrorMsg.IsEmpty() && aFallbackMessage) {
+        mErrorMsg.AssignWithConversion(aFallbackMessage);
+    }
+
+    if (!aReport->filename) {
+        mFileName.SetIsVoid(true);
+    } else {
+        mFileName.AssignWithConversion(aReport->filename);
+    }
+
+    mSourceLine = static_cast<const char16_t*>(aReport->uclinebuf);
+
+    mLineNumber = aReport->lineno;
+    mColumn = aReport->column;
+    mFlags = aReport->flags;
+}
 
 /***************************************************************************/
 

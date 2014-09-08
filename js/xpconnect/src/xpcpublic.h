@@ -15,6 +15,8 @@
 #include "nsISupports.h"
 #include "nsIURI.h"
 #include "nsIPrincipal.h"
+#include "nsIGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
@@ -26,7 +28,6 @@
 class nsGlobalWindow;
 class nsIPrincipal;
 class nsScriptNameSpaceManager;
-class nsIGlobalObject;
 class nsIMemoryReporterCallback;
 
 #ifndef BAD_TLS_INDEX
@@ -489,6 +490,46 @@ SetAddonInterposition(const nsACString &addonId, nsIAddonInterposition *interpos
 
 bool
 ExtraWarningsForSystemJS();
+
+class ErrorReport {
+  public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ErrorReport);
+
+    ErrorReport() : mIsChrome(false)
+                  , mLineNumber(0)
+                  , mColumn(0)
+                  , mFlags(0)
+    {}
+
+    void Init(JSErrorReport *aReport, const char *aFallbackMessage,
+              nsIGlobalObject *aGlobal);
+    void InitOnWorkerThread(JSErrorReport *aReport, const char *aFallbackMessage,
+                            bool aIsChrome);
+
+  private:
+    void InitInternal(JSErrorReport *aReport, const char *aFallbackMessage);
+    bool mIsChrome;
+
+  public:
+    const nsCString Category() {
+        return mIsChrome ? NS_LITERAL_CSTRING("chrome javascript")
+                         : NS_LITERAL_CSTRING("content javascript");
+    }
+
+    nsString mErrorMsg;
+    nsString mFileName;
+    nsString mSourceLine;
+    uint32_t mLineNumber;
+    uint32_t mColumn;
+    uint32_t mFlags;
+
+    // These are both null for ErrorReports initialized on a worker thread.
+    nsCOMPtr<nsIGlobalObject> mGlobal;
+    nsCOMPtr<nsPIDOMWindow> mWindow;
+
+  private:
+    ~ErrorReport() {}
+};
 
 } // namespace xpc
 
