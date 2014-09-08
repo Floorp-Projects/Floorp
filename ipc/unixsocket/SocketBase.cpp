@@ -7,8 +7,9 @@
  */
 
 #include "SocketBase.h"
+#include <errno.h>
 #include <string.h>
-#include "nsThreadUtils.h"
+#include <unistd.h>
 
 namespace mozilla {
 namespace ipc {
@@ -18,20 +19,78 @@ namespace ipc {
 //
 
 UnixSocketRawData::UnixSocketRawData(size_t aSize)
-: mSize(aSize)
+: mSize(0)
 , mCurrentWriteOffset(0)
+, mAvailableSpace(aSize)
 {
-  mData = new uint8_t[mSize];
+  mData = new uint8_t[mAvailableSpace];
 }
 
 UnixSocketRawData::UnixSocketRawData(const void* aData, size_t aSize)
 : mSize(aSize)
 , mCurrentWriteOffset(0)
+, mAvailableSpace(aSize)
 {
   MOZ_ASSERT(aData || !mSize);
 
-  mData = new uint8_t[mSize];
+  mData = new uint8_t[mAvailableSpace];
   memcpy(mData, aData, mSize);
+}
+
+ssize_t
+UnixSocketRawData::Receive(int aFd)
+{
+  if (!GetTrailingSpace()) {
+    if (!GetLeadingSpace()) {
+      return -1; /* buffer is full */
+    }
+    /* free up space at the end of data buffer */
+    if (GetSize() <= GetLeadingSpace()) {
+      memcpy(mData, GetData(), GetSize());
+    } else {
+      memmove(mData, GetData(), GetSize());
+    }
+    mCurrentWriteOffset = 0;
+  }
+
+  ssize_t res =
+    TEMP_FAILURE_RETRY(read(aFd, GetTrailingBytes(), GetTrailingSpace()));
+
+  if (res < 0) {
+    /* I/O error */
+    return -1;
+  } else if (!res) {
+    /* EOF or peer shutdown sending */
+    return 0;
+  }
+
+  mSize += res;
+
+  return res;
+}
+
+ssize_t
+UnixSocketRawData::Send(int aFd)
+{
+  if (!GetSize()) {
+    return 0;
+  }
+
+  ssize_t res = TEMP_FAILURE_RETRY(write(aFd, GetData(), GetSize()));
+
+  if (res < 0) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return 0; /* socket is blocked; try again later */
+    }
+    return -1;
+  } else if (!res) {
+    /* nothing written */
+    return 0;
+  }
+
+  Consume(res);
+
+  return res;
 }
 
 //
