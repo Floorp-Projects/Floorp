@@ -508,6 +508,7 @@
     "cpp_guard": "XP_WIN"
   },
   "EARLY_GLUESTARTUP_READ_OPS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
@@ -516,6 +517,7 @@
     "cpp_guard": "XP_WIN"
   },
   "EARLY_GLUESTARTUP_READ_TRANSFER": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "50 * 1024",
@@ -525,6 +527,7 @@
     "cpp_guard": "XP_WIN"
   },
   "GLUESTARTUP_READ_OPS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
@@ -533,6 +536,7 @@
     "cpp_guard": "XP_WIN"
   },
   "GLUESTARTUP_READ_TRANSFER": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "50 * 1024",
@@ -542,6 +546,7 @@
     "cpp_guard": "XP_WIN"
   },
   "EARLY_GLUESTARTUP_HARD_FAULTS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
@@ -550,6 +555,7 @@
     "cpp_guard": "XP_UNIX"
   },
   "GLUESTARTUP_HARD_FAULTS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "500",
@@ -716,6 +722,7 @@
     "description": "Startup cache age (hours)"
   },
   "STARTUP_CACHE_INVALID": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Was the disk startup cache file detected as invalid"
@@ -843,6 +850,7 @@
     "description": "WebGL canvas used"
   },
   "TOTAL_CONTENT_PAGE_LOAD_TIME": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 100,
@@ -2374,6 +2382,7 @@
     "description": "How many speculative connections are made needlessly"
   },
   "FIND_PLUGINS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -2731,6 +2740,7 @@
     "description": "SQLite write (bytes)"
   },
   "MOZ_STORAGE_ASYNC_REQUESTS_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "32768",
@@ -2739,6 +2749,7 @@
     "description": "mozStorage async requests completion (ms)"
   },
   "MOZ_STORAGE_ASYNC_REQUESTS_SUCCESS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "mozStorage async requests success"
@@ -2963,6 +2974,7 @@
     "description": "PLACES: Number of tags"
   },
   "PLACES_FOLDERS_COUNT": {
+    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "200",
@@ -3146,6 +3158,7 @@
     "description": "PLACES: Database filesize (MB)"
   },
   "PLACES_DATABASE_JOURNALSIZE_MB": {
+    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "50",
@@ -3250,6 +3263,7 @@
     "description": "PLACES: Number of bookmarks annotations"
   },
   "PLACES_ANNOS_BOOKMARKS_SIZE_KB": {
+    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 10,
@@ -3268,6 +3282,7 @@
     "description": "PLACES: Number of pages annotations"
   },
   "PLACES_ANNOS_PAGES_SIZE_KB": {
+    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 10,
@@ -3277,6 +3292,7 @@
     "description": "PLACES: Size of pages annotations (KB)"
   },
   "PLACES_FRECENCY_CALC_TIME_MS": {
+    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "100",
@@ -3434,6 +3450,7 @@
     "description": "Firefox: Time taken to kick off image compression of the canvas that will be used during swiping through history (ms)."
   },
   "FX_TAB_ANIM_OPEN_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -3441,6 +3458,7 @@
     "description": "Firefox: Time taken by the tab opening animation in milliseconds"
   },
   "FX_TAB_ANIM_CLOSE_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -3479,6 +3497,7 @@
     "description": "Average paint duration during any tab open/close animation (excluding tabstrip scroll)"
   },
   "FX_TAB_SWITCH_UPDATE_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000",
@@ -3559,6 +3578,7 @@
     "description": "THUMBNAILS: Thumbnail found"
   },
   "EVENTLOOP_UI_LAG_EXP_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 50,
@@ -3632,6 +3652,7 @@
     "description": "Session restore: Duration of the longest uninterruptible operation while collecting data in the content process (ms)"
   },
   "FX_SESSION_RESTORE_SERIALIZE_DATA_MS": {
+    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000",
@@ -4198,6 +4219,7 @@
     "description": "DOM storage: size of values stored in sessionStorage"
   },
   "RANGE_CHECKSUM_ERRORS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -4206,6 +4228,7 @@
     "description": "Number of histograms with range checksum errors"
   },
   "BUCKET_ORDER_ERRORS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -4214,6 +4237,7 @@
     "description": "Number of histograms with bucket order errors"
   },
   "TOTAL_COUNT_HIGH_ERRORS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -4222,6 +4246,7 @@
     "description": "Number of histograms with total count high errors"
   },
   "TOTAL_COUNT_LOW_ERRORS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -4472,6 +4497,7 @@
     "description": "Whether enablePrivilege has ever been called during the current session"
   },
   "READ_SAVED_PING_SUCCESS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Successfully reading a saved ping file"
