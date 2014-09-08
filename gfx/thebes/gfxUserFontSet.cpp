@@ -338,8 +338,10 @@ gfxProxyFontEntry::LoadNext(gfxMixedFontFamily *aFamily,
 
         if (currSrc.mIsLocal) {
             gfxFontEntry *fe =
-                gfxPlatform::GetPlatform()->LookupLocalFont(this,
-                                                            currSrc.mLocalName);
+                gfxPlatform::GetPlatform()->LookupLocalFont(currSrc.mLocalName,
+                                                            mWeight,
+                                                            mStretch,
+                                                            mItalic);
             aLocalRulesUsed = true;
             if (fe) {
                 LOG(("fontset (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n",
@@ -468,7 +470,7 @@ gfxProxyFontEntry::LoadNext(gfxMixedFontFamily *aFamily,
 
 gfxFontEntry*
 gfxProxyFontEntry::LoadFont(gfxMixedFontFamily *aFamily,
-                            const uint8_t *aFontData, uint32_t &aLength)
+                            const uint8_t* aFontData, uint32_t &aLength)
 {
     gfxFontEntry *fe = nullptr;
 
@@ -501,7 +503,11 @@ gfxProxyFontEntry::LoadFont(gfxMixedFontFamily *aFamily,
                                           originalFullName);
         // Here ownership of saneData is passed to the platform,
         // which will delete it when no longer required
-        fe = gfxPlatform::GetPlatform()->MakePlatformFont(this,
+
+        fe = gfxPlatform::GetPlatform()->MakePlatformFont(mName,
+                                                          mWeight,
+                                                          mStretch,
+                                                          mItalic,
                                                           saneData,
                                                           saneLen);
         if (!fe) {
@@ -746,7 +752,7 @@ gfxUserFontSet::FindFontEntry(gfxFontFamily *aFamily,
 bool
 gfxUserFontSet::OnLoadComplete(gfxMixedFontFamily *aFamily,
                                gfxProxyFontEntry *aProxy,
-                               const uint8_t *aFontData, uint32_t aLength,
+                               const uint8_t* aFontData, uint32_t aLength,
                                nsresult aDownloadStatus)
 {
     // forget about the loader, as we no longer potentially need to cancel it
