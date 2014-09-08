@@ -21,12 +21,19 @@ reflectURL({
   attribute: "href",
 });
 
-// .crossOrigin (String)
-reflectString({
+// .crossOrigin (String or null)
+reflectLimitedEnumerated({
   element: document.createElement("link"),
   attribute: "crossOrigin",
-  otherValues: ["anonymous", "use-credentials"],
-});
+  // "" is a valid value per spec, but gets mapped to the "anonymous" state,
+  // just like invalid values, so just list it under invalidValues
+  validValues: [ "anonymous", "use-credentials" ],
+  invalidValues: [
+    "", "  aNOnYmous   ", "  UsE-CreDEntIALS  ", "foobar", "FOOBAR", " fOoBaR  "
+  ],
+  defaultValue: { invalid: "anonymous", missing: null },
+  nullable: true,
+})
 
 // .rel (String)
 reflectString({

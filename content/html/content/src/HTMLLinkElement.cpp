@@ -117,7 +117,6 @@ NS_IMPL_STRING_ATTR(HTMLLinkElement, Rel, rel)
 NS_IMPL_STRING_ATTR(HTMLLinkElement, Rev, rev)
 NS_IMPL_STRING_ATTR(HTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(HTMLLinkElement, Type, type)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, CrossOrigin, crossorigin)
 
 void
 HTMLLinkElement::GetItemValueText(nsAString& aValue)

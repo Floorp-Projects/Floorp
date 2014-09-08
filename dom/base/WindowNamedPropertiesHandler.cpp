@@ -69,19 +69,6 @@ ShouldExposeChildWindow(nsString& aNameBeingResolved, nsIDOMWindow *aChild)
                              aNameBeingResolved, eCaseMatters);
 }
 
-static nsGlobalWindow*
-GetWindowFromGlobal(JSObject* aGlobal)
-{
-  nsGlobalWindow* win;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, aGlobal, win))) {
-    return win;
-  }
-  XPCWrappedNative* wrapper = XPCWrappedNative::Get(aGlobal);
-  nsCOMPtr<nsPIDOMWindow> piWin = do_QueryWrappedNative(wrapper);
-  MOZ_ASSERT(piWin);
-  return static_cast<nsGlobalWindow*>(piWin.get());
-}
-
 bool
 WindowNamedPropertiesHandler::getOwnPropDescriptor(JSContext* aCx,
                                                    JS::Handle<JSObject*> aProxy,
@@ -106,7 +93,7 @@ WindowNamedPropertiesHandler::getOwnPropDescriptor(JSContext* aCx,
   }
 
   // Grab the DOM window.
-  nsGlobalWindow* win = GetWindowFromGlobal(global);
+  nsGlobalWindow* win = xpc::WindowOrNull(global);
   if (win->Length() > 0) {
     nsCOMPtr<nsIDOMWindow> childWin = win->GetChildWindow(str);
     if (childWin && ShouldExposeChildWindow(str, childWin)) {
@@ -178,7 +165,7 @@ WindowNamedPropertiesHandler::ownPropNames(JSContext* aCx,
                                            JS::AutoIdVector& aProps) const
 {
   // Grab the DOM window.
-  nsGlobalWindow* win = GetWindowFromGlobal(JS_GetGlobalForObject(aCx, aProxy));
+  nsGlobalWindow* win = xpc::WindowOrNull(JS_GetGlobalForObject(aCx, aProxy));
   nsTArray<nsString> names;
   win->GetSupportedNames(names);
   // Filter out the ones we wouldn't expose from getOwnPropertyDescriptor.

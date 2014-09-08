@@ -2373,8 +2373,6 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
         nsCSSValue::Array* bgPosRes = nsCSSValue::Array::Create(4);
         item->mValue.SetArrayValue(bgPosRes, eCSSUnit_Array);
 
-        uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
-
         /* Only iterate over elements 1 and 3. The background position is
          * 'uncomputed' to only those elements.
          */
@@ -2382,16 +2380,8 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
           const nsCSSValue& v1 = bgPos1->Item(i);
           const nsCSSValue& v2 = bgPos2->Item(i);
           nsCSSValue& vr = bgPosRes->Item(i);
-
-          nsCSSUnit unit = GetCommonUnit(aProperty, v1.GetUnit(), v2.GetUnit());
-
-          if (!AddCSSValuePixelPercentCalc(restrictions, unit, aCoeff1, v1,
-                                           aCoeff2, v2, vr) ) {
-            if (v1 != v2) {
-              return false;
-            }
-            vr = v1;
-          }
+          AddCSSValueCanonicalCalc(aCoeff1, v1,
+                                   aCoeff2, v2, vr);
         }
 
         position1 = position1->mNext;
@@ -3167,29 +3157,10 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
             item->mValue.SetArrayValue(bgArray.get(), eCSSUnit_Array);
 
             const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
-            // XXXbz is there a good reason we can't just
-            // SetCalcValue(&pos.mXPosition, item->mXValue) here?
             nsCSSValue &xValue = bgArray->Item(1),
                        &yValue = bgArray->Item(3);
-            if (!pos.mXPosition.mHasPercent) {
-              NS_ABORT_IF_FALSE(pos.mXPosition.mPercent == 0.0f,
-                                "Shouldn't have mPercent!");
-              nscoordToCSSValue(pos.mXPosition.mLength, xValue);
-            } else if (pos.mXPosition.mLength == 0) {
-              xValue.SetPercentValue(pos.mXPosition.mPercent);
-            } else {
-              SetCalcValue(&pos.mXPosition, xValue);
-            }
-
-            if (!pos.mYPosition.mHasPercent) {
-              NS_ABORT_IF_FALSE(pos.mYPosition.mPercent == 0.0f,
-                                "Shouldn't have mPercent!");
-              nscoordToCSSValue(pos.mYPosition.mLength, yValue);
-            } else if (pos.mYPosition.mLength == 0) {
-              yValue.SetPercentValue(pos.mYPosition.mPercent);
-            } else {
-              SetCalcValue(&pos.mYPosition, yValue);
-            }
+            SetCalcValue(&pos.mXPosition, xValue);
+            SetCalcValue(&pos.mYPosition, yValue);
           }
 
           aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),

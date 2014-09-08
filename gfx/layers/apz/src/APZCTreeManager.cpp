@@ -934,31 +934,10 @@ APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
                                nsRefPtr<const OverscrollHandoffChain> aOverscrollHandoffChain,
                                bool aHandoff)
 {
-  nsRefPtr<AsyncPanZoomController> next;
-
-  // If the fling is being handed off, give it to the next APZC in the
-  // handoff chain after |aPrev|.
-  if (aHandoff) {
-    // Find |aPrev| in the handoff chain.
-    uint32_t i = aOverscrollHandoffChain->IndexOf(aPrev);
-
-    // Get the next APZC in the handoff chain, if any.
-    if (i + 1 < aOverscrollHandoffChain->Length()) {
-      next = aOverscrollHandoffChain->GetApzcAtIndex(i + 1);
-    }
-  // If the fling is being started, give it to the first APZC in the
-  // handoff chain.
-  } else {
-    if (aOverscrollHandoffChain->Length() != 0) {
-      next = aOverscrollHandoffChain->GetApzcAtIndex(0);
-    }
-  }
-
-  // Nothing to hand off fling to.
-  if (next == nullptr || next->IsDestroyed()) {
-    return false;
-  }
-
+  nsRefPtr<AsyncPanZoomController> current;
+  uint32_t aOverscrollHandoffChainLength = aOverscrollHandoffChain->Length();
+  uint32_t startIndex;
+  
   // The fling's velocity needs to be transformed from the screen coordinates
   // of |aPrev| to the screen coordinates of |next|. To transform a velocity
   // correctly, we need to convert it to a displacement. For now, we do this
@@ -967,14 +946,51 @@ APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
   // use the end point of the touch that started the fling as the start point
   // rather than (0, 0).
   ScreenPoint startPoint;  // (0, 0)
-  ScreenPoint endPoint = startPoint + aVelocity;
-  if (aPrev != next) {
-    TransformDisplacement(this, aPrev, next, startPoint, endPoint);
+  ScreenPoint endPoint;
+  ScreenPoint transformedVelocity = aVelocity;
+  
+  if (aHandoff) {
+    startIndex = aOverscrollHandoffChain->IndexOf(aPrev) + 1;
+    
+    // IndexOf will return aOverscrollHandoffChain->Length() if
+    // |aPrev| is not found.
+    if (startIndex >= aOverscrollHandoffChainLength) {
+      return false;
+    }
+  } else {
+    startIndex = 0;
   }
-  ScreenPoint transformedVelocity = endPoint - startPoint;
-
-  // Tell |next| to start a fling with the transformed velocity.
-  return next->AttemptFling(transformedVelocity, aOverscrollHandoffChain, aHandoff);
+  
+  for (; startIndex < aOverscrollHandoffChainLength; startIndex++) {
+    current = aOverscrollHandoffChain->GetApzcAtIndex(startIndex);
+    
+    // Make sure the apcz about to be handled can be handled
+    if (current == nullptr || current->IsDestroyed()) {
+      return false;
+    }
+    
+    endPoint = startPoint + transformedVelocity;
+    
+    // Only transform when current apcz can be transformed with previous
+    if (startIndex > 0) {
+      TransformDisplacement(this,
+                            aOverscrollHandoffChain->GetApzcAtIndex(startIndex - 1),
+                            current,
+                            startPoint,
+                            endPoint);
+    }
+    
+    transformedVelocity = endPoint - startPoint;
+    
+    bool handoff = (startIndex < 1) ? aHandoff : true;
+    if (current->AttemptFling(transformedVelocity,
+                              aOverscrollHandoffChain,
+                              handoff)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 bool
