@@ -564,7 +564,7 @@ DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 
 
 CanvasRenderingContext2D::CanvasRenderingContext2D()
-  : mForceSoftware(false)
+  : mRenderingMode(RenderingMode::OpenGLBackendMode)
   // these are the default values from the Canvas spec
   , mWidth(0), mHeight(0)
   , mZero(false), mOpaque(false)
@@ -577,6 +577,12 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
 {
   sNumLivingContexts++;
   SetIsDOMBinding();
+
+  // The default is to use OpenGL mode
+  if (!gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas()) {
+    mRenderingMode = RenderingMode::SoftwareBackendMode;
+  }
+
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D()
@@ -773,24 +779,25 @@ CanvasRenderingContext2D::RedrawUser(const gfxRect& r)
   Redraw(newr);
 }
 
-void CanvasRenderingContext2D::Demote()
+bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
 {
-  if (!IsTargetValid() || mForceSoftware || !mStream)
-    return;
-
-  RemoveDemotableContext(this);
+  if (!IsTargetValid() || mRenderingMode == aRenderingMode) {
+    return false;
+  }
 
   RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
   RefPtr<DrawTarget> oldTarget = mTarget;
   mTarget = nullptr;
   mStream = nullptr;
   mResetLayer = true;
-  mForceSoftware = true;
 
-  // Recreate target, now demoted to software only
-  EnsureTarget();
+  // Recreate target using the new rendering mode
+  RenderingMode attemptedMode = EnsureTarget(aRenderingMode);
   if (!IsTargetValid())
-    return;
+    return false;
+
+  // We succeeded, so update mRenderingMode to reflect reality
+  mRenderingMode = attemptedMode;
 
   // Restore the content from the old DrawTarget
   mgfx::Rect r(0, 0, mWidth, mHeight);
@@ -802,6 +809,15 @@ void CanvasRenderingContext2D::Demote()
   }
 
   mTarget->SetTransform(oldTarget->GetTransform());
+
+  return true;
+}
+
+void CanvasRenderingContext2D::Demote()
+{
+  if (SwitchRenderingMode(RenderingMode::SoftwareBackendMode)) {
+    RemoveDemotableContext(this);
+  }
 }
 
 std::vector<CanvasRenderingContext2D*>&
@@ -821,7 +837,9 @@ CanvasRenderingContext2D::DemoteOldestContextIfNecessary()
     return;
 
   CanvasRenderingContext2D* oldest = contexts.front();
-  oldest->Demote();
+  if (oldest->SwitchRenderingMode(RenderingMode::SoftwareBackendMode)) {
+    RemoveDemotableContext(oldest);
+  }
 }
 
 void
@@ -913,11 +931,16 @@ CanvasRenderingContext2D::CheckSizeForSkiaGL(IntSize size) {
   return threshold < 0 || (size.width * size.height) <= threshold;
 }
 
-void
-CanvasRenderingContext2D::EnsureTarget()
+CanvasRenderingContext2D::RenderingMode
+CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
 {
-  if (mTarget) {
-    return;
+  // This would make no sense, so make sure we don't get ourselves in a mess
+  MOZ_ASSERT(mRenderingMode != RenderingMode::DefaultBackendMode);
+
+  RenderingMode mode = (aRenderingMode == RenderingMode::DefaultBackendMode) ? mRenderingMode : aRenderingMode;
+
+  if (mTarget && mode == mRenderingMode) {
+    return mRenderingMode;
   }
 
    // Check that the dimensions are sane
@@ -938,9 +961,7 @@ CanvasRenderingContext2D::EnsureTarget()
     }
 
      if (layerManager) {
-      if (gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas() &&
-          !mForceSoftware &&
-          CheckSizeForSkiaGL(size)) {
+      if (mode == RenderingMode::OpenGLBackendMode && CheckSizeForSkiaGL(size)) {
         DemoteOldestContextIfNecessary();
 
         SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
@@ -954,6 +975,7 @@ CanvasRenderingContext2D::EnsureTarget()
             AddDemotableContext(this);
           } else {
             printf_stderr("Failed to create a SkiaGL DrawTarget, falling back to software\n");
+            mode = RenderingMode::SoftwareBackendMode;
           }
         }
 #endif
@@ -962,8 +984,10 @@ CanvasRenderingContext2D::EnsureTarget()
         }
       } else
         mTarget = layerManager->CreateDrawTarget(size, format);
+        mode = RenderingMode::SoftwareBackendMode;
      } else {
         mTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(size, format);
+        mode = RenderingMode::SoftwareBackendMode;
      }
   }
 
@@ -1002,6 +1026,8 @@ CanvasRenderingContext2D::EnsureTarget()
     EnsureErrorTarget();
     mTarget = sErrorTarget;
   }
+
+  return mode;
 }
 
 #ifdef DEBUG
@@ -1114,12 +1140,17 @@ CanvasRenderingContext2D::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value
     return NS_OK;
   }
 
+  // This shouldn't be called before drawing starts, so there should be no drawtarget yet
+  MOZ_ASSERT(!mTarget);
+
   ContextAttributes2D attributes;
   NS_ENSURE_TRUE(attributes.Init(aCx, aOptions), NS_ERROR_UNEXPECTED);
 
   if (Preferences::GetBool("gfx.canvas.willReadFrequently.enable", false)) {
     // Use software when there is going to be a lot of readback
-    mForceSoftware = attributes.mWillReadFrequently;
+    if (attributes.mWillReadFrequently) {
+      mRenderingMode = RenderingMode::SoftwareBackendMode;
+    }
   }
 
   if (!attributes.mAlpha) {
