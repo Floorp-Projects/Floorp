@@ -6,6 +6,7 @@ package org.mozilla.gecko.favicons;
 
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.http.AndroidHttpClient;
 import android.text.TextUtils;
