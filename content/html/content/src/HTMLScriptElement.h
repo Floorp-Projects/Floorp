@@ -68,7 +68,17 @@ public:
   void SetType(const nsAString& aType, ErrorResult& rv);
   void SetHtmlFor(const nsAString& aHtmlFor, ErrorResult& rv);
   void SetEvent(const nsAString& aEvent, ErrorResult& rv);
-  void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& rv);
+  void GetCrossOrigin(nsAString& aResult)
+  {
+    // Null for both missing and invalid defaults is ok, since we
+    // always parse to an enum value, so we don't need an invalid
+    // default, and we _want_ the missing default to be null.
+    GetEnumAttr(nsGkAtoms::crossorigin, nullptr, aResult);
+  }
+  void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& aError)
+  {
+    SetOrRemoveNullableStringAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
+  }
   bool Async();
   void SetAsync(bool aValue, ErrorResult& rv);
 

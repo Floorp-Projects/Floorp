@@ -39,8 +39,12 @@ public:
 
     // create a font entry for a downloaded font
     static FT2FontEntry* 
-    CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
-                    const uint8_t *aFontData, uint32_t aLength);
+    CreateFontEntry(const nsAString& aFontName,
+                    uint16_t aWeight,
+                    int16_t aStretch,
+                    bool aItalic,
+                    const uint8_t* aFontData,
+                    uint32_t aLength);
 
     // create a font entry representing an installed font, identified by
     // a FontListEntry; the freetype and cairo faces will not be instantiated
@@ -56,7 +60,7 @@ public:
     CreateFontEntry(FT_Face aFace,
                     const char *aFilename, uint8_t aIndex,
                     const nsAString& aName,
-                    const uint8_t *aFontData = nullptr);
+                    const uint8_t* aFontData = nullptr);
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
                                         bool aNeedsBold);
@@ -118,11 +122,16 @@ public:
 
     virtual gfxFontFamily* GetDefaultFont(const gfxFontStyle* aStyle);
 
-    virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
-                                          const nsAString& aFontName);
+    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
+                                          uint16_t aWeight,
+                                          int16_t aStretch,
+                                          bool aItalic);
 
-    virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                           const uint8_t *aFontData,
+    virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
+                                           uint16_t aWeight,
+                                           int16_t aStretch,
+                                           bool aItalic,
+                                           const uint8_t* aFontData,
                                            uint32_t aLength);
 
     void GetFontList(InfallibleTArray<FontListEntry>* retValue);

@@ -128,7 +128,8 @@ protected:
                                          MOZ_OVERRIDE;
   virtual bool RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aId,
                                         const int32_t& aX, const int32_t& aY) MOZ_OVERRIDE;
-  virtual bool RecvGetAPZTestData(APZTestData* aOutData);
+  virtual bool RecvGetAPZTestData(APZTestData* aOutData) MOZ_OVERRIDE;
+  virtual bool RecvRequestProperty(const nsString& aProperty, float* aValue) MOZ_OVERRIDE;
 
   virtual PLayerParent* AllocPLayerParent() MOZ_OVERRIDE;
   virtual bool DeallocPLayerParent(PLayerParent* actor) MOZ_OVERRIDE;

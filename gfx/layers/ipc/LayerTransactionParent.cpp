@@ -732,6 +732,20 @@ LayerTransactionParent::RecvGetAPZTestData(APZTestData* aOutData)
 }
 
 bool
+LayerTransactionParent::RecvRequestProperty(const nsString& aProperty, float* aValue)
+{
+  if (aProperty.Equals(NS_LITERAL_STRING("overdraw"))) {
+    *aValue = layer_manager()->GetCompositor()->GetFillRatio();
+  } else if (aProperty.Equals(NS_LITERAL_STRING("missed_hwc"))) {
+    *aValue = layer_manager()->LastFrameMissedHWC() ? 1 : 0;
+  } else {
+    *aValue = -1;
+  }
+  return true;
+}
+
+
+bool
 LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,
                                CompositableHost* aCompositable,
                                bool aIsAsync)

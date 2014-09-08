@@ -281,11 +281,7 @@ pref("browser.search.official", true);
 #endif
 
 // Control media casting feature
-#ifdef RELEASE_BUILD
-pref("browser.casting.enabled", false);
-#else
 pref("browser.casting.enabled", true);
-#endif
 
 // Enable sparse localization by setting a few package locale overrides
 pref("chrome.override_package.global", "browser");
@@ -556,7 +552,7 @@ pref("app.update.enabled", false);
 pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 
 // If you are looking for app.update.url, we no longer use it.
-// See mobile/android/base/UpdateServiceHelper.java.in
+// See mobile/android/base/updater/UpdateServiceHelper.java
 #endif
 
 // replace newlines with spaces on paste into single-line text boxes

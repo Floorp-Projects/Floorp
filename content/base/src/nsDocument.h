@@ -64,7 +64,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/DOMImplementation.h"
 #include "mozilla/dom/StyleSheetList.h"
-#include "nsIDOMTouchEvent.h"
 #include "nsDataHashtable.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"

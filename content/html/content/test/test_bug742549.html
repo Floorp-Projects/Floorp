@@ -24,10 +24,17 @@ var els = [ document.createElement("script"),
             document.createElementNS("http://www.w3.org/2000/svg", "script") ]
 
 for (var i = 0; i < els.length; ++i) {
-  reflectString({
+  reflectLimitedEnumerated({
     element: els[i],
     attribute: { content: "crossorigin", idl: "crossOrigin" },
-    otherValues: [ "anonymous", "use-credentials" ]
+    // "" is a valid value per spec, but gets mapped to the "anonymous" state,
+    // just like invalid values, so just list it under invalidValues
+    validValues: [ "anonymous", "use-credentials" ],
+    invalidValues: [
+      "", "  aNOnYmous   ", "  UsE-CreDEntIALS  ", "foobar", "FOOBAR", " fOoBaR  "
+    ],
+    defaultValue: { invalid: "anonymous", missing: null },
+    nullable: true,
   })
 }
 

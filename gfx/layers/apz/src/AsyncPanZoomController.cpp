@@ -1964,18 +1964,8 @@ bool AsyncPanZoomController::AttemptFling(ScreenPoint aVelocity,
                 false /* do not allow overscroll */);
     return true;
   }
-
-  // Otherwise, hand the fling back to the tree manager to pass on to the
-  // next APZC in the handoff chain. Had we started a fling animation in this
-  // APZC, we would have done this hand-off on its first frame anyways, but
-  // doing it here allows the tree manager to tell the previous APZC to enter
-  // an overscroll fling if nothing further in the chain wants the fling.
-  APZCTreeManager* treeManagerLocal = mTreeManager;
-  return treeManagerLocal
-      && treeManagerLocal->DispatchFling(this,
-                                         aVelocity,
-                                         aOverscrollHandoffChain,
-                                         true /* handoff */);
+  
+  return false;
 }
 
 void AsyncPanZoomController::HandleFlingOverscroll(const ScreenPoint& aVelocity,

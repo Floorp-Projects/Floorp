@@ -258,7 +258,7 @@ struct Census {
     Zone::ZoneSet debuggeeZones;
     Zone *atomsZone;
 
-    Census(JSContext *cx) : cx(cx), atomsZone(nullptr) { }
+    explicit Census(JSContext *cx) : cx(cx), atomsZone(nullptr) { }
 
     bool init() {
         AutoLockForExclusiveAccess lock(cx);
@@ -298,7 +298,7 @@ class Tally {
     size_t total_;
 
   public:
-    Tally(Census &census) : total_(0) { }
+    explicit Tally(Census &census) : total_(0) { }
     Tally(Tally &&rhs) : total_(rhs.total_) { }
     Tally &operator=(Tally &&rhs) { total_ = rhs.total_; return *this; }
 
@@ -342,7 +342,7 @@ class ByJSType {
     EachOther other;
 
   public:
-    ByJSType(Census &census)
+    explicit ByJSType(Census &census)
       : total_(0),
         objects(census),
         scripts(census),
@@ -456,7 +456,7 @@ class ByObjectClass {
     }
 
   public:
-    ByObjectClass(Census &census) : total_(0), other(census) { }
+    explicit ByObjectClass(Census &census) : total_(0), other(census) { }
     ByObjectClass(ByObjectClass &&rhs)
       : total_(rhs.total_), table(Move(rhs.table)), other(Move(rhs.other))
     { }
@@ -555,7 +555,7 @@ class ByUbinodeType {
     Table table;
 
   public:
-    ByUbinodeType(Census &census) : total_(0) { }
+    explicit ByUbinodeType(Census &census) : total_(0) { }
     ByUbinodeType(ByUbinodeType &&rhs) : total_(rhs.total_), table(Move(rhs.table)) { }
     ByUbinodeType &operator=(ByUbinodeType &&rhs) {
         MOZ_ASSERT(&rhs != this);
@@ -644,7 +644,7 @@ class CensusHandler {
     Assorter assorter;
 
   public:
-    CensusHandler(Census &census) : census(census), assorter(census) { }
+    explicit CensusHandler(Census &census) : census(census), assorter(census) { }
 
     bool init(Census &census) { return assorter.init(census); }
     bool report(Census &census, MutableHandleValue report) {
