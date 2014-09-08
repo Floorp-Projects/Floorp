@@ -386,9 +386,11 @@ nsresult PeerConnectionCtx::Initialize() {
   //codecMask |= VCM_CODEC_RESOURCE_H263;
 
 #ifdef MOZILLA_INTERNAL_API
+#ifdef MOZ_WEBRTC_OMX
   if (Preferences::GetBool("media.peerconnection.video.h264_enabled")) {
     codecMask |= VCM_CODEC_RESOURCE_H264;
   }
+#endif
 #else
   // Outside MOZILLA_INTERNAL_API ensures H.264 available in unit tests
   codecMask |= VCM_CODEC_RESOURCE_H264;
