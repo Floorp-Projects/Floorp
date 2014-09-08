@@ -237,14 +237,6 @@ public class BrowserDB {
         sDb.registerBookmarkObserver(cr, observer);
     }
 
-    public static void registerHistoryObserver(ContentResolver cr, ContentObserver observer) {
-        sDb.registerHistoryObserver(cr, observer);
-    }
-
-    public static void unregisterContentObserver(ContentResolver cr, ContentObserver observer) {
-        cr.unregisterContentObserver(observer);
-    }
-
     public static int getCount(ContentResolver cr, String database) {
         return sDb.getCount(cr, database);
     }
@@ -257,21 +249,9 @@ public class BrowserDB {
         sDb.unpinSite(cr, position);
     }
 
-    public static void unpinAllSites(ContentResolver cr) {
-        sDb.unpinAllSites(cr);
-    }
-
-    public static Cursor getPinnedSites(ContentResolver cr, int limit) {
-        return sDb.getPinnedSites(cr, limit);
-    }
-
     @RobocopTarget
     public static Cursor getBookmarkForUrl(ContentResolver cr, String url) {
         return sDb.getBookmarkForUrl(cr, url);
-    }
-
-    public static boolean areContentProvidersDisabled() {
-        return sAreContentProvidersEnabled;
     }
 
     public static void setEnableContentProviders(boolean enableContentProviders) {

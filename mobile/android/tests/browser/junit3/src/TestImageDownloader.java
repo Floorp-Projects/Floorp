@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.gecko.browser.tests;
+package org.mozilla.gecko;
 
 import android.content.Context;
 import android.content.res.Resources;

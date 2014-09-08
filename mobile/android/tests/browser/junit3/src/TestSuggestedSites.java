@@ -1,47 +1,39 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.gecko.browser.tests;
-
-import android.content.Context;
-import android.content.ContentResolver;
-import android.content.res.Resources;
-import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.ContentObserver;
-import android.net.Uri;
-import android.os.Handler;
-import android.os.SystemClock;
-import android.test.mock.MockResources;
-import android.test.RenamingDelegatingContext;
+package org.mozilla.gecko;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URI;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.jar.JarInputStream;
-import java.util.Map;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import org.mozilla.gecko.BrowserLocaleManager;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.SystemClock;
+import android.test.RenamingDelegatingContext;
+import android.test.mock.MockResources;
 
 public class TestSuggestedSites extends BrowserTestCase {
     private static class TestContext extends RenamingDelegatingContext {
@@ -94,12 +86,10 @@ public class TestSuggestedSites extends BrowserTestCase {
     }
 
     private static class TestDistribution extends Distribution {
-        private final Context context;
         private final Map<Locale, File> filesPerLocale;
 
         public TestDistribution(Context context) {
             super(context);
-            this.context = context;
             this.filesPerLocale = new HashMap<Locale, File>();
         }
 

@@ -27,19 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
 
-/* Wraper for different MediaRouter types supproted by Android. i.e. Chromecast, Miracast, etc. */
-interface GeckoMediaPlayer {
-    public JSONObject toJSON();
-    public void load(String title, String url, String type, EventCallback callback);
-    public void play(EventCallback callback);
-    public void pause(EventCallback callback);
-    public void stop(EventCallback callback);
-    public void start(EventCallback callback);
-    public void end(EventCallback callback);
-    public void mirror(EventCallback callback);
-    public void message(String message, EventCallback callback);
-}
-
 /* Manages a list of GeckoMediaPlayers methods (i.e. Chromecast/Miracast). Routes messages
  * from Gecko to the correct caster based on the id of the display
  */
