@@ -102,6 +102,9 @@ interface MozIccManager : EventTarget
   /** User cleared down call before connection or network release */
   const unsigned short STK_RESULT_USER_CLEAR_DOWN_CALL              = 0x23;
 
+  /** Action in contradiction with the current timer state */
+  const unsigned short STK_RESULT_ACTION_CONTRADICTION_TIMER_STATE  = 0x24;
+
   /** Launch browser generic error code */
   const unsigned short STK_RESULT_LAUNCH_BROWSER_ERROR              = 0x26;
 
