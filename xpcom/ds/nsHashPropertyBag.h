@@ -10,6 +10,8 @@
 #include "nsIVariant.h"
 #include "nsIWritablePropertyBag.h"
 #include "nsIWritablePropertyBag2.h"
+
+#include "nsCycleCollectionParticipant.h"
 #include "nsInterfaceHashtable.h"
 
 class nsHashPropertyBagBase
@@ -38,6 +40,18 @@ public:
 
 protected:
   virtual ~nsHashPropertyBag() {}
+};
+
+/* A cycle collected nsHashPropertyBag for main-thread-only use. */
+class nsHashPropertyBagCC MOZ_FINAL : public nsHashPropertyBagBase
+{
+public:
+  nsHashPropertyBagCC() {}
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHashPropertyBagCC,
+                                           nsIWritablePropertyBag)
+protected:
+  virtual ~nsHashPropertyBagCC() {}
 };
 
 #endif /* nsHashPropertyBag_h___ */
