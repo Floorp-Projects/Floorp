@@ -87,7 +87,7 @@ public:
                                       uint32_t aFlags) MOZ_OVERRIDE;
   virtual bool IsDisplayContainer() MOZ_OVERRIDE { return true; }
 
-  gfxMatrix GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot = nullptr);
+  gfxMatrix GetCanvasTM();
 
   nsRect GetInvalidRegion();
 
