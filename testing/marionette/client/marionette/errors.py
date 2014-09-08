@@ -31,6 +31,7 @@ class ErrorCodes(object):
     INVALID_RESPONSE = 53
     FRAME_SEND_NOT_INITIALIZED_ERROR = 54
     FRAME_SEND_FAILURE_ERROR = 55
+    UNSUPPORTED_OPERATION = 405
     MARIONETTE_ERROR = 500
 
 class MarionetteException(Exception):
@@ -137,4 +138,7 @@ class FrameSendNotInitializedError(MarionetteException):
     pass
 
 class FrameSendFailureError(MarionetteException):
+    pass
+
+class UnsupportedOperationException(MarionetteException):
     pass
