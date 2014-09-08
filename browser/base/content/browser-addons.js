@@ -44,8 +44,11 @@ const gXPInstallObserver = {
     } catch (e) {
       browser = winOrBrowser;
     }
-    if (!browser)
+    // Note that the above try/catch will pass through dead object proxies and
+    // other degenerate objects. Make sure the browser is bonafide.
+    if (!browser || gBrowser.browsers.indexOf(browser) == -1)
       return;
+
     const anchorID = "addons-notification-icon";
     var messageString, action;
     var brandShortName = brandBundle.getString("brandShortName");
