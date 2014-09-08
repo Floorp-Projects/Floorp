@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1064481
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1064481</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1064481">Mozilla Bug 1064481</a>
+  <iframe id="iframe"></iframe>
+  <script type="application/javascript">
+
+var a = new URLSearchParams();
+
+a.set('foobar', 'a\nb');
+is(a.toString(), 'foobar=a%0Ab', "Bug fixed");
+
+  </script>
+</body>
+</html>
