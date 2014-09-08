@@ -123,13 +123,13 @@ public:
    * startTouch() and the current touch from the last
    * updateWithTouchAtDevicePoint().
    */
-  float PanDistance() const;
+  ScreenCoord PanDistance() const;
 
   /**
    * Gets the distance between the starting position of the touch supplied in
    * startTouch() and the supplied position.
    */
-  float PanDistance(ScreenCoord aPos) const;
+  ScreenCoord PanDistance(ScreenCoord aPos) const;
 
   /**
    * Applies friction during a fling, or cancels the fling if the velocity is
