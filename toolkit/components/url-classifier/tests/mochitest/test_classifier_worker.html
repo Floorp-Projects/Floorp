@@ -28,14 +28,14 @@ var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
 
 function doUpdate(update) {
   var listener = {
-    QueryInterface: function(iid)
+    QueryInterface: SpecialPowers.wrapCallback(function(iid)
     {
       if (iid.equals(Ci.nsISupports) ||
           iid.equals(Ci.nsIUrlClassifierUpdateObserver))
         return this;
 
       throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    }),
     updateUrlRequested: function(url) { },
     streamFinished: function(status) { },
     updateError: function(errorCode) {

@@ -23,14 +23,14 @@ function startCallbackTimer() {
 
 
 var observer = {
-    QueryInterface : function (iid) {
+    QueryInterface : SpecialPowers.wrapCallback(function (iid) {
         const interfaces = [Ci.nsIObserver,
                             Ci.nsISupports, Ci.nsISupportsWeakReference];
 
         if (!interfaces.some( function(v) { return iid.equals(v) } ))
             throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
         return this;
-    },
+    }),
 
     observe : SpecialPowers.wrapCallback(function (subject, topic, data) {
       try {
