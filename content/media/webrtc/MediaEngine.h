@@ -10,8 +10,13 @@
 #include "DOMMediaStream.h"
 #include "MediaStreamGraph.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
+#include "mozilla/dom/VideoStreamTrack.h"
 
 namespace mozilla {
+
+namespace dom {
+class DOMFile;
+}
 
 struct VideoTrackConstraintsN;
 struct AudioTrackConstraintsN;
@@ -136,6 +141,29 @@ public:
 
   /* Returns the type of media source (camera, microphone, screen, window, etc) */
   virtual const MediaSourceType GetMediaSource() = 0;
+
+  // Callback interface for TakePhoto(). Either PhotoComplete() or PhotoError()
+  // should be called.
+  class PhotoCallback {
+  public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PhotoCallback)
+
+    // aBlob is the image captured by MediaEngineSource. It is
+    // called on main thread.
+    virtual nsresult PhotoComplete(already_AddRefed<dom::DOMFile> aBlob) = 0;
+
+    // It is called on main thread. aRv is the error code.
+    virtual nsresult PhotoError(nsresult aRv) = 0;
+
+  protected:
+    virtual ~PhotoCallback() {}
+  };
+
+  /* If implementation of MediaEngineSource supports TakePhoto(), the picture
+   * should be return via aCallback object. Otherwise, it returns NS_ERROR_NOT_IMPLEMENTED.
+   * Currently, only Gonk MediaEngineSource implementation supports it.
+   */
+  virtual nsresult TakePhoto(PhotoCallback* aCallback) = 0;
 
   /* Return false if device is currently allocated or started */
   bool IsAvailable() {
