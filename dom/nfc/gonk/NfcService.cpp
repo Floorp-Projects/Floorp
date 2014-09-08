@@ -199,26 +199,22 @@ public:
   {
     assertIsNfcServiceThread();
 
-    size_t size = mData->mSize;
-    size_t offset = 0;
-
-    while (size > 0) {
+    while (mData->GetSize()) {
       EventOptions event;
-      const uint8_t* data = mData->mData.get();
-      uint32_t parcelSize = ((data[offset + 0] & 0xff) << 24) |
-                            ((data[offset + 1] & 0xff) << 16) |
-                            ((data[offset + 2] & 0xff) <<  8) |
-                             (data[offset + 3] & 0xff);
-      MOZ_ASSERT(parcelSize <= (mData->mSize - offset));
+      const uint8_t* data = mData->GetData();
+      uint32_t parcelSize = ((data[0] & 0xff) << 24) |
+                            ((data[1] & 0xff) << 16) |
+                            ((data[2] & 0xff) <<  8) |
+                             (data[3] & 0xff);
+      MOZ_ASSERT(parcelSize <= mData->GetSize());
 
       Parcel parcel;
-      parcel.setData(&data[offset], parcelSize + sizeof(int));
+      parcel.setData(mData->GetData(), parcelSize + sizeof(parcelSize));
       mHandler->Unmarshall(parcel, event);
       nsCOMPtr<nsIRunnable> runnable = new NfcEventDispatcher(event);
       NS_DispatchToMainThread(runnable);
 
-      size -= parcel.dataSize();
-      offset += parcel.dataSize();
+      mData->Consume(parcelSize + sizeof(parcelSize));
     }
 
     return NS_OK;
