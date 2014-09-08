@@ -184,11 +184,13 @@ DispatchRILEvent::RunTask(JSContext *aCx)
 {
     JS::Rooted<JSObject*> obj(aCx, JS::CurrentGlobalOrNull(aCx));
 
-    JS::Rooted<JSObject*> array(aCx, JS_NewUint8Array(aCx, mMessage->mSize));
+    JS::Rooted<JSObject*> array(aCx,
+                                JS_NewUint8Array(aCx, mMessage->GetSize()));
     if (!array) {
         return false;
     }
-    memcpy(JS_GetArrayBufferViewData(array), mMessage->mData, mMessage->mSize);
+    memcpy(JS_GetArrayBufferViewData(array),
+           mMessage->GetData(), mMessage->GetSize());
 
     JS::AutoValueArray<2> args(aCx);
     args[0].setNumber((uint32_t)mClientId);

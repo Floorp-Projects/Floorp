@@ -22,6 +22,6 @@
 
     <instrumentation
         android:label="@string/app_name"
-        android:name="org.mozilla.gecko.browser.harness.BrowserInstrumentationTestRunner"
+        android:name="org.mozilla.gecko.harness.BrowserInstrumentationTestRunner"
         android:targetPackage="@ANDROID_BROWSER_TARGET_PACKAGE_NAME@" />
 </manifest>
