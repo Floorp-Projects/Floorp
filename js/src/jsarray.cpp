@@ -340,8 +340,12 @@ DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeede
             if (idx < obj->getDenseInitializedLength()) {
                 if (!obj->maybeCopyElementsForWrite(cx))
                     return false;
-                obj->markDenseElementsNotPacked(cx);
-                obj->setDenseElement(idx, MagicValue(JS_ELEMENTS_HOLE));
+                if (idx+1 == obj->getDenseInitializedLength()) {
+                    obj->setDenseInitializedLength(idx);
+                } else {
+                    obj->markDenseElementsNotPacked(cx);
+                    obj->setDenseElement(idx, MagicValue(JS_ELEMENTS_HOLE));
+                }
                 if (!js_SuppressDeletedElement(cx, obj, idx))
                     return false;
             }
@@ -2140,19 +2144,6 @@ js::array_pop(JSContext *cx, unsigned argc, Value *vp)
         /* Step 5c. */
         if (!hole && !DeletePropertyOrThrow(cx, obj, index))
             return false;
-    }
-
-    // If this was an array, then there are no elements above the one we just
-    // deleted (if we deleted an element).  Thus we can shrink the dense
-    // initialized length accordingly.  (This is fine even if the array length
-    // is non-writable: length-changing occurs after element-deletion effects.)
-    // Don't do anything if this isn't an array, as any deletion above has no
-    // effect on any elements after the "last" one indicated by the "length"
-    // property.
-    if (obj->is<ArrayObject>() && obj->getDenseInitializedLength() > index) {
-        if (!obj->maybeCopyElementsForWrite(cx))
-            return false;
-        obj->setDenseInitializedLength(index);
     }
 
     /* Steps 4a, 5d. */

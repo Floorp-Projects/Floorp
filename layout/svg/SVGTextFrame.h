@@ -318,8 +318,8 @@ public:
   // nsISVGChildFrame interface:
   virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
   virtual nsresult PaintSVG(nsRenderingContext* aContext,
-                            const nsIntRect* aDirtyRect,
-                            nsIFrame* aTransformRoot = nullptr) MOZ_OVERRIDE;
+                            const gfxMatrix& aTransform,
+                            const nsIntRect* aDirtyRect = nullptr) MOZ_OVERRIDE;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) MOZ_OVERRIDE;
   virtual void ReflowSVG() MOZ_OVERRIDE;
   virtual nsRect GetCoveredRegion() MOZ_OVERRIDE;
@@ -348,6 +348,14 @@ public:
                              float* aResult);
 
   // SVGTextFrame methods:
+
+  /**
+   * Handles a base or animated attribute value change to a descendant
+   * text content element.
+   */
+  void HandleAttributeChangeInDescendant(mozilla::dom::Element* aElement,
+                                         int32_t aNameSpaceID,
+                                         nsIAtom* aAttribute);
 
   /**
    * Schedules mPositions to be recomputed and the covered region to be

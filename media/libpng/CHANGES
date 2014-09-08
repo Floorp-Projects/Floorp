@@ -1,4 +1,4 @@
-#if 0
+
 CHANGES - changes for libpng
 
 Version 0.2
@@ -4345,8 +4345,9 @@ Version 1.6.0beta37 [January 10, 2013]
     programs to generate and test a PNG which should have the problem.
 
 Version 1.6.0beta39 [January 19, 2013]
-  Again corrected attempt at overflow detection in png_set_unknown_chunks().
-  Added overflow detection in png_set_sPLT() and png_set_text_2().
+  Again corrected attempt at overflow detection in png_set_unknown_chunks()
+  (CVE-2013-7353).  Added overflow detection in png_set_sPLT() and
+  png_set_text_2() (CVE-2013-7354).
 
 Version 1.6.0beta40 [January 20, 2013]
   Use consistent handling of overflows in text, sPLT and unknown png_set_* APIs
@@ -4873,6 +4874,109 @@ Version 1.6.10rc03 [March 4, 2014]
   Un-deprecated png_data_freer().
 
 Version 1.6.10 [March 6, 2014]
+  No changes.
+
+Version 1.6.11beta01 [March 17, 2014]
+  Use "if (value != 0)" instead of "if (value)" consistently.
+  Changed ZlibSrcDir from 1.2.5 to 1.2.8 in projects/vstudio.
+  Moved configuration information from the manual to the INSTALL file.
+
+Version 1.6.11beta02 [April 6, 2014]
+  Removed #if/#else/#endif from inside two pow() calls in pngvalid.c because
+    they were handled improperly by Portland Group's PGI-14.1 - PGI-14.3
+    when using its "__builtin_pow()" function.
+  Silence 'unused parameter' build warnings (Cosmin Truta).
+  $(CP) is now used alongside $(RM_F).  Also, use 'copy' instead of 'cp'
+    where applicable, and applied other minor makefile changes (Cosmin).
+  Don't warn about invalid dimensions exceeding user limits (Cosmin).
+  Allow an easy replacement of the default pre-built configuration
+    header with a custom header, via the make PNGLIBCONF_H_PREBUILT
+    macro (Cosmin).
+
+Version 1.6.11beta03 [April 6, 2014]
+  Fixed a typo in pngrutil.c, introduced in libpng-1.5.6, that interferes
+    with "blocky" expansion of sub-8-bit interlaced PNG files (Eric Huss).
+  Optionally use  __builtin_bswap16() in png_do_swap().
+
+Version 1.6.11beta04 [April 19, 2014]
+  Made progressive reading of interlaced images consistent with the
+    behavior of the sequential reader and consistent with the manual, by
+    moving some code out of the PNG_READ_INTERLACING_SUPPORTED blocks. The
+    row_callback now receives the proper pass number and unexpanded rows, when
+    png_combine_row() isn't built or used, and png_set_interlace_handling()
+    is not called.
+  Allow PNG_sRGB_PROFILE_CHECKING = (-1) to mean no sRGB profile checking.
+
+Version 1.6.11beta05 [April 26, 2014]
+  Do not reject ICC V2 profiles that lack padding (Kai-Uwe Behrmann).
+  Relocated closing bracket of the sRGB profile test loop to avoid getting
+    "Not recognizing known sRGB profile that has been edited" warning for
+    ICC V2 profiles that lack the MD5 signature in the profile header.
+
+Version 1.6.11beta06 [May 19, 2014]
+  Added PNG_SKIP_sRGB_CHECK_PROFILE choice for png_set_option().
+
+Version 1.6.11rc01 [May 27, 2014]
+  No changes.
+
+Version 1.6.11rc02 [June 3, 2014]
+  Test ZLIB_VERNUM instead of PNG_ZLIB_VERNUM in contrib/tools/pngfix.c
+
+Version 1.6.11 [June 5, 2014]
+  No changes.
+
+Version 1.6.12rc01 [June 6, 2014]
+  Relocated new code from 1.6.11beta06 in png.c to a point after the
+    declarations (Max Stepin).
+
+Version 1.6.12rc02 [June 7, 2014]
+  Changed file permissions of contrib/tools/intgamma.sh,
+    test-driver, and compile from 0644 to 0755 (Cosmin).
+
+Version 1.6.12rc03 [June 8, 2014]
+  Ensure "__has_attribute()" macro exists before trying to use it with
+    old clang compilers (MacPorts Ticket #43939).
+
+Version 1.6.12 [June 12, 2014]
+  No changes.
+
+Version 1.6.13beta01 [July 4, 2014]
+  Quieted -Wsign-compare and -Wclobber compiler warnings in
+    contrib/pngminus/*.c
+  Added "(void) png_ptr;" where needed in contrib/gregbook to quiet
+    compiler complaints about unused pointers.
+  Split a long output string in contrib/gregbook/rpng2-x.c.
+  Added "PNG_SET_OPTION" requirement for sRGB chunk support to pnglibconf.dfa,
+    Needed for write-only support (John Bowler).
+  Changed "if defined(__ARM_NEON__)" to
+    "if (defined(__ARM_NEON__) || defined(__ARM_NEON))" (James Wu).
+  Fixed clang no-warning builds: png_digit was defined but never used.
+    
+Version 1.6.13beta02 [July 21, 2014]
+  Fixed an incorrect separator ("/" should be "\") in scripts/makefile.vcwin32
+    (bug report from Wolfgang S. Kechel).  Bug was introduced in libpng-1.6.11.
+    Also fixed makefile.bc32, makefile.bor, makefile.msc, makefile.intel, and
+    makefile.tc3 similarly.
+
+Version 1.6.13beta03 [August 3, 2014]
+  Removed scripts/makefile.elf. It has not worked since libpng-1.5.0beta14
+    due to elimination of the PNG_FUNCTION_EXPORT and PNG_DATA_EXPORT
+    definitions from pngconf.h.
+  Ensure that CMakeLists.txt makes the target "lib" directory before making
+    symbolic link into it (SourceForge bug report #226 by Rolf Timmermans).
+
+Version 1.6.13beta04 [August 8, 2014]
+  Added opinion that the ECCN (Export Control Classification Number) for
+    libpng is EAR99 to the README file.
+  Eliminated use of "$<" in makefile explicit rules, when copying
+    $PNGLIBCONF_H_PREBUILT.  This does not work on some versions of make;
+    bug introduced in libpng version 1.6.11.
+
+Version 1.6.13rc01 [August 14, 2014]
+  Made "ccopts" agree with "CFLAGS" in scripts/makefile.hp* and makefile.*sunu
+
+Version 1.6.13 [August 21, 2014]
+  No changes.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit
@@ -4881,4 +4985,3 @@ to subscribe)
 or to glennrp at users.sourceforge.net
 
 Glenn R-P
-#endif
