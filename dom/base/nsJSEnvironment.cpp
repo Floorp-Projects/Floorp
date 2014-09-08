@@ -97,10 +97,6 @@ using namespace mozilla::dom;
 
 const size_t gStackSize = 8192;
 
-#ifdef PR_LOGGING
-static PRLogModuleInfo* gJSDiagnostics;
-#endif
-
 // Thank you Microsoft!
 #ifdef CompareString
 #undef CompareString
@@ -352,45 +348,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
   return called;
 }
 
-namespace mozilla {
-namespace dom {
-
-void
-AsyncErrorReporter::ReportError()
-{
-  nsCOMPtr<nsIScriptError> errorObject =
-    do_CreateInstance("@mozilla.org/scripterror;1");
-  if (!errorObject) {
-    return;
-  }
-
-  uint64_t windowID = mReport->mWindow ? mReport->mWindow->WindowID() : 0;
-  nsresult rv = errorObject->InitWithWindowID(mReport->mErrorMsg,
-                                              mReport->mFileName,
-                                              mReport->mSourceLine,
-                                              mReport->mLineNumber,
-                                              mReport->mColumn,
-                                              mReport->mFlags,
-                                              mReport->Category(),
-                                              windowID);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsCOMPtr<nsIConsoleService> consoleService =
-    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  if (!consoleService) {
-    return;
-  }
-
-  consoleService->LogMessage(errorObject);
-  return;
-}
-
-} // namespace dom
-} // namespace mozilla
-
-class ScriptErrorEvent : public AsyncErrorReporter
+class ScriptErrorEvent : public nsRunnable
 {
 public:
   ScriptErrorEvent(JSRuntime* aRuntime,
@@ -398,8 +356,7 @@ public:
                    nsIPrincipal* aScriptOriginPrincipal,
                    JS::Handle<JS::Value> aError,
                    bool aDispatchEvent)
-    // Pass an empty category, then compute ours
-    : AsyncErrorReporter(aRuntime, aReport)
+    : mReport(aReport)
     , mOriginPrincipal(aScriptOriginPrincipal)
     , mDispatchEvent(aDispatchEvent)
     , mError(aRuntime, aError)
@@ -464,13 +421,14 @@ public:
     }
 
     if (status != nsEventStatus_eConsumeNoDefault) {
-      AsyncErrorReporter::ReportError();
+      mReport->LogToConsole();
     }
 
     return NS_OK;
   }
 
 private:
+  nsRefPtr<xpc::ErrorReport>      mReport;
   nsCOMPtr<nsIPrincipal>          mOriginPrincipal;
   bool                            mDispatchEvent;
   JS::PersistentRootedValue       mError;
@@ -521,49 +479,6 @@ NS_ScriptErrorReporter(JSContext *cx,
                             */
                            report->errorNumber != JSMSG_OUT_OF_MEMORY));
   }
-
-  if (nsContentUtils::DOMWindowDumpEnabled()) {
-    // Print it to stderr as well, for the benefit of those invoking
-    // mozilla with -console.
-    nsAutoCString error;
-    error.AssignLiteral("JavaScript ");
-    if (JSREPORT_IS_STRICT(report->flags))
-      error.AppendLiteral("strict ");
-    if (JSREPORT_IS_WARNING(report->flags))
-      error.AppendLiteral("warning: ");
-    else
-      error.AppendLiteral("error: ");
-    error.Append(report->filename);
-    error.AppendLiteral(", line ");
-    error.AppendInt(report->lineno, 10);
-    error.AppendLiteral(": ");
-    if (report->ucmessage) {
-      AppendUTF16toUTF8(reinterpret_cast<const char16_t*>(report->ucmessage),
-                        error);
-    } else {
-      error.Append(message);
-    }
-
-    fprintf(stderr, "%s\n", error.get());
-    fflush(stderr);
-  }
-
-#ifdef PR_LOGGING
-  if (!gJSDiagnostics)
-    gJSDiagnostics = PR_NewLogModule("JSDiagnostics");
-
-  if (gJSDiagnostics) {
-    PR_LOG(gJSDiagnostics,
-           JSREPORT_IS_WARNING(report->flags) ? PR_LOG_WARNING : PR_LOG_ERROR,
-           ("file %s, line %u: %s\n%s%s",
-            report->filename, report->lineno, message,
-            report->linebuf ? report->linebuf : "",
-            (report->linebuf &&
-             report->linebuf[strlen(report->linebuf)-1] != '\n')
-            ? "\n"
-            : ""));
-  }
-#endif
 }
 
 #ifdef DEBUG

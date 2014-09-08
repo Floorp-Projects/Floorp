@@ -297,6 +297,62 @@ xpc::ErrorReport::InitInternal(JSErrorReport *aReport,
     mFlags = aReport->flags;
 }
 
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gJSDiagnostics;
+#endif
+
+void
+xpc::ErrorReport::LogToConsole()
+{
+    // Log to stdout.
+    if (nsContentUtils::DOMWindowDumpEnabled()) {
+        nsAutoCString error;
+        error.AssignLiteral("JavaScript ");
+        if (JSREPORT_IS_STRICT(mFlags))
+            error.AppendLiteral("strict ");
+        if (JSREPORT_IS_WARNING(mFlags))
+            error.AppendLiteral("warning: ");
+        else
+            error.AppendLiteral("error: ");
+        error.Append(NS_LossyConvertUTF16toASCII(mFileName));
+        error.AppendLiteral(", line ");
+        error.AppendInt(mLineNumber, 10);
+        error.AppendLiteral(": ");
+        error.Append(NS_LossyConvertUTF16toASCII(mErrorMsg));
+
+        fprintf(stderr, "%s\n", error.get());
+        fflush(stderr);
+    }
+
+#ifdef PR_LOGGING
+    // Log to the PR Log Module.
+    if (!gJSDiagnostics)
+        gJSDiagnostics = PR_NewLogModule("JSDiagnostics");
+    if (gJSDiagnostics) {
+        PR_LOG(gJSDiagnostics,
+                JSREPORT_IS_WARNING(mFlags) ? PR_LOG_WARNING : PR_LOG_ERROR,
+                ("file %s, line %u\n%s", NS_LossyConvertUTF16toASCII(mFileName).get(),
+                 mLineNumber, NS_LossyConvertUTF16toASCII(mErrorMsg).get()));
+    }
+#endif
+
+    // Log to the console. We do this last so that we can simply return if
+    // there's no console service without affecting the other reporting
+    // mechanisms.
+    nsCOMPtr<nsIConsoleService> consoleService =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    nsCOMPtr<nsIScriptError> errorObject =
+      do_CreateInstance("@mozilla.org/scripterror;1");
+    NS_ENSURE_TRUE_VOID(consoleService && errorObject);
+
+    nsresult rv = errorObject->InitWithWindowID(mErrorMsg, mFileName, mSourceLine,
+                                                mLineNumber, mColumn, mFlags, Category(),
+                                                mWindow ? mWindow->WindowID() : 0);
+    NS_ENSURE_SUCCESS_VOID(rv);
+    consoleService->LogMessage(errorObject);
+
+}
+
 /***************************************************************************/
 
 
