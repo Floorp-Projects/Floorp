@@ -254,18 +254,12 @@ Submitter.prototype = {
     }
     let serverURL = this.extraKeyVals.ServerURL;
 
-    // Override the submission URL from the environment or prefs.
+    // Override the submission URL from the environment
 
     var envOverride = Cc['@mozilla.org/process/environment;1'].
       getService(Ci.nsIEnvironment).get("MOZ_CRASHREPORTER_URL");
     if (envOverride != '') {
       serverURL = envOverride;
-    }
-    else if ('PluginHang' in this.extraKeyVals) {
-      try {
-        serverURL = Services.prefs.
-          getCharPref("toolkit.crashreporter.pluginHangSubmitURL");
-      } catch(e) { }
     }
 
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
