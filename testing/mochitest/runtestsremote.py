@@ -252,6 +252,10 @@ class MochiRemote(Mochitest):
         else:
             self.log.warning("Unable to retrieve log file (%s) from remote device" % self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
+        # Don't leave an old robotium.config hanging around; the
+        # profile it references was just deleted!
+        deviceRoot = self._dm.getDeviceRoot()
+        self._dm.removeFile(os.path.join(deviceRoot, "robotium.config"))
         blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
         if blobberUploadDir:
             self._dm.getDirectory(self.remoteNSPR, blobberUploadDir)
@@ -674,11 +678,6 @@ def main():
             my_tests = tests[start:end]
             log.info("Running tests %d-%d/%d" % (start+1, end, len(tests)))
 
-        dm.removeFile(os.path.join(deviceRoot, "fennec_ids.txt"))
-        fennec_ids = os.path.abspath(os.path.join(SCRIPT_DIR, "fennec_ids.txt"))
-        if not os.path.exists(fennec_ids) and options.robocopIds:
-            fennec_ids = options.robocopIds
-        dm.pushFile(fennec_ids, os.path.join(deviceRoot, "fennec_ids.txt"))
         options.extraPrefs.append('browser.search.suggest.enabled=true')
         options.extraPrefs.append('browser.search.suggest.prompted=true')
         options.extraPrefs.append('layout.css.devPixelsPerPx=1.0')
