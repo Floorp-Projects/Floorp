@@ -629,42 +629,6 @@ XPC_WN_NoHelper_Resolve(JSContext *cx, HandleObject obj, HandleId id)
                                  JSPROP_PERMANENT, nullptr);
 }
 
-static JSObject *
-XPC_WN_OuterObject(JSContext *cx, HandleObject objArg)
-{
-    JSObject *obj = objArg;
-
-    XPCWrappedNative *wrapper = XPCWrappedNative::Get(obj);
-    if (!wrapper) {
-        Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
-
-        return nullptr;
-    }
-
-    if (!wrapper->IsValid()) {
-        Throw(NS_ERROR_XPC_HAS_BEEN_SHUTDOWN, cx);
-
-        return nullptr;
-    }
-
-    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
-    if (si && si->GetFlags().WantOuterObject()) {
-        RootedObject newThis(cx);
-        nsresult rv =
-            si->GetCallback()->OuterObject(wrapper, cx, obj, newThis.address());
-
-        if (NS_FAILED(rv)) {
-            Throw(rv, cx);
-
-            return nullptr;
-        }
-
-        obj = newThis;
-    }
-
-    return obj;
-}
-
 const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
   { // base
     "XPCWrappedNative_NoHelper",    // name;
@@ -1172,24 +1136,8 @@ XPCNativeScriptableShared::PopulateJSClass()
     // We have to figure out resolve strategy at call time
     mJSClass.base.resolve = (JSResolveOp) XPC_WN_Helper_NewResolve;
 
-    // We need to respect content-defined toString() hooks on Window objects.
-    // In particular, js::DefaultValue checks for a convert stub, and the one
-    // we would install below ignores anything implemented in JS.
-    //
-    // We've always had this behavior for most XPCWrappedNative-implemented
-    // objects. However, Window was special, because the outer-window proxy
-    // had a null convert hook, which means that we'd end up with the default
-    // JS-engine behavior (which respects toString() overrides). We've fixed
-    // the convert hook on the outer-window proxy to invoke the defaultValue
-    // hook on the proxy, which in this case invokes js::DefaultValue on the
-    // target. So now we need to special-case this for Window to maintain
-    // consistent behavior. This can go away once Window is on WebIDL bindings.
-    //
-    // Note that WantOuterObject() is true if and only if this is a Window object.
     if (mFlags.WantConvert())
         mJSClass.base.convert = XPC_WN_Helper_Convert;
-    else if (mFlags.WantOuterObject())
-        mJSClass.base.convert = JS_ConvertStub;
     else
         mJSClass.base.convert = XPC_WN_Shared_Convert;
 
@@ -1215,9 +1163,6 @@ XPCNativeScriptableShared::PopulateJSClass()
         mJSClass.base.trace = JS_GlobalObjectTraceHook;
     else
         mJSClass.base.trace = XPCWrappedNative::Trace;
-
-    if (mFlags.WantOuterObject())
-        mJSClass.base.ext.outerObject = XPC_WN_OuterObject;
 
     mJSClass.base.ext.isWrappedNative = true;
 }
