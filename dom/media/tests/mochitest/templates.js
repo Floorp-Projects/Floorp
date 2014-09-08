@@ -24,24 +24,27 @@ function dumpSdp(test) {
     dump("ERROR: SDP answer: " + test._remote_answer.sdp.replace(/[\r]/g, ''));
   }
 
-  if (typeof test.pcLocal.iceConnectionLog !== 'undefined') {
+  if ((test.pcLocal) && (typeof test.pcLocal.iceConnectionLog !== 'undefined')) {
     dump("pcLocal ICE connection state log: " + test.pcLocal.iceConnectionLog + "\n");
   }
-  if (typeof test.pcRemote.iceConnectionLog !== 'undefined') {
+  if ((test.pcRemote) && (typeof test.pcRemote.iceConnectionLog !== 'undefined')) {
     dump("pcRemote ICE connection state log: " + test.pcRemote.iceConnectionLog + "\n");
   }
 
-  if ((typeof test.pcLocal.setRemoteDescDate !== 'undefined') &&
+  if ((test.pcLocal) && (test.pcRemote) &&
+    (typeof test.pcLocal.setRemoteDescDate !== 'undefined') &&
     (typeof test.pcRemote.setLocalDescDate !== 'undefined')) {
     var delta = deltaSeconds(test.pcLocal.setRemoteDescDate, test.pcRemote.setLocalDescDate);
     dump("Delay between pcLocal.setRemote <-> pcRemote.setLocal: " + delta + "\n");
   }
-  if ((typeof test.pcLocal.setRemoteDescDate !== 'undefined') &&
+  if ((test.pcLocal) && (test.pcRemote) &&
+    (typeof test.pcLocal.setRemoteDescDate !== 'undefined') &&
     (typeof test.pcLocal.setRemoteDescStableEventDate !== 'undefined')) {
     var delta = deltaSeconds(test.pcLocal.setRemoteDescDate, test.pcLocal.setRemoteDescStableEventDate);
     dump("Delay between pcLocal.setRemote <-> pcLocal.signalingStateStable: " + delta + "\n");
   }
-  if ((typeof test.pcRemote.setLocalDescDate !== 'undefined') &&
+  if ((test.pcLocal) && (test.pcRemote) &&
+    (typeof test.pcRemote.setLocalDescDate !== 'undefined') &&
     (typeof test.pcRemote.setLocalDescStableEventDate !== 'undefined')) {
     var delta = deltaSeconds(test.pcRemote.setLocalDescDate, test.pcRemote.setLocalDescStableEventDate);
     dump("Delay between pcRemote.setLocal <-> pcRemote.signalingStateStable: " + delta + "\n");
@@ -49,6 +52,22 @@ function dumpSdp(test) {
 }
 
 var commandsPeerConnection = [
+  [
+    'PC_SETUP_SIGNALING_CLIENT',
+    function (test) {
+      if (test.steeplechase) {
+        test.setupSignalingClient();
+        test.registerSignalingCallback("ice_candidate", function (message) {
+          var pc = test.pcRemote ? test.pcRemote : test.pcLocal;
+          pc.storeOrAddIceCandidate(new mozRTCIceCandidate(message.ice_candidate));
+        });
+        test.registerSignalingCallback("end_of_trickle_ice", function (message) {
+          test.signalingMessagesFinished();
+        });
+      }
+      test.next();
+    }
+  ],
   [
     'PC_LOCAL_SETUP_ICE_LOGGER',
     function (test) {
@@ -145,11 +164,12 @@ var commandsPeerConnection = [
       test.createOffer(test.pcLocal, function (offer) {
         is(test.pcLocal.signalingState, STABLE,
            "Local create offer does not change signaling state");
-        if (!test.pcRemote) {
-          send_message({"offer": test.originalOffer,
+        if (test.steeplechase) {
+          send_message({"type": "offer",
+                        "offer": test.originalOffer,
                         "offer_constraints": test.pcLocal.constraints,
                         "offer_options": test.pcLocal.offerOptions});
-          test._local_offer = test.pcLocal._last_offer;
+          test._local_offer = test.originalOffer;
           test._offer_constraints = test.pcLocal.constraints;
           test._offer_options = test.pcLocal.offerOptions;
         }
@@ -170,13 +190,13 @@ var commandsPeerConnection = [
   [
     'PC_REMOTE_GET_OFFER',
     function (test) {
-      if (test.pcLocal) {
+      if (!test.steeplechase) {
         test._local_offer = test.originalOffer;
         test._offer_constraints = test.pcLocal.constraints;
         test._offer_options = test.pcLocal.offerOptions;
         test.next();
       } else {
-        wait_for_message().then(function(message) {
+        test.getSignalingMessage("offer", function (message) {
           ok("offer" in message, "Got an offer message");
           test._local_offer = new mozRTCSessionDescription(message.offer);
           test._offer_constraints = message.offer_constraints;
@@ -224,8 +244,9 @@ var commandsPeerConnection = [
       test.createAnswer(test.pcRemote, function (answer) {
         is(test.pcRemote.signalingState, HAVE_REMOTE_OFFER,
            "Remote createAnswer does not change signaling state");
-        if (!test.pcLocal) {
-          send_message({"answer": test.originalAnswer,
+        if (test.steeplechase) {
+          send_message({"type": "answer",
+                        "answer": test.originalAnswer,
                         "answer_constraints": test.pcRemote.constraints});
           test._remote_answer = test.pcRemote._last_answer;
           test._answer_constraints = test.pcRemote.constraints;
@@ -261,7 +282,7 @@ var commandsPeerConnection = [
         return resultArray;
       }
 
-      const offerTriples = _sdpCandidatesIntoArray(test.originalOffer.sdp);
+      const offerTriples = _sdpCandidatesIntoArray(test._local_offer.sdp);
       info("Offer ICE host candidates: " + JSON.stringify(offerTriples));
 
       const answerTriples = _sdpCandidatesIntoArray(test.originalAnswer.sdp);
@@ -269,7 +290,7 @@ var commandsPeerConnection = [
 
       for (var i=0; i< offerTriples.length; i++) {
         if (answerTriples.indexOf(offerTriples[i]) !== -1) {
-          dump("SDP offer: " + test.originalOffer.sdp.replace(/[\r]/g, '') + "\n");
+          dump("SDP offer: " + test._local_offer.sdp.replace(/[\r]/g, '') + "\n");
           dump("SDP answer: " + test.originalAnswer.sdp.replace(/[\r]/g, '') + "\n");
           ok(false, "This IP:Port " + offerTriples[i] + " appears in SDP offer and answer!");
         }
@@ -293,12 +314,12 @@ var commandsPeerConnection = [
   [
     'PC_LOCAL_GET_ANSWER',
     function (test) {
-      if (test.pcRemote) {
+      if (!test.steeplechase) {
         test._remote_answer = test.originalAnswer;
         test._answer_constraints = test.pcRemote.constraints;
         test.next();
       } else {
-        wait_for_message().then(function(message) {
+        test.getSignalingMessage("answer", function (message) {
           ok("answer" in message, "Got an answer message");
           test._remote_answer = new mozRTCSessionDescription(message.answer);
           test._answer_constraints = message.answer_constraints;
@@ -762,8 +783,9 @@ var commandsDataChannel = [
            "Local create offer does not change signaling state");
         ok(offer.sdp.contains("m=application"),
            "m=application is contained in the SDP");
-        if (!test.pcRemote) {
-          send_message({"offer": test.originalOffer,
+        if (test.steeplechase) {
+          send_message({"type": "offer",
+                        "offer": test.originalOffer,
                         "offer_constraints": test.pcLocal.constraints,
                         "offer_options": test.pcLocal.offerOptions});
           test._local_offer = test.pcLocal._last_offer;
@@ -788,13 +810,13 @@ var commandsDataChannel = [
   [
     'PC_REMOTE_GET_OFFER',
     function (test) {
-      if (test.pcLocal) {
+      if (!test.steeplechase) {
         test._local_offer = test.originalOffer;
         test._offer_constraints = test.pcLocal.constraints;
         test._offer_options = test.pcLocal.offerOptions;
         test.next();
       } else {
-        wait_for_message().then(function(message) {
+        test.getSignalingMessage("offer", function (message) {
           ok("offer" in message, "Got an offer message");
           test._local_offer = new mozRTCSessionDescription(message.offer);
           test._offer_constraints = message.offer_constraints;
@@ -845,8 +867,9 @@ var commandsDataChannel = [
            "Remote createAnswer does not change signaling state");
         ok(answer.sdp.contains("m=application"),
            "m=application is contained in the SDP");
-        if (!test.pcLocal) {
-          send_message({"answer": test.originalAnswer,
+        if (test.steeplechase) {
+          send_message({"type":"answer",
+                        "answer": test.originalAnswer,
                         "answer_constraints": test.pcRemote.constraints});
           test._remote_answer = test.pcRemote._last_answer;
           test._answer_constraints = test.pcRemote.constraints;
@@ -892,12 +915,12 @@ var commandsDataChannel = [
   [
     'PC_LOCAL_GET_ANSWER',
     function (test) {
-      if (test.pcRemote) {
+      if (!test.steeplechase) {
         test._remote_answer = test.originalAnswer;
         test._answer_constraints = test.pcRemote.constraints;
         test.next();
       } else {
-        wait_for_message().then(function(message) {
+        test.getSignalingMessage("answer", function (message) {
           ok("answer" in message, "Got an answer message");
           test._remote_answer = new mozRTCSessionDescription(message.answer);
           test._answer_constraints = message.answer_constraints;
