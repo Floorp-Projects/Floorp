@@ -32,46 +32,8 @@ typedef enum {
     evHoldRevert = HOLDREVERT,
     evWhisper = WHISPER,
     evWaitingForDigits = WAITINGFORDIGITS,
-    evCreateOfferSuccess = CREATEOFFERSUCCESS,
-    evCreateAnswerSuccess = CREATEANSWERSUCCESS,
-    evCreateOfferError = CREATEOFFERERROR,
-    evCreateAnswerError = CREATEANSWERERROR,
-    evSetLocalDescSuccess = SETLOCALDESCSUCCESS,
-    evSetRemoteDescSuccess = SETREMOTEDESCSUCCESS,
-    evUpdateLocalDesc = UPDATELOCALDESC,
-    evSetLocalDescError = SETLOCALDESCERROR,
-    evSetRemoteDescError = SETREMOTEDESCERROR,
-    evOnRemoteStreamAdd = REMOTESTREAMADD,
-    evAddIceCandidate = ADDICECANDIDATE,
-    evAddIceCandidateError = ADDICECANDIDATEERROR,
-    evFoundIceCandidate = FOUNDICECANDIDATE,
-    evFoundIceCandidateError = FOUNDICECANDIDATEERROR,
     evMaxEvent
 } call_events;
-
-/* These values must be kept in sync with the equivalent values in:
- *
- *   PeerConnectionImpl.h
- *   Peerconnection.js
- *   nsIDOMPeerConnection.idl
- *
- * Yes, this is far from ideal, but there isn't an obviously cleaner
- * way to deal with the situation within the constraints imposed on us
- * by IDL.
- */
-
-typedef enum {
-    PC_NO_ERROR                          = 0,
-    PC_INVALID_CONSTRAINTS_TYPE          = 1,
-    PC_INVALID_CANDIDATE_TYPE            = 2,
-    PC_INVALID_MEDIASTREAM_TRACK         = 3,
-    PC_INVALID_STATE                     = 4,
-    PC_INVALID_SESSION_DESCRIPTION       = 5,
-    PC_INCOMPATIBLE_SESSION_DESCRIPTION  = 6,
-    PC_INCOMPATIBLE_CONSTRAINTS          = 7,
-    PC_INCOMPATIBLE_MEDIA_STREAM_TRACK   = 8,
-    PC_INTERNAL_ERROR                    = 9
-} pc_error;
 
 #define MWI_STATUS_YES 1
 
@@ -179,86 +141,6 @@ void ui_call_stop_ringer(line_t line, callid_t call_id);
 void ui_call_start_ringer(vcm_ring_mode_t ringMode, short once, line_t line, callid_t call_id);
 void ui_BLF_notification (int request_id, cc_blf_state_t blf_state, int app_id);
 void ui_update_media_interface_change(line_t line, callid_t call_id, group_call_event_t event);
-
-/* WebRTC upcalls for PeerConnectionImpl */
-
-void ui_create_offer(call_events event,
-                     fsmdef_states_t new_state,
-                     line_t nLine,
-                     callid_t nCallID,
-                     uint16_t call_instance_id,
-                     string_t sdp,
-                     Timecard *timecard,
-                     pc_error error,
-                     const char *format, ...);
-
-void ui_create_answer(call_events event,
-                      fsmdef_states_t new_state,
-                      line_t nLine,
-                      callid_t nCallID,
-                      uint16_t call_instance_id,
-                      string_t sdp,
-                      Timecard *timecard,
-                      pc_error error,
-                      const char *format, ...);
-
-void ui_set_local_description(call_events event,
-                              fsmdef_states_t new_state,
-                              line_t nLine,
-                              callid_t nCallID,
-                              uint16_t call_instance_id,
-                              string_t sdp,
-                              Timecard *timecard,
-                              pc_error error,
-                              const char *format, ...);
-
-void ui_set_remote_description(call_events event,
-                               fsmdef_states_t new_state,
-                               line_t nLine,
-                               callid_t nCallID,
-                               uint16_t call_instance_id,
-                               string_t sdp,
-                               Timecard *timecard,
-                               pc_error error,
-                               const char *format, ...);
-
-void ui_update_local_description(call_events event,
-                                 fsmdef_states_t new_state,
-                                 line_t nLine,
-                                 callid_t nCallID,
-                                 uint16_t call_instance_id,
-                                 string_t sdp,
-                                 Timecard *timecard,
-                                 pc_error error,
-                                 const char *format, ...);
-
-void ui_ice_candidate_add(call_events event,
-                          fsmdef_states_t new_state,
-                          line_t nLine,
-                          callid_t nCallID,
-                          uint16_t call_instance_id,
-                          string_t sdp,
-                          Timecard *timecard,
-                          pc_error error,
-                          const char *format, ...);
-
-void ui_ice_candidate_found(call_events event,
-                            fsmdef_states_t new_state,
-                            line_t nLine,
-                            callid_t nCallID,
-                            uint16_t call_instance_id,
-                            string_t sdp,
-                            string_t candidate,
-                            Timecard *timecard,
-                            pc_error error,
-                            const char *format, ...);
-
-void ui_on_remote_stream_added(call_events event,
-                               fsmdef_states_t new_state,
-                               line_t nLine,
-                               callid_t nCallID,
-                               uint16_t call_instance_id,
-                               cc_media_remote_track_table_t media_tracks);
 
 
 #endif

@@ -63,4 +63,6 @@ cc_causes_t
 fsm_cac_call_bandwidth_req(callid_t call_id, uint32_t sessions,
                             void *msg);
 
+fim_icb_t *fim_get_call_chn_by_call_id (callid_t call_id);
+fim_icb_t *fim_get_new_call_chn (callid_t call_id);
 #endif /* _FIM_H_ */

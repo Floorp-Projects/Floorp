@@ -527,15 +527,4 @@ void PeerConnectionCtx::onDeviceEvent(ccapi_device_event_e aDeviceEvent,
   }
 }
 
-void PeerConnectionCtx::onCallEvent(ccapi_call_event_e aCallEvent,
-                                    CSF::CC_CallPtr aCall,
-                                    CSF::CC_CallInfoPtr aInfo) {
-  CSFLogDebug(logTag, "onCallEvent()");
-  PeerConnectionWrapper pc(aCall->getPeerConnection());
-  if (!pc.impl())  // This must be an event on a dead PC. Ignore
-    return;
-  CSFLogDebug(logTag, "Calling PC");
-  pc.impl()->onCallEvent(OnCallEventArgs(aCallEvent, aInfo));
-}
-
 }  // namespace sipcc
