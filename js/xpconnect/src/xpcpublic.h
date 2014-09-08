@@ -506,6 +506,8 @@ class ErrorReport {
     void InitOnWorkerThread(JSErrorReport *aReport, const char *aFallbackMessage,
                             bool aIsChrome);
 
+    void LogToConsole();
+
   private:
     void InitInternal(JSErrorReport *aReport, const char *aFallbackMessage);
     bool mIsChrome;
