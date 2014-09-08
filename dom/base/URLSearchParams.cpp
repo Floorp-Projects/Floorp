@@ -300,7 +300,7 @@ public:
                  (*p >= 0x61 && *p <= 0x7A)) {
         mValue.Append(*p);
       } else {
-        mValue.AppendPrintf("%%%X", *p);
+        mValue.AppendPrintf("%%%.2X", *p);
       }
 
       ++p;
