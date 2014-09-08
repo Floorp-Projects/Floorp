@@ -347,7 +347,7 @@ nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect)
   }
 
   nsIContent* offsetParent = nullptr;
-  Element* docElement = GetCurrentDoc()->GetRootElement();
+  Element* docElement = GetComposedDoc()->GetRootElement();
   nsIContent* content = frame->GetContent();
 
   if (content && (content->IsHTML(nsGkAtoms::body) || content == docElement)) {
@@ -398,7 +398,7 @@ nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect)
       // parent chain. We want the offset parent in this case to be
       // the body, so we just get the body element from the document.
 
-      nsCOMPtr<nsIDOMHTMLDocument> html_doc(do_QueryInterface(GetCurrentDoc()));
+      nsCOMPtr<nsIDOMHTMLDocument> html_doc(do_QueryInterface(GetComposedDoc()));
 
       if (html_doc) {
         offsetParent = static_cast<nsHTMLDocument*>(html_doc.get())->GetBody();
@@ -1764,37 +1764,6 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
   }
 
   return NS_OK;
-}
-
-void
-nsGenericHTMLElement::GetEnumAttr(nsIAtom* aAttr,
-                                  const char* aDefault,
-                                  nsAString& aResult) const
-{
-  GetEnumAttr(aAttr, aDefault, aDefault, aResult);
-}
-
-void
-nsGenericHTMLElement::GetEnumAttr(nsIAtom* aAttr,
-                                  const char* aDefaultMissing,
-                                  const char* aDefaultInvalid,
-                                  nsAString& aResult) const
-{
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
-
-  aResult.Truncate();
-
-  if (!attrVal) {
-    if (aDefaultMissing) {
-      AppendASCIItoUTF16(nsDependentCString(aDefaultMissing), aResult);
-    }
-  } else {
-    if (attrVal->Type() == nsAttrValue::eEnum) {
-      attrVal->GetEnumString(aResult, true);
-    } else if (aDefaultInvalid) {
-      AppendASCIItoUTF16(nsDependentCString(aDefaultInvalid), aResult);
-    }
-  }
 }
 
 HTMLMenuElement*

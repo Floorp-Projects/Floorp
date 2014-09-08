@@ -56,9 +56,20 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(nsRenderingContext* aContext,
       // We have no children - the spec says clip away everything:
       gfx->Rectangle(gfxRect());
     } else {
-      singleClipPathChild->NotifySVGChanged(
-                             nsISVGChildFrame::TRANSFORM_CHANGED);
-      singleClipPathChild->PaintSVG(aContext, nullptr);
+      nsIFrame* child = do_QueryFrame(singleClipPathChild);
+      nsIContent* childContent = child->GetContent();
+      if (childContent->IsSVG()) {
+        singleClipPathChild->NotifySVGChanged(
+                               nsISVGChildFrame::TRANSFORM_CHANGED);
+        gfxMatrix toChildsUserSpace =
+          static_cast<const nsSVGElement*>(childContent)->
+            PrependLocalTransformsTo(mMatrixForChildren,
+                                     nsSVGElement::eUserSpaceToParent);
+        singleClipPathChild->PaintSVG(aContext, toChildsUserSpace);
+      } else {
+        // else, again, clip everything away
+        gfx->Rectangle(gfxRect());
+      }
     }
     gfx->Clip();
     gfx->NewPath();
@@ -110,7 +121,16 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(nsRenderingContext* aContext,
         }
       }
 
-      SVGFrame->PaintSVG(aContext, nullptr);
+      gfxMatrix toChildsUserSpace = mMatrixForChildren;
+      nsIFrame* child = do_QueryFrame(SVGFrame);
+      nsIContent* childContent = child->GetContent();
+      if (childContent->IsSVG()) {
+        toChildsUserSpace =
+          static_cast<const nsSVGElement*>(childContent)->
+            PrependLocalTransformsTo(mMatrixForChildren,
+                                     nsSVGElement::eUserSpaceToParent);
+      }
+      SVGFrame->PaintSVG(aContext, toChildsUserSpace);
 
       if (clipPathFrame) {
         if (!isTrivial) {
