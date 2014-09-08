@@ -179,8 +179,7 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
 nsresult
 nsFilterInstance::ComputeUserSpaceToFilterSpaceScale()
 {
-  gfxMatrix canvasTransform =
-    nsSVGUtils::GetCanvasTM(mTargetFrame, nsISVGChildFrame::FOR_OUTERSVG_TM);
+  gfxMatrix canvasTransform = nsSVGUtils::GetCanvasTM(mTargetFrame);
   if (canvasTransform.IsSingular()) {
     // Nothing should be rendered.
     return NS_ERROR_FAILURE;
