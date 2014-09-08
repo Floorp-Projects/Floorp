@@ -437,14 +437,12 @@ private:
 
 bool ScriptErrorEvent::sHandlingScriptError = false;
 
-// NOTE: This function could be refactored to use the above.  The only reason
-// it has not been done is that the code below only fills the error event
-// after it has a good nsPresContext - whereas using the above function
-// would involve always filling it.  Is that a concern?
+// This temporarily lives here to avoid code churn. It will go away entirely
+// soon.
+namespace xpc {
+
 void
-NS_ScriptErrorReporter(JSContext *cx,
-                       const char *message,
-                       JSErrorReport *report)
+SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
   JS::Rooted<JS::Value> exception(cx);
   ::JS_GetPendingException(cx, &exception);
@@ -454,12 +452,26 @@ NS_ScriptErrorReporter(JSContext *cx,
 
   MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
   nsCOMPtr<nsIGlobalObject> globalObject;
+
+  // The eventual plan is for error reporting to happen in the AutoJSAPI
+  // destructor using the global with which the AutoJSAPI was initialized. We
+  // can't _quite_ do that yet, so we take a sloppy stab at those semantics. If
+  // we have an nsIScriptContext, we'll get the right answer modulo
+  // non-current-inners.
+  //
+  // Otherwise, we just use the privileged junk scope. This has the effect of
+  // causing us to report the error as "chrome javascript" rather than "content
+  // javascript", and not invoking any error reporters. This is exactly what we
+  // want here.
   if (nsIScriptContext* scx = GetScriptContextFromJSContext(cx)) {
     nsCOMPtr<nsPIDOMWindow> outer = do_QueryInterface(scx->GetGlobalObject());
     if (outer) {
       globalObject = static_cast<nsGlobalWindow*>(outer->GetCurrentInnerWindow());
     }
+  } else {
+    globalObject = xpc::GetNativeForGlobal(xpc::PrivilegedJunkScope());
   }
+
   if (globalObject) {
     nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
     xpcReport->Init(report, message, globalObject);
@@ -488,6 +500,8 @@ NS_ScriptErrorReporter(JSContext *cx,
                            report->errorNumber != JSMSG_OUT_OF_MEMORY));
   }
 }
+
+} /* namespace xpc */
 
 #ifdef DEBUG
 // A couple of useful functions to call when you're debugging.
@@ -746,7 +760,7 @@ nsJSContext::InitContext()
   if (!mContext)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
+  JS_SetErrorReporter(mContext, xpc::SystemErrorReporter);
 
   JSOptionChangedCallback(js_options_dot_str, this);
 
