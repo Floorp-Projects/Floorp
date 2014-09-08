@@ -350,6 +350,14 @@ public:
   // SVGTextFrame methods:
 
   /**
+   * Handles a base or animated attribute value change to a descendant
+   * text content element.
+   */
+  void HandleAttributeChangeInDescendant(mozilla::dom::Element* aElement,
+                                         int32_t aNameSpaceID,
+                                         nsIAtom* aAttribute);
+
+  /**
    * Schedules mPositions to be recomputed and the covered region to be
    * updated.
    */
