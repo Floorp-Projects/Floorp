@@ -8,16 +8,16 @@ DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 
 jar = add_java_jar('browser-junit3')
 jar.sources += [
+    'src/BrowserTestCase.java',
     'src/harness/BrowserInstrumentationTestRunner.java',
     'src/harness/BrowserTestListener.java',
-    'src/tests/BrowserTestCase.java',
-    'src/tests/TestDistribution.java',
-    'src/tests/TestGeckoSharedPrefs.java',
-    'src/tests/TestImageDownloader.java',
-    'src/tests/TestJarReader.java',
-    'src/tests/TestRawResource.java',
-    'src/tests/TestSuggestedSites.java',
-    'src/tests/TestTopSitesCursorWrapper.java',
+    'src/TestDistribution.java',
+    'src/TestGeckoSharedPrefs.java',
+    'src/TestImageDownloader.java',
+    'src/TestJarReader.java',
+    'src/TestRawResource.java',
+    'src/TestSuggestedSites.java',
+    'src/TestTopSitesCursorWrapper.java',
 ]
 jar.generated_sources = [] # None yet -- try to keep it this way.
 jar.javac_flags += ['-Xlint:all,-unchecked']
@@ -36,4 +36,4 @@ main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in jar.generate
 main.referenced_projects += ['Fennec']
 
 main.add_classpathentry('src', SRCDIR + '/src',
-    dstdir='src/org/mozilla/gecko/browser')
+    dstdir='src/org/mozilla/gecko')

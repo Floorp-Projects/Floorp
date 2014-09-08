@@ -24,8 +24,7 @@ const NET_NETWORKSTATSSERVICE_CID = Components.ID("{18725604-e9ac-488a-8aa0-2471
 
 const TOPIC_BANDWIDTH_CONTROL = "netd-bandwidth-control"
 
-const TOPIC_INTERFACE_REGISTERED   = "network-interface-registered";
-const TOPIC_INTERFACE_UNREGISTERED = "network-interface-unregistered";
+const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
 const NET_TYPE_WIFI = Ci.nsINetworkInterface.NETWORK_TYPE_WIFI;
 const NET_TYPE_MOBILE = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE;
 
@@ -74,8 +73,7 @@ this.NetworkStatsService = {
     debug("Service started");
 
     Services.obs.addObserver(this, "xpcom-shutdown", false);
-    Services.obs.addObserver(this, TOPIC_INTERFACE_REGISTERED, false);
-    Services.obs.addObserver(this, TOPIC_INTERFACE_UNREGISTERED, false);
+    Services.obs.addObserver(this, TOPIC_CONNECTION_STATE_CHANGED, false);
     Services.obs.addObserver(this, TOPIC_BANDWIDTH_CONTROL, false);
     Services.obs.addObserver(this, "profile-after-change", false);
 
@@ -183,8 +181,7 @@ this.NetworkStatsService = {
 
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case TOPIC_INTERFACE_REGISTERED:
-      case TOPIC_INTERFACE_UNREGISTERED:
+      case TOPIC_CONNECTION_STATE_CHANGED:
 
         // If new interface is registered (notified from NetworkService),
         // the stats are updated for the new interface without waiting to
@@ -228,8 +225,7 @@ this.NetworkStatsService = {
 
         Services.obs.removeObserver(this, "xpcom-shutdown");
         Services.obs.removeObserver(this, "profile-after-change");
-        Services.obs.removeObserver(this, TOPIC_INTERFACE_REGISTERED);
-        Services.obs.removeObserver(this, TOPIC_INTERFACE_UNREGISTERED);
+        Services.obs.removeObserver(this, TOPIC_CONNECTION_STATE_CHANGED);
         Services.obs.removeObserver(this, TOPIC_BANDWIDTH_CONTROL);
 
         this.timer.cancel();

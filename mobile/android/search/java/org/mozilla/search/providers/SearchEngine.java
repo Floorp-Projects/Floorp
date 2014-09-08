@@ -49,6 +49,7 @@ public class SearchEngine {
 
     private String identifier;
     private String shortName;
+    private String iconURL;
 
     // TODO: Make something more robust (like EngineURL in nsSearchService.js)
     private Uri resultsUri;
@@ -79,8 +80,8 @@ public class SearchEngine {
                 readShortName(parser);
             } else if (tag.equals("Url")) {
                 readUrl(parser);
-            // TODO: Support for other tags
-            //} else if (tag.equals("Image")) {
+            } else if (tag.equals("Image")) {
+                readImage(parser);
             } else {
                 skip(parser);
             }
@@ -129,6 +130,19 @@ public class SearchEngine {
         }
     }
 
+    private void readImage(XmlPullParser parser) throws XmlPullParserException, IOException {
+        parser.require(XmlPullParser.START_TAG, null, "Image");
+
+        // TODO: Use width and height to get a preferred icon URL.
+        //final int width = Integer.parseInt(parser.getAttributeValue(null, "width"));
+        //final int height = Integer.parseInt(parser.getAttributeValue(null, "height"));
+
+        if (parser.next() == XmlPullParser.TEXT) {
+            iconURL = parser.getText();
+            parser.nextTag();
+        }
+    }
+
     private void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
         if (parser.getEventType() != XmlPullParser.START_TAG) {
             throw new IllegalStateException();
@@ -174,6 +188,10 @@ public class SearchEngine {
 
     public String getName() {
         return shortName;
+    }
+
+    public String getIconURL() {
+        return iconURL;
     }
 
     /**
