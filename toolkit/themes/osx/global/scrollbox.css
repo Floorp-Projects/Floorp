@@ -31,27 +31,13 @@
 }
 
 /* Vertical enabled */
-.autorepeatbutton-up:not([orient="horizontal"]) {
-  padding-bottom: 5px;
-}
-
-.autorepeatbutton-down:not([orient="horizontal"]) {
-  padding-top: 5px;
-}
-
-.autorepeatbutton-up:not([orient="horizontal"]) > .autorepeatbutton-icon {
-  transform: rotate(-90deg);
-}
-
-.autorepeatbutton-down:not([orient="horizontal"]) > .autorepeatbutton-icon {
-  transform: rotate(90deg);
-}
-
+.autorepeatbutton-up:not([orient="horizontal"]),
 .scrollbutton-up {
   list-style-image: url("chrome://global/skin/arrow/arrow-up-sharp.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
+.autorepeatbutton-down:not([orient="horizontal"]),
 .scrollbutton-down {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
   -moz-image-region: auto; /* cut off inheritance */
@@ -59,15 +45,12 @@
 
 /* Vertical disabled */
 .autorepeatbutton-up[disabled="true"]:not([orient="horizontal"]),
-.autorepeatbutton-down[disabled="true"]:not([orient="horizontal"]) {
-  -moz-image-region: rect(0, 27px, 10px, 18px);
-}
-
 .scrollbutton-up[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-up-dis.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
+.autorepeatbutton-down[disabled="true"]:not([orient="horizontal"]),
 .scrollbutton-down[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
   -moz-image-region: auto; /* cut off inheritance */
@@ -76,21 +59,4 @@
 .scrollbutton-up > .toolbarbutton-text,
 .scrollbutton-down > .toolbarbutton-text {
   display: none;
-}
-
-autorepeatbutton {
-  list-style-image: url("chrome://global/skin/menu/menu-arrow.png");
-  -moz-image-region: rect(0, 9px, 10px, 0);
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  padding: 1px;
-}
-
-@media (min-resolution: 2dppx) {
-  autorepeatbutton > .autorepeatbutton-icon {
-    list-style-image: url("chrome://global/skin/menu/menu-arrow@2x.png");
-    -moz-image-region: rect(0, 18px, 20px, 0);
-    width: 9px;
-    height: 10px;
-  }
 }

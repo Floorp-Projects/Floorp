@@ -1037,13 +1037,21 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
 }
 
 static const NSSize kCheckmarkSize = NSMakeSize(11, 11);
+static const NSSize kMenuarrowSize = nsCocoaFeatures::OnLionOrLater() ?
+                                     NSMakeSize(9, 10) : NSMakeSize(8, 10);
+static const NSSize kMenuScrollArrowSize = NSMakeSize(10, 8);
 static const NSString* kCheckmarkImage = @"image.MenuOnState";
+static const NSString* kMenuarrowRightImage = @"image.MenuSubmenu";
+static const NSString* kMenuarrowLeftImage = @"image.MenuSubmenuLeft";
+static const NSString* kMenuDownScrollArrowImage = @"image.MenuScrollDown";
+static const NSString* kMenuUpScrollArrowImage = @"image.MenuScrollUp";
 static const CGFloat kMenuIconIndent = 6.0f;
 
 void
 nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
                                  EventStates inState, nsIFrame* aFrame,
-                                 const NSSize& aIconSize, const NSString* aImageName)
+                                 const NSSize& aIconSize, const NSString* aImageName,
+                                 bool aCenterHorizontally)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1053,7 +1061,8 @@ nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
   CGFloat paddingStartX = std::min(paddingX, kMenuIconIndent);
   CGFloat paddingEndX = std::max(CGFloat(0.0), paddingX - kMenuIconIndent);
   CGRect drawRect = CGRectMake(
-    aRect.origin.x + (IsFrameRTL(aFrame) ? paddingEndX : paddingStartX),
+    aRect.origin.x + (aCenterHorizontally ? ceil(paddingX / 2) :
+                      IsFrameRTL(aFrame) ? paddingEndX : paddingStartX),
     aRect.origin.y + ceil(paddingY / 2),
     aIconSize.width, aIconSize.height);
 
@@ -2346,11 +2355,18 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     }
       break;
 
+    case NS_THEME_MENUARROW: {
+      bool isRTL = IsFrameRTL(aFrame);
+      DrawMenuIcon(cgContext, macRect, eventState, aFrame, kMenuarrowSize,
+                   isRTL ? kMenuarrowLeftImage : kMenuarrowRightImage, true);
+    }
+      break;
+
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM: {
       SurfaceFormat format  = thebesCtx->GetDrawTarget()->GetFormat();
       bool isTransparent = (format == SurfaceFormat::R8G8B8A8) ||
-                      (format == SurfaceFormat::B8G8R8A8);
+                           (format == SurfaceFormat::B8G8R8A8);
       if (isTransparent) {
         // Clear the background to get correct transparency.
         CGContextClearRect(cgContext, macRect);
@@ -2372,7 +2388,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       HIThemeDrawMenuItem(&macRect, &macRect, &drawInfo, cgContext, HITHEME_ORIENTATION, &ignored);
 
       if (aWidgetType == NS_THEME_CHECKMENUITEM) {
-        DrawMenuIcon(cgContext, macRect, eventState, aFrame, kCheckmarkSize, kCheckmarkImage);
+        DrawMenuIcon(cgContext, macRect, eventState, aFrame, kCheckmarkSize, kCheckmarkImage, false);
       }
     }
       break;
@@ -2390,6 +2406,13 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       HIThemeMenuItemDrawInfo midi = { 0, kThemeMenuItemPlain, menuState };
       HIThemeDrawMenuSeparator(&macRect, &macRect, &midi, cgContext, HITHEME_ORIENTATION);
     }
+      break;
+
+    case NS_THEME_BUTTON_ARROW_UP:
+    case NS_THEME_BUTTON_ARROW_DOWN:
+      DrawMenuIcon(cgContext, macRect, eventState, aFrame, kMenuScrollArrowSize,
+                   aWidgetType == NS_THEME_BUTTON_ARROW_UP ?
+                   kMenuUpScrollArrowImage : kMenuDownScrollArrowImage, true);
       break;
 
     case NS_THEME_TOOLTIP:
@@ -3090,6 +3113,21 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
+    case NS_THEME_BUTTON_ARROW_UP:
+    case NS_THEME_BUTTON_ARROW_DOWN:
+    {
+      aResult->SizeTo(kMenuScrollArrowSize.width, kMenuScrollArrowSize.height);
+      *aIsOverridable = false;
+      break;
+    }
+
+    case NS_THEME_MENUARROW:
+    {
+      aResult->SizeTo(kMenuarrowSize.width, kMenuarrowSize.height);
+      *aIsOverridable = false;
+      break;
+    }
+
     case NS_THEME_MOZ_MAC_HELP_BUTTON:
     {
       aResult->SizeTo(kHelpButtonSize.width, kHelpButtonSize.height);
@@ -3471,6 +3509,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_WINDOW_TITLEBAR:
     case NS_THEME_CHECKMENUITEM:
     case NS_THEME_MENUPOPUP:
+    case NS_THEME_MENUARROW:
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
     case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON:
@@ -3483,6 +3522,8 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_GROUPBOX:
     case NS_THEME_MOZ_MAC_HELP_BUTTON:
     case NS_THEME_BUTTON:
+    case NS_THEME_BUTTON_ARROW_UP:
+    case NS_THEME_BUTTON_ARROW_DOWN:
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_TOOLBAR_BUTTON:
     case NS_THEME_SPINNER:
@@ -3616,8 +3657,11 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
     case NS_THEME_DIALOG:
     case NS_THEME_GROUPBOX:
     case NS_THEME_TAB_PANELS:
+    case NS_THEME_BUTTON_ARROW_UP:
+    case NS_THEME_BUTTON_ARROW_DOWN:
     case NS_THEME_CHECKMENUITEM:
     case NS_THEME_MENUPOPUP:
+    case NS_THEME_MENUARROW:
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
     case NS_THEME_TOOLTIP:

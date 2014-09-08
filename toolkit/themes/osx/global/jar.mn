@@ -181,8 +181,6 @@ toolkit.jar:
   skin/classic/global/media/volume-full@2x.png                       (media/volume-full@2x.png)
   skin/classic/global/media/clicktoplay-bgtexture.png                (media/clicktoplay-bgtexture.png)
   skin/classic/global/media/videoClickToPlayButton.svg               (media/videoClickToPlayButton.svg)
-  skin/classic/global/menu/menu-arrow.png                            (menu/menu-arrow.png)
-  skin/classic/global/menu/menu-arrow@2x.png                         (menu/menu-arrow@2x.png)
   skin/classic/global/menu/shared-menu-check.png                     (../../shared/menu-check.png)
   skin/classic/global/menu/shared-menu-check@2x.png                  (../../shared/menu-check@2x.png)
 * skin/classic/global/in-content/common.css                          (in-content/common.css)
