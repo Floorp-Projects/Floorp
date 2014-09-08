@@ -175,11 +175,16 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
     bool success = false;
     RootedValue fun(cx);
 
-    // Don't call the actual function on a content object. We'll determine
-    // whether or not a content object is capable of implementing the
-    // interface (i.e. whether the interface is scriptable) and most content
-    // objects don't have QI implementations anyway. Also see bug 503926.
-    if (!xpc::AccessCheck::isChrome(js::GetObjectCompartment(jsobj))) {
+    // In bug 503926, we added a security check to make sure that we don't
+    // invoke content QI functions. In the modern world, this is probably
+    // unnecessary, because invoking QI involves passing an IID object to
+    // content, which will fail. But we do a belt-and-suspenders check to
+    // make sure that content can never trigger the rat's nest of code below.
+    // Once we completely turn off XPConnect for the web, this can definitely
+    // go away.
+    if (!AccessCheck::isChrome(jsobj) ||
+        !AccessCheck::isChrome(js::UncheckedUnwrap(jsobj)))
+    {
         return nullptr;
     }
 

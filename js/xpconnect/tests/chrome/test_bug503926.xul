@@ -14,7 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503926
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=503926"
      target="_blank">Mozilla Bug 503926</a>
 
-  <iframe id="ifr" type="content" onload="iframe_loaded()" src="bug503926.xul#iframe"/>
+  <iframe id="ifr" type="content" onload="loaded()" src="bug503926.xul#iframe"/>
+  <iframe id="ifrContent" type="content" onload="loaded()" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"/>
   </body>
 
   <!-- test code goes here -->
@@ -23,15 +24,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503926
 
   SimpleTest.expectAssertions(0, 1);
 
+  var gLoadCount = 0;
+  function loaded() {
+    if (++gLoadCount == 2)
+      go();
+  }
+
   /** Test for Bug 503926 **/
-  function iframe_loaded() {
+  function go() {
     var gWindowUtils  = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                                getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+    // Try with a chrome object.
     var passed = false;
     var obj = { QueryInterface: function() { passed = true; } };
     gWindowUtils.xpconnectArgument(obj);
     ok(passed, "trusted QIs should be called");
 
+    // Try with a content object.
+    var contentWin = $('ifrContent').contentWindow.wrappedJSObject;
+    contentWin.passed = false;
+    var contentObj = contentWin.eval('({ QueryInterface: function() { passed = true; } })');
+    gWindowUtils.xpconnectArgument(contentObj);
+    ok(!contentWin.passed, "untrusted QI should not be called");
+
+    // Try with a dialog.
     openDialog("bug503926.xul", "chromeDialog", "modal");
     SimpleTest.finish();
   }
