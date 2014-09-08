@@ -151,8 +151,28 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * The timeout for mAsyncScrollTimeoutTask delay task.
  * Units: milliseconds
  *
- * "apz.axis_lock_mode"
+ * "apz.axis_lock.mode"
  * The preferred axis locking style. See AxisLockMode for possible values.
+ *
+ * "apz.axis_lock.lock_angle"
+ * Angle from axis within which we stay axis-locked.
+ * Units: radians
+ *
+ * "apz.axis_lock.breakout_threshold"
+ * Distance in inches the user must pan before axis lock can be broken.
+ * Units: (real-world, i.e. screen) inches
+ *
+ * "apz.axis_lock.breakout_angle"
+ * Angle at which axis lock can be broken.
+ * Units: radians
+ *
+ * "apz.axis_lock.direct_pan_angle"
+ * If the angle from an axis to the line drawn by a pan move is less than
+ * this value, we can assume that panning can be done in the allowed direction
+ * (horizontal or vertical).
+ * Currently used only for touch-action css property stuff and was addded to
+ * keep behaviour consistent with IE.
+ * Units: radians
  *
  * "apz.content_response_timeout"
  * Amount of time before we timeout response from content. For example, if
@@ -322,30 +342,6 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * This controls how long the zoom-to-rect animation takes.
  * Units: ms
  */
-
-/**
- * Angle from axis within which we stay axis-locked
- */
-static const double AXIS_LOCK_ANGLE = M_PI / 6.0; // 30 degrees
-
-/**
- * The distance in inches the user must pan before axis lock can be broken
- */
-static const float AXIS_BREAKOUT_THRESHOLD = 1.0f/32.0f;
-
-/**
- * The angle at which axis lock can be broken
- */
-static const double AXIS_BREAKOUT_ANGLE = M_PI / 8.0; // 22.5 degrees
-
-/**
- * Angle from axis to the line drawn by pan move.
- * If angle is less than this value we can assume that panning
- * can be done in allowed direction (horizontal or vertical).
- * Currently used only for touch-action css property stuff and was
- * added to keep behavior consistent with IE.
- */
-static const double ALLOWED_DIRECT_PAN_ANGLE = M_PI / 3.0; // 60 degrees
 
 /**
  * Computed time function used for sampling frames of a zoom to animation.
@@ -1712,10 +1708,10 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
   // enabled by default.
   if (CurrentTouchBlock()->TouchActionAllowsPanningXY()) {
     if (mX.CanScrollNow() && mY.CanScrollNow()) {
-      if (IsCloseToHorizontal(aAngle, AXIS_LOCK_ANGLE)) {
+      if (IsCloseToHorizontal(aAngle, gfxPrefs::APZAxisLockAngle())) {
         mY.SetAxisLocked(true);
         SetState(PANNING_LOCKED_X);
-      } else if (IsCloseToVertical(aAngle, AXIS_LOCK_ANGLE)) {
+      } else if (IsCloseToVertical(aAngle, gfxPrefs::APZAxisLockAngle())) {
         mX.SetAxisLocked(true);
         SetState(PANNING_LOCKED_Y);
       } else {
@@ -1729,7 +1725,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
   } else if (CurrentTouchBlock()->TouchActionAllowsPanningX()) {
     // Using bigger angle for panning to keep behavior consistent
     // with IE.
-    if (IsCloseToHorizontal(aAngle, ALLOWED_DIRECT_PAN_ANGLE)) {
+    if (IsCloseToHorizontal(aAngle, gfxPrefs::APZAllowedDirectPanAngle())) {
       mY.SetAxisLocked(true);
       SetState(PANNING_LOCKED_X);
       mPanDirRestricted = true;
@@ -1739,7 +1735,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
       SetState(NOTHING);
     }
   } else if (CurrentTouchBlock()->TouchActionAllowsPanningY()) {
-    if (IsCloseToVertical(aAngle, ALLOWED_DIRECT_PAN_ANGLE)) {
+    if (IsCloseToVertical(aAngle, gfxPrefs::APZAllowedDirectPanAngle())) {
       mX.SetAxisLocked(true);
       SetState(PANNING_LOCKED_Y);
       mPanDirRestricted = true;
@@ -1755,7 +1751,7 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (!gfxPrefs::APZCrossSlideEnabled() && (!mX.CanScrollNow() || !mY.CanScrollNow())) {
     SetState(PANNING);
-  } else if (IsCloseToHorizontal(aAngle, AXIS_LOCK_ANGLE)) {
+  } else if (IsCloseToHorizontal(aAngle, gfxPrefs::APZAxisLockAngle())) {
     mY.SetAxisLocked(true);
     if (mX.CanScrollNow()) {
       SetState(PANNING_LOCKED_X);
@@ -1763,7 +1759,7 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
       SetState(CROSS_SLIDING_X);
       mX.SetAxisLocked(true);
     }
-  } else if (IsCloseToVertical(aAngle, AXIS_LOCK_ANGLE)) {
+  } else if (IsCloseToVertical(aAngle, gfxPrefs::APZAxisLockAngle())) {
     mX.SetAxisLocked(true);
     if (mY.CanScrollNow()) {
       SetState(PANNING_LOCKED_Y);
@@ -1783,16 +1779,16 @@ void AsyncPanZoomController::HandlePanningUpdate(float aDX, float aDY) {
     double angle = atan2(aDY, aDX); // range [-pi, pi]
     angle = fabs(angle); // range [0, pi]
 
-    float breakThreshold = AXIS_BREAKOUT_THRESHOLD * APZCTreeManager::GetDPI();
+    float breakThreshold = gfxPrefs::APZAxisBreakoutThreshold() * APZCTreeManager::GetDPI();
 
     if (fabs(aDX) > breakThreshold || fabs(aDY) > breakThreshold) {
       if (mState == PANNING_LOCKED_X || mState == CROSS_SLIDING_X) {
-        if (!IsCloseToHorizontal(angle, AXIS_BREAKOUT_ANGLE)) {
+        if (!IsCloseToHorizontal(angle, gfxPrefs::APZAxisBreakoutAngle())) {
           mY.SetAxisLocked(false);
           SetState(PANNING);
         }
       } else if (mState == PANNING_LOCKED_Y || mState == CROSS_SLIDING_Y) {
-        if (!IsCloseToVertical(angle, AXIS_BREAKOUT_ANGLE)) {
+        if (!IsCloseToVertical(angle, gfxPrefs::APZAxisLockAngle())) {
           mX.SetAxisLocked(false);
           SetState(PANNING);
         }
