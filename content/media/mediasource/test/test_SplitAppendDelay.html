@@ -25,10 +25,17 @@ runWithMSE(function () {
 
     fetchWithXHR("seek.webm", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
-      window.setTimeout(function () {
-        sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
-        ms.endOfStream();
-      }, 1000);
+      var first = true;
+      sb.addEventListener("updateend", function () {
+        if (first) {
+          window.setTimeout(function () {
+            sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
+            first = false;
+          }, 1000);
+        } else {
+          ms.endOfStream();
+        }
+      });
       v.play();
     });
   });
