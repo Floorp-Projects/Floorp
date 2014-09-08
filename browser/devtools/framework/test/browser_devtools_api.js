@@ -4,19 +4,21 @@
 // Tests devtools API
 
 const Cu = Components.utils;
-const toolId = "test-tool";
+const toolId1 = "test-tool-1";
+const toolId2 = "test-tool-2";
 
 let tempScope = {};
 Cu.import("resource://gre/modules/devtools/event-emitter.js", tempScope);
 let EventEmitter = tempScope.EventEmitter;
 
 function test() {
-  addTab("about:blank").then(runTests);
+  addTab("about:blank").then(runTests1);
 }
 
-function runTests(aTab) {
+// Test scenario 1: the tool definition build method returns a promise.
+function runTests1(aTab) {
   let toolDefinition = {
-    id: toolId,
+    id: toolId1,
     isTargetSupported: function() true,
     visibilityswitch: "devtools.test-tool.enabled",
     url: "about:blank",
@@ -28,40 +30,131 @@ function runTests(aTab) {
   };
 
   ok(gDevTools, "gDevTools exists");
-  is(gDevTools.getToolDefinitionMap().has(toolId), false,
+  is(gDevTools.getToolDefinitionMap().has(toolId1), false,
     "The tool is not registered");
 
   gDevTools.registerTool(toolDefinition);
-  is(gDevTools.getToolDefinitionMap().has(toolId), true,
+  is(gDevTools.getToolDefinitionMap().has(toolId1), true,
     "The tool is registered");
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
-  gDevTools.showToolbox(target, toolId).then(function (toolbox) {
+  let events = {};
+
+  // Check events on the gDevTools and toolbox objects.
+  gDevTools.once(toolId1 + "-init", (event, toolbox, iframe) => {
+    ok(iframe, "iframe argument available");
+
+    toolbox.once(toolId1 + "-init", (event, iframe) => {
+      ok(iframe, "iframe argument available");
+      events["init"] = true;
+    });
+  });
+
+  gDevTools.once(toolId1 + "-ready", (event, toolbox, panel) => {
+    ok(panel, "panel argument available");
+
+    toolbox.once(toolId1 + "-ready", (event, panel) => {
+      ok(panel, "panel argument available");
+      events["ready"] = true;
+    });
+  });
+
+  gDevTools.showToolbox(target, toolId1).then(function (toolbox) {
     is(toolbox.target, target, "toolbox target is correct");
     is(toolbox._host.hostTab, gBrowser.selectedTab, "toolbox host is correct");
+
+    ok(events["init"], "init event fired");
+    ok(events["ready"], "ready event fired");
+
+    gDevTools.unregisterTool(toolId1);
+
+    runTests2();
+  });
+}
+
+// Test scenario 2: the tool definition build method returns panel instance.
+function runTests2() {
+  let toolDefinition = {
+    id: toolId2,
+    isTargetSupported: function() true,
+    visibilityswitch: "devtools.test-tool.enabled",
+    url: "about:blank",
+    label: "someLabel",
+    build: function(iframeWindow, toolbox) {
+      return new DevToolPanel(iframeWindow, toolbox);
+    },
+  };
+
+  is(gDevTools.getToolDefinitionMap().has(toolId2), false,
+    "The tool is not registered");
+
+  gDevTools.registerTool(toolDefinition);
+  is(gDevTools.getToolDefinitionMap().has(toolId2), true,
+    "The tool is registered");
+
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+
+  let events = {};
+
+  // Check events on the gDevTools and toolbox objects.
+  gDevTools.once(toolId2 + "-init", (event, toolbox, iframe) => {
+    ok(iframe, "iframe argument available");
+
+    toolbox.once(toolId2 + "-init", (event, iframe) => {
+      ok(iframe, "iframe argument available");
+      events["init"] = true;
+    });
+  });
+
+  gDevTools.once(toolId2 + "-build", (event, toolbox, panel, iframe) => {
+    ok(panel, "panel argument available");
+
+    toolbox.once(toolId2 + "-build", (event, panel, iframe) => {
+      ok(panel, "panel argument available");
+      events["build"] = true;
+    });
+  });
+
+  gDevTools.once(toolId2 + "-ready", (event, toolbox, panel) => {
+    ok(panel, "panel argument available");
+
+    toolbox.once(toolId2 + "-ready", (event, panel) => {
+      ok(panel, "panel argument available");
+      events["ready"] = true;
+    });
+  });
+
+  gDevTools.showToolbox(target, toolId2).then(function (toolbox) {
+    is(toolbox.target, target, "toolbox target is correct");
+    is(toolbox._host.hostTab, gBrowser.selectedTab, "toolbox host is correct");
+
+    ok(events["init"], "init event fired");
+    ok(events["build"], "build event fired");
+    ok(events["ready"], "ready event fired");
+
     continueTests(toolbox);
   });
 }
 
 function continueTests(toolbox, panel) {
   ok(toolbox.getCurrentPanel(), "panel value is correct");
-  is(toolbox.currentToolId, toolId, "toolbox _currentToolId is correct");
+  is(toolbox.currentToolId, toolId2, "toolbox _currentToolId is correct");
 
-  ok(!toolbox.doc.getElementById("toolbox-tab-" + toolId).hasAttribute("icon-invertable"),
+  ok(!toolbox.doc.getElementById("toolbox-tab-" + toolId2).hasAttribute("icon-invertable"),
     "The tool tab does not have the invertable attribute");
 
   ok(toolbox.doc.getElementById("toolbox-tab-inspector").hasAttribute("icon-invertable"),
     "The builtin tool tabs do have the invertable attribute");
 
   let toolDefinitions = gDevTools.getToolDefinitionMap();
-  is(toolDefinitions.has(toolId), true, "The tool is in gDevTools");
+  is(toolDefinitions.has(toolId2), true, "The tool is in gDevTools");
 
-  let toolDefinition = toolDefinitions.get(toolId);
-  is(toolDefinition.id, toolId, "toolDefinition id is correct");
+  let toolDefinition = toolDefinitions.get(toolId2);
+  is(toolDefinition.id, toolId2, "toolDefinition id is correct");
 
-  gDevTools.unregisterTool(toolId);
-  is(gDevTools.getToolDefinitionMap().has(toolId), false,
+  gDevTools.unregisterTool(toolId2);
+  is(gDevTools.getToolDefinitionMap().has(toolId2), false,
     "The tool is no longer registered");
 
   // Wait for unregisterTool to select the next tool before
