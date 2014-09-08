@@ -976,12 +976,12 @@ pref("apz.subframe.enabled", true);
 
 // Overscroll-related settings
 pref("apz.overscroll.enabled", true);
-pref("apz.overscroll.fling_friction", "0.02");
+pref("apz.overscroll.fling_friction", "0.05");
 pref("apz.overscroll.fling_stopped_threshold", "0.4");
 pref("apz.overscroll.stretch_factor", "0.5");
-pref("apz.overscroll.snap_back.spring_stiffness", "0.6");
+pref("apz.overscroll.snap_back.spring_stiffness", "0.05");
 pref("apz.overscroll.snap_back.spring_friction", "0.1");
-pref("apz.overscroll.snap_back.mass", "1200");
+pref("apz.overscroll.snap_back.mass", "100");
 
 // This preference allows FirefoxOS apps (and content, I think) to force
 // the use of software (instead of hardware accelerated) 2D canvases by
