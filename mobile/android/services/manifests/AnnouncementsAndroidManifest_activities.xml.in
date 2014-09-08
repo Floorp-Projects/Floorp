@@ -1,0 +1,17 @@
+        <!--
+             As well as these system actions, we also listen for pref notifications
+             sent by Fennec: @ANDROID_PACKAGE_NAME@.ANNOUNCEMENTS_PREF.
+          -->
+        <receiver android:name="org.mozilla.gecko.background.announcements.AnnouncementsBroadcastReceiver" >
+            <intent-filter>
+                <!-- Startup. -->
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+            <intent-filter>
+                <!-- SD card remounted. -->
+                <action android:name="android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE" />
+            </intent-filter>
+            <intent-filter >
+              <action android:name="@ANDROID_PACKAGE_NAME@.ANNOUNCEMENTS_PREF" />
+            </intent-filter>
+        </receiver>
