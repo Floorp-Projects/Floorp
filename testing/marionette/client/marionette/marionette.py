@@ -708,6 +708,8 @@ class Marionette(object):
                 raise errors.FrameSendNotInitializedError(message=message, status=status, stacktrace=stacktrace)
             elif status == errors.ErrorCodes.FRAME_SEND_FAILURE_ERROR:
                 raise errors.FrameSendFailureError(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.UNSUPPORTED_OPERATION:
+                raise errors.UnsupportedOperationException(message=message, status=status, stacktrace=stacktrace)
             else:
                 raise errors.MarionetteException(message=message, status=status, stacktrace=stacktrace)
         raise errors.MarionetteException(message=response, status=500)
@@ -883,7 +885,6 @@ class Marionette(object):
         :rtype: string
 
         """
-
         self.window = self._send_message("getWindowHandle", "value")
         return self.window
 
@@ -1515,3 +1516,31 @@ class Marionette(object):
         self._send_message("setScreenOrientation", "ok", orientation=orientation)
         if self.emulator:
             self.emulator.screen.orientation = orientation.lower()
+
+    @property
+    def window_size(self):
+        """Get the current browser window size.
+
+        Will return the current browser window size in pixels. Refers to
+        window outerWidth and outerHeight values, which include scroll bars,
+        title bars, etc.
+
+        :returns: dictionary representation of current window width and height
+
+        """
+        return self._send_message("getWindowSize", "value")
+
+    def set_window_size(self, width, height):
+        """Resize the browser window currently in focus.
+
+        The supplied width and height values refer to the window outerWidth
+        and outerHeight values, which include scroll bars, title bars, etc.
+
+        An error will be returned if the requested window size would result
+        in the window being in the maximised state.
+
+        :param width: The width to resize the window to.
+        :param height: The height to resize the window to.
+
+        """
+        self._send_message("setWindowSize", "ok", width=width, height=height)
