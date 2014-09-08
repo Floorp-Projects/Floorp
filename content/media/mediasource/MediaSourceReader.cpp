@@ -84,16 +84,14 @@ MediaSourceReader::RequestAudioData()
     GetCallback()->OnDecodeError();
     return;
   }
-  if (SwitchAudioReader(double(mLastAudioTime) / USECS_PER_S)) {
-    MSE_DEBUGV("MediaSourceReader(%p)::RequestAudioData switching audio reader", this);
-  }
+  SwitchAudioReader(double(mLastAudioTime) / USECS_PER_S);
   mAudioReader->RequestAudioData();
 }
 
 void
 MediaSourceReader::OnAudioDecoded(AudioData* aSample)
 {
-  MSE_DEBUGV("MediaSourceReader(%p)::OnAudioDecoded mTime=%lld mDuration=%lld d=%d",
+  MSE_DEBUGV("MediaSourceReader(%p)::OnAudioDecoded [mTime=%lld mDuration=%lld mDiscontinuity=%d]",
              this, aSample->mTime, aSample->mDuration, aSample->mDiscontinuity);
   if (mDropAudioBeforeThreshold) {
     if (aSample->mTime < mTimeThreshold) {
@@ -148,16 +146,14 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
     mDropAudioBeforeThreshold = true;
     mDropVideoBeforeThreshold = true;
   }
-  if (SwitchVideoReader(double(mLastVideoTime) / USECS_PER_S)) {
-    MSE_DEBUGV("MediaSourceReader(%p)::RequestVideoData switching video reader", this);
-  }
+  SwitchVideoReader(double(mLastVideoTime) / USECS_PER_S);
   mVideoReader->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold);
 }
 
 void
 MediaSourceReader::OnVideoDecoded(VideoData* aSample)
 {
-  MSE_DEBUGV("MediaSourceReader(%p)::OnVideoDecoded mTime=%lld mDuration=%lld d=%d",
+  MSE_DEBUGV("MediaSourceReader(%p)::OnVideoDecoded [mTime=%lld mDuration=%lld mDiscontinuity=%d]",
              this, aSample->mTime, aSample->mDuration, aSample->mDiscontinuity);
   if (mDropVideoBeforeThreshold) {
     if (aSample->mTime < mTimeThreshold) {
@@ -312,11 +308,13 @@ MediaSourceReader::SwitchAudioReader(double aTarget)
   nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget,
                                                         &MediaSourceReader::CanSelectAudioReader,
                                                         mAudioTrack->Decoders());
-  if (newReader) {
+  if (newReader && newReader != mAudioReader) {
     mAudioReader->SetIdle();
     mAudioReader = newReader;
+    MSE_DEBUGV("MediaSourceReader(%p)::SwitchAudioReader switched reader to %p", this, mAudioReader.get());
+    return true;
   }
-  return newReader != nullptr;
+  return false;
 }
 
 bool
@@ -330,11 +328,13 @@ MediaSourceReader::SwitchVideoReader(double aTarget)
   nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget,
                                                         &MediaSourceReader::CanSelectVideoReader,
                                                         mVideoTrack->Decoders());
-  if (newReader) {
+  if (newReader && newReader != mVideoReader) {
     mVideoReader->SetIdle();
     mVideoReader = newReader;
+    MSE_DEBUGV("MediaSourceReader(%p)::SwitchVideoReader switched reader to %p", this, mVideoReader.get());
+    return true;
   }
-  return newReader != nullptr;
+  return false;
 }
 
 MediaDecoderReader*
@@ -490,8 +490,8 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
 
   if (mAudioTrack) {
     mAudioIsSeeking = true;
-    DebugOnly<bool> ok = SwitchAudioReader(target);
-    MOZ_ASSERT(ok && static_cast<SourceBufferDecoder*>(mAudioReader->GetDecoder())->ContainsTime(target));
+    SwitchAudioReader(target);
+    MOZ_ASSERT(static_cast<SourceBufferDecoder*>(mAudioReader->GetDecoder())->ContainsTime(target));
     nsresult rv = mAudioReader->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
     MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p rv=%x", this, mAudioReader.get(), rv);
     if (NS_FAILED(rv)) {
@@ -500,8 +500,8 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   }
   if (mVideoTrack) {
     mVideoIsSeeking = true;
-    DebugOnly<bool> ok = SwitchVideoReader(target);
-    MOZ_ASSERT(ok && static_cast<SourceBufferDecoder*>(mVideoReader->GetDecoder())->ContainsTime(target));
+    SwitchVideoReader(target);
+    MOZ_ASSERT(static_cast<SourceBufferDecoder*>(mVideoReader->GetDecoder())->ContainsTime(target));
     nsresult rv = mVideoReader->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
     MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p rv=%x", this, mVideoReader.get(), rv);
     if (NS_FAILED(rv)) {
