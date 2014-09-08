@@ -2336,6 +2336,9 @@ let BrowserOnClick = {
 
     let originalTarget = event.originalTarget;
     let ownerDoc = originalTarget.ownerDocument;
+    if (!ownerDoc) {
+      return;
+    }
 
     if (gMultiProcessBrowser &&
         ownerDoc.documentURI.toLowerCase() == "about:newtab") {
