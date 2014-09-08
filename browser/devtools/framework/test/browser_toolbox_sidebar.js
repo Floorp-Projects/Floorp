@@ -108,6 +108,7 @@ function test() {
     for (let tab of tabs) {
       is(tab.getAttribute("label"), label++, "Tab has the right title");
     }
+
     is(label, 4, "Found the right amount of tabs.");
     is(panel.sidebar._tabbox.selectedPanel, panels[0], "First tab is selected");
     ok(panel.sidebar.getCurrentTabID(), "tab1", "getCurrentTabID() is correct");
@@ -119,11 +120,30 @@ function test() {
         panel.sidebar.hide();
         is(panel.sidebar._tabbox.getAttribute("hidden"), "true", "Sidebar hidden");
         is(panel.sidebar.getWindowForTab("tab1").location.href, tab1URL, "Window is accessible");
-        testWidth(panel);
+        testRemoval(panel);
       });
     });
 
     panel.sidebar.select("tab2");
+  }
+
+  function testRemoval(panel) {
+    panel.sidebar.once("tab-unregistered", function(event, id) {
+      info(event);
+      registeredTabs[id] = false;
+
+      is(id, "tab3", "The right tab must be removed");
+
+      let tabs = panel.sidebar._tabbox.querySelectorAll("tab");
+      let panels = panel.sidebar._tabbox.querySelectorAll("tabpanel");
+
+      is(tabs.length, 2, "There is the right number of tabs");
+      is(panels.length, 2, "There is the right number of panels");
+
+      testWidth(panel);
+    });
+
+    panel.sidebar.removeTab("tab3");
   }
 
   function testWidth(panel) {

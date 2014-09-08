@@ -797,8 +797,8 @@ var SelectionHandler = {
   },
 
   isElementEditableText: function (aElement) {
-    return ((aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) ||
-            (aElement instanceof HTMLTextAreaElement));
+    return (((aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) ||
+            (aElement instanceof HTMLTextAreaElement)) && !aElement.readOnly);
   },
 
   /*

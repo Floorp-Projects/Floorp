@@ -80,11 +80,12 @@ registerCleanupFunction(() => {
 });
 
 let test = asyncTest(function* () {
-  let { inspector } = yield openInspectorForURL(TEST_URL);
+  let { inspector, toolbox } = yield openInspectorForURL(TEST_URL);
 
   yield testMenuItemSensitivity();
   yield testPasteOuterHTMLMenuItemSensitivity();
   yield testCopyMenuItems();
+  yield testShowDOMProperties();
   yield testPasteOuterHTMLMenu();
   yield testDeleteNode();
   yield testDeleteRootNode();
@@ -152,6 +153,27 @@ let test = asyncTest(function* () {
                        deferred.resolve, deferred.reject);
       yield deferred.promise;
     }
+  }
+
+  function* testShowDOMProperties() {
+    info("Testing 'Show DOM Properties' menu item.");
+    let showDOMPropertiesNode = inspector.panelDoc.getElementById("node-menu-showdomproperties");
+    ok(showDOMPropertiesNode, "the popup menu has a show dom properties item");
+
+    let consoleOpened = toolbox.once("webconsole-ready");
+
+    info("Triggering 'Show DOM Properties' and waiting for inspector open");
+    dispatchCommandEvent(showDOMPropertiesNode);
+    yield consoleOpened;
+
+    let webconsoleUI = toolbox.getPanel("webconsole").hud.ui;
+    let messagesAdded = webconsoleUI.once("messages-added");
+    yield messagesAdded;
+
+    info("Checking if 'inspect($0)' was evaluated");
+    ok(webconsoleUI.jsterm.history[0] === 'inspect($0)');
+
+    yield toolbox.toggleSplitConsole();
   }
 
   function* testPasteOuterHTMLMenu() {

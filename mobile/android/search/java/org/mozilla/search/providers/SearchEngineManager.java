@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.search.R;
@@ -23,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class SearchEngineManager implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String LOG_TAG = "SearchEngineManager";
@@ -118,8 +120,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
      */
     public List<SearchEngine> getAllEngines() {
         // First try to read the engine list from the jar.
-        final String url = getSearchPluginsJarUrl("list.txt");
-        InputStream in = GeckoJarReader.getStream(url);
+        InputStream in = getInputStreamFromJar("list.txt");
 
         // Fallback for standalone search activity.
         if (in == null) {
@@ -167,7 +168,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
      * @return SearchEngine instance for identifier
      */
     private SearchEngine createEngine(String identifier) {
-        InputStream in = getEngineFromJar(identifier);
+        InputStream in = getInputStreamFromJar(identifier + ".xml");
 
         // Fallback for standalone search activity.
         if (in == null) {
@@ -210,27 +211,43 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     }
 
     /**
-     * Reads open search plugin XML file from the gecko jar. This will only work
+     * Reads a file from the searchplugins directory in the Gecko jar. This will only work
      * if the search activity is built as part of mozilla-central.
      *
-     * @param identifier search engine identifier (e.g. "google")
-     * @return InputStream for open search plugin XML
+     * @param fileName name of the file to read
+     * @return InputStream for file
      */
-    private InputStream getEngineFromJar(String identifier) {
-        final String url = getSearchPluginsJarUrl(identifier + ".xml");
+    private InputStream getInputStreamFromJar(String fileName) {
+        final Locale locale = Locale.getDefault();
+
+        // First, try a file path for the full locale.
+        final String languageTag = BrowserLocaleManager.getLanguageTag(locale);
+        String url = getSearchPluginsJarURL(languageTag, fileName);
+
+        final InputStream in = GeckoJarReader.getStream(url);
+        if (in != null) {
+            return in;
+        }
+
+        // If that doesn't work, try a file path for just the language.
+        final String language = BrowserLocaleManager.getLanguage(locale);
+        if (languageTag.equals(language)) {
+            // We already tried this, so just return null.
+            return null;
+        }
+
+        url = getSearchPluginsJarURL(language, fileName);
         return GeckoJarReader.getStream(url);
     }
 
     /**
      * Gets the jar URL for a file in the searchplugins directory
      *
-     * @param fileName
-     * @return
+     * @param locale String representing the Gecko locale (e.g. "en-US")
+     * @param fileName name of the file to read
+     * @return URL for jar file
      */
-    private String getSearchPluginsJarUrl(String fileName) {
-        // TODO: Get the real value for this
-        final String locale = "en-US";
-
+    private String getSearchPluginsJarURL(String locale, String fileName) {
         final String path = "!/chrome/" + locale + "/locale/" + locale + "/browser/searchplugins/" + fileName;
         return "jar:jar:file://" + context.getPackageResourcePath() + "!/" + AppConstants.OMNIJAR_NAME + path;
     }
