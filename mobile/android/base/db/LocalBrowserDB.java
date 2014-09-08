@@ -1331,7 +1331,7 @@ public class LocalBrowserDB {
 
     // This wrapper adds a fake "Desktop Bookmarks" folder entry to the
     // beginning of the cursor's data set.
-    private class SpecialFoldersCursorWrapper extends CursorWrapper {
+    private static class SpecialFoldersCursorWrapper extends CursorWrapper {
         private int mIndexOffset;
 
         private int mDesktopBookmarksIndex = -1;
@@ -1347,22 +1347,27 @@ public class LocalBrowserDB {
             }
         }
 
+        @Override
         public int getCount() {
             return super.getCount() + mIndexOffset;
         }
 
+        @Override
         public boolean moveToPosition(int position) {
             mAtDesktopBookmarksPosition = (mDesktopBookmarksIndex == position);
 
-            if (mAtDesktopBookmarksPosition)
+            if (mAtDesktopBookmarksPosition) {
                 return true;
+            }
 
             return super.moveToPosition(position - mIndexOffset);
         }
 
+        @Override
         public long getLong(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition)
+            if (!mAtDesktopBookmarksPosition) {
                 return super.getLong(columnIndex);
+            }
 
             if (columnIndex == getColumnIndex(Bookmarks.PARENT)) {
                 return Bookmarks.FIXED_ROOT_ID;
@@ -1371,25 +1376,32 @@ public class LocalBrowserDB {
             return -1;
         }
 
+        @Override
         public int getInt(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition)
+            if (!mAtDesktopBookmarksPosition) {
                 return super.getInt(columnIndex);
+            }
 
-            if (columnIndex == getColumnIndex(Bookmarks._ID) && mAtDesktopBookmarksPosition)
-                    return Bookmarks.FAKE_DESKTOP_FOLDER_ID;
+            if (columnIndex == getColumnIndex(Bookmarks._ID) && mAtDesktopBookmarksPosition) {
+                return Bookmarks.FAKE_DESKTOP_FOLDER_ID;
+            }
 
-            if (columnIndex == getColumnIndex(Bookmarks.TYPE))
+            if (columnIndex == getColumnIndex(Bookmarks.TYPE)) {
                 return Bookmarks.TYPE_FOLDER;
+            }
 
             return -1;
         }
 
+        @Override
         public String getString(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition)
+            if (!mAtDesktopBookmarksPosition) {
                 return super.getString(columnIndex);
+            }
 
-            if (columnIndex == getColumnIndex(Bookmarks.GUID) && mAtDesktopBookmarksPosition)
-                    return Bookmarks.FAKE_DESKTOP_FOLDER_GUID;
+            if (columnIndex == getColumnIndex(Bookmarks.GUID) && mAtDesktopBookmarksPosition) {
+                return Bookmarks.FAKE_DESKTOP_FOLDER_GUID;
+            }
 
             return "";
         }
