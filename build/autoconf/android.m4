@@ -413,6 +413,16 @@ case "$target" in
     ;;
 esac
 
+MOZ_ARG_ENABLE_BOOL(android-resource-constrained,
+[  --enable-android-resource-constrained
+                          exclude hi-res images and similar from the final APK],
+    MOZ_ANDROID_RESOURCE_CONSTRAINED=1)
+
+if test -n "$MOZ_ANDROID_RESOURCE_CONSTRAINED"; then
+    AC_DEFINE(MOZ_ANDROID_RESOURCE_CONSTRAINED, $MOZ_ANDROID_RESOURCE_CONSTRAINED)
+    AC_SUBST(MOZ_ANDROID_RESOURCE_CONSTRAINED)
+fi
+
 MOZ_ARG_WITH_STRING(android-min-sdk,
 [  --with-android-min-sdk=[VER]     Impose a minimum Firefox for Android SDK version],
 [ MOZ_ANDROID_MIN_SDK_VERSION=$withval ])
@@ -433,10 +443,12 @@ if test -n "$MOZ_ANDROID_MIN_SDK_VERSION"; then
     fi
 
     AC_DEFINE_UNQUOTED(MOZ_ANDROID_MIN_SDK_VERSION, $MOZ_ANDROID_MIN_SDK_VERSION)
+    AC_SUBST(MOZ_ANDROID_MIN_SDK_VERSION)
 fi
 
 if test -n "$MOZ_ANDROID_MAX_SDK_VERSION"; then
     AC_DEFINE_UNQUOTED(MOZ_ANDROID_MAX_SDK_VERSION, $MOZ_ANDROID_MAX_SDK_VERSION)
+    AC_SUBST(MOZ_ANDROID_MAX_SDK_VERSION)
 fi
 
 ])

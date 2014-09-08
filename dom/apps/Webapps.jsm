@@ -633,10 +633,23 @@ this.DOMApplicationRegistry = {
 
       yield this.loadCurrentRegistry();
 
+      try {
+        let systemManifestURL =
+          Services.prefs.getCharPref("b2g.system_manifest_url");
+        let systemAppFound =
+          this.webapps.some(v => v.manifestURL == systemManifestURL);
+
+        // We configured a system app but can't find it. That prevents us
+        // from starting so we clear our registry to start again from scratch.
+        if (!systemAppFound) {
+          runUpdate = true;
+        }
+      } catch(e) {} // getCharPref will throw on non-b2g platforms. That's ok.
+
       if (runUpdate) {
 
         // Run migration before uninstall of core apps happens.
-        Services.obs.notifyObservers(null, "webapps-before-update-merge", null);        
+        Services.obs.notifyObservers(null, "webapps-before-update-merge", null);
 
 #ifdef MOZ_WIDGET_GONK
         yield this.installSystemApps();

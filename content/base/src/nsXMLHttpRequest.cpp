@@ -4074,8 +4074,8 @@ ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
     return rv;
   }
   nsZipItem* zipItem = zip->GetItem(aFile.get());
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (!zipItem) {
+    return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
   }
 
   // If file was added to the package as stored(uncompressed), map to the
