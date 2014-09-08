@@ -52,7 +52,16 @@ runWithMSE(function () {
 
     fetchWithXHR("seek.webm", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
+      is(sb.updating, true, "SourceBuffer.updating is expected value after appendBuffer");
+    });
+
+    sb.addEventListener("update", function () {
+      is(sb.updating, false, "SourceBuffer.updating is expected value in update event");
       ms.endOfStream();
+    });
+
+    sb.addEventListener("updateend", function () {
+      is(sb.updating, false, "SourceBuffer.updating is expected value in updateend event");
       v.play();
     });
   });

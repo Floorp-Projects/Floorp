@@ -41,9 +41,16 @@ runWithMSE(function () {
       fetchWithXHR("seek_lowres.webm", function (arrayBuffer) {
         // Append initialization segment.
         sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 438));
-        // Append media segment covering range [2, 4].
-        sb.appendBuffer(new Uint8Array(arrayBuffer, 51003));
-        ms.endOfStream();
+        var first = true;
+        sb.addEventListener("updateend", function () {
+          if (first) {
+            // Append media segment covering range [2, 4].
+            sb.appendBuffer(new Uint8Array(arrayBuffer, 51003));
+            first = false;
+          } else {
+            ms.endOfStream();
+          }
+        });
         target = targets.shift();
         v.currentTime = target.currentTime;
       });
