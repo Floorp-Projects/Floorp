@@ -132,7 +132,8 @@ def fixSymbols(line):
             # throw away the bad symbol, but keep balance tree structure
             before = balance_tree_re.match(before).groups()[0]
 
-            return before + info + after + "\n"
+            nl = '\n' if line[-1] == '\n' else ''
+            return before + info + after + nl
         else:
             sys.stderr.write("Warning: File \"" + file + "\" does not exist.\n")
             return line

@@ -26,15 +26,17 @@ reflectURL({
 
 todo("srcset" in document.createElement("img"), "Should implement srcset")
 
-// TODO: Bug 880997 - Make crossOrigin a limited enumerated attribute.
-reflectString({
+reflectLimitedEnumerated({
   element: document.createElement("img"),
   attribute: "crossOrigin",
-  otherValues: [
-    "", "anonymous", "ANONYMOUS", "  aNOnYmous    ",
-    "use-credentials", "USE-CREDENTIALS", "   UsE-CreDEntIALS      ",
-    "foobar", "FOOBAR", "  fOoBaR  "
-  ]
+  // "" is a valid value per spec, but gets mapped to the "anonymous" state,
+  // just like invalid values, so just list it under invalidValues
+  validValues: [ "anonymous", "use-credentials" ],
+  invalidValues: [
+    "", "  aNOnYmous   ", "  UsE-CreDEntIALS  ", "foobar", "FOOBAR", " fOoBaR  "
+  ],
+  defaultValue: { invalid: "anonymous", missing: null },
+  nullable: true,
 })
 
 reflectString({

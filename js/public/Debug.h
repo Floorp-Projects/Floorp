@@ -6,8 +6,8 @@
 
 // Interfaces by which the embedding can interact with the Debugger API.
 
-#ifndef js_DebugAPI_h
-#define js_DebugAPI_h
+#ifndef js_Debug_h
+#define js_Debug_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -253,4 +253,4 @@ class BuilderOrigin : public Builder {
 } // namespace JS
 
 
-#endif /* js_DebugAPI_h */
+#endif /* js_Debug_h */

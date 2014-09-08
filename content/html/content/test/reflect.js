@@ -248,6 +248,7 @@ function reflectUnsignedInt(aParameters)
  *     OR
  *    defaultValue        Object   [optional] object containing two attributes, 'invalid' and 'missing'
  *  - unsupportedValues   Array    [optional] valid values we do not support
+ *  - nullable            boolean  [optional] whether the attribute is nullable
  */
 function reflectLimitedEnumerated(aParameters)
 {
@@ -266,60 +267,73 @@ function reflectLimitedEnumerated(aParameters)
                                     ? aParameters.defaultValue : aParameters.defaultValue.missing
   var unsupportedValues = aParameters.unsupportedValues !== undefined
                             ? aParameters.unsupportedValues : [];
+  var nullable = aParameters.nullable;
 
   ok(idlAttr in element, idlAttr + " should be an IDL attribute of this element");
-  is(typeof element[idlAttr], "string", "'" + idlAttr + "' IDL attribute should be a string");
+  if (nullable) {
+    // The missing value default is null, which is typeof == "object"
+    is(typeof element[idlAttr], "object", "'" + idlAttr + "' IDL attribute should be null, which has typeof == object");
+    ise(element[idlAttr], null, "'" + idlAttr + "' IDL attribute should be null");
+  } else {
+    is(typeof element[idlAttr], "string", "'" + idlAttr + "' IDL attribute should be a string");
+  }
+
+  if (nullable) {
+    element.setAttribute(contentAttr, "something");
+    // Now it will be a string
+    is(typeof element[idlAttr], "string", "'" + idlAttr + "' IDL attribute should be a string");
+  }
 
   // Explicitly check the default value.
   element.removeAttribute(contentAttr);
-  is(element[idlAttr], defaultValueMissing,
-     "When no attribute is set, the value should be the default value.");
+  ise(element[idlAttr], defaultValueMissing,
+      "When no attribute is set, the value should be the default value.");
 
   // Check valid values.
   validValues.forEach(function (v) {
     element.setAttribute(contentAttr, v);
-    is(element[idlAttr], v,
-       v + " should be accepted as a valid value for " + idlAttr);
-    is(element.getAttribute(contentAttr), v,
-       "Content attribute should return the value it has been set to.");
+    ise(element[idlAttr], v,
+        "'" + v + "' should be accepted as a valid value for " + idlAttr);
+    ise(element.getAttribute(contentAttr), v,
+        "Content attribute should return the value it has been set to.");
     element.removeAttribute(contentAttr);
 
     element.setAttribute(contentAttr, v.toUpperCase());
-    is(element[idlAttr], v,
-       "Enumerated attributes should be case-insensitive.");
-    is(element.getAttribute(contentAttr), v.toUpperCase(),
-       "Content attribute should not be lower-cased.");
+    ise(element[idlAttr], v,
+        "Enumerated attributes should be case-insensitive.");
+    ise(element.getAttribute(contentAttr), v.toUpperCase(),
+        "Content attribute should not be lower-cased.");
     element.removeAttribute(contentAttr);
 
     element[idlAttr] = v;
-    is(element[idlAttr], v,
-       v + " should be accepted as a valid value for " + idlAttr);
-    is(element.getAttribute(contentAttr), v,
-       "Content attribute should return the value it has been set to.");
+    ise(element[idlAttr], v,
+        "'" + v + "' should be accepted as a valid value for " + idlAttr);
+    ise(element.getAttribute(contentAttr), v,
+        "Content attribute should return the value it has been set to.");
     element.removeAttribute(contentAttr);
 
     element[idlAttr] = v.toUpperCase();
-    is(element[idlAttr], v,
-       "Enumerated attributes should be case-insensitive.");
-    is(element.getAttribute(contentAttr), v.toUpperCase(),
-       "Content attribute should not be lower-cased.");
+    ise(element[idlAttr], v,
+        "Enumerated attributes should be case-insensitive.");
+    ise(element.getAttribute(contentAttr), v.toUpperCase(),
+        "Content attribute should not be lower-cased.");
     element.removeAttribute(contentAttr);
   });
 
   // Check invalid values.
   invalidValues.forEach(function (v) {
     element.setAttribute(contentAttr, v);
-    is(element[idlAttr], defaultValueInvalid,
-       "When the content attribute is set to an invalid value, the default value should be returned.");
-    is(element.getAttribute(contentAttr), v,
-       "Content attribute should not have been changed.");
+    ise(element[idlAttr], defaultValueInvalid,
+        "When the content attribute is set to an invalid value, the default value should be returned.");
+    ise(element.getAttribute(contentAttr), v,
+        "Content attribute should not have been changed.");
     element.removeAttribute(contentAttr);
 
     element[idlAttr] = v;
-    is(element[idlAttr], defaultValueInvalid,
-       "When the value is set to an invalid value, the default value should be returned.");
-    is(element.getAttribute(contentAttr), v,
-       "Content attribute should not have been changed.");
+    ise(element[idlAttr], defaultValueInvalid,
+        "When the value is set to an invalid value, the default value should be returned.");
+    ise(element.getAttribute(contentAttr), v,
+        "Content attribute should not have been changed.");
     element.removeAttribute(contentAttr);
   });
 
@@ -328,7 +342,7 @@ function reflectLimitedEnumerated(aParameters)
   unsupportedValues.forEach(function (v) {
     element.setAttribute(contentAttr, v);
     todo_is(element[idlAttr], v,
-            v + " should be accepted as a valid value for " + idlAttr);
+            "'" + v + "' should be accepted as a valid value for " + idlAttr);
     is(element.getAttribute(contentAttr), v,
        "Content attribute should return the value it has been set to.");
     element.removeAttribute(contentAttr);
@@ -342,7 +356,7 @@ function reflectLimitedEnumerated(aParameters)
 
     element[idlAttr] = v;
     todo_is(element[idlAttr], v,
-            v + " should be accepted as a valid value for " + idlAttr);
+            "'" + v + "' should be accepted as a valid value for " + idlAttr);
     is(element.getAttribute(contentAttr), v,
        "Content attribute should return the value it has been set to.");
     element.removeAttribute(contentAttr);
@@ -354,6 +368,18 @@ function reflectLimitedEnumerated(aParameters)
        "Content attribute should not be lower-cased.");
     element.removeAttribute(contentAttr);
   });
+
+  if (nullable) {
+    ise(defaultValueMissing, null,
+	"Missing default value should be null for nullable attributes");
+    ok(validValues.length > 0, "We better have at least one valid value");
+    element.setAttribute(contentAttr, validValues[0]);
+    ok(element.hasAttribute(contentAttr),
+       "Should have content attribute: we just set it");
+    element[idlAttr] = null;
+    ok(!element.hasAttribute(contentAttr),
+       "Should have removed content attribute");
+  }
 }
 
 /**

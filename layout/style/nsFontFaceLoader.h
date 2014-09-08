@@ -34,8 +34,7 @@ public:
 
   // starts loading process, creating and initializing a nsFontFaceLoader obj
   // returns whether load process successfully started or not
-  nsresult StartLoad(gfxMixedFontFamily* aFamily,
-                     gfxProxyFontEntry* aFontToLoad,
+  nsresult StartLoad(gfxUserFontEntry* aFontToLoad,
                      const gfxFontFaceSrc* aFontFaceSrc) MOZ_OVERRIDE;
 
   // Called by nsFontFaceLoader when the loader has completed normally.
@@ -46,10 +45,7 @@ public:
 
   nsPresContext* GetPresContext() { return mPresContext; }
 
-  virtual void ReplaceFontEntry(gfxMixedFontFamily* aFamily,
-                                gfxProxyFontEntry* aProxy,
-                                gfxFontEntry* aFontEntry) MOZ_OVERRIDE;
-
+  // search for @font-face rule that matches a platform font entry
   nsCSSFontFaceRule* FindRuleForEntry(gfxFontEntry* aFontEntry);
 
 protected:
@@ -62,7 +58,7 @@ protected:
   // so that we can update the set without having to throw away
   // all the existing fonts.
   struct FontFaceRuleRecord {
-    nsRefPtr<gfxFontEntry>       mFontEntry;
+    nsRefPtr<gfxUserFontEntry>   mUserFontEntry;
     nsFontFaceRuleContainer      mContainer;
   };
 
@@ -70,13 +66,12 @@ protected:
                   nsTArray<FontFaceRuleRecord>& oldRules,
                   bool& aFontSetModified);
 
-  already_AddRefed<gfxFontEntry> FindOrCreateFontFaceFromRule(
+  already_AddRefed<gfxUserFontEntry> FindOrCreateFontFaceFromRule(
                                                    const nsAString& aFamilyName,
                                                    nsCSSFontFaceRule* aRule,
                                                    uint8_t aSheetType);
 
-  virtual nsresult LogMessage(gfxMixedFontFamily* aFamily,
-                              gfxProxyFontEntry* aProxy,
+  virtual nsresult LogMessage(gfxUserFontEntry* aUserFontEntry,
                               const char* aMessage,
                               uint32_t aFlags = nsIScriptError::errorFlag,
                               nsresult aStatus = NS_OK) MOZ_OVERRIDE;
@@ -85,7 +80,7 @@ protected:
                                  nsIPrincipal** aPrincipal,
                                  bool* aBypassCache) MOZ_OVERRIDE;
 
-  virtual nsresult SyncLoadFontData(gfxProxyFontEntry* aFontToLoad,
+  virtual nsresult SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
                                     const gfxFontFaceSrc* aFontFaceSrc,
                                     uint8_t*& aBuffer,
                                     uint32_t& aBufferLength) MOZ_OVERRIDE;
@@ -93,6 +88,9 @@ protected:
   virtual bool GetPrivateBrowsing() MOZ_OVERRIDE;
 
   virtual void DoRebuildUserFontSet() MOZ_OVERRIDE;
+
+  // search for @font-face rule that matches a userfont font entry
+  nsCSSFontFaceRule* FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry);
 
   nsPresContext* mPresContext;  // weak reference
 
@@ -107,8 +105,7 @@ protected:
 class nsFontFaceLoader : public nsIStreamLoaderObserver
 {
 public:
-  nsFontFaceLoader(gfxMixedFontFamily* aFontFamily,
-                   gfxProxyFontEntry* aFontToLoad, nsIURI* aFontURI, 
+  nsFontFaceLoader(gfxUserFontEntry* aFontToLoad, nsIURI* aFontURI,
                    nsUserFontSet* aFontSet, nsIChannel* aChannel);
 
   NS_DECL_ISUPPORTS
@@ -133,8 +130,7 @@ protected:
   virtual ~nsFontFaceLoader();
 
 private:
-  nsRefPtr<gfxMixedFontFamily> mFontFamily;
-  nsRefPtr<gfxProxyFontEntry>  mFontEntry;
+  nsRefPtr<gfxUserFontEntry>  mUserFontEntry;
   nsCOMPtr<nsIURI>        mFontURI;
   nsRefPtr<nsUserFontSet> mFontSet;
   nsCOMPtr<nsIChannel>    mChannel;

@@ -1,0 +1,61 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     style="font: 16px sans-serif">
+
+  <title>Testcase for animating attributes on child text content elements</title>
+
+  <text x="20" y="20">Test 1
+    <set attributeName="x" to="200" begin="indefinite"/>
+  </text>
+  <text x="20" y="40">Test 2
+    <set attributeName="y" to="60" begin="indefinite"/>
+  </text>
+  <text x="20" y="80">Test 3
+    <set attributeName="rotate" to="10" begin="indefinite"/>
+  </text>
+  <text>
+    <tspan x="20" y="100">Test 4
+      <set attributeName="x" to="200" begin="indefinite"/>
+    </tspan>
+  </text>
+  <text>
+    <tspan x="20" y="120">Test 5
+      <set attributeName="y" to="140" begin="indefinite"/>
+    </tspan>
+  </text>
+  <text>
+    <tspan x="20" y="160">Test 6
+      <set attributeName="rotate" to="30" begin="indefinite"/>
+    </tspan>
+  </text>
+  <path id="p" d="M 20,180 h 400"/>
+  <text>
+    <textPath xlink:href="#p">Test 7
+      <set attributeName="startOffset" to="180" begin="indefinite"/>
+    </textPath>
+  </text>
+  <text x="20" y="200" textLength="100" lengthAdjust="spacing">Test 8
+    <set attributeName="lengthAdjust" to="spacingAndGlyphs" begin="indefinite"/>
+  </text>
+  <!-- We don't support textLength/lengthAdjust on child text content
+       elements currently (bug 890692), so Test 9 doesn't really test
+       anything at the moment.  But it is the only animatable enumerated
+       attribute value on text content elements to test. -->
+  <text>
+    <tspan x="20" y="220" textLength="100" lengthAdjust="spacing">Test 9
+      <set attributeName="lengthAdjust" to="spacingAndGlyphs" begin="indefinite"/>
+    </tspan>
+  </text>
+
+  <script>
+    window.addEventListener("MozReftestInvalidate", function() {
+      [...document.querySelectorAll("set")].forEach((e) => e.beginElement());
+      document.documentElement.removeAttribute("class");
+    }, false);
+  </script>
+</svg>
