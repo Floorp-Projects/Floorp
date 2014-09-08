@@ -534,15 +534,29 @@ public:
     // Allow whatever element types the bindings are willing to pass
     // us in TexSubImage2D
     template<class ElementType>
-    void TexSubImage2D(GLenum target, GLint level,
+    void TexSubImage2D(GLenum texImageTarget, GLint level,
                        GLint xoffset, GLint yoffset, GLenum format,
                        GLenum type, ElementType& elt, ErrorResult& rv)
     {
         if (IsContextLost())
             return;
 
+        const GLenum target = TexImageTargetToTexTarget(texImageTarget);
+        if (target == LOCAL_GL_NONE)
+            return ErrorInvalidEnumInfo("texSubImage2D: target", texImageTarget);
+
+        if (!ValidateTexImageFormatAndType(format, type, WebGLTexImageFunc::TexImage))
+            return;
+
+        if (level < 0)
+            return ErrorInvalidValue("texSubImage2D: level is negative");
+
+        const int32_t maxLevel = MaxTextureLevelForTexImageTarget(texImageTarget);
+        if (level > maxLevel)
+            return ErrorInvalidValue("texSubImage2D: level %d is too large, max is %d", level, maxLevel);
+
         // Trying to handle the video by GPU directly first
-        if (TexImageFromVideoElement(target, level, format, format, type, elt)) {
+        if (TexImageFromVideoElement(texImageTarget, level, format, format, type, elt)) {
             return;
         }
 
@@ -556,7 +570,7 @@ public:
 
         gfx::IntSize size = data->GetSize();
         uint32_t byteLength = data->Stride() * size.height;
-        return TexSubImage2D_base(target, level, xoffset, yoffset,
+        return TexSubImage2D_base(texImageTarget, level, xoffset, yoffset,
                                   size.width, size.height,
                                   data->Stride(), format, type,
                                   data->GetData(), byteLength,
