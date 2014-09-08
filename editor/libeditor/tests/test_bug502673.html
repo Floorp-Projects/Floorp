@@ -49,12 +49,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
           }
         },
 
-        QueryInterface: function(iid) {
+        QueryInterface: SpecialPowers.wrapCallback(function(iid) {
           if (iid.equals(SpecialPowers.Ci.nsIDocumentStateListener) ||
               iid.equals(SpecialPowers.Ci.nsISupports))
             return this;
           throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
-        },
+        }),
       };
 
       function doTest() {
