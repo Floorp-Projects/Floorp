@@ -2956,12 +2956,6 @@ def CreateBindingJSObject(descriptor, properties, parent):
             js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
             """,
             parent=parent)
-        if "Window" in descriptor.interface.identifier.name:
-            create = dedent("""
-                MOZ_ASSERT(false,
-                           "Our current reserved slot situation is unsafe for globals. Fix "
-                           "bug 760095!");
-                """) + create
     create = objDecl + create
 
     if descriptor.nativeOwnership == 'refcounted':
@@ -5287,7 +5281,7 @@ class CGArgumentConverter(CGThing):
             "args.hasDefined(${index})").substitute(replacer)
         self.replacementVariables["haveValue"] = haveValueCheck
         self.descriptorProvider = descriptorProvider
-        if self.argument.optional and not self.argument.defaultValue:
+        if self.argument.canHaveMissingValue():
             self.argcAndIndex = replacer
         else:
             self.argcAndIndex = None
@@ -6130,10 +6124,9 @@ class CGCallGenerator(CGThing):
                     return True
                 if a.type.isString():
                     return True
-                if a.optional and not a.defaultValue:
-                    # If a.defaultValue, then it's not going to use an Optional,
-                    # so doesn't need to be const just due to being optional.
-                    # This also covers variadic arguments.
+                if a.canHaveMissingValue():
+                    # This will need an Optional or it's a variadic;
+                    # in both cases it should be const.
                     return True
                 if a.type.isUnion():
                     return True
@@ -6350,7 +6343,7 @@ def wrapArgIntoCurrentCompartment(arg, value, isMember=True):
     As wrapTypeIntoCurrentCompartment but handles things being optional
     """
     origValue = value
-    isOptional = arg.optional and not arg.defaultValue
+    isOptional = arg.canHaveMissingValue()
     if isOptional:
         value = value + ".Value()"
     wrap = wrapTypeIntoCurrentCompartment(arg.type, value, isMember)
@@ -6857,8 +6850,7 @@ class CGMethodCall(CGThing):
                 # enough that we can examine this argument.  But note that we
                 # still want to claim that optional arguments are optional, in
                 # case undefined was passed in.
-                argIsOptional = (distinguishingArgument(signature).optional and
-                                 not distinguishingArgument(signature).defaultValue)
+                argIsOptional = distinguishingArgument(signature).canHaveMissingValue()
                 testCode = instantiateJSToNativeConversion(
                     getJSToNativeConversionInfo(type, descriptor,
                                                 failureCode=failureCode,
@@ -7143,6 +7135,9 @@ class FakeArgument():
 
     def allowTreatNonCallableAsNull(self):
         return self._allowTreatNonCallableAsNull
+
+    def canHaveMissingValue(self):
+        return False
 
 
 class CGSetterCall(CGPerSignatureCall):
@@ -7675,9 +7670,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
                                                         self.attr)
         if self.attr.slotIndex is not None:
-            if (self.descriptor.hasXPConnectImpls and
-                (self.descriptor.interface.identifier.name != 'Window' or
-                 self.attr.identifier.name != 'document')):
+            if self.descriptor.hasXPConnectImpls:
                 raise TypeError("Interface '%s' has XPConnect impls, so we "
                                 "can't use our slot for property '%s'!" %
                                 (self.descriptor.interface.identifier.name,
@@ -11119,10 +11112,9 @@ class CGDictionary(CGThing):
                  isEnforceRange=member.enforceRange,
                  isClamp=member.clamp,
                  isMember="Dictionary",
-                 isOptional=(not member.defaultValue),
+                 isOptional=member.canHaveMissingValue(),
                  defaultValue=member.defaultValue,
-                 sourceDescription=("'%s' member of %s" %
-                                    (member.identifier.name, dictionary.identifier.name))))
+                 sourceDescription=self.getMemberSourceDescription(member)))
             for member in dictionary.members]
 
         # If we have a union member containing something in the same
@@ -11322,7 +11314,7 @@ class CGDictionary(CGThing):
                 self.makeClassName(self.dictionary.parent)))
         for m, _ in self.memberInfo:
             memberName = self.makeMemberName(m.identifier.name)
-            if not m.defaultValue:
+            if m.canHaveMissingValue():
                 memberAssign = CGGeneric(fill(
                     """
                     if (aOther.${name}.WasPassed()) {
@@ -11476,6 +11468,19 @@ class CGDictionary(CGThing):
                       "}\n")
         if member.defaultValue:
             conversion += "${convert}"
+        elif not conversionInfo.dealWithOptional:
+            # We're required, but have no default value.  Make sure
+            # that we throw if we have no value provided.
+            conversion += dedent(
+                """
+                // Skip the undefined check if we have no cx.  In that
+                // situation the caller is default-constructing us and we'll
+                // just assume they know what they're doing.
+                if (cx && (isNull || temp->isUndefined())) {
+                  return ThrowErrorMessage(cx, MSG_MISSING_REQUIRED_DICTIONARY_MEMBER,
+                                           "%s");
+                }
+                ${convert}""" % self.getMemberSourceDescription(member))
         else:
             conversion += (
                 "if (!isNull && !temp->isUndefined()) {\n"
@@ -11491,7 +11496,7 @@ class CGDictionary(CGThing):
         member = memberInfo[0]
         declType = memberInfo[1].declType
         memberLoc = self.makeMemberName(member.identifier.name)
-        if member.defaultValue:
+        if not member.canHaveMissingValue():
             memberData = memberLoc
         else:
             # The data is inside the Optional<>
@@ -11547,7 +11552,7 @@ class CGDictionary(CGThing):
             pre=("do {\n"
                  "  // block for our 'break' successCode and scope for 'temp' and 'currentValue'\n"),
             post="} while(0);\n")
-        if not member.defaultValue:
+        if member.canHaveMissingValue():
             # Only do the conversion if we have a value
             conversion = CGIfWrapper(conversion, "%s.WasPassed()" % memberLoc)
         return conversion
@@ -11556,7 +11561,7 @@ class CGDictionary(CGThing):
         type = member.type
         assert typeNeedsRooting(type)
         memberLoc = self.makeMemberName(member.identifier.name)
-        if member.defaultValue:
+        if not member.canHaveMissingValue():
             memberData = memberLoc
         else:
             # The data is inside the Optional<>
@@ -11597,7 +11602,7 @@ class CGDictionary(CGThing):
         else:
             assert False  # unknown type
 
-        if not member.defaultValue:
+        if member.canHaveMissingValue():
             trace = CGIfWrapper(trace, "%s.WasPassed()" % memberLoc)
 
         return trace.define()
@@ -11609,8 +11614,8 @@ class CGDictionary(CGThing):
         value, so they're safe to trace at all times.
         """
         member, _ = memberInfo
-        if not member.defaultValue:
-            # No default value means no need to set it up front, since it's
+        if member.canHaveMissingValue():
+            # Allowed missing value means no need to set it up front, since it's
             # inside an Optional and won't get traced until it's actually set
             # up.
             return None
@@ -11620,6 +11625,10 @@ class CGDictionary(CGThing):
         if type.isObject():
             return "nullptr"
         return None
+
+    def getMemberSourceDescription(self, member):
+        return ("'%s' member of %s" %
+                (member.identifier.name, self.dictionary.identifier.name))
 
     @staticmethod
     def makeIdName(name):
@@ -12526,8 +12535,7 @@ class CGNativeMember(ClassMethod):
         """
         Get the full argument declaration for an argument
         """
-        decl, ref = self.getArgType(arg.type,
-                                    arg.optional and not arg.defaultValue,
+        decl, ref = self.getArgType(arg.type, arg.canHaveMissingValue(),
                                     "Variadic" if arg.variadic else False)
         if ref:
             decl = CGWrapper(decl, pre="const ", post="&")
@@ -13606,7 +13614,7 @@ class CallbackMember(CGNativeMember):
             jsvalIndex = "%d + idx" % i
         else:
             jsvalIndex = "%d" % i
-            if arg.optional and not arg.defaultValue:
+            if arg.canHaveMissingValue():
                 argval += ".Value()"
         if arg.type.isDOMString():
             # XPConnect string-to-JS conversion wants to mutate the string.  So
@@ -13649,7 +13657,7 @@ class CallbackMember(CGNativeMember):
                 """,
                 arg=arg.identifier.name,
                 conversion=conversion)
-        elif arg.optional and not arg.defaultValue:
+        elif arg.canHaveMissingValue():
             conversion = fill(
                 """
                 if (${argName}.WasPassed()) {
@@ -14383,7 +14391,7 @@ class CGEventMethod(CGNativeMember):
 
     def getArg(self, arg):
         decl, ref = self.getArgType(arg.type,
-                                    arg.optional and not arg.defaultValue,
+                                    arg.canHaveMissingValue(),
                                     "Variadic" if arg.variadic else False)
         if ref:
             decl = CGWrapper(decl, pre="const ", post="&")

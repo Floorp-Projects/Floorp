@@ -6141,6 +6141,8 @@ dumpValue(const Value &v)
         fprintf(stderr, "%g", v.toDouble());
     else if (v.isString())
         v.toString()->dump();
+    else if (v.isSymbol())
+        v.toSymbol()->dump();
     else if (v.isObject() && v.toObject().is<JSFunction>()) {
         JSFunction *fun = &v.toObject().as<JSFunction>();
         if (fun->displayAtom()) {

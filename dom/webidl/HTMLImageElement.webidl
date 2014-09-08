@@ -26,7 +26,7 @@ interface HTMLImageElement : HTMLElement {
            [SetterThrows, Pref="dom.image.srcset.enabled"]
            attribute DOMString srcset;
            [SetterThrows]
-           attribute DOMString crossOrigin;
+           attribute DOMString? crossOrigin;
            [SetterThrows]
            attribute DOMString useMap;
            [SetterThrows]

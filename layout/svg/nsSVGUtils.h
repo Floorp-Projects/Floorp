@@ -296,10 +296,10 @@ public:
   /* Paint SVG frame with SVG effects - aDirtyRect is the area being
    * redrawn, in device pixel coordinates relative to the outer svg */
   static void
-  PaintFrameWithEffects(nsRenderingContext *aContext,
-                        const nsIntRect *aDirtyRect,
-                        nsIFrame *aFrame,
-                        nsIFrame* aTransformRoot = nullptr);
+  PaintFrameWithEffects(nsIFrame *aFrame,
+                        nsRenderingContext *aContext,
+                        const gfxMatrix& aTransform,
+                        const nsIntRect *aDirtyRect = nullptr);
 
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  Returns true if no clipPath set. */
