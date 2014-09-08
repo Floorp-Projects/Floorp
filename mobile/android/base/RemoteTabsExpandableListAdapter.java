@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.mozilla.gecko.TabsAccessor.RemoteClient;
 import org.mozilla.gecko.TabsAccessor.RemoteTab;
+import org.mozilla.gecko.home.TwoLinePageRow;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -151,11 +152,18 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         final RemoteClient client = clients.get(groupPosition);
         final RemoteTab tab = client.tabs.get(childPosition);
 
-        final TextView titleView = (TextView) view.findViewById(R.id.title);
-        titleView.setText(TextUtils.isEmpty(tab.title) ? tab.url : tab.title);
+        // The view is a TwoLinePageRow only for some of our child views: it's
+        // present for the home panel children and not for the tabs tray
+        // children. Therefore, we must handle one case manually.
+        if (view instanceof TwoLinePageRow) {
+            ((TwoLinePageRow) view).update(tab.title, tab.url);
+        } else {
+            final TextView titleView = (TextView) view.findViewById(R.id.title);
+            titleView.setText(TextUtils.isEmpty(tab.title) ? tab.url : tab.title);
 
-        final TextView urlView = (TextView) view.findViewById(R.id.url);
-        urlView.setText(tab.url);
+            final TextView urlView = (TextView) view.findViewById(R.id.url);
+            urlView.setText(tab.url);
+        }
 
         return view;
     }
