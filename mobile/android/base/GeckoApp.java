@@ -45,6 +45,7 @@ import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.PromptService;
+import org.mozilla.gecko.SmsManager;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityResultHandler;
@@ -1544,9 +1545,8 @@ public abstract class GeckoApp
             mWebappEventListener.registerEvents();
         }
 
-
-        if (SmsManager.getInstance() != null) {
-          SmsManager.getInstance().start();
+        if (SmsManager.isEnabled()) {
+            SmsManager.getInstance().start();
         }
 
         mContactService = new ContactService(EventDispatcher.getInstance(), this);
@@ -2079,10 +2079,11 @@ public abstract class GeckoApp
         IntentHelper.destroy();
         GeckoNetworkManager.destroy();
 
-        if (SmsManager.getInstance() != null) {
+        if (SmsManager.isEnabled()) {
             SmsManager.getInstance().stop();
-            if (isFinishing())
+            if (isFinishing()) {
                 SmsManager.getInstance().shutdown();
+            }
         }
 
         final HealthRecorder rec = mHealthRecorder;

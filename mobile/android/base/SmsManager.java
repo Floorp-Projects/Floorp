@@ -6,15 +6,21 @@
 package org.mozilla.gecko;
 
 public class SmsManager {
-    static private ISmsManager sInstance;
-
-    static public ISmsManager getInstance() {
+    private static final ISmsManager sInstance;
+    static {
         if (AppConstants.MOZ_WEBSMS_BACKEND) {
-            if (sInstance == null) {
-                sInstance = new GeckoSmsManager();
-            }
+            sInstance = new GeckoSmsManager();
+        } else {
+            sInstance = null;
         }
+    }
+
+    public static ISmsManager getInstance() {
         return sInstance;
+    }
+
+    public static boolean isEnabled() {
+        return AppConstants.MOZ_WEBSMS_BACKEND;
     }
 
     public interface ISmsManager {
