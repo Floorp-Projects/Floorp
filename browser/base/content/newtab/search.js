@@ -35,21 +35,11 @@ let gSearch = {
     }
     let searchStr = this._nodes.text.value;
     if (this.currentEngineName && searchStr.length) {
-
-      let eventData = {
+      this._send("Search", {
         engineName: this.currentEngineName,
         searchString: searchStr,
         whence: "newtab",
-      }
-
-      if (searchText.hasAttribute("selection-index")) {
-        eventData.selection = {
-          index: searchText.getAttribute("selection-index"),
-          kind: searchText.getAttribute("selection-kind")
-        };
-      }
-
-      this._send("Search", eventData);
+      });
     }
     this._suggestionController.addInputValueToFormHistory();
   },
