@@ -8,6 +8,7 @@
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "mozilla/dom/HTMLSourceElement.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/AsyncEventDispatcher.h"
@@ -418,6 +419,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLMediaElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaSource)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrcAttrMediaSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrcStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrcAttrStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSourcePointer)
@@ -445,6 +447,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSrcAttrStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaSource)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSrcAttrMediaSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourcePointer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoadBlockedDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourceLoadCandidate)
@@ -499,35 +502,52 @@ HTMLMediaElement::IsVideo()
   return false;
 }
 
-already_AddRefed<DOMMediaStream>
-HTMLMediaElement::GetMozSrcObject() const
+void
+HTMLMediaElement::GetMozSrcObject(Nullable<OwningMediaStreamOrMediaSource>& aValue) const
 {
-  NS_ASSERTION(!mSrcAttrStream || mSrcAttrStream->GetStream(),
-               "MediaStream should have been set up properly");
-  nsRefPtr<DOMMediaStream> stream = mSrcAttrStream;
-  return stream.forget();
+  if (mSrcAttrStream) {
+    NS_ASSERTION(mSrcAttrStream->GetStream(),
+                 "MediaStream should have been set up properly");
+    aValue.SetValue().SetAsMediaStream() = mSrcAttrStream;
+    return;
+  }
+  if (mSrcAttrMediaSource) {
+    aValue.SetValue().SetAsMediaSource() = mSrcAttrMediaSource;
+    return;
+  }
+  aValue.SetNull();
 }
 
 NS_IMETHODIMP
 HTMLMediaElement::GetMozSrcObject(nsIDOMMediaStream** aStream)
 {
-  nsRefPtr<DOMMediaStream> stream = GetMozSrcObject();
+  NS_ASSERTION(!mSrcAttrStream || mSrcAttrStream->GetStream(),
+               "MediaStream should have been set up properly");
+  nsRefPtr<DOMMediaStream> stream = mSrcAttrStream;
   stream.forget(aStream);
   return NS_OK;
 }
 
 void
-HTMLMediaElement::SetMozSrcObject(DOMMediaStream& aValue)
+HTMLMediaElement::SetMozSrcObject(const Nullable<MediaStreamOrMediaSource>& aValue)
 {
-  mSrcAttrStream = &aValue;
+  mSrcAttrStream = nullptr;
+  mSrcAttrMediaSource = nullptr;
+
+  if (aValue.Value().IsMediaStream()) {
+    mSrcAttrStream = &(aValue.Value().GetAsMediaStream());
+  } else if (aValue.Value().IsMediaSource()) {
+    mSrcAttrMediaSource = &(aValue.Value().GetAsMediaSource());
+  }
   Load();
 }
 
 NS_IMETHODIMP
 HTMLMediaElement::SetMozSrcObject(nsIDOMMediaStream* aStream)
 {
-  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aStream);
-  SetMozSrcObject(*stream);
+  mSrcAttrStream = static_cast<DOMMediaStream*>(aStream);
+  mSrcAttrMediaSource = nullptr;
+  Load();
   return NS_OK;
 }
 
@@ -615,7 +635,10 @@ HTMLMediaElement::OnChannelRedirect(nsIChannel* aChannel,
 
 void HTMLMediaElement::ShutdownDecoder()
 {
-  RemoveMediaElementFromURITable();
+  // No URI is in use when setting MediaSource via mozSrcObject attribute
+  if (mLoadingSrc) {
+    RemoveMediaElementFromURITable();
+  }
   NS_ASSERTION(mDecoder, "Must have decoder to shut down");
   mDecoder->Shutdown();
   mDecoder = nullptr;
@@ -812,8 +835,8 @@ void HTMLMediaElement::SelectResourceWrapper()
 
 void HTMLMediaElement::SelectResource()
 {
-  if (!mSrcAttrStream && !HasAttr(kNameSpaceID_None, nsGkAtoms::src) &&
-      !HasSourceChildren(this)) {
+  if (!mSrcAttrStream && !mSrcAttrMediaSource &&
+      !HasAttr(kNameSpaceID_None, nsGkAtoms::src) && !HasSourceChildren(this)) {
     // The media element has neither a src attribute nor any source
     // element children, abort the load.
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
@@ -839,6 +862,12 @@ void HTMLMediaElement::SelectResource()
   nsAutoString src;
   if (mSrcAttrStream) {
     SetupSrcMediaStreamPlayback(mSrcAttrStream);
+  } else if (mSrcAttrMediaSource) {
+    nsresult rv = SetupSrcMediaSourcePlayback(mSrcAttrMediaSource);
+    if (NS_SUCCEEDED(rv)) {
+      return;
+    }
+    NoSupportedMediaSourceError();
   } else if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NewURIFromString(src, getter_AddRefs(uri));
@@ -1137,7 +1166,7 @@ nsresult HTMLMediaElement::LoadResource()
   HTMLMediaElement* other = LookupMediaElementURITable(mLoadingSrc);
   if (other && other->mDecoder) {
     // Clone it.
-    nsresult rv = InitializeDecoderAsClone(other->mDecoder);
+    rv = InitializeDecoderAsClone(other->mDecoder);
     if (NS_SUCCEEDED(rv))
       return rv;
   }
@@ -1168,16 +1197,7 @@ nsresult HTMLMediaElement::LoadResource()
       ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
       return rv;
     }
-    nsRefPtr<MediaSourceDecoder> decoder = new MediaSourceDecoder(this);
-    if (!source->Attach(decoder)) {
-      // TODO: Handle failure: run "If the media data cannot be fetched at
-      // all, due to network errors, causing the user agent to give up
-      // trying to fetch the resource" section of resource fetch algorithm.
-      return NS_ERROR_FAILURE;
-    }
-    mMediaSource = source.forget();
-    nsRefPtr<MediaResource> resource = MediaSourceDecoder::CreateResource();
-    return FinishDecoderSetup(decoder, resource, nullptr, nullptr);
+    return SetupSrcMediaSourcePlayback(source);
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
@@ -2694,7 +2714,10 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // which owns the channel.
   mChannel = nullptr;
 
-  AddMediaElementToURITable();
+  // No URI is in use when setting MediaSource via mozSrcObject attribute
+  if (mLoadingSrc) {
+    AddMediaElementToURITable();
+  }
 
   // We may want to suspend the new stream now.
   // This will also do an AddRemoveSelfReference.
@@ -2870,6 +2893,22 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   // to complete the setup by entering the HAVE_CURRENT_DATA state.
 }
 
+nsresult HTMLMediaElement::SetupSrcMediaSourcePlayback(nsRefPtr<MediaSource>& aSource)
+{
+  NS_ASSERTION(!mMediaSource, "Should have been ended already");
+
+  nsRefPtr<MediaSourceDecoder> decoder = new MediaSourceDecoder(this);
+  if (!aSource->Attach(decoder)) {
+    // TODO: Handle failure: run "If the media data cannot be fetched at
+    // all, due to network errors, causing the user agent to give up
+    // trying to fetch the resource" section of resource fetch algorithm.
+    return NS_ERROR_FAILURE;
+  }
+  mMediaSource = aSource;
+  nsRefPtr<MediaResource> resource = MediaSourceDecoder::CreateResource();
+  return FinishDecoderSetup(decoder, resource, nullptr, nullptr);
+}
+
 void HTMLMediaElement::EndSrcMediaStreamPlayback()
 {
   MediaStream* stream = GetSrcMediaStream();
@@ -2920,7 +2959,8 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
-  if (mDecoder && mDecoder->IsTransportSeekable() && mDecoder->IsMediaSeekable()) {
+  if (!mMediaSource &&
+      mDecoder && mDecoder->IsTransportSeekable() && mDecoder->IsMediaSeekable()) {
     ProcessMediaFragmentURI();
     mDecoder->SetFragmentEndTime(mFragmentEnd);
   }
