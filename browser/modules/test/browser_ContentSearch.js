@@ -45,7 +45,7 @@ add_task(function* SetCurrentEngine() {
     info("Test observed " + data);
     if (data == "engine-current") {
       ok(true, "Test observed engine-current");
-      Services.obs.removeObserver(obs, "browser-search-engine-modified", false);
+      Services.obs.removeObserver(obs, "browser-search-engine-modified");
       deferred.resolve();
     }
   }, "browser-search-engine-modified", false);
@@ -188,6 +188,7 @@ add_task(function* GetSuggestions_AddFormHistoryEntry_RemoveFormHistoryEntry() {
   let deferred = Promise.defer();
   Services.obs.addObserver(function onAdd(subj, topic, data) {
     if (data == "formhistory-add") {
+      Services.obs.removeObserver(onAdd, "satchel-storage-changed");
       executeSoon(() => deferred.resolve());
     }
   }, "satchel-storage-changed", false);
@@ -224,6 +225,7 @@ add_task(function* GetSuggestions_AddFormHistoryEntry_RemoveFormHistoryEntry() {
   deferred = Promise.defer();
   Services.obs.addObserver(function onRemove(subj, topic, data) {
     if (data == "formhistory-remove") {
+      Services.obs.removeObserver(onRemove, "satchel-storage-changed");
       executeSoon(() => deferred.resolve());
     }
   }, "satchel-storage-changed", false);
