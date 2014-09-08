@@ -204,8 +204,6 @@ private:
   bool mLayersUpdated;
 
   bool mReadyForCompose;
-
-  gfx::Matrix mWorldTransform;
 };
 
 class MOZ_STACK_CLASS AutoResolveRefLayers {

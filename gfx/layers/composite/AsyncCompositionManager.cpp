@@ -122,9 +122,9 @@ void
 AsyncCompositionManager::ComputeRotation()
 {
   if (!mTargetConfig.naturalBounds().IsEmpty()) {
-    mWorldTransform =
+    mLayerManager->SetWorldTransform(
       ComputeTransformForRotation(mTargetConfig.naturalBounds(),
-                                  mTargetConfig.rotation());
+                                  mTargetConfig.rotation()));
   }
 }
 
@@ -939,7 +939,6 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
     return false;
   }
 
-
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.
   bool wantNextFrame = SampleAnimations(root, aCurrentFrame);
@@ -976,13 +975,6 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
       }
     }
   }
-
-  LayerComposite* rootComposite = root->AsLayerComposite();
-
-  gfx::Matrix4x4 trans = rootComposite->GetShadowTransform();
-  trans *= gfx::Matrix4x4::From2D(mWorldTransform);
-  rootComposite->SetShadowTransform(trans);
-
 
   return wantNextFrame;
 }
