@@ -1131,6 +1131,19 @@ is_approx(px_to_num(cs.marginBottom), 100 * gTF.ease_in_out(0.8), 0.01,
           "animation-play-state test 4 at 10050ms");
 done_div();
 
+// an initially paused animation (bug 1063992)
+new_div("animation: anim1 1s paused both");
+is(cs.marginLeft, "0px", "animation-play-state test 5, at 0s");
+advance_clock(500);
+is(cs.marginLeft, "0px", "animation-play-state test 5, at 0.5s");
+div.style.animationPlayState = "running";
+is(cs.marginLeft, "0px",
+   "animation-play-state test 5, at 0.5s after unpausing");
+advance_clock(500);
+is(cs.marginLeft, "80px",
+   "animation-play-state test 5, at 1s after unpaused");
+done_div();
+
 /*
  * css3-animations:  3.8. The 'animation-delay' Property
  * http://dev.w3.org/csswg/css3-animations/#the-animation-delay-property-
