@@ -399,6 +399,10 @@ def do_file(filename, inclname, file_kind, f, all_inclnames, included_h_inclname
 
     # Extract the #include statements as a tree of IBlocks and IIncludes.
     for linenum, line in enumerate(f, start=1):
+        # We're only interested in lines that contain a '#'.
+        if not '#' in line:
+            continue
+
         # Look for a |#include "..."| line.
         m = re.match(r'\s*#\s*include\s+"([^"]*)"', line)
         if m is not None:
@@ -482,16 +486,12 @@ def do_file(filename, inclname, file_kind, f, all_inclnames, included_h_inclname
             error(filename, str(include1.linenum) + ':' + str(include2.linenum),
                   include1.quote() + ' should be included after ' + include2.quote())
 
-    # The #include statements in the files in assembler/ have all manner of implicit
-    # ordering requirements.  Boo.  Ignore them.
-    skip_order_checking = inclname.startswith('assembler/')
-
     # Check the extracted #include statements, both individually, and the ordering of
     # adjacent pairs that live in the same block.
     def pair_traverse(prev, this):
         if this.isLeaf():
             check_include_statement(this)
-            if prev is not None and prev.isLeaf() and not skip_order_checking:
+            if prev is not None and prev.isLeaf():
                 check_includes_order(prev, this)
         else:
             for prev2, this2 in zip([None] + this.kids[0:-1], this.kids):
