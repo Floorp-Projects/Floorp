@@ -63,7 +63,7 @@
     COMPONENT(VARIANT, nsVariantConstructor)
     COMPONENT(INTERFACEINFOMANAGER_SERVICE, nsXPTIInterfaceInfoManagerGetSingleton)
 
-    COMPONENT(HASH_PROPERTY_BAG, nsHashPropertyBagConstructor)
+    COMPONENT(HASH_PROPERTY_BAG, nsHashPropertyBagCCConstructor)
 
     COMPONENT(UUID_GENERATOR, nsUUIDGeneratorConstructor)
 

@@ -271,3 +271,21 @@ NS_INTERFACE_MAP_BEGIN(nsHashPropertyBag)
   NS_INTERFACE_MAP_ENTRY(nsIPropertyBag2)
   NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag2)
 NS_INTERFACE_MAP_END
+
+
+/*
+ * nsHashPropertyBagCC implementation.
+ */
+
+NS_IMPL_CYCLE_COLLECTION(nsHashPropertyBagCC, mPropertyHash)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsHashPropertyBagCC)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHashPropertyBagCC)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHashPropertyBagCC)
+  NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIPropertyBag, nsIWritablePropertyBag)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWritablePropertyBag)
+  NS_INTERFACE_MAP_ENTRY(nsIPropertyBag2)
+  NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag2)
+NS_INTERFACE_MAP_END
