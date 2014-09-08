@@ -1692,6 +1692,35 @@ nsEventStatus AsyncPanZoomController::OnCancelTap(const TapGestureInput& aEvent)
   return nsEventStatus_eIgnore;
 }
 
+// Helper function for To[Global|Local]ScreenCoordinates().
+// TODO(botond): Generalize this into a template function in UnitTransforms.h.
+static void TransformVector(const Matrix4x4& aTransform,
+                            ScreenPoint* aVector,
+                            const ScreenPoint& aAnchor) {
+  ScreenPoint start = aAnchor;
+  ScreenPoint end = aAnchor + *aVector;
+  start = TransformTo<ScreenPixel>(aTransform, start);
+  end = TransformTo<ScreenPixel>(aTransform, end);
+  *aVector = end - start;
+}
+
+void AsyncPanZoomController::ToGlobalScreenCoordinates(ScreenPoint* aVector,
+                                                       const ScreenPoint& aAnchor) const {
+  if (APZCTreeManager* treeManagerLocal = mTreeManager) {
+    Matrix4x4 transform = treeManagerLocal->GetScreenToApzcTransform(this);
+    transform.Invert();
+    TransformVector(transform, aVector, aAnchor);
+  }
+}
+
+void AsyncPanZoomController::ToLocalScreenCoordinates(ScreenPoint* aVector,
+                                                      const ScreenPoint& aAnchor) const {
+  if (APZCTreeManager* treeManagerLocal = mTreeManager) {
+    Matrix4x4 transform = treeManagerLocal->GetScreenToApzcTransform(this);
+    TransformVector(transform, aVector, aAnchor);
+  }
+}
+
 float AsyncPanZoomController::PanDistance() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
   return NS_hypot(mX.PanDistance(), mY.PanDistance());
