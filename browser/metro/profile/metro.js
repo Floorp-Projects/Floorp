@@ -57,7 +57,7 @@ pref("apz.x_skate_size_multiplier", "2.5");
 pref("apz.y_skate_size_multiplier", "2.5");
 pref("apz.min_skate_speed", "10.0");
 // 0 = free, 1 = standard, 2 = sticky
-pref("apz.axis_lock_mode", 2);
+pref("apz.axis_lock.mode", 2);
 pref("apz.cross_slide.enabled", true);
 pref("apz.subframe.enabled", true);
 

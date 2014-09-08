@@ -457,6 +457,15 @@ public:
                            double h, const nsAString& bgColor, uint32_t flags,
                            mozilla::ErrorResult& error);
 
+  enum RenderingMode {
+    SoftwareBackendMode,
+    OpenGLBackendMode,
+    DefaultBackendMode
+  };
+
+  bool SwitchRenderingMode(RenderingMode aRenderingMode);
+
+  // Eventually this should be deprecated. Keeping for now to keep the binding functional.
   void Demote();
 
   nsresult Redraw();
@@ -644,8 +653,10 @@ protected:
    * in creating the target then it will put sErrorTarget in place. If there
    * is in turn an error in creating the sErrorTarget then they would both
    * be null so IsTargetValid() would still return null.
+   *
+   * Returns the actual rendering mode being used by the created target.
    */
-  void EnsureTarget();
+  RenderingMode EnsureTarget(RenderingMode aRenderMode = RenderingMode::DefaultBackendMode);
 
   /*
    * Disposes an old target and prepares to lazily create a new target.
@@ -688,8 +699,7 @@ protected:
   static void AddDemotableContext(CanvasRenderingContext2D* context);
   static void RemoveDemotableContext(CanvasRenderingContext2D* context);
 
-  // Do not use GL
-  bool mForceSoftware;
+  RenderingMode mRenderingMode;
 
   // Member vars
   int32_t mWidth, mHeight;
