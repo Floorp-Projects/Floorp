@@ -1227,15 +1227,6 @@ nsDOMClassInfo::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP
-nsDOMClassInfo::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                            JSObject * obj, JSObject * *_retval)
-{
-  NS_WARNING("nsDOMClassInfo::OuterObject Don't call me!");
-
-  return NS_ERROR_UNEXPECTED;
-}
-
 static nsresult
 GetExternalClassInfo(nsScriptNameSpaceManager *aNameSpaceManager,
                      const nsAString &aName,
