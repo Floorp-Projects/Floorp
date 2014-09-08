@@ -105,6 +105,22 @@ private:
   bool SwitchAudioReader(double aTarget);
   bool SwitchVideoReader(double aTarget);
 
+  // Return a reader from the set available in aTrackDecoders that is considered
+  // usable by the aCanUserReader callback and has data available in the range
+  // requested by aTarget.
+  // aCanSelectReader is passed each reader available in aTrackDecoders and is
+  // expected to return true if the reader is considerable selectable.
+  already_AddRefed<MediaDecoderReader> SelectReader(double aTarget,
+                                                    bool (MediaSourceReader::*aCanSelectReader)(MediaDecoderReader*),
+                                                    const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders);
+
+  // Passed to SelectReader to enforce any track format specific requirements.
+  // In the case of CanSelectAudioReader, verifies that aNewReader has a
+  // matching audio format to the existing reader, as format switching is not
+  // yet supported.
+  bool CanSelectAudioReader(MediaDecoderReader* aNewReader);
+  bool CanSelectVideoReader(MediaDecoderReader* aNewReader);
+
   nsRefPtr<MediaDecoderReader> mAudioReader;
   nsRefPtr<MediaDecoderReader> mVideoReader;
 
