@@ -1005,19 +1005,13 @@ Promise::MaybeReportRejected()
     return;
   }
 
-  // Remains null in case of worker.
-  nsCOMPtr<nsPIDOMWindow> win;
-  bool isChromeError = false;
-
+  nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   if (MOZ_LIKELY(NS_IsMainThread())) {
-    nsIPrincipal* principal;
-    win = xpc::WindowGlobalOrNull(obj);
-    principal = nsContentUtils::ObjectPrincipal(obj);
-    isChromeError = nsContentUtils::IsSystemPrincipal(principal);
+    nsIGlobalObject* global = xpc::GetNativeForGlobal(js::GetGlobalForObjectCrossCompartment(obj));
+    xpcReport->Init(report.report(), report.message(), global);
   } else {
-    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(worker);
-    isChromeError = worker->IsChromeWorker();
+    xpcReport->InitOnWorkerThread(report.report(), report.message(),
+                                  GetCurrentThreadWorkerPrivate()->IsChromeWorker());
   }
 
   // Now post an event to do the real reporting async
@@ -1025,11 +1019,7 @@ Promise::MaybeReportRejected()
   // AsyncErrorReporter, otherwise if the call to DispatchToMainThread fails, it
   // will leak. See Bug 958684.
   nsRefPtr<AsyncErrorReporter> r =
-    new AsyncErrorReporter(CycleCollectedJSRuntime::Get()->Runtime(),
-                           report.report(),
-                           report.message(),
-                           isChromeError,
-                           win);
+    new AsyncErrorReporter(CycleCollectedJSRuntime::Get()->Runtime(), xpcReport);
   NS_DispatchToMainThread(r);
 }
 
