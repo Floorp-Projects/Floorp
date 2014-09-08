@@ -34,8 +34,8 @@ public:
 
   // starts loading process, creating and initializing a nsFontFaceLoader obj
   // returns whether load process successfully started or not
-  nsresult StartLoad(gfxMixedFontFamily* aFamily,
-                     gfxProxyFontEntry* aFontToLoad,
+  nsresult StartLoad(gfxUserFontFamily* aFamily,
+                     gfxUserFontEntry* aFontToLoad,
                      const gfxFontFaceSrc* aFontFaceSrc) MOZ_OVERRIDE;
 
   // Called by nsFontFaceLoader when the loader has completed normally.
@@ -46,8 +46,8 @@ public:
 
   nsPresContext* GetPresContext() { return mPresContext; }
 
-  virtual void ReplaceFontEntry(gfxMixedFontFamily* aFamily,
-                                gfxProxyFontEntry* aProxy,
+  virtual void ReplaceFontEntry(gfxUserFontFamily* aFamily,
+                                gfxUserFontEntry* aUserFontEntry,
                                 gfxFontEntry* aFontEntry) MOZ_OVERRIDE;
 
   nsCSSFontFaceRule* FindRuleForEntry(gfxFontEntry* aFontEntry);
@@ -75,8 +75,8 @@ protected:
                                                    nsCSSFontFaceRule* aRule,
                                                    uint8_t aSheetType);
 
-  virtual nsresult LogMessage(gfxMixedFontFamily* aFamily,
-                              gfxProxyFontEntry* aProxy,
+  virtual nsresult LogMessage(gfxUserFontFamily* aFamily,
+                              gfxUserFontEntry* aUserFontEntry,
                               const char* aMessage,
                               uint32_t aFlags = nsIScriptError::errorFlag,
                               nsresult aStatus = NS_OK) MOZ_OVERRIDE;
@@ -85,7 +85,7 @@ protected:
                                  nsIPrincipal** aPrincipal,
                                  bool* aBypassCache) MOZ_OVERRIDE;
 
-  virtual nsresult SyncLoadFontData(gfxProxyFontEntry* aFontToLoad,
+  virtual nsresult SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
                                     const gfxFontFaceSrc* aFontFaceSrc,
                                     uint8_t*& aBuffer,
                                     uint32_t& aBufferLength) MOZ_OVERRIDE;
@@ -107,8 +107,8 @@ protected:
 class nsFontFaceLoader : public nsIStreamLoaderObserver
 {
 public:
-  nsFontFaceLoader(gfxMixedFontFamily* aFontFamily,
-                   gfxProxyFontEntry* aFontToLoad, nsIURI* aFontURI, 
+  nsFontFaceLoader(gfxUserFontFamily* aFontFamily,
+                   gfxUserFontEntry* aFontToLoad, nsIURI* aFontURI,
                    nsUserFontSet* aFontSet, nsIChannel* aChannel);
 
   NS_DECL_ISUPPORTS
@@ -133,8 +133,8 @@ protected:
   virtual ~nsFontFaceLoader();
 
 private:
-  nsRefPtr<gfxMixedFontFamily> mFontFamily;
-  nsRefPtr<gfxProxyFontEntry>  mFontEntry;
+  nsRefPtr<gfxUserFontFamily> mFontFamily;
+  nsRefPtr<gfxUserFontEntry>  mFontEntry;
   nsCOMPtr<nsIURI>        mFontURI;
   nsRefPtr<nsUserFontSet> mFontSet;
   nsCOMPtr<nsIChannel>    mChannel;

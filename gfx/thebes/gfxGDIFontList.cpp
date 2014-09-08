@@ -140,7 +140,7 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
     mStretch = aStretch;
     if (IsType1())
         mForceGDI = true;
-    mIsUserFont = aUserFontData != nullptr;
+    mIsDataUserFont = aUserFontData != nullptr;
 
     InitLogFont(aFaceName, aFontType);
 }
@@ -229,7 +229,7 @@ GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeedsBold
 
     bool useClearType = isXP && !aFontStyle->systemFont &&
         (gfxWindowsPlatform::GetPlatform()->UseClearTypeAlways() ||
-         (mIsUserFont && !mIsLocalUserFont &&
+         (mIsDataUserFont &&
           gfxWindowsPlatform::GetPlatform()->UseClearTypeForDownloadableFonts()));
 
     return new gfxGDIFont(this, aFontStyle, aNeedsBold, 
@@ -291,7 +291,7 @@ GDIFontEntry::FillLogFont(LOGFONTW *aLogFont,
     // if the face is described as italic, we should use it as-is,
     // and if it's not, but then the element is styled italic, we'll use
     // a cairo transform to create fake italic (oblique)
-    if (IsUserFont() && !IsLocalUserFont()) {
+    if (mIsDataUserFont) {
         aLogFont->lfItalic = 0;
     }
 
@@ -751,10 +751,9 @@ gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
     if (!fe)
         return nullptr;
 
-    fe->mIsUserFont = true;
     fe->mIsLocalUserFont = true;
 
-    // make the new font entry match the proxy entry style characteristics
+    // make the new font entry match the userfont entry style characteristics
     fe->mWeight = (aWeight == 0 ? 400 : aWeight);
     fe->mItalic = aItalic;
 
@@ -832,7 +831,7 @@ gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
     if (!fe)
         return fe;
 
-    fe->mIsUserFont = true;
+    fe->mIsDataUserFont = true;
 
     // Uniscribe doesn't place CFF fonts loaded privately 
     // via AddFontMemResourceEx on XP/Vista

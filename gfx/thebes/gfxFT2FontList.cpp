@@ -276,7 +276,7 @@ FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
         NS_Free((void*)aFontData);
         return nullptr;
     }
-    // Create our FT2FontEntry, which inherits the name of the proxy
+    // Create our FT2FontEntry, which inherits the name of the userfont entry
     // as it's not guaranteed that the face has valid names (bug 737315)
     FT2FontEntry* fe =
         FT2FontEntry::CreateFontEntry(face, nullptr, 0, aFontName,
@@ -285,7 +285,7 @@ FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
         fe->mItalic = aItalic;
         fe->mWeight = aWeight;
         fe->mStretch = aStretch;
-        fe->mIsUserFont = true;
+        fe->mIsDataUserFont = true;
     }
     return fe;
 }
@@ -1529,7 +1529,7 @@ gfxFT2FontList::LookupLocalFont(const nsAString& aFontName,
     }
 
     // Clone the font entry so that we can then set its style descriptors
-    // from the proxy rather than the actual font.
+    // from the userfont entry rather than the actual font.
 
     // Ensure existence of mFTFace in the original entry
     data.mFontEntry->CairoFontFace();
@@ -1546,7 +1546,7 @@ gfxFT2FontList::LookupLocalFont(const nsAString& aFontName,
         fe->mItalic = aItalic;
         fe->mWeight = aWeight;
         fe->mStretch = aStretch;
-        fe->mIsUserFont = fe->mIsLocalUserFont = true;
+        fe->mIsLocalUserFont = true;
     }
 
     return fe;

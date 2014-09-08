@@ -291,7 +291,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
                                CGFontRef aFontRef,
                                uint16_t aWeight, uint16_t aStretch,
                                uint32_t aItalicStyle,
-                               bool aIsUserFont, bool aIsLocal)
+                               bool aIsDataUserFont,
+                               bool aIsLocalUserFont)
     : gfxFontEntry(aPostscriptName, false),
       mFontRef(NULL),
       mFontRefInitialized(false),
@@ -307,8 +308,11 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
     mStretch = aStretch;
     mFixedPitch = false; // xxx - do we need this for downloaded fonts?
     mItalic = (aItalicStyle & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
-    mIsUserFont = aIsUserFont;
-    mIsLocalUserFont = aIsLocal;
+
+    NS_ASSERTION(!(aIsDataUserFont && aIsLocalUserFont),
+                 "userfont is either a data font or a local font");
+    mIsDataUserFont = aIsDataUserFont;
+    mIsLocalUserFont = aIsLocalUserFont;
 }
 
 CGFontRef
@@ -742,8 +746,7 @@ gfxMacPlatformFontList::InitSingleFaceList()
             if (!mFontFamilies.GetWeak(key)) {
                 gfxFontFamily *familyEntry =
                     new gfxSingleFaceMacFontFamily(familyName);
-                // LookupLocalFont sets these to true, need to clear
-                fontEntry->mIsUserFont = false;
+                // LookupLocalFont sets this, need to clear
                 fontEntry->mIsLocalUserFont = false;
                 familyEntry->AddFontEntry(fontEntry);
                 familyEntry->SetHasStyles(true);
@@ -933,7 +936,7 @@ gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
                            aWeight, aStretch,
                            aItalic ?
                                NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
-                           true, true);
+                           false, true);
     ::CFRelease(fontRef);
 
     return newFontEntry;
