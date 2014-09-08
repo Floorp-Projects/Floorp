@@ -17,15 +17,10 @@
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 
-// This is essentially the same logic that decides whether nsStackWalk.cpp gets
-// built. See xpcom/base/moz.build
-#if !defined(MOZ_OPTIMIZE) || defined(MOZ_PROFILING) || defined(DEBUG)
-#define MOZ_STACKWALKING
+#ifdef MOZ_STACKWALKING
 #include "nsStackWalk.h"
 #endif
-#endif
 
-#ifdef TARGET_SANDBOX_EXPORTS
 #define TARGET_SANDBOX_EXPORT __declspec(dllexport)
 #else
 #define TARGET_SANDBOX_EXPORT __declspec(dllimport)
