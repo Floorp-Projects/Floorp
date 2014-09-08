@@ -153,3 +153,8 @@ function removeTab(aTab, aWindow) {
   targetBrowser.removeTab(aTab);
   return deferred.promise;
 }
+
+function handleError(aError) {
+  ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+  finish();
+}
