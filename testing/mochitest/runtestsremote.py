@@ -804,8 +804,9 @@ def main():
                 pass
             retVal = 1
 
+        mochitest.printDeviceInfo(printLogcat=True)
+
     message_logger.finish()
-    mochitest.printDeviceInfo(printLogcat=True)
 
     sys.exit(retVal)
 
