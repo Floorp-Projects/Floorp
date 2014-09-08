@@ -985,6 +985,9 @@ public:
   void *GetUserData(UserDataKey *key) {
     return mUserData.Get(key);
   }
+  void *RemoveUserData(UserDataKey *key) {
+    return mUserData.Remove(key);
+  }
 
   /** Within this rectangle all pixels will be opaque by the time the result of
    * this DrawTarget is first used for drawing. Either by the underlying surface

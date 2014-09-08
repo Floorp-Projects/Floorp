@@ -137,7 +137,6 @@ NS_IMPL_URI_ATTR(HTMLScriptElement, Src, src)
 NS_IMPL_STRING_ATTR(HTMLScriptElement, Type, type)
 NS_IMPL_STRING_ATTR(HTMLScriptElement, HtmlFor, _for)
 NS_IMPL_STRING_ATTR(HTMLScriptElement, Event, event)
-NS_IMPL_STRING_ATTR(HTMLScriptElement, CrossOrigin, crossorigin)
 
 void
 HTMLScriptElement::SetCharset(const nsAString& aCharset, ErrorResult& rv)
@@ -179,12 +178,6 @@ void
 HTMLScriptElement::SetEvent(const nsAString& aEvent, ErrorResult& rv)
 {
   SetHTMLAttr(nsGkAtoms::event, aEvent, rv);
-}
-
-void
-HTMLScriptElement::SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& rv)
-{
-  SetHTMLAttr(nsGkAtoms::crossorigin, aCrossOrigin, rv);
 }
 
 nsresult
