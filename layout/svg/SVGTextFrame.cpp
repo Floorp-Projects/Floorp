@@ -3449,7 +3449,7 @@ SVGTextFrame::FindCloserFrameForSelection(
     if (!userRect.IsEmpty()) {
       gfxMatrix m;
       if (!NS_SVGDisplayListHitTestingEnabled()) {
-        m = GetCanvasTM(FOR_OUTERSVG_TM);
+        m = GetCanvasTM();
       }
       nsRect rect = nsSVGUtils::ToCanvasBounds(userRect.ToThebesRect(), m,
                                                presContext);
@@ -3503,10 +3503,10 @@ SVGTextFrame::NotifySVGChanged(uint32_t aFlags)
   if (needNewCanvasTM && mLastContextScale != 0.0f) {
     mCanvasTM = nullptr;
     // If we are a non-display frame, then we don't want to call
-    // GetCanvasTM(FOR_OUTERSVG_TM), since the context scale does not use it.
+    // GetCanvasTM(), since the context scale does not use it.
     gfxMatrix newTM =
       (mState & NS_FRAME_IS_NONDISPLAY) ? gfxMatrix() :
-                                          GetCanvasTM(FOR_OUTERSVG_TM);
+                                          GetCanvasTM();
     // Compare the old and new context scales.
     float scale = GetContextScale(newTM);
     float change = scale / mLastContextScale;
@@ -3632,7 +3632,7 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
                       mRect.height / appUnitsPerDevPixel);
 
     nsRect canvasRect = nsLayoutUtils::RoundGfxRectToAppRect(
-        GetCanvasTM(FOR_OUTERSVG_TM).TransformBounds(frameRect), 1);
+        GetCanvasTM().TransformBounds(frameRect), 1);
     if (!canvasRect.Intersects(dirtyRect)) {
       return NS_OK;
     }
@@ -3769,7 +3769,7 @@ nsRect
 SVGTextFrame::GetCoveredRegion()
 {
   return nsSVGUtils::TransformFrameRectToOuterSVG(
-           mRect, GetCanvasTM(FOR_OUTERSVG_TM), PresContext());
+           mRect, GetCanvasTM(), PresContext());
 }
 
 void
@@ -3904,27 +3904,17 @@ SVGTextFrame::GetBBoxContribution(const gfx::Matrix &aToBBoxUserspace,
 // nsSVGContainerFrame methods
 
 gfxMatrix
-SVGTextFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
+SVGTextFrame::GetCanvasTM()
 {
-  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) &&
-      !aTransformRoot) {
-    if (aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) {
-      return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
-    }
-  }
   if (!mCanvasTM) {
     NS_ASSERTION(GetParent(), "null parent");
-    NS_ASSERTION(!(aFor == FOR_OUTERSVG_TM &&
-                   (GetStateBits() & NS_FRAME_IS_NONDISPLAY)),
-                 "should not call GetCanvasTM(FOR_OUTERSVG_TM) when we are "
-                 "non-display");
+    NS_ASSERTION(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+                 "should not call GetCanvasTM() when we are non-display");
 
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
     dom::SVGTextContentElement *content = static_cast<dom::SVGTextContentElement*>(mContent);
 
-    gfxMatrix tm = content->PrependLocalTransformsTo(
-        this == aTransformRoot ? gfxMatrix() :
-                                 parent->GetCanvasTM(aFor, aTransformRoot));
+    gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
 
     mCanvasTM = new gfxMatrix(tm);
   }
@@ -5312,7 +5302,7 @@ SVGTextFrame::UpdateFontSizeScaleFactor()
   // frame happens to reflow first.
   double contextScale = 1.0;
   if (!(mState & NS_FRAME_IS_NONDISPLAY)) {
-    gfxMatrix m(GetCanvasTM(FOR_OUTERSVG_TM));
+    gfxMatrix m(GetCanvasTM());
     if (!m.IsSingular()) {
       contextScale = GetContextScale(m);
     }

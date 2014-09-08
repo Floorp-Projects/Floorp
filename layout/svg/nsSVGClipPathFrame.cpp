@@ -338,7 +338,7 @@ nsSVGClipPathFrame::GetType() const
 }
 
 gfxMatrix
-nsSVGClipPathFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
+nsSVGClipPathFrame::GetCanvasTM()
 {
   return mMatrixForChildren;
 }

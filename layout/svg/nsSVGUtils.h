@@ -319,8 +319,7 @@ public:
    * child SVG frame, container SVG frame, or a regular frame.
    * For regular frames, we just return an identity matrix.
    */
-  static gfxMatrix GetCanvasTM(nsIFrame* aFrame, uint32_t aFor,
-                               nsIFrame* aTransformRoot = nullptr);
+  static gfxMatrix GetCanvasTM(nsIFrame* aFrame);
 
   /**
    * Returns the transform from aFrame's user space to canvas space. Only call
@@ -331,7 +330,7 @@ public:
    * space. Specifically, it does not include any other transforms introduced
    * by the frame such as x/y offsets and viewBox attributes.
    */
-  static gfxMatrix GetUserToCanvasTM(nsIFrame* aFrame, uint32_t aFor);
+  static gfxMatrix GetUserToCanvasTM(nsIFrame* aFrame);
 
   /**
    * Notify the descendants of aFrame of a change to one of their ancestors
