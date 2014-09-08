@@ -270,10 +270,6 @@ public class BrowserDB {
         return sDb.getBookmarkForUrl(cr, url);
     }
 
-    public static boolean areContentProvidersDisabled() {
-        return sAreContentProvidersEnabled;
-    }
-
     public static void setEnableContentProviders(boolean enableContentProviders) {
         sAreContentProvidersEnabled = enableContentProviders;
     }
