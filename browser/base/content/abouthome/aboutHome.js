@@ -298,28 +298,16 @@ function ensureSnippetsMapThen(aCallback)
 
 function onSearchSubmit(aEvent)
 {
-  let searchText = document.getElementById("searchText");
-  let searchTerms = searchText.value;
+  let searchTerms = document.getElementById("searchText").value;
   let engineName = document.documentElement.getAttribute("searchEngineName");
 
   if (engineName && searchTerms.length > 0) {
     // Send an event that will perform a search and Firefox Health Report will
     // record that a search from about:home has occurred.
-
-    let eventData = {
+    let eventData = JSON.stringify({
       engineName: engineName,
       searchTerms: searchTerms
-    };
-
-    if (searchText.hasAttribute("selection-index")) {
-      eventData.selection = {
-        index: searchText.getAttribute("selection-index"),
-        kind: searchText.getAttribute("selection-kind")
-      };
-    }
-
-    eventData = JSON.stringify(eventData);
-
+    });
     let event = new CustomEvent("AboutHomeSearchEvent", {detail: eventData});
     document.dispatchEvent(event);
   }
