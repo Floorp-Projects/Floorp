@@ -440,8 +440,13 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
     return;
   }
   StartUpdating();
-  /// TODO: Run coded frame removal algorithm asynchronously (would call StopUpdating()).
-  StopUpdating();
+  /// TODO: Run coded frame removal algorithm.
+
+  // Run the final step of the coded frame removal algorithm asynchronously
+  // to ensure the SourceBuffer's updating flag transition behaves as
+  // required by the spec.
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &SourceBuffer::StopUpdating);
+  NS_DispatchToMainThread(event);
 }
 
 void
@@ -561,7 +566,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // TODO: Run coded frame eviction algorithm.
   // TODO: Test buffer full flag.
   StartUpdating();
-  // TODO: Run buffer append algorithm asynchronously (would call StopUpdating()).
+  // TODO: Run more of the buffer append algorithm asynchronously.
   if (mParser->IsInitSegmentPresent(aData, aLength)) {
     MSE_DEBUG("SourceBuffer(%p)::AppendData: New initialization segment.", this);
     mMediaSource->QueueInitializationEvent();
@@ -632,7 +637,12 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
     // the current start point.
     mMediaSource->NotifyEvicted(0.0, GetBufferedStart());
   }
-  StopUpdating();
+
+  // Run the final step of the buffer append algorithm asynchronously to
+  // ensure the SourceBuffer's updating flag transition behaves as required
+  // by the spec.
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &SourceBuffer::StopUpdating);
+  NS_DispatchToMainThread(event);
 
   // Schedule the state machine thread to ensure playback starts
   // if required when data is appended.
