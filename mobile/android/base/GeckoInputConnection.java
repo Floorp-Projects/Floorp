@@ -1007,7 +1007,7 @@ final class DebugGeckoInputConnection
 
     public static GeckoEditableListener create(View targetView,
                                                GeckoEditableClient editable) {
-        final Class[] PROXY_INTERFACES = { InputConnection.class,
+        final Class<?>[] PROXY_INTERFACES = { InputConnection.class,
                 InputConnectionHandler.class,
                 GeckoEditableListener.class };
         DebugGeckoInputConnection dgic =
