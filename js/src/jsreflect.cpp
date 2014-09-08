@@ -3138,20 +3138,33 @@ ASTSerializer::arrayPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValu
 bool
 ASTSerializer::objectPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst)
 {
-    JS_ASSERT(pn->isKind(PNK_OBJECT));
+    MOZ_ASSERT(pn->isKind(PNK_OBJECT));
 
     NodeVector elts(cx);
     if (!elts.reserve(pn->pn_count))
         return false;
 
-    for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
-        LOCAL_ASSERT(next->isOp(JSOP_INITPROP));
+    for (ParseNode *propdef = pn->pn_head; propdef; propdef = propdef->pn_next) {
+        LOCAL_ASSERT(propdef->isKind(PNK_MUTATEPROTO) != propdef->isOp(JSOP_INITPROP));
 
-        RootedValue key(cx), patt(cx), prop(cx);
-        if (!propertyName(next->pn_left, &key) ||
-            !pattern(next->pn_right, pkind, &patt) ||
-            !builder.propertyPattern(key, patt, next->isKind(PNK_SHORTHAND), &next->pn_pos,
-                                     &prop)) {
+        RootedValue key(cx);
+        ParseNode *target;
+        if (propdef->isKind(PNK_MUTATEPROTO)) {
+            RootedValue pname(cx, StringValue(cx->names().proto));
+            if (!builder.literal(pname, &propdef->pn_pos, &key))
+                return false;
+            target = propdef->pn_kid;
+        } else {
+            if (!propertyName(propdef->pn_left, &key))
+                return false;
+            target = propdef->pn_right;
+        }
+
+        RootedValue patt(cx), prop(cx);
+        if (!pattern(target, pkind, &patt) ||
+            !builder.propertyPattern(key, patt, propdef->isKind(PNK_SHORTHAND), &propdef->pn_pos,
+                                     &prop))
+        {
             return false;
         }
 
