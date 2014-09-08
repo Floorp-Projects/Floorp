@@ -1764,10 +1764,7 @@ class IDLNullableType(IDLType):
         assert not innerType.isVoid()
         assert not innerType == BuiltinTypes[IDLBuiltinType.Types.any]
 
-        name = innerType.name
-        if innerType.isComplete():
-            name += "OrNull"
-        IDLType.__init__(self, location, name)
+        IDLType.__init__(self, location, innerType.name)
         self.inner = innerType
         self.builtin = False
 
@@ -1880,7 +1877,7 @@ class IDLNullableType(IDLType):
                                   "be a union type that itself has a nullable "
                                   "type as a member type", [self.location])
 
-        self.name = self.inner.name + "OrNull"
+        self.name = self.inner.name
         return self
 
     def unroll(self):
@@ -1903,10 +1900,6 @@ class IDLSequenceType(IDLType):
         IDLType.__init__(self, location, parameterType.name)
         self.inner = parameterType
         self.builtin = False
-        # Need to set self.name up front if our inner type is already complete,
-        # since in that case our .complete() won't be called.
-        if self.inner.isComplete():
-            self.name = self.inner.name + "Sequence"
 
     def __eq__(self, other):
         return isinstance(other, IDLSequenceType) and self.inner == other.inner
@@ -1968,7 +1961,7 @@ class IDLSequenceType(IDLType):
 
     def complete(self, scope):
         self.inner = self.inner.complete(scope)
-        self.name = self.inner.name + "Sequence"
+        self.name = self.inner.name
         return self
 
     def unroll(self):
@@ -1994,10 +1987,6 @@ class IDLMozMapType(IDLType):
         IDLType.__init__(self, location, parameterType.name)
         self.inner = parameterType
         self.builtin = False
-        # Need to set self.name up front if our inner type is already complete,
-        # since in that case our .complete() won't be called.
-        if self.inner.isComplete():
-            self.name = self.inner.name + "MozMap"
 
     def __eq__(self, other):
         return isinstance(other, IDLMozMapType) and self.inner == other.inner
@@ -2023,7 +2012,7 @@ class IDLMozMapType(IDLType):
 
     def complete(self, scope):
         self.inner = self.inner.complete(scope)
-        self.name = self.inner.name + "MozMap"
+        self.name = self.inner.name
         return self
 
     def unroll(self):
@@ -2088,6 +2077,9 @@ class IDLUnionType(IDLType):
                 return typeName(type._identifier.object())
             if isinstance(type, IDLObjectWithIdentifier):
                 return typeName(type.identifier)
+            if (isinstance(type, IDLType) and
+                (type.isArray() or type.isSequence() or type.isMozMap)):
+                return str(type)
             return type.name
 
         for (i, type) in enumerate(self.memberTypes):
