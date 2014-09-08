@@ -303,6 +303,20 @@ strlib_close (char *str)
     return (str);
 }
 
+string_t strlib_printf(const char *format, ...) {
+    string_t result = strlib_empty();
+    va_list args;
+    flex_string fs;
+    if (format) {
+        va_start(args, format);
+        flex_string_init(&fs);
+        flex_string_vsprintf(&fs, format, args);
+        result = strlib_malloc(fs.buffer, -1, __FILE__, __LINE__);
+        flex_string_free(&fs);
+        va_end(args);
+    }
+    return result;
+}
 
 /*
  *  Function: strlib_is_string
@@ -320,8 +334,6 @@ strlib_is_string (string_t str)
     string_block_t *temp;
 
     if (str == NULL) {
-        CSFLogError("src-common",
-          "Strlib Error: strlib_is_tring passed invalid string\n");
         return (0);
     }
 
