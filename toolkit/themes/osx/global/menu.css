@@ -76,47 +76,22 @@ menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
 .menu-right,
 .menu-accel-container {
   -moz-margin-start: 21px;
+  -moz-margin-end: -9px;
   -moz-box-pack: end;
 }
 
-.menu-accel-container {
-  -moz-margin-end: -9px;
+/* The native menuarrow we use is 9px wide on 10.7+ and 8px wide on 10.6,
+ * so it needs to be 'pulled in' one pixel more by the negative margin in
+ * order to align properly: */
+@media not all and (-moz-mac-lion-theme) {
+  .menu-right {
+    -moz-margin-end: -10px;
+  }
 }
 
 .menu-right {
-  -moz-margin-end: -10px;
-  width: 9px;
-  list-style-image: url("chrome://global/skin/menu/menu-arrow.png");
-  -moz-image-region: rect(0, 9px, 10px, 0);
-}
-
-.menu-right[_moz-menuactive="true"]:not([disabled="true"]) {
-  -moz-image-region: rect(0, 18px, 10px, 9px);
-}
-
-.menu-right[disabled="true"] {
-  -moz-image-region: rect(0, 27px, 10px, 18px);
-}
-
-.menu-right:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
-@media (min-resolution: 2dppx) {
-  .menu-right > image {
-    list-style-image: url("chrome://global/skin/menu/menu-arrow@2x.png");
-    -moz-image-region: rect(0, 18px, 20px, 0);
-    width: 9px;
-    height: 10px;
-  }
-
-  .menu-right[_moz-menuactive="true"]:not([disabled="true"]) > image {
-    -moz-image-region: rect(0, 36px, 20px, 18px);
-  }
-
-  .menu-right[disabled="true"] > image {
-    -moz-image-region: rect(0, 54px, 20px, 36px);
-  }
+  list-style-image: none;
+  -moz-appearance: menuarrow;
 }
 
 /* ::::: menu/menuitems in menubar ::::: */
