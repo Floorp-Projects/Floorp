@@ -9,10 +9,6 @@
 #include "base/string_util.h"
 #include "base/process_util.h"
 
-#ifdef XP_WIN
-#include <codecvt>
-#endif
-
 #include <string>
 
 using std::vector;
@@ -50,9 +46,8 @@ GMPProcessParent::Launch(int32_t aTimeoutMs)
   vector<string> args;
   args.push_back(mGMPPath);
 
-#ifdef XP_WIN
-  std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-  std::wstring wGMPPath = converter.from_bytes(mGMPPath.c_str());
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  std::wstring wGMPPath = UTF8ToWide(mGMPPath.c_str());
   mAllowedFilesRead.push_back(wGMPPath + L"\\*");
 #endif
 
