@@ -58,7 +58,8 @@ const ToolboxButtons = [
       !target.isAddon && target.activeTab && target.activeTab.traits.frames
     )
   },
-  { id: "command-button-splitconsole" },
+  { id: "command-button-splitconsole",
+    isTargetSupported: target => !target.isAddon },
   { id: "command-button-responsive" },
   { id: "command-button-paintflashing" },
   { id: "command-button-tilt" },
@@ -619,11 +620,6 @@ Toolbox.prototype = {
       this._buildPickerButton();
     }
 
-    if (!this.target.isLocalTab) {
-      this.setToolboxButtonsVisibility();
-      return Promise.resolve();
-    }
-
     let spec = CommandUtils.getCommandbarSpec("devtools.toolbox.toolbarSpec");
     let environment = CommandUtils.createEnvironment(this, '_target');
     return CommandUtils.createRequisition(environment).then(requisition => {
@@ -631,7 +627,11 @@ Toolbox.prototype = {
       return CommandUtils.createButtons(spec, this.target, this.doc,
                                         requisition).then(buttons => {
         let container = this.doc.getElementById("toolbox-buttons");
-        buttons.forEach(container.appendChild.bind(container));
+        buttons.forEach(button=> {
+          if (button) {
+            container.appendChild(button);
+          }
+        });
         this.setToolboxButtonsVisibility();
       });
     });
@@ -1545,7 +1545,7 @@ Toolbox.prototype = {
     // Remove the host UI
     outstanding.push(this.destroyHost());
 
-    if (this.target.isLocalTab) {
+    if (this._requisition) {
       this._requisition.destroy();
     }
     this._telemetry.toolClosed("toolbox");
