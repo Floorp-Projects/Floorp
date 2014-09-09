@@ -892,7 +892,10 @@ ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext,
     }
 
     if (!cp) {
-        return false;
+        *aId = 0;
+        *aIsForApp = false;
+        *aIsForBrowser = false;
+        return true;
     }
 
     *aId = cp->ChildID();
@@ -942,13 +945,15 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         nsRefPtr<nsIContentParent> constructorSender;
         if (isInContentProcess) {
             MOZ_ASSERT(aContext.IsBrowserElement());
-            constructorSender = CreateContentBridgeParent(aContext, initialPriority);
+            constructorSender =
+                CreateContentBridgeParent(aContext, initialPriority);
         } else {
           if (aOpenerContentParent) {
             constructorSender = aOpenerContentParent;
           } else {
-            constructorSender = GetNewOrUsedBrowserProcess(aContext.IsBrowserElement(),
-                                                                    initialPriority);
+            constructorSender =
+                GetNewOrUsedBrowserProcess(aContext.IsBrowserElement(),
+                                           initialPriority);
           }
         }
         if (constructorSender) {
@@ -1141,6 +1146,9 @@ ContentParent::CreateContentBridgeParent(const TabContext& aContext,
                                        &id,
                                        &isForApp,
                                        &isForBrowser)) {
+        return nullptr;
+    }
+    if (id == 0) {
         return nullptr;
     }
     if (!child->CallBridgeToChildProcess(id)) {
