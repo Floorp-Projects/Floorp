@@ -369,6 +369,7 @@ gbjar.sources += [
     'ReaderModeUtils.java',
     'RemoteTabsExpandableListAdapter.java',
     'Restarter.java',
+    'RestrictedProfiles.java',
     'ScrollAnimator.java',
     'ServiceNotificationClient.java',
     'SessionParser.java',
