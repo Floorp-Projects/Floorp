@@ -735,7 +735,8 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mTouchBlockBalance(0),
      mTreeManager(aTreeManager),
      mAPZCId(sAsyncPanZoomControllerCount++),
-     mSharedLock(nullptr)
+     mSharedLock(nullptr),
+     mAsyncTransformAppliedToContent(false)
 {
   MOZ_COUNT_CTOR(AsyncPanZoomController);
 
@@ -2235,6 +2236,7 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
   // fling is happening, it has to keep compositing so that the animation is
   // smooth. If an animation frame is requested, it is the compositor's
   // responsibility to schedule a composite.
+  mAsyncTransformAppliedToContent = false;
   bool requestAnimationFrame = false;
   Vector<Task*> deferredTasks;
 

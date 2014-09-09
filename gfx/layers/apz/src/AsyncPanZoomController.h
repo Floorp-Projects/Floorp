@@ -1067,9 +1067,22 @@ public:
     mTestAsyncScrollOffset = aPoint;
   }
 
+  void MarkAsyncTransformAppliedToContent()
+  {
+    mAsyncTransformAppliedToContent = true;
+  }
+
+  bool GetAsyncTransformAppliedToContent() const
+  {
+    return mAsyncTransformAppliedToContent;
+  }
+
 private:
   // Extra offset to add in SampleContentTransformForFrame for testing
   CSSPoint mTestAsyncScrollOffset;
+  // Flag to track whether or not the APZ transform is not used. This
+  // flag is recomputed for every composition frame.
+  bool mAsyncTransformAppliedToContent;
 };
 
 class AsyncPanZoomAnimation {

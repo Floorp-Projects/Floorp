@@ -471,7 +471,8 @@ ContainerRender(ContainerT* aContainer,
     // underlying layer.
     for (LayerMetricsWrapper i(aContainer); i; i = i.GetFirstChild()) {
       if (AsyncPanZoomController* apzc = i.GetApzc()) {
-        if (!Matrix4x4(apzc->GetCurrentAsyncTransform()).IsIdentity()) {
+        if (!apzc->GetAsyncTransformAppliedToContent()
+            && !Matrix4x4(apzc->GetCurrentAsyncTransform()).IsIdentity()) {
           aManager->UnusedApzTransformWarning();
           break;
         }
