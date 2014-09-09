@@ -373,13 +373,12 @@ pref("media.getusermedia.playout_delay", 50);
 pref("media.peerconnection.capture_delay", 50);
 pref("media.getusermedia.playout_delay", 50);
 #endif
-#else
-#ifdef ANDROID
-pref("media.navigator.enabled", true);
-#endif
 #endif
 
+#if !defined(ANDROID)
 pref("media.getusermedia.screensharing.enabled", true);
+#endif
+
 #ifdef RELEASE_BUILD
 pref("media.getusermedia.screensharing.allowed_domains", "");
 #else
