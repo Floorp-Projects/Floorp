@@ -223,17 +223,9 @@ nsSVGFilterProperty::nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters
     if (aFilters[i].GetType() != NS_STYLE_FILTER_URL)
       continue;
 
-    nsSVGFilterReference *reference =
+    nsRefPtr<nsSVGFilterReference> reference =
       new nsSVGFilterReference(aFilters[i].GetURL(), aFilteredFrame);
-    NS_ADDREF(reference);
     mReferences.AppendElement(reference);
-  }
-}
-
-nsSVGFilterProperty::~nsSVGFilterProperty()
-{
-  for (uint32_t i = 0; i < mReferences.Length(); i++) {
-    NS_RELEASE(mReferences[i]);
   }
 }
 
