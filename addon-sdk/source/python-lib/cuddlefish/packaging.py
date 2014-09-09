@@ -22,8 +22,8 @@ DEFAULT_ICON = 'icon.png'
 DEFAULT_ICON64 = 'icon64.png'
 
 METADATA_PROPS = ['name', 'description', 'keywords', 'author', 'version',
-                  'translators', 'contributors', 'license', 'homepage', 'icon',
-                  'icon64', 'main', 'directories', 'permissions', 'preferences']
+                  'developers', 'translators', 'contributors', 'license', 'homepage',
+                  'icon', 'icon64', 'main', 'directories', 'permissions', 'preferences']
 
 RESOURCE_HOSTNAME_RE = re.compile(r'^[a-z0-9_\-]+$')
 
