@@ -1,4 +1,3 @@
-// |jit-test| debug
 // If hasDebuggee(x) is false, removeDebuggee(x) does nothing.
 
 var dbg = new Debugger;

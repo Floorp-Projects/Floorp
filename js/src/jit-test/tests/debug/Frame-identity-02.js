@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Check that {throw:} resumption kills the current stack frame.
 
 load(libdir + "asserts.js");

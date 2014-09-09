@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Debugger.Script throws when applied as a constructor.
 
 load(libdir + 'asserts.js');
