@@ -1170,6 +1170,18 @@ private:
 
 } // end namespace mozilla
 
+bool
+WebGLContext::HasAlpha() const
+{
+  return gl->Caps().alpha;
+}
+
+static bool
+IsElementFullscreen(dom::Element* elem)
+{
+    return elem->State().HasState(NS_EVENT_STATE_FULL_SCREEN);
+}
+
 already_AddRefed<layers::CanvasLayer>
 WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                              CanvasLayer *aOldLayer,
@@ -1212,14 +1224,20 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     canvasLayer->SetUserData(&gWebGLLayerUserData, userData);
 
     CanvasLayer::Data data;
+
     data.mGLContext = gl;
     data.mSize = nsIntSize(mWidth, mHeight);
-    data.mHasAlpha = gl->Caps().alpha;
+    data.mHasAlpha = HasAlpha();
     data.mIsGLAlphaPremult = IsPremultAlpha() || !data.mHasAlpha;
+    data.mIsElemFullscreen = IsElementFullscreen(GetCanvas());
 
     canvasLayer->Initialize(data);
-    uint32_t flags = gl->Caps().alpha ? 0 : Layer::CONTENT_OPAQUE;
-    canvasLayer->SetContentFlags(flags);
+
+    if (!data.mHasAlpha) {
+        uint32_t flags = canvasLayer->GetContentFlags();
+        flags |= Layer::CONTENT_OPAQUE;
+        canvasLayer->SetContentFlags(flags);
+    }
     canvasLayer->Updated();
 
     mResetLayer = false;
