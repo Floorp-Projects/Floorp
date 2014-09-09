@@ -115,7 +115,10 @@ LoopUnroller::go(LoopIterationBound *bound)
     JitSpew(JitSpew_Unrolling, "Attempting to unroll loop");
 
     header = bound->header;
-    JS_ASSERT(header->isLoopHeader());
+
+    // UCE might have determined this isn't actually a loop.
+    if (!header->isLoopHeader())
+        return;
 
     backedge = header->backedge();
     oldPreheader = header->loopPredecessor();
