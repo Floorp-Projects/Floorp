@@ -112,7 +112,7 @@ protected:
 class nsSVGIDRenderingObserver : public nsSVGRenderingObserver {
 public:
   typedef mozilla::dom::Element Element;
-  nsSVGIDRenderingObserver(nsIURI* aURI, nsIFrame *aFrame,
+  nsSVGIDRenderingObserver(nsIURI* aURI, nsIContent* aObservingContent,
                          bool aReferenceImage);
   virtual ~nsSVGIDRenderingObserver();
 
@@ -142,14 +142,46 @@ protected:
   };
 
   SourceReference mElement;
-  // The frame that this property is attached to
+};
+
+struct nsSVGFrameReferenceFromProperty
+{
+  nsSVGFrameReferenceFromProperty(nsIFrame* aFrame)
+    : mFrame(aFrame)
+    , mFramePresShell(aFrame->PresContext()->PresShell())
+  {}
+
+  // Clear our reference to the frame.
+  void Detach();
+
+  // null if the frame has become invalid
+  nsIFrame* Get();
+
+private:
+  // The frame that this property is attached to, may be null
   nsIFrame *mFrame;
   // When a presshell is torn down, we don't delete the properties for
   // each frame until after the frames are destroyed. So here we remember
   // the presshell for the frames we care about and, before we use the frame,
   // we test the presshell to see if it's destroying itself. If it is,
   // then the frame pointer is not valid and we know the frame has gone away.
+  // mFramePresShell may be null, but when mFrame is non-null, mFramePresShell
+  // is guaranteed to be non-null, too.
   nsIPresShell *mFramePresShell;
+};
+
+class nsSVGRenderingObserverProperty : public nsSVGIDRenderingObserver {
+public:
+  nsSVGRenderingObserverProperty(nsIURI* aURI, nsIFrame *aFrame,
+                                 bool aReferenceImage)
+    : nsSVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage)
+    , mFrameReference(aFrame)
+  {}
+
+protected:
+  virtual void DoUpdate() MOZ_OVERRIDE;
+
+  nsSVGFrameReferenceFromProperty mFrameReference;
 };
 
 /**
@@ -165,10 +197,10 @@ protected:
  * The nsSVGFilterProperty class manages a list of nsSVGFilterReferences.
  */
 class nsSVGFilterReference MOZ_FINAL :
-  public nsSVGIDRenderingObserver, public nsISVGFilterReference {
+  public nsSVGRenderingObserverProperty, public nsISVGFilterReference {
 public:
   nsSVGFilterReference(nsIURI *aURI, nsIFrame *aFilteredFrame)
-    : nsSVGIDRenderingObserver(aURI, aFilteredFrame, false) {}
+    : nsSVGRenderingObserverProperty(aURI, aFilteredFrame, false) {}
 
   bool ReferencesValidResource() { return GetFilterFrame(); }
 
@@ -187,7 +219,7 @@ protected:
   virtual ~nsSVGFilterReference() {}
 
 private:
-  // nsSVGIDRenderingObserver
+  // nsSVGRenderingObserverProperty
   virtual void DoUpdate() MOZ_OVERRIDE;
 };
 
@@ -220,19 +252,19 @@ private:
   nsTArray<nsRefPtr<nsSVGFilterReference>> mReferences;
 };
 
-class nsSVGMarkerProperty : public nsSVGIDRenderingObserver {
+class nsSVGMarkerProperty : public nsSVGRenderingObserverProperty {
 public:
   nsSVGMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
-    : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
+    : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
 
 protected:
   virtual void DoUpdate() MOZ_OVERRIDE;
 };
 
-class nsSVGTextPathProperty : public nsSVGIDRenderingObserver {
+class nsSVGTextPathProperty : public nsSVGRenderingObserverProperty {
 public:
   nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
-    : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage)
+    : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage)
     , mValid(true) {}
 
   virtual bool ObservesReflow() MOZ_OVERRIDE { return false; }
@@ -249,10 +281,10 @@ private:
   bool mValid;
 };
 
-class nsSVGPaintingProperty : public nsSVGIDRenderingObserver {
+class nsSVGPaintingProperty : public nsSVGRenderingObserverProperty {
 public:
   nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
-    : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
+    : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
 
 protected:
   virtual void DoUpdate() MOZ_OVERRIDE;

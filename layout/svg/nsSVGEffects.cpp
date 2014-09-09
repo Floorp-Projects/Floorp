@@ -177,14 +177,13 @@ nsSVGRenderingObserver::ContentRemoved(nsIDocument *aDocument,
  * benefits/necessity of maintaining a second observer list.
  */
 
-nsSVGIDRenderingObserver::nsSVGIDRenderingObserver(nsIURI *aURI,
-                                                   nsIFrame *aFrame,
+nsSVGIDRenderingObserver::nsSVGIDRenderingObserver(nsIURI* aURI,
+                                                   nsIContent* aObservingContent,
                                                    bool aReferenceImage)
-  : mElement(MOZ_THIS_IN_INITIALIZER_LIST()), mFrame(aFrame),
-    mFramePresShell(aFrame->PresContext()->PresShell())
+  : mElement(MOZ_THIS_IN_INITIALIZER_LIST())
 {
   // Start watching the target element
-  mElement.Reset(aFrame->GetContent(), aURI, true, aReferenceImage);
+  mElement.Reset(aObservingContent, aURI, true, aReferenceImage);
   StartListening();
 }
 
@@ -196,19 +195,39 @@ nsSVGIDRenderingObserver::~nsSVGIDRenderingObserver()
 void
 nsSVGIDRenderingObserver::DoUpdate()
 {
-  if (mFramePresShell->IsDestroying()) {
-    // mFrame is no longer valid. Bail out.
-    mFrame = nullptr;
-    return;
-  }
   if (mElement.get() && mInObserverList) {
     nsSVGEffects::RemoveRenderingObserver(mElement.get(), this);
     mInObserverList = false;
   }
-  if (mFrame && mFrame->IsFrameOfType(nsIFrame::eSVG)) {
+}
+
+void
+nsSVGFrameReferenceFromProperty::Detach()
+{
+  mFrame = nullptr;
+  mFramePresShell = nullptr;
+}
+
+nsIFrame*
+nsSVGFrameReferenceFromProperty::Get()
+{
+  if (mFramePresShell && mFramePresShell->IsDestroying()) {
+    // mFrame is no longer valid.
+    Detach();
+  }
+  return mFrame;
+}
+
+void
+nsSVGRenderingObserverProperty::DoUpdate()
+{
+  nsSVGIDRenderingObserver::DoUpdate();
+
+  nsIFrame* frame = mFrameReference.Get();
+  if (frame && frame->IsFrameOfType(nsIFrame::eSVG)) {
     // Changes should propagate out to things that might be observing
     // the referencing frame or its ancestors.
-    nsSVGEffects::InvalidateRenderingObservers(mFrame);
+    nsSVGEffects::InvalidateRenderingObservers(frame);
   }
 }
 
@@ -226,8 +245,10 @@ nsSVGFilterReference::GetFilterFrame()
 void
 nsSVGFilterReference::DoUpdate()
 {
-  nsSVGIDRenderingObserver::DoUpdate();
-  if (!mFrame)
+  nsSVGRenderingObserverProperty::DoUpdate();
+
+  nsIFrame* frame = mFrameReference.Get();
+  if (!frame)
     return;
 
   // Repaint asynchronously in case the filter frame is being torn down
@@ -235,11 +256,11 @@ nsSVGFilterReference::DoUpdate()
     nsChangeHint(nsChangeHint_RepaintFrame);
 
   // Don't need to request UpdateOverflow if we're being reflowed.
-  if (!(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
+  if (!(frame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
     NS_UpdateHint(changeHint, nsChangeHint_UpdateOverflow);
   }
-  mFramePresShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
-    mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
+  frame->PresContext()->RestyleManager()->PostRestyleEvent(
+    frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
 NS_IMPL_ISUPPORTS(nsSVGFilterProperty, nsISupports)
@@ -288,26 +309,28 @@ nsSVGFilterProperty::Invalidate()
 void
 nsSVGMarkerProperty::DoUpdate()
 {
-  nsSVGIDRenderingObserver::DoUpdate();
-  if (!mFrame)
+  nsSVGRenderingObserverProperty::DoUpdate();
+
+  nsIFrame* frame = mFrameReference.Get();
+  if (!frame)
     return;
 
-  NS_ASSERTION(mFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
+  NS_ASSERTION(frame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
 
   // Repaint asynchronously in case the marker frame is being torn down
   nsChangeHint changeHint =
     nsChangeHint(nsChangeHint_RepaintFrame);
 
   // Don't need to request ReflowFrame if we're being reflowed.
-  if (!(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
+  if (!(frame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
     // XXXjwatt: We need to unify SVG into standard reflow so we can just use
     // nsChangeHint_NeedReflow | nsChangeHint_NeedDirtyReflow here.
-    nsSVGEffects::InvalidateRenderingObservers(mFrame);
+    nsSVGEffects::InvalidateRenderingObservers(frame);
     // XXXSDL KILL THIS!!!
-    nsSVGUtils::ScheduleReflowSVG(mFrame);
+    nsSVGUtils::ScheduleReflowSVG(frame);
   }
-  mFramePresShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
-    mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
+  frame->PresContext()->RestyleManager()->PostRestyleEvent(
+    frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
 bool
@@ -320,11 +343,13 @@ nsSVGTextPathProperty::TargetIsValid()
 void
 nsSVGTextPathProperty::DoUpdate()
 {
-  nsSVGIDRenderingObserver::DoUpdate();
-  if (!mFrame)
+  nsSVGRenderingObserverProperty::DoUpdate();
+
+  nsIFrame* frame = mFrameReference.Get();
+  if (!frame)
     return;
 
-  NS_ASSERTION(mFrame->IsFrameOfType(nsIFrame::eSVG) || mFrame->IsSVGText(),
+  NS_ASSERTION(frame->IsFrameOfType(nsIFrame::eSVG) || frame->IsSVGText(),
                "SVG frame expected");
 
   // Avoid getting into an infinite loop of reflows if the <textPath> is
@@ -347,8 +372,8 @@ nsSVGTextPathProperty::DoUpdate()
   // Repaint asynchronously in case the path frame is being torn down
   nsChangeHint changeHint =
     nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateTextPath);
-  mFramePresShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
-    mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
+  frame->PresContext()->RestyleManager()->PostRestyleEvent(
+    frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
 static void
@@ -363,15 +388,17 @@ InvalidateAllContinuations(nsIFrame* aFrame)
 void
 nsSVGPaintingProperty::DoUpdate()
 {
-  nsSVGIDRenderingObserver::DoUpdate();
-  if (!mFrame)
+  nsSVGRenderingObserverProperty::DoUpdate();
+
+  nsIFrame* frame = mFrameReference.Get();
+  if (!frame)
     return;
 
-  if (mFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    nsSVGEffects::InvalidateRenderingObservers(mFrame);
-    mFrame->InvalidateFrameSubtree();
+  if (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    nsSVGEffects::InvalidateRenderingObservers(frame);
+    frame->InvalidateFrameSubtree();
   } else {
-    InvalidateAllContinuations(mFrame);
+    InvalidateAllContinuations(frame);
   }
 }
 
