@@ -42,7 +42,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
   private final static String TAG = "WEBRTC-JC";
 
   // Only non-null while capturing, accessed exclusively from synchronized methods.
-  /* inner-access */ Camera camera;
+  Camera camera;
   private Camera.CameraInfo info;
   private final int id;
   private final long native_capturer;  // |VideoCaptureAndroid*| in C++.
@@ -55,14 +55,14 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
   private final int numCaptureBuffers = 3;
 
   // Needed to start/stop/rotate camera.
-  /* inner-access */ volatile int mCaptureRotation;
-  /* inner-access */ int mCaptureWidth;
-  /* inner-access */ int mCaptureHeight;
-  /* inner-access */ int mCaptureMinFPS;
-  /* inner-access */ int mCaptureMaxFPS;
+  volatile int mCaptureRotation;
+  int mCaptureWidth;
+  int mCaptureHeight;
+  int mCaptureMinFPS;
+  int mCaptureMaxFPS;
   // Are we being told to start/stop the camera, or just suspending/resuming
   // due to the application being backgrounded.
-  /* inner-access */ boolean mResumeCapture;
+  boolean mResumeCapture;
 
   @WebRTCJNITarget
   public VideoCaptureAndroid(int id, long native_capturer) {

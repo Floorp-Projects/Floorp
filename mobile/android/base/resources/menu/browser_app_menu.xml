@@ -71,4 +71,20 @@
           android:icon="@drawable/ic_menu_guest"
           android:visible="false"
           android:title="@string/exit_guest_session"/>
+
+    <!-- Android will eliminate v11+ resource files from pre-11 builds.
+         Those files are the only place in which certain IDs are defined.
+         This causes compilation errors.
+         To avoid nasty code workarounds, we define stub IDs here, but
+         hide the menu entries. -->
+
+    <item android:id="@+id/page"
+          android:visible="false"
+          android:enabled="false"
+          android:title="@string/page" />
+
+    <item android:id="@+id/tools"
+          android:visible="false"
+          android:enabled="false"
+          android:title="@string/tools" />
 </menu>

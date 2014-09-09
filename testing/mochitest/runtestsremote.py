@@ -252,6 +252,10 @@ class MochiRemote(Mochitest):
         else:
             self.log.warning("Unable to retrieve log file (%s) from remote device" % self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
+        # Don't leave an old robotium.config hanging around; the
+        # profile it references was just deleted!
+        deviceRoot = self._dm.getDeviceRoot()
+        self._dm.removeFile(os.path.join(deviceRoot, "robotium.config"))
         blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
         if blobberUploadDir:
             self._dm.getDirectory(self.remoteNSPR, blobberUploadDir)
@@ -584,14 +588,14 @@ class MochiRemote(Mochitest):
 
         return self._automation.runApp(*args, **kwargs)
 
-def main():
+def main(args):
     message_logger = MessageLogger(logger=None)
     process_args = {'messageLogger': message_logger}
     auto = RemoteAutomation(None, "fennec", processArgs=process_args)
 
     parser = RemoteOptions(auto)
     structured.commandline.add_logging_group(parser)
-    options, args = parser.parse_args()
+    options, args = parser.parse_args(args)
 
     if (options.dm_trans == "adb"):
         if (options.deviceIP):
@@ -611,7 +615,7 @@ def main():
 
     if (options == None):
         log.error("Invalid options specified, use --help for a list of valid options")
-        sys.exit(1)
+        return 1
 
     productPieces = options.remoteProductName.split('.')
     if (productPieces != None):
@@ -622,7 +626,7 @@ def main():
 
     options = parser.verifyOptions(options, mochitest)
     if (options == None):
-        sys.exit(1)
+        return 1
 
     logParent = os.path.dirname(options.remoteLogFile)
     dm.mkDir(logParent);
@@ -674,11 +678,6 @@ def main():
             my_tests = tests[start:end]
             log.info("Running tests %d-%d/%d" % (start+1, end, len(tests)))
 
-        dm.removeFile(os.path.join(deviceRoot, "fennec_ids.txt"))
-        fennec_ids = os.path.abspath(os.path.join(SCRIPT_DIR, "fennec_ids.txt"))
-        if not os.path.exists(fennec_ids) and options.robocopIds:
-            fennec_ids = options.robocopIds
-        dm.pushFile(fennec_ids, os.path.join(deviceRoot, "fennec_ids.txt"))
         options.extraPrefs.append('browser.search.suggest.enabled=true')
         options.extraPrefs.append('browser.search.suggest.prompted=true')
         options.extraPrefs.append('layout.css.devPixelsPerPx=1.0')
@@ -805,10 +804,12 @@ def main():
                 pass
             retVal = 1
 
-    message_logger.finish()
-    mochitest.printDeviceInfo(printLogcat=True)
+        mochitest.printDeviceInfo(printLogcat=True)
 
-    sys.exit(retVal)
+    message_logger.finish()
+
+    return retVal
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv[1:]))
