@@ -139,29 +139,29 @@ class CharacterRange
       : from_(0), to_(0)
     {}
 
-    CharacterRange(jschar from, jschar to)
+    CharacterRange(char16_t from, char16_t to)
       : from_(from), to_(to)
     {}
 
-    static void AddClassEscape(LifoAlloc *alloc, jschar type, CharacterRangeVector *ranges);
+    static void AddClassEscape(LifoAlloc *alloc, char16_t type, CharacterRangeVector *ranges);
 
-    static inline CharacterRange Singleton(jschar value) {
+    static inline CharacterRange Singleton(char16_t value) {
         return CharacterRange(value, value);
     }
-    static inline CharacterRange Range(jschar from, jschar to) {
+    static inline CharacterRange Range(char16_t from, char16_t to) {
         JS_ASSERT(from <= to);
         return CharacterRange(from, to);
     }
     static inline CharacterRange Everything() {
         return CharacterRange(0, 0xFFFF);
     }
-    bool Contains(jschar i) { return from_ <= i && i <= to_; }
-    jschar from() const { return from_; }
-    void set_from(jschar value) { from_ = value; }
-    jschar to() const { return to_; }
-    void set_to(jschar value) { to_ = value; }
+    bool Contains(char16_t i) { return from_ <= i && i <= to_; }
+    char16_t from() const { return from_; }
+    void set_from(char16_t value) { from_ = value; }
+    char16_t to() const { return to_; }
+    void set_to(char16_t value) { to_ = value; }
     bool is_valid() { return from_ <= to_; }
-    bool IsEverything(jschar max) { return from_ == 0 && to_ >= max; }
+    bool IsEverything(char16_t max) { return from_ == 0 && to_ >= max; }
     bool IsSingleton() { return (from_ == to_); }
     void AddCaseEquivalents(bool is_ascii, CharacterRangeVector *ranges);
 
@@ -190,8 +190,8 @@ class CharacterRange
     static const int kPayloadMask = (1 << 24) - 1;
 
   private:
-    jschar from_;
-    jschar to_;
+    char16_t from_;
+    char16_t to_;
 };
 
 // A set of unsigned integers that behaves especially well on small
@@ -247,25 +247,25 @@ class DispatchTable
           : from_(0), to_(0), out_set_(nullptr)
         {}
 
-        Entry(jschar from, jschar to, OutSet* out_set)
+        Entry(char16_t from, char16_t to, OutSet* out_set)
           : from_(from), to_(to), out_set_(out_set)
         {}
 
-        jschar from() { return from_; }
-        jschar to() { return to_; }
-        void set_to(jschar value) { to_ = value; }
+        char16_t from() { return from_; }
+        char16_t to() { return to_; }
+        void set_to(char16_t value) { to_ = value; }
         void AddValue(LifoAlloc *alloc, int value) {
             out_set_ = out_set_->Extend(alloc, value);
         }
         OutSet* out_set() { return out_set_; }
       private:
-        jschar from_;
-        jschar to_;
+        char16_t from_;
+        char16_t to_;
         OutSet* out_set_;
     };
 
     void AddRange(LifoAlloc *alloc, CharacterRange range, int value);
-    OutSet* Get(jschar value);
+    OutSet* Get(char16_t value);
     void Dump();
 
   private:
@@ -422,8 +422,8 @@ class QuickCheckDetails
 
     struct Position {
         Position() : mask(0), value(0), determines_perfectly(false) { }
-        jschar mask;
-        jschar value;
+        char16_t mask;
+        char16_t value;
         bool determines_perfectly;
     };
 

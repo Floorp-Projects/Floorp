@@ -626,17 +626,17 @@ Type.char =
 /**
  * A C wide char (two bytes)
  */
-Type.jschar =
-  new Type("jschar",
-           ctypes.jschar);
+Type.char16_t =
+  new Type("char16_t",
+           ctypes.char16_t);
 
  /**
   * Base string types.
   */
 Type.cstring = Type.char.in_ptr.withName("[in] C string");
-Type.wstring = Type.jschar.in_ptr.withName("[in] wide string");
+Type.wstring = Type.char16_t.in_ptr.withName("[in] wide string");
 Type.out_cstring = Type.char.out_ptr.withName("[out] C string");
-Type.out_wstring = Type.jschar.out_ptr.withName("[out] wide string");
+Type.out_wstring = Type.char16_t.out_ptr.withName("[out] wide string");
 
 /**
  * A C integer (8-bits).

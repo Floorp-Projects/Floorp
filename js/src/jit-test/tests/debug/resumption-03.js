@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Returning and throwing objects.
 
 load(libdir + "asserts.js");
