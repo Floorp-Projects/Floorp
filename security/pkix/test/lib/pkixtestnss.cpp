@@ -32,6 +32,7 @@
 #include "pk11pub.h"
 #include "pkix/pkixnss.h"
 #include "secerr.h"
+#include "secitem.h"
 
 namespace mozilla { namespace pkix { namespace test {
 
@@ -41,6 +42,14 @@ typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
   ScopedSECKEYPublicKey;
 typedef ScopedPtr<SECKEYPrivateKey, SECKEY_DestroyPrivateKey>
   ScopedSECKEYPrivateKey;
+
+inline void
+SECITEM_FreeItem_true(SECItem* item)
+{
+  SECITEM_FreeItem(item, true);
+}
+
+typedef mozilla::pkix::ScopedPtr<SECItem, SECITEM_FreeItem_true> ScopedSECItem;
 
 Result
 InitNSSIfNeeded()
