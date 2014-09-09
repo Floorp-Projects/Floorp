@@ -9,8 +9,7 @@
 #ifndef LIBGLESV2_QUERY_H_
 #define LIBGLESV2_QUERY_H_
 
-#include <GLES3/gl3.h>
-#include <GLES2/gl2.h>
+#include "angle_gl.h"
 
 #include "common/angleutils.h"
 #include "common/RefCountObject.h"

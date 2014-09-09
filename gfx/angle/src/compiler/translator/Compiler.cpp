@@ -5,6 +5,7 @@
 //
 
 #include "compiler/translator/BuiltInFunctionEmulator.h"
+#include "compiler/translator/Compiler.h"
 #include "compiler/translator/DetectCallDepth.h"
 #include "compiler/translator/ForLoopUnroll.h"
 #include "compiler/translator/Initialize.h"
@@ -12,7 +13,6 @@
 #include "compiler/translator/InitializeVariables.h"
 #include "compiler/translator/ParseContext.h"
 #include "compiler/translator/RenameFunction.h"
-#include "compiler/translator/ShHandle.h"
 #include "compiler/translator/UnfoldShortCircuitAST.h"
 #include "compiler/translator/ValidateLimitations.h"
 #include "compiler/translator/ValidateOutputs.h"

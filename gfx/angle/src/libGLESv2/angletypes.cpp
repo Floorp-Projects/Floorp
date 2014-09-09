@@ -90,15 +90,15 @@ VertexFormat::VertexFormat(GLenum type, GLboolean normalized, GLuint components,
     }
 }
 
-VertexFormat::VertexFormat(const VertexAttribute &attribute)
-    : mType(attribute.mType),
-      mNormalized(attribute.mNormalized ? GL_TRUE : GL_FALSE),
-      mComponents(attribute.mSize),
-      mPureInteger(attribute.mPureInteger)
+VertexFormat::VertexFormat(const VertexAttribute &attrib)
+    : mType(attrib.type),
+      mNormalized(attrib.normalized ? GL_TRUE : GL_FALSE),
+      mComponents(attrib.size),
+      mPureInteger(attrib.pureInteger)
 {
     // Ensure we aren't initializing a vertex format which should be using
     // the current-value type
-    ASSERT(attribute.mArrayEnabled);
+    ASSERT(attrib.enabled);
 
     // Float data can not be normalized, so ignore the user setting
     if (mType == GL_FLOAT || mType == GL_HALF_FLOAT || mType == GL_FIXED)
@@ -107,13 +107,13 @@ VertexFormat::VertexFormat(const VertexAttribute &attribute)
     }
 }
 
-VertexFormat::VertexFormat(const VertexAttribute &attribute, GLenum currentValueType)
-    : mType(attribute.mType),
-      mNormalized(attribute.mNormalized ? GL_TRUE : GL_FALSE),
-      mComponents(attribute.mSize),
-      mPureInteger(attribute.mPureInteger)
+VertexFormat::VertexFormat(const VertexAttribute &attrib, GLenum currentValueType)
+    : mType(attrib.type),
+      mNormalized(attrib.normalized ? GL_TRUE : GL_FALSE),
+      mComponents(attrib.size),
+      mPureInteger(attrib.pureInteger)
 {
-    if (!attribute.mArrayEnabled)
+    if (!attrib.enabled)
     {
         mType = currentValueType;
         mNormalized = GL_FALSE;

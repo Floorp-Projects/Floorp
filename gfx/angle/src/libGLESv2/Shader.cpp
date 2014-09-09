@@ -1,6 +1,6 @@
 #include "precompiled.h"
 //
-// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -115,12 +115,12 @@ void Shader::getTranslatedSource(GLsizei bufSize, GLsizei *length, char *buffer)
     getSourceImpl(mHlsl, bufSize, length, buffer);
 }
 
-const std::vector<Uniform> &Shader::getUniforms() const
+const std::vector<sh::Uniform> &Shader::getUniforms() const
 {
     return mActiveUniforms;
 }
 
-const std::vector<InterfaceBlock> &Shader::getInterfaceBlocks() const
+const std::vector<sh::InterfaceBlock> &Shader::getInterfaceBlocks() const
 {
     return mActiveInterfaceBlocks;
 }
@@ -184,6 +184,8 @@ void Shader::initializeCompiler()
             ShBuiltInResources resources;
             ShInitBuiltInResources(&resources);
 
+            const gl::Caps &caps = mRenderer->getCaps();
+
             resources.MaxVertexAttribs = MAX_VERTEX_ATTRIBS;
             resources.MaxVertexUniformVectors = mRenderer->getMaxVertexUniformVectors();
             resources.MaxVaryingVectors = mRenderer->getMaxVaryingVectors();
@@ -192,8 +194,8 @@ void Shader::initializeCompiler()
             resources.MaxTextureImageUnits = MAX_TEXTURE_IMAGE_UNITS;
             resources.MaxFragmentUniformVectors = mRenderer->getMaxFragmentUniformVectors();
             resources.MaxDrawBuffers = mRenderer->getMaxRenderTargets();
-            resources.OES_standard_derivatives = mRenderer->getDerivativeInstructionSupport();
-            resources.EXT_draw_buffers = mRenderer->getMaxRenderTargets() > 1;
+            resources.OES_standard_derivatives = caps.extensions.standardDerivatives;
+            resources.EXT_draw_buffers = caps.extensions.drawBuffers;
             resources.EXT_shader_texture_lod = 1;
             // resources.OES_EGL_image_external = mRenderer->getShareHandleSupport() ? 1 : 0; // TODO: commented out until the extension is actually supported.
             resources.FragmentPrecisionHigh = 1;   // Shader Model 2+ always supports FP24 (s16e7) which corresponds to highp
@@ -225,7 +227,7 @@ void Shader::parseVaryings(void *compiler)
 {
     if (!mHlsl.empty())
     {
-        std::vector<Varying> *activeVaryings;
+        std::vector<sh::Varying> *activeVaryings;
         ShGetInfoPointer(compiler, SH_ACTIVE_VARYINGS_ARRAY, reinterpret_cast<void**>(&activeVaryings));
 
         for (size_t varyingIndex = 0; varyingIndex < activeVaryings->size(); varyingIndex++)
@@ -361,11 +363,11 @@ void Shader::compileToHLSL(void *compiler)
 
         void *activeUniforms;
         ShGetInfoPointer(compiler, SH_ACTIVE_UNIFORMS_ARRAY, &activeUniforms);
-        mActiveUniforms = *(std::vector<Uniform>*)activeUniforms;
+        mActiveUniforms = *(std::vector<sh::Uniform>*)activeUniforms;
 
         void *activeInterfaceBlocks;
         ShGetInfoPointer(compiler, SH_ACTIVE_INTERFACE_BLOCKS_ARRAY, &activeInterfaceBlocks);
-        mActiveInterfaceBlocks = *(std::vector<InterfaceBlock>*)activeInterfaceBlocks;
+        mActiveInterfaceBlocks = *(std::vector<sh::InterfaceBlock>*)activeInterfaceBlocks;
     }
     else
     {
@@ -515,14 +517,14 @@ int VertexShader::getSemanticIndex(const std::string &attributeName)
         int semanticIndex = 0;
         for (unsigned int attributeIndex = 0; attributeIndex < mActiveAttributes.size(); attributeIndex++)
         {
-            const ShaderVariable &attribute = mActiveAttributes[attributeIndex];
+            const sh::ShaderVariable &attribute = mActiveAttributes[attributeIndex];
 
             if (attribute.name == attributeName)
             {
                 return semanticIndex;
             }
 
-            semanticIndex += AttributeRegisterCount(attribute.type);
+            semanticIndex += VariableRegisterCount(attribute.type);
         }
     }
 
@@ -536,7 +538,7 @@ void VertexShader::parseAttributes()
     {
         void *activeAttributes;
         ShGetInfoPointer(mVertexCompiler, SH_ACTIVE_ATTRIBUTES_ARRAY, &activeAttributes);
-        mActiveAttributes = *(std::vector<Attribute>*)activeAttributes;
+        mActiveAttributes = *(std::vector<sh::Attribute>*)activeAttributes;
     }
 }
 
@@ -567,7 +569,7 @@ void FragmentShader::compile()
     {
         void *activeOutputVariables;
         ShGetInfoPointer(mFragmentCompiler, SH_ACTIVE_OUTPUT_VARIABLES_ARRAY, &activeOutputVariables);
-        mActiveOutputVariables = *(std::vector<Attribute>*)activeOutputVariables;
+        mActiveOutputVariables = *(std::vector<sh::Attribute>*)activeOutputVariables;
     }
 }
 
@@ -578,7 +580,7 @@ void FragmentShader::uncompile()
     mActiveOutputVariables.clear();
 }
 
-const std::vector<Attribute> &FragmentShader::getOutputVariables() const
+const std::vector<sh::Attribute> &FragmentShader::getOutputVariables() const
 {
     return mActiveOutputVariables;
 }

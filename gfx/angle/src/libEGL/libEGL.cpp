@@ -169,8 +169,7 @@ const char *__stdcall eglQueryString(EGLDisplay dpy, EGLint name)
     ANGLE_TRY
     {
         egl::Display *display = static_cast<egl::Display*>(dpy);
-
-        if (!validateDisplay(display))
+        if (!(display == EGL_NO_DISPLAY && name == EGL_EXTENSIONS) && !validateDisplay(display))
         {
             return NULL;
         }
@@ -180,14 +179,14 @@ const char *__stdcall eglQueryString(EGLDisplay dpy, EGLint name)
           case EGL_CLIENT_APIS:
             return egl::success("OpenGL_ES");
           case EGL_EXTENSIONS:
-            return egl::success(display->getExtensionString());
+            return egl::success(egl::Display::getExtensionString(display));
           case EGL_VENDOR:
             return egl::success(display->getVendorString());
           case EGL_VERSION:
             return egl::success("1.4 (ANGLE " ANGLE_VERSION_STRING ")");
+          default:
+            return egl::error(EGL_BAD_PARAMETER, (const char*)NULL);
         }
-
-        return egl::error(EGL_BAD_PARAMETER, (const char*)NULL);
     }
     ANGLE_CATCH_ALL
     {
