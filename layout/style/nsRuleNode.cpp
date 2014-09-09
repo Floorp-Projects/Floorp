@@ -6368,7 +6368,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
 
   // background-position: enum, length, percent (flags), inherit [pair list]
   nsStyleBackground::Position initialPosition;
-  initialPosition.SetInitialValues();
+  initialPosition.SetInitialPercentValues(0.0f);
   SetBackgroundList(aContext, *aRuleData->ValueForBackgroundPosition(),
                     bg->mLayers,
                     parentBG->mLayers, &nsStyleBackground::Layer::mPosition,
