@@ -29,7 +29,7 @@ class nsSVGClipPathFrame;
 class nsSVGPaintServerFrame;
 class nsSVGFilterFrame;
 class nsSVGMaskFrame;
-class nsSVGFilterProperty;
+class nsSVGFilterChainObserver;
 
 /*
  * This interface allows us to be notified when a piece of SVG content is
@@ -195,14 +195,14 @@ protected:
  * It fires invalidations when the SVG filter element's id changes or when
  * the SVG filter element's content changes.
  *
- * The nsSVGFilterProperty class manages a list of nsSVGFilterReferences.
+ * The nsSVGFilterChainObserver class manages a list of nsSVGFilterReferences.
  */
 class nsSVGFilterReference MOZ_FINAL :
   public nsSVGIDRenderingObserver, public nsISVGFilterReference {
 public:
   nsSVGFilterReference(nsIURI* aURI,
                        nsIContent* aObservingContent,
-                       nsSVGFilterProperty* aFilterChainObserver)
+                       nsSVGFilterChainObserver* aFilterChainObserver)
     : nsSVGIDRenderingObserver(aURI, aObservingContent, false)
     , mFilterChainObserver(aFilterChainObserver)
   {
@@ -230,7 +230,7 @@ protected:
   virtual void DoUpdate() MOZ_OVERRIDE;
 
 private:
-  nsSVGFilterProperty* mFilterChainObserver;
+  nsSVGFilterChainObserver* mFilterChainObserver;
 };
 
 /**
@@ -238,15 +238,15 @@ private:
  * reference filters in a filter chain.
  * e.g. filter: url(#svg-filter-1) blur(10px) url(#svg-filter-2);
  *
- * In the above example, the nsSVGFilterProperty will manage two
+ * In the above example, the nsSVGFilterChainObserver will manage two
  * nsSVGFilterReferences, one for each SVG reference filter. CSS filters like
  * "blur(10px)" don't reference filter elements, so they don't need an
  * nsSVGFilterReference. The style system invalidates changes to CSS filters.
  */
-class nsSVGFilterProperty : public nsISupports {
+class nsSVGFilterChainObserver : public nsISupports {
 public:
-  nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
-                      nsIFrame *aFilteredFrame);
+  nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>& aFilters,
+                           nsIContent* aFilteredElement);
 
   bool ReferencesValidResources();
   bool IsInObserverLists() const;
@@ -256,12 +256,25 @@ public:
   NS_DECL_ISUPPORTS
 
 protected:
-  virtual ~nsSVGFilterProperty();
+  virtual ~nsSVGFilterChainObserver();
 
-  virtual void DoUpdate();
+  virtual void DoUpdate() = 0;
 
 private:
   nsTArray<nsRefPtr<nsSVGFilterReference>> mReferences;
+};
+
+class nsSVGFilterProperty : public nsSVGFilterChainObserver {
+public:
+  nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
+                      nsIFrame *aFilteredFrame)
+    : nsSVGFilterChainObserver(aFilters, aFilteredFrame->GetContent())
+    , mFrameReference(aFilteredFrame)
+  {}
+
+protected:
+  virtual void DoUpdate() MOZ_OVERRIDE;
+
   nsSVGFrameReferenceFromProperty mFrameReference;
 };
 
