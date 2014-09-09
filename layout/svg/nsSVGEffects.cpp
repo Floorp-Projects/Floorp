@@ -245,36 +245,34 @@ nsSVGFilterReference::GetFilterFrame()
 void
 nsSVGFilterReference::DoUpdate()
 {
-  nsSVGRenderingObserverProperty::DoUpdate();
+  nsSVGIDRenderingObserver::DoUpdate();
 
-  nsIFrame* frame = mFrameReference.Get();
-  if (!frame)
-    return;
-
-  // Repaint asynchronously in case the filter frame is being torn down
-  nsChangeHint changeHint =
-    nsChangeHint(nsChangeHint_RepaintFrame);
-
-  // Don't need to request UpdateOverflow if we're being reflowed.
-  if (!(frame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
-    NS_UpdateHint(changeHint, nsChangeHint_UpdateOverflow);
+  if (mFilterChainObserver) {
+    mFilterChainObserver->Invalidate();
   }
-  frame->PresContext()->RestyleManager()->PostRestyleEvent(
-    frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
 NS_IMPL_ISUPPORTS(nsSVGFilterProperty, nsISupports)
 
 nsSVGFilterProperty::nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
                                          nsIFrame *aFilteredFrame)
+  : mFrameReference(aFilteredFrame)
 {
+  nsIContent* filteredElement = aFilteredFrame->GetContent();
   for (uint32_t i = 0; i < aFilters.Length(); i++) {
     if (aFilters[i].GetType() != NS_STYLE_FILTER_URL)
       continue;
 
     nsRefPtr<nsSVGFilterReference> reference =
-      new nsSVGFilterReference(aFilters[i].GetURL(), aFilteredFrame);
+      new nsSVGFilterReference(aFilters[i].GetURL(), filteredElement, this);
     mReferences.AppendElement(reference);
+  }
+}
+
+nsSVGFilterProperty::~nsSVGFilterProperty()
+{
+  for (uint32_t i = 0; i < mReferences.Length(); i++) {
+    mReferences[i]->DetachFromChainObserver();
   }
 }
 
@@ -299,11 +297,28 @@ nsSVGFilterProperty::IsInObserverLists() const
 }
 
 void
-nsSVGFilterProperty::Invalidate()
+nsSVGFilterProperty::DoUpdate()
 {
-  for (uint32_t i = 0; i < mReferences.Length(); i++) {
-    mReferences[i]->Invalidate();
+  nsIFrame* frame = mFrameReference.Get();
+  if (!frame)
+    return;
+
+  if (frame && frame->IsFrameOfType(nsIFrame::eSVG)) {
+    // Changes should propagate out to things that might be observing
+    // the referencing frame or its ancestors.
+    nsSVGEffects::InvalidateRenderingObservers(frame);
   }
+
+  // Repaint asynchronously in case the filter frame is being torn down
+  nsChangeHint changeHint =
+    nsChangeHint(nsChangeHint_RepaintFrame);
+
+  // Don't need to request UpdateOverflow if we're being reflowed.
+  if (!(frame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
+    NS_UpdateHint(changeHint, nsChangeHint_UpdateOverflow);
+  }
+  frame->PresContext()->RestyleManager()->PostRestyleEvent(
+    frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
 void
