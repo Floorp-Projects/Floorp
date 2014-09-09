@@ -18,38 +18,28 @@ add_task(function test_isUserRestricted() {
   // In a restricted profile: enabled = true
   do_check_false(pc.parentalControlsEnabled);
 
-  do_check_true(pc.isAllowed(Ci.nsIParentalControlsService.DOWNLOAD));
-  do_check_true(pc.isAllowed(Ci.nsIParentalControlsService.INSTALL_EXTENSION));
-  do_check_true(pc.isAllowed(Ci.nsIParentalControlsService.INSTALL_APP));
-  do_check_true(pc.isAllowed(Ci.nsIParentalControlsService.VISIT_FILE_URLS));
-  do_check_true(pc.isAllowed(Ci.nsIParentalControlsService.SHARE));
-  do_check_true(pc.isAllowed(Ci.nsIParentalControlsService.BOOKMARK));
-  do_check_true(pc.isAllowed(Ci.nsIParentalControlsService.INSTALL_EXTENSION));
-
-  run_next_test();
+  //run_next_test();
 });
-
+/*
+// NOTE: JNI.jsm has no way to call a string method yet
 add_task(function test_getUserRestrictions() {
   // In an admin profile, like the tests: {}
   // In a restricted profile: {"no_modify_accounts":true,"no_share_location":true}
   let restrictions = "{}";
 
-  var jenv = null;
+  let jni = null;
   try {
-    jenv = JNI.GetForThread();
-    var geckoAppShell = JNI.LoadClass(jenv, "org.mozilla.gecko.RestrictedProfile", {
-      static_methods: [
-        { name: "getUserRestrictions", sig: "()Ljava/lang/String;" },
-      ],
-    });
-    restrictions = JNI.ReadString(jenv, geckoAppShell.getUserRestrictions());
+    jni = new JNI();
+    let cls = jni.findClass("org/mozilla/gecko/GeckoAppShell");
+    let method = jni.getStaticMethodID(cls, "getUserRestrictions", "()Ljava/lang/String;");
+    restrictions = jni.callStaticStringMethod(cls, method);
   } finally {
-    if (jenv) {
-      JNI.UnloadClasses(jenv);
+    if (jni != null) {
+      jni.close();
     }
   }
 
   do_check_eq(restrictions, "{}");
 });
-
+*/
 run_next_test();

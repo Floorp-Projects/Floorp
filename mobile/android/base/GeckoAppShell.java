@@ -104,6 +104,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
 import android.os.SystemClock;
+import android.os.UserManager;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
@@ -2551,6 +2552,39 @@ public class GeckoAppShell
         }
 
         return "DIRECT";
+    }
+
+    @WrapElementForJNI
+    public static boolean isUserRestricted() {
+        if (Versions.preJBMR2) {
+            return false;
+        }
+
+        UserManager mgr = (UserManager)getContext().getSystemService(Context.USER_SERVICE);
+        Bundle restrictions = mgr.getUserRestrictions();
+
+        return !restrictions.isEmpty();
+    }
+
+    @WrapElementForJNI
+    public static String getUserRestrictions() {
+        if (Versions.preJBMR2) {
+            return "{}";
+        }
+
+        JSONObject json = new JSONObject();
+        UserManager mgr = (UserManager)getContext().getSystemService(Context.USER_SERVICE);
+        Bundle restrictions = mgr.getUserRestrictions();
+
+        Set<String> keys = restrictions.keySet();
+        for (String key : keys) {
+            try {
+                json.put(key, restrictions.get(key));
+            } catch (JSONException e) {
+            }
+        }
+
+        return json.toString();
     }
 
     /* Downloads the uri pointed to by a share intent, and alters the intent to point to the locally stored file.
