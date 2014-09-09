@@ -1936,6 +1936,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   AutoSaveRestoreBlendMode autoRestoreBlendMode(*aBuilder);
   aBuilder->SetContainsBlendModes(BlendModeSet());
  
+  nsRect dirtyRectOutsideTransform = dirtyRect;
   if (isTransformed) {
     const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
     if (aBuilder->IsForPainting() &&
@@ -1960,6 +1961,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   }
 
   bool usingSVGEffects = nsSVGIntegrationUtils::UsingEffectsForFrame(this);
+  nsRect dirtyRectOutsideSVGEffects = dirtyRect;
   if (usingSVGEffects) {
     dirtyRect =
       nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
@@ -2082,6 +2084,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    * output even if the element being filtered wouldn't otherwise do so.
    */
   if (usingSVGEffects) {
+    // Revert to the post-filter dirty rect.
+    buildingDisplayList.SetDirtyRect(dirtyRectOutsideSVGEffects);
     /* List now emptied, so add the new list to the top. */
     resultList.AppendNewToTop(
         new (aBuilder) nsDisplaySVGEffects(aBuilder, this, &resultList));
@@ -2116,7 +2120,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     clipState.Restore();
     // Revert to the dirtyrect coming in from the parent, without our transform
     // taken into account.
-    buildingDisplayList.SetDirtyRect(aDirtyRect);
+    buildingDisplayList.SetDirtyRect(dirtyRectOutsideTransform);
     // Revert to the outer reference frame and offset because all display
     // items we create from now on are outside the transform.
     const nsIFrame* outerReferenceFrame =
