@@ -5854,7 +5854,11 @@ RilObject.prototype[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
   let Buf = this.context.Buf;
   options.sw1 = Buf.readInt32();
   options.sw2 = Buf.readInt32();
-  if (options.sw1 != ICC_STATUS_NORMAL_ENDING) {
+  // See 3GPP TS 11.11, clause 9.4.1 for opetation success results.
+  if (options.sw1 !== ICC_STATUS_NORMAL_ENDING &&
+      options.sw1 !== ICC_STATUS_NORMAL_ENDING_WITH_EXTRA &&
+      options.sw1 !== ICC_STATUS_WITH_SIM_DATA &&
+      options.sw1 !== ICC_STATUS_WITH_RESPONSE_DATA) {
     ICCIOHelper.processICCIOError(options);
     return;
   }
