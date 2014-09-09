@@ -778,22 +778,6 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Val
 //
 // UseCount_Fallback
 //
-static bool
-IsTopFrameConstructing(JSContext *cx)
-{
-    JS_ASSERT(cx->currentlyRunningInJit());
-    JitActivationIterator activations(cx->runtime());
-    JitFrameIterator iter(activations);
-    JS_ASSERT(iter.type() == JitFrame_Exit);
-
-    ++iter;
-    JS_ASSERT(iter.type() == JitFrame_BaselineStub);
-
-    ++iter;
-    JS_ASSERT(iter.isBaselineJS());
-
-    return iter.isConstructing();
-}
 
 static bool
 EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame,
@@ -804,15 +788,14 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame
 
     bool isLoopEntry = (JSOp(*pc) == JSOP_LOOPENTRY);
 
-    bool isConstructing = IsTopFrameConstructing(cx);
     MethodStatus stat;
     if (isLoopEntry) {
         JS_ASSERT(LoopEntryCanIonOsr(pc));
         JitSpew(JitSpew_BaselineOSR, "  Compile at loop entry!");
-        stat = CanEnterAtBranch(cx, script, frame, pc, isConstructing);
+        stat = CanEnterAtBranch(cx, script, frame, pc);
     } else if (frame->isFunctionFrame()) {
         JitSpew(JitSpew_BaselineOSR, "  Compile function from top for later entry!");
-        stat = CompileFunctionForBaseline(cx, script, frame, isConstructing);
+        stat = CompileFunctionForBaseline(cx, script, frame);
     } else {
         return true;
     }
