@@ -83,6 +83,7 @@ LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/xul',
     '/netwerk/protocol/viewsource',
+    '/tools/profiler',
 ]
 
 if CONFIG['MOZ_TOOLKIT_SEARCH']:

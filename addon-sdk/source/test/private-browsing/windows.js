@@ -93,39 +93,29 @@ exports.testIsPrivateOnWindowOpenFromPrivate = function(assert, done) {
        then(done, assert.fail);
 };
 
-exports.testOpenTabWithPrivateWindow = function(assert, done) {
-  function start() {
-    openPromise(null, {
-      features: {
-        private: true,
-        toolbar: true
-      }
-    }).then(focus).then(function(window) {
-      let { promise, resolve } = defer();
-      assert.equal(isPrivate(window), true, 'the focused window is private');
+exports.testOpenTabWithPrivateWindow = function*(assert) {
+  let { promise, resolve } = defer();
 
-      tabs.open({
-        url: 'about:blank',
-        onOpen: function(tab) {
-          assert.equal(isPrivate(tab), false, 'the opened tab is not private');
-          // not closing this tab on purpose.. for now...
-          // we keep this tab open because we closed all windows
-          // and must keep a non-private window open at end of this test for next ones.
-          resolve(window);
-        }
-      });
-
-      return promise;
-    }).then(close).then(done, assert.fail);
-  }
-
-  (function closeWindows() {
-    if (windows.length > 0) {
-      return windows.activeWindow.close(closeWindows);
+  let window = yield openPromise(null, {
+    features: {
+      private: true,
+      toolbar: true
     }
-    assert.pass('all pre test windows have been closed');
-    return start();
-  })()
+  });
+  yield focus(window);
+
+  assert.equal(isPrivate(window), true, 'the focused window is private');
+
+  tabs.open({
+    url: 'about:blank',
+    onOpen: (tab) => {
+      assert.equal(isPrivate(tab), false, 'the opened tab is not private');
+      tab.close(resolve);
+    }
+  });
+
+  yield promise;
+  yield close(window);
 };
 
 exports.testIsPrivateOnWindowOff = function(assert, done) {

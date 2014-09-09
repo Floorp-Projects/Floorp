@@ -405,6 +405,7 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/layout");
     this.registerModule("devtools/server/actors/csscoverage");
     this.registerModule("devtools/server/actors/monitor");
+    this.registerModule("devtools/server/actors/timeline");
     if ("nsIProfiler" in Ci) {
       this.registerModule("devtools/server/actors/profiler");
     }

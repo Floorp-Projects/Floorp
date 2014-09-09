@@ -35,6 +35,8 @@
 #include "nsTArray.h"                   // for nsAutoTArray
 #include "TextRenderer.h"               // for TextRenderer
 #include <vector>
+#include "GeckoProfiler.h"              // for GeckoProfiler
+#include "ProfilerMarkers.h"            // for ProfilerMarkers
 
 #define CULLING_LOG(...)
 // #define CULLING_LOG(...) printf_stderr("CULLING: " __VA_ARGS__)
@@ -115,7 +117,9 @@ static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
 
 static void PrintUniformityInfo(Layer* aLayer)
 {
-  static TimeStamp t0 = TimeStamp::Now();
+  if (!profiler_is_active()) {
+    return;
+  }
 
   // Don't want to print a log for smaller layers
   if (aLayer->GetEffectiveVisibleRegion().GetBounds().width < 300 ||
@@ -127,10 +131,10 @@ static void PrintUniformityInfo(Layer* aLayer)
   if (!transform.Is2D()) {
     return;
   }
+
   Point translation = transform.As2D().GetTranslation();
-  printf_stderr("UniformityInfo Layer_Move %llu %p %s\n",
-      (unsigned long long)(TimeStamp::Now() - t0).ToMilliseconds(), aLayer,
-      ToString(translation).c_str());
+  LayerTranslationPayload* payload = new LayerTranslationPayload(aLayer, translation);
+  PROFILER_MARKER_PAYLOAD("LayerTranslation", payload);
 }
 
 /* all of the per-layer prepared data we need to maintain */

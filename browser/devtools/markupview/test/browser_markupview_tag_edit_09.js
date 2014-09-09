@@ -45,11 +45,8 @@ function* testWellformedMixedCase(inspector) {
 }
 
 function* testMalformedMixedCase(inspector) {
-  info("Modifying a mixed-case attribute, making sure to generate a parsing" +
-    "error, and  expecting the attribute's case to NOT be preserved");
-  // See /browser/devtools/markupview/markup-view.js:parseAttributeValues
-  // When attributes are malformed, they cannot be parsed with the XML parser
-  // and so we fall back to the HTML parser which lowercases attributes.
+  info("Modifying a malformed, mixed-case attribute, " +
+    "expecting the attribute's case to be preserved");
 
   info("Listening to markup mutations");
   let onMutated = inspector.once("markupmutation");
@@ -67,7 +64,7 @@ function* testMalformedMixedCase(inspector) {
   yield onMutated;
 
   assertAttributes("svg", {
-    "viewbox": "<>",
+    "viewBox": "<>",
     "width": "200",
     "height": "200"
   });

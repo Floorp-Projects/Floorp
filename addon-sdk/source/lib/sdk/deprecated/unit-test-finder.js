@@ -135,9 +135,19 @@ TestFinder.prototype = {
     let { fileFilter, testFilter } = makeFilters({ filter: this.filter });
 
     return getSuites({ id: id, filter: fileFilter }).then(suites => {
-      let tests = [];
+      let testsRemaining = [];
 
-      suites.forEach(suite => {
+      let getNextTest = () => {
+        if (testsRemaining.length) {
+          return testsRemaining.shift();
+        }
+
+        if (!suites.length) {
+          return null;
+        }
+
+        let suite = suites.shift();
+
         // Load each test file as a main module in its own loader instance
         // `suite` is defined by cuddlefish/manifest.py:ManifestBuilder.build
         let suiteModule;
@@ -162,7 +172,7 @@ TestFinder.prototype = {
         if (this.testInProcess) {
           for (let name of Object.keys(suiteModule).sort()) {
             if (NOT_TESTS.indexOf(name) === -1 && testFilter(name)) {
-              tests.push({
+              testsRemaining.push({
                 setup: suiteModule.setup,
                 teardown: suiteModule.teardown,
                 testFunction: suiteModule[name],
@@ -171,9 +181,13 @@ TestFinder.prototype = {
             }
           }
         }
-      })
 
-      return tests;
+        return getNextTest();
+      };
+
+      return {
+        getNext: () => resolve(getNextTest())
+      };
     });
   }
 };

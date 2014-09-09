@@ -413,7 +413,7 @@ WebappsApplication.prototype = {
   },
 
   get receipts() {
-    return this._proxy.receipts;
+    return this._proxy.receipts || [];
   },
 
   get downloadError() {
@@ -639,6 +639,7 @@ WebappsApplication.prototype = {
       case "Webapps:AddReceipt:Return:OK":
         this.removeMessageListeners(["Webapps:AddReceipt:Return:OK",
                                      "Webapps:AddReceipt:Return:KO"]);
+        this.__DOM_IMPL__._clearCachedReceiptsValue();
         this._proxy.receipts = msg.receipts;
         Services.DOMRequest.fireSuccess(req, null);
         break;
@@ -650,6 +651,7 @@ WebappsApplication.prototype = {
       case "Webapps:RemoveReceipt:Return:OK":
         this.removeMessageListeners(["Webapps:RemoveReceipt:Return:OK",
                                      "Webapps:RemoveReceipt:Return:KO"]);
+        this.__DOM_IMPL__._clearCachedReceiptsValue();
         this._proxy.receipts = msg.receipts;
         Services.DOMRequest.fireSuccess(req, null);
         break;
@@ -661,6 +663,7 @@ WebappsApplication.prototype = {
       case "Webapps:ReplaceReceipt:Return:OK":
         this.removeMessageListeners(["Webapps:ReplaceReceipt:Return:OK",
                                      "Webapps:ReplaceReceipt:Return:KO"]);
+        this.__DOM_IMPL__._clearCachedReceiptsValue();
         this._proxy.receipts = msg.receipts;
         Services.DOMRequest.fireSuccess(req, null);
         break;

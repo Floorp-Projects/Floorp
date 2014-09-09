@@ -393,15 +393,14 @@
   background-image: url("../img/sad.png");
 }
 
-.feedback button.back {
+.fx-embedded-btn-back {
+  margin-bottom: 1rem;
+  padding: .2rem .8rem;
+  border: 1px solid #aaa;
   border-radius: 2px;
-  border: 1px solid #CCC;
-  color: #CCC;
-  font-size: 11px;
+  background: transparent;
+  color: #777;
   cursor: pointer;
-  padding: 3px 10px;
-  display: inline;
-  margin-bottom: 14px;
 }
 
 .feedback label {

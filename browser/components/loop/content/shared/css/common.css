@@ -224,6 +224,7 @@ p {
   background: #eee;
   padding: .2em 1em;
   margin-bottom: 1em;
+  border-bottom: 2px solid #E9E9E9;
 }
 
 .alert p.message {
@@ -232,8 +233,13 @@ p {
 }
 
 .alert.alert-error {
-  background: #f99;
-  border: 1px solid #f77;
+  display: flex;
+  align-content: center;
+  padding: 5px;
+  font-size: 10px;
+  justify-content: center;
+  color: #FFF;
+  background: repeating-linear-gradient(-45deg, #D74345, #D74345 10px, #D94B4D 10px, #D94B4D 20px) repeat scroll 0% 0% transparent;
 }
 
 .alert.alert-warning {

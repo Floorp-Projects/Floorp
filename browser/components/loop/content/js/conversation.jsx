@@ -151,7 +151,7 @@ loop.conversation = (function(OT, mozL10n) {
    *
    * Required options:
    * - {loop.shared.models.ConversationModel} conversation Conversation model.
-   * - {loop.shared.components.Notifier}      notifier     Notifier component.
+   * - {loop.shared.models.NotificationCollection} notifications
    *
    * @type {loop.shared.router.BaseConversationRouter}
    */
@@ -206,7 +206,7 @@ loop.conversation = (function(OT, mozL10n) {
           console.error("Failed to get the sessionData", err);
           // XXX Not the ideal response, but bug 1047410 will be replacing
           // this by better "call failed" UI.
-          this._notifier.errorL10n("cannot_start_call_session_not_ready");
+          this._notifications.errorL10n("cannot_start_call_session_not_ready");
           return;
         }
 
@@ -331,7 +331,7 @@ loop.conversation = (function(OT, mozL10n) {
     _handleSessionError: function() {
       // XXX Not the ideal response, but bug 1047410 will be replacing
       // this by better "call failed" UI.
-      this._notifier.errorL10n("cannot_start_call_session_not_ready");
+      this._notifications.errorL10n("cannot_start_call_session_not_ready");
     },
 
     /**
@@ -376,7 +376,7 @@ loop.conversation = (function(OT, mozL10n) {
       conversation: new loop.shared.models.ConversationModel(
         {},         // Model attributes
         {sdk: OT}), // Model dependencies
-      notifier: new sharedViews.NotificationListView({el: "#messages"})
+      notifications: new loop.shared.models.NotificationCollection()
     });
     Backbone.history.start();
   }

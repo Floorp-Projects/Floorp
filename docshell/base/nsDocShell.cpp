@@ -15,6 +15,8 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/ProfileTimelineMarkerBinding.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -88,6 +90,8 @@
 #include "nsDocShellEnumerator.h"
 #include "nsSHistory.h"
 #include "nsDocShellEditorData.h"
+#include "GeckoProfiler.h"
+#include "ProfilerMarkers.h"
 
 // Helper Classes
 #include "nsError.h"
@@ -1322,8 +1326,12 @@ nsDocShell::LoadURI(nsIURI * aURI,
     NS_PRECONDITION((aLoadFlags & 0xf) == 0, "Should not have these flags set");
     
     // Note: we allow loads to get through here even if mFiredUnloadEvent is
-    // true; that case will get handled in LoadInternal or LoadHistoryEntry.
-    if (IsPrintingOrPP()) {
+    // true; that case will get handled in LoadInternal or LoadHistoryEntry,
+    // so we pass false as the second parameter to IsNavigationAllowed.
+    // However, we don't allow the page to change location *in the middle of*
+    // firing beforeunload, so we do need to check if *beforeunload* is currently
+    // firing, so we call IsNavigationAllowed rather than just IsPrintingOrPP.
+    if (!IsNavigationAllowed(true, false)) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsCOMPtr<nsIURI> referrer;
@@ -2785,6 +2793,138 @@ nsDocShell::HistoryTransactionRemoved(int32_t aIndex)
     }
 
     return NS_OK;
+}
+
+unsigned long nsDocShell::gProfileTimelineRecordingsCount = 0;
+
+NS_IMETHODIMP
+nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
+{
+  bool currentValue;
+  GetRecordProfileTimelineMarkers(&currentValue);
+  if (currentValue != aValue) {
+    if (aValue) {
+      ++gProfileTimelineRecordingsCount;
+      mProfileTimelineStartTime = TimeStamp::Now();
+    } else {
+      --gProfileTimelineRecordingsCount;
+      mProfileTimelineStartTime = TimeStamp();
+      ClearProfileTimelineMarkers();
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetRecordProfileTimelineMarkers(bool* aValue)
+{
+  *aValue = !mProfileTimelineStartTime.IsNull();
+  return NS_OK;
+}
+
+nsresult
+nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
+                          JS::MutableHandle<JS::Value> aProfileTimelineMarkers)
+{
+  // Looping over all markers gathered so far at the docShell level, whenever a
+  // START marker is found, look for the corresponding END marker and build a
+  // {name,start,end} JS object.
+  // Paint markers are different because paint is handled at root docShell level
+  // in the information that a paint was done is then stored at each sub
+  // docShell level but we can only be sure that a paint did happen in a
+  // docShell if an Layer marker type was recorded too.
+
+  nsTArray<mozilla::dom::ProfileTimelineMarker> profileTimelineMarkers;
+
+  for (uint32_t i = 0; i < mProfileTimelineMarkers.Length(); ++i) {
+    ProfilerMarkerTracing* startPayload = static_cast<ProfilerMarkerTracing*>(
+      mProfileTimelineMarkers[i]->mPayload);
+    const char* startMarkerName = mProfileTimelineMarkers[i]->mName;
+
+    bool hasSeenPaintedLayer = false;
+
+    if (startPayload->GetMetaData() == TRACING_INTERVAL_START) {
+      // The assumption is that the devtools timeline flushes markers frequently
+      // enough for the amount of markers to always be small enough that the
+      // nested for loop isn't going to be a performance problem.
+      for (uint32_t j = i + 1; j < mProfileTimelineMarkers.Length(); ++j) {
+        ProfilerMarkerTracing* endPayload = static_cast<ProfilerMarkerTracing*>(
+          mProfileTimelineMarkers[j]->mPayload);
+        const char* endMarkerName = mProfileTimelineMarkers[j]->mName;
+
+        // Look for Layer markers to stream out paint markers
+        if (strcmp(endMarkerName, "Layer") == 0) {
+          hasSeenPaintedLayer = true;
+        }
+
+        bool isSameMarkerType = strcmp(startMarkerName, endMarkerName) == 0;
+        bool isValidType = strcmp(endMarkerName, "Paint") != 0 ||
+                           hasSeenPaintedLayer;
+
+        if (endPayload->GetMetaData() == TRACING_INTERVAL_END &&
+            isSameMarkerType && isValidType) {
+          mozilla::dom::ProfileTimelineMarker marker;
+          marker.mName = NS_ConvertUTF8toUTF16(startMarkerName);
+          marker.mStart = mProfileTimelineMarkers[i]->mTime;
+          marker.mEnd = mProfileTimelineMarkers[j]->mTime;
+          profileTimelineMarkers.AppendElement(marker);
+
+          break;
+        }
+      }
+    }
+  }
+
+  ToJSValue(aCx, profileTimelineMarkers, aProfileTimelineMarkers);
+
+  ClearProfileTimelineMarkers();
+
+  return NS_OK;
+}
+
+float
+nsDocShell::GetProfileTimelineDelta()
+{
+  return (TimeStamp::Now() - mProfileTimelineStartTime).ToMilliseconds();
+}
+
+void
+nsDocShell::AddProfileTimelineMarker(const char* aName,
+                                     TracingMetadata aMetaData)
+{
+  if (!mProfileTimelineStartTime.IsNull()) {
+    float delta = GetProfileTimelineDelta();
+    ProfilerMarkerTracing* payload = new ProfilerMarkerTracing("Timeline",
+                                                               aMetaData);
+    mProfileTimelineMarkers.AppendElement(
+      new InternalProfileTimelineMarker(aName, payload, delta));
+  }
+}
+
+void
+nsDocShell::AddProfileTimelineMarker(const char* aName,
+                                     ProfilerBacktrace* aCause,
+                                     TracingMetadata aMetaData)
+{
+  if (!mProfileTimelineStartTime.IsNull()) {
+    float delta = GetProfileTimelineDelta();
+    ProfilerMarkerTracing* payload = new ProfilerMarkerTracing("Timeline",
+                                                               aMetaData,
+                                                               aCause);
+    mProfileTimelineMarkers.AppendElement(
+      new InternalProfileTimelineMarker(aName, payload, delta));
+  }
+}
+
+void
+nsDocShell::ClearProfileTimelineMarkers()
+{
+  for (uint32_t i = 0; i < mProfileTimelineMarkers.Length(); ++i) {
+    delete mProfileTimelineMarkers[i]->mPayload;
+    mProfileTimelineMarkers[i]->mPayload = nullptr;
+  }
+  mProfileTimelineMarkers.Clear();
 }
 
 nsIDOMStorageManager*
@@ -4279,9 +4419,11 @@ nsDocShell::IsPrintingOrPP(bool aDisplayErrorDialog)
 }
 
 bool
-nsDocShell::IsNavigationAllowed(bool aDisplayPrintErrorDialog)
+nsDocShell::IsNavigationAllowed(bool aDisplayPrintErrorDialog,
+                                bool aCheckIfUnloadFired)
 {
-  bool isAllowed = !IsPrintingOrPP(aDisplayPrintErrorDialog) && !mFiredUnloadEvent;
+  bool isAllowed = !IsPrintingOrPP(aDisplayPrintErrorDialog) &&
+                   (!aCheckIfUnloadFired || !mFiredUnloadEvent);
   if (!isAllowed) {
     return false;
   }
@@ -5353,6 +5495,9 @@ nsDocShell::Destroy()
     }
     
     mIsBeingDestroyed = true;
+
+    // Make sure we don't record profile timeline markers anymore
+    SetRecordProfileTimelineMarkers(false);
 
     // Remove our pref observers
     if (mObserveErrorPages) {

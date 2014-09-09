@@ -14,6 +14,7 @@ exports.items = [
     buttonId: "command-button-splitconsole",
     buttonClass: "command-button command-button-invertable",
     tooltipText: gcli.lookup("splitconsoleTooltip"),
+    isRemoteSafe: true,
     state: {
       isChecked: function(target) {
         let toolbox = gDevTools.getToolbox(target);
