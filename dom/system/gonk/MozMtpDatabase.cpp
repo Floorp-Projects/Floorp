@@ -363,13 +363,14 @@ MozMtpDatabase::CreateEntryForFile(const nsACString& aPath, DeviceStorageFile* a
     if (slash == kNotFound) {
       component.Rebind(aPath, 0, aPath.Length());
     } else {
-      component.Rebind(aPath, slash, aPath.Length() - slash);
+      component.Rebind(aPath, 0 , slash);
     }
     if (doFind) {
       MtpObjectHandle entryHandle = FindEntryByPath(component);
       if (entryHandle != 0) {
         // We found an entry.
         parent = entryHandle;
+        offset = slash + 1 ;
         continue;
       }
     }
@@ -408,6 +409,7 @@ MozMtpDatabase::CreateEntryForFile(const nsACString& aPath, DeviceStorageFile* a
 
     AddEntry(entry);
     parent = entry->mHandle;
+    offset = slash + 1;
   } while (slash != kNotFound);
 
   return parent; // parent will be entry->mHandle
