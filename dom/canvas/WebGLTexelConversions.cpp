@@ -325,15 +325,6 @@ public:
 
 } // end anonymous namespace
 
-static bool
-IsNoNeedForPremultForFormats(WebGLTexelFormat srcFormat,
-                             WebGLTexelFormat dstFormat)
-{
-    return !HasAlpha(srcFormat) ||
-           !HasColor(srcFormat) ||
-           !HasColor(dstFormat);
-}
-
 void
 WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t dstStride,
                            const uint8_t* src, uint8_t *dst,
@@ -344,11 +335,13 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
     if (width <= 0 || height <= 0)
         return;
 
-    const bool noNeedForPremultFromFormats = IsNoNeedForPremultForFormats(srcFormat,
-                                                                          dstFormat);
+    const bool FormatsRequireNoPremultiplicationOp =
+        !HasAlpha(srcFormat) ||
+        !HasColor(srcFormat) ||
+        !HasColor(dstFormat);
 
     if (srcFormat == dstFormat &&
-        (noNeedForPremultFromFormats || srcPremultiplied == dstPremultiplied))
+        (FormatsRequireNoPremultiplicationOp || srcPremultiplied == dstPremultiplied))
     {
         // fast exit path: we just have to memcpy all the rows.
         //
@@ -388,7 +381,7 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
     WebGLImageConverter converter(width, height, src, dstStart, srcStride, signedDstStride);
 
     const WebGLTexelPremultiplicationOp premultiplicationOp
-        = noNeedForPremultFromFormats             ? WebGLTexelPremultiplicationOp::None
+        = FormatsRequireNoPremultiplicationOp     ? WebGLTexelPremultiplicationOp::None
         : (!srcPremultiplied && dstPremultiplied) ? WebGLTexelPremultiplicationOp::Premultiply
         : (srcPremultiplied && !dstPremultiplied) ? WebGLTexelPremultiplicationOp::Unpremultiply
                                                   : WebGLTexelPremultiplicationOp::None;
