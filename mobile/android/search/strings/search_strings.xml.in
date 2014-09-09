@@ -3,6 +3,9 @@
     <string name="search_app_name">&search_app_name;</string>
     <string name="search_for_something">&search_for_something;</string>
 
+    <string name="search_empty_title">&search_empty_title;</string>
+    <string name="search_empty_message">&search_empty_message;</string>
+
     <string name="search_pref_title">&search_pref_title;</string>
     <string name="search_pref_button_content_description">&search_pref_button_content_description;</string>
 

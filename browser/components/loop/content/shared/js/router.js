@@ -23,25 +23,25 @@ loop.shared.router = (function() {
     _activeView: undefined,
 
     /**
-     * Notifications dispatcher.
-     * @type {loop.shared.views.NotificationListView}
+     * Notifications collection.
+     * @type {loop.shared.models.NotificationCollection}
      */
-    _notifier: undefined,
+    _notifications: undefined,
 
     /**
      * Constructor.
      *
      * Required options:
-     * - {loop.shared.views.NotificationListView} notifier Notifier view.
+     * - {loop.shared.models.NotificationCollection} notifications
      *
      * @param  {Object} options Options object.
      */
     constructor: function(options) {
       options = options || {};
-      if (!options.notifier) {
-        throw new Error("missing required notifier");
+      if (!options.notifications) {
+        throw new Error("missing required notifications");
       }
-      this._notifier = options.notifier;
+      this._notifications = options.notifications;
 
       Backbone.Router.apply(this, arguments);
     },
@@ -144,7 +144,7 @@ loop.shared.router = (function() {
      */
     _notifyError: function(error) {
       console.log(error);
-      this._notifier.errorL10n("connection_error_see_console_notification");
+      this._notifications.errorL10n("connection_error_see_console_notification");
       this.endCall();
     },
 
@@ -169,7 +169,7 @@ loop.shared.router = (function() {
      * @param {Object} event
      */
     _onPeerHungup: function() {
-      this._notifier.warnL10n("peer_ended_conversation2");
+      this._notifications.warnL10n("peer_ended_conversation2");
       this.endCall();
     },
 
@@ -177,7 +177,7 @@ loop.shared.router = (function() {
      * Network disconnected. Notifies the user and ends the call.
      */
     _onNetworkDisconnected: function() {
-      this._notifier.warnL10n("network_disconnected");
+      this._notifications.warnL10n("network_disconnected");
       this.endCall();
     }
   });

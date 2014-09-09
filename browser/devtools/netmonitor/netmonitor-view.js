@@ -1212,9 +1212,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.updateMenuView(template, 'method', aMethod);
     this.updateMenuView(template, 'url', aUrl);
 
-    let waterfall = $(".requests-menu-waterfall", template);
-    waterfall.style.backgroundImage = this._cachedWaterfallBackground;
-
     // Flatten the DOM by removing one redundant box (the template container).
     for (let node of template.childNodes) {
       fragment.appendChild(node.cloneNode(true));
@@ -1378,7 +1375,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     // Redraw and set the canvas background for each waterfall view.
     this._showWaterfallDivisionLabels(scale);
     this._drawWaterfallBackground(scale);
-    this._flushWaterfallBackgrounds();
 
     // Apply CSS transforms to each waterfall in this container totalTime
     // accurately translate and resize as needed.
@@ -1497,8 +1493,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     let pixelArray = imageData.data;
 
     let buf = new ArrayBuffer(pixelArray.length);
-    let buf8 = new Uint8ClampedArray(buf);
-    let data32 = new Uint32Array(buf);
+    let view8bit = new Uint8ClampedArray(buf);
+    let view32bit = new Uint32Array(buf);
 
     // Build new millisecond tick lines...
     let timingStep = REQUESTS_WATERFALL_BACKGROUND_TICKS_MULTIPLE;
@@ -1520,26 +1516,16 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         let increment = scaledStep * Math.pow(2, i);
         for (let x = 0; x < canvasWidth; x += increment) {
           let position = (window.isRTL ? canvasWidth - x : x) | 0;
-          data32[position] = (alphaComponent << 24) | (b << 16) | (g << 8) | r;
+          view32bit[position] = (alphaComponent << 24) | (b << 16) | (g << 8) | r;
         }
         alphaComponent += REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD;
       }
     }
 
     // Flush the image data and cache the waterfall background.
-    pixelArray.set(buf8);
+    pixelArray.set(view8bit);
     ctx.putImageData(imageData, 0, 0);
-    this._cachedWaterfallBackground = "url(" + canvas.toDataURL() + ")";
-  },
-
-  /**
-   * Reapplies the current waterfall background on all request items.
-   */
-  _flushWaterfallBackgrounds: function() {
-    for (let { target } of this) {
-      let waterfallNode = $(".requests-menu-waterfall", target);
-      waterfallNode.style.backgroundImage = this._cachedWaterfallBackground;
-    }
+    document.mozSetImageElement("waterfall-background", canvas);
   },
 
   /**
@@ -1762,7 +1748,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   _canvas: null,
   _ctx: null,
   _cachedWaterfallWidth: 0,
-  _cachedWaterfallBackground: "",
   _firstRequestStartedMillis: -1,
   _lastRequestEndedMillis: -1,
   _updateQueue: [],

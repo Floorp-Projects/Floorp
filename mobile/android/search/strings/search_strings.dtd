@@ -5,6 +5,9 @@
 <!ENTITY search_app_name '&brandShortName; Search'>
 <!ENTITY search_for_something 'Search for something'>
 
+<!ENTITY search_empty_title '&brandShortName; Search'>
+<!ENTITY search_empty_message 'Quickly search for anything you want'>
+
 <!--  Localization note (search_plus_content_description): This is the content description
       for the "+" icon that appears at the end of search suggestions. -->
 <!ENTITY search_plus_content_description 'Add to search bar'>

@@ -48,6 +48,8 @@
 #include "imgIContainer.h"
 #include "nsIFrameRequestCallback.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "nsDocShell.h"
+#include "nsISimpleEnumerator.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -1045,6 +1047,52 @@ struct DocumentFrameCallbacks {
   nsIDocument::FrameRequestCallbackList mCallbacks;
 };
 
+static nsDocShell* GetDocShell(nsPresContext* aPresContext)
+{
+  return static_cast<nsDocShell*>(aPresContext->GetDocShell());
+}
+
+/**
+ * Return a list of all the child docShells in a given root docShell that are
+ * visible and are recording markers for the profilingTimeline
+ */
+static void GetProfileTimelineSubDocShells(nsDocShell* aRootDocShell,
+                                           nsTArray<nsDocShell*>& aShells)
+{
+  if (!aRootDocShell || nsDocShell::gProfileTimelineRecordingsCount == 0) {
+    return;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  nsresult rv = aRootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeAll,
+    nsIDocShell::ENUMERATE_BACKWARDS, getter_AddRefs(enumerator));
+
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocShell> curItem;
+  bool hasMore = false;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> curSupports;
+    enumerator->GetNext(getter_AddRefs(curSupports));
+    curItem = do_QueryInterface(curSupports);
+
+    if (!curItem || !curItem->GetRecordProfileTimelineMarkers()) {
+      continue;
+    }
+
+    nsDocShell* shell = static_cast<nsDocShell*>(curItem.get());
+    bool isVisible = false;
+    shell->GetVisibility(&isVisible);
+    if (!isVisible) {
+      continue;
+    }
+
+    aShells.AppendElement(shell);
+  };
+}
+
 void
 nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 {
@@ -1178,6 +1226,12 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           if (!mStyleFlushObservers.Contains(shell))
             continue;
 
+          nsRefPtr<nsDocShell> docShell = GetDocShell(shell->GetPresContext());
+          if (docShell) {
+            docShell->AddProfileTimelineMarker("Styles", mStyleCause,
+                                               TRACING_INTERVAL_START);
+          }
+
           if (!tracingStyleFlush) {
             tracingStyleFlush = true;
             profiler_tracing("Paint", "Styles", mStyleCause, TRACING_INTERVAL_START);
@@ -1189,6 +1243,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           shell->GetPresContext()->RestyleManager()->mObservingRefreshDriver = false;
           shell->FlushPendingNotifications(ChangesToFlush(Flush_Style, false));
           NS_RELEASE(shell);
+
+          if (docShell) {
+            docShell->AddProfileTimelineMarker("Styles", TRACING_INTERVAL_END);
+          }
         }
 
         if (tracingStyleFlush) {
@@ -1264,6 +1322,14 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   mPresShellsToInvalidateIfHidden.Clear();
 
   if (mViewManagerFlushIsPending) {
+    nsTArray<nsDocShell*> profilingDocShells;
+    GetProfileTimelineSubDocShells(GetDocShell(mPresContext), profilingDocShells);
+    for (uint32_t i = 0; i < profilingDocShells.Length(); i ++) {
+      // For the sake of the profile timeline's simplicity, this is flagged as
+      // paint even if it includes creating display lists
+      profilingDocShells[i]->AddProfileTimelineMarker("Paint",
+                                                      TRACING_INTERVAL_START);
+    }
     profiler_tracing("Paint", "DisplayList", TRACING_INTERVAL_START);
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -1279,6 +1345,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       printf_stderr("Ending ProcessPendingUpdates\n");
     }
 #endif
+    for (uint32_t i = 0; i < profilingDocShells.Length(); i ++) {
+      profilingDocShells[i]->AddProfileTimelineMarker("Paint",
+                                                      TRACING_INTERVAL_END);
+    }
     profiler_tracing("Paint", "DisplayList", TRACING_INTERVAL_END);
   }
 

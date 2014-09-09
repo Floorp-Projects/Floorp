@@ -11,18 +11,12 @@ describe("loop.conversation", function() {
 
   var ConversationRouter = loop.conversation.ConversationRouter,
       sandbox,
-      notifier;
+      notifications;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     sandbox.useFakeTimers();
-    notifier = {
-      notify: sandbox.spy(),
-      warn: sandbox.spy(),
-      warnL10n: sandbox.spy(),
-      error: sandbox.spy(),
-      errorL10n: sandbox.spy()
-    };
+    notifications = new loop.shared.models.NotificationCollection();
 
     navigator.mozLoop = {
       doNotDisturb: true,
@@ -72,8 +66,6 @@ describe("loop.conversation", function() {
       sandbox.stub(loop.conversation.ConversationRouter.prototype,
         "initialize");
       sandbox.stub(loop.shared.models.ConversationModel.prototype,
-        "initialize");
-      sandbox.stub(loop.shared.views.NotificationListView.prototype,
         "initialize");
 
       sandbox.stub(Backbone.history, "start");
@@ -132,7 +124,7 @@ describe("loop.conversation", function() {
         router = new ConversationRouter({
           client: client,
           conversation: conversation,
-          notifier: notifier
+          notifications: notifications
         });
         sandbox.stub(router, "loadView");
         sandbox.stub(conversation, "incoming");
@@ -181,11 +173,12 @@ describe("loop.conversation", function() {
 
         it("should display an error if requestCallsInfo returns an error",
           function(){
+            sandbox.stub(notifications, "errorL10n");
             client.requestCallsInfo.callsArgWith(1, "failed");
 
             router.incoming(42);
 
-            sinon.assert.calledOnce(notifier.errorL10n);
+            sinon.assert.calledOnce(notifications.errorL10n);
           });
 
         describe("requestCallsInfo successful", function() {
@@ -297,12 +290,13 @@ describe("loop.conversation", function() {
             });
 
             it("should display an error", function(done) {
+              sandbox.stub(notifications, "errorL10n");
               router._setupWebSocketAndCallView();
 
               promise.then(function() {
               }, function () {
-                sinon.assert.calledOnce(router._notifier.errorL10n);
-                sinon.assert.calledWithExactly(router._notifier.errorL10n,
+                sinon.assert.calledOnce(router._notifications.errorL10n);
+                sinon.assert.calledWithExactly(router._notifications.errorL10n,
                   "cannot_start_call_session_not_ready");
                 done();
               });
@@ -374,10 +368,11 @@ describe("loop.conversation", function() {
 
         it("should notify the user when session is not set",
           function() {
+            sandbox.stub(notifications, "errorL10n");
             router.conversation();
 
-            sinon.assert.calledOnce(router._notifier.errorL10n);
-            sinon.assert.calledWithExactly(router._notifier.errorL10n,
+            sinon.assert.calledOnce(router._notifications.errorL10n);
+            sinon.assert.calledWithExactly(router._notifications.errorL10n,
               "cannot_start_call_session_not_ready");
         });
       });
@@ -517,7 +512,7 @@ describe("loop.conversation", function() {
         router = new loop.conversation.ConversationRouter({
           client: client,
           conversation: conversation,
-          notifier: notifier
+          notifications: notifications
         });
       });
 
