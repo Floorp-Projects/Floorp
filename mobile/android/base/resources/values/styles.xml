@@ -62,6 +62,12 @@
         <item name="android:listSelector">@drawable/action_bar_button</item>
     </style>
 
+    <style name="Widget.Home.HistoryListView">
+        <item name="android:paddingLeft">32dp</item>
+        <item name="android:paddingRight">32dp</item>
+        <item name="android:scrollbarStyle">outsideOverlay</item>
+    </style>
+
     <style name="Widget.ListItem">
         <item name="android:minHeight">?android:attr/listPreferredItemHeight</item>
         <item name="android:textAppearance">?android:attr/textAppearanceLargeInverse</item>

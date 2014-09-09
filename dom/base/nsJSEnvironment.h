@@ -14,7 +14,9 @@
 #include "nsIXPConnect.h"
 #include "nsIArray.h"
 #include "mozilla/Attributes.h"
+#include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
+#include "xpcpublic.h"
 
 class nsICycleCollectorListener;
 class nsIXPConnectJSObjectHolder;
@@ -189,30 +191,18 @@ class AsyncErrorReporter : public nsRunnable
 {
 public:
   // aWindow may be null if this error report is not associated with a window
-  AsyncErrorReporter(JSRuntime* aRuntime,
-                     JSErrorReport* aErrorReport,
-                     const char* aFallbackMessage,
-                     bool aIsChromeError, // To determine category
-                     nsPIDOMWindow* aWindow);
+  AsyncErrorReporter(JSRuntime* aRuntime, xpc::ErrorReport* aReport)
+    : mReport(aReport)
+  {}
 
   NS_IMETHOD Run()
   {
-    ReportError();
+    mReport->LogToConsole();
     return NS_OK;
   }
 
 protected:
-  // Do the actual error reporting
-  void ReportError();
-
-  nsString mErrorMsg;
-  nsString mFileName;
-  nsString mSourceLine;
-  nsCString mCategory;
-  uint32_t mLineNumber;
-  uint32_t mColumn;
-  uint32_t mFlags;
-  uint64_t mInnerWindowID;
+  nsRefPtr<xpc::ErrorReport> mReport;
 };
 
 } // namespace dom
@@ -237,9 +227,6 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSArgArray, NS_IJSARGARRAY_IID)
-
-/* prototypes */
-void NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 
 JSObject* NS_DOMReadStructuredClone(JSContext* cx,
                                     JSStructuredCloneReader* reader, uint32_t tag,

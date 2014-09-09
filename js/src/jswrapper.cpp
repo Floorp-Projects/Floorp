@@ -687,7 +687,7 @@ SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper,
     if (desc.getter() || desc.setter()) {
         JSString *str = IdToString(cx, id);
         AutoStableStringChars chars(cx);
-        const jschar *prop = nullptr;
+        const char16_t *prop = nullptr;
         if (str->ensureFlat(cx) && chars.initTwoByte(cx, str))
             prop = chars.twoByteChars();
         JS_ReportErrorNumberUC(cx, js_GetErrorMessage, nullptr,

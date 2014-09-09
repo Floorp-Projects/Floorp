@@ -319,11 +319,11 @@ class RegExpObject : public JSObject
      * execution, as opposed to during something like XDR.
      */
     static RegExpObject *
-    create(ExclusiveContext *cx, RegExpStatics *res, const jschar *chars, size_t length,
+    create(ExclusiveContext *cx, RegExpStatics *res, const char16_t *chars, size_t length,
            RegExpFlag flags, frontend::TokenStream *ts, LifoAlloc &alloc);
 
     static RegExpObject *
-    createNoStatics(ExclusiveContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
+    createNoStatics(ExclusiveContext *cx, const char16_t *chars, size_t length, RegExpFlag flags,
                     frontend::TokenStream *ts, LifoAlloc &alloc);
 
     static RegExpObject *

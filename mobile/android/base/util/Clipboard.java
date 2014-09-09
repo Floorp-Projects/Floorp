@@ -17,7 +17,7 @@ public final class Clipboard {
     // Volatile but not synchronized: we don't care about the race condition in
     // init, because both app contexts will be the same, but we do care about a
     // thread having a stale null value of mContext.
-    /* inner-access */ volatile static Context mContext;
+    volatile static Context mContext;
     private final static String LOGTAG = "GeckoClipboard";
     private final static SynchronousQueue<String> sClipboardQueue = new SynchronousQueue<String>();
 
@@ -116,7 +116,7 @@ public final class Clipboard {
      * present on the thread.
      */
     @SuppressWarnings("deprecation")
-    /* inner-access */ static String getClipboardTextImpl() {
+    static String getClipboardTextImpl() {
         if (Versions.feature11Plus) {
             android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
             if (cm.hasPrimaryClip()) {

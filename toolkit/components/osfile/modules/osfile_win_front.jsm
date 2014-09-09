@@ -1070,7 +1070,7 @@
        //
        let buffer_size = 4096;
        while (true) {
-         let array = new (ctypes.ArrayType(ctypes.jschar, buffer_size))();
+         let array = new (ctypes.ArrayType(ctypes.char16_t, buffer_size))();
          let expected_size = throw_on_zero("getCurrentDirectory",
            WinFile.GetCurrentDirectory(buffer_size, array)
          );

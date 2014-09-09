@@ -36,7 +36,8 @@ function afterLoad() {
              .getService(SpecialPowers.Ci.nsIProperties)
              .get("TmpD", SpecialPowers.Ci.nsILocalFile);
     file.append("345339_test.file");
-    file.createUnique(SpecialPowers.Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+    // Only the file's path is used, so it doesn't need to be created.
+    // See also bug 1058977.
     filePath = file.path;
 
     SpecialPowers.wrap(iframeDoc).getElementById("file").value = filePath;
