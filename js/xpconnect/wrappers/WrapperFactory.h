@@ -31,10 +31,6 @@ class WrapperFactory {
         return HasWrapperFlag(wrapper, WAIVE_XRAY_WRAPPER_FLAG);
     }
 
-    static bool IsSecurityWrapper(JSObject *obj) {
-        return !js::CheckedUnwrap(obj);
-    }
-
     static bool IsCOW(JSObject *wrapper);
 
     static JSObject *GetXrayWaiver(JS::HandleObject obj);
