@@ -1254,6 +1254,36 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   bool isGlobal;
   const NativePropertyHooks *nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type, isGlobal);
+  ResolveOwnProperty resolveOwnProperty =
+    nativePropertyHooks->mResolveOwnProperty;
+
+  if (type == eNamedPropertiesObject) {
+    // None of these should be cached on the holder, since they're dynamic.
+    return resolveOwnProperty(cx, wrapper, obj, id, desc);
+  }
+
+  // Check for unforgeable properties first.
+  if (type == eInstance) {
+    const NativePropertiesHolder& nativeProperties =
+      nativePropertyHooks->mNativeProperties;
+    if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
+                                        nativeProperties.regular)) {
+      return false;
+    }
+
+    if (desc.object()) {
+      return true;
+    }
+
+    if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
+                                        nativeProperties.chromeOnly)) {
+      return false;
+    }
+
+    if (desc.object()) {
+      return true;
+    }
+  }
 
   if (type != eInstance || (isGlobal && GlobalPropertiesAreOwn())) {
     // For prototype objects and interface objects, just return their
@@ -1264,36 +1294,27 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
       return false;
     }
 
-    // For non-global non-instance Xrays there are no other properties, so
-    // return here for them whether we resolved the property or not.
-    if (!isGlobal || desc.object()) {
-      cacheOnHolder = true;
-      return true;
-    }
-  }
-
-  {
-    // Check for unforgeable properties before doing mResolveOwnProperty weirdness
-    const NativePropertiesHolder& nativeProperties =
-      nativePropertyHooks->mNativeProperties;
-    if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
-                                        nativeProperties.regular)) {
-      return false;
-    }
-    if (desc.object()) {
-      return true;
-    }
-    if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
-                                        nativeProperties.chromeOnly)) {
-      return false;
-    }
     if (desc.object()) {
       return true;
     }
   }
 
-  return !nativePropertyHooks->mResolveOwnProperty ||
-         nativePropertyHooks->mResolveOwnProperty(cx, wrapper, obj, id, desc);
+  if (type == eInstance) {
+    if (resolveOwnProperty) {
+      if (!resolveOwnProperty(cx, wrapper, obj, id, desc)) {
+        return false;
+      }
+
+      if (desc.object()) {
+        // None of these should be cached on the holder, since they're dynamic.
+        cacheOnHolder = false;
+
+        return true;
+      }
+    }
+  }
+
+  return true;
 }
 
 /* static */ bool
@@ -1304,6 +1325,8 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           JS::MutableHandle<JSPropertyDescriptor> desc,
                           bool& cacheOnHolder)
 {
+  MOZ_ASSERT(type != eNamedPropertiesObject);
+
   if (type == eInterface) {
     if (IdEquals(id, "prototype")) {
       return nativePropertyHooks->mPrototypeID == prototypes::id::_ID_Count ||
@@ -1369,6 +1392,10 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   bool isGlobal;
   const NativePropertyHooks* nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type, isGlobal);
+
+  if (type == eNamedPropertiesObject) {
+    return true;
+  }
 
   if (type == eInstance) {
     // Global objects return their interfaces' properties from
@@ -1459,6 +1486,8 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         DOMObjectType type, bool isGlobal,
                         const NativeProperties* nativeProperties)
 {
+  MOZ_ASSERT(type != eNamedPropertiesObject);
+
   if (type == eInstance) {
     ENUMERATE_IF_DEFINED(unforgeableMethod);
     ENUMERATE_IF_DEFINED(unforgeableAttribute);
@@ -1499,6 +1528,8 @@ XrayEnumerateNativeProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                               JS::Handle<JSObject*> obj, unsigned flags,
                               JS::AutoIdVector& props)
 {
+  MOZ_ASSERT(type != eNamedPropertiesObject);
+
   if (type == eInterface &&
       nativePropertyHooks->mPrototypeID != prototypes::id::_ID_Count &&
       !AddStringToIDVector(cx, props, "prototype")) {
@@ -1540,11 +1571,16 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
   bool isGlobal;
   const NativePropertyHooks* nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type, isGlobal);
+  EnumerateOwnProperties enumerateOwnProperties =
+    nativePropertyHooks->mEnumerateOwnProperties;
+
+  if (type == eNamedPropertiesObject) {
+    return enumerateOwnProperties(cx, wrapper, obj, props);
+  }
 
   if (type == eInstance) {
-    if (nativePropertyHooks->mEnumerateOwnProperties &&
-        !nativePropertyHooks->mEnumerateOwnProperties(cx, wrapper, obj,
-                                                      props)) {
+    if (enumerateOwnProperties &&
+        !enumerateOwnProperties(cx, wrapper, obj, props)) {
       return false;
     }
 

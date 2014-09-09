@@ -2370,6 +2370,43 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         JS::Handle<JSObject*> obj,
                         unsigned flags, JS::AutoIdVector& props);
 
+/**
+ * Returns the prototype to use for an Xray for a DOM object, wrapped in cx's
+ * compartment. This always returns the prototype that would be used for a DOM
+ * object if we ignore any changes that might have been done to the prototype
+ * chain by JS, the XBL code or plugins.
+ *
+ * cx should be in the Xray's compartment.
+ * obj is the target object of the Xray, a binding's instance object or an
+ *     interface or interface prototype object.
+ */
+inline bool
+XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
+                   JS::MutableHandle<JSObject*> protop)
+{
+  JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
+  {
+    JSAutoCompartment ac(cx, global);
+    const DOMJSClass* domClass = GetDOMClass(obj);
+    if (domClass) {
+      ProtoHandleGetter protoGetter = domClass->mGetProto;
+      if (protoGetter) {
+        protop.set(protoGetter(cx, global));
+      } else {
+        protop.set(JS_GetObjectPrototype(cx, global));
+      }
+    } else {
+      const js::Class* clasp = js::GetObjectClass(obj);
+      MOZ_ASSERT(IsDOMIfaceAndProtoClass(clasp));
+      ProtoGetter protoGetter =
+        DOMIfaceAndProtoJSClass::FromJSClass(clasp)->mGetParentProto;
+      protop.set(protoGetter(cx, global));
+    }
+  }
+
+  return JS_WrapObject(cx, protop);
+}
+
 extern NativePropertyHooks sWorkerNativePropertyHooks;
 
 // We use one constructor JSNative to represent all DOM interface objects (so
@@ -2839,7 +2876,7 @@ struct CreateGlobalOptions<nsGlobalWindow>
 nsresult
 RegisterDOMNames();
 
-template <class T, ProtoGetter GetProto>
+template <class T, ProtoHandleGetter GetProto>
 bool
 CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
              const JSClass* aClass, JS::CompartmentOptions& aOptions,
@@ -3024,6 +3061,13 @@ StrongOrRawPtr(T* aPtr)
 template<class T, template<typename> class SmartPtr, class S>
 inline void
 StrongOrRawPtr(SmartPtr<S>&& aPtr) MOZ_DELETE;
+
+inline
+JSObject*
+GetErrorPrototype(JSContext* aCx, JS::Handle<JSObject*> aForObj)
+{
+  return JS_GetErrorPrototype(aCx);
+}
 
 } // namespace dom
 } // namespace mozilla
