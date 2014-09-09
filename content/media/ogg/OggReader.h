@@ -268,6 +268,13 @@ private:
   // various SkeletonState functions.
   void BuildSerialList(nsTArray<uint32_t>& aTracks);
 
+  // Setup target bitstreams for decoding.
+  void SetupTargetTheora(TheoraState* aTheoraState);
+  void SetupTargetVorbis(VorbisState* aVorbisState);
+  void SetupTargetOpus(OpusState* aOpusState);
+  void SetupTargetSkeleton(SkeletonState* aSkeletonState);
+  void SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials);
+
   OggCodecStore mCodecStore;
 
   // Decode state of the Theora bitstream we're decoding, if we have video.

@@ -29,12 +29,17 @@ function appFrameScript() {
   content.document.body.appendChild(textarea);
 
   textarea.onfocus = function() {
-    textarea.parentNode.removeChild(textarea);
-    sendAsyncMessage('test:InputMethod:finished', {});
+    content.setTimeout(function() {
+      textarea.parentNode.removeChild(textarea);
+      sendAsyncMessage('test:InputMethod:finished', {});
+    }, 10);
   };
 
   content.setTimeout(function() {
-    textarea.focus();
+    content.setTimeout(function() {
+      textarea.focus();
+    }, 10);
+
     input.parentNode.removeChild(input);
   }, 0);
 }

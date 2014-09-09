@@ -46,7 +46,7 @@ public class MatrixBlobCursor extends AbstractCursor {
 
     private int rowCount;
 
-    /* inner-access */ Object[] data;
+    Object[] data;
 
     /**
      * Constructs a new cursor with the given initial capacity.

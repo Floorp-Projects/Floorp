@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Frame.prototype.script for eval frames.
 
 var g = newGlobal();

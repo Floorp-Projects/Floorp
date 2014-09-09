@@ -225,7 +225,7 @@ ComparePolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
             replace = MUnbox::New(alloc, in, MIRType_String, MUnbox::Infallible);
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unknown compare specialization");
+            MOZ_CRASH("Unknown compare specialization");
         }
 
         def->block()->insertBefore(def, replace);
@@ -726,7 +726,7 @@ StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins,
         value = boxAt(alloc, ins, value);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected type");
+        MOZ_CRASH("Unexpected type");
     }
 
     if (value != curValue) {
@@ -769,7 +769,7 @@ StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins,
         }
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid array type");
+        MOZ_CRASH("Invalid array type");
     }
 
     if (value != curValue)

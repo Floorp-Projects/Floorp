@@ -39,14 +39,6 @@ NSSTest::SetUpTestCase()
   }
 }
 
-NSSTest::NSSTest()
-  : arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE))
-{
-  if (!arena) {
-    abort();
-  }
-}
-
 // This assumes that time/time_t are POSIX-compliant in that time() returns
 // the number of seconds since the Unix epoch.
 const std::time_t now(time(nullptr));

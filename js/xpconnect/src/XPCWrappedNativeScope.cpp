@@ -120,9 +120,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
     mUseContentXBLScope = mAllowContentXBLScope;
     if (mUseContentXBLScope) {
       const js::Class *clasp = js::GetObjectClass(mGlobalJSObject);
-      mUseContentXBLScope = !strcmp(clasp->name, "Window") ||
-                            !strcmp(clasp->name, "ChromeWindow") ||
-                            !strcmp(clasp->name, "ModalContentWindow");
+      mUseContentXBLScope = !strcmp(clasp->name, "Window");
     }
     if (mUseContentXBLScope) {
       mUseContentXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);

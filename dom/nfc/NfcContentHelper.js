@@ -104,9 +104,9 @@ NfcContentHelper.prototype = {
       let record = records[i];
       encodedRecords.push({
         tnf: record.tnf,
-        type: record.type,
-        id: record.id,
-        payload: record.payload,
+        type: record.type || undefined,
+        id: record.id || undefined,
+        payload: record.payload || undefined,
       });
     }
     return encodedRecords;
@@ -365,13 +365,11 @@ NfcContentHelper.prototype = {
   fireRequestSuccess: function fireRequestSuccess(requestId, result) {
     let request = this.takeRequest(requestId);
     if (!request) {
-      debug("not firing success for id: " + requestId +
-            ", result: " + JSON.stringify(result));
+      debug("not firing success for id: " + requestId);
       return;
     }
 
-    debug("fire request success, id: " + requestId +
-          ", result: " + JSON.stringify(result));
+    debug("fire request success, id: " + requestId);
     Services.DOMRequest.fireSuccess(request, result);
   },
 
@@ -389,7 +387,7 @@ NfcContentHelper.prototype = {
   },
 
   receiveMessage: function receiveMessage(message) {
-    debug("Message received: " + JSON.stringify(message));
+    DEBUG && debug("Message received: " + JSON.stringify(message));
     let result = message.json;
 
     switch (message.name) {
@@ -445,10 +443,10 @@ NfcContentHelper.prototype = {
     let records = result.records;
     for (let i = 0; i < records.length; i++) {
       let record = records[i];
-      ndefMsg.push(new requester.MozNDEFRecord(record.tnf,
-                                               record.type,
-                                               record.id,
-                                               record.payload));
+      ndefMsg.push(new requester.MozNDEFRecord({tnf: record.tnf,
+                                                type: record.type,
+                                                id: record.id,
+                                                payload: record.payload}));
     }
     this.fireRequestSuccess(requestId, ndefMsg);
   },

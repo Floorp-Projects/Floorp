@@ -75,7 +75,7 @@ public class InstallHelper implements NativeEventListener {
         }
     }
 
-    /* inner-access */ void install(String profileName, JSONObject message) throws IOException {
+    void install(String profileName, JSONObject message) throws IOException {
         if (message == null) {
             message = new JSONObject();
         }

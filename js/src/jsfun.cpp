@@ -118,8 +118,11 @@ ThrowTypeErrorBehavior(JSContext *cx)
 static bool
 ArgumentsRestrictions(JSContext *cx, HandleFunction fun)
 {
-    // Throw if the function is a strict mode function or a bound function.
-    if ((!fun->isBuiltin() && fun->isInterpreted() && fun->strict()) ||
+    // Throw if the function is a builtin (note: this doesn't include asm.js),
+    // a strict mode function (FIXME: needs work handle strict asm.js functions
+    // correctly, should fall out of bug 1057208), or a bound function.
+    if (fun->isBuiltin() ||
+        (fun->isInterpreted() && fun->strict()) ||
         fun->isBoundFunction())
     {
         ThrowTypeErrorBehavior(cx);
@@ -153,14 +156,6 @@ ArgumentsGetterImpl(JSContext *cx, CallArgs args)
     RootedFunction fun(cx, &args.thisv().toObject().as<JSFunction>());
     if (!ArgumentsRestrictions(cx, fun))
         return false;
-
-    // FIXME: Bug 929642 will break "arguments" and "caller" properties on
-    //        builtin functions, at which point this condition should be added
-    //        to the early exit at the start of ArgumentsGuts.
-    if (fun->isBuiltin()) {
-        args.rval().setNull();
-        return true;
-    }
 
     // Return null if this function wasn't found on the stack.
     NonBuiltinScriptFrameIter iter(cx);
@@ -199,13 +194,6 @@ ArgumentsSetterImpl(JSContext *cx, CallArgs args)
     if (!ArgumentsRestrictions(cx, fun))
         return false;
 
-    // FIXME: Bug 929642 will break "arguments" and "caller" properties on
-    //        builtin functions, at which point this bit should be removed.
-    if (fun->isBuiltin()) {
-        args.rval().setUndefined();
-        return true;
-    }
-
     // If the function passes the gauntlet, return |undefined|.
     args.rval().setUndefined();
     return true;
@@ -227,8 +215,11 @@ ArgumentsSetter(JSContext *cx, unsigned argc, Value *vp)
 static bool
 CallerRestrictions(JSContext *cx, HandleFunction fun)
 {
-    // Throw if the function is a strict mode function or a bound function.
-    if ((!fun->isBuiltin() && fun->isInterpreted() && fun->strict()) ||
+    // Throw if the function is a builtin (note: this doesn't include asm.js),
+    // a strict mode function (FIXME: needs work handle strict asm.js functions
+    // correctly, should fall out of bug 1057208), or a bound function.
+    if (fun->isBuiltin() ||
+        (fun->isInterpreted() && fun->strict()) ||
         fun->isBoundFunction())
     {
         ThrowTypeErrorBehavior(cx);
@@ -258,14 +249,6 @@ CallerGetterImpl(JSContext *cx, CallArgs args)
     RootedFunction fun(cx, &args.thisv().toObject().as<JSFunction>());
     if (!CallerRestrictions(cx, fun))
         return false;
-
-    // FIXME: Bug 929642 will break "arguments" and "caller" properties on
-    //        builtin functions, at which point this condition should be added
-    //        to the early exit at the start of CallerRestrictions.
-    if (fun->isBuiltin()) {
-        args.rval().setNull();
-        return true;
-    }
 
     // Also return null if this function wasn't found on the stack.
     NonBuiltinScriptFrameIter iter(cx);
@@ -339,11 +322,6 @@ CallerSetterImpl(JSContext *cx, CallArgs args)
 
     // Return |undefined| unless an error must be thrown.
     args.rval().setUndefined();
-
-    // FIXME: Bug 929642 will break "arguments" and "caller" properties on
-    //        builtin functions, at which point this bit should be removed.
-    if (fun->isBuiltin())
-        return true;
 
     // We can almost just return |undefined| here -- but if the caller function
     // was strict mode code, we still have to throw a TypeError.  This requires
@@ -835,7 +813,7 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
 
     const char *rawSource = "() {\n}";
     size_t sourceLen = strlen(rawSource);
-    jschar *source = InflateString(cx, rawSource, &sourceLen);
+    char16_t *source = InflateString(cx, rawSource, &sourceLen);
     if (!source)
         return nullptr;
 
@@ -851,7 +829,7 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
     options.setNoScriptRval(true)
            .setVersion(JSVERSION_DEFAULT);
     RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
-    if (!sourceObject)
+    if (!sourceObject || !ScriptSourceObject::initFromOptions(cx, sourceObject, options))
         return nullptr;
 
     RootedScript script(cx, JSScript::Create(cx,
@@ -945,7 +923,7 @@ js::FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *
     if (!stableChars.initTwoByte(cx, src))
         return false;
 
-    const mozilla::Range<const jschar> srcChars = stableChars.twoByteRange();
+    const mozilla::Range<const char16_t> srcChars = stableChars.twoByteRange();
     TokenStream ts(cx, options, srcChars.start().get(), srcChars.length(), nullptr);
     int nest = 0;
     bool onward = true;
@@ -981,7 +959,7 @@ js::FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *
     *bodyStart = ts.currentToken().pos.begin;
     if (braced)
         *bodyStart += 1;
-    mozilla::RangedPtr<const jschar> end = srcChars.end();
+    mozilla::RangedPtr<const char16_t> end = srcChars.end();
     if (end[-1] == '}') {
         end--;
     } else {
@@ -1461,11 +1439,11 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 
         // Parse and compile the script from source.
         UncompressedSourceCache::AutoHoldEntry holder;
-        const jschar *chars = lazy->source()->chars(cx, holder);
+        const char16_t *chars = lazy->source()->chars(cx, holder);
         if (!chars)
             return false;
 
-        const jschar *lazyStart = chars + lazy->begin();
+        const char16_t *lazyStart = chars + lazy->begin();
         size_t lazyLength = lazy->end() - lazy->begin();
 
         if (!frontend::CompileLazyFunction(cx, lazy, lazyStart, lazyLength))
@@ -1776,7 +1754,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
         size_t old_args_length = args_length;
         args_length = old_args_length + n - 1;
         if (args_length < old_args_length ||
-            args_length >= ~(size_t)0 / sizeof(jschar)) {
+            args_length >= ~(size_t)0 / sizeof(char16_t)) {
             js_ReportAllocationOverflow(cx);
             return false;
         }
@@ -1787,7 +1765,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
          * free collected_args and its tokenstream in one swoop.
          */
         LifoAllocScope las(&cx->tempLifoAlloc());
-        jschar *cp = cx->tempLifoAlloc().newArray<jschar>(args_length + 1);
+        char16_t *cp = cx->tempLifoAlloc().newArray<char16_t>(args_length + 1);
         if (!cp) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -1916,7 +1894,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
     if (!stableChars.initTwoByte(cx, str))
         return false;
 
-    mozilla::Range<const jschar> chars = stableChars.twoByteRange();
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
     SourceBufferHolder::Ownership ownership = stableChars.maybeGiveOwnershipToCaller()
                                               ? SourceBufferHolder::GiveOwnership
                                               : SourceBufferHolder::NoOwnership;

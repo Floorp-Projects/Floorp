@@ -71,4 +71,11 @@
         <item name="android:layout_gravity">center</item>
     </style>
 
+    <style name="Widget.Home.HistoryListView">
+        <item name="android:paddingLeft">50dp</item>
+        <item name="android:paddingRight">100dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:scrollbarStyle">outsideOverlay</item>
+    </style>
+
 </resources>

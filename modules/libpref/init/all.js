@@ -439,8 +439,11 @@ pref("apz.asyncscroll.timeout", 300);
 // 0 = FREE (No locking at all)
 // 1 = STANDARD (Once locked, remain locked until scrolling ends)
 // 2 = STICKY (Allow lock to be broken, with hysteresis)
-pref("apz.axis_lock_mode", 0);
-
+pref("apz.axis_lock.mode", 0);
+pref("apz.axis_lock.lock_angle", "0.5235987");        // PI / 6 (30 degrees)
+pref("apz.axis_lock.breakout_threshold", "0.03125");  // 1/32 inches
+pref("apz.axis_lock.breakout_angle", "0.3926991");    // PI / 8 (22.5 degrees)
+pref("apz.axis_lock.direct_pan_angle", "1.047197");   // PI / 3 (60 degrees)
 pref("apz.content_response_timeout", 300);
 pref("apz.cross_slide.enabled", false);
 pref("apz.danger_zone_x", 50);
@@ -908,8 +911,6 @@ pref("dom.sysmsg.enabled", false);
 pref("dom.webapps.useCurrentProfile", false);
 
 pref("dom.cycle_collector.incremental", true);
-
-pref("dom.window_experimental_bindings", true);
 
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN

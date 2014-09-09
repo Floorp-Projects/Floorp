@@ -2556,7 +2556,7 @@ date_format(JSContext *cx, double date, formatspec format, MutableHandleValue rv
                 usetz = false;
             } else {
                 for (i = 0; i < tzlen; i++) {
-                    jschar c = tzbuf[i];
+                    char16_t c = tzbuf[i];
                     if (c > 127 ||
                         !(isalpha(c) || isdigit(c) ||
                           c == ' ' || c == '(' || c == ')')) {

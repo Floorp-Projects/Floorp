@@ -911,9 +911,8 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
       nsGlobalWindow *win = static_cast<nsGlobalWindow*>(mWindow.get());
       MOZ_ASSERT(win);
 
-      ErrorResult rv;
-      nsRefPtr<nsPerformance> performance = win->GetPerformance(rv);
-      if (rv.Failed() || !performance) {
+      nsRefPtr<nsPerformance> performance = win->GetPerformance();
+      if (!performance) {
         return;
       }
 

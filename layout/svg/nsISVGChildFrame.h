@@ -9,11 +9,12 @@
 #include "gfxRect.h"
 #include "nsQueryFrame.h"
 
+class gfxMatrix;
 class nsIFrame;
 class nsRenderingContext;
+class SVGBBox;
 
 struct nsPoint;
-class SVGBBox;
 struct nsRect;
 struct nsIntRect;
 
@@ -47,20 +48,36 @@ public:
 
   NS_DECL_QUERYFRAME_TARGET(nsISVGChildFrame)
 
-  // Paint this frame.
-  // aDirtyRect is the area being redrawn, in frame offset pixel coordinates.
-  // aTransformRoot (if non-null) is the frame at which we stop looking up
-  // transforms, when painting content that is part of an SVG glyph. (See
-  // bug 875329.)
-  // For normal SVG graphics using display-list rendering, any transforms on
-  // the element or its parents will have already been set up in the context
-  // before PaintSVG is called. When painting SVG glyphs, this is not the case,
-  // so the element's full transform needs to be applied; but we don't want to
-  // apply transforms from outside the actual glyph element, so we need to know
-  // how far up the ancestor chain to go.
+  /**
+   * Paint this frame.
+   *
+   * SVG is painted using a combination of display lists (trees of
+   * nsDisplayItem built by BuildDisplayList() implementations) and recursive
+   * PaintSVG calls.  SVG frames with the NS_FRAME_IS_NONDISPLAY bit set are
+   * always painted using recursive PaintSVG calls since display list painting
+   * would provide no advantages (they wouldn't be retained for invalidation).
+   * Displayed SVG is normally painted via a display list tree created under
+   * nsSVGOuterSVGFrame::BuildDisplayList, unless the
+   * svg.display-lists.painting.enabled pref has been set to false by the user
+   * in which case it is done via an nsSVGOuterSVGFrame::PaintSVG() call that
+   * recurses over the entire SVG frame tree.  In future we may use PaintSVG()
+   * calls on SVG container frames to avoid display list construction when it
+   * is expensive and unnecessary (see bug 934411).
+   *
+   * @param aTransform The transform that has to be multiplied onto the
+   *   DrawTarget in order for drawing to be in this frame's SVG user space.
+   *   Implementations of this method should avoid multiplying aTransform onto
+   *   the DrawTarget when possible and instead just pass a transform down to
+   *   their children.  This is preferable because changing the transform is
+   *   very expensive for certain DrawTarget backends so it is best to minimize
+   *   the number of transform changes.
+   *
+   * @param aDirtyRect The area being redrawn, in frame offset pixel
+   *   coordinates.
+   */
   virtual nsresult PaintSVG(nsRenderingContext* aContext,
-                            const nsIntRect *aDirtyRect,
-                            nsIFrame* aTransformRoot = nullptr) = 0;
+                            const gfxMatrix& aTransform,
+                            const nsIntRect* aDirtyRect = nullptr) = 0;
 
   /**
    * Returns the frame that should handle pointer events at aPoint.  aPoint is

@@ -16,7 +16,7 @@ interface SVGScriptElement : SVGElement {
 
   // CORS attribute
   [SetterThrows]
-  attribute DOMString crossOrigin;
+  attribute DOMString? crossOrigin;
 };
 
 SVGScriptElement implements SVGURIReference;

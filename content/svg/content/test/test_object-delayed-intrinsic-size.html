@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1063073
+-->
+<html>
+  <head>
+    <title>Test that &lt;object&gt; embedding SVG and using its intrinsic
+           size will resize if the &lt;object&gt; gets a reflow before the
+           root-&lt;svg&gt; gets its nsSVGOuterSVGFrame
+    </title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script>
+
+// This test checks for a race condition. If it fails intermittently then it
+// may actually be a full failure.
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest()
+{
+  var object = document.querySelector("object");
+  var cs = document.defaultView.getComputedStyle(object, "");
+  var width = cs.getPropertyValue("width");
+  is(width, "70px", "Check that the &lt;object&gt; size updated");
+  SimpleTest.finish();
+}
+
+    </script>
+  </head>
+  <body onload="runTest();">
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1063073">Mozilla Bug 1063073</a>
+    <p id="display"></p>
+    <div id="content">
+      <object style="border:1px solid black" type="image/svg+xml"
+              data="object-delayed-intrinsic-size.sjs"></object>
+    </div>
+  </body>
+</html>
+

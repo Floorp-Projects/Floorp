@@ -205,7 +205,7 @@ class LSimdSignMaskX4 : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(SimdSignMaskX4);
 
-    LSimdSignMaskX4(const LAllocation &input) {
+    explicit LSimdSignMaskX4(const LAllocation &input) {
         setOperand(0, input);
     }
 };
@@ -2794,7 +2794,7 @@ class LClzI : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(ClzI)
-    LClzI(const LAllocation &num) {
+    explicit LClzI(const LAllocation &num) {
         setOperand(0, num);
     }
 
@@ -6022,19 +6022,19 @@ class LPhi MOZ_FINAL : public LInstruction
         return 0;
     }
     LDefinition *getTemp(size_t index) {
-        MOZ_ASSUME_UNREACHABLE("no temps");
+        MOZ_CRASH("no temps");
     }
     void setTemp(size_t index, const LDefinition &temp) {
-        MOZ_ASSUME_UNREACHABLE("no temps");
+        MOZ_CRASH("no temps");
     }
     size_t numSuccessors() const {
         return 0;
     }
     MBasicBlock *getSuccessor(size_t i) const {
-        MOZ_ASSUME_UNREACHABLE("no successors");
+        MOZ_CRASH("no successors");
     }
     void setSuccessor(size_t i, MBasicBlock *) {
-        MOZ_ASSUME_UNREACHABLE("no successors");
+        MOZ_CRASH("no successors");
     }
 
     virtual void printInfo(FILE *fp) {
@@ -6355,19 +6355,19 @@ class LAsmJSCall MOZ_FINAL : public LInstruction
         return 0;
     }
     LDefinition *getTemp(size_t index) {
-        MOZ_ASSUME_UNREACHABLE("no temps");
+        MOZ_CRASH("no temps");
     }
     void setTemp(size_t index, const LDefinition &a) {
-        MOZ_ASSUME_UNREACHABLE("no temps");
+        MOZ_CRASH("no temps");
     }
     size_t numSuccessors() const {
         return 0;
     }
     MBasicBlock *getSuccessor(size_t i) const {
-        MOZ_ASSUME_UNREACHABLE("no successors");
+        MOZ_CRASH("no successors");
     }
     void setSuccessor(size_t i, MBasicBlock *) {
-        MOZ_ASSUME_UNREACHABLE("no successors");
+        MOZ_CRASH("no successors");
     }
 };
 

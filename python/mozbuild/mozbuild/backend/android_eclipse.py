@@ -176,17 +176,18 @@ class AndroidEclipseBackend(CommonBackend):
         for cpe in project._classpathentries:
             manifest.add_symlink(mozpath.join(srcdir, cpe.srcdir), cpe.dstdir)
 
-        # JARs and native libraries go in the same place. For now,
-        # we're adding class path entries with the full path to
-        # required JAR files (which makes sense for JARs in the source
-        # directory, but probably doesn't for JARs in the object
-        # directory). This could be a problem because we only know
-        # the contents of (a subdirectory of) libs/ after a successful
-        # build and package, which is after build-backend time. So we
-        # use a pattern symlink that is resolved at manifest install
-        # time.
-        if project.libs:
-            manifest.add_pattern_copy(mozpath.join(srcdir, project.libs), '**', 'libs')
+        # JARs and native libraries go in the same place. For now, we're adding
+        # class path entries with the full path to required JAR files (which
+        # makes sense for JARs in the source directory, but probably doesn't for
+        # JARs in the object directory). This could be a problem because we only
+        # know the contents of (a subdirectory of) libs/ after a successful
+        # build and package, which is after build-backend time. At the cost of
+        # some flexibility, we explicitly copy certain libraries here; if the
+        # libraries aren't present -- namely, when the tree hasn't been packaged
+        # -- this fails. That's by design, to avoid crashes on device caused by
+        # missing native libraries.
+        for src, dst in project.libs:
+            manifest.add_copy(mozpath.join(srcdir, src), dst)
 
         return manifest
 
@@ -239,6 +240,7 @@ class AndroidEclipseBackend(CommonBackend):
         else:
             defines['IDE_PROJECT_FILTERED_RESOURCES'] = ''
         defines['ANDROID_TARGET_SDK'] = self.environment.substs['ANDROID_TARGET_SDK']
+        defines['MOZ_ANDROID_MIN_SDK_VERSION'] = self.environment.defines['MOZ_ANDROID_MIN_SDK_VERSION']
 
         copier = FileCopier()
         finder = FileFinder(template_directory)

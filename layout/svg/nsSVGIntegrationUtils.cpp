@@ -381,8 +381,8 @@ public:
       mOffset(aOffset) {}
 
   virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
-                     const nsIntRect* aDirtyRect,
-                     nsIFrame* aTransformRoot) MOZ_OVERRIDE
+                     const gfxMatrix& aTransform,
+                     const nsIntRect* aDirtyRect) MOZ_OVERRIDE
   {
     BasicLayerManager* basic = static_cast<BasicLayerManager*>(mLayerManager);
     basic->SetTarget(aContext->ThebesContext());
@@ -524,7 +524,8 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
                                        offsetToUserSpace);
 
     nsRegion dirtyRegion = aDirtyRect - offsetToBoundingBox;
-    nsFilterInstance::PaintFilteredFrame(aCtx, aFrame, &callback, &dirtyRegion);
+    gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFrame);
+    nsFilterInstance::PaintFilteredFrame(aFrame, aCtx, tm, &callback, &dirtyRegion);
   } else {
     gfx->SetMatrix(matrixAutoSaveRestore.Matrix());
     aLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);

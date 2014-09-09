@@ -229,7 +229,7 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
                 ? !IsIdentifier(JSID_TO_ATOM(id))
                 : JSID_TO_INT(id) < 0)
             {
-                idstr = js_QuoteString(cx, idstr, jschar('\''));
+                idstr = js_QuoteString(cx, idstr, char16_t('\''));
                 if (!idstr)
                     return nullptr;
             }

@@ -722,7 +722,7 @@ js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
 extern bool
 js_ReportErrorNumberUCArray(JSContext *cx, unsigned flags, JSErrorCallback callback,
                             void *userRef, const unsigned errorNumber,
-                            const jschar **args);
+                            const char16_t **args);
 #endif
 
 extern bool
@@ -816,7 +816,7 @@ HandleExecutionInterrupt(JSContext *cx);
  * break out of its loop. This happens if, for example, the user clicks "Stop
  * script" on the slow script dialog; treat it as an uncatchable error.
  */
-inline bool
+MOZ_ALWAYS_INLINE bool
 CheckForInterrupt(JSContext *cx)
 {
     MOZ_ASSERT(cx->runtime()->requestDepth >= 1);

@@ -24,7 +24,7 @@
 // DEFINE_TYPE macro. Otherwise, turn off whichever ones we're not using.
 #if defined(DEFINE_TYPE)
 #  define DEFINE_CHAR_TYPE(x, y, z)         DEFINE_TYPE(x, y, z)
-#  define DEFINE_JSCHAR_TYPE(x, y, z)       DEFINE_TYPE(x, y, z)
+#  define DEFINE_CHAR16_TYPE(x, y, z)       DEFINE_TYPE(x, y, z)
 #  define DEFINE_BOOL_TYPE(x, y, z)         DEFINE_TYPE(x, y, z)
 #  define DEFINE_INT_TYPE(x, y, z)          DEFINE_TYPE(x, y, z)
 #  define DEFINE_WRAPPED_INT_TYPE(x, y, z)  DEFINE_TYPE(x, y, z)
@@ -36,8 +36,8 @@
 #  ifndef DEFINE_CHAR_TYPE
 #    define DEFINE_CHAR_TYPE(x, y, z)
 #  endif
-#  ifndef DEFINE_JSCHAR_TYPE
-#    define DEFINE_JSCHAR_TYPE(x, y, z)
+#  ifndef DEFINE_CHAR16_TYPE
+#    define DEFINE_CHAR16_TYPE(x, y, z)
 #  endif
 #  ifndef DEFINE_INT_TYPE
 #    define DEFINE_INT_TYPE(x, y, z)
@@ -101,7 +101,7 @@ DEFINE_FLOAT_TYPE      (double,             double,             ffi_type_double)
 DEFINE_CHAR_TYPE       (char,               char,               ffi_type_uint8)
 DEFINE_CHAR_TYPE       (signed_char,        signed char,        ffi_type_sint8)
 DEFINE_CHAR_TYPE       (unsigned_char,      unsigned char,      ffi_type_uint8)
-DEFINE_JSCHAR_TYPE     (jschar,             jschar,             ffi_type_uint16)
+DEFINE_CHAR16_TYPE     (char16_t,           char16_t,           ffi_type_uint16)
 
 #undef CTYPES_SSIZE_T
 #undef CTYPES_FFI_BOOL
@@ -114,7 +114,7 @@ DEFINE_JSCHAR_TYPE     (jschar,             jschar,             ffi_type_uint16)
 
 #undef DEFINE_TYPE
 #undef DEFINE_CHAR_TYPE
-#undef DEFINE_JSCHAR_TYPE
+#undef DEFINE_CHAR16_TYPE
 #undef DEFINE_BOOL_TYPE
 #undef DEFINE_INT_TYPE
 #undef DEFINE_WRAPPED_INT_TYPE

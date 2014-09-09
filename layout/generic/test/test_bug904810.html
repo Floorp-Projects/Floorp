@@ -26,6 +26,12 @@ third line
 /** Test for Bug 904810 **/
 
 SimpleTest.waitForExplicitFinish();
+
+// We intermittently trigger two "Wrong parent style context" assertions
+// on B2G emulator builds (bug XXXXXXX).  The two frames that get incorrect
+// style context parents are scroll bar parts in the <textarea>.
+SimpleTest.expectAssertions(0, 2);
+
 SimpleTest.waitForFocus(function test() {
   function shiftLeft(i) {
     for ( ; i > 0; --i)
@@ -100,10 +106,6 @@ SimpleTest.waitForFocus(function test() {
 
   SimpleTest.finish();
 });
-
-
-
-
 </script>
 </pre>
 </body>

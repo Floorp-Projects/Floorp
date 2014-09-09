@@ -191,7 +191,7 @@ DebuggerMemory::drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp)
 
     size_t length = dbg->allocationsLogLength;
 
-    RootedObject result(cx, NewDenseAllocatedArray(cx, length));
+    RootedObject result(cx, NewDenseFullyAllocatedArray(cx, length));
     if (!result)
         return false;
     result->ensureDenseInitializedLength(cx, 0, length);
@@ -258,7 +258,7 @@ struct Census {
     Zone::ZoneSet debuggeeZones;
     Zone *atomsZone;
 
-    Census(JSContext *cx) : cx(cx), atomsZone(nullptr) { }
+    explicit Census(JSContext *cx) : cx(cx), atomsZone(nullptr) { }
 
     bool init() {
         AutoLockForExclusiveAccess lock(cx);
@@ -298,7 +298,7 @@ class Tally {
     size_t total_;
 
   public:
-    Tally(Census &census) : total_(0) { }
+    explicit Tally(Census &census) : total_(0) { }
     Tally(Tally &&rhs) : total_(rhs.total_) { }
     Tally &operator=(Tally &&rhs) { total_ = rhs.total_; return *this; }
 
@@ -342,7 +342,7 @@ class ByJSType {
     EachOther other;
 
   public:
-    ByJSType(Census &census)
+    explicit ByJSType(Census &census)
       : total_(0),
         objects(census),
         scripts(census),
@@ -456,7 +456,7 @@ class ByObjectClass {
     }
 
   public:
-    ByObjectClass(Census &census) : total_(0), other(census) { }
+    explicit ByObjectClass(Census &census) : total_(0), other(census) { }
     ByObjectClass(ByObjectClass &&rhs)
       : total_(rhs.total_), table(Move(rhs.table)), other(Move(rhs.other))
     { }
@@ -550,12 +550,13 @@ class ByUbinodeType {
     // Note that, because ubi::Node::typeName promises to return a specific
     // pointer, not just any string whose contents are correct, we can use their
     // addresses as hash table keys.
-    typedef HashMap<const jschar *, EachType, DefaultHasher<const jschar *>, SystemAllocPolicy> Table;
+    typedef HashMap<const char16_t *, EachType, DefaultHasher<const char16_t *>,
+                    SystemAllocPolicy> Table;
     typedef typename Table::Entry Entry;
     Table table;
 
   public:
-    ByUbinodeType(Census &census) : total_(0) { }
+    explicit ByUbinodeType(Census &census) : total_(0) { }
     ByUbinodeType(ByUbinodeType &&rhs) : total_(rhs.total_), table(Move(rhs.table)) { }
     ByUbinodeType &operator=(ByUbinodeType &&rhs) {
         MOZ_ASSERT(&rhs != this);
@@ -568,7 +569,7 @@ class ByUbinodeType {
 
     bool count(Census &census, const Node &node) {
         total_++;
-        const jschar *key = node.typeName();
+        const char16_t *key = node.typeName();
         typename Table::AddPtr p = table.lookupForAdd(key);
         if (!p) {
             if (!table.add(p, key, EachType(census)))
@@ -619,7 +620,7 @@ class ByUbinodeType {
             if (!assorter.report(census, &assorterReport))
                 return false;
 
-            const jschar *name = entry.key();
+            const char16_t *name = entry.key();
             MOZ_ASSERT(name);
             JSAtom *atom = AtomizeChars(cx, name, js_strlen(name));
             if (!atom)
@@ -644,7 +645,7 @@ class CensusHandler {
     Assorter assorter;
 
   public:
-    CensusHandler(Census &census) : census(census), assorter(census) { }
+    explicit CensusHandler(Census &census) : census(census), assorter(census) { }
 
     bool init(Census &census) { return assorter.init(census); }
     bool report(Census &census, MutableHandleValue report) {

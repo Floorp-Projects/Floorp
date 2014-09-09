@@ -69,7 +69,6 @@ var LoginManagerParent = {
 
     receiveMessage: function (msg) {
         let data = msg.data;
-
         switch (msg.name) {
             case "RemoteLogins:findLogins": {
                 // TODO Verify msg.target's principals against the formOrigin?
@@ -88,6 +87,7 @@ var LoginManagerParent = {
                                   data.usernameField,
                                   data.newPasswordField,
                                   data.oldPasswordField,
+                                  msg.objects.openerWin,
                                   msg.target);
                 break;
             }
@@ -203,7 +203,7 @@ var LoginManagerParent = {
 
     onFormSubmit: function(hostname, formSubmitURL,
                            usernameField, newPasswordField,
-                           oldPasswordField,
+                           oldPasswordField, opener,
                            target) {
         function getPrompter() {
             var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
@@ -216,6 +216,8 @@ var LoginManagerParent = {
             prompterSvc.init(target.isRemoteBrowser ?
                                 target.ownerDocument.defaultView :
                                 target.contentWindow);
+            if (target.isRemoteBrowser)
+                prompterSvc.setE10sData({ browser: target, opener: opener });
             return prompterSvc;
         }
 

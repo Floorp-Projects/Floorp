@@ -168,7 +168,7 @@
 **      Macros to get the number of elements and the pointer to one past the
 **      last element of a C array. Use them like this:
 **
-**      jschar buf[10], *s;
+**      char16_t buf[10], *s;
 **      JSString *str;
 **      ...
 **      for (s = buf; s != JS_ARRAY_END(buf); ++s) *s = ...;
