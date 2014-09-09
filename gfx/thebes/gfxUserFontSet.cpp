@@ -176,7 +176,7 @@ gfxUserFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeeds
 
 class gfxOTSContext : public ots::OTSContext {
 public:
-    gfxOTSContext(gfxUserFontEntry* aUserFontEntry)
+    explicit gfxOTSContext(gfxUserFontEntry* aUserFontEntry)
         : mUserFontEntry(aUserFontEntry) {}
 
     virtual ots::TableAction GetTableAction(uint32_t aTag) MOZ_OVERRIDE {

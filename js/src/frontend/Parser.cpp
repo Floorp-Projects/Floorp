@@ -415,7 +415,7 @@ Parser<SyntaxParseHandler>::abortIfSyntaxParser()
 template <typename ParseHandler>
 Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
                              const ReadOnlyCompileOptions &options,
-                             const jschar *chars, size_t length, bool foldConstants,
+                             const char16_t *chars, size_t length, bool foldConstants,
                              Parser<SyntaxParseHandler> *syntaxParser,
                              LazyScript *lazyOuterFunction)
   : AutoGCRooter(cx, PARSER),
@@ -6970,7 +6970,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::newRegExp()
 {
     // Create the regexp even when doing a syntax parse, to check the regexp's syntax.
-    const jschar *chars = tokenStream.getTokenbuf().begin();
+    const char16_t *chars = tokenStream.getTokenbuf().begin();
     size_t length = tokenStream.getTokenbuf().length();
     RegExpFlag flags = tokenStream.currentToken().regExpFlags();
 

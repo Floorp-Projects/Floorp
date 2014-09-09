@@ -21,7 +21,7 @@ namespace {
 #ifdef BUILD_CTYPES
 
 char*
-UnicodeToNative(JSContext* aCx, const jschar* aSource, size_t aSourceLen)
+UnicodeToNative(JSContext* aCx, const char16_t* aSource, size_t aSourceLen)
 {
   nsDependentString unicode(aSource, aSourceLen);
 

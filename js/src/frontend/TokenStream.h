@@ -202,7 +202,7 @@ class StrictModeGetter {
 
 // TokenStream is the lexical scanner for Javascript source text.
 //
-// It takes a buffer of jschars and linearly scans it into |Token|s.
+// It takes a buffer of char16_t characters and linearly scans it into |Token|s.
 // Internally the class uses a four element circular buffer |tokens| of
 // |Token|s. As an index for |tokens|, the member |cursor| points to the
 // current token.
@@ -254,10 +254,10 @@ class MOZ_STACK_CLASS TokenStream
     static const unsigned ntokensMask = ntokens - 1;
 
   public:
-    typedef Vector<jschar, 32> CharBuffer;
+    typedef Vector<char16_t, 32> CharBuffer;
 
     TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &options,
-                const jschar *base, size_t length, StrictModeGetter *smg);
+                const char16_t *base, size_t length, StrictModeGetter *smg);
 
     ~TokenStream();
 
@@ -312,8 +312,8 @@ class MOZ_STACK_CLASS TokenStream
     JSAtom *getRawTemplateStringAtom() {
         JS_ASSERT(currentToken().type == TOK_TEMPLATE_HEAD ||
                   currentToken().type == TOK_NO_SUBS_TEMPLATE);
-        const jschar *cur = userbuf.base() + currentToken().pos.begin + 1;
-        const jschar *end;
+        const char16_t *cur = userbuf.base() + currentToken().pos.begin + 1;
+        const char16_t *end;
         if (currentToken().type == TOK_TEMPLATE_HEAD) {
             // Of the form    |`...${|   or   |}...${|
             end = userbuf.base() + currentToken().pos.end - 2;
@@ -345,7 +345,7 @@ class MOZ_STACK_CLASS TokenStream
 
     void onError();
     static JSAtom *atomize(ExclusiveContext *cx, CharBuffer &cb);
-    bool putIdentInTokenbuf(const jschar *identStart);
+    bool putIdentInTokenbuf(const char16_t *identStart);
 
     struct Flags
     {
@@ -478,11 +478,11 @@ class MOZ_STACK_CLASS TokenStream
       private:
         Position(const Position&) MOZ_DELETE;
         friend class TokenStream;
-        const jschar *buf;
+        const char16_t *buf;
         Flags flags;
         unsigned lineno;
-        const jschar *linebase;
-        const jschar *prevLinebase;
+        const char16_t *linebase;
+        const char16_t *prevLinebase;
         Token currentToken;
         unsigned lookahead;
         Token lookaheadTokens[maxLookahead];
@@ -497,11 +497,11 @@ class MOZ_STACK_CLASS TokenStream
         return pos.buf - userbuf.base();
     }
 
-    const jschar *rawBase() const {
+    const char16_t *rawBase() const {
         return userbuf.base();
     }
 
-    const jschar *rawLimit() const {
+    const char16_t *rawLimit() const {
         return userbuf.limit();
     }
 
@@ -509,7 +509,7 @@ class MOZ_STACK_CLASS TokenStream
         return displayURL_ != nullptr;
     }
 
-    jschar *displayURL() {
+    char16_t *displayURL() {
         return displayURL_.get();
     }
 
@@ -517,7 +517,7 @@ class MOZ_STACK_CLASS TokenStream
         return sourceMapURL_ != nullptr;
     }
 
-    jschar *sourceMapURL() {
+    char16_t *sourceMapURL() {
         return sourceMapURL_.get();
     }
 
@@ -532,7 +532,7 @@ class MOZ_STACK_CLASS TokenStream
     // false. If ttp is non-null, return true with the keyword's TokenKind in
     // *ttp.
     bool checkForKeyword(const KeywordInfo *kw, TokenKind *ttp);
-    bool checkForKeyword(const jschar *s, size_t length, TokenKind *ttp);
+    bool checkForKeyword(const char16_t *s, size_t length, TokenKind *ttp);
     bool checkForKeyword(JSAtom *atom, TokenKind *ttp);
 
     // This class maps a userbuf offset (which is 0-indexed) to a line number
@@ -625,7 +625,7 @@ class MOZ_STACK_CLASS TokenStream
     // chars" refers to the lack of EOL sequence normalization.)
     class TokenBuf {
       public:
-        TokenBuf(ExclusiveContext *cx, const jschar *buf, size_t length)
+        TokenBuf(ExclusiveContext *cx, const char16_t *buf, size_t length)
           : base_(buf), limit_(buf + length), ptr(buf)
         { }
 
@@ -637,23 +637,23 @@ class MOZ_STACK_CLASS TokenStream
             return ptr == base_;
         }
 
-        const jschar *base() const {
+        const char16_t *base() const {
             return base_;
         }
 
-        const jschar *limit() const {
+        const char16_t *limit() const {
             return limit_;
         }
 
-        jschar getRawChar() {
+        char16_t getRawChar() {
             return *ptr++;      // this will nullptr-crash if poisoned
         }
 
-        jschar peekRawChar() const {
+        char16_t peekRawChar() const {
             return *ptr;        // this will nullptr-crash if poisoned
         }
 
-        bool matchRawChar(jschar c) {
+        bool matchRawChar(char16_t c) {
             if (*ptr == c) {    // this will nullptr-crash if poisoned
                 ptr++;
                 return true;
@@ -661,7 +661,7 @@ class MOZ_STACK_CLASS TokenStream
             return false;
         }
 
-        bool matchRawCharBackwards(jschar c) {
+        bool matchRawCharBackwards(char16_t c) {
             JS_ASSERT(ptr);     // make sure it hasn't been poisoned
             if (*(ptr - 1) == c) {
                 ptr--;
@@ -675,13 +675,13 @@ class MOZ_STACK_CLASS TokenStream
             ptr--;
         }
 
-        const jschar *addressOfNextRawChar(bool allowPoisoned = false) const {
+        const char16_t *addressOfNextRawChar(bool allowPoisoned = false) const {
             JS_ASSERT_IF(!allowPoisoned, ptr);     // make sure it hasn't been poisoned
             return ptr;
         }
 
         // Use this with caution!
-        void setAddressOfNextRawChar(const jschar *a, bool allowPoisoned = false) {
+        void setAddressOfNextRawChar(const char16_t *a, bool allowPoisoned = false) {
             JS_ASSERT_IF(!allowPoisoned, a);
             ptr = a;
         }
@@ -697,14 +697,14 @@ class MOZ_STACK_CLASS TokenStream
             return c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR;
         }
 
-        // Finds the next EOL, but stops once 'max' jschars have been scanned
-        // (*including* the starting jschar).
-        const jschar *findEOLMax(const jschar *p, size_t max);
+        // Finds the next EOL, but stops once 'max' characters have been scanned
+        // (*including* the starting char16_t).
+        const char16_t *findEOLMax(const char16_t *p, size_t max);
 
       private:
-        const jschar *base_;            // base of buffer
-        const jschar *limit_;           // limit for quick bounds check
-        const jschar *ptr;              // next char to get
+        const char16_t *base_;          // base of buffer
+        const char16_t *limit_;         // limit for quick bounds check
+        const char16_t *ptr;            // next char to get
     };
 
     TokenKind getTokenInternal(Modifier modifier);
@@ -719,13 +719,13 @@ class MOZ_STACK_CLASS TokenStream
     bool peekUnicodeEscape(int32_t *c);
     bool matchUnicodeEscapeIdStart(int32_t *c);
     bool matchUnicodeEscapeIdent(int32_t *c);
-    bool peekChars(int n, jschar *cp);
+    bool peekChars(int n, char16_t *cp);
 
     bool getDirectives(bool isMultiline, bool shouldWarnDeprecated);
     bool getDirective(bool isMultiline, bool shouldWarnDeprecated,
                       const char *directive, int directiveLength,
                       const char *errorMsgPragma,
-                      mozilla::UniquePtr<jschar[], JS::FreePolicy> *destination);
+                      mozilla::UniquePtr<char16_t[], JS::FreePolicy> *destination);
     bool getDisplayURL(bool isMultiline, bool shouldWarnDeprecated);
     bool getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated);
 
@@ -763,12 +763,12 @@ class MOZ_STACK_CLASS TokenStream
     unsigned            lookahead;          // count of lookahead tokens
     unsigned            lineno;             // current line number
     Flags               flags;              // flags -- see above
-    const jschar        *linebase;          // start of current line;  points into userbuf
-    const jschar        *prevLinebase;      // start of previous line;  nullptr if on the first line
+    const char16_t      *linebase;          // start of current line;  points into userbuf
+    const char16_t      *prevLinebase;      // start of previous line;  nullptr if on the first line
     TokenBuf            userbuf;            // user input buffer
     const char          *filename;          // input filename or null
-    mozilla::UniquePtr<jschar[], JS::FreePolicy> displayURL_; // the user's requested source URL or null
-    mozilla::UniquePtr<jschar[], JS::FreePolicy> sourceMapURL_; // source map's filename or null
+    mozilla::UniquePtr<char16_t[], JS::FreePolicy> displayURL_; // the user's requested source URL or null
+    mozilla::UniquePtr<char16_t[], JS::FreePolicy> sourceMapURL_; // source map's filename or null
     CharBuffer          tokenbuf;           // current token string buffer
     bool                maybeEOL[256];      // probabilistic EOL lookup table
     bool                maybeStrSpecial[256];   // speeds up string scanning
@@ -779,7 +779,7 @@ class MOZ_STACK_CLASS TokenStream
 };
 
 // Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error
-// message have const jschar* type, not const char*.
+// message have const char16_t* type, not const char*.
 #define JSREPORT_UC 0x100
 
 } // namespace frontend

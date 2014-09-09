@@ -1,4 +1,5 @@
-// |jit-test| debug
+var g = newGlobal();
+var dbg = new g.Debugger(this);
 
 o = { toString:function() { return evalInFrame(1, "x") } }
 var x = 'C';

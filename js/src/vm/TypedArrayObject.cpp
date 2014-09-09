@@ -2618,7 +2618,7 @@ js::StringIsTypedArrayIndex(const CharT *s, size_t length, uint64_t *indexp)
 }
 
 template bool
-js::StringIsTypedArrayIndex(const jschar *s, size_t length, uint64_t *indexp);
+js::StringIsTypedArrayIndex(const char16_t *s, size_t length, uint64_t *indexp);
 
 template bool
 js::StringIsTypedArrayIndex(const Latin1Char *s, size_t length, uint64_t *indexp);

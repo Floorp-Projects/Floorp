@@ -180,16 +180,16 @@ extern bool
 intl_FormatDateTime(JSContext *cx, unsigned argc, Value *vp);
 
 /**
- * Cast jschar* strings to UChar* strings used by ICU.
+ * Cast char16_t* strings to UChar* strings used by ICU.
  */
 inline const UChar *
-JSCharToUChar(const jschar *chars)
+Char16ToUChar(const char16_t *chars)
 {
   return reinterpret_cast<const UChar *>(chars);
 }
 
 inline UChar *
-JSCharToUChar(jschar *chars)
+Char16ToUChar(char16_t *chars)
 {
   return reinterpret_cast<UChar *>(chars);
 }

@@ -700,7 +700,7 @@ DumpName(const CharT *s, size_t len)
         fprintf(stderr, "#<zero-length name>");
 
     for (size_t i = 0; i < len; i++) {
-        jschar c = s[i];
+        char16_t c = s[i];
         if (c > 32 && c < 127)
             fputc(c, stderr);
         else if (c <= 255)
