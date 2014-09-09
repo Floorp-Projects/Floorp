@@ -6070,11 +6070,13 @@ JS::AutoSaveExceptionState::restore()
 
 JS::AutoSaveExceptionState::~AutoSaveExceptionState()
 {
-    if (wasPropagatingForcedReturn && !context->isPropagatingForcedReturn())
-        context->setPropagatingForcedReturn();
-    if (wasThrowing && !context->isExceptionPending()) {
-        context->throwing = true;
-        context->unwrappedException_ = exceptionValue;
+    if (!context->isExceptionPending()) {
+        if (wasPropagatingForcedReturn)
+            context->setPropagatingForcedReturn();
+        if (wasThrowing) {
+            context->throwing = true;
+            context->unwrappedException_ = exceptionValue;
+        }
     }
 }
 
