@@ -188,6 +188,17 @@ IsNegativeZero(T aValue)
 }
 
 /**
+ * Returns 0 if a float/double is NaN or infinite;
+ * otherwise, the float/double is returned.
+ */
+template<typename T>
+static MOZ_ALWAYS_INLINE T
+ToZeroIfNonfinite(T aValue)
+{
+  return IsFinite(aValue) ? aValue : 0;
+}
+
+/**
  * Returns the exponent portion of the float/double.
  *
  * Zero is not special-cased, so ExponentComponent(0.0) is
