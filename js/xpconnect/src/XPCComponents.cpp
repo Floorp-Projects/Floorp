@@ -19,7 +19,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 #include "nsJSEnvironment.h"
-#include "mozilla/StartupTimeline.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
 #include "mozilla/dom/DOMException.h"
@@ -3557,7 +3556,8 @@ nsXPCComponents_Utils::SetAddonInterposition(const nsACString &addonIdStr,
 NS_IMETHODIMP
 nsXPCComponents_Utils::Now(double *aRetval)
 {
-    TimeStamp start = StartupTimeline::Get(StartupTimeline::PROCESS_CREATION);
+    bool isInconsistent = false;
+    TimeStamp start = TimeStamp::ProcessCreation(isInconsistent);
     *aRetval = (TimeStamp::Now() - start).ToMilliseconds();
     return NS_OK;
 }

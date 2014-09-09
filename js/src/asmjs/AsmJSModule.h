@@ -1127,18 +1127,21 @@ class AsmJSModule
     // the exported functions have been added.
 
     bool addExportedFunction(PropertyName *name,
-                             uint32_t srcStart,
-                             uint32_t srcEnd,
+                             uint32_t funcSrcBegin,
+                             uint32_t funcSrcEnd,
                              PropertyName *maybeFieldName,
                              ArgCoercionVector &&argCoercions,
                              ReturnType returnType)
     {
+        // NB: funcSrcBegin/funcSrcEnd are given relative to the ScriptSource
+        // (the entire file) and ExportedFunctions store offsets relative to
+        // the beginning of the module (so that they are caching-invariant).
         JS_ASSERT(isFinishedWithFunctionBodies() && !isFinished());
-        ExportedFunction func(name, srcStart, srcEnd, maybeFieldName,
-                              mozilla::Move(argCoercions), returnType);
-        if (exports_.length() >= UINT32_MAX)
-            return false;
-        return exports_.append(mozilla::Move(func));
+        JS_ASSERT(srcStart_ < funcSrcBegin);
+        JS_ASSERT(funcSrcBegin < funcSrcEnd);
+        ExportedFunction func(name, funcSrcBegin - srcStart_, funcSrcEnd - srcStart_,
+                              maybeFieldName, mozilla::Move(argCoercions), returnType);
+        return exports_.length() < UINT32_MAX && exports_.append(mozilla::Move(func));
     }
     unsigned numExportedFunctions() const {
         JS_ASSERT(isFinishedWithFunctionBodies());

@@ -1831,3 +1831,5 @@ pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
 test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-ref.html
 == 1059167-1.html 1059167-1-ref.html
 == 1059498-1.html 1059498-1-ref.html
+== 1059498-2.html 1059498-1-ref.html
+== 1059498-3.html 1059498-1-ref.html

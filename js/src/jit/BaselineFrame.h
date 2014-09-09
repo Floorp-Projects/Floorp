@@ -134,6 +134,9 @@ class BaselineFrame
         uint8_t *pointer = (uint8_t *)this + Size() + offsetOfCalleeToken();
         *(CalleeToken *)pointer = token;
     }
+    bool isConstructing() const {
+        return CalleeTokenIsConstructing(calleeToken());
+    }
     JSScript *script() const {
         if (isEvalFrame())
             return evalScript();

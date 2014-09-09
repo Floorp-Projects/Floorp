@@ -51,6 +51,8 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+typedef const nsStyleBackground::Position Position;
+typedef const nsStyleBackground::Position::PositionCoord PositionCoord;
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -2050,6 +2052,34 @@ nsComputedDOMStyle::DoGetBackgroundOrigin()
                            nsCSSProps::kBackgroundOriginKTable);
 }
 
+void
+nsComputedDOMStyle::SetValueToPositionCoord(const PositionCoord& aCoord,
+                                            nsROCSSPrimitiveValue* aValue)
+{
+  if (!aCoord.mHasPercent) {
+    NS_ABORT_IF_FALSE(aCoord.mPercent == 0.0f,
+                      "Shouldn't have mPercent!");
+    aValue->SetAppUnits(aCoord.mLength);
+  } else if (aCoord.mLength == 0) {
+    aValue->SetPercent(aCoord.mPercent);
+  } else {
+    SetValueToCalc(&aCoord, aValue);
+  }
+}
+
+void
+nsComputedDOMStyle::SetValueToPosition(const Position& aPosition,
+                                       nsDOMCSSValueList* aValueList)
+{
+  nsROCSSPrimitiveValue* valX = new nsROCSSPrimitiveValue;
+  aValueList->AppendCSSValue(valX);
+  SetValueToPositionCoord(aPosition.mXPosition, valX);
+
+  nsROCSSPrimitiveValue* valY = new nsROCSSPrimitiveValue;
+  aValueList->AppendCSSValue(valY);
+  SetValueToPositionCoord(aPosition.mYPosition, valY);
+}
+
 CSSValue*
 nsComputedDOMStyle::DoGetBackgroundPosition()
 {
@@ -2061,33 +2091,7 @@ nsComputedDOMStyle::DoGetBackgroundPosition()
     nsDOMCSSValueList *itemList = GetROCSSValueList(false);
     valueList->AppendCSSValue(itemList);
 
-    nsROCSSPrimitiveValue *valX = new nsROCSSPrimitiveValue;
-    itemList->AppendCSSValue(valX);
-
-    nsROCSSPrimitiveValue *valY = new nsROCSSPrimitiveValue;
-    itemList->AppendCSSValue(valY);
-
-    const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
-
-    if (!pos.mXPosition.mHasPercent) {
-      NS_ABORT_IF_FALSE(pos.mXPosition.mPercent == 0.0f,
-                        "Shouldn't have mPercent!");
-      valX->SetAppUnits(pos.mXPosition.mLength);
-    } else if (pos.mXPosition.mLength == 0) {
-      valX->SetPercent(pos.mXPosition.mPercent);
-    } else {
-      SetValueToCalc(&pos.mXPosition, valX);
-    }
-
-    if (!pos.mYPosition.mHasPercent) {
-      NS_ABORT_IF_FALSE(pos.mYPosition.mPercent == 0.0f,
-                        "Shouldn't have mPercent!");
-      valY->SetAppUnits(pos.mYPosition.mLength);
-    } else if (pos.mYPosition.mLength == 0) {
-      valY->SetPercent(pos.mYPosition.mPercent);
-    } else {
-      SetValueToCalc(&pos.mYPosition, valY);
-    }
+    SetValueToPosition(bg->mLayers[i].mPosition, itemList);
   }
 
   return valueList;

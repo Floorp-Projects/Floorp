@@ -11240,7 +11240,7 @@ class CGDictionary(CGThing):
                 JSAutoCompartment ac(cx, xpc::UnprivilegedJunkScope()); // Usage approved by bholley
                 JS::Rooted<JS::Value> obj(cx);
                 return ToObjectInternal(cx, &obj) && StringifyToJSON(cx, &obj, aJSON);
-            """))
+            """), const=True)
 
     def toObjectInternalMethod(self):
         body = ""
