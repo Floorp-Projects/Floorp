@@ -11,16 +11,16 @@ using namespace js::unicode;
 
 /*
  * So how does indexing work?
- * First let's have a look at a jschar, 16-bits:
+ * First let's have a look at a char16_t, 16-bits:
  *              [................]
  * Step 1:
- *  Extracting the upper 11 bits from the jschar.
+ *  Extracting the upper 11 bits from the char16_t.
  *   upper = char >>  5 ([***********.....])
  * Step 2:
  *  Using these bits to get an reduced index from index1.
  *   index = index1[upper]
  * Step 3:
- *  Combining the index and the bottom 5 bits of the original jschar.
+ *  Combining the index and the bottom 5 bits of the original char16_t.
  *   real_index = index2[(index << 5) + (char & ((1 << 5) - 1))] ([...********+++++])
  *
  * The advantage here is that the biggest number in index1 doesn't need 10 bits,
@@ -31,7 +31,7 @@ using namespace js::unicode;
  *
  * Pseudocode of generation:
  *
- * let table be the mapping of jschar => js_charinfo_index
+ * let table be the mapping of char16_t => js_charinfo_index
  * let index1 be an empty array
  * let index2 be an empty array
  * let cache be a hash map

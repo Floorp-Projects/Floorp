@@ -73,7 +73,7 @@ function test_CreateFile()
 
 function test_GetCurrentDirectory()
 {
-  let array = new (ctypes.ArrayType(ctypes.jschar, 4096))();
+  let array = new (ctypes.ArrayType(ctypes.char16_t, 4096))();
   let result = OS.Win.File.GetCurrentDirectory(4096, array);
   ok(result < array.length, "test_GetCurrentDirectory: length sufficient");
   ok(result > 0, "test_GetCurrentDirectory: length != 0");

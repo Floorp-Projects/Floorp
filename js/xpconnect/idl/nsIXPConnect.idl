@@ -274,7 +274,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(89b8525d-5c22-48bd-8a79-66aac9cd705e)]
+[noscript, uuid(a632b020-331f-11e4-8c21-0800200c9a66)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -572,11 +572,4 @@ interface nsIXPConnect : nsISupports
 
     [noscript] JSObjectPtr readFunction(in nsIObjectInputStream aStream,
                                         in JSContextPtr aJSContext);
-
-    /**
-     * This function should be called in JavaScript error reporters
-     * to signal that they are ignoring the error. In this case,
-     * XPConnect can print a warning to the console.
-     */
-    [noscript] void markErrorUnreported(in JSContextPtr aJSContext);
 };

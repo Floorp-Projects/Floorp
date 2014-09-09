@@ -445,7 +445,7 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   nsDependentString name(mName);
   if (!JS_WrapValue(cx, &result) ||
       !::JS_DefineUCProperty(cx, aBoundNode,
-                             reinterpret_cast<const jschar*>(mName),
+                             reinterpret_cast<const char16_t*>(mName),
                              name.Length(), result, mJSAttributes)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

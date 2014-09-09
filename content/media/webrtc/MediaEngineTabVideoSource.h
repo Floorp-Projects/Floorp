@@ -34,6 +34,11 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
       return MediaSourceType::Browser;
     }
 
+    virtual nsresult TakePhoto(PhotoCallback* aCallback)
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
     void Draw();
 
     class StartRunnable : public nsRunnable {

@@ -40,24 +40,6 @@ using namespace js::gc;
 
 using mozilla::PodZero;
 
-JS_PUBLIC_API(bool)
-JS_GetDebugMode(JSContext *cx)
-{
-    return cx->compartment()->debugMode();
-}
-
-JS_PUBLIC_API(bool)
-JS_SetDebugMode(JSContext *cx, bool debug)
-{
-    return JS_SetDebugModeForCompartment(cx, cx->compartment(), debug);
-}
-
-JS_PUBLIC_API(void)
-JS_SetRuntimeDebugMode(JSRuntime *rt, bool debug)
-{
-    rt->debugMode = !!debug;
-}
-
 JSTrapStatus
 js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 {
@@ -98,9 +80,6 @@ js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 {
     JS_ASSERT(cx->compartment()->debugMode());
 
-    if (cx->compartment()->getDebuggees().empty())
-        return JSTRAP_CONTINUE;
-
     /* Call debugger throw hook if set. */
     RootedValue rval(cx);
     JSTrapStatus status = Debugger::onExceptionUnwind(cx, &rval);
@@ -127,31 +106,6 @@ js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
     }
 
     return status;
-}
-
-JS_FRIEND_API(bool)
-JS_SetDebugModeForAllCompartments(JSContext *cx, bool debug)
-{
-    for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-        // Invalidate a zone at a time to avoid doing a ZoneCellIter
-        // per compartment.
-        AutoDebugModeInvalidation invalidate(zone);
-        for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-            // Ignore special compartments (atoms, JSD compartments)
-            if (c->principals) {
-                if (!c->setDebugModeFromC(cx, !!debug, invalidate))
-                    return false;
-            }
-        }
-    }
-    return true;
-}
-
-JS_FRIEND_API(bool)
-JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, bool debug)
-{
-    AutoDebugModeInvalidation invalidate(comp);
-    return comp->setDebugModeFromC(cx, !!debug, invalidate);
 }
 
 /************************************************************************/
@@ -191,7 +145,7 @@ JS_GetScriptFilename(JSScript *script)
     return script->filename();
 }
 
-JS_PUBLIC_API(const jschar *)
+JS_PUBLIC_API(const char16_t *)
 JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
 {
     ScriptSource *source = script->scriptSource();

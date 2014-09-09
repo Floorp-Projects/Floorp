@@ -39,7 +39,7 @@ js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext *cx, jsid id)
     } else {
         JSString *str = IdToString(cx, id);
         AutoStableStringChars chars(cx);
-        const jschar *prop = nullptr;
+        const char16_t *prop = nullptr;
         if (str->ensureFlat(cx) && chars.initTwoByte(cx, str))
             prop = chars.twoByteChars();
 

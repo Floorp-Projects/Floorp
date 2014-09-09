@@ -33,8 +33,8 @@ function initCTypes() {
                                 ctypes.winapi_abi,
                                 ctypes.int,
                                 ctypes.uintptr_t,
-                                ctypes.jschar.ptr,
-                                ctypes.jschar.ptr,
+                                ctypes.char16_t.ptr,
+                                ctypes.char16_t.ptr,
                                 ctypes.uint32_t);
   }
   if (!watcher) {
