@@ -387,7 +387,7 @@ js_ReportOutOfMemory(ThreadSafeContext *cxArg)
     PopulateReportBlame(cx, &report);
 
     /* Report the error. */
-    if (JSErrorReporter onError = cx->errorReporter) {
+    if (JSErrorReporter onError = cx->runtime()->errorReporter) {
         AutoSuppressGC suppressGC(cx);
         onError(cx, msg, &report);
     }
@@ -877,7 +877,7 @@ js::CallErrorReporter(JSContext *cx, const char *message, JSErrorReport *reportp
     JS_ASSERT(message);
     JS_ASSERT(reportp);
 
-    if (JSErrorReporter onError = cx->errorReporter)
+    if (JSErrorReporter onError = cx->runtime()->errorReporter)
         onError(cx, message, reportp);
 }
 
@@ -1108,7 +1108,6 @@ JSContext::JSContext(JSRuntime *rt)
     generatingError(false),
     savedFrameChains_(),
     cycleDetectorSet(MOZ_THIS_IN_INITIALIZER_LIST()),
-    errorReporter(nullptr),
     data(nullptr),
     data2(nullptr),
     outstandingRequests(0),
