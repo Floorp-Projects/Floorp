@@ -1130,7 +1130,6 @@ FindEnumStringIndex(JSContext* cx, JS::Handle<JS::Value> v, const EnumEntry* val
     *ok = false;
     return 0;
   }
-  JS::Anchor<JSString*> anchor(str);
 
   {
     int index;

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if defined(JSGC_USE_EXACT_ROOTING)
-
 #include "js/Class.h"
 #include "jsapi-tests/tests.h"
 
@@ -180,5 +178,3 @@ BEGIN_TEST(test_PersistentRootedAssign)
     return true;
 }
 END_TEST(test_PersistentRootedAssign)
-
-#endif // defined(JSGC_USE_EXACT_ROOTING)
