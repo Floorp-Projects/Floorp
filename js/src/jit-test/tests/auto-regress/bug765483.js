@@ -1,8 +1,11 @@
-// |jit-test| debug; error:ReferenceError;
+// |jit-test| error:ReferenceError;
 
 // Binary: cache/js-dbg-64-de23a9fc29db-linux
 // Flags: --ion-eager
 //
+
+var g = newGlobal();
+var dbg = new g.Debugger(this);
 
 var obj1 = {}, obj2 = {};
 obj2['b'+i] = 0;

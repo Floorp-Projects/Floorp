@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Don't allow cycles in the graph of the compartment "debugs" relation.
 
 load(libdir + "asserts.js");
