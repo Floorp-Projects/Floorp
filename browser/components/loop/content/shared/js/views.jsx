@@ -407,7 +407,8 @@ loop.shared.views = (function(_, OT, l10n) {
       var backButton = <div />;
       if (this.props.reset) {
         backButton = (
-          <button className="back" type="button" onClick={this.props.reset}>
+          <button className="fx-embedded-btn-back" type="button"
+                  onClick={this.props.reset}>
             &laquo;&nbsp;{l10n.get("feedback_back_button")}
           </button>
         );
