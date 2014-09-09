@@ -21,6 +21,7 @@
 #include "nsSVGUtils.h"
 #include "nsTHashtable.h"
 #include "nsURIHashKey.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIAtom;
 class nsIPresShell;
@@ -218,7 +219,8 @@ public:
   nsSVGFilterFrame *GetFilterFrame();
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsSVGFilterReference, nsSVGIDRenderingObserver)
 
   // nsISVGFilterReference
   virtual void Invalidate() MOZ_OVERRIDE { DoUpdate(); };
@@ -253,7 +255,8 @@ public:
   void Invalidate() { DoUpdate(); }
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsSVGFilterChainObserver)
 
 protected:
   virtual ~nsSVGFilterChainObserver();
@@ -271,6 +274,8 @@ public:
     : nsSVGFilterChainObserver(aFilters, aFilteredFrame->GetContent())
     , mFrameReference(aFilteredFrame)
   {}
+
+  void DetachFromFrame() { mFrameReference.Detach(); }
 
 protected:
   virtual void DoUpdate() MOZ_OVERRIDE;
@@ -390,12 +395,24 @@ public:
     (static_cast<nsISupports*>(aPropertyValue))->Release();
   }
 
+  static void DestroyFilterProperty(void* aPropertyValue)
+  {
+    auto* prop = static_cast<nsSVGFilterProperty*>(aPropertyValue);
+
+    // nsSVGFilterProperty is cycle-collected, so dropping the last reference
+    // doesn't necessarily destroy it. We need to tell it that the frame
+    // has now become invalid.
+    prop->DetachFromFrame();
+
+    prop->Release();
+  }
+
   static void DestroyHashtable(void* aPropertyValue)
   {
     delete static_cast<URIObserverHashtable*> (aPropertyValue);
   }
 
-  NS_DECLARE_FRAME_PROPERTY(FilterProperty, DestroySupports)
+  NS_DECLARE_FRAME_PROPERTY(FilterProperty, DestroyFilterProperty)
   NS_DECLARE_FRAME_PROPERTY(MaskProperty, DestroySupports)
   NS_DECLARE_FRAME_PROPERTY(ClipPathProperty, DestroySupports)
   NS_DECLARE_FRAME_PROPERTY(MarkerBeginProperty, DestroySupports)

@@ -16,6 +16,7 @@
 #include "nsSVGMaskFrame.h"
 #include "nsIReflowCallback.h"
 #include "RestyleManager.h"
+#include "nsCycleCollectionParticipant.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -231,9 +232,24 @@ nsSVGRenderingObserverProperty::DoUpdate()
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsSVGFilterReference,
-                            nsSVGIDRenderingObserver,
-                            nsISVGFilterReference);
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGFilterReference)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGFilterReference)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGFilterReference)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsSVGFilterReference)
+  tmp->mElement.Unlink();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsSVGFilterReference)
+  tmp->mElement.Traverse(&cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsSVGIDRenderingObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISVGFilterReference)
+NS_INTERFACE_MAP_END
 
 nsSVGFilterFrame *
 nsSVGFilterReference::GetFilterFrame()
@@ -252,7 +268,14 @@ nsSVGFilterReference::DoUpdate()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsSVGFilterChainObserver, nsISupports)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGFilterChainObserver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGFilterChainObserver)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterChainObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION(nsSVGFilterChainObserver, mReferences)
 
 nsSVGFilterChainObserver::nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>& aFilters,
                                                    nsIContent* aFilteredElement)
