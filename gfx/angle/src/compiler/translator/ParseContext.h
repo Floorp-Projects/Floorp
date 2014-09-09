@@ -1,15 +1,15 @@
 //
-// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
 #ifndef _PARSER_HELPER_INCLUDED_
 #define _PARSER_HELPER_INCLUDED_
 
+#include "compiler/translator/Compiler.h"
 #include "compiler/translator/Diagnostics.h"
 #include "compiler/translator/DirectiveHandler.h"
 #include "compiler/translator/localintermediate.h"
-#include "compiler/translator/ShHandle.h"
 #include "compiler/translator/SymbolTable.h"
 #include "compiler/preprocessor/Preprocessor.h"
 
@@ -133,8 +133,6 @@ struct TParseContext {
     TFunction *addConstructorFunc(TPublicType publicType);
     TIntermTyped* addConstructor(TIntermNode*, const TType*, TOperator, TFunction*, const TSourceLoc&);
     TIntermTyped* foldConstConstructor(TIntermAggregate* aggrNode, const TType& type);
-    TIntermTyped* constructStruct(TIntermNode*, TType*, int, const TSourceLoc&, bool subset);
-    TIntermTyped* constructBuiltIn(const TType*, TOperator, TIntermNode*, const TSourceLoc&, bool subset);
     TIntermTyped* addConstVectorNode(TVectorFields&, TIntermTyped*, const TSourceLoc&);
     TIntermTyped* addConstMatrixNode(int , TIntermTyped*, const TSourceLoc&);
     TIntermTyped* addConstArrayNode(int index, TIntermTyped* node, const TSourceLoc& line);

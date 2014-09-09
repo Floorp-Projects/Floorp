@@ -1,6 +1,6 @@
 #include "precompiled.h"
 //
-// Copyright (c) 2013 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2013-2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -13,11 +13,12 @@
 #include "libGLESv2/Context.h"
 #include "libGLESv2/Texture.h"
 #include "libGLESv2/Framebuffer.h"
-#include "libGLESv2/Renderbuffer.h"
+#include "libGLESv2/FramebufferAttachment.h"
 #include "libGLESv2/formatutils.h"
 #include "libGLESv2/main.h"
 #include "libGLESv2/Query.h"
 #include "libGLESv2/ProgramBinary.h"
+#include "libGLESv2/TransformFeedback.h"
 
 #include "common/mathutil.h"
 #include "common/utilities.h"
@@ -67,6 +68,7 @@ bool ValidTextureTarget(const Context *context, GLenum target)
 // This function differs from ValidTextureTarget in that the target must be
 // usable as the destination of a 2D operation-- so a cube face is valid, but
 // GL_TEXTURE_CUBE_MAP is not.
+// Note: duplicate of IsInternalTextureTarget
 bool ValidTexture2DDestinationTarget(const Context *context, GLenum target)
 {
     switch (target)
@@ -110,7 +112,7 @@ bool ValidBufferTarget(const Context *context, GLenum target)
 
       case GL_PIXEL_PACK_BUFFER:
       case GL_PIXEL_UNPACK_BUFFER:
-        return context->supportsPBOs();
+        return context->getCaps().extensions.pixelBufferObject;
 
       case GL_COPY_READ_BUFFER:
       case GL_COPY_WRITE_BUFFER:
@@ -165,14 +167,16 @@ bool ValidMipLevel(const Context *context, GLenum target, GLint level)
     return level < maxLevel;
 }
 
-bool ValidImageSize(const gl::Context *context, GLenum target, GLint level, GLsizei width, GLsizei height, GLsizei depth)
+bool ValidImageSize(const gl::Context *context, GLenum target, GLint level,
+                    GLsizei width, GLsizei height, GLsizei depth)
 {
     if (level < 0 || width < 0 || height < 0 || depth < 0)
     {
         return false;
     }
 
-    if (!context->supportsNonPower2Texture() && (level != 0 || !gl::isPow2(width) || !gl::isPow2(height) || !gl::isPow2(depth)))
+    if (!context->getCaps().extensions.textureNPOT &&
+        (level != 0 && (!gl::isPow2(width) || !gl::isPow2(height) || !gl::isPow2(depth))))
     {
         return false;
     }
@@ -187,14 +191,13 @@ bool ValidImageSize(const gl::Context *context, GLenum target, GLint level, GLsi
 
 bool ValidCompressedImageSize(const gl::Context *context, GLenum internalFormat, GLsizei width, GLsizei height)
 {
-    GLuint clientVersion = context->getClientVersion();
-    if (!IsFormatCompressed(internalFormat, clientVersion))
+    if (!IsFormatCompressed(internalFormat))
     {
         return false;
     }
 
-    GLint blockWidth = GetCompressedBlockWidth(internalFormat, clientVersion);
-    GLint blockHeight = GetCompressedBlockHeight(internalFormat, clientVersion);
+    GLint blockWidth = GetCompressedBlockWidth(internalFormat);
+    GLint blockHeight = GetCompressedBlockHeight(internalFormat);
     if (width  < 0 || (width  > blockWidth  && width  % blockWidth  != 0) ||
         height < 0 || (height > blockHeight && height % blockHeight != 0))
     {
@@ -260,7 +263,8 @@ bool ValidateRenderbufferStorageParameters(const gl::Context *context, GLenum ta
         return gl::error(GL_INVALID_VALUE, false);
     }
 
-    if (!gl::IsValidInternalFormat(internalformat, context))
+    const gl::Caps &caps = context->getCaps();
+    if (!gl::IsValidInternalFormat(internalformat, caps.extensions, context->getClientVersion()))
     {
         return gl::error(GL_INVALID_ENUM, false);
     }
@@ -269,20 +273,19 @@ bool ValidateRenderbufferStorageParameters(const gl::Context *context, GLenum ta
     // sized but it does state that the format must be in the ES2.0 spec table 4.5 which contains
     // only sized internal formats. The ES3 spec (section 4.4.2) does, however, state that the
     // internal format must be sized and not an integer format if samples is greater than zero.
-    if (!gl::IsSizedInternalFormat(internalformat, context->getClientVersion()))
+    if (!gl::IsSizedInternalFormat(internalformat))
     {
         return gl::error(GL_INVALID_ENUM, false);
     }
 
-    GLenum componentType = gl::GetComponentType(internalformat, context->getClientVersion());
+    GLenum componentType = gl::GetComponentType(internalformat);
     if ((componentType == GL_UNSIGNED_INT || componentType == GL_INT) && samples > 0)
     {
         return gl::error(GL_INVALID_OPERATION, false);
     }
 
-    if (!gl::IsColorRenderingSupported(internalformat, context) &&
-        !gl::IsDepthRenderingSupported(internalformat, context) &&
-        !gl::IsStencilRenderingSupported(internalformat, context))
+    const TextureCaps &formatCaps = caps.textureCaps.get(internalformat);
+    if (!formatCaps.colorRendering && !formatCaps.depthRendering && !formatCaps.stencilRendering)
     {
         return gl::error(GL_INVALID_ENUM, false);
     }
@@ -374,7 +377,7 @@ bool ValidateFramebufferRenderbufferParameters(gl::Context *context, GLenum targ
     return true;
 }
 
-static bool IsPartialBlit(gl::Context *context, gl::Renderbuffer *readBuffer, gl::Renderbuffer *writeBuffer,
+static bool IsPartialBlit(gl::Context *context, gl::FramebufferAttachment *readBuffer, gl::FramebufferAttachment *writeBuffer,
                           GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
                           GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1)
 {
@@ -467,24 +470,22 @@ bool ValidateBlitFramebufferParameters(gl::Context *context, GLint srcX0, GLint 
 
     bool sameBounds = srcX0 == dstX0 && srcY0 == dstY0 && srcX1 == dstX1 && srcY1 == dstY1;
 
-    GLuint clientVersion = context->getClientVersion();
-
     if (mask & GL_COLOR_BUFFER_BIT)
     {
-        gl::Renderbuffer *readColorBuffer = readFramebuffer->getReadColorbuffer();
-        gl::Renderbuffer *drawColorBuffer = drawFramebuffer->getFirstColorbuffer();
+        gl::FramebufferAttachment *readColorBuffer = readFramebuffer->getReadColorbuffer();
+        gl::FramebufferAttachment *drawColorBuffer = drawFramebuffer->getFirstColorbuffer();
 
         if (readColorBuffer && drawColorBuffer)
         {
             GLenum readInternalFormat = readColorBuffer->getActualFormat();
-            GLenum readComponentType = gl::GetComponentType(readInternalFormat, clientVersion);
+            GLenum readComponentType = gl::GetComponentType(readInternalFormat);
 
             for (unsigned int i = 0; i < gl::IMPLEMENTATION_MAX_DRAW_BUFFERS; i++)
             {
                 if (drawFramebuffer->isEnabledColorAttachment(i))
                 {
                     GLenum drawInternalFormat = drawFramebuffer->getColorbuffer(i)->getActualFormat();
-                    GLenum drawComponentType = gl::GetComponentType(drawInternalFormat, clientVersion);
+                    GLenum drawComponentType = gl::GetComponentType(drawInternalFormat);
 
                     // The GL ES 3.0.2 spec (pg 193) states that:
                     // 1) If the read buffer is fixed point format, the draw buffer must be as well
@@ -554,8 +555,8 @@ bool ValidateBlitFramebufferParameters(gl::Context *context, GLint srcX0, GLint 
 
     if (mask & GL_DEPTH_BUFFER_BIT)
     {
-        gl::Renderbuffer *readDepthBuffer = readFramebuffer->getDepthbuffer();
-        gl::Renderbuffer *drawDepthBuffer = drawFramebuffer->getDepthbuffer();
+        gl::FramebufferAttachment *readDepthBuffer = readFramebuffer->getDepthbuffer();
+        gl::FramebufferAttachment *drawDepthBuffer = drawFramebuffer->getDepthbuffer();
 
         if (readDepthBuffer && drawDepthBuffer)
         {
@@ -588,8 +589,8 @@ bool ValidateBlitFramebufferParameters(gl::Context *context, GLint srcX0, GLint 
 
     if (mask & GL_STENCIL_BUFFER_BIT)
     {
-        gl::Renderbuffer *readStencilBuffer = readFramebuffer->getStencilbuffer();
-        gl::Renderbuffer *drawStencilBuffer = drawFramebuffer->getStencilbuffer();
+        gl::FramebufferAttachment *readStencilBuffer = readFramebuffer->getStencilbuffer();
+        gl::FramebufferAttachment *drawStencilBuffer = drawFramebuffer->getStencilbuffer();
 
         if (readStencilBuffer && drawStencilBuffer)
         {
@@ -727,7 +728,7 @@ bool ValidateTexParamParameters(gl::Context *context, GLenum pname, GLint param)
         break;
 
       case GL_TEXTURE_MAX_ANISOTROPY_EXT:
-        if (!context->supportsTextureFilterAnisotropy())
+        if (!context->getCaps().extensions.textureFilterAnisotropic)
         {
             return gl::error(GL_INVALID_ENUM, false);
         }
@@ -847,7 +848,7 @@ bool ValidateReadPixelsParameters(gl::Context *context, GLint x, GLint y, GLsize
     }
 
     GLenum currentInternalFormat, currentFormat, currentType;
-    int clientVersion = context->getClientVersion();
+    GLuint clientVersion = context->getClientVersion();
 
     context->getCurrentReadFormatType(&currentInternalFormat, &currentFormat, &currentType);
 
@@ -859,10 +860,10 @@ bool ValidateReadPixelsParameters(gl::Context *context, GLint x, GLint y, GLsize
         return gl::error(GL_INVALID_OPERATION, false);
     }
 
-    GLenum sizedInternalFormat = IsSizedInternalFormat(format, clientVersion) ? format :
-                                 GetSizedInternalFormat(format, type, clientVersion);
+    GLenum sizedInternalFormat = IsSizedInternalFormat(format) ? format
+                                                               : GetSizedInternalFormat(format, type);
 
-    GLsizei outputPitch = GetRowPitch(sizedInternalFormat, type, clientVersion, width, context->getPackAlignment());
+    GLsizei outputPitch = GetRowPitch(sizedInternalFormat, type, width, context->getPackAlignment());
     // sized query sanity check
     if (bufSize)
     {
@@ -987,7 +988,7 @@ static bool ValidateUniformCommonBase(gl::Context *context, GLenum targetUniform
 bool ValidateUniform(gl::Context *context, GLenum uniformType, GLint location, GLsizei count)
 {
     // Check for ES3 uniform entry points
-    if (UniformComponentType(uniformType) == GL_UNSIGNED_INT && context->getClientVersion() < 3)
+    if (VariableComponentType(uniformType) == GL_UNSIGNED_INT && context->getClientVersion() < 3)
     {
         return gl::error(GL_INVALID_OPERATION, false);
     }
@@ -998,7 +999,7 @@ bool ValidateUniform(gl::Context *context, GLenum uniformType, GLint location, G
         return false;
     }
 
-    GLenum targetBoolType = UniformBoolVectorType(uniformType);
+    GLenum targetBoolType = VariableBoolVectorType(uniformType);
     bool samplerUniformCheck = (IsSampler(uniform->type) && uniformType == GL_INT);
     if (!samplerUniformCheck && uniformType != uniform->type && targetBoolType != uniform->type)
     {
@@ -1077,8 +1078,8 @@ bool ValidateStateQuery(gl::Context *context, GLenum pname, GLenum *nativeType, 
                 return gl::error(GL_INVALID_OPERATION, false);
             }
 
-            Renderbuffer *renderbuffer = framebuffer->getReadColorbuffer();
-            if (!renderbuffer)
+            FramebufferAttachment *attachment = framebuffer->getReadColorbuffer();
+            if (!attachment)
             {
                 return gl::error(GL_INVALID_OPERATION, false);
             }
@@ -1096,6 +1097,340 @@ bool ValidateStateQuery(gl::Context *context, GLenum pname, GLenum *nativeType, 
     }
 
     return true;
+}
+
+bool ValidateCopyTexImageParametersBase(gl::Context* context, GLenum target, GLint level, GLenum internalformat, bool isSubImage,
+                                        GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height,
+                                        GLint border, GLenum *textureFormatOut)
+{
+
+    if (!ValidTexture2DDestinationTarget(context, target))
+    {
+        return gl::error(GL_INVALID_ENUM, false);
+    }
+
+    if (level < 0 || xoffset < 0 || yoffset < 0 || zoffset < 0 || width < 0 || height < 0)
+    {
+        return gl::error(GL_INVALID_VALUE, false);
+    }
+
+    if (std::numeric_limits<GLsizei>::max() - xoffset < width || std::numeric_limits<GLsizei>::max() - yoffset < height)
+    {
+        return gl::error(GL_INVALID_VALUE, false);
+    }
+
+    if (border != 0)
+    {
+        return gl::error(GL_INVALID_VALUE, false);
+    }
+
+    if (!ValidMipLevel(context, target, level))
+    {
+        return gl::error(GL_INVALID_VALUE, false);
+    }
+
+    gl::Framebuffer *framebuffer = context->getReadFramebuffer();
+    if (framebuffer->completeness() != GL_FRAMEBUFFER_COMPLETE)
+    {
+        return gl::error(GL_INVALID_FRAMEBUFFER_OPERATION, false);
+    }
+
+    if (context->getReadFramebufferHandle() != 0 && framebuffer->getSamples() != 0)
+    {
+        return gl::error(GL_INVALID_OPERATION, false);
+    }
+
+    gl::Texture *texture = NULL;
+    GLenum textureInternalFormat = GL_NONE;
+    bool textureCompressed = false;
+    bool textureIsDepth = false;
+    GLint textureLevelWidth = 0;
+    GLint textureLevelHeight = 0;
+    GLint textureLevelDepth = 0;
+    int maxDimension = 0;
+
+    switch (target)
+    {
+      case GL_TEXTURE_2D:
+        {
+            gl::Texture2D *texture2d = context->getTexture2D();
+            if (texture2d)
+            {
+                textureInternalFormat = texture2d->getInternalFormat(level);
+                textureCompressed = texture2d->isCompressed(level);
+                textureIsDepth = texture2d->isDepth(level);
+                textureLevelWidth = texture2d->getWidth(level);
+                textureLevelHeight = texture2d->getHeight(level);
+                textureLevelDepth = 1;
+                texture = texture2d;
+                maxDimension = context->getMaximum2DTextureDimension();
+            }
+        }
+        break;
+
+      case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+      case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+      case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+      case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+      case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+      case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        {
+            gl::TextureCubeMap *textureCube = context->getTextureCubeMap();
+            if (textureCube)
+            {
+                textureInternalFormat = textureCube->getInternalFormat(target, level);
+                textureCompressed = textureCube->isCompressed(target, level);
+                textureIsDepth = false;
+                textureLevelWidth = textureCube->getWidth(target, level);
+                textureLevelHeight = textureCube->getHeight(target, level);
+                textureLevelDepth = 1;
+                texture = textureCube;
+                maxDimension = context->getMaximumCubeTextureDimension();
+            }
+        }
+        break;
+
+      case GL_TEXTURE_2D_ARRAY:
+        {
+            gl::Texture2DArray *texture2dArray = context->getTexture2DArray();
+            if (texture2dArray)
+            {
+                textureInternalFormat = texture2dArray->getInternalFormat(level);
+                textureCompressed = texture2dArray->isCompressed(level);
+                textureIsDepth = texture2dArray->isDepth(level);
+                textureLevelWidth = texture2dArray->getWidth(level);
+                textureLevelHeight = texture2dArray->getHeight(level);
+                textureLevelDepth = texture2dArray->getLayers(level);
+                texture = texture2dArray;
+                maxDimension = context->getMaximum2DTextureDimension();
+            }
+        }
+        break;
+
+      case GL_TEXTURE_3D:
+        {
+            gl::Texture3D *texture3d = context->getTexture3D();
+            if (texture3d)
+            {
+                textureInternalFormat = texture3d->getInternalFormat(level);
+                textureCompressed = texture3d->isCompressed(level);
+                textureIsDepth = texture3d->isDepth(level);
+                textureLevelWidth = texture3d->getWidth(level);
+                textureLevelHeight = texture3d->getHeight(level);
+                textureLevelDepth = texture3d->getDepth(level);
+                texture = texture3d;
+                maxDimension = context->getMaximum3DTextureDimension();
+            }
+        }
+        break;
+
+      default:
+        return gl::error(GL_INVALID_ENUM, false);
+    }
+
+    if (!texture)
+    {
+        return gl::error(GL_INVALID_OPERATION, false);
+    }
+
+    if (texture->isImmutable() && !isSubImage)
+    {
+        return gl::error(GL_INVALID_OPERATION, false);
+    }
+
+    if (textureIsDepth)
+    {
+        return gl::error(GL_INVALID_OPERATION, false);
+    }
+
+    if (textureCompressed)
+    {
+        GLint blockWidth = GetCompressedBlockWidth(textureInternalFormat);
+        GLint blockHeight = GetCompressedBlockHeight(textureInternalFormat);
+
+        if (((width % blockWidth) != 0 && width != textureLevelWidth) ||
+            ((height % blockHeight) != 0 && height != textureLevelHeight))
+        {
+            return gl::error(GL_INVALID_OPERATION, false);
+        }
+    }
+
+    if (isSubImage)
+    {
+        if (xoffset + width > textureLevelWidth ||
+            yoffset + height > textureLevelHeight ||
+            zoffset >= textureLevelDepth)
+        {
+            return gl::error(GL_INVALID_VALUE, false);
+        }
+    }
+    else
+    {
+        if (IsCubemapTextureTarget(target) && width != height)
+        {
+            return gl::error(GL_INVALID_VALUE, false);
+        }
+
+        if (!IsValidInternalFormat(internalformat, context->getCaps().extensions, context->getClientVersion()))
+        {
+            return gl::error(GL_INVALID_ENUM, false);
+        }
+
+        int maxLevelDimension = (maxDimension >> level);
+        if (static_cast<int>(width) > maxLevelDimension || static_cast<int>(height) > maxLevelDimension)
+        {
+            return gl::error(GL_INVALID_VALUE, false);
+        }
+    }
+
+    *textureFormatOut = textureInternalFormat;
+    return true;
+}
+
+static bool ValidateDrawBase(const gl::Context *context, GLenum mode, GLsizei count)
+{
+    switch (mode)
+    {
+      case GL_POINTS:
+      case GL_LINES:
+      case GL_LINE_LOOP:
+      case GL_LINE_STRIP:
+      case GL_TRIANGLES:
+      case GL_TRIANGLE_STRIP:
+      case GL_TRIANGLE_FAN:
+        break;
+      default:
+        return gl::error(GL_INVALID_ENUM, false);
+    }
+
+    if (count < 0)
+    {
+        return gl::error(GL_INVALID_VALUE, false);
+    }
+
+    // Check for mapped buffers
+    if (context->hasMappedBuffer(GL_ARRAY_BUFFER))
+    {
+        return gl::error(GL_INVALID_OPERATION, false);
+    }
+
+    const gl::DepthStencilState &depthStencilState = context->getDepthStencilState();
+    if (depthStencilState.stencilWritemask != depthStencilState.stencilBackWritemask ||
+        context->getStencilRef() != context->getStencilBackRef() ||
+        depthStencilState.stencilMask != depthStencilState.stencilBackMask)
+    {
+        // Note: these separate values are not supported in WebGL, due to D3D's limitations.
+        // See Section 6.10 of the WebGL 1.0 spec
+        ERR("This ANGLE implementation does not support separate front/back stencil "
+            "writemasks, reference values, or stencil mask values.");
+        return gl::error(GL_INVALID_OPERATION, false);
+    }
+
+    const gl::Framebuffer *fbo = context->getDrawFramebuffer();
+    if (!fbo || fbo->completeness() != GL_FRAMEBUFFER_COMPLETE)
+    {
+        return gl::error(GL_INVALID_FRAMEBUFFER_OPERATION, false);
+    }
+
+    // No-op if zero count
+    return (count > 0);
+}
+
+bool ValidateDrawArrays(const gl::Context *context, GLenum mode, GLint first, GLsizei count)
+{
+    if (first < 0)
+    {
+        return gl::error(GL_INVALID_VALUE, false);
+    }
+
+    gl::TransformFeedback *curTransformFeedback = context->getCurrentTransformFeedback();
+    if (curTransformFeedback && curTransformFeedback->isStarted() && !curTransformFeedback->isPaused() &&
+        curTransformFeedback->getDrawMode() != mode)
+    {
+        // It is an invalid operation to call DrawArrays or DrawArraysInstanced with a draw mode
+        // that does not match the current transform feedback object's draw mode (if transform feedback
+        // is active), (3.0.2, section 2.14, pg 86)
+        return gl::error(GL_INVALID_OPERATION, false);
+    }
+
+    if (!ValidateDrawBase(context, mode, count))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateDrawArraysInstanced(const gl::Context *context, GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+{
+    if (primcount < 0)
+    {
+        return gl::error(GL_INVALID_VALUE, false);
+    }
+
+    if (!ValidateDrawArrays(context, mode, first, count))
+    {
+        return false;
+    }
+
+    // No-op if zero primitive count
+    return (primcount > 0);
+}
+
+bool ValidateDrawElements(const gl::Context *context, GLenum mode, GLsizei count, GLenum type, const GLvoid* indices)
+{
+    switch (type)
+    {
+      case GL_UNSIGNED_BYTE:
+      case GL_UNSIGNED_SHORT:
+        break;
+      case GL_UNSIGNED_INT:
+        if (!context->getCaps().extensions.elementIndexUint)
+        {
+            return gl::error(GL_INVALID_ENUM, false);
+        }
+        break;
+      default:
+        return gl::error(GL_INVALID_ENUM, false);
+    }
+
+    gl::TransformFeedback *curTransformFeedback = context->getCurrentTransformFeedback();
+    if (curTransformFeedback && curTransformFeedback->isStarted() && !curTransformFeedback->isPaused())
+    {
+        // It is an invalid operation to call DrawElements, DrawRangeElements or DrawElementsInstanced
+        // while transform feedback is active, (3.0.2, section 2.14, pg 86)
+        return gl::error(GL_INVALID_OPERATION, false);
+    }
+
+    // Check for mapped buffers
+    if (context->hasMappedBuffer(GL_ELEMENT_ARRAY_BUFFER))
+    {
+        return gl::error(GL_INVALID_OPERATION, false);
+    }
+
+    if (!ValidateDrawBase(context, mode, count))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateDrawElementsInstanced(const gl::Context *context, GLenum mode, GLsizei count, GLenum type,
+                                   const GLvoid *indices, GLsizei primcount)
+{
+    if (primcount < 0)
+    {
+        return gl::error(GL_INVALID_VALUE, false);
+    }
+
+    if (!ValidateDrawElements(context, mode, count, type, indices))
+    {
+        return false;
+    }
+
+    // No-op zero primitive count
+    return (primcount > 0);
 }
 
 }
