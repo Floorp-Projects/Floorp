@@ -27,6 +27,7 @@ function* cleanup() {
   Services.prefs.clearUserPref("browser.urlbar.autocomplete.enabled");
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
   Services.prefs.clearUserPref("browser.urlbar.autoFill.typed");
+  Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
   remove_all_bookmarks();
   yield promiseClearHistory();
 }
