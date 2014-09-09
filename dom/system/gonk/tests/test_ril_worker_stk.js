@@ -156,6 +156,81 @@ add_test(function test_stk_terminal_response() {
   context.RIL.sendStkTerminalResponse(response);
 });
 
+/**
+ * Verify STK terminal response : GET_INKEY - YES/NO request
+ */
+add_test(function test_stk_terminal_response_get_inkey() {
+  function do_test(isYesNo) {
+    let worker = newUint8SupportOutgoingIndexWorker();
+    let context = worker.ContextPool._contexts[0];
+    let buf = context.Buf;
+    let pduHelper = context.GsmPDUHelper;
+
+    buf.sendParcel = function() {
+      // Type
+      do_check_eq(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
+
+      // Token : we don't care
+      this.readInt32();
+
+      // Data Size, 32 = 2 * (TLV_COMMAND_DETAILS_SIZE(5) +
+      //                      TLV_DEVICE_ID_SIZE(4) +
+      //                      TLV_RESULT_SIZE(3) +
+      //                      TEXT LENGTH(4))
+      do_check_eq(this.readInt32(), 32);
+
+      // Command Details, Type-Length-Value
+      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
+                                            COMPREHENSIONTLV_FLAG_CR);
+      do_check_eq(pduHelper.readHexOctet(), 3);
+      do_check_eq(pduHelper.readHexOctet(), 0x01);
+      do_check_eq(pduHelper.readHexOctet(), STK_CMD_GET_INKEY);
+      do_check_eq(pduHelper.readHexOctet(), 0x04);
+
+      // Device Identifies, Type-Length-Value(Source ID-Destination ID)
+      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
+      do_check_eq(pduHelper.readHexOctet(), 2);
+      do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+      do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+
+      // Result
+      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
+                                            COMPREHENSIONTLV_FLAG_CR);
+      do_check_eq(pduHelper.readHexOctet(), 1);
+      do_check_eq(pduHelper.readHexOctet(), STK_RESULT_OK);
+
+      // Yes/No response
+      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
+                                            COMPREHENSIONTLV_FLAG_CR);
+      do_check_eq(pduHelper.readHexOctet(), 2);
+      do_check_eq(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_8BIT);
+      do_check_eq(pduHelper.readHexOctet(), isYesNo ? 0x01 : 0x00);
+
+      run_next_test();
+    };
+
+    let response = {
+      command: {
+        commandNumber: 0x01,
+        typeOfCommand: STK_CMD_GET_INKEY,
+        commandQualifier: 0x04,
+        options: {
+          isYesNoRequested: true
+        }
+      },
+      isYesNo: isYesNo,
+      resultCode: STK_RESULT_OK
+    };
+
+    context.RIL.sendStkTerminalResponse(response);
+  };
+
+  // Test "Yes" response
+  do_test(true);
+  // Test "No" response
+  do_test(false);
+});
+
 // Test ComprehensionTlvHelper
 
 /**
