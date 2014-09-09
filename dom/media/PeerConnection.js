@@ -637,6 +637,12 @@ RTCPeerConnection.prototype = {
   },
 
   setLocalDescription: function(desc, onSuccess, onError) {
+    if (!onSuccess || !onError) {
+      this.logWarning(
+          "setLocalDescription called without success/failure callbacks. This is deprecated, and will be an error in the future.",
+          null, 0);
+    }
+
     this._localType = desc.type;
 
     let type;
@@ -668,6 +674,11 @@ RTCPeerConnection.prototype = {
   },
 
   setRemoteDescription: function(desc, onSuccess, onError) {
+    if (!onSuccess || !onError) {
+      this.logWarning(
+          "setRemoteDescription called without success/failure callbacks. This is deprecated, and will be an error in the future.",
+          null, 0);
+    }
     this._remoteType = desc.type;
 
     let type;
@@ -804,6 +815,11 @@ RTCPeerConnection.prototype = {
   },
 
   addIceCandidate: function(cand, onSuccess, onError) {
+    if (!onSuccess || !onError) {
+      this.logWarning(
+          "addIceCandidate called without success/failure callbacks. This is deprecated, and will be an error in the future.",
+          null, 0);
+    }
     if (!cand.candidate && !cand.sdpMLineIndex) {
       throw new this._win.DOMError("",
           "Invalid candidate passed to addIceCandidate!");
