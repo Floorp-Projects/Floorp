@@ -2136,13 +2136,12 @@ bool nsStyleBackground::IsTransparent() const
 }
 
 void
-nsStyleBackground::Position::SetInitialValues()
+nsStyleBackground::Position::SetInitialPercentValues(float aPercentVal)
 {
-  // Initial value is "0% 0%"
-  mXPosition.mPercent = 0.0f;
+  mXPosition.mPercent = aPercentVal;
   mXPosition.mLength = 0;
   mXPosition.mHasPercent = true;
-  mYPosition.mPercent = 0.0f;
+  mYPosition.mPercent = aPercentVal;
   mYPosition.mLength = 0;
   mYPosition.mHasPercent = true;
 }
@@ -2273,7 +2272,7 @@ nsStyleBackground::Layer::SetInitialValues()
   mOrigin = NS_STYLE_BG_ORIGIN_PADDING;
   mRepeat.SetInitialValues();
   mBlendMode = NS_STYLE_BLEND_NORMAL;
-  mPosition.SetInitialValues();
+  mPosition.SetInitialPercentValues(0.0f); // Initial value is "0% 0%"
   mSize.SetInitialValues();
   mImage.SetNull();
 }
