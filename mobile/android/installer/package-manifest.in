@@ -528,12 +528,15 @@
 @BINPATH@/res/table-remove-row-hover.gif
 @BINPATH@/res/table-remove-row.gif
 @BINPATH@/res/grabber.gif
-@BINPATH@/res/fonts/*
 @BINPATH@/res/dtd/*
 @BINPATH@/res/html/*
 @BINPATH@/res/langGroups.properties
 @BINPATH@/res/language.properties
 @BINPATH@/res/entityTables/*
+
+#ifndef MOZ_ANDROID_EXCLUDE_FONTS
+@BINPATH@/res/fonts/*
+#endif
 
 ; svg
 @BINPATH@/res/svg.css
