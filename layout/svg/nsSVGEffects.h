@@ -206,7 +206,6 @@ public:
   nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
                       nsIFrame *aFilteredFrame);
 
-  const nsTArray<nsStyleFilter>& GetFilters() { return mFilters; }
   bool ReferencesValidResources();
   bool IsInObserverLists() const;
   void Invalidate();
@@ -219,7 +218,6 @@ protected:
 
 private:
   nsTArray<nsSVGFilterReference*> mReferences;
-  nsTArray<nsStyleFilter> mFilters;
 };
 
 class nsSVGMarkerProperty : public nsSVGIDRenderingObserver {
