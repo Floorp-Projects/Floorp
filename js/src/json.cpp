@@ -121,7 +121,6 @@ Quote(StringBuffer &sb, JSLinearString *str)
 static bool
 Quote(JSContext *cx, StringBuffer &sb, JSString *str)
 {
-    JS::Anchor<JSString *> anchor(str);
     JSLinearString *linear = str->ensureLinear(cx);
     if (!linear)
         return false;
@@ -654,7 +653,6 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
         JSLinearString *str = space.toString()->ensureLinear(cx);
         if (!str)
             return false;
-        JS::Anchor<JSString *> anchor(str);
         size_t len = Min(size_t(10), str->length());
         if (!gap.appendSubstring(str, 0, len))
             return false;
@@ -846,8 +844,6 @@ json_parse(JSContext *cx, unsigned argc, Value *vp)
     JSFlatString *flat = str->ensureFlat(cx);
     if (!flat)
         return false;
-
-    JS::Anchor<JSString *> anchor(flat);
 
     AutoStableStringChars flatChars(cx);
     if (!flatChars.init(cx, flat))

@@ -13,7 +13,6 @@
 #include "jspubtd.h"
 #include "jstypes.h"
 
-#include "js/Anchor.h"
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/CharacterEncoding.h"

@@ -728,14 +728,12 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
     /* Note: CX is a subclass of either ContextFriendFields or PerThreadDataFriendFields. */
     template <typename CX>
     void init(CX *cx) {
-#ifdef JSGC_TRACK_EXACT_ROOTS
         js::ThingRootKind kind = js::RootKind<T>::rootKind();
         this->stack = &cx->thingGCRooters[kind];
         this->prev = *stack;
         *stack = reinterpret_cast<Rooted<void*>*>(this);
 
         MOZ_ASSERT(!js::GCMethods<T>::poisoned(ptr));
-#endif
     }
 
   public:
@@ -809,19 +807,12 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
         init(js::PerThreadDataFriendFields::getMainThread(rt));
     }
 
-    // Note that we need to let the compiler generate the default destructor in
-    // non-exact-rooting builds because of a bug in the instrumented PGO builds
-    // using MSVC, see bug 915735 for more details.
-#ifdef JSGC_TRACK_EXACT_ROOTS
     ~Rooted() {
         MOZ_ASSERT(*stack == reinterpret_cast<Rooted<void*>*>(this));
         *stack = prev;
     }
-#endif
 
-#ifdef JSGC_TRACK_EXACT_ROOTS
     Rooted<T> *previous() { return reinterpret_cast<Rooted<T>*>(prev); }
-#endif
 
     /*
      * Important: Return a reference here so passing a Rooted<T> to
@@ -854,14 +845,12 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
     bool operator==(const T &other) const { return ptr == other; }
 
   private:
-#ifdef JSGC_TRACK_EXACT_ROOTS
     /*
      * These need to be templated on void* to avoid aliasing issues between, for
      * example, Rooted<JSObject> and Rooted<JSFunction>, which use the same
      * stack head pointer for different classes.
      */
     Rooted<void *> **stack, *prev;
-#endif
 
     /*
      * |ptr| must be the last field in Rooted because the analysis treats all
