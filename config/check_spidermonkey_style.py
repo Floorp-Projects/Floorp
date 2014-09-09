@@ -574,10 +574,6 @@ def tarjan(V, E):
 
 
 def main():
-    # Suppress the build time check if MOZ_NO_BUILD_TIME_SM_CHECKS is set.
-    if "MOZ_NO_BUILD_TIME_SM_CHECKS" in os.environ:
-        sys.exit(0)
-
     ok = check_style()
 
     if ok:
