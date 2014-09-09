@@ -14,6 +14,7 @@ UNIFIED_SOURCES += [
     'js.cpp',
     'jsheaptools.cpp',
     'jsoptparse.cpp',
+    'OSObject.cpp'
 ]
 
 # Building against js_static requires that we declare mfbt sybols "exported"
