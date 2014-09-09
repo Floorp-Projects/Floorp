@@ -124,7 +124,7 @@ Escape(JSContext *cx, const CharT *chars, uint32_t length, uint32_t *newLengthOu
     /* Take a first pass and see how big the result string will need to be. */
     uint32_t newLength = length;
     for (size_t i = 0; i < length; i++) {
-        jschar ch = chars[i];
+        char16_t ch = chars[i];
         if (ch < 128 && shouldPassThrough[ch])
             continue;
 
@@ -147,7 +147,7 @@ Escape(JSContext *cx, const CharT *chars, uint32_t length, uint32_t *newLengthOu
 
     size_t i, ni;
     for (i = 0, ni = 0; i < length; i++) {
-        jschar ch = chars[i];
+        char16_t ch = chars[i];
         if (ch < 128 && shouldPassThrough[ch]) {
             newChars[ni++] = ch;
         } else if (ch < 256) {
@@ -203,12 +203,12 @@ str_escape(JSContext *cx, unsigned argc, Value *vp)
 
 template <typename CharT>
 static inline bool
-Unhex4(const RangedPtr<const CharT> chars, jschar *result)
+Unhex4(const RangedPtr<const CharT> chars, char16_t *result)
 {
-    jschar a = chars[0],
-           b = chars[1],
-           c = chars[2],
-           d = chars[3];
+    char16_t a = chars[0],
+             b = chars[1],
+             c = chars[2],
+             d = chars[3];
 
     if (!(JS7_ISHEX(a) && JS7_ISHEX(b) && JS7_ISHEX(c) && JS7_ISHEX(d)))
         return false;
@@ -219,10 +219,10 @@ Unhex4(const RangedPtr<const CharT> chars, jschar *result)
 
 template <typename CharT>
 static inline bool
-Unhex2(const RangedPtr<const CharT> chars, jschar *result)
+Unhex2(const RangedPtr<const CharT> chars, char16_t *result)
 {
-    jschar a = chars[0],
-           b = chars[1];
+    char16_t a = chars[0],
+             b = chars[1];
 
     if (!(JS7_ISHEX(a) && JS7_ISHEX(b)))
         return false;
@@ -254,7 +254,7 @@ Unescape(StringBuffer &sb, const mozilla::Range<const CharT> chars)
     /* Step 5. */
     while (k < length) {
         /* Step 6. */
-        jschar c = chars[k];
+        char16_t c = chars[k];
 
         /* Step 7. */
         if (c != '%')
@@ -701,7 +701,7 @@ ToLowerCase(JSContext *cx, JSLinearString *str)
         // Look for the first upper case character.
         size_t i = 0;
         for (; i < length; i++) {
-            jschar c = chars[i];
+            char16_t c = chars[i];
             if (unicode::ToLowerCase(c) != c)
                 break;
         }
@@ -717,7 +717,7 @@ ToLowerCase(JSContext *cx, JSLinearString *str)
         PodCopy(newChars.get(), chars, i);
 
         for (; i < length; i++) {
-            jschar c = unicode::ToLowerCase(chars[i]);
+            char16_t c = unicode::ToLowerCase(chars[i]);
             MOZ_ASSERT_IF((IsSame<CharT, Latin1Char>::value), c <= JSString::MAX_LATIN1_CHAR);
             newChars[i] = c;
         }
@@ -747,7 +747,7 @@ ToLowerCaseHelper(JSContext *cx, CallReceiver call)
     if (linear->hasLatin1Chars())
         str = ToLowerCase<Latin1Char>(cx, linear);
     else
-        str = ToLowerCase<jschar>(cx, linear);
+        str = ToLowerCase<char16_t>(cx, linear);
     if (!str)
         return false;
 
@@ -796,7 +796,7 @@ ToUpperCaseImpl(DestChar *destChars, const SrcChar *srcChars, size_t firstLowerC
         destChars[i] = srcChars[i];
 
     for (size_t i = firstLowerCase; i < length; i++) {
-        jschar c = unicode::ToUpperCase(srcChars[i]);
+        char16_t c = unicode::ToUpperCase(srcChars[i]);
         MOZ_ASSERT_IF((IsSame<DestChar, Latin1Char>::value), c <= JSString::MAX_LATIN1_CHAR);
         destChars[i] = c;
     }
@@ -809,7 +809,7 @@ static JSString *
 ToUpperCase(JSContext *cx, JSLinearString *str)
 {
     typedef UniquePtr<Latin1Char[], JS::FreePolicy> Latin1CharPtr;
-    typedef UniquePtr<jschar[], JS::FreePolicy> TwoByteCharPtr;
+    typedef UniquePtr<char16_t[], JS::FreePolicy> TwoByteCharPtr;
 
     mozilla::MaybeOneOf<Latin1CharPtr, TwoByteCharPtr> newChars;
     size_t length = str->length();
@@ -820,7 +820,7 @@ ToUpperCase(JSContext *cx, JSLinearString *str)
         // Look for the first lower case character.
         size_t i = 0;
         for (; i < length; i++) {
-            jschar c = chars[i];
+            char16_t c = chars[i];
             if (unicode::ToUpperCase(c) != c)
                 break;
         }
@@ -857,7 +857,7 @@ ToUpperCase(JSContext *cx, JSLinearString *str)
             ToUpperCaseImpl(buf.get(), chars, i, length);
             newChars.construct<Latin1CharPtr>(buf);
         } else {
-            TwoByteCharPtr buf = cx->make_pod_array<jschar>(length + 1);
+            TwoByteCharPtr buf = cx->make_pod_array<char16_t>(length + 1);
             if (!buf)
                 return nullptr;
 
@@ -898,7 +898,7 @@ ToUpperCaseHelper(JSContext *cx, CallReceiver call)
     if (linear->hasLatin1Chars())
         str = ToUpperCase<Latin1Char>(cx, linear);
     else
-        str = ToUpperCase<jschar>(cx, linear);
+        str = ToUpperCase<char16_t>(cx, linear);
     if (!str)
         return false;
 
@@ -1013,15 +1013,15 @@ str_normalize(JSContext *cx, unsigned argc, Value *vp)
 
     static const size_t INLINE_CAPACITY = 32;
 
-    const UChar *srcChars = JSCharToUChar(stableChars.twoByteRange().start().get());
+    const UChar *srcChars = Char16ToUChar(stableChars.twoByteRange().start().get());
     int32_t srcLen = AssertedCast<int32_t>(str->length());
-    Vector<jschar, INLINE_CAPACITY> chars(cx);
+    Vector<char16_t, INLINE_CAPACITY> chars(cx);
     if (!chars.resize(INLINE_CAPACITY))
         return false;
 
     UErrorCode status = U_ZERO_ERROR;
     int32_t size = unorm_normalize(srcChars, srcLen, form, 0,
-                                   JSCharToUChar(chars.begin()), INLINE_CAPACITY,
+                                   Char16ToUChar(chars.begin()), INLINE_CAPACITY,
                                    &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         if (!chars.resize(size))
@@ -1031,7 +1031,7 @@ str_normalize(JSContext *cx, unsigned argc, Value *vp)
         int32_t finalSize =
 #endif
         unorm_normalize(srcChars, srcLen, form, 0,
-                        JSCharToUChar(chars.begin()), size,
+                        Char16ToUChar(chars.begin()), size,
                         &status);
         MOZ_ASSERT(size == finalSize || U_FAILURE(status), "unorm_normalize behaved inconsistently");
     }
@@ -1103,7 +1103,7 @@ js::str_charCodeAt_impl(JSContext *cx, HandleString string, HandleValue index, M
             goto out_of_range;
         i = size_t(d);
     }
-    jschar c;
+    char16_t c;
     if (!string->getChar(cx, i , &c))
         return false;
     res.setInt32(c);
@@ -1157,7 +1157,7 @@ BoyerMooreHorspool(const TextChar *text, uint32_t textLen, const PatChar *pat, u
 
     uint32_t patLast = patLen - 1;
     for (uint32_t i = 0; i < patLast; i++) {
-        jschar c = pat[i];
+        char16_t c = pat[i];
         if (c >= sBMHCharSetSize)
             return sBMHBadPattern;
         skip[c] = uint8_t(patLast - i);
@@ -1171,7 +1171,7 @@ BoyerMooreHorspool(const TextChar *text, uint32_t textLen, const PatChar *pat, u
                 return static_cast<int>(i);  /* safe: max string size */
         }
 
-        jschar c = text[k];
+        char16_t c = text[k];
         k += (c >= sBMHCharSetSize) ? patLen : skip[c];
     }
     return -1;
@@ -1245,19 +1245,19 @@ FirstCharMatcher8bit(const char *text, uint32_t n, const char pat)
 #endif
 }
 
-static const jschar *
-FirstCharMatcher16bit(const jschar *text, uint32_t n, const jschar pat)
+static const char16_t *
+FirstCharMatcher16bit(const char16_t *text, uint32_t n, const char16_t pat)
 {
 #if defined(XP_MACOSX) || defined(XP_WIN)
     /*
      * Performance of memchr is horrible in OSX. Windows is better,
      * but it is still better to use UnrolledMatcher.
      */
-    return FirstCharMatcherUnrolled<jschar, jschar>(text, n, pat);
+    return FirstCharMatcherUnrolled<char16_t, char16_t>(text, n, pat);
 #else
     /*
      * For linux the best performance is obtained by slightly hacking memchr.
-     * memchr works only on 8bit char but jschar is 16bit. So we treat jschar
+     * memchr works only on 8bit char but char16_t is 16bit. So we treat char16_t
      * in blocks of 8bit and use memchr.
      */
 
@@ -1303,7 +1303,7 @@ Matcher(const TextChar *text, uint32_t textlen, const PatChar *pat, uint32_t pat
         const TextChar *pos;
 
         if (sizeof(TextChar) == 2 && sizeof(PatChar) == 2)
-            pos = (TextChar *) FirstCharMatcher16bit((jschar *)text + i, n - i, pat[0]);
+            pos = (TextChar *) FirstCharMatcher16bit((char16_t *)text + i, n - i, pat[0]);
         else if (sizeof(TextChar) == 1 && sizeof(PatChar) == 1)
             pos = (TextChar *) FirstCharMatcher8bit((char *) text + i, n - i, pat[0]);
         else
@@ -1397,7 +1397,7 @@ StringMatch(JSLinearString *text, JSLinearString *pat, uint32_t start = 0)
         else
             match = StringMatch(textChars, textLen, pat->twoByteChars(nogc), patLen);
     } else {
-        const jschar *textChars = text->twoByteChars(nogc) + start;
+        const char16_t *textChars = text->twoByteChars(nogc) + start;
         if (pat->hasLatin1Chars())
             match = StringMatch(textChars, textLen, pat->latin1Chars(nogc), patLen);
         else
@@ -1410,7 +1410,7 @@ StringMatch(JSLinearString *text, JSLinearString *pat, uint32_t start = 0)
 static const size_t sRopeMatchThresholdRatioLog2 = 5;
 
 bool
-js::StringHasPattern(JSLinearString *text, const jschar *pat, uint32_t patLen)
+js::StringHasPattern(JSLinearString *text, const char16_t *pat, uint32_t patLen)
 {
     AutoCheckCannotGC nogc;
     return text->hasLatin1Chars()
@@ -1599,9 +1599,9 @@ RopeMatch(JSContext *cx, JSRope *text, JSLinearString *pat, int *match)
             *match = RopeMatchImpl<Latin1Char>(nogc, strings, pat->twoByteChars(nogc), patLen);
     } else {
         if (pat->hasLatin1Chars())
-            *match = RopeMatchImpl<jschar>(nogc, strings, pat->latin1Chars(nogc), patLen);
+            *match = RopeMatchImpl<char16_t>(nogc, strings, pat->latin1Chars(nogc), patLen);
         else
-            *match = RopeMatchImpl<jschar>(nogc, strings, pat->twoByteChars(nogc), patLen);
+            *match = RopeMatchImpl<char16_t>(nogc, strings, pat->twoByteChars(nogc), patLen);
     }
 
     return true;
@@ -1785,7 +1785,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
         else
             res = LastIndexOfImpl(textChars, textLen, pat->twoByteChars(nogc), patLen, start);
     } else {
-        const jschar *textChars = text->twoByteChars(nogc);
+        const char16_t *textChars = text->twoByteChars(nogc);
         if (pat->hasLatin1Chars())
             res = LastIndexOfImpl(textChars, textLen, pat->latin1Chars(nogc), patLen, start);
         else
@@ -1812,7 +1812,7 @@ HasSubstringAt(JSLinearString *text, JSLinearString *pat, size_t start)
         return EqualChars(textChars, pat->twoByteChars(nogc), patLen);
     }
 
-    const jschar *textChars = text->twoByteChars(nogc) + start;
+    const char16_t *textChars = text->twoByteChars(nogc) + start;
     if (pat->hasTwoByteChars())
         return PodEqual(textChars, pat->twoByteChars(nogc), patLen);
 
@@ -2042,7 +2042,7 @@ class FlatMatch
 } /* anonymous namespace */
 
 static inline bool
-IsRegExpMetaChar(jschar c)
+IsRegExpMetaChar(char16_t c)
 {
     switch (c) {
       /* Taken from the PatternCharacter production in 15.10.1. */
@@ -2664,7 +2664,7 @@ InterpretDollar(RegExpStatics *res, const CharT *bp, const CharT *dp, const Char
         return false;
 
     /* Interpret all Perl match-induced dollar variables. */
-    jschar dc = dp[1];
+    char16_t dc = dp[1];
     if (JS7_ISDEC(dc)) {
         /* ECMA-262 Edition 3: 1-9 or 01-99 */
         unsigned num = JS7_UNDEC(dc);
@@ -2845,7 +2845,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
 
     return rdata.repstr->hasLatin1Chars()
            ? FindReplaceLengthString<Latin1Char>(cx, res, rdata, sizep)
-           : FindReplaceLengthString<jschar>(cx, res, rdata, sizep);
+           : FindReplaceLengthString<char16_t>(cx, res, rdata, sizep);
 }
 
 /*
@@ -2932,7 +2932,7 @@ ReplaceRegExp(JSContext *cx, RegExpStatics *res, ReplaceData &rdata)
     if (rdata.repstr->hasLatin1Chars())
         DoReplace<Latin1Char>(res, rdata);
     else
-        DoReplace<jschar>(res, rdata);
+        DoReplace<char16_t>(res, rdata);
     return true;
 }
 
@@ -4239,7 +4239,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
     if (args.length() == 1)
         return str_fromCharCode_one_arg(cx, args[0], args.rval());
 
-    jschar *chars = cx->pod_malloc<jschar>(args.length() + 1);
+    char16_t *chars = cx->pod_malloc<char16_t>(args.length() + 1);
     if (!chars)
         return false;
     for (unsigned i = 0; i < args.length(); i++) {
@@ -4248,7 +4248,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
             js_free(chars);
             return false;
         }
-        chars[i] = jschar(code);
+        chars[i] = char16_t(code);
     }
     chars[args.length()] = 0;
     JSString *str = NewString<CanGC>(cx, chars, args.length());
@@ -4274,7 +4274,7 @@ js::str_fromCharCode_one_arg(JSContext *cx, HandleValue code, MutableHandleValue
         return true;
     }
 
-    jschar c = jschar(ucode);
+    char16_t c = char16_t(ucode);
     JSString *str = NewStringCopyN<CanGC>(cx, &c, 1);
     if (!str)
         return false;
@@ -4455,7 +4455,7 @@ js::ValueToSource(JSContext *cx, HandleValue v)
         /* Special case to preserve negative zero, _contra_ toString. */
         if (v.isDouble() && IsNegativeZero(v.toDouble())) {
             /* NB: _ucNstr rather than _ucstr to indicate non-terminated. */
-            static const jschar js_negzero_ucNstr[] = {'-', '0'};
+            static const char16_t js_negzero_ucNstr[] = {'-', '0'};
 
             return NewStringCopyN<CanGC>(cx, js_negzero_ucNstr, 2);
         }
@@ -4555,14 +4555,14 @@ CompareStringsImpl(JSLinearString *str1, JSLinearString *str2)
                : CompareChars(chars1, len1, str2->twoByteChars(nogc), len2);
     }
 
-    const jschar *chars1 = str1->twoByteChars(nogc);
+    const char16_t *chars1 = str1->twoByteChars(nogc);
     return str2->hasLatin1Chars()
            ? CompareChars(chars1, len1, str2->latin1Chars(nogc), len2)
            : CompareChars(chars1, len1, str2->twoByteChars(nogc), len2);
 }
 
 int32_t
-js::CompareChars(const jschar *s1, size_t len1, JSLinearString *s2)
+js::CompareChars(const char16_t *s1, size_t len1, JSLinearString *s2)
 {
     AutoCheckCannotGC nogc;
     return s2->hasLatin1Chars()
@@ -4619,9 +4619,9 @@ js::StringEqualsAscii(JSLinearString *str, const char *asciiBytes)
 }
 
 size_t
-js_strlen(const jschar *s)
+js_strlen(const char16_t *s)
 {
-    const jschar *t;
+    const char16_t *t;
 
     for (t = s; *t != 0; t++)
         continue;
@@ -4629,7 +4629,7 @@ js_strlen(const jschar *s)
 }
 
 int32_t
-js_strcmp(const jschar *lhs, const jschar *rhs)
+js_strcmp(const char16_t *lhs, const char16_t *rhs)
 {
     while (true) {
         if (*lhs != *rhs)
@@ -4651,11 +4651,11 @@ js::DuplicateString(js::ThreadSafeContext *cx, const char *s)
     return ret;
 }
 
-UniquePtr<jschar[], JS::FreePolicy>
-js::DuplicateString(js::ThreadSafeContext *cx, const jschar *s)
+UniquePtr<char16_t[], JS::FreePolicy>
+js::DuplicateString(js::ThreadSafeContext *cx, const char16_t *s)
 {
     size_t n = js_strlen(s) + 1;
-    auto ret = cx->make_pod_array<jschar>(n);
+    auto ret = cx->make_pod_array<char16_t>(n);
     if (!ret)
         return ret;
     PodCopy(ret.get(), s, n);
@@ -4664,7 +4664,7 @@ js::DuplicateString(js::ThreadSafeContext *cx, const jschar *s)
 
 template <typename CharT>
 const CharT *
-js_strchr_limit(const CharT *s, jschar c, const CharT *limit)
+js_strchr_limit(const CharT *s, char16_t c, const CharT *limit)
 {
     while (s < limit) {
         if (*s == c)
@@ -4675,20 +4675,20 @@ js_strchr_limit(const CharT *s, jschar c, const CharT *limit)
 }
 
 template const Latin1Char *
-js_strchr_limit(const Latin1Char *s, jschar c, const Latin1Char *limit);
+js_strchr_limit(const Latin1Char *s, char16_t c, const Latin1Char *limit);
 
-template const jschar *
-js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
+template const char16_t *
+js_strchr_limit(const char16_t *s, char16_t c, const char16_t *limit);
 
-jschar *
+char16_t *
 js::InflateString(ThreadSafeContext *cx, const char *bytes, size_t *lengthp)
 {
     size_t nchars;
-    jschar *chars;
+    char16_t *chars;
     size_t nbytes = *lengthp;
 
     nchars = nbytes;
-    chars = cx->pod_malloc<jschar>(nchars + 1);
+    chars = cx->pod_malloc<char16_t>(nchars + 1);
     if (!chars)
         goto bad;
     for (size_t i = 0; i < nchars; i++)
@@ -4731,7 +4731,7 @@ js::DeflateStringToBuffer(JSContext *maybecx, const Latin1Char *src, size_t srcl
                           char *dst, size_t *dstlenp);
 
 template bool
-js::DeflateStringToBuffer(JSContext *maybecx, const jschar *src, size_t srclen,
+js::DeflateStringToBuffer(JSContext *maybecx, const char16_t *src, size_t srclen,
                           char *dst, size_t *dstlenp);
 
 #define ____ false
@@ -4896,12 +4896,12 @@ Encode(StringBuffer &sb, const CharT *chars, size_t length,
 {
     static const char HexDigits[] = "0123456789ABCDEF"; /* NB: uppercase */
 
-    jschar hexBuf[4];
+    char16_t hexBuf[4];
     hexBuf[0] = '%';
     hexBuf[3] = 0;
 
     for (size_t k = 0; k < length; k++) {
-        jschar c = chars[k];
+        char16_t c = chars[k];
         if (c < 128 && (unescapedSet[c] || (unescapedSet2 && unescapedSet2[c]))) {
             if (!sb.append(c))
                 return Encode_Failure;
@@ -4917,7 +4917,7 @@ Encode(StringBuffer &sb, const CharT *chars, size_t length,
                 if (k == length)
                     return Encode_BadUri;
 
-                jschar c2 = chars[k];
+                char16_t c2 = chars[k];
                 if (c2 < 0xDC00 || c2 > 0xDFFF)
                     return Encode_BadUri;
 
@@ -4979,7 +4979,7 @@ static DecodeResult
 Decode(StringBuffer &sb, const CharT *chars, size_t length, const bool *reservedSet)
 {
     for (size_t k = 0; k < length; k++) {
-        jschar c = chars[k];
+        char16_t c = chars[k];
         if (c == '%') {
             size_t start = k;
             if ((k + 2) >= length)
@@ -4991,7 +4991,7 @@ Decode(StringBuffer &sb, const CharT *chars, size_t length, const bool *reserved
             uint32_t B = JS7_UNHEX(chars[k+1]) * 16 + JS7_UNHEX(chars[k+2]);
             k += 2;
             if (!(B & 0x80)) {
-                c = jschar(B);
+                c = char16_t(B);
             } else {
                 int n = 1;
                 while (B & (0x80 >> n))
@@ -5026,12 +5026,12 @@ Decode(StringBuffer &sb, const CharT *chars, size_t length, const bool *reserved
                     if (v > 0xFFFFF)
                         return Decode_BadUri;
 
-                    c = jschar((v & 0x3FF) + 0xDC00);
-                    jschar H = jschar((v >> 10) + 0xD800);
+                    c = char16_t((v & 0x3FF) + 0xDC00);
+                    char16_t H = char16_t((v >> 10) + 0xD800);
                     if (!sb.append(H))
                         return Decode_Failure;
                 } else {
-                    c = jschar(v);
+                    c = char16_t(v);
                 }
             }
             if (c < 128 && reservedSet && reservedSet[c]) {
@@ -5284,7 +5284,7 @@ js::PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const Latin1
                          size_t length, uint32_t quote);
 
 template size_t
-js::PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const jschar *chars,
+js::PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const char16_t *chars,
                          size_t length, uint32_t quote);
 
 template size_t
@@ -5292,5 +5292,5 @@ js::PutEscapedString(char *buffer, size_t bufferSize, const Latin1Char *chars, s
                      uint32_t quote);
 
 template size_t
-js::PutEscapedString(char *buffer, size_t bufferSize, const jschar *chars, size_t length,
+js::PutEscapedString(char *buffer, size_t bufferSize, const char16_t *chars, size_t length,
                      uint32_t quote);

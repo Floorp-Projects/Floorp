@@ -1,5 +1,6 @@
-// |jit-test| debug
-setDebug(true);
+var global = newGlobal();
+var dbg = new global.Debugger(this);
+
 var a = new Array();
 
 function i(save) {

@@ -513,7 +513,7 @@ ArrayJoin(JSContext *cx, HandleObject array, HandleString sep)
 bool
 CharCodeAt(JSContext *cx, HandleString str, int32_t index, uint32_t *code)
 {
-    jschar c;
+    char16_t c;
     if (!str->getChar(cx, index, &c))
         return false;
     *code = c;
@@ -523,7 +523,7 @@ CharCodeAt(JSContext *cx, HandleString str, int32_t index, uint32_t *code)
 JSFlatString *
 StringFromCharCode(JSContext *cx, int32_t code)
 {
-    jschar c = jschar(code);
+    char16_t c = char16_t(code);
 
     if (StaticStrings::hasUnit(c))
         return cx->staticStrings().getUnit(c);
@@ -747,8 +747,8 @@ FilterArgumentsOrEval(JSContext *cx, JSString *str)
     if (!linear)
         return false;
 
-    static const jschar arguments[] = {'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's'};
-    static const jschar eval[] = {'e', 'v', 'a', 'l'};
+    static const char16_t arguments[] = {'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's'};
+    static const char16_t eval[] = {'e', 'v', 'a', 'l'};
 
     return !StringHasPattern(linear, arguments, mozilla::ArrayLength(arguments)) &&
         !StringHasPattern(linear, eval, mozilla::ArrayLength(eval));

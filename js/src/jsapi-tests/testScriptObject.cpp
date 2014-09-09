@@ -10,7 +10,7 @@
 struct ScriptObjectFixture : public JSAPITest {
     static const int code_size;
     static const char code[];
-    static jschar uc_code[];
+    static char16_t uc_code[];
 
     ScriptObjectFixture()
     {
@@ -35,7 +35,7 @@ struct ScriptObjectFixture : public JSAPITest {
 const char ScriptObjectFixture::code[] =
     "(function(a, b){return a+' '+b;}('hello', 'world'))";
 const int ScriptObjectFixture::code_size = sizeof(ScriptObjectFixture::code) - 1;
-jschar ScriptObjectFixture::uc_code[ScriptObjectFixture::code_size];
+char16_t ScriptObjectFixture::uc_code[ScriptObjectFixture::code_size];
 
 BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript)
 {

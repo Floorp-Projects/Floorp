@@ -9,9 +9,7 @@ function fetchWithXHR(uri, onLoadFunction) {
   xhr.open("GET", uri, true);
   xhr.responseType = "blob";
   xhr.addEventListener("load", function (e) {
-    if (xhr.status != 200) {
-      return;
-    }
+    is(xhr.status, 200, "fetchWithXHR load uri='" + uri + "' status=" + xhr.status);
     var rdr = new FileReader();
     rdr.addEventListener("load", function (e) {
       onLoadFunction(e.target.result);

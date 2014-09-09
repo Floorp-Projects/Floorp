@@ -12,11 +12,14 @@
 
 #include "jsprf.h"
 
+#include "mozilla/Vector.h"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "jsalloc.h"
 #include "jspubtd.h"
 #include "jsstr.h"
 #include "jsutil.h"
@@ -56,7 +59,7 @@ struct NumArgState
     va_list ap;     // point to the corresponding position on ap
 };
 
-const size_t NAS_DEFAULT_NUM = 20;  // default number of NumberedArgumentState array
+typedef mozilla::Vector<NumArgState, 20, js::SystemAllocPolicy> NumArgStateVector;
 
 
 #define TYPE_INT16      0
@@ -86,7 +89,7 @@ generic_write(SprintfState *ss, const char *src, size_t srclen)
 }
 
 inline int
-generic_write(SprintfState *ss, const jschar *src, size_t srclen)
+generic_write(SprintfState *ss, const char16_t *src, size_t srclen)
 {
     const size_t CHUNK_SIZE = 64;
     char chunk[CHUNK_SIZE];
@@ -341,10 +344,10 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
 }
 
 static inline const char *generic_null_str(const char *) { return "(null)"; }
-static inline const jschar *generic_null_str(const jschar *) { return MOZ_UTF16("(null)"); }
+static inline const char16_t *generic_null_str(const char16_t *) { return MOZ_UTF16("(null)"); }
 
 static inline size_t generic_strlen(const char *s) { return strlen(s); }
-static inline size_t generic_strlen(const jschar *s) { return js_strlen(s); }
+static inline size_t generic_strlen(const char16_t *s) { return js_strlen(s); }
 
 /*
  * Convert a string into its printable form.  "width" is the output
@@ -375,20 +378,18 @@ cvt_s(SprintfState *ss, const Char *s, int width, int prec, int flags)
  *      fmp = "%4$i, %2$d, %3s, %1d";
  * the number must start from 1, and no gap among them
  */
-static NumArgState *
-BuildArgArray(const char *fmt, va_list ap, int *rv, NumArgState *nasArray)
+static bool
+BuildArgArray(const char *fmt, va_list ap, NumArgStateVector& nas)
 {
     size_t number = 0, cn = 0, i;
     const char *p;
     char c;
-    NumArgState *nas;
 
 
     // First pass:
     // Detemine how many legal % I have got, then allocate space.
 
     p = fmt;
-    *rv = 0;
     i = 0;
     while ((c = *p++) != 0) {
         if (c != '%')
@@ -399,16 +400,12 @@ BuildArgArray(const char *fmt, va_list ap, int *rv, NumArgState *nasArray)
         while (c != 0) {
             if (c > '9' || c < '0') {
                 if (c == '$') {         // numbered argument case
-                    if (i > 0) {
-                        *rv = -1;
-                        return nullptr;
-                    }
+                    if (i > 0)
+                        return false;
                     number++;
                 } else {                // non-numbered argument case
-                    if (number > 0) {
-                        *rv = -1;
-                        return nullptr;
-                    }
+                    if (number > 0)
+                        return false;
                     i = 1;
                 }
                 break;
@@ -419,17 +416,10 @@ BuildArgArray(const char *fmt, va_list ap, int *rv, NumArgState *nasArray)
     }
 
     if (number == 0)
-        return nullptr;
+        return true;
 
-    if (number > NAS_DEFAULT_NUM) {
-        nas = (NumArgState *) js_malloc(number * sizeof(NumArgState));
-        if (!nas) {
-            *rv = -1;
-            return nullptr;
-        }
-    } else {
-        nas = nasArray;
-    }
+    if (!nas.growByUninitialized(number))
+        return false;
 
     for (i = 0; i < number; i++)
         nas[i].type = TYPE_UNKNOWN;
@@ -452,10 +442,8 @@ BuildArgArray(const char *fmt, va_list ap, int *rv, NumArgState *nasArray)
             c = *p++;
         }
 
-        if (!c || cn < 1 || cn > number) {
-            *rv = -1;
-            break;
-        }
+        if (!c || cn < 1 || cn > number)
+            return false;
 
         // nas[cn] starts from 0, and make sure nas[cn].type is not assigned.
         cn--;
@@ -467,8 +455,7 @@ BuildArgArray(const char *fmt, va_list ap, int *rv, NumArgState *nasArray)
         // width
         if (c == '*') {
             // not supported feature, for the argument is not numbered
-            *rv = -1;
-            break;
+            return false;
         }
 
         while ((c >= '0') && (c <= '9')) {
@@ -480,8 +467,7 @@ BuildArgArray(const char *fmt, va_list ap, int *rv, NumArgState *nasArray)
             c = *p++;
             if (c == '*') {
                 // not supported feature, for the argument is not numbered
-                *rv = -1;
-                break;
+                return false;
             }
 
             while ((c >= '0') && (c <= '9')) {
@@ -561,21 +547,13 @@ BuildArgArray(const char *fmt, va_list ap, int *rv, NumArgState *nasArray)
         }
 
         // get a legal para.
-        if (nas[cn].type == TYPE_UNKNOWN) {
-            *rv = -1;
-            break;
-        }
+        if (nas[cn].type == TYPE_UNKNOWN)
+            return false;
     }
 
 
     // Third pass:
     // Fill nas[].ap.
-
-    if (*rv < 0) {
-        if (nas != nasArray)
-            js_free(nas);
-        return nullptr;
-    }
 
     cn = 0;
     while (cn < number) {
@@ -596,22 +574,17 @@ BuildArgArray(const char *fmt, va_list ap, int *rv, NumArgState *nasArray)
         case TYPE_INT64:        (void) va_arg(ap, int64_t);     break;
         case TYPE_UINT64:       (void) va_arg(ap, uint64_t);    break;
         case TYPE_STRING:       (void) va_arg(ap, char*);       break;
-        case TYPE_WSTRING:      (void) va_arg(ap, jschar*);     break;
+        case TYPE_WSTRING:      (void) va_arg(ap, char16_t*);   break;
         case TYPE_INTSTR:       (void) va_arg(ap, int*);        break;
         case TYPE_DOUBLE:       (void) va_arg(ap, double);      break;
 
-        default:
-            if (nas != nasArray)
-                js_free(nas);
-            *rv = -1;
-            return nullptr;
+        default: return false;
         }
 
         cn++;
     }
 
-
-    return nas;
+    return true;
 }
 
 /*
@@ -624,13 +597,13 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
     int flags, width, prec, radix, type;
     union {
         char ch;
-        jschar wch;
+        char16_t wch;
         int i;
         long l;
         int64_t ll;
         double d;
         const char *s;
-        const jschar* ws;
+        const char16_t* ws;
         int *ip;
     } u;
     const char *fmt0;
@@ -638,16 +611,14 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
     static const char HEX[] = "0123456789ABCDEF";
     const char *hexp;
     int rv, i;
-    NumArgState *nas = nullptr;
-    NumArgState nasArray[NAS_DEFAULT_NUM];
     char pattern[20];
     const char *dolPt = nullptr;  // in "%4$.2f", dolPt will point to '.'
 
     // Build an argument array, IF the fmt is numbered argument
     // list style, to contain the Numbered Argument list pointers.
 
-    nas = BuildArgArray(fmt, ap, &rv, nasArray);
-    if (rv < 0) {
+    NumArgStateVector nas;
+    if (!BuildArgArray(fmt, ap, nas)) {
         // the fmt contains error Numbered Argument format, jliu@netscape.com
         JS_ASSERT(0);
         return rv;
@@ -676,7 +647,7 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
             continue;
         }
 
-        if (nas != nullptr) {
+        if (!nas.empty()) {
             // the fmt contains the Numbered Arguments feature
             i = 0;
             while (c && c != '$') {         // should improve error check later
@@ -684,13 +655,10 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
                 c = *fmt++;
             }
 
-            if (nas[i-1].type == TYPE_UNKNOWN) {
-                if (nas && nas != nasArray)
-                    js_free(nas);
+            if (nas[i - 1].type == TYPE_UNKNOWN)
                 return -1;
-            }
 
-            ap = nas[i-1].ap;
+            ap = nas[i - 1].ap;
             dolPt = fmt;
             c = *fmt++;
         }
@@ -846,7 +814,7 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
           case 'f':
           case 'g':
             u.d = va_arg(ap, double);
-            if (nas != nullptr) {
+            if (!nas.empty()) {
                 i = fmt - dolPt;
                 if (i < int(sizeof(pattern))) {
                     pattern[0] = '%';
@@ -916,7 +884,7 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 
           case 's':
             if(type == TYPE_INT16) {
-                u.ws = va_arg(ap, const jschar*);
+                u.ws = va_arg(ap, const char16_t*);
                 rv = cvt_s(ss, u.ws, width, prec, flags);
             } else {
                 u.s = va_arg(ap, const char*);
@@ -952,9 +920,6 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 
     // Stuff trailing NUL
     rv = (*ss->stuff)(ss, "\0", 1);
-
-    if (nas && nas != nasArray)
-        js_free(nas);
 
     return rv;
 }
