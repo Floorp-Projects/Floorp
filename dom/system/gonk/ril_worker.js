@@ -3091,7 +3091,8 @@ RilObject.prototype = {
         // ("Yes/No") command with command qualifier set to "Yes/No", it shall
         // supply the value '01' when the answer is "positive" and the value
         // '00' when the answer is "negative" in the Text string data object.
-        text = response.isYesNo ? 0x01 : 0x00;
+        text = response.isYesNo ? String.fromCharCode(0x01)
+                                : String.fromCharCode(0x00);
       } else {
         text = response.input;
       }
