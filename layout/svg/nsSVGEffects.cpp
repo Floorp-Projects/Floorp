@@ -252,24 +252,22 @@ nsSVGFilterReference::DoUpdate()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsSVGFilterProperty, nsISupports)
+NS_IMPL_ISUPPORTS(nsSVGFilterChainObserver, nsISupports)
 
-nsSVGFilterProperty::nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
-                                         nsIFrame *aFilteredFrame)
-  : mFrameReference(aFilteredFrame)
+nsSVGFilterChainObserver::nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>& aFilters,
+                                                   nsIContent* aFilteredElement)
 {
-  nsIContent* filteredElement = aFilteredFrame->GetContent();
   for (uint32_t i = 0; i < aFilters.Length(); i++) {
     if (aFilters[i].GetType() != NS_STYLE_FILTER_URL)
       continue;
 
     nsRefPtr<nsSVGFilterReference> reference =
-      new nsSVGFilterReference(aFilters[i].GetURL(), filteredElement, this);
+      new nsSVGFilterReference(aFilters[i].GetURL(), aFilteredElement, this);
     mReferences.AppendElement(reference);
   }
 }
 
-nsSVGFilterProperty::~nsSVGFilterProperty()
+nsSVGFilterChainObserver::~nsSVGFilterChainObserver()
 {
   for (uint32_t i = 0; i < mReferences.Length(); i++) {
     mReferences[i]->DetachFromChainObserver();
@@ -277,7 +275,7 @@ nsSVGFilterProperty::~nsSVGFilterProperty()
 }
 
 bool
-nsSVGFilterProperty::ReferencesValidResources()
+nsSVGFilterChainObserver::ReferencesValidResources()
 {
   for (uint32_t i = 0; i < mReferences.Length(); i++) {
     if (!mReferences[i]->ReferencesValidResource())
@@ -287,7 +285,7 @@ nsSVGFilterProperty::ReferencesValidResources()
 }
 
 bool
-nsSVGFilterProperty::IsInObserverLists() const
+nsSVGFilterChainObserver::IsInObserverLists() const
 {
   for (uint32_t i = 0; i < mReferences.Length(); i++) {
     if (!mReferences[i]->IsInObserverList())
