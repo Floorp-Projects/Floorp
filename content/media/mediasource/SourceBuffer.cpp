@@ -659,6 +659,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // about.
   // TODO: Make the eviction threshold smaller for audio-only streams.
   // TODO: Drive evictions off memory pressure notifications.
+  // TODO: Consider a global eviction threshold  rather than per TrackBuffer.
   const uint32_t evict_threshold = 75 * (1 << 20);
   bool evicted = mTrackBuffer->EvictData(evict_threshold);
   if (evicted) {
