@@ -28,6 +28,11 @@
 #include "nsThreadUtils.h"
 #include "prlog.h"
 
+#if defined(DEBUG)
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
+
 struct JSContext;
 class JSObject;
 
@@ -506,6 +511,20 @@ MediaSource::InitializationEvent()
     mDecoder->PrepareReaderInitialization();
   }
 }
+
+#if defined(DEBUG)
+void
+MediaSource::Dump(const char* aPath)
+{
+  char buf[255];
+  PR_snprintf(buf, sizeof(buf), "%s/mediasource-%p", aPath, this);
+  mkdir(buf, 0700);
+
+  if (mSourceBuffers) {
+    mSourceBuffers->Dump(buf);
+  }
+}
+#endif
 
 nsPIDOMWindow*
 MediaSource::GetParentObject() const

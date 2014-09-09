@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -348,5 +349,23 @@ TrackBuffer::Decoders()
   // XXX assert OnDecodeThread
   return mInitializedDecoders;
 }
+
+#if defined(DEBUG)
+void
+TrackBuffer::Dump(const char* aPath)
+{
+  char path[255];
+  PR_snprintf(path, sizeof(path), "%s/trackbuffer-%p", aPath, this);
+  mkdir(path, 0700);
+
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    char buf[255];
+    PR_snprintf(buf, sizeof(buf), "%s/reader-%p", path, mDecoders[i]->GetReader());
+    mkdir(buf, 0700);
+
+    mDecoders[i]->GetResource()->Dump(buf);
+  }
+}
+#endif
 
 } // namespace mozilla
