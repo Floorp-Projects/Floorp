@@ -10,8 +10,7 @@
 #include <string>
 #include <vector>
 
-#include <GLES3/gl3.h>
-#include <GLES2/gl2.h>
+#include "angle_gl.h"
 
 #include "common/debug.h"
 #include "angletypes.h"
@@ -23,7 +22,7 @@ namespace gl
 // Helper struct representing a single shader uniform
 struct LinkedUniform
 {
-    LinkedUniform(GLenum type, GLenum precision, const std::string &name, unsigned int arraySize, const int blockIndex, const BlockMemberInfo &blockInfo);
+    LinkedUniform(GLenum type, GLenum precision, const std::string &name, unsigned int arraySize, const int blockIndex, const sh::BlockMemberInfo &blockInfo);
 
     ~LinkedUniform();
 
@@ -40,7 +39,7 @@ struct LinkedUniform
     const std::string name;
     const unsigned int arraySize;
     const int blockIndex;
-    const BlockMemberInfo blockInfo;
+    const sh::BlockMemberInfo blockInfo;
 
     unsigned char *data;
     bool dirty;

@@ -16,7 +16,7 @@ namespace gl
 {
 class Buffer;
 class ProgramBinary;
-class VertexAttribute;
+struct VertexAttribute;
 struct VertexAttribCurrentValueData;
 
 enum TextureType

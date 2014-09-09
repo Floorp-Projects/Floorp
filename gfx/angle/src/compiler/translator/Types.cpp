@@ -22,57 +22,9 @@ TType::TType(const TPublicType &p)
         structure = p.userDef->getStruct();
 }
 
-bool TType::equals(const TType &other) const
-{
-    if (type != other.type || precision != other.precision ||
-        primarySize != other.primarySize || secondarySize != other.secondarySize ||
-        array != other.array || (array && arraySize != other.arraySize) ||
-        interfaceBlock != other.interfaceBlock || structure != other.structure)
-    {
-        return false;
-    }
-    if (interfaceBlock && !interfaceBlock->equals(*(other.interfaceBlock)))
-        return false;
-    if (structure && !structure->equals(*(other.structure)))
-        return false;
-    return true;
-}
-
-bool TField::equals(const TField &other) const
-{
-    ASSERT(mType && mName);
-    ASSERT(other.mType && other.mName);
-    return mType->equals(*(other.mType)) && *mName == *(other.mName);
-}
-
-bool TFieldListCollection::equals(const TFieldListCollection &other) const
-{
-    ASSERT(mName && mFields);
-    ASSERT(other.mName && other.mFields);
-    if (*mName != *(other.mName))
-         return false;
-    if (mFields->size() != other.mFields->size())
-        return false;
-    for (size_t ii = 0; ii < mFields->size(); ++ii)
-    {
-        ASSERT((*mFields)[ii] && (*(other.mFields))[ii]);
-        if (!(*mFields)[ii]->equals(*((*(other.mFields))[ii])))
-            return false;
-    }
-    return true;
-}
-
 bool TStructure::equals(const TStructure &other) const
 {
-    return TFieldListCollection::equals(other);
-}
-
-bool TInterfaceBlock::equals(const TInterfaceBlock &other) const
-{
-    if (!TFieldListCollection::equals(other))
-        return false;
-    // TODO(zmo): do we need to consider mBlockStorage and mMatrixPacking?
-    return mArraySize == other.mArraySize;
+    return (uniqueId() == other.uniqueId());
 }
 
 //

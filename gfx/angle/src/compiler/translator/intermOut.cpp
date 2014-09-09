@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -152,18 +152,6 @@ bool TOutputTraverser::visitUnary(Visit visit, TIntermUnary* node)
         case EOpPostDecrement:  out << "Post-Decrement";       break;
         case EOpPreIncrement:   out << "Pre-Increment";        break;
         case EOpPreDecrement:   out << "Pre-Decrement";        break;
-
-        case EOpConvIntToBool:  out << "Convert int to bool";  break;
-        case EOpConvUIntToBool: out << "Convert uint to bool"; break;
-        case EOpConvFloatToBool:out << "Convert float to bool";break;
-        case EOpConvBoolToFloat:out << "Convert bool to float";break;
-        case EOpConvIntToFloat: out << "Convert int to float"; break;
-        case EOpConvUIntToFloat:out << "Convert uint to float";break;
-        case EOpConvFloatToInt: out << "Convert float to int"; break;
-        case EOpConvBoolToInt:  out << "Convert bool to int";  break;
-        case EOpConvIntToUInt:  out << "Convert int to uint";  break;
-        case EOpConvFloatToUInt:out << "Convert float to uint";break;
-        case EOpConvBoolToUInt: out << "Convert bool to uint"; break;
 
         case EOpRadians:        out << "radians";              break;
         case EOpDegrees:        out << "degrees";              break;

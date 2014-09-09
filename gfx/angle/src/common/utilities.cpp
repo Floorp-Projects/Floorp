@@ -8,17 +8,14 @@
 
 #include "common/utilities.h"
 #include "common/mathutil.h"
-
-#if defined(_WIN32)
-#include <windows.h>
-#endif
+#include "common/platform.h"
 
 #include <set>
 
 namespace gl
 {
 
-int UniformComponentCount(GLenum type)
+int VariableComponentCount(GLenum type)
 {
     switch (type)
     {
@@ -78,7 +75,7 @@ int UniformComponentCount(GLenum type)
     return 0;
 }
 
-GLenum UniformComponentType(GLenum type)
+GLenum VariableComponentType(GLenum type)
 {
     switch(type)
     {
@@ -133,7 +130,7 @@ GLenum UniformComponentType(GLenum type)
     return GL_NONE;
 }
 
-size_t UniformComponentSize(GLenum type)
+size_t VariableComponentSize(GLenum type)
 {
     switch(type)
     {
@@ -147,18 +144,18 @@ size_t UniformComponentSize(GLenum type)
     return 0;
 }
 
-size_t UniformInternalSize(GLenum type)
+size_t VariableInternalSize(GLenum type)
 {
     // Expanded to 4-element vectors
-    return UniformComponentSize(UniformComponentType(type)) * VariableRowCount(type) * 4;
+    return VariableComponentSize(VariableComponentType(type)) * VariableRowCount(type) * 4;
 }
 
-size_t UniformExternalSize(GLenum type)
+size_t VariableExternalSize(GLenum type)
 {
-    return UniformComponentSize(UniformComponentType(type)) * UniformComponentCount(type);
+    return VariableComponentSize(VariableComponentType(type)) * VariableComponentCount(type);
 }
 
-GLenum UniformBoolVectorType(GLenum type)
+GLenum VariableBoolVectorType(GLenum type)
 {
     switch (type)
     {
@@ -365,7 +362,7 @@ int MatrixComponentCount(GLenum type, bool isRowMajorMatrix)
     return isRowMajorMatrix ? VariableColumnCount(type) : VariableRowCount(type);
 }
 
-int AttributeRegisterCount(GLenum type)
+int VariableRegisterCount(GLenum type)
 {
     return IsMatrixType(type) ? VariableColumnCount(type) : 1;
 }
@@ -395,24 +392,6 @@ bool IsCubemapTextureTarget(GLenum target)
     return (target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X && target <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
 }
 
-bool IsInternalTextureTarget(GLenum target, GLuint clientVersion)
-{
-    if (clientVersion == 2)
-    {
-        return target == GL_TEXTURE_2D || IsCubemapTextureTarget(target);
-    }
-    else if (clientVersion == 3)
-    {
-        return target == GL_TEXTURE_2D || IsCubemapTextureTarget(target) ||
-               target == GL_TEXTURE_3D || target == GL_TEXTURE_2D_ARRAY;
-    }
-    else
-    {
-        UNREACHABLE();
-        return false;
-    }
-}
-
 bool IsTriangleMode(GLenum drawMode)
 {
     switch (drawMode)
@@ -436,7 +415,7 @@ bool IsTriangleMode(GLenum drawMode)
 
 std::string getTempPath()
 {
-#if defined (_WIN32)
+#ifdef ANGLE_PLATFORM_WINDOWS
     char path[MAX_PATH];
     DWORD pathLen = GetTempPathA(sizeof(path) / sizeof(path[0]), path);
     if (pathLen == 0)
