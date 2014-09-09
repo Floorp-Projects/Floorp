@@ -9,17 +9,13 @@ var expect = chai.expect;
 describe("loop.shared.router", function() {
   "use strict";
 
-  var sandbox, notifier;
+  var sandbox, notifications;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
-    notifier = {
-      notify: sandbox.spy(),
-      warn: sandbox.spy(),
-      warnL10n: sandbox.spy(),
-      error: sandbox.spy(),
-      errorL10n: sandbox.spy()
-    };
+    notifications = new loop.shared.models.NotificationCollection();
+    sandbox.stub(notifications, "errorL10n");
+    sandbox.stub(notifications, "warnL10n");
   });
 
   afterEach(function() {
@@ -36,19 +32,19 @@ describe("loop.shared.router", function() {
     });
 
     describe("#constructor", function() {
-      it("should require a notifier", function() {
+      it("should require a notifications collection", function() {
         expect(function() {
           new loop.shared.router.BaseRouter();
-        }).to.Throw(Error, /missing required notifier/);
+        }).to.Throw(Error, /missing required notifications/);
       });
 
       describe("inherited", function() {
         var ExtendedRouter = loop.shared.router.BaseRouter.extend({});
 
-        it("should require a notifier", function() {
+        it("should require a notifications collection", function() {
           expect(function() {
             new ExtendedRouter();
-          }).to.Throw(Error, /missing required notifier/);
+          }).to.Throw(Error, /missing required notifications/);
         });
       });
     });
@@ -62,7 +58,7 @@ describe("loop.shared.router", function() {
           template: _.template("<p>plop</p>")
         });
         view = new TestView();
-        router = new TestRouter({notifier: notifier});
+        router = new TestRouter({notifications: notifications});
       });
 
       describe("#loadView", function() {
@@ -131,7 +127,7 @@ describe("loop.shared.router", function() {
         };
         router = new TestRouter({
           conversation: conversation,
-          notifier: notifier,
+          notifications: notifications,
           client: {}
         });
       });
@@ -141,8 +137,8 @@ describe("loop.shared.router", function() {
         it("should warn the user when .connect() call fails", function() {
           conversation.trigger("session:connection-error");
 
-          sinon.assert.calledOnce(notifier.errorL10n);
-          sinon.assert.calledWithExactly(notifier.errorL10n, sinon.match.string);
+          sinon.assert.calledOnce(notifications.errorL10n);
+          sinon.assert.calledWithExactly(notifications.errorL10n, sinon.match.string);
         });
 
         it("should invoke endCall()", function() {
@@ -163,8 +159,8 @@ describe("loop.shared.router", function() {
       it("should warn the user when peer hangs up", function() {
         conversation.trigger("session:peer-hungup");
 
-        sinon.assert.calledOnce(notifier.warnL10n);
-        sinon.assert.calledWithExactly(notifier.warnL10n,
+        sinon.assert.calledOnce(notifications.warnL10n);
+        sinon.assert.calledWithExactly(notifications.warnL10n,
                                        "peer_ended_conversation2");
 
       });
@@ -178,8 +174,8 @@ describe("loop.shared.router", function() {
       it("should warn the user when network disconnects", function() {
         conversation.trigger("session:network-disconnected");
 
-        sinon.assert.calledOnce(notifier.warnL10n);
-        sinon.assert.calledWithExactly(notifier.warnL10n,
+        sinon.assert.calledOnce(notifications.warnL10n);
+        sinon.assert.calledWithExactly(notifications.warnL10n,
                                        "network_disconnected");
       });
 
