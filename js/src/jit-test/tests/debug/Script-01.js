@@ -1,4 +1,3 @@
-// |jit-test| debug
 // We get the same Debugger.Script object instance each time we ask.
 
 var global = newGlobal();

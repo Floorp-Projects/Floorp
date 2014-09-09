@@ -1,4 +1,5 @@
-// |jit-test| debug
+var g = newGlobal();
+var dbg = new g.Debugger(this);
 
 var x = 5;
 let (x = eval("x++")) {

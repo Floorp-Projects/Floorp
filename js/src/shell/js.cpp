@@ -1718,29 +1718,6 @@ ValueToScript(JSContext *cx, jsval vArg, JSFunction **funp = nullptr)
     return script;
 }
 
-static bool
-SetDebug(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() == 0 || !args[0].isBoolean()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             JSSMSG_NOT_ENOUGH_ARGS, "setDebug");
-        return false;
-    }
-
-    /*
-     * Debug mode can only be set when there is no JS code executing on the
-     * stack. Unfortunately, that currently means that this call will fail
-     * unless debug mode is already set to what you're trying to set it to.
-     * In the future, this restriction may be lifted.
-     */
-
-    bool ok = !!JS_SetDebugMode(cx, args[0].toBoolean());
-    if (ok)
-        args.rval().setBoolean(true);
-    return ok;
-}
-
 static JSScript *
 GetTopScript(JSContext *cx)
 {
@@ -2646,8 +2623,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     RootedString str(cx, args[1].toString());
     bool saveCurrent = args.get(2).isBoolean() ? args[2].toBoolean() : false;
 
-    /* This is a copy of CheckDebugMode. */
-    if (!JS_GetDebugMode(cx)) {
+    if (!cx->compartment()->debugMode()) {
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
                                      nullptr, JSMSG_NEED_DEBUG_MODE);
         return false;
@@ -4449,10 +4425,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Throw if the first two arguments are not the same (both +0 or both -0,\n"
 "  both NaN, or non-zero and ===)."),
 
-    JS_FN_HELP("setDebug", SetDebug, 1, 0,
-"setDebug(debug)",
-"  Set debug mode."),
-
     JS_FN_HELP("throwError", ThrowError, 0, 0,
 "throwError()",
 "  Throw an error from JS_ReportError."),
@@ -5689,11 +5661,6 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (op->getBoolOption('s'))
         JS::RuntimeOptionsRef(cx).toggleExtraWarnings();
 
-    if (op->getBoolOption('d')) {
-        JS_SetRuntimeDebugMode(JS_GetRuntime(cx), true);
-        JS_SetDebugMode(cx, true);
-    }
-
     /* |scriptArgs| gets bound on the global before any code is run. */
     if (!BindScriptArgs(cx, obj, op))
         return EXIT_FAILURE;
@@ -6039,7 +6006,6 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('w', "warnings", "Emit warnings")
         || !op.addBoolOption('W', "nowarnings", "Don't emit warnings")
         || !op.addBoolOption('s', "strict", "Check strictness")
-        || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
         || !op.addBoolOption('D', "dump-bytecode", "Dump bytecode with exec count for all scripts")
         || !op.addBoolOption('b', "print-timing", "Print sub-ms runtime for each file that's run")
         || !op.addStringOption('\0', "js-cache", "[path]",

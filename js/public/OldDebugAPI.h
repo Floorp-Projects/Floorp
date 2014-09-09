@@ -56,48 +56,6 @@ typedef enum JSTrapStatus {
 extern JS_PUBLIC_API(JSString *)
 JS_DecompileScript(JSContext *cx, JS::HandleScript script, const char *name, unsigned indent);
 
-/*
- * Currently, we only support runtime-wide debugging. In the future, we should
- * be able to support compartment-wide debugging.
- */
-extern JS_PUBLIC_API(void)
-JS_SetRuntimeDebugMode(JSRuntime *rt, bool debug);
-
-/*
- * Debug mode is a compartment-wide mode that enables a debugger to attach
- * to and interact with running methodjit-ed frames. In particular, it causes
- * every function to be compiled as if an eval was present (so eval-in-frame)
- * can work, and it ensures that functions can be re-JITed for other debug
- * features. In general, it is not safe to interact with frames that were live
- * before debug mode was enabled. For this reason, it is also not safe to
- * enable debug mode while frames are live.
- */
-
-/* Get current state of debugging mode. */
-extern JS_PUBLIC_API(bool)
-JS_GetDebugMode(JSContext *cx);
-
-/*
- * Turn on/off debugging mode for all compartments. This returns false if any code
- * from any of the runtime's compartments is running or on the stack.
- */
-JS_FRIEND_API(bool)
-JS_SetDebugModeForAllCompartments(JSContext *cx, bool debug);
-
-/*
- * Turn on/off debugging mode for a single compartment. This should only be
- * used when no code from this compartment is running or on the stack in any
- * thread.
- */
-JS_FRIEND_API(bool)
-JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, bool debug);
-
-/*
- * Turn on/off debugging mode for a context's compartment.
- */
-JS_FRIEND_API(bool)
-JS_SetDebugMode(JSContext *cx, bool debug);
-
 
 /************************************************************************/
 
