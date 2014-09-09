@@ -8,6 +8,8 @@
  */
 
 add_task(function* test_match_beginning() {
+  Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);
+
   let uri1 = NetUtil.newURI("http://x.com/y");
   let uri2 = NetUtil.newURI("https://y.com/x");
   yield promiseAddVisits([ { uri: uri1, title: "a b" },

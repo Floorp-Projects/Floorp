@@ -18,6 +18,8 @@ let katakana = ["\u30a8", "\u30c9"]; // E, Do
 let ideograph = ["\u4efb", "\u5929", "\u5802"]; // Nin Ten Do
 
 add_task(function* test_escape() {
+  Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);
+
   let uri1 = NetUtil.newURI("http://matchme/");
   let uri2 = NetUtil.newURI("http://dontmatchme/");
   let uri3 = NetUtil.newURI("http://title/1");
