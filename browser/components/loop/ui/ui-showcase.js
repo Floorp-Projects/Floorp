@@ -58,7 +58,9 @@
   });
   mockConversationModel.startSession = noop;
 
-  var mockNotifier = {};
+  var notifications = new loop.shared.models.NotificationCollection();
+  var errNotifications = new loop.shared.models.NotificationCollection();
+  errNotifications.error("Error!");
 
   var Example = React.createClass({displayName: 'Example',
     render: function() {
@@ -117,11 +119,14 @@
               React.DOM.strong(null, "Note:"), " 332px wide."
             ), 
             Example({summary: "Call URL retrieved", dashed: "true", style: {width: "332px"}}, 
-              PanelView({client: mockClient, notifier: mockNotifier, 
+              PanelView({client: mockClient, notifications: notifications, 
                          callUrl: "http://invalid.example.url/"})
             ), 
             Example({summary: "Pending call url retrieval", dashed: "true", style: {width: "332px"}}, 
-              PanelView({client: mockClient, notifier: mockNotifier})
+              PanelView({client: mockClient, notifications: notifications})
+            ), 
+            Example({summary: "Error Notification", dashed: "true", style: {width: "332px"}}, 
+              PanelView({client: mockClient, notifications: errNotifications})
             )
           ), 
 
@@ -192,7 +197,7 @@
               React.DOM.div({className: "standalone"}, 
                 StartConversationView({model: mockConversationModel, 
                                        client: mockClient, 
-                                       notifier: mockNotifier, 
+                                       notifications: notifications, 
                                        showCallOptionsMenu: true})
               )
             )
