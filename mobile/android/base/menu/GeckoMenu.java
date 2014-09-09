@@ -112,7 +112,7 @@ public class GeckoMenu extends ListView
     private MenuItemsAdapter mAdapter;
 
     // Show/hide icons in the list.
-    /* inner-access */ boolean mShowIcons;
+    boolean mShowIcons;
 
     public GeckoMenu(Context context) {
         this(context, null);
@@ -550,7 +550,7 @@ public class GeckoMenu extends ListView
         handleMenuItemClick(item);
     }
 
-    /* inner-access */ void handleMenuItemClick(GeckoMenuItem item) {
+    void handleMenuItemClick(GeckoMenuItem item) {
         if (!item.isEnabled())
             return;
 
@@ -575,7 +575,7 @@ public class GeckoMenu extends ListView
         }
     }
 
-    /* inner-access */ void handleMenuItemLongClick(GeckoMenuItem item) {
+    void handleMenuItemLongClick(GeckoMenuItem item) {
         if(!item.isEnabled()) {
             return;
         }

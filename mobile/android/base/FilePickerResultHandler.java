@@ -173,7 +173,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
         private final Uri uri;
         private final File cacheDir;
         private final int tabId;
-        /* inner-access */ String tempFile;
+        String tempFile;
 
         public FileLoaderCallbacks(Uri uri, File cacheDir, int tabId) {
             this.uri = uri;

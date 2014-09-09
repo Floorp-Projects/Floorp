@@ -78,12 +78,6 @@
 
     <style name="Widget.ReadingListView" parent="Widget.BookmarksListView"/>
 
-    <style name="Widget.Home.HistoryListView">
-        <item name="android:paddingLeft">32dp</item>
-        <item name="android:paddingRight">32dp</item>
-        <item name="android:scrollbarStyle">outsideOverlay</item>
-    </style>
-
     <style name="Widget.HomeBanner">
         <item name="android:paddingLeft">32dp</item>
         <item name="android:paddingRight">32dp</item>

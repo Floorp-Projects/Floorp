@@ -827,3 +827,39 @@ class B2GCommands(MachCommandBase):
 
         mochitest = self._spawn(MochitestRunner)
         return mochitest.run_b2g_test(test_paths=test_paths, **kwargs)
+
+
+@CommandProvider
+class AndroidCommands(MachCommandBase):
+    @Command('robocop', category='testing',
+        conditions=[conditions.is_android],
+        description='Run a Robocop test.')
+    @CommandArgument('test_path', default=None, nargs='?',
+        metavar='TEST',
+        help='Test to run. Can be specified as a Robocop test name (like "testLoad"), ' \
+             'or omitted. If omitted, the entire test suite is executed.')
+    def run_robocop(self, test_path):
+        self.tests_dir = os.path.join(self.topobjdir, '_tests')
+        self.mochitest_dir = os.path.join(self.tests_dir, 'testing', 'mochitest')
+        import imp
+        path = os.path.join(self.mochitest_dir, 'runtestsremote.py')
+        with open(path, 'r') as fh:
+            imp.load_module('runtestsremote', fh, path,
+                ('.py', 'r', imp.PY_SOURCE))
+        import runtestsremote
+
+        args = [
+            '--xre-path=' + os.environ.get('MOZ_HOST_BIN'),
+            '--dm_trans=adb',
+            '--deviceIP=',
+            '--console-level=INFO',
+            '--app=' + self.substs['ANDROID_PACKAGE_NAME'],
+            '--robocop-apk=' + os.path.join(self.topobjdir, 'build', 'mobile', 'robocop', 'robocop-debug.apk'),
+            '--robocop-ini=' + os.path.join(self.topobjdir, 'build', 'mobile', 'robocop', 'robocop.ini'),
+            '--log-mach=-',
+        ]
+
+        if test_path:
+            args.append('--test-path=%s' % test_path)
+
+        sys.exit(runtestsremote.main(args))
