@@ -312,7 +312,7 @@ function test() {
     is(w2.value, "a", "The second value is correct.");
     is(w3.value, "a\"\"", "The third value is correct.");
     is(w4.value, "a''", "The fourth value is correct.");
-    is(w5.value, "SyntaxError: syntax error", "The fifth value is correct.");
+    is(w5.value, "SyntaxError: expected expression, got '?'", "The fifth value is correct.");
 
     if (typeof expected_a == "object") {
       is(w6.value.type, expected_a.type, "The sixth value type is correct.");
@@ -361,8 +361,8 @@ function test() {
     is(w19.value.type, "undefined", "The 19th value type is correct.");
     is(w19.value.class, undefined, "The 19th value class is correct.");
 
-    is(w20.value, "SyntaxError: syntax error", "The 20th value is correct.");
-    is(w21.value, "SyntaxError: syntax error", "The 21th value is correct.");
+    is(w20.value, "SyntaxError: expected expression, got '.'", "The 20th value is correct.");
+    is(w21.value, "SyntaxError: expected expression, got '.'", "The 21th value is correct.");
     is(w22.value, "TypeError: (intermediate value).foo is not a function", "The 22th value is correct.");
     is(w23.value, "RangeError: invalid array length", "The 23th value is correct.");
     is(w24.value, "RangeError: precision -4 out of range", "The 24th value is correct.");
