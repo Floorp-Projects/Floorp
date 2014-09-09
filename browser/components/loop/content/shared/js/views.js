@@ -407,7 +407,8 @@ loop.shared.views = (function(_, OT, l10n) {
       var backButton = React.DOM.div(null);
       if (this.props.reset) {
         backButton = (
-          React.DOM.button({className: "back", type: "button", onClick: this.props.reset}, 
+          React.DOM.button({className: "fx-embedded-btn-back", type: "button", 
+                  onClick: this.props.reset}, 
             "« ", l10n.get("feedback_back_button")
           )
         );
