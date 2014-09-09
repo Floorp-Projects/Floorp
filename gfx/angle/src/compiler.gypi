@@ -28,18 +28,6 @@
                      -excludes compiler/translator/ShaderLang.cpp \
                      -types *.cpp *.h *.y *.l)',
             ],
-            'conditions':
-            [
-                ['OS=="win"',
-                    {
-                        'msvs_disabled_warnings': [ 4267 ],
-                        'sources/': [ [ 'exclude', 'compiler/translator/ossource_posix.cpp' ], ],
-                    },
-                    { # else: posix
-                        'sources/': [ [ 'exclude', 'compiler/translator/ossource_win.cpp' ], ],
-                    }
-                ],
-            ],
             'msvs_settings':
             {
               'VCLibrarianTool':

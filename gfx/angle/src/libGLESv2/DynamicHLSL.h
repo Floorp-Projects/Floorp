@@ -17,6 +17,12 @@ namespace rx
 class Renderer;
 }
 
+namespace sh
+{
+struct Attribute;
+struct ShaderVariable;
+}
+
 namespace gl
 {
 
@@ -25,14 +31,19 @@ class FragmentShader;
 class VertexShader;
 struct VariableLocation;
 struct LinkedVarying;
-class VertexAttribute;
+struct VertexAttribute;
 struct VertexFormat;
-struct ShaderVariable;
-struct Varying;
-struct Attribute;
 struct PackedVarying;
 
 typedef const PackedVarying *VaryingPacking[IMPLEMENTATION_MAX_VARYING_VECTORS][4];
+
+struct PixelShaderOuputVariable
+{
+    GLenum type;
+    std::string name;
+    std::string source;
+    size_t outputIndex;
+};
 
 class DynamicHLSL
 {
@@ -41,33 +52,43 @@ class DynamicHLSL
 
     int packVaryings(InfoLog &infoLog, VaryingPacking packing, FragmentShader *fragmentShader,
                      VertexShader *vertexShader, const std::vector<std::string>& transformFeedbackVaryings);
-    std::string generateInputLayoutHLSL(const VertexFormat inputLayout[], const Attribute shaderAttributes[]) const;
+    std::string generateVertexShaderForInputLayout(const std::string &sourceShader, const VertexFormat inputLayout[],
+                                                   const sh::Attribute shaderAttributes[]) const;
+    std::string generatePixelShaderForOutputSignature(const std::string &sourceShader, const std::vector<PixelShaderOuputVariable> &outputVariables,
+                                                      bool usesFragDepth, const std::vector<GLenum> &outputLayout) const;
     bool generateShaderLinkHLSL(InfoLog &infoLog, int registers, const VaryingPacking packing,
                                 std::string& pixelHLSL, std::string& vertexHLSL,
                                 FragmentShader *fragmentShader, VertexShader *vertexShader,
                                 const std::vector<std::string>& transformFeedbackVaryings,
                                 std::vector<LinkedVarying> *linkedVaryings,
-                                std::map<int, VariableLocation> *programOutputVars) const;
+                                std::map<int, VariableLocation> *programOutputVars,
+                                std::vector<PixelShaderOuputVariable> *outPixelShaderKey,
+                                bool *outUsesFragDepth) const;
 
     std::string generateGeometryShaderHLSL(int registers, FragmentShader *fragmentShader, VertexShader *vertexShader) const;
     void getInputLayoutSignature(const VertexFormat inputLayout[], GLenum signature[]) const;
-
-    static const std::string VERTEX_ATTRIBUTE_STUB_STRING;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(DynamicHLSL);
 
     rx::Renderer *const mRenderer;
 
-    std::string generateVaryingHLSL(VertexShader *shader, const std::string &varyingSemantic,
-                                    std::vector<LinkedVarying> *linkedVaryings) const;
+    struct SemanticInfo;
+
+    std::string getVaryingSemantic(bool pointSize) const;
+    SemanticInfo getSemanticInfo(int startRegisters, bool fragCoord, bool pointCoord, bool pointSize,
+                                        bool pixelShader) const;
+    std::string generateVaryingLinkHLSL(const SemanticInfo &info, const std::string &varyingHLSL) const;
+    std::string generateVaryingHLSL(VertexShader *shader) const;
+    void storeUserLinkedVaryings(const VertexShader *vertexShader, std::vector<LinkedVarying> *linkedVaryings) const;
+    void storeBuiltinLinkedVaryings(const SemanticInfo &info, std::vector<LinkedVarying> *linkedVaryings) const;
     void defineOutputVariables(FragmentShader *fragmentShader, std::map<int, VariableLocation> *programOutputVars) const;
     std::string generatePointSpriteHLSL(int registers, FragmentShader *fragmentShader, VertexShader *vertexShader) const;
 
     // Prepend an underscore
     static std::string decorateVariable(const std::string &name);
 
-    std::string generateAttributeConversionHLSL(const VertexFormat &vertexFormat, const ShaderVariable &shaderAttrib) const;
+    std::string generateAttributeConversionHLSL(const VertexFormat &vertexFormat, const sh::ShaderVariable &shaderAttrib) const;
 };
 
 // Utility method shared between ProgramBinary and DynamicHLSL

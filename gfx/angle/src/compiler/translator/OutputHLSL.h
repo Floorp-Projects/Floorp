@@ -11,9 +11,7 @@
 #include <set>
 #include <map>
 
-#include <GLES3/gl3.h>
-#include <GLES2/gl2.h>
-
+#include "angle_gl.h"
 #include "compiler/translator/intermediate.h"
 #include "compiler/translator/ParseContext.h"
 #include "common/shadervars.h"
@@ -21,6 +19,10 @@
 namespace sh
 {
 class UnfoldShortCircuit;
+class StructureHLSL;
+class UniformHLSL;
+
+typedef std::map<TString, TIntermSymbol*> ReferencedSymbols;
 
 class OutputHLSL : public TIntermTraverser
 {
@@ -31,24 +33,13 @@ class OutputHLSL : public TIntermTraverser
     void output();
 
     TInfoSinkBase &getBodyStream();
-    const std::vector<gl::Uniform> &getUniforms();
-    const std::vector<gl::InterfaceBlock> &getInterfaceBlocks() const;
-    const std::vector<gl::Attribute> &getOutputVariables() const;
-    const std::vector<gl::Attribute> &getAttributes() const;
-    const std::vector<gl::Varying> &getVaryings() const;
+    const std::vector<sh::Uniform> &getUniforms();
+    const std::vector<sh::InterfaceBlock> &getInterfaceBlocks() const;
+    const std::vector<sh::Attribute> &getOutputVariables() const;
+    const std::vector<sh::Attribute> &getAttributes() const;
+    const std::vector<sh::Varying> &getVaryings() const;
 
-    TString typeString(const TType &type);
-    TString textureString(const TType &type);
-    TString samplerString(const TType &type);
-    TString interpolationString(TQualifier qualifier);
-    TString structureString(const TStructure &structure, bool useHLSLRowMajorPacking, bool useStd140Packing);
-    TString structureTypeName(const TStructure &structure, bool useHLSLRowMajorPacking, bool useStd140Packing);
-    static TString qualifierString(TQualifier qualifier);
-    static TString arrayString(const TType &type);
     static TString initializer(const TType &type);
-    static TString decorate(const TString &string);                      // Prepends an underscore to avoid naming clashes
-    static TString decorateUniform(const TString &string, const TType &type);
-    static TString decorateField(const TString &string, const TStructure &structure);
 
   protected:
     void header();
@@ -71,12 +62,8 @@ class OutputHLSL : public TIntermTraverser
     TString argumentString(const TIntermSymbol *symbol);
     int vectorSize(const TType &type) const;
 
-    void addConstructor(const TType &type, const TString &name, const TIntermSequence *parameters);
+    void outputConstructor(Visit visit, const TType &type, const TString &name, const TIntermSequence *parameters);
     const ConstantUnion *writeConstantUnion(const TType &type, const ConstantUnion *constUnion);
-
-    TString scopeString(unsigned int depthLimit);
-    TString scopedStruct(const TString &typeName);
-    TString structLookup(const TString &typeName);
 
     TParseContext &mContext;
     const ShShaderOutput mOutputType;
@@ -88,12 +75,14 @@ class OutputHLSL : public TIntermTraverser
     TInfoSinkBase mBody;
     TInfoSinkBase mFooter;
 
-    typedef std::map<TString, TIntermSymbol*> ReferencedSymbols;
     ReferencedSymbols mReferencedUniforms;
     ReferencedSymbols mReferencedInterfaceBlocks;
     ReferencedSymbols mReferencedAttributes;
     ReferencedSymbols mReferencedVaryings;
     ReferencedSymbols mReferencedOutputVariables;
+
+    StructureHLSL *mStructureHLSL;
+    UniformHLSL *mUniformHLSL;
 
     struct TextureFunction
     {
@@ -153,19 +142,6 @@ class OutputHLSL : public TIntermTraverser
 
     int mNumRenderTargets;
 
-    typedef std::set<TString> Constructors;
-    Constructors mConstructors;
-
-    typedef std::set<TString> StructNames;
-    StructNames mStructNames;
-
-    typedef std::list<TString> StructDeclarations;
-    StructDeclarations mStructDeclarations;
-
-    typedef std::vector<int> ScopeBracket;
-    ScopeBracket mScopeBracket;
-    unsigned int mScopeDepth;
-
     int mUniqueIndex;   // For creating unique names
 
     bool mContainsLoopDiscontinuity;
@@ -175,51 +151,19 @@ class OutputHLSL : public TIntermTraverser
 
     TIntermSymbol *mExcessiveLoopIndex;
 
-    int mUniformRegister;
-    int mInterfaceBlockRegister;
-    int mSamplerRegister;
-    int mPaddingCounter;
+    void declareVaryingToList(const TType &type, TQualifier baseTypeQualifier, const TString &name, std::vector<sh::Varying>& fieldsOut);
 
-    TString registerString(TIntermSymbol *operand);
-    int samplerRegister(TIntermSymbol *sampler);
-    int uniformRegister(TIntermSymbol *uniform);
-    void declareInterfaceBlockField(const TType &type, const TString &name, std::vector<gl::InterfaceBlockField>& output);
-    gl::Uniform declareUniformToList(const TType &type, const TString &name, int registerIndex, std::vector<gl::Uniform>& output);
-    void declareUniform(const TType &type, const TString &name, int index);
-    void declareVaryingToList(const TType &type, TQualifier baseTypeQualifier, const TString &name, std::vector<gl::Varying>& fieldsOut);
-
-    // Returns the uniform's register index
-    int declareUniformAndAssignRegister(const TType &type, const TString &name);
-
-    TString interfaceBlockFieldString(const TInterfaceBlock &interfaceBlock, const TField &field);
-    TString decoratePrivate(const TString &privateText);
-    TString interfaceBlockStructNameString(const TInterfaceBlock &interfaceBlockType);
-    TString interfaceBlockInstanceString(const TInterfaceBlock& interfaceBlock, unsigned int arrayIndex);
-    TString interfaceBlockFieldTypeString(const TField &field, TLayoutBlockStorage blockStorage);
-    TString interfaceBlockFieldString(const TInterfaceBlock &interfaceBlock, TLayoutBlockStorage blockStorage);
-    TString interfaceBlockStructString(const TInterfaceBlock &interfaceBlock);
-    TString interfaceBlockString(const TInterfaceBlock &interfaceBlock, unsigned int registerIndex, unsigned int arrayIndex);
-    TString std140PrePaddingString(const TType &type, int *elementIndex);
-    TString std140PostPaddingString(const TType &type, bool useHLSLRowMajorPacking);
     TString structInitializerString(int indent, const TStructure &structure, const TString &rhsStructName);
-    
-    static GLenum glVariableType(const TType &type);
-    static GLenum glVariablePrecision(const TType &type);
-    static bool isVaryingIn(TQualifier qualifier);
-    static bool isVaryingOut(TQualifier qualifier);
-    static bool isVarying(TQualifier qualifier);
 
-    std::vector<gl::Uniform> mActiveUniforms;
-    std::vector<gl::InterfaceBlock> mActiveInterfaceBlocks;
-    std::vector<gl::Attribute> mActiveOutputVariables;
-    std::vector<gl::Attribute> mActiveAttributes;
-    std::vector<gl::Varying> mActiveVaryings;
-    std::map<TString, int> mStd140StructElementIndexes;
+    std::vector<sh::Attribute> mActiveOutputVariables;
+    std::vector<sh::Attribute> mActiveAttributes;
+    std::vector<sh::Varying> mActiveVaryings;
     std::map<TIntermTyped*, TString> mFlaggedStructMappedNames;
     std::map<TIntermTyped*, TString> mFlaggedStructOriginalNames;
 
     void makeFlaggedStructMaps(const std::vector<TIntermTyped *> &flaggedStructs);
 };
+
 }
 
 #endif   // COMPILER_OUTPUTHLSL_H_

@@ -15,6 +15,7 @@
 
 struct TPublicType;
 class TType;
+class TSymbol;
 
 class TField
 {
@@ -46,8 +47,6 @@ class TField
     {
         return mLine;
     }
-
-    bool equals(const TField &other) const;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(TField);
@@ -99,8 +98,6 @@ class TFieldListCollection
     size_t calculateObjectSize() const;
     virtual TString mangledNamePrefix() const = 0;
 
-    bool equals(const TFieldListCollection &other) const;
-
     const TString *mName;
     TFieldList *mFields;
 
@@ -115,7 +112,8 @@ class TStructure : public TFieldListCollection
     POOL_ALLOCATOR_NEW_DELETE();
     TStructure(const TString *name, TFieldList *fields)
         : TFieldListCollection(name, fields),
-          mDeepestNesting(0)
+          mDeepestNesting(0),
+          mUniqueId(0)
     {
     }
 
@@ -129,6 +127,17 @@ class TStructure : public TFieldListCollection
 
     bool equals(const TStructure &other) const;
 
+    void setUniqueId(int uniqueId)
+    {
+        mUniqueId = uniqueId;
+    }
+
+    int uniqueId() const
+    {
+        ASSERT(mUniqueId != 0);
+        return mUniqueId;
+    }
+
   private:
     DISALLOW_COPY_AND_ASSIGN(TStructure);
     virtual TString mangledNamePrefix() const
@@ -138,6 +147,7 @@ class TStructure : public TFieldListCollection
     int calculateDeepestNesting() const;
 
     mutable int mDeepestNesting;
+    int mUniqueId;
 };
 
 class TInterfaceBlock : public TFieldListCollection
@@ -178,8 +188,6 @@ class TInterfaceBlock : public TFieldListCollection
     {
         return mMatrixPacking;
     }
-
-    bool equals(const TInterfaceBlock &other) const;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(TInterfaceBlock);
@@ -370,10 +378,6 @@ class TType
 
         return mangled;
     }
-
-    // This is different from operator== as we also compare
-    // precision here.
-    bool equals(const TType &other) const;
 
     bool sameElementType(const TType &right) const
     {
