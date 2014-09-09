@@ -12,6 +12,7 @@ loop.panel = (function(_, mozL10n) {
   "use strict";
 
   var sharedViews = loop.shared.views,
+      sharedModels = loop.shared.models,
       // aliasing translation function as __ for concision
       __ = mozL10n.get;
 
@@ -261,7 +262,7 @@ loop.panel = (function(_, mozL10n) {
     propTypes: {
       callUrl:        React.PropTypes.string,
       callUrlExpiry:  React.PropTypes.number,
-      notifier:       React.PropTypes.object.isRequired,
+      notifications:  React.PropTypes.object.isRequired,
       client:         React.PropTypes.object.isRequired
     },
 
@@ -296,10 +297,10 @@ loop.panel = (function(_, mozL10n) {
     },
 
     _onCallUrlReceived: function(err, callUrlData) {
-      this.props.notifier.clear();
+      this.props.notifications.reset();
 
       if (err) {
-        this.props.notifier.errorL10n("unable_retrieve_url");
+        this.props.notifications.errorL10n("unable_retrieve_url");
         this.setState(this.getInitialState());
       } else {
         try {
@@ -314,7 +315,7 @@ loop.panel = (function(_, mozL10n) {
                          callUrlExpiry: callUrlData.expiresAt});
         } catch(e) {
           console.log(e);
-          this.props.notifier.errorL10n("unable_retrieve_url");
+          this.props.notifications.errorL10n("unable_retrieve_url");
           this.setState(this.getInitialState());
         }
       }
@@ -411,17 +412,20 @@ loop.panel = (function(_, mozL10n) {
    */
   var PanelView = React.createClass({displayName: 'PanelView',
     propTypes: {
-      notifier: React.PropTypes.object.isRequired,
+      notifications: React.PropTypes.object.isRequired,
       client: React.PropTypes.object.isRequired,
       // Mostly used for UI components showcase and unit tests
       callUrl: React.PropTypes.string
     },
 
     render: function() {
+      var NotificationListView = sharedViews.NotificationListView;
+
       return (
         React.DOM.div(null, 
+          NotificationListView({notifications: this.props.notifications}), 
           CallUrlResult({client: this.props.client, 
-                         notifier: this.props.notifier, 
+                         notifications: this.props.notifications, 
                          callUrl: this.props.callUrl}), 
           ToSView(null), 
           React.DOM.div({className: "footer"}, 
@@ -454,7 +458,6 @@ loop.panel = (function(_, mozL10n) {
 
       this._registerVisibilityChangeEvent();
 
-      this.on("panel:open panel:closed", this.clearNotifications, this);
       this.on("panel:open", this.reset, this);
     },
 
@@ -483,20 +486,16 @@ loop.panel = (function(_, mozL10n) {
       this.reset();
     },
 
-    clearNotifications: function() {
-      this._notifier.clear();
-    },
-
     /**
      * Resets this router to its initial state.
      */
     reset: function() {
-      this._notifier.clear();
+      this._notifications.reset();
       var client = new loop.Client({
         baseServerUrl: navigator.mozLoop.serverUrl
       });
-      this.loadReactComponent(PanelView({client: client, 
-                                         notifier: this._notifier}));
+      this.loadReactComponent(
+          PanelView({client: client, notifications: this._notifications}));
     }
   });
 
@@ -510,7 +509,7 @@ loop.panel = (function(_, mozL10n) {
 
     router = new PanelRouter({
       document: document,
-      notifier: new sharedViews.NotificationListView({el: "#messages"})
+      notifications: new sharedModels.NotificationCollection()
     });
     Backbone.history.start();
 

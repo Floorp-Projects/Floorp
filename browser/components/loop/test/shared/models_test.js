@@ -401,4 +401,58 @@ describe("loop.shared.models", function() {
       });
     });
   });
+
+  describe("NotificationCollection", function() {
+    var collection, notifData, testNotif;
+
+    beforeEach(function() {
+      collection = new sharedModels.NotificationCollection();
+      sandbox.stub(l10n, "get", function(x) {
+        return "translated:" + x;
+      });
+      notifData = {level: "error", message: "plop"};
+      testNotif = new sharedModels.NotificationModel(notifData);
+    });
+
+    describe("#warn", function() {
+      it("should add a warning notification to the stack", function() {
+        collection.warn("watch out");
+
+        expect(collection).to.have.length.of(1);
+        expect(collection.at(0).get("level")).eql("warning");
+        expect(collection.at(0).get("message")).eql("watch out");
+      });
+    });
+
+    describe("#warnL10n", function() {
+      it("should warn using a l10n string id", function() {
+        collection.warnL10n("fakeId");
+
+        expect(collection).to.have.length.of(1);
+        expect(collection.at(0).get("level")).eql("warning");
+        expect(collection.at(0).get("message")).eql("translated:fakeId");
+      });
+    });
+
+    describe("#error", function() {
+      it("should add an error notification to the stack", function() {
+        collection.error("wrong");
+
+        expect(collection).to.have.length.of(1);
+        expect(collection.at(0).get("level")).eql("error");
+        expect(collection.at(0).get("message")).eql("wrong");
+      });
+    });
+
+    describe("#errorL10n", function() {
+      it("should notify an error using a l10n string id", function() {
+        collection.errorL10n("fakeId");
+
+        expect(collection).to.have.length.of(1);
+        expect(collection.at(0).get("level")).eql("error");
+        expect(collection.at(0).get("message")).eql("translated:fakeId");
+      });
+    });
+
+  });
 });

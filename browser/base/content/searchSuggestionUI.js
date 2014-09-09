@@ -179,6 +179,13 @@ SearchSuggestionUIController.prototype = {
     case event.DOM_VK_RETURN:
       if (this.selectedIndex >= 0) {
         this.input.value = this.suggestionAtIndex(this.selectedIndex);
+        this.input.setAttribute("selection-index", this.selectedIndex);
+        this.input.setAttribute("selection-kind", "key");
+      } else {
+        // If we didn't select anything, make sure to remove the attributes
+        // in case they were populated last time.
+        this.input.removeAttribute("selection-index");
+        this.input.removeAttribute("selection-kind");
       }
       this._stickyInputValue = this.input.value;
       this._hideSuggestions();
@@ -228,6 +235,8 @@ SearchSuggestionUIController.prototype = {
     let suggestion = this.suggestionAtIndex(idx);
     this._stickyInputValue = suggestion;
     this.input.value = suggestion;
+    this.input.setAttribute("selection-index", idx);
+    this.input.setAttribute("selection-kind", "mouse");
     this._hideSuggestions();
     if (this.onClick) {
       this.onClick.call(null);
