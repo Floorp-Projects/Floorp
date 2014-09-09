@@ -1549,13 +1549,6 @@ addAsyncAnimTest(function *() {
 // rules below it in the cascade; we're checking that the animation
 // isn't rebuilt when the restyles happen.
 addAsyncAnimTest(function *() {
-  // Bug 1012527 - ASSERTION: Why did this not get handled while processing
-  // mRestyleRoots? on B2G emulator builds
-  // (Note that we don't expect assertions anywhere else in this file so the
-  // following usage is safe)
-  if (navigator.platform === '') {
-    SimpleTest.expectAssertions(2);
-  }
   new_div("animation: kf3 1s linear forwards");
   yield waitForPaintsFlushed();
   omta_is("transform", { tx: 0 }, RunningOn.Compositor,

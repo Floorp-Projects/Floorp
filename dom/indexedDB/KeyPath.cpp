@@ -103,7 +103,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
 
     NS_ASSERTION(!token.IsEmpty(), "Should be a valid keypath");
 
-    const jschar* keyPathChars = token.BeginReading();
+    const char16_t* keyPathChars = token.BeginReading();
     const size_t keyPathLen = token.Length();
 
     bool hasProp;

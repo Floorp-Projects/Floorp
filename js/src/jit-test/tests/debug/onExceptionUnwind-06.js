@@ -1,4 +1,3 @@
-// |jit-test| debug
 // onExceptionUnwind assigning to argv[1] does not affect the thrown exception.
 
 var g = newGlobal();

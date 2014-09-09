@@ -162,6 +162,9 @@ fuzzy-if(Android,4,1) == anim-svg-viewBox-01.svg lime.svg
 # animate with some paint server values
 == anim-paintserver-1.svg anim-paintserver-1-ref.svg
 
+# animate attributes on text content children
+== anim-text-attr-01.svg anim-text-attr-01-ref.svg 
+
 # animate where the base value is non-interpolatable but will be replaced anyway
 == anim-fill-overpaintserver-1.svg lime.svg
 == anim-fill-overpaintserver-2.svg lime.svg

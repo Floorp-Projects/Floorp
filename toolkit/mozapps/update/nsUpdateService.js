@@ -162,6 +162,7 @@ const WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID = 47;
 const WRITE_ERROR_SHARING_VIOLATION_NOPID           = 48;
 const FOTA_FILE_OPERATION_ERROR                     = 49;
 const FOTA_RECOVERY_ERROR                           = 50;
+const SECURE_LOCATION_UPDATE_ERROR                  = 51;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -353,7 +354,7 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function aus_gOSVersion() {
     const BYTE = ctypes.uint8_t;
     const WORD = ctypes.uint16_t;
     const DWORD = ctypes.uint32_t;
-    const WCHAR = ctypes.jschar;
+    const WCHAR = ctypes.char16_t;
     const BOOL = ctypes.int;
 
     // This structure is described at:
@@ -523,7 +524,7 @@ function createMutex(aName, aAllowExisting) {
                                  ctypes.void_t.ptr, /* return handle */
                                  ctypes.void_t.ptr, /* security attributes */
                                  ctypes.int32_t, /* initial owner */
-                                 ctypes.jschar.ptr); /* name */
+                                 ctypes.char16_t.ptr); /* name */
 
   var handle = CreateMutexW(null, INITIAL_OWN, aName);
   var alreadyExists = ctypes.winLastError == ERROR_ALREADY_EXISTS;
@@ -1477,7 +1478,8 @@ function handleUpdateFailure(update, errorCode) {
     return true;
   }
 
-  if (update.errorCode == ELEVATION_CANCELED) {
+  if (update.errorCode == ELEVATION_CANCELED ||
+      update.errorCode == SECURE_LOCATION_UPDATE_ERROR) {
     writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
     return true;
   }
@@ -2383,7 +2385,7 @@ UpdateService.prototype = {
       if (parts.length > 1) {
         result = parseInt(parts[1]) || INVALID_UPDATER_STATUS_CODE;
       }
-      Services.telemetry.getHistogramById("UPDATER_STATUS_CODES").add(result);
+      Services.telemetry.getHistogramById("UPDATER_ALL_STATUS_CODES").add(result);
     } catch(e) {
       // Don't allow any exception to be propagated.
       Cu.reportError(e);

@@ -90,6 +90,14 @@ public:
   // that were evicted are provided.
   void NotifyEvicted(double aStart, double aEnd);
 
+  // Queue InitializationEvent to run on the main thread.  Called when a
+  // SourceBuffer has an initialization segment appended, but only
+  // dispatched the first time (using mFirstSourceBufferInitialization).
+  // Demarcates the point in time at which only currently registered
+  // TrackBuffers are treated as essential by the MediaSourceReader for
+  // initialization.
+  void QueueInitializationEvent();
+
 private:
   ~MediaSource();
 
@@ -101,6 +109,8 @@ private:
 
   void DurationChange(double aNewDuration, ErrorResult& aRv);
 
+  void InitializationEvent();
+
   double mDuration;
 
   nsRefPtr<SourceBufferList> mSourceBuffers;
@@ -109,6 +119,8 @@ private:
   nsRefPtr<MediaSourceDecoder> mDecoder;
 
   MediaSourceReadyState mReadyState;
+
+  bool mFirstSourceBufferInitialization;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaSource, MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID)

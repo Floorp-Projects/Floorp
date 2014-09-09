@@ -41,6 +41,11 @@ class VideoStreamTrack;
  *  be sent back as a JPG format via Blob event.
  *
  *  All the functions in ImageCapture are run in main thread.
+ *
+ *  There are two ways to capture image, MediaEngineSource and MediaStreamGraph.
+ *  When the implementation of MediaEngineSource supports TakePhoto() in platform
+ *  like B2G, it uses the platform camera to grab image. Otherwise, it falls back
+ *  to the MediaStreamGraph way.
  */
 
 class ImageCapture MOZ_FINAL : public DOMEventTargetHelper
@@ -85,6 +90,10 @@ public:
 
 protected:
   virtual ~ImageCapture();
+
+  // Capture image by MediaEngine. If it's not support taking photo, this function
+  // should return NS_ERROR_NOT_IMPLEMENTED.
+  nsresult TakePhotoByMediaEngine();
 
   nsRefPtr<VideoStreamTrack> mVideoStreamTrack;
 };

@@ -386,14 +386,35 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI, uint32_t aFixup
         info->mFixupCreatedAlternateURI = MakeAlternateURI(info->mFixedURI);
     }
 
+    // If there is no relevent dot in the host, do we require the domain to
+    // be whitelisted?
+    if (info->mFixedURI) {
+        if (aFixupFlags & FIXUP_FLAG_REQUIRE_WHITELISTED_HOST) {
+
+            nsAutoCString asciiHost;
+            if (NS_SUCCEEDED(info->mFixedURI->GetAsciiHost(asciiHost)) &&
+                !asciiHost.IsEmpty()) {
+
+                uint32_t dotLoc = uint32_t(asciiHost.FindChar('.'));
+
+                if ((dotLoc == uint32_t(kNotFound) || dotLoc == asciiHost.Length() - 1)) {
+                    if (IsDomainWhitelisted(asciiHost, dotLoc)) {
+                        info->mPreferredURI = info->mFixedURI;
+                    }
+                } else {
+                    info->mPreferredURI = info->mFixedURI;
+                }
+            }
+        } else {
+            info->mPreferredURI = info->mFixedURI;
+        }
+
+        return NS_OK;
+    }
+
     // If we still haven't been able to construct a valid URI, try to force a
     // keyword match.  This catches search strings with '.' or ':' in them.
-    if (info->mFixedURI)
-    {
-        info->mPreferredURI = info->mFixedURI;
-    }
-    else if (sFixupKeywords && (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP))
-    {
+    if (sFixupKeywords && (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP)) {
         rv = KeywordToURI(aStringURI, aPostData, getter_AddRefs(info->mPreferredURI));
         if (NS_SUCCEEDED(rv) && info->mPreferredURI)
         {
@@ -964,26 +985,17 @@ void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
               (dotLoc == lastDotLoc && (dotLoc == 0 || dotLoc == aURIString.Length() - 1))) &&
              colonLoc == uint32_t(kNotFound) && qMarkLoc == uint32_t(kNotFound))
     {
+
         nsAutoCString asciiHost;
         if (aFixupInfo->mFixedURI &&
             NS_SUCCEEDED(aFixupInfo->mFixedURI->GetAsciiHost(asciiHost)) &&
-            !asciiHost.IsEmpty())
-        {
-            // Check if this domain is whitelisted as an actual
-            // domain (which will prevent a keyword query)
-            // NB: any processing of the host here should stay in sync with
-            // code in the front-end(s) that set the pref.
-            nsAutoCString pref("browser.fixup.domainwhitelist.");
-            if (dotLoc == aURIString.Length() - 1) {
-              pref.Append(Substring(asciiHost, 0, asciiHost.Length() - 1));
-            } else {
-              pref.Append(asciiHost);
-            }
-            if (Preferences::GetBool(pref.get(), false))
-            {
+            !asciiHost.IsEmpty()) {
+
+            if (IsDomainWhitelisted(asciiHost, dotLoc)) {
                 return;
             }
         }
+
         // If we get here, we don't have a valid URI, or we did but the
         // host is not whitelisted, so we do a keyword search *anyway*:
         rv = KeywordToURI(aFixupInfo->mOriginalInput, aPostData,
@@ -993,6 +1005,25 @@ void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
             aFixupInfo->mFixupUsedKeyword = true;
         }
     }
+}
+
+bool nsDefaultURIFixup::IsDomainWhitelisted(const nsAutoCString aAsciiHost,
+                                            const uint32_t aDotLoc)
+{
+    // Check if this domain is whitelisted as an actual
+    // domain (which will prevent a keyword query)
+    // NB: any processing of the host here should stay in sync with
+    // code in the front-end(s) that set the pref.
+
+    nsAutoCString pref("browser.fixup.domainwhitelist.");
+
+    if (aDotLoc == aAsciiHost.Length() - 1) {
+      pref.Append(Substring(aAsciiHost, 0, aAsciiHost.Length() - 1));
+    } else {
+      pref.Append(aAsciiHost);
+    }
+
+    return Preferences::GetBool(pref.get(), false);
 }
 
 

@@ -52,6 +52,12 @@ def Libxul(name):
         # and config/version.mk would lift the $(srcdir)
         RCINCLUDE = '$(DEPTH)/toolkit/library/xulrunner.rc'
 
+    LIBRARY_DEFINES['MOZILLA_INTERNAL_API'] = True
+    LIBRARY_DEFINES['IMPL_LIBXUL'] = True
+    if not CONFIG['JS_SHARED_LIBRARY']:
+        LIBRARY_DEFINES['STATIC_EXPORTABLE_JS_API'] = True
+
+
 Libxul('xul')
 
 SDK_LIBRARY = True

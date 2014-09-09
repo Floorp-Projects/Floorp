@@ -4600,6 +4600,14 @@ AC_SUBST(MOZ_DISTRIBUTION_ID)
 
 
 dnl ========================================================
+dnl Google Play Services, placed here so it can depend on
+dnl values set by configure.sh above.
+dnl ========================================================
+
+MOZ_ANDROID_GOOGLE_PLAY_SERVICES
+
+
+dnl ========================================================
 dnl = Pango
 dnl ========================================================
 if test "$MOZ_ENABLE_GTK" -o "$MOZ_ENABLE_QT"
@@ -5631,7 +5639,7 @@ if test -n "${JAVA_BIN_PATH}" -o \
     AC_MSG_ERROR([The program keytool was not found.  Set \$JAVA_HOME to your Java SDK directory or use --with-java-bin-path={java-bin-dir}])
   fi
 
-  AC_MSG_CHECKING([for minimum required javac version = 1.7])
+  AC_MSG_CHECKING([for minimum required javac version >= 1.7])
 
   dnl Javac spits out something like `javac 1.7.0`. This line cuts off the 'javac'
   _javac_version=$($JAVAC -version 2>&1 | cut -d ' ' -f 2)
@@ -5645,8 +5653,8 @@ if test -n "${JAVA_BIN_PATH}" -o \
 
   dnl Fail if we have a version other than 1.7.X
   if test "$_javac_major_version" -ne "1" -o \
-      \( "$_javac_minor_version" -ne "7" \); then
-      AC_MSG_ERROR([javac 1.7 is required.])
+       \( "$_javac_minor_version" -lt "7" \); then
+      AC_MSG_ERROR([javac 1.7 or higher is required.])
   fi
 fi
 
@@ -6395,10 +6403,17 @@ if test -n "$gonkdir"; then
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
 fi
 
-MOZ_ARG_ENABLE_BOOL(content-sandbox,
-[  --enable-content-sandbox        Enable sandboxing support for content-processes],
-    MOZ_CONTENT_SANDBOX=1,
-    MOZ_CONTENT_SANDBOX=)
+case "$OS_TARGET:$NIGHTLY_BUILD" in
+WINNT:1)
+    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
+    ;;
+*)
+    MOZ_ARG_ENABLE_BOOL(content-sandbox,
+    [  --enable-content-sandbox        Enable sandboxing support for content-processes],
+        MOZ_CONTENT_SANDBOX=1,
+        MOZ_CONTENT_SANDBOX=)
+    ;;
+esac
 
 if test -n "$MOZ_CONTENT_SANDBOX"; then
     AC_DEFINE(MOZ_CONTENT_SANDBOX)
@@ -8334,6 +8349,12 @@ dnl Build Sync Services if required
 AC_SUBST(MOZ_SERVICES_SYNC)
 if test -n "$MOZ_SERVICES_SYNC"; then
   AC_DEFINE(MOZ_SERVICES_SYNC)
+fi
+
+dnl Build Services/CloudSync if required
+AC_SUBST(MOZ_SERVICES_CLOUDSYNC)
+if test -n "$MOZ_SERVICES_CLOUDSYNC"; then
+  AC_DEFINE(MOZ_SERVICES_CLOUDSYNC)
 fi
 
 dnl Build Captive Portal Detector if required

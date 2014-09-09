@@ -183,7 +183,7 @@ types::TypeString(Type type)
           case JSVAL_TYPE_MAGIC:
             return "lazyargs";
           default:
-            MOZ_ASSUME_UNREACHABLE("Bad type");
+            MOZ_CRASH("Bad type");
         }
     }
     if (type.isUnknown())
@@ -357,7 +357,7 @@ TypeSet::mightBeMIRType(jit::MIRType type)
         // same join point in GuessPhiType.
         return false;
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad MIR type");
+        MOZ_CRASH("Bad MIR type");
     }
 }
 
@@ -1752,20 +1752,20 @@ HeapTypeSetKey::constant(CompilerConstraintList *constraints, Value *valOut)
     if (nonData(constraints))
         return false;
 
-    if (!maybeTypes())
-        return false;
-
-    if (maybeTypes()->nonConstantProperty())
-        return false;
-
     // Only singleton object properties can be marked as constants.
-    JS_ASSERT(object()->singleton());
+    JSObject *obj = object()->singleton();
+    if (!obj || !obj->isNative())
+        return false;
+
+    if (maybeTypes() && maybeTypes()->nonConstantProperty())
+        return false;
 
     // Get the current value of the property.
-    Shape *shape = object()->singleton()->nativeLookupPure(id());
-    if (!shape)
+    Shape *shape = obj->nativeLookupPure(id());
+    if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot() || shape->hadOverwrite())
         return false;
-    Value val = object()->singleton()->nativeGetSlot(shape->slot());
+
+    Value val = obj->nativeGetSlot(shape->slot());
 
     // If the value is a pointer to an object in the nursery, don't optimize.
     if (val.isGCThing() && IsInsideNursery(val.toGCThing()))
@@ -3887,7 +3887,7 @@ TypeNewScript::maybeAnalyze(JSContext *cx, TypeObject *type, bool *regenerate, b
     if (!jit::AnalyzeNewScriptDefiniteProperties(cx, fun, type, templateRoot, &initializerVector))
         return false;
 
-    if (type->unknownProperties())
+    if (!type->newScript())
         return true;
 
     JS_ASSERT(OnlyHasDataProperties(templateObject()->lastProperty()));

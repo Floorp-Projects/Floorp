@@ -839,6 +839,12 @@ int NrSocketIpc::create(nr_transport_addr *addr) {
     ABORT(R_INTERNAL);
   }
 
+  // Bug 950660: Remote TCP socket is not supported yet.
+  if (NS_WARN_IF(addr->protocol != IPPROTO_UDP)) {
+    MOZ_ASSERT(false, "NrSocket over TCP is not e10s ready, see Bug 950660");
+    ABORT(R_INTERNAL);
+  }
+
   sts_thread_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(false, "Failed to get STS thread");

@@ -159,7 +159,7 @@ HostHasPermission(nsIURI &docURI)
   /*
      Test each domain name in the comma separated list
      after converting from UTF8 to ASCII. Each domain
-     must match exactly: no wildcards are used.
+     must match exactly or have a single leading '*.' wildcard
   */
   do {
     end = domainWhiteList.FindChar(',', begin);
@@ -505,15 +505,18 @@ public:
       (aVideoSource ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
 
     nsRefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream(aListener,
-                                                                     aAudioSource);
+                                                                     aAudioSource,
+                                                                     aVideoSource);
     stream->InitTrackUnionStream(aWindow, hints);
     return stream.forget();
   }
 
   nsDOMUserMediaStream(GetUserMediaCallbackMediaStreamListener* aListener,
-                       MediaEngineSource *aAudioSource) :
+                       MediaEngineSource *aAudioSource,
+                       MediaEngineSource *aVideoSource) :
     mListener(aListener),
     mAudioSource(aAudioSource),
+    mVideoSource(aVideoSource),
     mEchoOn(true),
     mAgcOn(false),
     mNoiseOn(true),
@@ -625,12 +628,32 @@ public:
     GetStream()->AsProcessedStream()->ForwardTrackEnabled(aID, aEnabled);
   }
 
+  virtual DOMLocalMediaStream* AsDOMLocalMediaStream()
+  {
+    return this;
+  }
+
+  virtual MediaEngineSource* GetMediaEngine(TrackID aTrackID)
+  {
+    // MediaEngine supports only one video and on video track now and TrackID is
+    // fixed in MediaEngine.
+    if (aTrackID == kVideoTrack) {
+      return mVideoSource;
+    }
+    else if (aTrackID == kAudioTrack) {
+      return mAudioSource;
+    }
+
+    return nullptr;
+  }
+
   // The actual MediaStream is a TrackUnionStream. But these resources need to be
   // explicitly destroyed too.
   nsRefPtr<SourceMediaStream> mSourceStream;
   nsRefPtr<MediaInputPort> mPort;
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
   nsRefPtr<MediaEngineSource> mAudioSource; // so we can turn on AEC
+  nsRefPtr<MediaEngineSource> mVideoSource;
   bool mEchoOn;
   bool mAgcOn;
   bool mNoiseOn;

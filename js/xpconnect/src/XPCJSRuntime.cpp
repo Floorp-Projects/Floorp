@@ -561,19 +561,9 @@ WindowOrNull(JSObject *aObj)
     MOZ_ASSERT(aObj);
     MOZ_ASSERT(!js::IsWrapper(aObj));
 
-    // This will always return null until we have Window on WebIDL bindings,
-    // at which point it will do the right thing.
-    if (!IS_WN_CLASS(js::GetObjectClass(aObj))) {
-        nsGlobalWindow* win = nullptr;
-        UNWRAP_OBJECT(Window, aObj, win);
-        return win;
-    }
-
-    nsISupports* supports = XPCWrappedNative::Get(aObj)->GetIdentityObject();
-    nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(supports);
-    if (!piWin)
-        return nullptr;
-    return static_cast<nsGlobalWindow*>(piWin.get());
+    nsGlobalWindow* win = nullptr;
+    UNWRAP_OBJECT(Window, aObj, win);
+    return win;
 }
 
 nsGlobalWindow*
@@ -2222,10 +2212,6 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
         cStats.regexpCompartment,
         "The regexp compartment and regexp data.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("debuggees-set"),
-        cStats.debuggeesSet,
-        "The debuggees set.");
-
     if (sundriesGCHeap > 0) {
         // We deliberately don't use ZCREPORT_GC_BYTES here.
         REPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),
@@ -2986,7 +2972,7 @@ PreserveWrapper(JSContext *cx, JSObject *obj)
 }
 
 static nsresult
-ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, size_t *len)
+ReadSourceFromFilename(JSContext *cx, const char *filename, char16_t **src, size_t *len)
 {
     nsresult rv;
 
@@ -3065,7 +3051,7 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, size_t
 // the source for a chrome JS function. See the comment in the XPCJSRuntime
 // constructor.
 class XPCJSSourceHook: public js::SourceHook {
-    bool load(JSContext *cx, const char *filename, jschar **src, size_t *length) {
+    bool load(JSContext *cx, const char *filename, char16_t **src, size_t *length) {
         *src = nullptr;
         *length = 0;
 

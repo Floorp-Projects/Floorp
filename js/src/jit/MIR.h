@@ -2115,12 +2115,6 @@ typedef AlwaysTenured<Shape*> AlwaysTenuredShape;
 
 class MNewArray : public MUnaryInstruction
 {
-  public:
-    enum AllocatingBehaviour {
-        NewArray_Allocating,
-        NewArray_Unallocating
-    };
-
   private:
     // Number of space to allocate for the array.
     uint32_t count_;
@@ -2165,8 +2159,8 @@ class MNewArray : public MUnaryInstruction
         return initialHeap_;
     }
 
-    bool isAllocating() const {
-        return allocating_ == NewArray_Allocating;
+    AllocatingBehaviour allocatingBehaviour() const {
+        return allocating_;
     }
 
     // Returns true if the code generator should call through to the
@@ -2495,7 +2489,7 @@ class MArrayState : public MVariadicInstruction
   private:
     uint32_t numElements_;
 
-    MArrayState(MDefinition *arr)
+    explicit MArrayState(MDefinition *arr)
     {
         // This instruction is only used as a summary for bailout paths.
         setRecoveredOnBailout();
@@ -4761,7 +4755,7 @@ class MClz
 {
     bool operandIsNeverZero_;
 
-    MClz(MDefinition *num)
+    explicit MClz(MDefinition *num)
       : MUnaryInstruction(num),
         operandIsNeverZero_(false)
     {

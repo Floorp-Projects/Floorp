@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Debugger.Frame.prototype.live is false for frames that have thrown or been thrown through
 
 load(libdir + "asserts.js");

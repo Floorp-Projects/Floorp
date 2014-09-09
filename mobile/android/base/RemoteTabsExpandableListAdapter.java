@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.mozilla.gecko.TabsAccessor.RemoteClient;
 import org.mozilla.gecko.TabsAccessor.RemoteTab;
+import org.mozilla.gecko.home.TwoLinePageRow;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -16,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
@@ -106,6 +108,18 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         final long now = System.currentTimeMillis();
         lastModifiedView.setText(TabsAccessor.getLastSyncedString(context, now, client.lastModified));
 
+        // This view exists only in some of our group views: it's present
+        // for the home panel groups and not for the tabs tray groups.
+        // Therefore, we must handle null.
+        final ImageView deviceTypeView = (ImageView) view.findViewById(R.id.device_type);
+        if (deviceTypeView != null) {
+            if ("desktop".equals(client.deviceType)) {
+                deviceTypeView.setBackgroundResource(R.drawable.sync_desktop);
+            } else {
+                deviceTypeView.setBackgroundResource(R.drawable.sync_mobile);
+            }
+        }
+
         return view;
     }
 
@@ -138,11 +152,18 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         final RemoteClient client = clients.get(groupPosition);
         final RemoteTab tab = client.tabs.get(childPosition);
 
-        final TextView titleView = (TextView) view.findViewById(R.id.title);
-        titleView.setText(TextUtils.isEmpty(tab.title) ? tab.url : tab.title);
+        // The view is a TwoLinePageRow only for some of our child views: it's
+        // present for the home panel children and not for the tabs tray
+        // children. Therefore, we must handle one case manually.
+        if (view instanceof TwoLinePageRow) {
+            ((TwoLinePageRow) view).update(tab.title, tab.url);
+        } else {
+            final TextView titleView = (TextView) view.findViewById(R.id.title);
+            titleView.setText(TextUtils.isEmpty(tab.title) ? tab.url : tab.title);
 
-        final TextView urlView = (TextView) view.findViewById(R.id.url);
-        urlView.setText(tab.url);
+            final TextView urlView = (TextView) view.findViewById(R.id.url);
+            urlView.setText(tab.url);
+        }
 
         return view;
     }

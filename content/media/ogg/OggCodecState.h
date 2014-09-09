@@ -382,10 +382,35 @@ private:
 // version numbers.
 #define SKELETON_VERSION(major, minor) (((major)<<16)|(minor))
 
+enum EMsgHeaderType {
+  eContentType,
+  eRole,
+  eName,
+  eLanguage,
+  eTitle,
+  eDisplayHint,
+  eAltitude,
+  eTrackOrder,
+  eTrackDependencies
+};
+
+typedef struct {
+  const char* mPatternToRecognize;
+  EMsgHeaderType mMsgHeaderType;
+} FieldPatternType;
+
+// Stores the message information for different logical bitstream.
+typedef struct {
+  nsClassHashtable<nsUint32HashKey, nsCString> mValuesStore;
+} MessageField;
+
 class SkeletonState : public OggCodecState {
 public:
   explicit SkeletonState(ogg_page* aBosPage);
   ~SkeletonState();
+
+  nsClassHashtable<nsUint32HashKey, MessageField> mMsgFieldStore;
+
   CodecType GetType() { return TYPE_SKELETON; }
   bool DecodeHeader(ogg_packet* aPacket);
   int64_t Time(int64_t granulepos) { return -1; }
@@ -454,6 +479,8 @@ private:
 
   // Decodes an index packet. Returns false on failure.
   bool DecodeIndex(ogg_packet* aPacket);
+  // Decodes an fisbone packet. Returns false on failure.
+  bool DecodeFisbone(ogg_packet* aPacket);
 
   // Gets the keypoint you must seek to in order to get the keyframe required
   // to render the stream at time aTarget on stream with serial aSerialno.

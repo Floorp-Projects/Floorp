@@ -148,6 +148,9 @@ IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
 
     JS_ASSERT(script()->hasBaselineScript() == (info->executionMode() != ArgumentsUsageAnalysis));
     JS_ASSERT(!!analysisContext == (info->executionMode() == DefinitePropertiesAnalysis));
+
+    if (!info->executionModeIsAnalysis())
+        script()->baselineScript()->setIonCompiledOrInlined();
 }
 
 void
@@ -4202,6 +4205,7 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
         // type information, except for definite properties analysis,
         // as the caller has not run yet.
         if (targetScript->getUseCount() < optimizationInfo().usesBeforeInlining() &&
+            !targetScript->baselineScript()->ionCompiledOrInlined() &&
             info().executionMode() != DefinitePropertiesAnalysis)
         {
             return DontInline(targetScript, "Vetoed: callee is insufficiently hot.");
@@ -4298,7 +4302,7 @@ class WrapMGetPropertyCache
     }
 
   public:
-    WrapMGetPropertyCache(MGetPropertyCache *cache)
+    explicit WrapMGetPropertyCache(MGetPropertyCache *cache)
       : cache_(cache)
     { }
 
@@ -5581,7 +5585,7 @@ IonBuilder::jsop_newarray(uint32_t count)
 
     MNewArray *ins = MNewArray::New(alloc(), constraints(), count, templateConst,
                                     templateObject->type()->initialHeap(constraints()),
-                                    MNewArray::NewArray_Allocating);
+                                    NewArray_FullyAllocating);
     current->add(ins);
     current->push(ins);
 
@@ -8313,7 +8317,7 @@ IonBuilder::jsop_rest()
 
     MNewArray *array = MNewArray::New(alloc(), constraints(), numRest, templateConst,
                                       templateObject->type()->initialHeap(constraints()),
-                                      MNewArray::NewArray_Allocating);
+                                      NewArray_FullyAllocating);
     current->add(array);
 
     if (numRest == 0) {

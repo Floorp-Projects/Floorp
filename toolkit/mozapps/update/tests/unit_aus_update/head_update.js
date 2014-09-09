@@ -1278,11 +1278,11 @@ XPCOMUtils.defineLazyGetter(this, "gLocalAppDataDir",
                                            ctypes.winapi_abi,
                                            ctypes.bool, /* bool(return) */
                                            ctypes.int32_t, /* HWND hwndOwner */
-                                           ctypes.jschar.ptr, /* LPTSTR lpszPath */
+                                           ctypes.char16_t.ptr, /* LPTSTR lpszPath */
                                            ctypes.int32_t, /* int csidl */
                                            ctypes.bool /* BOOL fCreate */);
 
-  let aryPathLocalAppData = ctypes.jschar.array()(260);
+  let aryPathLocalAppData = ctypes.char16_t.array()(260);
   let rv = SHGetSpecialFolderPath(0, aryPathLocalAppData, CSIDL_LOCAL_APPDATA, false);
   lib.close();
 
@@ -1303,11 +1303,11 @@ XPCOMUtils.defineLazyGetter(this, "gProgFilesDir",
                                            ctypes.winapi_abi,
                                            ctypes.bool, /* bool(return) */
                                            ctypes.int32_t, /* HWND hwndOwner */
-                                           ctypes.jschar.ptr, /* LPTSTR lpszPath */
+                                           ctypes.char16_t.ptr, /* LPTSTR lpszPath */
                                            ctypes.int32_t, /* int csidl */
                                            ctypes.bool /* BOOL fCreate */);
 
-  let aryPathProgFiles = ctypes.jschar.array()(260);
+  let aryPathProgFiles = ctypes.char16_t.array()(260);
   let rv = SHGetSpecialFolderPath(0, aryPathProgFiles, CSIDL_PROGRAM_FILES, false);
   lib.close();
 
@@ -1508,15 +1508,18 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
   if (gDisableReplaceFallback) {
     env.set("MOZ_NO_REPLACE_FALLBACK", "1");
   }
+  env.set("MOZ_EMULATE_ELEVATION_PATH", "1");
 
   let process = AUS_Cc["@mozilla.org/process/util;1"].
                 createInstance(AUS_Ci.nsIProcess);
   process.init(updateBin);
+
   process.run(true, args, args.length);
 
   if (gDisableReplaceFallback) {
     env.set("MOZ_NO_REPLACE_FALLBACK", "");
   }
+  env.set("MOZ_EMULATE_ELEVATION_PATH", "");
 
   let status = readStatusFile();
   if (process.exitValue != aExpectedExitValue || status != aExpectedStatus) {

@@ -3033,10 +3033,9 @@ MNewArray::shouldUseVM() const
     size_t arraySlots =
         gc::GetGCKindSlots(templateObject()->tenuredGetAllocKind()) - ObjectElements::VALUES_PER_HEADER;
 
-    // Allocate space using the VMCall
-    // when mir hints it needs to get allocated immediately,
-    // but only when data doesn't fit the available array slots.
-    bool allocating = isAllocating() && count() > arraySlots;
+    // Allocate space using the VMCall when mir hints it needs to get allocated
+    // immediately, but only when data doesn't fit the available array slots.
+    bool allocating = allocatingBehaviour() != NewArray_Unallocating && count() > arraySlots;
 
     return templateObject()->hasSingletonType() || allocating;
 }

@@ -281,11 +281,7 @@ pref("browser.search.official", true);
 #endif
 
 // Control media casting feature
-#ifdef RELEASE_BUILD
-pref("browser.casting.enabled", false);
-#else
 pref("browser.casting.enabled", true);
-#endif
 
 // Enable sparse localization by setting a few package locale overrides
 pref("chrome.override_package.global", "browser");
@@ -483,7 +479,7 @@ pref("plugin.default.state", 1);
 pref("breakpad.reportURL", "https://crash-stats.mozilla.com/report/index/");
 pref("app.support.baseURL", "http://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/");
 // Used to submit data to input from about:feedback
-pref("app.feedback.postURL", "https://input.mozilla.org/%LOCALE%/feedback");
+pref("app.feedback.postURL", "https://input.mozilla.org/api/v1/feedback/");
 pref("app.privacyURL", "https://www.mozilla.org/privacy/firefox/");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
 pref("app.channelURL", "http://www.mozilla.org/%LOCALE%/firefox/channel/");
@@ -556,7 +552,7 @@ pref("app.update.enabled", false);
 pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 
 // If you are looking for app.update.url, we no longer use it.
-// See mobile/android/base/UpdateServiceHelper.java.in
+// See mobile/android/base/updater/UpdateServiceHelper.java
 #endif
 
 // replace newlines with spaces on paste into single-line text boxes

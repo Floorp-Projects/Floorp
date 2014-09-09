@@ -388,7 +388,7 @@ class FreeOp : public JSFreeOp
         return static_cast<FreeOp *>(fop);
     }
 
-    FreeOp(JSRuntime *rt)
+    explicit FreeOp(JSRuntime *rt)
       : JSFreeOp(rt)
     {}
 
@@ -1013,9 +1013,6 @@ struct JSRuntime : public JS::shadow::Runtime,
 #ifdef NIGHTLY_BUILD
     js::AssertOnScriptEntryHook assertOnScriptEntryHook_;
 #endif
-
-    /* If true, new compartments are initially in debug mode. */
-    bool                debugMode;
 
     /* SPS profiling metadata */
     js::SPSProfiler     spsProfiler;

@@ -82,7 +82,7 @@ GetGMPStorageDir(nsIFile** aTempDir, const nsString& aOrigin)
   // process (a UUID or somesuch), we can just append it un-hashed here.
   // This should reduce the chance of hash collsions exposing data.
   nsAutoString nodeIdHash;
-  nodeIdHash.AppendInt(HashString(aOrigin.get()));
+  nodeIdHash.AppendInt(HashString(static_cast<const char16_t*>(aOrigin.get())));
   rv = tmpFile->Append(nodeIdHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

@@ -8,6 +8,7 @@
 #define imgLoader_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Mutex.h"
 
 #include "imgILoader.h"
 #include "imgICache.h"
@@ -170,11 +171,11 @@ private: // data
 #include <vector>
 
 #define NS_IMGLOADER_CID \
-{ /* 9f6a0d2e-1dd1-11b2-a5b8-951f13c846f7 */         \
-     0x9f6a0d2e,                                     \
-     0x1dd1,                                         \
-     0x11b2,                                         \
-    {0xa5, 0xb8, 0x95, 0x1f, 0x13, 0xc8, 0x46, 0xf7} \
+{ /* c1354898-e3fe-4602-88a7-c4520c21cb4e */         \
+     0xc1354898,                                     \
+     0xe3fe,                                         \
+     0x4602,                                         \
+    {0x88, 0xa7, 0xc4, 0x52, 0x0c, 0x21, 0xcb, 0x4e} \
 }
 
 class imgCacheQueue
@@ -216,6 +217,8 @@ class imgLoader MOZ_FINAL : public imgILoader,
 public:
   typedef mozilla::image::ImageURL ImageURL;
   typedef nsRefPtrHashtable<nsCStringHashKey, imgCacheEntry> imgCacheTable;
+  typedef nsTHashtable<nsPtrHashKey<imgRequest>> imgSet;
+  typedef mozilla::Mutex Mutex;
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGILOADER
@@ -285,6 +288,9 @@ public:
   bool RemoveFromCache(imgCacheEntry *entry);
 
   bool PutIntoCache(nsIURI *key, imgCacheEntry *entry);
+
+  void AddToUncachedImages(imgRequest* aRequest);
+  void RemoveFromUncachedImages(imgRequest* aRequest);
 
   // Returns true if we should prefer evicting cache entry |two| over cache
   // entry |one|.
@@ -374,6 +380,16 @@ private: // data
 
   imgCacheTable mChromeCache;
   imgCacheQueue mChromeCacheQueue;
+
+  // Hash set of every imgRequest for this loader that isn't in mCache or
+  // mChromeCache. The union over all imgLoader's of mCache, mChromeCache, and
+  // mUncachedImages should be every imgRequest that is alive. These are weak
+  // pointers so we rely on the imgRequest destructor to remove itself.
+  imgSet mUncachedImages;
+  // The imgRequest can have refs to them held on non-main thread, so we need
+  // a mutex because we modify the uncached images set from the imgRequest
+  // destructor.
+  Mutex mUncachedImagesMutex;
 
   static double sCacheTimeWeight;
   static uint32_t sCacheMaxSize;

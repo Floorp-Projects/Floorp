@@ -73,6 +73,9 @@ imgRequest::imgRequest(imgLoader* aLoader)
 
 imgRequest::~imgRequest()
 {
+  if (mLoader) {
+    mLoader->RemoveFromUncachedImages(this);
+  }
   if (mURI) {
     nsAutoCString spec;
     mURI->GetSpec(spec);
@@ -126,6 +129,10 @@ nsresult imgRequest::Init(nsIURI *aURI,
   return NS_OK;
 }
 
+void imgRequest::ClearLoader() {
+  mLoader = nullptr;
+}
+
 already_AddRefed<imgStatusTracker>
 imgRequest::GetStatusTracker()
 {
@@ -169,7 +176,9 @@ void imgRequest::AddProxy(imgRequestProxy *proxy)
   nsRefPtr<imgStatusTracker> statusTracker = GetStatusTracker();
   if (statusTracker->ConsumerCount() == 0) {
     NS_ABORT_IF_FALSE(mURI, "Trying to SetHasProxies without key uri.");
-    mLoader->SetHasProxies(mURI);
+    if (mLoader) {
+      mLoader->SetHasProxies(mURI);
+    }
   }
 
   statusTracker->AddConsumer(proxy);
@@ -199,7 +208,9 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
     if (mCacheEntry) {
       NS_ABORT_IF_FALSE(mURI, "Removing last observer without key uri.");
 
-      mLoader->SetHasNoProxies(mURI, mCacheEntry);
+      if (mLoader) {
+        mLoader->SetHasNoProxies(mURI, mCacheEntry);
+      }
     }
 #if defined(PR_LOGGING)
     else {
@@ -375,15 +386,22 @@ void imgRequest::RemoveFromCache()
 {
   LOG_SCOPE(GetImgLog(), "imgRequest::RemoveFromCache");
 
-  if (mIsInCache) {
+  if (mIsInCache && mLoader) {
     // mCacheEntry is nulled out when we have no more observers.
-    if (mCacheEntry)
+    if (mCacheEntry) {
       mLoader->RemoveFromCache(mCacheEntry);
-    else
+    } else {
       mLoader->RemoveFromCache(mURI);
+    }
   }
 
   mCacheEntry = nullptr;
+}
+
+bool imgRequest::HasConsumers()
+{
+  nsRefPtr<imgStatusTracker> statusTracker = GetStatusTracker();
+  return statusTracker && statusTracker->ConsumerCount() > 0;
 }
 
 int32_t imgRequest::Priority() const

@@ -150,7 +150,7 @@ class RegExpAssertion : public RegExpTree {
 class CharacterSet
 {
   public:
-    explicit CharacterSet(jschar standard_set_type)
+    explicit CharacterSet(char16_t standard_set_type)
       : ranges_(nullptr),
         standard_set_type_(standard_set_type)
     {}
@@ -160,8 +160,8 @@ class CharacterSet
     {}
 
     CharacterRangeVector &ranges(LifoAlloc *alloc);
-    jschar standard_set_type() { return standard_set_type_; }
-    void set_standard_set_type(jschar special_set_type) {
+    char16_t standard_set_type() { return standard_set_type_; }
+    void set_standard_set_type(char16_t special_set_type) {
         standard_set_type_ = special_set_type;
     }
     bool is_standard() { return standard_set_type_ != 0; }
@@ -172,7 +172,7 @@ class CharacterSet
 
     // If non-zero, the value represents a standard set (e.g., all whitespace
     // characters) without having to expand the ranges.
-    jschar standard_set_type_;
+    char16_t standard_set_type_;
 };
 
 class RegExpCharacterClass : public RegExpTree
@@ -183,7 +183,7 @@ class RegExpCharacterClass : public RegExpTree
         is_negated_(is_negated)
     {}
 
-    explicit RegExpCharacterClass(jschar type)
+    explicit RegExpCharacterClass(char16_t type)
       : set_(type),
         is_negated_(false)
     {}
@@ -215,7 +215,7 @@ class RegExpCharacterClass : public RegExpTree
     // D : non-ASCII digit
     // . : non-unicode non-newline
     // * : All characters
-    jschar standard_type() { return set_.standard_set_type(); }
+    char16_t standard_type() { return set_.standard_set_type(); }
 
     CharacterRangeVector &ranges(LifoAlloc *alloc) { return set_.ranges(alloc); }
     bool is_negated() { return is_negated_; }
@@ -225,7 +225,7 @@ class RegExpCharacterClass : public RegExpTree
     bool is_negated_;
 };
 
-typedef Vector<jschar, 10, LifoAllocPolicy<Infallible> > CharacterVector;
+typedef Vector<char16_t, 10, LifoAllocPolicy<Infallible> > CharacterVector;
 
 class RegExpAtom : public RegExpTree
 {
