@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1062406
+-->
+<head>
+  <title>Test for Bug 1062406</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1062406">Mozilla Bug 1062406</a>
+<div id="content" style="display: none">
+  
+</div>
+<div style="width:10000px; height:10000px"></div>
+<pre id="test">
+<script type="application/javascript">
+
+  /** Test for Bug 1062406 **/
+  window.scroll(100, 100);
+  window.scroll(NaN, NaN);
+  is(window.scrollX, 0, "window.scroll x parameter must treat NaN as 0.");
+  is(window.scrollY, 0, "window.scroll y parameter must treat NaN as 0.");
+
+  window.scroll(100, 100);
+  window.scroll(Infinity, Infinity);
+  is(window.scrollX, 0, "window.scroll x parameter must treat Infinity as 0.");
+  is(window.scrollY, 0, "window.scroll y parameter must treat Infinity as 0.");
+
+  window.scroll(100, 100);
+  window.scroll(-Infinity, -Infinity);
+  is(window.scrollX, 0, "window.scroll x parameter must treat -Infinity as 0.");
+  is(window.scrollY, 0, "window.scroll y parameter must treat -Infinity as 0.");
+
+</script>
+</pre>
+</body>
+</html>
