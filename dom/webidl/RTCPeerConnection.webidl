@@ -55,8 +55,19 @@ dictionary RTCDataChannelInit {
 dictionary RTCOfferOptions {
   long    offerToReceiveVideo;
   long    offerToReceiveAudio;
-  boolean MozDontOfferDataChannel;
-  boolean MozBundleOnly;
+  boolean mozDontOfferDataChannel;
+  boolean mozBundleOnly;
+
+  // TODO: Remove old constraint-like RTCOptions support soon (Bug 1064223).
+  DeprecatedRTCOfferOptionsSet mandatory;
+  sequence<DeprecatedRTCOfferOptionsSet> _optional;
+};
+
+dictionary DeprecatedRTCOfferOptionsSet {
+  boolean OfferToReceiveAudio;     // Note the uppercase 'O'
+  boolean OfferToReceiveVideo;     // Note the uppercase 'O'
+  boolean MozDontOfferDataChannel; // Note the uppercase 'M'
+  boolean MozBundleOnly;           // Note the uppercase 'M'
 };
 
 interface RTCDataChannel;
