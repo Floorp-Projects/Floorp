@@ -98,9 +98,6 @@ js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 {
     JS_ASSERT(cx->compartment()->debugMode());
 
-    if (cx->compartment()->getDebuggees().empty())
-        return JSTRAP_CONTINUE;
-
     /* Call debugger throw hook if set. */
     RootedValue rval(cx);
     JSTrapStatus status = Debugger::onExceptionUnwind(cx, &rval);
