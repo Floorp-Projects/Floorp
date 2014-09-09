@@ -1169,13 +1169,7 @@ public abstract class GeckoApp
             }
         }
 
-        // Speculatively pre-fetch the profile in the background.
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                getProfile();
-            }
-        });
+        BrowserDB.initialize(getProfile().getName());
 
         // Workaround for <http://code.google.com/p/android/issues/detail?id=20915>.
         try {
@@ -1445,8 +1439,6 @@ public abstract class GeckoApp
 
         initializeChrome();
 
-        BrowserDB.initialize(getProfile().getName());
-
         // If we are doing a restore, read the session data and send it to Gecko
         if (!mIsRestoringActivity) {
             String restoreMessage = null;
@@ -1675,7 +1667,7 @@ public abstract class GeckoApp
         }
     }
 
-    public synchronized GeckoProfile getProfile() {
+    public GeckoProfile getProfile() {
         // fall back to default profile if we didn't load a specific one
         if (mProfile == null) {
             mProfile = GeckoProfile.get(this);

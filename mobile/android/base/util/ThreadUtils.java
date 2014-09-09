@@ -182,7 +182,6 @@ public final class ThreadUtils {
         return isOnThread(getUiThread());
     }
 
-    @RobocopTarget
     public static boolean isOnBackgroundThread() {
         if (sBackgroundThread == null) {
             return false;
@@ -191,7 +190,6 @@ public final class ThreadUtils {
         return isOnThread(sBackgroundThread);
     }
 
-    @RobocopTarget
     public static boolean isOnThread(Thread thread) {
         return (Thread.currentThread().getId() == thread.getId());
     }
