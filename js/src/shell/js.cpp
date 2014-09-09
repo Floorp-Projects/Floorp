@@ -1452,8 +1452,6 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
     const char16_t *ucbuf = chars.twoByteRange().start().get();
     size_t buflen = str->length();
 
-    JS::Anchor<JSString *> a_str(str);
-
     RootedScript script(cx);
     int64_t startClock = PRMJ_Now();
     {
@@ -4798,7 +4796,6 @@ static bool
 PrintHelpString(JSContext *cx, jsval v)
 {
     JSString *str = v.toString();
-    JS::Anchor<JSString *> a_str(str);
 
     JSLinearString *linear = str->ensureLinear(cx);
     if (!linear)

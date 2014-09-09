@@ -9,8 +9,6 @@
 
 #include "jsapi-tests/tests.h"
 
-#ifdef JSGC_USE_EXACT_ROOTING
-
 BEGIN_TEST(testWeakMap_basicOperations)
 {
     JS::RootedObject map(cx, JS::NewWeakMapObject(cx));
@@ -240,5 +238,3 @@ checkSize(JS::HandleObject map, uint32_t expected)
     return true;
 }
 END_TEST(testWeakMap_keyDelegates)
-
-#endif // JSGC_USE_EXACT_ROOTING

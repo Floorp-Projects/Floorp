@@ -3839,7 +3839,6 @@ NSS_NO_LIBPKIX=
 MOZ_CONTENT_SANDBOX=
 MOZ_GMP_SANDBOX=
 MOZ_SANDBOX=1
-JSGC_USE_EXACT_ROOTING=1
 JSGC_GENERATIONAL=
 
 case "$target_os" in
@@ -7200,17 +7199,6 @@ if test -n "$JSGC_INCREMENTAL"; then
 fi
 
 dnl ========================================================
-dnl = Use exact stack rooting for GC
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(exact-rooting,
-[  --disable-exact-rooting  Enable use of conservative stack scanning for GC],
-    JSGC_USE_EXACT_ROOTING= ,
-    JSGC_USE_EXACT_ROOTING=1 )
-if test -n "$JSGC_USE_EXACT_ROOTING"; then
-    AC_DEFINE(JSGC_USE_EXACT_ROOTING)
-fi
-
-dnl ========================================================
 dnl = Use generational GC
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(gcgenerational,
@@ -9169,9 +9157,6 @@ if test -z "$JS_SHARED_LIBRARY" ; then
     if test -n "$MOZ_DISABLE_EXPORT_JS"; then
         ac_configure_args="$ac_configure_args --disable-export-js"
     fi
-fi
-if test -z "$JSGC_USE_EXACT_ROOTING" ; then
-    ac_configure_args="$ac_configure_args --disable-exact-rooting"
 fi
 if test -z "$JSGC_GENERATIONAL" ; then
     ac_configure_args="$ac_configure_args --disable-gcgenerational"
