@@ -4569,7 +4569,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, HandleObject obj, const char *utf8, siz
     Parser<frontend::FullParseHandler> parser(cx, &cx->tempLifoAlloc(),
                                               options, chars, length,
                                               /* foldConstants = */ true, nullptr, nullptr);
-    JSErrorReporter older = JS_SetErrorReporter(cx, nullptr);
+    JSErrorReporter older = JS_SetErrorReporter(cx->runtime(), nullptr);
     if (!parser.parse(obj)) {
         // We ran into an error. If it was because we ran out of source, we
         // return false so our caller knows to try to collect more buffered
@@ -4579,7 +4579,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, HandleObject obj, const char *utf8, siz
 
         cx->clearPendingException();
     }
-    JS_SetErrorReporter(cx, older);
+    JS_SetErrorReporter(cx->runtime(), older);
 
     js_free(chars);
     return result;
@@ -5767,18 +5767,18 @@ JS_ReportAllocationOverflow(JSContext *cx)
 }
 
 JS_PUBLIC_API(JSErrorReporter)
-JS_GetErrorReporter(JSContext *cx)
+JS_GetErrorReporter(JSRuntime *rt)
 {
-    return cx->runtime()->errorReporter;
+    return rt->errorReporter;
 }
 
 JS_PUBLIC_API(JSErrorReporter)
-JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
+JS_SetErrorReporter(JSRuntime *rt, JSErrorReporter er)
 {
     JSErrorReporter older;
 
-    older = cx->runtime()->errorReporter;
-    cx->runtime()->errorReporter = er;
+    older = rt->errorReporter;
+    rt->errorReporter = er;
     return older;
 }
 

@@ -760,8 +760,6 @@ nsJSContext::InitContext()
   if (!mContext)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  JS_SetErrorReporter(mContext, xpc::SystemErrorReporter);
-
   JSOptionChangedCallback(js_options_dot_str, this);
 
   return NS_OK;

@@ -826,7 +826,7 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
   rtPrivate->mWorkerPrivate = aWorkerPrivate;
   JS_SetRuntimePrivate(aRuntime, rtPrivate);
 
-  JS_SetErrorReporter(workerCx, ErrorReporter);
+  JS_SetErrorReporter(aRuntime, ErrorReporter);
 
   JS_SetInterruptCallback(aRuntime, InterruptCallback);
 
