@@ -744,20 +744,14 @@ Activation::Activation(ThreadSafeContext *cx, Kind kind)
     kind_(kind)
 {
     cx->perThreadData->activation_ = this;
-
-    // Link the activation into the list of profiling activations if needed.
-    if (isProfiling())
-        registerProfiling();
 }
 
 Activation::~Activation()
 {
+    JS_ASSERT_IF(isProfiling(), this != cx_->perThreadData->profilingActivation_);
     JS_ASSERT(cx_->perThreadData->activation_ == this);
     JS_ASSERT(hideScriptedCallerCount_ == 0);
     cx_->perThreadData->activation_ = prev_;
-
-    if (isProfiling())
-        unregisterProfiling();
 }
 
 bool
