@@ -7,14 +7,12 @@
 // debug.cpp: Debugging utilities.
 
 #include "common/debug.h"
+#include "common/platform.h"
+
 #include <stdarg.h>
 #include <vector>
 #include <fstream>
 #include <cstdio>
-
-#if defined(ANGLE_ENABLE_PERF)
-#include <d3d9.h>
-#endif
 
 namespace gl
 {

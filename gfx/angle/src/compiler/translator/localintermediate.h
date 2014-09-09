@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -24,7 +24,6 @@ public:
     TIntermediate(TInfoSink& i) : infoSink(i) { }
 
     TIntermSymbol* addSymbol(int Id, const TString&, const TType&, const TSourceLoc&);
-    TIntermTyped* addConversion(TOperator, const TType&, TIntermTyped*);
     TIntermTyped* addBinaryMath(TOperator op, TIntermTyped* left, TIntermTyped* right, const TSourceLoc&);
     TIntermTyped* addAssign(TOperator op, TIntermTyped* left, TIntermTyped* right, const TSourceLoc&);
     TIntermTyped* addIndex(TOperator op, TIntermTyped* base, TIntermTyped* index, const TSourceLoc&);
@@ -36,7 +35,6 @@ public:
     TIntermTyped* addSelection(TIntermTyped* cond, TIntermTyped* trueBlock, TIntermTyped* falseBlock, const TSourceLoc&);
     TIntermTyped* addComma(TIntermTyped* left, TIntermTyped* right, const TSourceLoc&);
     TIntermConstantUnion* addConstantUnion(ConstantUnion*, const TType&, const TSourceLoc&);
-    TIntermTyped* promoteConstantUnion(TBasicType, TIntermConstantUnion*) ;
     bool parseConstTree(const TSourceLoc&, TIntermNode*, ConstantUnion*, TOperator, TType, bool singleConstantParam = false);        
     TIntermNode* addLoop(TLoopType, TIntermNode*, TIntermTyped*, TIntermTyped*, TIntermNode*, const TSourceLoc&);
     TIntermBranch* addBranch(TOperator, const TSourceLoc&);
