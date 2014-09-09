@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 
   function testUserInput() {
     //Simulating an OK click and with a file name return.
-    MockFilePicker.useAnyFile();
+    MockFilePicker.useBlobFile();
     MockFilePicker.returnValue = MockFilePicker.returnOK;
     var input = document.getElementById('fileInput');
     input.focus();
