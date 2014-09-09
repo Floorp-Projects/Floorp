@@ -225,6 +225,14 @@
         // At this point in the tests the state of the menus has been returned
         // to the originally diagramed state.
 
+        // Test command disabling
+        var cmd_NewItem0 = document.getElementById("cmd_NewItem0");
+        ok(testItem("1|0", "cmd_NewItem0"), sa);
+        cmd_NewItem0.setAttribute("disabled", "true");
+        ok(!testItem("1|0", "cmd_NewItem0"), sna);
+        cmd_NewItem0.removeAttribute("disabled");
+        ok(testItem("1|0", "cmd_NewItem0"), sa);
+
         // Remove menu.
         menubarNode.removeChild(newMenu0);
         ok(runBaseMenuTests(), sa);
