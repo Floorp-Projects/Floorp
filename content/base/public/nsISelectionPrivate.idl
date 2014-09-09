@@ -28,13 +28,14 @@ template<class T> class nsTArray;
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
 
-[scriptable, builtinclass, uuid(52629837-7b3f-4434-940d-a14de7ef9b7a)]
+[scriptable, builtinclass, uuid(5a82ee9a-35ce-11e4-8c3e-b7043d68ad70)]
 interface nsISelectionPrivate : nsISelection
  {
     const short ENDOFPRECEDINGLINE=0;
     const short STARTOFNEXTLINE=1;
 
     attribute boolean interlinePosition;
+    [noscript] attribute nsIContent ancestorLimiter;
 
     /* startBatchChanges
        match this up with endbatchChanges. will stop ui updates while multiple selection methods are called
@@ -80,8 +81,6 @@ interface nsISelectionPrivate : nsISelection
      * Returns cached value for nsTextFrame::GetPointFromOffset.
      */
     [noscript] void getCachedFrameOffset(in nsIFrame aFrame, in int32_t inOffset, in nsPointRef aPoint);
-
-    [noscript] void setAncestorLimiter(in nsIContent aContent);
 
     /**
      * Set the painting style for the range. The range must be a range in
