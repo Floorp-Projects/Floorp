@@ -217,15 +217,14 @@ nsSVGRenderingObserver::ContentRemoved(nsIDocument *aDocument,
 NS_IMPL_ISUPPORTS(nsSVGFilterProperty, nsISupports)
 
 nsSVGFilterProperty::nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
-                                         nsIFrame *aFilteredFrame) :
-  mFilters(aFilters)
+                                         nsIFrame *aFilteredFrame)
 {
-  for (uint32_t i = 0; i < mFilters.Length(); i++) {
-    if (mFilters[i].GetType() != NS_STYLE_FILTER_URL)
+  for (uint32_t i = 0; i < aFilters.Length(); i++) {
+    if (aFilters[i].GetType() != NS_STYLE_FILTER_URL)
       continue;
 
     nsSVGFilterReference *reference =
-      new nsSVGFilterReference(mFilters[i].GetURL(), aFilteredFrame);
+      new nsSVGFilterReference(aFilters[i].GetURL(), aFilteredFrame);
     NS_ADDREF(reference);
     mReferences.AppendElement(reference);
   }
