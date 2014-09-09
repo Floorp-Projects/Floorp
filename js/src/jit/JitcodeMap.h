@@ -7,6 +7,8 @@
 #ifndef jit_JitcodeMap_h
 #define jit_JitcodeMap_h
 
+#include <sys/types.h>
+
 #include "ds/SplayTree.h"
 #include "jit/CompactBuffer.h"
 #include "jit/CompileInfo.h"
@@ -486,6 +488,39 @@ class JitcodeGlobalTable
 
     bool empty() const {
         return tree_.empty();
+    }
+
+    uint32_t sizeDebug() {
+        struct SZ {
+          uint32_t count_;
+          SZ() : count_(0) {};
+          SZ(const SZ &other) = delete;
+          void operator()(JitcodeGlobalEntry &ent) { count_++; }
+        };
+        SZ sz;
+        tree_.forEach<SZ &>(sz);
+        return sz.count_;
+    }
+
+    bool lookupDebug(void *ptr) {
+        struct LOOKUP {
+          void *ptr_;
+          bool found_;
+          LOOKUP(void *ptr) : ptr_(ptr), found_(false) {}
+          LOOKUP(const LOOKUP &other) = delete;
+          void operator()(JitcodeGlobalEntry &ent) {
+            if (ent.containsPointer(ptr_))
+              found_ = true;
+          }
+        };
+        LOOKUP l(ptr);
+        tree_.forEach<LOOKUP &>(l);
+        return l.found_;
+    }
+
+    template <typename T>
+    void forEach(T &t) {
+        return tree_.forEach(t);
     }
 
     bool lookup(void *ptr, JitcodeGlobalEntry *result);
