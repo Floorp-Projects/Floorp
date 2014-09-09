@@ -131,7 +131,7 @@
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="197cd9492b9fadaa915c5daf36ff557f8f4a8d1c"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="7d33aaf740bbf6c7c6e9c34a92b371eda311b66b"/>
   <project name="libnfcemu" path="external/libnfcemu" remote="b2g" revision="682e556367e0049bb3ae127cec6e6c459abca1b0"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="73bee3507d4593a96162ebdac8054a9b3ffe4fa8"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="d259117b4976decbe2f76eeed85218bf0109190f"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="9f28c4faea3b2f01db227b2467b08aeba96d9bec"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="7e5ae3ef2fe1cbc1c9a4fc718b01b7f28b1c5486"/>
