@@ -54,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(3646c915-df79-4500-8b57-c65ab9c3b39f)]
+[scriptable, builtinclass, uuid(2b8e4a50-7744-454d-a05b-debead8070fe)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -666,6 +666,17 @@ interface nsIDocShell : nsIDocShellTreeItem
     out ACString parentCharset,
     out int32_t parentCharsetSource,
     out nsIPrincipal parentCharsetPrincipal);
+
+  /**
+   * Whether the docShell records profile timeline markers at the moment
+   */
+  [infallible] attribute boolean recordProfileTimelineMarkers;
+
+  /**
+   * Returns and flushes the profile timeline markers gathered by the docShell
+   */
+  [implicit_jscontext]
+  jsval popProfileTimelineMarkers();
 
   /**
    * Add an observer to the list of parties to be notified when this docshell's

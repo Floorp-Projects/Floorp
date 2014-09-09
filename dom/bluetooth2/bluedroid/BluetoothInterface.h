@@ -427,7 +427,6 @@ public:
 
 class BluetoothAvrcpInterface
 {
-#if ANDROID_VERSION >= 18
 public:
   friend class BluetoothInterface;
 
@@ -473,10 +472,15 @@ public:
   void SetVolume(uint8_t aVolume, BluetoothAvrcpResultHandler* aRes);
 
 protected:
-  BluetoothAvrcpInterface(const btrc_interface_t* aInterface);
+  BluetoothAvrcpInterface(
+#if ANDROID_VERSION >= 18
+    const btrc_interface_t* aInterface
+#endif
+    );
   ~BluetoothAvrcpInterface();
 
 private:
+#if ANDROID_VERSION >= 18
   const btrc_interface_t* mInterface;
 #endif
 };
@@ -657,6 +661,9 @@ protected:
   ~BluetoothInterface();
 
 private:
+  template <class T>
+  T* CreateProfileInterface();
+
   template <class T>
   T* GetProfileInterface();
 

@@ -33,9 +33,8 @@ interface DOMApplication : EventTarget {
   readonly attribute DOMTimeStamp installTime;
   readonly attribute boolean removable;
 
-  // That's actually a [Cached, Pure] sequence<DOMString>.
-  // Will update once bug 963382 is fixed.
-  readonly attribute any receipts;
+  [Cached, Pure]
+  readonly attribute sequence<DOMString> receipts;
 
   readonly attribute double progress;
 

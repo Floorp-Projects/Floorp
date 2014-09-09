@@ -85,7 +85,6 @@ ALL_JARS = \
   nineoldandroids.jar \
   squareup-picasso.jar \
   sync-thirdparty.jar \
-  websockets.jar \
   $(NULL)
 
 ifdef MOZ_WEBRTC

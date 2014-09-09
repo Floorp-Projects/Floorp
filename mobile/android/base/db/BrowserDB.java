@@ -174,13 +174,6 @@ public class BrowserDB {
         return (sAreContentProvidersEnabled && sDb.isReadingListItem(cr, uri));
     }
 
-    public static int getItemFlags(ContentResolver cr, String uri) {
-        if (!sAreContentProvidersEnabled) {
-            return 0;
-        }
-        return sDb.getItemFlags(cr, uri);
-    }
-
     public static void addBookmark(ContentResolver cr, String title, String uri) {
         sDb.addBookmark(cr, title, uri);
     }

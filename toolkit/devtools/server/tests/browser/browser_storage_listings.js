@@ -639,8 +639,7 @@ let testIDBEntries = Task.async(function*(index, hosts, indexedDBActor) {
 });
 
 function test() {
-  waitForExplicitFinish();
-  addTab(MAIN_DOMAIN + "storage-listings.html", function(doc) {
+  addTab(MAIN_DOMAIN + "storage-listings.html").then(function(doc) {
     try {
       // Sometimes debugger server does not get destroyed correctly by previous
       // tests.

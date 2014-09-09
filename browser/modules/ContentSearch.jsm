@@ -206,7 +206,7 @@ this.ContentSearch = {
     ]);
     let browserWin = msg.target.ownerDocument.defaultView;
     let engine = Services.search.getEngineByName(data.engineName);
-    browserWin.BrowserSearch.recordSearchInHealthReport(engine, data.whence);
+    browserWin.BrowserSearch.recordSearchInHealthReport(engine, data.whence, data.selection);
     let submission = engine.getSubmission(data.searchString, "", data.whence);
     browserWin.loadURI(submission.uri.spec, null, submission.postData);
     return Promise.resolve();
