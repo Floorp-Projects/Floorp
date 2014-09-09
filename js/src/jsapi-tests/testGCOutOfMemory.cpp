@@ -18,7 +18,7 @@ ErrorCounter(JSContext *cx, const char *message, JSErrorReport *report)
 
 BEGIN_TEST(testGCOutOfMemory)
 {
-    JS_SetErrorReporter(cx, ErrorCounter);
+    JS_SetErrorReporter(rt, ErrorCounter);
 
     JS::RootedValue root(cx);
 
