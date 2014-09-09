@@ -191,38 +191,18 @@ this.EventManager.prototype = {
       }
       case Events.TEXT_CARET_MOVED:
       {
-        let acc = aEvent.accessible;
-        let characterCount = acc.
-          QueryInterface(Ci.nsIAccessibleText).characterCount;
+        let acc = aEvent.accessible.QueryInterface(Ci.nsIAccessibleText);
         let caretOffset = aEvent.
           QueryInterface(Ci.nsIAccessibleCaretMoveEvent).caretOffset;
 
-        // Update editing state, both for presenter and other things
-        let state = Utils.getState(acc);
-        let editState = {
-          editing: state.contains(States.EDITABLE),
-          multiline: state.contains(States.MULTI_LINE),
-          atStart: caretOffset == 0,
-          atEnd: caretOffset == characterCount
-        };
-
-        // Not interesting
-        if (!editState.editing && editState.editing == this.editState.editing)
-          break;
-
-        if (editState.editing != this.editState.editing)
-          this.present(Presentation.editingModeChanged(editState.editing));
-
-        if (editState.editing != this.editState.editing ||
-            editState.multiline != this.editState.multiline ||
-            editState.atEnd != this.editState.atEnd ||
-            editState.atStart != this.editState.atStart)
-          this.sendMsgFunc("AccessFu:Input", editState);
-
+        // We could get a caret move in an accessible that is not focused,
+        // it doesn't mean we are not on any editable accessible. just not
+        // on this one..
+        if (Utils.getState(acc).contains(States.FOCUSED)) {
+          this._setEditingMode(aEvent, caretOffset);
+        }
         this.present(Presentation.textSelectionChanged(acc.getText(0,-1),
                      caretOffset, caretOffset, 0, 0, aEvent.isFromUserInput));
-
-        this.editState = editState;
         break;
       }
       case Events.OBJECT_ATTRIBUTE_CHANGED:
@@ -268,6 +248,7 @@ this.EventManager.prototype = {
         // Put vc where the focus is at
         let acc = aEvent.accessible;
         let doc = aEvent.accessibleDocument;
+        this._setEditingMode(aEvent);
         if ([Roles.CHROME_WINDOW,
              Roles.DOCUMENT,
              Roles.APPLICATION].indexOf(acc.role) < 0) {
@@ -291,6 +272,54 @@ this.EventManager.prototype = {
         }
       }
     }
+  },
+
+  _setEditingMode: function _setEditingMode(aEvent, aCaretOffset) {
+    let acc = aEvent.accessible;
+    let accText, characterCount;
+    let caretOffset = aCaretOffset;
+
+    try {
+      accText = acc.QueryInterface(Ci.nsIAccessibleText);
+    } catch (e) {
+      // No text interface on this accessible.
+    }
+
+    if (accText) {
+      characterCount = accText.characterCount;
+      if (caretOffset === undefined) {
+        caretOffset = accText.caretOffset;
+      }
+    }
+
+    // Update editing state, both for presenter and other things
+    let state = Utils.getState(acc);
+
+    let editState = {
+      editing: state.contains(States.EDITABLE) &&
+        state.contains(States.FOCUSED),
+      multiline: state.contains(States.MULTI_LINE),
+      atStart: caretOffset === 0,
+      atEnd: caretOffset === characterCount
+    };
+
+    // Not interesting
+    if (!editState.editing && editState.editing === this.editState.editing) {
+      return;
+    }
+
+    if (editState.editing !== this.editState.editing) {
+      this.present(Presentation.editingModeChanged(editState.editing));
+    }
+
+    if (editState.editing !== this.editState.editing ||
+        editState.multiline !== this.editState.multiline ||
+        editState.atEnd !== this.editState.atEnd ||
+        editState.atStart !== this.editState.atStart) {
+      this.sendMsgFunc("AccessFu:Input", editState);
+    }
+
+    this.editState = editState;
   },
 
   _handleShow: function _handleShow(aEvent) {
