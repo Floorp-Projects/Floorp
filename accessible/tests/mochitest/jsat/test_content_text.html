@@ -132,27 +132,36 @@
 
           // Editable text tests.
           [ContentMessages.focusSelector('textarea'), {
-            speak: ['Please refrain from Mayoneggs during this ' +
-              'salmonella scare.', {string: 'textarea'}]
-          }],
-          [null, { // When we first focus, caret is at 0.
-              android: [{
-                eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
-                brailleOutput: {
-                  selectionStart: 0,
-                  selectionEnd: 0
-                }
-              }]
+            editState: {
+              editing: true,
+              multiline: true,
+              atStart: true,
+              atEnd: false
             }
-          ],
+           }, {
+             speak: ['Please refrain from Mayoneggs during this ' +
+               'salmonella scare.', {string: 'textarea'}]
+           }, { // When we first focus, caret is at 0.
+             android: [{
+              eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
+              brailleOutput: {
+                selectionStart: 0,
+                selectionEnd: 0
+              }
+            }]
+          }],
           [ContentMessages.activateCurrent(10), {
             android: [{
               eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
               fromIndex: 0,
               toIndex: 10
             }]
-          }],
-          [null, {
+           }, {
+            editState: { editing: true,
+                         multiline: true,
+                         atStart: false,
+                         atEnd: false }
+           }, {
             android: [{
               eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
               brailleOutput: {
@@ -167,8 +176,7 @@
               fromIndex: 10,
               toIndex: 20
             }]
-          }],
-          [null, {
+           }, {
             android: [{
               eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
               brailleOutput: {
@@ -217,7 +225,66 @@
               eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
               fromIndex: 53,
               toIndex: 59
-            }]
+            }],
+            focused: 'textarea'
+          }],
+
+          // bug xxx
+          [ContentMessages.simpleMoveNext, {
+            speak: ['So we don\'t get dessert?', {string: 'label'}],
+            focused: 'html'
+           }, {
+            editState: {
+              editing: false,
+              multiline: false,
+              atStart: true,
+              atEnd: false }
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: [{ string : 'entry' }],
+            focused: 'html'
+          }],
+          [ContentMessages.activateCurrent(0), {
+            editState: {
+              editing: true,
+              multiline: false,
+              atStart: true,
+              atEnd: true
+            },
+            focused: 'input[type=text]'
+          }],
+          [ContentMessages.simpleMovePrevious, {
+            editState: {
+              editing: false,
+              multiline: false,
+              atStart: true,
+              atEnd: false
+            },
+            focused: 'html'
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: [{ string : 'entry' }],
+            focused: 'html'
+          }],
+          [ContentMessages.activateCurrent(0), {
+            editState: {
+              editing: true,
+              multiline: false,
+              atStart: true,
+              atEnd: true
+            },
+            focused: 'input[type=text]'
+          }],
+          [ContentMessages.simpleMovePrevious, {
+            speak: [ 'So we don\'t get dessert?', {string: 'label'} ]
+           }, {
+            editState: {
+              editing: false,
+              multiline: false,
+              atStart: true,
+              atEnd: false
+            },
+            focused: 'html'
           }]
         ]);
 
