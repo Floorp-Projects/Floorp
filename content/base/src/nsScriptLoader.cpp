@@ -109,7 +109,7 @@ public:
   bool mIsInline;         // Is the script inline or loaded?
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
   nsString mSourceMapURL; // Holds source map url for loaded scripts
-  jschar* mScriptTextBuf;   // Holds script text for non-inline scripts. Don't
+  char16_t* mScriptTextBuf; // Holds script text for non-inline scripts. Don't
   size_t mScriptTextLength; // use nsString so we can give ownership to jsapi.
   uint32_t mJSVersion;
   nsCOMPtr<nsIURI> mURI;
@@ -898,7 +898,7 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest, void **aOffThreadT
 
   NS_ENSURE_ARG(aRequest);
   nsAutoString textData;
-  const jschar* scriptBuf = nullptr;
+  const char16_t* scriptBuf = nullptr;
   size_t scriptLength = 0;
   JS::SourceBufferHolder::Ownership giveScriptOwnership =
     JS::SourceBufferHolder::NoOwnership;
@@ -1278,7 +1278,7 @@ DetectByteOrderMark(const unsigned char* aBytes, int32_t aLen, nsCString& oChars
 nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
                                uint32_t aLength, const nsAString& aHintCharset,
                                nsIDocument* aDocument,
-                               jschar*& aBufOut, size_t& aLengthOut)
+                               char16_t*& aBufOut, size_t& aLengthOut)
 {
   if (!aLength) {
     aBufOut = nullptr;
@@ -1335,7 +1335,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
                                  aLength, &unicodeLength);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aBufOut = static_cast<jschar*>(js_malloc(unicodeLength * sizeof(jschar)));
+  aBufOut = static_cast<char16_t*>(js_malloc(unicodeLength * sizeof(char16_t)));
   if (!aBufOut) {
     aLengthOut = 0;
     return NS_ERROR_OUT_OF_MEMORY;

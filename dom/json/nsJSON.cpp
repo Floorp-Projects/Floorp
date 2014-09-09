@@ -163,7 +163,7 @@ nsJSON::EncodeToStream(nsIOutputStream *aStream,
 }
 
 static bool
-WriteCallback(const jschar *buf, uint32_t len, void *data)
+WriteCallback(const char16_t *buf, uint32_t len, void *data)
 {
   nsJSONWriter *writer = static_cast<nsJSONWriter*>(data);
   nsresult rv =  writer->Write((const char16_t*)buf, (uint32_t)len);
@@ -389,7 +389,7 @@ NS_IMETHODIMP
 nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx,
                       JS::MutableHandle<JS::Value> result)
 {
-  if (!JS_ParseJSON(cx, static_cast<const jschar*>(PromiseFlatString(str).get()),
+  if (!JS_ParseJSON(cx, static_cast<const char16_t*>(PromiseFlatString(str).get()),
                     str.Length(), result)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -525,7 +525,7 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 
   JS::Rooted<JS::Value> reviver(mCx, JS::NullValue()), value(mCx);
 
-  JS::ConstTwoByteChars chars(reinterpret_cast<const jschar*>(mBufferedChars.Elements()),
+  JS::ConstTwoByteChars chars(reinterpret_cast<const char16_t*>(mBufferedChars.Elements()),
                               mBufferedChars.Length());
   bool ok = JS_ParseJSONWithReviver(mCx, chars.get(),
                                       uint32_t(mBufferedChars.Length()),

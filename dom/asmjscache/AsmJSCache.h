@@ -80,8 +80,8 @@ struct WriteParams
 // Parameters specific to opening a cache entry for reading
 struct ReadParams
 {
-  const jschar* mBegin;
-  const jschar* mLimit;
+  const char16_t* mBegin;
+  const char16_t* mLimit;
 
   ReadParams()
   : mBegin(nullptr),
@@ -103,8 +103,8 @@ struct ReadParams
 
 bool
 OpenEntryForRead(nsIPrincipal* aPrincipal,
-                 const jschar* aBegin,
-                 const jschar* aLimit,
+                 const char16_t* aBegin,
+                 const char16_t* aLimit,
                  size_t* aSize,
                  const uint8_t** aMemory,
                  intptr_t *aHandle);
@@ -115,8 +115,8 @@ CloseEntryForRead(size_t aSize,
 bool
 OpenEntryForWrite(nsIPrincipal* aPrincipal,
                   bool aInstalled,
-                  const jschar* aBegin,
-                  const jschar* aEnd,
+                  const char16_t* aBegin,
+                  const char16_t* aEnd,
                   size_t aSize,
                   uint8_t** aMemory,
                   intptr_t* aHandle);

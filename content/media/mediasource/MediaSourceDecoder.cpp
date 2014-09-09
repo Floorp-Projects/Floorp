@@ -173,17 +173,8 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
 }
 
 void
-MediaSourceDecoder::WaitForData()
+MediaSourceDecoder::NotifyTimeRangesChanged()
 {
-  MSE_DEBUG("MediaSourceDecoder(%p)::WaitForData()", this);
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mon.Wait();
-}
-
-void
-MediaSourceDecoder::NotifyGotData()
-{
-  MSE_DEBUG("MediaSourceDecoder(%p)::NotifyGotData()", this);
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mon.NotifyAll();
 }
