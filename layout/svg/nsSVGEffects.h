@@ -214,10 +214,10 @@ public:
   NS_DECL_ISUPPORTS
 
 protected:
-  virtual ~nsSVGFilterProperty();
+  virtual ~nsSVGFilterProperty() {}
 
 private:
-  nsTArray<nsSVGFilterReference*> mReferences;
+  nsTArray<nsRefPtr<nsSVGFilterReference>> mReferences;
 };
 
 class nsSVGMarkerProperty : public nsSVGIDRenderingObserver {
