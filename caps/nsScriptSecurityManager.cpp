@@ -33,6 +33,7 @@
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
 #include "nsNetUtil.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIProperties.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
@@ -573,6 +574,35 @@ DenyAccessIfURIHasFlags(nsIURI* aURI, uint32_t aURIFlags)
     return NS_OK;
 }
 
+static bool
+EqualOrSubdomain(nsIURI* aProbeArg, nsIURI* aBase)
+{
+    // Make a clone of the incoming URI, because we're going to mutate it.
+    nsCOMPtr<nsIURI> probe;
+    nsresult rv = aProbeArg->Clone(getter_AddRefs(probe));
+    NS_ENSURE_SUCCESS(rv, false);
+
+    nsCOMPtr<nsIEffectiveTLDService> tldService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(tldService, false);
+    while (true) {
+        if (nsScriptSecurityManager::SecurityCompareURIs(probe, aBase)) {
+            return true;
+        }
+
+        nsAutoCString host, newHost;
+        nsresult rv = probe->GetHost(host);
+        NS_ENSURE_SUCCESS(rv, false);
+
+        rv = tldService->GetNextSubDomain(host, newHost);
+        if (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+            return false;
+        }
+        NS_ENSURE_SUCCESS(rv, false);
+        rv = probe->SetHost(newHost);
+        NS_ENSURE_SUCCESS(rv, false);
+    }
+}
+
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                                                    nsIURI *aTargetURI,
@@ -789,7 +819,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         // Allow domains that were whitelisted in the prefs. In 99.9% of cases,
         // this array is empty.
         for (size_t i = 0; i < mFileURIWhitelist.Length(); ++i) {
-            if (SecurityCompareURIs(mFileURIWhitelist[i], sourceURI)) {
+            if (EqualOrSubdomain(sourceURI, mFileURIWhitelist[i])) {
                 return NS_OK;
             }
         }
