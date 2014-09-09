@@ -520,6 +520,7 @@ AsyncCubebTask::Run()
 
 AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, dom::AudioChannel aChannel)
   : GraphDriver(aGraphImpl)
+  , mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS)
   , mStarted(false)
   , mAudioChannel(aChannel)
   , mInCallback(false)
