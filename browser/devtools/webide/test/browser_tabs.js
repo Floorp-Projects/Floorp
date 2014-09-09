@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+const TEST_URI = "http://example.com/browser/browser/devtools/webide/test/doc_tabs.html";
+
 function test() {
   waitForExplicitFinish();
   SimpleTest.requestCompleteLog();
@@ -9,10 +11,14 @@ function test() {
   Task.spawn(function() {
     const { DebuggerServer } =
       Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+
+    // Since we test the connections set below, destroy the server in case it
+    // was left open.
+    DebuggerServer.destroy();
     DebuggerServer.init(function () { return true; });
     DebuggerServer.addBrowserActors();
 
-    let tab = yield addTab("about:newtab");
+    let tab = yield addTab(TEST_URI);
 
     let win = yield openWebIDE();
 
@@ -23,15 +29,13 @@ function test() {
     yield selectTabProject(win);
 
     let project = win.AppManager.selectedProject;
-    is(project.location, "about:newtab", "Location is correct");
-    is(project.name, "New Tab", "Name is correct");
+    is(project.location, TEST_URI, "Location is correct");
+    is(project.name, "example.com: Test Tab", "Name is correct");
 
     yield closeWebIDE(win);
     DebuggerServer.destroy();
     yield removeTab(tab);
-
-    finish();
-  });
+  }).then(finish, handleError);
 }
 
 function connectToLocal(win) {

@@ -407,13 +407,6 @@
 @BINPATH@/components/AppsService.js
 @BINPATH@/components/AppsService.manifest
 
-@BINPATH@/components/Push.js
-@BINPATH@/components/Push.manifest
-
-@BINPATH@/components/SystemMessageInternal.js
-@BINPATH@/components/SystemMessageManager.js
-@BINPATH@/components/SystemMessageManager.manifest
-
 @BINPATH@/components/Activities.manifest
 @BINPATH@/components/ActivitiesGlue.js
 @BINPATH@/components/ActivityProxy.js
@@ -528,12 +521,15 @@
 @BINPATH@/res/table-remove-row-hover.gif
 @BINPATH@/res/table-remove-row.gif
 @BINPATH@/res/grabber.gif
-@BINPATH@/res/fonts/*
 @BINPATH@/res/dtd/*
 @BINPATH@/res/html/*
 @BINPATH@/res/langGroups.properties
 @BINPATH@/res/language.properties
 @BINPATH@/res/entityTables/*
+
+#ifndef MOZ_ANDROID_EXCLUDE_FONTS
+@BINPATH@/res/fonts/*
+#endif
 
 ; svg
 @BINPATH@/res/svg.css
