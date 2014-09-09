@@ -1,0 +1,40 @@
+<html>
+<head>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+function runTest() {
+  var sel = window.getSelection();
+  var r = new Range()
+  r.setStart(document.querySelector("#firstDiv"),0);
+  r.setEnd(document.querySelector("#firstDiv"),1);
+  sel.addRange(r)
+
+  document.querySelector("#editable").focus();
+  document.querySelector("#secondDiv").appendChild(document.querySelector("#editable"));
+
+  is(sel.rangeCount, 1, "still have a range in Selection")
+  var s=""
+  try {
+    var r2 = sel.getRangeAt(0)
+    s+=r2.startContainer.tagName
+    s+=r2.startOffset
+    s+=r2.endContainer.tagName
+    s+=r2.endOffset
+  } catch(e) {}
+
+  is(s, "DIV1DIV1", "the range gravitated correctly")
+}
+</script>
+</head>
+<body onload="runTest()">
+
+<div id="firstDiv">
+Parent1
+<div contenteditable id="editable">Testing 1</div>
+</div>
+
+<div id="secondDiv">
+Parent2</div>
+
+</body>
+</html>
