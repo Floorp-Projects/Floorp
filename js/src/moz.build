@@ -235,6 +235,7 @@ UNIFIED_SOURCES += [
     'proxy/DirectProxyHandler.cpp',
     'proxy/jsproxy.cpp',
     'proxy/ScriptedDirectProxyHandler.cpp',
+    'proxy/ScriptedIndirectProxyHandler.cpp',
     'vm/ArgumentsObject.cpp',
     'vm/ArrayBufferObject.cpp',
     'vm/CallNonGenericMethod.cpp',
