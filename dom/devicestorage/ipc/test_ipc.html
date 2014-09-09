@@ -51,10 +51,13 @@
       if (validStructuredMessage(message)) {
         switch (message.action) {
           case "test_status":
-            ok(message.expected === undefined, message.subtest, message.message);
-            break;
           case "test_end":
-            ok(message.expected === undefined, message.test, message.message);
+            let test_tokens = message.test.split("/");
+            let test_name = test_tokens[test_tokens.length - 1];
+            if (message.subtest) {
+                test_name += " | " + message.subtest;
+            }
+            ok(message.expected === undefined, test_name, message.message);
             break;
           case "log":
             info(message.message);
