@@ -186,7 +186,7 @@ public:
     mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha) MOZ_OVERRIDE;
 
     NS_IMETHOD SetIsOpaque(bool b) MOZ_OVERRIDE { return NS_OK; };
-    bool GetIsOpaque() MOZ_OVERRIDE { return false; }
+    bool GetIsOpaque() MOZ_OVERRIDE { return !HasAlpha(); }
     NS_IMETHOD SetContextOptions(JSContext* aCx,
                                  JS::Handle<JS::Value> aOptions) MOZ_OVERRIDE;
 
@@ -248,6 +248,7 @@ public:
     gl::GLContext* GL() const { return gl; }
 
     bool IsPremultAlpha() const { return mOptions.premultipliedAlpha; }
+    bool HasAlpha() const;
 
     bool PresentScreenBuffer();
 

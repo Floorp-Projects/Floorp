@@ -47,6 +47,8 @@ CopyableCanvasLayer::Initialize(const Data& aData)
 {
   NS_ASSERTION(mSurface == nullptr, "BasicCanvasLayer::Initialize called twice!");
 
+  mIsElemFullscreen = aData.mIsElemFullscreen;
+
   if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
     mStream = aData.mStream;

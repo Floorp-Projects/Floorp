@@ -784,7 +784,7 @@ Layer::GetEffectiveOpacity()
   }
   return opacity;
 }
-  
+
 CompositionOp
 Layer::GetEffectiveMixBlendMode()
 {
@@ -1188,7 +1188,7 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   aAttrs = RefLayerAttributes(GetReferentId());
 }
 
-/** 
+/**
  * StartFrameTimeRecording, together with StopFrameTimeRecording
  * enable recording of frame intervals.
  *
@@ -1978,6 +1978,12 @@ ToOutsideIntRect(const gfxRect &aRect)
 }
 
 PRLogModuleInfo* LayerManager::sLog;
+
+bool
+CanvasLayer::MustLayerUpdateBeSynchronous() const
+{
+  return !mIsElemFullscreen;
+}
 
 } // namespace layers
 } // namespace mozilla
