@@ -24,7 +24,6 @@
 #include "ActiveLayerTracker.h"
 #include "gfx2DGlue.h"
 #include "mozilla/LookAndFeel.h"
-#include "nsDocShell.h"
 
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/Tools.h"
@@ -4505,9 +4504,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
                              entry->mCommonClipCount);
   }
 
-  bool isActiveLayerManager = !aLayer->Manager()->IsInactiveLayerManager();
-
-  if (presContext->GetPaintFlashing() && isActiveLayerManager) {
+  if (presContext->GetPaintFlashing() &&
+      !aLayer->Manager()->IsInactiveLayerManager()) {
     gfxContextAutoSaveRestore save(aContext);
     if (shouldDrawRectsSeparately) {
       if (aClip == DrawRegionClip::DRAW_SNAPPED) {
@@ -4517,11 +4515,6 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       }
     }
     FlashPaint(aContext);
-  }
-
-  if (presContext && presContext->GetDocShell() && isActiveLayerManager) {
-    nsDocShell* docShell = static_cast<nsDocShell*>(presContext->GetDocShell());
-    docShell->AddProfileTimelineMarker("Layer", TRACING_EVENT);
   }
 
   if (!aRegionToInvalidate.IsEmpty()) {
