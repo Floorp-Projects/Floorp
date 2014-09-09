@@ -42,7 +42,8 @@ public:
    * exactly equals one of the language names or exactly equals a prefix of
    * one of the language names in the systemLanguage attribute.
    * @returns 2 * the lowest index in the aAcceptLangs that matches + 1
-   * if only the prefix matches, or -1 if no indices match.
+   * if only the prefix matches, -2 if there's no systemLanguage attribute,
+   * or -1 if no indices match.
    * XXX This algorithm is O(M*N).
    */
   int32_t GetBestLanguagePreferenceRank(const nsSubstring& aAcceptLangs) const;
