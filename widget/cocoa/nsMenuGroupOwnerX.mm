@@ -30,17 +30,14 @@ NS_IMPL_ISUPPORTS(nsMenuGroupOwnerX, nsIMutationObserver)
 
 
 nsMenuGroupOwnerX::nsMenuGroupOwnerX()
-: mCurrentCommandID(eCommand_ID_Last),
-  mDocument(nullptr)
+: mCurrentCommandID(eCommand_ID_Last)
 {
 }
 
 
 nsMenuGroupOwnerX::~nsMenuGroupOwnerX()
 {
-  // make sure we unregister ourselves as a document observer
-  if (mDocument)
-    mDocument->RemoveMutationObserver(this);
+  MOZ_ASSERT(mContentToObserverTable.Count() == 0, "have outstanding mutation observers!\n");
 }
 
 
@@ -50,12 +47,6 @@ nsresult nsMenuGroupOwnerX::Create(nsIContent* aContent)
     return NS_ERROR_INVALID_ARG;
 
   mContent = aContent;
-
-  nsIDocument* doc = aContent->OwnerDoc();
-  if (!doc)
-    return NS_ERROR_FAILURE;
-  doc->AddMutationObserver(this);
-  mDocument = doc;
 
   return NS_OK;
 }
@@ -93,8 +84,6 @@ void nsMenuGroupOwnerX::ContentAppended(nsIDocument* aDocument,
 
 void nsMenuGroupOwnerX::NodeWillBeDestroyed(const nsINode * aNode)
 {
-  // our menu bar node is being destroyed
-  mDocument = nullptr;
 }
 
 
@@ -187,12 +176,18 @@ void nsMenuGroupOwnerX::ParentChainChanged(nsIContent *aContent)
 void nsMenuGroupOwnerX::RegisterForContentChanges(nsIContent *aContent,
                                                   nsChangeObserver *aMenuObject)
 {
+  if (!mContentToObserverTable.Contains(aContent)) {
+    aContent->AddMutationObserver(this);
+  }
   mContentToObserverTable.Put(aContent, aMenuObject);
 }
 
 
 void nsMenuGroupOwnerX::UnregisterForContentChanges(nsIContent *aContent)
 {
+  if (mContentToObserverTable.Contains(aContent)) {
+    aContent->RemoveMutationObserver(this);
+  }
   mContentToObserverTable.Remove(aContent);
 }
 
