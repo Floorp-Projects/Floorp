@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "jsalloc.h"
 #include "jspubtd.h"
 #include "jsstr.h"
 #include "jsutil.h"
@@ -58,7 +59,7 @@ struct NumArgState
     va_list ap;     // point to the corresponding position on ap
 };
 
-typedef Vector<NumArgState, 20, SystemAllocPolicy> NumArgStateVector;
+typedef mozilla::Vector<NumArgState, 20, js::SystemAllocPolicy> NumArgStateVector;
 
 
 #define TYPE_INT16      0
