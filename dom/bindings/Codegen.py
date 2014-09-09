@@ -340,7 +340,7 @@ def DOMClass(descriptor):
           IsBaseOf<nsISupports, ${nativeType} >::value,
           ${hooks},
           GetParentObject<${nativeType}>::Get,
-          GetProtoObject,
+          GetProtoObjectHandle,
           GetCCParticipant<${nativeType}>::Get()
         """,
         protoChain=', '.join(protoList),
@@ -602,6 +602,36 @@ def CallOnUnforgeableHolder(descriptor, code, isXrayCheck=None,
         code=code)
 
 
+def InterfacePrototypeObjectProtoGetter(descriptor):
+    """
+    Returns a tuple with two elements:
+
+        1) The name of the function to call to get the prototype to use for the
+           interface prototype object as a JSObject*.
+
+        2) The name of the function to call to get the prototype to use for the
+           interface prototype object as a JS::Handle<JSObject*> or None if no
+           such function exists.
+    """
+    parentProtoName = descriptor.parentPrototypeName
+    if descriptor.hasNamedPropertiesObject:
+        protoGetter = "GetNamedPropertiesObject"
+        protoHandleGetter = None
+    elif parentProtoName is None:
+        if descriptor.interface.getExtendedAttribute("ArrayClass"):
+            protoGetter = "JS_GetArrayPrototype"
+        elif descriptor.interface.getExtendedAttribute("ExceptionClass"):
+            protoGetter = "GetErrorPrototype"
+        else:
+            protoGetter = "JS_GetObjectPrototype"
+        protoHandleGetter = None
+    else:
+        prefix = toBindingNamespace(parentProtoName)
+        protoGetter = prefix + "::GetProtoObject"
+        protoHandleGetter = prefix + "::GetProtoObjectHandle"
+
+    return (protoGetter, protoHandleGetter)
+
 class CGPrototypeJSClass(CGThing):
     def __init__(self, descriptor, properties):
         CGThing.__init__(self)
@@ -617,6 +647,7 @@ class CGPrototypeJSClass(CGThing):
         slotCount = "DOM_INTERFACE_PROTO_SLOTS_BASE"
         if UseHolderForUnforgeable(self.descriptor):
             slotCount += " + 1 /* slot for the JSObject holding the unforgeable properties */"
+        (protoGetter, _) = InterfacePrototypeObjectProtoGetter(self.descriptor)
         return fill(
             """
             static const DOMIfaceAndProtoJSClass PrototypeClass = {
@@ -643,19 +674,46 @@ class CGPrototypeJSClass(CGThing):
               ${hooks},
               "[object ${name}Prototype]",
               ${prototypeID},
-              ${depth}
+              ${depth},
+              ${protoGetter}
             };
             """,
             name=self.descriptor.interface.identifier.name,
             slotCount=slotCount,
             hooks=NativePropertyHooks(self.descriptor),
             prototypeID=prototypeID,
-            depth=depth)
+            depth=depth,
+            protoGetter=protoGetter)
 
 
 def NeedsGeneratedHasInstance(descriptor):
     return descriptor.hasXPConnectImpls or descriptor.interface.isConsequential()
 
+def InterfaceObjectProtoGetter(descriptor):
+    """
+    Returns a tuple with two elements:
+
+        1) The name of the function to call to get the prototype to use for the
+           interface object as a JSObject*.
+
+        2) The name of the function to call to get the prototype to use for the
+           interface prototype as a JS::Handle<JSObject*> or None if no such
+           function exists.
+    """
+    parentWithInterfaceObject = descriptor.interface.parent
+    while (parentWithInterfaceObject and
+           not parentWithInterfaceObject.hasInterfaceObject()):
+        parentWithInterfaceObject = parentWithInterfaceObject.parent
+    if parentWithInterfaceObject:
+        parentIfaceName = parentWithInterfaceObject.identifier.name
+        parentDesc = descriptor.getDescriptor(parentIfaceName)
+        prefix = toBindingNamespace(parentDesc.name)
+        protoGetter = prefix + "::GetConstructorObject"
+        protoHandleGetter = prefix + "::GetConstructorObjectHandle"
+    else:
+        protoGetter = "JS_GetFunctionPrototype"
+        protoHandleGetter = None
+    return (protoGetter, protoHandleGetter)
 
 class CGInterfaceObjectJSClass(CGThing):
     def __init__(self, descriptor, properties):
@@ -683,6 +741,8 @@ class CGInterfaceObjectJSClass(CGThing):
         if len(self.descriptor.interface.namedConstructors) > 0:
             slotCount += (" + %i /* slots for the named constructors */" %
                           len(self.descriptor.interface.namedConstructors))
+        (protoGetter, _) = InterfaceObjectProtoGetter(self.descriptor)
+
         return fill(
             """
             static const DOMIfaceAndProtoJSClass InterfaceObjectClass = {
@@ -709,7 +769,8 @@ class CGInterfaceObjectJSClass(CGThing):
               ${hooks},
               "function ${name}() {\\n    [native code]\\n}",
               ${prototypeID},
-              ${depth}
+              ${depth},
+              ${protoGetter}
             };
             """,
             slotCount=slotCount,
@@ -718,7 +779,8 @@ class CGInterfaceObjectJSClass(CGThing):
             hooks=NativePropertyHooks(self.descriptor),
             name=self.descriptor.interface.identifier.name,
             prototypeID=prototypeID,
-            depth=depth)
+            depth=depth,
+            protoGetter=protoGetter)
 
 
 class CGList(CGThing):
@@ -2579,38 +2641,23 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         self.properties = properties
 
     def definition_body(self):
-        parentProtoName = self.descriptor.parentPrototypeName
-        if self.descriptor.hasNamedPropertiesObject:
-            parentProtoType = "Handle"
-            getParentProto = "GetNamedPropertiesObject(aCx, aGlobal)"
-        elif parentProtoName is None:
+        (protoGetter, protoHandleGetter) = InterfacePrototypeObjectProtoGetter(self.descriptor)
+        if protoHandleGetter is None:
             parentProtoType = "Rooted"
-            if self.descriptor.interface.getExtendedAttribute("ArrayClass"):
-                getParentProto = "aCx, JS_GetArrayPrototype(aCx, aGlobal)"
-            elif self.descriptor.interface.getExtendedAttribute("ExceptionClass"):
-                getParentProto = "aCx, JS_GetErrorPrototype(aCx)"
-            else:
-                getParentProto = "aCx, JS_GetObjectPrototype(aCx, aGlobal)"
+            getParentProto = "aCx, " + protoGetter
         else:
             parentProtoType = "Handle"
-            getParentProto = ("%s::GetProtoObject(aCx, aGlobal)" %
-                              toBindingNamespace(parentProtoName))
+            getParentProto = protoHandleGetter
+        getParentProto = getParentProto + "(aCx, aGlobal)"
 
-        parentWithInterfaceObject = self.descriptor.interface.parent
-        while (parentWithInterfaceObject and
-               not parentWithInterfaceObject.hasInterfaceObject()):
-            parentWithInterfaceObject = parentWithInterfaceObject.parent
-        if parentWithInterfaceObject:
-            parentIfaceName = parentWithInterfaceObject.identifier.name
-            parentDesc = self.descriptor.getDescriptor(parentIfaceName)
-            if parentDesc.workers:
-                parentIfaceName += "_workers"
-            getConstructorProto = ("%s::GetConstructorObject(aCx, aGlobal)" %
-                                   toBindingNamespace(parentIfaceName))
-            constructorProtoType = "Handle"
-        else:
-            getConstructorProto = "aCx, JS_GetFunctionPrototype(aCx, aGlobal)"
+        (protoGetter, protoHandleGetter) = InterfaceObjectProtoGetter(self.descriptor)
+        if protoHandleGetter is None:
+            getConstructorProto = "aCx, " + protoGetter
             constructorProtoType = "Rooted"
+        else:
+            getConstructorProto = protoHandleGetter
+            constructorProtoType = "Handle"
+        getConstructorProto += "(aCx, aGlobal)"
 
         needInterfaceObject = self.descriptor.interface.hasInterfaceObject()
         needInterfacePrototypeObject = self.descriptor.interface.hasInterfacePrototypeObject()
@@ -2815,12 +2862,12 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
             id=self.id)
 
 
-class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
+class CGGetProtoObjectHandleMethod(CGGetPerInterfaceObject):
     """
     A method for getting the interface prototype object.
     """
     def __init__(self, descriptor):
-        CGGetPerInterfaceObject.__init__(self, descriptor, "GetProtoObject",
+        CGGetPerInterfaceObject.__init__(self, descriptor, "GetProtoObjectHandle",
                                          "prototypes::")
 
     def definition_body(self):
@@ -2832,13 +2879,25 @@ class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
             """) + CGGetPerInterfaceObject.definition_body(self)
 
 
-class CGGetConstructorObjectMethod(CGGetPerInterfaceObject):
+class CGGetProtoObjectMethod(CGAbstractMethod):
+    """
+    A method for getting the interface prototype object.
+    """
+    def __init__(self, descriptor):
+        CGAbstractMethod.__init__(
+            self, descriptor, "GetProtoObject", "JSObject*", [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aGlobal')])
+
+    def definition_body(self):
+        return "return GetProtoObjectHandle(aCx, aGlobal);\n"
+
+class CGGetConstructorObjectHandleMethod(CGGetPerInterfaceObject):
     """
     A method for getting the interface constructor object.
     """
     def __init__(self, descriptor):
         CGGetPerInterfaceObject.__init__(
-            self, descriptor, "GetConstructorObject",
+            self, descriptor, "GetConstructorObjectHandle",
             "constructors::",
             extraArgs=[Argument("bool", "aDefineOnGlobal", "true")])
 
@@ -2849,6 +2908,17 @@ class CGGetConstructorObjectMethod(CGGetPerInterfaceObject):
 
             """) + CGGetPerInterfaceObject.definition_body(self)
 
+class CGGetConstructorObjectMethod(CGAbstractMethod):
+    """
+    A method for getting the interface constructor object.
+    """
+    def __init__(self, descriptor):
+        CGAbstractMethod.__init__(
+            self, descriptor, "GetConstructorObject", "JSObject*", [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aGlobal')])
+
+    def definition_body(self):
+        return "return GetConstructorObjectHandle(aCx, aGlobal);\n"
 
 class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
     def __init__(self, descriptor):
@@ -2856,7 +2926,7 @@ class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
                 Argument('JS::Handle<JSObject*>', 'aGlobal')]
         CGAbstractStaticMethod.__init__(self, descriptor,
                                         'GetNamedPropertiesObject',
-                                        'JS::Handle<JSObject*>', args)
+                                        'JSObject*', args)
 
     def definition_body(self):
         parentProtoName = self.descriptor.parentPrototypeName
@@ -2866,9 +2936,9 @@ class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
         else:
             getParentProto = fill(
                 """
-                JS::Rooted<JSObject*> parentProto(aCx, ${parent}::GetProtoObject(aCx, aGlobal));
+                JS::Rooted<JSObject*> parentProto(aCx, ${parent}::GetProtoObjectHandle(aCx, aGlobal));
                 if (!parentProto) {
-                  return js::NullPtr();
+                  return nullptr;
                 }
                 """,
                 parent=toBindingNamespace(parentProtoName))
@@ -2877,7 +2947,7 @@ class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
             """
             /* Make sure our global is sane.  Hopefully we can remove this sometime */
             if (!(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL)) {
-              return JS::NullPtr();
+              return nullptr;
             }
 
             /* Check to see whether the named properties object has already been created */
@@ -2887,8 +2957,18 @@ class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
             if (!namedPropertiesObject) {
               $*{getParentProto}
               namedPropertiesObject = ${nativeType}::CreateNamedPropertiesObject(aCx, ${parentProto});
+              DebugOnly<const DOMIfaceAndProtoJSClass*> clasp =
+                DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(namedPropertiesObject));
+              MOZ_ASSERT(clasp->mType == eNamedPropertiesObject,
+                         "Expected ${nativeType}::CreateNamedPropertiesObject to return a named properties object");
+              MOZ_ASSERT(clasp->mNativeHooks,
+                         "The named properties object for ${nativeType} should have NativePropertyHooks.");
+              MOZ_ASSERT(clasp->mNativeHooks->mResolveOwnProperty,
+                         "Don't know how to resolve the properties of the named properties object for ${nativeType}.");
+              MOZ_ASSERT(clasp->mNativeHooks->mEnumerateOwnProperties,
+                         "Don't know how to enumerate the properties of the named properties object for ${nativeType}.");
             }
-            return JS::Handle<JSObject*>::fromMarkedLocation(namedPropertiesObject.address());
+            return namedPropertiesObject.get();
             """,
             getParentProto=getParentProto,
             ifaceName=self.descriptor.name,
@@ -2921,7 +3001,7 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
     def definition_body(self):
         if len(self.descriptor.interface.namedConstructors) > 0:
             getConstructor = dedent("""
-                JSObject* interfaceObject = GetConstructorObject(aCx, aGlobal, aDefineOnGlobal);
+                JSObject* interfaceObject = GetConstructorObjectHandle(aCx, aGlobal, aDefineOnGlobal);
                 if (!interfaceObject) {
                   return nullptr;
                 }
@@ -2934,7 +3014,7 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
                 return interfaceObject;
                 """)
         else:
-            getConstructor = "return GetConstructorObject(aCx, aGlobal, aDefineOnGlobal);\n"
+            getConstructor = "return GetConstructorObjectHandle(aCx, aGlobal, aDefineOnGlobal);\n"
         return getConstructor
 
 
@@ -3215,7 +3295,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
             JSAutoCompartment ac(aCx, parent);
             JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, parent));
-            JS::Handle<JSObject*> proto = GetProtoObject(aCx, global);
+            JS::Handle<JSObject*> proto = GetProtoObjectHandle(aCx, global);
             if (!proto) {
               return nullptr;
             }
@@ -3271,7 +3351,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             $*{assertions}
 
             JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-            JS::Handle<JSObject*> proto = GetProtoObject(aCx, global);
+            JS::Handle<JSObject*> proto = GetProtoObjectHandle(aCx, global);
             if (!proto) {
               return nullptr;
             }
@@ -3333,7 +3413,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                        "nsISupports must be on our primary inheritance chain");
 
             JS::Rooted<JSObject*> obj(aCx);
-            CreateGlobal<${nativeType}, GetProtoObject>(aCx,
+            CreateGlobal<${nativeType}, GetProtoObjectHandle>(aCx,
                                              aObject,
                                              aCache,
                                              Class.ToJSClass(),
@@ -11135,8 +11215,11 @@ class CGDescriptor(CGThing):
         # CGGetProtoObjectMethod and CGGetConstructorObjectMethod need
         # to come after CGCreateInterfaceObjectsMethod.
         if descriptor.interface.hasInterfacePrototypeObject():
-            cgThings.append(CGGetProtoObjectMethod(descriptor))
+            cgThings.append(CGGetProtoObjectHandleMethod(descriptor))
+            if descriptor.interface.hasChildInterfaces():
+                cgThings.append(CGGetProtoObjectMethod(descriptor))
         if descriptor.interface.hasInterfaceObject():
+            cgThings.append(CGGetConstructorObjectHandleMethod(descriptor))
             cgThings.append(CGGetConstructorObjectMethod(descriptor))
 
         # See whether we need we need to generate an IsPermitted method

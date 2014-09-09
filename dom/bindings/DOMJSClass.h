@@ -163,18 +163,22 @@ struct NativePropertyHooks
 enum DOMObjectType {
   eInstance,
   eInterface,
-  eInterfacePrototype
+  eInterfacePrototype,
+  eNamedPropertiesObject
 };
 
 typedef JSObject* (*ParentGetter)(JSContext* aCx, JS::Handle<JSObject*> aObj);
+
+typedef JSObject* (*ProtoGetter)(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGlobal);
 /**
  * Returns a handle to the relevent WebIDL prototype object for the given global
  * (which may be a handle to null on out of memory).  Once allocated, the
  * prototype object is guaranteed to exist as long as the global does, since the
  * global traces its array of WebIDL prototypes and constructors.
  */
-typedef JS::Handle<JSObject*> (*ProtoGetter)(JSContext* aCx,
-                                             JS::Handle<JSObject*> aGlobal);
+typedef JS::Handle<JSObject*> (*ProtoHandleGetter)(JSContext* aCx,
+                                                   JS::Handle<JSObject*> aGlobal);
 
 // Special JSClass for reflected DOM objects.
 struct DOMJSClass
@@ -197,7 +201,7 @@ struct DOMJSClass
   const NativePropertyHooks* mNativeHooks;
 
   ParentGetter mGetParent;
-  ProtoGetter mGetProto;
+  ProtoHandleGetter mGetProto;
 
   // This stores the CC participant for the native, null if this class is for a
   // worker or for a native inheriting from nsISupports (we can get the CC
@@ -225,7 +229,7 @@ struct DOMIfaceAndProtoJSClass
   // initialization for aggregate/POD types.
   const js::Class mBase;
 
-  // Either eInterface or eInterfacePrototype
+  // Either eInterface, eInterfacePrototype or eNamedPropertiesObject
   DOMObjectType mType;
 
   const NativePropertyHooks* mNativeHooks;
@@ -236,6 +240,8 @@ struct DOMIfaceAndProtoJSClass
 
   const prototypes::ID mPrototypeID;
   const uint32_t mDepth;
+
+  ProtoGetter mGetParentProto;
 
   static const DOMIfaceAndProtoJSClass* FromJSClass(const JSClass* base) {
     MOZ_ASSERT(base->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS);
