@@ -36,7 +36,7 @@ public final class ThreadUtils {
     // this out at compile time.
     public static Handler sGeckoHandler;
     public static MessageQueue sGeckoQueue;
-    public static Thread sGeckoThread;
+    public static volatile Thread sGeckoThread;
 
     // Delayed Runnable that resets the Gecko thread priority.
     private static final Runnable sPriorityResetRunnable = new Runnable() {
@@ -130,6 +130,10 @@ public final class ThreadUtils {
     }
 
     public static void assertNotOnGeckoThread() {
+        if (sGeckoThread == null) {
+            // Cannot be on Gecko thread if Gecko thread is not live yet.
+            return;
+        }
         assertNotOnThread(sGeckoThread, AssertBehavior.THROW);
     }
 
@@ -204,7 +208,13 @@ public final class ThreadUtils {
      * @param timeout Timeout in ms after which the priority will be reset
      */
     public static void reduceGeckoPriority(long timeout) {
-        if (!sIsGeckoPriorityReduced) {
+        if (Runtime.getRuntime().availableProcessors() > 1) {
+            // Don't reduce priority for multicore devices. We use availableProcessors()
+            // for its fast performance. It may give false negatives (i.e. multicore
+            // detected as single-core), but we can tolerate this behavior.
+            return;
+        }
+        if (!sIsGeckoPriorityReduced && sGeckoThread != null) {
             sIsGeckoPriorityReduced = true;
             sGeckoThread.setPriority(Thread.MIN_PRIORITY);
             getUiHandler().postDelayed(sPriorityResetRunnable, timeout);
