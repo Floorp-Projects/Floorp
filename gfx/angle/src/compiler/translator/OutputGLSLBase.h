@@ -7,7 +7,7 @@
 #ifndef CROSSCOMPILERGLSL_OUTPUTGLSLBASE_H_
 #define CROSSCOMPILERGLSL_OUTPUTGLSLBASE_H_
 
-#include <vector>
+#include <set>
 
 #include "compiler/translator/intermediate.h"
 #include "compiler/translator/LoopInfo.h"
@@ -56,22 +56,14 @@ class TOutputGLSLBase : public TIntermTraverser
   private:
     bool structDeclared(const TStructure *structure) const;
     void declareStruct(const TStructure *structure);
-    void pushDeclaredStructsScope();
-    void popDeclaredStructsScope();
 
     void writeBuiltInFunctionTriplet(Visit visit, const char *preStr, bool useEmulatedFunction);
 
     TInfoSinkBase &mObjSink;
     bool mDeclaringVariables;
 
-    // Structs are declared as the tree is traversed. This list contains all
-    // the structs already declared within a scope. It is maintained so that
-    // a struct is declared only once within a scope.
-    typedef std::vector<TStructure *> ScopedDeclaredStructs;
-    // This vector contains all the structs from the global scope to the
-    // current scope.  When the traverser exits a scope, the scope is discarded. 
-    typedef std::vector<ScopedDeclaredStructs> DeclaredStructs;
-    DeclaredStructs mDeclaredStructs;
+    // This set contains all the ids of the structs from every scope.
+    std::set<int> mDeclaredStructs;
 
     // Stack of loops that need to be unrolled.
     TLoopStack mLoopUnrollStack;

@@ -338,6 +338,10 @@ void initialize4ComponentData(int width, int height, int depth,
     }
 }
 
+void loadUintDataToUint24X8(int width, int height, int depth,
+                            const void *input, unsigned int inputRowPitch, unsigned int inputDepthPitch,
+                            void *output, unsigned int outputRowPitch, unsigned int outputDepthPitch);
+
 }
 
 #endif // LIBGLESV2_RENDERER_LOADIMAGE_H_
