@@ -541,6 +541,10 @@ public class BrowserApp extends GeckoApp
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT);
         }
 
+        if (NewTabletUI.isEnabled(this)) {
+            findViewById(R.id.new_tablet_tab_strip).setVisibility(View.VISIBLE);
+        }
+
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideOnTouchListener());
         ((GeckoApp.MainLayout) mMainLayout).setMotionEventInterceptor(new MotionEventInterceptor() {
             @Override
