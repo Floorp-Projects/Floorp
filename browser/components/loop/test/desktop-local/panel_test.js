@@ -10,11 +10,11 @@ var TestUtils = React.addons.TestUtils;
 describe("loop.panel", function() {
   "use strict";
 
-  var sandbox, notifier, fakeXHR, requests = [];
+  var sandbox, notifications, fakeXHR, requests = [];
 
   function createTestRouter(fakeDocument) {
     return new loop.panel.PanelRouter({
-      notifier: notifier,
+      notifications: notifications,
       document: fakeDocument
     });
   }
@@ -27,14 +27,7 @@ describe("loop.panel", function() {
     fakeXHR.xhr.onCreate = function (xhr) {
       requests.push(xhr);
     };
-    notifier = {
-      clear: sandbox.spy(),
-      notify: sandbox.spy(),
-      warn: sandbox.spy(),
-      warnL10n: sandbox.spy(),
-      error: sandbox.spy(),
-      errorL10n: sandbox.spy()
-    };
+    notifications = new loop.shared.models.NotificationCollection();
 
     navigator.mozLoop = {
       doNotDisturb: true,
@@ -63,15 +56,15 @@ describe("loop.panel", function() {
 
   describe("loop.panel.PanelRouter", function() {
     describe("#constructor", function() {
-      it("should require a notifier", function() {
+      it("should require a notifications collection", function() {
         expect(function() {
           new loop.panel.PanelRouter();
-        }).to.Throw(Error, /missing required notifier/);
+        }).to.Throw(Error, /missing required notifications/);
       });
 
       it("should require a document", function() {
         expect(function() {
-          new loop.panel.PanelRouter({notifier: notifier});
+          new loop.panel.PanelRouter({notifications: notifications});
         }).to.Throw(Error, /missing required document/);
       });
     });
@@ -101,9 +94,10 @@ describe("loop.panel", function() {
 
       describe("#reset", function() {
         it("should clear all pending notifications", function() {
+          sandbox.stub(notifications, "reset");
           router.reset();
 
-          sinon.assert.calledOnce(notifier.clear);
+          sinon.assert.calledOnce(notifications.reset);
         });
 
         it("should load the home view", function() {
@@ -213,7 +207,7 @@ describe("loop.panel", function() {
       };
 
       view = TestUtils.renderIntoDocument(loop.panel.PanelView({
-        notifier: notifier,
+        notifications: notifications,
         client: fakeClient
       }));
     });
@@ -324,8 +318,9 @@ describe("loop.panel", function() {
         }
       };
 
+      sandbox.stub(notifications, "reset");
       view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
-        notifier: notifier,
+        notifications: notifications,
         client: fakeClient
       }));
     });
@@ -350,7 +345,7 @@ describe("loop.panel", function() {
       it("should make a request to requestCallUrl", function() {
         sandbox.stub(fakeClient, "requestCallUrl");
         var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
-          notifier: notifier,
+          notifications: notifications,
           client: fakeClient
         }));
 
@@ -363,7 +358,7 @@ describe("loop.panel", function() {
         // Cancel requestCallUrl effect to keep the state pending
         fakeClient.requestCallUrl = sandbox.stub();
         var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
-          notifier: notifier,
+          notifications: notifications,
           client: fakeClient
         }));
 
@@ -387,14 +382,14 @@ describe("loop.panel", function() {
       });
 
       it("should reset all pending notifications", function() {
-        sinon.assert.calledOnce(view.props.notifier.clear);
+        sinon.assert.calledOnce(view.props.notifications.reset);
       });
 
       it("should display a share button for email", function() {
         fakeClient.requestCallUrl = sandbox.stub();
         var mailto = 'mailto:?subject=email-subject&body=http://example.com';
         var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
-          notifier: notifier,
+          notifications: notifications,
           client: fakeClient
         }));
         view.setState({pending: false, callUrl: "http://example.com"});
@@ -407,7 +402,7 @@ describe("loop.panel", function() {
       it("should feature a copy button capable of copying the call url when clicked", function() {
         fakeClient.requestCallUrl = sandbox.stub();
         var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
-          notifier: notifier,
+          notifications: notifications,
           client: fakeClient
         }));
         view.setState({
@@ -427,7 +422,7 @@ describe("loop.panel", function() {
       it("should note the call url expiry when the url is copied via button",
         function() {
           var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
-            notifier: notifier,
+            notifications: notifications,
             client: fakeClient
           }));
           view.setState({
@@ -447,7 +442,7 @@ describe("loop.panel", function() {
       it("should note the call url expiry when the url is emailed",
         function() {
           var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
-            notifier: notifier,
+            notifications: notifications,
             client: fakeClient
           }));
           view.setState({
@@ -468,7 +463,7 @@ describe("loop.panel", function() {
       it("should note the call url expiry when the url is copied manually",
         function() {
           var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
-            notifier: notifier,
+            notifications: notifications,
             client: fakeClient
           }));
           view.setState({
@@ -490,13 +485,14 @@ describe("loop.panel", function() {
         fakeClient.requestCallUrl = function(_, cb) {
           cb("fake error");
         };
+        sandbox.stub(notifications, "errorL10n");
         var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
-          notifier: notifier,
+          notifications: notifications,
           client: fakeClient
         }));
 
-        sinon.assert.calledOnce(notifier.errorL10n);
-        sinon.assert.calledWithExactly(notifier.errorL10n,
+        sinon.assert.calledOnce(notifications.errorL10n);
+        sinon.assert.calledWithExactly(notifications.errorL10n,
                                        "unable_retrieve_url");
       });
     });
