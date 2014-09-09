@@ -56,9 +56,9 @@ EXPORTS += [
     'jspubtd.h',
     'jstypes.h',
     'jsversion.h',
-    'jswrapper.h',
     'perf/jsperf.h',
     'proxy/jsproxy.h',
+    'proxy/jswrapper.h',
 ]
 
 # If you add a header here, add it to js/src/jsapi-tests/testIntTypesABI.cpp so
@@ -228,7 +228,6 @@ UNIFIED_SOURCES += [
     'jsstr.cpp',
     'jswatchpoint.cpp',
     'jsweakmap.cpp',
-    'jswrapper.cpp',
     'perf/jsperf.cpp',
     'prmjtime.cpp',
     'proxy/BaseProxyHandler.cpp',
@@ -236,6 +235,7 @@ UNIFIED_SOURCES += [
     'proxy/Proxy.cpp',
     'proxy/ScriptedDirectProxyHandler.cpp',
     'proxy/ScriptedIndirectProxyHandler.cpp',
+    'proxy/Wrapper.cpp',
     'vm/ArgumentsObject.cpp',
     'vm/ArrayBufferObject.cpp',
     'vm/CallNonGenericMethod.cpp',
