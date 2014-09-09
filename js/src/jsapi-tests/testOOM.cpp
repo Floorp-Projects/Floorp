@@ -10,7 +10,7 @@ BEGIN_TEST(testOOM)
 {
     JS::RootedValue v(cx, JS::Int32Value(9));
     JS::RootedString jsstr(cx, JS::ToString(cx, v));
-    jschar ch;
+    char16_t ch;
     if (!JS_GetStringCharAt(cx, jsstr, 0, &ch))
         return false;
     JS_ASSERT(ch == '9');

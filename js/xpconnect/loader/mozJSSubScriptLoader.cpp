@@ -23,7 +23,6 @@
 #include "jsfriendapi.h"
 #include "js/OldDebugAPI.h"
 #include "nsJSPrincipals.h"
-#include "xpcpublic.h" // For xpc::SystemErrorReporter
 #include "xpcprivate.h" // For xpc::OptionsBase
 #include "jswrapper.h"
 
@@ -134,14 +133,10 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObj
     if (NS_FAILED(rv))
         return rv;
 
-    /* set our own error reporter so we can report any bad things as catchable
-     * exceptions, including the source/line number */
-    JSErrorReporter er = JS_SetErrorReporter(cx, xpc::SystemErrorReporter);
-
     JS::CompileOptions options(cx);
     options.setFileAndLine(uriStr, 1);
     if (!charset.IsVoid()) {
-        jschar *scriptBuf = nullptr;
+        char16_t *scriptBuf = nullptr;
         size_t scriptLength = 0;
 
         rv = nsScriptLoader::ConvertToUTF16(nullptr, reinterpret_cast<const uint8_t*>(buf.get()), len,
@@ -174,9 +169,6 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObj
                                 len, function);
         }
     }
-
-    /* repent for our evil deeds */
-    JS_SetErrorReporter(cx, er);
 
     return NS_OK;
 }
@@ -402,7 +394,7 @@ private:
     nsRefPtr<nsIObserver> mObserver;
     nsRefPtr<nsIPrincipal> mPrincipal;
     nsRefPtr<nsIChannel> mChannel;
-    jschar* mScriptBuf;
+    char16_t* mScriptBuf;
     size_t mScriptLength;
 };
 
@@ -478,7 +470,7 @@ ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
     // Just notify that we are done with this load.
     NS_ENSURE_SUCCESS(aStatus, NS_OK);
 
-    // Convert data to jschar* and prepare to call CompileOffThread.
+    // Convert data to char16_t* and prepare to call CompileOffThread.
     nsAutoString hintCharset;
     nsresult rv =
         nsScriptLoader::ConvertToUTF16(mChannel, aString, aLength,
