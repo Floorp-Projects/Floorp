@@ -407,9 +407,6 @@
 @BINPATH@/components/AppsService.js
 @BINPATH@/components/AppsService.manifest
 
-@BINPATH@/components/Push.js
-@BINPATH@/components/Push.manifest
-
 @BINPATH@/components/SystemMessageInternal.js
 @BINPATH@/components/SystemMessageManager.js
 @BINPATH@/components/SystemMessageManager.manifest
