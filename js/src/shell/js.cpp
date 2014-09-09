@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- * vim: set ts=8 sts=4 et sw=4 tw=99:
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -61,6 +62,7 @@
 #include "perf/jsperf.h"
 #include "shell/jsheaptools.h"
 #include "shell/jsoptparse.h"
+#include "shell/OSObject.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
@@ -2172,7 +2174,7 @@ DisassFile(JSContext *cx, unsigned argc, jsval *vp)
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return false;
-    bool ok = DisassembleScript(cx, script, NullPtr(), p.lines, p.recursive, &sprinter);
+    bool ok = DisassembleScript(cx, script, JS::NullPtr(), p.lines, p.recursive, &sprinter);
     if (ok)
         fprintf(stdout, "%s\n", sprinter.string());
     if (!ok)
@@ -5925,6 +5927,9 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
     if (!envobj)
         return 1;
     JS_SetPrivate(envobj, envp);
+
+    if (!js::DefineOS(cx, glob))
+        return 1;
 
     int result = ProcessArgs(cx, glob, op);
 
