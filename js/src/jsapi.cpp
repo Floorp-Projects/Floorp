@@ -5769,7 +5769,7 @@ JS_ReportAllocationOverflow(JSContext *cx)
 JS_PUBLIC_API(JSErrorReporter)
 JS_GetErrorReporter(JSContext *cx)
 {
-    return cx->errorReporter;
+    return cx->runtime()->errorReporter;
 }
 
 JS_PUBLIC_API(JSErrorReporter)
@@ -5777,8 +5777,8 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
 {
     JSErrorReporter older;
 
-    older = cx->errorReporter;
-    cx->errorReporter = er;
+    older = cx->runtime()->errorReporter;
+    cx->runtime()->errorReporter = er;
     return older;
 }
 
