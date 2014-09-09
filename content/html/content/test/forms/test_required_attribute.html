@@ -308,22 +308,18 @@ function checkInputRequiredValidityForFile()
   element.type = 'file'
   document.forms[0].appendChild(element);
 
-  function createFileWithData(fileName, fileData) {
+  function createFile(fileName) {
     var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
                               .getService(SpecialPowers.Ci.nsIProperties);
     var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
     testFile.append(fileName);
-    var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"].
-                    createInstance(SpecialPowers.Ci.nsIFileOutputStream);
-    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                   0666, 0);
-    outStream.write(fileData, fileData.length);
-    outStream.close();
+    // Only the file's path is used, so it doesn't need to be created.
+    // See also bug 1058977.
 
     return testFile;
   }
 
-  var file = createFileWithData("345822_file", "file content");
+  var file = createFile("345822_file");
 
   SpecialPowers.wrap(element).value = "";
   element.required = false;
@@ -350,7 +346,6 @@ function checkInputRequiredValidityForFile()
 
   element.required = true;
   SpecialPowers.wrap(element).value = '';
-  file.remove(false);
   document.forms[0].removeChild(element);
   checkSufferingFromBeingMissing(element, true);
 }
