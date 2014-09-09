@@ -7661,7 +7661,6 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     uint32_t oldSlots = obj->numDynamicSlots();
 
     if (op == JSOP_INITPROP) {
-        MOZ_ASSERT(name != cx->names().proto, "should have used JSOP_MUTATEPROTO");
         MOZ_ASSERT(obj->is<JSObject>());
         if (!DefineNativeProperty(cx, obj, id, rhs, nullptr, nullptr, JSPROP_ENUMERATE))
             return false;
