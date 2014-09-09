@@ -234,8 +234,8 @@ irregexp::InterpretCode(JSContext *cx, const uint8_t *byteCode, const CharT *cha
           }
           BYTECODE(LOAD_2_CURRENT_CHARS_UNCHECKED) {
             int pos = current + (insn >> BYTECODE_SHIFT);
-            jschar next = chars[pos + 1];
-            current_char = (chars[pos] | (next << (kBitsPerByte * sizeof(jschar))));
+            char16_t next = chars[pos + 1];
+            current_char = (chars[pos] | (next << (kBitsPerByte * sizeof(char16_t))));
             pc += BC_LOAD_2_CURRENT_CHARS_UNCHECKED_LENGTH;
             break;
           }
@@ -460,5 +460,5 @@ irregexp::InterpretCode(JSContext *cx, const uint8_t *byteCode, const Latin1Char
                         size_t length, MatchPairs *matches);
 
 template RegExpRunStatus
-irregexp::InterpretCode(JSContext *cx, const uint8_t *byteCode, const jschar *chars, size_t current,
+irregexp::InterpretCode(JSContext *cx, const uint8_t *byteCode, const char16_t *chars, size_t current,
                         size_t length, MatchPairs *matches);

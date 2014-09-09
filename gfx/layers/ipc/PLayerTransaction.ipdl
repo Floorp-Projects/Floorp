@@ -97,6 +97,9 @@ parent:
   // layers id.
   sync GetAPZTestData() returns (APZTestData data);
 
+  // Query a named property from the last frame
+  sync RequestProperty(nsString property) returns (float value);
+
   async ChildAsyncMessages(AsyncChildMessageData[] aMessages);
 
   async __delete__();

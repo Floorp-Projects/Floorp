@@ -859,7 +859,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
                 return pi->finalPos - pi->size + headerSize_ * InstSize + offset;
             offset -= size;
         }
-        MOZ_ASSUME_UNREACHABLE("Entry is not in a pool");
+        MOZ_CRASH("Entry is not in a pool");
     }
 };
 

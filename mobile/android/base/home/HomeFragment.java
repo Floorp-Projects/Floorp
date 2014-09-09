@@ -50,7 +50,7 @@ import android.widget.Toast;
  * <p>
  * The containing activity <b>must</b> implement {@link OnUrlOpenListener}.
  */
-abstract class HomeFragment extends Fragment {
+public abstract class HomeFragment extends Fragment {
     // Log Tag.
     private static final String LOGTAG="GeckoHomeFragment";
 
@@ -194,7 +194,7 @@ abstract class HomeFragment extends Fragment {
             }
 
             // Fetch an icon big enough for use as a home screen icon.
-            Favicons.getPreferredSizeFaviconForPage(info.url, new GeckoAppShell.CreateShortcutFaviconLoadedListener(info.url, info.getDisplayTitle()));
+            Favicons.getPreferredSizeFaviconForPage(context, info.url, new GeckoAppShell.CreateShortcutFaviconLoadedListener(info.url, info.getDisplayTitle()));
             return true;
         }
 

@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test overdraw</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="application/javascript">
+var domWindowUtils = SpecialPowers.getDOMWindowUtils(window);
+
+var overdraw = domWindowUtils.requestCompositorProperty("overdraw");
+
+if (overdraw == -1) {
+  // Overdraw queries are not supported on non OMTC builds.
+  ok(overdraw == -1, "Platform doesn't use a compositor.");
+} else {
+  // Overdraw may be lower than 100% like on OS X where we don't
+  // composite the window corners.
+  ok(overdraw > 0.95 && overdraw < 200, "Overdraw: " + overdraw);
+}
+</script>
+</body>

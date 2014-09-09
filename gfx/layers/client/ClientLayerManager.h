@@ -237,6 +237,7 @@ public:
 
   void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) { mTransactionIdAllocator = aAllocator; }
 
+  float RequestProperty(const nsAString& aProperty) MOZ_OVERRIDE;
 protected:
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
@@ -251,7 +252,7 @@ private:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
-    MemoryPressureObserver(ClientLayerManager* aClientLayerManager)
+    explicit MemoryPressureObserver(ClientLayerManager* aClientLayerManager)
       : mClientLayerManager(aClientLayerManager)
     {
       RegisterMemoryPressureEvent();

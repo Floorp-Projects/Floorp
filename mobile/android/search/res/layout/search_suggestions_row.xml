@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<FrameLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -14,8 +14,9 @@
 
     <TextView
         android:id="@+id/auto_complete_row_text"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:paddingLeft="@dimen/suggestion_card_padding_x"
         android:paddingTop="@dimen/card_padding_y"
         android:paddingBottom="@dimen/card_padding_y"
@@ -24,7 +25,7 @@
     <ImageButton
         android:id="@+id/auto_complete_row_jump_button"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="right|center_vertical"
         android:paddingLeft="@dimen/jump_button_padding_x"
         android:paddingRight="@dimen/jump_button_padding_x"
@@ -32,4 +33,4 @@
         android:contentDescription="@string/search_plus_content_description"
         android:background="@android:color/transparent" />
 
-</FrameLayout>
+</LinearLayout>

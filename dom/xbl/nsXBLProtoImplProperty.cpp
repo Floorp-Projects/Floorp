@@ -147,7 +147,7 @@ nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
 
     nsDependentString name(mName);
     if (!::JS_DefineUCProperty(aCx, aTargetClassObject,
-                               static_cast<const jschar*>(mName),
+                               static_cast<const char16_t*>(mName),
                                name.Length(), JS::UndefinedHandleValue, mJSAttributes,
                                JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter.get()),
                                JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter.get())))

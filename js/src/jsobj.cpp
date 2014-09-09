@@ -2372,7 +2372,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
     JS_ASSERT(srcObj->getElementsHeader()->ownerObject() == srcObj);
 
     size_t length = srcObj->as<ArrayObject>().length();
-    RootedObject res(cx, NewDenseAllocatedArray(cx, length, nullptr, MaybeSingletonObject));
+    RootedObject res(cx, NewDenseFullyAllocatedArray(cx, length, nullptr, MaybeSingletonObject));
     if (!res)
         return nullptr;
 
@@ -6141,6 +6141,8 @@ dumpValue(const Value &v)
         fprintf(stderr, "%g", v.toDouble());
     else if (v.isString())
         v.toString()->dump();
+    else if (v.isSymbol())
+        v.toSymbol()->dump();
     else if (v.isObject() && v.toObject().is<JSFunction>()) {
         JSFunction *fun = &v.toObject().as<JSFunction>();
         if (fun->displayAtom()) {

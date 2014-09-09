@@ -551,6 +551,7 @@ class NodeBuilder
     bool catchClause(HandleValue var, HandleValue guard, HandleValue body, TokenPos *pos,
                      MutableHandleValue dst);
 
+    bool prototypeMutation(HandleValue val, TokenPos *pos, MutableHandleValue dst);
     bool propertyInitializer(HandleValue key, HandleValue val, PropKind kind, bool isShorthand,
                              bool isMethod, TokenPos *pos, MutableHandleValue dst);
 
@@ -723,7 +724,7 @@ NodeBuilder::newArray(NodeVector &elts, MutableHandleValue dst)
         js_ReportAllocationOverflow(cx);
         return false;
     }
-    RootedObject array(cx, NewDenseAllocatedArray(cx, uint32_t(len)));
+    RootedObject array(cx, NewDenseFullyAllocatedArray(cx, uint32_t(len)));
     if (!array)
         return false;
 
@@ -1309,6 +1310,18 @@ NodeBuilder::propertyPattern(HandleValue key, HandleValue patt, bool isShorthand
                    "value", patt,
                    "kind", kindName,
                    "shorthand", isShorthandVal,
+                   dst);
+}
+
+bool
+NodeBuilder::prototypeMutation(HandleValue val, TokenPos *pos, MutableHandleValue dst)
+{
+    RootedValue cb(cx, callbacks[AST_PROTOTYPEMUTATION]);
+    if (!cb.isNull())
+        return callback(cb, val, pos, dst);
+
+    return newNode(AST_PROTOTYPEMUTATION, pos,
+                   "value", val,
                    dst);
 }
 
@@ -3013,6 +3026,12 @@ ASTSerializer::propertyName(ParseNode *pn, MutableHandleValue dst)
 bool
 ASTSerializer::property(ParseNode *pn, MutableHandleValue dst)
 {
+    if (pn->isKind(PNK_MUTATEPROTO)) {
+        RootedValue val(cx);
+        return expression(pn->pn_kid, &val) &&
+               builder.prototypeMutation(val, &pn->pn_pos, dst);
+    }
+
     PropKind kind;
     switch (pn->getOp()) {
       case JSOP_INITPROP:
@@ -3119,20 +3138,33 @@ ASTSerializer::arrayPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValu
 bool
 ASTSerializer::objectPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst)
 {
-    JS_ASSERT(pn->isKind(PNK_OBJECT));
+    MOZ_ASSERT(pn->isKind(PNK_OBJECT));
 
     NodeVector elts(cx);
     if (!elts.reserve(pn->pn_count))
         return false;
 
-    for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
-        LOCAL_ASSERT(next->isOp(JSOP_INITPROP));
+    for (ParseNode *propdef = pn->pn_head; propdef; propdef = propdef->pn_next) {
+        LOCAL_ASSERT(propdef->isKind(PNK_MUTATEPROTO) != propdef->isOp(JSOP_INITPROP));
 
-        RootedValue key(cx), patt(cx), prop(cx);
-        if (!propertyName(next->pn_left, &key) ||
-            !pattern(next->pn_right, pkind, &patt) ||
-            !builder.propertyPattern(key, patt, next->isKind(PNK_SHORTHAND), &next->pn_pos,
-                                     &prop)) {
+        RootedValue key(cx);
+        ParseNode *target;
+        if (propdef->isKind(PNK_MUTATEPROTO)) {
+            RootedValue pname(cx, StringValue(cx->names().proto));
+            if (!builder.literal(pname, &propdef->pn_pos, &key))
+                return false;
+            target = propdef->pn_kid;
+        } else {
+            if (!propertyName(propdef->pn_left, &key))
+                return false;
+            target = propdef->pn_right;
+        }
+
+        RootedValue patt(cx), prop(cx);
+        if (!pattern(target, pkind, &patt) ||
+            !builder.propertyPattern(key, patt, propdef->isKind(PNK_SHORTHAND), &propdef->pn_pos,
+                                     &prop))
+        {
             return false;
         }
 
@@ -3450,7 +3482,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
     options.setCanLazilyParse(false);
-    mozilla::Range<const jschar> chars = flatChars.twoByteRange();
+    mozilla::Range<const char16_t> chars = flatChars.twoByteRange();
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars.start().get(),
                                     chars.length(), /* foldConstants = */ false, nullptr, nullptr);
 

@@ -187,6 +187,12 @@ class Defines(ContextDerived):
             else:
                 yield('-D%s=%s' % (define, shell_quote(value)))
 
+    def update(self, more_defines):
+        if isinstance(more_defines, Defines):
+            self.defines.update(more_defines.defines)
+        else:
+            self.defines.update(more_defines)
+
 class Exports(ContextDerived):
     """Context derived container object for EXPORTS, which is a
     HierarchicalStringList.
@@ -329,6 +335,7 @@ class LinkageWrongKindError(Exception):
 class Linkable(ContextDerived):
     """Generic context derived container object for programs and libraries"""
     __slots__ = (
+        'defines',
         'linked_libraries',
         'linked_system_libs',
     )
@@ -337,6 +344,7 @@ class Linkable(ContextDerived):
         ContextDerived.__init__(self, context)
         self.linked_libraries = []
         self.linked_system_libs = []
+        self.defines = Defines(context, {})
 
     def link_library(self, obj):
         assert isinstance(obj, BaseLibrary)
@@ -361,7 +369,6 @@ class Linkable(ContextDerived):
                     self.config.import_suffix,
                 )
         self.linked_system_libs.append(lib)
-
 
 class BaseProgram(Linkable):
     """Context derived container object for programs, which is a unicode

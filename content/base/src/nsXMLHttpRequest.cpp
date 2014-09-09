@@ -766,7 +766,7 @@ nsXMLHttpRequest::CreateResponseParsedJSON(JSContext* aCx)
   // The Unicode converter has already zapped the BOM if there was one
   JS::Rooted<JS::Value> value(aCx);
   if (!JS_ParseJSON(aCx,
-                    static_cast<const jschar*>(mResponseText.get()), mResponseText.Length(),
+                    static_cast<const char16_t*>(mResponseText.get()), mResponseText.Length(),
                     &value)) {
     return NS_ERROR_FAILURE;
   }
@@ -4074,8 +4074,8 @@ ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
     return rv;
   }
   nsZipItem* zipItem = zip->GetItem(aFile.get());
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (!zipItem) {
+    return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
   }
 
   // If file was added to the package as stored(uncompressed), map to the

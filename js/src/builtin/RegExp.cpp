@@ -45,7 +45,7 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
     size_t numPairs = matches.length();
     JS_ASSERT(numPairs > 0);
 
-    RootedObject arr(cx, NewDenseAllocatedArrayWithTemplate(cx, numPairs, templateObject));
+    RootedObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(cx, numPairs, templateObject));
     if (!arr)
         return false;
 
@@ -56,12 +56,15 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
         if (pair.isUndefined()) {
             JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
             arr->setDenseInitializedLength(i + 1);
-            arr->initDenseElement(i, UndefinedValue());
+            arr->initDenseElementWithType(cx, i, UndefinedValue());
         } else {
             JSLinearString *str = NewDependentString(cx, input, pair.start, pair.length());
             if (!str)
                 return false;
             arr->setDenseInitializedLength(i + 1);
+
+            // We don't have to update type information here, since the match
+            // result template is already known to have string elements.
             arr->initDenseElement(i, StringValue(str));
         }
     }
@@ -141,7 +144,7 @@ EscapeNakedForwardSlashes(StringBuffer &sb, const CharT *oldChars, size_t oldLen
             /* There's a forward slash that needs escaping. */
             if (sb.empty()) {
                 /* This is the first one we've seen, copy everything up to this point. */
-                if (mozilla::IsSame<CharT, jschar>::value && !sb.ensureTwoByteChars())
+                if (mozilla::IsSame<CharT, char16_t>::value && !sb.ensureTwoByteChars())
                     return false;
 
                 if (!sb.reserve(oldLen + 1))

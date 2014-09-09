@@ -201,7 +201,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     struct AllocationSite : public mozilla::LinkedListElement<AllocationSite>
     {
-        AllocationSite(HandleObject frame) : frame(frame) {
+        explicit AllocationSite(HandleObject frame) : frame(frame) {
             JS_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>());
         };
         RelocatablePtrObject frame;
@@ -265,22 +265,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     bool addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> obj,
                            AutoDebugModeInvalidation &invalidate);
     void cleanupDebuggeeGlobalBeforeRemoval(FreeOp *fop, GlobalObject *global,
-                                            AutoDebugModeInvalidation &invalidate,
-                                            GlobalObjectSet::Enum *compartmentEnum,
-                                            GlobalObjectSet::Enum *debugEnu);
+                                            GlobalObjectSet::Enum *debugEnum);
     bool removeDebuggeeGlobal(JSContext *cx, Handle<GlobalObject *> global,
-                              GlobalObjectSet::Enum *compartmentEnum,
                               GlobalObjectSet::Enum *debugEnum);
     bool removeDebuggeeGlobal(JSContext *cx, Handle<GlobalObject *> global,
                               AutoDebugModeInvalidation &invalidate,
-                              GlobalObjectSet::Enum *compartmentEnum,
                               GlobalObjectSet::Enum *debugEnum);
     void removeDebuggeeGlobalUnderGC(FreeOp *fop, GlobalObject *global,
-                                     GlobalObjectSet::Enum *compartmentEnum,
-                                     GlobalObjectSet::Enum *debugEnum);
-    void removeDebuggeeGlobalUnderGC(FreeOp *fop, GlobalObject *global,
-                                     AutoDebugModeInvalidation &invalidate,
-                                     GlobalObjectSet::Enum *compartmentEnum,
                                      GlobalObjectSet::Enum *debugEnum);
 
     /*
@@ -457,8 +448,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool markAllIteratively(GCMarker *trc);
     static void markAll(JSTracer *trc);
     static void sweepAll(FreeOp *fop);
-    static void detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
-                                             GlobalObjectSet::Enum *compartmentEnum);
+    static void detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global);
     static void findCompartmentEdges(JS::Zone *v, gc::ComponentFinder<JS::Zone> &finder);
 
     static inline JSTrapStatus onEnterFrame(JSContext *cx, AbstractFramePtr frame,
@@ -740,7 +730,7 @@ Debugger::observesGlobal(GlobalObject *global) const
 JSTrapStatus
 Debugger::onEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp)
 {
-    if (cx->compartment()->getDebuggees().empty())
+    if (!cx->compartment()->debugMode())
         return JSTRAP_CONTINUE;
     return slowPathOnEnterFrame(cx, frame, vp);
 }
@@ -748,17 +738,17 @@ Debugger::onEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue
 JSTrapStatus
 Debugger::onDebuggerStatement(JSContext *cx, MutableHandleValue vp)
 {
-    return cx->compartment()->getDebuggees().empty()
-           ? JSTRAP_CONTINUE
-           : dispatchHook(cx, vp, OnDebuggerStatement);
+    return cx->compartment()->debugMode()
+           ? dispatchHook(cx, vp, OnDebuggerStatement)
+           : JSTRAP_CONTINUE;
 }
 
 JSTrapStatus
 Debugger::onExceptionUnwind(JSContext *cx, MutableHandleValue vp)
 {
-    return cx->compartment()->getDebuggees().empty()
-           ? JSTRAP_CONTINUE
-           : dispatchHook(cx, vp, OnExceptionUnwind);
+    return cx->compartment()->debugMode()
+           ? dispatchHook(cx, vp, OnExceptionUnwind)
+           : JSTRAP_CONTINUE;
 }
 
 void
@@ -772,7 +762,7 @@ Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileA
                  !script->selfHosted(),
                  script->compartment()->firedOnNewGlobalObject);
     JS_ASSERT_IF(!script->compileAndGo(), !compileAndGoGlobal);
-    if (!script->compartment()->getDebuggees().empty())
+    if (script->compartment()->debugMode())
         slowPathOnNewScript(cx, script, compileAndGoGlobal);
 }
 
@@ -798,7 +788,7 @@ Debugger::onLogAllocationSite(JSContext *cx, HandleSavedFrame frame)
 
 extern bool
 EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
-              mozilla::Range<const jschar> chars, const char *filename, unsigned lineno,
+              mozilla::Range<const char16_t> chars, const char *filename, unsigned lineno,
               MutableHandleValue rval);
 
 bool ReportObjectRequired(JSContext *cx);

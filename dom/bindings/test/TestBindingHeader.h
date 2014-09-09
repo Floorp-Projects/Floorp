@@ -603,6 +603,10 @@ public:
   void PassUnion20(JSContext*, const ObjectSequenceOrLong&);
   void PassUnion21(const LongMozMapOrLong&);
   void PassUnion22(JSContext*, const ObjectMozMapOrLong&);
+  void PassUnion23(const ImageDataSequenceOrLong&);
+  void PassUnion24(const ImageDataOrNullSequenceOrLong&);
+  void PassUnion25(const ImageDataSequenceSequenceOrLong&);
+  void PassUnion26(const ImageDataOrNullSequenceSequenceOrLong&);
   void PassUnionWithCallback(const EventHandlerNonNullOrNullOrLong& arg);
   void PassUnionWithByteString(const ByteStringOrLong&);
   void PassUnionWithMozMap(const StringMozMapOrString&);

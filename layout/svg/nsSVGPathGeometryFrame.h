@@ -94,8 +94,8 @@ public:
 protected:
   // nsISVGChildFrame interface:
   virtual nsresult PaintSVG(nsRenderingContext *aContext,
-                            const nsIntRect *aDirtyRect,
-                            nsIFrame* aTransformRoot = nullptr) MOZ_OVERRIDE;
+                            const gfxMatrix& aTransform,
+                            const nsIntRect* aDirtyRect = nullptr) MOZ_OVERRIDE;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) MOZ_OVERRIDE;
   virtual nsRect GetCoveredRegion() MOZ_OVERRIDE;
   virtual void ReflowSVG() MOZ_OVERRIDE;
@@ -115,8 +115,13 @@ protected:
 private:
   enum { eRenderFill = 1, eRenderStroke = 2 };
   void Render(nsRenderingContext *aContext, uint32_t aRenderComponents,
-              nsIFrame* aTransformRoot);
-  void PaintMarkers(nsRenderingContext *aContext);
+              const gfxMatrix& aTransform);
+
+  /**
+   * @param aMatrix The transform that must be multiplied onto aContext to
+   *   establish this frame's SVG user space.
+   */
+  void PaintMarkers(nsRenderingContext *aContext, const gfxMatrix& aMatrix);
 
   struct MarkerProperties {
     nsSVGMarkerProperty* mMarkerStart;

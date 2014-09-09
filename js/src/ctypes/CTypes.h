@@ -63,10 +63,10 @@ class Array : public Vector<T, N, SystemAllocPolicy>
 };
 
 // String and AutoString classes, based on Vector.
-typedef Vector<jschar,  0, SystemAllocPolicy> String;
-typedef Vector<jschar, 64, SystemAllocPolicy> AutoString;
-typedef Vector<char,    0, SystemAllocPolicy> CString;
-typedef Vector<char,   64, SystemAllocPolicy> AutoCString;
+typedef Vector<char16_t,  0, SystemAllocPolicy> String;
+typedef Vector<char16_t, 64, SystemAllocPolicy> AutoString;
+typedef Vector<char,      0, SystemAllocPolicy> CString;
+typedef Vector<char,     64, SystemAllocPolicy> AutoCString;
 
 // Convenience functions to append, insert, and compare Strings.
 template <class T, size_t N, class AP, size_t ArrayLength>
@@ -92,7 +92,7 @@ AppendString(Vector<T, N, AP> &v, Vector<T, M, AP> &w)
 
 template <size_t N, class AP>
 void
-AppendString(Vector<jschar, N, AP> &v, JSString* str)
+AppendString(Vector<char16_t, N, AP> &v, JSString* str)
 {
   JS_ASSERT(str);
   JSLinearString *linear = str->ensureLinear(nullptr);
@@ -125,7 +125,7 @@ AppendString(Vector<char, N, AP> &v, JSString* str)
     for (size_t i = 0; i < alen; ++i)
       v[i + vlen] = char(chars[i]);
   } else {
-    const jschar *chars = linear->twoByteChars(nogc);
+    const char16_t *chars = linear->twoByteChars(nogc);
     for (size_t i = 0; i < alen; ++i)
       v[i + vlen] = char(chars[i]);
   }
@@ -151,7 +151,7 @@ PrependString(Vector<T, N, AP> &v, const char (&array)[ArrayLength])
 
 template <size_t N, class AP>
 void
-PrependString(Vector<jschar, N, AP> &v, JSString* str)
+PrependString(Vector<char16_t, N, AP> &v, JSString* str)
 {
   JS_ASSERT(str);
   size_t vlen = v.length();
@@ -164,7 +164,7 @@ PrependString(Vector<jschar, N, AP> &v, JSString* str)
     return;
 
   // Move vector data forward. This is safe since we've already resized.
-  memmove(v.begin() + alen, v.begin(), vlen * sizeof(jschar));
+  memmove(v.begin() + alen, v.begin(), vlen * sizeof(char16_t));
 
   // Copy data to insert.
   JS::AutoCheckCannotGC nogc;
@@ -173,7 +173,7 @@ PrependString(Vector<jschar, N, AP> &v, JSString* str)
     for (size_t i = 0; i < alen; i++)
       v[i] = chars[i];
   } else {
-    memcpy(v.begin(), linear->twoByteChars(nogc), alen * sizeof(jschar));
+    memcpy(v.begin(), linear->twoByteChars(nogc), alen * sizeof(char16_t));
   }
 }
 

@@ -593,7 +593,6 @@ JavaScriptShared::Wrap(JSContext *cx, HandleObject aObj, InfallibleTArray<CpowEn
 
     return true;
 }
-
 void JavaScriptShared::fixupAfterMovingGC()
 {
     objects_.sweep();
