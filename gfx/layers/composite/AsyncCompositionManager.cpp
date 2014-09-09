@@ -504,16 +504,16 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 }
 
 static bool
-SampleAPZAnimations(const LayerMetricsWrapper& aLayer, TimeStamp aPoint)
+SampleAPZAnimations(const LayerMetricsWrapper& aLayer, TimeStamp aSampleTime)
 {
   bool activeAnimations = false;
   for (LayerMetricsWrapper child = aLayer.GetFirstChild(); child;
         child = child.GetNextSibling()) {
-    activeAnimations |= SampleAPZAnimations(child, aPoint);
+    activeAnimations |= SampleAPZAnimations(child, aSampleTime);
   }
 
   if (AsyncPanZoomController* apzc = aLayer.GetApzc()) {
-    activeAnimations |= apzc->AdvanceAnimations(aPoint);
+    activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
   }
 
   return activeAnimations;
@@ -573,6 +573,10 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
                                                scrollOffset,
                                                &overscrollTransform);
+
+    if (!aLayer->IsScrollInfoLayer()) {
+      controller->MarkAsyncTransformAppliedToContent();
+    }
 
     const FrameMetrics& metrics = aLayer->GetFrameMetrics(i);
     CSSToLayerScale paintScale = metrics.LayersPixelsPerCSSPixel();
