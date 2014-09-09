@@ -147,7 +147,7 @@ function run_test()
   run_char_tests(library, ctypes.char, "char", 1, true, [-0x80, 0x7f]);
   run_char_tests(library, ctypes.signed_char, "signed_char", 1, true, [-0x80, 0x7f]);
   run_char_tests(library, ctypes.unsigned_char, "unsigned_char", 1, false, [0, 0xff]);
-  run_jschar_tests(library, ctypes.jschar, "jschar", [0, 0xffff]);
+  run_char16_tests(library, ctypes.char16_t, "char16_t", [0, 0xffff]);
 
   // Test the special types.
   run_StructType_tests();
@@ -1188,7 +1188,7 @@ function run_char_tests(library, t, name, size, signed, limits) {
         18 ] ]);
 }
 
-function run_jschar_tests(library, t, name, limits) {
+function run_char16_tests(library, t, name, limits) {
   run_basic_class_tests(t);
 
   do_check_eq(t.name, name);
@@ -2133,7 +2133,7 @@ function run_type_toString_tests() {
   do_check_eq(c.bool.toString(),                "type bool");
   do_check_eq(c.void_t.toString(),              "type void");
   do_check_eq(c.voidptr_t.toString(),           "type void*");
-  do_check_eq(c.jschar.toString(),              "type jschar");
+  do_check_eq(c.char16_t.toString(),            "type char16_t");
 
   var simplestruct = c.StructType("simplestruct", [{"smitty":c.voidptr_t}]);
   do_check_eq(simplestruct.toString(),          "type simplestruct");
@@ -2252,13 +2252,13 @@ function run_string_tests(library) {
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { test_ansi_len(vals[i]); }, TypeError);
 
-  let test_wide_len = library.declare("test_wide_len", ctypes.default_abi, ctypes.int32_t, ctypes.jschar.ptr);
+  let test_wide_len = library.declare("test_wide_len", ctypes.default_abi, ctypes.int32_t, ctypes.char16_t.ptr);
   do_check_eq(test_wide_len("hello world"), 11);
 
   let test_ansi_ret = library.declare("test_ansi_ret", ctypes.default_abi, ctypes.char.ptr);
   do_check_eq(test_ansi_ret().readString(), "success");
 
-  let test_wide_ret = library.declare("test_wide_ret", ctypes.default_abi, ctypes.jschar.ptr);
+  let test_wide_ret = library.declare("test_wide_ret", ctypes.default_abi, ctypes.char16_t.ptr);
   do_check_eq(test_wide_ret().readString(), "success");
 
   let test_ansi_echo = library.declare("test_ansi_echo", ctypes.default_abi, ctypes.char.ptr, ctypes.char.ptr);

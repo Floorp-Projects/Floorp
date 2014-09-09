@@ -1145,8 +1145,8 @@ FindEnumStringIndex(JSContext* cx, JS::Handle<JS::Value> v, const EnumEntry* val
       }
       index = FindEnumStringIndexImpl(chars, length, values);
     } else {
-      const jschar* chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, str,
-                                                              &length);
+      const char16_t* chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, str,
+                                                                &length);
       if (!chars) {
         *ok = false;
         return 0;

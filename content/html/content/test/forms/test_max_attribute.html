@@ -179,17 +179,12 @@ for (var test of data) {
                                 .getService(SpecialPowers.Ci.nsIProperties);
       var file = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
       file.append('635499_file');
-      var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"].
-                      createInstance(SpecialPowers.Ci.nsIFileOutputStream);
-      outStream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
-                     0666, 0);
-      outStream.write("foo", 3);
-      outStream.close();
+      // Only the file's path is used, so it doesn't need to be created.
+      // See also bug 1058977.
 
       SpecialPowers.wrap(input).value = file.path;
       checkValidity(input, true, apply, apply);
 
-      file.remove(false);
       break;
     case 'date':
       input.max = '2012-06-27';

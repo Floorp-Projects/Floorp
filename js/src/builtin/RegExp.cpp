@@ -144,7 +144,7 @@ EscapeNakedForwardSlashes(StringBuffer &sb, const CharT *oldChars, size_t oldLen
             /* There's a forward slash that needs escaping. */
             if (sb.empty()) {
                 /* This is the first one we've seen, copy everything up to this point. */
-                if (mozilla::IsSame<CharT, jschar>::value && !sb.ensureTwoByteChars())
+                if (mozilla::IsSame<CharT, char16_t>::value && !sb.ensureTwoByteChars())
                     return false;
 
                 if (!sb.reserve(oldLen + 1))

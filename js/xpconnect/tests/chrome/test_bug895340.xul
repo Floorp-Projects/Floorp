@@ -20,6 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=895340
   <script type="application/javascript"><![CDATA[
 
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.expectUncaughtException();
 
   const Cu = Components.utils;
   Cu.import("resource://gre/modules/Services.jsm", this);

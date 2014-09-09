@@ -140,7 +140,7 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function aus_gOSVersion() {
     const BYTE = ctypes.uint8_t;
     const WORD = ctypes.uint16_t;
     const DWORD = ctypes.uint32_t;
-    const WCHAR = ctypes.jschar;
+    const WCHAR = ctypes.char16_t;
     const BOOL = ctypes.int;
 
     // This structure is described at:

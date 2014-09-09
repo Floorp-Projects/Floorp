@@ -60,7 +60,7 @@ SimpleTest.waitForFocus(function() {
   b2.click();
 
   // Now, we can launch tests when file picker isn't canceled.
-  MockFilePicker.useAnyFile();
+  MockFilePicker.useBlobFile();
   MockFilePicker.returnValue = MockFilePicker.returnOK;
 
   var b = document.getElementById('b');
