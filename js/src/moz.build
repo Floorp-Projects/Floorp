@@ -53,12 +53,12 @@ EXPORTS += [
     'jsfriendapi.h',
     'jsprf.h',
     'jsprototypes.h',
+    'jsproxy.h',
     'jspubtd.h',
     'jstypes.h',
     'jsversion.h',
+    'jswrapper.h',
     'perf/jsperf.h',
-    'proxy/jsproxy.h',
-    'proxy/jswrapper.h',
 ]
 
 # If you add a header here, add it to js/src/jsapi-tests/testIntTypesABI.cpp so

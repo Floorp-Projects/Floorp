@@ -14,8 +14,6 @@
 using namespace js;
 using namespace js::gc;
 
-typedef JSPropertyDescriptor PropertyDescriptor;
-
 bool
 DeadObjectProxy::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const
 {
