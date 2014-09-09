@@ -338,7 +338,6 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
                                         &cStats.compartmentTables,
                                         &cStats.crossCompartmentWrappersTable,
                                         &cStats.regexpCompartment,
-                                        &cStats.debuggeesSet,
                                         &cStats.savedStacksSet);
 }
 

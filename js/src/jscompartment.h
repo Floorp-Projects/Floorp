@@ -234,7 +234,6 @@ struct JSCompartment
                                 size_t *compartmentTables,
                                 size_t *crossCompartmentWrappers,
                                 size_t *regexpCompartment,
-                                size_t *debuggeesSet,
                                 size_t *savedStacksSet);
 
     /*
@@ -295,14 +294,11 @@ struct JSCompartment
 
   private:
     enum {
-        DebugFromC = 1 << 0,
-        DebugFromJS = 1 << 1,
-        DebugNeedDelazification = 1 << 2
+        DebugMode = 1 << 0,
+        DebugNeedDelazification = 1 << 1
     };
 
-    static const unsigned DebugModeFromMask = DebugFromC | DebugFromJS;
-
-    unsigned                     debugModeBits;  // see debugMode() below
+    unsigned                     debugModeBits;
 
   public:
     JSCompartment(JS::Zone *zone, const JS::CompartmentOptions &options);
@@ -382,30 +378,23 @@ struct JSCompartment
     uint64_t rngState;
 
   private:
-    /*
-     * Weak reference to each global in this compartment that is a debuggee.
-     * Each global has its own list of debuggers.
-     */
-    js::GlobalObjectSet              debuggees;
-
-  private:
     JSCompartment *thisForCtor() { return this; }
 
+    // Only called from {enter,leave}DebugMode.
+    bool updateJITForDebugMode(JSContext *maybecx, js::AutoDebugModeInvalidation &invalidate);
+
   public:
-    /*
-     * There are dueling APIs for debug mode. It can be enabled or disabled via
-     * JS_SetDebugModeForCompartment. It is automatically enabled and disabled
-     * by Debugger objects. Therefore debugModeBits has the DebugFromC bit set
-     * if the C API wants debug mode and the DebugFromJS bit set if debuggees
-     * is non-empty.
-     *
-     * When toggling on, DebugNeedDelazification is set to signal that
-     * Debugger methods which depend on seeing all scripts (like findScripts)
-     * need to delazify the scripts in the compartment first.
-     */
+    // True if this compartment's global is a debuggee of some Debugger
+    // object.
     bool debugMode() const {
-        return !!(debugModeBits & DebugModeFromMask);
+        return !!(debugModeBits & DebugMode);
     }
+
+    bool enterDebugMode(JSContext *cx);
+    bool enterDebugMode(JSContext *cx, js::AutoDebugModeInvalidation &invalidate);
+    bool leaveDebugMode(JSContext *cx);
+    bool leaveDebugMode(JSContext *cx, js::AutoDebugModeInvalidation &invalidate);
+    void leaveDebugModeUnderGC();
 
     /* True if any scripts from this compartment are on the JS stack. */
     bool hasScriptsOnStack();
@@ -423,29 +412,6 @@ struct JSCompartment
      * scripts.
      */
     bool ensureDelazifyScriptsForDebugMode(JSContext *cx);
-
-  private:
-
-    /* This is called only when debugMode() has just toggled. */
-    bool updateJITForDebugMode(JSContext *maybecx, js::AutoDebugModeInvalidation &invalidate);
-
-  public:
-    js::GlobalObjectSet &getDebuggees() { return debuggees; }
-    bool addDebuggee(JSContext *cx, JS::Handle<js::GlobalObject *> global);
-    bool addDebuggee(JSContext *cx, JS::Handle<js::GlobalObject *> global,
-                     js::AutoDebugModeInvalidation &invalidate);
-    bool removeDebuggee(JSContext *cx, js::GlobalObject *global,
-                        js::GlobalObjectSet::Enum *debuggeesEnum = nullptr);
-    bool removeDebuggee(JSContext *cx, js::GlobalObject *global,
-                        js::AutoDebugModeInvalidation &invalidate,
-                        js::GlobalObjectSet::Enum *debuggeesEnum = nullptr);
-    void removeDebuggeeUnderGC(js::FreeOp *fop, js::GlobalObject *global,
-                               js::GlobalObjectSet::Enum *debuggeesEnum = nullptr);
-    void removeDebuggeeUnderGC(js::FreeOp *fop, js::GlobalObject *global,
-                               js::AutoDebugModeInvalidation &invalidate,
-                               js::GlobalObjectSet::Enum *debuggeesEnum = nullptr);
-    bool setDebugModeFromC(JSContext *cx, bool b,
-                           js::AutoDebugModeInvalidation &invalidate);
 
     void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JS::HandleObject handler);
 

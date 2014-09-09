@@ -58,7 +58,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     selfHostingScriptSource(nullptr),
     gcIncomingGrayPointers(nullptr),
     gcWeakMapList(nullptr),
-    debugModeBits(runtime_->debugMode ? DebugFromC : 0),
+    debugModeBits(0),
     rngState(0),
     watchpointMap(nullptr),
     scriptCountsMap(nullptr),
@@ -113,7 +113,7 @@ JSCompartment::init(JSContext *cx)
     if (!savedStacks_.init())
         return false;
 
-    return debuggees.init(0);
+    return true;
 }
 
 jit::JitRuntime *
@@ -594,8 +594,11 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
     sweepCallsiteClones();
     savedStacks_.sweep(rt);
 
-    if (global_ && IsObjectAboutToBeFinalized(global_.unsafeGet()))
+    if (global_ && IsObjectAboutToBeFinalized(global_.unsafeGet())) {
+        if (debugMode())
+            Debugger::detachAllDebuggersFromGlobal(fop, global_);
         global_.set(nullptr);
+    }
 
     if (selfHostingScriptSource &&
         IsObjectAboutToBeFinalized((JSObject **) selfHostingScriptSource.unsafeGet()))
@@ -627,17 +630,6 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
         if (gc::IsObjectAboutToBeFinalized(&iterObj))
             ni->unlink();
         ni = next;
-    }
-
-    /* For each debuggee being GC'd, detach it from all its debuggers. */
-    for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
-        GlobalObject *global = e.front();
-        if (IsObjectAboutToBeFinalized(&global)) {
-            // See infallibility note above.
-            Debugger::detachAllDebuggersFromGlobal(fop, global, &e);
-        } else if (global != e.front()) {
-            e.rekeyFront(global);
-        }
     }
 }
 
@@ -848,41 +840,6 @@ JSCompartment::ensureDelazifyScriptsForDebugMode(JSContext *cx)
 }
 
 bool
-JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeInvalidation &invalidate)
-{
-    bool enabledBefore = debugMode();
-    bool enabledAfter = (debugModeBits & DebugModeFromMask & ~DebugFromC) || b;
-
-    // Enabling debug mode from C (vs of from JS) can only be done when no
-    // scripts from the target compartment are on the stack.
-    //
-    // We do allow disabling debug mode while scripts are on the stack.  In
-    // that case the debug-mode code for those scripts remains, so subsequently
-    // hooks may be called erroneously, even though debug mode is supposedly
-    // off, and we have to live with it.
-    bool onStack = false;
-    if (enabledBefore != enabledAfter) {
-        onStack = hasScriptsOnStack();
-        if (b && onStack) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_IDLE);
-            return false;
-        }
-    }
-
-    debugModeBits = (debugModeBits & ~DebugFromC) | (b ? DebugFromC : 0);
-    JS_ASSERT(debugMode() == enabledAfter);
-    if (enabledBefore != enabledAfter) {
-        // Pass in a nullptr cx to not bother recompiling for JSD1, since
-        // we're still enforcing the idle-stack invariant here.
-        if (!updateJITForDebugMode(nullptr, invalidate))
-            return false;
-        if (!enabledAfter)
-            DebugScopes::onCompartmentLeaveDebugMode(this);
-    }
-    return true;
-}
-
-bool
 JSCompartment::updateJITForDebugMode(JSContext *maybecx, AutoDebugModeInvalidation &invalidate)
 {
     // The AutoDebugModeInvalidation argument makes sure we can't forget to
@@ -893,76 +850,47 @@ JSCompartment::updateJITForDebugMode(JSContext *maybecx, AutoDebugModeInvalidati
 }
 
 bool
-JSCompartment::addDebuggee(JSContext *cx, JS::Handle<js::GlobalObject *> global)
+JSCompartment::enterDebugMode(JSContext *cx)
 {
     AutoDebugModeInvalidation invalidate(this);
-    return addDebuggee(cx, global, invalidate);
+    return enterDebugMode(cx, invalidate);
 }
 
 bool
-JSCompartment::addDebuggee(JSContext *cx,
-                           JS::Handle<GlobalObject *> global,
-                           AutoDebugModeInvalidation &invalidate)
+JSCompartment::enterDebugMode(JSContext *cx, AutoDebugModeInvalidation &invalidate)
 {
-    bool wasEnabled = debugMode();
-    if (!debuggees.put(global)) {
-        js_ReportOutOfMemory(cx);
-        return false;
+    if (!debugMode()) {
+        debugModeBits |= DebugMode;
+        if (!updateJITForDebugMode(cx, invalidate))
+            return false;
     }
-    debugModeBits |= DebugFromJS;
-    if (!wasEnabled && !updateJITForDebugMode(cx, invalidate))
-        return false;
     return true;
 }
 
 bool
-JSCompartment::removeDebuggee(JSContext *cx,
-                              js::GlobalObject *global,
-                              js::GlobalObjectSet::Enum *debuggeesEnum)
+JSCompartment::leaveDebugMode(JSContext *cx)
 {
     AutoDebugModeInvalidation invalidate(this);
-    return removeDebuggee(cx, global, invalidate, debuggeesEnum);
+    return leaveDebugMode(cx, invalidate);
 }
 
 bool
-JSCompartment::removeDebuggee(JSContext *cx,
-                              js::GlobalObject *global,
-                              AutoDebugModeInvalidation &invalidate,
-                              js::GlobalObjectSet::Enum *debuggeesEnum)
+JSCompartment::leaveDebugMode(JSContext *cx, AutoDebugModeInvalidation &invalidate)
 {
-    bool wasEnabled = debugMode();
-    removeDebuggeeUnderGC(cx->runtime()->defaultFreeOp(), global, invalidate, debuggeesEnum);
-    if (wasEnabled && !debugMode() && !updateJITForDebugMode(cx, invalidate))
-        return false;
+    if (debugMode()) {
+        leaveDebugModeUnderGC();
+        if (!updateJITForDebugMode(cx, invalidate))
+            return false;
+    }
     return true;
 }
 
 void
-JSCompartment::removeDebuggeeUnderGC(FreeOp *fop,
-                                     js::GlobalObject *global,
-                                     js::GlobalObjectSet::Enum *debuggeesEnum)
+JSCompartment::leaveDebugModeUnderGC()
 {
-    AutoDebugModeInvalidation invalidate(this);
-    removeDebuggeeUnderGC(fop, global, invalidate, debuggeesEnum);
-}
-
-void
-JSCompartment::removeDebuggeeUnderGC(FreeOp *fop,
-                                     js::GlobalObject *global,
-                                     AutoDebugModeInvalidation &invalidate,
-                                     js::GlobalObjectSet::Enum *debuggeesEnum)
-{
-    bool wasEnabled = debugMode();
-    JS_ASSERT(debuggees.has(global));
-    if (debuggeesEnum)
-        debuggeesEnum->removeFront();
-    else
-        debuggees.remove(global);
-
-    if (debuggees.empty()) {
-        debugModeBits &= ~DebugFromJS;
-        if (wasEnabled && !debugMode())
-            DebugScopes::onCompartmentLeaveDebugMode(this);
+    if (debugMode()) {
+        debugModeBits &= ~DebugMode;
+        DebugScopes::onCompartmentLeaveDebugMode(this);
     }
 }
 
@@ -985,7 +913,6 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t *compartmentTables,
                                       size_t *crossCompartmentWrappersArg,
                                       size_t *regexpCompartment,
-                                      size_t *debuggeesSet,
                                       size_t *savedStacksSet)
 {
     *compartmentObject += mallocSizeOf(this);
@@ -997,7 +924,6 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                         + lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
     *crossCompartmentWrappersArg += crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
     *regexpCompartment += regExps.sizeOfExcludingThis(mallocSizeOf);
-    *debuggeesSet += debuggees.sizeOfExcludingThis(mallocSizeOf);
     *savedStacksSet += savedStacks_.sizeOfExcludingThis(mallocSizeOf);
 }
 
