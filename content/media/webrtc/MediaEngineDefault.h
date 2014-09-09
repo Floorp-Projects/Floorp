@@ -65,6 +65,11 @@ public:
     return MediaSourceType::Camera;
   }
 
+  virtual nsresult TakePhoto(PhotoCallback* aCallback)
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
@@ -123,6 +128,11 @@ public:
 
   virtual const MediaSourceType GetMediaSource() {
     return MediaSourceType::Microphone;
+  }
+
+  virtual nsresult TakePhoto(PhotoCallback* aCallback)
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS

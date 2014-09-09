@@ -12,45 +12,6 @@
 
 using namespace js;
 
-BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
-{
-    CHECK(JS_DefineDebuggerObject(cx, global));
-    JS::RootedObject debuggee(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
-    CHECK(debuggee);
-
-    {
-        JSAutoCompartment ae(cx, debuggee);
-        CHECK(JS_SetDebugMode(cx, true));
-        CHECK(JS_InitStandardClasses(cx, debuggee));
-    }
-
-    JS::RootedObject debuggeeWrapper(cx, debuggee);
-    CHECK(JS_WrapObject(cx, &debuggeeWrapper));
-    JS::RootedValue v(cx, JS::ObjectValue(*debuggeeWrapper));
-    CHECK(JS_SetProperty(cx, global, "debuggee", v));
-
-    EVAL("var dbg = new Debugger(debuggee);\n"
-         "var hits = 0;\n"
-         "dbg.onDebuggerStatement = function () { hits++; };\n"
-         "debuggee.eval('debugger;');\n"
-         "hits;\n",
-         &v);
-    CHECK_SAME(v, JSVAL_ONE);
-
-    {
-        JSAutoCompartment ae(cx, debuggee);
-        CHECK(JS_SetDebugMode(cx, false));
-    }
-
-    EVAL("debuggee.eval('debugger; debugger; debugger;');\n"
-         "hits;\n",
-         &v);
-    CHECK_SAME(v, INT_TO_JSVAL(4));
-
-    return true;
-}
-END_TEST(testDebugger_debuggerObjectVsDebugMode)
-
 BEGIN_TEST(testDebugger_newScriptHook)
 {
     // Test that top-level indirect eval fires the newScript hook.

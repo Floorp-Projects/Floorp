@@ -34,15 +34,15 @@ class JSStringPtr(Common):
     def display_hint(self):
         return "string"
 
-    def jschars(self):
+    def chars(self):
         d = self.value['d']
         length = d['u1']['length']
         flags = d['u1']['flags']
         is_rope = ((flags & self.stc.TYPE_FLAGS_MASK) == self.stc.ROPE_FLAGS)
         if is_rope:
-            for c in JSStringPtr(d['s']['u2']['left'], self.cache).jschars():
+            for c in JSStringPtr(d['s']['u2']['left'], self.cache).chars():
                 yield c
-            for c in JSStringPtr(d['s']['u3']['right'], self.cache).jschars():
+            for c in JSStringPtr(d['s']['u3']['right'], self.cache).chars():
                 yield c
         else:
             is_inline = (flags & self.stc.INLINE_CHARS_BIT) != 0
@@ -62,7 +62,7 @@ class JSStringPtr(Common):
 
     def to_string(self):
         s = u''
-        for c in self.jschars():
+        for c in self.chars():
             s += chr(c)
         return s
 

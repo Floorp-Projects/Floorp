@@ -137,7 +137,7 @@ class RegExpBuilder
 {
   public:
     explicit RegExpBuilder(LifoAlloc *alloc);
-    void AddCharacter(jschar character);
+    void AddCharacter(char16_t character);
     // "Adds" an empty expression. Does nothing except consume a
     // following quantifier
     void AddEmpty();
@@ -165,7 +165,7 @@ class RegExpBuilder
     mozilla::DebugOnly<LastAdded> last_added_;
 };
 
-// Characters parsed by RegExpParser can be either jschars or kEndMarker.
+// Characters parsed by RegExpParser can be either char16_t or kEndMarker.
 typedef uint32_t widechar;
 
 template <typename CharT>
@@ -200,7 +200,7 @@ class RegExpParser
     // can be reparsed.
     bool ParseBackReferenceIndex(int* index_out);
 
-    bool ParseClassAtom(jschar* char_class, CharacterRange *char_range);
+    bool ParseClassAtom(char16_t* char_class, CharacterRange *char_range);
     RegExpTree* ReportError(unsigned errorNumber);
     void Advance();
     void Advance(int dist) {

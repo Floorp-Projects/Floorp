@@ -28,7 +28,7 @@ InfoObject::DefineProperty(const char *name, nsAString &value)
     return;
 
   const nsString &flat = PromiseFlatString(value);
-  JS::Rooted<JSString*> string(mCx, JS_NewUCStringCopyN(mCx, static_cast<const jschar*>(flat.get()),
+  JS::Rooted<JSString*> string(mCx, JS_NewUCStringCopyN(mCx, static_cast<const char16_t*>(flat.get()),
                                                         flat.Length()));
   if (!string)
     mOk = false;
