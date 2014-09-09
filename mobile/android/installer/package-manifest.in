@@ -407,10 +407,6 @@
 @BINPATH@/components/AppsService.js
 @BINPATH@/components/AppsService.manifest
 
-@BINPATH@/components/SystemMessageInternal.js
-@BINPATH@/components/SystemMessageManager.js
-@BINPATH@/components/SystemMessageManager.manifest
-
 @BINPATH@/components/Activities.manifest
 @BINPATH@/components/ActivitiesGlue.js
 @BINPATH@/components/ActivityProxy.js
