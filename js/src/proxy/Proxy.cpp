@@ -15,6 +15,7 @@
 #include "jswrapper.h"
 
 #include "gc/Marking.h"
+#include "proxy/DeadObjectProxy.h"
 #include "proxy/ScriptedDirectProxyHandler.h"
 #include "proxy/ScriptedIndirectProxyHandler.h"
 #include "vm/WrapperObject.h"
