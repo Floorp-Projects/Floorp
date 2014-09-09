@@ -283,9 +283,9 @@ Error(JSContext *cx, const char (&input)[N], const char (&expectedLine)[M],
     ContextPrivate p = {0, 0};
     CHECK(!JS_GetContextPrivate(cx));
     JS_SetContextPrivate(cx, &p);
-    JSErrorReporter old = JS_SetErrorReporter(cx, ReportJSONError);
+    JSErrorReporter old = JS_SetErrorReporter(rt, ReportJSONError);
     bool ok = JS_ParseJSON(cx, str.chars(), str.length(), &dummy);
-    JS_SetErrorReporter(cx, old);
+    JS_SetErrorReporter(rt, old);
     JS_SetContextPrivate(cx, nullptr);
 
     CHECK(!ok);
