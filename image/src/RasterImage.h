@@ -35,6 +35,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/UniquePtr.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -644,7 +645,7 @@ private: // data
   // IMPORTANT: if you use mAnim in a method, call EnsureImageIsDecoded() first to ensure
   // that the frames actually exist (they may have been discarded to save memory, or
   // we maybe decoding on draw).
-  FrameAnimator* mAnim;
+  UniquePtr<FrameAnimator> mAnim;
 
   // Discard members
   uint32_t                   mLockCount;
