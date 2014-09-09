@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="80">
+<meta name="viewport" content="width=device-width">
+<body style="height: 5000px; overflow:hidden">
+  <!-- In this test the fixed-position element is a child of the scrollable layer, but
+       gets a clip rect because it is itself a container for scrolling sublayers. This
+       tests that such a layer is transformed correctly while an async scroll transform
+       is in effect. -->
+  <div style="display: block; margin-top: 100px; position:fixed; overflow:scroll; top: 0px; width: 50px; height: 100px"><div style="height:200px; background-color: red"></div></div>
+  <div style="display: block; margin-top: 100px; position:relative; left: 50px; width: 50px; height: 100px; background-color: red"></div>
+</body>
+</html>
