@@ -540,7 +540,6 @@ struct CompartmentStats
     macro(Other,   NotLiveGCThing, compartmentTables) \
     macro(Other,   NotLiveGCThing, crossCompartmentWrappersTable) \
     macro(Other,   NotLiveGCThing, regexpCompartment) \
-    macro(Other,   NotLiveGCThing, debuggeesSet) \
     macro(Other,   NotLiveGCThing, savedStacksSet)
 
     CompartmentStats()
