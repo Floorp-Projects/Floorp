@@ -88,8 +88,6 @@ public:
     void FillEllipse(const nsRect& aRect);
     void FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
-    void InvertRect(const nsRect& aRect);
-
     // Text
 
     void SetFont(nsFontMetrics *aFontMetrics);
