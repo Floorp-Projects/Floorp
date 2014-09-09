@@ -18,7 +18,10 @@
 
   runNetworkTest(function() {
     var test = new PeerConnectionTest();
-    test.setOfferOptions({ offerToReceiveAudio: true });
+
+    // TODO: Stop using old constraint-like RTCOptions soon (Bug 1064223).
+    // Watch out for case-difference when fixing: { offerToReceiveAudio: true }
+    test.setOfferOptions({ mandatory: { OfferToReceiveAudio: true } });
     test.run();
   });
 </script>

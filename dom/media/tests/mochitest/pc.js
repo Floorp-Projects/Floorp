@@ -2041,7 +2041,18 @@ PeerConnectionWrapper.prototype = {
     if (!options) {
       return 0;
     }
-    if (options.offerToReceiveAudio) {
+
+    var offerToReceiveAudio = options.offerToReceiveAudio;
+
+    // TODO: Remove tests of old constraint-like RTCOptions soon (Bug 1064223).
+    if (options.mandatory && options.mandatory.OfferToReceiveAudio !== undefined) {
+      offerToReceiveAudio = options.mandatory.OfferToReceiveAudio;
+    } else if (options.optional && options.optional[0] &&
+               options.optional[0].OfferToReceiveAudio !== undefined) {
+      offerToReceiveAudio = options.optional[0].OfferToReceiveAudio;
+    }
+
+    if (offerToReceiveAudio) {
       return 1;
     } else {
       return 0;
@@ -2079,7 +2090,18 @@ PeerConnectionWrapper.prototype = {
     if (!options) {
       return 0;
     }
-    if (options.offerToReceiveVideo) {
+
+    var offerToReceiveVideo = options.offerToReceiveVideo;
+
+    // TODO: Remove tests of old constraint-like RTCOptions soon (Bug 1064223).
+    if (options.mandatory && options.mandatory.OfferToReceiveVideo !== undefined) {
+      offerToReceiveVideo = options.mandatory.OfferToReceiveVideo;
+    } else if (options.optional && options.optional[0] &&
+               options.optional[0].OfferToReceiveVideo !== undefined) {
+      offerToReceiveVideo = options.optional[0].OfferToReceiveVideo;
+    }
+
+    if (offerToReceiveVideo) {
       return 1;
     } else {
       return 0;
