@@ -231,6 +231,7 @@ UNIFIED_SOURCES += [
     'perf/jsperf.cpp',
     'prmjtime.cpp',
     'proxy/BaseProxyHandler.cpp',
+    'proxy/DeadObjectProxy.cpp',
     'proxy/DirectProxyHandler.cpp',
     'proxy/Proxy.cpp',
     'proxy/ScriptedDirectProxyHandler.cpp',

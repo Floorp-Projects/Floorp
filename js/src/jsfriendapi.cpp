@@ -21,6 +21,7 @@
 #include "prmjtime.h"
 
 #include "builtin/TestingFunctions.h"
+#include "proxy/DeadObjectProxy.h"
 #include "vm/WrapperObject.h"
 
 #include "jsobjinlines.h"
@@ -597,11 +598,7 @@ JS_GetCustomIteratorCount(JSContext *cx)
 JS_FRIEND_API(bool)
 JS_IsDeadWrapper(JSObject *obj)
 {
-    if (!obj->is<ProxyObject>()) {
-        return false;
-    }
-
-    return obj->as<ProxyObject>().handler()->family() == &DeadObjectProxy::family;
+    return IsDeadProxyObject(obj);
 }
 
 void
