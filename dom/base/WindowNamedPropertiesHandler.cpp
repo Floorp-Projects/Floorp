@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WindowNamedPropertiesHandler.h"
+#include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsDOMClassInfo.h"
 #include "nsGlobalWindow.h"
@@ -219,11 +220,12 @@ static const DOMIfaceAndProtoJSClass WindowNamedPropertiesClass = {
   PROXY_CLASS_DEF("WindowProperties",
                   DOM_INTERFACE_PROTO_SLOTS_BASE, /* extra slots */
                   0),
-  eInterfacePrototype,
+  eNamedPropertiesObject,
   sWindowNamedPropertiesNativePropertyHooks,
   "[object WindowProperties]",
   prototypes::id::_ID_Count,
   0,
+  EventTargetBinding::GetProtoObject
 };
 
 // static
