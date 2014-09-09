@@ -8,7 +8,7 @@
 interface nsIDocument;
 interface nsIURI;
 
-[uuid(8d2f64db-5585-4876-a1c9-391e16549068)]
+[builtinclass, uuid(79ad5b57-d65d-46d3-b5e9-32d27e16052d)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**

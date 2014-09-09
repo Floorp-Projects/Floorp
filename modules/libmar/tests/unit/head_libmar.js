@@ -1,15 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const BIN_SUFFIX = "@BIN_SUFFIX@";
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-#ifdef XP_WIN
-  let refMARPrefix = "win_";
-#else
-  let refMARPrefix = "";
-#endif
+const isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+const refMARPrefix = (isWindows ? "win_" : "");
+const BIN_SUFFIX = (isWindows ? ".exe" : "");
 
 let tempDir = do_get_tempdir();
 

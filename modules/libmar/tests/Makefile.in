@@ -6,9 +6,6 @@ TESTROOT = $(abspath $(DEPTH))/_tests/xpcshell/$(relativesrcdir)
 
 include $(topsrcdir)/config/rules.mk
 
-libs:: unit/head_libmar.js.in
-	$(call py_action,preprocessor,-Fsubstitution $(DEFINES) $(ACDEFINES) $^ -o $(TESTROOT)/unit/head_libmar.js)
-
 ifneq ($(OS_TARGET),Android)
 ifndef MOZ_PROFILE_GENERATE
 libs::

@@ -380,8 +380,9 @@ struct nsStyleBackground {
     // Initialize nothing
     Position() {}
 
-    // Initialize to initial values
-    void SetInitialValues();
+    // Sets both mXPosition and mYPosition to the given percent value for the
+    // initial property-value (e.g. 0.0f for "0% 0%", or 0.5f for "50% 50%")
+    void SetInitialPercentValues(float aPercentVal);
 
     // True if the effective background image position described by this depends
     // on the size of the corresponding frame.

@@ -547,6 +547,8 @@ function PeerConnectionTest(options) {
   else
     this.pcRemote = null;
 
+  this.steeplechase = this.pcLocal === null || this.pcRemote === null;
+
   // Create command chain instance and assign default commands
   this.chain = new CommandChain(this, options.commands);
   if (!options.is_local) {
@@ -863,9 +865,108 @@ PCT_iceCandidateHandler(caller, candidate) {
     target.storeOrAddIceCandidate(candidate);
   } else {
     info("sending ice candidate to signaling server");
-    send_message({"ice_candidate": candidate});
+    send_message({"type": "ice_candidate", "ice_candidate": candidate});
   }
 };
+
+/**
+ * Installs a polling function for the socket.io client to read
+ * all messages from the chat room into a message queue.
+ */
+PeerConnectionTest.prototype.setupSignalingClient = function
+PCT_setupSignalingClient() {
+  var self = this;
+
+  self.signalingMessageQueue = [];
+  self.signalingCallbacks = {};
+  self.signalingLoopRun = true;
+
+  function queueMessage(message) {
+    info("Received signaling message: " + JSON.stringify(message));
+    var fired = false;
+    Object.keys(self.signalingCallbacks).forEach(function(name) {
+      if (name === message.type) {
+        info("Invoking callback for message type: " + name);
+        self.signalingCallbacks[name](message);
+        fired = true;
+      }
+    });
+    if (!fired) {
+      self.signalingMessageQueue.push(message);
+      info("signalingMessageQueue.length: " + self.signalingMessageQueue.length);
+    }
+    if (self.signalingLoopRun) {
+      wait_for_message().then(queueMessage);
+    } else {
+      info("Exiting signaling message event loop");
+    }
+  }
+
+  wait_for_message().then(queueMessage);
+}
+
+/**
+ * Sets a flag to stop reading further messages from the chat room.
+ */
+PeerConnectionTest.prototype.signalingMessagesFinished = function
+PCT_signalingMessagesFinished() {
+  this.signalingLoopRun = false;
+}
+
+/**
+ * Callback to stop reading message from chat room once trickle ICE
+ * on the far end is over.
+ *
+ * @param {string} caller
+ *        The lable of the caller of the function
+ */
+PeerConnectionTest.prototype.signalEndOfTrickleIce = function
+PCT_signalEndOfTrickleIce(caller) {
+  if (this.steeplechase) {
+    send_message({"type": "end_of_trickle_ice"});
+  }
+};
+
+/**
+ * Register a callback function to deliver messages from the chat room
+ * directly instead of storing them in the message queue.
+ *
+ * @param {string} messageType
+ *        For which message types should the callback get invoked.
+ *
+ * @param {function} onMessage
+ *        The function which gets invoked if a message of the messageType
+ *        has been received from the chat room.
+ */
+PeerConnectionTest.prototype.registerSignalingCallback = function
+PCT_registerSignalingCallback(messageType, onMessage) {
+  this.signalingCallbacks[messageType] = onMessage;
+}
+
+/**
+ * Searches the message queue for the first message of a given type
+ * and invokes the given callback function, or registers the callback
+ * function for future messages if the queue contains no such message.
+ *
+ * @param {string} messageType
+ *        The type of message to search and register for.
+ *
+ * @param {function} onMessage
+ *        The callback function which gets invoked with the messages
+ *        of the given mesage type.
+ */
+PeerConnectionTest.prototype.getSignalingMessage = function
+PCT_getSignalingMessage(messageType, onMessage) {
+  for(var i=0; i < this.signalingMessageQueue.length; i++) {
+    if (messageType === this.signalingMessageQueue[i].type) {
+      //FIXME
+      info("invoking callback on message " + i + " from message queue, for message type:" + messageType);
+      onMessage(this.signalingMessageQueue.splice(i, 1)[0]);
+      return;
+    }
+  }
+  this.registerSignalingCallback(messageType, onMessage);
+}
 
 /**
  * This class handles tests for data channels.
@@ -1991,6 +2092,7 @@ PeerConnectionWrapper.prototype = {
       if (!anEvent.candidate) {
         info(self.label + ": received end of trickle ICE event");
         self.endOfTrickleIce = true;
+        test.signalEndOfTrickleIce(self.label);
       } else {
         if (self.endOfTrickleIce) {
           ok(false, "received ICE candidate after end of trickle");
@@ -2005,8 +2107,6 @@ PeerConnectionWrapper.prototype = {
       }
     }
 
-    //FIXME: in the steeplecase scenario we need to setup a permanent listener
-    //       for ice candidates from the signaling server here
     self._pc.onicecandidate = iceCandidateCallback;
   },
 
@@ -2041,7 +2141,18 @@ PeerConnectionWrapper.prototype = {
     if (!options) {
       return 0;
     }
-    if (options.offerToReceiveAudio) {
+
+    var offerToReceiveAudio = options.offerToReceiveAudio;
+
+    // TODO: Remove tests of old constraint-like RTCOptions soon (Bug 1064223).
+    if (options.mandatory && options.mandatory.OfferToReceiveAudio !== undefined) {
+      offerToReceiveAudio = options.mandatory.OfferToReceiveAudio;
+    } else if (options.optional && options.optional[0] &&
+               options.optional[0].OfferToReceiveAudio !== undefined) {
+      offerToReceiveAudio = options.optional[0].OfferToReceiveAudio;
+    }
+
+    if (offerToReceiveAudio) {
       return 1;
     } else {
       return 0;
@@ -2079,7 +2190,18 @@ PeerConnectionWrapper.prototype = {
     if (!options) {
       return 0;
     }
-    if (options.offerToReceiveVideo) {
+
+    var offerToReceiveVideo = options.offerToReceiveVideo;
+
+    // TODO: Remove tests of old constraint-like RTCOptions soon (Bug 1064223).
+    if (options.mandatory && options.mandatory.OfferToReceiveVideo !== undefined) {
+      offerToReceiveVideo = options.mandatory.OfferToReceiveVideo;
+    } else if (options.optional && options.optional[0] &&
+               options.optional[0].OfferToReceiveVideo !== undefined) {
+      offerToReceiveVideo = options.optional[0].OfferToReceiveVideo;
+    }
+
+    if (offerToReceiveVideo) {
       return 1;
     } else {
       return 0;

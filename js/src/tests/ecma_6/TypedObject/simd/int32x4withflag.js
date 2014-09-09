@@ -8,8 +8,6 @@ var summary = 'int32x4 with';
 function test() {
   print(BUGNUMBER + ": " + summary);
 
-  // FIXME -- Bug 948379: Amend to check for correctness of border cases.
-
   var a = int32x4(1, 2, 3, 4);
   var x = SIMD.int32x4.withFlagX(a, true);
   var y = SIMD.int32x4.withFlagY(a, false);

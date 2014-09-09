@@ -8,8 +8,6 @@ var summary = 'int32x4 equal';
 function test() {
   print(BUGNUMBER + ": " + summary);
 
-  // FIXME -- Bug 948379: Amend to check for correctness of border cases.
-
   var a = int32x4(1, 20, 30, 40);
   var b = int32x4(10, 20, 30, 4);
   var c = SIMD.int32x4.equal(a, b);

@@ -102,27 +102,76 @@
              testItem(menu, "0|3|1", "cmd_BarItem1");
     }
 
+    function createStandaloneNativeMenu(menuNode) {
+      try {
+        let Cc = Components.classes;
+        let Ci = Components.interfaces;
+        let menu = Cc["@mozilla.org/widget/standalonenativemenu;1"].createInstance(Ci.nsIStandaloneNativeMenu);
+        menu.init(menuNode);
+        return menu;
+      } catch (e) {
+        ok(false, "Failed creating nsIStandaloneNativeMenu instance");
+        throw e;
+      }
+    }
+
+    function runDetachedMenuTests(addMenupopupBeforeCreatingSNM) {
+      let menu = createXULMenu("Detached menu");
+      menu.setAttribute("image", 'data:image/svg+xml,<svg%20xmlns="http://www.w3.org/2000/svg"%20width="32"%20height="32"><circle%20cx="16"%20cy="16"%20r="16"/></svg>');
+      let menupopup = createXULMenuPopup();
+
+      let popupShowingFired = false;
+      let itemActivated = false;
+
+      menupopup.addEventListener("popupshowing", function (e) {
+        popupShowingFired = true;
+
+        let menuitem = document.createElementNS(XUL_NS, "menuitem");
+        menuitem.setAttribute("label", "detached menu item");
+        menuitem.addEventListener("command", function (e) {
+          itemActivated = true;
+        })
+        menupopup.appendChild(menuitem);
+      })
+
+      // It shouldn't make a difference whether the menupopup is added to the
+      // menu element before or after we create the nsIStandaloneNativeMenu
+      // instance with it. We test both orders by calling this function twice
+      // with different values for addMenupopupBeforeCreatingSNM.
+
+      var menuSNM = null; // the nsIStandaloneNativeMenu object for "menu"
+      if (addMenupopupBeforeCreatingSNM) {
+        menu.appendChild(menupopup);
+        menuSNM = createStandaloneNativeMenu(menu);
+      } else {
+        menuSNM = createStandaloneNativeMenu(menu);
+        menu.appendChild(menupopup);
+      }
+
+      try {
+        ok(!popupShowingFired, "popupshowing shouldn't have fired before our call to menuWillOpen()");
+        menuSNM.menuWillOpen();
+        ok(popupShowingFired, "calling menuWillOpen() should have notified our popupshowing listener");
+
+        ok(!itemActivated, "our dynamically-added menuitem shouldn't have been activated yet");
+        menuSNM.activateNativeMenuItemAt("0");
+        ok(itemActivated, "the new menu item should have been activated now");
+      } catch (ex) {
+        ok(false, "dynamic menu test failed: " + ex);
+      }
+    }
+
     function onLoad() {
       var _delayedOnLoad = function() {
-        var Cc = Components.classes;
-        var Ci = Components.interfaces;
+        try {
 
         var menuNode = document.getElementById("standalonenativemenu");
-        var menu;
-        try {
-          menu = Cc["@mozilla.org/widget/standalonenativemenu;1"].createInstance(Ci.nsIStandaloneNativeMenu);
-          menu.init(menuNode);
-        } catch (e) {
-          ok(false, "Create nsIStandaloneNativeMenu instance");
-          onTestsFinished();
-          return;
-        }
+        var menu = createStandaloneNativeMenu(menuNode);
 
         // First let's run the base menu tests.
         ok(runBaseMenuTests(menu), "base tests #1");
 
         // Set up some nodes that we'll use.
-        //var menubarNode = document.getElementById("nativemenubar");
         var newMenu0 = createXULMenu("NewMenu0");
         var newMenu1 = createXULMenu("NewMenu1");
         var newMenuPopup0 = createXULMenuPopup();
@@ -267,7 +316,15 @@
         newMenu1.setAttribute("hidden", "false");
         menu.forceUpdateNativeMenuAt("1");
 
-        onTestsFinished();
+        // Run tests where the menu nodes are not in the document's node tree.
+        runDetachedMenuTests(false);
+        runDetachedMenuTests(true);
+
+        } catch (e) {
+          ok(false, "Caught an exception: " + e);
+        } finally {
+          onTestsFinished();
+        }
       }
 
       setTimeout(_delayedOnLoad, 1000);
