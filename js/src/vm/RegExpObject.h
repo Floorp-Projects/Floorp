@@ -11,10 +11,10 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "jscntxt.h"
-#include "jsproxy.h"
 
 #include "gc/Marking.h"
 #include "gc/Zone.h"
+#include "proxy/Proxy.h"
 #include "vm/Shape.h"
 
 /*
