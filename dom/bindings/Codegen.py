@@ -298,9 +298,9 @@ class CGNativePropertyHooks(CGThing):
             prototypeID += self.descriptor.name
         else:
             prototypeID += "_ID_Count"
-        parent = self.descriptor.interface.parent
-        parentHooks = (toBindingNamespace(parent.identifier.name) + "::sNativePropertyHooks"
-                       if parent else 'nullptr')
+        parentProtoName = self.descriptor.parentPrototypeName
+        parentHooks = (toBindingNamespace(parentProtoName) + "::sNativePropertyHooks"
+                       if parentProtoName else 'nullptr')
 
         return fill(
             """
@@ -327,10 +327,7 @@ def NativePropertyHooks(descriptor):
 
 
 def DOMClass(descriptor):
-    def make_name(d):
-        return "%s%s" % (d.interface.identifier.name, '_workers' if d.workers else '')
-
-    protoList = ['prototypes::id::' + make_name(descriptor.getDescriptor(proto)) for proto in descriptor.prototypeChain]
+    protoList = ['prototypes::id::' + proto for proto in descriptor.prototypeNameChain]
     # Pad out the list to the right length with _ID_Count so we
     # guarantee that all the lists are the same length.  _ID_Count
     # is never the ID of any prototype, so it's safe to use as
@@ -2582,7 +2579,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         self.properties = properties
 
     def definition_body(self):
-        if len(self.descriptor.prototypeChain) == 1:
+        parentProtoName = self.descriptor.parentPrototypeName
+        if parentProtoName is None:
             parentProtoType = "Rooted"
             if self.descriptor.interface.getExtendedAttribute("ArrayClass"):
                 getParentProto = "aCx, JS_GetArrayPrototype(aCx, aGlobal)"
@@ -2591,13 +2589,9 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             else:
                 getParentProto = "aCx, JS_GetObjectPrototype(aCx, aGlobal)"
         else:
-            parentProtoName = self.descriptor.prototypeChain[-2]
-            parentDesc = self.descriptor.getDescriptor(parentProtoName)
-            if parentDesc.workers:
-                parentProtoName += '_workers'
+            parentProtoType = "Handle"
             getParentProto = ("%s::GetProtoObject(aCx, aGlobal)" %
                               toBindingNamespace(parentProtoName))
-            parentProtoType = "Handle"
 
         parentWithInterfaceObject = self.descriptor.interface.parent
         while (parentWithInterfaceObject and

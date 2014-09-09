@@ -513,6 +513,16 @@ class Descriptor(DescriptorProvider):
     def binaryNameFor(self, name):
         return self._binaryNames.get(name, name)
 
+    @property
+    def prototypeNameChain(self):
+        return map(lambda p: self.getDescriptor(p).name, self.prototypeChain)
+
+    @property
+    def parentPrototypeName(self):
+        if len(self.prototypeChain) == 1:
+            return None
+        return self.getDescriptor(self.prototypeChain[-2]).name
+
     def hasInterfaceOrInterfacePrototypeObject(self):
 
         # Forward-declared interfaces don't need either interface object or
