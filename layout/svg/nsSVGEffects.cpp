@@ -47,41 +47,6 @@ nsSVGRenderingObserver::StopListening()
   NS_ASSERTION(!mInObserverList, "still in an observer list?");
 }
 
-
-
-/**
- * Note that in the current setup there are two separate observer lists.
- *
- * In nsSVGIDRenderingObserver's ctor, the new object adds itself to the
- * mutation observer list maintained by the referenced element. In this way the
- * nsSVGIDRenderingObserver is notified if there are any attribute or content
- * tree changes to the element or any of its *descendants*.
- *
- * In nsSVGIDRenderingObserver::GetReferencedElement() the
- * nsSVGIDRenderingObserver object also adds itself to an
- * nsSVGRenderingObserverList object belonging to the referenced
- * element.
- *
- * XXX: it would be nice to have a clear and concise executive summary of the
- * benefits/necessity of maintaining a second observer list.
- */
-
-nsSVGIDRenderingObserver::nsSVGIDRenderingObserver(nsIURI *aURI,
-                                                   nsIFrame *aFrame,
-                                                   bool aReferenceImage)
-  : mElement(MOZ_THIS_IN_INITIALIZER_LIST()), mFrame(aFrame),
-    mFramePresShell(aFrame->PresContext()->PresShell())
-{
-  // Start watching the target element
-  mElement.Reset(aFrame->GetContent(), aURI, true, aReferenceImage);
-  StartListening();
-}
-
-nsSVGIDRenderingObserver::~nsSVGIDRenderingObserver()
-{
-  StopListening();
-}
-
 static nsSVGRenderingObserverList *
 GetObserverList(Element *aElement)
 {
@@ -128,25 +93,6 @@ nsSVGRenderingObserver::GetReferencedFrame(nsIAtom* aFrameType, bool* aOK)
     }
   }
   return nullptr;
-}
-
-void
-nsSVGIDRenderingObserver::DoUpdate()
-{
-  if (mFramePresShell->IsDestroying()) {
-    // mFrame is no longer valid. Bail out.
-    mFrame = nullptr;
-    return;
-  }
-  if (mElement.get() && mInObserverList) {
-    nsSVGEffects::RemoveRenderingObserver(mElement.get(), this);
-    mInObserverList = false;
-  }
-  if (mFrame && mFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    // Changes should propagate out to things that might be observing
-    // the referencing frame or its ancestors.
-    nsSVGEffects::InvalidateRenderingObservers(mFrame);
-  }
 }
 
 void
@@ -214,6 +160,88 @@ nsSVGRenderingObserver::ContentRemoved(nsIDocument *aDocument,
   DoUpdate();
 }
 
+/**
+ * Note that in the current setup there are two separate observer lists.
+ *
+ * In nsSVGIDRenderingObserver's ctor, the new object adds itself to the
+ * mutation observer list maintained by the referenced element. In this way the
+ * nsSVGIDRenderingObserver is notified if there are any attribute or content
+ * tree changes to the element or any of its *descendants*.
+ *
+ * In nsSVGIDRenderingObserver::GetReferencedElement() the
+ * nsSVGIDRenderingObserver object also adds itself to an
+ * nsSVGRenderingObserverList object belonging to the referenced
+ * element.
+ *
+ * XXX: it would be nice to have a clear and concise executive summary of the
+ * benefits/necessity of maintaining a second observer list.
+ */
+
+nsSVGIDRenderingObserver::nsSVGIDRenderingObserver(nsIURI *aURI,
+                                                   nsIFrame *aFrame,
+                                                   bool aReferenceImage)
+  : mElement(MOZ_THIS_IN_INITIALIZER_LIST()), mFrame(aFrame),
+    mFramePresShell(aFrame->PresContext()->PresShell())
+{
+  // Start watching the target element
+  mElement.Reset(aFrame->GetContent(), aURI, true, aReferenceImage);
+  StartListening();
+}
+
+nsSVGIDRenderingObserver::~nsSVGIDRenderingObserver()
+{
+  StopListening();
+}
+
+void
+nsSVGIDRenderingObserver::DoUpdate()
+{
+  if (mFramePresShell->IsDestroying()) {
+    // mFrame is no longer valid. Bail out.
+    mFrame = nullptr;
+    return;
+  }
+  if (mElement.get() && mInObserverList) {
+    nsSVGEffects::RemoveRenderingObserver(mElement.get(), this);
+    mInObserverList = false;
+  }
+  if (mFrame && mFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    // Changes should propagate out to things that might be observing
+    // the referencing frame or its ancestors.
+    nsSVGEffects::InvalidateRenderingObservers(mFrame);
+  }
+}
+
+NS_IMPL_ISUPPORTS_INHERITED(nsSVGFilterReference,
+                            nsSVGIDRenderingObserver,
+                            nsISVGFilterReference);
+
+nsSVGFilterFrame *
+nsSVGFilterReference::GetFilterFrame()
+{
+  return static_cast<nsSVGFilterFrame *>
+    (GetReferencedFrame(nsGkAtoms::svgFilterFrame, nullptr));
+}
+
+void
+nsSVGFilterReference::DoUpdate()
+{
+  nsSVGIDRenderingObserver::DoUpdate();
+  if (!mFrame)
+    return;
+
+  // Repaint asynchronously in case the filter frame is being torn down
+  nsChangeHint changeHint =
+    nsChangeHint(nsChangeHint_RepaintFrame);
+
+  // Don't need to request UpdateOverflow if we're being reflowed.
+  if (!(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
+    NS_UpdateHint(changeHint, nsChangeHint_UpdateOverflow);
+  }
+  mFramePresShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
+    mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
+}
+
 NS_IMPL_ISUPPORTS(nsSVGFilterProperty, nsISupports)
 
 nsSVGFilterProperty::nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
@@ -255,45 +283,6 @@ nsSVGFilterProperty::Invalidate()
   for (uint32_t i = 0; i < mReferences.Length(); i++) {
     mReferences[i]->Invalidate();
   }
-}
-
-NS_IMPL_ISUPPORTS_INHERITED(nsSVGFilterReference,
-                            nsSVGIDRenderingObserver,
-                            nsISVGFilterReference);
-
-nsSVGFilterFrame *
-nsSVGFilterReference::GetFilterFrame()
-{
-  return static_cast<nsSVGFilterFrame *>
-    (GetReferencedFrame(nsGkAtoms::svgFilterFrame, nullptr));
-}
-
-static void
-InvalidateAllContinuations(nsIFrame* aFrame)
-{
-  for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
-    f->InvalidateFrame();
-  }
-}
-
-void
-nsSVGFilterReference::DoUpdate()
-{
-  nsSVGIDRenderingObserver::DoUpdate();
-  if (!mFrame)
-    return;
-
-  // Repaint asynchronously in case the filter frame is being torn down
-  nsChangeHint changeHint =
-    nsChangeHint(nsChangeHint_RepaintFrame);
-
-  // Don't need to request UpdateOverflow if we're being reflowed.
-  if (!(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
-    NS_UpdateHint(changeHint, nsChangeHint_UpdateOverflow);
-  }
-  mFramePresShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
-    mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
 void
@@ -360,6 +349,15 @@ nsSVGTextPathProperty::DoUpdate()
     nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateTextPath);
   mFramePresShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
     mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
+}
+
+static void
+InvalidateAllContinuations(nsIFrame* aFrame)
+{
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
+    f->InvalidateFrame();
+  }
 }
 
 void
