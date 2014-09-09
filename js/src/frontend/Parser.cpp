@@ -633,7 +633,8 @@ Parser<ParseHandler>::parse(JSObject *chain)
     Node pn = statements();
     if (pn) {
         if (!tokenStream.matchToken(TOK_EOF)) {
-            report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
+            report(ParseError, false, null(), JSMSG_GARBAGE_AFTER_INPUT,
+                   "script", TokenKindToDesc(tokenStream.peekToken()));
             return null();
         }
         if (foldConstants) {
@@ -751,7 +752,8 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
         return null();
 
     if (!tokenStream.matchToken(TOK_EOF)) {
-        report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
+        report(ParseError, false, null(), JSMSG_GARBAGE_AFTER_INPUT,
+               "function body", TokenKindToDesc(tokenStream.peekToken()));
         return null();
     }
 
@@ -5005,8 +5007,12 @@ Parser<ParseHandler>::throwStatement()
     TokenKind tt = tokenStream.peekTokenSameLine(TokenStream::Operand);
     if (tt == TOK_ERROR)
         return null();
-    if (tt == TOK_EOF || tt == TOK_EOL || tt == TOK_SEMI || tt == TOK_RC) {
-        report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
+    if (tt == TOK_EOF || tt == TOK_SEMI || tt == TOK_RC) {
+        report(ParseError, false, null(), JSMSG_MISSING_EXPR_AFTER_THROW);
+        return null();
+    }
+    if (tt == TOK_EOL) {
+        report(ParseError, false, null(), JSMSG_LINE_BREAK_AFTER_THROW);
         return null();
     }
 
@@ -7432,10 +7438,14 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
       case TOK_NULL:
         return handler.newNullLiteral(pos());
 
-      case TOK_RP:
+      case TOK_RP: {
+        TokenKind next = tokenStream.peekToken();
+        if (next == TOK_ERROR)
+            return null();
+
         // Not valid expression syntax, but this is valid in an arrow function
         // with no params: `() => body`.
-        if (tokenStream.peekToken() == TOK_ARROW) {
+        if (next == TOK_ARROW) {
             tokenStream.ungetToken();  // put back right paren
 
             // Now just return something that will allow parsing to continue.
@@ -7443,30 +7453,57 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
             // reparse the whole arrow function. See Parser::assignExpr.
             return handler.newNullLiteral(pos());
         }
-        report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
-        return null();
+        goto unexpected_token;
+      }
 
-      case TOK_TRIPLEDOT:
-        // Not valid expression syntax, but this is valid in an arrow function
-        // with a rest param: `(a, b, ...rest) => body`.
-        if (tokenStream.matchToken(TOK_NAME) &&
-            tokenStream.matchToken(TOK_RP) &&
-            tokenStream.peekToken() == TOK_ARROW)
-        {
-            tokenStream.ungetToken();  // put back right paren
+      case TOK_TRIPLEDOT: {
+        TokenKind next;
 
-            // Return an arbitrary expression node. See case TOK_RP above.
-            return handler.newNullLiteral(pos());
+        // This isn't valid expression syntax, but it's valid in an arrow
+        // function as a trailing rest param: `(a, b, ...rest) => body`.  Check
+        // for a name, closing parenthesis, and arrow, and allow it only if all
+        // are present.
+        next = tokenStream.getToken();
+        if (next == TOK_ERROR)
+            return null();
+        if (next != TOK_NAME) {
+            report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+                   "rest argument name", TokenKindToDesc(next));
+            return null();
         }
-        report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
-        return null();
+
+        next = tokenStream.getToken();
+        if (next == TOK_ERROR)
+            return null();
+        if (next != TOK_RP) {
+            report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+                   "closing parenthesis", TokenKindToDesc(next));
+            return null();
+        }
+
+        next = tokenStream.peekToken();
+        if (next == TOK_ERROR)
+            return null();
+        if (next != TOK_ARROW) {
+            report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+                   "'=>' after argument list", TokenKindToDesc(next));
+            return null();
+        }
+
+        tokenStream.ungetToken();  // put back right paren
+
+        // Return an arbitrary expression node. See case TOK_RP above.
+        return handler.newNullLiteral(pos());
+      }
 
       case TOK_ERROR:
         /* The scanner or one of its subroutines reported the error. */
         return null();
 
       default:
-        report(ParseError, false, null(), JSMSG_SYNTAX_ERROR);
+      unexpected_token:
+        report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+               "expression", TokenKindToDesc(tt));
         return null();
     }
 }
