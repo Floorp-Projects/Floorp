@@ -138,7 +138,8 @@ GetBaseTransform2D(Layer* aLayer, Matrix* aTransform)
 
 static void
 TranslateShadowLayer2D(Layer* aLayer,
-                       const gfxPoint& aTranslation)
+                       const gfxPoint& aTranslation,
+                       bool aAdjustClipRect)
 {
   // This layer might also be a scrollable layer and have an async transform.
   // To make sure we don't clobber that, we start with the shadow transform.
@@ -173,7 +174,7 @@ TranslateShadowLayer2D(Layer* aLayer,
   layerComposite->SetShadowTransformSetByAnimation(false);
 
   const nsIntRect* clipRect = aLayer->GetClipRect();
-  if (clipRect) {
+  if (aAdjustClipRect && clipRect) {
     nsIntRect transformedClipRect(*clipRect);
     transformedClipRect.MoveBy(aTranslation.x, aTranslation.y);
     layerComposite->SetShadowClipRect(&transformedClipRect);
@@ -257,7 +258,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   // aTransformedSubtreeRoot. Also, once we do encounter such a child, we don't
   // need to recurse any deeper because the fixed layers are relative to their
   // nearest scrollable layer.
-  if (aLayer == aTransformedSubtreeRoot || !isFixedOrSticky) {
+  if (!isFixedOrSticky) {
     // ApplyAsyncContentTransformToTree will call this function again for
     // nested scrollable layers, so we don't need to recurse if the layer is
     // scrollable.
@@ -349,8 +350,15 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                     IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
   }
 
-  // Finally, apply the 2D translation to the layer transform.
-  TranslateShadowLayer2D(aLayer, ThebesPoint(translation));
+  // Finally, apply the 2D translation to the layer transform. Note that in
+  // general we need to apply the same translation to the layer's clip rect, so
+  // that the effective transform on the clip rect takes it back to where it was
+  // originally, had there been no async scroll. In the case where the
+  // fixed/sticky layer is the same as aTransformedSubtreeRoot, then the clip
+  // rect is not affected by the scroll-induced async scroll transform anyway
+  // (since the clip is applied post-transform) so we don't need to make the
+  // adjustment.
+  TranslateShadowLayer2D(aLayer, ThebesPoint(translation), aLayer != aTransformedSubtreeRoot);
 }
 
 static void
