@@ -82,13 +82,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
       pushPrefs.bind(null, [['capability.policy.policynames', ',somepolicy, someotherpolicy, '],
                             ['capability.policy.somepolicy.checkloaduri.enabled', 'allaccess'],
                             ['capability.policy.someotherpolicy.checkloaduri.enabled', 'nope'],
-                            ['capability.policy.somepolicy.sites', ' http://example.org   https://example.com test1.example.com'],
+                            ['capability.policy.somepolicy.sites', ' http://example.org   test1.example.com https://test2.example.com '],
                             ['capability.policy.someotherpolicy.sites', 'http://example.net ']]))
     .then(checkLoadFileURI.bind(null, 'http://example.org', true))
-    .then(checkLoadFileURI.bind(null, 'http://example.com', false))
+    .then(checkLoadFileURI.bind(null, 'http://test2.example.com', false))
+    .then(checkLoadFileURI.bind(null, 'https://test2.example.com', true))
+    .then(checkLoadFileURI.bind(null, 'http://sub1.test2.example.com', false))
+    .then(checkLoadFileURI.bind(null, 'https://sub1.test2.example.com', true))
     .then(checkLoadFileURI.bind(null, 'http://example.net', false))
     .then(checkLoadFileURI.bind(null, 'http://test1.example.com', true))
     .then(checkLoadFileURI.bind(null, 'https://test1.example.com', true))
+    .then(checkLoadFileURI.bind(null, 'http://sub1.test1.example.com', true))
+    .then(checkLoadFileURI.bind(null, 'https://sub1.test1.example.com', true))
     .then(pushPrefs.bind(null, [['capability.policy.someotherpolicy.checkloaduri.enabled', 'allAccess']]))
     .then(checkLoadFileURI.bind(null, 'http://example.net', true))
     .then(popPrefs)
