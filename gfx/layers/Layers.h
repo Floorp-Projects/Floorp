@@ -1177,7 +1177,7 @@ public:
   float GetOpacity() { return mOpacity; }
   gfx::CompositionOp GetMixBlendMode() const { return mMixBlendMode; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nullptr; }
-  uint32_t GetContentFlags() const { return mContentFlags; }
+  uint32_t GetContentFlags() { return mContentFlags; }
   const nsIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   const FrameMetrics& GetFrameMetrics(uint32_t aIndex) const;
   uint32_t GetFrameMetricsCount() const { return mFrameMetrics.Length(); }
@@ -1999,7 +1999,6 @@ public:
       , mSize(0,0)
       , mHasAlpha(false)
       , mIsGLAlphaPremult(true)
-      , mIsElemFullscreen(false)
     { }
 
     // One of these two must be specified for Canvas2D, but never both
@@ -2020,8 +2019,6 @@ public:
 
     // Whether mGLContext contains data that is alpha-premultiplied.
     bool mIsGLAlphaPremult;
-
-    bool mIsElemFullscreen;
   };
 
   /**
@@ -2123,8 +2120,6 @@ public:
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
-  bool MustLayerUpdateBeSynchronous() const;
-
 protected:
   CanvasLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData)
@@ -2134,7 +2129,6 @@ protected:
     , mPostTransCallbackData(nullptr)
     , mFilter(GraphicsFilter::FILTER_GOOD)
     , mDirty(false)
-    , mIsElemFullscreen(false)
   {}
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
@@ -2157,7 +2151,6 @@ protected:
   DidTransactionCallback mPostTransCallback;
   void* mPostTransCallbackData;
   GraphicsFilter mFilter;
-  bool mIsElemFullscreen;
 
 private:
   /**
