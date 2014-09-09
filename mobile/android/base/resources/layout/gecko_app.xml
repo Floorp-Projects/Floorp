@@ -22,7 +22,6 @@
         <RelativeLayout android:id="@+id/gecko_layout"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_below="@+id/new_tablet_tab_strip"
                         android:layout_above="@+id/find_in_page">
 
             <include layout="@layout/shared_ui_components"/>
@@ -77,7 +76,6 @@
         <org.mozilla.gecko.widget.GeckoViewFlipper android:id="@id/browser_actionbar"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/browser_toolbar_height"
-                android:layout_below="@+id/new_tablet_tab_strip"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -105,13 +103,6 @@
                                                        android:src="@drawable/progress"
                                                        android:background="@null"
                                                        android:visibility="gone" />
-
-        <ViewStub android:id="@+id/new_tablet_tab_strip"
-                  android:inflatedId="@id/new_tablet_tab_strip"
-                  android:layout="@layout/new_tablet_tab_strip"
-                  android:layout_width="match_parent"
-                  android:layout_height="@dimen/new_tablet_tab_strip_height"
-                  android:visibility="gone"/>
 
     </view>
 
