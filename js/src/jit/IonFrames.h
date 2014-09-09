@@ -52,6 +52,11 @@ CalleeTokenIsFunction(CalleeToken token)
     CalleeTokenTag tag = GetCalleeTokenTag(token);
     return tag == CalleeToken_Function || tag == CalleeToken_FunctionConstructing;
 }
+static inline bool
+CalleeTokenIsConstructing(CalleeToken token)
+{
+    return GetCalleeTokenTag(token) == CalleeToken_FunctionConstructing;
+}
 static inline JSFunction *
 CalleeTokenToFunction(CalleeToken token)
 {
