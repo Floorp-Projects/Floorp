@@ -4266,6 +4266,16 @@ Selection::GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,
 }
 
 NS_IMETHODIMP
+Selection::GetAncestorLimiter(nsIContent** aContent)
+{
+  if (mFrameSelection) {
+    nsCOMPtr<nsIContent> c = mFrameSelection->GetAncestorLimiter();
+    c.forget(aContent);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Selection::SetAncestorLimiter(nsIContent* aContent)
 {
   if (mFrameSelection)
