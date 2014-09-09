@@ -64,7 +64,8 @@ int ViEInputManager::NumberOfCaptureDevices() {
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, ViEId(engine_id_), "%s",
                __FUNCTION__);
   CriticalSectionScoped cs(device_info_cs_.get());
-  GetDeviceInfo();
+  if (!GetDeviceInfo())
+    return 0;
   assert(capture_device_info_);
   capture_device_info_->Refresh();
   return capture_device_info_->NumberOfDevices();
@@ -91,7 +92,8 @@ int ViEInputManager::NumberOfCaptureCapabilities(
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, ViEId(engine_id_), "%s",
                __FUNCTION__);
   CriticalSectionScoped cs(device_info_cs_.get());
-  GetDeviceInfo();
+  if (!GetDeviceInfo())
+    return 0;
   assert(capture_device_info_);
   return capture_device_info_->NumberOfCapabilities(device_unique_idUTF8);
 }
