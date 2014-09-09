@@ -233,7 +233,7 @@ UNIFIED_SOURCES += [
     'prmjtime.cpp',
     'proxy/BaseProxyHandler.cpp',
     'proxy/DirectProxyHandler.cpp',
-    'proxy/jsproxy.cpp',
+    'proxy/Proxy.cpp',
     'proxy/ScriptedDirectProxyHandler.cpp',
     'proxy/ScriptedIndirectProxyHandler.cpp',
     'vm/ArgumentsObject.cpp',

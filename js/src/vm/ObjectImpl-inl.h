@@ -10,8 +10,8 @@
 #include "vm/ObjectImpl.h"
 
 #include "jscntxt.h"
-#include "jsproxy.h"
 
+#include "proxy/Proxy.h"
 #include "vm/ProxyObject.h"
 #include "vm/TypedArrayObject.h"
 
