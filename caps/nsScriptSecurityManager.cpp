@@ -1433,7 +1433,7 @@ nsScriptSecurityManager::AddSitesToFileURIWhitelist(const nsCString& aSiteList)
         if (NS_FAILED(sIOService->ExtractScheme(site, unused))) {
             AddSitesToFileURIWhitelist(NS_LITERAL_CSTRING("http://") + site);
             AddSitesToFileURIWhitelist(NS_LITERAL_CSTRING("https://") + site);
-            return;
+            continue;
         }
 
         // Convert it to a URI and add it to our list.
