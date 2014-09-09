@@ -80,6 +80,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         ]
 
     LOCAL_INCLUDES += [
+        '/docshell/base',
         '/ipc/chromium/src',
         '/mozglue/linker',
         '/toolkit/crashreporter/google-breakpad/src',
