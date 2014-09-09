@@ -7,6 +7,6 @@
     <switch id="s">
         <rect systemLanguage="fr" id="first" x="75" y="100" width="70" height="70" fill="yellow"/>
         <rect id="second" x="75" y="100" width="50" height="50" fill="lime"/>
-        <rect x="75" y="100" width="80" height="80" fill="red"/>
+        <rect id="third" x="75" y="100" width="80" height="80" fill="red"/>
     </switch>
 </svg>
