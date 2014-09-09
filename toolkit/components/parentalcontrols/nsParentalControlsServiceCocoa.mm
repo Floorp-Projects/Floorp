@@ -65,3 +65,12 @@ nsParentalControlsService::RequestURIOverrides(nsIArray *aTargets,
 {
   return NS_ERROR_NOT_AVAILABLE;
 }
+
+NS_IMETHODIMP
+nsParentalControlsService::IsAllowed(int16_t aAction,
+                                     nsIURI *aUri,
+                                     bool *_retval)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
