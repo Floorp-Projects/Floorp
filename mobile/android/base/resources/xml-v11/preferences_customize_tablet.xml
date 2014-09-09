@@ -5,7 +5,7 @@
 
 <!-- Tablet only: The contents under the "Customize" header for tablets,
      See xml-v11/preferences.xml for single-pane v11+ phone layout.
-     Changes to preferences shoudl be mirrored to preferences_customize.xml. -->
+     Changes to preferences should be mirrored to preferences_customize.xml. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
