@@ -24,10 +24,10 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 
 public abstract class ArrowPopup extends PopupWindow {
-    /* inner-access */ View mAnchor;
-    /* inner-access */ ImageView mArrow;
+    View mAnchor;
+    ImageView mArrow;
 
-    /* inner-access */ int mArrowWidth;
+    int mArrowWidth;
     private int mYOffset;
 
     protected LinearLayout mContent;
@@ -154,7 +154,7 @@ public abstract class ArrowPopup extends PopupWindow {
             public void onSizeChanged();
         }
 
-        /* inner-access */ OnSizeChangedListener mListener;
+        OnSizeChangedListener mListener;
 
         public ArrowPopupLayout(Context context, AttributeSet attrs, int defStyle) {
             super(context, attrs, defStyle);
