@@ -59,7 +59,16 @@ LoopUnroller::getReplacementDefinition(MDefinition *def)
     }
 
     DefinitionMap::Ptr p = unrolledDefinitions.lookup(def);
-    JS_ASSERT(p);
+    if (!p) {
+        // After phi analysis (TypeAnalyzer::replaceRedundantPhi) the resume
+        // point at the start of a block can contain definitions from within
+        // the block itself.
+        JS_ASSERT(def->isConstant());
+
+        MConstant *constant = MConstant::New(alloc, def->toConstant()->value());
+        oldPreheader->insertBefore(*oldPreheader->begin(), constant);
+        return constant;
+    }
 
     return p->value();
 }
