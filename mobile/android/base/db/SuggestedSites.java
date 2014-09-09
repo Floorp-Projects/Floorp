@@ -146,7 +146,7 @@ public class SuggestedSites {
 
     final Context context;
     final Distribution distribution;
-    private File cachedFile;
+    final File file;
     private Map<String, Site> cachedSites;
     private Set<String> cachedBlacklist;
 
@@ -155,20 +155,14 @@ public class SuggestedSites {
     }
 
     public SuggestedSites(Context appContext, Distribution distribution) {
-        this(appContext, distribution, null);
+        this(appContext, distribution,
+             GeckoProfile.get(appContext).getFile(FILENAME));
     }
 
     public SuggestedSites(Context appContext, Distribution distribution, File file) {
         this.context = appContext;
         this.distribution = distribution;
-        this.cachedFile = file;
-    }
-
-    synchronized File getFile() {
-        if (cachedFile == null) {
-            cachedFile = GeckoProfile.get(context).getFile(FILENAME);
-        }
-        return cachedFile;
+        this.file = file;
     }
 
     private static boolean isNewLocale(Context context, Locale requestedLocale) {
@@ -301,7 +295,6 @@ public class SuggestedSites {
                 setCachedSites(sites);
 
                 // Save the result to disk.
-                final File file = getFile();
                 synchronized (file) {
                     saveSites(file, sites);
                 }
@@ -345,7 +338,6 @@ public class SuggestedSites {
 
     private Map<String, Site> loadFromProfile() {
         try {
-            final File file = getFile();
             synchronized (file) {
                 return loadSites(file);
             }
@@ -459,7 +451,7 @@ public class SuggestedSites {
         // Force the suggested sites file in profile dir to be re-generated
         // if the locale has changed.
         if (isNewLocale) {
-            getFile().delete();
+            file.delete();
         }
 
         if (cachedSites == null || isNewLocale) {
