@@ -138,6 +138,11 @@ def gen_manifest(template_root_dir, target_cfg, jid,
         elem.appendChild(dom.createTextNode(translator))
         dom.documentElement.getElementsByTagName("Description")[0].appendChild(elem)
 
+    for developer in target_cfg.get("developers", [ ]):
+        elem = dom.createElement("em:developer");
+        elem.appendChild(dom.createTextNode(developer))
+        dom.documentElement.getElementsByTagName("Description")[0].appendChild(elem)
+
     for contributor in target_cfg.get("contributors", [ ]):
         elem = dom.createElement("em:contributor");
         elem.appendChild(dom.createTextNode(contributor))
@@ -150,7 +155,7 @@ def gen_manifest(template_root_dir, target_cfg, jid,
 
     if target_cfg.get("preferences"):
         manifest.set("em:optionsType", "2")
-        
+
         # workaround until bug 971249 is fixed
         # https://bugzilla.mozilla.org/show_bug.cgi?id=971249
         manifest.set("em:optionsURL", "data:text/xml,<placeholder/>")

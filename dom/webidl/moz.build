@@ -309,6 +309,7 @@ WEBIDL_FILES = [
     'Position.webidl',
     'PositionError.webidl',
     'ProcessingInstruction.webidl',
+    'ProfileTimelineMarker.webidl',
     'Promise.webidl',
     'PromiseDebugging.webidl',
     'PushManager.webidl',

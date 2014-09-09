@@ -6,7 +6,7 @@
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
-loop.shared.models = (function() {
+loop.shared.models = (function(l10n) {
   "use strict";
 
   /**
@@ -375,7 +375,43 @@ loop.shared.models = (function() {
    * Notification collection
    */
   var NotificationCollection = Backbone.Collection.extend({
-    model: NotificationModel
+    model: NotificationModel,
+
+    /**
+     * Adds a warning notification to the stack and renders it.
+     *
+     * @return {String} message
+     */
+    warn: function(message) {
+      this.add({level: "warning", message: message});
+    },
+
+    /**
+     * Adds a l10n warning notification to the stack and renders it.
+     *
+     * @param  {String} messageId L10n message id
+     */
+    warnL10n: function(messageId) {
+      this.warn(l10n.get(messageId));
+    },
+
+    /**
+     * Adds an error notification to the stack and renders it.
+     *
+     * @return {String} message
+     */
+    error: function(message) {
+      this.add({level: "error", message: message});
+    },
+
+    /**
+     * Adds a l10n rror notification to the stack and renders it.
+     *
+     * @param  {String} messageId L10n message id
+     */
+    errorL10n: function(messageId) {
+      this.error(l10n.get(messageId));
+    }
   });
 
   return {
@@ -383,4 +419,4 @@ loop.shared.models = (function() {
     NotificationCollection: NotificationCollection,
     NotificationModel: NotificationModel
   };
-})();
+})(navigator.mozL10n || document.mozL10n);

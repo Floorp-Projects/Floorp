@@ -58,7 +58,8 @@ const ToolboxButtons = [
       !target.isAddon && target.activeTab && target.activeTab.traits.frames
     )
   },
-  { id: "command-button-splitconsole" },
+  { id: "command-button-splitconsole",
+    isTargetSupported: target => !target.isAddon },
   { id: "command-button-responsive" },
   { id: "command-button-paintflashing" },
   { id: "command-button-tilt" },
@@ -619,11 +620,6 @@ Toolbox.prototype = {
       this._buildPickerButton();
     }
 
-    if (!this.target.isLocalTab) {
-      this.setToolboxButtonsVisibility();
-      return Promise.resolve();
-    }
-
     let spec = CommandUtils.getCommandbarSpec("devtools.toolbox.toolbarSpec");
     let environment = CommandUtils.createEnvironment(this, '_target');
     return CommandUtils.createRequisition(environment).then(requisition => {
@@ -631,7 +627,11 @@ Toolbox.prototype = {
       return CommandUtils.createButtons(spec, this.target, this.doc,
                                         requisition).then(buttons => {
         let container = this.doc.getElementById("toolbox-buttons");
-        buttons.forEach(container.appendChild.bind(container));
+        buttons.forEach(button=> {
+          if (button) {
+            container.appendChild(button);
+          }
+        });
         this.setToolboxButtonsVisibility();
       });
     });
@@ -875,18 +875,49 @@ Toolbox.prototype = {
     iframe.tooltip = "aHTMLTooltip";
     iframe.style.visibility = "hidden";
 
-    let vbox = this.doc.getElementById("toolbox-panel-" + id);
-    vbox.appendChild(iframe);
+    gDevTools.emit(id + "-init", this, iframe);
+    this.emit(id + "-init", iframe);
+
+    // If no parent yet, append the frame into default location.
+    if (!iframe.parentNode) {
+      let vbox = this.doc.getElementById("toolbox-panel-" + id);
+      vbox.appendChild(iframe);
+    }
 
     let onLoad = () => {
       // Prevent flicker while loading by waiting to make visible until now.
       iframe.style.visibility = "visible";
 
+      // The build method should return a panel instance, so events can
+      // be fired with the panel as an argument. However, in order to keep
+      // backward compatibility with existing extensions do a check
+      // for a promise return value.
       let built = definition.build(iframe.contentWindow, this);
+      if (!(built instanceof Promise)) {
+        let panel = built;
+        iframe.panel = panel;
+
+        gDevTools.emit(id + "-build", this, panel);
+        this.emit(id + "-build", panel);
+
+        // The panel can implement an 'open' method for asynchronous
+        // initialization sequence.
+        if (typeof panel.open == "function") {
+          built = panel.open();
+        } else {
+          let deferred = promise.defer();
+          deferred.resolve(panel);
+          built = deferred.promise;
+        }
+      }
+
+      // Wait till the panel is fully ready and fire 'ready' events.
       promise.resolve(built).then((panel) => {
         this._toolPanels.set(id, panel);
-        this.emit(id + "-ready", panel);
+
         gDevTools.emit(id + "-ready", this, panel);
+        this.emit(id + "-ready", panel);
+
         deferred.resolve(panel);
       }, console.error);
     };
@@ -1514,7 +1545,7 @@ Toolbox.prototype = {
     // Remove the host UI
     outstanding.push(this.destroyHost());
 
-    if (this.target.isLocalTab) {
+    if (this._requisition) {
       this._requisition.destroy();
     }
     this._telemetry.toolClosed("toolbox");
