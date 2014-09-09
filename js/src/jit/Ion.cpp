@@ -2195,8 +2195,7 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
 // Decide if a transition from interpreter execution to Ion code should occur.
 // May compile or recompile the target JSScript.
 MethodStatus
-jit::CanEnterAtBranch(JSContext *cx, JSScript *script, BaselineFrame *osrFrame,
-                      jsbytecode *pc, bool isConstructing)
+jit::CanEnterAtBranch(JSContext *cx, JSScript *script, BaselineFrame *osrFrame, jsbytecode *pc)
 {
     JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT((JSOp)*pc == JSOP_LOOPENTRY);
@@ -2230,7 +2229,8 @@ jit::CanEnterAtBranch(JSContext *cx, JSScript *script, BaselineFrame *osrFrame,
     // - Returns Method_Skipped if pc doesn't match
     //   (This means a background thread compilation with that pc could have started or not.)
     RootedScript rscript(cx, script);
-    MethodStatus status = Compile(cx, rscript, osrFrame, pc, isConstructing, SequentialExecution);
+    MethodStatus status = Compile(cx, rscript, osrFrame, pc, osrFrame->isConstructing(),
+                                  SequentialExecution);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
@@ -2309,8 +2309,7 @@ jit::CanEnter(JSContext *cx, RunState &state)
 }
 
 MethodStatus
-jit::CompileFunctionForBaseline(JSContext *cx, HandleScript script, BaselineFrame *frame,
-                                bool isConstructing)
+jit::CompileFunctionForBaseline(JSContext *cx, HandleScript script, BaselineFrame *frame)
 {
     JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT(frame->fun()->nonLazyScript()->canIonCompile());
@@ -2326,7 +2325,7 @@ jit::CompileFunctionForBaseline(JSContext *cx, HandleScript script, BaselineFram
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
     MethodStatus status =
-        Compile(cx, script, frame, nullptr, isConstructing, SequentialExecution);
+        Compile(cx, script, frame, nullptr, frame->isConstructing(), SequentialExecution);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);

@@ -343,7 +343,9 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& a
 
 ServiceWorkerRegistrationInfo::~ServiceWorkerRegistrationInfo()
 {
-  MOZ_ASSERT(!IsControllingDocuments());
+  if (IsControllingDocuments()) {
+    NS_WARNING("ServiceWorkerRegistrationInfo is still controlling documents. This can be a bug or a leak in ServiceWorker API or in any other API that takes the document alive.");
+  }
 }
 
 //////////////////////////

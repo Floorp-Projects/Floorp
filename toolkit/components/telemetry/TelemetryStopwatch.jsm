@@ -54,7 +54,7 @@ this.TelemetryStopwatch = {
       return false;
     }
 
-    timers[aHistogram] = Date.now();
+    timers[aHistogram] = Components.utils.now();
     return true;
   },
 
@@ -117,7 +117,8 @@ this.TelemetryStopwatch = {
     delete timers[aHistogram];
 
     if (start) {
-      let delta = Date.now() - start;
+      let delta = Components.utils.now() - start;
+      delta = Math.round(delta);
       let histogram = Telemetry.getHistogramById(aHistogram);
       histogram.add(delta);
       return true;

@@ -2015,7 +2015,7 @@ InlineFrameIterator::isConstructing() const
 bool
 JitFrameIterator::isConstructing() const
 {
-    return GetCalleeTokenTag(calleeToken()) == CalleeToken_FunctionConstructing;
+    return CalleeTokenIsConstructing(calleeToken());
 }
 
 unsigned

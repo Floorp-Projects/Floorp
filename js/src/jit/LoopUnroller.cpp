@@ -59,7 +59,16 @@ LoopUnroller::getReplacementDefinition(MDefinition *def)
     }
 
     DefinitionMap::Ptr p = unrolledDefinitions.lookup(def);
-    JS_ASSERT(p);
+    if (!p) {
+        // After phi analysis (TypeAnalyzer::replaceRedundantPhi) the resume
+        // point at the start of a block can contain definitions from within
+        // the block itself.
+        JS_ASSERT(def->isConstant());
+
+        MConstant *constant = MConstant::New(alloc, def->toConstant()->value());
+        oldPreheader->insertBefore(*oldPreheader->begin(), constant);
+        return constant;
+    }
 
     return p->value();
 }
@@ -115,7 +124,10 @@ LoopUnroller::go(LoopIterationBound *bound)
     JitSpew(JitSpew_Unrolling, "Attempting to unroll loop");
 
     header = bound->header;
-    JS_ASSERT(header->isLoopHeader());
+
+    // UCE might have determined this isn't actually a loop.
+    if (!header->isLoopHeader())
+        return;
 
     backedge = header->backedge();
     oldPreheader = header->loopPredecessor();
