@@ -54,6 +54,7 @@
 #define ONLOAD_CALLED_TOO_EARLY 1
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 class nsImageBoxFrameEvent : public nsRunnable
@@ -402,8 +403,7 @@ nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset)
   NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
 
   gfxPoint p = destRect.TopLeft() + aOffset;
-  gfx::Matrix transform;
-  transform.Translate(p.x, p.y);
+  Matrix transform = Matrix::Translation(p.x, p.y);
   transform.Scale(destRect.Width()/imageWidth,
                   destRect.Height()/imageHeight);
   aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
