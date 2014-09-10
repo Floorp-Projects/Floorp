@@ -343,8 +343,12 @@ class IonBuilder : public MIRGenerator
     MConstant *constant(const Value &v);
     MConstant *constantInt(int32_t i);
 
-    // Filter the type information at tests
-    bool filterTypesAtTest(MTest *test);
+    // Improve the type information at tests
+    bool improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test);
+    bool improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test);
+    // Used to detect triangular structure at test.
+    bool detectAndOrStructure(MPhi *ins, bool *branchIsTrue);
+    void replaceTypeSet(MDefinition *subject, types::TemporaryTypeSet *type, MTest *test);
 
     // Add a guard which ensure that the set of type which goes through this
     // generated code correspond to the observed types for the bytecode.
