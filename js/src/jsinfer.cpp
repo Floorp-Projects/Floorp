@@ -703,6 +703,18 @@ TypeSet::cloneObjectsOnly(LifoAlloc *alloc)
     return res;
 }
 
+TemporaryTypeSet *
+TypeSet::cloneWithoutObjects(LifoAlloc *alloc)
+{
+    TemporaryTypeSet *res = alloc->new_<TemporaryTypeSet>();
+    if (!res)
+        return nullptr;
+
+    res->flags = flags & ~TYPE_FLAG_ANYOBJECT;
+    res->setBaseObjectCount(0);
+    return res;
+}
+
 /* static */ TemporaryTypeSet *
 TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
 {
