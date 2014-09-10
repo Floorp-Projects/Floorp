@@ -12,10 +12,10 @@
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
 #include "nsTArray.h"
-#include "nsIFrame.h"
 
 class nsIFrame;
 class nsSVGFilterFrame;
+struct nsStyleFilter;
 
 namespace mozilla {
 namespace dom {
