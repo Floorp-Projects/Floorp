@@ -963,7 +963,7 @@ Assembler::as_movf(Register rd, Register rs, uint16_t cc)
 BufferOffset
 Assembler::as_clz(Register rd, Register rs)
 {
-    return writeInst(InstReg(op_special2, rs, rs, rd, ff_clz).encode());
+    return writeInst(InstReg(op_special2, rs, rd, rd, ff_clz).encode());
 }
 
 BufferOffset

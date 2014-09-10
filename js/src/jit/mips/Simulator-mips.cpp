@@ -2356,7 +2356,7 @@ Simulator::configureTypeRegister(SimInstruction *instr,
             alu_out = rs_u * rt_u;  // Only the lower 32 bits are kept.
             break;
           case ff_clz:
-            alu_out = __builtin_clz(rs_u);
+            alu_out = rs_u ? __builtin_clz(rs_u) : 32;
             break;
           default:
             MOZ_CRASH();
