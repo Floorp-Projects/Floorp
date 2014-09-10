@@ -3131,6 +3131,9 @@ IonBuilder::replaceTypeSet(MDefinition *subject, types::TemporaryTypeSet *type, 
 bool
 IonBuilder::detectAndOrStructure(MPhi *ins, bool *branchIsAnd)
 {
+    // TODO bug 1034184: enable this again
+    return false;
+
     if (current->numPredecessors() != 1)
         return false;
 
@@ -3216,17 +3219,18 @@ IonBuilder::improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test)
 
     MDefinition *subject = ins->lhs();
     if (!subject->resultTypeSet() || subject->resultTypeSet()->unknown())
-        return false;
+        return true;
 
     // Make sure the type is present we want to filter else this is a NOP.
-    types::TemporaryTypeSet *type = nullptr;
-    if ((filtersUndefined && subject->mightBeType(MIRType_Undefined)) ||
-        (filtersNull && subject->mightBeType(MIRType_Null)))
+    if ((!filtersUndefined || !subject->mightBeType(MIRType_Undefined)) &&
+        (!filtersNull || !subject->mightBeType(MIRType_Null)))
     {
-        type = subject->resultTypeSet()->filter(alloc_->lifoAlloc(), filtersUndefined,
-                                                                     filtersNull);
+        return true;
     }
 
+    types::TemporaryTypeSet *type =
+        type = subject->resultTypeSet()->filter(alloc_->lifoAlloc(), filtersUndefined,
+                                                                     filtersNull);
     if (!type)
         return false;
 
