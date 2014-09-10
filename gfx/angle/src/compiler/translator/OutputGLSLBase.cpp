@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -55,6 +55,8 @@ TOutputGLSLBase::TOutputGLSLBase(TInfoSinkBase &objSink,
       mSymbolTable(symbolTable),
       mShaderVersion(shaderVersion)
 {
+    // Set up global scope.
+    mDeclaredStructs.push_back(ScopedDeclaredStructs());
 }
 
 void TOutputGLSLBase::writeTriplet(
@@ -87,14 +89,8 @@ void TOutputGLSLBase::writeVariableType(const TType &type)
     // Declare the struct if we have not done so already.
     if (type.getBasicType() == EbtStruct && !structDeclared(type.getStruct()))
     {
-        TStructure *structure = type.getStruct();
-
-        declareStruct(structure);
-
-        if (!structure->name().empty())
-        {
-            mDeclaredStructs.insert(structure->uniqueId());
-        }
+        declareStruct(type.getStruct());
+        mDeclaredStructs[mDeclaredStructs.size() - 1].push_back(type.getStruct());
     }
     else
     {
@@ -402,6 +398,67 @@ bool TOutputGLSLBase::visitUnary(Visit visit, TIntermUnary *node)
       case EOpPreIncrement: preString = "(++"; break;
       case EOpPreDecrement: preString = "(--"; break;
 
+      case EOpConvIntToBool:
+      case EOpConvFloatToBool:
+        switch (node->getOperand()->getType().getNominalSize())
+        {
+          case 1:
+            preString =  "bool(";
+            break;
+          case 2:
+            preString = "bvec2(";
+            break;
+          case 3:
+            preString = "bvec3(";
+            break;
+          case 4:
+            preString = "bvec4(";
+            break;
+          default:
+            UNREACHABLE();
+        }
+        break;
+      case EOpConvBoolToFloat:
+      case EOpConvIntToFloat:
+        switch (node->getOperand()->getType().getNominalSize())
+        {
+          case 1:
+            preString = "float(";
+            break;
+          case 2:
+            preString = "vec2(";
+            break;
+          case 3:
+            preString = "vec3(";
+            break;
+          case 4:
+            preString = "vec4(";
+            break;
+          default:
+            UNREACHABLE();
+        }
+        break;
+      case EOpConvFloatToInt:
+      case EOpConvBoolToInt:
+        switch (node->getOperand()->getType().getNominalSize())
+        {
+          case 1:
+            preString = "int(";
+            break;
+          case 2:
+            preString = "ivec2(";
+            break;
+          case 3:
+            preString = "ivec3(";
+            break;
+          case 4:
+            preString = "ivec4(";
+            break;
+          default:
+            UNREACHABLE();
+        }
+        break;
+
       case EOpRadians:
         preString = "radians(";
         break;
@@ -547,6 +604,7 @@ bool TOutputGLSLBase::visitAggregate(Visit visit, TIntermAggregate *node)
         if (depth > 0)
         {
             out << "{\n";
+            pushDeclaredStructsScope();
         }
 
         incrementDepth(node);
@@ -565,6 +623,7 @@ bool TOutputGLSLBase::visitAggregate(Visit visit, TIntermAggregate *node)
         // Scope the sequences except when at the global scope.
         if (depth > 0)
         {
+            popDeclaredStructsScope();
             out << "}\n";
         }
         visitChildren = false;
@@ -976,12 +1035,17 @@ TString TOutputGLSLBase::hashFunctionName(const TString &mangled_name)
 bool TOutputGLSLBase::structDeclared(const TStructure *structure) const
 {
     ASSERT(structure);
-    if (structure->name().empty())
+    ASSERT(mDeclaredStructs.size() > 0);
+    for (size_t ii = mDeclaredStructs.size(); ii > 0; --ii)
     {
-        return false;
+        const ScopedDeclaredStructs &scope = mDeclaredStructs[ii - 1];
+        for (size_t jj = 0; jj < scope.size(); ++jj)
+        {
+            if (scope[jj]->equals(*structure))
+                return true;
+        }
     }
-
-    return (mDeclaredStructs.count(structure->uniqueId()) > 0);
+    return false;
 }
 
 void TOutputGLSLBase::declareStruct(const TStructure *structure)
@@ -1003,3 +1067,14 @@ void TOutputGLSLBase::declareStruct(const TStructure *structure)
     out << "}";
 }
 
+void TOutputGLSLBase::pushDeclaredStructsScope()
+{
+    mDeclaredStructs.push_back(ScopedDeclaredStructs());
+}
+
+void TOutputGLSLBase::popDeclaredStructsScope()
+{
+    // We should never pop the global scope.
+    ASSERT(mDeclaredStructs.size() >= 2);
+    mDeclaredStructs.pop_back();
+}

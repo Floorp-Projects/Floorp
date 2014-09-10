@@ -6,44 +6,43 @@
 
 #include "compiler/translator/PoolAlloc.h"
 
-#include "compiler/translator/InitializeGlobals.h"
-
-#include "common/platform.h"
-#include "common/angleutils.h"
-#include "common/tls.h"
-
+#ifndef _MSC_VER
 #include <stdint.h>
+#endif
 #include <stdio.h>
-#include <assert.h>
 
-TLSIndex PoolIndex = TLS_INVALID_INDEX;
+#include "common/angleutils.h"
+#include "compiler/translator/InitializeGlobals.h"
+#include "compiler/translator/osinclude.h"
+
+OS_TLSIndex PoolIndex = OS_INVALID_TLS_INDEX;
 
 bool InitializePoolIndex()
 {
-    assert(PoolIndex == TLS_INVALID_INDEX);
+    assert(PoolIndex == OS_INVALID_TLS_INDEX);
 
-    PoolIndex = CreateTLSIndex();
-    return PoolIndex != TLS_INVALID_INDEX;
+    PoolIndex = OS_AllocTLSIndex();
+    return PoolIndex != OS_INVALID_TLS_INDEX;
 }
 
 void FreePoolIndex()
 {
-    assert(PoolIndex != TLS_INVALID_INDEX);
+    assert(PoolIndex != OS_INVALID_TLS_INDEX);
 
-    DestroyTLSIndex(PoolIndex);
-    PoolIndex = TLS_INVALID_INDEX;
+    OS_FreeTLSIndex(PoolIndex);
+    PoolIndex = OS_INVALID_TLS_INDEX;
 }
 
 TPoolAllocator* GetGlobalPoolAllocator()
 {
-    assert(PoolIndex != TLS_INVALID_INDEX);
-    return static_cast<TPoolAllocator*>(GetTLSValue(PoolIndex));
+    assert(PoolIndex != OS_INVALID_TLS_INDEX);
+    return static_cast<TPoolAllocator*>(OS_GetTLSValue(PoolIndex));
 }
 
 void SetGlobalPoolAllocator(TPoolAllocator* poolAllocator)
 {
-    assert(PoolIndex != TLS_INVALID_INDEX);
-    SetTLSValue(PoolIndex, poolAllocator);
+    assert(PoolIndex != OS_INVALID_TLS_INDEX);
+    OS_SetTLSValue(PoolIndex, poolAllocator);
 }
 
 //

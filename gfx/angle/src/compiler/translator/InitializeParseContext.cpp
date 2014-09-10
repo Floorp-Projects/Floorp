@@ -6,37 +6,35 @@
 
 #include "compiler/translator/InitializeParseContext.h"
 
-#include "common/tls.h"
+#include "compiler/translator/osinclude.h"
 
-#include <assert.h>
-
-TLSIndex GlobalParseContextIndex = TLS_INVALID_INDEX;
+OS_TLSIndex GlobalParseContextIndex = OS_INVALID_TLS_INDEX;
 
 bool InitializeParseContextIndex()
 {
-    assert(GlobalParseContextIndex == TLS_INVALID_INDEX);
+    assert(GlobalParseContextIndex == OS_INVALID_TLS_INDEX);
 
-    GlobalParseContextIndex = CreateTLSIndex();
-    return GlobalParseContextIndex != TLS_INVALID_INDEX;
+    GlobalParseContextIndex = OS_AllocTLSIndex();
+    return GlobalParseContextIndex != OS_INVALID_TLS_INDEX;
 }
 
 void FreeParseContextIndex()
 {
-    assert(GlobalParseContextIndex != TLS_INVALID_INDEX);
+    assert(GlobalParseContextIndex != OS_INVALID_TLS_INDEX);
 
-    DestroyTLSIndex(GlobalParseContextIndex);
-    GlobalParseContextIndex = TLS_INVALID_INDEX;
+    OS_FreeTLSIndex(GlobalParseContextIndex);
+    GlobalParseContextIndex = OS_INVALID_TLS_INDEX;
 }
 
 void SetGlobalParseContext(TParseContext* context)
 {
-    assert(GlobalParseContextIndex != TLS_INVALID_INDEX);
-    SetTLSValue(GlobalParseContextIndex, context);
+    assert(GlobalParseContextIndex != OS_INVALID_TLS_INDEX);
+    OS_SetTLSValue(GlobalParseContextIndex, context);
 }
 
 TParseContext* GetGlobalParseContext()
 {
-    assert(GlobalParseContextIndex != TLS_INVALID_INDEX);
-    return static_cast<TParseContext*>(GetTLSValue(GlobalParseContextIndex));
+    assert(GlobalParseContextIndex != OS_INVALID_TLS_INDEX);
+    return static_cast<TParseContext*>(OS_GetTLSValue(GlobalParseContextIndex));
 }
 

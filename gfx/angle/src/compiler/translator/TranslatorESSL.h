@@ -7,7 +7,7 @@
 #ifndef COMPILER_TRANSLATORESSL_H_
 #define COMPILER_TRANSLATORESSL_H_
 
-#include "compiler/translator/Compiler.h"
+#include "compiler/translator/ShHandle.h"
 
 class TranslatorESSL : public TCompiler {
 public:

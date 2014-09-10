@@ -17,7 +17,6 @@
 #include "libGLESv2/Texture.h"
 #include "libGLESv2/Sampler.h"
 #include "libGLESv2/Fence.h"
-#include "libGLESv2/renderer/Renderer.h"
 
 namespace gl
 {
@@ -363,7 +362,7 @@ void ResourceManager::checkBufferAllocation(unsigned int buffer)
 {
     if (buffer != 0 && !getBuffer(buffer))
     {
-        Buffer *bufferObject = new Buffer(mRenderer->createBuffer(), buffer);
+        Buffer *bufferObject = new Buffer(mRenderer, buffer);
         mBufferMap[buffer] = bufferObject;
         bufferObject->addRef();
     }
@@ -406,7 +405,7 @@ void ResourceManager::checkRenderbufferAllocation(GLuint renderbuffer)
 {
     if (renderbuffer != 0 && !getRenderbuffer(renderbuffer))
     {
-        Renderbuffer *renderbufferObject = new Renderbuffer(renderbuffer, new Colorbuffer(mRenderer, 0, 0, GL_RGBA4, 0));
+        Renderbuffer *renderbufferObject = new Renderbuffer(mRenderer, renderbuffer, new Colorbuffer(mRenderer, 0, 0, GL_RGBA4, 0));
         mRenderbufferMap[renderbuffer] = renderbufferObject;
         renderbufferObject->addRef();
     }
