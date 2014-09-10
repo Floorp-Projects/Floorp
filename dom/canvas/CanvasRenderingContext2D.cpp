@@ -991,9 +991,10 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
         if (!mTarget) {
           mTarget = layerManager->CreateDrawTarget(size, format);
         }
-      } else
+      } else {
         mTarget = layerManager->CreateDrawTarget(size, format);
         mode = RenderingMode::SoftwareBackendMode;
+      }
      } else {
         mTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(size, format);
         mode = RenderingMode::SoftwareBackendMode;
