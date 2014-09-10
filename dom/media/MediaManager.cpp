@@ -135,6 +135,17 @@ HostInDomain(const nsCString &aHost, const nsCString &aPattern)
 static bool
 HostHasPermission(nsIURI &docURI)
 {
+  nsresult rv;
+
+  bool isHttps;
+  rv = docURI.SchemeIs("https",&isHttps);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+  if (!isHttps) {
+    return false;
+  }
+
   nsAdoptingCString hostName;
   docURI.GetAsciiHost(hostName); //normalize UTF8 to ASCII equivalent
   nsAdoptingCString domainWhiteList =
@@ -145,7 +156,6 @@ HostHasPermission(nsIURI &docURI)
     return false;
   }
 
-  nsresult rv;
   // Get UTF8 to ASCII domain name normalization service
   nsCOMPtr<nsIIDNService> idnService
     = do_GetService("@mozilla.org/network/idn-service;1", &rv);
