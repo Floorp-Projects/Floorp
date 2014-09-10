@@ -907,6 +907,8 @@ JSObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType c
         else
             shape->base_ = nbase;
 
+        JS_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
+
         shape->setSlot(slot);
         shape->attrs = uint8_t(attrs);
         shape->flags = flags | Shape::IN_DICTIONARY;
@@ -979,6 +981,7 @@ JSObject::changeProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
     JS_ASSERT(obj->nativeContainsPure(shape));
 
     attrs |= shape->attrs & mask;
+    JS_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
 
     /* Allow only shared (slotless) => unshared (slotful) transition. */
     JS_ASSERT(!((attrs ^ shape->attrs) & JSPROP_SHARED) ||
