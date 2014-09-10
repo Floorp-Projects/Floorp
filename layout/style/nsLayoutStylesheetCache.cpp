@@ -16,6 +16,7 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXULRuntime.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla;
 
@@ -428,24 +429,42 @@ nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsRefPtr<CSSStyleSheet>& 
   LoadSheet(uri, aSheet, false);
 }
 
+static void
+ErrorLoadingBuiltinSheet(nsIURI* aURI, const char* aMsg)
+{
+  nsAutoCString spec;
+  if (aURI) {
+    aURI->GetSpec(spec);
+  }
+  NS_RUNTIMEABORT(nsPrintfCString("%s loading built-in stylesheet '%s'",
+                                  aMsg, spec.get()).get());
+}
+
 void
 nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
                                    nsRefPtr<CSSStyleSheet>& aSheet,
                                    bool aEnableUnsafeRules)
 {
   if (!aURI) {
-    NS_ERROR("Null URI. Out of memory?");
+    ErrorLoadingBuiltinSheet(aURI, "null URI");
     return;
   }
 
   if (!gCSSLoader) {
     gCSSLoader = new mozilla::css::Loader();
     NS_IF_ADDREF(gCSSLoader);
+    if (!gCSSLoader) {
+      ErrorLoadingBuiltinSheet(aURI, "no Loader");
+      return;
+    }
   }
 
-  if (gCSSLoader) {
-    gCSSLoader->LoadSheetSync(aURI, aEnableUnsafeRules, true,
-                              getter_AddRefs(aSheet));
+
+  nsresult rv = gCSSLoader->LoadSheetSync(aURI, aEnableUnsafeRules, true,
+                                          getter_AddRefs(aSheet));
+  if (NS_FAILED(rv)) {
+    ErrorLoadingBuiltinSheet(aURI,
+      nsPrintfCString("LoadSheetSync failed with error %x", rv).get());
   }
 }
 
