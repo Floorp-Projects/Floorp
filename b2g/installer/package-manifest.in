@@ -748,10 +748,10 @@
 @BINPATH@/chrome/pippki.manifest
 
 ; For process sandboxing
+#if defined(MOZ_SANDBOX)
 #if defined(XP_WIN)
 @BINPATH@/@DLL_PREFIX@sandboxbroker@DLL_SUFFIX@
 #elif defined(XP_LINUX)
-#if defined(MOZ_CONTENT_SANDBOX) || defined(MOZ_GMP_SANDBOX)
 @BINPATH@/@DLL_PREFIX@mozsandbox@DLL_SUFFIX@
 #endif
 #endif
