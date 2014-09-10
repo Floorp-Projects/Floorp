@@ -73,13 +73,16 @@ SandboxBroker::SetSecurityLevelForContentProcess(bool inWarnOnlyMode)
 
   auto result = mPolicy->SetJobLevel(sandbox::JOB_NONE, 0);
   bool ret = (sandbox::SBOX_ALL_OK == result);
-  result =
-    mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                           sandbox::USER_RESTRICTED_SAME_ACCESS);
+
+  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                  sandbox::USER_RESTRICTED_SAME_ACCESS);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
-  result =
-    mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
+
+  // If the delayed integrity level is changed then SetUpSandboxEnvironment and
+  // CleanUpSandboxEnvironment in ContentChild should be changed or removed.
+  result = mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
+
   result = mPolicy->SetAlternateDesktop(true);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
