@@ -4955,8 +4955,11 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
 #if !defined SOLARIS
     int rv;
 
-    RootedValue idvalue(cx, IdToValue(id));
-    RootedString idstring(cx, ToString(cx, idvalue));
+    if (JSID_IS_SYMBOL(id))
+        return true;
+    RootedString idstring(cx, IdToString(cx, id));
+    if (!idstring)
+        return false;
     JSAutoByteString idstr;
     if (!idstr.encodeLatin1(cx, idstring))
         return false;
