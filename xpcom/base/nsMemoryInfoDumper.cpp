@@ -577,6 +577,47 @@ DumpFooter(nsIGZFileWriter* aWriter)
   return NS_OK;
 }
 
+// This dumps the JSON footer and closes the file, and then calls the given
+// nsIFinishDumpingCallback.
+class FinishReportingCallback MOZ_FINAL : public nsIFinishReportingCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  FinishReportingCallback(nsIFinishDumpingCallback* aFinishDumping,
+                          nsISupports* aFinishDumpingData)
+    : mFinishDumping(aFinishDumping)
+    , mFinishDumpingData(aFinishDumpingData)
+  {
+  }
+
+  NS_IMETHOD Callback(nsISupports* aData)
+  {
+    nsCOMPtr<nsIGZFileWriter> writer = do_QueryInterface(aData);
+    NS_ENSURE_TRUE(writer, NS_ERROR_FAILURE);
+
+    nsresult rv = DumpFooter(writer);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = writer->Finish();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!mFinishDumping) {
+      return NS_OK;
+    }
+
+    return mFinishDumping->Callback(mFinishDumpingData);
+  }
+
+private:
+  ~FinishReportingCallback() {}
+
+  nsCOMPtr<nsIFinishDumpingCallback> mFinishDumping;
+  nsCOMPtr<nsISupports> mFinishDumpingData;
+};
+
+NS_IMPL_ISUPPORTS(FinishReportingCallback, nsIFinishReportingCallback)
+
 class TempDirMemoryFinishCallback MOZ_FINAL : public nsIFinishReportingCallback
 {
 public:
@@ -807,47 +848,6 @@ nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
   return rv;
 }
 #endif  // MOZ_DMD
-
-// This dumps the JSON footer and closes the file, and then calls the given
-// nsIFinishDumpingCallback.
-class FinishReportingCallback MOZ_FINAL : public nsIFinishReportingCallback
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  FinishReportingCallback(nsIFinishDumpingCallback* aFinishDumping,
-                          nsISupports* aFinishDumpingData)
-    : mFinishDumping(aFinishDumping)
-    , mFinishDumpingData(aFinishDumpingData)
-  {
-  }
-
-  NS_IMETHOD Callback(nsISupports* aData)
-  {
-    nsCOMPtr<nsIGZFileWriter> writer = do_QueryInterface(aData);
-    NS_ENSURE_TRUE(writer, NS_ERROR_FAILURE);
-
-    nsresult rv = DumpFooter(writer);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = writer->Finish();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!mFinishDumping) {
-      return NS_OK;
-    }
-
-    return mFinishDumping->Callback(mFinishDumpingData);
-  }
-
-private:
-  ~FinishReportingCallback() {}
-
-  nsCOMPtr<nsIFinishDumpingCallback> mFinishDumping;
-  nsCOMPtr<nsISupports> mFinishDumpingData;
-};
-
-NS_IMPL_ISUPPORTS(FinishReportingCallback, nsIFinishReportingCallback)
 
 NS_IMETHODIMP
 nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
