@@ -336,10 +336,75 @@ var tests = [
       next();
     },
   },
+  {
+    key: "bug-1054803",
+    prep: function setupFakePictureSizes(test) {
+      // The important part of this test is that 3264 * 1836 = 5,992,704 = 2448 * 2448,
+      // so we need to make sure that the size-matching algorithm picks the right size.
+      test.setFakeParameters("picture-size-values=3264x1836,2448x2448,1836x3264", function () {
+        run();
+      });
+    },
+    test: function testFakeFocusAreas(cam, cap) {
+      // validate the capability attribute
+      ok(cap.pictureSizes.length == 3, "pictureSizes.length = " + cap.pictureSizes.length);
+      var found = 0;
+      [ { height: 3264, width: 1836 },
+        { height: 1836, width: 3264 },
+        { height: 2448, width: 2448 } ].forEach(function(size) {
+        found = 0;
+        cap.pictureSizes.forEach(function(capSize) {
+          if (capSize.height == size.height && capSize.width == size.width) {
+            ++found;
+          }
+        });
+        ok(found == 1, "found size " + size.toSource() + " in pictureSizes");
+      });
+
+      // test setters and getters
+      var sync = new Promise(function(resolve, reject) {
+        // Use setConfiguration() (which will fail on the profile)
+        // to signify that the CameraControl thread has run and our
+        // settings are applied. Yes--this is an ugly hack.
+        cam.setConfiguration({ mode: 'video',
+                               recorderProfile: 'weird-unsupported-profile'
+                             }, resolve, resolve);
+      });
+      var sizeGenerator = function() {
+        var sizes = [ { height: 3264, width: 1836 },
+                      { height: 1836, width: 3264 },
+                      { height: 2448, width: 2448 } ];
+        for (var i = 0; i < sizes.length; ++i) {
+          yield sizes[i];
+        }
+      }();
+
+      function nextSize() {
+        try {
+          var size = sizeGenerator.next();
+          cam.setPictureSize(size);
+          sync.then(function() {
+            var got = cam.getPictureSize();
+            ok(got.width == size.width && got.height == size.height,
+              "Set size " + size.toSource() + ", got size " + got.toSource());
+            nextSize();
+          }, onError);
+        } catch(e) {
+          if (e instanceof StopIteration) {
+            next();
+          } else {
+            throw e;
+          }
+        }
+      }
+
+      nextSize();
+    },
+  },
 ];
 
 var testGenerator = function() {
-  for (var i = 0; i < tests.length; ++i ) {
+  for (var i = 0; i < tests.length; ++i) {
     yield tests[i];
   }
 }();
