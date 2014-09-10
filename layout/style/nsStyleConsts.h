@@ -691,6 +691,13 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_IMAGE_ORIENTATION_FLIP         0
 #define NS_STYLE_IMAGE_ORIENTATION_FROM_IMAGE   1
 
+// See nsStylePosition.mObjectFit
+#define NS_STYLE_OBJECT_FIT_FILL                0
+#define NS_STYLE_OBJECT_FIT_CONTAIN             1
+#define NS_STYLE_OBJECT_FIT_COVER               2
+#define NS_STYLE_OBJECT_FIT_NONE                3
+#define NS_STYLE_OBJECT_FIT_SCALE_DOWN          4
+
 // See nsStyleDisplay
 #define NS_STYLE_RESIZE_NONE                    0
 #define NS_STYLE_RESIZE_BOTH                    1
