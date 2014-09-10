@@ -158,7 +158,8 @@ public class BrowserApp extends GeckoApp
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
 
-    public ViewFlipper mViewFlipper;
+    public ViewGroup mBrowserChrome;
+    public ViewFlipper mActionBarFlipper;
     public ActionModeCompatView mActionBar;
     private BrowserToolbar mBrowserToolbar;
     private ToolbarProgressView mProgressView;
@@ -343,7 +344,7 @@ public class BrowserApp extends GeckoApp
             switch (keyCode) {
                 case KeyEvent.KEYCODE_BUTTON_Y:
                     // Toggle/focus the address bar on gamepad-y button.
-                    if (mViewFlipper.getVisibility() == View.VISIBLE) {
+                    if (mBrowserChrome.getVisibility() == View.VISIBLE) {
                         if (mDynamicToolbar.isEnabled() && !isHomePagerVisible()) {
                             mDynamicToolbar.setVisible(false, VisibilityTransition.ANIMATE);
                             if (mLayerView != null) {
@@ -528,7 +529,8 @@ public class BrowserApp extends GeckoApp
 
         final Context appContext = getApplicationContext();
 
-        mViewFlipper = (ViewFlipper) findViewById(R.id.browser_actionbar);
+        mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
+        mActionBarFlipper = (ViewFlipper) findViewById(R.id.browser_actionbar);
         mActionBar = (ActionModeCompatView) findViewById(R.id.actionbar);
 
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
@@ -539,6 +541,10 @@ public class BrowserApp extends GeckoApp
             mBrowserToolbar.setTitle(intent.getDataString());
 
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT);
+        }
+
+        if (NewTabletUI.isEnabled(this)) {
+            findViewById(R.id.new_tablet_tab_strip).setVisibility(View.VISIBLE);
         }
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideOnTouchListener());
@@ -836,7 +842,7 @@ public class BrowserApp extends GeckoApp
                 mLayerView.setOnMetricsChangedListener(this);
             }
             setToolbarMargin(0);
-            mHomePagerContainer.setPadding(0, mViewFlipper.getHeight(), 0, 0);
+            mHomePagerContainer.setPadding(0, mBrowserChrome.getHeight(), 0, 0);
         } else {
             // Immediately show the toolbar when disabling the dynamic
             // toolbar.
@@ -844,8 +850,8 @@ public class BrowserApp extends GeckoApp
                 mLayerView.setOnMetricsChangedListener(null);
             }
             mHomePagerContainer.setPadding(0, 0, 0, 0);
-            if (mViewFlipper != null) {
-                ViewHelper.setTranslationY(mViewFlipper, 0);
+            if (mBrowserChrome != null) {
+                ViewHelper.setTranslationY(mBrowserChrome, 0);
             }
         }
 
@@ -1114,7 +1120,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
-        if (isHomePagerVisible() || mViewFlipper == null) {
+        if (isHomePagerVisible() || mBrowserChrome == null) {
             return;
         }
 
@@ -1123,7 +1129,7 @@ public class BrowserApp extends GeckoApp
         if (aMetrics.getPageHeight() <= aMetrics.getHeight()) {
             if (mDynamicToolbarCanScroll) {
                 mDynamicToolbarCanScroll = false;
-                if (mViewFlipper.getVisibility() != View.VISIBLE) {
+                if (mBrowserChrome.getVisibility() != View.VISIBLE) {
                     ThreadUtils.postToUiThread(new Runnable() {
                         public void run() {
                             mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
@@ -1135,13 +1141,13 @@ public class BrowserApp extends GeckoApp
             mDynamicToolbarCanScroll = true;
         }
 
-        final View toolbarLayout = mViewFlipper;
+        final View browserChrome = mBrowserChrome;
         final ToolbarProgressView progressView = mProgressView;
         final int marginTop = Math.round(aMetrics.marginTop);
         ThreadUtils.postToUiThread(new Runnable() {
             public void run() {
-                final float translationY = marginTop - toolbarLayout.getHeight();
-                ViewHelper.setTranslationY(toolbarLayout, translationY);
+                final float translationY = marginTop - browserChrome.getHeight();
+                ViewHelper.setTranslationY(browserChrome, translationY);
                 ViewHelper.setTranslationY(progressView, translationY);
 
                 if (mDoorHangerPopup.isShowing()) {
@@ -1178,8 +1184,8 @@ public class BrowserApp extends GeckoApp
         ThreadUtils.assertOnUiThread();
 
         int height = 0;
-        if (mViewFlipper != null) {
-            height = mViewFlipper.getHeight();
+        if (mBrowserChrome != null) {
+            height = mBrowserChrome.getHeight();
         }
 
         if (!mDynamicToolbar.isEnabled() || isHomePagerVisible()) {
@@ -1212,9 +1218,9 @@ public class BrowserApp extends GeckoApp
             @Override
             public void run() {
                 if (aShow) {
-                    mViewFlipper.setVisibility(View.VISIBLE);
+                    mBrowserChrome.setVisibility(View.VISIBLE);
                 } else {
-                    mViewFlipper.setVisibility(View.GONE);
+                    mBrowserChrome.setVisibility(View.GONE);
                     if (hasTabsSideBar()) {
                         hideTabs();
                     }
@@ -1230,8 +1236,8 @@ public class BrowserApp extends GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                mViewFlipper.setVisibility(View.VISIBLE);
-                mViewFlipper.requestFocusFromTouch();
+                mBrowserChrome.setVisibility(View.VISIBLE);
+                mActionBarFlipper.requestFocusFromTouch();
             }
         });
     }
@@ -2479,7 +2485,7 @@ public class BrowserApp extends GeckoApp
             @Override
             public void run() {
                 if (fullscreen) {
-                    mViewFlipper.setVisibility(View.GONE);
+                    mBrowserChrome.setVisibility(View.GONE);
                     if (mDynamicToolbar.isEnabled()) {
                         mDynamicToolbar.setVisible(false, VisibilityTransition.IMMEDIATE);
                         mLayerView.getLayerMarginsAnimator().setMaxMargins(0, 0, 0, 0);
@@ -2487,7 +2493,7 @@ public class BrowserApp extends GeckoApp
                         setToolbarMargin(0);
                     }
                 } else {
-                    mViewFlipper.setVisibility(View.VISIBLE);
+                    mBrowserChrome.setVisibility(View.VISIBLE);
                     if (mDynamicToolbar.isEnabled()) {
                         mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
                         mLayerView.getLayerMarginsAnimator().setMaxMargins(0, mToolbarHeight, 0, 0);
@@ -3043,12 +3049,12 @@ public class BrowserApp extends GeckoApp
     public void startActionModeCompat(final ActionModeCompat.Callback callback) {
         // If actionMode is null, we're not currently showing one. Flip to the action mode view
         if (mActionMode == null) {
-            mViewFlipper.showNext();
+            mActionBarFlipper.showNext();
             LayerMarginsAnimator margins = mLayerView.getLayerMarginsAnimator();
 
             // If the toolbar is dynamic and not currently showing, just slide it in
             if (mDynamicToolbar.isEnabled() && !margins.areMarginsShown()) {
-                margins.setMaxMargins(0, mViewFlipper.getHeight(), 0, 0);
+                margins.setMaxMargins(0, mBrowserChrome.getHeight(), 0, 0);
                 mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
                 mShowActionModeEndAnimation = true;
             } else {
@@ -3079,7 +3085,7 @@ public class BrowserApp extends GeckoApp
         mActionMode = null;
         mDynamicToolbar.setPinned(false, PinReason.ACTION_MODE);
 
-        mViewFlipper.showPrevious();
+        mActionBarFlipper.showPrevious();
 
         // Only slide the urlbar out if it was hidden when the action mode started
         // Don't animate hiding it so that there's no flash as we switch back to url mode
