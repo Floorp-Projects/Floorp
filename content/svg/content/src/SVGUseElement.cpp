@@ -434,7 +434,7 @@ SVGUseElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
   // our 'x' and 'y' attributes:
   float x, y;
   const_cast<SVGUseElement*>(this)->GetAnimatedLengthValues(&x, &y, nullptr);
-  gfxMatrix toUserSpace = gfxMatrix::Translation(x, y);
+  gfxMatrix toUserSpace = gfxMatrix().Translate(gfxPoint(x, y));
   if (aWhich == eChildToUserSpace) {
     return toUserSpace * aMatrix;
   }

@@ -1725,7 +1725,8 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot
                        RoundToMatchResidual(scaledOffset.y, data->mAnimatedGeometryRootPosition.y));
   data->mTranslation = pixOffset;
   pixOffset += mParameters.mOffset;
-  Matrix matrix = Matrix::Translation(pixOffset.x, pixOffset.y);
+  Matrix matrix;
+  matrix.Translate(pixOffset.x, pixOffset.y);
   layer->SetBaseTransform(Matrix4x4::From2D(matrix));
 
   // FIXME: Temporary workaround for bug 681192 and bug 724786.
@@ -2566,8 +2567,8 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
                                       itemVisibleRect.Size().ToIntSize(),
                                       SurfaceFormat::B8G8R8A8);
     context = new gfxContext(tempDT);
-    context->SetMatrix(gfxMatrix::Translation(-itemVisibleRect.x,
-                                              -itemVisibleRect.y));
+    context->SetMatrix(gfxMatrix().Translate(-gfxPoint(itemVisibleRect.x,
+                                                       itemVisibleRect.y)));
   }
 #endif
   basic->BeginTransaction();
@@ -4183,7 +4184,7 @@ static void DebugPaintItem(nsRenderingContext* aDest,
                                           IntSize(bounds.width, bounds.height),
                                           SurfaceFormat::B8G8R8A8);
   nsRefPtr<gfxContext> context = new gfxContext(tempDT);
-  context->SetMatrix(gfxMatrix::Translation(-gfxPoint(bounds.x, bounds.y)));
+  context->SetMatrix(gfxMatrix().Translate(-gfxPoint(bounds.x, bounds.y)));
   nsRefPtr<nsRenderingContext> ctx = new nsRenderingContext();
   ctx->Init(aDest->DeviceContext(), context);
 
@@ -4616,9 +4617,9 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
   // component of imageTransform), and its inverse used when the mask is used for
   // masking.
   // It is the transform from the masked layer's space to mask space
-  gfx::Matrix maskTransform =
-    Matrix::Scaling(surfaceSize.width / boundingRect.Width(),
-                    surfaceSize.height / boundingRect.Height());
+  gfx::Matrix maskTransform;
+  maskTransform.Scale(surfaceSize.width/boundingRect.Width(),
+                      surfaceSize.height/boundingRect.Height());
   gfx::Point p = boundingRect.TopLeft();
   maskTransform.Translate(-p.x, -p.y);
   // imageTransform is only used when the clip is painted to the mask

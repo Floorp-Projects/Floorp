@@ -968,10 +968,10 @@ SVGSVGElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
     const_cast<SVGSVGElement*>(this)->GetAnimatedLengthValues(&x, &y, nullptr);
     if (aWhich == eAllTransforms) {
       // the common case
-      return ThebesMatrix(GetViewBoxTransform()) * gfxMatrix::Translation(x, y) * fromUserSpace;
+      return ThebesMatrix(GetViewBoxTransform()) * gfxMatrix().Translate(gfxPoint(x, y)) * fromUserSpace;
     }
     NS_ABORT_IF_FALSE(aWhich == eChildToUserSpace, "Unknown TransformTypes");
-    return ThebesMatrix(GetViewBoxTransform()) * gfxMatrix::Translation(x, y) * aMatrix;
+    return ThebesMatrix(GetViewBoxTransform()) * gfxMatrix().Translate(gfxPoint(x, y)) * aMatrix;
   }
 
   if (IsRoot()) {
