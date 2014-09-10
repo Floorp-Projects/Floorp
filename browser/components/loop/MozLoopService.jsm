@@ -15,11 +15,6 @@ const INVALID_AUTH_TOKEN = 110;
 // serving" number of 2^24 - 1 is greater than it.
 const MAX_SOFT_START_TICKET_NUMBER = 16777214;
 
-const LOOP_SESSION_TYPE = {
-  GUEST: 1,
-  FXA: 2,
-};
-
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -27,7 +22,7 @@ Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/FxAccountsOAuthClient.jsm");
 
-this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE"];
+this.EXPORTED_SYMBOLS = ["MozLoopService"];
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
@@ -207,8 +202,6 @@ let MozLoopServiceInternal = {
   /**
    * Performs a hawk based request to the loop server.
    *
-   * @param {LOOP_SESSION_TYPE} sessionType The type of session to use for the request.
-   *                                        This is one of the LOOP_SESSION_TYPE members.
    * @param {String} path The path to make the request to.
    * @param {String} method The request method, e.g. 'POST', 'GET'.
    * @param {Object} payloadObj An object which is converted to JSON and
@@ -219,14 +212,14 @@ let MozLoopServiceInternal = {
    *        as JSON and contains an 'error' property, the promise will be
    *        rejected with this JSON-parsed response.
    */
-  hawkRequest: function(sessionType, path, method, payloadObj) {
+  hawkRequest: function(path, method, payloadObj) {
     if (!gHawkClient) {
       gHawkClient = new HawkClient(this.loopServerUri);
     }
 
     let sessionToken;
     try {
-      sessionToken = Services.prefs.getCharPref(this.getSessionTokenPrefName(sessionType));
+      sessionToken = Services.prefs.getCharPref("loop.hawk-session-token");
     } catch (x) {
       // It is ok for this not to exist, we'll default to sending no-creds
     }
@@ -244,37 +237,19 @@ let MozLoopServiceInternal = {
     });
   },
 
-  getSessionTokenPrefName: function(sessionType) {
-    let suffix;
-    switch (sessionType) {
-      case LOOP_SESSION_TYPE.GUEST:
-        suffix = "";
-        break;
-      case LOOP_SESSION_TYPE.FXA:
-        suffix = ".fxa";
-        break;
-      default:
-        throw new Error("Unknown LOOP_SESSION_TYPE");
-        break;
-    }
-    return "loop.hawk-session-token" + suffix;
-  },
-
   /**
    * Used to store a session token from a request if it exists in the headers.
    *
-   * @param {LOOP_SESSION_TYPE} sessionType The type of session to use for the request.
-   *                                        One of the LOOP_SESSION_TYPE members.
    * @param {Object} headers The request headers, which may include a
    *                         "hawk-session-token" to be saved.
    * @return true on success or no token, false on failure.
    */
-  storeSessionToken: function(sessionType, headers) {
+  storeSessionToken: function(headers) {
     let sessionToken = headers["hawk-session-token"];
     if (sessionToken) {
       // XXX should do more validation here
       if (sessionToken.length === 64) {
-        Services.prefs.setCharPref(this.getSessionTokenPrefName(sessionType), sessionToken);
+        Services.prefs.setCharPref("loop.hawk-session-token", sessionToken);
       } else {
         // XXX Bubble the precise details up to the UI somehow (bug 1013248).
         console.warn("Loop server sent an invalid session token");
@@ -299,35 +274,28 @@ let MozLoopServiceInternal = {
       return;
     }
 
-    this.registerWithLoopServer(LOOP_SESSION_TYPE.GUEST, pushUrl).then(() => {
-      gRegisteredDeferred.resolve();
-      // No need to clear the promise here, everything was good, so we don't need
-      // to re-register.
-    }, (error) => {
-      Cu.reportError("Failed to register with Loop server: " + error.errno);
-      gRegisteredDeferred.reject(error.errno);
-      gRegisteredDeferred = null;
-    });
+    this.registerWithLoopServer(pushUrl);
   },
 
   /**
-   * Registers with the Loop server either as a guest or a FxA user.
+   * Registers with the Loop server.
    *
-   * @param {LOOP_SESSION_TYPE} sessionType The type of session e.g. guest or FxA
    * @param {String} pushUrl The push url given by the push server.
-   * @param {Boolean} [retry=true] Whether to retry if authentication fails.
-   * @return {Promise}
+   * @param {Boolean} noRetry Optional, don't retry if authentication fails.
    */
-  registerWithLoopServer: function(sessionType, pushUrl, retry = true) {
-    return this.hawkRequest(sessionType, "/registration", "POST", { simplePushURL: pushUrl})
+  registerWithLoopServer: function(pushUrl, noRetry) {
+    this.hawkRequest("/registration", "POST", { simplePushURL: pushUrl})
       .then((response) => {
         // If this failed we got an invalid token. storeSessionToken rejects
         // the gRegisteredDeferred promise for us, so here we just need to
         // early return.
-        if (!this.storeSessionToken(sessionType, response.headers))
+        if (!this.storeSessionToken(response.headers))
           return;
 
         this.clearError("registration");
+        gRegisteredDeferred.resolve();
+        // No need to clear the promise here, everything was good, so we don't need
+        // to re-register.
       }, (error) => {
         // There's other errors than invalid auth token, but we should only do the reset
         // as a last resort.
@@ -339,16 +307,16 @@ let MozLoopServiceInternal = {
           }
 
           // Authorization failed, invalid token, we need to try again with a new token.
-          Services.prefs.clearUserPref(this.getSessionTokenPrefName(sessionType));
-          if (retry) {
-            return this.registerWithLoopServer(sessionType, pushUrl, false);
-          }
+          Services.prefs.clearUserPref("loop.hawk-session-token");
+          this.registerWithLoopServer(pushUrl, true);
+          return;
         }
 
         // XXX Bubble the precise details up to the UI somehow (bug 1013248).
         Cu.reportError("Failed to register with the loop server. error: " + error);
         this.setError("registration", error);
-        throw error;
+        gRegisteredDeferred.reject(error.errno);
+        gRegisteredDeferred = null;
       }
     );
   },
@@ -541,7 +509,7 @@ let MozLoopServiceInternal = {
    * @return {Promise} resolved with the body of the hawk request for OAuth parameters.
    */
   promiseFxAOAuthParameters: function() {
-    return this.hawkRequest(LOOP_SESSION_TYPE.FXA, "/fxa-oauth/params", "POST").then(response => {
+    return this.hawkRequest("/fxa-oauth/params", "POST").then(response => {
       return JSON.parse(response.body);
     });
   },
@@ -619,7 +587,7 @@ let MozLoopServiceInternal = {
       code: code,
       state: state,
     };
-    return this.hawkRequest(LOOP_SESSION_TYPE.FXA, "/fxa-oauth/token", "POST", payload).then(response => {
+    return this.hawkRequest("/fxa-oauth/token", "POST", payload).then(response => {
       return JSON.parse(response.body);
     });
   },
@@ -953,15 +921,6 @@ this.MozLoopService = {
     }).then(tokenData => {
       gFxAOAuthTokenData = tokenData;
       return tokenData;
-    }).then(tokenData => {
-      return gRegisteredDeferred.promise.then(Task.async(function*() {
-        if (gPushHandler.pushUrl) {
-          yield MozLoopServiceInternal.registerWithLoopServer(LOOP_SESSION_TYPE.FXA, gPushHandler.pushUrl);
-        } else {
-          throw new Error("No pushUrl for FxA registration");
-        }
-        return gFxAOAuthTokenData;
-      }));
     },
     error => {
       gFxAOAuthTokenData = null;
@@ -972,8 +931,6 @@ this.MozLoopService = {
   /**
    * Performs a hawk based request to the loop server.
    *
-   * @param {LOOP_SESSION_TYPE} sessionType The type of session to use for the request.
-   *                                        One of the LOOP_SESSION_TYPE members.
    * @param {String} path The path to make the request to.
    * @param {String} method The request method, e.g. 'POST', 'GET'.
    * @param {Object} payloadObj An object which is converted to JSON and
@@ -984,7 +941,7 @@ this.MozLoopService = {
    *        as JSON and contains an 'error' property, the promise will be
    *        rejected with this JSON-parsed response.
    */
-  hawkRequest: function(sessionType, path, method, payloadObj) {
+  hawkRequest: function(path, method, payloadObj) {
     return MozLoopServiceInternal.hawkRequest(path, method, payloadObj);
   },
 };
