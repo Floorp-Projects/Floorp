@@ -19,7 +19,7 @@ BEGIN_TEST(testErrorCopying_columnCopied)
     EXEC("function check() { Object; foo; }");
 
     JS::RootedValue rval(cx);
-    JS_SetErrorReporter(cx, my_ErrorReporter);
+    JS_SetErrorReporter(rt, my_ErrorReporter);
     CHECK(!JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
                                &rval));
     CHECK(column == 27);

@@ -601,6 +601,7 @@ public:
   static const KTableValue kMathDisplayKTable[];
   static const KTableValue kContextOpacityKTable[];
   static const KTableValue kContextPatternKTable[];
+  static const KTableValue kObjectFitKTable[];
   static const KTableValue kOrientKTable[];
   static const KTableValue kOutlineStyleKTable[];
   static const KTableValue kOutlineColorKTable[];

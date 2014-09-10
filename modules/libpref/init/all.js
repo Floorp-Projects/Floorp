@@ -2029,6 +2029,9 @@ pref("layout.css.background-blend-mode.enabled", true);
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", false);
 
+// Is support for object-fit and object-position enabled?
+pref("layout.css.object-fit-and-position.enabled", false);
+
 // Is -moz-osx-font-smoothing enabled?
 // Only supported in OSX builds
 #ifdef XP_MACOSX
