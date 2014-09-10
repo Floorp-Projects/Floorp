@@ -14,6 +14,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.util.GeckoJarReader;
+import org.mozilla.search.Constants;
 import org.mozilla.search.R;
 import org.mozilla.search.SearchPreferenceActivity;
 import org.xmlpull.v1.XmlPullParserException;
@@ -96,16 +97,24 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
                     }
                 }
 
-                identifier = context.getResources().getString(R.string.default_engine_identifier);
-                return createEngine(identifier);
+                try {
+                    return createEngine(Constants.DEFAULT_ENGINE_IDENTIFIER);
+                } catch (IllegalArgumentException e) {
+                    Log.e(LOG_TAG, "Exception creating search engine from default identifier. " +
+                            "This will happen if the locale doesn't contain the default search plugin.", e);
+                }
+
+                return null;
             }
 
             @Override
             protected void onPostExecute(SearchEngine engine) {
-                // Only touch engine on the main thread.
-                SearchEngineManager.this.engine = engine;
-                if (callback != null) {
-                    callback.execute(engine);
+                if (engine != null) {
+                    // Only touch engine on the main thread.
+                    SearchEngineManager.this.engine = engine;
+                    if (callback != null) {
+                        callback.execute(engine);
+                    }
                 }
             }
         };
