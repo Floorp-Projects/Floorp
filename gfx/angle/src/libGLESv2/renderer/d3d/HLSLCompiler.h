@@ -3,6 +3,8 @@
 
 #include "common/angleutils.h"
 
+#include <windows.h>
+
 namespace gl
 {
 class InfoLog;

@@ -1,6 +1,6 @@
 #include "precompiled.h"
 //
-// Copyright (c) 2012-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2012-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -16,11 +16,11 @@
 #include "libGLESv2/Shader.h"
 
 #if defined (ANGLE_ENABLE_D3D9)
-#include "libGLESv2/renderer/d3d/d3d9/Renderer9.h"
+#include "libGLESv2/renderer/d3d9/Renderer9.h"
 #endif // ANGLE_ENABLE_D3D9
 
 #if defined (ANGLE_ENABLE_D3D11)
-#include "libGLESv2/renderer/d3d/d3d11/Renderer11.h"
+#include "libGLESv2/renderer/d3d11/Renderer11.h"
 #endif // ANGLE_ENABLE_D3D11
 
 #if !defined(ANGLE_DEFAULT_D3D11)
@@ -31,27 +31,14 @@
 namespace rx
 {
 
-Renderer::Renderer(egl::Display *display)
-    : mDisplay(display),
-      mCapsInitialized(false),
-      mCurrentClientVersion(2)
+Renderer::Renderer(egl::Display *display) : mDisplay(display)
 {
+    mCurrentClientVersion = 2;
 }
 
 Renderer::~Renderer()
 {
     gl::Shader::releaseCompiler();
-}
-
-const gl::Caps &Renderer::getCaps() const
-{
-    if (!mCapsInitialized)
-    {
-        mCaps = generateCaps();
-        mCapsInitialized = true;
-    }
-
-    return mCaps;
 }
 
 }

@@ -10,7 +10,8 @@
 #ifndef LIBGLESV2_HANDLEALLOCATOR_H_
 #define LIBGLESV2_HANDLEALLOCATOR_H_
 
-#include "angle_gl.h"
+#include <GLES3/gl3.h>
+#include <GLES2/gl2.h>
 
 #include <vector>
 

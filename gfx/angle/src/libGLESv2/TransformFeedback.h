@@ -10,7 +10,8 @@
 #include "common/angleutils.h"
 #include "common/RefCountObject.h"
 
-#include "angle_gl.h"
+#include <GLES3/gl3.h>
+#include <GLES2/gl2.h>
 
 namespace gl
 {
