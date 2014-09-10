@@ -97,6 +97,19 @@ this.WebappManager = {
 
     let filePath;
 
+
+    let appName = aMessage.app.manifest ? aMessage.app.manifest.name
+                                        : aMessage.app.updateManifest.name;
+
+    let downloadingNotification = this._notify({
+      title: Strings.GetStringFromName("retrievingTitle"),
+      message: Strings.formatStringFromName("retrievingMessage", [appName], 1),
+      icon: "drawable://alert_download_animation",
+      // TODO: make this a determinate progress indicator once we can determine
+      // the sizes of the APKs and observe their progress - bug 970210.
+      progress: NaN,
+    });
+
     try {
       filePath = yield this._downloadApk(aMessage.app.manifestURL);
     } catch(ex) {
@@ -104,6 +117,8 @@ this.WebappManager = {
       aMessageManager.sendAsyncMessage("Webapps:Install:Return:KO", aMessage);
       debug("error downloading APK: " + ex);
       return;
+    } finally {
+      downloadingNotification.cancel();
     }
 
     Messaging.sendRequestForResult({
@@ -155,6 +170,7 @@ this.WebappManager = {
         deferred.reject(message);
       }
     }
+
 
     // Trigger the download.
     worker.postMessage({ url: generatorUrl.spec, path: file.path });
@@ -521,7 +537,7 @@ this.WebappManager = {
       message: getFormattedPluralForm("retrievingUpdateMessage", [downloadingNames], aApps.length),
       icon: "drawable://alert_download_animation",
       // TODO: make this a determinate progress indicator once we can determine
-      // the sizes of the APKs and observe their progress.
+      // the sizes of the APKs and observe their progress - bug 970210.
       progress: NaN,
     });
 
