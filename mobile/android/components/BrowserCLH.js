@@ -18,7 +18,6 @@ function openWindow(aParent, aURL, aTarget, aFeatures, aArgs) {
   let argsArray = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
   let urlString = null;
   let pinnedBool = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-  let guestBool = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
   let widthInt = Cc["@mozilla.org/supports-PRInt32;1"].createInstance(Ci.nsISupportsPRInt32);
   let heightInt = Cc["@mozilla.org/supports-PRInt32;1"].createInstance(Ci.nsISupportsPRInt32);
 
@@ -29,13 +28,11 @@ function openWindow(aParent, aURL, aTarget, aFeatures, aArgs) {
   widthInt.data = "width" in aArgs ? aArgs.width : 1;
   heightInt.data = "height" in aArgs ? aArgs.height : 1;
   pinnedBool.data = "pinned" in aArgs ? aArgs.pinned : false;
-  guestBool.data = "guest" in aArgs ? aArgs["guest"] : false;
 
   argsArray.AppendElement(urlString, false);
   argsArray.AppendElement(widthInt, false);
   argsArray.AppendElement(heightInt, false);
   argsArray.AppendElement(pinnedBool, false);
-  argsArray.AppendElement(guestBool, false);
   return Services.ww.openWindow(aParent, aURL, aTarget, aFeatures, argsArray);
 }
 
@@ -61,7 +58,6 @@ BrowserCLH.prototype = {
   handle: function fs_handle(aCmdLine) {
     let openURL = "about:home";
     let pinned = false;
-    let guest = false;
 
     let width = 1;
     let height = 1;
@@ -71,9 +67,6 @@ BrowserCLH.prototype = {
     } catch (e) { /* Optional */ }
     try {
       pinned = aCmdLine.handleFlag("webapp", false);
-    } catch (e) { /* Optional */ }
-    try {
-      guest = aCmdLine.handleFlag("guest", false);
     } catch (e) { /* Optional */ }
 
     try {
@@ -102,7 +95,6 @@ BrowserCLH.prototype = {
           pinned: pinned,
           width: width,
           height: height,
-          guest: guest
         };
 
         // Make sure webapps do not have: locationbar, personalbar, menubar, statusbar, and toolbar
