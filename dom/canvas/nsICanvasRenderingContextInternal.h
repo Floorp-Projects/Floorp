@@ -28,9 +28,6 @@ namespace layers {
 class CanvasLayer;
 class LayerManager;
 }
-namespace ipc {
-class Shmem;
-}
 namespace gfx {
 class SourceSurface;
 }
@@ -165,12 +162,6 @@ protected:
   nsRefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
   nsRefPtr<nsRefreshDriver> mRefreshDriver;
 };
-
-namespace mozilla {
-namespace dom {
-
-}
-}
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,
                               NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
