@@ -978,13 +978,16 @@
         <parameter name="aType"/>
         <body>
           <![CDATA[
-            var label = aTitle + " " + aUrl;
+            let label = aTitle + " " + aUrl;
             // convert aType (ex: "ac-result-type-<aType>") to text to be spoke aloud
             // by screen readers.  convert "tag" and "bookmark" to the localized versions,
             // but don't do anything for "favicon" (the default)
-            if (aType != "favicon") {
+            try {
               label += " " + this._bundle.GetStringFromName(aType + "ResultLabel");
+            } catch (e) {
+              // Undefined result label, do nothing.
             }
+
             return label;
           ]]>
         </body>

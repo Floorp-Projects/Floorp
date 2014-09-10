@@ -79,7 +79,7 @@ private:
   int32_t mCurLine;   // Line index of the image that's currently being decoded
   uint32_t mRowBytes; // How many bytes of the row were already received
   int32_t mOldLine;   // Previous index of the line 
-  nsAutoPtr<Decoder> mContainedDecoder; // Contains either a BMP or PNG resource
+  nsRefPtr<Decoder> mContainedDecoder; // Contains either a BMP or PNG resource
 
   char mDirEntryArray[ICODIRENTRYSIZE]; // Holds the current dir entry buffer
   IconDirEntry mDirEntry; // Holds a decoded dir entry

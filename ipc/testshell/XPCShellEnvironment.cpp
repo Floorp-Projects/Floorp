@@ -378,12 +378,12 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
             ok = JS_ExecuteScript(cx, obj, script, &result);
             if (ok && result != JSVAL_VOID) {
                 /* Suppress error reports from JS::ToString(). */
-                older = JS_SetErrorReporter(cx, nullptr);
+                older = JS_SetErrorReporter(JS_GetRuntime(cx), nullptr);
                 str = JS::ToString(cx, result);
                 JSAutoByteString bytes;
                 if (str)
                     bytes.encodeLatin1(cx, str);
-                JS_SetErrorReporter(cx, older);
+                JS_SetErrorReporter(JS_GetRuntime(cx), older);
 
                 if (!!bytes)
                     fprintf(stdout, "%s\n", bytes.ptr());
@@ -593,12 +593,12 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   JS::Rooted<JS::Value> result(cx);
   bool ok = JS_ExecuteScript(cx, global, script, &result);
   if (ok && result != JSVAL_VOID) {
-      JSErrorReporter old = JS_SetErrorReporter(cx, nullptr);
+      JSErrorReporter old = JS_SetErrorReporter(JS_GetRuntime(cx), nullptr);
       JSString* str = JS::ToString(cx, result);
       nsAutoJSString autoStr;
       if (str)
           autoStr.init(cx, str);
-      JS_SetErrorReporter(cx, old);
+      JS_SetErrorReporter(JS_GetRuntime(cx), old);
 
       if (!autoStr.IsEmpty() && aResult) {
           aResult->Assign(autoStr);

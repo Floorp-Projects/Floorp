@@ -195,6 +195,8 @@ NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options,
 static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const unsigned errorNumber);
 
+static void
+my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 
 /*
  * A toy principals type for the shell.
@@ -2699,6 +2701,7 @@ WorkerMain(void *arg)
         js_delete(input);
         return;
     }
+    JS_SetErrorReporter(rt, my_ErrorReporter);
 
     JSContext *cx = NewContext(rt);
     if (!cx) {
@@ -5545,7 +5548,6 @@ NewContext(JSRuntime *rt)
     }
 
     JS_SetContextPrivate(cx, data);
-    JS_SetErrorReporter(cx, my_ErrorReporter);
     return cx;
 }
 
@@ -6182,6 +6184,7 @@ main(int argc, char **argv, char **envp)
     if (!rt)
         return 1;
 
+    JS_SetErrorReporter(rt, my_ErrorReporter);
     JS::SetOutOfMemoryCallback(rt, my_OOMCallback, nullptr);
     if (!SetRuntimeOptions(rt, op))
         return 1;

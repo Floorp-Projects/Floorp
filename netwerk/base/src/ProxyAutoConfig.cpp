@@ -567,6 +567,8 @@ private:
      */
     JS_SetNativeStackQuota(mRuntime, 128 * sizeof(size_t) * 1024); 
 
+    JS_SetErrorReporter(mRuntime, PACErrorReporter);
+
     mContext = JS_NewContext(mRuntime, 0);
     NS_ENSURE_TRUE(mContext, NS_ERROR_OUT_OF_MEMORY);
 
@@ -582,8 +584,6 @@ private:
 
     JSAutoCompartment ac(mContext, global);
     JS_InitStandardClasses(mContext, global);
-
-    JS_SetErrorReporter(mContext, PACErrorReporter);
 
     if (!JS_DefineFunctions(mContext, global, PACGlobalFunctions))
       return NS_ERROR_FAILURE;
