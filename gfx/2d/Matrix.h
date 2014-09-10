@@ -10,6 +10,7 @@
 #include "Rect.h"
 #include "Point.h"
 #include <math.h>
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace gfx {
@@ -35,6 +36,11 @@ public:
   Float _11, _12;
   Float _21, _22;
   Float _31, _32;
+
+  MOZ_ALWAYS_INLINE Matrix Copy() const
+  {
+    return Matrix(*this);
+  }
 
   Point operator *(const Point &aPoint) const
   {
