@@ -17,11 +17,8 @@ includes Mozilla-specific patches on top of upstream.
      git checkout mozilla
 
 5. Rebase the mozilla branch on top of the new google master.  Fix up patches along the way,
-   remove unneded commits.  Google seems to have "chromium/2059" branches as well, that I
-   assume are merges into the Chromium tree.  These might be a good point to rebase on
-   as well, instead of google/master:
+   remove unneded commits.
      git rebase -i google/master
-  or git rebase -i google/chromium/2081  (whatever the latest is in 'git branch -a')
 
 6. Re-generate moz.build files:
      ./gyp_mozbuild
@@ -36,13 +33,3 @@ includes Mozilla-specific patches on top of upstream.
 9.  Build. Fix things until it builds.
 
 10. Try runs and reviews!
-
-11. Once reviews are done and checkin is ready, tag the equivalent git repo:
-    git tag -a mozilla-bug-123456 -m "ANGLE update for bug 123456"
-
-12. Push the new mozilla branch, along with the tags upstream:
-    git push --tags mozilla +mozilla
-
-The "mozilla" branch head will keep moving, since it will keep getting rebased.
-The tags will point to the topmost commit that was used for a particular bug number,
-so that we can see its history if needed.

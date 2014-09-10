@@ -237,7 +237,7 @@ variable_identifier
         {
             TType type(EbtFloat, EbpUndefined);
             TVariable *fakeVariable = new TVariable($1.string, type);
-            context->symbolTable.declare(fakeVariable);
+            context->symbolTable.declare(*fakeVariable);
             variable = fakeVariable;
         }
 
@@ -887,8 +887,7 @@ function_prototype
         else
         {
             // Insert the unmangled name to detect potential future redefinition as a variable.
-            TFunction *function = new TFunction(NewPoolTString($1->getName().c_str()), $1->getReturnType());
-            context->symbolTable.getOuterLevel()->insert(function);
+            context->symbolTable.getOuterLevel()->insert($1->getName(), *$1);
         }
 
         //
@@ -900,7 +899,7 @@ function_prototype
 
         // We're at the inner scope level of the function's arguments and body statement.
         // Add the function prototype to the surrounding scope instead.
-        context->symbolTable.getOuterLevel()->insert($$.function);
+        context->symbolTable.getOuterLevel()->insert(*$$.function);
     }
     ;
 
@@ -1256,7 +1255,7 @@ type_specifier
         $$ = $2;
         $$.precision = $1;
 
-        if (!SupportsPrecision($2.type)) {
+        if (!SupportsPrecision($2.type) {
             context->error(@1, "illegal type for precision qualifier", getBasicString($2.type));
             context->recover();
         }
@@ -1900,7 +1899,7 @@ function_definition
                 //
                 // Insert the parameters with name in the symbol table.
                 //
-                if (! context->symbolTable.declare(variable)) {
+                if (! context->symbolTable.declare(*variable)) {
                     context->error(@1, "redefinition", variable->getName().c_str());
                     context->recover();
                     delete variable;

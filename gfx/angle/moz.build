@@ -7,7 +7,6 @@ UNIFIED_SOURCES += [
     'src/common/event_tracer.cpp',
     'src/common/mathutil.cpp',
     'src/common/RefCountObject.cpp',
-    'src/common/tls.cpp',
     'src/common/utilities.cpp',
     'src/compiler/preprocessor/DiagnosticsBase.cpp',
     'src/compiler/preprocessor/DirectiveHandlerBase.cpp',
@@ -55,7 +54,6 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/RewriteElseBlocks.cpp',
     'src/compiler/translator/SearchSymbol.cpp',
     'src/compiler/translator/ShaderLang.cpp',
-    'src/compiler/translator/StructureHLSL.cpp',
     'src/compiler/translator/SymbolTable.cpp',
     'src/compiler/translator/timing/RestrictFragmentShaderTiming.cpp',
     'src/compiler/translator/timing/RestrictVertexShaderTiming.cpp',
@@ -65,9 +63,7 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/Types.cpp',
     'src/compiler/translator/UnfoldShortCircuit.cpp',
     'src/compiler/translator/UnfoldShortCircuitAST.cpp',
-    'src/compiler/translator/UniformHLSL.cpp',
     'src/compiler/translator/util.cpp',
-    'src/compiler/translator/UtilsHLSL.cpp',
     'src/compiler/translator/ValidateLimitations.cpp',
     'src/compiler/translator/ValidateOutputs.cpp',
     'src/compiler/translator/VariableInfo.cpp',
@@ -79,6 +75,26 @@ SOURCES += [
     'src/compiler/translator/glslang_lex.cpp',
     'src/compiler/translator/glslang_tab.cpp',
 ]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+    UNIFIED_SOURCES += [
+        'src/compiler/translator/ossource_posix.cpp',
+    ]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    UNIFIED_SOURCES += [
+        'src/compiler/translator/ossource_posix.cpp',
+    ]
+if CONFIG['MOZ_WIDGET_GTK']:
+    UNIFIED_SOURCES += [
+        'src/compiler/translator/ossource_posix.cpp',
+    ]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    UNIFIED_SOURCES += [
+        'src/compiler/translator/ossource_posix.cpp',
+    ]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    UNIFIED_SOURCES += [
+        'src/compiler/translator/ossource_win.cpp',
+    ]
 
 
 if CONFIG['GNU_CXX']:

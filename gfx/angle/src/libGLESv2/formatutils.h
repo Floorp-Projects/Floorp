@@ -9,9 +9,10 @@
 #ifndef LIBGLESV2_FORMATUTILS_H_
 #define LIBGLESV2_FORMATUTILS_H_
 
-#include "angle_gl.h"
+#include <GLES3/gl3.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
-#include "libGLESv2/Caps.h"
 #include "libGLESv2/angletypes.h"
 
 typedef void (*MipGenerationFunction)(unsigned int sourceWidth, unsigned int sourceHeight, unsigned int sourceDepth,
@@ -31,52 +32,66 @@ typedef void (*ColorCopyFunction)(const void *source, void *dest);
 
 typedef void (*VertexCopyFunction)(const void *input, size_t stride, size_t count, void *output);
 
+namespace rx
+{
+
+class Renderer;
+
+}
+
 namespace gl
 {
 
-typedef std::set<GLenum> FormatSet;
+class Context;
 
-bool IsValidInternalFormat(GLenum internalFormat, const Extensions &extensions, GLuint clientVersion);
-bool IsValidFormat(GLenum format, const Extensions &extensions, GLuint clientVersion);
-bool IsValidType(GLenum type, const Extensions &extensions, GLuint clientVersion);
+bool IsValidInternalFormat(GLenum internalFormat, const Context *context);
+bool IsValidFormat(GLenum format, GLuint clientVersion);
+bool IsValidType(GLenum type, GLuint clientVersion);
 
-bool IsValidFormatCombination(GLenum internalFormat, GLenum format, GLenum type, const Extensions &extensions, GLuint clientVersion);
+bool IsValidFormatCombination(GLenum internalFormat, GLenum format, GLenum type, GLuint clientVersion);
 bool IsValidCopyTexImageCombination(GLenum textureInternalFormat, GLenum frameBufferInternalFormat, GLuint readBufferHandle, GLuint clientVersion);
 
-bool IsSizedInternalFormat(GLenum internalFormat);
-GLenum GetSizedInternalFormat(GLenum format, GLenum type);
+bool IsSizedInternalFormat(GLenum internalFormat, GLuint clientVersion);
+GLenum GetSizedInternalFormat(GLenum format, GLenum type, GLuint clientVersion);
 
-GLuint GetPixelBytes(GLenum internalFormat);
-GLuint GetAlphaBits(GLenum internalFormat);
-GLuint GetRedBits(GLenum internalFormat);
-GLuint GetGreenBits(GLenum internalFormat);
-GLuint GetBlueBits(GLenum internalFormat);
-GLuint GetLuminanceBits(GLenum internalFormat);
-GLuint GetDepthBits(GLenum internalFormat);
-GLuint GetStencilBits(GLenum internalFormat);
+GLuint GetPixelBytes(GLenum internalFormat, GLuint clientVersion);
+GLuint GetAlphaBits(GLenum internalFormat, GLuint clientVersion);
+GLuint GetRedBits(GLenum internalFormat, GLuint clientVersion);
+GLuint GetGreenBits(GLenum internalFormat, GLuint clientVersion);
+GLuint GetBlueBits(GLenum internalFormat, GLuint clientVersion);
+GLuint GetLuminanceBits(GLenum internalFormat, GLuint clientVersion);
+GLuint GetDepthBits(GLenum internalFormat, GLuint clientVersion);
+GLuint GetStencilBits(GLenum internalFormat, GLuint clientVersion);
 
 GLuint GetTypeBytes(GLenum type);
 bool IsSpecialInterpretationType(GLenum type);
 bool IsFloatOrFixedComponentType(GLenum type);
 
-GLenum GetFormat(GLenum internalFormat);
-GLenum GetType(GLenum internalFormat);
+GLenum GetFormat(GLenum internalFormat, GLuint clientVersion);
+GLenum GetType(GLenum internalFormat, GLuint clientVersion);
 
-GLenum GetComponentType(GLenum internalFormat);
-GLuint GetComponentCount(GLenum internalFormat);
-GLenum GetColorEncoding(GLenum internalFormat);
+GLenum GetComponentType(GLenum internalFormat, GLuint clientVersion);
+GLuint GetComponentCount(GLenum internalFormat, GLuint clientVersion);
+GLenum GetColorEncoding(GLenum internalFormat, GLuint clientVersion);
 
-GLuint GetRowPitch(GLenum internalFormat, GLenum type, GLsizei width, GLint alignment);
-GLuint GetDepthPitch(GLenum internalFormat, GLenum type, GLsizei width, GLsizei height, GLint alignment);
-GLuint GetBlockSize(GLenum internalFormat, GLenum type, GLsizei width, GLsizei height);
+bool IsColorRenderingSupported(GLenum internalFormat, const rx::Renderer *renderer);
+bool IsColorRenderingSupported(GLenum internalFormat, const Context *context);
+bool IsTextureFilteringSupported(GLenum internalFormat, const rx::Renderer *renderer);
+bool IsTextureFilteringSupported(GLenum internalFormat, const Context *context);
+bool IsDepthRenderingSupported(GLenum internalFormat, const rx::Renderer *renderer);
+bool IsDepthRenderingSupported(GLenum internalFormat, const Context *context);
+bool IsStencilRenderingSupported(GLenum internalFormat, const rx::Renderer *renderer);
+bool IsStencilRenderingSupported(GLenum internalFormat, const Context *context);
 
-bool IsFormatCompressed(GLenum internalFormat);
-GLuint GetCompressedBlockWidth(GLenum internalFormat);
-GLuint GetCompressedBlockHeight(GLenum internalFormat);
+GLuint GetRowPitch(GLenum internalFormat, GLenum type, GLuint clientVersion, GLsizei width, GLint alignment);
+GLuint GetDepthPitch(GLenum internalFormat, GLenum type, GLuint clientVersion, GLsizei width, GLsizei height, GLint alignment);
+GLuint GetBlockSize(GLenum internalFormat, GLenum type, GLuint clientVersion, GLsizei width, GLsizei height);
 
-const FormatSet &GetAllSizedInternalFormats();
+bool IsFormatCompressed(GLenum internalFormat, GLuint clientVersion);
+GLuint GetCompressedBlockWidth(GLenum internalFormat, GLuint clientVersion);
+GLuint GetCompressedBlockHeight(GLenum internalFormat, GLuint clientVersion);
 
-ColorWriteFunction GetColorWriteFunction(GLenum format, GLenum type);
+ColorWriteFunction GetColorWriteFunction(GLenum format, GLenum type, GLuint clientVersion);
 
 }
 

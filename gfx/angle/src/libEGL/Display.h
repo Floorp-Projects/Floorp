@@ -35,8 +35,6 @@ class Display
 
     static egl::Display *getDisplay(EGLNativeDisplayType displayId);
 
-    static const char *getExtensionString(egl::Display *display);
-
     bool getConfigs(EGLConfig *configs, const EGLint *attribList, EGLint configSize, EGLint *numConfig);
     bool getConfigAttrib(EGLConfig config, EGLint attribute, EGLint *value);
 
@@ -84,12 +82,9 @@ class Display
 
     rx::Renderer *mRenderer;
 
-    static std::string generateClientExtensionString();
-
-    void initDisplayExtensionString();
-    std::string mDisplayExtensionString;
-
+    void initExtensionString();
     void initVendorString();
+    std::string mExtensionString;
     std::string mVendorString;
 };
 }

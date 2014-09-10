@@ -1,6 +1,6 @@
 #include "precompiled.h"
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -21,7 +21,7 @@
 #include "libGLESv2/renderer/TextureStorage.h"
 #include "libEGL/Surface.h"
 #include "libGLESv2/Buffer.h"
-#include "libGLESv2/renderer/BufferImpl.h"
+#include "libGLESv2/renderer/BufferStorage.h"
 #include "libGLESv2/renderer/RenderTarget.h"
 
 namespace gl
@@ -85,6 +85,16 @@ Texture::~Texture()
 GLenum Texture::getTarget() const
 {
     return mTarget;
+}
+
+void Texture::addProxyRef(const Renderbuffer *proxy)
+{
+    mRenderbufferProxies.addRef(proxy);
+}
+
+void Texture::releaseProxy(const Renderbuffer *proxy)
+{
+    mRenderbufferProxies.release(proxy);
 }
 
 void Texture::setMinFilter(GLenum filter)
@@ -309,9 +319,7 @@ void Texture::setImage(const PixelUnpackState &unpack, GLenum type, const void *
         // Do a CPU readback here, if we have an unpack buffer bound and the fast GPU path is not supported
         Buffer *pixelBuffer = unpack.pixelBuffer.get();
         ptrdiff_t offset = reinterpret_cast<ptrdiff_t>(pixels);
-        // TODO: setImage/subImage is the only place outside of renderer that asks for a buffers raw data.
-        // This functionality should be moved into renderer and the getData method of BufferImpl removed.
-        const void *bufferData = pixelBuffer->getImplementation()->getData();
+        const void *bufferData = pixelBuffer->getStorage()->getData();
         pixelData = static_cast<const unsigned char *>(bufferData) + offset;
     }
 
@@ -363,9 +371,7 @@ bool Texture::subImage(GLint xoffset, GLint yoffset, GLint zoffset, GLsizei widt
     {
         Buffer *pixelBuffer = unpack.pixelBuffer.get();
         unsigned int offset = reinterpret_cast<unsigned int>(pixels);
-        // TODO: setImage/subImage is the only place outside of renderer that asks for a buffers raw data.
-        // This functionality should be moved into renderer and the getData method of BufferImpl removed.
-        const void *bufferData = pixelBuffer->getImplementation()->getData();
+        const void *bufferData = pixelBuffer->getStorage()->getData();
         pixelData = static_cast<const unsigned char *>(bufferData) + offset;
     }
 
@@ -432,7 +438,7 @@ int Texture::immutableLevelCount()
 
 GLint Texture::creationLevels(GLsizei width, GLsizei height, GLsizei depth) const
 {
-    if ((isPow2(width) && isPow2(height) && isPow2(depth)) || mRenderer->getCaps().extensions.textureNPOT)
+    if ((isPow2(width) && isPow2(height) && isPow2(depth)) || mRenderer->getNonPower2TextureSupport())
     {
         // Maximum number of levels
         return log2(std::max(std::max(width, height), depth)) + 1;
@@ -543,8 +549,9 @@ void Texture2D::redefineImage(GLint level, GLenum internalformat, GLsizei width,
 
 void Texture2D::setImage(GLint level, GLsizei width, GLsizei height, GLenum internalFormat, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels)
 {
-    GLenum sizedInternalFormat = IsSizedInternalFormat(internalFormat) ? internalFormat
-                                                                       : GetSizedInternalFormat(format, type);
+    GLuint clientVersion = mRenderer->getCurrentClientVersion();
+    GLenum sizedInternalFormat = IsSizedInternalFormat(internalFormat, clientVersion) ? internalFormat
+                                                                                      : GetSizedInternalFormat(format, type, clientVersion);
     redefineImage(level, sizedInternalFormat, width, height);
 
     bool fastUnpacked = false;
@@ -661,8 +668,9 @@ void Texture2D::subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GL
 
 void Texture2D::copyImage(GLint level, GLenum format, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
 {
-    GLenum sizedInternalFormat = IsSizedInternalFormat(format) ? format
-                                                               : GetSizedInternalFormat(format, GL_UNSIGNED_BYTE);
+    GLuint clientVersion = mRenderer->getCurrentClientVersion();
+    GLenum sizedInternalFormat = IsSizedInternalFormat(format, clientVersion) ? format
+                                                                              : GetSizedInternalFormat(format, GL_UNSIGNED_BYTE, clientVersion);
     redefineImage(level, sizedInternalFormat, width, height);
 
     if (!mImageArray[level]->isRenderableFormat())
@@ -690,6 +698,11 @@ void Texture2D::copyImage(GLint level, GLenum format, GLint x, GLint y, GLsizei 
 
 void Texture2D::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
 {
+    if (xoffset + width > mImageArray[level]->getWidth() || yoffset + height > mImageArray[level]->getHeight() || zoffset != 0)
+    {
+        return gl::error(GL_INVALID_VALUE);
+    }
+
     // can only make our texture storage to a render target if level 0 is defined (with a width & height) and
     // the current level we're copying to is defined (with appropriate format, width & height)
     bool canCreateRenderTarget = isLevelComplete(level) && isLevelComplete(0);
@@ -707,6 +720,8 @@ void Texture2D::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yo
         {
             updateStorageLevel(level);
 
+            GLuint clientVersion = mRenderer->getCurrentClientVersion();
+
             gl::Rectangle sourceRect;
             sourceRect.x = x;
             sourceRect.width = width;
@@ -714,7 +729,7 @@ void Texture2D::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yo
             sourceRect.height = height;
 
             mRenderer->copyImage(source, sourceRect,
-                                 gl::GetFormat(getBaseLevelInternalFormat()),
+                                 gl::GetFormat(getBaseLevelInternalFormat(), clientVersion),
                                  xoffset, yoffset, mTexStorage, level);
         }
     }
@@ -766,7 +781,7 @@ bool Texture2D::isSamplerComplete(const SamplerState &samplerState) const
         return false;
     }
 
-    if (!mRenderer->getCaps().textureCaps.get(getInternalFormat(0)).filtering)
+    if (!IsTextureFilteringSupported(getInternalFormat(0), mRenderer))
     {
         if (samplerState.magFilter != GL_NEAREST ||
             (samplerState.minFilter != GL_NEAREST && samplerState.minFilter != GL_NEAREST_MIPMAP_NEAREST))
@@ -775,7 +790,7 @@ bool Texture2D::isSamplerComplete(const SamplerState &samplerState) const
         }
     }
 
-    bool npotSupport = mRenderer->getCaps().extensions.textureNPOT;
+    bool npotSupport = mRenderer->getNonPower2TextureSupport();
 
     if (!npotSupport)
     {
@@ -807,7 +822,8 @@ bool Texture2D::isSamplerComplete(const SamplerState &samplerState) const
     // depth and stencil format (see table 3.13), the value of TEXTURE_COMPARE_-
     // MODE is NONE, and either the magnification filter is not NEAREST or the mini-
     // fication filter is neither NEAREST nor NEAREST_MIPMAP_NEAREST.
-    if (gl::GetDepthBits(getInternalFormat(0)) > 0 && mRenderer->getCurrentClientVersion() > 2)
+    if (gl::GetDepthBits(getInternalFormat(0), mRenderer->getCurrentClientVersion()) > 0 &&
+        mRenderer->getCurrentClientVersion() > 2)
     {
         if (mSamplerState.compareMode == GL_NONE)
         {
@@ -884,12 +900,12 @@ bool Texture2D::isLevelComplete(int level) const
 
 bool Texture2D::isCompressed(GLint level) const
 {
-    return IsFormatCompressed(getInternalFormat(level));
+    return IsFormatCompressed(getInternalFormat(level), mRenderer->getCurrentClientVersion());
 }
 
 bool Texture2D::isDepth(GLint level) const
 {
-    return GetDepthBits(getInternalFormat(level)) > 0;
+    return GetDepthBits(getInternalFormat(level), mRenderer->getCurrentClientVersion()) > 0;
 }
 
 // Constructs a native texture resource from the texture images
@@ -1014,6 +1030,18 @@ const rx::Image *Texture2D::getBaseLevelImage() const
 rx::TextureStorageInterface *Texture2D::getBaseLevelStorage()
 {
     return mTexStorage;
+}
+
+Renderbuffer *Texture2D::getRenderbuffer(GLint level)
+{
+    Renderbuffer *renderBuffer = mRenderbufferProxies.get(level, 0);
+    if (!renderBuffer)
+    {
+        renderBuffer = new Renderbuffer(mRenderer, id(), new RenderbufferTexture2D(this, level));
+        mRenderbufferProxies.add(level, 0, renderBuffer);
+    }
+
+    return renderBuffer;
 }
 
 unsigned int Texture2D::getRenderTargetSerial(GLint level)
@@ -1196,7 +1224,7 @@ bool TextureCubeMap::isSamplerComplete(const SamplerState &samplerState) const
 
     bool mipmapping = IsMipmapFiltered(samplerState);
 
-    if (!mRenderer->getCaps().textureCaps.get(getInternalFormat(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0)).filtering)
+    if (!IsTextureFilteringSupported(getInternalFormat(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0), mRenderer))
     {
         if (samplerState.magFilter != GL_NEAREST ||
             (samplerState.minFilter != GL_NEAREST && samplerState.minFilter != GL_NEAREST_MIPMAP_NEAREST))
@@ -1205,7 +1233,7 @@ bool TextureCubeMap::isSamplerComplete(const SamplerState &samplerState) const
         }
     }
 
-    if (!isPow2(size) && !mRenderer->getCaps().extensions.textureNPOT)
+    if (!isPow2(size) && !mRenderer->getNonPower2TextureSupport())
     {
         if (samplerState.wrapS != GL_CLAMP_TO_EDGE || samplerState.wrapT != GL_CLAMP_TO_EDGE || mipmapping)
         {
@@ -1328,12 +1356,12 @@ bool TextureCubeMap::isFaceLevelComplete(int faceIndex, int level) const
 
 bool TextureCubeMap::isCompressed(GLenum target, GLint level) const
 {
-    return IsFormatCompressed(getInternalFormat(target, level));
+    return IsFormatCompressed(getInternalFormat(target, level), mRenderer->getCurrentClientVersion());
 }
 
 bool TextureCubeMap::isDepth(GLenum target, GLint level) const
 {
-    return GetDepthBits(getInternalFormat(target, level)) > 0;
+    return GetDepthBits(getInternalFormat(target, level), mRenderer->getCurrentClientVersion()) > 0;
 }
 
 void TextureCubeMap::initializeStorage(bool renderTarget)
@@ -1443,8 +1471,9 @@ bool TextureCubeMap::ensureRenderTarget()
 
 void TextureCubeMap::setImage(int faceIndex, GLint level, GLsizei width, GLsizei height, GLenum internalFormat, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels)
 {
-    GLenum sizedInternalFormat = IsSizedInternalFormat(internalFormat) ? internalFormat
-                                                                       : GetSizedInternalFormat(format, type);
+    GLuint clientVersion = mRenderer->getCurrentClientVersion();
+    GLenum sizedInternalFormat = IsSizedInternalFormat(internalFormat, clientVersion) ? internalFormat
+                                                                                      : GetSizedInternalFormat(format, type, clientVersion);
 
     redefineImage(faceIndex, level, sizedInternalFormat, width, height);
 
@@ -1499,8 +1528,9 @@ void TextureCubeMap::redefineImage(int faceIndex, GLint level, GLenum internalfo
 void TextureCubeMap::copyImage(GLenum target, GLint level, GLenum format, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
 {
     int faceIndex = targetToIndex(target);
-    GLenum sizedInternalFormat = IsSizedInternalFormat(format) ? format
-                                                               : GetSizedInternalFormat(format, GL_UNSIGNED_BYTE);
+    GLuint clientVersion = mRenderer->getCurrentClientVersion();
+    GLenum sizedInternalFormat = IsSizedInternalFormat(format, clientVersion) ? format
+                                                                              : GetSizedInternalFormat(format, GL_UNSIGNED_BYTE, clientVersion);
     redefineImage(faceIndex, level, sizedInternalFormat, width, height);
 
     if (!mImageArray[faceIndex][level]->isRenderableFormat())
@@ -1532,6 +1562,13 @@ void TextureCubeMap::copySubImage(GLenum target, GLint level, GLint xoffset, GLi
 {
     int faceIndex = targetToIndex(target);
 
+    GLsizei size = mImageArray[faceIndex][level]->getWidth();
+
+    if (xoffset + width > size || yoffset + height > size || zoffset != 0)
+    {
+        return gl::error(GL_INVALID_VALUE);
+    }
+
     // We can only make our texture storage to a render target if the level we're copying *to* is complete
     // and the base level is cube-complete. The base level must be cube complete (common case) because we cannot
     // rely on the "getBaseLevel*" methods reliably otherwise.
@@ -1550,13 +1587,15 @@ void TextureCubeMap::copySubImage(GLenum target, GLint level, GLint xoffset, GLi
         {
             updateStorageFaceLevel(faceIndex, level);
 
+            GLuint clientVersion = mRenderer->getCurrentClientVersion();
+
             gl::Rectangle sourceRect;
             sourceRect.x = x;
             sourceRect.width = width;
             sourceRect.y = y;
             sourceRect.height = height;
 
-            mRenderer->copyImage(source, sourceRect, gl::GetFormat(getBaseLevelInternalFormat()),
+            mRenderer->copyImage(source, sourceRect, gl::GetFormat(getBaseLevelInternalFormat(), clientVersion),
                                  xoffset, yoffset, mTexStorage, target, level);
         }
     }
@@ -1633,6 +1672,25 @@ const rx::Image *TextureCubeMap::getBaseLevelImage() const
 rx::TextureStorageInterface *TextureCubeMap::getBaseLevelStorage()
 {
     return mTexStorage;
+}
+
+Renderbuffer *TextureCubeMap::getRenderbuffer(GLenum target, GLint level)
+{
+    if (!IsCubemapTextureTarget(target))
+    {
+        return gl::error(GL_INVALID_OPERATION, (Renderbuffer *)NULL);
+    }
+
+    int faceIndex = targetToIndex(target);
+
+    Renderbuffer *renderBuffer = mRenderbufferProxies.get(level, faceIndex);
+    if (!renderBuffer)
+    {
+        renderBuffer = new Renderbuffer(mRenderer, id(), new RenderbufferTextureCubeMap(this, target, level));
+        mRenderbufferProxies.add(level, faceIndex, renderBuffer);
+    }
+
+    return renderBuffer;
 }
 
 unsigned int TextureCubeMap::getRenderTargetSerial(GLenum target, GLint level)
@@ -1735,18 +1793,19 @@ GLenum Texture3D::getActualFormat(GLint level) const
 
 bool Texture3D::isCompressed(GLint level) const
 {
-    return IsFormatCompressed(getInternalFormat(level));
+    return IsFormatCompressed(getInternalFormat(level), mRenderer->getCurrentClientVersion());
 }
 
 bool Texture3D::isDepth(GLint level) const
 {
-    return GetDepthBits(getInternalFormat(level)) > 0;
+    return GetDepthBits(getInternalFormat(level), mRenderer->getCurrentClientVersion()) > 0;
 }
 
 void Texture3D::setImage(GLint level, GLsizei width, GLsizei height, GLsizei depth, GLenum internalFormat, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels)
 {
-    GLenum sizedInternalFormat = IsSizedInternalFormat(internalFormat) ? internalFormat
-                                                                       : GetSizedInternalFormat(format, type);
+    GLuint clientVersion = mRenderer->getCurrentClientVersion();
+    GLenum sizedInternalFormat = IsSizedInternalFormat(internalFormat, clientVersion) ? internalFormat
+                                                                                      : GetSizedInternalFormat(format, type, clientVersion);
     redefineImage(level, sizedInternalFormat, width, height, depth);
 
     bool fastUnpacked = false;
@@ -1876,6 +1935,11 @@ rx::TextureStorageInterface *Texture3D::getBaseLevelStorage()
 
 void Texture3D::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
 {
+    if (xoffset + width > mImageArray[level]->getWidth() || yoffset + height > mImageArray[level]->getHeight() || zoffset >= mImageArray[level]->getDepth())
+    {
+        return gl::error(GL_INVALID_VALUE);
+    }
+
     // can only make our texture storage to a render target if level 0 is defined (with a width & height) and
     // the current level we're copying to is defined (with appropriate format, width & height)
     bool canCreateRenderTarget = isLevelComplete(level) && isLevelComplete(0);
@@ -1899,8 +1963,10 @@ void Texture3D::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yo
             sourceRect.y = y;
             sourceRect.height = height;
 
+            GLuint clientVersion = mRenderer->getCurrentClientVersion();
+
             mRenderer->copyImage(source, sourceRect,
-                                 gl::GetFormat(getBaseLevelInternalFormat()),
+                                 gl::GetFormat(getBaseLevelInternalFormat(), clientVersion),
                                  xoffset, yoffset, zoffset, mTexStorage, level);
         }
     }
@@ -1917,7 +1983,7 @@ bool Texture3D::isSamplerComplete(const SamplerState &samplerState) const
         return false;
     }
 
-    if (!mRenderer->getCaps().textureCaps.get(getInternalFormat(0)).filtering)
+    if (!IsTextureFilteringSupported(getInternalFormat(0), mRenderer))
     {
         if (samplerState.magFilter != GL_NEAREST ||
             (samplerState.minFilter != GL_NEAREST && samplerState.minFilter != GL_NEAREST_MIPMAP_NEAREST))
@@ -1995,6 +2061,18 @@ bool Texture3D::isLevelComplete(int level) const
     }
 
     return true;
+}
+
+Renderbuffer *Texture3D::getRenderbuffer(GLint level, GLint layer)
+{
+    Renderbuffer *renderBuffer = mRenderbufferProxies.get(level, layer);
+    if (!renderBuffer)
+    {
+        renderBuffer = new Renderbuffer(mRenderer, id(), new RenderbufferTexture3DLayer(this, level, layer));
+        mRenderbufferProxies.add(level, 0, renderBuffer);
+    }
+
+    return renderBuffer;
 }
 
 unsigned int Texture3D::getRenderTargetSerial(GLint level, GLint layer)
@@ -2263,21 +2341,22 @@ GLenum Texture2DArray::getActualFormat(GLint level) const
 
 bool Texture2DArray::isCompressed(GLint level) const
 {
-    return IsFormatCompressed(getInternalFormat(level));
+    return IsFormatCompressed(getInternalFormat(level), mRenderer->getCurrentClientVersion());
 }
 
 bool Texture2DArray::isDepth(GLint level) const
 {
-    return GetDepthBits(getInternalFormat(level)) > 0;
+    return GetDepthBits(getInternalFormat(level), mRenderer->getCurrentClientVersion()) > 0;
 }
 
 void Texture2DArray::setImage(GLint level, GLsizei width, GLsizei height, GLsizei depth, GLenum internalFormat, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels)
 {
-    GLenum sizedInternalFormat = IsSizedInternalFormat(internalFormat) ? internalFormat
-                                                                       : GetSizedInternalFormat(format, type);
+    GLuint clientVersion = mRenderer->getCurrentClientVersion();
+    GLenum sizedInternalFormat = IsSizedInternalFormat(internalFormat, clientVersion) ? internalFormat
+                                                                                      : GetSizedInternalFormat(format, type, clientVersion);
     redefineImage(level, sizedInternalFormat, width, height, depth);
 
-    GLsizei inputDepthPitch = gl::GetDepthPitch(sizedInternalFormat, type, width, height, unpack.alignment);
+    GLsizei inputDepthPitch = gl::GetDepthPitch(sizedInternalFormat, type, clientVersion, width, height, unpack.alignment);
 
     for (int i = 0; i < depth; i++)
     {
@@ -2291,7 +2370,8 @@ void Texture2DArray::setCompressedImage(GLint level, GLenum format, GLsizei widt
     // compressed formats don't have separate sized internal formats-- we can just use the compressed format directly
     redefineImage(level, format, width, height, depth);
 
-    GLsizei inputDepthPitch = gl::GetDepthPitch(format, GL_UNSIGNED_BYTE, width, height, 1);
+    GLuint clientVersion = mRenderer->getCurrentClientVersion();
+    GLsizei inputDepthPitch = gl::GetDepthPitch(format, GL_UNSIGNED_BYTE, clientVersion, width, height, 1);
 
     for (int i = 0; i < depth; i++)
     {
@@ -2303,7 +2383,8 @@ void Texture2DArray::setCompressedImage(GLint level, GLenum format, GLsizei widt
 void Texture2DArray::subImage(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels)
 {
     GLenum internalformat = getInternalFormat(level);
-    GLsizei inputDepthPitch = gl::GetDepthPitch(internalformat, type, width, height, unpack.alignment);
+    GLuint clientVersion =  mRenderer->getCurrentClientVersion();
+    GLsizei inputDepthPitch = gl::GetDepthPitch(internalformat, type, clientVersion, width, height, unpack.alignment);
 
     for (int i = 0; i < depth; i++)
     {
@@ -2319,7 +2400,8 @@ void Texture2DArray::subImage(GLint level, GLint xoffset, GLint yoffset, GLint z
 
 void Texture2DArray::subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void *pixels)
 {
-    GLsizei inputDepthPitch = gl::GetDepthPitch(format, GL_UNSIGNED_BYTE, width, height, 1);
+    GLuint clientVersion = mRenderer->getCurrentClientVersion();
+    GLsizei inputDepthPitch = gl::GetDepthPitch(format, GL_UNSIGNED_BYTE, clientVersion, width, height, 1);
 
     for (int i = 0; i < depth; i++)
     {
@@ -2412,6 +2494,11 @@ rx::TextureStorageInterface *Texture2DArray::getBaseLevelStorage()
 
 void Texture2DArray::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
 {
+    if (xoffset + width > getWidth(level) || yoffset + height > getHeight(level) || zoffset >= getLayers(level) || getLayers(level) == 0)
+    {
+        return gl::error(GL_INVALID_VALUE);
+    }
+
     // can only make our texture storage to a render target if level 0 is defined (with a width & height) and
     // the current level we're copying to is defined (with appropriate format, width & height)
     bool canCreateRenderTarget = isLevelComplete(level) && isLevelComplete(0);
@@ -2429,13 +2516,15 @@ void Texture2DArray::copySubImage(GLenum target, GLint level, GLint xoffset, GLi
         {
             updateStorageLevel(level);
 
+            GLuint clientVersion = mRenderer->getCurrentClientVersion();
+
             gl::Rectangle sourceRect;
             sourceRect.x = x;
             sourceRect.width = width;
             sourceRect.y = y;
             sourceRect.height = height;
 
-            mRenderer->copyImage(source, sourceRect, gl::GetFormat(getInternalFormat(0)),
+            mRenderer->copyImage(source, sourceRect, gl::GetFormat(getInternalFormat(0), clientVersion),
                                  xoffset, yoffset, zoffset, mTexStorage, level);
         }
     }
@@ -2452,7 +2541,7 @@ bool Texture2DArray::isSamplerComplete(const SamplerState &samplerState) const
         return false;
     }
 
-    if (!mRenderer->getCaps().textureCaps.get(getBaseLevelInternalFormat()).filtering)
+    if (!IsTextureFilteringSupported(getBaseLevelInternalFormat(), mRenderer))
     {
         if (samplerState.magFilter != GL_NEAREST ||
             (samplerState.minFilter != GL_NEAREST && samplerState.minFilter != GL_NEAREST_MIPMAP_NEAREST))
@@ -2528,6 +2617,18 @@ bool Texture2DArray::isLevelComplete(int level) const
     }
 
     return true;
+}
+
+Renderbuffer *Texture2DArray::getRenderbuffer(GLint level, GLint layer)
+{
+    Renderbuffer *renderBuffer = mRenderbufferProxies.get(level, layer);
+    if (!renderBuffer)
+    {
+        renderBuffer = new Renderbuffer(mRenderer, id(), new RenderbufferTexture2DArrayLayer(this, level, layer));
+        mRenderbufferProxies.add(level, 0, renderBuffer);
+    }
+
+    return renderBuffer;
 }
 
 unsigned int Texture2DArray::getRenderTargetSerial(GLint level, GLint layer)

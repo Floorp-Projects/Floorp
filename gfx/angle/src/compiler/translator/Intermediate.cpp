@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -77,6 +77,26 @@ const char* getOperatorString(TOperator op)
       case EOpPostDecrement: return "--";
       case EOpPreIncrement: return "++";
       case EOpPreDecrement: return "--";
+
+      // Fall-through.
+      case EOpConvIntToBool:
+      case EOpConvUIntToBool:
+      case EOpConvFloatToBool: return "bool";
+ 
+      // Fall-through.
+      case EOpConvBoolToFloat:
+      case EOpConvUIntToFloat:
+      case EOpConvIntToFloat: return "float";
+ 
+      // Fall-through.
+      case EOpConvFloatToInt:
+      case EOpConvUIntToInt:
+      case EOpConvBoolToInt: return "int";
+
+      // Fall-through.
+      case EOpConvIntToUInt:
+      case EOpConvFloatToUInt:
+      case EOpConvBoolToUInt: return "uint";
 
       case EOpRadians: return "radians";
       case EOpDegrees: return "degrees";
@@ -168,9 +188,23 @@ TIntermTyped* TIntermediate::addBinaryMath(TOperator op, TIntermTyped* left, TIn
         default: break;
     }
 
-    if (left->getBasicType() != right->getBasicType())
-    {
-        return 0;
+    //
+    // First try converting the children to compatible types.
+    //
+    if (left->getType().getStruct() && right->getType().getStruct()) {
+        if (left->getType() != right->getType())
+            return 0;
+    } else {
+        TIntermTyped* child = addConversion(op, left->getType(), right);
+        if (child)
+            right = child;
+        else {
+            child = addConversion(op, right->getType(), left);
+            if (child)
+                left = child;
+            else
+                return 0;
+        }
     }
 
     //
@@ -207,19 +241,19 @@ TIntermTyped* TIntermediate::addBinaryMath(TOperator op, TIntermTyped* left, TIn
 //
 TIntermTyped* TIntermediate::addAssign(TOperator op, TIntermTyped* left, TIntermTyped* right, const TSourceLoc& line)
 {
-    if (left->getType().getStruct() || right->getType().getStruct())
-    {
-        if (left->getType() != right->getType())
-        {
-            return 0;
-        }
-    }
-
+    //
+    // Like adding binary math, except the conversion can only go
+    // from right to left.
+    //
     TIntermBinary* node = new TIntermBinary(op);
     node->setLine(line);
 
+    TIntermTyped* child = addConversion(op, left->getType(), right);
+    if (child == 0)
+        return 0;
+
     node->setLeft(left);
-    node->setRight(right);
+    node->setRight(child);
     if (! node->promote(infoSink))
         return 0;
 
@@ -274,6 +308,42 @@ TIntermTyped* TIntermediate::addUnaryMath(TOperator op, TIntermNode* childNode, 
         case EOpNegative:
             if (child->getType().getBasicType() == EbtStruct || child->getType().isArray())
                 return 0;
+        default: break;
+    }
+
+    //
+    // Do we need to promote the operand?
+    //
+    // Note: Implicit promotions were removed from the language.
+    //
+    TBasicType newType = EbtVoid;
+    switch (op) {
+        case EOpConstructInt:   newType = EbtInt;   break;
+        case EOpConstructUInt:  newType = EbtUInt;  break;
+        case EOpConstructBool:  newType = EbtBool;  break;
+        case EOpConstructFloat: newType = EbtFloat; break;
+        default: break;
+    }
+
+    if (newType != EbtVoid) {
+        child = addConversion(op, TType(newType, child->getPrecision(), EvqTemporary,
+            child->getNominalSize(),
+            child->getSecondarySize(),
+            child->isArray()),
+            child);
+        if (child == 0)
+            return 0;
+    }
+
+    //
+    // For constructors, we are now done, it's all in the conversion.
+    //
+    switch (op) {
+        case EOpConstructInt:
+        case EOpConstructUInt:
+        case EOpConstructBool:
+        case EOpConstructFloat:
+            return child;
         default: break;
     }
 
@@ -337,6 +407,140 @@ TIntermAggregate* TIntermediate::setAggregateOperator(TIntermNode* node, TOperat
     aggNode->setLine(line);
 
     return aggNode;
+}
+
+//
+// Convert one type to another.
+//
+// Returns the node representing the conversion, which could be the same
+// node passed in if no conversion was needed.
+//
+// Return 0 if a conversion can't be done.
+//
+TIntermTyped* TIntermediate::addConversion(TOperator op, const TType& type, TIntermTyped* node)
+{
+    //
+    // Does the base type allow operation?
+    //
+    if (node->getBasicType() == EbtVoid ||
+        IsSampler(node->getBasicType()))
+    {
+        return 0;
+    }
+
+    //
+    // Otherwise, if types are identical, no problem
+    //
+    if (type == node->getType())
+        return node;
+
+    //
+    // If one's a structure, then no conversions.
+    //
+    if (type.getStruct() || node->getType().getStruct())
+        return 0;
+
+    //
+    // If one's an array, then no conversions.
+    //
+    if (type.isArray() || node->getType().isArray())
+        return 0;
+
+    TBasicType promoteTo;
+
+    switch (op) {
+        //
+        // Explicit conversions
+        //
+        case EOpConstructBool:
+            promoteTo = EbtBool;
+            break;
+        case EOpConstructFloat:
+            promoteTo = EbtFloat;
+            break;
+        case EOpConstructInt:
+            promoteTo = EbtInt;
+            break;
+        case EOpConstructUInt:
+            promoteTo = EbtUInt;
+            break;
+        default:
+            //
+            // implicit conversions were removed from the language.
+            //
+            if (type.getBasicType() != node->getType().getBasicType())
+                return 0;
+            //
+            // Size and structure could still differ, but that's
+            // handled by operator promotion.
+            //
+            return node;
+    }
+
+    if (node->getAsConstantUnion()) {
+
+        return (promoteConstantUnion(promoteTo, node->getAsConstantUnion()));
+    } else {
+
+        //
+        // Add a new newNode for the conversion.
+        //
+        TIntermUnary* newNode = 0;
+
+        TOperator newOp = EOpNull;
+        switch (promoteTo) {
+            case EbtFloat:
+                switch (node->getBasicType()) {
+                    case EbtInt:    newOp = EOpConvIntToFloat;  break;
+                    case EbtUInt:   newOp = EOpConvFloatToUInt; break;
+                    case EbtBool:   newOp = EOpConvBoolToFloat; break;
+                    default:
+                        infoSink.info.message(EPrefixInternalError, node->getLine(), "Bad promotion node");
+                        return 0;
+                }
+                break;
+            case EbtBool:
+                switch (node->getBasicType()) {
+                    case EbtInt:    newOp = EOpConvIntToBool;   break;
+                    case EbtUInt:   newOp = EOpConvBoolToUInt;  break;
+                    case EbtFloat:  newOp = EOpConvFloatToBool; break;
+                    default:
+                        infoSink.info.message(EPrefixInternalError, node->getLine(), "Bad promotion node");
+                        return 0;
+                }
+                break;
+            case EbtInt:
+                switch (node->getBasicType()) {
+                    case EbtUInt:   newOp = EOpConvUIntToInt;  break;
+                    case EbtBool:   newOp = EOpConvBoolToInt;  break;
+                    case EbtFloat:  newOp = EOpConvFloatToInt; break;
+                    default:
+                        infoSink.info.message(EPrefixInternalError, node->getLine(), "Bad promotion node");
+                        return 0;
+                }
+                break;
+            case EbtUInt:
+                switch (node->getBasicType()) {
+                    case EbtInt:    newOp = EOpConvIntToUInt;   break;
+                    case EbtBool:   newOp = EOpConvBoolToUInt;  break;
+                    case EbtFloat:  newOp = EOpConvFloatToUInt; break;
+                    default:
+                        infoSink.info.message(EPrefixInternalError, node->getLine(), "Bad promotion node");
+                        return 0;
+                }
+                break;
+            default:
+                infoSink.info.message(EPrefixInternalError, node->getLine(), "Bad promotion type");
+                return 0;
+        }
+
+        TType type(promoteTo, node->getPrecision(), EvqTemporary, node->getNominalSize(), node->getSecondarySize(), node->isArray());
+        newNode = new TIntermUnary(newOp, type);
+        newNode->setLine(node->getLine());
+        newNode->setOperand(node);
+
+        return newNode;
+    }
 }
 
 //
@@ -436,9 +640,18 @@ TIntermTyped* TIntermediate::addComma(TIntermTyped* left, TIntermTyped* right, c
 //
 TIntermTyped* TIntermediate::addSelection(TIntermTyped* cond, TIntermTyped* trueBlock, TIntermTyped* falseBlock, const TSourceLoc& line)
 {
-    if (trueBlock->getType() != falseBlock->getType())
-    {
-        return 0;
+    //
+    // Get compatible types.
+    //
+    TIntermTyped* child = addConversion(EOpSequence, trueBlock->getType(), falseBlock);
+    if (child)
+        falseBlock = child;
+    else {
+        child = addConversion(EOpSequence, falseBlock->getType(), trueBlock);
+        if (child)
+            trueBlock = child;
+        else
+            return 0;
     }
 
     //
@@ -830,9 +1043,7 @@ bool TIntermBinary::promote(TInfoSink& infoSink)
     // GLSL ES 2.0 does not support implicit type casting.
     // So the basic type should always match.
     if (left->getBasicType() != right->getBasicType())
-    {
         return false;
-    }
 
     //
     // Base assumption:  just make the type the same as the left
@@ -1511,6 +1722,104 @@ TIntermTyped* TIntermConstantUnion::fold(TOperator op, TIntermTyped* constantNod
         newNode->setLine(getLine());
         return newNode;
     }
+}
+
+TIntermTyped* TIntermediate::promoteConstantUnion(TBasicType promoteTo, TIntermConstantUnion* node)
+{
+    size_t size = node->getType().getObjectSize();
+
+    ConstantUnion *leftUnionArray = new ConstantUnion[size];
+
+    for (size_t i=0; i < size; i++) {
+
+        switch (promoteTo) {
+            case EbtFloat:
+                switch (node->getType().getBasicType()) {
+                    case EbtInt:
+                        leftUnionArray[i].setFConst(static_cast<float>(node->getIConst(i)));
+                        break;
+                    case EbtUInt:
+                        leftUnionArray[i].setFConst(static_cast<float>(node->getUConst(i)));
+                        break;
+                    case EbtBool:
+                        leftUnionArray[i].setFConst(static_cast<float>(node->getBConst(i)));
+                        break;
+                    case EbtFloat:
+                        leftUnionArray[i].setFConst(static_cast<float>(node->getFConst(i)));
+                        break;
+                    default:
+                        infoSink.info.message(EPrefixInternalError, node->getLine(), "Cannot promote");
+                        return 0;
+                }
+                break;
+            case EbtInt:
+                switch (node->getType().getBasicType()) {
+                    case EbtInt:
+                        leftUnionArray[i].setIConst(static_cast<int>(node->getIConst(i)));
+                        break;
+                    case EbtUInt:
+                        leftUnionArray[i].setIConst(static_cast<int>(node->getUConst(i)));
+                        break;
+                    case EbtBool:
+                        leftUnionArray[i].setIConst(static_cast<int>(node->getBConst(i)));
+                        break;
+                    case EbtFloat:
+                        leftUnionArray[i].setIConst(static_cast<int>(node->getFConst(i)));
+                        break;
+                    default:
+                        infoSink.info.message(EPrefixInternalError, node->getLine(), "Cannot promote");
+                        return 0;
+                }
+                break;
+            case EbtUInt:
+                switch (node->getType().getBasicType()) {
+                    case EbtInt:
+                        leftUnionArray[i].setUConst(static_cast<unsigned int>(node->getIConst(i)));
+                        break;
+                    case EbtUInt:
+                        leftUnionArray[i].setUConst(static_cast<unsigned int>(node->getUConst(i)));
+                        break;
+                    case EbtBool:
+                        leftUnionArray[i].setUConst(static_cast<unsigned int>(node->getBConst(i)));
+                        break;
+                    case EbtFloat:
+                        leftUnionArray[i].setUConst(static_cast<unsigned int>(node->getFConst(i)));
+                        break;
+                    default:
+                        infoSink.info.message(EPrefixInternalError, node->getLine(), "Cannot promote");
+                        return 0;
+                }
+                break;
+            case EbtBool:
+                switch (node->getType().getBasicType()) {
+                    case EbtInt:
+                        leftUnionArray[i].setBConst(node->getIConst(i) != 0);
+                        break;
+                    case EbtUInt:
+                        leftUnionArray[i].setBConst(node->getUConst(i) != 0);
+                        break;
+                    case EbtBool:
+                        leftUnionArray[i].setBConst(node->getBConst(i));
+                        break;
+                    case EbtFloat:
+                        leftUnionArray[i].setBConst(node->getFConst(i) != 0.0f);
+                        break;
+                    default:
+                        infoSink.info.message(EPrefixInternalError, node->getLine(), "Cannot promote");
+                        return 0;
+                }
+
+                break;
+            default:
+                infoSink.info.message(EPrefixInternalError, node->getLine(), "Incorrect data type found");
+                return 0;
+        }
+
+    }
+
+    const TType& t = node->getType();
+
+    return addConstantUnion(leftUnionArray, TType(promoteTo, t.getPrecision(), t.getQualifier(), t.getNominalSize(), t.getSecondarySize(), t.isArray()), node->getLine());
 }
 
 // static

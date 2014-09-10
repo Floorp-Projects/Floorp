@@ -13,7 +13,10 @@
 #include <algorithm>
 #include <vector>
 
-#include "angle_gl.h"
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <EGL/eglext.h>
 
 #include "common/debug.h"

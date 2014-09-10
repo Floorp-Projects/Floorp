@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <map>
 #include <vector>
-#include <sstream>
 
 #include "common/debug.h"
 #include "common/mathutil.h"
@@ -113,7 +112,7 @@ bool Display::initialize()
         return false;
     }
 
-    initDisplayExtensionString();
+    initExtensionString();
     initVendorString();
 
     return true;
@@ -344,7 +343,7 @@ EGLSurface Display::createOffscreenSurface(EGLConfig config, HANDLE shareHandle,
         return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
     }
 
-    if (textureFormat != EGL_NO_TEXTURE && !mRenderer->getCaps().extensions.textureNPOT && (!gl::isPow2(width) || !gl::isPow2(height)))
+    if (textureFormat != EGL_NO_TEXTURE && !mRenderer->getNonPower2TextureSupport() && (!gl::isPow2(width) || !gl::isPow2(height)))
     {
         return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
     }
@@ -501,58 +500,48 @@ bool Display::hasExistingWindowSurface(HWND window)
     return false;
 }
 
-std::string Display::generateClientExtensionString()
+void Display::initExtensionString()
 {
-    std::vector<std::string> extensions;
+    bool shareHandleSupported = mRenderer->getShareHandleSupport();
 
-    extensions.push_back("EGL_EXT_client_extensions");
-
-    std::ostringstream stream;
-    std::copy(extensions.begin(), extensions.end(), std::ostream_iterator<std::string>(stream, " "));
-    return stream.str();
-}
-
-void Display::initDisplayExtensionString()
-{
-    std::vector<std::string> extensions;
+    mExtensionString = "";
 
     // Multi-vendor (EXT) extensions
-    extensions.push_back("EGL_EXT_create_context_robustness");
+    mExtensionString += "EGL_EXT_create_context_robustness ";
 
     // ANGLE-specific extensions
-    if (mRenderer->getShareHandleSupport())
+    if (shareHandleSupported)
     {
-        extensions.push_back("EGL_ANGLE_d3d_share_handle_client_buffer");
-        extensions.push_back("EGL_ANGLE_surface_d3d_texture_2d_share_handle");
+        mExtensionString += "EGL_ANGLE_d3d_share_handle_client_buffer ";
     }
 
-    extensions.push_back("EGL_ANGLE_query_surface_pointer");
-    extensions.push_back("EGL_ANGLE_window_fixed_size");
+    mExtensionString += "EGL_ANGLE_query_surface_pointer ";
+
+    mExtensionString += "EGL_ANGLE_window_fixed_size ";
+
+    if (shareHandleSupported)
+    {
+        mExtensionString += "EGL_ANGLE_surface_d3d_texture_2d_share_handle ";
+    }
 
     if (mRenderer->getPostSubBufferSupport())
     {
-        extensions.push_back("EGL_NV_post_sub_buffer");
+        mExtensionString += "EGL_NV_post_sub_buffer ";
     }
 
     // TODO: complete support for the EGL_KHR_create_context extension
-    extensions.push_back("EGL_KHR_create_context");
+    mExtensionString += "EGL_KHR_create_context ";
 
-    std::ostringstream stream;
-    std::copy(extensions.begin(), extensions.end(), std::ostream_iterator<std::string>(stream, " "));
-    mDisplayExtensionString = stream.str();
+    std::string::size_type end = mExtensionString.find_last_not_of(' ');
+    if (end != std::string::npos)
+    {
+        mExtensionString.resize(end+1);
+    }
 }
 
-const char *Display::getExtensionString(egl::Display *display)
+const char *Display::getExtensionString() const
 {
-    if (display != EGL_NO_DISPLAY)
-    {
-        return display->mDisplayExtensionString.c_str();
-    }
-    else
-    {
-        static std::string clientExtensions = generateClientExtensionString();
-        return clientExtensions.c_str();
-    }
+    return mExtensionString.c_str();
 }
 
 void Display::initVendorString()

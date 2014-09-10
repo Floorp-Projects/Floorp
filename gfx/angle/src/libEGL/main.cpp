@@ -9,42 +9,42 @@
 #include "libEGL/main.h"
 
 #include "common/debug.h"
-#include "common/tls.h"
 
-static TLSIndex currentTLS = TLS_OUT_OF_INDEXES;
+static DWORD currentTLS = TLS_OUT_OF_INDEXES;
 
 namespace egl
 {
 
 Current *AllocateCurrent()
 {
-    ASSERT(currentTLS != TLS_OUT_OF_INDEXES);
-    if (currentTLS == TLS_OUT_OF_INDEXES)
+    Current *current = (egl::Current*)LocalAlloc(LPTR, sizeof(egl::Current));
+
+    if (!current)
     {
+        ERR("Could not allocate thread local storage.");
         return NULL;
     }
 
-    Current *current = new Current();
+    ASSERT(currentTLS != TLS_OUT_OF_INDEXES);
+    TlsSetValue(currentTLS, current);
+
     current->error = EGL_SUCCESS;
     current->API = EGL_OPENGL_ES_API;
     current->display = EGL_NO_DISPLAY;
     current->drawSurface = EGL_NO_SURFACE;
     current->readSurface = EGL_NO_SURFACE;
 
-    if (!SetTLSValue(currentTLS, current))
-    {
-        ERR("Could not set thread local storage.");
-        return NULL;
-    }
-
     return current;
 }
 
 void DeallocateCurrent()
 {
-    Current *current = reinterpret_cast<Current*>(GetTLSValue(currentTLS));
-    SafeDelete(current);
-    SetTLSValue(currentTLS, NULL);
+    void *current = TlsGetValue(currentTLS);
+
+    if (current)
+    {
+        LocalFree((HLOCAL)current);
+    }
 }
 
 }
@@ -70,13 +70,14 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
             }
 #endif
 
-            currentTLS = CreateTLSIndex();
+            currentTLS = TlsAlloc();
+
             if (currentTLS == TLS_OUT_OF_INDEXES)
             {
                 return FALSE;
             }
         }
-        // Fall through to initialize index
+        // Fall throught to initialize index
       case DLL_THREAD_ATTACH:
         {
             egl::AllocateCurrent();
@@ -90,7 +91,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
       case DLL_PROCESS_DETACH:
         {
             egl::DeallocateCurrent();
-            DestroyTLSIndex(currentTLS);
+            TlsFree(currentTLS);
         }
         break;
       default:
@@ -105,7 +106,7 @@ namespace egl
 
 Current *GetCurrentData()
 {
-    Current *current = reinterpret_cast<Current*>(GetTLSValue(currentTLS));
+    Current *current = (Current*)TlsGetValue(currentTLS);
 
     // ANGLE issue 488: when the dll is loaded after thread initialization,
     // thread local storage (current) might not exist yet.

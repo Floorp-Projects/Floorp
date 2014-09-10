@@ -10,7 +10,8 @@
 #ifndef LIBGLESV2_RESOURCEMANAGER_H_
 #define LIBGLESV2_RESOURCEMANAGER_H_
 
-#include "angle_gl.h"
+#include <GLES3/gl3.h>
+#include <GLES2/gl2.h>
 
 #include <unordered_map>
 
