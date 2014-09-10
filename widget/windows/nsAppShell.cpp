@@ -308,7 +308,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
       mozilla::HangMonitor::Suspend();
       {
         GeckoProfilerSleepRAII profiler_sleep;
-        WinUtils::WaitForMessage();
+        ::WaitMessage();
       }
     }
   } while (!gotMessage && mayWait);
