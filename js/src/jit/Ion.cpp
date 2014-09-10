@@ -303,6 +303,11 @@ JitRuntime::initialize(JSContext *cx)
             return false;
     }
 
+    JitSpew(JitSpew_Codegen, "# Emitting lazy link stub");
+    lazyLinkStub_ = generateLazyLinkStub(cx);
+    if (!lazyLinkStub_)
+        return false;
+
     jitcodeGlobalTable_ = cx->new_<JitcodeGlobalTable>();
     if (!jitcodeGlobalTable_)
         return false;
@@ -561,9 +566,15 @@ JitCompartment::hasRecentParallelActivity() const
 }
 
 void
-jit::FinishOffThreadBuilder(IonBuilder *builder)
+jit::FinishOffThreadBuilder(JSContext *cx, IonBuilder *builder)
 {
     ExecutionMode executionMode = builder->info().executionMode();
+
+    // Clean the references to the pending IonBuilder, if we just finished it.
+    if (builder->script()->hasIonScript() && builder->script()->pendingIonBuilder() == builder)
+        builder->script()->setPendingIonBuilder(cx, nullptr);
+    if (builder->isInList())
+        builder->remove();
 
     // Clear the recompiling flag of the old ionScript, since we continue to
     // use the old ionScript if recompiling fails.
@@ -572,7 +583,7 @@ jit::FinishOffThreadBuilder(IonBuilder *builder)
 
     // Clean up if compilation did not succeed.
     if (CompilingOffThread(builder->script(), executionMode)) {
-        SetIonScript(builder->script(), executionMode,
+        SetIonScript(cx, builder->script(), executionMode,
                      builder->abortReason() == AbortReason_Disable
                      ? ION_DISABLED_SCRIPT
                      : nullptr);
@@ -595,12 +606,62 @@ FinishAllOffThreadCompilations(JSCompartment *comp)
     for (size_t i = 0; i < finished.length(); i++) {
         IonBuilder *builder = finished[i];
         if (builder->compartment == CompileCompartment::get(comp)) {
-            FinishOffThreadBuilder(builder);
+            FinishOffThreadBuilder(nullptr, builder);
             HelperThreadState().remove(finished, &i);
         }
     }
 }
 
+uint8_t *
+jit::LazyLinkTopActivation(JSContext *cx)
+{
+    JitActivationIterator iter(cx->runtime());
+
+    // First frame should be an exit frame.
+    JitFrameIterator it(iter.jitTop(), SequentialExecution);
+    MOZ_ASSERT(it.type() == JitFrame_Exit);
+
+    // Second frame is the Ion frame.
+    ++it;
+    MOZ_ASSERT(it.type() == JitFrame_IonJS);
+
+    // Get the pending builder from the Ion frame.
+    IonBuilder *builder = it.script()->ionScript()->pendingBuilder();
+    it.script()->setPendingIonBuilder(cx, nullptr);
+
+    types::AutoEnterAnalysis enterTypes(cx);
+    RootedScript script(cx, builder->script());
+
+    // Remove from pending.
+    builder->remove();
+
+    if (CodeGenerator *codegen = builder->backgroundCodegen()) {
+        js::TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+        AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
+        AutoTraceLog logLink(logger, TraceLogger::IonLinking);
+
+        IonContext ictx(cx, &builder->alloc());
+
+        // Root the assembler until the builder is finished below. As it
+        // was constructed off thread, the assembler has not been rooted
+        // previously, though any GC activity would discard the builder.
+        codegen->masm.constructRoot(cx);
+
+        if (!codegen->link(cx, builder->constraints())) {
+            // Silently ignore OOM during code generation. The assembly code
+            // doesn't has code to handle it after linking happened. So it's
+            // not OK to throw a catchable exception from there.
+            cx->clearPendingException();
+        }
+    }
+
+    FinishOffThreadBuilder(cx, builder);
+
+    MOZ_ASSERT(script->hasBaselineScript());
+    MOZ_ASSERT(script->baselineOrIonRawPointer());
+
+    return script->baselineOrIonRawPointer();
+}
 /* static */ void
 JitRuntime::Mark(JSTracer *trc)
 {
@@ -860,7 +921,8 @@ IonScript::IonScript()
     parallelAge_(0),
     recompileInfo_(),
     osrPcMismatchCounter_(0),
-    dependentAsmJSModules(nullptr)
+    dependentAsmJSModules(nullptr),
+    pendingBuilder_(nullptr)
 {
 }
 
@@ -1198,6 +1260,9 @@ IonScript::Trace(JSTracer *trc, IonScript *script)
 void
 IonScript::Destroy(FreeOp *fop, IonScript *script)
 {
+    if (script->pendingBuilder())
+        jit::FinishOffThreadBuilder(nullptr, script->pendingBuilder());
+
     script->destroyCaches();
     script->unlinkFromRuntime(fop);
     fop->free_(script);
@@ -1784,6 +1849,36 @@ AttachFinishedCompilations(JSContext *cx)
         if (!builder)
             break;
 
+        // Try to defer linking if the script is on the stack, to postpone
+        // invalidating them.
+        if (builder->info().executionMode() == SequentialExecution &&
+            builder->script()->hasIonScript())
+        {
+            bool onStack = false;
+            for (JitActivationIterator iter(cx->runtime()); !iter.done(); ++iter) {
+                for (JitFrameIterator it(iter.jitTop(), SequentialExecution); !it.done(); ++it) {
+                    if (!it.isIonJS())
+                        continue;
+                    if (it.checkInvalidation())
+                        continue;
+
+                    JSScript *script = it.script();
+                    if (builder->script() == script) {
+                        onStack = true;
+                        break;
+                    }
+                }
+                if (onStack)
+                    break;
+            }
+
+            if (onStack) {
+                builder->script()->setPendingIonBuilder(cx, builder);
+                HelperThreadState().ionLazyLinkList().insertFront(builder);
+                continue;
+            }
+        }
+
         if (CodeGenerator *codegen = builder->backgroundCodegen()) {
             RootedScript script(cx, builder->script());
             IonContext ictx(cx, &builder->alloc());
@@ -1810,7 +1905,7 @@ AttachFinishedCompilations(JSContext *cx)
             }
         }
 
-        FinishOffThreadBuilder(builder);
+        FinishOffThreadBuilder(cx, builder);
     }
 }
 
@@ -1982,7 +2077,7 @@ IonCompile(JSContext *cx, JSScript *script,
     // If possible, compile the script off thread.
     if (OffThreadCompilationAvailable(cx)) {
         if (!recompile)
-            SetIonScript(builderScript, executionMode, ION_COMPILING_SCRIPT);
+            SetIonScript(cx, builderScript, executionMode, ION_COMPILING_SCRIPT);
 
         JitSpew(JitSpew_Logs, "Can't log script %s:%d. (Compiled on background thread.)",
                               builderScript->filename(), builderScript->lineno());
@@ -2607,8 +2702,16 @@ InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
         if (!it.isIonJS())
             continue;
 
+        bool calledFromLinkStub = false;
+        JitCode *lazyLinkStub = fop->runtime()->jitRuntime()->lazyLinkStub();
+        if (it.returnAddressToFp() >= lazyLinkStub->raw() &&
+            it.returnAddressToFp() < lazyLinkStub->rawEnd())
+        {
+            calledFromLinkStub = true;
+        }
+
         // See if the frame has already been invalidated.
-        if (it.checkInvalidation())
+        if (!calledFromLinkStub && it.checkInvalidation())
             continue;
 
         JSScript *script = it.script();
@@ -2652,7 +2755,6 @@ InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
 
         ionScript->incref();
 
-        const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddressToFp());
         JitCode *ionCode = ionScript->method();
 
         JS::Zone *zone = script->zone();
@@ -2665,12 +2767,17 @@ InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
         }
         ionCode->setInvalidated();
 
+        // Don't adjust OSI points in the linkStub (which don't exist).
+        if (calledFromLinkStub)
+            continue;
+
         // Write the delta (from the return address offset to the
         // IonScript pointer embedded into the invalidation epilogue)
         // where the safepointed call instruction used to be. We rely on
         // the call sequence causing the safepoint being >= the size of
         // a uint32, which is checked during safepoint index
         // construction.
+        const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddressToFp());
         CodeLocationLabel dataLabelToMunge(it.returnAddressToFp());
         ptrdiff_t delta = ionScript->invalidateEpilogueDataOffset() -
                           (it.returnAddressToFp() - ionCode->raw());
@@ -2764,7 +2871,7 @@ jit::Invalidate(types::TypeZone &types, FreeOp *fop,
         if (!ionScript)
             continue;
 
-        SetIonScript(script, executionMode, nullptr);
+        SetIonScript(nullptr, script, executionMode, nullptr);
         ionScript->decref(fop);
         co.invalidate();
         numInvalidations--;
@@ -2877,7 +2984,7 @@ jit::FinishInvalidation(FreeOp *fop, JSScript *script)
       case SequentialExecution:
         if (script->hasIonScript()) {
             IonScript *ion = script->ionScript();
-            script->setIonScript(nullptr);
+            script->setIonScript(nullptr, nullptr);
             FinishInvalidationOf(fop, script, ion);
         }
         return;
@@ -2927,7 +3034,7 @@ jit::ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode)
                 return;
         }
 
-        script->setIonScript(ION_DISABLED_SCRIPT);
+        script->setIonScript(cx, ION_DISABLED_SCRIPT);
         return;
 
       case ParallelExecution:

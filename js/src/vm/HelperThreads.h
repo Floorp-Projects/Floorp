@@ -47,6 +47,7 @@ class GlobalHelperThreadState
     typedef Vector<ParseTask*, 0, SystemAllocPolicy> ParseTaskVector;
     typedef Vector<SourceCompressionTask*, 0, SystemAllocPolicy> SourceCompressionTaskVector;
     typedef Vector<GCHelperState *, 0, SystemAllocPolicy> GCHelperStateVector;
+    typedef mozilla::LinkedList<jit::IonBuilder> IonBuilderList;
 
     // List of available threads, or null if the thread state has not been initialized.
     HelperThread *threads;
@@ -56,6 +57,9 @@ class GlobalHelperThreadState
 
     // Ion compilation worklist and finished jobs.
     IonBuilderVector ionWorklist_, ionFinishedList_;
+
+    // List of IonBuilders using lazy linking pending to get linked.
+    IonBuilderList ionLazyLinkList_;
 
     // AsmJS worklist and finished jobs.
     //
@@ -136,6 +140,10 @@ class GlobalHelperThreadState
     IonBuilderVector &ionFinishedList() {
         JS_ASSERT(isLocked());
         return ionFinishedList_;
+    }
+    IonBuilderList &ionLazyLinkList() {
+        JS_ASSERT(isLocked());
+        return ionLazyLinkList_;
     }
 
     AsmJSParallelTaskVector &asmJSWorklist() {
