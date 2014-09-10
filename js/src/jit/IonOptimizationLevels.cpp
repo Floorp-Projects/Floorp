@@ -41,8 +41,8 @@ OptimizationInfo::initNormalOptimizationInfo()
     maxInlineDepth_ = 3;
     scalarReplacement_ = true;
     smallFunctionMaxInlineDepth_ = 10;
-    usesBeforeCompile_ = 1000;
-    usesBeforeInliningFactor_ = 0.125;
+    compilerWarmUpThreshold_ = 1000;
+    inliningWarmUpThresholdFactor_ = 0.125;
 }
 
 void
@@ -63,16 +63,16 @@ OptimizationInfo::initAsmjsOptimizationInfo()
 }
 
 uint32_t
-OptimizationInfo::usesBeforeCompile(JSScript *script, jsbytecode *pc) const
+OptimizationInfo::compilerWarmUpThreshold(JSScript *script, jsbytecode *pc) const
 {
     JS_ASSERT(pc == nullptr || pc == script->code() || JSOp(*pc) == JSOP_LOOPENTRY);
 
     if (pc == script->code())
         pc = nullptr;
 
-    uint32_t minUses = usesBeforeCompile_;
-    if (js_JitOptions.forceDefaultIonUsesBeforeCompile)
-        minUses = js_JitOptions.forcedDefaultIonUsesBeforeCompile;
+    uint32_t warmUpThreshold = compilerWarmUpThreshold_;
+    if (js_JitOptions.forceDefaultIonWarmUpThreshold)
+        warmUpThreshold = js_JitOptions.forcedDefaultIonWarmUpThreshold;
 
     // If the script is too large to compile on the main thread, we can still
     // compile it off thread. In these cases, increase the warm-up counter
@@ -80,21 +80,21 @@ OptimizationInfo::usesBeforeCompile(JSScript *script, jsbytecode *pc) const
     // avoid later recompilation.
 
     if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE)
-        minUses = minUses * (script->length() / (double) MAX_MAIN_THREAD_SCRIPT_SIZE);
+        warmUpThreshold *= (script->length() / (double) MAX_MAIN_THREAD_SCRIPT_SIZE);
 
     uint32_t numLocalsAndArgs = NumLocalsAndArgs(script);
     if (numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
-        minUses = minUses * (numLocalsAndArgs / (double) MAX_MAIN_THREAD_LOCALS_AND_ARGS);
+        warmUpThreshold *= (numLocalsAndArgs / (double) MAX_MAIN_THREAD_LOCALS_AND_ARGS);
 
     if (!pc || js_JitOptions.eagerCompilation)
-        return minUses;
+        return warmUpThreshold;
 
     // It's more efficient to enter outer loops, rather than inner loops, via OSR.
     // To accomplish this, we use a slightly higher threshold for inner loops.
     // Note that the loop depth is always > 0 so we will prefer non-OSR over OSR.
     uint32_t loopDepth = LoopEntryDepthHint(pc);
     JS_ASSERT(loopDepth > 0);
-    return minUses + loopDepth * 100;
+    return warmUpThreshold + loopDepth * 100;
 }
 
 OptimizationInfos::OptimizationInfos()
@@ -144,7 +144,7 @@ OptimizationInfos::levelForScript(JSScript *script, jsbytecode *pc) const
     while (!isLastLevel(prev)) {
         OptimizationLevel level = nextLevel(prev);
         const OptimizationInfo *info = get(level);
-        if (script->getWarmUpCounter() < info->usesBeforeCompile(script, pc))
+        if (script->getWarmUpCounter() < info->compilerWarmUpThreshold(script, pc))
             return prev;
 
         prev = level;
