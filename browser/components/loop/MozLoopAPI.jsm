@@ -122,6 +122,23 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Returns the callData for a specific callDataId
+     *
+     * The data was retrieved from the LoopServer via a GET/calls/<version> request
+     * triggered by an incoming message from the LoopPushServer.
+     *
+     * @param {int} loopCallId
+     * @returns {callData} The callData or undefined if error.
+     */
+    getCallData: {
+      enumerable: true,
+      writable: true,
+      value: function(loopCallId) {
+        return Cu.cloneInto(MozLoopService.getCallData(loopCallId), targetWindow);
+      }
+    },
+
+    /**
      * Returns the contacts API.
      *
      * @returns {Object} The contacts API object
@@ -338,13 +355,22 @@ function injectLoopAPI(targetWindow) {
       enumerable: true,
       writable: true,
       value: function(path, method, payloadObj, callback) {
+        // XXX: Bug 1065153 - Should take a sessionType parameter instead of hard-coding GUEST
         // XXX Should really return a DOM promise here.
-        return MozLoopService.hawkRequest(path, method, payloadObj).then((response) => {
+        return MozLoopService.hawkRequest(LOOP_SESSION_TYPE.GUEST, path, method, payloadObj).then((response) => {
           callback(null, response.body);
         }, (error) => {
           callback(Cu.cloneInto(error, targetWindow));
         });
       }
+    },
+
+    LOOP_SESSION_TYPE: {
+      enumerable: true,
+      writable: false,
+      value: function() {
+        return LOOP_SESSION_TYPE;
+      },
     },
 
     logInToFxA: {

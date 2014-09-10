@@ -22,7 +22,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="15dp"
-        android:src="@drawable/search_fox"
         android:gravity="top|center"
         android:scaleType="fitCenter"/>
 
@@ -33,17 +32,17 @@
         android:layout_weight="3">
 
         <TextView
+            android:id="@+id/empty_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="15dp"
-            android:text="@string/search_empty_title"
             style="@style/TextAppearance.EmptyView.Title"
             android:gravity="center"/>
 
         <TextView
+            android:id="@+id/empty_message"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/search_empty_message"
             style="@style/TextAppearance.EmptyView.Message"
             android:gravity="center"/>
 

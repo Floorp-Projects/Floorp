@@ -331,3 +331,10 @@ nsParentalControlsService::LogFileDownload(bool blocked, nsIURI *aSource, nsIFil
   gEventWrite(mProvider, &WPCEVENT_WEB_FILEDOWNLOAD, ARRAYSIZE(eventData), eventData);
 }
 
+NS_IMETHODIMP
+nsParentalControlsService::IsAllowed(int16_t aAction,
+                                     nsIURI *aUri,
+                                     bool *_retval)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
