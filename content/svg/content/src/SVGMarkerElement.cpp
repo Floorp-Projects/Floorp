@@ -16,6 +16,8 @@
 #include "mozilla/gfx/Matrix.h"
 #include "SVGContentUtils.h"
 
+using namespace mozilla::gfx;
+
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Marker)
 
 namespace mozilla {
@@ -359,7 +361,8 @@ SVGMarkerElement::GetViewBoxTransform()
 
     gfx::Point ref = viewBoxTM * gfx::Point(refX, refY);
 
-    gfx::Matrix TM = viewBoxTM * gfx::Matrix().Translate(-ref.x, -ref.y);
+    Matrix TM = viewBoxTM;
+    TM.PostTranslate(-ref.x, -ref.y);
 
     mViewBoxToViewportTransform = new gfx::Matrix(TM);
   }
