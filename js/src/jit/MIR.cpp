@@ -2818,12 +2818,12 @@ MCompare::evaluateConstantOperands(bool *result)
           case JSOP_GE:
             *result = (lhsUint >= rhsUint);
             break;
+          case JSOP_STRICTEQ: // Fall through.
           case JSOP_EQ:
-          case JSOP_STRICTEQ:
             *result = (lhsUint == rhsUint);
             break;
+          case JSOP_STRICTNE: // Fall through.
           case JSOP_NE:
-          case JSOP_STRICTNE:
             *result = (lhsUint != rhsUint);
             break;
           default:
@@ -2849,9 +2849,11 @@ MCompare::evaluateConstantOperands(bool *result)
       case JSOP_GE:
         *result = (lhs.toNumber() >= rhs.toNumber());
         break;
+      case JSOP_STRICTEQ: // Fall through.
       case JSOP_EQ:
         *result = (lhs.toNumber() == rhs.toNumber());
         break;
+      case JSOP_STRICTNE: // Fall through.
       case JSOP_NE:
         *result = (lhs.toNumber() != rhs.toNumber());
         break;
