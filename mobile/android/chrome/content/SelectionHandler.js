@@ -652,6 +652,10 @@ var SelectionHandler = {
       },
       selector: {
         matches: function() {
+          if (!ParentalControls.isAllowed(ParentalControls.SHARE)) {
+            return false;
+          }
+
           return SelectionHandler.isSelectionActive();
         }
       }
