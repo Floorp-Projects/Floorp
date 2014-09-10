@@ -60,37 +60,3 @@ html|*.menulist-editable-input {
   background: inherit;
   font: inherit;
 }
-
-/* ::::: compact menulists ::::: */
-
-.menulist-compact {
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  margin: 0;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
-  background-color: -moz-Dialog;
-}
-
-.menulist-compact > .menulist-label {
-  margin: 0 3px !important;
-  text-align: end;
-}  
-
-.menulist-compact > .menulist-dropmarker {
-  -moz-margin-start: 2px;
-  border: none;
-  padding: 0 !important;
-  background: transparent;
-}
-
-.menulist-compact[open="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
-  background-color: ThreeDShadow;
-}
