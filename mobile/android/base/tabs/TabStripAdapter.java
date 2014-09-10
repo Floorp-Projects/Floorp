@@ -30,7 +30,9 @@ class TabStripAdapter extends BaseAdapter {
 
     @Override
     public Tab getItem(int position) {
-        return (tabs != null ? tabs.get(position) : null);
+        return (tabs != null &&
+                position >= 0 &&
+                position < tabs.size() ? tabs.get(position) : null);
     }
 
     @Override
