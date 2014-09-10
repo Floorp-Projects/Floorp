@@ -1548,6 +1548,11 @@ nsFrameSelection::TakeFocus(nsIContent*        aNewFocus,
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
+  Maybe<Selection::AutoApplyUserSelectStyle> userSelect;
+  if (IsUserSelectionReason()) {
+    userSelect.emplace(mDomSelections[index]);
+  }
+
   //traverse through document and unselect crap here
   if (!aContinueSelection) {//single click? setting cursor down
     uint32_t batching = mBatching;//hack to use the collapse code.
@@ -3103,6 +3108,7 @@ Selection::Selection()
   : mCachedOffsetForFrame(nullptr)
   , mDirection(eDirNext)
   , mType(nsISelectionController::SELECTION_NORMAL)
+  , mApplyUserSelectStyle(false)
 {
   SetIsDOMBinding();
 }
@@ -3112,6 +3118,7 @@ Selection::Selection(nsFrameSelection* aList)
   , mCachedOffsetForFrame(nullptr)
   , mDirection(eDirNext)
   , mType(nsISelectionController::SELECTION_NORMAL)
+  , mApplyUserSelectStyle(false)
 {
   SetIsDOMBinding();
 }
@@ -3453,6 +3460,25 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex)
     return NS_ERROR_UNEXPECTED;
 
   NS_ASSERTION(aOutIndex, "aOutIndex can't be null");
+
+  if (mApplyUserSelectStyle) {
+    nsAutoTArray<nsRefPtr<nsRange>, 4> rangesToAdd;
+    aItem->ExcludeNonSelectableNodes(&rangesToAdd);
+    for (size_t i = 0; i < rangesToAdd.Length(); ++i) {
+      nsresult rv = AddItemInternal(rangesToAdd[i], aOutIndex);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    return NS_OK;
+  }
+  return AddItemInternal(aItem, aOutIndex);
+}
+
+nsresult
+Selection::AddItemInternal(nsRange* aItem, int32_t* aOutIndex)
+{
+  MOZ_ASSERT(aItem);
+  MOZ_ASSERT(aItem->IsPositioned());
+  MOZ_ASSERT(aOutIndex);
 
   *aOutIndex = -1;
 
@@ -4443,8 +4469,7 @@ Selection::AddRange(nsRange& aRange, ErrorResult& aRv)
     return;
   }
 
-  if (!didAddRange)
-  {
+  if (!didAddRange) {
     result = AddItem(&aRange, &rangeIndex);
     if (NS_FAILED(result)) {
       aRv.Throw(result);
@@ -4452,7 +4477,10 @@ Selection::AddRange(nsRange& aRange, ErrorResult& aRv)
     }
   }
 
-  NS_ASSERTION(rangeIndex >= 0, "Range index not returned");
+  if (rangeIndex < 0) {
+    return;
+  }
+
   setAnchorFocusRange(rangeIndex);
   
   // Make sure the caret appears on the next line, if at a newline
@@ -4921,7 +4949,48 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
     return;
   }
 
-  //mFrameSelection->InvalidateDesiredX();
+  nsDirection dir = GetDirection();
+
+  // If aParentNode is inside a range in a multi-range selection we need
+  // to remove the ranges that follows in the selection direction and
+  // make that range the mAnchorFocusRange.
+  if (mRanges.Length() > 1) {
+    for (size_t i = 0; i < mRanges.Length(); ++i) {
+      nsRange* range = mRanges[i].mRange;
+      bool disconnected1 = false;
+      bool disconnected2 = false;
+      const bool isBeforeStart =
+        nsContentUtils::ComparePoints(range->GetStartParent(),
+                                      range->StartOffset(),
+                                      &aParentNode, aOffset,
+                                      &disconnected1) > 0;
+      const bool isAfterEnd =
+        nsContentUtils::ComparePoints(range->GetEndParent(),
+                                      range->EndOffset(),
+                                      &aParentNode, aOffset,
+                                      &disconnected2) < 0;
+      if (!isBeforeStart && !isAfterEnd && !disconnected1 && !disconnected2) {
+        // aParentNode/aOffset is inside 'range'.
+        mAnchorFocusRange = range;
+        if (dir == eDirNext) {
+          for (size_t j = i + 1; j < mRanges.Length(); ++j) {
+            nsRange* r = mRanges[j].mRange;
+            r->SetInSelection(false);
+            selectFrames(presContext, r, false);
+          }
+          mRanges.TruncateLength(i + 1);
+        } else {
+          for (size_t j = 0; j < i; ++j) {
+            nsRange* r = mRanges[j].mRange;
+            r->SetInSelection(false);
+            selectFrames(presContext, r, false);
+          }
+          mRanges.RemoveElementsAt(0, i);
+        }
+        break;
+      }
+    }
+  }
 
   nsINode* anchorNode = GetAnchorNode();
   nsINode* focusNode = GetFocusNode();
@@ -4934,8 +5003,6 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   nsINode* endNode = range->GetEndParent();
   int32_t startOffset = range->StartOffset();
   int32_t endOffset = range->EndOffset();
-
-  nsDirection dir = GetDirection();
 
   //compare anchor to old cursor.
 
@@ -5159,6 +5226,14 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
     if (NS_FAILED(res)) {
       aRv.Throw(res);
       return;
+    }
+  }
+
+  if (mRanges.Length() > 1) {
+    for (size_t i = 0; i < mRanges.Length(); ++i) {
+      nsRange* range = mRanges[i].mRange;
+      MOZ_ASSERT(range->IsInSelection());
+      selectFrames(presContext, range, range->IsInSelection());
     }
   }
 
