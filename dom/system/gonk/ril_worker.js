@@ -3470,14 +3470,6 @@ RilObject.prototype = {
       return;
     }
 
-    let ICCRecordHelper = this.context.ICCRecordHelper;
-    // Try to get iccId only when cardState left GECKO_CARDSTATE_UNDETECTED.
-    if (iccStatus.cardState === CARD_STATE_PRESENT &&
-        (this.cardState === GECKO_CARDSTATE_UNINITIALIZED ||
-         this.cardState === GECKO_CARDSTATE_UNDETECTED)) {
-      ICCRecordHelper.readICCID();
-    }
-
     if (RILQUIRKS_SUBSCRIPTION_CONTROL) {
       // All appIndex is -1 means the subscription is not activated yet.
       // Note that we don't support "ims" for now, so we don't take it into
@@ -3536,6 +3528,14 @@ RilObject.prototype = {
     } else {
       // Having incorrect app information, set card state to unknown.
       newCardState = GECKO_CARDSTATE_UNKNOWN;
+    }
+
+    let ICCRecordHelper = this.context.ICCRecordHelper;
+    // Try to get iccId only when cardState left GECKO_CARDSTATE_UNDETECTED.
+    if (iccStatus.cardState === CARD_STATE_PRESENT &&
+        (this.cardState === GECKO_CARDSTATE_UNINITIALIZED ||
+         this.cardState === GECKO_CARDSTATE_UNDETECTED)) {
+      ICCRecordHelper.readICCID();
     }
 
     if (this.cardState == newCardState) {
@@ -12705,6 +12705,7 @@ ICCIOHelperObject.prototype = {
       case CARD_APPTYPE_ISIM:
       // For SIM, this is what we want
       case CARD_APPTYPE_SIM:
+      default:
         options.p2 = 0x00;
         options.p3 = GET_RESPONSE_EF_SIZE_BYTES;
         break;
