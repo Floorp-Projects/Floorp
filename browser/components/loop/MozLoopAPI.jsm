@@ -338,13 +338,22 @@ function injectLoopAPI(targetWindow) {
       enumerable: true,
       writable: true,
       value: function(path, method, payloadObj, callback) {
+        // XXX: Bug 1065153 - Should take a sessionType parameter instead of hard-coding GUEST
         // XXX Should really return a DOM promise here.
-        return MozLoopService.hawkRequest(path, method, payloadObj).then((response) => {
+        return MozLoopService.hawkRequest(LOOP_SESSION_TYPE.GUEST, path, method, payloadObj).then((response) => {
           callback(null, response.body);
         }, (error) => {
           callback(Cu.cloneInto(error, targetWindow));
         });
       }
+    },
+
+    LOOP_SESSION_TYPE: {
+      enumerable: true,
+      writable: false,
+      value: function() {
+        return LOOP_SESSION_TYPE;
+      },
     },
 
     logInToFxA: {
