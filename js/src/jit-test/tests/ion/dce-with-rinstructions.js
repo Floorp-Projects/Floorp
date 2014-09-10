@@ -778,6 +778,139 @@ function rregexp_m_literal_test(i) {
     return i;
 }
 
+var uceFault_regexp_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_replace'))
+function rregexp_replace(i) {
+    var re = new RegExp("str\\d+" + (i % 10));
+    var res = "str00123456789".replace(re, "abc");
+    if (uceFault_regexp_replace(i) || uceFault_regexp_replace(i)) {
+        assertEq(res, "abc");
+    }
+    return i;
+}
+
+var uceFault_regexp_y_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_replace'))
+function rregexp_y_replace(i) {
+    var re = new RegExp("str\\d+" + (i % 10), "y");
+    re.test("str00123456789");
+    assertEq(re.lastIndex == 0, false);
+
+    var res = "str00123456789".replace(re, "abc");
+
+    // replace will not zero the lastIndex field, if sticky flag is set
+    assertEq(re.lastIndex == 0, false);
+
+    if (uceFault_regexp_y_replace(i) || uceFault_regexp_y_replace(i))
+        assertEq(res, "abc");
+    return i;
+}
+
+var uceFault_regexp_y_literal_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_literal_replace'))
+function rregexp_y_literal_replace(i) {
+    var re = /str\d+9/y;
+    re.test("str00123456789");
+    assertEq(re.lastIndex == 0, false);
+
+    var res = "str00123456789".replace(re, "abc");
+
+    assertEq(re.lastIndex == 0, false);
+
+    if (uceFault_regexp_y_literal_replace(i) || uceFault_regexp_y_literal_replace(i))
+        assertEq(res, "abc");
+    return i;
+}
+
+var uceFault_regexp_g_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_replace'))
+function rregexp_g_replace(i) {
+    var re = new RegExp("str\\d+" + (i % 10), "g");
+    re.test("str00123456789");
+    assertEq(re.lastIndex == 0, false);
+
+    var res = "str00123456789".replace(re, "abc");
+
+    // replace will always zero the lastIndex field, even if it was not zero before.
+    assertEq(re.lastIndex == 0, true);
+
+    if (uceFault_regexp_g_replace(i) || uceFault_regexp_g_replace(i))
+        assertEq(res, "abc");
+    return i;
+}
+
+var uceFault_regexp_g_literal_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_literal_replace'))
+function rregexp_g_literal_replace(i) {
+    var re = /str\d+9/g;
+    re.test("str00123456789");
+    assertEq(re.lastIndex == 0, false);
+
+    var res = "str00123456789".replace(re, "abc");
+
+    // replace will zero the lastIndex field.
+    assertEq(re.lastIndex == 0, true);
+
+    if (uceFault_regexp_g_literal_replace(i) || uceFault_regexp_g_literal_replace(i))
+        assertEq(res, "abc");
+    return i;
+}
+
+var uceFault_regexp_i_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_replace'))
+function rregexp_i_replace(i) {
+    var re = new RegExp("str\\d+" + (i % 10), "i");
+    re.test("STR00123456789");
+    assertEq(re.lastIndex == 0, true);
+
+    var res = "STR00123456789".replace(re, "abc");
+
+    assertEq(re.lastIndex == 0, true);
+
+    if (uceFault_regexp_i_replace(i) || uceFault_regexp_i_replace(i))
+        assertEq(res, "abc");
+    return i;
+}
+
+var uceFault_regexp_i_literal_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_literal_replace'))
+function rregexp_i_literal_replace(i) {
+    var re = /str\d+9/i;
+    re.test("STR00123456789");
+    assertEq(re.lastIndex == 0, true);
+
+    var res = "str00123456789".replace(re, "abc");
+
+    assertEq(re.lastIndex == 0, true);
+
+    if (uceFault_regexp_i_literal_replace(i) || uceFault_regexp_i_literal_replace(i))
+        assertEq(res, "abc");
+    return i;
+}
+
+var uceFault_regexp_m_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_replace'))
+function rregexp_m_replace(i) {
+    var re = new RegExp("^str\\d+" + (i % 10), "m");
+    re.test("abc\nstr00123456789");
+    assertEq(re.lastIndex == 0, true);
+
+    var res = "abc\nstr00123456789".replace(re, "abc");
+
+    assertEq(re.lastIndex == 0, true);
+
+    if (uceFault_regexp_m_replace(i) || uceFault_regexp_m_replace(i))
+        assertEq(res, "abc\nabc");
+    return i;
+}
+
+var uceFault_regexp_m_literal_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_literal_replace'))
+function rregexp_m_literal_replace(i) {
+    var re = /^str\d+9/m;
+    re.test("abc\nstr00123456789");
+    assertEq(re.lastIndex == 0, true);
+
+    var res = "abc\nstr00123456789".replace(re, "abc");
+
+    assertEq(re.lastIndex == 0, true);
+
+    if (uceFault_regexp_m_literal_replace(i) || uceFault_regexp_m_literal_replace(i))
+        assertEq(res, "abc\nabc");
+    return i;
+}
+
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
@@ -857,6 +990,15 @@ for (i = 0; i < 100; i++) {
     rregexp_i_literal_test(i);
     rregexp_m_test(i);
     rregexp_m_literal_test(i);
+    rregexp_replace(i);
+    rregexp_y_replace(i);
+    rregexp_y_literal_replace(i);
+    rregexp_g_replace(i);
+    rregexp_g_literal_replace(i);
+    rregexp_i_replace(i);
+    rregexp_i_literal_replace(i);
+    rregexp_m_replace(i);
+    rregexp_m_literal_replace(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well
