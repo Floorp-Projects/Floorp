@@ -17,6 +17,7 @@
 
 namespace mozilla {
 
+class ContainerParser;
 class MediaSourceDecoder;
 
 namespace dom {
@@ -45,11 +46,6 @@ public:
   // decoders buffered ranges in aRanges.
   double Buffered(dom::TimeRanges* aRanges);
 
-  // Create a new decoder, set mCurrentDecoder to the new decoder, and queue
-  // the decoder for initialization.  The decoder is not considered
-  // initialized until it is added to mDecoders.
-  bool NewDecoder();
-
   // Mark the current decoder's resource as ended, clear mCurrentDecoder and
   // reset mLast{Start,End}Timestamp.
   void DiscardDecoder();
@@ -59,14 +55,9 @@ public:
   // Returns true if an init segment has been appended.
   bool HasInitSegment();
 
-  // Returns true iff HasInitSegment() and the decoder using that init
+  // Returns true iff mParser->HasInitData() and the decoder using that init
   // segment has successfully initialized by setting mHas{Audio,Video}..
   bool IsReady();
-
-  // Query and update mLast{Start,End}Timestamp.
-  void LastTimestamp(int64_t& aStart, int64_t& aEnd);
-  void SetLastStartTimestamp(int64_t aStart);
-  void SetLastEndTimestamp(int64_t aEnd);
 
   // Returns true if any of the decoders managed by this track buffer
   // contain aTime in their buffered ranges.
@@ -88,6 +79,15 @@ public:
 
 private:
   ~TrackBuffer();
+
+  // Create a new decoder, set mCurrentDecoder to the new decoder, and queue
+  // the decoder for initialization.  The decoder is not considered
+  // initialized until it is added to mDecoders.
+  bool NewDecoder();
+
+  // Helper for AppendData, ensures NotifyDataArrived is called whenever
+  // data is appended to the current decoder's SourceBufferResource.
+  bool AppendDataToCurrentResource(const uint8_t* aData, uint32_t aLength);
 
   // Queue execution of InitializeDecoder on mTaskQueue.
   bool QueueInitializeDecoder(nsRefPtr<SourceBufferDecoder> aDecoder);
@@ -112,6 +112,8 @@ private:
   // function.
   void RemoveDecoder(nsRefPtr<SourceBufferDecoder> aDecoder);
 
+  nsAutoPtr<ContainerParser> mParser;
+
   // A task queue using the shared media thread pool.  Used exclusively to
   // initialize (i.e. call ReadMetadata on) decoders as they are created via
   // NewDecoder.
@@ -135,10 +137,6 @@ private:
   // AppendData.  Accessed on the main thread only.
   int64_t mLastStartTimestamp;
   int64_t mLastEndTimestamp;
-
-  // Set when the initialization segment is first seen and cached (implied
-  // by new decoder creation).  Protected by mParentDecoder's monitor.
-  bool mHasInit;
 
   // Set when the first decoder used by this TrackBuffer is initialized.
   // Protected by mParentDecoder's monitor.
