@@ -24,6 +24,7 @@ import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.GuestSession;
 import org.mozilla.gecko.LocaleManager;
 import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.PrefsHelper;
@@ -292,6 +293,10 @@ OnSharedPreferenceChangeListener
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (GeckoProfile.get(this).inGuestMode()) {
+            GuestSession.configureWindow(getWindow());
+        }
+
         // Apply the current user-selected locale, if necessary.
         checkLocale();
 
