@@ -716,8 +716,8 @@ public:
 
 
   /**
-   * Gets the transform for aFrame relative to aAncestor. Pass null for aAncestor
-   * to go up to the root frame.
+   * Gets the transform for aFrame relative to aAncestor. Pass null for
+   * aAncestor to go up to the root frame.
    */
   static Matrix4x4 GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncestor);
 
@@ -765,8 +765,8 @@ public:
 
   /**
    * Given a point in the global coordinate space, returns that point expressed
-   * in the coordinate system of aFrame.  This effectively inverts all transforms
-   * between this point and the root frame.
+   * in the coordinate system of aFrame.  This effectively inverts all
+   * transforms between this point and the root frame.
    *
    * @param aFrame The frame that acts as the coordinate space container.
    * @param aPoint The point, in the global space, to get in the frame-local space.
@@ -887,9 +887,9 @@ public:
    * or the root of a popup) with an associated widget and we draw using
    * the layer manager for the frame's widget.
    * @param aDirtyRegion the region that must be painted, in the coordinates
-   * of aFrame
+   * of aFrame.
    * @param aBackstop paint the dirty area with this color before drawing
-   * the actual content; pass NS_RGBA(0,0,0,0) to draw no background
+   * the actual content; pass NS_RGBA(0,0,0,0) to draw no background.
    * @param aFlags if PAINT_IN_TRANSFORM is set, then we assume
    * this is inside a transform or SVG foreignObject. If
    * PAINT_SYNC_DECODE_IMAGES is set, we force synchronous decode on all
@@ -905,15 +905,15 @@ public:
    * If PAINT_EXISTING_TRANSACTION is set, then BeginTransaction() has already
    * been called on aFrame's widget's layer manager and should not be
    * called again.
-   * If PAINT_COMPRESSED is set, the FrameLayerBuilder should be set to compressed mode
-   * to avoid short cut optimizations.
+   * If PAINT_COMPRESSED is set, the FrameLayerBuilder should be set to
+   * compressed mode to avoid short cut optimizations.
    *
    * So there are three possible behaviours:
    * 1) PAINT_WIDGET_LAYERS is set and aRenderingContext is null; we paint
-   * by calling BeginTransaction on the widget's layer manager
+   * by calling BeginTransaction on the widget's layer manager.
    * 2) PAINT_WIDGET_LAYERS is set and aRenderingContext is non-null; we
    * paint by calling BeginTransactionWithTarget on the widget's layer
-   * maanger
+   * manager.
    * 3) PAINT_WIDGET_LAYERS is not set and aRenderingContext is non-null;
    * we paint by construct a BasicLayerManager and calling
    * BeginTransactionWithTarget on it. This is desirable if we're doing
@@ -927,15 +927,16 @@ public:
 
   /**
    * Uses a binary search for find where the cursor falls in the line of text
-   * It also keeps track of the part of the string that has already been measured
-   * so it doesn't have to keep measuring the same text over and over
+   * It also keeps track of the part of the string that has already been
+   * measured so it doesn't have to keep measuring the same text over and over.
    *
    * @param "aBaseWidth" contains the width in twips of the portion
    * of the text that has already been measured, and aBaseInx contains
    * the index of the text that has already been measured.
    *
-   * @param aTextWidth returns the (in twips) the length of the text that falls
-   * before the cursor aIndex contains the index of the text where the cursor falls
+   * @param aTextWidth returns (in twips) the length of the text that falls
+   * before the cursor aIndex contains the index of the text where the cursor
+   * falls.
    */
   static bool
   BinarySearchForPosition(nsRenderingContext* acx,
@@ -1145,8 +1146,8 @@ public:
   /**
    * Check whether aFrame is a part of the scrollbar or scrollcorner of
    * the root content.
-   * @param aFrame the checking frame
-   * @return if TRUE, the frame is a part of the scrollbar or scrollcorner of
+   * @param aFrame the checking frame.
+   * @return true if the frame is a part of the scrollbar or scrollcorner of
    *         the root content.
    */
   static bool IsViewportScrollbarFrame(nsIFrame* aFrame);
@@ -1184,7 +1185,7 @@ public:
    * not handle 'auto'.  It ensures that the result is nonnegative.
    *
    * @param aRenderingContext Rendering context for font measurement/metrics.
-   * @param aFrame Frame whose (min-/max-/)width is being computed
+   * @param aFrame Frame whose (min-/max-/)width is being computed.
    * @param aContainingBlockWidth Width of aFrame's containing block.
    * @param aContentEdgeToBoxSizing The sum of any left/right padding and
    *          border that goes inside the rect chosen by box-sizing.
@@ -1425,8 +1426,7 @@ public:
    *                            that size.)
    *   @param aDest             The position and scaled area where one copy of
    *                            the image should be drawn.
-   *   @param aFill             The area to be filled with copies of the
-   *                            image.
+   *   @param aFill             The area to be filled with copies of the image.
    *   @param aAnchor           A point in aFill which we will ensure is
    *                            pixel-aligned in the output.
    *   @param aDirty            Pixels outside this area may be skipped.
@@ -1487,7 +1487,7 @@ public:
    *                            appropriate scale and transform for drawing in
    *                            app units.
    *   @param aImage            The image.
-   *   @param aDest             The top-left where the image should be drawn
+   *   @param aDest             The top-left where the image should be drawn.
    *   @param aDirty            If non-null, then pixels outside this area may
    *                            be skipped.
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
@@ -1512,7 +1512,7 @@ public:
    *                            appropriate scale and transform for drawing in
    *                            app units.
    *   @param aImage            The image.
-   *   @param aDest             The area that the image should fill
+   *   @param aDest             The area that the image should fill.
    *   @param aDirty            Pixels outside this area may be skipped.
    *   @param aSVGContext       If non-null, SVG-related rendering context
    *                            such as overridden attributes on the image
@@ -1619,7 +1619,7 @@ public:
    *                           the widget's transparency. For menupopups,
    *                           aBackgroundFrame and aCSSRootFrame will be the
    *                           same.
-   *   @return a value suitable for passing to SetWindowTranslucency
+   *   @return a value suitable for passing to SetWindowTranslucency.
    */
   static nsTransparencyMode GetFrameTransparency(nsIFrame* aBackgroundFrame,
                                                  nsIFrame* aCSSRootFrame);

@@ -24,10 +24,8 @@
 
 #include "nssgtest.h"
 #include "pkix/pkix.h"
-#include "pkix/pkixnss.h"
 #include "pkixder.h"
 #include "pkixtestutil.h"
-#include "secerr.h"
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
@@ -71,12 +69,13 @@ private:
   virtual Result DigestBuf(Input item, /*out*/ uint8_t *digestBuf,
                            size_t digestBufLen)
   {
-    return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
+    return TestDigestBuf(item, digestBuf, digestBufLen);
   }
 
   virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
   {
-    return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 };
 
@@ -90,15 +89,9 @@ protected:
     issuerDER = CNToDERName(issuerASCII);
     ASSERT_NE(ENCODING_FAILED, issuerDER);
 
-    ScopedSECKEYPublicKey issuerPublicKey;
-    ScopedSECKEYPrivateKey issuerPrivateKey;
-    ASSERT_EQ(Success, GenerateKeyPair(issuerPublicKey, issuerPrivateKey));
-
-    ScopedSECItem issuerSPKIOriginal(
-      SECKEY_EncodeDERSubjectPublicKeyInfo(issuerPublicKey.get()));
-    ASSERT_TRUE(issuerSPKIOriginal);
-
-    issuerSPKI.assign(issuerSPKIOriginal->data, issuerSPKIOriginal->len);
+    ScopedTestKeyPair keyPair(GenerateKeyPair());
+    ASSERT_TRUE(keyPair);
+    issuerSPKI = keyPair->subjectPublicKeyInfo;
   }
 
   CreateEncodedOCSPRequestTrustDomain trustDomain;
