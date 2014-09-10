@@ -47,7 +47,7 @@ TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& a
   : mParentDecoder(aParentDecoder)
   , mType(aType)
   , mLastStartTimestamp(0)
-  , mLastEndTimestamp(UnspecifiedNaN<double>())
+  , mLastEndTimestamp(0)
   , mHasInit(false)
   , mHasAudio(false)
   , mHasVideo(false)
@@ -177,7 +177,7 @@ TrackBuffer::NewDecoder()
   mDecoders.AppendElement(decoder);
 
   mLastStartTimestamp = 0;
-  mLastEndTimestamp = UnspecifiedNaN<double>();
+  mLastEndTimestamp = 0;
   mHasInit = true;
 
   return QueueInitializeDecoder(decoder);
@@ -292,7 +292,7 @@ TrackBuffer::IsReady()
 }
 
 void
-TrackBuffer::LastTimestamp(double& aStart, double& aEnd)
+TrackBuffer::LastTimestamp(int64_t& aStart, int64_t& aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
   aStart = mLastStartTimestamp;
@@ -300,14 +300,14 @@ TrackBuffer::LastTimestamp(double& aStart, double& aEnd)
 }
 
 void
-TrackBuffer::SetLastStartTimestamp(double aStart)
+TrackBuffer::SetLastStartTimestamp(int64_t aStart)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mLastStartTimestamp = aStart;
 }
 
 void
-TrackBuffer::SetLastEndTimestamp(double aEnd)
+TrackBuffer::SetLastEndTimestamp(int64_t aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mLastEndTimestamp = aEnd;
