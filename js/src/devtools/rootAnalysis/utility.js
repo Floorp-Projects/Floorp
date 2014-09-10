@@ -135,7 +135,7 @@ function readable(fullname)
 
 function xdbLibrary()
 {
-    var lib = ctypes.open(environment['XDB']);
+    var lib = ctypes.open(os.getenv('XDB'));
     return {
         open: lib.declare("xdb_open", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr),
         min_data_stream: lib.declare("xdb_min_data_stream", ctypes.default_abi, ctypes.int),
