@@ -368,7 +368,7 @@ nsSVGPathGeometryFrame::ReflowSVG()
                       fabs(scaleFactors.height) >= 1e-6;
   gfx::Matrix scaling;
   if (applyScaling) {
-    scaling.Scale(scaleFactors.width, scaleFactors.height);
+    scaling.PreScale(scaleFactors.width, scaleFactors.height);
   }
   gfxRect extent = GetBBoxContribution(scaling, flags).ToThebesRect();
   if (applyScaling) {

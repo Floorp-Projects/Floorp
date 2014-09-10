@@ -31,7 +31,7 @@ GetMaskData(Layer* aMaskLayer,
       Matrix4x4 effectiveTransform = aMaskLayer->GetEffectiveTransform();
       DebugOnly<bool> maskIs2D = effectiveTransform.CanDraw2D(&transform);
       NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
-      transform.Translate(-aDeviceOffset.x, -aDeviceOffset.y);
+      transform.PreTranslate(-aDeviceOffset.x, -aDeviceOffset.y);
       aMaskData->Construct(transform, surface);
       return true;
     }
