@@ -989,7 +989,7 @@ this.MozLoopService = {
    *        rejected with this JSON-parsed response.
    */
   hawkRequest: function(sessionType, path, method, payloadObj) {
-    return MozLoopServiceInternal.hawkRequest(path, method, payloadObj);
+    return MozLoopServiceInternal.hawkRequest(sessionType, path, method, payloadObj);
   },
 };
 Object.freeze(this.MozLoopService);
