@@ -122,6 +122,23 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Returns the callData for a specific callDataId
+     *
+     * The data was retrieved from the LoopServer via a GET/calls/<version> request
+     * triggered by an incoming message from the LoopPushServer.
+     *
+     * @param {int} loopCallId
+     * @returns {callData} The callData or undefined if error.
+     */
+    getCallData: {
+      enumerable: true,
+      writable: true,
+      value: function(loopCallId) {
+        return Cu.cloneInto(MozLoopService.getCallData(loopCallId), targetWindow);
+      }
+    },
+
+    /**
      * Returns the contacts API.
      *
      * @returns {Object} The contacts API object
