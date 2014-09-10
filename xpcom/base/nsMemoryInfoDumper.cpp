@@ -704,6 +704,43 @@ private:
 
 NS_IMPL_ISUPPORTS(TempDirMemoryFinishCallback, nsIFinishDumpingCallback)
 
+static nsresult
+DumpMemoryInfoToFile(
+  nsIFile* aReportsFile,
+  nsIFinishDumpingCallback* aFinishDumping,
+  nsISupports* aFinishDumpingData,
+  bool aAnonymize,
+  bool aMinimizeMemoryUsage,
+  nsAString& aDMDIdentifier)
+{
+  nsRefPtr<nsGZFileWriter> reportsWriter = new nsGZFileWriter();
+  nsresult rv = reportsWriter->Init(aReportsFile);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Dump the memory reports to the file.
+  rv = DumpHeader(reportsWriter);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Process reporters.
+  nsCOMPtr<nsIMemoryReporterManager> mgr =
+    do_GetService("@mozilla.org/memory-reporter-manager;1");
+  nsRefPtr<DumpReportCallback> dumpReport =
+    new DumpReportCallback(reportsWriter);
+  nsRefPtr<FinishReportingCallback> finishReporting =
+    new FinishReportingCallback(reportsWriter, aFinishDumping,
+                                aFinishDumpingData);
+  rv = mgr->GetReportsExtended(dumpReport, nullptr,
+                               finishReporting, nullptr,
+                               aAnonymize,
+                               aMinimizeMemoryUsage,
+                               aDMDIdentifier);
+  return rv;
+}
+
 NS_IMETHODIMP
 nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
                                             bool aAnonymize,
@@ -748,31 +785,8 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
   nsRefPtr<TempDirMemoryFinishCallback> finishDumping =
     new TempDirMemoryFinishCallback(reportsTmpFile, reportsFinalFilename);
 
-  nsRefPtr<nsGZFileWriter> reportsWriter = new nsGZFileWriter();
-  rv = reportsWriter->Init(reportsTmpFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Dump the memory reports to the file.
-  rv = DumpHeader(reportsWriter);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Process reporters.
-  nsCOMPtr<nsIMemoryReporterManager> mgr =
-    do_GetService("@mozilla.org/memory-reporter-manager;1");
-  nsRefPtr<DumpReportCallback> dumpReport =
-    new DumpReportCallback(reportsWriter);
-  nsRefPtr<FinishReportingCallback> finishReporting =
-    new FinishReportingCallback(reportsWriter, finishDumping, nullptr);
-  rv = mgr->GetReportsExtended(dumpReport, nullptr,
-                               finishReporting, nullptr,
-                               aAnonymize,
-                               aMinimizeMemoryUsage,
-                               /* DMDident = */ identifier);
-  return rv;
+  return DumpMemoryInfoToFile(reportsTmpFile, finishDumping, nullptr,
+                              aAnonymize, aMinimizeMemoryUsage, identifier);
 }
 
 #ifdef MOZ_DMD
@@ -872,33 +886,10 @@ nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
     }
   }
 
-  // Write the memory reports to the file.
-
-  nsRefPtr<nsGZFileWriter> reportsWriter = new nsGZFileWriter();
-  rv = reportsWriter->Init(reportsFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = DumpHeader(reportsWriter);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Process reports and finish up.
-  nsCOMPtr<nsIMemoryReporterManager> mgr =
-    do_GetService("@mozilla.org/memory-reporter-manager;1");
-  nsRefPtr<DumpReportCallback> dumpReport =
-    new DumpReportCallback(reportsWriter);
-  nsRefPtr<FinishReportingCallback> finishReporting =
-    new FinishReportingCallback(reportsWriter, aFinishDumping,
-                                aFinishDumpingData);
-  rv = mgr->GetReportsExtended(dumpReport, nullptr,
-                               finishReporting, nullptr,
-                               aAnonymize,
-                               /* minimizeMemoryUsage = */ false,
-                               /* DMDident = */ EmptyString());
-  return rv;
+  nsString dmdIdent = EmptyString();
+  return DumpMemoryInfoToFile(reportsFile, aFinishDumping, aFinishDumpingData,
+                              aAnonymize, /* minimizeMemoryUsage = */ false,
+                              dmdIdent);
 }
 
 #undef DUMP
