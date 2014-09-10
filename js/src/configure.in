@@ -1995,6 +1995,7 @@ arm*-*)
 sparc-*)
 dnl ENABLE_ION=0
     AC_DEFINE(JS_CPU_SPARC)
+    ;;
 mips*-*)
     AC_DEFINE(JS_CPU_MIPS)
     ;;
