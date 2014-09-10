@@ -674,7 +674,9 @@ OnSharedPreferenceChangeListener
                     preferences.removePreference(pref);
                     i--;
                     continue;
-                } else if (AppConstants.RELEASE_BUILD && PREFS_GEO_REPORTING.equals(key)) {
+                } else if (AppConstants.RELEASE_BUILD &&
+                            (PREFS_GEO_REPORTING.equals(key) ||
+                             PREFS_GEO_LEARN_MORE.equals(key))) {
                     // We don't build wifi/cell tower collection in release builds, so hide the UI.
                     preferences.removePreference(pref);
                     i--;
