@@ -593,7 +593,78 @@ public:
   {
   }
 
-  NS_IMETHOD Callback(nsISupports* aData);
+  NS_IMETHOD Callback(nsISupports* aData)
+  {
+    nsresult rv = DumpFooter(mrWriter);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // The call to Finish() deallocates the memory allocated by mrWriter's first
+    // DUMP() call (within DumpProcessMemoryReportsToGZFileWriter()).  Because
+    // that memory was live while the memory reporters ran and thus measured by
+    // them -- by "heap-allocated" if nothing else -- we want DMD to see it as
+    // well.  So we deliberately don't call Finish() until after DMD finishes.
+    rv = mrWriter->Finish();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Rename the memory reports file, now that we're done writing all the
+    // files. Its final name is "memory-report<-identifier>-<pid>.json.gz".
+
+    nsCOMPtr<nsIFile> mrFinalFile;
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mrFinalFile));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+  #ifdef ANDROID
+    rv = mrFinalFile->AppendNative(NS_LITERAL_CSTRING("memory-reports"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  #endif
+
+    rv = mrFinalFile->AppendNative(mrFilename);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = mrFinalFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsAutoString mrActualFinalFilename;
+    rv = mrFinalFile->GetLeafName(mrActualFinalFilename);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = mrTmpFile->MoveTo(/* directory */ nullptr, mrActualFinalFilename);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Write a message to the console.
+
+    nsCOMPtr<nsIConsoleService> cs =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsString path;
+    mrTmpFile->GetPath(path);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsString msg = NS_LITERAL_STRING("nsIMemoryInfoDumper dumped reports to ");
+    msg.Append(path);
+    return cs->LogStringMessage(msg.get());
+  }
 
 private:
   ~TempDirMemoryFinishCallback() {}
@@ -736,80 +807,6 @@ nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
   return rv;
 }
 #endif  // MOZ_DMD
-
-NS_IMETHODIMP
-TempDirMemoryFinishCallback::Callback(nsISupports* aData)
-{
-  nsresult rv = DumpFooter(mrWriter);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // The call to Finish() deallocates the memory allocated by mrWriter's first
-  // DUMP() call (within DumpProcessMemoryReportsToGZFileWriter()).  Because
-  // that memory was live while the memory reporters ran and thus measured by
-  // them -- by "heap-allocated" if nothing else -- we want DMD to see it as
-  // well.  So we deliberately don't call Finish() until after DMD finishes.
-  rv = mrWriter->Finish();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Rename the memory reports file, now that we're done writing all the files.
-  // Its final name is "memory-report<-identifier>-<pid>.json.gz".
-
-  nsCOMPtr<nsIFile> mrFinalFile;
-  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mrFinalFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-#ifdef ANDROID
-  rv = mrFinalFile->AppendNative(NS_LITERAL_CSTRING("memory-reports"));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-#endif
-
-  rv = mrFinalFile->AppendNative(mrFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = mrFinalFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsAutoString mrActualFinalFilename;
-  rv = mrFinalFile->GetLeafName(mrActualFinalFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = mrTmpFile->MoveTo(/* directory */ nullptr, mrActualFinalFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Write a message to the console.
-
-  nsCOMPtr<nsIConsoleService> cs =
-    do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsString path;
-  mrTmpFile->GetPath(path);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsString msg = NS_LITERAL_STRING("nsIMemoryInfoDumper dumped reports to ");
-  msg.Append(path);
-  return cs->LogStringMessage(msg.get());
-}
 
 // This dumps the JSON footer and closes the file, and then calls the given
 // nsIFinishDumpingCallback.
