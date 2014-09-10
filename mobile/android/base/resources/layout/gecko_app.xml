@@ -22,6 +22,7 @@
         <RelativeLayout android:id="@+id/gecko_layout"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:layout_below="@+id/new_tablet_tab_strip"
                         android:layout_above="@+id/find_in_page">
 
             <include layout="@layout/shared_ui_components"/>
@@ -63,7 +64,7 @@
         <FrameLayout android:id="@+id/search_container"
                      android:layout_width="match_parent"
                      android:layout_height="match_parent"
-                     android:layout_below="@+id/browser_actionbar"
+                     android:layout_below="@+id/browser_chrome"
                      android:background="@android:color/white"
                      android:visibility="invisible"/>
 
@@ -73,33 +74,48 @@
              the root view, BrowserToolbar should be specified as low in the
              view hierarchy as possible. -->
 
-        <org.mozilla.gecko.widget.GeckoViewFlipper android:id="@id/browser_actionbar"
+        <LinearLayout android:id="@id/browser_chrome"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical">
+
+            <ViewStub android:id="@+id/new_tablet_tab_strip"
+                      android:inflatedId="@id/new_tablet_tab_strip"
+                      android:layout="@layout/new_tablet_tab_strip"
+                      android:layout_width="match_parent"
+                      android:layout_height="@dimen/new_tablet_tab_strip_height"
+                      android:visibility="gone"/>
+
+            <org.mozilla.gecko.widget.GeckoViewFlipper
+                android:id="@+id/browser_actionbar"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/browser_toolbar_height"
                 android:clickable="true"
                 android:focusable="true">
 
-            <org.mozilla.gecko.toolbar.BrowserToolbar
-                android:id="@+id/browser_toolbar"
-                style="@style/BrowserToolbar"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/browser_toolbar_height"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="@drawable/url_bar_bg"/>
+                <org.mozilla.gecko.toolbar.BrowserToolbar
+                    android:id="@+id/browser_toolbar"
+                    style="@style/BrowserToolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/browser_toolbar_height"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/url_bar_bg"/>
 
-            <org.mozilla.gecko.ActionModeCompatView android:id="@+id/actionbar"
-                                                    android:layout_height="match_parent"
-                                                    android:layout_width="match_parent"
-                                                    style="@style/GeckoActionBar"/>
+                <org.mozilla.gecko.ActionModeCompatView android:id="@+id/actionbar"
+                                                        android:layout_height="match_parent"
+                                                        android:layout_width="match_parent"
+                                                        style="@style/GeckoActionBar"/>
 
-        </org.mozilla.gecko.widget.GeckoViewFlipper>
+            </org.mozilla.gecko.widget.GeckoViewFlipper>
+
+        </LinearLayout>
 
         <org.mozilla.gecko.toolbar.ToolbarProgressView android:id="@+id/progress"
                                                        android:layout_width="match_parent"
                                                        android:layout_height="14dp"
                                                        android:layout_marginTop="-8dp"
-                                                       android:layout_below="@id/browser_actionbar"
+                                                       android:layout_below="@id/browser_chrome"
                                                        android:src="@drawable/progress"
                                                        android:background="@null"
                                                        android:visibility="gone" />
