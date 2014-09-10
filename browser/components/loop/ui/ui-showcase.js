@@ -135,9 +135,17 @@
           ), 
 
           Section({name: "IncomingCallView"}, 
-            Example({summary: "Default", dashed: "true", style: {width: "280px"}}, 
+            Example({summary: "Default / incoming video call", dashed: "true", style: {width: "280px"}}, 
               React.DOM.div({className: "fx-embedded"}, 
-                IncomingCallView({model: mockConversationModel})
+                IncomingCallView({model: mockConversationModel, 
+                                  video: {enabled: true}})
+              )
+            ), 
+
+            Example({summary: "Default / incoming audio only call", dashed: "true", style: {width: "280px"}}, 
+              React.DOM.div({className: "fx-embedded"}, 
+                IncomingCallView({model: mockConversationModel, 
+                                  video: {enabled: false}})
               )
             )
           ), 
@@ -145,7 +153,9 @@
           Section({name: "IncomingCallView-ActiveState"}, 
             Example({summary: "Default", dashed: "true", style: {width: "280px"}}, 
               React.DOM.div({className: "fx-embedded"}, 
-                IncomingCallView({model: mockConversationModel, showDeclineMenu: true})
+                IncomingCallView({model: mockConversationModel, 
+                                   showDeclineMenu: true, 
+                                   video: {enabled: true}})
               )
             )
           ), 
