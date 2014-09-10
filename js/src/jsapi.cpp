@@ -6197,14 +6197,14 @@ JS_PUBLIC_API(void)
 JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t value)
 {
     switch (opt) {
-      case JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER:
+      case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
         if (value == uint32_t(-1)) {
             jit::JitOptions defaultValues;
             value = defaultValues.baselineUsesBeforeCompile;
         }
         jit::js_JitOptions.baselineUsesBeforeCompile = value;
         break;
-      case JSJITCOMPILER_ION_USECOUNT_TRIGGER:
+      case JSJITCOMPILER_ION_WARMUP_TRIGGER:
         if (value == uint32_t(-1)) {
             jit::js_JitOptions.resetUsesBeforeCompile();
             break;
@@ -6259,9 +6259,9 @@ JS_GetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt)
 {
 #ifndef JS_CODEGEN_NONE
     switch (opt) {
-      case JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER:
+      case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
         return jit::js_JitOptions.baselineUsesBeforeCompile;
-      case JSJITCOMPILER_ION_USECOUNT_TRIGGER:
+      case JSJITCOMPILER_ION_WARMUP_TRIGGER:
         return jit::js_JitOptions.forcedDefaultIonUsesBeforeCompile;
       case JSJITCOMPILER_ION_ENABLE:
         return JS::RuntimeOptionsRef(rt).ion();

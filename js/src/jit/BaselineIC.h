@@ -28,7 +28,7 @@ namespace jit {
 // specific to that site.  These stubs are composed of a |StubData|
 // structure that stores parametrization information (e.g.
 // the shape pointer for a shape-check-and-property-get stub), any
-// dynamic information (e.g. use counts), a pointer to the stub code,
+// dynamic information (e.g. warm-up counters), a pointer to the stub code,
 // and a pointer to the next stub state in the linked list.
 //
 // Every BaselineScript keeps an table of |CacheDescriptor| data
@@ -316,7 +316,7 @@ class ICEntry
 
 // List of baseline IC stub kinds.
 #define IC_STUB_KIND_LIST(_)    \
-    _(UseCount_Fallback)        \
+    _(WarmUpCounter_Fallback)   \
                                 \
     _(Profiler_Fallback)        \
     _(Profiler_PushFunction)    \
@@ -790,7 +790,7 @@ class ICStub
           case Call_ScriptedApplyArray:
           case Call_ScriptedApplyArguments:
           case Call_ScriptedFunCall:
-          case UseCount_Fallback:
+          case WarmUpCounter_Fallback:
           case GetElem_NativeSlot:
           case GetElem_NativePrototypeSlot:
           case GetElem_NativePrototypeCallNative:
@@ -1174,22 +1174,22 @@ class ICMultiStubCompiler : public ICStubCompiler
       : ICStubCompiler(cx, kind), op(op) {}
 };
 
-// UseCount_Fallback
+// WarmUpCounter_Fallback
 
-// A UseCount IC chain has only the fallback stub.
-class ICUseCount_Fallback : public ICFallbackStub
+// A WarmUpCounter IC chain has only the fallback stub.
+class ICWarmUpCounter_Fallback : public ICFallbackStub
 {
     friend class ICStubSpace;
 
-    explicit ICUseCount_Fallback(JitCode *stubCode)
-      : ICFallbackStub(ICStub::UseCount_Fallback, stubCode)
+    explicit ICWarmUpCounter_Fallback(JitCode *stubCode)
+      : ICFallbackStub(ICStub::WarmUpCounter_Fallback, stubCode)
     { }
 
   public:
-    static inline ICUseCount_Fallback *New(ICStubSpace *space, JitCode *code) {
+    static inline ICWarmUpCounter_Fallback *New(ICStubSpace *space, JitCode *code) {
         if (!code)
             return nullptr;
-        return space->allocate<ICUseCount_Fallback>(code);
+        return space->allocate<ICWarmUpCounter_Fallback>(code);
     }
 
     // Compiler for this stub kind.
@@ -1199,11 +1199,11 @@ class ICUseCount_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::UseCount_Fallback)
+          : ICStubCompiler(cx, ICStub::WarmUpCounter_Fallback)
         { }
 
-        ICUseCount_Fallback *getStub(ICStubSpace *space) {
-            return ICUseCount_Fallback::New(space, getStubCode());
+        ICWarmUpCounter_Fallback *getStub(ICStubSpace *space) {
+            return ICWarmUpCounter_Fallback::New(space, getStubCode());
         }
     };
 };

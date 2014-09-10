@@ -1,5 +1,5 @@
-//setJitCompilerOption("baseline.usecount.trigger", 10);
-//setJitCompilerOption("ion.usecount.trigger", 20);
+//setJitCompilerOption("baseline.warmup.trigger", 10);
+//setJitCompilerOption("ion.warmup.trigger", 20);
 
 // This function is used to force a bailout when it is inlined, and to recover
 // the frame which is inlining this function.

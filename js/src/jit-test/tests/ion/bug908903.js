@@ -3,21 +3,21 @@ function f(x) {
     return x + 1;
 }
 
-setJitCompilerOption("ion.usecount.trigger", 2);
-setJitCompilerOption("baseline.usecount.trigger", 0);
+setJitCompilerOption("ion.warmup.trigger", 2);
+setJitCompilerOption("baseline.warmup.trigger", 0);
 
-assertEq(f(1), 2);     // usecount == 1 => eagerly compile with baseline.
-assertEq(f(0.5), 1.5); // usecount == 2 => normaly compile with ion.
-                       //                  invalidate for unexpect output.
+assertEq(f(1), 2);     // warm-up == 1 => eagerly compile with baseline.
+assertEq(f(0.5), 1.5); // warm-up == 2 => normaly compile with ion.
+                       //                 invalidate for unexpect output.
 
 
 function normal() {
-    setJitCompilerOption("ion.usecount.trigger", 8);
-    setJitCompilerOption("baseline.usecount.trigger", 5);
+    setJitCompilerOption("ion.warmup.trigger", 8);
+    setJitCompilerOption("baseline.warmup.trigger", 5);
 }
 
 function eager() {
-    setJitCompilerOption("ion.usecount.trigger", 0);
+    setJitCompilerOption("ion.warmup.trigger", 0);
 }
 
 function h(x) {
@@ -43,12 +43,12 @@ try {
 } catch (x) { }
 
 try {
-    var ion = { usecount: { trigger: null } };
-    setJitCompilerOption(ion.usecount.trigger, 42);
+    var ion = { warmup: { trigger: null } };
+    setJitCompilerOption(ion.warmup.trigger, 42);
     assertEq(false, true);
 } catch (x) { }
 
 try {
-    setJitCompilerOption("ion.usecount.trigger", "32");
+    setJitCompilerOption("ion.warmup.trigger", "32");
     assertEq(false, true);
 } catch (x) { }

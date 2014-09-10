@@ -75,9 +75,9 @@ OptimizationInfo::usesBeforeCompile(JSScript *script, jsbytecode *pc) const
         minUses = js_JitOptions.forcedDefaultIonUsesBeforeCompile;
 
     // If the script is too large to compile on the main thread, we can still
-    // compile it off thread. In these cases, increase the use count threshold
-    // to improve the compilation's type information and hopefully avoid later
-    // recompilation.
+    // compile it off thread. In these cases, increase the warm-up counter
+    // threshold to improve the compilation's type information and hopefully
+    // avoid later recompilation.
 
     if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE)
         minUses = minUses * (script->length() / (double) MAX_MAIN_THREAD_SCRIPT_SIZE);
@@ -144,7 +144,7 @@ OptimizationInfos::levelForScript(JSScript *script, jsbytecode *pc) const
     while (!isLastLevel(prev)) {
         OptimizationLevel level = nextLevel(prev);
         const OptimizationInfo *info = get(level);
-        if (script->getUseCount() < info->usesBeforeCompile(script, pc))
+        if (script->getWarmUpCounter() < info->usesBeforeCompile(script, pc))
             return prev;
 
         prev = level;
