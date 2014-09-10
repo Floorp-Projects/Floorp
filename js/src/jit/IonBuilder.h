@@ -348,7 +348,7 @@ class IonBuilder : public MIRGenerator
     bool improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test);
     // Used to detect triangular structure at test.
     bool detectAndOrStructure(MPhi *ins, bool *branchIsTrue);
-    void replaceTypeSet(MDefinition *subject, types::TemporaryTypeSet *type, MTest *test);
+    bool replaceTypeSet(MDefinition *subject, types::TemporaryTypeSet *type, MTest *test);
 
     // Add a guard which ensure that the set of type which goes through this
     // generated code correspond to the observed types for the bytecode.
