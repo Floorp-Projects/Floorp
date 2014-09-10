@@ -97,6 +97,7 @@ SyncScheduler.prototype = {
     Svc.Obs.add("FxA:hawk:backoff:interval", this);
 
     if (Status.checkSetup() == STATUS_OK) {
+      Svc.Obs.add("wake_notification", this);
       Svc.Idle.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
     }
   },
@@ -213,6 +214,7 @@ SyncScheduler.prototype = {
       case "weave:service:setup-complete":
          Services.prefs.savePrefFile(null);
          Svc.Idle.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
+         Svc.Obs.add("wake_notification", this);
          break;
       case "weave:service:start-over":
          this.setDefaults();
@@ -247,6 +249,16 @@ SyncScheduler.prototype = {
             this.scheduleNextSync(0);
           }
         }, IDLE_OBSERVER_BACK_DELAY, this, "idleDebouncerTimer");
+        break;
+      case "wake_notification":
+        this._log.debug("Woke from sleep.");
+        Utils.nextTick(() => {
+          // Trigger a sync if we have multiple clients.
+          if (this.numClients > 1) {
+            this._log.debug("More than 1 client. Syncing.");
+            this.scheduleNextSync(0);
+          }
+        });
         break;
     }
   },

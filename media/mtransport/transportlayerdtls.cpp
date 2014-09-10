@@ -118,7 +118,7 @@ int32_t TransportLayerNSPRAdapter::Write(const void *buf, int32_t length) {
 
 // Implementation of NSPR methods
 static PRStatus TransportLayerClose(PRFileDesc *f) {
-  f->secret = nullptr;
+  f->dtor(f);
   return PR_SUCCESS;
 }
 

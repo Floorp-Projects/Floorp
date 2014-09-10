@@ -83,7 +83,7 @@ window.onload = function() {
 
   ok(!!window.performance.getEntriesByType("resource").length,
     "Performance.getEntriesByType() should return some results");
-  ok(!!window.performance.getEntriesByName("http://example.com/tests/image/test/mochitest/blue.png").length,
+  ok(!!window.performance.getEntriesByName("http://mochi.test:8888/tests/image/test/mochitest/blue.png").length,
     "Performance.getEntriesByName() should return some results");
 
   // Checks that two calls for "getEntries()" return a different array with the same
@@ -169,6 +169,10 @@ function checkEntries(anEntryList) {
       for (var j = 1; j < sequence.length; ++j) {
         var prop = sequence[j];
         var prevProp = sequence[j-1];
+        if (prop == 'redirectStart' && entry[prop] == 0)
+          continue;
+        if (prop == 'redirectEnd' && entry[prop] == 0)
+          continue;
         ok(entry[prevProp] <= entry[prop],
           ['Expected ', prevProp, ' to happen before ', prop,
            ', got ', prevProp, ' = ', entry[prevProp],
@@ -181,9 +185,9 @@ function checkEntries(anEntryList) {
   // the order (the order might depend on the platform the tests are running).
   allResources = {
     "http://mochi.test:8888/tests/SimpleTest/test.css" : "link",
-    "http://example.com/tests/image/test/mochitest/blue.png" : "img",
-    "http://example.com/tests/image/test/mochitest/red.png" : "object",
-    "http://example.com/tests/image/test/mochitest/big.png" : "embed",
+    "http://mochi.test:8888/tests/image/test/mochitest/blue.png" : "img",
+    "http://mochi.test:8888/tests/image/test/mochitest/red.png" : "object",
+    "http://mochi.test:8888/tests/image/test/mochitest/big.png" : "embed",
     "http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing_iframe.html" : "subdocument"};
 
   for (resourceName in allResources) {
@@ -201,8 +205,8 @@ function checkEntries(anEntryList) {
   }
 
   // Check that the iframe's image was NOT added as an entry to this window's performance entry.
-  ok(!window.performance.getEntriesByName("http://example.com/tests/image/test/mochitest/damon.jpg").length,
-    "http://example.com/tests/image/test/mochitest/damon.jpg should be a valid entry name");
+  ok(!window.performance.getEntriesByName("http://mochi.test:8888/tests/image/test/mochitest/damon.jpg").length,
+    "http://mochi.test:8888/tests/image/test/mochitest/damon.jpg should be a valid entry name");
 }
 
 function firstCheck() {
@@ -271,9 +275,9 @@ function iframeTestsCompleted() {
   </a>
   <p id="display"></p>
   <div id="content">
-    <img src="http://example.com/tests/image/test/mochitest/blue.png">
-      <object data="http://example.com/tests/image/test/mochitest/red.png" type="image/png"/>
-      <embed src="http://example.com/tests/image/test/mochitest/big.png" type="image/png"/>
+    <img src="http://mochi.test:8888/tests/image/test/mochitest/blue.png">
+      <object data="http://mochi.test:8888/tests/image/test/mochitest/red.png" type="image/png"/>
+      <embed src="http://mochi.test:8888/tests/image/test/mochitest/big.png" type="image/png"/>
       <iframe sandbox="allow-same-origin allow-scripts" id="if_2" src="resource_timing_iframe.html" height="10" width="10"></iframe>
   </div>
 </body>
