@@ -891,7 +891,13 @@ toolbarbutton[panel-multiview-anchor="true"] > .toolbarbutton-menubutton-button 
                     linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
   background-repeat: no-repeat;
   background-color: Highlight;
-  background-position: left 10px center, 0; /* this doesn't need to be changed for RTL */
+  background-position: left 10px center, 0;
+}
+
+#PanelUI-help[panel-multiview-anchor="true"]:-moz-locale-dir(rtl)::after {
+  background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted-rtl.png),
+                    linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+  background-position: right 10px center, 0;
 }
 
 toolbarbutton[panel-multiview-anchor="true"] {
