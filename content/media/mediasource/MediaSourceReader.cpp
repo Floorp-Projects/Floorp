@@ -227,44 +227,8 @@ MediaSourceReader::BreakCycles()
   mTrackBuffers.Clear();
 }
 
-bool
-MediaSourceReader::CanSelectAudioReader(MediaDecoderReader* aNewReader)
-{
-  AudioInfo currentInfo = mAudioReader->GetMediaInfo().mAudio;
-  AudioInfo newInfo = aNewReader->GetMediaInfo().mAudio;
-
-  // TODO: We can't handle switching audio formats yet.
-  if (currentInfo.mRate != newInfo.mRate ||
-      currentInfo.mChannels != newInfo.mChannels) {
-    MSE_DEBUGV("MediaSourceReader(%p)::CanSelectAudioReader(%p) skip reader due to format mismatch",
-               this, aNewReader);
-    return false;
-  }
-
-  if (aNewReader->AudioQueue().AtEndOfStream()) {
-    MSE_DEBUGV("MediaSourceReader(%p)::CanSelectAudioReader(%p) skip reader due to queue EOS",
-               this, aNewReader);
-    return false;
-  }
-
-  return true;
-}
-
-bool
-MediaSourceReader::CanSelectVideoReader(MediaDecoderReader* aNewReader)
-{
-  if (aNewReader->VideoQueue().AtEndOfStream()) {
-    MSE_DEBUGV("MediaSourceReader(%p)::CanSelectVideoReader(%p) skip reader due to queue EOS",
-               this, aNewReader);
-    return false;
-  }
-
-  return true;
-}
-
 already_AddRefed<MediaDecoderReader>
 MediaSourceReader::SelectReader(int64_t aTarget,
-                                bool (MediaSourceReader::*aCanSelectReader)(MediaDecoderReader*),
                                 const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders)
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
@@ -273,13 +237,6 @@ MediaSourceReader::SelectReader(int64_t aTarget,
   // providing a given buffered range is expected to replace an older one.
   for (int32_t i = aTrackDecoders.Length() - 1; i >= 0; --i) {
     nsRefPtr<MediaDecoderReader> newReader = aTrackDecoders[i]->GetReader();
-
-    // Check the track-type-specific aspects first, as it's assumed these
-    // are cheaper than a buffered range comparison, which seems worthwhile
-    // to avoid on any reader we'd subsequently reject.
-    if (!(this->*aCanSelectReader)(newReader)) {
-      continue;
-    }
 
     nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
     aTrackDecoders[i]->GetBuffered(ranges);
@@ -303,9 +260,7 @@ MediaSourceReader::SwitchAudioReader(int64_t aTarget)
   if (!mAudioTrack) {
     return false;
   }
-  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget,
-                                                        &MediaSourceReader::CanSelectAudioReader,
-                                                        mAudioTrack->Decoders());
+  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, mAudioTrack->Decoders());
   if (newReader && newReader != mAudioReader) {
     mAudioReader->SetIdle();
     mAudioReader = newReader;
@@ -323,9 +278,7 @@ MediaSourceReader::SwitchVideoReader(int64_t aTarget)
   if (!mVideoTrack) {
     return false;
   }
-  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget,
-                                                        &MediaSourceReader::CanSelectVideoReader,
-                                                        mVideoTrack->Decoders());
+  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, mVideoTrack->Decoders());
   if (newReader && newReader != mVideoReader) {
     mVideoReader->SetIdle();
     mVideoReader = newReader;
