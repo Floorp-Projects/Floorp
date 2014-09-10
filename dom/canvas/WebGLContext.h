@@ -191,6 +191,14 @@ public:
                                  JS::Handle<JS::Value> aOptions) MOZ_OVERRIDE;
 
     NS_IMETHOD SetIsIPC(bool b) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
+
+    /**
+     * An abstract base class to be implemented by callers wanting to be notified
+     * that a refresh has occurred. Callers must ensure an observer is removed
+     * before it is destroyed.
+     */
+    virtual void DidRefresh() MOZ_OVERRIDE;
+
     NS_IMETHOD Redraw(const gfxRect&) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Swap(mozilla::ipc::Shmem& aBack,
                     int32_t x, int32_t y, int32_t w, int32_t h)
