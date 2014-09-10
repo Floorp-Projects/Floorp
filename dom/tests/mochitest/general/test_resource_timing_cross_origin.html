@@ -1,0 +1,45 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=822480
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// Resource timing is prefed off by default, so we had to use this workaround
+var subwindow = null;
+SpecialPowers.pushPrefEnv({"set": [["dom.enable_resource_timing", true]]}, start);
+
+function start() {
+  subwindow = window.open("resource_timing_cross_origin.html");
+}
+
+function finishTests() {
+  subwindow.close();
+  SpecialPowers.pushPrefEnv({"clear":[["dom.enable_resource_timing"]]}, SimpleTest.finish);
+}
+
+</script>
+</pre>
+
+<a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=936814"
+     title="Cross origin resource timing">
+    Bug #936814 - Implement the "timing allow check algorithm" for cross-origin Resource Timing
+</a>
+
+</body>
+</html>

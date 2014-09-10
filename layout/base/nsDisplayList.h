@@ -367,10 +367,9 @@ public:
   nsCaret* GetCaret();
   /**
    * Notify the display list builder that we're entering a presshell.
-   * aReferenceFrame should be a frame in the new presshell and aDirtyRect
-   * should be the current dirty rect in aReferenceFrame's coordinate space.
+   * aReferenceFrame should be a frame in the new presshell.
    */
-  void EnterPresShell(nsIFrame* aReferenceFrame, const nsRect& aDirtyRect);
+  void EnterPresShell(nsIFrame* aReferenceFrame);
   /**
    * For print-preview documents, we sometimes need to build display items for
    * the same frames multiple times in the same presentation, with different
@@ -382,7 +381,7 @@ public:
   /**
    * Notify the display list builder that we're leaving a presshell.
    */
-  void LeavePresShell(nsIFrame* aReferenceFrame, const nsRect& aDirtyRect);
+  void LeavePresShell(nsIFrame* aReferenceFrame);
 
   /**
    * Returns true if we're currently building a display list that's
@@ -710,7 +709,6 @@ private:
     nsIPresShell* mPresShell;
     nsIFrame*     mCaretFrame;
     nsRect        mCaretRect;
-    nsRect        mPrevDirtyRect;
     uint32_t      mFirstFrameMarkedForDisplay;
     bool          mIsBackgroundOnly;
   };

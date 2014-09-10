@@ -426,7 +426,7 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
   {
     int r,_status;
     char string[256];
-    char *username;
+    char *username = 0;
     Data *password = 0;
     nr_stun_message_attribute *attr;
     nr_transport_addr *mapped_addr = 0;

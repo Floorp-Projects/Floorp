@@ -190,6 +190,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     destroyPrincipals(nullptr),
     structuredCloneCallbacks(nullptr),
     telemetryCallback(nullptr),
+    errorReporter(nullptr),
     propertyRemovals(0),
 #if !EXPOSE_INTL_API
     thousandsSeparator(0),
