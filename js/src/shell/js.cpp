@@ -4949,121 +4949,6 @@ static const JSClass global_class = {
     JS_GlobalObjectTraceHook
 };
 
-static bool
-env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
-{
-/* XXX porting may be easy, but these don't seem to supply setenv by default */
-#if !defined SOLARIS
-    int rv;
-
-    if (JSID_IS_SYMBOL(id))
-        return true;
-    RootedString idstring(cx, IdToString(cx, id));
-    if (!idstring)
-        return false;
-    JSAutoByteString idstr;
-    if (!idstr.encodeLatin1(cx, idstring))
-        return false;
-
-    RootedString value(cx, ToString(cx, vp));
-    if (!value)
-        return false;
-    JSAutoByteString valstr;
-    if (!valstr.encodeLatin1(cx, value))
-        return false;
-
-#if defined XP_WIN || defined HPUX || defined OSF1
-    {
-        char *waste = JS_smprintf("%s=%s", idstr.ptr(), valstr.ptr());
-        if (!waste) {
-            JS_ReportOutOfMemory(cx);
-            return false;
-        }
-        rv = putenv(waste);
-#ifdef XP_WIN
-        /*
-         * HPUX9 at least still has the bad old non-copying putenv.
-         *
-         * Per mail from <s.shanmuganathan@digital.com>, OSF1 also has a putenv
-         * that will crash if you pass it an auto char array (so it must place
-         * its argument directly in the char *environ[] array).
-         */
-        JS_smprintf_free(waste);
-#endif
-    }
-#else
-    rv = setenv(idstr.ptr(), valstr.ptr(), 1);
-#endif
-    if (rv < 0) {
-        JS_ReportError(cx, "can't set env variable %s to %s", idstr.ptr(), valstr.ptr());
-        return false;
-    }
-    vp.set(StringValue(value));
-#endif /* !defined SOLARIS */
-    return true;
-}
-
-static bool
-env_enumerate(JSContext *cx, HandleObject obj)
-{
-    static bool reflected;
-    char **evp, *name, *value;
-    RootedString valstr(cx);
-    bool ok;
-
-    if (reflected)
-        return true;
-
-    for (evp = (char **)JS_GetPrivate(obj); (name = *evp) != nullptr; evp++) {
-        value = strchr(name, '=');
-        if (!value)
-            continue;
-        *value++ = '\0';
-        valstr = JS_NewStringCopyZ(cx, value);
-        ok = valstr && JS_DefineProperty(cx, obj, name, valstr, JSPROP_ENUMERATE);
-        value[-1] = '=';
-        if (!ok)
-            return false;
-    }
-
-    reflected = true;
-    return true;
-}
-
-static bool
-env_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
-{
-    if (JSID_IS_SYMBOL(id))
-        return true;
-
-    RootedString idstring(cx, IdToString(cx, id));
-    if (!idstring)
-        return false;
-    JSAutoByteString idstr;
-    if (!idstr.encodeLatin1(cx, idstring))
-        return false;
-
-    const char *name = idstr.ptr();
-    const char *value = getenv(name);
-    if (value) {
-        RootedString valstr(cx, JS_NewStringCopyZ(cx, value));
-        if (!valstr)
-            return false;
-        if (!JS_DefineProperty(cx, obj, name, valstr, JSPROP_ENUMERATE))
-            return false;
-        objp.set(obj);
-    }
-    return true;
-}
-
-static const JSClass env_class = {
-    "environment", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
-    JS_PropertyStub,  JS_DeletePropertyStub,
-    JS_PropertyStub,  env_setProperty,
-    env_enumerate, (JSResolveOp) env_resolve,
-    JS_ConvertStub
-};
-
 /*
  * Define a FakeDOMObject constructor. It returns an object with a getter,
  * setter and method with attached JitInfo. This object can be used to test
@@ -5922,11 +5807,6 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         return 1;
 
     JSAutoCompartment ac(cx, glob);
-
-    JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class);
-    if (!envobj)
-        return 1;
-    JS_SetPrivate(envobj, envp);
 
     if (!js::DefineOS(cx, glob))
         return 1;
