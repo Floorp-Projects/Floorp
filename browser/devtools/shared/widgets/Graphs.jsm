@@ -10,7 +10,12 @@ const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
-this.EXPORTED_SYMBOLS = ["LineGraphWidget", "BarGraphWidget", "CanvasGraphUtils"];
+this.EXPORTED_SYMBOLS = [
+  "AbstractCanvasGraph",
+  "LineGraphWidget",
+  "BarGraphWidget",
+  "CanvasGraphUtils"
+];
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
@@ -495,6 +500,12 @@ AbstractCanvasGraph.prototype = {
   },
 
   /**
+   * Specifies whether or not mouse selection is allowed.
+   * @type boolean
+   */
+  selectionEnabled: true,
+
+  /**
    * Sets the selection bounds.
    * Use `dropCursor` to hide the cursor.
    *
@@ -955,6 +966,9 @@ AbstractCanvasGraph.prototype = {
     switch (this._canvas.getAttribute("input")) {
       case "hovering-background":
       case "hovering-region":
+        if (!this.selectionEnabled) {
+          break;
+        }
         this._selection.start = mouseX;
         this._selection.end = null;
         this.emit("selecting");
@@ -990,6 +1004,9 @@ AbstractCanvasGraph.prototype = {
     switch (this._canvas.getAttribute("input")) {
       case "hovering-background":
       case "hovering-region":
+        if (!this.selectionEnabled) {
+          break;
+        }
         if (this.getSelectionWidth() < 1) {
           let region = this.getHoveredRegion();
           if (region) {

@@ -1370,8 +1370,9 @@ pref("devtools.debugger.ui.variables-sorting-enabled", true);
 pref("devtools.debugger.ui.variables-only-enum-visible", false);
 pref("devtools.debugger.ui.variables-searchbox-visible", false);
 
-// Enable the Profiler
+// Enable the Profiler and the Timeline
 pref("devtools.profiler.enabled", true);
+pref("devtools.timeline.enabled", false);
 
 // The default Profiler UI settings
 pref("devtools.profiler.ui.show-platform-data", false);

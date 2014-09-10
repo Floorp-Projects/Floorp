@@ -256,11 +256,12 @@ AlertDownloadProgressListener.prototype = {
     let state = aDownload.state;
     switch (state) {
       case Ci.nsIDownloadManager.DOWNLOAD_QUEUED: {
-        if (BrowserApp.isGuest) {
+        if (!ParentalControls.isAllowed(ParentalControls.DOWNLOADS)) {
           aDownload.cancel();
           NativeWindow.toast.show(Strings.browser.GetStringFromName("downloads.disabledInGuest"), "long");
           return;
         }
+
         NativeWindow.toast.show(Strings.browser.GetStringFromName("alertDownloadsToast"), "long");
         Downloads.createNotification(aDownload, new DownloadNotifOptions(aDownload,
                                                                          Strings.browser.GetStringFromName("alertDownloadsStart2"),

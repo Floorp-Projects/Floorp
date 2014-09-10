@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="fe92ddd450e03b38edb2d465de7897971d68ac68">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="f108c706fae43cd61628babdd9463e7695b2496e"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="7f21bdda274f0329393ef0e5a9374c06255c6f57"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="6969df171e5295f855f12d12db0382048e6892e7"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -38,7 +38,7 @@
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="4eece0d80928a2b5266b78421ebf0c8686d4ad2c"/>
   <project name="platform/external/aac" path="external/aac" revision="fa3eba16446cc8f2f5e2dfc20d86a49dbd37299e"/>
   <project name="platform/external/bison" path="external/bison" revision="c2418b886165add7f5a31fc5609f0ce2d004a90e"/>
-  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="c50830cae1b748024eec7e73ad98a4e427f663c7"/>
+  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="c8e99ca7e11c00f8124196fe1726a15e6e976587"/>
   <project name="platform/external/bsdiff" path="external/bsdiff" revision="23e322ab19fb7d74c2c37e40ce364d9f709bdcee"/>
   <project name="platform/external/bzip2" path="external/bzip2" revision="1cb636bd8e9e5cdfd5d5b2909a122f6e80db62de"/>
   <project name="platform/external/checkpolicy" path="external/checkpolicy" revision="0d73ef7049feee794f14cf1af88d05dae8139914"/>
