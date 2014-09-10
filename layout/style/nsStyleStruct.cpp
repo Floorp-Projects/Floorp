@@ -1266,7 +1266,11 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
 nsStylePosition::nsStylePosition(void)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
+
   // positioning values not inherited
+
+  mObjectPosition.SetInitialPercentValues(0.5f);
+
   nsStyleCoord  autoCoord(eStyleUnit_Auto);
   mOffset.SetLeft(autoCoord);
   mOffset.SetTop(autoCoord);
@@ -1317,7 +1321,8 @@ nsStylePosition::~nsStylePosition(void)
 }
 
 nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
-  : mOffset(aSource.mOffset)
+  : mObjectPosition(aSource.mObjectPosition)
+  , mOffset(aSource.mOffset)
   , mWidth(aSource.mWidth)
   , mMinWidth(aSource.mMinWidth)
   , mMaxWidth(aSource.mMaxWidth)
@@ -1369,9 +1374,10 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  // Changes to "z-index" & "object-fit" require a repaint.
+  // Changes to "z-index", "object-fit", & "object-position" require a repaint.
   if (mZIndex != aOther.mZIndex ||
-      mObjectFit != aOther.mObjectFit) {
+      mObjectFit != aOther.mObjectFit ||
+      mObjectPosition != aOther.mObjectPosition) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
   }
 
