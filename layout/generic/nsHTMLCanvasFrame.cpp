@@ -19,6 +19,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla::gfx;
 
 class nsDisplayCanvas : public nsDisplayItem {
 public:
@@ -280,9 +281,8 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                       presContext->AppUnitsToGfxUnits(area.height));
 
   // Transform the canvas into the right place
-  gfx::Matrix transform;
   gfxPoint p = r.TopLeft() + aContainerParameters.mOffset;
-  transform.Translate(p.x, p.y);
+  Matrix transform = Matrix::Translation(p.x, p.y);
   transform.Scale(r.Width()/canvasSize.width, r.Height()/canvasSize.height);
   layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
   layer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));

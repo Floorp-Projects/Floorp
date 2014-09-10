@@ -548,5 +548,5 @@ nsFilterInstance::FilterSpaceToFrameSpace(const nsIntRegion& aRegion) const
 gfxMatrix
 nsFilterInstance::GetUserSpaceToFrameSpaceInCSSPxTransform() const
 {
-  return gfxMatrix().Translate(-nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(mTargetFrame));
+  return gfxMatrix::Translation(-nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(mTargetFrame));
 }
