@@ -1818,6 +1818,9 @@ function test_background_size_transition(prop) {
 }
 
 function test_background_position_transition(prop) {
+
+  // Test interpolation between edge keywords, and between edge keyword and a
+  // percent value. (Note: edge keywords are really aliases for percent vals.)
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "center 80%", "");
   is(cs.getPropertyValue(prop), "50% 80%",
@@ -1825,8 +1828,22 @@ function test_background_position_transition(prop) {
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "bottom right", "");
   is(cs.getPropertyValue(prop), "62.5% 85%",
-     "property " + prop + ": interpolation of percents");
+     "property " + prop + ": interpolation of edge keywords & percents");
   check_distance(prop, "center 80%", "62.5% 85%", "bottom right");
+
+  // Test interpolation between edge keyword *with an offset* and non-keyword
+  // values.
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "right 20px bottom 30%", "");
+  is(cs.getPropertyValue(prop), "calc(-20px + 100%) 70%",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "calc(40px + 20%) calc(12px + 30%)", "");
+  is(cs.getPropertyValue(prop), "calc(-5px + 80%) calc(3px + 60%)",
+     "property " + prop + ": interpolation of edge keywords w/ offsets & calc");
+  check_distance(prop, "right 20px bottom 30%",
+                       "calc(-5px + 80%) calc(3px + 60%)",
+                       "calc(40px + 20%) calc(12px + 30%)");
 
   var doesPropTakeListValues = (prop == "background-position");
 
@@ -1874,6 +1891,45 @@ function test_background_position_size_common(prop, doesPropTakeListValues) {
   is(cs.getPropertyValue(prop), "20px 30px",
      "property " + prop + ": interpolation of lengths");
   check_distance(prop, "10px 40px", "20px 30px", "50px 0");
+
+  // Test interpolation that computes to to calc() (transition from % to px)
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "20% 40%", "");
+  is(cs.getPropertyValue(prop), "20% 40%",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "12px 20px", "");
+  is(cs.getPropertyValue(prop), "calc(3px + 15%) calc(5px + 30%)",
+     "property " + prop + ": interpolation that computes to calc()");
+  check_distance(prop, "20% 40%",
+                       "calc(3px + 15%) calc(5px + 30%)",
+                       "12px 20px");
+
+  // Test interpolation that computes to to calc() (transition from px to %)
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "12px 20px", "");
+  is(cs.getPropertyValue(prop), "12px 20px",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "20% 40%", "");
+  is(cs.getPropertyValue(prop), "calc(9px + 5%) calc(15px + 10%)",
+     "property " + prop + ": interpolation that computes to calc()");
+  check_distance(prop, "12px 20px",
+                       "calc(9px + 5%) calc(15px + 10%)",
+                       "20% 40%");
+
+  // Test interpolation between calc() and non-calc()
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "calc(40px + 10%) 16px", "");
+  is(cs.getPropertyValue(prop), "calc(40px + 10%) 16px",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "30% calc(8px + 60%)", "");
+  is(cs.getPropertyValue(prop), "calc(30px + 15%) calc(14px + 15%)",
+     "property " + prop + ": interpolation between calc() and non-calc()");
+  check_distance(prop, "calc(40px + 10%) 16px",
+                       "calc(30px + 15%) calc(14px + 15%)",
+                       "30% calc(8px + 60%)");
 
   // Test list values, if appropriate
   if (doesPropTakeListValues) {
