@@ -9,6 +9,12 @@
 
 <preferences id="mainPreferences">
 
+#ifdef E10S_TESTING_ONLY
+    <preference id="browser.tabs.remote.autostart"
+                name="browser.tabs.remote.autostart"
+                type="bool"/>
+#endif
+
     <!-- Startup -->
     <preference id="browser.startup.page"
                 name="browser.startup.page"
@@ -107,6 +113,11 @@
           data-category="paneGeneral"
           hidden="true">
   <caption><label>&startup.label;</label></caption>
+
+#ifdef E10S_TESTING_ONLY
+  <checkbox id="e10sAutoStart"
+            label="Enable E10S (multi-process)"/>
+#endif
 
 #ifdef HAVE_SHELL_SERVICE
   <vbox id="defaultBrowserBox">
