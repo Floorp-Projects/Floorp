@@ -965,9 +965,25 @@ public:
   /**
    * Set a transform on the surface, this transform is applied at drawing time
    * to both the mask and source of the operation.
+   *
+   * Performance note: For some backends it is expensive to change the current
+   * transform (because transforms affect a lot of the parts of the pipeline,
+   * so new transform change can result in a pipeline flush).  To get around
+   * this, DrawTarget implementations buffer transform changes and try to only
+   * set the current transform on the backend when required.  That tracking has
+   * its own performance impact though, and ideally callers would be smart
+   * enough not to require it.  At a future date this method may stop this
+   * doing transform buffering so, if you're a consumer, please try to be smart
+   * about calling this method as little as possible.  For example, instead of
+   * concatenating a translation onto the current transform then calling
+   * FillRect, try to integrate the translation into FillRect's aRect
+   * argument's x/y offset.
    */
   virtual void SetTransform(const Matrix &aTransform)
     { mTransform = aTransform; mTransformDirty = true; }
+
+  inline void ConcatTransform(const Matrix &aTransform)
+    { SetTransform(aTransform * Matrix(GetTransform())); }
 
   SurfaceFormat GetFormat() { return mFormat; }
 
