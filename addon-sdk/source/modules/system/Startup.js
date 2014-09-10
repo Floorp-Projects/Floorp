@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Startup"];
+this.EXPORTED_SYMBOLS = ["Startup"];
 
 const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
@@ -20,10 +20,10 @@ const NAME2TOPIC = {
   'Thunderbird': 'mail-startup-done'
 };
 
-var Startup = {
+var exports = {
   initialized: !appStartupSrv.startingUp
 };
-var exports = Startup;
+this.Startup = exports;
 
 let gOnceInitializedDeferred = defer();
 exports.onceInitialized = gOnceInitializedDeferred.promise;
