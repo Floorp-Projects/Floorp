@@ -202,8 +202,10 @@ class DeviceManagerADB(DeviceManager):
         if not os.access(localname, os.F_OK):
             raise DMError("File not found: %s" % localname)
 
-        self._checkCmd(["push", os.path.realpath(localname), destname],
-                       retryLimit=retryLimit)
+        proc = self._runCmd(["push", os.path.realpath(localname), destname],
+                retryLimit=retryLimit)
+        if proc.returncode != 0:
+            raise DMError("Error pushing file %s -> %s; output: %s" % (localname, destname, proc.output))
 
     def mkDir(self, name):
         result = self._runCmd(["shell", "mkdir", name]).output
@@ -527,22 +529,29 @@ class DeviceManagerADB(DeviceManager):
         self.uninstallApp(appName)
         self.reboot()
 
-    def _runCmd(self, args):
+    def _runCmd(self, args, retryLimit=None):
         """
         Runs a command using adb
 
         returns: instance of ProcessHandler
         """
+        retryLimit = retryLimit or self.retryLimit
         finalArgs = [self._adbPath]
         if self._deviceSerial:
             finalArgs.extend(['-s', self._deviceSerial])
         finalArgs.extend(args)
         self._logger.debug("_runCmd - command: %s" % ' '.join(finalArgs))
-        proc = ProcessHandler(finalArgs, storeOutput=True,
-                processOutputLine=self._log)
-        proc.run()
-        proc.returncode = proc.wait()
-        return proc
+        retries = 0
+        while retries < retryLimit:
+            proc = ProcessHandler(finalArgs, storeOutput=True,
+                    processOutputLine=self._log)
+            proc.run()
+            proc.returncode = proc.wait()
+            if proc.returncode == None:
+                proc.kill()
+                retries += 1
+            else:
+                return proc
 
     # timeout is specified in seconds, and if no timeout is given,
     # we will run until we hit the default_timeout specified in the __init__
