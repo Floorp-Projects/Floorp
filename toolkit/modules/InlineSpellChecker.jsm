@@ -295,11 +295,6 @@ InlineSpellChecker.prototype = {
     var spellchecker = this.mInlineSpellChecker.spellChecker;
     spellchecker.SetCurrentDictionary(this.mDictionaryNames[index]);
     this.mInlineSpellChecker.spellCheckRange(null); // causes recheck
-    // Save chosen dictionary to preferences only when writing mail
-    if (this.mEditor.flags & this.mEditor.eEditorMailMask) {
-      Components.utils.import("resource://gre/modules/Services.jsm");
-      Services.prefs.setCharPref("spellchecker.dictionary", this.mDictionaryNames[index]);
-    }
   },
 
   // callback for selecting a suggesteed replacement
