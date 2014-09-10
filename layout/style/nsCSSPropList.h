@@ -2540,8 +2540,8 @@ CSS_PROP_POSITION(
     "layout.css.object-fit-and-position.enabled",
     0,
     kBackgroundPositionKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXXdholbert Use "_Custom", and implement animation
+    offsetof(nsStylePosition, mObjectPosition),
+    eStyleAnimType_Custom)
 CSS_PROP_DISPLAY(
     opacity,
     opacity,
