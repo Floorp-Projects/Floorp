@@ -142,8 +142,6 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
     mFilterSpaceToDeviceSpaceTransform = filterToUserSpace * mPaintTransform;
   }
 
-  mAppUnitsPerCSSPx = mTargetFrame->PresContext()->AppUnitsPerCSSPixel();
-
   mFilterSpaceToFrameSpaceInCSSPxTransform =
     filterToUserSpace * GetUserSpaceToFrameSpaceInCSSPxTransform();
   // mFilterSpaceToFrameSpaceInCSSPxTransform is always invertible
@@ -493,7 +491,7 @@ nsFilterInstance::FrameSpaceToFilterSpace(const nsRect* aRect) const
       return nsIntRect();
     }
     gfxRect rectInCSSPx =
-      nsLayoutUtils::RectToGfxRect(*aRect, mAppUnitsPerCSSPx);
+      nsLayoutUtils::RectToGfxRect(*aRect, nsPresContext::AppUnitsPerCSSPixel());
     gfxRect rectInFilterSpace =
       mFrameSpaceInCSSPxToFilterSpaceTransform.TransformBounds(rectInCSSPx);
     rectInFilterSpace.RoundOut();
@@ -514,7 +512,7 @@ nsFilterInstance::FilterSpaceToFrameSpace(const nsIntRect& aRect) const
   gfxRect r(aRect.x, aRect.y, aRect.width, aRect.height);
   r = mFilterSpaceToFrameSpaceInCSSPxTransform.TransformBounds(r);
   // nsLayoutUtils::RoundGfxRectToAppRect rounds out.
-  return nsLayoutUtils::RoundGfxRectToAppRect(r, mAppUnitsPerCSSPx);
+  return nsLayoutUtils::RoundGfxRectToAppRect(r, nsPresContext::AppUnitsPerCSSPixel());
 }
 
 nsIntRegion

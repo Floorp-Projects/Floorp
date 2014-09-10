@@ -324,7 +324,6 @@ private:
   nsTArray<mozilla::RefPtr<SourceSurface>> mInputImages;
   nsTArray<FilterPrimitiveDescription> mPrimitiveDescriptions;
   FilterDescription mFilterDescription;
-  int32_t mAppUnitsPerCSSPx;
   bool mInitialized;
 };
 
