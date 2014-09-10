@@ -88,6 +88,45 @@ let testcases = [ {
     fixedURI: "http://127.0.0.1/",
     protocolChange: true,
   }, {
+    input: "192.168.10.110",
+    fixedURI: "http://192.168.10.110/",
+    protocolChange: true,
+  }, {
+    input: "[::1]",
+    fixedURI: "http://[::1]/",
+    alternateURI: "http://[::1]/",
+    protocolChange: true,
+    affectedByWhitelist: true
+  }, {
+    input: "[fe80:cd00:0:cde:1257:0:211e:729c]",
+    fixedURI: "http://[fe80:cd00:0:cde:1257:0:211e:729c]/",
+    alternateURI: "http://[fe80:cd00:0:cde:1257:0:211e:729c]/",
+    protocolChange: true,
+    affectedByWhitelist: true
+  }, {
+    input: "[64:ff9b::8.8.8.8]",
+    fixedURI: "http://[64:ff9b::8.8.8.8]/",
+    protocolChange: true
+  }, {
+    input: "[64:ff9b::8.8.8.8]/~moz",
+    fixedURI: "http://[64:ff9b::8.8.8.8]/~moz",
+    protocolChange: true
+  }, {
+    input: "[::1][::1]",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
+    input: "[::1][100",
+    fixedURI: "http://[::1][100/",
+    alternateURI: "http://[::1][100/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true
+  }, {
+    input: "[::1]]",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
     input: "1234",
     fixedURI: "http://1234/",
     alternateURI: "http://www.1234.com/",
@@ -122,6 +161,22 @@ let testcases = [ {
     protocolChange: true,
   }, {
     input: "mozilla is amazing",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "search ?mozilla",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "mozilla .com",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "what if firefox?",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "london's map",
     keywordLookup: true,
     protocolChange: true,
   }, {
@@ -190,6 +245,112 @@ let testcases = [ {
     alternateURI: "http://www.whitelisted.com/",
     affectedByWhitelist: true,
     inWhitelist: true,
+  }, {
+    input: "café.local",
+    fixedURI: "http://café.local/",
+    alternateURI: "http://www.café.local/",
+    protocolChange: true
+  }, {
+    input: "47.6182,-122.830",
+    fixedURI: "http://47.6182,-122.830/",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
+    input: "-47.6182,-23.51",
+    fixedURI: "http://-47.6182,-23.51/",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
+    input: "-22.14,23.51-",
+    fixedURI: "http://-22.14,23.51-/",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
+    input: "32.7",
+    fixedURI: "http://32.7/",
+    alternateURI: "http://www.32.7/",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
+    input: "5+2",
+    fixedURI: "http://5+2/",
+    alternateURI: "http://www.5+2.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true
+  }, {
+    input: "moz ?.::%27",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
+    input: "mozilla.com/?q=search",
+    fixedURI: "http://mozilla.com/?q=search",
+    alternateURI: "http://www.mozilla.com/?q=search",
+    protocolChange: true
+  }, {
+    input: "mozilla.com?q=search",
+    fixedURI: "http://mozilla.com/?q=search",
+    alternateURI: "http://www.mozilla.com/?q=search",
+    protocolChange: true
+  }, {
+    input: "mozilla.com ?q=search",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
+    input: "mozilla.com.?q=search",
+    fixedURI: "http://mozilla.com./?q=search",
+    protocolChange: true
+  }, {
+    input: "mozilla.com'?q=search",
+    fixedURI: "http://mozilla.com'/?q=search",
+    alternateURI: "http://www.mozilla.com'/?q=search",
+    protocolChange: true
+  }, {
+    input: "mozilla.com':search",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
+    input: "[mozilla]",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
+    input: "':?",
+    fixedURI: "http://'/?",
+    alternateURI: "http://www.'.com/?",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true
+  }, {
+    input: "a?.com",
+    fixedURI: "http://a/?.com",
+    alternateURI: "http://www.a.com/?.com",
+    protocolChange: true,
+    affectedByWhitelist: true
+  }, {
+    input: "?'.com",
+    fixedURI: "http:///?%27.com",
+    alternateURI: "http://www..com/?%27.com",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true
+  }, {
+    input: "' ?.com",
+    keywordLookup: true,
+    protocolChange: true
+  }, {
+    input: "?mozilla",
+    fixedURI: "http:///?mozilla",
+    alternateURI: "http://www..com/?mozilla",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true
+  }, {
+    input: "??mozilla",
+    fixedURI: "http:///??mozilla",
+    alternateURI: "http://www..com/??mozilla",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true
   }];
 
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
@@ -297,14 +458,20 @@ function run_test() {
       do_check_eq(info.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null);
 
       // Check the preferred URI
-      let requiresWhitelistedDomain = flags & urifixup.FIXUP_FLAG_REQUIRE_WHITELISTED_HOST
+      let requiresWhitelistedDomain = flags & urifixup.FIXUP_FLAG_REQUIRE_WHITELISTED_HOST;
       if (couldDoKeywordLookup) {
         if (expectKeywordLookup) {
           if (!affectedByWhitelist || (affectedByWhitelist && !inWhitelist)) {
-        let urlparamInput = encodeURIComponent(sanitize(testInput)).replace("%20", "+", "g");
-        let searchURL = kSearchEngineURL.replace("{searchTerms}", urlparamInput);
-        do_check_eq(info.preferredURI.spec, searchURL);
-      } else {
+            let urlparamInput = encodeURIComponent(sanitize(testInput)).replace("%20", "+", "g");
+            // If the input starts with `?`, then info.preferredURI.spec will omit it
+            // In order to test this behaviour, remove `?` only if it is the first character
+            if (urlparamInput.startsWith("%3F")) {
+              urlparamInput = urlparamInput.replace("%3F", "");
+            }
+            let searchURL = kSearchEngineURL.replace("{searchTerms}", urlparamInput);
+            let spec = info.preferredURI.spec.replace("%27", "'", "g");
+            do_check_eq(spec, searchURL);
+          } else {
             do_check_eq(info.preferredURI, null);
           }
         } else {
