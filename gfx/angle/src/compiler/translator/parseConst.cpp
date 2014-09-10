@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -162,7 +162,6 @@ void TConstTraverser::visitConstantUnion(TIntermConstantUnion* node)
 
     ConstantUnion* leftUnionArray = unionArray;
     size_t instanceSize = type.getObjectSize();
-    TBasicType basicType = type.getBasicType();
 
     if (index >= instanceSize)
         return;
@@ -174,7 +173,7 @@ void TConstTraverser::visitConstantUnion(TIntermConstantUnion* node)
         for (size_t i=0; i < objectSize; i++) {
             if (index >= instanceSize)
                 return;
-            leftUnionArray[index].cast(basicType, rightUnionArray[i]);
+            leftUnionArray[index] = rightUnionArray[i];
 
             (index)++;
         }
@@ -187,7 +186,7 @@ void TConstTraverser::visitConstantUnion(TIntermConstantUnion* node)
                 if (i >= instanceSize)
                     return;
 
-                leftUnionArray[i].cast(basicType, rightUnionArray[count]);
+                leftUnionArray[i] = rightUnionArray[count];
 
                 (index)++;
                 
@@ -204,7 +203,7 @@ void TConstTraverser::visitConstantUnion(TIntermConstantUnion* node)
                 {
                     if (col == row)
                     {
-                        leftUnionArray[i].cast(basicType, rightUnionArray[0]);
+                        leftUnionArray[i] = rightUnionArray[0];
                     }
                     else
                     {

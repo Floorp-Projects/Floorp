@@ -12,7 +12,7 @@
 #include "common/mathutil.h"
 #include "common/utilities.h"
 
-namespace sh
+namespace gl
 {
 
 BlockLayoutEncoder::BlockLayoutEncoder(std::vector<BlockMemberInfo> *blockInfoOut)
@@ -103,7 +103,7 @@ void Std140BlockEncoder::exitAggregateType()
 void Std140BlockEncoder::getBlockLayoutInfo(GLenum type, unsigned int arraySize, bool isRowMajorMatrix, int *arrayStrideOut, int *matrixStrideOut)
 {
     // We assume we are only dealing with 4 byte components (no doubles or half-words currently)
-    ASSERT(gl::VariableComponentSize(gl::VariableComponentType(type)) == BytesPerComponent);
+    ASSERT(gl::UniformComponentSize(gl::UniformComponentType(type)) == BytesPerComponent);
 
     size_t baseAlignment = 0;
     int matrixStride = 0;
@@ -127,7 +127,7 @@ void Std140BlockEncoder::getBlockLayoutInfo(GLenum type, unsigned int arraySize,
     }
     else
     {
-        const int numComponents = gl::VariableComponentCount(type);
+        const int numComponents = gl::UniformComponentCount(type);
         baseAlignment = (numComponents == 3 ? 4u : static_cast<size_t>(numComponents));
     }
 
@@ -151,7 +151,7 @@ void Std140BlockEncoder::advanceOffset(GLenum type, unsigned int arraySize, bool
     }
     else
     {
-        mCurrentOffset += gl::VariableComponentCount(type);
+        mCurrentOffset += gl::UniformComponentCount(type);
     }
 }
 
@@ -173,7 +173,7 @@ void HLSLBlockEncoder::exitAggregateType()
 void HLSLBlockEncoder::getBlockLayoutInfo(GLenum type, unsigned int arraySize, bool isRowMajorMatrix, int *arrayStrideOut, int *matrixStrideOut)
 {
     // We assume we are only dealing with 4 byte components (no doubles or half-words currently)
-    ASSERT(gl::VariableComponentSize(gl::VariableComponentType(type)) == BytesPerComponent);
+    ASSERT(gl::UniformComponentSize(gl::UniformComponentType(type)) == BytesPerComponent);
 
     int matrixStride = 0;
     int arrayStride = 0;
@@ -204,7 +204,7 @@ void HLSLBlockEncoder::getBlockLayoutInfo(GLenum type, unsigned int arraySize, b
     }
     else if (isPacked())
     {
-        int numComponents = gl::VariableComponentCount(type);
+        int numComponents = gl::UniformComponentCount(type);
         if ((numComponents + (mCurrentOffset % ComponentsPerRegister)) > ComponentsPerRegister)
         {
             nextRegister();
@@ -232,7 +232,7 @@ void HLSLBlockEncoder::advanceOffset(GLenum type, unsigned int arraySize, bool i
     }
     else if (isPacked())
     {
-        mCurrentOffset += gl::VariableComponentCount(type);
+        mCurrentOffset += gl::UniformComponentCount(type);
     }
     else
     {
@@ -245,8 +245,8 @@ void HLSLBlockEncoder::skipRegisters(unsigned int numRegisters)
     mCurrentOffset += (numRegisters * ComponentsPerRegister);
 }
 
-void HLSLVariableGetRegisterInfo(unsigned int baseRegisterIndex, Uniform *variable, HLSLBlockEncoder *encoder,
-                                 const std::vector<BlockMemberInfo> &blockInfo, ShShaderOutput outputType)
+void HLSLVariableGetRegisterInfo(unsigned int baseRegisterIndex, gl::Uniform *variable, HLSLBlockEncoder *encoder,
+                                 const std::vector<gl::BlockMemberInfo> &blockInfo, ShShaderOutput outputType)
 {
     // because this method computes offsets (element indexes) instead of any total sizes,
     // we can ignore the array size of the variable
@@ -282,7 +282,7 @@ void HLSLVariableGetRegisterInfo(unsigned int baseRegisterIndex, Uniform *variab
     }
 }
 
-void HLSLVariableGetRegisterInfo(unsigned int baseRegisterIndex, Uniform *variable, ShShaderOutput outputType)
+void HLSLVariableGetRegisterInfo(unsigned int baseRegisterIndex, gl::Uniform *variable, ShShaderOutput outputType)
 {
     std::vector<BlockMemberInfo> blockInfo;
     HLSLBlockEncoder encoder(&blockInfo,

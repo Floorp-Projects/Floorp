@@ -10,7 +10,10 @@
 #define LIBGLESV2_MATHUTIL_H_
 
 #include "common/debug.h"
-#include "common/platform.h"
+
+#if defined(_WIN32)
+#include <intrin.h>
+#endif
 
 #include <limits>
 #include <algorithm>
@@ -109,7 +112,7 @@ inline unsigned int unorm(float x)
 
 inline bool supportsSSE2()
 {
-#ifdef ANGLE_PLATFORM_WINDOWS
+#if defined(_WIN32)
     static bool checked = false;
     static bool supports = false;
 

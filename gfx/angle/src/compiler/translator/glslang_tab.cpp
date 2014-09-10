@@ -807,19 +807,19 @@ static const yytype_uint16 yyrline[] =
     1064,  1068,  1072,  1079,  1083,  1087,  1094,  1098,  1102,  1123,
     1132,  1138,  1141,  1147,  1153,  1160,  1169,  1178,  1186,  1189,
     1196,  1200,  1207,  1210,  1214,  1218,  1227,  1236,  1244,  1254,
-    1266,  1269,  1272,  1278,  1285,  1288,  1294,  1297,  1300,  1306,
-    1309,  1324,  1328,  1332,  1336,  1340,  1344,  1349,  1354,  1359,
-    1364,  1369,  1374,  1379,  1384,  1389,  1394,  1399,  1404,  1409,
-    1414,  1419,  1424,  1429,  1434,  1439,  1444,  1449,  1453,  1457,
-    1461,  1465,  1469,  1473,  1477,  1481,  1485,  1489,  1493,  1497,
-    1501,  1505,  1509,  1517,  1525,  1529,  1542,  1542,  1545,  1545,
-    1551,  1554,  1570,  1573,  1582,  1586,  1592,  1599,  1614,  1618,
-    1622,  1623,  1629,  1630,  1631,  1632,  1633,  1637,  1638,  1638,
-    1638,  1648,  1649,  1653,  1653,  1654,  1654,  1659,  1662,  1672,
-    1675,  1681,  1682,  1686,  1694,  1698,  1708,  1713,  1730,  1730,
-    1735,  1735,  1742,  1742,  1750,  1753,  1759,  1762,  1768,  1772,
-    1779,  1786,  1793,  1800,  1811,  1820,  1824,  1831,  1834,  1840,
-    1840
+    1261,  1264,  1267,  1273,  1280,  1283,  1289,  1292,  1295,  1301,
+    1304,  1319,  1323,  1327,  1331,  1335,  1339,  1344,  1349,  1354,
+    1359,  1364,  1369,  1374,  1379,  1384,  1389,  1394,  1399,  1404,
+    1409,  1414,  1419,  1424,  1429,  1434,  1439,  1444,  1448,  1452,
+    1456,  1460,  1464,  1468,  1472,  1476,  1480,  1484,  1488,  1492,
+    1496,  1500,  1504,  1512,  1520,  1524,  1537,  1537,  1540,  1540,
+    1546,  1549,  1565,  1568,  1577,  1581,  1587,  1594,  1609,  1613,
+    1617,  1618,  1624,  1625,  1626,  1627,  1628,  1632,  1633,  1633,
+    1633,  1643,  1644,  1648,  1648,  1649,  1649,  1654,  1657,  1667,
+    1670,  1676,  1677,  1681,  1689,  1693,  1703,  1708,  1725,  1725,
+    1730,  1730,  1737,  1737,  1745,  1748,  1754,  1757,  1763,  1767,
+    1774,  1781,  1788,  1795,  1806,  1815,  1819,  1826,  1829,  1835,
+    1835
 };
 #endif
 
@@ -2575,7 +2575,7 @@ yyreduce:
         {
             TType type(EbtFloat, EbpUndefined);
             TVariable *fakeVariable = new TVariable((yyvsp[(1) - (1)].lex).string, type);
-            context->symbolTable.declare(fakeVariable);
+            context->symbolTable.declare(*fakeVariable);
             variable = fakeVariable;
         }
 
@@ -3436,8 +3436,7 @@ yyreduce:
         else
         {
             // Insert the unmangled name to detect potential future redefinition as a variable.
-            TFunction *function = new TFunction(NewPoolTString((yyvsp[(1) - (2)].interm.function)->getName().c_str()), (yyvsp[(1) - (2)].interm.function)->getReturnType());
-            context->symbolTable.getOuterLevel()->insert(function);
+            context->symbolTable.getOuterLevel()->insert((yyvsp[(1) - (2)].interm.function)->getName(), *(yyvsp[(1) - (2)].interm.function));
         }
 
         //
@@ -3449,7 +3448,7 @@ yyreduce:
 
         // We're at the inner scope level of the function's arguments and body statement.
         // Add the function prototype to the surrounding scope instead.
-        context->symbolTable.getOuterLevel()->insert((yyval.interm).function);
+        context->symbolTable.getOuterLevel()->insert(*(yyval.interm).function);
     }
     break;
 
@@ -3940,7 +3939,7 @@ yyreduce:
         (yyval.interm.type).precision = (yyvsp[(1) - (2)].interm.precision);
 
         if (!SupportsPrecision((yyvsp[(2) - (2)].interm.type).type)) {
-            context->error((yylsp[(1) - (2)]), "illegal type for precision qualifier", getBasicString((yyvsp[(2) - (2)].interm.type).type));
+            context->error((yylsp[(1) - (1)]), "illegal type for precision qualifier", getBasicString((yyvsp[(2) - (2)].interm.type).type));
             context->recover();
         }
     }
@@ -4968,7 +4967,7 @@ yyreduce:
                 //
                 // Insert the parameters with name in the symbol table.
                 //
-                if (! context->symbolTable.declare(variable)) {
+                if (! context->symbolTable.declare(*variable)) {
                     context->error((yylsp[(1) - (1)]), "redefinition", variable->getName().c_str());
                     context->recover();
                     delete variable;

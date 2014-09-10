@@ -69,7 +69,7 @@ std::string HLSLTypeString(GLenum type)
         return HLSLMatrixTypeString(type);
     }
 
-    return HLSLComponentTypeString(gl::VariableComponentType(type), gl::VariableComponentCount(type));
+    return HLSLComponentTypeString(gl::UniformComponentType(type), gl::UniformComponentCount(type));
 }
 
 }
@@ -82,8 +82,7 @@ std::string ArrayString(unsigned int i)
     return (i == GL_INVALID_INDEX ? "" : "[" + Str(i) + "]");
 }
 
-const std::string VERTEX_ATTRIBUTE_STUB_STRING = "@@ VERTEX ATTRIBUTES @@";
-const std::string PIXEL_OUTPUT_STUB_STRING = "@@ PIXEL OUTPUT @@";
+const std::string DynamicHLSL::VERTEX_ATTRIBUTE_STUB_STRING = "@@ VERTEX ATTRIBUTES @@";
 
 DynamicHLSL::DynamicHLSL(rx::Renderer *const renderer)
     : mRenderer(renderer)
@@ -282,9 +281,9 @@ int DynamicHLSL::packVaryings(InfoLog &infoLog, VaryingPacking packing, Fragment
     return registers;
 }
 
-std::string DynamicHLSL::generateVaryingHLSL(VertexShader *shader) const
+std::string DynamicHLSL::generateVaryingHLSL(VertexShader *shader, const std::string &varyingSemantic,
+                                             std::vector<LinkedVarying> *linkedVaryings) const
 {
-    std::string varyingSemantic = getVaryingSemantic(shader->mUsesPointSize);
     std::string varyingHLSL;
 
     for (unsigned int varyingIndex = 0; varyingIndex < shader->mVaryings.size(); varyingIndex++)
@@ -301,9 +300,9 @@ std::string DynamicHLSL::generateVaryingHLSL(VertexShader *shader) const
                 {
                     switch (varying.interpolation)
                     {
-                      case sh::INTERPOLATION_SMOOTH:   varyingHLSL += "    ";                 break;
-                      case sh::INTERPOLATION_FLAT:     varyingHLSL += "    nointerpolation "; break;
-                      case sh::INTERPOLATION_CENTROID: varyingHLSL += "    centroid ";        break;
+                      case INTERPOLATION_SMOOTH:   varyingHLSL += "    ";                 break;
+                      case INTERPOLATION_FLAT:     varyingHLSL += "    nointerpolation "; break;
+                      case INTERPOLATION_CENTROID: varyingHLSL += "    centroid ";        break;
                       default:  UNREACHABLE();
                     }
 
@@ -320,12 +319,19 @@ std::string DynamicHLSL::generateVaryingHLSL(VertexShader *shader) const
                     }
                     else
                     {
-                        GLenum componentType = VariableComponentType(transposedType);
+                        GLenum componentType = UniformComponentType(transposedType);
                         int columnCount = VariableColumnCount(transposedType);
                         typeString = gl_d3d::HLSLComponentTypeString(componentType, columnCount);
                     }
                     varyingHLSL += typeString + " v" + n + " : " + varyingSemantic + n + ";\n";
                 }
+            }
+
+            if (linkedVaryings)
+            {
+                linkedVaryings->push_back(LinkedVarying(varying.name, varying.type, varying.elementCount(),
+                                                        varyingSemantic, varying.registerIndex,
+                                                        variableRows * varying.elementCount()));
             }
         }
     }
@@ -333,9 +339,7 @@ std::string DynamicHLSL::generateVaryingHLSL(VertexShader *shader) const
     return varyingHLSL;
 }
 
-std::string DynamicHLSL::generateVertexShaderForInputLayout(const std::string &sourceShader,
-                                                            const VertexFormat inputLayout[],
-                                                            const sh::Attribute shaderAttributes[]) const
+std::string DynamicHLSL::generateInputLayoutHLSL(const VertexFormat inputLayout[], const Attribute shaderAttributes[]) const
 {
     std::string structHLSL, initHLSL;
 
@@ -347,7 +351,7 @@ std::string DynamicHLSL::generateVertexShaderForInputLayout(const std::string &s
         ASSERT(inputIndex < MAX_VERTEX_ATTRIBS);
 
         const VertexFormat &vertexFormat = inputLayout[inputIndex];
-        const sh::Attribute &shaderAttribute = shaderAttributes[attributeIndex];
+        const Attribute &shaderAttribute = shaderAttributes[attributeIndex];
 
         if (!shaderAttribute.name.empty())
         {
@@ -360,11 +364,11 @@ std::string DynamicHLSL::generateVertexShaderForInputLayout(const std::string &s
             else
             {
                 GLenum componentType = mRenderer->getVertexComponentType(vertexFormat);
-                structHLSL += "    " + gl_d3d::HLSLComponentTypeString(componentType, VariableComponentCount(shaderAttribute.type));
+                structHLSL += "    " + gl_d3d::HLSLComponentTypeString(componentType, UniformComponentCount(shaderAttribute.type));
             }
 
             structHLSL += " " + decorateVariable(shaderAttribute.name) + " : TEXCOORD" + Str(semanticIndex) + ";\n";
-            semanticIndex += VariableRegisterCount(shaderAttribute.type);
+            semanticIndex += AttributeRegisterCount(shaderAttribute.type);
 
             // HLSL code for initialization
             initHLSL += "    " + decorateVariable(shaderAttribute.name) + " = ";
@@ -388,247 +392,15 @@ std::string DynamicHLSL::generateVertexShaderForInputLayout(const std::string &s
         }
     }
 
-    std::string replacementHLSL = "struct VS_INPUT\n"
-                                  "{\n" +
-                                  structHLSL +
-                                  "};\n"
-                                  "\n"
-                                  "void initAttributes(VS_INPUT input)\n"
-                                  "{\n" +
-                                  initHLSL +
-                                  "}\n";
-
-    std::string vertexHLSL(sourceShader);
-
-    size_t copyInsertionPos = vertexHLSL.find(VERTEX_ATTRIBUTE_STUB_STRING);
-    vertexHLSL.replace(copyInsertionPos, VERTEX_ATTRIBUTE_STUB_STRING.length(), replacementHLSL);
-
-    return vertexHLSL;
-}
-
-std::string DynamicHLSL::generatePixelShaderForOutputSignature(const std::string &sourceShader, const std::vector<PixelShaderOuputVariable> &outputVariables,
-                                                               bool usesFragDepth, const std::vector<GLenum> &outputLayout) const
-{
-    const int shaderModel = mRenderer->getMajorShaderModel();
-    std::string targetSemantic = (shaderModel >= 4) ? "SV_TARGET" : "COLOR";
-    std::string depthSemantic = (shaderModel >= 4) ? "SV_Depth" : "DEPTH";
-
-    std::string declarationHLSL;
-    std::string copyHLSL;
-    for (size_t i = 0; i < outputVariables.size(); i++)
-    {
-        const PixelShaderOuputVariable& outputVariable = outputVariables[i];
-        ASSERT(outputLayout.size() > outputVariable.outputIndex);
-
-        // FIXME(geofflang): Work around NVIDIA driver bug by repacking buffers
-        bool outputIndexEnabled = true; // outputLayout[outputVariable.outputIndex] != GL_NONE
-        if (outputIndexEnabled)
-        {
-            declarationHLSL += "    " + gl_d3d::HLSLTypeString(outputVariable.type) + " " + outputVariable.name +
-                               " : " + targetSemantic + Str(outputVariable.outputIndex) + ";\n";
-
-            copyHLSL += "    output." + outputVariable.name + " = " + outputVariable.source + ";\n";
-        }
-    }
-
-    if (usesFragDepth)
-    {
-        declarationHLSL += "    float gl_Depth : " + depthSemantic + ";\n";
-        copyHLSL += "    output.gl_Depth = gl_Depth; \n";
-    }
-
-    std::string replacementHLSL = "struct PS_OUTPUT\n"
-                                  "{\n" +
-                                  declarationHLSL +
-                                  "};\n"
-                                  "\n"
-                                  "PS_OUTPUT generateOutput()\n"
-                                  "{\n"
-                                  "    PS_OUTPUT output;\n" +
-                                  copyHLSL +
-                                  "    return output;\n"
-                                  "}\n";
-
-    std::string pixelHLSL(sourceShader);
-
-    size_t outputInsertionPos = pixelHLSL.find(PIXEL_OUTPUT_STUB_STRING);
-    pixelHLSL.replace(outputInsertionPos, PIXEL_OUTPUT_STUB_STRING.length(), replacementHLSL);
-
-    return pixelHLSL;
-}
-
-std::string DynamicHLSL::getVaryingSemantic(bool pointSize) const
-{
-    // SM3 reserves the TEXCOORD semantic for point sprite texcoords (gl_PointCoord)
-    // In D3D11 we manually compute gl_PointCoord in the GS.
-    int shaderModel = mRenderer->getMajorShaderModel();
-    return ((pointSize && shaderModel < 4) ? "COLOR" : "TEXCOORD");
-}
-
-struct DynamicHLSL::SemanticInfo
-{
-    struct BuiltinInfo
-    {
-        BuiltinInfo()
-            : enabled(false),
-              index(0),
-              systemValue(false)
-        {}
-
-        bool enabled;
-        std::string semantic;
-        unsigned int index;
-        bool systemValue;
-
-        std::string str() const
-        {
-            return (systemValue ? semantic : (semantic + Str(index)));
-        }
-
-        void enableSystem(const std::string &systemValueSemantic)
-        {
-            enabled = true;
-            semantic = systemValueSemantic;
-            systemValue = true;
-        }
-
-        void enable(const std::string &semanticVal, unsigned int indexVal)
-        {
-            enabled = true;
-            semantic = semanticVal;
-            index = indexVal;
-        }
-    };
-
-    BuiltinInfo dxPosition;
-    BuiltinInfo glPosition;
-    BuiltinInfo glFragCoord;
-    BuiltinInfo glPointCoord;
-    BuiltinInfo glPointSize;
-};
-
-DynamicHLSL::SemanticInfo DynamicHLSL::getSemanticInfo(int startRegisters, bool fragCoord, bool pointCoord,
-                                                       bool pointSize, bool pixelShader) const
-{
-    SemanticInfo info;
-    bool hlsl4 = (mRenderer->getMajorShaderModel() >= 4);
-    const std::string &varyingSemantic = getVaryingSemantic(pointSize);
-
-    int reservedRegisterIndex = startRegisters;
-
-    if (hlsl4)
-    {
-        info.dxPosition.enableSystem("SV_Position");
-    }
-    else if (pixelShader)
-    {
-        info.dxPosition.enableSystem("VPOS");
-    }
-    else
-    {
-        info.dxPosition.enableSystem("POSITION");
-    }
-
-    info.glPosition.enable(varyingSemantic, reservedRegisterIndex++);
-
-    if (fragCoord)
-    {
-        info.glFragCoord.enable(varyingSemantic, reservedRegisterIndex++);
-    }
-
-    if (pointCoord)
-    {
-        // SM3 reserves the TEXCOORD semantic for point sprite texcoords (gl_PointCoord)
-        // In D3D11 we manually compute gl_PointCoord in the GS.
-        if (hlsl4)
-        {
-            info.glPointCoord.enable(varyingSemantic, reservedRegisterIndex++);
-        }
-        else
-        {
-            info.glPointCoord.enable("TEXCOORD", 0);
-        }
-    }
-
-    // Special case: do not include PSIZE semantic in HLSL 3 pixel shaders
-    if (pointSize && (!pixelShader || hlsl4))
-    {
-        info.glPointSize.enableSystem("PSIZE");
-    }
-
-    return info;
-}
-
-std::string DynamicHLSL::generateVaryingLinkHLSL(const SemanticInfo &info, const std::string &varyingHLSL) const
-{
-    std::string linkHLSL = "{\n";
-
-    ASSERT(info.dxPosition.enabled && info.glPosition.enabled);
-
-    linkHLSL += "    float4 dx_Position : " + info.dxPosition.str() + ";\n";
-    linkHLSL += "    float4 gl_Position : " + info.glPosition.str() + ";\n";
-
-    if (info.glFragCoord.enabled)
-    {
-        linkHLSL += "    float4 gl_FragCoord : " + info.glFragCoord.str() + ";\n";
-    }
-
-    if (info.glPointCoord.enabled)
-    {
-        linkHLSL += "    float2 gl_PointCoord : " + info.glPointCoord.str() + ";\n";
-    }
-
-    linkHLSL += varyingHLSL;
-
-    if (info.glPointSize.enabled)
-    {
-        linkHLSL += "    float gl_PointSize : " + info.glPointSize.str() + ";\n";
-    }
-
-    linkHLSL += "};\n";
-
-    return linkHLSL;
-}
-
-void DynamicHLSL::storeBuiltinLinkedVaryings(const SemanticInfo &info,
-                                             std::vector<LinkedVarying> *linkedVaryings) const
-{
-    ASSERT(info.glPosition.enabled);
-
-    linkedVaryings->push_back(LinkedVarying("gl_Position", GL_FLOAT_VEC4, 1, info.glPosition.semantic,
-                                            info.glPosition.index, 1));
-
-    if (info.glFragCoord.enabled)
-    {
-        linkedVaryings->push_back(LinkedVarying("gl_FragCoord", GL_FLOAT_VEC4, 1, info.glFragCoord.semantic,
-                                                info.glFragCoord.index, 1));
-    }
-
-    if (info.glPointSize.enabled)
-    {
-        linkedVaryings->push_back(LinkedVarying("gl_PointSize", GL_FLOAT, 1, "PSIZE", 0, 1));
-    }
-}
-
-void DynamicHLSL::storeUserLinkedVaryings(const VertexShader *vertexShader,
-                                          std::vector<LinkedVarying> *linkedVaryings) const
-{
-    const std::string &varyingSemantic = getVaryingSemantic(vertexShader->mUsesPointSize);
-    const std::vector<PackedVarying> &varyings = vertexShader->mVaryings;
-
-    for (unsigned int varyingIndex = 0; varyingIndex < varyings.size(); varyingIndex++)
-    {
-        const PackedVarying &varying = varyings[varyingIndex];
-        if (varying.registerAssigned())
-        {
-            GLenum transposedType = TransposeMatrixType(varying.type);
-            int variableRows = (varying.isStruct() ? 1 : VariableRowCount(transposedType));
-
-            linkedVaryings->push_back(LinkedVarying(varying.name, varying.type, varying.elementCount(),
-                                                    varyingSemantic, varying.registerIndex,
-                                                    variableRows * varying.elementCount()));
-        }
-    }
+    return "struct VS_INPUT\n"
+           "{\n" +
+           structHLSL +
+           "};\n"
+           "\n"
+           "void initAttributes(VS_INPUT input)\n"
+           "{\n" +
+           initHLSL +
+           "}\n";
 }
 
 bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const VaryingPacking packing,
@@ -636,9 +408,7 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
                                          FragmentShader *fragmentShader, VertexShader *vertexShader,
                                          const std::vector<std::string>& transformFeedbackVaryings,
                                          std::vector<LinkedVarying> *linkedVaryings,
-                                         std::map<int, VariableLocation> *programOutputVars,
-                                         std::vector<PixelShaderOuputVariable> *outPixelShaderKey,
-                                         bool *outUsesFragDepth) const
+                                         std::map<int, VariableLocation> *programOutputVars) const
 {
     if (pixelHLSL.empty() || vertexHLSL.empty())
     {
@@ -648,10 +418,6 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
     bool usesMRT = fragmentShader->mUsesMultipleRenderTargets;
     bool usesFragColor = fragmentShader->mUsesFragColor;
     bool usesFragData = fragmentShader->mUsesFragData;
-    bool usesFragCoord = fragmentShader->mUsesFragCoord;
-    bool usesPointCoord = fragmentShader->mUsesPointCoord;
-    bool usesPointSize = vertexShader->mUsesPointSize;
-
     if (usesFragColor && usesFragData)
     {
         infoLog.append("Cannot use both gl_FragColor and gl_FragData in the same fragment shader.");
@@ -662,12 +428,12 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
     const int shaderModel = mRenderer->getMajorShaderModel();
     const int maxVaryingVectors = mRenderer->getMaxVaryingVectors();
 
-    const int registersNeeded = registers + (usesFragCoord ? 1 : 0) + (usesPointCoord ? 1 : 0);
+    const int registersNeeded = registers + (fragmentShader->mUsesFragCoord ? 1 : 0) + (fragmentShader->mUsesPointCoord ? 1 : 0);
 
     // Two cases when writing to gl_FragColor and using ESSL 1.0:
     // - with a 3.0 context, the output color is copied to channel 0
     // - with a 2.0 context, the output color is broadcast to all channels
-    const bool broadcast = (usesFragColor && mRenderer->getCurrentClientVersion() < 3);
+    const bool broadcast = (fragmentShader->mUsesFragColor && mRenderer->getCurrentClientVersion() < 3);
     const unsigned int numRenderTargets = (broadcast || usesMRT ? mRenderer->getMaxRenderTargets() : 1);
 
     int shaderVersion = vertexShader->getShaderVersion();
@@ -675,19 +441,86 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
     if (registersNeeded > maxVaryingVectors)
     {
         infoLog.append("No varying registers left to support gl_FragCoord/gl_PointCoord");
+
         return false;
     }
 
-    const std::string &varyingHLSL = generateVaryingHLSL(vertexShader);
-    const SemanticInfo &vertexSemantics = getSemanticInfo(registers, usesFragCoord,
-                                                          false, usesPointSize, false);
+    std::string varyingSemantic = (vertexShader->mUsesPointSize && shaderModel == 3) ? "COLOR" : "TEXCOORD";
+    std::string targetSemantic = (shaderModel >= 4) ? "SV_Target" : "COLOR";
+    std::string dxPositionSemantic = (shaderModel >= 4) ? "SV_Position" : "POSITION";
+    std::string depthSemantic = (shaderModel >= 4) ? "SV_Depth" : "DEPTH";
 
-    storeUserLinkedVaryings(vertexShader, linkedVaryings);
-    storeBuiltinLinkedVaryings(vertexSemantics, linkedVaryings);
+    std::string varyingHLSL = generateVaryingHLSL(vertexShader, varyingSemantic, linkedVaryings);
+
+    // special varyings that use reserved registers
+    int reservedRegisterIndex = registers;
+
+    unsigned int glPositionSemanticIndex = reservedRegisterIndex++;
+    std::string glPositionSemantic = varyingSemantic;
+
+    std::string fragCoordSemantic;
+    unsigned int fragCoordSemanticIndex = 0;
+    if (fragmentShader->mUsesFragCoord)
+    {
+        fragCoordSemanticIndex = reservedRegisterIndex++;
+        fragCoordSemantic = varyingSemantic;
+    }
+
+    std::string pointCoordSemantic;
+    unsigned int pointCoordSemanticIndex = 0;
+    if (fragmentShader->mUsesPointCoord)
+    {
+        // Shader model 3 uses a special TEXCOORD semantic for point sprite texcoords.
+        // In DX11 we compute this in the GS.
+        if (shaderModel == 3)
+        {
+            pointCoordSemanticIndex = 0;
+            pointCoordSemantic = "TEXCOORD0";
+        }
+        else if (shaderModel >= 4)
+        {
+            pointCoordSemanticIndex = reservedRegisterIndex++;
+            pointCoordSemantic = varyingSemantic;
+        }
+    }
 
     // Add stub string to be replaced when shader is dynamically defined by its layout
-    vertexHLSL += "\n" + VERTEX_ATTRIBUTE_STUB_STRING + "\n"
-                  "struct VS_OUTPUT\n" + generateVaryingLinkHLSL(vertexSemantics, varyingHLSL) + "\n"
+    vertexHLSL += "\n" + VERTEX_ATTRIBUTE_STUB_STRING + "\n";
+
+    vertexHLSL += "struct VS_OUTPUT\n"
+                  "{\n";
+
+    if (shaderModel < 4)
+    {
+        vertexHLSL += "    float4 _dx_Position : " + dxPositionSemantic + ";\n";
+        vertexHLSL += "    float4 gl_Position : " + glPositionSemantic + Str(glPositionSemanticIndex) + ";\n";
+        linkedVaryings->push_back(LinkedVarying("gl_Position", GL_FLOAT_VEC4, 1, glPositionSemantic, glPositionSemanticIndex, 1));
+
+    }
+
+    vertexHLSL += varyingHLSL;
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        vertexHLSL += "    float4 gl_FragCoord : " + fragCoordSemantic + Str(fragCoordSemanticIndex) + ";\n";
+        linkedVaryings->push_back(LinkedVarying("gl_FragCoord", GL_FLOAT_VEC4, 1, fragCoordSemantic, fragCoordSemanticIndex, 1));
+    }
+
+    if (vertexShader->mUsesPointSize && shaderModel >= 3)
+    {
+        vertexHLSL += "    float gl_PointSize : PSIZE;\n";
+        linkedVaryings->push_back(LinkedVarying("gl_PointSize", GL_FLOAT, 1, "PSIZE", 0, 1));
+    }
+
+    if (shaderModel >= 4)
+    {
+        vertexHLSL += "    float4 _dx_Position : " + dxPositionSemantic + ";\n";
+        vertexHLSL += "    float4 gl_Position : " + glPositionSemantic + Str(glPositionSemanticIndex) + ";\n";
+        linkedVaryings->push_back(LinkedVarying("gl_Position", GL_FLOAT_VEC4, 1, glPositionSemantic, glPositionSemanticIndex, 1));
+    }
+
+    vertexHLSL += "};\n"
+                  "\n"
                   "VS_OUTPUT main(VS_INPUT input)\n"
                   "{\n"
                   "    initAttributes(input);\n";
@@ -699,10 +532,10 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
                       "\n"
                       "    VS_OUTPUT output;\n"
                       "    output.gl_Position = gl_Position;\n"
-                      "    output.dx_Position.x = gl_Position.x;\n"
-                      "    output.dx_Position.y = -gl_Position.y;\n"
-                      "    output.dx_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
-                      "    output.dx_Position.w = gl_Position.w;\n";
+                      "    output._dx_Position.x = gl_Position.x;\n"
+                      "    output._dx_Position.y = -gl_Position.y;\n"
+                      "    output._dx_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
+                      "    output._dx_Position.w = gl_Position.w;\n";
     }
     else
     {
@@ -711,18 +544,18 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
                       "\n"
                       "    VS_OUTPUT output;\n"
                       "    output.gl_Position = gl_Position;\n"
-                      "    output.dx_Position.x = gl_Position.x * dx_ViewAdjust.z + dx_ViewAdjust.x * gl_Position.w;\n"
-                      "    output.dx_Position.y = -(gl_Position.y * dx_ViewAdjust.w + dx_ViewAdjust.y * gl_Position.w);\n"
-                      "    output.dx_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
-                      "    output.dx_Position.w = gl_Position.w;\n";
+                      "    output._dx_Position.x = gl_Position.x * dx_ViewAdjust.z + dx_ViewAdjust.x * gl_Position.w;\n"
+                      "    output._dx_Position.y = -(gl_Position.y * dx_ViewAdjust.w + dx_ViewAdjust.y * gl_Position.w);\n"
+                      "    output._dx_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
+                      "    output._dx_Position.w = gl_Position.w;\n";
     }
 
-    if (usesPointSize && shaderModel >= 3)
+    if (vertexShader->mUsesPointSize && shaderModel >= 3)
     {
         vertexHLSL += "    output.gl_PointSize = gl_PointSize;\n";
     }
 
-    if (usesFragCoord)
+    if (fragmentShader->mUsesFragCoord)
     {
         vertexHLSL += "    output.gl_FragCoord = gl_Position;\n";
     }
@@ -793,51 +626,76 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
                   "    return output;\n"
                   "}\n";
 
-    const SemanticInfo &pixelSemantics = getSemanticInfo(registers, usesFragCoord, usesPointCoord,
-                                                         usesPointSize, true);
+    pixelHLSL += "struct PS_INPUT\n"
+                 "{\n";
 
-    pixelHLSL += "struct PS_INPUT\n" + generateVaryingLinkHLSL(pixelSemantics, varyingHLSL) + "\n";
+    pixelHLSL += varyingHLSL;
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        pixelHLSL += "    float4 gl_FragCoord : " + fragCoordSemantic + Str(fragCoordSemanticIndex) + ";\n";
+    }
+
+    if (fragmentShader->mUsesPointCoord && shaderModel >= 3)
+    {
+        pixelHLSL += "    float2 gl_PointCoord : " + pointCoordSemantic + Str(pointCoordSemanticIndex) + ";\n";
+    }
+
+    // Must consume the PSIZE element if the geometry shader is not active
+    // We won't know if we use a GS until we draw
+    if (vertexShader->mUsesPointSize && shaderModel >= 4)
+    {
+        pixelHLSL += "    float gl_PointSize : PSIZE;\n";
+    }
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        if (shaderModel >= 4)
+        {
+            pixelHLSL += "    float4 dx_VPos : SV_Position;\n";
+        }
+        else if (shaderModel >= 3)
+        {
+            pixelHLSL += "    float2 dx_VPos : VPOS;\n";
+        }
+    }
+
+    pixelHLSL += "};\n"
+                 "\n"
+                 "struct PS_OUTPUT\n"
+                 "{\n";
 
     if (shaderVersion < 300)
     {
         for (unsigned int renderTargetIndex = 0; renderTargetIndex < numRenderTargets; renderTargetIndex++)
         {
-            PixelShaderOuputVariable outputKeyVariable;
-            outputKeyVariable.type = GL_FLOAT_VEC4;
-            outputKeyVariable.name = "gl_Color" + Str(renderTargetIndex);
-            outputKeyVariable.source = broadcast ? "gl_Color[0]" : "gl_Color[" + Str(renderTargetIndex) + "]";
-            outputKeyVariable.outputIndex = renderTargetIndex;
-
-            outPixelShaderKey->push_back(outputKeyVariable);
+            pixelHLSL += "    float4 gl_Color" + Str(renderTargetIndex) + " : " + targetSemantic + Str(renderTargetIndex) + ";\n";
         }
 
-        *outUsesFragDepth = fragmentShader->mUsesFragDepth;
+        if (fragmentShader->mUsesFragDepth)
+        {
+            pixelHLSL += "    float gl_Depth : " + depthSemantic + ";\n";
+        }
     }
     else
     {
         defineOutputVariables(fragmentShader, programOutputVars);
 
-        const std::vector<sh::Attribute> &shaderOutputVars = fragmentShader->getOutputVariables();
+        const std::vector<Attribute> &shaderOutputVars = fragmentShader->getOutputVariables();
         for (auto locationIt = programOutputVars->begin(); locationIt != programOutputVars->end(); locationIt++)
         {
             const VariableLocation &outputLocation = locationIt->second;
-            const sh::ShaderVariable &outputVariable = shaderOutputVars[outputLocation.index];
-            const std::string &variableName = "out_" + outputLocation.name;
+            const ShaderVariable &outputVariable = shaderOutputVars[outputLocation.index];
             const std::string &elementString = (outputLocation.element == GL_INVALID_INDEX ? "" : Str(outputLocation.element));
 
-            PixelShaderOuputVariable outputKeyVariable;
-            outputKeyVariable.type = outputVariable.type;
-            outputKeyVariable.name = variableName + elementString;
-            outputKeyVariable.source = variableName + ArrayString(outputLocation.element);
-            outputKeyVariable.outputIndex = locationIt->first;
-
-            outPixelShaderKey->push_back(outputKeyVariable);
+            pixelHLSL += "    " + gl_d3d::HLSLTypeString(outputVariable.type) +
+                         " out_" + outputLocation.name + elementString +
+                         " : " + targetSemantic + Str(locationIt->first) + ";\n";
         }
-
-        *outUsesFragDepth = false;
     }
 
-    pixelHLSL += PIXEL_OUTPUT_STUB_STRING + "\n";
+    pixelHLSL += "};\n"
+                 "\n";
 
     if (fragmentShader->mUsesFrontFacing)
     {
@@ -858,19 +716,19 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
                      "{\n";
     }
 
-    if (usesFragCoord)
+    if (fragmentShader->mUsesFragCoord)
     {
         pixelHLSL += "    float rhw = 1.0 / input.gl_FragCoord.w;\n";
 
         if (shaderModel >= 4)
         {
-            pixelHLSL += "    gl_FragCoord.x = input.dx_Position.x;\n"
-                         "    gl_FragCoord.y = input.dx_Position.y;\n";
+            pixelHLSL += "    gl_FragCoord.x = input.dx_VPos.x;\n"
+                         "    gl_FragCoord.y = input.dx_VPos.y;\n";
         }
         else if (shaderModel >= 3)
         {
-            pixelHLSL += "    gl_FragCoord.x = input.dx_Position.x + 0.5;\n"
-                         "    gl_FragCoord.y = input.dx_Position.y + 0.5;\n";
+            pixelHLSL += "    gl_FragCoord.x = input.dx_VPos.x + 0.5;\n"
+                         "    gl_FragCoord.y = input.dx_VPos.y + 0.5;\n";
         }
         else
         {
@@ -883,7 +741,7 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
                      "    gl_FragCoord.w = rhw;\n";
     }
 
-    if (usesPointCoord && shaderModel >= 3)
+    if (fragmentShader->mUsesPointCoord && shaderModel >= 3)
     {
         pixelHLSL += "    gl_PointCoord.x = input.gl_PointCoord.x;\n";
         pixelHLSL += "    gl_PointCoord.y = 1.0 - input.gl_PointCoord.y;\n";
@@ -949,7 +807,37 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
     pixelHLSL += "\n"
                  "    gl_main();\n"
                  "\n"
-                 "    return generateOutput();\n"
+                 "    PS_OUTPUT output;\n";
+
+    if (shaderVersion < 300)
+    {
+        for (unsigned int renderTargetIndex = 0; renderTargetIndex < numRenderTargets; renderTargetIndex++)
+        {
+            unsigned int sourceColorIndex = broadcast ? 0 : renderTargetIndex;
+
+            pixelHLSL += "    output.gl_Color" + Str(renderTargetIndex) + " = gl_Color[" + Str(sourceColorIndex) + "];\n";
+        }
+
+        if (fragmentShader->mUsesFragDepth)
+        {
+            pixelHLSL += "    output.gl_Depth = gl_Depth;\n";
+        }
+    }
+    else
+    {
+        for (auto locationIt = programOutputVars->begin(); locationIt != programOutputVars->end(); locationIt++)
+        {
+            const VariableLocation &outputLocation = locationIt->second;
+            const std::string &variableName = "out_" + outputLocation.name;
+            const std::string &outVariableName = variableName + (outputLocation.element == GL_INVALID_INDEX ? "" : Str(outputLocation.element));
+            const std::string &staticVariableName = variableName + ArrayString(outputLocation.element);
+
+            pixelHLSL += "    output." + outVariableName + " = " + staticVariableName + ";\n";
+        }
+    }
+
+    pixelHLSL += "\n"
+                 "    return output;\n"
                  "}\n";
 
     return true;
@@ -957,11 +845,11 @@ bool DynamicHLSL::generateShaderLinkHLSL(InfoLog &infoLog, int registers, const 
 
 void DynamicHLSL::defineOutputVariables(FragmentShader *fragmentShader, std::map<int, VariableLocation> *programOutputVars) const
 {
-    const std::vector<sh::Attribute> &shaderOutputVars = fragmentShader->getOutputVariables();
+    const std::vector<Attribute> &shaderOutputVars = fragmentShader->getOutputVariables();
 
     for (unsigned int outputVariableIndex = 0; outputVariableIndex < shaderOutputVars.size(); outputVariableIndex++)
     {
-        const sh::Attribute &outputVariable = shaderOutputVars[outputVariableIndex];
+        const Attribute &outputVariable = shaderOutputVars[outputVariableIndex];
         const int baseLocation = outputVariable.location == -1 ? 0 : outputVariable.location;
 
         if (outputVariable.arraySize > 0)
@@ -996,20 +884,60 @@ std::string DynamicHLSL::generatePointSpriteHLSL(int registers, FragmentShader *
 
     std::string geomHLSL;
 
-    const SemanticInfo &inSemantics = getSemanticInfo(registers, fragmentShader->mUsesFragCoord,
-                                                      false, true, false);
-    const SemanticInfo &outSemantics = getSemanticInfo(registers, fragmentShader->mUsesFragCoord,
-                                                       fragmentShader->mUsesPointCoord, true, false);
+    std::string varyingSemantic = "TEXCOORD";
 
-    std::string varyingHLSL = generateVaryingHLSL(vertexShader);
-    std::string inLinkHLSL = generateVaryingLinkHLSL(inSemantics, varyingHLSL);
-    std::string outLinkHLSL = generateVaryingLinkHLSL(outSemantics, varyingHLSL);
+    std::string fragCoordSemantic;
+    std::string pointCoordSemantic;
+
+    int reservedRegisterIndex = registers;
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        fragCoordSemantic = varyingSemantic + Str(reservedRegisterIndex++);
+    }
+
+    if (fragmentShader->mUsesPointCoord)
+    {
+        pointCoordSemantic = varyingSemantic + Str(reservedRegisterIndex++);
+    }
 
     geomHLSL += "uniform float4 dx_ViewCoords : register(c1);\n"
                 "\n"
-                "struct GS_INPUT\n" + inLinkHLSL + "\n" +
-                "struct GS_OUTPUT\n" + outLinkHLSL + "\n" +
+                "struct GS_INPUT\n"
+                "{\n";
+
+    std::string varyingHLSL = generateVaryingHLSL(vertexShader, varyingSemantic, NULL);
+
+    geomHLSL += varyingHLSL;
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        geomHLSL += "    float4 gl_FragCoord : " + fragCoordSemantic + ";\n";
+    }
+
+    geomHLSL += "    float gl_PointSize : PSIZE;\n"
+                "    float4 gl_Position : SV_Position;\n"
+                "};\n"
                 "\n"
+                "struct GS_OUTPUT\n"
+                "{\n";
+
+    geomHLSL += varyingHLSL;
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        geomHLSL += "    float4 gl_FragCoord : " + fragCoordSemantic + ";\n";
+    }
+
+    if (fragmentShader->mUsesPointCoord)
+    {
+        geomHLSL += "    float2 gl_PointCoord : " + pointCoordSemantic + ";\n";
+    }
+
+    geomHLSL +=   "    float gl_PointSize : PSIZE;\n"
+                  "    float4 gl_Position : SV_Position;\n"
+                  "};\n"
+                  "\n"
                   "static float2 pointSpriteCorners[] = \n"
                   "{\n"
                   "    float2( 0.5f, -0.5f),\n"
@@ -1033,7 +961,6 @@ std::string DynamicHLSL::generatePointSpriteHLSL(int registers, FragmentShader *
                   "void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> outStream)\n"
                   "{\n"
                   "    GS_OUTPUT output = (GS_OUTPUT)0;\n"
-                  "    output.gl_Position = input[0].gl_Position;\n";
                   "    output.gl_PointSize = input[0].gl_PointSize;\n";
 
     for (int r = 0; r < registers; r++)
@@ -1048,13 +975,13 @@ std::string DynamicHLSL::generatePointSpriteHLSL(int registers, FragmentShader *
 
     geomHLSL += "    \n"
                 "    float gl_PointSize = clamp(input[0].gl_PointSize, minPointSize, maxPointSize);\n"
-                "    float4 dx_Position = input[0].dx_Position;\n"
-                "    float2 viewportScale = float2(1.0f / dx_ViewCoords.x, 1.0f / dx_ViewCoords.y) * dx_Position.w;\n";
+                "    float4 gl_Position = input[0].gl_Position;\n"
+                "    float2 viewportScale = float2(1.0f / dx_ViewCoords.x, 1.0f / dx_ViewCoords.y) * gl_Position.w;\n";
 
     for (int corner = 0; corner < 4; corner++)
     {
         geomHLSL += "    \n"
-                    "    output.dx_Position = dx_Position + float4(pointSpriteCorners[" + Str(corner) + "] * viewportScale * gl_PointSize, 0.0f, 0.0f);\n";
+                    "    output.gl_Position = gl_Position + float4(pointSpriteCorners[" + Str(corner) + "] * viewportScale * gl_PointSize, 0.0f, 0.0f);\n";
 
         if (fragmentShader->mUsesPointCoord)
         {
@@ -1074,7 +1001,7 @@ std::string DynamicHLSL::generatePointSpriteHLSL(int registers, FragmentShader *
 // This method needs to match OutputHLSL::decorate
 std::string DynamicHLSL::decorateVariable(const std::string &name)
 {
-    if (name.compare(0, 3, "gl_"))
+    if (name.compare(0, 3, "gl_") != 0 && name.compare(0, 3, "dx_") != 0)
     {
         return "_" + name;
     }
@@ -1082,7 +1009,7 @@ std::string DynamicHLSL::decorateVariable(const std::string &name)
     return name;
 }
 
-std::string DynamicHLSL::generateAttributeConversionHLSL(const VertexFormat &vertexFormat, const sh::ShaderVariable &shaderAttrib) const
+std::string DynamicHLSL::generateAttributeConversionHLSL(const VertexFormat &vertexFormat, const ShaderVariable &shaderAttrib) const
 {
     std::string attribString = "input." + decorateVariable(shaderAttrib.name);
 
@@ -1092,8 +1019,8 @@ std::string DynamicHLSL::generateAttributeConversionHLSL(const VertexFormat &ver
         return "transpose(" + attribString + ")";
     }
 
-    GLenum shaderComponentType = VariableComponentType(shaderAttrib.type);
-    int shaderComponentCount = VariableComponentCount(shaderAttrib.type);
+    GLenum shaderComponentType = UniformComponentType(shaderAttrib.type);
+    int shaderComponentCount = UniformComponentCount(shaderAttrib.type);
 
     // Perform integer to float conversion (if necessary)
     bool requiresTypeConversion = (shaderComponentType == GL_FLOAT && vertexFormat.mType != GL_FLOAT);
