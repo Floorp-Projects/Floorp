@@ -104,7 +104,6 @@ loop.Client = (function($) {
      * -- callUrl: The url of the call
      * -- expiresAt: The amount of hours until expiry of the url
      *
-     * @param  {String} simplepushUrl a registered Simple Push URL
      * @param  {string} nickname the nickname of the future caller
      * @param  {Function} cb Callback(err, callUrlData)
      */
