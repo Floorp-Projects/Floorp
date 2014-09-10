@@ -1299,6 +1299,7 @@ nsStylePosition::nsStylePosition(void)
   mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
   mFlexWrap = NS_STYLE_FLEX_WRAP_NOWRAP;
   mJustifyContent = NS_STYLE_JUSTIFY_CONTENT_FLEX_START;
+  mObjectFit = NS_STYLE_OBJECT_FIT_FILL;
   mOrder = NS_STYLE_ORDER_INITIAL;
   mFlexGrow = 0.0f;
   mFlexShrink = 1.0f;
@@ -1336,6 +1337,7 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   , mFlexDirection(aSource.mFlexDirection)
   , mFlexWrap(aSource.mFlexWrap)
   , mJustifyContent(aSource.mJustifyContent)
+  , mObjectFit(aSource.mObjectFit)
   , mOrder(aSource.mOrder)
   , mFlexGrow(aSource.mFlexGrow)
   , mFlexShrink(aSource.mFlexShrink)
@@ -1365,8 +1367,13 @@ IsAutonessEqual(const nsStyleSides& aSides1, const nsStyleSides& aSides2)
 
 nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
 {
-  nsChangeHint hint =
-    (mZIndex == aOther.mZIndex) ? NS_STYLE_HINT_NONE : nsChangeHint_RepaintFrame;
+  nsChangeHint hint = nsChangeHint(0);
+
+  // Changes to "z-index" & "object-fit" require a repaint.
+  if (mZIndex != aOther.mZIndex ||
+      mObjectFit != aOther.mObjectFit) {
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
 
   if (mOrder != aOther.mOrder) {
     // "order" impacts both layout order and stacking order, so we need both a

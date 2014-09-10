@@ -5372,6 +5372,17 @@ if (SpecialPowers.getBoolPref("layout.css.will-change.enabled")) {
   };
 }
 
+if (SpecialPowers.getBoolPref("layout.css.object-fit-and-position.enabled")) {
+  gCSSProperties["object-fit"] = {
+    domProp: "objectFit",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "fill" ],
+    other_values: [ "contain", "cover", "none", "scale-down" ],
+    invalid_values: [ "auto", "5px", "100%" ]
+  };
+}
+
 if (SpecialPowers.getBoolPref("layout.css.overflow-clip-box.enabled")) {
   gCSSProperties["overflow-clip-box"] = {
     domProp: "overflowClipBox",

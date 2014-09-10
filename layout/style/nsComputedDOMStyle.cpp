@@ -4188,6 +4188,15 @@ nsComputedDOMStyle::DoGetMixBlendMode()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetObjectFit()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StylePosition()->mObjectFit,
+                                               nsCSSProps::kObjectFitKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetLeft()
 {
   return GetOffsetWidthFor(NS_SIDE_LEFT);
