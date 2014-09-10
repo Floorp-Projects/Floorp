@@ -157,7 +157,7 @@ loop.conversation = (function(OT, mozL10n) {
    */
   var ConversationRouter = loop.desktopRouter.DesktopConversationRouter.extend({
     routes: {
-      "incoming/:version": "incoming",
+      "incoming/:callId": "incoming",
       "call/accept": "accept",
       "call/decline": "decline",
       "call/ongoing": "conversation",
@@ -182,12 +182,11 @@ loop.conversation = (function(OT, mozL10n) {
     /**
      * Incoming call route.
      *
-     * @param {String} loopVersion The version from the push notification, set
-     *                             by the router from the URL.
+     * @param {String} callId  Identifier assigned by the LoopService
+     *                         to this incoming call.
      */
-    incoming: function(loopVersion) {
+    incoming: function(callId) {
       navigator.mozLoop.startAlerting();
-      this._conversation.set({loopVersion: loopVersion});
       this._conversation.once("accept", function() {
         this.navigate("call/accept", {trigger: true});
       }.bind(this));
@@ -201,24 +200,16 @@ loop.conversation = (function(OT, mozL10n) {
       this._conversation.once("change:publishedStream", this._checkConnected, this);
       this._conversation.once("change:subscribedStream", this._checkConnected, this);
 
-      this._client.requestCallsInfo(loopVersion, function(err, sessionData) {
-        if (err) {
-          console.error("Failed to get the sessionData", err);
-          // XXX Not the ideal response, but bug 1047410 will be replacing
-          // this by better "call failed" UI.
-          this._notifications.errorL10n("cannot_start_call_session_not_ready");
-          return;
-        }
-
-        // XXX For incoming calls we might have more than one call queued.
-        // For now, we'll just assume the first call is the right information.
-        // We'll probably really want to be getting this data from the
-        // background worker on the desktop client.
-        // Bug 1032700 should fix this.
-        this._conversation.setIncomingSessionData(sessionData[0]);
-
-        this._setupWebSocketAndCallView();
-      }.bind(this));
+      var callData = navigator.mozLoop.getCallData(callId);
+      if (!callData) {
+        console.error("Failed to get the call data");
+        // XXX Not the ideal response, but bug 1047410 will be replacing
+        // this by better "call failed" UI.
+        this._notifications.errorL10n("cannot_start_call_session_not_ready");
+        return;
+      }
+      this._conversation.setIncomingSessionData(callData);
+      this._setupWebSocketAndCallView();
     },
 
     /**

@@ -121,6 +121,14 @@ public:
   };
 
   /**
+   * Gets autocommit status.
+   */
+  bool getAutocommit() {
+    MOZ_ASSERT(mDBConn, "A connection must exist at this point");
+    return static_cast<bool>(::sqlite3_get_autocommit(mDBConn));
+  };
+
+  /**
    * Lazily creates and returns a background execution thread.  In the future,
    * the thread may be re-claimed if left idle, so you should call this
    * method just before you dispatch and not save the reference.
