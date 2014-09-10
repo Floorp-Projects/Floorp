@@ -582,30 +582,31 @@ class TempDirMemoryFinishCallback MOZ_FINAL : public nsIFinishReportingCallback
 public:
   NS_DECL_ISUPPORTS
 
-  TempDirMemoryFinishCallback(nsGZFileWriter* aWriter,
-                              nsIFile* aTmpFile,
-                              const nsCString& aFilename,
+  TempDirMemoryFinishCallback(nsGZFileWriter* aReportsWriter,
+                              nsIFile* aReportsTmpFile,
+                              const nsCString& aReportsFinalFilename,
                               const nsString& aIdentifier)
-    : mrWriter(aWriter)
-    , mrTmpFile(aTmpFile)
-    , mrFilename(aFilename)
+    : mReportsWriter(aReportsWriter)
+    , mReportsTmpFile(aReportsTmpFile)
+    , mReportsFilename(aReportsFinalFilename)
     , mIdentifier(aIdentifier)
   {
   }
 
   NS_IMETHOD Callback(nsISupports* aData)
   {
-    nsresult rv = DumpFooter(mrWriter);
+    nsresult rv = DumpFooter(mReportsWriter);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    // The call to Finish() deallocates the memory allocated by mrWriter's first
-    // DUMP() call (within DumpProcessMemoryReportsToGZFileWriter()).  Because
-    // that memory was live while the memory reporters ran and thus measured by
-    // them -- by "heap-allocated" if nothing else -- we want DMD to see it as
-    // well.  So we deliberately don't call Finish() until after DMD finishes.
-    rv = mrWriter->Finish();
+    // The call to Finish() deallocates the memory allocated by mReportsWriter's
+    // first DUMP() call (within DumpProcessMemoryReportsToGZFileWriter()).
+    // Because that memory was live while the memory reporters ran and thus
+    // measured by them -- by "heap-allocated" if nothing else -- we want DMD to
+    // see it as well.  So we deliberately don't call Finish() until after DMD
+    // finishes.
+    rv = mReportsWriter->Finish();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -613,36 +614,38 @@ public:
     // Rename the memory reports file, now that we're done writing all the
     // files. Its final name is "memory-report<-identifier>-<pid>.json.gz".
 
-    nsCOMPtr<nsIFile> mrFinalFile;
-    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mrFinalFile));
+    nsCOMPtr<nsIFile> reportsFinalFile;
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
+                                getter_AddRefs(reportsFinalFile));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
   #ifdef ANDROID
-    rv = mrFinalFile->AppendNative(NS_LITERAL_CSTRING("memory-reports"));
+    rv = reportsFinalFile->AppendNative(NS_LITERAL_CSTRING("memory-reports"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   #endif
 
-    rv = mrFinalFile->AppendNative(mrFilename);
+    rv = reportsFinalFile->AppendNative(mReportsFilename);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = mrFinalFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    rv = reportsFinalFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    nsAutoString mrActualFinalFilename;
-    rv = mrFinalFile->GetLeafName(mrActualFinalFilename);
+    nsAutoString reportsFinalFilename;
+    rv = reportsFinalFile->GetLeafName(reportsFinalFilename);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = mrTmpFile->MoveTo(/* directory */ nullptr, mrActualFinalFilename);
+    rv = mReportsTmpFile->MoveTo(/* directory */ nullptr,
+                                 reportsFinalFilename);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -656,7 +659,7 @@ public:
     }
 
     nsString path;
-    mrTmpFile->GetPath(path);
+    mReportsTmpFile->GetPath(path);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -669,9 +672,9 @@ public:
 private:
   ~TempDirMemoryFinishCallback() {}
 
-  nsRefPtr<nsGZFileWriter> mrWriter;
-  nsCOMPtr<nsIFile> mrTmpFile;
-  nsCString mrFilename;
+  nsRefPtr<nsGZFileWriter> mReportsWriter;
+  nsCOMPtr<nsIFile> mReportsTmpFile;
+  nsCString mReportsFilename;
   nsString mIdentifier;
 };
 
@@ -696,38 +699,36 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
   // looking for memory report dumps to grab a file before we're finished
   // writing to it.
 
-  // Note that |mrFilename| is missing the "incomplete-" prefix; we'll tack
-  // that on in a moment.
-  nsCString mrFilename;
+  nsCString reportsFinalFilename;
   // The "unified" indicates that we merge the memory reports from all
   // processes and write out one file, rather than a separate file for
   // each process as was the case before bug 946407.  This is so that
   // the get_about_memory.py script in the B2G repository can
   // determine when it's done waiting for files to appear.
   MakeFilename("unified-memory-report", identifier, getpid(), "json.gz",
-               mrFilename);
+               reportsFinalFilename);
 
-  nsCOMPtr<nsIFile> mrTmpFile;
+  nsCOMPtr<nsIFile> reportsTmpFile;
   nsresult rv;
   // In Android case, this function will open a file named aFilename under
   // specific folder (/data/local/tmp/memory-reports). Otherwise, it will
   // open a file named aFilename under "NS_OS_TEMP_DIR".
   rv = nsDumpUtils::OpenTempFile(NS_LITERAL_CSTRING("incomplete-") +
-                                 mrFilename,
-                                 getter_AddRefs(mrTmpFile),
+                                 reportsFinalFilename,
+                                 getter_AddRefs(reportsTmpFile),
                                  NS_LITERAL_CSTRING("memory-reports"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  nsRefPtr<nsGZFileWriter> mrWriter = new nsGZFileWriter();
-  rv = mrWriter->Init(mrTmpFile);
+  nsRefPtr<nsGZFileWriter> reportsWriter = new nsGZFileWriter();
+  rv = reportsWriter->Init(reportsTmpFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Dump the memory reports to the file.
-  rv = DumpHeader(mrWriter);
+  rv = DumpHeader(reportsWriter);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -735,9 +736,11 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
   // Process reporters.
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
-  nsRefPtr<DumpReportCallback> dumpReport = new DumpReportCallback(mrWriter);
+  nsRefPtr<DumpReportCallback> dumpReport =
+    new DumpReportCallback(reportsWriter);
   nsRefPtr<nsIFinishReportingCallback> finishReport =
-    new TempDirMemoryFinishCallback(mrWriter, mrTmpFile, mrFilename, identifier);
+    new TempDirMemoryFinishCallback(reportsWriter, reportsTmpFile,
+                                    reportsFinalFilename, identifier);
   rv = mgr->GetReportsExtended(dumpReport, nullptr,
                                finishReport, nullptr,
                                aAnonymize,
@@ -860,25 +863,25 @@ nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
 
   // Create the file.
 
-  nsCOMPtr<nsIFile> mrFile;
-  nsresult rv = NS_NewLocalFile(aFilename, false, getter_AddRefs(mrFile));
+  nsCOMPtr<nsIFile> reportsFile;
+  nsresult rv = NS_NewLocalFile(aFilename, false, getter_AddRefs(reportsFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  mrFile->InitWithPath(aFilename);
+  reportsFile->InitWithPath(aFilename);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   bool exists;
-  rv = mrFile->Exists(&exists);
+  rv = reportsFile->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   if (!exists) {
-    rv = mrFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+    rv = reportsFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -886,13 +889,13 @@ nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
 
   // Write the memory reports to the file.
 
-  nsRefPtr<nsGZFileWriter> mrWriter = new nsGZFileWriter();
-  rv = mrWriter->Init(mrFile);
+  nsRefPtr<nsGZFileWriter> reportsWriter = new nsGZFileWriter();
+  rv = reportsWriter->Init(reportsFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = DumpHeader(mrWriter);
+  rv = DumpHeader(reportsWriter);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -900,10 +903,11 @@ nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
   // Process reports and finish up.
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
-  nsRefPtr<DumpReportCallback> dumpReport = new DumpReportCallback(mrWriter);
+  nsRefPtr<DumpReportCallback> dumpReport =
+    new DumpReportCallback(reportsWriter);
   nsRefPtr<FinishReportingCallback> finishReporting =
     new FinishReportingCallback(aFinishDumping, aFinishDumpingData);
-  return mgr->GetReports(dumpReport, nullptr, finishReporting, mrWriter,
+  return mgr->GetReports(dumpReport, nullptr, finishReporting, reportsWriter,
                          aAnonymize);
 }
 
