@@ -183,7 +183,7 @@ public class BrowserApp extends GeckoApp
     }
 
     // The types of guest mdoe dialogs we show
-    private static enum GuestModeDialog {
+    public static enum GuestModeDialog {
         ENTERING,
         LEAVING
     }
@@ -526,11 +526,15 @@ public class BrowserApp extends GeckoApp
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
         mProgressView = (ToolbarProgressView) findViewById(R.id.progress);
         mBrowserToolbar.setProgressBar(mProgressView);
-        if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+
+        final String action = intent.getAction();
+        if (Intent.ACTION_VIEW.equals(action)) {
             // Show the target URL immediately in the toolbar.
             mBrowserToolbar.setTitle(intent.getDataString());
 
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT);
+        } else if (GuestSession.NOTIFICATION_INTENT.equals(action)) {
+            showGuestModeDialog(BrowserApp.GuestModeDialog.LEAVING);
         }
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideOnTouchListener());
@@ -645,6 +649,13 @@ public class BrowserApp extends GeckoApp
             } catch(Exception ex) {
                 Log.e(LOGTAG, "Error initializing media manager", ex);
             }
+        }
+
+        if (getProfile().inGuestMode()) {
+            GuestSession.showNotification(this);
+        } else {
+            // If we're restarting, we won't destroy the activity. Make sure we remove any guest notifications that might have been shown.
+            GuestSession.hideNotification(this);
         }
     }
 
@@ -1011,6 +1022,8 @@ public class BrowserApp extends GeckoApp
             mBrowserHealthReporter.uninit();
             mBrowserHealthReporter = null;
         }
+
+        GuestSession.onDestroy(this);
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Menu:Update",
@@ -2806,7 +2819,7 @@ public class BrowserApp extends GeckoApp
         return super.onOptionsItemSelected(item);
     }
 
-    private void showGuestModeDialog(final GuestModeDialog type) {
+    public void showGuestModeDialog(final GuestModeDialog type) {
         final Prompt ps = new Prompt(this, new Prompt.PromptCallback() {
             @Override
             public void onPromptFinished(String result) {
@@ -2903,7 +2916,9 @@ public class BrowserApp extends GeckoApp
         }
 
         // Only solicit feedback when the app has been launched from the icon shortcut.
-        if (!Intent.ACTION_MAIN.equals(action)) {
+        if (GuestSession.NOTIFICATION_INTENT.equals(action)) {
+            showGuestModeDialog(BrowserApp.GuestModeDialog.LEAVING);
+        } else if (!Intent.ACTION_MAIN.equals(action)) {
             return;
         }
 
