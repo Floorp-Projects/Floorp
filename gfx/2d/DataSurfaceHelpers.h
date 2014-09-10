@@ -48,6 +48,8 @@ SurfaceToPackedBGR(DataSourceSurface *aSurface);
 /**
  * Clears all the bytes in a DataSourceSurface's data array to zero (so to
  * transparent black for SurfaceFormat::B8G8R8A8, for example).
+ * Note that DataSourceSurfaces can be initialized to zero, which is
+ * more efficient than zeroing the surface after initialization.
  */
 void
 ClearDataSourceSurface(DataSourceSurface *aSurface);

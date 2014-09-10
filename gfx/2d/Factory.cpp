@@ -691,14 +691,15 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
 
 TemporaryRef<DataSourceSurface>
 Factory::CreateDataSourceSurface(const IntSize &aSize,
-                                 SurfaceFormat aFormat)
+                                 SurfaceFormat aFormat,
+                                 bool aZero)
 {
   if (!CheckSurfaceSize(aSize)) {
     return nullptr;
   }
 
   RefPtr<SourceSurfaceAlignedRawData> newSurf = new SourceSurfaceAlignedRawData();
-  if (newSurf->Init(aSize, aFormat)) {
+  if (newSurf->Init(aSize, aFormat, aZero)) {
     return newSurf.forget();
   }
 
@@ -708,14 +709,15 @@ Factory::CreateDataSourceSurface(const IntSize &aSize,
 TemporaryRef<DataSourceSurface>
 Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
                                            SurfaceFormat aFormat,
-                                           int32_t aStride)
+                                           int32_t aStride,
+                                           bool aZero)
 {
   if (aStride < aSize.width * BytesPerPixel(aFormat)) {
     return nullptr;
   }
 
   RefPtr<SourceSurfaceAlignedRawData> newSurf = new SourceSurfaceAlignedRawData();
-  if (newSurf->InitWithStride(aSize, aFormat, aStride)) {
+  if (newSurf->InitWithStride(aSize, aFormat, aStride, aZero)) {
     return newSurf.forget();
   }
 
