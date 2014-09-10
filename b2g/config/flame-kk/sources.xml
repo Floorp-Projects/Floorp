@@ -131,7 +131,7 @@
   <default remote="caf" revision="LNX.LA.3.5.2.1.1" sync-j="4"/>
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
-  <project name="device/qcom/common" path="device/qcom/common" revision="da9043131590b23754c6411e8704c1dc425b0ead"/>
+  <project name="device/qcom/common" path="device/qcom/common" revision="54c32c2ddef066fbdf611d29e4b7c47e0363599e"/>
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="540314ae9c56394c6b1f17a267db9f25c5acb9d6"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="893238eb1215f8fd4f3747169170cc5e1cc33969"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="9e62af4da848d56841bdde326f9bba26c743c33a"/>
