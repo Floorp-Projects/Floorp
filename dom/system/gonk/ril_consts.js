@@ -1251,11 +1251,12 @@ this.STK_SUPPORTED_TERMINAL_PROFILE = [
 ];
 
 /**
- * (U)SIM Services.
+ * ICC Services Table.
  *
  * @see 3GPP TS 51.011 10.3.7 (SIM) and 3GPP TS 31.102 4.2.8 (USIM).
  */
 this.GECKO_ICC_SERVICES = {
+  // @see 3GPP TS 51.011 10.3.7 (SIM).
   sim: {
     ADN: 2,
     FDN: 3,
@@ -1276,6 +1277,7 @@ this.GECKO_ICC_SERVICES = {
     MWIS: 54,
     SPDI: 56
   },
+  // @see 3GPP TS 31.102 4.2.8 (USIM).
   usim: {
     FDN: 2,
     SDN: 4,
@@ -1294,9 +1296,11 @@ this.GECKO_ICC_SERVICES = {
     MWIS: 48,
     SPDI: 51
   },
+  // @see 3GPP2 C.S0023-D 3.4.18 (RUIM).
   ruim: {
     ENHANCED_PHONEBOOK: 6,
-    SPN: 17
+    SPN: 17,
+    SDN: 18
   }
 };
 
