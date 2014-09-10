@@ -36,7 +36,8 @@ static const int GLSL_VERSION_120 = 120;
 //    - varying vec3 color; invariant color;
 //
 TVersionGLSL::TVersionGLSL(ShShaderType type)
-    : mVersion(GLSL_VERSION_110)
+    : mShaderType(type),
+      mVersion(GLSL_VERSION_110)
 {
 }
 

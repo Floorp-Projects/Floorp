@@ -83,12 +83,6 @@ namespace gl
 #define UNUSED_ASSERTION_VARIABLE(variable) ((void)variable)
 #endif
 
-#ifndef ANGLE_ENABLE_TRACE
-#define UNUSED_TRACE_VARIABLE(variable) ((void)variable)
-#else
-#define UNUSED_TRACE_VARIABLE(variable)
-#endif
-
 // A macro to indicate unimplemented functionality
 
 // Define NOASSERT_UNIMPLEMENTED to non zero to skip the assert fail in the unimplemented checks

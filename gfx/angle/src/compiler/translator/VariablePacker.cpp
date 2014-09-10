@@ -6,6 +6,7 @@
 #include "compiler/translator/VariablePacker.h"
 
 #include <algorithm>
+#include "compiler/translator/ShHandle.h"
 
 namespace {
 int GetSortOrder(ShDataType type)

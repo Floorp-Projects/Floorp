@@ -948,26 +948,4 @@ void loadUintDataToUshort(int width, int height, int depth,
     }
 }
 
-void loadUintDataToUint24X8(int width, int height, int depth,
-                            const void *input, unsigned int inputRowPitch, unsigned int inputDepthPitch,
-                            void *output, unsigned int outputRowPitch, unsigned int outputDepthPitch)
-{
-    const unsigned int *source = NULL;
-    unsigned int *dest = NULL;
-
-    for (int z = 0; z < depth; z++)
-    {
-        for (int y = 0; y < height; y++)
-        {
-            source = offsetDataPointer<const unsigned int>(input, y, z, inputRowPitch, inputDepthPitch);
-            dest = offsetDataPointer<unsigned int>(output, y, z, outputRowPitch, outputDepthPitch);
-
-            for (int x = 0; x < width; x++)
-            {
-                dest[x] = source[x] >> 8;
-            }
-        }
-    }
-}
-
 }

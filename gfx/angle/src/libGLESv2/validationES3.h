@@ -34,8 +34,6 @@ bool ValidES3ReadFormatType(gl::Context *context, GLenum internalFormat, GLenum 
 bool ValidateInvalidateFramebufferParameters(gl::Context *context, GLenum target, GLsizei numAttachments,
                                              const GLenum* attachments);
 
-bool ValidateClearBuffer(const gl::Context *context);
-
 }
 
 #endif // LIBGLESV2_VALIDATION_ES3_H
