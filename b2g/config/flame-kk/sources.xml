@@ -151,7 +151,7 @@
   <project name="platform/hardware/ril" path="hardware/ril" revision="12b1977cc704b35f2e9db2bb423fa405348bc2f3"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="985bf15264d865fe7b9c5b45f61c451cbaafa43d"/>
   <project name="platform/system/core" path="system/core" revision="350eac5403124dacb2a5fd9e28ac290a59fc3b8e"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="7e5ae3ef2fe1cbc1c9a4fc718b01b7f28b1c5486"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="54a712b46fe937dacdaed9b1261c63847129a719"/>
   <project name="platform/system/qcom" path="system/qcom" revision="63e3f6f176caad587d42bba4c16b66d953fb23c2"/>
   <project name="platform/vendor/qcom-opensource/wlan/prima" path="vendor/qcom/opensource/wlan/prima" revision="6ada483cf7ff87eec2a9496941352606db73291e"/>
   <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="5d1dbc698de7294697373b436dd44e240f40e1ac"/>
