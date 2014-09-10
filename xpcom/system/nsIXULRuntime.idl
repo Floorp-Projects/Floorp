@@ -9,6 +9,11 @@
 namespace mozilla {
 // Simple C++ getter for nsIXULRuntime::browserTabsRemote
 bool BrowserTabsRemote();
+// Simple C++ getter for nsIXULRuntime::browserTabsRemoteAutostart
+// This getter is a temporary function that checks for special
+// conditions in which e10s support is not great yet, and should
+// therefore be disabled. Bug 1065561 tracks its removal.
+bool BrowserTabsRemoteAutostart();
 }
 
 %}
@@ -20,7 +25,7 @@ bool BrowserTabsRemote();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(e080b1f6-8452-4bde-9368-c795808b86d1)]
+[scriptable, uuid(e652d3b8-c77c-4601-a84d-b0716d2b32c0)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -87,6 +92,12 @@ interface nsIXULRuntime : nsISupports
    * browser UI.
    */
   readonly attribute boolean browserTabsRemote;
+
+  /**
+   * If true, browser tabs may be opened by default in a different process
+   * from the main browser UI.
+   */
+  readonly attribute boolean browserTabsRemoteAutostart;
 
   /**
    * Signal the apprunner to invalidate caches on the next restart.
