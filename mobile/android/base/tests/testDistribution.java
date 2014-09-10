@@ -18,7 +18,6 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.distribution.ReferrerDescriptor;
 import org.mozilla.gecko.distribution.ReferrerReceiver;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
@@ -63,12 +62,10 @@ public class testDistribution extends ContentProviderTest {
             doInit();
         }
 
-        @RobocopTarget
         public static void clearReferrerDescriptorForTesting() {
             referrer = null;
         }
 
-        @RobocopTarget
         public static ReferrerDescriptor getReferrerDescriptorForTesting() {
             return referrer;
         }

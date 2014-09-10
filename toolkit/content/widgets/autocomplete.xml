@@ -1281,8 +1281,14 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             // allow consumers that have extended popups to override
             // the label values for the richlistitems
-            if (panel.createResultLabel)
-              return panel.createResultLabel(title, url, this.getAttribute("type"));
+            if (panel.createResultLabel) {
+              let types = this.getAttribute("type").split(/\s+/);
+              // We only want one type for createResultLabel, so get the first
+              // that isn't "action".
+              let type = types.find(v => v != "action");
+
+              return panel.createResultLabel(title, url, type);
+            }
 
             // aType (ex: "ac-result-type-<aType>") is related to the class of the image,
             // and is not "visible" text so don't use it for the label (for accessibility).
