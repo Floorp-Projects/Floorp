@@ -742,6 +742,47 @@ DumpMemoryInfoToFile(
 }
 
 NS_IMETHODIMP
+nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
+  const nsAString& aFilename,
+  nsIFinishDumpingCallback* aFinishDumping,
+  nsISupports* aFinishDumpingData,
+  bool aAnonymize)
+{
+  MOZ_ASSERT(!aFilename.IsEmpty());
+
+  // Create the file.
+
+  nsCOMPtr<nsIFile> reportsFile;
+  nsresult rv = NS_NewLocalFile(aFilename, false, getter_AddRefs(reportsFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  reportsFile->InitWithPath(aFilename);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = reportsFile->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!exists) {
+    rv = reportsFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  nsString dmdIdent = EmptyString();
+  return DumpMemoryInfoToFile(reportsFile, aFinishDumping, aFinishDumpingData,
+                              aAnonymize, /* minimizeMemoryUsage = */ false,
+                              dmdIdent);
+}
+
+NS_IMETHODIMP
 nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
                                             bool aAnonymize,
                                             bool aMinimizeMemoryUsage)
@@ -850,46 +891,5 @@ nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
   return rv;
 }
 #endif  // MOZ_DMD
-
-NS_IMETHODIMP
-nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
-  const nsAString& aFilename,
-  nsIFinishDumpingCallback* aFinishDumping,
-  nsISupports* aFinishDumpingData,
-  bool aAnonymize)
-{
-  MOZ_ASSERT(!aFilename.IsEmpty());
-
-  // Create the file.
-
-  nsCOMPtr<nsIFile> reportsFile;
-  nsresult rv = NS_NewLocalFile(aFilename, false, getter_AddRefs(reportsFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  reportsFile->InitWithPath(aFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool exists;
-  rv = reportsFile->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!exists) {
-    rv = reportsFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  nsString dmdIdent = EmptyString();
-  return DumpMemoryInfoToFile(reportsFile, aFinishDumping, aFinishDumpingData,
-                              aAnonymize, /* minimizeMemoryUsage = */ false,
-                              dmdIdent);
-}
 
 #undef DUMP
