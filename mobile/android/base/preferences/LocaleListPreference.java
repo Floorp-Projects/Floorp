@@ -63,10 +63,7 @@ public class LocaleListPreference extends ListPreference {
         private static byte[] getPixels(final Bitmap b) {
             final int byteCount;
             if (Versions.feature19Plus) {
-                // TODO: when Bug 1042829 lands, do the right thing for KitKat devices.
-                // Which is:
-                // byteCount = b.getAllocationByteCount();
-                byteCount = b.getRowBytes() * b.getHeight();
+                byteCount = b.getAllocationByteCount();
             } else {
                 // Close enough for government work.
                 // Equivalent to getByteCount, but works on <12.
@@ -272,8 +269,7 @@ public class LocaleListPreference extends ListPreference {
 
         // We can't trust super.getSummary() across locale changes,
         // apparently, so let's do the same work.
-        final Locale loc = new Locale(value);
-        return loc.getDisplayName(loc);
+        return new LocaleDescriptor(value).getDisplayName();
     }
 
     private void buildList() {

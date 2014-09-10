@@ -25,4 +25,6 @@
 
     <color name="facet_button_text_color_default">#ADB0B1</color>
     <color name="facet_button_text_color_selected">#383E42</color>
+
+    <color name="network_error_link">#0092DB</color>
 </resources>
