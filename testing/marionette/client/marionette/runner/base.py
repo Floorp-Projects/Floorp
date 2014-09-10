@@ -696,7 +696,7 @@ class BaseMarionetteTestRunner(object):
 
         self.logger.suite_end()
 
-    def add_test(self, test, expected='pass', test_container=False):
+    def add_test(self, test, expected='pass', oop=None):
         filepath = os.path.abspath(test)
 
         if os.path.isdir(filepath):
@@ -719,7 +719,8 @@ class BaseMarionetteTestRunner(object):
                 else:
                     testargs.update({ atype: 'true' })
 
-        testarg_b2g = bool(testargs.get('b2g'))
+        # testarg_oop = either None, 'true' or 'false'.
+        testarg_oop = testargs.get('oop')
 
         file_ext = os.path.splitext(os.path.split(filepath)[-1])[1]
 
@@ -739,6 +740,11 @@ class BaseMarionetteTestRunner(object):
                 else:
                     unfiltered_tests.append(test)
 
+            # Don't filter tests with "oop" flag because manifest parser can't
+            # handle it well.
+            if testarg_oop is not None:
+                del testargs['oop']
+
             target_tests = manifest.get(tests=unfiltered_tests, **testargs)
             for test in unfiltered_tests:
                 if test['path'] not in [x['path'] for x in target_tests]:
@@ -749,21 +755,54 @@ class BaseMarionetteTestRunner(object):
                 if not os.path.exists(i["path"]):
                     raise IOError("test file: %s does not exist" % i["path"])
 
+                # manifest_oop is either 'false', 'true' or 'both'.  Anything
+                # else implies 'false'.
+                manifest_oop = i.get('oop', 'false')
+
+                # We only add an oop test when following conditions are met:
+                # 1) It's written by javascript because we have only
+                #    MarionetteJSTestCase that supports oop mode.
+                # 2) we're running with "--type=+oop" or no "--type=-oop", which
+                #    follows testarg_oop is either None or 'true' and must not
+                #    be 'false'.
+                # 3) When no "--type=[+-]oop" is applied, all active tests are
+                #    included in target_tests, so we must filter out those
+                #    really capable of running in oop mode. Besides, oop tests
+                #    must be explicitly specified for backward compatibility. So
+                #    test manifest_oop equals to either 'both' or 'true'.
                 file_ext = os.path.splitext(os.path.split(i['path'])[-1])[-1]
-                test_container = False
-                if i.get('test_container') and i.get('test_container') == 'true' and testarg_b2g:
-                    test_container = True
-                self.add_test(i["path"], i["expected"], test_container)
+                if (file_ext == '.js' and
+                    testarg_oop != 'false' and
+                    (manifest_oop == 'both' or manifest_oop == 'true')):
+                    self.add_test(i["path"], i["expected"], True)
+
+                # We only add an in-process test when following conditions are
+                # met:
+                # 1) we're running with "--type=-oop" or no "--type=+oop", which
+                #    follows testarg_oop is either None or 'false' and must not
+                #    be 'true'.
+                # 2) When no "--type=[+-]oop" is applied, all active tests are
+                #    included in target_tests, so we must filter out those
+                #    really capable of running in in-process mode.
+                if (testarg_oop != 'true' and
+                    (manifest_oop == 'both' or manifest_oop != 'true')):
+                    self.add_test(i["path"], i["expected"], False)
             return
 
-        self.tests.append({'filepath': filepath, 'expected': expected, 'test_container': test_container})
+        if oop is None:
+            # This test is added by directory enumeration or directly specified
+            # in argument list.  We have no manifest information here so we just
+            # respect the "--type=[+-]oop" argument here.
+            oop = file_ext == '.js' and testarg_oop == 'true'
 
-    def run_test(self, filepath, expected, test_container):
+        self.tests.append({'filepath': filepath, 'expected': expected, 'oop': oop})
+
+    def run_test(self, filepath, expected, oop):
 
         testloader = unittest.TestLoader()
         suite = unittest.TestSuite()
         self.test_kwargs['expected'] = expected
-        self.test_kwargs['test_container'] = test_container
+        self.test_kwargs['oop'] = oop
         mod_name = os.path.splitext(os.path.split(filepath)[-1])[0]
         for handler in self.test_handlers:
             if handler.match(os.path.basename(filepath)):
@@ -804,7 +843,7 @@ class BaseMarionetteTestRunner(object):
             random.shuffle(tests)
 
         for test in tests:
-            self.run_test(test['filepath'], test['expected'], test['test_container'])
+            self.run_test(test['filepath'], test['expected'], test['oop'])
             if self.marionette.check_for_crash():
                 break
 
@@ -823,7 +862,11 @@ class BaseMarionetteTestRunner(object):
                                                len(self.tests)))
             self.tests = chunks[self.this_chunk - 1]
 
-        self.run_test_set(self.tests)
+        oop_tests = [x for x in self.tests if x.get('oop')]
+        self.run_test_set(oop_tests)
+
+        in_process_tests = [x for x in self.tests if not x.get('oop')]
+        self.run_test_set(in_process_tests)
 
     def cleanup(self):
         if self.httpd:
