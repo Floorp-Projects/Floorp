@@ -17,23 +17,12 @@
 namespace mozilla {
 
 namespace image {
-class Decoder;
-}
-
-template<>
-struct HasDangerousPublicDestructor<image::Decoder>
-{
-  static const bool value = true;
-};
-
-namespace image {
 
 class Decoder
 {
 public:
 
   explicit Decoder(RasterImage& aImage);
-  virtual ~Decoder();
 
   /**
    * Initialize an image decoder. Decoders may not be re-initialized.
@@ -178,6 +167,7 @@ public:
   }
 
 protected:
+  virtual ~Decoder();
 
   /*
    * Internal hooks. Decoder implementations may override these and
