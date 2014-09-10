@@ -5,4 +5,5 @@ default-preferences pref(layout.css.filters.enabled,true)
 
 # Some platforms render this complex filter chain a little differently, and that's ok.
 fuzzy(5,13000) == long-chain.html long-chain-ref.html
+== moz-element.html moz-element-ref.html
 == same-filter.html same-filter-ref.html
