@@ -1055,9 +1055,8 @@ gfxContext::Paint(gfxFloat alpha)
 
     IntSize surfSize = state.sourceSurface->GetSize();
 
-    Matrix mat;
-    mat.Translate(-state.deviceOffset.x, -state.deviceOffset.y);
-    mDT->SetTransform(mat);
+    mDT->SetTransform(Matrix::Translation(-state.deviceOffset.x,
+                                          -state.deviceOffset.y));
 
     mDT->DrawSurface(state.sourceSurface,
                      Rect(state.sourceSurfaceDeviceOffset, Size(surfSize.width, surfSize.height)),
@@ -1619,9 +1618,8 @@ gfxContext::GetDeviceOffset() const
 Matrix
 gfxContext::GetDeviceTransform() const
 {
-  Matrix mat;
-  mat.Translate(-CurrentState().deviceOffset.x, -CurrentState().deviceOffset.y);
-  return mat;
+  return Matrix::Translation(-CurrentState().deviceOffset.x,
+                             -CurrentState().deviceOffset.y);
 }
 
 Matrix
