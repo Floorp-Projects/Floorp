@@ -2531,6 +2531,17 @@ CSS_PROP_POSITION(
     kObjectFitKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_POSITION(
+    object-position,
+    object_position,
+    ObjectPosition,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_STORES_CALC,
+    "layout.css.object-fit-and-position.enabled",
+    0,
+    kBackgroundPositionKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None) // XXXdholbert Use "_Custom", and implement animation
 CSS_PROP_DISPLAY(
     opacity,
     opacity,
