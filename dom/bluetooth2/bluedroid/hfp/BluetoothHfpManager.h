@@ -147,7 +147,7 @@ private:
   bool Init();
 
   void HandleShutdown();
-  void HandleVolumeChanged(nsISupports* aSubject);
+  void HandleVolumeChanged(const nsAString& aData);
   void Notify(const hal::BatteryInformation& aBatteryInfo);
 
   void NotifyConnectionStateChanged(const nsAString& aType);

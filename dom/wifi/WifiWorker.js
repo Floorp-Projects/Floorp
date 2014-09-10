@@ -3631,13 +3631,17 @@ WifiWorker.prototype = {
   observe: function observe(subject, topic, data) {
     switch (topic) {
     case kMozSettingsChangedObserverTopic:
+      // The string we're interested in will be a JSON string that looks like:
+      // {"key":"wifi.enabled","value":"true"}.
+
+      let setting = JSON.parse(data);
       // To avoid WifiWorker setting the wifi again, don't need to deal with
       // the "mozsettings-changed" event fired from internal setting.
-      if (subject.isInternalChange) {
+      if (setting.isInternalChange) {
         return;
       }
 
-      this.handle(subject.key, subject.value);
+      this.handle(setting.key, setting.value);
       break;
 
     case "xpcom-shutdown":
