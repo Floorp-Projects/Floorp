@@ -133,9 +133,6 @@ ClientLayerManager::SetDefaultTargetConfiguration(BufferMode aDoubleBuffering,
                                                   ScreenRotation aRotation)
 {
   mTargetRotation = aRotation;
-  if (mWidget) {
-    mTargetBounds = mWidget->GetNaturalBounds();
-   }
  }
 
 void
@@ -201,10 +198,9 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
     hal::GetCurrentScreenConfiguration(&currentConfig);
     orientation = currentConfig.orientation();
   }
-  nsIntRect clientBounds;
-  mWidget->GetClientBounds(clientBounds);
-  clientBounds.x = clientBounds.y = 0;
-  mForwarder->BeginTransaction(mTargetBounds, mTargetRotation, clientBounds, orientation);
+  nsIntRect targetBounds = mWidget->GetNaturalBounds();
+  targetBounds.x = targetBounds.y = 0;
+  mForwarder->BeginTransaction(targetBounds, mTargetRotation, orientation);
 
   // If we're drawing on behalf of a context with async pan/zoom
   // enabled, then the entire buffer of thebes layers might be
