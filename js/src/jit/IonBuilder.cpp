@@ -4367,7 +4367,7 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
         // Callee must have been called a few times to have somewhat stable
         // type information, except for definite properties analysis,
         // as the caller has not run yet.
-        if (targetScript->getWarmUpCounter() < optimizationInfo().usesBeforeInlining() &&
+        if (targetScript->getWarmUpCounter() < optimizationInfo().inliningWarmUpThreshold() &&
             !targetScript->baselineScript()->ionCompiledOrInlined() &&
             info().executionMode() != DefinitePropertiesAnalysis)
         {
@@ -6385,7 +6385,7 @@ IonBuilder::insertRecompileCheck()
     // threshold of the next optimization level.
     OptimizationLevel nextLevel = js_IonOptimizations.nextLevel(curLevel);
     const OptimizationInfo *info = js_IonOptimizations.get(nextLevel);
-    uint32_t warmUpCounter = info->usesBeforeCompile(topBuilder->script());
+    uint32_t warmUpCounter = info->compilerWarmUpThreshold(topBuilder->script());
     current->add(MRecompileCheck::New(alloc(), topBuilder->script(), warmUpCounter));
 }
 

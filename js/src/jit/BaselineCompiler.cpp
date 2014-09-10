@@ -680,8 +680,8 @@ BaselineCompiler::emitWarmUpCounterIncrement(bool allowOsr)
     Label skipCall;
 
     const OptimizationInfo *info = js_IonOptimizations.get(js_IonOptimizations.firstLevel());
-    uint32_t minUses = info->usesBeforeCompile(script, pc);
-    masm.branch32(Assembler::LessThan, countReg, Imm32(minUses), &skipCall);
+    uint32_t warmUpThreshold = info->compilerWarmUpThreshold(script, pc);
+    masm.branch32(Assembler::LessThan, countReg, Imm32(warmUpThreshold), &skipCall);
 
     masm.branchPtr(Assembler::Equal,
                    Address(scriptReg, JSScript::offsetOfIonScript()),

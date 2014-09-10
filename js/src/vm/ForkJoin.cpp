@@ -2284,7 +2284,7 @@ js::ParallelTestsShouldPass(JSContext *cx)
     return IsIonEnabled(cx) &&
            IsBaselineEnabled(cx) &&
            !js_JitOptions.eagerCompilation &&
-           js_JitOptions.baselineUsesBeforeCompile != 0 &&
+           js_JitOptions.baselineWarmUpThreshold != 0 &&
            cx->runtime()->gcZeal() == 0;
 }
 

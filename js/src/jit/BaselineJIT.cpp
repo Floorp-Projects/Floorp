@@ -268,7 +268,7 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
     if (cx->runtime()->forkJoinWarmup > 0) {
         if (osr)
             return Method_Skipped;
-    } else if (script->incWarmUpCounter() <= js_JitOptions.baselineUsesBeforeCompile) {
+    } else if (script->incWarmUpCounter() <= js_JitOptions.baselineWarmUpThreshold) {
         return Method_Skipped;
     }
 
