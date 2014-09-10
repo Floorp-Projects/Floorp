@@ -18,10 +18,7 @@ loop.shared.models = (function(l10n) {
       ongoing:      false,         // Ongoing call flag
       callerId:     undefined,     // Loop caller id
       loopToken:    undefined,     // Loop conversation token
-      loopVersion:  undefined,     // Loop version for /calls/ information. This
-                                   // is the version received from the push
-                                   // notification and is used by the server to
-                                   // determine the pending calls
+      loopCallId:   undefined,     // LoopService id for incoming session
       sessionId:    undefined,     // OT session id
       sessionToken: undefined,     // OT session token
       apiKey:       undefined,     // OT api key
