@@ -51,8 +51,9 @@
 // not inlined and the compiler will consider the return value to be a double, not a float32, making the
 // assertions fail. Note that as assertFloat32 is declared unsafe for fuzzing, this can't happen in fuzzed code.
 //
-// To be able to test it, we still need ion compilation though. A nice solution is to manually lower the ion usecount.
-setJitCompilerOption("ion.usecount.trigger", 50);
+// To be able to test it, we still need ion compilation though. A nice solution
+// is to manually lower the ion warm-up trigger.
+setJitCompilerOption("ion.warmup.trigger", 50);
 
 function test(f) {
     f32[0] = .5;

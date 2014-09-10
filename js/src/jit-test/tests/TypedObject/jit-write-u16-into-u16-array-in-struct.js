@@ -6,7 +6,7 @@
 if (!this.hasOwnProperty("TypedObject"))
   quit();
 
-setJitCompilerOption("ion.usecount.trigger", 30);
+setJitCompilerOption("ion.warmup.trigger", 30);
 
 var Vec3u16Type = TypedObject.uint16.array(3);
 var PairVec3u16Type = new TypedObject.StructType({fst: Vec3u16Type,

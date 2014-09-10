@@ -170,17 +170,17 @@ class ForkJoinOperation
         // version of this entry
         bool calleesEnqueued;
 
-        // Last record useCount; updated after warmup
+        // Last record warmUpCounter; updated after warmup
         // iterations;
-        uint32_t useCount;
+        uint32_t warmUpCounter;
 
         // Number of continuous "stalls" --- meaning warmups
-        // where useCount did not increase.
+        // where warmUpCounter did not increase.
         uint32_t stallCount;
 
         void reset() {
             calleesEnqueued = false;
-            useCount = 0;
+            warmUpCounter = 0;
             stallCount = 0;
         }
     };
@@ -649,21 +649,21 @@ ForkJoinOperation::compileForParallelExecution(ExecutionStatus *status)
             // will not be able to compile very well.  In such cases,
             // we continue to run baseline iterations until either (1)
             // the potential callee *has* a baseline script or (2) the
-            // potential callee's use count stops increasing,
+            // potential callee's warm-up counter stops increasing,
             // indicating that they are not in fact a callee.
             if (!script->hasBaselineScript()) {
-                uint32_t previousUseCount = worklistData_[i].useCount;
-                uint32_t currentUseCount = script->getUseCount();
-                if (previousUseCount < currentUseCount) {
-                    worklistData_[i].useCount = currentUseCount;
+                uint32_t previousWarmUpCounter = worklistData_[i].warmUpCounter;
+                uint32_t currentWarmUpCounter = script->getWarmUpCounter();
+                if (previousWarmUpCounter < currentWarmUpCounter) {
+                    worklistData_[i].warmUpCounter = currentWarmUpCounter;
                     worklistData_[i].stallCount = 0;
                     gatheringTypeInformation = true;
 
                     Spew(SpewCompile,
                          "Script %p:%s:%d has no baseline script, "
-                         "but use count grew from %d to %d",
+                         "but warm-up counter grew from %d to %d",
                          script.get(), script->filename(), script->lineno(),
-                         previousUseCount, currentUseCount);
+                         previousWarmUpCounter, currentWarmUpCounter);
                 } else {
                     uint32_t stallCount = ++worklistData_[i].stallCount;
                     if (stallCount < stallThreshold) {
@@ -672,9 +672,9 @@ ForkJoinOperation::compileForParallelExecution(ExecutionStatus *status)
 
                     Spew(SpewCompile,
                          "Script %p:%s:%d has no baseline script, "
-                         "and use count has %u stalls at %d",
+                         "and warm-up counter has %u stalls at %d",
                          script.get(), script->filename(), script->lineno(),
-                         stallCount, previousUseCount);
+                         stallCount, previousWarmUpCounter);
                 }
                 continue;
             }
@@ -737,14 +737,14 @@ ForkJoinOperation::compileForParallelExecution(ExecutionStatus *status)
         }
 
         // If there is compilation occurring in a helper thread, then
-        // run a warmup iterations in the main thread while we wait.
-        // There is a chance that this warmup will finish all the work
+        // run a warm-up iterations in the main thread while we wait.
+        // There is a chance that this warm-up will finish all the work
         // we have to do, so we should stop then, unless we are in
         // compile mode, in which case we'll continue to block.
         //
         // Note that even in compile mode, we can't block *forever*:
         // - OMTC compiles will finish;
-        // - no work is being done, so use counts on not-yet-baselined
+        // - no work is being done, so warm-up counters on not-yet-baselined
         //   scripts will not increase.
         if (offMainThreadCompilationsInProgress || gatheringTypeInformation) {
             bool stopIfComplete = (mode_ != ForkJoinModeCompile);

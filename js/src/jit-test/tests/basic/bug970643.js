@@ -1,7 +1,7 @@
 // |jit-test| exitstatus: 6;
 
-setJitCompilerOption("baseline.usecount.trigger", 1);
-setJitCompilerOption("ion.usecount.trigger", 2);
+setJitCompilerOption("baseline.warmup.trigger", 1);
+setJitCompilerOption("ion.warmup.trigger", 2);
 
 // The timepout function is made to trigger the interruption callback. The
 // interruption callback will protect the code while a GC might be

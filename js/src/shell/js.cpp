@@ -5807,13 +5807,13 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
             return OptionFailure("ion-limit-script-size", str);
     }
 
-    int32_t useCount = op.getIntOption("ion-uses-before-compile");
-    if (useCount >= 0)
-        jit::js_JitOptions.setUsesBeforeCompile(useCount);
+    int32_t warmUpCounter = op.getIntOption("ion-uses-before-compile");
+    if (warmUpCounter >= 0)
+        jit::js_JitOptions.setUsesBeforeCompile(warmUpCounter);
 
-    useCount = op.getIntOption("baseline-uses-before-compile");
-    if (useCount >= 0)
-        jit::js_JitOptions.baselineUsesBeforeCompile = useCount;
+    warmUpCounter = op.getIntOption("baseline-uses-before-compile");
+    if (warmUpCounter >= 0)
+        jit::js_JitOptions.baselineUsesBeforeCompile = warmUpCounter;
 
     if (op.getBoolOption("baseline-eager"))
         jit::js_JitOptions.baselineUsesBeforeCompile = 0;

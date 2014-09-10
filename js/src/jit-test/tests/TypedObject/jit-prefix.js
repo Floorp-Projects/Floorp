@@ -1,7 +1,7 @@
 if (!this.hasOwnProperty("TypedObject"))
   quit();
 
-setJitCompilerOption("ion.usecount.trigger", 30);
+setJitCompilerOption("ion.warmup.trigger", 30);
 
 var PointType2 =
   new TypedObject.StructType({

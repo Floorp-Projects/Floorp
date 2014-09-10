@@ -71,7 +71,7 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
             JS_ASSERT(!infos_[script_->pcToOffset(chkpc)].initialized);
 #endif
 
-        unsigned nuses = GetUseCount(script_, offset);
+        unsigned nuses = GetWarmUpCounter(script_, offset);
         unsigned ndefs = GetDefCount(script_, offset);
 
         JS_ASSERT(stackDepth >= nuses);

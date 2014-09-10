@@ -60,7 +60,7 @@ struct JitOptions
     JitOptions();
     bool isSmallFunction(JSScript *script) const;
     void setEagerCompilation();
-    void setUsesBeforeCompile(uint32_t useCount);
+    void setUsesBeforeCompile(uint32_t warmUpCounter);
     void resetUsesBeforeCompile();
 };
 

@@ -2774,14 +2774,14 @@ jit::Invalidate(types::TypeZone &types, FreeOp *fop,
         // (1) we are recompiling *because* a script got hot;
         //     (resetUses is false); or,
         // (2) we are invalidating a parallel script.  This is because
-        //     the useCount only applies to sequential uses.  Parallel
+        //     the warmUpCounter only applies to sequential uses.  Parallel
         //     execution *requires* ion, and so we don't limit it to
         //     methods with a high usage count (though we do check that
-        //     the useCount is at least 1 when compiling the transitive
+        //     the warmUpCounter is at least 1 when compiling the transitive
         //     closure of potential callees, to avoid compiling things
         //     that are never run at all).
         if (resetUses && executionMode != ParallelExecution)
-            script->resetUseCount();
+            script->resetWarmUpCounter();
     }
 
     // Make sure we didn't leak references by invalidating the same IonScript
@@ -3213,7 +3213,7 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
             FinishInvalidation<SequentialExecution>(fop, script);
             FinishInvalidation<ParallelExecution>(fop, script);
             FinishDiscardBaselineScript(fop, script);
-            script->resetUseCount();
+            script->resetWarmUpCounter();
         } else if (script->hasBaselineScript()) {
             script->baselineScript()->resetActive();
         }

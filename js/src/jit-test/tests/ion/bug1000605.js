@@ -1,5 +1,5 @@
-setJitCompilerOption("baseline.usecount.trigger", 0);
-setJitCompilerOption("ion.usecount.trigger", 0);
+setJitCompilerOption("baseline.warmup.trigger", 0);
+setJitCompilerOption("ion.warmup.trigger", 0);
 
 function ceil(a, b) {
     return Math.ceil((a | 0) / (b | 0)) | 0;
