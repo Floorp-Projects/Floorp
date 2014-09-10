@@ -7,41 +7,18 @@
 #include "storage_test_harness.h"
 
 #include "mozStorageHelper.h"
+#include "mozStorageConnection.h"
+
+using namespace mozilla;
+using namespace mozilla::storage;
+
+bool has_transaction(mozIStorageConnection* aDB) {
+  return !(static_cast<Connection *>(aDB)->getAutocommit());
+}
 
 /**
  * This file test our Transaction helper in mozStorageHelper.h.
  */
-
-void
-test_HasTransaction()
-{
-  nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
-
-  // First test that it holds the transaction after it should have gotten one.
-  {
-    mozStorageTransaction transaction(db, false);
-    do_check_true(transaction.HasTransaction());
-    (void)transaction.Commit();
-    // And that it does not have a transaction after we have committed.
-    do_check_false(transaction.HasTransaction());
-  }
-
-  // Check that no transaction is had after a rollback.
-  {
-    mozStorageTransaction transaction(db, false);
-    do_check_true(transaction.HasTransaction());
-    (void)transaction.Rollback();
-    do_check_false(transaction.HasTransaction());
-  }
-
-  // Check that we do not have a transaction if one is already obtained.
-  mozStorageTransaction outerTransaction(db, false);
-  do_check_true(outerTransaction.HasTransaction());
-  {
-    mozStorageTransaction innerTransaction(db, false);
-    do_check_false(innerTransaction.HasTransaction());
-  }
-}
 
 void
 test_Commit()
@@ -52,11 +29,13 @@ test_Commit()
   // exists after the transaction falls out of scope.
   {
     mozStorageTransaction transaction(db, false);
+    do_check_true(has_transaction(db));
     (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "CREATE TABLE test (id INTEGER PRIMARY KEY)"
     ));
     (void)transaction.Commit();
   }
+  do_check_false(has_transaction(db));
 
   bool exists = false;
   (void)db->TableExists(NS_LITERAL_CSTRING("test"), &exists);
@@ -72,11 +51,13 @@ test_Rollback()
   // not exists after the transaction falls out of scope.
   {
     mozStorageTransaction transaction(db, true);
+    do_check_true(has_transaction(db));
     (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "CREATE TABLE test (id INTEGER PRIMARY KEY)"
     ));
     (void)transaction.Rollback();
   }
+  do_check_false(has_transaction(db));
 
   bool exists = true;
   (void)db->TableExists(NS_LITERAL_CSTRING("test"), &exists);
@@ -92,10 +73,12 @@ test_AutoCommit()
   // transaction falls out of scope.  This means the Commit was successful.
   {
     mozStorageTransaction transaction(db, true);
+    do_check_true(has_transaction(db));
     (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "CREATE TABLE test (id INTEGER PRIMARY KEY)"
     ));
   }
+  do_check_false(has_transaction(db));
 
   bool exists = false;
   (void)db->TableExists(NS_LITERAL_CSTRING("test"), &exists);
@@ -112,46 +95,16 @@ test_AutoRollback()
   // successful.
   {
     mozStorageTransaction transaction(db, false);
+    do_check_true(has_transaction(db));
     (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "CREATE TABLE test (id INTEGER PRIMARY KEY)"
     ));
   }
+  do_check_false(has_transaction(db));
 
   bool exists = true;
   (void)db->TableExists(NS_LITERAL_CSTRING("test"), &exists);
   do_check_false(exists);
-}
-
-void
-test_SetDefaultAction()
-{
-  nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
-
-  // First we test that rollback happens when we first set it to automatically
-  // commit.
-  {
-    mozStorageTransaction transaction(db, true);
-    (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TABLE test1 (id INTEGER PRIMARY KEY)"
-    ));
-    transaction.SetDefaultAction(false);
-  }
-  bool exists = true;
-  (void)db->TableExists(NS_LITERAL_CSTRING("test1"), &exists);
-  do_check_false(exists);
-
-  // Now we do the opposite and test that a commit happens when we first set it
-  // to automatically rollback.
-  {
-    mozStorageTransaction transaction(db, false);
-    (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TABLE test2 (id INTEGER PRIMARY KEY)"
-    ));
-    transaction.SetDefaultAction(true);
-  }
-  exists = false;
-  (void)db->TableExists(NS_LITERAL_CSTRING("test2"), &exists);
-  do_check_true(exists);
 }
 
 void
@@ -160,20 +113,60 @@ test_null_database_connection()
   // We permit the use of the Transaction helper when passing a null database
   // in, so we need to make sure this still works without crashing.
   mozStorageTransaction transaction(nullptr, false);
-
-  do_check_false(transaction.HasTransaction());
   do_check_true(NS_SUCCEEDED(transaction.Commit()));
   do_check_true(NS_SUCCEEDED(transaction.Rollback()));
 }
 
+void
+test_async_Commit()
+{
+  // note this will be active for any following test.
+  hook_sqlite_mutex();
+
+  nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
+
+  // -- wedge the thread
+  nsCOMPtr<nsIThread> target(get_conn_async_thread(db));
+  do_check_true(target);
+  nsRefPtr<ThreadWedger> wedger (new ThreadWedger(target));
+
+  {
+    mozStorageTransaction transaction(db, false,
+                                      mozIStorageConnection::TRANSACTION_DEFERRED,
+                                      true);
+    do_check_true(has_transaction(db));
+    (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "CREATE TABLE test (id INTEGER PRIMARY KEY)"
+    ));
+    (void)transaction.Commit();
+  }
+  do_check_true(has_transaction(db));
+
+  // -- unwedge the async thread
+  wedger->unwedge();
+
+  // Ensure the transaction has done its job by enqueueing an async execution.
+  nsCOMPtr<mozIStorageAsyncStatement> stmt;
+  (void)db->CreateAsyncStatement(NS_LITERAL_CSTRING(
+    "SELECT NULL"
+  ), getter_AddRefs(stmt));
+  blocking_async_execute(stmt);
+  stmt->Finalize();
+  do_check_false(has_transaction(db));
+  bool exists = false;
+  (void)db->TableExists(NS_LITERAL_CSTRING("test"), &exists);
+  do_check_true(exists);
+
+  blocking_async_close(db);
+}
+
 void (*gTests[])(void) = {
-  test_HasTransaction,
   test_Commit,
   test_Rollback,
   test_AutoCommit,
   test_AutoRollback,
-  test_SetDefaultAction,
   test_null_database_connection,
+  test_async_Commit,
 };
 
 const char *file = __FILE__;
