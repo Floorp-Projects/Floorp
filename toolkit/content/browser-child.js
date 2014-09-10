@@ -369,7 +369,7 @@ addMessageListener("UpdateCharacterSet", function (aMessage) {
 // The AddonsChild needs to be rooted so that it stays alive as long as
 // the tab.
 let AddonsChild;
-if (Services.prefs.getBoolPref("browser.tabs.remote.autostart")) {
+if (Services.appinfo.browserTabsRemoteAutostart) {
   // Currently, the addon shims are only supported when autostarting
   // with remote tabs.
   AddonsChild = RemoteAddonsChild.init(this);

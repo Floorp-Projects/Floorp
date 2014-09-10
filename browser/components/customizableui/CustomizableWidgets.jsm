@@ -964,7 +964,7 @@ if (Services.prefs.getBoolPref("browser.tabs.remote")) {
     };
   }
 
-  let openRemote = !Services.prefs.getBoolPref("browser.tabs.remote.autostart");
+  let openRemote = !Services.appinfo.browserTabsRemoteAutostart;
   // Like the XUL menuitem counterparts, we hard-code these strings in because
   // this button should never roll into production.
   let buttonLabel = openRemote ? "New e10s Window"
