@@ -584,12 +584,10 @@ public:
 
   TempDirMemoryFinishCallback(nsGZFileWriter* aReportsWriter,
                               nsIFile* aReportsTmpFile,
-                              const nsCString& aReportsFinalFilename,
-                              const nsString& aIdentifier)
+                              const nsCString& aReportsFinalFilename)
     : mReportsWriter(aReportsWriter)
     , mReportsTmpFile(aReportsTmpFile)
     , mReportsFilename(aReportsFinalFilename)
-    , mIdentifier(aIdentifier)
   {
   }
 
@@ -675,7 +673,6 @@ private:
   nsRefPtr<nsGZFileWriter> mReportsWriter;
   nsCOMPtr<nsIFile> mReportsTmpFile;
   nsCString mReportsFilename;
-  nsString mIdentifier;
 };
 
 NS_IMPL_ISUPPORTS(TempDirMemoryFinishCallback, nsIFinishReportingCallback)
@@ -740,7 +737,7 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
     new DumpReportCallback(reportsWriter);
   nsRefPtr<nsIFinishReportingCallback> finishReport =
     new TempDirMemoryFinishCallback(reportsWriter, reportsTmpFile,
-                                    reportsFinalFilename, identifier);
+                                    reportsFinalFilename);
   rv = mgr->GetReportsExtended(dumpReport, nullptr,
                                finishReport, nullptr,
                                aAnonymize,
