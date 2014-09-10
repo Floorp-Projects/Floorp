@@ -228,6 +228,9 @@ nsFilterInstance::BuildPrimitives()
       return rv;
     }
   }
+
+  mFilterDescription = FilterDescription(mPrimitiveDescriptions);
+
   return NS_OK;
 }
 
@@ -267,9 +270,8 @@ nsFilterInstance::ComputeNeededBoxes()
   nsIntRegion fillPaintNeededRegion;
   nsIntRegion strokePaintNeededRegion;
 
-  FilterDescription filter(mPrimitiveDescriptions);
   FilterSupport::ComputeSourceNeededRegions(
-    filter, mPostFilterDirtyRegion,
+    mFilterDescription, mPostFilterDirtyRegion,
     sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
 
   nsIntRect sourceBounds;
@@ -423,9 +425,8 @@ nsFilterInstance::Render(gfxContext* aContext)
   if (NS_FAILED(rv))
     return rv;
 
-  FilterDescription filter(mPrimitiveDescriptions);
   FilterSupport::RenderFilterDescription(
-    dt, filter, ToRect(filterRect),
+    dt, mFilterDescription, ToRect(filterRect),
     mSourceGraphic.mSourceSurface, mSourceGraphic.mSurfaceRect,
     mFillPaint.mSourceSurface, mFillPaint.mSurfaceRect,
     mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect,
@@ -443,9 +444,8 @@ nsFilterInstance::ComputePostFilterDirtyRegion()
     return nsRegion();
   }
 
-  FilterDescription filter(mPrimitiveDescriptions);
   nsIntRegion resultChangeRegion =
-    FilterSupport::ComputeResultChangeRegion(filter,
+    FilterSupport::ComputeResultChangeRegion(mFilterDescription,
       mPreFilterDirtyRegion, nsIntRegion(), nsIntRegion());
   return FilterSpaceToFrameSpace(resultChangeRegion);
 }
@@ -456,9 +456,8 @@ nsFilterInstance::ComputePostFilterExtents()
   nsIntRect sourceBounds;
   sourceBounds.UnionRect(mTargetBBoxInFilterSpace, mTargetBounds);
 
-  FilterDescription filter(mPrimitiveDescriptions);
   nsIntRegion postFilterExtents =
-    FilterSupport::ComputePostFilterExtents(filter, sourceBounds);
+    FilterSupport::ComputePostFilterExtents(mFilterDescription, sourceBounds);
   return FilterSpaceToFrameSpace(postFilterExtents.GetBounds());
 }
 
