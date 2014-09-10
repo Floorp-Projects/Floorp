@@ -26,3 +26,6 @@
 <!--  Localization note (default_engine_identifier): Search engine identifier for the default
       engine. This should be one of the identifiers listed in /searchplugins/list.txt -->
 <!ENTITY default_engine_identifier 'yahoo'>
+
+<!ENTITY network_error_title 'No internet connection'>
+<!ENTITY network_error_message 'Tap here to check your network settings'>
