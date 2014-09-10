@@ -4,6 +4,7 @@
 
 #include "NfcMessageHandler.h"
 #include <binder/Parcel.h>
+#include "mozilla/dom/MozNDEFRecordBinding.h"
 #include "nsDebug.h"
 #include "NfcGonkMessage.h"
 #include "NfcOptions.h"
@@ -13,6 +14,7 @@
 
 using namespace android;
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static const char* kConfigRequest = "config";
 static const char* kGetDetailsNDEF = "getDetailsNDEF";
@@ -330,7 +332,7 @@ NfcMessageHandler::ReadNDEFMessage(const Parcel& aParcel, EventOptions& aOptions
   for (int i = 0; i < recordCount; i++) {
     int32_t tnf = aParcel.readInt32();
     NDEFRecordStruct record;
-    record.mTnf = tnf;
+    record.mTnf = static_cast<TNF>(tnf);
 
     int32_t typeLength = aParcel.readInt32();
     record.mType.AppendElements(
@@ -357,7 +359,7 @@ NfcMessageHandler::WriteNDEFMessage(Parcel& aParcel, const CommandOptions& aOpti
   aParcel.writeInt32(recordCount);
   for (int i = 0; i < recordCount; i++) {
     const NDEFRecordStruct& record = aOptions.mRecords[i];
-    aParcel.writeInt32(record.mTnf);
+    aParcel.writeInt32(static_cast<int32_t>(record.mTnf));
 
     void* data;
 
