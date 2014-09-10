@@ -107,7 +107,12 @@ void ARTPConnection::removeStream(PRFileDesc *rtpSocket, PRFileDesc *rtcpSocket)
     sp<AMessage> msg = new AMessage(kWhatRemoveStream, id());
     msg->setPointer("rtp-socket", rtpSocket);
     msg->setPointer("rtcp-socket", rtcpSocket);
-    msg->post();
+
+    // Since the caller will close the sockets after this function
+    // returns, we need to use a blocking post to prevent from polling
+    // closed sockets.
+    sp<AMessage> response;
+    msg->postAndAwaitResponse(&response);
 }
 
 static void bumpSocketBufferSize(PRFileDesc *s) {
@@ -177,6 +182,10 @@ void ARTPConnection::onMessageReceived(const sp<AMessage> &msg) {
         case kWhatRemoveStream:
         {
             onRemoveStream(msg);
+            sp<AMessage> ack = new AMessage;
+            uint32_t replyID;
+            CHECK(msg->senderAwaitsResponse(&replyID));
+            ack->postReply(replyID);
             break;
         }
 
