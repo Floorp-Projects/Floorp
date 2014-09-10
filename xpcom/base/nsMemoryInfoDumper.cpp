@@ -584,22 +584,26 @@ class FinishReportingCallback MOZ_FINAL : public nsIFinishReportingCallback
 public:
   NS_DECL_ISUPPORTS
 
-  FinishReportingCallback(nsIFinishDumpingCallback* aFinishDumping,
+  FinishReportingCallback(nsGZFileWriter* aReportsWriter,
+                          nsIFinishDumpingCallback* aFinishDumping,
                           nsISupports* aFinishDumpingData)
-    : mFinishDumping(aFinishDumping)
+    : mReportsWriter(aReportsWriter)
+    , mFinishDumping(aFinishDumping)
     , mFinishDumpingData(aFinishDumpingData)
   {
   }
 
   NS_IMETHOD Callback(nsISupports* aData)
   {
-    nsCOMPtr<nsIGZFileWriter> writer = do_QueryInterface(aData);
-    NS_ENSURE_TRUE(writer, NS_ERROR_FAILURE);
-
-    nsresult rv = DumpFooter(writer);
+    nsresult rv = DumpFooter(mReportsWriter);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = writer->Finish();
+    // The call to Finish() deallocates the memory allocated by the first DUMP()
+    // call. Because that memory was live while the memory reporters ran and
+    // thus measured by them -- by "heap-allocated" if nothing else -- we want
+    // DMD to see it as well.  So we deliberately don't call Finish() until
+    // after DMD finishes.
+    rv = mReportsWriter->Finish();
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mFinishDumping) {
@@ -612,50 +616,33 @@ public:
 private:
   ~FinishReportingCallback() {}
 
+  nsRefPtr<nsGZFileWriter> mReportsWriter;
   nsCOMPtr<nsIFinishDumpingCallback> mFinishDumping;
   nsCOMPtr<nsISupports> mFinishDumpingData;
 };
 
 NS_IMPL_ISUPPORTS(FinishReportingCallback, nsIFinishReportingCallback)
 
-class TempDirMemoryFinishCallback MOZ_FINAL : public nsIFinishReportingCallback
+class TempDirMemoryFinishCallback MOZ_FINAL : public nsIFinishDumpingCallback
 {
 public:
   NS_DECL_ISUPPORTS
 
-  TempDirMemoryFinishCallback(nsGZFileWriter* aReportsWriter,
-                              nsIFile* aReportsTmpFile,
+  TempDirMemoryFinishCallback(nsIFile* aReportsTmpFile,
                               const nsCString& aReportsFinalFilename)
-    : mReportsWriter(aReportsWriter)
-    , mReportsTmpFile(aReportsTmpFile)
+    : mReportsTmpFile(aReportsTmpFile)
     , mReportsFilename(aReportsFinalFilename)
   {
   }
 
   NS_IMETHOD Callback(nsISupports* aData)
   {
-    nsresult rv = DumpFooter(mReportsWriter);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // The call to Finish() deallocates the memory allocated by mReportsWriter's
-    // first DUMP() call (within DumpProcessMemoryReportsToGZFileWriter()).
-    // Because that memory was live while the memory reporters ran and thus
-    // measured by them -- by "heap-allocated" if nothing else -- we want DMD to
-    // see it as well.  So we deliberately don't call Finish() until after DMD
-    // finishes.
-    rv = mReportsWriter->Finish();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
     // Rename the memory reports file, now that we're done writing all the
     // files. Its final name is "memory-report<-identifier>-<pid>.json.gz".
 
     nsCOMPtr<nsIFile> reportsFinalFile;
-    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
-                                getter_AddRefs(reportsFinalFile));
+    nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
+                                         getter_AddRefs(reportsFinalFile));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -711,12 +698,11 @@ public:
 private:
   ~TempDirMemoryFinishCallback() {}
 
-  nsRefPtr<nsGZFileWriter> mReportsWriter;
   nsCOMPtr<nsIFile> mReportsTmpFile;
   nsCString mReportsFilename;
 };
 
-NS_IMPL_ISUPPORTS(TempDirMemoryFinishCallback, nsIFinishReportingCallback)
+NS_IMPL_ISUPPORTS(TempDirMemoryFinishCallback, nsIFinishDumpingCallback)
 
 NS_IMETHODIMP
 nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
@@ -759,6 +745,9 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
     return rv;
   }
 
+  nsRefPtr<TempDirMemoryFinishCallback> finishDumping =
+    new TempDirMemoryFinishCallback(reportsTmpFile, reportsFinalFilename);
+
   nsRefPtr<nsGZFileWriter> reportsWriter = new nsGZFileWriter();
   rv = reportsWriter->Init(reportsTmpFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -776,11 +765,10 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
     do_GetService("@mozilla.org/memory-reporter-manager;1");
   nsRefPtr<DumpReportCallback> dumpReport =
     new DumpReportCallback(reportsWriter);
-  nsRefPtr<nsIFinishReportingCallback> finishReport =
-    new TempDirMemoryFinishCallback(reportsWriter, reportsTmpFile,
-                                    reportsFinalFilename);
+  nsRefPtr<FinishReportingCallback> finishReporting =
+    new FinishReportingCallback(reportsWriter, finishDumping, nullptr);
   rv = mgr->GetReportsExtended(dumpReport, nullptr,
-                               finishReport, nullptr,
+                               finishReporting, nullptr,
                                aAnonymize,
                                aMinimizeMemoryUsage,
                                /* DMDident = */ identifier);
@@ -903,9 +891,14 @@ nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
   nsRefPtr<DumpReportCallback> dumpReport =
     new DumpReportCallback(reportsWriter);
   nsRefPtr<FinishReportingCallback> finishReporting =
-    new FinishReportingCallback(aFinishDumping, aFinishDumpingData);
-  return mgr->GetReports(dumpReport, nullptr, finishReporting, reportsWriter,
-                         aAnonymize);
+    new FinishReportingCallback(reportsWriter, aFinishDumping,
+                                aFinishDumpingData);
+  rv = mgr->GetReportsExtended(dumpReport, nullptr,
+                               finishReporting, nullptr,
+                               aAnonymize,
+                               /* minimizeMemoryUsage = */ false,
+                               /* DMDident = */ EmptyString());
+  return rv;
 }
 
 #undef DUMP
