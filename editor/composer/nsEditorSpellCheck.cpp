@@ -738,33 +738,27 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
     return NS_OK;
   }
 
+  mPreferredLang.Assign(aFetcher->mRootContentLang);
+
+  // If we successfully fetched a dictionary from content prefs, do not go
+  // further. Use this exact dictionary.
   nsAutoString dictName;
-  uint32_t flags;
-  mEditor->GetFlags(&flags);
-  // Don't use the content pref when writing mail
-  if (!(flags & nsIPlaintextEditor::eEditorMailMask)) {
-    mPreferredLang.Assign(aFetcher->mRootContentLang);
-
-    // If we successfully fetched a dictionary from content prefs, do not go
-    // further. Use this exact dictionary.
-    nsAutoString dictName;
-    dictName.Assign(aFetcher->mDictionary);
-    if (!dictName.IsEmpty()) {
-      if (NS_FAILED(SetCurrentDictionary(dictName))) { 
-        // may be dictionary was uninstalled ?
-        ClearCurrentDictionary(mEditor);
-      }
-      return NS_OK;
+  dictName.Assign(aFetcher->mDictionary);
+  if (!dictName.IsEmpty()) {
+    if (NS_FAILED(SetCurrentDictionary(dictName))) { 
+      // may be dictionary was uninstalled ?
+      ClearCurrentDictionary(mEditor);
     }
+    return NS_OK;
+  }
 
-    if (mPreferredLang.IsEmpty()) {
-      mPreferredLang.Assign(aFetcher->mRootDocContentLang);
-    }
+  if (mPreferredLang.IsEmpty()) {
+    mPreferredLang.Assign(aFetcher->mRootDocContentLang);
+  }
 
-    // Then, try to use language computed from element
-    if (!mPreferredLang.IsEmpty()) {
-      dictName.Assign(mPreferredLang);
-    }
+  // Then, try to use language computed from element
+  if (!mPreferredLang.IsEmpty()) {
+    dictName.Assign(mPreferredLang);
   }
 
   // otherwise, get language from preferences
