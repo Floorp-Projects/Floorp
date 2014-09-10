@@ -45,8 +45,6 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
 
     /* Spidermonkey extensions. */
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
-    virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
-    virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) const MOZ_OVERRIDE;
     virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent) const MOZ_OVERRIDE;
@@ -54,6 +52,24 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
 
     static const char family;
     static const ScriptedIndirectProxyHandler singleton;
+};
+
+/* Derived class to handle Proxy.createFunction() */
+class CallableScriptedIndirectProxyHandler : public ScriptedIndirectProxyHandler
+{
+  public:
+    CallableScriptedIndirectProxyHandler() : ScriptedIndirectProxyHandler() { }
+    virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
+
+    virtual bool isCallable(JSObject *obj) const MOZ_OVERRIDE {
+        return true;
+    }
+    virtual bool isConstructor(JSObject *obj) const MOZ_OVERRIDE {
+        return true;
+    }
+
+    static const CallableScriptedIndirectProxyHandler singleton;
 };
 
 bool

@@ -1239,6 +1239,12 @@ TypedObjectProto(JSObject *obj)
     return &typedObj.typedProto();
 }
 
+bool
+ObjectIsCallable(JSObject *obj)
+{
+    return obj->isCallable();
+}
+
 void
 MarkValueFromIon(JSRuntime *rt, Value *vp)
 {

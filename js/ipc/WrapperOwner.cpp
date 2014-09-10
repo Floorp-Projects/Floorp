@@ -82,6 +82,8 @@ class CPOWProxyHandler : public BaseProxyHandler
                                JSContext *cx) const MOZ_OVERRIDE;
     virtual const char* className(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
     virtual void finalize(JSFreeOp *fop, JSObject *proxy) const MOZ_OVERRIDE;
+    virtual bool isCallable(JSObject *obj) const MOZ_OVERRIDE;
+    virtual bool isConstructor(JSObject *obj) const MOZ_OVERRIDE;
 
     static const char family;
     static const CPOWProxyHandler singleton;
@@ -620,6 +622,25 @@ CPOWProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy) const
     OwnerOf(proxy)->drop(proxy);
 }
 
+bool
+CPOWProxyHandler::isCallable(JSObject *obj) const
+{
+    return OwnerOf(obj)->isCallable(obj);
+}
+
+bool
+CPOWProxyHandler::isConstructor(JSObject *obj) const
+{
+    return isCallable(obj);
+}
+
+bool
+WrapperOwner::isCallable(JSObject *obj)
+{
+    ObjectId objId = idOf(obj);
+    return !!(objId & OBJECT_IS_CALLABLE);
+}
+
 void
 WrapperOwner::drop(JSObject *obj)
 {
@@ -837,19 +858,14 @@ WrapperOwner::fromRemoteObjectVariant(JSContext *cx, RemoteObject objVar)
         return nullptr;
     }
 
-    bool callable = !!(objId & OBJECT_IS_CALLABLE);
-
     RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
 
     RootedValue v(cx, UndefinedValue());
-    ProxyOptions options;
-    options.selectDefaultClass(callable);
     obj = NewProxyObject(cx,
                          &CPOWProxyHandler::singleton,
                          v,
                          nullptr,
-                         global,
-                         options);
+                         global);
     if (!obj)
         return nullptr;
 
