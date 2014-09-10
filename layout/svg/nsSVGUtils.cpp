@@ -958,8 +958,9 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
           static_cast<SVGClipPathElement*>(clipPathFrame->GetContent());
         nsRefPtr<SVGAnimatedEnumeration> units = clipContent->ClipPathUnits();
         if (units->AnimVal() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-          matrix.Translate(gfxPoint(x, y));
-          matrix.Scale(width, height);
+          matrix = gfxMatrix().Scale(width, height) *
+                      gfxMatrix().Translate(gfxPoint(x, y)) *
+                      matrix;
         } else if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
           matrix.Reset();
         }
@@ -1071,10 +1072,9 @@ nsSVGUtils::AdjustMatrixForUnits(const gfxMatrix &aMatrix,
   if (aFrame &&
       aUnits->GetAnimValue() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     gfxRect bbox = GetBBox(aFrame);
-    gfxMatrix tm = aMatrix;
-    tm.Translate(gfxPoint(bbox.X(), bbox.Y()));
-    tm.Scale(bbox.Width(), bbox.Height());
-    return tm;
+    return gfxMatrix().Scale(bbox.Width(), bbox.Height()) *
+           gfxMatrix().Translate(gfxPoint(bbox.X(), bbox.Y())) *
+           aMatrix;
   }
   return aMatrix;
 }
