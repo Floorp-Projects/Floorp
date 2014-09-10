@@ -283,9 +283,6 @@ private:
                               void* aCallbackData,
                               EndTransactionFlags);
 
-  // The bounds of |mTarget| in device pixels.
-  nsIntRect mTargetBounds;
-
   LayerRefArray mKeepAlive;
 
   nsIWidget* mWidget;

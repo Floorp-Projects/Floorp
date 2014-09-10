@@ -195,7 +195,7 @@ ContainerPrepare(ContainerT* aContainer,
     }
 
     RenderTargetIntRect clipRect = layerToRender->GetLayer()->
-        CalculateScissorRect(aClipRect, &aManager->GetWorldTransform());
+        CalculateScissorRect(aClipRect);
     if (clipRect.IsEmpty()) {
       CULLING_LOG("Sublayer %p has an empty world clip rect\n", layerToRender->GetLayer());
       continue;

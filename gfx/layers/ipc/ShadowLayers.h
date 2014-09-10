@@ -176,7 +176,6 @@ public:
    */
   void BeginTransaction(const nsIntRect& aTargetBounds,
                         ScreenRotation aRotation,
-                        const nsIntRect& aClientBounds,
                         mozilla::dom::ScreenOrientation aOrientation);
 
   /**

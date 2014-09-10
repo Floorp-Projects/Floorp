@@ -116,32 +116,7 @@ Compositor::ClipRectInLayersCoordinates(Layer* aLayer, RenderTargetIntRect aClip
 
   RenderTargetRect result;
   aClip = aClip + renderTargetOffset;
-  RenderTargetIntSize destSize = RenderTargetIntSize(GetWidgetSize().width,
-                                                     GetWidgetSize().height);
-
-  switch (mScreenRotation) {
-    case ROTATION_0:
-      result = RenderTargetRect(aClip.x, aClip.y, aClip.width, aClip.height);
-      break;
-    case ROTATION_90:
-      result = RenderTargetRect(aClip.y,
-                                destSize.width - aClip.x - aClip.width,
-                                aClip.height, aClip.width);
-      break;
-    case ROTATION_270:
-      result = RenderTargetRect(destSize.height - aClip.y - aClip.height,
-                                aClip.x,
-                                aClip.height, aClip.width);
-      break;
-    case ROTATION_180:
-      result = RenderTargetRect(destSize.width - aClip.x - aClip.width,
-                                destSize.height - aClip.y - aClip.height,
-                                aClip.width, aClip.height);
-      break;
-      // ScreenRotation has a sentinel value, need to catch it in the switch
-      // statement otherwise the build fails (-WError)
-    default: {}
-  }
+  result = RenderTargetRect(aClip.x, aClip.y, aClip.width, aClip.height);
   return result;
 }
 
