@@ -33,8 +33,8 @@ MapResultToName(Result result)
 {
   switch (result)
   {
-#define MOZILLA_PKIX_MAP(mozilla_pkix_result, nss_result) \
-    case mozilla_pkix_result: return #mozilla_pkix_result;
+#define MOZILLA_PKIX_MAP(mozilla_pkix_result, value, nss_result) \
+    case Result::mozilla_pkix_result: return "Result::" #mozilla_pkix_result;
 
     MOZILLA_PKIX_MAP_LIST
 

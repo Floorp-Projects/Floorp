@@ -195,8 +195,8 @@ MapPRErrorCodeToResult(PRErrorCode error)
 {
   switch (error)
   {
-#define MOZILLA_PKIX_MAP(mozilla_pkix_result, nss_result) \
-    case nss_result: return mozilla_pkix_result;
+#define MOZILLA_PKIX_MAP(mozilla_pkix_result, value, nss_result) \
+    case nss_result: return Result::mozilla_pkix_result;
 
     MOZILLA_PKIX_MAP_LIST
 
@@ -212,8 +212,8 @@ MapResultToPRErrorCode(Result result)
 {
   switch (result)
   {
-#define MOZILLA_PKIX_MAP(mozilla_pkix_result, nss_result) \
-    case mozilla_pkix_result: return nss_result;
+#define MOZILLA_PKIX_MAP(mozilla_pkix_result, value, nss_result) \
+    case Result::mozilla_pkix_result: return nss_result;
 
     MOZILLA_PKIX_MAP_LIST
 
