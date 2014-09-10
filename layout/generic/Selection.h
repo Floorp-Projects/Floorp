@@ -9,13 +9,12 @@
 
 #include "nsIWeakReference.h"
 
-#include "mozilla/AutoRestore.h"
-#include "mozilla/TextRange.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"
 #include "nsRange.h"
 #include "nsThreadUtils.h"
+#include "mozilla/TextRange.h"
 #include "nsWrapperCache.h"
 
 struct CachedOffsetForFrame;
@@ -101,14 +100,8 @@ public:
                                int32_t aFlags = 0);
   nsresult      SubtractRange(RangeData* aRange, nsRange* aSubtract,
                               nsTArray<RangeData>* aOutput);
-  /**
-   * AddItem adds aRange to this Selection.  If mApplyUserSelectStyle is true,
-   * then aRange is first scanned for -moz-user-select:none nodes and split up
-   * into multiple ranges to exclude those before adding the resulting ranges
-   * to this Selection.
-   */
-  nsresult      AddItem(nsRange* aRange, int32_t* aOutIndex);
-  nsresult      RemoveItem(nsRange* aRange);
+  nsresult      AddItem(nsRange *aRange, int32_t* aOutIndex);
+  nsresult      RemoveItem(nsRange *aRange);
   nsresult      RemoveCollapsedRanges();
   nsresult      Clear(nsPresContext* aPresContext);
   nsresult      Collapse(nsINode* aParentNode, int32_t aOffset);
@@ -212,19 +205,6 @@ public:
 
   nsresult     NotifySelectionListeners();
 
-  friend struct AutoApplyUserSelectStyle;
-  struct MOZ_STACK_CLASS AutoApplyUserSelectStyle
-  {
-    AutoApplyUserSelectStyle(Selection* aSelection
-                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mSavedValue(aSelection->mApplyUserSelectStyle)
-    {
-      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      aSelection->mApplyUserSelectStyle = true;
-    }
-    AutoRestore<bool> mSavedValue;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  };
 private:
 
   class ScrollSelectionIntoViewEvent;
@@ -278,11 +258,6 @@ private:
                                  int32_t* aStartIndex, int32_t* aEndIndex);
   RangeData* FindRangeData(nsIDOMRange* aRange);
 
-  /**
-   * Helper method for AddItem.
-   */
-  nsresult AddItemInternal(nsRange* aRange, int32_t* aOutIndex);
-
   // These are the ranges inside this selection. They are kept sorted in order
   // of DOM start position.
   //
@@ -306,11 +281,6 @@ private:
   CachedOffsetForFrame *mCachedOffsetForFrame;
   nsDirection mDirection;
   SelectionType mType;
-  /**
-   * True if the current selection operation was initiated by user action.
-   * It determines whether we exclude -moz-user-select:none nodes or not.
-   */
-  bool mApplyUserSelectStyle;
 };
 
 } // namespace dom
