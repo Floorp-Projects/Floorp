@@ -34,7 +34,6 @@
 #include "nsITimer.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXPCOM.h"
-#include "mozilla/dom/SettingChangeNotificationBinding.h"
 
 #if defined(MOZ_WIDGET_GONK)
 #include "cutils/properties.h"
@@ -561,44 +560,91 @@ BluetoothService::HandleStartupSettingsCheck(bool aEnable)
 }
 
 nsresult
-BluetoothService::HandleSettingsChanged(nsISupports* aSubject)
+BluetoothService::HandleSettingsChanged(const nsAString& aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // The string that we're interested in will be a JSON string that looks like:
   //  {"key":"bluetooth.enabled","value":true}
 
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSContext* cx = jsapi.cx();
-  RootedDictionary<SettingChangeNotification> setting(cx);
-  if (!WrappedJSToDictionary(cx, aSubject, setting)) {
+  AutoSafeJSContext cx;
+  if (!cx) {
     return NS_OK;
   }
-  if (setting.mKey.EqualsASCII(BLUETOOTH_DEBUGGING_SETTING)) {
-    if (!setting.mValue.isBoolean()) {
+
+  JS::Rooted<JS::Value> val(cx);
+  if (!JS_ParseJSON(cx, aData.BeginReading(), aData.Length(), &val)) {
+    return JS_ReportPendingException(cx) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!val.isObject()) {
+    return NS_OK;
+  }
+
+  JS::Rooted<JSObject*> obj(cx, &val.toObject());
+
+  JS::Rooted<JS::Value> key(cx);
+  if (!JS_GetProperty(cx, obj, "key", &key)) {
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!key.isString()) {
+    return NS_OK;
+  }
+
+  // First, check if the string equals to BLUETOOTH_DEBUGGING_SETTING
+  bool match;
+  if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_DEBUGGING_SETTING, &match)) {
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (match) {
+    JS::Rooted<JS::Value> value(cx);
+    if (!JS_GetProperty(cx, obj, "value", &value)) {
+      MOZ_ASSERT(!JS_IsExceptionPending(cx));
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (!value.isBoolean()) {
       MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.debugging.enabled'!");
       return NS_ERROR_UNEXPECTED;
     }
-  
-    SWITCH_BT_DEBUG(setting.mValue.toBoolean());
+
+    SWITCH_BT_DEBUG(value.toBoolean());
 
     return NS_OK;
   }
 
   // Second, check if the string is BLUETOOTH_ENABLED_SETTING
-  if (!setting.mKey.EqualsASCII(BLUETOOTH_ENABLED_SETTING)) {
-    return NS_OK;
-  }
-  if (!setting.mValue.isBoolean()) {
-    MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.enabled'!");
-    return NS_ERROR_UNEXPECTED;
+  if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_ENABLED_SETTING, &match)) {
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  sToggleInProgress = true;
+  if (match) {
+    JS::Rooted<JS::Value> value(cx);
+    if (!JS_GetProperty(cx, obj, "value", &value)) {
+      MOZ_ASSERT(!JS_IsExceptionPending(cx));
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-  nsresult rv = StartStopBluetooth(setting.mValue.toBoolean(), false);
-  NS_ENSURE_SUCCESS(rv, rv);
+    if (!value.isBoolean()) {
+      MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.enabled'!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (sToggleInProgress || value.toBoolean() == IsEnabled()) {
+      // Nothing to do here.
+      return NS_OK;
+    }
+
+    sToggleInProgress = true;
+
+    nsresult rv = StartStopBluetooth(value.toBoolean(), false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -709,7 +755,7 @@ BluetoothService::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   if (!strcmp(aTopic, MOZSETTINGS_CHANGED_ID)) {
-    return HandleSettingsChanged(aSubject);
+    return HandleSettingsChanged(nsDependentString(aData));
   }
 
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
