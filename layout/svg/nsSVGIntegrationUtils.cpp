@@ -643,7 +643,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsPoint offset = GetOffsetToBoundingBox(mFrame);
   gfxPoint devPxOffset = gfxPoint(offset.x, offset.y) / appUnitsPerDevPixel;
-  aContext->Multiply(gfxMatrix::Translation(devPxOffset));
+  aContext->Multiply(gfxMatrix().Translate(devPxOffset));
 
   gfxSize paintServerSize =
     gfxSize(mPaintServerSize.width, mPaintServerSize.height) /
@@ -653,7 +653,8 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   // want it to render with mRenderSize, so we need to set up a scale transform.
   gfxFloat scaleX = mRenderSize.width / paintServerSize.width;
   gfxFloat scaleY = mRenderSize.height / paintServerSize.height;
-  aContext->Multiply(gfxMatrix::Scaling(scaleX, scaleY));
+  gfxMatrix scaleMatrix = gfxMatrix().Scale(scaleX, scaleY);
+  aContext->Multiply(scaleMatrix);
 
   // Draw.
   nsRect dirty(-offset.x, -offset.y,

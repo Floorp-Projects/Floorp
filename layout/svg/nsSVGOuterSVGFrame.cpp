@@ -864,7 +864,7 @@ nsSVGOuterSVGFrame::GetCanvasTM()
                                 PresContext()->AppUnitsPerDevPixel());
 
     gfxMatrix tm = content->PrependLocalTransformsTo(
-                     gfxMatrix::Scaling(devPxPerCSSPx, devPxPerCSSPx));
+                     gfxMatrix().Scale(devPxPerCSSPx, devPxPerCSSPx));
     mCanvasTM = new gfxMatrix(tm);
   }
   return *mCanvasTM;

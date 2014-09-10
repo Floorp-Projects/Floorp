@@ -425,7 +425,7 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
       }
     }
   }
-  return ToMatrix(matrix).PostTranslate(x, y);
+  return gfx::ToMatrix(matrix) * gfx::Matrix().Translate(x, y);
 }
 
 gfx::Matrix
