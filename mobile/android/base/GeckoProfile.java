@@ -335,12 +335,17 @@ public final class GeckoProfile {
         try {
             // If this dir doesn't exist getDir will create it for us
             final File lockFile = new File(getDir(), LOCK_FILE_NAME);
-            final boolean result = lockFile.createNewFile();
-            if (result) {
+            final boolean result;
+            lockFile.createNewFile();
+
+            if (lockFile.exists()) {
                 mLocked = LockState.LOCKED;
+                result = true;
             } else {
                 mLocked = LockState.UNLOCKED;
+                result = false;
             }
+
             return result;
         } catch(IOException ex) {
             Log.e(LOGTAG, "Error locking profile", ex);
