@@ -10,7 +10,7 @@ const MARIONETTE_TIMEOUT = 60000;
 const MARIONETTE_HEAD_JS = 'head.js';
 
 const MANIFEST_URL = 'app://system.gaiamobile.org/manifest.webapp';
-const NDEF_MESSAGE = [new MozNDEFRecord({tnf: 0x01,
+const NDEF_MESSAGE = [new MozNDEFRecord({tnf: "well-known",
                                          type: new Uint8Array(0x84),
                                          payload: new Uint8Array(0x20)})];
 

@@ -3470,14 +3470,6 @@ RilObject.prototype = {
       return;
     }
 
-    let ICCRecordHelper = this.context.ICCRecordHelper;
-    // Try to get iccId only when cardState left GECKO_CARDSTATE_UNDETECTED.
-    if (iccStatus.cardState === CARD_STATE_PRESENT &&
-        (this.cardState === GECKO_CARDSTATE_UNINITIALIZED ||
-         this.cardState === GECKO_CARDSTATE_UNDETECTED)) {
-      ICCRecordHelper.readICCID();
-    }
-
     if (RILQUIRKS_SUBSCRIPTION_CONTROL) {
       // All appIndex is -1 means the subscription is not activated yet.
       // Note that we don't support "ims" for now, so we don't take it into
@@ -3536,6 +3528,14 @@ RilObject.prototype = {
     } else {
       // Having incorrect app information, set card state to unknown.
       newCardState = GECKO_CARDSTATE_UNKNOWN;
+    }
+
+    let ICCRecordHelper = this.context.ICCRecordHelper;
+    // Try to get iccId only when cardState left GECKO_CARDSTATE_UNDETECTED.
+    if (iccStatus.cardState === CARD_STATE_PRESENT &&
+        (this.cardState === GECKO_CARDSTATE_UNINITIALIZED ||
+         this.cardState === GECKO_CARDSTATE_UNDETECTED)) {
+      ICCRecordHelper.readICCID();
     }
 
     if (this.cardState == newCardState) {
@@ -5854,7 +5854,11 @@ RilObject.prototype[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
   let Buf = this.context.Buf;
   options.sw1 = Buf.readInt32();
   options.sw2 = Buf.readInt32();
-  if (options.sw1 != ICC_STATUS_NORMAL_ENDING) {
+  // See 3GPP TS 11.11, clause 9.4.1 for opetation success results.
+  if (options.sw1 !== ICC_STATUS_NORMAL_ENDING &&
+      options.sw1 !== ICC_STATUS_NORMAL_ENDING_WITH_EXTRA &&
+      options.sw1 !== ICC_STATUS_WITH_SIM_DATA &&
+      options.sw1 !== ICC_STATUS_WITH_RESPONSE_DATA) {
     ICCIOHelper.processICCIOError(options);
     return;
   }
@@ -12705,6 +12709,7 @@ ICCIOHelperObject.prototype = {
       case CARD_APPTYPE_ISIM:
       // For SIM, this is what we want
       case CARD_APPTYPE_SIM:
+      default:
         options.p2 = 0x00;
         options.p3 = GET_RESPONSE_EF_SIZE_BYTES;
         break;
