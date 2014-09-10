@@ -60,6 +60,7 @@ gujar.sources += [
     'util/HardwareUtils.java',
     'util/INIParser.java',
     'util/INISection.java',
+    'util/IOUtils.java',
     'util/JSONUtils.java',
     'util/MenuUtils.java',
     'util/NativeEventListener.java',
