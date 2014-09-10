@@ -1247,6 +1247,7 @@ struct StackShape
         JS_ASSERT(base);
         JS_ASSERT(!JSID_IS_VOID(propid));
         JS_ASSERT(slot <= SHAPE_INVALID_SLOT);
+        JS_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
     }
 
     explicit StackShape(Shape *shape)
@@ -1355,6 +1356,7 @@ Shape::Shape(const StackShape &other, uint32_t nfixed)
     flags(other.flags),
     parent(nullptr)
 {
+    JS_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
     kids.setNull();
 }
 
