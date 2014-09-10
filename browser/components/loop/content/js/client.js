@@ -187,39 +187,6 @@ loop.Client = (function($) {
         this._requestCallUrlInternal(nickname, cb);
       }.bind(this));
     },
-
-    /**
-     * Requests call information from the server for all calls since the
-     * given version.
-     *
-     * @param  {String} version the version identifier from the push
-     *                          notification
-     * @param  {Function} cb Callback(err, calls)
-     */
-    requestCallsInfo: function(version, cb) {
-      // XXX It is likely that we'll want to move some of this to whatever
-      // opens the chat window, but we'll need to decide on this in bug 1002418
-      if (!version) {
-        throw new Error("missing required parameter version");
-      }
-
-      this.mozLoop.hawkRequest("/calls?version=" + version, "GET", null,
-                               function (error, responseText) {
-        if (error) {
-          this._failureHandler(cb, error);
-          return;
-        }
-
-        try {
-          var callsData = JSON.parse(responseText);
-
-          cb(null, this._validate(callsData, expectedCallProperties));
-        } catch (err) {
-          console.log("Error requesting calls info", err);
-          cb(err);
-        }
-      }.bind(this));
-    }
   };
 
   return Client;
