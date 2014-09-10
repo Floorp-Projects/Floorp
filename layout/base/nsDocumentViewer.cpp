@@ -28,7 +28,7 @@
 #include "nsILinkHandler.h"
 #include "nsIDOMDocument.h"
 #include "nsISelectionListener.h"
-#include "mozilla/dom/Selection.h"
+#include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsContentUtils.h"
@@ -316,7 +316,7 @@ private:
 
   nsresult SyncParentSubDocMap();
 
-  mozilla::dom::Selection* GetDocumentSelection();
+  nsresult GetDocumentSelection(nsISelection **aSelection);
 
   void DestroyPresShell();
   void DestroyPresContext();
@@ -704,12 +704,12 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
     mSelectionListener = selectionListener;
   }
 
-  nsRefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
-  if (!selection) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsISelection> selection;
+  rv = GetDocumentSelection(getter_AddRefs(selection));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = selection->AddSelectionListener(mSelectionListener);
+  nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
+  rv = selPrivate->AddSelectionListener(mSelectionListener);
   if (NS_FAILED(rv))
     return rv;
 
@@ -2562,14 +2562,19 @@ nsDocumentViewer::CreateDeviceContext(nsView* aContainerView)
 
 // Return the selection for the document. Note that text fields have their
 // own selection, which cannot be accessed with this method.
-mozilla::dom::Selection*
-nsDocumentViewer::GetDocumentSelection()
+nsresult nsDocumentViewer::GetDocumentSelection(nsISelection **aSelection)
 {
+  NS_ENSURE_ARG_POINTER(aSelection);
   if (!mPresShell) {
-    return nullptr;
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return mPresShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
+  nsCOMPtr<nsISelectionController> selcon;
+  selcon = do_QueryInterface(mPresShell);
+  if (selcon)
+    return selcon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                                aSelection);
+  return NS_ERROR_FAILURE;
 }
 
 /* ========================================================================================
@@ -2578,11 +2583,12 @@ nsDocumentViewer::GetDocumentSelection()
 
 NS_IMETHODIMP nsDocumentViewer::ClearSelection()
 {
+  nsresult rv;
+  nsCOMPtr<nsISelection> selection;
+
   // use nsCopySupport::GetSelectionForCopy() ?
-  nsRefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
-  if (!selection) {
-    return NS_ERROR_FAILURE;
-  }
+  rv = GetDocumentSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
 
   return selection->CollapseToStart();
 }
@@ -2592,17 +2598,16 @@ NS_IMETHODIMP nsDocumentViewer::SelectAll()
   // XXX this is a temporary implementation copied from nsWebShell
   // for now. I think nsDocument and friends should have some helper
   // functions to make this easier.
+  nsCOMPtr<nsISelection> selection;
+  nsresult rv;
 
   // use nsCopySupport::GetSelectionForCopy() ?
-  nsRefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
-  if (!selection) {
-    return NS_ERROR_FAILURE;
-  }
+  rv = GetDocumentSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDOMHTMLDocument> htmldoc = do_QueryInterface(mDocument);
   nsCOMPtr<nsIDOMNode> bodyNode;
 
-  nsresult rv;
   if (htmldoc)
   {
     nsCOMPtr<nsIDOMHTMLElement>bodyElement;
@@ -2620,7 +2625,6 @@ NS_IMETHODIMP nsDocumentViewer::SelectAll()
   rv = selection->RemoveAllRanges();
   if (NS_FAILED(rv)) return rv;
 
-  mozilla::dom::Selection::AutoApplyUserSelectStyle userSelection(selection);
   rv = selection->SelectAllChildren(bodyNode);
   return rv;
 }
@@ -3544,10 +3548,9 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocumen
   NS_ASSERTION(mDocViewer, "Should have doc viewer!");
 
   // get the selection state
-  nsRefPtr<mozilla::dom::Selection> selection = mDocViewer->GetDocumentSelection();
-  if (!selection) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsISelection> selection;
+  nsresult rv = mDocViewer->GetDocumentSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
 
   nsIDocument* theDoc = mDocViewer->GetDocument();
   if (!theDoc) return NS_ERROR_FAILURE;
@@ -4429,9 +4432,11 @@ nsDocumentViewer::DestroyPresShell()
   // Break circular reference (or something)
   mPresShell->EndObservingDocument();
 
-  nsRefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
-  if (selection && mSelectionListener)
-    selection->RemoveSelectionListener(mSelectionListener);
+  nsCOMPtr<nsISelection> selection;
+  GetDocumentSelection(getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionPrivate> selPrivate = do_QueryInterface(selection);
+  if (selPrivate && mSelectionListener)
+    selPrivate->RemoveSelectionListener(mSelectionListener);
 
   nsRefPtr<SelectionCarets> selectionCaret = mPresShell->GetSelectionCarets();
   if (selectionCaret) {
