@@ -199,13 +199,7 @@ public:
      */
     virtual void DidRefresh() MOZ_OVERRIDE;
 
-    NS_IMETHOD Redraw(const gfxRect&) { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD Swap(mozilla::ipc::Shmem& aBack,
-                    int32_t x, int32_t y, int32_t w, int32_t h)
-                    { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD Swap(uint32_t nativeID,
-                    int32_t x, int32_t y, int32_t w, int32_t h)
-                    { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD Redraw(const gfxRect&) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
 
     void SynthesizeGLError(GLenum err);
     void SynthesizeGLError(GLenum err, const char *fmt, ...);
