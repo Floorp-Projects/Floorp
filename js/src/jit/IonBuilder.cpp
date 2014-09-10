@@ -3077,25 +3077,55 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     return ControlStatus_Jumped;
 }
 
-void
+bool
 IonBuilder::replaceTypeSet(MDefinition *subject, types::TemporaryTypeSet *type, MTest *test)
 {
-    MDefinition *replace = nullptr;
+    if (type->unknown())
+        return true;
+
+    MFilterTypeSet *replace = nullptr;
+    MDefinition *ins;
+
     for (uint32_t i = 0; i < current->stackDepth(); i++) {
-        if (current->getSlot(i) != subject)
+        ins = current->getSlot(i);
+
+        // Instead of creating a new MFilterTypeSet, try to update the old one.
+        if (ins->isFilterTypeSet() && ins->getOperand(0) == subject &&
+            ins->dependency() == test)
+        {
+            types::TemporaryTypeSet *intersect =
+                types::TypeSet::intersectSets(ins->resultTypeSet(), type, alloc_->lifoAlloc());
+            if (!intersect)
+                return false;
+
+            ins->toFilterTypeSet()->setResultType(intersect->getKnownMIRType());
+            ins->toFilterTypeSet()->setResultTypeSet(intersect);
             continue;
-        if (!replace) {
-            replace = ensureDefiniteTypeSet(subject, type);
-            if (replace != subject) {
-                // Make sure we don't hoist it above the MTest, we can use the
-                // 'dependency' of an MInstruction. This is normally used by
-                // Alias Analysis, but won't get overwritten, since this
-                // instruction doesn't have an AliasSet.
-                replace->setDependency(test);
-            }
         }
-        current->setSlot(i, replace);
+
+        if (ins == subject) {
+            if (!replace) {
+                replace = MFilterTypeSet::New(alloc(), subject, type);
+
+                if (!replace)
+                    return false;
+                if (replace == subject)
+                    break;
+
+                current->add(replace);
+
+                if (replace != subject) {
+                    // Make sure we don't hoist it above the MTest, we can use the
+                    // 'dependency' of an MInstruction. This is normally used by
+                    // Alias Analysis, but won't get overwritten, since this
+                    // instruction doesn't have an AliasSet.
+                    replace->setDependency(test);
+                }
+            }
+            current->setSlot(i, replace);
+        }
     }
+    return true;
 }
 
 bool
@@ -3200,9 +3230,7 @@ IonBuilder::improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test)
     if (!type)
         return false;
 
-    replaceTypeSet(subject, type, test);
-
-    return true;
+    return replaceTypeSet(subject, type, test);
 }
 
 bool
@@ -3232,8 +3260,7 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
         if (!type)
             return false;
 
-        replaceTypeSet(ins->getOperand(0), type, test);
-        return true;
+        return replaceTypeSet(ins->getOperand(0), type, test);
       }
       case MDefinition::Op_Phi: {
         bool branchIsAnd = true;

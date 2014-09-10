@@ -10623,7 +10623,6 @@ class MFilterTypeSet
       : MUnaryInstruction(def)
     {
         MOZ_ASSERT(!types->unknown());
-        MOZ_ASSERT(def->type() == types->getKnownMIRType());
         setResultType(types->getKnownMIRType());
         setResultTypeSet(types);
     }
