@@ -169,6 +169,8 @@ void GraphDriver::Shutdown()
     nsRefPtr<AsyncCubebTask> releaseEvent =
       new AsyncCubebTask(AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
     releaseEvent->Dispatch();
+  } else {
+    Stop();
   }
 }
 
