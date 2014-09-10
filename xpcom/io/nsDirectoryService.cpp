@@ -24,6 +24,10 @@
 #include <shlobj.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#if defined(MOZ_CONTENT_SANDBOX)
+#include "nsIUUIDGenerator.h"
+#endif
 #elif defined(XP_UNIX)
 #include <unistd.h>
 #include <stdlib.h>
@@ -499,6 +503,47 @@ nsDirectoryService::UnregisterProvider(nsIDirectoryServiceProvider* aProv)
   return NS_OK;
 }
 
+#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_WIN)
+static nsresult
+GetLowIntegrityTemp(nsIFile** aLowIntegrityTemp)
+{
+  nsCOMPtr<nsIFile> localFile;
+  nsresult rv = GetSpecialSystemDirectory(Win_LocalAppdataLow,
+                                          getter_AddRefs(localFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIUUIDGenerator> uuidgen =
+    do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsID uuid;
+  rv = uuidgen->GenerateUUIDInPlace(&uuid);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  char uuidChars[NSID_LENGTH];
+  uuid.ToProvidedString(uuidChars);
+  rv = localFile->AppendNative(NS_LITERAL_CSTRING(MOZ_USER_DIR));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = localFile->AppendNative(NS_LITERAL_CSTRING("MozTemp-")
+                               + nsDependentCString(uuidChars));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  localFile.forget(aLowIntegrityTemp);
+  return rv;
+}
+#endif
+
 // DO NOT ADD ANY LOCATIONS TO THIS FUNCTION UNTIL YOU TALK TO: dougt@netscape.com.
 // This is meant to be a place of xpcom or system specific file locations, not
 // application specific locations.  If you need the later, register a callback for
@@ -671,6 +716,12 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
     rv = GetSpecialSystemDirectory(Win_Appdata, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sLocalAppdata) {
     rv = GetSpecialSystemDirectory(Win_LocalAppdata, getter_AddRefs(localFile));
+#if defined(MOZ_CONTENT_SANDBOX)
+  } else if (inAtom == nsDirectoryService::sLocalAppdataLow) {
+    rv = GetSpecialSystemDirectory(Win_LocalAppdataLow, getter_AddRefs(localFile));
+  } else if (inAtom == nsDirectoryService::sLowIntegrityTemp) {
+    rv = GetLowIntegrityTemp(getter_AddRefs(localFile));
+#endif
   } else if (inAtom == nsDirectoryService::sPrinthood) {
     rv = GetSpecialSystemDirectory(Win_Printhood, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sWinCookiesDirectory) {
