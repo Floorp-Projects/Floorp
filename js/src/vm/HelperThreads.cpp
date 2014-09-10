@@ -157,9 +157,20 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
     for (size_t i = 0; i < finished.length(); i++) {
         jit::IonBuilder *builder = finished[i];
         if (CompiledScriptMatches(compartment, script, builder->script())) {
-            jit::FinishOffThreadBuilder(builder);
+            jit::FinishOffThreadBuilder(nullptr, builder);
             HelperThreadState().remove(finished, &i);
         }
+    }
+
+    /* Cancel lazy linking for pending builders (attached to the ionScript). */
+    jit::IonBuilder* builder = HelperThreadState().ionLazyLinkList().getFirst();
+    while (builder) {
+        jit::IonBuilder *next = builder->getNext();
+        if (CompiledScriptMatches(compartment, script, builder->script())) {
+            builder->script()->setPendingIonBuilder(nullptr, nullptr);
+            jit::FinishOffThreadBuilder(nullptr, builder);
+        }
+        builder = next;
     }
 }
 
@@ -435,9 +446,20 @@ GlobalHelperThreadState::ensureInitialized()
 }
 
 GlobalHelperThreadState::GlobalHelperThreadState()
+ : cpuCount(0),
+   threadCount(0),
+   threads(nullptr),
+   asmJSCompilationInProgress(nullptr),
+   helperLock(nullptr),
+#ifdef DEbUG
+   lockOwner(nullptr),
+#endif
+   consumerWakeup(nullptr),
+   producerWakeup(nullptr),
+   pauseWakeup(nullptr),
+   numAsmJSFailedJobs(0),
+   asmJSFailedFunction(nullptr)
 {
-    mozilla::PodZero(this);
-
     cpuCount = GetCPUCount();
     threadCount = ThreadCountForCPUCount(cpuCount);
 
@@ -463,6 +485,8 @@ GlobalHelperThreadState::finish()
     PR_DestroyCondVar(producerWakeup);
     PR_DestroyCondVar(pauseWakeup);
     PR_DestroyLock(helperLock);
+
+    ionLazyLinkList_.clear();
 }
 
 void
