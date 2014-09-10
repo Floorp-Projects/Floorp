@@ -1250,7 +1250,7 @@ types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode execu
 
     if (!succeeded || types.compilerOutputs->back().pendingInvalidation()) {
         types.compilerOutputs->back().invalidate();
-        script->resetUseCount();
+        script->resetWarmUpCounter();
         return false;
     }
 
@@ -2418,7 +2418,7 @@ TypeZone::addPendingRecompile(JSContext *cx, JSScript *script)
 
     // Let the script warm up again before attempting another compile.
     if (jit::IsBaselineEnabled(cx))
-        script->resetUseCount();
+        script->resetWarmUpCounter();
 
     if (script->hasIonScript())
         addPendingRecompile(cx, script->ionScript()->recompileInfo());

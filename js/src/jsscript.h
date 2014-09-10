@@ -819,7 +819,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     uint32_t        sourceStart_;
     uint32_t        sourceEnd_;
 
-    uint32_t        useCount;   /* Number of times the script has been called
+    uint32_t        warmUpCounter;   /* Number of times the script has been called
                                  * or has had backedges taken. When running in
                                  * ion, also increased for any inlined scripts.
                                  * Reset if the script's JIT code is forcibly
@@ -1395,13 +1395,13 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     bool makeTypes(JSContext *cx);
 
   public:
-    uint32_t getUseCount() const {
-        return useCount;
+    uint32_t getWarmUpCounter() const {
+        return warmUpCounter;
     }
-    uint32_t incUseCount(uint32_t amount = 1) { return useCount += amount; }
-    uint32_t *addressOfUseCount() { return &useCount; }
-    static size_t offsetOfUseCount() { return offsetof(JSScript, useCount); }
-    void resetUseCount() { useCount = 0; }
+    uint32_t incWarmUpCounter(uint32_t amount = 1) { return warmUpCounter += amount; }
+    uint32_t *addressOfWarmUpCounter() { return &warmUpCounter; }
+    static size_t offsetOfWarmUpCounter() { return offsetof(JSScript, warmUpCounter); }
+    void resetWarmUpCounter() { warmUpCounter = 0; }
 
   public:
     bool initScriptCounts(JSContext *cx);

@@ -1,5 +1,5 @@
-setJitCompilerOption("baseline.usecount.trigger", 10);
-setJitCompilerOption("ion.usecount.trigger", 20);
+setJitCompilerOption("baseline.warmup.trigger", 10);
+setJitCompilerOption("ion.warmup.trigger", 20);
 var i;
 
 // Check that we are able to remove the operation inside recover test functions (denoted by "rop..."),

@@ -129,13 +129,13 @@ JitOptions::setEagerCompilation()
 }
 
 void
-JitOptions::setUsesBeforeCompile(uint32_t useCount)
+JitOptions::setUsesBeforeCompile(uint32_t warmUpCounter)
 {
     forceDefaultIonUsesBeforeCompile = true;
-    forcedDefaultIonUsesBeforeCompile = useCount;
+    forcedDefaultIonUsesBeforeCompile = warmUpCounter;
 
     // Undo eager compilation
-    if (eagerCompilation && useCount != 0) {
+    if (eagerCompilation && warmUpCounter != 0) {
         jit::JitOptions defaultValues;
         eagerCompilation = false;
         baselineUsesBeforeCompile = defaultValues.baselineUsesBeforeCompile;

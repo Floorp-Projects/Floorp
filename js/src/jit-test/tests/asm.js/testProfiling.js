@@ -88,8 +88,8 @@ for (name of ['atan2', 'pow'])
     testBuiltinDD2D(name);
 
 // FFI tests:
-setJitCompilerOption("ion.usecount.trigger", 10);
-setJitCompilerOption("baseline.usecount.trigger", 0);
+setJitCompilerOption("ion.warmup.trigger", 10);
+setJitCompilerOption("baseline.warmup.trigger", 0);
 setJitCompilerOption("offthread-compilation.enable", 0);
 
 var ffi1 = function() { return 10 }

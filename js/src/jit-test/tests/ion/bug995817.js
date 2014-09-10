@@ -1,4 +1,4 @@
-setJitCompilerOption('baseline.usecount.trigger', 1);
+setJitCompilerOption('baseline.warmup.trigger', 1);
 let r;
 (function() {
      function f() {
