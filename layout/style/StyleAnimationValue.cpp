@@ -558,6 +558,15 @@ StyleAnimationValue::ComputeDistance(nsCSSProperty aProperty,
       aDistance = sqrt(difflen * difflen + diffpct * diffpct);
       return true;
     }
+    case eUnit_ObjectPosition: {
+      const nsCSSValue* position1 = aStartValue.GetCSSValueValue();
+      const nsCSSValue* position2 = aEndValue.GetCSSValueValue();
+      double squareDistance =
+        CalcPositionSquareDistance(*position1,
+                                   *position2);
+      aDistance = sqrt(squareDistance);
+      return true;
+    }
     case eUnit_CSSValuePair: {
       const nsCSSValuePair *pair1 = aStartValue.GetCSSValuePairValue();
       const nsCSSValuePair *pair2 = aEndValue.GetCSSValuePairValue();
@@ -2067,6 +2076,18 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
       aResultValue.SetAndAdoptCSSValueValue(val, eUnit_Calc);
       return true;
     }
+    case eUnit_ObjectPosition: {
+      const nsCSSValue* position1 = aValue1.GetCSSValueValue();
+      const nsCSSValue* position2 = aValue2.GetCSSValueValue();
+
+      nsAutoPtr<nsCSSValue> result(new nsCSSValue);
+      AddPositions(aCoeff1, *position1,
+                   aCoeff2, *position2, *result);
+
+      aResultValue.SetAndAdoptCSSValueValue(result.forget(),
+                                            eUnit_ObjectPosition);
+      return true;
+    }
     case eUnit_CSSValuePair: {
       const nsCSSValuePair *pair1 = aValue1.GetCSSValuePairValue();
       const nsCSSValuePair *pair2 = aValue2.GetCSSValuePairValue();
@@ -2609,7 +2630,8 @@ StyleAnimationValue::UncomputeValue(nsCSSProperty aProperty,
                                     const StyleAnimationValue& aComputedValue,
                                     nsCSSValue& aSpecifiedValue)
 {
-  switch (aComputedValue.GetUnit()) {
+  Unit unit = aComputedValue.GetUnit();
+  switch (unit) {
     case eUnit_Normal:
       aSpecifiedValue.SetNormalValue();
       break;
@@ -2642,9 +2664,15 @@ StyleAnimationValue::UncomputeValue(nsCSSProperty aProperty,
       // colors can be alone, or part of a paint server
       aSpecifiedValue.SetColorValue(aComputedValue.GetColorValue());
       break;
-    case eUnit_Calc: {
-      nsCSSValue *val = aComputedValue.GetCSSValueValue();
-      NS_ABORT_IF_FALSE(val->GetUnit() == eCSSUnit_Calc, "unexpected unit");
+    case eUnit_Calc:
+    case eUnit_ObjectPosition: {
+      nsCSSValue* val = aComputedValue.GetCSSValueValue();
+      // Sanity-check that the underlying unit in the nsCSSValue is what we
+      // expect for our StyleAnimationValue::Unit:
+      MOZ_ASSERT((unit == eUnit_Calc && val->GetUnit() == eCSSUnit_Calc) ||
+                 (unit == eUnit_ObjectPosition &&
+                  val->GetUnit() == eCSSUnit_Array),
+                 "unexpected unit");
       aSpecifiedValue = *val;
       break;
     }
@@ -3180,6 +3208,18 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty_object_position: {
+          const nsStylePosition* stylePos =
+            static_cast<const nsStylePosition*>(styleStruct);
+
+          nsAutoPtr<nsCSSValue> val(new nsCSSValue);
+          SetPositionValue(stylePos->mObjectPosition, *val);
+
+          aComputedValue.SetAndAdoptCSSValueValue(val.forget(),
+                                                  eUnit_ObjectPosition);
+          break;
+        }
+
         case eCSSProperty_background_position: {
           const nsStyleBackground *bg =
             static_cast<const nsStyleBackground*>(styleStruct);
@@ -3574,6 +3614,9 @@ StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
       mValue.mColor = aOther.mValue.mColor;
       break;
     case eUnit_Calc:
+    case eUnit_ObjectPosition:
+      NS_ABORT_IF_FALSE(IsCSSValueUnit(mUnit),
+                        "This clause is for handling nsCSSValue-backed units");
       NS_ABORT_IF_FALSE(aOther.mValue.mCSSValue, "values may not be null");
       mValue.mCSSValue = new nsCSSValue(*aOther.mValue.mCSSValue);
       if (!mValue.mCSSValue) {
@@ -3836,6 +3879,9 @@ StyleAnimationValue::operator==(const StyleAnimationValue& aOther) const
     case eUnit_Color:
       return mValue.mColor == aOther.mValue.mColor;
     case eUnit_Calc:
+    case eUnit_ObjectPosition:
+      NS_ABORT_IF_FALSE(IsCSSValueUnit(mUnit),
+                        "This clause is for handling nsCSSValue-backed units");
       return *mValue.mCSSValue == *aOther.mValue.mCSSValue;
     case eUnit_CSSValuePair:
       return *mValue.mCSSValuePair == *aOther.mValue.mCSSValuePair;

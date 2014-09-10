@@ -30,7 +30,7 @@ BEGIN_TEST(testOriginPrincipals)
     CHECK(testOuter("(function(){return function(){return 10}}).bind()()"));
     CHECK(testOuter("var e = eval; (function() { return e('(function(){return 11})') })()"));
 
-    JS_SetErrorReporter(cx, ErrorReporter);
+    JS_SetErrorReporter(rt, ErrorReporter);
     CHECK(testError("eval(-)"));
     CHECK(testError("-"));
     CHECK(testError("new Function('x', '-')"));
