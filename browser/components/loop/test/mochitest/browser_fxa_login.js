@@ -7,13 +7,8 @@
 
 "use strict";
 
-const {
-  LOOP_SESSION_TYPE,
-  gFxAOAuthTokenData
-} = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-
+const gFxAOAuthTokenData = Cu.import("resource:///modules/loop/MozLoopService.jsm", {}).gFxAOAuthTokenData;
 const BASE_URL = "http://mochi.test:8888/browser/browser/components/loop/test/mochitest/loop_fxa.sjs?";
-const HAWK_TOKEN_LENGTH = 64;
 
 add_task(function* setup() {
   Services.prefs.setCharPref("loop.server", BASE_URL);
@@ -23,8 +18,6 @@ add_task(function* setup() {
     yield promiseDeletedOAuthParams(BASE_URL);
     Services.prefs.clearUserPref("loop.server");
     Services.prefs.clearUserPref("services.push.serverURL");
-    Services.prefs.clearUserPref(MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.GUEST));
-    Services.prefs.clearUserPref(MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA));
   });
 });
 
@@ -168,27 +161,10 @@ add_task(function* basicAuthorizationAndRegistration() {
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
-  info("registering");
-  mockPushHandler.pushUrl = "https://localhost/pushUrl/guest";
-  yield MozLoopService.register(mockPushHandler);
-  let prefName = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.GUEST);
-  let padding = new Array(HAWK_TOKEN_LENGTH - mockPushHandler.pushUrl.length).fill("X").join("");
-  ise(Services.prefs.getCharPref(prefName), mockPushHandler.pushUrl + padding, "Check guest hawk token");
-
-  // Normally the same pushUrl would be registered but we change it in the test
-  // to be able to check for success on the second registration.
-  mockPushHandler.pushUrl = "https://localhost/pushUrl/fxa";
-
   let tokenData = yield MozLoopService.logInToFxA();
   ise(tokenData.access_token, "code1_access_token", "Check access_token");
   ise(tokenData.scope, "profile", "Check scope");
   ise(tokenData.token_type, "bearer", "Check token_type");
-
-  let registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
-  ise(registrationResponse.response.simplePushURL, "https://localhost/pushUrl/fxa", "Check registered push URL");
-  prefName = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
-  padding = new Array(HAWK_TOKEN_LENGTH - mockPushHandler.pushUrl.length).fill("X").join("");
-  ise(Services.prefs.getCharPref(prefName), mockPushHandler.pushUrl + padding, "Check FxA hawk token");
 });
 
 add_task(function* loginWithParams401() {
@@ -202,7 +178,6 @@ add_task(function* loginWithParams401() {
     test_error: "params_401",
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
-  yield MozLoopService.register(mockPushHandler);
 
   let loginPromise = MozLoopService.logInToFxA();
   yield loginPromise.then(tokenData => {
