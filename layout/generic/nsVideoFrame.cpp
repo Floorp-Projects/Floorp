@@ -224,7 +224,8 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   // Set a transform on the layer to draw the video in the right place
   gfxPoint p = r.TopLeft() + aContainerParameters.mOffset;
   Matrix transform = Matrix::Translation(p.x, p.y);
-  transform.Scale(r.Width()/frameSize.width, r.Height()/frameSize.height);
+  transform.PreScale(r.Width() / frameSize.width,
+                     r.Height() / frameSize.height);
   layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
   nsRefPtr<Layer> result = layer.forget();
   return result.forget();

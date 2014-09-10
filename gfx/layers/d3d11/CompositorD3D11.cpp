@@ -830,8 +830,8 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
   mContext->RSSetViewports(1, &viewport);
 
   Matrix viewMatrix = Matrix::Translation(-1.0, 1.0);
-  viewMatrix.Scale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
-  viewMatrix.Scale(1.0f, -1.0f);
+  viewMatrix.PreScale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
+  viewMatrix.PreScale(1.0f, -1.0f);
 
   viewMatrix = aWorldTransform * viewMatrix;
 

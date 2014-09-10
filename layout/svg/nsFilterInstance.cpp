@@ -9,6 +9,7 @@
 // Keep others in (case-insensitive) order:
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
+#include "mozilla/gfx/Helpers.h"
 #include "nsISVGChildFrame.h"
 #include "nsRenderingContext.h"
 #include "nsCSSFilterInstance.h"
@@ -407,12 +408,11 @@ nsFilterInstance::Render(gfxContext* aContext)
     return NS_OK;
   }
 
-  Matrix oldDTMatrix;
   RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
-  oldDTMatrix = dt->GetTransform();
-  Matrix matrix = ToMatrix(ctm);
-  matrix.Translate(filterRect.x, filterRect.y);
-  dt->SetTransform(matrix * oldDTMatrix);
+
+  AutoSaveTransform autoSR(dt);
+  Matrix newTM = ToMatrix(ctm).PreTranslate(filterRect.x, filterRect.y) * dt->GetTransform();
+  dt->SetTransform(newTM);
 
   ComputeNeededBoxes();
 
@@ -429,8 +429,6 @@ nsFilterInstance::Render(gfxContext* aContext)
     mFillPaint.mSourceSurface, mFillPaint.mSurfaceRect,
     mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect,
     mInputImages);
-
-  dt->SetTransform(oldDTMatrix);
 
   return NS_OK;
 }

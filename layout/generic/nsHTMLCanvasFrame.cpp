@@ -283,7 +283,8 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   // Transform the canvas into the right place
   gfxPoint p = r.TopLeft() + aContainerParameters.mOffset;
   Matrix transform = Matrix::Translation(p.x, p.y);
-  transform.Scale(r.Width()/canvasSize.width, r.Height()/canvasSize.height);
+  transform.PreScale(r.Width() / canvasSize.width,
+                     r.Height() / canvasSize.height);
   layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
   layer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
 
