@@ -20,16 +20,16 @@ ComputeTransformForRotation(const nsIntRect& aBounds,
     case ROTATION_0:
         break;
     case ROTATION_90:
-        transform.Translate(aBounds.width, 0);
-        transform = gfx::Matrix::Rotation(floatPi / 2) * transform;
+        transform.PreTranslate(aBounds.width, 0);
+        transform.PreRotate(floatPi / 2);
         break;
     case ROTATION_180:
-        transform.Translate(aBounds.width, aBounds.height);
-        transform = gfx::Matrix::Rotation(floatPi) * transform;
+        transform.PreTranslate(aBounds.width, aBounds.height);
+        transform.PreRotate(floatPi);
         break;
     case ROTATION_270:
-        transform.Translate(0, aBounds.height);
-        transform = gfx::Matrix::Rotation(floatPi * 3 / 2) * transform;
+        transform.PreTranslate(0, aBounds.height);
+        transform.PreRotate(floatPi * 3 / 2);
         break;
     default:
         MOZ_CRASH("Unknown rotation");
