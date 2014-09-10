@@ -49,6 +49,7 @@ protected:
     void updateVersion(int version);
 
 private:
+    ShShaderType mShaderType;
     int mVersion;
 };
 

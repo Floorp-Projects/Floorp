@@ -11,9 +11,9 @@
 
 #include "GLSLANG/ShaderLang.h"
 
-#include "compiler/translator/Compiler.h"
 #include "compiler/translator/InitializeDll.h"
 #include "compiler/translator/length_limits.h"
+#include "compiler/translator/ShHandle.h"
 #include "compiler/translator/TranslatorHLSL.h"
 #include "compiler/translator/VariablePacker.h"
 

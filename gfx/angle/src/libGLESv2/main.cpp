@@ -8,41 +8,41 @@
 // main.cpp: DLL entry point and management of thread-local data.
 
 #include "libGLESv2/main.h"
+
 #include "libGLESv2/Context.h"
 
-#include "common/tls.h"
-
-static TLSIndex currentTLS = TLS_OUT_OF_INDEXES;
+static DWORD currentTLS = TLS_OUT_OF_INDEXES;
 
 namespace gl
 {
 
 Current *AllocateCurrent()
 {
-    ASSERT(currentTLS != TLS_OUT_OF_INDEXES);
-    if (currentTLS == TLS_OUT_OF_INDEXES)
+    Current *current = (Current*)LocalAlloc(LPTR, sizeof(Current));
+
+    if (!current)
     {
+        ERR("Could not allocate thread local storage.");
         return NULL;
     }
 
-    Current *current = new Current();
+    ASSERT(currentTLS != TLS_OUT_OF_INDEXES);
+    TlsSetValue(currentTLS, current);
+
     current->context = NULL;
     current->display = NULL;
-
-    if (!SetTLSValue(currentTLS, current))
-    {
-        ERR("Could not set thread local storage.");
-        return NULL;
-    }
 
     return current;
 }
 
 void DeallocateCurrent()
 {
-    Current *current = reinterpret_cast<Current*>(GetTLSValue(currentTLS));
-    SafeDelete(current);
-    SetTLSValue(currentTLS, NULL);
+    void *current = TlsGetValue(currentTLS);
+
+    if (current)
+    {
+        LocalFree((HLOCAL)current);
+    }
 }
 
 }
@@ -53,13 +53,14 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
     {
       case DLL_PROCESS_ATTACH:
         {
-            currentTLS = CreateTLSIndex();
+            currentTLS = TlsAlloc();
+
             if (currentTLS == TLS_OUT_OF_INDEXES)
             {
                 return FALSE;
             }
         }
-        // Fall through to initialize index
+        // Fall throught to initialize index
       case DLL_THREAD_ATTACH:
         {
             gl::AllocateCurrent();
@@ -73,7 +74,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
       case DLL_PROCESS_DETACH:
         {
             gl::DeallocateCurrent();
-            DestroyTLSIndex(currentTLS);
+            TlsFree(currentTLS);
         }
         break;
       default:
@@ -88,7 +89,7 @@ namespace gl
 
 Current *GetCurrentData()
 {
-    Current *current = reinterpret_cast<Current*>(GetTLSValue(currentTLS));
+    Current *current = (Current*)TlsGetValue(currentTLS);
 
     // ANGLE issue 488: when the dll is loaded after thread initialization,
     // thread local storage (current) might not exist yet.
@@ -118,7 +119,7 @@ Context *getContext()
 Context *getNonLostContext()
 {
     Context *context = getContext();
-
+    
     if (context)
     {
         if (context->isContextLost())

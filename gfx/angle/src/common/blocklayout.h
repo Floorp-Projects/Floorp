@@ -11,12 +11,14 @@
 #define COMMON_BLOCKLAYOUT_H_
 
 #include <vector>
-#include "angle_gl.h"
+#include <GLES3/gl3.h>
+#include <GLES2/gl2.h>
 #include <GLSLANG/ShaderLang.h>
 #include <cstddef>
 
-namespace sh
+namespace gl
 {
+
 struct ShaderVariable;
 struct InterfaceBlockField;
 struct BlockMemberInfo;
@@ -67,7 +69,7 @@ class Std140BlockEncoder : public BlockLayoutEncoder
 
 // Block layout packed according to the D3D9 or default D3D10+ register packing rules
 // See http://msdn.microsoft.com/en-us/library/windows/desktop/bb509632(v=vs.85).aspx
-// The strategy should be ENCODE_LOOSE for D3D9 constant blocks, and ENCODE_PACKED
+// The strategy should be ENCODE_LOOSE for D3D9 constnat blocks, and ENCODE_PACKED
 // for everything else (D3D10+ constant blocks and all attributes/varyings).
 
 class HLSLBlockEncoder : public BlockLayoutEncoder

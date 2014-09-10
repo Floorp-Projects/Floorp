@@ -12,7 +12,6 @@
 
 #include "libGLESv2/Uniform.h"
 #include "libGLESv2/angletypes.h"
-#include "libGLESv2/Caps.h"
 
 #if !defined(ANGLE_COMPILE_OPTIMIZATION_LEVEL)
 // WARNING: D3DCOMPILE_OPTIMIZATION_LEVEL3 may lead to a DX9 shader compiler hang.
@@ -30,7 +29,7 @@ namespace gl
 class InfoLog;
 class ProgramBinary;
 struct LinkedVarying;
-struct VertexAttribute;
+class VertexAttribute;
 class Buffer;
 class Texture;
 class Framebuffer;
@@ -47,8 +46,6 @@ class VertexBuffer;
 class IndexBuffer;
 class QueryImpl;
 class FenceImpl;
-class BufferImpl;
-class VertexArrayImpl;
 class BufferStorage;
 struct TranslatedIndexData;
 class ShaderExecutable;
@@ -120,8 +117,7 @@ class Renderer
                              bool ignoreViewport) = 0;
 
     virtual bool applyRenderTarget(gl::Framebuffer *frameBuffer) = 0;
-    virtual void applyShaders(gl::ProgramBinary *programBinary, const gl::VertexFormat inputLayout[], const gl::Framebuffer *framebuffer,
-                              bool rasterizerDiscard, bool transformFeedbackActive) = 0;
+    virtual void applyShaders(gl::ProgramBinary *programBinary, bool rasterizerDiscard, bool transformFeedbackActive, const gl::VertexFormat inputLayout[]) = 0;
     virtual void applyUniforms(const gl::ProgramBinary &programBinary) = 0;
     virtual bool applyPrimitiveType(GLenum primitiveType, GLsizei elementCount) = 0;
     virtual GLenum applyVertexBuffer(gl::ProgramBinary *programBinary, const gl::VertexAttribute vertexAttributes[], gl::VertexAttribCurrentValueData currentValues[],
@@ -143,13 +139,26 @@ class Renderer
     virtual bool testDeviceLost(bool notify) = 0;
     virtual bool testDeviceResettable() = 0;
 
-    // Renderer capabilities (virtual because it is used by egl::Display, do not override)
-    virtual const gl::Caps &getCaps() const;
-
+    // Renderer capabilities
     virtual DWORD getAdapterVendor() const = 0;
     virtual std::string getRendererDescription() const = 0;
     virtual GUID getAdapterIdentifier() const = 0;
 
+    virtual bool getBGRATextureSupport() const = 0;
+    virtual bool getDXT1TextureSupport() const = 0;
+    virtual bool getDXT3TextureSupport() const = 0;
+    virtual bool getDXT5TextureSupport() const = 0;
+    virtual bool getEventQuerySupport() const = 0;
+    virtual bool getFloat32TextureSupport() const = 0;
+    virtual bool getFloat32TextureFilteringSupport() const= 0;
+    virtual bool getFloat32TextureRenderingSupport() const= 0;
+    virtual bool getFloat16TextureSupport()  const= 0;
+    virtual bool getFloat16TextureFilteringSupport() const= 0;
+    virtual bool getFloat16TextureRenderingSupport() const = 0;
+    virtual bool getRGB565TextureSupport() const = 0;
+    virtual bool getLuminanceTextureSupport() const = 0;
+    virtual bool getLuminanceAlphaTextureSupport() const = 0;
+    virtual bool getRGTextureSupport() const = 0;
     bool getVertexTextureSupport() const { return getMaxVertexTextureImageUnits() > 0; }
     virtual unsigned int getMaxVertexTextureImageUnits() const = 0;
     virtual unsigned int getMaxCombinedTextureImageUnits() const = 0;
@@ -166,11 +175,18 @@ class Renderer
     virtual unsigned int getMaxTransformFeedbackSeparateComponents() const = 0;
     virtual unsigned int getMaxTransformFeedbackInterleavedComponents() const = 0;
     virtual unsigned int getMaxUniformBufferSize() const = 0;
+    virtual bool getNonPower2TextureSupport() const = 0;
+    virtual bool getDepthTextureSupport() const = 0;
+    virtual bool getOcclusionQuerySupport() const = 0;
+    virtual bool getInstancingSupport() const = 0;
+    virtual bool getTextureFilterAnisotropySupport() const = 0;
+    virtual bool getPBOSupport() const = 0;
+    virtual float getTextureMaxAnisotropy() const = 0;
     virtual bool getShareHandleSupport() const = 0;
+    virtual bool getDerivativeInstructionSupport() const = 0;
     virtual bool getPostSubBufferSupport() const = 0;
     virtual int getMaxRecommendedElementsIndices() const = 0;
     virtual int getMaxRecommendedElementsVertices() const = 0;
-    virtual bool getSRGBTextureSupport() const = 0;
 
     virtual int getMajorShaderModel() const = 0;
     virtual float getMaxPointSize() const = 0;
@@ -179,6 +195,7 @@ class Renderer
     virtual int getMaxTextureHeight() const = 0;
     virtual int getMaxTextureDepth() const = 0;
     virtual int getMaxTextureArrayLayers() const = 0;
+    virtual bool get32BitIndexSupport() const = 0;
     virtual int getMinSwapInterval() const = 0;
     virtual int getMaxSwapInterval() const = 0;
 
@@ -232,12 +249,9 @@ class Renderer
     virtual TextureStorage *createTextureStorage2DArray(GLenum internalformat, bool renderTarget, GLsizei width, GLsizei height, GLsizei depth, int levels) = 0;
 
     // Buffer creation
-    virtual BufferImpl *createBuffer() = 0;
     virtual VertexBuffer *createVertexBuffer() = 0;
     virtual IndexBuffer *createIndexBuffer() = 0;
-
-    // Vertex Array creation
-    virtual VertexArrayImpl *createVertexArray() = 0;
+    virtual BufferStorage *createBufferStorage() = 0;
 
     // Query and Fence creation
     virtual QueryImpl *createQuery(GLenum type) = 0;
@@ -262,11 +276,6 @@ class Renderer
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Renderer);
-
-    virtual gl::Caps generateCaps() const = 0;
-
-    mutable bool mCapsInitialized;
-    mutable gl::Caps mCaps;
 
     int mCurrentClientVersion;
 };
