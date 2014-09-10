@@ -58,31 +58,60 @@ public:
 
   GFX2D_API Rect TransformBounds(const Rect& rect) const;
 
-  // Apply a scale to this matrix. This scale will be applied -before- the
-  // existing transformation of the matrix.
-  Matrix &Scale(Float aX, Float aY)
+  static Matrix Translation(Float aX, Float aY)
   {
-    _11 *= aX;
-    _12 *= aX;
-    _21 *= aY;
-    _22 *= aY;
-
-    return *this;
+    return Matrix(1.0f, 0.0f, 0.0f, 1.0f, aX, aY);
   }
 
-  Matrix &Translate(Float aX, Float aY)
+  static Matrix Translation(Point aPoint)
+  {
+    return Translation(aPoint.x, aPoint.y);
+  }
+
+  /**
+   * Apply a translation to this matrix.
+   *
+   * The "Pre" in this method's name means that the translation is applied
+   * -before- this matrix's existing transformation. That is, any vector that
+   * is multiplied by the resulting matrix will first be translated, then be
+   * transformed by the original transform.
+   *
+   * Thus calling this method will result in this matrix having the same value
+   * as the result of:
+   *
+   *   Matrix::Translation(x, y) * this
+   *
+   * (Note that in performance critical code multiplying by the result of a
+   * Translation()/Scaling() call is not recommended since that results in a
+   * full matrix multiply involving 12 floating-point multiplications. Calling
+   * this method would be preferred since it only involves four floating-point
+   * multiplications.)
+   */
+  Matrix &PreTranslate(Float aX, Float aY)
   {
     _31 += _11 * aX + _21 * aY;
     _32 += _12 * aX + _22 * aY;
 
     return *this;
   }
-  
-  Matrix &Translate(const Point &aPoint)
+
+  Matrix &PreTranslate(const Point &aPoint)
   {
-    return Translate(aPoint.x, aPoint.y);
+    return PreTranslate(aPoint.x, aPoint.y);
   }
 
+  /**
+   * Similar to PreTranslate, but the translation is applied -after- this
+   * matrix's existing transformation instead of before it.
+   *
+   * This method is generally less used than PreTranslate since typically code
+   * want to adjust an existing user space to device space matrix to create a
+   * transform to device space from a -new- user space (translated from the
+   * previous user space). In that case consumers will need to use the Pre*
+   * variants of the matrix methods rather than using the Post* methods, since
+   * the Post* methods add a transform to the device space end of the
+   * transformation.
+   */
   Matrix &PostTranslate(Float aX, Float aY)
   {
     _31 += aX;
@@ -95,7 +124,30 @@ public:
     return PostTranslate(aPoint.x, aPoint.y);
   }
 
-  Matrix &Rotate(Float aAngle)
+  static Matrix Scaling(Float aScaleX, Float aScaleY)
+  {
+    return Matrix(aScaleX, 0.0f, 0.0f, aScaleY, 0.0f, 0.0f);
+  }
+  
+  /**
+   * Similar to PreTranslate, but applies a scale to this matrix.
+   */
+  Matrix &PreScale(Float aX, Float aY)
+  {
+    _11 *= aX;
+    _12 *= aX;
+    _21 *= aY;
+    _22 *= aY;
+
+    return *this;
+  }
+  
+  GFX2D_API static Matrix Rotation(Float aAngle);
+
+  /**
+   * Similar to PreTranslate, but applies a rotation to this matrix.
+   */
+  Matrix &PreRotate(Float aAngle)
   {
     return *this = Matrix::Rotation(aAngle) * *this;
   }
@@ -131,23 +183,6 @@ public:
   Float Determinant() const
   {
     return _11 * _22 - _12 * _21;
-  }
-
-  static Matrix Translation(Float aX, Float aY)
-  {
-    return Matrix(1.0f, 0.0f, 0.0f, 1.0f, aX, aY);
-  }
-
-  static Matrix Translation(Point aPoint)
-  {
-    return Translation(aPoint.x, aPoint.y);
-  }
-
-  GFX2D_API static Matrix Rotation(Float aAngle);
-
-  static Matrix Scaling(Float aX, Float aY)
-  {
-    return Matrix(aX, 0.0f, 0.0f, aY, 0.0f, 0.0f);
   }
 
   Matrix operator*(const Matrix &aMatrix) const
