@@ -272,8 +272,7 @@ public class LocaleListPreference extends ListPreference {
 
         // We can't trust super.getSummary() across locale changes,
         // apparently, so let's do the same work.
-        final Locale loc = new Locale(value);
-        return loc.getDisplayName(loc);
+        return new LocaleDescriptor(value).getDisplayName();
     }
 
     private void buildList() {
