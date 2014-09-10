@@ -25,6 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
 
   /** Test for CAPS file:// URI prefs. **/
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestCompleteLog();
 
   var profileDir = "file://" + Cc["@mozilla.org/file/directory_service;1"]
                                .getService(Ci.nsIProperties)
