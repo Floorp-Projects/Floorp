@@ -454,6 +454,18 @@ let gTests = [
     yield promiseWaitForCondition(() => doc.activeElement === searchInput);
     is(searchInput, doc.activeElement, "Search bar should be the active element.");
   })
+},
+{
+  desc: "Sync button should open about:accounts page with `abouthome` entrypoint",
+  setup: function () {},
+  run: Task.async(function* () {
+    let syncButton = gBrowser.selectedTab.linkedBrowser.contentDocument.getElementById("sync");
+    yield EventUtils.synthesizeMouseAtCenter(syncButton, {}, gBrowser.contentWindow);
+
+    yield promiseTabLoadEvent(gBrowser.selectedTab, null, "load");
+    is(gBrowser.currentURI.spec, "about:accounts?entrypoint=abouthome",
+      "Entry point should be `abouthome`.");
+  })
 }
 
 ];
