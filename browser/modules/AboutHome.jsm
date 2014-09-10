@@ -159,7 +159,7 @@ let AboutHome = {
             if (userData) {
               window.openPreferences("paneSync");
             } else {
-              window.loadURI("about:accounts");
+              window.loadURI("about:accounts?entrypoint=abouthome");
             }
           });
         } else {

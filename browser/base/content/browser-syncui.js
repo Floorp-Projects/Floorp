@@ -314,9 +314,11 @@ let gSyncUI = {
    *          null    -- regular set up wizard
    *          "pair"  -- pair a device first
    *          "reset" -- reset sync
+   * @param entryPoint
+   *        Indicates the entrypoint from where this method was called.
    */
 
-  openSetup: function SUI_openSetup(wizardType) {
+  openSetup: function SUI_openSetup(wizardType, entryPoint = "syncbutton") {
     let xps = Components.classes["@mozilla.org/weave/service;1"]
                                 .getService(Components.interfaces.nsISupports)
                                 .wrappedJSObject;
@@ -325,7 +327,13 @@ let gSyncUI = {
         if (userData) {
           this.openPrefs();
         } else {
-          switchToTabHavingURI("about:accounts", true);
+          // If the user is also in an uitour, set the entrypoint to `uitour`
+          if (UITour.originTabs.get(window) && UITour.originTabs.get(window).has(gBrowser.selectedTab)) {
+            entryPoint = "uitour";
+          }
+          switchToTabHavingURI("about:accounts?entrypoint=" + entryPoint, true, {
+            replaceQueryString: true
+          });
         }
       });
     } else {
@@ -366,8 +374,14 @@ let gSyncUI = {
     openPreferences("paneSync");
   },
 
-  openSignInAgainPage: function () {
-    switchToTabHavingURI("about:accounts?action=reauth", true);
+  openSignInAgainPage: function (entryPoint = "syncbutton") {
+    // If the user is also in an uitour, set the entrypoint to `uitour`
+    if (UITour.originTabs.get(window) && UITour.originTabs.get(window).has(gBrowser.selectedTab)) {
+      entryPoint = "uitour";
+    }
+    switchToTabHavingURI("about:accounts?action=reauth&entrypoint=" + entryPoint, true, {
+      replaceQueryString: true
+    });
   },
 
   // Helpers
