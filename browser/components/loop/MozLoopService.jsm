@@ -86,6 +86,8 @@ let gErrors = new Map();
  * and register with the Loop server.
  */
 let MozLoopServiceInternal = {
+  callsData: {data: undefined},
+
   // The uri of the Loop server.
   get loopServerUri() Services.prefs.getCharPref("loop.server"),
 
@@ -373,9 +375,22 @@ let MozLoopServiceInternal = {
     // bug 1046039 for background.
     Services.prefs.setCharPref("loop.seenToS", "seen");
 
-    this.openChatWindow(null,
-                        this.localizedStrings["incoming_call_title2"].textContent,
-                        "about:loopconversation#incoming/" + version);
+    /* Request the information on the new call(s) associated with this version. */
+    this.hawkRequest("/calls?version=" + version, "GET").then(response => {
+      try {
+        let respData = JSON.parse(response.body);
+        if (respData.calls && respData.calls[0]) {
+          this.callsData.data = respData.calls[0];
+          this.openChatWindow(null,
+            this.localizedStrings["incoming_call_title2"].textContent,
+            "about:loopconversation#incoming/" + version);
+        } else {
+          console.warn("Error: missing calls[] in response");
+        }
+      } catch (err) {
+        console.warn("Error parsing calls info", err);
+      }
+    });
   },
 
   /**
@@ -875,6 +890,19 @@ this.MozLoopService = {
     } catch (ex) {
       return "en-US";
     }
+  },
+
+  /**
+   * Returns the callData for a specific callDataId
+   *
+   * The data was retrieved from the LoopServer via a GET/calls/<version> request
+   * triggered by an incoming message from the LoopPushServer.
+   *
+   * @param {int} loopCallId
+   * @return {callData} The callData or undefined if error.
+   */
+  getCallData: function(loopCallId) {
+    return MozLoopServiceInternal.callsData.data;
   },
 
   /**
