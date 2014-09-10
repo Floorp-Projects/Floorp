@@ -1218,6 +1218,7 @@ Connection::initializeClone(Connection* aClone, bool aReadOnly)
     "journal_size_limit",
     "synchronous",
     "wal_autocheckpoint",
+    "busy_timeout"
   };
   for (uint32_t i = 0; i < ArrayLength(pragmas); ++i) {
     // Read-only connections just need cache_size and temp_store pragmas.
