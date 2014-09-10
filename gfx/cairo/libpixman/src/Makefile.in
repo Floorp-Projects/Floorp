@@ -8,11 +8,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-# Disable spammy "missing initializer" GCC warning
-ifdef GNU_CC
-CFLAGS += -Wno-missing-field-initializers
-endif # GNU_CC
-
 # The ARM asm functions here don't appreciate being called by functions
 # compiled with -mapcs-frame.  See bug 832752.
 CXXFLAGS := $(filter-out -mapcs-frame,$(CXXFLAGS))

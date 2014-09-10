@@ -782,8 +782,10 @@ private:
     // if it's bound.
     void AfterGLDrawCall()
     {
-        if (mScreen)
+        if (mScreen) {
             mScreen->AfterDrawCall();
+        }
+        mHeavyGLCallsSinceLastFlush = true;
     }
 
     // Do whatever setup is necessary to read from our offscreen FBO, if it's
@@ -904,6 +906,7 @@ private:
         BEFORE_GL_CALL;
         mSymbols.fBufferData(target, size, data, usage);
         AFTER_GL_CALL;
+        mHeavyGLCallsSinceLastFlush = true;
     }
 
 public:
@@ -926,6 +929,7 @@ public:
         BEFORE_GL_CALL;
         mSymbols.fBufferSubData(target, offset, size, data);
         AFTER_GL_CALL;
+        mHeavyGLCallsSinceLastFlush = true;
     }
 
 private:
@@ -971,6 +975,7 @@ public:
         BEFORE_GL_CALL;
         mSymbols.fCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, pixels);
         AFTER_GL_CALL;
+        mHeavyGLCallsSinceLastFlush = true;
     }
 
     void fCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid *pixels) {
@@ -978,6 +983,7 @@ public:
         BEFORE_GL_CALL;
         mSymbols.fCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, pixels);
         AFTER_GL_CALL;
+        mHeavyGLCallsSinceLastFlush = true;
     }
 
     void fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
@@ -1127,12 +1133,14 @@ public:
         BEFORE_GL_CALL;
         mSymbols.fFinish();
         AFTER_GL_CALL;
+        mHeavyGLCallsSinceLastFlush = false;
     }
 
     void fFlush() {
         BEFORE_GL_CALL;
         mSymbols.fFlush();
         AFTER_GL_CALL;
+        mHeavyGLCallsSinceLastFlush = false;
     }
 
     void fFrontFace(GLenum face) {
@@ -1524,6 +1532,7 @@ private:
         BEFORE_GL_CALL;
         mSymbols.fReadPixels(x, y, width, height, format, type, pixels);
         AFTER_GL_CALL;
+        mHeavyGLCallsSinceLastFlush = true;
     }
 
 public:
@@ -1626,6 +1635,7 @@ private:
         BEFORE_GL_CALL;
         mSymbols.fTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
         AFTER_GL_CALL;
+        mHeavyGLCallsSinceLastFlush = true;
     }
 
 public:
@@ -1646,6 +1656,7 @@ public:
         BEFORE_GL_CALL;
         mSymbols.fTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
         AFTER_GL_CALL;
+        mHeavyGLCallsSinceLastFlush = true;
     }
 
     void fUniform1f(GLint location, GLfloat v0) {
@@ -2263,6 +2274,7 @@ public:
         ASSERT_SYMBOL_PRESENT(fEGLImageTargetTexture2D);
         mSymbols.fEGLImageTargetTexture2D(target, image);
         AFTER_GL_CALL;
+        mHeavyGLCallsSinceLastFlush = true;
     }
 
     void fEGLImageTargetRenderbufferStorage(GLenum target, GLeglImage image)
@@ -3148,6 +3160,13 @@ public:
     nsTArray<NamedResource> mTrackedBuffers;
     nsTArray<NamedResource> mTrackedQueries;
 #endif
+
+
+protected:
+    bool mHeavyGLCallsSinceLastFlush;
+
+public:
+    void FlushIfHeavyGLCallsSinceLastFlush();
 };
 
 bool DoesStringMatch(const char* aString, const char *aWantedString);

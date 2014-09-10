@@ -7659,6 +7659,31 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               parentPos->mJustifyContent,
               NS_STYLE_JUSTIFY_CONTENT_FLEX_START, 0, 0, 0, 0);
 
+  // object-fit: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForObjectFit(),
+              pos->mObjectFit, canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+              parentPos->mObjectFit,
+              NS_STYLE_OBJECT_FIT_FILL, 0, 0, 0, 0);
+
+  // object-position
+  const nsCSSValue& objectPosition = *aRuleData->ValueForObjectPosition();
+  switch (objectPosition.GetUnit()) {
+    case eCSSUnit_Null:
+      break;
+    case eCSSUnit_Inherit:
+      canStoreInRuleTree = false;
+      pos->mObjectPosition = parentPos->mObjectPosition;
+      break;
+    case eCSSUnit_Initial:
+    case eCSSUnit_Unset:
+      pos->mObjectPosition.SetInitialPercentValues(0.5f);
+      break;
+    default:
+      ComputePositionValue(aContext, objectPosition,
+                           pos->mObjectPosition, canStoreInRuleTree);
+  }
+
   // grid-auto-flow
   const nsCSSValue& gridAutoFlow = *aRuleData->ValueForGridAutoFlow();
   switch (gridAutoFlow.GetUnit()) {
