@@ -182,52 +182,5 @@ describe("loop.Client", function() {
         }));
       });
     });
-
-    describe("#requestCallsInfo", function() {
-      it("should prevent launching a conversation when version is missing",
-        function() {
-          expect(function() {
-            client.requestCallsInfo();
-          }).to.Throw(Error, /missing required parameter version/);
-        });
-
-      it("should perform a get on /calls", function() {
-        client.requestCallsInfo(42, callback);
-
-        sinon.assert.calledOnce(hawkRequestStub);
-        sinon.assert.calledWith(hawkRequestStub,
-                                "/calls?version=42", "GET", null);
-
-      });
-
-      it("should request data for all calls", function() {
-        hawkRequestStub.callsArgWith(3, null,
-                                     '{"calls": [{"apiKey": "fake"}]}');
-
-        client.requestCallsInfo(42, callback);
-
-        sinon.assert.calledWithExactly(callback, null, [{apiKey: "fake"}]);
-      });
-
-      it("should send an error when the request fails", function() {
-        hawkRequestStub.callsArgWith(3, fakeErrorRes);
-
-        client.requestCallsInfo(42, callback);
-
-        sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
-          return /400.*invalid token/.test(err.message);
-        }));
-      });
-
-      it("should send an error if the data is not valid", function() {
-        hawkRequestStub.callsArgWith(3, null, "{}");
-
-        client.requestCallsInfo(42, callback);
-
-        sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
-          return /Invalid data received/.test(err.message);
-        }));
-      });
-    });
   });
 });
