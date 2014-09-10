@@ -236,16 +236,4 @@ SourceBufferDecoder::ConvertToByteOffset(double aTime)
   return offset;
 }
 
-bool
-SourceBufferDecoder::ContainsTime(double aTime)
-{
-  ErrorResult dummy;
-  nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
-  nsresult rv = GetBuffered(ranges);
-  if (NS_FAILED(rv) || ranges->Length() == 0) {
-    return false;
-  }
-  return ranges->Find(aTime) != dom::TimeRanges::NoIndex;
-}
-
 } // namespace mozilla
