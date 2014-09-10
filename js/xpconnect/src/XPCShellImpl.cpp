@@ -960,9 +960,9 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
                 ok = JS_ExecuteScript(cx, obj, script, &result);
                 if (ok && result != JSVAL_VOID) {
                     /* Suppress error reports from JS::ToString(). */
-                    older = JS_SetErrorReporter(cx, nullptr);
+                    older = JS_SetErrorReporter(JS_GetRuntime(cx), nullptr);
                     str = ToString(cx, result);
-                    JS_SetErrorReporter(cx, older);
+                    JS_SetErrorReporter(JS_GetRuntime(cx), older);
                     JSAutoByteString bytes;
                     if (str && bytes.encodeLatin1(cx, str))
                         fprintf(gOutFile, "%s\n", bytes.ptr());
@@ -1266,14 +1266,6 @@ XPCShellErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 }
 
 static bool
-ContextCallback(JSContext *cx, unsigned contextOp)
-{
-    if (contextOp == JSCONTEXT_NEW)
-        JS_SetErrorReporter(cx, XPCShellErrorReporter);
-    return true;
-}
-
-static bool
 GetCurrentWorkingDirectory(nsAString& workingDirectory)
 {
 #if !defined(XP_WIN) && !defined(XP_UNIX)
@@ -1454,13 +1446,13 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
             return 1;
         }
 
-        rtsvc->RegisterContextCallback(ContextCallback);
-
         // Override the default XPConnect interrupt callback. We could store the
         // old one and restore it before shutting down, but there's not really a
         // reason to bother.
         sScriptedInterruptCallback.emplace(rt, UndefinedValue());
         JS_SetInterruptCallback(rt, XPCShellInterruptCallback);
+
+        JS_SetErrorReporter(rt, XPCShellErrorReporter);
 
         dom::AutoJSAPI jsapi;
         jsapi.Init();

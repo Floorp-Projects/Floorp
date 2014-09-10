@@ -524,6 +524,77 @@ TEST_F(pkixder_input_tests, ReadTagAndGetValue_Input_InvalidWrongLength)
             ReadTagAndGetValue(input, tag, value));
 }
 
+TEST_F(pkixder_input_tests, ReadTagAndGetValue_Input_InvalidHighTagNumberForm1)
+{
+  // High tag number form is not allowed (illegal 1 byte tag)
+  //
+  // If the decoder treats 0x1F as a valid low tag number tag, then it will
+  // treat the actual tag (1) as a length, and then it will return Success
+  // with value == { 0x00 } and tag == 0x1f.
+  //
+  // It is illegal to encode tag 1 in the high tag number form because it isn't
+  // the shortest encoding (the low tag number form is).
+  static const uint8_t DER[] = {
+    0x1F, // high tag number form indicator
+    1,    // tag 1 (not legal!)
+    0     // length zero
+  };
+  Input buf(DER);
+  Reader input(buf);
+  uint8_t tag;
+  Input value;
+  ASSERT_EQ(Result::ERROR_BAD_DER,
+            ReadTagAndGetValue(input, tag, value));
+}
+
+TEST_F(pkixder_input_tests, ReadTagAndGetValue_Input_InvalidHighTagNumberForm2)
+{
+  // High tag number form is not allowed (legal 1 byte tag).
+  //
+  // ReadTagAndGetValue's check to prohibit the high tag number form has no
+  // effect on whether this test passes or fails, because ReadTagAndGetValue
+  // will interpret the second byte (31) as a length, and the input doesn't
+  // have 31 bytes following it. This test is here to guard against the case
+  // where somebody actually implements high tag number form parsing, to remind
+  // that person that they need to add tests here, including in particular
+  // tests for overly-long encodings.
+  static const uint8_t DER[] = {
+    0x1F, // high tag number form indicator
+    31,   // tag 31
+    0     // length zero
+  };
+  Input buf(DER);
+  Reader input(buf);
+  uint8_t tag;
+  Input value;
+  ASSERT_EQ(Result::ERROR_BAD_DER,
+            ReadTagAndGetValue(input, tag, value));
+}
+
+TEST_F(pkixder_input_tests, ReadTagAndGetValue_Input_InvalidHighTagNumberForm3)
+{
+  // High tag number form is not allowed (2 byte legal tag)
+  //
+  // ReadTagAndGetValue's check to prohibit the high tag number form has no
+  // effect on whether this test passes or fails, because ReadTagAndGetValue
+  // will interpret the second byte as a length, and the input doesn't have
+  // that many bytes following it. This test is here to guard against the case
+  // where somebody actually implements high tag number form parsing, to remind
+  // that person that they need to add tests here, including in particular
+  // tests for overly-long encodings.
+  static const uint8_t DER[] = {
+    0x1F,              // high tag number form indicator
+    0x80 | 0x01, 0x00, // tag 0x100 (256)
+    0                  // length zero
+  };
+  Input buf(DER);
+  Reader input(buf);
+  uint8_t tag;
+  Input value;
+  ASSERT_EQ(Result::ERROR_BAD_DER,
+            ReadTagAndGetValue(input, tag, value));
+}
+
 TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Reader_ValidEmpty)
 {
   Input buf(DER_SEQUENCE_EMPTY);

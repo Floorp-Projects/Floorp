@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="fe92ddd450e03b38edb2d465de7897971d68ac68">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="8e02f689b0fc39cb6ccdc22d02ed7e219c58faa7"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="f108c706fae43cd61628babdd9463e7695b2496e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="6969df171e5295f855f12d12db0382048e6892e7"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -131,7 +131,7 @@
   <default remote="caf" revision="LNX.LA.3.5.2.1.1" sync-j="4"/>
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
-  <project name="device/qcom/common" path="device/qcom/common" revision="da9043131590b23754c6411e8704c1dc425b0ead"/>
+  <project name="device/qcom/common" path="device/qcom/common" revision="54c32c2ddef066fbdf611d29e4b7c47e0363599e"/>
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="540314ae9c56394c6b1f17a267db9f25c5acb9d6"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="893238eb1215f8fd4f3747169170cc5e1cc33969"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="9e62af4da848d56841bdde326f9bba26c743c33a"/>
@@ -151,7 +151,7 @@
   <project name="platform/hardware/ril" path="hardware/ril" revision="12b1977cc704b35f2e9db2bb423fa405348bc2f3"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="985bf15264d865fe7b9c5b45f61c451cbaafa43d"/>
   <project name="platform/system/core" path="system/core" revision="350eac5403124dacb2a5fd9e28ac290a59fc3b8e"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="7e5ae3ef2fe1cbc1c9a4fc718b01b7f28b1c5486"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="54a712b46fe937dacdaed9b1261c63847129a719"/>
   <project name="platform/system/qcom" path="system/qcom" revision="63e3f6f176caad587d42bba4c16b66d953fb23c2"/>
   <project name="platform/vendor/qcom-opensource/wlan/prima" path="vendor/qcom/opensource/wlan/prima" revision="6ada483cf7ff87eec2a9496941352606db73291e"/>
   <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="5d1dbc698de7294697373b436dd44e240f40e1ac"/>

@@ -21,6 +21,7 @@
 # limitations under the License.
 
 SOURCES += [
+    'pkixtestnss.cpp',
     'pkixtestutil.cpp',
 ]
 
