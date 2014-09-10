@@ -623,13 +623,13 @@ private:
 
 NS_IMPL_ISUPPORTS(FinishReportingCallback, nsIFinishReportingCallback)
 
-class TempDirMemoryFinishCallback MOZ_FINAL : public nsIFinishDumpingCallback
+class TempDirFinishCallback MOZ_FINAL : public nsIFinishDumpingCallback
 {
 public:
   NS_DECL_ISUPPORTS
 
-  TempDirMemoryFinishCallback(nsIFile* aReportsTmpFile,
-                              const nsCString& aReportsFinalFilename)
+  TempDirFinishCallback(nsIFile* aReportsTmpFile,
+                        const nsCString& aReportsFinalFilename)
     : mReportsTmpFile(aReportsTmpFile)
     , mReportsFilename(aReportsFinalFilename)
   {
@@ -696,13 +696,13 @@ public:
   }
 
 private:
-  ~TempDirMemoryFinishCallback() {}
+  ~TempDirFinishCallback() {}
 
   nsCOMPtr<nsIFile> mReportsTmpFile;
   nsCString mReportsFilename;
 };
 
-NS_IMPL_ISUPPORTS(TempDirMemoryFinishCallback, nsIFinishDumpingCallback)
+NS_IMPL_ISUPPORTS(TempDirFinishCallback, nsIFinishDumpingCallback)
 
 static nsresult
 DumpMemoryInfoToFile(
@@ -823,8 +823,8 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
     return rv;
   }
 
-  nsRefPtr<TempDirMemoryFinishCallback> finishDumping =
-    new TempDirMemoryFinishCallback(reportsTmpFile, reportsFinalFilename);
+  nsRefPtr<TempDirFinishCallback> finishDumping =
+    new TempDirFinishCallback(reportsTmpFile, reportsFinalFilename);
 
   return DumpMemoryInfoToFile(reportsTmpFile, finishDumping, nullptr,
                               aAnonymize, aMinimizeMemoryUsage, identifier);
