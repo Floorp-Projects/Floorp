@@ -122,8 +122,8 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
     Matrix oldTransform = aTarget->GetTransform();
 
     // Transform from user -> buffer space.
-    Matrix transform;
-    transform.Translate(quadrantTranslation.x, quadrantTranslation.y);
+    Matrix transform =
+      Matrix::Translation(quadrantTranslation.x, quadrantTranslation.y);
 
     Matrix inverseMask = *aMaskTransform;
     inverseMask.Invert();
@@ -661,8 +661,7 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer,
     if (!isClear && (mode != SurfaceMode::SURFACE_COMPONENT_ALPHA || HaveBufferOnWhite())) {
       // Copy the bits
       nsIntPoint offset = -destBufferRect.TopLeft();
-      Matrix mat;
-      mat.Translate(offset.x, offset.y);
+      Matrix mat = Matrix::Translation(offset.x, offset.y);
       destDTBuffer->SetTransform(mat);
       if (!EnsureBuffer()) {
         return result;
