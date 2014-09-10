@@ -25,7 +25,7 @@ using namespace mozilla::ipc;
 
 static const nsLiteralString SEOriginString[] = {
   NS_LITERAL_STRING("SIM"),
-  NS_LITERAL_STRING("ESE"),
+  NS_LITERAL_STRING("eSE"),
   NS_LITERAL_STRING("ASSD")
 };
 
@@ -133,6 +133,7 @@ public:
         MozNDEFRecordOptions& record = *event.mRecords.Value().AppendElement();
 
         record.mTnf = recordStruct.mTnf;
+        MOZ_ASSERT(record.mTnf < TNF::EndGuard_);
 
         if (recordStruct.mType.Length() > 0) {
           record.mType.Construct();
