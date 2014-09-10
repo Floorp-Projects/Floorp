@@ -1,84 +1,84 @@
-function test() {
-  waitForExplicitFinish();
+const TEST_URL = "http://example.com/browser/browser/base/content/test/general/app_bug575561.html";
+
+add_task(function*() {
+  SimpleTest.requestCompleteLog();
 
   // Pinned: Link to the same domain should not open a new tab
-  // Tests link to http://example.com/browser/browser/base/content/test/general/dummy_page.html  
-  testLink(0, true, false, function() {
-    // Pinned: Link to a different subdomain should open a new tab
-    // Tests link to http://test1.example.com/browser/browser/base/content/test/general/dummy_page.html
-    testLink(1, true, true, function() {
-      // Pinned: Link to a different domain should open a new tab
-      // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html
-      testLink(2, true, true, function() {
-        // Not Pinned: Link to a different domain should not open a new tab
-        // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html
-        testLink(2, false, false, function() {
-          // Pinned: Targetted link should open a new tab
-          // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html with target="foo"
-          testLink(3, true, true, function() {
-            // Pinned: Link in a subframe should not open a new tab
-            // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html in subframe
-            testLink(0, true, false, function() {
-              // Pinned: Link to the same domain (with www prefix) should not open a new tab
-              // Tests link to http://www.example.com/browser/browser/base/content/test/general/dummy_page.html      
-              testLink(4, true, false, function() {
-                // Pinned: Link to a data: URI should not open a new tab
-                // Tests link to data:text/html,<!DOCTYPE html><html><body>Another Page</body></html>
-                testLink(5, true, false, function() {
-                  // Pinned: Link to an about: URI should not open a new tab
-                  // Tests link to about:mozilla
-                  testLink(6, true, false, finish);
-                });
-              });
-            }, true);
-          });
-        });
-      });
-    });
-  });
-}
+  // Tests link to http://example.com/browser/browser/base/content/test/general/dummy_page.html
+  yield testLink(0, true, false);
+  // Pinned: Link to a different subdomain should open a new tab
+  // Tests link to http://test1.example.com/browser/browser/base/content/test/general/dummy_page.html
+  yield testLink(1, true, true);
 
-function testLink(aLinkIndex, pinTab, expectNewTab, nextTest, testSubFrame) {
-  let appTab = gBrowser.addTab("http://example.com/browser/browser/base/content/test/general/app_bug575561.html", {skipAnimation: true});
+  // Pinned: Link to a different domain should open a new tab
+  // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html
+  yield testLink(2, true, true);
+
+  // Not Pinned: Link to a different domain should not open a new tab
+  // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html
+  yield testLink(2, false, false);
+
+  // Pinned: Targetted link should open a new tab
+  // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html with target="foo"
+  yield testLink(3, true, true);
+
+  // Pinned: Link in a subframe should not open a new tab
+  // Tests link to http://example.org/browser/browser/base/content/test/general/dummy_page.html in subframe
+  yield testLink(0, true, false, true);
+
+  // Pinned: Link to the same domain (with www prefix) should not open a new tab
+  // Tests link to http://www.example.com/browser/browser/base/content/test/general/dummy_page.html
+  yield testLink(4, true, false);
+
+  // Pinned: Link to a data: URI should not open a new tab
+  // Tests link to data:text/html,<!DOCTYPE html><html><body>Another Page</body></html>
+  yield testLink(5, true, false);
+
+  // Pinned: Link to an about: URI should not open a new tab
+  // Tests link to about:mozilla
+  yield testLink(6, true, false);
+});
+
+let waitForPageLoad = Task.async(function*(browser, linkLocation) {
+  yield waitForDocLoadComplete();
+
+  is(browser.contentDocument.location.href, linkLocation, "Link should not open in a new tab");
+});
+
+let waitForTabOpen = Task.async(function*() {
+  let event = yield promiseWaitForEvent(gBrowser.tabContainer, "TabOpen", true);
+  ok(true, "Link should open a new tab");
+
+  yield waitForDocLoadComplete(event.target.linkedBrowser);
+  yield Promise.resolve();
+
+  gBrowser.removeCurrentTab();
+});
+
+let testLink = Task.async(function*(aLinkIndex, pinTab, expectNewTab, testSubFrame) {
+  let appTab = gBrowser.addTab(TEST_URL, {skipAnimation: true});
   if (pinTab)
     gBrowser.pinTab(appTab);
   gBrowser.selectedTab = appTab;
 
-  waitForDocLoadComplete(appTab.linkedBrowser).then(function() {
-    let browser = gBrowser.getBrowserForTab(appTab);
-    if (testSubFrame)
-      browser = browser.contentDocument.getElementsByTagName("iframe")[0];
+  yield waitForDocLoadComplete();
 
-    let links = browser.contentDocument.getElementsByTagName("a");
+  let browser = appTab.linkedBrowser;
+  if (testSubFrame)
+    browser = browser.contentDocument.querySelector("iframe");
 
-    if (expectNewTab)
-      gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
-    else
-      waitForDocLoadComplete(appTab.linkedBrowser).then(onPageLoad);
+  let link = browser.contentDocument.querySelectorAll("a")[aLinkIndex];
 
-    info("Clicking " + links[aLinkIndex].textContent);
-    EventUtils.sendMouseEvent({type:"click"}, links[aLinkIndex], browser.contentWindow);
-    let linkLocation = links[aLinkIndex].href;
+  let promise;
+  if (expectNewTab)
+    promise = waitForTabOpen();
+  else
+    promise = waitForPageLoad(browser, link.href);
 
-    function onPageLoad() {
-      browser.removeEventListener("load", onPageLoad, true);
-      is(browser.contentDocument.location.href, linkLocation, "Link should not open in a new tab");
-      executeSoon(function(){
-        gBrowser.removeTab(appTab);
-        nextTest();
-      });
-    }
+  info("Clicking " + link.textContent);
+  link.click();
 
-    function onTabOpen(event) {
-      gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
-      ok(true, "Link should open a new tab");
-      waitForDocLoadComplete(event.target.linkedBrowser).then(function() {
-        executeSoon(function(){
-          gBrowser.removeTab(appTab);
-          gBrowser.removeCurrentTab();
-          nextTest();
-        });
-      });
-    }
-  });
-}
+  yield promise;
+
+  gBrowser.removeTab(appTab);
+});
