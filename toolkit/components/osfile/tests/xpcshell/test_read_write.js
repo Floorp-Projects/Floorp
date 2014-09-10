@@ -3,8 +3,6 @@
 
 "use strict";
 
-let {utils: Cu} = Components;
-
 let SHARED_PATH;
 
 let EXISTING_FILE = do_get_file("xpcshell.ini").path;
