@@ -224,6 +224,13 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp) const;
 
+    // Allow proxies, wrappers in particular, to specify callability at runtime.
+    // Note: These do not take const JSObject *, but they do in spirit.
+    //       We are not prepared to do this, as there's little const correctness
+    //       in the external APIs that handle proxies.
+    virtual bool isCallable(JSObject *obj) const;
+    virtual bool isConstructor(JSObject *obj) const;
+
     // These two hooks must be overridden, or not overridden, in tandem -- no
     // overriding just one!
     virtual bool watch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
@@ -306,11 +313,10 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
                                  RegExpGuard *g) const MOZ_OVERRIDE;
     virtual bool boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp) const;
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy) const MOZ_OVERRIDE;
+    virtual bool isCallable(JSObject *obj) const MOZ_OVERRIDE;
 };
 
-// Use these in places where you don't want to #include vm/ProxyObject.h.
-extern JS_FRIEND_DATA(const js::Class* const) CallableProxyClassPtr;
-extern JS_FRIEND_DATA(const js::Class* const) UncallableProxyClassPtr;
+extern JS_FRIEND_DATA(const js::Class* const) ProxyClassPtr;
 
 inline bool IsProxy(JSObject *obj)
 {
@@ -382,14 +388,14 @@ IsScriptedProxy(JSObject *obj)
 class MOZ_STACK_CLASS ProxyOptions {
   protected:
     /* protected constructor for subclass */
-    ProxyOptions(bool singletonArg, const Class *claspArg)
+    ProxyOptions(bool singletonArg)
       : singleton_(singletonArg),
-        clasp_(claspArg)
+        clasp_(ProxyClassPtr)
     {}
 
   public:
     ProxyOptions() : singleton_(false),
-                     clasp_(UncallableProxyClassPtr)
+                     clasp_(ProxyClassPtr)
     {}
 
     bool singleton() const { return singleton_; }
@@ -404,11 +410,6 @@ class MOZ_STACK_CLASS ProxyOptions {
     ProxyOptions &setClass(const Class *claspArg) {
         clasp_ = claspArg;
         return *this;
-    }
-    ProxyOptions &selectDefaultClass(bool callable) {
-        const Class *classp = callable? CallableProxyClassPtr :
-                                        UncallableProxyClassPtr;
-        return setClass(classp);
     }
 
   private:
