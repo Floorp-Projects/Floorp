@@ -119,5 +119,3 @@ browser.jar:
     content/browser/devtools/eyedropper.xul                            (eyedropper/eyedropper.xul)
     content/browser/devtools/eyedropper/crosshairs.css                 (eyedropper/crosshairs.css)
     content/browser/devtools/eyedropper/nocursor.css                   (eyedropper/nocursor.css)
-    content/browser/devtools/timeline/timeline.xul                     (timeline/timeline.xul)
-    content/browser/devtools/timeline/timeline.js                      (timeline/timeline.js)
