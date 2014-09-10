@@ -69,8 +69,8 @@ JitOptions::JitOptions()
     // Force how many invocation or loop iterations are needed before compiling
     // a function with the highest ionmonkey optimization level.
     // (i.e. OptimizationLevel_Normal)
-    forceDefaultIonUsesBeforeCompile = false;
-    forcedDefaultIonUsesBeforeCompile = 1000;
+    forceDefaultIonWarmUpThreshold = false;
+    forcedDefaultIonWarmUpThreshold = 1000;
 
     // Force the used register allocator instead of letting the
     // optimization pass decide.
@@ -85,7 +85,7 @@ JitOptions::JitOptions()
 
     // How many invocations or loop iterations are needed before functions
     // are compiled with the baseline compiler.
-    baselineUsesBeforeCompile = 10;
+    baselineWarmUpThreshold = 10;
 
     // Number of exception bailouts (resuming into catch/finally block) before
     // we invalidate and forbid Ion compilation.
@@ -110,7 +110,7 @@ JitOptions::JitOptions()
     smallFunctionMaxBytecodeLength_ = 100;
 
     // How many uses of a parallel kernel before we attempt compilation.
-    usesBeforeCompilePar = 1;
+    compilerWarmUpThresholdPar = 1;
 }
 
 bool
@@ -123,35 +123,35 @@ void
 JitOptions::setEagerCompilation()
 {
     eagerCompilation = true;
-    baselineUsesBeforeCompile = 0;
-    forceDefaultIonUsesBeforeCompile = true;
-    forcedDefaultIonUsesBeforeCompile = 0;
+    baselineWarmUpThreshold = 0;
+    forceDefaultIonWarmUpThreshold = true;
+    forcedDefaultIonWarmUpThreshold = 0;
 }
 
 void
-JitOptions::setUsesBeforeCompile(uint32_t warmUpCounter)
+JitOptions::setCompilerWarmUpThreshold(uint32_t warmUpCounter)
 {
-    forceDefaultIonUsesBeforeCompile = true;
-    forcedDefaultIonUsesBeforeCompile = warmUpCounter;
+    forceDefaultIonWarmUpThreshold = true;
+    forcedDefaultIonWarmUpThreshold = warmUpCounter;
 
     // Undo eager compilation
     if (eagerCompilation && warmUpCounter != 0) {
         jit::JitOptions defaultValues;
         eagerCompilation = false;
-        baselineUsesBeforeCompile = defaultValues.baselineUsesBeforeCompile;
+        baselineWarmUpThreshold = defaultValues.baselineWarmUpThreshold;
     }
 }
 
 void
-JitOptions::resetUsesBeforeCompile()
+JitOptions::resetCompilerWarmUpThreshold()
 {
-    forceDefaultIonUsesBeforeCompile = false;
+    forceDefaultIonWarmUpThreshold = false;
 
     // Undo eager compilation
     if (eagerCompilation) {
         jit::JitOptions defaultValues;
         eagerCompilation = false;
-        baselineUsesBeforeCompile = defaultValues.baselineUsesBeforeCompile;
+        baselineWarmUpThreshold = defaultValues.baselineWarmUpThreshold;
     }
 }
 
