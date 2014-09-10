@@ -14,6 +14,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "nsIAddonInterposition.h"
+#include "nsIXULRuntime.h"
 
 #include "mozilla/dom/BindingUtils.h"
 
@@ -211,7 +212,7 @@ CompartmentPerAddon()
 
     if (!initialized) {
         pref = Preferences::GetBool("dom.compartment_per_addon", false) ||
-               Preferences::GetBool("browser.tabs.remote.autostart", false);
+               BrowserTabsRemoteAutostart();
         initialized = true;
     }
 
