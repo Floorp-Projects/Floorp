@@ -1,0 +1,31 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filter Chains: Long Filter Chain</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <style type="text/css">
+    #target {
+      /* The first 8 CSS filter functions result in this color. */
+      background-color: rgba(118, 153, 44, 0.8);
+      /* Use an equivalent SVG filter for the last 2 CSS filter functions. */
+      filter: url(#blur-and-drop-shadow);
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blurred green square with a green drop shadow.</p>
+  <div id="target"></div>
+  <svg width="0" height="0">
+    <filter id="blur-and-drop-shadow" x="-50" y="-50" width="200" height="200" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="3" color-interpolation-filters="sRGB"/>
+      <feDropShadow dx="10" dy="10" stdDeviation="10" flood-color="#0f0" color-interpolation-filters="sRGB"/>
+    </filter>
+  </svg>
+</body>
+</html>
