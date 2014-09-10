@@ -587,6 +587,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D()
 {
+  RemovePostRefreshObserver();
   Reset();
   // Drop references from all CanvasRenderingContext2DUserData to this context
   for (uint32_t i = 0; i < mUserDatas.Length(); ++i) {
@@ -764,6 +765,14 @@ CanvasRenderingContext2D::Redraw(const mgfx::Rect &r)
   nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
 
   mCanvasElement->InvalidateCanvasContent(&r);
+}
+
+void
+CanvasRenderingContext2D::DidRefresh()
+{
+  if (mStream && mStream->GLContext()) {
+    mStream->GLContext()->FlushIfHeavyGLCallsSinceLastFlush();
+  }
 }
 
 void
@@ -1092,7 +1101,9 @@ CanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *shell,
                                                 int32_t width,
                                                 int32_t height)
 {
+  RemovePostRefreshObserver();
   mDocShell = shell;
+  AddPostRefreshObserverIfNecessary();
 
   SetDimensions(width, height);
   mTarget = gfxPlatform::GetPlatform()->
