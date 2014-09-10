@@ -60,14 +60,8 @@ var gMainPane = {
 
     this.updateBrowserStartupLastSession();
 
-    // Notify observers that the UI is now ready
-    Components.classes["@mozilla.org/observer-service;1"]
-              .getService(Components.interfaces.nsIObserverService)
-              .notifyObservers(window, "main-pane-loaded", null);
-
 #ifdef XP_WIN
     // Functionality for "Show tabs in taskbar" on Windows 7 and up.
-
     try {
       let sysInfo = Cc["@mozilla.org/system-info;1"].
                     getService(Ci.nsIPropertyBag2);
@@ -75,7 +69,6 @@ var gMainPane = {
       let showTabsInTaskbar = document.getElementById("showTabsInTaskbar");
       showTabsInTaskbar.hidden = ver < 6.1;
     } catch (ex) {}
-
 #endif
 
     setEventListener("browser.privatebrowsing.autostart", "change",
@@ -94,6 +87,11 @@ var gMainPane = {
                      gMainPane.restoreDefaultHomePage);
     setEventListener("chooseFolder", "command",
                      gMainPane.chooseFolder);
+
+    // Notify observers that the UI is now ready
+    Components.classes["@mozilla.org/observer-service;1"]
+              .getService(Components.interfaces.nsIObserverService)
+              .notifyObservers(window, "main-pane-loaded", null);
   },
 
   // HOME PAGE
