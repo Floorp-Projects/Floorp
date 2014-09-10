@@ -341,14 +341,31 @@ public final class BitmapUtils {
             return null;
         }
 
-        final String base64 = dataURI.substring(dataURI.indexOf(',') + 1);
-        try {
-            byte[] raw = Base64.decode(base64, Base64.DEFAULT);
-            return BitmapUtils.decodeByteArray(raw);
-        } catch (Exception e) {
-            Log.e(LOGTAG, "exception decoding bitmap from data URI: " + dataURI, e);
+        byte[] raw = getBytesFromDataURI(dataURI);
+        if (raw == null || raw.length == 0) {
+            return null;
         }
+
+        return decodeByteArray(raw);
+    }
+
+    /**
+     * Return a byte[] containing the bytes in a given base64 string, or null if this is not a valid
+     * base64 string.
+     */
+    public static byte[] getBytesFromBase64(String base64) {
+        try {
+            return Base64.decode(base64, Base64.DEFAULT);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "exception decoding bitmap from data URI: " + base64, e);
+        }
+
         return null;
+    }
+
+    public static byte[] getBytesFromDataURI(String dataURI) {
+        final String base64 = dataURI.substring(dataURI.indexOf(',') + 1);
+        return getBytesFromBase64(base64);
     }
 
     public static Bitmap getBitmapFromDrawable(Drawable drawable) {
