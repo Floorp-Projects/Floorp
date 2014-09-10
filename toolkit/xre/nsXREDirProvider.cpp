@@ -19,6 +19,7 @@
 #include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIToolkitChromeRegistry.h"
+#include "nsIXULRuntime.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
@@ -543,7 +544,7 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
 static void
 RegisterExtensionInterpositions(nsINIParser &parser)
 {
-  if (!mozilla::Preferences::GetBool("browser.tabs.remote.autostart", false))
+  if (!mozilla::BrowserTabsRemoteAutostart())
     return;
 
   nsCOMPtr<nsIAddonInterposition> interposition =
