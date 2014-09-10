@@ -64,9 +64,9 @@ public:
   bool IsReady();
 
   // Query and update mLast{Start,End}Timestamp.
-  void LastTimestamp(double& aStart, double& aEnd);
-  void SetLastStartTimestamp(double aStart);
-  void SetLastEndTimestamp(double aEnd);
+  void LastTimestamp(int64_t& aStart, int64_t& aEnd);
+  void SetLastStartTimestamp(int64_t aStart);
+  void SetLastEndTimestamp(int64_t aEnd);
 
   // Returns true if any of the decoders managed by this track buffer
   // contain aTime in their buffered ranges.
@@ -122,8 +122,8 @@ private:
 
   // The last start and end timestamps added to the TrackBuffer via
   // AppendData.  Accessed on the main thread only.
-  double mLastStartTimestamp;
-  double mLastEndTimestamp;
+  int64_t mLastStartTimestamp;
+  int64_t mLastEndTimestamp;
 
   // Set when the initialization segment is first seen and cached (implied
   // by new decoder creation).  Protected by mParentDecoder's monitor.
