@@ -724,6 +724,9 @@ public:
       static_cast<CanvasRenderingContext2DUserData*>(aData);
     if (self->mContext) {
       self->mContext->MarkContextClean();
+      if (self->mContext->mDrawObserver) {
+        self->mContext->mDrawObserver->FrameEnd();
+      }
     }
   }
   bool IsForContext(CanvasRenderingContext2D *aContext)
@@ -826,6 +829,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   , mResetLayer(true)
   , mIPC(false)
   , mStream(nullptr)
+  , mDrawObserver(nullptr)
   , mIsEntireFrameInvalid(false)
   , mPredictManyRedrawCalls(false), mPathTransformWillUpdate(false)
   , mInvalidateCount(0)
@@ -838,6 +842,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
     mRenderingMode = RenderingMode::SoftwareBackendMode;
   }
 
+  mDrawObserver = new CanvasDrawObserver(this);
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D()
@@ -3816,6 +3821,10 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
                                     uint8_t optional_argc,
                                     ErrorResult& error)
 {
+  if (mDrawObserver) {
+    mDrawObserver->DidDrawCall(CanvasDrawObserver::DrawCallType::DrawImage);
+  }
+
   MOZ_ASSERT(optional_argc == 0 || optional_argc == 2 || optional_argc == 6);
 
   RefPtr<SourceSurface> srcSurf;
@@ -4332,6 +4341,10 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
                                        double aSy, double aSw,
                                        double aSh, ErrorResult& error)
 {
+  if (mDrawObserver) {
+    mDrawObserver->DidDrawCall(CanvasDrawObserver::DrawCallType::GetImageData);
+  }
+
   EnsureTarget();
   if (!IsTargetValid()) {
     error.Throw(NS_ERROR_FAILURE);
@@ -4412,6 +4425,10 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
                                             uint32_t aHeight,
                                             JSObject** aRetval)
 {
+  if (mDrawObserver) {
+    mDrawObserver->DidDrawCall(CanvasDrawObserver::DrawCallType::GetImageData);
+  }
+
   MOZ_ASSERT(aWidth && aHeight);
 
   CheckedInt<uint32_t> len = CheckedInt<uint32_t>(aWidth) * aHeight * 4;
@@ -4585,6 +4602,10 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
                                                 bool hasDirtyRect, int32_t dirtyX, int32_t dirtyY,
                                                 int32_t dirtyWidth, int32_t dirtyHeight)
 {
+  if (mDrawObserver) {
+    mDrawObserver->DidDrawCall(CanvasDrawObserver::DrawCallType::PutImageData);
+  }
+
   if (w == 0 || h == 0) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
