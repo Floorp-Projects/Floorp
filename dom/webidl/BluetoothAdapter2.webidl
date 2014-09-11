@@ -32,24 +32,6 @@ dictionary MediaPlayStatus
   DOMString   playStatus = "";
 };
 
-enum BluetoothAdapterState
-{
-  "disabled",
-  "disabling",
-  "enabled",
-  "enabling"
-};
-
-enum BluetoothAdapterAttribute
-{
-  "unknown",
-  "state",
-  "address",
-  "name",
-  "discoverable",
-  "discovering"
-};
-
 [CheckPermissions="bluetooth"]
 interface BluetoothAdapter : EventTarget {
   readonly attribute BluetoothAdapterState  state;
@@ -60,6 +42,15 @@ interface BluetoothAdapter : EventTarget {
 
   [AvailableIn=CertifiedApps]
   readonly attribute BluetoothPairingListener pairingReqs;
+
+  // Fired when attribute(s) of BluetoothAdapter changed
+           attribute EventHandler   onattributechanged;
+
+  // Fired when a remote device gets paired with the adapter
+           attribute EventHandler   ondevicepaired;
+
+  // Fired when a remote device gets unpaired from the adapter
+           attribute EventHandler   ondeviceunpaired;
 
   // Fired when a2dp connection status changed
            attribute EventHandler   ona2dpstatuschanged;
@@ -73,22 +64,12 @@ interface BluetoothAdapter : EventTarget {
   // Fired when remote devices query current media play status
            attribute EventHandler   onrequestmediaplaystatus;
 
-  // Fired when attributes of BluetoothAdapter changed
-           attribute EventHandler   onattributechanged;
-
-  // Fired when a remote device gets paired with the adapter.
-           attribute EventHandler   ondevicepaired;
-
-  // Fired when a remote device gets unpaired from the adapter.
-           attribute EventHandler   ondeviceunpaired;
-
   /**
    * Enable/Disable a local bluetooth adapter by asynchronus methods and return
    * its result through a Promise.
    *
    * Several onattributechanged events would be triggered during processing the
-   * request, and the last one would indicate adapter.state becomes
-   * enabled/disabled.
+   * request, and the last one indicates adapter.state becomes enabled/disabled.
    */
   [NewObject, Throws]
   Promise<void> enable();
@@ -177,3 +158,22 @@ interface BluetoothAdapter : EventTarget {
   [NewObject,Throws]
   DOMRequest sendMediaPlayStatus(optional MediaPlayStatus mediaPlayStatus);
 };
+
+enum BluetoothAdapterState
+{
+  "disabled",
+  "disabling",
+  "enabled",
+  "enabling"
+};
+
+enum BluetoothAdapterAttribute
+{
+  "unknown",
+  "state",
+  "address",
+  "name",
+  "discoverable",
+  "discovering"
+};
+
