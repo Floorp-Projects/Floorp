@@ -24,7 +24,6 @@
 #include "nsIDOMText.h"
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
-#include "nsIDOMUserDataHandler.h"
 #include "nsChangeHint.h"
 #include "nsCOMArray.h"
 #include "nsNodeUtils.h"
