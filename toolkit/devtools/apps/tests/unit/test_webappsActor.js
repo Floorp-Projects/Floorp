@@ -50,6 +50,7 @@ add_test(function testGetAll() {
         do_check_eq(app.origin, APP_ORIGIN);
         do_check_eq(app.installOrigin, app.origin);
         do_check_eq(app.manifestURL, app.origin + "/manifest.webapp");
+        do_check_eq(app.csp, "script-src: http://foo.com");
         run_next_test();
         return;
       }
@@ -238,7 +239,8 @@ add_test(function testInstallHosted() {
     manifestURL: "http://foo.com/metadata/manifest.webapp"
   };
   let manifest = {
-    name: "My hosted app"
+    name: "My hosted app",
+    csp: "script-src: http://foo.com"
   };
   installHosted(gClient, gActor, gAppId, metadata, manifest).then(
     function ({ appId }) {
@@ -264,6 +266,7 @@ add_test(function testCheckHostedApp() {
         do_check_eq(app.origin, "http://foo.com");
         do_check_eq(app.installOrigin, "http://metadata.foo.com");
         do_check_eq(app.manifestURL, "http://foo.com/metadata/manifest.webapp");
+        do_check_eq(app.csp, "script-src: http://foo.com");
         run_next_test();
         return;
       }
