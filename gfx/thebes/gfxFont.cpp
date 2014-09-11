@@ -4362,7 +4362,7 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTi
                            gfxGlyphExtents *aExtents)
 {
     gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
-    aContext->IdentityMatrix();
+    aContext->SetMatrix(gfxMatrix());
 
     gfxRect svgBounds;
     if (mFontEntry->TryGetSVGData(this) && mFontEntry->HasSVGGlyph(aGlyphID) &&

@@ -466,7 +466,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
   nsRefPtr<gfxContext> tmpCtx = new gfxContext(tmpDT);
 
   GeneratePath(tmpCtx, aToBBoxUserspace);
-  tmpCtx->IdentityMatrix();
+  tmpCtx->SetMatrix(gfxMatrix());
 
   // Be careful when replacing the following logic to get the fill and stroke
   // extents independently (instead of computing the stroke extents from the
@@ -703,7 +703,7 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
                                      const Matrix &aTransform)
 {
   if (aTransform.IsSingular()) {
-    aContext->IdentityMatrix();
+    aContext->SetMatrix(gfxMatrix());
     aContext->NewPath();
     return;
   }

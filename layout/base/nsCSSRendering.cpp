@@ -5030,7 +5030,7 @@ nsContextBoxBlur::DoPaint()
   gfxContextMatrixAutoSaveRestore saveMatrix(mDestinationCtx);
 
   if (mPreTransformed) {
-    mDestinationCtx->IdentityMatrix();
+    mDestinationCtx->SetMatrix(gfxMatrix());
   }
 
   blur.Paint(mDestinationCtx);
@@ -5095,7 +5095,7 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
   if (!transform.HasNonAxisAlignedTransform() && transform._11 > 0.0 && transform._22 > 0.0) {
     scaleX = transform._11;
     scaleY = transform._22;
-    aDestinationCtx->IdentityMatrix();
+    aDestinationCtx->SetMatrix(gfxMatrix());
   } else {
     transform = gfxMatrix();
   }
