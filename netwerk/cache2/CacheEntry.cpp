@@ -76,8 +76,7 @@ CacheEntryHandle::~CacheEntryHandle()
 
 CacheEntry::Callback::Callback(CacheEntry* aEntry,
                                nsICacheEntryOpenCallback *aCallback,
-                               bool aReadOnly, bool aCheckOnAnyThread,
-                               bool aSecret)
+                               bool aReadOnly, bool aCheckOnAnyThread)
 : mEntry(aEntry)
 , mCallback(aCallback)
 , mTargetThread(do_GetCurrentThread())
@@ -85,7 +84,6 @@ CacheEntry::Callback::Callback(CacheEntry* aEntry,
 , mCheckOnAnyThread(aCheckOnAnyThread)
 , mRecheckAfterWrite(false)
 , mNotWanted(false)
-, mSecret(aSecret)
 {
   MOZ_COUNT_CTOR(CacheEntry::Callback);
 
@@ -103,7 +101,6 @@ CacheEntry::Callback::Callback(CacheEntry::Callback const &aThat)
 , mCheckOnAnyThread(aThat.mCheckOnAnyThread)
 , mRecheckAfterWrite(aThat.mRecheckAfterWrite)
 , mNotWanted(aThat.mNotWanted)
-, mSecret(aThat.mSecret)
 {
   MOZ_COUNT_CTOR(CacheEntry::Callback);
 
@@ -272,12 +269,11 @@ void CacheEntry::AsyncOpen(nsICacheEntryOpenCallback* aCallback, uint32_t aFlags
   bool truncate = aFlags & nsICacheStorage::OPEN_TRUNCATE;
   bool priority = aFlags & nsICacheStorage::OPEN_PRIORITY;
   bool multithread = aFlags & nsICacheStorage::CHECK_MULTITHREADED;
-  bool secret = aFlags & nsICacheStorage::OPEN_SECRETLY;
 
   MOZ_ASSERT(!readonly || !truncate, "Bad flags combination");
   MOZ_ASSERT(!(truncate && mState > LOADING), "Must not call truncate on already loaded entry");
 
-  Callback callback(this, aCallback, readonly, multithread, secret);
+  Callback callback(this, aCallback, readonly, multithread);
 
   if (!Open(callback, truncate, priority, bypassIfBusy)) {
     // We get here when the callback wants to bypass cache when it's busy.
@@ -763,7 +759,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const & aCallback)
     return;
   }
 
-  if (NS_SUCCEEDED(mFileStatus) && !aCallback.mSecret) {
+  if (NS_SUCCEEDED(mFileStatus)) {
     // Let the last-fetched and fetch-count properties be updated.
     mFile->OnFetched();
   }
@@ -777,8 +773,6 @@ void CacheEntry::InvokeAvailableCallback(Callback const & aCallback)
 
   if (state == READY) {
     LOG(("  ready/has-meta, notifying OCEA with entry and NS_OK"));
-
-    if (!aCallback.mSecret)
     {
       mozilla::MutexAutoLock lock(mLock);
       BackgroundOp(Ops::FRECENCYUPDATE);
@@ -828,10 +822,7 @@ CacheEntryHandle* CacheEntry::NewWriteHandle()
 {
   mozilla::MutexAutoLock lock(mLock);
 
-  // Ignore the OPEN_SECRETLY flag on purpose here, which should actually be
-  // used only along with OPEN_READONLY, but there is no need to enforce that.
   BackgroundOp(Ops::FRECENCYUPDATE);
-
   return (mWriter = NewHandle());
 }
 
