@@ -79,7 +79,7 @@ private:
 };
 
 static void
-RecordStackWalker(void* aPC, void* aSP, void* aClosure)
+RecordStackWalker(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
 {
   std::vector<uintptr_t>* stack =
     static_cast<std::vector<uintptr_t>*>(aClosure);
