@@ -34,7 +34,7 @@ function test() {
        "The test tab doesn't have the busy attribute");
 
     // Set the urlbar to include the moz-action
-    gURLBar.value = "moz-action:switchtab," + testURL;
+    gURLBar.value = "moz-action:switchtab," + JSON.stringify({url: testURL});
     // Focus the urlbar so we can press enter
     gURLBar.focus();
 

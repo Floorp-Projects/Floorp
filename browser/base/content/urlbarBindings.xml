@@ -150,7 +150,12 @@
           var action = this._parseActionUrl(aValue);
 
           if (action) {
-            returnValue = action.param;
+            switch (action.type) {
+              case "switchtab": {
+                returnValue = action.params.url;
+                break;
+              }
+            }
           }
 
           // Set the actiontype only if the user is not overriding actions.
@@ -279,9 +284,9 @@
 
           let matchLastLocationChange = true;
           if (action) {
-            url = action.param;
             if (this.hasAttribute("actiontype")) {
               if (action.type == "switchtab") {
+                url = action.params.url;
                 this.handleRevert();
                 let prevTab = gBrowser.selectedTab;
                 if (switchToTabHavingURI(url) &&
@@ -717,9 +722,28 @@
           if (!aUrl.startsWith("moz-action:"))
             return null;
 
-          // url is in the format moz-action:ACTION,PARAM
-          let [, action, param] = aUrl.match(/^moz-action:([^,]+),(.*)$/);
-          return {type: action, param: param};
+          // URL is in the format moz-action:ACTION,PARAMS
+          // Where PARAMS is a JSON encoded object.
+          aUrl = decodeURI(aUrl);
+          let [, type, params] = aUrl.match(/^moz-action:([^,]+),(.*)$/);
+
+          let action = {
+            type: type,
+          };
+
+          try {
+            action.params = JSON.parse(params);
+          } catch (e) {
+            // If this failed, we assume that params is not a JSON object, and
+            // is instead just a flat string. This will happen when
+            // UnifiedComplete is disabled - in which case, the param is always
+            // a URL.
+            action.params = {
+              url: params,
+            }
+          }
+
+          return action;
         ]]></body>
       </method>
 
@@ -888,13 +912,13 @@
             var where = whereToOpenLink(aEvent, false, true);
             searchBar.doSearch(search, where);
           }
-          ]]></body>
-        </method>
-      </implementation>
-    </binding>
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
 
-    <binding id="urlbar-rich-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
-      <implementation>
+  <binding id="urlbar-rich-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
+    <implementation>
       <field name="_maxResults">0</field>
 
       <field name="_bundle" readonly="true">

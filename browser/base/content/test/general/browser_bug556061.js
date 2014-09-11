@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let testURL = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
-let testActionURL = "moz-action:switchtab," + testURL;
+let testActionURL = "moz-action:switchtab," + JSON.stringify({url: testURL});
 testURL = gURLBar.trimValue(testURL);
 let testTab;
 
