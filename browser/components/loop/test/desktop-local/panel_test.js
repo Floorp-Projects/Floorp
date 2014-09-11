@@ -194,7 +194,7 @@ describe("loop.panel", function() {
         });
 
       it("should show a signout entry when user is authenticated", function() {
-        navigator.mozLoop.userProfile = {email: "test@example.com"};
+        navigator.mozLoop.loggedInToFxA = true;
 
         var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
 
@@ -205,7 +205,7 @@ describe("loop.panel", function() {
       });
 
       it("should show an account entry when user is authenticated", function() {
-        navigator.mozLoop.userProfile = {email: "test@example.com"};
+        navigator.mozLoop.loggedInToFxA = true;
 
         var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
 
@@ -234,7 +234,7 @@ describe("loop.panel", function() {
       });
 
       it("should sign out the user on click when authenticated", function() {
-        navigator.mozLoop.userProfile = {email: "test@example.com"};
+        navigator.mozLoop.loggedInToFxA = true;
         var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
 
         TestUtils.Simulate.click(

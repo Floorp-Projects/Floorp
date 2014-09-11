@@ -36,9 +36,6 @@ function handleRequest(request, response) {
     case "/get_registration": // Test-only
       get_registration(request, response);
       return;
-    case "/profile/profile":
-      profile(request, response);
-      return;
   }
   response.setStatusLine(request.httpVersion, 404, "Not Found");
 }
@@ -51,7 +48,7 @@ function handleRequest(request, response) {
  *
  * For a POST the X-Params header should contain a JSON object with keys to set for /fxa-oauth/params.
  * A DELETE request will delete the stored parameters and should be run in a cleanup function to
- * avoid interfering with subsequent tests.
+ * avoid interfering with subsequen tests.
  */
 function setup_params(request, response) {
   response.setHeader("Content-Type", "text/plain", false);
@@ -151,19 +148,6 @@ function token(request, response) {
   };
   response.setHeader("Content-Type", "application/json; charset=utf-8", false);
   response.write(JSON.stringify(tokenData, null, 2));
-}
-
-/**
- * GET /profile
- *
- */
-function profile(request, response) {
-  response.setHeader("Content-Type", "application/json; charset=utf-8", false);
-  let profile = {
-    email: "test@example.com",
-    uid: "1234abcd",
-  };
-  response.write(JSON.stringify(profile, null, 2));
 }
 
 /**

@@ -125,24 +125,11 @@
               PanelView({client: mockClient, notifications: notifications, 
                          callUrl: "http://invalid.example.url/"})
             ), 
-            Example({summary: "Call URL retrieved - authenticated", dashed: "true", style: {width: "332px"}}, 
-              PanelView({client: mockClient, notifications: notifications, 
-                         callUrl: "http://invalid.example.url/",
-                         userProfile: {email: "test@example.com"}})
-            ), 
             Example({summary: "Pending call url retrieval", dashed: "true", style: {width: "332px"}}, 
               PanelView({client: mockClient, notifications: notifications})
             ), 
-            Example({summary: "Pending call url retrieval - authenticated", dashed: "true", style: {width: "332px"}}, 
-              PanelView({client: mockClient, notifications: notifications,
-                         userProfile: {email: "test@example.com"}})
-            ), 
             Example({summary: "Error Notification", dashed: "true", style: {width: "332px"}}, 
               PanelView({client: mockClient, notifications: errNotifications})
-            ),
-            Example({summary: "Error Notification - authenticated", dashed: "true", style: {width: "332px"}}, 
-              PanelView({client: mockClient, notifications: errNotifications,
-                         userProfile: {email: "test@example.com"}})
             )
           ), 
 
