@@ -8,6 +8,11 @@ ASFLAGS=$(VPX_ASFLAGS) -I. -I$(topsrcdir)/media/libvpx/ -I$(topsrcdir)/media/lib
 AS_DASH_C_FLAG=$(VPX_DASH_C_FLAG)
 ASM_SUFFIX=$(VPX_ASM_SUFFIX)
 
+ifdef _MSC_VER
+# No macro to detect current VS version by yasm
+ASFLAGS += -D_MSC_VER=$(_MSC_VER)
+endif
+
 ifdef VPX_ARM_ASM
 # Building on an ARM platform with a supported assembler, include
 # the optimized assembly in the build.
