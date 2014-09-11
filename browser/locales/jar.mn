@@ -10,7 +10,6 @@
     locale/browser/aboutCertError.dtd              (%chrome/browser/aboutCertError.dtd)
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
     locale/browser/aboutPrivateBrowsing.dtd        (%chrome/browser/aboutPrivateBrowsing.dtd)
-    locale/browser/aboutPrivateBrowsing.properties (%chrome/browser/aboutPrivateBrowsing.properties)
     locale/browser/aboutRobots.dtd                 (%chrome/browser/aboutRobots.dtd)
     locale/browser/aboutHome.dtd                   (%chrome/browser/aboutHome.dtd)
 #ifdef MOZ_SERVICES_HEALTHREPORT
