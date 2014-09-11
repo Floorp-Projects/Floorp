@@ -15,83 +15,6 @@ loop.shared.views = (function(_, OT, l10n) {
   var WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS = 5;
 
   /**
-   * L10n view. Translates resulting view DOM fragment once rendered.
-   */
-  var L10nView = (function() {
-    var L10nViewImpl   = Backbone.View.extend(), // Original View constructor
-        originalExtend = L10nViewImpl.extend;    // Original static extend fn
-
-    /**
-     * Patches View extend() method so we can hook and patch any declared render
-     * method.
-     *
-     * @return {Backbone.View} Extended view with patched render() method.
-     */
-    L10nViewImpl.extend = function() {
-      var ExtendedView   = originalExtend.apply(this, arguments),
-          originalRender = ExtendedView.prototype.render;
-
-      /**
-       * Wraps original render() method to translate contents once they're
-       * rendered.
-       *
-       * @return {Backbone.View} Extended view instance.
-       */
-      ExtendedView.prototype.render = function() {
-        if (originalRender) {
-          originalRender.apply(this, arguments);
-          l10n.translate(this.el);
-        }
-        return this;
-      };
-
-      return ExtendedView;
-    };
-
-    return L10nViewImpl;
-  })();
-
-  /**
-   * Base view.
-   */
-  var BaseView = L10nView.extend({
-    /**
-     * Hides view element.
-     *
-     * @return {BaseView}
-     */
-    hide: function() {
-      this.$el.hide();
-      return this;
-    },
-
-    /**
-     * Shows view element.
-     *
-     * @return {BaseView}
-     */
-    show: function() {
-      this.$el.show();
-      return this;
-    },
-
-    /**
-     * Base render implementation: renders an attached template if available.
-     *
-     * Note: You need to override this if you want to do fancier stuff, eg.
-     *       rendering the template using model data.
-     *
-     * @return {BaseView}
-     */
-    render: function() {
-      if (this.template) {
-        this.$el.html(this.template());
-      }
-      return this;
-    }
-  });
-
-  /**
    * Media control button.
    *
    * Required props:
@@ -704,43 +627,11 @@ loop.shared.views = (function(_, OT, l10n) {
     }
   });
 
-  /**
-   * Unsupported Browsers view.
-   */
-  var UnsupportedBrowserView = BaseView.extend({
-    template: _.template([
-      '<div>',
-      '  <h2 data-l10n-id="incompatible_browser"></h2>',
-      '  <p data-l10n-id="powered_by_webrtc"></p>',
-      '  <p data-l10n-id="use_latest_firefox" ',
-      '    data-l10n-args=\'{"ff_url": "https://www.mozilla.org/firefox/"}\'>',
-      '  </p>',
-      '</div>'
-    ].join(""))
-  });
-
-  /**
-   * Unsupported Browsers view.
-   */
-  var UnsupportedDeviceView = BaseView.extend({
-    template: _.template([
-      '<div>',
-      '  <h2 data-l10n-id="incompatible_device"></h2>',
-      '  <p data-l10n-id="sorry_device_unsupported"></p>',
-      '  <p data-l10n-id="use_firefox_windows_mac_linux"></p>',
-      '</div>'
-    ].join(""))
-  });
-
   return {
-    L10nView: L10nView,
-    BaseView: BaseView,
     ConversationView: ConversationView,
     ConversationToolbar: ConversationToolbar,
     FeedbackView: FeedbackView,
     MediaControlButton: MediaControlButton,
-    NotificationListView: NotificationListView,
-    UnsupportedBrowserView: UnsupportedBrowserView,
-    UnsupportedDeviceView: UnsupportedDeviceView
+    NotificationListView: NotificationListView
   };
 })(_, window.OT, navigator.mozL10n || document.mozL10n);

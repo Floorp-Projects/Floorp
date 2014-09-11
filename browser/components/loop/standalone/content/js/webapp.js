@@ -27,8 +27,47 @@ loop.webapp = (function($, _, OT, mozL10n) {
   /**
    * Homepage view.
    */
-  var HomeView = sharedViews.BaseView.extend({
-    template: _.template('<p data-l10n-id="welcome"></p>')
+  var HomeView = React.createClass({displayName: 'HomeView',
+    render: function() {
+      return (
+        React.DOM.p(null, mozL10n.get("welcome"))
+      )
+    }
+  });
+
+  /**
+   * Unsupported Browsers view.
+   */
+  var UnsupportedBrowserView = React.createClass({displayName: 'UnsupportedBrowserView',
+    render: function() {
+      var useLatestFF = mozL10n.get("use_latest_firefox", {
+        "firefoxBrandNameLink": React.renderComponentToStaticMarkup(
+          React.DOM.a({target: "_blank", href: "https://www.mozilla.org/firefox/"}, "Firefox")
+        )
+      });
+      return (
+        React.DOM.div(null, 
+          React.DOM.h2(null, mozL10n.get("incompatible_browser")), 
+          React.DOM.p(null, mozL10n.get("powered_by_webrtc")), 
+          React.DOM.p({dangerouslySetInnerHTML: {__html: useLatestFF}})
+        )
+      );
+    }
+  });
+
+  /**
+   * Unsupported Device view.
+   */
+  var UnsupportedDeviceView = React.createClass({displayName: 'UnsupportedDeviceView',
+    render: function() {
+      return (
+        React.DOM.div(null, 
+          React.DOM.h2(null, mozL10n.get("incompatible_device")), 
+          React.DOM.p(null, mozL10n.get("sorry_device_unsupported")), 
+          React.DOM.p(null, mozL10n.get("use_firefox_windows_mac_linux"))
+        )
+      );
+    }
   });
 
   /**
@@ -324,7 +363,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       }
 
       // Load default view
-      this.loadView(new HomeView());
+      this.loadReactComponent(HomeView(null));
 
       this.listenTo(this._conversation, "timeout", this._onTimeout);
     },
@@ -470,15 +509,15 @@ loop.webapp = (function($, _, OT, mozL10n) {
      * Default entry point.
      */
     home: function() {
-      this.loadView(new HomeView());
+      this.loadReactComponent(HomeView(null));
     },
 
     unsupportedDevice: function() {
-      this.loadView(new sharedViews.UnsupportedDeviceView());
+      this.loadReactComponent(UnsupportedDeviceView(null));
     },
 
     unsupportedBrowser: function() {
-      this.loadView(new sharedViews.UnsupportedBrowserView());
+      this.loadReactComponent(UnsupportedBrowserView(null));
     },
 
     expired: function() {
@@ -579,6 +618,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
     CallUrlExpiredView: CallUrlExpiredView,
     StartConversationView: StartConversationView,
     HomeView: HomeView,
+    UnsupportedBrowserView: UnsupportedBrowserView,
+    UnsupportedDeviceView: UnsupportedDeviceView,
     init: init,
     PromoteFirefoxView: PromoteFirefoxView,
     WebappHelper: WebappHelper,

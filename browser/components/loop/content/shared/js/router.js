@@ -17,12 +17,6 @@ loop.shared.router = (function() {
    */
   var BaseRouter = Backbone.Router.extend({
     /**
-     * Active view.
-     * @type {Object}
-     */
-    _activeView: undefined,
-
-    /**
      * Notifications collection.
      * @type {loop.shared.models.NotificationCollection}
      */
@@ -47,51 +41,21 @@ loop.shared.router = (function() {
     },
 
     /**
-     * Loads and render current active view.
-     *
-     * @param {loop.shared.views.BaseView} view View.
-     */
-    loadView: function(view) {
-      this.clearActiveView();
-      this._activeView = {type: "backbone", view: view.render().show()};
-      this.updateView(this._activeView.view.$el);
-    },
-
-    /**
      * Renders a React component as current active view.
      *
      * @param {React} reactComponent React component.
      */
     loadReactComponent: function(reactComponent) {
       this.clearActiveView();
-      this._activeView = {
-        type: "react",
-        view: React.renderComponent(reactComponent,
-                                    document.querySelector("#main"))
-      };
+      React.renderComponent(reactComponent,
+                            document.querySelector("#main"));
     },
 
     /**
      * Clears current active view.
      */
     clearActiveView: function() {
-      if (!this._activeView) {
-        return;
-      }
-      if (this._activeView.type === "react") {
-        React.unmountComponentAtNode(document.querySelector("#main"));
-      } else {
-        this._activeView.view.remove();
-      }
-    },
-
-    /**
-     * Updates main div element with provided contents.
-     *
-     * @param  {jQuery} $el Element.
-     */
-    updateView: function($el) {
-      $("#main").html($el);
+      React.unmountComponentAtNode(document.querySelector("#main"));
     }
   });
 

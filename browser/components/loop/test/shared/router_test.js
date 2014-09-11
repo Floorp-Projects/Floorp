@@ -48,44 +48,6 @@ describe("loop.shared.router", function() {
         });
       });
     });
-
-    describe("constructed", function() {
-      var router, view, TestRouter;
-
-      beforeEach(function() {
-        TestRouter = loop.shared.router.BaseRouter.extend({});
-        var TestView = loop.shared.views.BaseView.extend({
-          template: _.template("<p>plop</p>")
-        });
-        view = new TestView();
-        router = new TestRouter({notifications: notifications});
-      });
-
-      describe("#loadView", function() {
-        it("should set the active view", function() {
-          router.loadView(view);
-
-          expect(router._activeView).eql({
-            type: "backbone",
-            view: view
-          });
-        });
-
-        it("should load and render the passed view", function() {
-          router.loadView(view);
-
-          expect($("#main p").text()).eql("plop");
-        });
-      });
-
-      describe("#updateView", function() {
-        it("should update the main element with provided contents", function() {
-          router.updateView($("<p>plip</p>"));
-
-          expect($("#main p").text()).eql("plip");
-        });
-      });
-    });
   });
 
   describe("BaseConversationRouter", function() {
