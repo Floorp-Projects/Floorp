@@ -7,6 +7,7 @@
 
 #include "nsFrameSetFrame.h"
 
+#include "gfxContext.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 
@@ -14,6 +15,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsLeafFrame.h"
 #include "nsContainerFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
@@ -1516,8 +1518,13 @@ void nsHTMLFramesetBorderFrame::PaintBorder(nsRenderingContext& aRenderingContex
     LookAndFeel::GetColor(LookAndFeel::eColorID_Widget3DShadow,
                           NS_RGB(128,128,128));
 
-  nsRenderingContext::AutoPushTranslation
-    translate(&aRenderingContext, aPt);
+  gfxContext* ctx = aRenderingContext.ThebesContext();
+
+  gfxPoint toRefFrame =
+    nsLayoutUtils::PointToGfxPoint(aPt, PresContext()->AppUnitsPerDevPixel());
+
+  gfxContextMatrixAutoSaveRestore autoSR(ctx);
+  ctx->SetMatrix(ctx->CurrentMatrix().Translate(toRefFrame));
 
   nscoord widthInPixels = nsPresContext::AppUnitsToIntCSSPixels(mWidth);
   nscoord pixelWidth    = nsPresContext::CSSPixelsToAppUnits(1);

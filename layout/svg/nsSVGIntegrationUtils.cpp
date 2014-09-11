@@ -386,7 +386,16 @@ public:
   {
     BasicLayerManager* basic = static_cast<BasicLayerManager*>(mLayerManager);
     basic->SetTarget(aContext->ThebesContext());
-    nsRenderingContext::AutoPushTranslation push(aContext, -mOffset);
+
+    gfxContext* ctx = aContext->ThebesContext();
+
+    gfxPoint devPixelOffset =
+      nsLayoutUtils::PointToGfxPoint(-mOffset,
+                                     aTarget->PresContext()->AppUnitsPerDevPixel());
+
+    gfxContextMatrixAutoSaveRestore autoSR(ctx);
+    ctx->SetMatrix(ctx->CurrentMatrix().Translate(devPixelOffset));
+
     mLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, mBuilder);
   }
 
