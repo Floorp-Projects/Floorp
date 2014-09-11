@@ -1727,10 +1727,7 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
         return nullptr;
     }
 
-    Matrix m;
-    m.Translate(0.0, mHeight);
-    m.Scale(1.0, -1.0);
-    dt->SetTransform(m);
+    dt->SetTransform(Matrix::Translation(0.0, mHeight).PreScale(1.0, -1.0));
 
     dt->DrawSurface(surf,
                     Rect(0, 0, mWidth, mHeight),

@@ -437,7 +437,7 @@ DOMMatrix::TranslateSelf(double aTx,
     Ensure3DMatrix();
     mMatrix3D->Translate(aTx, aTy, aTz);
   } else {
-    mMatrix2D->Translate(aTx, aTy);
+    mMatrix2D->PreTranslate(aTx, aTy);
   }
 
   return this;
@@ -517,7 +517,7 @@ DOMMatrix::RotateSelf(double aAngle, double aOriginX, double aOriginY)
   if (mMatrix3D) {
     RotateAxisAngleSelf(0, 0, 1, aAngle);
   } else {
-    *mMatrix2D = mMatrix2D->Rotate(aAngle * radPerDegree);
+    *mMatrix2D = mMatrix2D->PreRotate(aAngle * radPerDegree);
   }
 
   TranslateSelf(-aOriginX, -aOriginY);

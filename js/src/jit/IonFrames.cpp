@@ -450,9 +450,9 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
           case JSTRY_CATCH:
             if (cx->isExceptionPending() && !bailedOutForDebugMode) {
                 // Ion can compile try-catch, but bailing out to catch
-                // exceptions is slow. Reset the use count so that if we
+                // exceptions is slow. Reset the warm-up counter so that if we
                 // catch many exceptions we won't Ion-compile the script.
-                script->resetUseCount();
+                script->resetWarmUpCounter();
 
                 // Bailout at the start of the catch block.
                 jsbytecode *catchPC = script->main() + tn->start + tn->length;
@@ -568,9 +568,9 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
           case JSTRY_CATCH:
             if (cx->isExceptionPending()) {
                 // Ion can compile try-catch, but bailing out to catch
-                // exceptions is slow. Reset the use count so that if we
+                // exceptions is slow. Reset the warm-up counter so that if we
                 // catch many exceptions we won't Ion-compile the script.
-                script->resetUseCount();
+                script->resetWarmUpCounter();
 
                 // Resume at the start of the catch block.
                 rfe->kind = ResumeFromException::RESUME_CATCH;

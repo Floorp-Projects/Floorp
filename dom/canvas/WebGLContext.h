@@ -362,7 +362,7 @@ public:
     already_AddRefed<WebGLActiveInfo> GetActiveUniform(WebGLProgram *prog,
                                                        GLuint index);
     void GetAttachedShaders(WebGLProgram* prog,
-                            dom::Nullable< nsTArray<WebGLShader*> > &retval);
+                            dom::Nullable<nsTArray<nsRefPtr<WebGLShader>>>& retval);
     GLint GetAttribLocation(WebGLProgram* prog, const nsAString& name);
     JS::Value GetBufferParameter(GLenum target, GLenum pname);
     void GetBufferParameter(JSContext* /* unused */, GLenum target,

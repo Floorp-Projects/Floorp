@@ -1,4 +1,4 @@
-setJitCompilerOption("ion.usecount.trigger", 50);
+setJitCompilerOption("ion.warmup.trigger", 50);
 
 var f32 = new Float32Array(1);
 f32[0] = 13;
