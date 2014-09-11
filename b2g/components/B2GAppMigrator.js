@@ -15,6 +15,9 @@ const Cu = Components.utils;
 
 const kMigrationMessageName = "webapps-before-update-merge";
 
+const kIDBDirType = "indexedDBPDir";
+const kProfileDirType = "ProfD";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -42,25 +45,59 @@ B2GAppMigrator.prototype = {
     // the app
     let browserLocalAppId = appsService.getAppLocalIdByManifestURL("app://browser.gaiamobile.org/manifest.webapp");
     let browserAppStorageDirName = browserLocalAppId + "+f+app+++browser.gaiamobile.org";
-    let browserDBFile = FileUtils.getFile("ProfD",
-                                          ["storage",
-                                           "persistent",
-                                           browserAppStorageDirName,
-                                           "idb",
-                                           browserDBFileName], true);
+
+    // On the phone, the browser db will only be in the old IDB
+    // directory, since it only existed up until v2.0. On desktop, it
+    // will exist in the profile directory.
+    //
+    // Uses getDir with filename appending to make sure we don't
+    // create extra directories along the way if they don't already
+    // exist.
+    let browserDBFile = FileUtils.getDir(kIDBDirType,
+                                         ["storage",
+                                          "persistent",
+                                          browserAppStorageDirName,
+                                          "idb"], false, true);
+    browserDBFile.append(browserDBFileName);
 
     if (!browserDBFile.exists()) {
-      if (DEBUG) debug("Browser DB file does not exist, nothing to copy");
-      return;
+      if (DEBUG) debug("Browser DB directory " + browserDBFile.path + " does not exist, trying profile location");
+      browserDBFile = FileUtils.getDir(kProfileDirType,
+                                        ["storage",
+                                         "persistent",
+                                         browserAppStorageDirName,
+                                         "idb"], false, true);
+      browserDBFile.append(browserDBFileName);
+      if (!browserDBFile.exists()) {
+        if (DEBUG) debug("Browser DB directory " + browserDBFile.path + " does not exist. Cannot copy browser db.");
+        return;
+      }
     }
 
     let systemLocalAppId = appsService.getAppLocalIdByManifestURL("app://system.gaiamobile.org/manifest.webapp");
     let systemAppStorageDirName = systemLocalAppId + "+f+app+++system.gaiamobile.org";
-    let systemDBDir = FileUtils.getDir("ProfD",
+
+    // This check futureproofs the system DB storage directory. It
+    // currently exists outside of the profile but will most likely
+    // move into the profile at some point.
+    let systemDBDir = FileUtils.getDir(kIDBDirType,
                                        ["storage",
                                         "persistent",
                                         systemAppStorageDirName,
                                         "idb"], false, true);
+
+    if (!systemDBDir.exists()) {
+      if (DEBUG) debug("System DB directory " + systemDBDir.path + " does not exist, trying profile location");
+      systemDBDir = FileUtils.getDir(kProfileDirType,
+                                     ["storage",
+                                      "persistent",
+                                      systemAppStorageDirName,
+                                      "idb"], false, true);
+      if (!systemDBDir.exists()) {
+        if (DEBUG) debug("System DB directory " + systemDBDir.path + " does not exist. Cannot copy browser db.");
+        return;
+      }
+    }
 
     if (DEBUG) {
       debug("Browser DB file exists, copying");
