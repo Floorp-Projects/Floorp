@@ -851,10 +851,10 @@ class JSObject : public js::ObjectImpl
     /*
      * Back to generic stuff.
      */
-    bool isCallable() {
-        return getClass()->isCallable();
-    }
+    bool isCallable() const;
     bool isConstructor() const;
+    JSNative callHook() const;
+    JSNative constructHook() const;
 
     inline void finish(js::FreeOp *fop);
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);

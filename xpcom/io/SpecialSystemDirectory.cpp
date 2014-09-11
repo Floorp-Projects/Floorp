@@ -751,6 +751,14 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
       }
       return rv;
     }
+#if defined(MOZ_CONTENT_SANDBOX)
+    case Win_LocalAppdataLow: {
+      // This should only really fail on versions pre-Vista, in which case this
+      // shouldn't have been used in the first place.
+      GUID localAppDataLowGuid = FOLDERID_LocalAppDataLow;
+      return GetKnownFolder(&localAppDataLowGuid, aFile);
+    }
+#endif
     case Win_Documents: {
       return GetLibrarySaveToPath(CSIDL_MYDOCUMENTS,
                                   FOLDERID_DocumentsLibrary,

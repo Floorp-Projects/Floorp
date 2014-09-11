@@ -120,6 +120,10 @@
   #define NS_WIN_COMMON_APPDATA_DIR           "CmAppData"
   #define NS_WIN_APPDATA_DIR                  "AppData"
   #define NS_WIN_LOCAL_APPDATA_DIR            "LocalAppData"
+#if defined(MOZ_CONTENT_SANDBOX)
+  #define NS_WIN_LOCAL_APPDATA_LOW_DIR        "LocalAppDataLow"
+  #define NS_WIN_LOW_INTEGRITY_TEMP           "LowTmpD"
+#endif
   #define NS_WIN_PRINTHOOD                    "PrntHd"
   #define NS_WIN_COOKIES_DIR                  "CookD"
   #define NS_WIN_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"

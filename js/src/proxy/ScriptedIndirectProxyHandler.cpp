@@ -329,29 +329,6 @@ ScriptedIndirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigne
 }
 
 bool
-ScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args) const
-{
-    assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
-    RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
-    JS_ASSERT(ccHolder->getClass() == &CallConstructHolder);
-    RootedValue call(cx, ccHolder->getReservedSlot(0));
-    JS_ASSERT(call.isObject() && call.toObject().isCallable());
-    return Invoke(cx, args.thisv(), call, args.length(), args.array(), args.rval());
-}
-
-bool
-ScriptedIndirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const
-{
-    assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
-    RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
-    JS_ASSERT(ccHolder->getClass() == &CallConstructHolder);
-    RootedValue construct(cx, ccHolder->getReservedSlot(1));
-    JS_ASSERT(construct.isObject() && construct.toObject().isCallable());
-    return InvokeConstructor(cx, construct, args.length(), args.array(),
-                             args.rval().address());
-}
-
-bool
 ScriptedIndirectProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                          CallArgs args) const
 {
@@ -374,6 +351,31 @@ ScriptedIndirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, un
 }
 
 const ScriptedIndirectProxyHandler ScriptedIndirectProxyHandler::singleton;
+
+bool
+CallableScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args) const
+{
+    assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
+    RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
+    JS_ASSERT(ccHolder->getClass() == &CallConstructHolder);
+    RootedValue call(cx, ccHolder->getReservedSlot(0));
+    JS_ASSERT(call.isObject() && call.toObject().isCallable());
+    return Invoke(cx, args.thisv(), call, args.length(), args.array(), args.rval());
+}
+
+bool
+CallableScriptedIndirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const
+{
+    assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
+    RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
+    JS_ASSERT(ccHolder->getClass() == &CallConstructHolder);
+    RootedValue construct(cx, ccHolder->getReservedSlot(1));
+    JS_ASSERT(construct.isObject() && construct.toObject().isCallable());
+    return InvokeConstructor(cx, construct, args.length(), args.array(),
+                             args.rval().address());
+}
+
+const CallableScriptedIndirectProxyHandler CallableScriptedIndirectProxyHandler::singleton;
 
 bool
 js::proxy_create(JSContext *cx, unsigned argc, Value *vp)
@@ -448,11 +450,9 @@ js::proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     ccHolder->setReservedSlot(1, ObjectValue(*construct));
 
     RootedValue priv(cx, ObjectValue(*handler));
-    ProxyOptions options;
-    options.selectDefaultClass(true);
     JSObject *proxy =
-        ProxyObject::New(cx, &ScriptedIndirectProxyHandler::singleton,
-                         priv, TaggedProto(proto), parent, options);
+        NewProxyObject(cx, &CallableScriptedIndirectProxyHandler::singleton,
+                       priv, proto, parent);
     if (!proxy)
         return false;
     proxy->as<ProxyObject>().setExtra(0, ObjectValue(*ccHolder));

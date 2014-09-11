@@ -1476,6 +1476,8 @@ TestApp::Init(void)
   nsresult rv = baseWindow->GetMainWidget(getter_AddRefs(widget));
   NS_ENSURE_TRUE(widget, NS_ERROR_UNEXPECTED);
 
+  static_assert(false,
+    "GetNativeData() returns pointer to StaticRefPtr<>, fix here for it");
   ITfThreadMgr **threadMgr = reinterpret_cast<ITfThreadMgr**>(
       widget->GetNativeData(NS_NATIVE_TSF_THREAD_MGR));
   if (!threadMgr) {

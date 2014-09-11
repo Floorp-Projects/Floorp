@@ -435,8 +435,8 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     if (existing) {
         // Is it possible to reuse |existing|?
         if (!existing->getTaggedProto().isLazy() ||
-            // Note: don't use is<ObjectProxyObject>() here -- it also matches subclasses!
-            existing->getClass() != &ProxyObject::uncallableClass_ ||
+            // Note: Class asserted above, so all that's left to check is callability
+            existing->isCallable() ||
             existing->getParent() != global ||
             obj->isCallable())
         {

@@ -481,21 +481,17 @@ class CGDOMProxyJSClass(CGThing):
         # HTMLAllCollection.  So just hardcode it here.
         if self.descriptor.interface.identifier.name == "HTMLAllCollection":
             flags.append("JSCLASS_EMULATES_UNDEFINED")
-        callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
         return fill(
             """
             static const DOMJSClass Class = {
               PROXY_CLASS_DEF("${name}",
                               0, /* extra slots */
-                              ${flags},
-                              ${call}, /* call */
-                              nullptr  /* construct */),
+                              ${flags}),
               $*{descriptor}
             };
             """,
             name=self.descriptor.interface.identifier.name,
             flags=" | ".join(flags),
-            call=callHook,
             descriptor=DOMClass(self.descriptor))
 
 
@@ -10641,6 +10637,33 @@ class CGDOMJSProxyHandler_getInstance(ClassMethod):
             """)
 
 
+class CGDOMJSProxyHandler_call(ClassMethod):
+    def __init__(self):
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('const JS::CallArgs&', 'args')]
+
+        ClassMethod.__init__(self, "call", "bool", args, virtual=True, override=True, const=True)
+
+    def getBody(self):
+        return fill(
+            """
+            return js::ForwardToNative(cx, ${legacyCaller}, args);
+            """,
+            legacyCaller=LEGACYCALLER_HOOK_NAME)
+
+
+class CGDOMJSProxyHandler_isCallable(ClassMethod):
+    def __init__(self):
+        ClassMethod.__init__(self, "isCallable", "bool", [Argument('JSObject*', 'obj')],
+                           virtual=True, override=True, const=True)
+
+    def getBody(self):
+        return dedent("""
+            return true;
+        """)
+
+
 class CGDOMJSProxyHandler(CGClass):
     def __init__(self, descriptor):
         assert (descriptor.supportsIndexedProperties() or
@@ -10672,6 +10695,9 @@ class CGDOMJSProxyHandler(CGClass):
             (descriptor.operations['NamedSetter'] is not None and
              descriptor.interface.getExtendedAttribute('OverrideBuiltins'))):
             methods.append(CGDOMJSProxyHandler_setCustom(descriptor))
+        if descriptor.operations['LegacyCaller']:
+            methods.append(CGDOMJSProxyHandler_call())
+            methods.append(CGDOMJSProxyHandler_isCallable())
 
         CGClass.__init__(self, 'DOMProxyHandler',
                          bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
