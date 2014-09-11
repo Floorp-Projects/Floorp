@@ -312,6 +312,18 @@ nsresult imgFrame::Optimize()
   return NS_OK;
 }
 
+DrawableFrameRef
+imgFrame::DrawableRef()
+{
+  return DrawableFrameRef(this);
+}
+
+RawAccessFrameRef
+imgFrame::RawAccessRef()
+{
+  return RawAccessFrameRef(this);
+}
+
 imgFrame::SurfaceWithFormat
 imgFrame::SurfaceForDrawing(bool               aDoPadding,
                             bool               aDoPartialDecode,

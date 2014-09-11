@@ -1567,16 +1567,6 @@ GetPropertyIC::tryAttachProxy(JSContext *cx, HandleScript outerScript, IonScript
     return tryAttachGenericProxy(cx, outerScript, ion, obj, name, returnAddr, emitted);
 }
 
-static void
-GenerateProxyClassGuards(MacroAssembler &masm, Register object, Register scratchReg,
-                         Label *failures)
-{
-    masm.loadObjClass(object, scratchReg);
-    masm.branchTest32(Assembler::Zero,
-                      Address(scratchReg, Class::offsetOfFlags()),
-                      Imm32(JSCLASS_IS_PROXY), failures);
-}
-
 bool
 GetPropertyIC::tryAttachGenericProxy(JSContext *cx, HandleScript outerScript, IonScript *ion,
                                      HandleObject obj, HandlePropertyName name, void *returnAddr,
@@ -1602,7 +1592,7 @@ GetPropertyIC::tryAttachGenericProxy(JSContext *cx, HandleScript outerScript, Io
 
     Register scratchReg = output().valueReg().scratchReg();
 
-    GenerateProxyClassGuards(masm, object(), scratchReg, &failures);
+    masm.branchTestObjectIsProxy(false, object(), scratchReg, &failures);
 
     // Ensure that the incoming object is not a DOM proxy, so that we can get to
     // the specialized stubs
@@ -2181,7 +2171,7 @@ SetPropertyIC::attachGenericProxy(JSContext *cx, HandleScript outerScript, IonSc
         Register scratch = regSet.takeGeneral();
         masm.push(scratch);
 
-        GenerateProxyClassGuards(masm, object(), scratch, &proxyFailures);
+        masm.branchTestObjectIsProxy(false, object(), scratch, &proxyFailures);
 
         // Remove the DOM proxies. They'll take care of themselves so this stub doesn't
         // catch too much. The failure case is actually Equal. Fall through to the failure code.

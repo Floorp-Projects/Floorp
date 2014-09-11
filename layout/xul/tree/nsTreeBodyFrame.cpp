@@ -2816,7 +2816,7 @@ nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
 {
   // Update our available height and our page count.
   CalcInnerBox();
-  aRenderingContext.PushState();
+  aRenderingContext.ThebesContext()->Save();
   aRenderingContext.IntersectClip(mInnerBox + aPt);
   int32_t oldPageCount = mPageLength;
   if (!mHasFixedRowCount)
@@ -2875,7 +2875,7 @@ nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
       PaintDropFeedback(feedbackRect, PresContext(), aRenderingContext, aDirtyRect, aPt);
     }
   }
-  aRenderingContext.PopState();
+  aRenderingContext.ThebesContext()->Restore();
 }
 
 
@@ -3195,7 +3195,7 @@ nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
       twistyContext->StyleMargin()->GetMargin(twistyMargin);
       twistyRect.Inflate(twistyMargin);
 
-      aRenderingContext.PushState();
+      aRenderingContext.ThebesContext()->Save();
 
       const nsStyleBorder* borderStyle = lineContext->StyleBorder();
       nscolor color;
@@ -3244,7 +3244,7 @@ nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
         srcX -= mIndentation;
       }
 
-      aRenderingContext.PopState();
+      aRenderingContext.ThebesContext()->Restore();
     }
 
     // Always leave space for the twisty.

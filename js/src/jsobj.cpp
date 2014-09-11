@@ -3795,13 +3795,53 @@ js::FindClassObject(ExclusiveContext *cx, MutableHandleObject protop, const Clas
 }
 
 bool
+JSObject::isCallable() const
+{
+    if (is<JSFunction>())
+        return true;
+    return callHook() != nullptr;
+}
+
+bool
 JSObject::isConstructor() const
 {
     if (is<JSFunction>()) {
         const JSFunction &fun = as<JSFunction>();
         return fun.isNativeConstructor() || fun.isInterpretedConstructor();
     }
-    return getClass()->construct != nullptr;
+    return constructHook() != nullptr;
+}
+
+JSNative
+JSObject::callHook() const
+{
+    const js::Class *clasp = getClass();
+
+    if (clasp->call)
+        return clasp->call;
+
+    if (is<js::ProxyObject>()) {
+        const js::ProxyObject &p = as<js::ProxyObject>();
+        if (p.handler()->isCallable(const_cast<JSObject*>(this)))
+            return js::proxy_Call;
+    }
+    return nullptr;
+}
+
+JSNative
+JSObject::constructHook() const
+{
+    const js::Class *clasp = getClass();
+
+    if (clasp->construct)
+        return clasp->construct;
+
+    if (is<js::ProxyObject>()) {
+        const js::ProxyObject &p = as<js::ProxyObject>();
+        if (p.handler()->isConstructor(const_cast<JSObject*>(this)))
+            return js::proxy_Construct;
+    }
+    return nullptr;
 }
 
 /* static */ bool

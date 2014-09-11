@@ -202,7 +202,7 @@ private:
 
 class MP4ContainerParser : public ContainerParser {
 public:
-  MP4ContainerParser() : mTimescale(0) {}
+  MP4ContainerParser() {}
 
   bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
   {
@@ -234,15 +234,21 @@ public:
   virtual bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
                                           double& aStart, double& aEnd)
   {
-    mp4_demuxer::MoofParser parser(new mp4_demuxer::BufferStream(aData, aLength), 0);
-    parser.mMdhd.mTimescale = mTimescale;
+    bool initSegment = IsInitSegmentPresent(aData, aLength);
+    if (initSegment) {
+      mStream = new mp4_demuxer::BufferStream();
+      mParser = new mp4_demuxer::MoofParser(mStream, 0);
+    } else if (!mStream || !mParser) {
+      return false;
+    }
 
+    mStream->AppendBytes(aData, aLength);
     nsTArray<MediaByteRange> byteRanges;
-    byteRanges.AppendElement(MediaByteRange(0, aLength));
-    parser.RebuildFragmentedIndex(byteRanges);
+    byteRanges.AppendElement(mStream->GetByteRange());
+    mParser->RebuildFragmentedIndex(byteRanges);
 
-    if (IsInitSegmentPresent(aData, aLength)) {
-      const MediaByteRange& range = parser.mInitRange;
+    if (initSegment) {
+      const MediaByteRange& range = mParser->mInitRange;
       MSE_DEBUG("MP4ContainerParser(%p)::ParseStartAndEndTimestamps: Stashed init of %u bytes.",
                 this, range.mEnd - range.mStart);
 
@@ -251,11 +257,10 @@ public:
                                   range.mEnd - range.mStart);
     }
 
-    // Persist the timescale for when it is absent in later chunks
-    mTimescale = parser.mMdhd.mTimescale;
-
     mp4_demuxer::Interval<mp4_demuxer::Microseconds> compositionRange =
-        parser.GetCompositionRange();
+      mParser->GetCompositionRange(byteRanges);
+
+    mStream->DiscardBefore(mParser->mOffset);
 
     if (compositionRange.IsNull()) {
       return false;
@@ -267,8 +272,9 @@ public:
     return true;
   }
 
-  private:
-    uint32_t mTimescale;
+private:
+  nsRefPtr<mp4_demuxer::BufferStream> mStream;
+  nsAutoPtr<mp4_demuxer::MoofParser> mParser;
 };
 
 

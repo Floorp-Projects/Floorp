@@ -2183,7 +2183,7 @@ CheckIsValidConstructible(Value calleev)
     if (callee->is<JSFunction>())
         JS_ASSERT(callee->as<JSFunction>().isNativeConstructor());
     else
-        JS_ASSERT(callee->getClass()->construct != nullptr);
+        JS_ASSERT(callee->constructHook() != nullptr);
 }
 
 } // namespace detail
