@@ -8,8 +8,13 @@ interface BluetoothManager: EventTarget
 {
   readonly attribute BluetoothAdapter? defaultAdapter;
 
+  // Fired when attribute(s) of BluetoothManager changed
            attribute EventHandler onattributechanged;
+
+  // Fired when a new adapter is plugged in
            attribute EventHandler onadapteradded;
+
+  // Fired when an existing adapter is unplugged
            attribute EventHandler onadapterremoved;
 
   sequence<BluetoothAdapter> getAdapters();
