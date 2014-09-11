@@ -129,13 +129,13 @@ JitOptions::setEagerCompilation()
 }
 
 void
-JitOptions::setCompilerWarmUpThreshold(uint32_t warmUpCounter)
+JitOptions::setCompilerWarmUpThreshold(uint32_t warmUpThreshold)
 {
     forceDefaultIonWarmUpThreshold = true;
-    forcedDefaultIonWarmUpThreshold = warmUpCounter;
+    forcedDefaultIonWarmUpThreshold = warmUpThreshold;
 
     // Undo eager compilation
-    if (eagerCompilation && warmUpCounter != 0) {
+    if (eagerCompilation && warmUpThreshold != 0) {
         jit::JitOptions defaultValues;
         eagerCompilation = false;
         baselineWarmUpThreshold = defaultValues.baselineWarmUpThreshold;

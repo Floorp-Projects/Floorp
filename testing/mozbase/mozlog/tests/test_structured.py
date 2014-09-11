@@ -454,6 +454,21 @@ class TestTBPLFormatter(FormatterTest):
         self.logger.test_end("timeout_test", "OK")
         self.logger.suite_end()
 
+    def test_single_newline(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.set_position()
+        self.logger.test_status("test1", "subtest",
+                                status="PASS",
+                                expected="FAIL")
+        self.logger.test_end("test1", "OK")
+        self.logger.suite_end()
+
+        # This sequence should not produce blanklines
+        for line in self.loglines:
+            self.assertNotEqual("", line, "No blank line should be present in: %s" %
+                                self.loglines)
+
 
 class TestMachFormatter(FormatterTest):
 

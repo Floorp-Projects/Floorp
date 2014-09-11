@@ -205,6 +205,7 @@ private:
   nsresult NotifyIMEOfSelectionChange(const IMENotification& aIMENotification);
   nsresult NotifyIMEOfUpdateComposition();
   nsresult NotifyIMEOfTextChange(const IMENotification& aIMENotification);
+  nsresult NotifyIMEOfMouseButtonEvent(const IMENotification& aIMENotification);
 
   class PaintTask : public nsRunnable {
   public:

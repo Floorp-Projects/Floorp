@@ -1669,8 +1669,8 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 
     JitSpew(JitSpew_BaselineBailouts,
             "  Restored outerScript=(%s:%u,%u) innerScript=(%s:%u,%u) (bailoutKind=%u)",
-            outerScript->filename(), outerScript->lineno(), outerScript->getWarmUpCounter(),
-            innerScript->filename(), innerScript->lineno(), innerScript->getWarmUpCounter(),
+            outerScript->filename(), outerScript->lineno(), outerScript->getWarmUpCount(),
+            innerScript->filename(), innerScript->lineno(), innerScript->getWarmUpCount(),
             (unsigned) bailoutKind);
 
     switch (bailoutKind) {

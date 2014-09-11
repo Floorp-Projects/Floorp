@@ -388,17 +388,6 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
 }
 
 bool
-xpc_qsGetterOnlyPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool strict,
-                             MutableHandleValue vp)
-{
-    return JS_ReportErrorFlagsAndNumber(cx,
-                                        JSREPORT_WARNING | JSREPORT_STRICT |
-                                        JSREPORT_STRICT_MODE_ERROR,
-                                        js_GetErrorMessage, nullptr,
-                                        JSMSG_GETTER_ONLY);
-}
-
-bool
 xpc_qsGetterOnlyNativeStub(JSContext *cx, unsigned argc, jsval *vp)
 {
     return JS_ReportErrorFlagsAndNumber(cx,

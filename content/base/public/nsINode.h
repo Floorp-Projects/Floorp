@@ -37,7 +37,6 @@ class nsIContent;
 class nsIDocument;
 class nsIDOMElement;
 class nsIDOMNodeList;
-class nsIDOMUserDataHandler;
 class nsIEditor;
 class nsIFrame;
 class nsIMutationObserver;
@@ -245,8 +244,7 @@ private:
 // Categories of node properties
 // 0 is global.
 #define DOM_USER_DATA         1
-#define DOM_USER_DATA_HANDLER 2
-#define SMIL_MAPPED_ATTR_ANIMVAL 3
+#define SMIL_MAPPED_ATTR_ANIMVAL 2
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
@@ -1145,20 +1143,18 @@ protected:
 public:
   /**
    * Associate an object aData to aKey on this node. If aData is null any
-   * previously registered object and UserDataHandler associated to aKey on
-   * this node will be removed.
+   * previously registered object associated to aKey on this node will
+   * be removed.
    * Should only be used to implement the DOM Level 3 UserData API.
    *
    * @param aKey the key to associate the object to
    * @param aData the object to associate to aKey on this node (may be null)
-   * @param aHandler the UserDataHandler to call when the node is
-   *                 cloned/deleted/imported/renamed (may be null)
    * @param aResult [out] the previously registered object for aKey on this
    *                      node, if any
-   * @return whether adding the object and UserDataHandler succeeded
+   * @return whether adding the object succeeded
    */
   nsresult SetUserData(const nsAString& aKey, nsIVariant* aData,
-                       nsIDOMUserDataHandler* aHandler, nsIVariant** aResult);
+                       nsIVariant** aResult);
 
   /**
    * Get the UserData object registered for a Key on this node, if any.
@@ -1649,7 +1645,6 @@ public:
   nsDOMAttributeMap* GetAttributes();
   void SetUserData(JSContext* aCx, const nsAString& aKey,
                    JS::Handle<JS::Value> aData,
-                   nsIDOMUserDataHandler* aHandler,
                    JS::MutableHandle<JS::Value> aRetval,
                    mozilla::ErrorResult& aError);
   void GetUserData(JSContext* aCx, const nsAString& aKey,
@@ -2045,9 +2040,9 @@ ToCanonicalSupports(nsINode* aPointer)
   { \
     return nsINode::IsEqualNode(aArg, aResult); \
   } \
-  NS_IMETHOD SetUserData(const nsAString& aKey, nsIVariant* aData, nsIDOMUserDataHandler* aHandler, nsIVariant** aResult) __VA_ARGS__ \
+  NS_IMETHOD SetUserData(const nsAString& aKey, nsIVariant* aData, nsIVariant** aResult) __VA_ARGS__ \
   { \
-    return nsINode::SetUserData(aKey, aData, aHandler, aResult); \
+    return nsINode::SetUserData(aKey, aData, aResult); \
   } \
   NS_IMETHOD GetUserData(const nsAString& aKey, nsIVariant** aResult) __VA_ARGS__ \
   { \

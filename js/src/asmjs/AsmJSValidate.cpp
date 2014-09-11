@@ -3588,19 +3588,23 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
         ParseNode *global = DotBase(base);
         PropertyName *mathOrSimd = DotMember(base);
 
-        if (!IsUseOfName(global, m.module().globalArgumentName())) {
+        PropertyName *globalName = m.module().globalArgumentName();
+        if (!globalName)
+            return m.fail(base, "import statement requires the module have a stdlib parameter");
+
+        if (!IsUseOfName(global, globalName)) {
             if (global->isKind(PNK_DOT)) {
                 return m.failName(base, "imports can have at most two dot accesses "
-                                        "(e.g. %s.Math.sin)", m.module().globalArgumentName());
+                                        "(e.g. %s.Math.sin)", globalName);
             }
-            return m.failName(base, "expecting %s.*", m.module().globalArgumentName());
+            return m.failName(base, "expecting %s.*", globalName);
         }
 
         if (mathOrSimd == m.cx()->names().Math)
             return CheckGlobalMathImport(m, initNode, varName, field);
         if (mathOrSimd == m.cx()->names().SIMD)
             return CheckGlobalSimdImport(m, initNode, varName, field);
-        return m.failName(base, "expecting %s.{Math|SIMD}", m.module().globalArgumentName());
+        return m.failName(base, "expecting %s.{Math|SIMD}", globalName);
     }
 
     if (!base->isKind(PNK_NAME))
