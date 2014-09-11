@@ -341,3 +341,15 @@ BaseProxyHandler::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint3
 
     return js::SliceSlowly(cx, proxy, proxy, begin, end, result);
 }
+
+bool
+BaseProxyHandler::isCallable(JSObject *obj) const
+{
+    return false;
+}
+
+bool
+BaseProxyHandler::isConstructor(JSObject *obj) const
+{
+    return false;
+}

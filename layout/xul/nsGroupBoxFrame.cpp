@@ -161,12 +161,12 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.width = groupRect.x - rect.x;
     clipRect.height = border.top;
 
-    aRenderingContext.PushState();
+    aRenderingContext.ThebesContext()->Save();
     aRenderingContext.IntersectClip(clipRect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
 
-    aRenderingContext.PopState();
+    aRenderingContext.ThebesContext()->Restore();
 
 
     // draw right side
@@ -175,12 +175,12 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.width = rect.XMost() - groupRect.XMost();
     clipRect.height = border.top;
 
-    aRenderingContext.PushState();
+    aRenderingContext.ThebesContext()->Save();
     aRenderingContext.IntersectClip(clipRect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
 
-    aRenderingContext.PopState();
+    aRenderingContext.ThebesContext()->Restore();
 
     
   
@@ -190,12 +190,12 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.y += border.top;
     clipRect.height = mRect.height - (yoff + border.top);
   
-    aRenderingContext.PushState();
+    aRenderingContext.ThebesContext()->Save();
     aRenderingContext.IntersectClip(clipRect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
 
-    aRenderingContext.PopState();
+    aRenderingContext.ThebesContext()->Restore();
     
   } else {
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,

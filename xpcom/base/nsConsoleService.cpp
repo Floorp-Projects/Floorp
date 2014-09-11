@@ -25,6 +25,7 @@
 
 #if defined(ANDROID)
 #include <android/log.h>
+#include "mozilla/dom/ContentChild.h"
 #endif
 #ifdef XP_WIN
 #include <windows.h>
@@ -204,7 +205,18 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
     if (aOutputMode == OutputToLog) {
       nsCString msg;
       aMessage->ToString(msg);
-      __android_log_print(ANDROID_LOG_ERROR, "GeckoConsole",
+
+      /** Attempt to use the process name as the log tag. */
+      mozilla::dom::ContentChild* child =
+          mozilla::dom::ContentChild::GetSingleton();
+      nsCString appName;
+      if (child) {
+        child->GetProcessName(appName);
+      } else {
+        appName = "GeckoConsole";
+      }
+
+      __android_log_print(ANDROID_LOG_ERROR, appName.get(),
                           "%s", msg.get());
     }
 #endif

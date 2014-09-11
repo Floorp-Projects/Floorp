@@ -79,6 +79,9 @@ enum SystemDirectories {
   Win_Pictures              =   233,
   Win_Music                 =   234,
   Win_Videos                =   235,
+#if defined(MOZ_CONTENT_SANDBOX)
+  Win_LocalAppdataLow       =   236,
+#endif
 
   Unix_LocalDirectory       =   301,
   Unix_LibDirectory         =   302,

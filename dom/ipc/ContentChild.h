@@ -118,6 +118,11 @@ public:
     AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+    // Cleans up any resources used by the process when sandboxed.
+    void CleanUpSandboxEnvironment();
+#endif
+
     virtual bool RecvSetProcessSandbox() MOZ_OVERRIDE;
 
     PBackgroundChild*

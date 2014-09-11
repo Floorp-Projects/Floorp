@@ -982,10 +982,23 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadObjClass(objReg, scratch);
         Address flags(scratch, Class::offsetOfFlags());
 
-        branchTest32(Assembler::NonZero, flags, Imm32(JSCLASS_IS_PROXY), slowCheck);
+        branchTestClassIsProxy(true, scratch, slowCheck);
 
         Condition cond = truthy ? Assembler::Zero : Assembler::NonZero;
         branchTest32(cond, flags, Imm32(JSCLASS_EMULATES_UNDEFINED), checked);
+    }
+
+    void branchTestClassIsProxy(bool proxy, Register clasp, Label *label)
+    {
+        branchTest32(proxy ? Assembler::NonZero : Assembler::Zero,
+                     Address(clasp, Class::offsetOfFlags()),
+                     Imm32(JSCLASS_IS_PROXY), label);
+    }
+
+    void branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label *label)
+    {
+        loadObjClass(object, scratch);
+        branchTestClassIsProxy(proxy, scratch, label);
     }
 
   private:

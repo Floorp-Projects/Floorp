@@ -2063,7 +2063,7 @@ TemporaryTypeSet::maybeCallable()
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
         const Class *clasp = getObjectClass(i);
-        if (clasp && clasp->isCallable())
+        if (clasp && (clasp->isProxy() || clasp->nonProxyCallable()))
             return true;
     }
 

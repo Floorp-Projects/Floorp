@@ -347,3 +347,21 @@ LIRGeneratorX86Shared::visitSimdSplatX4(MSimdSplatX4 *ins)
         MOZ_CRASH("Unknown SIMD kind");
     }
 }
+
+
+bool
+LIRGeneratorX86Shared::visitSimdValueX4(MSimdValueX4 *ins)
+{
+    LAllocation x = useRegisterAtStart(ins->getOperand(0));
+    LAllocation y = useRegisterAtStart(ins->getOperand(1));
+    LAllocation z = useRegisterAtStart(ins->getOperand(2));
+    LAllocation w = useRegisterAtStart(ins->getOperand(3));
+
+    LDefinition copyY = tempCopy(ins->getOperand(1), 1);
+
+    if (ins->type() == MIRType_Float32x4)
+        return defineReuseInput(new (alloc()) LSimdValueFloat32x4(x, y, z, w, copyY), ins, 0);
+
+    MOZ_ASSERT(ins->type() == MIRType_Int32x4);
+    return define(new(alloc()) LSimdValueInt32x4(x, y, z, w), ins);
+}

@@ -3687,17 +3687,6 @@ LIRGenerator::visitRecompileCheck(MRecompileCheck *ins)
 }
 
 bool
-LIRGenerator::visitSimdValueX4(MSimdValueX4 *ins)
-{
-    LAllocation x = useRegisterAtStart(ins->getOperand(0));
-    LAllocation y = useRegisterAtStart(ins->getOperand(1));
-    LAllocation z = useRegisterAtStart(ins->getOperand(2));
-    LAllocation w = useRegisterAtStart(ins->getOperand(3));
-
-    return define(new(alloc()) LSimdValueX4(x, y, z, w), ins);
-}
-
-bool
 LIRGenerator::visitSimdConstant(MSimdConstant *ins)
 {
     JS_ASSERT(IsSimdType(ins->type()));

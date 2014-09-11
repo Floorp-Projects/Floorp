@@ -204,6 +204,8 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
     case NOTIFY_IME_OF_COMPOSITION_UPDATE:
       nsIMM32Handler::OnUpdateComposition(aWindow);
       return NS_OK;
+    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      return nsIMM32Handler::OnMouseButtonEvent(aWindow, aIMENotification);
 #ifdef NS_ENABLE_TSF
     case NOTIFY_IME_OF_BLUR:
       // If a plugin gets focus while TSF has focus, we need to notify TSF of
