@@ -60,19 +60,6 @@ public:
     void Translate(const nsPoint& aPt);
     void Scale(float aSx, float aSy);
 
-    class AutoPushTranslation {
-        nsRenderingContext* mCtx;
-    public:
-        AutoPushTranslation(nsRenderingContext* aCtx, const nsPoint& aPt)
-            : mCtx(aCtx) {
-            mCtx->PushState();
-            mCtx->Translate(aPt);
-        }
-        ~AutoPushTranslation() {
-            mCtx->PopState();
-        }
-    };
-
     // Shapes
 
     void DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt);
