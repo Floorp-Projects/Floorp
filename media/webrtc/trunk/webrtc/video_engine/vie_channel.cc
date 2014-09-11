@@ -1684,6 +1684,7 @@ int32_t ViEChannel::StartReceive() {
     return -1;
   }
   vie_receiver_.StartReceive();
+  vie_receiver_.StartRTCPReceive(); // For receiving RTCP SR in one-way connections
   return 0;
 }
 
@@ -1692,6 +1693,7 @@ int32_t ViEChannel::StopReceive() {
                __FUNCTION__);
 
   vie_receiver_.StopReceive();
+  vie_receiver_.StopRTCPReceive();
   StopDecodeThread();
   vcm_.ResetDecoder();
   return 0;

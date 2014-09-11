@@ -631,13 +631,13 @@ class MDefinition : public MNode
     // Number of uses of this instruction. This function is only available
     // in DEBUG mode since it requires traversing the list. Most users should
     // use hasUses() or hasOneUse() instead.
-    size_t warmUpCounter() const;
+    size_t useCount() const;
 
     // Number of uses of this instruction (only counting MDefinitions, ignoring
     // MResumePoints). This function is only available in DEBUG mode since it
     // requires traversing the list. Most users should use hasUses() or
     // hasOneUse() instead.
-    size_t defWarmUpCounter() const;
+    size_t defUseCount() const;
 #endif
 
     // Test whether this MDefinition has exactly one use.
@@ -745,6 +745,12 @@ class MDefinition : public MNode
     bool isEffectful() const {
         return getAliasSet().isStore();
     }
+#ifdef DEBUG
+    virtual bool needsResumePoint() const {
+        // Return whether this instruction should have its own resume point.
+        return isEffectful();
+    }
+#endif
     virtual bool mightAlias(const MDefinition *store) const {
         // Return whether this load may depend on the specified store, given
         // that the alias sets intersect. This may be refined to exclude
@@ -6829,15 +6835,15 @@ class MMaybeCopyElementsForWrite
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const {
-        // This instruction can read and write to the elements' contents,
-        // in the same manner as MConvertElementsToDoubles. As with that
-        // instruction, this is safe to consolidate and freely reorder this
-        // instruction, though this must precede any loads of the object's
-        // elements pointer or writes to the object's elements. The latter
-        // property is ensured by chaining this with the object definition
-        // itself, in the same manner as MBoundsCheck.
-        return AliasSet::None();
+        return AliasSet::Store(AliasSet::ObjectFields);
     }
+#ifdef DEBUG
+    bool needsResumePoint() const {
+        // This instruction is idempotent and does not change observable
+        // behavior, so does not need its own resume point.
+        return false;
+    }
+#endif
 
     TypePolicy *typePolicy() {
         return this;
@@ -11321,8 +11327,8 @@ class MRecompileCheck : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(RecompileCheck);
 
-    static MRecompileCheck *New(TempAllocator &alloc, JSScript *script_, uint32_t warmUpCounter) {
-        return new(alloc) MRecompileCheck(script_, warmUpCounter);
+    static MRecompileCheck *New(TempAllocator &alloc, JSScript *script_, uint32_t recompileThreshold) {
+        return new(alloc) MRecompileCheck(script_, recompileThreshold);
     }
 
     JSScript *script() const {
@@ -11671,6 +11677,21 @@ class MAsmJSCall MOZ_FINAL : public MVariadicInstruction
     }
 };
 
+class MUnknownValue : public MNullaryInstruction
+{
+  protected:
+    MUnknownValue() {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(UnknownValue)
+
+    static MUnknownValue *New(TempAllocator &alloc) {
+        return new(alloc) MUnknownValue();
+    }
+};
+
 #undef INSTRUCTION_HEADER
 
 void MUse::init(MDefinition *producer, MNode *consumer)
@@ -11751,12 +11772,10 @@ bool ElementAccessMightBeCopyOnWrite(types::CompilerConstraintList *constraints,
 bool ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constraints,
                                           MDefinition *obj);
 MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinition *obj);
-BarrierKind PropertyReadNeedsTypeBarrier(JSContext *propertycx,
-                                         types::CompilerConstraintList *constraints,
+BarrierKind PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                                          types::TypeObjectKey *object, PropertyName *name,
                                          types::TemporaryTypeSet *observed, bool updateObserved);
-BarrierKind PropertyReadNeedsTypeBarrier(JSContext *propertycx,
-                                         types::CompilerConstraintList *constraints,
+BarrierKind PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                                          MDefinition *obj, PropertyName *name,
                                          types::TemporaryTypeSet *observed);
 BarrierKind PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *constraints,

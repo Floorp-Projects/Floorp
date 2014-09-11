@@ -6,7 +6,7 @@ loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 loadRelativeToScript('CFG.js');
 
-var sourceRoot = (environment['SOURCE'] || '') + '/'
+var sourceRoot = (os.getenv('SOURCE') || '') + '/'
 
 var functionBodies;
 

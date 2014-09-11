@@ -2034,8 +2034,7 @@ IonCompile(JSContext *cx, JSScript *script,
     const OptimizationInfo *optimizationInfo = js_IonOptimizations.get(optimizationLevel);
     const JitCompileOptions options(cx);
 
-    IonBuilder *builder = alloc->new_<IonBuilder>((JSContext *) nullptr,
-                                                  CompileCompartment::get(cx->compartment()),
+    IonBuilder *builder = alloc->new_<IonBuilder>(CompileCompartment::get(cx->compartment()),
                                                   options, temp, graph, constraints,
                                                   inspector, info, optimizationInfo,
                                                   baselineFrameInspector);
@@ -2884,7 +2883,7 @@ jit::Invalidate(types::TypeZone &types, FreeOp *fop,
         //     the warmUpCounter only applies to sequential uses.  Parallel
         //     execution *requires* ion, and so we don't limit it to
         //     methods with a high usage count (though we do check that
-        //     the warmUpCounter is at least 1 when compiling the transitive
+        //     the warmUpCount is at least 1 when compiling the transitive
         //     closure of potential callees, to avoid compiling things
         //     that are never run at all).
         if (resetUses && executionMode != ParallelExecution)

@@ -108,7 +108,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMScriptObjectFactory.h"
-#include "nsIDOMUserDataHandler.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDragService.h"
 #include "nsIEditor.h"

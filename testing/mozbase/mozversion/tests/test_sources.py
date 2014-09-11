@@ -9,7 +9,8 @@ import tempfile
 import unittest
 
 import mozfile
-from mozversion import get_version
+
+from mozversion import errors, get_version
 
 
 class SourcesTest(unittest.TestCase):
@@ -57,12 +58,16 @@ class SourcesTest(unittest.TestCase):
         self._check_version(get_version())
 
     def test_invalid_sources_path(self):
-        v = get_version(self.binary, os.path.join(self.tempdir, 'invalid'))
-        self.assertEqual(v, {})
+        """An invalid source path should cause an exception"""
+        self.assertRaises(errors.AppNotFoundError, get_version,
+                          self.binary, os.path.join(self.tempdir, 'invalid'))
 
-    def test_missing_sources_file(self):
-        v = get_version(self.binary)
-        self.assertEqual(v, {})
+    def test_without_sources_file(self):
+        """With a missing sources file no exception should be thrown"""
+        with open(os.path.join(self.tempdir, 'application.ini'), 'w') as f:
+            f.writelines(self.application_ini)
+
+        get_version(self.binary)
 
     def _check_version(self, version):
         self.assertEqual(version.get('build_changeset'), 'build_revision')

@@ -1311,6 +1311,22 @@ TabParent::RecvNotifyIMETextHint(const nsString& aText)
 }
 
 bool
+TabParent::RecvNotifyIMEMouseButtonEvent(
+             const IMENotification& aIMENotification,
+             bool* aConsumedByIME)
+{
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    *aConsumedByIME = false;
+    return true;
+  }
+  nsresult rv = widget->NotifyIME(aIMENotification);
+  *aConsumedByIME = rv == NS_SUCCESS_EVENT_CONSUMED;
+  return true;
+}
+
+bool
 TabParent::RecvRequestFocus(const bool& aCanRaise)
 {
   nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();

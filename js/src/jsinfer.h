@@ -1465,7 +1465,6 @@ struct TypeObjectKey
     void watchStateChangeForInlinedCall(CompilerConstraintList *constraints);
     void watchStateChangeForTypedArrayData(CompilerConstraintList *constraints);
     HeapTypeSetKey property(jsid id);
-    void ensureTrackedProperty(JSContext *cx, jsid id);
 
     TypeObject *maybeType();
 };

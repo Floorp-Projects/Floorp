@@ -14,7 +14,6 @@
 struct CharacterDataChangeInfo;
 class nsIVariant;
 class nsIDOMNode;
-class nsIDOMUserDataHandler;
 template<class E> class nsCOMArray;
 class nsCycleCollectionTraversalCallback;
 
@@ -198,29 +197,9 @@ public:
   }
 
   /**
-   * Call registered userdata handlers for operation aOperation for the nodes in
-   * aNodesWithProperties. If aCloned is true aNodesWithProperties should
-   * contain both the original and the cloned nodes (and only the userdata
-   * handlers registered for the original nodes will be called).
+   * Helper for the cycle collector to traverse the DOM UserData for aNode.
    *
-   * @param aNodesWithProperties Contains the nodes that might have properties
-   *                             registered on them. If aCloned is true every
-   *                             one of those nodes should be immediately
-   *                             followed in the array by the cloned node.
-   * @param aOwnerDocument The ownerDocument of the original nodes.
-   * @param aOperation The operation to call a userdata handler for.
-   * @param aCloned If true aNodesWithProperties will contain both original
-   *                and cloned nodes.
-   */
-  static nsresult CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
-                                       nsIDocument *aOwnerDocument,
-                                       uint16_t aOperation, bool aCloned);
-
-  /**
-   * Helper for the cycle collector to traverse the DOM UserData and
-   * UserDataHandlers for aNode.
-   *
-   * @param aNode the node to traverse UserData and UserDataHandlers for
+   * @param aNode the node to traverse UserData for
    * @param aCb the cycle collection callback
    */
   static void TraverseUserData(nsINode* aNode,
@@ -232,17 +211,14 @@ public:
    *
    * @param aNode the node to clone
    * @param aDeep if true all descendants will be cloned too
-   * @param aCallUserDataHandlers if true, user data handlers will be called
    * @param aResult the clone
    */
-  static nsresult CloneNodeImpl(nsINode *aNode, bool aDeep,
-                                bool aCallUserDataHandlers,
-                                nsINode **aResult);
+  static nsresult CloneNodeImpl(nsINode *aNode, bool aDeep, nsINode **aResult);
 
   /**
-   * Release the UserData and UserDataHandlers for aNode.
+   * Release the UserData for aNode.
    *
-   * @param aNode the node to release the UserData and UserDataHandlers for
+   * @param aNode the node to release the UserData for
    */
   static void UnlinkUserData(nsINode *aNode);
 
