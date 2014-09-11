@@ -431,13 +431,6 @@ gfxContext::DrawSurface(gfxASurface *surface, const gfxSize& size)
 
 // transform stuff
 void
-gfxContext::Rotate(gfxFloat angle)
-{
-  Matrix rotation = Matrix::Rotation(Float(angle));
-  ChangeTransform(rotation * mTransform);
-}
-
-void
 gfxContext::Multiply(const gfxMatrix& matrix)
 {
   ChangeTransform(ToMatrix(matrix) * mTransform);
