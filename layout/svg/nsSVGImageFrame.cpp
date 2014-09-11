@@ -277,7 +277,7 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext,
     nscoord appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
     gfxFloat pageZoomFactor =
       nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPx);
-    imageTransform.Scale(pageZoomFactor, pageZoomFactor);
+    imageTransform.PreScale(pageZoomFactor, pageZoomFactor);
   }
 
   if (imageTransform.IsSingular()) {

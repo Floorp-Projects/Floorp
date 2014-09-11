@@ -37,10 +37,10 @@ GetIonScript(JSScript *script, ExecutionMode cmode)
 }
 
 static inline void
-SetIonScript(JSScript *script, ExecutionMode cmode, IonScript *ionScript)
+SetIonScript(JSContext *cx, JSScript *script, ExecutionMode cmode, IonScript *ionScript)
 {
     switch (cmode) {
-      case SequentialExecution: script->setIonScript(ionScript); return;
+      case SequentialExecution: script->setIonScript(cx, ionScript); return;
       case ParallelExecution: script->setParallelIonScript(ionScript); return;
       default:;
     }

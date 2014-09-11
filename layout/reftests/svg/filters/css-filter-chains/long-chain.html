@@ -1,0 +1,41 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filter Chains: Long Filter Chain</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#FilterProperty">
+  <link rel="match" href="long-chain-ref.html">
+  <meta name="assert"
+        content="Multiple chained CSS filter functions of different types should
+                 render correctly.">
+  <style type="text/css">
+    #target {
+      /*
+        Chain together all 10 CSS filter functions defined in the Filter Effects
+        Level 1 specification.
+      */
+      filter: brightness(2)
+              contrast(0.4)
+              grayscale(0.2)
+              hue-rotate(270deg)
+              invert(0.6)
+              opacity(0.8)
+              saturate(10)
+              sepia(0.4)
+              blur(3px)
+              drop-shadow(10px 10px 10px #0f0);
+      background-color: red;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blurred green square with a green drop shadow.</p>
+  <div id="target"></div>
+</body>
+</html>

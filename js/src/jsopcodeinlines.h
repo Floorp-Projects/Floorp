@@ -40,7 +40,7 @@ GetDefCount(JSScript *script, unsigned offset)
 }
 
 static inline unsigned
-GetUseCount(JSScript *script, unsigned offset)
+GetWarmUpCounter(JSScript *script, unsigned offset)
 {
     jsbytecode *pc = script->offsetToPC(offset);
 

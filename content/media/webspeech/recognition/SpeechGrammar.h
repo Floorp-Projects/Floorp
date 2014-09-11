@@ -34,8 +34,8 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  static SpeechGrammar* Constructor(const GlobalObject& aGlobal,
-                                    ErrorResult& aRv);
+  static already_AddRefed<SpeechGrammar>
+    Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
   void GetSrc(nsString& aRetVal, ErrorResult& aRv) const;
 

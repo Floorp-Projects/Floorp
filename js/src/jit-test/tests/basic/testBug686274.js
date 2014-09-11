@@ -1,6 +1,6 @@
 // Don't Baseline-compile the huge array literal with --baseline-eager
 // as it's slow, especially in debug builds.
-setJitCompilerOption("baseline.usecount.trigger", 2);
+setJitCompilerOption("baseline.warmup.trigger", 2);
 
 function f(N) {
     var body = "return [";

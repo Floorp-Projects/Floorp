@@ -1130,7 +1130,6 @@ FindEnumStringIndex(JSContext* cx, JS::Handle<JS::Value> v, const EnumEntry* val
     *ok = false;
     return 0;
   }
-  JS::Anchor<JSString*> anchor(str);
 
   {
     int index;
@@ -2977,6 +2976,25 @@ WrappedJSToDictionary(nsISupports* aObject, T& aDictionary)
   JS::Rooted<JS::Value> v(cx, OBJECT_TO_JSVAL(obj));
   return aDictionary.Init(cx, v);
 }
+
+
+template<class T, class S>
+inline nsRefPtr<T>
+StrongOrRawPtr(already_AddRefed<S>&& aPtr)
+{
+  return aPtr.template downcast<T>();
+}
+
+template<class T>
+inline T*
+StrongOrRawPtr(T* aPtr)
+{
+  return aPtr;
+}
+
+template<class T, template<typename> class SmartPtr, class S>
+inline void
+StrongOrRawPtr(SmartPtr<S>&& aPtr) MOZ_DELETE;
 
 } // namespace dom
 } // namespace mozilla

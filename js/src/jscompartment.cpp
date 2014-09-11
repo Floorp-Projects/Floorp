@@ -611,7 +611,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
         jitCompartment_->sweep(fop, this);
 
     /*
-     * JIT code increments activeUseCount for any RegExpShared used by jit
+     * JIT code increments activeWarmUpCounter for any RegExpShared used by jit
      * code for the lifetime of the JIT script. Thus, we must perform
      * sweeping after clearing jit code.
      */

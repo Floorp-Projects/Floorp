@@ -95,8 +95,6 @@ function ignoreEdgeUse(edge, variable)
         var callee = edge.Exp[0];
         if (callee.Kind == "Var") {
             var name = callee.Variable.Name[0];
-            if (/~Anchor/.test(name))
-                return true;
             if (/~DebugOnly/.test(name))
                 return true;
             if (/~ScopedThreadSafeStringInspector/.test(name))

@@ -126,42 +126,6 @@ std::string CC_SIPCCCallInfo::callStateToString (cc_call_state_t state)
       case WAITINGFORDIGITS:
         statestr = "WAITINGFORDIGITS";
         break;
-      case CREATEOFFERSUCCESS:
-        statestr = "CREATEOFFERSUCCESS";
-        break;
-      case CREATEANSWERSUCCESS:
-        statestr = "CREATEANSWERSUCCESS";
-        break;
-      case CREATEOFFERERROR:
-        statestr = "CREATEOFFERERROR";
-        break;
-      case CREATEANSWERERROR:
-        statestr = "CREATEANSWERERROR";
-        break;
-      case SETLOCALDESCSUCCESS:
-        statestr = "SETLOCALDESCSUCCESS";
-        break;
-      case SETREMOTEDESCSUCCESS:
-        statestr = "SETREMOTEDESCSUCCESS";
-        break;
-      case UPDATELOCALDESC:
-        statestr = "UPDATELOCALDESC";
-        break;
-      case SETLOCALDESCERROR:
-        statestr = "SETLOCALDESCERROR";
-        break;
-      case SETREMOTEDESCERROR:
-        statestr = "SETREMOTEDESCERROR";
-        break;
-      case REMOTESTREAMADD:
-        statestr = "REMOTESTREAMADD";
-        break;
-      case ADDICECANDIDATE:
-        statestr = "ADDICECANDIDATE";
-        break;
-      case ADDICECANDIDATEERROR:
-        statestr = "ADDICECANDIDATEERROR";
-        break;
       default:
         break;
     }
@@ -432,31 +396,6 @@ bool CC_SIPCCCallInfo::isAudioMuted()
 bool CC_SIPCCCallInfo::isVideoMuted()
 {
     return (CCAPI_CallInfo_isVideoMuted(callinfo_ref) != 0);
-}
-
-string CC_SIPCCCallInfo::getSDP()
-{
-    return CCAPI_CallInfo_getSDP(callinfo_ref);
-}
-
-cc_int32_t CC_SIPCCCallInfo::getStatusCode()
-{
-    return CCAPI_CallInfo_getStatusCode(callinfo_ref);
-}
-
-MediaStreamTable* CC_SIPCCCallInfo::getMediaStreams() const
-{
-	return CCAPI_CallInfo_getMediaStreams(callinfo_ref);
-}
-
-Timecard *CC_SIPCCCallInfo::takeTimecard()
-{
-    return CCAPI_CallInfo_takeTimecard(callinfo_ref);
-}
-
-std::string CC_SIPCCCallInfo::getCandidate()
-{
-    return CCAPI_CallInfo_getCandidate(callinfo_ref);
 }
 
 bool CC_SIPCCCallInfo::isMediaStateAvailable()

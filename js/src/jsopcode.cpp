@@ -414,7 +414,7 @@ class BytecodeParser
 uint32_t
 BytecodeParser::simulateOp(JSOp op, uint32_t offset, uint32_t *offsetStack, uint32_t stackDepth)
 {
-    uint32_t nuses = GetUseCount(script_, offset);
+    uint32_t nuses = GetWarmUpCounter(script_, offset);
     uint32_t ndefs = GetDefCount(script_, offset);
 
     JS_ASSERT(stackDepth >= nuses);
@@ -868,7 +868,6 @@ ToDisassemblySource(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
             JSString *source = obj.as<RegExpObject>().toString(cx);
             if (!source)
                 return false;
-            JS::Anchor<JSString *> anchor(source);
             return bytes->encodeLatin1(cx, source);
         }
     }

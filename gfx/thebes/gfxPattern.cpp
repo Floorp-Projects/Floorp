@@ -224,7 +224,7 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
 
         double x, y;
         cairo_surface_get_device_offset(surf, &x, &y);
-        newMat.Translate(-x, -y);
+        newMat.PreTranslate(-x, -y);
         mGfxPattern = new (mSurfacePattern.addr())
           SurfacePattern(mSourceSurface, ToExtendMode(extend), newMat, ToFilter(filter));
         return mGfxPattern;

@@ -1,0 +1,259 @@
+<!DOCTYPE>
+<html>
+<head>
+<title>-moz-user-select selection tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<style type="text/css">
+@font-face {
+  font-family: Ahem;
+  src: url("Ahem.ttf");
+}
+body { font-family: Ahem; font-size: 20px; }
+s { -moz-user-select: none; }
+n { display: none; }
+</style>
+
+</head>
+<body>
+
+<div id="test1">aaaaaaa<s>bbbbbbbb</s>ccccccc</div>
+<div id="test2"><s>aaaaaaa</s>bbbbbbbbccccccc</div>
+<div id="test3">aaaaaaabbbbbbbb<s>ccccccc</s></div>
+<div id="test4">aaaaaaa<x><s>bbbbbbbb</s></x>ccccccc</div>
+<div id="test5"><x><s>aaaaaaa</s></x>bbbbbbbbccccccc</div>
+<div id="test6">aaaaaaabbbbbbbb<x><s>ccccccc</s></x></div>
+<div id="test7">aaaaaaa<x><s><n>bbbb</n>bbbb</s></x>ccccccc</div>
+<div id="test8"><x><s>aa<n>aaa</n>aa</s></x>bbbbbbbbccccccc</div>
+<div id="test9">aaaaaaabbbbbbbb<x><s>cc<n>ccccc</n></s></x></div>
+<div id="testA">aaaaaaa<n>bbb<s>bbbbb</s></n>ccccccc</div>
+<div id="testB"><n><s>aaaa</s>aaa</n>bbbbbbbbccccccc</div>
+<div id="testC">aaaaaaabbbbbbbb<n>cc<s>c</s>cccc</n></div>
+
+<iframe id="testD" src="data:text/html,<body>aaaa<span style='-moz-user-select:none'>bbbb</span>cccc"></iframe>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function test()
+{
+  function clear(w)
+  {
+    var sel = (w ? w : window).getSelection();
+    sel.removeAllRanges();
+  }
+
+  function dragSelect(e, x1, x2, x3)
+  {
+    dir = x2 > x1 ? 1 : -1;
+    synthesizeMouse(e, x1, 5, { type: "mousedown" });
+    synthesizeMouse(e, x1 + dir, 5, { type: "mousemove" });
+    if (x3)
+      synthesizeMouse(e, x3, 5, { type: "mousemove" });
+    synthesizeMouse(e, x2 - dir, 5, { type: "mousemove" });
+    synthesizeMouse(e, x2, 5, { type: "mouseup" });
+  }
+
+  function shiftClick(e, x)
+  {
+    synthesizeMouse(e, x, 5, { type: "mousedown", shiftKey: true });
+    synthesizeMouse(e, x, 5, { type: "mouseup", shiftKey: true });
+  }
+
+  function init(arr, e)
+  {
+    clear();
+    var sel = window.getSelection();
+    for (i = 0; i < arr.length; ++i) {
+      var data = arr[i];
+      var r = new Range()
+      r.setStart(node(e, data[0]), data[1]);
+      r.setEnd(node(e, data[2]), data[3]);
+      sel.addRange(r);
+    }
+  }
+
+  function checkText(text, e)
+  {
+    var sel = window.getSelection();
+    is(sel.toString(), text, e.id + ": selected text")
+  }
+
+  function checkRangeText(text, index)
+  {
+    var r = window.getSelection().getRangeAt(index);
+    is(r.toString(), text, e.id + ": range["+index+"].toString()")
+  }
+
+  function node(e, index)
+  {
+    return index == -1 ? e : e.childNodes[index];
+  }
+
+  function checkRanges(arr, e)
+  {
+    var sel = window.getSelection();
+    is(sel.rangeCount, arr.length, e.id + ": Selection range count");
+    for (i = 0; i < arr.length; ++i) {
+      var expected = arr[i];
+      var r = sel.getRangeAt(i);
+      is(r.startContainer, node(e, expected[0]), e.id + ": range["+i+"].startContainer");
+      is(r.startOffset, expected[1], e.id + ": range["+i+"].startOffset");
+      is(r.endContainer, node(e, expected[2]), e.id + ": range["+i+"].endContainer");
+      is(r.endOffset, expected[3], e.id + ": range["+i+"].endOffset");
+    }
+  }
+
+  // ======================================================
+  // ================== dragSelect tests ==================
+  // ======================================================
+
+  var e = document.getElementById('test1');
+  dragSelect(e, 20, 340);
+  checkText('aaaaaacc', e);
+  checkRanges([[0,1,-1,1], [2,0,2,2]], e);
+
+  clear();
+  dragSelect(e, 20, 260, 120);
+  checkText('aaaaa', e);
+  checkRanges([[0,1,0,6]], e);
+
+  clear();
+  e = document.getElementById('test2');
+  dragSelect(e, 20, 340);
+  checkText('', e);
+  checkRanges([], e);
+
+  clear();
+  dragSelect(e, 340, 20, 140);
+  checkText('bbbbbbbbcc', e);
+  checkRanges([[1,0,1,10]], e);
+
+  clear();
+  e = document.getElementById('test3');
+  dragSelect(e, 20, 340, 295);
+  checkText('aaaaaabbbbbbbb', e);
+  checkRanges([[0,1,0,15]], e);
+
+  clear();
+  e = document.getElementById('test4');
+  dragSelect(e, 20, 340);
+  checkText('aaaaaacc', e);
+  checkRanges([[0,1,1,0], [2,0,2,2]], e);
+
+  clear();
+  e = document.getElementById('test5');
+  dragSelect(e, 340, 20, 140);
+  checkText('bbbbbbbbcc', e);
+  checkRanges([[1,0,1,10]], e);
+
+  clear();
+  e = document.getElementById('test6');
+  dragSelect(e, 20, 340, 295);
+  checkText('aaaaaabbbbbbbb', e);
+  checkRanges([[0,1,0,15]], e);
+
+  clear();
+  e = document.getElementById('test7');
+  dragSelect(e, 20, 340);
+  checkText('aaaaaacccccc', e);
+  checkRanges([[0,1,1,0], [2,0,2,6]], e);
+
+  clear();
+  e = document.getElementById('test8');
+  dragSelect(e, 340, 20, 140);
+  checkText('bbbbbccccc', e);
+  checkRanges([[1,3,1,13]], e);
+
+  clear();
+  e = document.getElementById('test9');
+  dragSelect(e, 20, 340, 295);
+  checkText('aaaaaabbbbbbbb', e);
+  checkRanges([[0,1,0,15]], e);
+
+  clear();
+  e = document.getElementById('testA');
+  dragSelect(e, 20, 340);
+  checkText('aaaaaaccccccc', e);
+  checkRanges([[0,1,2,7]], e);
+  checkRangeText('aaaaaabbbbbbbbccccccc', 0);
+
+  clear();
+  e = document.getElementById('testB');
+  dragSelect(e, 340, 20, 140);
+  checkText('bbbbbbbccccccc', e);
+  checkRanges([[1,1,1,15]], e);
+
+  clear();
+  e = document.getElementById('test9');
+  dragSelect(e, 20, 340, 295);
+  checkText('aaaaaabbbbbbbb', e);
+  checkRanges([[0,1,0,15]], e);
+
+  // ======================================================
+  // ================== shift+click tests =================
+  // ======================================================
+
+  // test extending a selection that starts in a -moz-user-select:none node
+  clear();
+  e = document.getElementById('test2');
+  init([[0,0,0,1]], e);
+  checkRangeText('aaaaaaa', 0);
+  checkText('', e);
+  shiftClick(e, 340);
+  checkRangeText('bbbbbbbbcc', 0);
+  checkText('bbbbbbbbcc', e);
+  checkRanges([[-1,1,1,10]], e);
+
+  // test extending a selection that end in a -moz-user-select:none node
+  clear();
+  e = document.getElementById('test3');
+  init([[1,0,1,1]], e);
+  checkRangeText('ccccccc', 0);
+  checkText('', e);
+  shiftClick(e, 20);
+  checkRangeText('aaaaaabbbbbbbb', 0);
+  checkText('aaaaaabbbbbbbb', e);
+  checkRanges([[0,1,-1,1]], e);
+
+  // ======================================================
+  // ==================== Script tests ====================
+  // ======================================================
+
+  clear();
+  e = document.getElementById('testD');
+  clear(e.contentWindow);
+  sel = e.contentWindow.getSelection();
+  sel.selectAllChildren(e.contentDocument.body);
+  is(window.getSelection().rangeCount, 0, "testD: no selection in outer window");
+  is(sel.toString(), 'aaaacccc', "testD: scripted selection");
+  is(sel.rangeCount, 1, "testD: scripted selection isn't filtered");
+  is(sel.getRangeAt(0).toString(), 'aaaabbbbcccc', "testD: scripted selection isn't filtered");
+
+  // ======================================================
+  // ================== Kbd command tests =================
+  // ======================================================
+
+  clear();
+  e = document.getElementById('testD');
+  clear(e.contentWindow);
+  e.contentWindow.focus();
+  synthesizeKey("a", { accelKey:true }, e.contentWindow);
+  sel = e.contentWindow.getSelection();
+  is(window.getSelection().rangeCount, 0, "testD: no selection in outer window");
+  is(sel.toString(), 'aaaacccc', "testD: kbd selection");
+  is(sel.rangeCount, 2, "testD: kbd selection is filtered");
+  is(sel.getRangeAt(0).toString(), 'aaaa', "testD: kbd selection is filtered");
+  is(sel.getRangeAt(1).toString(), 'cccc', "testD: kbd selection is filtered");
+
+  clear();
+  SimpleTest.finish();
+}
+window.onload = function() { setTimeout(test, 0); };
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<style>td:first-letter {
+</style>
+><table border=0>
+	<td><table id=test1>><td id=test2>
+<script>
+setTimeout("tCFcrash()", 41);
+function tCFcrash() {
+test1.appendChild(test2);
+}</script>>

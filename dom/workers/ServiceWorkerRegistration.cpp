@@ -10,9 +10,11 @@
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/Services.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "ServiceWorker.h"
 
+#include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"
@@ -97,12 +99,91 @@ ServiceWorkerRegistration::GetActive()
   return ret.forget();
 }
 
+namespace {
+
+class UnregisterCallback MOZ_FINAL : public nsIServiceWorkerUnregisterCallback
+{
+  nsRefPtr<Promise> mPromise;
+
+public:
+  NS_DECL_ISUPPORTS
+
+  UnregisterCallback(Promise* aPromise)
+    : mPromise(aPromise)
+  {
+    MOZ_ASSERT(mPromise);
+  }
+
+  NS_IMETHODIMP
+  UnregisterSucceeded(bool aState)
+  {
+    AssertIsOnMainThread();
+    mPromise->MaybeResolve(aState);
+    return NS_OK;
+  }
+
+  NS_IMETHODIMP
+  UnregisterFailed()
+  {
+    AssertIsOnMainThread();
+
+    AutoJSAPI api;
+    api.Init(mPromise->GetParentObject());
+    mPromise->MaybeReject(api.cx(), JS::UndefinedHandleValue);
+    return NS_OK;
+  }
+
+private:
+  ~UnregisterCallback()
+  { }
+};
+
+NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
+
+} // anonymous namespace
+
 already_AddRefed<Promise>
 ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
 {
-  nsCOMPtr<nsISupports> promise;
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(GetOwner());
+  if (!go) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
-  nsresult rv;
+  // Although the spec says that the same-origin checks should also be done
+  // asynchronously, we do them in sync because the Promise created by the
+  // WebIDL infrastructure due to a returned error will be resolved
+  // asynchronously. We aren't making any internal state changes in these
+  // checks, so ordering of multiple calls is not affected.
+  nsCOMPtr<nsIDocument> document = GetOwner()->GetExtantDoc();
+  if (!document) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> scopeURI;
+  nsCOMPtr<nsIURI> baseURI = document->GetBaseURI();
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), mScope, nullptr, baseURI);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIPrincipal> documentPrincipal = document->NodePrincipal();
+  rv = documentPrincipal->CheckMayLoad(scopeURI, true /* report */,
+                                       false /* allowIfInheritsPrinciple */);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  nsAutoCString uriSpec;
+  aRv = scopeURI->GetSpec(uriSpec);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsIServiceWorkerManager> swm =
     do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -110,14 +191,20 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
     return nullptr;
   }
 
-  aRv = swm->Unregister(mScope, getter_AddRefs(promise));
+  nsRefPtr<Promise> promise = Promise::Create(go, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  nsRefPtr<UnregisterCallback> cb = new UnregisterCallback(promise);
+
+  NS_ConvertUTF8toUTF16 scope(uriSpec);
+  aRv = swm->Unregister(cb, scope);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  nsRefPtr<Promise> ret = static_cast<Promise*>(promise.get());
-  MOZ_ASSERT(ret);
-  return ret.forget();
+  return promise.forget();
 }
 
 already_AddRefed<workers::ServiceWorker>
