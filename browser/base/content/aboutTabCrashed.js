@@ -11,3 +11,7 @@ function parseQueryString() {
 }
 
 document.title = parseQueryString();
+
+// Error pages are loaded as LOAD_BACKGROUND, so they don't get load events.
+var event = new CustomEvent("AboutTabCrashedLoad", {bubbles:true});
+document.dispatchEvent(event);
