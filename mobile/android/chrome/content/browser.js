@@ -86,6 +86,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebappManager",
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
                                   "resource://gre/modules/CharsetMenu.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PermissionsUtils",
+                                  "resource://gre/modules/PermissionsUtils.jsm");
+
 // Lazily-loaded browser scripts:
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
@@ -2858,6 +2861,9 @@ var LightWeightThemeWebInstaller = {
   },
 
   _isAllowed: function (node) {
+    // Make sure the whitelist has been imported to permissions
+    PermissionsUtils.importFromPrefs("xpinstall.", "install");
+
     let pm = Services.perms;
 
     let uri = node.ownerDocument.documentURIObject;
