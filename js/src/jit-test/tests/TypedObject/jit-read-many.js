@@ -9,7 +9,7 @@ if (!this.hasOwnProperty("TypedObject"))
 // Test a single function (`bar`) being used with arrays that are all
 // of known length, but not the same length.
 
-setJitCompilerOption("ion.usecount.trigger", 30);
+setJitCompilerOption("ion.warmup.trigger", 30);
 
 var N0 = 50;
 var N1 = 100;

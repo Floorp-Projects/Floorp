@@ -229,7 +229,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     bool emitStackCheck(bool earlyCheck=false);
     bool emitInterruptCheck();
-    bool emitUseCountIncrement(bool allowOsr=true);
+    bool emitWarmUpCounterIncrement(bool allowOsr=true);
     bool emitArgumentTypeChecks();
     bool emitDebugPrologue();
     bool emitDebugTrap();

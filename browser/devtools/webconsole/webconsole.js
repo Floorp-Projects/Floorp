@@ -4669,6 +4669,7 @@ var Utils = {
       case "Insecure Password Field":
       case "SSL":
       case "CORS":
+      case "Iframe Sandbox":
         return CATEGORY_SECURITY;
 
       default:

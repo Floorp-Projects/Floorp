@@ -1344,8 +1344,4 @@ struct GCMethods<types::Type>
 
 } // namespace js
 
-namespace JS {
-template<> class AnchorPermitted<js::types::TypeObject *> { };
-}  // namespace JS
-
 #endif /* jsinferinlines_h */

@@ -245,8 +245,7 @@ public:
 // worker has successfully been parsed.
 class ServiceWorkerUpdateInstance MOZ_FINAL : public nsISupports
 {
-  // Owner of this instance.
-  ServiceWorkerRegistrationInfo* mRegistration;
+  nsRefPtr<ServiceWorkerRegistrationInfo> mRegistration;
   nsCString mScriptSpec;
   nsCOMPtr<nsPIDOMWindow> mWindow;
 
@@ -484,13 +483,13 @@ public:
  */
 class UnregisterRunnable : public nsRunnable
 {
-  nsCOMPtr<nsIGlobalObject> mGlobal;
+  nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
   nsCOMPtr<nsIURI> mScopeURI;
-  nsRefPtr<Promise> mPromise;
+
 public:
-  UnregisterRunnable(nsIGlobalObject* aGlobal, nsIURI* aScopeURI,
-                     Promise* aPromise)
-    : mGlobal(aGlobal), mScopeURI(aScopeURI), mPromise(aPromise)
+  UnregisterRunnable(nsIServiceWorkerUnregisterCallback* aCallback,
+                     nsIURI* aScopeURI)
+    : mCallback(aCallback), mScopeURI(aScopeURI)
   {
     AssertIsOnMainThread();
   }
@@ -509,23 +508,22 @@ public:
     nsCString spec;
     nsresult rv = mScopeURI->GetSpecIgnoringRef(spec);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      AutoJSAPI api;
-      api.Init(mGlobal);
-      mPromise->MaybeReject(api.cx(), JS::UndefinedHandleValue);
-      return NS_OK;
+      return mCallback->UnregisterFailed();
     }
 
     nsRefPtr<ServiceWorkerRegistrationInfo> registration;
     if (!domainInfo->mServiceWorkerRegistrationInfos.Get(spec,
                                                          getter_AddRefs(registration))) {
-      mPromise->MaybeResolve(JS::FalseHandleValue);
-      return NS_OK;
+      return mCallback->UnregisterSucceeded(false);
     }
 
     MOZ_ASSERT(registration);
 
     registration->mPendingUninstall = true;
-    mPromise->MaybeResolve(JS::TrueHandleValue);
+    rv = mCallback->UnregisterSucceeded(true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     // The "Wait until no document is using registration" can actually be
     // handled by [[HandleDocumentUnload]] in Bug 1041340, so we simply check
@@ -1046,53 +1044,21 @@ ServiceWorkerManager::AbortCurrentUpdate(ServiceWorkerRegistrationInfo* aRegistr
   aRegistration->mUpdateInstance = nullptr;
 }
 
-// If we return an error, ServiceWorkerContainer will reject the Promise.
 NS_IMETHODIMP
-ServiceWorkerManager::Unregister(const nsAString& aScope, nsISupports** aPromise)
+ServiceWorkerManager::Unregister(nsIServiceWorkerUnregisterCallback* aCallback,
+                                 const nsAString& aScope)
 {
   AssertIsOnMainThread();
-
-  // XXXnsm Don't allow chrome callers for now.
-  MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
-
-  nsCOMPtr<nsIGlobalObject> sgo = GetEntryGlobal();
-  if (!sgo) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult result;
-  nsRefPtr<Promise> promise = Promise::Create(sgo, result);
-  if (result.Failed()) {
-    return result.ErrorCode();
-  }
-
-  // Although the spec says that the same-origin checks should also be done
-  // asynchronously, we do them in sync because the Promise created by the
-  // WebIDL infrastructure due to a returned error will be resolved
-  // asynchronously. We aren't making any internal state changes in these
-  // checks, so ordering of multiple calls is not affected.
-  nsCOMPtr<nsIDocument> document = GetEntryDocument();
-  if (!document) {
-    return NS_ERROR_FAILURE;
-  }
+  MOZ_ASSERT(aCallback);
 
   nsCOMPtr<nsIURI> scopeURI;
-  nsCOMPtr<nsIURI> baseURI = document->GetBaseURI();
-  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, baseURI);
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsIPrincipal> documentPrincipal = document->NodePrincipal();
-  rv = documentPrincipal->CheckMayLoad(scopeURI, true /* report */,
-                                       false /* allowIfInheritsPrinciple */);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   nsRefPtr<nsIRunnable> unregisterRunnable =
-    new UnregisterRunnable(sgo, scopeURI, promise);
-  promise.forget(aPromise);
+    new UnregisterRunnable(aCallback, scopeURI);
   return NS_DispatchToCurrentThread(unregisterRunnable);
 }
 

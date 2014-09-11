@@ -295,39 +295,4 @@ cc_boolean CCAPI_CallInfo_isAudioMuted(cc_callinfo_ref_t handle);
  */
 cc_boolean CCAPI_CallInfo_isVideoMuted(cc_callinfo_ref_t handle);
 
-/**
- * get SDP string CreateOffer and CreateAnswer callback
- * @param [in] handle - call info handle
- * @return sdp
- */
-cc_string_t CCAPI_CallInfo_getSDP(cc_callinfo_ref_t handle);
-
-/**
- * get trickle candidate
- * @param [in] handle - call info handle
- * @return sdp
- */
-cc_string_t CCAPI_CallInfo_getCandidate(cc_callinfo_ref_t handle);
-
-/**
- * get status code from internal JSEP functions
- * @param [in] handle - call info handle
- * @return status code
- */
-cc_int32_t  CCAPI_CallInfo_getStatusCode(cc_callinfo_ref_t handle);
-
-/**
- * get media stream table
- * @param [in] handle - call info handle
- * @return media track table
- */
-MediaStreamTable* CCAPI_CallInfo_getMediaStreams(cc_callinfo_ref_t handle);
-
-/**
- * Take posession of timecard
- * @param [in] handle - call info handle
- * @return timecard pointer
- */
-Timecard* CCAPI_CallInfo_takeTimecard(cc_callinfo_ref_t handle);
-
 #endif /* _CCAPIAPI_CALL_INFO_H_ */

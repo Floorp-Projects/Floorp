@@ -656,13 +656,13 @@ IonBuilder::build()
                 script()->filename(), script()->lineno(), (void *)script(),
                 ExecutionModeString(info().executionMode()));
     } else if (info().executionMode() == SequentialExecution && script()->hasIonScript()) {
-        JitSpew(JitSpew_Scripts, "Recompiling script %s:%d (%p) (usecount=%d, level=%s)",
+        JitSpew(JitSpew_Scripts, "Recompiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
-                (int)script()->getUseCount(), OptimizationLevelString(optimizationInfo().level()));
+                (int)script()->getWarmUpCounter(), OptimizationLevelString(optimizationInfo().level()));
     } else {
-        JitSpew(JitSpew_Scripts, "Compiling script %s:%d (%p) (usecount=%d, level=%s)",
+        JitSpew(JitSpew_Scripts, "Compiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
-                (int)script()->getUseCount(), OptimizationLevelString(optimizationInfo().level()));
+                (int)script()->getWarmUpCounter(), OptimizationLevelString(optimizationInfo().level()));
     }
 #endif
 
@@ -1277,11 +1277,11 @@ IonBuilder::traverseBytecode()
         // adding any SSA uses and doesn't call setImplicitlyUsedUnchecked on it.
         Vector<MDefinition *, 4, IonAllocPolicy> popped(alloc());
         Vector<size_t, 4, IonAllocPolicy> poppedUses(alloc());
-        unsigned nuses = GetUseCount(script_, script_->pcToOffset(pc));
+        unsigned nuses = GetWarmUpCounter(script_, script_->pcToOffset(pc));
 
         for (unsigned i = 0; i < nuses; i++) {
             MDefinition *def = current->peek(-int32_t(i + 1));
-            if (!popped.append(def) || !poppedUses.append(def->defUseCount()))
+            if (!popped.append(def) || !poppedUses.append(def->defWarmUpCounter()))
                 return false;
         }
 #endif
@@ -1328,7 +1328,7 @@ IonBuilder::traverseBytecode()
                           // for more details.
                           popped[i]->isNewDerivedTypedObject() ||
 
-                          popped[i]->defUseCount() > poppedUses[i]);
+                          popped[i]->defWarmUpCounter() > poppedUses[i]);
                 break;
             }
         }
@@ -1920,8 +1920,11 @@ IonBuilder::processIfElseTrueEnd(CFGState &state)
         return ControlStatus_Error;
     graph().moveBlockToEnd(current);
 
-    if (state.branch.test)
-        filterTypesAtTest(state.branch.test);
+    if (state.branch.test) {
+        MTest *test = state.branch.test;
+        if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
+            return ControlStatus_Error;
+    }
 
     return ControlStatus_Jumped;
 }
@@ -3075,82 +3078,241 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
 }
 
 bool
-IonBuilder::filterTypesAtTest(MTest *test)
+IonBuilder::replaceTypeSet(MDefinition *subject, types::TemporaryTypeSet *type, MTest *test)
 {
-    JS_ASSERT(test->ifTrue() == current || test->ifFalse() == current);
+    if (type->unknown())
+        return true;
 
-    bool trueBranch = test->ifTrue() == current;
+    MFilterTypeSet *replace = nullptr;
+    MDefinition *ins;
 
-    MDefinition *subject = nullptr;
-    bool removeUndefined = false;
-    bool removeNull = false;
-    bool setTypeToObject = false;
+    for (uint32_t i = 0; i < current->stackDepth(); i++) {
+        ins = current->getSlot(i);
 
-    // setTypeToObject is set to true only when we're sure that the type is object.
-    // If IsObject results to true, and we're in the true branch,
-    // then setTypeToObject is true. Similarly, if the instruction is !IsObject and
-    // we're not in true branch.
-    MDefinition *ins = test->getOperand(0);
-    if (ins->isIsObject() && trueBranch) {
-        setTypeToObject = true;
-        subject = ins->getOperand(0);
-    } else if (!trueBranch && ins->isNot() && ins->toNot()->getOperand(0)->isIsObject()) {
-        setTypeToObject = true;
-        subject = ins->getOperand(0)->getOperand(0);
+        // Instead of creating a new MFilterTypeSet, try to update the old one.
+        if (ins->isFilterTypeSet() && ins->getOperand(0) == subject &&
+            ins->dependency() == test)
+        {
+            types::TemporaryTypeSet *intersect =
+                types::TypeSet::intersectSets(ins->resultTypeSet(), type, alloc_->lifoAlloc());
+            if (!intersect)
+                return false;
+
+            ins->toFilterTypeSet()->setResultType(intersect->getKnownMIRType());
+            ins->toFilterTypeSet()->setResultTypeSet(intersect);
+            continue;
+        }
+
+        if (ins == subject) {
+            if (!replace) {
+                replace = MFilterTypeSet::New(alloc(), subject, type);
+
+                if (!replace)
+                    return false;
+                if (replace == subject)
+                    break;
+
+                current->add(replace);
+
+                if (replace != subject) {
+                    // Make sure we don't hoist it above the MTest, we can use the
+                    // 'dependency' of an MInstruction. This is normally used by
+                    // Alias Analysis, but won't get overwritten, since this
+                    // instruction doesn't have an AliasSet.
+                    replace->setDependency(test);
+                }
+            }
+            current->setSlot(i, replace);
+        }
+    }
+    return true;
+}
+
+bool
+IonBuilder::detectAndOrStructure(MPhi *ins, bool *branchIsAnd)
+{
+    // TODO bug 1034184: enable this again
+    return false;
+
+    if (current->numPredecessors() != 1)
+        return false;
+
+    MTest *initialTest;
+    MBasicBlock *initialBlock;
+    MBasicBlock *branchBlock;
+    MBasicBlock *testBlock = ins->block();
+
+    // If *branchIsAnd is true, then the phi is an AND. Else it is an OR.
+    *branchIsAnd = true;
+    // We need to first detect the triangular structure.
+    if (testBlock->numPredecessors() != 2)
+        return false;
+
+    if (testBlock->getPredecessor(0)->lastIns()->isTest())
+        initialBlock = testBlock->getPredecessor(0);
+    else if (testBlock->getPredecessor(1)->lastIns()->isTest())
+        initialBlock = testBlock->getPredecessor(1);
+    else
+        return false;
+
+    initialTest = initialBlock->lastIns()->toTest();
+
+    if (initialTest->ifTrue() == testBlock) {
+        branchBlock = initialTest->ifFalse();
+        *branchIsAnd = false;
     } else {
-        test->filtersUndefinedOrNull(trueBranch, &subject, &removeUndefined, &removeNull);
+        branchBlock = initialTest->ifTrue();
     }
 
-    // The test filters no undefined or null.
-    if (!subject)
-        return true;
+    if (branchBlock->numSuccessors() != 1 || branchBlock->getSuccessor(0) != testBlock)
+        return false;
 
-    // There is no TypeSet that can get filtered.
-    if (!subject->resultTypeSet() || subject->resultTypeSet()->unknown())
-        return true;
+    if (branchBlock->numPredecessors() != 1)
+        return false;
 
-    // Only do this optimization if the typeset does contains null or undefined
-    // or if type isn't already object only.
-    if (!(removeUndefined && subject->resultTypeSet()->hasType(types::Type::UndefinedType())) &&
-        !(removeNull && subject->resultTypeSet()->hasType(types::Type::NullType())) &&
-        !(setTypeToObject && subject->type() != MIRType_Object))
+    MPhi *phi = ins->toPhi();
+
+    MDefinition *branchResult = phi->getOperand(testBlock->indexForPredecessor(branchBlock));
+    MDefinition *initialResult = phi->getOperand(testBlock->indexForPredecessor(initialBlock));
+
+    if (branchBlock->stackDepth() != initialBlock->stackDepth())
+        return false;
+    if (branchBlock->stackDepth() != testBlock->stackDepth() + 1)
+        return false;
+    if (branchResult != branchBlock->peek(-1) || initialResult != initialBlock->peek(-1))
+        return false;
+
+    return true;
+}
+
+bool
+IonBuilder::improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test)
+{
+    // Only support Compare_Undefined and Compare_Null at the moment.
+    if (ins->compareType() != MCompare::Compare_Undefined &&
+        ins->compareType() != MCompare::Compare_Null)
     {
         return true;
     }
 
-    // Find all values on the stack that correspond to the subject
-    // and replace it with a MIR with filtered TypeSet information.
-    // Create the replacement MIR lazily upon first occurence.
-    MDefinition *replace = nullptr;
-    for (uint32_t i = 0; i < current->stackDepth(); i++) {
-        if (current->getSlot(i) != subject)
-            continue;
+    MOZ_ASSERT(ins->jsop() == JSOP_STRICTNE || ins->jsop() == JSOP_NE ||
+               ins->jsop() == JSOP_STRICTEQ || ins->jsop() == JSOP_EQ);
 
-        // Create replacement MIR with filtered TypesSet.
-        if (!replace) {
-            types::TemporaryTypeSet *type;
-            if (setTypeToObject)
-                type = subject->resultTypeSet()->cloneObjectsOnly(alloc_->lifoAlloc());
-            else
-                type = subject->resultTypeSet()->filter(alloc_->lifoAlloc(), removeUndefined,
-                                                                             removeNull);
-            if (!type)
-                return false;
+    // JSOP_*NE only removes undefined/null from if/true branch
+    if (!trueBranch && (ins->jsop() == JSOP_STRICTNE || ins->jsop() == JSOP_NE))
+        return true;
 
-            replace = ensureDefiniteTypeSet(subject, type);
-            if (replace != subject) {
-                // Make sure we don't hoist it above the MTest, we can use the
-                // 'dependency' of an MInstruction. This is normally used by
-                // Alias Analysis, but won't get overwritten, since this
-                // instruction doesn't have an AliasSet.
-                replace->setDependency(test);
-            }
-        }
+    // JSOP_*EQ only removes undefined/null from else/false branch
+    if (trueBranch && (ins->jsop() == JSOP_STRICTEQ || ins->jsop() == JSOP_EQ))
+        return true;
 
-        current->setSlot(i, replace);
+    bool filtersUndefined = false;
+    bool filtersNull = false;
+    if (ins->jsop() == JSOP_STRICTEQ || ins->jsop() == JSOP_STRICTNE) {
+        filtersUndefined = (ins->compareType() == MCompare::Compare_Undefined);
+        filtersNull = (ins->compareType() == MCompare::Compare_Null);
+    } else {
+        filtersUndefined = filtersNull = true;
     }
 
-   return true;
+    MOZ_ASSERT(IsNullOrUndefined(ins->rhs()->type()));
+
+    MDefinition *subject = ins->lhs();
+    if (!subject->resultTypeSet() || subject->resultTypeSet()->unknown())
+        return true;
+
+    // Make sure the type is present we want to filter else this is a NOP.
+    if ((!filtersUndefined || !subject->mightBeType(MIRType_Undefined)) &&
+        (!filtersNull || !subject->mightBeType(MIRType_Null)))
+    {
+        return true;
+    }
+
+    types::TemporaryTypeSet *type =
+        type = subject->resultTypeSet()->filter(alloc_->lifoAlloc(), filtersUndefined,
+                                                                     filtersNull);
+    if (!type)
+        return false;
+
+    return replaceTypeSet(subject, type, test);
+}
+
+bool
+IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
+{
+    // We explore the test condition to try and deduce
+    // as much type information as possible.
+    if (!ins)
+        return true;
+
+    switch(ins->op()) {
+      case MDefinition::Op_Not:
+        return improveTypesAtTest(ins->toNot()->getOperand(0), !trueBranch, test);
+      case MDefinition::Op_IsObject: {
+        types::TemporaryTypeSet *oldType = ins->getOperand(0)->resultTypeSet();
+        if (!oldType)
+            return true;
+        if (oldType->unknown() || !oldType->mightBeMIRType(MIRType_Object))
+            return true;
+
+        types::TemporaryTypeSet *type = nullptr;
+        if (trueBranch)
+            type = oldType->cloneObjectsOnly(alloc_->lifoAlloc());
+        else
+            type = oldType->cloneWithoutObjects(alloc_->lifoAlloc());
+
+        if (!type)
+            return false;
+
+        return replaceTypeSet(ins->getOperand(0), type, test);
+      }
+      case MDefinition::Op_Phi: {
+        bool branchIsAnd = true;
+        if (!detectAndOrStructure(ins->toPhi(), &branchIsAnd))
+            return true;
+
+        // Now we have detected the triangular structure and determined if it was an AND or an OR.
+        if (branchIsAnd) {
+            if (trueBranch) {
+                if (!improveTypesAtTest(ins->toPhi()->getOperand(0), true, test))
+                    return false;
+                if (!improveTypesAtTest(ins->toPhi()->getOperand(1), true, test))
+                    return false;
+            }
+        } else {
+            /*
+             * if (a || b) {
+             *    ...
+             * } else {
+             *    ...
+             * }
+             *
+             * If we have a statements like the one described above,
+             * And we are in the else branch of it. It amounts to:
+             * if (!(a || b)) and being in the true branch.
+             *
+             * Simplifying, we have (!a && !b)
+             * In this case we can use the same logic we use for branchIsAnd
+             *
+             */
+            if (!trueBranch) {
+                if (!improveTypesAtTest(ins->toPhi()->getOperand(0), false, test))
+                    return false;
+                if (!improveTypesAtTest(ins->toPhi()->getOperand(1), false, test))
+                    return false;
+            }
+        }
+        return true;
+      }
+
+      case MDefinition::Op_Compare:
+        return improveTypesAtCompare(ins->toCompare(), trueBranch, test);
+
+      default:
+        break;
+    }
+
+    return true;
 }
 
 bool
@@ -3606,7 +3768,8 @@ IonBuilder::jsop_ifeq(JSOp op)
         return false;
 
     // Filter the types in the true branch.
-    filterTypesAtTest(test);
+    if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
+        return false;
 
     return true;
 }
@@ -4204,7 +4367,7 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
         // Callee must have been called a few times to have somewhat stable
         // type information, except for definite properties analysis,
         // as the caller has not run yet.
-        if (targetScript->getUseCount() < optimizationInfo().usesBeforeInlining() &&
+        if (targetScript->getWarmUpCounter() < optimizationInfo().inliningWarmUpThreshold() &&
             !targetScript->baselineScript()->ionCompiledOrInlined() &&
             info().executionMode() != DefinitePropertiesAnalysis)
         {
@@ -6213,17 +6376,17 @@ IonBuilder::insertRecompileCheck()
     // Add recompile check.
 
     // Get the topmost builder. The topmost script will get recompiled when
-    // usecount is high enough to justify a higher optimization level.
+    // warm-up counter is high enough to justify a higher optimization level.
     IonBuilder *topBuilder = this;
     while (topBuilder->callerBuilder_)
         topBuilder = topBuilder->callerBuilder_;
 
-    // Add recompile check to recompile when the usecount reaches the usecount
-    // of the next optimization level.
+    // Add recompile check to recompile when the warm-up counter reaches the
+    // threshold of the next optimization level.
     OptimizationLevel nextLevel = js_IonOptimizations.nextLevel(curLevel);
     const OptimizationInfo *info = js_IonOptimizations.get(nextLevel);
-    uint32_t useCount = info->usesBeforeCompile(topBuilder->script());
-    current->add(MRecompileCheck::New(alloc(), topBuilder->script(), useCount));
+    uint32_t warmUpCounter = info->compilerWarmUpThreshold(topBuilder->script());
+    current->add(MRecompileCheck::New(alloc(), topBuilder->script(), warmUpCounter));
 }
 
 JSObject *

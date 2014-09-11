@@ -173,7 +173,7 @@ struct nsCSSBorderRenderer {
 
   // draw the given dashed side
   void DrawDashedSide (mozilla::css::Side aSide);
-  
+
   // Setup the stroke style for a given side
   void SetupStrokeStyle(mozilla::css::Side aSize);
 
@@ -226,45 +226,44 @@ struct nsCSSBorderRenderer {
 };
 
 namespace mozilla {
-
 #ifdef DEBUG_NEW_BORDERS
 #include <stdarg.h>
 
-static inline void S(const gfxPoint& p) {
+static inline void PrintAsString(const gfxPoint& p) {
   fprintf (stderr, "[%f,%f]", p.x, p.y);
 }
 
-static inline void S(const gfxSize& s) {
+static inline void PrintAsString(const gfxSize& s) {
   fprintf (stderr, "[%f %f]", s.width, s.height);
 }
 
-static inline void S(const gfxRect& r) {
-  fprintf (stderr, "[%f %f %f %f]", r.pos.x, r.pos.y, r.size.width, r.size.height);
+static inline void PrintAsString(const gfxRect& r) {
+  fprintf (stderr, "[%f %f %f %f]", r.X(), r.Y(), r.Width(), r.Height());
 }
 
-static inline void S(const gfxFloat f) {
+static inline void PrintAsString(const gfxFloat f) {
   fprintf (stderr, "%f", f);
 }
 
-static inline void S(const char *s) {
+static inline void PrintAsString(const char *s) {
   fprintf (stderr, "%s", s);
 }
 
-static inline void SN(const char *s = nullptr) {
+static inline void PrintAsStringNewline(const char *s = nullptr) {
   if (s)
     fprintf (stderr, "%s", s);
   fprintf (stderr, "\n");
   fflush (stderr);
 }
 
-static inline void SF(const char *fmt, ...) {
+static inline void PrintAsFormatString(const char *fmt, ...) {
   va_list vl;
   va_start(vl, fmt);
   vfprintf (stderr, fmt, vl);
   va_end(vl);
 }
 
-static inline void SX(gfxContext *ctx) {
+static inline void PrintGfxContext(gfxContext *ctx) {
   gfxPoint p = ctx->CurrentPoint();
   fprintf (stderr, "p: %f %f\n", p.x, p.y);
   return;
@@ -275,14 +274,14 @@ static inline void SX(gfxContext *ctx) {
 
 
 #else
-static inline void S(const gfxPoint& p) {}
-static inline void S(const gfxSize& s) {}
-static inline void S(const gfxRect& r) {}
-static inline void S(const gfxFloat f) {}
-static inline void S(const char *s) {}
-static inline void SN(const char *s = nullptr) {}
-static inline void SF(const char *fmt, ...) {}
-static inline void SX(gfxContext *ctx) {}
+static inline void PrintAsString(const gfxPoint& p) {}
+static inline void PrintAsString(const gfxSize& s) {}
+static inline void PrintAsString(const gfxRect& r) {}
+static inline void PrintAsString(const gfxFloat f) {}
+static inline void PrintAsString(const char *s) {}
+static inline void PrintAsStringNewline(const char *s = nullptr) {}
+static inline void PrintAsFormatString(const char *fmt, ...) {}
+static inline void PrintGfxContext(gfxContext *ctx) {}
 #endif
 
 }
