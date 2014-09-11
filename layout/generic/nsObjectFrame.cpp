@@ -1731,7 +1731,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
 
     if (ctx->UserToDevicePixelSnapped(frameGfxRect, false)) {
       dirtyGfxRect = ctx->UserToDevice(dirtyGfxRect);
-      ctx->IdentityMatrix();
+      ctx->SetMatrix(gfxMatrix());
     }
     dirtyGfxRect.RoundOut();
 

@@ -112,7 +112,7 @@ nsRenderingContext::SetClip(const nsIntRegion& aRegion)
     // an existing clip.
 
     gfxMatrix mat = mThebes->CurrentMatrix();
-    mThebes->IdentityMatrix();
+    mThebes->SetMatrix(gfxMatrix());
 
     mThebes->ResetClip();
 
@@ -185,7 +185,7 @@ nsRenderingContext::DrawLine(nscoord aX0, nscoord aY0,
         p0.Round();
         p1.Round();
 
-        mThebes->IdentityMatrix();
+        mThebes->SetMatrix(gfxMatrix());
 
         mThebes->NewPath();
 
@@ -308,7 +308,7 @@ nsRenderingContext::FillRect(const nsRect& aRect)
         if (!ConditionRect(r))
             return;
 
-        mThebes->IdentityMatrix();
+        mThebes->SetMatrix(gfxMatrix());
         mThebes->NewPath();
 
         mThebes->Rectangle(r, true);
