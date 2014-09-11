@@ -15,7 +15,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[uuid(aa7d28b2-7122-422d-8fcf-634771fb9ac1)]
+[uuid(55fe2f3f-35e8-4cb0-b39d-bea1bd0061c7)]
 interface nsIDOMDocumentType : nsIDOMNode
 {
   readonly attribute  DOMString            name;
