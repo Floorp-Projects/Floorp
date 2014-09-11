@@ -147,7 +147,7 @@ static void NudgeToInteger(double *aVal)
     *aVal = f;
 }
 
-void
+gfxMatrix&
 gfxMatrix::NudgeToIntegers(void)
 {
     NudgeToInteger(&_11);
@@ -156,4 +156,5 @@ gfxMatrix::NudgeToIntegers(void)
     NudgeToInteger(&_22);
     NudgeToInteger(&_31);
     NudgeToInteger(&_32);
+    return *this;
 }
