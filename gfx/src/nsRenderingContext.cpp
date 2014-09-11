@@ -170,12 +170,6 @@ nsRenderingContext::SetColor(nscolor aColor)
     mThebes->SetColor(gfxRGBA(aColor));
 }
 
-void
-nsRenderingContext::Scale(float aSx, float aSy)
-{
-    mThebes->Scale(aSx, aSy);
-}
-
 //
 // shapes
 //
