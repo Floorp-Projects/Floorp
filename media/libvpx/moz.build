@@ -44,9 +44,6 @@ if CONFIG['VPX_X86_ASM']:
     # Darwin toolchain right now
     if CONFIG['OS_TARGET'] == 'Darwin':
         SOURCES += files['AVX2']
-    # HAVE_X86_AVX2 doesn't check whether AVX2 intrincs is supported.
-    elif CONFIG['_MSC_VER'] and CONFIG['HAVE_X86_AVX2']:
-        SOURCES += files['AVX2']
 
     #postproc is only enabled on x86 with asm
     SOURCES += files['VP8_POSTPROC']
