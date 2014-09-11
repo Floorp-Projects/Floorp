@@ -17,6 +17,9 @@
   var IncomingCallView = loop.conversation.IncomingCallView;
 
   // 2. Standalone webapp
+  var HomeView = loop.webapp.HomeView;
+  var UnsupportedBrowserView = loop.webapp.UnsupportedBrowserView;
+  var UnsupportedDeviceView = loop.webapp.UnsupportedDeviceView;
   var CallUrlExpiredView    = loop.webapp.CallUrlExpiredView;
   var StartConversationView = loop.webapp.StartConversationView;
 
@@ -312,6 +315,31 @@
                 React.DOM.p({className: "message"}, 
                   "The person you were calling has ended the conversation."
                 )
+              )
+            )
+          ), 
+
+          Section({name: "HomeView"}, 
+            Example({summary: "Standalone Home View"}, 
+              React.DOM.div({className: "standalone"}, 
+                HomeView(null)
+              )
+            )
+          ), 
+
+
+          Section({name: "UnsupportedBrowserView"}, 
+            Example({summary: "Standalone Unsupported Browser"}, 
+              React.DOM.div({className: "standalone"}, 
+                UnsupportedBrowserView(null)
+              )
+            )
+          ), 
+
+          Section({name: "UnsupportedDeviceView"}, 
+            Example({summary: "Standalone Unsupported Device"}, 
+              React.DOM.div({className: "standalone"}, 
+                UnsupportedDeviceView(null)
               )
             )
           )
