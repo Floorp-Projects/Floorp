@@ -17,6 +17,9 @@
   var IncomingCallView = loop.conversation.IncomingCallView;
 
   // 2. Standalone webapp
+  var HomeView = loop.webapp.HomeView;
+  var UnsupportedBrowserView = loop.webapp.UnsupportedBrowserView;
+  var UnsupportedDeviceView = loop.webapp.UnsupportedDeviceView;
   var CallUrlExpiredView    = loop.webapp.CallUrlExpiredView;
   var StartConversationView = loop.webapp.StartConversationView;
 
@@ -312,6 +315,31 @@
                 <p className="message">
                   The person you were calling has ended the conversation.
                 </p>
+              </div>
+            </Example>
+          </Section>
+
+          <Section name="HomeView">
+            <Example summary="Standalone Home View">
+              <div className="standalone">
+                <HomeView />
+              </div>
+            </Example>
+          </Section>
+
+
+          <Section name="UnsupportedBrowserView">
+            <Example summary="Standalone Unsupported Browser">
+              <div className="standalone">
+                <UnsupportedBrowserView />
+              </div>
+            </Example>
+          </Section>
+
+          <Section name="UnsupportedDeviceView">
+            <Example summary="Standalone Unsupported Device">
+              <div className="standalone">
+                <UnsupportedDeviceView />
               </div>
             </Example>
           </Section>

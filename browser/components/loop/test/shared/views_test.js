@@ -27,22 +27,6 @@ describe("loop.shared.views", function() {
     sandbox.restore();
   });
 
-  describe("L10nView", function() {
-    beforeEach(function() {
-      sandbox.stub(l10n, "translate");
-    });
-
-    it("should translate generated contents on render()", function() {
-      var TestView = loop.shared.views.L10nView.extend();
-
-      var view = new TestView();
-      view.render();
-
-      sinon.assert.calledOnce(l10n.translate);
-      sinon.assert.calledWithExactly(l10n.translate, view.el);
-    });
-  });
-
   describe("MediaControlButton", function() {
     it("should render an enabled local audio button", function() {
       var comp = TestUtils.renderIntoDocument(sharedViews.MediaControlButton({
