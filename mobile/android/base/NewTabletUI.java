@@ -11,9 +11,8 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.HardwareUtils;
 
 public class NewTabletUI {
-    // XXX: Change default value to false before merging to m-c.
     // This value should be in sync with preferences_display.xml.
-    private static final boolean DEFAULT = true;
+    private static final boolean DEFAULT = false;
 
     private static Boolean sNewTabletUI;
 
