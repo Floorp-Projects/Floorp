@@ -1494,7 +1494,7 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
   if (eventStates.HasState(NS_EVENT_STATE_DISABLED) || sFocused != this)
     return;
 
-  aRenderingContext.PushState();
+  aRenderingContext.ThebesContext()->Save();
   nsRect clipRect = mDisplayFrame->GetRect() + aPt;
   aRenderingContext.IntersectClip(clipRect);
 
@@ -1518,7 +1518,7 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
   aRenderingContext.DrawLine(clipRect.BottomRight(), clipRect.BottomLeft());
   aRenderingContext.DrawLine(clipRect.BottomLeft(), clipRect.TopLeft());
 
-  aRenderingContext.PopState();
+  aRenderingContext.ThebesContext()->Restore();
 }
 
 //---------------------------------------------------------
