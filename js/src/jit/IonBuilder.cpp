@@ -639,11 +639,11 @@ IonBuilder::build()
     } else if (info().executionMode() == SequentialExecution && script()->hasIonScript()) {
         JitSpew(JitSpew_Scripts, "Recompiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
-                (int)script()->getWarmUpCounter(), OptimizationLevelString(optimizationInfo().level()));
+                (int)script()->getWarmUpCount(), OptimizationLevelString(optimizationInfo().level()));
     } else {
         JitSpew(JitSpew_Scripts, "Compiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
-                (int)script()->getWarmUpCounter(), OptimizationLevelString(optimizationInfo().level()));
+                (int)script()->getWarmUpCount(), OptimizationLevelString(optimizationInfo().level()));
     }
 #endif
 
@@ -1258,11 +1258,11 @@ IonBuilder::traverseBytecode()
         // adding any SSA uses and doesn't call setImplicitlyUsedUnchecked on it.
         Vector<MDefinition *, 4, IonAllocPolicy> popped(alloc());
         Vector<size_t, 4, IonAllocPolicy> poppedUses(alloc());
-        unsigned nuses = GetWarmUpCounter(script_, script_->pcToOffset(pc));
+        unsigned nuses = GetUseCount(script_, script_->pcToOffset(pc));
 
         for (unsigned i = 0; i < nuses; i++) {
             MDefinition *def = current->peek(-int32_t(i + 1));
-            if (!popped.append(def) || !poppedUses.append(def->defWarmUpCounter()))
+            if (!popped.append(def) || !poppedUses.append(def->defUseCount()))
                 return false;
         }
 #endif
@@ -1309,7 +1309,7 @@ IonBuilder::traverseBytecode()
                           // for more details.
                           popped[i]->isNewDerivedTypedObject() ||
 
-                          popped[i]->defWarmUpCounter() > poppedUses[i]);
+                          popped[i]->defUseCount() > poppedUses[i]);
                 break;
             }
         }
@@ -4342,7 +4342,7 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
         // Callee must have been called a few times to have somewhat stable
         // type information, except for definite properties analysis,
         // as the caller has not run yet.
-        if (targetScript->getWarmUpCounter() < optimizationInfo().inliningWarmUpThreshold() &&
+        if (targetScript->getWarmUpCount() < optimizationInfo().inliningWarmUpThreshold() &&
             !targetScript->baselineScript()->ionCompiledOrInlined() &&
             info().executionMode() != DefinitePropertiesAnalysis)
         {
@@ -6356,12 +6356,12 @@ IonBuilder::insertRecompileCheck()
     while (topBuilder->callerBuilder_)
         topBuilder = topBuilder->callerBuilder_;
 
-    // Add recompile check to recompile when the warm-up counter reaches the
+    // Add recompile check to recompile when the warm-up count reaches the
     // threshold of the next optimization level.
     OptimizationLevel nextLevel = js_IonOptimizations.nextLevel(curLevel);
     const OptimizationInfo *info = js_IonOptimizations.get(nextLevel);
-    uint32_t warmUpCounter = info->compilerWarmUpThreshold(topBuilder->script());
-    current->add(MRecompileCheck::New(alloc(), topBuilder->script(), warmUpCounter));
+    uint32_t warmUpThreshold = info->compilerWarmUpThreshold(topBuilder->script());
+    current->add(MRecompileCheck::New(alloc(), topBuilder->script(), warmUpThreshold));
 }
 
 JSObject *
