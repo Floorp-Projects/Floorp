@@ -5873,7 +5873,7 @@ nsresult
 nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint)
 {
   NS_PRECONDITION(outPoint != nullptr, "Null parameter");
-  nsRect contentRect = GetContentRect() - GetPosition();
+  nsRect contentRect = GetContentRectRelativeToSelf();
   nsPoint pt = contentRect.TopLeft();
   if (mContent)
   {
