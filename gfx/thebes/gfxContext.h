@@ -240,14 +240,6 @@ public:
      **/
 
     /**
-     * Adds a rotation around the origin to the current matrix. This rotation
-     * takes place before the previously set transformations.
-     *
-     * @param angle The angle in radians.
-     */
-    void Rotate(gfxFloat angle);
-
-    /**
      * Post-multiplies 'other' onto the current CTM, i.e. this
      * matrix's transformation will take place before the previously set
      * transformations.
