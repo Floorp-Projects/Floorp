@@ -86,18 +86,6 @@ nsRenderingContext::Init(nsDeviceContext* aContext,
 //
 
 void
-nsRenderingContext::PushState()
-{
-    mThebes->Save();
-}
-
-void
-nsRenderingContext::PopState()
-{
-    mThebes->Restore();
-}
-
-void
 nsRenderingContext::IntersectClip(const nsRect& aRect)
 {
     mThebes->NewPath();
