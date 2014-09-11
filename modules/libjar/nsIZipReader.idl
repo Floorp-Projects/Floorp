@@ -15,7 +15,7 @@ struct PRFileDesc;
 interface nsIUTF8StringEnumerator;
 interface nsIInputStream;
 interface nsIFile;
-interface nsICertificatePrincipal;
+interface nsIX509Cert;
 
 [scriptable, uuid(fad6f72f-13d8-4e26-9173-53007a4afe71)]
 interface nsIZipEntry : nsISupports
@@ -63,7 +63,7 @@ interface nsIZipEntry : nsISupports
     readonly attribute unsigned long    permissions;
 };
 
-[scriptable, uuid(38d6d07a-8a58-4fe7-be8b-ef6472fa83ff)]
+[scriptable, uuid(894c8dc0-37c8-11e4-916c-0800200c9a66)]
 interface nsIZipReader : nsISupports
 {
     /**
@@ -190,8 +190,8 @@ interface nsIZipReader : nsISupports
      * stored in the jar, verifyExternalFile (not yet implemented) must 
      * be called before getPrincipal.
      */
-    nsICertificatePrincipal getCertificatePrincipal(in AUTF8String aEntryName);   
-    
+    nsIX509Cert getSigningCert(in AUTF8String aEntryName);
+
     readonly attribute uint32_t manifestEntriesCount;
 };
 
