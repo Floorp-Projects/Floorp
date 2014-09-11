@@ -35,7 +35,7 @@ public:
 
 private:
   template<typename SampleFormatType>
-  void ConvertAndDispatchAudioChunk(int aDuration, float aVolume, SampleFormatType* aData);
+  void ConvertAndDispatchAudioChunk(int aDuration, float aVolume, SampleFormatType* aData, TrackRate aTrackRate);
   nsRefPtr<SpeechRecognition> mRecognition;
 };
 
