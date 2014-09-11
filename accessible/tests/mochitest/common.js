@@ -239,7 +239,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
 
     if (!acc) {
       if (!(aDoNotFailIf & DONOTFAIL_IF_NO_ACC))
-        ok(false, "Can't get accessible for " + aAccOrElmOrID);
+        ok(false, "Can't get accessible for " + prettyName(aAccOrElmOrID));
 
       return null;
     }
