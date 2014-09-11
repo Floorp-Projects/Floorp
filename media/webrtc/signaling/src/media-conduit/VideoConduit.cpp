@@ -1138,21 +1138,15 @@ WebrtcVideoConduit::ReceivedRTCPPacket(const void *data, int len)
   CSFLogDebug(logTag, " %s Channel %d, Len %d ", __FUNCTION__, mChannel, len);
 
   //Media Engine should be receiving already
-  if(mEngineTransmitting)
+  if(mPtrViENetwork->ReceivedRTCPPacket(mChannel,data,len) == -1)
   {
-    if(mPtrViENetwork->ReceivedRTCPPacket(mChannel,data,len) == -1)
+    int error = mPtrViEBase->LastError();
+    CSFLogError(logTag, "%s RTP Processing Failed %d", __FUNCTION__, error);
+    if(error >= kViERtpRtcpInvalidChannelId && error <= kViERtpRtcpRtcpDisabled)
     {
-      int error = mPtrViEBase->LastError();
-      CSFLogError(logTag, "%s RTP Processing Failed %d", __FUNCTION__, error);
-      if(error >= kViERtpRtcpInvalidChannelId && error <= kViERtpRtcpRtcpDisabled)
-      {
-        return kMediaConduitRTPProcessingFailed;
-      }
-      return kMediaConduitRTPRTCPModuleError;
+      return kMediaConduitRTPProcessingFailed;
     }
-  } else {
-    CSFLogError(logTag, "Error: %s when not receiving", __FUNCTION__);
-    return kMediaConduitSessionNotInited;
+    return kMediaConduitRTPRTCPModuleError;
   }
   return kMediaConduitNoError;
 }

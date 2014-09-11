@@ -762,21 +762,15 @@ WebrtcAudioConduit::ReceivedRTCPPacket(const void *data, int len)
 {
   CSFLogDebug(logTag,  "%s : channel %d",__FUNCTION__, mChannel);
 
-  if(mEngineTransmitting)
+  if(mPtrVoENetwork->ReceivedRTCPPacket(mChannel, data, len) == -1)
   {
-    if(mPtrVoENetwork->ReceivedRTCPPacket(mChannel, data, len) == -1)
+    int error = mPtrVoEBase->LastError();
+    CSFLogError(logTag, "%s RTCP Processing Error %d", __FUNCTION__, error);
+    if(error == VE_RTP_RTCP_MODULE_ERROR)
     {
-      int error = mPtrVoEBase->LastError();
-      CSFLogError(logTag, "%s RTCP Processing Error %d", __FUNCTION__, error);
-      if(error == VE_RTP_RTCP_MODULE_ERROR)
-      {
-        return kMediaConduitRTPRTCPModuleError;
-      }
-      return kMediaConduitUnknownError;
+      return kMediaConduitRTPRTCPModuleError;
     }
-  } else {
-    CSFLogError(logTag, "Error: %s when not receiving", __FUNCTION__);
-    return kMediaConduitSessionNotInited;
+    return kMediaConduitUnknownError;
   }
   return kMediaConduitNoError;
 }
