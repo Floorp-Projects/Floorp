@@ -240,12 +240,6 @@ public:
      **/
 
     /**
-     * Adds a translation to the current matrix. This translation takes place
-     * before the previously set transformations.
-     */
-    void Translate(const gfxPoint& pt);
-
-    /**
      * Adds a scale to the current matrix. This scaling takes place before the
      * previously set transformations.
      */

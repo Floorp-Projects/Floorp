@@ -431,13 +431,6 @@ gfxContext::DrawSurface(gfxASurface *surface, const gfxSize& size)
 
 // transform stuff
 void
-gfxContext::Translate(const gfxPoint& pt)
-{
-  Matrix newMatrix = mTransform;
-  ChangeTransform(newMatrix.PreTranslate(Float(pt.x), Float(pt.y)));
-}
-
-void
 gfxContext::Scale(gfxFloat x, gfxFloat y)
 {
   Matrix newMatrix = mTransform;
