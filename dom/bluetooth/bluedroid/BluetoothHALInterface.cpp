@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BluetoothInterface.h"
+#include "BluetoothHALInterface.h"
 #include <errno.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -1090,10 +1090,10 @@ Convert(const bt_property_t& aIn, BluetoothProperty& aOut)
 //
 
 template <typename Obj, typename Res>
-class BluetoothInterfaceRunnable0 : public nsRunnable
+class BluetoothHALInterfaceRunnable0 : public nsRunnable
 {
 public:
-  BluetoothInterfaceRunnable0(Obj* aObj, Res (Obj::*aMethod)())
+  BluetoothHALInterfaceRunnable0(Obj* aObj, Res (Obj::*aMethod)())
   : mObj(aObj)
   , mMethod(aMethod)
   {
@@ -1114,11 +1114,11 @@ private:
 };
 
 template <typename Obj, typename Res, typename Tin1, typename Arg1>
-class BluetoothInterfaceRunnable1 : public nsRunnable
+class BluetoothHALInterfaceRunnable1 : public nsRunnable
 {
 public:
-  BluetoothInterfaceRunnable1(Obj* aObj, Res (Obj::*aMethod)(Arg1),
-                              const Arg1& aArg1)
+  BluetoothHALInterfaceRunnable1(Obj* aObj, Res (Obj::*aMethod)(Arg1),
+                                       const Arg1& aArg1)
   : mObj(aObj)
   , mMethod(aMethod)
   , mArg1(aArg1)
@@ -1143,13 +1143,13 @@ private:
 template <typename Obj, typename Res,
           typename Tin1, typename Tin2, typename Tin3,
           typename Arg1, typename Arg2, typename Arg3>
-class BluetoothInterfaceRunnable3 : public nsRunnable
+class BluetoothHALInterfaceRunnable3 : public nsRunnable
 {
 public:
-  BluetoothInterfaceRunnable3(Obj* aObj,
-                              Res (Obj::*aMethod)(Arg1, Arg2, Arg3),
-                              const Arg1& aArg1, const Arg2& aArg2,
-                              const Arg3& aArg3)
+  BluetoothHALInterfaceRunnable3(Obj* aObj,
+                                       Res (Obj::*aMethod)(Arg1, Arg2, Arg3),
+                                       const Arg1& aArg1, const Arg2& aArg2,
+                                       const Arg3& aArg3)
   : mObj(aObj)
   , mMethod(aMethod)
   , mArg1(aArg1)
@@ -1180,11 +1180,11 @@ private:
 //
 
 template <typename ObjectWrapper, typename Res>
-class BluetoothNotificationRunnable0 : public nsRunnable
+class BluetoothNotificationHALRunnable0 : public nsRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothNotificationRunnable0<ObjectWrapper, Res> SelfType;
+  typedef BluetoothNotificationHALRunnable0<ObjectWrapper, Res> SelfType;
 
   static already_AddRefed<SelfType> Create(Res (ObjectType::*aMethod)())
   {
@@ -1199,7 +1199,7 @@ public:
     nsRefPtr<SelfType> runnable = Create(aMethod);
 
     if (!runnable) {
-      BT_WARNING("BluetoothNotificationRunnable0::Create failed");
+      BT_WARNING("BluetoothNotificationHALRunnable0::Create failed");
       return;
     }
     nsresult rv = NS_DispatchToMainThread(runnable);
@@ -1224,7 +1224,7 @@ public:
   }
 
 private:
-  BluetoothNotificationRunnable0(Res (ObjectType::*aMethod)())
+  BluetoothNotificationHALRunnable0(Res (ObjectType::*aMethod)())
   : mMethod(aMethod)
   {
     MOZ_ASSERT(mMethod);
@@ -1235,12 +1235,12 @@ private:
 
 template <typename ObjectWrapper, typename Res,
           typename Tin1, typename Arg1=Tin1>
-class BluetoothNotificationRunnable1 : public nsRunnable
+class BluetoothNotificationHALRunnable1 : public nsRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothNotificationRunnable1<ObjectWrapper, Res,
-                                         Tin1, Arg1> SelfType;
+  typedef BluetoothNotificationHALRunnable1<ObjectWrapper, Res,
+                                                  Tin1, Arg1> SelfType;
 
   template <typename T1>
   static already_AddRefed<SelfType> Create(
@@ -1261,7 +1261,7 @@ public:
     nsRefPtr<SelfType> runnable = Create(aMethod, aIn1);
 
     if (!runnable) {
-      BT_WARNING("BluetoothNotificationRunnable1::Create failed");
+      BT_WARNING("BluetoothNotificationHALRunnable1::Create failed");
       return;
     }
     nsresult rv = NS_DispatchToMainThread(runnable);
@@ -1286,7 +1286,7 @@ public:
   }
 
 private:
-  BluetoothNotificationRunnable1(Res (ObjectType::*aMethod)(Arg1))
+  BluetoothNotificationHALRunnable1(Res (ObjectType::*aMethod)(Arg1))
   : mMethod(aMethod)
   {
     MOZ_ASSERT(mMethod);
@@ -1310,12 +1310,13 @@ private:
 template <typename ObjectWrapper, typename Res,
           typename Tin1, typename Tin2,
           typename Arg1=Tin1, typename Arg2=Tin2>
-class BluetoothNotificationRunnable2 : public nsRunnable
+class BluetoothNotificationHALRunnable2 : public nsRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothNotificationRunnable2<ObjectWrapper, Res,
-                                         Tin1, Tin2, Arg1, Arg2> SelfType;
+  typedef BluetoothNotificationHALRunnable2<ObjectWrapper, Res,
+                                                  Tin1, Tin2,
+                                                  Arg1, Arg2> SelfType;
 
   template <typename T1, typename T2>
   static already_AddRefed<SelfType> Create(
@@ -1337,7 +1338,7 @@ public:
     nsRefPtr<SelfType> runnable = Create(aMethod, aIn1, aIn2);
 
     if (!runnable) {
-      BT_WARNING("BluetoothNotificationRunnable2::Create failed");
+      BT_WARNING("BluetoothNotificationHALRunnable2::Create failed");
       return;
     }
     nsresult rv = NS_DispatchToMainThread(runnable);
@@ -1362,7 +1363,8 @@ public:
   }
 
 private:
-  BluetoothNotificationRunnable2(Res (ObjectType::*aMethod)(Arg1, Arg2))
+  BluetoothNotificationHALRunnable2(
+    Res (ObjectType::*aMethod)(Arg1, Arg2))
   : mMethod(aMethod)
   {
     MOZ_ASSERT(mMethod);
@@ -1391,13 +1393,13 @@ private:
 template <typename ObjectWrapper, typename Res,
           typename Tin1, typename Tin2, typename Tin3,
           typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3>
-class BluetoothNotificationRunnable3 : public nsRunnable
+class BluetoothNotificationHALRunnable3 : public nsRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothNotificationRunnable3<ObjectWrapper, Res,
-                                         Tin1, Tin2, Tin3,
-                                         Arg1, Arg2, Arg3> SelfType;
+  typedef BluetoothNotificationHALRunnable3<ObjectWrapper, Res,
+                                                  Tin1, Tin2, Tin3,
+                                                  Arg1, Arg2, Arg3> SelfType;
 
   template <typename T1, typename T2, typename T3>
   static already_AddRefed<SelfType> Create(
@@ -1420,7 +1422,7 @@ public:
     nsRefPtr<SelfType> runnable = Create(aMethod, aIn1, aIn2, aIn3);
 
     if (!runnable) {
-      BT_WARNING("BluetoothNotificationRunnable3::Create failed");
+      BT_WARNING("BluetoothNotificationHALRunnable3::Create failed");
       return;
     }
     nsresult rv = NS_DispatchToMainThread(runnable);
@@ -1445,7 +1447,8 @@ public:
   }
 
 private:
-  BluetoothNotificationRunnable3(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3))
+  BluetoothNotificationHALRunnable3(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3))
   : mMethod(aMethod)
   {
     MOZ_ASSERT(mMethod);
@@ -1480,11 +1483,11 @@ template <typename ObjectWrapper, typename Res,
           typename Tin1, typename Tin2, typename Tin3, typename Tin4,
           typename Arg1=Tin1, typename Arg2=Tin2,
           typename Arg3=Tin3, typename Arg4=Tin4>
-class BluetoothNotificationRunnable4 : public nsRunnable
+class BluetoothNotificationHALRunnable4 : public nsRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothNotificationRunnable4<ObjectWrapper, Res,
+  typedef BluetoothNotificationHALRunnable4<ObjectWrapper, Res,
     Tin1, Tin2, Tin3, Tin4, Arg1, Arg2, Arg3, Arg4> SelfType;
 
   template <typename T1, typename T2, typename T3, typename T4>
@@ -1508,7 +1511,7 @@ public:
     nsRefPtr<SelfType> runnable = Create(aMethod, aIn1, aIn2, aIn3, aIn4);
 
     if (!runnable) {
-      BT_WARNING("BluetoothNotificationRunnable4::Create failed");
+      BT_WARNING("BluetoothNotificationHALRunnable4::Create failed");
       return;
     }
     nsresult rv = NS_DispatchToMainThread(runnable);
@@ -1533,7 +1536,7 @@ public:
   }
 
 private:
-  BluetoothNotificationRunnable4(
+  BluetoothNotificationHALRunnable4(
     Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4))
   : mMethod(aMethod)
   {
@@ -1576,11 +1579,11 @@ template <typename ObjectWrapper, typename Res,
           typename Tin4, typename Tin5,
           typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
           typename Arg4=Tin4, typename Arg5=Tin5>
-class BluetoothNotificationRunnable5 : public nsRunnable
+class BluetoothNotificationHALRunnable5 : public nsRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothNotificationRunnable5<ObjectWrapper, Res,
+  typedef BluetoothNotificationHALRunnable5<ObjectWrapper, Res,
     Tin1, Tin2, Tin3, Tin4, Tin5, Arg1, Arg2, Arg3, Arg4, Arg5> SelfType;
 
   template <typename T1, typename T2, typename T3, typename T4, typename T5>
@@ -1606,7 +1609,7 @@ public:
     nsRefPtr<SelfType> runnable = Create(aMethod,
                                          aIn1, aIn2, aIn3, aIn4, aIn5);
     if (!runnable) {
-      BT_WARNING("BluetoothNotificationRunnable5::Create failed");
+      BT_WARNING("BluetoothNotificationHALRunnable5::Create failed");
       return;
     }
     nsresult rv = NS_DispatchToMainThread(runnable);
@@ -1631,8 +1634,8 @@ public:
   }
 
 private:
-  BluetoothNotificationRunnable5(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3,
-                                                            Arg4, Arg5))
+  BluetoothNotificationHALRunnable5(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5))
   : mMethod(aMethod)
   {
     MOZ_ASSERT(mMethod);
@@ -1679,7 +1682,7 @@ private:
 //
 
 template<>
-struct interface_traits<BluetoothSocketInterface>
+struct interface_traits<BluetoothSocketHALInterface>
 {
   typedef const btsock_interface_t const_interface_type;
 
@@ -1690,33 +1693,35 @@ struct interface_traits<BluetoothSocketInterface>
 };
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothSocketResultHandler, void, int, int>
-  BluetoothSocketIntResultRunnable;
+  BluetoothHALInterfaceRunnable1<BluetoothSocketResultHandler, void,
+                                       int, int>
+  BluetoothSocketHALIntResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable3<BluetoothSocketResultHandler, void,
-                              int, const nsString, int,
-                              int, const nsAString_internal&, int>
-  BluetoothSocketIntStringIntResultRunnable;
+  BluetoothHALInterfaceRunnable3<BluetoothSocketResultHandler, void,
+                                       int, const nsString, int,
+                                       int, const nsAString_internal&, int>
+  BluetoothSocketHALIntStringIntResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothSocketResultHandler, void,
-                              BluetoothStatus, BluetoothStatus>
-  BluetoothSocketErrorRunnable;
+  BluetoothHALInterfaceRunnable1<BluetoothSocketResultHandler, void,
+                                       BluetoothStatus, BluetoothStatus>
+  BluetoothSocketHALErrorRunnable;
 
 static nsresult
-DispatchBluetoothSocketResult(BluetoothSocketResultHandler* aRes,
-                              void (BluetoothSocketResultHandler::*aMethod)(int),
-                              int aArg, BluetoothStatus aStatus)
+DispatchBluetoothSocketHALResult(
+  BluetoothSocketResultHandler* aRes,
+  void (BluetoothSocketResultHandler::*aMethod)(int), int aArg,
+  BluetoothStatus aStatus)
 {
   MOZ_ASSERT(aRes);
 
   nsRunnable* runnable;
 
   if (aStatus == STATUS_SUCCESS) {
-    runnable = new BluetoothSocketIntResultRunnable(aRes, aMethod, aArg);
+    runnable = new BluetoothSocketHALIntResultRunnable(aRes, aMethod, aArg);
   } else {
-    runnable = new BluetoothSocketErrorRunnable(aRes,
+    runnable = new BluetoothSocketHALErrorRunnable(aRes,
       &BluetoothSocketResultHandler::OnError, aStatus);
   }
   nsresult rv = NS_DispatchToMainThread(runnable);
@@ -1727,7 +1732,7 @@ DispatchBluetoothSocketResult(BluetoothSocketResultHandler* aRes,
 }
 
 static nsresult
-DispatchBluetoothSocketResult(
+DispatchBluetoothSocketHALResult(
   BluetoothSocketResultHandler* aRes,
   void (BluetoothSocketResultHandler::*aMethod)(int, const nsAString&, int),
   int aArg1, const nsAString& aArg2, int aArg3, BluetoothStatus aStatus)
@@ -1737,11 +1742,10 @@ DispatchBluetoothSocketResult(
   nsRunnable* runnable;
 
   if (aStatus == STATUS_SUCCESS) {
-    runnable = new BluetoothSocketIntStringIntResultRunnable(aRes, aMethod,
-                                                             aArg1, aArg2,
-                                                             aArg3);
+    runnable = new BluetoothSocketHALIntStringIntResultRunnable(
+      aRes, aMethod, aArg1, aArg2, aArg3);
   } else {
-    runnable = new BluetoothSocketErrorRunnable(aRes,
+    runnable = new BluetoothSocketHALErrorRunnable(aRes,
       &BluetoothSocketResultHandler::OnError, aStatus);
   }
   nsresult rv = NS_DispatchToMainThread(runnable);
@@ -1752,11 +1756,12 @@ DispatchBluetoothSocketResult(
 }
 
 void
-BluetoothSocketInterface::Listen(BluetoothSocketType aType,
-                                 const nsAString& aServiceName,
-                                 const uint8_t aServiceUuid[16],
-                                 int aChannel, bool aEncrypt, bool aAuth,
-                                 BluetoothSocketResultHandler* aRes)
+BluetoothSocketHALInterface::Listen(BluetoothSocketType aType,
+                                          const nsAString& aServiceName,
+                                          const uint8_t aServiceUuid[16],
+                                          int aChannel, bool aEncrypt,
+                                          bool aAuth,
+                                          BluetoothSocketResultHandler* aRes)
 {
   int fd;
   bt_status_t status;
@@ -1773,8 +1778,9 @@ BluetoothSocketInterface::Listen(BluetoothSocketType aType,
   }
 
   if (aRes) {
-    DispatchBluetoothSocketResult(aRes, &BluetoothSocketResultHandler::Listen,
-                                  fd, ConvertDefault(status, STATUS_FAIL));
+    DispatchBluetoothSocketHALResult(
+      aRes, &BluetoothSocketResultHandler::Listen, fd,
+      ConvertDefault(status, STATUS_FAIL));
   }
 }
 
@@ -2053,10 +2059,9 @@ public:
   void Proceed(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     if (mRes) {
-      DispatchBluetoothSocketResult(mRes,
-                                   &BluetoothSocketResultHandler::Connect,
-                                    GetFd(), GetBdAddress(),
-                                    GetConnectionStatus(), aStatus);
+      DispatchBluetoothSocketHALResult(
+        mRes, &BluetoothSocketResultHandler::Connect, GetFd(),
+        GetBdAddress(), GetConnectionStatus(), aStatus);
     }
     MessageLoopForIO::current()->PostTask(
       FROM_HERE, new DeleteTask<ConnectWatcher>(this));
@@ -2067,11 +2072,12 @@ private:
 };
 
 void
-BluetoothSocketInterface::Connect(const nsAString& aBdAddr,
-                                  BluetoothSocketType aType,
-                                  const uint8_t aUuid[16],
-                                  int aChannel, bool aEncrypt, bool aAuth,
-                                  BluetoothSocketResultHandler* aRes)
+BluetoothSocketHALInterface::Connect(const nsAString& aBdAddr,
+                                           BluetoothSocketType aType,
+                                           const uint8_t aUuid[16],
+                                           int aChannel, bool aEncrypt,
+                                           bool aAuth,
+                                           BluetoothSocketResultHandler* aRes)
 {
   int fd;
   bt_status_t status;
@@ -2092,10 +2098,9 @@ BluetoothSocketInterface::Connect(const nsAString& aBdAddr,
     Task* t = new SocketMessageWatcherTask(new ConnectWatcher(fd, aRes));
     XRE_GetIOMessageLoop()->PostTask(FROM_HERE, t);
   } else if (aRes) {
-    DispatchBluetoothSocketResult(aRes,
-                                  &BluetoothSocketResultHandler::Connect,
-                                  -1, EmptyString(), 0,
-                                  ConvertDefault(status, STATUS_FAIL));
+    DispatchBluetoothSocketHALResult(
+      aRes, &BluetoothSocketResultHandler::Connect, -1, EmptyString(), 0,
+      ConvertDefault(status, STATUS_FAIL));
   }
 }
 
@@ -2120,11 +2125,9 @@ public:
   void Proceed(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     if (mRes) {
-      DispatchBluetoothSocketResult(mRes,
-                                    &BluetoothSocketResultHandler::Accept,
-                                    GetClientFd(), GetBdAddress(),
-                                    GetConnectionStatus(),
-                                    aStatus);
+      DispatchBluetoothSocketHALResult(
+        mRes, &BluetoothSocketResultHandler::Accept, GetClientFd(),
+        GetBdAddress(), GetConnectionStatus(), aStatus);
     }
     MessageLoopForIO::current()->PostTask(
       FROM_HERE, new DeleteTask<AcceptWatcher>(this));
@@ -2135,21 +2138,22 @@ private:
 };
 
 void
-BluetoothSocketInterface::Accept(int aFd, BluetoothSocketResultHandler* aRes)
+BluetoothSocketHALInterface::Accept(int aFd,
+                                          BluetoothSocketResultHandler* aRes)
 {
   /* receive Bluedroid's socket-setup messages and client fd */
   Task* t = new SocketMessageWatcherTask(new AcceptWatcher(aFd, aRes));
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE, t);
 }
 
-BluetoothSocketInterface::BluetoothSocketInterface(
+BluetoothSocketHALInterface::BluetoothSocketHALInterface(
   const btsock_interface_t* aInterface)
 : mInterface(aInterface)
 {
   MOZ_ASSERT(mInterface);
 }
 
-BluetoothSocketInterface::~BluetoothSocketInterface()
+BluetoothSocketHALInterface::~BluetoothSocketHALInterface()
 { }
 
 //
@@ -2157,7 +2161,7 @@ BluetoothSocketInterface::~BluetoothSocketInterface()
 //
 
 template<>
-struct interface_traits<BluetoothHandsfreeInterface>
+struct interface_traits<BluetoothHandsfreeHALInterface>
 {
   typedef const bthf_interface_t const_interface_type;
 
@@ -2168,16 +2172,16 @@ struct interface_traits<BluetoothHandsfreeInterface>
 };
 
 typedef
-  BluetoothInterfaceRunnable0<BluetoothHandsfreeResultHandler, void>
-  BluetoothHandsfreeResultRunnable;
+  BluetoothHALInterfaceRunnable0<BluetoothHandsfreeResultHandler, void>
+  BluetoothHandsfreeHALResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothHandsfreeResultHandler, void,
-                              BluetoothStatus, BluetoothStatus>
-  BluetoothHandsfreeErrorRunnable;
+  BluetoothHALInterfaceRunnable1<BluetoothHandsfreeResultHandler, void,
+                                       BluetoothStatus, BluetoothStatus>
+  BluetoothHandsfreeHALErrorRunnable;
 
 static nsresult
-DispatchBluetoothHandsfreeResult(
+DispatchBluetoothHandsfreeHALResult(
   BluetoothHandsfreeResultHandler* aRes,
   void (BluetoothHandsfreeResultHandler::*aMethod)(),
   BluetoothStatus aStatus)
@@ -2187,9 +2191,9 @@ DispatchBluetoothHandsfreeResult(
   nsRunnable* runnable;
 
   if (aStatus == STATUS_SUCCESS) {
-    runnable = new BluetoothHandsfreeResultRunnable(aRes, aMethod);
+    runnable = new BluetoothHandsfreeHALResultRunnable(aRes, aMethod);
   } else {
-    runnable = new BluetoothHandsfreeErrorRunnable(aRes,
+    runnable = new BluetoothHandsfreeHALErrorRunnable(aRes,
       &BluetoothHandsfreeResultHandler::OnError, aStatus);
   }
   nsresult rv = NS_DispatchToMainThread(runnable);
@@ -2202,13 +2206,9 @@ DispatchBluetoothHandsfreeResult(
 // Notification handling
 //
 
-BluetoothHandsfreeNotificationHandler::
-  ~BluetoothHandsfreeNotificationHandler()
-{ }
-
 static BluetoothHandsfreeNotificationHandler* sHandsfreeNotificationHandler;
 
-struct BluetoothHandsfreeCallback
+struct BluetoothHandsfreeHALCallback
 {
   class HandsfreeNotificationHandlerWrapper
   {
@@ -2225,80 +2225,74 @@ struct BluetoothHandsfreeCallback
 
   // Notifications
 
-  typedef BluetoothNotificationRunnable2<HandsfreeNotificationHandlerWrapper,
-                                         void,
-                                         BluetoothHandsfreeConnectionState,
-                                         nsString,
-                                         BluetoothHandsfreeConnectionState,
-                                         const nsAString&>
+  typedef BluetoothNotificationHALRunnable2<
+    HandsfreeNotificationHandlerWrapper, void,
+    BluetoothHandsfreeConnectionState, nsString,
+    BluetoothHandsfreeConnectionState, const nsAString&>
     ConnectionStateNotification;
 
-  typedef BluetoothNotificationRunnable2<HandsfreeNotificationHandlerWrapper,
-                                         void,
-                                         BluetoothHandsfreeAudioState,
-                                         nsString,
-                                         BluetoothHandsfreeAudioState,
-                                         const nsAString&>
+  typedef BluetoothNotificationHALRunnable2<
+    HandsfreeNotificationHandlerWrapper, void,
+    BluetoothHandsfreeAudioState, nsString,
+    BluetoothHandsfreeAudioState, const nsAString&>
     AudioStateNotification;
 
-  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
-                                         void,
-                                         BluetoothHandsfreeVoiceRecognitionState>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void,
+    BluetoothHandsfreeVoiceRecognitionState>
     VoiceRecognitionNotification;
 
-  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
-                                         void>
+  typedef BluetoothNotificationHALRunnable0<
+    HandsfreeNotificationHandlerWrapper, void>
     AnswerCallNotification;
 
-  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
-                                         void>
+  typedef BluetoothNotificationHALRunnable0<
+    HandsfreeNotificationHandlerWrapper, void>
     HangupCallNotification;
 
-  typedef BluetoothNotificationRunnable2<HandsfreeNotificationHandlerWrapper,
-                                         void,
-                                         BluetoothHandsfreeVolumeType, int>
+  typedef BluetoothNotificationHALRunnable2<
+    HandsfreeNotificationHandlerWrapper, void,
+    BluetoothHandsfreeVolumeType, int>
     VolumeNotification;
 
-  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
-                                         void, nsString, const nsAString&>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void, nsString, const nsAString&>
     DialCallNotification;
 
-  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
-                                         void, char>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void, char>
     DtmfNotification;
 
-  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
-                                         void,
-                                         BluetoothHandsfreeNRECState>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void, BluetoothHandsfreeNRECState>
     NRECNotification;
 
-  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
-                                         void,
-                                         BluetoothHandsfreeCallHoldType>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void, BluetoothHandsfreeCallHoldType>
     CallHoldNotification;
 
-  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
-                                         void>
+  typedef BluetoothNotificationHALRunnable0<
+    HandsfreeNotificationHandlerWrapper, void>
     CnumNotification;
 
-  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
-                                         void>
+  typedef BluetoothNotificationHALRunnable0<
+    HandsfreeNotificationHandlerWrapper, void>
     CindNotification;
 
-  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
-                                         void>
+  typedef BluetoothNotificationHALRunnable0<
+    HandsfreeNotificationHandlerWrapper, void>
     CopsNotification;
 
-  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
-                                         void>
+  typedef BluetoothNotificationHALRunnable0<
+    HandsfreeNotificationHandlerWrapper, void>
     ClccNotification;
 
-  typedef BluetoothNotificationRunnable1<HandsfreeNotificationHandlerWrapper,
-                                         void, nsCString, const nsACString&>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void, nsCString, const nsACString&>
     UnknownAtNotification;
 
-  typedef BluetoothNotificationRunnable0<HandsfreeNotificationHandlerWrapper,
-                                         void>
+  typedef BluetoothNotificationHALRunnable0<
+    HandsfreeNotificationHandlerWrapper, void>
     KeyPressedNotification;
 
   // Bluedroid Handsfree callbacks
@@ -2424,39 +2418,39 @@ struct BluetoothHandsfreeCallback
 // Interface
 //
 
-BluetoothHandsfreeInterface::BluetoothHandsfreeInterface(
+BluetoothHandsfreeHALInterface::BluetoothHandsfreeHALInterface(
   const bthf_interface_t* aInterface)
 : mInterface(aInterface)
 {
   MOZ_ASSERT(mInterface);
 }
 
-BluetoothHandsfreeInterface::~BluetoothHandsfreeInterface()
+BluetoothHandsfreeHALInterface::~BluetoothHandsfreeHALInterface()
 { }
 
 void
-BluetoothHandsfreeInterface::Init(
+BluetoothHandsfreeHALInterface::Init(
   BluetoothHandsfreeNotificationHandler* aNotificationHandler,
   BluetoothHandsfreeResultHandler* aRes)
 {
   static bthf_callbacks_t sCallbacks = {
     sizeof(sCallbacks),
-    BluetoothHandsfreeCallback::ConnectionState,
-    BluetoothHandsfreeCallback::AudioState,
-    BluetoothHandsfreeCallback::VoiceRecognition,
-    BluetoothHandsfreeCallback::AnswerCall,
-    BluetoothHandsfreeCallback::HangupCall,
-    BluetoothHandsfreeCallback::Volume,
-    BluetoothHandsfreeCallback::DialCall,
-    BluetoothHandsfreeCallback::Dtmf,
-    BluetoothHandsfreeCallback::NoiseReductionEchoCancellation,
-    BluetoothHandsfreeCallback::CallHold,
-    BluetoothHandsfreeCallback::Cnum,
-    BluetoothHandsfreeCallback::Cind,
-    BluetoothHandsfreeCallback::Cops,
-    BluetoothHandsfreeCallback::Clcc,
-    BluetoothHandsfreeCallback::UnknownAt,
-    BluetoothHandsfreeCallback::KeyPressed
+    BluetoothHandsfreeHALCallback::ConnectionState,
+    BluetoothHandsfreeHALCallback::AudioState,
+    BluetoothHandsfreeHALCallback::VoiceRecognition,
+    BluetoothHandsfreeHALCallback::AnswerCall,
+    BluetoothHandsfreeHALCallback::HangupCall,
+    BluetoothHandsfreeHALCallback::Volume,
+    BluetoothHandsfreeHALCallback::DialCall,
+    BluetoothHandsfreeHALCallback::Dtmf,
+    BluetoothHandsfreeHALCallback::NoiseReductionEchoCancellation,
+    BluetoothHandsfreeHALCallback::CallHold,
+    BluetoothHandsfreeHALCallback::Cnum,
+    BluetoothHandsfreeHALCallback::Cind,
+    BluetoothHandsfreeHALCallback::Cops,
+    BluetoothHandsfreeHALCallback::Clcc,
+    BluetoothHandsfreeHALCallback::UnknownAt,
+    BluetoothHandsfreeHALCallback::KeyPressed
   };
 
   sHandsfreeNotificationHandler = aNotificationHandler;
@@ -2464,29 +2458,29 @@ BluetoothHandsfreeInterface::Init(
   bt_status_t status = mInterface->init(&sCallbacks);
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(aRes,
-                                     &BluetoothHandsfreeResultHandler::Init,
-                                     ConvertDefault(status, STATUS_FAIL));
+    DispatchBluetoothHandsfreeHALResult(
+      aRes, &BluetoothHandsfreeResultHandler::Init,
+      ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothHandsfreeInterface::Cleanup(BluetoothHandsfreeResultHandler* aRes)
+BluetoothHandsfreeHALInterface::Cleanup(
+  BluetoothHandsfreeResultHandler* aRes)
 {
   mInterface->cleanup();
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(aRes,
-                                     &BluetoothHandsfreeResultHandler::Cleanup,
-                                     STATUS_SUCCESS);
+    DispatchBluetoothHandsfreeHALResult(
+      aRes, &BluetoothHandsfreeResultHandler::Cleanup, STATUS_SUCCESS);
   }
 }
 
 /* Connect / Disconnect */
 
 void
-BluetoothHandsfreeInterface::Connect(const nsAString& aBdAddr,
-                                     BluetoothHandsfreeResultHandler* aRes)
+BluetoothHandsfreeHALInterface::Connect(
+  const nsAString& aBdAddr, BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status;
   bt_bdaddr_t bdAddr;
@@ -2498,14 +2492,14 @@ BluetoothHandsfreeInterface::Connect(const nsAString& aBdAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::Connect,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothHandsfreeInterface::Disconnect(
+BluetoothHandsfreeHALInterface::Disconnect(
   const nsAString& aBdAddr, BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status;
@@ -2518,14 +2512,14 @@ BluetoothHandsfreeInterface::Disconnect(
   }
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::Disconnect,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothHandsfreeInterface::ConnectAudio(
+BluetoothHandsfreeHALInterface::ConnectAudio(
   const nsAString& aBdAddr, BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status;
@@ -2538,14 +2532,14 @@ BluetoothHandsfreeInterface::ConnectAudio(
   }
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::ConnectAudio,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothHandsfreeInterface::DisconnectAudio(
+BluetoothHandsfreeHALInterface::DisconnectAudio(
   const nsAString& aBdAddr, BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status;
@@ -2558,7 +2552,7 @@ BluetoothHandsfreeInterface::DisconnectAudio(
   }
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::DisconnectAudio,
       ConvertDefault(status, STATUS_FAIL));
   }
@@ -2567,26 +2561,26 @@ BluetoothHandsfreeInterface::DisconnectAudio(
 /* Voice Recognition */
 
 void
-BluetoothHandsfreeInterface::StartVoiceRecognition(
+BluetoothHandsfreeHALInterface::StartVoiceRecognition(
   BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status = mInterface->start_voice_recognition();
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::StartVoiceRecognition,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothHandsfreeInterface::StopVoiceRecognition(
+BluetoothHandsfreeHALInterface::StopVoiceRecognition(
   BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status = mInterface->stop_voice_recognition();
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::StopVoiceRecognition,
       ConvertDefault(status, STATUS_FAIL));
   }
@@ -2595,7 +2589,7 @@ BluetoothHandsfreeInterface::StopVoiceRecognition(
 /* Volume */
 
 void
-BluetoothHandsfreeInterface::VolumeControl(
+BluetoothHandsfreeHALInterface::VolumeControl(
   BluetoothHandsfreeVolumeType aType, int aVolume,
   BluetoothHandsfreeResultHandler* aRes)
 {
@@ -2609,7 +2603,7 @@ BluetoothHandsfreeInterface::VolumeControl(
   }
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::VolumeControl,
       ConvertDefault(status, STATUS_FAIL));
   }
@@ -2618,7 +2612,7 @@ BluetoothHandsfreeInterface::VolumeControl(
 /* Device status */
 
 void
-BluetoothHandsfreeInterface::DeviceStatusNotification(
+BluetoothHandsfreeHALInterface::DeviceStatusNotification(
   BluetoothHandsfreeNetworkState aNtkState,
   BluetoothHandsfreeServiceType aSvcType, int aSignal,
   int aBattChg, BluetoothHandsfreeResultHandler* aRes)
@@ -2636,7 +2630,7 @@ BluetoothHandsfreeInterface::DeviceStatusNotification(
   }
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::DeviceStatusNotification,
       ConvertDefault(status, STATUS_FAIL));
   }
@@ -2645,20 +2639,20 @@ BluetoothHandsfreeInterface::DeviceStatusNotification(
 /* Responses */
 
 void
-BluetoothHandsfreeInterface::CopsResponse(
+BluetoothHandsfreeHALInterface::CopsResponse(
   const char* aCops, BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status = mInterface->cops_response(aCops);
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::CopsResponse,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothHandsfreeInterface::CindResponse(
+BluetoothHandsfreeHALInterface::CindResponse(
   int aSvc, int aNumActive, int aNumHeld,
   BluetoothHandsfreeCallState aCallSetupState,
   int aSignal, int aRoam, int aBattChg,
@@ -2676,27 +2670,27 @@ BluetoothHandsfreeInterface::CindResponse(
   }
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::CindResponse,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothHandsfreeInterface::FormattedAtResponse(
+BluetoothHandsfreeHALInterface::FormattedAtResponse(
   const char* aRsp, BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status = mInterface->formatted_at_response(aRsp);
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::FormattedAtResponse,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothHandsfreeInterface::AtResponse(
+BluetoothHandsfreeHALInterface::AtResponse(
   BluetoothHandsfreeAtResponse aResponseCode, int aErrorCode,
   BluetoothHandsfreeResultHandler* aRes)
 {
@@ -2710,14 +2704,14 @@ BluetoothHandsfreeInterface::AtResponse(
   }
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::AtResponse,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothHandsfreeInterface::ClccResponse(
+BluetoothHandsfreeHALInterface::ClccResponse(
   int aIndex,
   BluetoothHandsfreeCallDirection aDir,
   BluetoothHandsfreeCallState aState,
@@ -2747,7 +2741,7 @@ BluetoothHandsfreeInterface::ClccResponse(
   }
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::ClccResponse,
       ConvertDefault(status, STATUS_FAIL));
   }
@@ -2756,7 +2750,7 @@ BluetoothHandsfreeInterface::ClccResponse(
 /* Phone State */
 
 void
-BluetoothHandsfreeInterface::PhoneStateChange(int aNumActive, int aNumHeld,
+BluetoothHandsfreeHALInterface::PhoneStateChange(int aNumActive, int aNumHeld,
   BluetoothHandsfreeCallState aCallSetupState, const nsAString& aNumber,
   BluetoothHandsfreeCallAddressType aType,
   BluetoothHandsfreeResultHandler* aRes)
@@ -2775,7 +2769,7 @@ BluetoothHandsfreeInterface::PhoneStateChange(int aNumActive, int aNumHeld,
   }
 
   if (aRes) {
-    DispatchBluetoothHandsfreeResult(
+    DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::PhoneStateChange,
       ConvertDefault(status, STATUS_FAIL));
   }
@@ -2786,7 +2780,7 @@ BluetoothHandsfreeInterface::PhoneStateChange(int aNumActive, int aNumHeld,
 //
 
 template<>
-struct interface_traits<BluetoothA2dpInterface>
+struct interface_traits<BluetoothA2dpHALInterface>
 {
   typedef const btav_interface_t const_interface_type;
 
@@ -2797,16 +2791,16 @@ struct interface_traits<BluetoothA2dpInterface>
 };
 
 typedef
-  BluetoothInterfaceRunnable0<BluetoothA2dpResultHandler, void>
-  BluetoothA2dpResultRunnable;
+  BluetoothHALInterfaceRunnable0<BluetoothA2dpResultHandler, void>
+  BluetoothA2dpHALResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothA2dpResultHandler, void,
-                              BluetoothStatus, BluetoothStatus>
-  BluetoothA2dpErrorRunnable;
+  BluetoothHALInterfaceRunnable1<BluetoothA2dpResultHandler, void,
+                                       BluetoothStatus, BluetoothStatus>
+  BluetoothA2dpHALErrorRunnable;
 
 static nsresult
-DispatchBluetoothA2dpResult(
+DispatchBluetoothA2dpHALResult(
   BluetoothA2dpResultHandler* aRes,
   void (BluetoothA2dpResultHandler::*aMethod)(),
   BluetoothStatus aStatus)
@@ -2816,9 +2810,9 @@ DispatchBluetoothA2dpResult(
   nsRunnable* runnable;
 
   if (aStatus == STATUS_SUCCESS) {
-    runnable = new BluetoothA2dpResultRunnable(aRes, aMethod);
+    runnable = new BluetoothA2dpHALResultRunnable(aRes, aMethod);
   } else {
-    runnable = new BluetoothA2dpErrorRunnable(aRes,
+    runnable = new BluetoothA2dpHALErrorRunnable(aRes,
       &BluetoothA2dpResultHandler::OnError, aStatus);
   }
   nsresult rv = NS_DispatchToMainThread(runnable);
@@ -2831,12 +2825,9 @@ DispatchBluetoothA2dpResult(
 // Notification handling
 //
 
-BluetoothA2dpNotificationHandler::~BluetoothA2dpNotificationHandler()
-{ }
-
 static BluetoothA2dpNotificationHandler* sA2dpNotificationHandler;
 
-struct BluetoothA2dpCallback
+struct BluetoothA2dpHALCallback
 {
   class A2dpNotificationHandlerWrapper
   {
@@ -2853,20 +2844,16 @@ struct BluetoothA2dpCallback
 
   // Notifications
 
-  typedef BluetoothNotificationRunnable2<A2dpNotificationHandlerWrapper,
-                                         void,
-                                         BluetoothA2dpConnectionState,
-                                         nsString,
-                                         BluetoothA2dpConnectionState,
-                                         const nsAString&>
+  typedef BluetoothNotificationHALRunnable2<
+    A2dpNotificationHandlerWrapper, void,
+    BluetoothA2dpConnectionState, nsString,
+    BluetoothA2dpConnectionState, const nsAString&>
     ConnectionStateNotification;
 
-  typedef BluetoothNotificationRunnable2<A2dpNotificationHandlerWrapper,
-                                         void,
-                                         BluetoothA2dpAudioState,
-                                         nsString,
-                                         BluetoothA2dpAudioState,
-                                         const nsAString&>
+  typedef BluetoothNotificationHALRunnable2<
+    A2dpNotificationHandlerWrapper, void,
+    BluetoothA2dpAudioState, nsString,
+    BluetoothA2dpAudioState, const nsAString&>
     AudioStateNotification;
 
   // Bluedroid A2DP callbacks
@@ -2891,25 +2878,25 @@ struct BluetoothA2dpCallback
 // Interface
 //
 
-BluetoothA2dpInterface::BluetoothA2dpInterface(
+BluetoothA2dpHALInterface::BluetoothA2dpHALInterface(
   const btav_interface_t* aInterface)
 : mInterface(aInterface)
 {
   MOZ_ASSERT(mInterface);
 }
 
-BluetoothA2dpInterface::~BluetoothA2dpInterface()
+BluetoothA2dpHALInterface::~BluetoothA2dpHALInterface()
 { }
 
 void
-BluetoothA2dpInterface::Init(
+BluetoothA2dpHALInterface::Init(
   BluetoothA2dpNotificationHandler* aNotificationHandler,
   BluetoothA2dpResultHandler* aRes)
 {
   static btav_callbacks_t sCallbacks = {
     sizeof(sCallbacks),
-    BluetoothA2dpCallback::ConnectionState,
-    BluetoothA2dpCallback::AudioState
+    BluetoothA2dpHALCallback::ConnectionState,
+    BluetoothA2dpHALCallback::AudioState
   };
 
   sA2dpNotificationHandler = aNotificationHandler;
@@ -2917,25 +2904,27 @@ BluetoothA2dpInterface::Init(
   bt_status_t status = mInterface->init(&sCallbacks);
 
   if (aRes) {
-    DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Init,
-                                ConvertDefault(status, STATUS_FAIL));
+    DispatchBluetoothA2dpHALResult(aRes,
+                                         &BluetoothA2dpResultHandler::Init,
+                                         ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothA2dpInterface::Cleanup(BluetoothA2dpResultHandler* aRes)
+BluetoothA2dpHALInterface::Cleanup(BluetoothA2dpResultHandler* aRes)
 {
   mInterface->cleanup();
 
   if (aRes) {
-    DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Cleanup,
-                                STATUS_SUCCESS);
+    DispatchBluetoothA2dpHALResult(aRes,
+                                         &BluetoothA2dpResultHandler::Cleanup,
+                                         STATUS_SUCCESS);
   }
 }
 
 void
-BluetoothA2dpInterface::Connect(const nsAString& aBdAddr,
-                                BluetoothA2dpResultHandler* aRes)
+BluetoothA2dpHALInterface::Connect(const nsAString& aBdAddr,
+                                         BluetoothA2dpResultHandler* aRes)
 {
   bt_status_t status;
   bt_bdaddr_t bdAddr;
@@ -2947,14 +2936,15 @@ BluetoothA2dpInterface::Connect(const nsAString& aBdAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Connect,
-                                ConvertDefault(status, STATUS_FAIL));
+    DispatchBluetoothA2dpHALResult(
+      aRes, &BluetoothA2dpResultHandler::Connect,
+      ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothA2dpInterface::Disconnect(const nsAString& aBdAddr,
-                                   BluetoothA2dpResultHandler* aRes)
+BluetoothA2dpHALInterface::Disconnect(const nsAString& aBdAddr,
+                                            BluetoothA2dpResultHandler* aRes)
 {
   bt_status_t status;
   bt_bdaddr_t bdAddr;
@@ -2966,8 +2956,9 @@ BluetoothA2dpInterface::Disconnect(const nsAString& aBdAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Disconnect,
-                                ConvertDefault(status, STATUS_FAIL));
+    DispatchBluetoothA2dpHALResult(
+      aRes, &BluetoothA2dpResultHandler::Disconnect,
+      ConvertDefault(status, STATUS_FAIL));
   }
 }
 
@@ -2977,7 +2968,7 @@ BluetoothA2dpInterface::Disconnect(const nsAString& aBdAddr,
 
 #if ANDROID_VERSION >= 18
 template<>
-struct interface_traits<BluetoothAvrcpInterface>
+struct interface_traits<BluetoothAvrcpHALInterface>
 {
   typedef const btrc_interface_t const_interface_type;
 
@@ -2989,16 +2980,16 @@ struct interface_traits<BluetoothAvrcpInterface>
 #endif
 
 typedef
-  BluetoothInterfaceRunnable0<BluetoothAvrcpResultHandler, void>
-  BluetoothAvrcpResultRunnable;
+  BluetoothHALInterfaceRunnable0<BluetoothAvrcpResultHandler, void>
+  BluetoothAvrcpHALResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothAvrcpResultHandler, void,
-                              BluetoothStatus, BluetoothStatus>
-  BluetoothAvrcpErrorRunnable;
+  BluetoothHALInterfaceRunnable1<BluetoothAvrcpResultHandler, void,
+                                       BluetoothStatus, BluetoothStatus>
+  BluetoothAvrcpHALErrorRunnable;
 
 static nsresult
-DispatchBluetoothAvrcpResult(
+DispatchBluetoothAvrcpHALResult(
   BluetoothAvrcpResultHandler* aRes,
   void (BluetoothAvrcpResultHandler::*aMethod)(),
   BluetoothStatus aStatus)
@@ -3008,9 +2999,9 @@ DispatchBluetoothAvrcpResult(
   nsRunnable* runnable;
 
   if (aStatus == STATUS_SUCCESS) {
-    runnable = new BluetoothAvrcpResultRunnable(aRes, aMethod);
+    runnable = new BluetoothAvrcpHALResultRunnable(aRes, aMethod);
   } else {
-    runnable = new BluetoothAvrcpErrorRunnable(aRes,
+    runnable = new BluetoothAvrcpHALErrorRunnable(aRes,
       &BluetoothAvrcpResultHandler::OnError, aStatus);
   }
   nsresult rv = NS_DispatchToMainThread(runnable);
@@ -3022,9 +3013,6 @@ DispatchBluetoothAvrcpResult(
 
 // Notification handling
 //
-
-BluetoothAvrcpNotificationHandler::~BluetoothAvrcpNotificationHandler()
-{ }
 
 static BluetoothAvrcpNotificationHandler* sAvrcpNotificationHandler;
 
@@ -3045,64 +3033,64 @@ struct BluetoothAvrcpCallback
 
   // Notifications
 
-  typedef BluetoothNotificationRunnable0<AvrcpNotificationHandlerWrapper,
+  typedef BluetoothNotificationHALRunnable0<AvrcpNotificationHandlerWrapper,
                                          void>
     GetPlayStatusNotification;
 
-  typedef BluetoothNotificationRunnable0<AvrcpNotificationHandlerWrapper,
+  typedef BluetoothNotificationHALRunnable0<AvrcpNotificationHandlerWrapper,
                                          void>
     ListPlayerAppAttrNotification;
 
-  typedef BluetoothNotificationRunnable1<AvrcpNotificationHandlerWrapper,
+  typedef BluetoothNotificationHALRunnable1<AvrcpNotificationHandlerWrapper,
                                          void,
                                          BluetoothAvrcpPlayerAttribute>
     ListPlayerAppValuesNotification;
 
-  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable2<AvrcpNotificationHandlerWrapper, void,
     uint8_t, nsAutoArrayPtr<BluetoothAvrcpPlayerAttribute>,
     uint8_t, const BluetoothAvrcpPlayerAttribute*>
     GetPlayerAppValueNotification;
 
-  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable2<AvrcpNotificationHandlerWrapper, void,
     uint8_t, nsAutoArrayPtr<BluetoothAvrcpPlayerAttribute>,
     uint8_t, const BluetoothAvrcpPlayerAttribute*>
     GetPlayerAppAttrsTextNotification;
 
-  typedef BluetoothNotificationRunnable3<AvrcpNotificationHandlerWrapper,
+  typedef BluetoothNotificationHALRunnable3<AvrcpNotificationHandlerWrapper,
                                          void,
                                          uint8_t, uint8_t,
                                          nsAutoArrayPtr<uint8_t>,
                                          uint8_t, uint8_t, const uint8_t*>
     GetPlayerAppValuesTextNotification;
 
-  typedef BluetoothNotificationRunnable1<AvrcpNotificationHandlerWrapper,
+  typedef BluetoothNotificationHALRunnable1<AvrcpNotificationHandlerWrapper,
                                          void,
                                          BluetoothAvrcpPlayerSettings,
                                          const BluetoothAvrcpPlayerSettings&>
     SetPlayerAppValueNotification;
 
-  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable2<AvrcpNotificationHandlerWrapper, void,
     uint8_t, nsAutoArrayPtr<BluetoothAvrcpMediaAttribute>,
     uint8_t, const BluetoothAvrcpMediaAttribute*>
     GetElementAttrNotification;
 
-  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper,
+  typedef BluetoothNotificationHALRunnable2<AvrcpNotificationHandlerWrapper,
                                          void,
                                          BluetoothAvrcpEvent, uint32_t>
     RegisterNotificationNotification;
 
-  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper,
+  typedef BluetoothNotificationHALRunnable2<AvrcpNotificationHandlerWrapper,
                                          void,
                                          nsString, unsigned long,
                                          const nsAString&>
     RemoteFeatureNotification;
 
-  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper,
+  typedef BluetoothNotificationHALRunnable2<AvrcpNotificationHandlerWrapper,
                                          void,
                                          uint8_t, uint8_t>
     VolumeChangeNotification;
 
-  typedef BluetoothNotificationRunnable2<AvrcpNotificationHandlerWrapper,
+  typedef BluetoothNotificationHALRunnable2<AvrcpNotificationHandlerWrapper,
                                          void,
                                          int, int>
     PassthroughCmdNotification;
@@ -3211,7 +3199,7 @@ struct BluetoothAvrcpCallback
 // Interface
 //
 
-BluetoothAvrcpInterface::BluetoothAvrcpInterface(
+BluetoothAvrcpHALInterface::BluetoothAvrcpHALInterface(
 #if ANDROID_VERSION >= 18
   const btrc_interface_t* aInterface
 #endif
@@ -3225,11 +3213,11 @@ BluetoothAvrcpInterface::BluetoothAvrcpInterface(
 #endif
 }
 
-BluetoothAvrcpInterface::~BluetoothAvrcpInterface()
+BluetoothAvrcpHALInterface::~BluetoothAvrcpHALInterface()
 { }
 
 void
-BluetoothAvrcpInterface::Init(
+BluetoothAvrcpHALInterface::Init(
   BluetoothAvrcpNotificationHandler* aNotificationHandler,
   BluetoothAvrcpResultHandler* aRes)
 {
@@ -3265,28 +3253,28 @@ BluetoothAvrcpInterface::Init(
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(aRes, &BluetoothAvrcpResultHandler::Init,
+    DispatchBluetoothAvrcpHALResult(aRes, &BluetoothAvrcpResultHandler::Init,
                                  ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothAvrcpInterface::Cleanup(BluetoothAvrcpResultHandler* aRes)
+BluetoothAvrcpHALInterface::Cleanup(BluetoothAvrcpResultHandler* aRes)
 {
 #if ANDROID_VERSION >= 18
   mInterface->cleanup();
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(aRes, &BluetoothAvrcpResultHandler::Cleanup,
+    DispatchBluetoothAvrcpHALResult(aRes, &BluetoothAvrcpResultHandler::Cleanup,
                                  STATUS_SUCCESS);
   }
 }
 
 void
-BluetoothAvrcpInterface::GetPlayStatusRsp(ControlPlayStatus aPlayStatus,
-                                          uint32_t aSongLen, uint32_t aSongPos,
-                                          BluetoothAvrcpResultHandler* aRes)
+BluetoothAvrcpHALInterface::GetPlayStatusRsp(
+  ControlPlayStatus aPlayStatus, uint32_t aSongLen, uint32_t aSongPos,
+  BluetoothAvrcpResultHandler* aRes)
 {
   bt_status_t status;
 
@@ -3303,14 +3291,14 @@ BluetoothAvrcpInterface::GetPlayStatusRsp(ControlPlayStatus aPlayStatus,
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(
+    DispatchBluetoothAvrcpHALResult(
       aRes, &BluetoothAvrcpResultHandler::GetPlayStatusRsp,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothAvrcpInterface::ListPlayerAppAttrRsp(
+BluetoothAvrcpHALInterface::ListPlayerAppAttrRsp(
   int aNumAttr, const BluetoothAvrcpPlayerAttribute* aPAttrs,
   BluetoothAvrcpResultHandler* aRes)
 {
@@ -3330,14 +3318,14 @@ BluetoothAvrcpInterface::ListPlayerAppAttrRsp(
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(
+    DispatchBluetoothAvrcpHALResult(
       aRes, &BluetoothAvrcpResultHandler::ListPlayerAppAttrRsp,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothAvrcpInterface::ListPlayerAppValueRsp(
+BluetoothAvrcpHALInterface::ListPlayerAppValueRsp(
   int aNumVal, uint8_t* aPVals, BluetoothAvrcpResultHandler* aRes)
 {
 #if ANDROID_VERSION >= 18
@@ -3347,14 +3335,14 @@ BluetoothAvrcpInterface::ListPlayerAppValueRsp(
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(
+    DispatchBluetoothAvrcpHALResult(
       aRes, &BluetoothAvrcpResultHandler::ListPlayerAppValueRsp,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothAvrcpInterface::GetPlayerAppValueRsp(
+BluetoothAvrcpHALInterface::GetPlayerAppValueRsp(
   uint8_t aNumAttrs, const uint8_t* aIds, const uint8_t* aValues,
   BluetoothAvrcpResultHandler* aRes)
 {
@@ -3376,14 +3364,14 @@ BluetoothAvrcpInterface::GetPlayerAppValueRsp(
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(
+    DispatchBluetoothAvrcpHALResult(
       aRes, &BluetoothAvrcpResultHandler::GetPlayerAppValueRsp,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothAvrcpInterface::GetPlayerAppAttrTextRsp(
+BluetoothAvrcpHALInterface::GetPlayerAppAttrTextRsp(
   int aNumAttr, const uint8_t* aIds, const char** aTexts,
   BluetoothAvrcpResultHandler* aRes)
 {
@@ -3405,14 +3393,14 @@ BluetoothAvrcpInterface::GetPlayerAppAttrTextRsp(
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(
+    DispatchBluetoothAvrcpHALResult(
       aRes, &BluetoothAvrcpResultHandler::GetPlayerAppAttrTextRsp,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothAvrcpInterface::GetPlayerAppValueTextRsp(
+BluetoothAvrcpHALInterface::GetPlayerAppValueTextRsp(
   int aNumVal, const uint8_t* aIds, const char** aTexts,
   BluetoothAvrcpResultHandler* aRes)
 {
@@ -3434,14 +3422,14 @@ BluetoothAvrcpInterface::GetPlayerAppValueTextRsp(
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(
+    DispatchBluetoothAvrcpHALResult(
       aRes, &BluetoothAvrcpResultHandler::GetPlayerAppValueTextRsp,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothAvrcpInterface::GetElementAttrRsp(
+BluetoothAvrcpHALInterface::GetElementAttrRsp(
   uint8_t aNumAttr, const BluetoothAvrcpElementAttribute* aAttrs,
   BluetoothAvrcpResultHandler* aRes)
 {
@@ -3461,14 +3449,14 @@ BluetoothAvrcpInterface::GetElementAttrRsp(
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(
+    DispatchBluetoothAvrcpHALResult(
       aRes, &BluetoothAvrcpResultHandler::GetElementAttrRsp,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothAvrcpInterface::SetPlayerAppValueRsp(
+BluetoothAvrcpHALInterface::SetPlayerAppValueRsp(
   BluetoothAvrcpStatus aRspStatus, BluetoothAvrcpResultHandler* aRes)
 {
   bt_status_t status;
@@ -3486,14 +3474,14 @@ BluetoothAvrcpInterface::SetPlayerAppValueRsp(
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(
+    DispatchBluetoothAvrcpHALResult(
       aRes, &BluetoothAvrcpResultHandler::SetPlayerAppValueRsp,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothAvrcpInterface::RegisterNotificationRsp(
+BluetoothAvrcpHALInterface::RegisterNotificationRsp(
   BluetoothAvrcpEvent aEvent, BluetoothAvrcpNotification aType,
   const BluetoothAvrcpNotificationParam& aParam,
   BluetoothAvrcpResultHandler* aRes)
@@ -3549,15 +3537,15 @@ BluetoothAvrcpInterface::RegisterNotificationRsp(
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(
+    DispatchBluetoothAvrcpHALResult(
       aRes, &BluetoothAvrcpResultHandler::RegisterNotificationRsp,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothAvrcpInterface::SetVolume(uint8_t aVolume,
-                                   BluetoothAvrcpResultHandler* aRes)
+BluetoothAvrcpHALInterface::SetVolume(uint8_t aVolume,
+                                            BluetoothAvrcpResultHandler* aRes)
 {
 #if ANDROID_VERSION >= 19
   bt_status_t status = mInterface->set_volume(aVolume);
@@ -3566,7 +3554,7 @@ BluetoothAvrcpInterface::SetVolume(uint8_t aVolume,
 #endif
 
   if (aRes) {
-    DispatchBluetoothAvrcpResult(
+    DispatchBluetoothAvrcpHALResult(
       aRes, &BluetoothAvrcpResultHandler::SetVolume,
       ConvertDefault(status, STATUS_FAIL));
   }
@@ -3577,28 +3565,29 @@ BluetoothAvrcpInterface::SetVolume(uint8_t aVolume,
 //
 
 typedef
-  BluetoothInterfaceRunnable0<BluetoothResultHandler, void>
-  BluetoothResultRunnable;
+  BluetoothHALInterfaceRunnable0<BluetoothResultHandler, void>
+  BluetoothHALResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothResultHandler, void,
+  BluetoothHALInterfaceRunnable1<BluetoothResultHandler, void,
                               BluetoothStatus, BluetoothStatus>
-  BluetoothErrorRunnable;
+  BluetoothHALErrorRunnable;
 
 static nsresult
-DispatchBluetoothResult(BluetoothResultHandler* aRes,
-                        void (BluetoothResultHandler::*aMethod)(),
-                        BluetoothStatus aStatus)
+DispatchBluetoothHALResult(BluetoothResultHandler* aRes,
+                                 void (BluetoothResultHandler::*aMethod)(),
+                                 BluetoothStatus aStatus)
 {
   MOZ_ASSERT(aRes);
 
   nsRunnable* runnable;
 
   if (aStatus == STATUS_SUCCESS) {
-    runnable = new BluetoothResultRunnable(aRes, aMethod);
+    runnable = new BluetoothHALResultRunnable(aRes, aMethod);
   } else {
     runnable = new
-      BluetoothErrorRunnable(aRes, &BluetoothResultHandler::OnError, aStatus);
+      BluetoothHALErrorRunnable(aRes, &BluetoothResultHandler::OnError,
+                                      aStatus);
   }
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_FAILED(rv)) {
@@ -3609,9 +3598,6 @@ DispatchBluetoothResult(BluetoothResultHandler* aRes,
 
 // Notification handling
 //
-
-BluetoothNotificationHandler::~BluetoothNotificationHandler()
-{ }
 
 static BluetoothNotificationHandler* sNotificationHandler;
 
@@ -3632,63 +3618,63 @@ struct BluetoothCallback
 
   // Notifications
 
-  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable1<NotificationHandlerWrapper, void,
                                          bool>
     AdapterStateChangedNotification;
 
-  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable3<NotificationHandlerWrapper, void,
                                          BluetoothStatus, int,
                                          nsAutoArrayPtr<BluetoothProperty>,
                                          BluetoothStatus, int,
                                          const BluetoothProperty*>
     AdapterPropertiesNotification;
 
-  typedef BluetoothNotificationRunnable4<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable4<NotificationHandlerWrapper, void,
                                          BluetoothStatus, nsString, int,
                                          nsAutoArrayPtr<BluetoothProperty>,
                                          BluetoothStatus, const nsAString&,
                                          int, const BluetoothProperty*>
     RemoteDevicePropertiesNotification;
 
-  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable2<NotificationHandlerWrapper, void,
                                          int,
                                          nsAutoArrayPtr<BluetoothProperty>,
                                          int, const BluetoothProperty*>
     DeviceFoundNotification;
 
-  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable1<NotificationHandlerWrapper, void,
                                          bool>
     DiscoveryStateChangedNotification;
 
-  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable3<NotificationHandlerWrapper, void,
                                          nsString, nsString, uint32_t,
                                          const nsAString&, const nsAString&>
     PinRequestNotification;
 
-  typedef BluetoothNotificationRunnable5<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable5<NotificationHandlerWrapper, void,
                                          nsString, nsString, uint32_t,
                                          nsString, uint32_t,
                                          const nsAString&, const nsAString&,
                                          uint32_t, const nsAString&>
     SspRequestNotification;
 
-  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable3<NotificationHandlerWrapper, void,
                                          BluetoothStatus, nsString,
                                          BluetoothBondState,
                                          BluetoothStatus, const nsAString&>
     BondStateChangedNotification;
 
-  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable3<NotificationHandlerWrapper, void,
                                          BluetoothStatus, nsString, bool,
                                          BluetoothStatus, const nsAString&>
     AclStateChangedNotification;
 
-  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable3<NotificationHandlerWrapper, void,
                                          uint16_t, nsAutoArrayPtr<uint8_t>,
                                          uint8_t, uint16_t, const uint8_t*>
     DutModeRecvNotification;
 
-  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+  typedef BluetoothNotificationHALRunnable2<NotificationHandlerWrapper, void,
                                          BluetoothStatus, uint16_t>
     LeTestModeNotification;
 
@@ -3840,10 +3826,10 @@ struct BluetoothCallback
 #define container(_t, _v, _m) \
   ( (_t*)( ((const unsigned char*)(_v)) - offsetof(_t, _m) ) )
 
-BluetoothInterface*
-BluetoothInterface::GetInstance()
+BluetoothHALInterface*
+BluetoothHALInterface::GetInstance()
 {
-  static BluetoothInterface* sBluetoothInterface;
+  static BluetoothHALInterface* sBluetoothInterface;
 
   if (sBluetoothInterface) {
     return sBluetoothInterface;
@@ -3883,7 +3869,7 @@ BluetoothInterface::GetInstance()
     goto err_bt_interface_size;
   }
 
-  sBluetoothInterface = new BluetoothInterface(bt_interface);
+  sBluetoothInterface = new BluetoothHALInterface(bt_interface);
 
   return sBluetoothInterface;
 
@@ -3896,18 +3882,20 @@ err_get_bluetooth_interface:
   return nullptr;
 }
 
-BluetoothInterface::BluetoothInterface(const bt_interface_t* aInterface)
+BluetoothHALInterface::BluetoothHALInterface(
+  const bt_interface_t* aInterface)
 : mInterface(aInterface)
 {
   MOZ_ASSERT(mInterface);
 }
 
-BluetoothInterface::~BluetoothInterface()
+BluetoothHALInterface::~BluetoothHALInterface()
 { }
 
 void
-BluetoothInterface::Init(BluetoothNotificationHandler* aNotificationHandler,
-                         BluetoothResultHandler* aRes)
+BluetoothHALInterface::Init(
+  BluetoothNotificationHandler* aNotificationHandler,
+  BluetoothResultHandler* aRes)
 {
   static bt_callbacks_t sBluetoothCallbacks = {
     sizeof(sBluetoothCallbacks),
@@ -3932,18 +3920,18 @@ BluetoothInterface::Init(BluetoothNotificationHandler* aNotificationHandler,
   int status = mInterface->init(&sBluetoothCallbacks);
 
   if (aRes) {
-    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Init,
+    DispatchBluetoothHALResult(aRes, &BluetoothResultHandler::Init,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::Cleanup(BluetoothResultHandler* aRes)
+BluetoothHALInterface::Cleanup(BluetoothResultHandler* aRes)
 {
   mInterface->cleanup();
 
   if (aRes) {
-    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Cleanup,
+    DispatchBluetoothHALResult(aRes, &BluetoothResultHandler::Cleanup,
                             STATUS_SUCCESS);
   }
 
@@ -3951,23 +3939,23 @@ BluetoothInterface::Cleanup(BluetoothResultHandler* aRes)
 }
 
 void
-BluetoothInterface::Enable(BluetoothResultHandler* aRes)
+BluetoothHALInterface::Enable(BluetoothResultHandler* aRes)
 {
   int status = mInterface->enable();
 
   if (aRes) {
-    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Enable,
+    DispatchBluetoothHALResult(aRes, &BluetoothResultHandler::Enable,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::Disable(BluetoothResultHandler* aRes)
+BluetoothHALInterface::Disable(BluetoothResultHandler* aRes)
 {
   int status = mInterface->disable();
 
   if (aRes) {
-    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Disable,
+    DispatchBluetoothHALResult(aRes, &BluetoothResultHandler::Disable,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
@@ -3975,20 +3963,20 @@ BluetoothInterface::Disable(BluetoothResultHandler* aRes)
 /* Adapter Properties */
 
 void
-BluetoothInterface::GetAdapterProperties(BluetoothResultHandler* aRes)
+BluetoothHALInterface::GetAdapterProperties(BluetoothResultHandler* aRes)
 {
   int status = mInterface->get_adapter_properties();
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::GetAdapterProperties,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::GetAdapterProperty(const nsAString& aName,
-                                       BluetoothResultHandler* aRes)
+BluetoothHALInterface::GetAdapterProperty(const nsAString& aName,
+                                                BluetoothResultHandler* aRes)
 {
   int status;
   bt_property_type_t type;
@@ -4003,15 +3991,15 @@ BluetoothInterface::GetAdapterProperty(const nsAString& aName,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::GetAdapterProperties,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::SetAdapterProperty(const BluetoothNamedValue& aProperty,
-                                       BluetoothResultHandler* aRes)
+BluetoothHALInterface::SetAdapterProperty(
+  const BluetoothNamedValue& aProperty, BluetoothResultHandler* aRes)
 {
   int status;
   ConvertNamedValue convertProperty(aProperty);
@@ -4024,7 +4012,7 @@ BluetoothInterface::SetAdapterProperty(const BluetoothNamedValue& aProperty,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::SetAdapterProperty,
                             ConvertDefault(status, STATUS_FAIL));
   }
@@ -4033,8 +4021,8 @@ BluetoothInterface::SetAdapterProperty(const BluetoothNamedValue& aProperty,
 /* Remote Device Properties */
 
 void
-BluetoothInterface::GetRemoteDeviceProperties(const nsAString& aRemoteAddr,
-                                              BluetoothResultHandler* aRes)
+BluetoothHALInterface::GetRemoteDeviceProperties(
+  const nsAString& aRemoteAddr, BluetoothResultHandler* aRes)
 {
   int status;
   bt_bdaddr_t addr;
@@ -4046,16 +4034,16 @@ BluetoothInterface::GetRemoteDeviceProperties(const nsAString& aRemoteAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::GetRemoteDeviceProperties,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::GetRemoteDeviceProperty(const nsAString& aRemoteAddr,
-                                            const nsAString& aName,
-                                            BluetoothResultHandler* aRes)
+BluetoothHALInterface::GetRemoteDeviceProperty(
+  const nsAString& aRemoteAddr, const nsAString& aName,
+  BluetoothResultHandler* aRes)
 {
   int status;
   bt_bdaddr_t remoteAddr;
@@ -4072,16 +4060,16 @@ BluetoothInterface::GetRemoteDeviceProperty(const nsAString& aRemoteAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::GetRemoteDeviceProperty,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::SetRemoteDeviceProperty(const nsAString& aRemoteAddr,
-                                            const BluetoothNamedValue& aProperty,
-                                            BluetoothResultHandler* aRes)
+BluetoothHALInterface::SetRemoteDeviceProperty(
+  const nsAString& aRemoteAddr, const BluetoothNamedValue& aProperty,
+  BluetoothResultHandler* aRes)
 {
   int status;
   bt_bdaddr_t remoteAddr;
@@ -4098,7 +4086,7 @@ BluetoothInterface::SetRemoteDeviceProperty(const nsAString& aRemoteAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::SetRemoteDeviceProperty,
                             ConvertDefault(status, STATUS_FAIL));
   }
@@ -4107,7 +4095,7 @@ BluetoothInterface::SetRemoteDeviceProperty(const nsAString& aRemoteAddr,
 /* Remote Services */
 
 void
-BluetoothInterface::GetRemoteServiceRecord(const nsAString& aRemoteAddr,
+BluetoothHALInterface::GetRemoteServiceRecord(const nsAString& aRemoteAddr,
                                            const uint8_t aUuid[16],
                                            BluetoothResultHandler* aRes)
 {
@@ -4123,14 +4111,14 @@ BluetoothInterface::GetRemoteServiceRecord(const nsAString& aRemoteAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::GetRemoteServiceRecord,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::GetRemoteServices(const nsAString& aRemoteAddr,
+BluetoothHALInterface::GetRemoteServices(const nsAString& aRemoteAddr,
                                       BluetoothResultHandler* aRes)
 {
   int status;
@@ -4143,7 +4131,7 @@ BluetoothInterface::GetRemoteServices(const nsAString& aRemoteAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::GetRemoteServices,
                             ConvertDefault(status, STATUS_FAIL));
   }
@@ -4152,24 +4140,24 @@ BluetoothInterface::GetRemoteServices(const nsAString& aRemoteAddr,
 /* Discovery */
 
 void
-BluetoothInterface::StartDiscovery(BluetoothResultHandler* aRes)
+BluetoothHALInterface::StartDiscovery(BluetoothResultHandler* aRes)
 {
   int status = mInterface->start_discovery();
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::StartDiscovery,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::CancelDiscovery(BluetoothResultHandler* aRes)
+BluetoothHALInterface::CancelDiscovery(BluetoothResultHandler* aRes)
 {
   int status = mInterface->cancel_discovery();
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::CancelDiscovery,
                             ConvertDefault(status, STATUS_FAIL));
   }
@@ -4178,7 +4166,7 @@ BluetoothInterface::CancelDiscovery(BluetoothResultHandler* aRes)
 /* Bonds */
 
 void
-BluetoothInterface::CreateBond(const nsAString& aBdAddr,
+BluetoothHALInterface::CreateBond(const nsAString& aBdAddr,
                                BluetoothResultHandler* aRes)
 {
   bt_bdaddr_t bdAddr;
@@ -4191,14 +4179,14 @@ BluetoothInterface::CreateBond(const nsAString& aBdAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::CreateBond,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::RemoveBond(const nsAString& aBdAddr,
+BluetoothHALInterface::RemoveBond(const nsAString& aBdAddr,
                                BluetoothResultHandler* aRes)
 {
   bt_bdaddr_t bdAddr;
@@ -4211,14 +4199,14 @@ BluetoothInterface::RemoveBond(const nsAString& aBdAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::RemoveBond,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::CancelBond(const nsAString& aBdAddr,
+BluetoothHALInterface::CancelBond(const nsAString& aBdAddr,
                                BluetoothResultHandler* aRes)
 {
   bt_bdaddr_t bdAddr;
@@ -4231,7 +4219,7 @@ BluetoothInterface::CancelBond(const nsAString& aBdAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::CancelBond,
                             ConvertDefault(status, STATUS_FAIL));
   }
@@ -4240,7 +4228,7 @@ BluetoothInterface::CancelBond(const nsAString& aBdAddr,
 /* Authentication */
 
 void
-BluetoothInterface::PinReply(const nsAString& aBdAddr, bool aAccept,
+BluetoothHALInterface::PinReply(const nsAString& aBdAddr, bool aAccept,
                              const nsAString& aPinCode,
                              BluetoothResultHandler* aRes)
 {
@@ -4259,14 +4247,14 @@ BluetoothInterface::PinReply(const nsAString& aBdAddr, bool aAccept,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::PinReply,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::SspReply(const nsAString& aBdAddr,
+BluetoothHALInterface::SspReply(const nsAString& aBdAddr,
                              const nsAString& aVariant,
                              bool aAccept, uint32_t aPasskey,
                              BluetoothResultHandler* aRes)
@@ -4285,7 +4273,7 @@ BluetoothInterface::SspReply(const nsAString& aBdAddr,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::SspReply,
                             ConvertDefault(status, STATUS_FAIL));
   }
@@ -4294,7 +4282,7 @@ BluetoothInterface::SspReply(const nsAString& aBdAddr,
 /* DUT Mode */
 
 void
-BluetoothInterface::DutModeConfigure(bool aEnable,
+BluetoothHALInterface::DutModeConfigure(bool aEnable,
                                      BluetoothResultHandler* aRes)
 {
   int status;
@@ -4307,20 +4295,20 @@ BluetoothInterface::DutModeConfigure(bool aEnable,
   }
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::DutModeConfigure,
                             ConvertDefault(status, STATUS_FAIL));
   }
 }
 
 void
-BluetoothInterface::DutModeSend(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
+BluetoothHALInterface::DutModeSend(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
                                 BluetoothResultHandler* aRes)
 {
   int status = mInterface->dut_mode_send(aOpcode, aBuf, aLen);
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::DutModeSend,
                             ConvertDefault(status, STATUS_FAIL));
   }
@@ -4329,7 +4317,7 @@ BluetoothInterface::DutModeSend(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
 /* LE Mode */
 
 void
-BluetoothInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
+BluetoothHALInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
                                BluetoothResultHandler* aRes)
 {
 #if ANDROID_VERSION >= 18
@@ -4339,7 +4327,7 @@ BluetoothInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
 #endif
 
   if (aRes) {
-    DispatchBluetoothResult(aRes,
+    DispatchBluetoothHALResult(aRes,
                             &BluetoothResultHandler::LeTestMode,
                             ConvertDefault(status, STATUS_FAIL));
   }
@@ -4349,7 +4337,7 @@ BluetoothInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
 
 template <class T>
 T*
-BluetoothInterface::CreateProfileInterface()
+BluetoothHALInterface::CreateProfileInterface()
 {
   typename interface_traits<T>::const_interface_type* interface =
     reinterpret_cast<typename interface_traits<T>::const_interface_type*>(
@@ -4376,18 +4364,18 @@ BluetoothInterface::CreateProfileInterface()
  * the error constant STATUS_UNSUPPORTED.
  */
 template <>
-BluetoothAvrcpInterface*
-BluetoothInterface::CreateProfileInterface<BluetoothAvrcpInterface>()
+BluetoothAvrcpHALInterface*
+BluetoothHALInterface::CreateProfileInterface<BluetoothAvrcpHALInterface>()
 {
   BT_WARNING("Bluetooth profile 'avrcp' is not supported");
 
-  return new BluetoothAvrcpInterface();
+  return new BluetoothAvrcpHALInterface();
 }
 #endif
 
 template <class T>
 T*
-BluetoothInterface::GetProfileInterface()
+BluetoothHALInterface::GetProfileInterface()
 {
   static T* sBluetoothProfileInterface;
 
@@ -4401,27 +4389,27 @@ BluetoothInterface::GetProfileInterface()
 }
 
 BluetoothSocketInterface*
-BluetoothInterface::GetBluetoothSocketInterface()
+BluetoothHALInterface::GetBluetoothSocketInterface()
 {
-  return GetProfileInterface<BluetoothSocketInterface>();
+  return GetProfileInterface<BluetoothSocketHALInterface>();
 }
 
 BluetoothHandsfreeInterface*
-BluetoothInterface::GetBluetoothHandsfreeInterface()
+BluetoothHALInterface::GetBluetoothHandsfreeInterface()
 {
-  return GetProfileInterface<BluetoothHandsfreeInterface>();
+  return GetProfileInterface<BluetoothHandsfreeHALInterface>();
 }
 
 BluetoothA2dpInterface*
-BluetoothInterface::GetBluetoothA2dpInterface()
+BluetoothHALInterface::GetBluetoothA2dpInterface()
 {
-  return GetProfileInterface<BluetoothA2dpInterface>();
+  return GetProfileInterface<BluetoothA2dpHALInterface>();
 }
 
 BluetoothAvrcpInterface*
-BluetoothInterface::GetBluetoothAvrcpInterface()
+BluetoothHALInterface::GetBluetoothAvrcpInterface()
 {
-  return GetProfileInterface<BluetoothAvrcpInterface>();
+  return GetProfileInterface<BluetoothAvrcpHALInterface>();
 }
 
 END_BLUETOOTH_NAMESPACE
