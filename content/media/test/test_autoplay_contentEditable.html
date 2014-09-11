@@ -19,18 +19,19 @@ var tokens = {
   "canplaythrough": ["canplay", "canplaythrough"]
 };
 
+var eventList = ["play", "canplay", "playing", "canplaythrough", "ended"];
+
 function gotPlayEvent(event) {
   var v = event.target;
   ok(tokens[v._state].indexOf(event.type) >= 0,
-     "Check expected event got " + event.type + " at " + v._state + " for " + v.src +
-     " uneval(event.type)=" + uneval(event.type) + " typeof(event.type)=" + typeof(event.type) +
-     " uneval(v._state)=" + uneval(v._state) + " typeof(v._state)=" + typeof(v._state) + 
-     " tokens["+v._state+"]=" + tokens[v._state] +
-     " tokens["+v._state+"].indexOf(event.type)=" + tokens[v._state].indexOf(event.type));
+     "Check expected event got " + uneval(event.type) +
+     " at " + uneval(v._state) + " for " + v._name);
   v._state = event.type;
   if (event.type == 'canplaythrough') {
-    //canplaythrough event can fire multiple times on Windows
-    v.removeEventListener('canplaythrough', gotPlayEvent, false);
+    // Remove all event listeners to avoid running tests after finishing test case.
+    eventList.forEach(function (e) {
+      v.removeEventListener(e, gotPlayEvent, false);
+    });
     v.pause();
     goToNext(v);
   }
@@ -47,12 +48,13 @@ function initTest(test, token) {
   v.token = token;
   manager.started(token);
   v._state = 0;
- 
-  ["play", "canplay", "playing", "canplaythrough", "ended"].forEach(function (e) {
+
+  eventList.forEach(function (e) {
     v.addEventListener(e, gotPlayEvent, false);
   });
 
   v.src = test.name;
+  v._name = test.name;
   v.autoplay = true;
   document.body.appendChild(v); // Causes load.
 }
