@@ -319,7 +319,8 @@ private:
    */
   static void Shutdown();
 
-  static void StackWalkCallback(void* aPc, void* aSp, void* aClosure);
+  static void StackWalkCallback(uint32_t aFrameNumber, void* aPc,
+                                void* aSp, void* aClosure);
   static void GetStackTrace(AcquisitionState& aState);
 
 #  ifdef MOZILLA_INTERNAL_API
