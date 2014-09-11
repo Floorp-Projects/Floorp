@@ -40,6 +40,7 @@ wizardpage {
 
 .wizard-buttons button {
   -moz-appearance: toolbarbutton;
+  color: ButtonText;
   min-height: 22px;
   margin: 0 6px;
   padding: 0;
