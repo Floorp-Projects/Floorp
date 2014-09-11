@@ -4,18 +4,80 @@
 
 /* Panel styles */
 .panel {
-  /* XXX force proper content positioning by adding extra margin space
-   * taken away by reset.css
-   */
-  margin-top: 7px;
-  margin-bottom: 7px;
-
   /* hide the extra margin space that the panel resizer now wants to show */
   overflow: hidden;
 }
 
 .spacer {
   margin-bottom: 1em;
+}
+
+.tab-view,
+.tab-view > li {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  vertical-align: baseline;
+}
+
+.tab-view {
+  display: flex;
+  flex-direction: row;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  background: #fafafa;
+  border-top-right-radius: 2px;
+  border-top-left-radius: 2px;
+  list-style: none;
+}
+
+.tab-view > li {
+  flex: 1;
+  text-align: center;
+  color: #ccc;
+  border-right: 1px solid #ccc;
+  padding: 0 10px;
+  height: 16px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-position: center;
+}
+
+.tab-view > li[data-tab-name="call"] {
+  background-image: url("../img/icons-16x16.svg#precall");
+}
+
+.tab-view > li[data-tab-name="call"]:hover {
+  background-image: url("../img/icons-16x16.svg#precall-hover");
+}
+
+.tab-view > li[data-tab-name="call"].selected {
+  background-image: url("../img/icons-16x16.svg#precall-active");
+}
+
+.tab-view > li[data-tab-name="contacts"] {
+  background-image: url("../img/icons-16x16.svg#contacts");
+}
+
+.tab-view > li[data-tab-name="contacts"]:hover {
+  background-image: url("../img/icons-16x16.svg#contacts-hover");
+}
+
+.tab-view > li[data-tab-name="contacts"].selected {
+  background-image: url("../img/icons-16x16.svg#contacts-active");
+}
+
+.tab-view > li:last-child {
+  border-right: 0;
+}
+
+.tab {
+  display: none;
+}
+
+.tab.selected {
+  display: block;
 }
 
 .share {

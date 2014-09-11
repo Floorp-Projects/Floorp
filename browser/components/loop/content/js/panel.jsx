@@ -22,6 +22,57 @@ loop.panel = (function(_, mozL10n) {
    */
   var router;
 
+  var TabView = React.createClass({
+    getInitialState: function() {
+      return {
+        selectedTab: "call"
+      };
+    },
+
+    handleSelectTab: function(event) {
+      var tabName = event.target.dataset.tabName;
+      this.setState({selectedTab: tabName});
+
+      if (this.props.onSelect) {
+        this.props.onSelect(tabName);
+      }
+    },
+
+    render: function() {
+      var cx = React.addons.classSet;
+      var tabButtons = [];
+      var tabs = [];
+      React.Children.forEach(this.props.children, function(tab, i) {
+        var tabName = tab.props.name;
+        var isSelected = (this.state.selectedTab == tabName);
+        tabButtons.push(
+          <li className={cx({selected: isSelected})}
+              key={i}
+              data-tab-name={tabName}
+              onClick={this.handleSelectTab}>
+          </li>
+        );
+        tabs.push(
+          <div key={i} className={cx({tab: true, selected: isSelected})}>
+            {tab.props.children}
+          </div>
+        );
+      }, this);
+      return (
+        <div className="tab-view-container">
+          <ul className="tab-view">{tabButtons}</ul>
+          {tabs}
+        </div>
+      );
+    }
+  });
+
+  var Tab = React.createClass({
+    render: function() {
+      return null;
+    }
+  });
+
   /**
    * Dropdown menu mixin.
    * @type {Object}
@@ -424,10 +475,17 @@ loop.panel = (function(_, mozL10n) {
       return (
         <div>
           <NotificationListView notifications={this.props.notifications} />
-          <CallUrlResult client={this.props.client}
-                         notifications={this.props.notifications}
-                         callUrl={this.props.callUrl} />
-          <ToSView />
+          <TabView onSelect={this.selectTab}>
+            <Tab name="call">
+              <CallUrlResult client={this.props.client}
+                             notifications={this.props.notifications}
+                             callUrl={this.props.callUrl} />
+              <ToSView />
+            </Tab>
+            <Tab name="contacts">
+              <span>contacts</span>
+            </Tab>
+          </TabView>
           <div className="footer">
             <AvailabilityDropdown />
             <AuthLink />
