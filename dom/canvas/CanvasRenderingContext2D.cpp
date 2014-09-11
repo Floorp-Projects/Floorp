@@ -3725,7 +3725,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
     }
 
     thebes = new gfxContext(drawDT);
-    thebes->Scale(matrix._11, matrix._22);
+    thebes->SetMatrix(gfxMatrix::Scaling(matrix._11, matrix._22));
   }
 
   nsCOMPtr<nsIPresShell> shell = presContext->PresShell();

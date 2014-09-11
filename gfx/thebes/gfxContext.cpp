@@ -431,13 +431,6 @@ gfxContext::DrawSurface(gfxASurface *surface, const gfxSize& size)
 
 // transform stuff
 void
-gfxContext::Scale(gfxFloat x, gfxFloat y)
-{
-  Matrix newMatrix = mTransform;
-  ChangeTransform(newMatrix.PreScale(Float(x), Float(y)));
-}
-
-void
 gfxContext::Rotate(gfxFloat angle)
 {
   Matrix rotation = Matrix::Rotation(Float(angle));
