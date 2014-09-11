@@ -229,7 +229,8 @@ loop.panel = (function(_, mozL10n) {
     },
 
     _isSignedIn: function() {
-      return !!navigator.mozLoop.userProfile;
+      // XXX to be implemented - bug 979845
+      return !!navigator.mozLoop.loggedInToFxA;
     },
 
     render: function() {
@@ -448,19 +449,6 @@ loop.panel = (function(_, mozL10n) {
   });
 
   /**
-   * FxA user identity (guest/authenticated) component.
-   */
-  var UserIdentity = React.createClass({
-    render: function() {
-      return (
-        <p className="user-identity">
-          {this.props.displayName}
-        </p>
-      );
-    }
-  });
-
-  /**
    * Panel view.
    */
   var PanelView = React.createClass({
@@ -468,32 +456,12 @@ loop.panel = (function(_, mozL10n) {
       notifications: React.PropTypes.object.isRequired,
       client: React.PropTypes.object.isRequired,
       // Mostly used for UI components showcase and unit tests
-      callUrl: React.PropTypes.string,
-      userProfile: React.PropTypes.object,
-    },
-
-    getInitialState: function() {
-      return {
-        userProfile: this.props.userProfile || navigator.mozLoop.userProfile,
-      };
-    },
-
-    _onAuthStatusChange: function() {
-      this.setState({userProfile: navigator.mozLoop.userProfile});
-    },
-
-    componentDidMount: function() {
-      window.addEventListener("LoopStatusChanged", this._onAuthStatusChange);
-    },
-
-    componentWillUnmount: function() {
-      window.removeEventListener("LoopStatusChanged", this._onAuthStatusChange);
+      callUrl: React.PropTypes.string
     },
 
     render: function() {
       var NotificationListView = sharedViews.NotificationListView;
-      var displayName = this.state.userProfile && this.state.userProfile.email ||
-                        __("display_name_guest");
+
       return (
         <div>
           <NotificationListView notifications={this.props.notifications}
@@ -510,10 +478,7 @@ loop.panel = (function(_, mozL10n) {
             </Tab>
           </TabView>
           <div className="footer">
-            <div className="user-details">
-              <UserIdentity displayName={displayName} />
-              <AvailabilityDropdown />
-            </div>
+            <AvailabilityDropdown />
             <AuthLink />
             <SettingsDropdown />
           </div>
@@ -578,7 +543,6 @@ loop.panel = (function(_, mozL10n) {
 
   return {
     init: init,
-    UserIdentity: UserIdentity,
     AvailabilityDropdown: AvailabilityDropdown,
     CallUrlResult: CallUrlResult,
     PanelView: PanelView,
