@@ -387,7 +387,7 @@ MDefinition::dumpLocation() const
 
 #ifdef DEBUG
 size_t
-MDefinition::warmUpCounter() const
+MDefinition::useCount() const
 {
     size_t count = 0;
     for (MUseIterator i(uses_.begin()); i != uses_.end(); i++)
@@ -396,7 +396,7 @@ MDefinition::warmUpCounter() const
 }
 
 size_t
-MDefinition::defWarmUpCounter() const
+MDefinition::defUseCount() const
 {
     size_t count = 0;
     for (MUseIterator i(uses_.begin()); i != uses_.end(); i++)

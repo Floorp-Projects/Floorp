@@ -60,7 +60,7 @@ struct JitOptions
     JitOptions();
     bool isSmallFunction(JSScript *script) const;
     void setEagerCompilation();
-    void setCompilerWarmUpThreshold(uint32_t warmUpCounter);
+    void setCompilerWarmUpThreshold(uint32_t warmUpThreshold);
     void resetCompilerWarmUpThreshold();
 };
 

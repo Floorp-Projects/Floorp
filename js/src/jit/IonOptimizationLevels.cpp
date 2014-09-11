@@ -144,7 +144,7 @@ OptimizationInfos::levelForScript(JSScript *script, jsbytecode *pc) const
     while (!isLastLevel(prev)) {
         OptimizationLevel level = nextLevel(prev);
         const OptimizationInfo *info = get(level);
-        if (script->getWarmUpCounter() < info->compilerWarmUpThreshold(script, pc))
+        if (script->getWarmUpCount() < info->compilerWarmUpThreshold(script, pc))
             return prev;
 
         prev = level;

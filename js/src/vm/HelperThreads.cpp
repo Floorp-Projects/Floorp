@@ -584,8 +584,8 @@ IonBuilderHasHigherPriority(jit::IonBuilder *first, jit::IonBuilder *second)
         return !first->script()->hasIonScript();
 
     // A higher warm-up counter indicates a higher priority.
-    return first->script()->getWarmUpCounter() / first->script()->length() >
-           second->script()->getWarmUpCounter() / second->script()->length();
+    return first->script()->getWarmUpCount() / first->script()->length() >
+           second->script()->getWarmUpCount() / second->script()->length();
 }
 
 bool

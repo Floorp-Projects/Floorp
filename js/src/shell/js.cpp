@@ -5806,13 +5806,13 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
             return OptionFailure("ion-limit-script-size", str);
     }
 
-    int32_t warmUpCounter = op.getIntOption("ion-warmup-threshold");
-    if (warmUpCounter >= 0)
-        jit::js_JitOptions.setCompilerWarmUpThreshold(warmUpCounter);
+    int32_t warmUpThreshold = op.getIntOption("ion-warmup-threshold");
+    if (warmUpThreshold >= 0)
+        jit::js_JitOptions.setCompilerWarmUpThreshold(warmUpThreshold);
 
-    warmUpCounter = op.getIntOption("baseline-warmup-threshold");
-    if (warmUpCounter >= 0)
-        jit::js_JitOptions.baselineWarmUpThreshold = warmUpCounter;
+    warmUpThreshold = op.getIntOption("baseline-warmup-threshold");
+    if (warmUpThreshold >= 0)
+        jit::js_JitOptions.baselineWarmUpThreshold = warmUpThreshold;
 
     if (op.getBoolOption("baseline-eager"))
         jit::js_JitOptions.baselineWarmUpThreshold = 0;
