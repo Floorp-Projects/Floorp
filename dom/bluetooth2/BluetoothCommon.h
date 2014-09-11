@@ -16,6 +16,16 @@ extern bool gBluetoothDebugFlag;
 
 #define SWITCH_BT_DEBUG(V) (gBluetoothDebugFlag = V)
 
+#if MOZ_IS_GCC && MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
+/* use designated array initializers if supported */
+#define CONVERT(in_, out_) \
+  [in_] = out_
+#else
+/* otherwise init array element by position */
+#define CONVERT(in_, out_) \
+  out_
+#endif
+
 #undef BT_LOG
 #if defined(MOZ_WIDGET_GONK)
 #include <android/log.h>
@@ -200,10 +210,10 @@ enum BluetoothBondState {
   BOND_STATE_BONDED
 };
 
-enum BluetoothDeviceType {
-  DEVICE_TYPE_BREDR,
-  DEVICE_TYPE_BLE,
-  DEVICE_TYPE_DUAL
+enum BluetoothTypeOfDevice {
+  TYPE_OF_DEVICE_BREDR,
+  TYPE_OF_DEVICE_BLE,
+  TYPE_OF_DEVICE_DUAL
 };
 
 enum BluetoothPropertyType {
@@ -276,8 +286,8 @@ struct BluetoothProperty {
   /* PROPERTY_RSSI_VALUE */
   int32_t mInt32;
 
-  /* PROPERTY_DEVICE_TYPE */
-  BluetoothDeviceType mDeviceType;
+  /* PROPERTY_TYPE_OF_DEVICE */
+  BluetoothTypeOfDevice mTypeOfDevice;
 
   /* PROPERTY_SERVICE_RECORD */
   BluetoothServiceRecord mServiceRecord;
