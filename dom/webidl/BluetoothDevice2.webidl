@@ -11,6 +11,7 @@ interface BluetoothDevice : EventTarget
   readonly attribute BluetoothClassOfDevice cod;
   readonly attribute DOMString              name;
   readonly attribute boolean                paired;
+  readonly attribute BluetoothDeviceType    type;
 
   [Cached, Pure]
   readonly attribute sequence<DOMString>    uuids;
@@ -29,10 +30,18 @@ interface BluetoothDevice : EventTarget
   Promise<sequence<DOMString>>              fetchUuids();
 };
 
+enum BluetoothDeviceType
+{
+  "unknown",
+  "classic",
+  "le",
+  "dual"
+};
+
 /*
  * Possible device attributes that attributechanged event reports.
- * Note "address" is excluded since it never changes once BluetoothDevice
- * is created.
+ * Note "address" and "type" are excluded since they never change once
+ * BluetoothDevice is created.
  */
 enum BluetoothDeviceAttribute
 {
