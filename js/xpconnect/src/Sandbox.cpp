@@ -406,10 +406,31 @@ sandbox_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleV
     // After bug 1015790 is fixed, we should be able to remove this unwrapping.
     RootedObject unwrappedProto(cx, js::UncheckedUnwrap(proto, /* stopAtOuter = */ false));
 
-    if (!JS_CopyPropertyFrom(cx, id, unwrappedProto, obj))
+    Rooted<JSPropertyDescriptor> pd(cx);
+    if (!JS_GetPropertyDescriptorById(cx, proto, id, &pd))
         return false;
 
-    Rooted<JSPropertyDescriptor> pd(cx);
+    // This is a little icky. If the property exists and is not configurable,
+    // then JS_CopyPropertyFrom will throw an exception when we try to do a
+    // normal assignment since it will think we're trying to remove the
+    // non-configurability. So we do JS_SetPropertyById in that case.
+    //
+    // However, in the case of |const x = 3|, we get called once for
+    // JSOP_DEFCONST and once for JSOP_SETCONST. The first one creates the
+    // property as readonly and configurable. The second one changes the
+    // attributes to readonly and not configurable. If we use JS_SetPropertyById
+    // for the second call, it will throw an exception because the property is
+    // readonly. We have to use JS_CopyPropertyFrom since it ignores the
+    // readonly attribute (as it calls JSObject::defineProperty). See bug
+    // 1019181.
+    if (pd.object() && pd.isPermanent()) {
+        if (!JS_SetPropertyById(cx, proto, id, vp))
+            return false;
+    } else {
+        if (!JS_CopyPropertyFrom(cx, id, unwrappedProto, obj))
+            return false;
+    }
+
     if (!JS_GetPropertyDescriptorById(cx, obj, id, &pd))
         return false;
     unsigned attrs = pd.attributes() & ~(JSPROP_GETTER | JSPROP_SETTER);
@@ -562,11 +583,9 @@ WrapCallable(JSContext *cx, JSObject *callable, JSObject *sandboxProtoProxy)
                  &xpc::sandboxProxyHandler);
 
     RootedValue priv(cx, ObjectValue(*callable));
-    js::ProxyOptions options;
-    options.selectDefaultClass(true);
     return js::NewProxyObject(cx, &xpc::sandboxCallableProxyHandler,
                               priv, nullptr,
-                              sandboxProtoProxy, options);
+                              sandboxProtoProxy);
 }
 
 template<typename Op>

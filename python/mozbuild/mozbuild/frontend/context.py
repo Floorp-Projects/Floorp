@@ -830,7 +830,7 @@ VARIABLES = {
         When this variable is present, the results of this directory will end up
         being placed in the $(DIST_SUBDIR) subdirectory of where it would
         otherwise be placed.
-        """, 'libs'),
+        """, None),
 
     'FINAL_TARGET': (FinalTargetValue, unicode,
         """The name of the directory to install targets to.
@@ -840,7 +840,7 @@ VARIABLES = {
         neither are present, the result is dist/bin. If XPI_NAME is present, the
         result is dist/xpi-stage/$(XPI_NAME). If DIST_SUBDIR is present, then
         the $(DIST_SUBDIR) directory of the otherwise default value is used.
-        """, 'libs'),
+        """, None),
 
     'GYP_DIRS': (StrictOrderingOnAppendListWithFlagsFactory({
             'variables': dict,
@@ -930,7 +930,7 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the linker's command line in the same order as they
            appear in the moz.build file.
-        """, 'libs'),
+        """, None),
 
     'EXTRA_DSO_LDOPTS': (List, list,
         """Flags passed to the linker when linking a shared library.
@@ -938,7 +938,7 @@ VARIABLES = {
            Note that the ordering of flags matter here, these flags will be
            added to the linker's command line in the same order as they
            appear in the moz.build file.
-        """, 'libs'),
+        """, None),
 
     'WIN32_EXE_LDFLAGS': (List, list,
         """Flags passed to the linker when linking a Windows .exe executable
@@ -949,7 +949,7 @@ VARIABLES = {
            appear in the moz.build file.
 
            This variable only has an effect on Windows.
-        """, 'libs'),
+        """, None),
 }
 
 # Sanity check: we don't want any variable above to have a list as storage type.

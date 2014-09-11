@@ -487,6 +487,30 @@ WrapperAnswer::AnswerCallOrConstruct(const ObjectId &objId,
 }
 
 bool
+WrapperAnswer::AnswerHasInstance(const ObjectId &objId, const JSVariant &vVar, ReturnStatus *rs, bool *bp)
+{
+    AutoSafeJSContext cx;
+    JSAutoRequest request(cx);
+
+    RootedObject obj(cx, findObjectById(cx, objId));
+    if (!obj)
+        return fail(cx, rs);
+
+    JSAutoCompartment comp(cx, obj);
+
+    LOG("%s.hasInstance(%s)", ReceiverObj(objId), InVariant(vVar));
+
+    RootedValue val(cx);
+    if (!fromVariant(cx, vVar, &val))
+        return fail(cx, rs);
+
+    if (!JS_HasInstance(cx, obj, val, bp))
+        return fail(cx, rs);
+
+    return ok(rs);
+}
+
+bool
 WrapperAnswer::AnswerObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
 				   bool *result)
 {

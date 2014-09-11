@@ -317,8 +317,16 @@ nsTableCellFrame::DecorateForSelection(nsRenderingContext& aRenderingContext,
         //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
         bordercolor = EnsureDifferentColors(bordercolor,
                                             StyleBackground()->mBackgroundColor);
-        nsRenderingContext::AutoPushTranslation
-            translate(&aRenderingContext, aPt);
+
+        gfxContext* ctx = aRenderingContext.ThebesContext();
+
+        gfxPoint devPixelOffset =
+          nsLayoutUtils::PointToGfxPoint(aPt,
+                                         PresContext()->AppUnitsPerDevPixel());
+
+        gfxContextMatrixAutoSaveRestore autoSR(ctx);
+        ctx->SetMatrix(ctx->CurrentMatrix().Translate(devPixelOffset));
+
         nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
         aRenderingContext.SetColor(bordercolor);

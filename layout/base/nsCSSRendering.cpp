@@ -1309,8 +1309,12 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       gfxContextMatrixAutoSaveRestore save(shadowContext);
       nsRefPtr<nsRenderingContext> wrapperCtx = new nsRenderingContext();
       wrapperCtx->Init(aPresContext->DeviceContext(), shadowContext);
-      wrapperCtx->Translate(nsPoint(shadowItem->mXOffset,
-                                    shadowItem->mYOffset));
+      gfxPoint devPixelOffset =
+        nsLayoutUtils::PointToGfxPoint(nsPoint(shadowItem->mXOffset,
+                                               shadowItem->mYOffset),
+                                       aPresContext->AppUnitsPerDevPixel());
+      wrapperCtx->ThebesContext()->SetMatrix(
+        wrapperCtx->ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
 
       nsRect nativeRect;
       nativeRect.IntersectRect(frameRect, aDirtyRect);
@@ -2589,7 +2593,8 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                                          gradientStart, gradientEnd, &edgeColor)) {
         ctx->SetColor(edgeColor);
       } else {
-        ctx->Translate(tileRect.TopLeft());
+        ctx->SetMatrix(
+          ctx->CurrentMatrix().Copy().Translate(tileRect.TopLeft()));
         ctx->SetPattern(gradientPattern);
       }
       ctx->Fill();
@@ -5025,7 +5030,7 @@ nsContextBoxBlur::DoPaint()
   gfxContextMatrixAutoSaveRestore saveMatrix(mDestinationCtx);
 
   if (mPreTransformed) {
-    mDestinationCtx->IdentityMatrix();
+    mDestinationCtx->SetMatrix(gfxMatrix());
   }
 
   blur.Paint(mDestinationCtx);
@@ -5090,7 +5095,7 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
   if (!transform.HasNonAxisAlignedTransform() && transform._11 > 0.0 && transform._22 > 0.0) {
     scaleX = transform._11;
     scaleY = transform._22;
-    aDestinationCtx->IdentityMatrix();
+    aDestinationCtx->SetMatrix(gfxMatrix());
   } else {
     transform = gfxMatrix();
   }

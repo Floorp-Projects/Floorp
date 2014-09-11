@@ -34,18 +34,12 @@ Wrapper::defaultValue(JSContext *cx, HandleObject proxy, JSType hint, MutableHan
 
 JSObject *
 Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, const Wrapper *handler,
-             const WrapperOptions *options)
+             const WrapperOptions &options)
 {
     JS_ASSERT(parent);
 
     RootedValue priv(cx, ObjectValue(*obj));
-    mozilla::Maybe<WrapperOptions> opts;
-    if (!options) {
-        opts.emplace();
-        opts->selectDefaultClass(obj->isCallable());
-        options = opts.ptr();
-    }
-    return NewProxyObject(cx, handler, priv, options->proto(), parent, *options);
+    return NewProxyObject(cx, handler, priv, options.proto(), parent, options);
 }
 
 JSObject *
@@ -68,6 +62,15 @@ Wrapper::wrappedObject(JSObject *wrapper)
 {
     JS_ASSERT(wrapper->is<WrapperObject>());
     return wrapper->as<ProxyObject>().target();
+}
+
+bool
+Wrapper::isConstructor(JSObject *obj) const
+{
+    // For now, all wrappers are constructable if they are callable. We will want to eventually
+    // decouple this behavior, but none of the Wrapper infrastructure is currently prepared for
+    // that.
+    return isCallable(obj);
 }
 
 JS_FRIEND_API(JSObject *)

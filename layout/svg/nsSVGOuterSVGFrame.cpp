@@ -610,13 +610,13 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   gfxPoint devPixelOffset =
     nsLayoutUtils::PointToGfxPoint(viewportRect.TopLeft(), appUnitsPerDevPixel);
 
-  aContext->PushState();
+  aContext->ThebesContext()->Save();
   // We include the offset of our frame and a scale from device pixels to user
   // units (i.e. CSS px) in the matrix that we pass to our children):
   gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(mFrame) *
                    gfxMatrix::Translation(devPixelOffset);
   nsSVGUtils::PaintFrameWithEffects(mFrame, aContext, tm, &contentAreaDirtyRect);
-  aContext->PopState();
+  aContext->ThebesContext()->Restore();
 
   NS_ASSERTION(!aContext->ThebesContext()->HasError(), "Cairo in error state");
 

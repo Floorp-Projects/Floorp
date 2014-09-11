@@ -348,7 +348,7 @@ private:
         OP3_ROUNDSS_VsdWsd  = 0x0A,
         OP3_ROUNDSD_VsdWsd  = 0x0B,
         OP3_PTEST_VdVd      = 0x17,
-        OP3_PINSRD_VsdWsd   = 0x22
+        OP3_PINSRD_VdqEdIb  = 0x22
     } ThreeByteOpcodeID;
 
     typedef enum {
@@ -3562,23 +3562,25 @@ public:
         m_formatter.immediate8(mode); // modes are the same for roundsd and roundss
     }
 
-    void pinsrd_rr(RegisterID src, XMMRegisterID dst)
+    void pinsrd_irr(unsigned lane, RegisterID src, XMMRegisterID dst)
     {
-        spew("pinsrd     $1, %s, %s",
-             nameIReg(src), nameFPReg(dst));
+        MOZ_ASSERT(lane < 4);
+        spew("pinsrd     $%u, %s, %s",
+             lane, nameIReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PINSRD_VsdWsd, ESCAPE_PINSRD, (RegisterID)dst, (RegisterID)src);
-        m_formatter.immediate8(0x01); // the $1
+        m_formatter.threeByteOp(OP3_PINSRD_VdqEdIb, ESCAPE_PINSRD, (RegisterID)dst, (RegisterID)src);
+        m_formatter.immediate8(uint8_t(lane));
     }
 
-    void pinsrd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void pinsrd_imr(unsigned lane, int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("pinsrd     $1, %s0x%x(%s), %s",
-             PRETTY_PRINT_OFFSET(offset),
+        MOZ_ASSERT(lane < 4);
+        spew("pinsrd     $%u, %s0x%x(%s), %s",
+             lane, PRETTY_PRINT_OFFSET(offset),
              nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PINSRD_VsdWsd, ESCAPE_PINSRD, (RegisterID)dst, base, offset);
-        m_formatter.immediate8(0x01); // the $1
+        m_formatter.threeByteOp(OP3_PINSRD_VdqEdIb, ESCAPE_PINSRD, (RegisterID)dst, base, offset);
+        m_formatter.immediate8(uint8_t(lane));
     }
 
     void minsd_rr(XMMRegisterID src, XMMRegisterID dst)
