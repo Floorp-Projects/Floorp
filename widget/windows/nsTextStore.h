@@ -750,8 +750,6 @@ protected:
   // TSF category manager
   static mozilla::StaticRefPtr<ITfCategoryMgr> sCategoryMgr;
 
-  // TSF client ID for the current application
-  static DWORD          sTsfClientId;
   // Current text store which is managing a keyboard enabled editor (i.e.,
   // editable editor).  Currently only ONE nsTextStore instance is ever used,
   // although Create is called when an editor is focused and Destroy called
@@ -764,6 +762,9 @@ protected:
 
   static mozilla::StaticRefPtr<ITfInputProcessorProfiles>
     sInputProcessorProfiles;
+
+  // TSF client ID for the current application
+  static DWORD sClientId;
 
   // Enables/Disables hack for specific TIP.
   static bool sCreateNativeCaretForATOK;
