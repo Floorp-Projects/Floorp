@@ -1264,6 +1264,22 @@ if test -n "$MOZ_ASAN"; then
     MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
 fi
 AC_SUBST(MOZ_ASAN)
+
+dnl ========================================================
+dnl = Use Memory Sanitizer
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(memory-sanitizer,
+[  --enable-memory-sanitizer       Enable Memory Sanitizer (default=no)],
+    MOZ_MSAN=1,
+    MOZ_MSAN= )
+if test -n "$MOZ_MSAN"; then
+    MOZ_LLVM_HACKS=1
+    AC_DEFINE(MOZ_MSAN)
+    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
+fi
+AC_SUBST(MOZ_MSAN)
+
+# The LLVM symbolizer is used by all sanitizers
 AC_SUBST(LLVM_SYMBOLIZER)
 
 dnl ========================================================
