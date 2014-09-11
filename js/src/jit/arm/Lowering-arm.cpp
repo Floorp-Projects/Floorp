@@ -561,4 +561,10 @@ LIRGeneratorARM::visitSimdSplatX4(MSimdSplatX4 *ins)
     MOZ_CRASH("NYI");
 }
 
+bool
+LIRGeneratorARM::visitSimdValueX4(MSimdValueX4 *ins)
+{
+    MOZ_CRASH("NYI");
+}
+
 //__aeabi_uidiv

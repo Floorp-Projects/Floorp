@@ -482,7 +482,8 @@ struct Class
         return flags & JSCLASS_EMULATES_UNDEFINED;
     }
 
-    bool isCallable() const {
+    bool nonProxyCallable() const {
+        MOZ_ASSERT(!isProxy());
         return this == js::FunctionClassPtr || call;
     }
 

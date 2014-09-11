@@ -329,8 +329,8 @@ public:
   // HasObservers(). The request's cache entry will be re-set before this
   // happens, by calling imgRequest::SetCacheEntry() when an entry with no
   // observers is re-requested.
-  bool SetHasNoProxies(ImageURL *key, imgCacheEntry *entry);
-  bool SetHasProxies(ImageURL *key);
+  bool SetHasNoProxies(imgRequest *aRequest, imgCacheEntry *aEntry);
+  bool SetHasProxies(imgRequest *aRequest);
 
 private: // methods
 

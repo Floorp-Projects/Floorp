@@ -35,7 +35,7 @@
                android:layout_width="match_parent"
                android:layout_height="match_parent"
                android:layout_toRightOf="@id/tabs"
-               android:layout_toLeftOf="@id/menu_items"
+               android:layout_toLeftOf="@+id/menu_items"
                android:layout_marginLeft="-18dp"
                android:layout_marginTop="8dp"
                android:layout_marginBottom="8dp"
@@ -76,7 +76,7 @@
                   android:paddingLeft="8dip"
                   android:paddingRight="8dip"/>
 
-    <LinearLayout android:id="@+id/menu_items"
+    <LinearLayout android:id="@id/menu_items"
                   android:layout_width="wrap_content"
                   android:layout_height="match_parent"
                   android:layout_marginLeft="3dp"

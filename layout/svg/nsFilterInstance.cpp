@@ -296,23 +296,17 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsRefPtr<gfxContext> ctx = new gfxContext(offscreenDT);
-  ctx->Translate(-neededRect.TopLeft());
-
-  nsRefPtr<nsRenderingContext> tmpCtx(new nsRenderingContext());
-  tmpCtx->Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
-
   gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform();
   if (!deviceToFilterSpace.Invert()) {
     return NS_ERROR_FAILURE;
   }
-  gfxContext *gfx = tmpCtx->ThebesContext();
-  gfx->Multiply(deviceToFilterSpace);
-
-  gfx->Save();
 
   if (!mPaintTransform.IsSingular()) {
-    gfx->Multiply(mPaintTransform);
+    nsRefPtr<gfxContext> gfx = new gfxContext(offscreenDT);
+    gfx->Save();
+    gfx->Multiply(mPaintTransform *
+                  deviceToFilterSpace *
+                  gfxMatrix::Translation(-neededRect.TopLeft()));
     gfx->Rectangle(FilterSpaceToUserSpace(neededRect));
     if ((aSource == &mFillPaint &&
          nsSVGUtils::SetupCairoFillPaint(mTargetFrame, gfx)) ||
@@ -320,8 +314,8 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
          nsSVGUtils::SetupCairoStrokePaint(mTargetFrame, gfx))) {
       gfx->Fill();
     }
+    gfx->Restore();
   }
-  gfx->Restore();
 
 
   aSource->mSourceSurface = offscreenDT->Snapshot();
@@ -362,12 +356,6 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsRefPtr<gfxContext> ctx = new gfxContext(offscreenDT);
-  ctx->Translate(-neededRect.TopLeft());
-
-  nsRefPtr<nsRenderingContext> tmpCtx(new nsRenderingContext());
-  tmpCtx->Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
-
   gfxRect r = FilterSpaceToUserSpace(neededRect);
   r.RoundOut();
   nsIntRect dirty;
@@ -389,7 +377,13 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
   if (!deviceToFilterSpace.Invert()) {
     return NS_ERROR_FAILURE;
   }
-  tmpCtx->ThebesContext()->Multiply(deviceToFilterSpace);
+  nsRefPtr<gfxContext> ctx = new gfxContext(offscreenDT);
+  ctx->SetMatrix(
+    ctx->CurrentMatrix().Translate(-neededRect.TopLeft()).
+                         PreMultiply(deviceToFilterSpace));
+
+  nsRefPtr<nsRenderingContext> tmpCtx(new nsRenderingContext());
+  tmpCtx->Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
   mPaintCallback->Paint(tmpCtx, mTargetFrame, mPaintTransform, &dirty);
 
   mSourceGraphic.mSourceSurface = offscreenDT->Snapshot();

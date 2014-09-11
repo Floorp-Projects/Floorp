@@ -131,7 +131,8 @@ public:
   }
   void RebuildFragmentedIndex(
     const nsTArray<mozilla::MediaByteRange>& aByteRanges);
-  Interval<Microseconds> GetCompositionRange();
+  Interval<Microseconds> GetCompositionRange(
+    const nsTArray<mozilla::MediaByteRange>& aByteRanges);
   bool ReachedEnd();
   void ParseMoov(Box& aBox);
   void ParseTrak(Box& aBox);

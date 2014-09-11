@@ -7,9 +7,11 @@
 #include "ChromeObjectWrapper.h"
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
+#include "JavaScriptParent.h"
 #include "xpcprivate.h"
 #include "jsapi.h"
 #include "jswrapper.h"
+#include "nsXULAppAPI.h"
 
 using namespace JS;
 
@@ -115,6 +117,16 @@ CheckPassToChrome(JSContext *cx, HandleObject wrapper, HandleValue v)
     // Non-wrappers are fine.
     if (!js::IsWrapper(obj))
         return true;
+
+    // CPOWs use COWs (in the unprivileged junk scope) for all child->parent
+    // references. Without this test, the child process wouldn't be able to
+    // pass any objects at all to CPOWs.
+    if (mozilla::jsipc::IsWrappedCPOW(obj) &&
+        js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(xpc::UnprivilegedJunkScope()) &&
+        XRE_GetProcessType() == GeckoProcessType_Default)
+    {
+        return true;
+    }
 
     // COWs are fine to pass back if and only if they have __exposedProps__,
     // since presumably content should never have a reason to pass an opaque
