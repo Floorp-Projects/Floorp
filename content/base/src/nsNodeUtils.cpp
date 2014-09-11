@@ -11,7 +11,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsIMutationObserver.h"
 #include "nsIDocument.h"
-#include "nsIDOMUserDataHandler.h"
 #include "mozilla/EventListenerManager.h"
 #include "nsIXPConnect.h"
 #include "pldhash.h"
@@ -271,85 +270,12 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   FragmentOrElement::RemoveBlackMarkedNode(aNode);
 }
 
-struct MOZ_STACK_CLASS nsHandlerData
-{
-  uint16_t mOperation;
-  nsCOMPtr<nsIDOMNode> mSource;
-  nsCOMPtr<nsIDOMNode> mDest;
-};
-
-static void
-CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
-{
-  nsHandlerData *handlerData = static_cast<nsHandlerData*>(aData);
-  nsCOMPtr<nsIDOMUserDataHandler> handler =
-    static_cast<nsIDOMUserDataHandler*>(aHandler);
-  nsINode *node = static_cast<nsINode*>(aObject);
-  nsCOMPtr<nsIVariant> data =
-    static_cast<nsIVariant*>(node->GetProperty(DOM_USER_DATA, aKey));
-  NS_ASSERTION(data, "Handler without data?");
-
-  nsAutoString key;
-  aKey->ToString(key);
-  handler->Handle(handlerData->mOperation, key, data, handlerData->mSource,
-                  handlerData->mDest);
-}
-
-/* static */
-nsresult
-nsNodeUtils::CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
-                                  nsIDocument *aOwnerDocument,
-                                  uint16_t aOperation, bool aCloned)
-{
-  NS_PRECONDITION(!aCloned || (aNodesWithProperties.Count() % 2 == 0),
-                  "Expected aNodesWithProperties to contain original and "
-                  "cloned nodes.");
-
-  if (!nsContentUtils::IsSafeToRunScript()) {
-    nsContentUtils::WarnScriptWasIgnored(aOwnerDocument);
-    if (nsContentUtils::IsChromeDoc(aOwnerDocument)) {
-      NS_WARNING("Fix the caller! Userdata callback disabled.");
-    } else {
-      NS_ERROR("This is unsafe! Fix the caller! Userdata callback disabled.");
-    }
-
-    return NS_OK;
-  }
-
-  nsPropertyTable *table = aOwnerDocument->PropertyTable(DOM_USER_DATA_HANDLER);
-
-  // Keep the document alive, just in case one of the handlers causes it to go
-  // away.
-  nsCOMPtr<nsIDocument> ownerDoc = aOwnerDocument;
-
-  nsHandlerData handlerData;
-  handlerData.mOperation = aOperation;
-
-  uint32_t i, count = aNodesWithProperties.Count();
-  for (i = 0; i < count; ++i) {
-    nsINode *nodeWithProperties = aNodesWithProperties[i];
-
-    nsresult rv;
-    handlerData.mSource = do_QueryInterface(nodeWithProperties, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (aCloned) {
-      handlerData.mDest = do_QueryInterface(aNodesWithProperties[++i], &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    table->Enumerate(nodeWithProperties, CallHandler, &handlerData);
-  }
-
-  return NS_OK;
-}
-
 static void
 NoteUserData(void *aObject, nsIAtom *aKey, void *aXPCOMChild, void *aData)
 {
   nsCycleCollectionTraversalCallback* cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aData);
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "[user data (or handler)]");
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "[user data]");
   cb->NoteXPCOMChild(static_cast<nsISupports*>(aXPCOMChild));
 }
 
@@ -360,14 +286,11 @@ nsNodeUtils::TraverseUserData(nsINode* aNode,
 {
   nsIDocument* ownerDoc = aNode->OwnerDoc();
   ownerDoc->PropertyTable(DOM_USER_DATA)->Enumerate(aNode, NoteUserData, &aCb);
-  ownerDoc->PropertyTable(DOM_USER_DATA_HANDLER)->Enumerate(aNode, NoteUserData, &aCb);
 }
 
 /* static */
 nsresult
-nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep,
-                           bool aCallUserDataHandlers,
-                           nsINode **aResult)
+nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep, nsINode **aResult)
 {
   *aResult = nullptr;
 
@@ -377,14 +300,7 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep,
                       getter_AddRefs(newNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aCallUserDataHandlers) {
-    rv = CallUserDataHandlers(nodesWithProperties, aNode->OwnerDoc(),
-                              nsIDOMUserDataHandler::NODE_CLONED, true);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   newNode.swap(*aResult);
-
   return NS_OK;
 }
 
@@ -548,11 +464,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     }
   }
 
-  // XXX If there are any attribute nodes on this element with UserDataHandlers
-  // we should technically adopt/clone/import such attribute nodes and notify
-  // those handlers. However we currently don't have code to do so without
-  // also notifying when it's not safe so we're not doing that at this time.
-
   if (aDeep && (!aClone || !aNode->IsNodeOfType(nsINode::eATTRIBUTE))) {
     // aNode's children.
     for (nsIContent* cloneChild = aNode->GetFirstChild();
@@ -634,7 +545,6 @@ nsNodeUtils::UnlinkUserData(nsINode *aNode)
   // delete the document.
   nsCOMPtr<nsIDocument> document = aNode->OwnerDoc();
   document->PropertyTable(DOM_USER_DATA)->DeleteAllPropertiesFor(aNode);
-  document->PropertyTable(DOM_USER_DATA_HANDLER)->DeleteAllPropertiesFor(aNode);
 }
 
 bool

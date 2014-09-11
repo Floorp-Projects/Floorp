@@ -85,15 +85,6 @@ MarkUserData(void* aNode, nsIAtom* aKey, void* aValue, void* aData)
 }
 
 static void
-MarkUserDataHandler(void* aNode, nsIAtom* aKey, void* aValue, void* aData)
-{
-  nsIDocument* d = static_cast<nsINode*>(aNode)->GetCurrentDoc();
-  if (d && nsCCUncollectableMarker::InGeneration(d->GetMarkedCCGeneration())) {
-    Element::MarkUserDataHandler(aNode, aKey, aValue, aData);
-  }
-}
-
-static void
 MarkChildMessageManagers(nsIMessageBroadcaster* aMM)
 {
   aMM->MarkForCC();
@@ -208,9 +199,6 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
         }
         static_cast<nsGlobalWindow*>(win.get())->UnmarkGrayTimers();
       }
-
-      doc->PropertyTable(DOM_USER_DATA_HANDLER)->
-        EnumerateAll(MarkUserDataHandler, &nsCCUncollectableMarker::sGeneration);
     } else if (aPrepareForCC) {
       // Unfortunately we need to still mark user data just before running CC so
       // that it has the right generation. 

@@ -40,7 +40,6 @@
 #include "nsIAuthPrompt.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentPolicyUtils.h"
-#include "nsIDOMUserDataHandler.h"
 #include "nsNodeUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
