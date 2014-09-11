@@ -632,8 +632,7 @@ let PlacesProvider = {
             i++;
         }
         for (let link of outOfOrder) {
-          i = BinarySearch.insertionIndexOf(links, link,
-                                            Links.compareLinks.bind(Links));
+          i = BinarySearch.insertionIndexOf(Links.compareLinks, links, link);
           links.splice(i, 0, link);
         }
 
@@ -871,6 +870,8 @@ let Links = {
    * @return A negative number if aLink1 is ordered before aLink2, zero if
    *         aLink1 and aLink2 have the same ordering, or a positive number if
    *         aLink1 is ordered after aLink2.
+   *
+   * @note compareLinks's this object is bound to Links below.
    */
   compareLinks: function Links_compareLinks(aLink1, aLink2) {
     for (let prop of this._sortProperties) {
@@ -1037,7 +1038,7 @@ let Links = {
   },
 
   _binsearch: function Links__binsearch(aArray, aLink, aMethod) {
-    return BinarySearch[aMethod](aArray, aLink, this.compareLinks.bind(this));
+    return BinarySearch[aMethod](this.compareLinks, aArray, aLink);
   },
 
   /**
@@ -1065,6 +1066,8 @@ let Links = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference])
 };
+
+Links.compareLinks = Links.compareLinks.bind(Links);
 
 /**
  * Singleton used to collect telemetry data.
