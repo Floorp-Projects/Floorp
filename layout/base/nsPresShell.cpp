@@ -9968,7 +9968,7 @@ void ReflowCountMgr::PaintCount(const char*     aName,
     IndiReflowCounter * counter =
       (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
     if (counter != nullptr && counter->mName.EqualsASCII(aName)) {
-      aRenderingContext->PushState();
+      aRenderingContext->ThebesContext()->Save();
       gfxPoint devPixelOffset =
         nsLayoutUtils::PointToGfxPoint(aOffset,
                                        aPresContext->AppUnitsPerDevPixel());
@@ -10022,7 +10022,7 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       aRenderingContext->SetColor(color);
       aRenderingContext->DrawString(buf, strlen(buf), x,y);
 
-      aRenderingContext->PopState();
+      aRenderingContext->ThebesContext()->Restore();
     }
   }
 }
