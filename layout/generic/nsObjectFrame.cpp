@@ -9,6 +9,7 @@
 #include "nsObjectFrame.h"
 
 #include "gfx2DGlue.h"
+#include "gfxMatrix.h"
 #include "mozilla/BasicEvents.h"
 #ifdef XP_WIN
 // This is needed for DoublePassRenderingEvent.
@@ -832,9 +833,18 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
 nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsRenderingContext* aCtx,
                                 const nsRect& aDirtyRect, nsPoint aPt)
 {
+  gfxContext* ctx = aCtx->ThebesContext();
+
+  // Translate the context:
   nsPoint pt = aPt + aFrame->GetContentRectRelativeToSelf().TopLeft();
-  nsRenderingContext::AutoPushTranslation translate(aCtx, pt);
+  gfxPoint devPixelPt =
+    nsLayoutUtils::PointToGfxPoint(pt, aFrame->PresContext()->AppUnitsPerDevPixel());
+
+  gfxContextMatrixAutoSaveRestore autoSR(ctx);
+  ctx->SetMatrix(ctx->CurrentMatrix().Translate(devPixelPt));
+
   // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
+
   static_cast<nsObjectFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
 }
 
@@ -1676,9 +1686,17 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
 
       nativeDrawing.EndNativeDrawing();
     } else {
+      gfxContext* ctx = aRenderingContext.ThebesContext();
+
+      // Translate the context:
+      gfxPoint devPixelPt =
+        nsLayoutUtils::PointToGfxPoint(aPluginRect.TopLeft(),
+                                       PresContext()->AppUnitsPerDevPixel());
+
+      gfxContextMatrixAutoSaveRestore autoSR(ctx);
+      ctx->SetMatrix(ctx->CurrentMatrix().Translate(devPixelPt));
+
       // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
-      nsRenderingContext::AutoPushTranslation
-        translate(&aRenderingContext, aPluginRect.TopLeft());
 
       // this rect is used only in the CoreGraphics drawing model
       gfxRect tmpRect(0, 0, 0, 0);
