@@ -284,7 +284,7 @@ public:
      * to integers. In particular, components that are integral when
      * converted to single precision are set to those integers.
      */
-    void NudgeToIntegers(void);
+    gfxMatrix& NudgeToIntegers(void);
 
     /**
      * Returns true if matrix is multiple of 90 degrees rotation with flipping,
