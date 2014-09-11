@@ -437,14 +437,6 @@ gfxContext::Multiply(const gfxMatrix& matrix)
 }
 
 void
-gfxContext::MultiplyAndNudgeToIntegers(const gfxMatrix& matrix)
-{
-  Matrix transform = ToMatrix(matrix) * mTransform;
-  transform.NudgeToIntegers();
-  ChangeTransform(transform);
-}
-
-void
 gfxContext::SetMatrix(const gfxMatrix& matrix)
 {
   ChangeTransform(ToMatrix(matrix));
@@ -454,14 +446,6 @@ gfxMatrix
 gfxContext::CurrentMatrix() const
 {
   return ThebesMatrix(mTransform);
-}
-
-void
-gfxContext::NudgeCurrentMatrixToIntegers()
-{
-  gfxMatrix matrix = ThebesMatrix(mTransform);
-  matrix.NudgeToIntegers();
-  ChangeTransform(ToMatrix(matrix));
 }
 
 gfxPoint
