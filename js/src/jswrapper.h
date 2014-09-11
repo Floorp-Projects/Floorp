@@ -23,11 +23,11 @@ class DummyFrameGuard;
  */
 class MOZ_STACK_CLASS WrapperOptions : public ProxyOptions {
   public:
-    WrapperOptions() : ProxyOptions(false, nullptr),
+    WrapperOptions() : ProxyOptions(false),
                        proto_()
     {}
 
-    explicit WrapperOptions(JSContext *cx) : ProxyOptions(false, nullptr),
+    explicit WrapperOptions(JSContext *cx) : ProxyOptions(false),
                                              proto_()
     {
         proto_.emplace(cx);
@@ -69,7 +69,7 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
                               MutableHandleValue vp) const MOZ_OVERRIDE;
 
     static JSObject *New(JSContext *cx, JSObject *obj, JSObject *parent, const Wrapper *handler,
-                         const WrapperOptions *options = nullptr);
+                         const WrapperOptions &options = WrapperOptions());
 
     static JSObject *Renew(JSContext *cx, JSObject *existing, JSObject *obj, const Wrapper *handler);
 
@@ -88,6 +88,7 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
     { }
 
     virtual bool finalizeInBackground(Value priv) const MOZ_OVERRIDE;
+    virtual bool isConstructor(JSObject *obj) const MOZ_OVERRIDE;
 
     static const char family;
     static const Wrapper singleton;
@@ -197,6 +198,9 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
     virtual bool watch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                        JS::HandleObject callable) const MOZ_OVERRIDE;
     virtual bool unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id) const MOZ_OVERRIDE;
+
+    // Allow isCallable and isConstructor. They used to be class-level, and so could not be guarded
+    // against.
 
     /*
      * Allow our subclasses to select the superclass behavior they want without

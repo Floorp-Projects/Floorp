@@ -1857,9 +1857,9 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
         return NS_ERROR_FAILURE;
     }
     nsRefPtr<gfxContext> context = new gfxContext(dt);
-    gfxPoint pt(0, 0);
-    context->Translate(pt);
-    context->Scale(scale * bufW / srcW, scale * bufH / srcH);
+    context->SetMatrix(
+      context->CurrentMatrix().Scale(scale * bufW / srcW,
+                                     scale * bufH / srcH));
     rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
     if (is24bit) {
         gfxUtils::ConvertBGRAtoRGBA(data, stride * bufH);

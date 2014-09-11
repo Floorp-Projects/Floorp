@@ -211,6 +211,15 @@ public:
     return *this;
   }
 
+  /**
+   * Multiplies in the opposite order to operator=*.
+   */
+  Matrix &PreMultiply(const Matrix &aMatrix)
+  {
+    *this = aMatrix * *this;
+    return *this;
+  }
+
   /* Returns true if the other matrix is fuzzy-equal to this matrix.
    * Note that this isn't a cheap comparison!
    */
@@ -291,7 +300,7 @@ public:
     return Determinant() == 0;
   }
 
-  GFX2D_API void NudgeToIntegers();
+  GFX2D_API Matrix &NudgeToIntegers();
 
   bool IsTranslation() const
   {
@@ -729,7 +738,7 @@ public:
     return (__33 * det) < 0;
   }
 
-  void NudgeToIntegersFixedEpsilon()
+  Matrix4x4 &NudgeToIntegersFixedEpsilon()
   {
     static const float error = 1e-5f;
     NudgeToInteger(&_11, error);
@@ -748,6 +757,7 @@ public:
     NudgeToInteger(&_42, error);
     NudgeToInteger(&_43, error);
     NudgeToInteger(&_44, error);
+    return *this;
   }
 
   Point4D TransposedVector(int aIndex) const

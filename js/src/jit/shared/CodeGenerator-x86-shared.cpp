@@ -2119,37 +2119,48 @@ CodeGeneratorX86Shared::visitFloat32x4(LFloat32x4 *ins)
 }
 
 bool
-CodeGeneratorX86Shared::visitSimdValueX4(LSimdValueX4 *ins)
+CodeGeneratorX86Shared::visitSimdValueInt32x4(LSimdValueInt32x4 *ins)
 {
-    FloatRegister output = ToFloatRegister(ins->output());
-
     MSimdValueX4 *mir = ins->mir();
-    JS_ASSERT(IsSimdType(mir->type()));
-    JS_STATIC_ASSERT(sizeof(float) == sizeof(int32_t));
+    MOZ_ASSERT(mir->type() == MIRType_Int32x4);
 
-    masm.reserveStack(Simd128DataSize);
-    // TODO see bug 1051860 for possible optimizations.
-    switch (mir->type()) {
-      case MIRType_Int32x4: {
-        for (size_t i = 0; i < 4; ++i) {
+    FloatRegister output = ToFloatRegister(ins->output());
+    if (AssemblerX86Shared::HasSSE41()) {
+        masm.movd(ToRegister(ins->getOperand(0)), output);
+        for (size_t i = 1; i < 4; ++i) {
             Register r = ToRegister(ins->getOperand(i));
-            masm.store32(r, Address(StackPointer, i * sizeof(int32_t)));
+            masm.pinsrd(i, r, output);
         }
-        masm.loadAlignedInt32x4(Address(StackPointer, 0), output);
-        break;
-      }
-      case MIRType_Float32x4: {
-        for (size_t i = 0; i < 4; ++i) {
-            FloatRegister r = ToFloatRegister(ins->getOperand(i));
-            masm.storeFloat32(r, Address(StackPointer, i * sizeof(float)));
-        }
-        masm.loadAlignedFloat32x4(Address(StackPointer, 0), output);
-        break;
-      }
-      default: MOZ_CRASH("Unknown SIMD kind");
+        return true;
     }
 
+    masm.reserveStack(Simd128DataSize);
+    for (size_t i = 0; i < 4; ++i) {
+        Register r = ToRegister(ins->getOperand(i));
+        masm.store32(r, Address(StackPointer, i * sizeof(int32_t)));
+    }
+    masm.loadAlignedInt32x4(Address(StackPointer, 0), output);
     masm.freeStack(Simd128DataSize);
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdValueFloat32x4(LSimdValueFloat32x4 *ins)
+{
+    MSimdValueX4 *mir = ins->mir();
+    MOZ_ASSERT(mir->type() == MIRType_Float32x4);
+
+    FloatRegister output = ToFloatRegister(ins->output());
+    FloatRegister r0 = ToFloatRegister(ins->getOperand(0));
+    MOZ_ASSERT(r0 == output); // defineReuseInput(0)
+
+    FloatRegister r1 = ToFloatRegister(ins->getTemp(0));
+    FloatRegister r2 = ToFloatRegister(ins->getOperand(2));
+    FloatRegister r3 = ToFloatRegister(ins->getOperand(3));
+
+    masm.unpcklps(r3, r1);
+    masm.unpcklps(r2, r0);
+    masm.unpcklps(r1, r0);
     return true;
 }
 

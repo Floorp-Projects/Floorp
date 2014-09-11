@@ -25,6 +25,12 @@
                         android:title="@string/pref_scroll_title_bar2"
                         android:summary="@string/pref_scroll_title_bar_summary" />
 
+    <!-- Title string is hardcoded here because it's not meant to be translated
+         because this is just a temporary development toggle. -->
+    <CheckBoxPreference android:key="android.not_a_preference.new_tablet_ui"
+                        android:title="Enable new tablet UI"
+                        android:defaultValue="false" />
+
     <PreferenceCategory android:title="@string/pref_category_advanced">
 
         <CheckBoxPreference

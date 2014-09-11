@@ -431,38 +431,9 @@ gfxContext::DrawSurface(gfxASurface *surface, const gfxSize& size)
 
 // transform stuff
 void
-gfxContext::Translate(const gfxPoint& pt)
-{
-  Matrix newMatrix = mTransform;
-  ChangeTransform(newMatrix.PreTranslate(Float(pt.x), Float(pt.y)));
-}
-
-void
-gfxContext::Scale(gfxFloat x, gfxFloat y)
-{
-  Matrix newMatrix = mTransform;
-  ChangeTransform(newMatrix.PreScale(Float(x), Float(y)));
-}
-
-void
-gfxContext::Rotate(gfxFloat angle)
-{
-  Matrix rotation = Matrix::Rotation(Float(angle));
-  ChangeTransform(rotation * mTransform);
-}
-
-void
 gfxContext::Multiply(const gfxMatrix& matrix)
 {
   ChangeTransform(ToMatrix(matrix) * mTransform);
-}
-
-void
-gfxContext::MultiplyAndNudgeToIntegers(const gfxMatrix& matrix)
-{
-  Matrix transform = ToMatrix(matrix) * mTransform;
-  transform.NudgeToIntegers();
-  ChangeTransform(transform);
 }
 
 void
@@ -471,24 +442,10 @@ gfxContext::SetMatrix(const gfxMatrix& matrix)
   ChangeTransform(ToMatrix(matrix));
 }
 
-void
-gfxContext::IdentityMatrix()
-{
-  ChangeTransform(Matrix());
-}
-
 gfxMatrix
 gfxContext::CurrentMatrix() const
 {
   return ThebesMatrix(mTransform);
-}
-
-void
-gfxContext::NudgeCurrentMatrixToIntegers()
-{
-  gfxMatrix matrix = ThebesMatrix(mTransform);
-  matrix.NudgeToIntegers();
-  ChangeTransform(ToMatrix(matrix));
 }
 
 gfxPoint
@@ -1093,7 +1050,7 @@ static gfxRect
 GetRoundOutDeviceClipExtents(gfxContext* aCtx)
 {
   gfxContextMatrixAutoSaveRestore save(aCtx);
-  aCtx->IdentityMatrix();
+  aCtx->SetMatrix(gfxMatrix());
   gfxRect r = aCtx->GetClipExtents();
   r.RoundOut();
   return r;

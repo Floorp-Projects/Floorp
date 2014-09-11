@@ -23,9 +23,12 @@ function test() {
   ];
 
   let nevents = 0;
+  let nflushed = 0;
   function handleTabChangeEvent () {
     cloudSync.tabs.removeEventListener("change", handleTabChangeEvent);
     ++ nevents;
+    info("tab change event " + nevents);
+    next();
   }
 
   function getLocalTabs() {
@@ -50,23 +53,27 @@ function test() {
 
   cloudSync.tabs.addEventListener("change", handleTabChangeEvent);
 
-  let nflushed = 0;
   expected.forEach(function(url) {
     let tab = gBrowser.addTab(url);
 
     function flush() {
-      tab.linkedBrowser.removeEventListener("load", flush);
+      tab.linkedBrowser.removeEventListener("load", flush, true);
       local.TabState.flush(tab.linkedBrowser);
       ++ nflushed;
+      info("flushed " + nflushed);
 
-      if (nflushed == expected.length) {
-        getLocalTabs();
-      }
+      next();
     }
 
     tab.linkedBrowser.addEventListener("load", flush, true);
 
     opentabs.push(tab);
   });
+
+  function next() {
+    if (nevents == 1 && nflushed == expected.length) {
+      getLocalTabs();
+    }
+  }
 
 }

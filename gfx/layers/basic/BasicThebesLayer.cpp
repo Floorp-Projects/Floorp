@@ -209,7 +209,7 @@ BasicThebesLayer::Validate(LayerManager::DrawThebesLayerCallback aCallback,
     if (ctx) {
       NS_ASSERTION(GetEffectiveOpacity() == 1.0, "Should only read back opaque layers");
       NS_ASSERTION(!GetMaskLayer(), "Should only read back layers without masks");
-      ctx->Translate(gfxPoint(offset.x, offset.y));
+      ctx->SetMatrix(ctx->CurrentMatrix().Translate(offset.x, offset.y));
       mContentClient->DrawTo(this, ctx->GetDrawTarget(), 1.0,
                              CompositionOpForOp(ctx->CurrentOperator()),
                              nullptr, nullptr);

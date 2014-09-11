@@ -240,37 +240,11 @@ public:
      **/
 
     /**
-     * Adds a translation to the current matrix. This translation takes place
-     * before the previously set transformations.
-     */
-    void Translate(const gfxPoint& pt);
-
-    /**
-     * Adds a scale to the current matrix. This scaling takes place before the
-     * previously set transformations.
-     */
-    void Scale(gfxFloat x, gfxFloat y);
-
-    /**
-     * Adds a rotation around the origin to the current matrix. This rotation
-     * takes place before the previously set transformations.
-     *
-     * @param angle The angle in radians.
-     */
-    void Rotate(gfxFloat angle);
-
-    /**
      * Post-multiplies 'other' onto the current CTM, i.e. this
      * matrix's transformation will take place before the previously set
      * transformations.
      */
     void Multiply(const gfxMatrix& other);
-    /**
-     * As "Multiply", but also nudges any entries in the resulting matrix that
-     * are close to an integer to that integer, to correct for
-     * compounded rounding errors.
-     */
-    void MultiplyAndNudgeToIntegers(const gfxMatrix& other);
 
     /**
      * Replaces the current transformation matrix with matrix.
@@ -278,21 +252,9 @@ public:
     void SetMatrix(const gfxMatrix& matrix);
 
     /**
-     * Sets the transformation matrix to the identity matrix.
-     */
-    void IdentityMatrix();
-
-    /**
      * Returns the current transformation matrix.
      */
     gfxMatrix CurrentMatrix() const;
-
-    /**
-     * Snap components of the current matrix that are close to integers
-     * to integers. In particular, components that are integral when
-     * converted to single precision are set to those integers.
-     */
-    void NudgeCurrentMatrixToIntegers();
 
     /**
      * Converts a point from device to user coordinates using the inverse

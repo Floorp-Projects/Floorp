@@ -229,7 +229,9 @@ let gSyncPane = {
                   .wrappedJSObject;
 
     if (service.fxAccountsEnabled) {
-      this.openContentInBrowser("about:accounts");
+      this.openContentInBrowser("about:accounts?entrypoint=preferences", {
+        replaceQueryString: true
+      });
     } else {
       let win = Services.wm.getMostRecentWindow("Weave:AccountSetup");
       if (win) {
@@ -242,7 +244,7 @@ let gSyncPane = {
     }
   },
 
-  openContentInBrowser: function(url) {
+  openContentInBrowser: function(url, options) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     if (!win) {
       // no window to use, so use _openLink to create a new one.  We don't
@@ -251,21 +253,27 @@ let gSyncPane = {
       gSyncUtils._openLink(url);
       return;
     }
-    win.switchToTabHavingURI(url, true);
+    win.switchToTabHavingURI(url, true, options);
     // seeing as we are doing this in a tab we close the prefs dialog.
     window.close();
   },
 
   signUp: function() {
-    this.openContentInBrowser("about:accounts?action=signup");
+    this.openContentInBrowser("about:accounts?action=signup&entrypoint=preferences", {
+      replaceQueryString: true
+    });
   },
 
   signIn: function() {
-    this.openContentInBrowser("about:accounts?action=signin");
+    this.openContentInBrowser("about:accounts?action=signin&entrypoint=preferences", {
+      replaceQueryString: true
+    });
   },
 
   reSignIn: function() {
-    this.openContentInBrowser("about:accounts?action=reauth");
+    this.openContentInBrowser("about:accounts?action=reauth&entrypoint=preferences", {
+      replaceQueryString: true
+    });
   },
 
   manageFirefoxAccount: function() {
