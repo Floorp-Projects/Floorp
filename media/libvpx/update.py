@@ -13,7 +13,9 @@ from StringIO import StringIO
 
 PLATFORMS= [
   'x86-win32-vs8',
+  'x86-win32-vs11',
   'x86_64-win64-vs8',
+  'x86_64-win64-vs11',
   'x86-linux-gcc',
   'x86_64-linux-gcc',
   'generic-gnu',
