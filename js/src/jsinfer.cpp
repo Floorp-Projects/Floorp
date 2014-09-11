@@ -1091,6 +1091,21 @@ TypeObjectKey::property(jsid id)
     return property;
 }
 
+void
+TypeObjectKey::ensureTrackedProperty(JSContext *cx, jsid id)
+{
+    // If we are accessing a lazily defined property which actually exists in
+    // the VM and has not been instantiated yet, instantiate it now if we are
+    // on the main thread and able to do so.
+    if (!JSID_IS_VOID(id) && !JSID_IS_EMPTY(id)) {
+        JS_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+        if (JSObject *obj = singleton()) {
+            if (obj->isNative() && obj->nativeLookupPure(id))
+                EnsureTrackPropertyTypes(cx, obj, id);
+        }
+    }
+}
+
 bool
 HeapTypeSetKey::instantiate(JSContext *cx)
 {

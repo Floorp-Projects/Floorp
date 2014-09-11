@@ -106,7 +106,7 @@ jit::NewBaselineFrameInspector(TempAllocator *temp, BaselineFrame *frame, Compil
     return inspector;
 }
 
-IonBuilder::IonBuilder(CompileCompartment *comp,
+IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
                        const JitCompileOptions &options, TempAllocator *temp,
                        MIRGraph *graph, types::CompilerConstraintList *constraints,
                        BaselineInspector *inspector, CompileInfo *info,
@@ -115,6 +115,7 @@ IonBuilder::IonBuilder(CompileCompartment *comp,
                        uint32_t loopDepth)
   : MIRGenerator(comp, options, temp, graph, info, optimizationInfo),
     backgroundCodegen_(nullptr),
+    analysisContext(analysisContext),
     baselineFrame_(baselineFrame),
     constraints_(constraints),
     analysis_(*temp, info->script()),
@@ -146,6 +147,7 @@ IonBuilder::IonBuilder(CompileCompartment *comp,
     abortReason_ = AbortReason_Disable;
 
     JS_ASSERT(script()->hasBaselineScript() == (info->executionMode() != ArgumentsUsageAnalysis));
+    JS_ASSERT(!!analysisContext == (info->executionMode() == DefinitePropertiesAnalysis));
 
     if (!info->executionModeIsAnalysis())
         script()->baselineScript()->setIonCompiledOrInlined();
@@ -154,6 +156,7 @@ IonBuilder::IonBuilder(CompileCompartment *comp,
 void
 IonBuilder::clearForBackEnd()
 {
+    JS_ASSERT(!analysisContext);
     baselineFrame_ = nullptr;
 
     // The caches below allocate data from the malloc heap. Release this before
@@ -345,6 +348,22 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
 
     if (!target->isInterpreted())
         return DontInline(nullptr, "Non-interpreted target");
+
+    // Allow constructing lazy scripts when performing the definite properties
+    // analysis, as baseline has not been used to warm the caller up yet.
+    if (target->isInterpreted() && info().executionMode() == DefinitePropertiesAnalysis) {
+        RootedScript script(analysisContext, target->getOrCreateScript(analysisContext));
+        if (!script)
+            return InliningDecision_Error;
+
+        if (!script->hasBaselineScript() && script->canBaselineCompile()) {
+            MethodStatus status = BaselineCompile(analysisContext, script);
+            if (status == Method_Error)
+                return InliningDecision_Error;
+            if (status != Method_Compiled)
+                return InliningDecision_DontInline;
+        }
+    }
 
     if (!target->hasScript())
         return DontInline(nullptr, "Lazy script");
@@ -4184,10 +4203,16 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     AutoAccumulateReturns aar(graph(), returns);
 
     // Build the graph.
-    IonBuilder inlineBuilder(compartment, options, &alloc(), &graph(), constraints(),
+    IonBuilder inlineBuilder(analysisContext, compartment, options, &alloc(), &graph(), constraints(),
                              &inspector, info, &optimizationInfo(), nullptr, inliningDepth_ + 1,
                              loopDepth_);
     if (!inlineBuilder.buildInline(this, outerResumePoint, callInfo)) {
+        if (analysisContext && analysisContext->isExceptionPending()) {
+            JitSpew(JitSpew_Abort, "Inline builder raised exception.");
+            abortReason_ = AbortReason_Error;
+            return false;
+        }
+
         // Inlining the callee failed. Mark the callee as uninlineable only if
         // the inlining was aborted for a non-exception reason.
         if (inlineBuilder.abortReason_ == AbortReason_Disable) {
@@ -6418,6 +6443,8 @@ IonBuilder::testSingletonProperty(JSObject *obj, PropertyName *name)
             return nullptr;
 
         types::TypeObjectKey *objType = types::TypeObjectKey::get(obj);
+        if (analysisContext)
+            objType->ensureTrackedProperty(analysisContext, NameToId(name));
 
         if (objType->unknownProperties())
             return nullptr;
@@ -6499,6 +6526,8 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
             types::TypeObjectKey *object = types->getObject(i);
             if (!object)
                 continue;
+            if (analysisContext)
+                object->ensureTrackedProperty(analysisContext, NameToId(name));
 
             const Class *clasp = object->clasp();
             if (!ClassHasEffectlessLookup(clasp, name) || ClassHasResolveHook(compartment, clasp, name))
@@ -6706,6 +6735,8 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
     }
 
     types::TypeObjectKey *staticType = types::TypeObjectKey::get(staticObject);
+    if (analysisContext)
+        staticType->ensureTrackedProperty(analysisContext, NameToId(name));
 
     if (staticType->unknownProperties()) {
         *psucceeded = false;
@@ -6724,7 +6755,7 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
     }
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(constraints(), staticType,
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), staticType,
                                                        name, types, /* updateObserved = */ true);
 
     JSObject *singleton = types->getSingleton();
@@ -7540,7 +7571,8 @@ IonBuilder::getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index)
     // Emit GetElementCache.
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(constraints(), obj, nullptr, types);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), obj,
+                                                       nullptr, types);
 
     // Always add a barrier if the index might be a string or symbol, so that
     // the cache can attach stubs for particular properties.
@@ -7588,7 +7620,8 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
         AddObjectsForPropertyRead(obj, nullptr, types);
     }
 
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(constraints(), obj, nullptr, types);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), obj,
+                                                       nullptr, types);
     bool needsHoleCheck = !ElementAccessIsPacked(constraints(), obj);
 
     // Reads which are on holes in the object do not have to bail out if
@@ -8904,7 +8937,8 @@ IonBuilder::jsop_getprop(PropertyName *name)
     if (!getPropTryArgumentsCallee(&emitted, obj, name) || emitted)
         return emitted;
 
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(constraints(), obj, name, types);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
+                                                       obj, name, types);
 
     // Always use a call if we are performing analysis and
     // not actually emitting code, to simplify later analysis. Also skip deeper
@@ -9586,7 +9620,8 @@ IonBuilder::getPropTryInnerize(bool *emitted, MDefinition *obj, PropertyName *na
 
     // Passing the inner object to GetProperty IC is safe, see the
     // needsOuterizedThisObject check in IsCacheableGetPropCallNative.
-    BarrierKind barrier = PropertyReadNeedsTypeBarrier(constraints(), inner, name, types);
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
+                                                       inner, name, types);
     if (!getPropTryCache(emitted, inner, name, barrier, types) || *emitted)
         return *emitted;
 
