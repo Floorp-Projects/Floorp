@@ -405,7 +405,8 @@ nsDeviceContext::CreateRenderingContext()
 
     pContext->Init(this, dt);
     pContext->ThebesContext()->SetFlag(gfxContext::FLAG_DISABLE_SNAPPING);
-    pContext->Scale(mPrintingScale, mPrintingScale);
+    pContext->ThebesContext()->SetMatrix(gfxMatrix::Scaling(mPrintingScale,
+                                                            mPrintingScale));
 
     return pContext.forget();
 }

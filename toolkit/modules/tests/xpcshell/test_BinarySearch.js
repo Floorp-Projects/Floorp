@@ -67,13 +67,13 @@ function run_test() {
 }
 
 function ok(array, target, expectedFound, expectedIdx) {
-  let [found, idx] = BinarySearch.search(array, target, cmp);
+  let [found, idx] = BinarySearch.search(cmp, array, target);
   do_check_eq(found, expectedFound);
   do_check_eq(idx, expectedIdx);
 
   idx = expectedFound ? expectedIdx : -1;
-  do_check_eq(BinarySearch.indexOf(array, target, cmp), idx);
-  do_check_eq(BinarySearch.insertionIndexOf(array, target, cmp), expectedIdx);
+  do_check_eq(BinarySearch.indexOf(cmp, array, target), idx);
+  do_check_eq(BinarySearch.insertionIndexOf(cmp, array, target), expectedIdx);
 }
 
 function cmp(num1, num2) {

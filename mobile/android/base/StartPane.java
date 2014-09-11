@@ -21,6 +21,7 @@ public class StartPane extends Activity {
 
             @Override
             public void onClick(View v) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-sync");
                 showAccountSetup();
             }
         });
@@ -30,6 +31,7 @@ public class StartPane extends Activity {
 
             @Override
             public void onClick(View v) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-browser");
                 showBrowser();
             }
         });

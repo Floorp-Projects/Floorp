@@ -271,7 +271,8 @@ gfxWindowsNativeDrawing::PaintToContext()
                                 gfxImageFormat::ARGB32);
 
         mContext->Save();
-        mContext->Translate(mNativeRect.TopLeft());
+        mContext->SetMatrix(
+          mContext->CurrentMatrix().Translate(mNativeRect.TopLeft()));
         mContext->NewPath();
         mContext->Rectangle(gfxRect(gfxPoint(0.0, 0.0), mNativeRect.Size()));
 

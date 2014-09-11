@@ -4032,9 +4032,8 @@ WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
 
     WrapperOptions options(cx);
     options.setProto(proto.toObjectOrNull());
-    options.selectDefaultClass(obj.toObject().isCallable());
     JSObject *wrapped = Wrapper::New(cx, &obj.toObject(), &obj.toObject().global(),
-                                     &Wrapper::singletonWithPrototype, &options);
+                                     &Wrapper::singletonWithPrototype, options);
     if (!wrapped)
         return false;
 

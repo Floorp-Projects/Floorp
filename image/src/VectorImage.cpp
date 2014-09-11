@@ -288,9 +288,10 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
   if (!matrix.Invert()) {
     return false;
   }
-  aContext->Multiply(matrix);
-  aContext->Scale(double(mSize.width) / mViewport.width,
-                  double(mSize.height) / mViewport.height);
+  aContext->SetMatrix(
+    aContext->CurrentMatrix().PreMultiply(matrix).
+                              Scale(double(mSize.width) / mViewport.width,
+                                    double(mSize.height) / mViewport.height));
 
   nsPresContext* presContext = presShell->GetPresContext();
   MOZ_ASSERT(presContext, "pres shell w/out pres context");
