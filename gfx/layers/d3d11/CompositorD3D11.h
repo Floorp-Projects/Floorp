@@ -100,7 +100,6 @@ public:
    */
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
                           const gfx::Rect *aClipRectIn,
-                          const gfx::Matrix& aTransform,
                           const gfx::Rect& aRenderBounds,
                           gfx::Rect *aClipRectOut = nullptr,
                           gfx::Rect *aRenderBoundsOut = nullptr) MOZ_OVERRIDE;
@@ -125,8 +124,7 @@ public:
    * Setup the viewport and projection matrix for rendering
    * to a window of the given dimensions.
    */
-  virtual void PrepareViewport(const gfx::IntSize& aSize,
-                               const gfx::Matrix& aWorldTransform) MOZ_OVERRIDE;
+  virtual void PrepareViewport(const gfx::IntSize& aSize) MOZ_OVERRIDE;
 
   virtual bool SupportsPartialTextureUpdate() MOZ_OVERRIDE { return true; }
 

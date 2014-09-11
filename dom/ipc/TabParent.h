@@ -40,6 +40,10 @@ namespace layout {
 class RenderFrameParent;
 }
 
+namespace widget {
+struct IMENotification;
+}
+
 namespace dom {
 
 class ClonedMessageData;
@@ -167,6 +171,8 @@ public:
                                         const uint32_t& aFocus,
                                         const bool& aCausedByComposition) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMETextHint(const nsString& aText) MOZ_OVERRIDE;
+    virtual bool RecvNotifyIMEMouseButtonEvent(const widget::IMENotification& aEventMessage,
+                                               bool* aConsumedByIME) MOZ_OVERRIDE;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        nsString* aComposition) MOZ_OVERRIDE;
     virtual bool RecvGetInputContext(int32_t* aIMEEnabled,

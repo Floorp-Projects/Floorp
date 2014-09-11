@@ -423,6 +423,8 @@ PuppetWidget::NotifyIME(const IMENotification& aIMENotification)
       return NotifyIMEOfTextChange(aIMENotification);
     case NOTIFY_IME_OF_COMPOSITION_UPDATE:
       return NotifyIMEOfUpdateComposition();
+    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      return NotifyIMEOfMouseButtonEvent(aIMENotification);
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -622,6 +624,23 @@ PuppetWidget::NotifyIMEOfSelectionChange(
       aIMENotification.mSelectionChangeData.mCausedByComposition);
   }
   return NS_OK;
+}
+
+nsresult
+PuppetWidget::NotifyIMEOfMouseButtonEvent(
+                const IMENotification& aIMENotification)
+{
+  if (!mTabChild) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool consumedByIME = false;
+  if (!mTabChild->SendNotifyIMEMouseButtonEvent(aIMENotification,
+                                                &consumedByIME)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return consumedByIME ? NS_SUCCESS_EVENT_CONSUMED : NS_OK;
 }
 
 NS_IMETHODIMP
