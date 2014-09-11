@@ -126,10 +126,14 @@ public:
 
     // colors needed by the Mac OS X theme
 
+    // foreground color of :hover:active buttons
+    eColorID__moz_mac_buttonactivetext,
     // background color of chrome toolbars in active windows
     eColorID__moz_mac_chrome_active,
     // background color of chrome toolbars in inactive windows
     eColorID__moz_mac_chrome_inactive,
+    // foreground color of default buttons
+    eColorID__moz_mac_defaultbuttontext,
     //ring around text fields and lists
     eColorID__moz_mac_focusring,
     //colour used when mouse is over a menu item
