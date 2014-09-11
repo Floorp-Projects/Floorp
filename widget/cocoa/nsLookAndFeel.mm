@@ -137,6 +137,13 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       // Thanks to mpt26@student.canterbury.ac.nz for the hardcoded values that form the defaults
       //  if querying the Appearance Manager fails ;)
       //
+    case eColorID__moz_mac_buttonactivetext:
+    case eColorID__moz_mac_defaultbuttontext:
+      if (nsCocoaFeatures::OnYosemiteOrLater()) {
+        aColor = NS_RGB(0xFF,0xFF,0xFF);
+        break;
+      }
+      // Otherwise fall through and return the regular button text:
       
     case eColorID_buttontext:
     case eColorID__moz_buttonhovertext:
