@@ -180,6 +180,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "TabCrashReporter",
 XPCOMUtils.defineLazyModuleGetter(this, "FormValidationHandler",
   "resource:///modules/FormValidationHandler.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "UITour",
+  "resource:///modules/UITour.jsm");
+
 let gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -6917,9 +6920,13 @@ let gRemoteTabsUI = {
  *        If switching to this URI results in us opening a tab, aOpenParams
  *        will be the parameter object that gets passed to openUILinkIn. Please
  *        see the documentation for openUILinkIn to see what parameters can be
- *        passed via this object. This object also allows the 'ignoreFragment'
- *        property to be set to true to exclude fragment-portion matching when
- *        comparing URIs.
+ *        passed via this object.
+ *        This object also allows:
+ *        - 'ignoreFragment' property to be set to true to exclude fragment-portion
+ *        matching when comparing URIs.
+ *        - 'replaceQueryString' property to be set to true to exclude query string
+ *        matching when comparing URIs and ovewrite the initial query string with
+ *        the one from the new URI.
  * @return True if an existing tab was found, false otherwise
  */
 function switchToTabHavingURI(aURI, aOpenNew, aOpenParams={}) {
@@ -6930,6 +6937,8 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams={}) {
   ]);
 
   let ignoreFragment = aOpenParams.ignoreFragment;
+  let replaceQueryString = aOpenParams.replaceQueryString;
+
   // This property is only used by switchToTabHavingURI and should
   // not be used as a parameter for the new load.
   delete aOpenParams.ignoreFragment;
@@ -6960,6 +6969,15 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams={}) {
           browser.loadURI(spec);
         }
         return true;
+      }
+      if (replaceQueryString) {
+        if (browser.currentURI.spec.split("?")[0] == aURI.spec.split("?")[0]) {
+          // Focus the matching window & tab
+          aWindow.focus();
+          aWindow.gBrowser.tabContainer.selectedIndex = i;
+          browser.loadURI(aURI.spec);
+          return true;
+        }
       }
     }
     return false;
