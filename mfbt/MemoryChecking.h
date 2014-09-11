@@ -54,6 +54,29 @@ __asan_unpoison_memory_region(void const volatile *addr, size_t size);
 #define MOZ_MAKE_MEM_DEFINED(addr, size) \
   __asan_unpoison_memory_region((addr), (size))
 }
+#elif defined(MOZ_MSAN)
+#include <stddef.h>
+
+#include "mozilla/Types.h"
+
+extern "C" {
+/* These definitions are usually provided through the
+ * sanitizer/msan_interface.h header installed by MSan.
+ */
+void MOZ_EXPORT
+__msan_poison(void const volatile *addr, size_t size);
+void MOZ_EXPORT
+__msan_unpoison(void const volatile *addr, size_t size);
+
+#define MOZ_MAKE_MEM_NOACCESS(addr, size) \
+  __msan_poison((addr), (size))
+
+#define MOZ_MAKE_MEM_UNDEFINED(addr, size) \
+  __msan_poison((addr), (size))
+
+#define MOZ_MAKE_MEM_DEFINED(addr, size) \
+  __msan_unpoison((addr), (size))
+}
 #elif defined(MOZ_VALGRIND)
 #define MOZ_MAKE_MEM_NOACCESS(addr, size) \
   VALGRIND_MAKE_MEM_NOACCESS((addr), (size))
