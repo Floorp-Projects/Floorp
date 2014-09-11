@@ -211,6 +211,15 @@ public:
     return *this;
   }
 
+  /**
+   * Multiplies in the opposite order to operator=*.
+   */
+  Matrix &PreMultiply(const Matrix &aMatrix)
+  {
+    *this = aMatrix * *this;
+    return *this;
+  }
+
   /* Returns true if the other matrix is fuzzy-equal to this matrix.
    * Note that this isn't a cheap comparison!
    */
