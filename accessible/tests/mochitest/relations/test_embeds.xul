@@ -59,7 +59,11 @@
       this.match = function browserReorderChecker_match(aEvent)
       {
         // Reorder event might be duped because of temporary document creation.
-        if (aEvent.accessible == getAccessible(currentBrowser())) {
+        var browserAcc = getAccessible(currentBrowser());
+        if (!browserAcc)
+          ok(false, "opa opa sralslasya");
+
+        if (aEvent.accessible == browserAcc) {
           this.cnt++;
           return this.cnt != 2;
         }
