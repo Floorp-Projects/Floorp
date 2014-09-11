@@ -99,6 +99,7 @@ function resetFxA() {
   global.gFxAOAuthClientPromise = null;
   global.gFxAOAuthClient = null;
   global.gFxAOAuthTokenData = null;
+  global.gFxAOAuthProfile = null;
 }
 
 function promiseDeletedOAuthParams(baseURL) {
@@ -110,6 +111,15 @@ function promiseDeletedOAuthParams(baseURL) {
   xhr.addEventListener("error", deferred.reject);
   xhr.send();
 
+  return deferred.promise;
+}
+
+function promiseObserverNotified(aTopic) {
+  let deferred = Promise.defer();
+  Services.obs.addObserver(function onNotification(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(onNotification, aTopic);
+      deferred.resolve({subject: aSubject, data: aData});
+    }, aTopic, false);
   return deferred.promise;
 }
 
