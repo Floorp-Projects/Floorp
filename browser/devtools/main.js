@@ -91,39 +91,6 @@ Tools.options = {
   }
 }
 
-Tools.webConsole = {
-  id: "webconsole",
-  key: l10n("cmd.commandkey", webConsoleStrings),
-  accesskey: l10n("webConsoleCmd.accesskey", webConsoleStrings),
-  modifiers: Services.appinfo.OS == "Darwin" ? "accel,alt" : "accel,shift",
-  ordinal: 2,
-  icon: "chrome://browser/skin/devtools/tool-webconsole.svg",
-  invertIconForLightTheme: true,
-  url: "chrome://browser/content/devtools/webconsole.xul",
-  label: l10n("ToolboxTabWebconsole.label", webConsoleStrings),
-  menuLabel: l10n("MenuWebconsole.label", webConsoleStrings),
-  panelLabel: l10n("ToolboxWebConsole.panelLabel", webConsoleStrings),
-  tooltip: l10n("ToolboxWebconsole.tooltip", webConsoleStrings),
-  inMenu: true,
-  commands: "devtools/webconsole/console-commands",
-
-  preventClosingOnKey: true,
-  onkey: function(panel, toolbox) {
-    if (toolbox.splitConsole)
-      return toolbox.focusConsoleInput();
-
-    panel.focusInput();
-  },
-
-  isTargetSupported: function(target) {
-    return true;
-  },
-
-  build: function(iframeWindow, toolbox) {
-    return new WebConsolePanel(iframeWindow, toolbox);
-  }
-};
-
 Tools.inspector = {
   id: "inspector",
   accesskey: l10n("inspector.accesskey", inspectorStrings),
@@ -154,6 +121,39 @@ Tools.inspector = {
 
   build: function(iframeWindow, toolbox) {
     return new InspectorPanel(iframeWindow, toolbox);
+  }
+};
+
+Tools.webConsole = {
+  id: "webconsole",
+  key: l10n("cmd.commandkey", webConsoleStrings),
+  accesskey: l10n("webConsoleCmd.accesskey", webConsoleStrings),
+  modifiers: Services.appinfo.OS == "Darwin" ? "accel,alt" : "accel,shift",
+  ordinal: 2,
+  icon: "chrome://browser/skin/devtools/tool-webconsole.svg",
+  invertIconForLightTheme: true,
+  url: "chrome://browser/content/devtools/webconsole.xul",
+  label: l10n("ToolboxTabWebconsole.label", webConsoleStrings),
+  menuLabel: l10n("MenuWebconsole.label", webConsoleStrings),
+  panelLabel: l10n("ToolboxWebConsole.panelLabel", webConsoleStrings),
+  tooltip: l10n("ToolboxWebconsole.tooltip", webConsoleStrings),
+  inMenu: true,
+  commands: "devtools/webconsole/console-commands",
+
+  preventClosingOnKey: true,
+  onkey: function(panel, toolbox) {
+    if (toolbox.splitConsole)
+      return toolbox.focusConsoleInput();
+
+    panel.focusInput();
+  },
+
+  isTargetSupported: function(target) {
+    return true;
+  },
+
+  build: function(iframeWindow, toolbox) {
+    return new WebConsolePanel(iframeWindow, toolbox);
   }
 };
 
@@ -245,26 +245,6 @@ Tools.canvasDebugger = {
 
   build: function (iframeWindow, toolbox) {
     return new CanvasDebuggerPanel(iframeWindow, toolbox);
-  }
-};
-
-Tools.webAudioEditor = {
-  id: "webaudioeditor",
-  ordinal: 10,
-  visibilityswitch: "devtools.webaudioeditor.enabled",
-  icon: "chrome://browser/skin/devtools/tool-webaudio.svg",
-  invertIconForLightTheme: true,
-  url: "chrome://browser/content/devtools/webaudioeditor.xul",
-  label: l10n("ToolboxWebAudioEditor1.label", webAudioEditorStrings),
-  panelLabel: l10n("ToolboxWebAudioEditor1.panelLabel", webAudioEditorStrings),
-  tooltip: l10n("ToolboxWebAudioEditor1.tooltip", webAudioEditorStrings),
-
-  isTargetSupported: function(target) {
-    return !target.isAddon;
-  },
-
-  build: function(iframeWindow, toolbox) {
-    return new WebAudioEditorPanel(iframeWindow, toolbox);
   }
 };
 
@@ -366,9 +346,29 @@ Tools.storage = {
   }
 };
 
+Tools.webAudioEditor = {
+  id: "webaudioeditor",
+  ordinal: 11,
+  visibilityswitch: "devtools.webaudioeditor.enabled",
+  icon: "chrome://browser/skin/devtools/tool-webaudio.svg",
+  invertIconForLightTheme: true,
+  url: "chrome://browser/content/devtools/webaudioeditor.xul",
+  label: l10n("ToolboxWebAudioEditor1.label", webAudioEditorStrings),
+  panelLabel: l10n("ToolboxWebAudioEditor1.panelLabel", webAudioEditorStrings),
+  tooltip: l10n("ToolboxWebAudioEditor1.tooltip", webAudioEditorStrings),
+
+  isTargetSupported: function(target) {
+    return !target.isAddon;
+  },
+
+  build: function(iframeWindow, toolbox) {
+    return new WebAudioEditorPanel(iframeWindow, toolbox);
+  }
+};
+
 Tools.scratchpad = {
   id: "scratchpad",
-  ordinal: 11,
+  ordinal: 12,
   visibilityswitch: "devtools.scratchpad.enabled",
   icon: "chrome://browser/skin/devtools/tool-scratchpad.svg",
   invertIconForLightTheme: true,
