@@ -995,7 +995,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
     if (ins->mirRaw()) {
         JS_ASSERT(ins->mirRaw()->isInstruction());
         MInstruction *mir = ins->mirRaw()->toInstruction();
-        JS_ASSERT_IF(mir->isEffectful(), mir->resumePoint());
+        JS_ASSERT_IF(mir->needsResumePoint(), mir->resumePoint());
     }
 #endif
 
