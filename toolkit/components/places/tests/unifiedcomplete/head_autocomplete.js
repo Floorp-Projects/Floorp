@@ -281,3 +281,8 @@ function stripPrefix(spec)
   }
   return spec;
 }
+
+function makeActionURI(action, params) {
+  let url = "moz-action:" + action + "," + JSON.stringify(params);
+  return NetUtil.newURI(url);
+}
