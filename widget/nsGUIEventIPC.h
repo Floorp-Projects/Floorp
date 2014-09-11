@@ -593,6 +593,92 @@ struct ParamTraits<nsIMEUpdatePreference>
 };
 
 template<>
+struct ParamTraits<mozilla::widget::IMENotification>
+{
+  typedef mozilla::widget::IMENotification paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg,
+      static_cast<mozilla::widget::IMEMessageType>(aParam.mMessage));
+    switch (aParam.mMessage) {
+      case mozilla::widget::NOTIFY_IME_OF_SELECTION_CHANGE:
+        WriteParam(aMsg, aParam.mSelectionChangeData.mCausedByComposition);
+        return;
+      case mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE:
+        WriteParam(aMsg, aParam.mTextChangeData.mStartOffset);
+        WriteParam(aMsg, aParam.mTextChangeData.mOldEndOffset);
+        WriteParam(aMsg, aParam.mTextChangeData.mNewEndOffset);
+        WriteParam(aMsg, aParam.mTextChangeData.mCausedByComposition);
+        return;
+      case mozilla::widget::NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mEventMessage);
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mOffset);
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mCursorPos.mX);
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mCursorPos.mY);
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mCharRect.mX);
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mCharRect.mY);
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mCharRect.mWidth);
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mCharRect.mHeight);
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mButton);
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mButtons);
+        WriteParam(aMsg, aParam.mMouseButtonEventData.mModifiers);
+        return;
+      default:
+        return;
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    mozilla::widget::IMEMessageType IMEMessage = 0;
+    if (!ReadParam(aMsg, aIter, &IMEMessage)) {
+      return false;
+    }
+    aResult->mMessage = static_cast<mozilla::widget::IMEMessage>(IMEMessage);
+    switch (aResult->mMessage) {
+      case mozilla::widget::NOTIFY_IME_OF_SELECTION_CHANGE:
+        return ReadParam(aMsg, aIter,
+                         &aResult->mSelectionChangeData.mCausedByComposition);
+      case mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE:
+        return ReadParam(aMsg, aIter,
+                         &aResult->mTextChangeData.mStartOffset) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mTextChangeData.mOldEndOffset) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mTextChangeData.mNewEndOffset) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mTextChangeData.mCausedByComposition);
+      case mozilla::widget::NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+        return ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mEventMessage) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mOffset) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mCursorPos.mX) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mCursorPos.mY) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mCharRect.mX) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mCharRect.mY) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mCharRect.mWidth) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mCharRect.mHeight) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mButton) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mButtons) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mMouseButtonEventData.mModifiers);
+      default:
+        return true;
+    }
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::WidgetPluginEvent>
 {
   typedef mozilla::WidgetPluginEvent paramType;
