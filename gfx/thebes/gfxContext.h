@@ -240,12 +240,6 @@ public:
      **/
 
     /**
-     * Adds a scale to the current matrix. This scaling takes place before the
-     * previously set transformations.
-     */
-    void Scale(gfxFloat x, gfxFloat y);
-
-    /**
      * Adds a rotation around the origin to the current matrix. This rotation
      * takes place before the previously set transformations.
      *
