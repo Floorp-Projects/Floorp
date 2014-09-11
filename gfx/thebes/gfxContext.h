@@ -245,12 +245,6 @@ public:
      * transformations.
      */
     void Multiply(const gfxMatrix& other);
-    /**
-     * As "Multiply", but also nudges any entries in the resulting matrix that
-     * are close to an integer to that integer, to correct for
-     * compounded rounding errors.
-     */
-    void MultiplyAndNudgeToIntegers(const gfxMatrix& other);
 
     /**
      * Replaces the current transformation matrix with matrix.
@@ -261,13 +255,6 @@ public:
      * Returns the current transformation matrix.
      */
     gfxMatrix CurrentMatrix() const;
-
-    /**
-     * Snap components of the current matrix that are close to integers
-     * to integers. In particular, components that are integral when
-     * converted to single precision are set to those integers.
-     */
-    void NudgeCurrentMatrixToIntegers();
 
     /**
      * Converts a point from device to user coordinates using the inverse

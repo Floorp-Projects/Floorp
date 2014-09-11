@@ -708,7 +708,9 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
     return;
   }
 
-  aContext->MultiplyAndNudgeToIntegers(ThebesMatrix(aTransform));
+  aContext->SetMatrix(
+    aContext->CurrentMatrix().PreMultiply(ThebesMatrix(aTransform)).
+                              NudgeToIntegers());
 
   // Hack to let SVGPathData::ConstructPath know if we have square caps:
   const nsStyleSVG* style = StyleSVG();
