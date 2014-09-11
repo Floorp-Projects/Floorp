@@ -19,8 +19,6 @@ const js::Class OuterWrapperClass =
         "Proxy",
         0, /* additional slots */
         0, /* additional class flags */
-        nullptr, /* call */
-        nullptr, /* construct */
         PROXY_MAKE_EXT(
             nullptr, /* outerObject */
             js::proxy_innerObject,
@@ -63,7 +61,7 @@ BEGIN_TEST(testBug604087)
     js::WrapperOptions options;
     options.setClass(&OuterWrapperClass);
     options.setSingleton(true);
-    JS::RootedObject outerObj(cx, js::Wrapper::New(cx, global, global, &js::Wrapper::singleton, &options));
+    JS::RootedObject outerObj(cx, js::Wrapper::New(cx, global, global, &js::Wrapper::singleton, options));
     JS::RootedObject compartment2(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
     JS::RootedObject compartment3(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
     JS::RootedObject compartment4(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
@@ -84,7 +82,7 @@ BEGIN_TEST(testBug604087)
     JS::RootedObject next(cx);
     {
         JSAutoCompartment ac(cx, compartment2);
-        next = js::Wrapper::New(cx, compartment2, compartment2, &js::Wrapper::singleton, &options);
+        next = js::Wrapper::New(cx, compartment2, compartment2, &js::Wrapper::singleton, options);
         CHECK(next);
     }
 

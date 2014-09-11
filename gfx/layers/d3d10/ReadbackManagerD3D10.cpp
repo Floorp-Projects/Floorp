@@ -80,7 +80,8 @@ public:
                                              update->mSequenceCounter);
 
     if (ctx) {
-      ctx->Translate(gfxPoint(offset.x, offset.y));
+      ctx->SetMatrix(
+        ctx->CurrentMatrix().Translate(offset.x, offset.y));
       ctx->SetSource(sourceSurface, gfxPoint(mTask->mOrigin.x,
                                              mTask->mOrigin.y));
       ctx->Paint();

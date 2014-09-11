@@ -839,18 +839,12 @@ js::proxy_Slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
     return Proxy::slice(cx, proxy, begin, end, result);
 }
 
-#define PROXY_CLASS(callOp, constructOp)                        \
-    PROXY_CLASS_DEF("Proxy",                                    \
-                    0, /* additional slots */                   \
-                    JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy),    \
-                    callOp,                                     \
-                    constructOp)
+const Class js::ProxyObject::class_ =
+    PROXY_CLASS_DEF("Proxy",
+                    0,
+                    JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy));
 
-const Class js::ProxyObject::uncallableClass_ = PROXY_CLASS(nullptr, nullptr);
-const Class js::ProxyObject::callableClass_ = PROXY_CLASS(proxy_Call, proxy_Construct);
-
-const Class* const js::CallableProxyClassPtr = &ProxyObject::callableClass_;
-const Class* const js::UncallableProxyClassPtr = &ProxyObject::uncallableClass_;
+const Class* const js::ProxyClassPtr = &js::ProxyObject::class_;
 
 JS_FRIEND_API(JSObject *)
 js::NewProxyObject(JSContext *cx, const BaseProxyHandler *handler, HandleValue priv, JSObject *proto_,
@@ -865,7 +859,8 @@ ProxyObject::renew(JSContext *cx, const BaseProxyHandler *handler, Value priv)
 {
     JS_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
     JS_ASSERT(getParent() == cx->global());
-    JS_ASSERT(getClass() == &uncallableClass_);
+    JS_ASSERT(getClass() == &ProxyObject::class_);
+    JS_ASSERT(!isCallable());
     JS_ASSERT(!getClass()->ext.innerObject);
     JS_ASSERT(getTaggedProto().isLazy());
 

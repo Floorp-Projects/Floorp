@@ -39,16 +39,36 @@
 #elif defined(JS_HAVE_ENDIAN_H)
 # include <endian.h>
 
-# if defined(__BYTE_ORDER)
-#  if __BYTE_ORDER == __LITTLE_ENDIAN
-#   define IS_LITTLE_ENDIAN 1
-#   undef  IS_BIG_ENDIAN
-#  elif __BYTE_ORDER == __BIG_ENDIAN
-#   undef  IS_LITTLE_ENDIAN
-#   define IS_BIG_ENDIAN 1
+/*
+ * Historically, OSes providing <endian.h> only defined
+ * __BYTE_ORDER to either __LITTLE_ENDIAN or __BIG_ENDIAN.
+ * The Austin group decided to standardise <endian.h> in
+ * POSIX around 2011, expecting it to provide a BYTE_ORDER
+ * #define set to either LITTLE_ENDIAN or BIG_ENDIAN. We
+ * should try to cope with both possibilities here.
+ */
+
+# if defined(__BYTE_ORDER) || defined(BYTE_ORDER)
+#  if defined(__BYTE_ORDER)
+#   if __BYTE_ORDER == __LITTLE_ENDIAN
+#    define IS_LITTLE_ENDIAN 1
+#    undef  IS_BIG_ENDIAN
+#   elif __BYTE_ORDER == __BIG_ENDIAN
+#    undef  IS_LITTLE_ENDIAN
+#    define IS_BIG_ENDIAN 1
+#   endif
+#  endif
+#  if defined(BYTE_ORDER)
+#   if BYTE_ORDER == LITTLE_ENDIAN
+#    define IS_LITTLE_ENDIAN 1
+#    undef  IS_BIG_ENDIAN
+#   elif BYTE_ORDER == BIG_ENDIAN
+#    undef  IS_LITTLE_ENDIAN
+#    define IS_BIG_ENDIAN 1
+#   endif
 #  endif
 # else /* !defined(__BYTE_ORDER) */
-#  error "endian.h does not define __BYTE_ORDER. Cannot determine endianness."
+#  error "endian.h does not define __BYTE_ORDER nor BYTE_ORDER. Cannot determine endianness."
 # endif
 
 /* BSDs */

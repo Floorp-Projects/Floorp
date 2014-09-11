@@ -36,7 +36,9 @@
 #include "TextRenderer.h"               // for TextRenderer
 #include <vector>
 #include "GeckoProfiler.h"              // for GeckoProfiler
+#ifdef MOZ_ENABLE_PROFILER_SPS
 #include "ProfilerMarkers.h"            // for ProfilerMarkers
+#endif
 
 #define CULLING_LOG(...)
 // #define CULLING_LOG(...) printf_stderr("CULLING: " __VA_ARGS__)
@@ -117,6 +119,7 @@ static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
 
 static void PrintUniformityInfo(Layer* aLayer)
 {
+#ifdef MOZ_ENABLE_PROFILER_SPS
   if (!profiler_is_active()) {
     return;
   }
@@ -135,6 +138,7 @@ static void PrintUniformityInfo(Layer* aLayer)
   Point translation = transform.As2D().GetTranslation();
   LayerTranslationPayload* payload = new LayerTranslationPayload(aLayer, translation);
   PROFILER_MARKER_PAYLOAD("LayerTranslation", payload);
+#endif
 }
 
 /* all of the per-layer prepared data we need to maintain */

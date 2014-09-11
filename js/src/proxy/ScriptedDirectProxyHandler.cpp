@@ -1083,6 +1083,13 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const C
     return true;
 }
 
+bool
+ScriptedDirectProxyHandler::isCallable(JSObject *obj) const
+{
+    MOZ_ASSERT(obj->as<ProxyObject>().handler() == &ScriptedDirectProxyHandler::singleton);
+    return obj->as<ProxyObject>().extra(IS_CALLABLE_EXTRA).toBoolean();
+}
+
 const char ScriptedDirectProxyHandler::family = 0;
 const ScriptedDirectProxyHandler ScriptedDirectProxyHandler::singleton;
 
@@ -1102,15 +1109,14 @@ js::proxy(JSContext *cx, unsigned argc, jsval *vp)
     if (!handler)
         return false;
     RootedValue priv(cx, ObjectValue(*target));
-    ProxyOptions options;
-    options.selectDefaultClass(target->isCallable());
-    ProxyObject *proxy =
-        ProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
-                         priv, TaggedProto(TaggedProto::LazyProto), cx->global(),
-                         options);
+    JSObject *proxy =
+        NewProxyObject(cx, &ScriptedDirectProxyHandler::singleton,
+                       priv, TaggedProto::LazyProto, cx->global());
     if (!proxy)
         return false;
-    proxy->setExtra(ScriptedDirectProxyHandler::HANDLER_EXTRA, ObjectValue(*handler));
+    proxy->as<ProxyObject>().setExtra(ScriptedDirectProxyHandler::HANDLER_EXTRA, ObjectValue(*handler));
+    proxy->as<ProxyObject>().setExtra(ScriptedDirectProxyHandler::IS_CALLABLE_EXTRA,
+                                      BooleanValue(target->isCallable()));
     args.rval().setObject(*proxy);
     return true;
 }

@@ -15,6 +15,10 @@
     <dimen name="browser_toolbar_favicon_size">25.33dip</dimen>
     <dimen name="browser_toolbar_shadow_size">2dp</dimen>
 
+    <dimen name="new_tablet_tab_strip_height">48dp</dimen>
+    <dimen name="new_tablet_tab_strip_item_width">250dp</dimen>
+    <dimen name="new_tablet_tab_strip_item_margin">-30dp</dimen>
+
     <!-- Dimensions used by Favicons and FaviconView -->
     <dimen name="favicon_size_small">16dp</dimen>
     <dimen name="favicon_size_large">32dp</dimen>

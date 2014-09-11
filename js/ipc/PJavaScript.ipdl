@@ -37,6 +37,7 @@ both:
 
     rpc IsExtensible(uint64_t objId) returns (ReturnStatus rs, bool result);
     rpc CallOrConstruct(uint64_t objId, JSParam[] argv, bool construct) returns (ReturnStatus rs, JSVariant result, JSParam[] outparams);
+    rpc HasInstance(uint64_t objId, JSVariant v) returns (ReturnStatus rs, bool has);
     rpc ObjectClassIs(uint64_t objId, uint32_t classValue) returns (bool result);
     rpc ClassName(uint64_t objId) returns (nsString name);
 
