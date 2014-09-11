@@ -46,9 +46,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "CryptoUtils",
                                   "resource://services-crypto/utils.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsProfileClient",
-                                  "resource://gre/modules/FxAccountsProfileClient.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "HawkClient",
                                   "resource://services-common/hawkclient.js");
 
@@ -79,7 +76,6 @@ let gInitializeTimer = null;
 let gFxAOAuthClientPromise = null;
 let gFxAOAuthClient = null;
 let gFxAOAuthTokenData = null;
-let gFxAOAuthProfile = null;
 let gErrors = new Map();
 
 /**
@@ -879,10 +875,6 @@ this.MozLoopService = {
     MozLoopServiceInternal.doNotDisturb = aFlag;
   },
 
-  get userProfile() {
-    return gFxAOAuthProfile;
-  },
-
   get errors() {
     return MozLoopServiceInternal.errors;
   },
@@ -1003,23 +995,9 @@ this.MozLoopService = {
         }
         return gFxAOAuthTokenData;
       }));
-    }).then(tokenData => {
-      let client = new FxAccountsProfileClient({
-        serverURL: gFxAOAuthClient.parameters.profile_uri,
-        token: tokenData.access_token
-      });
-      client.fetchProfile().then(result => {
-        gFxAOAuthProfile = result;
-        MozLoopServiceInternal.notifyStatusChanged();
-      }, error => {
-        console.error("Failed to retrieve profile", error);
-        gFxAOAuthProfile = null;
-        MozLoopServiceInternal.notifyStatusChanged();
-      });
-      return tokenData;
-    }).catch(error => {
+    },
+    error => {
       gFxAOAuthTokenData = null;
-      gFxAOAuthProfile = null;
       throw error;
     });
   },
