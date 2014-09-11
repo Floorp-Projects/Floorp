@@ -2124,13 +2124,22 @@ CodeGeneratorX86Shared::visitSimdValueInt32x4(LSimdValueInt32x4 *ins)
     MSimdValueX4 *mir = ins->mir();
     MOZ_ASSERT(mir->type() == MIRType_Int32x4);
 
-    // TODO see bug 1051860 for possible optimizations.
+    FloatRegister output = ToFloatRegister(ins->output());
+    if (AssemblerX86Shared::HasSSE41()) {
+        masm.movd(ToRegister(ins->getOperand(0)), output);
+        for (size_t i = 1; i < 4; ++i) {
+            Register r = ToRegister(ins->getOperand(i));
+            masm.pinsrd(i, r, output);
+        }
+        return true;
+    }
+
     masm.reserveStack(Simd128DataSize);
     for (size_t i = 0; i < 4; ++i) {
         Register r = ToRegister(ins->getOperand(i));
         masm.store32(r, Address(StackPointer, i * sizeof(int32_t)));
     }
-    masm.loadAlignedInt32x4(Address(StackPointer, 0), ToFloatRegister(ins->output()));
+    masm.loadAlignedInt32x4(Address(StackPointer, 0), output);
     masm.freeStack(Simd128DataSize);
     return true;
 }
