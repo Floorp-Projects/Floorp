@@ -447,8 +447,6 @@
   <string name="guest_session_dialog_cancel">&guest_session_dialog_cancel;</string>
   <string name="new_guest_session_title">&new_guest_session_title;</string>
   <string name="new_guest_session_text">&new_guest_session_text;</string>
-  <string name="guest_browsing_notification_title">&guest_browsing_notification_title;</string>
-  <string name="guest_browsing_notification_text">&guest_browsing_notification_text;</string>
 
   <string name="exit_guest_session_title">&exit_guest_session_title;</string>
   <string name="exit_guest_session_text">&exit_guest_session_text;</string>
