@@ -44,7 +44,8 @@ browser.jar:
   content/browser/loop/shared/img/svg/glyph-account-16x16.svg   (content/shared/img/svg/glyph-account-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-signin-16x16.svg    (content/shared/img/svg/glyph-signin-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-signout-16x16.svg   (content/shared/img/svg/glyph-signout-16x16.svg)
-  content/browser/loop/shared/img/audio-call-avatar.svg   (content/shared/img/audio-call-avatar.svg)
+  content/browser/loop/shared/img/audio-call-avatar.svg         (content/shared/img/audio-call-avatar.svg)
+  content/browser/loop/shared/img/icons-16x16.svg               (content/shared/img/icons-16x16.svg)
 
   # Shared scripts
   content/browser/loop/shared/js/feedbackApiClient.js (content/shared/js/feedbackApiClient.js)

@@ -730,9 +730,40 @@ Search.prototype = {
     let match = yield PlacesSearchAutocompleteProvider.findMatchByToken(
                                                            this._searchString);
     if (match) {
+      // The match doesn't contain a 'scheme://www.' prefix, but since we have
+      // stripped it from the search string, here we could still be matching
+      // 'https://www.g' to 'google.com'.
+      // There are a couple cases where we don't want to match though:
+      //
+      //  * If the protocol differs we should not match. For example if the user
+      //    searched https we should not return http.
+      try {
+        let prefixURI = NetUtil.newURI(this._strippedPrefix);
+        let finalURI = NetUtil.newURI(match.url);
+        if (prefixURI.scheme != finalURI.scheme)
+          return;
+      } catch (e) {}
+
+      //  * If the user typed "www." but the final url doesn't have it, we
+      //    should not match as well, the two urls may point to different pages.
+      if (this._strippedPrefix.endsWith("www.") &&
+          !stripHttpAndTrim(match.url).startsWith("www."))
+        return;
+
+      let value = this._strippedPrefix + match.token;
+
+      // In any case, we should never arrive here with a value that doesn't
+      // match the search string.  If this happens there is some case we
+      // are not handling properly yet.
+      if (!value.startsWith(this._originalSearchString)) {
+        Components.utils.reportError(`Trying to inline complete in-the-middle
+                                      ${this._originalSearchString} to ${value}`);
+        return;
+      }
+
       this._result.setDefaultIndex(0);
       this._addFrecencyMatch({
-        value: match.token,
+        value: value,
         comment: match.engineName,
         icon: match.iconUrl,
         style: "priority-search",

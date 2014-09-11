@@ -66,6 +66,9 @@ function execute_search_test(test) {
 }
 
 function prep_search_test(test) {
+  // Syncrhonously load the search service.
+  Services.search.getVisibleEngines();
+
   setHandlerFunc(execute_search_test, test);
 
   let rel = test.rel || "search";
