@@ -134,6 +134,23 @@ public:
     return size;
   }
 
+#if defined(DEBUG)
+  void Dump(const char* aPath) {
+    for (uint32_t i = 0; i < uint32_t(GetSize()); ++i) {
+      ResourceItem* item = ResourceAt(i);
+
+      char buf[255];
+      PR_snprintf(buf, sizeof(buf), "%s/%08u.bin", aPath, i);
+      FILE* fp = fopen(buf, "wb");
+      if (!fp) {
+        return;
+      }
+      fwrite(item->mData.Elements(), item->mData.Length(), 1, fp);
+      fclose(fp);
+    }
+  }
+#endif
+
 private:
   ResourceItem* ResourceAt(uint32_t aIndex) const {
     return static_cast<ResourceItem*>(ObjectAt(aIndex));
@@ -172,7 +189,6 @@ private:
   // Logical offset into the resource of the first element in the queue.
   uint64_t mOffset;
 };
-
 
 } // namespace mozilla
 #endif /* MOZILLA_RESOURCEQUEUE_H_ */
