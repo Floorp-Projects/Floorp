@@ -142,6 +142,12 @@ CompositorThreadHolder::CreateCompositorThread()
   /* 8192ms is chosen for permanent hangs because it's several seconds longer
      than the default hang timeout on major platforms (about 5 seconds). */
   options.permanent_hang_timeout = 8192; // milliseconds
+#if defined(_WIN32)
+  /* With d3d9 the compositor thread creates native ui, see DeviceManagerD3D9. As
+   * such the thread is a gui thread, and must process a windows message queue or
+   * risk deadlocks. Chromium message loop TYPE_UI does exactly what we need. */
+  options.message_loop_type = MessageLoop::TYPE_UI;
+#endif
 
   if (!compositorThread->StartWithOptions(options)) {
     delete compositorThread;
