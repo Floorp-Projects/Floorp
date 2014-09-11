@@ -1247,7 +1247,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   -moz-margin-end: 3px;
 }
 
-.urlbar-display {
+#urlbar-display {
   margin-top: 0;
   margin-bottom: 0;
   -moz-margin-start: 0;

@@ -22,14 +22,14 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc.com",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" } ]
+    matches: [ { uri: NetUtil.newURI("moz-action:switchtab,http://abc.com/"), title: "ABC rocks" } ]
   });
 
   do_log_info("two results, one tab match");
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" },
+    matches: [ { uri: NetUtil.newURI("moz-action:switchtab,http://abc.com/"), title: "ABC rocks" },
                { uri: uri2, title: "xyz.net - we're better than ABC" } ]
   });
 
@@ -38,8 +38,8 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" },
-               { uri: makeActionURI("switchtab", {url: "http://xyz.net/"}), title: "xyz.net - we're better than ABC" } ]
+    matches: [ { uri: NetUtil.newURI("moz-action:switchtab,http://abc.com/"), title: "ABC rocks" },
+               { uri: NetUtil.newURI("moz-action:switchtab,http://xyz.net/"), title: "xyz.net - we're better than ABC" } ]
   });
 
   do_log_info("two results, both tab matches, one has multiple tabs");
@@ -47,8 +47,8 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" },
-               { uri: makeActionURI("switchtab", {url: "http://xyz.net/"}), title: "xyz.net - we're better than ABC" } ]
+    matches: [ { uri: NetUtil.newURI("moz-action:switchtab,http://abc.com/"), title: "ABC rocks" },
+               { uri: NetUtil.newURI("moz-action:switchtab,http://xyz.net/"), title: "xyz.net - we're better than ABC" } ]
   });
 
   do_log_info("two results, no tab matches");
@@ -66,30 +66,30 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: gTabRestrictChar + " abc",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" } ]
+    matches: [ { uri: NetUtil.newURI("moz-action:switchtab,http://abc.com/"), title: "ABC rocks" } ]
   });
 
   do_log_info("tab match with not-addable pages");
   yield check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("switchtab", {url: "about:mozilla"}), title: "about:mozilla" } ]
+    matches: [ { uri: NetUtil.newURI("moz-action:switchtab,about:mozilla"), title: "about:mozilla" } ]
   });
 
   do_log_info("tab match with not-addable pages and restriction character");
   yield check_autocomplete({
     search: gTabRestrictChar + " mozilla",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("switchtab", {url: "about:mozilla"}), title: "about:mozilla" } ]
+    matches: [ { uri: NetUtil.newURI("moz-action:switchtab,about:mozilla"), title: "about:mozilla" } ]
   });
 
   do_log_info("tab match with not-addable pages and only restriction character");
   yield check_autocomplete({
     search: gTabRestrictChar,
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" },
-               { uri: makeActionURI("switchtab", {url: "about:mozilla"}), title: "about:mozilla" },
-               { uri: makeActionURI("switchtab", {url: "data:text/html,test"}), title: "data:text/html,test" } ]
+    matches: [ { uri: NetUtil.newURI("moz-action:switchtab,http://abc.com/"), title: "ABC rocks" },
+               { uri: NetUtil.newURI("moz-action:switchtab,about:mozilla"), title: "about:mozilla" },
+               { uri: NetUtil.newURI("moz-action:switchtab,data:text/html,test"), title: "data:text/html,test" } ]
   });
 
   yield cleanup();
