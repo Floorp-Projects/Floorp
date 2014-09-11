@@ -15,67 +15,79 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493187
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.expectAssertions(0, 2);
+// Decrease parallelism for this test requires decent decoding performance in
+// order to pass the test.
+PARALLEL_TESTS = 1;
 
 var manager = new MediaTestManager;
 
-function start(e) {
-  var v = e.target;
-  info("[" + v._name + "] start");
-  e.target.currentTime = e.target.duration / 4;
+function finish(v) {
+  v.onerror = null;
+  removeNodeAndSource(v);
+  manager.finished(v.token);
 }
 
-function startSeeking(e) {
+function timeupdate(e) {
   var v = e.target;
-  info("[" + v._name + "] seeking");
-  e.target._seeked = true;
-}
-
-function canPlayThrough(e) {
-  var v = e.target;
-  info("[" + v._name + "] canPlayThrough");
-  if (v._seeked && !v._finished) {
-    ok(true, "[" + v._name + "] got canplaythrough after seek");
-    v._finished = true;
-    v.parentNode.removeChild(v);
-    v.src = "";
-    manager.finished(v.token);
+  var b = v.buffered;
+  var start = b.start(0);
+  var end = b.end(0);
+  // We got enough data buffered, try to seek within the buffered range.
+  if (end - start >= v.duration / 2) {
+    info("[" + v._name + "] buffered start=" + start + " end=" + end);
+    v.ontimeupdate = null;
+    // Seek to the middle of the buffered range.
+    var t = (start + end) / 2;
+    info("[" + v._name + "] seeking to " + t);
+    v.currentTime = t;
   }
 }
 
 function seeked(e) {
   var v = e.target;
-  info("[" + v._name + "] seeked");
+  info("[" + v._name + "] seeked currentTime=" + v.currentTime + " readyState=" + v.readyState);
+  // Having seeked within the buffered range, readyState should be at least
+  // HAVE_FUTURE_DATA now or later (buffered data becoming decoded data).
+  if (v.readyState >= v.HAVE_FUTURE_DATA) {
+    finish(v);
+    return;
+  }
+
+  v.oncanplay = function() {
+    info("[" + v._name + "] oncanplay currentTime=" + v.currentTime + " readyState=" + v.readyState);
+    // Pass the test when we receive "oncanplay". Don't check |readyState >= HAVE_FUTURE_DATA|
+    // for "oncanplay" is dispatched asynchronously, readyState could be changed
+    // before "oncanplay" is received.
+    v.oncanplay = null;
+    v.onended = null;
+    finish(v);
+  }
+  v.onended = function() {
+    v.oncanplay = null;
+    v.onended = null;
+    ok(false, "[" + v._name + "] readyState=" + v.readyState + " not reaching HAVE_FUTURE_DATA before ended");
+    finish(v);
+  }
 }
 
 function error(e) {
   var v = e.target;
-  info("[" + v._name + "] error");
+  info("[" + v._name + "] error=" + v.error.code);
+  finish(v);
 }
 
 function startTest(test, token) {
-  // TODO: Bug 568402, there's a bug in the WAV backend where we sometimes
-  // don't send canplaythrough events after seeking. Once that is fixed,
-  // we should remove this guard below so that we run this test for audio.
-  var type = getMajorMimeType(test.type);
-  if (type != "video")
-    return;
-
   var v = document.createElement('video');
   v.token = token;
   manager.started(token);
 
   v.src = test.name;
   v._name = test.name;
-  v._seeked = false;
-  v._finished = false;
-  v.preload = "auto";
-  v.addEventListener("loadedmetadata", start, false);
-  v.addEventListener("canplaythrough", canPlayThrough, false);
-  v.addEventListener("seeking", startSeeking, false);
-  v.addEventListener("seeked", seeked, false);
-  v.addEventListener("error", error, false);
+  v.ontimeupdate = timeupdate;
+  v.onseeked = seeked;
+  v.onerror = error;
   document.body.appendChild(v);
+  v.play();
 }
 
 SimpleTest.waitForExplicitFinish();
