@@ -554,7 +554,7 @@
           // always call openPopup...we may not have opened it
           // if a previous search session didn't return enough search results.
           // it's smart and doesn't try to open itself multiple times...
-          // be sure to add our result elements before calling openResultPopuup as we need
+          // be sure to add our result elements before calling openPopup as we need
           // to know the total # of results found so far.
           this.addResultElements(aSessionName, aResults);
 
