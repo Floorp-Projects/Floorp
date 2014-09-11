@@ -39,33 +39,19 @@ public class Restarter extends Activity {
                 }
             }
         } catch (Exception e) {
-            Log.i(LOGTAG, "Error killing gecko", e);
+            Log.i(LOGTAG, e.toString());
         }
-
         try {
-            final Intent originalIntent = getIntent();
-            Intent intent = null;
-            if (originalIntent.hasExtra(Intent.EXTRA_INTENT)) {
-                intent = (Intent) originalIntent.getParcelableExtra(Intent.EXTRA_INTENT);
-                originalIntent.removeExtra(Intent.EXTRA_INTENT);
-            }
-
-            if (intent == null) {
-                intent = new Intent(Intent.ACTION_MAIN);
-            }
-
+            Intent intent = new Intent(Intent.ACTION_MAIN);
             intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
                                 AppConstants.BROWSER_INTENT_CLASS_NAME);
-
-            Bundle b = originalIntent.getExtras();
-            if (b != null) {
+            Bundle b = getIntent().getExtras();
+            if (b != null)
                 intent.putExtras(b);
-            }
-
             Log.i(LOGTAG, intent.toString());
             startActivity(intent);
         } catch (Exception e) {
-            Log.i(LOGTAG, "Error restarting", e);
+            Log.i(LOGTAG, e.toString());
         }
     }
 }
