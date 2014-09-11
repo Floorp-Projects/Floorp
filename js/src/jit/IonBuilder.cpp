@@ -3229,8 +3229,8 @@ IonBuilder::improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test)
     }
 
     types::TemporaryTypeSet *type =
-        type = subject->resultTypeSet()->filter(alloc_->lifoAlloc(), filtersUndefined,
-                                                                     filtersNull);
+        subject->resultTypeSet()->filter(alloc_->lifoAlloc(), filtersUndefined,
+                                                              filtersNull);
     if (!type)
         return false;
 
