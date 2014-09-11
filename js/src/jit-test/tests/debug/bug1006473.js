@@ -2,7 +2,7 @@
 
 var lfcode = new Array();
 lfcode.push("gczeal(4);");
-lfcode.push("setJitCompilerOption('ion.usecount.trigger', 30);");
+lfcode.push("setJitCompilerOption('ion.warmup.trigger', 30);");
 lfcode.push("\
 var g = newGlobal();\
 g.parent = this;\

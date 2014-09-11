@@ -335,37 +335,5 @@ namespace CSF
         */
         virtual int getVolume() = 0;
 
-        /**
-           get SDP from info object returned from JSEP functions
-           @param [in] handle - call info handle
-           @return SDP string
-         */
-        virtual std::string getSDP() = 0;
-
-        /**
-           get status code
-           @param [in] handle - call info handle
-           @return code
-         */
-        virtual cc_int32_t getStatusCode() = 0;
-
-        /**
-           get media streams
-           @return media stream table
-           Note:Ownership of the MediaStreamTable is responsibiliy of
-           the caller.
-         */
-        virtual MediaStreamTable* getMediaStreams() const = 0;
-
-        /**
-          Get the current operation's timecard (if any), and assume ownership
-          of its memory.
-         */
-        virtual Timecard *takeTimecard() = 0;
-
-	/**
-          Get the latest candidate.
-	*/
-	virtual std::string getCandidate() = 0;
     };
 };

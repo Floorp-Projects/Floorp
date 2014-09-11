@@ -11,6 +11,7 @@
 extern "C"
 {
 #include "ccapi_types.h"
+#include "fsmdef_states.h"
 }
 
 #if defined(__cplusplus) && __cplusplus >= 201103L
@@ -37,6 +38,14 @@ namespace CSF
 		virtual int setExternalRenderer(VideoFormat videoFormat, ExternalRendererHandle renderer) = 0;
 
 		virtual void sendIFrame	() = 0;
+
+        virtual void getLocalSdp(std::string *sdp) const = 0;
+        virtual void getRemoteSdp(std::string *sdp) const = 0;
+        virtual fsmdef_states_t getFsmState () const = 0;
+        virtual std::string fsmStateToString (fsmdef_states_t state) const = 0;
+
+        virtual void getErrorString(std::string *error) const = 0;
+        virtual pc_error getError() const = 0;
 
         virtual CC_CallInfoPtr getCallInfo () = 0;
 
@@ -278,27 +287,27 @@ namespace CSF
           */
         virtual void originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip) = 0;
 
-        virtual void createOffer (cc_media_options_t* options, Timecard *) = 0;
+        virtual pc_error createOffer (cc_media_options_t* options, Timecard *) = 0;
 
-        virtual void createAnswer(Timecard *) = 0;
+        virtual pc_error createAnswer(Timecard *) = 0;
 
-        virtual void setLocalDescription(cc_jsep_action_t action, const std::string & sdp, Timecard *) = 0;
+        virtual pc_error setLocalDescription(cc_jsep_action_t action, const std::string & sdp, Timecard *) = 0;
 
-        virtual void setRemoteDescription(cc_jsep_action_t action, const std::string & sdp, Timecard *) = 0;
+        virtual pc_error setRemoteDescription(cc_jsep_action_t action, const std::string & sdp, Timecard *) = 0;
 
-        virtual void setPeerConnection(const std::string& handle) = 0;
+        virtual pc_error setPeerConnection(const std::string& handle) = 0;
 
-        virtual void addStream(cc_media_stream_id_t stream_id,
+        virtual pc_error addStream(cc_media_stream_id_t stream_id,
                                cc_media_track_id_t track_id,
                                cc_media_type_t media_type) = 0;
 
-        virtual void removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) = 0;
+        virtual pc_error removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) = 0;
 
         virtual const std::string& getPeerConnection() const = 0;
 
-        virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *) = 0;
+        virtual pc_error addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *) = 0;
 
-        virtual void foundICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *) = 0;
+        virtual pc_error foundICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *) = 0;
 
     };
 }

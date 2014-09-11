@@ -1099,6 +1099,17 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
     // OTOH Windows Server 2008 R1 and R2 already have the same version numbers as Vista and Seven respectively
     if (os == DRIVER_OS_WINDOWS_SERVER_2003)
       os = DRIVER_OS_WINDOWS_XP;
+
+    if (mHasDriverVersionMismatch) {
+      if (aFeature == nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS ||
+          aFeature == nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS ||
+          aFeature == nsIGfxInfo::FEATURE_DIRECT2D ||
+          aFeature == nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS)
+      {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+        return NS_OK;
+      }
+    }
   }
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);

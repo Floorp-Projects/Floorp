@@ -32,7 +32,7 @@ function g(x,y,z) {
     return z;
 }
 
-setJitCompilerOption("ion.usecount.trigger", 50);
+setJitCompilerOption("ion.warmup.trigger", 50);
 
 for (var n = 100; n--; ) {
     assertEq(f(0,1,2), 2);

@@ -9,6 +9,7 @@
 // Keep others in (case-insensitive) order:
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
+#include "mozilla/gfx/Helpers.h"
 #include "nsISVGChildFrame.h"
 #include "nsRenderingContext.h"
 #include "nsCSSFilterInstance.h"
@@ -142,8 +143,6 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
     mFilterSpaceToDeviceSpaceTransform = filterToUserSpace * mPaintTransform;
   }
 
-  mAppUnitsPerCSSPx = mTargetFrame->PresContext()->AppUnitsPerCSSPixel();
-
   mFilterSpaceToFrameSpaceInCSSPxTransform =
     filterToUserSpace * GetUserSpaceToFrameSpaceInCSSPxTransform();
   // mFilterSpaceToFrameSpaceInCSSPxTransform is always invertible
@@ -179,8 +178,7 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
 nsresult
 nsFilterInstance::ComputeUserSpaceToFilterSpaceScale()
 {
-  gfxMatrix canvasTransform =
-    nsSVGUtils::GetCanvasTM(mTargetFrame, nsISVGChildFrame::FOR_OUTERSVG_TM);
+  gfxMatrix canvasTransform = nsSVGUtils::GetCanvasTM(mTargetFrame);
   if (canvasTransform.IsSingular()) {
     // Nothing should be rendered.
     return NS_ERROR_FAILURE;
@@ -229,6 +227,9 @@ nsFilterInstance::BuildPrimitives()
       return rv;
     }
   }
+
+  mFilterDescription = FilterDescription(mPrimitiveDescriptions);
+
   return NS_OK;
 }
 
@@ -268,9 +269,8 @@ nsFilterInstance::ComputeNeededBoxes()
   nsIntRegion fillPaintNeededRegion;
   nsIntRegion strokePaintNeededRegion;
 
-  FilterDescription filter(mPrimitiveDescriptions);
   FilterSupport::ComputeSourceNeededRegions(
-    filter, mPostFilterDirtyRegion,
+    mFilterDescription, mPostFilterDirtyRegion,
     sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
 
   nsIntRect sourceBounds;
@@ -408,12 +408,11 @@ nsFilterInstance::Render(gfxContext* aContext)
     return NS_OK;
   }
 
-  Matrix oldDTMatrix;
   RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
-  oldDTMatrix = dt->GetTransform();
-  Matrix matrix = ToMatrix(ctm);
-  matrix.Translate(filterRect.x, filterRect.y);
-  dt->SetTransform(matrix * oldDTMatrix);
+
+  AutoSaveTransform autoSR(dt);
+  Matrix newTM = ToMatrix(ctm).PreTranslate(filterRect.x, filterRect.y) * dt->GetTransform();
+  dt->SetTransform(newTM);
 
   ComputeNeededBoxes();
 
@@ -424,15 +423,12 @@ nsFilterInstance::Render(gfxContext* aContext)
   if (NS_FAILED(rv))
     return rv;
 
-  FilterDescription filter(mPrimitiveDescriptions);
   FilterSupport::RenderFilterDescription(
-    dt, filter, ToRect(filterRect),
+    dt, mFilterDescription, ToRect(filterRect),
     mSourceGraphic.mSourceSurface, mSourceGraphic.mSurfaceRect,
     mFillPaint.mSourceSurface, mFillPaint.mSurfaceRect,
     mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect,
     mInputImages);
-
-  dt->SetTransform(oldDTMatrix);
 
   return NS_OK;
 }
@@ -444,9 +440,8 @@ nsFilterInstance::ComputePostFilterDirtyRegion()
     return nsRegion();
   }
 
-  FilterDescription filter(mPrimitiveDescriptions);
   nsIntRegion resultChangeRegion =
-    FilterSupport::ComputeResultChangeRegion(filter,
+    FilterSupport::ComputeResultChangeRegion(mFilterDescription,
       mPreFilterDirtyRegion, nsIntRegion(), nsIntRegion());
   return FilterSpaceToFrameSpace(resultChangeRegion);
 }
@@ -457,9 +452,8 @@ nsFilterInstance::ComputePostFilterExtents()
   nsIntRect sourceBounds;
   sourceBounds.UnionRect(mTargetBBoxInFilterSpace, mTargetBounds);
 
-  FilterDescription filter(mPrimitiveDescriptions);
   nsIntRegion postFilterExtents =
-    FilterSupport::ComputePostFilterExtents(filter, sourceBounds);
+    FilterSupport::ComputePostFilterExtents(mFilterDescription, sourceBounds);
   return FilterSpaceToFrameSpace(postFilterExtents.GetBounds());
 }
 
@@ -495,7 +489,7 @@ nsFilterInstance::FrameSpaceToFilterSpace(const nsRect* aRect) const
       return nsIntRect();
     }
     gfxRect rectInCSSPx =
-      nsLayoutUtils::RectToGfxRect(*aRect, mAppUnitsPerCSSPx);
+      nsLayoutUtils::RectToGfxRect(*aRect, nsPresContext::AppUnitsPerCSSPixel());
     gfxRect rectInFilterSpace =
       mFrameSpaceInCSSPxToFilterSpaceTransform.TransformBounds(rectInCSSPx);
     rectInFilterSpace.RoundOut();
@@ -516,7 +510,7 @@ nsFilterInstance::FilterSpaceToFrameSpace(const nsIntRect& aRect) const
   gfxRect r(aRect.x, aRect.y, aRect.width, aRect.height);
   r = mFilterSpaceToFrameSpaceInCSSPxTransform.TransformBounds(r);
   // nsLayoutUtils::RoundGfxRectToAppRect rounds out.
-  return nsLayoutUtils::RoundGfxRectToAppRect(r, mAppUnitsPerCSSPx);
+  return nsLayoutUtils::RoundGfxRectToAppRect(r, nsPresContext::AppUnitsPerCSSPixel());
 }
 
 nsIntRegion
@@ -549,5 +543,5 @@ nsFilterInstance::FilterSpaceToFrameSpace(const nsIntRegion& aRegion) const
 gfxMatrix
 nsFilterInstance::GetUserSpaceToFrameSpaceInCSSPxTransform() const
 {
-  return gfxMatrix().Translate(-nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(mTargetFrame));
+  return gfxMatrix::Translation(-nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(mTargetFrame));
 }

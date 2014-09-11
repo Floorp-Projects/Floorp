@@ -9,10 +9,6 @@
 
 #ifdef JSGC_GENERATIONAL
 
-#ifndef JSGC_USE_EXACT_ROOTING
-# error "Generational GC requires exact rooting."
-#endif
-
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ReentrancyGuard.h"

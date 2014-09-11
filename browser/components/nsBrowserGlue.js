@@ -796,6 +796,10 @@ BrowserGlue.prototype = {
         }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       }
     }
+
+#ifdef E10S_TESTING_ONLY
+    E10SUINotification.checkStatus();
+#endif
   },
 
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {
@@ -2241,6 +2245,51 @@ let DefaultBrowserCheck = {
     }
   },
 };
+
+#ifdef E10S_TESTING_ONLY
+let E10SUINotification = {
+  // Increase this number each time we want to roll out an
+  // e10s testing period to Nightly users.
+  CURRENT_NOTICE_COUNT: 0,
+
+  checkStatus: function() {
+    if (Services.appinfo.browserTabsRemoteAutostart) {
+      let notice = 0;
+      try {
+        notice = Services.prefs.getIntPref("browser.displayedE10SNotice");
+      } catch(e) {}
+      let activationNoticeShown = notice >= this.CURRENT_NOTICE_COUNT;
+
+      if (!activationNoticeShown) {
+        this._showE10sActivatedNotice();
+      }
+    }
+  },
+
+  _showE10sActivatedNotice: function() {
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    if (!win)
+      return;
+
+    Services.prefs.setIntPref("browser.displayedE10SNotice", this.CURRENT_NOTICE_COUNT);
+
+    let nb = win.document.getElementById("high-priority-global-notificationbox");
+    let message = "Thanks for helping to test multiprocess Firefox (e10s). Some functions might not work yet."
+    let buttons = [
+      {
+        label: "Learn More",
+        accessKey: "L",
+        callback: function () {
+          win.openUILinkIn("https://wiki.mozilla.org/Electrolysis", "tab");
+        }
+      }
+    ];
+    nb.appendNotification(message, "e10s-activated-noticed",
+                          null, nb.PRIORITY_WARNING_MEDIUM, buttons);
+
+  }
+};
+#endif
 
 var components = [BrowserGlue, ContentPermissionPrompt];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

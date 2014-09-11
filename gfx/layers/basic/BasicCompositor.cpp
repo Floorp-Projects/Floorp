@@ -261,9 +261,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       return;
     }
 
-    Matrix destTransform;
-    destTransform.Translate(-aRect.x, -aRect.y);
-    dest->SetTransform(destTransform);
+    dest->SetTransform(Matrix::Translation(-aRect.x, -aRect.y));
 
     // Get the bounds post-transform.
     new3DTransform = To3DMatrix(aTransform);
@@ -274,7 +272,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     transformBounds.RoundOut();
 
     // Propagate the coordinate offset to our 2D draw target.
-    newTransform.Translate(transformBounds.x, transformBounds.y);
+    newTransform = Matrix::Translation(transformBounds.x, transformBounds.y);
 
     // When we apply the 3D transformation, we do it against a temporary
     // surface, so undo the coordinate offset.
@@ -292,7 +290,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     MOZ_ASSERT(effectMask->mMaskTransform.Is2D(), "How did we end up with a 3D transform here?!");
     MOZ_ASSERT(!effectMask->mIs3D);
     maskTransform = effectMask->mMaskTransform.As2D();
-    maskTransform.Translate(-offset.x, -offset.y);
+    maskTransform.PreTranslate(-offset.x, -offset.y);
   }
 
   switch (aEffectChain.mPrimaryEffect->mType) {
@@ -441,9 +439,8 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   // We only allocate a surface sized to the invalidated region, so we need to
   // translate future coordinates.
-  Matrix transform;
-  transform.Translate(-invalidRect.x, -invalidRect.y);
-  mRenderTarget->mDrawTarget->SetTransform(transform);
+  mRenderTarget->mDrawTarget->SetTransform(Matrix::Translation(-invalidRect.x,
+                                                               -invalidRect.y));
 
   gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget, invalidRegionSafe);
 

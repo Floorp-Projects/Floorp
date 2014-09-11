@@ -1335,7 +1335,7 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
 
     if (!excInfo)
         iter.ionScript()->incNumBailouts();
-    iter.script()->updateBaselineOrIonRaw();
+    iter.script()->updateBaselineOrIonRaw(cx);
 
     // Allocate buffer to hold stack replacement data.
     BaselineStackBuilder builder(iter, 1024);
@@ -1669,8 +1669,8 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 
     JitSpew(JitSpew_BaselineBailouts,
             "  Restored outerScript=(%s:%u,%u) innerScript=(%s:%u,%u) (bailoutKind=%u)",
-            outerScript->filename(), outerScript->lineno(), outerScript->getUseCount(),
-            innerScript->filename(), innerScript->lineno(), innerScript->getUseCount(),
+            outerScript->filename(), outerScript->lineno(), outerScript->getWarmUpCounter(),
+            innerScript->filename(), innerScript->lineno(), innerScript->getWarmUpCounter(),
             (unsigned) bailoutKind);
 
     switch (bailoutKind) {

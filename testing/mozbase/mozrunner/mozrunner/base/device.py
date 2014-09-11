@@ -74,7 +74,6 @@ class DeviceRunner(BaseRunner):
 
         if not self.device.wait_for_net():
             raise Exception("Network did not come up when starting device")
-        self.app_ctx.stop_application()
 
         # In this case we need to pass in env as part of the command.
         # Make this empty so BaseRunner doesn't pass anything into the
@@ -87,7 +86,7 @@ class DeviceRunner(BaseRunner):
         timeout = 10 # seconds
         starttime = datetime.datetime.now()
         while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
-            if self.app_ctx.dm.processExist(self.app_ctx.remote_process):
+            if self.is_running():
                 break
             time.sleep(1)
         else:
@@ -96,22 +95,33 @@ class DeviceRunner(BaseRunner):
         if not self.device.wait_for_net():
             raise Exception("Failed to get a network connection")
 
+    def stop(self, sig=None):
+        remote_pid = self.is_running()
+        if remote_pid:
+            self.app_ctx.stop_application()
+            self.app_ctx.dm.killProcess(
+                self.app_ctx.remote_process, sig=sig)
+            timeout = 10  # seconds
+            start_time = datetime.datetime.now()
+            end_time = datetime.timedelta(seconds=timeout)
+            while datetime.datetime.now() - start_time < end_time:
+                if not self.is_running() == remote_pid:
+                    break
+                time.sleep(1)
+            else:
+                print("timed out waiting for '%s' process to exit" %
+                      self.app_ctx.remote_process)
+
+    def is_running(self):
+        return self.app_ctx.dm.processExist(self.app_ctx.remote_process)
+
     def on_output(self, line):
         match = re.findall(r"TEST-START \| ([^\s]*)", line)
         if match:
             self.last_test = match[-1]
 
     def on_timeout(self):
-        self.app_ctx.dm.killProcess(self.app_ctx.remote_process, sig=signal.SIGABRT)
-        timeout = 10 # seconds
-        starttime = datetime.datetime.now()
-        while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
-            if not self.app_ctx.dm.processExist(self.app_ctx.remote_process):
-                break
-            time.sleep(1)
-        else:
-            print("timed out waiting for '%s' process to exit" % self.app_ctx.remote_process)
-
+        self.stop(sig=signal.SIGABRT)
         msg = "DeviceRunner TEST-UNEXPECTED-FAIL | %s | application timed out after %s seconds"
         if self.timeout:
             timeout = self.timeout

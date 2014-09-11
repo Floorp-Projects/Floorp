@@ -434,14 +434,14 @@ void
 gfxContext::Translate(const gfxPoint& pt)
 {
   Matrix newMatrix = mTransform;
-  ChangeTransform(newMatrix.Translate(Float(pt.x), Float(pt.y)));
+  ChangeTransform(newMatrix.PreTranslate(Float(pt.x), Float(pt.y)));
 }
 
 void
 gfxContext::Scale(gfxFloat x, gfxFloat y)
 {
   Matrix newMatrix = mTransform;
-  ChangeTransform(newMatrix.Scale(Float(x), Float(y)));
+  ChangeTransform(newMatrix.PreScale(Float(x), Float(y)));
 }
 
 void
@@ -1055,9 +1055,8 @@ gfxContext::Paint(gfxFloat alpha)
 
     IntSize surfSize = state.sourceSurface->GetSize();
 
-    Matrix mat;
-    mat.Translate(-state.deviceOffset.x, -state.deviceOffset.y);
-    mDT->SetTransform(mat);
+    mDT->SetTransform(Matrix::Translation(-state.deviceOffset.x,
+                                          -state.deviceOffset.y));
 
     mDT->DrawSurface(state.sourceSurface,
                      Rect(state.sourceSurfaceDeviceOffset, Size(surfSize.width, surfSize.height)),
@@ -1164,11 +1163,9 @@ gfxContext::PopGroup()
 
   Matrix mat = mTransform;
   mat.Invert();
+  mat.PreTranslate(deviceOffset.x, deviceOffset.y); // device offset translation
 
-  Matrix deviceOffsetTranslation;
-  deviceOffsetTranslation.Translate(deviceOffset.x, deviceOffset.y);
-
-  nsRefPtr<gfxPattern> pat = new gfxPattern(src, deviceOffsetTranslation * mat);
+  nsRefPtr<gfxPattern> pat = new gfxPattern(src, mat);
 
   return pat.forget();
 }
@@ -1187,10 +1184,9 @@ gfxContext::PopGroupToSource()
 
   Matrix mat = mTransform;
   mat.Invert();
+  mat.PreTranslate(deviceOffset.x, deviceOffset.y); // device offset translation
 
-  Matrix deviceOffsetTranslation;
-  deviceOffsetTranslation.Translate(deviceOffset.x, deviceOffset.y);
-  CurrentState().surfTransform = deviceOffsetTranslation * mat;
+  CurrentState().surfTransform = mat;
 }
 
 bool
@@ -1619,9 +1615,8 @@ gfxContext::GetDeviceOffset() const
 Matrix
 gfxContext::GetDeviceTransform() const
 {
-  Matrix mat;
-  mat.Translate(-CurrentState().deviceOffset.x, -CurrentState().deviceOffset.y);
-  return mat;
+  return Matrix::Translation(-CurrentState().deviceOffset.x,
+                             -CurrentState().deviceOffset.y);
 }
 
 Matrix

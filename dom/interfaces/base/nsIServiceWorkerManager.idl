@@ -8,6 +8,15 @@
 interface nsIDocument;
 interface nsIURI;
 
+[builtinclass, uuid(d6a9d4b6-39b0-4cd2-957d-28a57df5a031)]
+interface nsIServiceWorkerUnregisterCallback : nsISupports
+{
+  // aState is true if the unregistration succeded.
+  // It's false if this ServiceWorkerRegistration doesn't exist.
+  [noscript] void UnregisterSucceeded(in bool aState);
+  [noscript] void UnregisterFailed();
+};
+
 [builtinclass, uuid(79ad5b57-d65d-46d3-b5e9-32d27e16052d)]
 interface nsIServiceWorkerManager : nsISupports
 {
@@ -22,13 +31,11 @@ interface nsIServiceWorkerManager : nsISupports
   nsISupports register(in DOMString aScope, in DOMString aScriptURI);
 
   /**
-   * Unregister an existing ServiceWorker registration for `aScope`.  Requires
-   * a valid entry settings object on the stack. This means you must call this
-   * from content code 'within' a window.
-   *
-   * Returns a Promise.
+   * Unregister an existing ServiceWorker registration for `aScope`.
+   * It keeps aCallback alive until the operation is concluded.
    */
-  nsISupports unregister(in DOMString aScope);
+  void unregister(in nsIServiceWorkerUnregisterCallback aCallback,
+                  in DOMString aScope);
 
   // Returns a Promise
   nsISupports getRegistrations(in nsIDOMWindow aWindow);

@@ -6,7 +6,7 @@
 if (!this.hasOwnProperty("TypedObject"))
   quit();
 
-setJitCompilerOption("ion.usecount.trigger", 30);
+setJitCompilerOption("ion.warmup.trigger", 30);
 
 var Vec3u32Type = TypedObject.uint32.array(3);
 

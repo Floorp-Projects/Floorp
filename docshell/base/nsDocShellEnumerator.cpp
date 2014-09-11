@@ -126,8 +126,7 @@ nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* 
   // add this item to the array
   if (mDocShellType == nsIDocShellTreeItem::typeAll ||
       inItem->ItemType() == mDocShellType) {
-    nsWeakPtr weakItem = do_GetWeakReference(inItem);
-    if (!inItemArray.AppendElement(weakItem))
+    if (!inItemArray.AppendElement(do_GetWeakReference(inItem)))
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -170,8 +169,7 @@ nsresult nsDocShellBackwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem*
   // add this item to the array
   if (mDocShellType == nsIDocShellTreeItem::typeAll ||
       inItem->ItemType() == mDocShellType) {
-    nsWeakPtr weakItem = do_GetWeakReference(inItem);
-    if (!inItemArray.AppendElement(weakItem))
+    if (!inItemArray.AppendElement(do_GetWeakReference(inItem)))
       return NS_ERROR_OUT_OF_MEMORY;
   }
 

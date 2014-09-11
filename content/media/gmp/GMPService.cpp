@@ -278,7 +278,10 @@ GeckoMediaPluginService::Observe(nsISupports* aSubject,
     nsCOMPtr<nsIThread> gmpThread;
     {
       MutexAutoLock lock(mMutex);
-      MOZ_ASSERT(mShuttingDown);
+      // XXX The content process never gets profile-change-teardown, so mShuttingDown
+      // will always be false here. GMPService needs to be proxied to the parent.
+      // See bug 1057908.
+      MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Default || mShuttingDown);
       mGMPThread.swap(gmpThread);
     }
 

@@ -14,6 +14,7 @@ namespace dom {
 
 class Console;
 class Function;
+class Promise;
 
 } // namespace dom
 } // namespace mozilla
@@ -189,11 +190,8 @@ public:
     // FIXME(nsm): Bug 982728
   }
 
-  void
-  Unregister()
-  {
-    // FIXME(nsm): Bug 982728
-  }
+  already_AddRefed<Promise>
+  Unregister(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(activate)
   IMPL_EVENT_HANDLER(beforeevicted)
