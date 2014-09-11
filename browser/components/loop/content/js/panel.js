@@ -22,6 +22,57 @@ loop.panel = (function(_, mozL10n) {
    */
   var router;
 
+  var TabView = React.createClass({displayName: 'TabView',
+    getInitialState: function() {
+      return {
+        selectedTab: "call"
+      };
+    },
+
+    handleSelectTab: function(event) {
+      var tabName = event.target.dataset.tabName;
+      this.setState({selectedTab: tabName});
+
+      if (this.props.onSelect) {
+        this.props.onSelect(tabName);
+      }
+    },
+
+    render: function() {
+      var cx = React.addons.classSet;
+      var tabButtons = [];
+      var tabs = [];
+      React.Children.forEach(this.props.children, function(tab, i) {
+        var tabName = tab.props.name;
+        var isSelected = (this.state.selectedTab == tabName);
+        tabButtons.push(
+          React.DOM.li({className: cx({selected: isSelected}), 
+              key: i, 
+              'data-tab-name': tabName, 
+              onClick: this.handleSelectTab}
+          )
+        );
+        tabs.push(
+          React.DOM.div({key: i, className: cx({tab: true, selected: isSelected})}, 
+            tab.props.children
+          )
+        );
+      }, this);
+      return (
+        React.DOM.div({className: "tab-view-container"}, 
+          React.DOM.ul({className: "tab-view"}, tabButtons), 
+          tabs
+        )
+      );
+    }
+  });
+
+  var Tab = React.createClass({displayName: 'Tab',
+    render: function() {
+      return null;
+    }
+  });
+
   /**
    * Dropdown menu mixin.
    * @type {Object}
@@ -424,10 +475,17 @@ loop.panel = (function(_, mozL10n) {
       return (
         React.DOM.div(null, 
           NotificationListView({notifications: this.props.notifications}), 
-          CallUrlResult({client: this.props.client, 
-                         notifications: this.props.notifications, 
-                         callUrl: this.props.callUrl}), 
-          ToSView(null), 
+          TabView({onSelect: this.selectTab}, 
+            Tab({name: "call"}, 
+              CallUrlResult({client: this.props.client, 
+                             notifications: this.props.notifications, 
+                             callUrl: this.props.callUrl}), 
+              ToSView(null)
+            ), 
+            Tab({name: "contacts"}, 
+              React.DOM.span(null, "contacts")
+            )
+          ), 
           React.DOM.div({className: "footer"}, 
             AvailabilityDropdown(null), 
             AuthLink(null), 
