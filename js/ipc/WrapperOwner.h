@@ -57,6 +57,7 @@ class WrapperOwner : public virtual JavaScriptShared
     bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible);
     bool callOrConstruct(JSContext *cx, JS::HandleObject proxy, const JS::CallArgs &args,
                          bool construct);
+    bool hasInstance(JSContext *cx, JS::HandleObject proxy, JS::MutableHandleValue v, bool *bp);
     bool objectClassIs(JSContext *cx, JS::HandleObject obj, js::ESClassValue classValue);
     const char* className(JSContext *cx, JS::HandleObject proxy);
     bool isCallable(JSObject *obj);
@@ -131,6 +132,8 @@ class WrapperOwner : public virtual JavaScriptShared
     virtual bool CallCallOrConstruct(const ObjectId &objId, const nsTArray<JSParam> &argv,
                                      const bool &construct, ReturnStatus *rs, JSVariant *result,
                                      nsTArray<JSParam> *outparams) = 0;
+    virtual bool CallHasInstance(const ObjectId &objId, const JSVariant &v,
+                                 ReturnStatus *rs, bool *bp) = 0;
     virtual bool CallObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
                                    bool *result) = 0;
     virtual bool CallClassName(const ObjectId &objId, nsString *result) = 0;
