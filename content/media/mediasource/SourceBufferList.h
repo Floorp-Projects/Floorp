@@ -79,10 +79,6 @@ public:
   // Returns the highest end time of any of the Sourcebuffers.
   double GetHighestBufferedEndTime();
 
-#if defined(DEBUG)
-  void Dump(const char* aPath);
-#endif
-
 private:
   ~SourceBufferList();
 
