@@ -224,10 +224,22 @@ let gFxAccounts = {
   },
 
   openAccountsPage: function () {
-    switchToTabHavingURI("about:accounts", true);
+    let entryPoint = "menupanel";
+    if (UITour.originTabs.get(window) && UITour.originTabs.get(window).has(gBrowser.selectedTab)) {
+      entryPoint = "uitour";
+    }
+    switchToTabHavingURI("about:accounts?entrypoint=" + entryPoint, true, {
+      replaceQueryString: true
+    });
   },
 
   openSignInAgainPage: function () {
-    switchToTabHavingURI("about:accounts?action=reauth", true);
+    let entryPoint = "menupanel";
+    if (UITour.originTabs.get(window) && UITour.originTabs.get(window).has(gBrowser.selectedTab)) {
+      entryPoint = "uitour";
+    }
+    switchToTabHavingURI("about:accounts?action=reauth&entrypoint=" + entryPoint, true, {
+      replaceQueryString: true
+    });
   }
 };

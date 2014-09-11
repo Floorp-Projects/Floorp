@@ -1363,6 +1363,10 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
       }
       BT_APPEND_NAMED_VALUE(propertiesArray, "UUIDs", uuids);
 
+    } else if (p.mType == PROPERTY_TYPE_OF_DEVICE) {
+      BT_APPEND_NAMED_VALUE(propertiesArray, "Type",
+                            static_cast<uint32_t>(p.mTypeOfDevice));
+
     } else {
       BT_LOGD("Other non-handled device properties. Type: %d", p.mType);
     }
@@ -1455,6 +1459,10 @@ BluetoothServiceBluedroid::DeviceFoundNotification(
         }
       }
       BT_APPEND_NAMED_VALUE(propertiesArray, "UUIDs", uuids);
+
+    } else if (p.mType == PROPERTY_TYPE_OF_DEVICE) {
+      BT_APPEND_NAMED_VALUE(propertiesArray, "Type",
+                            static_cast<uint32_t>(p.mTypeOfDevice));
 
     } else {
       BT_LOGD("Not handled remote device property: %d", p.mType);

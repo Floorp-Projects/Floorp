@@ -250,3 +250,6 @@ user_pref("loop.throttled", false);
 // Ensure UITour won't hit the network
 user_pref("browser.uitour.pinnedTabUrl", "http://%(server)s/uitour-dummy/pinnedTab");
 user_pref("browser.uitour.url", "http://%(server)s/uitour-dummy/tour");
+
+// Don't prompt about e10s
+user_pref("browser.displayedE10SPrompt", 5);

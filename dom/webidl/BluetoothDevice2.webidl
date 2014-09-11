@@ -4,21 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * Set of attributes that might be changed and reported by attributechanged
- * event.
- * Address is not included since it should not be changed once BluetoothDevice
- * is created.
- */
-enum BluetoothDeviceAttribute
-{
-  "unknown",
-  "cod",
-  "name",
-  "paired",
-  "uuids"
-};
-
 [CheckPermissions="bluetooth"]
 interface BluetoothDevice : EventTarget
 {
@@ -26,10 +11,12 @@ interface BluetoothDevice : EventTarget
   readonly attribute BluetoothClassOfDevice cod;
   readonly attribute DOMString              name;
   readonly attribute boolean                paired;
+  readonly attribute BluetoothDeviceType    type;
 
   [Cached, Pure]
   readonly attribute sequence<DOMString>    uuids;
 
+  // Fired when attribute(s) of BluetoothDevice changed
            attribute EventHandler           onattributechanged;
 
   /**
@@ -42,3 +29,26 @@ interface BluetoothDevice : EventTarget
   [NewObject, Throws]
   Promise<sequence<DOMString>>              fetchUuids();
 };
+
+enum BluetoothDeviceType
+{
+  "unknown",
+  "classic",
+  "le",
+  "dual"
+};
+
+/*
+ * Possible device attributes that attributechanged event reports.
+ * Note "address" and "type" are excluded since they never change once
+ * BluetoothDevice is created.
+ */
+enum BluetoothDeviceAttribute
+{
+  "unknown",
+  "cod",
+  "name",
+  "paired",
+  "uuids"
+};
+
