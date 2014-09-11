@@ -28,6 +28,8 @@ public:
                       size_t* bytes_read) = 0;
   virtual bool Length(int64_t* size) = 0;
 
+  virtual void DiscardBefore(int64_t offset) {}
+
 protected:
   virtual ~Stream() {}
 };

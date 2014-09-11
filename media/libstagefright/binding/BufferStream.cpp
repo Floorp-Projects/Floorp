@@ -3,33 +3,56 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mp4_demuxer/BufferStream.h"
+#include "MediaResource.h"
 #include <algorithm>
+
+using namespace mozilla;
 
 namespace mp4_demuxer {
 
-BufferStream::BufferStream(const uint8_t* aData, size_t aLength)
-  : mData(aData), mLength(aLength)
+BufferStream::BufferStream()
+  : mStartOffset(0)
 {
-
 }
 
 /*virtual*/ bool
 BufferStream::ReadAt(int64_t aOffset, void* aData, size_t aLength,
                      size_t* aBytesRead)
 {
-  if (aOffset > mLength) {
+  if (aOffset < mStartOffset || aOffset > mStartOffset + mData.Length()) {
     return false;
   }
-  *aBytesRead = std::min(aLength, mLength - (size_t) aOffset);
-  memcpy(aData, mData + aOffset, *aBytesRead);
+  *aBytesRead =
+    std::min(aLength, size_t(mStartOffset + mData.Length() - aOffset));
+  memcpy(aData, &mData[aOffset - mStartOffset], *aBytesRead);
   return true;
 }
 
 /*virtual*/ bool
 BufferStream::Length(int64_t* aLength)
 {
-  *aLength = mLength;
+  *aLength = mStartOffset + mData.Length();
   return true;
 }
 
+/* virtual */ void
+BufferStream::DiscardBefore(int64_t aOffset)
+{
+  if (aOffset > mStartOffset) {
+    mData.RemoveElementsAt(0, aOffset - mStartOffset);
+    mStartOffset = aOffset;
+  }
+}
+
+void
+BufferStream::AppendBytes(const uint8_t* aData, size_t aLength)
+{
+  mData.AppendElements(aData, aLength);
+}
+
+MediaByteRange
+BufferStream::GetByteRange()
+{
+  return MediaByteRange(mStartOffset, mStartOffset + mData.Length());
+}
 }
