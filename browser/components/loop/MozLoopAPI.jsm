@@ -109,6 +109,23 @@ function injectLoopAPI(targetWindow) {
 
   let api = {
     /**
+     * Gets an object with data that represents the currently
+     * authenticated user's identity.
+     */
+    userProfile: {
+      enumerable: true,
+      get: function() {
+        if (!MozLoopService.userProfile)
+          return null;
+        let userProfile = Cu.cloneInto({
+          email: MozLoopService.userProfile.email,
+          uid: MozLoopService.userProfile.uid
+        }, targetWindow);
+        return userProfile;
+      }
+    },
+
+    /**
      * Sets and gets the "do not disturb" mode activation flag.
      */
     doNotDisturb: {
@@ -440,10 +457,24 @@ function injectLoopAPI(targetWindow) {
     },
   };
 
+  function onStatusChanged(aSubject, aTopic, aData) {
+    let event = new targetWindow.CustomEvent("LoopStatusChanged");
+    targetWindow.dispatchEvent(event)
+  };
+
+  function onDOMWindowDestroyed(aSubject, aTopic, aData) {
+    if (targetWindow && aSubject != targetWindow)
+      return;
+    Services.obs.removeObserver(onDOMWindowDestroyed, "dom-window-destroyed");
+    Services.obs.removeObserver(onStatusChanged, "loop-status-changed");
+  };
+
   let contentObj = Cu.createObjectIn(targetWindow);
   Object.defineProperties(contentObj, api);
   Object.seal(contentObj);
   Cu.makeObjectPropsNormal(contentObj);
+  Services.obs.addObserver(onStatusChanged, "loop-status-changed", false);
+  Services.obs.addObserver(onDOMWindowDestroyed, "dom-window-destroyed", false);
 
   targetWindow.navigator.wrappedJSObject.__defineGetter__("mozLoop", function() {
     // We do this in a getter, so that we create these objects
