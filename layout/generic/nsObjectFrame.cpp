@@ -1641,7 +1641,8 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
       ctx->Rectangle(nativeClipRect);
       ctx->Clip();
       gfxPoint offset(contentPixels.x, contentPixels.y);
-      ctx->Translate(offset);
+      ctx->SetMatrix(
+        ctx->CurrentMatrix().Translate(offset));
 
       gfxQuartzNativeDrawing nativeDrawing(ctx, nativeClipRect - offset);
 

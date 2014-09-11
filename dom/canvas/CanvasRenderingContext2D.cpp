@@ -3520,9 +3520,10 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
   src.Scale(scale.width, scale.height);
 
   nsRefPtr<gfxContext> context = new gfxContext(tempTarget);
-  context->SetMatrix(contextMatrix);
-  context->Scale(1.0 / contextScale.width, 1.0 / contextScale.height);
-  context->Translate(gfxPoint(dest.x - src.x, dest.y - src.y));
+  context->SetMatrix(contextMatrix.
+                       Scale(1.0 / contextScale.width,
+                             1.0 / contextScale.height).
+                       Translate(dest.x - src.x, dest.y - src.y));
 
   // FLAG_CLAMP is added for increased performance, since we never tile here.
   uint32_t modifiedFlags = image.mDrawingFlags | imgIContainer::FLAG_CLAMP;

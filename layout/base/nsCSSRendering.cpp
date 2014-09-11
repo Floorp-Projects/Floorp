@@ -2593,7 +2593,8 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                                          gradientStart, gradientEnd, &edgeColor)) {
         ctx->SetColor(edgeColor);
       } else {
-        ctx->Translate(tileRect.TopLeft());
+        ctx->SetMatrix(
+          ctx->CurrentMatrix().Copy().Translate(tileRect.TopLeft()));
         ctx->SetPattern(gradientPattern);
       }
       ctx->Fill();

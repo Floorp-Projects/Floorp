@@ -214,13 +214,13 @@ gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext    *aContext,
     gfxFloat halfGap = HEX_CHAR_GAP / 2.0;
     gfxFloat top = -(MINIFONT_HEIGHT + halfGap);
     aContext->SetDeviceColor(currentColor);
-    aContext->Translate(center);
     // We always want integer scaling, otherwise the "bitmap" glyphs will look
     // even uglier than usual when zoomed
     int32_t scale =
         std::max<int32_t>(1, nsDeviceContext::AppUnitsPerCSSPixel() /
                              aAppUnitsPerDevPixel);
-    aContext->Scale(gfxFloat(scale), gfxFloat(scale));
+    aContext->SetMatrix(
+      aContext->CurrentMatrix().Translate(center).Scale(scale, scale));
     if (aChar < 0x10000) {
         if (aRect.Width() >= 2 * (MINIFONT_WIDTH + HEX_CHAR_GAP) &&
             aRect.Height() >= 2 * MINIFONT_HEIGHT + HEX_CHAR_GAP) {
