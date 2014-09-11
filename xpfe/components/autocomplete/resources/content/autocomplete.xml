@@ -64,11 +64,11 @@
         this.ifSetAttribute("maxrows", 5);
         this.ifSetAttribute("showpopup", true);
         this.ifSetAttribute("disableKeyNavigation", true);
-        
+
         // initialize the search sessions
         if (this.hasAttribute("autocompletesearch"))
           this.initAutoCompleteSearch();
-        
+
         // hack to work around lack of bottom-up constructor calling
         if ("initialize" in this.popup)
           this.popup.initialize();
@@ -257,13 +257,13 @@
                 onset="this.setAttribute('pastetimeout', val); return val;"
                 onget="var t = parseInt(this.getAttribute('pastetimeout')); return t ? t : 0;"/>
 
-      <!-- option for filling the textbox with the best match while typing 
+      <!-- option for filling the textbox with the best match while typing
            and selecting the difference -->
       <property name="autoFill"
                 onset="this.setAttribute('autofill', val); return val;"
                 onget="return this.getAttribute('autofill') == 'true';"/>
 
-      <!--  if this attribute is set, allow different style for 
+      <!--  if this attribute is set, allow different style for
             non auto-completed lines -->
       <property name="highlightNonMatches"
                 onset="this.setAttribute('highlightnonmatches', val); return val;"
@@ -280,7 +280,7 @@
                 onset="return this.setAttribute('tabscrolling', val); return val;"
                 onget="return this.getAttribute('tabscrolling') == 'true';"/>
 
-      <!-- option to completely ignore any blur events while  
+      <!-- option to completely ignore any blur events while
            searches are still going on.  This is useful so that nothing
            gets autopicked if the window is required to lose focus for
            some reason (eg in LDAP autocomplete, another window may be
@@ -459,7 +459,7 @@
             return;
 
           me.clearTimer();
-            
+
           if (me.disableAutoComplete)
             return;
 
@@ -544,7 +544,7 @@
             this.searchFailed();
             return;
           }
-          
+
           if (this.mFirstReturn) {
             if (this.view.mTree)
               this.view.mTree.beginUpdateBatch();
@@ -563,11 +563,11 @@
             this.view.mTree.endUpdateBatch();
           this.openPopup();
           this.mFirstReturn = false;
-         
-          // if this is the last session to return... 
+
+          // if this is the last session to return...
           if (this.mSessionReturns == 0) 
             this.postSearchCleanup();
-               
+
           if (this.mFinishAfterSearch)
             this.finishAutoComplete(false, this.mFireAfterSearch, null);
         ]]></body>
@@ -609,9 +609,9 @@
               break;
           }
           this.noMatch = failed;
-          
+
           // if we have processed all of our searches, and none of them gave us a default index,
-          // then we should try to auto fill the input field with the first match. 
+          // then we should try to auto fill the input field with the first match.
           // note: autoFillInput is smart enough to kick out if we've already prefilled something...
           if (!this.noMatch) {
              var defaultSession = this.getDefaultSession();
@@ -624,7 +624,7 @@
         ]]></body>
       </method>
 
-      <!-- when the focus exits the widget or user hits return, 
+      <!-- when the focus exits the widget or user hits return,
            determine what value to leave in the textbox -->
       <method name="finishAutoComplete">
         <parameter name="aForceComplete"/>
@@ -634,7 +634,7 @@
           this.mFinishAfterSearch = false;
           this.mFireAfterSearch = false;
           if (this.mNeedToFinish && !this.disableAutoComplete) {
-            // set textbox value to either override value, or default search result 
+            // set textbox value to either override value, or default search result
             var val = this.popup.overrideValue;
             if (val) {
               this.setTextValue(val);
@@ -692,7 +692,7 @@
 
             this.closePopup();
           }
-          
+
           this.mNeedToComplete = false;
           this.clearTimer();
 
@@ -721,7 +721,7 @@
 
           this.mNeedToFinish = false;
           this.mNeedToComplete = false;
-          
+
           this.closePopup();
 
           this.currentSearchString = "";
@@ -782,7 +782,7 @@
           var str = this.value;
           this.currentSearchString = str;
           this.popup.clearSelection();
-          
+
           var timeout = this.mIsPasting ? this.pasteTimeout : this.timeout;
           this.mAutoCompleteTimer = setTimeout(this.callListener, timeout, this, "startLookup");
         ]]></body>
@@ -793,9 +793,9 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           this.mLastKeyCode = aEvent.keyCode;
-          
+
           var killEvent = false;
-          
+
           switch (aEvent.keyCode) {
             case KeyEvent.DOM_VK_TAB:
               if (this.tabScrolling) {
@@ -807,7 +807,7 @@
                 }
               } 
               break;              
-              
+
             case KeyEvent.DOM_VK_RETURN:
 
               // if this is a failure item, save it for fireErrorCommand
@@ -827,7 +827,7 @@
               this.undoAutoComplete();
               this.closePopup();
               break;
-  
+
             case KeyEvent.DOM_VK_LEFT:
             case KeyEvent.DOM_VK_RIGHT:
             case KeyEvent.DOM_VK_HOME:
@@ -844,7 +844,7 @@
                 break;
               }
             // Alt+Down falls through to history popup toggling code
-              
+
             case KeyEvent.DOM_VK_F4:
               if (!aEvent.ctrlKey && !aEvent.shiftKey && this.getAttribute("enablehistory") == "true") {
                 var historyPopup = document.getAnonymousElementByAttribute(this, "anonid", "historydropmarker");
@@ -892,12 +892,12 @@
               }
               break;
           }
-          
+
           if (killEvent) {
             aEvent.preventDefault();
             aEvent.stopPropagation();
           }
-          
+
           return true;
         ]]></body>
       </method>
@@ -944,17 +944,17 @@
               this.openPopup();
               return true;
             }
-            
+
             this.userAction = "scrolling";
             this.mNeedToComplete = false;
-            
+
             var reverse = k == KeyEvent.DOM_VK_TAB && aEvent.shiftKey ||
                           k == KeyEvent.DOM_VK_UP ||
                           k == KeyEvent.DOM_VK_PAGE_UP;
             var page = k == KeyEvent.DOM_VK_PAGE_UP ||
                        k == KeyEvent.DOM_VK_PAGE_DOWN;
             var selected = this.popup.selectBy(reverse, page);
-          
+
             // determine which value to place in the textbox
             this.ignoreInputEvent = true;
             if (selected != -1) {
@@ -1155,7 +1155,7 @@
             if (returned == false)
               noCancel = false;
           }
-          
+
           return noCancel;
         ]]>
         </body>
@@ -1169,26 +1169,26 @@
           mTree: null,
           mSelection: null,
           mRowCount: 0,
-          
+
           clearResults: function()
           {
             var oldCount = this.mRowCount;
             this.mRowCount = 0;  
-            
+
             if (this.mTree) {
               this.mTree.rowCountChanged(0, -oldCount);
               this.mTree.scrollToRow(0);
             }
           },
-          
+
           updateResults: function(aRow, aCount)
           {
             this.mRowCount += aCount;
-            
+
             if (this.mTree)
               this.mTree.rowCountChanged(aRow, aCount);
           },
-          
+
           //////////////////////////////////////////////////////////
           // nsIAutoCompleteController interface
 
@@ -1199,11 +1199,11 @@
 
           //////////////////////////////////////////////////////////
           // nsITreeView interface
-          
+
           get rowCount() {
             return this.mRowCount;
           },
-          
+
           get selection() {
             return this.mSelection;
           },
@@ -1211,12 +1211,12 @@
           set selection(aVal) {
             return this.mSelection = aVal;
           },
-          
+
           setTree: function(aTree)
           {
             this.mTree = aTree;
           },
-          
+
           getCellText: function(aRow, aCol)
           {
             for (var name in this.mTextbox.mSessions) {
@@ -1281,7 +1281,7 @@
             }
             return "";
           },
-          
+
           getParentIndex: function(aRowIndex) { },
           hasNextSibling: function(aRowIndex, aAfterIndex) { },
           getLevel: function(aIndex) {},
@@ -1408,9 +1408,9 @@
           var rows = this.maxRows || 6;
           if (!view.rowCount || (rows && view.rowCount < rows))
             rows = view.rowCount;
-          
+
           var height = rows * bx.rowHeight;
-          
+
           if (height == 0)
             this.tree.setAttribute("collapsed", "true");
           else {
