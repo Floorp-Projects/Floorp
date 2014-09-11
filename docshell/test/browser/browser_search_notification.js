@@ -4,6 +4,27 @@
 function test() {
   waitForExplicitFinish();
 
+  const kSearchEngineID = "test_urifixup_search_engine";
+  const kSearchEngineURL = "http://localhost/?search={searchTerms}";
+  Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
+                                       kSearchEngineURL);
+
+  let oldDefaultEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
+
+  let selectedName = Services.search.defaultEngine.name;
+  is(selectedName, kSearchEngineID, "Check fake search engine is selected");
+
+  registerCleanupFunction(function() {
+    if (oldDefaultEngine) {
+      Services.search.defaultEngine = oldDefaultEngine;
+    }
+    let engine = Services.search.getEngineByName(kSearchEngineID);
+    if (engine) {
+      Services.search.removeEngine(engine);
+    }
+  });
+
   let tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
 
