@@ -4785,12 +4785,13 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
     }
   }
 
-  aThebesContext->Translate(gfxPoint(-nsPresContext::AppUnitsToFloatCSSPixels(aRect.x),
-                                     -nsPresContext::AppUnitsToFloatCSSPixels(aRect.y)));
-
   nsDeviceContext* devCtx = mPresContext->DeviceContext();
+
+  gfxPoint offset(-nsPresContext::AppUnitsToFloatCSSPixels(aRect.x),
+                  -nsPresContext::AppUnitsToFloatCSSPixels(aRect.y));
   gfxFloat scale = gfxFloat(devCtx->AppUnitsPerDevPixel())/nsPresContext::AppUnitsPerCSSPixel();
-  aThebesContext->Scale(scale, scale);
+  aThebesContext->SetMatrix(
+    aThebesContext->CurrentMatrix().Translate(offset).Scale(scale, scale));
 
   // Since canvas APIs use floats to set up their matrices, we may have
   // some slight inaccuracy here. Adjust matrix components that are
