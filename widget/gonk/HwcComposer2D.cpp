@@ -285,8 +285,7 @@ HwcComposer2D::setHwcGeometry(bool aGeometryChanged)
 bool
 HwcComposer2D::PrepareLayerList(Layer* aLayer,
                                 const nsIntRect& aClip,
-                                const Matrix& aParentTransform,
-                                const Matrix& aGLWorldTransform)
+                                const Matrix& aParentTransform)
 {
     // NB: we fall off this path whenever there are container layers
     // that require intermediate surfaces.  That means all the
@@ -308,7 +307,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 #endif
 
     nsIntRect clip;
-    if (!HwcUtils::CalculateClipRect(aParentTransform * aGLWorldTransform,
+    if (!HwcUtils::CalculateClipRect(aParentTransform,
                                      aLayer->GetEffectiveClipRect(),
                                      aClip,
                                      &clip))
@@ -344,7 +343,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         container->SortChildrenBy3DZOrder(children);
 
         for (uint32_t i = 0; i < children.Length(); i++) {
-            if (!PrepareLayerList(children[i], clip, transform, aGLWorldTransform)) {
+            if (!PrepareLayerList(children[i], clip, transform)) {
                 return false;
             }
         }
@@ -389,7 +388,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     hwc_rect_t sourceCrop, displayFrame;
     if(!HwcUtils::PrepareLayerRects(visibleRect,
-                          transform * aGLWorldTransform,
+                          transform,
                           clip,
                           bufferRect,
                           state.YFlipped(),
@@ -473,7 +472,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         // And ignore scaling.
         //
         // Reflection is applied before rotation
-        gfx::Matrix rotation = transform * aGLWorldTransform;
+        gfx::Matrix rotation = transform;
         // Compute fuzzy zero like PreservesAxisAlignedRectangles()
         if (fabs(rotation._11) < 1e-6) {
             if (rotation._21 < 0) {
@@ -578,7 +577,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
             mVisibleRegions.push_back(HwcUtils::RectVector());
             HwcUtils::RectVector* visibleRects = &(mVisibleRegions.back());
             if(!HwcUtils::PrepareVisibleRegion(visibleRegion,
-                                     transform * aGLWorldTransform,
+                                     transform,
                                      clip,
                                      bufferRect,
                                      visibleRects)) {
@@ -871,14 +870,8 @@ HwcComposer2D::Reset()
 
 bool
 HwcComposer2D::TryRender(Layer* aRoot,
-                         const gfx::Matrix& aGLWorldTransform,
                          bool aGeometryChanged)
 {
-    if (!aGLWorldTransform.PreservesAxisAlignedRectangles()) {
-        LOGD("Render aborted. World transform has non-square angle rotation");
-        return false;
-    }
-
     MOZ_ASSERT(Initialized());
     if (mList) {
         setHwcGeometry(aGeometryChanged);
@@ -897,8 +890,7 @@ HwcComposer2D::TryRender(Layer* aRoot,
     MOZ_ASSERT(mHwcLayerMap.IsEmpty());
     if (!PrepareLayerList(aRoot,
                           mScreenRect,
-                          gfx::Matrix(),
-                          aGLWorldTransform))
+                          gfx::Matrix()))
     {
         mHwcLayerMap.Clear();
         LOGD("Render aborted. Nothing was drawn to the screen");

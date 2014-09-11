@@ -34,6 +34,7 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 using nscolor from "nsColor.h";
 using class mozilla::WidgetCompositionEvent from "ipc/nsGUIEventIPC.h";
+using struct mozilla::widget::IMENotification from "nsIWidget.h";
 using struct nsIMEUpdatePreference from "nsIWidget.h";
 using struct nsIntPoint from "nsPoint.h";
 using struct nsIntRect from "nsRect.h";
@@ -187,6 +188,14 @@ parent:
      *  text         The entire content of the text field
      */
     NotifyIMETextHint(nsString text);
+
+    /**
+     * Notifies IME of mouse button event on a character in focused editor.
+     *
+     * Returns true if the mouse button event is consumd by IME.
+     */
+    sync NotifyIMEMouseButtonEvent(IMENotification notification)
+      returns (bool consumedByIME);
 
     /**
      * Instructs chrome to end any pending composition

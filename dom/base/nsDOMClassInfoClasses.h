@@ -67,7 +67,6 @@ DOMCI_CLASS(CSSPageRule)
 
 DOMCI_CLASS(CSSFontFeatureValuesRule)
 
-DOMCI_CLASS(UserDataHandler)
 DOMCI_CLASS(XULControlElement)
 DOMCI_CLASS(XULLabeledControlElement)
 DOMCI_CLASS(XULButtonElement)

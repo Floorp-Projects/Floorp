@@ -408,8 +408,7 @@ JavaScriptShared::findObjectById(JSContext *cx, uint32_t objId)
 }
 
 static const uint64_t DefaultPropertyOp = 1;
-static const uint64_t GetterOnlyPropertyStub = 2;
-static const uint64_t UnknownPropertyOp = 3;
+static const uint64_t UnknownPropertyOp = 2;
 
 bool
 JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> desc,
@@ -449,8 +448,6 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
     } else {
         if (desc.setter() == JS_StrictPropertyStub)
             out->setter() = DefaultPropertyOp;
-        else if (desc.setter() == js_GetterOnlyPropertyStub)
-            out->setter() = GetterOnlyPropertyStub;
         else
             out->setter() = UnknownPropertyOp;
     }
@@ -511,8 +508,6 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
     } else {
         if (in.setter().get_uint64_t() == DefaultPropertyOp)
             out.setSetter(JS_StrictPropertyStub);
-        else if (in.setter().get_uint64_t() == GetterOnlyPropertyStub)
-            out.setSetter(js_GetterOnlyPropertyStub);
         else
             out.setSetter(UnknownStrictPropertyStub);
     }
