@@ -408,6 +408,10 @@
         <item name="android:clipToPadding">false</item>
     </style>
 
+    <style name="UrlBar.ImageButton.TabCount.NewTablet">
+        <item name="android:background">@drawable/new_tablet_tabs_count</item>
+    </style>
+
     <!-- URL bar -->
     <style name="UrlBar">
         <item name="android:layout_width">match_parent</item>
@@ -442,13 +446,6 @@
         <item name="android:scaleType">center</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:background">@android:color/transparent</item>
-    </style>
-
-    <!-- URL bar - Image Button - Unused -->
-    <style name="UrlBar.ImageButton.Unused">
-        <item name="android:layout_width">0dip</item>
-        <item name="android:layout_height">0dip</item>
-        <item name="android:visibility">gone</item>
     </style>
 
     <!-- URL bar - Image Button - Icon -->

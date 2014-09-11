@@ -5,12 +5,6 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <ImageButton android:id="@+id/back"
-                 style="@style/UrlBar.ImageButton.Unused"/>
-
-    <ImageButton android:id="@+id/forward"
-                 style="@style/UrlBar.ImageButton.Unused"/>
-
     <!-- Note: any layout parameters setting the right edge of
          this View should be matched in the url_bar_translating_edge.
 
@@ -46,9 +40,6 @@
                android:visibility="invisible"
                android:src="@drawable/url_bar_translating_edge"
                android:scaleType="fitXY"/>
-
-    <LinearLayout android:id="@+id/menu_items"
-                  style="@style/UrlBar.ImageButton.Unused"/>
 
     <org.mozilla.gecko.toolbar.ShapedButton android:id="@+id/menu"
                                             style="@style/UrlBar.ImageButton"

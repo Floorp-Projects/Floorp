@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+
+    <!-- In editing mode, the toolbar shrinks by changing to
+         dynamically constructed LayoutParams. -->
+    <ImageView android:id="@+id/url_bar_entry"
+               android:layout_width="match_parent"
+               android:layout_height="match_parent"
+               android:layout_toLeftOf="@id/menu_items"
+               android:layout_marginLeft="20dp"
+               android:layout_marginTop="7dp"
+               android:layout_marginBottom="7dp"
+               android:duplicateParentState="true"
+               android:clickable="false"
+               android:focusable="false"
+               android:background="@drawable/url_bar_entry"/>
+
+    <org.mozilla.gecko.toolbar.ForwardButton style="@style/UrlBar.ImageButton.Forward"
+                                             android:id="@+id/forward"
+                                             android:layout_alignLeft="@id/url_bar_entry"/>
+
+    <org.mozilla.gecko.toolbar.BackButton android:id="@+id/back"
+                                          style="@style/UrlBar.ImageButton"
+                                          android:layout_width="50dip"
+                                          android:layout_height="50dip"
+                                          android:layout_marginLeft="-15dp"
+                                          android:layout_alignLeft="@id/url_bar_entry"
+                                          android:layout_centerVertical="true"
+                                          android:padding="13dp"
+                                          android:src="@drawable/ic_menu_back"
+                                          android:contentDescription="@string/back"
+                                          android:background="@drawable/url_bar_nav_button"/>
+
+    <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
+                  style="@style/UrlBar.Button"
+                  android:paddingLeft="12dp"
+                  android:paddingRight="12dp"
+                  android:visibility="gone"
+                  android:orientation="horizontal"
+                  android:layout_toRightOf="@id/back"
+                  android:layout_toLeftOf="@id/menu_items"/>
+
+    <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
+                  style="@style/UrlBar.Button.Container"
+                  android:layout_toRightOf="@id/back"
+                  android:layout_toLeftOf="@id/menu_items"/>
+
+    <LinearLayout android:id="@+id/menu_items"
+                  android:layout_width="wrap_content"
+                  android:layout_height="match_parent"
+                  android:layout_marginLeft="3dp"
+                  android:orientation="horizontal"
+                  android:layout_toLeftOf="@id/tabs"
+                  android:layout_alignWithParentIfMissing="true"/>
+
+    <org.mozilla.gecko.widget.ThemedImageButton android:id="@+id/tabs"
+                                                style="@style/UrlBar.ImageButton"
+                                                android:layout_width="56dip"
+                                                android:layout_toLeftOf="@id/menu"
+                                                android:background="@drawable/action_bar_button"/>
+
+    <!-- The TextSwitcher should be shifted 28dp on the right, to avoid
+         the curve. On a 56dp space, centering 24dp image will leave
+         16dp on all sides. However this image has a perception of
+         2 layers. Hence to center this, an additional 4dp is added to the right.
+         The margins will be 12dp on left, 48dp on right, instead of ideal 16dp
+         and 44dp. -->
+    <org.mozilla.gecko.toolbar.TabCounter android:id="@+id/tabs_counter"
+                        style="@style/UrlBar.ImageButton.TabCount.NewTablet"
+                        android:layout_width="24dip"
+                        android:layout_height="24dip"
+                        android:layout_margin="16dp"
+                        android:layout_centerVertical="true"
+                        android:layout_alignLeft="@id/tabs"
+                        android:layout_alignRight="@id/tabs"
+                        gecko:layout="@layout/new_tablet_tabs_counter"/>
+
+    <org.mozilla.gecko.widget.ThemedImageButton android:id="@+id/menu"
+                                                style="@style/UrlBar.ImageButton"
+                                                android:layout_width="56dip"
+                                                android:layout_alignParentRight="true"
+                                                android:contentDescription="@string/menu"
+                                                android:background="@drawable/action_bar_button"
+                                                android:visibility="gone"/>
+
+    <org.mozilla.gecko.widget.ThemedImageView android:id="@+id/menu_icon"
+                                              style="@style/UrlBar.ImageButton"
+                                              android:layout_alignLeft="@id/menu"
+                                              android:layout_alignRight="@id/menu"
+                                              android:gravity="center_vertical"
+                                              android:src="@drawable/menu_level"
+                                              android:visibility="gone"/>
+
+    <!-- We draw after the menu items so when they are hidden, the cancel button,
+         which is thus drawn on top, may be pressed. -->
+    <org.mozilla.gecko.widget.ThemedImageView
+            android:id="@+id/edit_cancel"
+            style="@style/UrlBar.ImageButton.Icon"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/close_edit_mode_selector"
+            android:contentDescription="@string/edit_mode_cancel"
+            android:visibility="gone"/>
+
+</merge>

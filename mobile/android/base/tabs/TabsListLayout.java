@@ -9,45 +9,41 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.animation.PropertyAnimator.Property;
+import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.tabs.TabsLayoutAdapter;
+import org.mozilla.gecko.tabs.TabsPanel.TabsLayout;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.animation.PropertyAnimator;
-import org.mozilla.gecko.animation.PropertyAnimator.Property;
-import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.TwoWayView;
-import org.mozilla.gecko.widget.TabThumbnailWrapper;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.view.ViewConfiguration;
 import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TextView;
 
-class TabsTray extends TwoWayView
-               implements TabsPanel.CloseAllPanelView {
-    private static final String LOGTAG = "Gecko" + TabsTray.class.getSimpleName();
+class TabsListLayout extends TwoWayView
+                     implements TabsLayout,
+                                Tabs.OnTabsChangedListener {
+    private static final String LOGTAG = "Gecko" + TabsListLayout.class.getSimpleName();
 
     private Context mContext;
     private TabsPanel mTabsPanel;
 
     final private boolean mIsPrivate;
 
-    private TabsAdapter mTabsAdapter;
+    private TabsLayoutAdapter mTabsAdapter;
 
     private List<View> mPendingClosedTabs;
     private int mCloseAnimationCount;
@@ -63,7 +59,7 @@ class TabsTray extends TwoWayView
 
     private int mOriginalSize;
 
-    public TabsTray(Context context, AttributeSet attrs) {
+    public TabsListLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
 
@@ -75,7 +71,7 @@ class TabsTray extends TwoWayView
         mIsPrivate = (a.getInt(R.styleable.TabsTray_tabs, 0x0) == 1);
         a.recycle();
 
-        mTabsAdapter = new TabsAdapter(mContext);
+        mTabsAdapter = new TabsListLayoutAdapter(mContext);
         setAdapter(mTabsAdapter);
 
         mSwipeListener = new TabSwipeGestureListener();
@@ -85,11 +81,49 @@ class TabsTray extends TwoWayView
         setRecyclerListener(new RecyclerListener() {
             @Override
             public void onMovedToScrapHeap(View view) {
-                TabRow row = (TabRow) view.getTag();
-                row.thumbnail.setImageDrawable(null);
-                row.close.setVisibility(View.VISIBLE);
+                TabsLayoutItemView item = (TabsLayoutItemView) view.getTag();
+                item.thumbnail.setImageDrawable(null);
+                item.close.setVisibility(View.VISIBLE);
             }
         });
+    }
+
+    private class TabsListLayoutAdapter extends TabsLayoutAdapter {
+        private Button.OnClickListener mOnClickListener;
+        public TabsListLayoutAdapter (Context context) {
+            super(context);
+
+            mOnClickListener = new Button.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    TabsLayoutItemView tab = (TabsLayoutItemView) v.getTag();
+                    final int pos = (isVertical() ? tab.info.getWidth() : 0 - tab.info.getHeight());
+                    animateClose(tab.info, pos);
+                }
+            };
+        }
+
+        @Override
+        public View newView(int position, ViewGroup parent) {
+            View view = super.newView(position, parent);
+
+            // This is nasty and once we change TabsLayoutItemView to an actual view
+            // we can get rid of it.
+            TabsLayoutItemView item = (TabsLayoutItemView) view.getTag();
+            item.close.setOnClickListener(mOnClickListener);
+
+            return view;
+        }
+
+        @Override
+        public void bindView(View view, Tab tab) {
+            super.bindView(view, tab);
+
+            // If we're recycling this view, there's a chance it was transformed during
+            // the close animation. Remove any of those properties.
+            TabsListLayout.this.resetTransforms(view);
+        }
+
     }
 
     @Override
@@ -101,14 +135,14 @@ class TabsTray extends TwoWayView
     public void show() {
         setVisibility(View.VISIBLE);
         Tabs.getInstance().refreshThumbnails();
-        Tabs.registerOnTabsChangedListener(mTabsAdapter);
-        mTabsAdapter.refreshTabsData();
+        Tabs.registerOnTabsChangedListener(this);
+        refreshTabsData();
     }
 
     @Override
     public void hide() {
         setVisibility(View.GONE);
-        Tabs.unregisterOnTabsChangedListener(mTabsAdapter);
+        Tabs.unregisterOnTabsChangedListener(this);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel",""));
         mTabsAdapter.clear();
     }
@@ -122,206 +156,93 @@ class TabsTray extends TwoWayView
         mTabsPanel.autoHidePanel();
     }
 
-    // ViewHolder for a row in the list
-    private class TabRow {
-        int id;
-        TextView title;
-        ImageView thumbnail;
-        ImageButton close;
-        ViewGroup info;
-        TabThumbnailWrapper thumbnailWrapper;
+    @Override
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        switch (msg) {
+            case ADDED:
+                // Refresh the list to make sure the new tab is added in the right position.
+                refreshTabsData();
+                break;
 
-        public TabRow(View view) {
-            info = (ViewGroup) view;
-            title = (TextView) view.findViewById(R.id.title);
-            thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
-            close = (ImageButton) view.findViewById(R.id.close);
-            thumbnailWrapper = (TabThumbnailWrapper) view.findViewById(R.id.wrapper);
+            case CLOSED:
+               if (tab.isPrivate() == mIsPrivate && mTabsAdapter.getCount() > 0) {
+                   if (mTabsAdapter.removeTab(tab)) {
+                       int selected = mTabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
+                       updateSelectedStyle(selected);
+                   }
+               }
+               break;
+
+            case SELECTED:
+                // Update the selected position, then fall through...
+                updateSelectedPosition();
+            case UNSELECTED:
+                // We just need to update the style for the unselected tab...
+            case THUMBNAIL:
+            case TITLE:
+            case RECORDING_CHANGE:
+                View view = getChildAt(mTabsAdapter.getPositionForTab(tab) - getFirstVisiblePosition());
+                if (view == null)
+                    return;
+
+                TabsLayoutItemView item = (TabsLayoutItemView) view.getTag();
+                item.assignValues(tab);
+                break;
         }
     }
 
-    // Adapter to bind tabs into a list
-    private class TabsAdapter extends BaseAdapter implements Tabs.OnTabsChangedListener {
-        private Context mContext;
-        private ArrayList<Tab> mTabs;
-        private LayoutInflater mInflater;
-        private Button.OnClickListener mOnCloseClickListener;
+    // Updates the selected position in the list so that it will be scrolled to the right place.
+    private void updateSelectedPosition() {
+        int selected = mTabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
+        updateSelectedStyle(selected);
 
-        public TabsAdapter(Context context) {
-            mContext = context;
-            mInflater = LayoutInflater.from(mContext);
+        if (selected != -1) {
+            setSelection(selected);
+        }
+    }
 
-            mOnCloseClickListener = new Button.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    TabRow tab = (TabRow) v.getTag();
-                    final int pos = (isVertical() ? tab.info.getWidth() : 0 - tab.info.getHeight());
-                    animateClose(tab.info, pos);
-                }
-            };
+    /**
+     * Updates the selected/unselected style for the tabs.
+     *
+     * @param selected position of the selected tab
+     */
+    private void updateSelectedStyle(int selected) {
+        for (int i = 0; i < mTabsAdapter.getCount(); i++) {
+            setItemChecked(i, (i == selected));
+        }
+    }
+
+    private void refreshTabsData() {
+        // Store a different copy of the tabs, so that we don't have to worry about
+        // accidentally updating it on the wrong thread.
+        ArrayList<Tab> tabData = new ArrayList<Tab>();
+
+        Iterable<Tab> allTabs = Tabs.getInstance().getTabsInOrder();
+        for (Tab tab : allTabs) {
+            if (tab.isPrivate() == mIsPrivate)
+                tabData.add(tab);
         }
 
-        @Override
-        public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
-            switch (msg) {
-                case ADDED:
-                    // Refresh the list to make sure the new tab is added in the right position.
-                    refreshTabsData();
-                    break;
+        mTabsAdapter.setTabs(tabData);
+        updateSelectedPosition();
+    }
 
-                case CLOSED:
-                    removeTab(tab);
-                    break;
+    public void resetTransforms(View view) {
+        ViewHelper.setAlpha(view, 1);
 
-                case SELECTED:
-                    // Update the selected position, then fall through...
-                    updateSelectedPosition();
-                case UNSELECTED:
-                    // We just need to update the style for the unselected tab...
-                case THUMBNAIL:
-                case TITLE:
-                case RECORDING_CHANGE:
-                    View view = TabsTray.this.getChildAt(getPositionForTab(tab) - TabsTray.this.getFirstVisiblePosition());
-                    if (view == null)
-                        return;
-
-                    TabRow row = (TabRow) view.getTag();
-                    assignValues(row, tab);
-                    break;
-            }
+        if (isVertical()) {
+            ViewHelper.setTranslationX(view, 0);
+        } else {
+            ViewHelper.setTranslationY(view, 0);
         }
 
-        private void refreshTabsData() {
-            // Store a different copy of the tabs, so that we don't have to worry about
-            // accidentally updating it on the wrong thread.
-            mTabs = new ArrayList<Tab>();
-
-            Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
-            for (Tab tab : tabs) {
-                if (tab.isPrivate() == mIsPrivate)
-                    mTabs.add(tab);
-            }
-
-            notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
-            updateSelectedPosition();
-        }
-
-        // Updates the selected position in the list so that it will be scrolled to the right place.
-        private void updateSelectedPosition() {
-            int selected = getPositionForTab(Tabs.getInstance().getSelectedTab());
-            updateSelectedStyle(selected);
-
-            if (selected != -1) {
-                TabsTray.this.setSelection(selected);
-            }
-        }
-
-        /**
-         * Updates the selected/unselected style for the tabs.
-         *
-         * @param selected position of the selected tab
-         */
-        private void updateSelectedStyle(int selected) {
-            for (int i = 0; i < getCount(); i++) {
-                TabsTray.this.setItemChecked(i, (i == selected));
-            }
-        }
-
-        public void clear() {
-            mTabs = null;
-            notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
-        }
-
-        @Override
-        public int getCount() {
-            return (mTabs == null ? 0 : mTabs.size());
-        }
-
-        @Override
-        public Tab getItem(int position) {
-            return mTabs.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        private int getPositionForTab(Tab tab) {
-            if (mTabs == null || tab == null)
-                return -1;
-
-            return mTabs.indexOf(tab);
-        }
-
-        private void removeTab(Tab tab) {
-            if (tab.isPrivate() == mIsPrivate && mTabs != null) {
-                mTabs.remove(tab);
-                notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
-
-                int selected = getPositionForTab(Tabs.getInstance().getSelectedTab());
-                updateSelectedStyle(selected);
-            }
-        }
-
-        private void assignValues(TabRow row, Tab tab) {
-            if (row == null || tab == null)
-                return;
-
-            row.id = tab.getId();
-
-            Drawable thumbnailImage = tab.getThumbnail();
-            if (thumbnailImage != null) {
-                row.thumbnail.setImageDrawable(thumbnailImage);
-            } else {
-                row.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
-            }
-            if (row.thumbnailWrapper != null) {
-                row.thumbnailWrapper.setRecording(tab.isRecording());
-            }
-            row.title.setText(tab.getDisplayTitle());
-            row.close.setTag(row);
-        }
-
-        private void resetTransforms(View view) {
-            ViewHelper.setAlpha(view, 1);
-
+        // We only need to reset the height or width after individual tab close animations.
+        if (mOriginalSize != 0) {
             if (isVertical()) {
-                ViewHelper.setTranslationX(view, 0);
+                ViewHelper.setHeight(view, mOriginalSize);
             } else {
-                ViewHelper.setTranslationY(view, 0);
+                ViewHelper.setWidth(view, mOriginalSize);
             }
-
-            // We only need to reset the height or width after individual tab close animations.
-            if (mOriginalSize != 0) {
-                if (isVertical()) {
-                    ViewHelper.setHeight(view, mOriginalSize);
-                } else {
-                    ViewHelper.setWidth(view, mOriginalSize);
-                }
-            }
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            TabRow row;
-
-            if (convertView == null) {
-                convertView = mInflater.inflate(R.layout.tabs_row, null);
-                row = new TabRow(convertView);
-                row.close.setOnClickListener(mOnCloseClickListener);
-                convertView.setTag(row);
-            } else {
-                row = (TabRow) convertView.getTag();
-                // If we're recycling this view, there's a chance it was transformed during
-                // the close animation. Remove any of those properties.
-                resetTransforms(convertView);
-            }
-
-            Tab tab = mTabs.get(position);
-            assignValues(row, tab);
-
-            return convertView;
         }
     }
 
@@ -373,7 +294,7 @@ class TabsTray extends TwoWayView
                     autoHidePanel();
 
                     // Re-enable the view after the animation is done.
-                    TabsTray.this.setEnabled(true);
+                    TabsListLayout.this.setEnabled(true);
 
                     // Then actually close all the tabs.
                     final Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
@@ -442,7 +363,7 @@ class TabsTray extends TwoWayView
         else
             animator.attach(view, Property.WIDTH, 1);
 
-        TabRow tab = (TabRow)view.getTag();
+        TabsLayoutItemView tab = (TabsLayoutItemView)view.getTag();
         final int tabId = tab.id;
 
         // Caching this assumes that all rows are the same height
@@ -479,7 +400,7 @@ class TabsTray extends TwoWayView
             public void onPropertyAnimationStart() { }
             @Override
             public void onPropertyAnimationEnd() {
-                TabRow tab = (TabRow) view.getTag();
+                TabsLayoutItemView tab = (TabsLayoutItemView) view.getTag();
                 tab.close.setVisibility(View.VISIBLE);
             }
         });
@@ -512,7 +433,7 @@ class TabsTray extends TwoWayView
         public TabSwipeGestureListener() {
             mEnabled = true;
 
-            ViewConfiguration vc = ViewConfiguration.get(TabsTray.this.getContext());
+            ViewConfiguration vc = ViewConfiguration.get(TabsListLayout.this.getContext());
             mSwipeThreshold = vc.getScaledTouchSlop();
             mMinFlingVelocity = (int) (getContext().getResources().getDisplayMetrics().density * MIN_VELOCITY);
             mMaxFlingVelocity = vc.getScaledMaximumFlingVelocity();
@@ -541,8 +462,8 @@ class TabsTray extends TwoWayView
                 return false;
 
             if (mListWidth < 2 || mListHeight < 2) {
-                mListWidth = TabsTray.this.getWidth();
-                mListHeight = TabsTray.this.getHeight();
+                mListWidth = TabsListLayout.this.getWidth();
+                mListHeight = TabsListLayout.this.getHeight();
             }
 
             switch (e.getActionMasked()) {
@@ -577,7 +498,7 @@ class TabsTray extends TwoWayView
                     mSwipeView.setPressed(false);
 
                     if (!mSwiping) {
-                        TabRow tab = (TabRow) mSwipeView.getTag();
+                        TabsLayoutItemView tab = (TabsLayoutItemView) mSwipeView.getTag();
                         Tabs.getInstance().selectTab(tab.id);
                         autoHidePanel();
 
@@ -663,9 +584,9 @@ class TabsTray extends TwoWayView
 
                     if (isSwipingToClose) {
                         mSwiping = true;
-                        TabsTray.this.requestDisallowInterceptTouchEvent(true);
+                        TabsListLayout.this.requestDisallowInterceptTouchEvent(true);
 
-                        TabRow tab = (TabRow) mSwipeView.getTag();
+                        TabsLayoutItemView tab = (TabsLayoutItemView) mSwipeView.getTag();
                         tab.close.setVisibility(View.INVISIBLE);
 
                         // Stops listview from highlighting the touched item
@@ -673,7 +594,7 @@ class TabsTray extends TwoWayView
                         MotionEvent cancelEvent = MotionEvent.obtain(e);
                         cancelEvent.setAction(MotionEvent.ACTION_CANCEL |
                                 (e.getActionIndex() << MotionEvent.ACTION_POINTER_INDEX_SHIFT));
-                        TabsTray.this.onTouchEvent(cancelEvent);
+                        TabsListLayout.this.onTouchEvent(cancelEvent);
                         cancelEvent.recycle();
                     }
 
@@ -700,13 +621,13 @@ class TabsTray extends TwoWayView
             Rect rect = new Rect();
 
             int[] listViewCoords = new int[2];
-            TabsTray.this.getLocationOnScreen(listViewCoords);
+            TabsListLayout.this.getLocationOnScreen(listViewCoords);
 
             int x = (int) rawX - listViewCoords[0];
             int y = (int) rawY - listViewCoords[1];
 
-            for (int i = 0; i < TabsTray.this.getChildCount(); i++) {
-                View child = TabsTray.this.getChildAt(i);
+            for (int i = 0; i < TabsListLayout.this.getChildCount(); i++) {
+                View child = TabsListLayout.this.getChildAt(i);
                 child.getHitRect(rect);
 
                 if (rect.contains(x, y))
@@ -720,14 +641,14 @@ class TabsTray extends TwoWayView
             if (mPendingCheckForTap == null)
                 mPendingCheckForTap = new CheckForTap();
 
-            TabsTray.this.postDelayed(mPendingCheckForTap, ViewConfiguration.getTapTimeout());
+            TabsListLayout.this.postDelayed(mPendingCheckForTap, ViewConfiguration.getTapTimeout());
         }
 
         private void cancelCheckForTap() {
             if (mPendingCheckForTap == null)
                 return;
 
-            TabsTray.this.removeCallbacks(mPendingCheckForTap);
+            TabsListLayout.this.removeCallbacks(mPendingCheckForTap);
         }
 
         private class CheckForTap implements Runnable {
