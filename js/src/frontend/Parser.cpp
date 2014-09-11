@@ -7329,9 +7329,18 @@ typename ParseHandler::Node
 Parser<ParseHandler>::computedPropertyName(Node literal)
 {
     uint32_t begin = pos().begin;
+
+    // Turn off the inDeclDestructuring flag when parsing computed property
+    // names. In short, when parsing 'let {[x + y]: z} = obj;', noteNameUse()
+    // should be called on x and y, but not on z. See the comment on
+    // Parser<>::checkDestructuring() for details.
+    bool saved = pc->inDeclDestructuring;
+    pc->inDeclDestructuring = false;
     Node assignNode = assignExpr();
+    pc->inDeclDestructuring = saved;
     if (!assignNode)
         return null();
+
     MUST_MATCH_TOKEN(TOK_RB, JSMSG_COMP_PROP_UNTERM_EXPR);
     Node propname = handler.newComputedName(assignNode, begin, pos().end);
     if (!propname)
