@@ -6,8 +6,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Chat",
                                   "resource:///modules/Chat.jsm");
 let openChatOrig = Chat.open;
 
-const loopServiceModule = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-
 add_test(function test_get_do_not_disturb() {
   Services.prefs.setBoolPref("loop.do_not_disturb", false);
 
@@ -39,20 +37,17 @@ add_test(function test_do_not_disturb_disabled_should_open_chat_window() {
       opened = true;
     };
 
-    let savedHawkClient = loopServiceModule.gHawkClient;
-    loopServiceModule.gHawkClient = {request: hawkGetCallsRequest};
-
     mockPushHandler.notify(1);
 
-    do_check_true(opened, "should open a chat window");
-
-    loopServiceModule.gHawkClient = savedHawkClient;
-
-    run_next_test();
+    waitForCondition(function() opened).then(() => {
+      run_next_test();
+    }, () => {
+      do_throw("should have opened a chat window");
+    });
   });
 });
 
-add_task(function test_do_not_disturb_enabled_shouldnt_open_chat_window() {
+add_test(function test_do_not_disturb_enabled_shouldnt_open_chat_window() {
   MozLoopService.doNotDisturb = true;
 
   // We registered in the previous test, so no need to do that on this one.
@@ -63,7 +58,10 @@ add_task(function test_do_not_disturb_enabled_shouldnt_open_chat_window() {
 
   mockPushHandler.notify(1);
 
-  do_check_false(opened, "should not open a chat window");
+  do_timeout(500, function() {
+    do_check_false(opened, "should not open a chat window");
+    run_next_test();
+  });
 });
 
 function run_test()
@@ -72,6 +70,12 @@ function run_test()
 
   loopServer.registerPathHandler("/registration", (request, response) => {
     response.setStatusLine(null, 200, "OK");
+    response.processAsync();
+    response.finish();
+  });
+  loopServer.registerPathHandler("/calls", (request, response) => {
+    response.setStatusLine(null, 200, "OK");
+    response.write(JSON.stringify({calls: [{callId: 4444333221, websocketToken: "0deadbeef0"}]}));
     response.processAsync();
     response.finish();
   });
