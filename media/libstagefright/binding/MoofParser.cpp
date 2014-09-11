@@ -37,11 +37,16 @@ MoofParser::RebuildFragmentedIndex(const nsTArray<MediaByteRange>& aByteRanges)
 }
 
 Interval<Microseconds>
-MoofParser::GetCompositionRange()
+MoofParser::GetCompositionRange(const nsTArray<MediaByteRange>& aByteRanges)
 {
   Interval<Microseconds> compositionRange;
+  BoxContext context(mSource, aByteRanges);
   for (size_t i = 0; i < mMoofs.Length(); i++) {
-    compositionRange = compositionRange.Extents(mMoofs[i].mTimeRange);
+    Moof& moof = mMoofs[i];
+    Box box(&context, moof.mRange.mStart);
+    if (box.IsAvailable()) {
+      compositionRange = compositionRange.Extents(moof.mTimeRange);
+    }
   }
   return compositionRange;
 }

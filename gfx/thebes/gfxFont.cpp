@@ -3577,8 +3577,9 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMod
         GetAdjustedSize() / GetFontEntry()->UnitsPerEm();
     gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
 
-    aContext->Translate(gfxPoint(aPoint.x, aPoint.y));
-    aContext->Scale(devUnitsPerSVGUnit, devUnitsPerSVGUnit);
+    aContext->SetMatrix(
+      aContext->CurrentMatrix().Translate(aPoint.x, aPoint.y).
+                                Scale(devUnitsPerSVGUnit, devUnitsPerSVGUnit));
 
     aContextPaint->InitStrokeGeometry(aContext, devUnitsPerSVGUnit);
 
@@ -4361,7 +4362,7 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTi
                            gfxGlyphExtents *aExtents)
 {
     gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
-    aContext->IdentityMatrix();
+    aContext->SetMatrix(gfxMatrix());
 
     gfxRect svgBounds;
     if (mFontEntry->TryGetSVGData(this) && mFontEntry->HasSVGGlyph(aGlyphID) &&

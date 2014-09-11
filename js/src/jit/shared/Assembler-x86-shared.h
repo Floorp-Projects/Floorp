@@ -1411,18 +1411,18 @@ class AssemblerX86Shared : public AssemblerShared
         JS_ASSERT(HasSSE2());
         masm.unpcklps_rr(src.code(), dest.code());
     }
-    void pinsrd(Register src, FloatRegister dest) {
+    void pinsrd(unsigned lane, Register src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
-        masm.pinsrd_rr(src.code(), dest.code());
+        masm.pinsrd_irr(lane, src.code(), dest.code());
     }
-    void pinsrd(const Operand &src, FloatRegister dest) {
+    void pinsrd(unsigned lane, const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::REG:
-            masm.pinsrd_rr(src.reg(), dest.code());
+            masm.pinsrd_irr(lane, src.reg(), dest.code());
             break;
           case Operand::MEM_REG_DISP:
-            masm.pinsrd_mr(src.disp(), src.base(), dest.code());
+            masm.pinsrd_imr(lane, src.disp(), src.base(), dest.code());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");

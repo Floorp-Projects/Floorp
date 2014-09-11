@@ -31,13 +31,14 @@
           android:layout_width="match_parent"
           android:layout_height="wrap_content">
 
-        <org.mozilla.gecko.tabs.TabsTray android:id="@+id/normal_tabs"
-                                         style="@style/TabsList"
-                                         android:layout_width="match_parent"
-                                         android:layout_height="match_parent"
-                                         android:choiceMode="singleChoice"
-                                         android:visibility="gone"
-                                         gecko:tabs="tabs_normal"/>
+        <view class="org.mozilla.gecko.tabs.TabsPanel$TabsLayout"
+              android:id="@+id/normal_tabs"
+              style="@style/TabsList"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:choiceMode="singleChoice"
+              android:visibility="gone"
+              gecko:tabs="tabs_normal"/>
 
         <org.mozilla.gecko.tabs.PrivateTabsPanel
                 android:id="@+id/private_tabs_panel"

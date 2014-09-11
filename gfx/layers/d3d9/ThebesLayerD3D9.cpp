@@ -535,7 +535,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
 
   nsRefPtr<gfxContext> context = new gfxContext(dt);
 
-  context->Translate(gfxPoint(-bounds.x, -bounds.y));
+  context->SetMatrix(context->CurrentMatrix().Translate(-bounds.x, -bounds.y));
   LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
   cbInfo.Callback(this, context, aRegion, DrawRegionClip::CLIP_NONE, nsIntRegion(), cbInfo.CallbackData);
 
@@ -548,7 +548,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
         update.mLayer->GetSink()->BeginUpdate(update.mUpdateRect + offset,
                                               update.mSequenceCounter);
     if (ctx) {
-      ctx->Translate(gfxPoint(offset.x, offset.y));
+      ctx->SetMatrix(ctx->CurrentMatrix().Translate(offset.x, offset.y));
       ctx->SetSource(destinationSurface, gfxPoint(bounds.x, bounds.y));
       ctx->Paint();
       update.mLayer->GetSink()->EndUpdate(ctx, update.mUpdateRect + offset);

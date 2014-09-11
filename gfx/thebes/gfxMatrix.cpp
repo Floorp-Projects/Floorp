@@ -23,21 +23,21 @@ gfxMatrix::Invert()
     return cairo_matrix_invert(CAIRO_MATRIX(this)) == CAIRO_STATUS_SUCCESS;
 }
 
-const gfxMatrix&
+gfxMatrix&
 gfxMatrix::Scale(gfxFloat x, gfxFloat y)
 {
     cairo_matrix_scale(CAIRO_MATRIX(this), x, y);
     return *this;
 }
 
-const gfxMatrix&
+gfxMatrix&
 gfxMatrix::Translate(const gfxPoint& pt)
 {
     cairo_matrix_translate(CAIRO_MATRIX(this), pt.x, pt.y);
     return *this;
 }
 
-const gfxMatrix&
+gfxMatrix&
 gfxMatrix::Rotate(gfxFloat radians)
 {
     cairo_matrix_rotate(CAIRO_MATRIX(this), radians);
@@ -51,7 +51,7 @@ gfxMatrix::operator *= (const gfxMatrix& m)
     return *this;
 }
 
-const gfxMatrix&
+gfxMatrix&
 gfxMatrix::PreMultiply(const gfxMatrix& m)
 {
     cairo_matrix_multiply(CAIRO_MATRIX(this), CONST_CAIRO_MATRIX(&m), CAIRO_MATRIX(this));
@@ -147,7 +147,7 @@ static void NudgeToInteger(double *aVal)
     *aVal = f;
 }
 
-void
+gfxMatrix&
 gfxMatrix::NudgeToIntegers(void)
 {
     NudgeToInteger(&_11);
@@ -156,4 +156,5 @@ gfxMatrix::NudgeToIntegers(void)
     NudgeToInteger(&_22);
     NudgeToInteger(&_31);
     NudgeToInteger(&_32);
+    return *this;
 }
