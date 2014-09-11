@@ -97,7 +97,8 @@ AppleVDADecoder::Flush()
   mTaskQueue->Flush();
   OSStatus rv = VDADecoderFlush(mDecoder, 0 /*dont emit*/);
   if (rv != noErr) {
-    LOG("AppleVDADecoder::Flush failed waiting for platform decoder.");
+    LOG("AppleVDADecoder::Flush failed waiting for platform decoder "
+        "with error:%d.", rv);
   }
   ClearReorderedFrames();
 
@@ -110,7 +111,8 @@ AppleVDADecoder::Drain()
   mTaskQueue->AwaitIdle();
   OSStatus rv = VDADecoderFlush(mDecoder, kVDADecoderFlush_EmitFrames);
   if (rv != noErr) {
-    LOG("AppleVDADecoder::Drain failed waiting for platform decoder.");
+    LOG("AppleVDADecoder::Drain failed waiting for platform decoder "
+        "with error:%d.", rv);
   }
   DrainReorderedFrames();
   mCallback->DrainComplete();
