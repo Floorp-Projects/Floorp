@@ -1149,8 +1149,8 @@ StaticRefPtr<ITfCategoryMgr> nsTextStore::sCategoryMgr;
 StaticRefPtr<ITfDocumentMgr> nsTextStore::sDisabledDocumentMgr;
 StaticRefPtr<ITfContext> nsTextStore::sDisabledContext;
 StaticRefPtr<ITfInputProcessorProfiles> nsTextStore::sInputProcessorProfiles;
-DWORD         nsTextStore::sTsfClientId  = 0;
 StaticRefPtr<nsTextStore> nsTextStore::sEnabledTextStore;
+DWORD nsTextStore::sClientId  = 0;
 
 bool nsTextStore::sCreateNativeCaretForATOK = false;
 bool nsTextStore::sDoNotReturnNoLayoutErrorToFreeChangJie = false;
@@ -1224,7 +1224,7 @@ nsTextStore::Init(nsWindowBase* aWidget)
   mWidget = aWidget;
 
   // Create context and add it to document manager
-  hr = mDocumentMgr->CreateContext(sTsfClientId, 0,
+  hr = mDocumentMgr->CreateContext(sClientId, 0,
                                    static_cast<ITextStoreACP*>(this),
                                    getter_AddRefs(mContext), &mEditCookie);
   if (FAILED(hr)) {
@@ -4415,7 +4415,7 @@ nsTextStore::SetIMEOpenState(bool aState)
          ("TSF:   nsTextStore::SetIMEOpenState(), setting "
           "0x%04X to GUID_COMPARTMENT_KEYBOARD_OPENCLOSE...",
           variant.lVal));
-  comp->SetValue(sTsfClientId, &variant);
+  comp->SetValue(sClientId, &variant);
 }
 
 // static
@@ -4491,7 +4491,7 @@ nsTextStore::MarkContextAsKeyboardDisabled(ITfContext* aContext)
          ("TSF: nsTextStore::MarkContextAsKeyboardDisabled(), setting "
           "to disable context 0x%p...",
           aContext));
-  comp->SetValue(sTsfClientId, &variant_int4_value1);
+  comp->SetValue(sClientId, &variant_int4_value1);
 }
 
 // static
@@ -4515,7 +4515,7 @@ nsTextStore::MarkContextAsEmpty(ITfContext* aContext)
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: nsTextStore::MarkContextAsEmpty(), setting "
           "to mark empty context 0x%p...", aContext));
-  comp->SetValue(sTsfClientId, &variant_int4_value1);
+  comp->SetValue(sClientId, &variant_int4_value1);
 }
 
 // static
@@ -4595,7 +4595,7 @@ nsTextStore::Initialize()
     return;
   }
 
-  hr = threadMgr->Activate(&sTsfClientId);
+  hr = threadMgr->Activate(&sClientId);
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
       ("TSF:   nsTextStore::Initialize() FAILED to activate, hr=0x%08X", hr));
@@ -4635,7 +4635,7 @@ nsTextStore::Initialize()
 
   nsRefPtr<ITfContext> disabledContext;
   DWORD editCookie = 0;
-  hr = disabledDocumentMgr->CreateContext(sTsfClientId, 0, nullptr,
+  hr = disabledDocumentMgr->CreateContext(sClientId, 0, nullptr,
                                           getter_AddRefs(disabledContext),
                                           &editCookie);
   if (FAILED(hr) || !disabledContext) {
@@ -4680,12 +4680,12 @@ nsTextStore::Initialize()
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), sThreadMgr=0x%p, "
-     "sTsfClientId=0x%08X, sDisplayAttrMgr=0x%p, "
+     "sClientId=0x%08X, sDisplayAttrMgr=0x%p, "
      "sCategoryMgr=0x%p, sDisabledDocumentMgr=0x%p, sDisabledContext=%p, "
      "sCreateNativeCaretForATOK=%s, "
      "sDoNotReturnNoLayoutErrorToFreeChangJie=%s, "
      "sDoNotReturnNoLayoutErrorToEasyChangjei=%s",
-     sThreadMgr.get(), sTsfClientId, sDisplayAttrMgr.get(),
+     sThreadMgr.get(), sClientId, sDisplayAttrMgr.get(),
      sCategoryMgr.get(), sDisabledDocumentMgr.get(), sDisabledContext.get(),
      GetBoolName(sCreateNativeCaretForATOK),
      GetBoolName(sDoNotReturnNoLayoutErrorToFreeChangJie),
@@ -4706,7 +4706,7 @@ nsTextStore::Terminate(void)
   sDisabledDocumentMgr = nullptr;
   sDisabledContext = nullptr;
   sInputProcessorProfiles = nullptr;
-  sTsfClientId = 0;
+  sClientId = 0;
   if (sThreadMgr) {
     sThreadMgr->Deactivate();
     sThreadMgr = nullptr;
