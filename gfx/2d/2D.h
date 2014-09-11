@@ -272,11 +272,13 @@ class SurfacePattern : public Pattern
 public:
   /// For constructor parameter description, see member data documentation.
   SurfacePattern(SourceSurface *aSourceSurface, ExtendMode aExtendMode,
-                 const Matrix &aMatrix = Matrix(), Filter aFilter = Filter::GOOD)
+                 const Matrix &aMatrix = Matrix(), Filter aFilter = Filter::GOOD,
+                 const IntRect &aSamplingRect = IntRect())
     : mSurface(aSourceSurface)
     , mExtendMode(aExtendMode)
     , mFilter(aFilter)
     , mMatrix(aMatrix)
+    , mSamplingRect(aSamplingRect)
   {}
 
   virtual PatternType GetType() const { return PatternType::SURFACE; }
@@ -286,6 +288,9 @@ public:
                                        outside the bounds of the image */
   Filter mFilter;                 //!< Resampling filter for resampling the image.
   Matrix mMatrix;                 //!< Transforms the pattern into user space
+
+  IntRect mSamplingRect;          /**< Rect that must not be sampled outside of,
+                                       or an empty rect if none has been specified. */
 };
 
 class StoredPattern;
