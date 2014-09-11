@@ -126,7 +126,7 @@ nsSVGPatternFrame::GetType() const
 // matrix, which depends on our units parameters
 // and X, Y, Width, and Height
 gfxMatrix
-nsSVGPatternFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
+nsSVGPatternFrame::GetCanvasTM()
 {
   if (mCTM) {
     return *mCTM;
@@ -135,7 +135,7 @@ nsSVGPatternFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
   // Do we know our rendering parent?
   if (mSource) {
     // Yes, use it!
-    return mSource->GetCanvasTM(aFor, aTransformRoot);
+    return mSource->GetCanvasTM();
   }
 
   // We get here when geometry in the <pattern> container is updated
@@ -197,8 +197,8 @@ GetPatternMatrix(uint16_t aPatternUnits,
 
   float scale = 1.0f / MaxExpansion(callerCTM);
   Matrix patternMatrix = patternTransform;
-  patternMatrix.Scale(scale, scale);
-  patternMatrix.Translate(minx, miny);
+  patternMatrix.PreScale(scale, scale);
+  patternMatrix.PreTranslate(minx, miny);
 
   return patternMatrix;
 }
@@ -368,8 +368,8 @@ nsSVGPatternFrame::PaintPattern(Matrix* patternMatrix,
     patternFrame->mCTM->PreMultiply(tempTM);
 
     // and rescale pattern to compensate
-    patternMatrix->Scale(patternWidth / surfaceSize.width,
-                         patternHeight / surfaceSize.height);
+    patternMatrix->PreScale(patternWidth / surfaceSize.width,
+                            patternHeight / surfaceSize.height);
   }
 
   RefPtr<DrawTarget> dt =

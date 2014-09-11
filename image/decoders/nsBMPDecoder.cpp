@@ -742,6 +742,9 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy
                         byte = *aBuffer++;
                         aCount--;
                         mCurPos += byte;
+                        // Delta encoding makes it possible to skip pixels making
+                        // the image transparent.
+                        mUseAlphaData = mHaveAlphaData = true;
                         if (mCurPos > mBIH.width)
                             mCurPos = mBIH.width;
 
@@ -753,6 +756,9 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy
                         byte = *aBuffer++;
                         aCount--;
                         mState = eRLEStateInitial;
+                        // Delta encoding makes it possible to skip pixels making
+                        // the image transparent.
+                        mUseAlphaData = mHaveAlphaData = true;
                         mCurLine -= std::min<int32_t>(byte, mCurLine);
                         break;
 

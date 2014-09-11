@@ -5921,10 +5921,9 @@ def dictionaryMatchesLambda(dictionary, func):
 # Whenever this is modified, please update CGNativeMember.getRetvalInfo as
 # needed to keep the types compatible.
 def getRetvalDeclarationForType(returnType, descriptorProvider,
-                                resultAlreadyAddRefed,
                                 isMember=False):
     """
-    Returns a tuple containing four things:
+    Returns a tuple containing five things:
 
     1) A CGThing for the type of the return value, or None if there is no need
        for a return value.
@@ -5939,58 +5938,60 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
 
     4) An argument string to pass to the retval declaration
        constructor or None if there are no arguments.
+
+    5) The name of a function that needs to be called with the return value
+       before using it, or None if no function needs to be called.
     """
     if returnType is None or returnType.isVoid():
         # Nothing to declare
-        return None, None, None, None
+        return None, None, None, None, None
     if returnType.isPrimitive() and returnType.tag() in builtinNames:
         result = CGGeneric(builtinNames[returnType.tag()])
         if returnType.nullable():
             result = CGTemplatedType("Nullable", result)
-        return result, None, None, None
+        return result, None, None, None, None
     if returnType.isDOMString() or returnType.isScalarValueString():
         if isMember:
-            return CGGeneric("nsString"), "ref", None, None
-        return CGGeneric("DOMString"), "ref", None, None
+            return CGGeneric("nsString"), "ref", None, None, None
+        return CGGeneric("DOMString"), "ref", None, None, None
     if returnType.isByteString():
-        return CGGeneric("nsCString"), "ref", None, None
+        return CGGeneric("nsCString"), "ref", None, None, None
     if returnType.isEnum():
         result = CGGeneric(returnType.unroll().inner.identifier.name)
         if returnType.nullable():
             result = CGTemplatedType("Nullable", result)
-        return result, None, None, None
+        return result, None, None, None, None
     if returnType.isGeckoInterface():
         result = CGGeneric(descriptorProvider.getDescriptor(
             returnType.unroll().inner.identifier.name).nativeType)
+        conversion = None
         if descriptorProvider.getDescriptor(
                 returnType.unroll().inner.identifier.name).nativeOwnership == 'owned':
             result = CGTemplatedType("nsAutoPtr", result)
-        elif resultAlreadyAddRefed:
+        elif isMember:
             result = CGTemplatedType("nsRefPtr", result)
         else:
-            result = CGWrapper(result, post="*")
-        return result, None, None, None
+            conversion = CGGeneric("StrongOrRawPtr<%s>" % result.define())
+            result = CGGeneric("auto")
+        return result, None, None, None, conversion
     if returnType.isCallback():
         name = returnType.unroll().identifier.name
-        return CGGeneric("nsRefPtr<%s>" % name), None, None, None
+        return CGGeneric("nsRefPtr<%s>" % name), None, None, None, None
     if returnType.isAny():
         if isMember:
-            return CGGeneric("JS::Value"), None, None, None
-        return CGGeneric("JS::Rooted<JS::Value>"), "ptr", None, "cx"
+            return CGGeneric("JS::Value"), None, None, None, None
+        return CGGeneric("JS::Rooted<JS::Value>"), "ptr", None, "cx", None
     if returnType.isObject() or returnType.isSpiderMonkeyInterface():
         if isMember:
-            return CGGeneric("JSObject*"), None, None, None
-        return CGGeneric("JS::Rooted<JSObject*>"), "ptr", None, "cx"
+            return CGGeneric("JSObject*"), None, None, None, None
+        return CGGeneric("JS::Rooted<JSObject*>"), "ptr", None, "cx", None
     if returnType.isSequence():
         nullable = returnType.nullable()
         if nullable:
             returnType = returnType.inner
-        # If our result is already addrefed, use the right type in the
-        # sequence argument here.
-        result, _, _, _ = getRetvalDeclarationForType(returnType.inner,
-                                                      descriptorProvider,
-                                                      resultAlreadyAddRefed,
-                                                      isMember="Sequence")
+        result, _, _, _, _ = getRetvalDeclarationForType(returnType.inner,
+                                                         descriptorProvider,
+                                                         isMember="Sequence")
         # While we have our inner type, set up our rooter, if needed
         if not isMember and typeNeedsRooting(returnType):
             rooter = CGGeneric("SequenceRooter<%s > resultRooter(cx, &result);\n" %
@@ -6000,17 +6001,14 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         result = CGTemplatedType("nsTArray", result)
         if nullable:
             result = CGTemplatedType("Nullable", result)
-        return result, "ref", rooter, None
+        return result, "ref", rooter, None, None
     if returnType.isMozMap():
         nullable = returnType.nullable()
         if nullable:
             returnType = returnType.inner
-        # If our result is already addrefed, use the right type in the
-        # MozMap argument here.
-        result, _, _, _ = getRetvalDeclarationForType(returnType.inner,
-                                                      descriptorProvider,
-                                                      resultAlreadyAddRefed,
-                                                      isMember="MozMap")
+        result, _, _, _, _ = getRetvalDeclarationForType(returnType.inner,
+                                                         descriptorProvider,
+                                                         isMember="MozMap")
         # While we have our inner type, set up our rooter, if needed
         if not isMember and typeNeedsRooting(returnType):
             rooter = CGGeneric("MozMapRooter<%s> resultRooter(cx, &result);\n" %
@@ -6020,7 +6018,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         result = CGTemplatedType("MozMap", result)
         if nullable:
             result = CGTemplatedType("Nullable", result)
-        return result, "ref", rooter, None
+        return result, "ref", rooter, None, None
     if returnType.isDictionary():
         nullable = returnType.nullable()
         dictName = CGDictionary.makeDictionaryName(returnType.unroll().inner)
@@ -6035,7 +6033,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             if nullable:
                 result = CGTemplatedType("Nullable", result)
             resultArgs = None
-        return result, "ref", None, resultArgs
+        return result, "ref", None, resultArgs, None
     if returnType.isUnion():
         result = CGGeneric(CGUnionStruct.unionTypeName(returnType.unroll(), True))
         if not isMember and typeNeedsRooting(returnType):
@@ -6048,18 +6046,14 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             if returnType.nullable():
                 result = CGTemplatedType("Nullable", result)
             resultArgs = None
-        return result, "ref", None, resultArgs
+        return result, "ref", None, resultArgs, None
     if returnType.isDate():
         result = CGGeneric("Date")
         if returnType.nullable():
             result = CGTemplatedType("Nullable", result)
-        return result, None, None, None
+        return result, None, None, None, None
     raise TypeError("Don't know how to declare return value for %s" %
                     returnType)
-
-
-def isResultAlreadyAddRefed(extendedAttributes):
-    return 'resultNotAddRefed' not in extendedAttributes
 
 
 def needCx(returnType, arguments, extendedAttributes, considerTypes,
@@ -6103,10 +6097,8 @@ class CGCallGenerator(CGThing):
 
         isFallible = errorReport is not None
 
-        resultAlreadyAddRefed = isResultAlreadyAddRefed(extendedAttributes)
-        result, resultOutParam, resultRooter, resultArgs = \
-            getRetvalDeclarationForType(
-                returnType, descriptorProvider, resultAlreadyAddRefed)
+        result, resultOutParam, resultRooter, resultArgs, resultConversion = \
+            getRetvalDeclarationForType(returnType, descriptorProvider)
 
         args = CGList([CGGeneric(arg) for arg in argsPre], ", ")
         for a, name in arguments:
@@ -6169,7 +6161,9 @@ class CGCallGenerator(CGThing):
         call = CGGeneric(nativeMethodName)
         if not static:
             call = CGWrapper(call, pre="%s->" % object)
-        call = CGList([call, CGWrapper(args, pre="(", post=");\n")])
+        call = CGList([call, CGWrapper(args, pre="(", post=")")])
+        if resultConversion is not None:
+            call = CGList([resultConversion, CGWrapper(call, pre="(", post=")")])
         if resultVar is None and result is not None:
             needResultDecl = True
             resultVar = "result"
@@ -6178,15 +6172,18 @@ class CGCallGenerator(CGThing):
             if resultRooter is not None:
                 self.cgRoot.prepend(resultRooter)
             if resultArgs is not None:
-                resultArgs = "(%s)" % resultArgs
+                resultArgsStr = "(%s)" % resultArgs
             else:
-                resultArgs = ""
-            result = CGWrapper(result, post=(" %s%s;\n" % (resultVar, resultArgs)))
-            self.cgRoot.prepend(result)
-            if not resultOutParam:
-                call = CGWrapper(call, pre=resultVar + " = ")
+                resultArgsStr = ""
+            result = CGWrapper(result, post=(" %s%s" % (resultVar, resultArgsStr)))
+            if resultOutParam is None and resultArgs is None:
+                call = CGList([result, CGWrapper(call, pre="(", post=")")])
+            else:
+                self.cgRoot.prepend(CGWrapper(result, post=";\n"))
+                if resultOutParam is None:
+                    call = CGWrapper(call, pre=resultVar + " = ")
 
-        call = CGWrapper(call)
+        call = CGWrapper(call, post=";\n")
         self.cgRoot.append(call)
 
         if isFallible:
@@ -6559,13 +6556,17 @@ class CGPerSignatureCall(CGThing):
         return 'infallible' not in self.extendedAttributes
 
     def wrap_return_value(self):
+        wrapCode = ""
+
         returnsNewObject = memberReturnsNewObject(self.idlNode)
-        if returnsNewObject:
-            # We better be returning addrefed things!
-            assert(isResultAlreadyAddRefed(self.extendedAttributes) or
-                   # NewObject can return raw pointers to owned objects
-                   (self.returnType.isGeckoInterface() and
-                    self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned'))
+        if (returnsNewObject and
+            self.returnType.isGeckoInterface() and
+            not self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned'):
+            wrapCode += dedent(
+                """
+                static_assert(!IsPointer<decltype(result)>::value,
+                              "NewObject implies that we need to keep the object alive with a strong reference.");
+                """)
 
         setSlot = self.idlNode.isAttr() and self.idlNode.slotIndex is not None
         if setSlot:
@@ -6583,7 +6584,7 @@ class CGPerSignatureCall(CGThing):
             'obj': "reflector" if setSlot else "obj"
         }
         try:
-            wrapCode = wrapForType(self.returnType, self.descriptor, resultTemplateValues)
+            wrapCode += wrapForType(self.returnType, self.descriptor, resultTemplateValues)
         except MethodNotNewObjectError, err:
             assert not returnsNewObject
             raise TypeError("%s being returned from non-NewObject method or property %s.%s" %
@@ -7711,10 +7712,8 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
     def makeNativeName(descriptor, attr):
         name = attr.identifier.name
         nativeName = MakeNativeName(descriptor.binaryNameFor(name))
-        # resultOutParam does not depend on whether resultAlreadyAddRefed is set
-        _, resultOutParam, _, _ = getRetvalDeclarationForType(attr.type,
-                                                              descriptor,
-                                                              False)
+        _, resultOutParam, _, _, _ = getRetvalDeclarationForType(attr.type,
+                                                                 descriptor)
         infallible = ('infallible' in
                       descriptor.getExtendedAttributes(attr, getter=True))
         if resultOutParam or attr.type.nullable() or not infallible:
@@ -12147,7 +12146,8 @@ class CGBindingRoot(CGThing):
 class CGNativeMember(ClassMethod):
     def __init__(self, descriptorProvider, member, name, signature, extendedAttrs,
                  breakAfter=True, passJSBitsAsNeeded=True, visibility="public",
-                 typedArraysAreStructs=True, variadicIsSequence=False):
+                 typedArraysAreStructs=True, variadicIsSequence=False,
+                 resultNotAddRefed=False):
         """
         If typedArraysAreStructs is false, typed arrays will be passed as
         JS::Handle<JSObject*>.  If it's true they will be passed as one of the
@@ -12160,7 +12160,7 @@ class CGNativeMember(ClassMethod):
         self.descriptorProvider = descriptorProvider
         self.member = member
         self.extendedAttrs = extendedAttrs
-        self.resultAlreadyAddRefed = isResultAlreadyAddRefed(self.extendedAttrs)
+        self.resultAlreadyAddRefed = not resultNotAddRefed
         self.passJSBitsAsNeeded = passJSBitsAsNeeded
         self.typedArraysAreStructs = typedArraysAreStructs
         self.variadicIsSequence = variadicIsSequence
@@ -12240,7 +12240,7 @@ class CGNativeMember(ClassMethod):
                 if memberReturnsNewObject(self.member) or isMember:
                     warning = ""
                 else:
-                    warning = "// Mark this as resultNotAddRefed to return raw pointers\n"
+                    warning = "// Return a raw pointer here to avoid refcounting, but make sure it's safe (the object should be kept alive by the callee).\n"
                 result = CGWrapper(result,
                                    pre=("%s%s<" % (warning, holder)),
                                    post=">")
@@ -13485,9 +13485,8 @@ class FakeMember():
         return False
 
     def getExtendedAttribute(self, name):
-        # Claim to be a [NewObject] so we can avoid the "mark this
-        # resultNotAddRefed" comments CGNativeMember codegen would
-        # otherwise stick in.
+        # Claim to be a [NewObject] so we can avoid the "return a raw pointer"
+        # comments CGNativeMember codegen would otherwise stick in.
         if name == "NewObject":
             return True
         return None
@@ -14289,13 +14288,12 @@ class GlobalGenRoots():
 class CGEventGetter(CGNativeMember):
     def __init__(self, descriptor, attr):
         ea = descriptor.getExtendedAttributes(attr, getter=True)
-        if not attr.type.isSequence():
-            ea.append('resultNotAddRefed')
         CGNativeMember.__init__(self, descriptor, attr,
                                 CGSpecializedGetter.makeNativeName(descriptor,
                                                                    attr),
                                 (attr.type, []),
-                                ea)
+                                ea,
+                                resultNotAddRefed=not attr.type.isSequence())
         self.body = self.getMethodBody()
 
     def getArgs(self, returnType, argList):

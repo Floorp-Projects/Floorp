@@ -276,21 +276,6 @@ typedef enum {
 	WHISPER,
 	PRESERVATION,
 	WAITINGFORDIGITS = 21,
-	CREATEOFFERSUCCESS,
-	CREATEANSWERSUCCESS,
-	CREATEOFFERERROR,
-	CREATEANSWERERROR,
-	SETLOCALDESCSUCCESS,
-	SETREMOTEDESCSUCCESS,
-	UPDATELOCALDESC,
-	UPDATEREMOTEDESC,
-	SETLOCALDESCERROR,
-	SETREMOTEDESCERROR,
-	REMOTESTREAMADD,
-	ADDICECANDIDATE,
-	ADDICECANDIDATEERROR,
-	FOUNDICECANDIDATE,
-	FOUNDICECANDIDATEERROR,
     MAX_CALL_STATES
 } cc_call_state_t;
 
@@ -559,6 +544,30 @@ typedef enum {
   JSEP_PRANSWER
 } cc_jsep_action_t;
 
+
+/* These values must be kept in sync with the equivalent values in:
+ *
+ *   PeerConnectionImpl.h
+ *   Peerconnection.js
+ *   nsIDOMPeerConnection.idl
+ *
+ * Yes, this is far from ideal, but there isn't an obviously cleaner
+ * way to deal with the situation within the constraints imposed on us
+ * by IDL.
+ */
+
+typedef enum {
+    PC_NO_ERROR                          = 0,
+    PC_INVALID_CONSTRAINTS_TYPE          = 1,
+    PC_INVALID_CANDIDATE_TYPE            = 2,
+    PC_INVALID_MEDIASTREAM_TRACK         = 3,
+    PC_INVALID_STATE                     = 4,
+    PC_INVALID_SESSION_DESCRIPTION       = 5,
+    PC_INCOMPATIBLE_SESSION_DESCRIPTION  = 6,
+    PC_INCOMPATIBLE_CONSTRAINTS          = 7,
+    PC_INCOMPATIBLE_MEDIA_STREAM_TRACK   = 8,
+    PC_INTERNAL_ERROR                    = 9
+} pc_error;
 
 typedef cc_string_t cc_peerconnection_t;
 

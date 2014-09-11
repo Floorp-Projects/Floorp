@@ -1062,8 +1062,6 @@ js::ArrayJoin(JSContext *cx, HandleObject obj, HandleLinearString sepstr, uint32
 
     // Steps 1 to 6, should be done by the caller.
 
-    JS::Anchor<JSString*> anchor(sepstr);
-
     // Step 6 is implicit in the loops below.
 
     // An optimized version of a special case of steps 7-11: when length==1 and

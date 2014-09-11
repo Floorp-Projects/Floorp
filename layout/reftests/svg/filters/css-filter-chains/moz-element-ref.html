@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters Chains: Use a Filtered Element as the Background of Another Element</title>
+  <style type="text/css">
+    #src {
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+    #dest {
+      margin-top: 10px;
+      background: #0f0;
+      width: 200px;
+      height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a small green square followed by a large green square.</p>
+  <div id="src"></div>
+  <div id="dest"></div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-setJitCompilerOption("ion.usecount.trigger", 20);
+setJitCompilerOption("ion.warmup.trigger", 20);
 Function.prototype.__proto__ = new Boolean({ get: function() {} }, {});
 function g(x, y) {}
 function f() {

@@ -141,7 +141,7 @@ fim_free_call_chn (fim_icb_t *call_chn, line_t line, boolean update_call_cnt)
 }
 
 
-static fim_icb_t *
+fim_icb_t *
 fim_get_call_chn_by_call_id (callid_t call_id)
 {
     static const char fname[] = "fim_get_call_chn_by_call_id";
@@ -161,7 +161,7 @@ fim_get_call_chn_by_call_id (callid_t call_id)
     return call_chn;
 }
 
-static fim_icb_t *
+fim_icb_t *
 fim_get_new_call_chn (callid_t call_id)
 {
     static const char fname[] = "fim_get_new_call_chn";
@@ -507,14 +507,6 @@ fim_process_event (void *data, boolean cac_passed)
             (event_id == CC_MSG_OFFHOOK)    ||
             (event_id == CC_MSG_DIALSTRING) ||
             (event_id == CC_MSG_LINE)       ||
-            (event_id == CC_MSG_CREATEOFFER) ||
-            (event_id == CC_MSG_CREATEANSWER) ||
-            (event_id == CC_MSG_SETLOCALDESC) ||
-            (event_id == CC_MSG_SETREMOTEDESC) ||
-            (event_id == CC_MSG_SETPEERCONNECTION) ||
-            (event_id == CC_MSG_ADDSTREAM) ||
-            (event_id == CC_MSG_REMOVESTREAM) ||
-            (event_id == CC_MSG_ADDCANDIDATE) ||
             ((event_id == CC_MSG_FEATURE) &&
              ((((cc_feature_t *) msg)->feature_id == CC_FEATURE_NEW_CALL)))) {
             call_chn = fim_get_new_call_chn(call_id);

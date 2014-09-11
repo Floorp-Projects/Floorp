@@ -234,271 +234,6 @@ private:
 };
 }
 
-class PeerConnectionObserverDispatch : public nsRunnable {
-
-public:
-  PeerConnectionObserverDispatch(CSF::CC_CallInfoPtr aInfo,
-                                 nsRefPtr<PeerConnectionImpl> aPC,
-                                 PeerConnectionObserver* aObserver)
-      : mPC(aPC),
-        mObserver(aObserver),
-        mCode(static_cast<PeerConnectionImpl::Error>(aInfo->getStatusCode())),
-        mReason(aInfo->getStatus()),
-        mSdpStr(),
-        mCandidateStr(),
-        mCallState(aInfo->getCallState()),
-        mFsmState(aInfo->getFsmState()),
-        mStateStr(aInfo->callStateToString(mCallState)),
-        mFsmStateStr(aInfo->fsmStateToString(mFsmState)) {
-    if (mCallState == REMOTESTREAMADD) {
-      MediaStreamTable *streams = nullptr;
-      streams = aInfo->getMediaStreams();
-      mRemoteStream = mPC->media()->GetRemoteStream(streams->media_stream_id);
-      MOZ_ASSERT(mRemoteStream);
-      cpr_free(streams);
-    } else if (mCallState == FOUNDICECANDIDATE) {
-        mCandidateStr = aInfo->getCandidate();
-    } else if ((mCallState == CREATEOFFERSUCCESS) ||
-               (mCallState == CREATEANSWERSUCCESS)) {
-        mSdpStr = aInfo->getSDP();
-    }
-  }
-
-  ~PeerConnectionObserverDispatch(){}
-
-#ifdef MOZILLA_INTERNAL_API
-  class TracksAvailableCallback : public DOMMediaStream::OnTracksAvailableCallback
-  {
-  public:
-    TracksAvailableCallback(DOMMediaStream::TrackTypeHints aTrackTypeHints,
-                            nsRefPtr<PeerConnectionObserver> aObserver)
-    : DOMMediaStream::OnTracksAvailableCallback(aTrackTypeHints)
-    , mObserver(aObserver) {}
-
-    virtual void NotifyTracksAvailable(DOMMediaStream* aStream) MOZ_OVERRIDE
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-
-      // Start currentTime from the point where this stream was successfully
-      // returned.
-      aStream->SetLogicalStreamStartTime(aStream->GetStream()->GetCurrentTime());
-
-      CSFLogInfo(logTag, "Returning success for OnAddStream()");
-      // We are running on main thread here so we shouldn't have a race
-      // on this callback
-
-      nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
-      aStream->GetTracks(tracks);
-      for (uint32_t i = 0; i < tracks.Length(); i++) {
-        JSErrorResult rv;
-        mObserver->OnAddTrack(*tracks[i], rv);
-        if (rv.Failed()) {
-          CSFLogError(logTag, ": OnAddTrack(%d) failed! Error: %d", i,
-                      rv.ErrorCode());
-        }
-      }
-      JSErrorResult rv;
-      mObserver->OnAddStream(*aStream, rv);
-      if (rv.Failed()) {
-        CSFLogError(logTag, ": OnAddStream() failed! Error: %d", rv.ErrorCode());
-      }
-    }
-  private:
-    nsRefPtr<PeerConnectionObserver> mObserver;
-  };
-#endif
-
-  NS_IMETHOD Run() {
-
-    CSFLogInfo(logTag, "PeerConnectionObserverDispatch processing "
-               "mCallState = %d (%s), mFsmState = %d (%s)",
-               mCallState, mStateStr.c_str(), mFsmState, mFsmStateStr.c_str());
-
-    if (mCallState == SETLOCALDESCERROR || mCallState == SETREMOTEDESCERROR) {
-      const std::vector<std::string> &errors = mPC->GetSdpParseErrors();
-      std::vector<std::string>::const_iterator i;
-      for (i = errors.begin(); i != errors.end(); ++i) {
-        mReason += " | SDP Parsing Error: " + *i;
-      }
-      if (errors.size()) {
-        mCode = PeerConnectionImpl::kInvalidSessionDescription;
-      }
-      mPC->ClearSdpParseErrorMessages();
-    }
-
-    if (mReason.length()) {
-      CSFLogInfo(logTag, "Message contains error: %d: %s",
-                 mCode, mReason.c_str());
-    }
-
-    /*
-     * While the fsm_states_t (FSM_DEF_*) constants are a proper superset
-     * of SignalingState, and the order in which the SignalingState values
-     * appear matches the order they appear in fsm_states_t, their underlying
-     * numeric representation is different. Hence, we need to perform an
-     * offset calculation to map from one to the other.
-     */
-
-    if (mFsmState >= FSMDEF_S_STABLE && mFsmState <= FSMDEF_S_CLOSED) {
-      int offset = FSMDEF_S_STABLE - int(PCImplSignalingState::SignalingStable);
-      mPC->SetSignalingState_m(static_cast<PCImplSignalingState>(mFsmState - offset));
-    } else {
-      CSFLogError(logTag, ": **** UNHANDLED SIGNALING STATE : %d (%s)",
-                  mFsmState, mFsmStateStr.c_str());
-    }
-
-    JSErrorResult rv;
-
-    switch (mCallState) {
-      case CREATEOFFERSUCCESS:
-        mObserver->OnCreateOfferSuccess(ObString(mSdpStr.c_str()), rv);
-        break;
-
-      case CREATEANSWERSUCCESS:
-        mObserver->OnCreateAnswerSuccess(ObString(mSdpStr.c_str()), rv);
-        break;
-
-      case CREATEOFFERERROR:
-        mObserver->OnCreateOfferError(mCode, ObString(mReason.c_str()), rv);
-        break;
-
-      case CREATEANSWERERROR:
-        mObserver->OnCreateAnswerError(mCode, ObString(mReason.c_str()), rv);
-        break;
-
-      case SETLOCALDESCSUCCESS:
-        // TODO: The SDP Parse error list should be copied out and sent up
-        // to the Javascript layer before being cleared here. Even though
-        // there was not a failure, it is possible that the SDP parse generated
-        // warnings. The WebRTC spec does not currently have a mechanism for
-        // providing non-fatal warnings.
-        mPC->ClearSdpParseErrorMessages();
-        mObserver->OnSetLocalDescriptionSuccess(rv);
-        mPC->StartTrickle();
-        break;
-
-      case SETREMOTEDESCSUCCESS:
-        // TODO: The SDP Parse error list should be copied out and sent up
-        // to the Javascript layer before being cleared here. Even though
-        // there was not a failure, it is possible that the SDP parse generated
-        // warnings. The WebRTC spec does not currently have a mechanism for
-        // providing non-fatal warnings.
-        mPC->ClearSdpParseErrorMessages();
-        mObserver->OnSetRemoteDescriptionSuccess(rv);
-#ifdef MOZILLA_INTERNAL_API
-        mPC->startCallTelem();
-#endif
-        break;
-
-      case SETLOCALDESCERROR:
-        mObserver->OnSetLocalDescriptionError(mCode,
-                                              ObString(mReason.c_str()), rv);
-        break;
-
-      case SETREMOTEDESCERROR:
-        mObserver->OnSetRemoteDescriptionError(mCode,
-                                               ObString(mReason.c_str()), rv);
-        break;
-
-      case ADDICECANDIDATE:
-        mObserver->OnAddIceCandidateSuccess(rv);
-        break;
-
-      case ADDICECANDIDATEERROR:
-        mPC->OnAddIceCandidateError();
-        mObserver->OnAddIceCandidateError(mCode, ObString(mReason.c_str()), rv);
-        break;
-
-      case FOUNDICECANDIDATE:
-        {
-            size_t end_of_level = mCandidateStr.find('\t');
-            if (end_of_level == std::string::npos) {
-                MOZ_ASSERT(false);
-                return NS_OK;
-            }
-            std::string level = mCandidateStr.substr(0, end_of_level);
-            if (!level.size()) {
-                MOZ_ASSERT(false);
-                return NS_OK;
-            }
-            char *endptr;
-            errno = 0;
-            unsigned long level_long =
-                strtoul(level.c_str(), &endptr, 10);
-            if (errno || *endptr != 0 || level_long > 65535) {
-                /* Conversion failure */
-                MOZ_ASSERT(false);
-                return NS_OK;
-            }
-            size_t end_of_mid = mCandidateStr.find('\t', end_of_level + 1);
-            if (end_of_mid == std::string::npos) {
-                MOZ_ASSERT(false);
-                return NS_OK;
-            }
-
-            std::string mid = mCandidateStr.substr(end_of_level + 1,
-                                                   end_of_mid - (end_of_level + 1));
-
-            std::string candidate = mCandidateStr.substr(end_of_mid + 1);
-
-            CSFLogDebug(logTag, "Passing local candidate to content: %s",
-                        candidate.c_str());
-            mObserver->OnIceCandidate(level_long & 0xffff,
-                                      ObString(mid.c_str()),
-                                      ObString(candidate.c_str()), rv);
-        }
-        break;
-      case REMOTESTREAMADD:
-        {
-          DOMMediaStream* stream = nullptr;
-
-          if (!mRemoteStream) {
-            CSFLogError(logTag, "%s: GetRemoteStream returned NULL", __FUNCTION__);
-          } else {
-            stream = mRemoteStream->GetMediaStream();
-          }
-
-          if (!stream) {
-            CSFLogError(logTag, "%s: GetMediaStream returned NULL", __FUNCTION__);
-          } else {
-#ifdef MOZILLA_INTERNAL_API
-            TracksAvailableCallback* tracksAvailableCallback =
-              new TracksAvailableCallback(mRemoteStream->mTrackTypeHints, mObserver);
-
-            stream->OnTracksAvailable(tracksAvailableCallback);
-#else
-            mObserver->OnAddStream(stream, rv);
-#endif
-          }
-          break;
-        }
-
-      case UPDATELOCALDESC:
-        /* No action necessary */
-        break;
-
-      default:
-        CSFLogError(logTag, ": **** UNHANDLED CALL STATE : %d (%s)",
-                    mCallState, mStateStr.c_str());
-        break;
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<PeerConnectionImpl> mPC;
-  nsRefPtr<PeerConnectionObserver> mObserver;
-  PeerConnectionImpl::Error mCode;
-  std::string mReason;
-  std::string mSdpStr;
-  std::string mCandidateStr;
-  cc_call_state_t mCallState;
-  fsmdef_states_t mFsmState;
-  std::string mStateStr;
-  std::string mFsmStateStr;
-  nsRefPtr<RemoteSourceStreamInfo> mRemoteStream;
-};
-
 NS_IMPL_ISUPPORTS0(PeerConnectionImpl)
 
 #ifdef MOZILLA_INTERNAL_API
@@ -1123,7 +858,9 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
 
   if (!mHaveDataStream) {
     // XXX stream_id of 0 might confuse things...
-    mInternal->mCall->addStream(0, 2, DATA);
+    if (mInternal->mCall->addStream(0, 2, DATA)) {
+      return NS_ERROR_FAILURE;
+    }
     mHaveDataStream = true;
   }
   nsIDOMDataChannel *retval;
@@ -1215,30 +952,59 @@ PeerConnectionImpl::CreateOffer(const RTCOfferOptions& aOptions)
   return CreateOffer(SipccOfferOptions(aOptions));
 }
 
+static void DeferredCreateOffer(const std::string& aPcHandle,
+                                const SipccOfferOptions& aOptions) {
+  PeerConnectionWrapper wrapper(aPcHandle);
+
+  if (wrapper.impl()) {
+    if (!PeerConnectionCtx::GetInstance()->isReady()) {
+      MOZ_CRASH("Why is DeferredCreateOffer being executed when the "
+                "PeerConnectionCtx isn't ready?");
+    }
+    wrapper.impl()->CreateOffer(aOptions);
+  }
+}
+
 // Used by unit tests and the IDL CreateOffer.
 NS_IMETHODIMP
 PeerConnectionImpl::CreateOffer(const SipccOfferOptions& aOptions)
 {
   PC_AUTO_ENTER_API_CALL(true);
 
-  Timecard *tc = mTimeCard;
-  mTimeCard = nullptr;
-  STAMP_TIMECARD(tc, "Create Offer");
-
-  cc_media_options_t* cc_options = aOptions.build();
-  NS_ENSURE_TRUE(cc_options, NS_ERROR_UNEXPECTED);
+  JSErrorResult rv;
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
+  if (!pco) {
+    return NS_OK;
+  }
 
   if (!PeerConnectionCtx::GetInstance()->isReady()) {
     // Uh oh. We're not ready yet. Enqueue this operation.
     PeerConnectionCtx::GetInstance()->queueJSEPOperation(
-        WrapRunnable(mInternal->mCall,
-                     &CSF::CC_Call::createOffer,
-                     cc_options,
-                     tc));
-  } else {
-    mInternal->mCall->createOffer(cc_options, tc);
+        WrapRunnableNM(DeferredCreateOffer, mHandle, aOptions));
+    STAMP_TIMECARD(mTimeCard, "Deferring CreateOffer (not ready)");
+    return NS_OK;
   }
 
+  STAMP_TIMECARD(mTimeCard, "Create Offer");
+
+  cc_media_options_t* cc_options = aOptions.build();
+  NS_ENSURE_TRUE(cc_options, NS_ERROR_UNEXPECTED);
+
+  cc_int32_t error = mInternal->mCall->createOffer(cc_options, mTimeCard);
+
+  if (error) {
+    std::string error_string;
+    mInternal->mCall->getErrorString(&error_string);
+    CSFLogError(logTag, "%s: pc = %s, error = %s",
+                __FUNCTION__, mHandle.c_str(), error_string.c_str());
+    pco->OnCreateOfferError(error, ObString(error_string.c_str()), rv);
+  } else {
+    std::string sdp;
+    mInternal->mCall->getLocalSdp(&sdp);
+    pco->OnCreateOfferSuccess(ObString(sdp.c_str()), rv);
+  }
+
+  UpdateSignalingState();
   return NS_OK;
 }
 
@@ -1247,12 +1013,41 @@ PeerConnectionImpl::CreateAnswer()
 {
   PC_AUTO_ENTER_API_CALL(true);
 
-  Timecard *tc = mTimeCard;
-  mTimeCard = nullptr;
-  STAMP_TIMECARD(tc, "Create Answer");
+  JSErrorResult rv;
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
+  if (!pco) {
+    return NS_OK;
+  }
 
-  mInternal->mCall->createAnswer(tc);
+  STAMP_TIMECARD(mTimeCard, "Create Answer");
+
+  cc_int32_t error = mInternal->mCall->createAnswer(mTimeCard);
+
+  if (error) {
+    std::string error_string;
+    mInternal->mCall->getErrorString(&error_string);
+    CSFLogError(logTag, "%s: pc = %s, error = %s",
+                __FUNCTION__, mHandle.c_str(), error_string.c_str());
+    pco->OnCreateAnswerError(error, ObString(error_string.c_str()), rv);
+  } else {
+    std::string sdp;
+    mInternal->mCall->getLocalSdp(&sdp);
+    pco->OnCreateAnswerSuccess(ObString(sdp.c_str()), rv);
+  }
+
+  UpdateSignalingState();
   return NS_OK;
+}
+
+static void appendSdpParseErrors(const std::vector<std::string>& aErrors,
+                                 std::string* aErrorString,
+                                 cc_int32_t* aErrorCode) {
+   for (auto i = aErrors.begin(); i != aErrors.end(); ++i) {
+     *aErrorString += " | SDP Parsing Error: " + *i;
+   }
+   if (aErrors.size()) {
+     *aErrorCode = PeerConnectionImpl::kInvalidSessionDescription;
+   }
 }
 
 NS_IMETHODIMP
@@ -1265,9 +1060,13 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP)
     return NS_ERROR_FAILURE;
   }
 
-  Timecard *tc = mTimeCard;
-  mTimeCard = nullptr;
-  STAMP_TIMECARD(tc, "Set Local Description");
+  JSErrorResult rv;
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
+  if (!pco) {
+    return NS_OK;
+  }
+
+  STAMP_TIMECARD(mTimeCard, "Set Local Description");
 
 #ifdef MOZILLA_INTERNAL_API
   bool isolated = mMedia->AnyLocalStreamHasPeerIdentity();
@@ -1275,9 +1074,41 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP)
 #endif
 
   mLocalRequestedSDP = aSDP;
-  mInternal->mCall->setLocalDescription((cc_jsep_action_t)aAction,
-                                        mLocalRequestedSDP, tc);
+  cc_int32_t error  = mInternal->mCall->setLocalDescription(
+      (cc_jsep_action_t)aAction,
+      mLocalRequestedSDP, mTimeCard);
+
+  if (error) {
+    std::string error_string;
+    mInternal->mCall->getErrorString(&error_string);
+    appendSdpParseErrors(mSDPParseErrorMessages, &error_string, &error);
+    CSFLogError(logTag, "%s: pc = %s, error = %s",
+                __FUNCTION__, mHandle.c_str(), error_string.c_str());
+    pco->OnSetLocalDescriptionError(error, ObString(error_string.c_str()), rv);
+  } else {
+    mInternal->mCall->getLocalSdp(&mLocalSDP);
+    pco->OnSetLocalDescriptionSuccess(rv);
+    StartTrickle();
+  }
+
+  ClearSdpParseErrorMessages();
+
+  UpdateSignalingState();
   return NS_OK;
+}
+
+static void DeferredSetRemote(const std::string& aPcHandle,
+                              int32_t aAction,
+                              const std::string& aSdp) {
+  PeerConnectionWrapper wrapper(aPcHandle);
+
+  if (wrapper.impl()) {
+    if (!PeerConnectionCtx::GetInstance()->isReady()) {
+      MOZ_CRASH("Why is DeferredSetRemote being executed when the "
+                "PeerConnectionCtx isn't ready?");
+    }
+    wrapper.impl()->SetRemoteDescription(aAction, aSdp.c_str());
+  }
 }
 
 NS_IMETHODIMP
@@ -1290,26 +1121,50 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
     return NS_ERROR_FAILURE;
   }
 
-  Timecard *tc = mTimeCard;
-  mTimeCard = nullptr;
-  STAMP_TIMECARD(tc, "Set Remote Description");
-
-  mRemoteRequestedSDP = aSDP;
+  JSErrorResult rv;
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
+  if (!pco) {
+    return NS_OK;
+  }
 
   if (!PeerConnectionCtx::GetInstance()->isReady()) {
     // Uh oh. We're not ready yet. Enqueue this operation. (This must be a
     // remote offer, or else we would not have gotten this far)
     PeerConnectionCtx::GetInstance()->queueJSEPOperation(
-        WrapRunnable(mInternal->mCall,
-                     &CSF::CC_Call::setRemoteDescription,
-                     (cc_jsep_action_t)action,
-                     mRemoteRequestedSDP,
-                     tc));
-  } else {
-    mInternal->mCall->setRemoteDescription((cc_jsep_action_t)action,
-                                           mRemoteRequestedSDP, tc);
+        WrapRunnableNM(DeferredSetRemote,
+                       mHandle,
+                       action,
+                       std::string(aSDP)));
+    STAMP_TIMECARD(mTimeCard, "Deferring SetRemote (not ready)");
+    return NS_OK;
   }
 
+  STAMP_TIMECARD(mTimeCard, "Set Remote Description");
+
+  mRemoteRequestedSDP = aSDP;
+
+  cc_int32_t error = mInternal->mCall->setRemoteDescription(
+                                         (cc_jsep_action_t)action,
+                                         mRemoteRequestedSDP, mTimeCard);
+
+  if (error) {
+    std::string error_string;
+    mInternal->mCall->getErrorString(&error_string);
+    appendSdpParseErrors(mSDPParseErrorMessages, &error_string, &error);
+    CSFLogError(logTag, "%s: pc = %s, error = %s",
+                __FUNCTION__, mHandle.c_str(), error_string.c_str());
+    pco->OnSetRemoteDescriptionError(error, ObString(error_string.c_str()), rv);
+  } else {
+    mInternal->mCall->getRemoteSdp(&mRemoteSDP);
+    pco->OnSetRemoteDescriptionSuccess(rv);
+#ifdef MOZILLA_INTERNAL_API
+    startCallTelem();
+#endif
+  }
+
+  ClearSdpParseErrorMessages();
+
+  UpdateSignalingState();
   return NS_OK;
 }
 
@@ -1372,9 +1227,13 @@ NS_IMETHODIMP
 PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, unsigned short aLevel) {
   PC_AUTO_ENTER_API_CALL(true);
 
-  Timecard *tc = mTimeCard;
-  mTimeCard = nullptr;
-  STAMP_TIMECARD(tc, "Add Ice Candidate");
+  JSErrorResult rv;
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
+  if (!pco) {
+    return NS_OK;
+  }
+
+  STAMP_TIMECARD(mTimeCard, "Add Ice Candidate");
 
 #ifdef MOZILLA_INTERNAL_API
   // When remote candidates are added before our ICE ctx is up and running
@@ -1392,8 +1251,101 @@ PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, un
   }
 #endif
 
-  mInternal->mCall->addICECandidate(aCandidate, aMid, aLevel, tc);
+  cc_int32_t error = mInternal->mCall->addICECandidate(aCandidate, aMid, aLevel, mTimeCard);
+
+  if (error) {
+    OnAddIceCandidateError();
+    std::string error_string;
+    mInternal->mCall->getErrorString(&error_string);
+    CSFLogError(logTag, "%s: pc = %s, error = %s (note, this should not be "
+                        "a show-stopper, since whether we incorporate "
+                        "candidates into the SDP doesn't really matter since "
+                        "we're full trickle)",
+                __FUNCTION__, mHandle.c_str(), error_string.c_str());
+    pco->OnAddIceCandidateError(error, ObString(error_string.c_str()), rv);
+  } else {
+    pco->OnAddIceCandidateSuccess(rv);
+    mInternal->mCall->getRemoteSdp(&mRemoteSDP);
+  }
+
+  UpdateSignalingState();
   return NS_OK;
+}
+
+#ifdef MOZILLA_INTERNAL_API
+class TracksAvailableCallback : public DOMMediaStream::OnTracksAvailableCallback
+{
+public:
+  TracksAvailableCallback(DOMMediaStream::TrackTypeHints aTrackTypeHints,
+                          nsRefPtr<PeerConnectionObserver> aObserver)
+  : DOMMediaStream::OnTracksAvailableCallback(aTrackTypeHints)
+  , mObserver(aObserver) {}
+
+  virtual void NotifyTracksAvailable(DOMMediaStream* aStream) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Start currentTime from the point where this stream was successfully
+    // returned.
+    aStream->SetLogicalStreamStartTime(aStream->GetStream()->GetCurrentTime());
+
+    CSFLogInfo(logTag, "Returning success for OnAddStream()");
+    // We are running on main thread here so we shouldn't have a race
+    // on this callback
+
+    nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+    aStream->GetTracks(tracks);
+    for (uint32_t i = 0; i < tracks.Length(); i++) {
+      JSErrorResult rv;
+      mObserver->OnAddTrack(*tracks[i], rv);
+      if (rv.Failed()) {
+        CSFLogError(logTag, ": OnAddTrack(%d) failed! Error: %d", i,
+                    rv.ErrorCode());
+      }
+    }
+    JSErrorResult rv;
+    mObserver->OnAddStream(*aStream, rv);
+    if (rv.Failed()) {
+      CSFLogError(logTag, ": OnAddStream() failed! Error: %d", rv.ErrorCode());
+    }
+  }
+private:
+  nsRefPtr<PeerConnectionObserver> mObserver;
+};
+#endif
+
+void PeerConnectionImpl::OnRemoteStreamAdded(const MediaStreamTable& aStream) {
+  DOMMediaStream* stream = nullptr;
+
+  nsRefPtr<RemoteSourceStreamInfo> mRemoteStreamInfo =
+    media()->GetRemoteStream(aStream.media_stream_id);
+  MOZ_ASSERT(mRemoteStreamInfo);
+
+  if (!mRemoteStreamInfo) {
+    CSFLogError(logTag, "%s: GetRemoteStream returned NULL", __FUNCTION__);
+  } else {
+    stream = mRemoteStreamInfo->GetMediaStream();
+  }
+
+  if (!stream) {
+    CSFLogError(logTag, "%s: GetMediaStream returned NULL", __FUNCTION__);
+  } else {
+    nsRefPtr<PeerConnectionObserver> pco =
+      do_QueryObjectReferent(mPCObserver);
+    if (!pco) {
+      return;
+    }
+
+#ifdef MOZILLA_INTERNAL_API
+    TracksAvailableCallback* tracksAvailableCallback =
+      new TracksAvailableCallback(mRemoteStreamInfo->mTrackTypeHints, pco);
+
+    stream->OnTracksAvailable(tracksAvailableCallback);
+#else
+    JSErrorResult rv;
+    pco->OnAddStream(stream, rv);
+#endif
+  }
 }
 
 NS_IMETHODIMP
@@ -1527,12 +1479,24 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
 
   // TODO(ekr@rtfm.com): these integers should be the track IDs
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-    mInternal->mCall->addStream(stream_id, 0, AUDIO);
+    if (mInternal->mCall->addStream(stream_id, 0, AUDIO)) {
+      std::string error_string;
+      mInternal->mCall->getErrorString(&error_string);
+      CSFLogError(logTag, "%s (audio) : pc = %s, error = %s",
+                  __FUNCTION__, mHandle.c_str(), error_string.c_str());
+      return NS_ERROR_FAILURE;
+    }
     mNumAudioStreams++;
   }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
-    mInternal->mCall->addStream(stream_id, 1, VIDEO);
+    if (mInternal->mCall->addStream(stream_id, 1, VIDEO)) {
+      std::string error_string;
+      mInternal->mCall->getErrorString(&error_string);
+      CSFLogError(logTag, "%s: (video) pc = %s, error = %s",
+                  __FUNCTION__, mHandle.c_str(), error_string.c_str());
+      return NS_ERROR_FAILURE;
+    }
     mNumVideoStreams++;
   }
 
@@ -1574,13 +1538,25 @@ PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
   }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-    mInternal->mCall->removeStream(stream_id, 0, AUDIO);
+    if (mInternal->mCall->removeStream(stream_id, 0, AUDIO)) {
+      std::string error_string;
+      mInternal->mCall->getErrorString(&error_string);
+      CSFLogError(logTag, "%s (audio) : pc = %s, error = %s",
+                  __FUNCTION__, mHandle.c_str(), error_string.c_str());
+      return NS_ERROR_FAILURE;
+    }
     MOZ_ASSERT(mNumAudioStreams > 0);
     mNumAudioStreams--;
   }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
-    mInternal->mCall->removeStream(stream_id, 1, VIDEO);
+    if (mInternal->mCall->removeStream(stream_id, 1, VIDEO)) {
+      std::string error_string;
+      mInternal->mCall->getErrorString(&error_string);
+      CSFLogError(logTag, "%s (video) : pc = %s, error = %s",
+                  __FUNCTION__, mHandle.c_str(), error_string.c_str());
+      return NS_ERROR_FAILURE;
+    }
     MOZ_ASSERT(mNumVideoStreams > 0);
     mNumVideoStreams--;
   }
@@ -1950,61 +1926,6 @@ PeerConnectionImpl::destructorSafeDestroyNSSReference()
 #endif
 
 void
-PeerConnectionImpl::onCallEvent(const OnCallEventArgs& args)
-{
-  const ccapi_call_event_e &aCallEvent = args.mCallEvent;
-  const CSF::CC_CallInfoPtr &aInfo = args.mInfo;
-
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  MOZ_ASSERT(aInfo.get());
-
-  cc_call_state_t event = aInfo->getCallState();
-  std::string statestr = aInfo->callStateToString(event);
-  Timecard *timecard = aInfo->takeTimecard();
-
-  if (timecard) {
-    mTimeCard = timecard;
-    STAMP_TIMECARD(mTimeCard, "Operation Completed");
-  }
-
-  if (CCAPI_CALL_EV_CREATED != aCallEvent && CCAPI_CALL_EV_STATE != aCallEvent) {
-    CSFLogDebug(logTag, "%s: **** CALL HANDLE IS: %s, **** CALL STATE IS: %s",
-      __FUNCTION__, mHandle.c_str(), statestr.c_str());
-    return;
-  }
-
-  switch (event) {
-    case SETLOCALDESCSUCCESS:
-    case UPDATELOCALDESC:
-      mLocalSDP = aInfo->getSDP();
-      break;
-
-    case SETREMOTEDESCSUCCESS:
-    case ADDICECANDIDATE:
-      mRemoteSDP = aInfo->getSDP();
-      break;
-
-    default:
-      break;
-  }
-
-  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
-  if (!pco) {
-    return;
-  }
-
-  PeerConnectionObserverDispatch* runnable =
-      new PeerConnectionObserverDispatch(aInfo, this, pco);
-
-  if (mThread) {
-    mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-    return;
-  }
-  runnable->Run();
-  delete runnable;
-}
-
-void
 PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -2021,6 +1942,33 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState)
   JSErrorResult rv;
   pco->OnStateChange(PCObserverStateType::SignalingState, rv);
   MOZ_ASSERT(!rv.Failed());
+}
+
+void
+PeerConnectionImpl::UpdateSignalingState() {
+  fsmdef_states_t state = mInternal->mCall->getFsmState();
+  /*
+   * While the fsm_states_t (FSM_DEF_*) constants are a proper superset
+   * of SignalingState, and the order in which the SignalingState values
+   * appear matches the order they appear in fsm_states_t, their underlying
+   * numeric representation is different. Hence, we need to perform an
+   * offset calculation to map from one to the other.
+   */
+
+  if (state >= FSMDEF_S_STABLE && state <= FSMDEF_S_CLOSED) {
+    int offset = FSMDEF_S_STABLE - int(PCImplSignalingState::SignalingStable);
+    PCImplSignalingState newState =
+      static_cast<PCImplSignalingState>(state - offset);
+    if (newState == PCImplSignalingState::SignalingClosed) {
+      Close();
+    } else {
+      SetSignalingState_m(newState);
+    }
+  } else {
+    CSFLogError(logTag, ": **** UNHANDLED SIGNALING STATE : %d (%s)",
+                state,
+                mInternal->mCall->fsmStateToString(state).c_str());
+  }
 }
 
 bool
@@ -2146,7 +2094,7 @@ PeerConnectionImpl::CandidateReady_m(const std::string& candidate,
     mCandidateBuffer.push_back(std::make_pair(candidate, level));
   } else {
     if (level <= mNumMlines) {
-      mInternal->mCall->foundICECandidate(candidate, "", level, nullptr);
+      FoundIceCandidate(candidate, level);
     }
   }
 
@@ -2157,7 +2105,7 @@ void
 PeerConnectionImpl::StartTrickle() {
   for (auto it = mCandidateBuffer.begin(); it != mCandidateBuffer.end(); ++it) {
     if (it->second <= mNumMlines) {
-      mInternal->mCall->foundICECandidate(it->first, "", it->second, nullptr);
+      FoundIceCandidate(it->first, it->second);
     }
   }
 
@@ -2165,29 +2113,72 @@ PeerConnectionImpl::StartTrickle() {
   // end-of-candidates event in IceGatheringStateChange_m.
   if (mIceGatheringState == PCImplIceGatheringState::Complete &&
       !mCandidateBuffer.empty()) {
-    SendEndOfCandidates();
+    SendLocalIceCandidateToContent(0, "", "");
   }
 
   mCandidateBuffer.clear();
 }
 
+void PeerConnectionImpl::FoundIceCandidate(const std::string& candidate,
+                                           uint16_t level) {
+  // TODO: What about mid? Is this something that we will choose, or will
+  // SIPCC choose for us? If the latter, we'll need to make it an outparam or
+  // something.
+  std::string mid;
+
+  cc_int32_t error = mInternal->mCall->foundICECandidate(candidate,
+                                                         mid,
+                                                         level,
+                                                         nullptr);
+
+  if (error) {
+    std::string error_string;
+    mInternal->mCall->getErrorString(&error_string);
+    CSFLogError(logTag, "%s: pc = %s, error = %s (note, this should not be "
+                        "a show-stopper, since whether we incorporate "
+                        "candidates into the SDP doesn't really matter since "
+                        "we're full trickle)",
+                __FUNCTION__, mHandle.c_str(), error_string.c_str());
+  } else {
+    CSFLogDebug(logTag, "Passing local candidate to content: %s",
+                candidate.c_str());
+    mInternal->mCall->getLocalSdp(&mLocalSDP);
+    SendLocalIceCandidateToContent(level, mid, candidate);
+  }
+  UpdateSignalingState();
+}
+
 static void
-SendEndOfCandidatesImpl(nsWeakPtr weakPCObserver) {
+SendLocalIceCandidateToContentImpl(nsWeakPtr weakPCObserver,
+                                   uint16_t level,
+                                   const std::string& mid,
+                                   const std::string& candidate) {
   nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(weakPCObserver);
   if (!pco) {
     return;
   }
 
   JSErrorResult rv;
-  pco->OnIceCandidate(0, ObString(""), ObString(""), rv);
+  pco->OnIceCandidate(level,
+                      ObString(mid.c_str()),
+                      ObString(candidate.c_str()),
+                      rv);
 }
 
 void
-PeerConnectionImpl::SendEndOfCandidates() {
-  // We dispatch this because real candidates do a dispatch in
-  // PeerConnectionImpl::onCallEvent, and we don't want this to jump ahead.
+PeerConnectionImpl::SendLocalIceCandidateToContent(
+    uint16_t level,
+    const std::string& mid,
+    const std::string& candidate) {
+  // We dispatch this because OnSetLocalDescriptionSuccess does a setTimeout(0)
+  // to unwind the stack, but the event handlers don't. We need to ensure that
+  // the candidates do not skip ahead of the callback.
   NS_DispatchToMainThread(
-      WrapRunnableNM(&SendEndOfCandidatesImpl, mPCObserver),
+      WrapRunnableNM(&SendLocalIceCandidateToContentImpl,
+                     mPCObserver,
+                     level,
+                     mid,
+                     candidate),
       NS_DISPATCH_NORMAL);
 }
 
@@ -2329,7 +2320,7 @@ PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
 
   if (mIceGatheringState == PCImplIceGatheringState::Complete &&
       mCandidateBuffer.empty()) {
-    SendEndOfCandidates();
+    SendLocalIceCandidateToContent(0, "", "");
   }
 
   return NS_OK;

@@ -185,4 +185,19 @@ private:
   bool                   mReferencingImage;
 };
 
+inline void
+ImplCycleCollectionUnlink(nsReferencedElement& aField)
+{
+  aField.Unlink();
+}
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsReferencedElement& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  aField.Traverse(&aCallback);
+}
+
 #endif /*NSREFERENCEDELEMENT_H_*/

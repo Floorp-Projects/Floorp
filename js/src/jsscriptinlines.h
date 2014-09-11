@@ -169,7 +169,7 @@ JSScript::setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselin
         js::jit::BaselineScript::writeBarrierPre(tenuredZone(), baseline);
     MOZ_ASSERT(!hasIonScript());
     baseline = baselineScript;
-    updateBaselineOrIonRaw();
+    updateBaselineOrIonRaw(maybecx);
 }
 
 inline bool

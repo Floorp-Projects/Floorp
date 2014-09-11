@@ -320,7 +320,7 @@ nsSVGForeignObjectFrame::GetCoveredRegion()
   if (h < 0.0f) h = 0.0f;
   // GetCanvasTM includes the x,y translation
   return nsSVGUtils::ToCanvasBounds(gfxRect(0.0, 0.0, w, h),
-                                    GetCanvasTM(FOR_OUTERSVG_TM),
+                                    GetCanvasTM(),
                                     PresContext());
 }
 
@@ -479,13 +479,8 @@ nsSVGForeignObjectFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
 //----------------------------------------------------------------------
 
 gfxMatrix
-nsSVGForeignObjectFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
+nsSVGForeignObjectFrame::GetCanvasTM()
 {
-  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) && !aTransformRoot) {
-    if (aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) {
-      return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
-    }
-  }
   if (!mCanvasTM) {
     NS_ASSERTION(GetParent(), "null parent");
 
@@ -493,9 +488,7 @@ nsSVGForeignObjectFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
     SVGForeignObjectElement *content =
       static_cast<SVGForeignObjectElement*>(mContent);
 
-    gfxMatrix tm = content->PrependLocalTransformsTo(
-        this == aTransformRoot ? gfxMatrix() :
-                                 parent->GetCanvasTM(aFor, aTransformRoot));
+    gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
 
     mCanvasTM = new gfxMatrix(tm);
   }
@@ -575,7 +568,7 @@ nsSVGForeignObjectFrame::GetInvalidRegion()
   if (kid->HasInvalidFrameInSubtree()) {
     gfxRect r(mRect.x, mRect.y, mRect.width, mRect.height);
     r.Scale(1.0 / nsPresContext::AppUnitsPerCSSPixel());
-    nsRect rect = nsSVGUtils::ToCanvasBounds(r, GetCanvasTM(FOR_OUTERSVG_TM), PresContext());
+    nsRect rect = nsSVGUtils::ToCanvasBounds(r, GetCanvasTM(), PresContext());
     rect = nsSVGUtils::GetPostFilterVisualOverflowRect(this, rect);
     return rect;
   }

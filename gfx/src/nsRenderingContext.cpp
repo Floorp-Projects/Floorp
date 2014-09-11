@@ -353,16 +353,6 @@ nsRenderingContext::FillRect(nscoord aX, nscoord aY,
 }
 
 void
-nsRenderingContext::InvertRect(const nsRect& aRect)
-{
-    gfxContext::GraphicsOperator lastOp = mThebes->CurrentOperator();
-
-    mThebes->SetOperator(gfxContext::OPERATOR_XOR);
-    FillRect(aRect);
-    mThebes->SetOperator(lastOp);
-}
-
-void
 nsRenderingContext::DrawEllipse(nscoord aX, nscoord aY,
                                 nscoord aWidth, nscoord aHeight)
 {

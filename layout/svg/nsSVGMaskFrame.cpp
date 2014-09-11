@@ -223,7 +223,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
   }
 
   gfxMatrix maskSurfaceMatrix =
-    aContext->CurrentMatrix() * gfxMatrix().Translate(-maskSurfaceRect.TopLeft());
+    aContext->CurrentMatrix() * gfxMatrix::Translation(-maskSurfaceRect.TopLeft());
 
   nsRefPtr<nsRenderingContext> tmpCtx = new nsRenderingContext();
   tmpCtx->Init(this->PresContext()->DeviceContext(), maskDT);
@@ -317,7 +317,7 @@ nsSVGMaskFrame::GetType() const
 }
 
 gfxMatrix
-nsSVGMaskFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
+nsSVGMaskFrame::GetCanvasTM()
 {
   return mMatrixForChildren;
 }

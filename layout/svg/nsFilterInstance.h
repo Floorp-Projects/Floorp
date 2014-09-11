@@ -47,6 +47,7 @@ class nsFilterInstance
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
+  typedef mozilla::gfx::FilterDescription FilterDescription;
 
 public:
   /**
@@ -322,7 +323,7 @@ private:
 
   nsTArray<mozilla::RefPtr<SourceSurface>> mInputImages;
   nsTArray<FilterPrimitiveDescription> mPrimitiveDescriptions;
-  int32_t mAppUnitsPerCSSPx;
+  FilterDescription mFilterDescription;
   bool mInitialized;
 };
 

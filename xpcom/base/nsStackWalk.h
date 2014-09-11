@@ -59,6 +59,9 @@ typedef void
  *
  * May skip some stack frames due to compiler optimizations or code
  * generation.
+ *
+ * Note: this (and other helper methods) will only be available when
+ * MOZ_STACKWALKING is defined, so any new consumers must #if based on that.
  */
 XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,

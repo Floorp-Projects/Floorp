@@ -22,6 +22,7 @@
 #include "StaticPtr.h"
 #include "PeerConnectionImpl.h"
 #include "mozIGeckoMediaPluginService.h"
+#include "nsIRunnable.h"
 
 namespace mozilla {
 class PeerConnectionCtxShutdown;
@@ -69,7 +70,7 @@ class PeerConnectionCtx : public CSF::CC_Observer {
   virtual void onDeviceEvent(ccapi_device_event_e deviceEvent, CSF::CC_DevicePtr device, CSF::CC_DeviceInfoPtr info);
   virtual void onFeatureEvent(ccapi_device_event_e deviceEvent, CSF::CC_DevicePtr device, CSF::CC_FeatureInfoPtr feature_info) {}
   virtual void onLineEvent(ccapi_line_event_e lineEvent, CSF::CC_LinePtr line, CSF::CC_LineInfoPtr info) {}
-  virtual void onCallEvent(ccapi_call_event_e callEvent, CSF::CC_CallPtr call, CSF::CC_CallInfoPtr info);
+  virtual void onCallEvent(ccapi_call_event_e callEvent, CSF::CC_CallPtr call, CSF::CC_CallInfoPtr info) {}
 
   // Create a SIPCC Call
   CSF::CC_CallPtr createCall();

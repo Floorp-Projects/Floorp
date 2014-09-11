@@ -749,6 +749,14 @@ public:
   // Initialize this array and pre-allocate some number of elements.
   explicit nsTArray_Impl(size_type aCapacity) { SetCapacity(aCapacity); }
 
+  // Initialize this array with an r-value.
+  // Allow different types of allocators, since the allocator doesn't matter.
+  template<typename Allocator>
+  explicit nsTArray_Impl(nsTArray_Impl<E, Allocator>&& aOther)
+  {
+    SwapElements(aOther);
+  }
+
   // The array's copy-constructor performs a 'deep' copy of the given array.
   // @param aOther The array object to copy.
   //
@@ -792,6 +800,16 @@ public:
     return *this;
   }
 
+  // The array's move assignment operator steals the underlying data from
+  // the other array.
+  // @param other  The array object to move from.
+  self_type& operator=(self_type&& aOther)
+  {
+    Clear();
+    SwapElements(aOther);
+    return *this;
+  }
+
   // Return true if this array has the same length and the same
   // elements as |aOther|.
   template<typename Allocator>
@@ -820,6 +838,14 @@ public:
   self_type& operator=(const nsTArray_Impl<E, Allocator>& aOther)
   {
     ReplaceElementsAt(0, Length(), aOther.Elements(), aOther.Length());
+    return *this;
+  }
+
+  template<typename Allocator>
+  self_type& operator=(nsTArray_Impl<E, Allocator>&& aOther)
+  {
+    Clear();
+    SwapElements(aOther);
     return *this;
   }
 
@@ -1325,6 +1351,11 @@ public:
     aArray.ShiftData(0, otherLen, 0, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
     return Elements() + len;
   }
+  template<class Item, class Allocator>
+  elem_type* MoveElementsFrom(nsTArray_Impl<Item, Allocator>&& aArray)
+  {
+    return MoveElementsFrom<Item, Allocator>(aArray);
+  }
 
   // This method removes a range of elements from this array.
   // @param aStart The starting index of the elements to remove.
@@ -1723,11 +1754,40 @@ public:
   nsTArray() {}
   explicit nsTArray(size_type aCapacity) : base_type(aCapacity) {}
   explicit nsTArray(const nsTArray& aOther) : base_type(aOther) {}
+  explicit nsTArray(nsTArray&& aOther) : base_type(mozilla::Move(aOther)) {}
 
   template<class Allocator>
   explicit nsTArray(const nsTArray_Impl<E, Allocator>& aOther)
     : base_type(aOther)
   {
+  }
+  template<class Allocator>
+  MOZ_IMPLICIT nsTArray(nsTArray_Impl<E, Allocator>&& aOther)
+    : base_type(mozilla::Move(aOther))
+  {
+  }
+
+  self_type& operator=(const self_type& aOther)
+  {
+    base_type::operator=(aOther);
+    return *this;
+  }
+  template<class Allocator>
+  self_type& operator=(const nsTArray_Impl<E, Allocator>& aOther)
+  {
+    base_type::operator=(aOther);
+    return *this;
+  }
+  self_type& operator=(self_type&& aOther)
+  {
+    base_type::operator=(mozilla::Move(aOther));
+    return *this;
+  }
+  template<class Allocator>
+  self_type& operator=(nsTArray_Impl<E, Allocator>&& aOther)
+  {
+    base_type::operator=(mozilla::Move(aOther));
+    return *this;
   }
 };
 
@@ -1745,11 +1805,43 @@ public:
   FallibleTArray() {}
   explicit FallibleTArray(size_type aCapacity) : base_type(aCapacity) {}
   explicit FallibleTArray(const FallibleTArray<E>& aOther) : base_type(aOther) {}
+  explicit FallibleTArray(FallibleTArray<E>&& aOther)
+    : base_type(mozilla::Move(aOther))
+  {
+  }
 
   template<class Allocator>
   explicit FallibleTArray(const nsTArray_Impl<E, Allocator>& aOther)
     : base_type(aOther)
   {
+  }
+  template<class Allocator>
+  explicit FallibleTArray(nsTArray_Impl<E, Allocator>&& aOther)
+    : base_type(mozilla::Move(aOther))
+  {
+  }
+
+  self_type& operator=(const self_type& aOther)
+  {
+    base_type::operator=(aOther);
+    return *this;
+  }
+  template<class Allocator>
+  self_type& operator=(const nsTArray_Impl<E, Allocator>& aOther)
+  {
+    base_type::operator=(aOther);
+    return *this;
+  }
+  self_type& operator=(self_type&& aOther)
+  {
+    base_type::operator=(mozilla::Move(aOther));
+    return *this;
+  }
+  template<class Allocator>
+  self_type& operator=(nsTArray_Impl<E, Allocator>&& aOther)
+  {
+    base_type::operator=(mozilla::Move(aOther));
+    return *this;
   }
 };
 
@@ -1785,6 +1877,19 @@ protected:
   {
     Init();
     this->AppendElements(aOther);
+  }
+
+  nsAutoArrayBase(const TArrayBase &aOther)
+  {
+    Init();
+    this->AppendElements(aOther);
+  }
+
+  template<typename Allocator>
+  nsAutoArrayBase(nsTArray_Impl<elem_type, Allocator>&& aOther)
+  {
+    Init();
+    this->SwapElements(aOther);
   }
 
 private:
@@ -1864,6 +1969,11 @@ public:
   {
     Base::AppendElements(aOther);
   }
+  template<typename Allocator>
+  explicit nsAutoTArray(nsTArray_Impl<E, Allocator>&& aOther)
+    : Base(mozilla::Move(aOther))
+  {
+  }
 
   operator const AutoFallibleTArray<E, N>&() const
   {
@@ -1888,6 +1998,11 @@ public:
   explicit AutoFallibleTArray(const nsTArray_Impl<E, Allocator>& aOther)
   {
     Base::AppendElements(aOther);
+  }
+  template<typename Allocator>
+  explicit AutoFallibleTArray(nsTArray_Impl<E, Allocator>&& aOther)
+    : Base(mozilla::Move(aOther))
+  {
   }
 
   operator const nsAutoTArray<E, N>&() const

@@ -4204,6 +4204,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_FS_END
 };
 
+// ES6 rev 27 (2014 Aug 24) 21.1.1
 bool
 js_String(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -4211,6 +4212,9 @@ js_String(JSContext *cx, unsigned argc, Value *vp)
 
     RootedString str(cx);
     if (args.length() > 0) {
+        if (!args.isConstructing() && args[0].isSymbol())
+            return js::SymbolDescriptiveString(cx, args[0].toSymbol(), args.rval());
+
         str = ToString<CanGC>(cx, args[0]);
         if (!str)
             return false;

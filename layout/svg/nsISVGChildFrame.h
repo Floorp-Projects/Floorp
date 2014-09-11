@@ -97,17 +97,6 @@ public:
   // be called by nsSVGOuterSVGFrame during its reflow.
   virtual void ReflowSVG()=0;
 
-  /**
-   * Flags used to specify to GetCanvasTM what it's being called for so that it
-   * knows how far up the tree the "canvas" is. When display lists are being
-   * used for painting or hit-testing of SVG, the "canvas" is simply user
-   * space.
-   */
-  enum RequestingCanvasTMFor {
-    FOR_PAINTING = 1,
-    FOR_OUTERSVG_TM
-  };
-
   // Flags to pass to NotifySVGChange:
   //
   // DO_NOT_NOTIFY_RENDERING_OBSERVERS - this should only be used when

@@ -109,4 +109,12 @@ class SymbolRegistry : public SymbolHashSet
 
 } /* namespace js */
 
+namespace js {
+
+// ES6 rev 27 (2014 Aug 24) 19.4.3.3
+bool
+SymbolDescriptiveString(JSContext *cx, JS::Symbol *sym, JS::MutableHandleValue result);
+
+} /* namespace js */
+
 #endif /* vm_Symbol_h */
