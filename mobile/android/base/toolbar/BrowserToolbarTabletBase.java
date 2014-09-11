@@ -10,7 +10,6 @@ import java.util.Arrays;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.Tabs.TabEvents;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 
@@ -20,6 +19,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Interpolator;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
@@ -37,12 +37,7 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     protected final LinearLayout actionItemBar;
 
     protected final BackButton backButton;
-    private final OnClickListener backButtonOnClickListener;
-    private final OnLongClickListener backButtonOnLongClickListener;
-
     protected final ForwardButton forwardButton;
-    private final OnClickListener forwardButtonOnClickListener;
-    private final OnLongClickListener forwardButtonOnLongClickListener;
 
     private final Interpolator buttonsInterpolator = new AccelerateInterpolator();
 
@@ -57,57 +52,39 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         setButtonEnabled(backButton, false);
         forwardButton = (ForwardButton) findViewById(R.id.forward);
         setButtonEnabled(forwardButton, false);
-
-        backButtonOnClickListener = new BackButtonOnClickListener();
-        backButtonOnLongClickListener = new BackButtonOnLongClickListener();
-        forwardButtonOnClickListener = new ForwardButtonOnClickListener();
-        forwardButtonOnLongClickListener = new ForwardButtonOnLongClickListener();
-        setNavigationButtonListeners(true);
+        initButtonListeners();
 
         focusOrder.addAll(Arrays.asList(tabsButton, (View) backButton, (View) forwardButton, this));
         focusOrder.addAll(urlDisplayLayout.getFocusOrder());
         focusOrder.addAll(Arrays.asList(actionItemBar, menuButton));
     }
 
-    /**
-     * Enables or disables the click listeners on the back and forward buttons.
-     *
-     * This method is useful to remove and later add the listeners when a navigation button is hit
-     * because calling `browser.go*()` twice in succession can cause the UI buttons to get out of
-     * sync with gecko's browser state (bug 960746).
-     *
-     * @param disabled True if the listeners should be removed, false for them to be added.
-     */
-    private void setNavigationButtonListeners(final boolean enabled) {
-        if (enabled) {
-            backButton.setOnClickListener(backButtonOnClickListener);
-            backButton.setOnLongClickListener(backButtonOnLongClickListener);
+    private void initButtonListeners() {
+        backButton.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Tabs.getInstance().getSelectedTab().doBack();
+            }
+        });
+        backButton.setOnLongClickListener(new Button.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                return Tabs.getInstance().getSelectedTab().showBackHistory();
+            }
+        });
 
-            forwardButton.setOnClickListener(forwardButtonOnClickListener);
-            forwardButton.setOnLongClickListener(forwardButtonOnLongClickListener);
-        } else {
-            backButton.setOnClickListener(null);
-            backButton.setOnLongClickListener(null);
-
-            forwardButton.setOnClickListener(null);
-            forwardButton.setOnLongClickListener(null);
-        }
-    }
-
-    @Override
-    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final Object data) {
-        // STOP appears to be the first page load event where async nav issues are prevented,
-        // SELECTED is for switching tabs, and LOAD_ERROR is called when a JavaScript exception
-        // is thrown while loading a URI, which can prevent STOP from ever being called.
-        //
-        // See `setNavigationButtonListeners` javadoc for more information.
-        if (msg == TabEvents.STOP ||
-                msg == TabEvents.SELECTED ||
-                msg == TabEvents.LOAD_ERROR) {
-            setNavigationButtonListeners(true);
-        }
-
-        super.onTabChanged(tab, msg, data);
+        forwardButton.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Tabs.getInstance().getSelectedTab().doForward();
+            }
+        });
+        forwardButton.setOnLongClickListener(new Button.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                return Tabs.getInstance().getSelectedTab().showForwardHistory();
+            }
+        });
     }
 
     @Override
@@ -186,37 +163,5 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         }
 
         button.setEnabled(enabled);
-    }
-
-    private class BackButtonOnClickListener implements OnClickListener {
-        @Override
-        public void onClick(final View view) {
-            setNavigationButtonListeners(false);
-            Tabs.getInstance().getSelectedTab().doBack();
-        }
-    }
-
-    private class BackButtonOnLongClickListener implements OnLongClickListener {
-        @Override
-        public boolean onLongClick(final View view) {
-            setNavigationButtonListeners(false);
-            return Tabs.getInstance().getSelectedTab().showBackHistory();
-        }
-    }
-
-    private class ForwardButtonOnClickListener implements OnClickListener {
-        @Override
-        public void onClick(final View view) {
-            setNavigationButtonListeners(false);
-            Tabs.getInstance().getSelectedTab().doForward();
-        }
-    }
-
-    private class ForwardButtonOnLongClickListener implements OnLongClickListener {
-        @Override
-        public boolean onLongClick(final View view) {
-            setNavigationButtonListeners(false);
-            return Tabs.getInstance().getSelectedTab().showForwardHistory();
-        }
     }
 }
