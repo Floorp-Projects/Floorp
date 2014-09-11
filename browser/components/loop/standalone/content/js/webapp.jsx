@@ -27,8 +27,47 @@ loop.webapp = (function($, _, OT, mozL10n) {
   /**
    * Homepage view.
    */
-  var HomeView = sharedViews.BaseView.extend({
-    template: _.template('<p data-l10n-id="welcome"></p>')
+  var HomeView = React.createClass({
+    render: function() {
+      return (
+        <p>{mozL10n.get("welcome")}</p>
+      )
+    }
+  });
+
+  /**
+   * Unsupported Browsers view.
+   */
+  var UnsupportedBrowserView = React.createClass({
+    render: function() {
+      var useLatestFF = mozL10n.get("use_latest_firefox", {
+        "firefoxBrandNameLink": React.renderComponentToStaticMarkup(
+          <a target="_blank" href="https://www.mozilla.org/firefox/">Firefox</a>
+        )
+      });
+      return (
+        <div>
+          <h2>{mozL10n.get("incompatible_browser")}</h2>
+          <p>{mozL10n.get("powered_by_webrtc")}</p>
+          <p dangerouslySetInnerHTML={{__html: useLatestFF}}></p>
+        </div>
+      );
+    }
+  });
+
+  /**
+   * Unsupported Device view.
+   */
+  var UnsupportedDeviceView = React.createClass({
+    render: function() {
+      return (
+        <div>
+          <h2>{mozL10n.get("incompatible_device")}</h2>
+          <p>{mozL10n.get("sorry_device_unsupported")}</p>
+          <p>{mozL10n.get("use_firefox_windows_mac_linux")}</p>
+        </div>
+      );
+    }
   });
 
   /**
@@ -324,7 +363,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       }
 
       // Load default view
-      this.loadView(new HomeView());
+      this.loadReactComponent(<HomeView />);
 
       this.listenTo(this._conversation, "timeout", this._onTimeout);
     },
@@ -470,15 +509,15 @@ loop.webapp = (function($, _, OT, mozL10n) {
      * Default entry point.
      */
     home: function() {
-      this.loadView(new HomeView());
+      this.loadReactComponent(<HomeView />);
     },
 
     unsupportedDevice: function() {
-      this.loadView(new sharedViews.UnsupportedDeviceView());
+      this.loadReactComponent(<UnsupportedDeviceView />);
     },
 
     unsupportedBrowser: function() {
-      this.loadView(new sharedViews.UnsupportedBrowserView());
+      this.loadReactComponent(<UnsupportedBrowserView />);
     },
 
     expired: function() {
@@ -579,6 +618,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
     CallUrlExpiredView: CallUrlExpiredView,
     StartConversationView: StartConversationView,
     HomeView: HomeView,
+    UnsupportedBrowserView: UnsupportedBrowserView,
+    UnsupportedDeviceView: UnsupportedDeviceView,
     init: init,
     PromoteFirefoxView: PromoteFirefoxView,
     WebappHelper: WebappHelper,
