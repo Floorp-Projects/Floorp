@@ -9969,7 +9969,11 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
     if (counter != nullptr && counter->mName.EqualsASCII(aName)) {
       aRenderingContext->PushState();
-      aRenderingContext->Translate(aOffset);
+      gfxPoint devPixelOffset =
+        nsLayoutUtils::PointToGfxPoint(aOffset,
+                                       aPresContext->AppUnitsPerDevPixel());
+      aRenderingContext->ThebesContext()->SetMatrix(
+        aRenderingContext->ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
       nsFont font(eFamily_serif, NS_FONT_STYLE_NORMAL,
                   NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0,
                   nsPresContext::CSSPixelsToAppUnits(11));
