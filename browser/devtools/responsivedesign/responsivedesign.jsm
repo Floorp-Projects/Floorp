@@ -772,7 +772,7 @@ ResponsiveUI.prototype = {
     if (!filename) {
       let date = new Date();
       let month = ("0" + (date.getMonth() + 1)).substr(-2, 2);
-      let day = ("0" + (date.getDay() + 1)).substr(-2, 2);
+      let day = ("0" + date.getDate()).substr(-2, 2);
       let dateString = [date.getFullYear(), month, day].join("-");
       let timeString = date.toTimeString().replace(/:/g, ".").split(" ")[0];
       filename = this.strings.formatStringFromName("responsiveUI.screenshotGeneratedFilename", [dateString, timeString], 2);
