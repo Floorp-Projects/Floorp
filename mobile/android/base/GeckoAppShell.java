@@ -447,6 +447,9 @@ public class GeckoAppShell
     // Tell the Gecko event loop that an event is available.
     public static native void notifyGeckoOfEvent(GeckoEvent event);
 
+    // Synchronously notify a Gecko observer; must be called from Gecko thread.
+    public static native void notifyGeckoObservers(String subject, String data);
+
     /*
      *  The Gecko-side API: API methods that Gecko calls
      */
