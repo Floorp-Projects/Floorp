@@ -171,12 +171,6 @@ nsRenderingContext::SetColor(nscolor aColor)
 }
 
 void
-nsRenderingContext::Translate(const nsPoint& aPt)
-{
-    mThebes->Translate(gfxPoint(FROM_TWIPS(aPt.x), FROM_TWIPS(aPt.y)));
-}
-
-void
 nsRenderingContext::Scale(float aSx, float aSy)
 {
     mThebes->Scale(aSx, aSy);

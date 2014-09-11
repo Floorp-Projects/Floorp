@@ -1299,7 +1299,11 @@ static void PaintDebugImageMap(nsIFrame* aFrame, nsRenderingContext* aCtx,
 
   aCtx->SetColor(NS_RGB(0, 0, 0));
   aCtx->PushState();
-  aCtx->Translate(inner.TopLeft());
+  gfxPoint devPixelOffset =
+    nsLayoutUtils::PointToGfxPoint(inner.TopLeft(),
+                                   aFrame->PresContext()->AppUnitsPerDevPixel());
+  aCtx->ThebesContext()->SetMatrix(
+    aCtx->ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
   f->GetImageMap()->Draw(aFrame, *aCtx);
   aCtx->PopState();
 }
@@ -1469,7 +1473,11 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
   nsImageMap* map = GetImageMap();
   if (nullptr != map) {
     aRenderingContext.PushState();
-    aRenderingContext.Translate(inner.TopLeft());
+    gfxPoint devPixelOffset =
+      nsLayoutUtils::PointToGfxPoint(inner.TopLeft(),
+                                     PresContext()->AppUnitsPerDevPixel());
+    aRenderingContext.ThebesContext()->SetMatrix(
+      aRenderingContext.ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
     aRenderingContext.SetColor(NS_RGB(255, 255, 255));
     aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
     map->Draw(this, aRenderingContext);

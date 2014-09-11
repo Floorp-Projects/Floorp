@@ -503,7 +503,10 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   NS_ASSERTION(hasSVGLayout || offsetToBoundingBox == offsetToUserSpace,
                "For non-SVG frames there shouldn't be any additional offset");
 
-  aCtx->Translate(offsetToUserSpace);
+  gfxPoint devPixelOffsetToUserSpace =
+    nsLayoutUtils::PointToGfxPoint(offsetToUserSpace,
+                                   aFrame->PresContext()->AppUnitsPerDevPixel());
+  gfx->SetMatrix(gfx->CurrentMatrix().Translate(devPixelOffsetToUserSpace));
 
   gfxMatrix cssPxToDevPxMatrix = GetCSSPxToDevPxMatrix(aFrame);
 
@@ -538,7 +541,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   } else {
     gfx->SetMatrix(matrixAutoSaveRestore.Matrix());
     aLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
-    aCtx->Translate(offsetToUserSpace);
+    gfx->SetMatrix(gfx->CurrentMatrix().Translate(devPixelOffsetToUserSpace));
   }
 
   if (clipPathFrame && isTrivialClip) {

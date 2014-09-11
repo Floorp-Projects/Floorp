@@ -1309,8 +1309,12 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       gfxContextMatrixAutoSaveRestore save(shadowContext);
       nsRefPtr<nsRenderingContext> wrapperCtx = new nsRenderingContext();
       wrapperCtx->Init(aPresContext->DeviceContext(), shadowContext);
-      wrapperCtx->Translate(nsPoint(shadowItem->mXOffset,
-                                    shadowItem->mYOffset));
+      gfxPoint devPixelOffset =
+        nsLayoutUtils::PointToGfxPoint(nsPoint(shadowItem->mXOffset,
+                                               shadowItem->mYOffset),
+                                       aPresContext->AppUnitsPerDevPixel());
+      wrapperCtx->ThebesContext()->SetMatrix(
+        wrapperCtx->ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
 
       nsRect nativeRect;
       nativeRect.IntersectRect(frameRect, aDirtyRect);

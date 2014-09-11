@@ -57,7 +57,6 @@ public:
     void SetClip(const nsIntRegion& aRegion);
     void SetLineStyle(nsLineStyle aLineStyle);
     void SetColor(nscolor aColor);
-    void Translate(const nsPoint& aPt);
     void Scale(float aSx, float aSy);
 
     // Shapes
