@@ -195,28 +195,6 @@ TypeFlagPrimitive(TypeFlags flags)
 }
 
 /*
- * Check for numeric strings, as in js_StringIsIndex, but allow negative
- * and overflowing integers.
- */
-template <class Range>
-inline bool
-IdIsNumericTypeId(Range cp)
-{
-    if (cp.length() == 0)
-        return false;
-
-    if (!JS7_ISDEC(cp[0]) && cp[0] != '-')
-        return false;
-
-    for (size_t i = 1; i < cp.length(); ++i) {
-        if (!JS7_ISDEC(cp[i]))
-            return false;
-    }
-
-    return true;
-}
-
-/*
  * Get the canonical representation of an id to use when doing inference.  This
  * maintains the constraint that if two different jsids map to the same property
  * in JS (e.g. 3 and "3"), they have the same type representation.
@@ -226,23 +204,9 @@ IdToTypeId(jsid id)
 {
     JS_ASSERT(!JSID_IS_EMPTY(id));
 
-    /*
-     * All integers must map to the aggregate property for index types, including
-     * negative integers.
-     */
-    if (JSID_IS_INT(id))
-        return JSID_VOID;
-
-    if (JSID_IS_STRING(id)) {
-        JSAtom *atom = JSID_TO_ATOM(id);
-        JS::AutoCheckCannotGC nogc;
-        bool isNumeric = atom->hasLatin1Chars()
-                         ? IdIsNumericTypeId(atom->latin1Range(nogc))
-                         : IdIsNumericTypeId(atom->twoByteRange(nogc));
-        return isNumeric ? JSID_VOID : id;
-    }
-
-    return JSID_VOID;
+    // All properties which can be stored in an object's dense elements must
+    // map to the aggregate property for index types.
+    return JSID_IS_INT(id) ? JSID_VOID : id;
 }
 
 const char * TypeIdStringImpl(jsid id);
@@ -1228,7 +1192,7 @@ TypeObject::getProperty(ExclusiveContext *cx, jsid id)
 {
     JS_ASSERT(cx->compartment()->activeAnalysis);
 
-    JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
+    JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
     JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     JS_ASSERT(!unknownProperties());
 
@@ -1269,7 +1233,7 @@ TypeObject::getProperty(ExclusiveContext *cx, jsid id)
 inline HeapTypeSet *
 TypeObject::maybeGetProperty(jsid id)
 {
-    JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
+    JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
     JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     JS_ASSERT(!unknownProperties());
 

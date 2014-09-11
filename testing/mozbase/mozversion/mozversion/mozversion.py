@@ -16,19 +16,7 @@ import mozdevice
 import mozlog
 import mozfile
 
-
-class VersionError(Exception):
-    def __init__(self, message):
-        Exception.__init__(self, message)
-
-
-class LocalAppNotFoundError(VersionError):
-    """Exception for local application not found"""
-    def __init__(self):
-        VersionError.__init__(
-            self, 'No binary path or application.ini found in working '
-            'directory. Specify a binary path or run from the directory '
-            'containing the binary.')
+import errors
 
 
 INI_DATA_MAPPING = (('application', 'App'), ('platform', 'Build'))
@@ -87,16 +75,27 @@ class LocalVersion(Version):
         Version.__init__(self, **kwargs)
         path = None
 
+        def find_location(path):
+            if os.path.exists(os.path.join(path, 'application.ini')):
+                return path
+
+            if sys.platform == 'darwin':
+                path = os.path.join(os.path.dirname(path), 'Resources')
+
+            if os.path.exists(os.path.join(path, 'application.ini')):
+                return path
+            else:
+                return None
+
         if binary:
             if not os.path.exists(binary):
                 raise IOError('Binary path does not exist: %s' % binary)
-            path = os.path.dirname(binary)
+            path = find_location(os.path.dirname(os.path.realpath(binary)))
         else:
-            if os.path.exists(os.path.join(os.getcwd(), 'application.ini')):
-                path = os.getcwd()
+            path = find_location(os.getcwd())
 
         if not path:
-            raise LocalAppNotFoundError()
+            raise errors.LocalAppNotFoundError(path)
 
         self.get_gecko_info(path)
 
@@ -110,7 +109,7 @@ class B2GVersion(Version):
             os.path.exists(os.path.join(os.getcwd(), 'sources.xml')) and \
             os.path.join(os.getcwd(), 'sources.xml')
 
-        if sources:
+        if sources and os.path.exists(sources):
             sources_xml = xml.dom.minidom.parse(sources)
             for element in sources_xml.getElementsByTagName('project'):
                 path = element.getAttribute('path')
@@ -182,10 +181,11 @@ class RemoteB2GVersion(B2GVersion):
             dm = mozdevice.DeviceManagerADB(deviceSerial=device_serial)
         elif dm_type == 'sut':
             if not host:
-                raise Exception('A host for SUT must be supplied.')
+                raise errors.RemoteAppNotFoundError('A host for SUT must be supplied.')
             dm = mozdevice.DeviceManagerSUT(host=host)
         else:
-            raise Exception('Unknown device manager type: %s' % dm_type)
+            raise errors.RemoteAppNotFoundError('Unknown device manager type: %s' %
+                                                dm_type)
 
         if not sources:
             path = 'system/sources.xml'
@@ -224,7 +224,7 @@ class RemoteB2GVersion(B2GVersion):
                 if key in desired_props.keys():
                     self._info[desired_props[key]] = value
 
-        if self._info['device_id'].lower() == 'flame':
+        if self._info.get('device_id', '').lower() == 'flame':
             self._info['device_firmware_version_base'] = dm._runCmd(
                 ['shell', 'getprop', 't2m.sw.version']).output[0]
 
@@ -253,9 +253,13 @@ def get_version(binary=None, sources=None, dm_type=None, host=None,
             version = LocalVersion(binary)
             if version._info.get('application_name') == 'B2G':
                 version = LocalB2GVersion(binary, sources=sources)
-    except LocalAppNotFoundError:
-        version = RemoteB2GVersion(sources=sources, dm_type=dm_type, host=host,
-                                   device_serial=device_serial)
+    except errors.LocalAppNotFoundError:
+        try:
+            version = RemoteB2GVersion(sources=sources, dm_type=dm_type,
+                                       host=host, device_serial=device_serial)
+        except errors.RemoteAppNotFoundError:
+            raise errors.AppNotFoundError('No application found')
+
     return version._info
 
 
@@ -275,8 +279,10 @@ def cli(args=sys.argv[1:]):
     dm_type = os.environ.get('DM_TRANS', 'adb')
     host = os.environ.get('TEST_DEVICE')
 
-    version = get_version(binary=options.binary, sources=options.sources,
-                          dm_type=dm_type, host=host,
+    version = get_version(binary=options.binary,
+                          sources=options.sources,
+                          dm_type=dm_type,
+                          host=host,
                           device_serial=options.device)
     for (key, value) in sorted(version.items()):
         if value:

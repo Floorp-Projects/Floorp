@@ -1392,12 +1392,8 @@ public:
    * nearest ancestor that has an intermediate surface, or relative to the root
    * viewport if no ancestor has an intermediate surface, corresponding to the
    * clip rect for this layer intersected with aCurrentScissorRect.
-   * If no ancestor has an intermediate surface, the clip rect is transformed
-   * by aWorldTransform before being combined with aCurrentScissorRect, if
-   * aWorldTransform is non-null.
    */
-  RenderTargetIntRect CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect,
-                                           const gfx::Matrix* aWorldTransform);
+  RenderTargetIntRect CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect);
 
   virtual const char* Name() const =0;
   virtual LayerType GetType() const =0;

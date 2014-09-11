@@ -11,6 +11,7 @@ assertAsmTypeFail(USE_ASM + 'function f(){} return g');
 assertAsmTypeFail(USE_ASM + 'function f(){} function f(){} return f');
 assertAsmTypeFail(USE_ASM + 'function f(){}; function g(){}; return {f, g}');
 assertAsmTypeFail(USE_ASM + 'var f=0; function f(){} return f');
+assertAsmTypeFail(USE_ASM + 'var f=glob.Math.imul; return {}');
 assertAsmTypeFail('glob', USE_ASM + 'var f=glob.Math.imul; function f(){} return f');
 assertAsmTypeFail('glob','foreign', USE_ASM + 'var f=foreign.foo; function f(){} return f');
 assertAsmTypeFail(USE_ASM + 'function f(){} var f=[f,f]; return f');

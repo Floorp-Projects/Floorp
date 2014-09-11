@@ -483,7 +483,7 @@ CompositorD3D11::SetRenderTarget(CompositingRenderTarget* aRenderTarget)
   ID3D11RenderTargetView* view = newRT->mRTView;
   mCurrentRT = newRT;
   mContext->OMSetRenderTargets(1, &view, nullptr);
-  PrepareViewport(newRT->GetSize(), gfx::Matrix());
+  PrepareViewport(newRT->GetSize());
 }
 
 void
@@ -738,7 +738,6 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
 void
 CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
                             const Rect* aClipRectIn,
-                            const gfx::Matrix& aTransform,
                             const Rect& aRenderBounds,
                             Rect* aClipRectOut,
                             Rect* aRenderBoundsOut)
@@ -816,8 +815,7 @@ CompositorD3D11::EndFrame()
 }
 
 void
-CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
-                                 const gfx::Matrix& aWorldTransform)
+CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize)
 {
   D3D11_VIEWPORT viewport;
   viewport.MaxDepth = 1.0f;
@@ -832,8 +830,6 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
   Matrix viewMatrix = Matrix::Translation(-1.0, 1.0);
   viewMatrix.PreScale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
   viewMatrix.PreScale(1.0f, -1.0f);
-
-  viewMatrix = aWorldTransform * viewMatrix;
 
   Matrix4x4 projection = Matrix4x4::From2D(viewMatrix);
   projection._33 = 0.0f;
