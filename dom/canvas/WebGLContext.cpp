@@ -324,6 +324,7 @@ WebGLContext::WebGLContext()
 
 WebGLContext::~WebGLContext()
 {
+    RemovePostRefreshObserver();
     mContextObserver->Destroy();
 
     DestroyResourcesAndContext();
@@ -1726,10 +1727,7 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
         return nullptr;
     }
 
-    Matrix m;
-    m.Translate(0.0, mHeight);
-    m.Scale(1.0, -1.0);
-    dt->SetTransform(m);
+    dt->SetTransform(Matrix::Translation(0.0, mHeight).PreScale(1.0, -1.0));
 
     dt->DrawSurface(surf,
                     Rect(0, 0, mWidth, mHeight),
@@ -1738,6 +1736,14 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
                     DrawOptions(1.0f, CompositionOp::OP_SOURCE));
 
     return dt->Snapshot();
+}
+
+void
+WebGLContext::DidRefresh()
+{
+    if (gl) {
+        gl->FlushIfHeavyGLCallsSinceLastFlush();
+    }
 }
 
 bool WebGLContext::TexImageFromVideoElement(GLenum texImageTarget, GLint level,

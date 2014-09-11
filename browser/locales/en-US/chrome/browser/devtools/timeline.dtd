@@ -1,0 +1,30 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- LOCALIZATION NOTE : FILE This file contains the Timeline strings -->
+<!-- LOCALIZATION NOTE : FILE Do not translate commandkey -->
+
+<!-- LOCALIZATION NOTE : FILE The correct localization of this file might be to
+  - keep it in English, or another language commonly spoken among web developers.
+  - You want to make that choice consistent across the developer tools.
+  - A good criteria is the language in which you'd find the best
+  - documentation on web development on the web. -->
+
+<!-- LOCALIZATION NOTE (timelineUI.recordButton): This string is displayed
+  -  on a button that starts a new recording. -->
+<!ENTITY timelineUI.recordButton.tooltip "Record timeline operations">
+
+<!-- LOCALIZATION NOTE (timelineUI.recordButton): This string is displayed
+  -  as a label to signal that a recording is in progress. -->
+<!ENTITY timelineUI.recordLabel "Recording…">
+
+<!-- LOCALIZATION NOTE (timelineUI.emptyNotice1/2): This is the label shown
+  -  in the timeline view when empty. -->
+<!ENTITY timelineUI.emptyNotice1    "Click on the">
+<!ENTITY timelineUI.emptyNotice2    "button to start recording timeline events.">
+
+<!-- LOCALIZATION NOTE (timelineUI.stopNotice1/2): This is the label shown
+  -  in the timeline view while recording. -->
+<!ENTITY timelineUI.stopNotice1    "Click on the">
+<!ENTITY timelineUI.stopNotice2    "button again to stop recording.">

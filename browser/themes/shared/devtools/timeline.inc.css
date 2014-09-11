@@ -1,0 +1,159 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#record-button {
+  list-style-image: url(profiler-stopwatch.svg);
+}
+
+#record-button[checked] {
+  list-style-image: url(profiler-stopwatch-checked.svg);
+}
+
+#record-button:not([checked]) ~ #record-label {
+  visibility: hidden;
+}
+
+.notice-container {
+  font-size: 120%;
+  padding-bottom: 35vh;
+}
+
+.theme-dark .notice-container {
+  background: #343c45; /* Toolbars */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .notice-container {
+  background: #f0f1f2; /* Toolbars */
+  color: #585959; /* Grey foreground text */
+}
+
+#empty-notice button,
+#recording-notice button {
+  min-width: 30px;
+  min-height: 28px;
+  margin: 0;
+  list-style-image: url(profiler-stopwatch.svg);
+}
+
+#empty-notice button[checked],
+#recording-notice button[checked] {
+  list-style-image: url(profiler-stopwatch-checked.svg);
+}
+
+#empty-notice button .button-text,
+#recording-notice button .button-text {
+  display: none;
+}
+
+.theme-dark #timeline-overview {
+  border-bottom: 1px solid #000;
+}
+
+.theme-light #timeline-overview {
+  border-bottom: 1px solid #aaa;
+}
+
+.timeline-list-contents {
+  /* Hack: force hardware acceleration */
+  transform: translateZ(1px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.timeline-header-ticks,
+.timeline-marker-waterfall {
+  /* Background created on a <canvas> in js. */
+  /* @see browser/devtools/timeline/widgets/waterfall.js */
+  background-image: -moz-element(#waterfall-background);
+  background-repeat: repeat-y;
+  background-position: -1px center;
+}
+
+.timeline-marker-waterfall {
+  overflow: hidden;
+}
+
+.timeline-marker-container[is-spacer] {
+  pointer-events: none;
+}
+
+.theme-dark .timeline-marker-container:not([is-spacer]):nth-child(2n) {
+  background-color: rgba(255,255,255,0.03);
+}
+
+.theme-light .timeline-marker-container:not([is-spacer]):nth-child(2n) {
+  background-color: rgba(128,128,128,0.03);
+}
+
+.theme-dark .timeline-marker-container:hover {
+  background-color: rgba(255,255,255,0.1) !important;
+}
+
+.theme-light .timeline-marker-container:hover {
+  background-color: rgba(128,128,128,0.1) !important;
+}
+
+.timeline-header-sidebar,
+.timeline-marker-sidebar {
+  -moz-border-end: 1px solid;
+}
+
+.theme-dark .timeline-header-sidebar,
+.theme-dark .timeline-marker-sidebar {
+  -moz-border-end-color: #000;
+}
+
+.theme-light .timeline-header-sidebar,
+.theme-light .timeline-marker-sidebar {
+  -moz-border-end-color: #aaa;
+}
+
+.timeline-header-sidebar {
+  padding: 5px;
+}
+
+.timeline-marker-sidebar {
+  padding: 2px;
+}
+
+.timeline-marker-container:hover > .timeline-marker-sidebar {
+  background-color: transparent;
+}
+
+.timeline-header-tick {
+  width: 100px;
+  font-size: 9px;
+  transform-origin: left center;
+}
+
+.theme-dark .timeline-header-tick {
+  color: #a9bacb;
+}
+
+.theme-light .timeline-header-tick {
+  color: #292e33;
+}
+
+.timeline-header-tick:not(:first-child) {
+  -moz-margin-start: -100px !important; /* Don't affect layout. */
+}
+
+.timeline-marker-bullet {
+  width: 8px;
+  height: 8px;
+  -moz-margin-start: 8px;
+  -moz-margin-end: 6px;
+  border: 1px solid;
+  border-radius: 1px;
+}
+
+.timeline-marker-bar {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  border: 1px solid;
+  border-radius: 1px;
+  transform-origin: left center;
+}

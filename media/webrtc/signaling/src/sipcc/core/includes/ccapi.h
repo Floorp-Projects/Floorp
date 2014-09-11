@@ -6,7 +6,6 @@
 #define _CCAPI_H_
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Assertions.h"
 
 #if defined(__cplusplus) && __cplusplus >= 201103L
 typedef struct Timecard Timecard;
@@ -94,15 +93,6 @@ typedef enum {
     CC_FEATURE_CAC_RESP_FAIL,
     CC_FEATURE_FAST_PIC_UPD,
     CC_FEATURE_UNDEFINED,
-    CC_FEATURE_CREATEOFFER,
-    CC_FEATURE_CREATEANSWER,
-    CC_FEATURE_SETLOCALDESC,
-    CC_FEATURE_SETREMOTEDESC,
-    CC_FEATURE_SETPEERCONNECTION,
-    CC_FEATURE_ADDSTREAM,
-    CC_FEATURE_REMOVESTREAM,
-    CC_FEATURE_ADDICECANDIDATE,
-    CC_FEATURE_FOUNDICECANDIDATE,
     CC_FEATURE_MAX
 } group_cc_feature_t;
 
@@ -160,15 +150,6 @@ static const char *const cc_feature_names[] = {
     "CAC FAILED",
     "FAST_PIC_UPD",
     "UNDEFINED",
-    "CREATEOFFER",
-    "CREATEANSWER",
-    "SETLOCALDESC",
-    "SETREMOTEDESC",
-    "SETPEERCONNECTION",
-    "ADDSTREAM",
-    "REMOVESTREAM",
-    "ADDICECANDIDATE",
-    "FOUNDICECANDIDATE",
     "MAX"
 };
 
@@ -234,15 +215,6 @@ typedef enum cc_msgs_t_ {
     CC_MSG_DIALSTRING,
     CC_MSG_MWI,
     CC_MSG_AUDIT,
-    CC_MSG_CREATEOFFER,
-    CC_MSG_CREATEANSWER,
-    CC_MSG_SETLOCALDESC,
-    CC_MSG_SETREMOTEDESC,
-    CC_MSG_SETPEERCONNECTION,
-    CC_MSG_ADDSTREAM,
-    CC_MSG_REMOVESTREAM,
-    CC_MSG_ADDCANDIDATE,
-    CC_MSG_FOUNDCANDIDATE,
     CC_MSG_AUDIT_ACK,
     CC_MSG_OPTIONS,
     CC_MSG_OPTIONS_ACK,
@@ -274,15 +246,6 @@ static const char *const cc_msg_names[] = {
     "DIALSTRING",
     "MWI",
     "AUDIT",
-    "CREATEOFFER",
-    "CREATEANSWER",
-    "SETLOCALDESC",
-    "SETREMOTEDESC",
-    "SETPEERCONNECTION",
-    "ADDSTREAM",
-    "REMOVESTREAM",
-    "ADDCANDIDATE",
-    "FOUNDCANDIDATE",
     "AUDIT_ACK",
     "OPTIONS",
     "OPTIONS_ACK",
@@ -1187,22 +1150,6 @@ void cc_int_release_complete(cc_srcs_t src_id, cc_srcs_t dst_id,
 void cc_int_feature2(cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
                     callid_t call_id, line_t line, cc_features_t feature_id,
                     cc_feature_data_t *data, Timecard *);
-
-void cc_createoffer(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
-                    line_t line, cc_features_t feature_id, cc_feature_data_t *data,
-                    Timecard *);
-
-void cc_createanswer (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
-                    line_t line, cc_features_t feature_id, string_t sdp, cc_feature_data_t *data,
-                    Timecard *);
-
-void cc_setlocaldesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
-                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data,
-                    Timecard *);
-
-void cc_setremotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
-                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data,
-                    Timecard *);
 
 void cc_int_feature_ack(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
                         line_t line, cc_features_t feature_id,

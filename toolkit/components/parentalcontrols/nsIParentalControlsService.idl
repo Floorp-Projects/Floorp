@@ -11,9 +11,21 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(871cf229-2b21-4f04-b24d-e08061f14815)]
+[scriptable, uuid(b3585b2a-b4b3-4aa7-be92-b8ddaa6aec5f)]
 interface nsIParentalControlsService : nsISupports
 {
+  /**
+   * Action types that can be blocked for users.
+   */
+  const short DOWNLOAD = 1; // Downloading files
+  const short INSTALL_EXTENSION = 2; // Installing extensions
+  const short INSTALL_APP = 3; // Installing webapps
+  const short VISIT_FILE_URLS = 4; // Opening file:/// urls
+  const short SHARE = 5; // Sharing
+  const short BOOKMARK = 6; // Creating bookmarks
+  const short ADD_CONTACT = 7; // Add contacts to the system database
+  const short SET_IMAGE = 8; // Setting images as wall paper
+
   /**
    * @returns true if the current user account has parental controls
    * restrictions enabled.
@@ -25,6 +37,15 @@ interface nsIParentalControlsService : nsISupports
    * restrictions include the blocking of all file downloads.
    */ 
   readonly attribute boolean blockFileDownloadsEnabled;
+
+  /**
+   * Check if the user can do the prescibed action for this uri.
+   *
+   * @param aAction             Action being performed
+   * @param aUri                The uri requesting this action
+   * @param aWindow             The window generating this event.
+   */
+   boolean isAllowed(in short aAction, [optional] in nsIURI aUri);
 
   /**
    * Request that blocked URI(s) be allowed through parental

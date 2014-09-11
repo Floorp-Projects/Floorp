@@ -289,7 +289,8 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mMaxTextureImageSize(0),
     mMaxRenderbufferSize(0),
     mNeedsTextureSizeChecks(false),
-    mWorkAroundDriverBugs(true)
+    mWorkAroundDriverBugs(true),
+    mHeavyGLCallsSinceLastFlush(false)
 {
     mOwningThreadId = PlatformThread::CurrentId();
 }
@@ -2138,6 +2139,16 @@ GLContext::ReadTexImageHelper()
     }
 
     return mReadTexImageHelper.get();
+}
+
+void
+GLContext::FlushIfHeavyGLCallsSinceLastFlush()
+{
+    if (!mHeavyGLCallsSinceLastFlush) {
+        return;
+    }
+    MakeCurrent();
+    fFlush();
 }
 
 bool

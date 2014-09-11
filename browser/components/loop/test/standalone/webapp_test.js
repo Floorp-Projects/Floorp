@@ -13,20 +13,14 @@ describe("loop.webapp", function() {
   var sharedModels = loop.shared.models,
       sharedViews = loop.shared.views,
       sandbox,
-      notifier;
+      notifications;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     // conversation#outgoing sets timers, so we need to use fake ones
     // to prevent random failures.
     sandbox.useFakeTimers();
-    notifier = {
-      notify: sandbox.spy(),
-      warn: sandbox.spy(),
-      warnL10n: sandbox.spy(),
-      error: sandbox.spy(),
-      errorL10n: sandbox.spy(),
-    };
+    notifications = new sharedModels.NotificationCollection();
     loop.config.pendingCallTimeout = 1000;
   });
 
@@ -88,7 +82,7 @@ describe("loop.webapp", function() {
         helper: {},
         client: client,
         conversation: conversation,
-        notifier: notifier
+        notifications: notifications
       });
       sandbox.stub(router, "loadView");
       sandbox.stub(router, "navigate");
@@ -107,10 +101,11 @@ describe("loop.webapp", function() {
       });
 
       it("should notify the user if session token is missing", function() {
+        sandbox.stub(notifications, "errorL10n");
         router.startCall();
 
-        sinon.assert.calledOnce(notifier.errorL10n);
-        sinon.assert.calledWithExactly(notifier.errorL10n,
+        sinon.assert.calledOnce(notifications.errorL10n);
+        sinon.assert.calledWithExactly(notifications.errorL10n,
                                        "missing_conversation_info");
       });
 
@@ -194,13 +189,14 @@ describe("loop.webapp", function() {
           });
         });
 
-        it("should display an error", function() {
+        it("should display an error", function(done) {
+          sandbox.stub(notifications, "errorL10n");
           router._setupWebSocketAndCallView();
 
           promise.then(function() {
           }, function () {
-            sinon.assert.calledOnce(router._notifier.errorL10n);
-            sinon.assert.calledWithExactly(router._notifier.errorL10n,
+            sinon.assert.calledOnce(router._notifications.errorL10n);
+            sinon.assert.calledWithExactly(router._notifications.errorL10n,
               "cannot_start_call_session_not_ready");
             done();
           });
@@ -242,13 +238,15 @@ describe("loop.webapp", function() {
             });
 
             it("should display an error message", function() {
+              sandbox.stub(notifications, "errorL10n");
+
               router._websocket.trigger("progress", {
                 state: "terminated",
                 reason: "reject"
               });
 
-              sinon.assert.calledOnce(router._notifier.errorL10n);
-              sinon.assert.calledWithExactly(router._notifier.errorL10n,
+              sinon.assert.calledOnce(router._notifications.errorL10n);
+              sinon.assert.calledWithExactly(router._notifications.errorL10n,
                 "call_timeout_notification_text");
             });
           });
@@ -472,9 +470,10 @@ describe("loop.webapp", function() {
           });
 
           it("should display an error", function() {
+            sandbox.stub(notifications, "errorL10n");
             conversation.setupOutgoingCall();
 
-            sinon.assert.calledOnce(notifier.errorL10n);
+            sinon.assert.calledOnce(notifications.errorL10n);
           });
         });
 
@@ -513,10 +512,11 @@ describe("loop.webapp", function() {
               });
 
             it("should notify the user on any other error", function() {
+              sandbox.stub(notifications, "errorL10n");
               client.requestCallInfo.callsArgWith(2, {errno: 104});
               conversation.setupOutgoingCall();
 
-              sinon.assert.calledOnce(notifier.errorL10n);
+              sinon.assert.calledOnce(notifications.errorL10n);
             });
 
             it("should call outgoing on the conversation model when details " +
@@ -565,7 +565,7 @@ describe("loop.webapp", function() {
         view = React.addons.TestUtils.renderIntoDocument(
             loop.webapp.StartConversationView({
               model: conversation,
-              notifier: notifier,
+              notifications: notifications,
               client: standaloneClientStub
             })
         );
@@ -657,7 +657,7 @@ describe("loop.webapp", function() {
         view = React.addons.TestUtils.renderIntoDocument(
             loop.webapp.StartConversationView({
               model: conversation,
-              notifier: notifier,
+              notifications: notifications,
               client: {requestCallUrlInfo: requestCallUrlInfo}
             })
           );
@@ -678,10 +678,11 @@ describe("loop.webapp", function() {
 
       it("should trigger a notication when a session:error model event is " +
          " received", function() {
+        sandbox.stub(notifications, "errorL10n");
         conversation.trigger("session:error", "tech error");
 
-        sinon.assert.calledOnce(notifier.errorL10n);
-        sinon.assert.calledWithExactly(notifier.errorL10n,
+        sinon.assert.calledOnce(notifications.errorL10n);
+        sinon.assert.calledWithExactly(notifications.errorL10n,
                                        "unable_retrieve_call_info");
       });
     });
@@ -714,7 +715,7 @@ describe("loop.webapp", function() {
         view = React.addons.TestUtils.renderIntoDocument(
           loop.webapp.StartConversationView({
             model: conversation,
-            notifier: notifier,
+            notifications: notifications,
             client: {requestCallUrlInfo: requestCallUrlInfo}
           })
         );
@@ -730,7 +731,7 @@ describe("loop.webapp", function() {
         view = React.addons.TestUtils.renderIntoDocument(
           loop.webapp.StartConversationView({
             model: conversation,
-            notifier: notifier,
+            notifications: notifications,
             client: {requestCallUrlInfo: requestCallUrlInfo}
           })
         );

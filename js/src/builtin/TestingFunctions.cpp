@@ -55,18 +55,13 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!info)
         return false;
 
-    RootedValue value(cx, BooleanValue(false));
-    if (!JS_SetProperty(cx, info, "rooting-analysis", value))
+    if (!JS_SetProperty(cx, info, "rooting-analysis", FalseHandleValue))
         return false;
 
-#ifdef JSGC_USE_EXACT_ROOTING
-    value = BooleanValue(true);
-#else
-    value = BooleanValue(false);
-#endif
-    if (!JS_SetProperty(cx, info, "exact-rooting", value))
+    if (!JS_SetProperty(cx, info, "exact-rooting", TrueHandleValue))
         return false;
 
+    RootedValue value(cx);
 #ifdef DEBUG
     value = BooleanValue(true);
 #else

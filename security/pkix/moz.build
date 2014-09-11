@@ -12,6 +12,7 @@ SOURCES += [
     'lib/pkixder.cpp',
     'lib/pkixnss.cpp',
     'lib/pkixocsp.cpp',
+    'lib/pkixresult.cpp',
     'lib/pkixtime.cpp',
 ]
 

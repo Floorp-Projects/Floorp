@@ -1677,11 +1677,8 @@ ia64*-hpux*)
         if test "$_CC_SUITE" -ge "12"; then
             dnl VS2013+ requires -FS when parallel building by make -jN.
             dnl If nothing, compiler sometimes causes C1041 error.
-            dnl
-            dnl Visual Studio 2013 supports -Gw flags
-            dnl http://blogs.msdn.com/b/vcblog/archive/2013/09/11/introducing-gw-compiler-switch.aspx
-            CFLAGS="$CFLAGS -FS -Gw"
-            CXXFLAGS="$CXXFLAGS -FS -Gw"
+            CFLAGS="$CFLAGS -FS"
+            CXXFLAGS="$CXXFLAGS -FS"
         fi
         # khuey says we can safely ignore MSVC warning C4251
         # MSVC warning C4244 (implicit type conversion may lose data) warns
@@ -3101,21 +3098,6 @@ if test -n "$JSGC_GENERATIONAL"; then
 fi
 JSGC_GENERATIONAL_CONFIGURED=$JSGC_GENERATIONAL
 AC_SUBST(JSGC_GENERATIONAL_CONFIGURED)
-
-dnl ========================================================
-dnl = Use exact stack rooting for GC
-dnl ========================================================
-dnl Use exact rooting by default in all shell builds. The top-level mozilla
-dnl configure.in will configure SpiderMonkey with --disable-exact-rooting as
-dnl needed on a per-platform basis.
-JSGC_USE_EXACT_ROOTING=1
-MOZ_ARG_DISABLE_BOOL(exact-rooting,
-[  --disable-exact-rooting  Enable use of conservative stack scanning for GC],
-    JSGC_USE_EXACT_ROOTING= ,
-    JSGC_USE_EXACT_ROOTING=1 )
-if test -n "$JSGC_USE_EXACT_ROOTING"; then
-    AC_DEFINE(JSGC_USE_EXACT_ROOTING)
-fi
 
 dnl ========================================================
 dnl = Use compacting GC

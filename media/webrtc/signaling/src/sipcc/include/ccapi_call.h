@@ -54,44 +54,6 @@ cc_lineid_t CCAPI_Call_getLine(cc_call_handle_t call_handle);
 cc_return_t CCAPI_Call_originateCall(cc_call_handle_t handle, cc_sdp_direction_t video_pref, cc_string_t digits);
 
 
-cc_return_t CCAPI_CreateOffer(cc_call_handle_t handle,
-                              cc_media_options_t *options,
-                              Timecard *tc);
-
-cc_return_t CCAPI_CreateAnswer(cc_call_handle_t handle,
-                               Timecard *tc);
-
-cc_return_t CCAPI_SetLocalDescription(cc_call_handle_t handle,
-                                      cc_jsep_action_t action,
-                                      cc_string_t sdp,
-                                      Timecard *tc);
-
-cc_return_t CCAPI_SetRemoteDescription(cc_call_handle_t handle,
-                                       cc_jsep_action_t action,
-                                       cc_string_t sdp,
-                                       Timecard *tc);
-
-cc_return_t CCAPI_SetPeerConnection(cc_call_handle_t handle, cc_peerconnection_t pc);
-
-cc_return_t CCAPI_AddStream(cc_call_handle_t handle,
-                            cc_media_stream_id_t stream_id,
-                            cc_media_track_id_t track_id,
-                            cc_media_type_t media_type);
-
-cc_return_t CCAPI_RemoveStream(cc_call_handle_t handle, cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
-
-cc_return_t CCAPI_AddICECandidate(cc_call_handle_t handle,
-                                  cc_string_t candidate,
-                                  cc_string_t mid,
-                                  cc_level_t level,
-                                  Timecard *tc);
-
-cc_return_t CCAPI_FoundICECandidate(cc_call_handle_t handle,
-                                    cc_string_t candidate,
-                                    cc_string_t mid,
-                                    cc_level_t level,
-                                    Timecard *tc);
-
 /**
  * Send digits on the call - can be invoked either to dial additional digits or send DTMF
  * @param [in] handle - call handle

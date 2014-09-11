@@ -18,8 +18,11 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -36,6 +39,7 @@ public class PreSearchFragment extends Fragment {
     private SimpleCursorAdapter cursorAdapter;
 
     private ListView listView;
+    private View emptyView;
 
     private static final String[] PROJECTION = new String[]{ SearchHistory.QUERY, SearchHistory._ID };
 
@@ -122,6 +126,24 @@ public class PreSearchFragment extends Fragment {
         super.onDestroyView();
         listView.setAdapter(null);
         listView = null;
+        emptyView = null;
+    }
+
+    private void updateUiFromCursor(Cursor c) {
+        if (c != null && c.getCount() > 0) {
+            return;
+        }
+
+        if (emptyView == null) {
+            final ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.empty_view_stub);
+            emptyView = emptyViewStub.inflate();
+
+            ((ImageView) emptyView.findViewById(R.id.empty_image)).setImageResource(R.drawable.search_fox);
+            ((TextView) emptyView.findViewById(R.id.empty_title)).setText(R.string.search_empty_title);
+            ((TextView) emptyView.findViewById(R.id.empty_message)).setText(R.string.search_empty_message);
+
+            listView.setEmptyView(emptyView);
+        }
     }
 
     private class SearchHistoryLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -132,10 +154,11 @@ public class PreSearchFragment extends Fragment {
         }
 
         @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             if (cursorAdapter != null) {
-                cursorAdapter.swapCursor(data);
+                cursorAdapter.swapCursor(c);
             }
+            updateUiFromCursor(c);
         }
 
         @Override

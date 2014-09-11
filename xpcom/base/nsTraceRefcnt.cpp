@@ -69,10 +69,6 @@ NS_MeanAndStdDev(double aNumberOfValues,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if !defined(XP_WIN) || (!defined(MOZ_OPTIMIZE) || defined(MOZ_PROFILING) || defined(DEBUG))
-#define STACKWALKING_AVAILABLE
-#endif
-
 #define NS_IMPL_REFCNT_LOGGING
 
 #ifdef NS_IMPL_REFCNT_LOGGING
@@ -209,7 +205,7 @@ static const PLHashAllocOps typesToLogHashAllocOps = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef STACKWALKING_AVAILABLE
+#ifdef MOZ_STACKWALKING
 
 class CodeAddressServiceStringTable MOZ_FINAL
 {
@@ -253,7 +249,7 @@ typedef mozilla::CodeAddressService<CodeAddressServiceStringTable,
 
 mozilla::StaticAutoPtr<WalkTheStackCodeAddressService> gCodeAddressService;
 
-#endif // STACKWALKING_AVAILABLE
+#endif // MOZ_STACKWALKING
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -931,7 +927,7 @@ InitTraceLog()
 
 extern "C" {
 
-#ifdef STACKWALKING_AVAILABLE
+#ifdef MOZ_STACKWALKING
 static void
 PrintStackFrame(void* aPC, void* aSP, void* aClosure)
 {
@@ -960,7 +956,7 @@ PrintStackFrameCached(void* aPC, void* aSP, void* aClosure)
 void
 nsTraceRefcnt::WalkTheStack(FILE* aStream)
 {
-#ifdef STACKWALKING_AVAILABLE
+#ifdef MOZ_STACKWALKING
   NS_StackWalk(PrintStackFrame, /* skipFrames */ 2, /* maxFrames */ 0, aStream,
                0, nullptr);
 #endif
@@ -969,7 +965,7 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
 void
 nsTraceRefcnt::WalkTheStackCached(FILE* aStream)
 {
-#ifdef STACKWALKING_AVAILABLE
+#ifdef MOZ_STACKWALKING
   if (!gCodeAddressService) {
     gCodeAddressService = new WalkTheStackCodeAddressService();
   }
@@ -1018,7 +1014,7 @@ NS_LogInit()
   NS_SetMainThread();
 
   // FIXME: This is called multiple times, we should probably not allow that.
-#ifdef STACKWALKING_AVAILABLE
+#ifdef MOZ_STACKWALKING
   StackWalkInitCriticalAddress();
 #endif
 #ifdef NS_IMPL_REFCNT_LOGGING
@@ -1368,7 +1364,7 @@ void
 nsTraceRefcnt::Shutdown()
 {
 #ifdef NS_IMPL_REFCNT_LOGGING
-#ifdef STACKWALKING_AVAILABLE
+#ifdef MOZ_STACKWALKING
   gCodeAddressService = nullptr;
 #endif
   if (gBloatView) {

@@ -11,10 +11,15 @@ EXTRA_JS_MODULES.addons += [
     'AddonUpdateChecker.jsm',
     'Content.js',
     'LightweightThemeImageOptimizer.jsm',
-    'OpenH264Provider.jsm',
-    'PluginProvider.jsm',
     'SpellCheckDictionaryBootstrap.js',
 ]
+
+# Don't ship unused providers on Android
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    EXTRA_JS_MODULES.addons += [
+        'OpenH264Provider.jsm',
+        'PluginProvider.jsm',
+    ]
 
 EXTRA_PP_JS_MODULES.addons += [
     'XPIProvider.jsm',

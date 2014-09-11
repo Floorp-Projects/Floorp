@@ -341,6 +341,10 @@ protected:
   // A flag that should be false only if a cross-domain redirect occurred
   uint32_t                          mAllRedirectsSameOrigin     : 1;
 
+  // Is 1 if no redirects have occured or if all redirects
+  // pass the Resource Timing timing-allow-check
+  uint32_t                          mAllRedirectsPassTimingAllowCheck : 1;
+
   // Current suspension depth for this channel object
   uint32_t                          mSuspendCount;
 

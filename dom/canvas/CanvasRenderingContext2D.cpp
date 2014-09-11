@@ -587,6 +587,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D()
 {
+  RemovePostRefreshObserver();
   Reset();
   // Drop references from all CanvasRenderingContext2DUserData to this context
   for (uint32_t i = 0; i < mUserDatas.Length(); ++i) {
@@ -764,6 +765,14 @@ CanvasRenderingContext2D::Redraw(const mgfx::Rect &r)
   nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
 
   mCanvasElement->InvalidateCanvasContent(&r);
+}
+
+void
+CanvasRenderingContext2D::DidRefresh()
+{
+  if (mStream && mStream->GLContext()) {
+    mStream->GLContext()->FlushIfHeavyGLCallsSinceLastFlush();
+  }
 }
 
 void
@@ -1092,7 +1101,9 @@ CanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *shell,
                                                 int32_t width,
                                                 int32_t height)
 {
+  RemovePostRefreshObserver();
   mDocShell = shell;
+  AddPostRefreshObserverIfNecessary();
 
   SetDimensions(width, height);
   mTarget = gfxPlatform::GetPlatform()->
@@ -1266,7 +1277,7 @@ CanvasRenderingContext2D::Scale(double x, double y, ErrorResult& error)
   }
 
   Matrix newMatrix = mTarget->GetTransform();
-  mTarget->SetTransform(newMatrix.Scale(x, y));
+  mTarget->SetTransform(newMatrix.PreScale(x, y));
 }
 
 void
@@ -1291,8 +1302,7 @@ CanvasRenderingContext2D::Translate(double x, double y, ErrorResult& error)
     return;
   }
 
-  Matrix newMatrix = mTarget->GetTransform();
-  mTarget->SetTransform(newMatrix.Translate(x, y));
+  mTarget->SetTransform(Matrix(mTarget->GetTransform()).PreTranslate(x, y));
 }
 
 void
@@ -3012,9 +3022,9 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
     // Translate so that the anchor point is at 0,0, then scale and then
     // translate back.
-    newTransform.Translate(aX, 0);
-    newTransform.Scale(aMaxWidth.Value() / totalWidth, 1);
-    newTransform.Translate(-aX, 0);
+    newTransform.PreTranslate(aX, 0);
+    newTransform.PreScale(aMaxWidth.Value() / totalWidth, 1);
+    newTransform.PreTranslate(-aX, 0);
     /* we do this to avoid an ICE in the android compiler */
     Matrix androidCompilerBug = newTransform;
     mTarget->SetTransform(androidCompilerBug);

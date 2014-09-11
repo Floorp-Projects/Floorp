@@ -709,10 +709,9 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoK
 {
     JS_ASSERT(!UseNewTypeForInitializer(script, pc, kind));
 
-    /* :XXX: Limit script->length so we don't need to check the offset up front? */
     uint32_t offset = script->pcToOffset(pc);
 
-    if (!script->compileAndGo() || offset >= AllocationSiteKey::OFFSET_LIMIT)
+    if (offset >= AllocationSiteKey::OFFSET_LIMIT)
         return GetTypeNewObject(cx, kind);
 
     AllocationSiteKey key;
@@ -1344,9 +1343,5 @@ struct GCMethods<types::Type>
 };
 
 } // namespace js
-
-namespace JS {
-template<> class AnchorPermitted<js::types::TypeObject *> { };
-}  // namespace JS
 
 #endif /* jsinferinlines_h */

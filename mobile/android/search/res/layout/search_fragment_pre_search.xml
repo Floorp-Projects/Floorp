@@ -8,6 +8,11 @@
     android:layout_height="match_parent"
     android:background="@color/global_background_color">
 
+    <ViewStub android:id="@+id/empty_view_stub"
+        android:layout="@layout/search_empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
     <ListView
         android:id="@+id/list_view"
         android:layout_width="match_parent"

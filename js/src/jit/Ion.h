@@ -84,10 +84,9 @@ void SetIonContext(IonContext *ctx);
 bool CanIonCompileScript(JSContext *cx, JSScript *script, bool osr);
 
 MethodStatus CanEnterAtBranch(JSContext *cx, JSScript *script,
-                              BaselineFrame *frame, jsbytecode *pc, bool isConstructing);
+                              BaselineFrame *frame, jsbytecode *pc);
 MethodStatus CanEnter(JSContext *cx, RunState &state);
-MethodStatus CompileFunctionForBaseline(JSContext *cx, HandleScript script, BaselineFrame *frame,
-                                        bool isConstructing);
+MethodStatus CompileFunctionForBaseline(JSContext *cx, HandleScript script, BaselineFrame *frame);
 MethodStatus CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numActualArgs);
 
 MethodStatus CanEnterInParallel(JSContext *cx, HandleScript script);
@@ -149,8 +148,10 @@ CodeGenerator *GenerateCode(MIRGenerator *mir, LIRGraph *lir);
 CodeGenerator *CompileBackEnd(MIRGenerator *mir);
 
 void AttachFinishedCompilations(JSContext *cx);
-void FinishOffThreadBuilder(IonBuilder *builder);
+void FinishOffThreadBuilder(JSContext *cx, IonBuilder *builder);
 void StopAllOffThreadCompilations(JSCompartment *comp);
+
+uint8_t *LazyLinkTopActivation(JSContext *cx);
 
 static inline bool
 IsIonEnabled(JSContext *cx)

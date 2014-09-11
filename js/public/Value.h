@@ -18,7 +18,6 @@
 #include "js-config.h"
 #include "jstypes.h"
 
-#include "js/Anchor.h"
 #include "js/GCAPI.h"
 #include "js/RootingAPI.h"
 #include "js/Utility.h"
@@ -1864,26 +1863,6 @@ IsPoisonedValue(const Value &v)
 {
     return js::GCMethods<Value>::poisoned(v);
 }
-
-#ifndef __GNUC__
-/*
- * The default assignment operator for |struct C| has the signature:
- *
- *   C& C::operator=(const C&)
- *
- * And in particular requires implicit conversion of |this| to type |C| for the
- * return value. But |volatile C| cannot thus be converted to |C|, so just
- * doing |sink = hold| as in the non-specialized version would fail to compile.
- * Do the assignment on asBits instead, since I don't think we want to give
- * jsval_layout an assignment operator returning |volatile jsval_layout|.
- */
-template<>
-inline Anchor<Value>::~Anchor()
-{
-    volatile uint64_t bits;
-    bits = JSVAL_TO_IMPL(hold).asBits;
-}
-#endif
 
 #ifdef JS_DEBUG
 namespace detail {

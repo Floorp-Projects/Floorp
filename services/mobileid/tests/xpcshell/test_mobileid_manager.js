@@ -898,6 +898,8 @@ add_test(function() {
   let client = new MockClient();
   MobileIdentityManager.client = client;
 
+  MobileIdentityManager.iccInfo = [];
+
   let promiseId = Date.now();
   let mm = {
     sendAsyncMessage: function(aMsg, aData) {
@@ -987,6 +989,8 @@ add_test(function() {
     }
   });
   MobileIdentityManager.client = client;
+
+  MobileIdentityManager.iccInfo = [];
 
   let promiseId = Date.now();
   let mm = {

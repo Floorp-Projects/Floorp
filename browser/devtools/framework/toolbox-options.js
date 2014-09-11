@@ -168,7 +168,7 @@ OptionsPanel.prototype = {
 
     let onCheckboxClick = (checkbox) => {
       let toolDefinition = toggleableButtons.filter(tool => tool.id === checkbox.id)[0];
-      SetPref(toolDefinition.visibilityswitch, checkbox.checked);
+      Services.prefs.setBoolPref(toolDefinition.visibilityswitch, checkbox.checked);
       setToolboxButtonsVisibility();
     };
 
@@ -198,7 +198,7 @@ OptionsPanel.prototype = {
     let onCheckboxClick = function(id) {
       let toolDefinition = gDevTools._tools.get(id);
       // Set the kill switch pref boolean to true
-      SetPref(toolDefinition.visibilityswitch, this.checked);
+      Services.prefs.setBoolPref(toolDefinition.visibilityswitch, this.checked);
       if (this.checked) {
         gDevTools.emit("tool-registered", id);
       }
