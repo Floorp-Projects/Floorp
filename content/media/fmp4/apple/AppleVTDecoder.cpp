@@ -114,7 +114,8 @@ AppleVTDecoder::Flush()
   mTaskQueue->Flush();
   nsresult rv = WaitForAsynchronousFrames();
   if (NS_FAILED(rv)) {
-    LOG("AppleVTDecoder::Drain failed waiting for platform decoder.");
+    LOG("AppleVTDecoder::Flush failed waiting for platform decoder "
+        "with error:%d.", rv);
   }
   ClearReorderedFrames();
 
@@ -127,8 +128,8 @@ AppleVTDecoder::Drain()
   mTaskQueue->AwaitIdle();
   nsresult rv = WaitForAsynchronousFrames();
   if (NS_FAILED(rv)) {
-    LOG("AppleVTDecoder::Drain failed waiting for platform decoder.");
-    return rv;
+    LOG("AppleVTDecoder::Drain failed waiting for platform decoder "
+        "with error:%d.", rv);
   }
   DrainReorderedFrames();
   mCallback->DrainComplete();
