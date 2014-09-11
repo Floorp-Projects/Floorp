@@ -379,10 +379,10 @@ public:
   void ReceiveNullableCallbackObjectSequence(nsTArray< nsRefPtr<TestCallbackInterface> > &);
   void ReceiveCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&);
   void ReceiveNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&);
-  void ReceiveWeakCastableObjectSequence(nsTArray<TestInterface*> &);
-  void ReceiveWeakNullableCastableObjectSequence(nsTArray<TestInterface*> &);
-  void ReceiveWeakCastableObjectNullableSequence(Nullable< nsTArray<TestInterface*> >&);
-  void ReceiveWeakNullableCastableObjectNullableSequence(Nullable< nsTArray<TestInterface*> >&);
+  void ReceiveWeakCastableObjectSequence(nsTArray<nsRefPtr<TestInterface>> &);
+  void ReceiveWeakNullableCastableObjectSequence(nsTArray<nsRefPtr<TestInterface>> &);
+  void ReceiveWeakCastableObjectNullableSequence(Nullable< nsTArray<nsRefPtr<TestInterface>> >&);
+  void ReceiveWeakNullableCastableObjectNullableSequence(Nullable< nsTArray<nsRefPtr<TestInterface>> >&);
   void PassCastableObjectSequence(const Sequence< OwningNonNull<TestInterface> >&);
   void PassNullableCastableObjectSequence(const Sequence< nsRefPtr<TestInterface> > &);
   void PassCastableObjectNullableSequence(const Nullable< Sequence< OwningNonNull<TestInterface> > >&);

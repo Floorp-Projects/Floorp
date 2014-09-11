@@ -1500,8 +1500,7 @@ IndexedDBObjectStoreRequestParent::ConvertBlobActors(
 
     for (uint32_t index = 0; index < length; index++) {
       BlobParent* actor = static_cast<BlobParent*>(aActors[index]);
-      nsCOMPtr<nsIDOMBlob> blob = actor->GetBlob();
-      aBlobs.AppendElement(blob);
+      aBlobs.AppendElement(actor->GetBlob());
     }
   }
 }

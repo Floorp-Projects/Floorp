@@ -25,20 +25,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimationElement)
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::SVGTests)
 NS_INTERFACE_MAP_END_INHERITING(SVGAnimationElementBase)
 
-// Cycle collection magic -- based on nsSVGUseElement
-NS_IMPL_CYCLE_COLLECTION_CLASS(SVGAnimationElement)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGAnimationElement,
-                                                SVGAnimationElementBase)
-  tmp->mHrefTarget.Unlink();
-  tmp->mTimedElement.Unlink();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGAnimationElement,
-                                                  SVGAnimationElementBase)
-  tmp->mHrefTarget.Traverse(&cb);
-  tmp->mTimedElement.Traverse(&cb);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(SVGAnimationElement,
+                                   SVGAnimationElementBase,
+                                   mHrefTarget, mTimedElement)
 
 //----------------------------------------------------------------------
 // Implementation

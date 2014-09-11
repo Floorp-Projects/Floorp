@@ -133,8 +133,7 @@ void
 RtspControllerChild::AddMetaData(
                        already_AddRefed<nsIStreamingProtocolMetaData>&& meta)
 {
-  nsCOMPtr<nsIStreamingProtocolMetaData> data = meta;
-  mMetaArray.AppendElement(data);
+  mMetaArray.AppendElement(mozilla::Move(meta));
 }
 
 int

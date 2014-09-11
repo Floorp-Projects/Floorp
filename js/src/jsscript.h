@@ -819,7 +819,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     uint32_t        sourceStart_;
     uint32_t        sourceEnd_;
 
-    uint32_t        useCount;   /* Number of times the script has been called
+    uint32_t        warmUpCounter;   /* Number of times the script has been called
                                  * or has had backedges taken. When running in
                                  * ion, also increased for any inlined scripts.
                                  * Reset if the script's JIT code is forcibly
@@ -1253,12 +1253,12 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     js::jit::IonScript *const *addressOfIonScript() const {
         return &ion;
     }
-    void setIonScript(js::jit::IonScript *ionScript) {
+    void setIonScript(JSContext *maybecx, js::jit::IonScript *ionScript) {
         if (hasIonScript())
             js::jit::IonScript::writeBarrierPre(tenuredZone(), ion);
         ion = ionScript;
         MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
-        updateBaselineOrIonRaw();
+        updateBaselineOrIonRaw(maybecx);
     }
 
     bool hasBaselineScript() const {
@@ -1275,7 +1275,17 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
     inline void setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselineScript);
 
-    void updateBaselineOrIonRaw();
+    void updateBaselineOrIonRaw(JSContext *maybecx);
+
+    void setPendingIonBuilder(JSContext *maybecx, js::jit::IonBuilder *builder) {
+        JS_ASSERT(!builder || !ion->pendingBuilder());
+        ion->setPendingBuilderPrivate(builder);
+        updateBaselineOrIonRaw(maybecx);
+    }
+    js::jit::IonBuilder *pendingIonBuilder() {
+        JS_ASSERT(hasIonScript());
+        return ion->pendingBuilder();
+    }
 
     bool hasParallelIonScript() const {
         return parallelIon && parallelIon != ION_DISABLED_SCRIPT && parallelIon != ION_COMPILING_SCRIPT;
@@ -1313,6 +1323,9 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
     static size_t offsetOfBaselineOrIonRaw() {
         return offsetof(JSScript, baselineOrIonRaw);
+    }
+    uint8_t *baselineOrIonRawPointer() const {
+        return baselineOrIonRaw;
     }
     static size_t offsetOfBaselineOrIonSkipArgCheck() {
         return offsetof(JSScript, baselineOrIonSkipArgCheck);
@@ -1395,13 +1408,13 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     bool makeTypes(JSContext *cx);
 
   public:
-    uint32_t getUseCount() const {
-        return useCount;
+    uint32_t getWarmUpCounter() const {
+        return warmUpCounter;
     }
-    uint32_t incUseCount(uint32_t amount = 1) { return useCount += amount; }
-    uint32_t *addressOfUseCount() { return &useCount; }
-    static size_t offsetOfUseCount() { return offsetof(JSScript, useCount); }
-    void resetUseCount() { useCount = 0; }
+    uint32_t incWarmUpCounter(uint32_t amount = 1) { return warmUpCounter += amount; }
+    uint32_t *addressOfWarmUpCounter() { return &warmUpCounter; }
+    static size_t offsetOfWarmUpCounter() { return offsetof(JSScript, warmUpCounter); }
+    void resetWarmUpCounter() { warmUpCounter = 0; }
 
   public:
     bool initScriptCounts(JSContext *cx);
