@@ -6,4 +6,6 @@
 
 DIRS += ['communicator']
 
+DEFINES['E10S_TESTING_ONLY'] = CONFIG['E10S_TESTING_ONLY']
+
 JAR_MANIFESTS += ['jar.mn']
