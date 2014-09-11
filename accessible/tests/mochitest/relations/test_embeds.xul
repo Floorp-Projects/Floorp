@@ -58,6 +58,9 @@
 
       this.match = function browserReorderChecker_match(aEvent)
       {
+        if (!isAccessible(currentBrowser()))
+          return false;
+
         // Reorder event might be duped because of temporary document creation.
         if (aEvent.accessible == getAccessible(currentBrowser())) {
           this.cnt++;
@@ -96,7 +99,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Testing
 
-    gA11yEventDumpToConsole = true; // debug
+    //gA11yEventDumpToConsole = true; // debug
 
     var gQueue = null;
     function doTests()
@@ -104,7 +107,7 @@
       testRelation(browserDocument(), RELATION_EMBEDS,
                    getAccessible(currentTabDocument()));
 
-      enableLogging("docload");
+      //enableLogging("docload");
       gQueue = new eventQueue();
 
       gQueue.push(new loadURI("about:about"));
@@ -112,7 +115,7 @@
 
       gQueue.onFinish = function()
       {
-        disableLogging();
+        //disableLogging();
         closeBrowserWindow();
       }
       gQueue.invoke();
