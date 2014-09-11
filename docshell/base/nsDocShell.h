@@ -978,6 +978,9 @@ private:
                                 nsIDocShellTreeItem* aOriginalRequestor,
                                 nsIDocShellTreeItem** _retval);
 
+    // Notify consumers of a search being loaded through the observer service:
+    void MaybeNotifyKeywordSearchLoading(const nsString &aProvider, const nsString &aKeyword);
+
 #ifdef DEBUG
     // We're counting the number of |nsDocShells| to help find leaks
     static unsigned long gNumberOfDocShells;
