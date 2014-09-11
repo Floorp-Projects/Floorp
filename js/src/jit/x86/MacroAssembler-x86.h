@@ -856,7 +856,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         JS_ASSERT(dest != ScratchDoubleReg);
         if (Assembler::HasSSE41()) {
             movd(src.payloadReg(), dest);
-            pinsrd(src.typeReg(), dest);
+            pinsrd(1, src.typeReg(), dest);
         } else {
             movd(src.payloadReg(), dest);
             movd(src.typeReg(), ScratchDoubleReg);
@@ -870,7 +870,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             movl(payload, scratch);
             movd(scratch, dest);
             movl(type, scratch);
-            pinsrd(scratch, dest);
+            pinsrd(1, scratch, dest);
         } else {
             movl(payload, scratch);
             movd(scratch, dest);
