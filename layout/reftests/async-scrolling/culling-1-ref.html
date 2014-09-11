@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <title>Culling Test</title>
+    <meta name="viewport" content="width=device-width">
+  </head>
+  <body style="background:red" onload="loaded()">
+    <div style="height:390px; width:300px; overflow-y:hidden; background:red">
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+      <div style="margin-top:15px; width:300px; height:40px; background:blue"></div>
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+    </div>
+    <script>
+      function loaded() {
+        var scrollableDiv = document.querySelector("div");
+        scrollableDiv.scrollTop = 10;
+      }
+    </script>
+  </body>
+</html>

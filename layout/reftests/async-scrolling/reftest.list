@@ -14,6 +14,7 @@ pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enable
 pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
 pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
 pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
+pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == culling-1.html culling-1-ref.html
 
 pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == bg-fixed-1.html bg-fixed-1-ref.html
 pref(layout.async-containerless-scrolling.enabled,false) skip-if(!asyncPanZoom) == bg-fixed-cover-1.html bg-fixed-cover-1-ref.html
