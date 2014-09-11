@@ -45,14 +45,15 @@ function openZip(path) {
 
 // Gets the pretty name from the signing cert or null if the zip is unsigned.
 function getSigner(zip) {
-  var principal = zip.getCertificatePrincipal(null);
-  if (principal && principal.hasCertificate)
-    return principal.prettyName;
+  var signingCert = zip.getSigningCert(null);
+  if (signingCert) {
+    return signingCert.organization;
+  }
   return null;
 }
 
 function verifySigning(zip) {
-  var principal = zip.getCertificatePrincipal(null);
+  var signingCert = zip.getSigningCert(null);
   var count = 0;
   var entries = zip.findEntries(null);
   while (entries.hasMore()) {
@@ -64,9 +65,10 @@ function verifySigning(zip) {
     if (entry.substr(-1) == "/")
       continue;
     count++;
-    var entryPrincipal = zip.getCertificatePrincipal(entry);
-    if (!entryPrincipal || !principal.equals(entryPrincipal))
+    var entryCert = zip.getSigningCert(entry);
+    if (!entryCert || !signingCert.equals(entryCert)) {
       return false;
+    }
   }
   return zip.manifestEntriesCount == count;
 }
