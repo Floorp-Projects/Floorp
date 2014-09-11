@@ -214,7 +214,7 @@ class IonBuilder
     static int CmpSuccessors(const void *a, const void *b);
 
   public:
-    IonBuilder(CompileCompartment *comp,
+    IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
                const JitCompileOptions &options, TempAllocator *temp,
                MIRGraph *graph, types::CompilerConstraintList *constraints,
                BaselineInspector *inspector, CompileInfo *info,
@@ -865,6 +865,7 @@ class IonBuilder
   private:
     bool init();
 
+    JSContext *analysisContext;
     BaselineFrameInspector *baselineFrame_;
 
     // Constraints for recording dependencies on type information.
