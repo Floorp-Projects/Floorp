@@ -6,7 +6,6 @@
 #include "domstubs.idl"
 
 interface nsIVariant;
-interface nsIDOMUserDataHandler;
 
 /**
  * The nsIDOMNode interface is the primary datatype for the entire 
@@ -17,7 +16,7 @@ interface nsIDOMUserDataHandler;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[uuid(56545150-a001-484e-9ed4-cb319eebd7b3)]
+[uuid(3eef1ab9-2f87-4eda-9bb9-469c37294f72)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
@@ -102,9 +101,8 @@ interface nsIDOMNode : nsISupports
   // Introduced in DOM Level 3:
   boolean            isEqualNode(in nsIDOMNode arg);
   // Introduced in DOM Level 3:
-  nsIVariant         setUserData(in DOMString key, 
-                                 in nsIVariant data, 
-                                 in nsIDOMUserDataHandler handler);
+  nsIVariant         setUserData(in DOMString key,
+                                 in nsIVariant data);
   // Introduced in DOM Level 3:
   nsIVariant         getUserData(in DOMString key);
 

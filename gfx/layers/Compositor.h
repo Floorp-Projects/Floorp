@@ -342,7 +342,6 @@ public:
    */
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
                           const gfx::Rect* aClipRectIn,
-                          const gfx::Matrix& aTransform,
                           const gfx::Rect& aRenderBounds,
                           gfx::Rect* aClipRectOut = nullptr,
                           gfx::Rect* aRenderBoundsOut = nullptr) = 0;
@@ -373,11 +372,8 @@ public:
    * target, usually the screen. Calling this method prepares the compositor to
    * render using a different viewport (that is, size and transform), usually
    * associated with a new render target.
-   * aWorldTransform is the transform from user space to the new viewport's
-   * coordinate space.
    */
-  virtual void PrepareViewport(const gfx::IntSize& aSize,
-                               const gfx::Matrix& aWorldTransform) = 0;
+  virtual void PrepareViewport(const gfx::IntSize& aSize) = 0;
 
   /**
    * Whether textures created by this compositor can receive partial updates.
