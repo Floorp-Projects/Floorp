@@ -572,6 +572,8 @@ class TypeSet
 
     /* Join two type sets into a new set. The result should not be modified further. */
     static TemporaryTypeSet *unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc);
+    /* Return the intersection of the 2 TypeSets. The result should not be modified further */
+    static TemporaryTypeSet *intersectSets(TemporaryTypeSet *a, TemporaryTypeSet *b, LifoAlloc *alloc);
 
     /* Add a type to this set using the specified allocator. */
     void addType(Type type, LifoAlloc *alloc);
@@ -629,9 +631,9 @@ class TypeSet
 
     // Create a new TemporaryTypeSet where undefined and/or null has been filtered out.
     TemporaryTypeSet *filter(LifoAlloc *alloc, bool filterUndefined, bool filterNull) const;
-
     // Create a new TemporaryTypeSet where the type has been set to object.
     TemporaryTypeSet *cloneObjectsOnly(LifoAlloc *alloc);
+    TemporaryTypeSet *cloneWithoutObjects(LifoAlloc *alloc);
 
     // Trigger a read barrier on all the contents of a type set.
     static void readBarrier(const TypeSet *types);

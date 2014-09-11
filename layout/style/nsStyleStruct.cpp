@@ -1266,7 +1266,11 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
 nsStylePosition::nsStylePosition(void)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
+
   // positioning values not inherited
+
+  mObjectPosition.SetInitialPercentValues(0.5f);
+
   nsStyleCoord  autoCoord(eStyleUnit_Auto);
   mOffset.SetLeft(autoCoord);
   mOffset.SetTop(autoCoord);
@@ -1299,6 +1303,7 @@ nsStylePosition::nsStylePosition(void)
   mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
   mFlexWrap = NS_STYLE_FLEX_WRAP_NOWRAP;
   mJustifyContent = NS_STYLE_JUSTIFY_CONTENT_FLEX_START;
+  mObjectFit = NS_STYLE_OBJECT_FIT_FILL;
   mOrder = NS_STYLE_ORDER_INITIAL;
   mFlexGrow = 0.0f;
   mFlexShrink = 1.0f;
@@ -1316,7 +1321,8 @@ nsStylePosition::~nsStylePosition(void)
 }
 
 nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
-  : mOffset(aSource.mOffset)
+  : mObjectPosition(aSource.mObjectPosition)
+  , mOffset(aSource.mOffset)
   , mWidth(aSource.mWidth)
   , mMinWidth(aSource.mMinWidth)
   , mMaxWidth(aSource.mMaxWidth)
@@ -1336,6 +1342,7 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   , mFlexDirection(aSource.mFlexDirection)
   , mFlexWrap(aSource.mFlexWrap)
   , mJustifyContent(aSource.mJustifyContent)
+  , mObjectFit(aSource.mObjectFit)
   , mOrder(aSource.mOrder)
   , mFlexGrow(aSource.mFlexGrow)
   , mFlexShrink(aSource.mFlexShrink)
@@ -1365,8 +1372,14 @@ IsAutonessEqual(const nsStyleSides& aSides1, const nsStyleSides& aSides2)
 
 nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
 {
-  nsChangeHint hint =
-    (mZIndex == aOther.mZIndex) ? NS_STYLE_HINT_NONE : nsChangeHint_RepaintFrame;
+  nsChangeHint hint = nsChangeHint(0);
+
+  // Changes to "z-index", "object-fit", & "object-position" require a repaint.
+  if (mZIndex != aOther.mZIndex ||
+      mObjectFit != aOther.mObjectFit ||
+      mObjectPosition != aOther.mObjectPosition) {
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
 
   if (mOrder != aOther.mOrder) {
     // "order" impacts both layout order and stacking order, so we need both a
@@ -2136,13 +2149,12 @@ bool nsStyleBackground::IsTransparent() const
 }
 
 void
-nsStyleBackground::Position::SetInitialValues()
+nsStyleBackground::Position::SetInitialPercentValues(float aPercentVal)
 {
-  // Initial value is "0% 0%"
-  mXPosition.mPercent = 0.0f;
+  mXPosition.mPercent = aPercentVal;
   mXPosition.mLength = 0;
   mXPosition.mHasPercent = true;
-  mYPosition.mPercent = 0.0f;
+  mYPosition.mPercent = aPercentVal;
   mYPosition.mLength = 0;
   mYPosition.mHasPercent = true;
 }
@@ -2273,7 +2285,7 @@ nsStyleBackground::Layer::SetInitialValues()
   mOrigin = NS_STYLE_BG_ORIGIN_PADDING;
   mRepeat.SetInitialValues();
   mBlendMode = NS_STYLE_BLEND_NORMAL;
-  mPosition.SetInitialValues();
+  mPosition.SetInitialPercentValues(0.0f); // Initial value is "0% 0%"
   mSize.SetInitialValues();
   mImage.SetNull();
 }

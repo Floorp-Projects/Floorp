@@ -13,6 +13,8 @@ contract @mozilla.org/addons/web-install-listener;1 {0f38e086-89a3-40a5-8ffc-9b6
 component {9df8ef2b-94da-45c9-ab9f-132eb55fddf1} amInstallTrigger.js
 contract @mozilla.org/addons/installtrigger;1 {9df8ef2b-94da-45c9-ab9f-132eb55fddf1}
 category JavaScript-global-property InstallTrigger @mozilla.org/addons/installtrigger;1
+#ifndef MOZ_WIDGET_ANDROID
 category addon-provider-module PluginProvider resource://gre/modules/addons/PluginProvider.jsm
 category addon-provider-module OpenH264Provider resource://gre/modules/addons/OpenH264Provider.jsm
+#endif
 #endif

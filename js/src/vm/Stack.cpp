@@ -1554,11 +1554,11 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
     fp_(nullptr),
     exitReason_(AsmJSExit::None)
 {
+    (void) entrySP_;  // squelch GCC warning
+
+    // NB: this is a hack and can be removed once Ion switches over to
+    // JS::ProfilingFrameIterator.
     if (cx->runtime()->spsProfiler.enabled()) {
-        // Use a profiler string that matches jsMatch regex in
-        // browser/devtools/profiler/cleopatra/js/parserWorker.js.
-        // (For now use a single static string to avoid further slowing down
-        // calls into asm.js.)
         profiler_ = &cx->runtime()->spsProfiler;
         profiler_->enterAsmJS("asm.js code :0", this);
     }
@@ -1568,14 +1568,21 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
 
     prevAsmJS_ = cx->mainThread().asmJSActivationStack_;
 
-    JSRuntime::AutoLockForInterrupt lock(cx->runtime());
-    cx->mainThread().asmJSActivationStack_ = this;
+    {
+        JSRuntime::AutoLockForInterrupt lock(cx->runtime());
+        cx->mainThread().asmJSActivationStack_ = this;
+    }
 
-    (void) entrySP_;  // squelch GCC warning
+    // Now that the AsmJSActivation is fully initialized, make it visible to
+    // asynchronous profiling.
+    registerProfiling();
 }
 
 AsmJSActivation::~AsmJSActivation()
 {
+    // Hide this activation from the profiler before is is destroyed.
+    unregisterProfiling();
+
     if (profiler_)
         profiler_->exitAsmJS();
 

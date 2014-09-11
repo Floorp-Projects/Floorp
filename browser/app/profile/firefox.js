@@ -1186,9 +1186,7 @@ pref("browser.tabs.remote.autostart", false);
 // This will probably require a restart.
 pref("browser.tabs.remote.sandbox", "off");
 
-// This is essentially the same logic that decides whether nsStackWalk.cpp gets
-// built, which we use for the stack trace. See xpcom/base/moz.build
-#if !defined(MOZ_OPTIMIZE) || defined(MOZ_PROFILING) || defined(DEBUG)
+#if defined(MOZ_STACKWALKING)
 // This controls the depth of stack trace that is logged when the warn only
 // sandbox reports that a resource access request has been blocked.
 // This does not require a restart to take effect.
@@ -1372,8 +1370,9 @@ pref("devtools.debugger.ui.variables-sorting-enabled", true);
 pref("devtools.debugger.ui.variables-only-enum-visible", false);
 pref("devtools.debugger.ui.variables-searchbox-visible", false);
 
-// Enable the Profiler
+// Enable the Profiler and the Timeline
 pref("devtools.profiler.enabled", true);
+pref("devtools.timeline.enabled", false);
 
 // The default Profiler UI settings
 pref("devtools.profiler.ui.show-platform-data", false);

@@ -27,7 +27,7 @@
 #include <ostream>
 
 #include "gtest/gtest.h"
-#include "pkix/pkixnss.h"
+#include "pkix/Result.h"
 
 // PrintTo must be in the same namespace as the type we're overloading it for.
 namespace mozilla { namespace pkix {

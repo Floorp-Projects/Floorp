@@ -8,8 +8,6 @@ var summary = 'int32x4 shuffle';
 function test() {
   print(BUGNUMBER + ": " + summary);
 
-  // FIXME -- Bug 948379: Amend to check for correctness of border cases.
-
   var a = int32x4(1, 2, 3, 4);
   var c = SIMD.int32x4.shuffle(a, 0x1B);
   assertEq(c.x, 4);

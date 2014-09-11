@@ -7129,17 +7129,23 @@ nsGlobalWindow::GetTopWindowRoot()
 }
 
 void
-nsGlobalWindow::Scroll(int32_t aXScroll, int32_t aYScroll,
+nsGlobalWindow::Scroll(double aXScroll, double aYScroll,
                        const ScrollOptions& aOptions)
 {
-  ScrollTo(CSSIntPoint(aXScroll, aYScroll), aOptions);
+  // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
+  CSSIntPoint scrollPos(mozilla::ToZeroIfNonfinite(aXScroll),
+                        mozilla::ToZeroIfNonfinite(aYScroll));
+  ScrollTo(scrollPos, aOptions);
 }
 
 void
-nsGlobalWindow::ScrollTo(int32_t aXScroll, int32_t aYScroll,
+nsGlobalWindow::ScrollTo(double aXScroll, double aYScroll,
                          const ScrollOptions& aOptions)
 {
-  ScrollTo(CSSIntPoint(aXScroll, aYScroll), aOptions);
+  // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
+  CSSIntPoint scrollPos(mozilla::ToZeroIfNonfinite(aXScroll),
+                        mozilla::ToZeroIfNonfinite(aYScroll));
+  ScrollTo(scrollPos, aOptions);
 }
 
 NS_IMETHODIMP
@@ -7196,19 +7202,20 @@ nsGlobalWindow::ScrollBy(int32_t aXScrollDif, int32_t aYScrollDif)
 }
 
 void
-nsGlobalWindow::ScrollBy(int32_t aXScrollDif, int32_t aYScrollDif,
+nsGlobalWindow::ScrollBy(double aXScrollDif, double aYScrollDif,
                          const ScrollOptions& aOptions)
 {
   FlushPendingNotifications(Flush_Layout);
   nsIScrollableFrame *sf = GetScrollFrame();
 
   if (sf) {
-    CSSIntPoint scrollPos =
-      sf->GetScrollPositionCSSPixels() + CSSIntPoint(aXScrollDif, aYScrollDif);
+    // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
+    CSSIntPoint scrollDif(mozilla::ToZeroIfNonfinite(aXScrollDif),
+                          mozilla::ToZeroIfNonfinite(aYScrollDif));
     // It seems like it would make more sense for ScrollBy to use
     // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
     // Perhaps Web content does too.
-    ScrollTo(scrollPos, aOptions);
+    ScrollTo(sf->GetScrollPositionCSSPixels() + scrollDif, aOptions);
   }
 }
 

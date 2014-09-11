@@ -2267,7 +2267,9 @@ nsresult
 nsNavHistory::BeginUpdateBatch()
 {
   if (mBatchLevel++ == 0) {
-    mBatchDBTransaction = new mozStorageTransaction(mDB->MainConn(), false);
+    mBatchDBTransaction = new mozStorageTransaction(mDB->MainConn(), false,
+                                                    mozIStorageConnection::TRANSACTION_DEFERRED,
+                                                    true);
 
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                      nsINavHistoryObserver, OnBeginUpdateBatch());
@@ -2332,7 +2334,9 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
   if (aPlaceIdsQueryString.IsEmpty())
     return NS_OK;
 
-  mozStorageTransaction transaction(mDB->MainConn(), false);
+  mozStorageTransaction transaction(mDB->MainConn(), false,
+                                    mozIStorageConnection::TRANSACTION_DEFERRED,
+                                    true);
 
   // Delete all visits for the specified place ids.
   nsresult rv = mDB->MainConn()->ExecuteSimpleSQL(
@@ -2724,7 +2728,9 @@ nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
   // force a full refresh calling onEndUpdateBatch (will call Refresh())
   UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
 
-  mozStorageTransaction transaction(mDB->MainConn(), false);
+  mozStorageTransaction transaction(mDB->MainConn(), false,
+                                    mozIStorageConnection::TRANSACTION_DEFERRED,
+                                    true);
 
   // Delete all visits within the timeframe.
   nsCOMPtr<mozIStorageStatement> deleteVisitsStmt = mDB->GetStatement(

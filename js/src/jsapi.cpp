@@ -4569,7 +4569,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, HandleObject obj, const char *utf8, siz
     Parser<frontend::FullParseHandler> parser(cx, &cx->tempLifoAlloc(),
                                               options, chars, length,
                                               /* foldConstants = */ true, nullptr, nullptr);
-    JSErrorReporter older = JS_SetErrorReporter(cx, nullptr);
+    JSErrorReporter older = JS_SetErrorReporter(cx->runtime(), nullptr);
     if (!parser.parse(obj)) {
         // We ran into an error. If it was because we ran out of source, we
         // return false so our caller knows to try to collect more buffered
@@ -4579,7 +4579,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, HandleObject obj, const char *utf8, siz
 
         cx->clearPendingException();
     }
-    JS_SetErrorReporter(cx, older);
+    JS_SetErrorReporter(cx->runtime(), older);
 
     js_free(chars);
     return result;
@@ -5767,18 +5767,18 @@ JS_ReportAllocationOverflow(JSContext *cx)
 }
 
 JS_PUBLIC_API(JSErrorReporter)
-JS_GetErrorReporter(JSContext *cx)
+JS_GetErrorReporter(JSRuntime *rt)
 {
-    return cx->errorReporter;
+    return rt->errorReporter;
 }
 
 JS_PUBLIC_API(JSErrorReporter)
-JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
+JS_SetErrorReporter(JSRuntime *rt, JSErrorReporter er)
 {
     JSErrorReporter older;
 
-    older = cx->errorReporter;
-    cx->errorReporter = er;
+    older = rt->errorReporter;
+    rt->errorReporter = er;
     return older;
 }
 
@@ -6070,11 +6070,13 @@ JS::AutoSaveExceptionState::restore()
 
 JS::AutoSaveExceptionState::~AutoSaveExceptionState()
 {
-    if (wasPropagatingForcedReturn && !context->isPropagatingForcedReturn())
-        context->setPropagatingForcedReturn();
-    if (wasThrowing && !context->isExceptionPending()) {
-        context->throwing = true;
-        context->unwrappedException_ = exceptionValue;
+    if (!context->isExceptionPending()) {
+        if (wasPropagatingForcedReturn)
+            context->setPropagatingForcedReturn();
+        if (wasThrowing) {
+            context->throwing = true;
+            context->unwrappedException_ = exceptionValue;
+        }
     }
 }
 
@@ -6195,19 +6197,19 @@ JS_PUBLIC_API(void)
 JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t value)
 {
     switch (opt) {
-      case JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER:
+      case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
         if (value == uint32_t(-1)) {
             jit::JitOptions defaultValues;
-            value = defaultValues.baselineUsesBeforeCompile;
+            value = defaultValues.baselineWarmUpThreshold;
         }
-        jit::js_JitOptions.baselineUsesBeforeCompile = value;
+        jit::js_JitOptions.baselineWarmUpThreshold = value;
         break;
-      case JSJITCOMPILER_ION_USECOUNT_TRIGGER:
+      case JSJITCOMPILER_ION_WARMUP_TRIGGER:
         if (value == uint32_t(-1)) {
-            jit::js_JitOptions.resetUsesBeforeCompile();
+            jit::js_JitOptions.resetCompilerWarmUpThreshold();
             break;
         }
-        jit::js_JitOptions.setUsesBeforeCompile(value);
+        jit::js_JitOptions.setCompilerWarmUpThreshold(value);
         if (value == 0)
             jit::js_JitOptions.setEagerCompilation();
         break;
@@ -6257,10 +6259,10 @@ JS_GetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt)
 {
 #ifndef JS_CODEGEN_NONE
     switch (opt) {
-      case JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER:
-        return jit::js_JitOptions.baselineUsesBeforeCompile;
-      case JSJITCOMPILER_ION_USECOUNT_TRIGGER:
-        return jit::js_JitOptions.forcedDefaultIonUsesBeforeCompile;
+      case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
+        return jit::js_JitOptions.baselineWarmUpThreshold;
+      case JSJITCOMPILER_ION_WARMUP_TRIGGER:
+        return jit::js_JitOptions.forcedDefaultIonWarmUpThreshold;
       case JSJITCOMPILER_ION_ENABLE:
         return JS::RuntimeOptionsRef(rt).ion();
       case JSJITCOMPILER_BASELINE_ENABLE:

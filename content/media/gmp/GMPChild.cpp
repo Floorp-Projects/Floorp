@@ -9,6 +9,7 @@
 #include "GMPAudioDecoderChild.h"
 #include "GMPDecryptorChild.h"
 #include "GMPVideoHost.h"
+#include "nsDebugImpl.h"
 #include "nsIFile.h"
 #include "nsXULAppAPI.h"
 #include "gmp-video-decode.h"
@@ -42,6 +43,7 @@ GMPChild::GMPChild()
   , mGetAPIFunc(nullptr)
   , mGMPMessageLoop(MessageLoop::current())
 {
+  nsDebugImpl::SetMultiprocessMode("GMP");
 }
 
 GMPChild::~GMPChild()

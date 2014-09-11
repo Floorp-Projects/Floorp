@@ -13,12 +13,20 @@
 #include "CSFVideoTermination.h"
 #include "CSFAudioTermination.h"
 #include "CSFAudioControl.h"
+// fsm.h picks this include up as a c header, causing trouble later
+#include "mozilla/ArrayUtils.h"
+
 
 extern "C"
 {
 #include "ccapi_call.h"
 #include "ccapi_call_listener.h"
 #include "config_api.h"
+#include "cc_constants.h"
+#include "phone_types.h"
+#include "fsm.h"
+#include "fim.h"
+#include "string_lib.h"
 }
 
 using namespace std;
@@ -30,7 +38,10 @@ CSF_IMPLEMENT_WRAP(CC_SIPCCCall, cc_call_handle_t);
 
 CC_SIPCCCall::CC_SIPCCCall (cc_call_handle_t aCallHandle) :
             callHandle(aCallHandle),
-            pMediaData(new CC_SIPCCCallMediaData(nullptr, false, false, -1))
+            pMediaData(new CC_SIPCCCallMediaData(nullptr, false, false, -1)),
+            localSdp(NULL),
+            remoteSdp(NULL),
+            errorString(NULL)
 {
     CSFLogInfo( logTag, "Creating  CC_SIPCCCall %u", callHandle );
 
@@ -42,6 +53,11 @@ CC_SIPCCCall::CC_SIPCCCall (cc_call_handle_t aCallHandle) :
     }
 }
 
+CC_SIPCCCall::~CC_SIPCCCall() {
+  strlib_free(localSdp);
+  strlib_free(remoteSdp);
+  strlib_free(errorString);
+}
 
 /*
   CCAPI_CALL_EV_CAPABILITY      -- From phone team: "...CCAPI_CALL_EV_CAPABILITY is generated for the capability changes but we decided to
@@ -121,11 +137,79 @@ void CC_SIPCCCall::sendIFrame()
     }
 }
 
+fsm_fcb_t* CC_SIPCCCall::getFcb() const
+{
+    callid_t call_id = GET_CALL_ID(callHandle);
+
+    // TODO(Bug 1065020): Create and hold our own call state
+    fim_icb_t *call_chn = fim_get_call_chn_by_call_id(call_id);
+
+    if (!call_chn)
+      return nullptr;
+
+    // The fcb (whatever that means) we want is buried in a fixed-size
+    // linked-list (arrays are for the weak) of icbs (whatever that means).
+    // We want FSM_TYPE_DEF (don't even ask what "DEF" means, of course it's
+    // the one we want, because its meaning is the most mysterious of available
+    // options).
+    fsm_fcb_t *fcb = (fsm_fcb_t*) call_chn->next_icb // FSM_TYPE_CNF
+                                          ->next_icb // FSM_TYPE_B2BCNF
+                                          ->next_icb // FSM_TYPE_XFR
+                                          ->next_icb->cb; // FSM_TYPE_DEF
+    return fcb;
+}
+
+void CC_SIPCCCall::getLocalSdp(std::string *sdp) const {
+  if (localSdp) {
+    *sdp = localSdp;
+  } else {
+    sdp->clear();
+  }
+}
+
+void CC_SIPCCCall::getRemoteSdp(std::string *sdp) const {
+  if (remoteSdp) {
+    *sdp = remoteSdp;
+  } else {
+    sdp->clear();
+  }
+}
+
+fsmdef_states_t CC_SIPCCCall::getFsmState() const {
+  fsm_fcb_t *fcb = getFcb();
+  if (!fcb) {
+    return FSMDEF_S_CLOSED;
+  }
+
+  return (fsmdef_states_t)fcb->state;
+}
+
+std::string CC_SIPCCCall::fsmStateToString (fsmdef_states_t state) const {
+  return fsmdef_state_name(state);
+}
+
+void CC_SIPCCCall::getErrorString(std::string *error) const {
+  if (errorString) {
+    *error = errorString;
+  } else {
+    error->clear();
+  }
+}
+
+pc_error CC_SIPCCCall::getError() const {
+    return error;
+}
+
+
+
 CC_CallInfoPtr CC_SIPCCCall::getCallInfo ()
 {
     cc_callinfo_ref_t callInfo = CCAPI_Call_getCallInfo(callHandle);
     CC_SIPCCCallInfoPtr callInfoPtr = CC_SIPCCCallInfo::wrap(callInfo);
     callInfoPtr->setMediaData( pMediaData);
+    // This starts out with a refcount of 1, and we've now bumped it to 2 by
+    // placing it in a CC_SIPCCCallInfoPtr
+    CCAPI_Call_releaseCallInfo(callInfo);
     return callInfoPtr.get();
 }
 
@@ -521,66 +605,294 @@ void CC_SIPCCCall::originateP2PCall (cc_sdp_direction_t video_pref, const std::s
     CCAPI_Call_originateCall(callHandle, video_pref, digits.c_str());
 }
 
-/*
- * This method works asynchronously, is an onCallEvent with the resulting SDP
- */
-void CC_SIPCCCall::createOffer (cc_media_options_t *options, Timecard *tc) {
-    CCAPI_CreateOffer(callHandle, options, tc);
-}
-/*
- * This method works asynchronously, there is onCallEvent with the resulting SDP
- */
-void CC_SIPCCCall::createAnswer (Timecard *tc) {
-    CCAPI_CreateAnswer(callHandle, tc);
+fsm_fcb_t* CC_SIPCCCall::preOperationBoilerplate(cc_feature_t *command,
+                                                 Timecard *tc) {
+    // Make sure the old error string doesn't hang around.
+    strlib_free(errorString);
+    errorString = NULL;
+
+    // Get the fcb, and if it fails, set the appropriate error stuff
+    fsm_fcb_t *fcb = getFcb();
+    if (!fcb) {
+      errorString = strlib_printf("No call state object");
+      // Can happen if we create too many peerconnections simultaneously
+      error = PC_INTERNAL_ERROR;
+      return NULL;
+    }
+
+    // Perform common init on the command struct
+    memset(command, 0, sizeof(cc_feature_t));
+    command->call_id = GET_CALL_ID(callHandle);
+    command->line = GET_LINE_ID(callHandle);
+    command->timecard = tc;
+    return fcb;
 }
 
-void CC_SIPCCCall::setLocalDescription(cc_jsep_action_t action,
+pc_error CC_SIPCCCall::createOffer (cc_media_options_t *options, Timecard *tc) {
+    cc_feature_t command;
+    fsm_fcb_t *fcb = preOperationBoilerplate(&command, tc);
+
+    if (!fcb) {
+      return error;
+    }
+
+    command.data.session.options = options;
+
+    switch (fcb->state) {
+      case FSMDEF_S_STABLE:
+        strlib_free(localSdp);
+        localSdp = NULL;
+        error = fsmdef_createoffer(fcb, &command, &localSdp, &errorString);
+        break;
+      default:
+        error = PC_INVALID_STATE;
+        errorString = strlib_printf("Cannot create offer in state %s",
+                                     fsmdef_state_name(fcb->state));
+    }
+    return error;
+}
+
+
+pc_error CC_SIPCCCall::createAnswer (Timecard *tc) {
+    cc_feature_t command;
+    fsm_fcb_t *fcb = preOperationBoilerplate(&command, tc);
+
+    if (!fcb) {
+      return error;
+    }
+
+    switch (fcb->state) {
+      case FSMDEF_S_STABLE:
+      case FSMDEF_S_HAVE_REMOTE_OFFER:
+        strlib_free(localSdp);
+        localSdp = NULL;
+        error = fsmdef_createanswer(fcb, &command, &localSdp, &errorString);
+        break;
+      default:
+        error = PC_INVALID_STATE;
+        errorString = strlib_printf("Cannot create answer in state %s",
+                                     fsmdef_state_name(fcb->state));
+    }
+    return error;
+}
+
+pc_error CC_SIPCCCall::setLocalDescription(cc_jsep_action_t action,
                                        const std::string & sdp,
                                        Timecard *tc) {
-    CCAPI_SetLocalDescription(callHandle, action, sdp.c_str(), tc);
+    cc_feature_t command;
+    fsm_fcb_t *fcb = preOperationBoilerplate(&command, tc);
+
+    if (!fcb) {
+      return error;
+    }
+
+    command.action = action;
+    command.sdp = const_cast<char*>(sdp.c_str()); // Ugh
+
+    switch (fcb->state) {
+      case FSMDEF_S_STABLE:
+      case FSMDEF_S_HAVE_REMOTE_OFFER:
+        strlib_free(localSdp);
+        localSdp = NULL;
+        error = fsmdef_setlocaldesc(fcb, &command, &localSdp, &errorString);
+        break;
+      default:
+        error = PC_INVALID_STATE;
+        errorString = strlib_printf("Cannot set local SDP in state %s",
+                                     fsmdef_state_name(fcb->state));
+    }
+    return error;
 }
 
-void CC_SIPCCCall::setRemoteDescription(cc_jsep_action_t action,
+pc_error CC_SIPCCCall::setRemoteDescription(cc_jsep_action_t action,
                                        const std::string & sdp,
                                        Timecard *tc) {
-    CCAPI_SetRemoteDescription(callHandle, action, sdp.c_str(), tc);
+    cc_feature_t command;
+    fsm_fcb_t *fcb = preOperationBoilerplate(&command, tc);
+
+    if (!fcb) {
+      return error;
+    }
+
+    command.action = action;
+    command.sdp = const_cast<char*>(sdp.c_str()); // Ugh
+
+    switch (fcb->state) {
+      case FSMDEF_S_STABLE: // should be an offer
+      case FSMDEF_S_HAVE_LOCAL_OFFER: // should be an answer
+      case FSMDEF_S_HAVE_REMOTE_PRANSWER:
+        // TODO: Refactor so that error-handling is performed here?
+        strlib_free(remoteSdp);
+        remoteSdp = NULL;
+        error = fsmdef_setremotedesc(fcb, &command, &remoteSdp, &errorString);
+        break;
+      default:
+        error = PC_INVALID_STATE;
+        errorString = strlib_printf("Cannot set remote SDP in state %s",
+                                     fsmdef_state_name(fcb->state));
+    }
+    return error;
 }
 
-void CC_SIPCCCall::setPeerConnection(const std::string& handle)
+pc_error CC_SIPCCCall::setPeerConnection(const std::string& handle)
 {
   CSFLogDebug(logTag, "setPeerConnection");
 
+  // Cause the fcb to be created
+  fim_get_new_call_chn(GET_CALL_ID(callHandle));
+
+  cc_feature_t command;
+  fsm_fcb_t *fcb = preOperationBoilerplate(&command, NULL);
+
+  if (!fcb) {
+    return error;
+  }
+
   peerconnection = handle;  // Cache this here. we need it to make the CC_SIPCCCallInfo
-  CCAPI_SetPeerConnection(callHandle, handle.c_str());
+
+  strncpy(command.data.pc.pc_handle,
+          handle.c_str(),
+          sizeof(command.data.pc.pc_handle));
+
+  switch (fcb->state) {
+    case FSMDEF_S_IDLE:
+      fsmdef_setpeerconnection(fcb, &command);
+      // TODO Maybe let this return errors like the other stuff?
+      error = PC_NO_ERROR;
+      break;
+    default:
+      errorString = strlib_printf("Cannot set peerconnection in state %s",
+                                   fsmdef_state_name(fcb->state));
+      error = PC_INVALID_STATE;
+  }
+  return error;
 }
 
 const std::string& CC_SIPCCCall::getPeerConnection() const {
   return peerconnection;
 }
 
-void CC_SIPCCCall::addStream(cc_media_stream_id_t stream_id,
+pc_error CC_SIPCCCall::addStream(cc_media_stream_id_t stream_id,
                              cc_media_track_id_t track_id,
                              cc_media_type_t media_type) {
-  CCAPI_AddStream(callHandle, stream_id, track_id, media_type);
+    cc_feature_t command;
+    fsm_fcb_t *fcb = preOperationBoilerplate(&command, NULL);
+
+    if (!fcb) {
+      return error;
+    }
+
+    command.data.track.stream_id = stream_id;
+    command.data.track.track_id = track_id;
+    command.data.track.media_type = media_type;
+
+    switch (fcb->state) {
+      case FSMDEF_S_STABLE:
+      case FSMDEF_S_HAVE_REMOTE_OFFER:
+        error = fsmdef_addstream(fcb, &command, &errorString);
+        break;
+      default:
+        errorString = strlib_printf("Cannot add stream in state %s",
+                                     fsmdef_state_name(fcb->state));
+        error = PC_INVALID_STATE;
+    }
+    return error;
 }
 
-void CC_SIPCCCall::removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) {
-  CCAPI_RemoveStream(callHandle, stream_id, track_id, media_type);
+pc_error CC_SIPCCCall::removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) {
+    cc_feature_t command;
+    fsm_fcb_t *fcb = preOperationBoilerplate(&command, NULL);
+
+    if (!fcb) {
+      return error;
+    }
+
+    command.data.track.stream_id = stream_id;
+    command.data.track.track_id = track_id;
+    command.data.track.media_type = media_type;
+
+    switch (fcb->state) {
+      case FSMDEF_S_STABLE:
+      case FSMDEF_S_HAVE_REMOTE_OFFER:
+        error = fsmdef_removestream(fcb, &command, &errorString);
+        break;
+      default:
+        errorString = strlib_printf("Cannot remove stream in state %s",
+                                     fsmdef_state_name(fcb->state));
+        error = PC_INVALID_STATE;
+    }
+    return error;
 }
 
-void CC_SIPCCCall::addICECandidate(const std::string & candidate,
+pc_error CC_SIPCCCall::addICECandidate(const std::string & candidate,
                                    const std::string & mid,
                                    unsigned short level,
                                    Timecard *tc) {
-  CCAPI_AddICECandidate(callHandle, candidate.c_str(), mid.c_str(),
-                        (cc_level_t) level, tc);
+    cc_feature_t command;
+    fsm_fcb_t *fcb = preOperationBoilerplate(&command, tc);
+
+    if (!fcb) {
+      return error;
+    }
+
+    command.data.candidate.level = level;
+    strncpy(command.data.candidate.candidate,
+            candidate.c_str(),
+            sizeof(command.data.candidate.candidate));
+    strncpy(command.data.candidate.mid,
+            mid.c_str(),
+            sizeof(command.data.candidate.mid));
+
+    switch (fcb->state) {
+      case FSMDEF_S_STABLE:
+      case FSMDEF_S_HAVE_REMOTE_OFFER:
+      case FSMDEF_S_HAVE_LOCAL_PRANSWER:
+      case FSMDEF_S_HAVE_REMOTE_PRANSWER:
+        strlib_free(remoteSdp);
+        remoteSdp = NULL;
+        error = fsmdef_addcandidate(fcb, &command, &remoteSdp, &errorString);
+        break;
+      default:
+        errorString = strlib_printf("Cannot add remote candidate in state %s",
+                                     fsmdef_state_name(fcb->state));
+        error = PC_INVALID_STATE;
+    }
+    return error;
 }
 
 
-void CC_SIPCCCall::foundICECandidate(const std::string & candidate,
+pc_error CC_SIPCCCall::foundICECandidate(const std::string & candidate,
                                      const std::string & mid,
                                      unsigned short level,
                                      Timecard *tc) {
-  CCAPI_FoundICECandidate(callHandle, candidate.c_str(), mid.c_str(),
-                          (cc_level_t) level, tc);
+    cc_feature_t command;
+    fsm_fcb_t *fcb = preOperationBoilerplate(&command, tc);
+
+    if (!fcb) {
+      return error;
+    }
+
+    command.data.candidate.level = level;
+    strncpy(command.data.candidate.candidate,
+            candidate.c_str(),
+            sizeof(command.data.candidate.candidate));
+    strncpy(command.data.candidate.mid,
+            mid.c_str(),
+            sizeof(command.data.candidate.mid));
+
+    switch (fcb->state) {
+      case FSMDEF_S_STABLE:
+      case FSMDEF_S_HAVE_LOCAL_OFFER:
+      case FSMDEF_S_HAVE_LOCAL_PRANSWER:
+      case FSMDEF_S_HAVE_REMOTE_PRANSWER:
+        strlib_free(localSdp);
+        localSdp = NULL;
+        error = fsmdef_foundcandidate(fcb, &command, &localSdp, &errorString);
+        break;
+      default:
+        errorString = strlib_printf("Cannot add local candidate in state %s",
+                                     fsmdef_state_name(fcb->state));
+        error = PC_INVALID_STATE;
+    }
+    return error;
 }

@@ -85,28 +85,27 @@ nsSVGFilterInstance::ComputeBounds()
   XYWH[3] = *mFilterFrame->GetLengthValue(SVGFilterElement::ATTR_HEIGHT);
   uint16_t filterUnits =
     mFilterFrame->GetEnumValue(SVGFilterElement::FILTERUNITS);
-  mUserSpaceBounds = nsSVGUtils::GetRelativeRect(filterUnits,
+  gfxRect userSpaceBounds = nsSVGUtils::GetRelativeRect(filterUnits,
     XYWH, mTargetBBox, mTargetFrame);
 
-  // Temporarily transform the user space bounds to filter space, so we
+  // Transform the user space bounds to filter space, so we
   // can align them with the pixel boundries of the offscreen surface.
   // The offscreen surface has the same scale as filter space.
-  mUserSpaceBounds = UserSpaceToFilterSpace(mUserSpaceBounds);
-  mUserSpaceBounds.RoundOut();
-  if (mUserSpaceBounds.Width() <= 0 || mUserSpaceBounds.Height() <= 0) {
+  gfxRect filterSpaceBounds = UserSpaceToFilterSpace(userSpaceBounds);
+  filterSpaceBounds.RoundOut();
+  if (filterSpaceBounds.width <= 0 || filterSpaceBounds.height <= 0) {
     // 0 disables rendering, < 0 is error. dispatch error console warning
     // or error as appropriate.
     return NS_ERROR_FAILURE;
   }
 
   // Set the filter space bounds.
-  if (!gfxUtils::GfxRectToIntRect(mUserSpaceBounds, &mFilterSpaceBounds)) {
+  if (!gfxUtils::GfxRectToIntRect(filterSpaceBounds, &mFilterSpaceBounds)) {
     // The filter region is way too big if there is float -> int overflow.
     return NS_ERROR_FAILURE;
   }
 
-  // Undo the temporary transformation of the user space bounds.
-  mUserSpaceBounds = FilterSpaceToUserSpace(mUserSpaceBounds);
+  mUserSpaceBounds = FilterSpaceToUserSpace(filterSpaceBounds);
 
   return NS_OK;
 }

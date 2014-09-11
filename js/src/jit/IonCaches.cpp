@@ -2815,6 +2815,10 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     RootedPropertyName name(cx, cache.name());
     RootedId id(cx, AtomToId(name));
 
+    RootedTypeObject oldType(cx, obj->getType(cx));
+    if (!oldType)
+        return false;
+
     // Stop generating new stubs once we hit the stub count limit, see
     // GetPropertyCache.
     NativeSetPropCacheability canCache = CanAttachNone;
@@ -2846,12 +2850,6 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
             }
         }
 
-        // Make sure the object de-lazifies its type. We do this here so that
-        // the parallel IC can share code that assumes that native objects all
-        // have a type object.
-        if (obj->isNative() && !obj->getType(cx))
-            return false;
-
         RootedShape shape(cx);
         RootedObject holder(cx);
         bool checkTypeset;
@@ -2873,7 +2871,6 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
 
     uint32_t oldSlots = obj->numDynamicSlots();
     RootedShape oldShape(cx, obj->lastProperty());
-    RootedTypeObject oldType(cx, obj->type());
 
     // Set/Add the property on the object, the inlined cache are setup for the next execution.
     if (!SetProperty(cx, obj, name, value, cache.strict(), cache.pc()))

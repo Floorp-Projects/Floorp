@@ -555,7 +555,46 @@ RTCPeerConnection.prototype = {
   },
 
   createOffer: function(onSuccess, onError, options) {
-    options = options || {};
+
+    // TODO: Remove old constraint-like RTCOptions support soon (Bug 1064223).
+    function convertLegacyOptions(o) {
+      if (!(o.mandatory || o.optional) ||
+          Object.keys(o).length != ((o.mandatory && o.optional)? 2 : 1)) {
+        return false;
+      }
+      let old = o.mandatory || {};
+      if (o.mandatory) {
+        delete o.mandatory;
+      }
+      if (o.optional) {
+        o.optional.forEach(one => {
+          // The old spec had optional as an array of objects w/1 attribute each.
+          // Assumes our JS-webidl bindings only populate passed-in properties.
+          let key = Object.keys(one)[0];
+          if (key && old[key] === undefined) {
+            old[key] = one[key];
+          }
+        });
+        delete o.optional;
+      }
+      o.offerToReceiveAudio = old.OfferToReceiveAudio;
+      o.offerToReceiveVideo = old.OfferToReceiveVideo;
+      o.mozDontOfferDataChannel = old.MozDontOfferDataChannel;
+      o.mozBundleOnly = old.MozBundleOnly;
+      Object.keys(o).forEach(k => {
+        if (o[k] === undefined) {
+          delete o[k];
+        }
+      });
+      return true;
+    }
+
+    if (options && convertLegacyOptions(options)) {
+      this.logWarning(
+          "Mandatory/optional in createOffer options is deprecated! Use " +
+          JSON.stringify(options) + " instead (note the case difference)!",
+          null, 0);
+    }
     this._queueOrRun({
       func: this._createOffer,
       args: [onSuccess, onError, options],
@@ -598,6 +637,12 @@ RTCPeerConnection.prototype = {
   },
 
   setLocalDescription: function(desc, onSuccess, onError) {
+    if (!onSuccess || !onError) {
+      this.logWarning(
+          "setLocalDescription called without success/failure callbacks. This is deprecated, and will be an error in the future.",
+          null, 0);
+    }
+
     this._localType = desc.type;
 
     let type;
@@ -629,6 +674,11 @@ RTCPeerConnection.prototype = {
   },
 
   setRemoteDescription: function(desc, onSuccess, onError) {
+    if (!onSuccess || !onError) {
+      this.logWarning(
+          "setRemoteDescription called without success/failure callbacks. This is deprecated, and will be an error in the future.",
+          null, 0);
+    }
     this._remoteType = desc.type;
 
     let type;
@@ -765,6 +815,11 @@ RTCPeerConnection.prototype = {
   },
 
   addIceCandidate: function(cand, onSuccess, onError) {
+    if (!onSuccess || !onError) {
+      this.logWarning(
+          "addIceCandidate called without success/failure callbacks. This is deprecated, and will be an error in the future.",
+          null, 0);
+    }
     if (!cand.candidate && !cand.sdpMLineIndex) {
       throw new this._win.DOMError("",
           "Invalid candidate passed to addIceCandidate!");

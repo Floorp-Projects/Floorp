@@ -85,7 +85,7 @@ SVGForeignObjectElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
   float x, y;
   const_cast<SVGForeignObjectElement*>(this)->
     GetAnimatedLengthValues(&x, &y, nullptr);
-  gfxMatrix toUserSpace = gfxMatrix().Translate(gfxPoint(x, y));
+  gfxMatrix toUserSpace = gfxMatrix::Translation(x, y);
   if (aWhich == eChildToUserSpace) {
     return toUserSpace * aMatrix;
   }

@@ -4638,10 +4638,10 @@ struct JSErrorReport {
 #define JSREPORT_IS_STRICT_MODE_ERROR(flags) (((flags) &                      \
                                               JSREPORT_STRICT_MODE_ERROR) != 0)
 extern JS_PUBLIC_API(JSErrorReporter)
-JS_GetErrorReporter(JSContext *cx);
+JS_GetErrorReporter(JSRuntime *rt);
 
 extern JS_PUBLIC_API(JSErrorReporter)
-JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);
+JS_SetErrorReporter(JSRuntime *rt, JSErrorReporter er);
 
 namespace JS {
 
@@ -4892,8 +4892,8 @@ extern JS_PUBLIC_API(void)
 JS_SetOffthreadIonCompilationEnabled(JSRuntime *rt, bool enabled);
 
 #define JIT_COMPILER_OPTIONS(Register)                                  \
-    Register(BASELINE_USECOUNT_TRIGGER, "baseline.usecount.trigger")    \
-    Register(ION_USECOUNT_TRIGGER, "ion.usecount.trigger")              \
+    Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger")    \
+    Register(ION_WARMUP_TRIGGER, "ion.warmup.trigger")              \
     Register(ION_ENABLE, "ion.enable")                                  \
     Register(BASELINE_ENABLE, "baseline.enable")                        \
     Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable") \

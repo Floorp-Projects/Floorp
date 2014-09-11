@@ -661,4 +661,19 @@ protected:
   static const uint8_t sMaxUpdateIntervalRecursionDepth;
 };
 
+inline void
+ImplCycleCollectionUnlink(nsSMILTimedElement& aField)
+{
+  aField.Unlink();
+}
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsSMILTimedElement& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  aField.Traverse(&aCallback);
+}
+
 #endif // NS_SMILTIMEDELEMENT_H_
