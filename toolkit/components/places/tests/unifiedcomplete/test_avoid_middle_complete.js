@@ -81,6 +81,72 @@ add_task(function* test_searchEngine_trailing_space_noautofill() {
   yield cleanup();
 });
 
+add_task(function* test_searchEngine_www_noautofill() {
+  Services.search.addEngineWithDetails("HamSearch", "", "", "",
+                                       "GET", "http://ham.search/");
+  let engine = Services.search.getEngineByName("HamSearch");
+  engine.addParam("q", "{searchTerms}", null);
+  do_register_cleanup(() => Services.search.removeEngine(engine));
+
+  do_log_info("Should not autoFill search engine if search string contains www. but engine doesn't");
+  yield check_autocomplete({
+    search: "www.ham",
+    autofilled: "www.ham",
+    completed: "www.ham"
+  });
+
+  yield cleanup();
+});
+
+add_task(function* test_searchEngine_different_scheme_noautofill() {
+  Services.search.addEngineWithDetails("PieSearch", "", "", "",
+                                       "GET", "https://pie.search/");
+  let engine = Services.search.getEngineByName("PieSearch");
+  engine.addParam("q", "{searchTerms}", null);
+  do_register_cleanup(() => Services.search.removeEngine(engine));
+
+  do_log_info("Should not autoFill search engine if search string has a different scheme.");
+  yield check_autocomplete({
+    search: "http://pie",
+    autofilled: "http://pie",
+    completed: "http://pie"
+  });
+
+  yield cleanup();
+});
+
+add_task(function* test_searchEngine_matching_prefix_autofill() {
+  Services.search.addEngineWithDetails("BeanSearch", "", "", "",
+                                       "GET", "http://www.bean.search/");
+  let engine = Services.search.getEngineByName("BeanSearch");
+  engine.addParam("q", "{searchTerms}", null);
+  do_register_cleanup(() => Services.search.removeEngine(engine));
+
+
+  do_log_info("Should autoFill search engine if search string has matching prefix.");
+  yield check_autocomplete({
+    search: "http://www.be",
+    autofilled: "http://www.bean.search",
+    completed: "http://www.bean.search"
+  })
+
+  do_log_info("Should autoFill search engine if search string has www prefix.");
+  yield check_autocomplete({
+    search: "www.be",
+    autofilled: "www.bean.search",
+    completed: "http://www.bean.search"
+  });
+
+  do_log_info("Should autoFill search engine if search string has matching scheme.");
+  yield check_autocomplete({
+    search: "http://be",
+    autofilled: "http://bean.search",
+    completed: "http://www.bean.search"
+  });
+
+  yield cleanup();
+});
+
 add_task(function* test_prefix_autofill() {
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/test/"),
                            transition: TRANSITION_TYPED });
