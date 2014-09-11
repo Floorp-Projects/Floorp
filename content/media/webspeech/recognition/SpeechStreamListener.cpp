@@ -50,18 +50,20 @@ SpeechStreamListener::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
     if (iterator->IsNull()) {
       nsTArray<int16_t> nullData;
       PodZero(nullData.AppendElements(duration), duration);
-      ConvertAndDispatchAudioChunk(duration, iterator->mVolume, nullData.Elements());
+      ConvertAndDispatchAudioChunk(duration, iterator->mVolume, nullData.Elements(), aTrackRate);
     } else {
       AudioSampleFormat format = iterator->mBufferFormat;
 
       MOZ_ASSERT(format == AUDIO_FORMAT_S16 || format == AUDIO_FORMAT_FLOAT32);
 
       if (format == AUDIO_FORMAT_S16) {
-        ConvertAndDispatchAudioChunk(duration, iterator->mVolume,
-                                     static_cast<const int16_t*>(iterator->mChannelData[0]));
+        ConvertAndDispatchAudioChunk(duration,iterator->mVolume,
+                                     static_cast<const int16_t*>(iterator->mChannelData[0]),
+                                     aTrackRate);
       } else if (format == AUDIO_FORMAT_FLOAT32) {
-        ConvertAndDispatchAudioChunk(duration, iterator->mVolume,
-                                     static_cast<const float*>(iterator->mChannelData[0]));
+        ConvertAndDispatchAudioChunk(duration,iterator->mVolume,
+                                     static_cast<const float*>(iterator->mChannelData[0]),
+                                     aTrackRate);
       }
     }
 
@@ -71,7 +73,8 @@ SpeechStreamListener::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 
 template<typename SampleFormatType> void
 SpeechStreamListener::ConvertAndDispatchAudioChunk(int aDuration, float aVolume,
-                                                   SampleFormatType* aData)
+                                                   SampleFormatType* aData,
+                                                   TrackRate aTrackRate)
 {
   nsRefPtr<SharedBuffer> samples(SharedBuffer::Create(aDuration *
                                                       1 * // channel
@@ -80,7 +83,7 @@ SpeechStreamListener::ConvertAndDispatchAudioChunk(int aDuration, float aVolume,
   int16_t* to = static_cast<int16_t*>(samples->Data());
   ConvertAudioSamplesWithScale(aData, to, aDuration, aVolume);
 
-  mRecognition->FeedAudioData(samples.forget(), aDuration, this);
+  mRecognition->FeedAudioData(samples.forget(), aDuration, this, aTrackRate);
 }
 
 void
