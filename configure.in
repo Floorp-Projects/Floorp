@@ -4154,7 +4154,6 @@ cairo-gtk3)
     USE_FC_FREETYPE=1
 
     TK_CFLAGS='$(MOZ_GTK3_CFLAGS)'
-    TK_LIBS='$(MOZ_GTK3_LIBS)'
     MOZ_WIDGET_GTK=3
     AC_DEFINE_UNQUOTED(MOZ_WIDGET_GTK,$MOZ_WIDGET_GTK)
     MOZ_PDF_PRINTING=1
@@ -4267,6 +4266,10 @@ if test "$COMPILE_ENVIRONMENT"; then
   if test "$MOZ_ENABLE_GTK3"; then
     PKG_CHECK_MODULES(MOZ_GTK3, gtk+-3.0 >= $GTK3_VERSION gtk+-unix-print-3.0 glib-2.0 gobject-2.0 $GDK_PACKAGES)
     MOZ_GTK3_CFLAGS="-I${_topsrcdir}/widget/gtk/compat-gtk3 $MOZ_GTK3_CFLAGS"
+    dnl Contrary to MOZ_GTK2_LIBS, MOZ_GTK3_LIBS needs to be literally added to TK_LIBS instead
+    dnl of a make reference because of how TK_LIBS is mangled in toolkit/library/moz.build
+    dnl for GTK+3 builds.
+    TK_LIBS=$MOZ_GTK3_LIBS
   fi
   if test "$MOZ_ENABLE_GTK"; then
     if test "$MOZ_X11"; then
