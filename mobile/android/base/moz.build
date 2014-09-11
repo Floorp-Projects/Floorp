@@ -251,7 +251,6 @@ gbjar.sources += [
     'gfx/ViewTransform.java',
     'gfx/VirtualLayer.java',
     'GlobalHistory.java',
-    'GuestSession.java',
     'health/BrowserHealthRecorder.java',
     'health/BrowserHealthReporter.java',
     'health/HealthRecorder.java',
