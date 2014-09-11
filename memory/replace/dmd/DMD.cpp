@@ -719,12 +719,14 @@ public:
   }
 
 private:
-  static void StackWalkCallback(void* aPc, void* aSp, void* aClosure)
+  static void StackWalkCallback(uint32_t aFrameNumber, void* aPc, void* aSp,
+                                void* aClosure)
   {
     StackTrace* st = (StackTrace*) aClosure;
     MOZ_ASSERT(st->mLength < MaxFrames);
     st->mPcs[st->mLength] = aPc;
     st->mLength++;
+    MOZ_ASSERT(st->mLength == aFrameNumber);
   }
 
   static int Cmp(const void* aA, const void* aB)
@@ -755,7 +757,7 @@ StackTrace::Print(const Writer& aWriter, CodeAddressService* aLocService) const
   static const size_t buflen = 1024;
   char buf[buflen];
   for (uint32_t i = 0; i < mLength; i++) {
-    aLocService->GetLocation(Pc(i), buf, buflen);
+    aLocService->GetLocation(i + 1, Pc(i), buf, buflen);
     aWriter.Write("    %s\n", buf);
   }
 }
@@ -1574,7 +1576,8 @@ Options::BadArg(const char* aArg)
 
 #ifdef XP_MACOSX
 static void
-NopStackWalkCallback(void* aPc, void* aSp, void* aClosure)
+NopStackWalkCallback(uint32_t aFrameNumber, void* aPc, void* aSp,
+                     void* aClosure)
 {
 }
 #endif
