@@ -11,18 +11,12 @@ describe("loop.conversation", function() {
 
   var ConversationRouter = loop.conversation.ConversationRouter,
       sandbox,
-      notifier;
+      notifications;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     sandbox.useFakeTimers();
-    notifier = {
-      notify: sandbox.spy(),
-      warn: sandbox.spy(),
-      warnL10n: sandbox.spy(),
-      error: sandbox.spy(),
-      errorL10n: sandbox.spy()
-    };
+    notifications = new loop.shared.models.NotificationCollection();
 
     navigator.mozLoop = {
       doNotDisturb: true,
@@ -38,6 +32,7 @@ describe("loop.conversation", function() {
       setLoopCharPref: sandbox.stub(),
       getLoopCharPref: sandbox.stub(),
       getLoopBoolPref: sandbox.stub(),
+      getCallData: sandbox.stub(),
       startAlerting: function() {},
       stopAlerting: function() {},
       ensureRegistered: function() {},
@@ -72,8 +67,6 @@ describe("loop.conversation", function() {
       sandbox.stub(loop.conversation.ConversationRouter.prototype,
         "initialize");
       sandbox.stub(loop.shared.models.ConversationModel.prototype,
-        "initialize");
-      sandbox.stub(loop.shared.views.NotificationListView.prototype,
         "initialize");
 
       sandbox.stub(Backbone.history, "start");
@@ -120,7 +113,6 @@ describe("loop.conversation", function() {
         sdk: {},
         pendingCallTimeout: 1000,
       });
-      sandbox.stub(client, "requestCallsInfo");
       sandbox.spy(conversation, "setIncomingSessionData");
       sandbox.stub(conversation, "setOutgoingSessionData");
     });
@@ -132,7 +124,7 @@ describe("loop.conversation", function() {
         router = new ConversationRouter({
           client: client,
           conversation: conversation,
-          notifier: notifier
+          notifications: notifications
         });
         sandbox.stub(router, "loadView");
         sandbox.stub(conversation, "incoming");
@@ -165,30 +157,15 @@ describe("loop.conversation", function() {
           sinon.assert.calledOnce(navigator.mozLoop.startAlerting);
         });
 
-        it("should set the loopVersion on the conversation model", function() {
-          router.incoming("fakeVersion");
-
-          expect(conversation.get("loopVersion")).to.equal("fakeVersion");
-        });
-
-        it("should call requestCallsInfo on the client",
+        it("should call getCallData on navigator.mozLoop",
           function() {
             router.incoming(42);
 
-            sinon.assert.calledOnce(client.requestCallsInfo);
-            sinon.assert.calledWith(client.requestCallsInfo, 42);
+            sinon.assert.calledOnce(navigator.mozLoop.getCallData);
+            sinon.assert.calledWith(navigator.mozLoop.getCallData, 42);
           });
 
-        it("should display an error if requestCallsInfo returns an error",
-          function(){
-            client.requestCallsInfo.callsArgWith(1, "failed");
-
-            router.incoming(42);
-
-            sinon.assert.calledOnce(notifier.errorL10n);
-          });
-
-        describe("requestCallsInfo successful", function() {
+        describe("getCallData successful", function() {
           var fakeSessionData, resolvePromise, rejectPromise;
 
           beforeEach(function() {
@@ -204,7 +181,7 @@ describe("loop.conversation", function() {
 
             sandbox.stub(router, "_setupWebSocketAndCallView");
 
-            client.requestCallsInfo.callsArgWith(1, null, [fakeSessionData]);
+            navigator.mozLoop.getCallData.returns(fakeSessionData);
           });
 
           it("should store the session data", function() {
@@ -297,12 +274,13 @@ describe("loop.conversation", function() {
             });
 
             it("should display an error", function(done) {
+              sandbox.stub(notifications, "errorL10n");
               router._setupWebSocketAndCallView();
 
               promise.then(function() {
               }, function () {
-                sinon.assert.calledOnce(router._notifier.errorL10n);
-                sinon.assert.calledWithExactly(router._notifier.errorL10n,
+                sinon.assert.calledOnce(router._notifications.errorL10n);
+                sinon.assert.calledWithExactly(router._notifications.errorL10n,
                   "cannot_start_call_session_not_ready");
                 done();
               });
@@ -374,10 +352,11 @@ describe("loop.conversation", function() {
 
         it("should notify the user when session is not set",
           function() {
+            sandbox.stub(notifications, "errorL10n");
             router.conversation();
 
-            sinon.assert.calledOnce(router._notifier.errorL10n);
-            sinon.assert.calledWithExactly(router._notifier.errorL10n,
+            sinon.assert.calledOnce(router._notifications.errorL10n);
+            sinon.assert.calledWithExactly(router._notifications.errorL10n,
               "cannot_start_call_session_not_ready");
         });
       });
@@ -517,7 +496,7 @@ describe("loop.conversation", function() {
         router = new loop.conversation.ConversationRouter({
           client: client,
           conversation: conversation,
-          notifier: notifier
+          notifications: notifications
         });
       });
 

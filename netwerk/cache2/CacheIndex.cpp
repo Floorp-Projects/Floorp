@@ -241,7 +241,7 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 
 CacheIndex::CacheIndex()
-  : mLock("CacheFile.mLock")
+  : mLock("CacheIndex.mLock")
   , mState(INITIAL)
   , mShuttingDown(false)
   , mIndexNeedsUpdate(false)

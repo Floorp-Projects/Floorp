@@ -1015,13 +1015,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         void define(ModuleCompiler &m, ParseNode *fn) {
             JS_ASSERT(!defined_);
             defined_ = true;
-
-            // The begin/end char range is relative to the beginning of the module.
-            // hence the assertions.
-            JS_ASSERT(fn->pn_pos.begin > m.srcStart());
-            JS_ASSERT(fn->pn_pos.begin <= fn->pn_pos.end);
-            srcBegin_ = fn->pn_pos.begin - m.srcStart();
-            srcEnd_ = fn->pn_pos.end - m.srcStart();
+            srcBegin_ = fn->pn_pos.begin;
+            srcEnd_ = fn->pn_pos.end;
         }
 
         uint32_t srcBegin() const { JS_ASSERT(defined_); return srcBegin_; }
@@ -1462,7 +1457,6 @@ class MOZ_STACK_CLASS ModuleCompiler
     Label &syncInterruptLabel() { return syncInterruptLabel_; }
     bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule &module() const { return *module_.get(); }
-    uint32_t srcStart() const { return module_->srcStart(); }
     bool usesSignalHandlersForInterrupt() const { return module_->usesSignalHandlersForInterrupt(); }
     bool usesSignalHandlersForOOB() const { return module_->usesSignalHandlersForOOB(); }
     bool supportsSimd() const { return supportsSimd_; }
@@ -3594,14 +3588,19 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
         ParseNode *global = DotBase(base);
         PropertyName *mathOrSimd = DotMember(base);
 
-        if (!IsUseOfName(global, m.module().globalArgumentName()))
-            return m.failf(base, "expecting %s.*", m.module().globalArgumentName());
+        if (!IsUseOfName(global, m.module().globalArgumentName())) {
+            if (global->isKind(PNK_DOT)) {
+                return m.failName(base, "imports can have at most two dot accesses "
+                                        "(e.g. %s.Math.sin)", m.module().globalArgumentName());
+            }
+            return m.failName(base, "expecting %s.*", m.module().globalArgumentName());
+        }
 
         if (mathOrSimd == m.cx()->names().Math)
             return CheckGlobalMathImport(m, initNode, varName, field);
         if (mathOrSimd == m.cx()->names().SIMD)
             return CheckGlobalSimdImport(m, initNode, varName, field);
-        return m.failf(base, "expecting %s.{Math|SIMD}", m.module().globalArgumentName());
+        return m.failName(base, "expecting %s.{Math|SIMD}", m.module().globalArgumentName());
     }
 
     if (!base->isKind(PNK_NAME))

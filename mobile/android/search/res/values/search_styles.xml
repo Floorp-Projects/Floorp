@@ -27,4 +27,14 @@
         <item name="android:clickable">true</item>
     </style>
 
+    <style name="TextAppearance.EmptyView.Title" parent="@android:style/TextAppearance.Small">
+        <item name="android:textColor">#363B40</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="TextAppearance.EmptyView.Message" parent="@android:style/TextAppearance.Small">
+        <item name="android:textColor">#777777</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
 </resources>

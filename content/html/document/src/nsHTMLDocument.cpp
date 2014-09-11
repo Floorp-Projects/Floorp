@@ -1998,8 +1998,7 @@ static void* CreateTokens(nsINode* aRootNode, const nsString* types)
       ++iter;
     } while (iter != end && !nsContentUtils::IsHTMLWhitespace(*iter));
 
-    nsCOMPtr<nsIAtom> token = do_GetAtom(Substring(start, iter));
-    tokens->AppendElement(token);
+    tokens->AppendElement(do_GetAtom(Substring(start, iter)));
 
     // skip whitespace
     while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {

@@ -267,7 +267,7 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
 
 void
 ContextFriendFields::checkNoGCRooters() {
-#if defined(JSGC_USE_EXACT_ROOTING) && defined(DEBUG)
+#ifdef DEBUG
     for (int i = 0; i < THING_ROOT_LIMIT; ++i)
         JS_ASSERT(thingGCRooters[i] == nullptr);
 #endif
@@ -387,7 +387,7 @@ js_ReportOutOfMemory(ThreadSafeContext *cxArg)
     PopulateReportBlame(cx, &report);
 
     /* Report the error. */
-    if (JSErrorReporter onError = cx->errorReporter) {
+    if (JSErrorReporter onError = cx->runtime()->errorReporter) {
         AutoSuppressGC suppressGC(cx);
         onError(cx, msg, &report);
     }
@@ -537,8 +537,6 @@ js::ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
         JS_ReportError(cx, "%s", msg);
     } else {
         JSString *str = usage.toString();
-        JS::Anchor<JSString *> a_str(str);
-
         if (!str->ensureFlat(cx))
             return;
         AutoStableStringChars chars(cx);
@@ -877,7 +875,7 @@ js::CallErrorReporter(JSContext *cx, const char *message, JSErrorReport *reportp
     JS_ASSERT(message);
     JS_ASSERT(reportp);
 
-    if (JSErrorReporter onError = cx->errorReporter)
+    if (JSErrorReporter onError = cx->runtime()->errorReporter)
         onError(cx, message, reportp);
 }
 
@@ -1108,7 +1106,6 @@ JSContext::JSContext(JSRuntime *rt)
     generatingError(false),
     savedFrameChains_(),
     cycleDetectorSet(MOZ_THIS_IN_INITIALIZER_LIST()),
-    errorReporter(nullptr),
     data(nullptr),
     data2(nullptr),
     outstandingRequests(0),

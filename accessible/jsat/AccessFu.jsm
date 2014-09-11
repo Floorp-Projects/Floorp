@@ -885,6 +885,7 @@ var Input = {
   },
 
   setEditState: function setEditState(aEditState) {
+    Logger.debug(() => { return ['setEditState', JSON.stringify(aEditState)] });
     this.editState = aEditState;
   },
 

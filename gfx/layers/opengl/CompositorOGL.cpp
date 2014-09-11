@@ -588,16 +588,16 @@ CompositorOGL::PrepareViewport(const gfx::IntSize& aSize,
   Matrix viewMatrix;
   if (mGLContext->IsOffscreen()) {
     // In case of rendering via GL Offscreen context, disable Y-Flipping
-    viewMatrix.Translate(-1.0, -1.0);
-    viewMatrix.Scale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
+    viewMatrix.PreTranslate(-1.0, -1.0);
+    viewMatrix.PreScale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
   } else {
-    viewMatrix.Translate(-1.0, 1.0);
-    viewMatrix.Scale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
-    viewMatrix.Scale(1.0f, -1.0f);
+    viewMatrix.PreTranslate(-1.0, 1.0);
+    viewMatrix.PreScale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
+    viewMatrix.PreScale(1.0f, -1.0f);
   }
 
   if (!mTarget) {
-    viewMatrix.Translate(mRenderOffset.x, mRenderOffset.y);
+    viewMatrix.PreTranslate(mRenderOffset.x, mRenderOffset.y);
   }
 
   viewMatrix = aWorldTransform * viewMatrix;
@@ -1212,8 +1212,8 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       // Drawing is always flipped, but when copying between surfaces we want to avoid
       // this, so apply a flip here to cancel the other one out.
       Matrix transform;
-      transform.Translate(0.0, 1.0);
-      transform.Scale(1.0f, -1.0f);
+      transform.PreTranslate(0.0, 1.0);
+      transform.PreScale(1.0f, -1.0f);
       program->SetTextureTransform(Matrix4x4::From2D(transform));
       program->SetTextureUnit(0);
 
@@ -1496,8 +1496,8 @@ CompositorOGL::CopyToTarget(DrawTarget* aTarget, const nsIntPoint& aTopLeft, con
   // Map from GL space to Cairo space and reverse the world transform.
   Matrix glToCairoTransform = aTransform;
   glToCairoTransform.Invert();
-  glToCairoTransform.Scale(1.0, -1.0);
-  glToCairoTransform.Translate(0.0, -height);
+  glToCairoTransform.PreScale(1.0, -1.0);
+  glToCairoTransform.PreTranslate(0.0, -height);
 
   glToCairoTransform.PostTranslate(-aTopLeft.x, -aTopLeft.y);
 

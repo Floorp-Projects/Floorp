@@ -1,3 +1,8 @@
+# AUTOMATICALLY GENERATED FROM moz.build.in AND mach.  DO NOT EDIT.
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 # -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
 # vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -10,4 +15,432 @@ DIRS += ["source/modules/system"]
 
 EXTRA_JS_MODULES.sdk += [
     'source/app-extension/bootstrap.js',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
+    EXTRA_JS_MODULES.commonjs.method.test += [
+        'source/lib/method/test/browser.js',
+        'source/lib/method/test/common.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.deprecated += [
+        'source/lib/sdk/deprecated/api-utils.js',
+        'source/lib/sdk/deprecated/cortex.js',
+        'source/lib/sdk/deprecated/errors.js',
+        'source/lib/sdk/deprecated/events.js',
+        'source/lib/sdk/deprecated/light-traits.js',
+        'source/lib/sdk/deprecated/list.js',
+        'source/lib/sdk/deprecated/memory.js',
+        'source/lib/sdk/deprecated/symbiont.js',
+        'source/lib/sdk/deprecated/traits-worker.js',
+        'source/lib/sdk/deprecated/traits.js',
+        'source/lib/sdk/deprecated/unit-test-finder.js',
+        'source/lib/sdk/deprecated/unit-test.js',
+        'source/lib/sdk/deprecated/window-utils.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.frame += [
+        'source/lib/sdk/frame/hidden-frame.js',
+        'source/lib/sdk/frame/utils.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.panel += [
+        'source/lib/sdk/panel/events.js',
+        'source/lib/sdk/panel/utils.js',
+        'source/lib/sdk/panel/window.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.places += [
+        'source/lib/sdk/places/bookmarks.js',
+        'source/lib/sdk/places/contract.js',
+        'source/lib/sdk/places/events.js',
+        'source/lib/sdk/places/favicon.js',
+        'source/lib/sdk/places/history.js',
+        'source/lib/sdk/places/utils.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.places.host += [
+        'source/lib/sdk/places/host/host-bookmarks.js',
+        'source/lib/sdk/places/host/host-query.js',
+        'source/lib/sdk/places/host/host-tags.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.tabs += [
+        'source/lib/sdk/tabs/common.js',
+        'source/lib/sdk/tabs/events.js',
+        'source/lib/sdk/tabs/helpers.js',
+        'source/lib/sdk/tabs/namespace.js',
+        'source/lib/sdk/tabs/observer.js',
+        'source/lib/sdk/tabs/tab-fennec.js',
+        'source/lib/sdk/tabs/tab-firefox.js',
+        'source/lib/sdk/tabs/tab.js',
+        'source/lib/sdk/tabs/tabs-firefox.js',
+        'source/lib/sdk/tabs/utils.js',
+        'source/lib/sdk/tabs/worker.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.test += [
+        'source/lib/sdk/test/assert.js',
+        'source/lib/sdk/test/harness.js',
+        'source/lib/sdk/test/httpd.js',
+        'source/lib/sdk/test/loader.js',
+        'source/lib/sdk/test/memory.js',
+        'source/lib/sdk/test/options.js',
+        'source/lib/sdk/test/runner.js',
+        'source/lib/sdk/test/tmp-file.js',
+        'source/lib/sdk/test/utils.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.ui += [
+        'source/lib/sdk/ui/frame.js',
+        'source/lib/sdk/ui/id.js',
+        'source/lib/sdk/ui/sidebar.js',
+        'source/lib/sdk/ui/state.js',
+        'source/lib/sdk/ui/toolbar.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.ui.button += [
+        'source/lib/sdk/ui/button/action.js',
+        'source/lib/sdk/ui/button/contract.js',
+        'source/lib/sdk/ui/button/toggle.js',
+        'source/lib/sdk/ui/button/view.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.ui.sidebar += [
+        'source/lib/sdk/ui/sidebar/actions.js',
+        'source/lib/sdk/ui/sidebar/contract.js',
+        'source/lib/sdk/ui/sidebar/namespace.js',
+        'source/lib/sdk/ui/sidebar/utils.js',
+        'source/lib/sdk/ui/sidebar/view.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.window += [
+        'source/lib/sdk/window/browser.js',
+        'source/lib/sdk/window/events.js',
+        'source/lib/sdk/window/helpers.js',
+        'source/lib/sdk/window/namespace.js',
+        'source/lib/sdk/window/utils.js',
+    ]
+
+    EXTRA_JS_MODULES.commonjs.sdk.windows += [
+        'source/lib/sdk/windows/dom.js',
+        'source/lib/sdk/windows/fennec.js',
+        'source/lib/sdk/windows/firefox.js',
+        'source/lib/sdk/windows/loader.js',
+        'source/lib/sdk/windows/observer.js',
+        'source/lib/sdk/windows/tabs-fennec.js',
+        'source/lib/sdk/windows/tabs-firefox.js',
+    ]
+
+EXTRA_JS_MODULES.commonjs += [
+    'source/lib/test.js',
+]
+
+EXTRA_JS_MODULES.commonjs.dev += [
+    'source/lib/dev/debuggee.js',
+    'source/lib/dev/frame-script.js',
+    'source/lib/dev/panel.js',
+    'source/lib/dev/ports.js',
+    'source/lib/dev/toolbox.js',
+    'source/lib/dev/utils.js',
+    'source/lib/dev/volcan.js',
+]
+
+EXTRA_JS_MODULES.commonjs.diffpatcher += [
+    'source/lib/diffpatcher/diff.js',
+    'source/lib/diffpatcher/index.js',
+    'source/lib/diffpatcher/patch.js',
+    'source/lib/diffpatcher/rebase.js',
+]
+
+EXTRA_JS_MODULES.commonjs.diffpatcher.test += [
+    'source/lib/diffpatcher/test/common.js',
+    'source/lib/diffpatcher/test/diff.js',
+    'source/lib/diffpatcher/test/index.js',
+    'source/lib/diffpatcher/test/patch.js',
+    'source/lib/diffpatcher/test/tap.js',
+]
+
+EXTRA_JS_MODULES.commonjs.framescript += [
+    'source/lib/framescript/FrameScriptManager.jsm',
+    'source/lib/framescript/tab-events.js',
+]
+
+EXTRA_JS_MODULES.commonjs.method += [
+    'source/lib/method/core.js',
+]
+
+EXTRA_JS_MODULES.commonjs.node += [
+    'source/lib/node/os.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk += [
+    'source/lib/sdk/addon-page.js',
+    'source/lib/sdk/base64.js',
+    'source/lib/sdk/clipboard.js',
+    'source/lib/sdk/context-menu.js',
+    'source/lib/sdk/hotkeys.js',
+    'source/lib/sdk/indexed-db.js',
+    'source/lib/sdk/l10n.js',
+    'source/lib/sdk/messaging.js',
+    'source/lib/sdk/notifications.js',
+    'source/lib/sdk/page-mod.js',
+    'source/lib/sdk/page-worker.js',
+    'source/lib/sdk/panel.js',
+    'source/lib/sdk/passwords.js',
+    'source/lib/sdk/private-browsing.js',
+    'source/lib/sdk/querystring.js',
+    'source/lib/sdk/request.js',
+    'source/lib/sdk/selection.js',
+    'source/lib/sdk/self.js',
+    'source/lib/sdk/simple-prefs.js',
+    'source/lib/sdk/simple-storage.js',
+    'source/lib/sdk/system.js',
+    'source/lib/sdk/tabs.js',
+    'source/lib/sdk/test.js',
+    'source/lib/sdk/timers.js',
+    'source/lib/sdk/ui.js',
+    'source/lib/sdk/url.js',
+    'source/lib/sdk/widget.js',
+    'source/lib/sdk/windows.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.addon += [
+    'source/lib/sdk/addon/events.js',
+    'source/lib/sdk/addon/host.js',
+    'source/lib/sdk/addon/installer.js',
+    'source/lib/sdk/addon/runner.js',
+    'source/lib/sdk/addon/window.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.browser += [
+    'source/lib/sdk/browser/events.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.console += [
+    'source/lib/sdk/console/plain-text.js',
+    'source/lib/sdk/console/traceback.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.content += [
+    'source/lib/sdk/content/content-worker.js',
+    'source/lib/sdk/content/content.js',
+    'source/lib/sdk/content/events.js',
+    'source/lib/sdk/content/loader.js',
+    'source/lib/sdk/content/mod.js',
+    'source/lib/sdk/content/sandbox.js',
+    'source/lib/sdk/content/thumbnail.js',
+    'source/lib/sdk/content/utils.js',
+    'source/lib/sdk/content/worker.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.core += [
+    'source/lib/sdk/core/disposable.js',
+    'source/lib/sdk/core/heritage.js',
+    'source/lib/sdk/core/namespace.js',
+    'source/lib/sdk/core/observer.js',
+    'source/lib/sdk/core/promise.js',
+    'source/lib/sdk/core/reference.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.deprecated.events += [
+    'source/lib/sdk/deprecated/events/assembler.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.deprecated.traits += [
+    'source/lib/sdk/deprecated/traits/core.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.dom += [
+    'source/lib/sdk/dom/events.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.dom.events += [
+    'source/lib/sdk/dom/events/keys.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.event += [
+    'source/lib/sdk/event/chrome.js',
+    'source/lib/sdk/event/core.js',
+    'source/lib/sdk/event/dom.js',
+    'source/lib/sdk/event/target.js',
+    'source/lib/sdk/event/utils.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.fs += [
+    'source/lib/sdk/fs/path.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.input += [
+    'source/lib/sdk/input/browser.js',
+    'source/lib/sdk/input/customizable-ui.js',
+    'source/lib/sdk/input/frame.js',
+    'source/lib/sdk/input/system.js',
+    'source/lib/sdk/input/window.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.io += [
+    'source/lib/sdk/io/buffer.js',
+    'source/lib/sdk/io/byte-streams.js',
+    'source/lib/sdk/io/data.js',
+    'source/lib/sdk/io/file.js',
+    'source/lib/sdk/io/fs.js',
+    'source/lib/sdk/io/stream.js',
+    'source/lib/sdk/io/text-streams.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.keyboard += [
+    'source/lib/sdk/keyboard/hotkeys.js',
+    'source/lib/sdk/keyboard/observer.js',
+    'source/lib/sdk/keyboard/utils.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.l10n += [
+    'source/lib/sdk/l10n/core.js',
+    'source/lib/sdk/l10n/html.js',
+    'source/lib/sdk/l10n/loader.js',
+    'source/lib/sdk/l10n/locale.js',
+    'source/lib/sdk/l10n/plural-rules.js',
+    'source/lib/sdk/l10n/prefs.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.l10n.json += [
+    'source/lib/sdk/l10n/json/core.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.l10n.properties += [
+    'source/lib/sdk/l10n/properties/core.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.lang += [
+    'source/lib/sdk/lang/functional.js',
+    'source/lib/sdk/lang/type.js',
+    'source/lib/sdk/lang/weak-set.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.lang.functional += [
+    'source/lib/sdk/lang/functional/concurrent.js',
+    'source/lib/sdk/lang/functional/core.js',
+    'source/lib/sdk/lang/functional/helpers.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.loader += [
+    'source/lib/sdk/loader/cuddlefish.js',
+    'source/lib/sdk/loader/sandbox.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.model += [
+    'source/lib/sdk/model/core.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.net += [
+    'source/lib/sdk/net/url.js',
+    'source/lib/sdk/net/xhr.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.output += [
+    'source/lib/sdk/output/system.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk['page-mod'] += [
+    'source/lib/sdk/page-mod/match-pattern.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.passwords += [
+    'source/lib/sdk/passwords/utils.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.platform += [
+    'source/lib/sdk/platform/xpcom.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.preferences += [
+    'source/lib/sdk/preferences/event-target.js',
+    'source/lib/sdk/preferences/native-options.js',
+    'source/lib/sdk/preferences/service.js',
+    'source/lib/sdk/preferences/utils.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk['private-browsing'] += [
+    'source/lib/sdk/private-browsing/utils.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.stylesheet += [
+    'source/lib/sdk/stylesheet/style.js',
+    'source/lib/sdk/stylesheet/utils.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.system += [
+    'source/lib/sdk/system/child_process.js',
+    'source/lib/sdk/system/environment.js',
+    'source/lib/sdk/system/events.js',
+    'source/lib/sdk/system/globals.js',
+    'source/lib/sdk/system/process.js',
+    'source/lib/sdk/system/runtime.js',
+    'source/lib/sdk/system/unload.js',
+    'source/lib/sdk/system/xul-app.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.system.child_process += [
+    'source/lib/sdk/system/child_process/subprocess.js',
+    'source/lib/sdk/system/child_process/subprocess_worker_unix.js',
+    'source/lib/sdk/system/child_process/subprocess_worker_win.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.tab += [
+    'source/lib/sdk/tab/events.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.ui.button.view += [
+    'source/lib/sdk/ui/button/view/events.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.ui.frame += [
+    'source/lib/sdk/ui/frame/model.js',
+    'source/lib/sdk/ui/frame/view.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.ui.state += [
+    'source/lib/sdk/ui/state/events.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.ui.toolbar += [
+    'source/lib/sdk/ui/toolbar/model.js',
+    'source/lib/sdk/ui/toolbar/view.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.url += [
+    'source/lib/sdk/url/utils.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.util += [
+    'source/lib/sdk/util/array.js',
+    'source/lib/sdk/util/collection.js',
+    'source/lib/sdk/util/contract.js',
+    'source/lib/sdk/util/deprecate.js',
+    'source/lib/sdk/util/dispatcher.js',
+    'source/lib/sdk/util/iteration.js',
+    'source/lib/sdk/util/list.js',
+    'source/lib/sdk/util/match-pattern.js',
+    'source/lib/sdk/util/object.js',
+    'source/lib/sdk/util/registry.js',
+    'source/lib/sdk/util/rules.js',
+    'source/lib/sdk/util/sequence.js',
+    'source/lib/sdk/util/uuid.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.view += [
+    'source/lib/sdk/view/core.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.worker += [
+    'source/lib/sdk/worker/utils.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk.zip += [
+    'source/lib/sdk/zip/utils.js',
+]
+
+EXTRA_JS_MODULES.commonjs.toolkit += [
+    'source/lib/toolkit/loader.js',
 ]

@@ -8,6 +8,8 @@
 #include "ProfilerMarkers.h"
 #include "gfxASurface.h"
 #include "SyncProfile.h"
+#include "Layers.h"
+#include "prprf.h"
 
 ProfilerMarkerPayload::ProfilerMarkerPayload(ProfilerBacktrace* aStack)
   : mStack(aStack)
@@ -124,9 +126,46 @@ IOMarkerPayload::streamPayloadImp(JSStreamWriter& b)
   b.EndObject();
 }
 
-
 void
 ProfilerJSEventMarker(const char *event)
 {
     PROFILER_MARKER(event);
+}
+
+LayerTranslationPayload::LayerTranslationPayload(mozilla::layers::Layer* aLayer,
+                                                 mozilla::gfx::Point aPoint)
+  : ProfilerMarkerPayload(mozilla::TimeStamp::Now(), mozilla::TimeStamp::Now(), nullptr)
+  , mLayer(aLayer)
+  , mPoint(aPoint)
+{
+}
+
+void
+LayerTranslationPayload::streamPayloadImpl(JSStreamWriter& b)
+{
+  const size_t bufferSize = 32;
+  char buffer[bufferSize];
+  PR_snprintf(buffer, bufferSize, "%p", mLayer);
+
+  b.BeginObject();
+  b.NameValue("layer", buffer);
+  b.NameValue("x", mPoint.x);
+  b.NameValue("y", mPoint.y);
+  b.NameValue("category", "LayerTranslation");
+  b.EndObject();
+}
+
+TouchDataPayload::TouchDataPayload(const mozilla::ScreenIntPoint& aPoint)
+  : ProfilerMarkerPayload(mozilla::TimeStamp::Now(), mozilla::TimeStamp::Now(), nullptr)
+{
+  mPoint = aPoint;
+}
+
+void
+TouchDataPayload::streamPayloadImpl(JSStreamWriter& b)
+{
+  b.BeginObject();
+  b.NameValue("x", mPoint.x);
+  b.NameValue("y", mPoint.y);
+  b.EndObject();
 }

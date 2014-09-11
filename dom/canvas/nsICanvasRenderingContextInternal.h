@@ -10,6 +10,7 @@
 #include "nsISupports.h"
 #include "nsIInputStream.h"
 #include "nsIDocShell.h"
+#include "nsRefreshDriver.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "GraphicsFilter.h"
 #include "mozilla/RefPtr.h"
@@ -27,15 +28,15 @@ namespace layers {
 class CanvasLayer;
 class LayerManager;
 }
-namespace ipc {
-class Shmem;
-}
 namespace gfx {
 class SourceSurface;
 }
 }
 
-class nsICanvasRenderingContextInternal : public nsISupports {
+class nsICanvasRenderingContextInternal :
+  public nsISupports,
+  public nsAPostRefreshObserver
+{
 public:
   typedef mozilla::layers::CanvasLayer CanvasLayer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -44,8 +45,37 @@ public:
 
   void SetCanvasElement(mozilla::dom::HTMLCanvasElement* aParentCanvas)
   {
+    RemovePostRefreshObserver();
     mCanvasElement = aParentCanvas;
+    AddPostRefreshObserverIfNecessary();
   }
+
+  virtual nsIPresShell *GetPresShell() {
+    if (mCanvasElement) {
+      return mCanvasElement->OwnerDoc()->GetShell();
+    }
+    return nullptr;
+  }
+
+  void RemovePostRefreshObserver()
+  {
+    if (mRefreshDriver) {
+      mRefreshDriver->RemovePostRefreshObserver(this);
+      mRefreshDriver = nullptr;
+    }
+  }
+
+  void AddPostRefreshObserverIfNecessary()
+  {
+    if (!GetPresShell() ||
+        !GetPresShell()->GetPresContext() ||
+        !GetPresShell()->GetPresContext()->RefreshDriver()) {
+      return;
+    }
+    mRefreshDriver = GetPresShell()->GetPresContext()->RefreshDriver();
+    mRefreshDriver->AddPostRefreshObserver(this);
+  }
+
   mozilla::dom::HTMLCanvasElement* GetParentObject() const
   {
     return mCanvasElement;
@@ -130,13 +160,8 @@ public:
 
 protected:
   nsRefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
+  nsRefPtr<nsRefreshDriver> mRefreshDriver;
 };
-
-namespace mozilla {
-namespace dom {
-
-}
-}
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,
                               NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)

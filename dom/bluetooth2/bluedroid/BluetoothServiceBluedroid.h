@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_bluetooth_bluetoothservicebluedroid_h__
 #define mozilla_dom_bluetooth_bluetoothservicebluedroid_h__
 
-#include <hardware/bluetooth.h>
-
 #include "BluetoothCommon.h"
 #include "BluetoothInterface.h"
 #include "BluetoothService.h"
@@ -19,8 +17,6 @@ class BluetoothServiceBluedroid : public BluetoothService
                                 , public BluetoothNotificationHandler
 {
 public:
-  static const bt_interface_t* GetBluetoothInterface();
-
   BluetoothServiceBluedroid();
   ~BluetoothServiceBluedroid();
 

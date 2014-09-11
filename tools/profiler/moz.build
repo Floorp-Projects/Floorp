@@ -15,6 +15,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     EXPORTS += [
         'GeckoProfilerFunc.h',
         'GeckoProfilerImpl.h',
+        'JSStreamWriter.h',
         'ProfilerMarkers.h',
         'PseudoStack.h',
         'shared-libraries.h',
@@ -80,6 +81,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         ]
 
     LOCAL_INCLUDES += [
+        '/docshell/base',
         '/ipc/chromium/src',
         '/mozglue/linker',
         '/toolkit/crashreporter/google-breakpad/src',

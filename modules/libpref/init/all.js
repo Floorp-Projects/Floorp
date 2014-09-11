@@ -373,13 +373,12 @@ pref("media.getusermedia.playout_delay", 50);
 pref("media.peerconnection.capture_delay", 50);
 pref("media.getusermedia.playout_delay", 50);
 #endif
-#else
-#ifdef ANDROID
-pref("media.navigator.enabled", true);
-#endif
 #endif
 
+#if !defined(ANDROID)
 pref("media.getusermedia.screensharing.enabled", true);
+#endif
+
 #ifdef RELEASE_BUILD
 pref("media.getusermedia.screensharing.allowed_domains", "");
 #else
@@ -2028,6 +2027,9 @@ pref("layout.css.background-blend-mode.enabled", true);
 
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", false);
+
+// Is support for object-fit and object-position enabled?
+pref("layout.css.object-fit-and-position.enabled", false);
 
 // Is -moz-osx-font-smoothing enabled?
 // Only supported in OSX builds

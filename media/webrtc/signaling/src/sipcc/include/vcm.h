@@ -598,6 +598,13 @@ int vcmRxStart(cc_mcapid_t mcap_id,
         vcm_mediaAttrs_t *attrs);
 
 
+struct cc_media_remote_track_table_t_;
+typedef struct cc_media_remote_track_table_t_ vcm_media_remote_track_table_t;
+
+void vcmOnRemoteStreamAdded(cc_call_handle_t call_handle,
+                            const char* peer_connection_handle,
+                            vcm_media_remote_track_table_t *media_tracks);
+
 /**
  *  start rx stream
  *  Same concept as vcmRxStart but for ICE/PeerConnection-based flows

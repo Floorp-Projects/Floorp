@@ -1635,7 +1635,7 @@ DictionaryBase::ParseJSON(JSContext* aCx,
 bool
 DictionaryBase::StringifyToJSON(JSContext* aCx,
                                 JS::MutableHandle<JS::Value> aValue,
-                                nsAString& aJSON)
+                                nsAString& aJSON) const
 {
   return JS_Stringify(aCx, aValue, JS::NullPtr(), JS::NullHandleValue,
                       AppendJSONToString, &aJSON);

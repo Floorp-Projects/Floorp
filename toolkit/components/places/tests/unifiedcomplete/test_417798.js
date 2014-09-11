@@ -8,6 +8,8 @@
  */
 
 add_task(function* test_javascript_match() {
+  Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);
+
   let uri1 = NetUtil.newURI("http://abc/def");
   let uri2 = NetUtil.newURI("javascript:5");
   yield promiseAddVisits([ { uri: uri1, title: "Title with javascript:" } ]);

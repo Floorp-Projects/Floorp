@@ -1,4 +1,4 @@
-setJitCompilerOption("ion.usecount.trigger", 4);
+setJitCompilerOption("ion.warmup.trigger", 4);
 
 var IsObject = getSelfHostedValue("IsObject")
 function test(foo) {

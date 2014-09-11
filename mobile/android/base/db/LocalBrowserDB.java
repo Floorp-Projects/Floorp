@@ -68,14 +68,13 @@ public class LocalBrowserDB {
     private final String mProfile;
 
     // Map of folder GUIDs to IDs. Used for caching.
-    private HashMap<String, Long> mFolderIdMap;
+    private final HashMap<String, Long> mFolderIdMap;
 
     // Use wrapped Boolean so that we can have a null state
     private Boolean mDesktopBookmarksExist;
 
     private final Uri mBookmarksUriWithProfile;
     private final Uri mParentsUriWithProfile;
-    private final Uri mFlagsUriWithProfile;
     private final Uri mHistoryUriWithProfile;
     private final Uri mHistoryExpireUriWithProfile;
     private final Uri mCombinedUriWithProfile;
@@ -98,7 +97,6 @@ public class LocalBrowserDB {
 
         mBookmarksUriWithProfile = appendProfile(Bookmarks.CONTENT_URI);
         mParentsUriWithProfile = appendProfile(Bookmarks.PARENTS_CONTENT_URI);
-        mFlagsUriWithProfile = appendProfile(Bookmarks.FLAGS_URI);
         mHistoryUriWithProfile = appendProfile(History.CONTENT_URI);
         mHistoryExpireUriWithProfile = appendProfile(History.CONTENT_OLD_URI);
         mCombinedUriWithProfile = appendProfile(Combined.CONTENT_URI);
@@ -132,7 +130,8 @@ public class LocalBrowserDB {
                 names.put(name, ours);
                 return ours;
             }
-            return mapping.intValue();
+
+            return mapping;
         }
 
         public boolean has(final String name) {
@@ -788,33 +787,6 @@ public class LocalBrowserDB {
 
         try {
             return c.getCount() > 0;
-        } finally {
-            c.close();
-        }
-    }
-
-    /**
-     * For a given URI, we want to return a number of things:
-     *
-     * * Is this URI the URI of a bookmark?
-     * * ... a reading list item?
-     *
-     * This will expand as necessary to eliminate multiple consecutive queries.
-     */
-    public int getItemFlags(ContentResolver cr, String uri) {
-        final Cursor c = cr.query(mFlagsUriWithProfile,
-                                  null,
-                                  null,
-                                  new String[] { uri },
-                                  null);
-        if (c == null) {
-            return 0;
-        }
-
-        try {
-            // This should never fail: it returns a single `flags` row.
-            c.moveToFirst();
-            return Bookmarks.FLAG_SUCCESS | c.getInt(0);
         } finally {
             c.close();
         }

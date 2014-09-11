@@ -390,7 +390,6 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   ImageResource(aURI), // invoke superclass's constructor
   mSize(0,0),
   mFrameDecodeFlags(DECODE_FLAGS_DEFAULT),
-  mAnim(nullptr),
   mLockCount(0),
   mDecodeCount(0),
   mRequestedSampleSize(0),
@@ -463,7 +462,6 @@ RasterImage::~RasterImage()
     }
   }
 
-  delete mAnim;
   mAnim = nullptr;
 
   // Total statistics
@@ -1123,7 +1121,7 @@ RasterImage::EnsureAnimExists()
   if (!mAnim) {
 
     // Create the animation context
-    mAnim = new FrameAnimator(mFrameBlender, mAnimationMode);
+    mAnim = MakeUnique<FrameAnimator>(mFrameBlender, mAnimationMode);
 
     // We don't support discarding animated images (See bug 414259).
     // Lock the image and throw away the key.
@@ -1646,7 +1644,6 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
       StopAnimation();
     mAnimationFinished = false;
     if (mAnim) {
-      delete mAnim;
       mAnim = nullptr;
     }
     // If there's only one frame, this could cause flickering

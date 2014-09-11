@@ -10,6 +10,7 @@
 #include "jscompartment.h"
 
 #include "gc/Rooting.h"
+#include "vm/StringBuffer.h"
 
 #include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
@@ -111,4 +112,27 @@ SymbolRegistry::sweep()
         if (IsSymbolAboutToBeFinalized(&sym))
             e.removeFront();
     }
+}
+
+bool
+js::SymbolDescriptiveString(JSContext *cx, Symbol *sym, MutableHandleValue result)
+{
+    // steps 2-5
+    StringBuffer sb(cx);
+    if (!sb.append("Symbol("))
+        return false;
+    RootedString str(cx, sym->description());
+    if (str) {
+        if (!sb.append(str))
+            return false;
+    }
+    if (!sb.append(')'))
+        return false;
+
+    // step 6
+    str = sb.finishString();
+    if (!str)
+        return false;
+    result.setString(str);
+    return true;
 }

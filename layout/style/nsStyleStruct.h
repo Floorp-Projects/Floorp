@@ -380,8 +380,9 @@ struct nsStyleBackground {
     // Initialize nothing
     Position() {}
 
-    // Initialize to initial values
-    void SetInitialValues();
+    // Sets both mXPosition and mYPosition to the given percent value for the
+    // initial property-value (e.g. 0.0f for "0% 0%", or 0.5f for "50% 50%")
+    void SetInitialPercentValues(float aPercentVal);
 
     // True if the effective background image position described by this depends
     // on the size of the corresponding frame.
@@ -1332,6 +1333,11 @@ struct nsStylePosition {
     return nsChangeHint(0);
   }
 
+  // XXXdholbert nsStyleBackground::Position should probably be moved to a
+  // different scope, since we're now using it in multiple style structs.
+  typedef nsStyleBackground::Position Position;
+
+  Position      mObjectPosition;        // [reset]
   nsStyleSides  mOffset;                // [reset] coord, percent, calc, auto
   nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, calc, auto
   nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum, calc
@@ -1352,6 +1358,7 @@ struct nsStylePosition {
   uint8_t       mFlexDirection;         // [reset] see nsStyleConsts.h
   uint8_t       mFlexWrap;              // [reset] see nsStyleConsts.h
   uint8_t       mJustifyContent;        // [reset] see nsStyleConsts.h
+  uint8_t       mObjectFit;             // [reset] see nsStyleConsts.h
   int32_t       mOrder;                 // [reset] integer
   float         mFlexGrow;              // [reset] float
   float         mFlexShrink;            // [reset] float

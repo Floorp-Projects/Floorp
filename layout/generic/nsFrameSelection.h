@@ -12,6 +12,7 @@
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsISelectionController.h"
+#include "nsISelectionListener.h"
 #include "nsITableCellLayout.h"
 #include "nsIDOMElement.h"
 #include "WordMovementType.h"
@@ -613,8 +614,17 @@ private:
   int16_t PopReason()
   {
     int16_t retval = mSelectionChangeReason;
-    mSelectionChangeReason = 0;
+    mSelectionChangeReason = nsISelectionListener::NO_REASON;
     return retval;
+  }
+  bool IsUserSelectionReason() const
+  {
+    return (mSelectionChangeReason &
+            (nsISelectionListener::DRAG_REASON |
+             nsISelectionListener::MOUSEDOWN_REASON |
+             nsISelectionListener::MOUSEUP_REASON |
+             nsISelectionListener::KEYPRESS_REASON)) !=
+           nsISelectionListener::NO_REASON;
   }
 
   friend class mozilla::dom::Selection;
