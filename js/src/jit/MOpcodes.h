@@ -242,7 +242,8 @@ namespace jit {
     _(ForkJoinGetSlice)                                                     \
     _(GuardThreadExclusive)                                                 \
     _(InterruptCheckPar)                                                    \
-    _(RecompileCheck)
+    _(RecompileCheck)                                                       \
+    _(UnknownValue)
 
 // Forward declarations of MIR types.
 #define FORWARD_DECLARE(op) class M##op;
