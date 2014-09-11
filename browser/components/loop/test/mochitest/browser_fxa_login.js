@@ -9,6 +9,7 @@
 
 const {
   gFxAOAuthTokenData,
+  gFxAOAuthProfile,
 } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
 
 const BASE_URL = "http://mochi.test:8888/browser/browser/components/loop/test/mochitest/loop_fxa.sjs?";
@@ -224,10 +225,21 @@ add_task(function* basicAuthorizationAndRegistration() {
   // to be able to check for success on the second registration.
   mockPushHandler.pushUrl = "https://localhost/pushUrl/fxa";
 
+  yield loadLoopPanel({loopURL: BASE_URL, stayOnline: true});
+  let loopDoc = document.getElementById("loop").contentDocument;
+  let visibleEmail = loopDoc.getElementsByClassName("user-identity")[0];
+  is(visibleEmail.textContent, "Guest", "Guest should be displayed on the panel when not logged in");
+  is(MozLoopService.userProfile, null, "profile should be null before log-in");
+
   let tokenData = yield MozLoopService.logInToFxA();
+  yield promiseObserverNotified("loop-status-changed");
   ise(tokenData.access_token, "code1_access_token", "Check access_token");
   ise(tokenData.scope, "profile", "Check scope");
   ise(tokenData.token_type, "bearer", "Check token_type");
+
+  is(MozLoopService.userProfile.email, "test@example.com", "email should exist in the profile data");
+  is(MozLoopService.userProfile.uid, "1234abcd", "uid should exist in the profile data");
+  is(visibleEmail.textContent, "test@example.com", "the email should be correct on the panel");
 
   let registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
   ise(registrationResponse.response.simplePushURL, "https://localhost/pushUrl/fxa", "Check registered push URL");
