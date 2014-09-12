@@ -27,6 +27,7 @@ assertThrowsInstanceOf(() =>
 var inputArray = [1, 2, 3];
 var inputDeep = [1, inputArray];
 var inputObject = {a: inputArray};
+var inputStr = 'str';
 function *inputGenerator() {
   yield 1;
   yield 2;
@@ -34,9 +35,9 @@ function *inputGenerator() {
 }
 
 var o = {prop: null, call: function () { return o; }};
-var globalEval = eval;
 
 var expected = [2, 3];
+var expectedStr = ['t', 'r'];
 
 function testAll(fn) {
   testDeclaration(fn);
@@ -47,11 +48,26 @@ function testAll(fn) {
   assertEqArray(fn('[, ...(o.call().prop)]', inputArray, 'o.prop'), expected);
 }
 function testDeclaration(fn) {
+  testStr(fn);
+
   assertEqArray(fn('[, ...rest]', inputArray), expected);
   assertEqArray(fn('[, ...rest]', inputGenerator()), expected);
   assertEqArray(fn('[, [, ...rest]]', inputDeep), expected);
   assertEqArray(fn('{a: [, ...rest]}', inputObject), expected);
 }
+
+function testStr(fn) {
+  assertEqArray(fn('[, ...rest]', inputStr), expectedStr);
+}
+
+function testForIn(pattern, input, binding) {
+  binding = binding || 'rest';
+  return new Function('input',
+    'for (var ' + pattern + ' in {[input]: 1}) {}' +
+    'return ' + binding
+  )(input);
+}
+testStr(testForIn);
 
 function testVar(pattern, input, binding) {
   binding = binding || 'rest';
