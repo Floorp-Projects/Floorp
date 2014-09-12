@@ -298,7 +298,12 @@ public class GeckoAppShell
     private static LayerView sLayerView;
 
     public static void setLayerView(LayerView lv) {
+        if (sLayerView == lv) {
+            return;
+        }
         sLayerView = lv;
+        // Install new Gecko-to-Java editable listener.
+        editableListener = new GeckoEditable();
     }
 
     @RobocopTarget
@@ -349,13 +354,6 @@ public class GeckoAppShell
         DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
         combinedArgs += " -width " + metrics.widthPixels + " -height " + metrics.heightPixels;
 
-        ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    geckoLoaded();
-                }
-            });
-
         if (!AppConstants.MOZILLA_OFFICIAL) {
             Log.d(LOGTAG, "GeckoLoader.nativeRun " + combinedArgs);
         }
@@ -364,13 +362,6 @@ public class GeckoAppShell
 
         // Remove pumpMessageLoop() idle handler
         Looper.myQueue().removeIdleHandler(idleHandler);
-    }
-
-    // Called on the UI thread after Gecko loads.
-    private static void geckoLoaded() {
-        GeckoEditable editable = new GeckoEditable();
-        // install the gecko => editable listener
-        editableListener = editable;
     }
 
     static void sendPendingEventsToGecko() {
@@ -446,6 +437,9 @@ public class GeckoAppShell
 
     // Tell the Gecko event loop that an event is available.
     public static native void notifyGeckoOfEvent(GeckoEvent event);
+
+    // Synchronously notify a Gecko observer; must be called from Gecko thread.
+    public static native void notifyGeckoObservers(String subject, String data);
 
     /*
      *  The Gecko-side API: API methods that Gecko calls
