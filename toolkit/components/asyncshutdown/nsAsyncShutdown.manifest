@@ -1,0 +1,2 @@
+component {35c496de-a115-475d-93b5-ffa3f3ae6fe3} nsAsyncShutdown.js
+contract @mozilla.org/async-shutdown-service;1 {35c496de-a115-475d-93b5-ffa3f3ae6fe3}
