@@ -418,6 +418,29 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
   }
 
   if (rv != Success) {
+    if (rv != Result::ERROR_KEY_PINNING_FAILURE) {
+      ScopedCERTCertificate certCopy(CERT_DupCertificate(cert));
+      if (!certCopy) {
+        return SECFailure;
+      }
+      ScopedCERTCertList certList(CERT_NewCertList());
+      if (!certList) {
+        return SECFailure;
+      }
+      SECStatus srv = CERT_AddCertToListTail(certList.get(), certCopy.get());
+      if (srv != SECSuccess) {
+        return SECFailure;
+      }
+      certCopy.forget(); // now owned by certList
+      PRBool chainOK = false;
+      srv = chainValidationCallback(&callbackState, certList, &chainOK);
+      if (srv != SECSuccess) {
+        return SECFailure;
+      }
+      if (!chainOK) {
+        rv = Result::ERROR_KEY_PINNING_FAILURE;
+      }
+    }
     PR_SetError(MapResultToPRErrorCode(rv), 0);
     return SECFailure;
   }
