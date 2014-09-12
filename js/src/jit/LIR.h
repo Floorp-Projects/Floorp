@@ -507,7 +507,7 @@ class LDefinition
     }
     uint32_t virtualRegister() const {
         uint32_t index = (bits_ >> VREG_SHIFT) & VREG_MASK;
-        JS_ASSERT(index != 0);
+        //JS_ASSERT(index != 0);
         return index;
     }
     LAllocation *output() {
